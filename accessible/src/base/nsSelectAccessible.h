@@ -22,7 +22,7 @@
  * Contributor(s):
  * Original Author: Eric Vaughan (evaughan@netscape.com)
  * Contributor(s):  John Gaunt (jgaunt@netscape.com)
- *
+ *                  Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,11 +43,14 @@
 
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleSelectable.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMXULListener.h"
 
 /** ------------------------------------------------------ */
 /**  First, the common widgets                             */
 /** ------------------------------------------------------ */
+
+enum { eSelection_Add=0, eSelection_Remove=1, eSelection_GetState=2 };
 
 /**
   * The list that contains all the options in the select.
@@ -89,76 +92,6 @@ public:
 protected:
   
   nsCOMPtr<nsIAccessible> mParent;
-};
-
-/** ------------------------------------------------------ */
-/**  Secondly, the Listbox widget                          */
-/** ------------------------------------------------------ */
-
-/**
-  * A class that represents the Listbox widget.
-  */
-class nsListboxAccessible : public nsAccessible,
-                            public nsIAccessibleSelectable
-{
-public:
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLESELECTABLE
-
-  nsListboxAccessible (nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsListboxAccessible () {}
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-
-};
-
-/** ------------------------------------------------------ */
-/**  Finally, the Combobox widgets                         */
-/** ------------------------------------------------------ */
-
-/**
-  * A class the represents the HTML Combobox widget.
-  */
-class nsComboboxAccessible : public nsAccessible,
-                             public nsIAccessibleSelectable,
-                             public nsIDOMXULListener
-{
-public:
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLESELECTABLE
-  
-  nsComboboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsComboboxAccessible();
-
-  /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-
-  /* ----- nsIDOMXULListener ----- */
-  NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);
-  NS_IMETHOD PopupShown(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
-  NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent) { return NS_OK; }
-  
-  NS_IMETHOD Close(nsIDOMEvent* aEvent);
-  NS_IMETHOD Command(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) { return NS_OK; }
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
-
-  virtual void SetupMenuListener();
-
-protected:
-
-  PRBool mRegistered;
-  PRBool mOpen;
-
 };
 
 /**

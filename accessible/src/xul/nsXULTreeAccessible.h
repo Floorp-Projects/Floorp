@@ -42,17 +42,16 @@
 #include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsCOMPtr.h"
-#include "nsIAccessibleSelectable.h"
 #include "nsIDOMNode.h"
 #include "nsIWeakReference.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
+#include "nsXULSelectAccessible.h"
 
 /*
  * A class the represents the XUL Tree widget.
  */
-class nsXULTreeAccessible : public nsAccessible,
-                            public nsIAccessibleSelectable
+class nsXULTreeAccessible : public nsXULSelectableAccessible
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -75,6 +74,8 @@ public:
 private:
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
+
+  NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
 };
 
 /**

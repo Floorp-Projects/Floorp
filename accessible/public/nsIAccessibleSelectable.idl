@@ -21,7 +21,11 @@
  * 
  * Contributor(s): 
  * John Gaunt
- */
+ * Marc Mulcahy (marc.mulcahy@sun.com)
+ * Paul Sandoz (paul.sandoz@sun.com)
+ * Bill Haneman (bill.haneman@sun.com)
+ * Kyle Yuan (kyle.yuan@sun.com)
+*/
 
 #include "nsISupports.idl"
 #include "nsIAccessible.idl"
@@ -30,5 +34,43 @@
 [scriptable, uuid(34d268d6-1dd2-11b2-9d63-83a5e0ada290)]
 interface nsIAccessibleSelectable : nsISupports
 {
-	nsISupportsArray GetSelectedChildren();
+    nsISupportsArray GetSelectedChildren();
+    
+    /**
+      * Returns the number of accessible children currently selected.
+      */
+    readonly attribute long selectionCount;
+
+    /**
+      * Adds the specified accessible child of the object to the
+      * object's selection.
+      */
+    void addSelection(in long index);
+
+    /**
+      * Removes the specified child of the object from the object's selection.
+      */
+    void removeSelection(in long index);
+
+    /**
+      * Clears the selection in the object so that no children in the object
+      * are selected.
+      */
+    void clearSelection();
+
+    /**
+      * Returns a reference to the accessible object representing the specified
+      * selected child of the object.
+      */
+    nsIAccessible refSelection(in long index);
+
+    /**
+      * Determines if the current child of this object is selected
+      */
+    boolean isChildSelected(in long index);
+
+    /**
+      * If the object does not accept multiple selection, return false.
+      */
+    boolean selectAllSelection();
 };

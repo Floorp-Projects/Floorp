@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  * Original Author: Eric Vaughan (evaughan@netscape.com)
- *
+ * Contributor(s):  Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +41,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAccessibleSelectable.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"
 #include "nsIWeakReference.h"
 #include "nsSelectAccessible.h"
@@ -68,6 +70,48 @@
 /** ------------------------------------------------------ */
 /**  First, the common widgets                             */
 /** ------------------------------------------------------ */
+
+/*
+ * The basic implemetation of nsIAccessibleSelectable.
+ */
+class nsHTMLSelectableAccessible : public nsAccessible,
+                                   public nsIAccessibleSelectable
+{
+public:
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLESELECTABLE
+
+  nsHTMLSelectableAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsHTMLSelectableAccessible() {}
+
+protected:
+
+  NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
+
+  class iterator 
+  {
+  protected:
+    PRUint32 mLength;
+    PRUint32 mIndex;
+    PRInt32 mSelCount;
+    nsHTMLSelectableAccessible *mParent;
+    nsCOMPtr<nsIDOMHTMLCollection> mOptions;
+    nsCOMPtr<nsIDOMHTMLOptionElement> mOption;
+
+  public:
+    iterator(nsHTMLSelectableAccessible *aParent);
+
+    void CalcSelectionCount(PRInt32 *aSelectionCount);
+    void Select(PRBool aSelect);
+    void AddAccessibleIfSelected(nsIAccessibilityService *aAccService, nsISupportsArray *aSelectedAccessibles, nsIPresContext *aContext);
+    PRBool GetAccessibleIfSelected(PRInt32 aIndex, nsIAccessibilityService *aAccService, nsIPresContext *aContext, nsIAccessible **_retval);
+
+    PRBool Advance();
+  };
+
+  friend class iterator;
+};
 
 /*
  * The list that contains all the options in the select.
@@ -132,16 +176,18 @@ public:
 /*
  * A class the represents the HTML Listbox widget.
  */
-class nsHTMLListboxAccessible : public nsListboxAccessible
+class nsHTMLListboxAccessible : public nsHTMLSelectableAccessible
 {
 public:
-
-  NS_DECL_NSIACCESSIBLESELECTABLE
 
   nsHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsHTMLListboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccValue(nsAString& _retval);
@@ -155,7 +201,7 @@ public:
 /*
  * A class the represents the HTML Combobox widget.
  */
-class nsHTMLComboboxAccessible : public nsComboboxAccessible
+class nsHTMLComboboxAccessible : public nsHTMLSelectableAccessible
 {
 public:
 
@@ -163,6 +209,10 @@ public:
   virtual ~nsHTMLComboboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccValue(nsAString& _retval);

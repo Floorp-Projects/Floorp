@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  * Original Author: Eric Vaughan (evaughan@netscape.com)
- *
+ * Contributor(s):  Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,6 +71,23 @@
 /** ------------------------------------------------------ */
 
 /*
+ * The basic implemetation of nsIAccessibleSelectable.
+ */
+class nsXULSelectableAccessible : public nsAccessible,
+                                  public nsIAccessibleSelectable
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLESELECTABLE
+
+  nsXULSelectableAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+  virtual ~nsXULSelectableAccessible() {}
+
+protected:
+  NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
+};
+
+/*
  * The list that contains all the options in the select.
  */
 class nsXULSelectListAccessible : public nsAccessible
@@ -109,11 +126,9 @@ public:
 /*
  * A class the represents the XUL Listbox widget.
  */
-class nsXULListboxAccessible : public nsListboxAccessible
+class nsXULListboxAccessible : public nsXULSelectableAccessible
 {
 public:
-
-  NS_DECL_NSIACCESSIBLESELECTABLE
 
   nsXULListboxAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULListboxAccessible() {}
@@ -151,7 +166,7 @@ public:
 /*
  * A class the represents the XUL Combobox widget.
  */
-class nsXULComboboxAccessible : public nsComboboxAccessible
+class nsXULComboboxAccessible : public nsXULSelectableAccessible
 {
 public:
 
@@ -159,6 +174,10 @@ public:
   virtual ~nsXULComboboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+
   NS_IMETHOD GetAccValue(nsAString& _retval);
 };
 
