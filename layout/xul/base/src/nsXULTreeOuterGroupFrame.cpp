@@ -286,6 +286,8 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
     mTreeLayoutState = eTreeLayoutAbort;
     if (mCurrentIndex > 0)
       VerticalScroll(mCurrentIndex * mRowHeight);
+
+    PostReflowCallback();
   } 
 }
 
