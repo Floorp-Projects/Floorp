@@ -1,0 +1,46 @@
+#
+# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+#
+#ident	"$Id: Makefile.in,v 1.1 2003/02/04 01:45:28 wtc%netscape.com Exp $"
+#
+
+MOD_DEPTH = ../..
+topsrcdir   = @top_srcdir@
+srcdir	    = @srcdir@
+VPATH	    = @srcdir@
+
+NAME        = sun-nspr
+RELEASE     = 1
+VERSION     = $(MOD_MAJOR_VERSION).$(MOD_MINOR_VERSION).$(MOD_REVISION_VERSION)
+SOURCE      = $(NAME)-$(VERSION).tar.gz
+RPM         = $(NAME)-$(VERSION)-$(RELEASE).i386.rpm
+SRPM        = $(NAME)-$(VERSION)-$(RELEASE).src.rpm
+TOPDIR      = /usr/src/redhat
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+all::
+publish:
+	$(MAKE) clean
+	mkdir -p usr/lib/mps
+	cp -L $(MOD_DEPTH)/dist/lib/* usr/lib/mps
+	mkdir -p usr/include/mps
+	cp -Lr $(MOD_DEPTH)/dist/include/* usr/include/mps
+	tar czvf $(SOURCE) usr
+	echo "%define name $(NAME)" >$(NAME).spec
+	echo "%define version $(VERSION)" >>$(NAME).spec
+	echo "%define release $(RELEASE)" >>$(NAME).spec
+
+	cat $(srcdir)/$(NAME).spec >>$(NAME).spec
+	cp $(SOURCE) $(TOPDIR)/SOURCES
+	rpm -ba $(NAME).spec
+	if [ ! -d RPMS ] ; then mkdir -p RPMS ; fi
+	if [ ! -d SRPMS ] ; then mkdir -p SRPMS ; fi
+	cp -v $(TOPDIR)/RPMS/i386/$(NAME)-* RPMS
+	cp -v $(TOPDIR)/SRPMS/$(NAME)-* SRPMS
+
+clean:
+	rm -rf $(TOPDIR)/BUILD/$(NAME)
+	rm -rf RPMS SRPMS usr
+	rm -f $(SOURCE)
