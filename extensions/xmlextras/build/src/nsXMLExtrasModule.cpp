@@ -122,66 +122,6 @@ NS_DOMCI_EXTENSION_END
 #define NS_XPOINTER_EVALUATOR_CONTRACTID \
 "@mozilla.org/xmlextras/xpointerevaluator;1"
 
-class nsXMLExtrasNameset : public nsISupports
-{
-public:
-  nsXMLExtrasNameset();
-  virtual ~nsXMLExtrasNameset();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-};
-
-nsXMLExtrasNameset::nsXMLExtrasNameset()
-{
-}
-
-nsXMLExtrasNameset::~nsXMLExtrasNameset()
-{
-}
-
-NS_INTERFACE_MAP_BEGIN(nsXMLExtrasNameset)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsXMLExtrasNameset)
-NS_IMPL_RELEASE(nsXMLExtrasNameset)
-
-#define NS_XML_EXTRAS_CID                          \
- { /* 33e569b0-40f8-11d4-9a41-000064657374 */      \
-  0x33e569b0, 0x40f8, 0x11d4,                      \
- {0x9a, 0x41, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
-
-#define NS_XML_EXTRAS_CONTRACTID "@mozilla.org/xmlextras;1"
-
-class nsXMLExtras : public nsISupports {
-public:
-  nsXMLExtras();
-  virtual ~nsXMLExtras();
-
-  NS_DEFINE_STATIC_CID_ACCESSOR(NS_XML_EXTRAS_CID);
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-};
-
-nsXMLExtras::nsXMLExtras()
-{
-}
-
-nsXMLExtras::~nsXMLExtras()
-{
-}
-
-NS_IMPL_ADDREF(nsXMLExtras)
-NS_IMPL_RELEASE(nsXMLExtras)
-
-NS_INTERFACE_MAP_BEGIN(nsXMLExtras)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLExtras)
-
 static NS_METHOD 
 RegisterXMLExtras(nsIComponentManager *aCompMgr,
                   nsIFile *aPath,
@@ -253,10 +193,9 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
 // class name.
 //
 static const nsModuleComponentInfo components[] = {
-  { "XMLExtras component", NS_XML_EXTRAS_CID, NS_XML_EXTRAS_CONTRACTID,
-    nsXMLExtrasConstructor, RegisterXMLExtras },
   { "XML Serializer", NS_XMLSERIALIZER_CID, NS_XMLSERIALIZER_CONTRACTID,
-    nsDOMSerializerConstructor },
+    nsDOMSerializerConstructor,
+    RegisterXMLExtras /* Register all of the components in one go */ },
   { "XMLHttpRequest", NS_XMLHTTPREQUEST_CID, NS_XMLHTTPREQUEST_CONTRACTID,
     nsXMLHttpRequestConstructor },
   { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_CONTRACTID,
@@ -278,6 +217,7 @@ XMLExtrasModuleDestructor(nsIModule* self)
   NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLSerializer));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLHttpRequest));
   NS_IF_RELEASE(NS_CLASSINFO_NAME(DOMParser));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XPointerResult));
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsXMLExtrasModule, components, 
