@@ -41,11 +41,8 @@
 //	nsIWebBrowserChrome	- This is a required interface to be implemented
 //						  by embeddors
 //
-//	nsIBaseWindow	   - This is a required interface to be implemented
+//	nsIWebBrowserSiteWindow - This is a required interface to be implemented
 //						 by embeddors			
-//					   - SetVisibility() gets called in cases 
-//					     where a JS window.open() call has window
-//						 height/width specified
 //					   - SetTitle() gets called after a document
 //						 load giving us the chance to update our
 //						 titlebar
@@ -106,7 +103,7 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
@@ -295,19 +292,8 @@ CBrowserImpl::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
 }
 
 //*****************************************************************************
-// CBrowserImpl::nsIBaseWindow
+// CBrowserImpl::nsIWebBrowserSiteWindow
 //*****************************************************************************   
-
-NS_IMETHODIMP CBrowserImpl::InitWindow(nativeWindow aParentNativeWindow,
-   nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CBrowserImpl::Create()
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 // Will get called in response to JavaScript window.close()
 //
@@ -385,58 +371,7 @@ NS_IMETHODIMP CBrowserImpl::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* 
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::Repaint(PRBool aForce)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CBrowserImpl::GetParentWidget(nsIWidget** aParentWidget)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CBrowserImpl::SetParentWidget(nsIWidget* aParentWidget)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CBrowserImpl::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CBrowserImpl::SetParentNativeWindow(nativeWindow aParentNativeWindow)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CBrowserImpl::GetVisibility(PRBool* aVisibility)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	m_pBrowserFrameGlue->GetBrowserFrameVisibility(aVisibility);
-
-	return NS_OK;
-}
-
-// SetVisibility() gets called in cases 
-// where a JS window.open() call has window
-// height/width specified
-// See nsIWebBrowserChrome::CreateBrowserWindow() for more
-// info on this
-//
-NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	m_pBrowserFrameGlue->ShowBrowserFrame(aVisibility);
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP CBrowserImpl::GetMainWidget(nsIWidget** aMainWidget)
+NS_IMETHODIMP CBrowserImpl::GetSiteWindow(void** aSiteWindow)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -447,16 +382,6 @@ NS_IMETHODIMP CBrowserImpl::SetFocus()
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->SetFocus();
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP CBrowserImpl::FocusAvailable(nsIBaseWindow* aCurrentFocus, PRBool* aTookFocus)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	m_pBrowserFrameGlue->FocusAvailable(aTookFocus);
 
 	return NS_OK;
 }

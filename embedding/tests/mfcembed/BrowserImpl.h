@@ -28,7 +28,7 @@
 
 class CBrowserImpl : public nsIInterfaceRequestor,
 					 public nsIWebBrowserChrome,
-					 public nsIBaseWindow,
+					 public nsIWebBrowserSiteWindow,
 					 public nsIWebProgressListener,
 					 public nsIContextMenuListener,
 					 public nsIPrompt,
@@ -43,7 +43,7 @@ public:
     NS_DECL_ISUPPORTS
 	NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIWEBBROWSERCHROME
-    NS_DECL_NSIBASEWINDOW	
+    NS_DECL_NSIWEBBROWSERSITEWINDOW
     NS_DECL_NSIWEBPROGRESSLISTENER
 	NS_DECL_NSICONTEXTMENULISTENER
 	NS_DECL_NSIPROMPT
