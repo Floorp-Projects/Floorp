@@ -3049,7 +3049,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (!mInner)	return(NS_RDF_NO_VALUE);
 
 	nsCOMPtr<nsIUnicodeDecoder>	unicodeDecoder;
-	nsAutoString			action, method, input, userVar;
+	nsAutoString			action, methodStr, input, userVar;
 
 	nsCOMPtr<nsIRDFLiteral>		dataLit;
 	if (NS_FAILED(rv = FindData(engine, getter_AddRefs(dataLit))) ||
@@ -3062,12 +3062,12 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (fullURL.Length() > 0)
 	{
 		action.Assign(fullURL);
-		method.AssignWithConversion("get");
+		methodStr.AssignWithConversion("get");
 	}
 	else
 	{
 		if (NS_FAILED(rv = GetData(dataUni, "search", 0, "action", action)))	return(rv);
-		if (NS_FAILED(rv = GetData(dataUni, "search", 0, "method", method)))	return(rv);
+		if (NS_FAILED(rv = GetData(dataUni, "search", 0, "method", methodStr)))	return(rv);
 	}
 
 	nsAutoString	encodingStr, queryEncodingStr, resultEncodingStr;
@@ -3128,7 +3128,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (fullURL.Length() > 0)
 	{
 	}
-	else if (method.EqualsIgnoreCase("get"))
+	else if (methodStr.EqualsIgnoreCase("get"))
 	{
 		if (NS_FAILED(rv = GetInputs(dataUni, userVar, textTemp, input)))	return(rv);
 		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
@@ -3165,13 +3165,16 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			// get it just from the cache if we can (do not validate)
 			channel->SetLoadAttributes(nsIChannel::VALIDATE_NEVER);
 
-			if (method.EqualsIgnoreCase("post"))
+			if (methodStr.EqualsIgnoreCase("post"))
 			{
 				nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 				if (httpChannel)
 				{
-					nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
-					httpChannel->SetRequestMethod(method);
+					nsCOMPtr<nsIAtom> postAtom = getter_AddRefs(NS_NewAtom("POST"));
+					if (postAtom)
+					{
+						httpChannel->SetRequestMethod(postAtom);
+					}
 
 			        	// construct post data to send
 			        	nsAutoString	postStr;
