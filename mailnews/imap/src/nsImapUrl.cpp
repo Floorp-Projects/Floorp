@@ -62,10 +62,10 @@ nsImapUrl::nsImapUrl()
 	m_file = nsnull;
 	
 	m_imapLog = nsnull;
-    m_imapMailFolder = nsnull;
-    m_imapMessage = nsnull;
-    m_imapExtension = nsnull;
-    m_imapMiscellaneous = nsnull;
+    m_imapMailFolderSink = nsnull;
+    m_imapMessageSink = nsnull;
+    m_imapExtensionSink = nsnull;
+    m_imapMiscellaneousSink = nsnull;
 	m_listOfMessageIds = nsnull;
 	m_sourceCanonicalFolderPathSubString = nsnull;
 	m_destinationCanonicalFolderPathSubString = nsnull;
@@ -85,10 +85,10 @@ nsImapUrl::nsImapUrl()
 nsImapUrl::~nsImapUrl()
 {
 	NS_IF_RELEASE(m_imapLog);
-    NS_IF_RELEASE(m_imapMailFolder);
-    NS_IF_RELEASE(m_imapMessage);
-    NS_IF_RELEASE(m_imapExtension);
-    NS_IF_RELEASE(m_imapMiscellaneous);
+    NS_IF_RELEASE(m_imapMailFolderSink);
+    NS_IF_RELEASE(m_imapMessageSink);
+    NS_IF_RELEASE(m_imapExtensionSink);
+    NS_IF_RELEASE(m_imapMiscellaneousSink);
 	NS_IF_RELEASE(m_server);
 
 	NS_IF_RELEASE(m_urlListeners);
@@ -240,96 +240,96 @@ NS_IMETHODIMP nsImapUrl::SetImapLog(nsIImapLog  * aImapLog)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetImapMailFolder(nsIImapMailFolder **
-                                           aImapMailFolder)
+NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
+                                           aImapMailFolderSink)
 {
-	if (aImapMailFolder)
+	if (aImapMailFolderSink)
 	{
-		*aImapMailFolder = m_imapMailFolder;
-		NS_IF_ADDREF(m_imapMailFolder);
+		*aImapMailFolderSink = m_imapMailFolderSink;
+		NS_IF_ADDREF(m_imapMailFolderSink);
 	}
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetImapMailFolder(nsIImapMailFolder  * aImapMailFolder)
+NS_IMETHODIMP nsImapUrl::SetImapMailFolderSink(nsIImapMailFolderSink  * aImapMailFolderSink)
 {
-	if (aImapMailFolder)
+	if (aImapMailFolderSink)
 	{
-		NS_IF_RELEASE(m_imapMailFolder);
-		m_imapMailFolder = aImapMailFolder;
-		NS_ADDREF(m_imapMailFolder);
+		NS_IF_RELEASE(m_imapMailFolderSink);
+		m_imapMailFolderSink = aImapMailFolderSink;
+		NS_ADDREF(m_imapMailFolderSink);
 	}
 
 	return NS_OK;
 }
  
-NS_IMETHODIMP nsImapUrl::GetImapMessage(nsIImapMessage ** aImapMessage)
+NS_IMETHODIMP nsImapUrl::GetImapMessageSink(nsIImapMessageSink ** aImapMessageSink)
 {
-	if (aImapMessage)
+	if (aImapMessageSink)
 	{
-		*aImapMessage = m_imapMessage;
-		NS_IF_ADDREF(m_imapMessage);
+		*aImapMessageSink = m_imapMessageSink;
+		NS_IF_ADDREF(m_imapMessageSink);
 	}
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetImapMessage(nsIImapMessage  * aImapMessage)
+NS_IMETHODIMP nsImapUrl::SetImapMessageSink(nsIImapMessageSink  * aImapMessageSink)
 {
-	if (aImapMessage)
+	if (aImapMessageSink)
 	{
-		NS_IF_RELEASE(m_imapMessage);
-		m_imapMessage = aImapMessage;
-		NS_ADDREF(m_imapMessage);
+		NS_IF_RELEASE(m_imapMessageSink);
+		m_imapMessageSink = aImapMessageSink;
+		NS_ADDREF(m_imapMessageSink);
 	}
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetImapExtension(nsIImapExtension ** aImapExtension)
+NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExtensionSink)
 {
-	if (aImapExtension)
+	if (aImapExtensionSink)
 	{
-		*aImapExtension = m_imapExtension;
-		NS_IF_ADDREF(m_imapExtension);
+		*aImapExtensionSink = m_imapExtensionSink;
+		NS_IF_ADDREF(m_imapExtensionSink);
 	}
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetImapExtension(nsIImapExtension  * aImapExtension)
+NS_IMETHODIMP nsImapUrl::SetImapExtensionSink(nsIImapExtensionSink  * aImapExtensionSink)
 {
-	if (aImapExtension)
+	if (aImapExtensionSink)
 	{
-		NS_IF_RELEASE(m_imapExtension);
-		m_imapExtension = aImapExtension;
-		NS_ADDREF(m_imapExtension);
+		NS_IF_RELEASE(m_imapExtensionSink);
+		m_imapExtensionSink = aImapExtensionSink;
+		NS_ADDREF(m_imapExtensionSink);
 	}
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetImapMiscellaneous(nsIImapMiscellaneous **
-                                              aImapMiscellaneous)
+NS_IMETHODIMP nsImapUrl::GetImapMiscellaneousSink(nsIImapMiscellaneousSink **
+                                              aImapMiscellaneousSink)
 {
-	if (aImapMiscellaneous)
+	if (aImapMiscellaneousSink)
 	{
-		*aImapMiscellaneous = m_imapMiscellaneous;
-		NS_IF_ADDREF(m_imapMiscellaneous);
+		*aImapMiscellaneousSink = m_imapMiscellaneousSink;
+		NS_IF_ADDREF(m_imapMiscellaneousSink);
 	}
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetImapMiscellaneous(nsIImapMiscellaneous  *
-                                              aImapMiscellaneous)
+NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
+                                              aImapMiscellaneousSink)
 {
-	if (aImapMiscellaneous)
+	if (aImapMiscellaneousSink)
 	{
-		NS_IF_RELEASE(m_imapMiscellaneous);
-		m_imapMiscellaneous = aImapMiscellaneous;
-		NS_ADDREF(m_imapMiscellaneous);
+		NS_IF_RELEASE(m_imapMiscellaneousSink);
+		m_imapMiscellaneousSink = aImapMiscellaneousSink;
+		NS_ADDREF(m_imapMiscellaneousSink);
 	}
 
 	return NS_OK;

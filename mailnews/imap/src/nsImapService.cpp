@@ -68,7 +68,7 @@ NS_IMETHODIMP nsImapService::CreateImapConnection(PLEventQueue *aEventQueue, nsI
 	return rv;
 }
 
-NS_IMETHODIMP nsImapService::SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolder * aImapMailFolder, 
+NS_IMETHODIMP nsImapService::SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
 										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 
@@ -90,7 +90,7 @@ NS_IMETHODIMP nsImapService::SelectFolder(PLEventQueue * aClientEventQueue, nsII
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
-		rv = imapUrl->SetImapMailFolder(aImapMailFolder);
+		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
 		// hmmm this is cludgy...we need to get the incoming server, get the host and port, and generate an imap url spec
 		// based on that information then tell the imap parser to parse that spec...*yuck*. I have to think of a better way
 		// for automatically generating the spec based on the incoming server data...

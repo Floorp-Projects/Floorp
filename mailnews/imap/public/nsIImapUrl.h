@@ -28,10 +28,10 @@
 
 /* include all of our event sink interfaces */
 #include "nsIImapLog.h"
-#include "nsIImapMailfolder.h"
-#include "nsIImapMessage.h"
-#include "nsIImapExtension.h"
-#include "nsIImapMiscellaneous.h"
+#include "nsIImapMailFolderSink.h"
+#include "nsIImapMessageSink.h"
+#include "nsIImapExtensionSink.h"
+#include "nsIImapMiscellaneousSink.h"
 
 /* 21A89610-DC0D-11d2-806C-006008128C4E */
 
@@ -131,17 +131,17 @@ public:
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
 
-    NS_IMETHOD GetImapMailFolder(nsIImapMailFolder** aImapMailFolder) = 0;
-    NS_IMETHOD SetImapMailFolder(nsIImapMailFolder* aImapMailFolder) = 0;
+    NS_IMETHOD GetImapMailFolderSink(nsIImapMailFolderSink** aImapMailFolderSink) = 0;
+    NS_IMETHOD SetImapMailFolderSink(nsIImapMailFolderSink* aImapMailFolderSink) = 0;
 
-    NS_IMETHOD GetImapMessage(nsIImapMessage** aImapMessage) = 0;
-    NS_IMETHOD SetImapMessage(nsIImapMessage* aImapMessage) = 0;
+    NS_IMETHOD GetImapMessageSink(nsIImapMessageSink** aImapMessageSink) = 0;
+    NS_IMETHOD SetImapMessageSink(nsIImapMessageSink* aImapMessageSink) = 0;
 
-    NS_IMETHOD GetImapExtension(nsIImapExtension** aImapExtension) = 0;
-    NS_IMETHOD SetImapExtension(nsIImapExtension* aImapExtension) = 0;
+    NS_IMETHOD GetImapExtensionSink(nsIImapExtensionSink** aImapExtensionSink) = 0;
+    NS_IMETHOD SetImapExtensionSink(nsIImapExtensionSink* aImapExtensionSink) = 0;
 
-    NS_IMETHOD GetImapMiscellaneous(nsIImapMiscellaneous** aImapMiscellaneous) = 0;
-    NS_IMETHOD SetImapMiscellaneous(nsIImapMiscellaneous* aImapMiscellaneous) = 0;
+    NS_IMETHOD GetImapMiscellaneousSink(nsIImapMiscellaneousSink** aImapMiscellaneousSink) = 0;
+    NS_IMETHOD SetImapMiscellaneousSink(nsIImapMiscellaneousSink* aImapMiscellaneousSink) = 0;
     
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap url state

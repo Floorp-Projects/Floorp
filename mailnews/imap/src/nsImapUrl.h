@@ -50,17 +50,17 @@ public:
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
 
-    NS_IMETHOD GetImapMailFolder(nsIImapMailFolder** aImapMailFolder);
-    NS_IMETHOD SetImapMailFolder(nsIImapMailFolder* aImapMailFolder);
+    NS_IMETHOD GetImapMailFolderSink(nsIImapMailFolderSink** aImapMailFolderSink);
+    NS_IMETHOD SetImapMailFolderSink(nsIImapMailFolderSink* aImapMailFolderSink);
 
-    NS_IMETHOD GetImapMessage(nsIImapMessage** aImapMessage);
-    NS_IMETHOD SetImapMessage(nsIImapMessage* aImapMessage);
+    NS_IMETHOD GetImapMessageSink(nsIImapMessageSink** aImapMessageSink);
+    NS_IMETHOD SetImapMessageSink(nsIImapMessageSink* aImapMessageSink);
 
-    NS_IMETHOD GetImapExtension(nsIImapExtension** aImapExtension);
-    NS_IMETHOD SetImapExtension(nsIImapExtension* aImapExtension);
+    NS_IMETHOD GetImapExtensionSink(nsIImapExtensionSink** aImapExtensionSink);
+    NS_IMETHOD SetImapExtensionSink(nsIImapExtensionSink* aImapExtensionSink);
 
-    NS_IMETHOD GetImapMiscellaneous(nsIImapMiscellaneous** aImapMiscellaneous);
-    NS_IMETHOD SetImapMiscellaneous(nsIImapMiscellaneous* aImapMiscellaneous);
+    NS_IMETHOD GetImapMiscellaneousSink(nsIImapMiscellaneousSink** aImapMiscellaneousSink);
+    NS_IMETHOD SetImapMiscellaneousSink(nsIImapMiscellaneousSink* aImapMiscellaneousSink);
 
 	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
 	NS_IMETHOD GetRequiredImapState(nsImapState * aImapUrlState);
@@ -177,10 +177,10 @@ protected:
 	imapMessageFlagsType	m_flags;
 	nsImapAction			m_imapAction;
 	nsIImapLog  * m_imapLog;
-    nsIImapMailFolder* m_imapMailFolder;
-    nsIImapMessage* m_imapMessage;
-    nsIImapExtension* m_imapExtension;
-    nsIImapMiscellaneous* m_imapMiscellaneous;
+    nsIImapMailFolderSink* m_imapMailFolderSink;
+    nsIImapMessageSink* m_imapMessageSink;
+    nsIImapExtensionSink* m_imapExtensionSink;
+    nsIImapMiscellaneousSink* m_imapMiscellaneousSink;
 
 	nsIMsgIncomingServer  *m_server;
 };

@@ -15,8 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsIImapMailfolder_h__
-#define nsIImapMailfolder_h__
+#ifndef nsIImapMailFolderSink_h__
+#define nsIImapMailFolderSink_h__
 
 #include "nscore.h"
 #include "nsISupports.h"
@@ -25,16 +25,16 @@
 
 /* 3b2dd7e0-e72c-11d2-ab7b-00805f8ac968 */
 
-#define NS_IIMAPMAILFOLDER_IID \
+#define NS_IIMAPMAILFOLDERSINK_IID \
 { 0x3b2dd7e0, 0xe72c, 0x11d2, \
     { 0xab, 0x7b, 0x00, 0x80, 0x5f, 0x8a, 0xc9, 0x68 } }
 
-class nsIImapMailFolder : public nsISupports
+class nsIImapMailFolderSink : public nsISupports
 {
 public:
     static const nsIID& GetIID()
     {
-        static nsIID iid = NS_IIMAPMAILFOLDER_IID;
+        static nsIID iid = NS_IIMAPMAILFOLDERSINK_IID;
         return iid;
     }
 

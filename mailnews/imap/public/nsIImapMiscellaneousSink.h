@@ -15,8 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsIImapMiscellaneous_h__
-#define nsIImapMiscellaneous_h__
+#ifndef nsIImapMiscellaneousSink_h__
+#define nsIImapMiscellaneousSink_h__
 
 #include "nscore.h"
 #include "nsISupports.h"
@@ -26,16 +26,16 @@
 
 /* 22e3e664-e789-11d2-af83-001083002da8 */
 
-#define NS_IIMAPMISCELLANEOUS_IID \
+#define NS_IIMAPMISCELLANEOUSSINK_IID \
 { 0x22e3e664, 0xe789, 0x11d2, \
 		{ 0xaf, 0x83, 0x00, 0x10, 0x83, 0x00, 0x2d, 0xa8 } }
 
-class nsIImapMiscellaneous : public nsISupports
+class nsIImapMiscellaneousSink : public nsISupports
 {
 public:
 	static const nsIID& GetIID()
 	{
-		static nsIID iid = NS_IIMAPMISCELLANEOUS_IID;
+		static nsIID iid = NS_IIMAPMISCELLANEOUSSINK_IID;
 		return iid;
 	}
 	

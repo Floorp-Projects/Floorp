@@ -27,10 +27,10 @@ EXPORTS= \
 			nsIImapProtocol.h		\
 			nsIImapLog.h			\
 			nsIIMAPHostSessionList.h \
-			nsIImapMailfolder.h \
-			nsIImapMessage.h \
-			nsIImapExtension.h \
-			nsIImapMiscellaneous.h \
+			nsIImapMailfolderSink.h \
+			nsIImapMessageSink.h \
+			nsIImapExtensionSink.h \
+			nsIImapMiscellaneousSink.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

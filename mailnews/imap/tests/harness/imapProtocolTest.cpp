@@ -44,10 +44,10 @@
 #include "nsIImapService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIImapLog.h"
-#include "nsIImapMailfolder.h"
-#include "nsIImapMessage.h"
-#include "nsIImapExtension.h"
-#include "nsIImapMiscellaneous.h"
+#include "nsIImapMailFolderSink.h"
+#include "nsIImapMessageSink.h"
+#include "nsIImapExtensionSink.h"
+#include "nsIImapMiscellaneousSink.h"
 
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
@@ -98,10 +98,10 @@ static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
 
 class nsIMAP4TestDriver  : public nsIUrlListener, 
                            public nsIImapLog,
-                           public nsIImapMailFolder,
-                           public nsIImapMessage,
-                           public nsIImapExtension, 
-                           public nsIImapMiscellaneous
+                           public nsIImapMailFolderSink,
+                           public nsIImapMessageSink,
+                           public nsIImapExtensionSink, 
+                           public nsIImapMiscellaneousSink
 {
 public:
 	NS_DECL_ISUPPORTS
@@ -113,7 +113,7 @@ public:
 	// nsIImapLog support
 	NS_IMETHOD HandleImapLogData (const char * aLogData);
 
-    // nsIImapMailFolder support
+    // nsIImapMailFolderSink support
     NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,
                                    mailbox_spec* aSpec);
     NS_IMETHOD MailboxDiscoveryDone(nsIImapProtocol* aProtocol);
@@ -146,7 +146,7 @@ public:
     
     NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
     
-    // nsIImapMessage support
+    // nsIImapMessageSink support
     NS_IMETHOD SetupMsgWriteStream(nsIImapProtocol* aProtocol,
                                    StreamInfo* aStreamInfo);
     
@@ -173,7 +173,7 @@ public:
     NS_IMETHOD GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
                                     MessageSizeInfo* sizeInfo);
 
-    // nsIImapExtension support
+    // nsIImapExtensionSink support
   
     NS_IMETHOD SetUserAuthenticated(nsIImapProtocol* aProtocol,
 								  PRBool aBool);
@@ -192,7 +192,7 @@ public:
     NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
                                  FolderQueryInfo* aInfo);
     
-    // nsIImapMiscellaneous support
+    // nsIImapMiscellaneousSink support
 	
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
                                const char* searchHitLine);
@@ -321,21 +321,21 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     {
         *aInstancePtr = (void*)(nsIImapLog*)this;
     }
-    else if (aIID.Equals(nsIImapMailFolder::GetIID()))
+    else if (aIID.Equals(nsIImapMailFolderSink::GetIID()))
     {
-        *aInstancePtr = (void*)(nsIImapMailFolder*)this;
+        *aInstancePtr = (void*)(nsIImapMailFolderSink*)this;
     }
-    else if (aIID.Equals(nsIImapMessage::GetIID()))
+    else if (aIID.Equals(nsIImapMessageSink::GetIID()))
     {
-        *aInstancePtr = (void*)(nsIImapMessage*)this;
+        *aInstancePtr = (void*)(nsIImapMessageSink*)this;
     }
-    else if (aIID.Equals(nsIImapExtension::GetIID()))
+    else if (aIID.Equals(nsIImapExtensionSink::GetIID()))
     {
-        *aInstancePtr = (void*)(nsIImapExtension*)this;
+        *aInstancePtr = (void*)(nsIImapExtensionSink*)this;
     }
-    else if (aIID.Equals(nsIImapMiscellaneous::GetIID()))
+    else if (aIID.Equals(nsIImapMiscellaneousSink::GetIID()))
     {
-        *aInstancePtr = (void*)(nsIImapMiscellaneous*)this;
+        *aInstancePtr = (void*)(nsIImapMiscellaneousSink*)this;
     }
     else if (aIID.Equals(kISupportsIID))
     {
@@ -348,7 +348,7 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
 }
 
-    // nsIImapMailFolder support
+    // nsIImapMailFolderSink support
 NS_IMETHODIMP
 nsIMAP4TestDriver::PossibleImapMailbox(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec)
@@ -735,7 +735,7 @@ NS_IMETHODIMP nsIMAP4TestDriver::AbortHeaderParseStream(nsIImapProtocol* aProtoc
 
     
     
-    // nsIImapMessage support
+    // nsIImapMessageSink support
 NS_IMETHODIMP
 nsIMAP4TestDriver::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
                                    StreamInfo* aStreamInfo)
@@ -822,7 +822,7 @@ nsIMAP4TestDriver::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
 }
 
 
-    // nsIImapExtension support
+    // nsIImapExtensionSink support
   
 NS_IMETHODIMP
 nsIMAP4TestDriver::SetUserAuthenticated(nsIImapProtocol* aProtocol,
@@ -889,7 +889,7 @@ nsIMAP4TestDriver::SetFolderAdminURL(nsIImapProtocol* aProtocol,
 }
 
     
-    // nsIImapMiscellaneous support
+    // nsIImapMiscellaneousSink support
 	
 NS_IMETHODIMP
 nsIMAP4TestDriver::AddSearchResult(nsIImapProtocol* aProtocol, 
@@ -1300,10 +1300,10 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	if (NS_SUCCEEDED(rv) && m_url)
     {
         m_url->SetImapLog(this);
-        m_url->SetImapMailFolder(this);
-        m_url->SetImapMessage(this);
-        m_url->SetImapExtension(this);
-        m_url->SetImapMiscellaneous(this);
+        m_url->SetImapMailFolderSink(this);
+        m_url->SetImapMessageSink(this);
+        m_url->SetImapExtensionSink(this);
+        m_url->SetImapMiscellaneousSink(this);
 
 		rv = m_url->SetSpec(m_urlString); // reset spec
 		m_url->RegisterListener(this);

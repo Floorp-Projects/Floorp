@@ -24,10 +24,10 @@
 #include "nsISupports.h"
 #include "nsIURL.h"
 #include "nsIImapLog.h"
-#include "nsIImapMailfolder.h"
-#include "nsIImapMessage.h"
-#include "nsIImapExtension.h"
-#include "nsIImapMiscellaneous.h"
+#include "nsIImapMailFolderSink.h"
+#include "nsIImapMessageSink.h"
+#include "nsIImapExtensionSink.h"
+#include "nsIImapMiscellaneousSink.h"
 
 class nsImapProxyBase
 {
@@ -59,15 +59,15 @@ public:
 	nsIImapLog* m_realImapLog;
 };
 
-class nsImapMailFolderProxy : public nsIImapMailFolder, 
+class nsImapMailFolderSinkProxy : public nsIImapMailFolderSink, 
                               public nsImapProxyBase
 {
 public:
-    nsImapMailFolderProxy(nsIImapMailFolder* aImapMailFolder,
+    nsImapMailFolderSinkProxy(nsIImapMailFolderSink* aImapMailFolderSink,
                           nsIImapProtocol* aProtocol,
                           PLEventQueue* aEventQ,
                           PRThread* aThread);
-    virtual ~nsImapMailFolderProxy();
+    virtual ~nsImapMailFolderSinkProxy();
     
     NS_DECL_ISUPPORTS
 
@@ -104,18 +104,18 @@ public:
     
     NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
     
-    nsIImapMailFolder* m_realImapMailFolder;
+    nsIImapMailFolderSink* m_realImapMailFolderSink;
 };
 
-class nsImapMessageProxy : public nsIImapMessage, 
+class nsImapMessageSinkProxy : public nsIImapMessageSink, 
                            public nsImapProxyBase
 {
 public:
-    nsImapMessageProxy(nsIImapMessage* aImapMessage,
+    nsImapMessageSinkProxy(nsIImapMessageSink* aImapMessageSink,
                        nsIImapProtocol* aProtocol,
                        PLEventQueue* aEventQ,
                        PRThread* aThread);
-    virtual ~nsImapMessageProxy();
+    virtual ~nsImapMessageSinkProxy();
 
     NS_DECL_ISUPPORTS 
 
@@ -147,18 +147,18 @@ public:
     NS_IMETHOD GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
                                     MessageSizeInfo* sizeInfo);
 
-    nsIImapMessage* m_realImapMessage;
+    nsIImapMessageSink* m_realImapMessageSink;
 };
 
-class nsImapExtensionProxy : public nsIImapExtension, 
+class nsImapExtensionSinkProxy : public nsIImapExtensionSink, 
                              public nsImapProxyBase
 {
 public:
-    nsImapExtensionProxy(nsIImapExtension* aImapExtension,
+    nsImapExtensionSinkProxy(nsIImapExtensionSink* aImapExtensionSink,
                          nsIImapProtocol* aProtocol,
                          PLEventQueue* aEventQ,
                          PRThread* aThread);
-    virtual ~nsImapExtensionProxy();
+    virtual ~nsImapExtensionSinkProxy();
 
     NS_DECL_ISUPPORTS
   
@@ -179,18 +179,18 @@ public:
     NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
                                  FolderQueryInfo* aInfo);
     
-    nsIImapExtension* m_realImapExtension;
+    nsIImapExtensionSink* m_realImapExtensionSink;
 };
 
-class nsImapMiscellaneousProxy : public nsIImapMiscellaneous, 
+class nsImapMiscellaneousSinkProxy : public nsIImapMiscellaneousSink, 
                                  public nsImapProxyBase
 {
 public:
-    nsImapMiscellaneousProxy (nsIImapMiscellaneous* aImapMiscellaneous,
+    nsImapMiscellaneousSinkProxy (nsIImapMiscellaneousSink* aImapMiscellaneousSink,
                               nsIImapProtocol* aProtocol,
                               PLEventQueue* aEventQ,
                               PRThread* aThread);
-    ~nsImapMiscellaneousProxy ();
+    ~nsImapMiscellaneousSinkProxy ();
 
     NS_DECL_ISUPPORTS
 	
@@ -234,7 +234,7 @@ public:
     NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
 
-    nsIImapMiscellaneous* m_realImapMiscellaneous;
+    nsIImapMiscellaneousSink* m_realImapMiscellaneousSink;
 };
 
 /* ******* Imap Base Event struct ******** */
@@ -261,16 +261,16 @@ struct nsImapLogProxyEvent : public nsImapEvent
 	nsImapLogProxy *m_proxy;
 };
 
-struct nsImapMailFolderProxyEvent : public nsImapEvent
+struct nsImapMailFolderSinkProxyEvent : public nsImapEvent
 {
-    nsImapMailFolderProxyEvent(nsImapMailFolderProxy* aProxy);
-    virtual ~nsImapMailFolderProxyEvent();
-    nsImapMailFolderProxy* m_proxy;
+    nsImapMailFolderSinkProxyEvent(nsImapMailFolderSinkProxy* aProxy);
+    virtual ~nsImapMailFolderSinkProxyEvent();
+    nsImapMailFolderSinkProxy* m_proxy;
 };
 
-struct PossibleImapMailboxProxyEvent : public nsImapMailFolderProxyEvent
+struct PossibleImapMailboxProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    PossibleImapMailboxProxyEvent(nsImapMailFolderProxy* aProxy,
+    PossibleImapMailboxProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                   mailbox_spec* aSpec);
     virtual ~PossibleImapMailboxProxyEvent();
     NS_IMETHOD HandleEvent();
@@ -278,68 +278,68 @@ struct PossibleImapMailboxProxyEvent : public nsImapMailFolderProxyEvent
     mailbox_spec m_mailboxSpec;
 };
 
-struct MailboxDiscoveryDoneProxyEvent : public nsImapMailFolderProxyEvent
+struct MailboxDiscoveryDoneProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    MailboxDiscoveryDoneProxyEvent(nsImapMailFolderProxy* aProxy);
+    MailboxDiscoveryDoneProxyEvent(nsImapMailFolderSinkProxy* aProxy);
     virtual ~MailboxDiscoveryDoneProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct UpdateImapMailboxInfoProxyEvent : public nsImapMailFolderProxyEvent
+struct UpdateImapMailboxInfoProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    UpdateImapMailboxInfoProxyEvent(nsImapMailFolderProxy* aProxy,
+    UpdateImapMailboxInfoProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                     mailbox_spec* aSpec);
     virtual ~UpdateImapMailboxInfoProxyEvent();
     NS_IMETHOD HandleEvent();
     mailbox_spec m_mailboxSpec;
 };
 
-struct UpdateImapMailboxStatusProxyEvent : public nsImapMailFolderProxyEvent
+struct UpdateImapMailboxStatusProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    UpdateImapMailboxStatusProxyEvent(nsImapMailFolderProxy* aProxy,
+    UpdateImapMailboxStatusProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                       mailbox_spec* aSpec);
     virtual ~UpdateImapMailboxStatusProxyEvent();
     NS_IMETHOD HandleEvent();
     mailbox_spec m_mailboxSpec;
 };
 
-struct ChildDiscoverySucceededProxyEvent : public nsImapMailFolderProxyEvent
+struct ChildDiscoverySucceededProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    ChildDiscoverySucceededProxyEvent(nsImapMailFolderProxy* aProxy);
+    ChildDiscoverySucceededProxyEvent(nsImapMailFolderSinkProxy* aProxy);
     virtual ~ChildDiscoverySucceededProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct OnlineFolderDeleteProxyEvent : public nsImapMailFolderProxyEvent
+struct OnlineFolderDeleteProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    OnlineFolderDeleteProxyEvent(nsImapMailFolderProxy* aProxy,
+    OnlineFolderDeleteProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                  const char* folderName);
     virtual ~OnlineFolderDeleteProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_folderName;
 };
 
-struct OnlineFolderCreateFailedProxyEvent : public nsImapMailFolderProxyEvent
+struct OnlineFolderCreateFailedProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    OnlineFolderCreateFailedProxyEvent(nsImapMailFolderProxy* aProxy,
+    OnlineFolderCreateFailedProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                        const char* folderName);
     virtual ~OnlineFolderCreateFailedProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_folderName;
 };
 
-struct OnlineFolderRenameProxyEvent : public nsImapMailFolderProxyEvent
+struct OnlineFolderRenameProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    OnlineFolderRenameProxyEvent(nsImapMailFolderProxy* aProxy,
+    OnlineFolderRenameProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                  folder_rename_struct* aStruct);
     virtual ~OnlineFolderRenameProxyEvent();
     NS_IMETHOD HandleEvent();
     folder_rename_struct m_folderRenameStruct;
 };
 
-struct SubscribeUpgradeFinishedProxyEvent : public nsImapMailFolderProxyEvent
+struct SubscribeUpgradeFinishedProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    SubscribeUpgradeFinishedProxyEvent(nsImapMailFolderProxy* aProxy,
+    SubscribeUpgradeFinishedProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                        EIMAPSubscriptionUpgradeState* aState);
     virtual ~SubscribeUpgradeFinishedProxyEvent();
     NS_IMETHOD HandleEvent();
@@ -347,245 +347,245 @@ struct SubscribeUpgradeFinishedProxyEvent : public nsImapMailFolderProxyEvent
 };
 
 struct PromptUserForSubscribeUpdatePathProxyEvent : 
-    public nsImapMailFolderProxyEvent 
+    public nsImapMailFolderSinkProxyEvent 
 {
-    PromptUserForSubscribeUpdatePathProxyEvent(nsImapMailFolderProxy* aProxy,
+    PromptUserForSubscribeUpdatePathProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                                PRBool* aBool);
     virtual ~PromptUserForSubscribeUpdatePathProxyEvent();
     NS_IMETHOD HandleEvent();
     PRBool m_bool;
 };
 
-struct FolderIsNoSelectProxyEvent : public nsImapMailFolderProxyEvent
+struct FolderIsNoSelectProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    FolderIsNoSelectProxyEvent(nsImapMailFolderProxy* aProxy,
+    FolderIsNoSelectProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                FolderQueryInfo* aInfo);
     virtual ~FolderIsNoSelectProxyEvent();
     NS_IMETHOD HandleEvent();
     FolderQueryInfo m_folderQueryInfo;
 };
 
-struct SetupHeaderParseStreamProxyEvent : public nsImapMailFolderProxyEvent
+struct SetupHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    SetupHeaderParseStreamProxyEvent(nsImapMailFolderProxy* aProxy,
+    SetupHeaderParseStreamProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                StreamInfo* aStreamInfo);
     virtual ~SetupHeaderParseStreamProxyEvent();
     NS_IMETHOD HandleEvent();
     StreamInfo m_streamInfo;
 };
 
-struct NormalEndHeaderParseStreamProxyEvent : public nsImapMailFolderProxyEvent
+struct NormalEndHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    NormalEndHeaderParseStreamProxyEvent(nsImapMailFolderProxy* aProxyo);
+    NormalEndHeaderParseStreamProxyEvent(nsImapMailFolderSinkProxy* aProxyo);
     virtual ~NormalEndHeaderParseStreamProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct ParseAdoptedHeaderLineProxyEvent : public nsImapMailFolderProxyEvent
+struct ParseAdoptedHeaderLineProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    ParseAdoptedHeaderLineProxyEvent(nsImapMailFolderProxy* aProxy,
+    ParseAdoptedHeaderLineProxyEvent(nsImapMailFolderSinkProxy* aProxy,
                                msg_line_info* aMsgLineInfo);
     virtual ~ParseAdoptedHeaderLineProxyEvent();
     NS_IMETHOD HandleEvent();
     msg_line_info m_msgLineInfo;
 };
 
-struct AbortHeaderParseStreamProxyEvent : public nsImapMailFolderProxyEvent
+struct AbortHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent
 {
-    AbortHeaderParseStreamProxyEvent(nsImapMailFolderProxy* aProxy);
+    AbortHeaderParseStreamProxyEvent(nsImapMailFolderSinkProxy* aProxy);
     virtual ~AbortHeaderParseStreamProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct nsImapMessageProxyEvent : nsImapEvent
+struct nsImapMessageSinkProxyEvent : nsImapEvent
 {
-    nsImapMessageProxyEvent(nsImapMessageProxy* aImapMessageProxy);
-    virtual ~nsImapMessageProxyEvent();
-    nsImapMessageProxy* m_proxy;
+    nsImapMessageSinkProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy);
+    virtual ~nsImapMessageSinkProxyEvent();
+    nsImapMessageSinkProxy* m_proxy;
 };
 
-struct SetupMsgWriteStreamProxyEvent : nsImapMessageProxyEvent
+struct SetupMsgWriteStreamProxyEvent : nsImapMessageSinkProxyEvent
 {
-    SetupMsgWriteStreamProxyEvent(nsImapMessageProxy* aImapMessageProxy,
+    SetupMsgWriteStreamProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
                                   StreamInfo* aStreamInfo);
     virtual ~SetupMsgWriteStreamProxyEvent();
     NS_IMETHOD HandleEvent();
     StreamInfo m_streamInfo;
 };
 
-struct ParseAdoptedMsgLineProxyEvent : nsImapMessageProxyEvent
+struct ParseAdoptedMsgLineProxyEvent : nsImapMessageSinkProxyEvent
 {
-    ParseAdoptedMsgLineProxyEvent(nsImapMessageProxy* aImapMessageProxy,
+    ParseAdoptedMsgLineProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
                                   msg_line_info* aMsgLineInfo);
     virtual ~ParseAdoptedMsgLineProxyEvent();
     NS_IMETHOD HandleEvent();
     msg_line_info m_msgLineInfo;
 };
 
-struct NormalEndMsgWriteStreamProxyEvent : nsImapMessageProxyEvent
+struct NormalEndMsgWriteStreamProxyEvent : nsImapMessageSinkProxyEvent
 {
-    NormalEndMsgWriteStreamProxyEvent(nsImapMessageProxy* aImapMessageProxy);
+    NormalEndMsgWriteStreamProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy);
     virtual ~NormalEndMsgWriteStreamProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct AbortMsgWriteStreamProxyEvent : nsImapMessageProxyEvent
+struct AbortMsgWriteStreamProxyEvent : nsImapMessageSinkProxyEvent
 {
-    AbortMsgWriteStreamProxyEvent(nsImapMessageProxy* aImapMessageProxy);
+    AbortMsgWriteStreamProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy);
     virtual ~AbortMsgWriteStreamProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct OnlineCopyReportProxyEvent : nsImapMessageProxyEvent
+struct OnlineCopyReportProxyEvent : nsImapMessageSinkProxyEvent
 {
-    OnlineCopyReportProxyEvent(nsImapMessageProxy* aImapMessageProxy,
+    OnlineCopyReportProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
                                ImapOnlineCopyState* aCopyState);
     virtual ~OnlineCopyReportProxyEvent();
     NS_IMETHOD HandleEvent();
     ImapOnlineCopyState m_copyState;
 };
 
-struct BeginMessageUploadProxyEvent : nsImapMessageProxyEvent
+struct BeginMessageUploadProxyEvent : nsImapMessageSinkProxyEvent
 {
-    BeginMessageUploadProxyEvent(nsImapMessageProxy* aImapMessageProxy);
+    BeginMessageUploadProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy);
     virtual ~BeginMessageUploadProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct UploadMessageFileProxyEvent : nsImapMessageProxyEvent
+struct UploadMessageFileProxyEvent : nsImapMessageSinkProxyEvent
 {
-    UploadMessageFileProxyEvent(nsImapMessageProxy* aImapMessageProxy,
+    UploadMessageFileProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
                                 UploadMessageInfo* aMsgInfo);
     virtual ~UploadMessageFileProxyEvent();
     NS_IMETHOD HandleEvent();
     UploadMessageInfo m_msgInfo;
 };
 
-struct NotifyMessageFlagsProxyEvent : nsImapMessageProxyEvent
+struct NotifyMessageFlagsProxyEvent : nsImapMessageSinkProxyEvent
 {
-    NotifyMessageFlagsProxyEvent(nsImapMessageProxy* aImapMessageProxy,
+    NotifyMessageFlagsProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
                                  FlagsKeyStruct* aKeyStruct);
     virtual ~NotifyMessageFlagsProxyEvent();
     NS_IMETHOD HandleEvent();
     FlagsKeyStruct m_keyStruct;
 };
 
-struct NotifyMessageDeletedProxyEvent : nsImapMessageProxyEvent
+struct NotifyMessageDeletedProxyEvent : nsImapMessageSinkProxyEvent
 {
-    NotifyMessageDeletedProxyEvent(nsImapMessageProxy* aImapMessageProxy,
+    NotifyMessageDeletedProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
                                    delete_message_struct* aStruct);
     virtual ~NotifyMessageDeletedProxyEvent();
     NS_IMETHOD HandleEvent();
     delete_message_struct m_deleteMessageStruct;
 };
 
-struct GetMessageSizeFromDBProxyEvent : nsImapMessageProxyEvent
+struct GetMessageSizeFromDBProxyEvent : nsImapMessageSinkProxyEvent
 {
-    GetMessageSizeFromDBProxyEvent(nsImapMessageProxy* aImapMessageProxy,
+    GetMessageSizeFromDBProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
                                    MessageSizeInfo* sizeInfo);
     virtual ~GetMessageSizeFromDBProxyEvent();
     NS_IMETHOD HandleEvent();
     MessageSizeInfo *m_sizeInfo; // pass in handle we don't own it
 };
 
-struct nsImapExtensionProxyEvent : nsImapEvent
+struct nsImapExtensionSinkProxyEvent : nsImapEvent
 {
-    nsImapExtensionProxyEvent(nsImapExtensionProxy* aProxy);
-    virtual ~nsImapExtensionProxyEvent();
-    nsImapExtensionProxy* m_proxy;
+    nsImapExtensionSinkProxyEvent(nsImapExtensionSinkProxy* aProxy);
+    virtual ~nsImapExtensionSinkProxyEvent();
+    nsImapExtensionSinkProxy* m_proxy;
 };
 
-struct SetUserAuthenticatedProxyEvent : nsImapExtensionProxyEvent
+struct SetUserAuthenticatedProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    SetUserAuthenticatedProxyEvent(nsImapExtensionProxy* aProxy,
+    SetUserAuthenticatedProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                    PRBool aBool);
     virtual ~SetUserAuthenticatedProxyEvent();
     NS_IMETHOD HandleEvent();
     PRBool m_bool;
 };
 
-struct SetMailServerUrlsProxyEvent : nsImapExtensionProxyEvent
+struct SetMailServerUrlsProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    SetMailServerUrlsProxyEvent(nsImapExtensionProxy* aProxy,
+    SetMailServerUrlsProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 const char* hostName);
     virtual ~SetMailServerUrlsProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_hostName;
 };
 
-struct SetMailAccountUrlProxyEvent : nsImapExtensionProxyEvent
+struct SetMailAccountUrlProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    SetMailAccountUrlProxyEvent(nsImapExtensionProxy* aProxy,
+    SetMailAccountUrlProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 const char* hostName);
     virtual ~SetMailAccountUrlProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_hostName;
 };
 
-struct ClearFolderRightsProxyEvent : nsImapExtensionProxyEvent
+struct ClearFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    ClearFolderRightsProxyEvent(nsImapExtensionProxy* aProxy,
+    ClearFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 nsIMAPACLRightsInfo* aclRights);
     virtual ~ClearFolderRightsProxyEvent();
     NS_IMETHOD HandleEvent();
     nsIMAPACLRightsInfo m_aclRightsInfo;
 };
 
-struct AddFolderRightsProxyEvent : nsImapExtensionProxyEvent
+struct AddFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    AddFolderRightsProxyEvent(nsImapExtensionProxy* aProxy,
+    AddFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 nsIMAPACLRightsInfo* aclRights);
     virtual ~AddFolderRightsProxyEvent();
     NS_IMETHOD HandleEvent();
     nsIMAPACLRightsInfo m_aclRightsInfo;
 };
 
-struct RefreshFolderRightsProxyEvent : nsImapExtensionProxyEvent
+struct RefreshFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    RefreshFolderRightsProxyEvent(nsImapExtensionProxy* aProxy,
+    RefreshFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 nsIMAPACLRightsInfo* aclRights);
     virtual ~RefreshFolderRightsProxyEvent();
     NS_IMETHOD HandleEvent();
     nsIMAPACLRightsInfo m_aclRightsInfo;
 };
 
-struct FolderNeedsACLInitializedProxyEvent : nsImapExtensionProxyEvent
+struct FolderNeedsACLInitializedProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    FolderNeedsACLInitializedProxyEvent(nsImapExtensionProxy* aProxy,
+    FolderNeedsACLInitializedProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 nsIMAPACLRightsInfo* aclRights);
     virtual ~FolderNeedsACLInitializedProxyEvent();
     NS_IMETHOD HandleEvent();
     nsIMAPACLRightsInfo m_aclRightsInfo;
 };
 
-struct SetFolderAdminURLProxyEvent : nsImapExtensionProxyEvent
+struct SetFolderAdminURLProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    SetFolderAdminURLProxyEvent(nsImapExtensionProxy* aProxy,
+    SetFolderAdminURLProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                 FolderQueryInfo* aInfo);
     virtual ~SetFolderAdminURLProxyEvent();
     NS_IMETHOD HandleEvent();
     FolderQueryInfo m_folderQueryInfo;
 };
 
-struct nsImapMiscellaneousProxyEvent : public nsImapEvent
+struct nsImapMiscellaneousSinkProxyEvent : public nsImapEvent
 {
-    nsImapMiscellaneousProxyEvent(nsImapMiscellaneousProxy* aProxy);
-    virtual ~nsImapMiscellaneousProxyEvent();
-    nsImapMiscellaneousProxy* m_proxy;
+    nsImapMiscellaneousSinkProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
+    virtual ~nsImapMiscellaneousSinkProxyEvent();
+    nsImapMiscellaneousSinkProxy* m_proxy;
 };
 
-struct AddSearchResultProxyEvent : public nsImapMiscellaneousProxyEvent
+struct AddSearchResultProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    AddSearchResultProxyEvent(nsImapMiscellaneousProxy* aProxy, 
+    AddSearchResultProxyEvent(nsImapMiscellaneousSinkProxy* aProxy, 
                               const char* searchHitLine);
     virtual ~AddSearchResultProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_searchHitLine;
 };
 
-struct GetArbitraryHeadersProxyEvent : public nsImapMiscellaneousProxyEvent
+struct GetArbitraryHeadersProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    GetArbitraryHeadersProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    GetArbitraryHeadersProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                   GenericInfo* aInfo);
     virtual ~GetArbitraryHeadersProxyEvent();
     NS_IMETHOD HandleEvent();
@@ -593,164 +593,164 @@ struct GetArbitraryHeadersProxyEvent : public nsImapMiscellaneousProxyEvent
 };
 
 struct GetShouldDownloadArbitraryHeadersProxyEvent : 
-    public nsImapMiscellaneousProxyEvent
+    public nsImapMiscellaneousSinkProxyEvent
 {
     GetShouldDownloadArbitraryHeadersProxyEvent(
-        nsImapMiscellaneousProxy* aProxy, GenericInfo* aInfo);
+        nsImapMiscellaneousSinkProxy* aProxy, GenericInfo* aInfo);
     virtual ~GetShouldDownloadArbitraryHeadersProxyEvent();
     NS_IMETHOD HandleEvent();
     GenericInfo *m_info;        // pass in handle we don't own it
 };
 
 struct GetShowAttachmentsInlineProxyEvent : 
-    public nsImapMiscellaneousProxyEvent
+    public nsImapMiscellaneousSinkProxyEvent
 {
     GetShowAttachmentsInlineProxyEvent(
-        nsImapMiscellaneousProxy* aProxy, PRBool* aBool);
+        nsImapMiscellaneousSinkProxy* aProxy, PRBool* aBool);
     virtual ~GetShowAttachmentsInlineProxyEvent();
     NS_IMETHOD HandleEvent();
     PRBool *m_bool;        // pass in handle we don't own it
 };
 
-struct HeaderFetchCompletedProxyEvent : public nsImapMiscellaneousProxyEvent
+struct HeaderFetchCompletedProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    HeaderFetchCompletedProxyEvent(nsImapMiscellaneousProxy* aProxy);
+    HeaderFetchCompletedProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
     virtual ~HeaderFetchCompletedProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct UpdateSecurityStatusProxyEvent : public nsImapMiscellaneousProxyEvent
+struct UpdateSecurityStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    UpdateSecurityStatusProxyEvent(nsImapMiscellaneousProxy* aProxy);
+    UpdateSecurityStatusProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
     virtual ~UpdateSecurityStatusProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct FinishImapConnectionProxyEvent : public nsImapMiscellaneousProxyEvent
+struct FinishImapConnectionProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    FinishImapConnectionProxyEvent(nsImapMiscellaneousProxy* aProxy);
+    FinishImapConnectionProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
     virtual ~FinishImapConnectionProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct SetImapHostPasswordProxyEvent : public nsImapMiscellaneousProxyEvent
+struct SetImapHostPasswordProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    SetImapHostPasswordProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    SetImapHostPasswordProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                   GenericInfo* aInfo);
     virtual ~SetImapHostPasswordProxyEvent();
     NS_IMETHOD HandleEvent();
     GenericInfo m_info;
 };
 
-struct GetPasswordForUserProxyEvent : public nsImapMiscellaneousProxyEvent
+struct GetPasswordForUserProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    GetPasswordForUserProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    GetPasswordForUserProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                  const char* userName);
     virtual ~GetPasswordForUserProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_userName;
 };
 
-struct SetBiffStateAndUpdateProxyEvent : public nsImapMiscellaneousProxyEvent
+struct SetBiffStateAndUpdateProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    SetBiffStateAndUpdateProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    SetBiffStateAndUpdateProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                     nsMsgBiffState biffState);
     virtual ~SetBiffStateAndUpdateProxyEvent();
     NS_IMETHOD HandleEvent();
     nsMsgBiffState m_biffState;
 };
 
-struct GetStoredUIDValidityProxyEvent : public nsImapMiscellaneousProxyEvent
+struct GetStoredUIDValidityProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    GetStoredUIDValidityProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    GetStoredUIDValidityProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                    uid_validity_info* aInfo);
     virtual ~GetStoredUIDValidityProxyEvent();
     NS_IMETHOD HandleEvent();
     uid_validity_info m_uidValidityInfo;
 };
 
-struct LiteSelectUIDValidityProxyEvent : public nsImapMiscellaneousProxyEvent
+struct LiteSelectUIDValidityProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    LiteSelectUIDValidityProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    LiteSelectUIDValidityProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                     PRUint32 uidValidity);
     virtual ~LiteSelectUIDValidityProxyEvent();
     NS_IMETHOD HandleEvent();
     PRUint32 m_uidValidity;
 };
 
-struct FEAlertProxyEvent : public nsImapMiscellaneousProxyEvent
+struct FEAlertProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    FEAlertProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    FEAlertProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                       const char* aString);
     virtual ~FEAlertProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_alertString;
 };
 
-struct FEAlertFromServerProxyEvent : public nsImapMiscellaneousProxyEvent
+struct FEAlertFromServerProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    FEAlertFromServerProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    FEAlertFromServerProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                 const char* aString);
     virtual ~FEAlertFromServerProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_alertString;
 };
 
-struct ProgressStatusProxyEvent : public nsImapMiscellaneousProxyEvent
+struct ProgressStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    ProgressStatusProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    ProgressStatusProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                              const char* statusMsg);
     virtual ~ProgressStatusProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_statusMsg;
 };
 
-struct PercentProgressProxyEvent : public nsImapMiscellaneousProxyEvent
+struct PercentProgressProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    PercentProgressProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    PercentProgressProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                               ProgressInfo* aInfo);
     virtual ~PercentProgressProxyEvent();
     NS_IMETHOD HandleEvent();
     ProgressInfo m_progressInfo;
 };
 
-struct PastPasswordCheckProxyEvent : public nsImapMiscellaneousProxyEvent
+struct PastPasswordCheckProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    PastPasswordCheckProxyEvent(nsImapMiscellaneousProxy* aProxy);
+    PastPasswordCheckProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
     virtual ~PastPasswordCheckProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 
-struct CommitNamespacesProxyEvent : public nsImapMiscellaneousProxyEvent
+struct CommitNamespacesProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    CommitNamespacesProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    CommitNamespacesProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                const char* hostName);
     virtual ~CommitNamespacesProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_hostName;
 };
 
-struct CommitCapabilityForHostProxyEvent : public nsImapMiscellaneousProxyEvent
+struct CommitCapabilityForHostProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    CommitCapabilityForHostProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    CommitCapabilityForHostProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                                       const char* hostName);
     virtual ~CommitCapabilityForHostProxyEvent();
     NS_IMETHOD HandleEvent();
     char* m_hostName;
 };
 
-struct TunnelOutStreamProxyEvent : public nsImapMiscellaneousProxyEvent
+struct TunnelOutStreamProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    TunnelOutStreamProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    TunnelOutStreamProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                               msg_line_info* aInfo);
     virtual ~TunnelOutStreamProxyEvent();
     NS_IMETHOD HandleEvent();
     msg_line_info m_msgLineInfo;
 };
 
-struct ProcessTunnelProxyEvent : public nsImapMiscellaneousProxyEvent
+struct ProcessTunnelProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
-    ProcessTunnelProxyEvent(nsImapMiscellaneousProxy* aProxy,
+    ProcessTunnelProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
                             TunnelInfo *aInfo);
     virtual ~ProcessTunnelProxyEvent();
     NS_IMETHOD HandleEvent();

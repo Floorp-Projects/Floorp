@@ -15,8 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsIImapMessage_h__
-#define nsIImapMessage_h__
+#ifndef nsIImapMessageSink_h__
+#define nsIImapMessageSink_h__
 
 #include "nscore.h"
 #include "nsISupports.h"
@@ -25,16 +25,16 @@
 
 /* f8abba00-e70e-11d2-ab7a-00805f8ac968 */
 
-#define NS_IIMAPMESSAGE_IID \
+#define NS_IIMAPMESSAGESINK_IID \
 { 0xf8abba00, 0xe70e, 0x11d2, \
     { 0xab, 0x7a, 0x00, 0x80, 0x5f, 0x8a, 0xc9, 0x68 } }
 
-class nsIImapMessage : public nsISupports
+class nsIImapMessageSink : public nsISupports
 {
 public:
     static const nsIID& GetIID()
     {
-        static nsIID iid = NS_IIMAPMESSAGE_IID;
+        static nsIID iid = NS_IIMAPMESSAGESINK_IID;
         return iid;
     }
     

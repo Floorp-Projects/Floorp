@@ -293,11 +293,11 @@ private:
     nsIMsgIncomingServer * m_server;
 
     nsImapLogProxy *m_imapLog;
-    nsImapMailFolderProxy *m_imapMailFolder;
-    nsImapMessageProxy *m_imapMessage;
+    nsImapMailFolderSinkProxy *m_imapMailFolderSink;
+    nsImapMessageSinkProxy *m_imapMessageSink;
 
-    nsImapExtensionProxy *m_imapExtension;
-    nsImapMiscellaneousProxy *m_imapMiscellaneous;
+    nsImapExtensionSinkProxy *m_imapExtensionSink;
+    nsImapMiscellaneousSinkProxy *m_imapMiscellaneousSink;
     // helper function to setup imap sink interface proxies
     void SetupSinkProxy();
 	// End thread support stuff
