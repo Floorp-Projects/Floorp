@@ -30,10 +30,10 @@
 #include "nsBoxFrame.h"
 #include "nsFrameList.h"
 #include "nsIMenuParent.h"
+#include "nsITimer.h"
 
 nsresult NS_NewMenuFrame(nsIFrame** aResult, PRUint32 aFlags) ;
 
-class nsITimer;
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
 
@@ -87,6 +87,8 @@ public:
   void SelectMenu(PRBool aActivateFlag);
   void OpenMenu(PRBool aActivateFlag);
 
+  PRBool IsMenu();
+  
   void SelectFirstItem();
 
   PRBool IsOpen() { return mMenuOpen; };
@@ -102,7 +104,7 @@ protected:
   PRBool mIsMenu; // Whether or not we can even have children or not.
   PRBool mMenuOpen;
   nsIMenuParent* mMenuParent; // Our parent menu.
-  nsITimer* mOpenTimer;
+  nsCOMPtr<nsITimer> mOpenTimer;
 }; // class nsMenuFrame
 
 #endif

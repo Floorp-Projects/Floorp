@@ -78,7 +78,7 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsMenuFrame cntr
 //
 nsMenuFrame::nsMenuFrame()
-:mMenuOpen(PR_FALSE), mIsMenu(PR_FALSE), mMenuParent(nsnull), mOpenTimer(nsnull)
+:mMenuOpen(PR_FALSE), mIsMenu(PR_FALSE), mMenuParent(nsnull)
 {
 
 } // cntr
@@ -189,29 +189,37 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eConsumeDoDefault;
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    // The menu item was selected. Bring up the menu.
-    nsIFrame* frame = mPopupFrames.FirstChild();
-    if (frame) {
-      // We have children.
-      ToggleMenuState();
-      if (!IsOpen() && mMenuParent) {
-        // We closed up. The menu bar should always be
-        // deactivated when this happens.
-        mMenuParent->SetActive(PR_FALSE);
+    PRBool isMenuBar = PR_TRUE;
+    if (mMenuParent)
+      mMenuParent->IsMenuBar(isMenuBar);
+    
+    if (isMenuBar) {
+      // The menu item was selected. Bring up the menu.
+      nsIFrame* frame = mPopupFrames.FirstChild();
+      if (frame) {
+        // We have children.
+        ToggleMenuState();
+        if (!IsOpen()) {
+          // We closed up. The menu bar should always be
+          // deactivated when this happens.
+          mMenuParent->SetActive(PR_FALSE);
+        }
       }
     }
   }
-  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !IsMenu() &&
+           mMenuParent) {
     // The menu item was invoked and can now be dismissed.
     // XXX Execute the execute event handler.
-    nsCOMPtr<nsIAtom> tag;
-    mContent->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenuitem && mMenuParent) {
-      // Close up the parent.
-      mMenuParent->DismissChain();
-    }
+    mMenuParent->DismissChain();
   }
   else if (aEvent->message == NS_MOUSE_EXIT) {
+    // Kill our timer if one is active.
+    if (mOpenTimer) {
+      mOpenTimer->Cancel();
+      mOpenTimer = nsnull;
+    }
+
     // Deactivate the menu.
     PRBool isActive = PR_FALSE;
     PRBool isMenuBar = PR_FALSE;
@@ -228,6 +236,9 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     // Let the menu parent know we're the new item.
     if (mMenuParent)
       mMenuParent->SetCurrentMenuItem(this);
+
+    // If we're a menu (and not a menu item),
+    // kick off the timer.
   }
   return NS_OK;
 }
@@ -391,13 +402,11 @@ nsMenuFrame::Enter()
   if (!mMenuOpen) {
     // The enter key press applies to us.
     // XXX Execute the event handler.
-    nsCOMPtr<nsIAtom> tag;
-    mContent->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenuitem && mMenuParent) {
+    if (!IsMenu() && mMenuParent) {
       // Close up the parent.
       mMenuParent->DismissChain();
     }
-    else if (tag.get() == nsXULAtoms::xpmenuchildren) {
+    else {
       OpenMenu(PR_TRUE);
       SelectFirstItem();
     }
@@ -422,4 +431,14 @@ nsMenuFrame::SelectFirstItem()
     popup->GetNextMenuItem(nsnull, &result);
     popup->SetCurrentMenuItem(result);
   }
+}
+
+PRBool
+nsMenuFrame::IsMenu()
+{
+  nsCOMPtr<nsIAtom> tag;
+  mContent->GetTag(*getter_AddRefs(tag));
+  if (tag.get() == nsXULAtoms::xpmenu)
+    return PR_TRUE;
+  return PR_FALSE;
 }

@@ -472,9 +472,17 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 
   nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
   
-  if (menuFrame && menuFrame->IsOpen()) {
-    // Give our child a shot.
-    menuFrame->KeyboardNavigation(aDirection, aHandledFlag);
+  if (menuFrame) {
+    if (menuFrame->IsOpen()) {
+      // Give our child a shot.
+      menuFrame->KeyboardNavigation(aDirection, aHandledFlag);
+    }
+    else if (aDirection == NS_VK_RIGHT && menuFrame->IsMenu()) {
+      // The menu is not yet open. Open it and select the first item.
+      aHandledFlag = PR_TRUE;
+      menuFrame->OpenMenu(PR_TRUE);
+      menuFrame->SelectFirstItem();
+    }
   }
 
   if (aHandledFlag)
