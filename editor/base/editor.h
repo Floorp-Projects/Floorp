@@ -18,7 +18,7 @@
 
 #include "nsIEditor.h"
 #include "COM_auto_ptr.h"
-
+#include "editorInterfaces.h"
 
 /** implementation of an editor object.  it will be the controler/focal point 
  *  for the main editor services. i.e. the GUIControler, publishing, transaction 
@@ -29,8 +29,8 @@ class Editor : public nsIEditor
 {
 private:
   COM_auto_ptr<nsIDOMDocument> mDomInterfaceP;
-  COM_auto_ptr<nsEditorKeyListener> mKeyListenerP;
-  COM_auto_ptr<nsEditorMouseListener> mMouseListenerP;
+  COM_auto_ptr<nsIDOMEventListener> mKeyListenerP;
+  COM_auto_ptr<nsIDOMEventListener> mMouseListenerP;
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
@@ -45,10 +45,10 @@ public:
   /*see the nsIEditor for more details*/
   virtual nsresult Init(nsIDOMDocument *aDomInterface);
 
-  virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface){*aDomInterface = mDomInterfaceP;}
+  virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface){*aDomInterface = mDomInterfaceP; return NS_OK;}
 
-  virtual nsresult SetProperties(PROPERTIES aProperty){}
-  virtual nsresult GetProperties(PROPERTIES &){}
+  virtual nsresult SetProperties(PROPERTIES aProperty){return NS_OK;}
+  virtual nsresult GetProperties(PROPERTIES &){return NS_OK;}
 /*END nsIEditor interfaces*/
 
 /*BEGIN Editor interfaces*/
@@ -60,14 +60,14 @@ public:
    *  value of the key that was hit for now
    *  @return False if ignored
    */
-  PR_Bool KeyDown(int aKeycode);
+  PRBool KeyDown(int aKeycode);
 
 /*MouseListener Methods*/
   /** MouseClick
    *  @param int x the xposition of the click
    *  @param int y the yposition of the click
    */
-  PR_Bool MouseClick(int aX,int aY); //it should also tell us the dom element that was selected.
+  PRBool MouseClick(int aX,int aY); //it should also tell us the dom element that was selected.
 };
 
 
