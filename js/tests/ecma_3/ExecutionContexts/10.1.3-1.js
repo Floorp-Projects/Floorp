@@ -35,15 +35,16 @@
 *
 *
 * Date:    11 Feb 2002
-* SUMMARY: Formal parameters to a function may share the same name
+* SUMMARY: Testing functions having duplicate formal parameter names
 *
 * Note: given function f(x,x,x,x) {return x;}; f(1,2,3,4) should return 4.
 * See ECMA-262 3rd Edition Final Section 10.1.3: Variable Instantiation
-*
+* 
+* Also see http://bugzilla.mozilla.org/show_bug.cgi?id=124900
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
-var bug = '(none)';
+var bug = 124900;
 var summary = 'Testing functions having duplicate formal parameter names';
 var status = '';
 var statusitems = [];
@@ -81,6 +82,7 @@ status = inSection(3);
 actual = f3(1,2,3,4);
 expect = 'a4b4c4';
 addThis();
+
 
 /*
  * If the value of the last duplicate parameter is not provided by
@@ -123,6 +125,44 @@ actual = f6(1,2,3,4);
 expect = '1,2,3,4';
 addThis();
 
+
+/*
+ * This variation (assigning to x inside f) is from nboyd@atg.com
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=124900
+ */
+function f7(x,x,x,x)
+{
+  x = 999;
+  var ret = [];
+
+  for (var i=0; i<arguments.length; i++)
+    ret.push(arguments[i]);
+
+  return ret.toString();
+}
+status = inSection(7);
+actual = f7(1,2,3,4);
+expect = '1,2,3,999';
+addThis();
+
+
+/*
+ * Same as above, but with |var| keyword added -
+ */
+function f8(x,x,x,x)
+{
+  var x = 999;
+  var ret = [];
+
+  for (var i=0; i<arguments.length; i++)
+    ret.push(arguments[i]);
+
+  return ret.toString();
+}
+status = inSection(8);
+actual = f8(1,2,3,4);
+expect = '1,2,3,999';
+addThis();
 
 
 
