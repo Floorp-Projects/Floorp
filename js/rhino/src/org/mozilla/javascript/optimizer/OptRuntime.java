@@ -39,13 +39,12 @@ package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
 
-public final class OptRuntime extends ScriptRuntime {
+public final class OptRuntime extends ScriptRuntime
+{
 
-    /**
-     * No instances should be created.
-     */
-    private OptRuntime() {
-    }
+    public static final Double zeroObj = new Double(0.0);
+    public static final Double oneObj = new Double(1.0);
+    public static final Double minusOneObj = new Double(-1.0);
 
     public static Object getElem(Object obj, double dblIndex, Scriptable scope)
     {
@@ -324,6 +323,23 @@ public final class OptRuntime extends ScriptRuntime {
         return ScriptRuntime.callSpecial(cx, fun, true, null, args, scope,
                                          callerThis, callType,
                                          "", -1);
+    }
+
+    public static Double wrapDouble(double num)
+    {
+        if (num == 0.0) {
+            if (1 / num > 0) {
+                // +0.0
+                return zeroObj;
+            }
+        } else if (num == 1.0) {
+            return oneObj;
+        } else if (num == -1.0) {
+            return minusOneObj;
+        } else if (num != num) {
+            return NaNobj;
+        }
+        return new Double(num);
     }
 
 }

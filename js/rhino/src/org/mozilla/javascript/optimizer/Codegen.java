@@ -804,7 +804,17 @@ public class Codegen extends Interpreter {
             cfw.addField(constantName, constantType,
                          (short)(ClassFileWriter.ACC_STATIC
                                  | ClassFileWriter.ACC_PRIVATE));
-            pushNewNumberObject(cfw, num);
+            int inum = (int)num;
+            if (inum == num) {
+                cfw.add(ByteCode.NEW, "java/lang/Integer");
+                cfw.add(ByteCode.DUP);
+                cfw.addPush(inum);
+                cfw.addInvoke(ByteCode.INVOKESPECIAL, "java/lang/Integer",
+                              "<init>", "(I)V");
+            } else {
+                cfw.addPush(num);
+                addDoubleWrap(cfw);
+            }
             cfw.add(ByteCode.PUTSTATIC, mainClassName,
                     constantName, constantType);
         }
@@ -881,53 +891,73 @@ public class Codegen extends Interpreter {
 
     void pushNumberAsObject(ClassFileWriter cfw, double num)
     {
-        if (num != num) {
-            // Add NaN object
+        if (num == 0.0) {
+            if (1 / num > 0) {
+                // +0.0
+                cfw.add(ByteCode.GETSTATIC,
+                        "org/mozilla/javascript/optimizer/OptRuntime",
+                        "zeroObj", "Ljava/lang/Double;");
+            } else {
+                cfw.addPush(num);
+                addDoubleWrap(cfw);
+            }
+
+        } else if (num == 1.0) {
+            cfw.add(ByteCode.GETSTATIC,
+                    "org/mozilla/javascript/optimizer/OptRuntime",
+                    "oneObj", "Ljava/lang/Double;");
+            return;
+
+        } else if (num == -1.0) {
+            cfw.add(ByteCode.GETSTATIC,
+                    "org/mozilla/javascript/optimizer/OptRuntime",
+                    "minusOneObj", "Ljava/lang/Double;");
+
+        } else if (num != num) {
             cfw.add(ByteCode.GETSTATIC,
                     "org/mozilla/javascript/ScriptRuntime",
                     "NaNobj", "Ljava/lang/Double;");
+
         } else if (itsConstantListSize >= 2000) {
             // There appears to be a limit in the JVM on either the number
             // of static fields in a class or the size of the class
             // initializer. Either way, we can't have any more than 2000
             // statically init'd constants.
-            pushNewNumberObject(cfw, num);
+            cfw.addPush(num);
+            addDoubleWrap(cfw);
+
         } else {
-            String constantName = "_k" + addNumberConstant(num);
+            int N = itsConstantListSize;
+            int index = 0;
+            if (N == 0) {
+                itsConstantList = new double[64];
+            } else {
+                double[] array = itsConstantList;
+                while (index != N && array[index] != num) {
+                    ++index;
+                }
+                if (N == array.length) {
+                    array = new double[N * 2];
+                    System.arraycopy(itsConstantList, 0, array, 0, N);
+                    itsConstantList = array;
+                }
+            }
+            if (index == N) {
+                itsConstantList[N] = num;
+                itsConstantListSize = N + 1;
+            }
+            String constantName = "_k" + index;
             String constantType = getStaticConstantWrapperType(num);
             cfw.add(ByteCode.GETSTATIC, mainClassName,
                     constantName, constantType);
         }
     }
 
-    private static void pushNewNumberObject(ClassFileWriter cfw, double num)
+    private static void addDoubleWrap(ClassFileWriter cfw)
     {
-        // Generate code to create the new numeric constant
-        //
-        // new java/lang/<WrapperType>
-        // dup
-        // push <number>
-        // invokestatic java/lang/<WrapperType>/<init>(X)V
-
-        String wrapperType;
-        String signature;
-        boolean isInteger;
-        int inum = (int)num;
-        if (inum == num) {
-            isInteger = true;
-            wrapperType = "java/lang/Integer";
-            signature = "(I)V";
-        } else {
-            isInteger = false;
-            wrapperType = "java/lang/Double";
-            signature = "(D)V";
-        }
-
-        cfw.add(ByteCode.NEW, wrapperType);
-        cfw.add(ByteCode.DUP);
-        if (isInteger) { cfw.addPush(inum); }
-        else { cfw.addPush(num); }
-        cfw.addInvoke(ByteCode.INVOKESPECIAL, wrapperType, "<init>", signature);
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/optimizer/OptRuntime",
+                      "wrapDouble", "(D)Ljava/lang/Double;");
     }
 
     private static String getStaticConstantWrapperType(double num)
@@ -940,30 +970,6 @@ public class Codegen extends Interpreter {
             return "Ljava/lang/Double;";
         }
     }
-
-    private int addNumberConstant(double num)
-    {
-        // NaN is provided via ScriptRuntime.NaNobj
-        if (num != num) Kit.codeBug();
-        int N = itsConstantListSize;
-        if (N == 0) {
-            itsConstantList = new double[128];
-        } else {
-            double[] array = itsConstantList;
-            for (int i = 0; i != N; ++i) {
-                if (array[i] == num) { return i; }
-            }
-            if (N == array.length) {
-                array = new double[N * 2];
-                System.arraycopy(itsConstantList, 0, array, 0, N);
-                itsConstantList = array;
-            }
-        }
-        itsConstantList[N] = num;
-        itsConstantListSize = N + 1;
-        return N;
-    }
-
     static void pushUndefined(ClassFileWriter cfw)
     {
         cfw.add(ByteCode.GETSTATIC, "org/mozilla/javascript/Undefined",
@@ -1157,10 +1163,8 @@ class BodyCodegen
                             "Ljava/lang/Class;");
                     int isObjectLabel = cfw.acquireLabel();
                     cfw.add(ByteCode.IF_ACMPNE, isObjectLabel);
-                    cfw.add(ByteCode.NEW,"java/lang/Double");
-                    cfw.add(ByteCode.DUP);
                     cfw.addDLoad(lVar.getJRegister() + 1);
-                    addDoubleConstructor();
+                    addDoubleWrap();
                     cfw.addAStore(lVar.getJRegister());
                     cfw.markLabel(isObjectLabel);
                 }
@@ -1597,14 +1601,12 @@ class BodyCodegen
               }
 
               case Token.BITNOT:
-                cfw.add(ByteCode.NEW, "java/lang/Double");
-                cfw.add(ByteCode.DUP);
                 generateCodeFromNode(child, node);
                 addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)I");
                 cfw.addPush(-1);         // implement ~a as (a ^ -1)
                 cfw.add(ByteCode.IXOR);
                 cfw.add(ByteCode.I2D);
-                addDoubleConstructor();
+                addDoubleWrap();
                 break;
 
               case Token.VOID:
@@ -1699,14 +1701,12 @@ class BodyCodegen
 
               case Token.POS:
               case Token.NEG:
-                cfw.add(ByteCode.NEW, "java/lang/Double");
-                cfw.add(ByteCode.DUP);
                 generateCodeFromNode(child, node);
                 addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
                 if (type == Token.NEG) {
                     cfw.add(ByteCode.DNEG);
                 }
-                addDoubleConstructor();
+                addDoubleWrap();
                 break;
 
               case Optimizer.TO_DOUBLE:
@@ -1726,10 +1726,8 @@ class BodyCodegen
                     generateCodeFromNode(child, node);
                     child.putIntProp(Node.ISNUMBER_PROP, prop);
                 } else {
-                    cfw.add(ByteCode.NEW, "java/lang/Double");
-                    cfw.add(ByteCode.DUP);
                     generateCodeFromNode(child, node);
-                    addDoubleConstructor();
+                    addDoubleWrap();
                 }
                 break;
               }
@@ -2409,16 +2407,12 @@ class BodyCodegen
                         }
                     }
                     if (!handled) {
+                        generateCodeFromNode(child, node);
                         int childNumberFlag
                                 = child.getIntProp(Node.ISNUMBER_PROP, -1);
                         if (childNumberFlag == Node.BOTH) {
-                            cfw.add(ByteCode.NEW,"java/lang/Double");
-                            cfw.add(ByteCode.DUP);
-                            generateCodeFromNode(child, node);
-                            addDoubleConstructor();
+                            addDoubleWrap();
                         }
-                        else
-                            generateCodeFromNode(child, node);
                     }
                 }
                 else
@@ -2848,10 +2842,6 @@ class BodyCodegen
         }
         else {
             boolean childOfArithmetic = isArithmeticNode(parent);
-            if (!childOfArithmetic) {
-                cfw.add(ByteCode.NEW, "java/lang/Double");
-                cfw.add(ByteCode.DUP);
-            }
             generateCodeFromNode(child, node);
             if (!isArithmeticNode(child))
                 addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
@@ -2860,7 +2850,7 @@ class BodyCodegen
                   addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
             cfw.add(opCode);
             if (!childOfArithmetic) {
-                addDoubleConstructor();
+                addDoubleWrap();
             }
         }
     }
@@ -2868,10 +2858,6 @@ class BodyCodegen
     private void visitBitOp(Node node, int type, Node child)
     {
         int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
-        if (childNumberFlag == -1) {
-            cfw.add(ByteCode.NEW, "java/lang/Double");
-            cfw.add(ByteCode.DUP);
-        }
         generateCodeFromNode(child, node);
 
         // special-case URSH; work with the target arg as a long, so
@@ -2887,7 +2873,7 @@ class BodyCodegen
             cfw.add(ByteCode.IAND);
             cfw.add(ByteCode.LUSHR);
             cfw.add(ByteCode.L2D);
-            addDoubleConstructor();
+            addDoubleWrap();
             return;
         }
         if (childNumberFlag == -1) {
@@ -2921,7 +2907,7 @@ class BodyCodegen
         }
         cfw.add(ByteCode.I2D);
         if (childNumberFlag == -1) {
-            addDoubleConstructor();
+            addDoubleWrap();
         }
     }
 
@@ -3497,10 +3483,8 @@ class BodyCodegen
                     cfw.addALoad(lVar.getJRegister());
                     cfw.add(ByteCode.GOTO, beyond);
                     cfw.markLabel(isNumberLabel);
-                    cfw.add(ByteCode.NEW,"java/lang/Double");
-                    cfw.add(ByteCode.DUP);
                     cfw.addDLoad(lVar.getJRegister() + 1);
-                    addDoubleConstructor();
+                    addDoubleWrap();
                     cfw.markLabel(beyond);
                 }
             } else {
@@ -3551,11 +3535,7 @@ class BodyCodegen
                     int isNumberLabel = cfw.acquireLabel();
                     int beyond = cfw.acquireLabel();
                     cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
-                    cfw.add(ByteCode.NEW,"java/lang/Double");
-                    cfw.add(ByteCode.DUP);
-                    cfw.add(ByteCode.DUP2_X2);
-                    cfw.add(ByteCode.POP2);
-                    addDoubleConstructor();
+                    addDoubleWrap();
                     cfw.addAStore(lVar.getJRegister());
                     cfw.add(ByteCode.GOTO, beyond);
                     cfw.markLabel(isNumberLabel);
@@ -3796,10 +3776,9 @@ class BodyCodegen
                       methodSignature);
     }
 
-    private void addDoubleConstructor()
+    private void addDoubleWrap()
     {
-        cfw.addInvoke(ByteCode.INVOKESPECIAL,
-                      "java/lang/Double", "<init>", "(D)V");
+        addOptRuntimeInvoke("wrapDouble", "(D)Ljava/lang/Double;");
     }
 
     private short getNewWordPairLocal()
