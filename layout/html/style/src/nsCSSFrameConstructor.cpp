@@ -1485,6 +1485,8 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
       return NS_NewImageControlFrame(aPresShell, &aFrame);
     }
     else if (val.EqualsIgnoreCase("radio")) {
+      if (UseXBLForms())
+        return NS_OK;
       return ConstructRadioControlFrame(aPresShell, aPresContext, aFrame, aContent, aStyleContext);
     }
   }
