@@ -255,6 +255,7 @@ protected:
    virtual void Report(const char* charset) = 0;
 
    PRUint8 mItems;
+   PRUint8 mClassItems;
    PRUint8 mState[MAX_VERIFIERS];
    PRUint8 mItemIdx[MAX_VERIFIERS];
    nsVerifier** mVerifier;
@@ -262,7 +263,9 @@ protected:
    PRBool mDone;
 
    PRBool mRunSampler;
+   PRBool mClassRunSampler;
 protected:
+   void Reset();
    void Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance=PR_FALSE);
 private:
 #ifdef DETECTOR_DEBUG
@@ -275,13 +278,19 @@ private:
 //----------------------------------------------------------
 nsPSMDetector::nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet, nsEUCStatistics** aStatisticsSet)
 {
-  mRunSampler = (nsnull != aStatisticsSet);
+  mClassRunSampler = (nsnull != aStatisticsSet);
   mStatisticsData = aStatisticsSet;
-  mDone= PR_FALSE;
-  mItems = aItems;
-  NS_ASSERTION(MAX_VERIFIERS >= aItems , "MAX_VERIFIERS is too small!");
   mVerifier = aVerifierSet;
-  NS_ASSERTION(aItems <= MAX_VERIFIERS , "Too many verifiers");
+
+  mClassItems = aItems;
+  Reset();
+}
+void nsPSMDetector::Reset()
+{
+  mRunSampler = mClassRunSampler;
+  mDone= PR_FALSE;
+  mItems = mClassItems;
+  NS_ASSERTION(MAX_VERIFIERS >= mItems , "MAX_VERIFIERS is too small!");
   for(PRUint8 i = 0; i < mItems ; i++)
   {
      mState[i] = 0;
@@ -289,7 +298,7 @@ nsPSMDetector::nsPSMDetector(PRUint8 aItems, nsVerifier** aVerifierSet, nsEUCSta
   }
 #ifdef DETECTOR_DEBUG
   mDbgLen = mDbgTest = 0;
-#endif
+#endif   
 }
 //----------------------------------------------------------
 void nsPSMDetector::DataEnd()
@@ -715,6 +724,7 @@ NS_IMETHODIMP nsXPCOMStringDetector::DoIt(const char* aBuf, PRUint32 aLen,
      *oCharset = mResult;
      oConfident = eSureAnswer;
   }
+  this->Reset();
   return NS_OK;
 }
 //==========================================================
