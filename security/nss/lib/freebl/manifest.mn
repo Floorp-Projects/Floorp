@@ -16,7 +16,11 @@
 # Copyright (C) 1994-2000 Netscape Communications Corporation.  All
 # Rights Reserved.
 # 
+# Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+# Sun Microsystems, Inc. All Rights Reserved.
+#
 # Contributor(s):
+#      Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -61,6 +65,7 @@ EXPORTS = \
 
 PRIVATE_EXPORTS = \
 	secmpi.h \
+	ec.h \
 	$(NULL)
 
 MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h
@@ -93,6 +98,8 @@ CSRCS = \
 	rijndael.c \
 	aeskeywrap.c \
 	dh.c \
+	ec.c \
+	GFp_ecl.c \
 	pqg.c \
 	dsa.c \
 	rsa.c \
@@ -107,6 +114,8 @@ ALL_HDRS =  \
 	blapi.h \
 	blapit.h \
 	des.h \
+	ec.h \
+	GFp_ecl.h \
 	loader.h \
 	rijndael.h \
 	secmpi.h \

@@ -18,7 +18,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.14 2003/01/30 23:36:35 relyea%netscape.com Exp $
+ * $Id: blapi.h,v 1.15 2003/02/27 01:31:11 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -186,6 +190,70 @@ extern SECStatus KEA_Derive(SECItem *prime,
  */
 extern PRBool KEA_Verify(SECItem *Y, SECItem *prime, SECItem *subPrime);
 
+/******************************************************
+** Elliptic Curve algorithms
+*/
+
+/* Generates a public and private key, both of which are encoded 
+** in a single ECPrivateKey struct. Params is input, privKey are
+** output.
+*/
+extern SECStatus EC_NewKey(ECParams *          params, 
+                           ECPrivateKey **     privKey);
+
+extern SECStatus EC_NewKeyFromSeed(ECParams *  params, 
+                           ECPrivateKey **     privKey,
+                           const unsigned char* seed,
+                           int                 seedlen);
+
+/* Validates an EC public key as described in Section 5.2.2 of
+ * X9.63. Such validation prevents against small subgroup attacks
+ * when the ECDH primitive is used with the cofactor.
+ */
+extern SECStatus EC_ValidatePublicKey(ECParams * params, 
+                           SECItem *           publicValue);
+
+/* 
+** ECDH_Derive performs a scalar point multiplication of a point
+** representing a (peer's) public key and a large integer representing
+** a private key (its own). Both keys must use the same elliptic curve
+** parameters. If the withCofactor parameter is true, the
+** multiplication also uses the cofactor associated with the curve
+** parameters.  The output of this scheme is the x-coordinate of the
+** resulting point. If successful, derivedSecret->data is set to the
+** address of the newly allocated buffer containing the derived
+** secret, and derivedSecret->len is the size of the secret
+** produced. It is the caller's responsibility to free the allocated
+** buffer containing the derived secret.
+*/
+extern SECStatus ECDH_Derive(SECItem *       publicValue,
+                             ECParams *      params,
+                             SECItem *       privateValue,
+                             PRBool          withCofactor,
+                             SECItem *       derivedSecret);
+
+/* On input,  signature->len == size of buffer to hold signature.
+**            digest->len    == size of digest.
+** On output, signature->len == size of signature in buffer.
+** Uses a random seed.
+*/
+extern SECStatus ECDSA_SignDigest(ECPrivateKey  *key, 
+                                  SECItem       *signature, 
+                                  const SECItem *digest);
+
+/* On input,  signature->len == size of buffer to hold signature.
+**            digest->len    == size of digest.
+*/
+extern SECStatus ECDSA_VerifyDigest(ECPublicKey   *key, 
+                                    const SECItem *signature, 
+                                    const SECItem *digest);
+
+/* Uses the provided seed. */
+extern SECStatus ECDSA_SignDigestWithSeed(ECPrivateKey        *key,
+                                          SECItem             *signature,
+                                          const SECItem       *digest,
+                                          const unsigned char *seed, 
+                                          const int           seedlen);
 
 /******************************************/
 /*

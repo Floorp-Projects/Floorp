@@ -20,7 +20,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -34,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslproto.h,v 1.3 2001/09/21 03:07:35 nelsonb%netscape.com Exp $
+ * $Id: sslproto.h,v 1.4 2003/02/27 01:31:35 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslproto_h_
@@ -160,6 +164,29 @@
 #define TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA 0x0063
 #define TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA  0x0065
 #define TLS_DHE_DSS_WITH_RC4_128_SHA            0x0066
+
+#ifdef NSS_ENABLE_ECC
+/* "Experimental" ECC cipher suites. 
+** XXX These numbers might change before the current IETF draft
+** on ECC cipher suites for TLS becomes an RFC.
+*/
+#define TLS_ECDH_ECDSA_WITH_NULL_SHA            0x0047
+#define TLS_ECDH_ECDSA_WITH_RC4_128_SHA         0x0048
+#define TLS_ECDH_ECDSA_WITH_DES_CBC_SHA         0x0049
+#define TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA    0x004A
+#define TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA     0x004B
+#define TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA     0x004C
+
+#define TLS_ECDH_RSA_WITH_NULL_SHA              0x004D
+#define TLS_ECDH_RSA_WITH_RC4_128_SHA           0x004E
+#define TLS_ECDH_RSA_WITH_DES_CBC_SHA           0x004F
+#define TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA      0x0050
+#define TLS_ECDH_RSA_WITH_AES_128_CBC_SHA       0x0051
+#define TLS_ECDH_RSA_WITH_AES_256_CBC_SHA       0x0052
+
+#define TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA    0x0077
+#define TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA      0x0078
+#endif /* NSS_ENABLE_ECC */
 
 /* Netscape "experimental" cipher suites. */
 #define SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA	0xffe0

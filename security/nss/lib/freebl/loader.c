@@ -18,7 +18,11 @@
  * Copyright (C) 2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.13 2003/01/30 23:36:36 relyea%netscape.com Exp $
+ * $Id: loader.c,v 1.14 2003/02/27 01:31:14 nelsonb%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -1294,3 +1298,69 @@ BLAPI_VerifySelf(const char *name)
       return PR_FALSE;
   return vector->p_BLAPI_VerifySelf(libraryName);
 }
+
+/* ============== New for 3.006 =============================== */
+
+SECStatus 
+EC_NewKey(ECParams * params, ECPrivateKey ** privKey)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_EC_NewKey)( params, privKey );
+}
+
+SECStatus 
+EC_NewKeyFromSeed(ECParams * params, ECPrivateKey ** privKey,
+    const unsigned char *seed, int seedlen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_EC_NewKeyFromSeed)( params, privKey, seed, seedlen );
+}
+
+SECStatus 
+EC_ValidatePublicKey(ECParams * params, SECItem * publicValue)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_EC_ValidatePublicKey)( params, publicValue );
+}
+
+SECStatus 
+ECDH_Derive(SECItem * publicValue, ECParams * params, SECItem * privateValue,
+            PRBool withCofactor, SECItem * derivedSecret)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_ECDH_Derive)( publicValue, params, privateValue,
+                                  withCofactor, derivedSecret );
+}
+
+SECStatus
+ECDSA_SignDigest(ECPrivateKey * key, SECItem * signature,
+    const SECItem * digest)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_ECDSA_SignDigest)( key, signature, digest );
+}
+
+SECStatus
+ECDSA_VerifyDigest(ECPublicKey * key, const SECItem * signature,
+    const SECItem * digest)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_ECDSA_VerifyDigest)( key, signature, digest );
+}
+
+SECStatus
+ECDSA_SignDigestWithSeed(ECPrivateKey * key, SECItem * signature,
+    const SECItem * digest, const unsigned char *seed, const int seedlen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_ECDSA_SignDigestWithSeed)( key, signature, digest, 
+      seed, seedlen );
+}
+

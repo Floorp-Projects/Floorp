@@ -16,8 +16,12 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved. 
+ *
  * Contributor(s): 
  *	Dr Stephen Henson <stephen.henson@gemplus.com>
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -33,7 +37,7 @@
  *
  * key.h - public data structures and prototypes for the private key library
  *
- * $Id: keyhi.h,v 1.7 2002/02/03 03:37:17 relyea%netscape.com Exp $
+ * $Id: keyhi.h,v 1.8 2003/02/27 01:31:04 nelsonb%netscape.com Exp $
  */
 
 #ifndef _KEYHI_H_
@@ -79,10 +83,14 @@ extern SECStatus
 SECKEY_KEAParamCompare(CERTCertificate *cert1,CERTCertificate *cert2);
 
 /*
-** Return the strength of the public key
+** Return the strength of the public key in bytes
 */
 extern unsigned SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk);
 
+/*
+** Return the strength of the public key in bits
+*/
+extern unsigned SECKEY_PublicKeyStrengthInBits(SECKEYPublicKey *pubk);
 
 /*
 ** Make a copy of the private key "privKey"
@@ -110,6 +118,13 @@ SECKEYPrivateKey *SECKEY_CreateRSAPrivateKey(int keySizeInBits,
  */
 SECKEYPrivateKey *SECKEY_CreateDHPrivateKey(SECKEYDHParams *param,
 					   SECKEYPublicKey **pubk, void *cx);
+
+/*
+ * create a new EC key pair. The private Key is returned...
+ */
+SECKEYPrivateKey *SECKEY_CreateECPrivateKey(SECKEYECParams *param,
+                                           SECKEYPublicKey **pubk, void *cx);
+
 /*
 ** Create a subject-public-key-info based on a public key.
 */

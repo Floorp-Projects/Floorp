@@ -18,7 +18,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.8 2003/01/30 23:36:36 relyea%netscape.com Exp $
+ * $Id: blapit.h,v 1.9 2003/02/27 01:31:12 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPIT_H_
@@ -65,6 +69,14 @@
 
 #define DSA_SIGNATURE_LEN 	40	/* Bytes */
 #define DSA_SUBPRIME_LEN	20	/* Bytes */
+
+/* XXX We shouldn't have to hard code this limit. For
+ * now, this is the quickest way to support ECDSA signature
+ * processing (ECDSA signature lengths depend on curve
+ * size). This limit is sufficient for curves upto
+ * 576 bits.
+ */
+#define MAX_ECKEY_LEN 	        72	/* Bytes */
 
 /*
  * Number of bytes each hash algorithm produces
@@ -252,5 +264,73 @@ struct DHPrivateKeyStr {
 };
 typedef struct DHPrivateKeyStr DHPrivateKey;
 
+/***************************************************************************
+** Data structures used for elliptic curve parameters and
+** public and private keys.
+*/
+
+/*
+** The ECParams data structures can encode elliptic curve 
+** parameters for both GFp and GF2m curves.
+*/
+
+typedef enum { ec_params_explicit,
+	       ec_params_named
+} ECParamsType;
+
+typedef enum { ec_field_GFp = 1,
+               ec_field_GF2m
+} ECFieldType;
+
+struct ECFieldIDStr {
+    int         size;   /* field size in bits */
+    ECFieldType type;
+    union {
+        SECItem  prime;  /* prime p for (GFp) */
+        SECItem  m;      /* integer m for (GF2m) */
+    } u;
+    int         k1;     /* first coefficient of pentanomial or
+                         * the only coefficient of trinomial 
+                         */
+    int         k2;     /* two remaining coefficients of pentanomial */
+    int         k3;
+};
+typedef struct ECFieldIDStr ECFieldID;
+
+struct ECCurveStr {
+    SECItem a;          /* contains octet stream encoding of
+                         * field element (X9.62 section 4.3.3) 
+			 */
+    SECItem b;
+    SECItem seed;
+};
+typedef struct ECCurveStr ECCurve;
+
+struct ECParamsStr {
+    PRArenaPool * arena;
+    ECParamsType  type;
+    ECFieldID     fieldID;
+    ECCurve       curve; 
+    SECItem       base;
+    SECItem       order; 
+    int           cofactor;
+    SECItem       DEREncoding;
+};
+typedef struct ECParamsStr ECParams;
+
+struct ECPublicKeyStr {
+    ECParams ecParams;   
+    SECItem publicValue;   /* elliptic curve point encoded as 
+			    * octet stream.
+			    */
+};
+typedef struct ECPublicKeyStr ECPublicKey;
+
+struct ECPrivateKeyStr {
+    ECParams ecParams;   
+    SECItem publicValue;   /* encoded ec point */
+    SECItem privateValue;  /* private big integer */
+};
+typedef struct ECPrivateKeyStr ECPrivateKey;
 
 #endif /* _BLAPIT_H_ */

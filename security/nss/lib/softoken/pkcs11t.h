@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s): 
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -1376,6 +1380,25 @@ typedef struct CK_PKCS5_PBKD2_PARAMS {
 } CK_PKCS5_PBKD2_PARAMS;
  
 typedef CK_PKCS5_PBKD2_PARAMS CK_PTR CK_PKCS5_PBKD2_PARAMS_PTR;
+
+/* CK_ECDH1_DERIVE_PARAMS is defined in Section 12.4.4 of 
+ * PKCS#11v2.11. This structure provides parameters for
+ * the CKM_ECDH1_DERIVE and CKM_ECDH1_COFACTOR_DERIVE key
+ * derivation mechanisms.
+ */
+typedef CK_ULONG CK_EC_KDF_TYPE;
+#define CKD_NULL                 0x00000001
+#define CKD_SHA1_KDF             0x00000002
+ 
+typedef struct CK_ECDH1_DERIVE_PARAMS {
+  CK_EC_KDF_TYPE kdf;
+  CK_ULONG ulSharedDataLen;
+  CK_BYTE_PTR pSharedData;
+  CK_ULONG ulPublicDataLen;
+  CK_BYTE_PTR pPublicData;
+} CK_ECDH1_DERIVE_PARAMS;
+
+typedef CK_ECDH1_DERIVE_PARAMS CK_PTR CK_ECDH1_DERIVE_PARAMS_PTR;
 
 /* Netscape Specific defines */
 #include "pkcs11n.h"

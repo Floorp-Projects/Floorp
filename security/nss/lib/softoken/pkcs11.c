@@ -16,8 +16,12 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s): 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
+ * Contributor(s):
  *	Dr Stephen Henson <stephen.henson@gemplus.com>
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -61,7 +65,11 @@
 
 #include "keydbi.h" 
 
- 
+#ifdef NSS_ENABLE_ECC
+extern SECStatus EC_FillParams(PRArenaPool *arena, 
+    const SECItem *encodedParams, ECParams *params);
+#endif
+
 /*
  * ******************** Static data *******************************
  */
@@ -226,6 +234,8 @@ struct mechanismList {
 #define CKF_SN_VR_RE		CKF_SN_VR       | CKF_SN_RE
 #define CKF_DUZ_IT_ALL		CKF_EN_DE_WR_UN | CKF_SN_VR_RE
 
+#define CKF_EC_PNU		CKF_EC_FP | CKF_EC_NAMEDCURVE | CKF_EC_UNCOMPRESS
+
 #define CK_MAX 0xffffffff
 
 static const struct mechanismList mechanisms[] = {
@@ -236,11 +246,11 @@ static const struct mechanismList mechanisms[] = {
       * The first argument is the PKCS #11 Mechanism we support.
       * The second argument is Mechanism info structure. It includes:
       *    The minimum key size,
-      *       in bits for RSA, DSA, DH, KEA, RC2 and RC4 * algs.
+      *       in bits for RSA, DSA, DH, EC*, KEA, RC2 and RC4 * algs.
       *       in bytes for RC5, AES, and CAST*
       *       ignored for DES*, IDEA and FORTEZZA based
       *    The maximum key size,
-      *       in bits for RSA, DSA, DH, KEA, RC2 and RC4 * algs.
+      *       in bits for RSA, DSA, DH, EC*, KEA, RC2 and RC4 * algs.
       *       in bytes for RC5, AES, and CAST*
       *       ignored for DES*, IDEA and FORTEZZA based
       *     Flags
@@ -272,6 +282,13 @@ static const struct mechanismList mechanisms[] = {
      /* no diffie hellman yet */
      {CKM_DH_PKCS_KEY_PAIR_GEN,	{128, 1024, CKF_GENERATE_KEY_PAIR}, PR_TRUE}, 
      {CKM_DH_PKCS_DERIVE,	{128, 1024, CKF_DERIVE}, 	PR_TRUE}, 
+#ifdef NSS_ENABLE_ECC
+     /* -------------------- Elliptic Curve Operations --------------------- */
+     {CKM_EC_KEY_PAIR_GEN,	{112, 571, CKF_GENERATE_KEY_PAIR|CKF_EC_PNU}, PR_TRUE}, 
+     {CKM_ECDH1_DERIVE,	        {112, 571, CKF_DERIVE|CKF_EC_PNU}, PR_TRUE}, 
+     {CKM_ECDSA,	        {112, 571, CKF_SN_VR|CKF_EC_PNU}, PR_TRUE}, 
+     {CKM_ECDSA_SHA1,	        {112, 571, CKF_SN_VR|CKF_EC_PNU}, PR_TRUE}, 
+#endif /* NSS_ENABLE_ECC */
      /* ------------------------- RC2 Operations --------------------------- */
      {CKM_RC2_KEY_GEN,		{1, 128, CKF_GENERATE},		PR_TRUE},
      {CKM_RC2_ECB,		{1, 128, CKF_EN_DE_WR_UN},	PR_TRUE},
@@ -1037,6 +1054,21 @@ pk11_handlePublicKeyObject(PK11Session *session, PK11Object *object,
 	recover = CK_FALSE;
 	wrap = CK_FALSE;
 	break;
+#ifdef NSS_ENABLE_ECC
+    case CKK_EC:
+	if ( !pk11_hasAttribute(object, CKA_EC_PARAMS)) {
+	    return CKR_TEMPLATE_INCOMPLETE;
+	}
+	if ( !pk11_hasAttribute(object, CKA_EC_POINT)) {
+	    return CKR_TEMPLATE_INCOMPLETE;
+	}
+	derive = CK_TRUE;    /* for ECDH */
+	verify = CK_TRUE;    /* for ECDSA */
+	encrypt = CK_FALSE;
+	recover = CK_FALSE;
+	wrap = CK_FALSE;
+	break;
+#endif /* NSS_ENABLE_ECC */
     default:
 	return CKR_ATTRIBUTE_VALUE_INVALID;
     }
@@ -1111,6 +1143,7 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
     CK_BBOOL encrypt = CK_TRUE;
     CK_BBOOL recover = CK_TRUE;
     CK_BBOOL wrap = CK_TRUE;
+    CK_BBOOL derive = CK_FALSE;
     CK_BBOOL ckfalse = CK_FALSE;
     SECItem mod;
     CK_RV crv;
@@ -1172,6 +1205,20 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 	recover = CK_FALSE;
 	wrap = CK_FALSE;
 	break;
+#ifdef NSS_ENABLE_ECC
+    case CKK_EC:
+	if ( !pk11_hasAttribute(object, CKA_EC_PARAMS)) {
+	    return CKR_TEMPLATE_INCOMPLETE;
+	}
+	if ( !pk11_hasAttribute(object, CKA_VALUE)) {
+	    return CKR_TEMPLATE_INCOMPLETE;
+	}
+	encrypt = CK_FALSE;
+	recover = CK_FALSE;
+	wrap = CK_FALSE;
+	derive = CK_TRUE;
+	break;
+#endif /* NSS_ENABLE_ECC */
     default:
 	return CKR_ATTRIBUTE_VALUE_INVALID;
     }
@@ -1189,6 +1236,8 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 							     sizeof(CK_BBOOL));
     if (crv != CKR_OK)  return crv; 
     crv = pk11_defaultAttribute(object,CKA_UNWRAP,&wrap,sizeof(CK_BBOOL));
+    if (crv != CKR_OK)  return crv; 
+    crv = pk11_defaultAttribute(object,CKA_DERIVE,&derive,sizeof(CK_BBOOL));
     if (crv != CKR_OK)  return crv; 
     /* the next two bits get modified only in the key gen and token cases */
     crv = pk11_forceAttribute(object,CKA_ALWAYS_SENSITIVE,
@@ -1793,6 +1842,24 @@ NSSLOWKEYPublicKey *pk11_GetPubKey(PK11Object *object,CK_KEY_TYPE key_type,
     	crv = pk11_Attribute2SSecItem(arena,&pubKey->u.dh.publicValue,
 							object,CKA_VALUE);
 	break;
+#ifdef NSS_ENABLE_ECC
+    case CKK_EC:
+	pubKey->keyType = NSSLOWKEYECKey;
+	crv = pk11_Attribute2SSecItem(arena,
+	                              &pubKey->u.ec.ecParams.DEREncoding,
+	                              object,CKA_EC_PARAMS);
+	if (crv != CKR_OK) break;
+
+	/* Fill out the rest of the ecParams structure 
+	 * based on the encoded params
+	 */
+	if (EC_FillParams(arena, &pubKey->u.ec.ecParams.DEREncoding,
+	    &pubKey->u.ec.ecParams) != SECSuccess) break;
+	    
+	crv = pk11_Attribute2SSecItem(arena,&pubKey->u.ec.publicValue,
+	                              object,CKA_EC_POINT);
+	break;
+#endif /* NSS_ENABLE_ECC */
     default:
 	crv = CKR_KEY_TYPE_INCONSISTENT;
 	break;
@@ -1899,6 +1966,30 @@ pk11_mkPrivKey(PK11Object *object, CK_KEY_TYPE key_type, CK_RV *crvp)
     	crv = pk11_Attribute2SSecItem(arena,&privKey->u.dh.publicValue,
 							object,CKA_NETSCAPE_DB);
 	break;
+
+#ifdef NSS_ENABLE_ECC
+    case CKK_EC:
+	privKey->keyType = NSSLOWKEYECKey;
+	crv = pk11_Attribute2SSecItem(arena, 
+	                              &privKey->u.ec.ecParams.DEREncoding,
+	                              object,CKA_EC_PARAMS);
+    	if (crv != CKR_OK) break;
+
+	/* Fill out the rest of the ecParams structure
+	 * based on the encoded params
+	 */
+	if (EC_FillParams(arena, &privKey->u.ec.ecParams.DEREncoding,
+	    &privKey->u.ec.ecParams) != SECSuccess) break;
+	crv = pk11_Attribute2SSecItem(arena,&privKey->u.ec.privateValue,
+							object,CKA_VALUE);
+	if (crv != CKR_OK) break;
+	/* XXX Why does this break handlePrivateKeyObject ? 
+	crv = pk11_Attribute2SSecItem(arena,&privKey->u.ec.publicValue,
+				      object,CKA_NETSCAPE_DB);
+	*/
+	break;
+#endif /* NSS_ENABLE_ECC */
+
     default:
 	crv = CKR_KEY_TYPE_INCONSISTENT;
 	break;

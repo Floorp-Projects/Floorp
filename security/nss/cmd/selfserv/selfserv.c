@@ -15,8 +15,12 @@
  * Communications Corporation.  Portions created by Netscape are 
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
- * 
+ *
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved. 
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -101,6 +105,28 @@ const int ssl2CipherSuites[] = {
     SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5,	/* D */
     SSL_EN_DES_64_CBC_WITH_MD5,			/* E */
     SSL_EN_DES_192_EDE3_CBC_WITH_MD5,		/* F */
+#ifdef NSS_ENABLE_ECC
+    /* NOTE: Since no new SSL2 ciphersuites are being 
+     * invented, and we've run out of lowercase letters
+     * for SSL3 ciphers, we use letters G and beyond
+     * for new SSL3 ciphers. A -1 indicates the cipher
+     * is not currently implemented.
+     */
+    -1, /* TLS_ECDH_ECDSA_WITH_NULL_SHA,     	 * G */
+    -1, /* TLS_ECDH_ECDSA_WITH_RC4_128_SHA,  	 * H */
+    -1, /* TLS_ECDH_ECDSA_WITH_DES_CBC_SHA,  	 * I */
+    -1, /* TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA, * J */
+    -1, /* TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,  * K */
+    -1, /* TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,  * L */
+    -1, /* TLS_ECDH_RSA_WITH_NULL_SHA,       	 * M */
+    -1, /* TLS_ECDH_RSA_WITH_RC4_128_SHA,    	 * N */
+    -1, /* TLS_ECDH_RSA_WITH_DES_CBC_SHA,    	 * O */
+    -1, /* TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,   * P */
+    -1, /* TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,	 * Q */
+    -1, /* TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,	 * R */
+    -1, /* TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, * S */
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,      	/* T */
+#endif /* NSS_ENABLE_ECC */
     0
 };
 
@@ -119,16 +145,16 @@ const int ssl3CipherSuites[] = {
     TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,	/* l */
     TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,	        /* m */
     SSL_RSA_WITH_RC4_128_SHA,			/* n */
-    TLS_DHE_DSS_WITH_RC4_128_SHA,		/* o */
-    SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,		/* p */
-    SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,		/* q */
-    SSL_DHE_RSA_WITH_DES_CBC_SHA,		/* r */
-    SSL_DHE_DSS_WITH_DES_CBC_SHA,		/* s */
-    TLS_DHE_DSS_WITH_AES_128_CBC_SHA, 	    	/* t */
-    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,       	/* u */
+    -1, /* TLS_DHE_DSS_WITH_RC4_128_SHA, 	 * o */
+    -1, /* SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,	 * p */
+    -1, /* SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,	 * q */
+    -1, /* SSL_DHE_RSA_WITH_DES_CBC_SHA,	 * r */
+    -1, /* SSL_DHE_DSS_WITH_DES_CBC_SHA,	 * s */
+    -1, /* TLS_DHE_DSS_WITH_AES_128_CBC_SHA,	 * t */
+    -1, /* TLS_DHE_RSA_WITH_AES_128_CBC_SHA,	 * u */
     TLS_RSA_WITH_AES_128_CBC_SHA,     	    	/* v */
-    TLS_DHE_DSS_WITH_AES_256_CBC_SHA, 	    	/* w */
-    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,       	/* x */
+    -1, /* TLS_DHE_DSS_WITH_AES_256_CBC_SHA,	 * w */
+    -1, /* TLS_DHE_RSA_WITH_AES_256_CBC_SHA,	 * x */
     TLS_RSA_WITH_AES_256_CBC_SHA,     	    	/* y */
     SSL_RSA_WITH_NULL_SHA,			/* z */
     0
@@ -199,6 +225,9 @@ Usage(const char *progName)
 "D    SSL2 RC2 128 CBC EXPORT40 WITH MD5\n"
 "E    SSL2 DES 64 CBC WITH MD5\n"
 "F    SSL2 DES 192 EDE3 CBC WITH MD5\n"
+#ifdef NSS_ENABLE_ECC
+"T    TLS ECDHE RSA WITH AES 128 CBC SHA\n"
+#endif /* NSS_ENABLE_ECC */
 "\n"
 "a    SSL3 FORTEZZA DMS WITH FORTEZZA CBC SHA\n"
 "b    SSL3 FORTEZZA DMS WITH RC4 128 SHA\n"

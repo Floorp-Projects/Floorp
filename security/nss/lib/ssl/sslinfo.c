@@ -16,7 +16,11 @@
  * Copyright (C) 2001 Netscape Communications Corporation.  All 
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -30,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslinfo.c,v 1.5 2002/08/09 21:53:17 nelsonb%netscape.com Exp $
+ * $Id: sslinfo.c,v 1.6 2003/02/27 01:31:34 nelsonb%netscape.com Exp $
  */
 #include "ssl.h"
 #include "sslimpl.h"
@@ -106,10 +110,13 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
 #define S_DSA   "DSA", ssl_auth_dsa
 #define S_RSA	"RSA", ssl_auth_rsa
 #define S_KEA   "KEA", ssl_auth_kea
+#define S_ECDSA "ECDSA", ssl_auth_ecdsa
 
 #define K_DHE	"DHE", kt_dh
 #define K_RSA	"RSA", kt_rsa
 #define K_KEA	"KEA", kt_kea
+#define K_ECDH	"ECDH", kt_ecdh
+#define K_ECDHE	"ECDHE", kt_ecdh
 
 #define C_AES	"AES", calg_aes
 #define C_RC4	"RC4", calg_rc4
@@ -163,6 +170,27 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 {0,CS(SSL_FORTEZZA_DMS_WITH_NULL_SHA),        S_KEA, K_KEA, C_NULL,B_0,   M_SHA, 0, 1, 0, },
 {0,CS(SSL_RSA_WITH_NULL_SHA),                 S_RSA, K_RSA, C_NULL,B_0,   M_SHA, 0, 1, 0, },
 {0,CS(SSL_RSA_WITH_NULL_MD5),                 S_RSA, K_RSA, C_NULL,B_0,   M_MD5, 0, 1, 0, },
+
+#ifdef NSS_ENABLE_ECC
+/* ECC cipher suites */
+{0,CS(TLS_ECDH_ECDSA_WITH_NULL_SHA),          S_ECDSA, K_ECDH, C_NULL, B_0, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_ECDSA_WITH_RC4_128_SHA),       S_ECDSA, K_ECDH, C_RC4, B_128, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_ECDSA_WITH_DES_CBC_SHA),       S_ECDSA, K_ECDH, C_DES, B_DES, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA),  S_ECDSA, K_ECDH, C_3DES, B_3DES, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA),   S_ECDSA, K_ECDH, C_AES, B_128, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA),   S_ECDSA, K_ECDH, C_AES, B_256, M_SHA, 0, 0, 0, },
+
+{0,CS(TLS_ECDH_RSA_WITH_NULL_SHA),            S_RSA, K_ECDH, C_NULL, B_0, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_RSA_WITH_RC4_128_SHA),         S_RSA, K_ECDH, C_RC4, B_128, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_RSA_WITH_DES_CBC_SHA),         S_RSA, K_ECDH, C_DES, B_DES, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA),    S_RSA, K_ECDH, C_3DES, B_3DES, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_RSA_WITH_AES_128_CBC_SHA),     S_RSA, K_ECDH, C_AES, B_128, M_SHA, 0, 0, 0, },
+{0,CS(TLS_ECDH_RSA_WITH_AES_256_CBC_SHA),     S_RSA, K_ECDH, C_AES, B_256, M_SHA, 0, 0, 0, },
+
+{0,CS(TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA),  S_ECDSA, K_ECDHE, C_AES, B_128, M_SHA, 0, 0, 0, },
+
+{0,CS(TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA),    S_RSA, K_ECDHE, C_AES, B_128, M_SHA, 0, 0, 0, },
+#endif /* NSS_ENABLE_ECC */
 
 /* SSL 2 table */
 {0,CK(SSL_CK_RC4_128_WITH_MD5),               S_RSA, K_RSA, C_RC4, B_128, M_MD5, 0, 0, 0, },

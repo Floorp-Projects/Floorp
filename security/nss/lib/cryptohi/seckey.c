@@ -16,8 +16,12 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved. 
+ *
  * Contributor(s): 
  *	Dr Stephen Henson <stephen.henson@gemplus.com>
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -44,6 +48,7 @@
 #include "secerr.h"
 #include "secdig.h"
 #include "prtime.h"
+#include "ec.h"
 
 const SEC_ASN1Template CERT_SubjectPublicKeyInfoTemplate[] = {
     { SEC_ASN1_SEQUENCE,
@@ -227,6 +232,33 @@ SECKEY_CreateDHPrivateKey(SECKEYDHParams *param, SECKEYPublicKey **pubk, void *c
 
     PK11_FreeSlot(slot);
     return(privk);
+}
+
+/* Create an EC key pair in any slot able to do so, 
+** This is a "session" (temporary), not "token" (permanent) key. 
+** Because of the high probability that this key will need to be moved to
+** another token, and the high cost of moving "sensitive" keys, we attempt
+** to create this key pair without the "sensitive" attribute, but revert to 
+** creating a "sensitive" key if necessary.
+*/
+SECKEYPrivateKey *
+SECKEY_CreateECPrivateKey(SECKEYECParams *param, SECKEYPublicKey **pubk, void *cx)
+{
+#ifdef NSS_ENABLE_ECC
+    SECKEYPrivateKey *privk;
+    PK11SlotInfo *slot = PK11_GetBestSlot(CKM_EC_KEY_PAIR_GEN,cx);
+
+    privk = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, param, 
+                                 pubk, PR_FALSE, PR_FALSE, cx);
+    if (!privk) 
+	privk = PK11_GenerateKeyPair(slot, CKM_EC_KEY_PAIR_GEN, param, 
+	                             pubk, PR_FALSE, PR_TRUE, cx);
+
+    PK11_FreeSlot(slot);
+    return(privk);
+#else
+    return NULL;
+#endif /* NSS_ENABLE_ECC */
 }
 
 void
@@ -433,7 +465,8 @@ seckey_UpdateCertPQGChain(CERTCertificate * subjectCert, int count)
              (tag != SEC_OID_ANSIX9_DSA_SIGNATURE) &&
              (tag != SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST) &&
              (tag != SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST) &&
-             (tag != SEC_OID_SDN702_DSA_SIGNATURE) ) {
+             (tag != SEC_OID_SDN702_DSA_SIGNATURE) &&
+             (tag != SEC_OID_ANSIX962_EC_PUBLIC_KEY) ) {
             
             return SECSuccess;
         }
@@ -480,8 +513,8 @@ seckey_UpdateCertPQGChain(CERTCertificate * subjectCert, int count)
              (tag != SEC_OID_ANSIX9_DSA_SIGNATURE) &&
              (tag != SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST) &&
              (tag != SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST) &&
-             (tag != SEC_OID_SDN702_DSA_SIGNATURE) ) {
-            
+             (tag != SEC_OID_SDN702_DSA_SIGNATURE) &&
+             (tag != SEC_OID_ANSIX962_EC_PUBLIC_KEY) ) {            
             return SECFailure;
         }
     } else {
@@ -881,11 +914,48 @@ CERT_GetCertKeyType (CERTSubjectPublicKeyInfo *spki) {
       case SEC_OID_X942_DIFFIE_HELMAN_KEY:
 	keyType = dhKey;
 	break;
+      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+	keyType = ecKey;
+	break;
       default:
 	keyType = nullKey;
     }
     return keyType;
 }
+
+#ifdef NSS_ENABLE_ECC
+static int
+seckey_supportedECParams(SECItem *encodedParams)
+{
+    SECOidTag tag;
+    SECItem oid = { siBuffer, NULL, 0};
+
+    /* We do not currently support explicit DER encoding of curve
+     * parameters. Make sure the encoding takes the form of
+     * an object identifier (this is how named curves are encoded).
+     */
+    if (encodedParams->data[0] != SEC_ASN1_OBJECT_ID) return 0;
+
+    /* The encodedParams data contains 0x06 (SEC_ASN1_OBJECT_ID),
+     * followed by the length of the curve oid and the curve oid.
+     */
+    oid.len = encodedParams->data[1];
+    oid.data = encodedParams->data + 2;
+    tag = SECOID_FindOIDTag(&oid);
+
+    return (((tag >= SEC_OID_ANSIX962_EC_PRIME192V1) 
+	    && (tag <= SEC_OID_ANSIX962_EC_PRIME256V1)) ||
+	    ((tag >= SEC_OID_SECG_EC_SECP112R1)
+		&& (tag <= SEC_OID_SECG_EC_SECP521R1)));
+}
+
+static int
+seckey_supportedECPointForm(SECItem *ecPoint)
+{
+    /* For now, we only support uncompressed points */
+    return (ecPoint->data[0] == EC_POINT_FORM_UNCOMPRESSED);
+}
+#endif /* NSS_ENABLE_ECC */
 
 static SECKEYPublicKey *
 seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
@@ -1012,6 +1082,46 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
 
         break;
 
+#ifdef NSS_ENABLE_ECC
+      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+	pubk->keyType = ecKey;
+	pubk->u.ec.size = 0;
+#if 0
+	/* If we uncomment these checks, ssl3con.c produces an "SSL
+	 * was unable to extract the public key from the peer's
+	 * certificate" error upon encountering an EC certificate with
+	 * an unsupported curve or point form.  It isn't clear that we
+	 * should be triggering this error because the EC key was
+	 * *successfully extracted* even though we can't use
+	 * it. Commenting these checks delays detection of unsupported
+	 * curves to a later point in the handshake (e.g. when a
+	 * client attempts to generate a key pair before sending the
+	 * ClientKeyExchange message). 
+	 */
+	if (!seckey_supportedECParams(&spki->algorithm.parameters)) {
+	    PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+	    rv = SECFailure;
+	    break;
+	}
+
+	if (!seckey_supportedECPointForm(&newOs)) {
+	    PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
+	    rv = SECFailure;
+	    break;
+	}
+#endif
+
+	/* Since PKCS#11 directly takes the DER encoding of EC params
+	 * and public value, we don't need any decoding here.
+	 */
+        rv = SECITEM_CopyItem(arena, &pubk->u.ec.DEREncodedParams, 
+	    &spki->algorithm.parameters);
+        if ( rv != SECSuccess )
+            break;
+        rv = SECITEM_CopyItem(arena, &pubk->u.ec.publicValue, &newOs);
+	if (rv == SECSuccess) return pubk;
+	break;
+#endif /* NSS_ENABLE_ECC */
 
       default:
 	rv = SECFailure;
@@ -1053,6 +1163,59 @@ CERT_KMIDPublicKey(CERTCertificate *cert)
     return seckey_ExtractPublicKey(&cert->subjectPublicKeyInfo);
 }
 
+#ifdef NSS_ENABLE_ECC
+static int
+seckey_ECParams2KeySize(SECItem *encodedParams)
+{
+    SECOidTag tag;
+    SECItem oid = { siBuffer, NULL, 0};
+	
+    /* The encodedParams data contains 0x06 (SEC_ASN1_OBJECT_ID),
+     * followed by the length of the curve oid and the curve oid.
+     */
+    oid.len = encodedParams->data[1];
+    oid.data = encodedParams->data + 2;
+    if ((tag = SECOID_FindOIDTag(&oid)) == SEC_OID_UNKNOWN)
+	return 0;
+    switch (tag) {
+    case SEC_OID_ANSIX962_EC_PRIME192V1:
+    case SEC_OID_ANSIX962_EC_PRIME192V2:
+    case SEC_OID_ANSIX962_EC_PRIME192V3:
+	    return 192;
+    case SEC_OID_ANSIX962_EC_PRIME239V1:
+    case SEC_OID_ANSIX962_EC_PRIME239V2:
+    case SEC_OID_ANSIX962_EC_PRIME239V3:
+	    return 239;
+    case SEC_OID_ANSIX962_EC_PRIME256V1:
+	    return 256;
+
+    case SEC_OID_SECG_EC_SECP112R1:
+    case SEC_OID_SECG_EC_SECP112R2:
+	    return 112;
+    case SEC_OID_SECG_EC_SECP128R1:
+    case SEC_OID_SECG_EC_SECP128R2:
+	    return 128;
+    case SEC_OID_SECG_EC_SECP160K1:
+    case SEC_OID_SECG_EC_SECP160R1:
+    case SEC_OID_SECG_EC_SECP160R2:
+	    return 160;
+    case SEC_OID_SECG_EC_SECP192K1:
+	    return 192;
+    case SEC_OID_SECG_EC_SECP224K1:
+    case SEC_OID_SECG_EC_SECP224R1:
+	    return 224;
+    case SEC_OID_SECG_EC_SECP256K1:
+	    return 256;
+    case SEC_OID_SECG_EC_SECP384R1:
+	    return 384;
+    case SEC_OID_SECG_EC_SECP521R1:
+	    return 521;
+    default:
+	    return 0;
+    }
+}
+#endif /* NSS_ENABLE_ECC */
+
 /* returns key strength in bytes (not bits) */
 unsigned
 SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk)
@@ -1076,6 +1239,39 @@ SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk)
 	    pubk->u.dh.publicValue.len - 1;
     case fortezzaKey:
 	return PR_MAX(pubk->u.fortezza.KEAKey.len, pubk->u.fortezza.DSSKey.len);
+#ifdef NSS_ENABLE_ECC
+    case ecKey:
+	/* Get the key size in bits and adjust */
+	if (pubk->u.ec.size == 0) {
+	    pubk->u.ec.size = 
+		seckey_ECParams2KeySize(&pubk->u.ec.DEREncodedParams);
+	} 
+	return (pubk->u.ec.size + 7)/8;
+#endif /* NSS_ENABLE_ECC */
+    default:
+	break;
+    }
+    return 0;
+}
+
+/* returns key strength in bits */
+unsigned
+SECKEY_PublicKeyStrengthInBits(SECKEYPublicKey *pubk)
+{
+    switch (pubk->keyType) {
+    case rsaKey:
+    case dsaKey:
+    case dhKey:
+    case fortezzaKey:
+	return SECKEY_PublicKeyStrength(pubk) * 8; /* 1 byte = 8 bits */
+#ifdef NSS_ENABLE_ECC
+    case ecKey:
+	if (pubk->u.ec.size == 0) {
+	    pubk->u.ec.size = 
+		seckey_ECParams2KeySize(&pubk->u.ec.DEREncodedParams);
+	} 
+	return pubk->u.ec.size;
+#endif /* NSS_ENABLE_ECC */
     default:
 	break;
     }
@@ -1230,6 +1426,16 @@ SECKEY_CopyPublicKey(SECKEYPublicKey *pubk)
 	    rv = SECITEM_CopyItem(arena, &copyk->u.dh.publicValue, 
 				&pubk->u.dh.publicValue);
 	    break;
+#ifdef NSS_ENABLE_ECC
+	  case ecKey:
+	    copyk->u.ec.size = pubk->u.ec.size;
+            rv = SECITEM_CopyItem(arena,&copyk->u.ec.DEREncodedParams,
+		&pubk->u.ec.DEREncodedParams);
+	    if (rv != SECSuccess) break;
+            rv = SECITEM_CopyItem(arena,&copyk->u.ec.publicValue,
+		&pubk->u.ec.publicValue);
+	    break;
+#endif /* NSS_ENABLE_ECC */
 	  case nullKey:
 	    return copyk;
 	  default:

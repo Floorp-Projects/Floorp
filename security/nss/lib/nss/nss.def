@@ -16,8 +16,12 @@
 ;+# Copyright (C) 2000 Netscape Communications Corporation.  All
 ;+# Rights Reserved.
 ;+#
+;+# Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+;+# Sun Microsystems, Inc. All Rights Reserved.
+;+#
 ;+# Contributor(s): 
 ;+#	Dr Stephen Henson <stephen.henson@gemplus.com>
+;+#	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
 ;+#
 ;+# Alternatively, the contents of this file may be used under the
 ;+# terms of the GNU General Public License Version 2 or later (the
@@ -746,6 +750,8 @@ PK11_UpdateSlotAttribute;
 PK11_UserEnableSlot;
 PK11_UserDisableSlot;
 SECITEM_ItemsAreEqual;
+SECKEY_CreateECPrivateKey;
+SECKEY_PublicKeyStrengthInBits;
 ;+    local:
 ;+       *;
 ;+};
