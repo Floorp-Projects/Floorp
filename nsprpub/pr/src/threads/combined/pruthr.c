@@ -1224,9 +1224,20 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             stack = _PR_NewStack(stackSize);
             if (!stack) {
                 PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-            return 0;
+                return NULL;
             }
 
+#if defined(GC_LEAK_DETECTOR)
+            top = stack->stackTop;
+            /* Allocate thread in heap, so GC will scan it. */
+            thread = (PRThread*) PR_CALLOC(sizeof(PRThread));
+            if (!thread) {
+                PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+                return NULL;
+            }
+            stack->thr = thread;
+            thread->threadAllocatedOnStack = 0;
+#else
             /* Allocate thread object and per-thread data off the top of the stack*/
             top = stack->stackTop;
 #ifdef HAVE_STACK_GROWING_UP
@@ -1251,6 +1262,8 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             stack->thr = thread;
             memset(thread, 0, sizeof(PRThread));
             thread->threadAllocatedOnStack = 1;
+#endif
+
 #else
             thread = _PR_MD_CREATE_USER_THREAD(stackSize, start, arg);
             if (!thread) {
