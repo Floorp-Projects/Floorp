@@ -444,10 +444,12 @@ nsAString::Cut( index_type cutStart, size_type cutLength )
     cutLength = NS_MIN(cutLength, myLength-cutStart);
     index_type cutEnd = cutStart + cutLength;
 
-    const_iterator fromBegin, fromEnd;
-    iterator toBegin;
     if ( cutEnd < myLength )
-      copy_string(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
+      {
+        const_iterator fromBegin, fromEnd;
+        iterator toBegin;
+        copy_string(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
+      }
     SetLength(myLength-cutLength);
   }
 
@@ -941,10 +943,12 @@ nsACString::Cut( index_type cutStart, size_type cutLength )
     cutLength = NS_MIN(cutLength, myLength-cutStart);
     index_type cutEnd = cutStart + cutLength;
 
-    const_iterator fromBegin, fromEnd;
-    iterator toBegin;
     if ( cutEnd < myLength )
-      copy_string(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
+      {
+        const_iterator fromBegin, fromEnd;
+        iterator toBegin;
+        copy_string(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
+      }
     SetLength(myLength-cutLength);
   }
 
