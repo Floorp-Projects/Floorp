@@ -78,6 +78,7 @@ function TableCellFilter(node)
     {
     case "td":
     case "th":
+    case "caption":
       return NodeFilter.FILTER_ACCEPT;
       break;
     default:
@@ -96,8 +97,8 @@ function StructRemoveTag()
   var offset = 0;
   var childNodes = element.parentNode.childNodes;
 
-  while (childNodes.item(offset) != element) {
-    offset++;
+  while (childNodes[offset] != element) {
+    ++offset;
   }
 
   editor.beginTransaction();
@@ -114,10 +115,10 @@ function StructRemoveTag()
                                                    NodeFilter.SHOW_ELEMENT,
                                                    TableCellFilter,
                                                    true);
-      var node = nodeIterator.nextNode();
+      var node = nodeIterator.lastChild();
       while (node) {
         MoveChildNodesAfterElement(editor, node, element, offset);
-        node = nodeIterator.nextNode();
+        node = nodeIterator.previousSibling();
       }
 
     }
@@ -133,7 +134,7 @@ function MoveChildNodesAfterElement(editor, element, targetElement, targetOffset
   var childNodes = element.childNodes;
   var childNodesLength = childNodes.length;
   var i;
-  for (i = 0; i < childNodesLength; i++) {
+  for (i = childNodesLength - 1; i >= 0; i--) {
     var clone = childNodes.item(i).cloneNode(true);
     editor.insertNode(clone, targetElement.parentNode, targetOffset + 1);
   }
