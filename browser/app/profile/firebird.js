@@ -474,7 +474,6 @@ pref("intl.charsetmenu.browser.more5",  "chrome://global/locale/intl.properties"
 pref("intl.charsetmenu.browser.cache.size", 5);
 pref("intl.charset.detector", "chrome://global/locale/intl.properties");
 pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");
-pref("intl.content.langcode", "chrome://communicator-region/locale/region.properties");
 pref("intl.locale.matchOS",   false);
 // fallback charset list for Unicode conversion (converting from Unicode)
 // currently used for mail send only to handle symbol characters (e.g Euro, trademark, smartquotes)
