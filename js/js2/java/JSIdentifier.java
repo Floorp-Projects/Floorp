@@ -10,16 +10,14 @@ class JSIdentifier extends JSString {
         return indent + "JSIdentifier : " + s + "\n";
     }
 
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        theEnv.theStack.push(this);
-        theEnv.scope.getProp(theEnv);
+        return theEnv.scope.getProp(theEnv, this);
     }
     
-    void evalLHS(Environment theEnv)
+    JSReference evalLHS(Environment theEnv)
     {
-        theEnv.theStack.push(this);
-        theEnv.theStack.push(theEnv.scope);
+        return new JSReference(theEnv.scope, this);
     }
     
 }

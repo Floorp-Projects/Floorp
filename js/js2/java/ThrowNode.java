@@ -7,8 +7,7 @@ class ThrowNode extends ControlNode {
 
     ControlNode eval(Environment theEnv)
     {
-        ControlNode n = super.eval(theEnv);
-        throw new JSException(theEnv.theStack.pop());
+        throw new JSException(expr.eval(theEnv));
     }
 
 }

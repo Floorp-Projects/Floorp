@@ -5,28 +5,29 @@ class ArithmeticNode extends BinaryNode {
         super(aOp, aLeft, aRight);
     }
 
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        left.eval(theEnv);
-        JSValue lV = theEnv.theStack.pop();
-        right.eval(theEnv);
+        JSValue lV = left.eval(theEnv);
+        JSValue rV = right.eval(theEnv);
 
         if (op == "+")
-            lV.add(theEnv);
+            return lV.add(theEnv, rV);
         else
         if (op == "-")
-            lV.subtract(theEnv);
+            return lV.subtract(theEnv, rV);
         else
         if (op == "*")
-            lV.multiply(theEnv);
+            return lV.multiply(theEnv, rV);
         else
         if (op == "/")
-            lV.divide(theEnv);
+            return lV.divide(theEnv, rV);
         else
         if (op == "%")
-            lV.remainder(theEnv);
-        else
+            return lV.remainder(theEnv, rV);
+        else {
             System.out.println("missing arithmetic op " + op);
+            return null;
+        }
     }
 
 }

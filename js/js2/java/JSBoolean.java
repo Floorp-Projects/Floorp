@@ -8,9 +8,9 @@ class JSBoolean extends JSValue {
         b = p;
     }
     
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        theEnv.theStack.push(this);
+        return this;
     }
     
     boolean isTrue()
@@ -23,12 +23,12 @@ class JSBoolean extends JSValue {
         return !b;
     }
     
-    void bang(Environment theEnv) {
-         theEnv.theStack.push((b) ? JSFalse : JSTrue);
+    JSValue bang(Environment theEnv) {
+         return (b) ? JSFalse : JSTrue;
     }
 
-    void typeof(Environment theEnv) {
-        theEnv.theStack.push(new JSString("boolean"));
+    JSValue typeof(Environment theEnv) {
+        return new JSString("boolean");
     }
 
     JSBoolean toJSBoolean(Environment theEnv) {

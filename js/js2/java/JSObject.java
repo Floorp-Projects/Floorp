@@ -19,16 +19,16 @@ class JSObject extends JSValue {
         return value + contents.toString();
     }
         
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        theEnv.theStack.push(this);
+        return this;
     }
 
-    void typeof(Environment theEnv) {
+    JSValue typeof(Environment theEnv) {
         if (this == JSUndefined)
-            theEnv.theStack.push(new JSString("undefined"));
+            return new JSString("undefined");
         else
-            theEnv.theStack.push(new JSString("object"));
+            return new JSString("object");
     }
     
     JSBoolean toJSBoolean(Environment theEnv) {
@@ -39,16 +39,13 @@ class JSObject extends JSValue {
         return toPrimitive(theEnv, "Number").toJSDouble(theEnv);
     }
         
-    void getProp(Environment theEnv) {
-        JSString id = theEnv.theStack.pop().toJSString(theEnv);
-        JSValue v = (JSValue)(contents.get(id.s));
-        theEnv.theStack.push(v);
+    JSValue getProp(Environment theEnv, JSString id) {
+        return (JSValue)(contents.get(id.s));
     }
         
-    void putProp(Environment theEnv) {
-        JSValue v = theEnv.theStack.pop();
-        JSString id = theEnv.theStack.pop().toJSString(theEnv);
-        contents.put(id.s, v);
+    JSValue putProp(Environment theEnv, JSString id, JSValue rV) {
+        contents.put(id.s, rV);
+        return rV;
     }
         
         

@@ -5,36 +5,35 @@ class LogicalNode extends BinaryNode {
         super(aOp, aLeft, aRight);
     }
 
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        left.eval(theEnv);
-        JSBoolean b = theEnv.theStack.pop().toJSBoolean(theEnv);
+        JSBoolean b = left.eval(theEnv).toJSBoolean(theEnv);
         if (op == "&&") {
             if (b.isFalse())
-                theEnv.theStack.push(b);
+                return b;
             else {
-                right.eval(theEnv);
-                b = theEnv.theStack.pop().toJSBoolean(theEnv);
+                b = right.eval(theEnv).toJSBoolean(theEnv);
                 if (b.isFalse())
-                    theEnv.theStack.push(b);
+                    return b;
                 else
-                    theEnv.theStack.push(JSBoolean.JSTrue);
+                    return JSBoolean.JSTrue;
             }
         }
         if (op == "||") {
             if (b.isTrue())
-                theEnv.theStack.push(b);
+                return b;
             else {
-                right.eval(theEnv);
-                b = theEnv.theStack.pop().toJSBoolean(theEnv);
+                b = right.eval(theEnv).toJSBoolean(theEnv);
                 if (b.isTrue())
-                    theEnv.theStack.push(b);
+                    return b;
                 else
-                    theEnv.theStack.push(JSBoolean.JSFalse);
+                    return JSBoolean.JSFalse;
             }
         }
-        else
+        else {
             System.out.println("missing logical op " + op);
+            return null;
+        }
     }
 
 }

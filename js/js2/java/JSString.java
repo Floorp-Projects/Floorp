@@ -5,79 +5,60 @@ class JSString extends JSValue {
         s = p;
     }
     
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        theEnv.theStack.push(this);
+        return this;
     }
     
-    void typeof(Environment theEnv) {
-        theEnv.theStack.push(new JSString("string"));
+    JSValue typeof(Environment theEnv) {
+        return new JSString("string");
     }
 
-    void add(Environment theEnv)
+    JSValue add(Environment theEnv, JSValue rV)
     {
-        JSString vR = theEnv.theStack.pop().toJSString(theEnv);
-        theEnv.theStack.push(new JSString(s + vR.s));
+        return new JSString(s + rV.toJSString(theEnv).s);
     }
 
-    void gt(Environment theEnv) {
-        JSValue vR = theEnv.theStack.peek();
-        if (vR instanceof JSString) {
-            theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) == 1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
-        }
+    JSValue gt(Environment theEnv, JSValue rV) {
+        if (rV instanceof JSString)
+            return (s.compareTo(rV.toJSString(theEnv).s) == 1) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
         else
-            toJSDouble(theEnv).gt(theEnv);
+            return toJSDouble(theEnv).gt(theEnv, rV);
     }
 
-    void ge(Environment theEnv) {
-        JSValue vR = theEnv.theStack.peek();
-        if (vR instanceof JSString) {
-            theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) != -1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
-        }
+    JSValue ge(Environment theEnv, JSValue rV) {
+        if (rV instanceof JSString)
+            return (s.compareTo(rV.toJSString(theEnv).s) != -1) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
         else
-            toJSDouble(theEnv).ge(theEnv);
+            return toJSDouble(theEnv).ge(theEnv, rV);
     }
     
-    void lt(Environment theEnv) {
-        JSValue vR = theEnv.theStack.peek();
-        if (vR instanceof JSString) {
-            theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) == -1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
-        }
+    JSValue lt(Environment theEnv, JSValue rV) {
+        if (rV instanceof JSString)
+            return (s.compareTo(rV.toJSString(theEnv).s) == -1) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
         else
-            toJSDouble(theEnv).lt(theEnv);
+            return toJSDouble(theEnv).lt(theEnv, rV);
     }
     
-    void le(Environment theEnv) {
-        JSValue vR = theEnv.theStack.peek();
-        if (vR instanceof JSString) {
-            theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) != 1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
-        }
+    JSValue le(Environment theEnv, JSValue rV) {
+        if (rV instanceof JSString)
+            return (s.compareTo(rV.toJSString(theEnv).s) != 1) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
         else
-            toJSDouble(theEnv).le(theEnv);
+            return toJSDouble(theEnv).le(theEnv, rV);
     }
     
-    void eq(Environment theEnv) {
-        JSValue vR = theEnv.theStack.peek();
-        if (vR instanceof JSString) {
-            theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) == 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
-        }
+    JSValue eq(Environment theEnv, JSValue rV) {
+        if (rV instanceof JSString)
+            return (s.compareTo(rV.toJSString(theEnv).s) == 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
         else
-            toJSDouble(theEnv).eq(theEnv);
+            return toJSDouble(theEnv).eq(theEnv, rV);
     }
     
-    void ne(Environment theEnv) {
-        JSValue vR = theEnv.theStack.peek();
-        if (vR instanceof JSString) {
-            theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) != 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
-        }
+    JSValue ne(Environment theEnv, JSValue rV) {
+        if (rV instanceof JSString)
+            return (s.compareTo(rV.toJSString(theEnv).s) != 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
         else
-            toJSDouble(theEnv).ne(theEnv);
+            return toJSDouble(theEnv).ne(theEnv, rV);
     }
     
     JSDouble toJSDouble(Environment theEnv) {

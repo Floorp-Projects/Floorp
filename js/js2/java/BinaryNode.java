@@ -7,31 +7,32 @@ class BinaryNode extends ExpressionNode {
         op = aOp;
     }
 
-    void evalLHS(Environment theEnv)
+    JSReference evalLHS(Environment theEnv)
     {
         if (op == ".") {
-            left.eval(theEnv);
-            JSValue lV = theEnv.theStack.pop();
+            JSValue lV = left.eval(theEnv);
+            JSString id;
             if (right instanceof JSIdentifier)
-                theEnv.theStack.push((JSValue)right);
+                id = (JSString)right;
             else
-                right.eval(theEnv);
-            theEnv.theStack.push(lV);
+                id = right.eval(theEnv).toJSString(theEnv);
+            return new JSReference(lV, id);
         }
         else
             throw new RuntimeException("bad lValue operator " + op);
     }
     
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        left.eval(theEnv);
-        JSValue lV = theEnv.theStack.pop();
-        right.eval(theEnv);
+        JSValue lV = left.eval(theEnv);
+        JSValue rV = right.eval(theEnv);
         
         if (op == ".")
-            lV.getProp(theEnv);
-        else
+            return lV.getProp(theEnv, rV.toJSString(theEnv));
+        else {
             System.out.println("missing binary op " + op);
+            return null;
+        }
         
     }
     

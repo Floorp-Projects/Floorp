@@ -22,7 +22,6 @@ class TryNode extends ControlNode {
 
     ControlNode eval(Environment theEnv)
     {
-        int stackHeight = theEnv.theStack.size();
         try {
             ControlNode c = tryBody;
             while (c != null) c = c.eval(theEnv);
@@ -32,7 +31,6 @@ class TryNode extends ControlNode {
             for (int i = 0; i < count; i++) {
                 ExpressionNode e = (ExpressionNode)(catchExpr.elementAt(i));
                 String id = ((JSObject)e).value;
-                theEnv.theStack.setStack(stackHeight);
                 theEnv.scope.contents.put(id, x.getValue());    // XXX YAARGH !!!
                 return (ControlNode)(catchCode.elementAt(i));
             }

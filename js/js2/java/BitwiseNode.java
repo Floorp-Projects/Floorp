@@ -5,31 +5,32 @@ class BitwiseNode extends BinaryNode {
         super(aOp, aLeft, aRight);
     }
 
-    void eval(Environment theEnv)
+    JSValue eval(Environment theEnv)
     {
-        left.eval(theEnv);
-        JSInteger lV = theEnv.theStack.pop().toJSInteger(theEnv);
-        right.eval(theEnv);
+        JSInteger lV = left.eval(theEnv).toJSInteger(theEnv);
+        JSValue rV = right.eval(theEnv);
 
         if (op == "&")
-            lV.and(theEnv);
+            return lV.and(theEnv, rV);
         else
         if (op == "|")
-            lV.or(theEnv);
+            return lV.or(theEnv, rV);
         else
         if (op == "^")
-            lV.xor(theEnv);
+            return lV.xor(theEnv, rV);
         else
         if (op == "<<")
-            lV.shr(theEnv);
+            return lV.shr(theEnv, rV);
         else
         if (op == ">>")
-            lV.shl(theEnv);
+            return lV.shl(theEnv, rV);
         else
         if (op == ">>>")
-            lV.ushl(theEnv);
-        else
+            return lV.ushl(theEnv, rV);
+        else {
             System.out.println("missing bitwise op " + op);
+            return null;
+        }
     }
 
 }

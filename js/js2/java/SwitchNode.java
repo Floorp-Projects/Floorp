@@ -21,20 +21,18 @@ class SwitchNode extends ControlNode {
     
     ControlNode eval(Environment theEnv)
     {
-        ControlNode n = super.eval(theEnv);
-        JSValue v = theEnv.theStack.pop();
+        JSValue v = expr.eval(theEnv);
         int count = caseExpr.size();
         for (int i = 0; i < count; i++) {
             ExpressionNode e = (ExpressionNode)(caseExpr.elementAt(i));
-            e.eval(theEnv);
-            v.eq(theEnv);                       
-            if (theEnv.theStack.pop().toJSBoolean(theEnv).isTrue())
+            JSBoolean b = v.eq(theEnv, e.eval(theEnv)).toJSBoolean(theEnv);                       
+            if (b.isTrue())
                 return (ControlNode)(caseCode.elementAt(i));
         }
         if (defaultCode != null)
             return defaultCode;
         else
-            return n;
+            return next;
     }
 
     Vector caseExpr = new Vector();
