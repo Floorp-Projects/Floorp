@@ -56,6 +56,7 @@ public:
   
 protected:
   // add any mac specific service state here
+  void UpdateCreatorInfo(nsIMIMEInfo * aMIMEInfo);
 
 };
 
