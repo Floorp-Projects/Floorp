@@ -94,6 +94,7 @@ ssl_init()
   #fileout=1
   #verbose="-v" #FIXME - see where this is usefull
   cd ${CLIENTDIR}
+
 }
 
 ########################### is_selfserv_alive ##########################
@@ -157,15 +158,15 @@ start_selfserv()
       echo "$SCRIPTNAME: $testname ----"
   fi
   sparam=`echo $sparam | sed -e 's;_; ;g'`
-  echo "selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOST}.${DOMSUF} \\"
+  echo "selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \\"
   echo "         -w nss ${sparam} -i ${R_SERVERPID} $verbose &"
   echo "selfserv started at `date`"
   if [ ${fileout} -eq 1 ]; then
-      selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOST}.${DOMSUF} \
+      selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose \
                > ${SERVEROUTFILE} 2>&1 &
   else
-      selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOST}.${DOMSUF} \
+      selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose &
   fi
   wait_for_selfserv
@@ -258,9 +259,9 @@ ssl_stress()
           start_selfserv
 
           echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose \\"
-          echo "         ${HOST}.${DOMSUF}"
+          echo "         ${HOSTADDR}"
           echo "strsclnt started at `date`"
-          strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF}
+          strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOSTADDR}
           echo "strsclnt completed at `date`"
 
           html_msg $? $value "${testname}"
@@ -270,6 +271,7 @@ ssl_stress()
 
   html "</TABLE><BR>"
 }
+
 
 ############################## ssl_cleanup #############################
 # local shell function to finish this script (no exit since it might be
@@ -284,8 +286,12 @@ ssl_cleanup()
 
 ################## main #################################################
 
-ssl_init
-ssl_cov
-ssl_auth
-ssl_stress
-ssl_cleanup
+#this script may be sourced from the distributed stress test - in this case do nothing...
+
+if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
+    ssl_init
+    ssl_cov
+    ssl_auth
+    ssl_stress
+    ssl_cleanup
+fi
