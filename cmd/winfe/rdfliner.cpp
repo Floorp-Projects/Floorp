@@ -34,6 +34,8 @@
 #include "fegui.h"
 #include "nethelp.h"
 #include "time.h"
+#include "csid.h"
+#include "libi18n.h"
 
 CMapStringToPtr CHTFEData::m_LocalFileCache(40);
 CMapStringToPtr CHTFEData::m_CustomURLCache(20);
@@ -2800,9 +2802,11 @@ char * CRDFOutliner::GetTextEditText(void)
 		int size = m_EditField->GetWindowText(str, 1000);
 		if(size > 0)
 		{
-			char *newStr = new char[size + 1];
-			strcpy(newStr, str);
-			return newStr;
+			// we need to convert to UTF8 from the 
+			// Edit Control charset
+			return  (char*) INTL_ConvertLineWithoutAutoDetect(
+				INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel),
+					CS_UTF8,(unsigned char*) str, size );
 		}
 	}
 
@@ -2868,13 +2872,20 @@ void CRDFOutliner::AddTextEdit()
 		::ReleaseDC(m_hWnd, hDC);
 		m_EditField->SetFocus();
 
-		char* pText = (char*)GetColumnText(m_nSelectedColumn, HT_GetNthItem(m_View, m_iSelection));
+		char* pUTF8Text = (char*)GetColumnText(m_nSelectedColumn, HT_GetNthItem(m_View, m_iSelection));
 
-		if (pText)
+		if (pUTF8Text)
 		{
+			// we need to convert from UTF8 from the 
+			// Edit Control charset
+			char* pEditText = (char*) INTL_ConvertLineWithoutAutoDetect( 
+				CS_UTF8,
+				INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel),
+				(unsigned char*)pUTF8Text, strlen(pUTF8Text) );
 			m_EditField->SetSel(0,-1);
-			m_EditField->ReplaceSel(pText);
+			m_EditField->ReplaceSel(pEditText);
 			m_EditField->SetSel(0,-1);
+			XP_FREEIF(pEditText);
 		}
 	}
 }
