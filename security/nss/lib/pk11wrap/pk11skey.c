@@ -197,7 +197,7 @@ PK11_CleanKeyList(PK11SlotInfo *slot)
     while (slot->freeSymKeysHead) {
     	symKey = slot->freeSymKeysHead;
 	slot->freeSymKeysHead = symKey->next;
-	pk11_CloseSession(symKey->slot, symKey->session,symKey->sessionOwner);
+	pk11_CloseSession(slot, symKey->session,symKey->sessionOwner);
 	PK11_USE_THREADS(PZ_DestroyLock(symKey->refLock);)
 	PORT_Free(symKey);
     };
