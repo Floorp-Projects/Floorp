@@ -42,7 +42,7 @@
 
 interface nsIInterfaceRequestor;
 
-[noscript, uuid(8b3e8488-1dd2-11b2-b547-956290be347c)]
+[scriptable, uuid(8b3e8488-1dd2-11b2-b547-956290be347c)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
     attribute boolean                   forceHandshake; /* obsolete, unused */
