@@ -564,4 +564,12 @@ PR_EXTERN(PRStatus) _MD_lockfile(PRInt32 osfd);
 PR_EXTERN(PRStatus) _MD_tlockfile(PRInt32 osfd);
 PR_EXTERN(PRStatus) _MD_unlockfile(PRInt32 osfd);
 
+/*
+** Random number seed generation
+** XXX: Note: delete re-definition after implementing for BeOS
+*/
+#undef _PR_MD_GET_RANDOM_NOISE
+#define _PR_MD_GET_RANDOM_NOISE(buf,size) 0
+
+
 #endif /* _nspr_beos_defs_h___*/
