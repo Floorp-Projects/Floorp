@@ -648,9 +648,13 @@ static inline PRBool IsNonwordChar(PRUnichar chr)
 {
   // a non-word character is one that can end a word, such as whitespace or
   // most punctuation. 
-  // mscott: We probably need to modify this to make it work for non ascii based languages...
-  //         but then again our spell checker doesn't support multi byte languages anyway.
-  return ((chr != '\'') && (GetCat(chr) != 5));
+  // mscott: We probably need to modify this to make it work for non ascii 
+  // based languages...  but then again our spell checker doesn't support 
+  // multi byte languages anyway.
+  // jshin: one way to make the word boundary checker more generic is to
+  // use 'word breaker(s)' in intl.
+  // Need to fix callers (of IsNonwordChar) to pass PRUint32
+  return ((chr != '\'') && (GetCat(PRUint32(chr)) != 5));
 }
 
 // There are certain conditions when we don't want to spell check a node. In particular 
