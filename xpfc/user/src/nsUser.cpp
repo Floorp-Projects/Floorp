@@ -27,7 +27,6 @@ static NS_DEFINE_IID(kCIUserIID,    NS_IUSER_IID);
 nsUser :: nsUser(nsISupports* outer)
 {
   NS_INIT_AGGREGATED(outer);
-  mUserName = "";
 }
 
 nsUser :: ~nsUser()
@@ -41,11 +40,17 @@ NS_METHOD nsUser::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePt
     if (NULL == aInstancePtr) {                                            
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
-    if (aIID.Equals(kCIUserIID) || aIID.Equals(kISupportsIID) || aIID.Equals(kCUserCID)) {
+    if (aIID.Equals(kCIUserIID) || aIID.Equals(kCUserCID)) {
         *aInstancePtr = (void*) this; 
         AddRef(); 
         return NS_OK; 
     } 
+    if (aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = (void*) ((nsISupports *)this);//&fAggregated);
+        AddRef();
+        return NS_OK;
+    }
+
     return NS_NOINTERFACE;
 }
 
