@@ -98,6 +98,9 @@ class nsXBLService: public nsIXBLService
   // frames built.
   NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult);
 
+  // Gets the object's base class type.  
+  NS_IMETHOD GetBaseTag(nsIContent* aContent, nsIAtom** aResult);
+
 public:
   nsXBLService();
   virtual ~nsXBLService();
@@ -279,6 +282,7 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
 
         (*aResult)->AppendElement(anonymousChild);
       }
+      return NS_OK;
     }
 
     nsCOMPtr<nsIXBLBinding> nextBinding;
@@ -288,6 +292,16 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXBLService::GetBaseTag(nsIContent* aContent, nsIAtom** aResult)
+{
+  *aResult = nsnull;
+  nsCOMPtr<nsIBindableContent> bindable = do_QueryInterface(aContent);
+  if (!bindable)
+    return NS_ERROR_FAILURE;
+
+  return bindable->GetBaseTag(aResult);
+}
 
 // Internal helper methods ////////////////////////////////////////////////////////////////
 
@@ -344,13 +358,18 @@ NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** a
       // Check for the presence of an extends attribute
       child->GetAttribute(kNameSpaceID_None, kExtendsAtom, value);
       if (value != "") {
-        // We have a base class binding. Load it right now.
-        nsCOMPtr<nsIXBLBinding> baseBinding;
-        nsCAutoString url = value;
-        GetBinding(url, getter_AddRefs(baseBinding));
-        if (!baseBinding)
-          return NS_OK; // At least we got the derived class binding loaded.
-        (*aResult)->SetBaseBinding(baseBinding);
+        // See if we are extending a builtin tag.
+        nsCOMPtr<nsIAtom> tag;
+        (*aResult)->GetBaseTag(getter_AddRefs(tag));
+        if (!tag) {
+          // We have a base class binding. Load it right now.
+          nsCOMPtr<nsIXBLBinding> baseBinding;
+          nsCAutoString url = value;
+          GetBinding(url, getter_AddRefs(baseBinding));
+          if (!baseBinding)
+            return NS_OK; // At least we got the derived class binding loaded.
+          (*aResult)->SetBaseBinding(baseBinding);
+        }
       }
 
       break;

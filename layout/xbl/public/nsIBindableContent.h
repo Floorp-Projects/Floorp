@@ -34,6 +34,7 @@
 
 class nsIContent;
 class nsIXBLBinding;
+class nsIAtom;
 
 // {55D70FE0-C8E5-11d3-97FB-00400553EEF0}
 #define NS_IBINDABLE_CONTENT_IID \
@@ -46,6 +47,8 @@ public:
 
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding) = 0;
   NS_IMETHOD GetBinding(nsIXBLBinding** aResult) = 0;
+
+  NS_IMETHOD GetBaseTag(nsIAtom** aResult) = 0;
 };
 
 #endif // nsIBINDABLE_CONTENT_h__
