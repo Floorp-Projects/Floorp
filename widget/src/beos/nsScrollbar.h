@@ -58,7 +58,7 @@ class nsScrollbar : public nsWindow,
 {
 
     // nsISupports
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
 public:
                             nsScrollbar(PRBool aIsVertical);

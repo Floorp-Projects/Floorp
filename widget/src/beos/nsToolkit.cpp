@@ -54,7 +54,7 @@ static PRUintn gToolkitTLSIndex = 0;
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 struct ThreadInterfaceData
 {

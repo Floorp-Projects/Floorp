@@ -79,6 +79,15 @@ public:
 	nsWindow();
 	virtual ~nsWindow();
 
+	// In BeOS, each window runs in its own thread.  Because of this,
+	// we have a proxy layer between the mozilla UI thread, and calls made
+	// within the window's thread via CallMethod().  However, since the windows
+	// are still running in their own thread, and reference counting takes place within
+	// that thread, we need to reference and de-reference outselves atomically.
+	// See BugZilla Bug# 92793
+	NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
+	NS_IMETHOD_(nsrefcnt) Release(void);          
+
 	// nsIWidget interface
 	NS_IMETHOD              Create(nsIWidget *aParent,
 	                               const nsRect &aRect,

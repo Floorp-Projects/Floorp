@@ -48,8 +48,8 @@
 // nsISupports 
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ADDREF(nsScrollbar)
-NS_IMPL_RELEASE(nsScrollbar)
+NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsWindow)
+NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsWindow)
 NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsWindow)
 
 //-------------------------------------------------------------------------

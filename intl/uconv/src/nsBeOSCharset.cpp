@@ -34,8 +34,13 @@
 #include "nsReadableUtils.h"
 #include "nsPlatformCharset.h"
 
-
-NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
+// In BeOS, each window runs in its own thread.  Because of this,
+// we have a proxy layer between the mozilla UI thread, and calls made
+// within the window's thread via CallMethod().  However, since the windows
+// are still running in their own thread, and reference counting takes place within
+// that thread, we need to reference and de-reference outselves atomically.
+// See BugZilla Bug# 92793
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
 
 nsPlatformCharset::nsPlatformCharset()
 {

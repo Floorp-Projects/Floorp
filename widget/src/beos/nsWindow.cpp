@@ -74,6 +74,10 @@
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 
+// See comments in nsWindow.h as to why we override these calls from nsBaseWidget
+NS_IMPL_THREADSAFE_ADDREF(nsWindow)
+NS_IMPL_THREADSAFE_RELEASE(nsWindow)
+
 ////////////////////////////////////////////////////
 // Rollup Listener - static variable defintions
 ////////////////////////////////////////////////////

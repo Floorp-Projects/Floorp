@@ -54,10 +54,6 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 
-NS_IMPL_ADDREF(nsTextWidget)
-NS_IMPL_RELEASE(nsTextWidget)
-
-
 //-------------------------------------------------------------------------
 //
 // nsTextWidget constructor
