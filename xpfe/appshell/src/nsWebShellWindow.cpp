@@ -156,8 +156,6 @@ static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 
 #define SIZE_PERSISTENCE_TIMEOUT 500 // msec
-#define kWebShellLocaleProperties "chrome://global/locale/commonDialogs.properties"
-
 
 const char * kPrimaryContentTypeValue  = "content-primary";
 
