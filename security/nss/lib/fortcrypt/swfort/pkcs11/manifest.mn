@@ -48,14 +48,14 @@ CSRCS		= \
 		  $(NULL)
 
 vpath %.c ../../
-INCLUDES += -I../..
+INCLUDES	= -I../..
 
 EXPORTS		= 
 
 REQUIRES	= security dbm
 
 
-CFLAGS		+= -DSWFORT
+DEFINES		= -DSWFORT
 
 GARBAGE		= $(COPIED_CSRCS) cryptint.h fmutex.h fortsock.h fpkcs11.h \
 	fpkcs11f.h fpkcs11i.h fpkcs11t.h fpkmem.h fpkstrs.h genci.h maci.h 
