@@ -155,7 +155,7 @@ WeekView.prototype.refreshEvents = function()
 
     ccalendar = createCalendar(); // XXX Should get the composite calendar here
 
-    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_ALL | ccalendar.ITEM_FILTER_TYPE_EVENT,
+    ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT,
                       0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
 
     return;
@@ -324,9 +324,9 @@ WeekView.prototype.createEventBox = function ( calItem )
     
     var calEvent = calItem.QueryInterface(Components.interfaces.calIEvent);
 
-    var startHour = calEvent.startDate.hour;
+    var startHour = calEvent.startDate.jsDate.getHours();
     var startMinutes = calEvent.startDate.minute;
-    var eventDuration = (calEvent.endDate.jsDate - calEvent.startDate.jsDate) / (60 * 60);
+    var eventDuration = (calEvent.endDate.jsDate - calEvent.startDate.jsDate) / (60 * 60 * 1000);
     //var eventDuration = ((calendarEventDisplay.displayEndDate - calendarEventDisplay.displayDate) / (60 * 60 * 1000));
     
     /*
@@ -353,13 +353,12 @@ WeekView.prototype.createEventBox = function ( calItem )
     top = top - ElementOfRef.parentNode.boxObject.y - 2;
     eventBox.setAttribute("top", top);
    
+
+    // figure out what column we need to put this on
     var dayIndex = new Date(gHeaderDateItemArray[1].getAttribute("date"));
-   
-    // XXX figure out what column we need to put this on
-    var index = 3;//var index = displayDateObject.getDay( ) - dayIndex.getDay( );
-    if( index < 0 ) {
-        index = index + 7;
-    }
+    var index = calEvent.startDate.day - dayIndex.getDate() - 1;
+    // XXX need to fix this for wrapping months
+
     var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
                   document.getElementById( "week-view-content-box" ).boxObject.x +
                   ( /*calendarEventDisplay.startDrawSlot*/1 * eventSlotWidth ) 
