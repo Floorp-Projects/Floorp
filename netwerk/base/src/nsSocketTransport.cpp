@@ -412,10 +412,6 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         
         mSelectFlags = PR_POLL_EXCEPT;
 
-        // XXX/ruslan: in case of keel-alive we need to check whether the connection is still alive;
-        //  this is ugly, but so as this state machine. It's too late in doWrite to do anything; let
-        //  me know if someone sees a better solution
-
         if (GetReadType() != eSocketRead_None) {
           // Set the select flags for non-blocking reads...
           mSelectFlags |= PR_POLL_READ;
