@@ -12,7 +12,7 @@
 # Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
 # ActiveState Tool Corp.  All Rights Reserved.
 #
-# Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+# Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
 #
 
 # This module provides the JavaScript "components" interface
@@ -201,8 +201,8 @@ ID = _xpcom.IID
 class _ShutdownObserver:
     _com_interfaces_ = interfaces.nsIObserver
     def observe(self, service, topic, extra):
-        global manager, interfaceInfoManager, _shutdownObserver, serviceManager, _constants_by_iid_map
-        manager = interfaceInfoManager = _shutdownObserver = serviceManager = _constants_by_iid_map = None
+        global manager, classes, interfaces, interfaceInfoManager, _shutdownObserver, serviceManager, _constants_by_iid_map
+        manager = classes = interfaces = interfaceInfoManager = _shutdownObserver = serviceManager = _constants_by_iid_map = None
         xpcom.client._shutdown()
         xpcom.server._shutdown()
 

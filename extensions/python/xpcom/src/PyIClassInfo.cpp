@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C)  2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -111,7 +111,7 @@ Py_nsIClassInfo::getattr(const char *name)
 		Py_END_ALLOW_THREADS;
 		GETATTR_CHECK_RESULT(nr);
 		ret = MakeStringOrNone(str_ret);
-		nsAllocator::Free(str_ret);
+		nsMemory::Free(str_ret);
 	} else if (strcmp(name, "classDescription")==0) {
 		char *str_ret;
 		Py_BEGIN_ALLOW_THREADS;
@@ -119,7 +119,7 @@ Py_nsIClassInfo::getattr(const char *name)
 		Py_END_ALLOW_THREADS;
 		GETATTR_CHECK_RESULT(nr);
 		ret = MakeStringOrNone(str_ret);
-		nsAllocator::Free(str_ret);
+		nsMemory::Free(str_ret);
 	} else if (strcmp(name, "classID")==0) {
 		nsIID *iid;
 		Py_BEGIN_ALLOW_THREADS;
@@ -127,7 +127,7 @@ Py_nsIClassInfo::getattr(const char *name)
 		Py_END_ALLOW_THREADS;
 		GETATTR_CHECK_RESULT(nr);
 		ret = Py_nsIID::PyObjectFromIID(*iid);
-		nsAllocator::Free(iid);
+		nsMemory::Free(iid);
 	} else if (strcmp(name, "implementationLanguage")==0) {
 		PRUint32 i;
 		Py_BEGIN_ALLOW_THREADS;

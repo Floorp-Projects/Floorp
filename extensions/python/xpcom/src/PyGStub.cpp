@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -99,7 +99,7 @@ done:
 		// good error reporting is critical for users to know WTF 
 		// is going on - especially with TypeErrors etc in their
 		// return values (ie, after the Python code has successfully
-		// existed, but we encountered errors unpacking their
+		// exited, but we encountered errors unpacking the
 		// result values for the COM caller - there is literally no 
 		// way to catch these exceptions from Python code, as their
 		// is no Python function on the call-stack)

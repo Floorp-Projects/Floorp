@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -131,7 +131,7 @@ PyXPCOM_TypeObject::Py_repr(PyObject *self)
 	// XXX - need some sort of buffer overflow.
 	char buf[512];
 	sprintf(buf, "<XPCOM object (%s) at 0x%p/0x%p>", iid_repr, self, pis->m_obj);
-	nsAllocator::Free(iid_repr);
+	nsMemory::Free(iid_repr);
 	return PyString_FromString(buf);
 }
 
@@ -153,7 +153,7 @@ PyXPCOM_TypeObject::Py_str(PyObject *self)
 		ret = Py_repr(self);
 	else
 		ret = PyString_FromString(val);
-	if (val) nsAllocator::Free(val);
+	if (val) nsMemory::Free(val);
 	return ret;
 }
 

@@ -12,7 +12,7 @@
 # Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
 # ActiveState Tool Corp.  All Rights Reserved.
 #
-# Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+# Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
 #
 
 # Could maybe later have a process that extracted these enums should they change.
@@ -143,6 +143,9 @@ TD_INTERFACE_IS_TYPE = 19
 TD_ARRAY             = 20
 TD_PSTRING_SIZE_IS   = 21
 TD_PWSTRING_SIZE_IS  = 22
+TD_UTF8STRING        = 23
+TD_CSTRING           = 24
+TD_ASTRING           = 25
 
 # From xpt_struct.h
 XPT_TDP_POINTER          = 0x80
@@ -214,3 +217,36 @@ T_INTERFACE_IS      = TD_INTERFACE_IS_TYPE
 T_ARRAY             = TD_ARRAY
 T_PSTRING_SIZE_IS   = TD_PSTRING_SIZE_IS
 T_PWSTRING_SIZE_IS  = TD_PWSTRING_SIZE_IS
+T_UTF8STRING        = TD_UTF8STRING
+T_CSTRING           = TD_CSTRING
+T_ASTRING           = TD_ASTRING
+
+# from nsIVariant
+VTYPE_INT8 = 0
+VTYPE_INT16 = 1
+VTYPE_INT32 = 2
+VTYPE_INT64 = 3
+VTYPE_UINT8 = 4
+VTYPE_UINT16 = 5
+VTYPE_UINT32 = 6
+VTYPE_UINT64 = 7
+VTYPE_FLOAT = 8
+VTYPE_DOUBLE = 9
+VTYPE_BOOL = 10
+VTYPE_CHAR = 11
+VTYPE_WCHAR = 12
+VTYPE_VOID = 13
+VTYPE_ID = 14
+VTYPE_DOMSTRING = 15
+VTYPE_CHAR_STR = 16
+VTYPE_WCHAR_STR = 17
+VTYPE_INTERFACE = 18
+VTYPE_INTERFACE_IS = 19
+VTYPE_ARRAY = 20
+VTYPE_STRING_SIZE_IS = 21
+VTYPE_WSTRING_SIZE_IS = 22
+VTYPE_UTF8STRING = 23
+VTYPE_CSTRING = 24
+VTYPE_ASTRING = 25
+VTYPE_EMPTY_ARRAY = 254
+VTYPE_EMPTY = 255

@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -38,6 +38,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIInputStream.h"
+#include "nsIVariant.h"
 
 
 #include "nsXPIDLString.h"

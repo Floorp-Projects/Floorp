@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -117,7 +117,7 @@ static PyObject *PyGetNameForIID(PyObject *self, PyObject *args)
 		return PyXPCOM_BuildPyException(r);
 
 	PyObject *ret = PyString_FromString(ret_name);
-	nsAllocator::Free(ret_name);
+	nsMemory::Free(ret_name);
 	return ret;
 }
 
@@ -140,7 +140,7 @@ static PyObject *PyGetIIDForName(PyObject *self, PyObject *args)
 		return PyXPCOM_BuildPyException(r);
 
 	PyObject *ret = Py_nsIID::PyObjectFromIID(*iid_ret);
-	nsAllocator::Free(iid_ret);
+	nsMemory::Free(iid_ret);
 	return ret;
 }
 

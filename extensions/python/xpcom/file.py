@@ -12,7 +12,7 @@
 # Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
 # ActiveState Tool Corp.  All Rights Reserved.
 #
-# Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+# Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
 #
 
 """Implementation of Python file objects for Mozilla/xpcom.
@@ -53,18 +53,6 @@ NS_APPEND        = components.interfaces.nsIFileChannel.NS_APPEND
 NS_TRUNCATE      = components.interfaces.nsIFileChannel.NS_TRUNCATE
 NS_SYNC          = components.interfaces.nsIFileChannel.NS_SYNC
 NS_EXCL          = components.interfaces.nsIFileChannel.NS_EXCL
-
-# A helper function - you pass a progID, an interface, plus optionally the
-# name of the "constructor" and its args.
-def _construct(progid, interface, ctor = None, *args):
-    assert (ctor is None and not args) or (ctor is not None and args), \
-           "no point having a ctor with no args, or if you provide args, there must be a ctor!"
-    instance = components.classes[progid] \
-                        .createInstance(interface)
-    if ctor is not None:
-        ctor = getattr(instance, ctor)
-        apply(ctor, args)
-    return instance
 
 # A helper function that may come in useful
 def LocalFileToURL(localFileName):
@@ -167,11 +155,16 @@ class URIFile(_File):
 # You open this file using a local file name (as a string) so it really is pointless - 
 # you may as well be using a standard Python file object!
 class LocalFile(_File):
+    def __init__(self, *args):
+        self.fileIO = None
+        _File.__init__(self, *args)
+
     def init(self, name, mode = "r"):
         name = os.path.abspath(name) # Moz libraries under Linux fail with relative paths.
         self.close()
-        file = _construct('@mozilla.org/file/local;1', "nsILocalFile", "initWithPath", name)
-        self.fileIO = _construct('@mozilla.org/network/file-io;1', "nsIFileIO", "init", file, -1, -1)
+        file = components.classes['@mozilla.org/file/local;1'].createInstance("nsILocalFile")
+        file.initWithPath(name)
+        self.fileIO = components.classes['@mozilla.org/network/file-io;1'].createInstance("nsIFileIO")
         if mode in ["w","a"]:
             if mode== "w":
                 if file.exists():
@@ -181,17 +174,24 @@ class LocalFile(_File):
                 moz_mode = NS_APPEND
             else:
                 assert 0, "Can't happen!"
+            self.fileIO.init(file, moz_mode, -1)
             self.outputStream = self.fileIO.outputStream
 
         elif mode == "r":
-            self.contentType, self.contentLength = self.fileIO.open()
+            self.fileIO.init(file, NS_RDONLY, -1)
             self.inputStream = self.fileIO.inputStream
         else:
             raise ValueError, "Unknown mode"
 
+    def close(self):
+        if self.fileIO is not None:
+            self.fileIO.close(0)
+            self.fileIO = None
+        _File.close(self)
+
     def read(self, n = -1):
         if n == -1:
-            n = self.contentLength
+            n = self.fileIO.contentLength
         return _File.read(self, n)
 
 

@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -86,7 +86,7 @@ PRBool PyXPCOM_ThreadState_Ensure()
 		if (PyXPCOM_InterpreterState==NULL) {
 				Py_FatalError("Can not setup thread state, as have no interpreter state");
 		}
-		pData = (ThreadData *)nsAllocator::Alloc(sizeof(ThreadData));
+		pData = (ThreadData *)nsMemory::Alloc(sizeof(ThreadData));
 		if (!pData)
 			Py_FatalError("Out of memory allocating thread state.");
 		memset(pData, 0, sizeof(*pData));
@@ -128,7 +128,7 @@ void PyXPCOM_ThreadState_Free()
 	PyThreadState *thisThreadState = pData->ts;
 	PyThreadState_Delete(thisThreadState);
 	PR_SetThreadPrivate(tlsIndex, NULL);
-	nsAllocator::Free(pData);
+	nsMemory::Free(pData);
 }
 
 void PyXPCOM_ThreadState_Clear()
@@ -141,7 +141,6 @@ void PyXPCOM_ThreadState_Clear()
 ////////////////////////////////////////////////////////////
 // Lock/exclusion global functions.
 //
-
 void PyXPCOM_AcquireGlobalLock(void)
 {
 	NS_PRECONDITION(g_lockMain != nsnull, "Cant acquire a NULL lock!");
@@ -187,10 +186,6 @@ void PyXPCOM_DLLRelease(void)
 	PR_AtomicDecrement(&g_cLockCount);
 }
 
-static void pyxpcom_construct() __attribute__((constructor));
-static void pyxpcom_destruct() __attribute__((destructor));
-
-
 void pyxpcom_construct(void)
 {
 	PRStatus status;
@@ -212,24 +207,12 @@ void pyxpcom_destruct(void)
 	// TlsFree(tlsIndex);
 }
 
-#ifdef XP_WIN
-
-extern "C" __declspec(dllexport)
-BOOL WINAPI DllMain(HANDLE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
-	switch (dwReason) {
-		case DLL_PROCESS_ATTACH: {
-			pyxpcom_construct();
-			break;
-		}
-		case DLL_PROCESS_DETACH: 
-		{
-			pyxpcom_destruct();
-			break;
-		}
-		default:
-			break;
+// Yet another attempt at cross-platform library initialization and finalization.
+struct DllInitializer {
+	DllInitializer() {
+		pyxpcom_construct();
 	}
-	return TRUE;    // ok
-}
-#endif // XP_WIN
+	~DllInitializer() {
+		pyxpcom_destruct();
+	}
+} dll_initializer;

@@ -12,7 +12,7 @@
 # Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
 # ActiveState Tool Corp.  All Rights Reserved.
 #
-# Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+# Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
 #
 
 from xpcom import xpcom_consts, _xpcom, client, nsError, ServerException, COMException
@@ -23,8 +23,18 @@ import operator
 import types
 
 IID_nsISupports = _xpcom.IID_nsISupports
+IID_nsIVariant = _xpcom.IID_nsIVariant
 XPT_MD_IS_GETTER = xpcom_consts.XPT_MD_IS_GETTER
 XPT_MD_IS_SETTER = xpcom_consts.XPT_MD_IS_SETTER
+
+VARIANT_INT_TYPES = xpcom_consts.VTYPE_INT8, xpcom_consts.VTYPE_INT16, xpcom_consts.VTYPE_INT32, \
+                    xpcom_consts.VTYPE_UINT8, xpcom_consts.VTYPE_UINT16, xpcom_consts.VTYPE_INT32
+VARIANT_LONG_TYPES = xpcom_consts.VTYPE_INT64, xpcom_consts.VTYPE_UINT64
+VARIANT_FLOAT_TYPES = xpcom_consts.VTYPE_FLOAT, xpcom_consts.VTYPE_DOUBLE
+VARIANT_STRING_TYPES = xpcom_consts.VTYPE_CHAR, xpcom_consts.VTYPE_CHAR_STR, xpcom_consts.VTYPE_STRING_SIZE_IS, \
+                       xpcom_consts.VTYPE_CSTRING
+VARIANT_UNICODE_TYPES = xpcom_consts.VTYPE_WCHAR, xpcom_consts.VTYPE_DOMSTRING, xpcom_consts.VTYPE_WSTRING_SIZE_IS, \
+                        xpcom_consts.VTYPE_ASTRING 
 
 _supports_primitives_map_ = {} # Filled on first use.
 
@@ -175,11 +185,47 @@ class DefaultPolicy:
             if iid is None:
                 iid = self._interface_info_.GetIIDForParam(method_index, param_index)
                 self._interface_iid_map_[(method_index, param_index)] = iid
-#            iid = _xpcom.IID_nsISupports
+        # handle nsIVariant
+        if iid == IID_nsIVariant:
+            interface = interface.QueryInterface(iid)
+            dt = interface.dataType
+            if dt in VARIANT_INT_TYPES:
+                return interface.getAsInt32()
+            if dt in VARIANT_LONG_TYPES:
+                return interface.getAsInt64()
+            if dt in VARIANT_FLOAT_TYPES:
+                return interface.getAsFloat()
+            if dt in VARIANT_STRING_TYPES:
+                return interface.getAsStringWithSize()
+            if dt in VARIANT_UNICODE_TYPES:
+                return interface.getAsWStringWithSize()
+            if dt == xpcom_consts.VTYPE_BOOL:
+                return interface.getAsBool()
+            if dt == xpcom_consts.VTYPE_INTERFACE:
+                return interface.getAsISupports()
+            if dt == xpcom_consts.VTYPE_INTERFACE_IS:
+                return interface.getAsInterface()
+            if dt == xpcom_consts.VTYPE_EMPTY or dt == xpcom_consts.VTYPE_VOID:
+                return None
+            if dt == xpcom_consts.VTYPE_ARRAY:
+                return interface.getAsArray()
+            if dt == xpcom_consts.VTYPE_EMPTY_ARRAY:
+                return []
+            if dt == xpcom_consts.VTYPE_ID:
+                return interface.getAsID()
+            # all else fails...
+            print "Warning: nsIVariant type %d not supported - returning a string" % (dt,)
+            try:
+                return interface.getAsString()
+            except COMException:
+                print "Error: failed to get Variant as a string - returning variant object"
+                traceback.print_exc()
+                return interface
+            
         return client.Component(interface, iid)
     
     def _CallMethod_(self, com_object, index, info, params):
-#        print "_CallMethod_", index, info, params
+        #print "_CallMethod_", index, info, params
         flags, name, param_descs, ret = info
         assert ret[1][0] == xpcom_consts.TD_UINT32, "Expected an nsresult (%s)" % (ret,)
         if XPT_MD_IS_GETTER(flags):

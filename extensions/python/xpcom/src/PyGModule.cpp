@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -65,7 +65,7 @@ PyG_nsIModule::GetClassObject(nsIComponentManager *aCompMgr,
 	NS_PRECONDITION(r_classObj, "null pointer");
 	*r_classObj = nsnull;
 	CEnterLeavePython _celp;
-	PyObject *cm = MakeInterfaceParam(aCompMgr, &NS_GET_IID(nsIComponentManagerObsolete));
+	PyObject *cm = Py_nsISupports::PyObjectFromInterface(aCompMgr, NS_GET_IID(nsIComponentManagerObsolete), PR_TRUE);
 	PyObject *iid = Py_nsIID::PyObjectFromIID(aIID);
 	PyObject *clsid = Py_nsIID::PyObjectFromIID(aClass);
 	const char *methodName = "getClassObject";
@@ -95,8 +95,8 @@ PyG_nsIModule::RegisterSelf(nsIComponentManager *aCompMgr,
 	NS_PRECONDITION(aCompMgr, "null pointer");
 	NS_PRECONDITION(aPath, "null pointer");
 	CEnterLeavePython _celp;
-	PyObject *cm = MakeInterfaceParam(aCompMgr, &NS_GET_IID(nsIComponentManagerObsolete));
-	PyObject *path = MakeInterfaceParam(aPath, &NS_GET_IID(nsIFile));
+	PyObject *cm = Py_nsISupports::PyObjectFromInterface(aCompMgr, NS_GET_IID(nsIComponentManagerObsolete), PR_TRUE);
+	PyObject *path = Py_nsISupports::PyObjectFromInterface(aPath, NS_GET_IID(nsIFile), PR_TRUE);
 	const char *methodName = "registerSelf";
 	nsresult nr = InvokeNativeViaPolicy(methodName, NULL, "OOzz", cm, path, registryLocation, componentType);
 	Py_XDECREF(cm);
@@ -112,8 +112,8 @@ PyG_nsIModule::UnregisterSelf(nsIComponentManager* aCompMgr,
 	NS_PRECONDITION(aCompMgr, "null pointer");
 	NS_PRECONDITION(aPath, "null pointer");
 	CEnterLeavePython _celp;
-	PyObject *cm = MakeInterfaceParam(aCompMgr, &NS_GET_IID(nsIComponentManagerObsolete));
-	PyObject *path = MakeInterfaceParam(aPath, &NS_GET_IID(nsIFile));
+	PyObject *cm = Py_nsISupports::PyObjectFromInterface(aCompMgr, NS_GET_IID(nsIComponentManagerObsolete), PR_TRUE);
+	PyObject *path = Py_nsISupports::PyObjectFromInterface(aPath, NS_GET_IID(nsIFile), PR_TRUE);
 	const char *methodName = "unregisterSelf";
 	nsresult nr = InvokeNativeViaPolicy(methodName, NULL, "OOz", cm, path, registryLocation);
 	Py_XDECREF(cm);
@@ -127,7 +127,8 @@ PyG_nsIModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 	NS_PRECONDITION(aCompMgr, "null pointer");
 	NS_PRECONDITION(okToUnload, "null pointer");
 	CEnterLeavePython _celp;
-	PyObject *cm = MakeInterfaceParam(aCompMgr, &NS_GET_IID(nsIComponentManagerObsolete));
+	// we are shutting down - don't ask for a nice wrapped object.
+	PyObject *cm = Py_nsISupports::PyObjectFromInterface(aCompMgr, NS_GET_IID(nsIComponentManagerObsolete), PR_TRUE, PR_FALSE);
 	const char *methodName = "canUnload";
 	PyObject *ret = NULL;
 	nsresult nr = InvokeNativeViaPolicy(methodName, &ret, "O", cm);
@@ -183,8 +184,8 @@ NS_IMETHODIMP PyG_nsIComponentLoader::Init(nsIComponentManager *aCompMgr, nsISup
 {
 	CEnterLeavePython _celp;
 	const char *methodName = "init";
-	PyObject *c = MakeInterfaceParam(aCompMgr, &NS_GET_IID(nsIComponentManagerObsolete));
-	PyObject *r = MakeInterfaceParam(aRegistry, &NS_GET_IID(nsISupports));
+	PyObject *c = Py_nsISupports::PyObjectFromInterface(aCompMgr, NS_GET_IID(nsIComponentManagerObsolete), PR_TRUE);
+	PyObject *r = Py_nsISupports::PyObjectFromInterface(aRegistry, NS_GET_IID(nsISupports), PR_TRUE);
 	nsresult nr = InvokeNativeViaPolicy(methodName, NULL, "OO", c, r);
 	Py_XDECREF(c);
 	Py_XDECREF(r);
@@ -214,7 +215,7 @@ NS_IMETHODIMP PyG_nsIComponentLoader::AutoRegisterComponents(PRInt32 aWhen, nsIF
 {
 	CEnterLeavePython _celp;
 	const char *methodName = "autoRegisterComponents";
-	PyObject *c = MakeInterfaceParam(aDirectory, &NS_GET_IID(nsIFile));
+	PyObject *c = Py_nsISupports::PyObjectFromInterface(aDirectory, NS_GET_IID(nsIFile), PR_TRUE);
 	nsresult nr = InvokeNativeViaPolicy(methodName, NULL, "iO", aWhen, c);
 	Py_XDECREF(c);
 	return nr;
@@ -226,7 +227,7 @@ NS_IMETHODIMP PyG_nsIComponentLoader::AutoRegisterComponent(PRInt32 aWhen, nsIFi
 	CEnterLeavePython _celp;
 	const char *methodName = "autoRegisterComponent";
 	PyObject *ret = NULL;
-	PyObject *c = MakeInterfaceParam(aComponent, &NS_GET_IID(nsIFile));
+	PyObject *c = Py_nsISupports::PyObjectFromInterface(aComponent, NS_GET_IID(nsIFile), PR_TRUE);
 	nsresult nr = InvokeNativeViaPolicy(methodName, &ret, "iO", aWhen, c);
 	Py_XDECREF(c);
 	if (NS_SUCCEEDED(nr)) {
@@ -244,7 +245,7 @@ NS_IMETHODIMP PyG_nsIComponentLoader::AutoUnregisterComponent(PRInt32 aWhen, nsI
 	CEnterLeavePython _celp;
 	const char *methodName = "autoUnregisterComponent";
 	PyObject *ret = NULL;
-	PyObject *c = MakeInterfaceParam(aComponent, &NS_GET_IID(nsIFile));
+	PyObject *c = Py_nsISupports::PyObjectFromInterface(aComponent, NS_GET_IID(nsIFile), PR_TRUE);
 	nsresult nr = InvokeNativeViaPolicy(methodName, &ret, "iO", aWhen, c);
 	Py_XDECREF(c);
 	if (NS_SUCCEEDED(nr)) {

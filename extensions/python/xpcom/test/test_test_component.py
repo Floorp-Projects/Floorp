@@ -79,7 +79,7 @@ def test_method(method, args, expected_results):
         print "Testing %s%s" % (method.__name__, `args`)
     ret = method(*args)
     if ret != expected_results:
-        print_error("calling method %s - expected %s, but got %s" % (method.__name__, expected_results, ret))
+        print_error("calling method %s - expected %r, but got %r" % (method.__name__, expected_results, ret))
 
 def test_int_method(meth):
     test_method(meth, (0,0), (0,0,0))
@@ -292,6 +292,15 @@ def test_derived_interface(c, test_flat = 0):
     test_method(c.UpWideString, (val,), val.upper())
     test_method(c.UpWideString2, (val,), val.upper())
     test_method(c.GetFixedWideString, (20,), u"A"*20)
+    val = u"The Euro Symbol is '\u20ac'"
+    test_method(c.CopyUTF8String, ("foo",), "foo")
+    test_method(c.CopyUTF8String, (u"foo",), "foo")
+    test_method(c.CopyUTF8String, (val,), val)
+    test_method(c.CopyUTF8String, (val.encode("utf8"),), val)
+    test_method(c.CopyUTF8String2, ("foo",), "foo")
+    test_method(c.CopyUTF8String2, (u"foo",), "foo")
+    test_method(c.CopyUTF8String2, (val,), val)
+    test_method(c.CopyUTF8String2, (val.encode("utf8"),), val)
     items = [1,2,3,4,5]
     test_method(c.MultiplyEachItemInIntegerArray, (3, items,), map(lambda i:i*3, items))
 
@@ -322,6 +331,7 @@ def test_derived_interface(c, test_flat = 0):
     test_method(c.CheckInterfaceArray, ((c, c),), 1)
     test_method(c.CheckInterfaceArray, ((c, None),), 0)
     test_method(c.CheckInterfaceArray, ((),), 1)
+    test_method(c.CopyInterfaceArray, ((c, c),), [c,c])
 
     test_method(c.GetInterfaceArray, (), [c,c,c, None])
     test_method(c.ExtendInterfaceArray, ((c,c,c, None),), [c,c,c,None,c,c,c,None] )
@@ -338,6 +348,25 @@ def test_derived_interface(c, test_flat = 0):
     test_method(c.CopyAndDoubleArray, ([1,2,3],), [1,2,3,1,2,3] )
     test_method(c.AppendArray, ([1,2,3],), [1,2,3])
     test_method(c.AppendArray, ([1,2,3],[4,5,6]), [1,2,3,4,5,6])
+
+    test_method(c.CopyVariant, (None,), None)
+    test_method(c.CopyVariant, (1,), 1)
+    test_method(c.CopyVariant, (1.0,), 1.0)
+    test_method(c.CopyVariant, (-1,), -1)
+    test_method(c.CopyVariant, (sys.maxint+1,), sys.maxint+1)
+    test_method(c.CopyVariant, ("foo",), "foo")
+    test_method(c.CopyVariant, (u"foo",), u"foo")
+    test_method(c.CopyVariant, (c,), c)
+    test_method(c.CopyVariant, (component_iid,), component_iid)
+    test_method(c.CopyVariant, ((1,2),), [1,2])
+    test_method(c.CopyVariant, ((1.2,2.1),), [1.2,2.1])
+    test_method(c.CopyVariant, (("foo","bar"),), ["foo", "bar"])
+    test_method(c.CopyVariant, ((component_iid,component_iid),), [component_iid,component_iid])
+    test_method(c.CopyVariant, ((c,c),), [c,c])
+    test_method(c.AppendVariant, (1,2), 3)
+    test_method(c.AppendVariant, ((1,2),(3,4)), 10)
+    test_method(c.AppendVariant, ("bar", "foo"), "foobar")
+    test_method(c.AppendVariant, (None, None), None)
 
     if not test_flat:
         c = c.queryInterface(xpcom.components.interfaces.nsIPythonTestInterfaceDOMStrings)

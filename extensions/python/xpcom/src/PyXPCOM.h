@@ -13,7 +13,7 @@
  * Portions created by ActiveState Tool Corp. are Copyright (C) 2000, 2001
  * ActiveState Tool Corp.  All Rights Reserved.
  *
- * Contributor(s): Mark Hammond <MarkH@ActiveState.com> (original author)
+ * Contributor(s): Mark Hammond <mhammond@skippinet.com.au> (original author)
  *
  */
 
@@ -176,9 +176,14 @@ public:
 	//  see the correct xpcom.client.Interface object even when calling
 	//  xpcom function directly.
 	static PyObject *PyObjectFromInterface(nsISupports *ps, 
-		                               const nsIID &iid, 
-					       PRBool bAddRef,
-					       PRBool bMakeNicePyObject = PR_TRUE);
+	                                       const nsIID &iid, 
+	                                       PRBool bAddRef,
+	                                       PRBool bMakeNicePyObject = PR_TRUE);
+
+	static PyObject *PyObjectFromInterfaceOrVariant(nsISupports *ps,
+	                                                const nsIID &iid, 
+	                                                PRBool bAddRef,
+	                                                PRBool bMakeNicePyObject = PR_TRUE);
 
 	// Given a Python object that is a registered COM type, return a given
 	// interface pointer on its underlying object, with a NEW REFERENCE ADDED.
@@ -187,12 +192,21 @@ public:
 	//  provided to stop accidental recursion should the object returned by
 	//  the wrap process itself be in instance (where it should already be
 	//  a COM object.
+	// If |iid|==nsIVariant, then arbitary Python objects will be wrapped
+	// in an nsIVariant.
 	static PRBool InterfaceFromPyObject(
 		PyObject *ob,
 		const nsIID &iid,
 		nsISupports **ppret,
 		PRBool bNoneOK,
 		PRBool bTryAutoWrap = PR_TRUE);
+
+	// Given a Py_nsISupports, return an interface.
+	// Object *must* be Py_nsISupports - there is no
+	// "autowrap", no "None" support, etc
+	static PRBool InterfaceFromPyISupports(PyObject *ob, 
+	                                       const nsIID &iid, 
+	                                       nsISupports **ppv);
 
 	static Py_nsISupports *Constructor(nsISupports *pInitObj, const nsIID &iid);
 	// The Python methods
@@ -459,6 +473,7 @@ private:
 	PRUint32 GetSizeIs( int var_index, PRBool is_arg1);
 	PRBool SetSizeIs( int var_index, PRBool is_arg1, PRUint32 new_size);
 	PRBool CanSetSizeIs( int var_index, PRBool is_arg1 );
+	nsIInterfaceInfo *GetInterfaceInfo(); // NOTE: no ref count on result.
 
 
 	nsXPTCMiniVariant* m_params;
@@ -466,7 +481,7 @@ private:
 	int m_method_index;
 	PythonTypeDescriptor *m_python_type_desc_array;
 	int m_num_type_descs;
-
+	nsCOMPtr<nsIInterfaceInfo> m_interface_info;
 };
 
 // Misc converters.
@@ -478,6 +493,8 @@ PyObject *PyObject_FromXPTParamDescriptor( const XPTParamDescriptor *d);
 PyObject *PyObject_FromXPTMethodDescriptor( const XPTMethodDescriptor *d);
 PyObject *PyObject_FromXPTConstant( const XPTConstDescriptor *d);
 
+nsIVariant *PyObject_AsVariant( PyObject *ob);
+PyObject *PyObject_FromVariant( nsIVariant *v);
 
 // DLL reference counting functions.
 // Although we maintain the count, we never actually
@@ -669,5 +686,6 @@ PyXPCOM_INTERFACE_DECLARE(Py_nsIInterfaceInfo, nsIInterfaceInfo, PyMethods_IInte
 PyXPCOM_INTERFACE_DECLARE(Py_nsIServiceManager, nsIServiceManager, PyMethods_IServiceManager)
 PyXPCOM_INTERFACE_DECLARE(Py_nsIInputStream, nsIInputStream, PyMethods_IInputStream)
 PyXPCOM_ATTR_INTERFACE_DECLARE(Py_nsIClassInfo, nsIClassInfo, PyMethods_IClassInfo)
+PyXPCOM_ATTR_INTERFACE_DECLARE(Py_nsIVariant, nsIVariant, PyMethods_IVariant)
 
 #endif // __PYXPCOM_H__
