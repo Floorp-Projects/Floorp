@@ -27,6 +27,9 @@
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsIMacLocale.h"
+#include "nsCRT.h"
+#include "nsCOMPtr.h"
+#include "plstr.h"
 
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
@@ -266,12 +269,11 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
     if (NS_SUCCEEDED(res)) {
       aLocale.SetString(aLocaleUnichar);
       //TODO: Get a charset name from a script code.
-      nsIMacLocale* macLocale;
+      nsCOMPtr <nsIMacLocale> macLocale;
       short langcode;
-      res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
+      res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, getter_AddRefs(macLocale));
       if (NS_SUCCEEDED(res)) {
         res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode);
-        macLocale->Release();
       }
     }    
   }
@@ -332,17 +334,13 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
 
 
   // convert result to unicode
-  nsICharsetConverterManager * ccm = nsnull;
-
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                   nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
-                                   (nsISupports**)&ccm);
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsIUnicodeDecoder * decoder = nsnull;
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
+  if(NS_SUCCEEDED(res) && ccm) {
+    nsCOMPtr <nsIUnicodeDecoder> decoder;
+    res = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+    if(NS_SUCCEEDED(res) && decoder) {
       PRInt32 unicharLength = 0;
-      PRInt32 srcLength = (PRInt32) strlen(aBuffer);
+      PRInt32 srcLength = (PRInt32) PL_strlen(aBuffer);
       res = decoder->Length(aBuffer, 0, srcLength, &unicharLength);
       PRUnichar *unichars = new PRUnichar [ unicharLength ];
   
@@ -354,9 +352,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
         }
       }
       delete [] unichars;
-      NS_IF_RELEASE(decoder);
     }    
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
   }
   
   return res;
@@ -383,6 +379,8 @@ nsresult nsDateTimeFormatMac::FormatPRExplodedTime(nsILocale* locale,
                                                    nsString& stringOut)
 {
   struct tm  tmTime;
+  nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
+
   tmTime.tm_yday = explodedTime->tm_yday;
   tmTime.tm_wday = explodedTime->tm_wday;
   tmTime.tm_year = explodedTime->tm_year;

@@ -24,6 +24,8 @@
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsIPosixLocale.h"
+#include "nsCOMPtr.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 static NS_DEFINE_IID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
@@ -52,12 +54,12 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
 #define kPlatformLocaleLength 64
   char strOut[NSDATETIME_FORMAT_BUFFER_LEN];
-  char fmtD[32], fmtT[32];
+  char fmtD[NSDATETIME_FORMAT_BUFFER_LEN], fmtT[NSDATETIME_FORMAT_BUFFER_LEN];
   char platformLocale[kPlatformLocaleLength+1];
   nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
   nsresult res;
   
-  PL_strcpy(platformLocale, "en_US");
+  PL_strncpy(platformLocale, "en_US", kPlatformLocaleLength+1);
   if (locale != nsnull) {
     const PRUnichar *aLocaleUnichar;
     nsString aLocale;
@@ -69,89 +71,83 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
     }
     aLocale.SetString(aLocaleUnichar);
 
-    nsIPosixLocale* posixLocale;
-    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, (void**)&posixLocale);
+    nsCOMPtr <nsIPosixLocale> posixLocale;
+    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, getter_AddRefs(posixLocale));
     if (NS_FAILED(res)) {
       return res;
     }
     res = posixLocale->GetPlatformLocale(&aLocale, platformLocale, kPlatformLocaleLength+1);
-
-    posixLocale->Release();
   }
 
   // set date format
   switch (dateFormatSelector) {
     case kDateFormatNone:
-      PL_strcpy(fmtD, "");
+      PL_strncpy(fmtD, "", NSDATETIME_FORMAT_BUFFER_LEN);
       break; 
     case kDateFormatLong:
-      PL_strcpy(fmtD, "%c");
+      PL_strncpy(fmtD, "%c", NSDATETIME_FORMAT_BUFFER_LEN);
       break; 
     case kDateFormatShort:
-      PL_strcpy(fmtD, "%x");
+      PL_strncpy(fmtD, "%x", NSDATETIME_FORMAT_BUFFER_LEN);
       break; 
     case kDateFormatYearMonth:
-      PL_strcpy(fmtD, "%y/%m");
+      PL_strncpy(fmtD, "%y/%m", NSDATETIME_FORMAT_BUFFER_LEN);
       break; 
     case kDateFormatWeekday:
-      PL_strcpy(fmtD, "%a");
+      PL_strncpy(fmtD, "%a", NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     default:
-      PL_strcpy(fmtD, ""); 
+      PL_strncpy(fmtD, "", NSDATETIME_FORMAT_BUFFER_LEN); 
   }
 
   // set time format
   switch (timeFormatSelector) {
     case kTimeFormatNone:
-      PL_strcpy(fmtT, ""); 
+      PL_strncpy(fmtT, "", NSDATETIME_FORMAT_BUFFER_LEN); 
       break;
     case kTimeFormatSeconds:
-      PL_strcpy(fmtT, "%I:%M:%S %p");
+      PL_strncpy(fmtT, "%I:%M:%S %p", NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     case kTimeFormatNoSeconds:
-      PL_strcpy(fmtT, "%I:%M %p");
+      PL_strncpy(fmtT, "%I:%M %p", NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     case kTimeFormatSecondsForce24Hour:
-      PL_strcpy(fmtT, "%H:%M:%S");
+      PL_strncpy(fmtT, "%H:%M:%S", NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     case kTimeFormatNoSecondsForce24Hour:
-      PL_strcpy(fmtT, "%H:%M");
+      PL_strncpy(fmtT, "%H:%M", NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     default:
-      PL_strcpy(fmtT, ""); 
+      PL_strncpy(fmtT, "", NSDATETIME_FORMAT_BUFFER_LEN); 
   }
 
   // generate data/time string
   char *old_locale = setlocale(LC_TIME, NULL);
   (void) setlocale(LC_TIME, platformLocale);
-  if (strlen(fmtD) && strlen(fmtT)) {
-    PL_strcat(fmtD, " ");
-    PL_strcat(fmtD, fmtT);
+  if (PL_strlen(fmtD) && PL_strlen(fmtT)) {
+    PL_strncat(fmtD, " ", NSDATETIME_FORMAT_BUFFER_LEN);
+    PL_strncat(fmtD, fmtT, NSDATETIME_FORMAT_BUFFER_LEN);
     strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtD, tmTime);
   }
-  else if (strlen(fmtD) && !strlen(fmtT)) {
+  else if (PL_strlen(fmtD) && !PL_strlen(fmtT)) {
     strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtD, tmTime);
   }
-  else if (!strlen(fmtD) && strlen(fmtT)) {
+  else if (!PL_strlen(fmtD) && PL_strlen(fmtT)) {
     strftime(strOut, NSDATETIME_FORMAT_BUFFER_LEN, fmtT, tmTime);
   }
   else {
-    PL_strcpy(strOut, "");
+    PL_strncpy(strOut, "", NSDATETIME_FORMAT_BUFFER_LEN);
   }
   (void) setlocale(LC_TIME, old_locale);
 
   // convert result to unicode
-  nsICharsetConverterManager * ccm = nsnull;
-
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                   kICharsetConverterManagerIID, 
-                                   (nsISupports**)&ccm);
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsIUnicodeDecoder * decoder = nsnull;
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
+  if(NS_SUCCEEDED(res) && ccm) {
+    nsCOMPtr<nsIUnicodeDecoder> decoder;
+    res = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+    if (NS_SUCCEEDED(res) && decoder) {
       PRInt32 unicharLength = 0;
-      PRInt32 srcLength = (PRInt32) strlen(strOut);
+      PRInt32 srcLength = (PRInt32) PL_strlen(strOut);
       res = decoder->Length(strOut, 0, srcLength, &unicharLength);
       PRUnichar *unichars = new PRUnichar [ unicharLength ];
   
@@ -163,9 +159,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
         }
       }
       delete [] unichars;
-      NS_IF_RELEASE(decoder);
     }    
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
   }
   
   return res;
@@ -192,6 +186,19 @@ nsresult nsDateTimeFormatUnix::FormatPRExplodedTime(nsILocale* locale,
                                                    nsString& stringOut)
 {
   struct tm  tmTime;
+  /* be safe and set all members of struct tm to zero
+   *
+   * there are other fields in the tm struct that we aren't setting
+   * (tm_isdst, tm_gmtoff, tm_zone, should we set these?) and since
+   * tmTime is on the stack, it may be filled with garbage, but
+   * the garbage may vary.  (this may explain why some saw bug #10412, and
+   * others did not.
+   *
+   * when tmTime is passed to strftime() with garbage bad things may happen. 
+   * see bug #10412
+   */
+  nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
+
   tmTime.tm_yday = explodedTime->tm_yday;
   tmTime.tm_wday = explodedTime->tm_wday;
   tmTime.tm_year = explodedTime->tm_year;
