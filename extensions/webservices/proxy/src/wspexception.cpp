@@ -43,15 +43,12 @@
 WSPException::WSPException(nsISOAPFault* aFault, nsresult aStatus)
   : mFault(aFault), mData(nsnull), mStatus(aStatus), mMsg(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WSPException::WSPException(nsresult aStatus, const char* aMsg, 
                            nsISupports* aData)
   : mFault(nsnull), mData(aData), mStatus(aStatus), mMsg(nsnull)
 {
-  NS_INIT_ISUPPORTS();
-
   if (aMsg) {
     mMsg = (char*) nsMemory::Clone(aMsg, strlen(aMsg)+1);
   }

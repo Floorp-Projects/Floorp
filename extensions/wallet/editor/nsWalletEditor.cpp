@@ -55,7 +55,6 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 WalletEditorImpl::WalletEditorImpl()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WalletEditorImpl::~WalletEditorImpl()

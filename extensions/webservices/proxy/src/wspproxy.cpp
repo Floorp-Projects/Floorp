@@ -56,7 +56,6 @@
 WSPProxy::WSPProxy()
   : mIID(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WSPProxy::~WSPProxy()

@@ -65,7 +65,6 @@ WSPComplexTypeProperty::WSPComplexTypeProperty(const nsAString& aName,
                                                nsIVariant* aValue)
   : mName(aName), mValue(aValue)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(WSPComplexTypeProperty, nsIProperty)
@@ -106,7 +105,6 @@ protected:
 WSPComplexTypeEnumerator::WSPComplexTypeEnumerator(WSPComplexTypeWrapper* aWrapper, nsIInterfaceInfo* aInterfaceInfo) 
   : mInterfaceInfo(aInterfaceInfo), mIndex(3)
 {
-  NS_INIT_ISUPPORTS();
   mWrapper = aWrapper;
   NS_ADDREF(mWrapper);
   if (mInterfaceInfo) {
@@ -173,7 +171,6 @@ WSPComplexTypeEnumerator::GetNext(nsISupports **_retval)
 
 WSPComplexTypeWrapper::WSPComplexTypeWrapper()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WSPComplexTypeWrapper::~WSPComplexTypeWrapper()

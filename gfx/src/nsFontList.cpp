@@ -42,7 +42,6 @@ static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
 
 nsFontList::nsFontList()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsFontList::~nsFontList()
@@ -77,7 +76,6 @@ nsFontListEnumerator : public nsISimpleEnumerator
 nsFontListEnumerator::nsFontListEnumerator() :
   mFonts(nsnull), mCount(0), mIndex(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsFontListEnumerator::~nsFontListEnumerator()

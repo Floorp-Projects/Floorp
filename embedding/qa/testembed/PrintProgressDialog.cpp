@@ -45,7 +45,6 @@ NS_INTERFACE_MAP_END
 CDlgPrintListener::CDlgPrintListener(CPrintProgressDialog* aDlg) :
   m_PrintDlg(aDlg)
 {
-  NS_INIT_ISUPPORTS();
   //NS_ADDREF_THIS();
 }
 

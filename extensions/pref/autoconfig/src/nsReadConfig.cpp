@@ -105,7 +105,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsReadConfig, nsIReadConfig, nsIObserver)
 nsReadConfig::nsReadConfig() :
     mRead(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult nsReadConfig::Init()

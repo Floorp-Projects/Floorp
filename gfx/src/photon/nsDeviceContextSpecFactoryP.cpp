@@ -49,7 +49,6 @@
 
 nsDeviceContextSpecFactoryPh :: nsDeviceContextSpecFactoryPh()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDeviceContextSpecFactoryPh :: ~nsDeviceContextSpecFactoryPh()

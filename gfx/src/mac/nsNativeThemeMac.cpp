@@ -187,8 +187,6 @@ NS_IMPL_ISUPPORTS1(nsNativeThemeMac, nsITheme)
 nsNativeThemeMac::nsNativeThemeMac()
   : mEraseProc(nsnull)
 {
-  NS_INIT_ISUPPORTS();
-
   mEraseProc = NewThemeEraseUPP(DoNothing);
 
   mCheckedAtom = do_GetAtom("checked");

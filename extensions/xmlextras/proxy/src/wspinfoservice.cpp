@@ -930,7 +930,6 @@ NS_IMPL_ISUPPORTS1(nsWSPInterfaceInfoService, nsIWSPInterfaceInfoService)
 
 nsWSPInterfaceInfoService::nsWSPInterfaceInfoService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWSPInterfaceInfoService::~nsWSPInterfaceInfoService()

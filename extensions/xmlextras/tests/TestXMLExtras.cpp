@@ -47,7 +47,7 @@ static NS_DEFINE_CID( kXMLDocumentCID, NS_XMLDOCUMENT_CID );
 class nsMyListener : public nsIDOMLoadListener 
 {
 public:
-  nsMyListener() {NS_INIT_ISUPPORTS();}
+  nsMyListener() {}
   ~nsMyListener() {}
 
   void Start(const char *a);

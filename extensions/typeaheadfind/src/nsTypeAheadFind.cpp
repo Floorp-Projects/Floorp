@@ -156,8 +156,6 @@ nsTypeAheadFind::nsTypeAheadFind():
   mRepeatingMode(eRepeatingNone), mTimeoutLength(0),
   mSoundInterface(nsnull), mIsSoundInitialized(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
-
 #ifdef DEBUG
   // There should only ever be one instance of us
   static PRInt32 gInstanceCount;

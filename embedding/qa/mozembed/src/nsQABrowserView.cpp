@@ -56,7 +56,6 @@
 
 nsQABrowserView::nsQABrowserView():mWebBrowser(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   mWebBrowser = nsnull;
   mWebNav = nsnull;
   mBaseWindow = nsnull;

@@ -140,7 +140,6 @@ GetCurrentContext(nsIScriptContext **aScriptContext)
 
 nsXMLHttpRequest::nsXMLHttpRequest()
 {
-  NS_INIT_ISUPPORTS();
   ChangeState(XML_HTTP_REQUEST_UNINITIALIZED,PR_FALSE);
   mAsync = PR_TRUE;
   mCrossSiteAccessEnabled = PR_FALSE;

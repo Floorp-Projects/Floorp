@@ -326,7 +326,6 @@ LoadListener::LoadListener(nsSchemaLoader* aLoader,
                            nsISchemaLoadListener* aListener,
                            nsIXMLHttpRequest* aRequest) 
 {
-  NS_INIT_ISUPPORTS();
   mLoader = aLoader;
   NS_ADDREF(mLoader);
   mListener = aListener;
@@ -394,7 +393,6 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
 ////////////////////////////////////////////////////////////
 nsBuiltinSchemaCollection::nsBuiltinSchemaCollection()
 {
-  NS_INIT_ISUPPORTS();
   if (!nsSchemaAtoms::sAnyType_atom) {
     nsSchemaAtoms::CreateSchemaAtoms();
   }
@@ -708,7 +706,6 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAString& aName,
 
 nsSchemaLoader::nsSchemaLoader()
 {
-  NS_INIT_ISUPPORTS();
   mBuiltinCollection = do_GetService(NS_BUILTINSCHEMACOLLECTION_CONTRACTID);
 }
 

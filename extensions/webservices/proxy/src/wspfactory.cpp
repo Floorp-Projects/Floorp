@@ -69,7 +69,6 @@ private:
 
 WSPAsyncProxyCreator::WSPAsyncProxyCreator()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WSPAsyncProxyCreator::~WSPAsyncProxyCreator()
@@ -159,7 +158,6 @@ WSPAsyncProxyCreator::OnError(nsresult status, const nsAString & statusMessage)
 
 WSPFactory::WSPFactory()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WSPFactory::~WSPFactory()

@@ -51,7 +51,6 @@ class nsPasswordManagerEnumerator : public nsISimpleEnumerator
 
     nsPasswordManagerEnumerator() : mHostCount(0), mUserCount(0)
     {
-      NS_INIT_ISUPPORTS();
     }
 
     NS_IMETHOD HasMoreElements(PRBool *result) 
@@ -107,7 +106,6 @@ class nsPasswordManagerRejectEnumerator : public nsISimpleEnumerator
 
     nsPasswordManagerRejectEnumerator() : mRejectCount(0)
     {
-      NS_INIT_ISUPPORTS();
     }
 
     NS_IMETHOD HasMoreElements(PRBool *result) 
@@ -151,7 +149,6 @@ NS_IMPL_ISUPPORTS3(nsPasswordManager, nsIPasswordManager, nsIPasswordManagerInte
  
 nsPasswordManager::nsPasswordManager()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPasswordManager::~nsPasswordManager(void)

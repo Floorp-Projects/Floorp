@@ -50,7 +50,6 @@ nsDeviceContextSpecMac::nsDeviceContextSpecMac()
 : mPrtRec(nsnull)
 , mPrintManagerOpen(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /** -------------------------------------------------------

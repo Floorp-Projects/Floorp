@@ -45,7 +45,6 @@ nsSOAPException::nsSOAPException(nsresult aStatus, const nsAString & aName,
                                  mStatus(aStatus),mName(aName),mMessage(aMessage),
                                  mInner(aInner)
 {
-  NS_INIT_ISUPPORTS();
   nsresult rc;
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rc));
   if(NS_SUCCEEDED(rc)) {

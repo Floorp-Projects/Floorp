@@ -33,7 +33,6 @@ nsSchema::nsSchema(nsISchemaCollection* aCollection,
                    const nsAString& aSchemaNamespace) 
   : mTargetNamespace(aTargetNamespace), mSchemaNamespace(aSchemaNamespace)
 {
-  NS_INIT_ISUPPORTS();
   mCollection = aCollection;  // Weak reference
 }
 

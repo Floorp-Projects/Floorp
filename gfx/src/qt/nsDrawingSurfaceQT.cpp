@@ -60,7 +60,6 @@ nsDrawingSurfaceQT::nsDrawingSurfaceQT()
        this, mID, gDSCount));
 #endif
 
-  NS_INIT_ISUPPORTS();
   mPaintDevice = nsnull;
   mPixmap      = nsnull;
   mGC          = nsnull;

@@ -39,7 +39,6 @@
 
 inBitmapChannel::inBitmapChannel()
 {
-  NS_INIT_ISUPPORTS();
   mStatus = NS_OK;
 }
 

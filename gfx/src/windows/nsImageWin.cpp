@@ -67,9 +67,6 @@ PRInt32 nsImageWin::gPlatform = GetPlatform();
   */
 nsImageWin :: nsImageWin()
 {
-  NS_INIT_ISUPPORTS();
-
-
   mImageBits = nsnull;
   mHBitmap = nsnull;
   mDIBSection = nsnull;

@@ -46,7 +46,6 @@ static NS_NAMED_LITERAL_STRING(kEmpty, "");
 
 nsSOAPFault::nsSOAPFault()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPFault::~nsSOAPFault()

@@ -62,7 +62,7 @@ public:
     nsScriptableDataType(); // not implemented
 
     nsScriptableDataType(const nsXPTType& aType)
-        : mType(aType) {NS_INIT_ISUPPORTS();}
+        : mType(aType) {}
 
     virtual ~nsScriptableDataType() {}
 
@@ -164,7 +164,7 @@ public:
     nsScriptableParamInfo(); // not implemented
     nsScriptableParamInfo(nsIInterfaceInfo* aInfo,
                            const nsXPTParamInfo& aParam)
-        : mInfo(aInfo), mParam(aParam) {NS_INIT_ISUPPORTS();}
+        : mInfo(aInfo), mParam(aParam) {}
     virtual ~nsScriptableParamInfo() {}
 
 private:
@@ -259,7 +259,7 @@ public:
     nsScriptableConstant(); // not implemented
     nsScriptableConstant(nsIInterfaceInfo* aInfo,
                          const nsXPTConstant& aConst)
-        : mInfo(aInfo), mConst(aConst) {NS_INIT_ISUPPORTS();}
+        : mInfo(aInfo), mConst(aConst) {}
     virtual ~nsScriptableConstant() {}
 private:
     // Holding onto the interface info keeps the underlying const alive.
@@ -357,7 +357,7 @@ public:
     nsScriptableMethodInfo(); // not implemented
     nsScriptableMethodInfo(nsIInterfaceInfo* aInfo,
                             const nsXPTMethodInfo& aMethod)
-        : mInfo(aInfo), mMethod(aMethod) {NS_INIT_ISUPPORTS();}
+        : mInfo(aInfo), mMethod(aMethod) {}
     virtual ~nsScriptableMethodInfo() {}
 private:
     // Holding onto the interface info keeps the underlying method alive.
@@ -471,13 +471,11 @@ NS_IMPL_ISUPPORTS1(nsScriptableInterfaceInfo, nsIScriptableInterfaceInfo)
 
 nsScriptableInterfaceInfo::nsScriptableInterfaceInfo()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsScriptableInterfaceInfo::nsScriptableInterfaceInfo(nsIInterfaceInfo* aInfo)
     : mInfo(aInfo)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsScriptableInterfaceInfo::~nsScriptableInterfaceInfo()

@@ -47,7 +47,6 @@
 inBitmap::inBitmap()
   : mBits(nsnull) 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 inBitmap::~inBitmap()

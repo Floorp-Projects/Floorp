@@ -92,8 +92,6 @@ protected:
 NS_IMPL_ISUPPORTS2_CI(nsSOAPPropertyBag, nsIPropertyBag, nsIXPCScriptable) 
 nsSOAPPropertyBag::nsSOAPPropertyBag() : mProperties(new nsSupportsHashtable)
 {
-  NS_INIT_ISUPPORTS();
-
   /* property initializers and constructor code */
 }
 
@@ -170,7 +168,6 @@ nsSOAPPropertyBagEnumerator::nsSOAPPropertyBagEnumerator(nsSOAPPropertyBag * aPr
     mCurrent
     (0)
 {
-  NS_INIT_ISUPPORTS();
   aPropertyBag->mProperties->Enumerate(&PropertyBagEnumFunc, mProperties);
 }
 
@@ -205,7 +202,6 @@ NS_IMPL_ISUPPORTS1_CI(nsSOAPProperty, nsIProperty)
 
 nsSOAPProperty::nsSOAPProperty(const nsAString & aName,
                  nsIVariant * aValue) : mName(aName), mValue(aValue) {
-  NS_INIT_ISUPPORTS();
 }
 nsSOAPProperty::~nsSOAPProperty()
 {
@@ -238,7 +234,6 @@ NS_IMETHODIMP
 
 nsSOAPPropertyBagMutator::nsSOAPPropertyBagMutator()
 {
-  NS_INIT_ISUPPORTS();
   mBag = mSOAPBag = new nsSOAPPropertyBag();
 }
 

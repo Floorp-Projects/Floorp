@@ -90,7 +90,6 @@ nsSchemaModelGroup::nsSchemaModelGroup(nsSchema* aSchema,
                                        const nsAString& aName)
   : nsSchemaParticleBase(aSchema), mName(aName), mCompositor(COMPOSITOR_SEQUENCE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaModelGroup::~nsSchemaModelGroup()
@@ -269,7 +268,6 @@ nsSchemaModelGroupRef::nsSchemaModelGroupRef(nsSchema* aSchema,
                                              const nsAString& aRef)
   : nsSchemaParticleBase(aSchema), mRef(aRef)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaModelGroupRef::~nsSchemaModelGroupRef()
@@ -401,7 +399,6 @@ nsSchemaModelGroupRef::GetElementByName(const nsAString& aName,
 nsSchemaAnyParticle::nsSchemaAnyParticle(nsSchema* aSchema)
   : nsSchemaParticleBase(aSchema), mProcess(PROCESS_STRICT)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaAnyParticle::~nsSchemaAnyParticle()
@@ -492,7 +489,6 @@ nsSchemaElement::nsSchemaElement(nsSchema* aSchema,
   : nsSchemaParticleBase(aSchema), mName(aName), 
     mNillable(PR_FALSE), mAbstract(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaElement::~nsSchemaElement()
@@ -653,7 +649,6 @@ nsSchemaElementRef::nsSchemaElementRef(nsSchema* aSchema,
                                        const nsAString& aRef)
   : nsSchemaParticleBase(aSchema), mRef(aRef)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaElementRef::~nsSchemaElementRef()

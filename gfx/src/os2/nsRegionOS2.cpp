@@ -26,7 +26,6 @@ NS_IMPL_ISUPPORTS1(nsRegionOS2, nsIRegion)
 
 nsRegionOS2::nsRegionOS2() 
 {  
-  NS_INIT_ISUPPORTS();
 }
 
 // Do not use GetNativeRegion on OS/2. Regions are device specific. Use GetHRGN () instead.

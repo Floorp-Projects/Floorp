@@ -52,7 +52,6 @@ WSPCallContext::WSPCallContext(WSPProxy* aProxy,
   : mProxy(aProxy), mCall(aSOAPCall), mMethodName(aMethodName),
     mOperation(aOperation), mStatus(NS_ERROR_NOT_AVAILABLE)
 {
-  NS_INIT_ISUPPORTS();
   NS_IF_ADDREF(mProxy);
 }
 

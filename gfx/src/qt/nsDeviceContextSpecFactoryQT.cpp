@@ -46,7 +46,6 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryQT, nsIDeviceContextSpecFactory)
 
 nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT() 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDeviceContextSpecFactoryQT::~nsDeviceContextSpecFactoryQT() 

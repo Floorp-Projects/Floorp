@@ -90,7 +90,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(const String& aRootName,
       mInTransform(PR_FALSE),
       mCreatingNewDocument(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
 
@@ -108,7 +107,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
       mInTransform(PR_FALSE),
       mCreatingNewDocument(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
 

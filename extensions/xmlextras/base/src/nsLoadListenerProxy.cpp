@@ -41,7 +41,6 @@
 
 nsLoadListenerProxy::nsLoadListenerProxy(nsWeakPtr aParent)
 {
-  NS_INIT_ISUPPORTS();
   mParent = aParent;
 }
 

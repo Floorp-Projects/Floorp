@@ -82,7 +82,7 @@ static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 class nsSingleSignOnProfileObserver : public nsIObserver
 {
 public:
-    nsSingleSignOnProfileObserver() { NS_INIT_ISUPPORTS(); }
+    nsSingleSignOnProfileObserver() { }
     virtual ~nsSingleSignOnProfileObserver() {}
     
     NS_DECL_ISUPPORTS
@@ -128,7 +128,6 @@ static nsresult EnsureSingleSignOnProfileObserver()
 
 nsWalletlibService::nsWalletlibService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWalletlibService::~nsWalletlibService()

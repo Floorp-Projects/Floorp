@@ -35,7 +35,6 @@ nsSchemaComplexType::nsSchemaComplexType(nsSchema* aSchema,
     mContentModel(CONTENT_MODEL_ELEMENT_ONLY), 
     mDerivation(DERIVATION_SELF_CONTAINED), mArrayInfo(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaComplexType::~nsSchemaComplexType()

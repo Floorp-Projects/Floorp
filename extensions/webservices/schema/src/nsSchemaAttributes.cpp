@@ -32,7 +32,6 @@ nsSchemaAttribute::nsSchemaAttribute(nsSchema* aSchema,
                                      const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaAttribute::~nsSchemaAttribute()
@@ -186,7 +185,6 @@ nsSchemaAttributeRef::nsSchemaAttributeRef(nsSchema* aSchema,
                                            const nsAString& aRef)
   : nsSchemaComponentBase(aSchema), mRef(aRef)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaAttributeRef::~nsSchemaAttributeRef()
@@ -328,7 +326,6 @@ nsSchemaAttributeGroup::nsSchemaAttributeGroup(nsSchema* aSchema,
                                                const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaAttributeGroup::~nsSchemaAttributeGroup()
@@ -478,7 +475,6 @@ nsSchemaAttributeGroupRef::nsSchemaAttributeGroupRef(nsSchema* aSchema,
                                                      const nsAString& aRef)
   : nsSchemaComponentBase(aSchema), mRef(aRef)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaAttributeGroupRef::~nsSchemaAttributeGroupRef()
@@ -599,7 +595,6 @@ nsSchemaAttributeGroupRef::GetAttributeByName(const nsAString & name,
 nsSchemaAnyAttribute::nsSchemaAnyAttribute(nsSchema* aSchema)
   : nsSchemaComponentBase(aSchema), mProcess(PROCESS_STRICT)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaAnyAttribute::~nsSchemaAnyAttribute()

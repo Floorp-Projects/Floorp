@@ -47,7 +47,6 @@
 
 nsSOAPHeaderBlock::nsSOAPHeaderBlock()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPHeaderBlock, nsISOAPBlock,

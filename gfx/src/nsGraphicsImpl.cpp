@@ -48,8 +48,6 @@ NS_IMPL_ISUPPORTS1(nsGraphicsImpl, nsIGraphics)
 nsGraphicsImpl::nsGraphicsImpl(nsIRenderingContext* aRenderer)
 	:	mRenderer(aRenderer)
 {
-	NS_INIT_ISUPPORTS();
-	
 	// hack:  back out the coordinate transformation to use pixels.
 	nsCOMPtr<nsIDeviceContext> dc;
 	mRenderer->GetDeviceContext(*getter_AddRefs(dc));

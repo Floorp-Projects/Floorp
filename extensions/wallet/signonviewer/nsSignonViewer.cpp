@@ -55,7 +55,6 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 SignonViewerImpl::SignonViewerImpl()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 SignonViewerImpl::~SignonViewerImpl()

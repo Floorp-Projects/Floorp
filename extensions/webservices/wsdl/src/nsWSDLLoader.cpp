@@ -136,7 +136,6 @@ nsWSDLAtoms::DestroyWSDLAtoms()
 
 nsWSDLLoader::nsWSDLLoader()
 {
-  NS_INIT_ISUPPORTS();
   if (!nsWSDLAtoms::sDefinitions_atom) {
     nsWSDLAtoms::CreateWSDLAtoms();
   }
@@ -279,7 +278,6 @@ nsWSDLLoadRequest::nsWSDLLoadRequest(PRBool aIsSync,
                                      const nsAString& aPortName)
   : mListener(aListener), mIsSync(aIsSync), mPortName(aPortName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWSDLLoadRequest::~nsWSDLLoadRequest()

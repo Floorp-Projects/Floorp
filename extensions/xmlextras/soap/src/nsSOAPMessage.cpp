@@ -59,7 +59,6 @@ static NS_DEFINE_CID(kDOMParserCID, NS_DOMPARSER_CID);
 
 nsSOAPMessage::nsSOAPMessage()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPMessage::~nsSOAPMessage()

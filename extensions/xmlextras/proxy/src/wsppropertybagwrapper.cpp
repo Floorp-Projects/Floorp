@@ -44,7 +44,6 @@
 WSPPropertyBagWrapper::WSPPropertyBagWrapper()
   : mIID(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WSPPropertyBagWrapper::~WSPPropertyBagWrapper()

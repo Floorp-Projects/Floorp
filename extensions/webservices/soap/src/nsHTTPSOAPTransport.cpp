@@ -58,7 +58,6 @@
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsHTTPSOAPTransport::~nsHTTPSOAPTransport()
@@ -342,13 +341,11 @@ NS_IMPL_ISUPPORTS2_CI(nsHTTPSOAPTransportCompletion, nsIDOMEventListener,
                       nsISOAPCallCompletion)
     nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(nsISOAPCall * call, nsISOAPResponse * response, nsIXMLHttpRequest * request, nsISOAPResponseListener * listener) :
 mCall(call), mResponse(response), mRequest(request), mListener(listener)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsHTTPSOAPTransportCompletion::~nsHTTPSOAPTransportCompletion()
@@ -556,7 +553,6 @@ NS_IMETHODIMP
 
 nsHTTPSSOAPTransport::nsHTTPSSOAPTransport()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsHTTPSSOAPTransport::~nsHTTPSSOAPTransport()

@@ -115,7 +115,6 @@ mozLineTerm::mozLineTerm() :
   mCookie(nsAutoString()),
   mLastTime(LL_ZERO)
 {
-  NS_INIT_ISUPPORTS();
   mLTerm = lterm_new();
 }
 

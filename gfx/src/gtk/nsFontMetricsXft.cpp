@@ -159,7 +159,6 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
 
 nsFontMetricsXft::nsFontMetricsXft()
 {
-    NS_INIT_ISUPPORTS();
     if (!gXftFontLoad)
         gXftFontLoad = PR_NewLogModule("XftFontLoad");
 }
@@ -1484,7 +1483,6 @@ nsFontMetricsXft::EnumFontCallback(const nsString &aFamily, PRBool aIsGeneric,
 
 nsFontEnumeratorXft::nsFontEnumeratorXft()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorXft, nsIFontEnumerator)

@@ -63,7 +63,6 @@ NS_IMPL_ISUPPORTS1(AutoConfigSecMan, nsIXPCSecurityManager);
 
 AutoConfigSecMan::AutoConfigSecMan()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP

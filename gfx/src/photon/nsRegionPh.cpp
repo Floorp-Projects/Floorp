@@ -58,13 +58,11 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 #define clry c->rect.lr.y
 
 nsRegionPh :: nsRegionPh( ) {
-  NS_INIT_ISUPPORTS();
   mRegion = NULL;
   mRegionType = eRegionComplexity_empty;
 	}
 
 nsRegionPh :: nsRegionPh( PhTile_t *tiles ) {
-  NS_INIT_ISUPPORTS();
   mRegion = tiles; /* assume ownership */
   mRegionType = (mRegion == NULL) ? eRegionComplexity_empty : eRegionComplexity_complex;
 	}

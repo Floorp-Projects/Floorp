@@ -50,7 +50,6 @@
 
 nsFontMetricsMac :: nsFontMetricsMac()
 {
-  NS_INIT_ISUPPORTS();
   mFont = nsnull;
   mFontNum = BAD_FONT_NUM;
   mFontMapping = nsnull;

@@ -62,8 +62,6 @@
 
 winEmbedFileLocProvider::winEmbedFileLocProvider(const char* productDirName)
 {
-    NS_INIT_ISUPPORTS();
-
     strncpy(mProductDirName, productDirName, sizeof(mProductDirName) - 1);
     mProductDirName[sizeof(mProductDirName) - 1] = '\0';
 }

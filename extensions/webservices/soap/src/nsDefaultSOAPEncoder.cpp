@@ -143,7 +143,7 @@ public:\
   NS_DECL_NSISOAPDECODER\
 };\
 NS_IMPL_ISUPPORTS2(ns##name##Encoder,nsISOAPEncoder,nsISOAPDecoder) \
-ns##name##Encoder::ns##name##Encoder(PRUint16 aSOAPVersion) {NS_INIT_ISUPPORTS();mSOAPVersion=aSOAPVersion;}\
+ns##name##Encoder::ns##name##Encoder(PRUint16 aSOAPVersion) {mSOAPVersion=aSOAPVersion;}\
 ns##name##Encoder::~ns##name##Encoder() {}
 
 // All encoders must be first declared and then registered.

@@ -38,7 +38,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(inBitmapURI, inIBitmapURI, nsIURI)
 
 inBitmapURI::inBitmapURI()
 {
-  NS_INIT_ISUPPORTS();
 }
  
 inBitmapURI::~inBitmapURI()

@@ -46,14 +46,12 @@
 NS_IMPL_ISUPPORTS2(nsPassword, nsIPassword, nsISupportsWeakReference);
 
 nsPassword::nsPassword() {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPassword::nsPassword(char * host, PRUnichar * user, PRUnichar * pswd) {
   passwordHost = host;
   passwordUser = user;
   passwordPswd = pswd;
-  NS_INIT_ISUPPORTS();
 }
 
 nsPassword::~nsPassword(void) {

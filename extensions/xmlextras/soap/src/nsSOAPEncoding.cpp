@@ -55,8 +55,6 @@
 
 NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncoding) nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding * aEncoding) : mEncodings(new nsSupportsHashtable)
 {
-  NS_INIT_ISUPPORTS();
-
   nsAutoString style;
   nsresult rc = aEncoding->GetStyleURI(style);
   if (NS_FAILED(rc)) {
@@ -258,8 +256,6 @@ NS_IMPL_ISUPPORTS1_CI(nsSOAPEncoding, nsISOAPEncoding)
 nsSOAPEncoding::nsSOAPEncoding() : mEncoders(new nsSupportsHashtable()),
 mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable()), mMappedExternal(new nsSupportsHashtable())
 {
-  NS_INIT_ISUPPORTS();
-
   /* member initializers and constructor code */
 
   mStyleURI.Assign(nsSOAPUtils::kSOAPEncURI11);
@@ -269,8 +265,6 @@ mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable())
 nsSOAPEncoding::nsSOAPEncoding(const nsAString & aStyleURI, nsSOAPEncodingRegistry * aRegistry, nsISOAPEncoding * aDefaultEncoding) : mEncoders(new nsSupportsHashtable()),
 mDecoders(new nsSupportsHashtable()), mMappedInternal(new nsSupportsHashtable()), mMappedExternal(new nsSupportsHashtable())
 {
-  NS_INIT_ISUPPORTS();
-
   /* member initializers and constructor code */
 
   mStyleURI.Assign(aStyleURI);

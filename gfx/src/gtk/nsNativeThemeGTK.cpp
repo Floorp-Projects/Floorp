@@ -61,8 +61,6 @@ static int gLastXError;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
 {
-  NS_INIT_ISUPPORTS();
-
   if (moz_gtk_init() != MOZ_GTK_SUCCESS) {
     memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
     return;

@@ -159,7 +159,7 @@ protected:
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHTTPHEADERVISITOR
-    nsHeaderVisitor() { NS_INIT_ISUPPORTS(); }
+    nsHeaderVisitor() { }
     virtual ~nsHeaderVisitor() {}
     const nsACString &Headers() { return mHeaders; }
   private:

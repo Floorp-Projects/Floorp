@@ -61,7 +61,6 @@ class nsPermissionEnumerator : public nsISimpleEnumerator
 
         nsPermissionEnumerator() : mHostCount(0), mTypeCount(0)
         {
-            NS_INIT_ISUPPORTS();
         }
 
         NS_IMETHOD HasMoreElements(PRBool *result) 
@@ -110,7 +109,6 @@ NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISu
 
 nsPermissionManager::nsPermissionManager()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPermissionManager::~nsPermissionManager(void)

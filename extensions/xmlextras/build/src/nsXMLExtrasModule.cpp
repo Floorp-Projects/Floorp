@@ -198,7 +198,6 @@ public:
 
 nsXMLExtrasNameset::nsXMLExtrasNameset()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsXMLExtrasNameset::~nsXMLExtrasNameset()
@@ -232,7 +231,6 @@ public:
 
 nsXMLExtras::nsXMLExtras()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsXMLExtras::~nsXMLExtras()

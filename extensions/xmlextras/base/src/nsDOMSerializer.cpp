@@ -59,7 +59,6 @@ static NS_DEFINE_CID(kRangeCID,NS_RANGE_CID);
 
 nsDOMSerializer::nsDOMSerializer()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDOMSerializer::~nsDOMSerializer()

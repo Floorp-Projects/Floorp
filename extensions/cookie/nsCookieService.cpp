@@ -68,7 +68,6 @@ PRBool gCookieIconVisible = PR_FALSE;
 
 nsCookieService::nsCookieService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCookieService::~nsCookieService(void)

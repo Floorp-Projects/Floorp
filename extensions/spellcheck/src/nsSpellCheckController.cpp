@@ -33,7 +33,6 @@ nsSpellCheckController::nsSpellCheckController() :
   mOffset(0),
   mEndPoint(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSpellCheckController::~nsSpellCheckController()

@@ -76,7 +76,6 @@ PyG_Base::CreateNew(PyObject *pPyInstance, const nsIID &iid, void **ppResult)
 PyG_Base::PyG_Base(PyObject *instance, const nsIID &iid)
 {
 	// Note that "instance" is the _policy_ instance!!
-	NS_INIT_ISUPPORTS();
 	PR_AtomicIncrement(&cGateways);
 	m_pBaseObject = GetDefaultGateway(instance);
 	// m_pWeakRef is an nsCOMPtr and needs no init.

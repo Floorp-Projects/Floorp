@@ -52,7 +52,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsGenericInterfaceInfoSet,
 
 nsGenericInterfaceInfoSet::nsGenericInterfaceInfoSet()
 {
-    NS_INIT_ISUPPORTS();
     mArena = XPT_NewArena(ARENA_BLOCK_SIZE, sizeof(double),
                           "nsGenericInterfaceInfoSet Arena");
 }

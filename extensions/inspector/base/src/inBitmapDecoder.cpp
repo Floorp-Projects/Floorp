@@ -39,7 +39,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 inBitmapDecoder::inBitmapDecoder()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 inBitmapDecoder::~inBitmapDecoder()

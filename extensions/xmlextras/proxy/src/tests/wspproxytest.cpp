@@ -73,7 +73,6 @@ const double sArray2[] = { 4.234, 23.97, 3434.2945, 0.03 };
 
 WSPProxyTest::WSPProxyTest()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WSPProxyTest::~WSPProxyTest()
@@ -582,7 +581,6 @@ NS_IMETHODIMP WSPProxyTest::CrossSumCallback(PRInt32 retval, nsIWebServiceCallCo
 ///////////////////////////////////////////////////
 WSPTestComplexType::WSPTestComplexType()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 WSPTestComplexType::~WSPTestComplexType()

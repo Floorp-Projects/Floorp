@@ -31,7 +31,6 @@
 nsSchemaBuiltinType::nsSchemaBuiltinType(PRUint16 aBuiltinType)
   : mBuiltinType(aBuiltinType)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaBuiltinType::~nsSchemaBuiltinType()
@@ -257,7 +256,6 @@ nsSchemaListType::nsSchemaListType(nsSchema* aSchema,
                                    const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaListType::~nsSchemaListType()
@@ -373,7 +371,6 @@ nsSchemaUnionType::nsSchemaUnionType(nsSchema* aSchema,
                                      const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaUnionType::~nsSchemaUnionType()
@@ -516,7 +513,6 @@ nsSchemaRestrictionType::nsSchemaRestrictionType(nsSchema* aSchema,
                                                  const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaRestrictionType::~nsSchemaRestrictionType()
@@ -675,7 +671,6 @@ nsSchemaTypePlaceholder::nsSchemaTypePlaceholder(nsSchema* aSchema,
                                                  const nsAString& aName)
   : nsSchemaComponentBase(aSchema), mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaTypePlaceholder::~nsSchemaTypePlaceholder()
@@ -738,7 +733,6 @@ nsSchemaTypePlaceholder::GetSimpleType(PRUint16 *aSimpleType)
 nsSchemaFacet::nsSchemaFacet(nsSchema* aSchema)
   : nsSchemaComponentBase(aSchema), mIsFixed(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSchemaFacet::~nsSchemaFacet()

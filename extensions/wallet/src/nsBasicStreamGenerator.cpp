@@ -45,7 +45,6 @@ NS_IMPL_ISUPPORTS1(nsBasicStreamGenerator, nsIKeyedStreamGenerator)
 
 nsBasicStreamGenerator::nsBasicStreamGenerator()
     : mLevel(NS_SECURITY_LEVEL), mSalt(0), mPassword(), mState(0) {
-  NS_INIT_ISUPPORTS();
 }
 
 nsBasicStreamGenerator::~nsBasicStreamGenerator() {

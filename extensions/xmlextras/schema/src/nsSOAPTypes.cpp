@@ -26,7 +26,6 @@
 nsSOAPArray::nsSOAPArray(nsISchemaType* aAnyType)
   : mAnyType(aAnyType)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPArray::~nsSOAPArray()
@@ -190,7 +189,6 @@ nsSOAPArray::GetArrayDimension(PRUint32* aDimension)
 
 nsSOAPArrayType::nsSOAPArrayType()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPArrayType::~nsSOAPArrayType()

@@ -608,7 +608,6 @@ nsFontMetricsQT::nsFontMetricsQT()
       ("nsFontMetricsQT CTOR (%p) ID: %d, Count: %d\n",
        this, mID, gFontMetricsCount));
 #endif
-  NS_INIT_ISUPPORTS();
   gFontMetricsQTCount++;
   mDeviceContext = nsnull;
   mFont = nsnull;
@@ -1996,7 +1995,6 @@ nsFontQTUserDefined::GetBoundingMetrics(const PRUnichar *aString,
 // The Font Enumerator
 nsFontEnumeratorQT::nsFontEnumeratorQT()
 {
-  NS_INIT_ISUPPORTS();
 }
  
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorQT, nsIFontEnumerator)

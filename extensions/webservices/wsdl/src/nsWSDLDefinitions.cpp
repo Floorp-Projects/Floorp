@@ -32,7 +32,6 @@
 nsWSDLPort::nsWSDLPort(const nsAString& aName)
   : mName(aName)
 {
-  NS_INIT_ISUPPORTS();  
 }
 
 nsWSDLPort::~nsWSDLPort()
@@ -159,7 +158,6 @@ nsSOAPPortBinding::nsSOAPPortBinding(const nsAString& aName)
   : mName(aName), mStyle(STYLE_RPC), 
   mSoapVersion(nsISOAPPortBinding::SOAP_VERSION_UNKNOWN)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPPortBinding::~nsSOAPPortBinding()
@@ -285,7 +283,6 @@ nsSOAPPortBinding::SetSoapVersion(PRUint16 aVersion)
 nsWSDLOperation::nsWSDLOperation(const nsAString &aName)
   : mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWSDLOperation::~nsWSDLOperation()
@@ -464,7 +461,6 @@ nsWSDLOperation::AddParameter(const nsAString& aParameter)
 nsSOAPOperationBinding::nsSOAPOperationBinding()
   : mStyle(nsISOAPPortBinding::STYLE_RPC)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPOperationBinding::~nsSOAPOperationBinding()
@@ -548,7 +544,6 @@ nsSOAPOperationBinding::SetSoapAction(const nsAString& aAction)
 nsWSDLMessage::nsWSDLMessage(const nsAString& aName)
   : mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWSDLMessage::~nsWSDLMessage()
@@ -674,7 +669,6 @@ nsWSDLMessage::SetBinding(nsIWSDLBinding* aBinding)
 nsSOAPMessageBinding::nsSOAPMessageBinding(const nsAString& aNamespace)
   : mNamespace(aNamespace)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPMessageBinding::~nsSOAPMessageBinding()
@@ -722,7 +716,6 @@ nsSOAPMessageBinding::GetNamespace(nsAString & aNamespace)
 nsWSDLPart::nsWSDLPart(const nsAString& aName)
   : mName(aName)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWSDLPart::~nsWSDLPart()
@@ -812,7 +805,6 @@ nsSOAPPartBinding::nsSOAPPartBinding(PRUint16 aLocation, PRUint16 aUse,
   : mLocation(aLocation), mUse(aUse), 
   mEncodingStyle(aEncodingStyle), mNamespace(aNamespace)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPPartBinding::~nsSOAPPartBinding()

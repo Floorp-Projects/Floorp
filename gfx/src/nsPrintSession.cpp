@@ -48,7 +48,6 @@ NS_IMPL_ISUPPORTS2(nsPrintSession, nsIPrintSession, nsISupportsWeakReference)
 //-----------------------------------------------------------------------------
 nsPrintSession::nsPrintSession()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 //-----------------------------------------------------------------------------

@@ -92,7 +92,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsPrintProgress::nsPrintProgress()
 {
-  NS_INIT_ISUPPORTS();
   m_closeProgress = PR_FALSE;
   m_processCanceled = PR_FALSE;
   m_pendingStateFlags = -1;

@@ -738,7 +738,6 @@ nsFreeTypeFace::nsFreeTypeFace()
 nsresult nsFreeTypeFace::Init(nsFontCatalogEntry *aFce)
 {
   NS_ASSERTION(aFce, "init of nsFreeTypeFace needs nsFontCatalogEntry");
-  NS_INIT_ISUPPORTS();
   if (aFce)
     mFce = aFce;
   else {

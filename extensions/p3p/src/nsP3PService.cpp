@@ -89,7 +89,6 @@ NS_IMPL_ISUPPORTS3(nsP3PService,
                    nsINetNotify);
 
 nsP3PService::nsP3PService( ){
-  NS_INIT_ISUPPORTS( );
   mCompactPolicy = nsnull;
 }
 

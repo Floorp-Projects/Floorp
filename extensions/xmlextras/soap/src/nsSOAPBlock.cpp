@@ -47,7 +47,6 @@
 
 nsSOAPBlock::nsSOAPBlock()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSOAPBlock::~nsSOAPBlock()

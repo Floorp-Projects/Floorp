@@ -311,7 +311,6 @@ NS_IMPL_ISUPPORTS2(nsPrintingPromptService, nsIPrintingPromptService, nsIWebProg
 nsPrintingPromptService::nsPrintingPromptService() :
     mWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID))
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsPrintingPromptService::~nsPrintingPromptService()

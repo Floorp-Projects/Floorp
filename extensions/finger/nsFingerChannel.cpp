@@ -50,7 +50,6 @@ nsFingerChannel::nsFingerChannel()
       mPort(-1),
       mStatus(NS_OK)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsFingerChannel::~nsFingerChannel() {

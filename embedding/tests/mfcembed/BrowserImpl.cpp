@@ -77,8 +77,6 @@
 
 CBrowserImpl::CBrowserImpl()
 {
-  NS_INIT_ISUPPORTS();
-
   m_pBrowserFrameGlue = NULL;
   mWebBrowser = nsnull;
 }
