@@ -120,11 +120,11 @@ sub show_graph {
   print "Days:";
   if($DAYS) {
 	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=0&units=$UNITS\">all data</a>|";
-    print "<input type=text value=$DAYS NAME=\"days\" SIZE=3 MAXLENGTH=80>\n";
+    print "<input type=text value=$DAYS name=\"days\" size=3 maxlength=10>\n";
 	print ")";
   } else {
 	print "(<b>all data</b>|";
-    print "<input type=text value=\"\" NAME=\"days\" SIZE=3 MAXLENGTH=80>\n";
+    print "<input type=text value=\"\" name=\"days\" size=3 maxlength=10>\n";
 	print ")";
   }
   print "</form>\n";
