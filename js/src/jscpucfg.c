@@ -55,7 +55,7 @@
 #include <Types.h>
 #define INT64	UnsignedWide
 #else
-#if defined(XP_PC) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_OS2)
 #ifdef WIN32
 #if defined(__GNUC__)
 #define INT64   long long
