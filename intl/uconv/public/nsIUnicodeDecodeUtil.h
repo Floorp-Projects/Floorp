@@ -59,8 +59,8 @@ public:
       PRInt32          aBehavior,
       PRUint16         numOfTable,
       uRange          *aRangeArray,
-      uShiftTable     *aShiftTableArray,
-      uMappingTable   *aMappingTableArray
+      uShiftTable     **aShiftTableArray,
+      uMappingTable   **aMappingTableArray
    ) = 0;
 
     /*
