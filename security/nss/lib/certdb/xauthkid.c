@@ -110,6 +110,7 @@ CERT_DecodeAuthKeyID (PRArenaPool *arena, SECItem *encodedValue)
     CERTAuthKeyID * value = NULL;
     SECStatus       rv    = SECFailure;
     void *          mark;
+    SECItem         newEncodedValue;
 
     PORT_Assert (arena);
    
@@ -119,8 +120,15 @@ CERT_DecodeAuthKeyID (PRArenaPool *arena, SECItem *encodedValue)
 	value->DERAuthCertIssuer = NULL;
 	if (value == NULL)
 	    break;
-	rv = SEC_QuickDERDecodeItem
-	     (arena, value, CERTAuthKeyIDTemplate, encodedValue);
+        /* copy the DER into the arena, since Quick DER returns data that points
+           into the DER input, which may get freed by the caller */
+        rv = SECITEM_CopyItem(arena, &newEncodedValue, encodedValue);
+        if ( rv != SECSuccess ) {
+	    break;
+        }
+
+        rv = SEC_QuickDERDecodeItem
+	     (arena, value, CERTAuthKeyIDTemplate, &newEncodedValue);
 	if (rv != SECSuccess)
 	    break;
 

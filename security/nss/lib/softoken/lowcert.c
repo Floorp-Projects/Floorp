@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.12 2002/08/24 00:49:11 jpierre%netscape.com Exp $
+ * $Id: lowcert.c,v 1.13 2002/08/31 00:37:46 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -496,6 +496,7 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
     SECStatus rv;
     PRArenaPool *arena;
     SECOidTag tag;
+    SECItem newDerSubjKeyInfo;
 
     arena = PORT_NewArena (DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL)
@@ -511,9 +512,17 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
     pubk->arena = arena;
     PORT_Memset(&spki,0,sizeof(spki));
 
+    /* copy the DER into the arena, since Quick DER returns data that points
+       into the DER input, which may get freed by the caller */
+    rv = SECITEM_CopyItem(arena, &newDerSubjKeyInfo, &cert->derSubjKeyInfo);
+    if ( rv != SECSuccess ) {
+        PORT_FreeArena (arena, PR_FALSE);
+        return NULL;
+    }
+
     /* we haven't bothered decoding the spki struct yet, do it now */
     rv = SEC_QuickDERDecodeItem(arena, &spki, 
-		nsslowcert_SubjectPublicKeyInfoTemplate, &cert->derSubjKeyInfo);
+		nsslowcert_SubjectPublicKeyInfoTemplate, &newDerSubjKeyInfo);
     if (rv != SECSuccess) {
  	PORT_FreeArena (arena, PR_FALSE);
  	return NULL;
