@@ -933,6 +933,9 @@ nsTableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
 // Structure used when creating MathML mtable frames
 struct nsMathMLmtableCreator: public nsTableCreator {
   virtual nsresult CreateTableOuterFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
 
   nsMathMLmtableCreator(nsIPresShell* aPresShell)
@@ -943,6 +946,24 @@ nsresult
 nsMathMLmtableCreator::CreateTableOuterFrame(nsIFrame** aNewFrame)
 {
   return NS_NewMathMLmtableOuterFrame(mPresShell, aNewFrame);
+}
+
+nsresult
+nsMathMLmtableCreator::CreateTableFrame(nsIFrame** aNewFrame)
+{
+  return NS_NewMathMLmtableFrame(mPresShell, aNewFrame);
+}
+
+nsresult
+nsMathMLmtableCreator::CreateTableRowFrame(nsIFrame** aNewFrame)
+{
+  return NS_NewMathMLmtrFrame(mPresShell, aNewFrame);
+}
+
+nsresult
+nsMathMLmtableCreator::CreateTableCellFrame(nsIFrame** aNewFrame)
+{
+  return NS_NewMathMLmtdFrame(mPresShell, aNewFrame);
 }
 
 nsresult
@@ -2689,16 +2710,6 @@ nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext*  aPresContext,
        (nsHTMLAtoms::form             == aTag) ) {
     return PR_FALSE;
   }
-
-// XXX DJF - when should pseudo frames be constructed for MathML?
-#ifdef MOZ_MATHML
-  if ( (nsMathMLAtoms::math == aTag) ) {
-    return PR_TRUE;
-  }
-  else {
-    return PR_FALSE;
-  }
-#endif
 
   return PR_TRUE;
 }
@@ -6589,10 +6600,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
 
       // then, create the table frame itself
       nsCOMPtr<nsIStyleContext> tableContext;
-      aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                                 nsMathMLAtoms::mozMathTable,
-                                                 blockContext, PR_FALSE,
-                                                 getter_AddRefs(tableContext));
+      aPresContext->ResolveStyleContextFor(aContent, blockContext, PR_FALSE,
+                                           getter_AddRefs(tableContext));
       nsFrameItems tempItems;
       nsIFrame* outerTable;
       nsIFrame* innerTable;
