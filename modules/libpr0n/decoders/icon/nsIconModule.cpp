@@ -50,5 +50,4 @@ static nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE("nsIconDecoderModule", components)
-
+NS_IMPL_NSGETMODULE(nsIconDecoderModule, components)
