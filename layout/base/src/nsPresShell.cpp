@@ -33,6 +33,7 @@
 
 #undef NOISY
 
+#if 0
 static PLHashNumber
 HashKey(nsIFrame* key)
 {
@@ -124,6 +125,7 @@ FrameHashTable::Remove(nsIFrame* aKey)
   }
   return oldValue;
 }
+#endif
 
 //----------------------------------------------------------------------
 
@@ -190,16 +192,12 @@ public:
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   virtual void ProcessReflowCommands();
-  virtual void PutCachedData(nsIFrame* aKeyFrame, void* aData);
-  virtual void* GetCachedData(nsIFrame* aKeyFrame);
-  virtual void* RemoveCachedData(nsIFrame* aKeyFrame);
 
 protected:
   ~PresShell();
 
   void InitFrameVerifyTreeLogModuleInfo();
 
-  FrameHashTable* mCache;
   nsIDocument* mDocument;
   nsIPresContext* mPresContext;
   nsIStyleSet* mStyleSet;
@@ -259,8 +257,6 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 PresShell::~PresShell()
 {
-  delete mCache;
-
   if (nsnull != mDocument) {
     mDocument->DeleteShell(this);
     NS_RELEASE(mDocument);
@@ -293,8 +289,6 @@ PresShell::Init(nsIDocument* aDocument,
   if (nsnull != mDocument) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
-
-  mCache = new FrameHashTable();
 
   mDocument = aDocument;
   NS_ADDREF(aDocument);
@@ -741,25 +735,6 @@ PresShell::FindFrameWithContent(nsIContent* aContent)
   // For the time being do a brute force depth-first search of
   // the frame tree
   return ::FindFrameWithContent(mRootFrame, aContent);
-}
-
-void
-PresShell::PutCachedData(nsIFrame* aKeyFrame, void* aData)
-{
-  void* oldData = mCache->Put(aKeyFrame, aData);
-  NS_ASSERTION(nsnull == oldData, "bad cached data usage");
-}
-
-void*
-PresShell::GetCachedData(nsIFrame* aKeyFrame)
-{
-  return mCache->Get(aKeyFrame);
-}
-
-void*
-PresShell::RemoveCachedData(nsIFrame* aKeyFrame)
-{
-  return mCache->Remove(aKeyFrame);
 }
 
 //----------------------------------------------------------------------
