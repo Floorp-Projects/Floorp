@@ -520,15 +520,11 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
   }
   
   nsCOMPtr<nsIContent> childrenElement;
-      
-  if (!buildContent) {
-    // see if we have a <children/> element
-    GetNestedChild(kChildrenAtom, content, getter_AddRefs(childrenElement));
-    if (childrenElement) {
-      buildContent = PR_TRUE;
-    }
-  }
-  
+  // see if we have a <children/> element
+  GetNestedChild(kChildrenAtom, content, getter_AddRefs(childrenElement));
+  if (childrenElement)
+    buildContent = PR_TRUE;
+
   if (buildContent) {
      // Always check the content element for potential attributes.
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
