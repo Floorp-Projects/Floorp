@@ -3108,7 +3108,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DownloadMessagesForOffline(
   }
   mDownloadWindow = aWindow;
 
-  return GetNewMessages(aWindow, this);
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server)); 
+  if (NS_FAILED(rv)) return rv;
+  if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server);
+  if (!localMailServer) 
+      return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  return localMailServer->GetNewMail(aWindow, this, this, nsnull); 
 }
 
 // TODO:  once we move certain code into the IncomingServer (search for TODO)
