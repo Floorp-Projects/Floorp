@@ -21,7 +21,7 @@ DIRS = unix
 
 MODULE=shell
 
-LIBRARY_NAME = shell
+LIBRARY_NAME = shell_s
 
 DEFINES = -D_IMPL_NS_SHELL
 
@@ -44,5 +44,7 @@ CPP_OBJS=				\
  $(NULL)
 
 include $(DEPTH)/config/config.mk
+
+TARGETS = $(LIBRARY)
 
 include $(DEPTH)/config/rules.mk

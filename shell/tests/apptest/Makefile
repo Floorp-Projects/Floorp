@@ -15,10 +15,47 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../..
-
-DIRS = apptest
+DEPTH=../../..
 
 include $(DEPTH)/config/config.mk
 
+CPPSRCS = \
+	nsAppTest.cpp		\
+	$(NULL)
+
+INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/shell
+
+DIRS	=
+
+OBJS	= $(CPPSRCS:.cpp=.o)
+
+EX_LIBS = \
+	$(DIST)/lib/libxpcom.a	\
+	$(DIST)/lib/libreg.a	\
+	$(DIST)/lib/libraptorbase.a	\
+	$(DIST)/lib/libplc21.a	\
+	$(DIST)/lib/libplds21.a	\
+	$(DIST)/lib/libnspr21.a	\
+	$(DIST)/lib/libshell_s.a	\
+	$(DIST)/lib/libshellentry_s.a	\
+	$(NULL)
+
+PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+
+TARGETS = $(PROGS)
+
 include $(DEPTH)/config/rules.mk
+
+$(OBJDIR)/%.o: %.cpp
+	@$(MAKE_OBJDIR)
+	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
+
+$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
+	@$(MAKE_OBJDIR)
+	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXt -lX11
+
+export::
+
+install:: $(TARGETS)
+	$(INSTALL) $(PROGS) $(DIST)/bin
+

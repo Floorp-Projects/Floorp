@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nscore.h"
 #include "nsAppTest.h"
 #include "AppTestImpl.h"
 
@@ -45,19 +46,25 @@ nsAppTest::~nsAppTest()
 {
 }
 
-NS_IMPL_ADDREF(nsAppTest)
-NS_IMPL_RELEASE(nsAppTest)
-NS_IMPL_QUERY_INTERFACE(nsAppTest,NS_IAPPTEST_IID);
+NS_DEFINE_IID(kIAppTestIID, NS_IAPPTEST_IID);
+NS_IMPL_ISUPPORTS(nsAppTest,kIAppTestIID);
 
 nsresult nsAppTest::Init()
 {
+#ifdef NS_WIN32
   InitAppTest(this);
+#else
+  PRUnichar * p;
+  nsCRT::strlen(p);
+#endif
   return NS_OK;
 }
 
 nsresult nsAppTest::Run()
 {
+#ifdef NS_WIN32
   RunAppTest(this);
+#endif
   return NS_OK;
 }
 
@@ -74,9 +81,9 @@ nsAppTestFactory::~nsAppTestFactory()
 {    
 }
 
-NS_IMPL_ADDREF(nsAppTestFactory)
-NS_IMPL_RELEASE(nsAppTestFactory)
-NS_IMPL_QUERY_INTERFACE(nsAppTestFactory,NS_IFACTORY_IID);
+NS_DEFINE_IID(kIAppTestFactoryIID, NS_IFACTORY_IID);
+NS_IMPL_ISUPPORTS(nsAppTestFactory,kIAppTestFactoryIID);
+
 
 nsresult nsAppTestFactory::CreateInstance(nsISupports * aOuter,
                                                    const nsIID &aIID,

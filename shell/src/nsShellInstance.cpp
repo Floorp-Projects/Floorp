@@ -20,6 +20,8 @@
 
 #ifdef NS_WIN32
 #include "windows.h"
+#elif NS_UNIX
+#include <Xm/Xm.h>
 #endif
 
 #include "nsISupports.h"
@@ -78,6 +80,8 @@ nsresult nsShellInstance::Run()
       DispatchMessage(&msg);
   }
   return ((nsresult)msg.wParam);
+#elif NS_UNIX
+  XtAppMainLoop(app_context) ;
 #else
   return NS_OK;
 #endif
