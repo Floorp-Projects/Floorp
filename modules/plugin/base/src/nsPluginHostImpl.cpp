@@ -3658,13 +3658,15 @@ nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
     return;
 
   // XXX temporary for testing transition
-  static nsCOMPtr<nsIPrefService> sPrefService;
   static PRBool sLoadViaPlugin = PR_FALSE;
-  if (!sPrefService) {
-    sPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (sPrefService) {
+  static PRBool sLoadViaPluginInitialized = PR_FALSE;
+  if (!sLoadViaPluginInitialized) {
+    nsCOMPtr<nsIPrefService> prefService =
+        do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefService) {
+      sLoadViaPluginInitialized = PR_TRUE;
       nsCOMPtr<nsIPrefBranch> prefBranch;
-      sPrefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+      prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
       if (prefBranch)
         prefBranch->GetBoolPref("plugin.disable_load_full_page_via_content", &sLoadViaPlugin);
     }
