@@ -3421,6 +3421,34 @@ nsTableFrame::CalcDesiredHeight(nsIPresContext*          aPresContext,
   return desiredHeight;
 }
 
+static void
+UpdateCol(nsTableFrame&           aTableFrame,
+          nsTableColFrame&        aColFrame,
+          const nsTableCellFrame& aCellFrame,
+          nscoord                 aColMaxWidth,
+          PRBool                  aColMaxGetsBigger)
+{
+  if (aColMaxGetsBigger) {
+    // update the columns's new min width
+    aColFrame.SetWidth(DES_CON, aColMaxWidth);
+  }
+  else {
+    // determine the new max width
+    PRInt32 numRows = aTableFrame.GetRowCount();
+    PRInt32 colIndex = aColFrame.GetColIndex();
+    PRBool originates;
+    PRInt32 colSpan;
+    nscoord maxWidth = 0;
+    for (PRInt32 rowX = 0; rowX < numRows; rowX++) {
+      nsTableCellFrame* cellFrame = aTableFrame.GetCellInfoAt(rowX, colIndex, &originates, &colSpan);
+      if (cellFrame && originates && (1 == colSpan)) {
+        maxWidth = PR_MAX(maxWidth, cellFrame->GetMaximumWidth());
+      }
+    }
+    // update the columns's new max width
+    aColFrame.SetWidth(DES_CON, maxWidth);
+  }
+}
 
 PRBool 
 nsTableFrame::CellChangedWidth(const nsTableCellFrame& aCellFrame,
@@ -3526,28 +3554,15 @@ nsTableFrame::CellChangedWidth(const nsTableCellFrame& aCellFrame,
             }
           }
           if (!haveProp) {
-            if (colMaxGetsBigger) {
-              // update the columns's new min width
-              colFrame->SetWidth(DES_CON, cellMax);
-            }
-            else if (colMaxGetsSmaller) {
-              // determine the new max width
-              numRows = GetRowCount();
-              nscoord maxWidth = 0;
-              for (rowX = 0; rowX < numRows; rowX++) {
-                nsTableCellFrame* cellFrame = GetCellInfoAt(rowX, colIndex, &originates, &colSpan);
-                if (cellFrame && originates && (1 == colSpan)) {
-                  maxWidth = PR_MAX(maxWidth, cellFrame->GetMaximumWidth());
-                }
-              }
-              // update the columns's new max width
-              colFrame->SetWidth(DES_CON, maxWidth);
-            }
+            UpdateCol(*this, *colFrame, aCellFrame, cellMax, colMaxGetsBigger);
             // we should rebalance in case the max width determines the column width
             SetNeedStrategyBalance(PR_TRUE);
           }
         }
       }
+    }
+    else {
+      UpdateCol(*this, *colFrame, aCellFrame, cellMax, colMaxGetsBigger);
     }
   }
   return PR_FALSE;
