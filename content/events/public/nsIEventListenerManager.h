@@ -70,8 +70,8 @@ public:
   virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsAReadableString& type, PRInt32 flags) = 0;
 
   /**
-  * Creates a script event listener for the given script object with name mName and function
-  * body mFunc.
+  * Creates a script event listener for the given script object with name aName and function
+  * body aFunc.
   * @param an event listener
   */
   virtual nsresult AddScriptEventListener(nsIScriptContext*aContext,
@@ -79,6 +79,9 @@ public:
                                           nsIAtom *aName,
                                           const nsAReadableString& aFunc,
                                           PRBool aDeferCompilation) = 0;
+
+
+  virtual nsresult RemoveScriptEventListener(nsIAtom *aName) = 0;
 
   /**
   * Registers an event listener that already exists on the given script object with the event
