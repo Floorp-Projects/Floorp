@@ -30,5 +30,5 @@ include $(topsrcdir)/config/rules.mk
 
 install::
 	$(REGCHROME) content content-packs content-packs.jar
-	$(REGCHROME) locale en-US/content-packs content-packs.jar
+	$(REGCHROME) locale en-US/content-packs en-US.jar
 
