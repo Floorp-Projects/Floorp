@@ -2213,7 +2213,6 @@ void LO_SetBaseURL( MWContext *context, char *pURL )
 }
 
 
-#if 0
 /*
  *---------------------------------------------------------------------------
  * From ns/lib/layout/laysel.c
@@ -2229,7 +2228,7 @@ LO_getNextTabableElement( MWContext *context, LO_TabFocusData *pCurrentFocus, in
     return FALSE;
 }
 
-
+#if 0
 /*
  *---------------------------------------------------------------------------
  * From ns/lib/layout/laygrid.c
