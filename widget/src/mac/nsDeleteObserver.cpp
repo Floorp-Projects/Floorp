@@ -54,21 +54,23 @@ nsDeleteObserved::~nsDeleteObserved()
 //
 //-------------------------------------------------------------------------
 
-void nsDeleteObserved::AddDeleteObserver(nsDeleteObserver* aDeleteObserver)
+PRBool nsDeleteObserved::AddDeleteObserver(nsDeleteObserver* aDeleteObserver)
 {
 	if (! mDeleteObserverArray)
 		mDeleteObserverArray = new nsVoidArray();
 
 	if (mDeleteObserverArray)
-		mDeleteObserverArray->AppendElement(aDeleteObserver);
+		return mDeleteObserverArray->AppendElement(aDeleteObserver);
+	return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
 
-void nsDeleteObserved::RemoveDeleteObserver(nsDeleteObserver* aDeleteObserver)
+PRBool nsDeleteObserved::RemoveDeleteObserver(nsDeleteObserver* aDeleteObserver)
 {
 	if (mDeleteObserverArray)
-		mDeleteObserverArray->RemoveElement(aDeleteObserver);
+		return mDeleteObserverArray->RemoveElement(aDeleteObserver);
+	return PR_FALSE;
 }

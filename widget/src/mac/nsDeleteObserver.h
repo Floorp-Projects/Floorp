@@ -18,6 +18,7 @@
 #ifndef DeleteObserver_h__
 #define DeleteObserver_h__
 
+#include "prtypes.h"
 class nsVoidArray;
 
 //-------------------------------------------------------------------------
@@ -54,8 +55,8 @@ public:
 							nsDeleteObserved(void* aObject);
 	virtual			~nsDeleteObserved();
 
-	void				AddDeleteObserver(nsDeleteObserver* aDeleteObserver);
-	void				RemoveDeleteObserver(nsDeleteObserver* aDeleteObserver);
+	PRBool			AddDeleteObserver(nsDeleteObserver* aDeleteObserver);
+	PRBool			RemoveDeleteObserver(nsDeleteObserver* aDeleteObserver);
 
 private:
 	nsVoidArray*			mDeleteObserverArray;

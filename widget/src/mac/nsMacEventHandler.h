@@ -21,16 +21,56 @@
 #include <Events.h>
 #include <MacWindows.h>
 #include <TextServices.h>
-#include "nsDeleteObserver.h"
+#include "prtypes.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
-#include "prtypes.h"
-
+#include "nsDeleteObserver.h"
 
 class nsWindow;
 class nsMacWindow;
 
-class nsMacEventHandler : public nsDeleteObserver
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+
+class nsMacFocusHandler : public nsDeleteObserver
+{
+public:
+  nsMacFocusHandler();
+  virtual				~nsMacFocusHandler();
+
+	void 					SetFocus(nsWindow *aFocusedWidget);
+	nsWindow*			GetFocus()	{return(mFocusedWidget);}
+
+	void 					SetWidgetHit(nsWindow *aWidgetHit);
+	void 					SetWidgetPointed(nsWindow *aWidgetPointed);
+
+	nsWindow*			GetWidgetHit()			{return(mWidgetHit);}
+	nsWindow*			GetWidgetPointed()	{return(mWidgetPointed);}
+
+	// DeleteObserver
+	virtual void	NotifyDelete(void* aDeletedObject);
+
+private:
+	nsWindow*			mFocusedWidget;
+	nsWindow*			mWidgetHit;
+	nsWindow*			mWidgetPointed;
+};
+
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+
+extern nsMacFocusHandler	gFocusHandler;
+
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
+
+class nsMacEventHandler
 {
 public:
 		nsMacEventHandler(nsMacWindow* aTopLevelWidget);
@@ -46,16 +86,15 @@ public:
 		//
 		// TSM Event Handlers
 		//
-		virtual long 	HandlePositionToOffset(Point aPoint,short* regionClass);
+		virtual long 		HandlePositionToOffset(Point aPoint,short* regionClass);
 		virtual PRBool 	HandleOffsetToPosition(long offset,Point* position);
 		virtual PRBool	HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
 		
 protected:
 #if 1
-		virtual void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message);
-		virtual PRBool IsSpecialRaptorKey(UInt32 macKeyCode);
-		virtual PRUint32 ConvertKeyEventToUnicode(EventRecord& aOSEvent);
-
+		virtual void			InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message);
+		virtual PRBool		IsSpecialRaptorKey(UInt32 macKeyCode);
+		virtual PRUint32	ConvertKeyEventToUnicode(EventRecord& aOSEvent);
 #endif
 		virtual PRBool	HandleKeyEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleActivateEvent(EventRecord& aOSEvent);
@@ -64,30 +103,25 @@ protected:
 		virtual PRBool	HandleMouseUpEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseMoveEvent(EventRecord& aOSEvent);
 
-		virtual void	ConvertOSEventToMouseEvent(
-									EventRecord&	aOSEvent,
-									nsMouseEvent&	aMouseEvent,
-									PRUint32		aMessage);
+		virtual void		ConvertOSEventToMouseEvent(
+												EventRecord&	aOSEvent,
+												nsMouseEvent&	aMouseEvent,
+												PRUint32		aMessage);
 		virtual PRBool	HandleStartComposition(void);
 		virtual PRBool	HandleEndComposition(void);
 		virtual PRBool  HandleTextEvent(PRUint32 textRangeCount, nsTextRangeArray textRangeArray);
 
-public:
-	virtual void	NotifyDelete(void* aDeletedObject);
-
 protected:
-	nsMacWindow*	mTopLevelWidget;
-	static nsWindow*		mLastWidgetHit;			// These items have been made static to fix #9456
-	static PRBool				mMouseInWidgetHit;
-	static nsWindow*		mLastWidgetPointed;
-	RgnHandle			mUpdateRgn;
-	TSMDocumentID		mTSMDocument;
-	PRBool				mIMEIsComposing;
-	PRUnichar			*mIMECompositionString;
-	size_t				mIMECompositionStringSize;
-	size_t				mIMECompositionStringLength;
+	static PRBool	mMouseInWidgetHit;
   static PRBool	mInBackground;
 
+	nsMacWindow*	mTopLevelWidget;
+	RgnHandle			mUpdateRgn;
+	TSMDocumentID	mTSMDocument;
+	PRBool				mIMEIsComposing;
+	PRUnichar*		mIMECompositionString;
+	size_t				mIMECompositionStringSize;
+	size_t				mIMECompositionStringLength;
 };
 
 #endif // MacMacEventHandler_h__
