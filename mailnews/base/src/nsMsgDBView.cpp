@@ -2736,7 +2736,10 @@ nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sor
         nsXPIDLCString scoreStr;
         rv = msgHdr->GetStringProperty("score", getter_Copies(scoreStr));
         // unscored messages should come before messages that are scored
-        // score is 0 - 100
+        // scoreStr is "", and "0" - "100"
+        // normalize to 0 - 101
+        //
+        // same normalization as in nsMsgLocalSearch.cpp
         *result = scoreStr.IsEmpty() ? (0) : atoi(scoreStr.get()) + 1;
       }
       break;
