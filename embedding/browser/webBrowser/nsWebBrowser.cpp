@@ -597,6 +597,13 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            mDocShell->SetAllowPlugins(aValue);
         }
         break;
+    case nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT:
+        {
+           NS_ENSURE_STATE(mDocShell);
+           NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
+           mDocShell->SetAllowJavascript(aValue);
+        }
+        break;
 
     default:
         return NS_ERROR_INVALID_ARG;

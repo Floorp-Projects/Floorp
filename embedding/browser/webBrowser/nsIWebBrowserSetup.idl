@@ -30,7 +30,8 @@
 [scriptable, uuid(F15398A0-8018-11d3-AF70-00A024FFC08C)]
 interface nsIWebBrowserSetup : nsISupports
 {
-	const unsigned long SETUP_ALLOW_PLUGINS = 1;
+	const unsigned long SETUP_ALLOW_PLUGINS         = 1;
+	const unsigned long SETUP_ALLOW_JAVASCRIPT      = 2;
 
 	void setProperty(in unsigned long aId, in unsigned long aValue);
 };

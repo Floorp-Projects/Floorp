@@ -288,6 +288,8 @@ protected:
    PRUint32                   mLoadType;
    PRBool                     mInitialPageLoad;
    PRBool                     mAllowPlugins;
+   PRBool                     mAllowJavascript;
+   PRUint32                   mAppType;
    PRInt32                    mViewMode;
    PRInt32                    mLastViewMode;
    PRBool                     mRestoreViewMode;

@@ -129,7 +129,7 @@ interface nsIScriptSecurityManager : nsISupports
 	 * Return true if content from the given principal is allowed to
 	 * execute scripts.
 	 */
-    boolean canExecuteScripts(in nsIPrincipal principal);
+    [noscript] boolean canExecuteScripts(in JSContextPtr cx, in nsIPrincipal principal);
 
 
 	///////////////// Capabilities /////////////////////

@@ -127,6 +127,8 @@ nsDocShell::nsDocShell() :
   mDefaultScrollbarPref(-1,-1),
   mInitialPageLoad(PR_TRUE),
   mAllowPlugins(PR_TRUE),
+  mAllowJavascript(PR_TRUE),
+  mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
   mViewMode(viewNormal),
   mLastViewMode(viewNormal),
   mRestoreViewMode(PR_FALSE),
@@ -695,6 +697,32 @@ NS_IMETHODIMP nsDocShell::SetAllowPlugins(PRBool aAllowPlugins)
 {
    mAllowPlugins = aAllowPlugins;
    //XXX should enable or disable a plugin host
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetAllowJavascript(PRBool* aAllowJavascript)
+{
+   NS_ENSURE_ARG_POINTER(aAllowJavascript);
+
+   *aAllowJavascript = mAllowJavascript;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetAllowJavascript(PRBool aAllowJavascript)
+{
+   mAllowJavascript = aAllowJavascript;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetAppType(PRUint32* aAppType)
+{
+   *aAppType = mAppType;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetAppType(PRUint32 aAppType)
+{
+   mAppType = aAppType;
    return NS_OK;
 }
 

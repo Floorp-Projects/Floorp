@@ -62,6 +62,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
 #include "nscore.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
@@ -407,7 +409,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckScriptAccessToURL(JSContext *cx, 
                                                 const char* aObjUrlStr, PRInt32 domPropInt, 
                                                 PRBool isWrite)
-{    
+{
     return CheckScriptAccessInternal(cx, nsnull, aObjUrlStr, domPropInt, isWrite);
 }
 
@@ -415,7 +417,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckScriptAccess(JSContext *cx, 
                                            void *aObj, PRInt32 domPropInt, 
                                            PRBool isWrite)
-{    
+{
     return CheckScriptAccessInternal(cx, aObj, nsnull, domPropInt, isWrite);
 }
 
@@ -450,7 +452,9 @@ nsScriptSecurityManager::CheckScriptAccessInternal(JSContext *cx,
       case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS:
       {
         const char *cap = isWrite ? UBW : UBR;
-
+#ifdef DEBUG_mstoltz
+		printf("##### Checking %s : \n", domPropNames[domProp]);
+#endif
         nsCOMPtr<nsIPrincipal> objectPrincipal;
         if (aObj)
         {
@@ -550,7 +554,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                                       PRUint32 aFlags)
 {
-   nsCOMPtr<nsIJARURI> jarURI;
+    nsCOMPtr<nsIJARURI> jarURI;
     nsCOMPtr<nsIURI> sourceUri(aSourceURI);
     while((jarURI = do_QueryInterface(sourceUri)))
         jarURI->GetJARFile(getter_AddRefs(sourceUri));
@@ -647,20 +651,26 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj, 
                                              void *aTargetObj)
 {
+    //-- This check is called for event handlers
     nsCOMPtr<nsIPrincipal> subject;
     nsresult rv = GetFunctionObjectPrincipal(aCx, (JSObject *)aFunObj, 
-                                           getter_AddRefs(subject));
+                                             getter_AddRefs(subject));
     if (NS_FAILED(rv))
         return rv;
 
-    // First check if the principal the function was compiled under is
+    PRBool isSystem;
+    if (NS_SUCCEEDED(subject->Equals(mSystemPrincipal, &isSystem)) && isSystem) 
+        // This is the system principal: just allow access
+        return NS_OK;
+
+    // Check if the principal the function was compiled under is
     // allowed to execute scripts.
     if (!subject) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
     PRBool result;
-    rv = CanExecuteScripts(subject, &result);
+    rv = CanExecuteScripts(aCx, subject, &result);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -862,46 +872,75 @@ nsScriptSecurityManager::EnsureNameSetRegistered()
     return mNameSetRegistered;
 }
 
+nsresult
+nsScriptSecurityManager::GetRootDocShell(JSContext *cx, nsIDocShell **result)
+{
+    nsresult rv;
+    *result = nsnull;
+    nsCOMPtr<nsIDocShell> docshell;
+    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+    if (!scriptContext) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+    if (!globalObject)  return NS_ERROR_FAILURE;
+    rv = globalObject->GetDocShell(getter_AddRefs(docshell));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem = do_QueryInterface(docshell, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDocShellTreeItem> rootItem;
+    rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+    if (NS_FAILED(rv)) return rv;
+
+    return rootItem->QueryInterface(NS_GET_IID(nsIDocShell), (void**)result);
+}
+
 NS_IMETHODIMP
-nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
+nsScriptSecurityManager::CanExecuteScripts(JSContext* cx, nsIPrincipal *principal,
                                            PRBool *result)
 {
     // XXX Really OK to fail? 
     // I suppose that in some embedding there may be no ScriptNameSetRegistry.
     EnsureNameSetRegistered();
 
-    if (principal == mSystemPrincipal) {
-         // Even if JavaScript is disabled, we must still execute system scripts
+    if (principal == mSystemPrincipal)
+	{
+        // Even if JavaScript is disabled, we must still execute system scripts
         *result = PR_TRUE;
         return NS_OK;
     }
-    
-    if (GetBit(hasDomainPolicyVector, NS_DOM_PROP_JAVASCRIPT_ENABLED)) {
+
+    //-- See if the current window allows JS execution
+    nsCOMPtr<nsIDocShell> docshell;
+    nsresult rv;
+    rv = GetRootDocShell(cx, getter_AddRefs(docshell));
+    if (NS_SUCCEEDED(rv))
+    {
+        rv = docshell->GetAllowJavascript(result);
+        if (NS_FAILED(rv)) return rv;
+        if (!*result)
+        return NS_OK;
+    }
+
+    if (GetBit(hasDomainPolicyVector, NS_DOM_PROP_JAVASCRIPT_ENABLED))
+    {
         // We may have a per-domain security policy for JavaScript execution
         nsCAutoString capability;
         PRInt32 secLevel = GetSecurityLevel(principal, 
                                             NS_DOM_PROP_JAVASCRIPT_ENABLED, 
                                             PR_FALSE, capability);
-        if (secLevel != SCRIPT_SECURITY_UNDEFINED_ACCESS) {
+        if (secLevel != SCRIPT_SECURITY_UNDEFINED_ACCESS)
+        {
             *result = (secLevel == SCRIPT_SECURITY_ALL_ACCESS);
             return NS_OK;
         }
     }
     
-    if (mIsJavaScriptEnabled != mIsMailJavaScriptEnabled) {
+    if ((mIsJavaScriptEnabled != mIsMailJavaScriptEnabled) && docshell)
+    {
         // Is this script running from mail?
-        nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-        if (!codebase) 
-            return NS_ERROR_FAILURE;
-        nsCOMPtr<nsIURI> uri;
-        if (NS_FAILED(codebase->GetURI(getter_AddRefs(uri)))) 
-            return NS_ERROR_FAILURE;
-        nsXPIDLCString scheme;
-        if (NS_FAILED(uri->GetScheme(getter_Copies(scheme))))
-            return NS_ERROR_FAILURE;
-        if (nsCRT::strcasecmp(scheme, "imap") == 0 || 
-            nsCRT::strcasecmp(scheme, "mailbox") == 0 ||
-            nsCRT::strcasecmp(scheme, "news") == 0) 
+		PRUint32 appType;
+        rv = docshell->GetAppType(&appType);
+        if (NS_FAILED(rv)) return rv;
+        if (appType == nsIDocShell::APP_TYPE_MAIL)
         {
             *result = mIsMailJavaScriptEnabled;
             return NS_OK;
@@ -1685,7 +1724,12 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, nsIPrincipal* aObjectP
         return NS_ERROR_FAILURE;
     
     if (isSameOrigin)
+	{
+#ifdef DEBUG_mstoltz
+		printf(" OK.\n");
+#endif
         return NS_OK;
+	}
 
     // Allow access to about:blank
     nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(aObjectPrincipal);
@@ -1712,6 +1756,9 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, nsIPrincipal* aObjectP
     /*
     ** Access tests failed, so now report error.
     */
+#ifdef DEBUG_mstoltz
+	printf(" FAILED.\n");
+#endif
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
 
