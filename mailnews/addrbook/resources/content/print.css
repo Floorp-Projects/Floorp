@@ -33,46 +33,88 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-directory {display:table;}
-card {display:table-row;}
-card *{display:table-cell;}
-mailinglist {display:table-row;}
-mailinglist *{display:table-cell;}
-GeneratedName {display:block; font-weight:bold;}
-FirstName {display:block;}
-LastName {display:block;}
-DisplayName {display:block;}
-NickName {display:block;}
-PrimaryEmail {display:block;}
-SecondEmail {display:block;}
-PreferMailFormat {display:none;}
-WorkPhone {display:block;}
-HomePhone {display:block;}
-FaxNumber {display:block;}
-PagerNumber {display:block;}
-CellularNumber {display:block;}
-HomeAddress {display:block;}
-HomeAddress2 {display:block;}
-HomeCity {display:block;}
-HomeState {display:block;}
-HomeZipCode {display:block;}
-HomeCountry {display:block;}
-WorkAddress {display:block;}
-WorkAddress2 {display:block;}
-WorkCity {display:block;}
-WorkState {display:block;}
-WorkZipCode {display:block;}
-WorkCountry {display:block;}
-JobTitle {display:block;}
-Department {display:block;}
-Company {display:block;}
-WebPage1 {display:block;}
-WebPage2 {display:block;}
-BirthYear {display:block;}
-BirthMonth {display:block;}
-BirthDay {display:block;}
-Custom1 {display:block;}
-Custom2 {display:block;}
-Custom3 {display:block;}
-Custom4 {display:block;}
-Notes {display:block;}
+
+directory {
+  display: block;
+}
+
+section {
+  display:block; 
+  margin: 15px 20px;
+}
+
+sectiontitle {
+  display:block; 
+  font-weight:bold; 
+  font-family:verdana; 
+  font-size:small;
+}
+
+labelrow {
+  display:block;
+}
+
+label {
+  display:inline; 
+  font-family:verdana; 
+  font-size:small;
+}
+
+GeneratedName {
+  display:block; 
+  font-weight:bold; 
+  font-family:verdana; 
+  margin: 20px 10px 3px 10px;
+}
+
+FirstName, LastName, 
+HomeAddress, HomeAddress2, HomeCountry,
+WorkAddress, WorkAddress2, WorkCountry,
+JobTitle, Department, Company, Notes {
+  display: block; 
+  font-family: verdana; 
+  font-size: small;
+}
+
+DisplayName, NickName,
+WorkPhone, HomePhone, FaxNumber, PagerNumber, CellularNumber,
+HomeCity, HomeState, HomeZipCode,
+WorkCity, WorkState, WorkZipCode, 
+Custom1, Custom2, Custom3, Custom4 {
+  display: inline; 
+  font-family: verdana; 
+  font-size: small;
+}
+
+PrimaryEmail, SecondEmail,
+WebPage1, WebPage2 {
+  display: block;
+  font-family: verdana;
+  font-size: small;
+  text-decoration: underline;
+  color: #666666;
+}
+
+separator {
+  display: block;
+  border-bottom: 1px solid #000000;
+  margin: 0px 0px 0px 10px;
+}
+
+table {
+  display: table;
+}
+
+tr {
+  display: table-row;
+}
+
+td {
+  display: table-cell; 
+  vertical-align: top;
+}
+
+PreferMailFormat {
+  display: none;
+}
+

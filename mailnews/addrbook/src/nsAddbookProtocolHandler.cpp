@@ -255,7 +255,7 @@ nsAddbookProtocolHandler::BuildDirectoryXML(nsIAbDirectory *aDirectory,
   aOutput.Append(NS_LITERAL_STRING("<?xml version=\"1.0\"?>\n").get());
   aOutput.Append(NS_LITERAL_STRING("<?xml-stylesheet type=\"text/css\" href=\"chrome://messenger/content/addressbook/print.css\"?>\n").get());
   aOutput.Append(NS_LITERAL_STRING("<directory>\n").get());
-
+ 
   rv = aDirectory->GetChildCards(getter_AddRefs(cardsEnumerator));
   if (NS_SUCCEEDED(rv) && cardsEnumerator)
   {
@@ -268,14 +268,17 @@ nsAddbookProtocolHandler::BuildDirectoryXML(nsIAbDirectory *aDirectory,
         nsCOMPtr <nsIAbCard> card = do_QueryInterface(item);
         nsXPIDLString xmlSubstr;
 
-        rv = card->ConvertToXMLData(getter_Copies(xmlSubstr));
+        rv = card->ConvertToXMLPrintData(getter_Copies(xmlSubstr));
         NS_ENSURE_SUCCESS(rv,rv);
 
+        aOutput.Append(NS_LITERAL_STRING("<separator/>").get());
         aOutput.Append(xmlSubstr.get());
       }
     }
+	aOutput.Append(NS_LITERAL_STRING("<separator/>").get());
   }
 
   aOutput.Append(NS_LITERAL_STRING("</directory>\n").get());
+
   return NS_OK;
 }

@@ -51,6 +51,7 @@
 #include "nsIAddressBook.h"
 
 class mozITXTToHTMLConv;
+struct AppendItem;
 
  /* 
   * Address Book Card Property
@@ -115,6 +116,7 @@ protected:
 
 private:
   nsresult AppendData(const char *aAttrName, mozITXTToHTMLConv *aConv, nsString &aResult);
+  nsresult AppendSection(AppendItem *aArray, PRInt16 aCount, const PRUnichar *aHeading, mozITXTToHTMLConv *aConv, nsString &aResult);
 };
 
 #endif

@@ -112,5 +112,5 @@ interface nsIAbCard : nsISupports {
 	boolean equals(in nsIAbCard card);
 
 	string convertToBase64EncodedXML();
-	wstring convertToXMLData();
+	wstring convertToXMLPrintData();
 };
