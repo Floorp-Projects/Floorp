@@ -1588,6 +1588,13 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
     // To better match IE, take the size (in twips) and remove 4 pixels
     // add this on as additional padding
     internalPadding = PR_MAX(font->size - NSToCoordRound(4 * p2t), 0);
+    // round to a multiple of p2t
+    nscoord rest = internalPadding%NSToCoordRound(p2t);
+    if( rest < NSToCoordRound(p2t) - rest) {
+      internalPadding = internalPadding - rest;
+    } else {
+      internalPadding = internalPadding + NSToCoordRound(p2t) - rest;
+    }
   }
 
 #else
