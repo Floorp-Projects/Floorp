@@ -58,8 +58,7 @@ extern nsPluginManager* thePluginManager;
 PR_IMPLEMENT(void)
 JVM_ReleaseJVMMgr(nsJVMManager* mgr)
 {
-    nsresult err = nsServiceManager::ReleaseService(kJVMManagerCID, (nsISupports*)((nsIJVMManager*)mgr));
-    PR_ASSERT(err == NS_OK);
+    mgr->Release();
 }
 
 static nsIJVMPlugin*

@@ -131,25 +131,21 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsTestXPCFoo2, nsITestProxy)
 
 NS_IMETHODIMP nsTestXPCFoo2::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
-printf("calling back to caller!\n\n");
+    printf("calling back to caller!\n\n");
 
-    nsIProxyObjectManager*  manager;
-    nsITestProxy         *  proxyObject;
-    
-    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
-                                  NS_GET_IID(nsIProxyObjectManager),
-                                  (nsISupports **)&manager);
+    nsCOMPtr<nsIProxyObjectManager> manager =
+            do_GetService(NS_XPCOMPROXY_CONTRACTID);
 
-    printf("ProxyObjectManager: %p \n", manager);
+    printf("ProxyObjectManager: %p \n", (void *) manager.get());
     
     PR_ASSERT(manager);
 
-    manager->GetProxyForObject((nsIEventQueue*)p1, NS_GET_IID(nsITestProxy), this, PROXY_SYNC, (void**)&proxyObject);
+    nsCOMPtr<nsITestProxy> proxyObject;
+    manager->GetProxyForObject((nsIEventQueue*)p1, NS_GET_IID(nsITestProxy),
+                               this, PROXY_SYNC, (void**)&proxyObject);
     proxyObject->Test3(nsnull, nsnull);
     
     printf("Deleting Proxy Object\n");
-    NS_RELEASE(proxyObject);
-
     return NS_OK;
 }
 
@@ -184,13 +180,10 @@ void TestCase_TwoClassesOneInterface(void *arg)
     ArgsStruct *argsStruct = (ArgsStruct*) arg;
 
 
-    nsIProxyObjectManager*  manager;
-    
-    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
-                                  NS_GET_IID(nsIProxyObjectManager),
-                                  (nsISupports **)&manager);
+    nsCOMPtr<nsIProxyObjectManager> manager =
+            do_GetService(NS_XPCOMPROXY_CONTRACTID);
 
-    printf("ProxyObjectManager: %p \n", manager);
+    printf("ProxyObjectManager: %p \n", (void *) manager.get());
     
     PR_ASSERT(manager);
 
@@ -254,14 +247,10 @@ void TestCase_NestedLoop(void *arg)
 {
     ArgsStruct *argsStruct = (ArgsStruct*) arg;
 
+    nsCOMPtr<nsIProxyObjectManager> manager =
+            do_GetService(NS_XPCOMPROXY_CONTRACTID);
 
-    nsIProxyObjectManager*  manager;
-    
-    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
-                                  NS_GET_IID(nsIProxyObjectManager),
-                                  (nsISupports **)&manager);
-
-    printf("ProxyObjectManager: %p \n", manager);
+    printf("ProxyObjectManager: %p\n", (void *) manager.get());
     
     PR_ASSERT(manager);
 
@@ -319,11 +308,8 @@ void TestCase_2(void *arg)
 
     ArgsStruct *argsStruct = (ArgsStruct*) arg;
 
-    nsIProxyObjectManager*  manager;
-    
-    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
-                                  NS_GET_IID(nsIProxyObjectManager),
-                                  (nsISupports **)&manager);
+    nsCOMPtr<nsIProxyObjectManager> manager =
+            do_GetService(NS_XPCOMPROXY_CONTRACTID);
     
     PR_ASSERT(manager);
 
@@ -349,11 +335,8 @@ void TestCase_nsISupports(void *arg)
 
     ArgsStruct *argsStruct = (ArgsStruct*) arg;
 
-    nsIProxyObjectManager*  manager;
-    
-    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
-                                  NS_GET_IID(nsIProxyObjectManager),
-                                  (nsISupports **)&manager);
+    nsCOMPtr<nsIProxyObjectManager> manager =
+            do_GetService(NS_XPCOMPROXY_CONTRACTID);
     
     PR_ASSERT(manager);
 
@@ -427,11 +410,8 @@ static void PR_CALLBACK EventLoop( void *arg )
 
     printf("Verifing calling Proxy on eventQ thread.\n");
 
-    nsIProxyObjectManager*  manager;
-    
-    nsServiceManager::GetService( NS_XPCOMPROXY_CONTRACTID, 
-                                  NS_GET_IID(nsIProxyObjectManager),
-                                  (nsISupports **)&manager);
+    nsCOMPtr<nsIProxyObjectManager> manager =
+            do_GetService(NS_XPCOMPROXY_CONTRACTID);
     
     PR_ASSERT(manager);
 

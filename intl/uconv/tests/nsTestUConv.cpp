@@ -1069,9 +1069,8 @@ nsresult testUTF7Encoder()
 
 nsresult  testPlatformCharset()
 {
-  nsIPlatformCharset * cinfo;
-  nsresult res = nsServiceManager::GetService(kPlatformCharsetCID,
-      NS_GET_IID(nsIPlatformCharset), (nsISupports **)&cinfo);
+  nsIPlatformCharset *cinfo;
+  nsresult res = CallGetService(kPlatformCharsetCID, &cinfo);
   if (NS_FAILED(res)) {
     printf("ERROR at GetService() code=0x%x.\n",res);
     return res;

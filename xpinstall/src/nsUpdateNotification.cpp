@@ -101,11 +101,7 @@ nsXPINotifierImpl::nsXPINotifierImpl()
 
 nsXPINotifierImpl::~nsXPINotifierImpl()
 {
-    if (mRDF) 
-    {
-        nsServiceManager::ReleaseService(kRDFServiceCID, mRDF);
-        mRDF = nsnull;
-    }
+    NS_IF_RELEASE(mRDF);
 
     NS_IF_RELEASE(kXPI_NotifierSources);
     NS_IF_RELEASE(kXPI_NotifierPackages);
@@ -202,7 +198,7 @@ nsXPINotifierImpl::Init()
     PRBool moreElements;
     
     // Read the distributor registry
-    rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService), (nsISupports**) &mRDF);
+    rv = CallGetService(kRDFServiceCID, &mRDF);
     if (NS_FAILED(rv)) return rv;
     
     if (! kXPI_NotifierSources)

@@ -303,9 +303,18 @@ EventsPluginInstance::RegisterSelf(nsIComponentManager* aCompMgr,
 {
     nsresult rv;
 
+    nsIServiceManager *svcMgr;
+    rv = aCompMgr->QueryInterface(NS_GET_IID(nsIServiceManager),
+                                  NS_REINTERPRET_CAST(void**, &svcMgr));
+    if (NS_FAILED(rv))
+        return rv;
+
     nsIPluginManager* pm;
-    rv = nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager),
-                                      NS_REINTERPRET_CAST(nsISupports**, &pm));
+    rv = svcMgr->GetService(kPluginManagerCID,
+                            NS_GET_IID(nsIPluginManager),
+                            NS_REINTERPRET_CAST(void**, &pm));
+    NS_RELEASE(svcMgr);
+
     if (NS_SUCCEEDED(rv)) {
         rv = pm->RegisterPlugin(kEventsPluginCID,
                                 kPluginName,
@@ -330,9 +339,18 @@ EventsPluginInstance::UnregisterSelf(nsIComponentManager* aCompMgr,
 {
     nsresult rv;
 
+    nsIServiceManager *svcMgr;
+    rv = aCompMgr->QueryInterface(NS_GET_IID(nsIServiceManager),
+                                  NS_REINTERPRET_CAST(void**, &svcMgr));
+    if (NS_FAILED(rv))
+        return rv;
+
     nsIPluginManager* pm;
-    rv = nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager),
-                                      NS_REINTERPRET_CAST(nsISupports**, &pm));
+    rv = svcMgr->GetService(kPluginManagerCID,
+                            NS_GET_IID(nsIPluginManager),
+                            NS_REINTERPRET_CAST(void**, &pm));
+    NS_RELEASE(svcMgr);
+
     if (NS_SUCCEEDED(rv)) {
         rv = pm->UnregisterPlugin(kEventsPluginCID);
         NS_RELEASE(pm);

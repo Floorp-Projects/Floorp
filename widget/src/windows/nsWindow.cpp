@@ -4442,11 +4442,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_DESTROYCLIPBOARD:
     {
       nsIClipboard* clipboard;
-      nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                                 NS_GET_IID(nsIClipboard),
-                                                 (nsISupports **)&clipboard);
+      nsresult rv = CallGetService(kCClipboardCID, &clipboard);
       clipboard->EmptyClipboard(nsIClipboard::kGlobalClipboard);
-      nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
+      NS_RELEASE(clipboard);
     }
     break;
 

@@ -888,11 +888,13 @@ nsJSCID::GetService(nsISupports **_retval)
     else
         iid = NS_GET_IID(nsISupports);
 
-    nsCOMPtr<nsISupports> srvc;
-    nsresult rv;
+    nsCOMPtr<nsIServiceManager> svcMgr;
+    nsresult rv = NS_GetServiceManager(getter_AddRefs(svcMgr));
+    if (NS_FAILED(rv))
+        return rv;
 
-    rv = nsServiceManager::GetService(*mDetails.GetID(), iid,
-                                      getter_AddRefs(srvc), nsnull);
+    nsCOMPtr<nsISupports> srvc;
+    rv = svcMgr->GetService(*mDetails.GetID(), iid, getter_AddRefs(srvc));
     NS_ASSERTION(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
     if(NS_FAILED(rv) || !srvc)
         return NS_ERROR_XPC_GS_RETURNED_FAILURE;

@@ -142,8 +142,7 @@ static nsresult EnsureCaseConv()
 {
   nsresult res = NS_OK;
   if (!gCaseConv) {
-    res = nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),
-                                       (nsISupports**)&gCaseConv);
+    res = CallGetService(kUnicharUtilCID, &gCaseConv);
     NS_ASSERTION( NS_SUCCEEDED(res), "cannot get UnicharUtil");
     NS_ASSERTION( gCaseConv != NULL, "cannot get UnicharUtil");
   }
@@ -158,10 +157,7 @@ nsTextTransformer::Shutdown()
   nsContentUtils::UnregisterPrefCallback(kWordSelectStopAtPunctuationPref,
                                          WordSelectPrefCallback, nsnull);
 
-  if (gCaseConv) {
-    nsServiceManager::ReleaseService(kUnicharUtilCID, gCaseConv);
-    gCaseConv = nsnull;
-  }
+  NS_IF_RELEASE(gCaseConv);
 }
 
 // For now, we have only a couple of characters to strip out. If we get

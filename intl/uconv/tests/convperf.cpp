@@ -112,11 +112,9 @@ void msEncode(UINT cp, const PRUnichar *src,
      
 int main(int argc, const char** argv)
 {
-   nsresult res= NS_OK;
-   nsICharsetConverterManager* ccMain=nsnull;
-   // get ccMain;
-   nsServiceManager::GetService(kCharsetConverterManagerCID,
-       kICharsetConverterManagerIID, (nsISupports**) &ccMain);
+   nsresult res;
+   nsCOMPtr<nsICharsetConverterManager> ccMain =
+      do_GetService(kCharsetConverterManagerCID, &res);
    if(NS_FAILED(res))
    {
 	 fprintf(stderr, "Cannot get Character Converter Manager %x\n", res);

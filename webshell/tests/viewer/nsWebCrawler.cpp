@@ -985,16 +985,13 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static nsresult
 QueueEvent(PLEvent* aEvent)
 {
-  nsISupports* is;
-  nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                             kIEventQueueServiceIID,
-                                             &is,
-                                             nsnull);
+  nsresult rv;
+  nsCOMPtr<nsIEventQueueService> eqs =
+      do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  nsCOMPtr<nsIEventQueueService> eqs = do_QueryInterface(is);
   if (eqs) {
     nsCOMPtr<nsIEventQueue> eq;
     rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eq));
@@ -1003,7 +1000,6 @@ QueueEvent(PLEvent* aEvent)
     }
   }
 
-  nsServiceManager::ReleaseService(kEventQueueServiceCID, is, nsnull);
   return rv;
 }
 

@@ -802,7 +802,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     if (nsComponentManagerImpl::gComponentManager) {
         nsComponentManagerImpl::gComponentManager->FreeServices();
     }
-    nsServiceManager::ShutdownGlobalServiceManager(nsnull);
 
     if (currentQ) {
         currentQ->ProcessPendingEvents();

@@ -113,12 +113,8 @@ int main()
     CallCreateInstance(NS_TEST_SERVICE_CONTRACTID, &myITestService);
 
     /* Test CallGetService */
-    nsIShutdownListener *myShutdownListener = nsnull;
     CallGetService(kTestServiceCID, &myITestService);
-    CallGetService(kTestServiceCID, myShutdownListener, &myITestService);
     CallGetService(NS_TEST_SERVICE_CONTRACTID, &myITestService);
-    CallGetService(NS_TEST_SERVICE_CONTRACTID, myShutdownListener,
-                   &myITestService);
 
     /* Test CallGetInterface */
     nsIInterfaceRequestor *myInterfaceRequestor =

@@ -112,9 +112,7 @@ nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
                               &kRDF_Alt);
         if (NS_FAILED(rv)) break;
 
-        rv = nsServiceManager::GetService("@mozilla.org/rdf/container-utils;1",
-                                          NS_GET_IID(nsIRDFContainerUtils),
-                                          (nsISupports**) &gRDFC);
+        rv = CallGetService("@mozilla.org/rdf/container-utils;1", &gRDFC);
         if (NS_FAILED(rv)) break;
     } while (0);
 
@@ -139,11 +137,7 @@ nsRDFXMLSerializer::~nsRDFXMLSerializer()
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kRDF_nextVal);
-
-        if (gRDFC) {
-            nsServiceManager::ReleaseService("@mozilla.org/rdf/container-utils;1", gRDFC);
-            gRDFC = nsnull;
-        }
+        NS_IF_RELEASE(gRDFC);
     }
 }
 

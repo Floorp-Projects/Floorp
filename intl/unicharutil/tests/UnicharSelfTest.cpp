@@ -55,7 +55,6 @@
 #include "nsString.h"
 
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 NS_DEFINE_CID(kUnicodeNormalizerCID, NS_UNICODE_NORMALIZER_CID);
@@ -271,20 +270,16 @@ void TestCaseConversion()
    printf("==============================\n");
    nsICaseConversion *t = NULL;
    nsresult res;
-   res = nsServiceManager::GetService(kUnicharUtilCID,
-                                kCaseConversionIID,
-                                (nsISupports**) &t);
+   res = CallGetService(kUnicharUtilCID, &t);
            
    printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t1st GetService failed\n");
    } else {
-     res = nsServiceManager::ReleaseService(kUnicharUtilCID, t);
+     NS_RELEASE(t);
    }
 
-   res = nsServiceManager::GetService(kUnicharUtilCID,
-                                kCaseConversionIID,
-                                (nsISupports**) &t);
+   res = CallGetService(kUnicharUtilCID, &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t2nd GetService failed\n");
@@ -365,7 +360,7 @@ void TestCaseConversion()
      printf("Test 7 - ToTitle(PRUnichar*, PRUnichar*, PRUint32):\n");
      printf("!!! To Be Implemented !!!\n");
 
-   res = nsServiceManager::ReleaseService(kUnicharUtilCID, t);
+   NS_RELEASE(t);
    }
    printf("==============================\n");
    printf("Finish nsICaseConversion Test \n");
@@ -545,20 +540,16 @@ void TestNormalization()
    printf("==============================\n");
    nsIUnicodeNormalizer *t = NULL;
    nsresult res;
-   res = nsServiceManager::GetService(kUnicodeNormalizerCID,
-                                      NS_GET_IID(nsIUnicodeNormalizer),
-                                      (nsISupports**) &t);
+   res = CallGetService(kUnicodeNormalizerCID, &t);
            
    printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t1st Norm GetService failed\n");
    } else {
-     res = nsServiceManager::ReleaseService(kUnicodeNormalizerCID, t);
+     NS_RELEASE(t);
    }
 
-   res = nsServiceManager::GetService(kUnicodeNormalizerCID,
-                                NS_GET_IID(nsIUnicodeNormalizer),
-                                (nsISupports**) &t);
+   res = CallGetService(kUnicodeNormalizerCID, &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t2nd GetService failed\n");
@@ -572,8 +563,7 @@ void TestNormalization()
       printf(" Failed in NFD UnicodeNormalizer test. \n");
     }
 
-
-    res = nsServiceManager::ReleaseService(kUnicodeNormalizerCID, t);
+    NS_RELEASE(t);
    }
    printf("==============================\n");
    printf("Finish nsIUnicodeNormalizer Test \n");

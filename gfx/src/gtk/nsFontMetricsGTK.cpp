@@ -1093,14 +1093,12 @@ InitGlobals(nsIDeviceContext *aDevice)
 
   aDevice->GetCanonicalPixelScale(gDevScale);
 
-  nsServiceManager::GetService(kCharSetManagerCID,
-    NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharSetManager);
+  CallGetService(kCharSetManagerCID, &gCharSetManager);
   if (!gCharSetManager) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
-  nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-    (nsISupports**) &gPref);
+  CallGetService(kPrefCID, &gPref);
   if (!gPref) {
     FreeGlobals();
     return NS_ERROR_FAILURE;

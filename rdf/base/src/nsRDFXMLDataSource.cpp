@@ -514,12 +514,8 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 
     NS_RELEASE(mInner);
 
-    if (--gRefCnt == 0) {
-        if (gRDFService) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-            gRDFService = nsnull;
-        }
-    }
+    if (--gRefCnt == 0)
+        NS_IF_RELEASE(gRDFService);
 }
 
 

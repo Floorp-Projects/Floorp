@@ -53,8 +53,7 @@ BeginTest(int testNumber)
 {
     nsresult err;
     NS_ASSERTION(myServ == NULL, "myServ not reset");
-    err = nsServiceManager::GetService(kIMyServiceCID, NS_GET_IID(IMyService),
-                                       (nsISupports**)&myServ);
+    err = CallGetService(kIMyServiceCID, &myServ);
     return err;
 }
 
@@ -67,9 +66,7 @@ EndTest(int testNumber)
         err = myServ->Doit();
         if (err != NS_OK) return err;
 
-        err = nsServiceManager::ReleaseService(kIMyServiceCID, myServ);
-        if (err != NS_OK) return err;
-        myServ = NULL;
+        NS_RELEASE(myServ);
     }
     
     printf("test %d succeeded\n", testNumber);
@@ -93,17 +90,22 @@ SimpleTest(int testNumber)
 nsresult
 AsyncShutdown(int testNumber)
 {
-    nsresult err;
+    nsresult err = NS_OK;
 
     // If the AsyncShutdown was truly asynchronous and happened on another
     // thread, we'd have to protect all accesses to myServ throughout this
     // code with a monitor.
 
+    // XXX-darin: say what?!?
+
+    /*
     err = nsServiceManager::UnregisterService(kIMyServiceCID);
     if (err == NS_ERROR_SERVICE_NOT_AVAILABLE) {
         printf("async shutdown -- service not found\n");
         return NS_OK;
     }
+    */
+
     return err;
 }
 
@@ -125,8 +127,7 @@ AsyncNoShutdownTest(int testNumber)
     // Create some other user of kIMyServiceCID, preventing it from
     // really going away:
     IMyService* otherClient;
-    err = nsServiceManager::GetService(kIMyServiceCID, NS_GET_IID(IMyService),
-                                       (nsISupports**)&otherClient);
+    err = CallGetService(kIMyServiceCID, &otherClient);
     if (err != NS_OK) return err;
 
     err = AsyncShutdown(testNumber);
@@ -134,7 +135,7 @@ AsyncNoShutdownTest(int testNumber)
     err = EndTest(testNumber);
 
     // Finally, release the other client.
-    err = nsServiceManager::ReleaseService(kIMyServiceCID, otherClient);
+    NS_RELEASE(otherClient);
 
     return err;
 }

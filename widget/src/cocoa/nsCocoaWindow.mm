@@ -147,9 +147,7 @@ nsCocoaWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr
     case kDragTrackingEnterWindow:
     {
       // get our drag service for the duration of the drag.
-      nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                                NS_GET_IID(nsIDragService),
-                                              (nsISupports **)&sDragService);
+      nsresult rv = CallGetService(kCDragServiceCID, &sDragService);
             NS_ASSERTION ( sDragService, "Couldn't get a drag service, we're in biiig trouble" );
 
       // tell the session about this drag
@@ -217,10 +215,7 @@ nsCocoaWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr
       ::HideDragHilite ( theDrag );
   
       // we're _really_ done with it, so let go of the service.
-      if ( sDragService ) {
-        nsServiceManager::ReleaseService(kCDragServiceCID, sDragService);
-        sDragService = nsnull;      
-      }
+      NS_IF_RELEASE( sDragService );
       
       break;
     }

@@ -126,9 +126,7 @@ ContainerEnumeratorImpl::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          NS_GET_IID(nsIRDFContainerUtils),
-                                          NS_REINTERPRET_CAST(nsISupports**, &gRDFC));
+        rv = CallGetService(kRDFContainerUtilsCID, &gRDFC);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -140,11 +138,7 @@ ContainerEnumeratorImpl::~ContainerEnumeratorImpl()
 {
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kRDF_nextVal);
-
-        if (gRDFC) {
-            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
-            gRDFC = nsnull;
-        }
+        NS_IF_RELEASE(gRDFC);
     }
 }
 

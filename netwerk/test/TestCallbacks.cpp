@@ -293,9 +293,7 @@ nsresult StartLoad(const char *aURISpec) {
     if (NS_FAILED(rv)) return rv;
 
 
-    nsCOMPtr<nsIIOService> serv;
-    rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
-                                      getter_AddRefs(serv));
+    nsCOMPtr<nsIIOService> serv = do_GetService(kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // create a uri

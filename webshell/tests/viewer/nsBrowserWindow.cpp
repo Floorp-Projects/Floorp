@@ -969,9 +969,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   nsIPresShell* shell;
   shell = nsnull;
   shell = GetPresShell();
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
+  res = CallGetService(kWalletServiceCID, &walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsString urlString2;
 //    res = walletservice->WALLET_Prefill(shell, (PRVCY_QPREFILL == aID));
@@ -995,9 +993,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 
   /* set a cookie for the javascript wallet editor */
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
+  res = CallGetService(kWalletServiceCID, &walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsIURI * url;
     nsCOMPtr<nsIIOService> service(do_GetService(kIOServiceCID, &res));
@@ -1031,9 +1027,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 #if defined(SingleSignon)
   case PRVCY_DISPLAY_SIGNONS:
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
+  res = CallGetService(kWalletServiceCID, &walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
 //    res = walletservice->SI_DisplaySignonInfoAsHTML();
     NS_RELEASE(walletservice);
@@ -1215,8 +1209,7 @@ GetTitleSuffix(void)
 {
   nsString* suffix = new nsString(" - Failed");
   nsIStringBundleService* service = nsnull;
-  nsresult ret = nsServiceManager::GetService(kStringBundleServiceCID,
-    kIStringBundleServiceIID, (nsISupports**) &service);
+  nsresult ret = CallGetService(kStringBundleServiceCID, &service);
   if (NS_FAILED(ret)) {
     return suffix;
   }

@@ -204,51 +204,6 @@ nsViewerApp::Destroy()
   NS_IF_RELEASE(mPrefService);
 }
 
-class nsTestFormProcessor : public nsIFormProcessor {
-public:
-  nsTestFormProcessor();
-  NS_IMETHOD ProcessValue(nsIDOMHTMLElement *aElement, 
-                          const nsString& aName, 
-                          nsString& aValue);
-
-  NS_IMETHOD ProvideContent(const nsString& aFormType, 
-                            nsVoidArray& aContent,
-                            nsString& aAttribute);
-  NS_DECL_ISUPPORTS
-};
-
-
-
-NS_IMPL_ISUPPORTS1(nsTestFormProcessor, nsIFormProcessor)
-
-nsTestFormProcessor::nsTestFormProcessor()
-{
-}
-
-NS_METHOD 
-nsTestFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement, 
-                                  const nsString& aName, 
-                                  nsString& aValue)
-{
-#ifdef DEBUG_kmcclusk
-  char *name = ToNewCString(aName);
-  char *value = ToNewCString(aValue);
-  printf("ProcessValue: name %s value %s\n",  name, value);
-  delete [] name;
-  delete [] value;
-#endif
-
-  return NS_OK;
-}
-
-NS_METHOD nsTestFormProcessor::ProvideContent(const nsString& aFormType, 
-                               nsVoidArray& aContent,
-                               nsString& aAttribute)
-{
-  return NS_OK;
-}
-
-
 nsresult
 nsViewerApp::SetupRegistry()
 {
@@ -273,15 +228,6 @@ nsViewerApp::SetupRegistry()
 #ifdef DEBUG
     printf("Unable to instantiate Cookie Manager\n");
 #endif
-  }
-
-   // Register a form processor. The form processor has the opportunity to
-   // modify the value's passed during form submission.
-  nsTestFormProcessor* testFormProcessor = new nsTestFormProcessor();
-  nsCOMPtr<nsISupports> formProcessor;
-  rv = testFormProcessor->QueryInterface(kISupportsIID, getter_AddRefs(formProcessor));
-  if (NS_SUCCEEDED(rv) && formProcessor) {
-    rv = nsServiceManager::RegisterService(kFormProcessorCID, formProcessor);
   }
 
   return NS_OK;
@@ -355,9 +301,6 @@ nsViewerApp::Exit()
     mAppShell->Exit();
     NS_RELEASE(mAppShell);
   }
-
-    // Unregister the test form processor registered in nsViewerApp::SetupRegistry
-  rv = nsServiceManager::UnregisterService(kFormProcessorCID);
 
   return rv;
 }

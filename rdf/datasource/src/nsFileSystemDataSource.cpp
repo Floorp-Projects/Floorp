@@ -282,9 +282,7 @@ FileSystemDataSource::FileSystemDataSource(void)
 #ifdef DEBUG
         nsresult rv =
 #endif
-        nsServiceManager::GetService(kRDFServiceCID,
-                                     NS_GET_IID(nsIRDFService),
-                                     (nsISupports**) &gRDFService);
+        rv = CallGetService(kRDFServiceCID, &gRDFService);
 
         PR_ASSERT(NS_SUCCEEDED(rv));
 
@@ -409,8 +407,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kLiteralFalse);
 
         gFileSystemDataSource = nsnull;
-        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-        gRDFService = nsnull;
+        NS_RELEASE(gRDFService);
     }
 }
 

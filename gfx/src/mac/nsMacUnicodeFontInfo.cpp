@@ -529,8 +529,7 @@ GetConverter(const nsCString& aFontName, nsIUnicodeEncoder** aConverter)
   
   if (!gCharsetManager)
   {
-    rv = nsServiceManager::GetService(kCharsetConverterManagerCID,
-            NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharsetManager);
+    rv = CallGetService(kCharsetConverterManagerCID, &gCharsetManager);
     if(NS_FAILED(rv)) return rv;
   }
   

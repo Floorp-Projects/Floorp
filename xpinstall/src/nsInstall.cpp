@@ -109,11 +109,9 @@
 #endif
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
 #define kInstallLocaleProperties "chrome://global/locale/commonDialogs.properties"
 
@@ -182,7 +180,6 @@ nsInstallInfo::~nsInstallInfo()
   MOZ_COUNT_DTOR(nsInstallInfo);
 }
 
-static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
 
@@ -210,9 +207,7 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
     mJarFileData = theJARFile;
 
     nsISoftwareUpdate *su;
-    nsresult rv = nsServiceManager::GetService(kSoftwareUpdateCID,
-                                               kISoftwareUpdateIID,
-                                               (nsISupports**) &su);
+    nsresult rv = CallGetService(kSoftwareUpdateCID, &su);
 
     if (NS_SUCCEEDED(rv))
     {
@@ -1201,15 +1196,14 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     }
 
     // initialize string bundle and related services
-    ret = nsServiceManager::GetService(kStringBundleServiceCID,
-                    kIStringBundleServiceIID, (nsISupports**) &service);
+    ret = CallGetService(kStringBundleServiceCID, &service);
     if (NS_FAILED(ret))
         goto cleanup;
-    ret = nsServiceManager::GetService(kEventQueueServiceCID,
-                    kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
+    ret = CallGetService(kEventQueueServiceCID, &pEventQueueService);
     if (NS_FAILED(ret))
         goto cleanup;
     ret = pEventQueueService->CreateThreadEventQueue();
+    NS_RELEASE(pEventQueueService);
     if (NS_FAILED(ret))
         goto cleanup;
 
@@ -1220,7 +1214,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
       ret = NS_GetURLSpecFromFile(resFile, spec);
       if (NS_FAILED(ret)) {
         NS_WARNING("cannot get url spec\n");
-        nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
+        NS_RELEASE(service);
         return ret;
       }
       ret = service->CreateBundle(spec.get(), &bundle);
@@ -1275,7 +1269,6 @@ cleanup:
 
     // release services
     NS_IF_RELEASE( service );
-    NS_IF_RELEASE( pEventQueueService );
 
     // release file, URL, StringBundle, Enumerator
     NS_IF_RELEASE( url );

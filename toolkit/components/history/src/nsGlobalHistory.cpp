@@ -542,10 +542,7 @@ nsGlobalHistory::~nsGlobalHistory()
   NS_IF_RELEASE(mStore);
   
   if (--gRefCnt == 0) {
-    if (gRDFService) {
-      nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-      gRDFService = nsnull;
-    }
+    NS_IF_RELEASE(gRDFService);
 
     NS_IF_RELEASE(kNC_Page);
     NS_IF_RELEASE(kNC_Date);
@@ -2482,9 +2479,7 @@ nsGlobalHistory::Init()
   }
 
   if (gRefCnt++ == 0) {
-    rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      NS_GET_IID(nsIRDFService),
-                                      (nsISupports**) &gRDFService);
+    rv = CallGetService(kRDFServiceCID, &gRDFService);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
     if (NS_FAILED(rv)) return rv;
