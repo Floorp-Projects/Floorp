@@ -102,7 +102,9 @@ extern "C" NS_EXPORT nsresult PyXPCOM_NSGetModule(nsIComponentManager *servMgr,
 			return NS_ERROR_FAILURE;
 		}
 		PyEval_InitThreads();
+#ifndef PYXPCOM_USE_PYGILSTATE
 		PyXPCOM_InterpreterState_Ensure();
+#endif
 		PyEval_SaveThread();
 	}
 #endif // LOADER_LINKS_WITH_PYTHON	
