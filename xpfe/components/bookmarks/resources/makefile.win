@@ -34,7 +34,7 @@ CHROME_CONTENT = \
 	$(NULL)
 
 CHROME_SKIN = \
-	.\bm-panel.css
+	.\bm-panel.css \
 	.\bookmark-folder-closed.gif \
 	.\bookmark-folder-open.gif \
 	.\bookmark-item.gif \
