@@ -185,21 +185,22 @@ nsPostScriptObj::~nsPostScriptObj()
     finalize_translation();
     if ( mPrintSetup->filename != (char *) NULL )
       fclose( mPrintSetup->out );
-    else
-#ifdef XP_OS2_VACPP
-        // pclose not defined OS2TODO
+    else {
+#if defined(XP_OS2_VACPP) || defined(XP_PC)
+      // pclose not defined OS2TODO
 #else
 	pclose( mPrintSetup->out );
 #endif
 #ifdef VMS
-    if ( mPrintSetup->print_cmd != (char *) NULL ) {
-      char VMSPrintCommand[1024];
-      sprintf (VMSPrintCommand, "%s /delete %s.",
-        mPrintSetup->print_cmd, mPrintSetup->filename);
-      system(VMSPrintCommand);
-      free(mPrintSetup->filename);
-    }
+      if ( mPrintSetup->print_cmd != (char *) NULL ) {
+        char VMSPrintCommand[1024];
+        sprintf (VMSPrintCommand, "%s /delete %s.",
+          mPrintSetup->print_cmd, mPrintSetup->filename);
+        system(VMSPrintCommand);
+        free(mPrintSetup->filename);
+      }
 #endif
+    }
   }
   // Cleanup things allocated along the way
   if (nsnull != mTitle){
@@ -238,10 +239,10 @@ nsPostScriptObj::~nsPostScriptObj()
 nsresult 
 nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
 {
-  PRBool isGray, isAPrinter, isFirstPageFirst;
-  int printSize;
-  float top, bottom, left, right, fwidth, fheight;
-  char *buf;
+  PRBool  isGray, isAPrinter, isFirstPageFirst;
+  int     printSize;
+  float   fwidth, fheight;
+  char    *buf;
 
   PrintInfo* pi = new PrintInfo(); 
   mPrintSetup = new PrintSetup();
@@ -259,14 +260,8 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
         mPrintSetup->color = PR_FALSE; 
         mPrintSetup->deep_color = PR_FALSE; 
       }
-      aSpec->GetTopMargin( top );
-      aSpec->GetBottomMargin( bottom );
-      aSpec->GetLeftMargin( left );
-      aSpec->GetRightMargin( right );
-#ifdef DEBUG
-printf("\nPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP\n");
-printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
-#endif
+
+
       aSpec->GetFirstPageFirst( isFirstPageFirst );
       if ( isFirstPageFirst == PR_FALSE )
         mPrintSetup->reverse = 1;
@@ -276,7 +271,7 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
       if ( isAPrinter == PR_TRUE ) {
 #ifndef VMS
         aSpec->GetCommand( &buf );
-#ifdef XP_OS2_VACPP
+#if defined(XP_OS2_VACPP) || defined(XP_PC)
 	mPrintSetup->out = NULL;
         // popen not defined OS2TODO
 #else
@@ -323,10 +318,10 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
     mPrintSetup->scale_pre = PR_FALSE;		        // do the pre-scaling thing 
     // scale margins (specified in inches) to dots.
 
-    mPrintSetup->top = (int) (top * mPrintSetup->dpi);     
-    mPrintSetup->bottom = (int) (bottom * mPrintSetup->dpi);
-    mPrintSetup->left = (int) (left * mPrintSetup->dpi);
-    mPrintSetup->right = (int) (right * mPrintSetup->dpi); 
+    mPrintSetup->top = (int) 0;     
+    mPrintSetup->bottom = (int) 0;
+    mPrintSetup->left = (int) 0;
+    mPrintSetup->right = (int) 0; 
 #ifdef DEBUG
     printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right );
 #endif
