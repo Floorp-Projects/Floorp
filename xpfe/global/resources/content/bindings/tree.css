@@ -46,6 +46,7 @@ treechildren {
 tree > treechildren {
   overflow: auto;
   min-height: 0px;
+  -moz-box-flex: 1;
 }
 
 treeitem > treechildren {
