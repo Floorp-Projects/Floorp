@@ -396,7 +396,7 @@ BEGIN {
         my ($pageloader_time)
             = @{ $td->{pageloader}{$logfile} };
         # ex: Tp:8.4s
-        print sprintf "<br>Tp:%3.1fs", $pageloader_time/1000;
+        print sprintf "<br>Tp:%fms", $pageloader_time;
       }
 
       # Startup data
