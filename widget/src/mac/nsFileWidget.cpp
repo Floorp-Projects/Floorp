@@ -493,8 +493,15 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
 
 NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
 {
+	mNumberOfFilters  = aNumberOfFilters;
+	mTitles           = aTitles;
+	mFilters          = aFilters;
+	
+#if 0  // FOR NOW JUST BYPASS ALL THIS CODE
+
 	unsigned char	typeTemp[256];
 	unsigned char	tempChar;
+
 	OSType			tempOSType;
 	ICInstance		icInstance;
 	ICError			icErr;
@@ -502,11 +509,6 @@ NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsStri
 	ICAttr			attr;
 	ICMapEntry		icEntry;
 	
-	mNumberOfFilters  = aNumberOfFilters;
-	mTitles           = aTitles;
-	mFilters          = aFilters;
-	
-#if 0  // FOR NOW JUST BYPASS ALL THIS CODE
 	icErr = ICStart(&icInstance, 'MOZZ');
 	if (icErr == noErr)
 	{
