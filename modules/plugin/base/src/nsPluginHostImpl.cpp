@@ -27,6 +27,8 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIInputStream.h"
+#include "nsINetService.h"
+#include "nsIServiceManager.h"
 #include "prprf.h"
 #include "gui.h"
 
@@ -47,6 +49,8 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 nsPluginTag :: nsPluginTag()
 {
@@ -690,11 +694,23 @@ nsresult nsPluginHostImpl :: ReloadPlugins(PRBool reloadPages)
   return LoadPlugins();
 }
 
-//XXX need to find out score on this one... MMP
 nsresult nsPluginHostImpl :: UserAgent(const char **retstring)
 {
-  *retstring = (const char *)"Mozilla/5.0 [en] (Windows;I)";
-  return NS_OK;
+  nsString ua;
+  nsINetService *service = nsnull;
+
+  nsresult res = nsServiceManager::GetService(kNetServiceCID,
+                                        kINetServiceIID,
+                                        (nsISupports **)&service);
+  if ((NS_OK == res) && (nsnull != service)) {
+      res = service->GetUserAgent(ua);
+      if (NS_OK == res)
+          *retstring = ua.ToNewCString();
+      else
+          *retstring = nsnull;
+      NS_RELEASE(service);
+  }
+  return res;
 }
 
 NS_IMETHODIMP nsPluginHostImpl :: GetURL(nsISupports* inst, const char* url,

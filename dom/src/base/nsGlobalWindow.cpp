@@ -1878,13 +1878,7 @@ NavigatorImpl::GetUserAgent(nsString& aUserAgent)
                                           (nsISupports **)&service);
 
     if ((NS_OK == res) && (nsnull != service)) {
-        if (NS_OK == (res = service->GetAppCodeName(aUserAgent)) ) {
-            nsAutoString appVersion;
-            if (NS_OK == (res = service->GetAppVersion(appVersion)) ) {
-                aUserAgent.Append('/');
-                aUserAgent.Append(appVersion);
-            }
-        }
+        res = service->GetUserAgent(aUserAgent);
         NS_RELEASE(service);
     }
     return res;
