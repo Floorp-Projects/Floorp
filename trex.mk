@@ -69,11 +69,8 @@ pull_julian:
 pull_trex:
 	cd $(MOZ_SRC); \
 	$(CVS)  mozilla/gconfig; \
-	cd $(MOZ_SRC)/.
-
-pull_trex_ns:
-	cd $(MOZ_SRC)/mozilla; \
-	$(CVST)  -d trex ns/trex; \
+	$(CVS)  mozilla/xpfc; \
+	$(CVS)  mozilla/calendar; \
 	cd $(MOZ_SRC)/.
 
 build_all: build_platform build_julian build_trex
@@ -95,7 +92,9 @@ build_julian::
 build_trex:
 	cd $(MOZ_SRC)/mozilla/gconfig; \
 	gmake; \
-	cd $(MOZ_SRC)/mozilla/trex; \
+	cd $(MOZ_SRC)/mozilla/xpfc; \
+	gmake; \
+	cd $(MOZ_SRC)/mozilla/calendar; \
 	gmake; \
 	cd $(MOZ_SRC)
 
