@@ -2611,7 +2611,8 @@ main(int argc, char **argv)
                         "secmod.db", 0);
     if (rv != SECSuccess) {
 	SECU_PrintPRandOSError(progName);
-	return 255;
+	rv = SECFailure;
+	goto shutdown;
     }
     certHandle = CERT_GetDefaultCertDB();
 
@@ -2638,47 +2639,47 @@ main(int argc, char **argv)
 	               certutil.options[opt_BinaryDER].activated,
 	               certutil.options[opt_ASCIIForIO].activated, 
                        (outFile) ? outFile : PR_STDOUT, &pwdata);
-	return rv ? 255 : 0;
+	goto shutdown;
     }
     if (certutil.commands[cmd_DumpChain].activated) {
 	rv = DumpChain(certHandle, name, slot,
 	               certutil.options[opt_BinaryDER].activated,
 	               certutil.options[opt_ASCIIForIO].activated, 
                        (outFile) ? outFile : PR_STDOUT, &pwdata);
-	return rv ? 255 : 0;
+	goto shutdown;
     }
     /*  XXX needs work  */
     /*  List keys (-K)  */
     if (certutil.commands[cmd_ListKeys].activated) {
 	rv = ListKeys(slot, name, 0 /*keyindex*/, keytype, PR_FALSE /*dopriv*/,
 	              &pwdata);
-	return rv ? 255 : 0;
+	goto shutdown;
     }
     /*  List modules (-U)  */
     if (certutil.commands[cmd_ListModules].activated) {
 	rv = ListModules();
-	return rv ? 255 : 0;
+	goto shutdown;
     }
     /*  Delete cert (-D)  */
     if (certutil.commands[cmd_DeleteCert].activated) {
 	rv = DeleteCert(certHandle, name);
-	return rv ? 255 : 0;
+	goto shutdown;
     }
     /*  Delete key (-F)  */
     if (certutil.commands[cmd_DeleteKey].activated) {
 	rv = DeleteKey(name, &pwdata);
-	return rv ? 255 : 0;
+	goto shutdown;
     }
     /*  Modify trust attribute for cert (-M)  */
     if (certutil.commands[cmd_ModifyCertTrust].activated) {
 	rv = ChangeTrustAttributes(certHandle, name, 
 	                           certutil.options[opt_Trust].arg);
-	return rv ? 255 : 0;
+	goto shutdown;
     }
     /*  Change key db password (-W) (future - change pw to slot?)  */
     if (certutil.commands[cmd_ChangePassword].activated) {
 	rv = SECU_ChangePW(slot, 0, certutil.options[opt_PasswordFile].arg);
-	return rv ? 255 : 0;
+	goto shutdown;
     }
     /*  Reset the a token */
     if (certutil.commands[cmd_TokenReset].activated) {
@@ -2689,7 +2690,7 @@ main(int argc, char **argv)
  	}
 	rv = PK11_ResetToken(slot,sso_pass);
 
- 	return !rv - 1;
+	goto shutdown;
     }
     /*  Check cert validity against current time (-V)  */
     if (certutil.commands[cmd_CheckCertValidity].activated) {
@@ -2704,7 +2705,7 @@ main(int argc, char **argv)
 			  certutil.options[opt_VerifySig].activated,
 			  certutil.options[opt_DetailedInfo].activated,
 	                  &pwdata);
-	return rv ? 255 : 0;
+	goto shutdown;
     }
 
     /*
@@ -2725,14 +2726,16 @@ main(int argc, char **argv)
 	                                &pwdata);
 	if (privkey == NULL) {
 	    SECU_PrintError(progName, "unable to generate key(s)\n");
-	    return 255;
+	    rv = SECFailure;
+	    goto shutdown;
 	}
 	privkey->wincx = &pwdata;
 	PORT_Assert(pubkey != NULL);
 
 	/*  If all that was needed was keygen, exit.  */
 	if (certutil.commands[cmd_GenKeyPair].activated) {
-	    return SECSuccess;
+	    rv = SECSuccess;
+	    goto shutdown;
 	}
     }
 
@@ -2748,7 +2751,7 @@ main(int argc, char **argv)
 	             certutil.options[opt_ASCIIForIO].activated,
 		     outFile ? outFile : PR_STDOUT);
 	if (rv) 
-	    return 255;
+	    goto shutdown;
 	privkey->wincx = &pwdata;
     }
 
@@ -2765,13 +2768,15 @@ main(int argc, char **argv)
 	if (!inFile) {
 	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
                        certreqfile, PR_GetError(), PR_GetOSError());
-	    return 255;
+	    rv = SECFailure;
+	    goto shutdown;
 	}
 	outFile = PR_Open(certfile, PR_RDWR | PR_CREATE_FILE, 00660);
 	if (!outFile) {
 	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
                        certfile, PR_GetError(), PR_GetOSError());
-	    return 255;
+	    rv = SECFailure;
+	    goto shutdown;
 	}
     }
 
@@ -2791,7 +2796,7 @@ main(int argc, char **argv)
 	                certutil.options[opt_AddCRLDistPtsExt].activated,
 	                certutil.options[opt_AddNSCertTypeExt].activated);
 	if (rv) 
-	    return 255;
+	    goto shutdown;
     }
 
     /* 
@@ -2805,7 +2810,8 @@ main(int argc, char **argv)
 	if (!inFile) {
 	    PR_fprintf(PR_STDERR, "Failed to open file \"%s\" (%ld, %ld).\n",
                        certfile, PR_GetError(), PR_GetOSError());
-	    return 255;
+	    rv = SECFailure;
+	    goto shutdown;
 	}
     }
 
@@ -2818,7 +2824,7 @@ main(int argc, char **argv)
 	             certutil.options[opt_ASCIIForIO].activated,
 	             certutil.commands[cmd_AddEmailCert].activated,&pwdata);
 	if (rv) 
-	    return 255;
+	    goto shutdown;
     }
 
     if (certutil.commands[cmd_CreateAndAddCert].activated) {
@@ -2827,6 +2833,9 @@ main(int argc, char **argv)
 	PR_Delete(certreqfile);
     }
 
+shutdown:
+    if (slot)
+	PK11_FreeSlot(slot);
 #ifdef notdef
     if ( certHandle ) {
 	CERT_ClosePermCertDB(certHandle);
@@ -2835,5 +2844,9 @@ main(int argc, char **argv)
     NSS_Shutdown();
 #endif
 
-    return rv;  
+    if (rv == SECSuccess) {
+	return 0;
+    } else {
+	return 255;
+    }
 }
