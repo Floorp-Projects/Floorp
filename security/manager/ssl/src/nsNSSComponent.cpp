@@ -546,12 +546,8 @@ nsNSSComponent::RegisterProfileChangeObserver()
                   NS_OBSERVERSERVICE_CONTRACTID, &rv);
   NS_ASSERTION(observerService, "could not get observer service");
   if (observerService) {
-    // Our refcnt must be > 0 when we call AddObserver or we'll
-    // get deleted.
-    ++mRefCnt;
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
     observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC);
-    --mRefCnt;
   }
   return rv;
 }
