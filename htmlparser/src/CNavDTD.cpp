@@ -52,56 +52,43 @@ static char* kVerificationDir = "c:/temp";
 
 static nsAutoString gEmpty;
 
-static char formElementTags[]= {  
+static eHTMLTags gFormElementTags[]= {  
     eHTMLTag_button,  eHTMLTag_fieldset,  eHTMLTag_input,
     eHTMLTag_isindex, eHTMLTag_label,     eHTMLTag_legend,
-    eHTMLTag_option,  eHTMLTag_select,    eHTMLTag_textarea,0};
+    eHTMLTag_option,  eHTMLTag_select,    eHTMLTag_textarea};
 
-static char gHeadingTags[]={
+static eHTMLTags gHeadingTags[]={
   eHTMLTag_h1,  eHTMLTag_h2,  eHTMLTag_h3,  
-  eHTMLTag_h4,  eHTMLTag_h5,  eHTMLTag_h6, 
-  0};
+  eHTMLTag_h4,  eHTMLTag_h5,  eHTMLTag_h6};
 
-static char  gStyleTags[]={
-  eHTMLTag_a,
-  eHTMLTag_acronym,
-  eHTMLTag_b,
-  eHTMLTag_bdo,
-  eHTMLTag_big,
-  eHTMLTag_blink,
-  eHTMLTag_center,
-  eHTMLTag_cite,
-  eHTMLTag_code,
-  eHTMLTag_del,
-  eHTMLTag_dfn,
-  eHTMLTag_em,
-  eHTMLTag_font,
-  eHTMLTag_i,
-  eHTMLTag_ins,
-  eHTMLTag_kbd,
-  eHTMLTag_nobr,
-  eHTMLTag_q,
-  eHTMLTag_s,
-  eHTMLTag_samp,
-  eHTMLTag_small,
-  eHTMLTag_span,
-  eHTMLTag_strike,
-  eHTMLTag_strong,
-  eHTMLTag_sub,
-  eHTMLTag_sup,
-  eHTMLTag_tt,
-  eHTMLTag_u,     
-  eHTMLTag_var,     
-  0};
+static eHTMLTags gStyleTags[]={
+  eHTMLTag_a,       eHTMLTag_acronym,   eHTMLTag_b,
+  eHTMLTag_bdo,     eHTMLTag_big,       eHTMLTag_blink,
+  eHTMLTag_center,  eHTMLTag_cite,      eHTMLTag_code,
+  eHTMLTag_del,     eHTMLTag_dfn,       eHTMLTag_em,
+  eHTMLTag_font,    eHTMLTag_i,         eHTMLTag_ins,
+  eHTMLTag_kbd,     eHTMLTag_nobr,      eHTMLTag_q,
+  eHTMLTag_s,       eHTMLTag_samp,      eHTMLTag_small,
+  eHTMLTag_span,    eHTMLTag_strike,    eHTMLTag_strong,
+  eHTMLTag_sub,     eHTMLTag_sup,       eHTMLTag_tt,
+  eHTMLTag_u,       eHTMLTag_var};
 
-static char gTableTags[]={ 
+static eHTMLTags gNonContainers[]={
+  eHTMLTag_area,    eHTMLTag_base,    eHTMLTag_basefont,
+  eHTMLTag_br,      eHTMLTag_col,     eHTMLTag_embed,
+  eHTMLTag_frame,   eHTMLTag_hr,      eHTMLTag_whitespace,
+  eHTMLTag_input,   eHTMLTag_link,    eHTMLTag_isindex,
+  eHTMLTag_meta,    eHTMLTag_param,   eHTMLTag_plaintext,
+  eHTMLTag_style,   eHTMLTag_spacer,  eHTMLTag_wbr,   
+  eHTMLTag_newline, eHTMLTag_text,    eHTMLTag_img,   
+  eHTMLTag_unknown, eHTMLTag_xmp};
+
+static eHTMLTags gTableTags[]={ 
   eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_tbody,   
-  eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,     eHTMLTag_td, 
-  0};
+  eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,     eHTMLTag_td};
   
-static char  gWhitespaceTags[]={
-  eHTMLTag_newline, eHTMLTag_whitespace,
-  0};
+static eHTMLTags gWhitespaceTags[]={
+  eHTMLTag_newline, eHTMLTag_whitespace};
 
 
 /************************************************************************
@@ -694,7 +681,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken){
 nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  eHTMLTags theParentTag=GetTopNode();
+  eHTMLTags theParentTag=mContextStack.Last();
   nsresult  result=NS_OK;
   PRBool    contains=CanContain(theParentTag,aChildTag);
 
@@ -707,7 +694,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
       //You must determine what container hierarchy you need to hold aToken,
       //and create that on the parsestack.
       result=ReduceContextStackFor(aChildTag);
-      if(PR_FALSE==CanContain(GetTopNode(),aChildTag)) {
+      if(PR_FALSE==CanContain(mContextStack.Last(),aChildTag)) {
         //we unwound too far; now we have to recreate a valid context stack.
         result=CreateContextStackFor(aChildTag);
       }
@@ -754,7 +741,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
   if(NS_OK==result) {
       //now check to see if this token should be omitted...
-    if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
+    if(PR_FALSE==CanOmit(mContextStack.Last(),tokenTagType)) {
   
       switch(tokenTagType) {
 
@@ -848,9 +835,9 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
   // close the explicit style tag (goofy, huh?)
 
 
-    //now check to see if this token should be omitted, or 
-    //if it's gated from closing by the presence of another tag.
-  if(PR_TRUE==CanOmitEndTag(GetTopNode(),tokenTagType)) {
+  //now check to see if this token should be omitted, or 
+  //if it's gated from closing by the presence of another tag.
+  if(PR_TRUE==CanOmitEndTag(mContextStack.Last(),tokenTagType)) {
     UpdateStyleStackForCloseTag(tokenTagType,tokenTagType);
     return result;
   }
@@ -908,7 +895,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   CEntityToken* et = (CEntityToken*)(aToken);
   nsresult      result=NS_OK;
 
-  if(PR_FALSE==CanOmit(GetTopNode(),eHTMLTag_entity)) {
+  if(PR_FALSE==CanOmit(mContextStack.Last(),eHTMLTag_entity)) {
     nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
     result=AddLeaf(aNode);
   }
@@ -1186,46 +1173,22 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
   return result;
 }
 
-/**
- *  This method is called to determine whether or not a 
- *  form-type tag can contain a tag of another form-type tag.
- *  
- *  @update  gess 4/8/98
- *  @param   aParent -- tag enum of parent container
- *  @param   aChild -- tag enum of child container
- *  @return  PR_TRUE if parent can contain child
- */
-PRBool CNavDTD::CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const {
-  PRBool result=PR_FALSE;
-
-  if(mParser && HasOpenContainer(eHTMLTag_form)) {
-    eHTMLTags topTag=GetTopNode();
-    switch(aChild) {
-      case eHTMLTag_option:
-        result=HasOpenContainer(eHTMLTag_select); 
-        break;
-      default:
-        result=PR_TRUE;
-        break;
-    } //switch
-  }//if
-  return result;
-}
 
  /***********************************************************************************
    The following tables determine the set of elements each tag can contain...
   ***********************************************************************************/
 
-static char  gTagSet1[]={ 
+static eHTMLTags gTagSet1[]={ 
   eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
   eHTMLTag_blink,     eHTMLTag_b,         eHTMLTag_basefont,  eHTMLTag_bdo,
   eHTMLTag_big,
   eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
   eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
-  eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_em,        eHTMLTag_fieldset,
-  eHTMLTag_embed,
-  eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
-  eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
+  eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_dt,
+  eHTMLTag_em,        eHTMLTag_embed,
+  eHTMLTag_fieldset,  eHTMLTag_font,      eHTMLTag_form,      
+  eHTMLTag_h1,        eHTMLTag_h2,        eHTMLTag_h3,        
+  eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
   eHTMLTag_hr,        eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,
   eHTMLTag_input,     eHTMLTag_isindex,   
   
@@ -1240,10 +1203,9 @@ static char  gTagSet1[]={
   
   eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
   eHTMLTag_userdefined,   eHTMLTag_var,   eHTMLTag_wbr,
-  eHTMLTag_whitespace,
-  0};
+  eHTMLTag_whitespace};
 
-static char  gTagSet2[]={ 
+static eHTMLTags gTagSet2[]={ 
   eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
   eHTMLTag_b,
   eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
@@ -1263,10 +1225,9 @@ static char  gTagSet2[]={
   eHTMLTag_table,// XXX kipp was here
 
   eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
-  eHTMLTag_wbr,       eHTMLTag_whitespace,
-  0};
+  eHTMLTag_wbr,       eHTMLTag_whitespace};
 
-static char  gTagSet3[]={ 
+static eHTMLTags gTagSet3[]={ 
   eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
   eHTMLTag_b,
   eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
@@ -1288,12 +1249,30 @@ static char  gTagSet3[]={
   eHTMLTag_td,        eHTMLTag_text,
   
   eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined,
-  eHTMLTag_var,       eHTMLTag_wbr,       eHTMLTag_whitespace,
-  0};
+  eHTMLTag_var,       eHTMLTag_wbr,       eHTMLTag_whitespace};
 
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...
   ***********************************************************************************/
+
+
+/**
+ * This method quickly scans the given set of tags,
+ * looking for the given tag.
+ * @update	gess8/27/98
+ * @param   aTag -- tag to be search for in set
+ * @param   aTagSet -- set of tags to be searched
+ * @return
+ */
+inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
+  PRInt32 index;
+
+  for(index=0;index<aCount;index++)
+    if(aTag==aTagSet[index]) {
+      return PR_TRUE;
+    }
+  return PR_FALSE;
+}
 
 /**
  *  This method is called to determine whether or not a tag
@@ -1306,20 +1285,35 @@ static char  gTagSet3[]={
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
-  PRBool result=PR_FALSE;
+  PRBool result=(eHTMLTag_userdefined==aChild) ? PR_TRUE : !IsContainer(aParent);
 
-    //This hack code is here because we don't yet know what to do
-    //with userdefined tags...  XXX Hack
 
-  if(eHTMLTag_userdefined==aChild)  // XXX Hack: For now...
-    result=PR_TRUE;
-
-    //handle form elements (this is very much a WIP!!!)
-  if(0!=strchr(formElementTags,aChild)){
-    return CanContainFormElement((eHTMLTags)aParent,(eHTMLTags)aChild);
+    /***************************************************************************
+     * Handle form elements here. Why? Because as long as a form is open, 
+     * almost any form element is allowed. (Except <option> which must have a 
+     * <select> as a parent.) Handling forms here means I don't have to do 
+     * special case form handling in every case statement below.
+     *
+     * Note: ANYONE can contain a form element so long as a form is open.
+     ***************************************************************************/
+  if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown))) {
+    if(HasOpenContainer(eHTMLTag_form)) {
+      switch((eHTMLTags)aParent) {
+        case eHTMLTag_select:
+          result=PRBool(eHTMLTag_option==aChild);
+          break;
+        case eHTMLTag_option:
+          result=PR_FALSE;
+          break;
+        default:
+          result=PR_TRUE;
+          break;
+      } //switch
+    }//if
+    return result;
   }
 
-  if((aParent) && (0 != strchr(gStyleTags, aParent))) {
+  if((aParent) && (FindTagInSet(aParent,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown)))) {
     if(eHTMLTag_li == aChild) {
       //This code was added to enforce the rule that listitems
       //autoclose prior listitems.  Stylistic tags (including <A>)
@@ -1327,58 +1321,42 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       result=PR_FALSE;
     }
     else
-      result=PRBool(0!=strchr(gTagSet1,aChild));
+      result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
   }
   else {
     switch((eHTMLTags)aParent) {
       case eHTMLTag_address:
-        result=PRBool(0!=strchr(gTagSet2,aChild));
+        result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_applet:
         if(eHTMLTag_param==aChild)
           result=PR_TRUE;
         else
-          result=PRBool(0!=strchr(gTagSet2,aChild)); 
+          result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
         break;
 
-      case eHTMLTag_area:
-      case eHTMLTag_base:
-      case eHTMLTag_basefont:
-      case eHTMLTag_br:
-      case eHTMLTag_embed:
-      case eHTMLTag_hr:      
-      case eHTMLTag_img:
-      case eHTMLTag_input:
-      case eHTMLTag_isindex:
-      case eHTMLTag_meta:
-      case eHTMLTag_spacer:
-      case eHTMLTag_wbr:
-        break;    //singletons can't contain anything...
-
-    case eHTMLTag_blockquote:
-    case eHTMLTag_body:
-    case eHTMLTag_layer:
-      if(eHTMLTag_userdefined==aChild)
-        result=PR_TRUE;
-      else
-        result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      case eHTMLTag_blockquote:
+      case eHTMLTag_body:
+      case eHTMLTag_layer:
+        if(eHTMLTag_userdefined==aChild)
+          result=PR_TRUE;
+        else
+          result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
       break;
 
       case eHTMLTag_button:
-        result=PRBool(0!=strchr(gTagSet3,aChild));
+        result=FindTagInSet(aChild,gTagSet3,sizeof(gTagSet3)/sizeof(eHTMLTag_unknown));
         break;
 
-      case eHTMLTag_caption:
-        result=PRBool(0!=strchr(gTagSet1,aChild));
+      case eHTMLTag_caption:    case eHTMLTag_center:
+      case eHTMLTag_dd:         case eHTMLTag_dir:
+      case eHTMLTag_div:        case eHTMLTag_form:
+      case eHTMLTag_label:      case eHTMLTag_legend:
+      case eHTMLTag_menu:       case eHTMLTag_noscript:
+      case eHTMLTag_ol:         case eHTMLTag_ul:
+        result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         break;
-
-      case eHTMLTag_center:
-        result=PRBool(0!=strchr(gTagSet1,aChild));
-        break;
-
-      case eHTMLTag_col:
-        break;    //singletons can't contain anything...
 
       case eHTMLTag_colgroup:
         result=PRBool(eHTMLTag_col==(eHTMLTags)aChild);
@@ -1386,25 +1364,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
       case eHTMLTag_dt:
         {
-          static char  datalistTags[]={eHTMLTag_dt,eHTMLTag_dd,0};
+          static eHTMLTags datalistTags[]={eHTMLTag_dt,eHTMLTag_dd};
 
-          if(0!=strchr(datalistTags,aChild)) {
+          if(FindTagInSet(aChild,datalistTags,sizeof(datalistTags)/sizeof(eHTMLTag_unknown))) {
             result=PR_TRUE;
           }
           else
-            result=PRBool(0!=strchr(gTagSet1,aChild));
+            result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         }
         break;
 
-      case eHTMLTag_dd:
-      case eHTMLTag_div:
-        result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
       case eHTMLTag_dl:
         {
-          char okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,
-                         eHTMLTag_map,eHTMLTag_form,eHTMLTag_newline,eHTMLTag_p,0};
-          result=PRBool(0!=strchr(okTags,aChild));
+          static eHTMLTags okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,
+                                     eHTMLTag_map,eHTMLTag_form,eHTMLTag_newline,eHTMLTag_p};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
@@ -1412,22 +1386,14 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         if(eHTMLTag_legend==aChild)
           result=PR_TRUE;
         else
-          result=PRBool(0!=strchr(gTagSet1,aChild)); 
+          result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         break;
-
-      case eHTMLTag_form:
-        result=PRBool(0!=strchr(gTagSet1,aChild));
-        break;
-
-      case eHTMLTag_frame:
-        break;  //singletons can't contain other tags
 
       case eHTMLTag_frameset:
         {
-          static char okTags[]={eHTMLTag_frame,eHTMLTag_frameset,
-                                eHTMLTag_noframes,
-                                eHTMLTag_newline,eHTMLTag_whitespace,0};
-          result=PRBool(0!=strchr(okTags,aChild));
+          static eHTMLTags okTags[]={ eHTMLTag_frame,     eHTMLTag_frameset,  eHTMLTag_noframes,  
+                                      eHTMLTag_newline,   eHTMLTag_whitespace};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
@@ -1435,25 +1401,25 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       case eHTMLTag_h3: case eHTMLTag_h4:
       case eHTMLTag_h5: case eHTMLTag_h6:
         {
-          if(0!=strchr(gHeadingTags,aChild))
+          if(FindTagInSet(aChild,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown)))
             result=PR_FALSE;
-          else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+          else result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         }
         break;
 
       case eHTMLTag_head:
         {
-          static char  okTags[]={
+          static eHTMLTags okTags[]={
             eHTMLTag_base,    eHTMLTag_isindex, eHTMLTag_link,  eHTMLTag_meta,
-            eHTMLTag_script,  eHTMLTag_style,   eHTMLTag_title, 0};
-          result=PRBool(0!=strchr(okTags,aChild));
+            eHTMLTag_script,  eHTMLTag_style,   eHTMLTag_title};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
       case eHTMLTag_html:
         {
-          static char okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_script,0};
-          result=PRBool(0!=strchr(okTags,aChild));
+          static eHTMLTags okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_script};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
@@ -1461,55 +1427,28 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         if(eHTMLTag_frame==aChild)
           result=PR_FALSE;
         else
-          result=PRBool(0!=strchr(gTagSet1,aChild)); 
+          result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         break;
-
-      case eHTMLTag_label:
-      case eHTMLTag_legend:/* XXX not sure */
-        result=PRBool(0!=strchr(gTagSet1,aChild));
-        break;
-
-      case eHTMLTag_link:
-        break;    //singletons can't contain anything...
 
       case eHTMLTag_li:
         if (eHTMLTag_li == aChild) {
           result = PR_FALSE;
         }
-        else result=PRBool(!strchr(gHeadingTags,aChild));
-        break;
-
-      case eHTMLTag_listing:
-        result = PR_TRUE;
+        else result=!FindTagInSet(aChild,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_map:
         {
-          static char okTags[] = {eHTMLTag_area,
-                                  eHTMLTag_newline,
-                                  eHTMLTag_whitespace,
-                                  0};
-          result = PRBool(0 != strchr(okTags, aChild));
+          static eHTMLTags okTags[] = { eHTMLTag_area,eHTMLTag_newline,eHTMLTag_whitespace};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
-        break;
-
-      case eHTMLTag_menu:
-      case eHTMLTag_dir:
-      case eHTMLTag_ol:
-      case eHTMLTag_ul:
-        // XXX kipp was here
-        result=PRBool(0 != strchr(gTagSet1,aChild));
         break;
 
       case eHTMLTag_noframes:
         if(eHTMLTag_body==aChild)
           result=PR_TRUE;
         else
-          result=PRBool(0!=strchr(gTagSet1,aChild)); 
-        break;
-
-      case eHTMLTag_noscript:
-        result=PRBool(0!=strchr(gTagSet1,aChild));
+          result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_option:
@@ -1519,11 +1458,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
       case eHTMLTag_p:
         {
-          static char  datalistTags[]={eHTMLTag_dt,eHTMLTag_dd,0};
+          static eHTMLTags datalistTags[]={eHTMLTag_dt,eHTMLTag_dd};
 
           if(eHTMLTag_p==aChild)
             result=PR_FALSE;
-          else if(0!=strchr(datalistTags,aChild)) {
+          else if(FindTagInSet(aChild,datalistTags,sizeof(datalistTags)/sizeof(eHTMLTag_unknown))) {
             //we now allow DT/DD inside a paragraph, so long as a DL is open...
             if(PR_TRUE==HasOpenContainer(eHTMLTag_dl)) {
               if(PR_TRUE==HasOpenContainer(eHTMLTag_dt))
@@ -1532,37 +1471,21 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
               result=PR_TRUE;
           }
           else
-            result=PRBool(0!=strchr(gTagSet2,aChild));
+            result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
         }
         break;
 
       case eHTMLTag_object:
       case eHTMLTag_pre:
-        result=PRBool(0!=strchr(gTagSet2,aChild));
+        result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
         break;
-
-      case eHTMLTag_param:
-        break;  //singletons can't contain other tags
-
-      case eHTMLTag_plaintext:
-        break;
-
-      case eHTMLTag_script:
-        break; //unadorned script text...
-
-      case eHTMLTag_select:
-        result=PR_TRUE; //for now, allow select to contain anything...
-        break;
-
-      case eHTMLTag_style:
-        break;  //singletons can't contain other tags
 
       case eHTMLTag_table:
         {
-          static char  okTags[]={ 
+          static eHTMLTags okTags[]={ 
             eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,eHTMLTag_tbody,   
-            eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  eHTMLTag_thead,   eHTMLTag_map, 0};
-          result=PRBool(0!=strchr(okTags,aChild));
+            eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  eHTMLTag_thead,   eHTMLTag_map};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
@@ -1570,44 +1493,36 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       case eHTMLTag_tfoot:
       case eHTMLTag_thead:
         {
-          static char  okTags[]={eHTMLTag_tr,eHTMLTag_map,eHTMLTag_form,0};
-          result=PRBool(0!=strchr(okTags,aChild));
+          static eHTMLTags okTags[]={eHTMLTag_tr,eHTMLTag_map,eHTMLTag_form};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
       case eHTMLTag_th:
       case eHTMLTag_td:
         {
-          static char  extraTags[]={eHTMLTag_newline,eHTMLTag_map,0};
-          result=PRBool(0!=strchr(extraTags,aChild));
+          static eHTMLTags okTags[]={eHTMLTag_newline,eHTMLTag_map};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
           if(PR_FALSE==result)
-            result=PRBool(0!=strchr(gTagSet1,aChild)); 
+            result=FindTagInSet(aChild,gTagSet1,sizeof(gTagSet1)/sizeof(eHTMLTag_unknown));
         }
         break;
 
-      case eHTMLTag_textarea:
-      case eHTMLTag_title:
-        break; //nothing but plain text...
-
       case eHTMLTag_tr:
         {
-          static char  okTags[]={eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_map,0};
-          result=PRBool(0!=strchr(okTags,aChild)); 
+          static eHTMLTags okTags[]={eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_map};
+          result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
         }
         break;
 
       case eHTMLTag_unknown:
-        {
-            //the only thing that should ever have an unknown
-            //parent is an HTML Tag. Everything else should propagate.
-          static char  okTags[]={eHTMLTag_html,0};
-          result=PRBool(0!=strchr(okTags,aChild)); 
-        }
+        //the only thing that should ever have an unknown
+        //parent is an HTML Tag. Everything else should propagate.
+        result=PRBool(eHTMLTag_html==aChild);
         break;
 
-      case eHTMLTag_xmp: 
-        break;
-
+      case eHTMLTag_listing:
+      case eHTMLTag_select:
       case eHTMLTag_userdefined:
         result=PR_TRUE; //XXX for now...
         break;
@@ -1643,6 +1558,8 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const {
       break;
 
     default:
+      if(IsContainer(aChild) && HasOpenContainer(aChild))
+        result=IsGatedFromClosing(aChild);
       break;
   }//switch
   return result;
@@ -1664,10 +1581,8 @@ PRBool CNavDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
 
     case eHTMLTag_html:
       {
-        static char  okTags[]={
-          eHTMLTag_head,    eHTMLTag_body, 0
-        };
-        result=PRBool(0!=strchr(okTags,aChild));
+        static eHTMLTags okTags[]={eHTMLTag_head,eHTMLTag_body };
+        result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
       }
 
     case eHTMLTag_body:
@@ -1675,13 +1590,13 @@ PRBool CNavDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
 
     case eHTMLTag_table:
       {
-        static char  okTags[]={
+        static eHTMLTags okTags[]={
           eHTMLTag_caption, eHTMLTag_colgroup,
           eHTMLTag_tbody,   eHTMLTag_tfoot,
           eHTMLTag_thead,   eHTMLTag_tr,
           eHTMLTag_td,      eHTMLTag_th,
-          eHTMLTag_col,     0};
-        result=PRBool(0!=strchr(okTags,aChild));
+          eHTMLTag_col};
+        result=FindTagInSet(aChild,okTags,sizeof(okTags)/sizeof(eHTMLTag_unknown));
       }
       break;
 
@@ -1707,7 +1622,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
     case eHTMLTag_table:
       if(eHTMLTag_form==aChild)
         result=PR_FALSE;
-      else result=PRBool(!strchr(gTableTags,aChild));
+      else result=!FindTagInSet(aChild,gTableTags,sizeof(gTableTags)/sizeof(eHTMLTag_unknown));
       break;
 
     case eHTMLTag_tr:
@@ -1725,8 +1640,8 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
 
     case eHTMLTag_unknown:
       {
-        static char skippable[]={eHTMLTag_newline,eHTMLTag_whitespace,0};
-        if(0!=strchr(skippable,aChild)) {
+        static eHTMLTags skippable[]={eHTMLTag_newline,eHTMLTag_whitespace};
+        if(FindTagInSet(aChild,skippable,sizeof(skippable)/sizeof(eHTMLTag_unknown))) {
           result=PR_TRUE;
         }
       }
@@ -1800,12 +1715,11 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
 
         default:
 
-          static char kNonStylizedTabletags[]={eHTMLTag_table,eHTMLTag_tr,0};
-          if(0!=strchr(gStyleTags,aChild)) {
-            if(0!=strchr(kNonStylizedTabletags,aParent))
+          static eHTMLTags kNonStylizedTabletags[]={eHTMLTag_table,eHTMLTag_tr};
+          if(FindTagInSet(aChild,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown))) {
+            if(FindTagInSet(aParent,kNonStylizedTabletags,sizeof(kNonStylizedTabletags)/sizeof(eHTMLTag_unknown)))
               return PR_TRUE;
           }
-
           break;
       } //switch
       break;
@@ -1826,11 +1740,11 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
 PRBool IsCompatibleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
   PRBool result=PR_FALSE;
 
-  if(0!=strchr(gStyleTags,aTag1)) {
-    result=PRBool(0!=strchr(gStyleTags,aTag2));
+  if(FindTagInSet(aTag1,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown))) {
+    result=FindTagInSet(aTag2,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown));
   }
-  if(0!=strchr(gHeadingTags,aTag1)) {
-    result=PRBool(0!=strchr(gHeadingTags,aTag2));
+  if(FindTagInSet(aTag1,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown))) {
+    result=FindTagInSet(aTag2,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown));
   }
   return result;
 }
@@ -1884,7 +1798,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
     case eHTMLTag_h1:           case eHTMLTag_h2:
     case eHTMLTag_h3:           case eHTMLTag_h4:
     case eHTMLTag_h5:           case eHTMLTag_h6:
-      if(0!=strchr(gHeadingTags,aParent)) {
+      if(FindTagInSet(aParent,gHeadingTags,sizeof(gHeadingTags)/sizeof(eHTMLTag_unknown))) {
         result=PR_FALSE;
         break;
       }
@@ -1894,7 +1808,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
     default:
       if(IsGatedFromClosing(aChild))
         result=PR_TRUE;
-      else if(IsCompatibleTag(aChild,GetTopNode()))
+      else if(IsCompatibleTag(aChild,mContextStack.Last()))
         result=PR_FALSE;
       else result=(!HasOpenContainer(aChild));
       break;
@@ -1907,40 +1821,14 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
  *  tag is itself a container
  *  
  *  @update  gess 4/8/98
- *  @param   aTag -- tag to test for containership
+ *  @param   aTag -- tag to test as a container
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool CNavDTD::IsContainer(eHTMLTags aTag) const {
-  PRBool result=PR_FALSE;
-
-  switch(aTag){
-    case eHTMLTag_area:       case eHTMLTag_base:
-    case eHTMLTag_basefont:   case eHTMLTag_br:
-    case eHTMLTag_col:      //  case eHTMLTag_colgroup:
-    case eHTMLTag_embed:
-    case eHTMLTag_frame:
-    case eHTMLTag_hr:         case eHTMLTag_img:
-    case eHTMLTag_input:      case eHTMLTag_isindex:
-    case eHTMLTag_link:
-    case eHTMLTag_meta:
-//    case eHTMLTag_option:     
-    case eHTMLTag_param:
-    case eHTMLTag_style:      
-    case eHTMLTag_spacer:
-    case eHTMLTag_wbr:
-//    case eHTMLTag_form:
-    case eHTMLTag_newline:
-    case eHTMLTag_whitespace:
-    case eHTMLTag_text: 
-    case eHTMLTag_unknown:
-      result=PR_FALSE;
-      break;
-
-    default:
-      result=PR_TRUE;
-  }
+PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
+  PRBool result=!FindTagInSet(aTag,gNonContainers,sizeof(gNonContainers)/sizeof(eHTMLTag_unknown));
   return result;
 }
+
 
 /**
  * This method does two things: 1st, help construct
@@ -2040,9 +1928,8 @@ PRBool CNavDTD::ForwardPropagate(CTagStack& aStack,eHTMLTags aParentTag,eHTMLTag
   switch(aParentTag) {
     case eHTMLTag_table:
       {
-        static char  tableTags[]={eHTMLTag_tr,eHTMLTag_td,0};
-        if(strchr(tableTags,aChildTag)) {
-          //if you're here, we know we can correctly backward propagate.
+        static eHTMLTags tableTags[]={eHTMLTag_tr,eHTMLTag_td};
+        if(FindTagInSet(aChildTag,tableTags,sizeof(tableTags)/sizeof(eHTMLTag_unknown))) {
           return BackwardPropagate(aStack,aParentTag,aChildTag);
         }
       }
@@ -2133,19 +2020,19 @@ PRBool CNavDTD::IsGatedFromClosing(eHTMLTags aChildTag) const {
   PRInt32 tagPos=GetTopmostIndexOf(aChildTag);
   PRInt32 theGatePos=kNotFound;
 
-  if (0 != strchr(gStyleTags, aChildTag)) {
-    static char theGateTags[]={ 
+  if(FindTagInSet(aChildTag,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown))) {
+    static eHTMLTags theGateTags[]={ 
       eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_tbody,   
       eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,     eHTMLTag_td, 
-      eHTMLTag_body,0};
-    theGatePos=GetTopmostIndexOf(theGateTags);
+      eHTMLTag_body};
+    theGatePos=GetTopmostIndexOf(theGateTags,sizeof(theGateTags)/sizeof(eHTMLTag_unknown));
   }
   else {
     switch(aChildTag) {
     case eHTMLTag_li:
       {
-        static char theGateTags[]={eHTMLTag_ol,eHTMLTag_ul,0};
-        theGatePos=GetTopmostIndexOf(theGateTags);
+        static eHTMLTags theGateTags[]={eHTMLTag_ol,eHTMLTag_ul};
+        theGatePos=GetTopmostIndexOf(theGateTags,sizeof(theGateTags)/sizeof(eHTMLTag_unknown));
       }
       break;
 
@@ -2218,11 +2105,12 @@ eHTMLTags CNavDTD::GetTopNode() const {
  *  @param   eHTMLTags tag to be searched for in stack
  *  @return  topmost index of tag on stack
  */
-PRInt32 CNavDTD::GetTopmostIndexOf(char aTagSet[]) const {
+PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
   int i=0;
   for(i=mContextStack.mCount-1;i>=0;i--){
-    if(0!=strchr(aTagSet,mContextStack.mTags[i]))
+    if(FindTagInSet(mContextStack.mTags[i],aTagSet,aCount)) {
       return i;
+    }
   }
   return kNotFound;
 }
@@ -2248,7 +2136,7 @@ PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
   Here comes code that handles the interface
   to our content sink.
  *********************************************/
-
+ 
 
 /**
  * It is with great trepidation that I offer this method (privately of course).
@@ -2264,10 +2152,10 @@ PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
 nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
   nsresult result=NS_OK;
 
-  if(0==strchr(gWhitespaceTags,aTag)){
+  if(!FindTagInSet(aTag,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(eHTMLTag_unknown))) {
     PRInt32 pos=0;
 
-    eHTMLTags parentTag=GetTopNode();
+    eHTMLTags parentTag=mContextStack.Last();
     if(CanContainStyles(parentTag)) {
       for(pos=0;pos<mStyleStack->mCount;pos++) {
         eHTMLTags theTag=mStyleStack->mTags[pos]; 
@@ -2311,8 +2199,7 @@ nsresult CNavDTD::CloseTransientStyles(eHTMLTags aTag){
   nsresult result=NS_OK;
 
   if((mStyleStack->mCount>0) && (mContextStack.mBits[mContextStack.mCount-1])) {
-    if(0==strchr(gWhitespaceTags,aTag)){
-
+    if(!FindTagInSet(aTag,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(eHTMLTag_unknown))) {
       result=CloseContainersTo(mStyleStack->mTags[0],PR_FALSE);
       mContextStack.mBits[mContextStack.mCount-1]=PR_FALSE;
 
@@ -2394,7 +2281,7 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
 
   nsresult result=NS_OK;
-  eHTMLTags topTag=GetTopNode();
+  eHTMLTags topTag=mContextStack.Last();
 
   if(eHTMLTag_html!=topTag) {
     
@@ -2704,7 +2591,7 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
     return CloseContainersTo(pos,aTag,aUpdateStyles);
   }
 
-  eHTMLTags theTopTag=GetTopNode();
+  eHTMLTags theTopTag=mContextStack.Last();
   if(IsCompatibleTag(aTag,theTopTag)) {
     //if you're here, it's because we're trying to close one style tag,
     //but a different one is actually open. Because this is NAV4x
@@ -2777,7 +2664,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   
   nsresult  result=(nsresult)kContextMismatch;
   PRInt32   cnt=0;
-  eHTMLTags theTop=GetTopNode();
+  eHTMLTags theTop=mContextStack.Last();
   PRBool    bResult=ForwardPropagate(kPropagationStack,theTop,aChildTag);
   
   if(PR_FALSE==bResult){
@@ -2844,13 +2731,13 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
  */
 nsresult CNavDTD::ReduceContextStackFor(eHTMLTags aChildTag){
   nsresult   result=NS_OK;
-  eHTMLTags topTag=GetTopNode();
+  eHTMLTags topTag=mContextStack.Last();
 
   while( (topTag!=kNotFound) && 
          (PR_FALSE==CanContain(topTag,aChildTag)) &&
          (PR_FALSE==CanContainIndirect(topTag,aChildTag))) {
     CloseTopmostContainer();
-    topTag=GetTopNode();
+    topTag=mContextStack.Last();
   }
   return result;
 }
@@ -2868,7 +2755,7 @@ nsresult
 CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult   result=0;
   
-  if (0 != strchr(gStyleTags, aTag)) {
+  if(FindTagInSet(aTag,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown))) {
     mStyleStack->Push(aTag);
   }
   else {
@@ -2899,7 +2786,7 @@ CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult result=0;
   
   if(mStyleStack->mCount>0) {
-    if (0 != strchr(gStyleTags, aTag)) {
+    if(FindTagInSet(aTag,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown))) {
       if(aTag==anActualTag)
         mStyleStack->Pop();
     }
@@ -2954,7 +2841,7 @@ CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
         }//if
         break;
       case kExclamation:
-        aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_unknown,gEmpty);
+        aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
         break;
       default:
         if(nsString::IsAlpha(aChar))
@@ -3065,7 +2952,7 @@ CNavDTD::ConsumeContentToEndTag(const nsString& aString,
  *  @return new token or null 
  */
 
-static char gSkippedContentTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea, 0};
+static eHTMLTags gSkippedContentTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea};
 
 nsresult
 CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
@@ -3087,7 +2974,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
         eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
 
-        if(0!=strchr(gSkippedContentTags,theTag)){
+        if(FindTagInSet(theTag,gSkippedContentTags,sizeof(gSkippedContentTags)/sizeof(eHTMLTag_unknown))) {
 
             //Do special case handling for <script>, <style>, <title> or <textarea>...
           CToken*   skippedToken=0;
@@ -3096,7 +2983,6 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
     
           if((NS_OK==result) && skippedToken){
               //now we strip the ending sequence from our new SkippedContent token...
-            //PRInt32 slen=str.Length()+3;
             nsString& skippedText=((CSkippedContentToken*)skippedToken)->GetKey();    
             mTokenDeque.Push(skippedToken);
   

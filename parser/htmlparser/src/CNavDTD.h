@@ -358,7 +358,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @param   aTag -- tag to test for containership
      *  @return  PR_TRUE if given tag can contain other tags
      */
-    virtual PRBool IsContainer(eHTMLTags aTags) const;
+    virtual PRBool IsContainer(PRInt32 aTag) const;
 
     /**
      * Call this if you want the DTD to give you a default
@@ -413,7 +413,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      */
     virtual PRBool IsGatedFromClosing(eHTMLTags aChild) const;
 
-
     /**
      * Accessor that retrieves the tag type of the topmost item on context 
 	   * vector stack.
@@ -437,7 +436,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   tag to be found
      * @return  index of topmost tag occurance -- may be -1 (kNotFound).
      */
-    virtual PRInt32 GetTopmostIndexOf(char aTagSet[]) const;
+    virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
 
     /**
      * The following set of methods are used to partially construct 
@@ -602,7 +601,6 @@ protected:
 
 protected:
 
-    PRBool			CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const;
 		void				PushStack(CTagStack& aStack);
 		CTagStack*	PopStack();
 		PRInt32			CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);

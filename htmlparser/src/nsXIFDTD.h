@@ -232,6 +232,15 @@ class nsXIFDTD : public nsIDTD {
      */
     virtual PRBool CanContain(PRInt32 aParent, PRInt32 aChild) const;
 
+    /**
+     *  This method gets called to determine whether a given 
+     *  tag is itself a container
+     *  
+     *  @update  gess 3/25/98
+     *  @param   aTag -- tag to test for containership
+     *  @return  PR_TRUE if given tag can contain other tags
+     */
+    virtual PRBool IsContainer(PRInt32 aTag) const;
 
     /**
      * Called by the parser to initiate dtd verification of the

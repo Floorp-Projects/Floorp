@@ -19,7 +19,7 @@
 /**
  * MODULE NOTES:
  * @update  gess 4/8/98
- * 
+ *  
  *         
  */
 
@@ -352,19 +352,6 @@ nsresult COtherDTD::HandleStyleToken(CToken* aToken){
   return CNavDTD::HandleStyleToken(aToken);
 }
 
-/**
- *  This method is called to determine whether or not a tag
- *  of one type can contain a tag of another type.
- *  
- *  @update  gess 4/8/98
- *  @param   aParent -- tag enum of parent container
- *  @param   aChild -- tag enum of child container
- *  @return  PR_TRUE if parent can contain child
- */
-PRBool COtherDTD::CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const {
-  return CNavDTD::CanContainFormElement(aParent,aChild);
-}
-
 
 /**
  *  This method is called to determine whether or not a tag
@@ -416,18 +403,6 @@ PRBool COtherDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
  */
 PRBool COtherDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
   return CNavDTD::CanOmitEndTag(aParent,aChild);
-}
-
-/**
- *  This method gets called to determine whether a given 
- *  tag is itself a container
- *  
- *  @update  gess 4/8/98
- *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
- */
-PRBool COtherDTD::IsContainer(eHTMLTags aTag) const {
-  return CNavDTD::IsContainer(aTag);
 }
 
 /**

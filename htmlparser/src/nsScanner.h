@@ -177,7 +177,7 @@ class CScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      nsresult ReadUntil(nsString& aString,nsString& aTermSet,PRBool addTerminal);
+      nsresult ReadUntil(nsString& aString,nsString& aTermSet,PRBool anOrderedSet,PRBool addTerminal);
 
       /**
        *  Consume characters while they're members of anInputSet
@@ -188,7 +188,7 @@ class CScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      nsresult ReadWhile(nsString& aString,nsString& anInputSet,PRBool addTerminal);
+      nsresult ReadWhile(nsString& aString,nsString& anInputSet,PRBool anOrderedSet,PRBool addTerminal);
 
       /**
        *  Records current offset position in input stream. This allows us

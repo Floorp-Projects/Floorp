@@ -34,15 +34,11 @@
 #include "nsEntityEx.cpp"
 #endif
 
-static nsString     gIdentChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-");
-static nsString     gAttrTextChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-%.");
-static nsString     gAlphaChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+static nsString     gIdentChars("-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
 static nsAutoString gDigits("0123456789");
-static nsAutoString gWhitespace(" \t\b");
-static nsAutoString gOperatorChars("/?.<>[]{}~^+=-!%&*(),|:");
+static nsAutoString gWhitespace("\b\t ");
 static const char*  gUserdefined = "userdefined";
 static const char*  gEmpty = "";
-
 
 const PRInt32 kMAXNAMELEN=10;
 
@@ -231,7 +227,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
   mTextValue=aChar;
-  nsresult result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_FALSE);
+  nsresult result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_TRUE,PR_FALSE);
   char buffer[300];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
   mTypeID = NS_TagToEnum(buffer);
@@ -309,8 +305,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
   mTextValue="";
-  static nsAutoString terminals(">");
-  nsresult result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
+  nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_FALSE);
 
   char buffer[300];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
@@ -443,7 +438,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   PRBool    done=PR_FALSE;
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
+    result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
       if(kCR==aChar) {
@@ -467,7 +462,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
     }
   }
   return result;
-};
+}
 
 /*
  *  default constructor
@@ -503,9 +498,7 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
 nsresult CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   nsresult  result=NS_OK;
-  
-  static nsAutoString terminals(">");
-  
+    
   aScanner.GetChar(aChar);
   mTextValue="<!";
   if(kMinus==aChar) {
@@ -517,7 +510,7 @@ nsresult CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
         mTextValue+="-";
         PRInt32 findpos=-1;
         while((findpos==kNotFound) && (NS_OK==result)) {
-          result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
+          result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
           findpos=mTextValue.RFind("-->");
         }
         return result;
@@ -528,7 +521,7 @@ nsresult CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   if(NS_OK==result) {
      //if you're here, we're consuming a "short-form" comment
     mTextValue+=aChar;
-    result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
+    result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
   }
   return result;
 }
@@ -742,16 +735,13 @@ void CAttributeToken::DebugDumpToken(ostream& out) {
  *  @return  error result
  */
 PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner){
-  static nsAutoString terminals1("'");
-  static nsAutoString terminals2("\"");
-
   PRInt32 result=kNotFound;
   switch(aChar) {
     case kQuote:
-      result=aScanner.ReadUntil(aString,terminals2,PR_TRUE);
+      result=aScanner.ReadUntil(aString,kQuote,PR_TRUE);
       break;
     case kApostrophe:
-      result=aScanner.ReadUntil(aString,terminals1,PR_TRUE);
+      result=aScanner.ReadUntil(aString,kApostrophe,PR_TRUE);
       break;
     default:
       break;
@@ -774,8 +764,9 @@ PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner
 PRInt32 ConsumeAttributeValueText(PRUnichar,nsString& aString,CScanner& aScanner){
 
   PRInt32 result=kNotFound;
-  static nsAutoString terminals(" \t\b\r\n>");
-  result=aScanner.ReadUntil(aString,terminals,PR_FALSE);
+  static nsAutoString terminals("\b\t\n\r >");
+
+  result=aScanner.ReadUntil(aString,terminals,PR_FALSE,PR_FALSE);
   return result;
 }
 
@@ -791,7 +782,6 @@ PRInt32 ConsumeAttributeValueText(PRUnichar,nsString& aString,CScanner& aScanner
 nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   aScanner.SkipWhitespace();             //skip leading whitespace                                      
-  static nsAutoString kAllButEqualOrGT("=>");
   nsresult result=aScanner.Peek(aChar);
   if(NS_OK==result) {
     if(kQuote==aChar) {               //if you're here, handle quoted key...
@@ -805,20 +795,19 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
       result=aScanner.GetChar(aChar);        //skip the hash sign...
       if(NS_OK==result) {
         mTextKey=aChar;
-        result=aScanner.ReadWhile(mTextKey,gDigits,PR_TRUE);
+        result=aScanner.ReadWhile(mTextKey,gDigits,PR_TRUE,PR_TRUE);
       }
     }
     else {
         //If you're here, handle an unquoted key.
         //Don't forget to reduce entities inline!
-      static nsAutoString terminals(" >=\t\b\r\n\"");
-      result=aScanner.ReadUntil(mTextKey,terminals,PR_FALSE);
+      static nsAutoString terminals("\b\t\n\r \"=>");
+      result=aScanner.ReadUntil(mTextKey,terminals,PR_TRUE,PR_FALSE);
     }
 
       //now it's time to Consume the (optional) value...
     if(NS_OK == (result=aScanner.SkipWhitespace())) { 
       //Skip ahead until you find an equal sign or a '>'...
-//    if(NS_OK == (result=aScanner.SkipTo(kAllButEqualOrGT))) { 
         if(NS_OK == (result=aScanner.Peek(aChar))) {  
           if(kEqual==aChar){
             result=aScanner.GetChar(aChar);  //skip the equal sign...
@@ -928,7 +917,7 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   
   mTextValue=aChar;
 
-  nsresult result=aScanner.ReadWhile(mTextValue,gWhitespace,PR_FALSE);
+  nsresult result=aScanner.ReadWhile(mTextValue,gWhitespace,PR_FALSE,PR_FALSE);
   if(NS_OK==result) {
     mTextValue.StripChars("\r");
   }
@@ -1016,7 +1005,7 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& 
     if(kLeftBrace==aChar) {
       //you're consuming a script entity...
       static nsAutoString terminals("}>");
-      result=aScanner.ReadUntil(aString,terminals,PR_FALSE);
+      result=aScanner.ReadUntil(aString,terminals,PR_FALSE,PR_FALSE);
       if(kNoError==result) {
         result=aScanner.Peek(aChar);
         if(kNoError==result) {
@@ -1028,7 +1017,7 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& 
       }
     } //if
     else {
-      result=aScanner.ReadWhile(aString,gIdentChars,PR_FALSE);
+      result=aScanner.ReadWhile(aString,gIdentChars,PR_TRUE,PR_FALSE);
       if(kNoError==result) {
         result=aScanner.Peek(aChar);
         if(kNoError==result) {
@@ -1203,8 +1192,6 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
  //If we find either, just eat them. If we find text or a tag, then go to the 
  //target endtag, or the start of another comment. 
 
-  static nsAutoString kEndTerminal(">"); 
-  static nsAutoString kStartTerminal("<"); 
   while((!done) && (kNoError==result)) { 
     result=aScanner.GetChar(aChar); 
     if((kNoError==result) && (kLessThan==aChar)) { 
@@ -1221,10 +1208,10 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
         //read a tag... 
         temp+=aChar; 
         temp+=theChar; 
-        result=aScanner.ReadUntil(temp,kEndTerminal,PR_TRUE); 
+        result=aScanner.ReadUntil(temp,kGreaterThan,PR_TRUE); 
       } 
     } 
-    else if(0<=gWhitespace.Find(aChar)) { 
+    else if(0<=gWhitespace.BinarySearch(aChar)) { 
       static CWhitespaceToken theWS; 
       result=theWS.Consume(aChar,aScanner); 
       if(kNoError==result) { 
@@ -1233,7 +1220,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
     } 
     else { 
       temp+=aChar; 
-      result=aScanner.ReadUntil(temp,kStartTerminal,PR_FALSE); 
+      result=aScanner.ReadUntil(temp,kLessThan,PR_FALSE); 
     } 
     done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE)); 
   } 

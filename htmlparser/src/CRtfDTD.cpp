@@ -57,7 +57,7 @@ static NS_DEFINE_IID(kClassIID,     NS_RTF_DTD_IID);
 
 static const char* kRTFTextContentType = "application/rtf";
 static const char* kRTFDocHeader= "{\\rtf0";
-static nsString     gAlphaChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+static nsString     gAlphaChars("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 static nsAutoString gDigits("-0123456789");
 
 static nsAutoString gEmpty;
@@ -462,6 +462,19 @@ void CRtfDTD::SetVerification(PRBool aEnabled){
 }
 
 /**
+ *  This method gets called to determine whether a given 
+ *  tag is itself a container
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aTag -- tag to test for containership
+ *  @return  PR_TRUE if given tag can contain other tags
+ */
+PRBool CRtfDTD::IsContainer(PRInt32 aTag) const{
+  PRBool result=PR_FALSE;
+  return result;
+}
+
+/**
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  
@@ -566,7 +579,7 @@ PRInt32 CRTFControlWord::GetTokenType() {
 
 
 PRInt32 CRTFControlWord::Consume(CScanner& aScanner){
-  PRInt32 result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_FALSE);
+  PRInt32 result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_TRUE,PR_FALSE);
   if(kNoError==result) {
     //ok, now look for an option parameter...
     PRUnichar ch;
@@ -576,7 +589,7 @@ PRInt32 CRTFControlWord::Consume(CScanner& aScanner){
       case '0': case '1': case '2': case '3': case '4': 
       case '5': case '6': case '7': case '8': case '9': 
       case kMinus:
-        result=aScanner.ReadWhile(mArgument,gDigits,PR_FALSE);
+        result=aScanner.ReadWhile(mArgument,gDigits,PR_TRUE,PR_FALSE);
         break;
 
       case kSpace:
@@ -642,7 +655,7 @@ PRInt32 CRTFContent::GetTokenType() {
  */
 static nsString textTerminators("\\{}");
 PRInt32 CRTFContent::Consume(CScanner& aScanner){
-  PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE);
+  PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE,PR_FALSE);
   return result;
 }
 
