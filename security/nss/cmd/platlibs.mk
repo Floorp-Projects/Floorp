@@ -110,6 +110,10 @@ EXTRA_LIBS += \
 	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifeq ($(OS_ARCH), AIX) 
+EXTRA_SHARED_LIBS += -brtl 
+endif
+
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
