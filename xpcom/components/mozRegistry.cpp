@@ -110,9 +110,11 @@ struct mozRegSubtreeEnumerator : public nsIEnumerator {
     mozRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all );
 
 protected:
+    NS_IMETHOD advance(); // Implementation file; does appropriate NR_RegEnum call.
     HREG    mReg;   // Handle to registry we're affiliated with.
     RKEY    mKey;   // Base key being enumerated.
     REGENUM mEnum;  // Corresponding libreg "enumerator".
+    REGENUM mNext;  // Lookahead value.
     uint32  mStyle; // Style (indicates all or some);
     PRBool  mDone;  // Done flag.
     REGERR  mErr;   // Last libreg error code.
@@ -132,8 +134,8 @@ struct mozRegValueEnumerator : public mozRegSubtreeEnumerator {
     // Override CurrentItem to allocate mozRegistryValue objects.
     nsresult CurrentItem( nsISupports **result );
 
-    // Override Next to use proper NR_EnumEntries.
-    nsresult Next();
+    // Override advance() to use proper NR_RegEnumEntries.
+    NS_IMETHOD advance();
 
     // ctor/dtor
     mozRegValueEnumerator( HREG hReg, RKEY rKey );
@@ -690,7 +692,7 @@ NS_IMETHODIMP mozRegistry::GetValueInfo( Key baseKey, const char *path, ValueInf
         // Get registry info into local structure.
         REGINFO info = { sizeof info, 0, 0 };
         mErr = NR_RegGetEntryInfo( mReg,(RKEY)baseKey,(char*)path, &info );
-        if( mErr = REGERR_OK ) {
+        if( mErr == REGERR_OK ) {
             // Copy info to user's structure.
             reginfo2ValueInfo( info, *result );
         } else {
@@ -715,7 +717,7 @@ NS_IMETHODIMP mozRegistry::EnumerateValues( Key baseKey, nsIEnumerator **result 
         // Check for success.
         if( *result ) {
             // Bump refcnt on behalf of caller.
- (*result)->AddRef();
+            (*result)->AddRef();
         } else {
             // Unable to allocate space for the enumerator object.
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -772,24 +774,25 @@ NS_IMETHODIMP mozRegistry::Pack() {
 | the subkeys.                                                                 |
 ------------------------------------------------------------------------------*/
 mozRegSubtreeEnumerator::mozRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all )
-    : mReg( hReg ), mKey( rKey ), mEnum( 0 ),
+    : mReg( hReg ), mKey( rKey ), mEnum( 0 ), mNext( 0 ),
       mStyle( all ? REGENUM_DESCEND : 0 ), mDone( PR_FALSE ), mErr( -1 ) {
     NS_INIT_REFCNT();
     return;
 }
 
 /*---------------------- mozRegSubtreeEnumerator::First ------------------------
-| Set mEnum to 0; this will cause the next NR_RegEnumSubkeys call to go to     |
+| Set mEnum to 0; this will cause the next NR_RegEnum call to go to            |
 | the beginning.  We then do a Next() call in order to do a "lookahead" to     |
-| properly detect an empty list of subkeys(i.e., set the mDone flag).         |
-| Finally, we reset the mEnum flag so that we're still positioned at the       |
-| beginning.                                                                   |
+| properly detect an empty list (i.e., set the mDone flag).                    |
 ------------------------------------------------------------------------------*/
 nsresult mozRegSubtreeEnumerator::First() {
     nsresult rv = NS_OK;
-    mEnum = 0;
+    // Reset "done" flag.
+    mDone = PR_FALSE;
+    // Go to beginning.
+    mEnum = mNext = 0;
+    // Lookahead so mDone flag gets set for empty list.
     rv = Next();
-    mEnum = 0;
     return rv;
 }
 
@@ -802,23 +805,45 @@ nsresult mozRegSubtreeEnumerator::Last() {
 }
 
 /*---------------------- mozRegSubtreeEnumerator::Next -------------------------
-| Advance mEnum by calling NR_RegEnumSubkeys.                                  |
+| First, we check if we've already advanced to the end by checking the  mDone  |
+| flag.                                                                        |
+|                                                                              |
+| We advance mEnum to the next enumeration value which is in the mNext         |
+| lookahead buffer.  We must then call advance to lookahead and properly set   |
+| the isDone flag.                                                             |
 ------------------------------------------------------------------------------*/
 nsresult mozRegSubtreeEnumerator::Next() {
     nsresult rv = NS_OK;
-    // Advance to next subkey.
+    // Check for at end.
+    if ( !mDone ) {
+        // Advance to next spot.
+        mEnum = mNext;
+        // Lookahead so mDone is properly set (and to update mNext).
+        rv = advance();
+    } else {
+        // Set result accordingly.
+        rv = regerr2nsresult( REGERR_NOMORE );
+    }
+    return rv;
+}
+
+/*--------------------- mozRegSubtreeEnumerator::advance -----------------------
+| Advance mNext to next subkey using NR_RegEnumSubkeys.  We set mDone if       |
+| there are no more subkeys.                                                   |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP mozRegSubtreeEnumerator::advance() {
     char name[MAXREGPATHLEN];
     uint32 len = sizeof name;
-    mErr = NR_RegEnumSubkeys( mReg, mKey, &mEnum, name, len, mStyle );
+    mErr = NR_RegEnumSubkeys( mReg, mKey, &mNext, name, len, mStyle );
     // See if we ran off end.
     if( mErr == REGERR_NOMORE ) {
         // Remember we've run off end.
         mDone = PR_TRUE;
     }
     // Convert result.
-    rv = regerr2nsresult( mErr );
+    nsresult rv = regerr2nsresult( mErr );
     return rv;
-}
+};
 
 /*---------------------- mozRegSubtreeEnumerator::Prev -------------------------
 | This can't be implemented on top of libreg.                                  |
@@ -887,24 +912,24 @@ nsresult mozRegValueEnumerator::CurrentItem( nsISupports **result ) {
     return rv;
 }
 
-/*----------------------- mozRegValueEnumerator::Next --------------------------
-| Advances the mEnum state, but by using NR_RegEnumEntries this time.          |
+/*---------------------- mozRegValueEnumerator::advance ------------------------
+| Advance mNext to next subkey using NR_RegEnumEntries.  We set mDone if       |
+| there are no more entries.                                                   |
 ------------------------------------------------------------------------------*/
-nsresult mozRegValueEnumerator::Next() {
-    nsresult rv = NS_OK;
-    // Advance to next subkey.
+NS_IMETHODIMP mozRegValueEnumerator::advance() {
     char name[MAXREGNAMELEN];
     uint32 len = sizeof name;
-    mErr = NR_RegEnumEntries( mReg, mKey, &mEnum, name, len, 0 );
+    REGINFO info = { sizeof info, 0, 0 };
+    mErr = NR_RegEnumEntries( mReg, mKey, &mNext, name, len, &info );
     // See if we ran off end.
     if( mErr == REGERR_NOMORE ) {
         // Remember we've run off end.
         mDone = PR_TRUE;
     }
     // Convert result.
-    rv = regerr2nsresult( mErr );
+    nsresult rv = regerr2nsresult( mErr );
     return rv;
-}
+};
 
 
 /*--------------------- mozRegistryNode::mozRegistryNode -----------------------
