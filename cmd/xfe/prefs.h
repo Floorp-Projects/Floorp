@@ -131,23 +131,10 @@ typedef struct _XFE_GlobalPrefs
 								   * replaced by items above 
 								   */
 
-	/* show toolbar as */
-
-	int     toolbar_style;        /* new for 4.0
-								   * BROWSER_TOOLBAR_ICONS_ONLY     0
-								   * BROWSER_TOOLBAR_TEXT_ONLY      1
-								   * BROWSER_TOOLBAR_ICONS_AND_TEXT 2
-								   * will update toolbar_icons_p and toolbar_text_p
-								   * when reading in toolbar_style
-								   */
-	XP_Bool toolbar_icons_p;
-	XP_Bool toolbar_text_p;
-
 	/*
 	 *  ----- Appearance/Colors -----
 	 */
 
-	XP_Bool  underline_links_p;
 	XP_Bool  use_doc_colors;
 	LO_Color text_color;
 	LO_Color background_color;
@@ -262,8 +249,6 @@ typedef struct _XFE_GlobalPrefs
 								   */
 
 	int     global_history_expiration;	/* days */
-
-	XP_Bool show_toolbar_p;
 
 	XP_Bool ssl2_enable;
 	XP_Bool ssl3_enable;
@@ -469,14 +454,7 @@ typedef struct _XFE_GlobalPrefs
 	/* OPTIONS MENU
 	 */
 
-	XP_Bool show_url_p;
-	XP_Bool show_directory_buttons_p;
-	XP_Bool show_menubar_p;
-	XP_Bool show_bottom_status_bar_p;
 	XP_Bool fancy_ftp_p;
-#ifndef NO_SECURITY
-	XP_Bool show_security_bar_p;
-#endif
 
 	/* APPLICATIONS */
     /* spider begin */

@@ -143,15 +143,7 @@ static struct pref_map pref_map[] = {
 {"autoupdate.enabled", FIELD_OFFSET(auto_install), read_bool, write_bool},
 
 {"browser.download_directory", FIELD_OFFSET(tmp_dir), read_path, write_path, },
-{"browser.chrome.show_toolbar", FIELD_OFFSET(show_toolbar_p), read_bool, write_bool},
-{"browser.chrome.show_url_bar", FIELD_OFFSET(show_url_p), read_bool, write_bool},
-{"browser.chrome.show_directory_buttons", FIELD_OFFSET(show_directory_buttons_p), read_bool, write_bool},
-{"browser.chrome.show_menubar", FIELD_OFFSET(show_menubar_p), read_bool, write_bool},
-{"browser.chrome.show_status_bar", FIELD_OFFSET(show_bottom_status_bar_p), read_bool, write_bool},
 {"browser.fancy_ftp", FIELD_OFFSET(fancy_ftp_p), read_bool, write_bool},
-#ifndef NO_SECURITY
-{"browser.chrome.show_security_bar", FIELD_OFFSET(show_security_bar_p), read_bool, write_bool},
-#endif
 {"browser.cache.memory_cache_size", FIELD_OFFSET(memory_cache_size), read_int, write_int},
 {"browser.cache.disk_cache_size", FIELD_OFFSET(disk_cache_size), read_int, write_int},
 {"browser.cache.directory", FIELD_OFFSET(cache_dir), read_path, write_path, },
@@ -162,11 +154,9 @@ static struct pref_map pref_map[] = {
 {"browser.cache.disk_cache_ssl", FIELD_OFFSET(cache_ssl_p), read_bool, write_bool},
 {"browser.bookmark_file", FIELD_OFFSET(bookmark_file), read_path, write_path, },
 {"browser.history_file", FIELD_OFFSET(history_file), read_path, write_path, },
-{"browser.chrome.toolbar_style", FIELD_OFFSET(toolbar_style), read_int, write_int},
 {"browser.chrome.toolbar_tips", FIELD_OFFSET(toolbar_tips_p), read_bool, write_bool},
 {"browser.startup.page", FIELD_OFFSET(browser_startup_page), read_int, write_int},
 {"browser.startup.homepage", FIELD_OFFSET(home_document), read_str, write_str},
-{"browser.underline_anchors", FIELD_OFFSET(underline_links_p), read_bool, write_bool},
 {"browser.link_expiration", FIELD_OFFSET(global_history_expiration), read_int, write_int},
 {"browser.startup.license_accepted", FIELD_OFFSET(license_accepted), read_str, write_str},
 {"browser.user_history_file", FIELD_OFFSET(user_history_file), read_path, write_path, },
@@ -180,9 +170,6 @@ static struct pref_map pref_map[] = {
 {"browser.enable_style_sheets", FIELD_OFFSET(enable_style_sheet), read_bool, write_bool},
 
 #ifdef EDITOR
-/* The editor preferences haven't all been defined yet */
-{"editor.show_character_toolbar", FIELD_OFFSET(editor_character_toolbar), read_bool, write_bool},
-{"editor.show_paragraph_toolbar", FIELD_OFFSET(editor_paragraph_toolbar), read_bool, write_bool},
 {"editor.author", FIELD_OFFSET(editor_author_name), read_str, write_str},
 {"editor.html_editor", FIELD_OFFSET(editor_html_editor), read_path, write_path, },
 {"editor.image_editor", FIELD_OFFSET(editor_image_editor), read_path, write_path, },
@@ -1277,25 +1264,10 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 
 		/* OPTIONS MENU
 		 */
-		if (!XP_STRCASECMP("SHOW_TOOLBAR", name))
-			prefs->show_toolbar_p = BOOLP (value);
-		else if (!XP_STRCASECMP("SHOW_URL", name))
-			prefs->show_url_p = BOOLP (value);
-		else if (!XP_STRCASECMP("SHOW_DIRECTORY_BUTTONS", name))
-			prefs->show_directory_buttons_p = BOOLP (value);
-		else if (!XP_STRCASECMP("SHOW_MENUBAR", name))
-			prefs->show_menubar_p = BOOLP (value);
-		else if (!XP_STRCASECMP("SHOW_BOTTOM_STATUS_BAR", name))
-			prefs->show_bottom_status_bar_p = BOOLP (value);
-		else if (!XP_STRCASECMP("AUTOLOAD_IMAGES", name))
+		if (!XP_STRCASECMP("AUTOLOAD_IMAGES", name))
 			prefs->autoload_images_p = BOOLP (value);
 		else if (!XP_STRCASECMP("FTP_FILE_INFO", name))
 			prefs->fancy_ftp_p = BOOLP (value);
-#ifndef NO_SECURITY
-		else if (!XP_STRCASECMP("SHOW_SECURITY_BAR", name))
-			prefs->show_security_bar_p = BOOLP (value);
-#endif
-
 
 		/* APPLICATIONS
 		 */
@@ -1589,18 +1561,12 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 
       /* STYLES (GENERAL APPEARANCE)
        */
-		else if (!XP_STRCASECMP("TOOLBAR_ICONS", name))
-			prefs->toolbar_icons_p = BOOLP (value);
-		else if (!XP_STRCASECMP("TOOLBAR_TEXT", name))
-			prefs->toolbar_text_p = BOOLP (value);
 		else if (!XP_STRCASECMP("TOOLBAR_TIPS", name))
 			prefs->toolbar_tips_p = BOOLP (value);
 		else if (!XP_STRCASECMP("STARTUP_MODE", name)) 
 			prefs->startup_mode = atoi (value); 
 		else if (!XP_STRCASECMP("HOME_DOCUMENT", name))
 			StrAllocCopy (prefs->home_document, value);
-		else if (!XP_STRCASECMP("UNDERLINE_LINKS", name))
-			prefs->underline_links_p = BOOLP (value);
 		else if (!XP_STRCASECMP("HISTORY_EXPIRATION", name))
 			prefs->global_history_expiration = atoi (value);
 #ifdef MOZ_MAIL_NEWS
@@ -1688,18 +1654,6 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 
 	/* Include the current version number in global prefs when upgrading from 3.0 to 4.0 */
 	StrAllocCopy(prefs->version_number, PREFS_CURRENT_VERSION);
-
-	/* toolbar icons/text */
-
-	if (prefs->toolbar_icons_p && prefs->toolbar_text_p) {
-		prefs->toolbar_style = BROWSER_TOOLBAR_ICONS_AND_TEXT;
-	}
-	else if (prefs->toolbar_icons_p) { 
-		prefs->toolbar_style = BROWSER_TOOLBAR_ICONS_ONLY;
-	}		
-	else {
-		prefs->toolbar_style = BROWSER_TOOLBAR_TEXT_ONLY;
-	}
 
 #ifdef MOZ_MAIL_NEWS
 	/* movemail -> mail server type */
@@ -1824,20 +1778,6 @@ tweaks(XFE_GlobalPrefs* prefs)
 		(prefs->mail_server_type == MAIL_SERVER_POP3))
 		prefs->use_movemail_p = FALSE;
 #endif /* MOZ_MAIL_NEWS */
-
-	/* toolbar style */
-	if (prefs->toolbar_style == BROWSER_TOOLBAR_ICONS_ONLY) {
-		prefs->toolbar_icons_p = True;
-		prefs->toolbar_text_p = False;
-	}
-	else if (prefs->toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY) {
-		prefs->toolbar_icons_p = False;
-		prefs->toolbar_text_p = True;
-	}
-	else if (prefs->toolbar_style == BROWSER_TOOLBAR_ICONS_AND_TEXT) {
-		prefs->toolbar_icons_p = True;
-		prefs->toolbar_text_p = True;
-	}
 }
 
 
