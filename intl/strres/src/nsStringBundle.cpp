@@ -222,7 +222,7 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
                                      PRUnichar **aResult)
 {
   NS_ENSURE_ARG_POINTER(aName);
-  NS_ENSURE_ARG_POINTER(aParams);
+  NS_ASSERTION(aParams && aLength, "FormatStringFromName() without format parameters: use GetStringFromName() instead");
   NS_ENSURE_ARG_POINTER(aResult);
 
   nsresult rv;
