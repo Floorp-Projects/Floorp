@@ -358,7 +358,7 @@ JS_PUBLIC_API(JSBool)
 JS_XDRString(JSXDRState *xdr, JSString **strp)
 {
     uint32 i, len, nbytes;
-    jschar *chars, *raw;
+    jschar *chars = NULL, *raw;
 
     if (xdr->mode == JSXDR_ENCODE)
 	len = (*strp)->length;
@@ -526,6 +526,8 @@ JS_RegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *idp)
 	registry = JS_realloc(xdr->cx,
 			      xdr->registry,
 			      (nclasses + REGISTRY_CHUNK) * sizeof(JSClass *));
+    } else {
+        registry = xdr->registry;
     }
     if (!registry)
 	return JS_FALSE;

@@ -40,10 +40,8 @@ else
 INSTALL	= $(DEPTH)/../../dist/$(OBJDIR)/bin/nsinstall
 endif
 
-include $(DEPTH)/config/$(OS_CONFIG).mk
-
 ifdef BUILD_OPT
-OPTIMIZER  += -O
+OPTIMIZER  = -O
 DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(shell whoami)
 OBJDIR_TAG = _OPT
 else
@@ -55,6 +53,8 @@ endif
 DEFINES    += -DDEBUG -DDEBUG_$(shell whoami)
 OBJDIR_TAG = _DBG
 endif
+
+include $(DEPTH)/config/$(OS_CONFIG).mk
 
 # Name of the binary code directories
 OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG).OBJ

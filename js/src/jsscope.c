@@ -216,19 +216,25 @@ JSScopeOps js_hash_scope_ops = {
 
 /************************************************************************/
 
+static void
+move_sym_to_front(JSSymbol *sym, JSSymbol **nextp, JSSymbol **front)
+{
+    *nextp = (JSSymbol*)sym->entry.next;
+    sym->entry.next = &(*front)->entry;
+    *front = sym;
+}
+
 JS_STATIC_DLL_CALLBACK(JSSymbol *)
 js_list_scope_lookup(JSContext *cx, JSScope *scope, jsid id, JSHashNumber hash)
 {
     JSSymbol *sym, **sp;
-
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+
     for (sp = (JSSymbol **)&scope->data; (sym = *sp) != 0;
 	 sp = (JSSymbol **)&sym->entry.next) {
 	if (sym_id(sym) == id) {
 	    /* Move sym to the front for shorter searches. */
-	    *sp = (JSSymbol *)sym->entry.next;
-	    sym->entry.next = scope->data;
-	    scope->data = sym;
+            move_sym_to_front(sym,sp,(JSSymbol**)&scope->data);
 	    return sym;
 	}
     }

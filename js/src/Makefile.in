@@ -27,6 +27,8 @@ ifdef MOZ_OJI
 DIRS = liveconnect
 endif
 
+DIRS	+=	fdlibm
+
 LIBRARY_NAME	= js
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)
@@ -87,7 +89,6 @@ EXPORTS		= js.msg \
 		  jscntxt.h \
 		  jscompat.h \
 		  jsconfig.h \
-		  jscpucfg.h \
 		  jsdate.h \
 		  jsdbgapi.h \
 		  jsemit.h \
@@ -198,6 +199,36 @@ ifeq ($(OS_ARCH), Linux)
 LDFLAGS += -ldl
 endif
 
+FDLIBM_LIBRARY	= fdlibm/libfdm.a
+JSMATH_PRELINK	= jsmathtemp.o
+
+# special rule for jsmath.o since we want to incrementally link
+# against fdlibm to pull in only what is needed
+jsmath.o: $(FDLIBM_LIBRARY) $(JSMATH_PRELINK)
+	@$(MAKE_OBJDIR)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
+else
+	ld -r -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
+endif
+
+$(JSMATH_PRELINK): jsmath.c
+	@$(MAKE_OBJDIR)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+	$(CC) -Fo$@ -c $(CFLAGS) $<
+else
+	$(CC) -o $@ -c $(CFLAGS) $<
+endif
+
+# ripped from $(topsrcdir)/config/rules.mk
+$(FDLIBM_LIBRARY):
+			set -e;					\
+			set $(EXIT_ON_ERROR);			\
+			echo "cd $(@D); $(MAKE) $(@F)";		\
+			oldDir=`pwd`;				\
+			cd $(@D); $(MAKE) $(@F); cd $$oldDir;	\
+			set +e;
+
 # this requires clobbering and recompiling with XCFLAGS=-DJSFILE
 js:
 	$(MAKE) clobber
@@ -219,6 +250,20 @@ endif
 # hardwire dependencies on jsopcode.tbl
 jsopcode.h jsopcode.c: jsopcode.tbl
 
+# Generate jsautocfg.h header
+$(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
+	rm -f $@
+	$(OBJDIR)/jscpucfg > $@
+
+$(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
+	$(CC) -o $@ $(OBJDIR)/jscpucfg.o
+
+export:: $(OBJDIR)/jsautocfg.h
+	$(INSTALL) -m 444 $(OBJDIR)/jsautocfg.h $(DIST)/include
+
+# Add to TARGETS so clobber rule works
+TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg $(OBJDIR)/jscpucfg.o
+
 # this section was put in the merged by danda into the
 # JAVA_*_MERGE section and normally would have
 # been removed.  However it looks like it shouldn't have
@@ -231,25 +276,3 @@ $(OBJDIR)/js.o: js.c
 	@$(MAKE_OBJDIR)
 	$(CC) -Fo$@ -c $(CFLAGS) $(JSJAVA_CFLAGS) js.c
 endif
-
-
-refdiff:
-	@for f in `cat commfiles`; do                                         \
-	    t=/tmp/refdiff.$$$$;                                              \
-	    trap 'rm -f $$t' 0 1 2 15;                                        \
-	    sed -f prconv.sed ../ref/$$f > $$t;                               \
-	    cmp -s $$t $$f;                                                   \
-	    if test $$? -ne 0; then                                           \
-		echo "=== $$f";                                               \
-		diff $$f $$t;                                                 \
-	    fi;                                                               \
-	    rm -f $$t;                                                        \
-	done
-
-refconv:
-	@for f in `cat commfiles`; do                                         \
-	    echo "=== $$f";                                                   \
-	    sed -f prconv.sed ../ref/$$f > $$f;                               \
-	done
-
-.PHONY: refdiff refconv

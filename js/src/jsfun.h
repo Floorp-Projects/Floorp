@@ -37,6 +37,8 @@ struct JSFunction {
     uint8        spare;         /* reserved for future use */
     JSAtom       *atom;         /* name for diagnostics and decompiling */
     JSScript     *script;       /* interpreted bytecode descriptor or null */
+    JSClass      *clasp;        /* this function is a constructor for objects 
+                                 * of this class */
 };
 
 extern JSClass js_ArgumentsClass;
@@ -60,7 +62,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
 js_InitArgsCallClosureClasses(JSContext *cx, JSObject *obj,
-			      JSObject *arrayProto);
+			      JSObject *objProto);
 
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,

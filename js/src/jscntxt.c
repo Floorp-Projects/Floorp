@@ -81,6 +81,7 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 #if JS_HAS_EXCEPTIONS
     cx->throwing = JS_FALSE;
 #endif
+
     return cx;
 }
 
@@ -218,12 +219,15 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 	    if (argCount > 0) {
 		/*
                  * Gather the arguments into an array, and accumulate
-                 * their sizes.
+                 * their sizes. We allocate 1 more than necessary and 
+                 * null it out to act as the caboose when we free the
+                 * pointers later.
 		 */
 		reportp->messageArgs
-                        = JS_malloc(cx, sizeof(jschar *) * argCount);
+                        = JS_malloc(cx, sizeof(jschar *) * (argCount + 1));
 		if (!reportp->messageArgs)
 		    return JS_FALSE;
+                reportp->messageArgs[argCount] = NULL;
                 for (i = 0; i < argCount; i++) {
                     if (charArgs) {
                         char *charArg = va_arg(ap, char *);
@@ -235,6 +239,8 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                     argLengths[i] = js_strlen(reportp->messageArgs[i]);
                     totalArgsLength += argLengths[i];
                 }
+                /* NULL-terminate for easy copying. */
+                reportp->messageArgs[i] = NULL; 
 	    }
 	    /*
 	     * Parse the error format, substituting the argument X
@@ -345,16 +351,43 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
      * if the error is defined to have an associated exception.  If an
      * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
      * on the error report, and exception-aware hosts should ignore it.
-     */
-    js_ErrorToException(cx, &report, message);
-#endif
 
+     * We set the JSREPORT_EXCEPTION flag for the special case of
+     * user-thrown exeptions.
+     */
+    if (errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
+        report.flags |= JSREPORT_EXCEPTION;
+    
+    /* 
+     * Only call the error reporter if an exception wasn't raised. 
+     *
+     * If an exception was raised, then we call the debugErrorHook 
+     * (if present) to give it a chance to see the error before it
+     * propigates out of scope. This is needed for compatability with
+     * the old scheme.
+     */
+    if (!js_ErrorToException(cx, message, &report))
+        js_ReportErrorAgain(cx, message, &report);
+    else if (cx->runtime->debugErrorHook && cx->errorReporter) {
+        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
+        /* test local in case debugErrorHook changed on another thread */
+        if (hook)
+            hook(cx, message, &report, cx->runtime->debugErrorHookData);
+    }
+#else
     js_ReportErrorAgain(cx, message, &report);
+#endif
 
     if (message)
 	JS_free(cx, message);
-    if (report.messageArgs)
-	JS_free(cx, (void *)report.messageArgs);
+    if (report.messageArgs) {
+        int i = 0;
+        while (report.messageArgs[i]) 
+            JS_free(cx, (void *)report.messageArgs[i++]);
+        JS_free(cx, (void *)report.messageArgs);
+    }
+    if (report.ucmessage) 
+        JS_free(cx, (void *)report.ucmessage);
 }
 
 JS_FRIEND_API(void)
@@ -370,6 +403,18 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
     if (!cx->lastMessage)
 	return;
     onError = cx->errorReporter;
+    /*
+     * If debugErrorHook is present then we give it a chance to veto
+     * sending the error on to the regular ErrorReporter.
+     */
+    if (cx->runtime->debugErrorHook && onError) {
+        JSDebugErrorHook hook = cx->runtime->debugErrorHook;
+        /* test local in case debugErrorHook changed on another thread */
+        if (hook && !hook(cx, message, reportp,
+                          cx->runtime->debugErrorHookData)) {
+            onError = NULL;
+        }
+    }
     if (onError)
 	(*onError)(cx, cx->lastMessage, reportp);
 }

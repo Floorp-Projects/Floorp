@@ -538,18 +538,17 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 	propid = sprop->id;
 	symid = (jsid) sym_atom(sprop->symbols);
 	OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-	vp = NULL;
-	if (getter == js_GetArgument) {
-	    vp = fp->argv;
-	    nslots = fp->argc;
-	    getter = setter = NULL;
-	} else if (getter == js_GetLocalVariable) {
-	    vp = fp->vars;
-	    nslots = fp->nvars;
-	    getter = js_GetCallVariable;
-	    setter = js_SetCallVariable;
-	}
-	if (vp) {
+	if (getter == js_GetArgument || getter == js_GetLocalVariable) {
+	    if (getter == js_GetArgument) {
+	        vp = fp->argv;
+	        nslots = fp->argc;
+	        getter = setter = NULL;
+            } else {
+	        vp = fp->vars;
+	        nslots = fp->nvars;
+	        getter = js_GetCallVariable;
+	        setter = js_SetCallVariable;
+	    }
 	    slot = (uintN)JSVAL_TO_INT(propid);
 	    if (!js_DefineProperty(cx, obj, symid,
 				   (slot < nslots) ? vp[slot] : JSVAL_VOID,
@@ -1086,7 +1085,10 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		    getter = js_GetLocalVariable;
 		    setter = js_SetLocalVariable;
 		    JS_ASSERT(nvars++ <= fun->nvars);
-		}
+                } else {
+                    getter = NULL;
+                    setter = NULL;
+                }
 		atom = js_Atomize(xdr->cx, propname, strlen(propname), 0);
 		if (!atom ||
 		    !OBJ_DEFINE_PROPERTY(xdr->cx, fun->object, (jsid)atom,
@@ -1197,14 +1199,15 @@ fun_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 */
         if (JSVAL_IS_OBJECT(fval)) {
             obj = JSVAL_TO_OBJECT(fval);
-            if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, JSTYPE_FUNCTION, &fval))
+            if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, 
+                                                    JSTYPE_FUNCTION, &fval))
 	        return JS_FALSE;
         }
         if (!JSVAL_IS_FUNCTION(cx, fval)) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_INCOMPATIBLE_PROTO,
                                  "Function", "toString", 
-                                 JS_GetStringBytes(JS_ValueToString(cx, fval)));
+                                 JS_GetTypeName(cx, JS_TypeOfValue(cx, fval)));
             return JS_FALSE;
         }        
     }
@@ -1587,7 +1590,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return JS_FALSE;
     if (argv) {
 	/* Use the last arg (or this if argc == 0) as a local GC root. */
-	argv[argc-1] = STRING_TO_JSVAL(str);
+	argv[(intn)(argc-1)] = STRING_TO_JSVAL(str);
     }
 
     if ((fp = cx->fp) != NULL && (fp = fp->down) != NULL && fp->script) {
@@ -1659,10 +1662,10 @@ bad:
 
 JSBool
 js_InitArgsCallClosureClasses(JSContext *cx, JSObject *obj,
-			      JSObject *arrayProto)
+			      JSObject *objProto)
 {
 #if JS_HAS_ARGS_OBJECT
-    if (!JS_InitClass(cx, obj, arrayProto, &js_ArgumentsClass, Arguments, 0,
+    if (!JS_InitClass(cx, obj, objProto, &js_ArgumentsClass, Arguments, 0,
 		      args_props, NULL, NULL, NULL)) {
 	return JS_FALSE;
     }
@@ -1725,6 +1728,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
     fun->spare = 0;
     fun->atom = atom;
     fun->script = NULL;
+    fun->clasp = NULL;
     return fun;
 }
 
@@ -1782,15 +1786,27 @@ void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
 {
     JSStackFrame *fp;
-    jsval *sp;
     JSString *str;
+    const char *typeName;
+    JSString *fallback;
 
     fp = cx->fp;
-    if (fp)
-	sp = fp->sp, fp->sp = vp;
-    str = js_DecompileValueGenerator(cx, *vp, NULL);
-    if (fp)
-	fp->sp = sp;
+    /*
+     * We provide the typename as the fallback to handle the case
+     * when valueOf is not a function, which prevents ValueToString
+     * from being called as the default case inside 
+     * js_DecompileValueGenerator (and so recursing back to here).
+     */
+    typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, *vp));
+    fallback = JS_InternString(cx, typeName);
+    if (fp) {
+        jsval *sp = fp->sp;
+        fp->sp = vp;
+        str = js_DecompileValueGenerator(cx, *vp, fallback);
+        fp->sp = sp;
+    } else {
+        str = js_DecompileValueGenerator(cx, *vp, fallback);
+    }
     if (str) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 			     constructing ? JSMSG_NOT_CONSTRUCTOR

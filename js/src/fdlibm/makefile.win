@@ -1,0 +1,80 @@
+#// The contents of this file are subject to the Netscape Public License
+#// Version 1.0 (the "NPL"); you may not use this file except in
+#// compliance with the NPL.  You may obtain a copy of the NPL at
+#// http://www.mozilla.org/NPL/
+#//
+#// Software distributed under the NPL is distributed on an "AS IS" basis,
+#// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+#// for the specific language governing rights and limitations under the
+#// NPL.
+#//
+#// The Initial Developer of this code under the NPL is Netscape
+#// Communications Corporation.  Portions created by Netscape are
+#// Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+#// Reserved.
+
+#//------------------------------------------------------------------------
+#//
+#// Specify the depth of the current directory relative to the
+#// root of NS
+#//
+#//------------------------------------------------------------------------
+DEPTH=..\..\..
+include <$(DEPTH)\config\config.mak>
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
+#//
+#//------------------------------------------------------------------------
+
+LIBRARY_NAME			= fdlibm
+
+#//------------------------------------------------------------------------
+#// 
+#// Define the files necessary to build the target (ie. OBJS)
+#//
+#//------------------------------------------------------------------------
+OBJS =		\
+	.\$(OBJDIR)\e_atan2.obj		\
+	.\$(OBJDIR)\e_pow.obj		\
+	.\$(OBJDIR)\e_sqrt.obj		\
+	.\$(OBJDIR)\k_standard.obj	\
+	.\$(OBJDIR)\s_atan.obj		\
+	.\$(OBJDIR)\s_copysign.obj	\
+	.\$(OBJDIR)\s_fabs.obj		\
+	.\$(OBJDIR)\s_finite.obj	\
+	.\$(OBJDIR)\s_isnan.obj		\
+	.\$(OBJDIR)\s_matherr.obj	\
+	.\$(OBJDIR)\s_rint.obj		\
+	.\$(OBJDIR)\s_scalbn.obj	\
+	.\$(OBJDIR)\w_atan2.obj		\
+	.\$(OBJDIR)\w_pow.obj		\
+	.\$(OBJDIR)\w_sqrt.obj		\
+	.\$(OBJDIR)\s_lib_version.obj	\
+	$(NULL)
+
+#//------------------------------------------------------------------------
+#//
+#// Include the common makefile rules
+#//
+#//------------------------------------------------------------------------
+include <$(DEPTH)\config\rules.mak>
+
+export:: $(LIBRARY)
+
+#//------------------------------------------------------------------------
+#//
+#// Standalone js.exe interpreter
+#//
+#//------------------------------------------------------------------------
+
+#//PROGRAM = $(OBJDIR)\js.exe
+#//js:	$(PROGRAM)
+#//
+#//$(PROGRAM): $(OBJDIR)\js.obj $(LIBRARY)
+#//	    @$(MAKE_OBJDIR)
+#//	    $(link) /debug /out:$(PROGRAM) $(OBJDIR)\js.obj $(DIST)\lib\pr3240.lib $(LIBRARY) $(LDFLAGS)
+#//
+#//$(OBJDIR)\js.obj: js.c
+#//		$(CC) /Fo$(OBJDIR)\js.obj js.c $(CFLAGS) -DJSFILE

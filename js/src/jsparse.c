@@ -253,6 +253,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     } while (ok);
 
 out:
+    ts->flags &= ~TSF_BADCOMPILE;
     cx->gcDisabled--;
     cx->fp = fp;
     if (!ok)
@@ -720,18 +721,9 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    pn2->pn_pos.begin = pn->pn_pos.begin;
 	    pn2->pn_pos.end = ts->token.pos.end;
 
-	    /* Optimize o['p'] to o.p by rewriting pn2. */
-	    if (pn3->pn_type == TOK_STRING) {
-		pn2->pn_type = TOK_DOT;
-		pn2->pn_op = JSOP_GETPROP;
-		pn2->pn_arity = PN_NAME;
-		pn2->pn_expr = pn;
-		pn2->pn_atom = pn3->pn_atom;
-	    } else {
-		pn2->pn_op = JSOP_GETELEM;
-		pn2->pn_left = pn;
-		pn2->pn_right = pn3;
-	    }
+            pn2->pn_op = JSOP_GETELEM;
+            pn2->pn_left = pn;
+            pn2->pn_right = pn3;
 	}
 
 	pn = pn2;
@@ -1137,9 +1129,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	catchtail = pn;
 	while(js_PeekToken(cx, ts) == TOK_CATCH) {
 	    /*
-	     * legal catch forms are:
+	     * legal catch form is:
 	     * catch (v)
+             * 
+             * The form
 	     * catch (v : <boolean_expression>)
+             * has been pulled pending resolution in ECMA.
 	     */
 
 	    /* catch node */
@@ -1159,14 +1154,15 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
 	    MUST_MATCH_TOKEN(TOK_NAME, JSMSG_CATCH_IDENTIFIER);
 	    pn3->pn_atom = ts->token.t_atom;
+            pn3->pn_expr = NULL;
+#if JS_HAS_CATCH_GUARD
 	    if (js_PeekToken(cx, ts) == TOK_COLON) {
 		(void)js_GetToken(cx, ts); /* eat `:' */
 		pn3->pn_expr = Expr(cx, ts, tc);
 		if (!pn3->pn_expr)
 		    return NULL;
-	    } else {
-		pn3->pn_expr = NULL;
-	    }
+	    } 
+#endif
 	    pn2->pn_kid1 = pn3;
 
 	    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_CATCH);
@@ -2204,18 +2200,9 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 	    pn2->pn_pos.begin = pn->pn_pos.begin;
 	    pn2->pn_pos.end = ts->token.pos.end;
 
-	    /* Optimize o['p'] to o.p by rewriting pn2. */
-	    if (pn3->pn_type == TOK_STRING) {
-		pn2->pn_type = TOK_DOT;
-		pn2->pn_op = JSOP_GETPROP;
-		pn2->pn_arity = PN_NAME;
-		pn2->pn_expr = pn;
-		pn2->pn_atom = pn3->pn_atom;
-	    } else {
-		pn2->pn_op = JSOP_GETELEM;
-		pn2->pn_left = pn;
-		pn2->pn_right = pn3;
-	    }
+            pn2->pn_op = JSOP_GETELEM;
+            pn2->pn_left = pn;
+            pn2->pn_right = pn3;
 	} else if (allowCallSyntax && tt == TOK_LP) {
 	    pn2 = NewParseNode(cx, &ts->token, PN_LIST);
 	    if (!pn2)
@@ -2512,7 +2499,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn)
 {
-    JSParseNode *pn1, *pn2, *pn3;
+    JSParseNode *pn1=NULL, *pn2=NULL, *pn3=NULL;
 
     switch (pn->pn_arity) {
       case PN_FUNC:

@@ -169,13 +169,16 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
     JSBool b;
     jsdouble d;
 
-#if defined XP_PC && defined _MSC_VER &&_MSC_VER <= 800
+#if defined XP_PC && defined _MSC_VER && _MSC_VER <= 800
     /* MSVC1.5 coredumps */
     if (!bp)
 	return JS_TRUE;
+    /* This should be an if-else chain, but MSVC1.5 crashes if it is. */
+#define ELSE
+#else
+#define ELSE else
 #endif
 
-    /* XXX this should be an if-else chain, but MSVC1.5 crashes if it is. */
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
 	/* Must return early to avoid falling thru to JSVAL_IS_OBJECT case. */
 	*bp = JS_FALSE;
@@ -191,20 +194,29 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 	} else {
 	    b = JS_TRUE;
 	}
-    }
+    } ELSE
     if (JSVAL_IS_STRING(v)) {
 	b = JSVAL_TO_STRING(v)->length ? JS_TRUE : JS_FALSE;
-    }
+    } ELSE
     if (JSVAL_IS_INT(v)) {
 	b = JSVAL_TO_INT(v) ? JS_TRUE : JS_FALSE;
-    }
+    } ELSE
     if (JSVAL_IS_DOUBLE(v)) {
 	d = *JSVAL_TO_DOUBLE(v);
 	b = (!JSDOUBLE_IS_NaN(d) && d != 0) ? JS_TRUE : JS_FALSE;
-    }
+    } ELSE
+#if defined XP_PC && defined _MSC_VER && _MSC_VER <= 800
     if (JSVAL_IS_BOOLEAN(v)) {
 	b = JSVAL_TO_BOOLEAN(v);
     }
+#else
+    {
+        JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+	b = JSVAL_TO_BOOLEAN(v);
+    }
+#endif
+
+#undef ELSE
     *bp = b;
     return JS_TRUE;
 }

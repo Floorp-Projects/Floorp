@@ -96,6 +96,7 @@ typedef struct JSRuntime         JSTaskState;	/* XXX deprecated name */
 typedef struct JSScript          JSScript;
 typedef struct JSString          JSString;
 typedef struct JSXDRState	 JSXDRState;
+typedef struct JSExceptionState  JSExceptionState;
 
 #ifndef CRT_CALL
 #ifdef XP_OS2

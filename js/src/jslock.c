@@ -102,31 +102,31 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
     unsigned int res;
 #ifndef ULTRA_SPARC
     JS_ASSERT(nv != -1);
-    asm volatile ("
-stbar
-swap [%1],%4
-1:  cmp %4,-1
-be,a 1b
-swap [%1],%4
-cmp %2,%4
-be,a 2f
-swap [%1],%3
-swap [%1],%4
-ba 3f
-mov 0,%0
-2:  mov 1,%0
+    asm volatile ("\
+stbar\n\
+swap [%1],%4\n\
+1:  cmp %4,-1\n\
+be,a 1b\n\
+swap [%1],%4\n\
+cmp %2,%4\n\
+be,a 2f\n\
+swap [%1],%3\n\
+swap [%1],%4\n\
+ba 3f\n\
+mov 0,%0\n\
+2:  mov 1,%0\n\
 3:"
 		  : "=r" (res)
 		  : "r" (w), "r" (ov), "r" (nv), "r" (-1));
 #else /* ULTRA_SPARC */
     JS_ASSERT(ov != nv);
-    asm volatile ("
-stbar
-cas [%1],%2,%3
-cmp %2,%3
-be,a 1f
-mov 1,%0
-mov 0,%0
+    asm volatile ("\
+stbar\n\
+cas [%1],%2,%3\n\
+cmp %2,%3\n\
+be,a 1f\n\
+mov 1,%0\n\
+mov 0,%0\n\
 1:"
 		  : "=r" (res)
 		  : "r" (w), "r" (ov), "r" (nv));

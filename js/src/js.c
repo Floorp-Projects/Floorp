@@ -72,8 +72,17 @@
 #include <io.h>     /* for isatty() */
 #endif
 
+FILE *gErrFile = NULL;
+FILE *gOutFile = NULL;
+
 #ifdef XP_MAC
+#ifdef MAC_TEST_HACK
+/* this is the data file that all Print strings will be echoed into */
+FILE *gTestResultFile = NULL;
+#define isatty(f) 0
+#else
 #define isatty(f) 1
+#endif
 
 #include <SIOUX.h>
 #include <MacTypes.h>
@@ -159,7 +168,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 	js_InitCodeGenerator(cx, &cg, ts->filename, ts->lineno, ts->principals);
 	do {
 	    if (ts->flags & TSF_INTERACTIVE)
-		printf("js> ");
+		fprintf(gOutFile, "js> ");
 	    ok = js_CompileTokenStream(cx, obj, ts, &cg);
 	    if (ts->flags & TSF_ERROR) {
 		ts->flags &= ~TSF_ERROR;
@@ -175,7 +184,8 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 	    if (script) {
                 JSErrorReporter older;
                 
-		if (JS_ExecuteScript(cx, obj, script, &result) &&
+		ok = JS_ExecuteScript(cx, obj, script, &result);
+		if (ok &&
 		    (ts->flags & TSF_INTERACTIVE) &&
 		    result != JSVAL_VOID) {
                     /*
@@ -187,31 +197,26 @@ Process(JSContext *cx, JSObject *obj, char *filename)
                     JS_SetErrorReporter(cx, older);
 
 		    if (str)
-			printf("%s\n", JS_GetStringBytes(str));
+			fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
+                    else
+                        ok = JS_FALSE;
 		}
 
-		if (JS_IsExceptionPending(cx) &&
-		    JS_GetPendingException(cx, &result))
-		{
-		    /*
-		     * Calling JS_ValueToString could cause another error (and
-		     * throw an associated exception) - so we disable the error
-		     * reporter so nothing gets reported, and we always clear
-		     * the pending exception.
-		     */
-                    JS_ClearPendingException(cx);
-		    older = JS_SetErrorReporter(cx, NULL);
-		    str = JS_ValueToString(cx, result);
-		    JS_SetErrorReporter(cx, older);
+#if JS_HAS_ERROR_EXCEPTIONS
+#if 0
+                /*
+                 * Require that any time we return failure, an exception has
+                 * been set.
+                 */
+                JS_ASSERT(ok || JS_IsExceptionPending(cx));
 
-		    /* XXX non-i18nized strings... */
-		    if (str) {
-			fprintf(stderr, "Uncaught JavaScript exception:\n%s\n",
-			       JS_GetStringBytes(str));
-		    } else {
-			fprintf(stderr, "Uncaught JavaScript exception\n");
-		    }
-		}
+                /*
+                 * Also that any time an exception has been set, we've
+                 * returned failure.
+                 */
+                JS_ASSERT(!JS_IsExceptionPending(cx) || !ok);
+#endif
+#endif /* JS_HAS_ERROR_EXCEPTIONS */
 		JS_DestroyScript(cx, script);
 	    }
 	}
@@ -230,8 +235,8 @@ out:
 static int
 usage(void)
 {
-    fprintf(stderr, "%s\n", JS_GetImplementationVersion());
-    fprintf(stderr, "usage: js [-w] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
+    fprintf(gErrFile, "usage: js [-w] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -244,6 +249,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     jsval *vector;
     jsval *p;
     JSObject *argsObj;
+    JSBool isInteractive = JS_TRUE;
 
     for (i=0; i < argc; i++) {
 	if (argv[i][0] == '-') {
@@ -268,6 +274,12 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 		if (filename[0] == '-' && filename[1] == '\0')
 		    filename = NULL;
 		Process(cx, obj, filename);
+                filename = NULL;
+                /* XXX: js -f foo.js should interpret foo.js and then
+                 * drop into interactive mode, but that breaks test
+                 * harness. Just execute foo.js for now. 
+                 */
+                isInteractive = JS_FALSE;
 		i++;
 		break;
 	    default:
@@ -275,6 +287,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 	    }
 	} else {
 	    filename = argv[i++];
+            isInteractive = JS_FALSE;
 	    break;
 	}
     }
@@ -302,7 +315,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 			   OBJECT_TO_JSVAL(argsObj), NULL, NULL, 0))
 	return 1;
 
-    Process(cx, obj, filename);
+    if (filename || isInteractive)
+        Process(cx, obj, filename);
     return 0;
 }
 
@@ -316,6 +330,9 @@ Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	*rval = INT_TO_JSVAL(JS_GetVersion(cx));
     return JS_TRUE;
 }
+
+static void
+my_LoadErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
@@ -332,6 +349,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSBool ok;
     jsval result;
+    JSErrorReporter older;
 
     for (i = 0; i < argc; i++) {
 	str = JS_ValueToString(cx, argv[i]);
@@ -340,6 +358,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	argv[i] = STRING_TO_JSVAL(str);
 	filename = JS_GetStringBytes(str);
 	errno = 0;
+        older = JS_SetErrorReporter(cx, my_LoadErrorReporter);
 	script = JS_CompileFile(cx, obj, filename);
 	if (!script)
             ok = JS_FALSE;
@@ -347,6 +366,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             ok = JS_ExecuteScript(cx, obj, script, &result);
 	    JS_DestroyScript(cx, script);
         }
+        JS_SetErrorReporter(cx, older);
 	if (!ok)
 	    return JS_FALSE;
     }
@@ -364,11 +384,11 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	str = JS_ValueToString(cx, argv[i]);
 	if (!str)
 	    return JS_FALSE;
-	printf("%s%s", i ? " " : "", JS_GetStringBytes(str));
-	n++;
+	fprintf(gOutFile, "%s%s", i ? " " : "", JS_GetStringBytes(str));
     }
+    n++;
     if (n)
-	putchar('\n');
+        fputc('\n', gOutFile);
     return JS_TRUE;
 }
 
@@ -402,7 +422,7 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
 	FILE *file = fopen(name, "w");
 	if (!file) {
-	    fprintf(stderr, "gc: can't open %s: %s\n", strerror(errno));
+	    fprintf(gErrFile, "gc: can't open %s: %s\n", strerror(errno));
 	    return JS_FALSE;
 	}
 	js_DumpGCHeap = file;
@@ -416,7 +436,7 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	fclose(js_DumpGCHeap);
     js_DumpGCHeap = NULL;
 #endif
-    printf("before %lu, after %lu, break %08lx\n",
+    fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
 	   (unsigned long)preBytes, (unsigned long)rt->gcBytes,
 #ifdef XP_UNIX
 	   (unsigned long)sbrk(0)
@@ -561,27 +581,27 @@ SrcNotes(JSContext *cx, JSFunction *fun )
 
     notes = fun->script->notes;
     if (notes) {
-	printf("\nSource notes:\n");
+	fprintf(gOutFile, "\nSource notes:\n");
 	offset = 0;
 	for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
 	    delta = SN_DELTA(sn);
 	    offset += delta;
-	    printf("%3u: %5u [%4u] %-8s",
+	    fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
 		   sn - notes, offset, delta, js_SrcNoteName[SN_TYPE(sn)]);
 	    type = SN_TYPE(sn);
 	    switch (type) {
 	      case SRC_SETLINE:
-		printf(" lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+		fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
 		break;
 	      case SRC_FOR:
-		printf(" cond %u update %u tail %u",
+		fprintf(gOutFile, " cond %u update %u tail %u",
 		       (uintN) js_GetSrcNoteOffset(sn, 0),
 		       (uintN) js_GetSrcNoteOffset(sn, 1),
 		       (uintN) js_GetSrcNoteOffset(sn, 2));
 		break;
 	      case SRC_PCBASE:
 	      case SRC_PCDELTA:
-		printf(" offset %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+		fprintf(gOutFile, " offset %u", (uintN) js_GetSrcNoteOffset(sn, 0));
 		break;
 	      case SRC_LABEL:
 	      case SRC_LABELBRACE:
@@ -590,22 +610,22 @@ SrcNotes(JSContext *cx, JSFunction *fun )
 	      case SRC_FUNCDEF:
 		atomIndex = (jsatomid) js_GetSrcNoteOffset(sn, 0);
 		atom = js_GetAtom(cx, &fun->script->atomMap, atomIndex);
-		printf(" atom %u (%s)", (uintN)atomIndex, ATOM_BYTES(atom));
+		fprintf(gOutFile, " atom %u (%s)", (uintN)atomIndex, ATOM_BYTES(atom));
 		break;
 	      case SRC_SWITCH:
-		printf(" length %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+		fprintf(gOutFile, " length %u", (uintN) js_GetSrcNoteOffset(sn, 0));
 		caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
 		if (caseOff)
-		    printf(" first case offset %u", caseOff);
+		    fprintf(gOutFile, " first case offset %u", caseOff);
 		break;
 	      case SRC_CATCH:
 		delta = (uintN) js_GetSrcNoteOffset(sn, 0);
 		if (delta)
-		    printf(" guard size %u", delta);
+		    fprintf(gOutFile, " guard size %u", delta);
 		break;
 	      default:;
 	    }
-	    putchar('\n');
+	    fputc('\n', gOutFile);
 	}
     }
 }
@@ -633,9 +653,9 @@ TryNotes(JSContext *cx, JSFunction *fun)
 
     if (!tn)
 	return JS_TRUE;
-    printf("\nException table:\nstart\tend\tcatch\n");
+    fprintf(gOutFile, "\nException table:\nstart\tend\tcatch\n");
     while (tn->start && tn->catchStart) {
-	printf("  %d\t%d\t%d\n",
+	fprintf(gOutFile, "  %d\t%d\t%d\n",
 	       tn->start, tn->length, tn->catchStart);
 	tn++;
     }
@@ -714,11 +734,11 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 	    if (line2 < line1) {
 		if (bupline != line2) {
 		    bupline = line2;
-		    printf("%s %3u: BACKUP\n", sep, line2);
+		    fprintf(gOutFile, "%s %3u: BACKUP\n", sep, line2);
 		}
 	    } else {
 		if (bupline && line1 == line2)
-		    printf("%s %3u: RESTORE\n", sep, line2);
+		    fprintf(gOutFile, "%s %3u: RESTORE\n", sep, line2);
 		bupline = 0;
 		while (line1 < line2) {
 		    if (!fgets(linebuf, LINE_BUF_LEN, file)) {
@@ -728,7 +748,7 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 			goto bail;
 		    }
 		    line1++;
-		    printf("%s %3u: %s", sep, line1, linebuf);
+		    fprintf(gOutFile, "%s %3u: %s", sep, line1, linebuf);
 		}
 	    }
 
@@ -770,7 +790,7 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	str = JS_ValueToString(cx, argv[0]);
 	if (!str)
 	    return JS_FALSE;
-	fprintf(stderr, "tracing: illegal argument %s\n",
+	fprintf(gErrFile, "tracing: illegal argument %s\n",
 		JS_GetStringBytes(str));
 	return JS_TRUE;
     }
@@ -833,8 +853,8 @@ DumpScope(JSContext *cx, JSObject *obj, JSHashEnumerator dump, FILE *fp)
 }
 
 /* These are callable from gdb. */
-void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, stderr); }
-void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, stderr); }
+void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
+void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
 
 static JSBool
 DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -857,7 +877,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    JS_DumpArenaStats(stdout);
 #endif
 	} else if (strcmp(bytes, "atom") == 0) {
-	    printf("\natom table contents:\n");
+	    fprintf(gOutFile, "\natom table contents:\n");
 	    JS_HashTableDump(cx->runtime->atomState.table, DumpAtom, stdout);
 	} else if (strcmp(bytes, "global") == 0) {
 	    DumpScope(cx, cx->globalObject, DumpSymbol, stdout);
@@ -873,7 +893,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		    return JS_FALSE;
 	    }
 	    if (!prop || !JSVAL_IS_OBJECT(value)) {
-		fprintf(stderr, "js: invalid stats argument %s\n",
+		fprintf(gErrFile, "js: invalid stats argument %s\n",
 			bytes);
 		continue;
 	    }
@@ -944,8 +964,8 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 			     &v)) {
 	return JS_FALSE;
     }
-    printf("b %u, c %x (%c), i %ld, u %lu, j %ld\n", b, c, (char)c, i, u, j);
-    printf("d %g, I %g, s %s, S %s, obj %s, fun %s, v %s\n",
+    fprintf(gOutFile, "b %u, c %x (%c), i %ld, u %lu, j %ld\n", b, c, (char)c, i, u, j);
+    fprintf(gOutFile, "d %g, I %g, s %s, S %s, obj %s, fun %s, v %s\n",
 	   d, I, s, JS_GetStringBytes(str),
 	   JS_GetStringBytes(JS_ValueToString(cx, OBJECT_TO_JSVAL(obj))),
 	   JS_GetStringBytes(JS_DecompileFunction(cx, fun, 4)),
@@ -957,7 +977,7 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 BuildDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    printf("built on %s at %s\n", __DATE__, __TIME__);
+    fprintf(gOutFile, "built on %s at %s\n", __DATE__, __TIME__);
     return JS_TRUE;
 }
 
@@ -1022,14 +1042,14 @@ static char *shell_help_messages[] = {
 static void
 ShowHelpHeader(void)
 {
-    printf("%-9s %-22s %s\n", "Command", "Usage", "Description");
-    printf("%-9s %-22s %s\n", "=======", "=====", "===========");
+    fprintf(gOutFile, "%-9s %-22s %s\n", "Command", "Usage", "Description");
+    fprintf(gOutFile, "%-9s %-22s %s\n", "=======", "=====", "===========");
 }
 
 static void
 ShowHelpForCommand(uintN n)
 {
-    printf("%-9.9s %s\n", shell_functions[n].name, shell_help_messages[n]);
+    fprintf(gOutFile, "%-9.9s %s\n", shell_functions[n].name, shell_help_messages[n]);
 }
 
 static JSBool
@@ -1042,7 +1062,7 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     const char *bytes;
 
-    printf("%s\n", JS_GetImplementationVersion());
+    fprintf(gOutFile, "%s\n", JS_GetImplementationVersion());
     if (argc == 0) {
 	ShowHelpHeader();
 	for (i = 0; shell_functions[i].name; i++)
@@ -1078,7 +1098,7 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		str = JS_ValueToString(cx, argv[i]);
 		if (!str)
 		    return JS_FALSE;
-		fprintf(stderr, "Sorry, no help for %s\n",
+		fprintf(gErrFile, "Sorry, no help for %s\n",
 			JS_GetStringBytes(str));
 	    }
 	}
@@ -1146,9 +1166,9 @@ static JSBool
 its_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     if (its_noisy) {
-	printf("adding its property %s,",
+	fprintf(gOutFile, "adding its property %s,",
 	       JS_GetStringBytes(JS_ValueToString(cx, id)));
-	printf(" initial value %s\n",
+	fprintf(gOutFile, " initial value %s\n",
 	       JS_GetStringBytes(JS_ValueToString(cx, *vp)));
     }
     return JS_TRUE;
@@ -1158,9 +1178,9 @@ static JSBool
 its_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     if (its_noisy) {
-	printf("deleting its property %s,",
+	fprintf(gOutFile, "deleting its property %s,",
 	       JS_GetStringBytes(JS_ValueToString(cx, id)));
-	printf(" current value %s\n",
+	fprintf(gOutFile, " current value %s\n",
 	       JS_GetStringBytes(JS_ValueToString(cx, *vp)));
     }
     return JS_TRUE;
@@ -1170,9 +1190,9 @@ static JSBool
 its_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     if (its_noisy) {
-	printf("getting its property %s,",
+	fprintf(gOutFile, "getting its property %s,",
 	       JS_GetStringBytes(JS_ValueToString(cx, id)));
-	printf(" current value %s\n",
+	fprintf(gOutFile, " current value %s\n",
 	       JS_GetStringBytes(JS_ValueToString(cx, *vp)));
     }
     return JS_TRUE;
@@ -1182,9 +1202,9 @@ static JSBool
 its_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     if (its_noisy) {
-	printf("setting its property %s,",
+	fprintf(gOutFile, "setting its property %s,",
 	       JS_GetStringBytes(JS_ValueToString(cx, id)));
-	printf(" new value %s\n",
+	fprintf(gOutFile, " new value %s\n",
 	       JS_GetStringBytes(JS_ValueToString(cx, *vp)));
     }
     if (JSVAL_IS_STRING(id) &&
@@ -1198,7 +1218,7 @@ static JSBool
 its_enumerate(JSContext *cx, JSObject *obj)
 {
     if (its_noisy)
-	printf("enumerate its properties\n");
+	fprintf(gOutFile, "enumerate its properties\n");
     return JS_TRUE;
 }
 
@@ -1206,7 +1226,7 @@ static JSBool
 its_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
     if (its_noisy) {
-	printf("resolving its property %s\n",
+	fprintf(gOutFile, "resolving its property %s\n",
 	       JS_GetStringBytes(JS_ValueToString(cx, id)));
     }
     return JS_TRUE;
@@ -1216,7 +1236,7 @@ static JSBool
 its_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     if (its_noisy)
-	printf("converting it to %s type\n", JS_GetTypeName(cx, type));
+	fprintf(gOutFile, "converting it to %s type\n", JS_GetTypeName(cx, type));
     return JS_TRUE;
 }
 
@@ -1224,7 +1244,7 @@ static void
 its_finalize(JSContext *cx, JSObject *obj)
 {
     if (its_noisy)
-	printf("finalizing it\n");
+	fprintf(gOutFile, "finalizing it\n");
 }
 
 static JSClass its_class = {
@@ -1255,25 +1275,35 @@ my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 }
 
 static void
+my_LoadErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+{
+    if (!report) {
+        fprintf(gErrFile, "%s\n", message);
+        return;
+    }
+
+    /* Ignore any exceptions */
+    if (JSREPORT_IS_EXCEPTION(report->flags))
+        return;
+
+    /* Otherwise, fall back to the ordinary error reporter. */
+    my_ErrorReporter(cx, message, report);
+}
+
+static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
     int i, j, k, n;
     char *prefix = NULL, *tmp;
 
     if (!report) {
-	fprintf(stderr, "%s\n", message);
+	fprintf(gErrFile, "%s\n", message);
 	return;
     }
 
-    /*
-     * Conditionally ignore reported warnings, and ignore error reports for
-     * which a JavaScript exception has been thrown, except when we're in
-     * a toplevel compile.
-     */
-    if ((JSREPORT_IS_WARNING(report->flags) && !reportWarnings) ||
-	(JSREPORT_IS_EXCEPTION(report->flags))) {
+    /* Conditionally ignore reported warnings. */
+    if ((JSREPORT_IS_WARNING(report->flags) && !reportWarnings))
 	return;
-    }
 
     if (report->filename)
 	prefix = JS_smprintf("%s:", report->filename);
@@ -1291,31 +1321,33 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     /* embedded newlines -- argh! */
     while ((tmp = strchr(message, '\n')) != 0) {
 	tmp++;
-	if (prefix) fputs(prefix, stderr);
-	fwrite(message, 1, tmp - message, stderr);
+	if (prefix) fputs(prefix, gErrFile);
+	fwrite(message, 1, tmp - message, gErrFile);
 	message = tmp;
     }
     /* If there were no filename or lineno, the prefix might be empty */
-    if (prefix) fputs(prefix, stderr);
-    fputs(message, stderr);
+    if (prefix)
+        fputs(prefix, gErrFile);
+    fputs(message, gErrFile);
 
     if (!report->linebuf) {
-	putc('\n', stderr);
+	fputc('\n', gErrFile);
 	goto out;
     }
 
-    fprintf(stderr, ":\n%s%s\n%s", prefix, report->linebuf, prefix);
+    fprintf(gErrFile, ":\n%s%s\n%s", prefix, report->linebuf, prefix);
     n = report->tokenptr - report->linebuf;
     for (i = j = 0; i < n; i++) {
 	if (report->linebuf[i] == '\t') {
-	    for (k = (j + 8) & ~7; j < k; j++)
-		putc('.', stderr);
+            for (k = (j + 8) & ~7; j < k; j++) {
+		fputc('.', gErrFile);
+            }
 	    continue;
 	}
-	putc('.', stderr);
+	fputc('.', gErrFile);
 	j++;
     }
-    fputs("^\n", stderr);
+    fputs("^\n", gErrFile);
  out:
     JS_free(cx, prefix);
 }
@@ -1448,8 +1480,42 @@ main(int argc, char **argv)
     setbuf(stderr,0);
 #endif
 
+    gErrFile = stderr;
+    gOutFile = stdout;
+
 #ifdef XP_MAC
 	initConsole("\pJavaScript Shell", "Welcome to js shell.", &argc, &argv);
+#endif
+
+#ifdef MAC_TEST_HACK
+/*
+        Open a file "testArgs.txt" and read each line into argc/argv.
+        Re-direct all output to "results.txt"
+*/
+        {
+                char argText[256];
+                FILE *f = fopen("testargs.txt", "r");
+                if (f != NULL) {
+                        int maxArgs = 32; /* arbitrary max !!! */
+                        argc = 1;
+                        argv = malloc(sizeof(char *) * maxArgs); 
+                        argv[0] = NULL;
+                        while (fgets(argText, 255, f) != NULL) {
+                                 /* argText includes '\n' */
+                                argv[argc] = malloc(strlen(argText));
+                                strncpy(argv[argc], argText,
+                                                    strlen(argText) - 1);
+                                argv[argc][strlen(argText) - 1] = '\0';
+                                argc++;
+                                if (argc >= maxArgs) break;
+                        }
+                        fclose(f);
+                }       
+                gTestResultFile = fopen("results.txt", "w");
+        }
+
+        gErrFile = gTestResultFile;
+        gOutFile = gTestResultFile;
 #endif
 
     version = JSVERSION_DEFAULT;
@@ -1531,6 +1597,10 @@ main(int argc, char **argv)
     if (_jsdc)
 	JSD_DebuggerOff(_jsdc);
 #endif  /* JSDEBUGGER */
+
+#ifdef MAC_TEST_HACK
+    fclose(gTestResultFile);
+#endif
 
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);

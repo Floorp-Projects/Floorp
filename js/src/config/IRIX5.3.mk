@@ -19,4 +19,4 @@
 # Config stuff for IRIX5.3
 #
 
-include config/IRIX.mk
+include $(DEPTH)/config/IRIX.mk

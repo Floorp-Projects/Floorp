@@ -26,6 +26,8 @@ include <$(DEPTH)\config\config.mak>
 DIRS = liveconnect
 !endif
 
+DIRS = $(DIRS) fdlibm
+
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
@@ -54,7 +56,9 @@ DEFFILE		= $(DLLNAME).def
 !endif
 !endif
 
-LLIBS=$(LIBNSPR)
+FDLIBM_LIBRARY	=	fdlibm\$(OBJDIR)\fdlibm.lib
+
+LLIBS=$(LIBNSPR) $(FDLIBM_LIBRARY)
 LCFLAGS= $(LCFLAGS) -DEXPORT_JS_API
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
@@ -155,6 +159,21 @@ INSTALL_FILE_LIST=	\
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
+
+.\$(OBJDIR)\jsmath.obj: $(FDLIBM_LIBRARY)
+
+#// Ripped from mozilla/config/rule.mak $(DIRS):: rule
+$(FDLIBM_LIBRARY):
+!if "$(WINOS)" == "WIN95"
+!if defined(VERBOSE)
+    @echo +++ make: cannot recursively make on win95 using command.com, use w95make.
+!endif
+!else
+    @echo +++ make: %MAKE_ARGS% in $(MAKEDIR)\$@
+	@cd fdlibm
+	@$(NMAKE) -f makefile.win %%MAKE_ARGS%%
+    @cd $(MAKEDIR) 
+!endif
 
 export:: $(DLL)	INSTALL_FILES
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

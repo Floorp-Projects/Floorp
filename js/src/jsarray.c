@@ -78,7 +78,7 @@ IdIsIndex(jsid id, jsuint *indexp)
     if (JS7_ISDEC(*cp) && str->length < sizeof(MAXSTR)) {
 	jsuint index = JS7_UNDEC(*cp++);
 	jsuint oldIndex = 0;
-	jsint c;
+	jsint c = 0;
 	if (index != 0) {
 	    while (JS7_ISDEC(*cp)) {
 		oldIndex = index;
@@ -1015,20 +1015,20 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    if (!obj2)
 		return JS_FALSE;
 	    *rval = OBJECT_TO_JSVAL(obj2);
-	}
 
-	/* If there are elements to remove, put them into the return value. */
-	if (count > 0) {
-	    for (last = begin; last < end; last++) {
-		if (!IndexToId(cx, last, &id))
-		    return JS_FALSE;
-		if (!IndexToId(cx, last - begin, &id2))
-		    return JS_FALSE;
-		if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
-		    return JS_FALSE;
-		if (!OBJ_SET_PROPERTY(cx, obj2, id2, &v))
-		    return JS_FALSE;
-	    }
+            /* If there are elements to remove, put them into the return value. */
+            if (count > 0) {
+                for (last = begin; last < end; last++) {
+                    if (!IndexToId(cx, last, &id))
+                        return JS_FALSE;
+                    if (!IndexToId(cx, last - begin, &id2))
+                        return JS_FALSE;
+                    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                        return JS_FALSE;
+                    if (!OBJ_SET_PROPERTY(cx, obj2, id2, &v))
+                        return JS_FALSE;
+                }
+            }
 	}
     }
 

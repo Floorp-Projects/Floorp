@@ -848,6 +848,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	if (js_EmitN(cx, cg, switchop, switchsize) < 0)
 	    return JS_FALSE;
 
+        off = -1;
 	if (switchop == JSOP_CONDSWITCH) {
 	    intN caseNoteIndex = -1;
 
@@ -904,7 +905,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	    off = CG_OFFSET(cg) - top;
 	}
 
+        /* We better have set "off" by now. */
+        JS_ASSERT(off != -1);
+
 	/* Set the default offset (to end of switch if no default). */
+        pc = NULL;
 	if (switchop == JSOP_CONDSWITCH) {
 	    JS_ASSERT(defaultOffset != -1);
 	    if (!js_SetJumpOffset(cx, cg, CG_CODE(cg, defaultOffset),
@@ -1221,11 +1226,17 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	stmt = cg->treeContext.topStmt;
 	atom = pn->pn_atom;
 	if (atom) {
+            /* Find the loop statement enclosed by the matching label. */
+            JSStmtInfo *loop = NULL;
 	    ale = js_IndexAtom(cx, atom, &cg->atomList);
 	    if (!ale)
 		return JS_FALSE;
-	    while (stmt->type != STMT_LABEL || stmt->label != atom)
+            while (stmt->type != STMT_LABEL || stmt->label != atom) {
+                if (STMT_IS_LOOP(stmt))
+                    loop = stmt;
 		stmt = stmt->down;
+            }
+            stmt = loop;
 	} else {
 	    ale = NULL;
 	    while (!STMT_IS_LOOP(stmt))
@@ -1252,7 +1263,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #if JS_HAS_EXCEPTIONS
 
       case TOK_TRY: {
-	ptrdiff_t start, end, catchStart, finallyCatch, catchjmp = -1;
+	ptrdiff_t start, end;
+        ptrdiff_t catchStart = -1, finallyCatch = -1, catchjmp = -1;
 	JSParseNode *iter = pn;
 	uint16 depth;
 
@@ -1525,7 +1537,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif /* JS_HAS_EXCEPTIONS */
 
       case TOK_VAR:
-	noteIndex = -1;
+	off = noteIndex = -1;
 	for (pn2 = pn->pn_head; ; pn2 = pn2->pn_next) {
 	    JS_ASSERT(pn2->pn_type == TOK_NAME);
 	    op = pn2->pn_op;
@@ -1636,7 +1648,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	 * These notes help the decompiler bracket the bytecodes generated
 	 * from each sub-expression that follows a comma.
 	 */
-	noteIndex = -1;
+	off = noteIndex = -1;
 	for (pn2 = pn->pn_head; ; pn2 = pn2->pn_next) {
 	    if (!js_EmitTree(cx, cg, pn2))
 		return JS_FALSE;
@@ -1664,6 +1676,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	 */
 	pn2 = pn->pn_left;
 	JS_ASSERT(pn2->pn_type != TOK_RP);
+	atomIndex = -1;
 	switch (pn2->pn_type) {
 	  case TOK_NAME:
 	    if (pn2->pn_slot >= 0) {
@@ -2491,6 +2504,7 @@ js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
     JSTryNote *tn;
 
     JS_ASSERT(cg->tryBase <= cg->tryNext);
+    JS_ASSERT(catchStart >= 0);
     tn = cg->tryNext++;
     tn->start = start;
     tn->length = end - start;

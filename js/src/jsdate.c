@@ -305,7 +305,7 @@ static jsdouble LocalTZA;
 static jsdouble
 DaylightSavingTA(jsdouble t)
 {
-    int64 PR_t;
+    volatile int64 PR_t;
     int64 ms2us;
     int64 offset;
     jsdouble result;

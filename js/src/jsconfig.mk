@@ -56,23 +56,42 @@ endif
 SHIP_DIST  = $(MOZ_DEPTH)/dist/$(OBJDIR)
 SHIP_DIR   = $(SHIP_DIST)/SHIP
 
-SHIP_LIBS  = jsj.so libjs.so libnspr21.so
+SHIP_LIBS      = libjs.so
+ifdef JS_LIVECONNECT
+  SHIP_LIBS   += jsj.so
+endif
+ifdef JS_THREADSAFE
+  ifeq ($(OS_ARCH), HP-UX)
+    SHIP_LIBS += libnspr21.sl
+  else
+    SHIP_LIBS += libnspr21.so
+  endif
+endif
 ifeq ($(OS_ARCH), WINNT)
- SHIP_LIBS = jsj.dll js32.dll libnspr21.dll
+  SHIP_LIBS    = js32.dll
+  ifdef JS_LIVECONNECT
+    SHIP_LIBS += jsj.dll
+  endif
+  ifdef JS_THREADSAFE
+    SHIP_LIBS += libnspr21.dll
+  endif
 endif
-ifeq ($(OS_ARCH), HP-UX)
- SHIP_LIBS = jsj.so libjs.so libnspr21.sl
+SHIP_LIBS     := $(addprefix $(SHIP_DIST)/lib/, $(SHIP_LIBS))
+
+SHIP_INCS      = js*.h
+ifdef JS_LIVECONNECT
+  SHIP_INCS   += netscape*.h
 endif
-SHIP_LIBS := $(addprefix $(SHIP_DIST)/lib/, $(SHIP_LIBS))
+SHIP_INCS     := $(addprefix $(SHIP_DIST)/include/, $(SHIP_INCS))
 
-SHIP_INCS  = js*.h netscape*.h
-SHIP_INCS := $(addprefix $(SHIP_DIST)/include/, $(SHIP_INCS))
-
-SHIP_BINS  = js jsj
+SHIP_BINS      = js
+ifdef JS_LIVECONNECT
+  SHIP_BINS   += jsj
+endif
 ifeq ($(OS_ARCH), WINNT)
- SHIP_BINS = js.exe jsj.exe
+  SHIP_BINS   := $(addsuffix .exe, $(SHIP_BINS))
 endif
-SHIP_BINS := $(addprefix $(SHIP_DIST)/bin/, $(SHIP_BINS))
+SHIP_BINS     := $(addprefix $(SHIP_DIST)/bin/, $(SHIP_BINS))
 
 ifdef BUILD_OPT
   JSREFJAR = jsref_opt.jar
@@ -92,3 +111,25 @@ ship:
 ifdef BUILD_SHIP
 	cp $(SHIP_DIR)/$(JSREFJAR) $(BUILD_SHIP)
 endif
+
+CWD = $(shell pwd)
+shipSource: $(SHIP_DIR)/jsref_src.lst .FORCE
+	mkdir -p $(SHIP_DIR)
+	cd $(MOZ_DEPTH)/.. ; \
+	  zip $(CWD)/$(SHIP_DIR)/jsref_src.jar -@ < $(CWD)/$(SHIP_DIR)/jsref_src.lst
+ifdef BUILD_SHIP
+	cp $(SHIP_DIR)/jsref_src.jar $(BUILD_SHIP)
+endif
+
+JSREFSRCDIRS := $(shell cat $(DEPTH)/SpiderMonkey.rsp)
+$(SHIP_DIR)/jsref_src.lst: .FORCE
+	mkdir -p $(SHIP_DIR)
+	rm -f $@
+	touch $@
+	for d in $(JSREFSRCDIRS); do                                \
+	  cd $(MOZ_DEPTH)/..;                                       \
+	  ls -1 -d $$d | grep -v CVS | grep -v \.OBJ >> $(CWD)/$@;  \
+	  cd $(CWD);                                                \
+	done
+
+.FORCE:

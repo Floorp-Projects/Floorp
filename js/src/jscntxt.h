@@ -25,6 +25,7 @@
 #include "jsclist.h"
 #include "jslong.h"
 #include "jsatom.h"
+#include "jsconfig.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jsobj.h"
@@ -90,6 +91,10 @@ struct JSRuntime {
     void                *callHookData;
     JSObjectHook        objectHook;
     void                *objectHookData;
+    JSTrapHandler       throwHook;
+    void                *throwHookData;
+    JSDebugErrorHook    debugErrorHook;
+    void                *debugErrorHookData;
 
     /* More debugging state, see jsdbgapi.c. */
     JSCList             trapList;

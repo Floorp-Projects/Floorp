@@ -44,10 +44,7 @@
 
 #ifdef XP_UNIX
 
-/* The following line used to be ifdef SOLARIS, which seems to be required
-   to build on some SOLARIS platforms, but on others it causes duplicate
-   function declaration errors.  mccabe will have to investigate further. */
-#if 0
+#ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
 extern int gettimeofday(struct timeval *tv);
 #endif
 
@@ -281,14 +278,11 @@ PRMJ_Now(void)
 #endif
 
 #ifdef XP_UNIX
-/* The following line used to be ifdef SOLARIS, which seems to be required
-   to build on some SOLARIS platforms, but on others it causes duplicate
-   function declaration errors.  mccabe will have to investigate further. */
-#if 0
+#ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
     gettimeofday(&tv);
 #else
     gettimeofday(&tv, 0);
-#endif /* SOLARIS */
+#endif /* _SVID_GETTOD */
     JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
     JSLL_UI2L(s, tv.tv_sec);
     JSLL_UI2L(us, tv.tv_usec);
