@@ -809,7 +809,8 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 			return(rv);
 
 		PRBool			isDirFlag = PR_FALSE;
-		if (NS_FAILED(rv = aDir->IsDirectory(&isDirFlag)))
+		rv = aDir->IsDirectory(&isDirFlag);
+                if (NS_FAILED(rv) && (rv != NS_ERROR_FILE_NOT_FOUND))
 			return(rv);
 
 		nsCOMPtr<nsISupportsArray> array;
