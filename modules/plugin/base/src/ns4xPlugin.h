@@ -22,7 +22,6 @@
 #include "nsplugin.h"
 #include "prlink.h"  // for PRLibrary
 #include "npupp.h"
-#include "nsIMalloc.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -39,16 +38,12 @@
 
 // XXX These are defined in platform specific FE directories right now :-/
 
-//BTW: this sucks rocks.
-#ifdef XP_PC
-#define PLUGIN_ENTRYPOINT_CALL_TYPE __stdcall
-#else
-#define PLUGIN_ENTRYPOINT_CALL_TYPE
-#endif
+typedef NS_CALLBACK_(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
+typedef NS_CALLBACK_(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
+typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);
 
-typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_GETENTRYPOINTS)(NPPluginFuncs* pCallbacks);
-typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_PLUGININIT)(const NPNetscapeFuncs* pCallbacks);
-typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_PLUGINSHUTDOWN)();
+class nsIServiceManager;
+class nsIAllocator;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +54,7 @@ typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_PLUGINSHUTDOWN)();
 class ns4xPlugin : public nsIPlugin
 {
 public:
-  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsISupports* browserInterfaces);
+  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr);
   ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
@@ -102,7 +97,7 @@ public:
   static nsresult
   CreatePlugin(PRLibrary *library,
                nsIPlugin **result,
-			   nsISupports* browserInterfaces);
+			   nsIServiceManager* serviceMgr);
 
 protected:
   /**
@@ -226,7 +221,7 @@ protected:
   static NPNetscapeFuncs CALLBACKS;
 
   static nsIPluginManager   *mPluginManager;
-  static nsIMalloc          *mMalloc;
+  static nsIAllocator       *mMalloc;
 };
 
 #endif // ns4xPlugin_h__
