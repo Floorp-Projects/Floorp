@@ -84,8 +84,8 @@ public class TokenStream {
         ERROR       = -1, // well-known as the only code < EOF
         EOF         = 0,  // end of file token - (not EOF_CHAR)
         EOL         = 1,  // end of line
-        // Beginning here are interpreter bytecodes. Their values
-        // must not exceed 127.
+
+        // Beginning here are interpreter bytecodes.
         POPV        = 2,
         ENTERWITH   = 3,
         LEAVEWITH   = 4,
@@ -149,70 +149,67 @@ public class TokenStream {
         THROW       = 62,
         IN          = 63,
         INSTANCEOF  = 64,
-        GOSUB       = 65,
-        RETSUB      = 66,
-        CALLSPECIAL = 67,
-        GETTHIS     = 68,
-        NEWTEMP     = 69,
-        USETEMP     = 70,
-        GETBASE     = 71,
-        GETVAR      = 72,
-        SETVAR      = 73,
-        UNDEFINED   = 74,
-        TRY         = 75,
-        ENDTRY      = 76,
-        NEWSCOPE    = 77,
-        TYPEOFNAME  = 78,
-        ENUMINIT    = 79,
-        ENUMNEXT    = 80,
-        GETPROTO    = 81,
-        GETPARENT   = 82,
-        SETPROTO    = 83,
-        SETPARENT   = 84,
-        SCOPE       = 85,
-        GETSCOPEPARENT = 86,
-        THISFN      = 87,
-        JTHROW      = 88,
+        CALLSPECIAL = 65,
+        GETTHIS     = 66,
+        NEWTEMP     = 67,
+        USETEMP     = 68,
+        GETBASE     = 69,
+        GETVAR      = 70,
+        SETVAR      = 71,
+        UNDEFINED   = 72,
+        TRY         = 73,
+        NEWSCOPE    = 74,
+        TYPEOFNAME  = 75,
+        ENUMINIT    = 76,
+        ENUMNEXT    = 77,
+        GETPROTO    = 78,
+        GETPARENT   = 79,
+        SETPROTO    = 80,
+        SETPARENT   = 81,
+        SCOPE       = 82,
+        GETSCOPEPARENT = 83,
+        THISFN      = 84,
+
         // End of interpreter bytecodes
-        SEMI        = 89,  // semicolon
-        LB          = 90,  // left and right brackets
-        RB          = 91,
-        LC          = 92,  // left and right curlies (braces)
-        RC          = 93,
-        LP          = 94,  // left and right parentheses
-        RP          = 95,
-        COMMA       = 96,  // comma operator
-        ASSIGN      = 97, // assignment ops (= += -= etc.)
-        HOOK        = 98, // conditional (?:)
-        COLON       = 99,
-        OR          = 100, // logical or (||)
-        AND         = 101, // logical and (&&)
-        EQOP        = 102, // equality ops (== !=)
-        RELOP       = 103, // relational ops (< <= > >=)
-        SHOP        = 104, // shift ops (<< >> >>>)
-        UNARYOP     = 105, // unary prefix operator
-        INC         = 106, // increment/decrement (++ --)
-        DEC         = 107,
-        DOT         = 108, // member operator (.)
-        PRIMARY     = 109, // true, false, null, this
-        FUNCTION    = 110, // function keyword
-        EXPORT      = 111, // export keyword
-        IMPORT      = 112, // import keyword
-        IF          = 113, // if keyword
-        ELSE        = 114, // else keyword
-        SWITCH      = 115, // switch keyword
-        CASE        = 116, // case keyword
-        DEFAULT     = 117, // default keyword
-        WHILE       = 118, // while keyword
-        DO          = 119, // do keyword
-        FOR         = 120, // for keyword
-        BREAK       = 121, // break keyword
-        CONTINUE    = 122, // continue keyword
-        VAR         = 123, // var keyword
-        WITH        = 124, // with keyword
-        CATCH       = 125, // catch keyword
-        FINALLY     = 126, // finally keyword
-        RESERVED    = 127, // reserved keywords
+        SEMI        = 85,  // semicolon
+        LB          = 86,  // left and right brackets
+        RB          = 87,
+        LC          = 88,  // left and right curlies (braces)
+        RC          = 89,
+        LP          = 90,  // left and right parentheses
+        RP          = 91,
+        COMMA       = 92,  // comma operator
+        ASSIGN      = 93, // assignment ops (= += -= etc.)
+        HOOK        = 94, // conditional (?:)
+        COLON       = 95,
+        OR          = 96, // logical or (||)
+        AND         = 97, // logical and (&&)
+        EQOP        = 98, // equality ops (== !=)
+        RELOP       = 99, // relational ops (< <= > >=)
+        SHOP        = 100, // shift ops (<< >> >>>)
+        UNARYOP     = 101, // unary prefix operator
+        INC         = 102, // increment/decrement (++ --)
+        DEC         = 103,
+        DOT         = 104, // member operator (.)
+        PRIMARY     = 105, // true, false, null, this
+        FUNCTION    = 106, // function keyword
+        EXPORT      = 107, // export keyword
+        IMPORT      = 108, // import keyword
+        IF          = 109, // if keyword
+        ELSE        = 110, // else keyword
+        SWITCH      = 111, // switch keyword
+        CASE        = 112, // case keyword
+        DEFAULT     = 113, // default keyword
+        WHILE       = 114, // while keyword
+        DO          = 115, // do keyword
+        FOR         = 116, // for keyword
+        BREAK       = 117, // break keyword
+        CONTINUE    = 118, // continue keyword
+        VAR         = 119, // var keyword
+        WITH        = 120, // with keyword
+        CATCH       = 121, // catch keyword
+        FINALLY     = 122, // finally keyword
+        RESERVED    = 123, // reserved keywords
 
         /** Added by Mike - these are JSOPs in the jsref, but I
          * don't have them yet in the java implementation...
@@ -221,37 +218,37 @@ public class TokenStream {
          * Most of these go in the 'op' field when returning
          * more general token types, eg. 'DIV' as the op of 'ASSIGN'.
          */
-        NOP         = 128, // NOP
-        NOT         = 129, // etc.
-        PRE         = 130, // for INC, DEC nodes.
-        POST        = 131,
+        NOP         = 124, // NOP
+        NOT         = 125, // etc.
+        PRE         = 126, // for INC, DEC nodes.
+        POST        = 127,
 
         /**
          * For JSOPs associated with keywords...
          * eg. op = THIS; token = PRIMARY
          */
 
-        VOID        = 132,
+        VOID        = 128,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
-        BLOCK       = 133, // statement block
-        ARRAYLIT    = 134, // array literal
-        OBJLIT      = 135, // object literal
-        LABEL       = 136, // label
-        TARGET      = 137,
-        LOOP        = 138,
-        ENUMDONE    = 139,
-        EXPRSTMT    = 140,
-        PARENT      = 141,
-        CONVERT     = 142,
-        JSR         = 143,
-        NEWLOCAL    = 144,
-        USELOCAL    = 145,
-        SCRIPT      = 146,   // top-level node for entire script
+        BLOCK       = 129, // statement block
+        ARRAYLIT    = 130, // array literal
+        OBJLIT      = 131, // object literal
+        LABEL       = 132, // label
+        TARGET      = 133,
+        LOOP        = 134,
+        ENUMDONE    = 135,
+        EXPRSTMT    = 136,
+        PARENT      = 137,
+        CONVERT     = 138,
+        JSR         = 139,
+        NEWLOCAL    = 140,
+        USELOCAL    = 141,
+        SCRIPT      = 142,   // top-level node for entire script
 
-        LAST_TOKEN  = 146;
+        LAST_TOKEN  = 142;
 
     // end enum
 
@@ -325,8 +322,6 @@ public class TokenStream {
             case THROW:           return "throw";
             case IN:              return "in";
             case INSTANCEOF:      return "instanceof";
-            case GOSUB:           return "gosub";
-            case RETSUB:          return "retsub";
             case CALLSPECIAL:     return "callspecial";
             case GETTHIS:         return "getthis";
             case NEWTEMP:         return "newtemp";
@@ -336,7 +331,6 @@ public class TokenStream {
             case SETVAR:          return "setvar";
             case UNDEFINED:       return "undefined";
             case TRY:             return "try";
-            case ENDTRY:          return "endtry";
             case NEWSCOPE:        return "newscope";
             case TYPEOFNAME:      return "typeofname";
             case ENUMINIT:        return "enuminit";
@@ -348,7 +342,6 @@ public class TokenStream {
             case SCOPE:           return "scope";
             case GETSCOPEPARENT:  return "getscopeparent";
             case THISFN:          return "thisfn";
-            case JTHROW:          return "jthrow";
             case SEMI:            return "semi";
             case LB:              return "lb";
             case RB:              return "rb";

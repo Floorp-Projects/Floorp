@@ -57,8 +57,14 @@ public class Interpreter {
     // To return undefined value
         RETURN_UNDEF_ICODE              = TokenStream.LAST_TOKEN + 5,
 
+    // Exception handling implementation
+        ENDTRY                          = TokenStream.LAST_TOKEN + 6,
+        JTHROW                          = TokenStream.LAST_TOKEN + 7,
+        GOSUB                           = TokenStream.LAST_TOKEN + 8,
+        RETSUB                          = TokenStream.LAST_TOKEN + 9,
+
     // Last icode
-        END_ICODE                       = TokenStream.LAST_TOKEN + 6;
+        END_ICODE                       = TokenStream.LAST_TOKEN + 10;
 
 
     public IRFactory createIRFactory(Context cx, TokenStream ts)
@@ -462,7 +468,7 @@ public class Interpreter {
 
             case TokenStream.USELOCAL : {
                 if (node.getProp(Node.TARGET_PROP) != null) {
-                    iCodeTop = addByte(TokenStream.RETSUB, iCodeTop);
+                    iCodeTop = addByte(RETSUB, iCodeTop);
                 } else {
                     iCodeTop = addByte(TokenStream.USETEMP, iCodeTop);
                     itsStackDepth++;
@@ -513,7 +519,7 @@ public class Interpreter {
                 // of pending trys and have some knowledge of how
                 // many trys we need to close when we perform a
                 // GOTO or GOSUB.
-                iCodeTop = addGoto(target, TokenStream.GOSUB, iCodeTop);
+                iCodeTop = addGoto(target, GOSUB, iCodeTop);
                 break;
             }
 
@@ -869,7 +875,7 @@ public class Interpreter {
                         (nextSibling == catchTarget ||
                          nextSibling == finallyTarget))
                     {
-                        iCodeTop = addByte(TokenStream.ENDTRY, iCodeTop);
+                        iCodeTop = addByte(ENDTRY, iCodeTop);
                         insertedEndTry = true;
                     }
                     if (child == catchTarget) {
@@ -889,9 +895,8 @@ public class Interpreter {
                     recordJumpOffset(tryStart + 3, finallyOffset);
                     // Stack depth is handled during generation of
                     // finallyTarget
-                    iCodeTop = addGoto(finallyTarget, TokenStream.GOSUB,
-                                       iCodeTop);
-                    iCodeTop = addByte(TokenStream.JTHROW, iCodeTop);
+                    iCodeTop = addGoto(finallyTarget, GOSUB, iCodeTop);
+                    iCodeTop = addByte(JTHROW, iCodeTop);
                     resolveForwardGoto(skippyJumpStart, iCodeTop);
                 }
                 itsTryDepth--;
@@ -1193,6 +1198,10 @@ public class Interpreter {
                     case SHORTNUMBER_ICODE:  return "shortnumber";
                     case INTNUMBER_ICODE:    return "intnumber";
                     case RETURN_UNDEF_ICODE: return "return_undef";
+                    case ENDTRY:             return "endtry";
+                    case JTHROW:             return "jthrow";
+                    case GOSUB:              return "gosub";
+                    case RETSUB:             return "retsub";
                     case END_ICODE:          return "end";
                 }
             }
@@ -1226,7 +1235,7 @@ public class Interpreter {
                             out.println(tname);
                             break;
 
-                        case TokenStream.GOSUB :
+                        case GOSUB :
                         case TokenStream.GOTO :
                         case TokenStream.IFEQ :
                         case TokenStream.IFNE : {
@@ -1247,7 +1256,7 @@ public class Interpreter {
                             pc += 4;
                             break;
                         }
-                        case TokenStream.RETSUB :
+                        case RETSUB :
                         case TokenStream.ENUMINIT :
                         case TokenStream.ENUMNEXT :
                         case TokenStream.VARINC :
@@ -1357,10 +1366,10 @@ public class Interpreter {
             case TokenStream.ENTERWITH :
             case TokenStream.LEAVEWITH :
             case TokenStream.RETURN :
-            case TokenStream.ENDTRY :
+            case ENDTRY :
             case TokenStream.CATCH:
             case TokenStream.THROW :
-            case TokenStream.JTHROW :
+            case JTHROW :
             case TokenStream.GETTHIS :
             case TokenStream.SETELEM :
             case TokenStream.GETELEM :
@@ -1410,7 +1419,7 @@ public class Interpreter {
             case END_ICODE:
                 return 1;
 
-            case TokenStream.GOSUB :
+            case GOSUB :
             case TokenStream.GOTO :
             case TokenStream.IFEQ :
             case TokenStream.IFNE :
@@ -1422,7 +1431,7 @@ public class Interpreter {
                 // finally pc offset or 0
                 return 1 + 2 + 2;
 
-            case TokenStream.RETSUB :
+            case RETSUB :
             case TokenStream.ENUMINIT :
             case TokenStream.ENUMNEXT :
             case TokenStream.VARINC :
@@ -1678,7 +1687,7 @@ public class Interpreter {
                 switch (iCode[pc] & 0xff) {
     // Back indent to ease imlementation reading
 
-    case TokenStream.ENDTRY :
+    case ENDTRY :
         tryStackTop--;
         stack[TRY_STACK_SHFT + tryStackTop] = null;
         break;
@@ -1782,7 +1791,7 @@ public class Interpreter {
         continue Loop;
     }
     case TokenStream.THROW:
-    case TokenStream.JTHROW: {
+    case JTHROW: {
         if ((iCode[pc] & 0xff) == TokenStream.THROW) {
             Object value = stack[stackTop];
             if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
@@ -1965,7 +1974,7 @@ public class Interpreter {
         }
         pcPrevBranch = pc = getTarget(iCode, pc + 1);
         continue Loop;
-    case TokenStream.GOSUB :
+    case GOSUB :
         sDbl[++stackTop] = pc + 3;
         if (instructionThreshold != 0) {
             instructionCount += pc + 3 - pcPrevBranch;
@@ -1975,7 +1984,7 @@ public class Interpreter {
             }
         }
         pcPrevBranch = pc = getTarget(iCode, pc + 1);                                    continue Loop;
-    case TokenStream.RETSUB : {
+    case RETSUB : {
         int slot = (iCode[pc + 1] & 0xFF);
         if (instructionThreshold != 0) {
             instructionCount += pc + 2 - pcPrevBranch;
