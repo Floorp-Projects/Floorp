@@ -355,12 +355,7 @@ function newCommandParams()
 function GetDocumentTitle()
 {
   try {
-    var domhtmldoc = GetCurrentEditor().document.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
-    
-    // See bug 77315 for details on this wacky code! 
-    // (It seems DOM hasn't consistently returned title string, 
-    /// but "[xpconnect wrapped HTMLObjectElement]" instead! )
-    return Components.lookupMethod(domhtmldoc, 'title').call(domhtmldoc);
+    return new XPCNativeWrapper(GetCurrentEditor().document, "title").title;
   } catch (e) {}
 
   return "";

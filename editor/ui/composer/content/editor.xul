@@ -70,6 +70,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/StructBarContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/editorApplicationOverlay.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/publishprefs.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/XPCNativeWrapper.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
