@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.1 2001/08/24 21:16:45 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.2 2001/08/25 21:01:38 mcgreer%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -250,7 +250,7 @@ pk11_DBInit(const char *configdir, const char *certPrefix,
 
 loser:
     if (crv != CKR_OK) {
-	NSS_Shutdown();
+	pk11_Shutdown();
     }
     return crv;
 }
