@@ -1029,16 +1029,19 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   
   arg.context = context;
 
- if (lo_IsEmptyTag(tag->type))
+ if (node->type != NODE_TYPE_ELEMENT ||
+     lo_IsEmptyTag(tag->type))
     /* other code says we can't handle empty tags, so I bail...for now! */
     return;
+
+ element = (DOM_Element *)node;
 
  if (!DOM_StyleGetProperty(cx, db, node, POSITION_STYLE, &entry))
     return;
 
   if (entry) {
-    if (!DOM_GetCleanAttributeData(cx, entry, PositionParser,
-                                   (uint32 *)&inflow, NULL))
+    if (!DOM_GetCleanEntryData(cx, entry, PositionParser,
+                               (uint32 *)&inflow, NULL))
       return;
   } else {
     if (!DOM_StyleGetProperty(cx, db, node, LAYER_SRC_STYLE, &entry))
@@ -1055,7 +1058,8 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (arg.units == STYLE_UNITS_PERCENT)                                       \
     entry->dirty = JS_TRUE;
 
-  param->name = XP_STRDUP(node->name);
+  if (node->name)
+    param->name = XP_STRDUP(node->name);
   if (node->type == NODE_TYPE_ELEMENT)
     param->id = element->styleID ? XP_STRDUP(element->styleID) : NULL;
 
@@ -1064,8 +1068,8 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (entry) {
     arg.axisAdjust = AXIS_X;
     arg.enclosingVal = 0;
-    if (!DOM_GetCleanAttributeData(cx, entry, lo_ParseSSNumToData,
-                                   &param->left, (void *)&arg))
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData,
+                               &param->left, (void *)&arg))
       goto error;
     CHECK_PERCENTAGE(entry, arg);
     param->has_left = TRUE;
@@ -1076,7 +1080,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (entry) {
     arg.axisAdjust = AXIS_Y;
     arg.enclosingVal = 0;
-    if (!DOM_GetCleanAttributeData(cx, entry, lo_ParseSSNumToData, &param->top,
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData, &param->top,
                                    (void *)&arg))
       goto error;
     param->has_top = TRUE;
@@ -1087,7 +1091,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (entry) {
     arg.axisAdjust = AXIS_Y;
     arg.enclosingVal = lo_GetEnclosingLayerHeight(state);
-    if (!DOM_GetCleanAttributeData(cx, entry, lo_ParseSSNumToData,
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData,
                                    &param->height, (void *)&arg))
       goto error;
     param->has_height = TRUE;
@@ -1108,7 +1112,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (!DOM_StyleGetProperty(cx, db, node, ZINDEX_STYLE, &entry))
     goto error;
   if (entry) {
-    if (!DOM_GetCleanAttributeData(cx, entry, lo_atoi, &param->zindex, NULL))
+    if (!DOM_GetCleanEntryData(cx, entry, lo_atoi, &param->zindex, NULL))
       goto error;
     param->has_zindex = TRUE;
   } else {
