@@ -109,19 +109,16 @@ $::dbwritesallowed = 1;
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
     $::dbwritesallowed = !$useshadow;
-    $useshadow = ($useshadow && Param("shadowdb") &&
-                  Param("queryagainstshadowdb"));
-    my $useshadow_dbh = ($useshadow && Param("shadowdbhost") ne "");
-    my $name = $useshadow ? Param("shadowdb") : $::db_name;
+    $useshadow &&= Param("shadowdb");
     my $connectstring;
 
-    if ($useshadow_dbh) {
+    if ($useshadow) {
         if (defined $::shadow_dbh) {
             $::db = $::shadow_dbh;
             return;
         }
         $connectstring="DBI:mysql:host=" . Param("shadowdbhost") .
-          ";database=$name;port=" . Param("shadowdbport");
+          ";database=" . Param('shadowdb') . ";port=" . Param("shadowdbport");
         if (Param("shadowdbsock") ne "") {
             $connectstring .= ";mysql_socket=" . Param("shadowdbsock");
         }
@@ -130,7 +127,7 @@ sub ConnectToDatabase {
             $::db = $::main_dbh;
             return;
         }
-        $connectstring="DBI:mysql:host=$::db_host;database=$name;port=$::db_port";
+        $connectstring="DBI:mysql:host=$::db_host;database=$::db_name;port=$::db_port";
         if ($::db_sock ne "") {
             $connectstring .= ";mysql_socket=$::db_sock";
         }
@@ -141,7 +138,7 @@ sub ConnectToDatabase {
         Param("maintainer") . ". The error you should quote is: " .
         $DBI::errstr;
 
-    if ($useshadow_dbh) {
+    if ($useshadow) {
         $::shadow_dbh = $::db;
     } else {
         $::main_dbh = $::db;
@@ -149,57 +146,16 @@ sub ConnectToDatabase {
 }
 
 sub ReconnectToShadowDatabase {
-    # This will connect us to the shadowdb if we're not already connected,
-    # but if we're using the same dbh for both the main db and the shadowdb,
-    # be sure to USE the correct db
-    if (Param("shadowdb") && Param("queryagainstshadowdb")) {
+    if (Param("shadowdb")) {
         ConnectToDatabase(1);
-        if (!Param("shadowdbhost")) {
-            SendSQL("USE " . Param("shadowdb"));
-        }
     }
 }
 
 sub ReconnectToMainDatabase {
-    if (Param("shadowdb") && Param("queryagainstshadowdb")) {
+    if (Param("shadowdb")) {
         ConnectToDatabase();
-        if (!Param("shadowdbhost")) {
-            SendSQL("USE $::db_name");
-        }
     }
 }
-
-my $shadowchanges = 0;
-sub SyncAnyPendingShadowChanges {
-    if ($shadowchanges && Param("updateshadowdb")) {
-        my $pid;
-        FORK: {
-            if ($pid = fork) { # create a fork
-                # parent code runs here
-                $shadowchanges = 0;
-                return;
-            } elsif (defined $pid) {
-                # child process code runs here
-                my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
-                open STDOUT,">$redir";
-                open STDERR,">$redir";
-                exec("./syncshadowdb","--") or die "Unable to exec syncshadowdb: $!";
-                # the idea was that passing the second parameter tricks it into
-                # using execvp instead of running a shell. Not really necessary since
-                # there are no shell meta-characters, but it passes our tinderbox
-                # test that way. :) http://bugzilla.mozilla.org/show_bug.cgi?id=21253
-            } elsif ($! =~ /No more process/) {
-                # recoverable fork error, try again in 5 seconds
-                sleep 5;
-                redo FORK;
-            } else {
-                # something weird went wrong
-                die "Can't create background process to run syncshadowdb: $!";
-            }
-        }
-    }
-}
-
 
 # This is used to manipulate global state used by SendSQL(),
 # MoreSQLData() and FetchSQLData().  It provides a way to do another
@@ -248,7 +204,7 @@ sub SqlLog {
 }
 
 sub SendSQL {
-    my ($str, $dontshadow) = (@_);
+    my ($str) = (@_);
 
     # Don't use DBI's taint stuff yet, because:
     # a) We don't want out vars to be tainted (yet)
@@ -262,12 +218,10 @@ sub SendSQL {
     if ($iswrite && !$::dbwritesallowed) {
         die "Evil code attempted to write '$str' to the shadow database";
     }
-    if ($str =~ /^LOCK TABLES/i && $str !~ /shadowlog/ && $::dbwritesallowed) {
-        $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /i;
-    }
+
     # If we are shutdown, we don't want to run queries except in special cases
     if (Param('shutdownhtml')) {
-        if ($0 =~ m:[\\/]((do)?editparams.cgi|syncshadowdb)$:) {
+        if ($0 =~ m:[\\/]((do)?editparams.cgi)$:) {
             $::ignorequery = 0;
         } else {
             $::ignorequery = 1;
@@ -284,19 +238,6 @@ sub SendSQL {
         die "$str: " . $errstr;
     }
     SqlLog("Done");
-    if (!$dontshadow && $iswrite && Param("shadowdb") && Param("updateshadowdb")) {
-        my $q = SqlQuote($str);
-        my $insertid;
-        if ($str =~ /^(INSERT|REPLACE)/i) {
-            SendSQL("SELECT LAST_INSERT_ID()");
-            $insertid = FetchOneColumn();
-        }
-        SendSQL("INSERT INTO shadowlog (command) VALUES ($q)", 1);
-        if ($insertid) {
-            SendSQL("SET LAST_INSERT_ID = $insertid");
-        }
-        $shadowchanges++;
-    }
 }
 
 sub MoreSQLData {

@@ -67,30 +67,14 @@ sub check_shadowdb {
     if ($value eq "") {
         return "";
     }
-    if (!Param("updateshadowdb")) {
-        # Can't test this, because ConnectToDatabase uses the param, but
-        # we can't set this before testing....
-        return "";
-    }
-    &::SendSQL("SHOW DATABASES");
-    while (&::MoreSQLData()) {
-        my $n = &::FetchOneColumn();
-        if (lc($n) eq lc($value)) {
-            return "The $n database already exists.  If that's really the name you want to use for the backup, please CAREFULLY make the existing database go away somehow, and then try again.";
-        }
-    }
-    # We trust the admin....
-    trick_taint($value);
-    &::SendSQL("CREATE DATABASE $value");
-    &::SendSQL("INSERT INTO shadowlog (command) VALUES ('SYNCUP')", 1);
-    return "";
-}
 
-sub check_shadowdbhost {
-    my ($value) = (@_);
-    if ($value && Param("updateshadowdb")) {
-        return "Sorry, you can't have the shadowdb on a different connection to the main database if you want Bugzilla to handle the replication for you.";
+    if (!Param('shadowdbhost')) {
+        return "You need to specify a host when using a shadow database";
     }
+
+    # Can't test existance of this because ConnectToDatabase uses the param,
+    # but we can't set this before testing....
+    # This can really only be fixed after we can use the DBI more openly
     return "";
 }
 
@@ -271,50 +255,10 @@ sub check_netmask {
   },
 
   {
-   name => 'queryagainstshadowdb',
-   desc => 'If this is on, and the <tt>shadowdb</tt> parameter is set, then ' .
-           'certain queries will happen against the shadow database.',
-   type => 'b',
-   default => 0,
-  },
-
-  {
-   name => 'updateshadowdb',
-   desc => 'If this is on, and the <tt>shadowdb</tt> parameter is set, then ' .
-           'Bugzilla will use the old style of shadow database in which it ' .
-           'manually propogates changes to the shadow database. Otherwise, ' .
-           'Bugzilla will assume that the <tt>shadowdb</tt> database (if ' . 
-           'any) is being updated via replication. <b>WARNING! This ' .
-           'manual replication is deprecated and is going away soon ' .
-           '(<u>BEFORE</u> the next stable Bugzilla release).</b> It has ' .
-           'several problems with data consistency, and replication is the ' .
-           'preferred option. If this parameter is on, and you disable it, ' .
-           'make sure that the shadow database is already set up for ' .
-           'replication, or queries will return stale data.',
-   type => 'b',
-   default => 1,
-  },
-
-  # This entry must be _after_ updateshadowdb, because check_shadowdbhost uses
-  # that
-  {
    name => 'shadowdbhost',
-   desc => 'The host the shadow database is on. If blank, then then we ' .
-           'assume it\'s on the main database host (as defined in ' .
-           'localconfig) and ingore the <tt>shadowdbport</tt> and ' .
-           '<tt>shadowdbsock</tt> parameters below, which means that this ' .
-           'parameter <em>must be filled in</em> if your shadow database is ' .
-           'on a different instance of the mysql server, even if that ' .
-           'instance runs on the same machine as the main database. Note ' .
-           'that <tt>updateshadowdb</tt> must be off if the shadow database ' .
-           'is on a difference mysql instance, since Bugzilla can\'t ' .
-           'propogate changes between instances itself, and this should be ' .
-           'left blank if the shadow database is on the same instance, ' .
-           'since Bugzilla can then reuse the same database connection for '.
-           'better performance.',
+   desc => 'The host the shadow database is on.',
    type => 't',
    default => '',
-   checker => \&check_shadowdbhost,
   },
 
   {
@@ -346,11 +290,12 @@ sub check_netmask {
   {
    name => 'shadowdb',
    desc => 'If non-empty, then this is the name of another database in ' .
-           'which Bugzilla will keep a shadow read-only copy of everything. ' .
+           'which Bugzilla will use as a read-only copy of everything. ' .
            'This is done so that long slow read-only operations can be used ' .
-           'against this db, and not lock up things for everyone else. ' .
-           'Turning on this parameter will create the given database ; be ' .
-           'careful not to use the name of an existing database with useful ' .           'data in it!',
+           'against this db, and not lock up things for everyone else. This ' .
+           'database is on the <tt>shadowdbhost</tt>, and must exist. ' .
+           'Bugzilla does not update it, if you use this paramater, then ' .
+           'you need to set up replication for your database',
    type => 't',
    default => '',
    checker => \&check_shadowdb

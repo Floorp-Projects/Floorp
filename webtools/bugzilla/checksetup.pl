@@ -820,7 +820,7 @@ if ($my_create_htaccess) {
     open HTACCESS, ">.htaccess";
     print HTACCESS <<'END';
 # don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pl|localconfig|processmail|syncshadowdb|runtests.sh)$>
+<FilesMatch ^(.*\.pl|localconfig|processmail|runtests.sh)$>
   deny from all
 </FilesMatch>
 END
@@ -1085,7 +1085,7 @@ WriteParams();
 
 # These are the files which need to be marked executable
 my @executable_files = ('processmail', 'whineatnews.pl', 'collectstats.pl',
-   'checksetup.pl', 'syncshadowdb', 'importxml.pl', 'runtests.sh');
+   'checksetup.pl', 'importxml.pl', 'runtests.sh');
 
 # tell me if a file is executable.  All CGI files and those in @executable_files
 # are executable
@@ -1647,13 +1647,6 @@ $table{milestones} =
      value varchar(20) not null,
      sortkey smallint not null,
      unique (product_id, value)';
-
-$table{shadowlog} =
-    'id int not null auto_increment primary key,
-     ts timestamp,
-     reflected tinyint not null,
-     command mediumtext not null,
-     index(reflected)';
 
 # GRM
 $table{duplicates} =
@@ -3828,6 +3821,11 @@ if ($sth->rows == 0) {
     }
 }
 
+# 2002-11-XX Bug 180870 - remove manual shadowdb replication code
+if (TableExists('shadowlog')) {
+    print "Removing shadowlog table\n";
+    $dbh->do("DROP TABLE shadowlog");
+}
 
 #
 # Final checks...

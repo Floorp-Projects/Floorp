@@ -198,7 +198,6 @@
 | products          |
 | profiles          |
 | profiles_activity |
-| shadowlog         |
 | tokens            |
 | versions          |
 | votes             |
@@ -289,10 +288,6 @@ sshh... don't tell your users!)
 
 profiles_activity:  Need to know who did what when to who's profile?  This'll
 tell you, it's a pretty complete history.
-
-shadowlog:  I could be mistaken here, but I believe this table tells you when
-your shadow database is updated and what commands were used to update it.  We
-don't use a shadow database at our site yet, so it's pretty empty for us.
 
 versions:  Version information for every product
 

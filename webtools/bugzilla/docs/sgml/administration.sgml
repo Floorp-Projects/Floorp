@@ -69,8 +69,14 @@
         write locking. What this means is that if someone needs to make a
         change to a bug, they will lock the entire table until the operation
         is complete. Locking for write also blocks reads until the write is
-        complete. The 
-        <quote>shadowdb</quote>
+        complete. Note that more recent versions of mysql support row level
+        locking using different table types. These types are slower than the
+        standard type, and Bugzilla does not yet take advantage of features
+        such as transactions which would justify this speed decrease. The
+        Bugzilla team are, however, happy to hear about any experiences with
+        row level locking and Bugzilla</para>
+
+        <para>The <quote>shadowdb</quote>
         parameter was designed to get around this limitation. While only a
         single user is allowed to write to a table at a time, reads can
         continue unimpeded on a read-only shadow copy of the database.
@@ -85,23 +91,10 @@
         Bugzilla bug changes and comments per day.</para>
 
         <para>The value of the parameter defines the name of the 
-        shadow bug database. 
-        Set "shadowdb" to e.g. "bug_shadowdb" if you will be running a
-        *very* large installation of Bugzilla. 
-        <note>
-          <para>Enabling "shadowdb" can adversely affect the stability of
-          your installation of Bugzilla. You should regularly check that your
-          database is in sync. It is often advisable to force a shadow
-          database sync nightly via 
-          <quote>cron</quote>.
-          </para>
-        </note>
-        </para>
-        
-        <para>If you use the "shadowdb" option, it is only natural that you
-        should turn the "queryagainstshadowdb" option on as well. Otherwise
-        you are replicating data into a shadow database for no reason!</para>
-
+        shadow bug database. You will need to set the host and port settings
+        from the params page, and set up replication in your database server
+        so that updates reach this readonly mirror. Consult your database
+        documentation for more detail.</para>
       </step>
 
       <step>

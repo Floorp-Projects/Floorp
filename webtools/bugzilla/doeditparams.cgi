@@ -101,11 +101,6 @@ foreach my $i (GetParamList()) {
 WriteParams();
 
 unlink "data/versioncache";
-if (Param("updateshadowdb")) {
-    print "<PRE>";
-    system("./syncshadowdb", "-v");
-    print "</PRE>";
-}
 
 print "OK, done.<p>\n";
 print "<a href=editparams.cgi>Edit the params some more.</a><p>\n";

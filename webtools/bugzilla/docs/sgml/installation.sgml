@@ -559,9 +559,7 @@ AllowOverride Limit
         <para>There are important files and directories that should not be a
         served by the HTTP server - most files in the 
         <quote>data</quote>
-        and 
-        <quote>shadow</quote>
-        directories and the 
+        directory and the 
         <quote>localconfig</quote>
         file. You should configure your HTTP server to not serve 
         these files. Failure to do so will expose critical passwords and
