@@ -175,6 +175,11 @@ public:
    * question.
    */
   const nsACString& GetDocumentCharacterSet() const { return mCharacterSet; }
+
+  /**
+   * Set the document's character encoding. |aCharSetID| should be canonical. 
+   * That is, callers are responsible for the charset alias resolution. 
+   */
   virtual void SetDocumentCharacterSet(const nsACString& aCharSetID) = 0;
 
   PRInt32 GetDocumentCharacterSetSource() const { return mCharacterSetSource; }

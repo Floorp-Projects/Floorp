@@ -119,6 +119,11 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsScriptEventManager.h"
 #include "nsIXPathEvaluatorInternal.h"
 
+#ifdef DEBUG
+#include "nsICharsetAlias.h"
+static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
+#endif
+
 // Helper structs for the content->subdoc map
 
 class SubDocMapEntry : public PLDHashEntryHdr
@@ -869,6 +874,16 @@ nsDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
 {
   if (!mCharacterSet.Equals(aCharSetID)) {
     mCharacterSet = aCharSetID;
+
+#ifdef DEBUG
+    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID));
+    if (calias) {
+      nsCAutoString canonicalName;
+      calias->GetPreferred(aCharSetID, canonicalName);
+      NS_ASSERTION(canonicalName.Equals(aCharSetID),
+                   "charset name must be canonical");
+    }
+#endif
 
     PRInt32 n = mCharSetObservers.Count();
 
