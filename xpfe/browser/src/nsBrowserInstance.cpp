@@ -22,7 +22,14 @@
  *    Travis Bogard <travis@netscape.com>
  */
 
+// Local Includes
 #include "nsBrowserInstance.h"
+
+// Helper Includes
+
+// Interfaces Needed
+#include "nsIXULWindow.h"
+
 // Use this trick temporarily, to minimize delta to nsBrowserAppCore.cpp.
 #define nsBrowserAppCore nsBrowserInstance
 
@@ -145,10 +152,8 @@ static NS_DEFINE_IID(kCSessionHistoryCID,       NS_SESSIONHISTORY_CID);
 static NS_DEFINE_CID(kCPrefServiceCID,          NS_PREF_CID);
 
 /* Define Interface IDs */
-static NS_DEFINE_IID(kIAppShellServiceIID,      NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,       NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kIWebShellWindowIID,       NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID,        NS_IGLOBALHISTORY_IID);
 static NS_DEFINE_IID(kIWebShellIID,             NS_IWEB_SHELL_IID);
 
@@ -769,26 +774,6 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
 }
 
 
-static void DOMWindowToWebShellWindow(
-              nsIDOMWindow *DOMWindow,
-              nsCOMPtr<nsIWebShellWindow> *webWindow)
-{
-  if (!DOMWindow)
-    return; // with webWindow unchanged -- its constructor gives it a null ptr
-
-  nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
-  nsCOMPtr<nsIDocShell> docShell;
-  if (globalScript)
-    globalScript->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-  if(!webshell)
-   return;
-  nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-  webshell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-  *webWindow = do_QueryInterface(topLevelWindow);
-}
-
-
 NS_IMETHODIMP    
 nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
 {
@@ -818,51 +803,29 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     return res;
   }
 
+   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWin));
+   NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
 
-    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    nsresult           rv;
-    nsIAppShellService *appShell;
-    nsIWebShellWindow  *window;
+   nsCOMPtr<nsIScriptContext> scriptContext;
+   sgo->GetContext(getter_AddRefs(scriptContext));
+   NS_ENSURE_TRUE(scriptContext, NS_ERROR_FAILURE);
 
-    window = nsnull;
+   JSContext* jsContext = (JSContext*)scriptContext->GetNativeContext();
+   NS_ENSURE_TRUE(jsContext, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIURI> urlObj;
-    char * urlstr = "chrome://wallet/content/WalletPreview.xul";
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+   void* mark;
+   jsval* argv;
 
-    nsIURI *uri = nsnull;
-    rv = service->NewURI(urlstr, nsnull, &uri);
-    if (NS_FAILED(rv)) return rv;
+   argv = JS_PushArguments(jsContext, &mark, "sss", "chrome://wallet/content/WalletPreview.xul", "_blank", 
+                  //"chrome,dialog=yes,modal=yes,all");
+                  "chrome,modal=yes,dialog=yes,all,width=504,height=436");
+   NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
 
-    rv = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&urlObj);
-    NS_RELEASE(uri);
-    if (NS_FAILED(rv))
-        return rv;
+   nsCOMPtr<nsIDOMWindow> newWindow;
+   aWin->OpenDialog(jsContext, argv, 3, getter_AddRefs(newWindow));
+   JS_PopArguments(jsContext, mark);
 
-    rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Create "save to disk" nsIXULCallbacks...
-    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
-    nsIXULWindowCallbacks *cb = nsnull;
-
-    nsCOMPtr<nsIWebShellWindow> parent;
-    DOMWindowToWebShellWindow(aWin, &parent);
-    window = nsnull;
-    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
-                              nsIWebBrowserChrome::allChrome | nsIWebBrowserChrome::openAsDialog,
-                              cb, 504, 436, &window);
-    if (window != nsnull) {
-      appShell->RunModalDialog(&window, parent, nsnull, nsIWebBrowserChrome::allChrome,
-                               cb, 504, 436);
-      NS_RELEASE(window);
-    }
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-
-    return rv;
+   return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1367,7 +1330,7 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     if (nsnull != webShellContainer)
     {
       nsCOMPtr<nsIWebShellWindow> webShellWin;
-      if (NS_OK == webShellContainer->QueryInterface(kIWebShellWindowIID, getter_AddRefs(webShellWin)))
+      if (NS_OK == webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), getter_AddRefs(webShellWin)))
       {
         mWebShellWin = webShellWin;   // WE DO NOT OWN THIS
       }
