@@ -8,6 +8,7 @@ var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile)
 var retvals;
 var filePickerMode;
 var currentFilter;
+var lastClicked;
 
 function onLoad() {
 
@@ -161,8 +162,11 @@ function onClick(e) {
   var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
   file.initWithPath(e.target.parentNode.getAttribute("path"));
 
-  textInput = document.getElementById("textInput");
-  textInput.value = file.path;
+  if (!file.isDirectory()) {
+    textInput = document.getElementById("textInput");
+    textInput.value = file.leafName;
+    lastClicked = file.leafName;
+  }
 
   if (e.detail == 2) {
     if (file.isDirectory()) {
@@ -372,7 +376,11 @@ function loadDirectory() {
         getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
       } catch(ex) { dump("getDirectoryContents() failed\n"); }
       addToHistory(sfile.path);
-      document.getElementById("textInput").value = "";
+      textInput = document.getElementById("textInput");
+      if (lastClicked == textInput.value) {
+        textInput.value = "";
+      }
+      lastClicked = "";
     }
   } catch(ex) { dump("isDirectory failed\n"); }
 }
