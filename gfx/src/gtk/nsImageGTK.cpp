@@ -1871,7 +1871,7 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
   }
 
   nsRect rect(aDX, aDY, aDWidth, aDHeight);
-  dest->ImageUpdated(NULL, 0, &rect);
+  dest->ImageUpdated(nsnull, 0, &rect);
 
   return NS_OK;
 }
