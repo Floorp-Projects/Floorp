@@ -126,12 +126,12 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     char *id = 0;
     char *id_url = 0;
     char *id_name = 0;
-    char *id_imap = 0;
+    nsXPIDLCString id_imap;
     PRBool all_headers_p = obj->options->headers == MimeHeadersAll;
     
     id = mime_part_address (obj);
     if (obj->options->missing_parts)
-      id_imap = mime_imap_part_address (obj);
+      id_imap.Adopt(mime_imap_part_address (obj));
     if (! id) return MIME_OUT_OF_MEMORY;
     
     if (obj->options && obj->options->url)
@@ -140,7 +140,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
       if (id_imap && id)
       {
         // if this is an IMAP part. 
-        id_url = mime_set_url_imap_part(url, id_imap, id);
+        id_url = mime_set_url_imap_part(url, id_imap.get(), id);
       }
       else
       {
@@ -187,7 +187,6 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     
     newopt.fancy_headers_p = PR_TRUE;
     newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);    
-    PR_FREEIF(id_name);
 
 /******    
 RICHIE SHERRY

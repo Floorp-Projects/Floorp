@@ -386,21 +386,21 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	   */
 	  {
 		MimeDecoderData *(*fn) (nsresult (*) (const char*, PRInt32,void*), void*) = 0;
-		char *encoding = MimeHeaders_get (sig->sig_hdrs,
-										  HEADER_CONTENT_TRANSFER_ENCODING,
-										  PR_TRUE, PR_FALSE);
-		if (!encoding)
-		  ;
-		else if (!nsCRT::strcasecmp(encoding, ENCODING_BASE64))
-		  fn = &MimeB64DecoderInit;
-		else if (!nsCRT::strcasecmp(encoding, ENCODING_QUOTED_PRINTABLE))
-		  fn = &MimeQPDecoderInit;
-		else if (!nsCRT::strcasecmp(encoding, ENCODING_UUENCODE) ||
-				 !nsCRT::strcasecmp(encoding, ENCODING_UUENCODE2) ||
-				 !nsCRT::strcasecmp(encoding, ENCODING_UUENCODE3) ||
-				 !nsCRT::strcasecmp(encoding, ENCODING_UUENCODE4))
-		  fn = &MimeUUDecoderInit;
-
+    nsXPIDLCString encoding;
+    encoding.Adopt(MimeHeaders_get (sig->sig_hdrs,
+                   HEADER_CONTENT_TRANSFER_ENCODING,
+                   PR_TRUE, PR_FALSE));
+    if (encoding.IsEmpty())
+      ;
+    else if (!nsCRT::strcasecmp(encoding.get(), ENCODING_BASE64))
+      fn = &MimeB64DecoderInit;
+    else if (!nsCRT::strcasecmp(encoding.get(), ENCODING_QUOTED_PRINTABLE))
+      fn = &MimeQPDecoderInit;
+    else if (!nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE) ||
+             !nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE2) ||
+             !nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE3) ||
+             !nsCRT::strcasecmp(encoding.get(), ENCODING_UUENCODE4))
+      fn = &MimeUUDecoderInit;
 		if (fn)
 		  {
 			sig->sig_decoder_data =
