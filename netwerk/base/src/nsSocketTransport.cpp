@@ -1386,6 +1386,8 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
     // If the lookup failed, set the status...
     if (NS_FAILED(aStatus))
         mStatus = aStatus;
+    else if (PR_IsNetAddrType(&mNetAddress, PR_IpAddrAny))
+        mStatus = NS_ERROR_ABORT;
 
     // Start processing the transport again - if necessary...
     if (GetFlag(eSocketDNS_Wait)) {
