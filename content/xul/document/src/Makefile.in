@@ -94,7 +94,7 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES	= -I$(srcdir)/../../../base/src \
 		  -I$(srcdir)/../../content/src \
 		  -I$(srcdir)/../../templates/src \
-		  -I$(srcdir)/../../../html/style/src \
+		  -I$(srcdir)/../../../../layout/style \
 		  -I$(srcdir)/../../../xml/document/src \
 		  $(NULL)
 

@@ -46,6 +46,7 @@ XPIDL_MODULE	= content_base
 GRE_MODULE	= 1
 
 EXPORTS		= \
+mozFlushType.h \
 nsIContent.h \
 nsIAttribute.h \
 nsIContentIterator.h \
@@ -55,18 +56,13 @@ nsContentUtils.h \
 nsIDocument.h \
 nsIDocumentEncoder.h \
 nsIDocumentObserver.h \
-nsIDocumentViewer.h \
 nsINameSpace.h \
 nsINameSpaceManager.h \
 nsINodeInfo.h \
 nsIRangeUtils.h \
 nsIScriptElement.h \
 nsIStyledContent.h \
-nsIStyleRule.h \
-nsIStyleRuleSupplier.h \
-nsIStyleSheet.h \
 nsIStyleSheetLinkingElement.h \
-nsIStyleRuleProcessor.h \
 nsITextContent.h \
 nsIPrivateDOMImplementation.h \
 nsIContentSerializer.h \
@@ -75,7 +71,6 @@ nsIXPathEvaluatorInternal.h \
 mozISanitizingSerializer.h \
 nsIContentList.h \
 nsIFrameLoader.h \
-nsLayoutStylesheetCache.h \
 nsContentCID.h \
 nsCopySupport.h \
 nsContentCreatorFunctions.h \
@@ -95,9 +90,6 @@ XPIDLSRCS	= \
 		nsIScriptLoader.idl  \
 		nsIScriptLoaderObserver.idl  \
 		nsISyncLoadDOMService.idl  \
-		nsIPrintProgress.idl  \
-		nsIPrintProgressParams.idl  \
-		nsIPrintStatusFeedback.idl  \
 		nsIDragDropHandler.idl \
 		nsIScriptEventHandler.idl \
 		nsIScriptEventManager.idl \

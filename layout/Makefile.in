@@ -44,7 +44,15 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 
-DIRS		= base html xul
+DIRS		= \
+		style \
+		base \
+		generic \
+		forms \
+		printing \
+		tables \
+		xul \
+		$(NULL)
 
 ifdef MOZ_MATHML
 DIRS           += mathml

@@ -42,7 +42,129 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src
+MODULE		= layout
+XPIDL_MODULE	= layout_base
+GRE_MODULE	= 1
+LIBRARY_NAME	= gkbase_s
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  content \
+		  xul \
+		  xuldoc \
+		  gfx \
+		  widget \
+		  view \
+		  necko \
+		  docshell \
+		  webshell \
+		  webbrwsr \
+		  uriloader \
+		  js \
+		  xpconnect \
+		  plugin \
+		  locale \
+		  pref \
+		  imglib2 \
+		  unicharutil \
+		  htmlparser \
+		  util \
+		  windowwatcher \
+		  intl \
+		  accessibility \
+		  $(NULL)
+
+XPIDLSRCS	= \
+		nsIChromeEventHandler.idl	\
+		nsISelectionImageService.idl	\
+		$(NULL)
+
+EXPORTS		= \
+		nsBidi.h \
+		nsBidiPresUtils.h \
+		nsBidiUtils.h \
+		nsCSSFrameConstructor.h \
+		nsChangeHint.h \
+		nsCompatibility.h \
+		nsFrameManager.h \
+		nsFrameManagerBase.h \
+		nsFrameTraversal.h \
+		nsIAutoCopy.h \
+		nsICaret.h \
+		nsIDocumentViewer.h \
+		nsIFrameSelection.h \
+		nsIFrameTraversal.h \
+		nsIImageMap.h \
+		nsILayoutDebugger.h \
+		nsILayoutHistoryState.h \
+		nsIPercentHeightObserver.h  \
+		nsIPresShell.h \
+		nsIPresState.h \
+		nsIReflowCallback.h \
+		nsLayoutAtomList.h \
+		nsLayoutAtoms.h \
+		nsLayoutErrors.h \
+		nsLayoutUtils.h \
+		nsPresContext.h \
+		nsStyleChangeList.h \
+		nsStyleConsts.h \
+		$(NULL)
+
+CPPSRCS		= \
+		nsAutoCopy.cpp \
+		nsBidiUtils.cpp \
+		nsCSSColorUtils.cpp \
+		nsCSSFrameConstructor.cpp \
+		nsCSSRendering.cpp \
+		nsCaret.cpp \
+		nsChildIterator.cpp \
+		nsDocumentViewer.cpp \
+		nsFrameContentIterator.cpp \
+		nsFrameManager.cpp \
+		nsFrameTraversal.cpp \
+		nsImageLoader.cpp \
+		nsLayoutAtoms.cpp \
+		nsLayoutDebugger.cpp \
+		nsLayoutHistoryState.cpp \
+		nsLayoutUtils.cpp \
+		nsPresContext.cpp \
+		nsPresShell.cpp \
+		nsPresState.cpp \
+		nsQuoteList.cpp \
+		nsStyleChangeList.cpp \
+		$(NULL)
+
+ifdef IBMBIDI
+CPPSRCS		+= \
+		nsBidiPresUtils.cpp \
+		nsBidi.cpp \
+		$(NULL)
+endif                
+
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES += \
+		-I$(srcdir) \
+		-I$(srcdir)/../generic \
+		-I$(srcdir)/../forms \
+		-I$(srcdir)/../tables \
+		-I$(srcdir)/../printing \
+		-I$(srcdir)/../xul/base/src \
+		-I$(srcdir)/../../content/events/src \
+		-I$(srcdir)/../../view/src \
+		$(NULL)
+
+ifdef MOZ_MATHML
+LOCAL_INCLUDES += \
+        -I$(srcdir)/../mathml/content/src \
+        -I$(srcdir)/../mathml/base/src
+endif
+
+ifdef MOZ_SVG
+LOCAL_INCLUDES += \
+        -I$(srcdir)/../svg/base/src
+endif
+
+DEFINES += -D_IMPL_NS_LAYOUT

@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  content \
+		  xul \
 		  gfx \
 		  widget \
 		  locale \
@@ -82,13 +83,10 @@ EXPORTS		= \
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../../../../base/src \
-		-I$(srcdir)/../../../../../html/style/src \
-		-I$(srcdir)/../../../../../html/base/src \
-		-I$(srcdir)/../../../../../html/forms/src \
-		-I$(srcdir)/../../../../content/src \
-		-I$(srcdir)/../../../../../xml/content/src \
-		-I$(srcdir)/../../../../../base/public \
-		-I$(srcdir)/../../../../../xul/base/src \
+		-I$(srcdir)/../../../../../base \
+		-I$(srcdir)/../../../../../generic \
+		-I$(srcdir)/../../../../../style \
+		-I$(srcdir)/../../../../../forms \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

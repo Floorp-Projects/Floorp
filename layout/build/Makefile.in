@@ -106,23 +106,21 @@ CPPSRCS		= \
 EXPORTS		= nsLayoutCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmlbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmlforms_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmlstyle_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkhtmltable_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlstyle_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconshared_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
@@ -223,10 +221,10 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)/../base/src \
-		   -I$(srcdir)/../html/base/src \
-		   -I$(srcdir)/../html/forms/src \
-		   -I$(srcdir)/../html/style/src \
+LOCAL_INCLUDES	+= -I$(srcdir)/../base \
+		   -I$(srcdir)/../generic \
+		   -I$(srcdir)/../forms \
+		   -I$(srcdir)/../style \
 		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
 		   -I$(srcdir)/../../content/base/src \
@@ -244,11 +242,11 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 		   $(NULL)
 
 ifdef MOZ_MATHML
-INCLUDES += -I$(srcdir)/../mathml/content/src
+LOCAL_INCLUDES	+= -I$(srcdir)/../mathml/content/src
 endif
 
 ifdef MOZ_SVG
-INCLUDES += -I$(srcdir)/../../content/svg/content/src
+LOCAL_INCLUDES	+= -I$(srcdir)/../../content/svg/content/src
 endif
 
 DEFINES += -D_IMPL_NS_LAYOUT

@@ -222,6 +222,7 @@ endif
 	cp $(topsrcdir)/dist/bin/components/xultmpl.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/content_xslt.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/layout_base.xpt ./$(MOZ_APP_NAME)/components
+	cp $(topsrcdir)/dist/bin/components/layout_printing.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/layout_xul.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/layout_xul_tree.xpt ./$(MOZ_APP_NAME)/components
 	cp $(topsrcdir)/dist/bin/components/shistory.xpt ./$(MOZ_APP_NAME)/components

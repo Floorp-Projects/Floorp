@@ -70,7 +70,13 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
+EXPORTS		= \
+		nsXBLAtomList.h \
+		nsXBLAtoms.h \
+		$(NULL)
+
 CPPSRCS		= \
+    nsXBLAtoms.cpp \
     nsXBLBinding.cpp \
     nsXBLPrototypeBinding.cpp \
     nsXBLPrototypeResources.cpp \
@@ -101,11 +107,11 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../html/style/src \
 		-I$(srcdir)/../../html/base/src \
 		-I$(srcdir)/../../html/document/src \
 		-I$(srcdir)/../../xml/document/src \
 		-I$(srcdir)/../../xul/content/src \
+		-I$(srcdir)/../../../layout/style \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

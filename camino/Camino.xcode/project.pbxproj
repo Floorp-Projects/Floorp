@@ -190,6 +190,7 @@
 				F6BD63EF01B313EE01A962F7,
 				F6BD63F001B313EE01A962F7,
 				F6BD63F101B313EE01A962F7,
+				F6BD63F201B313EE01A962F7,
 				F6BD641D01B3156701A962F7,
 				F6BD641F01B3156701A962F7,
 				F6BD642001B3156701A962F7,
@@ -2860,6 +2861,7 @@
 				3F44AD2A05BDFB9F00CB4B08,
 				3F44AD2B05BDFB9F00CB4B08,
 				3F44AD2C05BDFB9F00CB4B08,
+				3F44ADB105BDFB9F00CB4B08,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4372,6 +4374,12 @@
 			);
 			isa = PBXRezBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3F44ADB105BDFB9F00CB4B08 = {
+			fileRef = F6BD63F201B313EE01A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		3F44ADB205BDFBA000CB4B08 = {
 			isa = PBXFileReference;
@@ -6808,6 +6816,7 @@
 				3F44AF4505BDFBA000CB4B08,
 				3F44AF4605BDFBA000CB4B08,
 				3F44AF4705BDFBA000CB4B08,
+				3F44AFF905BDFBA000CB4B08,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8370,6 +8379,12 @@
 		};
 		3F44AFF805BDFBA100CB4B08 = {
 			fileRef = 3F44ADF105BDFBA000CB4B08;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F44AFF905BDFBA000CB4B08 = {
+			fileRef = F6BD63F201B313EE01A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -14423,6 +14438,14 @@
 			lastKnownFileType = file;
 			name = necko.xpt;
 			path = ../dist/Embed/components/necko.xpt;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		F6BD63F201B313EE01A962F7 = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			name = layout_printing.xpt;
+			path = ../dist/Embed/components/layout_printing.xpt;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

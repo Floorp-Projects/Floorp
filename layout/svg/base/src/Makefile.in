@@ -90,16 +90,11 @@ FORCE_STATIC_LIB = 1
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
-		-I$(srcdir)/../../../base/src \
-		-I$(srcdir)/../../../html/table/src \
-		-I$(srcdir)/../../../html/style/src \
-		-I$(srcdir)/../../../html/base/src \
-		-I$(srcdir)/../../../html/forms/src \
-		-I$(srcdir)/../../../../content/svg/content/src \
-		-I$(srcdir)/../../../html/content/src \
-		-I$(srcdir)/../../../xml/content/src \
-		-I$(srcdir)/../../../base/public \
+		-I$(srcdir)/../../../base \
+		-I$(srcdir)/../../../generic \
+		-I$(srcdir)/../../../style \
 		-I$(srcdir)/../../../xul/base/src \
+		-I$(srcdir)/../../../../content/svg/content/src \
 		$(NULL)
 
 EXPORT_RESOURCE_CONTENT = \

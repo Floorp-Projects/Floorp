@@ -53,7 +53,6 @@ REQUIRES	= xpcom \
 		  shistory \
 		  widget \
 		  gfx \
-		  content \
 		  docshell \
 		  appshell \
 		  appcomps \

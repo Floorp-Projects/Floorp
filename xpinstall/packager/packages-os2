@@ -157,6 +157,7 @@ bin/components/jar.xpt
 bin/components/jsconsole-clhandler.js
 bin/components/jsurl.xpt
 bin/components/layout_base.xpt
+bin/components/layout_printing.xpt
 bin/components/layout_xul.xpt
 bin/components/layout_xul_tree.xpt
 bin/components/locale.xpt

@@ -174,6 +174,7 @@ components/gfx.xpt
 ; layout
 components/libgklayout.so               
 components/layout_base.xpt              
+components/layout_printing.xpt              
 components/layout_xul.xpt               
 components/layout_xul_tree.xpt               
 components/content_base.xpt
@@ -190,6 +191,7 @@ components/xuldoc.xpt
 ;;res/dtd/xhtml11.dtd
 components/libgklayout.so                   
 components/layout_base.xpt              
+components/layout_printing.xpt              
 components/layout_xul.xpt
 components/layout_xul_tree.xpt               
 components/content_base.xpt
