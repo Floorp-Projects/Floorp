@@ -22,30 +22,42 @@ require 'timelocal.pl';
 
 umask 0;
 
+#$logfile = '';
+
 %MAIL_HEADER = ();
-%tbx = ();
-$logfile = '';
+$DONE = 0;
+$building = 0;
 
+open( LOG, "<$ARGV[0]") || die "cant open $!";
+&parse_mail_header;
+while ($DONE == 0) {
+    %tbx = ();
+    $endsection = 0;
+    &get_variables;
 
-&get_variables;
-&check_required_vars;
+    # run thru if EOF and we haven't hit our section end marker
+ 
+    if ( !$DONE || !$endsection) {
+        &check_required_vars;
+        $tree = $tbx{'tree'} if (!defined($tree));
+        $logfile = "$builddate.$$.gz" if (!defined($logfile));
+	$building++ if ($tbx{'status'} =~ m/building/);
+        &lock;
+        &write_build_data;
+        &unlock;
+    }
+}
+close(LOG);
+
 &compress_log_file;
 &unlink_log_file;
 
-$tree = $tbx{'tree'};
-
-&lock;
-&write_build_data;
-&unlock;
-
-$err = system("./buildwho.pl $tbx{'tree'}");
+#$err = system("./buildwho.pl $tree");
 
 #
 # This routine will scan through log looking for 'tinderbox:' variables
 #
 sub  get_variables{
-    open( LOG, "<$ARGV[0]") || die "cant open $!";
-    &parse_mail_header;
 
     #while( ($k,$v) = each( %MAIL_HEADER ) ){
     #    print "$k='$v'\n";
@@ -56,17 +68,21 @@ sub  get_variables{
     #while( ($k,$v) = each( %tbx ) ){
     #    print "$k='$v'\n";
     #}
-    close(LOG);
 }
 
 
 sub parse_log_variables {
-    my $line;
-    while($line = <LOG> ){
-        chop($line);
+    my ($line, $stop);
+    $stop = 0;
+    while($stop == 0){
+        $line = <LOG>;
+        $DONE++, return if !defined($line);
+        chomp($line);
         if( $line =~ /^tinderbox\:/ ){
             if( $line =~ /^tinderbox\:[ \t]*([^:]*)\:[ \t]*([^\n]*)/ ){
                 $tbx{$1} = $2;
+            } elsif ( $line =~ /^tinderbox: END/ ) {
+                $stop++, $endsection++;
             }
         }
     }
@@ -76,7 +92,7 @@ sub parse_mail_header {
     my $line;
     my $name = '';
     while($line = <LOG> ){
-        chop($line);
+        chomp($line);
 
         if( $line eq '' ){
             return;
@@ -125,8 +141,8 @@ sub check_required_vars {
     }
     else {
         if( $tbx{'builddate'} =~ 
-                /([0-9]*)\/([0-9]*)\/([0-9]*)[ \t]*([0-9]*)\:([0-9]*)\:([0-9]*)/ ){
-
+            /([0-9]*)\/([0-9]*)\/([0-9]*)[ \t]*([0-9]*)\:([0-9]*)\:([0-9]*)/ ){
+            
             $builddate = timelocal($6,$5,$4,$2,$1-1,$3);
                         
         }
@@ -167,9 +183,7 @@ sub write_build_data {
 sub compress_log_file {
     local( $done, $line);
 
-    if( $tbx{'status'} =~ /building/ ){
-        return;
-    }
+    return if ( $building );
 
     open( LOG2, "<$ARGV[0]") || die "cant open $!";
 
@@ -178,13 +192,11 @@ sub compress_log_file {
     #
     $done = 0;
     while( !$done && ($line = <LOG2>) ){
-        chop($line);
+        chomp($line);
         $done = ($line eq '');
     }
 
-    $logfile = "$builddate.$$.gz";
-
-    open( ZIPLOG, "| $gzip -c > $tbx{'tree'}/$logfile" ) || die "can't open $! for writing";
+    open( ZIPLOG, "| $gzip -c > ${tree}/$logfile" ) || die "can't open $! for writing";
     $inBinary = 0;
     $hasBinary = ($tbx{'binaryname'} ne '');
     while( $line = <LOG2> ){
