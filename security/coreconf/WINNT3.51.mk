@@ -60,7 +60,11 @@ endif
 OS_WIN_CFLAGS += -W3
 OS_CFLAGS     += -nologo $(OS_WIN_CFLAGS) $(OS_PROC_CFLAGS)
 #OS_DLLFLAGS  += -nologo -DLL -PDB:NONE -SUBSYSTEM:WINDOWS
-OS_DLLFLAGS   += -nologo -DLL -PDB:NONE -SUBSYSTEM:WINDOWS
+OS_DLLFLAGS   += -nologo -DLL -SUBSYSTEM:WINDOWS
+ifndef MOZ_DEBUG_SYMBOLS
+OS_DLLFLAGS   += -PDB:NONE
+endif
+
 #
 # Win NT needs -GT so that fibers can work
 #
