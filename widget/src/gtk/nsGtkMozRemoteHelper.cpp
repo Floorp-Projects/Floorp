@@ -196,9 +196,9 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
   PRBool         newWindow = PR_FALSE;
   nsCString      actionString;
   nsCString      commandString;
-  nsCAutoString  origString;
-  char          *begin_command = 0;
-  char          *end_command = 0;
+  nsCString      origString;
+  PRInt32        begin_command = 0;
+  PRInt32        end_command = 0;
   PRInt32        commandLen = 0;
 
   if (!aResponse)
@@ -217,10 +217,10 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
     return;
   }
   // make a copy of the string to work with
-  origString = nsCRT::strdup(aCommand);
+  origString = aCommand;
   
   // check to make sure that was allocated properly
-  if ((char *)origString)
+  if (origString.IsEmpty())
   {
     // hey, this might fail to.  but that's ok, the caller will handle
     // it if it is null anyway.
@@ -229,46 +229,38 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
   }
 
   // should start with a '(' char
-  begin_command = PL_strstr(origString, "(");
-  // make sure it's not null and is > 1 in length
-  if (begin_command == 0)
+  begin_command = origString.FindChar('(');
+  // make sure that it's there and it's not the first character
+  if (begin_command == kNotFound || begin_command == 0)
   {
-    *aResponse = BuildResponse(s500ParseCommand, origString);
+    *aResponse = BuildResponse(s500ParseCommand, origString.GetBuffer());
     return;
   }
 
-  // make sure there is an action
-  if (begin_command <= ((char *)origString))
+  // should end with a ')' char after the '(' char
+  end_command = origString.RFindChar(')');
+  if (end_command == kNotFound || end_command < begin_command)
   {
-    *aResponse = BuildResponse(s500ParseCommand, origString);
-    return;
-  }
-  // should end with a ')' char
-  end_command = PL_strrstr(origString, ")");
-  if (end_command == 0)
-  {
-    *aResponse = BuildResponse(s500ParseCommand, origString);
+    *aResponse = BuildResponse(s500ParseCommand, origString.GetBuffer());
     return;
   }
 
   // trunc the end of command
-  *end_command = '\0';
+  origString.Truncate(end_command);
   
   // get the action type
-  actionString.Append(origString, (begin_command - (char *)origString));
+  actionString = Substring(origString, 0, begin_command);
 
-  // figure out how long the command is
-  commandLen = (end_command - begin_command) - 1;
+  commandString = Substring(origString, begin_command + 1, origString.Length() - begin_command - 1);
 
-  if (commandLen > 0)
-    // get the command
-    commandString.Append(begin_command + 1);
-
-  // convert the action to lower case
+  // convert the action to lower case and remove whitespace
+  actionString.Trim(" ", PR_TRUE, PR_TRUE);
   actionString.ToLowerCase();
 
   // strip off whitespace from the command
-  commandString.CompressWhitespace(PR_TRUE, PR_TRUE);
+  commandString.Trim(" ", PR_TRUE, PR_TRUE);
+
+  commandLen = commandString.Length();
 
   /*   
       openURL ( ) 
@@ -301,11 +293,11 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
       // ok, do it
       if (newWindow)
       {
-	rv = OpenURL(commandString, PR_TRUE);
+	rv = OpenURL(commandString.GetBuffer(), PR_TRUE);
       }
       else
       {
-	rv = OpenURL(commandString, PR_FALSE);
+	rv = OpenURL(commandString.GetBuffer(), PR_FALSE);
       }
     }
   }
@@ -326,7 +318,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
     }
     else
     {
-      rv = OpenFile(commandString);
+      rv = OpenFile(commandString.GetBuffer());
     }
   }
 
@@ -418,7 +410,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
       PRUint32 indexRet = 0;
       nsCString lastCommand;
       FindLastInList(commandString, lastCommand, &indexRet);
-      if ((char *)lastCommand)
+      if (!lastCommand.IsEmpty())
       {
 	nsCAutoString title = lastCommand;
 	commandString.Truncate(indexRet);
@@ -458,7 +450,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
 }
 
 void
-nsGtkMozRemoteHelper::FindLastInList(const char *aString, nsCString &retString, PRUint32 *aIndexRet)
+nsGtkMozRemoteHelper::FindLastInList(nsCString &aString, nsCString &retString, PRUint32 *aIndexRet)
 {
   // init our return
   *aIndexRet = 0;
@@ -477,10 +469,10 @@ nsGtkMozRemoteHelper::FindLastInList(const char *aString, nsCString &retString, 
 
   // strip off leading + trailing whitespace
   
-  tempString.CompressWhitespace(PR_TRUE, PR_TRUE);
+  tempString.Trim(" ", PR_TRUE, PR_TRUE);
 
   // see if we've reduced it to nothing
-  if (tempString.Length() == 0)
+  if (tempString.IsEmpty())
     return;
 
   *aIndexRet = strIndex;
@@ -538,7 +530,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
   nsresult rv;
   nsString newURL;
   nsString name;
-  nsCAutoString navChromeURL = NULL;
+  nsCString navChromeURL = NULL;
   nsXPIDLCString tempString;
   NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
   if (NS_SUCCEEDED(rv))
@@ -547,7 +539,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
   if (tempString)
     navChromeURL = tempString;
   // default to this
-  if (!(char *)navChromeURL)
+  if (navChromeURL.IsEmpty())
     navChromeURL = "chrome://navigator/content/navigator.xul";
 
   newURL.AssignWithConversion(aURL);

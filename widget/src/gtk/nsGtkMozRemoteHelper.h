@@ -43,7 +43,7 @@ public:
   // internal methods
   static       void  EnsureAtoms     (void);
   static       void  ParseCommand    (const char *aCommand, char **aResponse);
-  static       void  FindLastInList  (const char *aString, nsCString &retString, PRUint32 *aIndexRet);
+  static       void  FindLastInList  (nsCString &aString, nsCString &retString, PRUint32 *aIndexRet);
   static       char *BuildResponse   (const char *aError, const char *aMessage);
 
   // these are for the actions
