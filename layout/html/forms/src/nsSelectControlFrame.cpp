@@ -212,6 +212,7 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
   nsIDOMHTMLCollection* options = GetOptions(select);
   if (!options) {
+    NS_RELEASE(select);
     return;
   }
 
@@ -289,6 +290,7 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   }
 
+  NS_RELEASE(select);
   NS_RELEASE(options);
 }
 

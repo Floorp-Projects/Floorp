@@ -44,33 +44,17 @@ struct nsFormFrameTableEntry
   nsFormFrame*           mFormFrame;
   nsFormFrameTableEntry(nsIPresContext&        aPresContext, 
                         nsIDOMHTMLFormElement& aFormElement,
-                        nsFormFrame&           aFormFrame) : mPresContext(&aPresContext), 
-                                                             mFormElement(&aFormElement), 
-                                                             mFormFrame(&aFormFrame) {}
+                        nsFormFrame&           aFormFrame);
+  ~nsFormFrameTableEntry();
 };
 struct nsFormFrameTable
 {
   nsVoidArray mEntries;
   nsFormFrameTable() {}
-  nsFormFrame* Get(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem) {
-    PRInt32 count = mEntries.Count();
-    for (PRInt32 i = 0; i < count; i++) {
-      nsFormFrameTableEntry* entry = (nsFormFrameTableEntry *)mEntries.ElementAt(i);
-      if ((entry->mPresContext == &aPresContext) && (entry->mFormElement == &aFormElem)) {
-        return entry->mFormFrame;
-      }
-    }
-    return nsnull;
-  }
-  void Put(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem, nsFormFrame& aFormFrame) {
-    mEntries.AppendElement(new nsFormFrameTableEntry(aPresContext, aFormElem, aFormFrame));
-  }
-  ~nsFormFrameTable() { 
-    PRInt32 count = mEntries.Count(); 
-    for (PRInt32 i = 0; i < count; i++) {
-      delete mEntries.ElementAt(i);
-    }
-  }
+  ~nsFormFrameTable();
+  void Put(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem, nsFormFrame& aFormFrame);  
+  nsFormFrame* Get(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem);
+  void Remove(nsFormFrame& aFormFrame);
 };
 
 class nsFormFrame : public nsLeafFrame, 
@@ -120,6 +104,9 @@ public:
     gFormFrameTable->Put(aPresContext, aFormElem, aFrame);
   }
 
+  static void RemoveFormFrame(nsFormFrame& aFrame) { 
+    gFormFrameTable->Remove(aFrame);
+  }
   // static helper functions for nsIFormControls
   
   static PRBool GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent = 0);
