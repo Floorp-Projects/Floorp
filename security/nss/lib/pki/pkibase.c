@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.9 $ $Date: 2002/06/24 22:36:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.10 $ $Date: 2002/07/31 02:00:13 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -859,7 +859,9 @@ nssPKIObjectCollection_GetObjects
 	    /* Convert the proto-object to an object */
 	    node->object = (*collection->createObject)(node->object);
 	    if (!node->object) {
-		return PR_FAILURE;
+		link = PR_NEXT_LINK(link);
+		PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
+		continue;
 	    }
 	    node->haveObject = PR_TRUE;
 	}
@@ -884,7 +886,9 @@ nssPKIObjectCollection_Traverse
 	if (!node->haveObject) {
 	    node->object = (*collection->createObject)(node->object);
 	    if (!node->object) {
-		return PR_FAILURE;
+		link = PR_NEXT_LINK(link);
+		PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
+		continue;
 	    }
 	    node->haveObject = PR_TRUE;
 	}
@@ -926,6 +930,7 @@ nssPKIObjectCollection_AddInstanceAsObject
     if (!node->haveObject) {
 	node->object = (*collection->createObject)(node->object);
 	if (!node->object) {
+	    PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
 	    return PR_FAILURE;
 	}
 	node->haveObject = PR_TRUE;
