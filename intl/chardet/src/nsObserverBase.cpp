@@ -32,7 +32,8 @@ static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsObserverBase::NotifyWebShell(
-  PRUint32 aDocumentID, const char* charset, nsCharsetSource source)
+  PRUint32 aDocumentID, const char* charset, nsCharsetSource source,
+  const char* aCmd)
 {
    nsresult res = NS_OK;
    nsresult rv = NS_OK;
@@ -75,7 +76,7 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
       goto done;
    }
 
-   if(NS_FAILED(rv = wss->ReloadDocument(charset, source))) {
+   if(NS_FAILED(rv = wss->ReloadDocument(charset, source, aCmd))) {
 	  rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
       goto done;
    }

@@ -42,7 +42,10 @@ public:
    */
 protected:
 
-  NS_IMETHOD NotifyWebShell(PRUint32 aDocumentID, const char* charset, nsCharsetSource source);
+  NS_IMETHOD NotifyWebShell(PRUint32 aDocumentID, 
+                            const char* charset, 
+                            nsCharsetSource source,
+                            const char* aCmd = nsnull);
 
 };
 
