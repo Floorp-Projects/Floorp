@@ -768,6 +768,8 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
       5. Scan the output string looking for markup inside our sentinel. If non-empty
          then we have to assume that the fragment is valid (at least in part)
    ************************************************************************************/
+
+/*------------------------ Comment out for now ----------------------------
   nsAutoString  theContext;
   PRUint32 theCount=aStack.GetSize();
   PRUint32 theIndex=0;
@@ -799,6 +801,8 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
     }
   }
   return result;
+*--------------------------------------------------------------------------*/
+  return PR_FALSE;
 }
 
 
