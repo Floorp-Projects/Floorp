@@ -176,6 +176,18 @@ nsTextHelper::~nsTextHelper()
 {
 }
 
+#ifdef MOZ_UNICODE
+//-------------------------------------------------------------------------
+//
+// return the window class name and initialize the class if needed
+//
+//-------------------------------------------------------------------------
+LPCWSTR nsTextHelper::WindowClassW()
+{
+    return(L"EDIT");
+}
+#endif /* MOZ_UNICODE */
+
 //-------------------------------------------------------------------------
 //
 // return the window class name and initialize the class if needed
