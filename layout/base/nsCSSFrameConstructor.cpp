@@ -6817,9 +6817,16 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
   
     // Create a text content element for the alternate text
     nsCOMPtr<nsIContent> altTextContent;
-    nsIDOMCharacterData* domData;
-
     NS_NewTextNode(getter_AddRefs(altTextContent));
+
+    // Set aContent as the parent content and set the document object
+    nsCOMPtr<nsIDocument> document;
+    aContent->GetDocument(*getter_AddRefs(document));
+    altTextContent->SetParent(aContent);
+    altTextContent->SetDocument(document, PR_TRUE);
+
+    // Set the content's text
+    nsIDOMCharacterData* domData;
     altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
     domData->SetData(altText);
     NS_RELEASE(domData);
