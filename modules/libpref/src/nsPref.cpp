@@ -28,6 +28,10 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
+#ifdef PREF_USE_SYSDIR
+#include "nsSpecialSystemDirectory.h"	// For exe dir
+#endif /* PREF_USE_SYSDIR */
+
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -198,7 +202,19 @@ nsPref::useDefaultPrefFile(nsPref *aPrefInst)
   if (!aPrefInst)
     return;
 
+#ifdef PREF_USE_SYSDIR
+  nsSpecialSystemDirectory sysDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  sysDir += "prefs.js";
+  nsFilePath prefPath(sysDir);
+  /* incomplete */
+#endif /* PREF_USE_SYSDIR */
+
+
+#ifdef XP_UNIX
+  aPrefInst->Startup("preferences.js");
+#else /* all others XP_WIN && XP_MAC */
   aPrefInst->Startup("prefs.js");
+#endif
 
   return;
 }
