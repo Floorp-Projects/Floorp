@@ -652,7 +652,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
                const nsRect&        aDirtyRect,
                nsFramePaintLayer    aWhichLayer)
 {
-  if (eFramePaintLayer_Overlay == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     if (DisplaySelection(aPresContext) == PR_FALSE)
       return NS_OK;
 

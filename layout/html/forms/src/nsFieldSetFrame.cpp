@@ -178,7 +178,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
                        const nsRect& aDirtyRect,
                        nsFramePaintLayer aWhichLayer)
 {
-  if (eFramePaintLayer_Underlay == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Paint our background and border
     const nsStyleDisplay* disp =
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -213,7 +213,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
-  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
+  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     nsIView* view;
     GetView(&view);
     if (nsnull != view) {

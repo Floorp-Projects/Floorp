@@ -334,7 +334,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 
 	nsRect rect;
 
-    if (eFramePaintLayer_Underlay == aWhichLayer) 
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) 
 	{
 
 		if (mOuterFocusStyle) {
@@ -360,7 +360,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 		}
 	}
 
-    if (eFramePaintLayer_Overlay == aWhichLayer) 
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
 	{
 		if /*(mOutlineStyle) */ (PR_FALSE) {
 
@@ -391,7 +391,7 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext& aPresContext,
 
 {
 
-    if (eFramePaintLayer_Underlay != aWhichLayer) 
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND != aWhichLayer) 
 	   return;
 
 	// get the button rect this is inside the focus and outline rects

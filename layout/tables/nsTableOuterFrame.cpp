@@ -130,7 +130,7 @@ NS_METHOD nsTableOuterFrame::Paint(nsIPresContext& aPresContext,
                                    nsFramePaintLayer aWhichLayer)
 {
   // for debug...
-  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
+  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(255,0,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }

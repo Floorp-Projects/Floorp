@@ -1929,11 +1929,11 @@ PresShell::Paint(nsIView              *aView,
 
   if (nsnull != frame) {
     rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
-                      eFramePaintLayer_Underlay);
+                      NS_FRAME_PAINT_LAYER_BACKGROUND);
     rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
-                      eFramePaintLayer_Content);
+                      NS_FRAME_PAINT_LAYER_FLOATERS);
     rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
-                      eFramePaintLayer_Overlay);
+                      NS_FRAME_PAINT_LAYER_FOREGROUND);
 #ifdef NS_DEBUG
     // Draw a border around the frame
     if (nsIFrame::GetShowFrameBorders()) {

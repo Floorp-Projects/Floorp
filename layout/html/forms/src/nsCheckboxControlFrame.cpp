@@ -345,7 +345,7 @@ nsCheckboxControlFrame::Paint(nsIPresContext& aPresContext,
 {
     // Paint the background
   nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  if (eFramePaintLayer_Content == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       // Paint the checkmark 
     PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   }

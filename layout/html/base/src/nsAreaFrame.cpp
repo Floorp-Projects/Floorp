@@ -222,7 +222,7 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
   nsresult rv = nsBlockFrame::Paint(aPresContext, aRenderingContext,
                                     aDirtyRect, aWhichLayer);
 
-  if ((eFramePaintLayer_Overlay == aWhichLayer) && nsIFrame::GetShowFrameBorders()) {
+  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     // Render the bands in the spacemanager
     nsISpaceManager* sm = mSpaceManager;
 

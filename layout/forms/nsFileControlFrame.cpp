@@ -463,7 +463,7 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
 
   mTextFrame->PaintTextControlBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
-  if (eFramePaintLayer_Content == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     nsString text;
     if (NS_SUCCEEDED(nsFormControlHelper::GetInputElementValue(mContent, &text, PR_FALSE))) {
       nsRect rect;

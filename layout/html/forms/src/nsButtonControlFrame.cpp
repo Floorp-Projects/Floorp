@@ -269,7 +269,7 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
     nsRect rect(0, 0, mRect.width, mRect.height);
     mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
 
-    if (eFramePaintLayer_Content == aWhichLayer) {
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
 	    nsString label;
 	    nsresult result = GetValue(&label);
 

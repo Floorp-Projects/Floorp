@@ -346,7 +346,7 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
         aRenderingContext.Translate(kidRect.x, kidRect.y);
         kid->Paint(aPresContext, aRenderingContext, kidDamageArea,
                    aWhichLayer);
-        if ((eFramePaintLayer_Overlay == aWhichLayer) &&
+        if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
             GetShowFrameBorders()) {
           aRenderingContext.SetColor(NS_RGB(255,0,0));
           aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);

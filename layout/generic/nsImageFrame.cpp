@@ -754,7 +754,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
     if (nsnull == image) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
-      if (eFramePaintLayer_Underlay == aWhichLayer) {
+      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
         DisplayAltFeedback(aPresContext, aRenderingContext,
                            mImageLoader.GetLoadImageFailed()
                            ? NS_ICON_BROKEN_IMAGE
@@ -763,7 +763,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
       return NS_OK;
     }
 
-    if ((eFramePaintLayer_Content == aWhichLayer)
+    if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
 #ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
         && mImageLoader.HaveImageSize()
 #endif
@@ -781,7 +781,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
       aRenderingContext.DrawImage(image, inner);
     }
 
-    if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
+    if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
       nsImageMap* map = GetImageMap();
       if (nsnull != map) {
         nsRect inner;

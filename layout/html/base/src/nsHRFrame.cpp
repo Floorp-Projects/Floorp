@@ -80,7 +80,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
                   const nsRect&        aDirtyRect,
                   nsFramePaintLayer    aWhichLayer)
 {
-  if (eFramePaintLayer_Content != aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
   }
 

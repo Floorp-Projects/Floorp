@@ -73,7 +73,7 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
-  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
+  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     float p2t;
     aPresContext.GetPixelsToTwips(&p2t);
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
