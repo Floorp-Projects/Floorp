@@ -889,9 +889,11 @@
             case KeyEvent.DOM_VK_PAGE_UP:
             case KeyEvent.DOM_VK_PAGE_DOWN:
             case KeyEvent.DOM_VK_UP:
-              this.clearTimer();
-              killEvent = true;
-              this.keyNavigation(aEvent);
+              if (!aEvent.ctrlKey && !aEvent.metaKey) {
+                this.clearTimer();
+                killEvent = true;
+                this.keyNavigation(aEvent);
+              }
               break;
           }
           
