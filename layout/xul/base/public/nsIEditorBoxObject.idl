@@ -23,8 +23,8 @@
  */
 
 #include "nsIBoxObject.idl"
-#include "nsIEditorShell.idl"
-#include "domstubs.idl"
+
+interface nsIEditorShell;
 
 [scriptable, uuid(14B3B669-3414-4548-AA03-EDF257D889C8)]
 interface nsIEditorBoxObject : nsISupports

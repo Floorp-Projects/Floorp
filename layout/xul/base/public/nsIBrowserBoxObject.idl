@@ -23,8 +23,8 @@
  */
 
 #include "nsIBoxObject.idl"
-#include "nsIWebBrowser.idl"
-#include "domstubs.idl"
+
+interface nsIWebBrowser;
 
 [scriptable, uuid(F2504C26-7CF5-426a-86A7-E50998AC57C1)]
 interface nsIBrowserBoxObject : nsISupports
