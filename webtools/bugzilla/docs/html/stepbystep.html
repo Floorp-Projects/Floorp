@@ -4,10 +4,9 @@
 >Step-by-step Install</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
-"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.4 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Installation"
@@ -37,7 +36,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.4 Development Release</TH
+>The Bugzilla Guide - 2.17.5 Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -755,6 +754,15 @@ HREF="stepbystep.html#install-modules-mime-parser"
             (any) for the email interface
           </P
 ></LI
+><LI
+><P
+>&#13;            <A
+HREF="stepbystep.html#install-modules-patchreader"
+>PatchReader</A
+>
+            (0.9.1) for pretty HTML view of patches
+          </P
+></LI
 ></OL
 >          
       </P
@@ -1428,6 +1436,43 @@ TARGET="_top"
 ><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
 ></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="install-modules-patchreader"
+></A
+>4.1.3.18. PatchReader (0.9.1) [Optional]</H3
+><P
+>PatchReader is only needed if you want to use Patch Viewer, a
+      Bugzilla feature to format patches in a pretty HTML fashion.  There are a
+      number of optional parameters you can configure Patch Viewer with as well,
+      including cvsroot, cvsroot_get, lxr_root, bonsai_url, lxr_url, and
+      lxr_root.  Patch Viewer also optionally will use cvs, diff and interdiff
+      utilities if they exist on the system (interdiff can be found in the
+      patchutils package at <A
+HREF="http://cyberelk.net/tim/patchutils/"
+TARGET="_top"
+>http://cyberelk.net/tim/patchutils/</A
+>.
+      These programs' locations can be configured in localconfig.
+      </P
+><P
+CLASS="literallayout"
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CPAN&nbsp;Download&nbsp;Page:&nbsp;<A
+HREF="http://search.cpan.org/author/JKEISER/PatchReader/"
+TARGET="_top"
+>http://search.cpan.org/author/JKEISER/PatchReader/</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Documentation:&nbsp;<A
+HREF="http://www.johnkeiser.com/mozilla/Patch_Viewer.html"
+TARGET="_top"
+>http://www.johnkeiser.com/mozilla/Patch_Viewer.html</A
+><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</P
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -1763,7 +1808,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN749"
+NAME="AEN759"
 ></A
 >4.1.7. <TT
 CLASS="filename"
@@ -1913,7 +1958,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN780"
+NAME="AEN790"
 ></A
 >4.1.8. Configuring Bugzilla</H2
 ><P

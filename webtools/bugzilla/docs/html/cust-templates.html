@@ -4,10 +4,9 @@
 >Template Customization</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
-"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.4 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Administering Bugzilla"
@@ -37,7 +36,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.4 Development Release</TH
+>The Bugzilla Guide - 2.17.5 Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -90,16 +89,20 @@ TARGET="_top"
     </P
 ><P
 >&#13;      Templatization also makes localized versions of Bugzilla possible, 
-      for the first time. In the future, a Bugzilla installation may
-      have templates installed for multiple localizations, and select
-      which ones to use based on the user's browser language setting.      
+      for the first time. As of version 2.17.4 which will soon
+      become 2.18, it's possible to have Bugzilla's language determined by
+      the user's browser. More information is available in
+      <A
+HREF="cust-templates.html#template-http-accept"
+>Section 5.7.5</A
+>.
     </P
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1559"
+NAME="AEN1570"
 ></A
 >5.7.1. What to Edit</H2
 ><P
@@ -208,13 +211,48 @@ CLASS="filename"
 ></TR
 ></TABLE
 ></DIV
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>It is recommended that you run <B
+CLASS="command"
+>./checksetup.pl</B
+>
+        after any template edits, especially if you've created a new file in
+        the <TT
+CLASS="filename"
+>custom</TT
+> directory.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1578"
+NAME="AEN1593"
 ></A
 >5.7.2. How To Edit Templates</H2
 ><P
@@ -296,7 +334,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1588"
+NAME="AEN1603"
 ></A
 >5.7.3. Template Formats</H2
 ><P
@@ -358,7 +396,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1601"
+NAME="AEN1616"
 ></A
 >5.7.4. Particular Templates</H2
 ><P
@@ -540,6 +578,48 @@ CLASS="programlisting"
 ></TABLE
 >
         would appear in the initial checkin comment.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="template-http-accept"
+></A
+>5.7.5. Configuring Bugzilla to Detect the User's Language</H2
+><P
+>Begining in version 2.18 (first introduced in version 
+      2.17.4), it's now possible to have the users web browser tell Bugzilla
+      which language templates to use for each visitor (using the HTTP_ACCEPT
+      header). For this to work, Bugzilla needs to have the correct language
+      templates installed for the version of Bugzilla you are using. Many
+      language templates can be obtained from <A
+HREF="http://www.bugzilla.org/download.html#localizations"
+TARGET="_top"
+>http://www.bugzilla.org/download.html#localizations</A
+>. Instructions
+      for submitting new languages are also available from that location.
+      </P
+><P
+>After untarring the localizations (or creating your own) in the 
+      <TT
+CLASS="filename"
+>[Bugzilla_Root]/template</TT
+> directory,
+      you must update the <TT
+CLASS="option"
+>languages</TT
+> parameter to contain any
+      localizations you'd like to permit. You may also wish to set the
+      <TT
+CLASS="option"
+>defaultlanguage</TT
+> parameter to something other than
+      <SPAN
+CLASS="QUOTE"
+>"en"</SPAN
+> if you don't want Engish to be the default language.
       </P
 ></DIV
 ></DIV

@@ -1,5 +1,4 @@
-
-The Bugzilla Guide - 2.17.4 Development Release
+The Bugzilla Guide - 2.17.5 Development Release
 
 Matthew P. Barnson
 
@@ -7,7 +6,7 @@ Jacob Steenhagen
 
 The Bugzilla Team
 
-   2003-04-23
+   2003-10-31
 
    This is the documentation for Bugzilla, the mozilla.org bug-tracking
    system. Bugzilla is an enterprise-class piece of software that powers
@@ -120,13 +119,13 @@ Chapter 1. About This Guide
 
 
 
-   Permission is granted to copy, distribute and/or modify this document
-   under the terms of the GNU Free Documentation License, Version 1.1 or
-   any later version published by the Free Software Foundation; with no
-   Invariant Sections, no Front-Cover Texts, and with no Back-Cover
-   Texts. A copy of the license is included in Appendix E.
+     Permission is granted to copy, distribute and/or modify this document
+     under the terms of the GNU Free Documentation License, Version 1.1 or
+     any later version published by the Free Software Foundation; with no
+     Invariant Sections, no Front-Cover Texts, and with no Back-Cover
+     Texts. A copy of the license is included in Appendix E.
 
-   --Copyright (c) 2000-2003 Matthew P. Barnson and The Bugzilla Team
+       --Copyright (c) 2000-2003 Matthew P. Barnson and The Bugzilla Team
 
    If you have any questions regarding this document, its copyright, or
    publishing this document in non-electronic form, please contact The
@@ -172,7 +171,7 @@ Chapter 1. About This Guide
 
 1.3. New Versions
 
-   This is the 2.17.4 version of The Bugzilla Guide. It is so named to
+   This is the 2.17.5 version of The Bugzilla Guide. It is so named to
    match the current version of Bugzilla. This version of the guide, like
    its associated Bugzilla version is a development version. Information
    is subject to change between now and when 2.18 is released. If you are
@@ -246,24 +245,28 @@ Chapter 1. About This Guide
    Descriptions Appearance
    Warnings
 
+
    Caution
 
-   Don't run with scissors!
+           Don't run with scissors!
    Hint
+
 
    Tip
 
-   Would you like a breath mint?
+       Would you like a breath mint?
    Notes
+
 
    Note
 
-   Dear John...
+        Dear John...
    Information requiring special attention
+
 
    Warning
 
-   Read this or the cat gets it.
+           Read this or the cat gets it.
    File Names filename
    Directory Names directory
    Commands to be typed command
@@ -275,9 +278,9 @@ Chapter 1. About This Guide
    Emphasized word word
    Term found in the glossary Bugzilla
    Code Example
-<para>
-Beginning and end of paragraph
-</para>
+   <para>
+   Beginning and end of paragraph
+   </para>
      _________________________________________________________________
 
 Chapter 2. Introduction
@@ -409,22 +412,22 @@ Chapter 3. Using Bugzilla
        several Components:
 
        Administration: Administration of a Bugzilla installation.
-   Bugzilla-General: Anything that doesn't fit in the other components,
-   or spans multiple components.
+       Bugzilla-General: Anything that doesn't fit in the other components,
+       or spans multiple components.
        Creating/Changing Bugs: Creating, changing, and viewing bugs.
-   Documentation: The Bugzilla documentation, including The Bugzilla
-   Guide.
+       Documentation: The Bugzilla documentation, including The Bugzilla
+       Guide.
        Email: Anything to do with email sent by Bugzilla.
        Installation: The installation process of Bugzilla.
-   Query/Buglist: Anything to do with searching for bugs and viewing the
-   buglists.
+       Query/Buglist: Anything to do with searching for bugs and viewing the
+       buglists.
        Reporting/Charting: Getting reports from Bugzilla.
-   User Accounts: Anything about managing a user account from the user's
-   perspective. Saved queries, creating accounts, changing passwords,
-   logging in, etc.
-   User Interface: General issues having to do with the user interface
-   cosmetics (not functionality) including cosmetic issues, HTML
-   templates, etc.
+       User Accounts: Anything about managing a user account from the user's
+       perspective. Saved queries, creating accounts, changing passwords,
+       logging in, etc.
+       User Interface: General issues having to do with the user interface
+       cosmetics (not functionality) including cosmetic issues, HTML
+       templates, etc.
     2. Status and Resolution: These define exactly what state the bug is
        in - from not even being confirmed as a bug, through to being
        fixed and the fix confirmed by Quality Assurance. The different
@@ -478,12 +481,16 @@ Chapter 3. Using Bugzilla
    http://landfill.bugzilla.org/bugzilla-tip/query.cgi.
 
    The Search page has controls for selecting different possible values
-   for all of the fields in a bug, as described above. Once you've
-   defined a search, you can either run it, or save it as a Remembered
-   Query, which can optionally appear in the footer of your pages.
+   for all of the fields in a bug, as described above. For some fields,
+   multiple values can be selected. In those cases, Bugzilla returns bugs
+   where the content of the field matches one of the selected values. If
+   none is selected, then the field can take any value.
 
-   Highly advanced querying is done using Boolean Charts, which have
-   their own context-sensitive help .
+   Once you've defined a search, you can either run it, or save it as a
+   Remembered Query, which can optionally appear in the footer of your
+   pages.
+
+   Highly advanced querying is done using Boolean Charts.
      _________________________________________________________________
 
 3.1.4. Bug Lists
@@ -652,8 +659,8 @@ Chapter 3. Using Bugzilla
 
    Note
 
-   The ability to watch other users may not be available in all Bugzilla
-   installations. If you can't see it, ask your administrator.
+        The ability to watch other users may not be available in all Bugzilla
+        installations. If you can't see it, ask your administrator.
      _________________________________________________________________
 
 3.3.3. Page Footer
@@ -685,18 +692,18 @@ Chapter 4. Installation
 
    Note
 
-   Windows is one of those operating systems that has many quirks and is
-   not yet officially supported by the Bugzilla team. If you wish to
-   install Bugzilla on Windows, be sure to see Section 4.3.1.
+        Windows is one of those operating systems that has many quirks and is
+        not yet officially supported by the Bugzilla team. If you wish to
+        install Bugzilla on Windows, be sure to see Section 4.3.1.
 
-   Warning
+ Warning
 
-   While installing Bugzilla, it is a good idea to ensure that there is
-   some kind of firewall between you and the rest of the Internet as your
-   machine may be insecure for periods during the install. Many
-   installation steps require an active Internet connection to complete,
-   but you must take care to ensure that at no point is your machine
-   vulnerable to an attack.
+         While installing Bugzilla, it is a good idea to ensure that there is
+         some kind of firewall between you and the rest of the Internet as your
+         machine may be insecure for periods during the install. Many
+         installation steps require an active Internet connection to complete,
+         but you must take care to ensure that at no point is your machine
+         vulnerable to an attack.
 
    This guide assumes that you already have your operating system
    installed, network configured, and have administrative access to the
@@ -723,11 +730,11 @@ Chapter 4. Installation
 
    Note
 
-   Many of the binary versions of MySQL store their data files in /var.
-   On some Unix systems, this is part of a smaller root partition, and
-   may not have room for your bug database. You can set the data
-   directory as an option to configure if you build MySQL from source
-   yourself.
+        Many of the binary versions of MySQL store their data files in /var.
+        On some Unix systems, this is part of a smaller root partition, and
+        may not have room for your bug database. You can set the data
+        directory as an option to configure if you build MySQL from source
+        yourself.
 
    If you install from something other than a packaging/installation
    system (such as .rpm, .dep, .exe, or .msi) you will need to configure
@@ -741,9 +748,9 @@ Chapter 4. Installation
    set this value to be slightly larger than that parameter.
 
    Figure 4-1. Set Max Packet Size in MySQL
-[mysqld]
-# Allow packets up to 1M
-set-variable = max_allowed_packet=1M
+   [mysqld]
+   # Allow packets up to 1M
+   set-variable = max_allowed_packet=1M
 
    If you are running Bugzilla and MySQL on the same machine, you may
    also wish to utilize the skip-networking option as mentioned in
@@ -773,34 +780,34 @@ set-variable = max_allowed_packet=1M
    Example 4-1. Installing perl modules with CPAN
 
    The easy way:
-bash# perl -MCPAN -e 'install "<modulename>"'
+   bash# perl -MCPAN -e 'install "<modulename>"'
 
    Or the hard way:
-bash# tar xzvf <module>.tar.gz      (1)
-bash# cd <module>                   (2)
-bash# perl Makefile.PL
-bash# make
-bash# make test
-bash# make install
+   bash# tar xzvf <module>.tar.gz      (1)
+   bash# cd <module>                   (2)
+   bash# perl Makefile.PL
+   bash# make
+   bash# make test
+   bash# make install
 
-   (1) 
+   (1)
           This assumes that you've already downloaded the <module>.tar.gz
           to the current working directory.
-   (2) 
+   (2)
           The process of untaring the module as defined in (1) will
           create the <module> directory.
 
    Tip
 
-   Many people complain that Perl modules will not install for them. Most
-   times, the error messages complain that they are missing a file in
-   "@INC". Virtually every time, this error is due to permissions being
-   set too restrictively for you to compile Perl modules or not having
-   the necessary Perl development libraries installed on your system.
-   Consult your local UNIX systems administrator for help solving these
-   permissions issues; if you are the local UNIX sysadmin, please consult
-   the newsgroup/mailing list for further assistance or hire someone to
-   help you out.
+       Many people complain that Perl modules will not install for them. Most
+       times, the error messages complain that they are missing a file in
+       "@INC". Virtually every time, this error is due to permissions being
+       set too restrictively for you to compile Perl modules or not having
+       the necessary Perl development libraries installed on your system.
+       Consult your local UNIX systems administrator for help solving these
+       permissions issues; if you are the local UNIX sysadmin, please consult
+       the newsgroup/mailing list for further assistance or hire someone to
+       help you out.
 
    Perl Modules (minimum version):
 
@@ -824,6 +831,7 @@ bash# make install
     4. GD::Graph (any) for bug charting
     5. GD::Text::Align (any) for bug charting
     6. MIME::Parser (any) for the email interface
+    7. PatchReader (0.9.1) for pretty HTML view of patches
      _________________________________________________________________
 
 4.1.3.1. Bundle::Bugzilla
@@ -837,14 +845,14 @@ bash# make install
    Assuming your perl was installed with CPAN (most unix installations
    are), using Bundle::Bugzilla is really easy. Simply follow along with
    the commands below.
-bash# perl -MCPAN -eshell               (1)
-cpan shell -- CPAN exploration and modules installation (v1.63)
-ReadLine support enabled
+   bash# perl -MCPAN -eshell               (1)
+   cpan shell -- CPAN exploration and modules installation (v1.63)
+   ReadLine support enabled
 
-cpan>
+   cpan>
 
 
-   (1) 
+   (1)
           At this point, unless you've used CPAN on this machine before,
           you'll have to go through a series of configuration steps.
      _________________________________________________________________
@@ -994,16 +1002,16 @@ cpan>
 
    Note
 
-   The Perl GD library requires some other libraries that may or may not
-   be installed on your system, including libpng and libgd. The full
-   requirements are listed in the Perl GD library README. If compiling GD
-   fails, it's probably because you're missing a required library.
+        The Perl GD library requires some other libraries that may or may not
+        be installed on your system, including libpng and libgd. The full
+        requirements are listed in the Perl GD library README. If compiling GD
+        fails, it's probably because you're missing a required library.
 
    Tip
 
-   The version of the GD perl module you need is very closely tied to the
-   libgd version installed on your system. If you have a version 1.x of
-   libgd the 2.x versions of the GD perl module won't work for you.
+       The version of the GD perl module you need is very closely tied to the
+       libgd version installed on your system. If you have a version 1.x of
+       libgd the 2.x versions of the GD perl module won't work for you.
 
            CPAN Download Page: http://search.cpan.org/dist/GD/
            PPM Download Link: http://ppm.activestate.com/PPMPackages/zips
@@ -1070,6 +1078,24 @@ cpan>
    /Parser.pm
      _________________________________________________________________
 
+4.1.3.18. PatchReader (0.9.1) [Optional]
+
+   PatchReader is only needed if you want to use Patch Viewer, a Bugzilla
+   feature to format patches in a pretty HTML fashion. There are a number
+   of optional parameters you can configure Patch Viewer with as well,
+   including cvsroot, cvsroot_get, lxr_root, bonsai_url, lxr_url, and
+   lxr_root. Patch Viewer also optionally will use cvs, diff and
+   interdiff utilities if they exist on the system (interdiff can be
+   found in the patchutils package at
+   http://cyberelk.net/tim/patchutils/. These programs' locations can be
+   configured in localconfig.
+
+           CPAN Download Page: http://search.cpan.org/author/JKEISER/Patc
+   hReader/
+           Documentation: http://www.johnkeiser.com/mozilla/Patch_Viewer.
+   html
+     _________________________________________________________________
+
 4.1.4. HTTP Server
 
    You have freedom of choice here, pretty much any web server that is
@@ -1078,11 +1104,11 @@ cpan>
 
    Note
 
-   We strongly recommend Apache as the web server to use. The Bugzilla
-   Guide installation instructions, in general, assume you are using
-   Apache. If you have got Bugzilla working using another webserver,
-   please share your experiences with us by filing a bug in Bugzilla
-   Documentation.
+        We strongly recommend Apache as the web server to use. The Bugzilla
+        Guide installation instructions, in general, assume you are using
+        Apache. If you have got Bugzilla working using another webserver,
+        please share your experiences with us by filing a bug in Bugzilla
+        Documentation.
      _________________________________________________________________
 
 4.1.5. Bugzilla
@@ -1095,22 +1121,22 @@ cpan>
 
    Tip
 
-   If you symlink the bugzilla directory into your Apache's HTML
-   hierarchy, you may receive Forbidden errors unless you add the
-   "FollowSymLinks" directive to the <Directory> entry for the HTML root
-   in httpd.conf.
+       If you symlink the bugzilla directory into your Apache's HTML
+       hierarchy, you may receive Forbidden errors unless you add the
+       "FollowSymLinks" directive to the <Directory> entry for the HTML root
+       in httpd.conf.
 
    Once all the files are in a web accessible directory, make that
    directory writable by your webserver's user. This is a temporary step
    until you run the post-install checksetup.pl script, which locks down
    your installation.
 
-   Caution
+  Caution
 
-   The default Bugzilla distribution is not designed to be placed in a
-   cgi-bin directory (this includes any directory which is configured
-   using the ScriptAlias directive of Apache). This will probably change
-   as part of bug 44659.
+          The default Bugzilla distribution is not designed to be placed in a
+          cgi-bin directory (this includes any directory which is configured
+          using the ScriptAlias directive of Apache). This will probably change
+          as part of bug 44659.
      _________________________________________________________________
 
 4.1.6. Setting Up the MySQL Database
@@ -1128,7 +1154,7 @@ cpan>
 
    Note
 
-   Most people use "bugs" for both the user and database name.
+        Most people use "bugs" for both the user and database name.
 
    Next, we use an SQL GRANT command to create a "bugs_user" user, and
    grant sufficient permissions for checksetup.pl, which we'll use later,
@@ -1136,15 +1162,15 @@ cpan>
    operations within a database called "bugs_db", and only allows the
    account to connect from "localhost". Modify it to reflect your setup
    if you will be connecting from another machine or as a different user.
-mysql> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
-       DROP,REFERENCES ON bugs_db.* TO bugs_user@localhost
-       IDENTIFIED BY 'bugs_password';
-mysql> FLUSH PRIVILEGES;
+   mysql> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
+          DROP,REFERENCES ON bugs_db.* TO bugs_user@localhost
+          IDENTIFIED BY 'bugs_password';
+   mysql> FLUSH PRIVILEGES;
 
    Note
 
-   If you are using MySQL 4, the bugs user also needs to be granted the
-   LOCK TABLES and CREATE TEMPORARY TABLES permissions.
+        If you are using MySQL 4, the bugs user also needs to be granted the
+        LOCK TABLES and CREATE TEMPORARY TABLES permissions.
      _________________________________________________________________
 
 4.1.7. checksetup.pl
@@ -1156,7 +1182,7 @@ mysql> FLUSH PRIVILEGES;
    files. It will make sure Bugzilla files and directories have
    reasonable permissions, set up the data directory, and create all the
    MySQL tables.
-bash# ./checksetup.pl
+   bash# ./checksetup.pl
 
    The first time you run it, it will create a file called localconfig.
 
@@ -1180,9 +1206,9 @@ bash# ./checksetup.pl
 
    Note
 
-   The checksetup.pl script is designed so that you can run it at any
-   time without causing harm. You should run it after any upgrade to
-   Bugzilla.
+        The checksetup.pl script is designed so that you can run it at any
+        time without causing harm. You should run it after any upgrade to
+        Bugzilla.
      _________________________________________________________________
 
 4.1.8. Configuring Bugzilla
@@ -1241,26 +1267,27 @@ bash# ./checksetup.pl
 
    cd <your-bugzilla-directory> ; ./whineatnews.pl
 
-   Tip
+   Tip   
 
-   Depending on your system, crontab may have several manpages. The
-   following command should lead you to the most useful page for this
-   purpose:
-   man 5 crontab
+          Depending on your system, crontab may have several manpages. The
+          following command should lead you to the most useful page for this
+          purpose:
+
+       man 5 crontab
      _________________________________________________________________
 
 4.2.4. LDAP Authentication
 
    Note
 
-   LDAP authentication has been rewritten for the 2.18 release of
-   Bugzilla. It no longer requires the Mozilla::LDAP module and now uses
-   Net::LDAP instead. This rewrite was part of a larger landing that
-   allowed for additional authentication schemes to be easily added (bug
-   180642).
+        LDAP authentication has been rewritten for the 2.18 release of
+        Bugzilla. It no longer requires the Mozilla::LDAP module and now uses
+        Net::LDAP instead. This rewrite was part of a larger landing that
+        allowed for additional authentication schemes to be easily added (bug
+        180642).
 
-   This patch originally landed in 21-Mar-2003 and was included in the
-   2.17.4 development release.
+        This patch originally landed in 21-Mar-2003 and was included in the
+        2.17.4 development release.
 
    The existing authentication scheme for Bugzilla uses email addresses
    as the primary user ID, and a password to authenticate that user. All
@@ -1278,14 +1305,14 @@ bash# ./checksetup.pl
    tasks are still handled by email address, not LDAP username. You still
    assign bugs by email address, query on users by email address, etc.
 
-   Caution
+  Caution
 
-   Because the Bugzilla account is not created until the first time a
-   user logs in, a user who has not yet logged is unknown to Bugzilla.
-   This means they cannot be used as an assignee or QA contact (default
-   or otherwise), added to any cc list, or any other such operation. One
-   possible workaround is the bugzilla_ldapsync.rb script in the contrib
-   directory. Another possible solution is fixing bug 201069.
+          Because the Bugzilla account is not created until the first time a
+          user logs in, a user who has not yet logged is unknown to Bugzilla.
+          This means they cannot be used as an assignee or QA contact (default
+          or otherwise), added to any cc list, or any other such operation. One
+          possible workaround is the bugzilla_ldapsync.rb script in the contrib
+          directory. Another possible solution is fixing bug 201069.
 
    Parameters required to use LDAP Authentication:
 
@@ -1342,28 +1369,28 @@ Javascript code
    Due to internationalization concerns, we are unable to incorporate the
    code changes necessary to fulfill the CERT advisory requirements
    mentioned in
-   http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3. Making
-   the change below will fix the problem if your installation is for an
-   English speaking audience.
+   http://www.cert.org/tech_tips/malicious_code_mitigation.html/#3.
+   Making the change below will fix the problem if your installation is
+   for an English speaking audience.
 
    Telling Bugzilla to output a charset as part of the HTTP header is
    much easier in version 2.18 and higher (including any cvs pull after
    4-May-2003 and development release after 2.17.5) than it was in
    previous versions. Simply locate the following line in
    Bugzilla/CGI.pm:
-    # Make sure that we don't send any charset headers
-    $self->charset('');
+       # Make sure that we don't send any charset headers
+       $self->charset('');
 
    and change it to:
-    # Send all data using the ISO-8859-1 charset
-    $self->charset('ISO-8859-1');
+       # Send all data using the ISO-8859-1 charset
+       $self->charset('ISO-8859-1');
 
    Note
 
-   Using <meta> tags to set the charset is not recommended, as there's a
-   bug in Netscape 4.x which causes pages marked up in this way to load
-   twice. See bug 126266 for more information including progress toward
-   making bugzilla charset aware by default.
+        Using <meta> tags to set the charset is not recommended, as there's a
+        bug in Netscape 4.x which causes pages marked up in this way to load
+        twice. See bug 126266 for more information including progress toward
+        making bugzilla charset aware by default.
      _________________________________________________________________
 
 4.2.6. directoryindex for the Bugzilla default page.
@@ -1434,18 +1461,18 @@ Javascript code
 
    Bugzilla on Windows requires the same perl modules found in Section
    4.1.3. The main difference is that windows uses PPM instead of CPAN.
-C:\perl> ppm <module name>
+   C:\perl> ppm <module name>
 
    Note
 
-   The above syntax should work for all modules with the exception of
-   Template Toolkit. The Template Toolkit website suggests using the
-   instructions on OpenInteract's website.
+        The above syntax should work for all modules with the exception of
+        Template Toolkit. The Template Toolkit website suggests using the
+        instructions on OpenInteract's website.
 
    Tip
 
-   A complete list of modules that can be installed using ppm can be
-   found at http://www.activestate.com/PPMPackages/5.6plus.
+       A complete list of modules that can be installed using ppm can be
+       found at http://www.activestate.com/PPMPackages/5.6plus.
      _________________________________________________________________
 
 4.3.1.3. Code changes required to run on win32
@@ -1461,16 +1488,16 @@ C:\perl> ppm <module name>
 4.3.1.3.1. Changes to checksetup.pl
 
    In checksetup.pl, the line reading:
-my $mysql_binaries = `which mysql`;
+   my $mysql_binaries = `which mysql`;
 
    to
-my $mysql_binaries = "D:\\mysql\\bin\\mysql";
+   my $mysql_binaries = "D:\\mysql\\bin\\mysql";
 
    And you'll also need to change:
-my $webservergid = getgrnam($my_webservergroup)
+   my $webservergid = getgrnam($my_webservergroup)
 
    to
-my $webservergid = '8'
+   my $webservergid = '8'
      _________________________________________________________________
 
 4.3.1.3.2. Changes to BugMail.pm
@@ -1478,27 +1505,27 @@ my $webservergid = '8'
    To make bug e-mail work on Win32 (until bug 84876 lands), the simplest
    way is to have Net::SMTP installed and change this (in
    Bugzilla/BugMail.pm):
-open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
-  die "Can't open sendmail";
+   open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
+     die "Can't open sendmail";
 
-print SENDMAIL trim($msg) . "\n";
-close SENDMAIL;
+   print SENDMAIL trim($msg) . "\n";
+   close SENDMAIL;
 
    to
-use Net::SMTP;
-my $smtp_server = 'smtp.mycompany.com';  # change this
+   use Net::SMTP;
+   my $smtp_server = 'smtp.mycompany.com';  # change this
 
-# Use die on error, so that the mail will be in the 'unsent mails' and
-# can be sent from the sanity check page.
-my $smtp = Net::SMTP->new($smtp_server) ||
-  die 'Cannot connect to server \'$smtp_server\'';
+   # Use die on error, so that the mail will be in the 'unsent mails' and
+   # can be sent from the sanity check page.
+   my $smtp = Net::SMTP->new($smtp_server) ||
+     die 'Cannot connect to server \'$smtp_server\'';
 
-$smtp->mail('bugzilla-daemon@mycompany.com');  # change this
-$smtp->to($person);
-$smtp->data();
-$smtp->datasend($msg);
-$smtp->dataend();
-$smtp->quit;
+   $smtp->mail('bugzilla-daemon@mycompany.com');  # change this
+   $smtp->to($person);
+   $smtp->data();
+   $smtp->datasend($msg);
+   $smtp->dataend();
+   $smtp->quit;
 
    Don't forget to change the name of your SMTP server and the domain of
    the sending e-mail address (after the '@') in the above lines of code.
@@ -1514,10 +1541,10 @@ $smtp->quit;
 
    Note
 
-   If using Apache on windows, you can set the ScriptInterpreterSource
-   directive in your Apache config, if you don't do this, you'll have to
-   modify the first line of every script to contain your path to perl
-   instead of /usr/bin/perl.
+        If using Apache on windows, you can set the ScriptInterpreterSource
+        directive in your Apache config, if you don't do this, you'll have to
+        modify the first line of every script to contain your path to perl
+        instead of /usr/bin/perl.
      _________________________________________________________________
 
 4.3.2. Mac OS X
@@ -1540,28 +1567,28 @@ $smtp->quit;
 
    Note
 
-   To prevent creating conflicts with the software that Apple installs by
-   default, Fink creates its own directory tree at /sw where it installs
-   most of the software that it installs. This means your libraries and
-   headers be at /sw/lib and /sw/include instead of /usr/lib and
-   /usr/local/include. When the Perl module config script asks where your
-   libgd is, be sure to tell it /sw/lib.
+        To prevent creating conflicts with the software that Apple installs by
+        default, Fink creates its own directory tree at /sw where it installs
+        most of the software that it installs. This means your libraries and
+        headers be at /sw/lib and /sw/include instead of /usr/lib and
+        /usr/local/include. When the Perl module config script asks where your
+        libgd is, be sure to tell it /sw/lib.
 
    Also available via Fink is expat. Once running using fink to install
    the expat package you will be able to install XML::Parser using CPAN.
    There is one caveat. Unlike recent versions of the GD module,
    XML::Parser doesn't prompt for the location of the required libraries.
    When using CPAN, you will need to use the following command sequence:
-# perl -MCPAN -e'look XML::Parser'         (1)
-# perl Makefile.PL EXPATLIBPATH=/sw/lib EXPATINCPATH=/sw/include
-# make; make test; make install            (2)
-# exit                                     (3)
+   # perl -MCPAN -e'look XML::Parser'         (1)
+   # perl Makefile.PL EXPATLIBPATH=/sw/lib EXPATINCPATH=/sw/include
+   # make; make test; make install            (2)
+   # exit                                     (3)
 
-   (1) (3) 
+   (1) (3)
           The look command will download the module and spawn a new shell
           with the extracted files as the current working directory. The
           exit command will return you to your original shell.
-   (2) 
+   (2)
           You should watch the output from these make commands,
           especially "make test" as errors may prevent XML::Parser from
           functioning correctly with Bugzilla.
@@ -1574,13 +1601,13 @@ $smtp->quit;
    utility. If you follow these commands, you should have everything you
    need for Bugzilla, and ./checksetup.pl should not complain about any
    missing libraries. You may already have some of these installed.
-bash# urpmi perl-mysql
-bash# urpmi perl-chart
-bash# urpmi perl-gd
-bash# urpmi perl-MailTools              (1)
-bash# urpmi apache-modules
+   bash# urpmi perl-mysql
+   bash# urpmi perl-chart
+   bash# urpmi perl-gd
+   bash# urpmi perl-MailTools              (1)
+   bash# urpmi apache-modules
 
-   (1) 
+   (1)
           for Bugzilla e-mail integration
      _________________________________________________________________
 
@@ -1615,39 +1642,39 @@ bash# urpmi apache-modules
 
    To allow files with a .cgi extension to be run, make sure the
    following line exists and is uncommented:
-AddHandler cgi-script .cgi
+   AddHandler cgi-script .cgi
 
    To allow .htaccess files to override permissions and .cgi files to run
    in the Bugzilla directory, make sure the following two lines are in a
    Directory directive that applies to the Bugzilla directory on your
    system (either the Bugzilla directory or one of its parents).
-Options +ExecCGI
-AllowOverride Limit
+   Options +ExecCGI
+   AllowOverride Limit
 
    Note
 
-   For more information on Apache and its directives, see the glossary
-   entry on Apache.
+        For more information on Apache and its directives, see the glossary
+        entry on Apache.
 
    Example 4-2. .htaccess files for Apache
 
    $BUGZILLA_HOME/.htaccess
-# don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$>
-  deny from all
-</FilesMatch>
-<FilesMatch ^(localconfig.js|localconfig.rdf)$>
-  allow from all
-</FilesMatch>
+  # don't allow people to retrieve non-cgi executable files or our private data
+  <FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$>
+    deny from all
+  </FilesMatch>
+  <FilesMatch ^(localconfig.js|localconfig.rdf)$>
+    allow from all
+  </FilesMatch>
 
    $BUGZILLA_HOME/data/.htaccess
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory; the only exception is duplicates.rdf, which is used by
-# duplicates.xul and must be loadable over the web
-deny from all
-<Files duplicates.rdf>
-  allow from all
-</Files>
+   # nothing in this directory is retrievable unless overriden by an .htaccess
+   # in a subdirectory; the only exception is duplicates.rdf, which is used by
+   # duplicates.xul and must be loadable over the web
+   deny from all
+   <Files duplicates.rdf>
+     allow from all
+   </Files>
 
    $BUGZILLA_HOME/data/webdot
 # Restrict access to .dot files to the public webdot server at research.att.com
@@ -1669,14 +1696,14 @@ deny from all
 Deny from all
 
    $BUGZILLA_HOME/Bugzilla/.htaccess
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
+   # nothing in this directory is retrievable unless overriden by an .htaccess
+   # in a subdirectory
+   deny from all
 
    $BUGZILLA_HOME/template/.htaccess
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
+   # nothing in this directory is retrievable unless overriden by an .htaccess
+   # in a subdirectory
+   deny from all
      _________________________________________________________________
 
 4.4.2. Microsoft Internet Information Services
@@ -1706,36 +1733,36 @@ deny from all
    aolserver/modules/tcl/filter.tcl file (the filename shouldn't matter)
    with the following contents (change /bugzilla/ to the web-based path
    to your Bugzilla installation):
-ns_register_filter preauth GET /bugzilla/localconfig filter_deny
-ns_register_filter preauth GET /bugzilla/localconfig~ filter_deny
-ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
-ns_register_filter preauth GET /bugzilla/*.pl filter_deny
-ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
-ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
-ns_register_filter preauth GET /bugzilla/data/* filter_deny
-ns_register_filter preauth GET /bugzilla/template/* filter_deny
+   ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+   ns_register_filter preauth GET /bugzilla/localconfig~ filter_deny
+   ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
+   ns_register_filter preauth GET /bugzilla/*.pl filter_deny
+   ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
+   ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
+   ns_register_filter preauth GET /bugzilla/data/* filter_deny
+   ns_register_filter preauth GET /bugzilla/template/* filter_deny
 
 
-proc filter_deny { why } {
-    ns_log Notice "filter_deny"
-    return "filter_return"
-}
+   proc filter_deny { why } {
+       ns_log Notice "filter_deny"
+       return "filter_return"
+   }
 
-   Warning
+  Warning
 
-   This probably doesn't account for all possible editor backup files so
-   you may wish to add some additional variations of localconfig. For
-   more information, see bug 186383 or Bugtraq ID 6501.
+          This probably doesn't account for all possible editor backup files so
+          you may wish to add some additional variations of localconfig. For
+          more information, see bug 186383 or Bugtraq ID 6501.
 
    Note
 
-   If you are using webdot from research.att.com (the default
-   configuration for the webdotbase paramater), you will need to allow
-   access to data/webdot/*.dot for the reasearch.att.com machine.
+        If you are using webdot from research.att.com (the default
+        configuration for the webdotbase paramater), you will need to allow
+        access to data/webdot/*.dot for the reasearch.att.com machine.
 
-   If you are using a local installation of GraphViz, you will need to
-   allow everybody to access *.png, *.gif, *.jpg, and *.map in the
-   data/webdot directory.
+        If you are using a local installation of GraphViz, you will need to
+        allow everybody to access *.png, *.gif, *.jpg, and *.map in the
+        data/webdot directory.
      _________________________________________________________________
 
 4.5. Troubleshooting
@@ -1768,18 +1795,18 @@ proc filter_deny { why } {
 
    To fix this, go to <path-to-perl>/lib/DBD/sponge.pm in your Perl
    installation and replace
- my $numFields;
- if ($attribs->{'NUM_OF_FIELDS'}) {
-     $numFields = $attribs->{'NUM_OF_FIELDS'};
- } elsif ($attribs->{'NAME'}) {
-     $numFields = @{$attribs->{NAME}};
+    my $numFields;
+    if ($attribs->{'NUM_OF_FIELDS'}) {
+        $numFields = $attribs->{'NUM_OF_FIELDS'};
+    } elsif ($attribs->{'NAME'}) {
+        $numFields = @{$attribs->{NAME}};
 
    by
- my $numFields;
- if ($attribs->{'NUM_OF_FIELDS'}) {
-     $numFields = $attribs->{'NUM_OF_FIELDS'};
- } elsif ($attribs->{'NAMES'}) {
-     $numFields = @{$attribs->{NAMES}};
+    my $numFields;
+    if ($attribs->{'NUM_OF_FIELDS'}) {
+        $numFields = $attribs->{'NUM_OF_FIELDS'};
+    } elsif ($attribs->{'NAMES'}) {
+        $numFields = @{$attribs->{NAMES}};
 
    (note the S added to NAME.)
      _________________________________________________________________
@@ -1803,38 +1830,38 @@ proc filter_deny { why } {
    been reported. Examples can be found in Figure 4-2.
 
    Figure 4-2. Other File::Temp error messages
-Your vendor has not defined Fcntl macro O_NOINHERIT, used
-at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 208.
+   Your vendor has not defined Fcntl macro O_NOINHERIT, used
+   at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 208.
 
-Your vendor has not defined Fcntl macro O_EXLOCK, used
-at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 210.
+   Your vendor has not defined Fcntl macro O_EXLOCK, used
+   at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 210.
 
-Your vendor has not defined Fcntl macro O_TEMPORARY, used
-at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.
+   Your vendor has not defined Fcntl macro O_TEMPORARY, used
+   at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.
 
    Numerous people have reported that upgrading to version 5.6.1 or
    higher solved the problem for them. A less involved fix is to apply
    the patch in Figure 4-3. The patch is also available as a patch file.
 
    Figure 4-3. Patch for File::Temp in Perl 5.6.0
---- File/Temp.pm.orig   Thu Feb  6 16:26:00 2003
-+++ File/Temp.pm        Thu Feb  6 16:26:23 2003
-@@ -205,6 +205,7 @@
-     # eg CGI::Carp
-     local $SIG{__DIE__} = sub {};
-     local $SIG{__WARN__} = sub {};
-+    local *CORE::GLOBAL::die = sub {};
-     $bit = &$func();
-     1;
-   };
-@@ -226,6 +227,7 @@
-     # eg CGI::Carp
-     local $SIG{__DIE__} = sub {};
-     local $SIG{__WARN__} = sub {};
-+    local *CORE::GLOBAL::die = sub {};
-     $bit = &$func();
-     1;
-   };
+   --- File/Temp.pm.orig   Thu Feb  6 16:26:00 2003
+   +++ File/Temp.pm        Thu Feb  6 16:26:23 2003
+   @@ -205,6 +205,7 @@
+        # eg CGI::Carp
+        local $SIG{__DIE__} = sub {};
+        local $SIG{__WARN__} = sub {};
+   +    local *CORE::GLOBAL::die = sub {};
+        $bit = &$func();
+        1;
+      };
+   @@ -226,6 +227,7 @@
+        # eg CGI::Carp
+        local $SIG{__DIE__} = sub {};
+        local $SIG{__WARN__} = sub {};
+   +    local *CORE::GLOBAL::die = sub {};
+        $bit = &$func();
+        1;
+      };
      _________________________________________________________________
 
 Chapter 5. Administering Bugzilla
@@ -1930,12 +1957,12 @@ Chapter 5. Administering Bugzilla
        wise idea to require comments when users resolve, reassign, or
        reopen bugs at the very least.
 
-   Note
+     Note
 
-   It is generally far better to require a developer comment when
-   resolving bugs than not. Few things are more annoying to bug database
-   users than having a developer mark a bug "fixed" without any comment
-   as to what the fix was (or even that it was truly fixed!)
+          It is generally far better to require a developer comment when
+          resolving bugs than not. Few things are more annoying to bug database
+          users than having a developer mark a bug "fixed" without any comment
+          as to what the fix was (or even that it was truly fixed!)
    13. supportwatchers: Turning on this option allows users to ask to
        receive copies of all a particular other user's bug email. This
        is, of course, subject to the groupset restrictions on the bug; if
@@ -1958,10 +1985,10 @@ Chapter 5. Administering Bugzilla
 
    Tip
 
-   If you wish to add more administrative users, add them to the "admin"
-   group and, optionally, add edit the tweakparams, editusers,
-   creategroups, editcomponents, and editkeywords groups to add the
-   entire admin group to those groups.
+       If you wish to add more administrative users, add them to the "admin"
+       group and, optionally, add edit the tweakparams, editusers,
+       creategroups, editcomponents, and editkeywords groups to add the
+       entire admin group to those groups.
      _________________________________________________________________
 
 5.2.2. Managing Other Users
@@ -1978,15 +2005,15 @@ Chapter 5. Administering Bugzilla
     2. Fill out the form presented. This page is self-explanatory. When
        done, click "Submit".
 
-   Note
+    Note
 
-   Adding a user this way will not send an email informing them of their
-   username and password. While useful for creating dummy accounts
-   (watchers which shuttle mail to another system, for instance, or email
-   addresses which are a mailing list), in general it is preferable to
-   log out and use the "New Account" button to create users, as it will
-   pre-populate all the required fields and also notify the user of her
-   account name and password.
+         Adding a user this way will not send an email informing them of their
+         username and password. While useful for creating dummy accounts
+         (watchers which shuttle mail to another system, for instance, or email
+         addresses which are a mailing list), in general it is preferable to
+         log out and use the "New Account" button to create users, as it will
+         pre-populate all the required fields and also notify the user of her
+         account name and password.
      _________________________________________________________________
 
 5.2.2.2. Modifying Users
@@ -2022,13 +2049,13 @@ Chapter 5. Administering Bugzilla
 
        Warning
 
-   Don't disable the administrator account!
+               Don't disable the administrator account!
 
-   Note
+      Note
 
-   The user can still submit bugs via the e-mail gateway, if you set it
-   up, even if the disabled text field is filled in. The e-mail gateway
-   should not be enabled for secure installations of Bugzilla.
+           The user can still submit bugs via the e-mail gateway, if you set it
+           up, even if the disabled text field is filled in. The e-mail gateway
+           should not be enabled for secure installations of Bugzilla.
      * <groupname>: If you have created some groups, e.g.
        "securitysensitive", then checkboxes will appear here to allow you
        to add users to, or remove them from, these groups.
@@ -2145,8 +2172,8 @@ Chapter 5. Administering Bugzilla
 
    Note
 
-   Milestone options will only appear for a Product if you turned on the
-   "usetargetmilestone" Param in the "Edit Parameters" screen.
+        Milestone options will only appear for a Product if you turned on the
+        "usetargetmilestone" Param in the "Edit Parameters" screen.
 
    To create new Milestones, set Default Milestones, and set Milestone
    URL:
@@ -2162,12 +2189,12 @@ Chapter 5. Administering Bugzilla
     4. From the Edit product screen, you can enter the URL of a page
        which gives information about your milestones and what they mean.
 
-   Tip
+     Tip
 
-   If you want your milestone document to be restricted so that it can
-   only be viewed by people in a particular Bugzilla group, the best way
-   is to attach the document to a bug in that group, and make the URL the
-   URL of that attachment.
+         If you want your milestone document to be restricted so that it can
+         only be viewed by people in a particular Bugzilla group, the best way
+         is to attach the document to a bug in that group, and make the URL the
+         URL of that attachment.
      _________________________________________________________________
 
 5.4. Voting
@@ -2241,12 +2268,12 @@ Chapter 5. Administering Bugzilla
        fulfill the Regular Expression into the new group. When you have
        finished, click "Add".
 
-   Warning
+  Warning
 
-   The User Regexp is a perl regexp and, if not anchored, will match any
-   part of an address. So, if you do not want to grant access into
-   'mycompany.com' to 'badperson@mycompany.com.hacker.net', use
-   '@mycompany\.com$' as the regexp.
+          The User Regexp is a perl regexp and, if not anchored, will match any
+          part of an address. So, if you do not want to grant access into
+          'mycompany.com' to 'badperson@mycompany.com.hacker.net', use
+          '@mycompany\.com$' as the regexp.
     4. After you add your new group, edit the new group. On the edit
        page, you can specify other groups that should be included in this
        group and which groups should be permitted to add and delete users
@@ -2264,24 +2291,24 @@ Chapter 5. Administering Bugzilla
 
    Warning
 
-   Poorly-configured MySQL and Bugzilla installations have given
-   attackers full access to systems in the past. Please take these
-   guidelines seriously, even for Bugzilla machines hidden away behind
-   your firewall. 80% of all computer trespassers are insiders, not
-   anonymous crackers.
+           Poorly-configured MySQL and Bugzilla installations have given
+           attackers full access to systems in the past. Please take these
+           guidelines seriously, even for Bugzilla machines hidden away behind
+           your firewall. 80% of all computer trespassers are insiders, not
+           anonymous crackers.
 
    Note
 
-   These instructions must, of necessity, be somewhat vague since
-   Bugzilla runs on so many different platforms. If you have refinements
-   of these directions, please submit a bug to Bugzilla Documentation.
+        These instructions must, of necessity, be somewhat vague since
+        Bugzilla runs on so many different platforms. If you have refinements
+        of these directions, please submit a bug to Bugzilla Documentation.
 
-   Warning
+ Warning
 
-   This is not meant to be a comprehensive list of every possible
-   security issue regarding the tools mentioned in this section. There is
-   no subsitute for reading the information written by the authors of any
-   software running on your system.
+         This is not meant to be a comprehensive list of every possible
+         security issue regarding the tools mentioned in this section. There is
+         no subsitute for reading the information written by the authors of any
+         software running on your system.
      _________________________________________________________________
 
 5.6.1. TCP/IP Ports
@@ -2320,9 +2347,9 @@ mysql> FLUSH PRIVILEGES;
        should consider disabling networking from within MySQL by adding
        the following to your /etc/my.conf:
 
-[myslqd]
-# Prevent network access to MySQL.
-skip-networking
+       [myslqd]
+       # Prevent network access to MySQL.
+       skip-networking
 
 
     4. You may also consider running MySQL, or even all of Bugzilla in a
@@ -2342,10 +2369,10 @@ skip-networking
 
    Note
 
-   You will need to set the webservergroup to the group you created for
-   your webserver to run as in localconfig. This will allow
-   ./checksetup.pl to better adjust the file permissions on your Bugzilla
-   install so as to not require making anything world-writable.
+        You will need to set the webservergroup to the group you created for
+        your webserver to run as in localconfig. This will allow
+        ./checksetup.pl to better adjust the file permissions on your Bugzilla
+        install so as to not require making anything world-writable.
      _________________________________________________________________
 
 5.6.4. Web Server Access Controls
@@ -2380,9 +2407,9 @@ skip-networking
 
    Tip
 
-   Bugzilla ships with the ability to generate .htaccess files
-   instructing Apache which files should and should not be accessible.
-   For more information, see Section 4.4.1.
+       Bugzilla ships with the ability to generate .htaccess files
+       instructing Apache which files should and should not be accessible.
+       For more information, see Section 4.4.1.
 
    You should test to make sure that the files mentioned above are not
    accessible from the Internet, especially your localconfig file which
@@ -2391,16 +2418,16 @@ skip-networking
    we'd try to access http://bugzilla.mozilla.org/localconfig. You should
    get a 403 Forbidden error.
 
-   Caution
+ Caution
 
-   Not following the instructions in this section, including testing, may
-   result in sensitive information being globally accessible.
+         Not following the instructions in this section, including testing, may
+         result in sensitive information being globally accessible.
 
    Tip
 
-   You should check Section 4.4 to see if instructions have been included
-   for your web server. You should also compare those instructions with
-   this list to make sure everything is properly accounted for.
+       You should check Section 4.4 to see if instructions have been included
+       for your web server. You should also compare those instructions with
+       this list to make sure everything is properly accounted for.
      _________________________________________________________________
 
 5.7. Template Customization
@@ -2412,9 +2439,9 @@ skip-networking
    upgrade to a newer version in the future.
 
    Templatization also makes localized versions of Bugzilla possible, for
-   the first time. In the future, a Bugzilla installation may have
-   templates installed for multiple localizations, and select which ones
-   to use based on the user's browser language setting.
+   the first time. As of version 2.17.4 which will soon become 2.18, it's
+   possible to have Bugzilla's language determined by the user's browser.
+   More information is available in Section 5.7.5.
      _________________________________________________________________
 
 5.7.1. What to Edit
@@ -2459,8 +2486,14 @@ skip-networking
 
    Note
 
-   Don't directly edit the compiled templates in data/template/* - your
-   changes will be lost when Template Toolkit recompiles them.
+        Don't directly edit the compiled templates in data/template/* - your
+        changes will be lost when Template Toolkit recompiles them.
+
+   Note
+
+        It is recommended that you run ./checksetup.pl after any template
+        edits, especially if you've created a new file in the custom
+        directory.
      _________________________________________________________________
 
 5.7.2. How To Edit Templates
@@ -2496,9 +2529,9 @@ skip-networking
 
    Note
 
-   If you are making template changes that you intend on submitting back
-   for inclusion in standard Bugzilla, you should read the relevant
-   sections of the Developers' Guide.
+        If you are making template changes that you intend on submitting back
+        for inclusion in standard Bugzilla, you should read the relevant
+        sections of the Developers' Guide.
      _________________________________________________________________
 
 5.7.3. Template Formats
@@ -2605,15 +2638,33 @@ skip-networking
    would appear in the initial checkin comment.
      _________________________________________________________________
 
+5.7.5. Configuring Bugzilla to Detect the User's Language
+
+   Begining in version 2.18 (first introduced in version 2.17.4), it's
+   now possible to have the users web browser tell Bugzilla which
+   language templates to use for each visitor (using the HTTP_ACCEPT
+   header). For this to work, Bugzilla needs to have the correct language
+   templates installed for the version of Bugzilla you are using. Many
+   language templates can be obtained from
+   http://www.bugzilla.org/download.html#localizations. Instructions for
+   submitting new languages are also available from that location.
+
+   After untarring the localizations (or creating your own) in the
+   [Bugzilla_Root]/template directory, you must update the languages
+   parameter to contain any localizations you'd like to permit. You may
+   also wish to set the defaultlanguage parameter to something other than
+   "en" if you don't want Engish to be the default language.
+     _________________________________________________________________
+
 5.8. Change Permission Customization
 
-   Warning
+  Warning
 
-   This feature should be considered experimental; the Bugzilla code you
-   will be changing is not stable, and could change or move between
-   versions. Be aware that if you make modifications to it, you may have
-   to re-make them or port them if Bugzilla changes internally between
-   versions.
+          This feature should be considered experimental; the Bugzilla code you
+          will be changing is not stable, and could change or move between
+          versions. Be aware that if you make modifications to it, you may have
+          to re-make them or port them if Bugzilla changes internally between
+          versions.
 
    Companies often have rules about which employees, or classes of
    employees, are allowed to change certain things in the bug system. For
@@ -2634,10 +2685,10 @@ skip-networking
    Certain marked sections should not be changed - these are the
    "plumbing" which makes the rest of the function work. In between those
    sections, you'll find snippets of code like:
-    # Allow the owner to change anything.
-    if ($ownerid eq $whoid) {
-        return 1;
-    }
+       # Allow the owner to change anything.
+       if ($ownerid eq $whoid) {
+           return 1;
+       }
 
    It's fairly obvious what this piece of code does.
 
@@ -2654,27 +2705,27 @@ skip-networking
    $ownerid has been obtained from the database. You can either add a
    positive check, which returns 1 (allow) if certain conditions are
    true, or a negative check, which returns 0 (deny.) E.g.:
-    if ($field eq "qacontact") {
-        if (Bugzilla->user->groups("quality_assurance")) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
-    }
+       if ($field eq "qacontact") {
+           if (Bugzilla->user->groups("quality_assurance")) {
+               return 1;
+           }
+           else {
+               return 0;
+           }
+       }
 
    This says that only users in the group "quality_assurance" can change
    the QA Contact field of a bug. Getting more weird:
-    if (($field eq "priority") &&
-        (Bugzilla->user->email =~ /.*\@example\.com$/))
-    {
-        if ($oldvalue eq "P1") {
-            return 1;
-        }
-        else {
-            return 0;
-        }
-    }
+       if (($field eq "priority") &&
+           (Bugzilla->user->email =~ /.*\@example\.com$/))
+       {
+           if ($oldvalue eq "P1") {
+               return 1;
+           }
+           else {
+               return 0;
+           }
+       }
 
    This says that if the user is trying to change the priority field, and
    their email address is @example.com, they can only do so if the old
@@ -2687,12 +2738,12 @@ skip-networking
 
 5.9. Upgrading to New Releases
 
-   Warning
+ Warning
 
-   Upgrading is a one-way process. You should backup your database and
-   current Bugzilla directory before attempting the upgrade. If you wish
-   to revert to the old Bugzilla version for any reason, you will have to
-   restore from these backups.
+         Upgrading is a one-way process. You should backup your database and
+         current Bugzilla directory before attempting the upgrade. If you wish
+         to revert to the old Bugzilla version for any reason, you will have to
+         restore from these backups.
 
    Upgrading Bugzilla is something we all want to do from time to time,
    be it to get new features or pick up the latest security fix. How easy
@@ -2743,65 +2794,65 @@ skip-networking
 
    Tip
 
-   If you can do this, updating using CVS is probably the most painless
-   method, especially if you have a lot of local changes.
-bash$ cd /var/www/html/bugzilla
-bash$ cvs login
-Logging in to :pserver:anonymous@cvs-mirror.mozilla.org:2401/cvsroot
-CVS password: anonymous
-bash$ cvs -q update -r BUGZILLA-2_16_2 -dP
-P checksetup.pl
-P collectstats.pl
-P globals.pl
-P docs/rel_notes.txt
-P template/en/default/list/quips.html.tmpl
+       If you can do this, updating using CVS is probably the most painless
+       method, especially if you have a lot of local changes.
+   bash$ cd /var/www/html/bugzilla
+   bash$ cvs login
+   Logging in to :pserver:anonymous@cvs-mirror.mozilla.org:2401/cvsroot
+   CVS password: anonymous
+   bash$ cvs -q update -r BUGZILLA-2_16_2 -dP
+   P checksetup.pl
+   P collectstats.pl
+   P globals.pl
+   P docs/rel_notes.txt
+   P template/en/default/list/quips.html.tmpl
 
    Caution
 
-   If a line in the output from cvs update begins with a C that
-   represents a file with local changes that CVS was unable to properly
-   merge. You need to resolve these conflicts manually before Bugzilla
-   (or at least the portion using that file) will be usable.
+           If a line in the output from cvs update begins with a C that
+           represents a file with local changes that CVS was unable to properly
+           merge. You need to resolve these conflicts manually before Bugzilla
+           (or at least the portion using that file) will be usable.
 
    Note
 
-   You also need to run ./checksetup.pl before your Bugzilla upgrade will
-   be complete.
+        You also need to run ./checksetup.pl before your Bugzilla upgrade will
+        be complete.
 
    Example 5-2. Upgrading using the tarball
 
    If you are unable or unwilling to use CVS, another option that's
    always available is to download the latest tarball. This is the most
    difficult option to use, especially if you have local changes.
-bash$ cd /var/www/html
-bash$ wget ftp://ftp.mozilla.org/pub/webtools/bugzilla-2.16.2.tar.gz
-Output omitted
-bash$ tar xzvf bugzilla-2.16.2.tar.gz
-bugzilla-2.16.2/
-bugzilla-2.16.2/.cvsignore
-bugzilla-2.16.2/1x1.gif
-Output truncated
-bash$ cd bugzilla-2.16.2
-bash$ cp ../bugzilla/localconfig* .
-bash$ cp -r ../bugzilla/data .
-bash$ cd ..
-bash$ mv bugzilla bugzilla.old
-bash$ mv bugzilla-2.16.2 bugzilla
-bash$ cd bugzilla
-bash$ ./checksetup.pl
-Output omitted
+   bash$ cd /var/www/html
+   bash$ wget ftp://ftp.mozilla.org/pub/webtools/bugzilla-2.16.2.tar.gz
+   Output omitted
+   bash$ tar xzvf bugzilla-2.16.2.tar.gz
+   bugzilla-2.16.2/
+   bugzilla-2.16.2/.cvsignore
+   bugzilla-2.16.2/1x1.gif
+   Output truncated
+   bash$ cd bugzilla-2.16.2
+   bash$ cp ../bugzilla/localconfig* .
+   bash$ cp -r ../bugzilla/data .
+   bash$ cd ..
+   bash$ mv bugzilla bugzilla.old
+   bash$ mv bugzilla-2.16.2 bugzilla
+   bash$ cd bugzilla
+   bash$ ./checksetup.pl
+   Output omitted
 
    Warning
 
-   The cp commands both end with periods which is a very important
-   detail, it tells the shell that the destination directory is the
-   current working directory. Also, the period at the beginning of the
-   ./checksetup.pl is important and can not be omitted.
+           The cp commands both end with periods which is a very important
+           detail, it tells the shell that the destination directory is the
+           current working directory. Also, the period at the beginning of the
+           ./checksetup.pl is important and can not be omitted.
 
    Note
 
-   You will now have to reapply any changes you have made to your local
-   installation manually.
+        You will now have to reapply any changes you have made to your local
+        installation manually.
 
    Example 5-3. Upgrading using patches
 
@@ -2827,9 +2878,9 @@ patching file globals.pl
 
    Caution
 
-   If you do this, beware that this doesn't change the entires in your
-   CVS directory so it may make updates using CVS (Example 5-1) more
-   difficult in the future.
+           If you do this, beware that this doesn't change the entires in your
+           CVS directory so it may make updates using CVS (Example 5-1) more
+           difficult in the future.
      _________________________________________________________________
 
 5.10. Integrating Bugzilla with Third-Party Tools
@@ -2889,185 +2940,185 @@ Appendix A. The Bugzilla FAQ
    1. General Questions
 
         A.1.1. Where can I find information about Bugzilla?
-        A.1.2. What license is Bugzilla distributed under? 
-        A.1.3. How do I get commercial support for Bugzilla? 
+        A.1.2. What license is Bugzilla distributed under?
+        A.1.3. How do I get commercial support for Bugzilla?
         A.1.4. What major companies or projects are currently using
-                Bugzilla for bug-tracking? 
+                Bugzilla for bug-tracking?
 
-        A.1.5. Who maintains Bugzilla? 
+        A.1.5. Who maintains Bugzilla?
         A.1.6. How does Bugzilla stack up against other bug-tracking
-                databases? 
+                databases?
 
         A.1.7. Why doesn't Bugzilla offer this or that feature or
-                compatibility with this other tracking software? 
+                compatibility with this other tracking software?
 
         A.1.8. Why MySQL? I'm interested in seeing Bugzilla run on
-                Oracle/Sybase/Msql/PostgreSQL/MSSQL. 
+                Oracle/Sybase/Msql/PostgreSQL/MSSQL.
 
-        A.1.9. What is /usr/bonsaitools/bin/perl? 
+        A.1.9. What is /usr/bonsaitools/bin/perl?
         A.1.10. My perl is not located at /usr/bin/perl, is there an easy
-                way to change it everywhere it needs to be changed? 
+                way to change it everywhere it needs to be changed?
 
-        A.1.11. Is there an easy way to change the Bugzilla cookie name? 
+        A.1.11. Is there an easy way to change the Bugzilla cookie name?
 
    2. Managerial Questions
 
         A.2.1. Is Bugzilla web-based, or do you have to have specific
-                software or a specific operating system on your machine? 
+                software or a specific operating system on your machine?
 
-        A.2.2. Can Bugzilla integrate with Perforce (SCM software)? 
-        A.2.3. Does Bugzilla allow the user to track multiple projects? 
+        A.2.2. Can Bugzilla integrate with Perforce (SCM software)?
+        A.2.3. Does Bugzilla allow the user to track multiple projects?
         A.2.4. If I am on many projects, and search for all bugs assigned
                 to me, will Bugzilla list them for me and allow me to
-                sort by project, severity etc? 
+                sort by project, severity etc?
 
         A.2.5. Does Bugzilla allow attachments (text, screenshots, URLs
-                etc)? If yes, are there any that are NOT allowed? 
+                etc)? If yes, are there any that are NOT allowed?
 
         A.2.6. Does Bugzilla allow us to define our own priorities and
                 levels? Do we have complete freedom to change the labels
                 of fields and format of them, and the choice of
-                acceptable values? 
+                acceptable values?
 
         A.2.7. Does Bugzilla provide any reporting features, metrics,
                 graphs, etc? You know, the type of stuff that management
-                likes to see. :) 
+                likes to see. :)
 
         A.2.8. Is there email notification and if so, what do you see
-                when you get an email? 
+                when you get an email?
 
         A.2.9. Can email notification be set up to send to multiple
-                people, some on the To List, CC List, BCC List etc? 
+                people, some on the To List, CC List, BCC List etc?
 
         A.2.10. Do users have to have any particular type of email
-                application? 
+                application?
 
         A.2.11. Does Bugzilla allow data to be imported and exported? If
                 I had outsiders write up a bug report using a MS Word bug
                 template, could that template be imported into "matching"
                 fields? If I wanted to take the results of a query and
-                export that data to MS Excel, could I do that? 
+                export that data to MS Excel, could I do that?
 
         A.2.12. Has anyone converted Bugzilla to another language to be
-                used in other countries? Is it localizable? 
+                used in other countries? Is it localizable?
 
         A.2.13. Can a user create and save reports? Can they do this in
-                Word format? Excel format? 
+                Word format? Excel format?
 
         A.2.14. Does Bugzilla have the ability to search by word, phrase,
-                compound search? 
+                compound search?
 
         A.2.15. Does Bugzilla provide record locking when there is
                 simultaneous access to the same bug? Does the second
                 person get a notice that the bug is in use or how are
-                they notified? 
+                they notified?
 
-        A.2.16. Are there any backup features provided? 
+        A.2.16. Are there any backup features provided?
         A.2.17. Can users be on the system while a backup is in progress?
-                
+
         A.2.18. What type of human resources are needed to be on staff to
                 install and maintain Bugzilla? Specifically, what type of
                 skills does the person need to have? I need to find out
                 if we were to go with Bugzilla, what types of individuals
                 would we need to hire and how much would that cost vs
-                buying an "Out-of-the-Box" solution. 
+                buying an "Out-of-the-Box" solution.
 
         A.2.19. What time frame are we looking at if we decide to hire
                 people to install and maintain the Bugzilla? Is this
                 something that takes hours or weeks to install and a
                 couple of hours per week to maintain and customize or is
                 this a multi-week install process, plus a full time job
-                for 1 person, 2 people, etc? 
+                for 1 person, 2 people, etc?
 
         A.2.20. Is there any licensing fee or other fees for using
                 Bugzilla? Any out-of-pocket cost other than the bodies
-                needed as identified above? 
+                needed as identified above?
 
    3. Bugzilla Security
 
         A.3.1. How do I completely disable MySQL security if it's giving
                 me problems (I've followed the instructions in the
-                installation section of this guide)? 
+                installation section of this guide)?
 
-        A.3.2. Are there any security problems with Bugzilla? 
+        A.3.2. Are there any security problems with Bugzilla?
         A.3.3. I've implemented the security fixes mentioned in Chris
                 Yeh's security advisory of 5/10/2000 advising not to run
                 MySQL as root, and am running into problems with MySQL no
-                longer working correctly. 
+                longer working correctly.
 
    4. Bugzilla Email
 
         A.4.1. I have a user who doesn't want to receive any more email
-                from Bugzilla. How do I stop it entirely for this user? 
+                from Bugzilla. How do I stop it entirely for this user?
 
         A.4.2. I'm evaluating/testing Bugzilla, and don't want it to send
-                email to anyone but me. How do I do it? 
+                email to anyone but me. How do I do it?
 
         A.4.3. I want whineatnews.pl to whine at something more, or other
-                than, only new bugs. How do I do it? 
+                than, only new bugs. How do I do it?
 
         A.4.4. I don't like/want to use Procmail to hand mail off to
-                bug_email.pl. What alternatives do I have? 
+                bug_email.pl. What alternatives do I have?
 
         A.4.5. How do I set up the email interface to submit/change bugs
-                via email? 
+                via email?
 
         A.4.6. Email takes FOREVER to reach me from Bugzilla -- it's
-                extremely slow. What gives? 
+                extremely slow. What gives?
 
-        A.4.7. How come email from Bugzilla changes never reaches me? 
+        A.4.7. How come email from Bugzilla changes never reaches me?
 
    5. Bugzilla Database
 
-        A.5.1. I've heard Bugzilla can be used with Oracle? 
+        A.5.1. I've heard Bugzilla can be used with Oracle?
         A.5.2. I think my database might be corrupted, or contain invalid
-                entries. What do I do? 
+                entries. What do I do?
 
-        A.5.3. I want to manually edit some entries in my database. How? 
+        A.5.3. I want to manually edit some entries in my database. How?
         A.5.4. I think I've set up MySQL permissions correctly, but
-                Bugzilla still can't connect. 
+                Bugzilla still can't connect.
 
         A.5.5. How do I synchronize bug information among multiple
-                different Bugzilla databases? 
+                different Bugzilla databases?
 
    6. Bugzilla and Win32
 
         A.6.1. What is the easiest way to run Bugzilla on Win32
-                (Win98+/NT/2K)? 
+                (Win98+/NT/2K)?
 
-        A.6.2. Is there a "Bundle::Bugzilla" equivalent for Win32? 
+        A.6.2. Is there a "Bundle::Bugzilla" equivalent for Win32?
         A.6.3. CGI's are failing with a "something.cgi is not a valid
-                Windows NT application" error. Why? 
+                Windows NT application" error. Why?
 
         A.6.4. I'm having trouble with the perl modules for NT not being
-                able to talk to to the database. 
+                able to talk to to the database.
 
    7. Bugzilla Usage
 
-        A.7.1. How do I change my user name (email address) in Bugzilla? 
+        A.7.1. How do I change my user name (email address) in Bugzilla?
         A.7.2. The query page is very confusing. Isn't there a simpler
-                way to query? 
+                way to query?
 
         A.7.3. I'm confused by the behavior of the "accept" button in the
                 Show Bug form. Why doesn't it assign the bug to me when I
-                accept it? 
+                accept it?
 
         A.7.4. I can't upload anything into the database via the "Create
-                Attachment" link. What am I doing wrong? 
+                Attachment" link. What am I doing wrong?
 
         A.7.5. How do I change a keyword in Bugzilla, once some bugs are
-                using it? 
+                using it?
 
    8. Bugzilla Hacking
 
-        A.8.1. What kind of style should I use for templatization? 
-        A.8.2. What bugs are in Bugzilla right now? 
+        A.8.1. What kind of style should I use for templatization?
+        A.8.2. What bugs are in Bugzilla right now?
         A.8.3. How can I change the default priority to a null value? For
                 instance, have the default priority be "---" instead of
-                "P2"? 
+                "P2"?
 
         A.8.4. What's the best way to submit patches? What guidelines
-                should I follow? 
+                should I follow?
 
 1. General Questions
 
@@ -3108,7 +3159,7 @@ Appendix A. The Bugzilla FAQ
 
    A.1.5. Who maintains Bugzilla?
 
-   A core team, led by Dave Miller (justdave@netscape.com).
+   A core team, led by Dave Miller (justdave@bugzilla.org).
 
    A.1.6. How does Bugzilla stack up against other bug-tracking
    databases?
@@ -3173,7 +3224,7 @@ Appendix A. The Bugzilla FAQ
    Yes, the following bit of perl magic will change all the shebang
    lines. Be sure to change /usr/local/bin/perl to your path to the perl
    binary.
-perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
+   perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
    A.1.11. Is there an easy way to change the Bugzilla cookie name?
 
@@ -3183,7 +3234,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
    Note
 
-   Questions likely to be asked by managers. :-)
+        Questions likely to be asked by managers. :-)
 
    A.2.1. Is Bugzilla web-based, or do you have to have specific software
    or a specific operating system on your machine?
@@ -3260,12 +3311,12 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
    Note
 
-   If you decide to use the bugzilla_email integration features to allow
-   Bugzilla to record responses to mail with the associated bug, you may
-   need to caution your users to set their mailer to "respond to messages
-   in the format in which they were sent". For security reasons Bugzilla
-   ignores HTML tags in comments, and if a user sends HTML-based email
-   into Bugzilla the resulting comment looks downright awful.
+        If you decide to use the bugzilla_email integration features to allow
+        Bugzilla to record responses to mail with the associated bug, you may
+        need to caution your users to set their mailer to "respond to messages
+        in the format in which they were sent". For security reasons Bugzilla
+        ignores HTML tags in comments, and if a user sends HTML-based email
+        into Bugzilla the resulting comment looks downright awful.
 
    A.2.11. Does Bugzilla allow data to be imported and exported? If I had
    outsiders write up a bug report using a MS Word bug template, could
@@ -3497,9 +3548,9 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
    Warning
 
-   Running MySQL with this command line option is very insecure and
-   should only be done when not connected to the external network as a
-   troubleshooting step.
+           Running MySQL with this command line option is very insecure and
+           should only be done when not connected to the external network as a
+           troubleshooting step.
 
    A.5.5. How do I synchronize bug information among multiple different
    Bugzilla databases?
@@ -3614,18 +3665,18 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
    Gerv and Myk suggest a 2-space indent, with embedded code sections on
    their own line, in line with outer tags. Like this:
-<fred>
-[% IF foo %]
-  <bar>
-  [% FOREACH x = barney %]
-    <tr>
-      <td>
-        [% x %]
-      </td>
-    <tr>
-  [% END %]
-[% END %]
-</fred>
+   <fred>
+   [% IF foo %]
+     <bar>
+     [% FOREACH x = barney %]
+       <tr>
+         <td>
+           [% x %]
+         </td>
+       <tr>
+     [% END %]
+   [% END %]
+   </fred>
 
    Myk also recommends you turn on PRE_CHOMP in the template
    initialization to prevent bloating of HTML with unnecessary
@@ -3682,9 +3733,9 @@ Appendix B. The Bugzilla Database
 
    Note
 
-   This document really needs to be updated with more fleshed out
-   information about primary keys, interrelationships, and maybe some
-   nifty tables to document dependencies. Any takers?
+        This document really needs to be updated with more fleshed out
+        information about primary keys, interrelationships, and maybe some
+        nifty tables to document dependencies. Any takers?
      _________________________________________________________________
 
 B.1. Modifying Your Running System
@@ -3798,31 +3849,31 @@ B.2.1.1. Bugzilla Database Tables
 
    From the command issued above, ou should have some output that looks
    like this:
-+-------------------+
-| Tables in bugs    |
-+-------------------+
-| attachments       |
-| bugs              |
-| bugs_activity     |
-| cc                |
-| components        |
-| dependencies      |
-| fielddefs         |
-| groups            |
-| keyworddefs       |
-| keywords          |
-| logincookies      |
-| longdescs         |
-| milestones        |
-| namedqueries      |
-| products          |
-| profiles          |
-| profiles_activity |
-| tokens            |
-| versions          |
-| votes             |
-| watch             |
-+-------------------+
+   +-------------------+
+   | Tables in bugs    |
+   +-------------------+
+   | attachments       |
+   | bugs              |
+   | bugs_activity     |
+   | cc                |
+   | components        |
+   | dependencies      |
+   | fielddefs         |
+   | groups            |
+   | keyworddefs       |
+   | keywords          |
+   | logincookies      |
+   | longdescs         |
+   | milestones        |
+   | namedqueries      |
+   | products          |
+   | profiles          |
+   | profiles_activity |
+   | tokens            |
+   | versions          |
+   | votes             |
+   | watch             |
+   +-------------------+
 
      Here's an overview of what each table does. Most columns in each tab
    le have
@@ -4023,10 +4074,10 @@ C.1. Apache mod_rewrite magic
        spits back http://www.foo.com/show_bug.cgi?id=12345. Try setting
        up your VirtualHost section for Bugzilla with a rule like this:
 
-<VirtualHost 12.34.56.78>
-RewriteEngine On
-RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
-</VirtualHost>
+       <VirtualHost 12.34.56.78>
+       RewriteEngine On
+       RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
+       </VirtualHost>
 
     2. There are many, many more things you can do with mod_rewrite.
        Please refer to the mod_rewrite documentation at
@@ -4596,10 +4647,10 @@ C
           perl, there may be additional modules or other requirements
           than those of the offical distribution.
 
-          Note
+       Note
 
-   Scripts in the contrib directory are not offically supported by the
-   Bugzilla team and may break in between versions.
+            Scripts in the contrib directory are not offically supported by the
+            Bugzilla team and may break in between versions.
 
 D
 
@@ -4690,7 +4741,7 @@ R
 
 S
 
-   SGML 
+   SGML
           SGML stands for "Standard Generalized Markup Language". Created
           in the 1980's to provide an extensible means to maintain
           documentation based upon content instead of presentation, SGML
@@ -4726,16 +4777,16 @@ Z
 
 
 
-   I've been asked to explain this ... way back when, when Netscape
-   released version 4.0 of its browser, we had a release party.
-   Naturally, there had been a big push to try and fix every known bug
-   before the release. Naturally, that hadn't actually happened. (This is
-   not unique to Netscape or to 4.0; the same thing has happened with
-   every software project I've ever seen.) Anyway, at the release party,
-   T-shirts were handed out that said something like "Netscape 4.0: Zarro
-   Boogs". Just like the software, the T-shirt had no known bugs. Uh-huh.
-   So, when you query for a list of bugs, and it gets no results, you can
-   think of this as a friendly reminder. Of *course* there are bugs
-   matching your query, they just aren't in the bugsystem yet...
+         I've been asked to explain this ... way back when, when Netscape
+         released version 4.0 of its browser, we had a release party.
+         Naturally, there had been a big push to try and fix every known bug
+         before the release. Naturally, that hadn't actually happened. (This is
+         not unique to Netscape or to 4.0; the same thing has happened with
+         every software project I've ever seen.) Anyway, at the release party,
+         T-shirts were handed out that said something like "Netscape 4.0: Zarro
+         Boogs". Just like the software, the T-shirt had no known bugs. Uh-huh.
+         So, when you query for a list of bugs, and it gets no results, you can
+         think of this as a friendly reminder. Of *course* there are bugs
+         matching your query, they just aren't in the bugsystem yet...
 
-          --Terry Weissman
+                                                              --Terry Weissman
