@@ -340,47 +340,67 @@
     (:terminal-keyword cs :terminal-keyword-num b :courier :blue :no-language)
     ((+ :styles) (* :terminal-keyword additive sbasedon :terminal-num "Terminal Keyword;"))
     
-    (:nonterminal-num 46)
+    (:terminal-sub-num 46)
+    (:terminal-sub cs :terminal-sub-num :teal)
+    ((+ :styles) (* :terminal-sub additive sbasedon :default-paragraph-font-num "Terminal Sub;"))
+    
+    (:nonterminal-num 47)
     (:nonterminal cs :nonterminal-num i :palatino :maroon :no-language)
     ((+ :styles) (* :nonterminal additive sbasedon :default-paragraph-font-num "Nonterminal;"))
     (:nonterminal-index-entry v i :palatino :maroon :no-language)
     
-    (:nonterminal-attribute-num 47)
-    (:nonterminal-attribute cs :nonterminal-attribute-num i 0 :no-language)
+    (:nonterminal-attribute-num 48)
+    (:nonterminal-attribute cs :nonterminal-attribute-num :helvetica :maroon :no-language)
     ((+ :styles) (* :nonterminal-attribute additive sbasedon :default-paragraph-font-num "Nonterminal Attribute;"))
     
-    (:nonterminal-argument-num 48)
-    (:nonterminal-argument cs :nonterminal-argument-num :no-language)
+    (:nonterminal-argument-num 49)
+    (:nonterminal-argument cs :nonterminal-argument-num :maroon :no-language)
     ((+ :styles) (* :nonterminal-argument additive sbasedon :default-paragraph-font-num "Nonterminal Argument;"))
     
-    (:semantic-keyword-num 50)
+    (:nonterminal-sub-num 50)
+    (:nonterminal-sub cs :nonterminal-sub-num :maroon)
+    ((+ :styles) (* :nonterminal-sub additive sbasedon :default-paragraph-font-num "Nonterminal Sub;"))
+    
+    (:semantic-keyword-num 51)
     (:semantic-keyword cs :semantic-keyword-num b :times)
     ((+ :styles) (* :semantic-keyword additive sbasedon :default-paragraph-font-num "Semantic Keyword;"))
     
-    (:type-name-num 51)
+    (:type-name-num 52)
     (:type-name cs :type-name-num scaps :times :red :no-language)
     ((+ :styles) (* :type-name additive sbasedon :default-paragraph-font-num "Type Name;"))
     (:type-name-index-entry v scaps :times :red :no-language)
     
-    (:field-name-num 52)
+    (:type-sub-num 53)
+    (:type-sub cs :type-sub-num :red)
+    ((+ :styles) (* :type-sub additive sbasedon :default-paragraph-font-num "Type Sub;"))
+    
+    (:field-name-num 54)
     (:field-name cs :field-name-num :helvetica :no-language)
     ((+ :styles) (* :field-name additive sbasedon :default-paragraph-font-num "Field Name;"))
     
-    (:tag-name-num 53)
+    (:field-sub-num 55)
+    (:field-sub cs :field-sub-num :maroon)
+    ((+ :styles) (* :field-sub additive sbasedon :default-paragraph-font-num "Field Sub;"))
+    
+    (:tag-name-num 56)
     (:tag-name cs :tag-name-num b :helvetica :no-language)
     ((+ :styles) (* :tag-name additive sbasedon :default-paragraph-font-num "Tag Name;"))
     (:tag-name-index-entry v b :helvetica :no-language)
     
-    (:global-variable-num 54)
+    (:global-variable-num 57)
     (:global-variable cs :global-variable-num i :times :dark-green :no-language)
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
     (:global-variable-index-entry v i :times :dark-green :no-language)
     
-    (:variable-num 55)
+    (:variable-num 58)
     (:variable cs :variable-num i :times :green :no-language)
     ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
     
-    (:action-name-num 56)
+    (:variable-sub-num 59)
+    (:variable-sub cs :variable-sub-num :green)
+    ((+ :styles) (* :variable-sub additive sbasedon :default-paragraph-font-num "Variable Sub;"))
+    
+    (:action-name-num 60)
     (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
     ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
     
@@ -449,7 +469,6 @@
     ((:line-break 12) "[line" ~ "break]")
     ((:no-line-break 15) "[no" ~ "line" ~ "break]")
     (:subscript sub)
-    (:plain-subscript b 0 i 0 :subscript)
     (:superscript super)
     ((:action-begin 1) "[")
     ((:action-end 1) "]")
@@ -1323,6 +1342,23 @@
   (delete-unused-rtf-data rtf 'listid 'listtable))
 
 
+; Look for nexted cs styles in the rtf.
+(defun find-cs (rtf)
+  (find-cs-sub rtf 0 nil))
+
+(defun find-cs-sub (rtf outer-count outer)
+  (do ((rtf rtf (cdr rtf)))
+      ((endp rtf))
+    (let ((item (car rtf)))
+      (cond
+       ((eq item 'cs)
+        (when (> outer-count 0)
+          (format t "nested: ~S ~W ~W~%" outer-count outer rtf))
+        (incf outer-count)
+        (setq outer rtf))
+       ((consp item)
+        (find-cs-sub item outer-count outer))))))
+
 #|
 (declaim (optimize (debug 1))) ;*****
 
@@ -1335,6 +1371,9 @@
 
 (setq r (read-rtf-from-local-file ":private:Edition4b.rtf"))
 (setq r (read-rtf-from-local-file ":private:ParserSemanticsJS2.rtf"))
+(setq s (read-rtf-from-local-file ":private:UnitSemantics.rtf"))
+(setq r (read-rtf-from-local-file ":JS20:LexerSemantics.rtf"))
+(find-cs r)
 
 
 (each-rtf-tag r 'listid #'(lambda (rtf)

@@ -195,7 +195,7 @@
          
          (cut (input good-metastate good-input good-value-stack)
            (unless good-metastate
-             (error "Parse error on ~S ..." (ldiff input (nthcdr 10 input))))
+             (syntax-error "Parse error on ~S ..." (ldiff input (nthcdr 10 input))))
            (let ((last-metatransition (metastate-transition good-metastate *end-marker-terminal-number*)))
              (assert-true (null (metatransition-next-metastate last-metatransition)))
              (assert-true (null (metatransition-post-productions last-metatransition)))
@@ -260,7 +260,7 @@
        
        (cut (input good-metastate good-input good-value-stack good-type-stack)
          (unless good-metastate
-           (error "Parse error on ~S ..." (ldiff input (nthcdr 10 input))))
+           (syntax-error "Parse error on ~S ..." (ldiff input (nthcdr 10 input))))
          (let ((last-metatransition (metastate-transition good-metastate *end-marker-terminal-number*)))
            (assert-true (null (metatransition-next-metastate last-metatransition)))
            (assert-true (null (metatransition-post-productions last-metatransition)))

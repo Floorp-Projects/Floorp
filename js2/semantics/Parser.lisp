@@ -613,6 +613,17 @@
 
 ;;; ------------------------------------------------------------------------------------------------------
 
+(define-condition syntax-error (error)
+                  ((message :reader syntax-error-message :initarg :message))
+  (:report
+   (lambda (condition stream)
+     (format stream "Syntax error: ~A" (syntax-error-message condition)))))
+
+
+(defun syntax-error (control-string &rest args)
+  (error 'syntax-error :message (apply #'format nil control-string args)))
+
+
 ; Parse the input list of tokens to produce a parse tree.
 ; token-terminal is a function that returns a terminal symbol when given an input token.
 (defun parse (grammar token-terminal input)
@@ -643,7 +654,7 @@
                           (parse-step-1 (acons dst-state named-expansion stack) terminal token input-rest))))
              (:accept (cdar stack))
              (t (error "Bad transition: ~S" transition)))
-           (error "Parse error on ~S followed by ~S ..." token (ldiff input-rest (nthcdr 10 input-rest)))))))
+           (syntax-error "Parse error on ~S followed by ~S ..." token (ldiff input-rest (nthcdr 10 input-rest)))))))
     
     (parse-step (list (cons (grammar-start-state grammar) nil)) input)))
 
@@ -680,22 +691,27 @@
   (let ((action-signatures (grammar-action-signatures grammar))
         (grammar-symbols (general-grammar-symbol-instances grammar general-grammar-symbol))
         (symbol-exists nil))
-    (dolist (grammar-symbol grammar-symbols)
-      (let ((signature (gethash grammar-symbol action-signatures :undefined)))
-        (unless (eq signature :undefined)
-          (setq symbol-exists t)
-          (when (assoc action-symbol signature :test #'eq)
-            (error "Attempt to redefine the type of action ~S on ~S" action-symbol grammar-symbol))
-          (setf (gethash grammar-symbol action-signatures)
-                (nconc signature (list (cons action-symbol type-expr))))
-          (if (nonterminal? grammar-symbol)
+    (flet ((add-signature (variant)
+             (let ((signature (gethash variant action-signatures :undefined)))
+               (unless (eq signature :undefined)
+                 (setq symbol-exists t)
+                 (when (assoc action-symbol signature :test #'eq)
+                   (error "Attempt to redefine the type of action ~S on ~S" action-symbol variant))
+                 (setf (gethash variant action-signatures)
+                       (nconc signature (list (cons action-symbol type-expr))))))))
+      (dolist (grammar-symbol grammar-symbols)
+        (if (nonterminal? grammar-symbol)
+          (progn
+            (add-signature grammar-symbol)
             (dolist (production (rule-productions (grammar-rule grammar grammar-symbol)))
               (setf (production-actions production)
-                    (nconc (production-actions production) (list (cons action-symbol nil)))))
-            (let ((terminal-actions (grammar-terminal-actions grammar)))
-              (assert-type grammar-symbol terminal)
-              (setf (gethash grammar-symbol terminal-actions)
-                    (nconc (gethash grammar-symbol terminal-actions) (list (cons action-symbol nil)))))))))
+                    (nconc (production-actions production) (list (cons action-symbol nil))))))
+          (let ((terminal-actions (grammar-terminal-actions grammar)))
+            (assert-type grammar-symbol terminal)
+            (dolist (variant (terminal-variants grammar grammar-symbol))
+              (add-signature variant)
+              (setf (gethash variant terminal-actions)
+                    (nconc (gethash variant terminal-actions) (list (cons action-symbol nil)))))))))
     (unless symbol-exists
       (error "Bad action grammar symbol ~S" grammar-symbols))))
 
@@ -752,13 +768,14 @@
 ; The action should have been declared already.
 (defun define-terminal-action (grammar terminal action-symbol action-function)
   (assert-type action-function function)
-  (let ((definition (assoc action-symbol (gethash terminal (grammar-terminal-actions grammar)) :test #'eq)))
-    (cond
-     ((null definition)
-      (error "Attempt to define action ~S on ~S, which hasn't been declared yet" action-symbol terminal))
-     ((cdr definition)
-      (error "Duplicate definition of action ~S on ~S" action-symbol terminal))
-     (t (setf (cdr definition) action-function)))))
+  (dolist (variant (terminal-variants grammar terminal))
+    (let ((definition (assoc action-symbol (gethash variant (grammar-terminal-actions grammar)) :test #'eq)))
+      (cond
+       ((null definition)
+        (error "Attempt to define action ~S on ~S, which hasn't been declared yet" action-symbol variant))
+       ((cdr definition)
+        (error "Duplicate definition of action ~S on ~S" action-symbol variant))
+       (t (setf (cdr definition) action-function))))))
 
 
 
@@ -830,7 +847,7 @@
                  (grammar-user-start-action-types grammar))))
              
              (t (error "Bad transition: ~S" transition)))
-           (error "Parse error on ~S followed by ~S ..." token (ldiff input-rest (nthcdr 10 input-rest)))))))
+           (syntax-error "Parse error on ~S followed by ~S ..." token (ldiff input-rest (nthcdr 10 input-rest)))))))
     
     (parse-step (list (grammar-start-state grammar)) nil nil input)))
 

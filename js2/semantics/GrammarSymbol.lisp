@@ -91,26 +91,19 @@
   (cond
    ((characterp terminal)
     (depict-char-style (markup-stream :character-literal)
-      (depict-character markup-stream terminal)
-      (when subscript
-        (depict-char-style (markup-stream :plain-subscript)
-          (depict-integer markup-stream subscript)))))
+      (depict-character markup-stream terminal)))
    ((and terminal (symbolp terminal))
     (let ((name (symbol-name terminal)))
       (if (and (> (length name) 0) (char= (char name 0) #\$))
         (depict-char-style (markup-stream :terminal)
-          (depict markup-stream (subseq (symbol-upper-mixed-case-name terminal) 1))
-          (when subscript
-            (depict-char-style (markup-stream :plain-subscript)
-              (depict-integer markup-stream subscript))))
-        (progn
-          (depict-char-style (markup-stream :terminal-keyword)
-            (depict markup-stream (string-downcase name)))
-          (when subscript
-            (depict-char-style (markup-stream :terminal)
-              (depict-char-style (markup-stream :plain-subscript)
-                (depict-integer markup-stream subscript))))))))
-   (t (error "Don't know how to emit markup for terminal ~S" terminal))))
+          (depict markup-stream (subseq (symbol-upper-mixed-case-name terminal) 1)))
+        (depict-char-style (markup-stream :terminal-keyword)
+          (depict markup-stream (string-downcase name))))))
+   (t (error "Don't know how to emit markup for terminal ~S" terminal)))
+  (when subscript
+    (depict-char-style (markup-stream :subscript)
+      (depict-char-style (markup-stream :terminal-sub)
+        (depict-integer markup-stream subscript)))))
 
 
 
@@ -131,9 +124,8 @@
 
 
 (defun depict-nonterminal-attribute (markup-stream attribute)
-  (depict-char-style (markup-stream :nonterminal)
-    (depict-char-style (markup-stream :nonterminal-attribute)
-      (depict markup-stream (symbol-lower-mixed-case-name attribute)))))
+  (depict-char-style (markup-stream :nonterminal-attribute)
+    (depict markup-stream (symbol-lower-mixed-case-name attribute))))
 
 
 ; Return true if this nonterminal parameter is a variable.
@@ -147,17 +139,13 @@
   '(:alpha :beta :gamma :delta :epsilon :zeta :eta :theta :iota :kappa :lambda :mu :nu
     :xi :omicron :pi :rho :sigma :tau :upsilon :phi :chi :psi :omega))
 
-(defun depict-nonterminal-argument-symbol (markup-stream argument)
+(defun depict-nonterminal-argument (markup-stream argument)
   (depict-char-style (markup-stream :nonterminal-argument)
     (let ((argument (symbol-abbreviation argument)))
       (depict markup-stream
               (if (member argument *special-nonterminal-arguments*)
                 argument
                 (symbol-upper-mixed-case-name argument))))))
-
-(defun depict-nonterminal-argument (markup-stream argument)
-  (depict-char-style (markup-stream :nonterminal)
-    (depict-nonterminal-argument-symbol markup-stream argument)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -283,46 +271,37 @@
     ((depict-nonterminal-name (markup-stream symbol)
        (let ((name (symbol-upper-mixed-case-name symbol)))
          (depict-link (markup-stream link "N-" name t)
-           (depict markup-stream name))))
+           (depict-char-style (markup-stream :nonterminal)
+             (depict markup-stream name)))))
      
      (depict-nonterminal-parameter (markup-stream parameter)
        (if (nonterminal-attribute? parameter)
-         (depict-char-style (markup-stream :nonterminal-attribute)
-           (depict markup-stream (symbol-lower-mixed-case-name parameter)))
-         (depict-nonterminal-argument-symbol markup-stream parameter)))
+         (depict-nonterminal-attribute markup-stream parameter)
+         (depict-nonterminal-argument markup-stream parameter)))
      
      (depict-parametrized-nonterminal (markup-stream symbol parameters)
        (depict-nonterminal-name markup-stream symbol)
        (depict-char-style (markup-stream :superscript)
          (depict-list markup-stream #'depict-nonterminal-parameter parameters
-                      :separator ",")))
-     
-     (depict-general (markup-stream)      
-       (depict-char-style (markup-stream :nonterminal)
-         (cond
-          ((keywordp general-nonterminal)
-           (depict-nonterminal-name markup-stream general-nonterminal))
-          ((attributed-nonterminal? general-nonterminal)
-           (depict-parametrized-nonterminal markup-stream
-                                            (attributed-nonterminal-symbol general-nonterminal)
-                                            (attributed-nonterminal-attributes general-nonterminal)))
-          ((generic-nonterminal? general-nonterminal)
-           (depict-parametrized-nonterminal markup-stream
-                                            (generic-nonterminal-symbol general-nonterminal)
-                                            (generic-nonterminal-parameters general-nonterminal)))
-          (t (error "Bad nonterminal ~S" general-nonterminal)))
-         (when subscript
-           (depict-char-style (markup-stream :plain-subscript)
-             (depict-integer markup-stream subscript))))))
+                      :separator ","))))
     
-    (if (or (eq link :definition)
-            (and (or (eq link :reference) (eq link :external))
-                 (keywordp general-nonterminal)
-                 (null subscript)))
-      (depict-link (markup-stream link "N-" (symbol-upper-mixed-case-name (general-grammar-symbol-symbol general-nonterminal)) t)
-        (setq link nil)
-        (depict-general markup-stream))
-      (depict-general markup-stream))))
+    (cond
+     ((keywordp general-nonterminal)
+      (depict-nonterminal-name markup-stream general-nonterminal))
+     ((attributed-nonterminal? general-nonterminal)
+      (depict-parametrized-nonterminal markup-stream
+                                       (attributed-nonterminal-symbol general-nonterminal)
+                                       (attributed-nonterminal-attributes general-nonterminal)))
+     ((generic-nonterminal? general-nonterminal)
+      (depict-parametrized-nonterminal markup-stream
+                                       (generic-nonterminal-symbol general-nonterminal)
+                                       (generic-nonterminal-parameters general-nonterminal)))
+     (t (error "Bad nonterminal ~S" general-nonterminal)))
+    (when subscript
+      (depict-char-style (markup-stream :subscript)
+        (depict-char-style (markup-stream :nonterminal-sub)
+          (depict-integer markup-stream subscript))))))
+
 
 
 ;;; ------------------------------------------------------------------------------------------------------

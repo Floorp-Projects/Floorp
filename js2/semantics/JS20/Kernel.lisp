@@ -12,17 +12,19 @@
 
 ; Convert the results of the lexer's actions into a token suitable for the parser.
 (defun js-lexer-results-to-token (token-value line-break)
-  (multiple-value-bind (token token-arg)
-                       (ecase (car token-value)
-                         (identifier (values '$identifier (cdr token-value)))
-                         ((keyword punctuator) (values (intern (string-upcase (cdr token-value))) nil))
-                         (number (values '$number (cdr token-value)))
-                         (string (values '$string (cdr token-value)))
-                         (regular-expression (values '$regular-expression (cdr token-value)))
-                         (end (setq line-break nil) *end-marker*))
-    (when line-break
-      (setq token (terminal-lf-terminal token)))
-    (values token token-arg)))
+  (if (eq token-value :end-of-input)
+    (values *end-marker* nil)
+    (let ((data (second token-value)))
+      (multiple-value-bind (token token-arg)
+                           (ecase (first token-value)
+                             (l:identifier (values '$identifier data))
+                             ((l:keyword l:punctuator) (values (intern (string-upcase data)) nil))
+                             (l:number (values '$number data))
+                             (l:string (values '$string data))
+                             (l:regular-expression (values '$regular-expression data)))
+        (when line-break
+          (setq token (terminal-lf-terminal token)))
+        (values token token-arg)))))
 
 
 ; Lex and parse the input-string of tokens to produce a list of action results.
@@ -74,12 +76,12 @@
                                      (t '$re)))
                        (token-value (get-next-token-value lexer-state))
                        (line-break nil))
-                  (when (eq (car token-value) 'line-break)
+                  (when (eq token-value :line-break)
                     (when (eq lexer-state '$unit)
                       (setq lexer-state '$non-re))
                     (setq token-value (get-next-token-value lexer-state))
                     (setq line-break t))
-                  (setq prev-number-token (eq (car token-value) 'number))
+                  (setq prev-number-token (and (consp token-value) (eq (car token-value) 'l:number)))
                   (multiple-value-setq (token token-arg) (js-lexer-results-to-token token-value line-break)))))
             (setq transition (state-transition state token))
             (unless transition
@@ -93,7 +95,7 @@
                         token2-arg token-arg
                         token '$virtual-semicolon
                         token-arg nil))
-                (error "Parse error on ~S followed by ~S ..." token (coerce (butlast (ldiff input (nthcdr 31 input))) 'string)))))
+                (syntax-error "Parse error on ~S followed by ~S ..." token (coerce (butlast (ldiff input (nthcdr 31 input))) 'string)))))
           
           (when trace
             (format *trace-output* "S~D: ~@_" (state-number state))
@@ -148,16 +150,32 @@
   (loop
     (let ((s (read-line *terminal-io* t)))
       (format *terminal-io* "<~S>~%" s)
-      (dolist (r (multiple-value-list (js-parse s)))
-        (write r :stream *terminal-io* :pretty t)
-        (terpri *terminal-io*)))))
+      (block success
+        (handler-case
+          (let ((exception
+                 (catch :semantic-exception
+                   (dolist (r (multiple-value-list (js-parse s)))
+                     (write r :stream *terminal-io* :pretty t)
+                     (terpri *terminal-io*))
+                   (return-from success))))
+            (format *terminal-io* "Exception: ~S~%" exception))
+          (syntax-error (condition)
+                        (format *terminal-io* "~A~%" condition)))))))
 
 
 #|
 (js-parse "1+2*/4*/
 32")
+(js-parse "1+2
++3" :trace t)
+(js-parse "3
+++" :trace t)
+(js-parse "1+2
+true
+false")
 (js-parse "32+abc//23e-a4*7e-2 3 id4 4ef;")
 
+(js-parse "if (1) 5 else 8")
 (js-parse "0x20")
 (js-parse "2b")
 (js-parse " 3.75" :trace t)
