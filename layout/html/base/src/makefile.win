@@ -22,73 +22,73 @@ MODULE=raptor
 REQUIRES=xpcom raptor js
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=			\
- nsAbsoluteFrame.cpp		\
- nsBRFrame.cpp			\
- nsBlockFrame.cpp		\
- nsBodyFrame.cpp		\
- nsGlobalVariables.cpp		\
- nsHRFrame.cpp			\
- nsHTMLAtoms.cpp		\
- nsHTMLBase.cpp			\
- nsHTMLBullet.cpp		\
- nsHTMLContainerFrame.cpp	\
- nsHTMLIIDs.cpp			\
- nsHTMLFrame.cpp		\
- nsHTMLReflowCommand.cpp	\
- nsImageFrame.cpp		\
- nsImageMap.cpp			\
- nsInlineFrame.cpp		\
- nsInlineLayout.cpp		\
- nsLeafFrame.cpp		\
- nsLineLayout.cpp		\
- nsObjectFrame.cpp		\
- nsPageFrame.cpp		\
- nsPlaceholderFrame.cpp		\
- nsScrollFrame.cpp		\
- nsSpacerFrame.cpp		\
- nsTextFrame.cpp		\
- nsWBRFrame.cpp			\
- nsDOMNodeList.cpp		\
- nsDOMAttributes.cpp		\
- nsHTMLContainer.cpp		\
- nsHTMLContent.cpp		\
- nsHTMLTagContent.cpp		\
- $(NULL)
+CPPSRCS=				\
+	nsAbsoluteFrame.cpp		\
+	nsBRFrame.cpp			\
+	nsBlockFrame.cpp		\
+	nsBodyFrame.cpp			\
+	nsFrameReflowState.cpp		\
+	nsGlobalVariables.cpp		\
+	nsHRFrame.cpp			\
+	nsHTMLAtoms.cpp			\
+	nsHTMLBullet.cpp		\
+	nsHTMLContainerFrame.cpp	\
+	nsHTMLIIDs.cpp			\
+	nsHTMLFrame.cpp			\
+	nsHTMLReflowCommand.cpp		\
+	nsImageFrame.cpp		\
+	nsImageMap.cpp			\
+	nsInlineFrame.cpp		\
+	nsInlineReflow.cpp		\
+	nsLeafFrame.cpp			\
+	nsLineLayout.cpp		\
+	nsObjectFrame.cpp		\
+	nsPageFrame.cpp			\
+	nsPlaceholderFrame.cpp		\
+	nsScrollFrame.cpp		\
+	nsSpacerFrame.cpp		\
+	nsTextFrame.cpp			\
+	nsWBRFrame.cpp			\
+	nsDOMNodeList.cpp		\
+	nsDOMAttributes.cpp		\
+	nsHTMLContainer.cpp		\
+	nsHTMLContent.cpp		\
+	nsHTMLTagContent.cpp		\
+	$(NULL)
 
-CPP_OBJS=				\
- .\$(OBJDIR)\nsAbsoluteFrame.obj	\
- .\$(OBJDIR)\nsBRFrame.obj		\
- .\$(OBJDIR)\nsBlockFrame.obj		\
- .\$(OBJDIR)\nsBodyFrame.obj		\
- .\$(OBJDIR)\nsGlobalVariables.obj	\
- .\$(OBJDIR)\nsHRFrame.obj		\
- .\$(OBJDIR)\nsHTMLAtoms.obj		\
- .\$(OBJDIR)\nsHTMLBase.obj		\
- .\$(OBJDIR)\nsHTMLBullet.obj		\
- .\$(OBJDIR)\nsHTMLContainer.obj	\
- .\$(OBJDIR)\nsHTMLContainerFrame.obj	\
- .\$(OBJDIR)\nsHTMLContent.obj		\
- .\$(OBJDIR)\nsHTMLFrame.obj		\
- .\$(OBJDIR)\nsHTMLIIDs.obj		\
- .\$(OBJDIR)\nsHTMLReflowCommand.obj	\
- .\$(OBJDIR)\nsHTMLTagContent.obj	\
- .\$(OBJDIR)\nsImageFrame.obj		\
- .\$(OBJDIR)\nsImageMap.obj		\
- .\$(OBJDIR)\nsInlineFrame.obj		\
- .\$(OBJDIR)\nsInlineLayout.obj		\
- .\$(OBJDIR)\nsLeafFrame.obj		\
- .\$(OBJDIR)\nsLineLayout.obj		\
- .\$(OBJDIR)\nsObjectFrame.obj		\
- .\$(OBJDIR)\nsPageFrame.obj		\
- .\$(OBJDIR)\nsPlaceholderFrame.obj	\
- .\$(OBJDIR)\nsScrollFrame.obj		\
- .\$(OBJDIR)\nsSpacerFrame.obj		\
- .\$(OBJDIR)\nsTextFrame.obj		\
- .\$(OBJDIR)\nsWBRFrame.obj		\
- .\$(OBJDIR)\nsDOMNodeList.obj		\
- .\$(OBJDIR)\nsDOMAttributes.obj	\
- $(NULL)
+CPP_OBJS=					\
+	.\$(OBJDIR)\nsAbsoluteFrame.obj		\
+	.\$(OBJDIR)\nsBRFrame.obj		\
+	.\$(OBJDIR)\nsBlockFrame.obj		\
+	.\$(OBJDIR)\nsBodyFrame.obj		\
+	.\$(OBJDIR)\nsFrameReflowState.obj	\
+	.\$(OBJDIR)\nsGlobalVariables.obj	\
+	.\$(OBJDIR)\nsHRFrame.obj		\
+	.\$(OBJDIR)\nsHTMLAtoms.obj		\
+	.\$(OBJDIR)\nsHTMLBullet.obj		\
+	.\$(OBJDIR)\nsHTMLContainer.obj		\
+	.\$(OBJDIR)\nsHTMLContainerFrame.obj	\
+	.\$(OBJDIR)\nsHTMLContent.obj		\
+	.\$(OBJDIR)\nsHTMLFrame.obj		\
+	.\$(OBJDIR)\nsHTMLIIDs.obj		\
+	.\$(OBJDIR)\nsHTMLReflowCommand.obj	\
+	.\$(OBJDIR)\nsHTMLTagContent.obj	\
+	.\$(OBJDIR)\nsImageFrame.obj		\
+	.\$(OBJDIR)\nsImageMap.obj		\
+	.\$(OBJDIR)\nsInlineFrame.obj		\
+	.\$(OBJDIR)\nsInlineReflow.obj		\
+	.\$(OBJDIR)\nsLeafFrame.obj		\
+	.\$(OBJDIR)\nsLineLayout.obj		\
+	.\$(OBJDIR)\nsObjectFrame.obj		\
+	.\$(OBJDIR)\nsPageFrame.obj		\
+	.\$(OBJDIR)\nsPlaceholderFrame.obj	\
+	.\$(OBJDIR)\nsScrollFrame.obj		\
+	.\$(OBJDIR)\nsSpacerFrame.obj		\
+	.\$(OBJDIR)\nsTextFrame.obj		\
+	.\$(OBJDIR)\nsWBRFrame.obj		\
+	.\$(OBJDIR)\nsDOMNodeList.obj		\
+	.\$(OBJDIR)\nsDOMAttributes.obj		\
+	$(NULL)
 
 EXPORTS=nsGlobalVariables.h
 

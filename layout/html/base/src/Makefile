@@ -22,16 +22,13 @@ LIBRARY_NAME = raptorhtmlbase_s
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS=				\
 	nsAbsoluteFrame.cpp		\
-        nsInlineFrame.cpp   \
-        nsInlineLayout.cpp   \
-        nsBlockFrame.cpp \
-        nsLineLayout.cpp \
 	nsBRFrame.cpp			\
+	nsBlockFrame.cpp		\
 	nsBodyFrame.cpp			\
+	nsFrameReflowState.cpp		\
 	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
-	nsHTMLBase.cpp			\
 	nsHTMLBullet.cpp		\
 	nsHTMLContainerFrame.cpp	\
 	nsHTMLIIDs.cpp			\
@@ -39,7 +36,10 @@ CPPSRCS=				\
 	nsHTMLReflowCommand.cpp		\
 	nsImageFrame.cpp		\
 	nsImageMap.cpp			\
+	nsInlineFrame.cpp		\
+	nsInlineReflow.cpp		\
 	nsLeafFrame.cpp			\
+	nsLineLayout.cpp		\
 	nsObjectFrame.cpp		\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
