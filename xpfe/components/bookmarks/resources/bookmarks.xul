@@ -65,9 +65,11 @@
     </menu>
   </menubar>
 
+<popupset>
 <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
 	<menu />
 </popup>
+</popupset>
 
 <html:div style="width: 100px; height: 100px;" flex="1">
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
