@@ -44,8 +44,8 @@ Contributor(s):
         </setter>
       </property>
       <method name="returnNode">
-        <argument name="aNodeA"/>
-        <argument name="aNodeB"/>
+        <parameter name="aNodeA"/>
+        <parameter name="aNodeB"/>
         <body>
         <![CDATA[
           var node = this.parentNode;
@@ -84,7 +84,7 @@ Contributor(s):
     </content>
     <implementation>
       <method name="collapseToolbar">
-        <argument name="toolbar"/>
+        <parameter name="toolbar"/>
         <body>
         <![CDATA[
           const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -99,7 +99,7 @@ Contributor(s):
         </body>
       </method>
       <method name="expandToolbar">
-        <argument name="aGrippyID"/>
+        <parameter name="aGrippyID"/>
         <body>
         <![CDATA[
           var idString = aGrippyID.substring("moz_tb_collapsed_".length, aGrippyID.length);
@@ -115,8 +115,8 @@ Contributor(s):
         </body>
       </method>
       <method name="findNodeByAttribute">
-        <argument name="aAttribute"/>
-        <argument name="aValue"/>
+        <parameter name="aAttribute"/>
+        <parameter name="aValue"/>
         <body>
         <![CDATA[
           var nodes = document.getAnonymousNodes(this);
@@ -134,7 +134,7 @@ Contributor(s):
         </body>
       </method>
       <method name="createCollapsedGrippy">
-        <argument name="aToolbar"/>
+        <parameter name="aToolbar"/>
         <body>
         <![CDATA[
           const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -167,7 +167,7 @@ Contributor(s):
         </body>
       </method>
       <method name="init">
-        <argument name="aEvent"/>
+        <parameter name="aEvent"/>
         <body>
         <![CDATA[
           for (var i = 0; i < this.childNodes.length; i++) {
@@ -205,8 +205,8 @@ Contributor(s):
     </content>
     <implementation>
       <method name="findNodeByAttribute">
-        <argument name="aAttribute"/>
-        <argument name="aValue"/>
+        <parameter name="aAttribute"/>
+        <parameter name="aValue"/>
         <body>
         <![CDATA[
           var nodes = document.getAnonymousNodes(this);
@@ -235,8 +235,8 @@ Contributor(s):
     </content>
     <implementation>
       <method name="findNodeByAttribute">
-        <argument name="aAttribute"/>
-        <argument name="aValue"/>
+        <parameter name="aAttribute"/>
+        <parameter name="aValue"/>
         <body>
         <![CDATA[
           var nodes = document.getAnonymousNodes(this);

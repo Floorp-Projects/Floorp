@@ -113,7 +113,7 @@ public:
   static nsIAtom* kExtendsAtom;
   static nsIAtom* kChildrenAtom;
   static nsIAtom* kMethodAtom;
-  static nsIAtom* kArgumentAtom;
+  static nsIAtom* kParameterAtom;
   static nsIAtom* kBodyAtom;
   static nsIAtom* kPropertyAtom;
   static nsIAtom* kOnSetAtom;

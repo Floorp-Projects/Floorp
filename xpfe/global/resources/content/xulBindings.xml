@@ -281,8 +281,8 @@
                                       onget="return document.getAnonymousNodes(this)[0].firstChild.selectionEnd;"/>
 
       <method name="setSelectionRange">
-        <argument name="aSelectionStart"/>
-        <argument name="aSelectionEnd"/>
+        <parameter name="aSelectionStart"/>
+        <parameter name="aSelectionEnd"/>
         <body>
           document.getAnonymousNodes(this)[0].firstChild.setSelectionRange( aSelectionStart, aSelectionEnd );
         </body>
@@ -344,12 +344,12 @@
     </content>
     <implementation>
       <method name="openPopup">
-        <argument name="element"/>
-        <argument name="xpos"/>
-        <argument name="ypos"/>
-        <argument name="popuptype"/>
-        <argument name="anchoralignment"/>
-        <argument name="popupalignment"/>
+        <parameter name="element"/>
+        <parameter name="xpos"/>
+        <parameter name="ypos"/>
+        <parameter name="popuptype"/>
+        <parameter name="anchoralignment"/>
+        <parameter name="popupalignment"/>
         <body>
         <![CDATA[
           try {
