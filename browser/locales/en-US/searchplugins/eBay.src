@@ -4,6 +4,7 @@ name="eBay"
 description="eBay - Online actions"
 action="http://search.ebay.com/search/search.dll"
 method="GET"
+queryCharset="ISO-8859-1"
 >
 
 <input name="query" user />
