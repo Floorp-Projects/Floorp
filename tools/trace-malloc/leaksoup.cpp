@@ -63,7 +63,7 @@ struct AllocationNode {
     nsAutoVoidArray pointers_from;
 
     // Early on in the algorithm, the pre-order index from a DFS.
-    // Later on, set to the index of the strongly connected index to
+    // Later on, set to the index of the strongly connected component to
     // which this node belongs.
     PRUint32 index;
 
@@ -215,10 +215,10 @@ int main(int argc, char **argv)
 
                     // When doing post-order processing, we have to be
                     // careful not to put reached nodes into the stack.
-                    nsVoidArray &pf = n->pointers_to;
-                    for (PRInt32 i = pf.Count() - 1; i >= 0; --i) {
-                        if (!NS_STATIC_CAST(AllocationNode*, pf[i])->reached) {
-                            stack.AppendElement(pf[i]);
+                    nsVoidArray &pt = n->pointers_to;
+                    for (PRInt32 i = pt.Count() - 1; i >= 0; --i) {
+                        if (!NS_STATIC_CAST(AllocationNode*, pt[i])->reached) {
+                            stack.AppendElement(pt[i]);
                         }
                     }
                 }
