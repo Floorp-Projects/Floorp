@@ -268,20 +268,33 @@ loser:
 NS_IMETHODIMP nsSecretDecoderRing::
 ChangePassword()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-#if 0
-  nsresult rv = NS_OK;
-  CMTStatus status;
-  CMT_CONTROL *control;
+  nsresult rv;
+  PK11SlotInfo *slot;
 
-  rv = mPSM->GetControlConnection(&control);
-  if (rv != NS_OK) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+  slot = PK11_GetInternalKeySlot();
+  if (!slot) return NS_ERROR_NOT_AVAILABLE;
 
-  status = CMT_SDRChangePassword(control, (void*)0);
+  /* Convert UTF8 token name to UCS2 */
+  NS_ConvertUTF8toUCS2 tokenName(PK11_GetTokenName(slot));
 
-loser:
+  PK11_FreeSlot(slot);
+
+  /* Get the set password dialog handler imlementation */
+  nsCOMPtr<nsITokenPasswordDialogs> dialogs;
+
+  rv = getNSSDialogs(getter_AddRefs(dialogs),
+           NS_GET_IID(nsITokenPasswordDialogs));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();
+  PRBool canceled;
+
+  rv = dialogs->SetPassword(ctx, tokenName.get(), &canceled);
+
+  /* canceled is ignored */
+
+
   return rv;
-#endif
 }
 
 /* void logout(); */
