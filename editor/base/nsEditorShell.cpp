@@ -331,46 +331,80 @@ nsEditorShell::Init()
   return NS_OK;
 }
 
+
+nsresult
+nsEditorShell::ResetEditingState()
+{
+  if (!mEditor) return NS_OK;   // nothing to do
+
+  // Mmm, we have an editor already. That means that someone loaded more than
+  // one URL into the content area. Let's tear down what we have, and rip 'em a
+  // new one.
+
+  // Unload existing stylesheets
+  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
+  if (styleSheets)
+  {
+    if (mBaseStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mBaseStyleSheet);
+      mBaseStyleSheet = 0;
+    }
+    if (mEditModeStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
+      mEditModeStyleSheet = 0;
+    }
+    if (mAllTagsModeStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
+      mAllTagsModeStyleSheet = 0;
+    }
+    if (mParagraphMarksStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mParagraphMarksStyleSheet);
+      mParagraphMarksStyleSheet = 0;  
+    }
+  }
+  
+  // now, unregister the selection listener, if there was one
+  if (mStateMaintainer)
+  {
+    nsCOMPtr<nsIDOMSelection> domSelection;
+    // using a scoped result, because we don't really care if this fails
+    nsresult result = GetEditorSelection(getter_AddRefs(domSelection));
+    if (NS_SUCCEEDED(result) && domSelection)
+    {
+      domSelection->RemoveSelectionListener(mStateMaintainer);
+      NS_IF_RELEASE(mStateMaintainer);
+    }
+  }
+  
+  // clear this editor out of the controller
+  if (mEditorController)
+  {
+    mEditorController->SetCommandRefCon(nsnull);
+  }
+  
+  mEditorType = eUninitializedEditorType;
+  mEditor = 0;  // clear out the nsCOMPtr
+
+  // and tell them that they are doing bad things
+  NS_WARNING("Multiple loads of the editor's document detected.");
+  // Note that if you registered doc state listeners before the second
+  // URL load, they don't get transferred to the new editor.
+
+  return NS_OK;
+}
+
 nsresult    
 nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl)
 {
   if (!mContentAreaDocShell || !mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (mEditor)
-  {
-    // Mmm, we have an editor already. That means that someone loaded more than
-    // one URL into the content area. Let's tear down what we have, and rip 'em a
-    // new one.
+  NS_ASSERTION(!mEditor, "Should never have an editor here");
 
-    // first, unregister the selection listener, if there was one
-    if (mStateMaintainer)
-    {
-      nsCOMPtr<nsIDOMSelection> domSelection;
-      // using a scoped result, because we don't really care if this fails
-      nsresult result = GetEditorSelection(getter_AddRefs(domSelection));
-      if (NS_SUCCEEDED(result) && domSelection)
-      {
-        domSelection->RemoveSelectionListener(mStateMaintainer);
-        NS_IF_RELEASE(mStateMaintainer);
-      }
-    }
-    
-    // clear this editor out of the controller
-    if (mEditorController)
-    {
-      mEditorController->SetCommandRefCon(nsnull);
-    }
-    
-    mEditorType = eUninitializedEditorType;
-    mEditor = 0;  // clear out the nsCOMPtr
-
-    // and tell them that they are doing bad things
-    NS_WARNING("Multiple loads of the editor's document detected.");
-    // Note that if you registered doc state listeners before the second
-    // URL load, they don't get transferred to the new editor.
-  }
-   
   // get the webshell for this loader. Need this, not mContentAreaDocShell, in
   // case we are editing a frameset
   nsCOMPtr<nsISupports> loaderContainer;
@@ -762,26 +796,6 @@ nsEditorShell::UpdateInterfaceState(const PRUnichar *tagToUpdate)
   return mStateMaintainer->ForceUpdate(tagToUpdate);
 }  
 
-NS_IMETHODIMP
-nsEditorShell::SetCommandStateData(const PRUnichar *commandName, void * stateData)
-{
-  if (!mStateMaintainer)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsSubsumeStr commandStr((PRUnichar *)commandName, PR_FALSE);
-  return mStateMaintainer->SetCommandStateData(commandStr, stateData);
-}
-
-NS_IMETHODIMP
-nsEditorShell::GetCommandStateData(const PRUnichar *commandName, void * *outStateData)
-{
-  if (!mStateMaintainer)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsSubsumeStr commandStr((PRUnichar *)commandName, PR_FALSE);
-  return mStateMaintainer->GetCommandStateData(commandStr, outStateData);
-}
-
 // Deletion routines
 nsresult
 nsEditorShell::ScrollSelectionIntoView()
@@ -1164,34 +1178,8 @@ nsEditorShell::LoadUrl(const PRUnichar *url)
   if(!mContentAreaDocShell)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (mEditor)
-  {
-    // Always unload all the override style sheets before loading
-    //  a url in case we're replacing an existing document that used them
-    nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
-    if (!styleSheets) return NS_NOINTERFACE;
-
-    if (mBaseStyleSheet)
-    {
-      styleSheets->RemoveOverrideStyleSheet(mBaseStyleSheet);
-      mBaseStyleSheet = nsnull;
-    }
-    if (mEditModeStyleSheet)
-    {
-      styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
-      mEditModeStyleSheet = nsnull;
-    }
-    if (mAllTagsModeStyleSheet)
-    {
-      styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
-      mAllTagsModeStyleSheet = nsnull;
-    }
-    if (mParagraphMarksStyleSheet)
-    {
-      styleSheets->RemoveOverrideStyleSheet(mParagraphMarksStyleSheet);
-      mParagraphMarksStyleSheet = nsnull;  
-    }
-  }
+  nsresult rv = ResetEditingState();
+  if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
   NS_ENSURE_SUCCESS(webNav->LoadURI(url), NS_ERROR_FAILURE);
@@ -4674,5 +4662,4 @@ nsEditorShell::DocumentIsRootDoc(nsIDocumentLoader* aLoader, PRBool& outIsRoot)
   outIsRoot = (rootItem.get() == docShellAsTreeItem.get());
   return NS_OK;
 }
-
 

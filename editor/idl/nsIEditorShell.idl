@@ -165,10 +165,6 @@ interface nsIEditorShell : nsISupports
   */
   void UpdateInterfaceState(in wstring tagToUpdate);
 
-  /* Used to associate state with a command */
-  [noscript] void SetCommandStateData(in wstring commandName, in voidStar stateData);
-  [noscript] voidStar GetCommandStateData(in wstring commandName);
-    
   /* Get string from the Editor's localized string bundle */
   wstring GetString(in wstring name);
 
@@ -531,4 +527,5 @@ interface nsIEditorShell : nsISupports
 
   void StartLogging(in nsIFileSpec logFile);
   void StopLogging();
+  
 };
