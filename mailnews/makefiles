@@ -72,7 +72,6 @@ mailnews/compose/tests/sendlater/Makefile
 mailnews/compose/tests/sendpage/Makefile
 mailnews/compose/tests/smtp/Makefile
 mailnews/public/Makefile
-mailnews/idl/Makefile
 mailnews/import/Makefile
 mailnews/import/public/Makefile
 mailnews/import/src/Makefile
