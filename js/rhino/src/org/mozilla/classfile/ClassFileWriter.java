@@ -822,6 +822,22 @@ public class ClassFileWriter {
     }
 
     /**
+     * Generate code to load the given long on stack.
+     *
+     * @param k the constant
+     */
+    public void addPush(long k)
+    {
+        int ik = (int)k;
+        if (ik == k) {
+            addPush(ik);
+            add(ByteCode.I2L);
+        } else {
+            addLoadConstant(k);
+        }
+    }
+
+    /**
      * Generate code to load the given double on stack.
      *
      * @param k the constant
