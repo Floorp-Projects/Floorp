@@ -47,13 +47,16 @@
           var selectedIndex = 0;
           for (var i = 0; i < this.childNodes.length; i++)
             {
-              if (this.childNodes[i] != val && this.childNodes[i].selected)
+              if (this.childNodes[i].selected)
                 {
-                  this.childNodes[i].selected = false;
-                  this.childNodes[i].removeAttribute("selected");
+                  if (this.childNodes[i] != val)
+                    {
+                      this.childNodes[i].selected = false;
+                      this.childNodes[i].removeAttribute("selected");
+                    }
+                  else 
+                    selectedIndex = i;
                 }
-              else
-                selectedIndex = i;
             }
           var tabpanel = this.parentNode.getElementsByTagName("tabpanel");
           tabpanel = tabpanel.length ? tabpanel[0] : null;
@@ -64,9 +67,8 @@
       </property>
     </interface>
     <handlers>
-      <!-- XXX - hyatt is lazy
-      <handler name="bindinginit">
-      <![CDATA]
+      <handler name="bindingattached">
+      <![CDATA[
         // first and last tabs need to be able to have unique styles
         // and also need to select first tab on startup. 
         var tabs = this.getElementsByTagName("tab");
@@ -81,7 +83,6 @@
         }
       ]]>
       </handler>
-      -->
     </handlers>
   </binding>
   
@@ -102,6 +103,15 @@
       </xul:box>
     </content>
     <interface>
+      <property name="value">
+        <getter>
+          return this.getAttribute("value");
+        </getter>
+        <setter>  
+          this.setAttribute("value", val);
+          return val;
+        </setter>
+      </property>
       <property name="tabbox" 
                 onget="return this.getAttribute('tabbox');"
                 onset="this.setAttribute('tabbox', val); return val;"/>
@@ -121,7 +131,7 @@
       </property>
     </interface>
     <handlers>
-      <handler type="command">
+      <handler type="click">
       <![CDATA[
         var tabbox = this.parentNode;
         while (tabbox.localName != "tabcontrol") {
