@@ -634,9 +634,6 @@ INCLUDES += -I.
 DEPENDENT_LIBS_H = dependentLibs.h
 GARBAGE += $(DEPENDENT_LIBS_H)
 
-# Create a dependency on static libraries listed in EXTRA_DSO_LDOPTS
-DSO_LDOPTS_DEPS = $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
-
 export:: $(DEPENDENT_LIBS_H)
 
 $(DEPENDENT_LIBS_H): Makefile Makefile.in
@@ -646,6 +643,10 @@ $(DEPENDENT_LIBS_H): Makefile Makefile.in
 endif
 endif
 endif
+
+
+# Create a dependency on static libraries listed in EXTRA_DSO_LDOPTS
+DSO_LDOPTS_DEPS = $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
 ##############################################
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
