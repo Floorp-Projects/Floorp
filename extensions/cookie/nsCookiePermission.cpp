@@ -1,3 +1,4 @@
+// vim:ts=2:sw=2:et:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -19,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,8 +41,17 @@
 #include "nsICookie.h"
 #include "nsIServiceManager.h"
 #include "nsICookiePromptService.h"
-#include "nsIDOMWindow.h"
 #include "nsIURI.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsILoadGroup.h"
+#include "nsIChannel.h"
+#include "nsIDOMWindow.h"
 #include "nsString.h"
 
 /****************************************************************
@@ -48,43 +59,186 @@
  ****************************************************************/
 
 static const PRBool kDefaultPolicy = PR_TRUE;
+static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
+static const char kCookiesDisabledForMailNews[] = "network.cookie.disableCookieForMailNews";
+static const char kPermissionType[] = "cookie";
 
-NS_IMPL_ISUPPORTS1(nsCookiePermission, nsICookiePermission)
-
-NS_IMETHODIMP 
-nsCookiePermission::TestPermission(nsIURI *aURI,
-                                   nsICookie *aCookie,
-                                   nsIDOMWindow *aParent,
-                                   PRInt32 aCookiesFromHost,
-                                   PRBool aChangingCookie,
-                                   PRBool aShowDialog,
-                                   PRBool *aPermission) 
+#ifndef MOZ_PHOENIX
+// returns PR_TRUE if URI appears to be the URI of a mailnews protocol
+static PRBool
+IsFromMailNews(nsIURI *aURI)
 {
-  NS_ASSERTION(aURI, "could not get uri");
+  static const char *kMailNewsProtocols[] =
+      { "imap", "news", "snews", "mailbox", nsnull };
+  PRBool result;
+  for (const char **p = kMailNewsProtocols; *p; ++p) {
+    if (NS_SUCCEEDED(aURI->SchemeIs(*p, &result)) && result)
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+#endif
 
-  *aPermission = kDefaultPolicy;
+static void
+GetInterfaceFromChannel(nsIChannel   *aChannel,
+                        const nsIID  &aIID,
+                        void        **aResult)
+{
+  if (!aChannel)
+    return; // no context, no interface!
+  NS_ASSERTION(!*aResult, "result not initialized to null");
 
+  nsCOMPtr<nsIInterfaceRequestor> cbs;
+  aChannel->GetNotificationCallbacks(getter_AddRefs(cbs));
+  if (cbs)
+    cbs->GetInterface(aIID, aResult);
+  if (!*aResult) {
+    // try load group's notification callbacks...
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (loadGroup) {
+      loadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+      if (cbs)
+        cbs->GetInterface(aIID, aResult);
+    }
+  }
+}
+
+NS_IMPL_ISUPPORTS2(nsCookiePermission,
+                   nsICookiePermission,
+                   nsIObserver)
+
+nsresult
+nsCookiePermission::Init()
+{
   nsresult rv;
-  if (!mPermMgr) {
-    mPermMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+  mPermMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // failure to access the pref service is non-fatal...
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    nsCOMPtr<nsIPrefBranchInternal> prefInt = do_QueryInterface(prefBranch);   
+    if (prefInt) {
+      prefInt->AddObserver(kCookiesAskPermission, this, PR_FALSE);
+      prefInt->AddObserver(kCookiesDisabledForMailNews, this, PR_FALSE);
+    }
+    PrefChanged(prefBranch, nsnull);
   }
 
-  PRUint32 listPermission;
-  mPermMgr->TestPermission(aURI, "cookie", &listPermission);
-  if (listPermission == nsIPermissionManager::DENY_ACTION) {
-    *aPermission = PR_FALSE;
-  } else if (listPermission == nsIPermissionManager::ALLOW_ACTION) {
-    *aPermission = PR_TRUE;
-  } else if (aShowDialog) {
+  return NS_OK;
+}
+
+void
+nsCookiePermission::PrefChanged(nsIPrefBranch *prefBranch,
+                                const char    *pref)
+{
+  PRBool val;
+
+#define PREF_CHANGED(_P) (!pref || !strcmp(pref, _P))
+
+  if (PREF_CHANGED(kCookiesAskPermission) &&
+      NS_SUCCEEDED(prefBranch->GetBoolPref(kCookiesAskPermission, &val)))
+    mCookiesAskPermission = val;
+
+#ifndef MOZ_PHOENIX
+  if (PREF_CHANGED(kCookiesDisabledForMailNews) &&
+      NS_SUCCEEDED(prefBranch->GetBoolPref(kCookiesDisabledForMailNews, &val)))
+    mCookiesDisabledForMailNews = val;
+#endif
+}
+
+NS_IMETHODIMP
+nsCookiePermission::SetAccess(nsIURI         *aURI,
+                              nsCookieAccess  aAccess)
+{
+  //
+  // NOTE: nsCookieAccess values conveniently match up with
+  //       the permission codes used by nsIPermissionManager.
+  //       this is nice because it avoids conversion code.
+  //
+  return mPermMgr->Add(aURI, kPermissionType, aAccess);
+}
+
+NS_IMETHODIMP
+nsCookiePermission::CanAccess(nsIURI         *aURI,
+                              nsIURI         *aFirstURI,
+                              nsIChannel     *aChannel,
+                              nsCookieAccess *aResult)
+{
+#ifndef MOZ_PHOENIX
+  // disable cookies in mailnews if user's prefs say so
+  if (mCookiesDisabledForMailNews) {
+    //
+    // try to examine the "app type" of the docshell owning this request.  if
+    // we find a docshell in the heirarchy of type APP_TYPE_MAIL, then assume
+    // this URI is being loaded from within mailnews.
+    //
+    // XXX this is a pretty ugly hack at the moment since cookies really
+    // shouldn't have to talk to the docshell directly.  ultimately, we want
+    // to talk to some more generic interface, which the docshell would also
+    // implement.  but, the basic mechanism here of leveraging the channel's
+    // (or loadgroup's) notification callbacks attribute seems ideal as it
+    // avoids the problem of having to modify all places in the code which
+    // kick off network requests.
+    //
+    PRUint32 appType = nsIDocShell::APP_TYPE_UNKNOWN;
+    if (aChannel) {
+      nsCOMPtr<nsIDocShellTreeItem> item, parent;
+      GetInterfaceFromChannel(aChannel, NS_GET_IID(nsIDocShellTreeItem),
+                              getter_AddRefs(parent));
+      if (parent) {
+        do {
+            item = parent;
+            nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(item);
+            if (docshell)
+              docshell->GetAppType(&appType);
+        } while (appType != nsIDocShell::APP_TYPE_MAIL &&
+                 NS_SUCCEEDED(item->GetParent(getter_AddRefs(parent))) &&
+                 parent);
+      }
+    }
+    if ((appType == nsIDocShell::APP_TYPE_MAIL) ||
+        (aFirstURI && IsFromMailNews(aFirstURI)) ||
+        IsFromMailNews(aURI)) {
+      *aResult = ACCESS_DENY;
+      return NS_OK;
+    }
+  }
+#endif // MOZ_PHOENIX
+  
+  // finally, check with permission manager...
+  return mPermMgr->TestPermission(aURI, kPermissionType, (PRUint32 *) aResult);
+}
+
+NS_IMETHODIMP 
+nsCookiePermission::CanSetCookie(nsIURI     *aURI,
+                                 nsIChannel *aChannel,
+                                 nsICookie  *aCookie,
+                                 PRInt32     aNumCookiesFromHost,
+                                 PRBool      aChangingCookie,
+                                 PRBool     *aResult) 
+{
+  NS_ASSERTION(aURI, "null uri");
+
+  *aResult = kDefaultPolicy;
+
+  nsresult rv;
+  PRUint32 perm;
+  mPermMgr->TestPermission(aURI, kPermissionType, &perm);
+  if (perm == nsIPermissionManager::DENY_ACTION) {
+    *aResult = PR_FALSE;
+  } else if (perm == nsIPermissionManager::ALLOW_ACTION) {
+    *aResult = PR_TRUE;
+  } else if (mCookiesAskPermission) {
     // check whether the user wants to be prompted. we only do this if the
     // permissionlist lookup returned UNKNOWN_ACTION (i.e., no permissionlist
     // entry exists for this host).
-    NS_ASSERTION(listPermission == nsIPermissionManager::UNKNOWN_ACTION,
-        "unknown permission");
+    NS_ASSERTION(perm == nsIPermissionManager::UNKNOWN_ACTION, "unknown permission");
 
     // default to rejecting, in case the prompting process fails
-    *aPermission = PR_FALSE;
+    *aResult = PR_FALSE;
 
     nsCAutoString hostPort;
     aURI->GetHostPort(hostPort);
@@ -111,18 +265,34 @@ nsCookiePermission::TestPermission(nsIURI *aURI,
         do_GetService(NS_COOKIEPROMPTSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
+    // try to get a nsIDOMWindow from the channel...
+    nsCOMPtr<nsIDOMWindow> parent;
+    GetInterfaceFromChannel(aChannel, NS_GET_IID(nsIDOMWindow),
+                            getter_AddRefs(parent));
+
     PRBool rememberDecision = PR_FALSE;
-    rv = cookiePromptService->CookieDialog(nsnull, aCookie, hostPort, 
-                                           aCookiesFromHost, aChangingCookie,
-                                           &rememberDecision, aPermission);
+    rv = cookiePromptService->CookieDialog(parent, aCookie, hostPort, 
+                                           aNumCookiesFromHost, aChangingCookie,
+                                           &rememberDecision, aResult);
     if (NS_FAILED(rv)) return rv;
 
     if (rememberDecision) {
-      mPermMgr->Add(aURI, "cookie",
-                   *aPermission ? (PRUint32) nsIPermissionManager::ALLOW_ACTION
-                                : (PRUint32) nsIPermissionManager::DENY_ACTION);
+      mPermMgr->Add(aURI, kPermissionType,
+                   *aResult ? (PRUint32) nsIPermissionManager::ALLOW_ACTION
+                            : (PRUint32) nsIPermissionManager::DENY_ACTION);
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookiePermission::Observe(nsISupports     *aSubject,
+                            const char      *aTopic,
+                            const PRUnichar *aData)
+{
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
+  if (prefBranch)
+    PrefChanged(prefBranch, NS_LossyConvertUCS2toASCII(aData).get());
   return NS_OK;
 }

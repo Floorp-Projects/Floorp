@@ -1,3 +1,4 @@
+// vim:ts=2:sw=2:et:
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
@@ -39,18 +40,11 @@
 
 #include "nsCookieService.h"
 #include "nsIServiceManager.h"
-#include "nsIGenericFactory.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDocumentLoader.h"
-#include "nsIWebProgress.h"
 
-#include "nsIPermissionManager.h"
 #include "nsIIOService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefService.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsICookieConsent.h"
 #include "nsICookiePermission.h"
 #include "nsIURI.h"
@@ -73,7 +67,6 @@
 #include "prnetdb.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
-#include "nsCURILoader.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 /******************************************************************************
@@ -81,12 +74,10 @@
  * useful types & constants
  ******************************************************************************/
 
-static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-
 static const char kCookieFileName[] = "cookies.txt";
 
-static const PRUint32 kLazyWriteLoadingTimeout = 10000; //msec
-static const PRUint32 kLazyWriteFinishedTimeout = 1000; //msec
+static const PRUint32 kLazyWriteTimeout = 5000; //msec
+static const PRUint32 kLazyNotifyTimeout = 1000; //msec
 
 static const PRInt32 kMaxNumberOfCookies = 300;
 static const PRInt32 kMaxCookiesPerHost = 20;
@@ -127,14 +118,12 @@ static const char kCookiesForDomainOnly[] = "network.cookie.enableForOriginating
 static const char kCookiesLifetimeCurrentSession[] = "network.cookie.enableForCurrentSessionOnly";
 #else
 static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
-static const char kCookiesDisabledForMailNews[] = "network.cookie.disableCookieForMailNews";
 static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
 static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
 static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
 static const char kCookiesP3PString[] = "network.cookie.p3p";
 static const char kCookiesP3PString_Default[] = "drdraaaa";
 #endif
-static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 static const char kCookiesStrictDomains[] = "network.cookie.strictDomains";
 
 // struct for temporarily storing cookie attributes during header parsing
@@ -300,18 +289,15 @@ nsCookieService::GetSingleton()
  * public methods
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS6(nsCookieService,
+NS_IMPL_ISUPPORTS5(nsCookieService,
                    nsICookieService,
                    nsICookieManager,
                    nsICookieManager2,
                    nsIObserver,
-                   nsIWebProgressListener,
                    nsISupportsWeakReference)
 
 nsCookieService::nsCookieService()
- : mLoadCount(0)
- , mWritePending(PR_FALSE)
- , mCookieChanged(PR_FALSE)
+ : mCookieChanged(PR_FALSE)
  , mCookieIconVisible(PR_FALSE)
 {
   // AddRef now, so we don't cross XPCOM boundaries with a zero refcount
@@ -337,17 +323,6 @@ nsCookieService::nsCookieService()
 
   mP3PService = do_GetService(NS_COOKIECONSENT_CONTRACTID);
   mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
-
-  // Register as an observer for the document loader  
-  nsCOMPtr<nsIDocumentLoader> docLoaderService = do_GetService(kDocLoaderServiceCID);
-  nsCOMPtr<nsIWebProgress> progress = do_QueryInterface(docLoaderService);
-  if (progress) {
-    progress->AddProgressListener(this,
-                                  nsIWebProgress::NOTIFY_STATE_DOCUMENT |
-                                  nsIWebProgress::NOTIFY_STATE_NETWORK);
-  } else {
-    NS_ERROR("Couldn't get nsIDocumentLoader");
-  }
 }
 
 nsCookieService::~nsCookieService()
@@ -356,6 +331,8 @@ nsCookieService::~nsCookieService()
 
   if (mWriteTimer)
     mWriteTimer->Cancel();
+  if (mNotifyTimer)
+    mNotifyTimer->Cancel();
 
   // clean up memory
   RemoveAllFromMemory();
@@ -372,8 +349,14 @@ nsCookieService::Observe(nsISupports     *aSubject,
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.
-    if (mWriteTimer)
+    if (mWriteTimer) {
       mWriteTimer->Cancel();
+      mWriteTimer = 0;
+    }
+    if (mNotifyTimer) {
+      mNotifyTimer->Cancel();
+      mNotifyTimer = 0;
+    }
 
     if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       RemoveAllFromMemory();
@@ -445,13 +428,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
       }
       mCookiesPermissions = tempPrefValue;
 
-    } else if (pref.Equals(kCookiesDisabledForMailNews)) {
-      rv = mPrefBranch->GetBoolPref(kCookiesDisabledForMailNews, &tempPrefValue);
-      if (NS_FAILED(rv)) {
-        tempPrefValue = PR_TRUE;
-      }
-      mCookiesDisabledForMailNews = tempPrefValue;
-
     } else if (pref.Equals(kCookiesLifetimeEnabled)) {
       rv = mPrefBranch->GetBoolPref(kCookiesLifetimeEnabled, &tempPrefValue);
       if (NS_FAILED(rv)) {
@@ -486,13 +462,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
 
 #endif
     // common prefs between Phoenix & Mozilla
-    } else if (pref.Equals(kCookiesAskPermission)) {
-      rv = mPrefBranch->GetBoolPref(kCookiesAskPermission, &tempPrefValue);
-      if (NS_FAILED(rv)) {
-        tempPrefValue = PR_FALSE;
-      }
-      mCookiesAskPermission = tempPrefValue;
-
     } else if (pref.Equals(kCookiesStrictDomains)) {
       rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &tempPrefValue);
       if (NS_FAILED(rv)) {
@@ -736,33 +705,26 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
 
   // switch to a nice string type now, and process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
-  while (SetCookieInternal(aHostURI,
+  while (SetCookieInternal(aHostURI, aChannel,
                            cookieHeader, serverTime,
                            cookieStatus, cookiePolicy));
 
   // write out the cookie file
-  LazyWrite(PR_TRUE);
+  LazyWrite();
+  LazyNotify();
   return NS_OK;
 }
 
 void
-nsCookieService::LazyWrite(PRBool aForce)
+nsCookieService::LazyWrite()
 {
-  // !aForce resets the timer at load end, but only if a write is pending
-  if (!aForce && !mWritePending)
-    return;
-
-  PRUint32 timeout = mLoadCount > 0 ? kLazyWriteLoadingTimeout :
-                                      kLazyWriteFinishedTimeout;
   if (mWriteTimer) {
-    mWriteTimer->SetDelay(timeout);
-    mWritePending = PR_TRUE;
+    mWriteTimer->SetDelay(kLazyWriteTimeout);
   } else {
     mWriteTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mWriteTimer) {
-      mWriteTimer->InitWithFuncCallback(DoLazyWrite, this, timeout,
+      mWriteTimer->InitWithFuncCallback(DoLazyWrite, this, kLazyWriteTimeout,
                                         nsITimer::TYPE_ONE_SHOT);
-      mWritePending = PR_TRUE;
     }
   }
 }
@@ -772,34 +734,35 @@ nsCookieService::DoLazyWrite(nsITimer *aTimer,
                              void     *aClosure)
 {
   nsCookieService *service = NS_REINTERPRET_CAST(nsCookieService*, aClosure);
-  service->mWritePending = PR_FALSE;
   service->Write();
+  service->mWriteTimer = 0;
 }
 
-NS_IMETHODIMP 
-nsCookieService::OnStateChange(nsIWebProgress *aWebProgress, 
-                               nsIRequest     *aRequest, 
-                               PRUint32       aProgressStateFlags, 
-                               nsresult       aStatus)
+void
+nsCookieService::LazyNotify()
 {
-  if (aProgressStateFlags & STATE_IS_NETWORK) {
-    if (aProgressStateFlags & STATE_START)
-      ++mLoadCount;
-    if (aProgressStateFlags & STATE_STOP) {
-      if (mLoadCount > 0) // needed because at startup we may miss initial STATE_START
-        --mLoadCount;
-      if (mLoadCount == 0)
-        LazyWrite(PR_FALSE);
+  // this algorithm is slightly different than the one used to write cookies.
+  // here we are concerned with update frequency of the UI (yes, yes, this
+  // code really shouldn't have to worry about the UI!)... so, we do not
+  // further delay an already delayed notification.
+
+  if (!mNotifyTimer) {
+    mNotifyTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mNotifyTimer) {
+      mNotifyTimer->InitWithFuncCallback(DoLazyNotify, this, kLazyNotifyTimeout,
+                                         nsITimer::TYPE_ONE_SHOT);
     }
   }
+}
 
-  if (mObserverService &&
-      (aProgressStateFlags & STATE_IS_DOCUMENT) &&
-      (aProgressStateFlags & STATE_STOP)) {
-    mObserverService->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
-  }
-
-  return NS_OK;
+void
+nsCookieService::DoLazyNotify(nsITimer *aTimer,
+                              void     *aClosure)
+{
+  nsCookieService *service = NS_REINTERPRET_CAST(nsCookieService*, aClosure);
+  if (service->mObserverService)
+    service->mObserverService->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
+  service->mNotifyTimer = 0;
 }
 
 void
@@ -815,47 +778,6 @@ NS_IMETHODIMP
 nsCookieService::GetCookieIconIsVisible(PRBool *aIsVisible)
 {
   *aIsVisible = mCookieIconVisible;
-  return NS_OK;
-}
-
-// nsIWebProgressListener implementation
-NS_IMETHODIMP
-nsCookieService::OnProgressChange(nsIWebProgress *aProgress,
-                                  nsIRequest     *aRequest,
-                                  PRInt32        aCurSelfProgress,
-                                  PRInt32        aMaxSelfProgress,
-                                  PRInt32        aCurTotalProgress,
-                                  PRInt32        aMaxTotalProgress)
-{
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::OnLocationChange(nsIWebProgress *aWebProgress,
-                                  nsIRequest     *aRequest,
-                                  nsIURI         *aLocation)
-{
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsCookieService::OnStatusChange(nsIWebProgress  *aWebProgress,
-                                nsIRequest      *aRequest,
-                                nsresult        aStatus,
-                                const PRUnichar *aMessage)
-{
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsCookieService::OnSecurityChange(nsIWebProgress *aWebProgress, 
-                                  nsIRequest     *aRequest, 
-                                  PRUint32       aState)
-{
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -882,13 +804,11 @@ nsCookieService::InitPrefObservers()
       prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
 #else
       prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
-      prefInternal->AddObserver(kCookiesDisabledForMailNews, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesLifetimeEnabled, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesLifetimeDays, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesP3PString, this, PR_TRUE);
 #endif
-      prefInternal->AddObserver(kCookiesAskPermission, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesStrictDomains, this, PR_TRUE);
     }
 
@@ -900,15 +820,11 @@ nsCookieService::InitPrefObservers()
 
   } else {
     // only called if getting the prefbranch failed.
-#ifdef MOZ_PHOENIX
-    mCookiesDisabledForMailNews = PR_FALSE; // for efficiency
-#else
-    mCookiesDisabledForMailNews = PR_TRUE;
+#ifndef MOZ_PHOENIX
     mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
 #endif
     mCookiesPermissions = BEHAVIOR_REJECT;
     mCookiesLifetimeEnabled = PR_FALSE;
-    mCookiesAskPermission = PR_FALSE;
     mCookiesStrictDomains = PR_FALSE;
   }
 }
@@ -955,7 +871,6 @@ nsCookieService::ReadPrefs()
   mCookiesLifetimeCurrentSession = tempPrefValue;
   // Phoenix hacks to reduce ifdefs in code
   mCookiesLifetimeEnabled = mCookiesLifetimeCurrentSession;
-  mCookiesDisabledForMailNews = PR_FALSE;
   mCookiesLifetimeSec = 0;
 
 #else
@@ -965,13 +880,6 @@ nsCookieService::ReadPrefs()
     rv2 = rv;
   }
   mCookiesPermissions = tempPrefValue;
-
-  rv = mPrefBranch->GetBoolPref(kCookiesDisabledForMailNews, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = PR_TRUE;
-    rv2 = rv;
-  }
-  mCookiesDisabledForMailNews = tempPrefValue;
 
   rv = mPrefBranch->GetBoolPref(kCookiesLifetimeEnabled, &tempPrefValue);
   if (NS_FAILED(rv)) {
@@ -1007,12 +915,6 @@ nsCookieService::ReadPrefs()
 
 #endif
   // common prefs between Phoenix & Mozilla
-  rv = mPrefBranch->GetBoolPref(kCookiesAskPermission, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = PR_FALSE;
-    rv2 = rv;
-  }
-  mCookiesAskPermission = tempPrefValue;
 
   rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &tempPrefValue);
   if (NS_FAILED(rv)) {
@@ -1161,24 +1063,21 @@ nsCookieService::Remove(const nsACString &aHost,
         cookieInList->Name().Equals(aName)) {
       // check if we need to add the host to the permissions blacklist.
       // we should push this portion into the UI, it shouldn't live here in the backend.
-      if (aBlocked) {
-        nsresult rv;
-        nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+      if (aBlocked && mPermissionService) {
+        nsCAutoString buf;
+        NS_NAMED_LITERAL_CSTRING(httpPrefix, "http://");
 
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIURI> uri;
-          static NS_NAMED_LITERAL_CSTRING(httpPrefix, "http://");
+        // remove leading dot from host
+        if (cookieInList->IsDomain())
+          buf = httpPrefix + Substring(cookieInList->Host(), 1, cookieInList->Host().Length() - 1);
+        else
+          buf = httpPrefix + cookieInList->Host();
 
-          // remove leading dot from host
-          if (cookieInList->IsDomain()) {
-            rv = NS_NewURI(getter_AddRefs(uri), PromiseFlatCString(httpPrefix + Substring(cookieInList->Host(), 1, cookieInList->Host().Length() - 1)));
-          } else {
-            rv = NS_NewURI(getter_AddRefs(uri), PromiseFlatCString(httpPrefix + cookieInList->Host()));
-          }
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), buf);
 
-          if (NS_SUCCEEDED(rv))
-            permissionManager->Add(uri, "cookie", nsIPermissionManager::DENY_ACTION);
-        }
+        if (uri)
+          mPermissionService->SetAccess(uri, nsICookiePermission::ACCESS_DENY);
       }
 
       mCookieList.RemoveElementAt(i);
@@ -1456,6 +1355,7 @@ nsCookieService::Write()
 // to be processed
 PRBool
 nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
+                                   nsIChannel         *aChannel,
                                    nsDependentCString &aCookieHeader,
                                    nsInt64            aServerTime,
                                    nsCookieStatus     aStatus,
@@ -1535,12 +1435,11 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
     PRBool permission;
     // we need to think about prompters/parent windows here - TestPermission
     // needs one to prompt, so right now it has to fend for itself to get one
-    mPermissionService->TestPermission(aHostURI,
-                                       NS_STATIC_CAST(nsICookie*, NS_STATIC_CAST(nsCookie*, cookie)),
-                                       nsnull,
-                                       countFromHost, foundCookie,
-                                       mCookiesAskPermission,
-                                       &permission);
+    mPermissionService->CanSetCookie(aHostURI,
+                                     aChannel,
+                                     NS_STATIC_CAST(nsICookie*, NS_STATIC_CAST(nsCookie*, cookie)),
+                                     countFromHost, foundCookie,
+                                     &permission);
     if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie rejected by permission manager");
       return newCookie;
@@ -1879,16 +1778,6 @@ nsCookieService::IsIPAddress(const nsAFlatCString &aHost)
   return (PR_StringToNetAddr(aHost.get(), &addr) == PR_SUCCESS);
 }
 
-// returns PR_TRUE if URI scheme is from mailnews
-PRBool
-nsCookieService::IsFromMailNews(const nsAFlatCString &aScheme)
-{
-  return (aScheme.Equals(NS_LITERAL_CSTRING("imap"))  || 
-          aScheme.Equals(NS_LITERAL_CSTRING("news"))  ||
-          aScheme.Equals(NS_LITERAL_CSTRING("snews")) ||
-          aScheme.Equals(NS_LITERAL_CSTRING("mailbox")));
-}
-
 PRBool
 nsCookieService::IsInDomain(const nsACString &aDomain,
                             const nsACString &aHost,
@@ -2116,68 +2005,19 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
     return nsICookie::STATUS_REJECTED;
   }
 
-  // disable cookies in mailnews if user's prefs say so
-  if (mCookiesDisabledForMailNews) {
-    //
-    // try to examine the "app type" of the docshell owning this request.  if
-    // we find a docshell in the heirarchy of type APP_TYPE_MAIL, then assume
-    // this URI is being loaded from within mailnews.
-    //
-    // XXX this is a pretty ugly hack at the moment since cookies really
-    // shouldn't have to talk to the docshell directly.  ultimately, we want
-    // to talk to some more generic interface, which the docshell would also
-    // implement.  but, the basic mechanism here of leveraging the channel's
-    // (or loadgroup's) notification callbacks attribute seems ideal as it
-    // avoids the problem of having to modify all places in the code which
-    // kick off network requests.
-    //
-    PRUint32 appType = nsIDocShell::APP_TYPE_UNKNOWN;
-    if (aChannel) {
-      nsCOMPtr<nsIInterfaceRequestor> req;
-      aChannel->GetNotificationCallbacks(getter_AddRefs(req));
-      if (!req) {
-        // check the load group's notification callbacks...
-        nsCOMPtr<nsILoadGroup> group;
-        aChannel->GetLoadGroup(getter_AddRefs(group));
-        if (group)
-          group->GetNotificationCallbacks(getter_AddRefs(req));
-      }
-      if (req) {
-        nsCOMPtr<nsIDocShellTreeItem> item, parent = do_GetInterface(req);
-        if (parent) {
-          do {
-              item = parent;
-              nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(item);
-              if (docshell)
-                docshell->GetAppType(&appType);
-          } while (appType != nsIDocShell::APP_TYPE_MAIL &&
-                   NS_SUCCEEDED(item->GetParent(getter_AddRefs(parent))) &&
-                   parent);
-        }
-      }
-    }
-    if ((appType == nsIDocShell::APP_TYPE_MAIL) ||
-        (aFirstURI && IsFromMailNews(firstURIScheme)) ||
-        IsFromMailNews(currentURIScheme)) {
-      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies disabled for mailnews");
-      return nsICookie::STATUS_REJECTED;
-    }
-  }
-
   // check the permission list first; if we find an entry, it overrides
   // default prefs. see bug 184059.
-  nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    PRUint32 listPermission;
-    permissionManager->TestPermission(aHostURI, "cookie", &listPermission);
+  if (mPermissionService) {
+    nsCookieAccess access;
+    mPermissionService->CanAccess(aHostURI, aFirstURI, aChannel, &access);
 
     // if we found an entry, use it
-    switch (listPermission) {
-      case nsIPermissionManager::DENY_ACTION:
+    switch (access) {
+      case nsICookiePermission::ACCESS_DENY:
         COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are blocked for this site");
         return nsICookie::STATUS_REJECTED;
 
-      case nsIPermissionManager::ALLOW_ACTION:
+      case nsICookiePermission::ACCESS_ALLOW:
         return nsICookie::STATUS_ACCEPTED;
     }
   }
