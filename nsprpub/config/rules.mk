@@ -165,7 +165,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_LIBS := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_LIBS))
 endif
 
-ALL_TRASH		= $(TARGETS) $(OBJS) $(filter-out . .., $(OBJDIR)) LOGS TAGS $(GARBAGE) \
+ALL_TRASH		= $(TARGETS) $(OBJS) $(RES) $(filter-out . .., $(OBJDIR)) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) \
 			  so_locations
 
@@ -208,11 +208,11 @@ libs:: export
 install:: export
 
 clean::
-	rm -rf $(OBJS) so_locations $(NOSUCHFILE) $(GARBAGE)
+	rm -rf $(OBJS) $(RES) so_locations $(NOSUCHFILE) $(GARBAGE)
 	+$(LOOP_OVER_DIRS)
 
 clobber::
-	rm -rf $(OBJS) $(TARGETS) $(filter-out . ..,$(OBJDIR)) $(GARBAGE) so_locations $(NOSUCHFILE)
+	rm -rf $(OBJS) $(RES) $(TARGETS) $(filter-out . ..,$(OBJDIR)) $(GARBAGE) so_locations $(NOSUCHFILE)
 	+$(LOOP_OVER_DIRS)
 
 realclean clobber_all::
