@@ -130,6 +130,32 @@ BEGIN {
     if (!$^C) {
 
 ###########################################################################
+# Check for help request. Display help page if --help/-h/-? was passed.
+###########################################################################
+my $help = grep(/^--help$/, @ARGV) || grep (/^-h$/, @ARGV) || grep (/^-\?$/, @ARGV) || 0;
+help_page() if $help;
+
+sub help_page {
+    my $programname = $0;
+    $programname =~ s#^\./##;
+    print "$programname - checks your setup and updates your Bugzilla installation\n";
+    print "\nUsage: $programname [SCRIPT [--verbose]] [--check-modules|--help]\n";
+    print "\n";
+    print "   --help           Display this help text.\n";
+    print "   --check-modules  Only check for correct module dependencies and quit thereafter;\n";
+    print "                    does not perform any changes.\n";
+    print "    SCRIPT          Name of script to drive non-interactive mode.\n";
+    print "                    This script should define an \%answer hash whose\n"; 
+    print "                    keys are variable names and the values answers to\n";
+    print "                    all the questions checksetup.pl asks.\n";
+    print "                    (See comments at top of $programname for more info.)\n";
+    print "   --verbose        Output results of SCRIPT being processed.\n";
+    print "\n";
+
+    exit 1;
+}
+
+###########################################################################
 # Non-interactive override. Pass a filename on the command line which is
 # a Perl script. This script defines a %answer hash whose names are tags
 # and whose values are answers to all the questions checksetup.pl asks. 
@@ -140,7 +166,7 @@ if ($ARGV[0] && ($ARGV[0] !~ /^--/)) {
     do $ARGV[0] 
         or ($@ && die("Error $@ processing $ARGV[0]"))
         or die("Error $! processing $ARGV[0]");
-    $silent = !grep(/^--no-silent$/, @ARGV);
+    $silent = !grep(/^--no-silent$/, @ARGV) && !grep(/^--verbose$/, @ARGV);
 }
 
 ###########################################################################
