@@ -145,6 +145,8 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         !(*js_GetGCThingFlags(left) & GCF_MUTABLE)) {
         /* We must copy if left does not own a buffer to realloc. */
         ln = JSSTRING_LENGTH(left);
+        if (ln == 0)
+            return right;
         ls = JSSTRING_CHARS(left);
         s = (jschar *) JS_malloc(cx, (ln + rn + 1) * sizeof(jschar));
         if (!s)
