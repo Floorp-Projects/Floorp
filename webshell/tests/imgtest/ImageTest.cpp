@@ -199,7 +199,12 @@ MyLoadImage(char *aFileName)
     if (gImageGroup == NULL) {
         nsIDeviceContext *deviceCtx = gWindow->GetDeviceContext();
         if (NS_NewImageGroup(&gImageGroup) != NS_OK ||
-            gImageGroup->Init(deviceCtx, nsnull) != NS_OK) {
+#ifndef NECKO
+            gImageGroup->Init(deviceCtx, nsnull) != NS_OK)
+#else
+            gImageGroup->Init(deviceCtx) != NS_OK)
+#endif // NECKO
+        {
                 ::MessageBox(NULL, "Couldn't create image group",
                              class1Name, MB_OK);
                 NS_RELEASE(deviceCtx);
