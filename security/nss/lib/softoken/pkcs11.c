@@ -1905,7 +1905,7 @@ static PLHashTable *nscSlotHashTable = NULL;
 PK11Slot *
 pk11_SlotFromID(CK_SLOT_ID slotID)
 {
-    return (PK11Slot *)PL_HashTableLookup(nscSlotHashTable, (void *)slotID);
+    return (PK11Slot *)PL_HashTableLookupConst(nscSlotHashTable, (void *)slotID);
 }
 
 PK11Slot *
