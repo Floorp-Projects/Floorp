@@ -225,15 +225,49 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
         // we need to tell the emitter that this is the case for use in in any
         // possible reply or forward operation.
         //
-        PRBool isAlternativeOrRelated = PR_FALSE;
-        PRBool isBody = MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
-        if ( (isAlternativeOrRelated || isBody) && obj->options)
+        PRBool isBody = PR_FALSE;
+        PRBool isAlternative = PR_FALSE;
+
+        MimeContainer *container = (MimeContainer*) obj; 
+        if (container->children && container->nchildren == 1)
         {
-          MimeContainer *container = (MimeContainer*) obj; 
-          // If we have only one child and this is the message body object,     
-          // this we should check for a special charset and notify the emitter  
-          // if one exists!                                                     
-          if ( (isAlternativeOrRelated) || ((container->children) && (container->nchildren == 1)) )
+          PRBool isAlternativeOrRelated = PR_FALSE;
+          isBody = MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
+
+          // MimeObjectChildIsMessageBody returns false for "multipart/related"
+          // but we want to use the first part charset if that's a body.
+          // I don't want to change the behavior of MimeObjectChildIsMessageBody
+          // which is used by other places, so do the body check here.
+          if (!isBody && 
+              isAlternativeOrRelated &&
+              mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeMultipartRelatedClass))
+          {
+            MimeObject *firstChild = container->children[0];
+            char *disposition = MimeHeaders_get (firstChild->headers,
+                                                 HEADER_CONTENT_DISPOSITION, 
+                                                 PR_TRUE,
+                                                 PR_FALSE);
+            if (!disposition)
+            {
+              if (!nsCRT::strcasecmp (firstChild->content_type, TEXT_PLAIN) ||
+                  !nsCRT::strcasecmp (firstChild->content_type, TEXT_HTML) ||
+                  !nsCRT::strcasecmp (firstChild->content_type, TEXT_MDL) ||
+                  !nsCRT::strcasecmp (firstChild->content_type, MULTIPART_ALTERNATIVE) ||
+                  !nsCRT::strcasecmp (firstChild->content_type, MULTIPART_RELATED) ||
+                  !nsCRT::strcasecmp (firstChild->content_type, MESSAGE_NEWS) ||
+                  !nsCRT::strcasecmp (firstChild->content_type, MESSAGE_RFC822))
+                isBody = PR_TRUE;
+            }
+          }
+        }
+        else 
+          isAlternative = mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeMultipartAlternativeClass);
+
+        // If "multipart/alternative" or the first part is a message body
+        // then we should check for a charset and notify the emitter  
+        // if one exists.                                                     
+        if (obj->options && (isAlternative || isBody))
+        {
           {
            char *ct = MimeHeaders_get(mult->hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
            if (ct)
@@ -256,8 +290,8 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
               PR_FREEIF(cset);
             }
           }
-          }
         }
+      }
       break;
     }
 
