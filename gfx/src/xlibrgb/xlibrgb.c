@@ -61,22 +61,6 @@
 #  include <stdlib.h>
 #endif
 
-/* Porting Note:
- * If you are going to use this code somewhere other than mozilla
- * you will need to set these defines.  It's pretty easy for Intel
- * but I'm not sure about other platforms.
- */
-#if USE_MOZILLA_TYPES
-/* prtypes contains definitions for uint32/int32 and uint16/int16 */
-#include "prtypes.h"
-#include "prcpucfg.h"
-#else
-typedef unsigned int uint32;
-typedef int int32;
-typedef unsigned short uint16;
-typedef short int16;
-#endif
-
 #define ENABLE_GRAYSCALE
 
 #define G_LITTLE_ENDIAN 1
