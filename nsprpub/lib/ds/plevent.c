@@ -57,17 +57,6 @@ typedef MPARAM WPARAM,LPARAM;
 
 #if defined(VMS)
 /*
-** If MOTIF is being used then XtAppAddInput is used as the notification
-** method and so event flags must be used, so you need to define
-** VMS_EVENTS_USE_EF. If gdk is being used then select is used for
-** notification, and then VMS_EVENTS_USE_SOCKETS should be defined.
-*/
-#undef VMS_EVENTS_USE_EF
-#define VMS_EVENTS_USE_SOCKETS
-#endif
-
-#if defined(VMS_EVENTS_USE_EF)
-/*
 ** On OpenVMS, XtAppAddInput doesn't want a regular fd, instead it 
 ** wants an event flag. So, we don't create and use a pipe for 
 ** notification of when an event queue has something ready, instead
@@ -77,11 +66,7 @@ typedef MPARAM WPARAM,LPARAM;
 #include <lib$routines.h>
 #include <starlet.h>
 #include <stsdef.h>
-#endif /* VMS_EVENTS_USE_EF */
-
-#if defined(VMS_EVENTS_USE_SOCKETS)
-#include <socket.h>
-#endif /* VMS_EVENTS_USE_SOCKETS */
+#endif /* VMS */
 
 
 static PRLogModuleInfo *event_lm = NULL;
@@ -108,7 +93,7 @@ struct PLEventQueue {
     PRThread*    handlerThread;
     EventQueueType type;
     PRBool       processingEvents;
-#if defined(VMS_EVENTS_USE_EF)
+#if defined(VMS)
     int		 efn;
     int		 notifyCount;
 #elif defined(XP_UNIX)
@@ -646,34 +631,19 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
 #pragma unused (self)
 #endif
 
-#if defined(VMS_EVENTS_USE_EF)
+#if defined(VMS)
     {
-#ifdef VMS_USE_GETEF
         unsigned int status;
         status = LIB$GET_EF(&self->efn);
         if (!$VMS_STATUS_SUCCESS(status))
             return PR_FAILURE;
-#else
-        static int next_event_flag = 2;
-        if (next_event_flag <= 23) {
-            self->efn = next_event_flag++;
-        }
-        else {
-            printf("ERROR: Out of event flags\n");
-            return PR_FAILURE;
-        }
-#endif
 	return PR_SUCCESS;
     }
 #elif defined(XP_UNIX)
     int err;
     int flags;
 
-#if defined(VMS_EVENTS_USE_SOCKETS)
-    err = socketpair(AF_UNIX,SOCK_STREAM,0,self->eventPipe);
-#else
     err = pipe(self->eventPipe);
-#endif
     if (err != 0) {
         return PR_FAILURE;
     }
@@ -735,13 +705,11 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #pragma unused (self)
 #endif
 
-#if defined(VMS_EVENTS_USE_EF)
-#ifdef VMS_USE_GETEF
+#if defined(VMS)
     {
         unsigned int status;
         status = LIB$FREE_EF(&self->efn);
     }
-#endif /* VMS_USE_GETEF */
 #elif defined(XP_UNIX)
     close(self->eventPipe[0]);
     close(self->eventPipe[1]);
@@ -768,14 +736,17 @@ _pl_NativeNotify(PLEventQueue* self)
 }/* --- end _pl_NativeNotify() --- */
 #endif /* XP_OS2 */
 
-#if defined(VMS_EVENTS_USE_EF)
+#if defined(VMS)
 /* Just set the event flag */
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
         unsigned int status;
-        status = SYS$SETEF(self->efn);
+        PR_LOG(event_lm, PR_LOG_DEBUG,
+               ("_pl_NativeNotify: self=%p notifyCount=%d efn=%d",
+                self, self->notifyCount, self->efn));
         self->notifyCount++;
+        status = SYS$SETEF(self->efn);
         if ($VMS_STATUS_SUCCESS(status))
             return PR_SUCCESS;
         else
@@ -834,18 +805,22 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 {
-#if defined(VMS_EVENTS_USE_EF)
-/* Clear the event flag if we're all done */
-/* NOTE that we might want to always clear the event flag, even if the */
-/* notifyCount says we shouldn't. */
-    if (self->notifyCount <= 0) return PR_SUCCESS;
+#if defined(VMS)
+    PR_LOG(event_lm, PR_LOG_DEBUG,
+            ("_pl_AcknowledgeNativeNotify: self=%p notifyCount=%d efn=%d",
+             self, self->notifyCount, self->efn));
+    /*
+    ** If this is the last entry, then clear the event flag. Also make sure
+    ** the flag is cleared on any spurious wakeups.
+    */
+    if (self->notifyCount <= 1)
+        sys$clref(self->efn);
+
+    if (self->notifyCount <= 0)
+        return PR_SUCCESS;
+
     self->notifyCount--;
-    if (self->notifyCount == 0) {
-        unsigned int status;
-        status = SYS$CLREF(self->efn);
-        if (!$VMS_STATUS_SUCCESS(status))
-            return PR_FAILURE;
-    }
+
     return PR_SUCCESS;
 #elif defined(XP_UNIX)
 
@@ -882,8 +857,8 @@ PL_GetEventQueueSelectFD(PLEventQueue* self)
     if (self == NULL)
     return -1;
 
-#if defined(VMS_EVENTS_USE_EF)
-    return self->efn;
+#if defined(VMS)
+    return -(self->efn);
 #elif defined(XP_UNIX)
     return self->eventPipe[0];
 #else
