@@ -88,6 +88,7 @@ CPPSRCS		= \
 		nsCOMArray.cpp \
 		nsArray.cpp \
 		nsArrayEnumerator.cpp \
+		nsHashPropertyBag.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -130,6 +131,7 @@ EXPORTS		= \
 		nsCOMArray.h \
 		nsStringEnumerator.h \
 		nsAutoBuffer.h \
+		nsHashPropertyBag.h \
 		$(NULL)			
 
 XPIDLSRCS	= \

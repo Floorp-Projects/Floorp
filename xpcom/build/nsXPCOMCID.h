@@ -170,5 +170,12 @@
 { 0xA9, 0x43, 0xB0, 0x23, 0x34, 0xA6, 0xD0, 0x83 } }
 #define NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID "@mozilla.org/supports-interface-pointer;1"
 
+/**
+ * nsHashPropertyBag impl of nsIWritablePropertyBag
+ */
+#define NS_HASH_PROPERTY_BAG_CID \
+{ 0x678c50b8, 0x6bcb, 0x4ad0, \
+{ 0xb9, 0xb8, 0xc8, 0x11, 0x75, 0x95, 0x51, 0x99 } }
+#define NS_HASH_PROPERTY_BAG_CONTRACTID "@mozilla.org/hash-property-bag;1"
 
 #endif

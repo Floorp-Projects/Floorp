@@ -103,6 +103,8 @@
 #include "nsTraceRefcnt.h"
 #include "nsTimelineService.h"
 
+#include "nsHashPropertyBag.h"
+
 #include "nsVariant.h"
 
 #ifdef GC_LEAK_DETECTOR
@@ -191,6 +193,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRecyclingAllocatorImpl)
 #ifdef MOZ_TIMELINE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService)
 #endif
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHashPropertyBag)
 
 static NS_METHOD
 nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
@@ -378,6 +382,9 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton),
 
     COMPONENT(RECYCLINGALLOCATOR, nsRecyclingAllocatorImplConstructor),
+
+#define NS_HASH_PROPERTY_BAG_CLASSNAME "Hashtable Property Bag"
+    COMPONENT(HASH_PROPERTY_BAG, nsHashPropertyBagConstructor),
 };
 
 #undef COMPONENT
