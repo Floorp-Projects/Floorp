@@ -850,16 +850,6 @@ void _PR_InitThreads(
     rv = pthread_setspecific(pt_book.key, thred);
     PR_ASSERT(0 == rv);    
     PR_SetThreadPriority(thred, priority);
-
-    /*
-     * Linux pthreads use SIGUSR1 and SIGUSR2 internally, which
-     * conflict with the use of these two signals in our GC support.
-     * So we don't know how to support GC on Linux pthreads.
-     */
-#if !defined(LINUX) && !defined(FREEBSD) && !defined(NETBSD) && !defined(OPENBSD)
-	init_pthread_gc_support();
-#endif
-
 }  /* _PR_InitThreads */
 
 PR_IMPLEMENT(PRStatus) PR_Cleanup()
@@ -958,14 +948,19 @@ static sigset_t sigwait_set;
 static struct timespec onemillisec = {0, 1000000L};
 static struct timespec hundredmillisec = {0, 100000000L};
 
-#endif /* defined(_PR_DCETHREADS) */
-
 static void suspend_signal_handler(PRIntn sig);
 
 #ifdef PT_NO_SIGTIMEDWAIT
 static void null_signal_handler(PRIntn sig);
 #endif
 
+#endif /* defined(_PR_DCETHREADS) */
+
+/*
+ * Linux pthreads use SIGUSR1 and SIGUSR2 internally, which
+ * conflict with the use of these two signals in our GC support.
+ * So we don't know how to support GC on Linux pthreads.
+ */
 static void init_pthread_gc_support()
 {
     PRIntn rv;
@@ -1288,6 +1283,8 @@ PR_IMPLEMENT(void) PR_ResumeTest(PRThread *thred)
         "End PR_ResumeTest thred %X tid %X\n", thred, thred->id));
 }  /* PR_ResumeTest */
 
+static pthread_once_t pt_gc_support_control = PTHREAD_ONCE_INIT;
+
 PR_IMPLEMENT(void) PR_SuspendAll()
 {
 #ifdef DEBUG
@@ -1295,6 +1292,10 @@ PR_IMPLEMENT(void) PR_SuspendAll()
 #endif
     PRThread* thred = pt_book.first;
     PRThread *me = PR_CurrentThread();
+    int rv;
+
+    rv = pthread_once(&pt_gc_support_control, init_pthread_gc_support);
+    PR_ASSERT(0 == rv);
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, ("Begin PR_SuspendAll\n"));
     /*
      * Stop all threads which are marked GC able.
@@ -1382,6 +1383,8 @@ PR_IMPLEMENT(void *)PR_GetSP(PRThread *thred)
 
 #else /* !defined(_PR_DCETHREADS) */
 
+static pthread_once_t pt_gc_support_control = pthread_once_init;
+
 /*
  * For DCE threads, there is no pthread_kill or a way of suspending or resuming a
  * particular thread.  We will just disable the preemption (virtual timer alarm) and
@@ -1392,6 +1395,8 @@ PR_IMPLEMENT(void) PR_SuspendAll()
 {
     PRIntn rv;
 
+    rv = pthread_once(&pt_gc_support_control, init_pthread_gc_support);
+    PR_ASSERT(0 == rv);  /* returns -1 on failure */
 #ifdef DEBUG
     suspendAllOn = PR_TRUE;
 #endif

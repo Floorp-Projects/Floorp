@@ -70,12 +70,12 @@ static pthread_mutex_t static_atomic_locks[DEFAULT_ATOMIC_LOCKS] = {
 
 #ifdef DEBUG
 static PRInt32 static_hash_lock_counts[DEFAULT_ATOMIC_LOCKS];
-static PRInt32 *hash_lock_counts;
+static PRInt32 *hash_lock_counts = static_hash_lock_counts;
 #endif
 
 static PRUint32	num_atomic_locks = DEFAULT_ATOMIC_LOCKS;
-static pthread_mutex_t *atomic_locks = NULL;
-static PRUint32 atomic_hash_mask;
+static pthread_mutex_t *atomic_locks = static_atomic_locks;
+static PRUint32 atomic_hash_mask = DEFAULT_ATOMIC_LOCKS - 1;
 
 #define _PR_HASH_FOR_LOCK(ptr) 							\
 			((PRUint32) (((PRUptrdiff) (ptr) >> 2)	^	\
@@ -127,20 +127,20 @@ PRIntn lock_count;
 			}
 		}
 #endif
-	}
-	if (atomic_locks == NULL) {
-		/*
-		 *	Use statically allocated locks
-		 */
-		atomic_locks = static_atomic_locks;
-		num_atomic_locks = DEFAULT_ATOMIC_LOCKS;
-#ifdef DEBUG
-		hash_lock_counts = static_hash_lock_counts;
-#endif
+		if (atomic_locks == NULL) {
+			/*
+			 *	Use statically allocated locks
+			 */
+			atomic_locks = static_atomic_locks;
+			num_atomic_locks = DEFAULT_ATOMIC_LOCKS;
+	#ifdef DEBUG
+			hash_lock_counts = static_hash_lock_counts;
+	#endif
+		}
+		atomic_hash_mask = num_atomic_locks - 1;
 	}
 	PR_ASSERT(PR_FloorLog2(num_atomic_locks) ==
 								PR_CeilingLog2(num_atomic_locks));
-	atomic_hash_mask = num_atomic_locks - 1;
 }
 
 PRInt32

@@ -144,6 +144,7 @@ CSRCS =             \
 	udpsrv.c	    \
 	writev.c        \
 	xnotify.c       \
+	y2k.c           \
 	$(NULL)
 
 ifeq ($(OS_TARGET),OS2)
