@@ -2593,12 +2593,6 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
   MOZ_UPDATE_XTERM=1)
 
-dnl Creating the makefiles incrementally obsoletes allmakefiles.sh
-_INCREMENTAL_MAKEFILES=1
-MOZ_ARG_DISABLE_BOOL(incremental-makefiles,
-[  --disable-incremental-makefiles Create Makefile's on the fly],
-  _INCREMENTAL_MAKEFILES=)
-
 dnl Need the contents of config-defs.h in the build logs
 VERBOSE_CONFIG_DEFS=1
 AC_ARG_ENABLE(verbose-config-defs,
@@ -3264,56 +3258,27 @@ fi
 
 AC_SUBST(MOZ_DEFINES)
 
-if test "$_INCREMENTAL_MAKEFILES"; then
-  MAKEFILES="
-    Makefile
-    xpinstall/packager/Makefile
-    build/unix/mozilla-config
-    build/unix/nspr_my_config.mk
-    build/unix/nspr_my_overrides.mk
-    build/package/rpm/mozilla.spec
-    build/package/rpm/nspr-pthreads.spec
-    config/autoconf.mk
-    webshell/embed/gtk/mozilla_config.mk
-  "
-  dnl Create needed subdirectories because config.status is lame.
-  dnl It can only create one directory level at a time.
-  for file in $MAKEFILES
-  do
-    dir=`dirname $file`
-    if test ! -d $dir; then rm -f $dir; mkdir -p $dir; else true; fi
-  done
-else
-  dnl Manually make the directories to get around deficiency in AC_OUTPUT
-  for dir in lib modules modules/security build build/package; do
-    if test ! -d $dir; then rm -f $dir; mkdir $dir; fi
-  done
+dnl Manually make the directories to get around deficiency in AC_OUTPUT
+mkdir -p lib modules modules/security build build/package
 
-  dnl Load the list of Makefiles to generate.
-  dnl   To add new Makefiles, edit allmakefiles.sh.
-  dnl   allmakefiles.sh sets the variable, MAKEFILES.
-  . ${srcdir}/allmakefiles.sh
-  dnl 
-  dnl Run a perl script to quickly create the makefiles.
-  dnl If it succeeds, it outputs a shell command to set CONFIG_FILES
-  dnl   for the files it cannot handle correctly. This way, config.status
-  dnl   will handle these files.
-  dnl If it fails, nothing is set and config.status will run as usual.
-  dnl
-  dnl This does not change the $MAKEFILES variable.
-  dnl
-  dnl OpenVMS gets a line overflow on the long eval command
-  dnl
-  if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
-	echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl \
-		>configsh.tmp 2>/dev/null
-	eval `cat configsh.tmp`
-	rm configsh.tmp
-  else
-	eval `echo $MAKEFILES | \
-		$PERL $srcdir/build/autoconf/acoutput-fast.pl` 2>/dev/null
-  fi
-fi
+dnl Load the list of Makefiles to generate.
+dnl   To add new Makefiles, edit allmakefiles.sh.
+dnl   allmakefiles.sh sets the variable, MAKEFILES.
+. ${srcdir}/allmakefiles.sh
+dnl 
+dnl Run a perl script to quickly create the makefiles.
+dnl If it succeeds, it outputs a shell command to set CONFIG_FILES
+dnl   for the files it cannot handle correctly. This way, config.status
+dnl   will handle these files.
+dnl If it fails, nothing is set and config.status will run as usual.
+dnl
+dnl This does not change the $MAKEFILES variable.
+dnl
+dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
+dnl
+echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
+eval `cat conftest.sh`
+rm conftest.sh
 
 AC_OUTPUT($MAKEFILES)
 
