@@ -56,6 +56,7 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer)
   mEndComment = "-->";
   mQuote =(char)'\"';
   mEqual =(char)'=';
+  mMarkupDeclarationOpen="markup_declaration";
 
   mSelection = nsnull;
 }
@@ -327,6 +328,18 @@ void nsXIFConverter::AddComment(const nsString& aContent)
 void nsXIFConverter::AddContentComment(const nsString& aContent)
 {
   nsString tag(mComment);
+  AddStartTag(tag, PR_FALSE);
+  AddContent(aContent);
+  AddEndTag(tag, PR_FALSE);
+}
+
+//
+// Use this method to add DOCTYPE, MARKEDSECTION, etc., that are
+// not really classified as ** tags **
+//
+void nsXIFConverter::AddMarkupDeclaration(const nsString& aContent)
+{
+  nsString tag(mMarkupDeclarationOpen);
   AddStartTag(tag, PR_FALSE);
   AddContent(aContent);
   AddEndTag(tag, PR_FALSE);
