@@ -156,7 +156,7 @@ install:: $(TARGETS)
 	$(INSTALL) throbber/anims07.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims08.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims09.gif $(DIST)/bin/res/throbber
-	$(INSTALL) throbber/anims1.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims10.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims11.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims12.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims13.gif $(DIST)/bin/res/throbber
