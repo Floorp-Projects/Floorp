@@ -20,6 +20,7 @@ file:///s:/mozilla/layout/html/tests/table/core/col_widths_auto_autoPer.html
 file:///s:/mozilla/layout/html/tests/table/core/col_widths_auto_fix.html
 file:///s:/mozilla/layout/html/tests/table/core/col_widths_auto_fixPer.html
 file:///s:/mozilla/layout/html/tests/table/core/col_widths_auto_per.html
+file:///s:/mozilla/layout/html/tests/table/core/cols1.html
 file:///s:/mozilla/layout/html/tests/table/core/conflicts.html
 file:///s:/mozilla/layout/html/tests/table/core/misc.html
 file:///s:/mozilla/layout/html/tests/table/core/nested1.html
