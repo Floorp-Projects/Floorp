@@ -193,7 +193,7 @@
 // 0.05 added new entry point check for the default plugin, bug 132430
 // 0.06 strip off suffixes in mime description strings, bug 53895
 // 0.07 changed nsIRegistry to flat file support for caching plugins info 
-static const char *kPluginInfoVersion = "0.07";
+static const char *kPluginRegistryVersion = "0.07";
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
@@ -5248,14 +5248,14 @@ nsPluginHostImpl::WritePluginInfo()
 
   PR_fprintf(fd, "Generated File. Do not edit.\n");
 
-  PR_fprintf(fd, "\n[HEADER]\nVersion%c%d%c%d\n",
+  PR_fprintf(fd, "\n[HEADER]\nVersion%c%s%c%c\n",
              PLUGIN_REGISTRY_FIELD_DELIMITER,
-             PLUGIN_REGISTRY_VERSION_MAJOR,
+             kPluginRegistryVersion,
              PLUGIN_REGISTRY_FIELD_DELIMITER,
-             PLUGIN_REGISTRY_VERSION_MINOR);
+             PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
   // Store all plugins in the mPlugins list - all plugins currently in use.
-  PR_fprintf(fd, "\n[PLUGINS]");
+  PR_fprintf(fd, "\n[PLUGINS]\n");
 
   nsPluginTag *taglist[] = {mPlugins, mCachedPlugins};
   for (int i=0; i<(int)(sizeof(taglist)/sizeof(nsPluginTag *)); i++) {
@@ -5264,20 +5264,27 @@ nsPluginHostImpl::WritePluginInfo()
       if ((taglist[i] == mCachedPlugins) && !(tag->mFlags & NS_PLUGIN_FLAG_UNWANTED))
         continue;
       // store each plugin info into the registry
-      //filename|fullpath|lastModifiedTimeStamp|canUnload|tag->mFlags
-      PR_fprintf(fd, "\n%s%c%s%c%lld%c%d%c%lu%c%c\n",
+      // filename & fullpath are on separate line
+      // because they can contain field delimiter char
+      PR_fprintf(fd, "%s%c%c\n%s%c%c\n",
         (tag->mFileName ? tag->mFileName : ""),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
+        PLUGIN_REGISTRY_END_OF_LINE_MARKER,
         (tag->mFullPath ? tag->mFullPath : ""),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
-        tag->mLastModifiedTime,PLUGIN_REGISTRY_FIELD_DELIMITER,
-        tag->mCanUnloadLibrary,PLUGIN_REGISTRY_FIELD_DELIMITER,
-        tag->mFlags,PLUGIN_REGISTRY_FIELD_DELIMITER,
+        PLUGIN_REGISTRY_END_OF_LINE_MARKER);
+
+      // lastModifiedTimeStamp|canUnload|tag->mFlags
+      PR_fprintf(fd, "%lld%c%d%c%lu%c%c\n",
+        tag->mLastModifiedTime,
+        PLUGIN_REGISTRY_FIELD_DELIMITER,
+        tag->mCanUnloadLibrary,
+        PLUGIN_REGISTRY_FIELD_DELIMITER,
+        tag->mFlags,
+        PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER);
       
-      //description\n  --\  on separate line, so there is no need to parse it
-      //name\n         --/  and check for delimiters
-      //mtypecount
+      //description, name & mtypecount are on separate line
       PR_fprintf(fd, "%s%c%c\n%s%c%c\n%d\n", 
         (tag->mDescription ? tag->mDescription : ""),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
@@ -5307,6 +5314,7 @@ nsPluginHostImpl::WritePluginInfo()
   return NS_OK;
 }
 
+#define PLUGIN_REG_MIMETYPES_ARRAY_SIZE 12
 nsresult
 nsPluginHostImpl::ReadPluginInfo()
 {
@@ -5379,8 +5387,8 @@ nsPluginHostImpl::ReadPluginInfo()
 
   char* values[6]; 
     
-  // VersionLiteral,major,minor
-  if (3 != reader.ParseLine(values, 3)) {
+  // VersionLiteral, kPluginRegistryVersion
+  if (2 != reader.ParseLine(values, 2)) {
     return rv;
   }
     
@@ -5389,13 +5397,8 @@ nsPluginHostImpl::ReadPluginInfo()
     return rv;
   }
    
-  // major
-  if (PLUGIN_REGISTRY_VERSION_MAJOR != atoi(values[1])) {
-    return rv;
-  }
-   
-  // minor
-  if (PLUGIN_REGISTRY_VERSION_MINOR != atoi(values[2])) {
+  // kPluginRegistryVersion
+  if (PL_strcmp(values[1], kPluginRegistryVersion)) {
     return rv;
   }
 
@@ -5403,39 +5406,41 @@ nsPluginHostImpl::ReadPluginInfo()
     return rv;
   }
 
-  while (reader.NextLine()) {
-    
-    //filename|fullpath|lastModifiedTimeStamp|canUnload|tag.mFlag
-    if (5 != reader.ParseLine(values, 5))
-      return rv;
-    
-    char *filename = values[0];
-    char *fullpath = values[1];
-    PRInt64 lastmod = nsCRT::atoll(values[2]);
-    PRBool canunload = atoi(values[3]);
-    PRUint32 tagflag = atoi(values[4]);
-    
-    //description is whole line and can contain any chars
+  while (reader.NextLine()) {    
+    char *filename = reader.LinePtr();
     if (!reader.NextLine())
       return rv;
+
+    char *fullpath = reader.LinePtr();
+    if (!reader.NextLine())
+      return rv;
+
+    // lastModifiedTimeStamp|canUnload|tag.mFlag
+    if (3 != reader.ParseLine(values, 3))
+      return rv;
+
+    PRInt64 lastmod = nsCRT::atoll(values[0]);
+    PRBool canunload = atoi(values[1]);
+    PRUint32 tagflag = atoi(values[2]);
+    if (!reader.NextLine())
+      return rv;
+
     char *description = reader.LinePtr();
-
-    //name is whole line and can contain any chars
     if (!reader.NextLine())
       return rv;
-    char *name = reader.LinePtr();
 
-    //mimetypecount
+    char *name = reader.LinePtr();
     if (!reader.NextLine())
-      return rv;    
+      return rv;
+
     int mimetypecount = atoi(reader.LinePtr());
     
-    char *stackalloced[PLUGIN_REGISTRY_MAX_MIMETYPES_PER_PLUGIN * 3];
+    char *stackalloced[PLUGIN_REG_MIMETYPES_ARRAY_SIZE * 3];
     char **mimetypes;
     char **mimedescriptions;
     char **extensions;
     char **heapalloced = 0;
-    if (mimetypecount > PLUGIN_REGISTRY_MAX_MIMETYPES_PER_PLUGIN - 1) {
+    if (mimetypecount > PLUGIN_REG_MIMETYPES_ARRAY_SIZE - 1) {
       heapalloced = new char *[mimetypecount * 3];
       mimetypes = heapalloced;
     } else {
