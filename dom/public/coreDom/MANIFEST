@@ -26,6 +26,7 @@ nsIDOMCharacterData.h
 nsIDOMComment.h
 nsIDOMDOMImplementation.h
 nsIDOMDocument.h
+nsIDOMDocumentCSS.h
 nsIDOMDocumentFragment.h
 nsIDOMDocumentStyle.h
 nsIDOMDocumentType.h
