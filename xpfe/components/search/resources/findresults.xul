@@ -27,35 +27,39 @@
 		<treecol id="DescriptionColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
 
 		<template>
-			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
+			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
 				<treeitem uri="...">
-					<treecell>
-						<html:hr width="75%" align="center" size="1" />
-					</treecell>
+					<treerow>
+						<treecell>
+							<html:hr width="75%" align="center" size="1" />
+						</treecell>
+					</treerow>
 				</treeitem>  		
 			</rule>
 
-			<rule rootcontainment="treebody" subcontainment="treechildren">
+			<rule rootcontainment="treechildren" subcontainment="treechildren">
 				<treeitem uri="...">
-					<treecell>
-						<treeindentation />
-						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
-					</treecell>
-					<treecell>
-						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
-					</treecell>
-					<treecell>
-						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
-					</treecell>
-					<treecell>
-						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="right" style="list-style-image: none;" />
-					</treecell>
+					<treerow>
+						<treecell>
+							<treeindentation />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+						</treecell>
+						<treecell>
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+						</treecell>
+						<treecell>
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
+						</treecell>
+						<treecell>
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="right" style="list-style-image: none;" />
+						</treecell>
+					</treerow>
 				</treeitem>
 			</rule>
 		</template>
 
 		<treehead>
-			<treeitem>
+			<treerow>
 				<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending">
 					<observes element="NameColumn" attribute="sortActive"/>
 					<observes element="NameColumn" attribute="sortDirection"/>
@@ -76,9 +80,9 @@
 					<observes element="DescriptionColumn" attribute="sortDirection"/>
 					&description.column.label;
 				</treecell>
-			</treeitem>
+			</treerow>
 		</treehead>
 
-		<treebody />
+		<treechildren />
 	</tree>
 </window>

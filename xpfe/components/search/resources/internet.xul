@@ -41,31 +41,35 @@
 					<treecol id="CheckboxColumn" />
 					<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
 
-					<template rootcontainment="treebody" subcontainment="treechildren">
+					<template rootcontainment="treechildren" subcontainment="treechildren">
 						<treeitem uri="...">
-							<treecell treeallowevents="true">
-								<checkbox value="0" />
-							</treecell>
-							<treecell>
-								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" style="list-style-image: none;" />
-							</treecell>
+							<treerow>
+								<treecell treeallowevents="true">
+									<checkbox value="0" />
+								</treecell>
+								<treecell>
+									<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" style="list-style-image: none;" />
+								</treecell>
+							</treerow>
 						</treeitem>
 					</template>
 
 					<treehead>
 						<treeitem>
-							<treecell>
-								&checkbox.column.label;
-							</treecell>
-							<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" >
-								<observes element="NameColumn" attribute="sortActive"/>
-								<observes element="NameColumn" attribute="sortDirection"/>
-								&engine.column.label;
-							</treecell>
+							<treerow>
+								<treecell>
+									&checkbox.column.label;
+								</treecell>
+								<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" >
+									<observes element="NameColumn" attribute="sortActive"/>
+									<observes element="NameColumn" attribute="sortDirection"/>
+									&engine.column.label;
+								</treecell>
+							</treerow>
 						</treeitem>
 					</treehead>
 
-					<treebody id="NC:SearchEngineRoot" open="true" />
+					<treechildren id="NC:SearchEngineRoot" open="true" />
 				</tree>
 			</html:td></html:tr>
 
