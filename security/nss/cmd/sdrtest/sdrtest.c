@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.3 2001/01/04 08:21:07 nelsonb%netscape.com Exp $
+ * $Id: sdrtest.c,v 1.4 2001/01/05 21:14:47 wtc%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -100,8 +100,7 @@ main (int argc, char **argv)
 {
     int		 retval = 0;  /* 0 - test succeeded.  -1 - test failed */
     SECStatus	 rv;
-    CERTCertDBHandle *certHandle = NULL;
-    PK11SlotInfo *slot = 0;
+    const char	*certDir = ".";
     PLOptState	*optstate;
     char	*program_name;
     const char  *input_file = NULL; 	/* read encrypted data from here (or create) */
@@ -157,30 +156,12 @@ main (int argc, char **argv)
     }
 
     /*
-     * Initialize the NSPR and Security libraries.
+     * Initialize the Security libraries.
      */
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
-    /*  Initialize NSPR and NSS.  */
-    PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    certHandle = SECU_OpenCertDB(PR_FALSE);
-    if (!certHandle) goto prdone;
-
-    SECU_PKCS11Init(PR_FALSE);
-    SEC_Init();
-
-    /* Initialize random number source: this uses only
-     * system information, but that is sufficient for
-     * testing the basic capabilities of SDR
-     */
-    RNG_SystemInfoForRNG();
-
-    slot = PK11_GetInternalKeySlot();
-    if (PK11_NeedUserInit(slot))
-    {
-      if (verbose) printf("Initializing new key database\n");
-      PK11_InitPin(slot, 0, 0);
-    }
+    rv = NSS_Init(certDir);
+    if (rv != SECSuccess) goto prdone;
 
     /* Convert value into an item */
     data.data = (unsigned char *)value;
@@ -293,7 +274,6 @@ file_loser:
 loser:
     if (text.data) free(text.data);
     if (result.data) free(result.data);
-    if (certHandle) CERT_ClosePermCertDB(certHandle);
     NSS_Shutdown();
 
 prdone:
