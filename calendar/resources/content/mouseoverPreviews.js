@@ -196,7 +196,8 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
       boxAppendLabeledText(vbox, "tooltipTitle", event.title);
     }
 
-    if (var location = event.getProperty("LOCATION"))
+    var location = event.getProperty("LOCATION");
+    if (location)
     {
       boxAppendLabeledText(vbox, "tooltipLocation", location);
     }
@@ -246,7 +247,8 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
       boxAppendLabeledText(vbox, "tooltipStatus", statusString);
     }
 
-    if (var description = event.getProperty("DESCRIPTION"))
+    var description = event.getProperty("DESCRIPTION");
+    if (description)
     {
       // display up to 4 description lines, like body of message below headers
       boxAppendText(vbox, ""); 
