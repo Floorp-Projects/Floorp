@@ -45,6 +45,7 @@ require "CGI.pl";
 use Bugzilla::Flag; 
 use Bugzilla::FlagType; 
 use Bugzilla::User;
+use Bugzilla::Util;
 
 # Establish a connection to the database backend.
 ConnectToDatabase();
@@ -420,7 +421,38 @@ sub validateObsolete
     # Check that the user can modify this attachment
     validateCanEdit($attachid);
   }
+}
 
+# Returns 1 if the parameter is a content-type viewable in this browser
+# Note that we don't use $cgi->Accept()'s ability to check if a content-type
+# matches, because this will return a value even if it's matched by the generic
+# */* which most browsers add to the end of their Accept: headers.
+sub isViewable
+{
+  my $contenttype = trim(shift);
+    
+  # We assume we can view all text and image types  
+  if ($contenttype =~ /^(text|image)\//) {
+    return 1;
+  }
+  
+  # Mozilla can view XUL. Note the trailing slash on the Gecko detection to
+  # avoid sending XUL to Safari.
+  if (($contenttype =~ /^application\/vnd\.mozilla\./) &&
+      ($cgi->user_agent() =~ /Gecko\//))
+  {
+    return 1;
+  }
+
+  # If it's not one of the above types, we check the Accept: header for any 
+  # types mentioned explicitly.
+  my $accept = join(",", $cgi->Accept());
+  
+  if ($accept =~ /^(.*,)?\Q$contenttype\E(,.*)?$/) {
+    return 1;
+  }
+  
+  return 0;
 }
 
 ################################################################################
@@ -718,13 +750,9 @@ sub viewall
   {
     my %a; # the attachment hash
     ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, 
-     $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'}) = FetchSQLData();
-
-    # Flag attachments as to whether or not they can be viewed (as opposed to
-    # being downloaded).  Currently I decide they are viewable if their MIME type 
-    # is either text/*, image/*, or application/vnd.mozilla.*.
-    # !!! Yuck, what an ugly hack.  Fix it!
-    $a{'isviewable'} = ( $a{'contenttype'} =~ /^(text|image|application\/vnd\.mozilla\.)/ );
+     $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'}) 
+                                                               = FetchSQLData();
+    $a{'isviewable'} = isViewable($a{'contenttype'});
 
     # Add the hash representing the attachment to the array of attachments.
     push @attachments, \%a;
@@ -915,11 +943,7 @@ sub edit
            FROM attachments WHERE attach_id = $::FORM{'id'}");
   my ($description, $contenttype, $filename, $bugid, $ispatch, $isobsolete, $isprivate) = FetchSQLData();
 
-  # Flag attachment as to whether or not it can be viewed (as opposed to
-  # being downloaded).  Currently I decide it is viewable if its content
-  # type is either text/.* or application/vnd.mozilla.*.
-  # !!! Yuck, what an ugly hack.  Fix it!
-  my $isviewable = ( $contenttype =~ /^(text|image|application\/vnd\.mozilla\.)/ );
+  my $isviewable = isViewable($contenttype);
 
   # Retrieve a list of attachments for this bug as well as a summary of the bug
   # to use in a navigation bar across the top of the screen.

@@ -270,8 +270,13 @@
       [% ELSE %]
         <td id="noview" width="50%">
           <p><b>
-            Attachment cannot be viewed because its MIME type is not either text/*, image/*, or application/vnd.mozilla.*.
-            <a href="attachment.cgi?id=[% attachid %]&amp;action=view">Download the attachment instead</a>.
+            Attachment is not viewable in your browser because its MIME type 
+            ([% contenttype FILTER html %]) is not one that your browser is 
+            able to display.
+          </b></p>
+          <p><b>
+            <a href="attachment.cgi?id=[% attachid %]&amp;action=view">Download
+            the attachment</a>.
           </b></p>
         </td>
       [% END %]
