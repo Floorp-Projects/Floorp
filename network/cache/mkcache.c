@@ -744,77 +744,80 @@ net_CacheStore(net_CacheObject * obj,
 		local_cache_database = 0;
 	  }
  
-	if ( !SARCache )
-	{
-		/* add the size of the new file 
-		 * size_on_disk can be in error, use content_length
-		 * when missized
-		 */
-		net_DiskCacheSize += net_calc_real_file_size(obj->content_length);
-		net_NumberInDiskCache++;
+    if (store_type == NEW_CACHE_STORE)
+    {
+	    if ( !SARCache )
+	    {
+		    /* add the size of the new file 
+		     * size_on_disk can be in error, use content_length
+		     * when missized
+		     */
+		    net_DiskCacheSize += net_calc_real_file_size(obj->content_length);
+		    net_NumberInDiskCache++;
 
-		if (++cache_sync_count >= CACHE_SYNC_RATE) 
-		{
-		
-			/* sync the database everytime to guarentee
-			 * consistancy
-			 */
-			if(local_cache_database && -1 == (*local_cache_database->sync)(local_cache_database, 0))
-			  {
-				TRACEMSG(("Error syncing cache database"));
+		    if (++cache_sync_count >= CACHE_SYNC_RATE) 
+		    {
+		    
+			    /* sync the database everytime to guarentee
+			     * consistancy
+			     */
+			    if(local_cache_database && -1 == (*local_cache_database->sync)(local_cache_database, 0))
+			      {
+				    TRACEMSG(("Error syncing cache database"));
 
-				/* close the database */
-				(*local_cache_database->close)(local_cache_database);
-				cache_database = 0;
-				local_cache_database = 0;
-			  }
+				    /* close the database */
+				    (*local_cache_database->close)(local_cache_database);
+				    cache_database = 0;
+				    local_cache_database = 0;
+			      }
 
-			cache_sync_count = 0;
+			    cache_sync_count = 0;
 
-		}
-	}
-	else
-	{
-		/* larubbio */
-		/* add the size of the new file 
-		 * size_on_disk can be in error, use content_length
-		 * when missized
-		 */
-		URL_s->SARCache->DiskCacheSize += net_calc_real_file_size(obj->content_length);
-		URL_s->SARCache->NumberInDiskCache++;
+		    }
+	    }
+	    else
+	    {
+		    /* larubbio */
+		    /* add the size of the new file 
+		     * size_on_disk can be in error, use content_length
+		     * when missized
+		     */
+		    URL_s->SARCache->DiskCacheSize += net_calc_real_file_size(obj->content_length);
+		    URL_s->SARCache->NumberInDiskCache++;
 
-	    if(URL_s->SARCache->DiskCacheSize > URL_s->SARCache->MaxSize && -1 != URL_s->SARCache->MaxSize )
-		{
-			TRACEMSG(("MaxSize exceeded!!!"));
-			/* delete the file since we wont remember it
-			 */
-			XP_FileRemove(obj->filename, fileType);
+	        if(URL_s->SARCache->DiskCacheSize > URL_s->SARCache->MaxSize && -1 != URL_s->SARCache->MaxSize )
+		    {
+			    TRACEMSG(("MaxSize exceeded!!!"));
+			    /* delete the file since we wont remember it
+			     */
+			    XP_FileRemove(obj->filename, fileType);
 
-			URL_s->SARCache->DiskCacheSize -= net_calc_real_file_size(obj->content_length);
-			URL_s->SARCache->NumberInDiskCache--;
+			    URL_s->SARCache->DiskCacheSize -= net_calc_real_file_size(obj->content_length);
+			    URL_s->SARCache->NumberInDiskCache--;
 
-			return FALSE;
-		}
+			    return FALSE;
+		    }
 
-		/* sync the database every time to guarentee
-		 * consistancy
-		 */
-		if(local_cache_database && -1 == (*local_cache_database->sync)(local_cache_database, 0))
-		  {
-			TRACEMSG(("Error syncing cache database"));
+		    /* sync the database every time to guarentee
+		     * consistancy
+		     */
+		    if(local_cache_database && -1 == (*local_cache_database->sync)(local_cache_database, 0))
+		      {
+			    TRACEMSG(("Error syncing cache database"));
 
-			/* close the database */
-			(*local_cache_database->close)(local_cache_database);
-			CACHE_CloseCache(URL_s->SARCache);
-			local_cache_database = 0;
-		  }
-		else
-		{
-			/* This is inefficent to do each time, but it keeps us in synch, and this is for 
-			   offline browsing, which is not a performance intensive task */
-			CACHE_SaveCacheInfoToDB(URL_s->SARCache);
-		}
-	}
+			    /* close the database */
+			    (*local_cache_database->close)(local_cache_database);
+			    CACHE_CloseCache(URL_s->SARCache);
+			    local_cache_database = 0;
+		      }
+		    else
+		    {
+			    /* This is inefficent to do each time, but it keeps us in synch, and this is for 
+			       offline browsing, which is not a performance intensive task */
+			    CACHE_SaveCacheInfoToDB(URL_s->SARCache);
+		    }
+	    }
+    }
 
 	net_FreeCacheDBTdata(key);
     net_FreeCacheDBTdata(data);
