@@ -128,13 +128,15 @@ private:
 
   nsIPresContext    *mContext;
   nsIWidget         *mRootWindow;
-  nsRect            mDSBounds;
-  nsDrawingSurface  mDrawingSurface;
   PRTime            mLastRefresh;
   nsIRegion         *mDirtyRegion;
   PRInt32           mTransCnt;
   PRBool            mRefreshEnabled;
-                            
+
+  static PRUint32          mVMCount;        //number of viewmanagers
+  static nsDrawingSurface  mDrawingSurface; //single drawing surface
+  static nsRect            mDSBounds;       //for all VMs
+
 public:
   //these are public so that our timer callback can poke them.
   nsITimer          *mTimer;

@@ -46,10 +46,15 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
   vm->Composite();
 }
 
+PRUint32 nsViewManager::mVMCount = 0;
+nsDrawingSurface nsViewManager::mDrawingSurface = nsnull;
+nsRect nsViewManager::mDSBounds = nsRect(0, 0, 0, 0);
+
 static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
 
 nsViewManager :: nsViewManager()
 {
+  mVMCount++;
 }
 
 nsViewManager :: ~nsViewManager()
@@ -63,7 +68,11 @@ nsViewManager :: ~nsViewManager()
   NS_IF_RELEASE(mRootWindow);
   NS_IF_RELEASE(mDirtyRegion);
 
-  if (nsnull != mDrawingSurface)
+  --mVMCount;
+
+  NS_ASSERTION(!(mVMCount < 0), "underflow of viewmanagers");
+
+  if ((0 == mVMCount) && (nsnull != mDrawingSurface))
   {
     nsIRenderingContext *rc;
 
