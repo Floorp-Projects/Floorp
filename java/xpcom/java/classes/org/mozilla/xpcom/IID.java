@@ -23,7 +23,7 @@ package org.mozilla.xpcom;
 
 public class IID {
     public IID(String iid) {
-        this.iid = (iid == null) ? "" : iid;
+        this.iid = ((iid == null) ? "" : iid).toLowerCase();;
     }
     public boolean equals(Object obj) {
         if (! (obj instanceof IID)) { 
