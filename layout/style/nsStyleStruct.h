@@ -1100,24 +1100,9 @@ inline nsBorderEdges::nsBorderEdges()
   mOutsideEdge = PR_TRUE;
 };
 
-// typesafe mechanisms for accessing style data
-class nsIFrame;
-class nsIStyleContext;
-
-template <class T>
-inline void
-GetStyleData(nsIFrame* aFrame, const T** aStyleStruct)
-{
-    aFrame->GetStyleData(NS_GET_STYLESTRUCTID(T),
-                    *NS_REINTERPRET_CAST(const nsStyleStruct**, aStyleStruct));
-}
-
-template <class T>
-inline void
-GetStyleData(nsIStyleContext* aStyleContext, const T** aStyleStruct)
-{
-    *aStyleStruct = NS_STATIC_CAST(const T*,
-                         aStyleContext->GetStyleData(NS_GET_STYLESTRUCTID(T)));
-}
+// typesafe mechanisms for accessing style data, global function
+// templates |GetStyleData(nsIFrame*, const T**)| and
+// |GetStyleData(nsIStyleContext*, const T**)|, where T is derived from
+// nsStyleStruct, are located in nsIStyleContext.h and nsIFrame.h
 
 #endif /* nsStyleStruct_h___ */

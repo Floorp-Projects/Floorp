@@ -1159,4 +1159,14 @@ private:
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
 
+// typesafe way to access style data.  See comment in nsStyleStruct.h
+// and also overloaded function in nsIStyleContext.h
+template <class T>
+inline void
+GetStyleData(nsIFrame* aFrame, const T** aStyleStruct)
+{
+    aFrame->GetStyleData(NS_GET_STYLESTRUCTID(T),
+                    *NS_REINTERPRET_CAST(const nsStyleStruct**, aStyleStruct));
+}
+
 #endif /* nsIFrame_h___ */
