@@ -52,3 +52,12 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES        += -I$(srcdir)/../ucvlatin \
                    -I$(srcdir)/../ucvja
+
+
+EXPORT_RESOURCE = \
+	$(srcdir)/unixcharset.properties \
+	$(srcdir)/charsetalias.properties \
+        $(NULL)
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
