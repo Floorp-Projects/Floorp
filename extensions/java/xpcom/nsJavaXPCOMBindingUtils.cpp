@@ -119,30 +119,14 @@ static PLDHashTable *gJAVAtoXPCOMBindings = nsnull;
 static PLDHashTable *gXPCOMtoJAVABindings = nsnull;
 
 PR_STATIC_CALLBACK(PRBool)
-InitJAVAtoXPCOMBindingEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                            const void *key)
+InitJavaXPCOMBindingEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                          const void *key)
 {
   JavaXPCOMBindingEntry *e =
     NS_CONST_CAST(JavaXPCOMBindingEntry *,
                   NS_STATIC_CAST(const JavaXPCOMBindingEntry *, entry));
 
   e->mKey = key;
-  e->mXPCOMInstance = nsnull;
-
-  return PR_TRUE;
-}
-
-PR_STATIC_CALLBACK(PRBool)
-InitXPCOMtoJAVABindingEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                            const void *key)
-{
-  JavaXPCOMBindingEntry *e =
-    NS_CONST_CAST(JavaXPCOMBindingEntry *,
-                  NS_STATIC_CAST(const JavaXPCOMBindingEntry *, entry));
-
-  e->mKey = key;
-  e->mXPCOMInstance = NS_CONST_CAST(void*, key);
-  e->mJavaObject = nsnull;
 
   return PR_TRUE;
 }
@@ -164,14 +148,22 @@ AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
   entry->mJavaObject = java_ref;
   entry->mXPCOMInstance = aXPCOMObject;
 
+  // We want the hash key to be the actual XPCOM object
+  void* xpcomObjKey = nsnull;
+  if (IsXPTCStub(aXPCOMObject))
+    xpcomObjKey = GetXPTCStubAddr(aXPCOMObject);
+  else
+    xpcomObjKey = ((JavaXPCOMInstance*) aXPCOMObject)->GetInstance();
+
   entry =
     NS_STATIC_CAST(JavaXPCOMBindingEntry*,
-                   PL_DHashTableOperate(gXPCOMtoJAVABindings, aXPCOMObject,
+                   PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcomObjKey,
                                         PL_DHASH_ADD));
   entry->mJavaObject = java_ref;
+  entry->mXPCOMInstance = aXPCOMObject;
 
   LOG("+ Adding Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x) weakref=0x%08x\n",
-         hash, (int) aXPCOMObject, (PRUint32) java_ref);
+         hash, (int) xpcomObjKey, (PRUint32) java_ref);
 }
 
 void
@@ -203,8 +195,21 @@ RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
   if (entry) {
     jobject jweakref = entry->mJavaObject;
     void* xpcom_obj = entry->mXPCOMInstance;
+
+    // Get keys.  For Java, we use the hash key of the Java object.  For XPCOM,
+    // we get the 'actual' object (either the nsJavaXPTCStub or the instance
+    // that is wrapped by JavaXPCOMInstance).
+    void* xpcomObjKey = nsnull;
     if (hash == 0)
       hash = env->CallIntMethod(jweakref, hashCodeMID);
+    if (aXPCOMObject) {
+      xpcomObjKey = aXPCOMObject;
+    } else {
+      if (IsXPTCStub(xpcom_obj))
+        xpcomObjKey = GetXPTCStubAddr(xpcom_obj);
+      else
+        xpcomObjKey = ((JavaXPCOMInstance*) xpcom_obj)->GetInstance();
+    }
 
     NS_ASSERTION(env->IsSameObject(jweakref, aJavaObject),
                  "Weakref does not point to expected Java object");
@@ -214,10 +219,9 @@ RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
     // Remove both instances from stores
     PL_DHashTableOperate(gJAVAtoXPCOMBindings, NS_INT32_TO_PTR(hash),
                          PL_DHASH_REMOVE);
-    PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcom_obj, PL_DHASH_REMOVE);
-
+    PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcomObjKey, PL_DHASH_REMOVE);
     LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x) weakref=0x%08x\n",
-        hash, (int) xpcom_obj, (PRUint32) jweakref);
+        hash, (int) xpcomObjKey, (PRUint32) jweakref);
 
     env->DeleteWeakGlobalRef(NS_STATIC_CAST(jweak, jweakref));
   }
@@ -235,8 +239,15 @@ GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject)
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+#ifdef DEBUG
+    void* xpcomObjKey = nsnull;
+    if (IsXPTCStub(entry->mXPCOMInstance))
+      xpcomObjKey = GetXPTCStubAddr(entry->mXPCOMInstance);
+    else
+      xpcomObjKey = ((JavaXPCOMInstance*) entry->mXPCOMInstance)->GetInstance();
     LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-           hash, (int) entry->mXPCOMInstance);
+           hash, (int) xpcomObjKey);
+#endif
     return entry->mXPCOMInstance;
   }
 
@@ -433,7 +444,7 @@ InitializeJavaGlobals(JNIEnv *env)
       PL_DHashMoveEntryStub,
       PL_DHashClearEntryStub,
       PL_DHashFinalizeStub,
-      InitJAVAtoXPCOMBindingEntry
+      InitJavaXPCOMBindingEntry
     };
   
     gJAVAtoXPCOMBindings = PL_NewDHashTable(&java_to_xpcom_hash_ops, nsnull,
@@ -452,7 +463,7 @@ InitializeJavaGlobals(JNIEnv *env)
       PL_DHashMoveEntryStub,
       PL_DHashClearEntryStub,
       PL_DHashFinalizeStub,
-      InitXPCOMtoJAVABindingEntry
+      InitJavaXPCOMBindingEntry
     };
   
     gXPCOMtoJAVABindings = PL_NewDHashTable(&xpcom_to_java_hash_ops, nsnull,
