@@ -2804,30 +2804,20 @@ nsMsgComposeAndSend::DeliverFileAsMail()
       rv = mWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
       netPrompt = do_QueryInterface(topLevelWindow, &rv);
     }
-/**** RICHIE - will have to be null for now
     else
     {
       NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
       if(NS_SUCCEEDED(rv)) 
       {
-        nsCOMPtr<nsIXULWindow>          webshellwindow;
-        nsCOMPtr<nsIWebShellContainer>  topLevelWindow;
-        nsIWebShell                     *webShell;
+        nsCOMPtr<nsIXULWindow>          xulWindow;
 
-        appshellservice->GetHiddenWindow(getter_AddRefs(webshellwindow));
-        if (webshellwindow)
+        appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
+        if (xulWindow)
         {
-          webshellwindow->GetWebShell(webShell);
-          if (webShell)
-          {
-            rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-            netPrompt = do_QueryInterface(topLevelWindow, &rv);
-            NS_RELEASE(webShell);
-          }
+          netPrompt = do_QueryInterface(xulWindow, &rv);
         }
       }
     }
-*****/
 
     // Tell the user we are sending the message!
     PRUnichar *msg = ComposeGetStringByID(NS_MSG_SENDING_MESSAGE);
