@@ -55,9 +55,6 @@ nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
   }
 
   PRInt32 err = Zip()->Read(mReadInfo, buf, count, bytesRead);
-#ifdef DEBUG_warren
-//  printf("read %d from %s\n", *bytesRead, mEntryName);
-#endif
   return err == ZIP_OK ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -106,7 +103,8 @@ NS_IMETHODIMP
 nsJARInputStream::Close()
 {
   NS_IF_RELEASE(mJAR);
-  delete mReadInfo;
+  if (mReadInfo)
+    delete mReadInfo;
   return NS_OK;
 }
 
@@ -117,10 +115,9 @@ nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
     return NS_ERROR_NULL_POINTER;
   mJAR = aJAR;
   NS_ADDREF(mJAR);
-  mEntryName = nsCRT::strdup(aFilename);
 
   PRInt32 result; 
-  result = Zip()->ReadInit(mEntryName, &mReadInfo);
+  result = Zip()->ReadInit(aFilename, &mReadInfo);
   if (result != ZIP_OK)
     return NS_ERROR_FAILURE;
   return NS_OK;
@@ -143,7 +140,7 @@ nsJARInputStream::Create(nsISupports* ignored, const nsIID& aIID, void* *aResult
 //----------------------------------------------
 
 nsJARInputStream::nsJARInputStream()
-  : mJAR(nsnull), mEntryName(nsnull), mReadInfo(nsnull)
+  : mJAR(nsnull), mReadInfo(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -151,7 +148,6 @@ nsJARInputStream::nsJARInputStream()
 nsJARInputStream::~nsJARInputStream()
 {
   Close();
-  if (mEntryName) nsCRT::free(mEntryName);
 }
 
 

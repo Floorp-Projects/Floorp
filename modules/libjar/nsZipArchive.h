@@ -34,6 +34,10 @@
 
 #ifdef STANDALONE
 #define nsZipArchive nsZipArchiveStandalone
+
+#define ZIP_Seek(fd,p,m) (fseek((fd),(p),(m))==0)
+#else
+#define ZIP_Seek(fd,p,m) (PR_Seek((fd),(p),(m))==(p))
 #endif
 
 class nsZipFind;
@@ -227,7 +231,7 @@ private:
   nsZipItem*        GetFileItem( const char * zipEntry );
   PRUint32          HashName( const char* aName );
 
-  PRInt32           SeekToItem(const char* zipEntry, nsZipItem** aItem);
+  PRInt32           SeekToItem(const nsZipItem* aItem);
   PRInt32           CopyItemToBuffer(const nsZipItem* aItem, char* aBuf);
   PRInt32           CopyItemToDisk( const nsZipItem* aItem, PRFileDesc* outFD );
   PRInt32           InflateItem( const nsZipItem* aItem, 
@@ -252,7 +256,6 @@ public:
   nsZipItem*    mItem;
   PRUint32      mCurPos;
   char*         mFileBuffer;
-  PRUint32      mCRC32;
 
 private:
   //-- prevent copies and assignments

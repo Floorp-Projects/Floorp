@@ -35,6 +35,7 @@ OBJS=.\$(OBJDIR)\nsZipArchive.obj
 LCFLAGS=-DSTANDALONE
 
 LINCS=                        \
+    -I..                      \
     -I$(XPDIST)\public\nspr   \
     -I$(XPDIST)\public\raptor \
     -I$(XPDIST)\public\xpcom  \
@@ -49,16 +50,14 @@ LLIBS=                        \
 include <$(DEPTH)/config/rules.mak>
 
 export::
-    $(MAKE_INSTALL) ..\nsZip*.*  .
-    $(MAKE_INSTALL) ..\zip*.*    .
+    $(MAKE_INSTALL) ..\nsZipArchive.cpp  .
 
 install:: $(LIBRARY)
     $(MAKE_INSTALL) .\$(OBJDIR)\jar_s.lib $(DIST)\lib
 
 clobber::
-  $(RM) *.h *.cpp
+  $(RM) nsZipArchive.cpp
 
-clobber_all::
-  $(RM) *.h *.cpp
+clobber_all:: clobber
   $(RM) $(DIST)\lib\jar_s.lib
 

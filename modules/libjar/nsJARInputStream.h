@@ -60,7 +60,6 @@ class nsJARInputStream : public nsIInputStream
 
   protected:
     nsJAR*      mJAR;
-    char*       mEntryName;
     nsZipRead*  mReadInfo;
 };
 
