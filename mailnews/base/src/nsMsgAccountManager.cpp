@@ -61,6 +61,9 @@ static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
+#define PREF_NEWS_DIRECTORY "news.directory"
+
+/* we are going to clear these after migration */
 #define PREF_4X_MAIL_IDENTITY_USEREMAIL "mail.identity.useremail"
 #define PREF_4X_MAIL_IDENTITY_USERNAME "mail.identity.username"
 #define PREF_4X_MAIL_IDENTITY_REPLY_TO "mail.identity.reply_to"    
@@ -78,8 +81,11 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 #define PREF_4X_MAIL_SMTP_NAME "mail.smtp_name"
 #define PREF_4X_MAIL_SERVER_TYPE "mail.server_type"
 #define PREF_4X_NETWORK_HOSTS_IMAP_SERVER "network.hosts.imap_servers"
-#define PREF_4X_NEWS_DIRECTORY "news.directory"
-        
+
+#ifdef DEBUG_seth
+#define DEBUG_CLEAR_PREF 1
+#endif
+
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
 typedef struct _findServerEntry {
@@ -1844,15 +1850,17 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
     char *news_directory_value = nsnull;
 	nsFileSpec dirWithTheNewsrcFiles;
     
-	rv = m_prefs->CopyCharPref(PREF_4X_NEWS_DIRECTORY, &news_directory_value);
+	rv = m_prefs->CopyCharPref(PREF_NEWS_DIRECTORY, &news_directory_value);
 	if (NS_SUCCEEDED(rv)) {
       dirWithTheNewsrcFiles = news_directory_value;
       PR_FREEIF(news_directory_value);
       news_directory_value = nsnull;
 
-#ifdef DEBUG_CLEAR_PREF
+#if 0
+      /* leave "news.directory" pref, we may still be using it in 5.0 */
+      
       // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_4X_NEWS_DIRECTORY);
+      rv = m_prefs->ClearUserPref(PREF_NEWS_DIRECTORY);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
 	}
