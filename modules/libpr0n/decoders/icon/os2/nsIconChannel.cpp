@@ -281,7 +281,7 @@ void ConvertColorBitMap(PBYTE buffer, PBITMAPINFO2 pBitMapInfo, nsCString& iconB
     {
       iIter = pBitMapInfo->cx;  // Bytes = Pels
     }
-    for (INT j = 0; j < pBitMapInfo->cy; j++)  //Number of rows
+    for (ULONG j = 0; j < pBitMapInfo->cy; j++)  //Number of rows
     {
       pPelPair = buffer;
       pPel     = (PBYTE)buffer;
@@ -302,7 +302,7 @@ void ConvertColorBitMap(PBYTE buffer, PBITMAPINFO2 pBitMapInfo, nsCString& iconB
       }
       if (numBytesPaddingPerRowRGB)
       {
-        for (INT k = 0; k < numBytesPaddingPerRowRGB; k++)
+        for (PRUint32 k = 0; k < numBytesPaddingPerRowRGB; k++)
         {
           iconBuffer.Append((char) 0);
         }
@@ -483,9 +483,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
       strcpy(tmpfile, tmpdir);
       strcat(tmpfile, pszFileName);
       FILE* fp = fopen(tmpfile, "wb+");
-      fclose(fp);
-      hIcon = WinLoadFileIcon(tmpfile, FALSE);
-      remove(tmpfile);
+      if (fp) {
+        fclose(fp);
+        hIcon = WinLoadFileIcon(tmpfile, FALSE);
+        remove(tmpfile);
+      }
     }
   }
   if (hIcon == NULLHANDLE)
