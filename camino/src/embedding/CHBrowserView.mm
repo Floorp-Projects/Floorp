@@ -854,12 +854,12 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 - (void)moveToBeginningOfDocumentAndModifySelection:(id)sender
 {
-  [self doCommand: "cmd_selectMoveTop"];
+  [self doCommand: "cmd_selectTop"];
 }
 
 - (void)moveToEndOfDocumentAndModifySelection:(id)sender
 {
-  [self doCommand: "cmd_selectMoveBottom"];
+  [self doCommand: "cmd_selectBottom"];
 }
 
 // how does this differ from getCurrentURI?

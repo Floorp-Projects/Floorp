@@ -100,8 +100,8 @@ const char * const sSelectLineNextString = "cmd_selectLineNext";
 const char * const sSelectPagePreviousString = "cmd_selectPagePrevious";
 const char * const sSelectPageNextString = "cmd_selectPageNext";
 
-const char * const sSelectMoveTopString = "cmd_selectMoveTop";
-const char * const sSelectMoveBottomString = "cmd_selectMoveBottom";
+const char * const sSelectTopString = "cmd_selectTop";
+const char * const sSelectBottomString = "cmd_selectBottom";
 
 
 #if 0
@@ -388,9 +388,9 @@ nsSelectCommand::DoSelectCommand(const char *aCommandName, nsIDOMWindow *aWindow
     rv = selCont->LineMove(PR_FALSE, PR_TRUE);
   else if (!nsCRT::strcmp(aCommandName, sSelectLineNextString))
     rv = selCont->LineMove(PR_TRUE, PR_TRUE);
-  else if (!nsCRT::strcmp(aCommandName, sSelectMoveTopString))
+  else if (!nsCRT::strcmp(aCommandName, sSelectTopString))
     rv = selCont->CompleteMove(PR_FALSE, PR_TRUE);
-  else if (!nsCRT::strcmp(aCommandName, sSelectMoveBottomString))
+  else if (!nsCRT::strcmp(aCommandName, sSelectBottomString))
     rv = selCont->CompleteMove(PR_TRUE, PR_TRUE);
 
   return rv;
@@ -954,8 +954,8 @@ nsWindowCommandRegistration::RegisterWindowCommands(
   // XXX these commands were never implemented. fix me.
   // NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectPagePreviousString);
   // NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectPageNextString);
-  NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectMoveTopString);
-  NS_REGISTER_LAST_COMMAND(nsSelectCommand, sSelectMoveBottomString);
+  NS_REGISTER_NEXT_COMMAND(nsSelectCommand, sSelectTopString);
+  NS_REGISTER_LAST_COMMAND(nsSelectCommand, sSelectBottomString);
 
   NS_REGISTER_ONE_COMMAND(nsClipboardCopyCommand, "cmd_copy");
   NS_REGISTER_ONE_COMMAND(nsClipboardCutCommand, "cmd_cut");
