@@ -364,7 +364,7 @@ var BookmarksMenu = {
   // aTarget may not the aEvent target (see Open in tabs command)
   loadBookmark: function (aEvent, aTarget, aDS)
   {
-    if (aTarget.id == "openintabs-menuitem")
+    if (aTarget.getAttribute("class") == "openintabs-menuitem")
       aTarget = aTarget.parentNode.parentNode;
       
     // Check for invalid bookmarks (most likely a static menu item like "Manage Bookmarks")
