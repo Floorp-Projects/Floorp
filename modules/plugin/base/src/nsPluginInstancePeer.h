@@ -46,7 +46,7 @@
 
 
 class nsPluginInstancePeerImpl : public nsIPluginInstancePeer2,
-								 public nsIWindowlessPluginInstancePeer,
+                                 public nsIWindowlessPluginInstancePeer,
                                  public nsIPluginTagInfo2,
                                  public nsIJVMPluginTagInfo
 								
@@ -179,11 +179,6 @@ public:
   nsresult SetOwner(nsIPluginInstanceOwner *aOwner);
 
   nsresult GetOwner(nsIPluginInstanceOwner *&aOwner);
-
-/*  void SetStopped();
-  void SetStarted();
-
-  void IsStopped(PRBool *result);*/
 
 private:
   nsIPluginInstance       *mInstance; //we don't add a ref to this
