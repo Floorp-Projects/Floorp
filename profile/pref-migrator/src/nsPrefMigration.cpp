@@ -390,7 +390,7 @@ nsPrefMigration::WindowCloseCallback()
     nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(docShell));
     if (treeItem) {
         nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-        nsresult rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+        rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(treeOwner));
         if (baseWindow) (void)baseWindow->Destroy();
@@ -1525,7 +1525,7 @@ nsPrefMigration::DoTheCopy(nsIFileSpec * oldPath, nsIFileSpec * newPath, PRBool 
    this code will fix the expire times and the line endings, so the code is nsCookie.cpp
    can read the migrate cookies. */
 static PRInt32
-GetCookieLine(nsInputFileStream strm, nsAutoString& aLine) 
+GetCookieLine(nsInputFileStream &strm, nsAutoString& aLine) 
 {
   /* read the line */
   aLine.Truncate();
@@ -1550,7 +1550,7 @@ GetCookieLine(nsInputFileStream strm, nsAutoString& aLine)
 }
 
 static nsresult
-PutCookieLine(nsOutputFileStream strm, const nsString& aLine)
+PutCookieLine(nsOutputFileStream &strm, const nsString& aLine)
 {
   /* allocate a buffer from the heap */
   char * cp = aLine.ToNewCString();
