@@ -214,6 +214,7 @@ sub show_bug {
     foreach my $flag_type (@$flag_types) {
         $flag_type->{'flags'} = 
           Bugzilla::Flag::match({ 'bug_id'      => $id , 
+                                  'type_id'     => $flag_type->{'id'} , 
                                   'target_type' => 'bug' });
     }
     $vars->{'flag_types'} = $flag_types;
