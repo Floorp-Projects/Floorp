@@ -181,6 +181,16 @@ LAYOUT_ATOM(Korean, "ko")
 LAYOUT_ATOM(wildcard, "*")
 LAYOUT_ATOM(mozdirty, "_moz_dirty")
 
+#ifdef IBMBIDI
+LAYOUT_ATOM(directionalFrame, "DirectionalFrame")
+LAYOUT_ATOM(listControlFrame,"ListControlFrame")
+LAYOUT_ATOM(baseLevel, "BaseLevel")                            // PRUint8
+LAYOUT_ATOM(embeddingLevel, "EmbeddingLevel")                  // PRUint8
+LAYOUT_ATOM(endsInDiacritic, "EndsInDiacritic")                // PRUint32
+LAYOUT_ATOM(nextBidi, "NextBidi")                              // nsIFrame*
+LAYOUT_ATOM(charType, "charType")                              // PRUint8
+#endif
+
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code
 LAYOUT_ATOM(cellMap, "TableCellMap")
