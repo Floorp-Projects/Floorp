@@ -58,7 +58,6 @@
     <commandset id="composerMenuItems"/>
     <commandset id="composerEditMenuItems"/>
     <commandset id="composerSaveMenuItems"/>    
-    <commandset id="composerStyleMenuItems"/>
   </commands>
 
   <broadcaster id="args" value="chrome://editor/content/EditorInitPagePlain.html"/>
