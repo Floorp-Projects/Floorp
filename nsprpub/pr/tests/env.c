@@ -124,12 +124,12 @@ PRIntn main(PRIntn argc, char *argv[])
     /* set an environment variable, read it back */
     envBuf = NewBuffer( ENVBUFSIZE );
     sprintf( envBuf, ENVNAME "=" ENVVALUE );
-    rc = PR_PutEnv( envBuf );
+    rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (debug) printf( "env: PR_PutEnv() failed setting\n");
+        if (debug) printf( "env: PR_SetEnv() failed setting\n");
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_PutEnv() worked.\n");
+        if (verbose) printf("env: PR_SetEnv() worked.\n");
     }
 
     value = PR_GetEnv( ENVNAME );
@@ -144,11 +144,11 @@ PRIntn main(PRIntn argc, char *argv[])
     /* un-set the variable, using RAW name... should not work */
     envBuf = NewBuffer( ENVBUFSIZE );
     sprintf( envBuf, ENVNAME );
-    rc = PR_PutEnv( envBuf );
+    rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (verbose) printf( "env: PR_PutEnv() not un-set using RAW name. Good!\n");
+        if (verbose) printf( "env: PR_SetEnv() not un-set using RAW name. Good!\n");
     } else {
-        if (debug) printf("env: PR_PutEnv() un-set using RAW name. Bad!\n" );
+        if (debug) printf("env: PR_SetEnv() un-set using RAW name. Bad!\n" );
         failedAlready = PR_TRUE;
     }
 
@@ -164,23 +164,23 @@ PRIntn main(PRIntn argc, char *argv[])
     /* set it again ... */
     envBuf = NewBuffer( ENVBUFSIZE );
     sprintf( envBuf, ENVNAME "=" ENVVALUE );
-    rc = PR_PutEnv( envBuf );
+    rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (debug) printf( "env: PR_PutEnv() failed setting the second time.\n");
+        if (debug) printf( "env: PR_SetEnv() failed setting the second time.\n");
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_PutEnv() worked.\n");
+        if (verbose) printf("env: PR_SetEnv() worked.\n");
     }
 
     /* un-set the variable using the form name= */
     envBuf = NewBuffer( ENVBUFSIZE );
     sprintf( envBuf, ENVNAME "=" );
-    rc = PR_PutEnv( envBuf );
+    rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (debug) printf( "env: PR_PutEnv() failed un-setting using name=\n");
+        if (debug) printf( "env: PR_SetEnv() failed un-setting using name=\n");
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_PutEnv() un-set using name= worked\n" );
+        if (verbose) printf("env: PR_SetEnv() un-set using name= worked\n" );
     }
 
     value = PR_GetEnv( ENVNAME );
@@ -194,12 +194,12 @@ PRIntn main(PRIntn argc, char *argv[])
     /* un-set the variable using the form name= */
     envBuf = NewBuffer( ENVBUFSIZE );
     sprintf( envBuf, ENVNAME "999=" );
-    rc = PR_PutEnv( envBuf );
+    rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (debug) printf( "env: PR_PutEnv() failed un-setting using name=\n");
+        if (debug) printf( "env: PR_SetEnv() failed un-setting using name=\n");
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_PutEnv() un-set using name= worked\n" );
+        if (verbose) printf("env: PR_SetEnv() un-set using name= worked\n" );
     }
 
     value = PR_GetEnv( ENVNAME "999" );
