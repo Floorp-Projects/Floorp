@@ -60,7 +60,10 @@ Contributor(s): ______________________________________. -->
 	     key="&reduceTextSizeCmd.commandkey;"
 	     observes="Browser:ReduceTextSize"/>
         -->
-
+	<!-- Search Menu -->	
+	<key id="key_find"            xulkey="true"  key="&findOnCmd.commandkey;" observes="Browser:Find"/>
+	<key id="key_findAgain"       xulkey="true"  key="&findAgainCmd.commandkey;" observes="Browser:FindAgain"/>
+		
 	<key id="goForwardKb"         xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoForward" />
 	<key id="goBackwardKb"        xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoBackwards" />
     <key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
@@ -122,6 +125,9 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="canGoForward" disabled="true"	oncommand="BrowserForward();"/>
 	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" 					oncommand="BrowserHome();" />
   
+	<broadcaster id="Browser:Find"      value="&findOnCmd.label;"            oncommand="BrowserFind();" />
+	<broadcaster id="Browser:FindAgain" value="&findAgainCmd.label;"         oncommand="BrowserFindAgain();" />	
+	
 	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
 	<broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();" />
 </broadcasterset>
@@ -321,30 +327,13 @@ END of Deprecated -->
   
   <menu accesskey="s" value="&searchMenu.label;">
     <menupopup id="searchMenu">
-      <menuitem value="&findOnCmd.label;" oncommand="BrowserFind();"/>
-      <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();"/>
+      <menuitem accesskey="&findOnCmd.accesskey;"    key="key_find" observes="Browser:Find"/>
+      <menuitem accesskey="&findAgainCmd.accesskey;" key="key_findAgain" observes="Browser:FindAgain"/>
       <menuseparator /> 
-      <menuitem value="&searchInternetCmd.label;"
-        oncommand="openTopWin('http://home.netscape.com/bookmark/6_0b1/ssearch.html')"/>
-      <menuitem value="&searchAllMailCmd.label;" 
-        disabled="true" oncommand=""/>
-	  <menuitem value="&searchBookmarksHistoryCmd.label;" 
-        disabled="true" oncommand=""/>
-      <menuitem value="&searchAddressbookCmd.label;"
-        disabled="true" oncommand=""/>
-    <!--   <menuseparator />  
-    Commenting out of beta. Not in Spec   
-    <menuitem value="&searchComputerCmd.label;" 
-        oncommand="BrowserReload();"/>  -->
-    <menupopup>
-      <menuitem value="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" oncommand="BrowserFind();"/>
-      <menuitem value="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" oncommand="BrowserFindAgain();"/>
-      <menuseparator />
+      <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://home.netscape.com/bookmark/6_0b1/ssearch.html')"/>
+      <menuitem value="&searchAllMailCmd.label;" accesskey="&searchAllMailCmd.accesskey;" disabled="true" oncommand=""/>
       <menuitem value="&searchBookmarksHistoryCmd.label;" accesskey="&searchBookmarksHistoryCmd.accesskey;" oncommand="OpenSearch('find', true, null);"/>
-      <menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="RevealSearchPanel();"/>
-      <menuitem value="&searchAllMailCmd.label;" accesskey="&searchAllMailCmd.accesskey;" oncommand="OpenSearch('mail', true, null);"/>
-      <menuitem value="&searchAddressbookCmd.label;" accesskey="&searchAddressbookCmd.accesskey;" oncommand="OpenSearch('addressbook', true, null);"/>
-     </menupopup>
+      <menuitem value="&searchAddressbookCmd.label;" accesskey="&searchAddressbookCmd.accesskey;" disabled="true" oncommand="OpenSearch('addressbook', true, null);"/>
 	</menupopup>
   </menu>
 
