@@ -62,7 +62,7 @@ namespace Silverstone.Manticore.LayoutAbstraction
     public void RealizeLayoutEngine()
     {
       if (gecko == null && trident == null)
-        SwitchLayoutEngine("gecko");
+        SwitchLayoutEngine("gecko"); // XXX Should be pref-based.
     }
 
     public void SwitchLayoutEngine(String id)
