@@ -1607,10 +1607,11 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   if (nsnull == mParser) {
 #ifdef NECKO
     nsCOMPtr<nsIChannel> channel;
-    result = NS_OpenURI(getter_AddRefs(channel), aSourceURL,
-                        mDocumentLoadGroup);
+    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+
+    result = NS_OpenURI(getter_AddRefs(channel), aSourceURL, group);
     if (NS_FAILED(result)) return result;
-    result = Reset(channel, mDocumentLoadGroup);
+    result = Reset(channel, group);
     if (NS_FAILED(result)) return result;
 #else
     result = Reset(aSourceURL);
