@@ -162,7 +162,7 @@ wallet_DumpTiming() {
   PRInt32 i;
   for (i=1; i<timing_index; i++) {
 #ifndef	XP_MAC
-    fprintf(stdout, "time %c = %ld\n", timingID[i], (timings[i] - timings[i-1])/100);
+    fprintf(stdout, "time %c = %ld\n", timingID[i], (long)(timings[i] - timings[i-1])/100);
 #endif
     if (i%20 == 0) {
       wallet_Pause();
