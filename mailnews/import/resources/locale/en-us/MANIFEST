@@ -21,3 +21,6 @@
 #
 
 importMsgs.properties
+fieldMapExport.dtd
+fieldMapImport.dtd
+

@@ -24,3 +24,8 @@ importDialog.js
 importDialog.xul
 importProgress.js
 importProgress.xul
+fieldMapExport.xul
+fieldMapExport.js
+fieldMapImport.xul
+fieldMapImport.js
+

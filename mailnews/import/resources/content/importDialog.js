@@ -1,3 +1,25 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ */
+
 var importType = 0;
 var bundle = 0;
 var importService = 0;
@@ -99,14 +121,15 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
+							var meterText = top.bundle.GetStringFromName( 'MailProgressMeterText') + " " + name;
 							// show the progress window...
 							top.window.openDialog(
 								"chrome://messenger/content/importProgress.xul",
 								"",
 								"chrome,modal",
-								{windowTitle:"My Progress Window Title",
-								 progressTitle: "Importing some crap",
-								 progressStatus: "Now importing specific crap",
+								{windowTitle: top.bundle.GetStringFromName( 'MailProgressTitle'),
+								 progressTitle: meterText,
+								 progressStatus: "",
 								 progressInfo: top.progressInfo});
 							
 							dump( "*** Returned from progress window\n");
@@ -140,14 +163,15 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
+							var meterText = top.bundle.GetStringFromName( 'AddrProgressMeterText') + " " + name;
 							// show the progress window...
 							top.window.openDialog(
 								"chrome://messenger/content/importProgress.xul",
 								"",
 								"chrome,modal",
-								{windowTitle:"My Address Window Title",
-								 progressTitle: "Importing some address",
-								 progressStatus: "Now importing specific crap",
+								{windowTitle: top.bundle.GetStringFromName( 'AddrProgressTitle'),
+								 progressTitle: meterText,
+								 progressStatus: "",
 								 progressInfo: top.progressInfo});
 
 							return( true);
@@ -299,17 +323,20 @@ function ShowMailComplete( good)
 
 function ShowAddressComplete( good)
 {
-	var str;
+	var str = null;
 	if (good == true) {
 		str = top.bundle.GetStringFromName( 'ImportAddressSuccess');
 		str += "\nsuccess: " + top.successStr.data + "\nerror:" + top.errorStr.data;
 	}
 	else {
-		str = top.bundle.GetStringFromName( 'ImportAddressFailed');
-		str += "\nerror: " + top.errorStr.data;
+		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0)) {
+			str = top.bundle.GetStringFromName( 'ImportAddressFailed');
+			str += "\nerror: " + top.errorStr.data;
+		}
 	}
 	
-	alert( str);
+	if (str != null)
+		alert( str);
 }
 
 
@@ -533,7 +560,20 @@ function ImportAddress( module, success, error) {
 	
 	var map = addInterface.GetData( "fieldMap");
 	if (map != null) {
-		// FIXME: Show modal UI to handle the field map!
+		map = map.QueryInterface( Components.interfaces.nsIImportFieldMap);
+		if (map != null) {
+			var result = new Object();
+			result.ok = false;
+			top.window.openDialog(
+				"chrome://messenger/content/fieldMapImport.xul",
+				"",
+				"chrome,modal",
+				{fieldMap: map,
+				 addInterface: addInterface,
+				 result: result});
+		}
+		if (result.ok == false)
+			return( false);
 	}
 
 	if (addInterface.WantsProgress()) {
