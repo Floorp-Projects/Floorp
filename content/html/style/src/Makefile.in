@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  js \
 		  necko \
+		  mimetype \
 		  webshell \
 		  xul \
 		  htmlparser \
