@@ -68,28 +68,36 @@ nsImageBeOS::nsImageBeOS()
 {
 }
 
-nsImageBeOS::~nsImageBeOS() {
-	if (nsnull != mImage) {
+nsImageBeOS::~nsImageBeOS() 
+{
+	if (nsnull != mImage) 
+	{
 		delete mImage;
 		mImage = nsnull;
 	}
-	if (nsnull != mImageBits) {
+	if (nsnull != mImageBits) 
+	{
 		delete [] mImageBits;
 		mImageBits = nsnull;
 	}
-	if (nsnull != mAlphaBits) {
+	if (nsnull != mAlphaBits) 
+	{
 		delete [] mAlphaBits;
 		mAlphaBits = nsnull;
 	}
 }
 
 nsresult nsImageBeOS::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
-                           nsMaskRequirements aMaskRequirements) {
+                           nsMaskRequirements aMaskRequirements) 
+{
 	// Assumed: Init only gets called once by gfxIImageFrame
 	// Only 24 bit depths are supported for the platform independent bits
-	if (24 == aDepth) {
+	if (24 == aDepth) 
+	{
 		mNumBytesPixel = 3;
-	} else {
+	} 
+	else 
+	{
 		NS_ASSERTION(PR_FALSE, "unexpected image depth");
 		return NS_ERROR_UNEXPECTED;
 	}
@@ -98,13 +106,15 @@ nsresult nsImageBeOS::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
 	mHeight = aHeight;
 	mDepth = aDepth;
 	mRowBytes = (mWidth * mDepth) >> 5;
-	if (((PRUint32)mWidth * mDepth) & 0x1F) mRowBytes++;
+	if (((PRUint32)mWidth * mDepth) & 0x1F) 
+		mRowBytes++;
 	mRowBytes <<= 2;
 	mSizeImage = mRowBytes * mHeight;
 
 	mImageBits = new PRUint8[mSizeImage];
 
-	switch (aMaskRequirements) {
+	switch (aMaskRequirements) 
+	{
 		case nsMaskRequirements_kNeeds1Bit:
 			mAlphaRowBytes = (aWidth + 7) / 8;
 			mAlphaDepth = 1;
@@ -132,7 +142,8 @@ nsresult nsImageBeOS::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,
 // flag to false, we can be sure that the BBitmap will be updated before it gets blit.
 // TO DO: It would be better to cache the updated rectangle here, and only copy the
 // area that has changed in CreateImage().
-void nsImageBeOS::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect) {
+void nsImageBeOS::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect) 
+{
 	// This should be 0'd out by Draw()
 	mFlags = aFlags;
 	mImageCurrent = PR_FALSE;
@@ -149,28 +160,35 @@ void nsImageBeOS::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRec
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 	PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-	PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) {
+	PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) 
+{
 	
 	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
 	BView *view;
 	
-	if (!mImageCurrent || (nsnull == mImage)) BuildImage(aSurface);
-	if (nsnull == mImage) return PR_FALSE;
+	if (!mImageCurrent || (nsnull == mImage)) 
+		BuildImage(aSurface);
+	if (nsnull == mImage) 
+		return PR_FALSE;
 	//LockAndUpdateView() sets proper clipping region here and elsewhere in nsImageBeOS.
-	if(((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) {	
+	if (((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) 
+	{
 		beosdrawing->AcquireView(&view);
-		if (view) {
+		if (view) 
+		{
 			// Only use B_OP_ALPHA when there is an alpha channel present, as it is much slower
-			if (0 != mAlphaDepth) {
+			if (0 != mAlphaDepth) 
+			{
 				view->SetDrawingMode(B_OP_ALPHA);
-				view->DrawBitmapAsync(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
+				view->DrawBitmap(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
 					BRect(aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1));
 				view->SetDrawingMode(B_OP_COPY);
-			} else {
-				view->DrawBitmapAsync(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
+			} 
+			else 
+			{
+				view->DrawBitmap(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
 					BRect(aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1));
 			}
-			view->Sync();
 			//view was locked by LockAndUpdateView() before it was aquired. So unlock.
 			view->UnlockLooper();
 		}
@@ -183,7 +201,8 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 
 // Draw the bitmap, this draw just has destination coordinates
 NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-	PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) {
+	PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) 
+{
 	
 	// XXX kipp: this is temporary code until we eliminate the
 	// width/height arguments from the draw method.
@@ -193,22 +212,28 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
 	BView *view;
 
-	if (!mImageCurrent || (nsnull == mImage)) BuildImage(aSurface);
-	if (nsnull == mImage) return PR_FALSE;
-	if(((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) {
+	if (!mImageCurrent || (nsnull == mImage)) 
+		BuildImage(aSurface);
+	if (nsnull == mImage) 
+		return PR_FALSE;
+	if (((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) 
+	{
 		beosdrawing->AcquireView(&view);
-		if (view && view->LockLooper()) {
+		if (view) 
+		{
 			// Only use B_OP_ALPHA when there is an alpha channel present, as it is much slower
-			if (0 != mAlphaDepth) {
+			if (0 != mAlphaDepth) 
+			{
 				view->SetDrawingMode(B_OP_ALPHA);
-				view->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
+				view->DrawBitmap(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
 					BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
 				view->SetDrawingMode(B_OP_COPY);
-			} else {
-				view->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
+			} 
+			else 
+			{
+				view->DrawBitmap(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
 					BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
 			}
-			view->Sync();
 			view->UnlockLooper();
 		}
 		beosdrawing->ReleaseView();
@@ -218,94 +243,107 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	return NS_OK;
 }
 
-// Private Draw() call used by DrawTile() routines. The view passed in is
-// assumed to already be locked and the drawing is asynchronous. Calling Sync()
-// on every iteration of tiling a small texture has a lot of overhead.
-void nsImageBeOS::DrawNoLock(BView *aView, PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-	PRInt32 aHeight) {
-	
-	// XXX kipp: this is temporary code until we eliminate the
-	// width/height arguments from the draw method.
-	aWidth = PR_MIN(aWidth, mWidth);
-	aHeight = PR_MIN(aHeight, mHeight);
-	
-	if (aView) {
-		if (0 != mAlphaDepth) {
-			aView->SetDrawingMode(B_OP_ALPHA);
-			aView->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
-				BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
-			aView->SetDrawingMode(B_OP_COPY);
-		} else {
-			aView->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
-				BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
-		}
-	}
-}
-
-/** 
- * Draw a tiled version of the bitmap 
- * @update - dwc 3/30/00 
- * @param aSurface the surface to blit to 
- * @param aX0 starting x 
- * @param aY0 starting y 
- * @param aX1 ending x 
- * @param aY1 ending y 
- * @param aWidth The destination width of the pixelmap 
- * @param aHeight The destination height of the pixelmap 
- */ 
-
 NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-	PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect) {
-	
+	PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect) 
+{
+
+		
 	PRInt32 validX = 0, validY = 0, validWidth = mWidth, validHeight = mHeight;
 
-  if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
-    return NS_OK;
+  	if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
+    	return NS_OK;
+    	
+	if (!mImageCurrent || (nsnull == mImage)) 
+		BuildImage(aSurface);
+	if (nsnull == mImage) 
+		return NS_ERROR_FAILURE;
 	
 	// Limit the image rectangle to the size of the image data which
 	// has been validated.
-	if ((mDecodedY2 < mHeight)) {
+	if ((mDecodedY2 < mHeight)) 
 		validHeight = mDecodedY2 - mDecodedY1;
-	}
-	if ((mDecodedX2 < mWidth)) {
+
+	if ((mDecodedX2 < mWidth)) 
 		validWidth = mDecodedX2 - mDecodedX1;
-	}
-	if ((mDecodedY1 > 0)) {
+
+	if ((mDecodedY1 > 0)) 
+	{
 		validHeight -= mDecodedY1;
 		validY = mDecodedY1;
 	}
-	if ((mDecodedX1 > 0)) {
+	if ((mDecodedX1 > 0)) 
+	{
 		validWidth -= mDecodedX1;
 		validX = mDecodedX1;
 	}
 	
 	PRInt32 aY0 = aTileRect.y - aSYOffset, aX0 = aTileRect.x - aSXOffset,
 		aY1 = aTileRect.y + aTileRect.height, aX1 = aTileRect.x + aTileRect.width;
-	
+	//Creating temporary bitmap, compatible with mImage and  with size of area to be filled with tiles
+	BBitmap *tmpbmp = 0;
+	tmpbmp = new BBitmap(BRect(0, 0, aX1 - aX0, aY1 - aY0), mImage->ColorSpace());
+	if (!tmpbmp || !tmpbmp->IsValid())
+		return NS_ERROR_FAILURE;
+
+	uint8 *dst0 = (uint8 *)tmpbmp->Bits();
+	uint8 *src0 = (uint8 *)mImage->Bits();
+	uint8 *src = src0;
+	uint8 *dst = dst0;
+			
+	int32 srcRowLength = mImage->BytesPerRow();
+	int32 dstRowLength = tmpbmp->BytesPerRow();
+	ldiv_t rowscan = ldiv(dstRowLength, srcRowLength);
+	int32 srcColHeight = mImage->BitsLength()/srcRowLength;
+	int32 dstColHeight = tmpbmp->BitsLength()/dstRowLength;
+	ldiv_t colscan = ldiv(dstColHeight, srcColHeight);
+	int32 copyheight = colscan.quot*srcColHeight + colscan.rem;
+	//Rendering mImage tile to temporary bitmap
+	for (int32 y = 0, yy = 0; y < copyheight; ++y) 
+	{
+		for (int32 x = 0; x < rowscan.quot; ++x) 
+		{
+			memcpy(dst,src, srcRowLength);
+			dst += srcRowLength;
+		}
+		if (rowscan.rem)
+		{
+			memcpy(dst,src, rowscan.rem);
+			dst += rowscan.rem;
+		}
+		src = src0 + yy*srcRowLength;
+		if (++yy == srcColHeight) //PR_MIN(dstColHeight, srcColHeight))
+			yy = 0;
+	}
+	//Flushing temporary bitmap to proper are in drawable BView		
 	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
 	BView *view;
-	
-	if (!mImageCurrent || (nsnull == mImage)) BuildImage(aSurface);
-	if (nsnull == mImage) return PR_FALSE;
-	if(((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) {
+	if (((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) 
+	{
 		beosdrawing->AcquireView(&view);
-		if (view) {
-			for (PRInt32 y = aY0; y < aY1; y += validHeight) {
-				for (PRInt32 x = aX0; x < aX1; x += validWidth) {
-					DrawNoLock(view, x, y, PR_MIN(validWidth, aX1 - x),
-						PR_MIN(validHeight, aY1-y));
-				}
+		if (view) 
+		{
+			if (0 != mAlphaDepth) 
+			{
+				view->SetDrawingMode(B_OP_ALPHA);
+				view->DrawBitmap(tmpbmp, BPoint(aX0, aY0));
+				view->SetDrawingMode(B_OP_COPY);
+			} 
+			else 
+			{
+				view->DrawBitmap(tmpbmp, BPoint(aX0, aY0));
 			}
-			view->Sync();
+
 			view->UnlockLooper();
 		}
 		beosdrawing->ReleaseView();
 	}
-	
+	if (tmpbmp) 
+		delete tmpbmp;	
 	return NS_OK;
 }
 
-nsresult nsImageBeOS::BuildImage(nsDrawingSurface aDrawingSurface) {
+nsresult nsImageBeOS::BuildImage(nsDrawingSurface aDrawingSurface) 
+{
 	CreateImage(aDrawingSurface);
 	return NS_OK;
 }
@@ -314,27 +352,36 @@ nsresult nsImageBeOS::BuildImage(nsDrawingSurface aDrawingSurface) {
 // and mAlphaBits) into a BBitmap so it can be drawn using the Be APIs. Since it is
 // expensive to create and destroy a BBitmap for this purpose, we will keep this bitmap
 // around, which also prevents the need to copy the bits if they have not changed.
-void nsImageBeOS::CreateImage(nsDrawingSurface aSurface) {
-	if (mImageBits) {
-		if (24 != mDepth) {
+void nsImageBeOS::CreateImage(nsDrawingSurface aSurface) 
+{
+	if (mImageBits) 
+	{
+		if (24 != mDepth) 
+		{
 			NS_ASSERTION(PR_FALSE, "unexpected image depth");
 			return;
 		}
 		
 		// If the previous BBitmap is the right dimensions and colorspace, then reuse it.
 		const color_space cs = B_RGB32;
-		if (nsnull != mImage) {
+		if (nsnull != mImage) 
+		{
 			BRect bounds = mImage->Bounds();
 			if (bounds.IntegerWidth() != mWidth - 1 || bounds.IntegerHeight() != mHeight - 1 ||
-				mImage->ColorSpace() != cs) {
+				mImage->ColorSpace() != cs) 
+			{
 				
 				delete mImage;
 				mImage = new BBitmap(BRect(0, 0, mWidth - 1, mHeight - 1), cs);
-			} else {
+			} 
+			else 
+			{
 				// Don't copy the data twice if the BBitmap is up to date
 				if (mImageCurrent) return;
 			}
-		} else {
+		} 
+		else 
+		{
 			// No BBitmap exists, so create one and update it
 			mImage = new BBitmap(BRect(0, 0, mWidth - 1, mHeight - 1), cs);
 		}
@@ -344,15 +391,20 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface) {
 		// support write-combining on the Athlon/Duron family.
 		// TO DO: Only the data that has changed (the rectangle supplied to ImageUpdated())
 		// needs to be copied to the BBitmap, it is wasteful to copy the entire contents here.
-		if (mImage && mImage->IsValid()) {
+		if (mImage && mImage->IsValid()) 
+		{
 			uint32 *dest = (uint32 *)mImage->Bits();
 			uint8 *src = mImageBits;
 
-			if (mAlphaBits) {
+			if (mAlphaBits) 
+			{
 				uint8 *alpha = mAlphaBits;
-				if (1 == mAlphaDepth) {
-					for (int y = 0; y < mHeight; y++) {
-						for (int x = 0; x < mWidth; x++) {
+				if (1 == mAlphaDepth) 
+				{
+					for (int y = 0; y < mHeight; y++) 
+					{
+						for (int x = 0; x < mWidth; x++) 
+						{
 							uint8 a = (alpha[x / 8] & (1 << (7 - (x % 8)))) ? 255 : 0;
 							*dest++ = (a << 24) | (src[2] << 16) | (src[1] << 8) | src[0];
 							src += 3;
@@ -360,9 +412,13 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface) {
 						src += mRowBytes - (mWidth * mNumBytesPixel);
 						alpha += mAlphaRowBytes;
 					}				
-				} else {
-					for (int y = 0; y < mHeight; y++) {
-						for (int x = 0; x < mWidth; x++) {
+				} 
+				else 
+				{
+					for (int y = 0; y < mHeight; y++) 
+					{
+						for (int x = 0; x < mWidth; x++) 
+						{
 							*dest++ = (alpha[x] << 24) | (src[2] << 16) | (src[1] << 8) | src[0];
 							src += 3;
 						}
@@ -370,10 +426,14 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface) {
 						alpha += mAlphaRowBytes;
 					}
 				}
-			} else {
+			} 
+			else 
+			{
 				// Fixed 255 in the alpha channel to mean completely opaque
-				for (int y = 0; y < mHeight; y++) {
-					for (int x = 0; x < mWidth; x++) {
+				for (int y = 0; y < mHeight; y++) 
+				{
+					for (int x = 0; x < mWidth; x++) 
+					{
 						*dest++ = 0xff000000 | (src[2] << 16) | (src[1] << 8) | src[0];
 						src += 3;
 					}
@@ -391,17 +451,21 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface) {
 // If not yet optimized, delete mImageBits and mAlphaBits here to save memory,
 // since the image will never change again and no one else will need to get the
 // platform independent bits.
-nsresult nsImageBeOS::Optimize(nsIDeviceContext *aContext) {
-	if (!mOptimized) {
+nsresult nsImageBeOS::Optimize(nsIDeviceContext *aContext) 
+{
+	if (!mOptimized) 
+	{
 		// Make sure the BBitmap is up to date
 		CreateImage(NULL);
 		
 		// Release Mozilla-specific data
-		if (nsnull != mImageBits) {
+		if (nsnull != mImageBits) 
+		{
 			delete [] mImageBits;
 			mImageBits = nsnull;
 		}
-		if (nsnull != mAlphaBits) {
+		if (nsnull != mAlphaBits) 
+		{
 			delete [] mAlphaBits;
 			mAlphaBits = nsnull;
 		}
@@ -412,13 +476,15 @@ nsresult nsImageBeOS::Optimize(nsIDeviceContext *aContext) {
 }
 
 // Not implemented at the moment. It's unclear whether this is necessary for
-// the BeOS port or not.
-NS_IMETHODIMP nsImageBeOS::LockImagePixels(PRBool aMaskPixels) {
+// the BeOS port or not. BBitmap::Lock/UnlockBits()  may be used if neccessary
+NS_IMETHODIMP nsImageBeOS::LockImagePixels(PRBool aMaskPixels) 
+{
 	return NS_OK;
 }
 
 // Same as above.
-NS_IMETHODIMP nsImageBeOS::UnlockImagePixels(PRBool aMaskPixels) {
+NS_IMETHODIMP nsImageBeOS::UnlockImagePixels(PRBool aMaskPixels) 
+{
 	return NS_OK;
 }
 
@@ -426,13 +492,17 @@ NS_IMETHODIMP nsImageBeOS::UnlockImagePixels(PRBool aMaskPixels) {
 // there is no need to call CreateImage(). The platform independent bits will get
 // copied to the BBitmap if and when it gets blit.
 NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord aDY,
-	nscoord aDWidth, nscoord aDHeight) {
+	nscoord aDWidth, nscoord aDHeight) 
+{
 	
 	nsImageBeOS *dest = NS_STATIC_CAST(nsImageBeOS *, aDstImage);
-	if (!dest) return NS_ERROR_FAILURE;
-	if (!dest->mImageBits) return NS_ERROR_FAILURE;
+	if (!dest) 
+		return NS_ERROR_FAILURE;
+	if (!dest->mImageBits) 
+	return NS_ERROR_FAILURE;
 	
-	if (!mImageBits) return NS_ERROR_FAILURE;
+	if (!mImageBits) 
+		return NS_ERROR_FAILURE;
 	
 	// The following part is derived from GTK version
 	// 2001/6/21 Makoto Hamanaka < VTA04230@nifty.com >
@@ -442,25 +512,32 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 	PRUint8 *rgbPtr = nsnull, *alphaPtr = nsnull;
 	PRUint32 rgbStride = 0, alphaStride = 0;
 	
-	if ((aDWidth != mWidth) || (aDHeight != mHeight)) {
+	if ((aDWidth != mWidth) || (aDHeight != mHeight)) 
+	{
 		// scale factor in DrawTo... start scaling
 		scaledImage = (PRUint8 *)nsMemory::Alloc(3 * aDWidth * aDHeight);
-		if (!scaledImage) return NS_ERROR_OUT_OF_MEMORY;
+		if (!scaledImage) 
+			return NS_ERROR_OUT_OF_MEMORY;
 		
 		RectStretch(mWidth, mHeight, aDWidth, aDHeight,
                 0, 0, aDWidth-1, aDHeight-1,
                 mImageBits, mRowBytes, scaledImage, 3 * aDWidth, 24);
 		
-		if (mAlphaDepth) {
-			if (mAlphaDepth == 1) {
+		if (mAlphaDepth) 
+		{
+			if (mAlphaDepth == 1) 
+			{
 				// Round to next byte
 				alphaStride = (aDWidth + 7) >> 3;
-			} else {
+			} 
+			else 
+			{
 				alphaStride = aDWidth;
 			}
 			
 			scaledAlpha = (PRUint8 *)nsMemory::Alloc(alphaStride * aDHeight);
-			if (!scaledAlpha) {
+			if (!scaledAlpha) 
+			{
 				nsMemory::Free(scaledImage);
 				return NS_ERROR_OUT_OF_MEMORY;
 			}
@@ -472,7 +549,9 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 		rgbPtr = scaledImage;
 		rgbStride = 3 * aDWidth;
 		alphaPtr = scaledAlpha;
-	} else {
+	} 
+	else 
+	{
 		rgbPtr = mImageBits;
 		rgbStride = mRowBytes;
 		alphaPtr = mAlphaBits;
@@ -480,19 +559,23 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 	}
 
 	// Now composite the two images together
-	switch (mAlphaDepth) {
+	switch (mAlphaDepth) 
+	{
 		case 1:
-			for (int y = 0; y < aDHeight; y++) {
+			for (int y = 0; y < aDHeight; y++) 
+			{
 				PRUint8 *dst = dest->mImageBits + (y + aDY) * dest->mRowBytes + 3 * aDX;
 				PRUint8 *dstAlpha = dest->mAlphaBits + (y + aDY) * dest->mAlphaRowBytes;
 				PRUint8 *src = rgbPtr + y * rgbStride; 
 				PRUint8 *alpha = alphaPtr + y * alphaStride;
 
-				for (int x = 0; x < aDWidth; x++, dst += 3, src += 3) {
+				for (int x = 0; x < aDWidth; x++, dst += 3, src += 3) 
+				{
 #define NS_GET_BIT(rowptr, x) (rowptr[(x) >> 3] & (1 << (7 - (x) & 0x7)))
 #define NS_SET_BIT(rowptr, x) (rowptr[(x) >> 3] |= (1 << (7 - (x) & 0x7)))					
 					// If this pixel is opaque then copy into the destination image
-					if (NS_GET_BIT(alpha, x)) {
+					if (NS_GET_BIT(alpha, x)) 
+					{
 						dst[0] = src[0];
 						dst[1] = src[1];
 						dst[2] = src[2];
@@ -504,12 +587,14 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 			}
 			break;
 		case 8:
-			for (int y = 0; y < aDHeight; y++) {
+			for (int y = 0; y < aDHeight; y++) 
+			{
 				PRUint8 *dst = dest->mImageBits + (y + aDY) * dest->mRowBytes + 3 * aDX;
 				PRUint8 *dstAlpha = dest->mAlphaBits + (y + aDY) * dest->mAlphaRowBytes + aDX;
 				PRUint8 *src = rgbPtr + y * rgbStride;
 				PRUint8 *alpha = alphaPtr + y * alphaStride;
-				for (int x = 0; x < aDWidth; x++, dst += 3, dstAlpha++, src += 3, alpha++) {
+				for (int x = 0; x < aDWidth; x++, dst += 3, dstAlpha++, src += 3, alpha++) 
+				{
 					// Blend this pixel over the destination image
 					unsigned val = *alpha;
 					MOZ_BLEND(dst[0], dst[0], src[0], val);
@@ -522,15 +607,18 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 		case 0:
 		default:
 			// No alpha present, so just memcpy a scanline at a time
-			for (int y = 0; y < aDHeight; y++) {
+			for (int y = 0; y < aDHeight; y++) 
+			{
 				memcpy(dest->mImageBits + (y + aDY) * dest->mRowBytes + 3 * aDX,
 					rgbPtr + y * rgbStride, 3 * aDWidth);
 			}
 			break;
 	}
 
-	if (scaledAlpha) nsMemory::Free(scaledAlpha);
-	if (scaledImage) nsMemory::Free(scaledImage);
+	if (scaledAlpha) 
+		nsMemory::Free(scaledAlpha);
+	if (scaledImage) 
+		nsMemory::Free(scaledImage);
 	
 	// ImageUpdated() won't be called in this case, so we need to mark the destination
 	// image as changed. This will cause its data to be copied in the BBitmap when it
