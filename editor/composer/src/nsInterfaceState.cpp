@@ -64,9 +64,6 @@ nsInterfaceState::nsInterfaceState()
 
 nsInterfaceState::~nsInterfaceState()
 {
-  // cancel any outstanding udpate timer
-  if (mUpdateTimer)
-    mUpdateTimer->Cancel();
 }
 
 NS_IMPL_ADDREF(nsInterfaceState);
@@ -103,6 +100,10 @@ nsInterfaceState::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
 NS_IMETHODIMP
 nsInterfaceState::NotifyDocumentWillBeDestroyed()
 {
+  // cancel any outstanding udpate timer
+  if (mUpdateTimer)
+    mUpdateTimer->Cancel();
+
   return NS_OK;
 }
 
