@@ -39,8 +39,10 @@ LINUX NOTES:
 A standard Gtk edit control is used.  
 
 PROBLEMS:
-* Resizing is messed up, but likely because we don't understand Gtk's sizing 
-model.
+* Focus has problems.  If you click in the plugin window, then click in the
+  HTML edit widget, you get cursors in both places.  Typing is still directed
+  at the plugin, even though focus was just set to the HTML widget.  Using the
+  TAB key to change focus yields better results.
 
 MAC NOTES:
 ----------
