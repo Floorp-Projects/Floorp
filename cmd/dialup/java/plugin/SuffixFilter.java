@@ -22,19 +22,21 @@ import java.lang.*;
 
 public class SuffixFilter implements FilenameFilter
 {
-    String      suffix;
+	String      suffix;
+	
+	public SuffixFilter( String inSuffix )
+	{
+		suffix = inSuffix.toUpperCase();
+	}
 
-    public SuffixFilter( String inSuffix )
-    {
-        suffix = inSuffix;
-    }
+	public boolean accept( File f, String s )
+	{
+		String		sUpper = s.toUpperCase();
 
-    public boolean accept( File f, String s )
-    {
-        if ( s.endsWith( suffix ) )
-            return true;
-        return false;
-    }
+		if ( sUpper.endsWith( suffix ) )
+		    return true;
+		return false;
+	}
 }
 
 
