@@ -24,8 +24,17 @@
 #include "nsCRT.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "prprf.h"
+
 #include "nsString.h"
 #include "nsVoidArray.h"
+
+#include "nsCRT.h"
+#include "nsEscape.h"
+
+// include common interfaces such as the service manager and the repository....
+#include "nsIServiceManager.h"
+#include "nsRepository.h"
 
 /* NS_ERROR_MODULE_MAILNEWS is defined in mozilla/xpcom/public/nsError.h */
 
