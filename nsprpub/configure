@@ -4474,15 +4474,16 @@ EOF
         DSO_CFLAGS=-KPIC
         DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs'
     fi
-    if test -z "$GNU_AS"; then
-        ASFLAGS="$ASFLAGS -Wa,-P"
-    fi
     if test -n "$GNU_CC"; then
         CFLAGS="$CFLAGS -Wall"
         CXXFLAGS="$CXXFLAGS -Wall"
         if test -n "$USE_MDUPDATE"; then
             CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
             CXXFLAGS="$CXXFLAGS -MDupdate \$(DEPENDENCIES)"
+        fi
+        GCC_AS=`$CC -print-prog-name=as`
+        if test "`echo | $GCC_AS -v 2>&1 | grep -c GNU`" != "0"; then
+            GNU_AS=1
         fi
     else
         CFLAGS="$CFLAGS -xstrconst"
@@ -4493,20 +4494,30 @@ EOF
         fi
         _OPTIMIZE_FLAGS=-xO4
     fi
+    if test -z "$GNU_AS"; then
+        ASFLAGS="$ASFLAGS -Wa,-P"
+    fi
     if test -n "$USE_64"; then
         if test -n "$GNU_CC"; then
             CC="$CC -m64"
             CXX="$CXX -m64"
         else
-            CC="$CC -xarch=v9"
-            CXX="$CXX -xarch=v9"
+            if test "$OS_TEST" = "i86pc"; then
+                CC="$CC -xarch=amd64"
+                CXX="$CXX -xarch=amd64"
+            else
+                CC="$CC -xarch=v9"
+                CXX="$CXX -xarch=v9"
+            fi
         fi
     fi
     if test "$OS_TEST" = "i86pc"; then
-        cat >> confdefs.h <<\EOF
+        if test -z "$USE_64"; then
+            cat >> confdefs.h <<\EOF
 #define i386 1
 EOF
 
+        fi
         CPU_ARCH_TAG=_$OS_TEST
         # The default debug format, DWARF (-g), is not supported by gcc
         # on i386-ANY-sysv4/solaris, but the stabs format is.  It is
@@ -4761,7 +4772,7 @@ case $target in
     ;;
 *)
     echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:4765: checking for dlopen in -ldl" >&5
+echo "configure:4776: checking for dlopen in -ldl" >&5
 ac_lib_var=`echo dl'_'dlopen | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4769,7 +4780,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4773 "configure"
+#line 4784 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -4780,7 +4791,7 @@ int main() {
 dlopen()
 ; return 0; }
 EOF
-if { (eval echo configure:4784: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4795: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4797,17 +4808,17 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
   ac_safe=`echo "dlfcn.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for dlfcn.h""... $ac_c" 1>&6
-echo "configure:4801: checking for dlfcn.h" >&5
+echo "configure:4812: checking for dlfcn.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4806 "configure"
+#line 4817 "configure"
 #include "confdefs.h"
 #include <dlfcn.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:4811: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:4822: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -4840,13 +4851,13 @@ esac
 
 if test $ac_cv_prog_gcc = yes; then
     echo $ac_n "checking whether ${CC-cc} needs -traditional""... $ac_c" 1>&6
-echo "configure:4844: checking whether ${CC-cc} needs -traditional" >&5
+echo "configure:4855: checking whether ${CC-cc} needs -traditional" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_gcc_traditional'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
     ac_pattern="Autoconf.*'x'"
   cat > conftest.$ac_ext <<EOF
-#line 4850 "configure"
+#line 4861 "configure"
 #include "confdefs.h"
 #include <sgtty.h>
 Autoconf TIOCGETP
@@ -4864,7 +4875,7 @@ rm -f conftest*
 
   if test $ac_cv_prog_gcc_traditional = no; then
     cat > conftest.$ac_ext <<EOF
-#line 4868 "configure"
+#line 4879 "configure"
 #include "confdefs.h"
 #include <termio.h>
 Autoconf TCGETA
@@ -4888,12 +4899,12 @@ fi
 for ac_func in lchown strerror
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:4892: checking for $ac_func" >&5
+echo "configure:4903: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4897 "configure"
+#line 4908 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -4916,7 +4927,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4920: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4931: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -4957,7 +4968,7 @@ hpux*)
 if test -z "$GNU_CC"; then
 
     echo $ac_n "checking for +Olit support""... $ac_c" 1>&6
-echo "configure:4961: checking for +Olit support" >&5
+echo "configure:4972: checking for +Olit support" >&5
 if eval "test \"`echo '$''{'ac_cv_hpux_usable_olit_option'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4991,7 +5002,7 @@ esac
 
 
 echo $ac_n "checking for pthread_create in -lpthreads""... $ac_c" 1>&6
-echo "configure:4995: checking for pthread_create in -lpthreads" >&5
+echo "configure:5006: checking for pthread_create in -lpthreads" >&5
 echo "
     #include <pthread.h> 
     void *foo(void *v) { return v; } 
@@ -5013,7 +5024,7 @@ echo "
         echo "$ac_t""no" 1>&6
         
 echo $ac_n "checking for pthread_create in -lpthread""... $ac_c" 1>&6
-echo "configure:5017: checking for pthread_create in -lpthread" >&5
+echo "configure:5028: checking for pthread_create in -lpthread" >&5
 echo "
     #include <pthread.h> 
     void *foo(void *v) { return v; } 
@@ -5035,7 +5046,7 @@ echo "
         echo "$ac_t""no" 1>&6
         
 echo $ac_n "checking for pthread_create in -lc_r""... $ac_c" 1>&6
-echo "configure:5039: checking for pthread_create in -lc_r" >&5
+echo "configure:5050: checking for pthread_create in -lc_r" >&5
 echo "
     #include <pthread.h> 
     void *foo(void *v) { return v; } 
@@ -5057,7 +5068,7 @@ echo "
         echo "$ac_t""no" 1>&6
         
 echo $ac_n "checking for pthread_create in -lc""... $ac_c" 1>&6
-echo "configure:5061: checking for pthread_create in -lc" >&5
+echo "configure:5072: checking for pthread_create in -lc" >&5
 echo "
     #include <pthread.h> 
     void *foo(void *v) { return v; } 
@@ -5209,7 +5220,7 @@ if test -n "$USE_PTHREADS"; then
       rm -f conftest*
    ac_cv_have_dash_pthread=no
    echo $ac_n "checking whether ${CC-cc} accepts -pthread""... $ac_c" 1>&6
-echo "configure:5213: checking whether ${CC-cc} accepts -pthread" >&5
+echo "configure:5224: checking whether ${CC-cc} accepts -pthread" >&5
    echo 'int main() { return 0; }' | cat > conftest.c
    ${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
    if test $? -eq 0; then
@@ -5232,7 +5243,7 @@ echo "configure:5213: checking whether ${CC-cc} accepts -pthread" >&5
 			    ac_cv_have_dash_pthreads=no
     if test "$ac_cv_have_dash_pthread" = "no"; then
 	    echo $ac_n "checking whether ${CC-cc} accepts -pthreads""... $ac_c" 1>&6
-echo "configure:5236: checking whether ${CC-cc} accepts -pthreads" >&5
+echo "configure:5247: checking whether ${CC-cc} accepts -pthreads" >&5
     	echo 'int main() { return 0; }' | cat > conftest.c
 	    ${CC-cc} -pthreads -o conftest conftest.c > conftest.out 2>&1
     	if test $? -eq 0; then
@@ -5486,7 +5497,11 @@ EOF
 EOF
 
         if test "$OS_TEST" = "i86pc"; then
-            PR_MD_ASFILES=os_SunOS_x86.s
+            if test -n "$USE_64"; then
+               PR_MD_ASFILES=os_SunOS_x86_64.s
+            else
+               PR_MD_ASFILES=os_SunOS_x86.s
+            fi
         else
             PR_MD_ASFILES=os_SunOS.s
             if test -n "$USE_64"; then
