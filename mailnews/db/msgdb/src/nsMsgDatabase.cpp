@@ -1377,38 +1377,45 @@ NS_IMETHODIMP nsMsgDatabase::ContainsKey(nsMsgKey key, PRBool *containsKey)
 // get a message header for the given key. Caller must release()!
 NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr)
 {
-	nsresult	err = NS_OK;
-	mdb_bool	hasOid;
-	mdbOid		rowObjectId;
-
+  nsresult	err = NS_OK;
+  mdb_bool	hasOid;
+  mdbOid		rowObjectId;
+  
 #ifdef DEBUG_bienvenu
   NS_ASSERTION(m_folder, "folder should be set");
 #endif
-
-	if (!pmsgHdr || !m_mdbAllMsgHeadersTable)
-		return NS_ERROR_NULL_POINTER;
-
-	*pmsgHdr = NULL;
-	err = GetHdrFromUseCache(key, pmsgHdr);
-	if (NS_SUCCEEDED(err) && *pmsgHdr)
-		return err;
-
-	rowObjectId.mOid_Id = key;
-	rowObjectId.mOid_Scope = m_hdrRowScopeToken;
-	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
-	if (err == NS_OK && m_mdbStore /* && hasOid */)
-	{
-		nsIMdbRow *hdrRow;
-		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &hdrRow);
-
-		if (err == NS_OK && hdrRow)
-		{
-//			NS_ASSERTION(hasOid, "we had oid, right?");
-			err = CreateMsgHdr(hdrRow,  key, pmsgHdr);
-		}
-	}
-
-	return err;
+  
+  if (!pmsgHdr || !m_mdbAllMsgHeadersTable)
+    return NS_ERROR_NULL_POINTER;
+  
+  *pmsgHdr = NULL;
+  err = GetHdrFromUseCache(key, pmsgHdr);
+  if (NS_SUCCEEDED(err) && *pmsgHdr)
+    return err;
+  
+  rowObjectId.mOid_Id = key;
+  rowObjectId.mOid_Scope = m_hdrRowScopeToken;
+  err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
+  if (err == NS_OK && m_mdbStore /* && hasOid */)
+  {
+    nsIMdbRow *hdrRow;
+    err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &hdrRow);
+    
+    if (err == NS_OK)
+    {
+      if (!hdrRow)
+      {
+        err = NS_ERROR_NULL_POINTER;
+      }
+      else
+      {
+        //  			NS_ASSERTION(hasOid, "we had oid, right?");
+        err = CreateMsgHdr(hdrRow,  key, pmsgHdr);
+      }
+    }
+  }
+  
+  return err;
 }
 
 NS_IMETHODIMP nsMsgDatabase::StartBatch()
