@@ -52,6 +52,8 @@
 #include "nsNetUtil.h"
 #include "nsIStringBundle.h"
 #include "nsIConsoleService.h"
+#include "nsIXPConnect.h"
+#include "jsapi.h"
 
 #define WSA_GRANT_ACCESS_TO_ALL   (1 << 0)
 #define WSA_FILE_NOT_FOUND        (1 << 1)
@@ -190,10 +192,10 @@ void VerifyIsEqual()
                 NS_ConvertUTF8toUCS2(kStrings[i].rhs)) 
                 != kStrings[i].equal) {
       const char* equal = 
-        kStrings[i].equal ? "be equal but it is not!" : 
-                            "not be equal but it is!";
-      printf("\nTest Failed: %s and %s should %s.\n", 
-             kStrings[i].lhs, kStrings[i].rhs, equal);
+        kStrings[i].equal ? "equivalent" : 
+                            "not equivalent";
+      printf("\nTest Failed: %s is %s to %s.\n", 
+             kStrings[i].lhs, equal, kStrings[i].rhs);
     }
   }
 }
@@ -234,11 +236,36 @@ nsWebScriptsAccess::CanAccess(nsIURI* aTransportURI,
     mSecurityManager = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-    
+   
+  rv =
+    mSecurityManager->IsCapabilityEnabled("UniversalBrowserRead", 
+                                          aAccessGranted);
+  if (NS_FAILED(rv) || aAccessGranted)
+    return rv;
+  
   rv = mSecurityManager->CheckSameOrigin(0, aTransportURI);
   if (NS_SUCCEEDED(rv)) {
+    // script security manager has granted access
     *aAccessGranted = PR_TRUE;
-    return rv; // script security manager has granted access
+    return rv;
+  }
+  else {
+    // Script security manager has denied access and has set an
+    // exception. Clear the exception and fall back on the new
+    // security model's decision.
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
+    if (xpc) {
+      nsCOMPtr<nsIXPCNativeCallContext> cc;
+      xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+      if (cc) {
+        JSContext* cx;
+        rv = cc->GetJSContext(&cx);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        JS_ClearPendingException(cx);
+        cc->SetExceptionWasThrown(PR_FALSE);
+      }
+    }
   }
 
   mServiceURI = aTransportURI;
