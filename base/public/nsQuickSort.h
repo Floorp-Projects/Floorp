@@ -24,19 +24,17 @@
 #ifndef nsQuickSort_h___
 #define nsQuickSort_h___
 
+#include "nscore.h"
+#include "prtypes.h"
 /* Had to pull the following define out of xp_core.h
  * to avoid including xp_core.h.
  * That brought in too many header file dependencies.
  */
-#if defined(__cplusplus)
-extern "C" {
-#endif
+NS_BEGIN_EXTERN_C
 
-extern void nsQuickSort(void *, size_t, size_t,
+PR_EXTERN(void) nsQuickSort(void *, size_t, size_t,
                      int (*)(const void *, const void *, void *), void *);
 
-#if defined(__cplusplus)
-}
-#endif
+NS_END_EXTERN_C
 
 #endif /* nsQuickSort_h___ */
