@@ -85,63 +85,63 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\e_atan2.c
+SOURCE=..\..\..\js\src\fdlibm\e_atan2.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\e_fmod.c
+SOURCE=..\..\..\js\src\fdlibm\e_fmod.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\e_pow.c
+SOURCE=..\..\..\js\src\fdlibm\e_pow.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\e_sqrt.c
+SOURCE=..\..\..\js\src\fdlibm\e_sqrt.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\s_atan.c
+SOURCE=..\..\..\js\src\fdlibm\s_atan.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\s_copysign.c
+SOURCE=..\..\..\js\src\fdlibm\s_copysign.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\s_fabs.c
+SOURCE=..\..\..\js\src\fdlibm\s_fabs.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\s_finite.c
+SOURCE=..\..\..\js\src\fdlibm\s_finite.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\s_isnan.c
+SOURCE=..\..\..\js\src\fdlibm\s_isnan.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\s_matherr.c
+SOURCE=..\..\..\js\src\fdlibm\s_matherr.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\s_rint.c
+SOURCE=..\..\..\js\src\fdlibm\s_rint.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\s_scalbn.c
+SOURCE=..\..\..\js\src\fdlibm\s_scalbn.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\w_atan2.c
+SOURCE=..\..\..\js\src\fdlibm\w_atan2.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\w_pow.c
+SOURCE=..\..\..\js\src\fdlibm\w_pow.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\js\src\fdlibm\w_sqrt.c
+SOURCE=..\..\..\js\src\fdlibm\w_sqrt.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
