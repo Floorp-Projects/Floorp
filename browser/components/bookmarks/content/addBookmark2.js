@@ -21,6 +21,7 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@netscape.com> (Original Author)
+#   David Hyatt <hyatt@mozilla.org>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -67,6 +68,7 @@
  *   window.arguments[5]: If the mode is "addGroup", this is an array
  *                        of objects with name, URL and charset
  *                        properties, one for each group member.
+ *   window.arguments[6]: If the bookmark should become a web panel.
  */
 
 var gSelectedFolder;
@@ -125,6 +127,13 @@ function onOK()
   var selection = BookmarksUtils.getSelectionFromResource(rSource);
   var target    = BookmarksUtils.getTargetFromFolder(rFolder);
   BookmarksUtils.insertSelection("newbookmark", selection, target);
+  
+  if (window.arguments[6] && rSource) {
+        // Assert that we're a web panel.
+        BMDS.Assert(rSource, RDF.GetResource(NC_NS+"WebPanel"),
+                    RDF.GetLiteral("true"), true);
+  }
+  
   // in insertSelection, the ds flush is delayed. It will never be performed,
   // since this dialog is destroyed before.
   // We have to flush manually

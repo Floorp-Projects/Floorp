@@ -17,6 +17,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
   <hbox align="center">
     <toolbarbutton label="&addPanel.label;" oncommand="addWebPanel()"/>
+    <spacer flex="1"/>
     <toolbarbutton label="&viewPage.label;" oncommand="grabPage()"/>
   </hbox>
   <browser id="webpanels-browser" type="content" flex="1"

@@ -53,3 +53,7 @@ function grabPage()
     } catch (e) {}
 }
 
+function addWebPanel()
+{
+    window.parent.addBookmarkAs(document.getElementById('webpanels-browser'), true);
+}

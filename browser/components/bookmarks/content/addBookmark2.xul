@@ -65,7 +65,7 @@
 
   <separator class="thin"/>
   <script type="application/x-javascript"><![CDATA[
-    if (window.arguments.length < 6)
+    if (!window.arguments[5])
       document.getElementById("addgroup").setAttribute("hidden", "true");
   ]]></script>
 

@@ -6,6 +6,9 @@
 <link rel="stylesheet" href="chrome://browser/skin/web-panels-drop-page.css"/>
 </head>
 <body>
-Drag a link into this area to view it here.
+Drop a link here to view it.
+You can also click on the <i>Grab Page</i> button above to
+view the current page.
+
 </body>
 </html>
