@@ -45,6 +45,7 @@
 #define IDC_URLFIELD                    1023
 #define IDC_COMBO1                      1025
 #define IDC_CHECK1                      1027
+#define IDC_CHKURLFLAG                  1027
 #define IDC_MATCH_WHOLE_WORD            1040
 #define IDC_MATCH_CASE                  1041
 #define IDC_WRAP_AROUND                 1042
