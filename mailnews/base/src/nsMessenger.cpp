@@ -872,7 +872,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
     {
         // ** save as Template
         nsCOMPtr<nsIFileSpec> fileSpec;
-        nsFileSpec tmpFileSpec = "nsmail.tmp";
+        nsFileSpec tmpFileSpec = NS_ConvertASCIItoUCS2("nsmail.tmp");
         rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(fileSpec));
         if (NS_FAILED(rv)) goto done;
 
