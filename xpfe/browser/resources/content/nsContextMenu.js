@@ -313,7 +313,7 @@ nsContextMenu.prototype = {
         var pref = this.getService( 'component://netscape/preferences', 'nsIPref' );
         var result = false;
         try {
-           result = pref.GetBoolPref( "imageBlocker.enabled" );
+           result = pref.GetBoolPref( "imageblocker.enabled" );
         } catch(e) {
         }
         return result;
