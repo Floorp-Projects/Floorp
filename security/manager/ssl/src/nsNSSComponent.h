@@ -39,11 +39,35 @@
 #define NS_NSSCOMPONENT_CID \
 {0xa277189c, 0x1dd1, 0x11b2, {0xa8, 0xc9, 0xe4, 0xe8, 0xbf, 0xb1, 0x33, 0x8e}}
 
+//Define an interface that we can use to look up from the
+//callbacks passed to NSS.
+
+#define NS_INSSCOMPONENT_IID_STR "d4b49dd6-1dd1-11b2-b6fe-b14cfaf69cbd"
+#define NS_INSSCOMPONENT_IID \
+  {0xd4b49dd6, 0x1dd1, 0x11b2, \
+    { 0xb6, 0xfe, 0xb1, 0x4c, 0xfa, 0xf6, 0x9c, 0xbd }}
+
+class NS_NO_VTABLE nsINSSComponent : public nsISupports {
+ public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
+
+  NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
+                                   nsString &outString) = 0;
+  NS_IMETHOD PIPBundleFormatStringFromName(const PRUnichar *name,
+                                           const PRUnichar **params,
+                                           PRUint32 numParams,
+                                           PRUnichar **outString) = 0;
+
+};
+
+
+
 // Implementation of the PSM component interface.
 class nsNSSComponent : public nsISecurityManagerComponent,
                        public nsIContentHandler,
                        public nsISignatureVerifier,
-                       public nsIEntropyCollector
+                       public nsIEntropyCollector,
+                       public nsINSSComponent
 {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID );
@@ -59,12 +83,12 @@ public:
 
   NS_METHOD Init();
 
-  nsresult GetPIPNSSBundleString(const PRUnichar *name,
-                                 nsString &outString);
-  nsresult PIPBundleFormatStringFromName(const PRUnichar *name,
-                                         const PRUnichar **params,
-                                         PRUint32 numParams,
-                                         PRUnichar **outString);
+  NS_IMETHOD GetPIPNSSBundleString(const PRUnichar *name,
+                                   nsString &outString);
+  NS_IMETHOD PIPBundleFormatStringFromName(const PRUnichar *name,
+                                           const PRUnichar **params,
+                                           PRUint32 numParams,
+                                           PRUnichar **outString);
   nsresult InitializeNSS();
 
 private:

@@ -89,18 +89,14 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   }
 
   nsString promptString;
-  nsNSSComponent *nssComponent;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
 
-  rv = nsServiceManager::GetService(kNSSComponentCID, 
-                                    NS_GET_IID(nsISecurityManagerComponent),
-                                    (nsISupports**)&nssComponent);
   if (NS_FAILED(rv))
     return nsnull; 
 
   nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertPassPrompt"),
                                       promptString);
-  nsServiceManager::ReleaseService(kNSSComponentCID, 
-                                   (nsISecurityManagerComponent*)nssComponent);
+
   PRUnichar *uniString = promptString.ToNewUnicode();
   rv = proxyPrompt->PromptPassword(nsnull, uniString,
                                    NS_LITERAL_STRING(" "),
@@ -142,20 +138,13 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
       nsXPIDLString shortDesc;
       const PRUnichar* formatStrings[1] = { ToNewUnicode(nsLiteralCString(caName)) };
-      nsNSSComponent *nssComponent;
-
-      rv = nsServiceManager::GetService(kNSSComponentCID, 
-                                        NS_GET_IID(nsISecurityManagerComponent),
-                                        (nsISupports**)&nssComponent);
+      nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
       if (NS_FAILED(rv))
         return; 
 
       rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SignedBy"),
                                                      formatStrings, 1,
                                                      getter_Copies(shortDesc));
-      nsServiceManager::ReleaseService(kNSSComponentCID, 
-                                       (nsISecurityManagerComponent*)nssComponent);
-
 
       nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
   

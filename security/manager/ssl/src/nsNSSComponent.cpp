@@ -95,7 +95,7 @@ nsNSSComponent::~nsNSSComponent()
 #endif /*DEBUG*/ 
 #endif /*XP_MAC*/
 
-nsresult 
+NS_IMETHODIMP
 nsNSSComponent::PIPBundleFormatStringFromName(const PRUnichar *name,
                                               const PRUnichar **params,
                                               PRUint32 numParams,
@@ -110,7 +110,7 @@ nsNSSComponent::PIPBundleFormatStringFromName(const PRUnichar *name,
   return rv;
 }
 
-nsresult 
+NS_IMETHODIMP
 nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
                                       nsString &outString)
 {
@@ -274,11 +274,12 @@ nsNSSComponent::Init()
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSComponent,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSComponent,
                               nsISecurityManagerComponent,
                               nsIContentHandler,
                               nsISignatureVerifier,
-                              nsIEntropyCollector);
+                              nsIEntropyCollector,
+                              nsINSSComponent);
 
 
 NS_IMETHODIMP
