@@ -150,6 +150,8 @@ nsMenu::~nsMenu()
     //printf("WARNING: DeleteMenu called!!! \n");
     ::DeleteMenu(mMacMenuID);
   }
+  
+  mDOMNode = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -679,8 +681,24 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
   //printf("  mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
   // Close the node.
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  if (domElement)
-    domElement->RemoveAttribute("open");
+  if(!domElement) {
+      NS_ERROR("Unable to QI dom element.");
+      return nsEventStatus_eIgnore;  
+  }
+  
+  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(domElement);
+  if (!contentNode) {
+      NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+      return nsEventStatus_eIgnore;
+  }
+  
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(contentNode);
+  if (!domDocument) {
+      NS_ERROR("DOM Node doesn't support the nsIContent interface.");
+      return nsEventStatus_eIgnore;
+  }
+  
+  domElement->RemoveAttribute("open");
   
   return nsEventStatus_eIgnore;
 }
