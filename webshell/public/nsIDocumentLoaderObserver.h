@@ -50,7 +50,8 @@ public:
   /**
    * Notify the observer that a document has been completely loaded.
    */
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus) = 0;
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus,
+								nsIDocumentLoaderObserver * aObserver) = 0;
 
   /**
    * Notify the observer that the specified nsIURL has just started to load.
