@@ -45,7 +45,11 @@
 #include "nsDialogParamBlock.h"
 #include "nsFileLocations.h"
 
+#ifdef XP_MAC
+#include "nsUserInfoMac.h"
+#else
 #include "nsUserInfo.h"
+#endif
 
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
