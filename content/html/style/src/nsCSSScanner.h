@@ -50,7 +50,7 @@ enum nsCSSTokenType {
   eCSSToken_Function = 9,       // mIdent
 
   eCSSToken_URL = 10,            // mIdent
-  eCSSToken_InvalidURL = 11,    // doesn't matter
+  eCSSToken_InvalidURL = 11     // doesn't matter
 
 };
 
