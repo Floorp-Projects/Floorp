@@ -874,18 +874,20 @@ nsFormControlFrame::PaintArrow(nsArrowDirection aArrowDirection,
 					                    nsIRenderingContext& aRenderingContext,
 															nsIPresContext& aPresContext, 
 															const nsRect& aDirtyRect,
-                              nsRect& aRect, 
+                                                            nsRect& aRect, 
 															nscoord aOnePixel, 
-															const nsStyleColor& aColor,
+															 nsIStyleContext* aArrowStyle,
 															const nsStyleSpacing& aSpacing,
 															nsIFrame* aForFrame,
                               nsRect& aFrameRect)
 {
   // Draw border using CSS
+  const nsStyleColor* color = (const nsStyleColor*)
+      aArrowStyle->GetStyleData(eStyleStruct_Color);
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-                                    aDirtyRect, aRect,  aColor, aSpacing, 0, 0);
+                                    aDirtyRect, aRect,  *color, aSpacing, 0, 0);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
-                               aDirtyRect, aRect, aSpacing, 0);
+                               aDirtyRect, aRect, aSpacing, aArrowStyle, 0);
 
   // Draw the glyph in black
   aRenderingContext.SetColor(NS_RGB(0, 0, 0));
@@ -929,18 +931,18 @@ nsFormControlFrame::PaintScrollbar(nsIRenderingContext& aRenderingContext,
 		nscoord arrowWidth = aRect.height;
 		nsRect arrowLeftRect(aRect.x, aRect.y, arrowWidth, arrowWidth);
     PaintArrow(eArrowDirection_Left,aRenderingContext,aPresContext, 
-			        aDirtyRect, arrowLeftRect,aOnePixel, *arrowColor, *arrowSpacing, aForFrame, aFrameRect);
+			        aDirtyRect, arrowLeftRect,aOnePixel, aScrollbarArrowStyleContext, *arrowSpacing, aForFrame, aFrameRect);
 
 		nsRect thumbRect(aRect.x+arrowWidth, aRect.y, arrowWidth, arrowWidth);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
                                     aDirtyRect, thumbRect, *arrowColor, *arrowSpacing,
                                     0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
-                                aDirtyRect, thumbRect, *arrowSpacing, 0);
+                                aDirtyRect, thumbRect, *arrowSpacing, aScrollbarArrowStyleContext, 0);
 
     nsRect arrowRightRect(aRect.x + (aRect.width - arrowWidth), aRect.y, arrowWidth, arrowWidth);
 	  PaintArrow(eArrowDirection_Right,aRenderingContext,aPresContext, 
-			        aDirtyRect, arrowRightRect,aOnePixel, *arrowColor, *arrowSpacing, aForFrame, aFrameRect);
+			        aDirtyRect, arrowRightRect,aOnePixel, aScrollbarArrowStyleContext, *arrowSpacing, aForFrame, aFrameRect);
 
 	}
   else {
@@ -948,18 +950,18 @@ nsFormControlFrame::PaintScrollbar(nsIRenderingContext& aRenderingContext,
 		nscoord arrowHeight = aRect.width;
 		nsRect arrowUpRect(aRect.x, aRect.y, arrowHeight, arrowHeight);
 	  PaintArrow(eArrowDirection_Up,aRenderingContext,aPresContext, 
-			        aDirtyRect, arrowUpRect,aOnePixel, *arrowColor, *arrowSpacing, aForFrame, aFrameRect);
+			        aDirtyRect, arrowUpRect,aOnePixel, aScrollbarArrowStyleContext, *arrowSpacing, aForFrame, aFrameRect);
 
 		nsRect thumbRect(aRect.x, aRect.y+arrowHeight, arrowHeight, arrowHeight);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
                                     aDirtyRect, thumbRect, *arrowColor, *arrowSpacing,
                                     0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
-                                aDirtyRect, thumbRect, *arrowSpacing, 0);
+                                aDirtyRect, thumbRect, *arrowSpacing, aScrollbarArrowStyleContext, 0);
 
 		nsRect arrowDownRect(aRect.x, aRect.y + (aRect.height - arrowHeight), arrowHeight, arrowHeight);
 	  PaintArrow(eArrowDirection_Down,aRenderingContext,aPresContext, 
-			        aDirtyRect, arrowDownRect,aOnePixel, *arrowColor, *arrowSpacing, aForFrame, aFrameRect);
+			        aDirtyRect, arrowDownRect,aOnePixel, aScrollbarArrowStyleContext, *arrowSpacing, aForFrame, aFrameRect);
   }
 
 }
@@ -1095,7 +1097,7 @@ nsFormControlFrame::PaintRectangularButton(nsIPresContext& aPresContext,
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
                                     aDirtyRect, rect,  *color, *spacing, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
-                               aDirtyRect, rect, *spacing, 0);
+                               aDirtyRect, rect, *spacing, aStyleContext, 0);
 
     nsMargin border;
     spacing->CalcBorderFor(aForFrame, border);
