@@ -24,7 +24,7 @@ my $contents;
 # This is the preferences file that gets read and written.
 # So run this script with src/mozilla/build/ as the current directory.
 #
-my $sourcefile = "../network/module/nsNetService.cpp";
+my $sourcefile = "../xpfe/xpviewer/src/nsViewerApp.cpp";
 
 
 # from noah, who should be shot
@@ -47,9 +47,13 @@ sub ctime {
 
   if ($TZ ne "") { $TZ .= " "; }
   $year += ($year < 70) ? 2000 : 1900;
-  return sprintf ("%s %s %02d %02d:%02d:%02d %s%4d",
-                  $weekday[$wday], $month[$mon], $mday, $hour, $min, $sec,
-                  $TZ, $year);
+  #return sprintf ("%s %s %02d %02d:%02d:%02d %s%4d",
+  #                $weekday[$wday], $month[$mon], $mday, $hour, $min, $sec,
+  #                $TZ, $year);
+
+  # the following is for shaver's timebomb hack
+  return sprintf ("%s %02d %2d %02d:%02d:%02d",
+                  $month[$mon], $mday, $year, $hour, $min, $sec);
 }
 
 sub read_file {
@@ -103,18 +107,18 @@ sub set_bomb {
     my $now = time;
     my $bomb = $now + ($bomb_days * 24 * 60 * 60);
     my $warn = $now + ($warning_days * 24 * 60 * 60);
+    $bomb = ctime($bomb); #convert for the timebomb-code-of-the-week
+    
 
     $_ = $contents;
 
-    s@\s+/\*\s+(#define TIMEBOMB_ON)\s+\*/@\n$1\n@;
-    s@#undef\s+TIMEBOMB_ON@@;
-    s@(TIME_BOMB_TIME\s+)\d+@$1$bomb@;
-    s@(TIME_BOMB_WARNING_TIME\s+)\d+@$1$warn@;
+    s@/\*\s*TIMEBOMB_GOES_HERE\s*\*/@\#define MOZ_TIMEBOMB "$bomb"@;
 
     $contents = $_;
 
     print STDERR sprintf("%s: timebomb goes off in %2d days (%s)\n",
-			 $progname, $bomb_days, ctime($bomb));
+			 $progname, $bomb_days, $bomb);
+			# $progname, $bomb_days, ctime($bomb));
     print STDERR sprintf("%s:  warning goes off in %2d days (%s)\n",
 			 $progname, $warning_days, ctime($warn));
 }
