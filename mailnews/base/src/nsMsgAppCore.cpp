@@ -389,8 +389,6 @@ nsMsgAppCore::GetId(nsString& aId)
 NS_IMETHODIMP    
 nsMsgAppCore::Open3PaneWindow()
 {
-	static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-
 	nsIAppShellService* appShell;
 	char *  urlstr=nsnull;
 	nsresult rv;
@@ -821,9 +819,32 @@ nsMsgAppCore::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *p
 NS_IMETHODIMP
 nsMsgAppCore::AccountManager(nsIDOMWindow *parent)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // this is so lame - what IS this?!
+  nsString controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
 
+  nsCOMPtr<nsIURL> url;
+  rv = NS_NewURL(getter_AddRefs(url),
+                 "resource:/res/mailnews/messenger/AccountManager.xul");
+  if (NS_FAILED(rv)) return rv;
+
+  nsIXULWindowCallbacks *cb = nsnull;
+  nsIWebShellWindow* newWindow;
+  rv = appShell->CreateDialogWindow(nsnull, // parent
+                                    url, // UI url
+                                    controllerCID, 
+                                    newWindow,
+                                    nsnull, // stream observer
+                                    cb, // callbacks
+                                    504, 436 ); // width, height
+
+  if (NS_SUCCEEDED(rv) && newWindow)
+    rv = newWindow->ShowModal();
+  
+  return rv;
 }
 
 //  to load the webshell!
