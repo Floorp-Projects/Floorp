@@ -486,7 +486,10 @@ nsFingerChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
 
         nsCOMPtr<nsITXTToHTMLConv> converter(do_QueryInterface(converterListener));
         if (converter) {
-          nsAutoString title; title.AssignWithConversion("Finger Results");
+          nsAutoString title; title.AssignWithConversion("Finger information for ");
+          nsXPIDLCString userHost;
+          rv = mUrl->GetPath(getter_Copies(userHost));
+          title.Append(userHost);
           converter->SetTitle(title.GetUnicode());
           converter->PreFormatHTML(PR_TRUE);
         }
