@@ -153,7 +153,6 @@ protected:
 
   nsSocketTransportService* mService;
   PRUint32                  mLoadAttributes;
-  nsIEventQueue*            mEventQueue;
 };
 
 
