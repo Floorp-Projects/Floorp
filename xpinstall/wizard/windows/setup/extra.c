@@ -5751,6 +5751,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diSelectAdditionalComponents.bShowDialog  = FALSE;
       diWindowsIntegration.bShowDialog          = FALSE;
       diProgramFolder.bShowDialog               = FALSE;
+      diQuickLaunch.bShowDialog                 = FALSE;
       diDownloadOptions.bShowDialog             = FALSE;
       diAdvancedSettings.bShowDialog            = FALSE;
       diStartInstall.bShowDialog                = FALSE;
