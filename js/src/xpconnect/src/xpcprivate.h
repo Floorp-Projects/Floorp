@@ -2212,9 +2212,14 @@ class XPCReadableJSStringWrapper : public nsDependentString
 public:
     XPCReadableJSStringWrapper(JSString *str) :
         nsDependentString(NS_REINTERPRET_CAST(PRUnichar *,
-                                          JS_GetStringChars(str)),
+                                              JS_GetStringChars(str)),
                       JS_GetStringLength(str)),
         mStr(str), mBufferHandle(0), mHandleIsShared(JS_FALSE)
+    { }
+
+    XPCReadableJSStringWrapper() :
+        nsDependentString(nsnull, (PRUint32)0), mStr(nsnull),
+        mBufferHandle(nsnull), mHandleIsShared(JS_FALSE)
     { }
 
     ~XPCReadableJSStringWrapper();
@@ -2228,6 +2233,11 @@ public:
     const nsSharedBufferHandle<PRUnichar>* GetSharedBufferHandle() const
     {
         return BufferHandle(JS_TRUE);
+    }
+
+    PRBool IsVoid() const
+    {
+        return mStr == nsnull;
     }
 
 protected:
@@ -2265,6 +2275,41 @@ protected:
     JSString            *mStr;
     WrapperBufferHandle *mBufferHandle;
     JSBool              mHandleIsShared;
+};
+
+// "voidable" nsAString implementation
+class XPCVoidableString : public nsAutoString
+{
+public:
+    XPCVoidableString() :
+        nsAutoString(), mIsVoid(PR_FALSE)
+    { }
+
+    char_type* GetWritableFragment(nsWritableFragment<char_type>& aFragment,
+                                   nsFragmentRequest aRequest,
+                                   PRUint32 aOffset)
+    {
+        mIsVoid = PR_FALSE;
+
+        return nsAutoString::GetWritableFragment(aFragment, aRequest, aOffset);
+    }
+
+    PRBool IsVoid() const
+    {
+        return mIsVoid;
+    }
+
+    void SetIsVoid(PRBool aVoid)
+    {
+        if(aVoid && !mIsVoid) {
+            Truncate();
+        }
+
+        mIsVoid = aVoid;
+    }
+
+protected:
+    PRBool mIsVoid;
 };
 
 // readable string conversions, static methods only

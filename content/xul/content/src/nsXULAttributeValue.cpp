@@ -80,7 +80,8 @@ nsresult nsXULAttributeValue::GetValue( nsAWritableString& aResult )
 }
 
 
-nsresult nsXULAttributeValue::SetValue(const nsAReadableString& aValue, PRBool forceAtom)
+nsresult nsXULAttributeValue::SetValue(const nsAReadableString& aValue,
+                                       PRBool forceAtom)
 {   
     nsCOMPtr<nsIAtom> newAtom;
     
@@ -89,7 +90,10 @@ nsresult nsXULAttributeValue::SetValue(const nsAReadableString& aValue, PRBool f
     // atom table: the style system frequently asks for it, and if the
     // table is "unprimed" we see quite a bit of thrashing as the 'id'
     // value is repeatedly added and then removed from the atom table.
-    if ((aValue.Length() <= kMaxAtomValueLength) || forceAtom)
+
+    PRUint32 len = aValue.Length();
+
+    if (len && ((len <= kMaxAtomValueLength) || forceAtom))
     {
         newAtom = getter_AddRefs( NS_NewAtom(aValue) );
     }
@@ -104,10 +108,14 @@ nsresult nsXULAttributeValue::SetValue(const nsAReadableString& aValue, PRBool f
         mValue = (void*)(PRWord(newAtom.get()) | kAtomType);
     }
     else {
-        PRUnichar* str = ToNewUnicode(aValue);
-        if (! str)
-            return NS_ERROR_OUT_OF_MEMORY;
-  
+        PRUnichar* str = nsnull;
+
+        if (len) {
+            str = ToNewUnicode(aValue);
+            if (! str)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+
         mValue = str;
     }
 
