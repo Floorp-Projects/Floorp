@@ -48,7 +48,7 @@ ifndef NS_USE_GCC
 	ifdef USE_HYBRID
 	    OS_CFLAGS 	+= -Aa +e +DA2.0 +DS2.0 
 	else
-	    OS_CFLAGS   += +DAportable +DS1.1
+	    OS_CFLAGS   += +DAportable +DS2.0
 	endif
     endif
 else
