@@ -245,7 +245,7 @@ public class Base64InputStream extends FilterInputStream {
         ByteArrayOutputStream b64OStream = new ByteArrayOutputStream();
 
         Base64OutputStream b64Stream = new Base64OutputStream(
-            new PrintStream(b64Ostream), 18);
+            new PrintStream(b64OStream), 18);
 
         int numread;
         byte []data = new byte[1024];
