@@ -55,8 +55,9 @@ protected:
   IdlUnion*       ParseUnion(IdlSpecification &aSpecification);
   IdlVariable*    ParseConst(IdlSpecification &aSpecification);
   IdlException*   ParseException(IdlSpecification &aSpecification);
-  IdlAttribute*   ParseAttribute(IdlSpecification &aSpecification, int aTokenID);
-  IdlFunction*    ParseFunction(IdlSpecification &aSpecification, Token &aToken);
+  IdlAttribute*   MaybeParseAttribute(IdlSpecification &aSpecification, int aTokenID);
+  IdlAttribute*   ParseAttribute(IdlSpecification &aSpecification, int aTokenID, int aIsNoScript=0);
+  IdlFunction*    ParseFunction(IdlSpecification &aSpecification, Token *aToken);
 
   IdlParameter*   ParseFunctionParameter(IdlSpecification &aSpecification);
 

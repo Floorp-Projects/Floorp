@@ -32,6 +32,7 @@ private:
   nsVoidArray *mParameters;
   nsVoidArray *mExceptions;
   int         mHasEllipsis;
+  int         mIsNoScript;
 
 public:
                   IdlFunction();
@@ -50,6 +51,9 @@ public:
 
   int             GetHasEllipsis();
   void            SetHasEllipsis(int aHasEllipsis);
+
+  int             GetIsNoScript();
+  void            SetIsNoScript(int aIsNoScript);
 };
 
 #ifdef XP_MAC

@@ -290,13 +290,26 @@ void IdlParser::ParseInterfaceBody(IdlSpecification &aSpecification, IdlInterfac
       case EXCEPTION_TOKEN:
         aInterface.AddException(ParseException(aSpecification));
         break;
+      case NOSCRIPT_TOKEN:
+        {
+          IdlAttribute* attr;
+          
+          attr = MaybeParseAttribute(aSpecification, token->id);
+          if (NULL == attr) {
+            aInterface.AddFunction(ParseFunction(aSpecification, token));
+          }
+          else {
+            aInterface.AddAttribute(attr);
+          }
+        }
+        break;
       case READONLY_TOKEN:
       case ATTRIBUTE_TOKEN:
         aInterface.AddAttribute(ParseAttribute(aSpecification, token->id));
         break;
       default:
         // it's either a function or an error
-        aInterface.AddFunction(ParseFunction(aSpecification, *token));
+        aInterface.AddFunction(ParseFunction(aSpecification, token));
         break;
     }
 
@@ -531,16 +544,34 @@ IdlException* IdlParser::ParseException(IdlSpecification &aSpecification)
   return (IdlException*)0;
 }
 
+IdlAttribute* IdlParser::MaybeParseAttribute(IdlSpecification &aSpecification, int aTokenID)
+{
+  Token *token;
+  int isNoScript = 0;
+
+  // if it was a noscript keyword check if this is an attribute
+  if (NOSCRIPT_TOKEN == aTokenID) {
+    isNoScript = 1;
+    TrimComments();
+    token = mScanner->PeekToken();
+    if ((token->id != READONLY_TOKEN) && (token->id != ATTRIBUTE_TOKEN)) {
+      return NULL;
+    }
+  }
+  
+  return ParseAttribute(aSpecification, aTokenID, isNoScript);
+}
+
 /**
  * attr_dcl           = [ "readonly" ] "attribute" param_type_spec identifier
  * param_type_spec    = base_type_spec / string_type / scoped_name
  */
-IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aTokenID)
+IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aTokenID, int aIsNoScript)
 {
   Token *token;
   int isReadOnly = 0;
 
-  // if it was a readonly keyword read the attribute keyword
+  // if it was a readonly keyword read the next keyword
   if (READONLY_TOKEN == aTokenID) {
     isReadOnly = 1;
     TrimComments();
@@ -554,6 +585,7 @@ IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aT
 
   // create the attribute object
   IdlAttribute *attrObj = new IdlAttribute();
+  attrObj->SetIsNoScript(aIsNoScript);
   attrObj->SetReadOnly(isReadOnly);
 
   // this must be the attribute type
@@ -632,14 +664,23 @@ IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aT
   return attrObj;
 }
 
-IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &aToken)
+IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token *aToken)
 {
   // NOTE: we don't process the function specifier "oneway"
+  int isNoScript = 0;
+
+  // if it was a readonly keyword read the next keyword
+  if (NOSCRIPT_TOKEN == aToken->id) {
+    isNoScript = 1;
+    TrimComments();
+    aToken = mScanner->NextToken();
+  }
 
   IdlFunction *funcObj = new IdlFunction();
+  funcObj->SetIsNoScript(isNoScript);
 
   // a function name starts with the return value
-  switch(aToken.id) {
+  switch(aToken->id) {
     // base type
     case BOOLEAN_TOKEN:
       funcObj->SetReturnValue(TYPE_BOOLEAN);
@@ -683,8 +724,8 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &a
       break;
     // scoped name
     case IDENTIFIER_TOKEN:
-      //if (aSpecification.ContainInterface(aToken.stringID)) {
-        funcObj->SetReturnValue(TYPE_OBJECT, aToken.stringID);
+      //if (aSpecification.ContainInterface(aToken->stringID)) {
+        funcObj->SetReturnValue(TYPE_OBJECT, aToken->stringID);
         break;
       //}
     case XPIDL_TOKEN:

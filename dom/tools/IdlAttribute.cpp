@@ -34,6 +34,7 @@ ostream& operator<<(ostream &s, IdlAttribute &aAttribute)
 IdlAttribute::IdlAttribute()
 {
   mReadOnly = 0;
+  mIsNoScript = 0;
 }
 
 IdlAttribute::~IdlAttribute()
@@ -48,4 +49,16 @@ void IdlAttribute::SetReadOnly(int aReadOnlyFlag)
 int IdlAttribute::GetReadOnly()
 {
   return mReadOnly;
+}
+
+int             
+IdlAttribute::GetIsNoScript()
+{
+  return mIsNoScript;
+}
+
+void            
+IdlAttribute::SetIsNoScript(int aIsNoScript)
+{
+  mIsNoScript = aIsNoScript;
 }

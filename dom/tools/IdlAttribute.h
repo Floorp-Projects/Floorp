@@ -25,6 +25,7 @@ class IdlAttribute : public IdlVariable {
 
 private:
   int mReadOnly;
+  int mIsNoScript;
 
 public:
                   IdlAttribute();
@@ -32,6 +33,9 @@ public:
 
   void            SetReadOnly(int aReadOnlyFlag);
   int             GetReadOnly();
+
+  int             GetIsNoScript();
+  void            SetIsNoScript(int aIsNoScript);
 };
 
 #ifdef XP_MAC
