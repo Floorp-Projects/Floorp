@@ -1906,6 +1906,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
 
   PRBool docElemIsTable = IsTableRelated(display->mDisplay);
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
 
   // See if we're paginated
   PRBool isPaginated;
@@ -1914,6 +1916,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     if (docElemIsTable) {
       nsIFrame* tableFrame;
       ConstructDocElementTableFrame(aPresContext, aDocElement, aParentFrame, tableFrame);
+      presShell->SetPrimaryFrameFor(aDocElement, tableFrame);  // add mapping from content->frame
       mInitialContainingBlock = tableFrame;
       aNewFrame = tableFrame;
       return NS_OK;
@@ -1923,6 +1926,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     nsIFrame* areaFrame;
     NS_NewAreaFrame(&areaFrame);
     areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext, nsnull);
+    presShell->SetPrimaryFrameFor(aDocElement, areaFrame);  // add mapping from content->frame
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
                                              styleContext, PR_FALSE);
 
@@ -1980,6 +1984,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     if (docElemIsTable) {
       nsIFrame* tableFrame;
       ConstructDocElementTableFrame(aPresContext, aDocElement, parFrame, tableFrame);
+      presShell->SetPrimaryFrameFor(aDocElement, tableFrame);  // add mapping from content->frame
       mInitialContainingBlock = tableFrame;
       aNewFrame = tableFrame;
       return NS_OK;
@@ -1991,6 +1996,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     // flag that says that this is the body...
     NS_NewDocumentElementFrame(&areaFrame);
     areaFrame->Init(*aPresContext, aDocElement, parFrame, styleContext, nsnull);
+    // Add a mapping from content object to frame. The primary frame is the scroll
+    // frame, because it contains the area frame
+    presShell->SetPrimaryFrameFor(aDocElement, scrollFrame ? scrollFrame : areaFrame);
 
     if (scrollFrame) {
       // If the document element is scrollable, then it needs a view. Otherwise,
@@ -2535,10 +2543,15 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
   PRBool    frameHasBeenInitialized = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
   PRBool    isReplaced = PR_FALSE;
+  PRBool    addToHashTable = PR_TRUE;
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
     rv = NS_NewTextFrame(&newFrame);
+    // Text frames never go in the content->frame hash table, because
+    // they're anonymous. This keeps the hash table smaller. See
+    // FindPrimaryFrameFor()
+    addToHashTable = PR_FALSE;
     isReplaced = PR_TRUE;   // XXX kipp: temporary
   }
   else {
@@ -2727,9 +2740,21 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
 
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
+
     } else {
       // Add the newly constructed frame to the flow
       aFrameItems.AddChild(newFrame);
+    }
+
+    if (addToHashTable) {
+      // Add a mapping from content object to primary frame. Note that for
+      // floated and positioned frames this is the out-of-flow frame and not
+      // the placeholder frame
+      nsIPresShell* presShell;
+      
+      aPresContext->GetShell(&presShell);
+      presShell->SetPrimaryFrameFor(aContent, newFrame);
+      NS_RELEASE(presShell);
     }
   }
 
@@ -3137,7 +3162,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     // Set the frame's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   
-    // If the frame is absolutely positioned then create a placeholder frame
+    // If the frame is absolutely positioned, then create a placeholder frame
     if (isAbsolutelyPositioned || isFixedPositioned) {
       nsIFrame* placeholderFrame;
 
@@ -3154,6 +3179,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
     }
+
+    // Add a mapping from content object to primary frame. Note that for
+    // floated and positioned frames this is the out-of-flow frame and not
+    // the placeholder frame
+    nsIPresShell* presShell;
+
+    aPresContext->GetShell(&presShell);
+    presShell->SetPrimaryFrameFor(aContent, newFrame);
+    NS_RELEASE(presShell);
   }
 
   return rv;
@@ -3607,6 +3641,17 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
     aFrameItems.AddChild(newFrame);
   }
 
+  if (newFrame) {
+    // Add a mapping from content object to primary frame. Note that for
+    // floated and positioned frames this is the out-of-flow frame and not
+    // the placeholder frame
+    nsIPresShell* presShell;
+  
+    aPresContext->GetShell(&presShell);
+    presShell->SetPrimaryFrameFor(aContent, newFrame);
+    NS_RELEASE(presShell);
+  }
+
   return rv;
 }
 
@@ -3800,6 +3845,11 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
         
         // Get the frame that corresponds to the document element
         shell->GetPrimaryFrameFor(rootContent, &docElementFrame);
+
+        // Clear the hash tables that map from content to frame and out-of-flow
+        // frame to placeholder frame
+        shell->ClearPrimaryFrameMap();
+        shell->ClearPlaceholderFrameMap();
 
         if (nsnull != docElementFrame) {
           nsIFrame* docParentFrame;
