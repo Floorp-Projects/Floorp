@@ -149,6 +149,7 @@
 #define NS_STYLE_BORDER_STYLE_INSET             8
 #define NS_STYLE_BORDER_STYLE_OUTSET            9
 #define NS_STYLE_BORDER_STYLE_HIDDEN            10
+#define NS_STYLE_HAS_BORDER_COLOR               0x80  
 
 // See nsStyleDisplay
 #define NS_STYLE_CLEAR_NONE                     0
