@@ -16,8 +16,15 @@
  * Reserved.
  */
 
-#include "nsINNTPNewsgroupList.idl"
-#include "nsINNTPNewsgroup.idl"
+#include "nsISupports.idl"
+
+%{ C++
+#include "nsINNTPNewsgroup.h"
+#include "nsINNTPNewsgroupList.h"
+%}
+
+interface nsINNTPNewsgroup;
+interface nsINNTPNewsgroupList;
 
 [scriptable, uuid(6b128da0-d74f-11d2-b7f9-00805f05ffa5)]
 interface nsINNTPHost : nsISupports {

@@ -8,7 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
 #include "nsINNTPHost.h"
-#include "nsINNTPNewsgroupList.h"
 
 class nsINNTPHost; /* forward decl */
 class nsINNTPNewsgroup; /* forward decl */

@@ -6,9 +6,12 @@
 #define __gen_nsINNTPHost_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
 #include "nsrootidl.h" /* interface nsrootidl */
-#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
+#include "nsINNTPNewsgroup.h"
+#include "nsINNTPNewsgroupList.h"
+
+class nsINNTPNewsgroup; /* forward decl */
+class nsINNTPNewsgroupList; /* forward decl */
 
 /* starting interface:    nsINNTPHost */
 
