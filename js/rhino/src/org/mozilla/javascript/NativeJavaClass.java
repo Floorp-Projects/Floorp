@@ -173,7 +173,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                Modifier.isAbstract(modifiers)))
         {
             Constructor[] ctors = members.ctors;
-            int index = NativeJavaMethod.findFunction(ctors, args);
+            Class[][] ctorTypes = members.ctorTypes;
+            int index = NativeJavaMethod.findFunction(ctors, ctorTypes, args);
             if (index < 0) {
                 String sig = NativeJavaMethod.scriptSignature(args);
                 throw Context.reportRuntimeError2(
@@ -181,8 +182,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             }
 
             // Found the constructor, so try invoking it.
-            return NativeJavaClass.constructSpecific(cx, scope,
-                                                     this, ctors[index], args);
+            return constructSpecific(cx, scope, this, args,
+                                     ctors[index], ctorTypes[index]);
         } else {
             Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
             String msg = "";
@@ -211,14 +212,14 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     public static Scriptable constructSpecific(Context cx,
                                                Scriptable scope,
                                                Scriptable thisObj,
+                                               Object[] args,
                                                Constructor ctor,
-                                               Object[] args)
+                                               Class[] paramTypes)
         throws JavaScriptException
     {
         Scriptable topLevel = ScriptableObject.getTopLevelScope(thisObj);
         Class classObject = ctor.getDeclaringClass();
 
-        Class[] paramTypes = ctor.getParameterTypes();
         for (int i = 0; i < args.length; i++) {
             args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i], true);
         }

@@ -120,17 +120,19 @@ class JavaMembers
 
     private Member findExplicitFunction(String name, boolean isStatic)
     {
-        Hashtable ht = isStatic ? staticMembers : members;
         int sigStart = name.indexOf('(');
+        if (sigStart < 0) { return null; }
+
+        Hashtable ht = isStatic ? staticMembers : members;
         Member[] methodsOrCtors = null;
-        NativeJavaMethod method = null;
+        Class[][] methodOrCtorTypes = null;
         boolean isCtor = (isStatic && sigStart == 0);
 
         if (isCtor) {
             // Explicit request for an overloaded constructor
             methodsOrCtors = ctors;
-        }
-        else if (sigStart > 0) {
+            methodOrCtorTypes = ctorTypes;
+        } else {
             // Explicit request for an overloaded method
             String trueName = name.substring(0,sigStart);
             Object obj = ht.get(trueName);
@@ -138,17 +140,19 @@ class JavaMembers
                 // Try to get static member from instance (LC3)
                 obj = staticMembers.get(trueName);
             }
-            if (obj != null && obj instanceof NativeJavaMethod) {
-                method = (NativeJavaMethod)obj;
-                methodsOrCtors = method.methods;
+            if (obj instanceof NativeJavaMethod) {
+                NativeJavaMethod njm = (NativeJavaMethod)obj;
+                methodsOrCtors = njm.methods;
+                methodOrCtorTypes = njm.methodTypes;
             }
         }
 
         if (methodsOrCtors != null) {
             for (int i = 0; i < methodsOrCtors.length; i++) {
                 Member member = methodsOrCtors[i];
-                String nameWithSig = NativeJavaMethod.memberSignature(member);
-                if (name.equals(nameWithSig)) {
+                Class[] type = methodOrCtorTypes[i];
+                String sig = NativeJavaMethod.memberSignature(member, type);
+                if (name.equals(sig)) {
                     return member;
                 }
             }
@@ -266,7 +270,7 @@ class JavaMembers
         makeBeanProperties(scope, false);
         makeBeanProperties(scope, true);
 
-        ctors = cl.getConstructors();
+        reflectCtors();
     }
 
     private void reflectMethods(Scriptable scope)
@@ -301,30 +305,6 @@ class JavaMembers
         }
         initNativeMethods(staticMembers, scope);
         initNativeMethods(members, scope);
-    }
-
-    private static void initNativeMethods(Hashtable ht, Scriptable scope)
-    {
-        Enumeration e = ht.keys();
-        while (e.hasMoreElements()) {
-            String name = (String)e.nextElement();
-            Method[] methods;
-            Object value = ht.get(name);
-            if (value instanceof Method) {
-                methods = new Method[1];
-                methods[0] = (Method)value;
-            } else {
-                ObjArray overloadedMethods = (ObjArray)value;
-                if (overloadedMethods.size() < 2) Context.codeBug();
-                methods = new Method[overloadedMethods.size()];
-                overloadedMethods.toArray(methods);
-            }
-            NativeJavaMethod fun = new NativeJavaMethod(methods);
-            if (scope != null) {
-                fun.setPrototype(ScriptableObject.getFunctionPrototype(scope));
-            }
-            ht.put(name, fun);
-        }
     }
 
     private void reflectFields(Scriptable scope)
@@ -368,20 +348,6 @@ class JavaMembers
         }
     }
 
-    private Hashtable getFieldAndMethodsTable(boolean isStatic)
-    {
-        Hashtable fmht = isStatic ? staticFieldAndMethods
-                                  : fieldAndMethods;
-        if (fmht == null) {
-            fmht = new Hashtable(11);
-            if (isStatic)
-                staticFieldAndMethods = fmht;
-            else
-                fieldAndMethods = fmht;
-        }
-
-        return fmht;
-    }
 
     private void makeBeanProperties(Scriptable scope, boolean isStatic)
     {
@@ -459,6 +425,55 @@ class JavaMembers
         }
     }
 
+    private void reflectCtors()
+    {
+        ctors = cl.getConstructors();
+        int N = ctors.length;
+        ctorTypes = new Class[N][];
+        for (int i = 0; i != N; ++i) {
+            ctorTypes[i] = ctors[i].getParameterTypes();
+        }
+    }
+
+    private static void initNativeMethods(Hashtable ht, Scriptable scope)
+    {
+        Enumeration e = ht.keys();
+        while (e.hasMoreElements()) {
+            String name = (String)e.nextElement();
+            Method[] methods;
+            Object value = ht.get(name);
+            if (value instanceof Method) {
+                methods = new Method[1];
+                methods[0] = (Method)value;
+            } else {
+                ObjArray overloadedMethods = (ObjArray)value;
+                if (overloadedMethods.size() < 2) Context.codeBug();
+                methods = new Method[overloadedMethods.size()];
+                overloadedMethods.toArray(methods);
+            }
+            NativeJavaMethod fun = new NativeJavaMethod(methods);
+            if (scope != null) {
+                fun.setPrototype(ScriptableObject.getFunctionPrototype(scope));
+            }
+            ht.put(name, fun);
+        }
+    }
+
+    private Hashtable getFieldAndMethodsTable(boolean isStatic)
+    {
+        Hashtable fmht = isStatic ? staticFieldAndMethods
+                                  : fieldAndMethods;
+        if (fmht == null) {
+            fmht = new Hashtable(11);
+            if (isStatic)
+                staticFieldAndMethods = fmht;
+            else
+                fieldAndMethods = fmht;
+        }
+
+        return fmht;
+    }
+
     private static Method extractGetMethod(NativeJavaMethod njm,
                                            boolean isStatic)
     {
@@ -469,7 +484,7 @@ class JavaMembers
             Method method = methods[0];
             // Make sure the method static-ness is preserved for this property.
             if (!isStatic || Modifier.isStatic(method.getModifiers())) {
-                Class[] params = method.getParameterTypes();
+                Class[] params = njm.methodTypes[0];
                 if (params != null && params.length == 0) {
                     Class type = method.getReturnType();
                     if (type != null && type != Void.TYPE) {
@@ -480,7 +495,7 @@ class JavaMembers
         }
         return null;
     }
-            
+
     private static Method extractSetMethod(Class type,
                                            NativeJavaMethod njm,
                                            boolean isStatic)
@@ -499,7 +514,7 @@ class JavaMembers
                 Method method = methods[i];
                 if (!isStatic || Modifier.isStatic(method.getModifiers())) {
                     if (method.getReturnType() == Void.TYPE) {
-                        Class[] params = method.getParameterTypes();
+                        Class[] params = njm.methodTypes[i];
                         if (params != null && params.length == 1) {
                             if (pass == 1) {
                                 if (params[0] == type) {
@@ -634,6 +649,7 @@ class JavaMembers
     private Hashtable staticMembers;
     private Hashtable staticFieldAndMethods;
     Constructor[] ctors;
+    Class[][] ctorTypes;
 }
 
 class BeanProperty

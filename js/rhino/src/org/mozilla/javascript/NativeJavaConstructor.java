@@ -38,6 +38,7 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
+import java.io.*;
 
 /**
  * This class reflects a single Java constructor into the JavaScript
@@ -58,7 +59,8 @@ public class NativeJavaConstructor extends BaseFunction
     public NativeJavaConstructor(Constructor ctor)
     {
         this.constructor = ctor;
-        String sig = NativeJavaMethod.memberSignature(ctor);
+        this.constructorType = ctor.getParameterTypes();
+        String sig = NativeJavaMethod.memberSignature(ctor, constructorType);
         this.functionName = "<init>".concat(sig);
     }
 
@@ -71,8 +73,8 @@ public class NativeJavaConstructor extends BaseFunction
             throw new RuntimeException("No constructor defined for call");
         }
 
-        return NativeJavaClass.constructSpecific(cx, scope,
-                                                 this, constructor, args);
+        return NativeJavaClass.constructSpecific(cx, scope, this, args,
+                                                 constructor, constructorType);
     }
 
     public String toString()
@@ -80,11 +82,23 @@ public class NativeJavaConstructor extends BaseFunction
         return "[JavaConstructor " + constructor.getName() + "]";
     }
 
-    Constructor getConstructor()
+    private void readObject(ObjectInputStream in)
+        throws IOException, ClassNotFoundException
     {
-        return constructor;
+        in.defaultReadObject();
+        constructor = (Constructor)FunctionObject.readMember(in);
+        constructorType = constructor.getParameterTypes();
     }
 
-    Constructor constructor;
+    private void writeObject(ObjectOutputStream out)
+        throws IOException
+    {
+        out.defaultWriteObject();
+        FunctionObject.writeMember(out, constructor);
+    }
+
+    transient Constructor constructor;
+    private transient Class[] constructorType;
+
 }
 

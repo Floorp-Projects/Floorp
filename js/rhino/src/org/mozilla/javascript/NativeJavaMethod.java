@@ -38,6 +38,7 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
+import java.io.*;
 
 /**
  * This class reflects Java methods into the JavaScript environment.  It
@@ -57,15 +58,26 @@ public class NativeJavaMethod extends BaseFunction
 
     public NativeJavaMethod(Method[] methods)
     {
-        this.methods = methods;
         this.functionName = methods[0].getName();
+        init(methods);
     }
 
     public NativeJavaMethod(Method method, String name)
     {
-        this.methods = new Method[1];
-        this.methods[0] = method;
         this.functionName = name;
+        Method[] methods = { method };
+        init(methods);
+    }
+
+    private void init(Method[] methods)
+    {
+        this.methods = methods;
+
+        int N = methods.length;
+        methodTypes = new Class[N][];
+        for (int i = 0; i != N; ++i) {
+            methodTypes[i] = methods[i].getParameterTypes();
+        }
     }
 
     private static String scriptSignature(Object value)
@@ -134,18 +146,14 @@ public class NativeJavaMethod extends BaseFunction
         }
     }
 
-    static String memberSignature(Member member)
+    static String memberSignature(Member member, Class[] paramTypes)
     {
         String name;
-        Class[] paramTypes;
         if (member instanceof Method) {
             Method method = (Method)member;
             name = method.getName();
-            paramTypes = method.getParameterTypes();
         } else {
-            Constructor ctor = (Constructor)member;
             name = "";
-            paramTypes = ctor.getParameterTypes();
         }
         StringBuffer sb = new StringBuffer();
         sb.append(name);
@@ -187,7 +195,7 @@ public class NativeJavaMethod extends BaseFunction
             Method method = methods[i];
             sb.append(javaSignature(method.getReturnType()));
             sb.append(' ');
-            sb.append(memberSignature(method));
+            sb.append(memberSignature(method, methodTypes[i]));
             sb.append('\n');
         }
     }
@@ -200,7 +208,7 @@ public class NativeJavaMethod extends BaseFunction
         if (methods.length == 0) {
             throw new RuntimeException("No methods defined for call");
         }
-        int index = findFunction(methods, args);
+        int index = findFunction(methods, methodTypes, args);
         if (index < 0) {
             Class c = methods[0].getDeclaringClass();
             String sig = c.getName() + '.' + functionName + '(' +
@@ -209,9 +217,7 @@ public class NativeJavaMethod extends BaseFunction
         }
 
         Method meth = methods[index];
-        // OPT: already retrieved in findFunction, so we should inline that
-        // OPT: or pass it back somehow
-        Class paramTypes[] = meth.getParameterTypes();
+        Class paramTypes[] = methodTypes[index];
 
         // First, we marshall the args.
         Object[] origArgs = args;
@@ -241,7 +247,7 @@ public class NativeJavaMethod extends BaseFunction
             javaObject = ((Wrapper) o).unwrap();
         }
         if (debug) {
-            printDebug("Calling ", meth, args);
+            printDebug("Calling ", meth, paramTypes, args);
         }
 
         Object retval;
@@ -335,15 +341,14 @@ public class NativeJavaMethod extends BaseFunction
      * or constructors and the arguments.
      * If no function can be found to call, return -1.
      */
-    static int findFunction(Member[] methodsOrCtors, Object[] args)
+    static int findFunction(Member[] methodsOrCtors, Class[][] memberTypes,
+                            Object[] args)
     {
         if (methodsOrCtors.length == 0) {
             return -1;
         } else if (methodsOrCtors.length == 1) {
             Member member = methodsOrCtors[0];
-            Class paramTypes[] = (member instanceof Method)
-                                 ? ((Method) member).getParameterTypes()
-                                 : ((Constructor) member).getParameterTypes();
+            Class paramTypes[] = memberTypes[0];
             int plength = paramTypes.length;
             if (plength != args.length) {
                 return -1;
@@ -351,11 +356,11 @@ public class NativeJavaMethod extends BaseFunction
             for (int j = 0; j != plength; ++j) {
                 if (!NativeJavaObject.canConvert(args[j], paramTypes[j])) {
                     if (debug) printDebug("Rejecting (args can't convert) ",
-                                          member, args);
+                                          member, paramTypes, args);
                     return -1;
                 }
             }
-            if (debug) printDebug("Found ", member, args);
+            if (debug) printDebug("Found ", member, paramTypes, args);
             return 0;
         }
 
@@ -369,9 +374,7 @@ public class NativeJavaMethod extends BaseFunction
 
         for (int i = 0; i < methodsOrCtors.length; i++) {
             Member member = methodsOrCtors[i];
-            Class paramTypes[] = hasMethods
-                                 ? ((Method) member).getParameterTypes()
-                                 : ((Constructor) member).getParameterTypes();
+            Class paramTypes[] = memberTypes[i];
             if (paramTypes.length != args.length) {
                 continue;
             }
@@ -380,12 +383,12 @@ public class NativeJavaMethod extends BaseFunction
                 for (j = 0; j < paramTypes.length; j++) {
                     if (!NativeJavaObject.canConvert(args[j], paramTypes[j])) {
                         if (debug) printDebug("Rejecting (args can't convert) ",
-                                              member, args);
+                                              member, paramTypes, args);
                         break;
                     }
                 }
                 if (j == paramTypes.length) {
-                    if (debug) printDebug("Found ", member, args);
+                    if (debug) printDebug("Found ", member, paramTypes, args);
                     bestFit = i;
                     bestFitTypes = paramTypes;
                 }
@@ -394,17 +397,20 @@ public class NativeJavaMethod extends BaseFunction
                 int preference = preferSignature(args, paramTypes,
                                                  bestFitTypes);
                 if (preference == PREFERENCE_AMBIGUOUS) {
-                    if (debug) printDebug("Deferring ", member, args);
+                    if (debug) printDebug("Deferring ",
+                                          member, paramTypes, args);
                     // add to "ambiguity list"
                     if (ambiguousMethods == null)
                         ambiguousMethods = new int[methodsOrCtors.length];
                     ambiguousMethods[ambiguousMethodCount++] = i;
                 } else if (preference == PREFERENCE_FIRST_ARG) {
-                    if (debug) printDebug("Substituting ", member, args);
+                    if (debug) printDebug("Substituting ",
+                                          member, paramTypes, args);
                     bestFit = i;
                     bestFitTypes = paramTypes;
                 } else if (preference == PREFERENCE_SECOND_ARG) {
-                    if (debug) printDebug("Rejecting ", member, args);
+                    if (debug) printDebug("Rejecting ",
+                                          member, paramTypes, args);
                 } else {
                     if (preference != PREFERENCE_EQUAL) Context.codeBug();
                     Member best = methodsOrCtors[bestFit];
@@ -417,12 +423,14 @@ public class NativeJavaMethod extends BaseFunction
                         // a derived class's parameters match exactly.
                         // We want to call the dervied class's method.
                         if (debug) printDebug(
-                            "Substituting (overridden static)", member, args);
+                            "Substituting (overridden static)",
+                            member, paramTypes, args);
                         bestFit = i;
                         bestFitTypes = paramTypes;
                     } else {
                         if (debug) printDebug(
-                            "Ignoring same signature member ", member, args);
+                            "Ignoring same signature member ",
+                            member, paramTypes, args);
                     }
                 }
             }
@@ -437,26 +445,27 @@ public class NativeJavaMethod extends BaseFunction
         for (int k = 0; k != ambiguousMethodCount; ++k) {
             int i = ambiguousMethods[k];
             Member member = methodsOrCtors[i];
-            Class paramTypes[] = hasMethods
-                                 ? ((Method) member).getParameterTypes()
-                                 : ((Constructor) member).getParameterTypes();
+            Class paramTypes[] = memberTypes[i];
             int preference = preferSignature(args, paramTypes,
                                              bestFitTypes);
 
             if (preference == PREFERENCE_FIRST_ARG) {
-                if (debug) printDebug("Substituting ", member, args);
+                if (debug) printDebug("Substituting ",
+                                      member, paramTypes, args);
                 bestFit = i;
                 bestFitTypes = paramTypes;
                 ambiguousMethods[k] = -1;
                 ++removedCount;
             }
             else if (preference == PREFERENCE_SECOND_ARG) {
-                if (debug) printDebug("Rejecting ", member, args);
+                if (debug) printDebug("Rejecting ",
+                                      member, paramTypes, args);
                 ambiguousMethods[k] = -1;
                 ++removedCount;
             }
             else {
-                if (debug) printDebug("UNRESOLVED: ", member, args);
+                if (debug) printDebug("UNRESOLVED: ",
+                                      member, paramTypes, args);
             }
         }
 
@@ -482,7 +491,7 @@ public class NativeJavaMethod extends BaseFunction
                 buf.append(rtnType);
                 buf.append(' ');
             }
-            buf.append(memberSignature(member));
+            buf.append(memberSignature(member, memberTypes[i]));
             first = false;
         }
 
@@ -570,7 +579,8 @@ public class NativeJavaMethod extends BaseFunction
 
     private static final boolean debug = false;
 
-    private static void printDebug(String msg, Member member, Object[] args)
+    private static void printDebug(String msg, Member member,
+                                   Class[] paramTypes, Object[] args)
     {
         if (debug) {
             StringBuffer sb = new StringBuffer();
@@ -578,14 +588,38 @@ public class NativeJavaMethod extends BaseFunction
             sb.append(msg);
             sb.append(member.getDeclaringClass().getName());
             sb.append('.');
-            sb.append(memberSignature(member));
+            sb.append(memberSignature(member, paramTypes));
             sb.append(" for arguments (");
             sb.append(scriptSignature(args));
             sb.append(')');
         }
     }
 
-    Method methods[];
+    private void readObject(ObjectInputStream in)
+        throws IOException, ClassNotFoundException
+    {
+        in.defaultReadObject();
+        int N = in.readInt();
+        Method[] array = new Method[N];
+        for (int i = 0; i != N; ++i) {
+            array[i] = (Method)FunctionObject.readMember(in);
+        }
+        init(array);
+    }
+
+    private void writeObject(ObjectOutputStream out)
+        throws IOException
+    {
+        out.defaultWriteObject();
+        int N = methods.length;
+        out.writeInt(N);
+        for (int i = 0; i != N; ++i) {
+            FunctionObject.writeMember(out, methods[i]);
+        }
+    }
+
+    transient Method methods[];
+    transient Class[][] methodTypes;
 
     private static Method method_setAccessible = null;
 
