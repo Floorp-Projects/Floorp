@@ -155,5 +155,35 @@ extern XP_List * NET_GetTrustList( char *TargetURL );
 NET_ProtoImpl * net_get_protocol_impl(int for_url_type);
 MODULE_PRIVATE int32 net_MailtoLoad (ActiveEntry * cur_entry);
 
+
+/*
+** The following TIMEBOMB defines were
+** moved from nsNetService.cpp and mkgeturl.c to
+** work around static initialization of netlib before
+** prefs gets initialized.  For M3 release.
+*/
+
+/*
+** Don't ever forget about this!!!
+**
+** This is ALL superseeded by the setting in /ns/modules/libpref/src/init/all.js
+** lock for timebomb.use_timebomb
+** 
+** Define TIMEBOMB_ON for beta builds.
+** Undef TIMEBOMB_ON for release builds.
+*/
+#undef TIMEBOMB_ON
+
+/*
+** After this date all hell breaks loose
+*/
+#ifdef TIMEBOMB_ON
+#define TIME_BOMB_TIME          917856001	/* 2/01/98 + 1 secs */
+#define TIME_BOMB_WARNING_TIME  915955201	/* 1/10/98 + 1 secs */
+#else
+#define TIME_BOMB_TIME          0
+#define TIME_BOMB_WARNING_TIME  0
+#endif
+
 PR_END_EXTERN_C
 #endif /* not MKGetURL_H */
