@@ -184,6 +184,7 @@ bin/components/xpcom_threads.xpt
 bin/chrome/bookmarks/*
 bin/chrome/directory/*
 bin/chrome/editor/*
+bin/chrome/security/*
 -bin/chrome/editor/content/default/EditorInitPage.html
 -bin/chrome/editor/content/default/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:

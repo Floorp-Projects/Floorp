@@ -162,6 +162,7 @@ viewer:Components:xpinstall.xpt
 
 viewer:chrome:bookmarks:*
 viewer:chrome:editor:*
+viewer:chrome:security:*
 -viewer:chrome:editor:content:default:EditorInitPage.html
 -viewer:chrome:editor:content:default:EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
