@@ -95,16 +95,10 @@ final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
         byte[] IV = null;
         if( params instanceof IVParameterSpec ) {
             IV = ((IVParameterSpec)params).getIV();
-        }
-        try {
-            if( params instanceof IvParameterSpec ) {
-                IV = ((IvParameterSpec)params).getIV();
-            } else if( params instanceof RC2ParameterSpec ) {
-                IV = ((RC2ParameterSpec)params).getIV();
-            }
-        } catch(NoClassDefFoundError e) {
-            // javax.crypto.spec.IvParameterSpec was introduced in JDK 1.4.
-            // Older versions of the JRE don't have it.
+        } else if( params instanceof IvParameterSpec ) {
+            IV = ((IvParameterSpec)params).getIV();
+        } else if( params instanceof RC2ParameterSpec ) {
+            IV = ((RC2ParameterSpec)params).getIV();
         }
         return IV;
     }

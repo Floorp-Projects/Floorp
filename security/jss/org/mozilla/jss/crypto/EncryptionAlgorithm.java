@@ -309,27 +309,11 @@ public class EncryptionAlgorithm extends Algorithm {
         return padding;
     }
 
-    //
-    // In JDK 1.4, Sun introduced javax.crypto.spec.IvParameterSpec,
-    // which obsoletes org.mozilla.jss.crypto.IVParameterSpec. However,
-    // we still need to support pre-1.4 runtimes, so we have to be
-    // prepared for this new class not to be available. Here we try to load
-    // the new 1.4 class. If we succeed, we will accept either JSS's
-    // IVParameterSpec or Java's IvParameterSpec. If we fail, which will
-    // happen if we are running a pre-1.4 runtime, we just accept
-    // JSS's IVParameterSpec.
-    //
     private static Class[] IVParameterSpecClasses = null;
     static {
-        try {
-            IVParameterSpecClasses = new Class[2];
-            IVParameterSpecClasses[0] = IVParameterSpec.class;
-            IVParameterSpecClasses[1] = IvParameterSpec.class;
-        } catch(NoClassDefFoundError e) {
-            // We must be running on a pre-1.4 JRE.
-            IVParameterSpecClasses = new Class[1];
-            IVParameterSpecClasses[0] = IVParameterSpec.class;
-        }
+        IVParameterSpecClasses = new Class[2];
+        IVParameterSpecClasses[0] = IVParameterSpec.class;
+        IVParameterSpecClasses[1] = IvParameterSpec.class;
     }
 
     /**

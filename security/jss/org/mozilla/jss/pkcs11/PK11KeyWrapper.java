@@ -42,6 +42,8 @@ import org.mozilla.jss.util.Assert;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.interfaces.DSAPublicKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.RC2ParameterSpec;
 
 final class PK11KeyWrapper implements KeyWrapper {
 
@@ -239,13 +241,10 @@ final class PK11KeyWrapper implements KeyWrapper {
         }
         if( params instanceof IVParameterSpec ) {
             IV = ((IVParameterSpec)params).getIV();
-        }
-        try {
-            if( params instanceof javax.crypto.spec.IvParameterSpec ) {
-                IV = ((javax.crypto.spec.IvParameterSpec)params).getIV();
-            }
-        } catch(NoClassDefFoundError e) {
-            // we must be running in JDK < 1.4. Ignore.
+        } else if( params instanceof javax.crypto.spec.IvParameterSpec ) {
+            IV = ((javax.crypto.spec.IvParameterSpec)params).getIV();
+        } else if( params instanceof RC2ParameterSpec ) {
+            IV = ((RC2ParameterSpec)params).getIV();
         }
     }
 
