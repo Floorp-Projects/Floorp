@@ -42,6 +42,7 @@ class nsSimpleNotifier : public nsIXPINotifier
         NS_IMETHOD            ItemScheduled(const PRUnichar *message);
         NS_IMETHOD            FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum);
         NS_IMETHOD            FinalStatus(const PRUnichar* URL, PRInt32 status);
+        NS_IMETHOD            LogComment(const PRUnichar* message);
         NS_IMETHOD            QueryInterface(REFNSIID aIID, void** aInstancePtr);
         NS_IMETHOD_(nsrefcnt) AddRef(void);
         NS_IMETHOD_(nsrefcnt) Release(void);
