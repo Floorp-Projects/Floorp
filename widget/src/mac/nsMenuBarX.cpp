@@ -733,13 +733,13 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsMenuBarX)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsMenuBarX)
 
 NS_IMETHODIMP
-nsMenuBarX::BeginUpdate( nsIDocument * aDocument )
+nsMenuBarX::BeginUpdate( nsIDocument * aDocument, nsUpdateType aUpdateType )
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMenuBarX::EndUpdate( nsIDocument * aDocument )
+nsMenuBarX::EndUpdate( nsIDocument * aDocument, nsUpdateType aUpdateType )
 {
   return NS_OK;
 }

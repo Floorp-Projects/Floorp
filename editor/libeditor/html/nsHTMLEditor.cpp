@@ -3710,9 +3710,12 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
     return NS_ERROR_NULL_POINTER;
   styleSheet->SetOwningDocument(document);
 
-  // This notifies document observers to rebuild all frames
+  // This notifies document observers to recompute style data
   // (this doesn't affect style sheet because it is not a doc sheet)
+  // XXXbz this is a major misuse of the API....
+  document->BeginUpdate(UPDATE_STYLE);
   document->SetStyleSheetApplicableState(styleSheet, PR_TRUE);
+  document->EndUpdate(UPDATE_STYLE);
 
   // Save as the last-loaded sheet
   mLastOverrideStyleSheetURL = aURL;
@@ -3769,9 +3772,12 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 
   styleSet->RemoveOverrideStyleSheet(styleSheet);
 
-  // This notifies document observers to rebuild all frames
+  // This notifies document observers to recompute style data
   // (this doesn't affect style sheet because it is not a doc sheet)
+  // XXXbz this is a major misuse of the API....
+  document->BeginUpdate(UPDATE_STYLE);
   document->SetStyleSheetApplicableState(styleSheet, PR_FALSE);
+  document->EndUpdate(UPDATE_STYLE);
 
   // Remove it from our internal list
   return RemoveStyleSheetFromList(aURL);

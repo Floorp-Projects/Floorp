@@ -519,13 +519,13 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsContentList)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsContentList)
 
 NS_IMETHODIMP 
-nsContentList::BeginUpdate(nsIDocument *aDocument)
+nsContentList::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsContentList::EndUpdate(nsIDocument *aDocument)
+nsContentList::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
   return NS_OK;
 }

@@ -289,13 +289,15 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXULTemplateBuilder)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXULTemplateBuilder)
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::BeginUpdate(nsIDocument *aDocument)
+nsXULTemplateBuilder::BeginUpdate(nsIDocument *aDocument,
+                                  nsUpdateType aUpdateType)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::EndUpdate(nsIDocument *aDocument)
+nsXULTemplateBuilder::EndUpdate(nsIDocument *aDocument,
+                                nsUpdateType aUpdateType)
 {
     return NS_OK;
 }

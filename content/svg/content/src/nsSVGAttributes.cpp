@@ -608,7 +608,7 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
 
   // Send the notification before making any updates
   if (aNotify && document) {
-    document->BeginUpdate();
+    document->BeginUpdate(UPDATE_CONTENT_MODEL);
     document->AttributeWillChange(mContent, nameSpaceID, name);
   }
 
@@ -671,7 +671,7 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
                                      : PRInt32(nsIDOMMutationEvent::ADDITION);
       document->AttributeChanged(mContent, nameSpaceID, name,
                                  modHint);
-      document->EndUpdate();
+      document->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
 
@@ -704,7 +704,7 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         !attr->IsRequired() &&
         !attr->IsFixed()) {
       if (aNotify && document) {
-        document->BeginUpdate();
+        document->BeginUpdate(UPDATE_CONTENT_MODEL);
       }
       
       if (mContent && nsGenericElement::HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
@@ -747,7 +747,7 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aNotify) {
       document->AttributeChanged(mContent, aNameSpaceID, aName,
                                  nsIDOMMutationEvent::REMOVAL);
-      document->EndUpdate();
+      document->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
   

@@ -1649,7 +1649,9 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
             NS_ASSERTION(uriStr.Equals(kMathMLStyleSheetURI), "resolved URI unexpected");
 #endif
             if (sheet) {
+              doc->BeginUpdate(UPDATE_STYLE);
               doc->AddStyleSheet(sheet, NS_STYLESHEET_FROM_CATALOG);
+              doc->EndUpdate(UPDATE_STYLE);
             }
           }
         }
@@ -1882,7 +1884,9 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
       printf("Loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
 #endif
       if (sheet) {
+        mDocument->BeginUpdate(UPDATE_STYLE);
         mDocument->AddStyleSheet(sheet, NS_STYLESHEET_FROM_CATALOG);
+        mDocument->EndUpdate(UPDATE_STYLE);
       }
     }
   }

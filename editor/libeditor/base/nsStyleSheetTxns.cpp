@@ -102,8 +102,11 @@ AddStyleSheetTxn::DoTransaction()
     nsCOMPtr<nsIDocument> document;
     rv = presShell->GetDocument(getter_AddRefs(document));
 
-    if (NS_SUCCEEDED(rv) && document)
+    if (NS_SUCCEEDED(rv) && document) {
+      document->BeginUpdate(UPDATE_STYLE);
       document->AddStyleSheet(styleSheet, 0);
+      document->EndUpdate(UPDATE_STYLE);
+    }
   }
 
   return rv;
@@ -135,8 +138,11 @@ AddStyleSheetTxn::UndoTransaction()
 
     rv = presShell->GetDocument(getter_AddRefs(document));
 
-    if (NS_SUCCEEDED(rv) && document && observer && styleSheet)
+    if (NS_SUCCEEDED(rv) && document && observer && styleSheet) {
+      observer->BeginUpdate(document, UPDATE_STYLE);
       rv = observer->StyleSheetRemoved(document, styleSheet);
+      observer->EndUpdate(document, UPDATE_STYLE);
+    }
   }
   
   return rv;
@@ -223,8 +229,11 @@ RemoveStyleSheetTxn::DoTransaction()
 
     rv = presShell->GetDocument(getter_AddRefs(document));
 
-    if (NS_SUCCEEDED(rv) && document && observer && styleSheet)
+    if (NS_SUCCEEDED(rv) && document && observer && styleSheet) {
+      observer->BeginUpdate(document, UPDATE_STYLE);
       rv = observer->StyleSheetRemoved(document, styleSheet);
+      observer->EndUpdate(document, UPDATE_STYLE);
+    }
   }
   
   return rv;
@@ -255,8 +264,11 @@ RemoveStyleSheetTxn::UndoTransaction()
       nsCOMPtr<nsIDocument> document;
       rv = presShell->GetDocument(getter_AddRefs(document));
 
-      if (NS_SUCCEEDED(rv) && document)
+      if (NS_SUCCEEDED(rv) && document) {
+        document->BeginUpdate(UPDATE_STYLE);
         document->AddStyleSheet(styleSheet, 0);
+        document->EndUpdate(UPDATE_STYLE);
+      }
     }
   }
 

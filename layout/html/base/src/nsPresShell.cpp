@@ -1291,7 +1291,9 @@ protected:
   nsresult GetSelectionForCopy(nsISelection** outSelection);
 
   nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintain a ref, may be null
+#ifdef DEBUG
   PRUint32                  mUpdateCount;
+#endif
   // normal reflow commands
   nsVoidArray               mReflowCommands; 
 
@@ -1302,6 +1304,7 @@ protected:
 
   PRPackedBool mDidInitialReflow;
   PRPackedBool mIgnoreFrameDestruction;
+  PRPackedBool mStylesHaveChanged;
 
   nsIFrame*   mCurrentEventFrame;
   nsIContent* mCurrentEventContent;
@@ -3632,19 +3635,27 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 }
 
 NS_IMETHODIMP
-PresShell::BeginUpdate(nsIDocument *aDocument)
+PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
+#ifdef DEBUG
   mUpdateCount++;
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::EndUpdate(nsIDocument *aDocument)
+PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
+#ifdef DEBUG
   NS_PRECONDITION(0 != mUpdateCount, "too many EndUpdate's");
-  if (--mUpdateCount == 0) {
-    // XXX do something here
+  --mUpdateCount;
+#endif
+
+  if (mStylesHaveChanged && (aUpdateType & UPDATE_STYLE)) {
+    mStylesHaveChanged = PR_FALSE;
+    return ReconstructStyleData();
   }
+  
   return NS_OK;
 }
 
@@ -5469,11 +5480,11 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
   PRBool applicable;
   aStyleSheet->GetApplicable(applicable);
 
-  if (!applicable || !aStyleSheet->HasRules()) {
-    return NS_OK;
+  if (applicable && aStyleSheet->HasRules()) {
+    mStylesHaveChanged = PR_TRUE;
   }
   
-  return ReconstructStyleData();
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -5484,11 +5495,11 @@ PresShell::StyleSheetRemoved(nsIDocument *aDocument,
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
   PRBool applicable;
   aStyleSheet->GetApplicable(applicable);
-  if (!applicable || !aStyleSheet->HasRules()) {
-    return NS_OK;
+  if (applicable && aStyleSheet->HasRules()) {
+    mStylesHaveChanged = PR_TRUE;
   }
   
-  return ReconstructStyleData();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5503,11 +5514,11 @@ PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
       return rv;
   }
 
-  if (!aStyleSheet->HasRules()) {
-    return NS_OK;
+  if (aStyleSheet->HasRules()) {
+    mStylesHaveChanged = PR_TRUE;
   }
 
-  return ReconstructStyleData();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5516,23 +5527,26 @@ PresShell::StyleRuleChanged(nsIDocument *aDocument,
                             nsIStyleRule* aOldStyleRule,
                             nsIStyleRule* aNewStyleRule)
 {
-  return ReconstructStyleData();
+  mStylesHaveChanged = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::StyleRuleAdded(nsIDocument *aDocument,
                           nsIStyleSheet* aStyleSheet,
                           nsIStyleRule* aStyleRule) 
-{ 
-  return ReconstructStyleData();
+{
+  mStylesHaveChanged = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::StyleRuleRemoved(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) 
-{ 
-  return ReconstructStyleData();
+{
+  mStylesHaveChanged = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6451,8 +6465,8 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       deadline = PR_IntervalNow() + PR_MicrosecondsToInterval(gMaxRCProcessingTime);
 
     // force flushing of any pending notifications
-    mDocument->BeginUpdate();
-    mDocument->EndUpdate();
+    mDocument->BeginUpdate(UPDATE_ALL);
+    mDocument->EndUpdate(UPDATE_ALL);
 
     mIsReflowing = PR_TRUE;
 

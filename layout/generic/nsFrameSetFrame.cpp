@@ -286,7 +286,7 @@ nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
   if (prefName.Equals(NS_LITERAL_STRING(kFrameResizePref))) {
     nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
     if (doc) {
-      doc->BeginUpdate();
+      doc->BeginUpdate(UPDATE_CONTENT_MODEL);
       doc->AttributeWillChange(mContent,
                                kNameSpaceID_None,
                                nsHTMLAtoms::frameborder);
@@ -301,7 +301,7 @@ nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
                             kNameSpaceID_None,
                             nsHTMLAtoms::frameborder,
                             nsIDOMMutationEvent::MODIFICATION);
-      doc->EndUpdate();
+      doc->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
   return NS_OK;

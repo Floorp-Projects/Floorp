@@ -159,7 +159,7 @@ nsSVGElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate();
+    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
@@ -189,7 +189,7 @@ nsSVGElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     }
   }
   if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate();
+    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   return NS_OK;
 }
@@ -202,7 +202,7 @@ nsSVGElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != mDocument)) {
-    doc->BeginUpdate();
+    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   nsRange::OwnerChildReplaced(this, aIndex, oldKid);
@@ -221,7 +221,7 @@ nsSVGElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
     NS_RELEASE(oldKid);
   }
   if (aNotify && (nsnull != mDocument)) {
-    doc->EndUpdate();
+    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   return NS_OK;
 }
@@ -233,7 +233,7 @@ nsSVGElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   NS_PRECONDITION(nsnull != aKid && this != aKid, "null ptr");
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate();
+    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
@@ -263,7 +263,7 @@ nsSVGElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
     }
   }
   if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate();
+    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   return NS_OK;
 }
@@ -273,7 +273,7 @@ nsSVGElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsIDocument* doc = mDocument;
   if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate();
+    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
@@ -307,7 +307,7 @@ nsSVGElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     NS_RELEASE(oldKid);
   }
   if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate();
+    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return NS_OK;  

@@ -43,10 +43,10 @@
 #include "nsAString.h"
 #include "nsChangeHint.h"
 #include "nsCOMArray.h"
+#include "nsIDocumentObserver.h"
 
 class nsIAtom;
 class nsIContent;
-class nsIDocumentObserver;
 class nsIPresContext;
 class nsIPresShell;
 
@@ -381,10 +381,11 @@ public:
    */
   virtual PRBool RemoveObserver(nsIDocumentObserver* aObserver) = 0;
 
-  // Observation hooks used by content nodes to propagate
-  // notifications to document observers.
-  NS_IMETHOD BeginUpdate() = 0;
-  NS_IMETHOD EndUpdate() = 0;
+  // Observation hooks used to propagate notifications to document observers.
+  // BeginUpdate must be called before any batch of modifications of the
+  // content model or of style data, EndUpdate must be called afterward.
+  NS_IMETHOD BeginUpdate(nsUpdateType aUpdateType) = 0;
+  NS_IMETHOD EndUpdate(nsUpdateType aUpdateType) = 0;
   NS_IMETHOD BeginLoad() = 0;
   NS_IMETHOD EndLoad() = 0;
   NS_IMETHOD ContentChanged(nsIContent* aContent,

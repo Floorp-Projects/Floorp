@@ -174,7 +174,9 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     // stylesheet.  We want to do this even if updates are disabled, since
     // otherwise a sheet with a stale linking element pointer will be hanging
     // around -- not good!
+    aOldDocument->BeginUpdate(UPDATE_STYLE);
     aOldDocument->RemoveStyleSheet(mStyleSheet);
+    aOldDocument->EndUpdate(UPDATE_STYLE);
     mStyleSheet = nsnull;
   }
 
@@ -218,7 +220,9 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
   }
 
   if (mStyleSheet) {
+    doc->BeginUpdate(UPDATE_STYLE);
     doc->RemoveStyleSheet(mStyleSheet);
+    doc->EndUpdate(UPDATE_STYLE);
     mStyleSheet = nsnull;
   }
 

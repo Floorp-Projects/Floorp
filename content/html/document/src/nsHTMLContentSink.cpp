@@ -5094,9 +5094,10 @@ NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(HTMLContentSink)
 NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(HTMLContentSink)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(HTMLContentSink)
 NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(HTMLContentSink)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(HTMLContentSink)
 
 NS_IMETHODIMP
-HTMLContentSink::BeginUpdate(nsIDocument *aDocument)
+HTMLContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
   nsresult result = NS_OK;
   // If we're in a script and we didn't do the notification,
@@ -5112,7 +5113,7 @@ HTMLContentSink::BeginUpdate(nsIDocument *aDocument)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::EndUpdate(nsIDocument *aDocument)
+HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
 
   // If we're in a script and we didn't do the notification,
@@ -5123,80 +5124,6 @@ HTMLContentSink::EndUpdate(nsIDocument *aDocument)
     UpdateAllContexts();
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::StyleSheetAdded(nsIDocument *aDocument,
-                                 nsIStyleSheet* aStyleSheet)
-{
-  // We only care when applicable sheets are added
-  NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
-  PRBool applicable;
-  aStyleSheet->GetApplicable(applicable);
-  if (applicable) {
-    // Processing of a new style sheet causes recreation of the frame
-    // model. As a result, all contexts should update their notion of
-    // how much frame creation has happened.
-    UpdateAllContexts();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::StyleSheetRemoved(nsIDocument *aDocument,
-                                   nsIStyleSheet* aStyleSheet)
-{
-  // We only care when applicable sheets are removed
-  NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
-  PRBool applicable;
-  aStyleSheet->GetApplicable(applicable);
-  if (applicable) {
-    // Removing a style sheet causes recreation of the frame model.
-    // As a result, all contexts should update their notion of how
-    // much frame creation has happened.
-    UpdateAllContexts();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
-                                                  nsIStyleSheet* aStyleSheet,
-                                                  PRBool aApplicable)
-{
-  // Changing a style sheet's applicable state causes recreation of
-  // the frame model. As a result, all contexts should update their
-  // notion of how much frame creation has happened.
-  UpdateAllContexts();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::StyleRuleChanged(nsIDocument *aDocument,
-                                  nsIStyleSheet* aStyleSheet,
-                                  nsIStyleRule* aOldStyleRule,
-                                  nsIStyleRule* aNewStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::StyleRuleAdded(nsIDocument *aDocument,
-                                nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::StyleRuleRemoved(nsIDocument *aDocument,
-                                  nsIStyleSheet* aStyleSheet,
-                                  nsIStyleRule* aStyleRule)
-{
   return NS_OK;
 }
 

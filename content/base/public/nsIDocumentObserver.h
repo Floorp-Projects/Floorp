@@ -52,6 +52,13 @@ class nsIDocument;
 #define NS_IDOCUMENT_OBSERVER_IID \
 { 0xb3f92460, 0x944c, 0x11d1, {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
+typedef PRUint32 nsUpdateType;
+
+#define UPDATE_CONTENT_MODEL 0x00000001
+#define UPDATE_STYLE         0x00000002
+#define UPDATE_CONTENT_STATE 0x00000004
+#define UPDATE_ALL (UPDATE_CONTENT_MODEL | UPDATE_STYLE | UPDATE_CONTENT_STATE)
+
 // Document observer interface
 class nsIDocumentObserver : public nsISupports {
 public:
@@ -61,13 +68,13 @@ public:
    * Notify that a content model update is beginning. This call can be
    * nested.
    */
-  NS_IMETHOD BeginUpdate(nsIDocument *aDocument) = 0;
+  NS_IMETHOD BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType) = 0;
 
   /**
    * Notify that a content model update is finished. This call can be
    * nested.
    */
-  NS_IMETHOD EndUpdate(nsIDocument *aDocument) = 0;
+  NS_IMETHOD EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType) = 0;
 
   /**
    * Notify the observer that a document load is beginning.
@@ -341,8 +348,8 @@ public:
 };
 
 #define NS_DECL_NSIDOCUMENTOBSERVER                                          \
-    NS_IMETHOD BeginUpdate(nsIDocument* aDocument);                          \
-    NS_IMETHOD EndUpdate(nsIDocument* aDocument);                            \
+    NS_IMETHOD BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
+    NS_IMETHOD EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);  \
     NS_IMETHOD BeginLoad(nsIDocument* aDocument);                            \
     NS_IMETHOD EndLoad(nsIDocument* aDocument);                              \
     NS_IMETHOD BeginReflow(nsIDocument* aDocument,                           \
@@ -399,12 +406,12 @@ public:
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(_class)                     \
 NS_IMETHODIMP                                                             \
-_class::BeginUpdate(nsIDocument* aDocument)                               \
+_class::BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)     \
 {                                                                         \
   return NS_OK;                                                           \
 }                                                                         \
 NS_IMETHODIMP                                                             \
-_class::EndUpdate(nsIDocument* aDocument)                                 \
+_class::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)       \
 {                                                                         \
   return NS_OK;                                                           \
 }                                                                         \

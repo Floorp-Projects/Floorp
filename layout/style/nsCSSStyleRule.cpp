@@ -1033,9 +1033,7 @@ DOMCSSDeclarationImpl::DeclarationChanged()
   }
 
   if (owningDoc) {
-    // XXXldb Do we need to bother with this?  We're now doing it in
-    // more places than we used to, but it probably doesn't matter...
-    owningDoc->BeginUpdate();
+    owningDoc->BeginUpdate(UPDATE_STYLE);
   }
 
   nsCOMPtr<nsICSSStyleRule> oldRule = mRule;
@@ -1051,7 +1049,7 @@ DOMCSSDeclarationImpl::DeclarationChanged()
 
   if (owningDoc) {
     owningDoc->StyleRuleChanged(sheet, oldRule, mRule);
-    owningDoc->EndUpdate();
+    owningDoc->EndUpdate(UPDATE_STYLE);
   }
   return NS_OK;
 }

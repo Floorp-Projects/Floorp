@@ -4052,7 +4052,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       doc1 = oldHover->GetDocument();
     }
     if (doc1) {
-      doc1->BeginUpdate();
+      doc1->BeginUpdate(UPDATE_CONTENT_STATE);
 
       // Notify all content from newHover to the commonHoverAncestor
       while (newHover && newHover != commonHoverAncestor) {
@@ -4083,17 +4083,17 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
           }
         }
       }
-      doc1->EndUpdate();
+      doc1->EndUpdate(UPDATE_CONTENT_STATE);
 
       if (doc2) {
-        doc2->BeginUpdate();
+        doc2->BeginUpdate(UPDATE_CONTENT_STATE);
         doc2->ContentStatesChanged(notifyContent[1], notifyContent[2],
                                    aState & ~NS_EVENT_STATE_HOVER);
         if (notifyContent[3]) {
           doc1->ContentStatesChanged(notifyContent[3], notifyContent[4],
                                      aState & ~NS_EVENT_STATE_HOVER);
         }
-        doc2->EndUpdate();
+        doc2->EndUpdate(UPDATE_CONTENT_STATE);
       }
     }
 
@@ -4757,10 +4757,10 @@ void nsEventStateManager::FocusElementButNotDocument(nsIContent *aContent)
   // Temporarily set mCurrentFocus so that esm::GetContentState() tells 
   // layout system to show focus on this element. 
   mCurrentFocus = aContent;  // Reset back to null at the end of this method.
-  mDocument->BeginUpdate();
+  mDocument->BeginUpdate(UPDATE_CONTENT_STATE);
   mDocument->ContentStatesChanged(oldFocusedContent, aContent, 
                                   NS_EVENT_STATE_FOCUS);
-  mDocument->EndUpdate();
+  mDocument->EndUpdate(UPDATE_CONTENT_STATE);
 
   // Reset mCurrentFocus = nsnull for this doc, so when this document 
   // does get focus next time via preHandleEvent() NS_GOTFOCUS,

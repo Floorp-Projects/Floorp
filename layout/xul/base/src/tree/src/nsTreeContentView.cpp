@@ -687,13 +687,13 @@ NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsTreeContentView)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsTreeContentView)
 
 NS_IMETHODIMP
-nsTreeContentView::BeginUpdate(nsIDocument *aDocument)
+nsTreeContentView::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTreeContentView::EndUpdate(nsIDocument *aDocument)
+nsTreeContentView::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
   return NS_OK;
 }
