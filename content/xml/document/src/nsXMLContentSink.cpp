@@ -661,7 +661,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
       else {
         nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
 
-        parent->AppendChildTo(content, PR_FALSE);
+        parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
       }
       if (pushContent) {
         PushContent(content);
@@ -814,8 +814,8 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
   else {
     nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
 
-    if (nsnull != parent) {
-      result = parent->AppendChildTo(aContent, PR_FALSE);
+    if (parent) {
+      result = parent->AppendChildTo(aContent, PR_FALSE, PR_FALSE);
     }
   }
 
@@ -1147,18 +1147,15 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     if (0 == src.Length()) {
 
       // Create a text node holding the content
-      nsIContent* text;
-      rv = NS_NewTextNode(&text);
-      if (NS_OK == rv) {
-        nsIDOMText* tc;
-        rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&tc);
-        if (NS_OK == rv) {
+      nsCOMPtr<nsIContent> text;
+      rv = NS_NewTextNode(getter_AddRefs(text));
+      if (text) {
+        nsCOMPtr<nsIDOMText> tc(do_QueryInterface(text));
+        if (tc) {
           tc->SetData(mStyleText);
-          NS_RELEASE(tc);
         }
-        mStyleElement->AppendChildTo(text, PR_FALSE);
+        mStyleElement->AppendChildTo(text, PR_FALSE, PR_FALSE);
         text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-        NS_RELEASE(text);
       }
 
       // Create a string to hold the data and wrap it up in a unicode

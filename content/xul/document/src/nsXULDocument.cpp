@@ -4809,7 +4809,7 @@ nsXULDocument::ResumeWalk()
                     if (NS_FAILED(rv)) return rv;
 
                     // ...and append it to the content model.
-                    rv = element->AppendChildTo(child, PR_FALSE);
+                    rv = element->AppendChildTo(child, PR_FALSE, PR_FALSE);
                     if (NS_FAILED(rv)) return rv;
 
                     // do pre-order document-level hookup, but only if
@@ -4898,7 +4898,7 @@ nsXULDocument::ResumeWalk()
                     if (! child)
                         return NS_ERROR_UNEXPECTED;
 
-                    rv = element->AppendChildTo(child, PR_FALSE);
+                    rv = element->AppendChildTo(child, PR_FALSE, PR_FALSE);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -5945,7 +5945,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
 
             if (pos != -1) {
                 pos = isInsertAfter ? pos + 1 : pos;
-                rv = aParent->InsertChildAt(aChild, pos, PR_FALSE);
+                rv = aParent->InsertChildAt(aChild, pos, PR_FALSE, PR_TRUE);
                 if (NS_FAILED(rv)) return rv;
 
                 wasInserted = PR_TRUE;
@@ -5962,7 +5962,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
             // Positions are one-indexed.
             PRInt32 pos = posStr.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
             if (NS_SUCCEEDED(rv)) {
-                rv = aParent->InsertChildAt(aChild, pos - 1, PR_FALSE);
+                rv = aParent->InsertChildAt(aChild, pos - 1, PR_FALSE, PR_TRUE);
                 if (NS_FAILED(rv)) return rv;
 
                 wasInserted = PR_TRUE;
@@ -5971,21 +5971,9 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
     }
 
     if (! wasInserted) {
-        rv = aParent->AppendChildTo(aChild, PR_FALSE);
+        rv = aParent->AppendChildTo(aChild, PR_FALSE, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
     }
-
-    // Both InsertChildAt() and AppendChildTo() only do a "shallow"
-    // SetDocument(); make sure that we do a "deep" one now...
-    nsCOMPtr<nsIDocument> doc;
-    rv = aParent->GetDocument(*getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(doc != nsnull, "merging into null document");
-
-    rv = aChild->SetDocument(doc, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
     return NS_OK;
 }
 

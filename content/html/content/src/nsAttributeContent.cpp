@@ -161,9 +161,12 @@ public:
   NS_IMETHOD ChildCount(PRInt32& aResult) const { aResult = 0; return NS_OK;  }
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const { aResult = nsnull; return NS_OK;  }
   NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const { aResult = -1; return NS_OK;  }
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) { return NS_OK;  }
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) { return NS_OK;  }
-  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) { return NS_OK;  }
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                           PRBool aDeepSetDocument) { return NS_OK;  }
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                            PRBool aDeepSetDocument) { return NS_OK;  }
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument) { return NS_OK;  }
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {  return NS_OK;  }
   NS_IMETHOD SplitText(PRUint32 aOffset, nsIDOMText** aReturn){  return NS_OK;  }
  

@@ -653,7 +653,7 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
     rv = NS_NewHTMLTableSectionElement(getter_AddRefs(newFoot),nodeInfo);
 
     if (NS_SUCCEEDED(rv) && newFoot) {
-      rv = AppendChildTo(newFoot, PR_TRUE);
+      rv = AppendChildTo(newFoot, PR_TRUE, PR_FALSE);
       newFoot->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);
     }
   }
@@ -700,7 +700,7 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
     rv = NS_NewHTMLTableCaptionElement(getter_AddRefs(newCaption),nodeInfo);
 
     if (NS_SUCCEEDED(rv) && newCaption) {
-      rv = AppendChildTo(newCaption, PR_TRUE);
+      rv = AppendChildTo(newCaption, PR_TRUE, PR_FALSE);
       newCaption->QueryInterface(NS_GET_IID(nsIDOMHTMLElement),
                                  (void **)aValue);
     }
@@ -842,7 +842,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
                                          nodeInfo);
 
       if (NS_SUCCEEDED(rv) && newRowGroup) {
-        rv = AppendChildTo(newRowGroup, PR_TRUE);
+        rv = AppendChildTo(newRowGroup, PR_TRUE, PR_FALSE);
 
         rowGroup = do_QueryInterface(newRowGroup);
       }

@@ -300,7 +300,7 @@ int main(int argc, char** argv)
   NS_ASSERTION(canHaveKids,"");
   container->SetDocument(myDoc, PR_FALSE, PR_TRUE);
 
-  container->AppendChildTo(text, PR_FALSE);
+  container->AppendChildTo(text, PR_FALSE, PR_FALSE);
   PRInt32 nk;
   container->ChildCount(nk);
   if (nk != 1) {

@@ -889,7 +889,7 @@ nsGenericDOMDataNode::SplitText(nsIContent *aOuterContent, PRUint32 aOffset,
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(newNode));
       
-      rv = parentNode->InsertChildAt(content, index+1, PR_TRUE);
+      rv = parentNode->InsertChildAt(content, index+1, PR_TRUE, PR_FALSE);
     }
   }
   

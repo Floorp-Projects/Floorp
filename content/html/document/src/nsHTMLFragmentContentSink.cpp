@@ -330,7 +330,7 @@ nsHTMLFragmentContentSink::SetTitle(const nsString& aValue)
         parent = mRoot;
       }
       
-      result=parent->AppendChildTo(content, PR_FALSE);
+      result=parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
       
       if (NS_SUCCEEDED(result)) {       
         result=AddTextToContent(content,aValue);
@@ -508,7 +508,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
           parent = mRoot;
         }
         
-        parent->AppendChildTo(content, PR_FALSE);
+        parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
         PushContent(content);
       }
     }
@@ -586,7 +586,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
                 parent = mRoot;
               }
             
-              parent->AppendChildTo(content, PR_FALSE);
+              parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
             }
           }
 
@@ -659,7 +659,7 @@ nsHTMLFragmentContentSink::AddComment(const nsIParserNode& aNode)
         parent = mRoot;
       }
       
-      parent->AppendChildTo(comment, PR_FALSE);
+      parent->AppendChildTo(comment, PR_FALSE, PR_FALSE);
     }
     NS_RELEASE(comment);
   }
@@ -793,7 +793,7 @@ nsHTMLFragmentContentSink::AddTextToContent(nsIHTMLContent* aContent,const nsStr
         if (NS_SUCCEEDED(result)) {
           tc->SetData(aText);
         }
-        result=aContent->AppendChildTo(text, PR_FALSE);
+        result=aContent->AppendChildTo(text, PR_FALSE, PR_FALSE);
       }
     }
   }
@@ -822,7 +822,7 @@ nsHTMLFragmentContentSink::FlushText()
         parent = mRoot;
       }
       
-      parent->AppendChildTo(content, PR_FALSE);
+      parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
 
       NS_RELEASE(content);
     }

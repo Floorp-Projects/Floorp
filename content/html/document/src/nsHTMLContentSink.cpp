@@ -1403,10 +1403,10 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     if (mStack[mStackPos-1].mInsertionPoint != -1) {
       parent->InsertChildAt(content, 
                             mStack[mStackPos-1].mInsertionPoint++, 
-                            PR_FALSE);
+                            PR_FALSE, PR_FALSE);
     }
     else {
-      parent->AppendChildTo(content, PR_FALSE);
+      parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
     }
     mStack[mStackPos].mFlags |= APPENDED;
   }
@@ -1489,10 +1489,10 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     if (mStack[mStackPos-1].mInsertionPoint != -1) {
       result = parent->InsertChildAt(content, 
                                      mStack[mStackPos-1].mInsertionPoint++, 
-                                     PR_FALSE);
+                                     PR_FALSE, PR_FALSE);
     }
     else {
-      result = parent->AppendChildTo(content, PR_FALSE);
+      result = parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
     }
   }
 
@@ -1648,7 +1648,7 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
       // notification (it the container hasn't already been appended)
       else if (!(mStack[stackPos].mFlags & APPENDED)) {
         mSink->mInNotification++;
-        parent->AppendChildTo(container, PR_FALSE);
+        parent->AppendChildTo(container, PR_FALSE, PR_FALSE);
         mSink->mInNotification--;
       }
       
@@ -1692,7 +1692,7 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
               // since we already did notifications for all content
               // that's come through with the FlushTags() call so far.
               mSink->mInNotification++;
-              result = parent->AppendChildTo(child, sync);
+              result = parent->AppendChildTo(child, sync, PR_FALSE);
               mSink->mInNotification--;
             }
             NS_RELEASE(child);
@@ -1815,10 +1815,10 @@ SinkContext::AddLeaf(nsIHTMLContent* aContent)
   if (mStack[mStackPos-1].mInsertionPoint != -1) {
     parent->InsertChildAt(aContent, 
                           mStack[mStackPos-1].mInsertionPoint++, 
-                          PR_FALSE);
+                          PR_FALSE, PR_FALSE);
   }
   else {
-    parent->AppendChildTo(aContent, PR_FALSE);
+    parent->AppendChildTo(aContent, PR_FALSE, PR_FALSE);
   }
 
   DidAddContent(aContent, PR_FALSE);
@@ -1867,10 +1867,10 @@ SinkContext::AddComment(const nsIParserNode& aNode)
       if (mStack[mStackPos-1].mInsertionPoint != -1) {
         parent->InsertChildAt(comment, 
                               mStack[mStackPos-1].mInsertionPoint++, 
-                              PR_FALSE);
+                              PR_FALSE, PR_FALSE);
       }
       else {
-        parent->AppendChildTo(comment, PR_FALSE);
+        parent->AppendChildTo(comment, PR_FALSE, PR_FALSE);
       }
       
       DidAddContent(comment, PR_FALSE);
@@ -2001,10 +2001,10 @@ SinkContext::FlushTags(PRBool aNotify)
     if (mStack[mStackPos-1].mInsertionPoint != -1) {
       parent->InsertChildAt(content, 
                             mStack[mStackPos-1].mInsertionPoint++, 
-                            PR_FALSE);
+                            PR_FALSE, PR_FALSE);
     }
     else {
-      parent->AppendChildTo(content, PR_FALSE);
+      parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
     }
     mStack[stackPos].mFlags |= APPENDED;
 
@@ -2134,10 +2134,10 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         if (mStack[mStackPos-1].mInsertionPoint != -1) {
           parent->InsertChildAt(content, 
                                 mStack[mStackPos-1].mInsertionPoint++, 
-                                PR_FALSE);
+                                PR_FALSE, PR_FALSE);
         }
         else {
-          parent->AppendChildTo(content, PR_FALSE);
+          parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
         }
 
         mLastTextNode = content;
@@ -2377,7 +2377,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     MOZ_TIMER_STOP(mWatch);
     return rv;
   }
-  mRoot->AppendChildTo(mHead, PR_FALSE);
+  mRoot->AppendChildTo(mHead, PR_FALSE, PR_FALSE);
 
   mCurrentContext = new SinkContext(this);
   mCurrentContext->Begin(eHTMLTag_html, mRoot, 0, -1);
@@ -2717,11 +2717,11 @@ HTMLContentSink::SetTitle(const nsString& aValue)
         tc->SetData(*mTitle);
         NS_RELEASE(tc);
       }
-      it->AppendChildTo(text, PR_FALSE);
+      it->AppendChildTo(text, PR_FALSE, PR_FALSE);
       text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       NS_RELEASE(text);
     }
-    mHead->AppendChildTo(it, PR_FALSE);
+    mHead->AppendChildTo(it, PR_FALSE, PR_FALSE);
     NS_RELEASE(it);
   }
 
@@ -3721,7 +3721,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     AddBaseTagInfo(area); // basehref or basetarget. Fix. Bug: 30617
 
     // Add AREA object to the current map
-    mCurrentMap->AppendChildTo(area, PR_FALSE);
+    mCurrentMap->AppendChildTo(area, PR_FALSE, PR_FALSE);
     NS_RELEASE(area);
   }
   return NS_OK;
@@ -3810,7 +3810,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
       element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddAttributes(aNode, element);
       if (NS_SUCCEEDED(result)) {
-        parent->AppendChildTo(element, PR_FALSE);
+        parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
         if(!mInsideNoXXXTag) {
           nsAutoString value;
           if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
@@ -4173,7 +4173,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         NS_RELEASE(element);
         return result;
       }
-      parent->AppendChildTo(element, PR_FALSE);
+      parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
     }
     else {
       return result;
@@ -4291,7 +4291,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
         NS_RELEASE(it);
         return rv;
       }
-      parent->AppendChildTo(it, PR_FALSE);
+      parent->AppendChildTo(it, PR_FALSE, PR_FALSE);
             
       // XXX It's just not sufficient to check if the parent is head. Also check for
       // the preference.
@@ -4974,10 +4974,10 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     if (mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint != -1) {
       parent->InsertChildAt(element, 
                             mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint++, 
-                            PR_FALSE);
+                            PR_FALSE, PR_FALSE);
     }
     else {
-      parent->AppendChildTo(element, PR_FALSE);
+      parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
     }
   }
   else {
@@ -4999,7 +4999,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
         tc->SetData(script);
         NS_RELEASE(tc);
       }
-      element->AppendChildTo(text, PR_FALSE);
+      element->AppendChildTo(text, PR_FALSE, PR_FALSE);
       text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       NS_RELEASE(text);
     }
@@ -5141,7 +5141,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
         NS_RELEASE(element);
         return rv;
       }
-      parent->AppendChildTo(element, PR_FALSE);
+      parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
     }
 
     if(!mInsideNoXXXTag && NS_SUCCEEDED(rv)) {
@@ -5207,7 +5207,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
               tc->SetData(content);
               NS_RELEASE(tc);
             }
-            element->AppendChildTo(text, PR_FALSE);
+            element->AppendChildTo(text, PR_FALSE, PR_FALSE);
             text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
             NS_RELEASE(text);
           }
