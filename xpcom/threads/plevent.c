@@ -767,7 +767,7 @@ failed:
 	{
 		/* create port
 		 */
-		self->eventport = create_port(100, portname);
+		self->eventport = create_port(500, portname);
 
 		/* We don't use the sem, but it has to be there
 		 */

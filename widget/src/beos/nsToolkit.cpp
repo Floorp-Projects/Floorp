@@ -276,7 +276,16 @@ void nsToolkit::CallMethodAsync(MethodInfo *info)
 
 	id.data = info;
 	id.sync = false;
-	write_port_etc(eventport, WM_CALLMETHOD, &id, sizeof(id), B_TIMEOUT, 0);
+	
+	// Check message count to not exceed the port's capacity.
+	// There seems to be a BeOS bug that allows more 
+	// messages on a port than its capacity.
+	port_info portinfo;
+	if (get_port_info(eventport, &portinfo) != B_OK)
+	  return;
+
+	if (port_count(eventport) < portinfo.capacity - 20) 
+	  write_port_etc(eventport, WM_CALLMETHOD, &id, sizeof(id), B_TIMEOUT, 0);
 }
 
 //------------------------------------------------------------------------- 
