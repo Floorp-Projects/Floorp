@@ -123,8 +123,8 @@ NS_IMETHODIMP nsWebBrowserChrome::GetChromeMask(PRUint32* aChromeMask)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::GetNewBrowserChrome(nsIWebBrowserChrome**
-   aWebBrowserChrome)
+NS_IMETHODIMP nsWebBrowserChrome::GetNewBrowser(PRUint32 aChromeMask, 
+   nsIWebBrowser** aWebBrowser)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
@@ -135,6 +135,17 @@ NS_IMETHODIMP nsWebBrowserChrome::FindNamedBrowserChrome(const PRUnichar* aName,
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
+{
+   NS_ERROR("Haven't Implemented this yet");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebBrowserChrome::ShowAsModal()
+{
+   return ShowModal();
 }
 
 //*****************************************************************************

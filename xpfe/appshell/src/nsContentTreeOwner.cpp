@@ -250,8 +250,8 @@ NS_IMETHODIMP nsContentTreeOwner::GetChromeMask(PRUint32* aChromeMask)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetNewBrowserChrome(nsIWebBrowserChrome**
-   aWebBrowserChrome)
+NS_IMETHODIMP nsContentTreeOwner::GetNewBrowser(PRUint32 aChromeFlags,
+   nsIWebBrowser** aWebBrowser)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
@@ -262,6 +262,17 @@ NS_IMETHODIMP nsContentTreeOwner::FindNamedBrowserChrome(const PRUnichar* aName,
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsContentTreeOwner::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
+{
+   NS_ERROR("Haven't Implemented this yet");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
+{
+   return ShowModal();
 }
 
 //*****************************************************************************
