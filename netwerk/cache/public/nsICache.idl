@@ -19,8 +19,8 @@
  * 
  * Contributor(s): 
  *    Gordon Sheridan <gordon@netscape.com>
- *    Patrick Beard   <beard@netscape.com>
- *    Darin Fisher    <darin@netscape.com>
+ *    Patrick Beard <beard@netscape.com>
+ *    Darin Fisher <darin@netscape.com>
  */
 
 #include "nsISupports.idl"
@@ -45,7 +45,7 @@ interface nsICache
      *                | Mode = NONE         | Mode = READ
      *                | No Descriptor       | Descriptor
      * ------------------------------------------------------------------------
-     * WRITE          | NS_OK               | NS_OK            (Cache manager
+     * WRITE          | NS_OK               | NS_OK            (Cache service
      *                | Mode = WRITE        | Mode = WRITE      dooms existing
      *                | Descriptor          | Descriptor        cache entry)
      * ------------------------------------------------------------------------
@@ -127,18 +127,18 @@ interface nsICache
      * STORE_ON_DISK_AS_DISK - Requires the cache entry to reside in persistent
      *                         storage, and in a specific file.
      */
-    const nsCacheStoragePolicy STORE_ANYWHERE           = 0;
-    const nsCacheStoragePolicy STORE_IN_MEMORY          = 1;
-    const nsCacheStoragePolicy STORE_ON_DISK            = 2;
-    const nsCacheStoragePolicy STORE_ON_DISK_AS_FILE    = 3;
+    const nsCacheStoragePolicy STORE_ANYWHERE        = 0;
+    const nsCacheStoragePolicy STORE_IN_MEMORY       = 1;
+    const nsCacheStoragePolicy STORE_ON_DISK         = 2;
+    const nsCacheStoragePolicy STORE_ON_DISK_AS_FILE = 3;
 
     /**
      * All entries for a cache session are stored as streams of data or
      * as objects.  These constant my be used to specify the type of entries
      * when calling nsICacheService::CreateSession().
      */
-    const long              NOT_STREAM_BASED = 0;
-    const long              STREAM_BASED     = 1;
+    const long NOT_STREAM_BASED = 0;
+    const long STREAM_BASED     = 1;
 };
 
 
