@@ -122,6 +122,7 @@ function save()
                                                              data.contentType.toString(),
                                                              fileNameFromContentDisp( data.contentDisp ),
                                                              true,
+                                                             null,
                                                              null );
     } catch( exception ) {
         // Failed (or cancelled), give them another chance.

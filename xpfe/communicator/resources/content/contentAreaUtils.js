@@ -79,21 +79,23 @@
   function savePage(url) 
   {
     var postData = null; // No post data, usually.
+    var cacheKey = null;
     // Default is to save current page.
     if ( !url )
       url = window._content.location.href;
 
     try {
       var sessionHistory = getWebNavigation().sessionHistory;
-      var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
+      var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false).QueryInterface(Components.interfaces.nsISHEntry);
       postData = entry.postData;
+      cacheKey = entry.cacheKey;
     } catch(e) {
     }
 
     // Use stream xfer component to prompt for destination and save.
     var xfer = Components.classes["@mozilla.org/appshell/component/xfer;1"].getService(Components.interfaces["nsIStreamTransfer"]);
     try {
-      xfer.SelectFileAndTransferLocationSpec( url, window, "", "", true, postData );
+      xfer.SelectFileAndTransferLocationSpec( url, window, "", "", true, postData, cacheKey );
     } catch( exception ) {
       return false;
     }

@@ -685,14 +685,17 @@ nsContextMenu.prototype = {
     // Save specified URL in user-selected file.
     savePage : function ( url, doNotValidate ) {
         var postData = null; // No post data, usually.
+        var cacheKey = null;
+
         // Default is to save current page.
         if ( !url ) {
             url = window._content.location.href;
 
             try {
                 var sessionHistory = getWebNavigation().sessionHistory;
-                var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false);
+                var entry = sessionHistory.getEntryAtIndex(sessionHistory.index, false).QueryInterface(Components.interfaces.nsISHEntry);
                 postData = entry.postData;
+                cacheKey = entry.cacheKey;
             } catch(e) {
             }
         }
@@ -701,7 +704,7 @@ nsContextMenu.prototype = {
         var xfer = this.getService( "@mozilla.org/appshell/component/xfer;1",
                                     "nsIStreamTransfer" );
         try {
-            xfer.SelectFileAndTransferLocationSpec( url, window, "", "", doNotValidate, postData );
+            xfer.SelectFileAndTransferLocationSpec( url, window, "", "", doNotValidate, postData, cacheKey );
         } catch( exception ) {
             // Failed (or cancelled), give them another chance.
         }
