@@ -342,6 +342,8 @@ var defaultController =
 
       //Edit Menu
       case "cmd_pasteQuote":
+      case "cmd_delete":
+      case "cmd_selectAll":
       case "cmd_find":
       case "cmd_findNext":
       case "cmd_account":
@@ -459,6 +461,10 @@ var defaultController =
       case "cmd_findNext":
         //Disable the editor specific edit commands if the focus is not into the body
         return !focusedElement;
+      case "cmd_delete":
+        return MessageHasSelectedAttachments();
+      case "cmd_selectAll":
+        return MessageHasAttachments();
       case "cmd_account":
       case "cmd_preferences":
         return true;
@@ -579,6 +585,8 @@ var defaultController =
       case "cmd_print"              : DoCommandPrint();                                                        break;
 
       //Edit Menu
+      case "cmd_delete"             : if (MessageHasSelectedAttachments()) RemoveSelectedAttachment();         break;
+      case "cmd_selectAll"          : if (MessageHasAttachments()) SelectAllAttachments();                     break;
       case "cmd_account"            : MsgAccountManager(null); break;
       case "cmd_preferences"        : DoCommandPreferences(); break;
 
@@ -661,6 +669,8 @@ function updateComposeItems() {
 
 function updateEditItems() {
   goUpdateCommand("cmd_pasteQuote");
+  goUpdateCommand("cmd_delete");
+  goUpdateCommand("cmd_selectAll");
   goUpdateCommand("cmd_find");
   goUpdateCommand("cmd_findNext");
 }
@@ -2153,6 +2163,32 @@ function AddAttachment(attachment)
   }
 }
 
+function SelectAllAttachments()
+{
+  var bucketTree = document.getElementById("attachmentBucket");
+  if (bucketTree)
+    bucketTree.selectAll();
+}
+
+function MessageHasAttachments()
+{
+  var bucketTree = document.getElementById("attachmentBucket");
+  if (bucketTree)
+  {
+    var body = document.getElementById("bucketBody");
+    return (body && body.hasChildNodes() && (bucketTree == top.document.commandDispatcher.focusedElement));
+  }
+  return false;
+}
+
+function MessageHasSelectedAttachments()
+{
+  var bucketTree = document.getElementById("attachmentBucket");
+
+  if (bucketTree)
+    return (MessageHasAttachments() && bucketTree.selectedItems.length);
+  return false;
+}
 
 function AttachPage()
 {
@@ -2257,8 +2293,9 @@ function RemoveSelectedAttachment()
 
       gContentChanged = true;
     }
+    // Clear selection after removal
+    bucketTree.selectedItems.length = 0;
   }
-
 }
 
 function FocusOnFirstAttachment()
@@ -2519,6 +2556,9 @@ function editorKeyPress(event)
 
 function AttachmentBucketClicked(event)
 {
+  if (event.button != 0)
+    return;
+
   if (event.originalTarget.localName == 'treechildren')
     goDoCommand('cmd_attachFile');
 }

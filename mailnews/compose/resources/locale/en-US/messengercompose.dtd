@@ -202,3 +202,5 @@
 <!ENTITY delete.accesskey "D">
 <!ENTITY selectAll.label "Select All">
 <!ENTITY selectAll.accesskey "A">
+<!ENTITY addAttachment.label "Add Attachment">
+<!ENTITY addAttachment.accesskey "t">

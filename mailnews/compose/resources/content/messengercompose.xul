@@ -117,6 +117,8 @@
   <!--command id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
   <!--command id="cmd_find"/-->
   <!--command id="cmd_findNext"/-->
+  <command id="cmd_delete"/>
+  <command id="cmd_selectAll"/>
   <command id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
 
   <!-- View Menu -->
@@ -184,6 +186,13 @@
   <menuitem label="&delete.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
   <menuseparator/>
   <menuitem label="&selectAll.label;" accesskey="&selectAll.accesskey;" command="cmd_selectAll"/>
+</popup>
+
+<popup id="msgComposeAttachmentContext" onpopupshowing="updateEditItems();">
+  <menuitem label="&delete.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
+  <menuitem label="&selectAll.label;" accesskey="&selectAll.accesskey;" command="cmd_selectAll"/>
+  <menuseparator/>
+  <menuitem label="&addAttachment.label;" accesskey="&addAttachment.accesskey;" command="cmd_attachFile"/>
 </popup>
 
   <toolbox class="toolbox-top" id="headers-box">
@@ -426,6 +435,7 @@
                 dragdroptree="true"
                 onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
                 onclick="AttachmentBucketClicked(event);"
+                context="msgComposeAttachmentContext"
                 ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);">
