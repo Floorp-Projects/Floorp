@@ -363,7 +363,7 @@
 <!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
 <!ENTITY deleteJunk.accesskey "e">
 <!ENTITY javaScriptConsoleCmd.label "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey "S">
+<!ENTITY javaScriptConsoleCmd.accesskey "C">
 
 <!-- Help Menu -->
 <!ENTITY helpMenu.label "Help">
