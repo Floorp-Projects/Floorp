@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.30 $ $Date: 2002/02/04 22:34:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.31 $ $Date: 2002/02/08 02:51:37 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -845,5 +845,20 @@ nssCertificateList_DoCallback
     nssListIterator_Finish(certs);
     nssListIterator_Destroy(certs);
     return PR_SUCCESS;
+}
+
+static PRStatus add_ref_callback(NSSCertificate *c, void *a)
+{
+    nssCertificate_AddRef(c);
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT void
+nssCertificateList_AddReferences
+(
+  nssList *certList
+)
+{
+    (void)nssCertificateList_DoCallback(certList, add_ref_callback, NULL);
 }
 

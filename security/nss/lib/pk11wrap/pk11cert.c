@@ -94,14 +94,35 @@ static PRStatus convert_and_cache_cert(NSSCertificate *c, void *arg)
     PRStatus nssrv;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     struct nss3_cert_cbstr *nss3cb = (struct nss3_cert_cbstr *)arg;
-    nssrv = convert_cert(c, arg);
-    if (nssrv == PR_SUCCESS) {
-	nssTrustDomain_AddCertsToCache(td, &c, 1);
-	if (!nssList_Get(nss3cb->cached, c)) {
-	    nssCertificate_AddRef(c);
-	    nssList_Add(nss3cb->cached, c);
-	}
+    NSSCertificate *cp = nssCertificate_AddRef(c);
+    /* The cert coming in has been retrieved from a token.  It was not in
+     * the cache when the search was begun.  But it may be in the cache now,
+     * and if it isn't, it will be, because it is going to be cracked into
+     * a CERTCertificate and fed into the callback.
+     */
+    nssrv = nssTrustDomain_AddCertsToCache(td, &c, 1);
+    if (!nssList_Get(nss3cb->cached, c)) {
+	nssCertificate_AddRef(c);
+	nssList_Add(nss3cb->cached, c);
     }
+    /* This is why the hack of copying the cert was done above.  The pointer
+     * c passed to this function is provided by retrieve_cert.  That function
+     * will destroy the pointer once this function returns.  Since c is a local
+     * copy, there is no way to notify retrieve_cert if it has changed.  That
+     * would happen if the above call to add it to the cache found the cert
+     * already there.  In that case, the pointer c passed to the callback
+     * below will be the cached cert, and the pointer c that retrieve_cert
+     * has will be the same as the copy made above.  Thus, retrieve_cert will
+     * destroy the reference to the copy, the callback will use the reference
+     * to the cached entry, and everyone should be happy.
+     */
+    if (cp == c) {
+	/* However, if the call to add c to the cache was successful, cp is
+	 * now an extra copy within this function and needs to be destroyed.
+	 */
+	NSSCertificate_Destroy(cp);
+    }
+    nssrv = convert_cert(c, arg);
     return nssrv;
 }
 
