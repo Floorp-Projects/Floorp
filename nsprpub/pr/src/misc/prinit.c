@@ -451,6 +451,9 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
          */
         _PR_CleanupNet();
         _PR_CleanupIO();
+#ifdef WINNT
+        _PR_CleanupCPUs();
+#endif
         _PR_CleanupThreads();
         PR_DestroyLock(_pr_sleeplock);
         _pr_sleeplock = NULL;

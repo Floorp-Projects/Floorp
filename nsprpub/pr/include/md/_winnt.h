@@ -346,6 +346,8 @@ extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
 #define _MD_INIT_THREAD             _PR_MD_INIT_THREAD
 #define _MD_INIT_ATTACHED_THREAD    _PR_MD_INIT_THREAD
 #define _MD_CREATE_THREAD           _PR_MD_CREATE_THREAD
+#define _MD_JOIN_THREAD             _PR_MD_JOIN_THREAD
+#define _MD_END_THREAD              _PR_MD_END_THREAD
 #define _MD_YIELD                   _PR_MD_YIELD
 #define _MD_SET_PRIORITY            _PR_MD_SET_PRIORITY
 #define _MD_CLEAN_THREAD            _PR_MD_CLEAN_THREAD

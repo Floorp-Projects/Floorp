@@ -254,6 +254,21 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
     return PR_FAILURE;
 }
 
+void
+_PR_MD_JOIN_THREAD(_MDThread *md)
+{
+    DWORD rv;
+
+    rv = WaitForSingleObject(md->handle, INFINITE);
+    PR_ASSERT(WAIT_OBJECT_0 == rv);
+}
+
+void
+_PR_MD_END_THREAD(void)
+{
+    _endthreadex(0);
+}
+
 void    
 _PR_MD_YIELD(void)
 {
