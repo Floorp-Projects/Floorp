@@ -60,6 +60,15 @@ nsRegionGTK::~nsRegionGTK()
 NS_IMPL_ISUPPORTS1(nsRegionGTK, nsIRegion)
 
 
+/* static */ void
+nsRegionGTK::Shutdown()
+{
+  if (copyRegion) {
+    gdk_region_destroy(copyRegion);
+    copyRegion = nsnull;
+  }
+}
+
 GdkRegion *
 nsRegionGTK::GetCopyRegion() {
   if (!copyRegion) copyRegion = gdk_region_new();
