@@ -38,18 +38,18 @@ function OnLoadNewCard()
 	editCard.okCallback = 0;
 	editCard.titleProperty = "newCardTitle"
 
-	if (window.arguments && window.arguments[0])
+	if ("arguments" in window && window.arguments[0])
 	{
-		if ( window.arguments[0].selectedAB )
+		if ("selectedAB" in window.arguments[0])
 			editCard.selectedAB = window.arguments[0].selectedAB;
 		else
 			editCard.selectedAB = "abdirectory://abook.mab";
 
     // we may have been given properties to pre-initialize the window with....
     // we'll fill these in here...
-    if (window.arguments[0].primaryEmail)
+    if ("primaryEmail" in window.arguments[0])
       editCard.card.primaryEmail = window.arguments[0].primaryEmail;
-    if (window.arguments[0].displayName)
+    if ("displayName" in window.arguments[0])
       editCard.card.displayName = window.arguments[0].displayName;
 	}
 
@@ -70,6 +70,12 @@ function OnLoadNewCard()
 					break;
 				}
 			}
+		}
+		else {
+			// Default to the first valid addressbook when none is
+			// selected. (the 0th is an empty/invalid entry)
+			abPopup.value = menupopup.childNodes[1].getAttribute('value');
+			abPopup.data = menupopup.childNodes[1].getAttribute('data');
 		}
 	}
 
@@ -196,7 +202,7 @@ function EditCardOKButton()
   	CallSaveListeners();
 	
 	// callback to allow caller to update
-	if ( editCard.okCallback )
+	if ("okCallback" in editCard)
 		editCard.okCallback();
 	
 	return true;	// close the window
