@@ -367,10 +367,6 @@ si_unlock_signon_list(void)
  * Data and procedures for rememberSignons preference
  */
 
-static const char *pref_rememberSignons =
-    "signon.rememberSignons";
-PRIVATE PRBool si_RememberSignons = PR_FALSE;
-
 PRIVATE int
 si_SaveSignonDataLocked(PRBool fullSave);
 
@@ -383,24 +379,30 @@ SI_LoadSignonData(PRBool fullLoad);
 PRIVATE void
 si_RemoveAllSignonData();
 
+static const char *pref_rememberSignons =
+    "signon.rememberSignons";
+PRIVATE PRBool si_RememberSignons = PR_FALSE;
+
+static const char *pref_Notified =
+    "signon.Notified";
+PRIVATE PRBool si_Notified = PR_FALSE;
+
+PRIVATE PRBool
+si_GetNotificationPref(void)
+{
+    return si_Notified;
+}
+
+PRIVATE void
+si_SetNotificationPref(PRBool x)
+{
+    SI_SetBoolPref(pref_Notified, x);
+    si_Notified = x;
+}
+
 PRIVATE void
 si_SetSignonRememberingPref(PRBool x)
 {
-
-    /* Note:
-     * We initially want the signon pref to be TRUE so that a notification will be given
-     * the first time a signon form is sumbitted.  So that is the default value if
-     * we don't find the pref in the preference file.  However, if the user opens the
-     * preference panel and clicks OK, a value of false for the signon pref is written
-     * to the file.  This will prevent the notification message from ever occurring.
-     *
-     * To get around this problem, if the signon pref is FALSE and no notification has
-     * ever been given, we will treat this as if the signon pref were TRUE
-     */
-    if (!x && !SI_GetBoolPref("signon.Notified", PR_FALSE)) {
-        x = PR_TRUE;
-    }
-
     /* do nothing if new value of pref is same as current value */
     if (x == si_RememberSignons) {
         return;
@@ -446,7 +448,24 @@ si_RegisterSignonPrefCallbacks(void)
     if(first_time)
     {
         first_time = PR_FALSE;
-        x = SI_GetBoolPref(pref_rememberSignons, PR_TRUE);
+        x = SI_GetBoolPref(pref_Notified, PR_FALSE);
+        si_SetNotificationPref(x);        
+
+        /*
+         * We initially want the rememberSignons pref to be TRUE so that a notification
+         * will be given the first time a signon form is sumbitted.  So that is the
+         * default value used below if we don't find the pref in the preference file.
+         *
+         * However, if the user opens the preference panel and clicks OK, a value of
+         * FALSE for the signon pref is written to the file and that will override our
+         * default of TRUE.  This will prevent the notification message from ever
+         * occurring.
+         *
+         * To get around this problem, if the signon pref is FALSE and no notification has
+         * ever been given, we will treat this as if the signon pref were TRUE.  See coding
+         * in si_GetSignonRememberinPref() that does this.
+         */
+        x = SI_GetBoolPref(pref_rememberSignons, PR_TRUE); /* see comment above */
         si_SetSignonRememberingPref(x);
         SI_RegisterCallback(pref_rememberSignons, si_SignonRememberingPrefChanged, NULL);
     }
@@ -470,7 +489,16 @@ si_GetSignonRememberingPref(void)
 #endif
 
     si_RegisterSignonPrefCallbacks();
-    return si_RememberSignons;
+
+    /*
+     * see comment in si_RegisterSignonPrefCallbacks() for why GetNotificationPref is
+     * used in line below
+     */
+    if (!si_RememberSignons && !si_GetNotificationPref()) {
+        return PR_TRUE;
+    } else {
+        return si_RememberSignons;
+    }
 }
 
 /*
@@ -1093,7 +1121,7 @@ si_OkToSave(char *URLName, char *userName) {
         return PR_TRUE;
     }
 
-    if (!SI_GetBoolPref("signon.Notified", PR_FALSE)) {
+    if (!si_RememberSignons && !si_GetNotificationPref()) {
         char* notification = 0;
         char * message = Wallet_Localize("PasswordNotification1");
         StrAllocCopy(notification, message);
@@ -1101,7 +1129,7 @@ si_OkToSave(char *URLName, char *userName) {
         message = Wallet_Localize("PasswordNotification2");
         StrAllocCat(notification, message);
         PR_FREEIF(message);
-        SI_SetBoolPref("signon.Notified", PR_TRUE);
+        si_SetNotificationPref(PR_TRUE);
         if (!Wallet_Confirm(notification)) {
             XP_FREE (notification);
             SI_SetBoolPref(pref_rememberSignons, PR_FALSE);
@@ -1470,9 +1498,9 @@ si_LoadSignonDataFromKeychain() {
 
     if (status == noErr) {
         /* if we found a Netscape item, let's assume notice has been given */
-        SI_SetBoolPref("signon.Notified", PR_TRUE);
+        si_SetNotificationPref(PR_TRUE);
     } else {
-        SI_SetBoolPref("signon.Notified", PR_FALSE);
+        si_SetNotificationPref(PR_FALSE);
     }
 
     si_lock_signon_list();
