@@ -88,6 +88,7 @@
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #define TURBO_NAVIGATOR 1
 #define TURBO_MAIL 2
