@@ -43,6 +43,7 @@
 - (void) dealloc
 {
   [regionMappingTable release];
+  [super dealloc];
 }
 
 - (id)initWithBundle:(NSBundle *)bundle
