@@ -639,7 +639,7 @@ function onAccept()
     while (selectElement.lastChild)
       editor.deleteNode(selectElement.lastChild);
 
-    var offset;
+    var offset = 0;
     for (var i = 1; i < itemArray.length; i++)
       if (itemArray[i].level > 1)
         selectElement.lastChild.appendChild(itemArray[i].element);
