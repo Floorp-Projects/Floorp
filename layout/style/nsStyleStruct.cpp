@@ -544,11 +544,15 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     NS_FOR_CSS_SIDES(ix) {
       if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) || 
           (mBorderColor[ix] != aOther.mBorderColor[ix])) {
-        if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) &&
-            ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[ix]) ||
-             (NS_STYLE_BORDER_STYLE_NONE == aOther.mBorderStyle[ix]) ||
-             (NS_STYLE_BORDER_STYLE_HIDDEN == mBorderStyle[ix]) ||          // bug 45754
-             (NS_STYLE_BORDER_STYLE_HIDDEN == aOther.mBorderStyle[ix]))) {
+        if (mBorderStyle[ix] != aOther.mBorderStyle[ix] &&
+            (NS_STYLE_BORDER_STYLE_NONE ==
+               (mBorderStyle[ix] & BORDER_STYLE_MASK) ||
+             NS_STYLE_BORDER_STYLE_NONE ==
+               (aOther.mBorderStyle[ix] & BORDER_STYLE_MASK) ||
+             NS_STYLE_BORDER_STYLE_HIDDEN ==
+               (mBorderStyle[ix] & BORDER_STYLE_MASK) ||          // bug 45754
+             NS_STYLE_BORDER_STYLE_HIDDEN ==
+               (aOther.mBorderStyle[ix] & BORDER_STYLE_MASK))) {
           return NS_STYLE_HINT_REFLOW;  // border on or off
         }
         return NS_STYLE_HINT_VISUAL;
