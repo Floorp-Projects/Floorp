@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout \
 		  content \
+		  content_xsl \
 		  caps \
 		  docshell \
 		  xpconnect \
@@ -58,7 +59,6 @@ REQUIRES	= xpcom \
 		  chardet \
 		  transformiix \
 		  xmlextras \
-		  xsl_doc \
 		  $(NULL)
 
 CPPSRCS =			\

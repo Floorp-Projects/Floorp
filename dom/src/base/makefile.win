@@ -61,7 +61,6 @@ REQUIRES	= xpcom \
 		  chardet \
 		  transformiix \
 		  xmlextras \
-		  xsl_doc \
 		  $(NULL)
 
 CPPSRCS =			\

@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = xsl_doc
+MODULE = content_xsl
 LIBRARY_NAME = gkconxsldoc_s
 REQUIRES	= xpcom \
 		  string \

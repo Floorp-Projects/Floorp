@@ -35,8 +35,8 @@ REQUIRES	= xpcom \
 		  dom \
 		  layout \
 		  content \
+		  content_xsl \
 		  widget \
-		  xsl_doc \
 		  necko \
 		  $(NULL)
 IS_COMPONENT	= 1
