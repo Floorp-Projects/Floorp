@@ -24,11 +24,13 @@
 #include "nsRenderingContextUnix.h"
 #include "nsImageUnix.h"
 #include "nsDeviceContextUnix.h"
+#include "nsRegionUnix.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_IID(kCRegion, NS_IREGION_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -129,6 +131,9 @@ nsresult nsGfxFactoryUnix::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCImage)) {
     inst = (nsISupports *)new nsImageUnix();
+  }
+  else if (mClassID.Equals(kCRegion)) {
+    inst = (nsISupports *)new nsRegionUnix();
   }
 
   if (inst == NULL) {  
