@@ -18,7 +18,6 @@
 
 #include "nsIImageManager.h"
 #include "libimg.h"
-#include "il_strm.h"
 #include "nsCRT.h"
 #include "nsImageNet.h"
 
@@ -39,7 +38,7 @@ public:
   virtual PRInt32 GetCacheSize(void);
   virtual PRInt32 ShrinkCache(void);
   NS_IMETHOD FlushCache(void);
-  virtual nsImageType GetImageType(const char *buf, PRInt32 length);
+ // virtual nsImageType GetImageType(const char *buf, PRInt32 length);
 
 private:
   ilISystemServices *mSS;
@@ -105,7 +104,8 @@ ImageManagerImpl::FlushCache(void)
   IL_FlushCache();
   return NS_OK;
 }
- 
+#if 0
+//obsolete, ptn test
 nsImageType 
 ImageManagerImpl::GetImageType(const char *buf, PRInt32 length)
 {
@@ -131,6 +131,7 @@ ImageManagerImpl::GetImageType(const char *buf, PRInt32 length)
       return nsImageType_kUnknown;
   }
 }
+#endif
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageManager(nsIImageManager **aInstancePtrResult)
