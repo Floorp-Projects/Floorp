@@ -420,6 +420,9 @@ function set_assign_to() {
   <input type="hidden" name="form_name" value="enter_bug">
 </form>
 
+[%# Links or content with more information about the bug being created. %]
+[% Hook.process("end") %]
+
 [% PROCESS global/footer.html.tmpl %]
 
 [%############################################################################%]

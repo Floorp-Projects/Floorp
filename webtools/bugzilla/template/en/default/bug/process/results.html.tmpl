@@ -55,6 +55,8 @@
     </td>
     <td>
       <a href="show_bug.cgi?id=[% id %]">Back To [% terms.Bug %]# [% id %]</a>
+      [%# Links to more information about the changed bug. %]
+      [% Hook.process("links") %]
     </td>
   </tr>
 </table>

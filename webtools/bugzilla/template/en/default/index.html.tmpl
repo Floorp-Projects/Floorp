@@ -78,6 +78,10 @@ function addSidebar() {
   [% END %]
 [% END %]
     <li id="sidebar"><a href="javascript:addSidebar()">Add to Sidebar</a> (requires a Mozilla browser like Mozilla Firefox)</li>
+
+    [%# List items of links to more things users can do on this installation. %]
+    [% Hook.process("links") %]
+
   </ul>
 
   <form id="show-bug" name="f" action="show_bug.cgi" method="get"
