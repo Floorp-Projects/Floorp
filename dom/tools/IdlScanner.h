@@ -53,6 +53,7 @@ enum TokenType {
   INPUT_PARAM_TOKEN,
   OUTPUT_PARAM_TOKEN,
   INOUT_PARAM_TOKEN,
+  RAISES_TOKEN,
   INHERITANCE_SPEC_TOKEN, // ':'
   SEPARATOR_TOKEN, // ','
   BEGIN_BLOCK_TOKEN, // '{'
@@ -61,8 +62,6 @@ enum TokenType {
   ASSIGNEMENT_TOKEN, // '='
   FUNC_PARAMS_SPEC_BEGIN_TOKEN, // '('
   FUNC_PARAMS_SPEC_END_TOKEN, // ')'
-  // temp, it changes to ushort or uint or ulong
-  UNSIGNED_TOKEN,
   // constant values
   INTEGER_CONSTANT = 1000,
   STRING_CONSTANT

@@ -28,7 +28,7 @@ class IdlUnion;
 class IdlEnum;
 class IdlAttribute;
 class IdlFunction;
-class IdlConst;
+class IdlVariable;
 class IdlException;
 
 class IdlInterface : public IdlObject {
@@ -62,9 +62,9 @@ public:
   void            AddUnion(IdlUnion *aUnion);
   long            UnionCount();
   IdlUnion*       GetUnionAt(long aIndex);
-  void            AddConst(IdlConst *aConst);
+  void            AddConst(IdlVariable *aConst);
   long            ConstCount();
-  IdlConst*       GetConstAt(long aIndex);
+  IdlVariable*    GetConstAt(long aIndex);
   void            AddException(IdlException *aException);
   long            ExceptionCount();
   IdlException*   GetExceptionAt(long aIndex);
@@ -76,6 +76,9 @@ public:
   IdlFunction*    GetFunctionAt(long aIndex);
 
 };
+
+class ostream;
+ostream& operator<<(ostream &s, IdlInterface &aInterface);
 
 #endif
 

@@ -298,6 +298,7 @@ void IdlParser::ParseInterfaceBody(IdlSpecification &aSpecification, IdlInterfac
     if (TERMINATOR_TOKEN != token->id) {
       throw InterfaceParsingException("Missing ';'.");
     }
+    TrimComments();
   }
 
   // eat "}"
@@ -354,7 +355,7 @@ IdlEnum* IdlParser::ParseEnum(IdlSpecification &aSpecification)
       // must be an identifier
       if (IDENTIFIER_TOKEN == token->id) {
         IdlVariable* enumerator = new IdlVariable();
-        enumerator->SetType(TYPE_INT); // it does not really matter
+        enumerator->SetType(TYPE_INT); // it does not really matter which type
         enumerator->SetName(mScanner->NextToken()->stringID);
         enumObj->AddEnumerator(enumerator);
         TrimComments();
@@ -413,12 +414,101 @@ IdlUnion* IdlParser::ParseUnion(IdlSpecification &aSpecification)
 }
 
 /**
- * XXX NOT IMPLEMENTED YET
+ * 
  */
-IdlConst* IdlParser::ParseConst(IdlSpecification &aSpecification)
+IdlVariable* IdlParser::ParseConst(IdlSpecification &aSpecification)
 {
-  throw NotImplementedException();
-  return (IdlConst*)0;
+  IdlVariable *constObj = new IdlVariable();
+  Token *token;
+
+  TrimComments();
+  token = mScanner->NextToken();
+
+  // must be the type
+  switch(token->id) {
+    // base type
+    case BOOLEAN_TOKEN:
+      constObj->SetType(TYPE_BOOLEAN);
+      break;
+    case FLOAT_TOKEN:
+      constObj->SetType(TYPE_FLOAT);
+      break;
+    case DOUBLE_TOKEN:
+      constObj->SetType(TYPE_DOUBLE);
+      break;
+    case LONG_TOKEN:
+      constObj->SetType(TYPE_LONG);
+      break;
+    case SHORT_TOKEN:
+      constObj->SetType(TYPE_SHORT);
+      break;
+    case ULONG_TOKEN:
+      constObj->SetType(TYPE_ULONG);
+      break;
+    case USHORT_TOKEN:
+      constObj->SetType(TYPE_USHORT);
+      break;
+    case CHAR_TOKEN:
+      constObj->SetType(TYPE_CHAR);
+      break;
+    case INT_TOKEN:
+      constObj->SetType(TYPE_INT);
+      break;
+    case UINT_TOKEN:
+      constObj->SetType(TYPE_UINT);
+      break;
+    // string type
+    case STRING_TOKEN:
+      constObj->SetType(TYPE_STRING);
+      break;
+    // scoped name
+    case IDENTIFIER_TOKEN:
+      //if (aSpecification.ContainInterface(aToken.stringID)) {
+        constObj->SetType(TYPE_OBJECT);
+        constObj->SetTypeName(token->stringID);
+        break;
+      //}
+    default:
+      delete constObj;
+      throw ConstParsingException("Unknown type.");
+  }
+
+  TrimComments();
+  token = mScanner->NextToken();
+
+  // an identifier must follow
+  if (IDENTIFIER_TOKEN == token->id) {
+    constObj->SetName(token->stringID);
+  }
+  else {
+    delete constObj;
+    throw ConstParsingException("Missing identifire. Const name undefined.");
+  }
+
+  // the "=" sign
+  TrimComments();
+  token = mScanner->NextToken();
+  if (ASSIGNEMENT_TOKEN != token->id) {
+    delete constObj;
+    throw ConstParsingException("Missing identifire. Const name undefined.");
+  }
+
+  TrimComments();
+  token = mScanner->NextToken();
+  // must be some kind of constant. Constants token ids start at 
+  // position INTEGER_CONSTANT
+  if (token->id < INTEGER_CONSTANT) {
+    delete constObj;
+    throw ConstParsingException("Missing identifire. Const name undefined.");
+  }
+  else if (INTEGER_CONSTANT == token->id) {
+    constObj->SetValue(token->value.vLong);
+  }
+  else if (STRING_CONSTANT == token->id) {
+    constObj->SetValue(token->value.vString);
+  }
+
+  return constObj;
 }
 
 /**
@@ -616,6 +706,9 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &a
       // is it throwing an exception?
       TrimComments();
       token = mScanner->PeekToken();
+
+      //XXX this is how exceptions are declared now. This should change
+      //    to the correct way so that this while loop can be deleted
       while (INTERFACE_TOKEN == token->id) {
         mScanner->NextToken(); // eat "interface"
         TrimComments();
@@ -639,6 +732,35 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &a
           throw FunctionParsingException("Undeclared exception name.");
         }
       }
+
+      if (RAISES_TOKEN == token->id) {
+        mScanner->NextToken(); // eat "raises"
+        TrimComments();
+        token = mScanner->NextToken(); // must be '('
+        while (FUNC_PARAMS_SPEC_BEGIN_TOKEN == token->id || 
+                SEPARATOR_TOKEN == token->id) {
+          TrimComments();
+          token = mScanner->NextToken(); // must be the exception name
+          if (IDENTIFIER_TOKEN == token->id) {
+            funcObj->AddException(token->stringID);
+            TrimComments();
+            token = mScanner->NextToken(); // must be ',' or ')'
+          }
+          else {
+            delete funcObj;
+            throw FunctionParsingException("Undeclared exception name.");
+          }
+        }
+
+        if (FUNC_PARAMS_SPEC_END_TOKEN != token->id) {
+          delete funcObj;
+          throw FunctionParsingException("Missing ')'. Exceptions declaration non terminated.");
+        }
+
+        TrimComments();
+        token = mScanner->PeekToken();
+      }
+
     }
     else {
       delete funcObj;

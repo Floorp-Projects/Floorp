@@ -19,6 +19,33 @@
 #include "IdlEnum.h"
 #include "nsVoidArray.h"
 #include "IdlVariable.h"
+#include <ostream.h>
+
+ostream& operator<<(ostream &s, IdlEnum &aEnum)
+{
+  s << "enum { \n";
+
+  long count = aEnum.EnumeratorCount();
+  if (count) {
+    for (int i = 0; i < count - 1; i++) {
+      IdlVariable *enumerator = aEnum.GetEnumeratorAt(i);
+      s << "  " << enumerator->GetName();
+      if (TYPE_INT == enumerator->GetType()) {
+        s << " = " << enumerator->GetLongValue();
+      }
+      s << ",\n";
+    }
+
+    IdlVariable *enumerator = aEnum.GetEnumeratorAt(i);
+    s << "  " << enumerator->GetName();
+    if (TYPE_INT == enumerator->GetType()) {
+      s << " = " << enumerator->GetLongValue();
+    }
+    s << "\n";
+  }
+
+  return s << "}; \n";
+}
 
 IdlEnum::IdlEnum()
 {

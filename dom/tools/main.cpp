@@ -60,6 +60,9 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 1; i <= args; i++) {
+
+      cout << "************** PARSING " << argv[i] << " **************" << "\n";
+
       // create a specification object. On parser termination it will
       // contain all parsed interfaces
       IdlSpecification *specification = new IdlSpecification();
@@ -75,6 +78,11 @@ int main(int argc, char *argv[])
       } catch(...) {
         cout << "Unknown Exception. Parser Aborted.";
       }
+
+      cout << "************** PARSED **************" << "\n" 
+           << "************** DUMPING **************" << "\n" 
+           << *specification;
+
       delete parser;
     }
 

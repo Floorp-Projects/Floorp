@@ -35,5 +35,8 @@ public:
 
 };
 
+class ostream;
+ostream& operator<<(ostream &s, IdlAttribute &aAttribute);
+
 #endif
 

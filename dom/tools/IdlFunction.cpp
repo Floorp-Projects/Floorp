@@ -21,7 +21,35 @@
 #include "IdlObject.h"
 #include "nsVoidArray.h"
 #include "IdlParameter.h"
+#include <string.h>
+#include <ostream.h>
 
+ostream& operator<<(ostream &s, IdlFunction &aFunction)
+{
+  char type[128];
+  aFunction.GetReturnValue()->GetTypeAsString(type, 128);
+  s << type << " " << aFunction.GetName() << "(";
+
+  long count = aFunction.ParameterCount();
+  if (count) {
+    for (int i = 0; i < count - 1; i++) {
+      s << *(aFunction.GetParameterAt(i)) << ", ";
+    }
+    s << *(aFunction.GetParameterAt(count - 1));
+  }
+  s << ")";
+
+  count = aFunction.ExceptionCount();
+  if (count) {
+    s << " raises (";
+    for (int i = 0; i < count - 1; i++) {
+      s << aFunction.GetExceptionAt(i) << ", ";
+    }
+    s << aFunction.GetExceptionAt(count - 1) << ")";
+  }
+
+  return s << ";";
+}
 
 IdlFunction::IdlFunction() 
 {
@@ -43,8 +71,8 @@ IdlFunction::~IdlFunction()
   }
   if (mExceptions) {
     for (int i = 0; i < mExceptions->Count(); i++) {
-      IdlException *excObj = (IdlException*)mExceptions->ElementAt(i);
-      delete excObj;
+      char *exc = (char*)mExceptions->ElementAt(i);
+      delete[] exc;
     }
   }
 }
@@ -100,7 +128,9 @@ void IdlFunction::AddException(char *aException)
     if (!mExceptions) {
       mExceptions = new nsVoidArray();
     }
-    mExceptions->AppendElement((void*)aException);
+    char *exc = new char[strlen(aException) + 1];
+    strcpy(exc, aException);
+    mExceptions->AppendElement((void*)exc);
   }
 }
 

@@ -53,9 +53,10 @@ public:
                   ~IdlVariable();
 
   void            SetType(Type aType);
-  Type            GeType();
+  Type            GetType();
   void            SetTypeName(char *aTypeName);
   char*           GetTypeName();
+  void            GetTypeAsString(char *aString, size_t aStringSize);
   
   void            SetValue(unsigned long aValue);
   void            SetValue(char aValue);

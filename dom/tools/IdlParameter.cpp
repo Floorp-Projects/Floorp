@@ -17,6 +17,25 @@
  */
 
 #include "IdlParameter.h"
+#include <ostream.h>
+
+ostream& operator<<(ostream &s, IdlParameter &aParameter)
+{
+  switch (aParameter.GetAttribute()) {
+    case IdlParameter::INPUT:
+      s << "in ";
+      break;
+    case IdlParameter::OUTPUT:
+      s << "out ";
+      break;
+    case IdlParameter::INOUT:
+      s << "inout ";
+      break;
+  }
+  char type[128];
+  aParameter.GetTypeAsString(type, 128);
+  return s << type << " " << aParameter.GetName();
+}
 
 IdlParameter::IdlParameter()
 {

@@ -24,6 +24,61 @@
 #include "IdlFunction.h"
 
 #include <string.h>
+#include <ostream.h>
+
+ostream& operator<<(ostream &s, IdlInterface &aInterface)
+{
+  int i;
+  // write the interface header
+  s << "interface " << aInterface.GetName();
+  long count = aInterface.BaseClasseCount();
+  if (count) {
+    s << " : ";
+    for (int i = 0; i < count - 1; i++) {
+      s << aInterface.GetBaseClassAt(i) << ", ";
+    }
+    s << aInterface.GetBaseClassAt(count - 1);
+  }
+
+  // write the interface body
+  s << " { \n";
+
+  // all the consts
+  for (i = 0; i < aInterface.ConstCount(); i++) {
+    IdlVariable *constObj = aInterface.GetConstAt(i);
+    char type[128];
+    constObj->GetTypeAsString(type, 128);
+    s << "  const " << type << " " << constObj->GetName() << " = ";
+    Type constType = constObj->GetType();
+    if (constType == TYPE_INT ||
+        constType == TYPE_LONG ||
+        constType == TYPE_SHORT ||
+        constType == TYPE_UINT ||
+        constType == TYPE_ULONG ||
+        constType == TYPE_USHORT) {
+      s << constObj->GetLongValue() << ";\n";
+    }
+    //XXX finish the other cases (string, double,...)
+  }
+
+  // all the enums
+  for (i = 0; i < aInterface.EnumCount(); i++) {
+    s << *(aInterface.GetEnumAt(i));
+  }
+
+  // all the attribute
+  for (i = 0; i < aInterface.AttributeCount(); i++) {
+    s << "  " << *(aInterface.GetAttributeAt(i)) << "\n";
+  }
+
+  // all the functions
+  for (i = 0; i < aInterface.FunctionCount(); i++) {
+    s << "  " << *(aInterface.GetFunctionAt(i)) << "\n";
+  }
+
+  return s << "}; \n";
+}
+
 
 IdlInterface::IdlInterface()
 {
@@ -78,7 +133,7 @@ IdlInterface::~IdlInterface()
   }
   if (mConsts) {
     for (int i = 0; i < mConsts->Count(); i++) {
-      IdlConst *constObj = (IdlConst*)mConsts->ElementAt(i);
+      IdlVariable *constObj = (IdlVariable*)mConsts->ElementAt(i);
       delete constObj;
     }
   }
@@ -99,8 +154,7 @@ IdlInterface::~IdlInterface()
 void IdlInterface::InheritsFrom(char *aBase)
 {
   if (aBase) {
-    size_t length = strlen(aBase) + 1;
-    char *baseName = new char[length];
+    char *baseName = new char[strlen(aBase) + 1];
     strcpy(baseName, aBase);
     if (!mBaseClasses) {
       mBaseClasses = new nsVoidArray();
@@ -236,7 +290,7 @@ IdlUnion* IdlInterface::GetUnionAt(long aIndex)
   return unionObj;
 }
 
-void IdlInterface::AddConst(IdlConst *aConst)
+void IdlInterface::AddConst(IdlVariable *aConst)
 {
   if (aConst) {
     if (!mConsts) {
@@ -254,11 +308,11 @@ long IdlInterface::ConstCount()
   return 0;
 }
 
-IdlConst* IdlInterface::GetConstAt(long aIndex)
+IdlVariable* IdlInterface::GetConstAt(long aIndex)
 {
-  IdlConst *constObj = (IdlConst*)0;
+  IdlVariable *constObj = (IdlVariable*)0;
   if (mConsts) {
-    constObj = (IdlConst*)mConsts->ElementAt(aIndex);
+    constObj = (IdlVariable*)mConsts->ElementAt(aIndex);
   }
   return constObj;
 }
