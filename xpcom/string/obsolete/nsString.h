@@ -130,6 +130,15 @@ virtual void SizeOf(nsISizeOfHandler* aHandler) const;
  */
 PRBool IsOrdered(void) const;
 
+/**
+ *  Determine whether or not this string has a length of 0
+ *  
+ *  @return  TRUE if empty.
+ */
+PRBool IsEmpty(void) const {
+  return PRBool(0==mLength);
+}
+
 /**********************************************************************
   Accessor methods...
  *********************************************************************/
