@@ -3765,45 +3765,6 @@ nsContextMenu.prototype = {
              if ( this.target.localName.toUpperCase() == "IMG" ) {
                 this.onImage = true;
                 this.imageURL = this.target.src;
-                // Look for image map.
-                var mapName = this.target.getAttribute( "usemap" );
-                if ( mapName ) {
-                    // Find map.
-                    var map = this.target.ownerDocument.getElementById( mapName.substr(1) );
-                    if ( map ) {
-                        // Search child <area>s for a match.
-                        var areas = map.childNodes;
-                        //XXX Client side image maps are too hard for now!
-                        areas.length = 0;
-                        for ( var i = 0; i < areas.length && !this.onLink; i++ ) {
-                            var area = areas[i];
-                            if ( area.nodeType == Node.ELEMENT_NODE
-                                 &&
-                                 area.localName.toUpperCase() == "AREA" ) {
-                                // Get type (rect/circle/polygon/default).
-                                var type = area.getAttribute( "type" );
-                                var coords = this.parseCoords( area );
-                                switch ( type.toUpperCase() ) {
-                                    case "RECT":
-                                    case "RECTANGLE":
-                                        break;
-                                    case "CIRC":
-                                    case "CIRCLE":
-                                        break;
-                                    case "POLY":
-                                    case "POLYGON":
-                                        break;
-                                    case "DEFAULT":
-                                        // Default matches entire image.
-                                        this.onLink = true;
-                                        this.link = area;
-                                        this.onSaveableLink = this.isLinkSaveable( this.link );
-                                        break;
-                                }
-                            }
-                        }
-                    }
-                }
              } else if ( this.target.localName.toUpperCase() == "OBJECT"
                          &&
                          // See if object tag is for an image.
