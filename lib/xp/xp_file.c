@@ -485,7 +485,7 @@ int XP_FileWrite (const void* source, int32 count, XP_File file)
     else
         realCount = count;
 
-	return( fwrite( source, 1, realCount, file ) );
+	return( fwrite( source, 1, realCount, (unsigned int)file ) );
 }
 
 /* The user can set these on the preferences dialogs; the front end
@@ -533,7 +533,7 @@ xp_unix_sprintf_stat( char * buf,
 
     while (--len > 0 && dirName[len] == '/')
 	/* do nothing */;		/* strip trailing slashes */
-    strncpy(buf, dirName, ++len);
+    strncpy(buf, dirName, (unsigned int) ++len);
     buf[len++] = '/';
     buf[len]   =  0;
     if (lang != NULL && *lang == 0)
@@ -715,18 +715,18 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		const char *newsrc_dir = ((FE_UserNewsRC && *FE_UserNewsRC)
 								  ? FE_UserNewsRC
 								  : (home ? home : ""));
-		const char *basename = (type == xpSNewsRC ? ".snewsrc" : ".newsrc");
+		const char *rcbasename = (type == xpSNewsRC ? ".snewsrc" : ".newsrc");
 		const char *suffix = (type == xpTemporaryNewsRC ? ".tmp" : "");
 		if (*name)
 		  sprintf (buf, "%.800s%.1s%.8s-%.128s%.4s",
 				   newsrc_dir,
 				   (newsrc_dir[XP_STRLEN(newsrc_dir)-1] == '/' ? "" : "/"),
-				   basename, name, suffix);
+				   rcbasename, name, suffix);
 		else
 		  sprintf (buf, "%.800s%.1s%.128s%.4s",
 				   newsrc_dir,
 				   (newsrc_dir[XP_STRLEN(newsrc_dir)-1] == '/' ? "" : "/"),
-				   basename, suffix);
+				   rcbasename, suffix);
 
 		name = buf;
 		break;
@@ -863,7 +863,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		if (name) XP_ASSERT (name[0] == '/');
 		XP_ASSERT (slash);
 		if (!slash) return 0;
-		XP_MEMCPY (buf, name, slash - name + 1);
+		XP_MEMCPY (buf, name,(unsigned int)(slash - name + 1));
 		buf [slash - name + 1] = '.';
 		XP_STRCPY (buf + (slash - name) + 2, slash + 1);
 		XP_STRCAT (buf, ".summary");
@@ -903,7 +903,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		  if (dot) {
 
 			  len = dot - name + 1;
-			  PL_strncpyz(buf, name, len);
+			  PL_strncpyz(buf, name, (unsigned int)len);
 		  }/* if */
 
 		  XP_STRCAT (buf, ".nab");
@@ -945,7 +945,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		  dot = XP_STRRCHR(name, '.');
 		  if (dot) {
 			  len = dot - name + 1;
-			  PL_strncpyz(buf, name, len);
+			  PL_strncpyz(buf, name, (unsigned int)len);
 		  }/* if */
 
 		  XP_STRCAT (buf, ".vcf");
@@ -981,7 +981,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		  dot = XP_STRRCHR(name, '.');
 		  if (dot) {
 			  len = dot - name + 1;
-			  PL_strncpyz(buf, name, len);
+			  PL_strncpyz(buf, name, (unsigned int)len);
 		  }/* if */
 
 		  XP_STRCAT (buf, ".ldif");
@@ -1174,7 +1174,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 
 				/* include NULL in length */
 				len = XP_STRLEN(name) + 1;
-				PL_strncpyz(buf, name, len);
+				PL_strncpyz(buf, name, (unsigned int)len);
 
 				/* we want to concatenate ".p12" if it is not the
 				 * last 4 characters of the name already.  
@@ -1343,7 +1343,7 @@ xp_TempName (XP_FileType type, const char * prefix, char* buf, char* buf2, unsig
 
 	  /* The name of the subdirectory is the bottom 5 bits of the time part,
 		 in hex (giving a total of 32 directories.) */
-	  sprintf (s, "%02X", (now & 0x1F));
+	  sprintf (s, "%02X", (unsigned int)(now & 0x1F));
 
 	  if (XP_Stat (buf, &st, xpURL))		/* create the dir if necessary */
 		XP_MakeDirectory (buf, type);
@@ -1728,7 +1728,7 @@ char *fe_GetConfigDir(void) {
     int len = strlen(home);
     len += strlen("/") + strlen(MOZ_USER_DIR) + 1;
 
-    config_dir = (char *)XP_CALLOC(len, sizeof(char));
+    config_dir = (char *)XP_CALLOC((unsigned int)len, sizeof(char));
     /* we really should use XP_STRN*_SAFE but this is MODULAR_NETLIB */
     XP_STRCPY(config_dir, home);
     XP_STRCAT(config_dir, "/");

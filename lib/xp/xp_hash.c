@@ -359,7 +359,7 @@ XP_HashListNew (int size,
     if(!hash_struct)
 	    return(NULL);
 
-	new_size = toprime (size);
+	new_size = toprime ((unsigned int)size);
 	XP_ASSERT (new_size >= size);
 
     hash_list = (XP_List **) XP_ALLOC(sizeof(XP_List *) * new_size);
@@ -406,7 +406,7 @@ PUBLIC int
 XP_HashListAddObject (XP_HashList * hash_struct, void * new_ele)
 {
     uint32   bucket_num;
-    int      result;
+    int      result=0;
     XP_List * list_ptr;
     void   * obj_ptr;
 
