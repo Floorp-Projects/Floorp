@@ -1404,12 +1404,12 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
   return rv;
 }
 
-nsresult nsHTTPChannel::ReleaseTransport(nsIChannel *aTransport)
+nsresult nsHTTPChannel::ReleaseTransport (nsIChannel *aTransport, PRBool keepAlive)
 {
   nsresult rv = NS_OK;
   if (aTransport) {
-    (void) mRequest->ReleaseTransport(aTransport);
-    rv = mHandler->ReleaseTransport(aTransport);
+    (void) mRequest->ReleaseTransport (aTransport);
+    rv   = mHandler->ReleaseTransport (aTransport, keepAlive);
   }
   
   return rv;

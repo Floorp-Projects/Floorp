@@ -954,7 +954,7 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
                                 o_pTrans);
 }
 
-nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
+nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans, PRBool keepAlive)
 {
     nsresult rv;
     PRUint32 count=0, transportsInUseCount = 0;
@@ -974,7 +974,7 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
     rv = mTransportList->RemoveElement(i_pTrans);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
 
-    if (mDoKeepAlive)
+    if (mDoKeepAlive && keepAlive)
     {
         nsresult rv;
         nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (i_pTrans, &rv);

@@ -98,7 +98,7 @@ public:
     nsresult            ResponseCompleted(nsIStreamListener* aListener,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg);
-    nsresult            ReleaseTransport(nsIChannel *aTransport);
+    nsresult            ReleaseTransport (nsIChannel *aTransport, PRBool keepAlive = PR_FALSE);
 
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);

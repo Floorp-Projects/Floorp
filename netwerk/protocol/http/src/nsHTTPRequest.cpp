@@ -286,16 +286,16 @@ nsresult nsHTTPRequest::WriteRequest()
     if (-1 != refLocation)
         mRequestBuffer.Truncate(refLocation);
 
-	char * httpVersion = " HTTP/1.0" CRLF;
+    char * httpVersion = " HTTP/1.0" CRLF;
 
-	switch (mVersion)
-	{
-		case HTTP_ZERO_NINE:
-			httpVersion = " HTTP/0.9"CRLF;
-			break;
-		case HTTP_ONE_ONE:
-			httpVersion = " HTTP/1.1"CRLF;
-	}
+    switch (mVersion)
+    {
+        case HTTP_ZERO_NINE:
+            httpVersion = " HTTP/0.9"CRLF;
+            break;
+        case HTTP_ONE_ONE:
+            httpVersion = " HTTP/1.1"CRLF;
+    }
 
     mRequestBuffer.Append (httpVersion);
 
