@@ -34,7 +34,7 @@ public:
 	
 	NS_DECL_ISUPPORTS
 
-	nsImapProtocol();
+	nsImapProtocol(PLEventQueue *aEventQueue);
 	
 	virtual ~nsImapProtocol();
 
@@ -75,6 +75,9 @@ public:
 	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
 	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
 
+    // ******** Thread support *******
+    NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue);
+
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url
@@ -91,6 +94,16 @@ private:
 	nsITransport			* m_transport; 
 	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
 	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
+
+    // ******* Thread support *******
+    PLEventQueue *m_sinkEventQueue;
+    PLEventQueue *m_eventQueue;
+    PRThread     *m_thread;
+    PRMonitor    *m_monitor;
+    PRBool       m_imapThreadIsRunning;
+    static void ImapThreadMain(void *aParm);
+    void ImapThreadMainLoop(void);
+    PRBool ImapThreadIsRunning();
 
 
 	// initialization function given a new url and transport layer

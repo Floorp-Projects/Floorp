@@ -75,9 +75,11 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
   return NS_NOINTERFACE;
 }
 
-nsImapProtocol::nsImapProtocol()
+nsImapProtocol::nsImapProtocol(PLEventQueue *aEventQueue)
 {
 	/* the following macro is used to initialize the ref counting data */
+    if (!aEventQueue)
+        NS_ASSERTION(0, "Ooooh no, null sink event queue.\n");
 	NS_INIT_REFCNT();
 	m_runningUrl = nsnull; // initialize to NULL
 	m_transport = nsnull;
@@ -86,6 +88,13 @@ nsImapProtocol::nsImapProtocol()
 	m_urlInProgress = PR_FALSE;
 	m_socketIsOpen = PR_FALSE;
 	m_dataBuf = nsnull;
+    
+    // ***** Thread support *****
+    m_sinkEventQueue = aEventQueue;
+    m_eventQueue = nsnull;
+    m_thread = nsnull;
+    m_monitor = nsnull;
+    m_imapThreadIsRunning = PR_FALSE;
 }
 
 nsImapProtocol::~nsImapProtocol()
@@ -94,8 +103,21 @@ nsImapProtocol::~nsImapProtocol()
 	NS_IF_RELEASE(m_outputStream); 
 	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
-
 	PR_FREEIF(m_dataBuf);
+
+    // **** We must be out of the thread main loop function
+    NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, 
+                 "Oops, thread is still running.\n");
+    if (m_eventQueue)
+    {
+        PL_DestroyEventQueue(m_eventQueue);
+        m_eventQueue = nsnull;
+    }
+    if (m_monitor)
+    {
+        PR_DestroyMonitor(m_monitor);
+        m_monitor = nsnull;
+    }
 }
 
 void nsImapProtocol::Initialize(nsIURL * aURL)
@@ -147,7 +169,101 @@ void nsImapProtocol::Initialize(nsIURL * aURL)
 	// m_dataBuf is used by ReadLine and SendData
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
+
+    // ******* Thread support *******
+    if (m_thread == nsnull)
+    {
+        m_monitor = PR_NewMonitor();
+        m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
+                                   this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                                   PR_UNJOINABLE_THREAD, 0);
+        NS_ASSERTION(m_thread, "Unable to create imap thread.\n");
+    }
 }
+
+void
+nsImapProtocol::ImapThreadMain(void *aParm)
+{
+    nsImapProtocol *me = (nsImapProtocol *) aParm;
+    NS_ASSERTION(me, "Yuk, me is null.\n");
+    
+    PR_CEnterMonitor(aParm);
+    NS_ASSERTION(me->m_imapThreadIsRunning == PR_FALSE, 
+                 "Oh. oh. thread is already running. What's wrong here?");
+    if (me->m_imapThreadIsRunning)
+    {
+        PR_CNotify(me);
+        PR_CExitMonitor(me);
+        return;
+    }
+    me->m_eventQueue = PL_CreateEventQueue("ImapProtocolThread",
+                                       PR_GetCurrentThread());
+    NS_ASSERTION(me->m_eventQueue, 
+                 "Unable to create imap thread event queue.\n");
+    if (!me->m_eventQueue)
+    {
+        PR_CNotify(me);
+        PR_CExitMonitor(me);
+        return;
+    }
+    me->m_imapThreadIsRunning = PR_TRUE;
+    PR_CNotify(me);
+    PR_CExitMonitor(me);
+
+    // call the platform specific main loop ....
+    me->ImapThreadMainLoop();
+
+    PR_CNotify(me);
+    PR_CExitMonitor(me);
+
+    PR_DestroyEventQueue(me->m_eventQueue);
+    me->m_eventQueue = nsnull;
+
+    // ***** Important need to remove the connection out from the connection
+    // pool - nsImapService **********
+    delete me;
+}
+
+PRBool
+nsImapProtocol::ImapThreadIsRunning()
+{
+    PRBool retValue = PR_FALSE;
+    PR_CEnterMonitor(this);
+    retValue = m_imapThreadIsRunning;
+    PR_CNotify(this);
+    PR_CExitMonitor(this);
+    return retValue;
+}
+
+NS_IMETHODIMP
+nsImapProtocol::GetThreadEventQueue(PLEventQueue **aEventQueue)
+{
+    // *** should subclassing PLEventQueue and ref count it ***
+    // *** need to find a way to prevent dangling pointer ***
+    // *** a callback mechanism or a semaphor control thingy ***
+    PR_CEnterMonitor(this);
+    *aEventQueue = m_eventQueue;
+    PR_CNotify(this);
+    PR_CExitMonitor(this);
+    return NS_OK;
+}
+
+void
+nsImapProtocol::ImapThreadMainLoop()
+{
+    // ****** please implement PR_LOG 'ing ******
+    while (ImapThreadIsRunning())
+    {
+        PLEvent* event = PL_WaitForEvent(m_eventQueue);
+        if(event == nsnull)
+        {
+            // This can only happen if the current thread is interrupted
+            return;
+        }
+        PL_HandleEvent(event);
+    }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // we suppport the nsIStreamListener interface 
