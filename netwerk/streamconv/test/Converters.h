@@ -23,6 +23,7 @@ public:
     NS_DECL_ISUPPORTS
 
     TestConverter();
+    virtual ~TestConverter() {;};
 
     // nsIStreamConverter methods
     NS_IMETHOD Convert(nsIInputStream *aFromStream, const PRUnichar *aFromType, 
