@@ -71,9 +71,9 @@ EXPORTS=  \
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
 
 clobber::
         rm -f $(DIST)\lib\$(MODULE).lib
-        rm -f $(DIST)\bin\$(MODULE).dll
+        rm -f $(DIST)\bin\components\$(MODULE).dll
