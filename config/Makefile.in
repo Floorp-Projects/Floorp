@@ -111,7 +111,11 @@ libs::
 	$(RM) -rf $(DIST)/sdk/nspr/bin $(DIST)/sdk/nspr/share
 	mv $(DIST)/sdk/nspr/lib $(DIST)/sdk/nspr/bin
 ifndef DISABLE_DIST_GRE
+ifeq ($(OS_ARCH),OS2)
+	cp $(DIST)/sdk/nspr/bin/$(LIB_PREFIX)*$(DLL_SUFFIX) $(GRE_DIST)
+else
 	$(INSTALL) $(DIST)/sdk/nspr/bin/$(LIB_PREFIX)*$(DLL_SUFFIX) $(GRE_DIST)
+endif
 endif
 endif
 
