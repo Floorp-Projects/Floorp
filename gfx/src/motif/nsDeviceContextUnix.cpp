@@ -240,6 +240,7 @@ PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
   return (newcolor);
 }
 
+
 void nsDeviceContextUnix :: InstallColormap()
 {
 
@@ -252,6 +253,28 @@ void nsDeviceContextUnix :: InstallColormap()
       number of visuals may be the one associated with this device context.
    */
 
+   if (mSurface) {
+     InstallColormap((Display*)mSurface->display, (Drawable)mSurface->drawable);
+   }
+   else {
+    // No surface so we have to create a window just to get a drawable so we
+    // can install the colormap.
+     Window w;
+     Display * d = XtDisplay(mWidget);
+     w = ::XCreateSimpleWindow(d, 
+                               RootWindow(d, DefaultScreen(d)),
+                               0, 0, 1, 1, 0,
+                               BlackPixel(d, DefaultScreen(d)),
+                               WhitePixel(d, DefaultScreen(d)));
+     InstallColormap(d, w);
+     ::XDestroyWindow(d, w);
+   }
+}
+
+
+void nsDeviceContextUnix :: InstallColormap(Display* aDisplay, Drawable aDrawable)
+{
+
   XWindowAttributes wa;
 
 
@@ -260,8 +283,8 @@ void nsDeviceContextUnix :: InstallColormap()
     return;
 
   // Find the depth of this visual
-  ::XGetWindowAttributes(mSurface->display,
-			 mSurface->drawable,
+  ::XGetWindowAttributes(aDisplay,
+			 aDrawable,
 			 &wa);
   
   mDepth = wa.depth;
@@ -382,6 +405,63 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const nsString& aFontNam
   return rv;
 }
 
+
+NS_IMETHODIMP nsDeviceContextUnix::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
+{
+  aPaletteInfo.isPaletteDevice = PR_FALSE;
+  aPaletteInfo.sizePalette = 0;
+  aPaletteInfo.numReserved = 0;
+  aPaletteInfo.palette = nsnull;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsDeviceContextUnix::GetILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+  InstallColormap();
+
+  if (nsnull == mColorSpace) {
+   if (16 == mDepth) {
+    IL_RGBBits colorRGBBits;
+    // Default is to create a 16-bit color space
+
+    colorRGBBits.red_shift = mRedOffset;  
+    colorRGBBits.red_bits = mRedBits;
+    colorRGBBits.green_shift = mGreenOffset;
+    colorRGBBits.green_bits = mGreenBits; 
+    colorRGBBits.blue_shift = mBlueOffset; 
+    colorRGBBits.blue_bits = mBlueBits;  
+
+    mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 16);
+    } 
+    else if (24 == mDepth) {
+      DeviceContextImpl::GetILColorSpace(aColorSpace);
+      return NS_OK;
+    }
+    else {
+printf("\n\n\n\n Unknown depth %d\n",mDepth);
+      IL_RGBBits colorRGBBits;
+      // Default is to create a 16-bit color space
+      colorRGBBits.red_shift = mRedOffset;  
+      colorRGBBits.red_bits = mRedBits;
+      colorRGBBits.green_shift = mGreenOffset;
+      colorRGBBits.green_bits = mGreenBits; 
+      colorRGBBits.blue_shift = mBlueOffset; 
+      colorRGBBits.blue_bits = mBlueBits;  
+      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 16);
+    }
+  
+    if (nsnull == mColorSpace) {
+      aColorSpace = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
+  aColorSpace = mColorSpace;
+  IL_AddRefToColorSpace(aColorSpace);
+  return NS_OK;
+}
 
 
 
