@@ -375,6 +375,18 @@
 			settings = {
 			};
 		};
+		A774482E0404546400A967DF = {
+			isa = PBXFileReference;
+			name = libmozz.dylib;
+			path = ../../../modules/zlib/src/libmozz.dylib;
+			refType = 2;
+		};
+		A774482F0404546C00A967DF = {
+			fileRef = A774482E0404546400A967DF;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		A79172DB0403993400A967DF = {
 			isa = PBXFileReference;
 			name = libimglib2.dylib;
@@ -478,6 +490,7 @@
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F6BD638701B30F5301A962F7,
+				A774482E0404546400A967DF,
 				F6BD645501B3167601A962F7,
 				F6BD64FB01B3184301A962F7,
 				F6BD638901B30F5301A962F7,
@@ -498,6 +511,7 @@
 				F6BD638D01B30F5301A962F7,
 				F6BD638E01B30F5301A962F7,
 				F6BD637D01B30E2901A962F7,
+				A774482F0404546C00A967DF,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
