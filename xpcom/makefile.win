@@ -27,6 +27,7 @@ DIRS=   typelib        \
         threads        \
         reflect        \
         proxy          \
+		  appshell       \
         tools          \
         build          \
         sample         \
