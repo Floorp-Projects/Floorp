@@ -37,6 +37,7 @@
 #include "nsIExternalHelperAppService.h"
 #include "nsIStringBundle.h"
 #include "nsIFilePicker.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define HELPERAPP_DIALOG_URL       "chrome://global/locale/helperAppLauncher.properties"
@@ -292,12 +293,41 @@ nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, c
 
     filePicker->AppendFilters(nsIFilePicker::filterAll);
 
+    nsCOMPtr<nsILocalFile> startDir;
+    // Pull in the user's preferences and get the default download directory.
+    nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+    if ( prefs ) 
+    {
+      rv = prefs->GetFileXPref( "browser.download.dir", getter_AddRefs( startDir ) );
+      if ( NS_SUCCEEDED(rv) && startDir ) 
+      {
+        PRBool isValid = PR_FALSE;
+        startDir->Exists( &isValid );
+        if ( isValid )  // Set file picker so startDir is used.
+          filePicker->SetDisplayDirectory( startDir );
+      }
+    }
+
+
     PRInt16 dialogResult;
     filePicker->Show(&dialogResult);
     if (dialogResult == nsIFilePicker::returnCancel)
       rv = NS_ERROR_FAILURE;
     else          
+    {
+      // be sure to save the directory the user chose as the new browser.download.dir
       rv = filePicker->GetFile(aNewFile);
+      if (*aNewFile)
+      {
+        nsCOMPtr<nsIFile> newDirectory;
+        (*aNewFile)->GetParent(getter_AddRefs(newDirectory));
+        nsCOMPtr<nsILocalFile> newLocalDirectory (do_QueryInterface(newDirectory));
+
+        if (newLocalDirectory)
+         prefs->SetFileXPref( "browser.download.dir", newLocalDirectory);
+      }
+
+    }
   }
 
   return rv;
