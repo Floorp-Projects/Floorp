@@ -348,9 +348,7 @@ nsCategoryManager::EnumerateCategory( const char *aCategoryName,
     CategoryNode* category = find_category(aCategoryName);
     if (category)
       {
-        nsCOMPtr<nsIEnumerator> innerEnumerator;
-        if ( NS_SUCCEEDED(status = NS_NewHashtableEnumerator(category, ExtractKeyString, 0, getter_AddRefs(innerEnumerator))) )
-          status = NS_NewAdapterEnumerator(_retval, innerEnumerator);
+        status = NS_NewHashtableEnumerator(category, ExtractKeyString, 0, _retval);
       }
 
       // If you couldn't find the category, or had trouble creating an enumerator...
@@ -371,12 +369,11 @@ nsCategoryManager::EnumerateCategories(nsISimpleEnumerator **_retval)
     *_retval = 0;
 
     nsresult status = NS_ERROR_NOT_AVAILABLE;
-    nsCOMPtr<nsIEnumerator> innerEnumerator;
 
-    if ( NS_SUCCEEDED(status = NS_NewHashtableEnumerator(this, ExtractKeyString, 0, getter_AddRefs(innerEnumerator))))
-      status = NS_NewAdapterEnumerator(_retval, innerEnumerator);
+    status = NS_NewHashtableEnumerator(this, ExtractKeyString, 0, _retval);
  
-      // If you couldn't find the category, or had trouble creating an enumerator...
+    // If you couldn't find the category, or had trouble creating an
+    // enumerator...
     if ( NS_FAILED(status) )
     {
         NS_IF_RELEASE(*_retval);

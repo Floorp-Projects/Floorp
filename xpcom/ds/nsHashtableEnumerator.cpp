@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Rob Ginda <rginda@ix.netcom.com>
+ *   Alec Flett <alecf@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,74 +40,20 @@
 
 /*
  * Implementation of nsHashEnumerator.
- * Use it to expose nsIEnumerator interfaces around nsHashtable objects.  
- * Contributed by Rob Ginda, rginda@ix.netcom.com 
+ * Use it to expose nsISimpleEnumerator interfaces around nsHashtable objects. 
  */
 
 #include "nscore.h"
 #include "nsHashtableEnumerator.h"
-
-class nsHashtableEnumerator : public nsIBidirectionalEnumerator
-{
-  public:    
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIENUMERATOR
-    NS_DECL_NSIBIDIRECTIONALENUMERATOR
-
-  public:    
-    virtual ~nsHashtableEnumerator ();
-    nsHashtableEnumerator (nsHashtable *aHash, 
-                           NS_HASH_ENUMERATOR_CONVERTER aConverter,
-                           void *aData);
-    nsHashtableEnumerator (); /* no implementation */
-
-  private:
-    NS_IMETHOD Reset(nsHashtable *aHash, 
-                     NS_HASH_ENUMERATOR_CONVERTER aConverter,
-                     void *aData);
-    NS_IMETHOD ReleaseElements();
-
-    nsISupports  **mElements;
-    PRInt16      mCount, mCurrent;
-    PRBool       mDoneFlag;
-    
-};
+#include "nsISimpleEnumerator.h"
 
 struct nsHashEnumClosure
 {
     NS_HASH_ENUMERATOR_CONVERTER Converter;
     nsISupports                  **Elements;
-    PRInt16                      Current;
+    PRUint32                     Current;
     void                         *Data;
 };
-
-extern "C" NS_COM nsresult
-NS_NewHashtableEnumerator (nsHashtable *aHash, 
-                           NS_HASH_ENUMERATOR_CONVERTER aConverter,
-                           void *aData, nsIEnumerator **retval)
-{
-    NS_PRECONDITION (retval, "null ptr");
-
-    *retval = nsnull;
-    
-    nsHashtableEnumerator *hte = new nsHashtableEnumerator (aHash, aConverter,
-                                                            aData);
-    if (!hte)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    return hte->QueryInterface (NS_GET_IID(nsIEnumerator),
-                                (void **)retval);
-}
-
-nsHashtableEnumerator::nsHashtableEnumerator (nsHashtable *aHash,
-                                        NS_HASH_ENUMERATOR_CONVERTER aConverter,
-                                        void *aData)
-        : mElements(nsnull), mCount(0), mDoneFlag(PR_TRUE)
-{
-    NS_INIT_ISUPPORTS();
-    Reset (aHash, aConverter, aData);
-    
-}
 
 PRBool PR_CALLBACK 
 hash_enumerator (nsHashKey *aKey, void *aObject, void *closure)
@@ -124,140 +72,107 @@ hash_enumerator (nsHashKey *aKey, void *aObject, void *closure)
 
 }
 
-NS_IMETHODIMP
-nsHashtableEnumerator::Reset (nsHashtable *aHash,
-                              NS_HASH_ENUMERATOR_CONVERTER aConverter,
-                              void *aData)
+class nsHashtableEnumerator : public nsISimpleEnumerator
 {
-    nsHashEnumClosure c;
+public:
+    nsHashtableEnumerator(nsHashtable *aHash,
+                                NS_HASH_ENUMERATOR_CONVERTER aConverter,
+                                void* aData);
+    virtual ~nsHashtableEnumerator();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    void* operator new (size_t size, nsHashtable* aArray) CPP_THROW_NEW;
+    void operator delete(void* ptr) {
+        ::operator delete(ptr);
+    }
     
-    ReleaseElements();
+private:
+    // not to be implemented
+    void* operator new (size_t size);
+    
+    PRUint32 mCurrent;
+    PRUint32 mCount;
+    nsISupports* mElements[1];
+};
 
-    mCurrent = c.Current = 0;
+NS_COM nsresult
+NS_NewHashtableEnumerator(nsHashtable *aHash,
+                          NS_HASH_ENUMERATOR_CONVERTER aConverter,
+                          void* aData, nsISimpleEnumerator **retval)
+{
+    *retval = nsnull;
+
+    nsHashtableEnumerator *hte =
+        new (aHash) nsHashtableEnumerator(aHash, aConverter, aData);
+
+    if (!hte)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *retval = NS_STATIC_CAST(nsISimpleEnumerator*, hte);
+	NS_ADDREF(*retval);
+
+    return NS_OK;
+}
+
+void*
+nsHashtableEnumerator::operator new (size_t size, nsHashtable* aHash)
+    CPP_THROW_NEW
+{
+    // create enough space such that mValueArray points to a large
+    // enough value. Note that the initial value of size gives us
+    // space for mValueArray[0], so we must subtract
+    size += (aHash->Count() - 1) * sizeof(nsISupports*);
+
+    // do the actual allocation
+    nsHashtableEnumerator * result =
+        NS_STATIC_CAST(nsHashtableEnumerator*, ::operator new(size));
+
+    return result;
+}
+
+NS_IMPL_ISUPPORTS1(nsHashtableEnumerator, nsISimpleEnumerator)
+
+nsHashtableEnumerator::nsHashtableEnumerator(nsHashtable *aHash,
+                                             NS_HASH_ENUMERATOR_CONVERTER
+                                             aConverter,
+                                             void* aData)
+{
+    NS_INIT_ISUPPORTS();
     mCount = aHash->Count();
-    if (mCount == 0)
-        return NS_ERROR_FAILURE;
 
-    mElements = c.Elements = new nsISupports*[mCount];
+    nsHashEnumClosure c;
+    c.Current = mCurrent = 0;
+    c.Elements = mElements;
     c.Data = aData;
     c.Converter = aConverter;
-    aHash->Enumerate (&hash_enumerator, &c);
+    aHash->Enumerate(&hash_enumerator, &c);
 
-    mCount = c.Current;  /* some items may not have converted correctly */
-    mDoneFlag = PR_FALSE;
-    
-    return NS_OK;
-    
+    mCount = c.Current; /* some items may not have converted correctly */
+
+}
+
+nsHashtableEnumerator::~nsHashtableEnumerator()
+{
+    for (;mCurrent<mCount; mCurrent++)
+        NS_RELEASE(mElements[mCurrent]);
 }
 
 NS_IMETHODIMP
-nsHashtableEnumerator::ReleaseElements()
+nsHashtableEnumerator::HasMoreElements(PRBool *aResult)
 {
-    
-    for (; mCount > 0; mCount--)
-        if (mElements[mCount - 1])
-            NS_RELEASE(mElements[mCount - 1]);
-
-    delete[] mElements;
-    mElements = nsnull;
-    
-    return NS_OK;
-    
-}
-
-NS_IMPL_ISUPPORTS2(nsHashtableEnumerator, nsIBidirectionalEnumerator, nsIEnumerator)
-
-nsHashtableEnumerator::~nsHashtableEnumerator() 
-{
-    ReleaseElements();
-}
-
-NS_IMETHODIMP
-nsHashtableEnumerator::First ()
-{
-    if (!mElements || (mCount == 0))
-        return NS_ERROR_FAILURE;
-
-    mCurrent = 0;
-    mDoneFlag = PR_FALSE;
-    
-    return NS_OK;
-
-}
-
-NS_IMETHODIMP
-nsHashtableEnumerator::Last ()
-{
-    if (!mElements || (mCount == 0))
-        return NS_ERROR_FAILURE;
-    
-    mCurrent = mCount - 1;
-    mDoneFlag = PR_FALSE;
-    
-    return NS_OK;
-
-}
-
-NS_IMETHODIMP
-nsHashtableEnumerator::Prev ()
-{
-    if (!mElements || (mCount == 0) || (mCurrent == 0)) {
-        mDoneFlag = PR_TRUE;
-        return NS_ERROR_FAILURE;
-    }
-
-    mCurrent--;
-    mDoneFlag = PR_FALSE;
-
-    return NS_OK;
-    
-}
-
-NS_IMETHODIMP
-nsHashtableEnumerator::Next ()
-{
-    if (!mElements || (mCount == 0) || (mCurrent == mCount - 1)) {
-        mDoneFlag = PR_TRUE;
-        return NS_ERROR_FAILURE;
-    }
-
-    mCurrent++;
-    mDoneFlag = PR_FALSE;
-    
+    *aResult = (mCurrent < mCount);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHashtableEnumerator::CurrentItem (nsISupports **retval)
+nsHashtableEnumerator::GetNext(nsISupports** aResult)
 {
-    NS_PRECONDITION (retval, "null ptr");
-    NS_PRECONDITION (mElements, "invalid state");
-    NS_ASSERTION (mCurrent >= 0, "mCurrent less than zero");
-
-    if (mCount == 0)
-    {
-        *retval = nsnull;
-        return NS_ERROR_FAILURE;
-    }
-
-    NS_ASSERTION (mCurrent <= mCount - 1, "mCurrent too high");
-
-    *retval = mElements[mCurrent];
-
-    /* who says the item can't be null? */
-    if (*retval)
-        NS_ADDREF(*retval);
-
-    return NS_OK;
+    if (mCurrent < mCount) return NS_ERROR_UNEXPECTED;
     
-}
-
-NS_IMETHODIMP
-nsHashtableEnumerator::IsDone ()
-{
-
-    if ((!mElements) || (mCount == 0) || (mDoneFlag))
-        return NS_OK;
-
-    return NS_COMFALSE;
+    *aResult = mElements[mCurrent++];
+    // no need to addref - we'll just steal the refcount from the
+    // array of elements
+    return NS_OK;
 }
