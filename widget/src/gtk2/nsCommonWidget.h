@@ -53,12 +53,14 @@
 extern PRLogModuleInfo *gWidgetLog;
 extern PRLogModuleInfo *gWidgetFocusLog;
 extern PRLogModuleInfo *gWidgetIMLog;
+extern PRLogModuleInfo *gWidgetDrawLog;
 
 #endif /* MOZ_LOGGING */
 
 #define LOG(args) PR_LOG(gWidgetLog, 4, args)
-#define LOGFOCUS(args) PR_LOG(gWidgetFocusLog, 4, args);
-#define LOGIM(args) PR_LOG(gWidgetIMLog, 4, args);
+#define LOGFOCUS(args) PR_LOG(gWidgetFocusLog, 4, args)
+#define LOGIM(args) PR_LOG(gWidgetIMLog, 4, args)
+#define LOGDRAW(args) PR_LOG(gWidgetDrawLog, 4, args)
 
 class nsCommonWidget : public nsBaseWidget {
 public:
