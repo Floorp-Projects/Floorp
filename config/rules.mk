@@ -918,7 +918,7 @@ $(MKDEPENDENCIES)::
 	@$(MAKE_OBJDIR)
 	touch $(MKDEPENDENCIES)
 ifdef USE_AUTOCONF
-	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(AC_DEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>/dev/null
+	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>/dev/null
 	@mv depend.mk depend.mk.old && cat depend.mk.old | sed "s|^$(OBJDIR_NAME)/$(srcdir)/|$(OBJDIR_NAME)/|g" > depend.mk && rm -f depend.mk.old
 else
 	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(INCLUDES) $(CSRCS) $(CPPSRCS)
@@ -965,11 +965,19 @@ endif
 #############################################################################
 # Yet another depend system: -MD
 
-
-MDDEPENDENCIES		:= $(addprefix $(OBJDIR)/.deps/,$(OBJS:.o=.pp))
-
-ifdef MDDEPENDENCIES
--include $(MDDEPENDENCIES)
+ifdef COMPILER_DEPEND
+ifdef OBJS
+#ifneq ($@,install)
+MDDEPEND_FILES := $(foreach obj, $(OBJS), \
+                    $(dir $(obj)).deps/$(basename $(notdir $(obj))).pp)
+MDDEPEND_FILES := $(wildcard $(MDDEPEND_FILES))
+ifdef MDDEPEND_FILES
+# Get the list of objects to force.
+MDDEPEND_FORCE := $(shell $(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES))
+# (MDDEPEND_FORCE gets added to the PHONY target).
+endif
+#endif
+endif
 endif
 #############################################################################
 
@@ -1013,7 +1021,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer run_apprunner $(OBJDIR) $(DIRS)
+.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer run_apprunner $(OBJDIR) $(DIRS) $(MDDEPEND_FORCE)
 
 envirocheck::
 	@echo -----------------------------------
