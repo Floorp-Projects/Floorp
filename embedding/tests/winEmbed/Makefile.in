@@ -36,6 +36,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= winEmbed$(BIN_SUFFIX)
 RESFILE		= winEmbed.res
+MOZILLA_INTERNAL_API = 1
 
 MODULE		= winEmbed
 
