@@ -19,7 +19,7 @@
 #define nsILinkHandler_h___
 
 #include "nsweb.h"
-#include "nsIWebWidget.h"
+#include "nsISupports.h"
 class nsIFrame;
 class nsString;
 class nsIPostData;
@@ -43,9 +43,7 @@ enum nsLinkState {
  */
 class nsILinkHandler : public nsISupports {
 public:
-  NS_IMETHOD Init(nsIWebWidget* aWidget) = 0;
-
-  NS_IMETHOD GetWebWidget(nsIWebWidget** aResult) = 0;
+  NS_IMETHOD Init() = 0;
 
   /**
    * Process a click on a link. aFrame is the frame that contains the
@@ -73,8 +71,5 @@ public:
    */
   NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState) = 0;
 };
-
-// Standard link handler that does what you would expect (XXX doc...)
-extern NS_WEB nsresult NS_NewLinkHandler(nsILinkHandler** aInstancePtrResult);
 
 #endif /* nsILinkHandler_h___ */
