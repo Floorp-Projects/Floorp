@@ -82,10 +82,10 @@ pages[0][0]=new page("main.htm",null,null);
 pages[0][1]=new method("ipreview/inpvw1.htm","parent.content.go('Internet Preview')",true);
 pages[0][2]=new method("preview/duepvw1.htm","parent.content.go('Preview')",true);
 pages[0][3]=new method("intro/intro1.htm","parent.controls.checkShowIntroFlag('')",true);
-pages[0][4]=new condition("intro/intro1.htm","Mode Selection","Show_Intro_Screens","yes");
-pages[0][5]=new condition("needs1.htm","Mode Selection","ForceNew","yes");
-pages[0][6]=new condition("useAcct.htm","Mode Selection","ForceExisting","yes");
-pages[0][7]=new action("accounts.htm");
+//pages[0][4]=new condition("intro/intro1.htm","Mode Selection","Show_Intro_Screens","yes");
+//pages[0][5]=new condition("needs1.htm","Mode Selection","ForceNew","yes");
+//pages[0][6]=new condition("useAcct.htm","Mode Selection","ForceExisting","yes");
+//pages[0][7]=new action("accounts.htm");
 
 pages[1]=new Array();
 pages[1][0]=new page("accounts.htm",null,null);
@@ -259,12 +259,14 @@ pages[31][1]=new method("preview/duepvw5.htm","parent.content.go('')",true);
 
 pages[32]=new Array();
 pages[32][0]=new page("preview/duepvw5.htm",null,null);
-pages[32][1]=new method("preview/duepvw6.htm","parent.content.go('')",true);
+pages[32][1]=new method("preview/duepvw7a.htm","parent.content.go('')",true);
 
+//The following array is ignored as reference to Conference feature is removed
 pages[33]=new Array();
 pages[33][0]=new page("preview/duepvw6.htm",null,null);
 pages[33][1]=new method("preview/duepvw7.htm","parent.content.go('')",true);
 
+//The following array is ignored as reference to Netcaster feature is removed
 pages[34]=new Array();
 pages[34][0]=new page("preview/duepvw7.htm",null,null);
 pages[34][1]=new method("preview/duepvw7a.htm","parent.content.go('')",true);
@@ -299,7 +301,7 @@ pages[40][1]=new method("ipreview/inpvw5.htm","parent.content.go('')",true);
 
 pages[41]=new Array();
 pages[41][0]=new page("ipreview/inpvw5.htm",null,null);
-pages[41][1]=new method("ipreview/inpvw6.htm","parent.content.go('')",true);
+pages[41][1]=new method("ipreview/inpvw5a.htm","parent.content.go('')",true);
 
 pages[42]=new Array();
 pages[42][0]=new page("ipreview/inpvw6.htm",null,null);
@@ -346,9 +348,9 @@ pages[50][1]=new method("intro/intro6.htm","parent.content.go('')",true);
 
 pages[51]=new Array();
 pages[51][0]=new page("intro/intro6.htm",null,null);
-pages[51][1]=new condition("needs1.htm","Mode Selection","ForceNew","yes");
-pages[51][2]=new condition("useAcct.htm","Mode Selection","ForceExisting","yes");
-pages[51][3]=new action("accounts.htm");
+//pages[51][1]=new condition("needs1.htm","Mode Selection","ForceNew","yes");
+//pages[51][2]=new condition("useAcct.htm","Mode Selection","ForceExisting","yes");
+pages[51][1]=new action("main.htm");
 
 pages[52]=new Array();
 pages[52][0]=new page("editfour.htm",null,null);
@@ -356,6 +358,13 @@ pages[52][1]=new method("register.htm","parent.content.go('register.htm')",true)
 pages[52][2]=new method("ok.htm","parent.content.go('ok.htm')",true);
 pages[52][3]=new method("okreboot.htm","parent.content.go('okreboot.htm')",true);
 pages[52][4]=new method("error.htm","parent.content.go('error.htm')",true);
+
+
+// Added to accommodate Netcenter Screen
+pages[53]=new Array();
+pages[53][0]=new page("ipreview/inpvw5a.htm",null,null);
+pages[53][1]=new method("ipreview/inpvw6.htm","parent.content.go('')",true);
+
 
 
 
