@@ -795,7 +795,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
     const jschar *s1 = js_SkipWhiteSpace(s);
     size_t length = js_strlen(s1);
 
-    // Use cbuf to avoid malloc
+    /* Use cbuf to avoid malloc */
     if (length >= sizeof cbuf) {
         cstr = (char *) malloc(length + 1);
         if (!cstr)
