@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2003/08/17 00:44:05 $ 
+# $Revision: 1.15 $ 
+# $Date: 2004/07/12 01:02:31 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -61,23 +61,30 @@ use FileStructure;
                                            );
 
     my ($tree) = $form{'tree'};
+    my ($out) = '';
 
-    my ($url) = (
-               FileStructure::get_filename($tree, 'tree_URL').
-                 '/'.
-                 $FileStructure::DEFAULT_HTML_PAGE
-                 );
+    if (defined($tree)) {
+        // called from a tinderbox web page.
+        // send them back to the status page.
 
-    my ($link) = HTMLPopUp::Link(
-                                 "linktxt"=>"Tinderbox page",
-                                 "href"=>$url,
-                                 );
-
-    my ($out) = <<EOF;
+        my ($url) = (
+                     FileStructure::get_filename($tree, 'tree_URL').
+                     '/'.
+                     $FileStructure::DEFAULT_HTML_PAGE
+                     );
+        
+        my ($link) = HTMLPopUp::Link(
+                                     "linktxt"=>"Tinderbox page",
+                                     "href"=>$url,
+                                     );
+        $out = <<EOF;
 Content-type: text/html
 
+<HTML>
+</HEAD>
 <TITLE>tinderbox</TITLE>
 <META HTTP-EQUIV="Refresh" CONTENT="0; URL=$url">
+</HEAD>
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
         LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 <CENTER>
@@ -89,11 +96,27 @@ Sending you back to the regenerated $link.<br>
 </FONT>
 </TD></TR></TABLE>
 </CENTER>
+</BODY>
+</HTML>
 
 EOF
 
 ;
 
+    } else {
+        // called via HTTPPost
+        // Tell the webserver that everythings fine.
+
+        $out = <<EOF;
+Content-type: text/html
+
+<HTML></HTML>
+EOF
+
+;
+
+    }
+        
     print $out;
 
     HTMLPopUp::regenerate_HTML_pages();
