@@ -1626,43 +1626,53 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     sv = GetNearestScrollingView(focusView);
   }
 
-  PRBool passToParent = PR_FALSE;
-
+  PRBool passToParent;
   if (sv) {
     GenerateMouseEnterExit(aPresContext, &mouseOutEvent);
-
-    // Check the scroll position before and after calling ScrollBy[Page|Line]s.
-    // This allows us to detect whether the view is not scrollable
-    // (for whatever reason) and bubble up the scroll to the parent document.
 
     nscoord xPos, yPos;
     sv->GetScrollPosition(xPos, yPos);
 
-    PRInt32 scrollX = 0;
-    PRInt32 scrollY = aNumLines;
+    // If we're already at the scroll limit for this view, scroll the
+    // parent view instead.
+    if (aNumLines < 0) {
+      passToParent = aScrollHorizontal ? (xPos <= 0) : (yPos <= 0);
+    } else {
+      nsSize scrolledSize;
+      sv->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
+      
+      nsIView* portView = nsnull;
+      CallQueryInterface(sv, &portView);
+      if (!portView)
+        return NS_ERROR_FAILURE;
+      nsRect portRect;
+      portView->GetBounds(portRect);
 
-    if (aScrollPage)
-      scrollY = (scrollY > 0) ? 1 : -1;
-
-    if (aScrollHorizontal)
-    {
-      scrollX = scrollY;
-      scrollY = 0;
+      passToParent = aScrollHorizontal ? (xPos + portRect.width >= scrolledSize.width)
+        : (yPos + portRect.height >= scrolledSize.height);
     }
 
-    if (aScrollPage)
-      sv->ScrollByPages(scrollX, scrollY);
-    else
-      sv->ScrollByLines(scrollX, scrollY);
+    if (!passToParent) {
+      PRInt32 scrollX = 0;
+      PRInt32 scrollY = aNumLines;
 
-    nscoord newXPos, newYPos;
-    sv->GetScrollPosition(newXPos, newYPos);
-
-    if (newXPos != xPos || newYPos != yPos) {
+      if (aScrollPage)
+        scrollY = (scrollY > 0) ? 1 : -1;
+      
+      if (aScrollHorizontal)
+        {
+          scrollX = scrollY;
+          scrollY = 0;
+        }
+      
+      if (aScrollPage)
+        sv->ScrollByPages(scrollX, scrollY);
+      else
+        sv->ScrollByLines(scrollX, scrollY);
+      
       if (focusView)
         ForceViewUpdate(focusView);
-    } else
-      passToParent = PR_TRUE;
+    }
   } else
     passToParent = PR_TRUE;
 
