@@ -1,40 +1,23 @@
 window { 
- display: block;
  background-color: white; 
 } 
 
 tree { 
- display: table; 
  background-color: #FFFFFF; 
  border: 5px ridge; 
  border-spacing: 0px; 
  width: 75%;
 } 
 
-treeitem { 
- display: table-row; 
-} 
-
-treehead { 
- display: table-header-group; 
-} 
-
-treebody { 
- display: table-row-group; 
-} 
-
 treecol[id="migration"] {
- display: table-column;
  width: 25%;
 }
 
 treecol[id="username"] {
- display: table-column;
  width: 75%;
 }
 
 treecell { 
- display: table-cell;
  font-family: Verdana, Sans-Serif;
  font-size: 8pt;
  white-space: nowrap;
