@@ -93,8 +93,11 @@ ssl_init()
   fileout=0 #FIXME, looks like all.sh tried to turn this on but actually didn't
   #fileout=1
   #verbose="-v" #FIXME - see where this is usefull
-  cd ${CLIENTDIR}
 
+  USER_NICKNAME=TestUser
+  NORM_EXT=""
+
+  cd ${CLIENTDIR}
 }
 
 ########################### is_selfserv_alive ##########################
@@ -177,15 +180,21 @@ start_selfserv()
 ########################################################################
 ssl_cov()
 {
-  html_head "SSL Cipher Coverage"
+  html_head "SSL Cipher Coverage $NORM_EXT"
 
   testname=""
   sparam="-c ABCDEFabcdefghijklmnvy"
   start_selfserv # Launch the server
                
+  p=""
+
   cat ${SSLCOV} | while read tls param testname
   do
-      if [ $tls != "#" ]; then
+      p=`echo "$testname" | sed -e "s/ .*//"`   #sonmi, only run extended test on SSL3 and TLS
+      
+      if [ "$p" = "SSL2" -a "$NORM_EXT" = "Extended test" ] ; then
+          echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
+      elif [ "$tls" != "#" ] ; then
           echo "$SCRIPTNAME: running $testname ----------------------------"
           TLS_FLAG=-T
           if [ $tls = "TLS" ]; then
@@ -226,12 +235,12 @@ ssl_cov()
 ########################################################################
 ssl_auth()
 {
-  html_head "SSL Client Authentication"
+  html_head "SSL Client Authentication $NORM_EXT"
 
   cat ${SSLAUTH} | while read value sparam cparam testname
   do
       if [ $value != "#" ]; then
-          cparam=`echo $cparam | sed -e 's;_; ;g'`
+          cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
           start_selfserv
 
           echo "tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} \\"
@@ -265,11 +274,14 @@ ssl_auth()
 ########################################################################
 ssl_stress()
 {
-  html_head "SSL Stress Test"
+  html_head "SSL Stress Test $NORM_EXT"
 
   cat ${SSLSTRESS} | while read value sparam cparam testname
   do
-      if [ $value != "#" ]; then
+      p=`echo "$testname" | sed -e "s/Stress //" -e "s/ .*//"`   #sonmi, only run extended test on SSL3 and TLS
+      if [ "$p" = "SSL2" -a "$NORM_EXT" = "Extended test" ] ; then
+          echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
+      elif [ $value != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g'`
           start_selfserv
           if [ `uname -n` = "sjsu" ] ; then
@@ -313,6 +325,17 @@ ssl_cleanup()
 
 if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
     ssl_init
+    ssl_cov
+    ssl_auth
+    ssl_stress
+
+    SERVERDIR=$EXT_SERVERDIR
+    CLIENTDIR=$EXT_CLIENTDIR
+    R_SERVERDIR=$R_EXT_SERVERDIR
+    R_CLIENTDIR=$R_EXT_CLIENTDIR
+    USER_NICKNAME=ExtendedSSLUser
+    NORM_EXT="Extended test"
+    cd ${CLIENTDIR}
     ssl_cov
     ssl_auth
     ssl_stress
