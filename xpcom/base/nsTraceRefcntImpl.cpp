@@ -87,7 +87,7 @@ int nsIToA16(PRUint32 aNumber, char* aBuffer)
   return count;
 }
 
-#if defined(_WIN32) // WIN32 stack walking code
+#if defined(_WIN32) && defined(_M_IX86) // WIN32 x86 stack walking code
 #include "imagehlp.h"
 #include <stdio.h>
 
@@ -343,7 +343,7 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
                                   void* aLibrayHandle)
 {
 #ifdef MOZ_TRACE_XPCOM_REFCNT
-#if defined(_WIN32)
+#if defined(_WIN32) && defined(_M_IX86) /* Win32 x86 only */
   InitTraceLog();
   if (PR_LOG_TEST(gTraceRefcntLog,PR_LOG_DEBUG)) {
     HANDLE myProcess = ::GetCurrentProcess();
