@@ -118,7 +118,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
   public ViewedFolder getDefaultFolder() throws MessagingException {
     if (fDefaultFolder == null) {
       checkConnected();
-      if (isConnected() || isLocal()) {
+      if (isConnected()) {
         fDefaultFolder = new ViewedFolderBase(this, null,
                                               fStore.getDefaultFolder());
 
@@ -166,7 +166,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
    */
 
   public boolean isConnected() {
-    return fConnected;
+    return ((isLocal()) ? true : fConnected);
   }
 
   /**
