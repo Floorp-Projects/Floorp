@@ -55,6 +55,9 @@ public:
 	LO_FormElementData *GetElementData() const;
 	lo_FormElementTextData *GetElementTextData() const;
 	lo_FormElementTextareaData *GetElementTextareaData() const;
+#ifdef ENDER
+    lo_FormElementTextareaData *GetElementHtmlareaData() const;
+#endif /*ENDER*/
 	lo_FormElementMinimalData *GetElementMinimalData() const;
 	lo_FormElementToggleData *GetElementToggleData() const;
 	lo_FormElementSelectData *GetElementSelectData() const;

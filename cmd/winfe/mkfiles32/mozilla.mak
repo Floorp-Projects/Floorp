@@ -745,6 +745,9 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 !elseif defined(MOZ_JAVA)
     /DJAVA \
 !endif
+!if defined(MOZ_ENDER)
+    /DENDER \
+!endif
     /DMOZILLA_CLIENT
 
 
@@ -1297,6 +1300,10 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\fmselone.cpp
 	$(DEPTH)\cmd\winfe\fmtext.cpp
 	$(DEPTH)\cmd\winfe\fmtxarea.cpp
+!ifdef MOZ_ENDER
+	$(DEPTH)\cmd\winfe\fmhtml.cpp
+	$(DEPTH)\cmd\winfe\editfloat.cpp
+!endif
 !endif
 	$(DEPTH)\cmd\winfe\frameglu.cpp   
 	$(DEPTH)\cmd\winfe\framinit.cpp   

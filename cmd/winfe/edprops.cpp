@@ -1007,6 +1007,7 @@ int CColorComboBox::SetColor(COLORREF cr)
 // CColorPicker     Widget for picking colors
 // We can't use Pretranslate or SetCapture under Win16, 
 //  so we must derive from CWnd, not CDialog
+IMPLEMENT_DYNAMIC(CColorPicker,CWnd);
 
 CColorPicker::CColorPicker(CWnd      * pParent,
                      MWContext * pMWContext,

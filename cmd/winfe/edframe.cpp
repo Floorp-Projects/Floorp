@@ -1311,7 +1311,14 @@ void FE_EditorDocumentLoaded(MWContext* pMWContext)
     if ( ! pMWContext ) {
         return;
     }
-    CEditFrame* pFrame = (CEditFrame*)GetFrame(pMWContext);
+    CEditFrame* pFrame;
+    CGenericFrame *pWnd = (CGenericFrame*)GetFrame(pMWContext);
+#ifdef ENDER
+    if (pWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))
+        return;
+    else 
+#endif //ENDER
+        pFrame = (CEditFrame*)pWnd;
 
     // Clear cached pointers to old elements
     CWinCX * pContext = WINCX(pMWContext);

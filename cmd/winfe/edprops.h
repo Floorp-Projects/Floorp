@@ -321,14 +321,14 @@ public:
               UINT        nIDCaption = IDS_TEXT_COLOR,  // Defines what color we are setting
               RECT      * pCallerRect = NULL);  // If null, normal centerred dialog,
                                                 //  else positions like a dropdown from caller's rect
-
+DECLARE_DYNAMIC(CColorPicker);
 // Dialog Data
 	//{{AFX_DATA(CColorPicker)
 	enum { IDD = IDD_COLOR_DLG };
 	//}}AFX_DATA
 
     virtual ~CColorPicker();
-
+    CWnd *getParent(){return m_pParent;}
 private:    
     RECT            m_CallerRect;
     CWnd           *m_pParent;

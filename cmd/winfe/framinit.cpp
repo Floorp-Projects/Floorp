@@ -35,6 +35,11 @@
 #include "edview.h"
 #include "vocab.h"
 
+#ifdef ENDER
+#include "editfloat.h"
+#include "edframe.h" //for the WM_TOOLBARCONTROLER define
+#endif //ENDER
+
 #ifdef _DEBUG
 #undef THIS_FILE
 static char BASED_CODE THIS_FILE[] = __FILE__;
@@ -86,6 +91,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CGenericFrame)
     ON_WM_SYSCOMMAND()
     ON_WM_SETFOCUS()
 	ON_COMMAND(ID_VIEW_TOOLBAR, OnOptionsViewToolBar)
+#ifdef ENDER
+    ON_MESSAGE(WM_TOOLCONTROLLER,OnToolController)
+#endif
     ON_COMMAND(ID_OPTIONS_LOADINLINEDIMAGES, OnToggleImageLoad)
     ON_COMMAND(ID_OPTIONS_SHOWSTARTERBUTTONS, OnOptionsShowstarterbuttons)
 	ON_COMMAND(ID_OPEN_MAIL_WINDOW, OnOpenMailWindow)
@@ -120,6 +128,9 @@ CMainFrame::CMainFrame()
 	m_barLocation = NULL;
 	m_barLinks = NULL;
 	m_pCommandToolbar = NULL;
+#ifdef ENDER
+    m_pToolBarController = NULL;
+#endif
 
 	m_tabFocusInMainFrm = TAB_FOCUS_IN_NULL ;
 	m_SrvrItemCount = 0;
@@ -136,6 +147,11 @@ CMainFrame::~CMainFrame()
 
 	if(m_pCommandToolbar)
 		delete m_pCommandToolbar;
+
+#ifdef ENDER
+    if (m_pToolBarController)
+    	delete m_pToolBarController;
+#endif //ENDER
 }
 
 
@@ -167,6 +183,25 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
         if( IsEditFrame() && pDontCare->GetContext() ) {
             pDontCare->GetContext()->is_editor = TRUE;
         }
+#ifdef ENDER
+        else
+        {
+            m_pToolBarController = new CEnderBar();
+            if (m_pToolBarController || !m_pToolBarController->Init(this,TRUE))
+            {
+                TRACE("Bad ComposeBar");
+                if (m_pToolBarController)
+                    delete m_pToolBarController;
+                m_pToolBarController = NULL;
+                return FALSE;
+            }
+            m_pToolBarController->ShowWindow(SW_HIDE);
+            m_pToolBarController->SetWindowText(_T("Edit"));//RESOURCE IT!
+            EnableDocking(CBRS_ALIGN_BOTTOM);
+            FloatControlBar(m_pToolBarController,CPoint(0,0),CBRS_ALIGN_LEFT);
+        }
+#endif //ENDER
+
 #endif //EDITOR
 		// mwh - CDCCX::Initialize() will initialize the color palette, but we have to make sure we have 
 		// the focus first for realizePalette()	to work.
@@ -417,7 +452,6 @@ int CMainFrame::CreateMainToolbar(void)
 			return FALSE;
 	}
 
-
 	m_pCommandToolbar->SetBitmap(IDB_PICTURES);
 
 	CButtonToolbarWindow *pWindow = new CButtonToolbarWindow(m_pCommandToolbar, theApp.m_pToolbarStyle, 43, 27, eLARGE_HTAB);
@@ -525,6 +559,8 @@ void CMainFrame::BeginStreamingOfRDFToolbars()
 	}
 	*/
 }
+
+
 
 void CMainFrame::OnShowWindow (BOOL bShow, UINT nStatus)
 {
@@ -914,3 +950,11 @@ void CMainFrame::OnDropFiles(HDROP hDropInfo)
     //Mocha will handle cleanup and DragFinish when it calls back in.
 #endif /* MOZ_NGLAYOUT */
 }
+
+
+#ifdef ENDER
+LONG CMainFrame::OnToolController(UINT,LONG)
+{
+	return (LONG)m_pToolBarController;
+}
+#endif //ENDER

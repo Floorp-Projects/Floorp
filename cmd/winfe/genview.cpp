@@ -36,6 +36,10 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 #include "libevent.h"
 #include "findrepl.h"
 
+#ifdef ENDER
+#include "edview.h"
+#endif //ENDER
+
 /////////////////////////////////////////////////////////////////////////////
 // CGenericView
 
@@ -233,6 +237,13 @@ BOOL CGenericView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 		//              and should get appropriately called there.
 		BOOL bViewChild = IsChild(pFocus);
 		BOOL bGenericView = pFocus->IsKindOf(RUNTIME_CLASS(CGenericView));
+#ifdef ENDER
+        if (pFocus->IsKindOf(RUNTIME_CLASS(CNetscapeEditView)))
+        {
+            if (((CNetscapeEditView *)pFocus)->GetEmbedded())
+                bGenericView = FALSE; //we need this message!
+        }
+#endif //ENDER
 		if(bViewChild == TRUE && bGenericView == FALSE) {
 			//      Try an OnCmdMessage directly on the window with focus.
 			//      Probably a form widget.
@@ -322,7 +333,10 @@ void CGenericView::OnLButtonUp(UINT nFlags, CPoint point)
 
 	//      If focus didn't go to one of the children, this will give it back
 	//              to the frame so that our command keys work.
-	if(GetFrame() != NULL)  {
+    /*disabling for the editor, it continuously sends me Killfocus 
+    and Setfocus messages to the edview, mjudge*/
+	if (GetContext() != NULL  && !EDT_IS_EDITOR(GetContext()->GetContext()))
+	 if(GetFrame() != NULL)  {
 		if(GetFrame()->GetFrameWnd() != NULL)   {
             CPoint ptScreen = point;
             ClientToScreen( &ptScreen );

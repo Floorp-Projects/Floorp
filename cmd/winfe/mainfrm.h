@@ -40,6 +40,10 @@ extern int iLowerAnimationColors;
 extern int iLowerColors;
 extern int colorCubeSize;
 
+#ifdef ENDER
+class CEnderBar;
+#endif //ENDER
+
 class CMainFrame : public CGenericFrame
 {
 public: // create from serialization only
@@ -61,6 +65,10 @@ private:
 	CURLBar		* m_barLocation;
 	CRDFToolbar *m_barLinks;
 	CCommandToolbar *m_pCommandToolbar;
+#ifdef ENDER
+    //CEditToolBarController * m_pToolBarController;
+    CEnderBar * m_pToolBarController;
+#endif //ENDER
 
 
 private :
@@ -73,6 +81,9 @@ private :
 public :
 	enum  { TAB_FOCUS_IN_NULL, TAB_FOCUS_IN_CHROME,TAB_FOCUS_IN_GRID };
 	void SetTabFocusFlag( int nn ) { m_tabFocusInMainFrm = nn; }
+#ifdef ENDER
+    CEnderBar *getComposeToolBar(){return m_pToolBarController;}
+#endif //ENDER
 //#endif /* NO_TAB_NAVIGATION */
 
 // Implementation
@@ -174,8 +185,9 @@ protected:
 	afx_msg void OnUpdateViewCommandToolbar(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewLocationToolbar(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewCustomToolbar(CCmdUI* pCmdUI);
-
-
+#ifdef ENDER
+    afx_msg LONG OnToolController(UINT,LONG);
+#endif 
 	//}}AFX_MSG
 
 	BOOL FileBookmark(HT_Resource pFolder);

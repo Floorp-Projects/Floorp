@@ -4072,7 +4072,9 @@
 #define IDM_SAVEASTEMPLATE              65504
 #define IDS_ADVSEARCH_TITLE             65505
 #define IDS_BASICSEARCH_TITLE           65506
-
+#define ID_ENDER                        65507
+#define IDS_EDIT_FLOAT_TOOLBAR          65508
+#define IDB_EDIT_FLOAT_TOOLBAR          65509
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

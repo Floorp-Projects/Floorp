@@ -2716,6 +2716,7 @@ int CGenericFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// We use a taskbar
 	theApp.GetTaskBarMgr().Reference(TRUE);
 #endif // MOZ_TASKBAR
+
     return 0;
 }
 

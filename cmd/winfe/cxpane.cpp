@@ -24,6 +24,14 @@
 #include "navcontv.h"
 #include "rdfliner.h"
 
+#ifdef ENDER
+#include "netsdoc.h" //ENDER
+#include "edview.h"  //ENDER
+#include "edt.h"     //ENDER
+extern char * EDT_NEW_DOC_URL; //ENDER
+#endif //ENDER
+
+
 //  What is CPaneCX?
 //      A pane is part of a complete window.
 //
@@ -1529,12 +1537,13 @@ BOOL CPaneCX::SubClass(HWND hWnd, BOOL bSubClass)
 #endif
 }
 
-char* getBuiltInAttribute (LO_BuiltinStruct *builtin_struct, char* att) {
+char* getBuiltInAttribute (LO_BuiltinStruct *pBuiltin_struct, char* att) {
 	int n = 0;
-
-	while (n < builtin_struct->attribute_cnt) {
-		char* attName = *(builtin_struct->attribute_list + n);
-		char* attValue = *(builtin_struct->value_list + n);
+	if (!pBuiltin_struct || !att)
+		return NULL;
+	while (n < pBuiltin_struct->attribute_cnt) {
+		char* attName = *(pBuiltin_struct->attribute_list + n);
+		char* attValue = *(pBuiltin_struct->value_list + n);
 		if (attName && (stricmp(attName, att) == 0)) {
 			return attValue; 
 		}
@@ -1543,31 +1552,114 @@ char* getBuiltInAttribute (LO_BuiltinStruct *builtin_struct, char* att) {
 	return NULL;
 }
 
-void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruct *builtin_struct)
+void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruct *pBuiltin_struct)
 {
-	// This code assumes a type of builtin/tree.  Will have to be changed.
-    HWND cView = PANECX(pContext)->GetPane();
-
-	// Ok, we have the parent window.  we need to know where to display it.
-	int xPos = builtin_struct->x;
-    int yPos = builtin_struct->y;
-	int width = builtin_struct->width;
-	int height = builtin_struct->height;
-	char* url = getBuiltInAttribute(builtin_struct, "data");
-    char* target = getBuiltInAttribute(builtin_struct, "target");
-	
-	if (builtin_struct->FE_Data == NULL)
-	{
-		CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(CWnd::FromHandle(cView), xPos, yPos, width, height, url, builtin_struct->attribute_cnt, builtin_struct->attribute_list, builtin_struct->value_list);
-		((CRDFOutliner*)pWnd->GetOutlinerParent()->GetOutliner())->SetWindowTarget(target);
-		builtin_struct->FE_Data = pWnd;
+    HWND cView = GetPane();
+	CWnd* cWnd = NULL;
+	char* classid = NULL;
+	if ( !pBuiltin_struct || !(cWnd = CWnd::FromHandle(cView))){
+		XP_ASSERT(FALSE); //very invalid stuff.
+		return;
 	}
+	// Ok, we have the parent window.  we need to know where to display it.
+	int xPos = pBuiltin_struct->x;
+	int yPos = pBuiltin_struct->y;
+	int width = pBuiltin_struct->width;
+	int height = pBuiltin_struct->height;
+
+#ifdef ENDER
+	classid = getBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
+	if (!classid)
+		TRACE("Bad object tag NULL\n");
+	if (classid && !XP_STRCMP(classid,"builtin:tree")){
+#endif //ENDER
+
+		char* url = getBuiltInAttribute(pBuiltin_struct, "data");
+		char* target = getBuiltInAttribute(pBuiltin_struct, "target");
+		if (pBuiltin_struct->FE_Data == NULL ){
+			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attribute_cnt, pBuiltin_struct->attribute_list, pBuiltin_struct->value_list);
+			((CRDFOutliner*)pWnd->GetOutlinerParent()->GetOutliner())->SetWindowTarget(target);
+			pBuiltin_struct->FE_Data = pWnd;
+		}
+#ifdef ENDER
+	}
+	else if (classid && !XP_STRCMP(classid,"builtin:htmlarea")) { //ENDER
+		if (pBuiltin_struct->FE_Data == NULL) {
+			//create a new CPaneCX
+			CNetscapeDoc* pDoc = new CNetscapeDoc();
+			CNetscapeEditView* pWnd = new CNetscapeEditView();
+			pWnd->SetEmbedded(TRUE);
+			RECT rect;
+			rect.left=xPos;
+			rect.top=yPos;
+			rect.right=xPos+width;
+			rect.bottom=yPos+height;
+			if (!pWnd->Create(NULL, NULL, AFX_WS_DEFAULT_VIEW, rect, cWnd, ID_ENDER, NULL))
+            {
+				TRACE("Warning: could not create view for frame.\n");
+                delete pDoc;
+                delete pWnd;
+            }
+			else
+            {
+                pBuiltin_struct->FE_Data = pWnd;
+			    CWinCX* pDontCare = new CWinCX((CGenericDoc *)pDoc,
+									     ((CGenericView *)cWnd)->GetFrame(), (CGenericView *)pWnd);
+			    if (pDontCare && pDontCare->GetContext())
+                {
+                    pDontCare->GetContext()->is_editor = TRUE;
+			        pWnd->SetContext(pDontCare);
+			        pDontCare->Initialize(pDontCare->CDCCX::IsOwnDC(), &rect);
+			        pDontCare->NormalGetUrl(EDT_NEW_DOC_URL);
+			        pWnd->UpdateWindow();
+			        cWnd->InvalidateRect(&rect); //may be redundant, if flashing this is why .mjudge
+                }
+            }
+		}
+	}
+	else if (classid)
+		TRACE("Bad object tag %s\n",classid);
+#endif //ENDER
 }
 
-void CPaneCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin)
+void CPaneCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin_struct)
 {
-	// This code assumed a type of builtin/tree.  Will have to be changed.
+	char* classid = NULL;
+	if ( !pBuiltin_struct || !pContext ){
+		XP_ASSERT(FALSE); //very invalid stuff.
+		return;
+	}
 
-	CRDFContentView* pWnd = (CRDFContentView*)pBuiltin->FE_Data;
-	pWnd->DestroyWindow();
+#ifdef ENDER
+	classid = getBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
+	if (!classid)
+		TRACE("Bad object tag NULL\n");
+
+	if (classid && !XP_STRCMP(classid,"builtin:tree")){
+#endif //ENDER
+		CRDFContentView* pWnd = (CRDFContentView*)pBuiltin_struct->FE_Data;
+		if (pWnd)
+			pWnd->DestroyWindow();
+#ifdef ENDER
+	}
+	else
+		if (classid && !XP_STRCMP(classid,"builtin:htmlarea")){
+			CObject* pObj = (CObject *)pBuiltin_struct->FE_Data;
+			if (pObj && pObj->IsKindOf( RUNTIME_CLASS( CNetscapeEditView ))){
+				CNetscapeEditView* pWnd = (CNetscapeEditView *)pObj;
+				CNetscapeDoc* pDoc = (CNetscapeDoc *)pWnd->GetDocument();
+				//warning! do not allow the CWinCX to RE-FREE its frame. 
+				//we are borrowning the frame from the "browser window or layer"
+				//call ClearFrame to "Clear the frame"
+				CWinCX *pCX = pWnd->GetContext();
+				if (pCX){
+					if (pDoc)
+						delete pDoc;
+					pCX->ClearFrame();
+				    EDT_DestroyEditBuffer(pCX->GetContext());
+				}
+				pWnd->DestroyWindow();
+			}
+		}
+#endif //ENDER
 }

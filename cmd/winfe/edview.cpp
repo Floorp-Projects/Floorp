@@ -40,6 +40,9 @@
 #include "compfrm.h"
 #include "edtclass.h"
 #include "abdefn.h"
+#ifdef ENDER
+#include "editfloat.h"
+#endif //ENDER
  
 #ifdef _IME_COMPOSITION
 #define CLEARBIT(A, N)	A&=~N
@@ -137,6 +140,10 @@ UINT CNetscapeEditView::m_converrmsg[NUM_CONVERR]={
 };
 
 
+#ifdef ENDER
+CControlBarInfo CNetscapeEditView::s_Info;
+BOOL CNetscapeEditView::s_EnderBarRectInit=FALSE;
+#endif //ENDER
 
 struct PluginHookStruct //this is used for the callbacks from plugins you must
 {                       //free the outputimagecontext yourself
@@ -462,7 +469,10 @@ CNetscapeEditView::CNetscapeEditView()
     m_nLoadingImageCount = 0;
     m_pLoadingImageDlg = NULL;
     m_FileSaveStatus = ED_ERROR_NONE;
-	
+#ifdef ENDER
+	m_bEmbedded = FALSE; //mjudge for ENDER
+    m_EnderBarRectInit = FALSE;
+#endif //ENDER
     memset( (void*)&m_EditState, 0, sizeof( ED_FORMATSTATE ) );
     m_EditState.nParagraphFormat = P_UNKNOWN;
 
@@ -600,7 +610,10 @@ void CNetscapeEditView::AddPluginMenus()
 {
 	CFrameWnd *pFrame = GetParentFrame();
 	ASSERT(pFrame != NULL);
-
+#ifdef ENDER
+	if (GetEmbedded())
+		return; //mjudge ENDER leave out until we know what to do here.
+#endif //ENDER
     // Get the menu bar
     CMenu *pMenu=pFrame->GetMenu();
     if (pMenu == NULL)
@@ -793,8 +806,8 @@ void CNetscapeEditView::OnSetFocus(CWnd *pOldWin)
         pFrame->SetFocusField(this);
     }
 #endif // MOZ_MAIL_NEWS
-    CNetscapeView::OnSetFocus(pOldWin);
     //TRACE2("CNetscapeEditView::OnSetFocus hCurrentFocus=%X, View=%X\n", (pOldWin ? pOldWin->m_hWnd : 0), this->m_hWnd );
+    CNetscapeView::OnSetFocus(pOldWin);
 
     // create a caret if there is no selected text
     MWContext * pMWContext = GET_MWCONTEXT;
@@ -888,6 +901,31 @@ void CNetscapeEditView::OnSetFocus(CWnd *pOldWin)
     }
 #endif //XP_WIN16
 #endif //_IME_COMPOSITION
+#ifdef ENDER
+    if (GetEmbedded())
+    {
+        CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
+        CEnderBar *pControler = pFrame->getComposeToolBar();
+        if (pControler)
+        {
+            //must calculate position for toolbar
+            if (!m_EnderBarRectInit)
+            {
+                CRect t_rect;
+                CRect t_EnderBarRect;
+                pControler->GetWindowRect(t_rect);
+                GetWindowRect(t_EnderBarRect);
+                t_EnderBarRect.top -= 54;
+                t_EnderBarRect.left = t_EnderBarRect.right-310;
+                pFrame->FloatControlBar(pControler,CPoint(t_EnderBarRect.left,t_EnderBarRect.top),CBRS_ALIGN_LEFT);
+                m_EnderBarRectInit=TRUE;
+            }
+            pFrame->ShowControlBar(pControler,TRUE,FALSE);
+            pFrame->RecalcLayout();
+            UpdateWindow();
+        }
+    }
+#endif //ENDER
 }
 
 void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)  
@@ -941,7 +979,33 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
     }
 #endif //_IME_COMPOSITION
     // CNetscapeView doens't need this?
-    CNetscapeView::OnKillFocus(pOldWin);
+#ifdef ENDER
+    if (GetEmbedded())
+    {
+        CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
+        CEnderBar *pControler = pFrame->getComposeToolBar();
+        CWnd *pWnd=NULL;
+        CWnd *pCPparent=NULL;
+        BOOL bColorPicker=FALSE;
+        if (pOldWin)
+        {
+            pWnd = pOldWin->GetParent();
+            if (pOldWin->IsKindOf(RUNTIME_CLASS(CColorPicker)))
+            {
+                pCPparent = ((CColorPicker *)pOldWin)->getParent();
+                bColorPicker= (CGenericFrame *)::GetFrame(GET_MWCONTEXT) == (CGenericFrame *)pCPparent;
+            }
+        }
+        if (pControler && !bColorPicker && (!pWnd || !pWnd->IsKindOf(RUNTIME_CLASS(CComboToolBar))))
+        {
+            //remember where the controler was!
+            pFrame->ShowControlBar(pControler,FALSE,FALSE);
+            pFrame->RecalcLayout();
+            UpdateWindow();
+        }
+    }
+#endif //ENDER
+    CNetscapeView::OnKillFocus(pOldWin); 
 }
 
 BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
@@ -2579,8 +2643,16 @@ void CNetscapeEditView::OnCharacterBarToggle()
     } 
     else 
     {   // In Mail Composer, we didn't embed the Character toolbar inside a CCommandToolbar
-	    CEditToolBarController * pController = 
-		    (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+        CEditToolBarController * pController = NULL;
+    #ifdef ENDER
+        CEnderBar *pEnderBar = NULL;
+        if (GetEmbedded())
+        {
+            pEnderBar = (CEnderBar *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+        }
+        else
+    #endif //ENDER
+            pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
 	    if( pController )
         {
             CComboToolBar * pToolBar = pController->GetCharacterBar();
@@ -2606,8 +2678,16 @@ void CNetscapeEditView::OnUpdateCharacterBarToggle(CCmdUI* pCmdUI)
         } 
         else 
         {   // In Mail Composer, we didn't embed the Character toolbar inside a CCommandToolbar
-	        CEditToolBarController * pController = 
-		        (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+            CEditToolBarController * pController = NULL;
+#ifdef ENDER
+            CEnderBar *pEnderBar = NULL;
+            if (GetEmbedded())
+            {
+                pEnderBar = (CEnderBar *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+            }
+            else
+#endif //ENDER
+                pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
 	        if( pController && pController->GetCharacterBar() )
             {
                 pCmdUI->m_pMenu->ModifyMenu(ID_OPT_CHARBAR_TOGGLE, MF_BYCOMMAND | MF_STRING, ID_OPT_CHARBAR_TOGGLE,
@@ -3613,4 +3693,21 @@ void CNetscapeEditView::OnSelectNextNonTextObject()
 {
     EDT_SelectNextNonTextObject(GET_MWCONTEXT);
 }
+
+#ifdef ENDER
+int
+CNetscapeEditView::OnMouseActivate( CWnd *pWin, UINT uHitTest, UINT uMessage )
+{
+    if (GetEmbedded() && WM_LBUTTONDOWN == uMessage)
+    {
+        SetFocus();
+        return MA_NOACTIVATE;
+    }
+    else
+        return CNetscapeView::OnMouseActivate( pWin, uHitTest, uMessage );
+}
+
+#endif //ENDER
+
 #endif // EDITOR
+

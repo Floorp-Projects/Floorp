@@ -32,10 +32,14 @@ class CNetscapeDoc : public CGenericDoc
 {
 	friend class CNetscapeDocTemplate;
 	friend class CDCCX;	//	Need a friend that can create us.
-
+#ifdef ENDER
+public: //ENDER needs to create a CNetscapeDoc outide of the template method.
+#else
+protected:
+#endif
+	CNetscapeDoc(); 
 protected: // create from serialization only
 	DECLARE_DYNCREATE(CNetscapeDoc)
-	CNetscapeDoc();
 
 // Implementation
 public:

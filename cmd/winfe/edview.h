@@ -84,6 +84,7 @@ private:
 class CImagePage;
 class CDocColorPage;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // Edit Document view
 // All stuff specific to editing the main document viewing area
@@ -116,10 +117,16 @@ public:
     // EdtSaveToTempCallback puts temp filename here
     char   *m_pTempFilename;  
 
+#ifdef ENDER
+	void SetEmbedded(BOOL bEmbedded){m_bEmbedded=bEmbedded;} //mjudge for ENDER
+	BOOL GetEmbedded(){return m_bEmbedded;}                  //mjudge for ENDER
+#else
+protected:
+#endif //ENDER
+    CNetscapeEditView();                                     //mjudge for ENDER
+    ~CNetscapeEditView();                                    //mjudge for ENDER
 protected: // create from serialization only
     DECLARE_DYNCREATE(CNetscapeEditView)
-    CNetscapeEditView();
-    ~CNetscapeEditView();
 
 	// Editor plugin support.
     void AddPluginMenus();					// initialize the plugin menus
@@ -139,7 +146,12 @@ private:
     // Flag to undo our auto-selecting of object on right mouse button popup menu
     BOOL             m_bAutoSelectObject;
     CEditorResourceDll m_resourcedll;
-    
+#ifdef ENDER
+    BOOL             m_bEmbedded;
+    static CControlBarInfo    s_Info;
+    BOOL             m_EnderBarRectInit;
+    static BOOL      s_EnderBarRectInit;
+#endif //ENDER
 #ifdef _IME_COMPOSITION
     BOOL m_imebool;
     IIMEDll *m_pime;
@@ -514,6 +526,9 @@ protected:
     afx_msg void OnUpdateEditFindAgain(CCmdUI* pCmdUI);
     afx_msg void OnUpdateFileDocinfo(CCmdUI* pCmdUI);
     afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+#ifdef ENDER
+    virtual afx_msg int OnMouseActivate( CWnd *pWin, UINT uHitTest, UINT uMessage );
+#endif //ENDER
 
     LRESULT OnButtonMenuOpen(WPARAM wParam, LPARAM lParam);
 

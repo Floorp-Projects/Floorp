@@ -32,6 +32,8 @@ static char BASED_CODE THIS_FILE[] = __FILE__;
 
 static int iComboRightBorder = 6;
 
+IMPLEMENT_DYNAMIC(CComboToolBar,CToolBar)
+
 /////////////////////////////////////////////////////////////////////////////
 // CComboToolBar
 CComboToolBar::CComboToolBar()
@@ -99,7 +101,7 @@ BOOL CComboToolBar::Create( BOOL bIsPageComposer, CWnd* pParent, UINT nIDBar, UI
 		AfxIsValidAddress(pIDArray, sizeof(UINT) * nIDCount, FALSE));
 
 #ifdef XP_WIN16
-    DWORD dwStyle = WS_CHILD|WS_VISIBLE | CBRS_TOP;
+    DWORD dwStyle = WS_CHILD|WS_VISIBLE | CBRS_FLOATING ;
 	m_pToolTip = new CNSToolTip();
     if(m_pToolTip && !m_pToolTip->Create(this, TTS_ALWAYSTIP) ){
        TRACE("Unable To create ToolTip\n");
@@ -212,7 +214,8 @@ BOOL CComboToolBar::Create( BOOL bIsPageComposer, CWnd* pParent, UINT nIDBar, UI
 #ifdef WIN32
     if ( m_nComboBoxCount )
         // Ugly! Takes too much room to dock on sides if we have comboboxes
-        EnableDocking(CBRS_ALIGN_TOP | CBRS_ALIGN_BOTTOM);
+        //EnableDocking(CBRS_ALIGN_TOP | CBRS_ALIGN_BOTTOM);
+        EnableDocking(CBRS_ALIGN_ANY);
     else
         EnableDocking(CBRS_ALIGN_ANY);
 #endif

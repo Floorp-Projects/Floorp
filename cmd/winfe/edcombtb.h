@@ -65,6 +65,7 @@ class CComboToolBar : public CToolBar
 {
 // Construction
 public:
+    DECLARE_DYNAMIC(CComboToolBar)
 	CComboToolBar();
 
 // Attributes

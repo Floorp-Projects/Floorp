@@ -26,6 +26,9 @@
 #include "fmselone.h"
 #include "fmtext.h"
 #include "fmtxarea.h"
+#ifdef ENDER
+#include "fmhtml.h" //ENDER
+#endif
 #include "fmrdonly.h"
 
 #include "windowsx.h"
@@ -79,6 +82,12 @@ CFormElement *CFormElement::GetFormElement(CAbstractCX *pCX, LO_FormElementStruc
 				case FORM_TYPE_TEXTAREA:
 					pRetval = (CFormElement *)new CFormTextarea();
 					break;
+#ifdef ENDER
+				case FORM_TYPE_HTMLAREA:
+					pRetval = (CFormElement *)new CFormHtmlarea();
+					break;
+#endif
+
 				case FORM_TYPE_FILE:
 					pRetval = (CFormElement *)new CFormFile();
 					break;
@@ -223,6 +232,23 @@ lo_FormElementTextareaData *CFormElement::GetElementTextareaData() const
 	return(pRetval);
 }
 
+
+#ifdef ENDER
+//	Careful when using, may return incorrect structure if not correct
+//		form type.
+lo_FormElementTextareaData *CFormElement::GetElementHtmlareaData() const
+{
+	lo_FormElementTextareaData *pRetval = NULL;
+	if(GetElementData())	{
+		ASSERT(
+			GetElementData()->type == FORM_TYPE_HTMLAREA
+			);
+		pRetval = &(GetElementData()->ele_textarea);
+	}
+
+	return(pRetval);
+}
+#endif
 
 //	Always safe to use.
 lo_FormElementMinimalData *CFormElement::GetElementMinimalData() const

@@ -4136,6 +4136,7 @@ BEGIN
     IDS_ADVSEARCH           "<< Advanced Search"
     IDS_BASICSEARCH         "<< Basic Search"
     IDS_SEARCH_PROMPT       "Search..."
+	IDS_EDIT_FLOAT_TOOLBAR  "Editor"
 END
 
 #endif    // English (U.S.) resources
