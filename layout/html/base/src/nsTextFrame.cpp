@@ -143,6 +143,7 @@ nsAutoIndexBuffer::GrowTo(PRInt32 aAtLeast)
   return NS_OK;
 }
 
+
 //----------------------------------------------------------------------
 
 // Helper class for managing blinking text
@@ -625,6 +626,14 @@ public:
                 PRUnichar* aBuffer, PRInt32 aLength,
                 nscoord* aWidthResult);
 
+  //this returns the index into the PAINTBUFFER of the x coord aWidth(based on 0 as far left) 
+  //also note: this is NOT added to mContentOffset since that would imply that this return is
+  //meaningful to content yet. use index buffer from prepareunicodestring to find the content offset.
+  PRInt32 GetLengthSlowly(nsIRenderingContext& aRenderingContext,
+                TextStyle& aStyle,
+                PRUnichar* aBuffer, PRInt32 aLength,
+                nscoord aWidth);
+
   void PaintUnicodeText(nsIPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nsIStyleContext* aStyleContext,
@@ -668,6 +677,12 @@ protected:
   PRInt32   mContentOffset;
   PRInt32   mContentLength;
   PRInt32   mColumn;
+  //factored out method for getwidth and getlengthslowly. if aGetWidth is non-zero number then measure to that width and return the length. else shove total width into result
+  PRInt32 GetWidthOrLength(nsIRenderingContext& aRenderingContext,
+                TextStyle& aStyle,
+                PRUnichar* aBuffer, PRInt32 aLength,
+                nscoord* aWidthResult,
+                PRBool aGetWidth/* true=get width false = return length up to aWidthResult size*/);
 };
 
 class nsContinuingTextFrame : public nsTextFrame {
@@ -726,6 +741,231 @@ nsContinuingTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) con
   return NS_OK;
 }
 #endif
+
+
+
+//DRAW SELECTION ITERATOR USED FOR TEXTFRAMES ONLY
+//helper class for drawing multiply selected text
+class DrawSelectionIterator
+{
+  enum {SELECTION_TYPES_WE_CARE_ABOUT=SELECTION_NONE+SELECTION_NORMAL};
+public:
+  DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle);
+  PRBool      First();
+  PRBool      Next();
+  PRBool      IsDone();
+
+  PRUnichar * CurrentTextUnicharPtr();
+  char *      CurrentTextCStrPtr();
+  PRUint32    CurrentLength();
+  nsTextFrame::TextStyle & CurrentStyle();
+  nscolor     CurrentForeGroundColor();
+  PRBool      CurrentBackGroundColor(nscolor &aColor);
+private:
+  union {
+    PRUnichar *mUniStr;
+    char *mCStr;
+  };
+	PRUint32  mLength;
+	PRUint32  mCurrentIdx;
+  PRUint32  mCurrentLength;
+  nsTextFrame::TextStyle &mOldStyle;//base new styles on this one???
+  const SelectionDetails *mDetails;
+  PRBool    mDone;
+  PRUint8 * mTypes;
+  PRBool    mInit;
+  //private methods
+  void FillCurrentData();
+};
+
+DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText, 
+							PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle)
+              :mOldStyle(aTextStyle)
+{
+    mDetails = aSelDetails;
+    mCurrentIdx = 0;
+    mUniStr = aText;
+    mLength = aTextLength;
+    mTypes = nsnull;
+    mInit = PR_FALSE;
+    if (!aSelDetails)
+    {
+      mDone = PR_TRUE;
+      return;
+    }
+    mDone = (PRBool)(mCurrentIdx>=mLength);
+    if (mDone)
+      return;
+
+    //special case for 1 selection. later
+    const SelectionDetails *details = aSelDetails;
+    if (details->mNext)
+    {
+      mTypes = new PRUint8[mLength];
+      if (!mTypes)
+        return;
+      memset(mTypes,0,mLength);//initialize to 0
+      while (details)
+      {
+        if (!(details->mType & SELECTION_TYPES_WE_CARE_ABOUT))
+          continue;
+        if (details->mStart == details->mEnd)
+          continue;//collapsed selections need not apply
+        mInit = PR_TRUE;//WE FOUND SOMETHING WE CARE ABOUT
+        for (int i = details->mStart; i < details->mEnd; i++)
+        {
+            if ((PRUint32)i>=mLength)
+            {
+              NS_ASSERTION(0,"Selection Details out of range?");
+              return;//eh
+            }
+            mTypes[i]|=details->mType;//add this bit
+        }
+        details= details->mNext;
+      }
+    }
+    else if (details->mStart == details->mEnd)//no collapsed selections here!
+    {
+      mDone = true;
+      return;
+    }
+    mInit = true;
+}
+
+void
+DrawSelectionIterator::FillCurrentData()
+{
+  if (mDone)
+    return;
+  if (!mTypes)
+  {
+    mCurrentIdx+=mCurrentLength;
+    if (mCurrentIdx >= mLength)
+    {
+      mDone = true;
+      return;
+    }
+    if (mCurrentIdx < (PRUint32)mDetails->mStart)
+    {
+      mCurrentLength = mDetails->mStart;
+    }
+    else if (mCurrentIdx == (PRUint32)mDetails->mStart)
+    {//start
+        mCurrentLength = mDetails->mEnd-mCurrentIdx;
+    }
+    else if (mCurrentIdx > (PRUint32)mDetails->mStart)//last unselected part
+    {
+      mCurrentLength = mLength - mDetails->mEnd;
+    }
+  }
+  else
+  {
+    mCurrentIdx+=mCurrentLength;//advance to this chunk
+    if (mCurrentIdx >= mLength)
+      return;
+    uint8 typevalue = mTypes[mCurrentIdx];
+    while (typevalue == mTypes[mCurrentIdx+mCurrentLength] && (mCurrentIdx+mCurrentLength) <mLength)
+    {
+      mCurrentLength++;
+    }
+  }
+}
+
+PRBool
+DrawSelectionIterator::First()
+{
+  if (!mInit)
+    return PR_FALSE;
+  mCurrentIdx = 0;
+  mCurrentLength = 0;
+  if (!mTypes && mDetails->mStart == mDetails->mEnd)//no collapsed selections here!
+    mDone = true;
+  mDone = (mCurrentIdx+mCurrentLength) >= mLength;
+  FillCurrentData();
+  return PR_TRUE;
+}
+
+
+
+PRBool
+DrawSelectionIterator::Next()
+{
+  if (mDone || !mInit)
+    return PR_FALSE;
+  FillCurrentData();//advances to next chunk
+  return PR_TRUE;
+}
+
+PRBool
+DrawSelectionIterator::IsDone()
+{
+    return mDone || !mInit;
+}
+
+
+PRUnichar *
+DrawSelectionIterator::CurrentTextUnicharPtr()
+{
+  return mUniStr+mCurrentIdx;
+}
+
+char *
+DrawSelectionIterator::CurrentTextCStrPtr()
+{
+  return mCStr+mCurrentIdx;
+}
+
+PRUint32
+DrawSelectionIterator::CurrentLength()
+{
+    return mCurrentLength;
+}
+
+nsTextFrame::TextStyle & 
+DrawSelectionIterator::CurrentStyle()
+{
+  return mOldStyle;
+}
+
+nscolor
+DrawSelectionIterator::CurrentForeGroundColor()
+{
+  
+  if (!mTypes)
+  {
+      if (mCurrentIdx == (PRUint32)mDetails->mStart)
+        return NS_RGB(255,255,255);
+  }
+  else if (mTypes[mCurrentIdx] | SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
+    return NS_RGB(255,255,255);
+  return mOldStyle.mColor->mColor;
+}
+
+PRBool
+DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
+{
+  //Find color based on mTypes[mCurrentIdx];
+  if (!mTypes)
+  {
+      if (mCurrentIdx == (PRUint32)mDetails->mStart)
+      {
+        aColor=NS_RGB(0,128,0);
+        return true;
+      }
+  }
+  else if (mTypes[mCurrentIdx] | SELECTION_NORMAL)
+  {
+    aColor=NS_RGB(0,128,0);
+    return true;
+  }
+  return false;
+}
+
+
+//END DRAWSELECTIONITERATOR!!
+
+
+
 
 // Flag information used by rendering code. This information is
 // computed by the ResizeReflow code. The flags are stored in the
@@ -1241,7 +1481,10 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
           }
           switch (aDetails->mType)
           {
-          case SELECTION_NORMAL:{
+          case SELECTION_NORMAL:
+#if 0
+            {
+            //using new selectionpainting now
 //
 // XOR InvertRect is currently implemented only in the unix and windows
 // rendering contexts.  When other platforms implement InvertRect(), they
@@ -1256,7 +1499,9 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               aRenderingContext.SetColor(NS_RGB(0,0,0));
               aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
 #endif
-                                }break;
+            }
+#endif //0
+                                break;
            case SELECTION_SPELLCHECK:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(NS_RGB(255,0,0));
@@ -1380,8 +1625,53 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      aRenderingContext.SetColor(aTextStyle.mColor->mColor);
-      aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
+      //while we have substrings...
+      if (details)
+      {
+        DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle);
+        if (iter.First())
+        {
+          nscoord currentX = dx;
+          nscoord newWidth;//temp
+          while (!iter.IsDone())
+          {
+            PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
+            PRUint32   currentlength= iter.CurrentLength();
+            TextStyle &currentStyle = iter.CurrentStyle();
+            nscolor    currentFGColor = iter.CurrentForeGroundColor();
+            nscolor    currentBKColor;
+
+            if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
+            {
+              if (iter.CurrentBackGroundColor(currentBKColor))
+              {//DRAW RECT HERE!!!
+                aRenderingContext.SetColor(currentBKColor);
+                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+              }
+            }
+            else
+              newWidth =0;
+            
+
+            aRenderingContext.SetColor(currentFGColor);
+            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
+
+            currentX+=newWidth;//increment twips X start
+
+            iter.Next();
+          }
+        }
+        else
+        {
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
+          aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
+        }
+      }
+      else
+      {
+        aRenderingContext.SetColor(aTextStyle.mColor->mColor);
+        aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
+      }
       PaintTextDecorations(aRenderingContext, aStyleContext,
                            aTextStyle, dx, dy, width, text, details,0,(PRUint32)textLength);
       sdptr = details;
@@ -1471,76 +1761,15 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   if (!outofstylehandled) //then we drag to closest X point and dont worry about the 'Y'
 //END STYLE RULE
   {
-    PRInt32 actualLength = textLength;
+    //the following will first get the index into the PAINTBUFFER then the actual content
+    nscoord adjustedX = PR_MAX(0,aPoint.x-origin.x);
 
-    nscoord charWidth,widthsofar = 0;
-    PRInt32 indx = 0;
-    PRBool found = PR_FALSE;
-    PRInt32* ip = indexBuffer.mBuffer;
-    PRUnichar* paintBuf = paintBuffer.mBuffer;
-    PRUnichar* startBuf = paintBuf;
-    nsIFontMetrics* lastFont = ts.mLastFont;
-    for (; --textLength >= 0; paintBuf++,indx++) {
-      nsIFontMetrics* nextFont;
-      nscoord glyphWidth;
-      PRUnichar ch = *paintBuf;
-      if (ts.mSmallCaps && nsCRT::IsLower(ch)) {
-        nextFont = ts.mSmallFont;
-        ch = nsCRT::ToUpper(ch);
-        if (lastFont != ts.mSmallFont) {
-          aRendContext->SetFont(ts.mSmallFont);
-          aRendContext->GetWidth(ch, charWidth);
-          aRendContext->SetFont(ts.mNormalFont);
-        }
-        else {
-          aRendContext->GetWidth(ch, charWidth);
-        }
-        glyphWidth = charWidth + ts.mLetterSpacing;
-      }
-      else if (ch == ' ') {
-        nextFont = lastFont;
-        glyphWidth = ts.mSpaceWidth + ts.mWordSpacing;
-        nscoord extra = ts.mExtraSpacePerSpace;
-        if (--ts.mNumSpaces == 0) {
-          extra += ts.mRemainingExtraSpace;
-        }
-        glyphWidth += extra;
-      }
-      else {
-        nextFont = lastFont;
-        aRendContext->GetWidth(ch, charWidth);
-        glyphWidth = charWidth + ts.mLetterSpacing;
-      }
-      if ((aPoint.x  - origin.x) >= widthsofar && (aPoint.x - origin.x) <= (widthsofar + glyphWidth)){
-        if ( ((aPoint.x - origin.x) - widthsofar) <= (glyphWidth /2)){
-          aOffset = indx;
-          found = PR_TRUE;
-          break;
-        }
-        else{
-          aOffset = indx+1;
-          found = PR_TRUE;
-          break;
-        }
-
-      }
-      if (nextFont != lastFont)
-        lastFont = nextFont;
-
-      widthsofar += glyphWidth;
-    }
-    paintBuf = startBuf;
-    if (!found){
-      aOffset = textLength;
-      if (aOffset <0)
-        aOffset = actualLength;//max length before textlength was reduced
-    }
-    aOffset += mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
+    aOffset = mContentOffset+GetLengthSlowly(*aRendContext, ts,paintBuffer.mBuffer,textLength,adjustedX);
     PRInt32 i;
     for (i = 0;i <= mContentLength; i ++){
-      if (ip[i] == aOffset){ //reverse mapping
-        aOffset = i + mContentOffset;
-        break;
+      if (indexBuffer.mBuffer[i] >= aOffset){ //reverse mapping
+          aOffset = i + mContentOffset;
+          break;
       }
     }
   }
@@ -1667,7 +1896,6 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
   pendingCount = bp - runStart;
   if (0 != pendingCount) {
     // Measure previous run of characters using the previous font
-    aRenderingContext.SetColor(aTextStyle.mColor->mColor);
     aRenderingContext.DrawString(runStart, pendingCount, aX, lastY, -1,
                                  spacing ? sp0 : nsnull);
 
@@ -1695,12 +1923,78 @@ nsTextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
                                   nscoord* aWidthResult)
 {
   nsIRenderingContext& rc = *aReflowState.rendContext;
+  *aWidthResult = 0;
   GetWidth(rc, aTextStyle, aWord, aWordLength, aWidthResult);
   if (aTextStyle.mLastFont != aTextStyle.mNormalFont) {
     rc.SetFont(aTextStyle.mNormalFont);
     aTextStyle.mLastFont = aTextStyle.mNormalFont;
   }
 }
+
+
+PRInt32
+nsTextFrame::GetWidthOrLength(nsIRenderingContext& aRenderingContext,
+                TextStyle& aStyle,
+                PRUnichar* aBuffer, PRInt32 aLength,
+                nscoord* aWidthResult,
+                PRBool aGetWidth/* true=get width false = return length up to aWidthResult size*/)
+{
+  PRUnichar *inBuffer = aBuffer;
+  PRInt32 length = aLength;
+  nsAutoTextBuffer widthBuffer;
+  if (NS_FAILED(widthBuffer.GrowTo(length))) {
+    *aWidthResult = 0;
+    return 0;
+  }
+  PRUnichar* bp = widthBuffer.mBuffer;
+
+  nsIFontMetrics* lastFont = aStyle.mLastFont;
+  nscoord sum = 0;
+  nscoord charWidth;
+  while (--length >= 0) {
+    nscoord glyphWidth;
+    PRUnichar ch = *inBuffer++;
+    if (aStyle.mSmallCaps && nsCRT::IsLower(ch)) {
+      ch = nsCRT::ToUpper(ch);
+      if (lastFont != aStyle.mSmallFont) {
+        lastFont = aStyle.mSmallFont;
+        aRenderingContext.SetFont(lastFont);
+      }
+      aRenderingContext.GetWidth(ch, charWidth);
+      glyphWidth = charWidth + aStyle.mLetterSpacing;
+    }
+    else if (ch == ' ') {
+      glyphWidth = aStyle.mSpaceWidth + aStyle.mWordSpacing;
+      nscoord extra = aStyle.mExtraSpacePerSpace;
+      if (--aStyle.mNumSpaces == 0) {
+        extra += aStyle.mRemainingExtraSpace;
+      }
+      glyphWidth += extra;
+    }
+    else {
+      if (lastFont != aStyle.mNormalFont) {
+        lastFont = aStyle.mNormalFont;
+        aRenderingContext.SetFont(lastFont);
+      }
+      aRenderingContext.GetWidth(ch, charWidth);
+      glyphWidth = charWidth + aStyle.mLetterSpacing;
+    }
+    sum += glyphWidth;
+    *bp++ = ch;
+    if (!aGetWidth && sum >= *aWidthResult)
+    {
+      PRInt32 result = aLength - length;
+      if (2*(sum - *aWidthResult) > glyphWidth) //then we have gone too far, back up 1
+        result--;
+      aStyle.mLastFont = lastFont;
+      return result;
+    }
+  }
+  aStyle.mLastFont = lastFont;
+  *aWidthResult = sum;
+  return aLength;
+}
+
 
 // XXX factor in logic from RenderString into here; gaps, justification, etc.
 void
@@ -1709,52 +2003,18 @@ nsTextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
                       PRUnichar* aBuffer, PRInt32 aLength,
                       nscoord* aWidthResult)
 {
-  PRUnichar *inBuffer = aBuffer;
-  PRInt32 length = aLength;
-  nsAutoTextBuffer widthBuffer;
-  if (NS_FAILED(widthBuffer.GrowTo(length))) {
-    *aWidthResult = 0;
-    return;
-  }
-  PRUnichar* bp = widthBuffer.mBuffer;
-
-  nsIFontMetrics* lastFont = aTextStyle.mLastFont;
-  nscoord sum = 0;
-  nscoord charWidth;
-  while (--length >= 0) {
-    nscoord glyphWidth;
-    PRUnichar ch = *inBuffer++;
-    if (aTextStyle.mSmallCaps && nsCRT::IsLower(ch)) {
-      ch = nsCRT::ToUpper(ch);
-      if (lastFont != aTextStyle.mSmallFont) {
-        lastFont = aTextStyle.mSmallFont;
-        aRenderingContext.SetFont(lastFont);
-      }
-      aRenderingContext.GetWidth(ch, charWidth);
-      glyphWidth = charWidth + aTextStyle.mLetterSpacing;
-    }
-    else if (ch == ' ') {
-      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing;
-      nscoord extra = aTextStyle.mExtraSpacePerSpace;
-      if (--aTextStyle.mNumSpaces == 0) {
-        extra += aTextStyle.mRemainingExtraSpace;
-      }
-      glyphWidth += extra;
-    }
-    else {
-      if (lastFont != aTextStyle.mNormalFont) {
-        lastFont = aTextStyle.mNormalFont;
-        aRenderingContext.SetFont(lastFont);
-      }
-      aRenderingContext.GetWidth(ch, charWidth);
-      glyphWidth = charWidth + aTextStyle.mLetterSpacing;
-    }
-    sum += glyphWidth;
-    *bp++ = ch;
-  }
-  aTextStyle.mLastFont = lastFont;
-  *aWidthResult = sum;
+  GetWidthOrLength(aRenderingContext,aTextStyle,aBuffer,aLength,aWidthResult,PR_TRUE);
 }
+
+PRInt32 
+nsTextFrame::GetLengthSlowly(nsIRenderingContext& aRenderingContext,
+                TextStyle& aStyle,
+                PRUnichar* aBuffer, PRInt32 aLength,
+                nscoord aWidth)
+{
+  return GetWidthOrLength(aRenderingContext,aStyle,aBuffer,aLength,&aWidth,PR_FALSE);
+}
+
 
 void
 nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
@@ -1796,6 +2056,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
     if (!displaySelection || !isSelected) { 
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
+      aRenderingContext.SetColor(aTextStyle.mColor->mColor);
       RenderString(aRenderingContext, aStyleContext, aTextStyle,
                    text, textLength, dx, dy, width);
     }
@@ -1823,9 +2084,55 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      aRenderingContext.SetColor(aTextStyle.mColor->mColor);
-      RenderString(aRenderingContext,aStyleContext, aTextStyle, text, 
+      if (details)
+      {
+        DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle);
+        if (iter.First())
+        {
+          nscoord currentX = dx;
+          nscoord newWidth;//temp
+          while (!iter.IsDone())
+          {
+            PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
+            PRUint32   currentlength= iter.CurrentLength();
+            TextStyle &currentStyle = iter.CurrentStyle();
+            nscolor    currentFGColor = iter.CurrentForeGroundColor();
+            nscolor    currentBKColor;
+            GetWidth(aRenderingContext,aTextStyle,currenttext, (PRInt32)currentlength,&newWidth);
+            if (newWidth)
+            {
+              if (iter.CurrentBackGroundColor(currentBKColor))
+              {//DRAW RECT HERE!!!
+                aRenderingContext.SetColor(currentBKColor);
+                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+              }
+            }
+            else
+              newWidth =0;
+            
+
+            aRenderingContext.SetColor(currentFGColor);
+            RenderString(aRenderingContext,aStyleContext, aTextStyle, currenttext, 
+                          currentlength, currentX, dy, width, details);
+            //increment twips X start but remember to get ready for next draw by reducing current x by letter spacing amount
+            currentX+=newWidth;// + aTextStyle.mLetterSpacing;
+
+            iter.Next();
+          }
+        }
+        else
+        {
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
+          RenderString(aRenderingContext,aStyleContext, aTextStyle, text, 
+                        PRUint32(textLength), dx, dy, width, details);
+        }
+      }
+      else
+      {
+        aRenderingContext.SetColor(aTextStyle.mColor->mColor);
+        RenderString(aRenderingContext,aStyleContext, aTextStyle, text, 
                     PRUint32(textLength), dx, dy, width, details);
+      }
       sdptr = details;
       if (details){
         while ((sdptr = details->mNext) != nsnull) {
@@ -1926,8 +2233,52 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      aRenderingContext.SetColor(aTextStyle.mColor->mColor);
-      aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
+      if (details)
+      {
+        DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle);//ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
+        if (iter.First())
+        {
+          nscoord currentX = dx;
+          nscoord newWidth;//temp
+          while (!iter.IsDone())
+          {
+            char *currenttext  = iter.CurrentTextCStrPtr();
+            PRUint32   currentlength= iter.CurrentLength();
+            TextStyle &currentStyle = iter.CurrentStyle();
+            nscolor    currentFGColor = iter.CurrentForeGroundColor();
+            nscolor    currentBKColor;
+
+            if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
+            {
+              if (iter.CurrentBackGroundColor(currentBKColor))
+              {//DRAW RECT HERE!!!
+                aRenderingContext.SetColor(currentBKColor);
+                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+              }
+            }
+            else
+              newWidth =0;
+            
+
+            aRenderingContext.SetColor(currentFGColor);
+            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
+
+            currentX+=newWidth;//increment twips X start
+
+            iter.Next();
+          }
+        }
+        else
+        {
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
+          aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
+        }
+      }
+      else
+      {
+        aRenderingContext.SetColor(aTextStyle.mColor->mColor);
+        aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
+      }
       PaintTextDecorations(aRenderingContext, aStyleContext,
                            aTextStyle, dx, dy, width,
                            unicodePaintBuffer.mBuffer,
@@ -2381,10 +2732,16 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   }
 
   nscoord width = mRect.width;
-  GetWidth(*inRendContext, ts,
-           paintBuffer.mBuffer, ip[inOffset]-mContentOffset,
-           &width);
-
+  if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)) 
+  {
+    GetWidth(*inRendContext, ts,
+             paintBuffer.mBuffer, ip[inOffset]-mContentOffset,
+             &width);
+  }
+  else
+  {
+    inRendContext->GetWidth(paintBuffer.mBuffer, ip[inOffset]-mContentOffset,width);
+  }
   if (inOffset > textLength && (TEXT_TRIMMED_WS & mState)){
     //
     // Offset must be after a space that has
