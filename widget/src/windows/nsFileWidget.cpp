@@ -278,6 +278,7 @@ nsFileDlgResults nsFileWidget::GetFile(nsIWidget        * aParent,
     nsFilePath filePath(mFile);
     nsFileSpec fileSpec(filePath);
     theFileSpec = fileSpec;
+    status = nsFileDlgResults_OK;
   }
   return status;
 }
