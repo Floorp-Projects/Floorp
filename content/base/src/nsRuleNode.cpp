@@ -2585,19 +2585,6 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     }
   }
 
-  if (inherited)
-    // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
-    // style context.
-    aContext->SetStyle(eStyleStruct_Display, display);
-  else {
-    // We were fully specified and can therefore be cached right on the rule node.
-    if (!aHighestNode->mStyleData.mResetData)
-      aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
-    aHighestNode->mStyleData.mResetData->mDisplayData = display;
-    // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Display), aHighestNode);
-  }
-
   // CSS2 specified fixups:
   if (generatedContent) {
     // According to CSS2 section 12.1, :before and :after
@@ -2613,6 +2600,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     PRUint8 displayValue = display->mDisplay;
     if (displayValue != NS_STYLE_DISPLAY_NONE &&
         displayValue != NS_STYLE_DISPLAY_INLINE) {
+      inherited = PR_TRUE;
       if (parentDisplay->IsBlockLevel()) {
         // If the subject of the selector is a block-level element,
         // allowed values are 'none', 'inline', 'block', and 'marker'.
@@ -2629,7 +2617,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
         display->mDisplay = NS_STYLE_DISPLAY_INLINE;
       }
     }
-  } 
+  }
   else if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
     // CSS2 9.7 specifies display type corrections dealing with 'float'
     // and 'position'.  Since generated content can't be floated or
@@ -2660,6 +2648,19 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       EnsureBlockDisplay(display->mDisplay);
       display->mFloats = NS_STYLE_FLOAT_NONE;
     }
+  }
+
+  if (inherited)
+    // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
+    // style context.
+    aContext->SetStyle(eStyleStruct_Display, display);
+  else {
+    // We were fully specified and can therefore be cached right on the rule node.
+    if (!aHighestNode->mStyleData.mResetData)
+      aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
+    aHighestNode->mStyleData.mResetData->mDisplayData = display;
+    // Propagate the bit down.
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Display), aHighestNode);
   }
 
   return display;

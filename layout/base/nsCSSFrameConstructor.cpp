@@ -3311,9 +3311,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     }
   }
 
-  PRBool docElemIsTable = IsTableRelated(display->mDisplay, PR_FALSE);
- 
-
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
 
   PRBool isScrollable = IsScrollable(aPresContext, display);
@@ -3347,6 +3344,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   nsIFrame* contentFrame = nsnull;
   PRBool isBlockFrame = PR_FALSE;
   nsresult rv;
+
+  PRBool docElemIsTable = display->mDisplay == NS_STYLE_DISPLAY_TABLE ||
+                          display->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE;
 
   if (docElemIsTable) {
       // if the document is a table then just populate it.
