@@ -74,7 +74,7 @@ INCLUDES	+=	\
 		-I$(DIST)/private/security \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = \
+EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
