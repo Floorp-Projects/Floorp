@@ -64,7 +64,7 @@
           <menuitem value="th" label="&font.langGroup.thai;"/>
           <menuitem value="he" label="&font.langGroup.hebrew;"/>
           <menuitem value="ar" label="&font.langGroup.arabic;"/>
-          <menuitem value="hi-IN" label="&font.langGroup.hi-IN;"/>
+          <menuitem value="x-devanagari" label="&font.langGroup.devanagari;"/>
         </menupopup>
       </menulist>
     </caption>

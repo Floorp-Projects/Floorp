@@ -471,7 +471,7 @@ static nsFontLangGroupXlib FLG_ZHCN    = { "zh-CN",         nsnull };
 static nsFontLangGroupXlib FLG_ZHTW    = { "zh-TW",         nsnull };
 static nsFontLangGroupXlib FLG_JA      = { "ja",            nsnull };
 static nsFontLangGroupXlib FLG_KO      = { "ko",            nsnull };
-static nsFontLangGroupXlib FLG_INDIC   = { "hi-IN",         nsnull };
+static nsFontLangGroupXlib FLG_INDIC   = { "x-devanagari",  nsnull };
 static nsFontLangGroupXlib FLG_NONE    = { nsnull,          nsnull };
 
 /*
