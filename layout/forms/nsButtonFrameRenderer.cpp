@@ -1,5 +1,23 @@
-#include "nsButtonFrameRenderer.h"
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
 
+
+#include "nsButtonFrameRenderer.h"
 
 #include "nsFileControlFrame.h"
 #include "nsFormControlHelper.h"
@@ -374,8 +392,8 @@ nsButtonFrameRenderer::MarginUnion(const nsMargin& a, const nsMargin& b, nsMargi
 void 
 nsButtonFrameRenderer::ResetButtonStyles()
 {
-	mOutlineStyle = nsnull;
-	mFocusStyle = nsnull;
+	mOutlineStyle = do_QueryInterface(nsnull);
+	mFocusStyle = do_QueryInterface(nsnull);
 }
 
 void 
@@ -387,14 +405,14 @@ nsButtonFrameRenderer::UpdateButtonStyles(nsFrame* aFrame, nsIPresContext& aPres
     aFrame->GetStyleContext(getter_AddRefs(context));
 
 	if (!mOutlineStyle) {
-		  nsCOMPtr<nsIAtom> atom (NS_NewAtom(":button-outline"));
+		  nsCOMPtr<nsIAtom> atom (do_QueryInterface(NS_NewAtom(":button-outline")));
 		  aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 												  PR_FALSE,
 												  getter_AddRefs(mOutlineStyle));
 	}
 
 	if (!mFocusStyle) {
-		  nsCOMPtr<nsIAtom> atom (NS_NewAtom(":button-focus"));
+		  nsCOMPtr<nsIAtom> atom (do_QueryInterface(NS_NewAtom(":button-focus")));
 		  aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 												  PR_FALSE,
 												  getter_AddRefs(mFocusStyle));
