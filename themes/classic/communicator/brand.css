@@ -42,6 +42,7 @@
   padding: 1px;
   min-width: 0;
   list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
+  -moz-appearance:none !important;
 }
 
 #navigator-throbber:hover:active {
