@@ -161,6 +161,7 @@
 <!ENTITY event.title.alarm         "Alarme" >
 <!ENTITY event.title.new         "Novo Evento" >
 <!ENTITY event.title.edit        "Editar Evento" >
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "No ">
 <!ENTITY last-text             "&#xDA;ltimo ">

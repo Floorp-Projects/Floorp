@@ -162,6 +162,7 @@
 <!ENTITY event.title.alarm         "Értesítés" >
 <!ENTITY event.title.new         "Új esemény" >
 <!ENTITY event.title.edit        "Esemény szerkesztése" >
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "A(z) ">
 <!ENTITY last-text             "Utolsó ">

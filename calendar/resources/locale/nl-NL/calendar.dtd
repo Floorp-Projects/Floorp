@@ -160,6 +160,7 @@
 <!ENTITY event.title.alarm         "Waarschuwing" >
 <!ENTITY event.title.new         "Nieuwe gebeurtenis" >
 <!ENTITY event.title.edit        "Bewerk gebeurtenis" >
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "Op de ">
 <!ENTITY last-text             "Laatste ">

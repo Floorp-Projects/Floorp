@@ -160,6 +160,7 @@
 <!ENTITY event.title.alarm         "Alarm">
 <!ENTITY event.title.new         "Nov dogodek">
 <!ENTITY event.title.edit        "Uredi dogodek">
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "Na ">
 <!ENTITY last-text             "Zadnjih ">

@@ -156,6 +156,7 @@
 <!ENTITY event.title.alarm         "Alarm" >
 <!ENTITY event.title.new         "Nowe" >
 <!ENTITY event.title.edit        "Edytuj" >
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "W ">
 <!ENTITY last-text             "ostatni ">

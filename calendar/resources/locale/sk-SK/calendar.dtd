@@ -160,6 +160,7 @@
 <!ENTITY event.title.alarm         "Upozornenie" >
 <!ENTITY event.title.new         "Nová udalosť" >
 <!ENTITY event.title.edit        "Upraviť udalosť" >
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "">
 <!ENTITY last-text             "Posledná ">

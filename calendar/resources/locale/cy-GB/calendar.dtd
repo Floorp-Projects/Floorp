@@ -160,6 +160,7 @@
 <!ENTITY event.title.alarm         "Larwm" >
 <!ENTITY event.title.new         "Digwyddiad Newydd" >
 <!ENTITY event.title.edit        "Golygu Digwyddiad" >
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "Ar yr ">
 <!ENTITY last-text             "Olaf ">

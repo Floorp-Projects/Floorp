@@ -160,6 +160,7 @@
 <!ENTITY event.title.alarm         "Signalas" >
 <!ENTITY event.title.new         "Naujas įvykis" >
 <!ENTITY event.title.edit        "Įvykio aprašo taisa" >
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            " dieną">
 <!ENTITY last-text             "paskutinį ">

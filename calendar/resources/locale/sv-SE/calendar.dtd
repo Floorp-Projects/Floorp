@@ -161,6 +161,7 @@
 <!ENTITY event.title.alarm         "Alarm" >
 <!ENTITY event.title.new         "Ny Händelse" >
 <!ENTITY event.title.edit        "Redigera Händelse" >
+<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "På den ">
 <!ENTITY last-text             "Sista ">
