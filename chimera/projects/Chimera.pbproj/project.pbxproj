@@ -2071,12 +2071,12 @@
 		};
 		F57074BD026D80DF01A80166 = {
 			isa = PBXFileReference;
-			path = LocationBar.h;
+			path = CHLocationBar.h;
 			refType = 4;
 		};
 		F57074BE026D80DF01A80166 = {
 			isa = PBXFileReference;
-			path = LocationBar.mm;
+			path = CHLocationBar.mm;
 			refType = 4;
 		};
 		F57074BF026D80DF01A80166 = {
