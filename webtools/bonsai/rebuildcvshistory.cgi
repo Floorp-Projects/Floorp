@@ -27,7 +27,6 @@ use strict;
 sub sillyness {
     my $zz;
     $zz = $::RepositoryID;
-    $zz = $::StartingDir;
 }
 
 use File::Basename;
@@ -239,7 +238,6 @@ ConnectToDatabase();
 $::Repository    = $::TreeInfo{$::TreeID}{'repository'};
 $::Description   = $::TreeInfo{$::TreeID}{'description'};
 $::RepositoryID  = GetId('repositories', 'repository', $::Repository);
-$::StartingDir   = 0;
 
 print "
 Rebuilding entire checkin history in $::Description, (`$::TreeID' tree) ...
@@ -250,9 +248,9 @@ Log("Rebuilding cvs history in $::Description, (`$::TreeID' tree)...");
 LoadDirList();
 my @Dirs = grep(!/\*$/, @::LegalDirs);
 @Dirs = split(/,\s*/, $::Modules) if $::Modules;
-my $StartingDir;
-($StartingDir = "$::Repository/$::SubDir") =~ s!/.?$!! if $::SubDir;
-
+if ($::SubDir) {
+  @Dirs = ($::SubDir);
+}
 
 print "Doing directories: @Dirs ...\n";
 foreach my $Dir (@Dirs) {
