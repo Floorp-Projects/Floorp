@@ -137,9 +137,9 @@ XULPopupListenerImpl::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP
 XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 {
-    element = aElement; // Weak reference. Don't addref it.
-    popupType = popup;
-    return NS_OK;
+  element = aElement; // Weak reference. Don't addref it.
+  popupType = popup;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
           domWindow->CreateAnchoredPopup(element, popupContent,
                                          anchorAlignment, type, popupAlignment);
         }
-		xulDocument->SetPopup(nsnull);
+		    xulDocument->SetPopup(nsnull);
       }
       NS_RELEASE(global);
     }
