@@ -173,12 +173,7 @@ public class FunctionObject extends BaseFunction
             if (returnType == Void.TYPE) {
                 hasVoidReturn = true;
             } else {
-                int returnTypeTag = getTypeTag(returnType);
-                if (returnTypeTag == JAVA_UNSUPPORTED_TYPE) {
-                    throw Context.reportRuntimeError2(
-                        "msg.bad.method.return",
-                        returnType.getName(), methodName);
-                }
+                returnTypeTag = getTypeTag(returnType);
             }
             member.prepareInvokerOptimization();
         } else {
@@ -446,6 +441,9 @@ public class FunctionObject extends BaseFunction
         Object result;
         if (member.isMethod()) {
             result = member.invoke(thisObj, invokeArgs);
+            if (returnTypeTag == JAVA_UNSUPPORTED_TYPE) {
+                result = cx.getWrapFactory().wrap(cx, scope, result, null);
+            }
         } else {
             result = member.newInstance(invokeArgs);
         }
@@ -510,6 +508,15 @@ public class FunctionObject extends BaseFunction
                 typeTags[i] = (byte)getTypeTag(types[i]);
             }
         }
+        if (member.isMethod()) {
+            Method method = member.method();
+            Class returnType = method.getReturnType();
+            if (returnType == Void.TYPE) {
+                hasVoidReturn = true;
+            } else {
+                returnTypeTag = getTypeTag(returnType);
+            }
+        }
     }
 
     private static final short VARARGS_METHOD = -1;
@@ -526,8 +533,9 @@ public class FunctionObject extends BaseFunction
     public static final int JAVA_OBJECT_TYPE      = 6;
 
     MemberBox member;
-    transient private byte[] typeTags;
+    private transient byte[] typeTags;
     private int parmsLength;
-    private boolean hasVoidReturn;
+    private transient boolean hasVoidReturn;
+    private transient int returnTypeTag;
     private boolean isStatic;
 }
