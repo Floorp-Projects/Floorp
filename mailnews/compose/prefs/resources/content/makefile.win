@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..\..\..
-MODULE=msgcompose
+MODULE=msgcompo
 
 include <$(DEPTH)\config\rules.mak>
 
