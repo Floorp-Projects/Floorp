@@ -20,6 +20,15 @@
 #define nsIMenuListener_h__
 
 #include "nsGUIEvent.h"
+#include "nsISupports.h"
+
+// TODO: This needs to be generated!
+// {BC658C81-4BEB-11d2-8DBB-00609703C14E}
+#define NS_IMENULISTENER_IID      \
+{ 0xbc658c81, 0x4beb, 0x11d2, \
+  { 0x8d, 0xbb, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x9e } }
+  
+static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
 
 /**
  *
@@ -28,7 +37,7 @@
  * These are registered with nsWindows to recieve menu events
  */
 
-class nsIMenuListener {
+class nsIMenuListener : public nsISupports {
 
   public:
 
@@ -37,7 +46,7 @@ class nsIMenuListener {
      * @param aMenuEvent See nsGUIEvent.h 
      * @return whether the event was consumed or ignored. See nsEventStatus
      */
-    virtual nsEventStatus MenuSelected(const nsGUIEvent & aMenuEvent) = 0;
+    virtual nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent) = 0;
 
 };
 

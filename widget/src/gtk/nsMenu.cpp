@@ -28,7 +28,37 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kMenuIID, NS_IMENU_IID);
-NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
+static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
+//NS_IMPL_ISUPPORTS(nsMenu, kMenuIID)
+
+nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIMenuIID)) {                                         
+    *aInstancePtr = (void*)(nsIMenu*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*)(nsISupports*) this;                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+  if (aIID.Equals(kIMenuListenerIID)) {                                      
+    *aInstancePtr = (void*) ((nsIMenuListener*)this);                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                     
+  return NS_NOINTERFACE;                                                 
+}
+
+NS_IMPL_ADDREF(nsMenu)
+NS_IMPL_RELEASE(nsMenu)
 
 //-------------------------------------------------------------------------
 //
@@ -247,4 +277,9 @@ GtkWidget *nsMenu::GetNativeParent()
   return GTK_WIDGET(voidData);
 }
 
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
 
