@@ -46,9 +46,11 @@ typedef uint32 uint32_t;
 
 typedef prword_t uintVP_t; /* unsigned that is same size as a void pointer */
 
-#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11) && !defined(RHAPSODY) && !defined(NETBSD) && !defined(AIX) && !defined(HPUX)
+#if defined(HAVE_INT64) && !defined(HAVE_INT64_T)
 typedef int64 int64_t;
-#else
+#endif
+
+#if !defined(HAVE_INT64) && defined(HAVE_INT64_T)
 /*
 ** On BSDI, for some reason, they define long long's for these types
 ** even though they aren't actually 64 bits wide!
@@ -56,9 +58,10 @@ typedef int64 int64_t;
 #define int64_t int64
 #endif
 
-#if defined(XP_PC) || (defined(__sun) && !defined(SVR4)) || defined(HPUX) || defined(LINUX) || defined(BSDI)  /* || defined(XP_MAC) */
+#ifndef HAVE_UINT_T
+#ifndef XP_MAC
 typedef unsigned int uint_t;
-#elif defined(XP_MAC)
+#else
 /* we have to push/pop to avoid breaking existing projects that
 ** have "treat warnings as errors" on. This is two, two, TWO hacks in one! (pinkerton)
 */
@@ -69,6 +72,7 @@ typedef unsigned long uint_t;	/* this is already declared in OpenTransport.h, bu
 					least bad given the alternatives. */
 #endif /* __OPENTRANSPORT__ */
 #pragma warning_errors reset
+#endif
 #endif
 
 #if defined(XP_PC) && !defined(XP_OS2)
