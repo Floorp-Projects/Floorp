@@ -1,4 +1,6 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -140,8 +142,6 @@ PRUint16* nsFontMetricsWin::gEmptyCCMap = nsnull;
 #define NS_MAX_FONT_WEIGHT 900
 #define NS_MIN_FONT_WEIGHT 100
 
-#undef CHAR_BUFFER_SIZE
-#define CHAR_BUFFER_SIZE 1024
 
 static nsIPersistentProperties* gFontEncodingProperties = nsnull;
 static nsICharsetConverterManager2* gCharsetManager = nsnull;
@@ -572,38 +572,43 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
 
 
 #define AUTO_FONTDATA_BUFFER_SIZE 16384 /* 16K */
+#undef CHAR_BUFFER_SIZE
+#define CHAR_BUFFER_SIZE 1024
 
-class nsAutoFontDataBuffer {
+// template for helper classes for temporary buffer allocation
+template<class T, PRInt32 sz> class nsAutoArray {
 public:
-  nsAutoFontDataBuffer();
-  ~nsAutoFontDataBuffer();
+  nsAutoArray();
+  ~nsAutoArray();
 
-  PRUint8* GetArray(PRInt32 aMinLength = 0);
+  T* GetArray(PRInt32 aMinLength = 0);
 
 private:
-  PRUint8* mArray;
-  PRUint8  mAutoArray[AUTO_FONTDATA_BUFFER_SIZE];
+  T* mArray;
+  T  mAutoArray[sz];
   PRInt32  mCount;
 };
 
-nsAutoFontDataBuffer::nsAutoFontDataBuffer()
+template<class T, PRInt32 sz> 
+nsAutoArray<T, sz>::nsAutoArray()
   : mArray(mAutoArray),
-    mCount(AUTO_FONTDATA_BUFFER_SIZE)
+    mCount(sz)
 {
 }
 
-nsAutoFontDataBuffer::~nsAutoFontDataBuffer()
+template<class T, PRInt32 sz> 
+nsAutoArray<T, sz>::~nsAutoArray()
 {
   if (mArray && (mArray != mAutoArray)) {
     delete [] mArray;
   }
 }
 
-PRUint8*
-nsAutoFontDataBuffer::GetArray(PRInt32 aMinCount)
+template<class T, PRInt32 sz> T*
+nsAutoArray<T, sz>::GetArray(PRInt32 aMinCount)
 {
   if (aMinCount > mCount) {
-    PRUint8* newArray = new PRUint8[aMinCount];
+    T* newArray = new T[aMinCount];
     if (!newArray) {
       return nsnull;
     }
@@ -615,6 +620,10 @@ nsAutoFontDataBuffer::GetArray(PRInt32 aMinCount)
   }
   return mArray;
 }
+
+typedef nsAutoArray<PRUint8, AUTO_FONTDATA_BUFFER_SIZE> nsAutoFontDataBuffer;
+typedef nsAutoArray<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
+typedef nsAutoArray<PRUint16, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
 
 static PRUint16
 GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
@@ -1151,7 +1160,21 @@ GetEncoding(const char* aFontName, nsString& aValue)
        (!strcmp(aFontName, mspgothic )) )
     return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
 
-  nsCAutoString name(NS_LITERAL_CSTRING("encoding.") + nsDependentCString(aFontName) + NS_LITERAL_CSTRING(".ttf"));
+  // XXX We need this kludge to deal with aFontName in CP949 when the locale 
+  // is Korean until we figure out a way to get facename in US-ASCII
+  // regardless of the current locale. We have no control over what 
+  // EnumFontFamiliesEx() does.
+  nsCAutoString name;
+  if ( ::GetACP() != 949) 
+    name.Assign(NS_LITERAL_CSTRING("encoding.") + nsDependentCString(aFontName) + NS_LITERAL_CSTRING(".ttf"));
+  else {
+    PRUnichar fname[LF_FACESIZE];
+    fname[0] = 0;
+    MultiByteToWideChar(CP_ACP, 0, aFontName,
+    strlen(aFontName) + 1, fname, sizeof(fname)/sizeof(fname[0]));
+    name.Assign(NS_LITERAL_CSTRING("encoding.") + NS_ConvertUCS2toUTF8(fname) + NS_LITERAL_CSTRING(".ttf"));
+  }
+
   name.StripWhitespace();
   ToLowerCase(name);
 
@@ -1188,13 +1211,25 @@ GetDefaultConverterForTTFSymbolEncoding(nsIUnicodeEncoder** aConverter)
 }
 
 static nsresult
-GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter)
+GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter, PRBool* aIsWide = nsnull)
 {
   *aConverter = nsnull;
 
   nsAutoString value;
   nsresult rv = GetEncoding(aFontName, value);
   if (NS_FAILED(rv)) return rv;
+  // The encoding name of a wide NonUnicode font in fontEncoding.properties
+  // has '.wide' suffix which has to be removed to get the converter
+  // for the encoding.
+  if (Substring(value, value.Length() - 5, 5) == (NS_LITERAL_STRING(".wide"))) {
+    value.Truncate(value.Length()-5);
+    if (aIsWide)
+      *aIsWide = PR_TRUE;
+  }
+  else 
+    if (aIsWide)
+      *aIsWide = PR_FALSE;
+
   return GetConverterCommon(value, aConverter);
 }
 
@@ -1214,6 +1249,36 @@ GetCCMapThroughConverter(const char* aFontName)
       return MapperToCCMap(mapper);
   } 
   return nsnull;
+}
+
+static nsresult
+ConvertUnicodeToGlyph(const PRUnichar* aSrc,  PRInt32 aSrcLength, 
+  PRInt32& aDestLength, nsIUnicodeEncoder* aConverter,
+  PRBool aIsWide, nsAutoCharBuffer& aResult)
+{
+  if (aIsWide && 
+      NS_FAILED(aConverter->GetMaxLength(aSrc, aSrcLength, &aDestLength))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  char* str = aResult.GetArray(aDestLength); 
+  if (!str) return NS_ERROR_OUT_OF_MEMORY;
+
+  aConverter->Convert(aSrc, &aSrcLength, str, &aDestLength);
+
+#ifdef IS_LITTLE_ENDIAN
+  // Convert BE UCS2 to LE UCS2 for 'wide' fonts
+  if (aIsWide) {
+    char* pstr = str;
+    while (pstr < str + aDestLength) {
+      PRUint8 tmp = pstr[0];
+      pstr[0] = pstr[1];
+      pstr[1] = tmp;
+      pstr += 2;  // swap every two bytes
+    }
+  }
+#endif
+  return NS_OK;
 }
 
 class nsFontInfo : public PLHashEntry
@@ -1645,17 +1710,16 @@ nsFontMetricsWin::GetCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType
 // variable, and this is the first call, the function will cache
 // the CMAP in the gFontMaps hash table, and returns its location, hence
 // the caller can re-use the cached value in subsequent calls.
-static PRUint16*
-GetGlyphIndices(HDC              aDC,
-                nsCharacterMap** aCMAP,
-                const PRUnichar* aString, 
-                PRUint32         aLength,
-                PRUint16*        aBuffer, 
-                PRUint32         aBufferLength)
+static nsresult
+GetGlyphIndices(HDC                 aDC,
+                nsCharacterMap**    aCMAP,
+                const PRUnichar*    aString, 
+                PRUint32            aLength,
+                nsAutoChar16Buffer& aResult)
 {  
-  NS_ASSERTION(aString && aBuffer, "null arg");
-  if (!aString || !aBuffer)
-    return nsnull;
+  NS_ASSERTION(aString, "null arg");
+  if (!aString)
+    return NS_ERROR_NULL_POINTER;
 
   nsAutoFontDataBuffer buffer;
   PRUint8* buf = nsnull;
@@ -1674,15 +1738,15 @@ GetGlyphIndices(HDC              aDC,
 
     len = GetFontData(aDC, CMAP, 0, nsnull, 0);
     if ((len == GDI_ERROR) || (!len)) {
-      return nsnull;
+      return NS_ERROR_UNEXPECTED;
     }
     buf = buffer.GetArray(len);
     if (!buf) {
-      return nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
     DWORD newLen = GetFontData(aDC, CMAP, 0, buf, len);
     if (newLen != len) {
-      return nsnull;
+      return NS_ERROR_UNEXPECTED;
     }
     PRUint8* p = buf + sizeof(PRUint16); // skip version, move to numberOfSubtables
     PRUint16 n = GET_SHORT(p);
@@ -1702,12 +1766,12 @@ GetGlyphIndices(HDC              aDC,
     }
     if (i == n) {
       NS_WARNING("nsFontMetricsWin::GetGlyphIndices() called for a non-unicode font!");
-      return nsnull;
+      return NS_ERROR_UNEXPECTED;
     }
     p = buf + offset;
     PRUint16 format = GET_SHORT(p);
     if (format != eTTFormat4SegmentMappingToDeltaValues) {
-      return nsnull;
+      return NS_ERROR_UNEXPECTED;
     }
     PRUint8* end = buf + len;
 
@@ -1772,11 +1836,9 @@ GetGlyphIndices(HDC              aDC,
     PRUint16* idDelta = startCode + segCount;
     PRUint16* idRangeOffset = idDelta + segCount;
 
-    // if output buffer too small, allocate a bigger array -- the caller should free
-    PRUint16* result = aBuffer;
-    if (aLength > aBufferLength) {
-      result = new PRUint16[aLength];
-      if (!result) return nsnull;
+    PRUint16* result = aResult.GetArray(aLength);
+    if (!result) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
     for (i = 0; i < aLength; ++i) {
       result[i] = GetGlyphIndex(segCount, endCode, startCode,
@@ -1784,9 +1846,9 @@ GetGlyphIndices(HDC              aDC,
                                 aString[i]);
     }
 
-    return result;
+    return NS_OK;
   }
-  return nsnull;
+  return NS_ERROR_UNEXPECTED;
 }
 
 // ----------------------------------------------------------------------
@@ -1884,7 +1946,9 @@ nsGlyphAgent::GetGlyphMetrics(HDC           aDC,
   // http://support.microsoft.com/support/kb/articles/Q241/3/58.ASP)
   // we will use glyph indices as a work around.
   if (0 == aGlyphIndex) { // caller doesn't know the glyph index, so find it
-    GetGlyphIndices(aDC, nsnull, &aChar, 1, &aGlyphIndex, 1);
+    nsAutoChar16Buffer buf;
+    if (NS_SUCCEEDED(GetGlyphIndices(aDC, nsnull, &aChar, 1, buf)))
+      aGlyphIndex = *(buf.GetArray());
   }
   if (0 < aGlyphIndex) {
     return GetGlyphOutlineA(aDC, aGlyphIndex, GGO_METRICS | GGO_GLYPH_INDEX, aGlyphMetrics, 0, nsnull, &mMat);
@@ -1898,6 +1962,53 @@ nsGlyphAgent::GetGlyphMetrics(HDC           aDC,
 // the global glyph agent that we will be using
 nsGlyphAgent gGlyphAgent;
 
+#ifdef MOZ_MATHML
+
+// the common part of GetBoundingMetrics used by nsFontWinUnicode
+// and 'wide' nsFontWinNonUnicode.
+inline static nsresult 
+GetBoundingMetricsCommon(HDC aDC, const PRUnichar* aString, PRUint32 aLength, 
+  nsBoundingMetrics& aBoundingMetrics, PRUnichar* aGlyphStr)
+{
+  // measure the string
+  nscoord descent;
+  GLYPHMETRICS gm;                                                
+  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, aString[0], aGlyphStr[0], &gm);
+  if (GDI_ERROR == len) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  // flip sign of descent for cross-platform compatibility
+  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+  aBoundingMetrics.descent = descent;
+  aBoundingMetrics.width = gm.gmCellIncX;
+
+  if (1 < aLength) {
+    // loop over each glyph to get the ascent and descent
+    for (PRUint32 i = 1; i < aLength; ++i) {
+      len = gGlyphAgent.GetGlyphMetrics(aDC, aString[i], aGlyphStr[i], &gm);
+      if (GDI_ERROR == len) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      if (aBoundingMetrics.descent < descent)
+        aBoundingMetrics.descent = descent;
+    }
+    // get the final rightBearing and width. Possible kerning is taken into account.
+    SIZE size;
+    ::GetTextExtentPointW(aDC, aString, aLength, &size);
+    aBoundingMetrics.width = size.cx;
+    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  }
+
+  return NS_OK;
+}
+#endif
 
 // Subclass for common unicode fonts (e.g, Times New Roman, Arial, etc.).
 // Offers the fastest rendering because no mapping table is needed (here, 
@@ -1929,16 +2040,21 @@ private:
   PRBool mUnderlinedOrStrikeOut;
 };
 
-// Subclass for non-unicode fonts that need a mapping table and uses
-// 'A'nsi functions (ExtTextOutA, GetTextExtentPoint32A) after
-// converting unicode code points to font's encoding indices. (A slight
-// overhead arises from this conversion.)
+// Subclass for non-unicode fonts that need a mapping table. 'Narrow'
+// ones use 'A'nsi functions (ExtTextOutA, GetTextExtentPoint32A) after
+// converting unicode code points to font's encoding indices while
+// 'wide' ones use 'W' functions (ExtTextOutW, GetTextExtentPoint32W). 
+// (A slight  overhead arises from this conversion.)
 // NOTE: This subclass also handles some fonts that claim to be 
-// unicode, but need a converter.
+// unicode, but need a converter.  Converter used for 'wide' fonts
+// among them is assumed to return the result in UCS2(BE) corresponding 
+// to  pseudo-Unicode code points used as 'glyph indices'(different from
+// genuine internal glyph indices used by a font)  of non-Unicode
+// fonts claiming to be Unicode fonts.
 class nsFontWinNonUnicode : public nsFontWin
 {
 public:
-  nsFontWinNonUnicode(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap, nsIUnicodeEncoder* aConverter);
+  nsFontWinNonUnicode(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap, nsIUnicodeEncoder* aConverter, PRBool aIsWide = PR_FALSE);
   virtual ~nsFontWinNonUnicode();
 
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength);
@@ -1957,6 +2073,7 @@ public:
 
 private:
   nsCOMPtr<nsIUnicodeEncoder> mConverter;
+  PRBool mIsWide; 
 };
 
 void
@@ -2096,8 +2213,9 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
           }
           else if (eFontType_NonUnicode == fontType) {
             nsCOMPtr<nsIUnicodeEncoder> converter;
-            if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter))))
-              font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter);
+            PRBool isWide;
+            if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter), &isWide)))
+              font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter, isWide);
             else if (mFont.familyNameQuirks)
               if (NS_SUCCEEDED(GetDefaultConverterForTTFSymbolEncoding(getter_AddRefs(converter))))
                 font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter);
@@ -2132,8 +2250,9 @@ nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
     }
     else if (eFontType_NonUnicode == aGlobalFont->fonttype) {
       nsCOMPtr<nsIUnicodeEncoder> converter;
-      if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
-        font = new nsFontWinNonUnicode(&logFont, hfont, aGlobalFont->ccmap, converter);
+      PRBool isWide;
+      if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter), &isWide))) {
+        font = new nsFontWinNonUnicode(&logFont, hfont, aGlobalFont->ccmap, converter, isWide);
       }
     }
     if (font) {
@@ -3774,8 +3893,7 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
                                      nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  PRUint16 str[CHAR_BUFFER_SIZE];
-  PRUint16* pstr = (PRUint16*)&str;
+  nsAutoChar16Buffer buffer;
 
   // at this stage, the glyph agent should have already been initialized
   // given that it was used to compute the x-height in RealizeFont()
@@ -3783,59 +3901,13 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
   if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
     // we are on a platform that doesn't implement GetGlyphOutlineW() 
     // we need to use glyph indices
-    pstr = GetGlyphIndices(aDC, &mCMAP, aString, aLength, str, CHAR_BUFFER_SIZE);
-    if (!pstr) {
-      return NS_ERROR_UNEXPECTED;
+    nsresult rv = GetGlyphIndices(aDC, &mCMAP, aString, aLength, buffer);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 
-  // measure the string
-  nscoord descent;
-  GLYPHMETRICS gm;                                                
-  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, aString[0], pstr[0], &gm);
-  if (GDI_ERROR == len) {
-    if (pstr != str) {
-      delete[] pstr;
-    }
-    return NS_ERROR_UNEXPECTED;
-  }
-  // flip sign of descent for cross-platform compatibility
-  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
-  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-  aBoundingMetrics.descent = descent;
-  aBoundingMetrics.width = gm.gmCellIncX;
-
-  if (1 < aLength) {
-    // loop over each glyph to get the ascent and descent
-    for (PRUint32 i = 1; i < aLength; ++i) {
-      len = gGlyphAgent.GetGlyphMetrics(aDC, aString[i], pstr[i], &gm);
-      if (GDI_ERROR == len) {
-        if (pstr != str) {
-          delete[] pstr;
-        }
-        return NS_ERROR_UNEXPECTED;
-      }
-      // flip sign of descent for cross-platform compatibility
-      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
-        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-      if (aBoundingMetrics.descent < descent)
-        aBoundingMetrics.descent = descent;
-    }
-    // get the final rightBearing and width. Possible kerning is taken into account.
-    SIZE size;
-    ::GetTextExtentPointW(aDC, aString, aLength, &size);
-    aBoundingMetrics.width = size.cx;
-    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-  }
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
-
-  return NS_OK;
+  return GetBoundingMetricsCommon(aDC, aString, aLength, aBoundingMetrics, buffer.GetArray());
 }
 
 #ifdef NS_DEBUG
@@ -3849,9 +3921,10 @@ nsFontWinUnicode::DumpFontInfo()
 #endif
 
 nsFontWinNonUnicode::nsFontWinNonUnicode(LOGFONT* aLogFont, HFONT aFont,
-  PRUint16* aCCMap, nsIUnicodeEncoder* aConverter) : nsFontWin(aLogFont, aFont, aCCMap)
+  PRUint16* aCCMap, nsIUnicodeEncoder* aConverter, PRBool aIsWide) : nsFontWin(aLogFont, aFont, aCCMap)
 {
   mConverter = aConverter;
+  mIsWide = aIsWide;
 }
 
 nsFontWinNonUnicode::~nsFontWinNonUnicode()
@@ -3862,22 +3935,19 @@ PRInt32
 nsFontWinNonUnicode::GetWidth(HDC aDC, const PRUnichar* aString,
   PRUint32 aLength)
 {
-  char str[CHAR_BUFFER_SIZE];
-  char* pstr = str;
-  if (aLength > CHAR_BUFFER_SIZE) {
-    pstr = new char[aLength];
-    if (!pstr) return 0;
-  }
+  nsAutoCharBuffer buffer;
 
-  PRInt32 srcLength = aLength, destLength = aLength;
-  mConverter->Convert(aString, &srcLength, pstr, &destLength);
+  PRInt32 destLength = aLength;
+  if (NS_FAILED(ConvertUnicodeToGlyph(aString, aLength, destLength, 
+                mConverter, mIsWide, buffer))) {
+    return 0;
+  }
 
   SIZE size;
-  ::GetTextExtentPoint32A(aDC, pstr, aLength, &size);
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
+  if (!mIsWide)
+    ::GetTextExtentPoint32A(aDC, buffer.GetArray(), destLength, &size);
+  else
+    ::GetTextExtentPoint32W(aDC, (PRUnichar*) buffer.GetArray(), destLength / 2, &size);
 
   return size.cx;
 }
@@ -3886,21 +3956,18 @@ void
 nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-  char str[CHAR_BUFFER_SIZE];
-  char* pstr = str;
-  if (aLength > CHAR_BUFFER_SIZE) {
-    pstr = new char[aLength];
-    if (!pstr) return;
+  nsAutoCharBuffer buffer;
+  PRInt32 destLength = aLength;
+
+  if (NS_FAILED(ConvertUnicodeToGlyph(aString, aLength, destLength, 
+                mConverter, mIsWide, buffer))) {
+    return;
   }
 
-  PRInt32 srcLength = aLength, destLength = aLength;
-  mConverter->Convert(aString, &srcLength, pstr, &destLength);
-
-  ::ExtTextOutA(aDC, aX, aY, 0, NULL, pstr, aLength, NULL);
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
+  if (!mIsWide)
+    ::ExtTextOutA(aDC, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
+  else 
+    ::ExtTextOutW(aDC, aX, aY, 0, NULL, (PRUnichar*) buffer.GetArray(), destLength / 2, NULL);
 }
 
 #ifdef MOZ_MATHML
@@ -3911,24 +3978,42 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
                                         nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  char str[CHAR_BUFFER_SIZE];
-  char* pstr = str;
-  if (aLength > CHAR_BUFFER_SIZE) {
-    pstr = new char[aLength];
-    if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsAutoCharBuffer buffer;
+  PRInt32 destLength = aLength;
+  nsresult rv = NS_OK;
 
-  PRInt32 srcLength = aLength, destLength = aLength;
-  mConverter->Convert(aString, &srcLength, pstr, &destLength);
+  rv = ConvertUnicodeToGlyph(aString, aLength, destLength, mConverter, 
+                             mIsWide, buffer);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (mIsWide) {
+    nsAutoChar16Buffer buf;
+    // at this stage, the glyph agent should have already been initialized
+    // given that it was used to compute the x-height in RealizeFont()
+    NS_ASSERTION(gGlyphAgent.GetState() != eGlyphAgent_UNKNOWN, "Glyph agent is not yet initialized");
+    if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
+      // we are on a platform that doesn't implement GetGlyphOutlineW() 
+      // we need to use glyph indices
+      rv = GetGlyphIndices(aDC, &mCMAP, (PRUint16*) buffer.GetArray(), destLength / 2, buf);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+
+    // buffer.mBuffer is now a pseudo-Unicode string so that we can use 
+    // GetBoundingMetricsCommon() also used by nsFontWinUnicode. 
+    return  GetBoundingMetricsCommon(aDC, (PRUint16*) buffer.GetArray(), 
+              destLength / 2, aBoundingMetrics, buf.GetArray());
+
+  }
 
   // measure the string
   nscoord descent;
   GLYPHMETRICS gm;
+  char* pstr = buffer.GetArray();
   DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
   if (GDI_ERROR == len) {
-    if (pstr != str) {
-      delete[] pstr;
-    }
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -3945,9 +4030,6 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
     for (PRUint32 i = 1; i < aLength; ++i) {
       len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[i]), &gm);
       if (GDI_ERROR == len) {
-        if (pstr != str) {
-          delete[] pstr;
-        }
         return NS_ERROR_UNEXPECTED;
       }
       // flip sign of descent for cross-platform compatibility
@@ -3964,10 +4046,6 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
     aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
   }
 
-  if (pstr != str) {
-    delete[] pstr;
-  }
-
   return NS_OK;
 }
 
@@ -3979,7 +4057,7 @@ nsFontWinNonUnicode::DumpFontInfo()
   printf("FontType: nsFontWinNonUnicode\n");
 }
 #endif // NS_DEBUG
-#endif
+#endif // MOZ_MATHML
 
 nsFontWinSubstitute::nsFontWinSubstitute(LOGFONT* aLogFont, HFONT aFont,
   PRUint16* aCCMap, PRBool aDisplayUnicode) : nsFontWin(aLogFont, aFont, aCCMap)
@@ -3992,13 +4070,12 @@ nsFontWinSubstitute::~nsFontWinSubstitute()
 {
 }
 
-static PRUnichar*
-SubstituteChars(PRBool           aDisplayUnicode,
-                const PRUnichar* aString, 
-                PRUint32         aLength,
-                PRUnichar*       aBuffer, 
-                PRUint32         aBufferLength, 
-                PRUint32*        aCount)
+static nsresult
+SubstituteChars(PRBool              aDisplayUnicode,
+                const PRUnichar*    aString, 
+                PRUint32            aLength,
+                nsAutoChar16Buffer& aResult,
+                PRUint32*           aCount)
 {
   if (!gFontSubstituteConverter) {
     nsComponentManager::
@@ -4023,20 +4100,17 @@ SubstituteChars(PRBool           aDisplayUnicode,
   }
 
   // do the transliteration if we have a converter
-  PRUnichar* result = aBuffer;
+  PRUnichar* result; 
   if (gFontSubstituteConverter) {
     char* conv = nsnull;
     nsAutoString tmp(aString, aLength); // we need to pass a null-terminated string
     gFontSubstituteConverter->Convert(tmp.get(), &conv);
     if (conv) {
       *aCount = strlen(conv);
-      if (*aCount > aBufferLength) {
-        // allocate a bigger array that the caller should free
-        result = new PRUnichar[*aCount];
-        if (!result) {
-          nsMemory::Free(conv);
-          return nsnull;
-        }
+      result = aResult.GetArray(*aCount);
+      if (!result) {
+        nsMemory::Free(conv);
+        return NS_ERROR_OUT_OF_MEMORY;
       }
       PRUnichar* u = result;
       char* c = conv;
@@ -4044,38 +4118,30 @@ SubstituteChars(PRBool           aDisplayUnicode,
         *u = *c;
       }
       nsMemory::Free(conv);
-      return result;
+      return NS_OK;
     }
   }
 
   // we reach here if we couldn't transliterate, so fallback to question marks 
-  if (aLength > aBufferLength) {
-    // allocate a bigger array that the caller should free
-    result = new PRUnichar[aLength];
-    if (!result) return nsnull;
-  }
+  result = aResult.GetArray(aLength);
+  if (!result) return NS_ERROR_OUT_OF_MEMORY;
   for (PRUint32 i = 0; i < aLength; i++) {
     result[i] = NS_REPLACEMENT_CHAR;
   }
   *aCount = aLength;
-  return result;
+  return NS_OK;
 }
 
 PRInt32
 nsFontWinSubstitute::GetWidth(HDC aDC, const PRUnichar* aString,
   PRUint32 aLength)
 {
-  PRUnichar str[CHAR_BUFFER_SIZE];
-  PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
-                           aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-  if (!pstr || !aLength) return 0;
+  nsAutoChar16Buffer buffer;
+  nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
+  if (NS_FAILED(rv) || !aLength) return 0;
 
   SIZE size;
-  ::GetTextExtentPoint32W(aDC, pstr, aLength, &size);
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
+  ::GetTextExtentPoint32W(aDC, buffer.GetArray(), aLength, &size);
 
   return size.cx;
 }
@@ -4084,16 +4150,11 @@ void
 nsFontWinSubstitute::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-  PRUnichar str[CHAR_BUFFER_SIZE];
-  PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
-                           aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-  if (!pstr || !aLength) return;
+  nsAutoChar16Buffer buffer;
+  nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
+  if (NS_FAILED(rv) || !aLength) return;
 
-  ::ExtTextOutW(aDC, aX, aY, 0, NULL, pstr, aLength, NULL);
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
+  ::ExtTextOutW(aDC, aX, aY, 0, NULL, buffer.GetArray(), aLength, NULL);
 }
 
 #ifdef MOZ_MATHML
@@ -4104,13 +4165,13 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
                                         nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  PRUnichar str[CHAR_BUFFER_SIZE];
-  PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
-                           aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-  if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
+  nsAutoChar16Buffer buffer;
+  nsresult rv = SubstituteChars(mDisplayUnicode, aString, aLength, buffer, &aLength);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   if (!aLength) return NS_OK;
-  PRUint16 s[CHAR_BUFFER_SIZE];
-  PRUint16* ps = (PRUint16*)&s;
+  nsAutoChar16Buffer buf;
 
   // at this stage, the glyph agent should have already been initialized
   // given that it was used to compute the x-height in RealizeFont()
@@ -4118,26 +4179,20 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
   if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
     // we are on a platform that doesn't implement GetGlyphOutlineW() 
     // we better get all glyph indices in one swoop
-    ps = GetGlyphIndices(aDC, &mCMAP, pstr, aLength, s, CHAR_BUFFER_SIZE);
-    if (!ps) {
-      if (pstr != str) {
-        delete[] pstr;
-      }
-      return NS_ERROR_UNEXPECTED;
+    rv = GetGlyphIndices(aDC, &mCMAP, buffer.GetArray(), aLength, buf);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
+
+  PRUnichar* pstr = buffer.GetArray();
+  PRUnichar* ps = buf.GetArray();
 
   // measure the string
   nscoord descent;
   GLYPHMETRICS gm;
   DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[0], ps[0], &gm);
   if (GDI_ERROR == len) {
-    if (pstr != str) {
-      delete[] pstr;
-    }  
-    if (ps != s) {
-      delete[] ps;
-    }
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -4154,12 +4209,6 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
     for (PRUint32 i = 1; i < aLength; ++i) {
       len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[i], ps[i], &gm);        
       if (GDI_ERROR == len) {
-        if (pstr != str) {
-          delete[] pstr;
-        }
-        if (ps != s) {
-          delete[] ps;
-        }
         return NS_ERROR_UNEXPECTED;
       }
       // flip sign of descent for cross-platform compatibility
@@ -4175,13 +4224,6 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
     ::GetTextExtentPointW(aDC, pstr, aLength, &size);
     aBoundingMetrics.width = size.cx;
     aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-  }
-
-  if (pstr != str) {
-    delete[] pstr;
-  }
-  if (ps != s) {
-    delete[] ps;
   }
 
   return NS_OK;
@@ -4523,10 +4565,9 @@ void
 nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
   char** aResult, int* aResultLength)
 {
-  PRUnichar str[CHAR_BUFFER_SIZE];
-  PRUnichar* pstr = SubstituteChars(PR_FALSE,
-                           aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-  if (!pstr) {
+  nsAutoChar16Buffer buffer;
+  nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
+  if (NS_FAILED(rv)) {
     // this is the out-of-memory error case
     *aResult = nsnull;
     *aResultLength = 0;
@@ -4538,10 +4579,7 @@ nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
     *aResultLength = 0;
     return;
   }
-  nsFontSubset::Convert(pstr, aLength, aResult, aResultLength);
-  if (pstr != str) {
-    delete[] pstr;
-  }
+  nsFontSubset::Convert(buffer.GetArray(), aLength, aResult, aResultLength);
 }
 
 nsFontWinA::nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap)
