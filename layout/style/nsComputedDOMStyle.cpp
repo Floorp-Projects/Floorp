@@ -3629,7 +3629,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     // COMPUTED_STYLE_MAP_ENTRY(pause_before,               PauseBefore),
     // COMPUTED_STYLE_MAP_ENTRY(pitch,                      Pitch),
     // COMPUTED_STYLE_MAP_ENTRY(pitch_range,                PitchRange),
-    //// COMPUTED_STYLE_MAP_ENTRY(play_during,              PlayDuring),
     COMPUTED_STYLE_MAP_ENTRY(position,                      Position),
     // COMPUTED_STYLE_MAP_ENTRY(quotes,                     Quotes),
     // COMPUTED_STYLE_MAP_ENTRY(richness,                   Richness),

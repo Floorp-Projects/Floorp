@@ -491,9 +491,7 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
   aValue.Truncate(0);
 
   // simple properties are easy.
-  if (!nsCSSProps::IsShorthand(aProperty) &&
-      // play-during is not a real shorthand, but is special...
-      aProperty != eCSSProperty_play_during) {
+  if (!nsCSSProps::IsShorthand(aProperty)) {
     AppendValueToString(aProperty, aValue);
     return NS_OK;
   }
@@ -644,37 +642,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
 #endif
         AppendValueToString(eCSSProperty_background_y_position, aValue);
         NS_ASSERTION(check, "we parsed half of background-position");
-      }
-      break;
-    }
-    case eCSSProperty_play_during: {
-      nsCSSCompressedDataBlock *data =
-        GetValueIsImportant(eCSSProperty_play_during) ? mImportantData : mData;
-      const void *storage = data->StorageFor(eCSSProperty_play_during);
-      if (!storage) {
-        break;
-      }
-      NS_ASSERTION(nsCSSProps::kTypeTable[eCSSProperty_play_during] ==
-                   eCSSType_ValuePair,
-                   "Someone changed the storage type of play-during!");
-      const nsCSSValuePair *pair = NS_STATIC_CAST(const nsCSSValuePair*, storage);
-      AppendCSSValueToString(aProperty, pair->mXValue, aValue);
-      if (pair->mYValue.GetUnit() != eCSSUnit_Null) {
-        aValue.Append(PRUnichar(' '));
-        PRInt32 intValue = pair->mYValue.GetIntValue();
-        if ((NS_STYLE_PLAY_DURING_MIX & intValue) != 0) {
-          AppendUTF8toUTF16(nsCSSProps::LookupPropertyValue(aProperty,
-                                                     NS_STYLE_PLAY_DURING_MIX),
-                            aValue);
-        }
-        if ((NS_STYLE_PLAY_DURING_REPEAT & intValue) != 0) {
-          if (NS_STYLE_PLAY_DURING_REPEAT != intValue) {
-            aValue.Append(PRUnichar(' '));
-          }
-          AppendUTF8toUTF16(nsCSSProps::LookupPropertyValue(aProperty,
-                                                  NS_STYLE_PLAY_DURING_REPEAT),
-                            aValue);
-        }
       }
       break;
     }

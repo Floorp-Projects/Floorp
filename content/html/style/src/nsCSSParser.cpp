@@ -272,7 +272,6 @@ protected:
   PRBool ParseOverflow(nsresult& aErrorCode);
   PRBool ParsePadding(nsresult& aErrorCode);
   PRBool ParsePause(nsresult& aErrorCode);
-  PRBool ParsePlayDuring(nsresult& aErrorCode);
   PRBool ParseQuotes(nsresult& aErrorCode);
   PRBool ParseSize(nsresult& aErrorCode);
   PRBool ParseTextDecoration(nsresult& aErrorCode, nsCSSValue& aValue);
@@ -4150,8 +4149,6 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
                                        NS_BOXPROP_SOURCE_LOGICAL);
   case eCSSProperty_pause:
     return ParsePause(aErrorCode);
-  case eCSSProperty_play_during:
-    return ParsePlayDuring(aErrorCode);
   case eCSSProperty_quotes:
     return ParseQuotes(aErrorCode);
   case eCSSProperty_size:
@@ -4268,7 +4265,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_padding_right:
   case eCSSProperty_padding_start:
   case eCSSProperty_pause:
-  case eCSSProperty_play_during:
   case eCSSProperty_quotes:
   case eCSSProperty_size:
   case eCSSProperty_text_shadow:
@@ -5721,29 +5717,6 @@ PRBool CSSParserImpl::ParsePause(nsresult& aErrorCode)
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       AppendValue(eCSSProperty_pause_before, before);
       AppendValue(eCSSProperty_pause_after, before);
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-PRBool CSSParserImpl::ParsePlayDuring(nsresult& aErrorCode)
-{
-  nsCSSValue  playDuring;
-  nsCSSValue  flags;
-  if (ParseVariant(aErrorCode, playDuring, VARIANT_AHUO, nsnull)) {
-    if (eCSSUnit_URL == playDuring.GetUnit()) {
-      if (ParseEnum(aErrorCode, flags, nsCSSProps::kPlayDuringKTable)) {
-        PRInt32 intValue = flags.GetIntValue();
-        if (ParseEnum(aErrorCode, flags, nsCSSProps::kPlayDuringKTable)) {
-          flags.SetIntValue(intValue | flags.GetIntValue(), eCSSUnit_Enumerated);
-        }
-      }
-    }
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      mTempData.mAural.mPlayDuring.mXValue = playDuring;
-      mTempData.mAural.mPlayDuring.mYValue = flags;
-      mTempData.SetPropertyBit(eCSSProperty_play_during);
       return PR_TRUE;
     }
   }

@@ -437,7 +437,6 @@ CSS_PROP_BACKENDONLY(pause-after, pause_after, PauseAfter, Aural, mPauseAfter, e
 CSS_PROP_BACKENDONLY(pause-before, pause_before, PauseBefore, Aural, mPauseBefore, eCSSType_Value, PR_FALSE, nsnull)
 CSS_PROP_BACKENDONLY(pitch, pitch, Pitch, Aural, mPitch, eCSSType_Value, PR_FALSE, kPitchKTable)
 CSS_PROP_BACKENDONLY(pitch-range, pitch_range, PitchRange, Aural, mPitchRange, eCSSType_Value, PR_FALSE, nsnull)
-CSS_PROP_BACKENDONLY(play-during, play_during, PlayDuring, Aural, mPlayDuring, eCSSType_ValuePair, PR_FALSE, kPlayDuringKTable)
 CSS_PROP_DISPLAY(position, position, Position, Display, mPosition, eCSSType_Value, PR_FALSE, kPositionKTable)
 CSS_PROP_QUOTES(quotes, quotes, Quotes, Content, mQuotes, eCSSType_Quotes, PR_FALSE, nsnull)
 CSS_PROP_BACKENDONLY(richness, richness, Richness, Aural, mRichness, eCSSType_Value, PR_FALSE, nsnull)

@@ -745,12 +745,6 @@ const PRInt32 nsCSSProps::kPitchKTable[] = {
   -1,-1
 };
 
-const PRInt32 nsCSSProps::kPlayDuringKTable[] = {
-  eCSSKeyword_mix, NS_STYLE_PLAY_DURING_MIX,
-  eCSSKeyword_repeat, NS_STYLE_PLAY_DURING_REPEAT,
-  -1,-1
-};
-
 const PRInt32 nsCSSProps::kPositionKTable[] = {
   eCSSKeyword_static, NS_STYLE_POSITION_STATIC,
   eCSSKeyword_relative, NS_STYLE_POSITION_RELATIVE,
