@@ -28,33 +28,23 @@
 	by Alex Musil
  */
 
+#include "xp_core.h"
+#include "nsplugin.h"
+#include "ns4xPlugin.h"
+#include "ns4xPluginInstance.h"
+#include "nsIServiceManager.h"
+#include "nsIMemory.h"
+#include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
-#include "prlink.h"
-#include "plstr.h"
-#include "prmem.h"
-#include "nsString.h"
 #include "nsSpecialSystemDirectory.h"
+#include "prmem.h"
 
 /* Local helper functions */
  
-static char* GetFileName(const char* pathname)
-{
-        const char* filename = nsnull;
-                
-        // this is most likely a path, so skip to the filename
-        filename = PL_strrchr(pathname, '/');
-        if(filename)
-                ++filename;
-        else
-                filename = pathname;
-
-        return PL_strdup(filename);
-}
-
-static PRUint32 CalculateVariantCount(char* mimeTypes)
+static PRUint32 CalculateVariantCount(const char* mimeTypes)
 {
         PRUint32 variants = 0;
-        char* ptr = mimeTypes;
+        const char* ptr = mimeTypes;
         while (*ptr)
         {
                 if (*ptr == ';')
@@ -162,35 +152,60 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     return NS_OK;
 }
 
-typedef char* (*UNIX_Plugin_GetMIMEDescription)();
-
-
 /**
  * Obtains all of the information currently available for this plugin.
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-	const char *path = this->GetCString();
-    char *mimedescr,*mdesc,*start,*nexttoc,*mtype,*exten,*descr;
+    NS_ERROR("stop");
+
+    nsresult rv;
+    const char* mimedescr;
+    char *mdesc,*start,*nexttoc,*mtype,*exten,*descr;
     int i,num;
 
-    UNIX_Plugin_GetMIMEDescription procedure = nsnull;
-    mimedescr=(char *)"";
+    // No, this doesn't leak. GetGlobalServiceManager() doesn't addref
+    // it's out pointer. Maybe it should.
+    nsIServiceManager* mgr;
+    nsServiceManager::GetGlobalServiceManager(&mgr);
 
-    if((procedure = (UNIX_Plugin_GetMIMEDescription)PR_FindSymbol(pLibrary,"NP_GetMIMEDescription")) != 0) {
-        mimedescr = procedure();
-    } else {
-#ifdef NS_DEBUG
-        printf("Cannot get plugin info: no GetMIMEDescription procedure!\n");
-#endif
-        return NS_ERROR_FAILURE;
+    nsFactoryProc nsGetFactory =
+        (nsFactoryProc) PR_FindSymbol(pLibrary, "NSGetFactory");
+
+    nsCOMPtr<nsIPlugin> plugin;
+
+    if (nsGetFactory) {
+        // It's an almost-new-style plugin. The "truly new" plugins
+        // are just XPCOM components, but there are some Mozilla
+        // Classic holdovers that live in the plugins directory but
+        // implement nsIPlugin and the factory stuff.
+        static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
+
+        nsCOMPtr<nsIFactory> factory;
+        rv = nsGetFactory(mgr, kPluginCID, nsnull, nsnull, getter_AddRefs(factory));
+        if (NS_FAILED(rv)) return rv;
+
+        plugin = do_QueryInterface(factory);
+    }
+    else {
+        // It's old sk00l
+        rv = ns4xPlugin::CreatePlugin(mgr, this->GetCString(), pLibrary, getter_AddRefs(plugin));
+        if (NS_FAILED(rv)) return rv;
     }
 
-	info.fName = GetFileName(path);
+    if (plugin) {
+        plugin->GetValue(nsPluginVariable_NameString, &info.fName);
+        plugin->GetValue(nsPluginVariable_DescriptionString, &info.fDescription);
+        plugin->GetMIMEDescription(&mimedescr);
+    }
+    else {
+        info.fName = PL_strdup(this->GetCString()); // XXXwaterson LEAK
+        info.fDescription = "";
+        info.fMimeDescription = "";
+    }
 
 #ifdef NS_DEBUG
-    printf("GetMIMEDescription() %lx returned \"%s\"\n",
-           (unsigned long)procedure, mimedescr);
+    printf("GetMIMEDescription() returned \"%s\"\n", mimedescr);
 #endif
 
     // copy string

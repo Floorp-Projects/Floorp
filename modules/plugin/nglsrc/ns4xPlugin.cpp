@@ -110,13 +110,14 @@ static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
-ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
+ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
 {
 	NS_INIT_REFCNT();
 
 	memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
 	fShutdownEntry = aShutdown;
 
+    fLibrary = aLibrary;
 	mServiceMgr = serviceMgr;
 }
 
@@ -186,14 +187,17 @@ ns4xPlugin::SetPluginRefNum(short aRefNum)
 */
 
 nsresult
-ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
+ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
+                         const char* aFileName,
+                         PRLibrary* aLibrary,
+                         nsIPlugin** aResult)
 {
     CheckClassInitialized();
 
 	// set up the MemAllocator service now because it might be used by the plugin
-	if (serviceMgr != nsnull) {
+	if (aServiceMgr != nsnull) {
 		if (nsnull == mMalloc)
-			serviceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&mMalloc);
+			aServiceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&mMalloc);
 	}
 
 #ifdef NS_DEBUG
@@ -213,15 +217,15 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 #endif
 
     NP_PLUGINSHUTDOWN pfnShutdown =
-        (NP_PLUGINSHUTDOWN)PR_FindSymbol(pluginTag->mLibrary, "NP_Shutdown");
+        (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 
 	// create the new plugin handler
-    pluginTag->mEntryPoint = plptr = new ns4xPlugin(&callbacks, pfnShutdown, serviceMgr);
+    *aResult = plptr = new ns4xPlugin(&callbacks, aLibrary, pfnShutdown, aServiceMgr);
 
-    if (pluginTag->mEntryPoint == NULL)
+    if (*aResult == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(pluginTag->mEntryPoint);
+    NS_ADDREF(*aResult);
 
 	// we must init here because the plugin may call NPN functions
 	// when we call into the NP_Initialize entry point - NPN functions
@@ -229,7 +233,7 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
     plptr->Initialize();
 
     NP_PLUGINUNIXINIT pfnInitialize =
-        (NP_PLUGINUNIXINIT)PR_FindSymbol(pluginTag->mLibrary, "NP_Initialize");
+        (NP_PLUGINUNIXINIT)PR_FindSymbol(aLibrary, "NP_Initialize");
 
     if (pfnInitialize == NULL)
         return NS_ERROR_UNEXPECTED; // XXX Right error?
@@ -249,7 +253,7 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 #ifdef XP_PC
 	// XXX this only applies on Windows
     NP_GETENTRYPOINTS pfnGetEntryPoints =
-        (NP_GETENTRYPOINTS)PR_FindSymbol(pluginTag->mLibrary, "NP_GetEntryPoints");
+        (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
 
     if (pfnGetEntryPoints == NULL)
         return NS_ERROR_FAILURE;
@@ -268,20 +272,20 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 #endif
 
     NP_PLUGINSHUTDOWN pfnShutdown =
-        (NP_PLUGINSHUTDOWN)PR_FindSymbol(pluginTag->mLibrary, "NP_Shutdown");
+        (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 
 	// create the new plugin handler
-    pluginTag->mEntryPoint = new ns4xPlugin(&callbacks, pfnShutdown, serviceMgr);
+    *aResult = new ns4xPlugin(&callbacks, aLibrary, pfnShutdown, aServiceMgr);
 
-    if (pluginTag->mEntryPoint == NULL)
+    if (*aResult == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(pluginTag->mEntryPoint);
+    NS_ADDREF(*aResult);
 	
 	// we must init here because the plugin may call NPN functions
 	// when we call into the NP_Initialize entry point - NPN functions
 	// require that mBrowserManager be set up
-    pluginTag->mEntryPoint->Initialize();
+    (*aResult)->Initialize();
 
     // the NP_Initialize entry point was misnamed as NP_PluginInit,
     // early in plugin project development.  Its correct name is
@@ -290,11 +294,11 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
     // we'll accept either name
 
     NP_PLUGININIT pfnInitialize =
-        (NP_PLUGININIT)PR_FindSymbol(pluginTag->mLibrary, "NP_Initialize");
+        (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
 
     if (!pfnInitialize) {
         pfnInitialize =
-            (NP_PLUGININIT)PR_FindSymbol(pluginTag->mLibrary, "NP_PluginInit");
+            (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_PluginInit");
     }
 
     if (pfnInitialize == NULL)
@@ -306,7 +310,7 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 
 #if defined(XP_MAC) && !TARGET_CARBON
 	// get the mainRD entry point
-	NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(pluginTag->mLibrary, "mainRD");
+	NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
 	if(pfnMain == NULL)
 		return NS_ERROR_FAILURE;
 		
@@ -328,7 +332,7 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 		{
 				FSSpec spec = file;
 				char* fileName = p2cstrdup(spec.name);
-				if(!PL_strcmp(fileName, pluginTag->mFileName))
+				if(!PL_strcmp(fileName, aFileName))
 					{
 					Boolean targetIsFolder, wasAliased;
 					OSErr err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
@@ -347,24 +351,22 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 		return NS_ERROR_FAILURE;
 	
 	// create the new plugin handler
-	ns4xPlugin* plugin = new ns4xPlugin(&callbacks, (NP_PLUGINSHUTDOWN)pfnShutdown, serviceMgr);
+	ns4xPlugin* plugin = new ns4xPlugin(&callbacks, aLibrary, (NP_PLUGINSHUTDOWN)pfnShutdown, aServiceMgr);
 
 	if(plugin == NULL)
     	return NS_ERROR_OUT_OF_MEMORY;
 
 	plugin->SetPluginRefNum(pluginRefNum);
 	
-    pluginTag->mEntryPoint = plugin;
+    *aResult = plugin;
       
-    NS_ADDREF(pluginTag->mEntryPoint);
-#endif
-
-#ifdef XP_UNIX
-	return NS_ERROR_FAILURE;
+    NS_ADDREF(*aResult);
 #endif
 
     return NS_OK;
 }
+
+
 
 /*
    CreateInstance()
@@ -447,9 +449,11 @@ ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 #ifdef NS_DEBUG
   printf("plugin getmimedescription called\n");
 #endif
+  const char* (*npGetMIMEDescrpition)() =
+    (const char* (*)()) PR_FindSymbol(fLibrary, "NP_GetMIMEDescription");
 
-  *resultingDesc = "";
-  return NS_OK; // XXX make a callback, etc.
+  *resultingDesc = npGetMIMEDescrpition ? npGetMIMEDescrpition() : "";
+  return NS_OK;
 }
 
 nsresult
@@ -459,7 +463,15 @@ ns4xPlugin::GetValue(nsPluginVariable variable, void *value)
   printf("plugin getvalue %d called\n", variable);
 #endif
 
-  return NS_OK;
+  NPError (*npGetValue)(void*, nsPluginVariable, void*) =
+    (NPError (*)(void*, nsPluginVariable, void*)) PR_FindSymbol(fLibrary, "NP_GetValue");
+
+  if (npGetValue && NPERR_NO_ERROR == npGetValue(nsnull, variable, value)) {
+    return NS_OK;
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
