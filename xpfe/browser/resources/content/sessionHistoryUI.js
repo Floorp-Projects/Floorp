@@ -167,11 +167,11 @@ function addToUrlbarHistory()
   if (!gRDF)
      gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                       .getService(Components.interfaces.nsIRDFService);
-
+ 
   if (!gGlobalHistory)
     gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
                                .getService(Components.interfaces.nsIBrowserHistory);
-  
+
   if (!gURIFixup)
     gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                           .getService(Components.interfaces.nsIURIFixup);

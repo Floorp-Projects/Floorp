@@ -51,7 +51,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX
-REQUIRES += browsercomps history
+REQUIRES += toolkitcomps history
 endif
 
 CPPSRCS		= \

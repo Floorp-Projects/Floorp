@@ -103,7 +103,7 @@
 #include "nsIProxyObjectManager.h" 
 
 #ifdef MOZ_PHOENIX
-#include "nsBrowserCompsCID.h"
+#include "nsToolkitCompsCID.h"
 #endif
 
 #include "nsBrowserStatusFilter.h"
