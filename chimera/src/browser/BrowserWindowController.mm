@@ -65,6 +65,8 @@
 #include "nsIClipboardCommands.h"
 #include "nsIWebBrowser.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPrefBranch.h"
+#include "nsIServiceManagerUtils.h"
 
 #include <QuickTime/QuickTime.h>
 
