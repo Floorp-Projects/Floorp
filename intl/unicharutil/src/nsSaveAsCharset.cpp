@@ -45,7 +45,7 @@
 #include "nsICharsetConverterManager2.h"
 #include "nsSaveAsCharset.h"
 #include "nsCRT.h"
-
+#include "nsUnicharUtils.h"
 
 //
 // nsISupports methods
@@ -167,7 +167,7 @@ nsSaveAsCharset::GetCharset(char * *aCharset)
 // do the fallback, reallocate the buffer if necessary
 // need to pass destination buffer info (size, current position and estimation of rest of the conversion)
 NS_IMETHODIMP
-nsSaveAsCharset::HandleFallBack(PRUnichar character, char **outString, PRInt32 *bufferLength, 
+nsSaveAsCharset::HandleFallBack(PRUint32 character, char **outString, PRInt32 *bufferLength, 
                                 PRInt32 *currentPos, PRInt32 estimatedLength)
 {
   if((nsnull == outString ) || (nsnull == bufferLength) ||(nsnull ==currentPos))
@@ -251,7 +251,12 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
 
     // do the fallback
     if (!ATTR_NO_FALLBACK(mAttribute)) {
-      PRUnichar unMappedChar = inString[pos1-1];
+      PRUint32 unMappedChar;
+      if (IS_HIGH_SURROGATE(inString[pos1-1]) && 
+          inStringLength > pos1 && IS_LOW_SURROGATE(inString[pos1])) {
+        unMappedChar = SURROGATE_TO_UCS4(inString[pos1-1], inString[pos1]);
+        pos1++;
+      };
 
       rv = mEncoder->GetMaxLength(inString+pos1, inStringLength-pos1, &dstLength);
       if (NS_FAILED(rv)) 
@@ -290,7 +295,7 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
 }
 
 NS_IMETHODIMP
-nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PRInt32 bufferLength)
+nsSaveAsCharset::DoConversionFallBack(PRUint32 inUCS4, char *outString, PRInt32 bufferLength)
 {
   NS_ASSERTION(outString, "invalid input");
   if(nsnull == outString )
@@ -303,9 +308,10 @@ nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PR
   if (ATTR_NO_FALLBACK(mAttribute)) {
     return NS_OK;
   }
-  if (attr_EntityAfterCharsetConv == MASK_ENTITY(mAttribute)) {
+  if (attr_EntityAfterCharsetConv == MASK_ENTITY(mAttribute) && 
+      !(inUCS4 & 0xff0000) ) {
     char *entity = NULL;
-    rv = mEntityConverter->ConvertToEntity(inCharacter, mEntityVersion, &entity);
+    rv = mEntityConverter->ConvertToEntity((PRUnichar)inUCS4, mEntityVersion, &entity);
     if (NS_SUCCEEDED(rv)) {
       if (NULL == entity || (PRInt32)strlen(entity) > bufferLength) {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -327,13 +333,16 @@ nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PR
     }
     break;
   case attr_FallbackEscapeU:
-    rv = (PR_snprintf(outString, bufferLength, "\\u%.4x", inCharacter) > 0) ? NS_OK : NS_ERROR_FAILURE;
+    if (inUCS4 & 0xff0000)
+      rv = (PR_snprintf(outString, bufferLength, "\\u%.6x", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
+    else
+      rv = (PR_snprintf(outString, bufferLength, "\\u%.4x", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
     break;
   case attr_FallbackDecimalNCR:
-    rv = ( PR_snprintf(outString, bufferLength, "&#%u;", inCharacter) > 0) ? NS_OK : NS_ERROR_FAILURE;
+    rv = ( PR_snprintf(outString, bufferLength, "&#%u;", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
     break;
   case attr_FallbackHexNCR:
-    rv = (PR_snprintf(outString, bufferLength, "&#x%x;", inCharacter) > 0) ? NS_OK : NS_ERROR_FAILURE;
+    rv = (PR_snprintf(outString, bufferLength, "&#x%x;", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
     break;
   case attr_FallbackNone:
     rv = NS_OK;
