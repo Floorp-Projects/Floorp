@@ -397,7 +397,6 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
     JSAtom *atom;
     JSAtomListElement *ale;
 
-    ival = (jsint)dval;
     if (JSDOUBLE_IS_INT(dval, ival) && INT_FITS_IN_JSVAL(ival)) {
 	if (ival == 0)
 	    return js_Emit1(cx, cg, JSOP_ZERO) >= 0;

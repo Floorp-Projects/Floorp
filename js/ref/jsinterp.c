@@ -140,7 +140,6 @@ static JSClass prop_iterator_class = {
 	jsint _i;                                                             \
 	jsval _v;                                                             \
 									      \
-	_i = (jsint)d;                                                        \
 	if (JSDOUBLE_IS_INT(d, _i) && INT_FITS_IN_JSVAL(_i)) {                \
 	    _v = INT_TO_JSVAL(_i);                                            \
 	} else {                                                              \

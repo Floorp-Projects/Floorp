@@ -393,7 +393,6 @@ js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 {
     jsint i;
 
-    i = (jsint)d;
     if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
 	*rval = INT_TO_JSVAL(i);
     } else {
@@ -427,7 +426,6 @@ js_NumberToString(JSContext *cx, jsdouble d)
     jsint i;
     char buf[32];
 
-    i = (jsint)d;
     if (JSDOUBLE_IS_INT(d, i)) {
 	PR_snprintf(buf, sizeof buf, "%ld", (long)i);
     } else {

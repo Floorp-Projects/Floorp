@@ -57,14 +57,14 @@ PR_BEGIN_EXTERN_C
 #define JSDOUBLE_IS_NEGZERO(d)  (JSDOUBLE_HI32(d) == JSDOUBLE_HI32_SIGNBIT && \
 				 JSDOUBLE_LO32(d) == 0)
 
-#define JSDOUBLE_IS_INT_2(d, i)	(!JSDOUBLE_IS_NEGZERO(d) && (jsdouble)i == d)
-
-#ifdef XP_PC
-/* XXX MSVC miscompiles NaN floating point comparisons for ==, !=, <, and <= */
-#define JSDOUBLE_IS_INT(d, i)	(!JSDOUBLE_IS_NaN(d) && JSDOUBLE_IS_INT_2(d, i))
-#else
-#define JSDOUBLE_IS_INT(d, i)	JSDOUBLE_IS_INT_2(d, i)
-#endif
+/*
+ * JSDOUBLE_IS_INT first checks that d is neither NaN nor infinite, to avoid
+ * raising SIGFPE on platforms such as Alpha Linux, then (only if the cast is
+ * safe) leaves i as (jsint)d.  This also avoid anomalous NaN floating point
+ * comparisons under MSVC.
+ */
+#define JSDOUBLE_IS_INT(d, i) (JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d) \
+                               && ((d) == (i = (jsint)(d))))
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject *
