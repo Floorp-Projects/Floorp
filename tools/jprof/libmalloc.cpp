@@ -191,6 +191,7 @@ void setupProfilingStuff(void)
     if(gFirstTime && !(gFirstTime=0)) {
 	int  startTimer = 1;
 	int  doNotStart = 1;
+	int  firstDelay = 0;
         char *tst  = getenv("JPROF_FLAGS");
 
 	/* Options from JPROF_FLAGS environment variable:
@@ -198,6 +199,7 @@ void setupProfilingStuff(void)
 	 *               to generate them internally
 	 *   JP_START  -> Install the signal handler
 	 *   JP_PERIOD -> Time between prifiler ticks
+	 *   JP_FIRST  -> Extra delay before starting
 	*/
 	if(tst) {
 	    if(strstr(tst, "JP_DEFER")) startTimer = 0;
@@ -209,6 +211,11 @@ void setupProfilingStuff(void)
 		if(tmp>1e-3) {
 		    timerMiliSec = static_cast<unsigned long>(1000 * tmp);
 		}
+	    }
+
+	    char *first = strstr(tst, "JP_FIRST=");
+	    if(first) {
+	        firstDelay = atol(first+9);
 	    }
 	}
 
@@ -234,12 +241,13 @@ void setupProfilingStuff(void)
 		    action.sa_flags = SA_RESTART | SA_SIGINFO;
 		    sigaction(SIGPROF, &action, NULL);
 		    sprintf(buffer, "Jprof: Initialized signal hander and set "
-		    "timer for %lu mili-seconds\n", timerMiliSec);
+		    "timer for %lu mili-seconds with %d second initial delay\n",
+		    timerMiliSec, firstDelay);
 		    writeStrStdout(buffer);
 
 		    if(startTimer) {
 			writeStrStdout("Jprof: started timer\n");
-			startSignalCounter(timerMiliSec);
+			startSignalCounter(firstDelay*1000 + timerMiliSec);
 		    }
 		}
 	    }
