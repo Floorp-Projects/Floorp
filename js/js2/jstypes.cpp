@@ -255,13 +255,13 @@ JSString* JSArray::ArrayString = new JSString("Array");
 JSObject *JSArray::ArrayPrototypeObject = NULL;
 JSFunction *JSArray::Array_length_getter = NULL;
 
-static JSValue array_length(Context *cx, const JSValues& argv)
+static JSValue array_length(Context* /*cx*/, const JSValues& argv)
 {
     // argv[0] better be an array object
     uint32 argCount = argv.size();
     if ((argCount > 0) & argv[0].isArray()) {
         JSArray *thisArray = argv[0].array;
-        return thisArray->length();
+        return JSValue(thisArray->length());
     }
     return kUndefinedValue;
 }
