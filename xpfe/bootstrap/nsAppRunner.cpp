@@ -1109,12 +1109,9 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // Initialize the cmd line service
   nsCOMPtr<nsICmdLineService> cmdLineArgs(do_GetService(kCmdLineServiceCID, &rv));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get command line service");
-
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(PR_FALSE, "Could not obtain CmdLine processing service\n");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Could not obtain CmdLine processing service\n");
+  if (NS_FAILED(rv))
     return rv;
-  }
 
   rv = cmdLineArgs->Initialize(argc, argv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize command line args");
