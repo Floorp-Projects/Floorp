@@ -274,6 +274,10 @@ public:
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   NS_IMETHOD  ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
+  NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
+                                           nsIFrame** aProviderFrame, 
+                                           nsContextProviderRelationship& aRelationship);
+
   // nsIHTMLReflow
   NS_IMETHOD  WillReflow(nsIPresContext* aPresContext);
   NS_IMETHOD  Reflow(nsIPresContext*          aPresContext,
