@@ -197,6 +197,14 @@ TypedRegister ICodeGenerator::newObject()
     return dest;
 }
 
+TypedRegister ICodeGenerator::newClass(const StringAtom &name)
+{
+    TypedRegister dest(getRegister(), &Any_Type);
+    NewClass *instr = new NewClass(dest, &name);
+    iCode->push_back(instr);
+    return dest;
+}
+
 TypedRegister ICodeGenerator::newFunction(ICodeModule *icm)
 {
     TypedRegister dest(getRegister(), &Function_Type);
@@ -632,8 +640,12 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         break;
     case ExprNode::New:
         {
-            // FIXME - handle args, etc...
-            ret = newObject();
+            InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
+            if (i->op->getKind() == ExprNode::identifier) {
+                ret = newClass(static_cast<IdentifierExprNode *>(i->op)->name);
+            }                
+            else
+                ret = newObject();  // XXX more
         }
         break;
     case ExprNode::call : 
@@ -934,7 +946,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 if (b->op1->getKind() == ExprNode::dot) {
                     BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
                     TypedRegister base = genExpr(lb->op1); 
-                    const StringAtom &name = static_cast<IdentifierExprNode *>(b->op2)->name;
+                    const StringAtom &name = static_cast<IdentifierExprNode *>(lb->op2)->name;
                     uint32 slotIndex;
                     if (isSlotName(base.second, name, slotIndex))
                         setSlot(base, slotIndex, ret);

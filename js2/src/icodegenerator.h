@@ -238,6 +238,7 @@ namespace ICG {
         TypedRegister newObject();
         TypedRegister newArray();
         TypedRegister newFunction(ICodeModule *icm);
+        TypedRegister newClass(const StringAtom &name);
         
         TypedRegister loadName(const StringAtom &name);
         void saveName(const StringAtom &name, TypedRegister value);

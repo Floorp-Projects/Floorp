@@ -32,6 +32,7 @@
  */
 
 #include "jstypes.h"
+#include "jsclasses.h"
 #include "numerics.h"
 #include "icodegenerator.h"
 
@@ -155,13 +156,13 @@ int JSValue::operator==(const JSValue& value) const
     return 0;
 }
 
-Formatter& operator<<(Formatter& f, const JSObject& obj)
+Formatter& operator<<(Formatter& f, JSObject& obj)
 {
     obj.printProperties(f);
     return f;
 }
 
-void JSObject::printProperties(Formatter& f) const
+void JSObject::printProperties(Formatter& f)
 {
     for (JSProperties::const_iterator i = mProperties.begin(); i != mProperties.end(); i++) {
         f << (*i).first << " : " << (*i).second;
@@ -184,6 +185,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         break;
     case JSValue::object_tag:
         {
+
             printFormat(f, "Object @ 0x%08X\n", value.object);
             f << *value.object;
         }
