@@ -432,7 +432,7 @@ Contributor(s): ______________________________________. -->
 	   <menupopup>
         <menuitem value="&xptk1Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/checkboxTest.xul'"/>
         <menuitem value="&xptk2Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
-        <menuitem value="&xptk3Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/treeTest1.xul'"/>
+        <menuitem value="&xptk3Cmd.label;" oncommand="BrowserReallyReload(0)"/>
         <menuitem value="&xptk4Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/dexsimplemaster.xul'"/>
         <menuitem value="&xptk5Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/dexanimmaster.xul'"/>
         <menuitem value="&xptk6Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/dexopenchrome.xul'"/>
