@@ -2769,6 +2769,24 @@ JS_GetFunctionName(JSFunction *fun)
            : js_anonymous_str;
 }
 
+JS_PUBLIC_API(JSString *)
+JS_GetFunctionId(JSFunction *fun)
+{
+    return fun->atom ? ATOM_TO_STRING(fun->atom) : NULL;
+}
+
+JS_PUBLIC_API(uintN)
+JS_GetFunctionFlags(JSFunction *fun)
+{
+    return fun->flags;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
+{
+    return OBJ_GET_CLASS(cx, obj) == &js_FunctionClass;
+}
+
 JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
 {
@@ -3035,6 +3053,12 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
         script->object = obj;
     }
     return obj;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetScriptObject(JSScript *script)
+{
+    return script->object;
 }
 
 JS_PUBLIC_API(void)
