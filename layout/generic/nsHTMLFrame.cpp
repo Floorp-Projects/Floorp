@@ -93,6 +93,12 @@ public:
    * @see nsLayoutAtoms::canvasFrame
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
@@ -410,6 +416,23 @@ CanvasFrame::GetFrameType(nsIAtom** aType) const
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
   *aType = nsLayoutAtoms::canvasFrame; 
   NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CanvasFrame::AttributeChanged(nsIPresContext* aPresContext,
+                          nsIContent*     aChild,
+                          PRInt32         aNameSpaceID,
+                          nsIAtom*        aAttribute,
+                          PRInt32         aHint)
+{
+// if the background color or image is changing, invalidate the canvas
+  if (aHint > 0){
+    if (aAttribute == nsHTMLAtoms::bgcolor ||
+        aAttribute == nsHTMLAtoms::background) {
+      Invalidate(aPresContext,mRect,PR_FALSE);
+    }
+  }
   return NS_OK;
 }
 
