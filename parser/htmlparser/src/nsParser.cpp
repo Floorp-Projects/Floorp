@@ -2411,7 +2411,7 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
     gOutFile=0;
   }
 #endif
-
+  NS_IF_RELEASE(mBundle);
   return result;
 }
 
