@@ -737,6 +737,11 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aW
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
+
   // Don't draw empty rectangles; also, w/h are adjusted down by one
   // so that the right number of pixels are drawn.
   if (w && h) {
@@ -770,6 +775,11 @@ NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aW
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
+
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        TRUE,
                        x, y, w, h);
@@ -796,6 +806,11 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  // After the transform, if the numbers are huge, chop them, because
+  // they're going to be converted from 32 bit to 16 bit.
+  // It's all way off the screen anyway.
+  ConditionRect(x,y,w,h);
 
   // Set XOR drawing mode
   ::gdk_gc_set_function(mSurface->GetGC(),GDK_XOR);  
@@ -1580,5 +1595,26 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 
 NS_IMETHODIMP nsRenderingContextGTK::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextGTK::ConditionRect( nscoord &x, nscoord &y, nscoord &w, nscoord &h )
+{
+  if ( y < -32766 ) {
+    y = -32766;
+  }
+
+  if ( y + h > 32766 ) {
+    h  = 32766 - y;
+  }
+
+  if ( x < -32766 ) {
+    x = -32766;
+  }
+
+  if ( x + w > 32766 ) {
+    w  = 32766 - x;
+  }
+
   return NS_OK;
 }

@@ -174,6 +174,11 @@ protected:
   nscolor                mCurrentColor;
   GdkFont               *mCurrentFont;
   nsLineStyle            mCurrentLineStyle;
+
+private:
+  // ConditionRect is used to fix coordinate overflow problems for
+  // rectangles after they are transformed to screen coordinates
+  NS_IMETHOD ConditionRect( nscoord &x, nscoord &y, nscoord &w, nscoord &h );
 };
 
 #endif /* nsRenderingContextGTK_h___ */
