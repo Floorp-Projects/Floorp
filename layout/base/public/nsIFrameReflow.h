@@ -210,6 +210,12 @@ public:
    *          maximum element size must be less than or equal to your
    *          desired size.
    *
+   *          For an incremental reflow you are responsible for invalidating
+   *          any area within your frame that needs repainting (including
+   *          borders). If your new desired size is different than your current
+   *          size, then your parent frame is responsible for making sure that
+   *          the difference between the two rects is repainted
+   *
    * @param aReflowState information about your reflow including the reason
    *          for the reflow and the available space in which to lay out. Each
    *          dimension of the available space can either be constrained or
