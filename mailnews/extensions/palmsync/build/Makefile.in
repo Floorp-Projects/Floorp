@@ -1,0 +1,77 @@
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is mozilla.org code
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 2002 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+#
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= PalmSyncProxy
+LIBRARY_NAME	= $(MODULE)
+DEFFILE		= $(srcdir)/PalmSyncProxy.def
+
+EXPORTS		= IPalmSync.h
+
+CSRCS		= \
+		dlldata.c \
+		IPalmSync_p.c \
+		IPalmSync_i.c \
+		$(NULL)
+
+OS_LIBS		+= rpcrt4.lib
+
+MIDL_GENERATED_FILES = IPalmSync.h IPalmSync_p.c IPalmSync_i.c dlldata.c
+
+SRCDIR_CSRCS	= $(addprefix $(srcdir)/,$(CSRCS))
+
+GARBAGE	+= $(MIDL_GENERATED_FILES) done_gen $(CSRCS) $(SRCDIR_CSRCS)
+
+LOCAL_INCLUDES	= -I.
+
+# Force use of PIC
+FORCE_USE_PIC	= 1 
+FORCE_SHARED_LIB = 1
+
+include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DREGISTER_PROXY_DLL -DUNICODE -D_UNICODE
+
+$(MIDL_GENERATED_FILES): done_gen
+
+done_gen: IPalmSync.idl
+	$(RM) $(SRCDIR_CSRCS)
+	$(MIDL) $(UNICODE_FLAGS) $(srcdir)/IPalmSync.idl
+	touch $@
+
+copy_csrcs: done_gen
+	@for f in $(CSRCS); do \
+	    if test ! -f $(srcdir)/$$f; then \
+		cp $$f $(srcdir)/$$f; \
+	    fi ; \
+	done
+
+$(SRCDIR_CSRCS): copy_csrcs
+
+export:: done_gen copy_csrcs
+
+
