@@ -211,7 +211,7 @@ sub FindMakefiles
   }
 
   # Try a build.
-  my $base = get_system_cwd();
+  my $basedir = get_system_cwd();
 
   #
   # Construct an allmakefiles.sh file
@@ -262,20 +262,42 @@ sub FindMakefiles
   close ALLMAKEFILES;
 
   #print "Configuring nspr ... \n";
-  #chdir("$base/mozilla/nsprpub");
+  #chdir("$basedir/mozilla/nsprpub");
   #my $nspr_configure_cmd = "./configure";
   #system("$nspr_configure_cmd");
 
   print "Configuring ... \n";
-  unlink("$base/mozilla/config.cache");
-  chdir("$base/mozilla");
+  unlink("$basedir/mozilla/config.cache");
+  chdir("$basedir/mozilla");
   my $configure_cmd = "./configure --enable-standalone-modules=$root_modules";
   $rv = run_shell_command("$configure_cmd");
 
-  #unless($rv) {
+  # Now try and build.
+  # Not a top-level build, but build each directory.
   print "Building ... \n";
-  $rv = run_shell_command("gmake");
-  #} else {
-  #  print "Error: skipping build.\n";
-  #}
+
+  print "basedir = $basedir\n";
+  chdir($basedir);
+  my $dir;
+
+  foreach (@dirs) {
+    print "dir = $_\n";
+  }
+  
+  foreach (@dirs) {
+    print "dir = $_ (export)\n";
+    #run_shell_command("gmake -C $_ export");
+    print "gmake -C $_ export\n";
+    system("gmake -C $_ export");
+  }
+
+  print "basedir = $basedir\n";
+  foreach (@dirs) {
+    print "dir = $_ (libs)\n";
+    #run_shell_command("gmake -C $dir");
+    print "gmake -C $_ export\n";
+    system("gmake -C $_ libs");    
+  }
+
+
 }
