@@ -63,13 +63,13 @@ abstract class XMLObjectImpl extends XMLObject
      * ecmaHas(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    abstract boolean hasXMLProperty(XMLName name, boolean descendants);
+    abstract boolean hasXMLProperty(XMLName name);
 
     /**
      * ecmaGet(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    abstract Object getXMLProperty(XMLName name, boolean descendants);
+    abstract Object getXMLProperty(XMLName name);
 
     /**
      * ecmaPut(cx, id, value) calls this after resolving when id to XMLName
@@ -81,7 +81,7 @@ abstract class XMLObjectImpl extends XMLObject
      * ecmaDelete(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    abstract void deleteXMLProperty(XMLName name, boolean descendants);
+    abstract void deleteXMLProperty(XMLName name);
 
     /**
      * Test XML equality with target the target.
@@ -190,7 +190,7 @@ abstract class XMLObjectImpl extends XMLObject
             // XXX Fix this cast
             return has((int)index, this);
         }
-        return hasXMLProperty(xmlName, false);
+        return hasXMLProperty(xmlName);
     }
 
     /**
@@ -209,7 +209,7 @@ abstract class XMLObjectImpl extends XMLObject
             }
             return result;
         }
-        return getXMLProperty(xmlName, false);
+        return getXMLProperty(xmlName);
     }
 
     /**
@@ -241,11 +241,11 @@ abstract class XMLObjectImpl extends XMLObject
             delete((int)index);
             return true;
         }
-        deleteXMLProperty(xmlName, false);
+        deleteXMLProperty(xmlName);
         return true;
     }
 
-    public Reference memberRef(Context cx, Object elem, int memberTypeFlags)
+    public Ref memberRef(Context cx, Object elem, int memberTypeFlags)
     {
         XMLName xmlName;
         if ((memberTypeFlags & Node.ATTRIBUTE_FLAG) != 0) {
@@ -259,15 +259,17 @@ abstract class XMLObjectImpl extends XMLObject
             }
             xmlName = lib.toXMLName(cx, elem);
         }
-        boolean descendants = ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0);
-        return new XMLReference(descendants, this, xmlName);
+        if ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0) {
+            xmlName.setIsDescendants();
+        }
+        return Ref.pushTarget(cx, xmlName, this);
     }
 
     /**
      * Generic reference to implement x::ns, x.@ns::y, x..@ns::y etc.
      */
-    public Reference memberRef(Context cx, Object namespace, Object elem,
-                               int memberTypeFlags)
+    public Ref memberRef(Context cx, Object namespace, Object elem,
+                         int memberTypeFlags)
     {
         XMLName xmlName = lib.toQualifiedName(cx, namespace, elem);
         if ((memberTypeFlags & Node.ATTRIBUTE_FLAG) != 0) {
@@ -275,8 +277,10 @@ abstract class XMLObjectImpl extends XMLObject
                 xmlName.setAttributeName();
             }
         }
-        boolean descendants = ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0);
-        return new XMLReference(descendants, this, xmlName);
+        if ((memberTypeFlags & Node.DESCENDANTS_FLAG) != 0) {
+            xmlName.setIsDescendants();
+        }
+        return Ref.pushTarget(cx, xmlName, this);
     }
 
     public NativeWith enterWith(Scriptable scope)

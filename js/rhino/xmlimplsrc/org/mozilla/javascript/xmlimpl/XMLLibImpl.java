@@ -523,8 +523,8 @@ public final class XMLLibImpl extends XMLLib
         return XMLName.formProperty(uri, localName);
     }
 
-    public Reference nameRef(Context cx, Object name,
-                             Scriptable scope, int memberTypeFlags)
+    public Ref nameRef(Context cx, Object name,
+                       Scriptable scope, int memberTypeFlags)
     {
         if ((memberTypeFlags & Node.ATTRIBUTE_FLAG) == 0) {
             // should only be called foir cases like @name or @[expr]
@@ -534,8 +534,8 @@ public final class XMLLibImpl extends XMLLib
         return xmlPrimaryReference(cx, xmlName, scope);
     }
 
-    public Reference nameRef(Context cx, Object namespace, Object name,
-                             Scriptable scope, int memberTypeFlags)
+    public Ref nameRef(Context cx, Object namespace, Object name,
+                       Scriptable scope, int memberTypeFlags)
     {
         XMLName xmlName = toQualifiedName(cx, namespace, name);
         if ((memberTypeFlags & Node.ATTRIBUTE_FLAG) != 0) {
@@ -546,9 +546,8 @@ public final class XMLLibImpl extends XMLLib
         return xmlPrimaryReference(cx, xmlName, scope);
     }
 
-    private Reference xmlPrimaryReference(Context cx,
-                                          XMLName xmlName,
-                                          Scriptable scope)
+    private Ref xmlPrimaryReference(Context cx, XMLName xmlName,
+                                    Scriptable scope)
     {
         XMLObjectImpl xmlObj;
         XMLObjectImpl firstXmlObject = null;
@@ -557,7 +556,7 @@ public final class XMLLibImpl extends XMLLib
             // of XMLWithScope
             if (scope instanceof XMLWithScope) {
                 xmlObj = (XMLObjectImpl)scope.getPrototype();
-                if (xmlObj.hasXMLProperty(xmlName, false)) {
+                if (xmlObj.hasXMLProperty(xmlName)) {
                     break;
                 }
                 if (firstXmlObject == null) {
@@ -571,8 +570,9 @@ public final class XMLLibImpl extends XMLLib
             }
         }
 
-        // xmlName == null corresponds to undefined
-        return new XMLReference(false, xmlObj, xmlName);
+        // xmlObj == null corresponds to undefined as the target of
+        // the reference
+        return Ref.pushTarget(cx, xmlName, xmlObj);
     }
 
     /**

@@ -85,14 +85,14 @@ public abstract class XMLObject extends IdScriptableObject
     /**
      * Generic reference to implement x.@y, x..y etc.
      */
-    public abstract Reference memberRef(Context cx, Object elem,
-                                        int memberTypeFlags);
+    public abstract Ref memberRef(Context cx, Object elem,
+                                  int memberTypeFlags);
 
     /**
      * Generic reference to implement x::ns, x.@ns::y, x..@ns::y etc.
      */
-    public abstract Reference memberRef(Context cx, Object namespace,
-                                        Object elem, int memberTypeFlags);
+    public abstract Ref memberRef(Context cx, Object namespace, Object elem,
+                                  int memberTypeFlags);
 
     /**
      * Wrap this object into NativeWith to implement the with statement.

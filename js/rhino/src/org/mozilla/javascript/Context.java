@@ -2597,4 +2597,7 @@ public class Context
 
     // It can be used to return the second Scriptable result from function
     Scriptable scratchScriptable;
+
+    // It is used to return the target component for Ref instance
+    Scriptable scratchRefTarget;
 }

@@ -78,11 +78,11 @@ public abstract class XMLLib
 
     public abstract boolean isXMLName(Context cx, Object name);
 
-    public abstract Reference nameRef(Context cx, Object name,
-                                      Scriptable scope, int memberTypeFlags);
+    public abstract Ref nameRef(Context cx, Object name,
+                                Scriptable scope, int memberTypeFlags);
 
-    public abstract Reference nameRef(Context cx, Object namespace, Object name,
-                                      Scriptable scope, int memberTypeFlags);
+    public abstract Ref nameRef(Context cx, Object namespace, Object name,
+                                Scriptable scope, int memberTypeFlags);
 
     /**
      * Escapes the reserved characters in a value of an attribute

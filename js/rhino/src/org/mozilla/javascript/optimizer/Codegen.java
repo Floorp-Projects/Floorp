@@ -1700,13 +1700,15 @@ class BodyCodegen
                 cfw.addALoad(contextLocal);
                 cfw.addALoad(variableObjectLocal);
                 addScriptRuntimeInvoke(
-                    "referenceCall",
+                    "callRef",
                     "(Lorg/mozilla/javascript/Function;"
                     +"Lorg/mozilla/javascript/Scriptable;"
                     +"[Ljava/lang/Object;"
                     +"Lorg/mozilla/javascript/Context;"
                     +"Lorg/mozilla/javascript/Scriptable;"
                     +")Ljava/lang/Object;");
+                // Load reference target stored in cx by refCal
+                refTargetToStack();
                 break;
 
               case Token.NUMBER:
@@ -2021,11 +2023,12 @@ class BodyCodegen
                 break;
 
               case Token.GET_REF:
-                generateExpression(child, node); // reference
+                generateExpression(child, node); // reference and target
                 cfw.addALoad(contextLocal);
                 addScriptRuntimeInvoke(
-                    "getReference",
-                    "(Lorg/mozilla/javascript/Reference;"
+                    "refGet",
+                    "(Lorg/mozilla/javascript/Ref;"
+                    +"Lorg/mozilla/javascript/Scriptable;"
                     +"Lorg/mozilla/javascript/Context;"
                     +")Ljava/lang/Object;");
                 break;
@@ -2058,19 +2061,21 @@ class BodyCodegen
                     generateExpression(child, node);
                     child = child.getNext();
                     if (type == Token.SET_REF_OP) {
-                        cfw.add(ByteCode.DUP);
+                        cfw.add(ByteCode.DUP2);
                         cfw.addALoad(contextLocal);
                         addScriptRuntimeInvoke(
-                            "getReference",
-                            "(Lorg/mozilla/javascript/Reference;"
+                            "refGet",
+                            "(Lorg/mozilla/javascript/Ref;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
                             +"Lorg/mozilla/javascript/Context;"
                             +")Ljava/lang/Object;");
                     }
                     generateExpression(child, node);
                     cfw.addALoad(contextLocal);
                     addScriptRuntimeInvoke(
-                        "setReference",
-                        "(Lorg/mozilla/javascript/Reference;"
+                        "refSet",
+                        "(Lorg/mozilla/javascript/Ref;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
                         +"Ljava/lang/Object;"
                         +"Lorg/mozilla/javascript/Context;"
                         +")Ljava/lang/Object;");
@@ -2080,8 +2085,9 @@ class BodyCodegen
               case Token.DEL_REF:
                 generateExpression(child, node);
                 cfw.addALoad(contextLocal);
-                addScriptRuntimeInvoke("deleteReference",
-                                       "(Lorg/mozilla/javascript/Reference;"
+                addScriptRuntimeInvoke("refDel",
+                                       "(Lorg/mozilla/javascript/Ref;"
+                                       +"Lorg/mozilla/javascript/Scriptable;"
                                        +"Lorg/mozilla/javascript/Context;"
                                        +")Ljava/lang/Object;");
                 break;
@@ -2132,7 +2138,9 @@ class BodyCodegen
                         "(Ljava/lang/Object;"
                         +"Ljava/lang/String;"
                         +"Lorg/mozilla/javascript/Context;"
-                        +")Lorg/mozilla/javascript/Reference;");
+                        +")Lorg/mozilla/javascript/Ref;");
+                    // Load reference target stored in cx by specialRef
+                    refTargetToStack();
                 }
                 break;
 
@@ -2157,7 +2165,7 @@ class BodyCodegen
                                     +"Ljava/lang/Object;"
                                     +"Lorg/mozilla/javascript/Context;"
                                     +"I"
-                                    +")Lorg/mozilla/javascript/Reference;";
+                                    +")Lorg/mozilla/javascript/Ref;";
                         break;
                       case Token.REF_NS_MEMBER:
                         methodName = "memberRef";
@@ -2166,7 +2174,7 @@ class BodyCodegen
                                     +"Ljava/lang/Object;"
                                     +"Lorg/mozilla/javascript/Context;"
                                     +"I"
-                                    +")Lorg/mozilla/javascript/Reference;";
+                                    +")Lorg/mozilla/javascript/Ref;";
                         break;
                       case Token.REF_NAME:
                         methodName = "nameRef";
@@ -2174,7 +2182,7 @@ class BodyCodegen
                                     +"Lorg/mozilla/javascript/Context;"
                                     +"Lorg/mozilla/javascript/Scriptable;"
                                     +"I"
-                                    +")Lorg/mozilla/javascript/Reference;";
+                                    +")Lorg/mozilla/javascript/Ref;";
                         cfw.addALoad(variableObjectLocal);
                         break;
                       case Token.REF_NS_NAME:
@@ -2183,7 +2191,7 @@ class BodyCodegen
                                     +"Lorg/mozilla/javascript/Context;"
                                     +"Lorg/mozilla/javascript/Scriptable;"
                                     +"I"
-                                    +")Lorg/mozilla/javascript/Reference;";
+                                    +")Lorg/mozilla/javascript/Ref;";
                         cfw.addALoad(variableObjectLocal);
                         break;
                       default:
@@ -2191,6 +2199,8 @@ class BodyCodegen
                     }
                     cfw.addPush(memberTypeFlags);
                     addScriptRuntimeInvoke(methodName, signature);
+                    // Load reference target stored in cx by methodName
+                    refTargetToStack();
                 }
                 break;
 
@@ -3168,8 +3178,9 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             cfw.addALoad(contextLocal);
             cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke(
-                "referenceIncrDecr",
-                "(Lorg/mozilla/javascript/Reference;"
+                "refIncrDecr",
+                "(Lorg/mozilla/javascript/Ref;"
+                +"Lorg/mozilla/javascript/Scriptable;"
                 +"Lorg/mozilla/javascript/Context;"
                 +"I)Ljava/lang/Object;");
             break;
@@ -3865,11 +3876,21 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         }
     }
 
+    private void refTargetToStack()
+    {
+        cfw.addALoad(contextLocal);
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org.mozilla.javascript.Ref",
+                      "popTarget",
+                      "(Lorg/mozilla/javascript/Context;"
+                      +")Lorg/mozilla/javascript/Scriptable;");
+    }
+
     private void addScriptRuntimeInvoke(String methodName,
                                         String methodSignature)
     {
         cfw.addInvoke(ByteCode.INVOKESTATIC,
-                      "org/mozilla/javascript/ScriptRuntime",
+                      "org.mozilla.javascript.ScriptRuntime",
                       methodName,
                       methodSignature);
     }

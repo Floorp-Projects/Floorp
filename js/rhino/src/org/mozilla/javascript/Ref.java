@@ -35,24 +35,41 @@
 
 package org.mozilla.javascript;
 
+import java.io.Serializable;
+
 /**
- * Generic notion of callable object that can execute some script-related code
- * upon request with specified values for script scope and this objects.
+ * Generic notion of reference object that know how to query/modify the
+ * target objects based on some property/index.
  */
-public abstract class Reference
+public abstract class Ref implements Serializable
 {
-    public boolean has(Context cx)
+    public static Ref pushTarget(Context cx, Ref ref, Scriptable target)
+    {
+        if (cx.scratchRefTarget != null) throw new IllegalStateException();
+        cx.scratchRefTarget = target;
+        return ref;
+    }
+
+    public static Scriptable popTarget(Context cx)
+    {
+        Scriptable target = cx.scratchRefTarget;
+        cx.scratchRefTarget = null;
+        return target;
+    }
+
+    public boolean has(Context cx, Scriptable target)
     {
         return true;
     }
 
-    public abstract Object get(Context cx);
+    public abstract Object get(Context cx, Scriptable target);
 
-    public abstract Object set(Context cx, Object value);
+    public abstract Object set(Context cx, Scriptable target, Object value);
 
-    public boolean delete(Context cx)
+    public boolean delete(Context cx, Scriptable target)
     {
         return false;
     }
+
 }
 

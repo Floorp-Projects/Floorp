@@ -35,24 +35,22 @@
 
 package org.mozilla.javascript;
 
-class SpecialRef extends Reference
+class SpecialRef extends Ref
 {
     private static final int SPECIAL_NONE = 0;
     private static final int SPECIAL_PROTO = 1;
     private static final int SPECIAL_PARENT = 2;
 
     private int type;
-    private Scriptable target;
     private String name;
 
-    private SpecialRef(int type, Scriptable target, String name)
+    private SpecialRef(int type, String name)
     {
         this.type = type;
-        this.target = target;
         this.name = name;
     }
 
-    static Reference createSpecial(Context cx, Object object, String name)
+    static Ref createSpecial(Context cx, Object object, String name)
     {
         Scriptable target = ScriptRuntime.toObjectOrNull(cx, object);
         if (target == null) {
@@ -73,10 +71,10 @@ class SpecialRef extends Reference
             type = SPECIAL_NONE;
         }
 
-        return new SpecialRef(type, target, name);
+        return Ref.pushTarget(cx, new SpecialRef(type, name), target);
     }
 
-    public Object get(Context cx)
+    public Object get(Context cx, Scriptable target)
     {
         switch (type) {
           case SPECIAL_NONE:
@@ -90,7 +88,7 @@ class SpecialRef extends Reference
         }
     }
 
-    public Object set(Context cx, Object value)
+    public Object set(Context cx, Scriptable target, Object value)
     {
         switch (type) {
           case SPECIAL_NONE:
@@ -127,7 +125,7 @@ class SpecialRef extends Reference
         }
     }
 
-    public boolean has(Context cx)
+    public boolean has(Context cx, Scriptable target)
     {
         if (type == SPECIAL_NONE) {
             return ScriptRuntime.hasObjectElem(target, name, cx);
@@ -135,7 +133,7 @@ class SpecialRef extends Reference
         return true;
     }
 
-    public boolean delete(Context cx)
+    public boolean delete(Context cx, Scriptable target)
     {
         if (type == SPECIAL_NONE) {
             return ScriptRuntime.deleteObjectElem(target, name, cx);

@@ -1516,19 +1516,20 @@ public class ScriptRuntime {
         return result;
     }
 
-    public static Object getReference(Reference ref, Context cx)
+    public static Object refGet(Ref ref, Scriptable target, Context cx)
     {
-        return ref.get(cx);
+        return ref.get(cx, target);
     }
 
-    public static Object setReference(Reference ref, Object value, Context cx)
+    public static Object refSet(Ref ref, Scriptable target,
+                                Object value, Context cx)
     {
-        return ref.set(cx, value);
+        return ref.set(cx, target, value);
     }
 
-    public static Object deleteReference(Reference ref, Context cx)
+    public static Object refDel(Ref ref, Scriptable target, Context cx)
     {
-        return wrapBoolean(ref.delete(cx));
+        return wrapBoolean(ref.delete(cx, target));
     }
 
     static boolean isSpecialProperty(String s)
@@ -1536,8 +1537,8 @@ public class ScriptRuntime {
         return s.equals("__proto__") || s.equals("__parent__");
     }
 
-    public static Reference specialRef(Object obj, String specialProperty,
-                                       Context cx)
+    public static Ref specialRef(Object obj, String specialProperty,
+                                 Context cx)
     {
         return SpecialRef.createSpecial(cx, obj, specialProperty);
     }
@@ -2032,20 +2033,22 @@ public class ScriptRuntime {
     /**
      * Perform function call in reference context. Should always
      * return value that can be passed to
-     * {@link #getReference(Object)} or @link #setReference(Object, Object)}
+     * {@link #refGet(Object)} or @link #refSet(Object, Object)}
      * arbitrary number of times.
      * The args array reference should not be stored in any object that is
      * can be GC-reachable after this method returns. If this is necessary,
      * store args.clone(), not args array itself.
      */
-    public static Object referenceCall(Function function, Scriptable thisObj,
-                                       Object[] args,
-                                       Context cx, Scriptable scope)
+    public static Object callRef(Function function, Scriptable thisObj,
+                                 Object[] args, Context cx, Scriptable scope)
     {
         if (function instanceof BaseFunction) {
             BaseFunction bf = (BaseFunction)function;
-            Reference ref = bf.referenceCall(cx, scope, thisObj, args);
-            if (ref != null) { return ref; }
+            Ref ref = bf.callRef(cx, scope, thisObj, args);
+            if (ref != null) {
+                storeScriptable(cx, thisObj);
+                return ref;
+            }
         }
         // No runtime support for now
         String msg = getMessage1("msg.no.ref.from.function",
@@ -2413,10 +2416,10 @@ public class ScriptRuntime {
         }
     }
 
-    public static Object referenceIncrDecr(Reference ref, Context cx,
-                                           int incrDecrMask)
+    public static Object refIncrDecr(Ref ref, Scriptable target,
+                                     Context cx, int incrDecrMask)
     {
-        Object value = ref.get(cx);
+        Object value = ref.get(cx, target);
         boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
@@ -2434,7 +2437,7 @@ public class ScriptRuntime {
             --number;
         }
         Number result = wrapNumber(number);
-        ref.set(cx, result);
+        ref.set(cx, target, result);
         if (post) {
             return value;
         } else {
@@ -3395,8 +3398,8 @@ public class ScriptRuntime {
         return xmlLib.escapeTextValue(value);
     }
 
-    public static Reference memberRef(Object obj, Object elem, Context cx,
-                                      int memberTypeFlags)
+    public static Ref memberRef(Object obj, Object elem,
+                                Context cx, int memberTypeFlags)
     {
         if (!(obj instanceof XMLObject)) {
             throw notXmlError(obj);
@@ -3405,9 +3408,8 @@ public class ScriptRuntime {
         return xmlObject.memberRef(cx, elem, memberTypeFlags);
     }
 
-    public static Reference memberRef(Object obj, Object namespace,
-                                      Object elem, Context cx,
-                                      int memberTypeFlags)
+    public static Ref memberRef(Object obj, Object namespace, Object elem,
+                                Context cx, int memberTypeFlags)
     {
         if (!(obj instanceof XMLObject)) {
             throw notXmlError(obj);
@@ -3416,15 +3418,15 @@ public class ScriptRuntime {
         return xmlObject.memberRef(cx, namespace, elem, memberTypeFlags);
     }
 
-    public static Reference nameRef(Object name, Context cx,
-                                    Scriptable scope, int memberTypeFlags)
+    public static Ref nameRef(Object name, Context cx,
+                              Scriptable scope, int memberTypeFlags)
     {
         XMLLib xmlLib = currentXMLLib(cx);
         return xmlLib.nameRef(cx, name, scope, memberTypeFlags);
     }
 
-    public static Reference nameRef(Object namespace, Object name, Context cx,
-                                    Scriptable scope, int memberTypeFlags)
+    public static Ref nameRef(Object namespace, Object name, Context cx,
+                              Scriptable scope, int memberTypeFlags)
     {
         XMLLib xmlLib = currentXMLLib(cx);
         return xmlLib.nameRef(cx, namespace, name, scope, memberTypeFlags);
@@ -3457,8 +3459,6 @@ public class ScriptRuntime {
 
     private static void storeScriptable(Context cx, Scriptable value)
     {
-        if (value == null)
-            throw new IllegalArgumentException();
         // The previosly stored scratchScriptable should be consumed
         if (cx.scratchScriptable != null)
             throw new IllegalStateException();
@@ -3468,9 +3468,6 @@ public class ScriptRuntime {
     public static Scriptable lastStoredScriptable(Context cx)
     {
         Scriptable result = cx.scratchScriptable;
-        if (result == null)
-            throw new IllegalStateException();
-        // Consume the result
         cx.scratchScriptable = null;
         return result;
     }

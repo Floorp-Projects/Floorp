@@ -349,8 +349,8 @@ public class BaseFunction extends IdScriptableObject implements Function
     /**
      * EXPERIMENTAL: subject to change/removal
      */
-    protected Reference referenceCall(Context cx, Scriptable scope,
-                                      Scriptable thisObj, Object[] args)
+    protected Ref callRef(Context cx, Scriptable scope,
+                          Scriptable thisObj, Object[] args)
     {
         return null;
     }
