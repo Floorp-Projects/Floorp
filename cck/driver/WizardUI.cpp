@@ -459,6 +459,7 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 			char indices[MAX_SIZE];
 			int i;
 
+			((CCheckListBox*)curWidget->control)->Enable(0,FALSE);
 			strcpy(indices, curWidget->value); 
 			char *s = strtok(indices, ",");
 			for (; s; s=strtok(NULL, ","))
