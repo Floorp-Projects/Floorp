@@ -1,9 +1,18 @@
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# $Revision: 1.1 $ 
-# $Date: 2000/11/29 20:53:13 $ 
+
+# $Revision: 1.2 $ 
+# $Date: 2001/01/04 00:24:09 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
+
+
+
+# BuildStatus.pm - the definitions of the various types of build
+# results and what action should be taken with each result.  Users can
+# customize their tinderbox to call pagers when certain events happen
+# or change the names/colors of the build events.
 
 
 # The contents of this file are subject to the Mozilla Public
