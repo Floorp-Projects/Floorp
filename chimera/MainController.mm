@@ -382,6 +382,8 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [controller openNewTabWithURL:inURLString loadInBackground:loadInBackground];
   }
   else {
+    // should use BrowserWindowController openNewWindowWithURL, but that method
+    // really needs to be on the MainController
     controller = [self openBrowserWindowWithURL: inURLString];
   }
   
@@ -546,9 +548,38 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   return [[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]];
 }
 
+- (void)adjustCloseWindowMenuItemKeyEquivalent:(BOOL)inHaveTabs
+{
+  // capitalization of the key equivalent affects whether the shift modifer is used.
+  [mCloseWindowMenuItem setKeyEquivalent: inHaveTabs ? @"W" : @"w"];
+}
+
+- (void)adjustCloseTabMenuItemKeyEquivalent:(BOOL)inHaveTabs
+{
+  if (inHaveTabs) {
+    [mCloseTabMenuItem setKeyEquivalent:@"w"];
+    [mCloseTabMenuItem setKeyEquivalentModifierMask:NSCommandKeyMask];
+  }
+  else {
+    [mCloseTabMenuItem setKeyEquivalent:@""];
+    [mCloseTabMenuItem setKeyEquivalentModifierMask:0];
+  }
+}
+
+// see if we have a window with tabs open, and adjust the key equivalents for
+// Close Tab/Close Window accordingly
+- (void)fixCloseMenuItemKeyEquivalents
+{
+  BOOL windowWithMultipleTabs = ([[[[mApplication mainWindow] windowController] getTabBrowser] numberOfTabViewItems] > 1);
+  
+  [self adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
+  [self adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
+}
 
 -(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
 {
+  //NSLog(@"validateMenuItem for %@ called on the MainController", [aMenuItem title]);
+
   // disable items that aren't relevant if there's no main browser window open
   SEL action = [aMenuItem action];
   if (action == @selector(newTab:) ||
@@ -600,9 +631,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // only activate if we've got multiple tabs open.
   if ((action == @selector(closeTab:) ||
        action == @selector (nextTab:) ||
-       action == @selector (previousTab:))) {
+       action == @selector (previousTab:)))
+  {
     if ([[[[mApplication mainWindow] windowController] getTabBrowser] numberOfTabViewItems] > 1)
       return YES;
+
     return NO;
   }
 

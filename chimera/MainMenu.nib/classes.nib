@@ -44,12 +44,14 @@
             CLASS = MainController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mApplication = id; 
-                mBookmarksMenu = id; 
-                mBookmarksToolbarMenuItem = id; 
-                mFilterList = id; 
-                mFilterView = id; 
-                mOfflineMenuItem = id; 
+                mApplication = NSApplication; 
+                mBookmarksMenu = NSMenu; 
+                mBookmarksToolbarMenuItem = NSMenuItem; 
+                mCloseTabMenuItem = NSMenuItem; 
+                mCloseWindowMenuItem = NSMenuItem; 
+                mFilterList = NSPopUpButton; 
+                mFilterView = NSView; 
+                mOfflineMenuItem = NSMenuItem; 
             }; 
             SUPERCLASS = NSObject; 
         }, 
