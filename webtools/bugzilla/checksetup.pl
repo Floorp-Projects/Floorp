@@ -2055,7 +2055,7 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 # a Bugzilla with the old data format, and so upgrade their data files.
 unless (-d 'graphs') {
     print "Creating graphs directory...\n";
-    mkdir 'graphs', 1770; 
+    mkdir 'graphs', 0770; 
     if ($my_webservergroup eq "") {
         chmod 01777, 'graphs';
     } 
