@@ -19,6 +19,9 @@
 #include "fe_proto.h"
 #include "xp_file.h"
 #include "prlog.h"
+#include <Aliases.h>
+#include "FullPath.h"
+#include "prmem.h"
 
 #define USE_MSL
 
@@ -45,6 +48,18 @@ char * WH_FileName (const char *name, XP_FileType type)
 		return name ? strdup(name) : NULL;
 }
 
+
+// XP_FileOpen
+//
+//		This is a ¥TEMPORARY¥ version. We will soon use NSPR for all file I/O.
+//
+//		NOTE: Like NSPR, we use ConvertUnixPathToMacPath() to support
+//		some special paths (for instance "/usr/local/netscape/bin" to 
+//		designate the application folder) but unlike NSPR, this function
+//		also support aliases, although through a very slow process
+//		which should be optimized in a final implementation (currently,
+//		we convert a fullpath to a fSpec back-and-forth).
+//
 XP_File XP_FileOpen( const char* name, XP_FileType type,
 					 const XP_FilePerm inPermissions )
 {
@@ -57,12 +72,35 @@ XP_File XP_FileOpen( const char* name, XP_FileType type,
 #ifdef USE_MSL
 	// use MSL like the other functions in xp_file.h
 	char *macFileName = NULL;
-
     OSErr err = ConvertUnixPathToMacPath(name, &macFileName);
 	if (err != noErr)
 		return NULL;
 
-	return (XP_File)fopen(macFileName, inPermissions);
+	// resolve an alias if this was one
+	FSSpec	fileSpec;
+	err = FSpLocationFromFullPath(strlen(macFileName), macFileName, &fileSpec);
+	if (err == noErr)
+	{
+		Boolean crap;
+		err = ResolveAliasFile(&fileSpec, true, &crap, &crap);
+		if (err == noErr)
+		{
+			short	fullPathLength;
+			Handle	fullPath;
+			err = FSpGetFullPath(&fileSpec, &fullPathLength, &fullPath);
+			if (err == noErr)
+			{
+				macFileName = (char*)malloc(fullPathLength + 1);
+				BlockMoveData(*fullPath, macFileName, fullPathLength);
+				macFileName[fullPathLength] = '\0';
+				::DisposeHandle(fullPath);
+			}
+		}
+	}
+
+	XP_File theFile = (XP_File)fopen(macFileName, inPermissions);
+	PR_FREEIF(macFileName);
+	return theFile;
 
 #else
 	// use NSPR as is would be nice to do one day
