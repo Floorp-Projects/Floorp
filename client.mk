@@ -184,7 +184,7 @@ nspr:	$(NSPR_INSTALL_DIR)/lib/libnspr21.so
 	@echo NSPR is ready and installed in $(NSPR_INSTALL_DIR)
 
 $(NSPR_INSTALL_DIR)/lib/libnspr21.so:
-	$(CVSCO) NSPR
+	$(CVSCO) -rNSPRPUB_RELEASE_3_0 NSPR
 	@-$(MKDIR) -p $(NSPR_INSTALL_DIR)
 	($(MAKE) -C $(SRCDIR)/nsprpub $(NSPR_GMAKE_OPTIONS)) 
 
