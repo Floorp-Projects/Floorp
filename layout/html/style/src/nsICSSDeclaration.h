@@ -29,8 +29,11 @@
 enum nsCSSUnit {
   eCSSUnit_Null       = 0,      // (n/a) null unit, value is not specified
   eCSSUnit_Auto       = 1,      // (n/a) value is algorithmic
+  eCSSUnit_Inherit    = 2,      // (n/a) value is inherited
+  eCSSUnit_None       = 3,      // (n/a) value is none
+  eCSSUnit_Normal     = 4,      // (n/a) value is normal (algorithmic, different than auto)
   eCSSUnit_String     = 10,     // (nsString) a string value
-  eCSSUnit_Absolute   = 50,     // (int) simple value
+  eCSSUnit_Integer    = 50,     // (int) simple value
   eCSSUnit_Enumerated = 51,     // (int) value has enumerated meaning
   eCSSUnit_Color      = 80,     // (color) an RGBA value
   eCSSUnit_Percent    = 90,     // (float) 1.0 == 100%) value is percentage of something
@@ -72,7 +75,7 @@ struct nsCSSStruct {
 
 class nsCSSValue {
 public:
-  nsCSSValue(void);
+  nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null);  // for valueless units only (null, auto, inherit, none, normal)
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsString& aValue);
@@ -92,16 +95,22 @@ public:
     { return PRBool(eCSSUnit_EM <= mUnit); }
 
   PRInt32   GetIntValue(void) const;
+  float     GetPercentValue(void) const;
   float     GetFloatValue(void) const;
   nsString& GetStringValue(nsString& aBuffer) const;
   nscolor   GetColorValue(void) const;
   nscoord   GetLengthTwips(void) const;
 
-  void  Reset(void);
-  void  Set(PRInt32 aValue, nsCSSUnit aUnit);
-  void  Set(float aValue, nsCSSUnit aUnit);
-  void  Set(const nsString& aValue);
-  void  Set(nscolor aValue);
+  void  Reset(void);  // sets to null
+  void  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
+  void  SetPercentValue(float aValue);
+  void  SetFloatValue(float aValue, nsCSSUnit aUnit);
+  void  SetStringValue(const nsString& aValue);
+  void  SetColorValue(nscolor aValue);
+  void  SetAutoValue(void);
+  void  SetInheritValue(void);
+  void  SetNoneValue(void);
+  void  SetNormalValue(void);
 
   void  AppendToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
   void  ToString(nsString& aBuffer, PRInt32 aPropID = -1) const;
@@ -118,27 +127,28 @@ protected:
 
 inline PRInt32 nsCSSValue::GetIntValue(void) const
 {
-  NS_ASSERTION((mUnit == eCSSUnit_Absolute) ||
+  NS_ASSERTION((mUnit == eCSSUnit_Integer) ||
                (mUnit == eCSSUnit_Enumerated), "not an int value");
-  if ((mUnit == eCSSUnit_Absolute) ||
+  if ((mUnit == eCSSUnit_Integer) ||
       (mUnit == eCSSUnit_Enumerated)) {
     return mValue.mInt;
   }
   return 0;
 }
 
+inline float nsCSSValue::GetPercentValue(void) const
+{
+  NS_ASSERTION((mUnit == eCSSUnit_Percent), "not a percent value");
+  if ((mUnit == eCSSUnit_Percent)) {
+    return mValue.mFloat;
+  }
+  return 0.0f;
+}
+
 inline float nsCSSValue::GetFloatValue(void) const
 {
-  NS_ASSERTION((mUnit != eCSSUnit_Null) && 
-               (mUnit != eCSSUnit_Absolute) &&
-               (mUnit != eCSSUnit_Enumerated) &&
-               (mUnit != eCSSUnit_String) &&
-               (mUnit != eCSSUnit_Color), "not a float value");
-  if ((mUnit != eCSSUnit_Null) && 
-      (mUnit != eCSSUnit_Absolute) &&
-      (mUnit != eCSSUnit_Enumerated) &&
-      (mUnit != eCSSUnit_String) &&
-      (mUnit != eCSSUnit_Color)) {
+  NS_ASSERTION((mUnit >= eCSSUnit_Number), "not a float value");
+  if ((mUnit >= eCSSUnit_Number)) {
     return mValue.mFloat;
   }
   return 0.0f;

@@ -22,20 +22,35 @@
 
 const nsHTMLValue nsHTMLValue::kNull;
 
-nsHTMLValue::nsHTMLValue(void)
-  : mUnit(eHTMLUnit_Null)
+nsHTMLValue::nsHTMLValue(nsHTMLUnit aUnit)
+  : mUnit(aUnit)
 {
+  NS_ASSERTION((aUnit <= eHTMLUnit_Empty), "not a valueless unit");
+  if (aUnit > eHTMLUnit_Empty) {
+    mUnit = eHTMLUnit_Null;
+  }
   mValue.mString = nsnull;
 }
 
 nsHTMLValue::nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit)
   : mUnit(aUnit)
 {
-  mValue.mInt = aValue;
+  NS_ASSERTION((eHTMLUnit_Integer == aUnit) ||
+               (eHTMLUnit_Enumerated == aUnit) ||
+               (eHTMLUnit_Pixel == aUnit), "not an integer value");
+  if ((eHTMLUnit_Integer == aUnit) ||
+      (eHTMLUnit_Enumerated == aUnit) ||
+      (eHTMLUnit_Pixel == aUnit)) {
+    mValue.mInt = aValue;
+  }
+  else {
+    mUnit = eHTMLUnit_Null;
+    mValue.mInt = 0;
+  }
 }
 
-nsHTMLValue::nsHTMLValue(float aValue, nsHTMLUnit aUnit)
-  : mUnit(aUnit)
+nsHTMLValue::nsHTMLValue(float aValue)
+  : mUnit(eHTMLUnit_Percent)
 {
   mValue.mFloat = aValue;
 }
@@ -159,28 +174,40 @@ void nsHTMLValue::Reset(void)
 }
 
 
-void nsHTMLValue::Set(PRInt32 aValue, nsHTMLUnit aUnit)
+void nsHTMLValue::SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit)
 {
   Reset();
-  mUnit = aUnit;
+  NS_ASSERTION((eHTMLUnit_Integer == aUnit) ||
+               (eHTMLUnit_Enumerated == aUnit), "not an int value");
+  if ((eHTMLUnit_Integer == aUnit) ||
+      (eHTMLUnit_Enumerated == aUnit)) {
+    mUnit = aUnit;
+    mValue.mInt = aValue;
+  }
+}
+
+void nsHTMLValue::SetPixelValue(PRInt32 aValue)
+{
+  Reset();
+  mUnit = eHTMLUnit_Pixel;
   mValue.mInt = aValue;
 }
 
-void nsHTMLValue::Set(float aValue, nsHTMLUnit aUnit)
+void nsHTMLValue::SetPercentValue(float aValue)
 {
   Reset();
-  mUnit = aUnit;
+  mUnit = eHTMLUnit_Percent;
   mValue.mFloat = aValue;
 }
 
-void nsHTMLValue::Set(const nsString& aValue)
+void nsHTMLValue::SetStringValue(const nsString& aValue)
 {
   Reset();
   mUnit = eHTMLUnit_String;
   mValue.mString = aValue.ToNewString();
 }
 
-void nsHTMLValue::Set(nsISupports* aValue)
+void nsHTMLValue::SetSupportsValue(nsISupports* aValue)
 {
   Reset();
   mUnit = eHTMLUnit_ISupports;
@@ -188,11 +215,17 @@ void nsHTMLValue::Set(nsISupports* aValue)
   NS_IF_ADDREF(mValue.mISupports);
 }
 
-void nsHTMLValue::Set(nscolor aValue)
+void nsHTMLValue::SetColorValue(nscolor aValue)
 {
   Reset();
   mUnit = eHTMLUnit_Color;
   mValue.mColor = aValue;
+}
+
+void nsHTMLValue::SetEmptyValue(void)
+{
+  Reset();
+  mUnit = eHTMLUnit_Empty;
 }
 
 void nsHTMLValue::AppendToString(nsString& aBuffer) const
@@ -201,7 +234,9 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
     return;
   }
 
-  if (eHTMLUnit_String == mUnit) {
+  if (eHTMLUnit_Empty == mUnit) {
+  }
+  else if (eHTMLUnit_String == mUnit) {
     if (nsnull != mValue.mString) {
       aBuffer.Append('"');
       aBuffer.Append(*(mValue.mString));
@@ -238,9 +273,10 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
 
   switch (mUnit) {
     case eHTMLUnit_Null:       break;
+    case eHTMLUnit_Empty:      break;
     case eHTMLUnit_String:     break;
     case eHTMLUnit_ISupports:  aBuffer.Append("ptr");  break;
-    case eHTMLUnit_Absolute:   break;
+    case eHTMLUnit_Integer:    break;
     case eHTMLUnit_Enumerated: aBuffer.Append("enum"); break;
     case eHTMLUnit_Color:      aBuffer.Append("rbga"); break;
     case eHTMLUnit_Percent:    aBuffer.Append("%");    break;
@@ -251,7 +287,7 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
 
 void nsHTMLValue::ToString(nsString& aBuffer) const
 {
-  aBuffer.SetLength(0);
+  aBuffer.Truncate();
   AppendToString(aBuffer);
 }
 
