@@ -39,8 +39,6 @@
 
 interface nsIDOMEventTarget;
 interface nsIWebNavigation;
-interface nsIOverrideDragSource;
-interface nsIOverrideDropSite;
 
 
 /**
