@@ -43,6 +43,7 @@
 #include "nsIStatefulFrame.h"
 #include "nsIPresState.h"
 #include "nsCWeakReference.h"
+#include "nsIContent.h"
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
