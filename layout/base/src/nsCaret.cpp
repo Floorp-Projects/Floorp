@@ -437,8 +437,10 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 			  }
 			  else
 			  {
-			    nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
-          NS_ASSERTION(nodeAsText, "Should have a text node here");
+			    //nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
+          //NS_ASSERTION(nodeAsText, "Should have a text node here");
+          
+          // we can be in a text node, or a BR node here.
 			  }
 			
 				nsIFrame*	theFrame = nsnull;
