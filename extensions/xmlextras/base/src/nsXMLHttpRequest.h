@@ -32,7 +32,6 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDocument.h"
-#include "nsISecurityCheckedComponent.h"
 #include "nsIURI.h"
 #include "nsIHttpChannel.h"
 #include "nsIDocument.h"
@@ -43,6 +42,8 @@
 #include "nsWeakReference.h"
 #include "nsISupportsArray.h"
 #include "jsapi.h"
+#include "nsIScriptContext.h"
+
 
 enum {
   XML_HTTP_REQUEST_INITIALIZED,
@@ -53,9 +54,9 @@ enum {
 };
 
 class nsXMLHttpRequest : public nsIXMLHttpRequest,
+                         public nsIJSXMLHttpRequest,
                          public nsIDOMLoadListener,
                          public nsIDOMEventTarget,
-                         public nsISecurityCheckedComponent,
                          public nsIStreamListener,
                          public nsSupportsWeakReference
 {
@@ -67,6 +68,9 @@ public:
 
   // nsIXMLHttpRequest  
   NS_DECL_NSIXMLHTTPREQUEST
+
+  // nsIJSXMLHttpRequest  
+  NS_DECL_NSIJSXMLHTTPREQUEST
 
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
@@ -80,9 +84,6 @@ public:
   NS_IMETHOD Abort(nsIDOMEvent* aEvent);
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
-  // nsISecurityCheckedComponent
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
-
   // nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
 
@@ -90,13 +91,6 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
 
 protected:
-  nsresult MakeScriptEventListener(nsISupports* aObject,
-                                   nsIDOMEventListener** aListener);
-  void GetScriptEventListener(nsISupportsArray* aList, 
-                              nsIDOMEventListener** aListener);
-  PRBool StuffReturnValue(nsIDOMEventListener* aListener);
-
-
   nsresult GetStreamForWString(const PRUnichar* aStr,
                                PRInt32 aLength,
                                nsIInputStream** aStream);
@@ -109,8 +103,13 @@ protected:
 #ifdef IMPLEMENT_SYNC_LOAD
   nsCOMPtr<nsIWebBrowserChrome> mChromeWindow;
 #endif
+
   nsCOMPtr<nsISupportsArray> mLoadEventListeners;
   nsCOMPtr<nsISupportsArray> mErrorEventListeners;
+  nsCOMPtr<nsIScriptContext> mScriptContext;
+
+  nsCOMPtr<nsIDOMEventListener> mOnLoadListener;
+  nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
   
   nsresult DetectCharset(nsAWritableString& aCharset);
   nsresult ConvertBodyToText(PRUnichar **aOutBuffer);
@@ -139,38 +138,6 @@ protected:
 
   PRInt32 mStatus;
   PRBool mAsync;
-};
-
-#define NS_IPRIVATEJSEVENTLISTENER_IID              \
- { /* d47a6550-4327-11d4-9a45-000064657374 */       \
-  0xd47a6550, 0x4327, 0x11d4,                       \
- {0x9a, 0x45, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
-
-class nsIPrivateJSEventListener : public nsISupports {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATEJSEVENTLISTENER_IID)
-    
-  NS_IMETHOD GetFunctionObj(JSObject** aObj) = 0;
-};
-
-class nsXMLHttpRequestScriptListener : public nsIDOMEventListener,
-                                       public nsIPrivateJSEventListener
-{
-public:
-  nsXMLHttpRequestScriptListener(JSObject* aScopeObj, JSObject* aFunctionObj);
-  virtual ~nsXMLHttpRequestScriptListener();
-
-  NS_DECL_ISUPPORTS
-  
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-  // nsIPrivateJSEventListener
-  NS_IMETHOD GetFunctionObj(JSObject** aObj);
-  
-protected:  
-  JSObject* mScopeObj;
-  JSObject* mFunctionObj;
 };
 
 #endif

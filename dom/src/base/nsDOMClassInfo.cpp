@@ -471,9 +471,8 @@ nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // XML extras classes
-  NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsXMLHttpRequestSH,
-                           0 /* Not used, XMLHttpRequest is it's own
-                                helper */)
+  NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMSerializer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMParser, nsDOMGenericSH,
@@ -3249,20 +3248,6 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 }
 
 
-// XMLHttpRequest helper
-
-// XMLHttpRequest is it's own helper so we don't supply one here.
-
-NS_IMETHODIMP
-nsXMLHttpRequestSH::GetHelperForLanguage(PRUint32 language,
-                                         nsISupports **_retval)
-{
-  *_retval = nsnull;
-
-  return NS_OK;
-}
-
-
 // nsIDOMEventListener::HandleEvent() 'this' converter helper
 
 NS_INTERFACE_MAP_BEGIN(nsEventListenerThisTranslator)
@@ -3292,8 +3277,6 @@ nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
   nsCOMPtr<nsIDOMEventTarget> target;
 
   event->GetCurrentTarget(getter_AddRefs(target));
-
-  NS_WARN_IF_FALSE(target, "Hmm, null target, weird.");
 
   *_retval = target;
   NS_IF_ADDREF(*_retval);

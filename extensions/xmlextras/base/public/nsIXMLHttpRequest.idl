@@ -29,22 +29,6 @@ interface nsIHttpChannel;
 [scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
 interface nsIXMLHttpRequest : nsISupports {
   /**
-   * Meant to be a script-only mechanism for setting a load event listener.
-   * The attribute is expected to be JavaScript function object. When
-   * the load event occurs, the function is invoked. 
-   * This attribute should not be used from native code!!
-   */
-  attribute nsISupports onload;
-
-  /**
-   * Meant to be a script-only mechanism for setting an error event listener.
-   * The attribute is expected to be JavaScript function object. When
-   * the error event occurs, the function is invoked. 
-   * This attribute should not be used from native code!!
-   */
-  attribute nsISupports onerror;
-
-  /**
    * The HTTP request uses an HTTP channel in order to perform the
    * request.  This attribute represents the HTTP channel used
    * for the request.  NULL if the HTTP channel has not yet been
@@ -168,6 +152,26 @@ interface nsIXMLHttpRequest : nsISupports {
    * @param value The body of the header.
    */
   void   setRequestHeader(in string header, in string value);  
+};
+
+
+[scriptable, uuid(9deabc90-28d5-41d3-a660-474f2254f4ba)]
+interface nsIJSXMLHttpRequest : nsISupports {
+  /**
+   * Meant to be a script-only mechanism for setting a load event listener.
+   * The attribute is expected to be JavaScript function object. When
+   * the load event occurs, the function is invoked. 
+   * This attribute should not be used from native code!!
+   */
+  attribute nsIDOMEventListener onload;
+
+  /**
+   * Meant to be a script-only mechanism for setting an error event listener.
+   * The attribute is expected to be JavaScript function object. When
+   * the error event occurs, the function is invoked. 
+   * This attribute should not be used from native code!!
+   */
+  attribute nsIDOMEventListener onerror;
 };
 
 %{ C++

@@ -864,29 +864,6 @@ public:
 };
 
 
-// XMLHttpRequest helper
-
-class nsXMLHttpRequestSH : public nsDOMGenericSH
-{
-protected:
-  nsXMLHttpRequestSH(nsDOMClassInfoID aID) : nsDOMGenericSH(aID)
-  {
-  }
-
-  virtual ~nsXMLHttpRequestSH()
-  {
-  }
-
-public:
-  NS_IMETHOD GetHelperForLanguage(PRUint32 language, nsISupports **_retval);
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
-  {
-    return new nsXMLHttpRequestSH(aID);
-  }
-};
-
-
 // Event handler 'this' translator class, this is called by XPConnect
 // when a "function interface" (nsIDOMEventListener) is called, this
 // class extracts 'this' fomr the first argument to the called
