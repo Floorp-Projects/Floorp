@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static String tool_names[] = 
 {

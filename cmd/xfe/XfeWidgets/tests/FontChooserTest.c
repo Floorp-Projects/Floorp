@@ -25,7 +25,7 @@
 
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static String font_names[] = 
 {

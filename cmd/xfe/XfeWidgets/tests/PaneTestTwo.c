@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static void		menu_item_cb				(Widget,XtPointer,XtPointer);
 static void		toggle_managed_cb			(Widget,XtPointer,XtPointer);

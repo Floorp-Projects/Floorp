@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 #include <X11/Xmu/Editres.h>
 #include <X11/Xmu/Converters.h>
@@ -109,7 +109,7 @@ XfeFrameCreate(char * frame_name,ArgList args,Cardinal num_args)
 	
 	main_form = XfeCreateManagedForm(frame,"MainForm",NULL,0);
 
-/*  	XfeAddEditresSupport(frame); */
+  	XfeAddEditresSupport(frame);
 
 	return frame;
 }
@@ -133,7 +133,7 @@ XfeFrameCreateWithChrome(char * frame_name,ArgList args,Cardinal num_args)
 									 frame,
 									 NULL);
 
-/*  	XfeAddEditresSupport(frame); */
+  	XfeAddEditresSupport(frame);
 
 	return frame;
 }

@@ -24,18 +24,53 @@
 # http://www.neurondata.com.
 #
 
-DEPTH		= ../../../..
+##########################################################################
+#
+# Name:			Makefile
+# Description:	Makefile for Microline Widget library
+# Author:		Ramiro Estrugo <ramiro@netscape.com>
+#
+##########################################################################
 
-MODULE		= XmL
+DEPTH			= ../../../..
+
+# XmL headers are exported to dist/public/Microline/XmL
+MODULE			= Microline/XmL
+
 LIBRARY_NAME	= XmL
 
-CSRCS		=\
-			Folder.c \
-			Grid.c \
-			Tree.c \
-			XmL.c \
-		  $(NULL)
+# There are unused widgets.  They are currently not needed to build Mozilla,
+# but that might change in the future.
+ifdef XFE_WIDGETS_BUILD_UNUSED
+UNUSED_CSRCS	= \
+				Progress.c \
+				Tree.c \
+				$(NULL)
+
+UNUSED_EXPORTS	= \
+				Progress.h \
+				ProgressP.h \
+				Tree.h \
+				TreeP.h \
+				$(NULL)
+endif
+
+CSRCS			= \
+				$(UNUSED_CSRCS) \
+				Folder.c \
+				Grid.c \
+				XmL.c \
+				$(NULL)
+
+REQUIRES		= Microline
+
+EXPORTS			= \
+				$(UNUSED_EXPORTS) \
+				Folder.h \
+				FolderP.h \
+				Grid.h \
+				GridP.h \
+				XmL.h \
+				$(NULL)
 
 include $(DEPTH)/config/rules.mk
-
-INCLUDES	+= -I..

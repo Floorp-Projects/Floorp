@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static Widget	create_button			(Widget,String);
 static void		install_large_pixmaps	(Widget);

@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static Widget	create_tool_item		(Widget,String,Cardinal);
 static void		close_cb				(Widget,XtPointer,XtPointer);

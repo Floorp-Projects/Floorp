@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static void	StartSweep		(Widget,int);
 static void	SweepTimeout	(XtPointer,XtIntervalId *);

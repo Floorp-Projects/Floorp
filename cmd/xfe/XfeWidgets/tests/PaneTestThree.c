@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static Widget	pane_create					(Widget,String);
 static void		pane_add_buttons			(Widget,Widget,Widget);

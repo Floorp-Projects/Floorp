@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 #include <X11/xpm.h>
 
 #define ICON_SMALL			"../icons/taskbar/task_small_browser.xpm"

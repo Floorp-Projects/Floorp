@@ -16,15 +16,26 @@
 # Reserved.
 
 
-# 
+##########################################################################
+#
+# Name:			Makefile
+# Description:	Makefile for Xfe Widgets and related libraries
+# Author:		Ramiro Estrugo <ramiro@netscape.com>
+#
+##########################################################################
 
-DEPTH   = ../../..
-
-DIRS    = Xfe
+DEPTH			= ../../..
 
 ifdef XFE_WIDGETS_BUILD_TESTS
-DIRS	+= XfeTest tests
+TEST_DIRS		= \
+				XfeTest \
+				tests \
+				$(NULL)
 endif
+
+DIRS			= \
+				Xfe \
+				$(TEST_DIRS)
 
 include $(DEPTH)/config/rules.mk
 

@@ -25,7 +25,7 @@
 
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static void	animation_callback		(Widget,XtPointer,XtPointer);
 static void	init_animations			(void);

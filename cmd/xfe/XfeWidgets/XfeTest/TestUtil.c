@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 #include <ctype.h>
 
 static XmString fe_StringChopCreate(char *,char *,XmFontList,int);

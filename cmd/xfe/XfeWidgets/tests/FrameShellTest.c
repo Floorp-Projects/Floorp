@@ -25,7 +25,7 @@
 
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static Widget	create_control		(String);
 static Widget	create_dummy		(String);

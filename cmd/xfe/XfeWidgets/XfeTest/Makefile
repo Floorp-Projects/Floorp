@@ -15,25 +15,52 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-# 
 
-DEPTH		= ../../../..
+##########################################################################
+#
+# Name:			Makefile
+# Description:	Makefile for XfeTest library
+# Author:		Ramiro Estrugo <ramiro@netscape.com>
+#
+##########################################################################
 
-MODULE		= XfeTest
+DEPTH			= ../../../..
+
+# XfeTest headers (only one) are exported to dist/public/XfeTest/Xfe
+MODULE			= XfeTest/Xfe
+
 LIBRARY_NAME	= XfeTest
 
-CSRCS		= \
-		  TestAnim.c \
-		  TestApp.c \
-		  TestCallbacks.c \
-		  TestCreate.c \
-		  TestIcons.c \
-		  TestMenu.c \
-		  TestPixmap.c \
-		  TestToolBar.c \
-		  TestUtil.c \
-		  $(NULL)
+
+ifdef XFE_WIDGETS_BUILD_DEMO
+XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_DEMO
+endif
+
+ifdef XFE_WIDGETS_BUILD_UNUSED
+XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_UNUSED
+endif
+
+CSRCS			= \
+				TestAnim.c \
+				TestApp.c \
+				TestCallbacks.c \
+				TestCreate.c \
+				TestIcons.c \
+				TestMenu.c \
+				TestPixmap.c \
+				TestToolBar.c \
+				TestUtil.c \
+				$(NULL)
+
+REQUIRES		= \
+				XfeTest \
+				XfeWidgets
+
+EXPORTS			= \
+				XfeTest.h \
+				$(NULL)
 
 include $(DEPTH)/config/rules.mk
 
-INCLUDES	+= -I.. -I../.. -I../icons
+INCLUDES	+= -I../icons
+DEFINES		+= $(XFE_EXTRA_DEFINES)

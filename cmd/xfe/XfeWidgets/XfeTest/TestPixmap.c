@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 #if defined(LINUX) || defined(IRIX)
 #include <X11/xpm.h>

@@ -24,7 +24,7 @@
 /*----------------------------------------------------------------------*/
 
 
-#include <XfeTest/XfeTest.h>
+#include <Xfe/XfeTest.h>
 
 static WidgetClass	type_to_class			(XfeMenuItemType item_type);
 static String		type_to_action_cb_name	(XfeMenuItemType item_type);

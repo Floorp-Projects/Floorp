@@ -71,6 +71,8 @@ DIRS		= \
 		  $(NULL)
 
 REQUIRES	= \
+		XfeWidgets \
+		Microline \
 		  addr \
 		  applet \
 		  img \
@@ -417,7 +419,7 @@ ifdef USE_ABCOM
 DEFINES		+= -DUSE_ABCOM
 endif
 
-INCLUDES	+= -IMicroline3.0 -IXfeWidgets -Isrc -I.
+INCLUDES	+= -Isrc -I.
 
 
 #######################################################################

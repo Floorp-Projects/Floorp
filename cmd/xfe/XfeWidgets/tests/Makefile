@@ -18,42 +18,55 @@
 
 # 
 
-DEPTH = ../../../..
+DEPTH			= ../../../..
 
-XFE_DEPTH = ../..
+ifdef XFE_WIDGETS_BUILD_UNUSED
 
-CSRCS		= \
-			ArrowTest.c \
-			ButtonTest.c \
-			CascadeTest.c \
-			ChromeTest.c \
-			ComboBoxTest.c \
-			DashBoardTest.c \
-			FontChooserTest.c \
-			FrameShellTest.c \
-			LabelTest.c \
-			LogoTest.c \
-			MenuTest.c \
-			PaneTestOne.c \
-			PaneTestThree.c \
-			PaneTestTwo.c \
-			PixmapTest.c \
-			ProgressBarTest.c \
-			TaskBarTestOne.c \
-			TaskBarTestTwo.c \
-			ToolBarTest.c \
-			ToolBoxTest.c \
-			ToolScrollTest.c \
-			$(NULL)
+XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_UNUSED
+
+UNUSED_CSRCS		= \
+				ArrowTest.c \
+				ChromeTest.c \
+				ComboBoxTest.c \
+				FontChooserTest.c \
+				FrameShellTest.c \
+				$(NULL)
+
+
+endif
+
+CSRCS			= \
+				$(UNUSED_CSRCS) \
+				ButtonTest.c \
+				CascadeTest.c \
+				DashBoardTest.c \
+				LabelTest.c \
+				LogoTest.c \
+				MenuTest.c \
+				PaneTestOne.c \
+				PaneTestThree.c \
+				PaneTestTwo.c \
+				PixmapTest.c \
+				ProgressBarTest.c \
+				TaskBarTestOne.c \
+				TaskBarTestTwo.c \
+				ToolBarTest.c \
+				ToolBoxTest.c \
+				ToolScrollTest.c \
+				$(NULL)
+
+REQUIRES		= \
+				XfeTest \
+				XfeWidgets
 
 PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.exe))
 
 include $(DEPTH)/config/rules.mk
 
+DEFINES		+= $(XFE_EXTRA_DEFINES)
+
 all:: $(PROGS)
 install:: $(PROGS)
-
-INCLUDES += -I.. -I../icons
 
 LDFLAGS =
 
@@ -72,8 +85,6 @@ SHARED_XFE_LIBS = \
 				$(DIST)/bin/libXfeWidgets.$(SHARED_EXT)
 
 ifeq (,$(filter Linux IRIX ,$(OS_ARCH)))
-
-#ifneq ($(OS_ARCH),Linux)
 
 SHARED_XFE_LIBS += $(DIST)/bin/libXpm.$(SHARED_EXT)
 STATIC_XFE_LIBS += $(DIST)/lib/libXpm.a
@@ -100,7 +111,9 @@ else
 
 endif
 
+ifeq ($(OS_ARCH),Linux)
 -include $(DEPTH)/config/motif.mk
+endif
 
 XM_LD_FLAGS = -lXm $(NS_MOTIF2_XP_LD_FLAGS)
 
