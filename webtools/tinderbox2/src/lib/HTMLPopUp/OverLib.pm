@@ -7,8 +7,8 @@
 # Contributed by dominik.stadler@gmx.at 
 
 
-# $Revision: 1.2 $
-# $Date: 2003/02/03 13:43:32 $
+# $Revision: 1.3 $
+# $Date: 2003/04/13 20:44:35 $
 # $Author: kestes%walrus.com $
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/OverLib.pm,v $
 # $Name:  $
@@ -41,6 +41,16 @@
 
 
 package HTMLPopUp::OverLib;
+
+# Load standard perl libraries
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
+use FileStructure;
+use Utils;
+
 
 $VERSION = '#tinder_version#';
 
@@ -1355,6 +1365,24 @@ sub page_header {
   ($args{'refresh'}) &&
     ( $refresh =  "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"$args{'refresh'}\">" );
 
+  my ($overlib_file) = "$FileStructure::TINDERBOX_HTML_DIR/OverLib.js";
+  my ($overlib_link) = "$FileStructure::URL_HTML/OverLib.js";
+
+  # The overlib code is 45K. Put it in its own file, which is not
+  # overwritten, so that status pages load faster. Hopefuly browsers
+  # will keep this file cached separately from the status page.
+
+  if ( !($WROTE_OVERLIB_JS) ) {
+      $WROTE_OVERLIB_JS = 1;
+
+      if ( !( -r $overlib_file) ) {
+          main::overwrite_file(
+                               $overlib_file, 
+                               $OVERLIB_JS
+                               );
+        }
+  }
+
 $header .=<<EOF;
 <HTML>
 <HEAD>
@@ -1377,11 +1405,13 @@ var ol_textsize = \"2\";
 var ol_vauto = 1;
 var ol_hauto = 1;
 
-$OVERLIB_JS
-
 </script>
 
-<div id=\"overDiv\" style=\"position:absolute; visibility:hidden; z-index:1000;\"></div>
+<div id=\"overDiv\" style=\"position:absolute; visibility:hidden; z-index:1000;\">
+</div>
+
+<script language=\"JavaScript\" src=\"$overlib_link\">
+</script>
 
 <TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">
 <TR><TD>
