@@ -1481,13 +1481,14 @@ nsHashtable* ProxyJNIEnv::theIDTable = NULL;
 ProxyJNIEnv::ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureJNI2* secureEnv)
 	:	mSecureEnv(secureEnv), mContext(NULL), mJavaThread(NULL)
 {
+ nsresult result; 
 	this->functions = &theFuncs;
 	if (theIDTable == NULL)
 		theIDTable = new nsHashtable();
 	
 	// Ask the JVM for a new nsISecureJNI2, if none provided.
 	if (secureEnv == NULL)
-		nsresult result = jvmPlugin->CreateSecureEnv(this, &mSecureEnv);
+		result = jvmPlugin->CreateSecureEnv(this, &mSecureEnv);
 }
 
 ProxyJNIEnv::~ProxyJNIEnv()
