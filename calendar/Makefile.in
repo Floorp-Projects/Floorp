@@ -84,12 +84,13 @@ openvmsxpi::
 	mv ./linux/calendar_openvms.xpi .
 	echo "Done."
 
-xpi::
 ifeq ($(OS_ARCH),WINNT)
-	platform=windows
+calplatform=windows
 else
-	platform=linux
+calplatform=linux
 endif
+
+xpi::
 	rm -f calendar.xpi
 	rm -rf xpi
 
@@ -105,7 +106,7 @@ endif
 	cp libxpical/_xpidlgen/calendar.xpt ./xpi/bin/components
 	cp resources/content/calendarService.js ./xpi/bin/components
 	cp -r resources/locale ./xpi/resources
-	cp -r $(platform)linux/icons ./xpi
+	cp -r $(calplatform)/icons ./xpi
 	cp install.js ./xpi
 	cd xpi; find bin/ resources/ icons/ install.js \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
 
