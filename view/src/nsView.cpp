@@ -30,6 +30,7 @@
 #include "nsRepository.h"
 #include "nsIRenderingContext.h"
 #include "nsTransform2D.h"
+#include "nsIScrollableView.h"
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
@@ -478,35 +479,31 @@ void nsView :: GetPosition(nscoord *x, nscoord *y)
   *y = mBounds.y;
 }
 
-#include "nsScrollingView.h"
-
 void nsView :: SetDimensions(nscoord width, nscoord height)
 {
   mBounds.SizeTo(width, height);
 
-  //XXX this is a hack. pretend you don't see it.
-  //it will go away soon, i promise. MMP
-
   if (nsnull != mParent)
   {
-    nsScrollingView *root = (nsScrollingView *)mViewManager->GetRootView();
+    nsIScrollableView *scroller;
 
-    if (mParent == root)
+    static NS_DEFINE_IID(kscroller, NS_ISCROLLABLEVIEW_IID);
+
+    if (NS_OK == mParent->QueryInterface(kscroller, (void **)&scroller))
     {
-      root->SetContainerSize(mBounds.height);
+      scroller->SetContainerSize(mBounds.height);
+      NS_RELEASE(scroller);
     }
+  }
 
-    if (nsnull != mWindow)
-    {
-      nsIPresContext  *px = mViewManager->GetPresContext();
-      float           t2p = px->GetTwipsToPixels();
-    
-      mWindow->Resize(NS_TO_INT_ROUND(t2p * width), NS_TO_INT_ROUND(t2p * height));
+  if (nsnull != mWindow)
+  {
+    nsIPresContext  *px = mViewManager->GetPresContext();
+    float           t2p = px->GetTwipsToPixels();
+  
+    mWindow->Resize(NS_TO_INT_ROUND(t2p * width), NS_TO_INT_ROUND(t2p * height));
 
-      NS_RELEASE(px);
-    }
-
-    NS_RELEASE(root);
+    NS_RELEASE(px);
   }
 }
 

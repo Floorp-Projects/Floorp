@@ -59,6 +59,8 @@ public:
   virtual void SetVisibleOffset(PRInt32 aOffset);
   virtual PRInt32 GetVisibleOffset();
 
+  virtual nsIView * GetScrolledView(void);
+
 protected:
   PRInt32 mSize;
   PRInt32 mOffset;
