@@ -62,6 +62,7 @@
 #include "nsIDocShell.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
+#include "nsINameSpaceManager.h"
 #include "nsIObserverService.h"
 #include "nsIPluginInstance.h"
 #include "nsIPresContext.h"
@@ -448,7 +449,15 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
   }
 #endif
   else {
-    return NS_ERROR_FAILURE;
+    nsAutoString tabIndex;
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex, tabIndex);
+    PRInt32 rv, tabIndexVal = tabIndex.ToInteger(&rv);
+    if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
+      *aAccessible = new nsGenericAccessible(node, weakShell);
+    }
+    else {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   NS_ENSURE_TRUE(aAccessible, NS_ERROR_OUT_OF_MEMORY);

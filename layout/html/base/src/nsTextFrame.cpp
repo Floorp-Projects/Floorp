@@ -75,6 +75,7 @@
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsTextTransformer.h"
+#include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrameSelection.h"
 #include "nsISelection.h"
@@ -1345,6 +1346,23 @@ nsTextFrame::GetCursor(nsIPresContext* aPresContext,
   aCursor = GetStyleUserInterface()->mCursor;
   if (NS_STYLE_CURSOR_AUTO == aCursor) {
     aCursor = NS_STYLE_CURSOR_TEXT;
+
+    // If tabindex >= 0, use default cursor to indicate it's not selectable
+    nsIFrame *ancestorFrame = this;
+    while ((ancestorFrame = ancestorFrame->GetParent()) != nsnull) {
+      nsIContent *ancestorContent = ancestorFrame->GetContent();
+      if (ancestorContent && ancestorContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+        nsAutoString tabIndexStr;
+        ancestorContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
+        if (!tabIndexStr.IsEmpty()) {
+          PRInt32 rv, tabIndexVal = tabIndexStr.ToInteger(&rv);
+          if (NS_SUCCEEDED(rv) && tabIndexVal >= 0) {
+            aCursor = NS_STYLE_CURSOR_DEFAULT;
+            break;
+          }
+        }
+      }
+    }
   }
   return NS_OK;
 }

@@ -3384,19 +3384,6 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 void
 nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
 {
-  if (aFrom->IsContentOfType(nsIContent::eHTML)) {
-    nsIAtom *tag = aFrom->Tag();
-
-    if (tag != nsHTMLAtoms::a &&
-        tag != nsHTMLAtoms::area &&
-        tag != nsHTMLAtoms::button &&
-        tag != nsHTMLAtoms::input &&
-        tag != nsHTMLAtoms::object &&
-        tag != nsHTMLAtoms::select &&
-        tag != nsHTMLAtoms::textarea)
-      return;
-  }
-
   nsAutoString tabIndexStr;
   aFrom->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
   if (!tabIndexStr.IsEmpty()) {
@@ -3509,28 +3496,29 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
 
     nsIContent* child = currentFrame->GetContent();
     nsCOMPtr<nsIDOMElement> element(do_QueryInterface(child));
+    PRInt32 tabIndex = -1;
 
+    if (element && viewShown) {
+      if (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
+          vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN && 
+          ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
+          ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
+        tabIndex = 0; // Default value when focusable via -moz-user-focus
+      }
+      TabIndexFrom(child, &tabIndex);
+    }
     // if collapsed or hidden, we don't get tabbed into.
-    if (viewShown &&
-        (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE) &&
-        (vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) && 
-        (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
-        (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) && element) {
-      PRInt32 tabIndex = -1;
+    if (tabIndex >= 0) {
       PRBool disabled = PR_TRUE;
 
       nsIAtom *tag = child->Tag();
       if (child->IsContentOfType(nsIContent::eHTML)) {
         if (tag == nsHTMLAtoms::input) {
-          nsCOMPtr<nsIDOMHTMLInputElement> nextInput(do_QueryInterface(child));
-          if (nextInput) {
-            nextInput->GetTabIndex(&tabIndex);
-            nsCOMPtr<nsIDOMNSHTMLInputElement> nextInputNS(do_QueryInterface(child));
-            NS_ASSERTION(nextInputNS, "DOMHTMLInputElement must QI to nsIDOMNSHTMLInputElement!");
-            PRBool isTabbable;
-            nextInputNS->GetTabbable(&isTabbable);
-            disabled = !isTabbable;
-          }
+          nsCOMPtr<nsIDOMNSHTMLInputElement> nextInputNS(do_QueryInterface(child));
+          NS_ASSERTION(nextInputNS, "input element must QI to nsIDOMNSHTMLInputElement!");
+          PRBool isTabbable;
+          nextInputNS->GetTabbable(&isTabbable);
+          disabled = !isTabbable;
         }
         else if (tag == nsHTMLAtoms::select) {
           // Select counts as form but not as text
@@ -3539,7 +3527,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             nsCOMPtr<nsIDOMHTMLSelectElement> nextSelect(do_QueryInterface(child));
             if (nextSelect) {
               nextSelect->GetDisabled(&disabled);
-              nextSelect->GetTabIndex(&tabIndex);
             }
           }
         }
@@ -3550,7 +3537,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             nsCOMPtr<nsIDOMHTMLTextAreaElement> nextTextArea(do_QueryInterface(child));
             if (nextTextArea) {
               nextTextArea->GetDisabled(&disabled);
-              nextTextArea->GetTabIndex(&tabIndex);
             }
           }
         }
@@ -3559,8 +3545,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
           disabled = !(sTabFocusModel & eTabFocus_linksMask);
           nsCOMPtr<nsIDOMHTMLAnchorElement> nextAnchor(do_QueryInterface(child));
           if (!disabled) {
-            if (nextAnchor)
-              nextAnchor->GetTabIndex(&tabIndex);
             nsAutoString href;
             nextAnchor->GetAttribute(NS_LITERAL_STRING("href"), href);
             if (href.IsEmpty()) {
@@ -3576,7 +3560,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
           if (!disabled) {
             nsCOMPtr<nsIDOMHTMLButtonElement> nextButton(do_QueryInterface(child));
             if (nextButton) {
-              nextButton->GetTabIndex(&tabIndex);
               nextButton->GetDisabled(&disabled);
             }
           }
@@ -3651,12 +3634,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         else if (tag == nsHTMLAtoms::object) {
           // OBJECT is treated as a form element.
           disabled = !(sTabFocusModel & eTabFocus_formElementsMask);
-          if (!disabled) {
-            nsCOMPtr<nsIDOMHTMLObjectElement> nextObject(do_QueryInterface(child));
-            if (nextObject) 
-              nextObject->GetTabIndex(&tabIndex);
-            disabled = PR_FALSE;
-          }
         }
         else if (tag == nsHTMLAtoms::iframe || tag == nsHTMLAtoms::frame) {
           disabled = PR_TRUE;
@@ -3697,13 +3674,6 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         // Is it disabled?
         nsAutoString value;
         child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
-        // Check the tabindex attribute
-        nsAutoString tabStr;
-        child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabStr);
-        if (!tabStr.IsEmpty()) {
-          PRInt32 errorCode;
-          tabIndex = tabStr.ToInteger(&errorCode);
-        }
         if (!value.EqualsLiteral("true")) {
           nsCOMPtr<nsIDOMXULControlElement> control(do_QueryInterface(child));
           if (control)
@@ -3713,9 +3683,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         }
       }
       
-      //TabIndex not set (-1) treated at same level as set to 0
-      tabIndex = tabIndex < 0 ? 0 : tabIndex;
-
+      // TabIndex not set treated at same level as set to 0
       if (!disabled && (aIgnoreTabIndex || mCurrentTabIndex == tabIndex) &&
           child != aStartContent) {
         *aResultNode = child;

@@ -56,6 +56,11 @@ interface nsIDOMNSHTMLElement : nsISupports
   readonly attribute long             clientHeight;
   readonly attribute long             clientWidth;
 
+  readonly attribute long             tabIndex;
+
+  void blur();
+  void focus();
+
   // |top| is optional in JS, scriptability of this method is done in
   // nsHTMLElementSH
   [noscript] void           scrollIntoView(in boolean top);

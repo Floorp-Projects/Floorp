@@ -409,18 +409,11 @@ noframes {
 }
 
 
-/* focusable content */
+/* focusable content: anything w/ tabindex >=0 is focusable */
+*:focus { -moz-outline: 1px dotted invert; }
 
-/* links */
-*|*:-moz-any-link:focus img {
-  -moz-outline: 1px dotted invert;
-}
-*|*:-moz-any-link:focus object {
-  -moz-outline: 1px dotted invert;
-}
-*|*:-moz-any-link:focus embed {
-  -moz-outline: 1px dotted invert;
-}
+/* Avoid extra focus outlines on input elements that already show focus */
+isindex:focus, input:focus, button:focus, select:focus { -moz-outline: none; }
 
 /* hidden elements */
 area, base, basefont, head, meta, script, style, title,
