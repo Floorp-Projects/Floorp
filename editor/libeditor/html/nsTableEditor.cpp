@@ -896,18 +896,18 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
     nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, PR_FALSE);
     nsAutoTxnsConserveSelection dontChangeSelection(this);
 
-    PRInt32 currentRow = -1;
-    PRInt32 currentCol = -1;
+    PRBool  checkToDeleteRow = PR_TRUE;
+    PRBool  checkToDeleteColumn = PR_TRUE;
     while (cell)
     {
       PRBool deleteRow = PR_FALSE;
       PRBool deleteCol = PR_FALSE;
 
-      if (startRowIndex != currentRow)
+      if (checkToDeleteRow)
       {
         // Optimize to delete an entire row
-        // Remember index so we don't repeat AllCellsInRowSelected within the same row
-        currentRow = startRowIndex;
+        // Clear so we don't repeat AllCellsInRowSelected within the same row
+        checkToDeleteRow = PR_FALSE;
 
         deleteRow = AllCellsInRowSelected(table, startRowIndex, colCount);
         if (deleteRow)
@@ -926,17 +926,23 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
           // Delete entire row
           res = DeleteRow(table, startRowIndex);          
           if (NS_FAILED(res)) return res;
-          // For the next cell
-          if (cell) startRowIndex = nextRow;
+
+          if (cell)
+          {
+            // For the next cell: Subtract 1 for row we deleted
+            startRowIndex = nextRow - 1;
+            // Set true since we know we will look at a new row next
+            checkToDeleteRow = PR_TRUE;
+          }
         }
       }
       if (!deleteRow)
       {
-        if (startColIndex != currentCol)
+        if (checkToDeleteColumn)
         {
           // Optimize to delete an entire column
-          // Remember index so we don't repeat AllCellsInColSelected within the same Col
-          currentCol = startColIndex;
+          // Clear this so we don't repeat AllCellsInColSelected within the same Col
+          checkToDeleteColumn = PR_FALSE;
 
           deleteCol = AllCellsInColumnSelected(table, startColIndex, colCount);
           if (deleteCol)
@@ -955,8 +961,13 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
             // Delete entire Col
             res = DeleteColumn(table, startColIndex);          
             if (NS_FAILED(res)) return res;
-            // For the next cell
-            if (cell) startColIndex = nextCol;
+            if (cell) 
+            {
+              // For the next cell, subtract 1 for col. deleted
+              startColIndex = nextCol - 1;
+              // Set true since we know we will look at a new column next
+              checkToDeleteColumn = PR_TRUE;
+            }
           }
         }
         if (!deleteCol)
