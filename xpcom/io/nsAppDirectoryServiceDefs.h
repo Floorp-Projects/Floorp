@@ -83,6 +83,13 @@
 // These locations are typically provided by the profile mgr
 // --------------------------------------------------------------------------------------
 
+// In a shared profile environment, prefixing a profile-relative
+// key with NS_SHARED returns a location that is shared by
+// other users of the profile. Without this prefix, the consumer
+// has exclusive access to this location.
+ 
+#define NS_SHARED                               "SHARED"
+
 #define NS_APP_PREFS_50_DIR                     "PrefD"         // Directory which contains user prefs       
 #define NS_APP_PREFS_50_FILE                    "PrefF"
         

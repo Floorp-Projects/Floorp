@@ -46,11 +46,18 @@ LIBRARY_NAME	= profdirserviceprovider_s
 REQUIRES	= xpcom \
 		  string \
 		  $(NULL)
+      
+ifdef MOZ_PROFILESHARING
+REQUIRES	+= transmngr \
+		  profilesharingsetup \
+		  $(NULL)
+endif
 
-CPPSRCS		= nsProfileDirServiceProvider.cpp
+CPPSRCS		= nsProfileDirServiceProvider.cpp \
+		  nsProfileLock.cpp \
+		  $(NULL)
 
 # we don't want the shared lib
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
-

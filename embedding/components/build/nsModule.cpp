@@ -69,7 +69,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPromptService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSConsoleService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingPromptService, Init)
 #endif
- 
+
+#ifdef MOZ_PROFILESHARING
+#include "nsProfileSharingSetup.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileSharingSetup)
+#endif
+
 static const nsModuleComponentInfo gComponents[] = {
 
 #ifdef MOZ_XUL
@@ -88,6 +93,9 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Command Params", NS_COMMAND_PARAMS_CID, NS_COMMAND_PARAMS_CONTRACTID, nsCommandParamsConstructor },
   { "Command Group", NS_CONTROLLER_COMMAND_GROUP_CID, NS_CONTROLLER_COMMAND_GROUP_CONTRACTID, nsControllerCommandGroupConstructor },
   { "Base Command Controller", NS_BASECOMMANDCONTROLLER_CID, NS_BASECOMMANDCONTROLLER_CONTRACTID, nsBaseCommandControllerConstructor }
+#ifdef MOZ_PROFILESHARING
+  ,{ "Profile Sharing Setup", NS_PROFILESHARINGSETUP_CID, NS_PROFILESHARINGSETUP_CONTRACTID, nsProfileSharingSetupConstructor }
+#endif
 };
 
 NS_IMPL_NSGETMODULE(embedcomponents, gComponents)

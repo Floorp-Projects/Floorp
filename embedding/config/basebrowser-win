@@ -76,7 +76,8 @@ moz_art_lgpl.dll
 components\gklayout.dll                   
 components\gkparser.dll                 
 components\layout_base.xpt              
-components\layout_xul.xpt               
+components\layout_xul.xpt
+components\layout_xul_tree.xpt               
 components\content_base.xpt
 
 ; 
@@ -147,6 +148,7 @@ components\locale.xpt
 components\uconv.dll
 components\uconv.xpt
 components\unicharutil.xpt
+components\intl.xpt
 
 ; dom
 components\jsdom.dll   

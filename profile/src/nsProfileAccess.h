@@ -176,45 +176,5 @@ private:
 };
 
 
-#include "prclist.h"
-
-class nsProfileLock
-#if defined (XP_UNIX)
-  : public PRCList
-#endif
-{
-public:
-                            nsProfileLock();
-                            nsProfileLock(nsProfileLock& src);
-
-                            ~nsProfileLock();
- 
-    nsProfileLock&          operator=(nsProfileLock& rhs);
-                       
-    nsresult                Lock(nsILocalFile* aFile);
-    nsresult                Unlock();
-        
-private:
-    PRPackedBool            mHaveLock;
-
-#if defined (XP_MAC)
-  #if TARGET_CARBON
-    int                     mLockFileDesc;
-  #endif
-    nsCOMPtr<nsILocalFile>  mLockFile;
-#elif defined (XP_WIN)
-    HANDLE                  mLockFileHandle;
-#elif defined (XP_OS2)
-    LHANDLE                 mLockFileHandle;
-#elif defined (XP_UNIX)
-    static void             RemovePidLockFiles();
-    static void             FatalSignalHandler(int signo);
-    static PRCList          mPidLockList;
-    char*                   mPidLockFileName;
-    int                     mLockFileDesc;
-#endif
-
-};
-
 #endif // __nsProfileAccess_h___
 

@@ -43,13 +43,14 @@
 
 // Forward Declarations
 class nsIAtom;
+class nsProfileLock;
 
 // --------------------------------------------------------------------------------------
 // nsProfileDirServiceProvider - The nsIDirectoryServiceProvider implementation used for
 // profile-relative file locations.
 // --------------------------------------------------------------------------------------
 
-class nsProfileDirServiceProvider: public nsIDirectoryServiceProvider 
+class nsProfileDirServiceProvider: public nsIDirectoryServiceProvider
 {  
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
@@ -95,7 +96,8 @@ protected:
 
   nsresult                 Initialize();
   nsresult                 InitProfileDir(nsIFile* profileDir);
-  nsresult                 EnsureProfileFileExists(nsIFile *aFile);
+  nsresult                 InitNonSharedProfileDir();
+  nsresult                 EnsureProfileFileExists(nsIFile *aFile, nsIFile *destDir);
   nsresult                 UndefineFileLocations();
 
 protected:
@@ -117,8 +119,13 @@ protected:
   static nsIAtom*          sApp_NewsDirectory50;
   static nsIAtom*          sApp_MessengerFolderCache50;
 
-  PRPackedBool             mNotifyObservers;
   nsCOMPtr<nsIFile>        mProfileDir;
+  nsProfileLock*           mProfileDirLock;
+  PRPackedBool             mNotifyObservers;
+
+  PRPackedBool             mSharingEnabled;
+  nsString                 mNonSharedDirName;
+  nsCOMPtr<nsIFile>        mNonSharedProfileDir;
 };
 
 
