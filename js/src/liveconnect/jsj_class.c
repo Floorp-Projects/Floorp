@@ -459,15 +459,17 @@ jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
 extern JavaClassDescriptor *
 jsj_GetJavaClassDescriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
 {
-    JavaClassDescriptor *class_descriptor;
+    JavaClassDescriptor *class_descriptor = NULL;
 
 #ifdef JSJ_THREADSAFE
     PR_EnterMonitor(java_class_reflections_monitor);
 #endif
 
-    class_descriptor = JSJ_HashTableLookup(java_class_reflections,
+    if (java_class_reflections) {
+		class_descriptor = JSJ_HashTableLookup(java_class_reflections,
                                            (const void *)java_class,
                                            (void*)jEnv);
+	}
     if (!class_descriptor) {
         class_descriptor = new_class_descriptor(cx, jEnv, java_class);
 

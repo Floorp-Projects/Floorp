@@ -420,7 +420,7 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
 
         /* Walk the chain of JavaPackage objects to get to the parent of the
            rightmost sub-package in the fully-qualified package name. */
-        for (simple_name = strtok(package_name, "."); 1; simple_name = strtok(NULL, ".")) {
+        for (simple_name = strtok(package_name, "."); simple_name /*1*/; simple_name = strtok(NULL, ".")) {
             jsval v;
 
             if (!simple_name) {
