@@ -2631,18 +2631,22 @@ dnl supports it well enough to allow us to use it to change access, but not
 dnl to resolve ambiguity. The next two tests determine how well the |using|
 dnl keyword is supported.
 dnl
-dnl Check to see if we can change access with |using|.
+dnl Check to see if we can change access with |using|.  Test both a
+dnl legal and an illegal example.
 AC_CACHE_CHECK(whether the C++ \"using\" keyword can change access,
-               ac_cv_cpp_access_changing_using,
-               [AC_TRY_COMPILE(class X { public: int go(const X&) {return 3;} };
-                               class Y : public X {
-                                 public:  int go(int) {return 2;}
-                                 private: using X::go;
-                               };,
-                               X x; Y y;,
-                               ac_cv_cpp_access_changing_using=yes,
-                               ac_cv_cpp_access_changing_using=no)])
-if test "$ac_cv_cpp_access_changing_using" = yes ; then
+               ac_cv_cpp_access_changing_using2,
+               [AC_TRY_COMPILE(
+                   class A { protected: int foo() { return 0; } };
+                   class B : public A { public: using A::foo; };,
+                   B b; return b.foo();,
+                   [AC_TRY_COMPILE(
+                       class A { public: int foo() { return 1; } };
+                       class B : public A { private: using A::foo; };,
+                       B b; return b.foo();,
+                       ac_cv_cpp_access_changing_using2=no,
+                       ac_cv_cpp_access_changing_using2=yes)],
+                   ac_cv_cpp_access_changing_using2=no)])
+if test "$ac_cv_cpp_access_changing_using2" = yes ; then
    AC_DEFINE(HAVE_CPP_ACCESS_CHANGING_USING)
 fi
 
