@@ -1180,6 +1180,16 @@ void _PR_InitDtoa(void)
 	p5s_lock = PR_NewLock();
 }
 
+void _PR_CleanupDtoa(void)
+{
+    PR_DestroyLock(freelist_lock);
+    freelist_lock = NULL;
+    PR_DestroyLock(p5s_lock);
+    p5s_lock = NULL;
+
+    /* FIXME: deal with freelist and p5s. */
+}
+
 #if defined(HAVE_WATCOM_BUG_1)
 PRFloat64 __pascal __loadds  __export
 #else
