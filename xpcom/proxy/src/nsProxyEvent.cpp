@@ -49,7 +49,7 @@ nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
         free( (void*) mParameterList);
 }
 
-
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_IMPL_ISUPPORTS(nsProxyObject, kISupportsIID)
 
 static NS_DEFINE_IID(kIEventQIID, NS_IEVENTQUEUE_IID);
