@@ -147,8 +147,8 @@ private:
 
     // auth specific methods
     nsresult GetCredentials(const char *challenges, PRBool proxyAuth, nsAFlatCString &creds);
-    nsresult SelectChallenge(const char *challenges, nsCString &challenge, nsCString &scheme, nsIHttpAuthenticator **); 
-    nsresult GetAuthenticator(const char *scheme, nsIHttpAuthenticator **);
+    nsresult GetCredentialsForChallenge(const char *challenge, const char *scheme,  PRBool proxyAuth, nsIHttpAuthenticator *auth, nsAFlatCString &creds);
+    nsresult ParseChallenge(const char *challenge, nsCString &scheme, nsIHttpAuthenticator **auth); 
     void     ParseRealm(const char *challenge, nsACString &realm);
     void     GetIdentityFromURI(PRUint32 authFlags, nsHttpAuthIdentity&);
     nsresult PromptForIdentity(const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, const char *scheme, PRUint32 authFlags, nsHttpAuthIdentity &);
