@@ -2472,15 +2472,15 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
   if (state & NS_FRAME_INDEPENDENT_SELECTION) 
   {
     nsIFrame *tmp = this;
-    nsresult result = tmp->GetParent(&tmp);//start one up from this one on the parent chain
-    while (NS_SUCCEEDED(result) && tmp)
+    while (tmp)
     {
       nsIGfxTextControlFrame2 *tcf;
       if (NS_SUCCEEDED(tmp->QueryInterface(NS_GET_IID(nsIGfxTextControlFrame2),(void**)&tcf)))
       {
         return tcf->GetSelectionContr(aSelCon);
       }
-      result = NS_FAILED(tmp->GetParent(&tmp));
+      if (NS_FAILED(tmp->GetParent(&tmp)))
+        break;
     }
   }
   nsCOMPtr<nsIPresShell> shell;
