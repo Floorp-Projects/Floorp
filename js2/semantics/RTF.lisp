@@ -220,23 +220,23 @@
     ((+ :styles) (:grammar-header sbasedon :normal-num snext :grammar-lhs-num "Grammar Header;"))
     
     (:grammar-lhs-num 10)
-    (:grammar-lhs s :grammar-lhs-num fi -1440 li 1800 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    (:grammar-lhs s :grammar-lhs-num fi -540 li 720 keep keepn nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:grammar-lhs sbasedon :grammar-num snext :grammar-rhs-num "Grammar LHS;"))
     
     (:grammar-lhs-last-num 11)
-    (:grammar-lhs-last s :grammar-lhs-last-num fi -1440 li 1800 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
-    ((+ :styles) (:grammar-lhs-last sbasedon :grammar-num snext :grammar-lhs-num "Grammar LHS Last;"))
+    (:grammar-lhs-last s :grammar-lhs-last-num fi -540 li 720 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    ((+ :styles) (:grammar-lhs-last sbasedon :grammar-lhs-num snext :grammar-lhs-num "Grammar LHS Last;"))
     
     (:grammar-rhs-num 12)
-    (:grammar-rhs s :grammar-rhs-num fi -1260 li 1800 keep keepn nowidctlpar :asian-keywords tx 720 hyphpar 0 :10-pt :english)
+    (:grammar-rhs s :grammar-rhs-num fi -360 li 720 keep keepn nowidctlpar :asian-keywords tx 540 hyphpar 0 :10-pt :english)
     ((+ :styles) (:grammar-rhs sbasedon :grammar-num snext :grammar-rhs-num "Grammar RHS;"))
     
     (:grammar-rhs-last-num 13)
-    (:grammar-rhs-last s :grammar-rhs-last-num fi -1260 li 1800 sa 180 keep nowidctlpar :asian-keywords tx 720 hyphpar 0 :10-pt :english)
+    (:grammar-rhs-last s :grammar-rhs-last-num fi -360 li 720 sa 180 keep nowidctlpar :asian-keywords tx 540 hyphpar 0 :10-pt :english)
     ((+ :styles) (:grammar-rhs-last sbasedon :grammar-rhs-num snext :grammar-lhs-num "Grammar RHS Last;"))
     
     (:grammar-argument-num 14)
-    (:grammar-argument s :grammar-argument-num fi -1440 li 1800 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
+    (:grammar-argument s :grammar-argument-num fi -540 li 720 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 :10-pt :english)
     ((+ :styles) (:grammar-argument sbasedon :grammar-num snext :grammar-lhs-num "Grammar Argument;"))
     
     (:algorithm-simple-num 15)
@@ -311,11 +311,11 @@
     ((+ :styles) (* :page-number additive sbasedon :default-paragraph-font-num "page number;"))
     
     (:character-literal-num 32)
-    (:character-literal cs :character-literal-num b :courier :blue :no-language)
+    (:character-literal cs :character-literal-num :courier :navy :no-language)
     ((+ :styles) (* :character-literal additive sbasedon :default-paragraph-font-num "Character Literal;"))
     
     (:character-literal-control-num 33)
-    (:character-literal-control cs :character-literal-control-num b 0 :times :navy :no-language)
+    (:character-literal-control cs :character-literal-control-num :times :navy :no-language)
     ((+ :styles) (* :character-literal-control additive sbasedon :default-paragraph-font-num "Character Literal Control;"))
     
     (:terminal-num 34)
@@ -359,9 +359,8 @@
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
     
     (:variable-num 45)
-    (:variable cs :variable-num i :times :color336600 :no-language)
+    (:variable cs :variable-num i :times :green :no-language)
     ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
-    (:local-variable :variable)
     
     (:action-name-num 46)
     (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
