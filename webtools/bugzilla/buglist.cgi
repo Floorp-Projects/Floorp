@@ -110,14 +110,21 @@ my $serverpush =
 my $order = $::FORM{'order'} || "";
 my $order_from_cookie = 0;  # True if $order set using $::COOKIE{'LASTORDER'}
 
+# The params object to use for the actual query itself
+my $params;
+
 # If the user is retrieving the last bug list they looked at, hack the buffer
 # storing the query string so that it looks like a query retrieving those bugs.
 if ($::FORM{'regetlastlist'}) {
     $::COOKIE{'BUGLIST'} || ThrowUserError("missing_cookie");
 
-    $::FORM{'bug_id'} = join(",", split(/:/, $::COOKIE{'BUGLIST'}));
     $order = "reuse last sort" unless $order;
-    $::buffer = "bug_id=$::FORM{'bug_id'}&order=" . url_quote($order);
+
+    # set up the params for this new query
+    $params = new Bugzilla::CGI({
+                                 bug_id => [split(/:/, $::COOKIE{'BUGLIST'})],
+                                 order => $order,
+                                });
 }
 
 if ($::buffer =~ /&cmd-/) {
@@ -229,9 +236,12 @@ if ($::FORM{'cmdtype'} eq "runnamed") {
     $::FORM{'remaction'} = "run";
 }
 
-# The params object to use for the actual query itsself
-# This will be modified, so make a copy
-my $params = new Bugzilla::CGI($cgi);
+# Now we're going to be running, so ensure that the params object is set up,
+# using ||= so that we only do so if someone hasn't overridden this 
+# earlier, for example by setting up a named query search.
+
+# This will be modified, so make a copy.
+$params ||= new Bugzilla::CGI($cgi);
 
 # Take appropriate action based on user's request.
 if ($::FORM{'cmdtype'} eq "dorem") {  
