@@ -25,17 +25,17 @@
 #include "nsXtEventHandler.h"
 #include <Xm/ToggleB.h>
 
-#define DBG 0
+NS_IMPL_ADDREF(nsCheckButton)
+NS_IMPL_RELEASE(nsCheckButton)
+
 //-------------------------------------------------------------------------
 //
 // nsCheckButton constructor
 //
 //-------------------------------------------------------------------------
-nsCheckButton::nsCheckButton(nsISupports *aOuter) : 
-  nsWindow(aOuter),
-  mIsArmed(PR_FALSE)
+nsCheckButton::nsCheckButton() : nsWindow() , nsICheckButton()
 {
-  mLowerLeft = PR_TRUE;
+  NS_INIT_REFCNT();
 }
 
 //-------------------------------------------------------------------------
@@ -63,8 +63,6 @@ void nsCheckButton::Create(nsIWidget *aParent,
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
@@ -73,9 +71,6 @@ void nsCheckButton::Create(nsIWidget *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
 
   mWidget = ::XtVaCreateManagedWidget("",
                                     xmToggleButtonWidgetClass,
@@ -96,8 +91,6 @@ void nsCheckButton::Create(nsIWidget *aParent,
                                     XmNentryBorder, 0,
                                     XmNborderWidth, 0,
                                     0);
-
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -138,21 +131,27 @@ void nsCheckButton::Create(nsNativeWidget aParent,
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsCheckButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @modify gpk 8/4/98
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ * 
+*/ 
+nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kICheckButtonIID,    NS_ICHECKBUTTON_IID);
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
 
-  if (aIID.Equals(kICheckButtonIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+    static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
+    if (aIID.Equals(kICheckButtonIID)) {
+        *aInstancePtr = (void*) ((nsICheckButton*)this);
+        AddRef();
+        return NS_OK;
+    }
+    return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
 //-------------------------------------------------------------------------
@@ -165,7 +164,6 @@ void nsCheckButton::Armed()
   mIsArmed      = PR_TRUE;
   mValueWasSet  = PR_FALSE;
   mInitialState = XmToggleButtonGetState(mWidget);
-  if (DBG) printf("Arm: InitialValue: %d\n", mInitialState);
 }
 
 //-------------------------------------------------------------------------
@@ -175,11 +173,6 @@ void nsCheckButton::Armed()
 //-------------------------------------------------------------------------
 void nsCheckButton::DisArmed() 
 {
-  if (DBG) printf("DisArm: InitialValue: %d\n", mInitialState);
-  if (DBG) printf("DisArm: ActualValue:  %d\n", XmToggleButtonGetState(mWidget));
-  if (DBG) printf("DisArm: mValueWasSet  %d\n", mValueWasSet);
-  if (DBG) printf("DisArm: mNewValue     %d\n", mNewValue);
-
   if (mValueWasSet) {
     XmToggleButtonSetState(mWidget, mNewValue, TRUE);
   } else {
@@ -193,7 +186,7 @@ void nsCheckButton::DisArmed()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::SetState(PRBool aState) 
+NS_METHOD nsCheckButton::SetState(PRBool aState) 
 {
   int state = aState;
   if (mIsArmed) {
@@ -208,26 +201,27 @@ void nsCheckButton::SetState(PRBool aState)
 // Set this button label
 //
 //-------------------------------------------------------------------------
-PRBool nsCheckButton::GetState()
+NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
   int state = XmToggleButtonGetState(mWidget);
   if (mIsArmed) {
     if (mValueWasSet) {
-      return mNewValue;
+      aState = mNewValue;
     } else {
-      return state;
+      aState = state;
     }
   } else {
-    return state;
+    aState = state;
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 //
-// Set this button label
+// Set this Checkbox label
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::SetLabel(const nsString& aText)
+NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   XmString str;
@@ -243,7 +237,7 @@ void nsCheckButton::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::GetLabel(nsString& aBuffer)
+NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
 {
   XmString str;
   XtVaGetValues(mWidget, XmNlabelString, &str, nsnull);
@@ -269,44 +263,13 @@ PRBool nsCheckButton::OnMove(PRInt32, PRInt32)
 
 PRBool nsCheckButton::OnPaint(nsPaintEvent &aEvent)
 {
+  //printf("** nsCheckButton::OnPaint **\n");
   return PR_FALSE;
 }
 
-PRBool nsCheckButton::OnResize(nsSizeEvent &aEvent)
+PRBool nsCheckButton::OnResize(nsRect &aWindowRect)
 {
     return PR_FALSE;
 }
 
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-
-#define GET_OUTER() \
-  ((nsCheckButton*) ((char*)this - nsCheckButton::GetOuterOffset()))
-
-PRBool nsCheckButton::AggCheckButton::GetState()
-{
-  return GET_OUTER()->GetState();
-}
-
-void nsCheckButton::AggCheckButton::SetState(PRBool aState)
-{
-  GET_OUTER()->SetState(aState);
-}
-
-void nsCheckButton::AggCheckButton::SetLabel(const nsString& aText)
-{
-  GET_OUTER()->SetLabel(aText);
-}
-
-void nsCheckButton::AggCheckButton::GetLabel(nsString& aText)
-{
-  GET_OUTER()->GetLabel(aText);
-}
-
-
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsCheckButton, AggCheckButton);
 
