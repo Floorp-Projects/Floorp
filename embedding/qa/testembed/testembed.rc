@@ -168,6 +168,9 @@ BEGIN
         END
         MENUITEM "NSNewChannel/AyncOpen",       ID_TESTS_NSNEWCHANNEL
         MENUITEM "nsIIOService->NewURI()",      ID_TESTS_NSIIOSERVICENEWURI
+        MENUITEM "nsIProtocolHandler->NewURI()", 
+                                                ID_TESTS_NSIPROTOCOLHANDLERNEWURI
+
     END
     POPUP "&Interfaces"
     BEGIN

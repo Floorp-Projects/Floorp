@@ -70,7 +70,6 @@ CNsIRequest::~CNsIRequest()
 }
 
 
-
 /////////////////////////////////////////////////////////////////////////////
 // CNsIRequest message handlers
 // ***********************************************************************
@@ -89,7 +88,7 @@ Element ReqTable[] = {
 	{"http://www.aol.com/",      0, 1, 0, 0, 0, 1, 1},
 	{"https://www.yahoo.com/",   1, 1, 1, 1, 0, 1, 1},
 	{"data:text/plain;charset=iso-8859-7,%be%fg%be",
-								1, 1, 1, 1, 0, 1, 1},
+								 1, 1, 1, 1, 0, 1, 1},
 	{"file://C|/Program Files/", 1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.netscape.com/",  1, 1, 1, 1, 0, 1, 1},
 	{"ftp://ftp.mozilla.org/",   0, 0, 0, 0, 1, 0, 0},

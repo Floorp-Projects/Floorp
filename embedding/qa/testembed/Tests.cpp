@@ -97,6 +97,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_OPENURI, OnTestsAddUriContentListenerByOpenUri)
 	ON_COMMAND(ID_TESTS_NSNEWCHANNEL, OnTestsNSNewChannelAndAsyncOpen)
 	ON_COMMAND(ID_TESTS_NSIIOSERVICENEWURI, OnTestsIOServiceNewURI)
+	ON_COMMAND(ID_TESTS_NSIPROTOCOLHANDLERNEWURI, OnTestsProtocolHandlerNewURI)
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
@@ -608,6 +609,46 @@ void CTests::OnTestsIOServiceNewURI()
 	}
 }
 
+// *********************************************************
+
+void CTests::OnTestsProtocolHandlerNewURI()
+{
+	nsCOMPtr<nsIIOService> ioService(do_GetIOService(&rv));
+	if (!ioService) {
+		QAOutput("We didn't get the IOService object.", 2);
+		return;
+	}
+
+	if (myDialog.DoModal() == IDOK)
+	{
+		nsCAutoString theStr, retStr;
+		nsCOMPtr<nsIURI> theOriginalURI;
+		nsIURI *theReturnURI = nsnull;
+
+		nsCOMPtr<nsIProtocolHandler> protocolHandler;
+
+		theStr = myDialog.m_urlfield;
+		rv = ioService->GetProtocolHandler("http", getter_AddRefs(protocolHandler));
+		RvTestResult(rv, "ioService->GetProtocolHandler() test", 2);
+		rv = qaWebNav->GetCurrentURI(getter_AddRefs(theOriginalURI));
+		if (!protocolHandler) {
+			QAOutput("We didn't get the protocolHandler object.", 2);
+			return;
+		}
+		rv = protocolHandler->NewURI(theStr, nsnull, theOriginalURI, &theReturnURI);
+		if (!theOriginalURI)
+			QAOutput("We didn't get the original nsIURI object.", 2);
+		else if (!theReturnURI)
+			QAOutput("We didn't get the output nsIURI object.", 2);
+		RvTestResult(rv, "protocolHandler->NewURI() test", 2);
+	    retStr = GetTheUri(theReturnURI, 1);
+	   // simple string compare to see if input & output URLs match
+	    if (strcmp(myDialog.m_urlfield, retStr.get()) == 0)
+		   QAOutput("The in/out URIs MATCH.", 1);
+	    else
+		   QAOutput("The in/out URIs don't MATCH.", 1);
+	}
+}
 // *********************************************************
 // *********************************************************
 //					TOOLS to help us
