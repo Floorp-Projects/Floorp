@@ -29,8 +29,7 @@
 #include "nsIParserFilter.h"
 #include "nshtmlpars.h"
 #include "nsWellFormedDTD.h"
-
-// #include "nsViewSourceHTML.h" //uncomment this to partially enable viewsource...
+#include "nsViewSourceHTML.h" //uncomment this to partially enable viewsource...
 
 #undef rickgdebug
 #ifdef  rickgdebug
@@ -92,9 +91,8 @@ public:
     NS_NewWellFormed_DTD(&theDTD);
     RegisterDTD(theDTD);
 
-//Uncomment these to enable viewsource...
-//    NS_NewViewSourceHTML(&theDTD);
-//    RegisterDTD(theDTD);
+    NS_NewViewSourceHTML(&theDTD);
+    RegisterDTD(theDTD);
   }
 
   ~CSharedParserObjects() {
@@ -283,7 +281,7 @@ nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
  *  @return	 ptr to previously set contentsink (usually null)  
  */
 void nsParser::SetCommand(const char* aCommand){
-  mCommand="view-source";
+  mCommand=aCommand;
 }
 
 /**

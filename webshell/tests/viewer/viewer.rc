@@ -26,6 +26,7 @@ VIEWER MENU DISCARDABLE
   {
     MENUITEM "&New Window", VIEWER_WINDOW_OPEN
     MENUITEM "&Open...", VIEWER_FILE_OPEN
+    MENUITEM "&ViewSource", VIEW_SOURCE
     POPUP "&Samples"
     {
       MENUITEM "demo #0", VIEWER_DEMO0

@@ -494,7 +494,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
         nsIDTD* theDTD=0;
         NS_NewNavHTMLDTD(&theDTD);
         mParser->RegisterDTD(theDTD);
-        mParser->SetCommand("");
+        mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink);
         mParser->Parse(aURL);
       }

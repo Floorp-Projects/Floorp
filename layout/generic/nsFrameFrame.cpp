@@ -753,8 +753,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
       nsString absURL;
       TempMakeAbsURL(content, url, absURL);
 
-      rv = mWebShell->LoadURL(absURL,          // URL string
-                              nsnull);         // Post Data
+      rv = mWebShell->LoadURL(absURL);  // URL string with a default nsnull value for post Data
     }
     NS_RELEASE(content);
   }
@@ -801,8 +800,7 @@ nsHTMLFrameInnerFrame::ReloadURL()
       nsString absURL;
       TempMakeAbsURL(content, url, absURL);
 
-      rv = mWebShell->LoadURL(absURL,          // URL string
-                              nsnull);         // Post Data
+      rv = mWebShell->LoadURL(absURL);  // URL string with a default nsnull value for post Data
     }
     NS_RELEASE(content);
   }

@@ -173,6 +173,13 @@ public:
                      PRBool aModifyHistory=PR_TRUE,
                      nsURLReloadType aType = nsURLReload,
                      const PRUint32 localIP = 0);
+  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
+                     const char* aCommand,
+                     nsIPostData* aPostData=nsnull,
+                     PRBool aModifyHistory=PR_TRUE,
+                     nsURLReloadType aType = nsURLReload,
+                     const PRUint32 localIP = 0);
+
   NS_IMETHOD Stop(void);
   NS_IMETHOD Reload(nsURLReloadType aType);
    
@@ -1110,6 +1117,19 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsURLReloadType aType,
                     const PRUint32 aLocalIP)
 {
+
+  return LoadURL(aURLSpec,"view",aPostData,aModifyHistory,aType, aLocalIP);
+}
+
+NS_IMETHODIMP
+nsWebShell::LoadURL(const PRUnichar *aURLSpec,
+                    const char* aCommand,
+                    nsIPostData* aPostData,
+                    PRBool aModifyHistory,
+                    nsURLReloadType aType,
+                    const PRUint32 aLocalIP)
+{
+
   nsresult rv;
   PRInt32 colon, fSlash;
   PRUnichar port;
@@ -1175,7 +1195,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
 
   rv = mDocLoader->LoadDocument(urlSpec,       // URL string
-                                "View",         // Command
+                                aCommand,         // Command
                                 this,           // Container
                                 aPostData,      // Post Data
                                 nsnull,         // Extra Info...

@@ -255,6 +255,17 @@ public:
                      const PRUint32 aLocalIP=0) = 0;
 
   /**
+   * Load the document associated with the specified URL into the WebShell.
+   */
+  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
+                     const char* aCommand, 
+                     nsIPostData* aPostData=nsnull,
+                     PRBool aModifyHistory=PR_TRUE,
+                     nsURLReloadType aType=nsURLReload,
+                     const PRUint32 aLocalIP=0) = 0;
+
+
+  /**
    * Stop loading the current document.
    */
   NS_IMETHOD Stop(void) = 0;
