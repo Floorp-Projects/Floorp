@@ -946,8 +946,6 @@ debug_RegisterPrefCallbacks()
 				prefs->RegisterCallback(debug_PrefValues[i].name,
 										debug_PrefChangedCallback,
 										NULL);
-
-				printf("Registering callback for %s\n",debug_PrefValues[i].name);
 			}
 			
 			NS_RELEASE(prefs);
