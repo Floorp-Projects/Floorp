@@ -1930,22 +1930,16 @@ nsDOMSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIEnumerator::GetIID())) {
-    nsRangeListIterator *iter = new nsRangeListIterator(this);
-    if (!iter)
-       return NS_ERROR_OUT_OF_MEMORY;
-    *aInstancePtr = NS_STATIC_CAST(nsIEnumerator*, iter);
-    NS_ADDREF(iter);
-    return NS_OK;
+
+
+    /* The following clause needs to go away, as soon as we've caught any offending callers */
+  if (aIID.Equals(nsIEnumerator::GetIID())
+   || aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
+  	NS_ASSERTION(0, "(tell scc or mjudge) -- Error: Get new enumerators with |GetEnumerator|, not |QueryInterface|!  Caller must be fixed");
+  	return NS_NOINTERFACE;
   }
-  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
-    nsRangeListIterator *iter = new nsRangeListIterator(this);
-    if (!iter)
-       return NS_ERROR_OUT_OF_MEMORY;
-    *aInstancePtr = NS_STATIC_CAST(nsIBidirectionalEnumerator*, iter);
-    NS_ADDREF(iter);
-    return NS_OK;
-  }
+
+
   if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*) tmp;
