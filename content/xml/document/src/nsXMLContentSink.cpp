@@ -771,7 +771,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
   nsAutoString tag;
-  nsIAtom* nameSpacePrefix;
+  nsCOMPtr<nsIAtom> nameSpacePrefix;
   PRInt32 nameSpaceID = kNameSpaceID_Unknown;
   PRBool isHTML = PR_FALSE;
   PRBool popContent = PR_TRUE;
@@ -782,7 +782,7 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   PR_ASSERT(eXMLContentSinkState_InDocumentElement == mState);
 
   tag = aNode.GetText();
-  nameSpacePrefix = CutNameSpacePrefix(tag);
+  nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
   nameSpaceID = GetNameSpaceId(nameSpacePrefix);
   isHTML = IsHTMLNameSpace(nameSpaceID);
 
