@@ -12,6 +12,7 @@ nsISerializable.idl
 nsISimpleEnumerator.idl
 nsISupportsArray.idl
 nsITimelineService.idl
+nsIStringService.idl
 nsISupportsIterators.idl
 nsISupportsPrimitives.idl
 nsIVariant.idl
