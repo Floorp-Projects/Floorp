@@ -61,6 +61,7 @@ gint handle_toplevel_focus_out(
 nsWindow  *nsWindow::focusWindow = NULL;
 // are we grabbing?
 PRBool     nsWindow::mIsGrabbing = PR_FALSE;
+nsWindow  *nsWindow::mGrabWindow = NULL;
 
 //-------------------------------------------------------------------------
 //
@@ -103,6 +104,11 @@ nsWindow::~nsWindow()
   printf("nsWindow::~nsWindow:%p\n", this);
 #endif
   mIsDestroyingWindow = PR_TRUE;
+  // make sure that we release the grab indicator here
+  if (mGrabWindow == this) {
+    mIsGrabbing = PR_FALSE;
+    mGrabWindow = NULL;
+  }
   if (nsnull != mShell || nsnull != mSuperWin) {
     // make sure to release our focus window
     if (this == focusWindow) {
@@ -393,6 +399,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     else
       {
         mIsGrabbing = PR_TRUE;
+        mGrabWindow = this;
         int ret = gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
                                     (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                                      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
@@ -409,6 +416,10 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 #ifdef DEBUG_pavlov
     printf("ungrabbing widget\n");
 #endif
+    // make sure that the grab window is marked as released
+    if (mGrabWindow == this) {
+      mGrabWindow = NULL;
+    }
     mIsGrabbing = PR_FALSE;
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
     //    gtk_grab_remove(grabWidget);

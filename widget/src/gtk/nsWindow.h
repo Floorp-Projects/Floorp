@@ -192,7 +192,8 @@ protected:
 
   nsIMenuBar *mMenuBar;
   // are we doing a grab?
-  static PRBool mIsGrabbing;
+  static PRBool    mIsGrabbing;
+  static nsWindow *mGrabWindow;
 private:
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
