@@ -72,14 +72,21 @@ NS_IMETHODIMP nsImapFlagAndUidState::GetUidOfMessage(PRInt32 zeroBasedIndex, PRU
 
 NS_IMETHODIMP	nsImapFlagAndUidState::GetMessageFlags(PRInt32 zeroBasedIndex, PRUint16 *result)
 {
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
-	imapMessageFlagsType returnFlags = kNoImapMsgFlag;
-	if (zeroBasedIndex < fNumberOfMessagesAdded)
-		returnFlags = fFlags[zeroBasedIndex];
+  if (!result)
+    return NS_ERROR_NULL_POINTER;
+  imapMessageFlagsType returnFlags = kNoImapMsgFlag;
+  if (zeroBasedIndex < fNumberOfMessagesAdded)
+    returnFlags = fFlags[zeroBasedIndex];
+  
+  *result = returnFlags;
+  return NS_OK;
+}
 
-	*result = returnFlags;
-	return NS_OK;
+NS_IMETHODIMP nsImapFlagAndUidState::SetMessageFlags(PRInt32 zeroBasedIndex, unsigned short flags)
+{
+  if (zeroBasedIndex < fNumberOfMessagesAdded)
+    fFlags[zeroBasedIndex] = flags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapFlagAndUidState::GetNumberOfRecentMessages(PRInt32 *result)
@@ -165,13 +172,13 @@ nsImapFlagAndUidState::SetSupportedUserFlags(uint16 flags)
 
 NS_IMETHODIMP nsImapFlagAndUidState::Reset(PRUint32 howManyLeft)
 {
-    PR_CEnterMonitor(this);
-	if (!howManyLeft)
-		fNumberOfMessagesAdded = fNumberDeleted = 0;		// used space is still here
+  PR_CEnterMonitor(this);
+  if (!howManyLeft)
+    fNumberOfMessagesAdded = fNumberDeleted = 0; // used space is still here
   if (m_customFlagsHash)
     m_customFlagsHash->Reset(FreeCustomFlags, nsnull);
-    PR_CExitMonitor(this);
-	return NS_OK;
+  PR_CExitMonitor(this);
+  return NS_OK;
 }
 
 
@@ -196,7 +203,7 @@ NS_IMETHODIMP nsImapFlagAndUidState::ExpungeByIndex(PRUint32 msgIndex)
   for (counter = msgIndex; counter < (PRUint32) fNumberOfMessagesAdded; counter++)
   {
     fUids.SetAt(counter, fUids[counter + 1]);                               
-     fFlags[counter] = fFlags[counter + 1];                                  
+    fFlags[counter] = fFlags[counter + 1];                                  
   }
 
   PR_CExitMonitor(this);
@@ -274,15 +281,17 @@ PRInt32 nsImapFlagAndUidState::GetNumberOfDeletedMessages()
 
 PRUint32  nsImapFlagAndUidState::GetHighestNonDeletedUID()
 {
-	PRUint32 msgIndex = fNumberOfMessagesAdded;
-	do {
-		if (msgIndex <= 0)
-			return(0);
-		msgIndex--;
-		if (fUids[msgIndex] && !(fFlags[msgIndex] & kImapMsgDeletedFlag))
-			return fUids[msgIndex];
-	} while (msgIndex > 0);
-	return 0;
+  PRUint32 msgIndex = fNumberOfMessagesAdded;
+  do 
+  {
+    if (msgIndex <= 0)
+      return(0);
+    msgIndex--;
+    if (fUids[msgIndex] && !(fFlags[msgIndex] & kImapMsgDeletedFlag))
+      return fUids[msgIndex];
+  }
+  while (msgIndex > 0);
+  return 0;
 }
 
 
@@ -291,15 +300,15 @@ PRUint32  nsImapFlagAndUidState::GetHighestNonDeletedUID()
 
 PRBool nsImapFlagAndUidState::IsLastMessageUnseen()
 {
-	PRUint32 msgIndex = fNumberOfMessagesAdded;
-
-	if (msgIndex <= 0)
-		return PR_FALSE;
-	msgIndex--;
-	// if last message is deleted, it was probably filtered the last time around
-	if (fUids[msgIndex] && (fFlags[msgIndex] & (kImapMsgSeenFlag | kImapMsgDeletedFlag)))
-		return PR_FALSE;
-	return PR_TRUE; 
+  PRUint32 msgIndex = fNumberOfMessagesAdded;
+  
+  if (msgIndex <= 0)
+    return PR_FALSE;
+  msgIndex--;
+  // if last message is deleted, it was probably filtered the last time around
+  if (fUids[msgIndex] && (fFlags[msgIndex] & (kImapMsgSeenFlag | kImapMsgDeletedFlag)))
+    return PR_FALSE;
+  return PR_TRUE; 
 }
 
 

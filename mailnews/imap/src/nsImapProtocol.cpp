@@ -2212,9 +2212,22 @@ void nsImapProtocol::ProcessSelectedStateURL()
                   bMessageIdsAreUids, NULL, messageSize, PR_TRUE);
               }
             }
-          }
+            if (GetServerStateParser().LastCommandSuccessful())
+            {
+              PRUint32 uid = atoi(messageIdString); 
+              PRInt32 index;
+              PRBool foundIt;
+              imapMessageFlagsType flags = m_flagState->GetMessageFlagsFromUID(uid, &foundIt, &index);
+              if (foundIt)
+              {
+                flags |= kImapMsgSeenFlag;
+                m_flagState->SetMessageFlags(index, flags);
+              }
             }
-            break;
+
+          }
+        }
+        break;
       case nsIImapUrl::nsImapExpungeFolder:
         Expunge();
         // note fall through to next cases.
@@ -3054,7 +3067,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
     GetServerStateParser().SetFetchingFlags(PR_FALSE);
     GetServerStateParser().SetFetchingEverythingRFC822(PR_FALSE); // always clear this flag after every fetch....
     if (GetServerStateParser().LastCommandSuccessful() && CheckNeeded())
-       Check();
+      Check();
   }
   else
     HandleMemoryFailure();

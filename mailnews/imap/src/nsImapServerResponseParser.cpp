@@ -295,84 +295,84 @@ void nsImapServerResponseParser::HandleMemoryFailure()
 // SEARCH is the only command that requires pre-processing for now.
 // others will be added here.
 void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken,
-										      const char *currentCommand)
+                                                        const char *currentCommand)
 {
-	fCurrentCommandIsSingleMessageFetch = PR_FALSE;
-	fWaitingForMoreClientInput = PR_FALSE;
-	
-	if (!PL_strcasecmp(commandToken, "SEARCH"))
-		fSearchResults->ResetSequence();
-	else if (!PL_strcasecmp(commandToken, "SELECT") && currentCommand)
-	{
-		// the mailbox name must be quoted, so strip the quotes
-		const char *openQuote = PL_strstr(currentCommand, "\"");
-		NS_ASSERTION(openQuote, "expected open quote in imap server response");
-		if (!openQuote)
-        { // ill formed select command
-            openQuote = PL_strstr(currentCommand, " ");
+  fCurrentCommandIsSingleMessageFetch = PR_FALSE;
+  fWaitingForMoreClientInput = PR_FALSE;
+  
+  if (!PL_strcasecmp(commandToken, "SEARCH"))
+    fSearchResults->ResetSequence();
+  else if (!PL_strcasecmp(commandToken, "SELECT") && currentCommand)
+  {
+    // the mailbox name must be quoted, so strip the quotes
+    const char *openQuote = PL_strstr(currentCommand, "\"");
+    NS_ASSERTION(openQuote, "expected open quote in imap server response");
+    if (!openQuote)
+    { // ill formed select command
+      openQuote = PL_strstr(currentCommand, " ");
+    }
+    PR_Free( fSelectedMailboxName);
+    fSelectedMailboxName = PL_strdup(openQuote + 1);
+    if (fSelectedMailboxName)
+    {
+      // strip the escape chars and the ending quote
+      char *currentChar = fSelectedMailboxName;
+      while (*currentChar)
+      {
+        if (*currentChar == '\\')
+        {
+          PL_strcpy(currentChar, currentChar+1);
+          currentChar++;	// skip what we are escaping
         }
-		PR_Free( fSelectedMailboxName);
-		fSelectedMailboxName = PL_strdup(openQuote + 1);
-		if (fSelectedMailboxName)
-		{
-			// strip the escape chars and the ending quote
-			char *currentChar = fSelectedMailboxName;
-			while (*currentChar)
-			{
-				if (*currentChar == '\\')
-				{
-					PL_strcpy(currentChar, currentChar+1);
-					currentChar++;	// skip what we are escaping
-				}
-				else if (*currentChar == '\"')
-					*currentChar = 0;	// end quote
-				else
-					currentChar++;
-			}
-		}
-		else
-			HandleMemoryFailure();
-		
-		// we don't want bogus info for this new box
-		//delete fFlagState;	// not our object
-		//fFlagState = nsnull;
-	}
-	else if (!PL_strcasecmp(commandToken, "CLOSE"))
-	{
-		return;	// just for debugging
-		// we don't want bogus info outside the selected state
-		//delete fFlagState;	// not our object
-		//fFlagState = nsnull;
-	}
-	else if (!PL_strcasecmp(commandToken, "UID"))
-	{
-	
-		char *copyCurrentCommand = PL_strdup(currentCommand);
-		if (copyCurrentCommand && !fServerConnection.DeathSignalReceived())
-		{
-			char *placeInTokenString = nsnull;
-			char *tagToken           = Imapstrtok_r(copyCurrentCommand, WHITESPACE,&placeInTokenString);
-			char *uidToken           = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
-			char *fetchToken         = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
-			uidToken = nsnull; // use variable to quiet compiler warning
-            tagToken = nsnull; // use variable to quiet compiler warning
-			if (!PL_strcasecmp(fetchToken, "FETCH") )
-			{
-				char *uidStringToken = Imapstrtok_r(nsnull, WHITESPACE, &placeInTokenString);
-				if (!PL_strchr(uidStringToken, ',') && !PL_strchr(uidStringToken, ':'))	// , and : are uid delimiters
-				{
-					fCurrentCommandIsSingleMessageFetch = PR_TRUE;
-					fUidOfSingleMessageFetch = atoi(uidStringToken);
-				}
-			}
-			PR_Free(copyCurrentCommand);
-		}
-	}
+        else if (*currentChar == '\"')
+          *currentChar = 0;	// end quote
+        else
+          currentChar++;
+      }
+    }
+    else
+      HandleMemoryFailure();
+    
+    // we don't want bogus info for this new box
+    //delete fFlagState;	// not our object
+    //fFlagState = nsnull;
+  }
+  else if (!PL_strcasecmp(commandToken, "CLOSE"))
+  {
+    return;	// just for debugging
+    // we don't want bogus info outside the selected state
+    //delete fFlagState;	// not our object
+    //fFlagState = nsnull;
+  }
+  else if (!PL_strcasecmp(commandToken, "UID"))
+  {
+    
+    char *copyCurrentCommand = PL_strdup(currentCommand);
+    if (copyCurrentCommand && !fServerConnection.DeathSignalReceived())
+    {
+      char *placeInTokenString = nsnull;
+      char *tagToken           = Imapstrtok_r(copyCurrentCommand, WHITESPACE,&placeInTokenString);
+      char *uidToken           = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
+      char *fetchToken         = Imapstrtok_r(nsnull, WHITESPACE,&placeInTokenString);
+      uidToken = nsnull; // use variable to quiet compiler warning
+      tagToken = nsnull; // use variable to quiet compiler warning
+      if (!PL_strcasecmp(fetchToken, "FETCH") )
+      {
+        char *uidStringToken = Imapstrtok_r(nsnull, WHITESPACE, &placeInTokenString);
+        if (!PL_strchr(uidStringToken, ',') && !PL_strchr(uidStringToken, ':'))	// , and : are uid delimiters
+        {
+          fCurrentCommandIsSingleMessageFetch = PR_TRUE;
+          fUidOfSingleMessageFetch = atoi(uidStringToken);
+        }
+      }
+      PR_Free(copyCurrentCommand);
+    }
+  }
 }
 
 const char *nsImapServerResponseParser::GetSelectedMailboxName()
 {
-	return fSelectedMailboxName;
+  return fSelectedMailboxName;
 }
 
 nsImapSearchResultIterator *nsImapServerResponseParser::CreateSearchResultIterator()
@@ -2617,93 +2617,93 @@ void nsImapServerResponseParser::ResetCapabilityFlag()
 // returns PR_TRUE if this is the last chunk and we should close the stream
 PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origin)
 {
-	numberOfCharsInThisChunk = atoi(fNextToken + 1); // might be the whole message
-	charsReadSoFar = 0;
-	static PRBool lastCRLFwasCRCRLF = PR_FALSE;
-
-	PRBool lastChunk = !chunk || (origin + numberOfCharsInThisChunk >= fTotalDownloadSize);
-
-	nsImapAction imapAction; 
-	fServerConnection.GetCurrentUrl()->GetImapAction(&imapAction);
-	if (!lastCRLFwasCRCRLF && 
-		fServerConnection.GetIOTunnellingEnabled() && 
-		(numberOfCharsInThisChunk > fServerConnection.GetTunnellingThreshold()) &&
-		(imapAction != nsIImapUrl::nsImapOnlineToOfflineCopy) &&
-		(imapAction != nsIImapUrl::nsImapOnlineToOfflineMove))
-	{
-		// One day maybe we'll make this smarter and know how to handle CR/LF boundaries across tunnels.
-		// For now, we won't, even though it might not be too hard, because it is very rare and will add
-		// some complexity.
-		charsReadSoFar = fServerConnection.OpenTunnel(numberOfCharsInThisChunk);
-	}
-
-	// If we opened a tunnel, finish everything off here.  Otherwise, get everything here.
-	// (just like before)
-
-	while (ContinueParse() && (charsReadSoFar < numberOfCharsInThisChunk))
-	{
-		AdvanceToNextLine();
-		if (ContinueParse())
-		{
-			if (lastCRLFwasCRCRLF && (*fCurrentLine == nsCRT::CR))
-			{
-				char *usableCurrentLine = PL_strdup(fCurrentLine + 1);
-				PR_Free(fCurrentLine);
-				fCurrentLine = usableCurrentLine;
-			}
-
-			if (ContinueParse())
-			{
-				charsReadSoFar += strlen(fCurrentLine);
-				if (!fDownloadingHeaders && fCurrentCommandIsSingleMessageFetch)
-				{
-					fServerConnection.ProgressEventFunctionUsingId(IMAP_DOWNLOADING_MESSAGE);
-					if (fTotalDownloadSize > 0)
-						fServerConnection.PercentProgressUpdateEvent(0,charsReadSoFar + origin, fTotalDownloadSize);
-				}
-				if (charsReadSoFar > numberOfCharsInThisChunk)
-				{	// this is rare.  If this msg ends in the middle of a line then only display the actual message.
-					char *displayEndOfLine = (fCurrentLine + strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk));
-					char saveit = *displayEndOfLine;
-					*displayEndOfLine = 0;
-					fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk);
-					*displayEndOfLine = saveit;
-					lastCRLFwasCRCRLF = (*(displayEndOfLine - 1) == nsCRT::CR);
-				}
-				else
-				{
-					lastCRLFwasCRCRLF = (*(fCurrentLine + strlen(fCurrentLine) - 1) == nsCRT::CR);
-					fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk && (charsReadSoFar == numberOfCharsInThisChunk));
-				}
-			}
-		}
-	}
-
-	// This would be a good thing to log.
-	if (lastCRLFwasCRCRLF)
-		PR_LOG(IMAP, PR_LOG_ALWAYS, ("PARSER: CR/LF fell on chunk boundary."));
-	
-	if (ContinueParse())
-	{
-		if (charsReadSoFar > numberOfCharsInThisChunk)
-		{
-			// move the lexical analyzer state to the end of this message because this message
-			// fetch ends in the middle of this line.
-			//fCurrentTokenPlaceHolder = fLineOfTokens + nsCRT::strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk);
-			AdvanceTokenizerStartingPoint(strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk));
-			fNextToken = GetNextToken();
-		}
-		else
-		{
-			skip_to_CRLF();
-			fNextToken = GetNextToken();
-		}
-	}
-	else
-	{
-		lastCRLFwasCRCRLF = PR_FALSE;
-	}
-	return lastChunk;
+  numberOfCharsInThisChunk = atoi(fNextToken + 1); // might be the whole message
+  charsReadSoFar = 0;
+  static PRBool lastCRLFwasCRCRLF = PR_FALSE;
+  
+  PRBool lastChunk = !chunk || (origin + numberOfCharsInThisChunk >= fTotalDownloadSize);
+  
+  nsImapAction imapAction; 
+  fServerConnection.GetCurrentUrl()->GetImapAction(&imapAction);
+  if (!lastCRLFwasCRCRLF && 
+    fServerConnection.GetIOTunnellingEnabled() && 
+    (numberOfCharsInThisChunk > fServerConnection.GetTunnellingThreshold()) &&
+    (imapAction != nsIImapUrl::nsImapOnlineToOfflineCopy) &&
+    (imapAction != nsIImapUrl::nsImapOnlineToOfflineMove))
+  {
+    // One day maybe we'll make this smarter and know how to handle CR/LF boundaries across tunnels.
+    // For now, we won't, even though it might not be too hard, because it is very rare and will add
+    // some complexity.
+    charsReadSoFar = fServerConnection.OpenTunnel(numberOfCharsInThisChunk);
+  }
+  
+  // If we opened a tunnel, finish everything off here.  Otherwise, get everything here.
+  // (just like before)
+  
+  while (ContinueParse() && (charsReadSoFar < numberOfCharsInThisChunk))
+  {
+    AdvanceToNextLine();
+    if (ContinueParse())
+    {
+      if (lastCRLFwasCRCRLF && (*fCurrentLine == nsCRT::CR))
+      {
+        char *usableCurrentLine = PL_strdup(fCurrentLine + 1);
+        PR_Free(fCurrentLine);
+        fCurrentLine = usableCurrentLine;
+      }
+      
+      if (ContinueParse())
+      {
+        charsReadSoFar += strlen(fCurrentLine);
+        if (!fDownloadingHeaders && fCurrentCommandIsSingleMessageFetch)
+        {
+          fServerConnection.ProgressEventFunctionUsingId(IMAP_DOWNLOADING_MESSAGE);
+          if (fTotalDownloadSize > 0)
+            fServerConnection.PercentProgressUpdateEvent(0,charsReadSoFar + origin, fTotalDownloadSize);
+        }
+        if (charsReadSoFar > numberOfCharsInThisChunk)
+        {	// this is rare.  If this msg ends in the middle of a line then only display the actual message.
+          char *displayEndOfLine = (fCurrentLine + strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk));
+          char saveit = *displayEndOfLine;
+          *displayEndOfLine = 0;
+          fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk);
+          *displayEndOfLine = saveit;
+          lastCRLFwasCRCRLF = (*(displayEndOfLine - 1) == nsCRT::CR);
+        }
+        else
+        {
+          lastCRLFwasCRCRLF = (*(fCurrentLine + strlen(fCurrentLine) - 1) == nsCRT::CR);
+          fServerConnection.HandleMessageDownLoadLine(fCurrentLine, !lastChunk && (charsReadSoFar == numberOfCharsInThisChunk));
+        }
+      }
+    }
+  }
+  
+  // This would be a good thing to log.
+  if (lastCRLFwasCRCRLF)
+    PR_LOG(IMAP, PR_LOG_ALWAYS, ("PARSER: CR/LF fell on chunk boundary."));
+  
+  if (ContinueParse())
+  {
+    if (charsReadSoFar > numberOfCharsInThisChunk)
+    {
+      // move the lexical analyzer state to the end of this message because this message
+      // fetch ends in the middle of this line.
+      //fCurrentTokenPlaceHolder = fLineOfTokens + nsCRT::strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk);
+      AdvanceTokenizerStartingPoint(strlen(fCurrentLine) - (charsReadSoFar - numberOfCharsInThisChunk));
+      fNextToken = GetNextToken();
+    }
+    else
+    {
+      skip_to_CRLF();
+      fNextToken = GetNextToken();
+    }
+  }
+  else
+  {
+    lastCRLFwasCRCRLF = PR_FALSE;
+  }
+  return lastChunk;
 }
 
 PRBool nsImapServerResponseParser::CurrentFolderReadOnly()

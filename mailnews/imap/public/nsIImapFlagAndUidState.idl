@@ -42,14 +42,15 @@ interface nsIImapFlagAndUidState : nsISupports
 {
   readonly attribute long numberOfMessages;
   readonly attribute long numberOfRecentMessages;
-  void GetUidOfMessage(in long zeroBasedIndex, out unsigned long result);
-  void GetMessageFlags(in long zeroBasedIndex, out unsigned short result);
-  void ExpungeByIndex(in unsigned long zeroBasedIndex);
-  void AddUidFlagPair(in unsigned long uid, in unsigned short flags);
+  void getUidOfMessage(in long zeroBasedIndex, out unsigned long result);
+  void getMessageFlags(in long zeroBasedIndex, out unsigned short result);
+  void setMessageFlags(in long zeroBasedIndex, in unsigned short flags);
+  void expungeByIndex(in unsigned long zeroBasedIndex);
+  void addUidFlagPair(in unsigned long uid, in unsigned short flags);
   void addUidCustomFlagPair(in unsigned long uid, in string customFlag);
   string getCustomFlags(in unsigned long uid); // returns space-separated keywords
-  void Reset(in unsigned long howManyLeft);
-  void SetSupportedUserFlags(in unsigned short flags);
+  void reset(in unsigned long howManyLeft);
+  void setSupportedUserFlags(in unsigned short flags);
   void clearCustomFlags(in unsigned long uid);
 };
 

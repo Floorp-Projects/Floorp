@@ -60,16 +60,16 @@ public:
     nsImapServerResponseParser(nsImapProtocol &imapConnection);
     virtual ~nsImapServerResponseParser();
 
-	// Overridden from the base parser class
-	virtual PRBool     LastCommandSuccessful();
+  // Overridden from the base parser class
+  virtual PRBool     LastCommandSuccessful();
   virtual void		HandleMemoryFailure();
 
   // aignoreBadAndNOResponses --> don't throw a error dialog if this command results in a NO or Bad response
   // from the server..in other words the command is "exploratory" and we don't really care if it succeeds or fails.
   // This value is typically FALSE for almost all cases. 
   virtual void		ParseIMAPServerResponse(const char *currentCommand, PRBool aIgnoreBadAndNOResponses);
-	virtual void		InitializeState();
-  PRBool				CommandFailed();
+  virtual void		InitializeState();
+  PRBool		CommandFailed();
     
     enum eIMAPstate {
         kNonAuthenticated,
@@ -83,7 +83,7 @@ public:
     } ;
 
   virtual eIMAPstate GetIMAPstate();
-	virtual PRBool WaitingForMoreClientInput() { return fWaitingForMoreClientInput; };
+  virtual PRBool WaitingForMoreClientInput() { return fWaitingForMoreClientInput; };
     
   const char *GetSelectedMailboxName();   // can be NULL
 
@@ -152,7 +152,6 @@ public:
   virtual PRUint16	SupportsUserFlags() { return fSupportsUserDefinedFlags; };
   virtual PRUint16  SettablePermanentFlags() { return fSettablePermanentFlags;};
   void SetFlagState(nsIImapFlagAndUidState *state);
-
   PRBool GetDownloadingHeaders();
   PRBool GetFillingInShell();
   void	UseCachedShell(nsIMAPBodyShell *cachedShell);
@@ -198,8 +197,8 @@ protected:
   virtual void    msg_obsolete();
   virtual void	  msg_fetch_headers(const char *partNum);
   virtual void    msg_fetch_content(PRBool chunk, PRInt32 origin, const char *content_type);
-  virtual PRBool	msg_fetch_quoted(PRBool chunk, PRInt32 origin);
-  virtual PRBool	msg_fetch_literal(PRBool chunk, PRInt32 origin);
+  virtual PRBool  msg_fetch_quoted(PRBool chunk, PRInt32 origin);
+  virtual PRBool  msg_fetch_literal(PRBool chunk, PRInt32 origin);
   virtual void    mailbox_list(PRBool discoveredFromLsub);
   virtual void    mailbox(nsImapMailboxSpec *boxSpec);
   
@@ -207,7 +206,7 @@ protected:
   virtual void    ProcessBadCommand(const char *commandToken);
   virtual void    PreProcessCommandToken(const char *commandToken,
                                              const char *currentCommand);
-  virtual void		PostProcessEndOfLine();
+  virtual void    PostProcessEndOfLine();
 
   // Overridden from the nsIMAPGenericParser, to retrieve the next line
   // from the open socket.
