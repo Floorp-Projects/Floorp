@@ -823,8 +823,6 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
 PUBLIC char *
 COOKIE_GetCookie(char * address) {
   char *name=0;
-  char *host = cookie_ParseURL(address, GET_HOST_PART);
-  char *path = cookie_ParseURL(address, GET_PATH_PART);
   cookie_CookieStruct * cookie_s;
   PRBool first=PR_TRUE;
   PRBool xxx = PR_FALSE;
@@ -849,6 +847,8 @@ COOKIE_GetCookie(char * address) {
     cookie_UnlockCookieList();
     return NULL;
   }
+  char *host = cookie_ParseURL(address, GET_HOST_PART);
+  char *path = cookie_ParseURL(address, GET_PATH_PART);
   PRInt32 count = cookie_cookieList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
@@ -930,8 +930,8 @@ COOKIE_GetCookie(char * address) {
 
   cookie_UnlockCookieList();
   PR_FREEIF(name);
-  PR_Free(path);
-  PR_Free(host);
+  PR_FREEIF(path);
+  PR_FREEIF(host);
 
   /* may be NULL */
   return(rv);
