@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.50 2003/07/02 18:58:37 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.51 2003/07/02 19:07:01 jake%bugzilla.org Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -1065,8 +1065,7 @@ man 5 crontab
 
     </section>
     
-    <section id="content-type"
-    xreflabel="Preventing untrusted Bugzilla content from executing malicious Javascript code">
+    <section id="content-type">
 
       <title>Preventing untrusted Bugzilla content from executing malicious
       Javascript code</title>
@@ -1077,16 +1076,15 @@ man 5 crontab
       requirements mentioned in 
       <ulink
       url="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3"/>.
-      Executing the following code snippet from a UNIX command shell will
-      rectify the problem if your Bugzilla installation is intended for an
-      English-speaking audience. As always, be sure your Bugzilla
-      installation has a good backup before making changes, and I recommend
-      you understand what the script is doing before executing it.</para>
+      Making the change below will fix the problem if your installation is for
+      an English speaking audience.
+      </para>
 
       <para>Telling Bugzilla to output a charset as part of the HTTP header is
       much easier in version 2.18 and higher<![%bz-devel;[ (including any cvs
-      pull after 4-May-2003 and development release after 2.17.5)]]>. Simply
-      locatate the following line in <filename>Bugzilla/CGI.pm</filename>:
+      pull after 4-May-2003 and development release after 2.17.5)]]> than it was
+      in previous versions. Simply locate the following line in
+      <filename>Bugzilla/CGI.pm</filename>:
       <programlisting>
     # Make sure that we don't send any charset headers
     $self->charset('');
