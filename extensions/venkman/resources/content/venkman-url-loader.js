@@ -77,13 +77,13 @@ function StreamListener(url, observer)
 StreamListener.prototype.onStartRequest =
 function (request, data)
 {
-    dd ("onStartRequest()");
+    //dd ("onStartRequest()");
 }
 
 StreamListener.prototype.onStopRequest =
 function (request, data, status)
 {
-    dd ("onStopRequest(): status: " + status + "\n" /* + this.data*/);
+    //dd ("onStopRequest(): status: " + status + "\n" /* + this.data*/);
     if (typeof this.observer.onComplete == "function")
         this.observer.onComplete (this.data, this.url, status);
 }
