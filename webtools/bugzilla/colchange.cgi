@@ -34,6 +34,8 @@ use vars qw(
 
 require "CGI.pl";
 
+quietly_check_login();
+
 print "Content-type: text/html\n";
 
 # The master list not only says what fields are possible, but what order
