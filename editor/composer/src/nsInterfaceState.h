@@ -32,8 +32,6 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
-#include "nsHashtable.h"
-
 class nsIHTMLEditor;
 class nsIDOMXULDocument;
 
@@ -60,9 +58,6 @@ public:
   
   // nsIDOMSelectionListener interface
   NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
-
-  NS_IMETHOD    SetCommandStateData(const nsString& commandName, void* stateData);
-  NS_IMETHOD    GetCommandStateData(const nsString& commandName, void* *outStateData);
 
   NS_DECL_NSIDOCUMENTSTATELISTENER
   
@@ -132,9 +127,7 @@ protected:
   PRPackedBool  mUpdateBold;
   PRPackedBool  mUpdateItalics;
   PRPackedBool  mUpdateUnderline;
-  
-  nsHashtable   mCommandStateTable;
-  
+    
   // current state
   PRInt8        mBoldState;
   PRInt8        mItalicState;
