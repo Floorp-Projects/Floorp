@@ -56,15 +56,15 @@
 
     case eTrue: 
         {
-	    push(JS2VAL_TRUE);
-	}
-	break;
+            push(JS2VAL_TRUE);
+        }
+        break;
 
     case eFalse: 
         {
-	    push(JS2VAL_FALSE);
-	}
-	break;
+            push(JS2VAL_FALSE);
+        }
+        break;
 
     case eString: 
         {
@@ -76,7 +76,15 @@
 
     case eRegExp: 
         {
-            RegExpInstance *x = bCon->mRegExpList[BytecodeContainer::getShort(pc)];
+            RegExpInstance *x = checked_cast<RegExpInstance *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
+            push(OBJECT_TO_JS2VAL(x));
+            pc += sizeof(short);
+        }
+        break;
+
+    case eFunction: 
+        {
+            JS2Object *x = checked_cast<JS2Object *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
             push(OBJECT_TO_JS2VAL(x));
             pc += sizeof(short);
         }
@@ -84,15 +92,15 @@
 
     case eNull: 
         {
-	    push(JS2VAL_NULL);
-	}
-	break;
+            push(JS2VAL_NULL);
+        }
+        break;
 
     case eUndefined: 
         {
-	    push(JS2VAL_UNDEFINED);
-	}
-	break;
+            push(JS2VAL_UNDEFINED);
+        }
+        break;
 
     case eThis: // XXX literal?
         {

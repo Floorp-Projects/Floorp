@@ -1040,7 +1040,7 @@ public:
     void ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
-    JS2Object *validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
+    JS2Object *validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
 
     js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);

@@ -75,6 +75,7 @@ enum JS2Op {
     eLongZero,
     eNumber,
     eRegExp,
+    eFunction,
     eUInt64,
     eInt64,
     eString,            // <string pointer:u32>

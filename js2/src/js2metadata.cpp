@@ -85,7 +85,7 @@ namespace MetaData {
         }
     }
      
-    JS2Object *JS2Metadata::validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
+    JS2Object *JS2Metadata::validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
     {
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
         JS2Object *result;
@@ -93,13 +93,13 @@ namespace MetaData {
         if (prototype) {
             FunctionInstance *fInst = new FunctionInstance(functionClass->prototype, functionClass);
             fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-            f->fWrap = fInst->fWrap;
+            fnDef->fWrap = fInst->fWrap;
             result = fInst;
         }
         else {
             SimpleInstance *sInst = new SimpleInstance(functionClass);
             sInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-            f->fWrap = sInst->fWrap;
+            fnDef->fWrap = sInst->fWrap;
             result = sInst;
         }
 
@@ -107,9 +107,9 @@ namespace MetaData {
         Frame *curTopFrame = env->getTopFrame();
 
         try {
-            CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+            CompilationData *oldData = startCompilationUnit(fnDef->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
             env->addFrame(compileFrame);
-            VariableBinding *pb = f->function.parameters;
+            VariableBinding *pb = fnDef->parameters;
             if (pb) {
                 NamespaceList publicNamespaceList;
                 publicNamespaceList.push_back(publicNamespace);
@@ -120,7 +120,7 @@ namespace MetaData {
                 }
                 if (prototype)
                     writeDynamicProperty(result, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(pCount), RunPhase);
-                pb = f->function.parameters;
+                pb = fnDef->parameters;
                 compileFrame->positional = new Variable *[pCount];
                 compileFrame->positionalCount = pCount;
                 pCount = 0;
@@ -132,7 +132,7 @@ namespace MetaData {
                     pb = pb->next;
                 }
             }
-            ValidateStmt(cxt, env, Plural, f->function.body);
+            ValidateStmt(cxt, env, Plural, fnDef->body);
             env->removeTopFrame();
             restoreCompilationUnit(oldData);
         }
@@ -435,7 +435,7 @@ namespace MetaData {
                                 // XXX getter/setter --> ????
                             }
                             else {
-                                JS2Object *fObj = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
+                                JS2Object *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
                                 if (unchecked 
                                         && (f->attributes == NULL)
                                         && ((topFrame->kind == GlobalObjectKind)
@@ -455,7 +455,7 @@ namespace MetaData {
                     case Attribute::Final:
                         {
                     // XXX Here the spec. has ???, so the following is tentative
-                            JS2Object *fObj = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
+                            JS2Object *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
                             JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
                             InstanceMember *m = new InstanceMethod(checked_cast<SimpleInstance *>(fObj));
                             defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
@@ -465,7 +465,7 @@ namespace MetaData {
                         {
                     // XXX Here the spec. has ???, so the following is tentative
                             ASSERT(!prototype); // XXX right?
-                            JS2Object *fObj = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
+                            JS2Object *fObj = validateStaticFunction(&f->function, compileThis, prototype, unchecked, cxt, env);
                             ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fObj));
                             defineLocalMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
                         }
@@ -1095,8 +1095,8 @@ namespace MetaData {
         case StmtNode::Function:
             {
                 FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
-                CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
-                env->addFrame(f->fWrap->compileFrame);
+                CompilationData *oldData = startCompilationUnit(f->function.fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+                env->addFrame(f->function.fWrap->compileFrame);
                 SetupStmt(env, phase, f->function.body);
                 // XXX need to make sure that all paths lead to an exit of some kind
                 bCon->emitOp(eReturnVoid, p->pos);
@@ -1663,6 +1663,12 @@ namespace MetaData {
                 ValidateExpression(cxt, env, b->op2);
             }
             break;
+        case ExprNode::functionLiteral:
+			{
+				FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
+				f->obj = validateStaticFunction(&f->function, JS2VAL_INACCESSIBLE, true, true, cxt, env);
+			}
+			break;
         default:
             NOT_REACHED("Not Yet Implemented");
         } // switch (p->getKind())
@@ -2267,6 +2273,18 @@ doUnary:
                 SetupExprNode(env, phase, b->op2, exprType);
             }
             break;
+        case ExprNode::functionLiteral:
+			{
+				FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
+                CompilationData *oldData = startCompilationUnit(f->function.fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+                env->addFrame(f->function.fWrap->compileFrame);
+                SetupStmt(env, phase, f->function.body);
+                // XXX need to make sure that all paths lead to an exit of some kind
+                bCon->emitOp(eReturnVoid, p->pos);
+                env->removeTopFrame();
+                restoreCompilationUnit(oldData);
+			}
+			break;
         default:
             NOT_REACHED("Not Yet Implemented");
         }

@@ -435,6 +435,7 @@ namespace MetaData {
         { eLongZero,  "0(64)", 0 },
         { eNumber,  "Number", FLOAT64 },
         { eRegExp,  "RegExp", U16 },
+        { eFunction,  "Function", U16 },
         { eUInt64,  "UInt64", 0 },
         { eInt64,  "Int64", 0 },
         { eString,  "String", STR_PTR },            // <string pointer:u32>
@@ -655,6 +656,7 @@ namespace MetaData {
         case eNull:
         case eThis:
         case eRegExp:
+        case eFunction:
         case eUndefined:
         case eLongZero:
             return 1;       // push literal value

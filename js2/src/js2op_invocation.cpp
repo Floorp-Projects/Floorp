@@ -220,7 +220,7 @@
 
     case ePushFrame: 
         {
-            Frame *f = bCon->mFrameList[BytecodeContainer::getShort(pc)];
+            Frame *f = checked_cast<Frame *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
             pc += sizeof(short);
             meta->env->addFrame(f);
             f->instantiate(meta->env);

@@ -150,13 +150,15 @@ namespace MetaData {
         for (std::vector<Multiname *>::iterator mi = mMultinameList.begin(), mend = mMultinameList.end(); (mi != mend); mi++) {
             GCMARKOBJECT(*mi);   
         }
-        for (std::vector<Frame *>::iterator fi = mFrameList.begin(), fend = mFrameList.end(); (fi != fend); fi++) {
+        for (std::vector<JS2Object *>::iterator fi = mObjectList.begin(), fend = mObjectList.end(); (fi != fend); fi++) {
             GCMARKOBJECT(*fi);   
         }
-        for (std::vector<RegExpInstance *>::iterator ri = mRegExpList.begin(), rend = mRegExpList.end(); (ri != rend); ri++) {
-            GCMARKOBJECT(*ri);   
-        }
     }
+
+    void BytecodeContainer::addFrame(Frame *f)                 { saveObject(f); addShort((uint16)(mObjectList.size() - 1)); }
+    void BytecodeContainer::saveFrame(Frame *f)                { saveObject(f); }
+    void BytecodeContainer::addRegExp(RegExpInstance *x, size_t pos)   { emitOp(eRegExp, pos); saveObject(x); addShort((uint16)(mObjectList.size() - 1)); }
+
 
 }
 }

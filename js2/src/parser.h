@@ -59,6 +59,7 @@ namespace JavaScript {
 #ifdef EPIMETHEUS
     namespace MetaData {
         class Context;
+        class JS2Object;
         class JS2Class;
         class Member;
         class Multiname;
@@ -313,6 +314,9 @@ namespace JavaScript {
         BlockStmtNode *body;            // Body; nil if none
 
         void print(PrettyPrinter &f, const AttributeStmtNode *attributes, bool noSemi) const;
+#ifdef EPIMETHEUS
+        MetaData::FunctionWrapper *fWrap;       // Runtime data, bytecode, parameters etc.
+#endif
     };
 
 
@@ -394,6 +398,9 @@ namespace JavaScript {
         explicit FunctionExprNode(size_t pos): ExprNode(pos, functionLiteral) {}
 
         void print(PrettyPrinter &f) const;
+#ifdef EPIMETHEUS
+		MetaData::JS2Object *obj;		// used by backend to store the function object
+#endif
     };
 
     struct ExprPairList: ArenaObject {
@@ -701,9 +708,6 @@ namespace JavaScript {
         FunctionDefinition function;    // Function definition
 #ifdef DIKDIK
         JS2Runtime::JSFunction *mFunction; // used by backend
-#endif
-#ifdef EPIMETHEUS
-        MetaData::FunctionWrapper *fWrap;       // Runtime data, bytecode, parameters etc.
 #endif
         FunctionStmtNode(size_t pos, Kind kind, ExprNode *attributes): AttributeStmtNode(pos, kind, attributes) {}
 
