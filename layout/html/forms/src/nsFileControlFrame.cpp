@@ -97,7 +97,8 @@ NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsFileControlFrame::nsFileControlFrame():
   mTextFrame(nsnull), 
-  mCachedState(nsnull)
+  mCachedState(nsnull),
+  mDidPreDestroy(PR_FALSE)
 {
     //Shrink the area around it's contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
@@ -117,8 +118,8 @@ nsFileControlFrame::~nsFileControlFrame()
   }
 }
 
-NS_IMETHODIMP 
-nsFileControlFrame::Destroy(nsIPresContext* aPresContext)
+void
+nsFileControlFrame::PreDestroy(nsIPresContext* aPresContext)
 {
   // Toss the value into the control from the anonymous content, which is about
   // to get lost.
@@ -131,8 +132,30 @@ nsFileControlFrame::Destroy(nsIPresContext* aPresContext)
     nsCOMPtr<nsITextControlElement> fileInput = do_QueryInterface(mContent);
     fileInput->TakeTextFrameValue(value);
   }
+  mDidPreDestroy = PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsFileControlFrame::Destroy(nsIPresContext* aPresContext)
+{
+  if (!mDidPreDestroy) {
+    PreDestroy(aPresContext);
+  }
   mTextFrame = nsnull;
   return nsAreaFrame::Destroy(aPresContext);
+}
+
+void
+nsFileControlFrame::RemovedAsPrimaryFrame(nsIPresContext* aPresContext)
+{
+  if (!mDidPreDestroy) {
+    PreDestroy(aPresContext);
+  }
+#ifdef DEBUG
+  else {
+    NS_ERROR("RemovedAsPrimaryFrame called after PreDestroy");
+  }
+#endif
 }
 
 NS_IMETHODIMP
