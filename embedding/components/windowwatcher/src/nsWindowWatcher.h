@@ -27,7 +27,7 @@
 #define NS_WINDOWWATCHER_CID \
  {0xa21bfa01, 0xf349, 0x4394, {0xa8, 0x4c, 0x8d, 0xe5, 0xcf, 0x7, 0x37, 0xd0}}
 #define NS_WINDOWWATCHER_CONTRACTID \
- "@mozilla.org/apputil/window-watcher;1"
+ "@mozilla.org/embedcomp/window-watcher;1"
 
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
