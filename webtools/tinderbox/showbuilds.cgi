@@ -480,6 +480,8 @@ sub query_ref {
   $output = "<a href=${rel_path}../bonsai/cvsquery.cgi";
   $output .= "?module=$td->{cvs_module}";
   $output .= "&branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
+  $output .= "&branchtype=regexp"
+    if $td->{cvs_branch} =~ /\+|\?|\*/;
   $output .= "&cvsroot=$td->{cvs_root}"    if $td->{cvs_root} ne $default_root;
   $output .= "&date=explicit&mindate=$mindate";
   $output .= "&maxdate=$maxdate"           if $maxdate and $maxdate ne '';
