@@ -49,7 +49,6 @@
 
 // MacFE specific headers
 #include "URDFUtilities.h"
-#include "CNavCenterSelectorPane.h"
 #include "Netscape_Constants.h"
 #include "URobustCreateWindow.h"
 #include "BookmarksDialogs.h"
@@ -263,8 +262,8 @@ void CRDFCoordinator::HandleNotification(
 			SelectView(view);
 			
 			bool openShelf = (view != NULL);
-			ListenToMessage ( CNavCenterSelectorPane::msg_ShelfStateShouldChange, &openShelf );
-			BroadcastMessage ( CNavCenterSelectorPane::msg_ActiveSelectorChanged, view );
+			ListenToMessage ( CDockedRDFCoordinator::msg_ShelfStateShouldChange, &openShelf );
+			BroadcastMessage ( CRDFCoordinator::msg_ActiveSelectorChanged, view );
 			break;
 		}
 		
@@ -427,7 +426,7 @@ CRDFCoordinator::ListenToMessage ( MessageT inMessage, void *ioParam )
 		// the backend about it, but before we do that, turn off HT events so we don't actually
 		// get the notification back -- we don't need it because the view change was caused
 		// by the FE.
-		case CNavCenterSelectorPane::msg_ActiveSelectorChanged:
+		case msg_ActiveSelectorChanged:
 		{
 			HT_View newView = reinterpret_cast<HT_View>(ioParam);
 			URDFUtilities::StHTEventMasking saveMask(mHTPane, HT_EVENT_NO_NOTIFICATION_MASK);
@@ -696,7 +695,7 @@ CShackRDFCoordinator :: BuildHTPane ( const char* inURL, unsigned int inCount,
 		// the title bar to update the title.
 		HT_View view =  HT_GetSelectedView(mHTPane);
 		SelectView ( view );		
-		BroadcastMessage ( CNavCenterSelectorPane::msg_ActiveSelectorChanged, view );
+		BroadcastMessage ( CRDFCoordinator::msg_ActiveSelectorChanged, view );
 	}
 
 } // BuildHTPane

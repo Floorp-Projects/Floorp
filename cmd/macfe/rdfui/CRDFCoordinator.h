@@ -86,6 +86,9 @@ protected:
 	
 public:
 	enum { class_ID = 'RCoo', pane_ID = 'RCoo' };
+	enum {
+		msg_ActiveSelectorChanged	= 'selc'		// broadcast when selector changes
+	};
 
 		// Set the current workspace to a particular kind of workspace
 	virtual void SelectView ( HT_ViewType inPane ) ;
