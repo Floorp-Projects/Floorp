@@ -80,6 +80,7 @@ LINCS=													\
 		-I$(PUBLIC)\raptor								\
 		-I$(PUBLIC)\netlib								\
 		-I$(PUBLIC)\pref								\
+		-I$(PUBLIC)\mime								\
 		 $(NULL)
 
 LCFLAGS =		   \
