@@ -273,5 +273,5 @@ protected:
 									Boolean	&outUsesMark,
 									Char16	&outMark,
 									Str255	outName);
-
+	
 }; // CPopdownRDFCoordinator

@@ -377,8 +377,10 @@ void CRDFCoordinator::HandleNotification(
 //
 void CRDFCoordinator::SelectView(HT_View view)
 {
-	if ( view )
+	if ( view ) {
 		mTreePane->OpenView(view);
+		BroadcastMessage ( CRDFCoordinator::msg_ActiveSelectorChanged, view );
+	}
 	
 } // SelectView
 
@@ -731,7 +733,6 @@ CShackRDFCoordinator :: BuildHTPane ( const char* inURL, unsigned int inCount,
 		// the title bar to update the title.
 		HT_View view =  HT_GetSelectedView(mHTPane);
 		SelectView ( view );		
-		BroadcastMessage ( CRDFCoordinator::msg_ActiveSelectorChanged, view );
 	}
 
 } // BuildHTPane
@@ -812,10 +813,10 @@ CPopdownRDFCoordinator :: ~CPopdownRDFCoordinator ( )
 void
 CPopdownRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
 {
-	// out with the old
-	if ( mHTPane )
+	// out with the old, but only if it is not the pane originating d&d. 
+	if ( mHTPane != CPopdownFlexTable::HTPaneOriginatingDragAndDrop() )
 		HT_DeletePane ( mHTPane );
-
+	
 	// in with the new
 	mHTPane = CreateHTPane ( inNode );
 	if ( mHTPane ) {
