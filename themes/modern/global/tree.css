@@ -27,6 +27,10 @@ treeitem[selected="true"] > treerow {
 	color: white;
 	background-color: #336699;
 }
+treeitem[dd-dropon="true"] > treerow { 
+	color: white;
+	background-color: #336699;
+}
 
 treecell { 
   white-space: nowrap;

@@ -38,6 +38,10 @@ treeitem[selected="true"] > treerow {
 	color: #000000;
 	background-color: Highlight;
 }
+treeitem[dd-dropon="true"] > treerow { 
+	color: #000000;
+	background-color: Highlight;
+}
 
 treecell { 
   white-space: nowrap;

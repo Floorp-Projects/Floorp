@@ -25,6 +25,10 @@ treeitem[selected="true"] > treerow {
 	color: highlighttext;
 	background-color: highlight;
 }
+treeitem[dd-dropon="true"] > treerow { 
+	color: highlighttext;
+	background-color: highlight;
+}
 
 treecell 
   { 
