@@ -47,6 +47,7 @@ $build{most} 			= 0;			# turn off to do individual builds
 $build{dist} 			= 0;
 $build{dist_runtime}	= 0;			# implied by $build{dist}
 $build{idl}             = 0;
+$build{xpidl}			= 0;
 $build{resources} 		= 0;
 $build{stubs} 			= 0;
 $build{runtime}			= 0;
