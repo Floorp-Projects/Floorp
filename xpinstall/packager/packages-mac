@@ -108,7 +108,6 @@ viewer:Components:netwerk.xpt
 viewer:Components:Network.shlb 
 viewer:Components:nkcache.shlb 
 viewer:Components:nkcache.xpt
-viewer:Components:nsCategoryManager.js
 viewer:Components:nsIStringBundle.xpt 
 viewer:Components:nslocale.shlb 
 viewer:Components:nsLocale.xpt 
