@@ -78,6 +78,12 @@ protected:
 
   PRBool IsServerImageMap();
 
+  void TranslateEventCoords(nsIPresContext& aPresContext,
+                            const nsPoint& aPoint,
+                            nsPoint& aResult);
+
+  void GetAnchorHREF(nsString& aResult);
+
   PRIntn GetSuppress();
 
   void MeasureString(const PRUnichar*     aString,
