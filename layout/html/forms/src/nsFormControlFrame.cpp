@@ -275,8 +275,10 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
       SetView(view);
     }
 
+    PRInt32 type;
+    GetType(&type);
  	const nsIID& id = GetCID();
-    if (PR_TRUE == supportsWidgets) {
+    if ((NS_FORM_INPUT_HIDDEN != type) && (PR_TRUE == supportsWidgets)) {
 	    // Do the following only if a widget is created
       nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
       view->CreateWidget(id, initData);
