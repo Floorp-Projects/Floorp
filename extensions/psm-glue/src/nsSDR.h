@@ -49,8 +49,6 @@ public:
 private:
   nsIPSMComponent *mPSM;
 
-  static const char *kPrefix;
-  static const char *kFailed;
   static const char *kPSMComponentProgID;
 
   nsresult encode(const unsigned char *data, PRInt32 dataLen, char **_retval);
