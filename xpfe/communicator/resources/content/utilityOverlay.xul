@@ -138,9 +138,10 @@
 	<!-- Help Menu -->
 	<menu id="menu_Help" value="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
 		<menupopup id="helpPopup" oncreate="helpMenuCreate()">
-			<menuitem value="&releaseCommCmd.label;" id="releaseUrl"  />
+			<menuitem accesskey="&releaseCommCmd.accesskey;" value="&releaseCommCmd.label;" id="releaseUrl"  />
 			<menuseparator />
-			<menuitem value="&aboutCommCmd.label;" name="&aboutCommCmd.label;" id="releaseName" oncommand="goAboutDialog();"/>
+			<menuitem accesskey="&aboutCommCmd.accesskey;" value="&aboutCommCmd.label;"
+				name="&aboutCommCmd.label;" id="releaseName" oncommand="goAboutDialog();"/>
 		</menupopup>
 	</menu>
 	

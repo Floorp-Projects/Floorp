@@ -1,4 +1,3 @@
-
 <!-- these things need to move into utilityOverlay.xul -->
 <!ENTITY  offlineGoOfflineCmd.label                 "Work Offline">
 <!ENTITY  offlineGoOfflineCmd.accesskey             "w">
@@ -66,6 +65,7 @@
 <!ENTITY helpMenu.label					"Help"> 
 <!ENTITY helpMenu.accesskey				"h"> 
 <!ENTITY helpContentCmd.label				"Help Contents">  
+<!ENTITY helpContentCmd.accesskey			"h">
 <!ENTITY referenceLibraryCmd.label			".Reference Library">  
 <!ENTITY releaseNotesCmd.label				".Release Notes">  
 <!ENTITY productInfoCmd.label				".Product Information and Support">  
@@ -95,5 +95,7 @@
 <!ENTITY interUsersCmd.label				"International Users">  
 <!-- LOCALIZATION NOTE  (helpAtCmd.label): Do NOT translate "Netscape.com" -->
 <!ENTITY helpAtCmd.label				"Help at Netscape.com">
-<!ENTITY releaseCommCmd.label				"Release Notes">
+<!ENTITY releaseCommCmd.label			"Release Notes">
+<!ENTITY releaseCommCmd.accesskey		"r">
 <!ENTITY aboutCommCmd.label				"About">
+<!ENTITY aboutCommCmd.accesskey			"a">
