@@ -43,7 +43,7 @@ extern "C" void NS_SetupRegistry();
 
 static const std::string c_szPrefsFile     = "prefs50.js";
 static const std::string c_szPrefsHomePage = "browser.startup.homepage";
-static const std::string c_szDefaultPage   = "resource://res/MozillaControl.html";
+static const std::string c_szDefaultPage   = "resource:/res/MozillaControl.html";
 
 BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 

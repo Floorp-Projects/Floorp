@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
-<?xml-stylesheet href="resource://res/rdf/customize.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/rdf/customize.css" type="text/css"?>
 
 <!DOCTYPE window> 
 
@@ -11,7 +11,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();">
 
-<html:script src="resource://res/rdf/customize.js" />
+<html:script src="resource:/res/rdf/customize.js" />
 
 <box align="vertical" flex="100%" id="main-box">
 

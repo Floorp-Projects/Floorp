@@ -46,7 +46,7 @@ nsMacCharset::nsMacCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
-  nsAutoString propertyURL("resource://res/maccharset.properties");
+  nsAutoString propertyURL("resource:/res/maccharset.properties");
 
   nsURLProperties *info = new nsURLProperties( propertyURL );
 

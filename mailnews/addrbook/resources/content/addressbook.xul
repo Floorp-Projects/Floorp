@@ -90,7 +90,7 @@
 <html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>
 <!--
 <html:script language="JavaScript" src="chrome://messenger/content/commandglue.js"/>
-<html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
+<html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
 -->
 	<menubar>
 		<menu id="fileMenu" name="&fileMenu.label;">

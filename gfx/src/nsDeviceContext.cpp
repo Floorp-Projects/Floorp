@@ -375,7 +375,7 @@ NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
 
   // Build the URL string
   char  url[128];
-  sprintf(url, "resource://res/gfx/icon_%d.gif", aId);
+  sprintf(url, "resource:/res/gfx/icon_%d.gif", aId);
 
   // Use a sync net context
   ilINetContext* netContext;

@@ -17,7 +17,7 @@
     }
 
     // the location of the flash registry.
-    var localSoftwareUpdateRegistry = 'resource://res/rdf/SoftwareUpdates.rdf'; 
+    var localSoftwareUpdateRegistry = 'resource:/res/rdf/SoftwareUpdates.rdf'; 
 
     function Init()
     {

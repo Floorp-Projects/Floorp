@@ -137,7 +137,7 @@
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("resource://res/rdf/bookmarks.xul",window);
+      toolkitCore.ShowWindow("resource:/res/rdf/bookmarks.xul",window);
     }
   }
 

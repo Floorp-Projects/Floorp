@@ -16,14 +16,14 @@
        <RDF:Description ID="Headlines">
          <NC:title>Headlines</NC:title>
          <NC:content>http://my.netscape.com/topstories_subchannel.tmpl</NC:content>
-         <NC:customize>resource://res/samples/related-panel-cust.xul</NC:customize>
+         <NC:customize>resource:/res/samples/related-panel-cust.xul</NC:customize>
        </RDF:Description>
     </RDF:li>
     <RDF:li>
        <RDF:Description ID="Local News">
          <NC:title>Local News</NC:title>
          <NC:content>http://my.netscape.com/localnews_content.tmpl</NC:content>
-         <NC:customize>resource://res/rdf/flash-cust.xul</NC:customize>
+         <NC:customize>resource:/res/rdf/flash-cust.xul</NC:customize>
        </RDF:Description>
     </RDF:li>
     <RDF:li>

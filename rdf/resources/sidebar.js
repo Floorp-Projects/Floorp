@@ -141,7 +141,7 @@ function resize(id) {
 }
 
 function customize() {
-	var newWin = window.openDialog('resource://res/rdf/customize.xul','New','chrome', sidebar.db, sidebar.resource);
+	var newWin = window.openDialog('resource:/res/rdf/customize.xul','New','chrome', sidebar.db, sidebar.resource);
 	return newWin;
 }
 

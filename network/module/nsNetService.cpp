@@ -1490,7 +1490,7 @@ extern "C" void net_ReleaseContext(MWContext *context)
 
 
 /*
- * Rewrite "resource://" URLs into file: URLs with the path of the 
+ * Rewrite "resource:/" URLs into file: URLs with the path of the 
  * executable prepended to the file path...
  */
 char *mangleResourceIntoFileURL(const char* aResourceFileName) 
