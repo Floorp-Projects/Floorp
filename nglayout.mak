@@ -50,7 +50,7 @@ W32LOBJS = $(OBJS: .= +-.)
 #
 
 !if defined(MOZ_DATE)
-CVSCO = cvs -q co -P -D $(MOZ_DATE)
+CVSCO = cvs -q co -P -D "$(MOZ_DATE)"
 !else
 CVSCO = cvs -q co -P
 !endif
