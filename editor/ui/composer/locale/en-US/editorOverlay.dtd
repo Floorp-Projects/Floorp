@@ -475,7 +475,7 @@
 
 <!-- Table Menu -->
 <!ENTITY tableMenu.label "Table">
-<!ENTITY tablemenu.accesskey "t">
+<!ENTITY tablemenu.accesskey "a">
 <!-- Select submenu -->
 <!ENTITY tableSelectMenu.label "Select">
 <!ENTITY tableselectmenu.accesskey "s">
@@ -486,18 +486,21 @@
 <!ENTITY tableTable.label "Table">
 <!ENTITY tabletable.accesskey "t">
 <!ENTITY tableRow.label "Row">
+<!ENTITY tableRows.label "Row(s)">
 <!ENTITY tablerow.accesskey "r">
 <!ENTITY tableRowAbove.label "Row Above">
 <!-- uses tablerow.accesskey -->
 <!ENTITY tableRowBelow.label "Row Below">
 <!ENTITY tablerowbelow.accesskey "b">
 <!ENTITY tableColumn.label "Column">
+<!ENTITY tableColumns.label "Column(s)">
 <!ENTITY tablecolumn.accesskey "o">
 <!ENTITY tableColumnBefore.label "Column Before">
 <!-- uses tablecolumn.accesskey -->
 <!ENTITY tableColumnAfter.label "Column After">
 <!ENTITY tablecolumnafter.accesskey "a">
 <!ENTITY tableCell.label "Cell">
+<!ENTITY tableCells.label "Cell(s)">
 <!ENTITY tablecell.accesskey "c">
 <!ENTITY tableCellContents.label "Cell Contents">
 <!ENTITY tablecellcontents.accesskey "n">

@@ -21,7 +21,14 @@
  *   Pete Collins
  *   Brian King
  */
-
+/*
+  if we ever need to use a different string bundle, use srGetStrBundle
+  by including
+  <script language="javascript" src="chrome://global/content/strres.js"/>
+  e.g.:
+  var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
+*/
+  
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
@@ -753,9 +760,14 @@ function GetLocalFileURL(filterType)
   if (filterType == "img")
     fp.appendFilters(nsIFilePicker.filterImages);
   else
-    // While we allow "All", include filters that prefer HTML and Text files
-    fp.appendFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
-  
+  {
+    // When loading into Composer, direct user to prefer HTML files and text files,
+    //   so we call separately to control the order of the filter list
+    fp.appendFilters(nsIFilePicker.filterHTML);
+    fp.appendFilters(nsIFilePicker.filterText);
+    fp.appendFilters(nsIFilePicker.filterAll);
+  }  
+
   /* doesn't handle *.shtml files */
   try {
     fp.show();

@@ -205,9 +205,23 @@ function EditorSharedStartup()
   gIsMac = !gIsWin && !gIsUNIX;
   //dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
 
+  // Set platform-specific hints for how to select cells
+  // Mac uses "Cmd", all others use "Ctrl"
+  var tableKey = GetString(gIsMac ? "XulKeyMac" : "TableSelectKey");
+  var DragStr = tableKey+GetString("Drag");
+  var ClickStr = tableKey+GetString("Click");
+
+  var DelStr = GetString(gIsMac ? "Clear" : "Del");
+
+  document.getElementById("menu_SelectCell").setAttribute("acceltext", ClickStr);
+  document.getElementById("menu_SelectRow").setAttribute("acceltext", DragStr);
+  document.getElementById("menu_SelectColumn").setAttribute("acceltext", DragStr);
+  document.getElementById("menu_SelectAllCells").setAttribute("acceltext", DragStr);
+  // And add "Del" or "Clear"
+  document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
+
   // hide UI that we don't have components for
   HideInapplicableUIElements();
-
 }
 
 function _EditorNotImplemented()
@@ -754,7 +768,7 @@ function SetEditMode(mode)
         var childCount = bodyNode.childNodes.length;
         if( childCount)
         {
-          gSourceContentWindow.value = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
+          gSourceContentWindow.setAttribute("value",editorShell.GetContentsAs("text/html", gOutputBodyOnly));
           gSourceContentWindow.focus();
           setTimeout("gSourceContentWindow.focus()", 10);
           return;
@@ -1661,22 +1675,6 @@ function EditorInitTableMenu()
     menuText = GetString("JoinCellToRight");
 
   document.getElementById("menu_tableJoinCells").setAttribute("value",menuText);
-
-  // Set platform-specific hints for how to select cells
-  // Mac uses "Cmd", all others use "Ctrl"
-  var tableKey = gIsMac ? "XulKeyMac" : "TableSelectKey";
-  tableKey = GetString(tableKey);
-  var DragStr = tableKey+GetString("Drag");
-  var ClickStr = tableKey+GetString("Click");
-
-  var DelStr = GetString(gIsMac ? "Clear" : "Del");
-
-  document.getElementById("menu_DeleteCell").setAttribute("acceltext",ClickStr);
-  document.getElementById("menu_SelectRow").setAttribute("acceltext",DragStr);
-  document.getElementById("menu_SelectColumn").setAttribute("acceltext",DragStr);
-  document.getElementById("menu_SelectAllCells").setAttribute("acceltext",DragStr);
-  // And add "Del" or "Clear"
-  document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
 
   // Set enable states for all table commands
   goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));

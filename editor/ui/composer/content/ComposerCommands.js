@@ -1074,14 +1074,25 @@ var nsJoinTableCellsCommand =
       var countObj = new Object;
       var cell = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
 
-      // We need a cell and either > 1 selected cell or a sibling cell to the right
-      // (Note that editorShell returns "td" for "th" also)
-      // (This is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
-      return ( cell && (tagNameObj.value == "td") &&
-               ( (countObj.value > 1) ||
-                  (cell.nextSibling && 
-                   (cell.nextSibling.tagName == "TD" ||
-                    cell.nextSibling.tagName == "TH")) ) );
+      // We need a cell and either > 1 selected cell or a cell to the right
+      //  (this cell may originate in a row spanned from above current row)
+      // Note that editorShell returns "td" for "th" also.
+      // (tis is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
+      if( cell && (tagNameObj.value == "td"))
+      {
+        // Selected cells
+        if (countObj.value > 1) return true;
+
+        var colSpan = cell.getAttribute("colspan");
+        if (!colSpan) colSpan = 1;
+
+        // cells with 0 span should never have cells to the right
+        // (if there is, user can select the 2 cells to join them)
+        return (colSpan != 0 &&
+                window.editorShell.GetCellAt(null, 
+                                   window.editorShell.GetRowIndex(cell), 
+                                   window.editorShell.GetColumnIndex(cell) + colSpan));
+      }
     }
     return false;
   },
@@ -1089,7 +1100,8 @@ var nsJoinTableCellsCommand =
   {
     if (this.isCommandEnabled(aCommand))
     {
-      window.editorShell.JoinTableCells();
+      // Param: Don't merge non-contiguous cells
+      window.editorShell.JoinTableCells(false);
       window._content.focus();
     }
   }
@@ -1105,12 +1117,19 @@ var nsSplitTableCellCommand =
       var tagNameObj = new Object;
       var countObj = new Object;
       var cell = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
-
       // We need a cell parent and there's just 1 selected cell 
       // or selection is entirely inside 1 cell
-      return ( cell && (tagNameObj.value == "td") && 
-               (countObj.value <= 1) &&
-               IsSelectionInOneCell() );
+      if ( cell && (tagNameObj.value == "td") && 
+           countObj.value <= 1 &&
+           IsSelectionInOneCell() )
+      {
+        var colSpan = cell.getAttribute("colspan");
+        var rowSpan = cell.getAttribute("colspan");
+        if (!colSpan) colSpan = 1;
+        if (!rowSpan) rowSpan = 1;
+        return (colSpan > 1  || rowSpan > 1 ||
+                colSpan == 0 || rowSpan == 0);
+      }
     }
     return false;
   },

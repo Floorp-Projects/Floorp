@@ -52,10 +52,14 @@ var newRowCount;
 var newColCount;
 var curRowIndex;
 var curColIndex;
+var curColSpan;
 var SelectedCellsType = 1;
 var SELECT_CELL = 1;
 var SELECT_ROW = 2;
 var SELECT_COLUMN = 3;
+var RESET_SELECTION = 0;
+var cellData = new Object;
+
 /*
 From C++:
  0 TABLESELECTION_TABLE
@@ -71,8 +75,8 @@ var selectedCellCount = 0;
 var error = 0;
 var ApplyUsed = false;
 // What should these be?
-var maxRows    = 10000;
-var maxColumns = 10000;
+var maxRows    = 1000; // This is the value gecko code uses for maximum rowspan, colspan
+var maxColumns = 1000;
 var selection;
 var CellDataChanged = false;
 
@@ -142,7 +146,8 @@ function Startup()
 
   dialog.CellHeightCheckbox = document.getElementById("CellHeightCheckbox");
   dialog.CellWidthCheckbox = document.getElementById("CellWidthCheckbox");
-  dialog.SpanCheckbox = document.getElementById("SpanCheckbox");
+  dialog.RowSpanCheckbox = document.getElementById("RowSpanCheckbox");
+  dialog.ColSpanCheckbox = document.getElementById("ColSpanCheckbox");
   dialog.CellHAlignCheckbox = document.getElementById("CellHAlignCheckbox");
   dialog.CellVAlignCheckbox = document.getElementById("CellVAlignCheckbox");
   dialog.CellStyleCheckbox = document.getElementById("CellStyleCheckbox");
@@ -175,6 +180,7 @@ function Startup()
 
     // Tells us whether cell, row, or column is selected
     SelectedCellsType = editorShell.GetSelectedCellsType(TableElement);
+    SetSpanEnable();
     
     // Ignore types except Cell, Row, and Column
     if (SelectedCellsType < SELECT_CELL || SelectedCellsType > SELECT_COLUMN)
@@ -189,21 +195,10 @@ function Startup()
     curRowIndex = editorShell.GetRowIndex(CellElement);
     curColIndex = editorShell.GetColumnIndex(CellElement);
 
-    // Get actual rowspan and colspan
-    var startRowIndexObj = new Object;
-    var startColIndexObj = new Object;
-    var rowSpanObj = new Object;
-    var colSpanObj = new Object;
-    var actualRowSpanObj = new Object;
-    var actualColSpanObj = new Object;
-    var isSelectedObj = new Object;
-    editorShell.GetCellDataAt(TableElement, curRowIndex, curColIndex, 
-                              startRowIndexObj, startColIndexObj,
-                              rowSpanObj, colSpanObj, 
-                              actualRowSpanObj, actualColSpanObj, isSelectedObj);
-
-    curRowSpan = actualRowSpanObj.value;
-    curColSpan = actualColSpanObj.value;
+    // We save the current colspan to quickly 
+    //  move selection from from cell to cell
+    if (GetCellData(curRowIndex, curColIndex))
+      curColSpan = cellData.colSpan;
 
     // Set appropriate icons in the Previous/Next buttons
     SetSelectionButtons();
@@ -368,7 +363,45 @@ dump("*****globalCellElement="+globalCellElement+", CellElement="+CellElement+"\
   }
 }
 
-//TODO: Should we validate the panel before leaving it? We don't now
+function GetCellData(rowIndex, colIndex)
+{
+  // Get actual rowspan and colspan
+  var startRowIndexObj = new Object;
+  var startColIndexObj = new Object;
+  var rowSpanObj = new Object;
+  var colSpanObj = new Object;
+  var actualRowSpanObj = new Object;
+  var actualColSpanObj = new Object;
+  var isSelectedObj = new Object;
+  if (!cellData)
+    cellData = new Object;
+
+dump("Get cell data: cellData="+cellData+"\n");
+
+  try {
+    cellData.cell = 
+      editorShell.GetCellDataAt(TableElement, rowIndex, colIndex, 
+                                startRowIndexObj, startColIndexObj,
+                                rowSpanObj, colSpanObj, 
+                                actualRowSpanObj, actualColSpanObj, isSelectedObj);
+  }
+  catch(ex) {
+    return false
+  }
+dump("Get cell data: cell="+cellData.cell+"\n");
+
+  cellData.startRowIndex = startRowIndexObj.value;  
+  cellData.startColIndex = startColIndexObj.value;  
+  cellData.startRowIndex = rowSpanObj.value;  
+  cellData.colSpan = colSpanObj.value;  
+  cellData.rowSpan = rowSpanObj.value;  
+  cellData.actualRowSpan = actualRowSpanObj.value;  
+  cellData.actualColSpan = actualColSpanObj.value;  
+  cellData.isSelected = isSelectedObj.value;  
+  return true;
+}
+
+//TODO: Should we validate the panel before leaving it?
 function SelectTableTab()
 {
   globalElement = globalTableElement;
@@ -437,20 +470,44 @@ function SetColor(ColorWellID, color)
   setColorWell(ColorWellID, color); 
 }
 
+function ChangeSelectionToFirstCell()
+{
+  if (!GetCellData(0,0))
+  {
+    dump("Can't find first cell in table!\n");
+    return;
+  }
+  CellElement = cellData.cell;
+  globalCellElement = CellElement;
+  globalElement = CellElement;
+
+  curRowIndex = 0;
+  curColIndex = 0;
+  ChangeSeletion(RESET_SELECTION);
+}
+
 function ChangeSelection(newType)
 {
 dump("ChangeSelection: newType="+newType+"\n");
   newType = Number(newType);
 
-  if (SelectedCellsType != newType)
-  {
-    SelectedCellsType = newType;
-    // Keep the same focus CellElement, just change the type
-    DoCellSelection();
-    SetSelectionButtons();
+  if (SelectedCellsType == newType)
+    return;
 
-    // Note: globalCellElement should still be a clone of CellElement
-  }
+  if (newType == RESET_SELECTION)
+    // Restore selection to existing focus cell
+    selection.collapse(CellElement,0);
+  else
+    SelectedCellsType = newType;
+
+  // Keep the same focus CellElement, just change the type
+  DoCellSelection();
+  SetSelectionButtons();
+
+  // Enable/Disable appropriate span checkboxes
+  SetSpanEnable();
+
+  // Note: globalCellElement should still be a clone of CellElement
 }
 
 function MoveSelection(forward)
@@ -538,55 +595,43 @@ function MoveSelection(forward)
   }  
 
   // Get the cell at the new location
-  var startRowIndexObj = new Object;
-  var startColIndexObj = new Object;
-  var rowSpanObj = new Object;
-  var colSpanObj = new Object;
-  var actualRowSpanObj = new Object;
-  var actualColSpanObj = new Object;
-  var isSelectedObj = new Object;
-
-dump("*** Move from row="+curRowIndex+", col="+curColIndex+" to NewRow="+newRowIndex+", NewCol="+newColIndex+"\n");
+//dump("*** Move from row="+curRowIndex+", col="+curColIndex+" to NewRow="+newRowIndex+", NewCol="+newColIndex+"\n");
   
   do {
-    focusCell = editorShell.GetCellDataAt(TableElement, newRowIndex, newColIndex, 
-                                     startRowIndexObj, startColIndexObj,
-                                     rowSpanObj, colSpanObj, 
-                                     actualRowSpanObj, actualColSpanObj, isSelectedObj);
-    if (!focusCell)
+    if (!GetCellData(newRowIndex, newColIndex))
     {
       dump("MoveSelection: CELL NOT FOUND\n");
-      return null;
+      return;
     }
     if (inRow)
     {
-      if (startRowIndexObj.value == newRowIndex)
+      if (cellData.startRowIndex == newRowIndex)
         break;
       else
         // Cell spans from a row above, look for the next cell in row
-        newRowIndex += actualRowSpanObj.value;
+        newRowIndex += cellData.actualRowSpan;
     }
     else
     {
-      if (startColIndexObj.value == newColIndex)
+      if (cellData.startColIndex == newColIndex)
         break;
       else
         // Cell spans from a Col above, look for the next cell in column
-        newColIndex += actualColSpanObj.value;
+        newColIndex += cellData.actualColSpan;
     }
   }
   while(true);
 
   // Set cell and other data
-  CellElement = focusCell;
+  CellElement = cellData.cell;
 
   globalTableCell = CellElement.cloneNode(false);
   globalElement = globalCellElement;
 
-  curRowIndex = startRowIndexObj.value;
-  curColIndex = startColIndexObj.value;
-  curRowSpan = actualRowSpanObj.value;
-  curColSpan = actualColSpanObj.value;
+  // Save globals for current cell
+  curRowIndex = cellData.startRowIndex;
+  curColIndex = cellData.startColIndex;
+  curColSpan = cellData.actualColSpan;
 
   if (CellDataChanged && dialog.ApplyBeforeMove.checked)
   {
@@ -603,7 +648,10 @@ dump("*** Move from row="+curRowIndex+", col="+curColIndex+" to NewRow="+newRowI
 
   // Reinitialize using new cell only if checkbox is not checked
   if (!dialog.KeepCurrentData.checked)
+  {
     InitCellPanel();
+    // Uncheck all the checkboxes used from last selection?
+  }
 
   // Change the selection
   DoCellSelection();
@@ -645,6 +693,14 @@ dump("SetSelectionButtons to ROW\n");
     dialog.PreviousButton.setAttribute("type","col");
     dialog.NextButton.setAttribute("type","col");
   }
+}
+
+function SetSpanEnable()
+{
+  // If entire row is selected, don't allow changing colspan...
+  dialog.RowSpanCheckbox.setAttribute("disabled", (SelectedCellsType == SELECT_COLUMN) ? "true" : "false");
+  // ...and similarly:
+  dialog.ColSpanCheckbox.setAttribute("disabled", (SelectedCellsType == SELECT_ROW) ? "true" : "false");
 }
 
 function ChooseTableImage()
@@ -840,15 +896,17 @@ function ValidateCellData()
     if (error) return false;
   }
   
-  if (dialog.SpanCheckbox.checked)
+  if (dialog.RowSpanCheckbox.checked && dialog.RowSpanCheckbox.disabled != "true")
   {
     // Note that span = 0 is allowed and means "span entire row/col"
-    ValidateNumber("ColSpanInput", null,
-                   0, colCount, globalCellElement, "colspan");
-    if (error) return false;
-
     ValidateNumber("RowSpanInput", null,
                    0, rowCount, globalCellElement, "rowspan");
+    if (error) return false;
+  }
+  if (dialog.ColSpanCheckbox.checked && dialog.ColSpanCheckbox.getAttribute("disabled") != "true")
+  {
+    ValidateNumber("ColSpanInput", null,
+                   0, colCount, globalCellElement, "colspan");
     if (error) return false;
   }
 
@@ -977,6 +1035,16 @@ function CloneAttribute(destElement, srcElement, attr)
     editorShell.SetAttribute(destElement, attr, value);
 }
 
+function ConfirmDeleteCells()
+{
+  if (0 == editorShell.ConfirmWithTitle(GetString("DeleteTableTitle"), GetString("DeleteTableMsg"),
+                                        GetString("DeleteCells"), ""))
+  {
+    return true;
+  }
+  return false;
+}
+
 function ApplyTableAttributes()
 {
   if (dialog.TableCaptionCheckbox.checked)
@@ -1021,13 +1089,154 @@ dump("Insert a table caption...\n");
     }
   }
 
-  //TODO: DOM manipulation to add/remove table rows/columns
+  var countDelta;
   if (dialog.RowsCheckbox.checked && newRowCount != rowCount)
   {
+    countDelta = newRowCount - rowCount;
+    if (newRowCount > rowCount)
+    {
+dump("New Row count="+newRowCount+", New Col Count="+newColCount+"\n");
+
+      // Append new rows
+      // Find first cell in last row
+      if(GetCellData(lastRowIndex, 0))
+      {
+dump("New Row count="+newRowCount+", New Col Count="+newColCount+"\n");
+        try {
+          // Move selection to the last cell
+          selection.collapse(cellData.cell,0);
+          // Insert new rows after it
+          editorShell.InsertTableRow(countDelta, true);
+        }
+        catch(ex) {
+          dump("FAILED TO FIND FIRST CELL IN LAST ROW\n");
+          countDelta = 0;
+        }
+      }
+    }
+    else
+    {
+      // Delete rows
+      // First, ask user if they really want to do this!
+      if (ConfirmDeleteCells())
+      {
+        // Find first cell starting in new last row
+        var newLastRow = lastRowIndex + countDelta;
+        var foundCell = false;
+        for (var i = 0; i <= lastColIndex; i++)
+        {
+          if (!GetCellData(newLastRow, i))
+          {
+            // We failed!
+            countDelta = 0;
+            break;
+          }
+          if (cellData.startRowIndex == newLastRow)
+          {
+            foundCell = true;
+            break;
+          }
+        };
+        if (foundCell)
+        {
+          try {
+            // Move selection to the cell we found
+            selection.collapse(cellData.cell, 0);
+            editorShell.DeleteTableRow(-countDelta);
+          }
+          catch(ex) {
+            dump("FAILED TO FIND FIRST CELL IN LAST ROW\n");
+            countDelta = 0;
+          }
+        }
+      }
+      else
+        countDelta != 0; // User didn't want to delete anything
+    }
+    if (countDelta != 0)
+    {
+      rowCount = newRowCount;
+      lastRowIndex = rowCount - 1;
+
+      if (curRowIndex > cellData.startRowIndex)
+        // We are deleting our selection
+        // move it to start of table
+        ChangeSelectionToFirstCell()
+      else
+        // Put selecton back where it was
+        ChangeSelection(RESET_SELECTION);
+    }
   }
 
   if (dialog.ColumnsCheckbox.checked && newColCount != colCount)
   {
+    countDelta = newColCount - colCount;
+
+    if (newColCount > colCount)
+    {
+      // Append new columns
+      // Find last cell in first column
+      if(GetCellData(0, lastColIndex))
+      {
+        try {
+          // Move selection to the last cell
+          selection.collapse(cellData.cell,0);
+          editorShell.InsertTableColumn(countDelta, true);
+        }
+        catch(ex) {
+          dump("FAILED TO FIND FIRST CELL IN LAST COLUMN\n");
+          countDelta = 0;
+        }
+      }
+    }
+    else
+    {
+      // Delete columns
+      // First, ask user if they really want to do this!
+      if (ConfirmDeleteCells())
+      {
+        var newLastCol = lastColIndex + countDelta;
+        var foundCell = false;
+        for (var i = 0; i <= lastRowIndex; i++)
+        {
+          // Find first cell starting in new last column
+          if (!GetCellData(i, newLastCol))
+          {
+            // We failed!
+            countDelta = 0;
+            break;
+          }
+          if (cellData.startColIndex == newLastCol)
+          {
+            foundCell = true;
+            break;
+          }
+        };
+        if (foundCell)
+        {
+          try {
+            // Move selection to the cell we found
+            selection.collapse(cellData.cell, 0);
+            editorShell.DeleteTableColumn(-countDelta);
+          }
+          catch(ex) {
+            dump("FAILED TO FIND FIRST CELL IN LAST ROW\n");
+            countDelta = 0;
+          }
+        }
+      }
+      else
+        countDelta != 0; // User didn't want to delete anything
+    }
+    if (countDelta != 0)
+    {
+      colCount = newColCount;
+      lastColIndex = newColCount - 1;
+      if (curColIndex > lastColIndex)
+        ChangeSelectionToFirstCell()
+      else
+        ChangeSelection(RESET_SELECTION);
+    }
   }
 
   if (dialog.TableHeightCheckbox.checked)
@@ -1076,11 +1285,11 @@ function ApplyAttributesToOneCell(destElement)
   if (dialog.CellWidthCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "width");
 
-  if (dialog.SpanCheckbox.checked)
-  {
+  if (dialog.RowSpanCheckbox.checked && dialog.RowSpanCheckbox.getAttribute("disabled") != "true")
     CloneAttribute(destElement, globalCellElement, "rowspan");
+
+  if (dialog.ColSpanCheckbox.checked && dialog.ColSpanCheckbox.getAttribute("disabled") != "true")
     CloneAttribute(destElement, globalCellElement, "colspan");
-  }
 
   if (dialog.CellHAlignCheckbox.checked)
   {
@@ -1137,7 +1346,11 @@ function Apply()
 
     // We may have just a table, so check for cell element
     if (globalCellElement)
+    {
       ApplyCellAttributes();
+      // Be sure user didn't mess up table by setting incorrect span values
+      editorShell.NormalizeTable(TableElement);
+    }
 
     editorShell.EndBatchChanges();
 
