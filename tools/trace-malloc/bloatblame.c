@@ -475,8 +475,9 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
                 (unsigned long)site->bytes.direct, (long)site->bytes.total);
     }
     nkids = 0;
+    level++;
     for (kid = site->kids; kid; kid = kid->siblings) {
-        walk_callsite_tree(kid, level + 1, nkids, fp);
+        walk_callsite_tree(kid, level, nkids, fp);
         nkids++;
     }
 
