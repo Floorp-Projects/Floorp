@@ -4939,14 +4939,14 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
         if (! mAttributes)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        nsXPIDLString attributeValue, attributeNamespaceURI, attributeName;
+        nsAutoString attributeValue;
         for (i = 0; i < mNumAttributes; ++i) {
             rv |= aStream->Read32(&number);
             mAttributes[i].mNodeInfo = do_QueryElementAt(aNodeInfos, number);
             if (!mAttributes[i].mNodeInfo)
                 return NS_ERROR_UNEXPECTED;
 
-            rv |= aStream->ReadWStringZ(getter_Copies(attributeValue));
+            rv |= aStream->ReadString(attributeValue);
             mAttributes[i].mValue.SetValue(attributeValue);
         }
 
@@ -5461,9 +5461,7 @@ nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     // Write basic prototype data
-    PRUnichar* str = nsnull;
-    rv = aStream->ReadWStringZ(&str);
-    mValue.Adopt(str);
+    rv = aStream->ReadString(mValue);
     
     return rv;
 }

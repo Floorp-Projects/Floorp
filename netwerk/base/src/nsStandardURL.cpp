@@ -2325,7 +2325,6 @@ NS_IMETHODIMP
 nsStandardURL::Read(nsIObjectInputStream *stream)
 {
     nsresult rv;
-    nsXPIDLCString buf;
     
     rv = stream->Read32(&mURLType);
     if (NS_FAILED(rv)) return rv;
@@ -2350,9 +2349,8 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     rv = stream->Read32((PRUint32 *) &mDefaultPort);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_ReadOptionalStringZ(stream, getter_Copies(buf));
+    rv = NS_ReadOptionalCString(stream, mSpec);
     if (NS_FAILED(rv)) return rv;
-    mSpec = buf;
 
     rv = ReadSegment(stream, mScheme);
     if (NS_FAILED(rv)) return rv;
@@ -2393,9 +2391,8 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     rv = ReadSegment(stream, mRef);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_ReadOptionalStringZ(stream, getter_Copies(buf));
+    rv = NS_ReadOptionalCString(stream, mOriginCharset);
     if (NS_FAILED(rv)) return rv;
-    mOriginCharset = buf;
 
     return NS_OK;
 }

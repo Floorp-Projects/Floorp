@@ -743,9 +743,9 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
     if (NS_FAILED(rv))
         return rv;
 
+    nsCAutoString filename;
     for (i = 0, n = aFooter->mNumDependencies; i < n; i++) {
-        nsXPIDLCString filename;
-        rv = ReadStringZ(getter_Copies(filename));
+        rv = ReadCString(filename);
         if (NS_FAILED(rv))
             return rv;
 
@@ -868,18 +868,16 @@ nsFastLoadFileReader::ReadMuxedDocumentInfo(nsFastLoadMuxedDocumentInfo *aInfo)
 {
     nsresult rv;
 
-    char *spec;
-    rv = ReadStringZ(&spec);
+    nsCAutoString spec;
+    rv = ReadCString(spec);
     if (NS_FAILED(rv))
         return rv;
 
     rv = Read32(&aInfo->mInitialSegmentOffset);
-    if (NS_FAILED(rv)) {
-        nsMemory::Free((void*) spec);
+    if (NS_FAILED(rv))
         return rv;
-    }
 
-    aInfo->mURISpec = spec;
+    aInfo->mURISpec = ToNewCString(spec);
     return NS_OK;
 }
 
