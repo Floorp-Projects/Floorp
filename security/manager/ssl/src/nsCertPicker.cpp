@@ -44,6 +44,10 @@
 #include "nsNSSCertificate.h"
 #include "nsINSSDialogs.h"
 #include "nsReadableUtils.h"
+#include "nsNSSCleaner.h"
+
+NSSCleanupAutoPtrClass(CERTCertNicknames, CERT_FreeNicknames)
+NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
 
 #include "cert.h"
 
@@ -76,8 +80,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
   PRUnichar **certNicknameList = nsnull;
   PRUnichar **certDetailsList = nsnull;
   CERTCertListNode* node = nsnull;
-  CERTCertificate* cert = nsnull;
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   {
     // Iterate over all certs. This assures that user is logged in to all hardware tokens.
@@ -96,68 +99,74 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
                               !allowDuplicateNicknames,
                               !allowInvalid,
                               ctx);
-  
+  CERTCertListCleaner clc(certList);
+
   if (!certList) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  
-  rv = NS_OK;
-  
+
   CERTCertNicknames *nicknames = 
     CERT_NicknameStringsFromCertList(certList,
                                      NICKNAME_EXPIRED_STRING,
                                      NICKNAME_NOT_YET_VALID_STRING);
+  CERTCertNicknamesCleaner cnc(nicknames);
 
   if (!nicknames) {
-    rv = NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
-  else {
-    certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
-    certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
 
-    PRInt32 CertsToUse;
+  certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+  certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
 
-    for (CertsToUse = 0, node = CERT_LIST_HEAD(certList);
-         !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
-         node = CERT_LIST_NEXT(node)
-        )
-    {
-      nsNSSCertificate *tempCert = new nsNSSCertificate(node->cert);
+  if (!certNicknameList || !certDetailsList) {
+    nsMemory::Free(certNicknameList);
+    nsMemory::Free(certDetailsList);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-      if (tempCert) {
+  PRInt32 CertsToUse;
 
-        // XXX we really should be using an nsCOMPtr instead of manually add-refing,
-        // but nsNSSCertificate does not have a default constructor.
+  for (CertsToUse = 0, node = CERT_LIST_HEAD(certList);
+       !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
+       node = CERT_LIST_NEXT(node)
+      )
+  {
+    nsNSSCertificate *tempCert = new nsNSSCertificate(node->cert);
 
-        NS_ADDREF(tempCert);
+    if (tempCert) {
 
-        nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[CertsToUse]));
-        nsAutoString nickWithSerial;
-        nsAutoString details;
-        
-        if (!selectionFound) {
-          if (i_nickname == nsDependentString(selectedNickname)) {
-            selectedIndex = CertsToUse;
-            selectionFound = PR_TRUE;
-          }
+      // XXX we really should be using an nsCOMPtr instead of manually add-refing,
+      // but nsNSSCertificate does not have a default constructor.
+
+      NS_ADDREF(tempCert);
+
+      nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[CertsToUse]));
+      nsAutoString nickWithSerial;
+      nsAutoString details;
+
+      if (!selectionFound) {
+        if (i_nickname == nsDependentString(selectedNickname)) {
+          selectedIndex = CertsToUse;
+          selectionFound = PR_TRUE;
         }
-        
-        if (NS_SUCCEEDED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details))) {
-          certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
-          certDetailsList[CertsToUse] = ToNewUnicode(details);
-        }
-        else {
-          certNicknameList[CertsToUse] = nsnull;
-          certDetailsList[CertsToUse] = nsnull;
-        }
-
-        NS_RELEASE(tempCert);
-
-        ++CertsToUse;
       }
+
+      if (NS_SUCCEEDED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details))) {
+        certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
+        certDetailsList[CertsToUse] = ToNewUnicode(details);
+      }
+      else {
+        certNicknameList[CertsToUse] = nsnull;
+        certDetailsList[CertsToUse] = nsnull;
+      }
+
+      NS_RELEASE(tempCert);
+
+      ++CertsToUse;
     }
-    
-    PRInt32 i = 0;
+  }
+
+  if (CertsToUse) {
     nsICertPickDialogs *dialogs = nsnull;
     rv = getNSSDialogs((void**)&dialogs, NS_GET_IID(nsICertPickDialogs));
 
@@ -167,47 +176,47 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
         (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
         CertsToUse, &selectedIndex, canceled);
 
-      for (i = 0; i < CertsToUse; ++i) {
-        nsMemory::Free(certNicknameList[i]);
-        nsMemory::Free(certDetailsList[i]);
-      }
-      nsMemory::Free(certNicknameList);
-      nsMemory::Free(certDetailsList);
-
       NS_RELEASE(dialogs);
     }
+  }
 
-    if (NS_SUCCEEDED(rv) && !*canceled) {
-      for (i = 0, node = CERT_LIST_HEAD(certList);
-           !CERT_LIST_END(node, certList);
-           ++i, node = CERT_LIST_NEXT(node)) {
+  PRInt32 i;
+  for (i = 0; i < CertsToUse; ++i) {
+    nsMemory::Free(certNicknameList[i]);
+    nsMemory::Free(certDetailsList[i]);
+  }
+  nsMemory::Free(certNicknameList);
+  nsMemory::Free(certDetailsList);
+  
+  if (!CertsToUse) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-        if (i == selectedIndex) {
-          nsNSSCertificate *cert = new nsNSSCertificate(node->cert);
-          if (!cert) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
+  if (NS_SUCCEEDED(rv) && !*canceled) {
+    for (i = 0, node = CERT_LIST_HEAD(certList);
+         !CERT_LIST_END(node, certList);
+         ++i, node = CERT_LIST_NEXT(node)) {
 
-          nsIX509Cert *x509 = 0;
-          nsresult rv = cert->QueryInterface(NS_GET_IID(nsIX509Cert), (void**)&x509);
-          if (NS_FAILED(rv)) {
-            break;
-          }
-
-          NS_ADDREF(x509);
-          *_retval = x509;
-          NS_RELEASE(cert);
+      if (i == selectedIndex) {
+        nsNSSCertificate *cert = new nsNSSCertificate(node->cert);
+        if (!cert) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
+
+        nsIX509Cert *x509 = 0;
+        nsresult rv = cert->QueryInterface(NS_GET_IID(nsIX509Cert), (void**)&x509);
+        if (NS_FAILED(rv)) {
+          break;
+        }
+
+        NS_ADDREF(x509);
+        *_retval = x509;
+        NS_RELEASE(cert);
+        break;
       }
     }
-
-    CERT_FreeNicknames(nicknames);
   }
 
-  if (certList) {
-    CERT_DestroyCertList(certList);
-  }
   return rv;
 }
