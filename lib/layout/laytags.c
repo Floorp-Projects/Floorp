@@ -4118,7 +4118,6 @@ lo_SetStyleSheetProperties(MWContext *context,
 
 /* return TRUE if the tag type is an empty tag. (not a container tag)
  */
-MODULE_PRIVATE /* used in layblock.c */
 Bool
 lo_IsEmptyTag(TagType type)
 {

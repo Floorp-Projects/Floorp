@@ -28,8 +28,6 @@
 #include "layers.h"
 #include "intl_csi.h"
 
-extern Bool lo_IsEmptyTag(TagType type);
-
 /* This struct is used during the processing of a <LAYER> or <ILAYER>
  * tag, but discarded after the tag is closed. It is used to store the
  * current document state while process the tag and channel everything

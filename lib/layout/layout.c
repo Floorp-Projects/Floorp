@@ -4074,6 +4074,7 @@ LO_ProcessTag(void *data_object, PA_Tag *tag, intn status)
         }
     }
 
+
 	if (top_state == NULL)
 	{
 		state = NULL;
@@ -4084,6 +4085,10 @@ LO_ProcessTag(void *data_object, PA_Tag *tag, intn status)
 	}
 	context = doc_data->window_id;
 	
+#ifdef DOM
+    if (state && context)
+        LM_ReflectTagNode(tag, state, context);
+#endif
 	/*
 	 * if we get called with abort/complete then ignore oom condition
 	 * and clean up

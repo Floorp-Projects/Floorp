@@ -52,7 +52,11 @@ CSRCS		= bullet.c \
 		  laytrav.c \
                   $(NULL)
 
-REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy
+REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy mocha
+
+ifdef DOM
+REQUIRES	+= dom
+endif
 
 include $(DEPTH)/config/config.mk
 
@@ -81,6 +85,10 @@ CPPSRCS		= streams.cpp \
 endif
 
 include $(DEPTH)/config/rules.mk
+
+ifdef DOM
+DEFINES += -DDOM=1
+endif
 
 ifneq ($(OS_ARCH),OS2)
 $(OBJDIR)/laymocha.o: laymocha.c

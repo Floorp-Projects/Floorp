@@ -35,6 +35,10 @@
 
 #include "libmocha.h"
 
+#ifdef DOM
+#include "dom.h"
+#endif
+
 #define MEMORY_ARENAS 1
 
 #define NEXT_ELEMENT	state->top_state->element_id++
@@ -658,6 +662,8 @@ typedef struct lo_DocState_struct {
 #ifdef DOM
 	Bool in_span;
 	PA_Block current_span;
+    DOM_Node *top_node;
+    DOM_Node *current_node;
 #endif
 } lo_DocState;
 
@@ -1466,6 +1472,9 @@ extern Bool lo_EditableElement(int iType);
 Bool
 lo_BumpEditablePosition(MWContext *context, lo_DocState *state,
     LO_Element **pEptr, int32 *pPosition, Bool direction);
+
+Bool
+lo_IsEmptyTag(TagType type);
 
 #ifdef MOCHA
 
