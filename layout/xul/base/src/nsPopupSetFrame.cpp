@@ -538,8 +538,11 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     nsCOMPtr<nsIContent> content;
     GetContent(getter_AddRefs(content));
     nsAutoString property;    
+    // Tooltips don't get keyboard navigation
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
-    if ( !property.EqualsWithConversion("true") && childPopup )
+    if ( ! property.EqualsWithConversion("true") && 
+           childPopup &&
+         ! mPopupType.EqualsWithConversion("tooltip") )
       childPopup->InstallKeyboardNavigator();
 
   }
