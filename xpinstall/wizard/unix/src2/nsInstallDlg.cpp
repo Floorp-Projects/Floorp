@@ -555,6 +555,7 @@ nsInstallDlg::PerformInstall()
     err = engine->Download(bCus, comps);
     if (err == E_DL_DROP_CXN)
     {
+        DLPause(NULL, NULL);
         ShowCxnDroppedDlg();
         return err;
     }
