@@ -428,11 +428,11 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
     {
         PRInt32 length, status;
 
-        length = aValue.ToInteger(&status);
+        mContentLength = aValue.ToInteger(&status);
         rv = (nsresult)status;
 
         if (NS_SUCCEEDED(rv)) {
-            SetContentLength(length);
+            SetContentLength(mContentLength);
         }
     }
 

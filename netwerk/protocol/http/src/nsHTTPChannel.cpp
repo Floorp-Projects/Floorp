@@ -751,12 +751,8 @@ nsHTTPChannel::OnStatus(nsIChannel *aChannel,
                         nsISupports *aContext,
                         const PRUnichar *aMsg) {
     nsresult rv = NS_OK;
-    if (mCallbacks) {
-        nsCOMPtr<nsIProgressEventSink> progressProxy;
-        rv = mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), 
-                getter_AddRefs(progressProxy));
-        if (NS_FAILED(rv)) return rv;
-        rv = progressProxy->OnStatus(this, aContext, aMsg);
+    if (mProgressEventSink) {
+        rv = mProgressEventSink->OnStatus(this, aContext, aMsg);
     }
     return rv;
 }
@@ -764,8 +760,8 @@ nsHTTPChannel::OnStatus(nsIChannel *aChannel,
 NS_IMETHODIMP
 nsHTTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
                                   PRUint32 aProgress, PRUint32 aProgressMax) {
-    return mProgressEventSink ? mProgressEventSink->OnProgress(this, aContext, 
-                                aProgress, aProgressMax) : NS_OK;
+  // HTTP pushes out progress via the response listener.
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
