@@ -124,7 +124,7 @@ nsTableRowFrame::nsTableRowFrame()
 {
   mBits.mMinRowSpan = 1;
   mBits.mRowIndex   = 0;
-  ResetTallestCell();
+  ResetTallestCell(0);
 }
 
 NS_IMETHODIMP
@@ -409,9 +409,9 @@ nscoord nsTableRowFrame::GetTallestCell() const
 }
 
 void 
-nsTableRowFrame::ResetTallestCell()
+nsTableRowFrame::ResetTallestCell(nscoord aRowStyleHeight)
 {
-  mTallestCell = 0;
+  mTallestCell = (NS_UNCONSTRAINEDSIZE == aRowStyleHeight) ? 0 : aRowStyleHeight;
   mMaxCellAscent = 0;
   mMaxCellDescent = 0;
 }
@@ -462,7 +462,7 @@ nsTableRowFrame::CalcTallestCell()
   if (NS_FAILED(rv)) return;
 
   nscoord cellSpacingX = tableFrame->GetCellSpacingX();
-  ResetTallestCell();
+  ResetTallestCell(0);
 
   for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     nsCOMPtr<nsIAtom> frameType;
@@ -818,7 +818,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
   }
 
   nsresult rv = NS_OK;
-  ResetTallestCell();
+  ResetTallestCell(aReflowState.reflowState.mComputedHeight);
 
   nsSize  localKidMaxElementSize(0,0);
   nsSize* kidMaxElementSize = (aDesiredSize.maxElementSize) ? &localKidMaxElementSize : nsnull;
@@ -1067,7 +1067,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
                                PRBool               aDoSiblings)
 {
   nsresult  rv = NS_OK;
-  ResetTallestCell();
+  ResetTallestCell(aReflowState.reflowState.mComputedHeight);
 
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize(0,0);
