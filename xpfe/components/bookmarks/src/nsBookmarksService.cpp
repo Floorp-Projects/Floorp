@@ -27,6 +27,7 @@
 #include "nsFileStream.h"
 #include "nsIBookmarksService.h"
 #include "nsIComponentManager.h"
+#include "nsIDOMWindow.h"
 #include "nsIGenericFactory.h"
 #include "nsIProfile.h"
 #include "nsIRDFContainer.h"
@@ -35,6 +36,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsSpecialSystemDirectory.h"
@@ -2005,60 +2007,47 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 				NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
 				if (NS_SUCCEEDED(rv))
 				{
-					nsCOMPtr<nsIURI> urlObj;
-					const char *chromeURLStr = "chrome://navigator/content";
-					if (NS_SUCCEEDED(rv))
-					{
-						nsCOMPtr<nsIURI>	url;
-						if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), chromeURLStr)))
-						{
-							appShell->PushThreadEventQueue();
+          // get a parent window for the new browser window
+          nsCOMPtr<nsIWebShellWindow> parent;
+          appShell->GetHiddenWindow(getter_AddRefs(parent));
 
-							nsCOMPtr<nsIWebShellWindow>	window;
-							if (NS_SUCCEEDED(rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, PR_FALSE,
-								NS_CHROME_ALL_CHROME, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT, getter_AddRefs(window))))
-							{
-								nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(window));
-								if (browser)
-									browser->SetChrome(NS_CHROME_ALL_CHROME);
-
-								// Spin into the modal loop.
-								nsIAppShell *subshell;
-								rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
-								if (NS_SUCCEEDED(rv))
-								{
-									subshell->Create(0, nsnull);
-									subshell->Spinup(); // Spin up 
-
-									// Specify that we want the window to remain locked until the chrome has loaded.
-									window->LockUntilChromeLoad();
-									PRBool locked = PR_FALSE;
-									nsresult looprv = NS_OK;
-									window->GetLockedState(locked);
-									while (NS_SUCCEEDED(looprv) && locked)
-									{
-										void      *data;
-										PRBool    isRealEvent;
-
-										looprv = subshell->GetNativeEvent(isRealEvent, data);
-										subshell->DispatchNativeEvent(isRealEvent, data);
-
-										window->GetLockedState(locked);
-									}
-									subshell->Spindown();
-									NS_RELEASE(subshell);
-								}
-								appShell->PopThreadEventQueue();
-
-								nsCOMPtr<nsIWebShell>	content;
-								if (NS_SUCCEEDED(rv = window->GetContentShellById(nsAutoString("content"),
-									getter_AddRefs(content))))
-								{
-									content->LoadURL(nsAutoString(uri).GetUnicode() /* , "view" */);
-								}
-							}
-						}
-					}
+          // convert it to a DOMWindow
+          if (parent)
+          {
+            nsCOMPtr<nsIWebShell> webshell;
+            parent->GetWebShell(*getter_AddRefs(webshell));
+            if (webshell)
+            {
+              nsCOMPtr<nsIDOMWindow> domParent;
+              parent->ConvertWebShellToDOMWindow(webshell, getter_AddRefs(domParent));
+              if (domParent)
+              {
+                // extract its JS context and create JS-flavor arguments
+                nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(domParent);
+                if (sgo)
+                {
+                  nsCOMPtr<nsIScriptContext> context;
+                  sgo->GetContext(getter_AddRefs(context));
+                  if (context)
+                  {
+                    JSContext *jsContext = (JSContext*)context->GetNativeContext();
+                    if (jsContext)
+                    {
+                      void *stackPtr;
+                      jsval *argv = JS_PushArguments(jsContext, &stackPtr, "s", uri);
+                      if (argv)
+                      {
+                        // open the window
+                        nsIDOMWindow *newWindow;
+                        domParent->Open(jsContext, argv, 1, &newWindow);
+                        JS_PopArguments(jsContext, stackPtr);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
 				}
 			}
 		}
