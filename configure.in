@@ -3163,6 +3163,24 @@ MOZ_ARG_ENABLE_STRING(reorder,
 
 dnl ========================================================
 dnl =
+dnl = --enable-timeline
+dnl = 
+dnl = Enable timeline service, which provides lightweight
+dnl = instrumentation of mozilla for performance measurement.
+dnl = 
+dnl = Timeline is off by default.
+dnl = 
+dnl ========================================================
+MOZ_TIMELINE=0
+MOZ_ARG_ENABLE_STRING(timeline,
+[  --enable-timeline Enable timeline ],
+    [ if test "$enableval" != "no"; then
+            AC_DEFINE(MOZ_TIMELINE)
+	    MOZ_TIMELINE=1
+      fi ])
+
+dnl ========================================================
+dnl =
 dnl = --disable-debug
 dnl = 
 dnl = Disable building with debug info.
@@ -4068,6 +4086,7 @@ AC_SUBST(MOZ_OS2_EMX_OBJECTFORMAT)
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_REORDER)
+AC_SUBST(MOZ_TIMELINE)
 
 dnl system JPEG support
 dnl ========================================================

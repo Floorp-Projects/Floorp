@@ -254,7 +254,7 @@ ifeq ($(MOZ_REORDER),1)
 LDSCRIPT = ldscript
 LDFLAGS += -Wl,-T,$(LDSCRIPT)
 GARBAGE += $(LDSCRIPT)
-ORDERFILE = mozilla-bin.order
+ORDERFILE = $(srcdir)/mozilla-bin.order
 
 $(PROGRAM) : $(LDSCRIPT) $(ORDERFILE)
 

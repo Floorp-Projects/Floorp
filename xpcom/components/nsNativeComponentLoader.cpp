@@ -43,6 +43,7 @@
 #include "nsCRT.h"
 
 #include "nsIObserverService.h"
+#include "nsITimelineService.h"
 
 #ifdef  XP_MAC  // sdagley dougt fix
 #include <Files.h>
@@ -91,6 +92,11 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
                                     const char *aType,
                                     nsIFactory **_retval)
 {
+    NS_TIMELINE_MARKV(("nsNativeComponentLoader::GetFactory(%s)...",
+                       aLocation));
+    NS_TIMELINE_INDENT();
+    NS_TIMELINE_START_TIMER("nsNativeComponentLoader::GetFactory");
+
     nsresult rv;
 
     if (!_retval)
@@ -158,6 +164,12 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
     // this is ok to limp along.
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Factory creation failed");
     
+    NS_TIMELINE_STOP_TIMER("nsNativeComponentLoader::GetFactory");
+    NS_TIMELINE_OUTDENT();
+    NS_TIMELINE_MARKV(("...nsNativeComponentLoader::GetFactory(%s) done",
+                       aLocation));
+    NS_TIMELINE_MARK_TIMER("nsNativeComponentLoader::GetFactory");
+
     return rv;
 }
 

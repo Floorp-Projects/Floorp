@@ -84,6 +84,8 @@
 #include "nsTraceMalloc.h"
 #endif
 
+#include "nsITimelineService.h"
+
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_CMD_LINE
 #endif
@@ -1103,6 +1105,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
 static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 {
   nsresult rv;
+  NS_TIMELINE_ENTER("main1");
 
   //----------------------------------------------------------------
   // First we need to check if a previous installation occured and
@@ -1135,13 +1138,15 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   fpsetmask(0);
 #endif
 
+  NS_TIMELINE_ENTER("init event service");
   nsCOMPtr<nsIEventQueueService> eventQService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
     // XXX: What if this fails?
     rv = eventQService->CreateThreadEventQueue();
   }
+  NS_TIMELINE_LEAVE("init event service");
 
-
+  NS_TIMELINE_ENTER("init observer service");
   // Setup an autoreg obserer, so that we can update a progress
   // string in the splash screen
   nsCOMPtr<nsIObserverService> obsService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
@@ -1153,6 +1158,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
       obsService->AddObserver(splashScreenObserver, NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get());
     }
   }
+  NS_TIMELINE_LEAVE("init observer service");
 
 #if XP_MAC
   stTSMCloser  tsmCloser;
@@ -1161,6 +1167,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "Initializing AppleEvents failed");
 #endif
 
+  NS_TIMELINE_ENTER("setup registry");
   // Ask XPInstall if we need to autoregister anything new.
   PRBool needAutoReg = NS_SoftwareUpdateNeedsAutoReg();
 
@@ -1175,6 +1182,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   if (needAutoReg)  // XXX ...and autoreg was successful?
     NS_SoftwareUpdateDidAutoReg();
+  NS_TIMELINE_LEAVE("setup registry");
 
   // remove the nativeApp as an XPCOM autoreg observer
   if (obsService)
@@ -1186,6 +1194,8 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     }
   }
 
+  NS_TIMELINE_ENTER("startupNotifier");
+
   // Start up the core services:
 
   // Please do not add new things to main1() - please hook into the
@@ -1194,8 +1204,10 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   if(NS_FAILED(rv))
     return rv;
   startupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
+  NS_TIMELINE_LEAVE("startupNotifier");
 
-  
+  NS_TIMELINE_ENTER("cmdLineArgs");
+
   // Initialize the cmd line service
   nsCOMPtr<nsICmdLineService> cmdLineArgs(do_GetService(kCmdLineServiceCID, &rv));
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get command line service");
@@ -1212,9 +1224,15 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     return rv;
   }
 
+  NS_TIMELINE_LEAVE("cmdLineArgs");
+
+  NS_TIMELINE_ENTER("InstallGlobalLocale");
   rv = InstallGlobalLocale(cmdLineArgs);
   if(NS_FAILED(rv))
     return rv;
+  NS_TIMELINE_LEAVE("InstallGlobalLocale");
+
+  NS_TIMELINE_ENTER("appShell");
 
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get the appshell service");
@@ -1240,9 +1258,14 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     return rv;
   }
 
+  NS_TIMELINE_LEAVE("appShell");
+
+  NS_TIMELINE_ENTER("appShell->Initialize");
 
   // Create the Application Shell instance...
   rv = appShell->Initialize(cmdLineArgs, nativeApp);
+
+  NS_TIMELINE_LEAVE("appShell->Initialize");
 
   // We are done with the native app (or splash screen) object here;
   // the app shell owns it now.
@@ -1259,15 +1282,21 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   appShell->SetQuitOnLastWindowClosing(PR_FALSE);
 
   // Initialize Profile Service here.
+  NS_TIMELINE_ENTER("InitializeProfileService");
   rv = InitializeProfileService(cmdLineArgs);
+  NS_TIMELINE_LEAVE("InitializeProfileService");
   if (NS_FAILED(rv)) return rv;
 
   // Enumerate AppShellComponenets
+  NS_TIMELINE_ENTER("appShell->EnumerateAndInitializeComponents");
   appShell->EnumerateAndInitializeComponents();
+  NS_TIMELINE_LEAVE("appShell->EnumerateAndInitializeComponents");
 
   // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
   //      if the profile manager ever switches to using nsIDOMWindowInternal stuff, this might have to change
+  NS_TIMELINE_ENTER("appShell->CreateHiddenWindow");
   appShell->CreateHiddenWindow();
+  NS_TIMELINE_LEAVE("appShell->CreateHiddenWindow");
 
   nsCOMPtr<nsINativeAppSupport> nativeApps;
   rv = GetNativeAppSupport(getter_AddRefs(nativeApps));
@@ -1299,17 +1328,23 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     return rv;
 
   // Make sure there exists at least 1 window.
+  NS_TIMELINE_ENTER("Ensure1Window");
   rv = Ensure1Window( cmdLineArgs );
+  NS_TIMELINE_LEAVE("Ensure1Window");
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
 
   // Startup wallet service so it registers for notifications
+  NS_TIMELINE_ENTER("walletService");
   nsCOMPtr<nsIWalletService> walletService(do_GetService(NS_WALLETSERVICE_CONTRACTID, &rv));
+  NS_TIMELINE_LEAVE("walletService");
 
   // From this point on, should be true
   appShell->SetQuitOnLastWindowClosing(PR_TRUE);	
   // Start main event loop
+  NS_TIMELINE_ENTER("appShell->Run");
   rv = appShell->Run();
+  NS_TIMELINE_LEAVE("appShell->Run");
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
 
   /*
@@ -1317,6 +1352,8 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
    * method returned an error.
    */
   (void) appShell->Shutdown();
+
+  NS_TIMELINE_LEAVE("main1");
 
   return rv;
 }
@@ -1533,9 +1570,10 @@ static PRBool GetWantSplashScreen(int argc, char* argv[])
   return dosplash;
 }
 
-
 int main(int argc, char* argv[])
 {
+  NS_TIMELINE_MARK("enter main");
+
 #if defined(XP_UNIX) || defined(XP_BEOS)
   InstallUnixSignalHandlers(argv[0]);
 #endif
@@ -1607,8 +1645,12 @@ int main(int argc, char* argv[])
   NSGetStaticModuleInfo = apprunner_getModuleInfo;
 #endif
 
+  NS_TIMELINE_MARK("InitXPCom...");
+
   rv = NS_InitXPCOM(NULL, NULL);
   NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
+
+  NS_TIMELINE_MARK("...InitXPCOM done");
 
 #ifdef MOZ_ENABLE_XREMOTE
   // handle -remote now that xpcom is fired up

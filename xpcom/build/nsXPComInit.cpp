@@ -74,6 +74,7 @@
 
 #include "nsAtomService.h"
 #include "nsTraceRefcnt.h"
+#include "nsTimelineService.h"
 
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
@@ -115,6 +116,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService);
     
+#ifdef MOZ_TIMELINE
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService);
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM initialization
 //
@@ -198,6 +203,9 @@ static nsModuleComponentInfo components[] = {
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor),
     COMPONENT(EXCEPTIONSERVICE, nsExceptionServiceConstructor),
     COMPONENT(ATOMSERVICE, nsAtomServiceConstructor),
+#ifdef MOZ_TIMELINE
+    COMPONENT(TIMELINESERVICE, nsTimelineServiceConstructor),
+#endif
     COMPONENT(OBSERVER, nsObserver::Create),
     COMPONENT(OBSERVERSERVICE, nsObserverService::Create),
     COMPONENT(GENERICFACTORY, nsGenericFactory::Create),

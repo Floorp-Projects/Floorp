@@ -49,6 +49,7 @@
 
 #include "nsXPIDLString.h"
 #include "prproces.h"
+#include "nsITimelineService.h"
 
 // certainly not all the error that can be 
 // encountered, but many of them common ones
@@ -1150,7 +1151,10 @@ nsLocalFile::Load(PRLibrary * *_retval)
     if (! isFile)
         return NS_ERROR_FILE_IS_DIRECTORY;
 
+    NS_TIMELINE_START_TIMER("PR_LoadLibrary");
     *_retval =  PR_LoadLibrary(mResolvedPath);
+    NS_TIMELINE_STOP_TIMER("PR_LoadLibrary");
+    NS_TIMELINE_MARK_TIMER("PR_LoadLibrary");
     
     if (*_retval)
         return NS_OK;
