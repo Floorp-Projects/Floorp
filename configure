@@ -3890,8 +3890,8 @@ fi
 _COMPILER_PREFIX=
 
 if test "$GNU_CC"; then
-    MKSHLIB='$(CXX) $(DSO_LDOPTS)'
-    MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$@'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
@@ -4066,7 +4066,7 @@ EOF
     ;;
 
 *-beos*)
-    MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
     DSO_LDOPTS='-nostart -Xlinker --ignore-undefined'
     TK_LIBS='-lbe -lroot'
     MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_beos.so'
@@ -4113,8 +4113,8 @@ ivacy"
 	DSO_LDOPTS='-b -Wl,+s -L$(DIST)/bin'
 	DSO_CFLAGS=""
 	DSO_PIC_CFLAGS="+Z"
-	MKSHLIB='$(CXX) $(DSO_LDOPTS)'
-	MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
+	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
     else
 	DSO_LDOPTS='-b -E +s -L$(DIST)/bin -L$(DIST)/lib'
 	MKSHLIB='$(LD) $(DSO_LDOPTS)'
@@ -4144,8 +4144,8 @@ EOF
 EOF
 
     DSO_LDOPTS='-elf -shared'
-    MKSHLIB='$(CCC) $(DSO_LDOPTS)'
-    MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+    MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_LDOPTS)'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
     if test "$GNU_CC"; then
        MKSHLIB_FORCE_ALL='-Wl,-all'
        MKSHLIB_UNFORCE_ALL='-Wl,-none'
@@ -4476,8 +4476,8 @@ EOF
     TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
     CFLAGS="$CFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
     CXXFLAGS="$CXXFLAGS -traditional-cpp -fno-common -I/System/Library/Frameworks/Carbon.framework/Headers"
-    MKSHLIB='$(CXX) -arch ppc $(DSO_LDOPTS)'
-    MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+    MKSHLIB='$(CXX) $(CXXFLAGS) -arch ppc $(DSO_LDOPTS)'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
     MKSHLIB_FORCE_ALL=''
     MKSHLIB_UNFORCE_ALL=''
     ;;
@@ -4509,8 +4509,8 @@ EOF
 EOF
 
        LDFLAGS='-xildoff'
-       MKSHLIB='$(CXX) $(DSO_LDOPTS)'
-       MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
        DSO_LDOPTS='-G -h $@'
@@ -4535,8 +4535,8 @@ EOF
            ;;
        esac
     else
-       MKSHLIB='$(CXX) $(DSO_LDOPTS)'
-       MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS)'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS)'
        DSO_LDOPTS='-G -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
