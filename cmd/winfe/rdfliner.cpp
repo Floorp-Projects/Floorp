@@ -1638,6 +1638,19 @@ COLORREF Brighten(COLORREF r)
 	return RGB(newR, newG, newB);
 }
 
+void ResolveToPaletteColor(COLORREF& color, HPALETTE hPal)
+{
+	int index = ::GetNearestPaletteIndex(hPal, color);
+
+    PALETTEENTRY palEntry;
+    ::GetPaletteEntries(hPal, index, 1, &palEntry);
+    unsigned uRed   = palEntry.peRed;
+    unsigned uGreen = palEntry.peGreen;
+    unsigned uBlue  = palEntry.peBlue;
+
+	color = RGB(uRed, uGreen, uBlue);
+}
+
 void CRDFOutliner::OnPaint()
 {
 	m_bPaintingFirstObject = TRUE;
@@ -1645,27 +1658,6 @@ void CRDFOutliner::OnPaint()
 	RECT rcClient;
 	GetClientRect(&rcClient);
     CPaintDC pdc ( this );
-
-/*
-	COLORREF bgColor = GetSysColor(COLOR_WINDOW);
-	COLORREF textColor = GetSysColor(COLOR_WINDOWTEXT);
-	COLORREF sortColor;
-
-	if (GetRValue(bgColor) == 255 && GetGValue(bgColor) == 255 && GetBValue(bgColor) == 255 
-		&& sysInfo.m_iBitsPerPixel > 8)
-	{
-			// Translate white to gray (HACK TO SATISFY THE MIGHTY GUHA)
-			sortColor = RGB(192,192,192);
-			bgColor = RGB(224,224,224);
-			textColor = RGB(0,0,0);
-	}
-	else
-	{
-		if (((GetRValue(textColor) + GetGValue(textColor) + GetBValue(textColor))/3) > 128)
-			sortColor = Darken(bgColor);
-		else sortColor = Brighten(bgColor);
-	}
-*/
 
 	// Read in all the properties
 	HT_Resource top = HT_TopNode(m_View);
@@ -1691,6 +1683,7 @@ void CRDFOutliner::OnPaint()
 		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
 			m_bHasPipes = FALSE;
 	}
+	else m_bHasPipes = TRUE;
 
 	// Sort foreground color
 	HT_GetNodeData(top, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING, &data);
@@ -1725,9 +1718,25 @@ void CRDFOutliner::OnPaint()
 
 	// Divider color
 	m_DividerColor = RGB(255,255,255);
+	m_bDrawDividers = FALSE;
 
-	HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
-	HPALETTE pOldPalette = ::SelectPalette(pdc.m_hDC, hPalette, TRUE);	
+	HPALETTE pOldPalette = NULL;
+	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(pdc.m_hDC, RASTERCAPS) & RC_PALETTE))
+	{
+		// Use the palette, since we have less than 16 bits per pixel and are
+		// using a palette-based device.
+		HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
+		::SelectPalette(pdc.m_hDC, hPalette, FALSE);	
+
+		// Find the nearest match in our palette for our colors.
+		ResolveToPaletteColor(m_BackgroundColor, hPalette);
+		ResolveToPaletteColor(m_ForegroundColor, hPalette);
+		ResolveToPaletteColor(m_SelectionForegroundColor, hPalette);
+		ResolveToPaletteColor(m_SelectionBackgroundColor, hPalette);
+		ResolveToPaletteColor(m_SortBackgroundColor, hPalette);
+		ResolveToPaletteColor(m_SortForegroundColor, hPalette);
+		ResolveToPaletteColor(m_DividerColor, hPalette);
+	}
 
 	HBRUSH hRegBrush = (HBRUSH) ::CreateSolidBrush(m_BackgroundColor); 
     HPEN hRegPen = (HPEN)::CreatePen( PS_SOLID, 0, m_BackgroundColor);
@@ -1787,7 +1796,10 @@ void CRDFOutliner::OnPaint()
     pdc.SelectObject ( hOldPen );
     pdc.SelectObject ( hOldBrush );
 	
-	::SelectPalette(pdc.m_hDC, pOldPalette, FALSE);
+	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(pdc.m_hDC, RASTERCAPS) & RC_PALETTE))
+	{
+		::SelectPalette(pdc.m_hDC, pOldPalette, FALSE);
+	}
 
 	VERIFY(DeleteObject( hRegBrush ));
 	VERIFY(DeleteObject( hRegPen ));
@@ -1934,14 +1946,17 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect,
 	}
 
 	// Draw the divider
-	CDC* pDC = CDC::FromHandle(hdc);
-	HPEN hDividerPen = ::CreatePen(PS_SOLID, 1, m_DividerColor);
-	HPEN pOldPen = (HPEN)::SelectObject(hdc, hDividerPen);
-	pDC->MoveTo(WinRect.left, rectColumn.bottom-1);
-	pDC->LineTo(WinRect.right, rectColumn.bottom-1);
-	::SelectObject(hdc, pOldPen);
-	VERIFY(::DeleteObject(hDividerPen));
-	
+	if (m_bDrawDividers)
+	{
+		CDC* pDC = CDC::FromHandle(hdc);
+		HPEN hDividerPen = ::CreatePen(PS_SOLID, 1, m_DividerColor);
+		HPEN pOldPen = (HPEN)::SelectObject(hdc, hDividerPen);
+		pDC->MoveTo(WinRect.left, rectColumn.bottom-1);
+		pDC->LineTo(WinRect.right, rectColumn.bottom-1);
+		::SelectObject(hdc, pOldPen);
+		VERIFY(::DeleteObject(hDividerPen));
+	}
+
     HFONT hOldFont =(HFONT) ::SelectObject ( hdc, GetLineFont ( pLineData ) );
 
     for ( iColumn = offset = 0; iColumn < m_iVisColumns; iColumn++ )
@@ -1956,9 +1971,8 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect,
 			{
 				hSortBrush = (HBRUSH)::CreateSolidBrush(m_SortBackgroundColor);
 				CRect tempRect(rectColumn);
-				tempRect.bottom--;
-				if (iColumn == m_iVisColumns-1)
-				  tempRect.right = WinRect.right;
+				if (m_bDrawDividers)
+					tempRect.bottom--;
 				::FillRect(hdc, &tempRect, hSortBrush);
 				VERIFY(DeleteObject(hSortBrush));
 			}
@@ -1966,8 +1980,8 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect,
 			if ( m_pColumn[ iColumn ]->iCommand == m_idImageCol ) 
 			{
 				rectColumn.left = DrawPipes ( iLineNo, iColumn, offset, hdc, pLineData );
-				rectColumn.left += OUTLINE_TEXT_OFFSET;
 			}
+		
             PaintColumn ( iLineNo, iColumn, rectColumn, hdc, pLineData, hHighlightBrush,
 						  hHighlightPen );
 		}
@@ -1980,11 +1994,11 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect,
 
 	if (!(m_pBackgroundImage && m_pBackgroundImage->SuccessfullyLoaded()))
 	{
-		rectColumn.bottom--; // Handle the divider
+		if (m_bDrawDividers)
+			rectColumn.bottom--; // Handle the divider
 		::FillRect(hdc, &rectColumn, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
+		PaintColumn ( iLineNo, iColumn, rectColumn, hdc, pLineData, hHighlightBrush, hHighlightPen );
 	}
-
-	PaintColumn ( iLineNo, iColumn, rectColumn, hdc, pLineData, hHighlightBrush, hHighlightPen );
 
 	rectColumn.left = WinRect.left;
 	rectColumn.right = WinRect.right;
@@ -2004,8 +2018,9 @@ void CRDFOutliner::PaintColumn(int iLineNo, int iColumn, LPRECT lpColumnRect,
 {
     if (iColumn < m_iVisColumns) 
 	{
-		const char* lpsz = GetColumnText (m_pColumn[ iColumn ]->iCommand,pLineData);
 		HT_Resource theNode = (HT_Resource)pLineData;
+		const char* lpsz = GetColumnText (m_pColumn[ iColumn ]->iCommand,pLineData);
+		
 		if (theNode && HT_IsSeparator(theNode))
 		{
 			// Alter the column text name.
@@ -2274,13 +2289,18 @@ int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void
 	{
         idx = TranslateIcon (pLineData);
 		HT_Resource r = (HT_Resource)pLineData;
-		if (idx == HTFE_USE_CUSTOM_IMAGE)
-		  DrawArbitraryURL(r, rect.left, rect.top, 16, 16, hdc, ::GetBkColor(hdc), this, FALSE);
-		else if (idx == HTFE_LOCAL_FILE)
-		  DrawLocalFileIcon(r, rect.left, rect.top, hdc);
-		else m_pIUserImage->DrawTransImage ( idx, rect.left, rect.top, hdc );
+		if (!HT_IsSeparator(r))
+		{
+			if (idx == HTFE_USE_CUSTOM_IMAGE)
+				DrawArbitraryURL(r, rect.left, rect.top, 16, 16, hdc, ::GetBkColor(hdc), this, FALSE);
+			else if (idx == HTFE_LOCAL_FILE)
+				DrawLocalFileIcon(r, rect.left, rect.top, hdc);
+			else m_pIUserImage->DrawTransImage ( idx, rect.left, rect.top, hdc );
+		}
+		else return rect.left;
     }
-	return rect.right;
+
+	return rect.right + OUTLINE_TEXT_OFFSET;
 }
 
 
