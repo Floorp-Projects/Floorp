@@ -197,8 +197,13 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
     // Perform a selection
 	  if (((nsMouseEvent *)aEvent)->isShift)
 	    mTreeFrame->RangedSelection(aPresContext, this); // Applying a ranged selection.
+#ifdef XP_MAC
+    else if (((nsMouseEvent *)aEvent)->isCommand)
+      mTreeFrame->ToggleSelection(aPresContext, this);
+#else
 	  else if (((nsMouseEvent *)aEvent)->isControl)
 	    mTreeFrame->ToggleSelection(aPresContext, this); // Applying a toggle selection.
+#endif
 	  else mTreeFrame->SetSelection(aPresContext, this); // Doing a single selection only.
   }
   return NS_OK;
