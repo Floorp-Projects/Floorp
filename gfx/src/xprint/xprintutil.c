@@ -41,6 +41,8 @@
 #include <errno.h>
 
 #ifdef XPU_USE_NSPR
+#include "plstr.h"
+#undef strtok_r
 #define strtok_r(s1, s2, x) PL_strtok_r((s1), (s2), (x))
 #endif /* USE_MOZILLA_TYPES */
 
@@ -51,6 +53,19 @@
 #define MAKE_STRING_WRITABLE(str) (((str)?((str) = strdup(str)):0))
 #define FREE_WRITABLE_STRING(str) free((void *)(str))
 #define STRING_AS_WRITABLE(str) ((char *)(str))
+
+/* Local prototypes */
+static const char *XpuGetDefaultXpPrintername(void);
+static const char *XpuGetXpServerList( void );
+static const char *XpuEnumerateXpAttributeValue( const char *value, void **vcptr );
+static const char *XpuGetCurrentAttributeGroup( void **vcptr );
+static void XpuDisposeEnumerateXpAttributeValue( void **vc );
+static Bool XpuEnumerateMediumSourceSizes( Display *pdpy, XPContext pcontext,
+                                           const char **tray_name,
+                                           const char **medium_name, int *mbool, 
+                                           float *ma1, float *ma2, float *ma3, float *ma4,
+                                           void **vcptr );
+static void XpuDisposeEnumerateMediumSourceSizes( void **vc );
 
 /*
 ** XprintUtil functions start with Xpu
@@ -76,7 +91,33 @@ int XpuCheckExtension( Display *pdpy )
   return(0);
 }
 
+/* Get the default printer name from the XPRINTER env var.
+ * If XPRINTER env var is not present looks for PDPRINTER, LPDEST, and
+ * PRINTER (in that order)
+ * See CDE's DtPrintSetupBox(3) manual page, too...
+ */
+static
+const char *XpuGetDefaultXpPrintername(void)
+{
+  const char *s;
+  /* BUG/TODO: XpPrinter resource needs to be sourced, too... */
+  s = getenv("XPRINTER");
+  if( !s )
+  {
+    s = getenv("PDPRINTER");
+    if( !s )
+    {
+      s = getenv("LPDEST");
+      if( !s )
+      {
+        s = getenv("PRINTER");
+      }
+    }
+  }  
+  return s;
+}
 
+static
 const char *XpuGetXpServerList( void )
 {
   const char *s;
@@ -203,15 +244,40 @@ int XpuGetPrinter( const char *arg_printername, Display **pdpyptr, XPContext *pc
 }
 
 
+void XpuClosePrinterDisplay(Display *pdpy, XPContext pcontext)
+{
+  if( pdpy )
+  {
+    if( pcontext != None )
+      XpDestroyContext(pdpy, pcontext);
+      
+    XCloseDisplay(pdpy);
+  }
+}
+
 void XpuSetOneAttribute( Display *pdpy, XPContext pcontext, 
                          XPAttributes type, const char *attribute_name, const char *value, XPAttrReplacement replacement_rule )
 {
   /* Alloc buffer for sprintf() stuff below */
-  char *buffer = malloc(strlen(attribute_name)+strlen(value)+4);
+  char *buffer = (char *)malloc(strlen(attribute_name)+strlen(value)+4);
   
   if( buffer != NULL )
   {
     sprintf(buffer, "%s: %s", attribute_name, value);      
+    XpSetAttributes(pdpy, pcontext, type, buffer, replacement_rule);
+    free(buffer);
+  }  
+}
+
+void XpuSetOneLongAttribute( Display *pdpy, XPContext pcontext, 
+                             XPAttributes type, const char *attribute_name, long value, XPAttrReplacement replacement_rule )
+{
+  /* Alloc buffer for sprintf() stuff below */
+  char *buffer = (char *)malloc(strlen(attribute_name)+32+4);
+  
+  if( buffer != NULL )
+  {
+    sprintf(buffer, "%s: %ld", attribute_name, value);      
     XpSetAttributes(pdpy, pcontext, type, buffer, replacement_rule);
     free(buffer);
   }  
@@ -237,18 +303,18 @@ int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, con
   {
     const char *s;
     
-    for( s = XpuEmumerateXpAttributeValue(value, &tok_lasts) ; s != NULL ; s = XpuEmumerateXpAttributeValue(NULL, &tok_lasts) )
+    for( s = XpuEnumerateXpAttributeValue(value, &tok_lasts) ; s != NULL ; s = XpuEnumerateXpAttributeValue(NULL, &tok_lasts) )
     {
       XPU_DEBUG_ONLY(printf("XpuCheckSupported: probing '%s'=='%s'\n", XPU_NULLXSTR(s), XPU_NULLXSTR(query)));
       if( !strcmp(s, query) )
       {
         XFree(value);
-        XpuDisposeEmumerateXpAttributeValue(&tok_lasts);
+        XpuDisposeEnumerateXpAttributeValue(&tok_lasts);
         return(1);
       }  
     }
     
-    XpuDisposeEmumerateXpAttributeValue(&tok_lasts);
+    XpuDisposeEnumerateXpAttributeValue(&tok_lasts);
     XFree(value);
   }  
   
@@ -270,30 +336,6 @@ int XpuSetJobTitle( Display *pdpy, XPContext pcontext, const char *title )
   }  
 }
     
-        
-int XpuSetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, const char *orientation )
-{
-  /* fixme: check whether the given |orientation| is supported or not... */
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "content-orientations-supported", orientation) )
-  {
-    XpuSetOneAttribute(pdpy, pcontext, type, "*content-orientation", orientation, XPAttrMerge);
-    return(1);
-  }
-  else
-  {
-    XPU_DEBUG_ONLY(printf("XpuSetContentOrientation: XpuCheckSupported failed for '%s'\n", XPU_NULLXSTR(orientation)));
-    return(0);
-  }  
-}
-
-/* ToDo: Implement
-const char *XpuGetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type );
-*/
-
-/* ToDo:
-.* XpuGetPlex(), XpuSetPlex()
- */
-
 int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, long *result )
 {
   char *s;
@@ -325,7 +367,6 @@ int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type
   if( s != NULL ) 
     XFree(s);
   
-  XPU_DEBUG_ONLY(puts("XpuGetOneLongAttribute failed\n"));
   FREE_WRITABLE_STRING(attribute_name);
   
   return(0);
@@ -336,83 +377,51 @@ int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type
 /* debug only */
 void dumpXpAttributes( Display *pdpy, XPContext pcontext )
 {
-  /* BUG: values from XpuGet*Attributes should be passed to XFree() after use... :-) */
+  char *s;
   printf("------------------------------------------------\n");
-  printf("--> Job\n%s\n",     XpuGetJobAttributes(pdpy, pcontext));
-  printf("--> Doc\n%s\n",     XpuGetDocAttributes(pdpy, pcontext));
-  printf("--> Page\n%s\n",    XpuGetPageAttributes(pdpy, pcontext));
-  printf("--> Printer\n%s\n", XpuGetPrinterAttributes(pdpy, pcontext));
-  printf("--> Server\n%s\n",  XpuGetServerAttributes(pdpy, pcontext));
+  printf("--> Job\n%s\n",         s=XpuGetJobAttributes(pdpy, pcontext));     XFree(s);
+  printf("--> Doc\n%s\n",         s=XpuGetDocAttributes(pdpy, pcontext));     XFree(s);
+  printf("--> Page\n%s\n",        s=XpuGetPageAttributes(pdpy, pcontext));    XFree(s);
+  printf("--> Printer\n%s\n",     s=XpuGetPrinterAttributes(pdpy, pcontext)); XFree(s);
+  printf("--> Server\n%s\n",      s=XpuGetServerAttributes(pdpy, pcontext));  XFree(s);
   printf("image resolution %d\n", (int)XpGetImageResolution(pdpy, pcontext));
   printf("------------------------------------------------\n");
 }
 #endif /* DEBUG */    
 
 
-/* BUG: Is it really neccesary that this function eats-up all other events ? */
-void XpuWaitForPrintNotify( Display *pdpy, int detail )
+typedef struct XpuIsNotifyEventContext_
 {
-  /* Xprt |Display *| for which "event_base_return" and "error_base_return" are valid  */
-  static Display *ext_display = NULL; 
-  static int      event_base_return = -1, 
-                  error_base_return = -1;
-         XEvent   ev;
+  int event_base;
+  int detail;
+} XpuIsNotifyEventContext;
+
+static
+Bool IsXpNotifyEvent( Display *pdpy, XEvent *ev, XPointer arg )
+{
+  Bool match;
+  XpuIsNotifyEventContext *context = (XpuIsNotifyEventContext *)arg;
+  XPPrintEvent *pev = (XPPrintEvent *)ev;
   
-  /* get extension event_base if we did not get it yet (and if Xserver does not 
-   * support extension do not wait for events which will never be send... :-) 
-   */
-  if( ((event_base_return == -1) && (error_base_return == -1)) || (ext_display != pdpy) )
-  {
-    int myevent_base_return, myerror_base_return;
-    
-    if( XpQueryExtension(pdpy, &myevent_base_return, &myerror_base_return) == False )
-    {
-      XPU_DEBUG_ONLY(printf("XpuWaitForPrintNotify: XpQueryExtension failed\n"));
-      return;
-    }
-    
-    /* be sure we don't get in trouble if two threads try the same thing :-)
-     */
-    event_base_return = myevent_base_return;
-    error_base_return = myerror_base_return;
-    ext_display = pdpy;
-  }
-  
-  do 
-  {
-    XNextEvent(pdpy, &ev);
-    if( ev.type != (event_base_return+XPPrintNotify) )
-    {
-      XPU_DEBUG_ONLY(printf("XpuWaitForPrintNotify: Killing non-PrintNotify event %d/%d while waiting for %d/%d\n", 
-               (int)ev.type, (int)((XPPrintEvent *)(&ev))->detail, 
-               (int)(event_base_return+XPPrintNotify), detail));
-    }
-  } while( !((ev.type == (event_base_return+XPPrintNotify)) && (((XPPrintEvent *)(&ev))->detail == detail)) );
+  match = pev->type == (context->event_base+XPPrintNotify) && 
+          pev->detail == context->detail;
+
+  XPU_DEBUG_ONLY(printf("XpuWaitForPrintNotify: %d=IsXpNotifyEvent(%d,%d)\n",
+                 (int)match,
+                 (int)pev->type,
+                 (int)pev->detail));
+  return match;
+}
+
+void XpuWaitForPrintNotify( Display *pdpy, int xp_event_base, int detail )
+{
+  XEvent                  dummy;
+  XpuIsNotifyEventContext matchcontext;
+
+  matchcontext.event_base = xp_event_base;
+  matchcontext.detail     = detail;
+  XIfEvent(pdpy, &dummy, IsXpNotifyEvent, (XPointer)&matchcontext);
 }      
-
-/* set print resolution
- * Retun error if printer does not support this resolution
- */
-Bool XpuSetResolution( Display *pdpy, XPContext pcontext, long dpi )
-{
-  /* not implemented yet */
-  return False;
-}
-
-/* get default printer reolution
- * this function may fail in the following conditions:
- * - Xprt misconfiguration
- * - X DPI != Y DPI (not yet implemented in Xprt)
- */
-Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi_ptr )
-{
-  if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "default-printer-resolution", dpi_ptr) == 1 )
-  {
-    return True;
-  }
-
-  return False;
-}
 
 static
 const char *skip_matching_brackets(const char *start)
@@ -432,6 +441,8 @@ const char *skip_matching_brackets(const char *start)
       case '}': level--; break;
     }
   } while(level > 0);
+
+  return(s);
 }
 
 
@@ -456,18 +467,24 @@ const char *search_next_space(const char *start)
   }
 }
 
-/* PRIVATE context data for XpuEmumerateXpAttributeValue() */
+/* PRIVATE context data for XpuEnumerateXpAttributeValue() */
 typedef struct _XpuAttributeValueEnumeration
 {
-  char *value;
-  char *start;
-  char *s;
+  char   *value;
+  size_t  original_value_len; /* original length of value */
+  char   *group;
+  char   *start;
+  char   *s;
 } XpuAttributeValueEnumeration;
 
-const char *XpuEmumerateXpAttributeValue( const char *value, void **vcptr )
+
+/* Hacked parser for Xp values and enumerations */
+static
+const char *XpuEnumerateXpAttributeValue( const char *value, void **vcptr )
 {
   XpuAttributeValueEnumeration **cptr = (XpuAttributeValueEnumeration **)vcptr;
   XpuAttributeValueEnumeration  *context;
+  const char                    *tmp;
   
   if( !cptr )
     return(NULL);
@@ -476,20 +493,43 @@ const char *XpuEmumerateXpAttributeValue( const char *value, void **vcptr )
   {
     XpuAttributeValueEnumeration *e;
     const char *s = value;
+    Bool        isGroup = FALSE;
   
-    e = malloc(sizeof(XpuAttributeValueEnumeration));
+    e = (XpuAttributeValueEnumeration *)malloc(sizeof(XpuAttributeValueEnumeration));
     if( !e )
       return NULL;
   
-    /* skip leading '{'. */
-    while(*s=='{')
+    /* Skip leading '{'. */
+    while(*s=='{' && isGroup==FALSE)
+    {
       s++;
-    /* skip leading blanks or '\''. */
-    while(isspace(*s) || *s=='\'')
+      isGroup = TRUE;
+    }  
+    /* Skip leading blanks. */
+    while(isspace(*s))
       s++;
-       
-    e->start = e->s = e->value = strdup(s);    
+    
+    e->group = NULL;
+    
+    /* Read group name. */
+    if( isGroup )
+    { 
+      tmp = s;  
+      while(!isspace(*s))
+        s++;
+      if(strncmp(tmp, "''", s-tmp) != 0)
+      {
+        e->group = strdup(tmp);
+        e->group[s-tmp] = '\0';
+      }
+    }
   
+    e->original_value_len = strlen(s);
+    e->value = (char *)malloc(e->original_value_len+4); /* We may look up to three bytes beyond the string */
+    strcpy(e->value, s);
+    memset(e->value+e->original_value_len+1, 0, 3); /* quad termination */
+    e->start = e->s = e->value;
+    
     *cptr = e;
   }
   
@@ -499,7 +539,7 @@ const char *XpuEmumerateXpAttributeValue( const char *value, void **vcptr )
     return(NULL);
    
   /* Skip leading blanks, '\'' or '}' */
-  while(isspace(*(context->s)) || *(context->s)=='\'' || *(context->s)=='}' )
+  while(isspace(*(context->s)) || *(context->s)=='\'' /*|| *(context->s)=='}'*/ )
     context->s++;
 
   if( *(context->s) == '\0' )
@@ -518,24 +558,69 @@ const char *XpuEmumerateXpAttributeValue( const char *value, void **vcptr )
     context->s++;
   }
   
+  /* Check if we reached a new attribute group */
+  tmp = context->start;
+  while(isspace(*tmp))
+    tmp++;   
+  if( *tmp=='}' )
+  {
+    void *prev_cptr = *vcptr;
+    
+    tmp+=2; /* We have 3*'\0' at the end of the string - this is legal! */
+    if( *tmp!='\0' )
+    {
+      const char *ret;
+   
+      /* Start the parser again */
+      *vcptr = NULL;
+      ret = XpuEnumerateXpAttributeValue(tmp, vcptr);
+    
+      /* Free old context */
+      XpuDisposeEnumerateXpAttributeValue(&prev_cptr);
+    
+      return(ret);
+    }
+    else
+    {
+      return(NULL);
+    }
+  }
+  
   return(context->start);   
 }
 
+/* Get enumeration group for last string returned by |XpuEnumerateXpAttributeValue|... */
+static
+const char *XpuGetCurrentAttributeGroup( void **vcptr )
+{
+  XpuAttributeValueEnumeration **cptr = (XpuAttributeValueEnumeration **)vcptr;
+  if( !cptr )
+    return(NULL);
+  if( !*cptr )
+    return(NULL);
+    
+  return((*cptr)->group);
+}
 
-void XpuDisposeEmumerateXpAttributeValue( void **vc )
+
+static
+void XpuDisposeEnumerateXpAttributeValue( void **vc )
 { 
   if( vc )
   {
     XpuAttributeValueEnumeration *context = *((XpuAttributeValueEnumeration **)vc);
     free(context->value);
+    if(context->group)
+      free(context->group);
     free(context);   
   }
 }
 
 /* parse a paper size string 
  * (example: '{na-letter False {6.3500 209.5500 6.3500 273.0500}}') */
+static
 Bool XpuParseMediumSourceSize( const char *value, 
-                               const char **media_name, Bool *mbool, 
+                               const char **medium_name, int *mbool, 
                                float *ma1, float *ma2, float *ma3, float *ma4 )
 {
   const char *s;
@@ -549,9 +634,9 @@ Bool XpuParseMediumSourceSize( const char *value,
     
   value_len = strlen(value);
   
-  /* alloc buffer for "media_name" and |boolbuf| in one step
+  /* alloc buffer for |medium_name| and |boolbuf| in one step
    * (both must be large enougth to hold at least |strlen(value)+1| bytes) */  
-  name = malloc(value_len*2 + 4);
+  name = (char *)malloc(value_len*2 + 4);
   boolbuf = name + value_len+2; /* |boolbuf| starts directly after |name| */
   
   /* remove '{' && '}' */
@@ -568,7 +653,7 @@ Bool XpuParseMediumSourceSize( const char *value,
   }
   while(*s);
     
-  /* seperate media name from string */
+  /* seperate medium name from string */
   d = (char *)search_next_space(name);
   if( !d )
   {
@@ -576,7 +661,7 @@ Bool XpuParseMediumSourceSize( const char *value,
     return(False);
   }  
   *d = '\0';
-  *media_name = name;
+  *medium_name = name;
   
   /* ... continue to parse the remaining string... */
   d++;
@@ -586,7 +671,7 @@ Bool XpuParseMediumSourceSize( const char *value,
     free(name);
     return(False);
   }
-  
+
   if( !strcmp(boolbuf, "true") )
     *mbool = True;
   else if( !strcmp(boolbuf, "false") )
@@ -596,9 +681,65 @@ Bool XpuParseMediumSourceSize( const char *value,
     free(name);
     return(False);    
   }
-        
   return(True);
 }
+
+
+/* parse a paper size string 
+ * (example: '{na-letter False {6.3500 209.5500 6.3500 273.0500}}') */
+static
+Bool XpuEnumerateMediumSourceSizes( Display *pdpy, XPContext pcontext,
+                                    const char **tray_name,
+                                    const char **medium_name, int *mbool, 
+                                    float *ma1, float *ma2, float *ma3, float *ma4,
+                                    void **vcptr )
+{
+  const char *medium_spec;
+  const char *value = NULL;
+  
+  if( pdpy && pcontext )
+  {
+    value = XpGetOneAttribute(pdpy, pcontext, XPPrinterAttr, "medium-source-sizes-supported");
+    if( !value )
+      return(False);
+  }
+
+  while(1)
+  {  
+    medium_spec = XpuEnumerateXpAttributeValue(value, vcptr);
+    
+    if( value )
+    {
+      XFree((void *)value);
+      value = NULL;
+    }
+
+    /* enumeration done? */
+    if( !medium_spec )
+      return(False);
+
+    if (XpuParseMediumSourceSize(medium_spec, 
+                                 medium_name, mbool, 
+                                 ma1, ma2, ma3, ma4))
+    {
+      *tray_name = XpuGetCurrentAttributeGroup(vcptr);
+      return(True);
+    }
+    else
+    {
+      /* Should never ever happen! */
+      fprintf(stderr, "XpuEnumerateMediumSourceSize: error parsing '%s'", medium_spec);
+    }
+  }
+  /* not reached */   
+}
+
+static
+void XpuDisposeEnumerateMediumSourceSizes( void **vc )
+{
+  XpuDisposeEnumerateXpAttributeValue(vc);
+}  
+
 
 /* future: Migrate this functionality into |XpGetPrinterList| - just do
  * not pass a |Display *| to |XpGetPrinterList|
@@ -606,12 +747,14 @@ Bool XpuParseMediumSourceSize( const char *value,
 XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count )
 {
   XPPrinterRec *rec = NULL;
-  int           rec_count = 1; /* allocate one more XPPrinterRec structure
+  int           rec_count = 1; /* Allocate one more |XPPrinterRec| structure
                                 * as terminator */
   char         *sl;
-  
+  const char   *default_printer_name = XpuGetDefaultXpPrintername();
+  int           default_printer_rec_index = -1;
+
   if( !res_list_count )
-    return(NULL);
+    return(NULL); 
   
   sl = strdup(XpuGetXpServerList());
   MAKE_STRING_WRITABLE(printer);
@@ -643,15 +786,30 @@ XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count )
           for( i = 0 ; i < list_count ; i++ )
           {
             char *s;
-            rec_count++;             
-            rec = realloc(rec, sizeof(XPPrinterRec)*rec_count);
+            rec_count++;
+            rec = (XPPrinterRec *)realloc(rec, sizeof(XPPrinterRec)*rec_count);
             if( !rec ) /* failure */
               break;
               
-            s = malloc(strlen(list[i].name)+display_len+4);
+            s = (char *)malloc(strlen(list[i].name)+display_len+4);
             sprintf(s, "%s@%s", list[i].name, display);
             rec[rec_count-2].name = s;
             rec[rec_count-2].desc = (list[i].desc)?(strdup(list[i].desc)):(NULL);
+            
+            /* Test for default printer (if the user set one).*/
+            if( default_printer_name )
+            {
+              /* Default_printer_name may either contain the FQPN(=full
+               * qualified printer name ("foo@myhost:5") or just the name
+               * ("foo")) */
+              if( (!strcmp(list[i].name, default_printer_name)) ||
+                  (!strcmp(s,            default_printer_name)) )
+              {
+                /* Remember index of default printer that we can swap it to 
+                 * the head of the array below... */
+                default_printer_rec_index = rec_count-2;
+              }
+            }  
           }
           
           XpFreePrinterList(list);
@@ -667,7 +825,10 @@ XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count )
   if( rec )
   {
     /* users: DO NOT COUNT ON THIS DETAIL 
-     * (this is only to make current impl. of XpuFreePrinterList() easier) */
+     * (this is only to make current impl. of XpuFreePrinterList() easier)
+     * I may remove this implementation detail in a later revision of
+     * the library!
+     */
     rec[rec_count-1].name = NULL;
     rec[rec_count-1].desc = NULL;
     rec_count--;
@@ -675,6 +836,15 @@ XPPrinterList XpuGetPrinterList( const char *printer, int *res_list_count )
   else
   {
     rec_count = 0;
+  }
+  
+  /* The default printer is always the first one in the printer list... */
+  if( (default_printer_rec_index != -1) && rec )
+  {
+    XPPrinterRec tmp;
+    tmp = rec[0];
+    rec[0] = rec[default_printer_rec_index];
+    rec[default_printer_rec_index] = tmp;
   }
     
   *res_list_count = rec_count;
@@ -687,17 +857,682 @@ void XpuFreePrinterList( XPPrinterList list )
 {
   if( list )
   {
-    XPPrinterList curr = list;
+    XPPrinterRec *curr = list;
   
-    while(curr->name!=NULL)
+    /* See the warning abouve about using this implementation detail for
+     * checking for the list's end... */
+    while( curr->name != NULL )
     {
       free(curr->name);
-      free(curr->desc);
+      if(curr->desc)
+        free(curr->desc);
       curr++;
     }
   
     free(list);
   }
+}
+
+/* Set number of copies to print from this document */
+int XpuSetDocumentCopies( Display *pdpy, XPContext pcontext, long num_copies )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "copy-count") )
+  {
+    XpuSetOneLongAttribute(pdpy, pcontext, XPDocAttr, "*copy-count", num_copies, XPAttrMerge);
+    return(1);
+  }
+  else
+  {
+    XPU_DEBUG_ONLY(printf("XpuSetContentOrientation: XpuCheckSupported failed for 'copy-count'\n"));
+    
+    /* We may safely assume that the device prints at least one copy if
+     * |copy-count| is not supported for this printer device.
+     */
+    if (num_copies == 1)
+      return(1);
+    
+    /* Failure... */
+    return(0);
+  }  
+}
+
+XpuMediumSourceSizeList XpuGetMediumSourceSizeList( Display *pdpy, XPContext pcontext, int *numEntriesPtr )
+{
+  XpuMediumSourceSizeList list = NULL;
+  int                     rec_count = 1; /* allocate one more |XpuMediumSourceSizeRec| structure
+                                          * as terminator */
+  Bool                    status;
+  float                   ma1,
+                          ma2,
+                          ma3,
+                          ma4;
+  char                   *value;
+  void                   *tok_lasts;
+  const char             *tray_name,
+                         *medium_name;
+  int                     mbool;
+  const char             *default_tray,
+                         *default_medium;
+  int                     default_medium_rec_index = -1;
+  
+  default_tray   = XpGetOneAttribute(pdpy, pcontext, XPDocAttr, "default-input-tray");
+  if(!default_tray)
+  {
+    fprintf(stderr, "XpuGetMediumSourceSizeList: Internal error, no 'default-input-tray' found.\n");
+    return(NULL);
+  }
+  default_medium = XpGetOneAttribute(pdpy, pcontext, XPDocAttr, "default-medium");
+  if(!default_medium)
+  {
+    fprintf(stderr, "XpuGetMediumSourceSizeList: Internal error, no 'default-medium' found.\n");
+    XFree((void *)default_tray);
+    return(NULL);
+  }
+  
+  for( status = XpuEnumerateMediumSourceSizes(pdpy, pcontext, &tray_name, &medium_name, &mbool,
+                                              &ma1, &ma2, &ma3, &ma4, &tok_lasts) ;
+       status != False ;
+       status = XpuEnumerateMediumSourceSizes(NULL, NULL,     &tray_name, &medium_name, &mbool, 
+                                            &ma1, &ma2, &ma3, &ma4, &tok_lasts) )
+  {
+    rec_count++;
+    list = (XpuMediumSourceSizeRec *)realloc(list, sizeof(XpuMediumSourceSizeRec)*rec_count);
+    if( !list )
+      return(NULL);
+    
+    list[rec_count-2].tray_name   = (tray_name)?(strdup(tray_name)):(NULL);
+    list[rec_count-2].medium_name = strdup(medium_name);
+    list[rec_count-2].mbool       = mbool;
+    list[rec_count-2].ma1         = ma1;
+    list[rec_count-2].ma2         = ma2;
+    list[rec_count-2].ma3         = ma3;
+    list[rec_count-2].ma4         = ma4;
+    
+    /* Default medium ? */
+    if( (!strcmp(medium_name, default_medium)) && 
+        ((tray_name && (strlen(default_tray) > 0))?(!strcmp(tray_name, default_tray)):(True)) )
+    {
+      default_medium_rec_index = rec_count-2;
+    }
+  }  
+
+  XpuDisposeEnumerateMediumSourceSizes(&tok_lasts);
+
+  if( list )
+  {
+    /* users: DO NOT COUNT ON THIS DETAIL 
+     * (this is only to make current impl. of XpuFreeMediumSourceSizeList() easier)
+     * I may remove this implementation detail in a later revision of
+     * the library! */
+    list[rec_count-1].tray_name  = NULL;
+    list[rec_count-1].medium_name = NULL;
+    rec_count--;
+  }
+  else
+  {
+    rec_count = 0;
+  }
+
+  /* Make the default medium always the first item in the list... */
+  if( (default_medium_rec_index != -1) && list )
+  {
+    XpuMediumSourceSizeRec tmp;
+    tmp = list[0];
+    list[0] = list[default_medium_rec_index];
+    list[default_medium_rec_index] = tmp;
+  }
+
+  *numEntriesPtr = rec_count; 
+  return(list);
+}
+
+void XpuFreeMediumSourceSizeList( XpuMediumSourceSizeList list )
+{
+  if( list )
+  {
+    XpuMediumSourceSizeRec *curr = list;
+  
+    /* See the warning abouve about using this implementation detail for
+     * checking for the list's end... */
+    while( curr->medium_name != NULL )
+    {
+      if( curr->tray_name)
+        free((void *)curr->tray_name);
+      free((void *)curr->medium_name);
+      curr++;
+    }
+  
+    free(list);
+  }
+}
+
+static
+int XpuSetMediumSourceSize( Display *pdpy, XPContext pcontext, XPAttributes type, XpuMediumSourceSizeRec *medium_spec )
+{
+  /* Set the "default-medium" and "*default-input-tray" 
+   * (if |XpuEnumerateMediumSourceSizes| returned one) XPDocAttr's
+   * attribute and return */
+  if (medium_spec->tray_name)
+  {
+    XpuSetOneAttribute(pdpy, pcontext, type, "*default-input-tray", medium_spec->tray_name, XPAttrMerge);
+  }
+  XpuSetOneAttribute(pdpy, pcontext, type, "*default-medium", medium_spec->medium_name, XPAttrMerge);
+  
+  return( 1 );
+}
+
+/* Set document medium size */
+int XpuSetDocMediumSourceSize( Display *pdpy, XPContext pcontext, XpuMediumSourceSizeRec *medium_spec )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "default-medium") == 0 )
+    return( 0 );
+    
+  if (medium_spec->tray_name)
+  {
+    if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "default-input-tray") == 0 )
+      return( 0 );  
+  }
+
+  return XpuSetMediumSourceSize(pdpy, pcontext, XPDocAttr, medium_spec);
+}
+
+/* Set page medium size */
+int XpuSetPageMediumSourceSize( Display *pdpy, XPContext pcontext, XpuMediumSourceSizeRec *medium_spec )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "default-medium") == 0 )
+    return( 0 );
+    
+  if (medium_spec->tray_name)
+  {
+    if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "default-input-tray") == 0 )
+      return( 0 );  
+  }
+
+  return XpuSetMediumSourceSize(pdpy, pcontext, XPPageAttr, medium_spec);
+}
+
+#ifndef ABS
+#define ABS(x) ((x)<0?-(x):(x))
+#endif /* ABS */
+#define MORE_OR_LESS_EQUAL(a, b, tolerance) (ABS((a) - (b)) <= (tolerance))
+
+XpuMediumSourceSizeRec *
+XpuFindMediumSourceSizeBySize( XpuMediumSourceSizeList mlist, int mlist_count, 
+                               float page_width_mm, float page_height_mm, float tolerance )
+{
+  int i;
+  for( i = 0 ; i < mlist_count ; i++ )
+  {
+    XpuMediumSourceSizeRec *curr = &mlist[i];
+    float total_width  = curr->ma1 + curr->ma2,
+          total_height = curr->ma3 + curr->ma4;
+
+    /* Match width/height*/
+    if( ((page_width_mm !=-1.f)?(MORE_OR_LESS_EQUAL(total_width,  page_width_mm,  tolerance)):(True)) &&
+        ((page_height_mm!=-1.f)?(MORE_OR_LESS_EQUAL(total_height, page_height_mm, tolerance)):(True)) )
+    {
+      return(curr);
+    }
+  }
+
+  return(NULL);
+}
+
+XpuMediumSourceSizeRec *
+XpuFindMediumSourceSizeByBounds( XpuMediumSourceSizeList mlist, int mlist_count, 
+                                 float m1, float m2, float m3, float m4, float tolerance )
+{
+  int i;
+  for( i = 0 ; i < mlist_count ; i++ )
+  {
+    XpuMediumSourceSizeRec *curr = &mlist[i];
+
+    /* Match bounds */
+    if( ((m1!=-1.f)?(MORE_OR_LESS_EQUAL(curr->ma1, m1, tolerance)):(True)) &&
+        ((m2!=-1.f)?(MORE_OR_LESS_EQUAL(curr->ma2, m2, tolerance)):(True)) &&
+        ((m3!=-1.f)?(MORE_OR_LESS_EQUAL(curr->ma3, m3, tolerance)):(True)) &&
+        ((m4!=-1.f)?(MORE_OR_LESS_EQUAL(curr->ma4, m4, tolerance)):(True)) )
+    {
+      return(curr);
+    }
+  }
+
+  return(NULL);
+}
+
+XpuMediumSourceSizeRec *
+XpuFindMediumSourceSizeByName( XpuMediumSourceSizeList mlist, int mlist_count, 
+                               const char *tray_name, const char *medium_name )
+{
+  int i;
+  for( i = 0 ; i < mlist_count ; i++ )
+  {
+    XpuMediumSourceSizeRec *curr = &mlist[i];
+
+    /* Match by tray name and/or medium name */
+    if( ((tray_name && curr->tray_name)?(!strcasecmp(curr->tray_name, tray_name)):(tray_name==NULL)) &&
+        ((medium_name)?(!strcasecmp(curr->medium_name, medium_name)):(True)) )
+    {
+      return(curr);
+    }
+  }
+
+  return(NULL);
+}
+
+XpuResolutionList XpuGetResolutionList( Display *pdpy, XPContext pcontext, int *numEntriesPtr )
+{
+  XpuResolutionList list = NULL;
+  int               rec_count = 1; /* Allocate one more |XpuResolutionRec| structure
+                                    * as terminator */
+  char             *value;
+  char             *tok_lasts;
+  const char       *s;
+  long              default_resolution = 0;
+  int               default_resolution_rec_index = -1;
+
+  /* Get default document resolution */
+  if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "default-printer-resolution", &default_resolution) != 1 )
+  {
+    fprintf(stderr, "XpuGetResolutionList: Internal error, no 'default-printer-resolution' XPDocAttr found.\n");
+    return(NULL);
+  }
+  
+  value = XpGetOneAttribute(pdpy, pcontext, XPPrinterAttr, "printer-resolutions-supported");
+  if (!value)
+  {
+    fprintf(stderr, "XpuGetResolutionList: Internal error, no 'printer-resolutions-supported' XPPrinterAttr found.\n");
+    return(NULL);
+  }
+  
+  for( s = strtok_r(value, " ", &tok_lasts) ;
+       s != NULL ;
+       s = strtok_r(NULL, " ", &tok_lasts) )
+  {
+    long tmp;
+    
+    tmp = strtol(s, (char **)NULL, 10);
+    
+    if( ((tmp == 0L) || (tmp == LONG_MIN) || (tmp == LONG_MAX)) && 
+        ((errno == ERANGE) || (errno == EINVAL)) )
+    {
+      fprintf(stderr, "XpuGetResolutionList: Internal parser errror for '%s'.\n", s);
+      continue;
+    }    
+  
+    rec_count++;
+    list = (XpuResolutionRec *)realloc(list, sizeof(XpuResolutionRec)*rec_count);
+    if( !list )
+      return(NULL);
+    
+    list[rec_count-2].dpi = tmp;
+
+    /* Default resolution ? */
+    if( list[rec_count-2].dpi == default_resolution )
+    {
+      default_resolution_rec_index = rec_count-2;
+    }
+  }  
+
+  XFree(value);
+
+  if( list )
+  {
+    /* users: DO NOT COUNT ON THIS DETAIL 
+     * (this is only to make current impl. of XpuFreeMediumSourceSizeList() easier)
+     * I may remove this implementation detail in a later revision of
+     * the library! */
+    list[rec_count-1].dpi = -1;
+    rec_count--;
+  }
+  else
+  {
+    rec_count = 0;
+  }
+
+  /* Make the default resolution always the first item in the list... */
+  if( (default_resolution_rec_index != -1) && list )
+  {
+    XpuResolutionRec tmp;
+    tmp = list[0];
+    list[0] = list[default_resolution_rec_index];
+    list[default_resolution_rec_index] = tmp;
+  }
+
+  *numEntriesPtr = rec_count; 
+  return(list);
+}
+
+void XpuFreeResolutionList( XpuResolutionList list )
+{
+  if( list )
+  { 
+    free(list);
+  }
+}
+
+/* Get default page (if defined) or document resolution
+ * this function may fail in the following conditions:
+ * - Xprt misconfiguration
+ * - X DPI != Y DPI (not yet implemented in Xprt)
+ */
+Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi_ptr )
+{
+  /* Try to get the current page's resolution (pages may differ in resolution if the DDX supports this) */
+  if( XpuGetOneLongAttribute(pdpy, pcontext, XPPageAttr, "default-printer-resolution", dpi_ptr) == 1 )
+  {
+    return True;
+  }
+
+  /* Get document resolution */
+  if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "default-printer-resolution", dpi_ptr) == 1 )
+  {
+    return True;
+  }
+
+  return False;
+}
+
+static
+int XpuSetResolution( Display *pdpy, XPContext pcontext, XPAttributes type, XpuResolutionRec *rec )
+{
+  XpuSetOneLongAttribute(pdpy, pcontext, type, "*default-printer-resolution", rec->dpi, XPAttrMerge); 
+  return( 1 );
+}
+
+/* Set document resolution 
+ * Retun error if printer does not support setting a resolution
+ */
+int XpuSetDocResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec *rec )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "default-printer-resolution") == 0 )
+    return( 0 );
+    
+  return XpuSetResolution(pdpy, pcontext, XPDocAttr, rec);
+}
+
+/* Set page medium size 
+ * Retun error if printer does not support setting a resolution or if per-page
+ * resolution changes are not allowed.
+ */
+int XpuSetPageResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec *rec )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "default-printer-resolution") == 0 )
+    return( 0 );
+    
+  return XpuSetResolution(pdpy, pcontext, XPPageAttr, rec);
+}
+
+XpuOrientationList XpuGetOrientationList( Display *pdpy, XPContext pcontext, int *numEntriesPtr )
+{
+  XpuOrientationList list = NULL;
+  int                rec_count = 1; /* Allocate one more |XpuOrientationRec|
+                                     * structure as terminator */
+  char              *value;
+  char              *tok_lasts;
+  const char        *s;
+  const char        *default_orientation = NULL;
+  int                default_orientation_rec_index = -1;
+
+  /* Get default document orientation */
+  default_orientation = XpGetOneAttribute(pdpy, pcontext, XPDocAttr, "content-orientation"); 
+  if( !default_orientation )
+  {
+    fprintf(stderr, "XpuGetOrientationList: Internal error, no 'content-orientation' XPDocAttr found.\n");
+    return(NULL);
+  }
+  
+  value = XpGetOneAttribute(pdpy, pcontext, XPPrinterAttr, "content-orientations-supported");
+  if (!value)
+  {
+    fprintf(stderr, "XpuGetOrientationList: Internal error, no 'content-orientations-supported' XPPrinterAttr found.\n");
+    return(NULL);
+  }
+  
+  for( s = strtok_r(value, " ", &tok_lasts) ;
+       s != NULL ;
+       s = strtok_r(NULL, " ", &tok_lasts) )
+  { 
+    rec_count++;
+    list = (XpuOrientationRec *)realloc(list, sizeof(XpuOrientationRec)*rec_count);
+    if( !list )
+      return(NULL);
+    
+    list[rec_count-2].orientation = strdup(s);
+
+    /* Default resolution ? */
+    if( !strcmp(list[rec_count-2].orientation, default_orientation) )
+    {
+      default_orientation_rec_index = rec_count-2;
+    }
+  }  
+
+  XFree(value);
+  XFree((void *)default_orientation);
+
+  if( list )
+  {
+    /* users: DO NOT COUNT ON THIS DETAIL 
+     * (this is only to make current impl. of XpuFreeOrientationList() easier)
+     * I may remove this implementation detail in a later revision of
+     * the library! */
+    list[rec_count-1].orientation = NULL;
+    rec_count--;
+  }
+  else
+  {
+    rec_count = 0;
+  }
+
+  /* Make the default orientation always the first item in the list... */
+  if( (default_orientation_rec_index != -1) && list )
+  {
+    XpuOrientationRec tmp;
+    tmp = list[0];
+    list[0] = list[default_orientation_rec_index];
+    list[default_orientation_rec_index] = tmp;
+  }
+
+  *numEntriesPtr = rec_count; 
+  return(list);
+}
+
+void XpuFreeOrientationList( XpuOrientationList list )
+{
+  if( list )
+  {
+    XpuOrientationRec *curr = list;
+  
+    /* See the warning abouve about using this implementation detail for
+     * checking for the list's end... */
+    while( curr->orientation != NULL )
+    {
+      free((void *)curr->orientation);
+      curr++;
+    }   
+    free(list);
+  }
+}
+
+XpuOrientationRec *
+XpuFindOrientationByName( XpuOrientationList list, int list_count, const char *orientation )
+{
+  int i;
+  
+  for( i = 0 ; i < list_count ; i++ )
+  {
+    XpuOrientationRec *curr = &list[i];
+    if (!strcasecmp(curr->orientation, orientation))
+      return curr;
+  }
+
+  return(NULL);
+}
+
+static
+int XpuSetOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, XpuOrientationRec *rec )
+{
+  XpuSetOneAttribute(pdpy, pcontext, type, "*content-orientation", rec->orientation, XPAttrMerge);
+  return(1);
+}
+
+/* Set document orientation 
+ * Retun error if printer does not support setting an orientation
+ */
+int XpuSetDocOrientation( Display *pdpy, XPContext pcontext, XpuOrientationRec *rec )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "content-orientation") == 0 )
+    return( 0 );
+    
+  return XpuSetOrientation(pdpy, pcontext, XPDocAttr, rec);
+}
+
+/* Set page orientation
+ * Retun error if printer does not support setting an orientation or if
+ * per-page orientations changes are not allowed
+ */
+int XpuSetPageOrientation( Display *pdpy, XPContext pcontext, XpuOrientationRec *rec )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "content-orientation") == 0 )
+    return( 0 );
+    
+  return XpuSetOrientation(pdpy, pcontext, XPPageAttr, rec);
+}
+
+XpuPlexList XpuGetPlexList( Display *pdpy, XPContext pcontext, int *numEntriesPtr )
+{
+  XpuPlexList  list = NULL;
+  int          rec_count = 1; /* Allocate one more |XpuPlexList| structure
+                               * as terminator */
+  char        *value;
+  char        *tok_lasts;
+  const char  *s;
+  const char  *default_plex = NULL;
+  int          default_plex_rec_index = -1;
+
+  /* Get default document plex */
+  default_plex = XpGetOneAttribute(pdpy, pcontext, XPDocAttr, "plex"); 
+  if( !default_plex )
+  {
+    fprintf(stderr, "XpuGetPlexList: Internal error, no 'plex' XPDocAttr found.\n");
+    return(NULL);
+  }
+   
+  value = XpGetOneAttribute(pdpy, pcontext, XPPrinterAttr, "plexes-supported");
+  if (!value)
+  {
+    fprintf(stderr, "XpuGetPlexList: Internal error, no 'plexes-supported' XPPrinterAttr found.\n");
+    return(NULL);
+  }
+  
+  for( s = strtok_r(value, " ", &tok_lasts) ;
+       s != NULL ;
+       s = strtok_r(NULL, " ", &tok_lasts) )
+  { 
+    rec_count++;
+    list = (XpuPlexRec *)realloc(list, sizeof(XpuPlexRec)*rec_count);
+    if( !list )
+      return(NULL);
+    
+    list[rec_count-2].plex = strdup(s);
+
+    /* Default plex ? */
+    if( !strcmp(list[rec_count-2].plex, default_plex) )
+    {
+      default_plex_rec_index = rec_count-2;
+    }
+  }  
+
+  XFree(value);
+  XFree((void *)default_plex);
+
+  if( list )
+  {
+    /* users: DO NOT COUNT ON THIS DETAIL 
+     * (this is only to make current impl. of XpuFreePlexList() easier)
+     * I may remove this implementation detail in a later revision of
+     * the library! */
+    list[rec_count-1].plex = NULL;
+    rec_count--;
+  }
+  else
+  {
+    rec_count = 0;
+  }
+
+  /* Make the default plex always the first item in the list... */
+  if( (default_plex_rec_index != -1) && list )
+  {
+    XpuPlexRec tmp;
+    tmp = list[0];
+    list[0] = list[default_plex_rec_index];
+    list[default_plex_rec_index] = tmp;
+  }
+
+  *numEntriesPtr = rec_count; 
+  return(list);
+}
+
+void XpuFreePlexList( XpuPlexList list )
+{
+  if( list )
+  {
+    XpuPlexRec *curr = list;
+  
+    /* See the warning abouve about using this implementation detail for
+     * checking for the list's end... */
+    while( curr->plex != NULL )
+    {
+      free((void *)curr->plex);
+      curr++;
+    }   
+    free(list);
+  }
+}
+
+XpuPlexRec *
+XpuFindPlexByName( XpuPlexList list, int list_count, const char *plex )
+{
+  int i;
+  
+  for( i = 0 ; i < list_count ; i++ )
+  {
+    XpuPlexRec *curr = &list[i];
+    if (!strcasecmp(curr->plex, plex))
+      return curr;
+  }
+
+  return(NULL);
+}
+
+static
+int XpuSetContentPlex( Display *pdpy, XPContext pcontext, XPAttributes type, XpuPlexRec *rec )
+{
+  XpuSetOneAttribute(pdpy, pcontext, type, "*plex", rec->plex, XPAttrMerge);
+  return(1);
+}
+
+/* Set document plex 
+ * Retun error if printer does not support setting an plex
+ */
+int XpuSetDocPlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "plex") == 0 )
+    return( 0 );
+    
+  return XpuSetContentPlex(pdpy, pcontext, XPDocAttr, rec);
+}
+
+/* Set page plex
+ * Retun error if printer does not support setting an plex or if
+ * per-page plex changes are not allowed
+ */
+int XpuSetPagePlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec )
+{
+  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "plex") == 0 )
+    return( 0 );
+    
+  return XpuSetContentPlex(pdpy, pcontext, XPPageAttr, rec);
 }
 
 /* EOF. */

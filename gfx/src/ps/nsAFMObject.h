@@ -164,14 +164,14 @@ typedef enum
 struct AFM_Single_Char_Metrics
 {
 
-  PRInt32   mCharacter_Code;	// default charcode (-1 if not encoded) 
-  double    mW0x;		          // character width x in writing direction 0, 
-  double    mW0y;		          // character width y in writing direction 0
-  double    mW1x;		          // character width x in writing direction 1
-  double    mW1y;		          // character width y in writing direction 1
-  //char      *mName;	          // character name ,  not using currently
-  //double    mVv_x;	          // local VVector x ,  not using currently
-  //double    mVv_y;	          // local VVector y ,  not using currently
+  PRInt32   mCharacter_Code;      // default charcode (-1 if not encoded) 
+  double    mW0x;                 // character width x in writing direction 0, 
+  double    mW0y;                 // character width y in writing direction 0
+  double    mW1x;                 // character width x in writing direction 1
+  double    mW1y;                 // character width y in writing direction 1
+  //char      *mName;             // character name ,  not using currently
+  //double    mVv_x;              // local VVector x ,  not using currently
+  //double    mVv_y;              // local VVector y ,  not using currently
 
   // character bounding box. 
   double    mLlx;
@@ -191,36 +191,35 @@ typedef struct AFM_Single_Char_Metrics  AFMscm;
 // Font information which we get from AFM files, this is needed for the PS output
 struct fontInformation
 {
-  double  mFontVersion;
-  char    *mFontName;
-  char    *mFullName;
-  char    *mFamilyName;
-  char    *mWeight;
-  double  mFontBBox_llx;
-  double  mFontBBox_lly;
-  double  mFontBBox_urx;
-  double  mFontBBox_ury;
-  char    *mVersion;
-  char    *mNotice;
-  char    *mEncodingScheme;
-  PRInt32 mMappingScheme;
-  PRInt32 mEscChar;
-  char    *mCharacterSet;
-  PRInt32 mCharacters;
-  PRBool  mIsBaseFont;
-  double  mVVector_0;
-  double  mVVector_1;
-  PRBool  mIsFixedV;
-  double  mCapHeight;
-  double  mXHeight;
-  double  mAscender;
-  double  mDescender;
-  double  mUnderlinePosition;
-  double  mUnderlineThickness;
+  double      mFontVersion;
+  const char *mFontName;
+  const char *mFullName;
+  const char *mFamilyName;
+  const char *mWeight;
+  double      mFontBBox_llx;
+  double      mFontBBox_lly;
+  double      mFontBBox_urx;
+  double      mFontBBox_ury;
+  const char *mVersion;
+  const char *mNotice;
+  const char *mEncodingScheme;
+  PRInt32     mMappingScheme;
+  PRInt32     mEscChar;
+  const char *mCharacterSet;
+  PRInt32     mCharacters;
+  PRBool      mIsBaseFont;
+  double      mVVector_0;
+  double      mVVector_1;
+  PRBool      mIsFixedV;
+  double      mCapHeight;
+  double      mXHeight;
+  double      mAscender;
+  double      mDescender;
+  double      mUnderlinePosition;
+  double      mUnderlineThickness;
 
-  PRInt32 mNumCharacters;
-  AFMscm *mAFMCharMetrics;
-
+  PRInt32     mNumCharacters;
+  AFMscm     *mAFMCharMetrics;
 };
 
 
@@ -414,7 +413,7 @@ protected:
 
 /** ---------------------------------------------------
  *  A static structure initialized with the default fonts for postscript
- *	@update 3/12/99 dwc
+ *  @update 3/12/99 dwc
  *  @member mFontName -- string with the substitute font name
  *  @member mFontInfo -- AFM font information header created with the AFMGen program
  *  @member mCharInfo -- Character information created with the AFMGen program
@@ -422,13 +421,13 @@ protected:
  */
 struct AFM_SubstituteFonts
 {
-const char*         mPSName;
-const char*         mFamily;
-PRUint16            mWeight;
-PRUint8             mStyle;
-AFMFontInformation* mFontInfo;
-AFMscm*             mCharInfo;
-PRInt32             mIndex;
+  const char*         mPSName;
+  const char*         mFamily;
+  PRUint16            mWeight;
+  PRUint8             mStyle;
+  AFMFontInformation* mFontInfo;
+  AFMscm*             mCharInfo;
+  PRInt32             mIndex;
 };
 
 typedef struct AFM_SubstituteFonts  DefFonts;
@@ -438,5 +437,5 @@ extern DefFonts gSubstituteFonts[];
 // number of supported default fonts
 #define NUM_AFM_FONTS 13
 
-#endif
+#endif /* !nsAFMObject_h__ */
 

@@ -43,9 +43,6 @@
 #include "nsFontMetricsPS.h"
 #include "nsPostScriptObj.h"
 
-static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
-
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
@@ -63,16 +60,30 @@ nsDeviceContextPS :: nsDeviceContextPS()
  */
 nsDeviceContextPS :: ~nsDeviceContextPS()
 {
-  NS_IF_RELEASE(mSpec);
-  NS_IF_RELEASE(mParentDeviceContext);
+  /* nsCOMPtr<> will dispose the objects... */
+  mSpec = nsnull;
+  mParentDeviceContext = nsnull;
 }
 
 NS_IMETHODIMP
 nsDeviceContextPS :: SetSpec(nsIDeviceContextSpec* aSpec)
 {
+  nsresult  rv = NS_ERROR_FAILURE;
+
   mSpec = aSpec;
-  NS_ADDREF(aSpec);
-  return NS_OK;
+  
+  nsCOMPtr<nsIDeviceContextSpecPS> psSpec;
+
+  mPSObj = new nsPostScriptObj();
+  if (!mPSObj)
+    return  NS_ERROR_OUT_OF_MEMORY; 
+
+  psSpec = do_QueryInterface(mSpec, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = mPSObj->Init(psSpec);
+  }
+  
+  return rv;  
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsDeviceContextPS,
@@ -106,7 +117,6 @@ float t2d, a2d;
 
   mParentDeviceContext = aParentContext;
   NS_ASSERTION(mParentDeviceContext, "aCreatingDeviceContext cannot be NULL!!!");
-  NS_ADDREF(mParentDeviceContext);
   return  NS_OK;
 }
 
@@ -119,18 +129,19 @@ float t2d, a2d;
  */
 NS_IMETHODIMP nsDeviceContextPS :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv;
+   
+  aContext = nsnull;
 
-	aContext = new nsRenderingContextPS();
-  if (nsnull != aContext){
+  nsCOMPtr<nsRenderingContextPS> renderingContext = new nsRenderingContextPS();
+  if (!renderingContext)
+    return NS_ERROR_OUT_OF_MEMORY;
+     
+  rv = renderingContext->Init(this);
+
+  if (NS_SUCCEEDED(rv)) {
+    aContext = renderingContext;
     NS_ADDREF(aContext);
-    rv = ((nsRenderingContextPS*) aContext)->Init(this);
-  }else{
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (NS_FAILED(rv)) {
-    NS_IF_RELEASE(aContext);
   }
 
   return rv;
@@ -152,11 +163,10 @@ NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidget
  */
 NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-   //XXX: Hardcoded values for Postscript
-  aWidth = 20;
-  aHeight = 20;
+  //XXX: Hardcoded values for Postscript
+  aWidth  = 20.f;
+  aHeight = 20.f;
   return NS_OK;
-
 }
 
 /** ---------------------------------------------------
@@ -165,6 +175,7 @@ NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &
  */
 NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
+  aSurface = nsnull;
   return NS_OK;
 }
 
@@ -174,7 +185,8 @@ NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aConte
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
-  return(1);    // postscript is 1 bit
+  /* PostScript module uses 24bit RGB images */
+  return(24);
 }
 
 /** ---------------------------------------------------
@@ -205,15 +217,11 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRI
   nsIDeviceContextSpecPS *psSpec;
   nsresult rv = NS_ERROR_FAILURE;
   float width, height;
-  float top,left,right,bottom;
 
-  if ( nsnull != mSpec ) {
-    rv = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
-    if (NS_SUCCEEDED(rv)) {
-      psSpec->GetPageDimensions( width, height );
-      aWidth = NSToIntRound((72.0f*width) * mDevUnitsToAppUnits); 
-      aHeight = NSToIntRound((72.0f*height) * mDevUnitsToAppUnits); 
-    }
+  if (mPSObj && mPSObj->mPrintSetup) {
+    aWidth  = NSToIntRound(mPSObj->mPrintSetup->width  * mDevUnitsToAppUnits); 
+    aHeight = NSToIntRound(mPSObj->mPrintSetup->height * mDevUnitsToAppUnits); 
+    rv = NS_OK;
   }
   return rv;
 }
@@ -255,18 +263,12 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP nsDeviceContextPS::BeginDocument(PRUnichar * aTitle)
-{  
-  nsIDeviceContextSpecPS *psSpec;
-  nsresult res = NS_OK;
+{
+  if (!mPSObj)
+    return NS_ERROR_NULL_POINTER;
 
-  if ( nsnull != mSpec ) {
-    mPSObj = new nsPostScriptObj();  
-    res = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
-    if (NS_SUCCEEDED(res)) {
-      res = mPSObj->Init(psSpec,aTitle);
-    }
-  }
-  return res;
+  mPSObj->settitle(aTitle); 
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -286,6 +288,9 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
  */
 NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
 {
+  if (!mPSObj)
+    return NS_ERROR_NULL_POINTER;
+
   // begin the page
   mPSObj->begin_page(); 
   return NS_OK;

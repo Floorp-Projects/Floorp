@@ -2688,9 +2688,6 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
     bitmap_size = (*s)->mSize;
   }
 
-#ifndef ABS
-#define ABS(a)     (((a) < 0) ? -(a) : (a))
-#endif /* !ABS */
   // if we do not have the correct size 
   // check if we can use a scaled font
   // (when the size of a hand tuned font is close to the desired size
@@ -2702,7 +2699,7 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
     // if it is allowed to be closer than the bitmap
     if (aStretch->mOutlineScaled) {
       scale_size = PR_MAX(mPixelSize, aCharSet->mOutlineScaleMin);
-      if (ABS(mPixelSize - scale_size) < ABS(mPixelSize - bitmap_size)) {
+      if (PR_ABS(mPixelSize - scale_size) < PR_ABS(mPixelSize - bitmap_size)) {
         use_scaled_font = PR_TRUE;
       }
     }
@@ -2713,7 +2710,7 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
       double ratio = (bitmap_size / ((double) mPixelSize));
       if ((ratio < aCharSet->mBitmapUndersize)
           || (ratio > aCharSet->mBitmapOversize)) {
-        if ((ABS(mPixelSize - scale_size) < ABS(mPixelSize - bitmap_size))) {
+        if ((PR_ABS(mPixelSize - scale_size) < PR_ABS(mPixelSize - bitmap_size))) {
           use_scaled_font = PR_TRUE;
         }
       }

@@ -70,13 +70,13 @@ nsRenderingContextXp::Init(nsIDeviceContext* aContext)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Init(nsIDeviceContext *)\n"));
 
-  mContext = do_QueryInterface(aContext);
-  NS_ASSERTION(nsnull != mContext, "Device context is null.");
+  NS_ENSURE_TRUE(nsnull != aContext, NS_ERROR_NULL_POINTER);
+  mContext = aContext;
   if (mContext) {
      nsIDeviceContext *dc = mContext;     
      NS_STATIC_CAST(nsDeviceContextXp *,dc)->GetPrintContext(mPrintContext);
   }
-  NS_ASSERTION(nsnull != mPrintContext, "mPrintContext is null.");
+  NS_ENSURE_TRUE(nsnull != mPrintContext, NS_ERROR_NULL_POINTER);
 
   mPrintContext->GetXlibRgbHandle(mXlibRgbHandle);
   mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);

@@ -75,14 +75,6 @@ public:
    NS_IMETHOD GetGrayscale(  PRBool &aGrayscale ) = 0;   
 
   /*
-   * Paper size e.g., NS_LETTER_SIZE 
-   * @update 
-   * @param aSize --
-   * @return 
-   **/
-   NS_IMETHOD GetSize (  int &aSize ) = 0; 
-
-  /*
    * Top margin 
    * @update 
    * @param aValue --
@@ -120,15 +112,7 @@ public:
    * @param aPrinter --
    * @return 
    **/
-   NS_IMETHOD GetPrinterName ( char **aPrinter ) = 0;   
-
-  /*
-   * Get width and height based on user page size choice, e.g., 8.5 x 11.0 
-   * @update 
-   * @param aWidth, aHeight 
-   * @return 
-   **/
-   NS_IMETHOD GetPageDimensions ( float &aWidth, float &aHeight ) = 0;   
+   NS_IMETHOD GetPrinterName ( const char **aPrinter ) = 0;   
 
   /*
    * If PR_TRUE, user chose Landscape
@@ -144,7 +128,7 @@ public:
    * @param aPath --
    * @return 
    **/
-   NS_IMETHOD GetPath (  char **aPath ) = 0;    
+   NS_IMETHOD GetPath ( const char **aPath ) = 0;    
 
   /*
    * If PR_TRUE, user cancelled 
@@ -152,7 +136,20 @@ public:
    * @param aCancel -- 
    * @return 
    **/
-   NS_IMETHOD GetUserCancelled(  PRBool &aCancel ) = 0;      
+   NS_IMETHOD GetUserCancelled(  PRBool &aCancel ) = 0;
+   
+   /*
+    * Returns W/H in Twips from Paper Size H/W
+    */
+   NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight) = 0;
+
+  /*
+   * Return number of copies to print
+   * @update 
+   * @param aCopies
+   * @return 
+   **/   
+   NS_IMETHOD GetCopies ( int &aCopies ) = 0;
 };
 
 #endif /* !nsIDeviceContextSpecXP_h___ */

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -58,15 +59,6 @@
 class nsIImage;
 #endif
 
-#define NS_LETTER_SIZE    0
-#define NS_LEGAL_SIZE     1
-#define NS_EXECUTIVE_SIZE 2
-#define NS_A4_SIZE	  3
-#define NS_A3_SIZE	  4
-
-#define NS_PORTRAIT  0
-#define NS_LANDSCAPE 1
-
 #define N_FONTS 8
 #define INCH_TO_PAGE(f) ((int) (.5 + (f)*720))
 #define PAGE_TO_POINT_I(f) ((int) ((f) / 10.0))
@@ -86,7 +78,7 @@ typedef struct {
 } PS_CharInfo;
 
 typedef struct {
-    char *name;
+    const char *name;
     PS_BBox fontBBox;
     short upos, uthick;
     PS_CharInfo chars[256];
@@ -122,9 +114,9 @@ struct PrintInfo_ {
   int pt_size;		    /* Size of above table  */
   int n_pages;		    /* # of valid entries in above table */
 
-  char*	doc_title;	/* best guess at title */
-  int32 doc_width;	/* Total document width */
-  int32 doc_height;	/* Total document height */
+  const char *doc_title; /* best guess at title */
+  int32 doc_width;	 /* Total document width */
+  int32 doc_height;	 /* Total document height */
 
 #ifdef LATER
   THIS IS GOING TO BE DELETED XXXXX
@@ -175,19 +167,20 @@ struct PrintSetup_ {
   int n_up;                     /* cool page combining */
   int bigger;                   /* Used to init sizes if sizesin NULL */
   int paper_size;               /* Paper Size(letter,legal,exec,a4,a3) */
-
+  float paper_width_in_inch,       /* paper width in inch  */
+        paper_height_in_inch;      /* paper height in inch */
   const char* prefix;           /* For text xlate, prepended to each line */
   const char* eol;              /* For text translation, line terminator  */
   const char* bullet;           /* What char to use for bullets */
 
   struct URL_Struct_ *url;      /* url of doc being translated */
-  FILE *out;                  /* Where to send the output */
-  char *filename;               /* output file name, if any */
+  FILE *out;                    /* Where to send the output */
+  const char *filename;         /* output file name, if any */
   XL_CompletionRoutine completion; /* Called when translation finished */
   void* carg;                   /* Data saved for completion routine */
   int status;                   /* Status of URL on completion */
 #ifdef VMS
-  char *print_cmd;		/* print command issued in dtor*/
+  const char *print_cmd;        /* print command issued in dtor*/
 #endif
 
 	/* "other" font is for encodings other than iso-8859-1 */
@@ -225,7 +218,7 @@ public:
    *  Init PostScript Object 
    *	@update 3/19/99 dwc
    */
-  nsresult Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle);
+  nsresult Init( nsIDeviceContextSpecPS *aSpec );
   /** ---------------------------------------------------
    *  Start a postscript page
    *	@update 2/1/99 dwc
@@ -413,13 +406,15 @@ public:
    *	@update 6/1/2000 katakai
    */
   void preshow(const PRUnichar* aText, int aLen);
+  
+  void settitle(PRUnichar * aTitle);
 
   FILE * GetPrintFile();
   PRBool  InitUnixPrinterProps();
   PRBool  GetUnixPrinterSetting(const nsCAutoString&, char**);
+  PrintSetup            *mPrintSetup;
 private:
   PSContext             *mPrintContext;
-  PrintSetup            *mPrintSetup;
   PRUint16              mPageNumber;
   nsCOMPtr<nsIPersistentProperties> mPrinterProps;
   char                  *mTitle;

@@ -247,7 +247,7 @@ protected:
   int                      mDepth;
 
   // graphics state stuff
-  nsVoidArray             *mStateCache;
+  nsAutoVoidArray          mStateCache;
   nsFontXlib              *mCurrentFont;
   nsLineStyle              mCurrentLineStyle;
   xGC                     *mGC;

@@ -113,6 +113,8 @@ private:
   Visual       *mVisual;
   Drawable      mDrawable; /* window */
   xGC          *mGC;
+  int           mXpEventBase, /* XpExtension X event base */
+                mXpErrorBase; /* XpExtension X error base */
   int           mDepth;
   int           mScreenNumber;
   int           mWidth;
@@ -120,13 +122,16 @@ private:
   XPContext     mPContext;
   PRBool        mIsGrayscale; /* color or grayscale ? */
   PRBool        mIsAPrinter;  /* destination: printer or file ? */
-  char         *mPrintFile;   /* file to "print" to */
+  const char   *mPrintFile;   /* file to "print" to */
   void         *mXpuPrintToFileHandle; /* handle for XpuPrintToFile/XpuWaitForPrintFileChild when printing to file */
   long          mPrintResolution;
   nsDeviceContextXp *mContext; /* DeviceContext which created this object */
 
   nsresult SetupWindow(int x, int y, int width, int height);
   nsresult SetupPrintContext(nsIDeviceContextSpecXp *aSpec);
+  nsresult SetPageSize(float page_width_mm, float page_height_mm);
+  nsresult SetOrientation(int landscape);
+
 };
 
 
