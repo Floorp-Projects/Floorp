@@ -360,7 +360,10 @@ class NS_COM nsFileSpec
         ConstStr255Param        GetLeafPName() const { return mSpec.name; }
 
         OSErr                   GetCatInfo(CInfoPBRec& outInfo) const;
-
+#if DOUGT_UNTESTED        
+        OSErr                   SetFileTypeAndCreator(OSType type, OSType creator);
+        OSErr                   GetFileTypeAndCreator(OSType* type, OSType* creator);
+#endif
 #endif // end of Macintosh utility methods.
 
         PRBool                  Valid() const { return NS_SUCCEEDED(Error()); }
