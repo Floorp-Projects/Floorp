@@ -39,6 +39,25 @@ extern nsWeakPtr gMacMenubar;
 
 class nsIWidget;
 
+
+namespace MenuHelpers
+{
+    // utility routine for getting a PresContext out of a webShell
+  nsresult WebShellToPresContext ( nsIWebShell* inWebShell, nsIPresContext** outContext ) ;
+
+    // utility routine for handling unicode->OS text conversions for setting the item
+    // text in a menu.
+  void SetMenuItemText ( MenuHandle macMenuHandle, short menuItem, const nsString& text,
+                         const UnicodeToTextRunInfo converter ) ;
+                                
+    // Converts unicode to a single script run and extract the relevant font information. The
+    // caller is responsible for deleting the memory allocated by this call with |nsMemory::Free()|.
+    // Returns |nsnull| if an error occurred.
+  char* ConvertToScriptRun ( const nsString & inStr, const UnicodeToTextRunInfo inConverter,
+                               short* outFontID, SInt16* outFontSize, Style* outFontStyle ) ;
+}
+
+
 /**
  * Native Mac MenuBar wrapper
  */
@@ -153,7 +172,6 @@ protected:
   Handle      mMacMBarHandle;
   Handle      mOriginalMacMBarHandle;
   UnicodeToTextRunInfo mUnicodeTextRunConverter;
-  void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& menuString);
   
 };
 

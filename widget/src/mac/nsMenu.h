@@ -50,13 +50,6 @@ extern const PRInt16 kAppleMenuID;
  extern PRInt16 mMacMenuIDCount;// = kMacMenuID;
 
 
-namespace MenuHelpers
-{
-    // utility routine for getting a PresContext out of a webShell
-  nsresult WebShellToPresContext ( nsIWebShell* inWebShell, nsIPresContext** outContext ) ;
-}
-
-
 class nsMenu :  public nsIMenu,
                 public nsIMenuListener,
                 public nsIChangeObserver,
@@ -153,9 +146,7 @@ protected:
   nsEventStatus HelpMenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                                     void* menuNode, void* aWebShell);
   
-  void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
   MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
-  MenuHandle NSStringNewChildMenu(short menuID, nsString& menuTitle);
 
 private:
   
