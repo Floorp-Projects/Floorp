@@ -801,11 +801,7 @@ nsresult nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
   nsresult rv = folder->GetName(getter_Copies(name));
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
-	if(!sort)
-	{
-	  createNode(nameString, target, getRDFService());
-	}
-	else
+	if(sort)
 	{
 		PRInt32 order;
 		rv = GetFolderSortOrder(folder, &order);
