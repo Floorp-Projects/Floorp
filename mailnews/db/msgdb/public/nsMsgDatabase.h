@@ -18,7 +18,7 @@
 
 
 #include "nsMsgHdr.h"
-#include "nsMsgPtrArray.h"
+#include "nsMsgPtrArray.h"	// for XPPtrArray
 #include "nsString.h"
 
 class ListContext;
@@ -86,4 +86,5 @@ protected:
 	static void		RemoveFromCache(nsMsgDatabase* pMessageDB);
 	static int		FindInCache(nsMsgDatabase* pMessageDB);
 	static nsMsgDatabaseArray*	GetDBCache();
+	static nsMsgDatabaseArray	*m_dbCache;
 };
