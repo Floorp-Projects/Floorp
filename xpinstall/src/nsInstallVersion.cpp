@@ -28,6 +28,7 @@
 #include "nsIScriptGlobalObject.h"
 
 #include "prprf.h"
+#include "prmem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -268,7 +269,9 @@ nsInstallVersion::ToString(nsString& aReturn)
     char *result=NULL;
     result = PR_sprintf_append(result, "%d.%d.%d.%d", major, minor, release, build);
     
-    aReturn = result;
+    aReturn.SetString(result);
+
+    PR_FREEIF(result);
 
     return NS_OK;
 }
