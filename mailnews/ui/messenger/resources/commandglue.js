@@ -40,7 +40,7 @@ function ComposeMessage(tree, nodeList, msgAppCore, type)
 		composeAppCore = new ComposeAppCore();
 		if (composeAppCore)
 		{
-			var args = "name=" + composeAppCoreName;
+			var args = "name=" + composeAppCoreName + ",editorType=html";
 			composeAppCore.Init(composeAppCoreName);
 			composeAppCore.NewMessage("chrome://messengercompose/content/", args, tree, nodeList, msgAppCore, type);
 			dump("Created a compose appcore from Messenger, " + args);
