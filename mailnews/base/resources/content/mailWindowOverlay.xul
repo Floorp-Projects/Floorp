@@ -351,6 +351,10 @@ Rights Reserved.
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="shift"/>
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
 
+  <!-- View Toggle Keys (F8/F9) -->
+  <key id="key_toggleMessagePane" keycode="VK_F8" oncommand="MsgToggleMessagePane();"/>
+  <key id="key_toggleThreadPane" keycode="VK_F9" oncommand="MsgToggleSplitter('gray_vertical_splitter');"/>
+
   <!-- Label Keys -->
   <key id="key_label0" charcode="&labelCmd0.key;"  oncommand="goDoCommand('cmd_label0')"/>
   <key id="key_label1" charcode="&labelCmd1.key;"  oncommand="goDoCommand('cmd_label1')"/>
@@ -1169,6 +1173,7 @@ Rights Reserved.
            type="checkbox"
            label="&showMessageCmd.label;"
            accesskey="&showMessageCmd.accesskey;"
+           key="key_toggleMessagePane"
            oncommand="MsgToggleMessagePane();"/>
         </menupopup>
       </menu>
