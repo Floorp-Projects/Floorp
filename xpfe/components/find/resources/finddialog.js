@@ -88,13 +88,13 @@ function onLoad()
 
   // get the find instance
   var arg0 = window.arguments[0];
-  if (arg0 instanceof window.opener.nsFindInstData) {
+  // If the dialog was opened from window.find(),
+  // arg0 will be an instance of nsIWebBrowserFind
+  if (arg0 instanceof Components.interfaces.nsIWebBrowserFind) {
+    gFindInst = arg0;
+  } else {
     gFindInstData = arg0;
     gFindInst = gFindInstData.webBrowserFind;
-  } else {
-    // If the dialog was opened from window.find(), findInst will be an
-    // nsISupports interface, so QueryInterface anyway to nsIWebBrowserFind.
-    gFindInst = arg0.QueryInterface(Components.interfaces.nsIWebBrowserFind);
   }
 
   fillDialog();
