@@ -159,5 +159,11 @@ interface nsIMsgCompose : nsISupports {
 
 	/* ... */
     readonly attribute long wrapLength;
+
+	/* by reading this value, you can determine if yes or not the message has been mofified
+	   by the user. When you set this value to false, you reset the modification count
+	   of the body to 0 (clean).
+	*/
+	attribute boolean bodyModified;
 };
 

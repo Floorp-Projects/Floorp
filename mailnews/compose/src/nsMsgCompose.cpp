@@ -346,6 +346,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
   if (editor)
     editor->EnableUndo(PR_TRUE);
+  SetBodyModified(PR_FALSE);
 
   return NS_OK;
 }
@@ -806,8 +807,8 @@ nsresult nsMsgCompose::ShowWindow(PRBool show)
 
 nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor) 
 { 
- *aEditor = m_editor; 
- return NS_OK; 
+  *aEditor = m_editor;
+  return NS_OK;
 } 
 
 nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor) 
@@ -835,6 +836,64 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
 
   return NS_OK;
 } 
+
+nsresult nsMsgCompose::GetBodyModified(PRBool * modified)
+{
+	nsresult rv;
+
+	if (! modified)
+		return NS_ERROR_NULL_POINTER;
+
+	*modified = PR_TRUE;
+			
+	if (m_editor)
+	{
+		nsCOMPtr<nsIEditor> editor;
+		rv = m_editor->GetEditor(getter_AddRefs(editor));
+		if (NS_SUCCEEDED(rv) && editor)
+		{
+			rv = editor->GetDocumentModified(modified);
+			if (NS_FAILED(rv))
+				*modified = PR_TRUE;
+		}
+	}
+
+	return NS_OK; 	
+}
+
+nsresult nsMsgCompose::SetBodyModified(PRBool modified)
+{
+	nsresult  rv = NS_OK;
+
+	if (m_editor)
+	{
+		nsCOMPtr<nsIEditor> editor;
+		rv = m_editor->GetEditor(getter_AddRefs(editor));
+		if (NS_SUCCEEDED(rv) && editor)
+		{
+			nsCOMPtr<nsIDOMDocument>  theDoc;
+			rv = editor->GetDocument(getter_AddRefs(theDoc));
+			if (NS_FAILED(rv))
+				return rv;
+  
+			nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc, &rv);
+			if (NS_FAILED(rv))
+				return rv;
+
+			if (modified)
+			{
+				PRInt32  modCount = 0;
+				diskDoc->GetModCount(&modCount);
+				if (modCount == 0)
+					diskDoc->IncrementModCount(1);
+			}
+			else
+				diskDoc->ResetModCount();
+		}
+	}
+
+	return rv; 	
+}
 
 nsresult nsMsgCompose::GetDomWindow(nsIDOMWindow * *aDomWindow)
 {
