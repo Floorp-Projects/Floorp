@@ -95,6 +95,7 @@ public:
     static NS_EXPORT void  Free(void* ptr);
     static NS_EXPORT void  HeapMinimize();
     static NS_EXPORT void* Clone(const void* ptr,  PRUint32 size);
+    static NS_EXPORT nsIAllocator* GetGlobalAllocator();
 private:
     nsAllocator();   // not implemented
     static PRBool EnsureAllocator() {return mAllocator || FetchAllocator();}
