@@ -27,7 +27,6 @@
 #define IMG_BUILD_png 1
 #define IMG_BUILD_jpeg 1
 #define IMG_BUILD_xbm 1
-#define IMG_BUILD_ppm 1
 #endif
 
 #include "nsIGenericFactory.h"
@@ -69,11 +68,6 @@
 #include "nsXBMDecoder.h"
 #endif
 
-#ifdef IMG_BUILD_ppm
-// ppm
-#include "nsPPMDecoder.h"
-#endif
-
 // objects that just require generic constructors
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgCache)
@@ -108,11 +102,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPNGDecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXBMDecoder)
 #endif
 
-#ifdef IMG_BUILD_ppm
-// ppm
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPPMDecoder)
-#endif
-
 static const char* gImageMimeTypes[] = {
 #ifdef IMG_BUILD_gif
   "image/gif",
@@ -133,12 +122,7 @@ static const char* gImageMimeTypes[] = {
 #ifdef IMG_BUILD_xbm
   "image/x-xbitmap",
   "image/x-xbm",
-  "image/xbm",
-#endif
-#ifdef IMG_BUILD_ppm
-  "image/x-portable-bitmap",
-  "image/x-portable-graymap",
-  "image/x-portable-pixmap"
+  "image/xbm"
 #endif
 };
 
@@ -260,23 +244,6 @@ static const nsModuleComponentInfo components[] =
      NS_XBMDECODER_CID,
      "@mozilla.org/image/decoder;2?type=image/xbm",
      nsXBMDecoderConstructor, },
-#endif
-
-
-#ifdef IMG_BUILD_ppm
-  // ppm
-  { "pbm decoder",
-    NS_PPMDECODER_CID,
-    "@mozilla.org/image/decoder;2?type=image/x-portable-bitmap",
-    nsPPMDecoderConstructor, },
-  { "pgm decoder",
-    NS_PPMDECODER_CID,
-    "@mozilla.org/image/decoder;2?type=image/x-portable-graymap",
-    nsPPMDecoderConstructor, },
-  { "ppm decoder",
-    NS_PPMDECODER_CID,
-    "@mozilla.org/image/decoder;2?type=image/x-portable-pixmap",
-    nsPPMDecoderConstructor, },
 #endif
 };
 
