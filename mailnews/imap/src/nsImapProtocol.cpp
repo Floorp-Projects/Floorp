@@ -8014,7 +8014,7 @@ nsresult nsImapMockChannel::OpenCacheEntry()
     {
       // check if this is a filter plugin requesting the message. In that case,we're not
       // fetching a part, and we want the cache key to be just the uri.
-      if (strcmp(anchor, "?header=filter"))
+      if (strcmp(anchor, "?header=filter") && strcmp(anchor, "?header=attach"))
         mTryingToReadPart = PR_TRUE;
       else
         *anchor = '\0'; 

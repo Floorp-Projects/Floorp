@@ -167,7 +167,8 @@ MimeLeaf_parse_buffer (const char *buffer, PRInt32 size, MimeObject *obj)
 
   if (leaf->decoder_data &&
       obj->options && 
-      obj->options->format_out != nsMimeOutput::nsMimeMessageDecrypt)
+      obj->options->format_out != nsMimeOutput::nsMimeMessageDecrypt
+      && obj->options->format_out != nsMimeOutput::nsMimeMessageAttach)
 	return MimeDecoderWrite (leaf->decoder_data, buffer, size);
   else
 	return ((MimeLeafClass *)obj->clazz)->parse_decoded_buffer (buffer, size,

@@ -231,6 +231,7 @@
  */
 
 #include "mimehdrs.h"
+#include "nsVoidArray.h"
 
 typedef struct MimeObject      MimeObject;
 typedef struct MimeObjectClass MimeObjectClass;
@@ -383,8 +384,14 @@ extern void mime_set_crypto_stamp(MimeObject *obj,
 								  PRBool signed_p, PRBool encrypted_p);
 #endif // ENABLE_SMIME
 
-struct MimeParseStateObject {
+class MimeParseStateObject {
+public:
 
+  MimeParseStateObject() 
+      {root = 0; separator_queued_p = PR_FALSE; separator_suppressed_p = PR_FALSE;
+        first_part_written_p = PR_FALSE; post_header_html_run_p = PR_FALSE; first_data_written_p = PR_FALSE; 
+        decrypted_p = PR_FALSE; strippingPart = PR_FALSE;
+      }
   MimeObject *root;				/* The outermost parser object. */
 
   PRBool separator_queued_p;	/* Whether a separator should be written out
@@ -407,10 +414,12 @@ struct MimeParseStateObject {
   PRBool first_data_written_p;	/* State used for Mozilla lazy-stream-
 								   creation evilness. */
 
-  PRBool decrypted_p;			/* If options->dexlate_p is true, then this
-								   will be set to indicate whether any
-								   dexlateion did in fact occur.
-								 */
+  PRBool decrypted_p; /* If options->dexlate_p is true, then this
+                        will be set to indicate whether any
+                        dexlateion did in fact occur.
+                      */
+  nsCStringArray partsToStrip;      /* if we're stripping parts, what parts to strip */
+  PRBool strippingPart;
 };
 
 

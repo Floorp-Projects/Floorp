@@ -251,8 +251,9 @@ nsMailboxService::StreamMessage(const char *aMessageURI, nsISupports *aConsumer,
                                         const char *aAdditionalHeader,
 					nsIURI **aURL)
 {
-    // The mailbox protocol object will look for "header=filter" to decide if it wants to convert 
-    // the data instead of using aConvertData. It turns out to be way too hard to pass aConvertData 
+    // The mailbox protocol object will look for "header=filter" or 
+    // "header=attach" to decide if it wants to convert the data instead of 
+    // using aConvertData. It turns out to be way too hard to pass aConvertData 
     // all the way over to the mailbox protocol object.
     nsCAutoString aURIString(aMessageURI);
     if (aAdditionalHeader)

@@ -47,7 +47,7 @@ interface nsIDOMWindowInternal;
 interface nsITransactionManager;
 interface nsIMsgMessageService;
 
-[scriptable, uuid(74028422-7d28-4624-8fff-f8ec4288332a)]
+[scriptable, uuid(f0f5b18b-9fb8-44d8-ad41-8d837d89fa0c)]
 interface nsIMessenger : nsISupports {
 
     const long eUnknown = 0;
@@ -106,11 +106,17 @@ interface nsIMessenger : nsISupports {
     void saveAllAttachments(in unsigned long count, [array, size_is(count)] in string contentTypeArray,
                             [array, size_is(count)] in string urlArray, [array, size_is(count)] in string displayNameArray,
                             [array, size_is(count)] in string messageUriArray);
+    void detachAttachment(in string contentTpe, in string url, in string displayName, in string messageUri, in boolean saveFirst);
+    void detachAllAttachments(in unsigned long count, [array, size_is(count)] in string contentTypeArray,
+                             [array, size_is(count)] in string urlArray, [array, size_is(count)] in string displayNameArray,
+                             [array, size_is(count)] in string messageUriArray, in boolean saveFirst);
     // saveAttachmentToFolder is used by the drag and drop code to drop an attachment to a destination folder
 	// we need to return the actual file path (including the filename).
     nsILocalFile saveAttachmentToFolder(in string contentType, in string url, in string displayName, in string messageUri, in nsILocalFile aDestFolder);
 
     attribute boolean sendingUnsentMsgs;
+
+    readonly attribute string lastDisplayedMessageUri;
 
     nsIMsgMessageService messageServiceFromURI(in string uri);
 };

@@ -320,7 +320,7 @@ bridge_set_mime_stream_converter_listener(void *bridgeStream, nsIMimeStreamConve
   return NS_OK;
 }
 
-// find a query element in a url and return a pointer to it's data
+// find a query element in a url and return a pointer to its data
 // (query must be in the form "query=")
 static const char * 
 FindQueryElementData(const char * aUrl, const char * aQuery)
@@ -462,7 +462,8 @@ nsStreamConverter::DetermineOutputFormat(const char *aUrl, nsMimeOutputType *aNe
       { "none",      "text/html",  nsMimeOutput::nsMimeMessageBodyDisplay },
       { "quote",     "text/html",  nsMimeOutput::nsMimeMessageQuoting },
       { "saveas",    "text/html",  nsMimeOutput::nsMimeMessageSaveAs },
-      { "src",       "text/plain", nsMimeOutput::nsMimeMessageSource }
+      { "src",       "text/plain", nsMimeOutput::nsMimeMessageSource },
+      { "attach",    "raw",        nsMimeOutput::nsMimeMessageAttach }
     };
 
     // find the requested header in table, ensure that we don't match on a prefix
@@ -573,6 +574,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       mOutputFormat = "text/html";
       break;
       
+    case nsMimeOutput::nsMimeMessageAttach:
     case nsMimeOutput::nsMimeMessageDecrypt:  
     case nsMimeOutput::nsMimeMessageRaw:              // the raw RFC822 data and attachments
       mOutputFormat = "raw";

@@ -723,7 +723,8 @@ nsresult nsNNTPProtocol::SetupPartExtractorListener(nsIStreamListener * aConsume
 
     // check if this is a filter plugin requesting the message.
     // in that case, set up a text converter
-    convertData = (queryStr.Find("header=filter") != kNotFound);
+    convertData = (queryStr.Find("header=filter") != kNotFound 
+      || queryStr.Find("header=attach") != kNotFound);
   }
   else
   {

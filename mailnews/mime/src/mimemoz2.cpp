@@ -635,7 +635,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
     if ( (opt->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
          (opt->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) || 
          (opt->format_out == nsMimeOutput::nsMimeMessageSaveAs) || 
-         (opt->format_out == nsMimeOutput::nsMimeMessagePrintOutput) )
+         (opt->format_out == nsMimeOutput::nsMimeMessagePrintOutput))
     {
       mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_DESCRIPTION, tmp->description);
       mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_TYPE, tmp->real_type);
@@ -1555,28 +1555,31 @@ mime_bridge_create_display_stream(
   msd->options->write_html_p = PR_TRUE;
   switch (format_out) 
   {
-		case nsMimeOutput::nsMimeMessageSplitDisplay:   // the wrapper HTML output to produce the split header/body display
-		case nsMimeOutput::nsMimeMessageHeaderDisplay:  // the split header/body display
-		case nsMimeOutput::nsMimeMessageBodyDisplay:    // the split header/body display
+    case nsMimeOutput::nsMimeMessageSplitDisplay:   // the wrapper HTML output to produce the split header/body display
+    case nsMimeOutput::nsMimeMessageHeaderDisplay:  // the split header/body display
+    case nsMimeOutput::nsMimeMessageBodyDisplay:    // the split header/body display
       msd->options->fancy_headers_p = PR_TRUE;
       msd->options->output_vcard_buttons_p = PR_TRUE;
       msd->options->fancy_links_p = PR_TRUE;
       break;
 
-	case nsMimeOutput::nsMimeMessageSaveAs:         // Save As operations
-	case nsMimeOutput::nsMimeMessageQuoting:        // all HTML quoted/printed output
-  case nsMimeOutput::nsMimeMessagePrintOutput:
+    case nsMimeOutput::nsMimeMessageSaveAs:         // Save As operations
+    case nsMimeOutput::nsMimeMessageQuoting:        // all HTML quoted/printed output
+    case nsMimeOutput::nsMimeMessagePrintOutput:
       msd->options->fancy_headers_p = PR_TRUE;
       msd->options->fancy_links_p = PR_TRUE;
       break;
 
-	case nsMimeOutput::nsMimeMessageBodyQuoting:        // only HTML body quoted output
+    case nsMimeOutput::nsMimeMessageBodyQuoting:        // only HTML body quoted output
       MIME_HeaderType = MimeHeadersNone;
       break;
 
+    case nsMimeOutput::nsMimeMessageAttach:           // handling attachment storage
+        msd->options->write_html_p = PR_FALSE;
+        break;
     case nsMimeOutput::nsMimeMessageRaw:              // the raw RFC822 data (view source) and attachments
-		case nsMimeOutput::nsMimeMessageDraftOrTemplate:  // Loading drafts & templates
-		case nsMimeOutput::nsMimeMessageEditorTemplate:   // Loading templates into editor
+    case nsMimeOutput::nsMimeMessageDraftOrTemplate:  // Loading drafts & templates
+    case nsMimeOutput::nsMimeMessageEditorTemplate:   // Loading templates into editor
     case nsMimeOutput::nsMimeMessageFilterSniffer:    // generating an output that can be scan by a message filter
       break;
 

@@ -289,7 +289,9 @@ MimeMultCMS_init (MimeObject *obj)
         // processing will be shown in the UI.
         
         if (!strstr(urlSpec.get(), "?header=filter") &&
-            !strstr(urlSpec.get(), "&header=filter"))
+            !strstr(urlSpec.get(), "&header=filter")&&
+            !strstr(urlSpec.get(), "?header=attach") &&
+            !strstr(urlSpec.get(), "&header=attach"))
         {
           msgurl = do_QueryInterface(uri);
           if (msgurl)

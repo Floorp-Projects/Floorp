@@ -198,11 +198,16 @@ MimeObject_parse_begin (MimeObject *obj)
 	{
 	  NS_ASSERTION(!obj->headers, "headers should be null");  /* should be the outermost object. */
 
-	  obj->options->state = PR_NEW(MimeParseStateObject);
+	  obj->options->state = new MimeParseStateObject;
 	  if (!obj->options->state) return MIME_OUT_OF_MEMORY;
-	  memset(obj->options->state, 0, sizeof(*obj->options->state));
 	  obj->options->state->root = obj;
 	  obj->options->state->separator_suppressed_p = PR_TRUE; /* no first sep */
+          const char *delParts = PL_strcasestr(obj->options->url, "&del=");
+          if (delParts)
+          {
+            delParts += 5; // advance past "&del="
+            obj->options->state->partsToStrip.ParseString(delParts, ",");
+          }
 	}
 
   /* Decide whether this object should be output or not... */
@@ -228,7 +233,8 @@ MimeObject_parse_begin (MimeObject *obj)
       // First, check for an exact match
       obj->output_p = !strcmp(id, obj->options->part_to_load); 
       if (!obj->output_p && (obj->options->format_out == nsMimeOutput::nsMimeMessageRaw ||
-             obj->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay))
+             obj->options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay
+             || obj->options->format_out == nsMimeOutput::nsMimeMessageAttach))
     {
         // Then, check for subpart
         unsigned int partlen = strlen(obj->options->part_to_load);

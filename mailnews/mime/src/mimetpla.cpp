@@ -123,10 +123,11 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
          obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
        )       );  // The output will be inserted in the composer as quotation
   PRBool plainHTML = quoting || (obj->options &&
-       obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
+       (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs));
        // Just good(tm) HTML. No reliance on CSS.
   PRBool rawPlainText = obj->options &&
-       obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer;
+       (obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer
+         || obj->options->format_out == nsMimeOutput::nsMimeMessageAttach);
 
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   if (status < 0) return status;
@@ -262,7 +263,8 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
        )           );  // see above
   
   PRBool rawPlainText = obj->options &&
-       obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer;
+       (obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer
+        || obj->options->format_out == nsMimeOutput::nsMimeMessageAttach);
 
   /* Run parent method first, to flush out any buffered data. */
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
@@ -314,7 +316,8 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
        // see above
 
   PRBool rawPlainText = obj->options &&
-       obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer;
+       (obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer
+       || obj->options->format_out == nsMimeOutput::nsMimeMessageAttach);
 
   // this routine gets called for every line of data that comes through the
   // mime converter. It's important to make sure we are efficient with 

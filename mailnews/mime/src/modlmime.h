@@ -90,7 +90,7 @@ typedef struct MimeHeaders
 } MimeHeaders;
 
 class MimeDisplayOptions;
-typedef struct MimeParseStateObject MimeParseStateObject;
+class MimeParseStateObject;
 typedef struct MSG_AttachmentData MSG_AttachmentData;
 
 /* Given the name of a header, returns the contents of that header as

@@ -44,7 +44,7 @@
 // mscott@netscape.com. It's critical that the code in here for displaying
 // the message headers for a selected message remain as fast as possible. In particular, 
 // right now, we only introduce one reflow per message. i.e. if you click on a message in the thread
-// pane, we batch up all the changes for displaying the header pane (to, cc, attachements button, etc.) 
+// pane, we batch up all the changes for displaying the header pane (to, cc, attachments button, etc.) 
 // and we make a single pass to display them. It's critical that we maintain this one reflow per message
 // view in the message header pane. 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +70,10 @@ var gOpenLabel;
 var gOpenLabelAccesskey;
 var gSaveLabel;
 var gSaveLabelAccesskey;
+var gDetachLabel;
+var gDetachLabelAccesskey;
+var gDeleteLabel;
+var gDeleteLabelAccesskey;
 var gMessengerBundle;
 var gProfileDirURL;
 var gIOService;
@@ -935,22 +939,96 @@ createNewAttachmentInfo.prototype.printAttachment = function printAttachment()
   */
 }
 
+createNewAttachmentInfo.prototype.detachAttachment = function detachAttachment()
+{
+  messenger.detachAttachment(this.contentType, 
+                             this.url, 
+                             encodeURIComponent(this.displayName), 
+                             this.uri,
+                             true); // save
+}
+
+createNewAttachmentInfo.prototype.deleteAttachment = function deleteAttachment()
+{
+  messenger.detachAttachment(this.contentType, 
+                             this.url, 
+                             encodeURIComponent(this.displayName), 
+                             this.uri,
+                             false); // don't save
+}
+
+createNewAttachmentInfo.prototype.isDeleted = function isDeleted()
+{
+  return (this.contentType == 'text/x-moz-deleted');
+}
+
 function onShowAttachmentContextMenu()
 {
-  // if no attachments are selected, disable the Open and Save...
   var attachmentList = document.getElementById('attachmentList');
   var selectedAttachments = attachmentList.selectedItems;
+  var isSelected = (selectedAttachments.length > 0);
+
+  // if no attachments are selected you can't open an attachment
   var openMenu = document.getElementById('context-openAttachment');
-  var saveMenu = document.getElementById('context-saveAttachment');
-  if (selectedAttachments.length > 0)
+  if (isSelected)
   {
     openMenu.removeAttribute('disabled');
-    saveMenu.removeAttribute('disabled');
   }
   else
   {
     openMenu.setAttribute('disabled', true);
+  }
+
+  // determine if all *selected* attachments are deleted  
+  var isAllDeleted = true;
+  for (index in selectedAttachments)
+  {
+    var listItem = selectedAttachments[index];
+    isAllDeleted = listItem.attachment['isDeleted']();
+  }
+
+  // if no attachments are selected, or all selected attachments are already 
+  // deleted, you can't save, detach or delete an attachment
+  var saveMenu = document.getElementById('context-saveAttachment');
+  var detachMenu = document.getElementById('context-detachAttachment');
+  var deleteMenu = document.getElementById('context-deleteAttachment');
+  if ( isSelected && !isAllDeleted )
+  {
+    saveMenu.removeAttribute('disabled');
+    detachMenu.removeAttribute('disabled');
+    deleteMenu.removeAttribute('disabled');
+  }
+  else
+  {
     saveMenu.setAttribute('disabled', true);
+    detachMenu.setAttribute('disabled', true);
+    deleteMenu.setAttribute('disabled', true);
+  }
+
+  // determine if *all* attachments are deleted  
+  isAllDeleted = true;
+  for (index in currentAttachments)
+  {
+    var attachment = currentAttachments[index];
+    isAllDeleted = (attachment.contentType == 'text/x-moz-deleted');
+  }
+
+  // if all selected attachments are already deleted, you can't save, detach or
+  // delete any attachments
+  var saveAllMenu = document.getElementById('context-saveAllAttachments');
+  var detachAllMenu = document.getElementById('context-detachAllAttachments');
+  var deleteAllMenu = document.getElementById('context-deleteAllAttachments');
+  if ( !isAllDeleted )
+  {
+    saveAllMenu.removeAttribute('disabled');
+    detachAllMenu.removeAttribute('disabled');
+    deleteAllMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    saveAllMenu.setAttribute('disabled', true);
+    detachAllMenu.setAttribute('disabled', true);
+    deleteAllMenu.setAttribute('disabled', true);
   }
 }
 
@@ -1018,7 +1096,10 @@ function displayAttachmentsForExpandedView()
 function setApplicationIconForAttachment(attachment, listitem)
 {
    // generate a moz-icon url for the attachment so we'll show a nice icon next to it.
-   listitem.setAttribute('image', "moz-icon:" + "//" + attachment.displayName + "?size=16&contentType=" + attachment.contentType);
+   if ( attachment.contentType == 'text/x-moz-deleted' )
+     listitem.setAttribute('image', 'chrome://messenger/skin/icons/message-mail-attach-del.gif');
+   else
+     listitem.setAttribute('image', "moz-icon:" + "//" + attachment.displayName + "?size=16&contentType=" + attachment.contentType);
 }
 
 function displayAttachmentsForCollapsedView()
@@ -1045,20 +1126,41 @@ function FillAttachmentListPopup(popup)
 
   if (!gBuildAttachmentPopupForCurrentMsg) return; 
 
-  var attachmentIndex = 0;
-
   // otherwise we need to build the attachment view...
   // First clear out the old view...
   ClearAttachmentMenu(popup);
 
+  // add all attachments to the popup and determine if *all* attachments 
+  // are deleted  
+  var attachmentIndex = 0;
+  var isAllDeleted = true;
   for (index in currentAttachments)
   {
     ++attachmentIndex;
-    addAttachmentToPopup(popup, currentAttachments[index], attachmentIndex);
+    var attachment = currentAttachments[index];
+    isAllDeleted = (attachment.contentType == 'text/x-moz-deleted');
+    addAttachmentToPopup(popup, attachment, attachmentIndex);
+  }
+
+  // if all selected attachments are already deleted, you can't save, detach or
+  // delete any attachments
+  var saveAllMenu = document.getElementById('file-saveAllAttachments');
+  var detachAllMenu = document.getElementById('file-detachAllAttachments');
+  var deleteAllMenu = document.getElementById('file-deleteAllAttachments');
+  if ( !isAllDeleted )
+  {
+    saveAllMenu.removeAttribute('disabled');
+    detachAllMenu.removeAttribute('disabled');
+    deleteAllMenu.removeAttribute('disabled');
+  }
+  else
+  {
+    saveAllMenu.setAttribute('disabled', true);
+    detachAllMenu.setAttribute('disabled', true);
+    deleteAllMenu.setAttribute('disabled', true);
   }
 
   gBuildAttachmentPopupForCurrentMsg = false;
-
 }
 
 // Public method used to clear the file attachment menu
@@ -1066,7 +1168,8 @@ function ClearAttachmentMenu(popup)
 { 
   if ( popup ) 
   { 
-     while ( popup.childNodes.length > 2 ) 
+     //Note: 4 == number of entries in attachmentMenuList definition in msgHdrViewOverlay.xul
+     while ( popup.childNodes.length > 4 ) 
        popup.removeChild(popup.childNodes[0]); 
   } 
 }
@@ -1088,11 +1191,12 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       if (!gMessengerBundle)
         gMessengerBundle = document.getElementById("bundle_messenger");
 
-      // insert the item just before the separator...the separator is the 2nd to last element in the popup.
+      // insert the item just before the separator... 
       item.setAttribute('class', 'menu-iconic');
       setApplicationIconForAttachment(attachment,item);
       var numItemsInPopup = popup.childNodes.length;
-      item = popup.insertBefore(item, popup.childNodes[numItemsInPopup-2]);
+      //Note: 4 == number of entries in attachmentMenuList definition in msgHdrViewOverlay.xul
+      item = popup.insertBefore(item, popup.childNodes[numItemsInPopup-4]);
 
       var formattedDisplayNameString = gMessengerBundle.getFormattedString("attachmentDisplayNameFormat",
                                        [attachmentIndex, attachment.displayName]);
@@ -1116,6 +1220,14 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
         gOpenLabel = gMessengerBundle.getString("openLabel");
       if (!gOpenLabelAccesskey)
         gOpenLabelAccesskey = gMessengerBundle.getString("openLabelAccesskey");
+      if (!gDetachLabel)
+        gDetachLabel = gMessengerBundle.getString("detachLabel");
+      if (!gDetachLabelAccesskey)
+        gDetachLabelAccesskey = gMessengerBundle.getString("detachLabelAccesskey");
+      if (!gDeleteLabel)
+        gDeleteLabel = gMessengerBundle.getString("deleteLabel");
+      if (!gDeleteLabelAccesskey)
+        gDeleteLabelAccesskey = gMessengerBundle.getString("deleteLabelAccesskey");
 
       menuitementry.setAttribute('label', gOpenLabel); 
       menuitementry.setAttribute('accesskey', gOpenLabelAccesskey); 
@@ -1129,12 +1241,32 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       menuitementry.setAttribute('oncommand', 'this.attachment.saveAttachment()'); 
       menuitementry.setAttribute('label', gSaveLabel); 
       menuitementry.setAttribute('accesskey', gSaveLabelAccesskey); 
+      if (attachment.contentType == 'text/x-moz-deleted')
+        menuitementry.setAttribute('disabled', true); 
+      menuitementry = openpopup.appendChild(menuitementry);
+
+      menuitementry = document.createElement('menuitem');
+      menuitementry.attachment = attachment;
+      menuitementry.setAttribute('oncommand', 'this.attachment.detachAttachment()'); 
+      menuitementry.setAttribute('label', gDetachLabel); 
+      menuitementry.setAttribute('accesskey', gDetachLabelAccesskey); 
+      if (attachment.contentType == 'text/x-moz-deleted')
+        menuitementry.setAttribute('disabled', true); 
+      menuitementry = openpopup.appendChild(menuitementry);
+
+      menuitementry = document.createElement('menuitem');
+      menuitementry.attachment = attachment;
+      menuitementry.setAttribute('oncommand', 'this.attachment.deleteAttachment()'); 
+      menuitementry.setAttribute('label', gDeleteLabel); 
+      menuitementry.setAttribute('accesskey', gDeleteLabelAccesskey); 
+      if (attachment.contentType == 'text/x-moz-deleted')
+        menuitementry.setAttribute('disabled', true); 
       menuitementry = openpopup.appendChild(menuitementry);
     }  // if we created a menu item for this attachment...
   } // if we have a popup
 } 
 
-function SaveAllAttachments()
+function HandleAllAttachments(action)
 {
  try 
  {
@@ -1145,23 +1277,42 @@ function SaveAllAttachments()
    var attachmentMessageUriArray = new Array();
 
    // populate these arrays..
+   var actionIndex = 0;
    for (index in currentAttachments)
    {
+     // exclude all attachments already deleted
      var attachment = currentAttachments[index];
-     attachmentContentTypeArray[index] = attachment.contentType;
-     attachmentUrlArray[index] = attachment.url;
-     attachmentDisplayNameArray[index] = encodeURI(attachment.displayName);
-     attachmentMessageUriArray[index] = attachment.uri;
+     if ( attachment.contentType != 'text/x-moz-deleted' )
+     {
+       attachmentContentTypeArray[actionIndex] = attachment.contentType;
+       attachmentUrlArray[actionIndex] = attachment.url;
+       attachmentDisplayNameArray[actionIndex] = encodeURI(attachment.displayName);
+       attachmentMessageUriArray[actionIndex] = attachment.uri;
+       ++actionIndex;
+     }
    }
 
-   // okay the list has been built...now call our save all attachments code...
-   messenger.saveAllAttachments(attachmentContentTypeArray.length,
-                                attachmentContentTypeArray, attachmentUrlArray,
-                                attachmentDisplayNameArray, attachmentMessageUriArray);
+   // okay the list has been built... now call our action code...
+   if ( action == 'save' )
+     messenger.saveAllAttachments(attachmentContentTypeArray.length,
+                                  attachmentContentTypeArray, attachmentUrlArray,
+                                  attachmentDisplayNameArray, attachmentMessageUriArray);
+   else if ( action == 'detach' )
+     messenger.detachAllAttachments(attachmentContentTypeArray.length,
+                                    attachmentContentTypeArray, attachmentUrlArray,
+                                    attachmentDisplayNameArray, attachmentMessageUriArray,
+                                    true); // save
+   else if ( action == 'delete' )
+     messenger.detachAllAttachments(attachmentContentTypeArray.length,
+                                    attachmentContentTypeArray, attachmentUrlArray,
+                                    attachmentDisplayNameArray, attachmentMessageUriArray,
+                                    false); // don't save
+   else
+     dump ("** unknown HandleAllAttachments action: " + action + "**\n");
  }
  catch (ex)
  {
-   dump ("** failed to save all attachments **\n");
+   dump ("** failed to handle all attachments **\n");
  }
 }
 

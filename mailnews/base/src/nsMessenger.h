@@ -74,6 +74,7 @@ protected:
                      nsISupportsArray *srcArray, nsISupportsArray *arguments);
   const nsAdoptingString GetString(const nsAFlatString& aStringName);
   nsresult InitStringBundle();
+  nsresult PromptIfDeleteAttachments(PRBool saveFirst, PRUint32 count, const char **displayNameArray);
 
 private:
   nsresult GetLastSaveDirectory(nsILocalFile **aLastSaveAsDir);

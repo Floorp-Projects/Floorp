@@ -447,7 +447,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
            attachment types and inline images) and is for paranoid users.
        */
   if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer &&
-               opts->format_out != nsMimeOutput::nsMimeMessageDecrypt)
+               opts->format_out != nsMimeOutput::nsMimeMessageDecrypt
+               && opts->format_out != nsMimeOutput::nsMimeMessageAttach)
     if (prefBranch)
     {
       prefBranch->GetIntPref("mailnews.display.html_as", &html_as);
@@ -556,7 +557,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
         // Preliminary use the normal plain text
         clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
         
-        if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer)
+        if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer
+          && opts->format_out != nsMimeOutput::nsMimeMessageAttach)
         {
           PRBool disable_format_flowed = PR_FALSE;
           if (prefBranch)
@@ -657,7 +659,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
         /* Treat all unknown multipart subtypes as "multipart/mixed" */
         clazz = (MimeObjectClass *)&mimeMultipartMixedClass;
 
-      /* If we are sniffing a message, let's threat alternative parts as mixed */
+      /* If we are sniffing a message, let's treat alternative parts as mixed */
       if (opts && opts->format_out == nsMimeOutput::nsMimeMessageFilterSniffer)
         if (clazz == (MimeObjectClass *)&mimeMultipartAlternativeClass)
           clazz = (MimeObjectClass *)&mimeMultipartMixedClass;
@@ -1801,12 +1803,24 @@ MimeObject_write(MimeObject *obj, const char *output, PRInt32 length,
 {
   if (!obj->output_p) return 0;
 
+  // if we're stripping attachments, check if any parent is not being ouput
+  if (obj->options->format_out == nsMimeOutput::nsMimeMessageAttach)
+  {
+    // if true, mime genrates a separator in html - we don't want that.
+    user_visible_p = PR_FALSE;
+
+    for (MimeObject *parent = obj->parent; parent; parent = parent->parent)
+    {
+      if (!parent->output_p)
+        return 0;
+    }
+  }
   if (!obj->options->state->first_data_written_p)
-	{
-	  int status = MimeObject_output_init(obj, 0);
-	  if (status < 0) return status;
-	  NS_ASSERTION(obj->options->state->first_data_written_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
-	}
+  {
+    int status = MimeObject_output_init(obj, 0);
+    if (status < 0) return status;
+    NS_ASSERTION(obj->options->state->first_data_written_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
+  }
 
   return MimeOptions_write(obj->options, output, length, user_visible_p);
 }
