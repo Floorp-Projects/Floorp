@@ -30,6 +30,7 @@
  *   +- defaultNet (String) default network to use for irc:// urls
  *   +- reconnect (Boolean) reconnect when disconnected due to ERROR
  *   +- multiline (Boolean) multiline input mode
+ *   +- colorcodes (Boolean) enable color code escape characters
  *   +- bugURL   (String) url to use for "bug 12345" links.  Use %s to place
  *                        the bug number.
  *   +- initialURLs (String) irc:// urls to connect to on startup, semicolon
@@ -92,6 +93,7 @@ function initPrefs()
         "desc":     ["CIRCNetwork.prototype.INITIAL_DESC",   "New Now Know How"],
         "reconnect": ["CIRCNetwork.prototype.stayingPower",                true],
         "multiline":         ["client.MULTILINE",                         false],
+        "colorCodes":        ["client.COLORCODES",                        false],
         "defaultNet":        ["client.DEFAULT_NETWORK",                "moznet"],
         "charset":           ["client.CHARSET",                              ""],
         "initialURLs":       ["client.INITIAL_URLS",                   "irc://"],

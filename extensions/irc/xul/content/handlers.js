@@ -1009,6 +1009,15 @@ function onInputCompleteLine(e, simulated)
     }
     else /* plain text */
     {
+        /* color codes */
+        if (client.COLORCODES)
+        {
+            e.line = e.line.replace(/%U/g, "\x1f");
+            e.line = e.line.replace(/%B/g, "\x02");
+            e.line = e.line.replace(/%O/g, "\x0f");
+            e.line = e.line.replace(/%C/g, "\x03");
+            e.line = e.line.replace(/%R/g, "\x16");
+        }
         client.sayToCurrentTarget (e.line);
     }
 }

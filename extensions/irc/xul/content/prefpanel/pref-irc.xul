@@ -42,7 +42,7 @@
   <![CDATA[
     var _elementIDs = ["czNickname", "czUsername", "czDesc", 
         "czNotify", "czDisplayCollapse", "czDisplayCopyMsgs",
-        "czReconnect", "czNickCompleteStr"];
+        "czReconnect", "czColorCodes", "czNickCompleteStr"];
   ]]>
   </script>
   
@@ -99,6 +99,9 @@
     <checkbox id="czReconnect" label="&global.reconnect.label;" 
         accesskey="&global.reconnect.accesskey;" prefdefval="true" 
         prefstring="extensions.irc.reconnect"/>
+    <checkbox id="czColorCodes" label="&global.colorcodes.label;" 
+        accesskey="&global.colorcodes.accesskey;" prefdefval="false" 
+        prefstring="extensions.irc.colorCodes"/>
     <separator/>
     <hbox align="center">
       <label value="&global.nickCompleteStr.label;" control="czNickCompleteStr" 

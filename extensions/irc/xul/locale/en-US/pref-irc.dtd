@@ -83,6 +83,8 @@
 <!ENTITY global.copyMsgs.accesskey "i">
 <!ENTITY global.reconnect.label "Automatically reconnect after a disconnect">
 <!ENTITY global.reconnect.accesskey "r">
+<!ENTITY global.colorcodes.label "Enable color code escape characters">
+<!ENTITY global.colorcodes.accesskey "l">
 <!ENTITY global.nickCompleteStr.label "Nickname completion string:">
 <!ENTITY global.nickCompleteStr.accesskey "k">
 <!ENTITY global.nickCompleteStr.desc "This is appended to a nickname when tab-completed as the first word.">
