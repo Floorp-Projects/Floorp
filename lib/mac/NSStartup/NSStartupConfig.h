@@ -15,8 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
- 
+
+#include "IDE_Options.h"
+
 /* Common defines for NSStartup */
 
-/* Used to turn on the GC leak detection system. */
-// #define GC_LEAK_DETECTOR
+/* Turn this on to use the GC based leak detector. */
+#define GC_LEAK_DETECTOR 1
