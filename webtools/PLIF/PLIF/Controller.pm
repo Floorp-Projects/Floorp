@@ -44,6 +44,7 @@ sub init {
     $self->name($0); # may be overridden by descendants
     # prepare the services array for the registration system
     $self->services([]);
+    $self->objects([]);
     $self->servicesHash({});
     # perform the registration
     $self->registerServices();
@@ -85,21 +86,32 @@ sub register {
 sub addObject {
     my $self = shift;
     foreach my $object (@_) {
+        $self->assert(defined($object), 1, 'Internal error: Tried to add undefined object to object list.');
         push(@{$self->objects}, $object);
     }
 }
 
 sub removeObject {
     my $self = shift;
-    foreach my $object (@_) {
-        foreach my $index (0..$#{$self->objects}) {
-            if ($self->objects->[$index] == $object) {
-                # XXX for 5.6.1, use this: delete($self->objects->[$index]);
-                # won't work in early perls though, so instead:
-                $self->objects->[$index] = undef;
+    # XXX for 5.6.1, use this:
+    # foreach my $object (@_) {
+    #     foreach my $index (0..$#{$self->objects}) {
+    #         if ($self->objects->[$index] == $object) {
+    #             delete($self->objects->[$index]);
+    #         }
+    #     }
+    # }
+    # won't work in early perls though, so instead:
+    my $objects = [];
+    object: foreach my $object (@{$self->objects}) {
+        foreach my $removee (@_) {
+            if ($object == $removee) {
+                next object;
             }
         }
+        push(@$objects, $objects);
     }
+    $self->objects($objects);
 }
 
 sub getService {
