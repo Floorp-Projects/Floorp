@@ -35,6 +35,7 @@ DEPTH      = ../..
 
 DIRS =            \
 	base      \
+	asn1      \
 	dev       \
 	pki       \
 	pki1      \
