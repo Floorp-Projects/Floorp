@@ -35,6 +35,11 @@ nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsNativeFileSpec& inFol
 	CreateSummaryFileName();
 }
 
+nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFilePath &inFolderPath) : nsNativeFileSpec(inFolderPath)
+{
+	CreateSummaryFileName();
+}
+
 void nsLocalFolderSummarySpec::SetFolderName(const char *folderPath)
 {
 	*this = folderPath;

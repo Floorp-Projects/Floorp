@@ -33,6 +33,7 @@ public:
 			nsLocalFolderSummarySpec();
 			nsLocalFolderSummarySpec(const char *folderPath);
 			nsLocalFolderSummarySpec(const nsNativeFileSpec& inFolderPath);
+			nsLocalFolderSummarySpec(const nsFilePath &inFolderPath);
 			void SetFolderName(const char *folderPath);
 
 protected:
