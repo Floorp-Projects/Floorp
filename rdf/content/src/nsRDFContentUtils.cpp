@@ -46,6 +46,14 @@
 #include "rdf.h"
 #include "rdfutil.h"
 
+#include "nsILocale.h"
+#include "nsLocaleCID.h"
+#include "nsILocaleFactory.h"
+
+#include "nsIDateTimeFormat.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsIScriptableDateFormat.h"
+
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
@@ -54,6 +62,14 @@ static NS_DEFINE_IID(kIRDFDateIID,     NS_IRDFDATE_IID);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID); // XXX grr...
 static NS_DEFINE_CID(kTextNodeCID,     NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,   NS_RDFSERVICE_CID);
+
+static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
+static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
+static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
+static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
+
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
+static NS_DEFINE_CID(kDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 
 
@@ -289,11 +305,27 @@ nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
     else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFDateIID, (void**) &dateLiteral))) {
 	PRInt64		theDate;
         if (NS_SUCCEEDED(rv = dateLiteral->GetValue( &theDate ))) {
+#if 0
 		PRExplodedTime	dateData;
 		PR_ExplodeTime(theDate, PR_LocalTimeParameters, &dateData);
 		char		dateBuf[128];
 		PR_FormatTime(dateBuf, sizeof(dateBuf)-1, "%c", &dateData);
 		aResult = dateBuf;
+#else
+		// XXX can we catch this somehow instead of creating/destroying it all the time?
+		nsIDateTimeFormat	*aDateTimeFormat;
+		rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
+		              nsIDateTimeFormat::GetIID(), (void **) &aDateTimeFormat);
+		if (NS_SUCCEEDED(rv) && (aDateTimeFormat))
+		{
+			if (NS_SUCCEEDED(rv = aDateTimeFormat->FormatPRTime(nsnull /* nsILocale* locale */, kDateFormatLong,
+				kTimeFormatSeconds, (PRTime)theDate, aResult)))
+			{
+			}
+			NS_RELEASE(aDateTimeFormat);
+		}
+#endif
+
         }
         NS_RELEASE(dateLiteral);
     }
