@@ -80,7 +80,7 @@ nsPrefMigrationFactory::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsPrefMigrationFactory);
 NS_IMPL_RELEASE(nsPrefMigrationFactory);
 /*------------------------------------------------------------------------*/
-/* The PrefMigration CreateInstance Method
+/* The PrefMigration CreateInstance Method                                */
 /*------------------------------------------------------------------------*/
 NS_IMETHODIMP
 nsPrefMigrationFactory::CreateInstance(nsISupports *aOuter, 

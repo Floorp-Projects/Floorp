@@ -13,9 +13,10 @@
 class nsPrefMigration: public nsIPrefMigration
 {
     public:
-      static const nsIID& IID() { static nsIID iid = NS_PrefMigration_CID; return iid; }
-      nsPrefMigration();
-      ~nsPrefMigration();
+      NS_DEFINE_STATIC_CID_ACCESSOR(NS_PrefMigration_CID) 
+
+	  nsPrefMigration();
+      virtual ~nsPrefMigration();
 
       NS_DECL_ISUPPORTS
 
