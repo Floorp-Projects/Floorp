@@ -79,6 +79,7 @@
 #include "nsIWebBrowserFind.h"
 #include "nsNetUtil.h"
 #include "SaveHeaderSniffer.h"
+#include "nsIWebPageDescriptor.h"
 
 #import "CHBrowserView.h"
 
@@ -97,6 +98,7 @@ typedef unsigned int DragReference;
 // Undo/redo
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
+
 
 
 const char kPersistContractID[] = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
@@ -1243,6 +1245,28 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     }
   }
   return nil;
+}
+
+- (already_AddRefed<nsISupports>)getPageDescriptor
+{
+  nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
+  nsCOMPtr<nsIWebPageDescriptor> wpd = do_QueryInterface(docShell);
+  if(!wpd)
+    return NULL;
+
+  nsISupports *desc = NULL;
+  wpd->GetCurrentDescriptor(&desc);	// addrefs
+  return desc;
+}
+
+- (void)setPageDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType
+{
+  nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
+  nsCOMPtr<nsIWebPageDescriptor> wpd = do_QueryInterface(docShell);
+  if(!wpd)
+    return;
+
+  wpd->LoadPage(aDesc, aDisplayType);
 }
 
 @end

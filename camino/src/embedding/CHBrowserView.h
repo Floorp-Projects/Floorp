@@ -41,6 +41,9 @@
 #undef DARWIN
 #import <Cocoa/Cocoa.h>
 
+#include "prtypes.h"
+#include "nsCOMPtr.h"
+
 @class CHBrowserView;
 class CHBrowserListener;
 class nsIDOMWindow;
@@ -52,6 +55,7 @@ class nsIEventSink;
 class nsIDragHelperService;
 class nsIPrintSettings;
 class nsIURI;
+class nsISupports;
 
 
 // Protocol implemented by anyone interested in progress
@@ -222,6 +226,9 @@ enum {
 
 - (IBAction)reloadWithNewCharset:(NSString*)charset;
 - (NSString*)currentCharset;
+
+- (already_AddRefed<nsISupports>)getPageDescriptor;
+- (void)setPageDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType;
 
 @end
 

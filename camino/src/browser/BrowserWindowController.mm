@@ -84,6 +84,7 @@
 #include "nsIURIFixup.h"
 #include "nsIBrowserHistory.h"
 #include "nsIPermissionManager.h"
+#include "nsIWebPageDescriptor.h"
 
 #include <QuickTime/QuickTime.h>
 
@@ -231,11 +232,18 @@ static NSArray* sToolbarDefaults = nil;
 #pragma mark -
 
 @interface BrowserWindowController(Private)
+  // open a new window or tab, but doesn't load anything into them. Must be matched
+  // with a call to do that.
+- (BrowserWindowController*)openNewWindow:(BOOL)aLoadInBG;
+- (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
+
 - (void)setupToolbar;
 - (void)setupSidebarTabs;
 - (NSString*)getContextMenuNodeDocumentURL;
 - (void)loadSourceOfURL:(NSString*)urlStr;
 - (void) transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
+-(void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
+-(void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
 @end
 
 @implementation BrowserWindowController
@@ -1216,16 +1224,26 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)loadSourceOfURL:(NSString*)urlStr
 {
-  NSString* viewSource = [@"view-source:" stringByAppendingString: urlStr];
-
+  // first attempt to get the source that's already loaded
   PRBool loadInBackground;
   nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
 
-  if (![self newTabsAllowed])
-    [self openNewWindowWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
-  else
+  nsCOMPtr<nsISupports> desc = [[mBrowserView getBrowserView] getPageDescriptor];
+  if (desc) {
+    if ([self newTabsAllowed])
+      [self openNewTabWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
+    else
+      [self openNewWindowWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
+    return;
+  }
+
+  //otherwise reload it from the server
+  NSString* viewSource = [@"view-source:" stringByAppendingString: urlStr];
+  if ([self newTabsAllowed])
     [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
+  else
+    [self openNewWindowWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
 }
 
 - (IBAction)viewSource:(id)aSender
@@ -1905,29 +1923,27 @@ static NSArray* sToolbarDefaults = nil;
 
 -(void)openNewWindowWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
 {
-  // Autosave our dimensions before we open a new window.  That ensures the size ends up matching.
-  [self autosaveWindowFrame];
-
-  BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];  
+  BrowserWindowController* browser = [self openNewWindow:aLoadInBG];
   [browser loadURL: aURLSpec referrer:aReferrer activate:!aLoadInBG];
-  
-  if (aLoadInBG)
-  {
-    BrowserWindow* browserWin = [browser window]; 
-    [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
-    [browserWin orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
-    [browserWin setSuppressMakeKeyFront:NO];
-  }
-  else
-    [browser showWindow:self];
 }
 
 - (void)openNewWindowWithGroupURLs: (NSArray *)urlArray loadInBackground: (BOOL)aLoadInBG
 {
+  BrowserWindowController* browser = [self openNewWindow:aLoadInBG];
+  [browser openTabGroup:urlArray replaceExistingTabs:YES];
+}
+
+//
+// -openNewWindow:
+//
+// open a new window, but doesn't load anything into it. Must be matched
+// with a call to do that.
+//
+- (BrowserWindowController*)openNewWindow:(BOOL)aLoadInBG
+{
   // Autosave our dimensions before we open a new window.  That ensures the size ends up matching.
   [self autosaveWindowFrame];
 
-  // Tell the Tab Browser in the newly created window to load the group
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
   if (aLoadInBG)
   {
@@ -1938,13 +1954,25 @@ static NSArray* sToolbarDefaults = nil;
   }
   else
     [browser showWindow:self];
-  [browser openTabGroup:urlArray replaceExistingTabs:YES];
+
+  return browser;
 }
 
 -(void)openNewTabWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
 {
+  BrowserTabViewItem* newTab = [self openNewTab:aLoadInBG];
+  [[newTab view] loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG];
+}
+
+//
+// -openNewTab:
+//
+// open a new tab, but doesn't load anything into it. Must be matched
+// with a call to do that.
+//
+- (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
+{
   BrowserTabViewItem* newTab  = [self createNewTabItem];
-  BrowserWrapper*     newView = [newTab view];
 
   [self ensureBrowserVisible:self];
   
@@ -1968,8 +1996,21 @@ static NSArray* sToolbarDefaults = nil;
   if (!aLoadInBG)
     [mTabBrowser selectTabViewItem: newTab];
 
-  [newView loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG];
+  return newTab;
 }
+
+-(void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
+{
+  BrowserWindowController* browser = [self openNewWindow:aLoadInBG];
+  [[[browser getBrowserWrapper] getBrowserView] setPageDescriptor:aDesc displayType:aDisplayType];
+}
+
+-(void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
+{
+  BrowserTabViewItem* newTab = [self openNewTab:aLoadInBG];
+  [[[newTab view] getBrowserView] setPageDescriptor:aDesc displayType:aDisplayType];
+}
+
 
 - (void)openTabGroup:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting
 {
