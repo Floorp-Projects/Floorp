@@ -100,6 +100,9 @@ JS_END_EXTERN_C
 #elif defined(SOLARIS)
 #define JS_HAVE_LONG_LONG
 
+#elif defined(FREEBSD)
+#define JS_HAVE_LONG_LONG
+
 #elif defined(SUNOS4)
 #undef JS_HAVE_LONG_LONG
 
@@ -120,3 +123,4 @@ extern void *sbrk(int);
 #endif /* XP_UNIX */
 
 #endif /* jsosdep_h___ */
+
