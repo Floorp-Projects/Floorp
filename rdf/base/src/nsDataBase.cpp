@@ -149,6 +149,7 @@ class DBArcsInOutCursor : public nsIRDFArcsOutCursor,
     PRInt32         mCount;
     nsIRDFArcsOutCursor* mOutCursor;
     nsIRDFArcsInCursor* mInCursor;
+    nsVoidArray    mResults;
 
 public:
     DBArcsInOutCursor(DataBase* db, nsIRDFNode* node, PRBool arcsOutp);
@@ -246,9 +247,16 @@ DBArcsInOutCursor::Advance(void)
 {
     nsIRDFDataSource* ds;
     while (mInCursor || mOutCursor) {
-        nsresult result = (mInCursor ? mInCursor->Advance() : mOutCursor->Advance());
-        if (NS_ERROR_RDF_CURSOR_EMPTY != result)
-            return NS_OK;
+        nsresult result = (mInCursor ? mInCursor->Advance() : mOutCursor->Advance());        
+        while (NS_ERROR_RDF_CURSOR_EMPTY != result) {
+            nsIRDFNode* obj ;
+            GetValue(&obj);
+            if (mResults.IndexOf(obj) < 0) {
+                mResults.AppendElement(obj);
+                return NS_OK;
+            }
+            result = (mInCursor ? mInCursor->Advance() : mOutCursor->Advance());        
+        }
 
         if (mCount >= mDataBase->mDataSources.Count())
             break;
@@ -627,7 +635,7 @@ DataBase::HasAssertion(nsIRDFResource* source,
         if (NS_FAILED(rv = ds->HasAssertion(source, property, target, tv, hasAssertion)))
             return rv;
 
-        if (hasAssertion)
+        if (*hasAssertion)
             return NS_OK;
 
         if (NS_FAILED(rv = ds->HasAssertion(source, property, target, !tv, &hasNegation)))

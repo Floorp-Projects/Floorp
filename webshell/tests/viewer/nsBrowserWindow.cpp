@@ -880,6 +880,12 @@ static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
   if (NS_FAILED(rv = db->AddDataSource(ds)))
     goto done;
 
+  if (NS_FAILED(rv = service->GetNamedDataSource("resource:/res/rdf/LocalStore.rdf", &ds)))
+    goto done;
+
+  if (NS_FAILED(rv = db->AddDataSource(ds)))
+    goto done;
+
   if (NS_FAILED(rv = service->GetResource("MailRoot", &root)))
     goto done;
 

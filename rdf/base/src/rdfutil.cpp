@@ -266,8 +266,18 @@ rdf_Assert(nsIRDFService* service,
 
     nsresult rv;
     nsIRDFResource* predicate;
-    if (NS_FAILED(rv = service->GetUnicodeResource(predicateURI, &predicate)))
+	 
+	//XXX gross hack for now since I can't seem to get namespaces working in the parser
+	if (predicateURI.Equals("child") || predicateURI.Equals("subject")) { 
+		nsAutoString prefix("http://home.netscape.com/NC-rdf#");
+		prefix.Append(predicateURI);
+		if (NS_FAILED(rv = service->GetUnicodeResource(prefix, &predicate)))
         return rv;
+	} else {
+		 if (NS_FAILED(rv = service->GetUnicodeResource(predicateURI, &predicate)))
+        return rv;
+	}
+    
 
     rv = rdf_Assert(service, ds, subject, predicate, objectURI);
     NS_RELEASE(predicate);

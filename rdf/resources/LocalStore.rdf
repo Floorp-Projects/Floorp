@@ -1,0 +1,8 @@
+<RDF xml-ns:RDF="http://www.w3.org/TR/WD-rdf-syntax#" 
+	xml-ns:nc="http://home.netscape.com/NC-rdf#">
+
+<RDF:Description RDF:about="MailRoot">
+  <nc:child RDF:resource="http://www.netscape.com" nc:subject="Netscape Home Page!"/>
+</RDF:Description>
+
+</RDF>
