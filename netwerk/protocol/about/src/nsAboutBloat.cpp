@@ -59,7 +59,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     PRInt32 pos = p.Find("?");
     if (pos > 0) {
         nsCAutoString param;
-        (void)p.Right(param, pos+1);
+        (void)p.Right(param, p.Length() - (pos+1));
         if (param.Equals("new"))
             statType = nsTraceRefcnt::NEW_STATS;
         else if (param.Equals("clear"))
