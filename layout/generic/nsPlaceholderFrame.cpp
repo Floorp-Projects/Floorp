@@ -20,6 +20,8 @@
 #include "nsIContentDelegate.h"
 #include "nsIFloaterContainer.h"
 #include "nsBodyFrame.h"
+#include "nsIStyleContext.h"
+#include "nsCSSLayout.h"
 
 static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
 
@@ -56,10 +58,14 @@ NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
                                      nsReflowStatus&      aStatus)
 {
   // Get the floater container in which we're inserted
+  nsIFrame*             containingBlock;
   nsIFloaterContainer*  container = nsnull;
 
-  for (nsIFrame* parent = mGeometricParent; parent; parent->GetGeometricParent(parent)) {
-    if (NS_OK == parent->QueryInterface(kIFloaterContainerIID, (void**)&container)) {
+  for (containingBlock = mGeometricParent;
+       nsnull != containingBlock;
+       containingBlock->GetGeometricParent(containingBlock))
+  {
+    if (NS_OK == containingBlock->QueryInterface(kIFloaterContainerIID, (void**)&container)) {
       break;
     }
   }
@@ -86,10 +92,26 @@ NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
       }
     }
 
+    // Compute the available space for the floater. Use the default 'auto' width
+    // and height values
+    nsSize  kidAvailSize(0, NS_UNCONSTRAINEDSIZE);
+    nsSize  styleSize;
+    PRIntn  styleSizeFlags = nsCSSLayout::GetStyleSize(aPresContext, aReflowState,
+                                                       styleSize);
+
+    // XXX The width and height are for the content area only. Add in space for
+    // border and padding
+    if (styleSizeFlags & NS_SIZE_HAS_WIDTH) {
+      kidAvailSize.width = styleSize.width;
+    }
+    if (styleSizeFlags & NS_SIZE_HAS_HEIGHT) {
+      kidAvailSize.height = styleSize.height;
+    }
+
     // Resize reflow the anchored item into the available space
     // XXX Check for complete?
     nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(mAnchoredItem, aReflowState, aReflowState.maxSize,
+    nsReflowState   reflowState(mAnchoredItem, aReflowState, kidAvailSize,
                                 eReflowReason_Initial);
     mAnchoredItem->WillReflow(*aPresContext);
     mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
