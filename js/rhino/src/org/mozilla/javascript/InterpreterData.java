@@ -85,7 +85,6 @@ class InterpreterData implements Serializable {
 
     int itsFirstLine;
     int itsEndLine;
-    UintMap itsLineNumberTable;
 
     Object securityDomain;
 }

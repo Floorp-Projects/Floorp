@@ -256,14 +256,6 @@ public class Interpreter {
             if (lineno >= itsData.itsEndLine) {
                 itsData.itsEndLine = lineno + 1;
             }
-            if (itsData.itsLineNumberTable == null
-                && Context.getCurrentContext().isGeneratingDebug())
-            {
-                itsData.itsLineNumberTable = new UintMap();
-            }
-            if (itsData.itsLineNumberTable != null) {
-                itsData.itsLineNumberTable.put(lineno, iCodeTop);
-            }
         }
 
         return iCodeTop;
@@ -1233,72 +1225,15 @@ public class Interpreter {
                     out.print("[" + pc + "] ");
                     int token = iCode[pc] & 0xff;
                     String tname = icodeToName(token);
+                    int old_pc = pc;
                     ++pc;
+                    int icodeLength = icodeTokenLength(token);
                     switch (token) {
-                        case TokenStream.SCOPE :
-                        case TokenStream.GETPROTO :
-                        case TokenStream.GETPARENT :
-                        case TokenStream.GETSCOPEPARENT :
-                        case TokenStream.SETPROTO :
-                        case TokenStream.SETPARENT :
-                        case TokenStream.DELPROP :
-                        case TokenStream.TYPEOF :
-                        case TokenStream.NEWSCOPE :
-                        case TokenStream.ENTERWITH :
-                        case TokenStream.LEAVEWITH :
-                        case TokenStream.RETURN :
-                        case TokenStream.ENDTRY :
-                        case TokenStream.THROW :
-                        case TokenStream.JTHROW :
-                        case TokenStream.GETTHIS :
-                        case TokenStream.SETELEM :
-                        case TokenStream.GETELEM :
-                        case TokenStream.SETPROP :
-                        case TokenStream.GETPROP :
-                        case TokenStream.PROPINC :
-                        case TokenStream.PROPDEC :
-                        case TokenStream.ELEMINC :
-                        case TokenStream.ELEMDEC :
-                        case TokenStream.BITNOT :
-                        case TokenStream.BITAND :
-                        case TokenStream.BITOR :
-                        case TokenStream.BITXOR :
-                        case TokenStream.LSH :
-                        case TokenStream.RSH :
-                        case TokenStream.URSH :
-                        case TokenStream.NEG :
-                        case TokenStream.POS :
-                        case TokenStream.SUB :
-                        case TokenStream.MUL :
-                        case TokenStream.DIV :
-                        case TokenStream.MOD :
-                        case TokenStream.ADD :
-                        case TokenStream.POPV :
-                        case TokenStream.POP :
-                        case TokenStream.DUP :
-                        case TokenStream.LT :
-                        case TokenStream.GT :
-                        case TokenStream.LE :
-                        case TokenStream.GE :
-                        case TokenStream.IN :
-                        case TokenStream.INSTANCEOF :
-                        case TokenStream.EQ :
-                        case TokenStream.NE :
-                        case TokenStream.SHEQ :
-                        case TokenStream.SHNE :
-                        case TokenStream.ZERO :
-                        case TokenStream.ONE :
-                        case TokenStream.NULL :
-                        case TokenStream.THIS :
-                        case TokenStream.THISFN :
-                        case TokenStream.FALSE :
-                        case TokenStream.TRUE :
-                        case TokenStream.UNDEFINED :
-                        case SOURCEFILE_ICODE :
-                        case RETURN_UNDEF_ICODE:
-                        case END_ICODE:
+                        default:
+                            if (icodeLength != 1) Context.codeBug();
                             out.println(tname);
                             break;
+
                         case TokenStream.GOSUB :
                         case TokenStream.GOTO :
                         case TokenStream.IFEQ :
@@ -1391,15 +1326,149 @@ public class Interpreter {
                                 pc += 2;
                             }
                             break;
-                        default :
-                            out.close();
-                            throw new RuntimeException("Unknown icode : "
-                                    + token  + " @ pc : " + (pc - 1));
                     }
+                    if (old_pc + icodeLength != pc) Context.codeBug();
                 }
                 out.close();
             }
             catch (IOException x) {}
+        }
+    }
+
+    private static int icodeTokenLength(int icodeToken) {
+        switch (icodeToken) {
+            case TokenStream.SCOPE :
+            case TokenStream.GETPROTO :
+            case TokenStream.GETPARENT :
+            case TokenStream.GETSCOPEPARENT :
+            case TokenStream.SETPROTO :
+            case TokenStream.SETPARENT :
+            case TokenStream.DELPROP :
+            case TokenStream.TYPEOF :
+            case TokenStream.NEWSCOPE :
+            case TokenStream.ENTERWITH :
+            case TokenStream.LEAVEWITH :
+            case TokenStream.RETURN :
+            case TokenStream.ENDTRY :
+            case TokenStream.THROW :
+            case TokenStream.JTHROW :
+            case TokenStream.GETTHIS :
+            case TokenStream.SETELEM :
+            case TokenStream.GETELEM :
+            case TokenStream.SETPROP :
+            case TokenStream.GETPROP :
+            case TokenStream.PROPINC :
+            case TokenStream.PROPDEC :
+            case TokenStream.ELEMINC :
+            case TokenStream.ELEMDEC :
+            case TokenStream.BITNOT :
+            case TokenStream.BITAND :
+            case TokenStream.BITOR :
+            case TokenStream.BITXOR :
+            case TokenStream.LSH :
+            case TokenStream.RSH :
+            case TokenStream.URSH :
+            case TokenStream.NEG :
+            case TokenStream.POS :
+            case TokenStream.SUB :
+            case TokenStream.MUL :
+            case TokenStream.DIV :
+            case TokenStream.MOD :
+            case TokenStream.ADD :
+            case TokenStream.POPV :
+            case TokenStream.POP :
+            case TokenStream.DUP :
+            case TokenStream.LT :
+            case TokenStream.GT :
+            case TokenStream.LE :
+            case TokenStream.GE :
+            case TokenStream.IN :
+            case TokenStream.INSTANCEOF :
+            case TokenStream.EQ :
+            case TokenStream.NE :
+            case TokenStream.SHEQ :
+            case TokenStream.SHNE :
+            case TokenStream.ZERO :
+            case TokenStream.ONE :
+            case TokenStream.NULL :
+            case TokenStream.THIS :
+            case TokenStream.THISFN :
+            case TokenStream.FALSE :
+            case TokenStream.TRUE :
+            case TokenStream.UNDEFINED :
+            case SOURCEFILE_ICODE :
+            case RETURN_UNDEF_ICODE:
+            case END_ICODE:
+                return 1;
+
+            case TokenStream.GOSUB :
+            case TokenStream.GOTO :
+            case TokenStream.IFEQ :
+            case TokenStream.IFNE :
+                // target pc offset
+                return 1 + 2;
+
+            case TokenStream.TRY :
+                // catch pc offset or 0
+                // finally pc offset or 0
+                return 1 + 2 + 2;
+
+            case TokenStream.RETSUB :
+            case TokenStream.ENUMINIT :
+            case TokenStream.ENUMNEXT :
+            case TokenStream.VARINC :
+            case TokenStream.VARDEC :
+            case TokenStream.GETVAR :
+            case TokenStream.SETVAR :
+            case TokenStream.NEWTEMP :
+            case TokenStream.USETEMP :
+                // slot index
+                return 1 + 1;
+
+            case TokenStream.CALLSPECIAL :
+                // line number
+                // name string index
+                // arg count
+                return 1 + 2 + 2 + 2;
+
+            case TokenStream.OBJECT :
+            case TokenStream.CLOSURE :
+            case TokenStream.NEW :
+            case TokenStream.CALL :
+                // name string index
+                // arg count
+                return 1 + 2 + 2;
+
+            case SHORTNUMBER_ICODE :
+                // short number
+                return 1 + 2;
+
+            case INTNUMBER_ICODE :
+                // int number
+                return 1 + 4;
+
+            case TokenStream.NUMBER :
+                // index of double number
+                return 1 + 2;
+
+            case TokenStream.TYPEOFNAME :
+            case TokenStream.GETBASE :
+            case TokenStream.BINDNAME :
+            case TokenStream.SETNAME :
+            case TokenStream.NAME :
+            case TokenStream.NAMEINC :
+            case TokenStream.NAMEDEC :
+            case TokenStream.STRING :
+                // string index
+                return 1 + 2;
+
+            case LINE_ICODE :
+                // line number
+                return 1 + 2;
+
+            default:
+                Context.codeBug(); // Bad icodeToken
+                return 0;
         }
     }
 
@@ -1410,11 +1479,19 @@ public class Interpreter {
         int end = theData.itsEndLine;
         if (offset < 0 || array.length - offset < end - first)
             Context.codeBug();
-        int[] lines = theData.itsLineNumberTable.getKeys();
-        for (int i = 0; i != lines.length; ++i) {
-            int line = lines[i];
-            if (!(first <= line && line < end)) Context.codeBug();
-            array[offset + line - first] = true;
+
+        int iCodeLength = theData.itsICodeTop;
+        byte[] iCode = theData.itsICode;
+        for (int pc = 0; pc != iCodeLength;) {
+            int icodeToken = iCode[pc] & 0xff;
+            int icodeLength = icodeTokenLength(icodeToken);
+            if (icodeToken == LINE_ICODE) {
+                int line = getShort(iCode, pc + 1);
+                if (!(first <= line && line < end)) Context.codeBug();
+                if (icodeLength != 3) Context.codeBug();
+                array[offset + line - first] = true;
+            }
+            pc += icodeLength;
         }
     }
 
