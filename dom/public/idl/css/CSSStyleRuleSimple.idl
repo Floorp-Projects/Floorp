@@ -1,0 +1,5 @@
+
+   interface CSSStyleRuleSimple : CSSStyleRule {
+     attribute wstring selectorText;
+     attribute CSSStyleDeclaration style;
+   };

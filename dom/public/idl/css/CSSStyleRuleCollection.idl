@@ -1,0 +1,5 @@
+
+    interface CSSStyleRuleCollection {
+      readonly attribute unsigned long length;
+      CSSStyleRule item(in unsigned long index);
+    };
