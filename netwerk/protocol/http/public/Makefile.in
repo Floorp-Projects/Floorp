@@ -29,10 +29,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = necko
 XPIDL_MODULE = necko_http
 
-XPIDLSRCS	= \
+SDK_XPIDLSRCS   = \
 		nsIHttpChannel.idl \
-		nsIHttpChannelInternal.idl \
 		nsIHttpHeaderVisitor.idl \
+		$(NULL)
+
+XPIDLSRCS	= \
+		nsIHttpChannelInternal.idl \
 		nsIHttpNotify.idl \
 		nsIHttpProtocolHandler.idl \
 		nsIHttpEventSink.idl \
