@@ -16,34 +16,35 @@
  * Reserved.
  */
 
-#ifndef InsertTextTxn_h__
-#define InsertTextTxn_h__
+#ifndef DeleteElementTxn_h__
+#define DeleteElementTxn_h__
 
 #include "EditTxn.h"
+#include "nsIDOMNode.h"
+#include "nsCOMPtr.h"
 
-#define INSERTTEXTTXN_IID \
-{/* 93276f00-ab2c-11d2-8f4b-006008159b0c*/ \
-0x93276f00, 0xab2c, 0x11d2, \
-{0x8f, 0xb4, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc} }
-
-class nsIDOMCharacterData;
+class nsIDOMDocument;
+class nsIDOMElement;
 
 /**
- * A transaction that changes an attribute of a content node. 
- * This transaction covers add, remove, and change attribute.
+ * A transaction that deletes a single element
  */
-class InsertTextTxn : public EditTxn
+class DeleteElementTxn : public EditTxn
 {
 public:
 
-  InsertTextTxn(nsEditor *aEditor,
-                nsIDOMCharacterData *aElement,
-                PRUint32 aOffset,
-                const nsString& aStringToInsert);
+  DeleteElementTxn(nsEditor *aEditor,
+                   nsIDOMDocument *aDoc,
+                   nsIDOMNode *aElement,
+                   nsIDOMNode *aParent);
+
+  virtual ~DeleteElementTxn();
 
   virtual nsresult Do(void);
 
   virtual nsresult Undo(void);
+
+  virtual nsresult Redo(void);
 
   virtual nsresult GetIsTransient(PRBool *aIsTransient);
 
@@ -55,29 +56,22 @@ public:
 
   virtual nsresult GetRedoString(nsString **aString);
 
-// nsISupports declarations
-
-  // override QueryInterface to handle InsertTextTxn request
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  static const nsIID& IID() { static nsIID iid = INSERTTEXTTXN_IID; return iid; }
-
-
-  virtual nsresult GetData(nsString& aResult);
-
 protected:
   
-  /** the text element to operate upon */
-  nsIDOMCharacterData *mElement;
+  /** the document into which the new node will be inserted */
+  nsIDOMDocument *mDoc;
   
-  /** the offset into mElement where the insertion is to take place */
-  PRUint32 mOffset;
+  /** the element to delete */
+  nsIDOMNode *mElement;
 
-  /** the value to set the attribute to (ignored if mRemoveAttribute==PR_TRUE) */
-  nsString mValue;
+  /** the node into which the new node will be inserted */
+  nsIDOMNode *mParent;
 
-  /** the text to insert into mElement at mOffset */
-  nsString mStringToInsert;
+  /** the index in mParent for the new node */
+  PRUint32 mOffsetInParent;
+
+  /** the node we will insert mNewNode before.  We compute this ourselves. */
+  nsCOMPtr<nsIDOMNode> mRefNode;
 
 };
 

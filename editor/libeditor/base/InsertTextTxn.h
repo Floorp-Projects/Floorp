@@ -21,6 +21,11 @@
 
 #include "EditTxn.h"
 
+#define INSERTTEXTTXN_IID \
+{/* 93276f00-ab2c-11d2-8f4b-006008159b0c*/ \
+0x93276f00, 0xab2c, 0x11d2, \
+{0x8f, 0xb4, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc} }
+
 class nsIDOMCharacterData;
 
 /**
@@ -49,6 +54,16 @@ public:
   virtual nsresult GetUndoString(nsString **aString);
 
   virtual nsresult GetRedoString(nsString **aString);
+
+// nsISupports declarations
+
+  // override QueryInterface to handle InsertTextTxn request
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  static const nsIID& IID() { static nsIID iid = INSERTTEXTTXN_IID; return iid; }
+
+
+  virtual nsresult GetData(nsString& aResult);
 
 protected:
   

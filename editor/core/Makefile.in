@@ -33,7 +33,9 @@ CPPSRCS =                       \
     InsertTextTxn.cpp           \
     DeleteTextTxn.cpp           \
     CreateElementTxn.cpp        \
-    SplitElementTxn.cpp        \
+    DeleteElementTxn.cpp        \
+    DeleteRangeTxn.cpp          \
+    SplitElementTxn.cpp         \
     $(NULL)
 
 MODULE = editor

@@ -27,7 +27,7 @@
 //#include "nsISelection.h"
 
 class nsIDOMCharacterData;
-
+class nsIPresShell;
 
 //This is the monitor for the editor.
 PRMonitor *getEditorMonitor();
@@ -41,6 +41,7 @@ PRMonitor *getEditorMonitor();
 class nsEditor : public nsIEditor
 {
 private:
+  nsIPresShell *mPresShell;
   nsCOMPtr<nsIDOMDocument>      mDomInterfaceP;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
@@ -64,7 +65,7 @@ public:
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsIDOMDocument *aDomInterface);
+  virtual nsresult Init(nsIDOMDocument *aDomInterface, nsIPresShell* aPresShell);
 
   virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface);
 
@@ -170,6 +171,11 @@ public:
   nsresult CreateElement(const nsString& aTag,
                          nsIDOMNode *    aParent,
                          PRInt32         aPosition);
+
+  nsresult DeleteElement(nsIDOMNode * aParent,
+                         nsIDOMNode * aElement);
+
+  nsresult DeleteSelection();
 
   nsresult InsertText(nsIDOMCharacterData *aElement,
                       PRUint32             aOffset,

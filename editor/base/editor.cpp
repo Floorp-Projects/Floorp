@@ -25,6 +25,7 @@
 #include "nsIDOMAttr.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMRange.h"
 #include "nsIDocument.h"
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
@@ -32,13 +33,17 @@
 #include "nsEditorCID.h"
 #include "nsTransactionManagerCID.h"
 #include "nsITransactionManager.h"
+#include "nsIPresShell.h"
+#include "nsISelection.h"
 #include "nsIAtom.h"
 
 // transactions the editor knows how to build
 #include "ChangeAttributeTxn.h"
 #include "CreateElementTxn.h"
+#include "DeleteElementTxn.h"
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
+#include "DeleteRangeTxn.h"
 
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -47,6 +52,7 @@ static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,          NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMRangeIID,          NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID,          NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
@@ -153,6 +159,9 @@ nsEditor::nsEditor()
 
 nsEditor::~nsEditor()
 {
+  NS_IF_RELEASE(mPresShell);
+  NS_IF_RELEASE(mTxnMgr);
+  
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
   nsCOMPtr<nsIDOMEventReceiver> erP;
@@ -207,12 +216,14 @@ nsEditor::GetDomInterface(nsIDOMDocument **aDomInterface)
 
 
 nsresult
-nsEditor::Init(nsIDOMDocument *aDomInterface)
+nsEditor::Init(nsIDOMDocument *aDomInterface, nsIPresShell* aPresShell)
 {
-  if (!aDomInterface)
+  if ((nsnull==aDomInterface) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
   mDomInterfaceP = aDomInterface;
+  mPresShell = aPresShell;
+  NS_ADDREF(mPresShell);
 
   nsresult t_result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
   if (NS_OK != t_result)
@@ -596,8 +607,31 @@ nsresult nsEditor::CreateElement(const nsString& aTag,
   {
     CreateElementTxn *txn = new CreateElementTxn(this, mDomInterfaceP, aTag, aParent, aPosition);
     if (nsnull!=txn)
-      result = ExecuteTransaction(txn);  
+      result = ExecuteTransaction(txn);
+    else
+      result = NS_ERROR_OUT_OF_MEMORY;
   }
+  else
+    result = NS_ERROR_INVALID_ARG;
+
+  return result;
+}
+
+nsresult nsEditor::DeleteElement(nsIDOMNode * aParent,
+                                 nsIDOMNode * aElement)
+{
+  nsresult result;
+  if ((nsnull != aParent) && (nsnull != aElement))
+  {
+    DeleteElementTxn *txn = new DeleteElementTxn(this, mDomInterfaceP, aElement, aParent);
+    if (nsnull!=txn)
+      result = ExecuteTransaction(txn);  
+    else
+      result = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else
+    result = NS_ERROR_INVALID_ARG;
+
   return result;
 }
 
@@ -610,8 +644,13 @@ nsresult nsEditor::InsertText(nsIDOMCharacterData *aElement,
   {
     InsertTextTxn *txn = new InsertTextTxn(this, aElement, aOffset, aStringToInsert);
     if (nsnull!=txn)
-      result = ExecuteTransaction(txn);  
+      result = ExecuteTransaction(txn);
+    else
+      result = NS_ERROR_OUT_OF_MEMORY;
   }
+  else
+    result = NS_ERROR_INVALID_ARG;
+
   return result;
 }
 
@@ -619,13 +658,42 @@ nsresult nsEditor::DeleteText(nsIDOMCharacterData *aElement,
                               PRUint32             aOffset,
                               PRUint32             aLength)
 {
-  nsresult result;
+  nsresult result=NS_OK;
   if (nsnull != aElement)
   {
     DeleteTextTxn *txn = new DeleteTextTxn(this, aElement, aOffset, aLength);
     if (nsnull!=txn)
-      result = ExecuteTransaction(txn);  
+      result = ExecuteTransaction(txn);
+    else
+      result = NS_ERROR_OUT_OF_MEMORY;
   }
+  else
+    result = NS_ERROR_INVALID_ARG;
+
+  return result;
+}
+
+nsresult nsEditor::DeleteSelection()
+{
+  nsresult result;
+  nsISelection* selection;
+  result = mPresShell->GetSelection(&selection);
+  if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
+  {
+    nsCOMPtr<nsIDOMRange> range;
+    result = selection->QueryInterface(kIDOMRangeIID, getter_AddRefs(range));
+    if ((NS_SUCCEEDED(result)) && (range))
+    {
+      DeleteRangeTxn *txn = new DeleteRangeTxn(this, range);
+      if (nsnull!=txn)
+        result = ExecuteTransaction(txn);  
+      else
+        result = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  else
+    result = NS_ERROR_INVALID_ARG;
+
   return result;
 }
 
@@ -673,8 +741,10 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
         }        
       }
     }
-    else result = NS_ERROR_NULL_POINTER;
   }
+  else
+    result = NS_ERROR_INVALID_ARG;
+
   return result;
 }
 
@@ -730,7 +800,8 @@ nsEditor::JoinNodes(nsIDOMNode * aNodeToKeep,
     }
   }
   else
-    result = NS_ERROR_NULL_POINTER;
+    result = NS_ERROR_INVALID_ARG;
+
   return result;
 }
 
