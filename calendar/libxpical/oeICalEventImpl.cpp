@@ -1047,7 +1047,7 @@ NS_IMETHODIMP oeICalEventImpl::GetPreviousOccurrence( PRTime beforethis, PRTime 
 //#endif
 //                continue;
                 next.day = 0;
-                icaltime_normalize( next );
+                next = icaltime_normalize( next );
             }
             PRTime nextinms = ConvertToPrtime( next );
             if( LL_CMP(nextinms, < ,beforethis) && !IsExcepted( nextinms ) ) {
@@ -1139,7 +1139,7 @@ icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin, bool *isbeg
                 //#endif
                 //continue;
                 next.day = 0;
-                icaltime_normalize( next );
+                next = icaltime_normalize( next );
             }
 
             if( icaltime_compare( next, begin ) > 0 ) {
