@@ -930,7 +930,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsIURI* aURL, const cha
 	rv = channel->GetContentType(&aContentType);
 	if (NS_FAILED(rv)) return rv;
 	nsCOMPtr<nsIURI> aURL;
-	rv = channel->GetURI(dont_AddRef(aURL));
+	rv = channel->GetURI(getter_AddRefs(aURL));
 	if (NS_FAILED(rv)) return rv;
 #endif
 
@@ -998,7 +998,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIURI* aURL, PRUint32 aPro
 	if (channel)
 	{
 		nsCOMPtr<nsIURI> aURL;
-		rv = channel->GetURI(dont_AddRef(aURL));
+		rv = channel->GetURI(getter_AddRefs(aURL));
 		if (NS_FAILED(rv)) return rv;
 #endif
   mPluginStreamInfo->SetLength(aProgressMax);
@@ -1048,7 +1048,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInput
 	if (channel)
 	{
 		nsCOMPtr<nsIURI> aURL;
-		rv = channel->GetURI(dont_AddRef(aURL));
+		rv = channel->GetURI(getter_AddRefs(aURL));
 		if (NS_FAILED(rv)) return rv;
 #endif
   const char* url;
@@ -1096,7 +1096,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopBinding(nsIURI* aURL, nsresult a
   if (channel) 
   {
   	nsCOMPtr<nsIURI> aURL;
-	rv = channel->GetURI(dont_AddRef(aURL));
+	rv = channel->GetURI(getter_AddRefs(aURL));
 	if (NS_FAILED(rv)) return rv;
 #endif // NECKO
   nsPluginReason  reason = nsPluginReason_NoReason;
