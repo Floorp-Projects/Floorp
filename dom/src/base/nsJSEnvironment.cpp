@@ -225,16 +225,20 @@ nsJSContext::InitializeExternalClasses()
 nsresult
 nsJSContext::InitializeLiveConnectClasses()
 {
-	nsresult result = NS_OK;
+	nsresult rv = NS_OK;
 
 #if defined(OJI)
-	nsILiveConnectManager* manager = NULL;
-	result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
-	                                  nsILiveConnectManager::GetIID(),
-	                                  (nsISupports **)&manager);
-	if (result == NS_OK) {
-		result = manager->InitLiveConnectClasses(mContext, JS_GetGlobalObject(mContext));
-		nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
+	NS_WITH_SERVICE(nsIJVMManager, jvmManager, nsIJVMManager::GetCID(), &rv);
+	if (rv == NS_OK && jvmManager != nsnull) {
+		PRBool javaEnabled = PR_FALSE;
+		if (NS_OK == jvmManager->IsJavaEnabled(&javaEnabled) && javaEnabled) {
+			nsILiveConnectManager* liveConnectManager = nsnull;
+			if (NS_OK == jvmManager->QueryInterface(nsILiveConnectManager::GetIID(),
+													(void**)&liveConnectManager)) {
+				rv = liveConnectManager->InitLiveConnectClasses(mContext, JS_GetGlobalObject(mContext));
+				NS_RELEASE(liveConnectManager);
+			}
+		}
 	}
 #endif
 
