@@ -35,6 +35,11 @@
   margin-left: 1px;
 }
 
+.abDirectory treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
+  list-style-image: none !important;                                            
+  padding-left: 12px;                                                           
+}
+
 /* ::::: result pane icons ::::: */
 
 .abResults treeitem > treerow > treecell.cardicon {

@@ -19,8 +19,9 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/cardDialog.css" type="text/css"?>
 
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
 
 <overlay id="editListOverlay"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

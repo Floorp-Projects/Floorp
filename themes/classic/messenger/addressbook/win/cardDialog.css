@@ -31,18 +31,20 @@
 
 /* ::::: Card Edit dialog ::::: */
 
-[class="CardEditWidth"] {
+.CardEditWidth {
 	width: 25em;
 }
 
-[class="CardEditLabel"] {
+.CardEditLabel {
 	padding: 0px;
 	margin-top: 3px;
 }
 
-[class="alignBoxWithFieldset"] {
+.alignBoxWithFieldset {
 	margin-left: 6px;
 	margin-right: 5px;
 }
 
-.stateZipSpacer { width: 3em; }
+.stateZipSpacer {
+  width: 3em;
+}
