@@ -4388,7 +4388,7 @@ XP_Trace
 # lm_component_array_class
 # lm_component_class
 # lm_components_str
-lm_crippled_context
+# lm_crippled_context
 # lm_crippled_decoder
 # lm_disable_str
 # lm_document_class
