@@ -127,6 +127,11 @@ nsBrowserStatusHandler.prototype =
     this.userTyped       = null;
   },
 
+  getFrom : function(object, property)
+  {
+    return object.__proto__.__lookupGetter__(property).call(object);
+  },
+
   setJSStatus : function(status)
   {
     this.jsStatus = status;
@@ -238,7 +243,7 @@ nsBrowserStatusHandler.prototype =
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
         domWindow = aWebProgress.DOMWindow;
         if (aRequest) {
-          if (domWindow == domWindow.top)
+          if (domWindow == this.getFrom(domWindow, "top"))
             this.endDocumentLoad(aRequest, aStatus);
 
           var location = aRequest.QueryInterface(nsIChannel).URI.spec;
@@ -301,7 +306,7 @@ nsBrowserStatusHandler.prototype =
     // Do not update urlbar if there was a subframe navigation
 
     var domWindow = aWebProgress.DOMWindow;
-    if (domWindow == domWindow.top) {
+    if (domWindow == this.getFrom(domWindow, "top")) {
       if (!this.userTyped.value) {
         this.urlBar.value = location;
         // the above causes userTyped.value to become true, reset it
