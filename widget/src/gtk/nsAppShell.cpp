@@ -332,6 +332,17 @@ NS_IMETHODIMP nsAppShell::Spindown()
   return NS_OK;
 }
 
+#ifdef NS_TRACE_MALLOC
+#include "nsTraceMalloc.h"
+
+static gint
+tm_flush_logfiles(gpointer data)
+{
+  NS_TraceMallocFlushLogfiles();
+  return 1;
+}
+#endif
+
 //-------------------------------------------------------------------------
 //
 // Run
@@ -344,6 +355,10 @@ NS_IMETHODIMP nsAppShell::Run()
   
   if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;
+
+#ifdef NS_TRACE_MALLOC
+  gtk_idle_add(tm_flush_logfiles, nsnull);
+#endif
 
   // kick up gtk_main.  this won't return until gtk_main_quit is called
   gtk_main();
