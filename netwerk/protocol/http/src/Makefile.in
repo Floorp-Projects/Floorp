@@ -24,9 +24,13 @@ LIBRARY_NAME = http
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS =                              \
-        nsHttpProtocolHandler.cpp      \
-        nsHttpProtocolConnection.cpp   \
-        nsHttpFactory.cpp              \
+        nsHTTPHandler.cpp      \
+        nsHTTPHandlerFactory.cpp              \
+        nsHTTPConnection.cpp   \
+        nsHTTPRequest.cpp              \
+        nsHTTPRequestObserver.cpp              \
+        nsHTTPResponseListener.cpp              \
+        nsHTTPResponse.cpp              \
         $(NULL)
 
 REQUIRES = xpcom netwerk raptor
