@@ -52,6 +52,31 @@ nsCookieHTTPNotify::nsCookieHTTPNotify() {
 nsCookieHTTPNotify::~nsCookieHTTPNotify() {
 }
 
+NS_METHOD
+nsCookieHTTPNotify::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
+  if (! aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  *aResult = nsnull;
+  nsresult rv;
+  nsIHTTPNotify* inst = nsnull;
+  if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&inst))) {
+    return rv;
+  }
+  if (!inst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  rv = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(rv)) {
+    *aResult = NULL;
+  }
+  NS_RELEASE(inst);
+  return rv;
+}
+
 ///////////////////////////////////
 // nsIHTTPNotify
 
@@ -188,46 +213,3 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsCookieHTTPFactory Implementation
-
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsCookieHTTPNotifyFactory, kIFactoryIID);
-
-nsCookieHTTPNotifyFactory::nsCookieHTTPNotifyFactory(void) {
-  NS_INIT_REFCNT();
-}
-
-nsCookieHTTPNotifyFactory::~nsCookieHTTPNotifyFactory(void) {
-}
-
-nsresult
-nsCookieHTTPNotifyFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
-  if (! aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  *aResult = nsnull;
-  nsresult rv;
-  nsIHTTPNotify* inst = nsnull;
-  if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&inst))) {
-    return rv;
-  }
-  if (!inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv)) {
-    *aResult = NULL;
-  }
-  return rv;
-}
-
-nsresult
-nsCookieHTTPNotifyFactory::LockFactory(PRBool aLock) {
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
