@@ -397,11 +397,21 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
 
     PRUint16 type = 0;
     aStyle->GetNodeType(&type);
-    NS_ENSURE_TRUE(type == nsIDOMNode::ELEMENT_NODE ||
-                   type == nsIDOMNode::DOCUMENT_NODE,
-                   NS_ERROR_INVALID_ARG);
+    switch (type) {
+        case nsIDOMNode::ELEMENT_NODE:
+            aStyle->GetOwnerDocument(getter_AddRefs(mStylesheetDocument));
+            break;
+
+        case nsIDOMNode::DOCUMENT_NODE:
+            mStylesheetDocument = do_QueryInterface(aStyle);
+            break;
+
+        default:
+            return NS_ERROR_INVALID_ARG;
+    }
 
     mStylesheet = aStyle;
+    
     return NS_OK;
 }
 
@@ -429,12 +439,7 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
     NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
 
     // Create wrapper for the style document.
-    nsCOMPtr<nsIDOMDocument> styleDOMDocument;
-    mStylesheet->GetOwnerDocument(getter_AddRefs(styleDOMDocument));
-    if (!styleDOMDocument) {
-        styleDOMDocument = do_QueryInterface(mStylesheet);
-    }
-    Document xslDocument(styleDOMDocument);
+    Document xslDocument(mStylesheetDocument);
 
     // Create a new ProcessorState. Must be done after creating the documents
     // so that C++ will ensure that it is destroyed before the documents.
@@ -502,12 +507,7 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
 
     // Create wrapper for the style document.
-    nsCOMPtr<nsIDOMDocument> styleDOMDocument;
-    mStylesheet->GetOwnerDocument(getter_AddRefs(styleDOMDocument));
-    if (!styleDOMDocument) {
-        styleDOMDocument = do_QueryInterface(mStylesheet);
-    }
-    Document xslDocument(styleDOMDocument);
+    Document xslDocument(mStylesheetDocument);
 
     // Create a new ProcessorState. Must be done after creating the documents
     // so that C++ will ensure that it is destroyed before the documents.

@@ -140,6 +140,7 @@ public:
 
 protected:
     nsCOMPtr<nsIDOMNode> mStylesheet;
+    nsCOMPtr<nsIDOMDocument> mStylesheetDocument;
     txExpandedNameMap mVariables;
 };
 
