@@ -2269,9 +2269,7 @@ nsIFrame::GetView() const
 
   // Check for a property on the frame
   nsresult rv;
-  void *value = GetPresContext()->PropertyTable()->GetProperty(this,
-                                                   nsLayoutAtoms::viewProperty,
-                                                               &rv);
+  void *value = GetProperty(nsLayoutAtoms::viewProperty, &rv);
 
   NS_ENSURE_SUCCESS(rv, nsnull);
   NS_ASSERTION(value, "frame state bit was set but frame has no view");
@@ -2291,11 +2289,7 @@ nsIFrame::SetView(nsIView* aView)
     aView->SetClientData(this);
 
     // Set a property on the frame
-    nsresult rv = GetPresContext()->PropertyTable()->SetProperty(this,
-                                                   nsLayoutAtoms::viewProperty,
-                                                                 aView,
-                                                                 nsnull,
-                                                                 nsnull);
+    nsresult rv = SetProperty(nsLayoutAtoms::viewProperty, aView, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set the frame state bit that says the frame has a view
