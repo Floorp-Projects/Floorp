@@ -98,7 +98,7 @@ public:
     OperatorNode* two = (OperatorNode*)aItem2;
 
     PRInt32 rv;
-    rv = one->mStr.Compare(two->mStr, PR_FALSE);
+    rv = one->mStr.CompareWithConversion(two->mStr, PR_FALSE);
     if (0 == rv) {
       nsOperatorFlags form1 = NS_MATHML_OPERATOR_GET_FORM(one->mFlags);
       nsOperatorFlags form2 = NS_MATHML_OPERATOR_GET_FORM(two->mFlags);
