@@ -328,8 +328,8 @@ sub gcc_parser {
 
     # Remember line of first occurrence in the build log
     unless (defined $warnings{$file}{$line}) {
-      $warnings{$file}{$line}->{first_seen_line} = $.
-      $warnings{$file}{$line}->{ignorecount}++;
+      $warnings{$file}{$line}->{first_seen_line} = $.;
+      $warnings{$file}{$line}->{ignorecount} = 0;
     }
 
     my $ignore_it = /$ignore_pat/o;
