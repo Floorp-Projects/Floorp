@@ -118,7 +118,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mIMECompositionStringSize = 0;
 	mIMECompositionStringSize = 0;
 	mIMECompositionUniString = NULL;
-#ifdef DEBUG_tague
+#ifdef tague_keyboard_patch
 	mHaveDBCSLeadByte = false;
 	mDBCSLeadByte = '\0';
 #endif
@@ -1924,7 +1924,7 @@ ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
     case VK_F10:   
     case VK_F11:   
     case VK_F12: 
-#ifdef DEBUG_tague
+#ifdef tague_keyboard_patch
 	case VK_RETURN:
 	case VK_BACK:
 #endif
@@ -2089,7 +2089,7 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 //
 //
 //-------------------------------------------------------------------------
-#ifdef DEBUG_tague
+#ifdef tague_keyboard_patch
 BOOL nsWindow::OnChar( UINT aVirtualKeyCode, bool isMultiByte )
 {
   wchar_t	uniChar;
@@ -2252,7 +2252,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_PAINT:
             result = OnPaint();
             break;
-#ifdef DEBUG_tague
+#ifdef tague_keyboard_patch
 		case WM_SYSCHAR:
 		case WM_CHAR: 
 			{
