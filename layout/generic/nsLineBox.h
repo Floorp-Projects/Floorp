@@ -318,7 +318,8 @@ public:
 
   // mCarriedOutBottomMargin value
   nsCollapsingMargin GetCarriedOutBottomMargin() const;
-  void SetCarriedOutBottomMargin(nsCollapsingMargin aValue);
+  // Returns PR_TRUE if the margin changed
+  PRBool SetCarriedOutBottomMargin(nsCollapsingMargin aValue);
 
   // mFloats
   PRBool HasFloats() const {
