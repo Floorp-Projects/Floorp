@@ -499,7 +499,7 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
   nsKeyEvent keyPressEvent(NS_KEY_PRESS, win);
   InitKeyPressEvent(event, keyPressEvent);
   if (noDefault) {  // If prevent default set for onkeydown, do the same for onkeypress
-    event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+   keyPressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
   }
 
   win->OnKey(keyPressEvent);
@@ -586,7 +586,7 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   nsKeyEvent keyPressEvent(NS_KEY_PRESS, win);
   InitKeyPressEvent(event, keyPressEvent);
   if (noDefault) {  // If prevent default set for onkeydown, do the same for onkeypress
-    event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+    keyPressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
   }
 
   if (event->length) {
