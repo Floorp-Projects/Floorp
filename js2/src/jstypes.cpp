@@ -51,7 +51,7 @@ int JSValue::operator==(const JSValue& value) const
         CASE(i16); CASE(u16);
         CASE(i32); CASE(u32); CASE(f32);
         CASE(i64); CASE(u64); CASE(f64);
-        CASE(object); CASE(array); CASE(function);
+        CASE(object); CASE(array); CASE(function); CASE(string);
         #undef CASE
         // question:  are all undefined values equal to one another?
         case undefined_tag: return 1;
