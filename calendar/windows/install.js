@@ -8,8 +8,6 @@ addDirectory( "resources" );
 
 addDirectory("", "components", getFolder( "Components" ), "" );
 
-addDirectory( "", "bin", getFolder( "Program" ), "" );
-
 var err = getLastError();
   
 if ( err == SUCCESS ) { 
