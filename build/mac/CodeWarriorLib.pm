@@ -27,6 +27,7 @@ Replaces the AppleScript library I<CodeWarriorLib>.
 use strict;
 use Cwd;
 use Mac::Types;
+use Mac::Events;
 use Mac::AppleEvents;
 use Mac::AppleEvents::Simple;
 use Mac::Processes;
@@ -253,10 +254,15 @@ sub activate () {
 		launchAppSpec => $appath,
 		launchControlFlags => launchContinue() + launchNoFileFlags()
 	);
-        unless (LaunchApplication($lp)) {
-                unlink($filepath);
-                die $^E;
-        }
+	unless (LaunchApplication($lp)) {
+		unlink($filepath);
+		die $^E;
+	}
+	
+	#call WNE to allow launch/switch to happen
+	WaitNextEvent();
+	WaitNextEvent();
+	WaitNextEvent();
 }
 
 =pod

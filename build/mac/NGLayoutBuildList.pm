@@ -334,6 +334,9 @@ sub ConfigureBuildSystem()
     #// In the future, we may want to do configurations based on the actual build system itself.
     #// _genBuildSystemInfo();
 
+    # launch codewarrior and write idepath.txt
+    LaunchCodeWarrior();
+    
     #// For now, if we discover a newer header file than existed in Universal Interfaces 3.2,
     #// we'll assume that 3.3 or later is in use.
     my($universal_interfaces) = getCodeWarriorPath("MacOS Support:Universal:Interfaces:CIncludes:");
