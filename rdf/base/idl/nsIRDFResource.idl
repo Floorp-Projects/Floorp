@@ -43,16 +43,24 @@
  * An nsIRDFResource is an object that has unique identity in the 
  * RDF data model. The object's identity is determined by its URI.
  */
-[scriptable, uuid(E0C493D1-9542-11d2-8EB8-00805F29F370)]
+[scriptable, uuid(fb9686a7-719a-49dc-9107-10dea5739341)]
 interface nsIRDFResource : nsIRDFNode {
     /**
-     * The single-byte string value of the resource
+     * The single-byte string value of the resource.
+     * @note THIS IS OBSOLETE. C++ should use GetValueConst and script
+     *       should use .valueUTF8
      */
     readonly attribute string Value;
 
     /**
+     * The UTF-8 URI of the resource.
+     */
+    readonly attribute AUTF8String ValueUTF8;
+
+    /**
      * An unscriptable version used to avoid a string copy. Meant
-     * for use as a performance optimization.
+     * for use as a performance optimization. The string is encoded
+     * in UTF-8.
      */
     [noscript] void GetValueConst([shared] out string aConstValue);
 

@@ -61,6 +61,7 @@ public:
     // nsIRDFResource methods:
     NS_IMETHOD Init(const char* aURI);
     NS_IMETHOD GetValue(char* *aURI);
+    NS_IMETHOD GetValueUTF8(nsACString& aResult);
     NS_IMETHOD GetValueConst(const char** aURI);
     NS_IMETHOD EqualsString(const char* aURI, PRBool* aResult);
     NS_IMETHOD GetDelegate(const char* aKey, REFNSIID aIID, void** aResult);
@@ -75,7 +76,7 @@ protected:
     static nsrefcnt gRDFServiceRefCnt;
 
 protected:
-    char* mURI;
+    nsCString mURI;
 
     struct DelegateEntry {
         nsCString             mKey;
