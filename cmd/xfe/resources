@@ -6339,6 +6339,8 @@ for download.
 *taskBarUndockButton.shadowThickness:			1
 *taskBarUndockButton.shadowType:				shadow_out
 *taskBarUndockButton.buttonLayout:				button_pixmap_only
+*taskBarUndockButton.marginLeft:				1
+*taskBarUndockButton.marginRight:				1
 
 
 *dockedTaskBar*XfeButton.marginBottom:				1
