@@ -474,6 +474,7 @@ nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFil
   nsVoidArray* servers = new nsVoidArray();
   nsVoidArray* smtpservers = new nsVoidArray();
   nsVoidArray* ldapservers = new nsVoidArray();
+  nsVoidArray* labelPrefs = new nsVoidArray();
 
   if (!accounts || !identities || !servers || !smtpservers || !ldapservers)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -483,6 +484,7 @@ nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFil
   ReadBranch("mail.server.", psvc, servers);
   ReadBranch("mail.smtpserver.", psvc, smtpservers);
   ReadBranch("ldap_2.servers.", psvc, ldapservers);
+  ReadBranch("mailnews.labels.", psvc, labelPrefs);
 
   // certain mail prefs may actually be absolute paths instead of profile relative paths
   // we need to fix these paths up before we write them out to the new prefs.js
@@ -501,12 +503,14 @@ nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFil
   WriteBranch("mail.server.", psvc, servers);
   WriteBranch("mail.smtpserver.", psvc, smtpservers);
   WriteBranch("ldap_2.servers.", psvc, ldapservers);
+  WriteBranch("mailnews.labels.", psvc, labelPrefs);
 
   delete accounts;
   delete identities;
   delete servers;
   delete smtpservers;
   delete ldapservers;
+  delete labelPrefs;
 
   nsCOMPtr<nsIFile> targetPrefsFile;
   mTargetProfile->Clone(getter_AddRefs(targetPrefsFile));
