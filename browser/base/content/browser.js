@@ -1919,11 +1919,15 @@ function openHomeDialog(aURL)
 var goButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
     {
+      var statusTextFld = document.getElementById("statusbar-display");
+      statusTextFld.label = gNavigatorBundle.getString("dropongobutton");
       aEvent.target.setAttribute("dragover", "true");
       return true;
     },
   onDragExit: function (aEvent, aDragSession)
     {
+      var statusTextFld = document.getElementById("statusbar-display");
+      statusTextFld.label = "";
       aEvent.target.removeAttribute("dragover");
     },
   onDrop: function (aEvent, aXferData, aDragSession)
@@ -1948,8 +1952,16 @@ var DownloadsButtonDNDObserver = {
   // nsDragAndDrop
   onDragOver: function (aEvent, aFlavour, aDragSession)
   {
+    var statusTextFld = document.getElementById("statusbar-display");
+    statusTextFld.label = gNavigatorBundle.getString("dropondownloadsbutton");
     aDragSession.canDrop = (aFlavour.contentType == "text/x-moz-url" || 
                             aFlavour.contentType == "text/unicode");
+  },
+
+  onDragExit: function (aEvent, aDragSession)
+  {
+    var statusTextFld = document.getElementById("statusbar-display");
+    statusTextFld.label = "";
   },
 
   onDrop: function (aEvent, aXferData, aDragSession)
