@@ -496,11 +496,14 @@ public:
       deviceContext->GetMetricsFor(*plainFont, langGroup, mNormalFont);
       aRenderingContext.SetFont(mNormalFont);
       aRenderingContext.GetWidth(' ', mSpaceWidth);
+      mAveCharWidth = 0;
 #ifdef _WIN32
       mNormalFont->GetAveCharWidth(mAveCharWidth);
-#else
-      mAveCharWidth = 10;
 #endif
+      if (0 == mAveCharWidth) {
+        // provide a default if it could not be resolved
+        mAveCharWidth = 10;
+      }
       mLastFont = mNormalFont;
 
       // Get the small-caps font if needed
