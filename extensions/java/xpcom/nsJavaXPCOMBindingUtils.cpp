@@ -164,8 +164,8 @@ AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
   entry->mJavaObject = java_ref;
   entry->mXPCOMInstance = aXPCOMObject;
 
-  LOG("+ Adding Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x) weakref=0x%08x\n",
-         hash, (int) xpcomObjKey, (PRUint32) java_ref);
+  LOG(("+ Adding Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x) weakref=0x%08x\n",
+       hash, (int) xpcomObjKey, (PRUint32) java_ref));
 }
 
 void
@@ -222,8 +222,8 @@ RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
     PL_DHashTableOperate(gJAVAtoXPCOMBindings, NS_INT32_TO_PTR(hash),
                          PL_DHASH_REMOVE);
     PL_DHashTableOperate(gXPCOMtoJAVABindings, xpcomObjKey, PL_DHASH_REMOVE);
-    LOG("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x) weakref=0x%08x\n",
-        hash, (int) xpcomObjKey, (PRUint32) jweakref);
+    LOG(("- Removing Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x) weakref=0x%08x\n",
+         hash, (int) xpcomObjKey, (PRUint32) jweakref));
 
     env->DeleteWeakGlobalRef(NS_STATIC_CAST(jweak, jweakref));
   }
@@ -247,8 +247,8 @@ GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject)
       xpcomObjKey = GetXPTCStubAddr(entry->mXPCOMInstance);
     else
       xpcomObjKey = ((JavaXPCOMInstance*) entry->mXPCOMInstance)->GetInstance();
-    LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-           hash, (int) xpcomObjKey);
+    LOG(("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
+         hash, (int) xpcomObjKey));
 #endif
     return entry->mXPCOMInstance;
   }
@@ -282,8 +282,8 @@ GetMatchingJavaObject(JNIEnv* env, void* aXPCOMObject)
   }
 
   if (java_obj) {
-    LOG("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-        env->CallIntMethod(java_obj, hashCodeMID), (int) aXPCOMObject);
+    LOG(("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
+         env->CallIntMethod(java_obj, hashCodeMID), (int) aXPCOMObject));
   }
 
   return java_obj;

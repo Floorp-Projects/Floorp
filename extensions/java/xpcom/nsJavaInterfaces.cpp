@@ -405,7 +405,7 @@ XPCOM_NATIVE(FinalizeStub) (JNIEnv *env, jclass that, jobject aJavaObject)
   jclass clazz = env->GetObjectClass(aJavaObject);
   jstring name = (jstring) env->CallObjectMethod(clazz, getNameMID);
   const char* javaObjectName = env->GetStringUTFChars(name, &isCopy);
-  LOG("*** Finalize(java_obj=%s)\n", javaObjectName);
+  LOG(("*** Finalize(java_obj=%s)\n", javaObjectName));
   if (isCopy)
     env->ReleaseStringUTFChars(name, javaObjectName);
 #endif
