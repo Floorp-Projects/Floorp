@@ -3825,6 +3825,7 @@ function asyncOpenWebPanel(event)
          return false;
        loadURI(url);
        event.preventDefault();
+       markLinkVisited(linkNode.href, linkNode);
        return false;
      }
      else
