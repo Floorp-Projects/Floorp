@@ -64,7 +64,7 @@ CIconServicesIcon::~CIconServicesIcon()
 void CIconServicesIcon::DrawSelf()
 {
 	Rect	iconRect;
-	CalcPortFrameRect(iconRect);
+	CalcLocalFrameRect(iconRect);
     AdjustIconRect(iconRect);
     	
 	IconTransformType transform;
@@ -74,7 +74,18 @@ void CIconServicesIcon::DrawSelf()
 	    transform = kTransformDisabled;
 	else
 	    transform = kTransformNone;
-		  
+	
+	// Because the icon may be translucent, clear out the
+	// region under it. The icon will draw differently
+	// depending on the background. This makes it consistent.
+	StRegion cleanRgn;
+	if (::IconRefToRgn(cleanRgn,
+	                   &iconRect,
+	                   mAlignmentType,
+	                   kIconServicesNormalUsageFlag,
+                       mIconRef) == noErr)
+        ::EraseRgn(cleanRgn);
+    
     ::PlotIconRef(&iconRect,
                   mAlignmentType,
                   transform,
@@ -101,14 +112,11 @@ SInt16 CIconServicesIcon::FindHotSpot(Point	inPoint) const
 Boolean CIconServicesIcon::PointInHotSpot(Point		inPoint,
 								          SInt16	inHotSpot) const
 {
-	Point	portPt = inPoint;
-	LocalToPortPoint(portPt);
-
 	Rect	iconRect;
-	CalcPortFrameRect(iconRect);
+	CalcLocalFrameRect(iconRect);
     AdjustIconRect(iconRect);
 
-    return ::PtInIconRef(&portPt, &iconRect, mAlignmentType, kIconServicesNormalUsageFlag, mIconRef);
+    return ::PtInIconRef(&inPoint, &iconRect, mAlignmentType, kIconServicesNormalUsageFlag, mIconRef);
 }
 
 void CIconServicesIcon::HotSpotAction(SInt16		/* inHotSpot */,
@@ -162,10 +170,14 @@ void CIconServicesIcon::Init()
 
 void CIconServicesIcon::AdjustIconRect(Rect& ioRect) const
 {
-	ioRect.top += ((ioRect.bottom - ioRect.top) - 32) / 2;
-	ioRect.left += ((ioRect.right - ioRect.left) - 32) / 2;
-    ioRect.right = ioRect.left + 32;
-    ioRect.bottom = ioRect.top + 32;
+    SDimension16 frameSize;
+    GetFrameSize(frameSize);
+    SInt16 iconSize = (frameSize.width <= 16 && frameSize.height <= 16) ? 16 : 32;
+    
+	ioRect.top += ((ioRect.bottom - ioRect.top) - iconSize) / 2;
+	ioRect.left += ((ioRect.right - ioRect.left) - iconSize) / 2;
+    ioRect.right = ioRect.left + iconSize;
+    ioRect.bottom = ioRect.top + iconSize;
 }
 	
 void CIconServicesIcon::GetIconRef()

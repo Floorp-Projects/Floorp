@@ -53,11 +53,11 @@
 #include "UMacUnicode.h"
 #include "CAppFileLocationProvider.h"
 #include "EmbedEventHandling.h"
-#include "PromptService.h"
+#include "AppComponents.h"
 
 #include "nsEmbedAPI.h"
 
-#include "nsIServiceManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -293,34 +293,27 @@ CBrowserApp::OverrideComponents()
 {
     nsresult rv = NS_OK;
 
-#ifdef NATIVE_PROMPTS
-    #define NS_PROMPTSERVICE_CID \
-     {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
-    static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
-    
-    // Here, we're creating a factory using a method compiled into
-    // the application. This is preferable if you do not want to locate
-    // and load an external DLL. That approach is used by MfcEmbed if
-    // that's of interest.
-    
-    nsCOMPtr<nsIFactory> promptFactory;
-    rv = NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
-    if (NS_FAILED(rv)) return rv;
-    rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
-                                              "Prompt Service",
-                                              "@mozilla.org/embedcomp/prompt-service;1",
-                                              promptFactory,
-                                              PR_TRUE); // replace existing
-#endif
+    nsCOMPtr<nsIComponentRegistrar> cr;
+    NS_GetComponentRegistrar(getter_AddRefs(cr));
+    if (!cr)
+        return NS_ERROR_FAILURE;
 
-    static NS_DEFINE_CID(kDownloadCID, NS_DOWNLOAD_CID);
-    nsCOMPtr<nsIFactory> dlFactory;
-    nsComponentManager::FindFactory(kDownloadCID, getter_AddRefs(dlFactory));
-    rv = nsComponentManager::RegisterFactory(kDownloadCID, 
-                                              "Download", 
-                                              NS_DOWNLOAD_CONTRACTID,
-                                              dlFactory,
-                                              PR_TRUE); // replace existing
+    int numComponents;
+    const nsModuleComponentInfo* componentInfo = GetAppModuleComponentInfo(&numComponents);
+    for (int i = 0; i < numComponents; ++i) {
+        nsCOMPtr<nsIGenericFactory> componentFactory;
+        rv = NS_NewGenericFactory(getter_AddRefs(componentFactory), &(componentInfo[i]));
+            if (NS_FAILED(rv)) {
+            NS_ASSERTION(PR_FALSE, "Unable to create factory for component");
+            continue;
+        }
+
+        rv = cr->RegisterFactory(componentInfo[i].mCID,
+                             componentInfo[i].mDescription,
+                             componentInfo[i].mContractID,
+                             componentFactory);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to register factory for component");
+    }
 
     return rv;
 }
@@ -411,6 +404,9 @@ void CBrowserApp::HandleAppleEvent(const AppleEvent&    inAppleEvent,
                                 
                 theWindow->Show();
             }
+            break;
+            
+        case ae_ApplicationDied: // We get these from opening downloaded files with Stuffit - ignore.
             break;
             
         default:

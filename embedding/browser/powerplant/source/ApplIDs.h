@@ -35,11 +35,15 @@
 //*****************************************************************************
 
 // Windows
+enum {
+    wind_DownloadProgress = 1305
+};
 
 // Views
 enum {
     view_BrowserStatusBar = 130,
-    view_BrowserToolBar = 131
+    view_BrowserToolBar = 131,
+    view_DownloadProgressItem = 1306
 };
 
 // Dialogs
@@ -120,8 +124,24 @@ enum {
     STRx_StdAlertStrings        = 5002,
     
     str_OpeningPopupWindow      = 1,
-    str_OpeningPopupWindowExp
- };
+    str_OpeningPopupWindowExp,  
+    str_ConfirmCloseDownloads,
+    str_ConfirmCloseDownloadsExp
+};
+
+enum {
+    STRx_DownloadStatus         = 5003,
+    
+    str_ProgressFormat          = 1,
+    
+    str_About5Seconds,
+    str_About10Seconds,
+    str_LessThan1Minute,
+    str_About1Minute,
+    str_AboutNMinutes,
+    str_About1Hour,
+    str_AboutNHours
+};
 
 // Icons
 enum {
@@ -148,8 +168,6 @@ enum {
     cmd_OpenDirectory           = 'ODir',
     cmd_OpenLinkInNewWindow     = 'OLnN',
     
-    cmd_SaveAllAs               = 'SvDc',
-
 	cmd_Back                    = 'Back',
 	cmd_Forward                 = 'Forw',
 	cmd_Reload                  = 'Rlod',
@@ -172,7 +190,10 @@ enum {
     
     
     cmd_ManageProfiles          = 'MPrf',
-    cmd_Logout                  = 'LOut'
+    cmd_Logout                  = 'LOut',
+    
+    cmd_SaveLinkTarget          = 'DnlL',
+    cmd_SaveImage               = 'DlIm'
 };
 
 //*****************************************************************************

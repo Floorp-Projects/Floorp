@@ -39,10 +39,20 @@
 #ifndef __PromptService_h
 #define __PromptService_h
 
-#include "nsError.h"
+#include "nsIPromptService.h"
 
-class nsIFactory;
+//*****************************************************************************
+// CPromptService
+//*****************************************************************************   
 
-extern nsresult NS_NewPromptServiceFactory(nsIFactory** aFactory);
+class CPromptService: public nsIPromptService
+{
+public:
+			CPromptService();
+  virtual	~CPromptService();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPROMPTSERVICE
+};
 
 #endif
