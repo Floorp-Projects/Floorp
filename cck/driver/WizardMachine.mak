@@ -1,6 +1,6 @@
 # Microsoft Developer Studio Generated NMAKE File, Based on WizardMachine.dsp
 !IF "$(CFG)" == ""
-CFG=WizardMachine - Win32 Debug
+CFG=WizardMachine - Win32 Release
 !MESSAGE No configuration specified. Defaulting to WizardMachine - Win32 Release.
 !ENDIF 
 
