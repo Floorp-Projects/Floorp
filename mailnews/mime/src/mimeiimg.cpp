@@ -118,12 +118,10 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 	  if (filename)
 	  {
 		  char *escapedName = nsEscape(filename, url_Path);
-		  if (escapedName)
-		  {
+		  if (!escapedName) return MIME_OUT_OF_MEMORY;
 			  url_with_filename += "&filename=";
 			  url_with_filename += escapedName;
 			  nsCRT::free(escapedName);
-		  }
 	  }
 
     // We need to separate images with HR's...
