@@ -21,6 +21,8 @@
 
 #include "nscore.h"
 
+class nsString;
+
 // A color is a 32 bit unsigned integer with four components: R, G, B
 // and A.
 typedef PRUint32 nscolor;
@@ -44,16 +46,16 @@ typedef PRUint32 nscolor;
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
 // This accepts only 3, 6 or 9 digits
-extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aBuf, nscolor* aResult);
+extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aBuf, nscolor* aResult);
 
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
 // This version accepts 1 to 9 digits (missing digits are 0)
-extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const char* aBuf, nscolor* aResult);
+extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResult);
 
 // Translate a color name to a color. Return true if it parses ok,
 // otherwise return false.
-extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aBuf, nscolor* aResult);
+extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsString& aBuf, nscolor* aResult);
 
 // Weird color computing code stolen from winfe which was stolen
 // from the xfe which was written originally by Eric Bina. So there.
