@@ -6412,7 +6412,7 @@ rm -f conftest*
      echo libIDL $LIBIDL_VERSION or higher is required.
   echo Get yourself a RPM or source package from ftp://ftp.mozilla.org/
   echo before your tree is HOSED.
-  echo See http://www.rpi.edu/~veliaa/libIDL/ for more information.
+  echo See http://atv.ne.mediaone.net/libIDL/ for more information.
   { echo "configure: error: libIDL not installed." 1>&2; exit 1; }
   fi
   
