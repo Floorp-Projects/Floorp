@@ -2412,8 +2412,13 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   nsCOMPtr<nsIContent> commonHoverParent = nsnull;
   if ((aState & NS_EVENT_STATE_HOVER) && (aContent != mHoverContent)) {
     if (hHover) {
-      newHover = aContent;
-      oldHover = mHoverContent;
+      nsCOMPtr<nsIDocument> doc;
+      if (aContent && NS_SUCCEEDED(aContent->GetDocument(*getter_AddRefs(doc))) && doc) {
+        newHover = aContent;
+      }
+      if (mHoverContent && NS_SUCCEEDED(mHoverContent->GetDocument(*getter_AddRefs(doc))) && doc) {
+        oldHover = mHoverContent;
+      }
 
       //Find closest common parent
       nsCOMPtr<nsIContent> parent1 = mHoverContent;
