@@ -49,10 +49,14 @@
 #include "nsCairoScreen.h"
 #include "nsCairoScreenManager.h"
 #include "nsCairoBlender.h"
+#ifdef MOZ_ENABLE_XFT
+#include "nsFontMetricsXft.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoFontMetrics)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsXft)
+    //NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoFontMetrics)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoDeviceContext)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoRenderingContext)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoImage)
@@ -105,7 +109,7 @@ static const nsModuleComponentInfo components[] =
   { "Cairo nsFontMetrics",
     NS_FONT_METRICS_CID,
     "@mozilla.org/gfx/fontmetrics;1",
-    nsCairoFontMetricsConstructor },
+    nsFontMetricsXftConstructor },
   { "Cairo Device Context",
     NS_DEVICE_CONTEXT_CID,
     "@mozilla.org/gfx/devicecontext;1",

@@ -67,7 +67,6 @@ REQUIRES =  xpcom \
             $(NULL)
 
 CPPSRCS		= \
-		nsCairoFontMetrics.cpp \
 		nsCairoDeviceContext.cpp \
 		nsCairoRenderingContext.cpp \
 		nsCairoImage.cpp \
@@ -77,6 +76,8 @@ CPPSRCS		= \
 		nsCairoDrawingSurface.cpp \
 		nsCairoGfxFactory.cpp \
 		nsCairoBlender.cpp \
+		nsFontMetricsUtils.cpp \
+		nsFontMetricsXft.cpp \
 		$(NULL)
 
 EXTRA_DSO_LIBS	= gkgfx mozutil_s gfxshared_s
@@ -98,7 +99,7 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ENABLE_GTK2
 EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS)
-CXXFLAGS	+= $(MOZ_GTK_CFLAGS) $(MOZ_XFT_CFLAGS) $(MOZ_GTK2_CFLAGS) -DMOZ_ENABLE_GTK2
-CFLAGS		+= $(MOZ_GTK_CFLAGS) $(MOZ_XFT_CFLAGS) $(MOZ_GTK2_CFLAGS) -DMOZ_ENABLE_GTK2
+CXXFLAGS	+= $(MOZ_GTK_CFLAGS) $(MOZ_XFT_CFLAGS) $(MOZ_GTK2_CFLAGS) -DMOZ_ENABLE_GTK2 -DMOZ_ENABLE_XFT
+CFLAGS		+= $(MOZ_GTK_CFLAGS) $(MOZ_XFT_CFLAGS) $(MOZ_GTK2_CFLAGS) -DMOZ_ENABLE_GTK2 -DMOZ_ENABLE_XFT
 endif
 

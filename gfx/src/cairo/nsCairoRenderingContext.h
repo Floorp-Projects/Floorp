@@ -51,6 +51,7 @@
 #include "nsIRegion.h"
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
+#include "nsICairoFontMetrics.h"
 
 class nsIImage;
 
@@ -214,7 +215,7 @@ protected:
     // we need to manage our own clip region (since we can't get at
     // the old one from cairo)
     nsCOMPtr<nsIRegion> mClipRegion;
-    nsCOMPtr<nsIFontMetrics> mFontMetrics;
+    nsCOMPtr<nsICairoFontMetrics> mFontMetrics;
 
     nsLineStyle mLineStyle;
     nscolor mColor;

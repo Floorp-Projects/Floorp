@@ -87,11 +87,15 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     mDeviceContext = aContext;
     mWidget = aWidget;
 
+
     mDrawingSurface = new nsCairoDrawingSurface();
     mDrawingSurface->Init (cairoDC, aWidget);
 
     mCairo = cairo_create ();
     cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
+
+    float app2dev = mDeviceContext->AppUnitsToDevUnits();
+    cairo_scale(mCairo, app2dev, app2dev);
 
     mClipRegion = new nsCairoRegion();
 
@@ -112,6 +116,9 @@ nsCairoRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSu
 
     mCairo = cairo_create ();
     cairo_set_target_surface (mCairo, mDrawingSurface->GetCairoSurface());
+
+    float app2dev = mDeviceContext->AppUnitsToDevUnits();
+    cairo_scale(mCairo, app2dev, app2dev);
 
     mClipRegion = new nsCairoRegion();
 
@@ -244,7 +251,7 @@ nsCairoRenderingContext::DoCairoClip()
         PRInt32 x, y, w, h;
         mClipRegion->GetBoundingBox(&x, &y, &w, &h);
         cairo_new_path (mCairo);
-        cairo_rectangle (mCairo, double(x), double(y), double(w), double(h));
+        cairo_rectangle (mCairo, double(x*15), double(y*15), double(w*15), double(h*15));
         cairo_clip (mCairo);
     } else if (cplx == eRegionComplexity_complex) {
         nsRegionRectSet *rects = nsnull;
@@ -255,10 +262,10 @@ nsCairoRenderingContext::DoCairoClip()
         cairo_new_path (mCairo);
         for (PRUint32 i = 0; i < rects->mRectsLen; i++) {
             cairo_rectangle (mCairo,
-                             double (rects->mRects[i].x),
-                             double (rects->mRects[i].y),
-                             double (rects->mRects[i].width),
-                             double (rects->mRects[i].height));
+                             double (rects->mRects[i].x * 15),
+                             double (rects->mRects[i].y * 15),
+                             double (rects->mRects[i].width * 15),
+                             double (rects->mRects[i].height * 15));
         }
 
         cairo_clip (mCairo);
@@ -407,7 +414,6 @@ NS_IMETHODIMP
 nsCairoRenderingContext::GetColor(nscolor &aColor) const
 {
     aColor = mColor;
-    NS_ERROR("not used anywhere");
     return NS_OK;
 }
 
@@ -428,6 +434,7 @@ nsCairoRenderingContext::Scale(float aSx, float aSy)
 NS_IMETHODIMP
 nsCairoRenderingContext::GetCurrentTransform(nsTransform2D *&aTransform)
 {
+    printf("getcurrenttrasnform()\n");
     double a, b, c, d, tx, ty;
     cairo_matrix_t *mat = cairo_matrix_create();
     cairo_current_matrix (mCairo, mat);
@@ -445,6 +452,7 @@ nsCairoRenderingContext::GetCurrentTransform(nsTransform2D *&aTransform)
     {
         aTransform->SetToTranslate (tx, ty);
     } else {
+        aTransform->Set(a, b, c, d, tx, ty, MG_2DGENERAL);
         /* XXX we need to add api on nsTransform2D to set all these values since they are private
         aTransform->m00 = a;
         aTransform->m01 = b;
@@ -738,8 +746,8 @@ nsCairoRenderingContext::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 NS_IMETHODIMP
 nsCairoRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 {
-    *aUseBackbuffer = PR_FALSE;
-//    *aUseBackbuffer = PR_TRUE;
+    //    *aUseBackbuffer = PR_FALSE;
+    *aUseBackbuffer = PR_TRUE;
     return NS_OK;
 }
 
@@ -873,7 +881,9 @@ nsCairoRenderingContext::DrawTile(imgIContainer *aImage,
 NS_IMETHODIMP
 nsCairoRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 {
-    mDeviceContext->GetMetricsFor(aFont, aLangGroup, *getter_AddRefs(mFontMetrics));
+    nsCOMPtr<nsIFontMetrics> newMetrics;
+    nsresult rv = mDeviceContext->GetMetricsFor(aFont, aLangGroup, *getter_AddRefs(newMetrics));
+    mFontMetrics = NS_REINTERPRET_CAST(nsICairoFontMetrics*, newMetrics.get());
     return NS_OK;
 }
 
@@ -930,8 +940,7 @@ nsCairoRenderingContext::GetWidth(const char* aString, PRUint32 aLength,
         return NS_OK;
     }
 
-    aWidth = NS_REINTERPRET_CAST(nsCairoFontMetrics*, mFontMetrics.get())->MeasureString(aString, aLength);
-    return NS_OK;
+    return mFontMetrics->GetWidth(aString, aLength, aWidth);
 }
 
 NS_IMETHODIMP
@@ -943,8 +952,7 @@ nsCairoRenderingContext::GetWidth(const PRUnichar *aString, PRUint32 aLength,
         return NS_OK;
     }
 
-    aWidth = NS_REINTERPRET_CAST(nsCairoFontMetrics*, mFontMetrics.get())->MeasureString(aString, aLength);
-    return NS_OK;
+    return mFontMetrics->GetWidth(aString, aLength, aWidth, aFontID);
 }
 
 NS_IMETHODIMP
@@ -1021,6 +1029,9 @@ nsCairoRenderingContext::DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     const nscoord* aSpacing)
 {
+    return mFontMetrics->DrawString(aString, aLength, aX, aY, aSpacing,
+                                    this, mDrawingSurface);
+
 #if 0
     NS_WARNING("DrawString 1");
     cairo_move_to(mCairo, double(aX), double(aY));
@@ -1038,8 +1049,8 @@ nsCairoRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                     PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
-//    NS_WARNING("DrawString 2");
-    return DrawString(nsDependentString(aString), aX, aY, aFontID, aSpacing);
+    return mFontMetrics->DrawString(aString, aLength, aX, aY, aFontID,
+                                    aSpacing, this, mDrawingSurface);
 }
 
 NS_IMETHODIMP
@@ -1048,8 +1059,8 @@ nsCairoRenderingContext::DrawString(const nsString& aString,
                                     PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
-//    NS_WARNING("DrawString 3");
-    return DrawString(NS_ConvertUTF16toUTF8(aString).get(), aString.Length(), aX, aY, aSpacing);
+    return DrawString(aString.get(), aString.Length(),
+                      aX, aY, aFontID, aSpacing);
 }
 
 NS_IMETHODIMP
