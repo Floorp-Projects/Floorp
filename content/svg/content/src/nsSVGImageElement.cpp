@@ -75,10 +75,11 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGImageElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGImageElementBase::)
 
+  // nsISVGContent specializations:
+  virtual void ParentChainChanged();
+
 protected:
   void GetSrc(nsAString& src);
-  
-  virtual void ParentChainChanged();
   
   nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
@@ -329,7 +330,7 @@ nsSVGImageElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 
 
 //----------------------------------------------------------------------
-//
+// nsISVGContent methods
 
 void nsSVGImageElement::ParentChainChanged()
 {

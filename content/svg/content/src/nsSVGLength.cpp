@@ -504,8 +504,8 @@ float nsSVGLength::UserUnitsPerPixel()
 float nsSVGLength::mmPerPixel()
 {
   if (!mContext) {
-    NS_WARNING("no context in mmPerPixel()");
-    return 1e-20f;
+    NS_ERROR("no context in mmPerPixel()");
+    return 1.0f;
   }
   
   nsCOMPtr<nsIDOMSVGNumber> num;
@@ -516,7 +516,7 @@ float nsSVGLength::mmPerPixel()
   
   if (mmPerPx == 0.0f) {
     NS_ASSERTION(PR_FALSE, "invalid mm/pixels");
-    mmPerPx = 1e-20f; // some small value
+    mmPerPx = 1e-4f; // some small value
   }
   
   return mmPerPx;
@@ -525,8 +525,8 @@ float nsSVGLength::mmPerPixel()
 float nsSVGLength::AxisLength()
 {
   if (!mContext) {
-    NS_WARNING("no context in AxisLength()");
-    return 1e-20f;
+    NS_ERROR("no context in AxisLength()");
+    return 1.0f;
   }
 
   nsCOMPtr<nsIDOMSVGNumber> num;

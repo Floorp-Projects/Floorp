@@ -70,8 +70,10 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGRectElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGRectElementBase::)
 
-protected:
+  // nsISVGContent specializations:
   virtual void ParentChainChanged();
+
+protected:
   
   nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
@@ -336,7 +338,7 @@ NS_IMETHODIMP nsSVGRectElement::GetRy(nsIDOMSVGAnimatedLength * *aRy)
 }
 
 //----------------------------------------------------------------------
-//
+// nsISVGContent methods
 
 void nsSVGRectElement::ParentChainChanged()
 {
@@ -444,4 +446,6 @@ void nsSVGRectElement::ParentChainChanged()
     
     length->SetContext(ctx);
   }
+
+  // XXX call baseclass version to recurse into children?
 }  

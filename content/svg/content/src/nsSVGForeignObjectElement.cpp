@@ -69,8 +69,10 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGForeignObjectElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGForeignObjectElementBase::)
 
-protected:
+  // nsISVGContent specializations:
   virtual void ParentChainChanged();
+
+protected:
   
   nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
@@ -284,7 +286,7 @@ NS_IMETHODIMP nsSVGForeignObjectElement::GetHeight(nsIDOMSVGAnimatedLength * *aH
 }
 
 //----------------------------------------------------------------------
-//
+// nsISVGContent methods
 
 void nsSVGForeignObjectElement::ParentChainChanged()
 {

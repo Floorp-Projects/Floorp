@@ -70,8 +70,10 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGEllipseElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGEllipseElementBase::)
 
-protected:
+  // nsISVGContent specializations:
   virtual void ParentChainChanged();
+
+protected:
 
   nsCOMPtr<nsIDOMSVGAnimatedLength> mCx;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mCy;
@@ -287,7 +289,7 @@ NS_IMETHODIMP nsSVGEllipseElement::GetRy(nsIDOMSVGAnimatedLength * *aRy)
 }
 
 //----------------------------------------------------------------------
-//
+// nsISVGContent methods
 
 
 void nsSVGEllipseElement::ParentChainChanged()
@@ -364,4 +366,6 @@ void nsSVGEllipseElement::ParentChainChanged()
     
     length->SetContext(ctx);
   }
+
+  // XXX call baseclass version to recurse into children?
 }  

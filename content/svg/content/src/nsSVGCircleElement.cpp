@@ -67,8 +67,10 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGCircleElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGCircleElementBase::)
 
-protected:
+  // nsISVGContent specializations:
   virtual void ParentChainChanged();
+    
+protected:
   
   nsCOMPtr<nsIDOMSVGAnimatedLength> mCx;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mCy;
@@ -255,7 +257,7 @@ NS_IMETHODIMP nsSVGCircleElement::GetR(nsIDOMSVGAnimatedLength * *aR)
 }
 
 //----------------------------------------------------------------------
-//
+// nsISVGContent methods
 
 void nsSVGCircleElement::ParentChainChanged()
 {
@@ -315,4 +317,6 @@ void nsSVGCircleElement::ParentChainChanged()
     
     length->SetContext(ctx);
   }
+
+  // XXX call baseclass version to recurse into children?
 }  

@@ -76,10 +76,11 @@ public:
   // nsIStyledContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
+  // nsISVGContent specializations:
+  virtual void ParentChainChanged();
+
 protected:
 
-  virtual void ParentChainChanged();
-  
   // nsIDOMSVGTextPositioning properties:
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> mX;
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> mY;
@@ -358,7 +359,7 @@ nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 //----------------------------------------------------------------------
-// 
+// nsISVGContent methods
 
 void nsSVGTSpanElement::ParentChainChanged()
 {
@@ -402,4 +403,7 @@ void nsSVGTSpanElement::ParentChainChanged()
     
     lengthlist->SetContext(ctx);
   }
+
+  // recurse into child content:
+  nsSVGTSpanElementBase::ParentChainChanged();
 }  
