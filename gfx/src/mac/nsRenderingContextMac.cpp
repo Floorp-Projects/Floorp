@@ -21,6 +21,7 @@
 #include "nsFontMetricsMac.h"
 #include "nsIRegion.h"
 #include "nsIEnumerator.h"
+#include "nsRegionMac.h"
 
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
@@ -915,10 +916,38 @@ NS_IMETHODIMP nsRenderingContextMac :: GetClipRect(nsRect &aRect, PRBool &aClipV
 
 NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
-  nsRect rect;
-  nsIRegion* pRegion = (nsIRegion*)&aRegion;
-  pRegion->GetBoundingBox(&rect.x, &rect.y, &rect.width, &rect.height);
-  SetClipRectInPixels(rect, aCombine, aClipEmpty);		//¥TODO: this is wrong: we should clip to the region, not to its bounding box
+	RgnHandle regionH;
+	aRegion.GetNativeRegion(regionH);
+
+	RgnHandle clipRgn = mGS->mClipRegion;
+	if (clipRgn == nsnull)
+		clipRgn = ::NewRgn();
+
+	switch (aCombine)
+	{
+	  case nsClipCombine_kIntersect:
+	  	::SectRgn(clipRgn, regionH, clipRgn);
+	  	break;
+
+	  case nsClipCombine_kUnion:
+	  	::UnionRgn(clipRgn, regionH, clipRgn);
+	  	break;
+
+	  case nsClipCombine_kSubtract:
+	  	::DiffRgn(clipRgn, regionH, clipRgn);
+	  	break;
+
+	  case nsClipCombine_kReplace:
+	  	::CopyRgn(regionH, clipRgn);
+	  	break;
+	}
+
+	StartDraw();
+		::SetClip(clipRgn);
+	EndDraw();
+
+	mGS->mClipRegion = clipRgn;
+	aClipEmpty = ::EmptyRgn(clipRgn);
 
   return NS_OK;
 }
@@ -927,8 +956,6 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
 
 NS_IMETHODIMP nsRenderingContextMac :: GetClipRegion(nsIRegion **aRegion)
 {
-  nsIRegion * pRegion;
-
   static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
   static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 
@@ -936,12 +963,8 @@ NS_IMETHODIMP nsRenderingContextMac :: GetClipRegion(nsIRegion **aRegion)
 
   if (NS_OK == rv)
  	{
-    nsRect rect;
-    PRBool clipState;
-    pRegion = (nsIRegion *)&aRegion;
-    pRegion->Init();
-    GetClipRect(rect, clipState);
-    pRegion->Union(rect.x,rect.y,rect.width,rect.height);
+		nsRegionMac** macRegion = (nsRegionMac**)aRegion;
+		(*macRegion)->SetNativeRegion(mGS->mClipRegion);
  	}
 
   return NS_OK;
