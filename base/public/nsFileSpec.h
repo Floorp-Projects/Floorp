@@ -224,7 +224,8 @@ class NS_BASE nsFileSpec
         void                    operator = (const char* inPath);
         void                    operator = (const nsString& inPath)
                                 {
-                                    *this = nsAutoCString(inPath);
+                                    const nsAutoCString path(inPath);
+                                    *this = path;
                                 }
         void                    operator = (const nsFilePath& inPath);
         void                    operator = (const nsFileURL& inURL);
@@ -284,7 +285,8 @@ class NS_BASE nsFileSpec
                                     // one kind of concatenation of "paths".
         void                    SetLeafName(const nsString& inLeafName)
                                 {
-                                    SetLeafName(nsAutoCString(inLeafName));
+                                    const nsAutoCString leafName(inLeafName);
+                                    SetLeafName(leafName);
                                 }
         void                    GetParent(nsFileSpec& outSpec) const;
                                     // Return the filespec of the parent directory. Used
@@ -297,7 +299,9 @@ class NS_BASE nsFileSpec
         nsFileSpec              operator + (const char* inRelativePath) const;
         nsFileSpec              operator + (const nsString& inRelativePath) const
                                 {
-                                    return *this + nsAutoCString(inRelativePath);
+                                    const nsAutoCString 
+                                      relativePath(inRelativePath);
+                                    return *this + relativePath;
                                 }
         void			        operator += (const char* inRelativePath);
                                     // Concatenate the relative path to this directory.
@@ -310,14 +314,16 @@ class NS_BASE nsFileSpec
                                     // "below" this.
         void			        operator += (const nsString& inRelativePath)
                                 {
-                                    *this += nsAutoCString(inRelativePath);
+                                    const nsAutoCString relativePath(inRelativePath);
+                                    *this += relativePath;
                                 }
 
         void                    MakeUnique();
         void                    MakeUnique(const char* inSuggestedLeafName);
         void                    MakeUnique(const nsString& inSuggestedLeafName)
                                 {
-                                    MakeUnique(nsAutoCString(inSuggestedLeafName));
+                                    const nsAutoCString suggestedLeafName(inSuggestedLeafName);
+                                    MakeUnique(suggestedLeafName);
                                 }
     
         PRBool                  IsDirectory() const;
@@ -336,14 +342,16 @@ class NS_BASE nsFileSpec
         nsresult                Rename(const char* inNewName); // not const: gets updated
         nsresult                Rename(const nsString& inNewName)
                                 {
-                                    return Rename(nsAutoCString(inNewName));
+                                    const nsAutoCString newName(inNewName);
+                                    return Rename(newName);
                                 }
         nsresult                Copy(const nsFileSpec& inNewParentDirectory) const;
         nsresult                Move(const nsFileSpec& inNewParentDirectory) const;
         nsresult                Execute(const char* args) const;
         nsresult                Execute(const nsString& args) const
                                 {
-                                    return Execute(nsAutoCString(args));
+                                    const nsAutoCString argsString(args);
+                                    return Execute(argsString);
                                 }
 
         //--------------------------------------------------
@@ -387,7 +395,8 @@ class NS_BASE nsFileURL
         void                    operator = (const char* inString);
         void                    operator = (const nsString& inString)
                                 {
-                                    *this = nsAutoCString(inString);
+                                    const nsAutoCString string(inString);
+                                    *this = string;
                                 }
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsFileSpec& inOther);
@@ -441,7 +450,8 @@ class NS_BASE nsFilePath
         void                    operator = (const char* inString);
         void                    operator = (const nsString& inString)
                                 {
-                                    *this = nsAutoCString(inString);
+                                    const nsAutoCString string(inString);
+                                    *this = string;
                                 }
         void                    operator = (const nsFileURL& inURL);
         void                    operator = (const nsFileSpec& inOther);
