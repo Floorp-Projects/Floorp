@@ -47,16 +47,16 @@ Rights Reserved.
 		windowtype="mail:3pane">
 
 
-<html:script src="chrome://global/content/strres.js"/>
-<html:script src="chrome://messenger/content/widgetglue.js"/>
-<html:script src="chrome://messenger/content/commandglue.js"/>
-<html:script src="chrome://messenger/content/shareglue.js"/>
-<html:script src="chrome://messenger/content/msgViewNavigation.js"/>
-<html:script src="chrome://messenger/content/mailWindow.js"/>
-<html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-<html:script src="chrome://messenger/content/mailContextMenus.js"/>
-<html:script src="chrome://messenger/content/messengerdnd.js"/>
-<html:script src="chrome://messenger/content/accountUtils.js"/>
+<script src="chrome://global/content/strres.js"/>
+<script src="chrome://messenger/content/widgetglue.js"/>
+<script src="chrome://messenger/content/commandglue.js"/>
+<script src="chrome://messenger/content/shareglue.js"/>
+<script src="chrome://messenger/content/msgViewNavigation.js"/>
+<script src="chrome://messenger/content/mailWindow.js"/>
+<script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<script src="chrome://messenger/content/mailContextMenus.js"/>
+<script src="chrome://messenger/content/messengerdnd.js"/>
+<script src="chrome://messenger/content/accountUtils.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
@@ -316,7 +316,7 @@ Rights Reserved.
 	<box align="horizontal" style="height:100px" flex="1">
 		<box id="sidebar-box">
 			<splitter class="sidebar-main-header" collapse="after" persist="state">
-				<html:div class="panel-bar">&mail-sidebar-header.label;</html:div>
+				<text class="panel-bar" value="&mail-sidebar-header.label;"/>
 			</splitter>
 			<tree id="folderTree" style="width:100px; height: 600px;" flex="1" context="folderPaneContext"/>
 		</box>
@@ -349,12 +349,11 @@ Rights Reserved.
 					<spring flex="100%"/>
 				</box>
 
-				<titledbutton id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;">    
-				</titledbutton>
-				<titledbutton value="&unreadCountText.label;"/>
-				<titledbutton id="unreadMessageCount" style="min-width: 5px"/>
-				<titledbutton value="&totalCountText.label;"/>
-				<titledbutton id="totalMessageCount" style="min-width: 5px"/>
+				<text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>
+				<text value="&unreadCountText.label;"/>
+				<text id="unreadMessageCount" style="min-width: 5px"/>
+				<text value="&totalCountText.label;"/>
+				<text id="totalMessageCount" style="min-width: 5px"/>
 			</box>
 		</box>
 	</box>
