@@ -95,7 +95,7 @@ endif
 #
 
 ifeq (,$(filter-out Linux FreeBSD,$(OS_ARCH)))
-OS_RELEASE	:= $(shell echo $(OS_RELEASE) | sed 's/-.*//')
+OS_RELEASE	:= $(shell echo "$(OS_RELEASE)" | sed 's/-.*//')
 endif
 
 #
