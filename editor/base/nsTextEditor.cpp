@@ -1133,12 +1133,14 @@ NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 }
 
 //
-// Change the wrap width on any top-level <PRE> tags in this document.
-// (Search for more than one in case there are interspersed
-// quoted text blocks.)
+// Change the wrap width on the first <PRE> tag in this document.
+// (Eventually want to search for more than one in case there are
+// interspersed quoted text blocks.)
 // 
 NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 {
+  nsresult res;
+
   if (! aWrapColumn)
     return NS_ERROR_NULL_POINTER;
 
@@ -1157,8 +1159,6 @@ NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   // If wrap col is nonpositive, then we need to remove any existing "cols":
   if (aWrapColumn <= 0)
   {
-    nsresult res;
-
     (void)RemoveAttribute(preElement, colsStr);
 
     if (aWrapColumn == 0)        // Wrap to window width
@@ -1174,7 +1174,12 @@ NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   (void)RemoveAttribute(preElement, wrapStr);
   nsString numCols;
   numCols.Append(aWrapColumn, 10);
-  return SetAttribute(preElement, colsStr, numCols);
+  res = SetAttribute(preElement, colsStr, numCols);
+
+  // Layout doesn't detect that this attribute change requires redraw.  Sigh.
+  //HACKForceRedraw();  // This doesn't do it either!
+
+  return res;
 }  
 
 NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
