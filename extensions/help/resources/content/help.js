@@ -545,6 +545,12 @@ function doFind() {
   searchTree.builder.rebuild();
 }
 
+function doEnabling() {
+  var findButton = document.getElementById("findButton");
+  var findTextbox = document.getElementById("findText");
+  findButton.disabled = !findTextbox.value;
+}
+
 function clearDatabases(compositeDataSource) {
   var enumDS = compositeDataSource.GetDataSources()
   while (enumDS.hasMoreElements()) {
