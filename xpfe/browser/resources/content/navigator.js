@@ -1150,24 +1150,6 @@ function OpenSearch(tabName, searchStr)
                 dump("Can't find status broadcaster!\n");
             }
         }
-        
-        function onProtocolClick()
-        {
-            //TODO: need to hookup to page info
-            var status = document.getElementById("Browser:Status");
-            if ( status ) {
-			    //var msg = "Hey, don't touch me there!";
-				//status.setAttribute("value",msg);
-            }
-        }
-        function onProtocolChange() 
-        {
-            var protocolIcon = document.getElementById("Browser:ProtocolIcon");
-            var uri = protocolIcon.getAttribute("uri");
-            var icon = document.getElementById("protocol-icon");
- 
-            icon.setAttribute("src",uri);
-        }
 
         function doTests() {
         }
