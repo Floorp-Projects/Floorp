@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.6 2001/11/30 23:21:48 relyea%netscape.com Exp $
+ * $Id: loader.c,v 1.7 2001/12/03 19:51:57 relyea%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -955,5 +955,5 @@ BL_Cleanup(void)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return;
-  (vector->p_Cleanup)();
+  (vector->p_BL_Cleanup)();
 }
