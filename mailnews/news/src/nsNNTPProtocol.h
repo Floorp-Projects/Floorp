@@ -27,6 +27,8 @@
 #include "nsIOutputStream.h"
 #include "nsINntpUrl.h"
 
+#include "nsIWebShell.h"  // mscott - this dependency should only be temporary!
+
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
 #include "nsINNTPHost.h"
@@ -35,7 +37,7 @@
 
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
-#define ARTICLE_PATH  "tempArticle.eml"
+#define ARTICLE_PATH  "D|/mozilla/mozilla/mailnews/news/tempArticle.eml"
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
@@ -140,7 +142,9 @@ public:
 	
 	virtual ~nsNNTPProtocol();
 
-	PRInt32 LoadURL(nsIURL * aURL);
+	// aConsumer is typically a display stream you may want the results to be displayed into...
+
+	PRInt32 LoadURL(nsIURL * aURL, nsISupports * aConsumer /* consumer of the url */ = nsnull);
 	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
 
 	NS_DECL_ISUPPORTS
@@ -200,6 +204,7 @@ private:
 	nsITransport			* m_transport; 
 	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
 	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
+	nsIWebShell				* m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 
 	// the nsINntpURL that is currently running
 	nsINntpUrl				* m_runningURL;
@@ -215,10 +220,6 @@ private:
 	PRInt32 	m_previousResponseCode; 
     char       *m_responseText;   /* text returned from NNTP server */
 	char	   *m_hostName;
-
-#ifdef XP_WIN
-	PRBool		calling_netlib_all_the_time;
-#endif
 
     char		*m_dataBuf;
     PRUint32	 m_dataBufSize;
@@ -390,5 +391,12 @@ private:
 
 	PRInt32 ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * bValP, char ** aGroup, char ** aMessageID, char ** aCommandSpecificData);
 };
+
+NS_BEGIN_EXTERN_C
+
+nsresult NS_MailNewsLoadUrl(const nsString& urlString, nsISupports * aConsumer);
+nsresult NS_NewNntpUrl(nsINntpUrl ** aResult, const nsString urlSpec);
+
+NS_END_EXTERN_C
 
 #endif  // nsNNTPProtocol_h___
