@@ -30,6 +30,7 @@
 #include "nsError.h"
 #include "nsICacheService.h"
 #include "nsCache.h"
+#include "nsCacheService.h"
 #include "nsCacheDevice.h"
 
 
@@ -56,56 +57,21 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
 }
 
 
-static void* PR_CALLBACK
-CacheElementReleaseEventHandler(PLEvent *self)
-{
-    nsISupports * element = (nsISupports *)PL_GetEventOwner(self);
-    NS_RELEASE(element);
-    return 0;
-}
-
-
-static void PR_CALLBACK
-CacheElementReleaseDestroyHandler(PLEvent *self)
-{
-    delete self;
-}
-
-
 nsCacheEntry::~nsCacheEntry()
 {
     delete mKey;
     delete mMetaData;
     
-    if (IsStreamData()) return;
+    if (IsStreamData())  return;
 
     // proxy release of of memory cache nsISupports objects
-    if (!mData) {
-        NS_ASSERTION(!mEventQ, "### ~nsCacheEntry: mEventQ but no mData");
-        return;
-    }
-    
-    if (!mEventQ) {
-        NS_ASSERTION(!mData, "### ~nsCacheEntry: mData, but no eventQ");
-        return;
-    }
-    
-    PLEvent * event = new PLEvent;
-    if (!event) {
-        // XXX warning
-        return;
-    }
+    if (!mData)  return;
     
     nsISupports * data = mData;
-    NS_ADDREF(data);    // this reference will be owned by the event
+    NS_ADDREF(data);    // this reference will be owned by the proxy
     mData = nsnull;     // release our reference before switching threads
 
-    PL_InitEvent(event,
-                 data,
-                 CacheElementReleaseEventHandler,
-                 CacheElementReleaseDestroyHandler);
-    
-    mEventQ->PostEvent(event);
+    nsCacheService::ProxyObjectRelease(data, mThread);
 }
 
 
@@ -127,6 +93,7 @@ nsCacheEntry::Create( const char *          key,
     *result = entry;
     return NS_OK;
 }
+
 
 void
 nsCacheEntry::Fetched()

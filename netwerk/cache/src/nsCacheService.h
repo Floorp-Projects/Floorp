@@ -98,11 +98,14 @@ public:
      */
 
     static
-    nsCacheService * GlobalInstance(void) { return gService; };
+    nsCacheService * GlobalInstance()  { return gService; };
 
     nsresult         DoomEntry(nsCacheEntry * entry);
 
     nsresult         DoomEntry_Locked(nsCacheEntry * entry);
+
+    static
+    void             ProxyObjectRelease(nsISupports * object, PRThread * thread);
 
     /**
      * Methods called by nsCachePrefObserver

@@ -234,9 +234,6 @@ nsCacheEntryDescriptor::SetCacheElement(nsISupports * cacheElement)
     if (!mCacheEntry)                 return NS_ERROR_NOT_AVAILABLE;
     if (mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
 
-    mCacheEntry->SetData(cacheElement);
-    mCacheEntry->TouchData();
-
     return nsCacheService::GlobalInstance()->SetCacheElement(mCacheEntry, cacheElement);
 }
 
