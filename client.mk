@@ -369,7 +369,8 @@ endif
 # and we need to get OBJDIR earlier
 ifdef MOZ_TOOLS
 _tmpobjdir := $(shell cygpath -u $(OBJDIR))
-_OBJ2SRCPATH := $(shell $(TOPSRCDIR)/build/unix/abs2rel.pl $(TOPSRCDIR) $(_tmpobjdir))
+_abs2rel := $(shell cygpath -w $(TOPSRCDIR)/build/unix/abs2rel.pl | sed -e 's|\\|/|g')
+_OBJ2SRCPATH := $(shell $(_abs2rel) $(TOPSRCDIR) $(_tmpobjdir))
 endif 
 
 #######################################################################
