@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.74 $ $Date: 2003/02/18 20:53:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.75 $ $Date: 2003/08/25 19:18:01 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -586,9 +586,11 @@ get_cert_instance(NSSCertificate *c)
 }
 
 char * 
-STAN_GetCERTCertificateName(NSSCertificate *c)
+STAN_GetCERTCertificateNameForInstance (
+  NSSCertificate *c,
+  nssCryptokiInstance *instance
+)
 {
-    nssCryptokiInstance *instance = get_cert_instance(c);
     NSSCryptoContext *context = c->object.cryptoContext;
     PRStatus nssrv;
     int nicklen, tokenlen, len;
@@ -626,6 +628,12 @@ STAN_GetCERTCertificateName(NSSCertificate *c)
     return nickname;
 }
 
+char * 
+STAN_GetCERTCertificateName(NSSCertificate *c)
+{
+    nssCryptokiInstance *instance = get_cert_instance(c);
+    return STAN_GetCERTCertificateNameForInstance(c, instance);
+}
 
 static void
 fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced)
