@@ -43,7 +43,7 @@ import java.util.*;
  */
 public class EncryptionAlgorithm extends Algorithm {
 
-    private static class Mode {
+    public static class Mode {
         private String name;
 
         private static Hashtable nameHash = new Hashtable();
@@ -74,7 +74,7 @@ public class EncryptionAlgorithm extends Algorithm {
         public static final Mode CBC = new Mode("CBC");
     }
 
-    private static class Alg {
+    public static class Alg {
         private String name;
 
         private static Hashtable nameHash = new Hashtable();
@@ -107,7 +107,7 @@ public class EncryptionAlgorithm extends Algorithm {
         public static final Alg RC2 = new Alg("RC2");
     }
 
-    private static class Padding {
+    public static class Padding {
         private String name;
 
         private static Hashtable nameHash = new Hashtable();
@@ -190,6 +190,37 @@ public class EncryptionAlgorithm extends Algorithm {
     private Mode mode;
     private Padding padding;
     private int keyStrength;
+
+    /**
+     * Returns the base algorithm, without the parameters. For example,
+     * the base algorithm of "AES/CBC/NoPadding" is "AES".
+     */
+    public Alg getAlg() {
+        return alg;
+    }
+
+    /**
+     * Returns the mode of this algorithm.
+     */
+    public Mode getMode() {
+        return mode;
+    }
+
+    /**
+     * Returns the padding type of this algorithm.
+     */
+    public Padding getPadding() {
+        return padding;
+    }
+
+    /**
+     * Returns the key strength of this algorithm in bits. Algorithms that
+     * use continuously variable key sizes (such as RC4) will return 0 to
+     * indicate they can use any key size.
+     */
+    public int getKeyStrength() {
+        return keyStrength;
+    }
 
     ///////////////////////////////////////////////////////////////////////
     // mapping
