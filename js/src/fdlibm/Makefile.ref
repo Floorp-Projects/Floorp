@@ -88,7 +88,9 @@ include $(DEPTH)/config.mk
 CFLAGS          += -DXP_UNIX $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
 		  -DJSFILE $(XCFLAGS) -D_IEEE_LIBM
 
-
+# Need for jstypes.h and friends
+INCLUDES += -I..
+INCLUDES += -I../$(OBJDIR)
 
 #CC = cc
 
