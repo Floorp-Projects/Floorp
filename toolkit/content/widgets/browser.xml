@@ -615,7 +615,7 @@
       </handler>
       <handler event="mousedown">
         <![CDATA[
-          if (!this._isScrolling && event.button == 1 && !this.isLink(event.originalTarget)) {
+          if (!this.getAttribute("autoscroll") == "false" && !this._isScrolling && event.button == 1 && !this.isLink(event.originalTarget)) {
             this._startX = event.clientX; this._startY = event.clientY;
             this._distanceX = 0; this._distanceY = 0;
             this._scrollingFingerFree = false;
