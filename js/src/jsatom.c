@@ -427,7 +427,8 @@ js_atom_unpinner(JSHashEntry *he, intN i, void *arg)
 void
 js_UnpinPinnedAtoms(JSAtomState *state)
 {
-    JS_HashTableEnumerateEntries(state->table, js_atom_unpinner, NULL);
+    if (state->table)
+        JS_HashTableEnumerateEntries(state->table, js_atom_unpinner, NULL);
 }
 
 static JSAtom *
