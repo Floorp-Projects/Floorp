@@ -229,7 +229,10 @@ function IsCurrentLoadedFolder(folder)
 /* Functions related to startup */
 function OnLoadMessenger()
 {
-  var beforeLoadMessenger = new Date();
+  var beforeLoadMessenger;
+  if(showPerformance) {
+      beforeLoadMessenger = new Date();
+  }
 
   CreateMailWindowGlobals();
   Create3PaneGlobals();

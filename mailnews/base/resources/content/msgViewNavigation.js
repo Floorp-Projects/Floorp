@@ -90,7 +90,10 @@ function FindNextFolder(originalFolderURI)
 */
 function GoNextMessage(type, startFromBeginning )
 {
-	var beforeGoNextMessage = new Date();
+	var beforeGoNextMessage;
+    if (showPerformance) {
+	    beforeGoNextMessage = new Date();
+    }
 
 	var tree = GetThreadTree();
 	
@@ -156,10 +159,11 @@ function GoNextMessage(type, startFromBeginning )
         }
 	}
 
-	var afterGoNextMessage = new Date();
-	var timeToGetNext = (afterGoNextMessage.getTime() - beforeGoNextMessage.getTime())/1000;
-	dump("time to GoNextMessage is " + timeToGetNext + "seconds\n");
-
+    if (showPerformance) {
+	  var afterGoNextMessage = new Date();
+	  var timeToGetNext = (afterGoNextMessage.getTime() - beforeGoNextMessage.getTime())/1000;
+	  dump("time to GoNextMessage is " + timeToGetNext + "seconds\n");
+    }
 }
 
 
