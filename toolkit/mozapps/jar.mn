@@ -32,10 +32,12 @@ en-US.jar:
   locale/en-US/mozapps/downloads/downloadProperties.dtd     (downloads/locale/downloadProperties.dtd)
   locale/en-US/mozapps/extensions/extensions.dtd            (extensions/locale/extensions.dtd)
   locale/en-US/mozapps/extensions/extensions.properties     (extensions/locale/extensions.properties)
+  locale/en-US/mozapps/extensions/about.dtd                 (extensions/locale/about.dtd)
   locale/en-US/mozapps/contents.rdf                         (contents-locale.rdf)
 
 classic.jar:
   skin/classic/mozapps/extensions/extensions.css            (extensions/skin/extensions.css)
+  skin/classic/mozapps/extensions/about.css                 (extensions/skin/about.css)
   skin/classic/mozapps/shared/richview.xml                  (shared/skin/richview.xml)
   skin/classic/mozapps/shared/richview.css                  (shared/skin/richview.css)
   skin/classic/mozapps/shared/viewFader.png                 (shared/skin/viewFader.png)

@@ -63,8 +63,9 @@
   </stringbundleset>
     
   <keyset id="extensionsKeys">
-    <key id="key_close"   key="&cmd.close.commandKey;" oncommand="closeWindow(true);"       modifiers="accel"/>
-    <key id="key_info"    key="&cmd.info.commandKey;"  oncommand="onExtensionsShowInfo();"  modifiers="accel"/>
+    <key id="key_close"   key="&cmd.close.commandKey;"    oncommand="closeWindow(true);"        modifiers="accel"/>
+    <key id="key_info"    key="&cmd.info.commandKey;"     oncommand="onExtensionViewAbout();"   modifiers="accel"/>
+    <key id="key_options" key="&cmd.options.commandKey;"  oncommand="onExtensionViewOptions();" modifiers="accel"/>
   </keyset>
   
   <vbox id="contextMenuPalette" hidden="true">
