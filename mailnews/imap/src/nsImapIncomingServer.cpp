@@ -107,7 +107,8 @@ nsImapIncomingServer::nsImapIncomingServer()
 
 nsImapIncomingServer::~nsImapIncomingServer()
 {
-    nsresult rv = ClearInner();
+    nsresult rv;
+    rv = ClearInner();
     NS_ASSERTION(NS_SUCCEEDED(rv), "ClearInner failed");
 
     CloseCachedConnections();
@@ -2372,7 +2373,25 @@ nsImapIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed,PRBool cha
 {
     nsresult rv = EnsureInner();
     NS_ENSURE_SUCCESS(rv,rv);
-	return mInner->AddTo(aName, addAsSubscribed, changeIfExists);
+
+    // quick check if the name we are passed is really modified UTF-7
+    // if it isn't, ignore it.  (otherwise, we'll crash.  see #63186)
+    // there is a bug in the UW IMAP server where it can send us
+    // folder names as literals, instead of MUTF7
+    unsigned char *ptr = (unsigned char *)aName;
+    PRBool nameIsClean = PR_TRUE;
+    while (*ptr) {
+        if (*ptr > 127) {
+            nameIsClean = PR_FALSE;
+            break;
+        }
+        ptr++;
+    }
+
+    NS_ASSERTION(nameIsClean,"folder path was not in UTF7, ignore it");
+    if (!nameIsClean) return NS_OK;
+
+    return mInner->AddTo(aName, addAsSubscribed, changeIfExists);
 }
 
 NS_IMETHODIMP
