@@ -279,6 +279,22 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 }
 
 
+//
+// toolbarWillAddItem: (toolbar delegate method)
+//
+// Called when a button is about to be added to a toolbar. This is where we should
+// cache items we may need later. For instance, we want to hold onto the sidebar
+// toolbar item so we can change it when the drawer opens and closes.
+//
+- (void)toolbarWillAddItem:(NSNotification *)notification
+{
+  NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
+  NSString* toolbarItemId = [item itemIdentifier];
+  if ( [toolbarItemId isEqual:SidebarToolbarItemIdentifier] )
+    mSidebarToolbarItem = item;
+}
+
+
 - (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
     return [NSArray arrayWithObjects:	BackToolbarItemIdentifier,
@@ -354,7 +370,6 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
         [toolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(toggleSidebar:)];
-        mSidebarToolbarItem = toolbarItem;
     } else if ( [itemIdent isEqual:LocationToolbarItemIdentifier] ) {
         
         NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
