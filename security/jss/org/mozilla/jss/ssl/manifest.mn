@@ -80,10 +80,13 @@ CLASSES =	SSLHandshakeCompletedEvent    \
 		SSLHandshakeCompletedListener \
         SSLServerSocket                 \
 		SSLSocket                     \
+        SSLOutputStream                 \
 		PrintOutputStreamWriter       \
 		SSLCertificateApprovalCallback   \
 		SSLClientCertificateSelectionCallback \
         SocketBase \
+        SocketProxy \
+        SSLInputStream \
 		$(NULL)
 
 PRIVATE_CLASSES = \
