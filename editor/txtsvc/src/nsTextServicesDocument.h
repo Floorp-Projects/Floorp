@@ -53,6 +53,7 @@
 #include "nsITextServicesFilter.h"
 
 class nsIWordBreaker;
+class nsIRangeUtils;
 
 /** implementation of a text services object.
  *
@@ -88,8 +89,6 @@ private:
   static nsIAtom *sVarAtom;
   static nsIAtom *sWbrAtom;
 
-  static PRInt32 sInstanceCount;
-
   typedef enum { eIsDone=0,        // No iterator (I), or itertor doesn't point to anything valid.
                  eValid,           // I points to first text node (TN) in current block (CB).
                  ePrev,            // No TN in CB, I points to first TN in prev block.
@@ -115,6 +114,8 @@ private:
 
   nsCOMPtr<nsITextServicesFilter> mTxtSvcFilter;
 
+  static nsIRangeUtils* sRangeHelper;
+
 public:
 
   /** The default constructor.
@@ -124,6 +125,14 @@ public:
   /** The default destructor.
    */
   virtual ~nsTextServicesDocument();
+
+  /** To be called at module init
+   */
+  static void RegisterAtoms();
+
+  /** To be called at module shutdown
+   */
+  static void Shutdown();
 
   /* Macro for AddRef(), Release(), and QueryInterface() */
   NS_DECL_ISUPPORTS

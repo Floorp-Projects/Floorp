@@ -46,6 +46,7 @@
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
+#include "nsIRangeUtils.h"
 #include "nsISelection.h"
 #include "nsIPlaintextEditor.h"
 #include "nsTextServicesDocument.h"
@@ -98,17 +99,10 @@ public:
 #include "nsTSAtomList.h"
 #undef TS_ATOM
 
-
-PRInt32 nsTextServicesDocument::sInstanceCount;
+nsIRangeUtils* nsTextServicesDocument::sRangeHelper;
 
 nsTextServicesDocument::nsTextServicesDocument()
 {
-static const nsStaticAtom ts_atoms[] = {
-#define TS_ATOM(name_, value_) { value_, &name_ },
-#include "nsTSAtomList.h"
-#undef TS_ATOM
-};
-
   mRefCnt         = 0;
 
   mSelStartIndex  = -1;
@@ -117,11 +111,6 @@ static const nsStaticAtom ts_atoms[] = {
   mSelEndOffset   = -1;
 
   mIteratorStatus = eIsDone;
-
-  if (sInstanceCount <= 0)
-    NS_RegisterStaticAtoms(ts_atoms, NS_ARRAY_LENGTH(ts_atoms));
-
-  ++sInstanceCount;
 }
 
 nsTextServicesDocument::~nsTextServicesDocument()
@@ -130,8 +119,26 @@ nsTextServicesDocument::~nsTextServicesDocument()
     mEditor->RemoveEditActionListener(mNotifier);
 
   ClearOffsetTable(&mOffsetTable);
+}
 
-  --sInstanceCount;
+/* static */
+void
+nsTextServicesDocument::RegisterAtoms()
+{
+  static const nsStaticAtom ts_atoms[] = {
+#define TS_ATOM(name_, value_) { value_, &name_ },
+#include "nsTSAtomList.h"
+#undef TS_ATOM
+  };
+
+  NS_RegisterStaticAtoms(ts_atoms, NS_ARRAY_LENGTH(ts_atoms));
+}
+
+/* static */
+void
+nsTextServicesDocument::Shutdown()
+{
+  NS_IF_RELEASE(sRangeHelper);
 }
 
 #define DEBUG_TEXT_SERVICES__DOCUMENT_REFCNT 1
@@ -3980,38 +3987,16 @@ nsTextServicesDocument::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                                       PRInt32 *aResult)
 {
   nsresult result;
+  
+  if (!sRangeHelper) {
+    result = CallGetService("@mozilla.org/content/range-utils;1",
+                            &sRangeHelper);
+    if (!sRangeHelper)
+      return result;
+  }
 
-  // Compare two node/offset pairs.
-  //
-  // Return -1 if node1 <  node2
-  // Return  0 if node1 == node2
-  // Return  1 if node1 >  node2 
-
-  *aResult = 0;
-
-  if (aParent1 == aParent2 && aOffset1 == aOffset2)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMRange> range =
-                  do_CreateInstance("@mozilla.org/content/range;1", &result);
-  if (NS_FAILED(result))
-    return result;
-
-  if (!range)
-    return NS_ERROR_FAILURE;
-
-  result = range->SetStart(aParent1, aOffset1);
-
-  if (NS_FAILED(result))
-    return result;
-
-  result = range->SetEnd(aParent2, aOffset2);
-
-  if (NS_SUCCEEDED(result))
-    *aResult = -1;
-  else
-    *aResult = 1;
-
+  *aResult = sRangeHelper->ComparePoints(aParent1, aOffset1,
+                                         aParent2, aOffset2);
   return NS_OK;
 }
 
