@@ -117,125 +117,6 @@ struct NumArgState{
 
 #define ELEMENTS_OF(array_) (sizeof(array_) / sizeof(array_[0]))
 
-// Warning: if aDest isn't big enough this function returns the converted 
-// string in allocated memory which must be freed using PR_FREE().
-// May return nsnull if memory couldn't be allocated.
-static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen, 
-                             PRUnichar* aDest, PRUint32 aDestLen)
-{
-    const char *in, *inend;
-    inend = aSrc + aSrcLen;
-    PRUnichar *out;
-    PRUint32 state;
-    PRUint32 ucs4;
-    // decide the length of the UCS2 first.
-    PRUint32 needLen = 0;
-
-    for (in = aSrc, state = 0, ucs4 = 0; in < inend; in++) {
-            if (0 == state) {
-                if (0 == (0x80 & (*in))) {
-                    needLen++;
-                } else if (0xC0 == (0xE0 & (*in))) {
-                    needLen++;
-                    state = 1;
-                } else if (0xE0 == (0xF0 & (*in))) {
-                    needLen++;
-                    state = 2;
-                } else if (0xF0 == (0xF8 & (*in))) {
-                    needLen+=2;
-                    state = 3;
-                } else if (0xF8 == (0xFC & (*in))) {
-                    needLen+=2;
-                    state = 4;
-                } else if (0xFC == (0xFE & (*in))) {
-                    needLen+=2;
-                    state = 5;
-                } else {
-                    needLen++;
-                    state = 0;
-                }
-            } else {
-                NS_ASSERTION((0x80 == (0xC0 & (*in))), "The input string is not in utf8");
-                if(0x80 == (0xC0 & (*in))) {
-                    state--;
-                } else {
-                    state = 0;
-                }
-            }
-    }
-    needLen++; // add null termination.
-
-    // allocates sufficient memory if aDest is not big enough.
-    if (needLen > aDestLen) {
-        aDest = (PRUnichar*)PR_MALLOC(sizeof(PRUnichar) * needLen);
-    }
-    if (nsnull == aDest) {
-        return nsnull;
-    }
-    out = aDest;
-
-    for (in = aSrc, state = 0, ucs4 = 0; in < inend; in++) {
-        if (0 == state) {
-            if (0 == (0x80 & (*in))) {
-                // ASCII
-                *out++ = (PRUnichar)*in;
-            } else if (0xC0 == (0xE0 & (*in))) {
-                // 2 bytes UTF8
-                ucs4 = (PRUint32)(*in);
-                ucs4 = (ucs4 << 6) & 0x000007C0L;
-                state=1;
-            } else if (0xE0 == (0xF0 & (*in))) {
-                ucs4 = (PRUint32)(*in);
-                ucs4 = (ucs4 << 12) & 0x0000F000L;
-                state=2;
-            } else if (0xF0 == (0xF8 & (*in))) {
-                ucs4 = (PRUint32)(*in);
-                ucs4 = (ucs4 << 18) & 0x001F0000L;
-                state=3;
-            } else if (0xF8 == (0xFC & (*in))) {
-                ucs4 = (PRUint32)(*in);
-                ucs4 = (ucs4 << 24) & 0x03000000L;
-                state=4;
-            } else if (0xFC == (0xFE & (*in))) {
-                ucs4 = (PRUint32)(*in);
-                ucs4 = (ucs4 << 30) & 0x40000000L;
-                state=5;
-            } else {
-                NS_ASSERTION(0, "The input string is not in utf8");
-                state=0;
-                ucs4=0;
-            }
-        } else {
-            NS_ASSERTION((0x80 == (0xC0 & (*in))), "The input string is not in utf8");
-            if (0x80 == (0xC0 & (*in))) {
-                PRUint32 tmp = (*in);
-                int shift = --state * 6;
-                tmp = (tmp << shift) & (0x0000003FL << shift);
-                ucs4 |= tmp;
-                if (0 == state) {
-                    if (ucs4 >= 0x00010000) {
-                        if (ucs4 >= 0x00110000) {
-                            *out++ = 0xFFFD;
-                        } else {
-                            ucs4 -= 0x00010000;
-                            *out++ = 0xD800 | (0x000003FF & (ucs4 >> 10));
-                            *out++ = 0xDC00 | (0x000003FF & ucs4);
-                        }
-                    } else {
-                        *out++ = ucs4;
-                    }
-                    ucs4 = 0;
-                }
-            } else {
-                state = 0;
-                ucs4 = 0;
-            }
-        }
-    }
-    *out = 0x0000;
-    return aDest;
-}
-
 /*
 ** Fill into the buffer using the data in src
 */
@@ -675,23 +556,8 @@ static int cvt_S(SprintfState *ss, const PRUnichar *s, int width,
 static int cvt_s(SprintfState *ss, const char *s, int width,
                  int prec, int flags)
 {
-    // convert s from UTF8 to PRUnichar*
-    // Fix me !!!
-    PRUnichar buf[256];
-    PRUnichar *retbuf = nsnull;
-
-    if (s) {
-        retbuf = UTF8ToUCS2(s, strlen(s), buf, 256);        
-        if(nsnull == retbuf) {
-            return -1;
-        }
-    }
-    int ret = cvt_S(ss, retbuf, width, prec, flags);
-
-    if (retbuf != buf) {
-        PR_DELETE(retbuf);
-    }
-    return ret;
+    NS_ConvertUTF8toUTF16 utf16Val(s);
+    return cvt_S(ss, utf16Val.get(), width, prec, flags);
 }
 
 /*
