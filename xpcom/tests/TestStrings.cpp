@@ -191,8 +191,61 @@ PRBool test_replace_substr()
     s.ReplaceSubstring("ppp", "www");
     PRBool r = strcmp(s.get(), "abc-www-qqq-www-xyz") == 0;
     if (!r)
-      printf("[s=%s]\n", s.get());
-    return r;
+      {
+        printf("[s=%s]\n", s.get());
+        return PR_FALSE;
+      }
+
+    s.Assign("foobar");
+    s.ReplaceSubstring("foo", "bar");
+    s.ReplaceSubstring("bar", "");
+    r = strcmp(s.get(), "") == 0;
+    if (!r)
+      {
+        printf("[s=%s]\n", s.get());
+        return PR_FALSE;
+      }
+
+    s.Assign("foofoofoo");
+    s.ReplaceSubstring("foo", "foo");
+    r = strcmp(s.get(), "foofoofoo") == 0;
+    if (!r)
+      {
+        printf("[s=%s]\n", s.get());
+        return PR_FALSE;
+      }
+
+    s.Assign("foofoofoo");
+    s.ReplaceSubstring("of", "fo");
+    r = strcmp(s.get(), "fofoofooo") == 0;
+    if (!r)
+      {
+        printf("[s=%s]\n", s.get());
+        return PR_FALSE;
+      }
+
+    return PR_TRUE;
+  }
+
+PRBool test_replace_substr_2()
+  {
+    const char *oldName = nsnull;
+    const char *newName = "user";
+    nsString acctName = NS_LITERAL_STRING("forums.foo.com");
+    nsAutoString newAcctName, oldVal, newVal;
+    oldVal.AssignWithConversion(oldName);
+    newVal.AssignWithConversion(newName);
+    newAcctName.Assign(acctName);
+
+    // here, oldVal is empty.  we are testing that this function
+    // does not hang.  see bug 235355.
+    newAcctName.ReplaceSubstring(oldVal, newVal);
+
+    // we expect that newAcctName will be unchanged.
+    if (!newAcctName.Equals(acctName))
+      return PR_FALSE;
+
+    return PR_TRUE;
   }
 
 PRBool test_strip_ws()
@@ -353,6 +406,25 @@ PRBool test_set_length()
     return PR_TRUE;
   }
 
+PRBool test_substring()
+  {
+    nsCString super("hello world"), sub("hello");
+
+    // this tests that |super| starts with |sub|,
+    
+    PRBool r = sub.Equals(StringHead(super, sub.Length()));
+    if (!r)
+      return PR_FALSE;
+
+    // and verifies that |sub| does not start with |super|.
+
+    r = super.Equals(StringHead(sub, super.Length()));
+    if (r)
+      return PR_FALSE;
+
+    return PR_TRUE;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -376,6 +448,7 @@ tests[] =
     { "test_length", test_length },
     { "test_trim", test_trim },
     { "test_replace_substr", test_replace_substr },
+    { "test_replace_substr_2", test_replace_substr_2 },
     { "test_strip_ws", test_strip_ws },
     { "test_equals_ic", test_equals_ic },
     { "test_fixed_string", test_fixed_string },
@@ -384,6 +457,7 @@ tests[] =
     { "test_xpidl_string", test_xpidl_string },
     { "test_empty_assign", test_empty_assign },
     { "test_set_length", test_set_length },
+    { "test_substring", test_substring },
     { nsnull, nsnull }
   };
 
@@ -399,7 +473,7 @@ int main(int argc, char **argv)
       {
         for (const Test* t = tests; t->name != nsnull; ++t)
           {
-            printf("%20s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
+            printf("%25s : %s\n", t->name, t->func() ? "SUCCESS" : "FAILURE");
           }
       }
     
