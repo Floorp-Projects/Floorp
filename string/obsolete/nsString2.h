@@ -530,25 +530,13 @@ class NS_COM NS_ConvertUTF8toUCS2
       : public nsAutoString
   {
     public:
-      explicit
-      NS_ConvertUTF8toUCS2( const nsACString& aCString )
-        {
-          Init( aCString );
-        }
-
-      explicit
-      NS_ConvertUTF8toUCS2( const char* aCString )
-        {
-          Init( nsDependentCString( aCString ) );
-        }
-
-      NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength )
-        {
-          Init( Substring( aCString, aCString + aLength ) );
-        }
+      explicit NS_ConvertUTF8toUCS2( const nsACString& aCString );
+      explicit NS_ConvertUTF8toUCS2( const nsASingleFragmentCString& aCString );
+      explicit NS_ConvertUTF8toUCS2( const char* aCString );
+      NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength );
 
     protected:
-      void Init( const nsACString& aCString );
+      void Init( const char* aCString, PRUint32 aLength );
 
     private:
       NS_ConvertUTF8toUCS2( PRUnichar );

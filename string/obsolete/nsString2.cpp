@@ -1351,34 +1351,82 @@ NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const nsACString& aCString )
       }
   }
 
-void
-NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
-{
-  // Compute space required: do this once so we don't incur multiple
-  // allocations. This "optimization" is probably of dubious value...
+NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const nsACString& aCString )
+  {
+    // Compute space required: do this once so we don't incur multiple
+    // allocations. This "optimization" is probably of dubious value...
 
-  nsACString::const_iterator start, end;
-  CalculateUTF8Length calculator;
-  copy_string(aCString.BeginReading(start), aCString.EndReading(end), calculator);
+    nsACString::const_iterator start, end;
+    CalculateUTF8Length calculator;
+    copy_string(aCString.BeginReading(start), aCString.EndReading(end),
+                calculator);
 
-  PRUint32 count = calculator.Length();
+    PRUint32 count = calculator.Length();
 
-  if (count) {
-    // Grow the buffer if we need to.
-    SetLength(count);
+    if (count)
+      {
+        // Grow the buffer if we need to.
+        SetCapacity(count);
 
-    // All ready? Time to convert
+        // All ready? Time to convert
 
-    ConvertUTF8toUCS2 converter(mUStr);
-    copy_string(aCString.BeginReading(start), aCString.EndReading(end), converter);
-    mLength = converter.Length();
-    if (mLength != count) {
-      NS_ERROR("Input wasn't UTF8 or incorrect length was calculated");
-      Truncate();
-    }
+        ConvertUTF8toUCS2 converter(mUStr);
+        copy_string(aCString.BeginReading(start), aCString.EndReading(end),
+                    converter).write_terminator();
+        mLength = converter.Length();
+        if (mLength != count)
+          {
+            NS_ERROR("Input wasn't UTF8 or incorrect length was calculated");
+            Truncate();
+          }
+      }
   }
 
-}
+NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const nsASingleFragmentCString& aCString )
+  {
+    nsASingleFragmentCString::const_char_iterator start;
+    Init(aCString.BeginReading(start), aCString.Length());
+  }
+
+NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const char* aCString )
+  {
+    Init(aCString, nsCharTraits<char>::length(aCString));
+  }
+
+NS_ConvertUTF8toUCS2::NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength )
+  {
+    Init(aCString, aLength);
+  }
+
+void
+NS_ConvertUTF8toUCS2::Init( const char* aCString, PRUint32 aLength )
+  {
+    // Compute space required: do this once so we don't incur multiple
+    // allocations. This "optimization" is probably of dubious value...
+
+    CalculateUTF8Length calculator;
+    calculator.write(aCString, aLength);
+
+    PRUint32 count = calculator.Length();
+
+    if (count)
+      {
+        // Grow the buffer if we need to.
+        SetCapacity(count);
+
+        // All ready? Time to convert
+
+        ConvertUTF8toUCS2 converter(mUStr);
+        converter.write(aCString, aLength);
+        mLength = converter.Length();
+        mUStr[mLength] = char_type(0);
+        if (mLength != count)
+          {
+            NS_ERROR("Input invalid or incorrect length was calculated");
+            Truncate();
+          }
+      }
+  }
 
 /**
  * Default copy constructor

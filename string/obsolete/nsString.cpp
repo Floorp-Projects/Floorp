@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsDebug.h"
+#include "nsUTF8Utils.h"
 
 #ifndef nsCharTraits_h___
 #include "nsCharTraits.h"
@@ -1086,111 +1087,86 @@ PRBool nsCString::EqualsWithConversion(const char* aCString,PRBool aIgnoreCase,P
 
 //----------------------------------------------------------------------
 
-NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAString& aString )
+NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const PRUnichar* aString )
   {
-    nsAString::const_iterator start; aString.BeginReading(start);
-    nsAString::const_iterator end;   aString.EndReading(end);
-    
-    while (start != end) {
-      nsReadableFragment<PRUnichar> frag(start.fragment());
-      Append(frag.mStart, frag.mEnd - frag.mStart);
-      start.advance(start.size_forward());
-    }
+    if (!aString)
+      // Leave us as an uninitialized nsCAutoString.
+      return;
+    Init(aString, nsCharTraits<PRUnichar>::length(aString));
   }
 
-void
-NS_ConvertUCS2toUTF8::Append( const PRUnichar* aString, PRUint32 aLength )
+NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const PRUnichar* aString, PRUint32 aLength )
   {
-    // Handle null string by just leaving us as a brand-new
-    // uninitialized nsCAutoString.
-    if (! aString)
+    if (!aString)
+      // Leave us as an uninitialized nsCAutoString.
       return;
+    Init(aString, aLength);
+  }
 
-    // Calculate how many bytes we need
-    const PRUnichar* p;
-    PRInt32 count, utf8len;
-    for (p = aString, utf8len = 0, count = aLength; 0 != count && 0 != (*p); count--, p++)
+NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsASingleFragmentString& aString )
+  {
+    nsASingleFragmentString::const_char_iterator start;
+    Init(aString.BeginReading(start), aString.Length());
+  }
+
+NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAString& aString )
+  {
+    // Compute space required: do this once so we don't incur multiple
+    // allocations. This "optimization" is probably of dubious value...
+
+    nsAString::const_iterator start, end;
+    CalculateUTF8Size calculator;
+    copy_string(aString.BeginReading(start), aString.EndReading(end),
+                calculator);
+
+    PRUint32 count = calculator.Size();
+
+    if (count)
       {
-        if (! ((*p) & 0xFF80))
-          utf8len += 1; // 0000 0000 - 0000 007F
-        else if (! ((*p) & 0xF800))
-          utf8len += 2; // 0000 0080 - 0000 07FF
-        else 
-          utf8len += 3; // 0000 0800 - 0000 FFFF
-        // Note: Surrogate pair needs 4 bytes, but in this calcuation
-        // we count it as 6 bytes. It will waste 2 bytes per surrogate pair
-      }
+        // Grow the buffer if we need to.
+        SetCapacity(count);
 
-    // Make sure our buffer's big enough, so we don't need to do
-    // multiple allocations.
-    if(mLength+PRUint32(utf8len+1) > sizeof(mBuffer))
-      SetCapacity(mLength+utf8len+1);
-    // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAString.h),
-    //  we can only use it since our local implementation, |nsCString::SetCapacity|, is known to do what we want
+        // All ready? Time to convert
 
-    char* out = mStr+mLength;
-    PRUint32 ucs4=0;
-
-    for (p = aString, count = aLength; 0 != count && 0 != (*p); count--, p++)
-      {
-        if (0 == ucs4)
+        ConvertUCS2toUTF8 converter(mStr);
+        copy_string(aString.BeginReading(start), aString.EndReading(end),
+                    converter).write_terminator();
+        mLength = converter.Size();
+        if (mLength != count)
           {
-            if (! ((*p) & 0xFF80))
-              {
-                *out++ = (char)*p;
-              } 
-            else if (! ((*p) & 0xF800))
-              {
-                *out++ = 0xC0 | (char)((*p) >> 6);
-                *out++ = 0x80 | (char)(0x003F & (*p));
-              }
-            else
-              {
-                if (0xD800 == (0xFC00 & (*p))) 
-                  {
-                    // D800- DBFF - High Surrogate 
-                    // N = (H- D800) *400 + 10000 + ...
-                    ucs4 = 0x10000 | ((0x03FF & (*p)) << 10);
-                  }
-                else if (0xDC00 == (0xFC00 & (*p)))
-                  { 
-                    // DC00- DFFF - Low Surrogate 
-                    // error here. We should hit High Surrogate first
-                    // Do not output any thing in this case
-                  }
-                else
-                  {
-                    *out++ = 0xE0 | (char)((*p) >> 12);
-                    *out++ = 0x80 | (char)(0x003F & (*p >> 6));
-                    *out++ = 0x80 | (char)(0x003F & (*p) );
-                  }
-              }
-          }
-        else
-          {
-            if (0xDC00 == (0xFC00 & (*p)))
-              { 
-                // DC00- DFFF - Low Surrogate 
-                // N += ( L - DC00 )  
-                ucs4 |= (0x03FF & (*p));
-
-                // 0001 0000-001F FFFF
-                *out++ = 0xF0 | (char)(ucs4 >> 18);
-                *out++ = 0x80 | (char)(0x003F & (ucs4 >> 12));
-                *out++ = 0x80 | (char)(0x003F & (ucs4 >> 6));
-                *out++ = 0x80 | (char)(0x003F & ucs4) ;
-              }
-            else
-              {
-                // Got a High Surrogate but no low surrogate
-                // output nothing.
-              }
-            ucs4 = 0;
+            NS_ERROR("Input invalid or incorrect length was calculated");
+            Truncate();
           }
       }
+  }
 
-    *out = '\0'; // null terminate
-    mLength += utf8len;
+void NS_ConvertUCS2toUTF8::Init( const PRUnichar* aString, PRUint32 aLength )
+  {
+    // Compute space required: do this once so we don't incur multiple
+    // allocations. This "optimization" is probably of dubious value...
+
+    CalculateUTF8Size calculator;
+    calculator.write(aString, aLength);
+
+    PRUint32 count = calculator.Size();
+
+    if (count)
+      {
+        // Grow the buffer if we need to.
+        SetCapacity(count);
+
+        // All ready? Time to convert
+
+        ConvertUCS2toUTF8 converter(mStr);
+        converter.write(aString, aLength);
+        mLength = converter.Size();
+        mStr[mLength] = char_type(0);
+        if (mLength != count)
+          {
+            NS_ERROR("Input invalid or incorrect length was calculated");
+            Truncate();
+          }
+      }
   }
 
 NS_LossyConvertUCS2toASCII::NS_LossyConvertUCS2toASCII( const nsAString& aString )
