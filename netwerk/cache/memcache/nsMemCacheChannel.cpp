@@ -179,8 +179,7 @@ public:
     }
 
     NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) {
-        NS_NOTREACHED("ReadSegments");
-        return NS_ERROR_NOT_IMPLEMENTED;
+        return mSyncStream->ReadSegments(writer, closure, count, _retval);
     }
 
     NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {

@@ -442,10 +442,36 @@ nsStorageInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
 }
 
 NS_IMETHODIMP 
-nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
+nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 aCount, PRUint32 *aNumRead)
 {
-    NS_NOTREACHED("ReadSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    PRUint32 count, availableInSegment, remainingCapacity, bytesConsumed;
+
+    remainingCapacity = aCount;
+    while (remainingCapacity) {
+        availableInSegment = mSegmentEnd - mReadCursor;
+        if (!availableInSegment) {
+            PRUint32 available = mStorageStream->mLogicalLength - mLogicalCursor;
+            if (!available)
+                goto out;
+	    
+            mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(mSegmentNum++);
+            mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize, available);
+        }
+	
+        count = PR_MIN(availableInSegment, remainingCapacity);
+        writer(this, closure, mReadCursor, mLogicalCursor, count, &bytesConsumed);
+        remainingCapacity -= bytesConsumed;
+        mReadCursor += bytesConsumed;
+        mLogicalCursor += bytesConsumed;
+    };
+
+ out:
+    *aNumRead = aCount - remainingCapacity;
+
+    if (*aNumRead == 0)
+      return NS_BASE_STREAM_WOULD_BLOCK;
+    else
+      return NS_OK;
 }
 
 NS_IMETHODIMP 
