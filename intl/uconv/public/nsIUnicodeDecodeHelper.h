@@ -59,16 +59,6 @@ public:
 
   /**
    * Converts data using a set of lookup tables.
-   *
-   * XXX deprecated
-   */
-  NS_IMETHOD ConvertByTables(const char * aSrc, PRInt32 * aSrcLength, 
-      PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
-      uRange * aRangeArray, uShiftTable ** aShiftTable, 
-      uMappingTable ** aMappingTable) = 0;
-
-  /**
-   * Converts data using a set of lookup tables.
    */
   NS_IMETHOD ConvertByMultiTable(const char * aSrc, PRInt32 * aSrcLength, 
       PRUnichar * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
