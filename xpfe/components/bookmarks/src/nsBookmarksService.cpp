@@ -33,6 +33,7 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsSpecialSystemDirectory.h"
@@ -785,7 +786,8 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 // BookmarkDataSourceImpl
 
 class nsBookmarksService : public nsIBookmarksService,
-                               public nsIRDFDataSource
+						   public nsIRDFDataSource,
+						   public nsIRDFRemoteDataSource
 {
 protected:
     nsIRDFDataSource* mInner;
@@ -812,14 +814,7 @@ public:
     NS_IMETHOD AddBookmark(const char *aURI, const PRUnichar *aOptionalTitle);
     NS_IMETHOD FindShortcut(const PRUnichar *aUserInput, char **aShortcutURL);
 
-    // nsIRDFDataSource
-    NS_IMETHOD Init(const char* uri) {
-		return mInner->Init(uri);
-	}
-
-    NS_IMETHOD GetURI(char* *uri)  {
-        return mInner->GetURI(uri);
-    }
+    NS_IMETHOD GetURI(char* *uri);
 
     NS_IMETHOD GetSource(nsIRDFResource* property,
                          nsIRDFNode* target,
@@ -856,6 +851,16 @@ public:
                         nsIRDFResource* aProperty,
                         nsIRDFNode* aTarget);
 
+	NS_IMETHOD Change(nsIRDFResource* aSource,
+					  nsIRDFResource* aProperty,
+					  nsIRDFNode* aOldTarget,
+					  nsIRDFNode* aNewTarget);
+
+	NS_IMETHOD Move(nsIRDFResource* aOldSource,
+					nsIRDFResource* aNewSource,
+					nsIRDFResource* aProperty,
+					nsIRDFNode* aTarget);
+
     NS_IMETHOD HasAssertion(nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
@@ -886,8 +891,6 @@ public:
         return mInner->GetAllResources(aResult);
     }
 
-    NS_IMETHOD Flush();
-
     NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                               nsIEnumerator/*<nsIRDFResource>*/** commands);
 
@@ -900,6 +903,10 @@ public:
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
+	// nsIRDFRemoteDataSource
+	NS_IMETHOD Init(const char* aURI);
+	NS_IMETHOD Refresh(PRBool aBlocking);
+    NS_IMETHOD Flush();
 };
 
 
@@ -929,9 +936,6 @@ nsBookmarksService::Init()
                                             nsnull,
                                             nsIRDFDataSource::GetIID(),
                                             (void**) &mInner);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mInner->Init("rdf:bookmarks");
     if (NS_FAILED(rv)) return rv;
 
     rv = ReadBookmarks();
@@ -996,6 +1000,9 @@ nsBookmarksService::QueryInterface(REFNSIID aIID, void **aResult)
     else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIRDFDataSource*, this);
     }
+	else if (aIID.Equals(nsIRDFRemoteDataSource::GetIID())) {
+		*aResult = NS_STATIC_CAST(nsIRDFRemoteDataSource*, this);
+	}
     else {
         *aResult = nsnull;
         return NS_NOINTERFACE;
@@ -1085,6 +1092,15 @@ nsBookmarksService::FindShortcut(const PRUnichar *aUserInput, char **aShortcutUR
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDataSource
 
+NS_IMETHODIMP
+nsBookmarksService::GetURI(char* *aURI)
+{
+	*aURI = nsXPIDLCString::Copy("rdf:bookmarks");
+	if (! *aURI)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBookmarksService::GetTarget(nsIRDFResource* aSource,
@@ -1142,8 +1158,6 @@ nsBookmarksService::Assert(nsIRDFResource* aSource,
     }
 }
 
-
-
 NS_IMETHODIMP
 nsBookmarksService::Unassert(nsIRDFResource* aSource,
                                  nsIRDFResource* aProperty,
@@ -1158,13 +1172,34 @@ nsBookmarksService::Unassert(nsIRDFResource* aSource,
 }
 
 
-
 NS_IMETHODIMP
-nsBookmarksService::Flush()
+nsBookmarksService::Change(nsIRDFResource* aSource,
+						  nsIRDFResource* aProperty,
+						  nsIRDFNode* aOldTarget,
+						  nsIRDFNode* aNewTarget)
 {
-    return WriteBookmarks(mInner, kNC_BookmarksRoot);
+	if (CanAccept(aSource, aProperty, aNewTarget)) {
+		return mInner->Change(aSource, aProperty, aOldTarget, aNewTarget);
+	}
+	else {
+		return NS_RDF_ASSERTION_REJECTED;
+	}
 }
 
+
+NS_IMETHODIMP
+nsBookmarksService::Move(nsIRDFResource* aOldSource,
+						 nsIRDFResource* aNewSource,
+						 nsIRDFResource* aProperty,
+						 nsIRDFNode* aTarget)
+{
+	if (CanAccept(aNewSource, aProperty, aTarget)) {
+		return mInner->Move(aOldSource, aNewSource, aProperty, aTarget);
+	}
+	else {
+		return NS_RDF_ASSERTION_REJECTED;
+	}
+}
 
 NS_IMETHODIMP
 nsBookmarksService::GetAllCommands(nsIRDFResource* source,
@@ -1193,7 +1228,29 @@ nsBookmarksService::DoCommand(nsISupportsArray* aSources,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+////////////////////////////////////////////////////////////////////////
+// nsIRDFRemoteDataSource
 
+NS_IMETHODIMP
+nsBookmarksService::Init(const char* aURI)
+{
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBookmarksService::Refresh(PRBool aBlocking)
+{
+	// XXX re-sync with the bookmarks file, if necessary.
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBookmarksService::Flush()
+{
+    return WriteBookmarks(mInner, kNC_BookmarksRoot);
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods

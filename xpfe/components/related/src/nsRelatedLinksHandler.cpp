@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -94,7 +94,7 @@ public:
 	 NS_DECL_ISUPPORTS
 
 			RelatedLinksStreamListener(nsIRDFDataSource *ds);
-	 virtual	~RelatedLinksStreamListener(void);
+	 virtual	~RelatedLinksStreamListener();
 
 	 NS_METHOD	Init();
 	 NS_METHOD	CreateAnonymousResource(const nsString& aPrefixURI, nsCOMPtr<nsIRDFResource>* aResult);
@@ -371,7 +371,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStre
 				{
 					theStart += PL_strlen("name=\"");
 					oneLiner.Cut(0, theStart);
-					PRInt32 theEnd = oneLiner.Find("\"");
+					theEnd = oneLiner.Find("\"");
 					if (theEnd > 0)
 					{
 						oneLiner.Mid(title, 0, theEnd);
@@ -531,8 +531,9 @@ private:
 
 	nsCOMPtr<nsIRDFDataSource> mInner;
 
-			RelatedLinksHandlerImpl(void);
-	virtual		~RelatedLinksHandlerImpl(void);
+				RelatedLinksHandlerImpl();
+	virtual		~RelatedLinksHandlerImpl();
+	nsresult	Init();
 
 	friend NS_IMETHODIMP
 	NS_NewRelatedLinksHandler(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -547,7 +548,6 @@ public:
 
 	// nsIRDFDataSource methods
 
-	NS_IMETHOD	Init(const char *uri);
 	NS_IMETHOD	GetURI(char **uri);
 	NS_IMETHOD	GetSource(nsIRDFResource *property,
 				nsIRDFNode *target,
@@ -572,6 +572,14 @@ public:
 	NS_IMETHOD	Unassert(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsIRDFNode *target);
+	NS_IMETHOD Change(nsIRDFResource* aSource,
+					  nsIRDFResource* aProperty,
+					  nsIRDFNode* aOldTarget,
+					  nsIRDFNode* aNewTarget);
+	NS_IMETHOD Move(nsIRDFResource* aOldSource,
+					nsIRDFResource* aNewSource,
+					nsIRDFResource* aProperty,
+					nsIRDFNode* aTarget);
 	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
 				nsIRDFResource *property,
 				nsIRDFNode *target,
@@ -584,7 +592,6 @@ public:
 	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aCursor);
 	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
 	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
-	NS_IMETHOD	Flush();
 	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
 				nsIEnumerator/*<nsIRDFResource>*/** commands);
 	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
@@ -609,7 +616,7 @@ nsIRDFResource		*RelatedLinksHandlerImpl::kRDF_type;
 
 
 
-RelatedLinksHandlerImpl::RelatedLinksHandlerImpl(void)
+RelatedLinksHandlerImpl::RelatedLinksHandlerImpl()
 	: mURI(nsnull),
 	  mRelatedLinksURL(nsnull),
 	  mPerformQuery(PR_FALSE)
@@ -619,7 +626,7 @@ RelatedLinksHandlerImpl::RelatedLinksHandlerImpl(void)
 
 
 
-RelatedLinksHandlerImpl::~RelatedLinksHandlerImpl (void)
+RelatedLinksHandlerImpl::~RelatedLinksHandlerImpl()
 {
 	if (mRelatedLinksURL)
 	{
@@ -638,6 +645,34 @@ RelatedLinksHandlerImpl::~RelatedLinksHandlerImpl (void)
 		gRDFService = nsnull;
 	}
 }
+
+nsresult
+RelatedLinksHandlerImpl::Init()
+{
+	nsresult rv;
+
+	if (gRefCnt++ == 0)
+	{
+		rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                  nsIRDFService::GetIID(),
+                                                  (nsISupports**) &gRDFService);
+		if (NS_FAILED(rv)) return rv;
+
+		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "child", &kNC_Child);
+		gRDFService->GetResource(NC_NAMESPACE_URI  "Name", &kNC_Name);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
+	}
+
+	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+											nsnull,
+											nsIRDFDataSource::GetIID(),
+											getter_AddRefs(mInner));
+	if (NS_FAILED(rv)) return rv;
+
+	return NS_OK;
+}
+
 
 
 
@@ -658,7 +693,7 @@ NS_NewRelatedLinksHandler(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 	if (! result)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	rv = result->Init("rdf:relatedlinks");
+	rv = result->Init();
 	if (NS_SUCCEEDED(rv)) {
 		rv = result->QueryInterface(aIID, aResult);
 	}
@@ -792,46 +827,22 @@ RelatedLinksHandlerImpl::SetURL(char* aURL)
 
 // nsIRDFDataSource interface
 
+
 NS_IMETHODIMP
-RelatedLinksHandlerImpl::Init(const char *aURI)
+RelatedLinksHandlerImpl::GetURI(char **aURI)
 {
 	NS_PRECONDITION(aURI != nsnull, "null ptr");
 	if (! aURI)
 		return NS_ERROR_NULL_POINTER;
 
-	nsresult rv;
-
-	if (gRefCnt++ == 0)
-	{
-		rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                  nsIRDFService::GetIID(),
-                                                  (nsISupports**) &gRDFService);
-		if (NS_FAILED(rv)) return rv;
-
-		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "child", &kNC_Child);
-		gRDFService->GetResource(NC_NAMESPACE_URI  "Name", &kNC_Name);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
-	}
-
-	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-						nsnull,
-						nsIRDFDataSource::GetIID(),
-						getter_AddRefs(mInner));
-	if (NS_FAILED(rv)) return rv;
-
-	rv = mInner->Init(mURI);
-	if (NS_FAILED(rv)) return rv;
+	// XXX We could munge in the current URL that we're looking at I
+	// suppose. Not critical because this datasource shouldn't be
+	// registered with the RDF service.
+	*aURI = nsXPIDLCString::Copy("rdf:related-links");
+	if (! *aURI)
+		return NS_ERROR_OUT_OF_MEMORY;
 
 	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksHandlerImpl::GetURI(char **aURI)
-{
-	return mInner->GetURI(aURI);
 }
 
 
@@ -901,6 +912,24 @@ RelatedLinksHandlerImpl::Unassert(nsIRDFResource *aSource,
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
+NS_IMETHODIMP
+RelatedLinksHandlerImpl::Change(nsIRDFResource* aSource,
+								nsIRDFResource* aProperty,
+								nsIRDFNode* aOldTarget,
+								nsIRDFNode* aNewTarget)
+{
+	return NS_RDF_ASSERTION_REJECTED;
+}
+
+
+NS_IMETHODIMP
+RelatedLinksHandlerImpl::Move(nsIRDFResource* aOldSource,
+							  nsIRDFResource* aNewSource,
+							  nsIRDFResource* aProperty,
+							  nsIRDFNode* aTarget)
+{
+	return NS_RDF_ASSERTION_REJECTED;
+}
 
 
 NS_IMETHODIMP
@@ -953,14 +982,6 @@ NS_IMETHODIMP
 RelatedLinksHandlerImpl::RemoveObserver(nsIRDFObserver *aObserver)
 {
 	return mInner->RemoveObserver(aObserver);
-}
-
-
-
-NS_IMETHODIMP
-RelatedLinksHandlerImpl::Flush()
-{
-	return mInner->Flush();
 }
 
 
@@ -1051,8 +1072,8 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 	if (NS_FAILED(rv)) return rv;
 
 	rv = compMgr->RegisterComponent(kRelatedLinksHandlerCID, "Related Links Handler",
-					NS_RELATEDLINKSHANDLER_PROGID,
-					aPath, PR_TRUE, PR_TRUE);
+									NS_RELATEDLINKSHANDLER_PROGID,
+									aPath, PR_TRUE, PR_TRUE);
 
 	return NS_OK;
 }

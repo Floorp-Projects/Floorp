@@ -258,8 +258,6 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 // enable window mediation
 	rv = nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID,
                                    (nsISupports**) &mWindowMediator);
-	if ( NS_SUCCEEDED( rv) )
-		mWindowMediator->Init("rdf:window-mediator");
 done:
   return rv;
 }
