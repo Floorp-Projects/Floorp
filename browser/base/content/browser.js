@@ -827,16 +827,16 @@ function BrowserLoadURL(aTriggeringEvent)
     if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
         aTriggeringEvent.ctrlKey && 'shiftKey' in aTriggeringEvent &&
         aTriggeringEvent.shiftKey)
-      // Tack www. and .org on.
-      url = gURLBar.value = "www." + url + ".org/";
+      // Tack http://www. and .org on.
+      url = gURLBar.value = "http://www." + url + ".org/";
     else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
         aTriggeringEvent.ctrlKey)
       // Tack www. and .com on.
-      url = gURLBar.value = "www." + url + ".com/";
+      url = gURLBar.value = "http://www." + url + ".com/";
     else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
         aTriggeringEvent.shiftKey)
       // Tack www. and .org on.
-      url = gURLBar.value = "www." + url + ".net/";
+      url = gURLBar.value = "http://www." + url + ".net/";
 
     if (getBrowser().localName == "tabbrowser" &&
         aTriggeringEvent && 'altKey' in aTriggeringEvent &&
