@@ -71,7 +71,7 @@
 #include "nsMsgSimulateError.h"
 #include "nsNetUtil.h"
 #include "nsIPrefService.h"
-
+#include "nsISignatureVerifier.h"
 #include "nsISSLSocketControl.h"
 
 #ifndef XP_UNIX
@@ -698,8 +698,14 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
             if (m_responseText.Find("EXTERNAL", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
-            if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)  
-                SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+            if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
+            {
+                nsresult rv;
+                nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+                // this checks if psm is installed...
+                if (NS_SUCCEEDED(rv))
+                  SetFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
+            }
 
         }
         startPos = endPos + 1;
@@ -833,13 +839,17 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   default:
       if (smtpServer)
       {
-          // only forget the password if we didn't get here from the redirection.
-          if (mLogonCookie.IsEmpty()) {
+        // only forget the password if we didn't get here from the redirection
+        // and it wasn't CRAM_MD5 that failed. If CRAM_MD5 fails, we're going
+        // to fall back on a less secure login method.
+          if (!TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) && mLogonCookie.IsEmpty()) {
               smtpServer->ForgetPassword();
               if (m_usernamePrompted)
                   smtpServer->SetUsername("");
           }
           m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
+          // if CRAM_MD5_ENABLED, clear it if it failed. 
+          ClearFlag(SMTP_AUTH_CRAM_MD5_ENABLED); 
       }
       else
       {
@@ -964,7 +974,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
       if (decodedChallenge)
         rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), password.get(), password.Length(), digest);
       else
-        return -1;
+        rv = NS_ERROR_FAILURE;
       
       PR_Free(decodedChallenge);
       if (NS_SUCCEEDED(rv) && digest)
@@ -991,6 +1001,8 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
         PR_snprintf(buffer, sizeof(buffer), "%s" CRLF, base64Str);
         PR_Free(base64Str);
       }
+      if (NS_FAILED(rv))
+        ClearFlag(SMTP_AUTH_CRAM_MD5_ENABLED);
     }
 		else
 		{

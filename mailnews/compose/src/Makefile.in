@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  htmlparser \
 		  txmgr \
+		  caps \
 		  exthandler \
 		  mork \
 		  nkcache \
