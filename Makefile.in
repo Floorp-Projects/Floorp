@@ -42,21 +42,10 @@ else
 #
 default: $(SUBMAKEFILES)
 	$(MAKE) nspr
-	$(MAKE) tier_0
-ifdef MOZ_LDAP_XPCOM
-# Call each of ldap's stages individually since
-# its default target isn't -j safe
-	$(MAKE) -C directory/c-sdk/ldap export
-	$(MAKE) -C directory/c-sdk/ldap install
-endif
-	$(MAKE) tier_1
-	$(MAKE) tier_9
+	$(foreach d,0 1 9 95 96 97 98 99,$(MAKE) tier_${d} && ) echo
 
 # Make sure that the existing rulesets work
-DIRS = $(NSPRPUB_DIR) $(tier_0_dirs) $(tier_1_dirs) $(tier_9_dirs)
-ifdef MOZ_LDAP_XPCOM
-DIRS += directory/c-sdk/ldap
-endif
+DIRS = $(NSPRPUB_DIR) $(foreach d,0 1 9 95 96 97 98 99, $(tier_${d}_dirs))
 
 #
 # tier 0 - base build config dirs
@@ -76,6 +65,10 @@ tier_1_dirs = js
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 tier_1_dirs += lib/mac/MoreFiles
 endif
+
+#
+# tier 9 - core components (xpcom,necko,gecko)
+#
 
 # intl should not be in here - it's just temporary until
 # xpconnect's dependency on intl is repaired - see bug 106130
@@ -99,9 +92,6 @@ tier_9_dirs	+= \
 	modules/libjar \
 	$(NULL)
 
-#
-# tier 9 - mozilla application
-#
 ifdef MOZ_JAVA_SUPPLEMENT
 tier_9_dirs += 			\
   java/util			\
@@ -167,6 +157,10 @@ ifdef ACCESSIBILITY
 tier_9_dirs    += accessible
 endif
 
+ifdef MOZ_LDAP_XPCOM
+tier_9_dirs	+= directory/c-sdk/ldap directory/xpcom
+endif
+
 # This must preceed xpfe
 ifdef MOZ_JPROF
 tier_9_dirs        += tools/jprof
@@ -174,24 +168,8 @@ endif
 
 tier_9_dirs	+= xpfe xpinstall
 
-ifdef MOZ_PSM
-tier_9_dirs	+= security/manager
-endif
-
-ifdef MOZ_LDAP_XPCOM
-tier_9_dirs	+= directory/xpcom
-endif
-
 ifdef MOZ_EXTENSIONS
 tier_9_dirs	+= extensions
-endif
-
-ifdef MOZ_MAIL_NEWS
-tier_9_dirs	+= mailnews
-endif
-
-ifdef MOZ_CALENDAR
-tier_9_dirs	+= calendar
 endif
 
 ifdef MOZ_LEAKY
@@ -208,11 +186,31 @@ endif
 
 tier_9_dirs	+= l10n
 
-ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))
-tier_9_dirs   += modules/staticmod
+#
+# tier 9x - application features
+#
+
+ifdef MOZ_PSM
+tier_95_dirs	+= security/manager
 endif
 
-tier_9_dirs	+= xpfe/bootstrap
+ifdef MOZ_MAIL_NEWS
+tier_97_dirs	+= mailnews
+endif
+
+ifdef MOZ_CALENDAR
+tier_98_dirs	+= calendar
+endif
+
+#
+# tier 99 - application binaries
+#
+
+ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))
+tier_99_dirs   += modules/staticmod
+endif
+
+tier_99_dirs	+= xpfe/bootstrap
 
 endif # BUILD_MODULES == all
 
@@ -232,14 +230,16 @@ include $(topsrcdir)/config/rules.mk
 
 tier_%: 
 	@echo "$@: $($@_dirs)"
-	@$(EXIT_ON_ERROR) \
-	for d in $($@_dirs); do $(UPDATE_TITLE) \
-		$(MAKE) -C $$d export; \
-	done ; \
-	$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include ;\
-	for d in $($@_dirs); do $(UPDATE_TITLE) \
-		$(MAKE) -C $$d libs; \
-	done
+	@if test -n "$($@_dirs)"; then \
+		$(EXIT_ON_ERROR) \
+		for d in $($@_dirs); do $(UPDATE_TITLE) \
+			$(MAKE) -C $$d export; \
+		done ; \
+		$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include ;\
+		for d in $($@_dirs); do $(UPDATE_TITLE) \
+			$(MAKE) -C $$d libs; \
+		done \
+	fi
 #
 # Individual modules
 #
