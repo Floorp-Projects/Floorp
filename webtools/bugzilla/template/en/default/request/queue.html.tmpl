@@ -21,6 +21,9 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
+
 [%# The javascript and header_html blocks get used in header.html.tmpl. %]
 [% javascript = BLOCK %]
   var usetms = 0; // do we have target milestone?
@@ -44,14 +47,14 @@
   <table id="filter">
     <tr>
       <th>Requester:</th>
-      <td><input type="text" name="requester" value="[% form.requester FILTER html %]" size="20"></td>
+      <td><input type="text" name="requester" value="[% cgi.param('requester') FILTER html %]" size="20"></td>
       <th>Product:</th>
       <td>
         <select name="product" onchange="selectProduct(this.form, 'product', 'component', 'Any');">
           <option value="">Any</option>
           [% FOREACH item = products %]
             <option value="[% item FILTER html %]"
-                    [% "selected" IF form.product == item %]>[% item FILTER html %]</option>
+                    [% "selected" IF cgi.param('product') == item %]>[% item FILTER html %]</option>
           [% END %]
         </select>
       </td>
@@ -60,7 +63,7 @@
         [% PROCESS "global/select-menu.html.tmpl"
                     name="type"
                     options=types
-                    default=form.type %]
+                    default=cgi.param('type') %]
       </td>
 
       [%# We could let people see a "queue" of non-pending requests. %]
@@ -70,20 +73,20 @@
         [%# PROCESS "global/select-menu.html.tmpl"
                     name="status"
                     options=["all", "?", "+-", "+", "-"]
-                    default=form.status %]
+                    default=cgi.param('status') %]
       </td>
       -->
 
     </tr>
     <tr>
       <th>Requestee:</th>
-      <td><input type="text" name="requestee" value="[% form.requestee FILTER html %]" size="20"></td>
+      <td><input type="text" name="requestee" value="[% cgi.param('requestee') FILTER html %]" size="20"></td>
       <th>Component:</th>
       <td>
         <select name="component">
           <option value="">Any</option>
           [% FOREACH item = components %]
-            <option value="[% item FILTER html %]" [% "selected" IF form.component == item %]>
+            <option value="[% item FILTER html %]" [% "selected" IF cgi.param('component') == item %]>
               [% item FILTER html %]</option>
           [% END %]
         </select>
@@ -96,7 +99,7 @@
             "Flag" => 'type' ,
             "Product/Component" => 'category'
           } %]
-        [% PROCESS "global/select-menu.html.tmpl" name="group" options=groups default=form.group %]
+        [% PROCESS "global/select-menu.html.tmpl" name="group" options=groups default=cgi.param('group') %]
       </td>
       <td><input type="submit" value="Filter"></td>
     </tr>

@@ -58,8 +58,10 @@ exit;
 ################################################################################
 
 sub queue {
-    validateStatus();
-    validateGroup();
+    my $cgi = Bugzilla->cgi;
+    
+    validateStatus($cgi->param('status'));
+    validateGroup($cgi->param('group'));
     
     my $attach_join_clause = "flags.attach_id = attachments.attach_id";
     if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
@@ -118,7 +120,7 @@ sub queue {
     ";
     
     # Limit query to pending requests.
-    $query .= " AND flags.status = '?' " unless $::FORM{'status'};
+    $query .= " AND flags.status = '?' " unless $cgi->param('status');
 
     # The set of criteria by which we filter records to display in the queue.
     my @criteria = ();
@@ -132,50 +134,52 @@ sub queue {
     
     # Filter requests by status: "pending", "granted", "denied", "all" 
     # (which means any), or "fulfilled" (which means "granted" or "denied").
-    if ($::FORM{'status'}) {
-        if ($::FORM{'status'} eq "+-") {
+    if ($cgi->param('status')) {
+        if ($cgi->param('status') eq "+-") {
             push(@criteria, "flags.status IN ('+', '-')");
-            push(@excluded_columns, 'status') unless $::FORM{'do_union'};
+            push(@excluded_columns, 'status') unless $cgi->param('do_union');
         }
-        elsif ($::FORM{'status'} ne "all") {
-            push(@criteria, "flags.status = '$::FORM{'status'}'");
-            push(@excluded_columns, 'status') unless $::FORM{'do_union'};
+        elsif ($cgi->param('status') ne "all") {
+            push(@criteria, "flags.status = '" . $cgi->param('status') . "'");
+            push(@excluded_columns, 'status') unless $cgi->param('do_union');
         }
     }
     
     # Filter results by exact email address of requester or requestee.
-    if (defined($::FORM{'requester'}) && $::FORM{'requester'} ne "") {
-        push(@criteria, "requesters.login_name = " . SqlQuote($::FORM{'requester'}));
-        push(@excluded_columns, 'requester') unless $::FORM{'do_union'};
+    if (defined $cgi->param('requester') && $cgi->param('requester') ne "") {
+        push(@criteria, "requesters.login_name = " . SqlQuote($cgi->param('requester')));
+        push(@excluded_columns, 'requester') unless $cgi->param('do_union');
     }
-    if (defined($::FORM{'requestee'}) && $::FORM{'requestee'} ne "") {
-        push(@criteria, "requestees.login_name = " . SqlQuote($::FORM{'requestee'}));
-        push(@excluded_columns, 'requestee') unless $::FORM{'do_union'};
+    if (defined $cgi->param('requestee') && $cgi->param('requestee') ne "") {
+        push(@criteria, "requestees.login_name = " .
+            SqlQuote($cgi->param('requestee')));
+        push(@excluded_columns, 'requestee') unless $cgi->param('do_union');
     }
     
     # Filter results by exact product or component.
-    if (defined($::FORM{'product'}) && $::FORM{'product'} ne "") {
-        my $product_id = get_product_id($::FORM{'product'});
+    if (defined $cgi->param('product') && $cgi->param('product') ne "") {
+        my $product_id = get_product_id($cgi->param('product'));
         if ($product_id) {
             push(@criteria, "bugs.product_id = $product_id");
-            push(@excluded_columns, 'product') unless $::FORM{'do_union'};
-            if (defined($::FORM{'component'}) && $::FORM{'component'} ne "") {
-                my $component_id = get_component_id($product_id, $::FORM{'component'});
+            push(@excluded_columns, 'product') unless $cgi->param('do_union');
+            if (defined $cgi->param('component') && $cgi->param('component') ne "") {
+                my $component_id = get_component_id($product_id, $cgi->param('component'));
                 if ($component_id) {
                     push(@criteria, "bugs.component_id = $component_id");
-                    push(@excluded_columns, 'component') unless $::FORM{'do_union'};
+                    push(@excluded_columns, 'component') unless $cgi->param('do_union');
                 }
-                else { ThrowCodeError("unknown_component", { component => $::FORM{component} }) }
+                else { ThrowCodeError("unknown_component", { component => $cgi->param('component') }) }
             }
         }
-        else { ThrowCodeError("unknown_product", { product => $::FORM{product} }) }
+        else { ThrowCodeError("unknown_product", { product => $cgi->param('product') }) }
     }
     
     # Filter results by flag types.
-    if (defined($::FORM{'type'}) && !grep($::FORM{'type'} eq $_, ("", "all"))) {
+    my $form_type = $cgi->param('type');
+    if (defined $form_type && !grep($form_type eq $_, ("", "all"))) {
         # Check if any matching types are for attachments.  If not, don't show
         # the attachment column in the report.
-        my $types = Bugzilla::FlagType::match({ 'name' => $::FORM{'type'} });
+        my $types = Bugzilla::FlagType::match({ 'name' => $form_type });
         my $has_attachment_type = 0;
         foreach my $type (@$types) {
             if ($type->{'target_type'} eq "attachment") {
@@ -185,14 +189,14 @@ sub queue {
         }
         if (!$has_attachment_type) { push(@excluded_columns, 'attachment') }
         
-        push(@criteria, "flagtypes.name = " . SqlQuote($::FORM{'type'}));
-        push(@excluded_columns, 'type') unless $::FORM{'do_union'};
+        push(@criteria, "flagtypes.name = " . SqlQuote($form_type));
+        push(@excluded_columns, 'type') unless $cgi->param('do_union');
     }
     
     # Add the criteria to the query.  We do an intersection by default 
     # but do a union if the "do_union" URL parameter (for which there is no UI 
     # because it's an advanced feature that people won't usually want) is true.
-    my $and_or = $::FORM{'do_union'} ? " OR " : " AND ";
+    my $and_or = $cgi->param('do_union') ? " OR " : " AND ";
     $query .= " AND (" . join($and_or, @criteria) . ") " if scalar(@criteria);
     
     # Group the records by flag ID so we don't get multiple rows of data
@@ -204,17 +208,19 @@ sub queue {
     # Group the records, in other words order them by the group column
     # so the loop in the display template can break them up into separate
     # tables every time the value in the group column changes.
-    $::FORM{'group'} ||= "requestee";
-    if ($::FORM{'group'} eq "requester") {
+
+    my $form_group = $cgi->param('group');
+    $form_group ||= "requestee";
+    if ($form_group eq "requester") {
         $query .= " ORDER BY requesters.realname, requesters.login_name";
     }
-    elsif ($::FORM{'group'} eq "requestee") {
+    elsif ($form_group eq "requestee") {
         $query .= " ORDER BY requestees.realname, requestees.login_name";
     }
-    elsif ($::FORM{'group'} eq "category") {
+    elsif ($form_group eq "category") {
         $query .= " ORDER BY products.name, components.name";
     }
-    elsif ($::FORM{'group'} eq "type") {
+    elsif ($form_group eq "type") {
         $query .= " ORDER BY flagtypes.name";
     }
 
@@ -223,7 +229,7 @@ sub queue {
     
     # Pass the query to the template for use when debugging this script.
     $vars->{'query'} = $query;
-    $vars->{'debug'} = $::FORM{'debug'} ? 1 : 0;
+    $vars->{'debug'} = $cgi->param('debug') ? 1 : 0;
     
     SendSQL($query);
     my @requests = ();
@@ -260,9 +266,8 @@ sub queue {
     $vars->{'components_by_product'} = $selectable->{components};
     
     $vars->{'excluded_columns'} = \@excluded_columns;
-    $vars->{'group_field'} = $::FORM{'group'};
+    $vars->{'group_field'} = $form_group;
     $vars->{'requests'} = \@requests;
-    $vars->{'form'} = \%::FORM;
     $vars->{'types'} = \@types;
 
     # Return the appropriate HTTP response headers.
@@ -278,18 +283,20 @@ sub queue {
 ################################################################################
 
 sub validateStatus {
-    return if !defined($::FORM{'status'});
+    my $status = $_[0];
+    return if !defined $status;
     
-    grep($::FORM{'status'} eq $_, qw(? +- + - all))
+    grep($status eq $_, qw(? +- + - all))
       || ThrowCodeError("flag_status_invalid",
-                        { status => $::FORM{'status'} });
+                        { status => $status });
 }
 
 sub validateGroup {
-    return if !defined($::FORM{'group'});
+    my $group = $_[0];
+    return if !defined $group;
     
-    grep($::FORM{'group'} eq $_, qw(requester requestee category type))
+    grep($group eq $_, qw(requester requestee category type))
       || ThrowCodeError("request_queue_group_invalid", 
-                        { group => $::FORM{'group'} });
+                        { group => $group });
 }
 
