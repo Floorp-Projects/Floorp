@@ -8,3 +8,4 @@ nsIStringStream.h
 nsIUnicharInputStream.h
 nsSpecialSystemDirectory.h
 nsPipe2.h
+nsStorageStream.h
