@@ -242,10 +242,10 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
     if (m_bHeadersDone) {
 
         // Notify the event sink that response headers are available...
-        nsIHTTPEventSink* pSink= nsnull;
-        m_pConnection->GetEventSink(&pSink);
-        if (pSink) {
-            pSink->OnHeadersAvailable(m_pConnection);
+        nsCOMPtr<nsIHTTPEventSink> sink;
+        m_pConnection->GetEventSink(getter_AddRefs(sink));
+        if (sink) {
+            sink->OnHeadersAvailable(m_pConnection);
         }
 
         // Check for any modules that want to receive headers once they've arrived.

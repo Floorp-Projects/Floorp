@@ -295,8 +295,16 @@ nsHTTPChannel::GetResponseString(char* *o_String)
 NS_IMETHODIMP
 nsHTTPChannel::GetEventSink(nsIHTTPEventSink* *o_EventSink) 
 {
-    *o_EventSink = m_pEventSink; 
-    return NS_OK;
+    nsresult rv;
+
+    if (o_EventSink) {
+        *o_EventSink = m_pEventSink;
+        NS_IF_ADDREF(*o_EventSink);
+        rv = NS_OK;
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
 }
 
 
