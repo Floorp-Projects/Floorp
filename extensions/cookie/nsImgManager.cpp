@@ -51,18 +51,6 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-static PRBool ShouldBlockImageByScheme(nsIURI * aURI)
-{
-    nsCAutoString scheme;
-
-    if (NS_FAILED(aURI->GetScheme(scheme)))
-      return PR_FALSE;
-
-    return scheme.Equals(NS_LITERAL_CSTRING("http")) || scheme.Equals(NS_LITERAL_CSTRING("https")) ||
-           scheme.Equals(NS_LITERAL_CSTRING("imap")) || scheme.Equals(NS_LITERAL_CSTRING("mailbox")) ||
-           scheme.Equals(NS_LITERAL_CSTRING("news")) || scheme.Equals(NS_LITERAL_CSTRING("snews"));
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -135,9 +123,6 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
 
                 rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
                 if (NS_FAILED(rv) || !baseURI) return rv;
-
-                if (!ShouldBlockImageByScheme(baseURI)) //JFD: Why do we care about the base url anyway?
-                  return NS_OK;
 
                 // Let check if we are running a mail window, doesn't matter if mail images are allowed
                 if (IMAGE_BlockedInMail()) {

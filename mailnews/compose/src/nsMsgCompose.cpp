@@ -739,6 +739,7 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
     if (NS_FAILED(rv)) return rv;
 
     m_baseWindow = do_QueryInterface(treeOwner);
+    docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
   }
   
   MSG_ComposeFormat format;
