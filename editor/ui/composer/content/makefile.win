@@ -39,6 +39,8 @@ install::
 	$(MAKE_INSTALL) sb-FileWidgetFileHandler.js $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) viewsource.xul             $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) viewsource.js              $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) editorOverlay.xul          $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) editorOverlay.js           $(DIST)\bin\chrome\editor\content\default
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorAppShell.xul
@@ -60,3 +62,5 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\sb-FileWidgetFileHandler.js
   rm -f $(DIST)\bin\chrome\editor\content\default\viewsource.xul
   rm -f $(DIST)\bin\chrome\editor\content\default\viewSource.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\editorOverlay.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\editorOverlay.js
