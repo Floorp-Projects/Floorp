@@ -21,17 +21,12 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.6 1999/03/26 09:50:40 ramiro%netscape.com Exp $
+   $Id: color.cpp,v 3.7 1999/04/15 02:28:28 alecf%netscape.com Exp $
 */
 
 
 #include "if.h"
-#ifdef XP_MAC
-#include "xpcompat.h"
-#else
-#include "xp_qsort.h"
-#endif
-
+#include "nsQuickSort.h"
 
 #ifdef PROFILE
 #pragma profile on
@@ -586,7 +581,7 @@ ConvertRGBToRGB32(il_container *ic,
 
 /* Sorting predicate for qsort() */
 static int
-compare_uint32(const void *a, const void *b)
+compare_uint32(const void *a, const void *b, void *)
 {
     uint32 a1 = *(uint32*)a;
     uint32 b1 = *(uint32*)b;
@@ -621,7 +616,7 @@ unique_map_colors(NI_ColorMap *cmap)
     }
 
     /* Sort by color, so identical colors will be grouped together. */
-    XP_QSORT(ind, max_colors, sizeof(*ind), compare_uint32);
+    nsQuickSort(ind, max_colors, sizeof(*ind), compare_uint32, NULL);
 
     /* Look for adjacent colors with different values */
     for (i = 0; i < max_colors-1; i++)
