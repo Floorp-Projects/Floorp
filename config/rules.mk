@@ -480,7 +480,7 @@ endif
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
 #
-$(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS)
+$(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(OS_ARCH),OS2)
 	$(LINK) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS)  $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(DEF_FILE)
 else
@@ -516,7 +516,7 @@ endif
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 #
-$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EXTRA_DEPS)
+$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
