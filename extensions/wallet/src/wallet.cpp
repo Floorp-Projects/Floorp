@@ -37,7 +37,7 @@
 #include "xp_list.h"
 #include "prefapi.h"
 #include "nsFileStream.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsFileLocations.h"
 
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -696,13 +696,13 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   }
 
   /* open output stream */
-  nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  walletFile += "res";
-  walletFile += "wallet";
+  nsSpecialFileSpec walletFile(nsSpecialFileSpec::App_UserProfileDirectory50);
   walletFile += filename;
   nsOutputFileStream strm(walletFile);
   if (!strm.is_open()) {
-    NS_ERROR("unable to open file");
+#ifdef DEBUG
+    printf("Wallet: Unable to open wallet file: %s\n", (const char *)walletFile);
+#endif /* DEBUG */
     return;
   }
   if (obscure) {
@@ -745,9 +745,7 @@ wallet_ReadFromFile
     (char* filename, XP_List*& list, PRBool obscure, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
-  nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  walletFile += "res";
-  walletFile += "wallet";
+  nsSpecialFileSpec walletFile(nsSpecialFileSpec::App_UserProfileDirectory50);
   walletFile += filename;
   nsInputFileStream strm(walletFile);
   if (!strm.is_open()) {
@@ -838,9 +836,7 @@ wallet_ReadFromURLFieldToSchemaFile
     (char* filename, XP_List*& list, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
-  nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  walletFile += "res";
-  walletFile += "wallet";
+  nsSpecialFileSpec walletFile(nsSpecialFileSpec::App_UserProfileDirectory50);
   walletFile += filename;
   nsInputFileStream strm(walletFile);
   if (!strm.is_open()) {
@@ -934,9 +930,7 @@ wallet_FetchFromNetCenter(char* from, char* to) {
       if (NS_SUCCEEDED(rv)) {
 
         /* open output file */
-        nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-        walletFile += "res";
-        walletFile += "wallet";
+        nsSpecialFileSpec walletFile(nsSpecialFileSpec::App_UserProfileDirectory50);
         walletFile += to;
         nsOutputFileStream strm(walletFile);
         if (!strm.is_open()) {
@@ -1683,9 +1677,7 @@ wallet_PostEdit() {
     *separator = BREAK;
 
     /* open SchemaValue file */
-    nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    walletFile += "res";
-    walletFile += "wallet";
+    nsSpecialFileSpec walletFile(nsSpecialFileSpec::App_UserProfileDirectory50);
     walletFile += "SchemaValue.tbl";
     nsOutputFileStream strm(walletFile);
     if (!strm.is_open()) {
