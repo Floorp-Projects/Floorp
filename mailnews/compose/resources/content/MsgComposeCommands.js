@@ -189,6 +189,7 @@ function ComposeStartup()
             break;
         }
     }
+    LoadIdentity(true);
 
 	if (msgComposeService)
 	{
@@ -1014,4 +1015,24 @@ function DetermineHTMLAction()
     }
 
     return sendFormat;
+}
+
+function LoadIdentity(startup)
+{
+    var identityElement = document.getElementById("msgIdentity");
+    
+    if (identityElement) {
+        var item = identityElement.selectedItem;
+        idKey = item.getAttribute('id');
+        var identity = accountManager.getIdentity(idKey);
+        
+        //Setup autocomplete session, we can doit from here as it's use as a service
+        var session = Components.classes["component://netscape/autocompleteSession&type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
+        if (session)
+        {
+            var emailAddr = identity.email;
+            var start = emailAddr.lastIndexOf("@");
+            session.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
+        }
+    }   
 }

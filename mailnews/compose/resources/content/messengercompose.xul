@@ -400,7 +400,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				<box align="horizontal">
                     <text value="&fromAddr.label;" />
 					<spring style="width:0.5em"/>
-					<menulist id="msgIdentity" value="..." onchange="contentChanged=true;">
+					<menulist id="msgIdentity" value="..." oncommand="contentChanged=true; LoadIdentity(false);">
                         <menupopup id="msgIdentityPopup" />
                     </menulist>
 				</box> 
