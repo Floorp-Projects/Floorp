@@ -52,8 +52,8 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
   //Insert the program name 
   if (aArgv[0])
   {
-    mArgList.AppendElement((void *)PL_strdup("-progname"));
-    mArgValueList.AppendElement((void *)PL_strdup(aArgv[0]));
+    mArgList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup("-progname")));
+    mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[0])));
     mArgCount++;
     i++;
   }
@@ -64,7 +64,7 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
        /* An option that starts with -. May or many not
 	    * have a value after it. 
 	    */
-	   mArgList.AppendElement((void *)PL_strdup(aArgv[i]));
+	   mArgList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[i])));
 	   //Increment the index to look ahead at the next option.
        i++;
 
@@ -75,7 +75,7 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	     /* All args have been parsed. Append a PR_TRUE for the
 	      * previous option in the mArgValueList
 	      */
-	     mArgValueList.AppendElement((void *)PL_strdup("1"));
+	     mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup("1")));
 	     mArgCount++;
 	     break;
 	   }
@@ -85,7 +85,7 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	     * mArgValue array and retract the index so that this option 
 	     * will get stored in the next iteration
 	     */
-        mArgValueList.AppendElement((void *)PL_strdup("1"));
+        mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup("1")));
    	    mArgCount++;
         i--;
         continue;
@@ -103,7 +103,7 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 
  		       // Append the url to the arrays
            //mArgList.AppendElement((void *)PL_strdup("-url"));
-		       mArgValueList.AppendElement((void *) PL_strdup(aArgv[i]));
+		       mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[i])));
 	 	       mArgCount++;
            continue;
         }
@@ -111,7 +111,7 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	         /* This is a value to the previous option.
 	          * Store it in the mArgValue array 
 	          */
-             mArgValueList.AppendElement((void *)PL_strdup(aArgv[i]));
+             mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[i])));
 	         mArgCount++;
 	      }
 	   }
@@ -121,8 +121,8 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 	      /* This must be the  URL at the end 
 	       * Append the url to the arrays
            */
-           mArgList.AppendElement((void *)PL_strdup("-url"));
-	         mArgValueList.AppendElement((void *) PL_strdup(aArgv[i]));
+           mArgList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup("-url")));
+	         mArgValueList.AppendElement(NS_REINTERPRET_CAST(void*, nsCRT::strdup(aArgv[i])));
 	         mArgCount++;
 	     }
 	     else {
@@ -237,6 +237,21 @@ nsCmdLineService::GetArgv(char *** aResult)
 
 nsCmdLineService::~nsCmdLineService()
 {
+  PRInt32 curr = mArgList.Count();
+  while ( curr ) {
+    char* str = NS_REINTERPRET_CAST(char*, mArgList[curr-1]);
+    if ( str )
+      nsAllocator::Free(str);
+    --curr;
+  }
+  
+  curr = mArgValueList.Count();
+  while ( curr ) {
+    char* str = NS_REINTERPRET_CAST(char*, mArgValueList[curr-1]);
+    if ( str )
+      nsAllocator::Free(str);
+    --curr;
+  }
 }
 
 
