@@ -1432,6 +1432,15 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_PopStatement(tc);
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_right = pn2;
+        if (cx->version != JSVERSION_ECMA_3) {
+            /*
+             * All legacy and extended versions must do automatic semicolon
+             * insertion after do-while.  See the testcase and discussion in
+             * http://bugzilla.mozilla.org/show_bug.cgi?id=238945.
+             */
+            (void) js_MatchToken(cx, ts, TOK_SEMI);
+            return pn;
+        }
         break;
 #endif /* JS_HAS_DO_WHILE_LOOP */
 
