@@ -164,8 +164,8 @@ MyFE_PromptUsernameAndPassword
         (char *msg, char **username, char **password) {
 
   if (!si_GetUsingDialogsPref()) {
-    *username = "your name";
-    *password = "your password";
+    *username = PL_strdup("your name");
+    *password = PL_strdup("your password");
     return PR_TRUE;
   }
 
@@ -1751,7 +1751,9 @@ si_LoadSignonData(PRBool fullLoad) {
     if (fullLoad) {
       si_RestartKey();
       while (!si_SetKey()) {
-          if (!MyFE_Confirm("incorrect key -- do you want to try again?")) {
+          if (!si_GetUsingDialogsPref()) {
+            return 1;
+          } else if (!MyFE_Confirm("incorrect key -- do you want to try again?")) {
               MyFE_Confirm("Key failure -- password file will not be opened");
               return 1;
           }
