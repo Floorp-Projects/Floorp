@@ -131,6 +131,48 @@ lo_element_info(LO_Element *ele_list, NET_StreamClass *stream)
 					  }
 				}
 				break;
+#ifdef SHACK
+		    case LO_BUILTIN:
+				{
+					LO_BuiltinStruct *builtin;
+					char *str;
+					char *builtin_src;
+
+					builtin = (LO_BuiltinStruct *)eptr;
+					/*
+					 * Extract the SRC of this builtin.
+					 */
+					PA_LOCK(str, char *, builtin->builtin_src);
+					if (str != NULL)
+					{
+						builtin_src = XP_STRDUP(str);
+					}
+					else
+					{
+						builtin_src = NULL;
+					}
+					PA_UNLOCK(builtin->builtin_src);
+
+					if(builtin_src)
+					  {
+						XP_STRCPY(buf,"<li>");
+						XP_STRCAT(buf, XP_GetString(LAY_PAGEINFO_EMBED));
+						XP_STRCAT(buf," <A TARGET=Internal_URL_Info HREF=\"about:");
+						STREAM_WRITE(buf);
+						STREAM_WRITE(builtin_src);
+						XP_STRCPY(buf,"\">");
+						STREAM_WRITE(buf);
+						tmp_ptr = NET_EscapeHTML(builtin_src);
+						STREAM_WRITE(tmp_ptr);
+						XP_FREE(tmp_ptr);
+						XP_STRCPY(buf,"</A>");
+						STREAM_WRITE(buf);
+						XP_FREE(builtin_src);
+					  }
+				}
+			    break;
+#endif /* SHACK */
+
 #ifdef JAVA
 			case LO_JAVA:
 				{
