@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_display.h             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.3                                                      * */
+/* * version   : 0.9.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : Display management (definition)                            * */
 /* *                                                                        * */

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : mng_types.h               copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.3                                                      * */
+/* * version   : 0.9.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : type specifications                                        * */
 /* *                                                                        * */
@@ -58,6 +58,9 @@
 /* *             - changed definition of mng_handle (again)                 * */
 /* *             - swapped refresh parameters                               * */
 /* *             - added inclusion of stdlib.h for abs()                    * */
+/* *                                                                        * */
+/* *             0.9.0 - 06/30/2000 - G.Juyn                                * */
+/* *             - changed refresh parameters to 'x,y,width,height'         * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -357,10 +360,10 @@ typedef mng_ptr    MNG_DECL (*mng_getbkgdline)   (mng_handle  hHandle,
 typedef mng_ptr    MNG_DECL (*mng_getalphaline)  (mng_handle  hHandle,
                                                   mng_uint32  iLinenr);
 typedef mng_bool   MNG_DECL (*mng_refresh)       (mng_handle  hHandle,
-                                                  mng_uint32  iLeft,
-                                                  mng_uint32  iTop,
-                                                  mng_uint32  iRight,
-                                                  mng_uint32  iBottom);
+                                                  mng_uint32  iX,
+                                                  mng_uint32  iY,
+                                                  mng_uint32  iWidth,
+                                                  mng_uint32  iHeight);
 
                                        /* timer management callbacks */
 typedef mng_uint32 MNG_DECL (*mng_gettickcount)  (mng_handle  hHandle);

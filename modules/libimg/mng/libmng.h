@@ -101,7 +101,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng.h                  copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.5.3                                                      * */
+/* * version   : 0.9.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : main application interface                                 * */
 /* *                                                                        * */
@@ -154,6 +154,9 @@
 /* *             - fixed inclusion of IJG read/write code                   * */
 /* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
 /* *             - changed userdata variable to mng_ptr                     * */
+/* *                                                                        * */
+/* *             0.9.0 - 06/30/2000 - G.Juyn                                * */
+/* *             - changed refresh parameters to 'x,y,width,height'         * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -460,6 +463,17 @@ MNG_EXT mng_retcode MNG_DECL mng_setcb_processtext   (mng_handle        hHandle,
 /* refresh is called to inform the GUI to redraw the current canvas onto
    it's output device (eg. in Win32 this would mean sending an
    invalidate message for the specified region */
+/* NOTE that the update-region is specified as x,y,width,height; eg. the
+   invalidate message for Windows requires left,top,right,bottom parameters
+   where the bottom-right is exclusive of the region!!
+   to get these correctly is as simple as:
+   left   = x;
+   top    = y;
+   right  = x + width;
+   bottom = y + height;
+   if your implementation requires inclusive points, simply subtract 1 from
+   both the right & bottom values calculated above.
+   */
 #ifdef MNG_SUPPORT_DISPLAY
 MNG_EXT mng_retcode MNG_DECL mng_setcb_getcanvasline (mng_handle        hHandle,
                                                       mng_getcanvasline fProc);
