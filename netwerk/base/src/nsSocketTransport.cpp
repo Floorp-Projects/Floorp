@@ -2667,6 +2667,7 @@ nsSocketRequest::OnStop()
         }
         mObserver->OnStopRequest(this, mContext, mStatus);
         mObserver = 0;
+        mContext = 0;
         mStopFired = PR_TRUE;
     }
     return NS_OK;
