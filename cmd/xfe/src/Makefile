@@ -80,6 +80,7 @@ endif
 CPPSRCS		= \
 		  ToolbarButton.cpp \
 		  ToolbarItem.cpp \
+		  ToolbarSeparator.cpp \
 		  ToolbarUrlBar.cpp \
 		  plugin.cpp \
 		  BackForwardMenu.cpp \
