@@ -51,6 +51,7 @@
 #include "nsIDOMCrypto.h"
 #include "nsIDOMPkcs11.h"
 #include "nsISidebar.h"
+#include "nsIPrincipal.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -244,6 +245,7 @@ protected:
    nsIChromeEventHandler*        mChromeEventHandler; // Weak Reference
    nsCOMPtr<nsIDOMCrypto>        mCrypto;
    nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
+   nsCOMPtr<nsIPrincipal>        mDocumentPrincipal;
 };
 
 /* 
