@@ -21,7 +21,10 @@
 
 DEPTH=..\..\..\..
 LIBRARY_NAME=timer_s
-REQUIRES=xpcom string widget
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  $(NULL)
 DEFINES=-DWIN32_LEAN_AND_MEAN -DSTRICT
 
 EXPORTS=nsTimerManager.h nsWindowsTimer.h nsIWindowsTimerMap.h

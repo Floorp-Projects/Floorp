@@ -25,7 +25,15 @@ DEPTH=..\..\..
 MODULE         = widget
 LIBRARY_NAME   = gkwidget
 MODULE_NAME = nsWidgetModule
-REQUIRES = xpcom string widget necko uconv gfx dom timer
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  necko \
+		  uconv \
+		  gfx \
+		  dom \
+		  timer \
+		  $(NULL)
 RESFILE = widget.res
 
 CPPSRCS  = nsWinWidgetFactory.cpp

@@ -34,7 +34,12 @@ EXPORTS = \
 	$(NULL)
 
 MODULE=widget 
-REQUIRES	= xpcom string widget layout gfx
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  layout \
+		  gfx \
+		  $(NULL)
 
 OBJS= \
 	.\$(OBJDIR)\nsWidgetSupport.obj  \
