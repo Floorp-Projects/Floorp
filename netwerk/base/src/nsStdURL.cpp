@@ -1039,9 +1039,6 @@ nsStdURL::DirFile(char **o_DirFile)
     if (mDirectory)
     {
         temp = mDirectory;
-        // if we have anything in the dir besides just the / 
-        if (mDirectory[1])
-            temp += '/'; 
     }
     if (mFileName)
     {
