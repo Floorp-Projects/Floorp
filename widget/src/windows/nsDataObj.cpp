@@ -525,7 +525,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   fmetc.cfFormat = RegisterClipboardFormat ( CFSTR_FILECONTENTS );
 
   // create a global memory area and build up the file contents w/in it
-  static const char* shortcutFormatStr = "[InternetShortcut]\nURL=%s\n";
+  static const char* shortcutFormatStr = "[InternetShortcut]\nURL=%s\r\n";
   static const int formatLen = strlen(shortcutFormatStr) - 2; // don't include %s in the len
   const int totalLen = formatLen + strlen(urlStr) + 1;
   HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, totalLen);
