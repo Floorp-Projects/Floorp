@@ -88,9 +88,7 @@ nsSpaceManager::BandList::Clear()
 PR_STATIC_CALLBACK(void*)
 PSArenaAllocCB(size_t aSize, void* aClosure)
 {
-  void *rv;
-  NS_STATIC_CAST(nsIPresShell*, aClosure)->AllocateFrame(aSize, &rv);
-  return rv;
+  return NS_STATIC_CAST(nsIPresShell*, aClosure)->AllocateFrame(aSize);
 }
 
 // PresShell Arena free callback (for nsIntervalSet use below)

@@ -91,9 +91,7 @@ NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
 void* 
 nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
-  void* result = nsnull;
-  aPresShell->AllocateFrame(sz, &result);
-  return result;
+  return aPresShell->AllocateFrame(sz);
 }
 
 // Overloaded delete operator. Doesn't actually free the memory, because we

@@ -433,8 +433,7 @@ void*
 nsFrame::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
   // Check the recycle list first.
-  void* result = nsnull;
-  aPresShell->AllocateFrame(sz, &result);
+  void* result = aPresShell->AllocateFrame(sz);
   
   if (result) {
     memset(result, 0, sz);
@@ -3186,9 +3185,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       aBlockFrame->GetOffsetFromView(aPresContext, offset,&view);
       nscoord newDesiredX  = aPos->mDesiredX - offset.x;//get desired x into blockframe coordinates!
 #ifdef IBMBIDI
-      PRBool bidiEnabled;
-      aPresContext->GetBidiEnabled(&bidiEnabled);
-      result = it->FindFrameAt(searchingLine, newDesiredX, bidiEnabled, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
+      result = it->FindFrameAt(searchingLine, newDesiredX, aPresContext->BidiEnabled(), &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
 #else
       result = it->FindFrameAt(searchingLine, newDesiredX, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
 #endif // IBMBIDI

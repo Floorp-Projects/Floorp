@@ -68,9 +68,7 @@ struct RuleProcessorData {
   ~RuleProcessorData();
 
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
-    void* result = nsnull;
-    aContext->AllocateFromShell(sz, &result);
-    return result;
+    return aContext->AllocateFromShell(sz);
   }
   void Destroy(nsIPresContext* aContext) {
     this->~RuleProcessorData();

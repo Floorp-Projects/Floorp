@@ -565,11 +565,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
   nsCOMPtr<nsIPresContext> presContext;
   rv = presShell->GetPresContext(getter_AddRefs(presContext));
 
-  PRBool bidiEnabled = PR_FALSE;
-  if (presContext)
-    presContext->GetBidiEnabled(&bidiEnabled);
-
-  if (bidiEnabled)
+  if (presContext && presContext->BidiEnabled())
   {
     presShell->GetCaretBidiLevel(&bidiLevel);
     if (bidiLevel & BIDI_LEVEL_UNDEFINED)
@@ -1088,7 +1084,7 @@ void nsCaret::GetCaretRectAndInvert()
       presContext->SetBidiEnabled(bidiEnabled);
     }
     else
-      presContext->GetBidiEnabled(&bidiEnabled);
+      bidiEnabled = presContext->BidiEnabled();
     if (bidiEnabled)
     {
       if (bidiLevel != mKeyboardRTL)

@@ -83,8 +83,8 @@ class nsIRenderingContext;
 #endif
 
 #define NS_IPRESCONTEXT_IID   \
-{ 0x0a5d12e0, 0x944e, 0x11d1, \
-  {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+{ 0xfaf7c34a, 0x347c, 0x48f6, \
+  {0x81, 0x76, 0xc0, 0xf6, 0xd4, 0xe5, 0x74, 0x2e} }
 
 enum nsWidgetType {
   eWidgetType_Button  	= 1,
@@ -188,8 +188,18 @@ public:
   virtual nsresult GetXBLBindingURL(nsIContent* aContent,
                                     nsIURI** aResult) = 0;
 
-  NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult) = 0;
-  NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk) = 0;
+  void* AllocateFromShell(size_t aSize)
+  {
+    if (mShell)
+      return mShell->AllocateFrame(aSize);
+    return nsnull;
+  }
+
+  void FreeToShell(size_t aSize, void* aFreeChunk)
+  {
+    if (mShell)
+      mShell->FreeFrame(aSize, aFreeChunk);
+  }
 
   /**
    * Get the font metrics for a given font.
@@ -202,10 +212,7 @@ public:
    */
   virtual const nsFont* GetDefaultFont(PRUint8 aFontID) const = 0;
 
-  /** Get a cached boolean pref, by its type
-       if the type is not supported, then NS_ERROR_INVALID_ARG is returned
-       and the aValue argument is undefined, otherwise aValue is set
-       to the value of the boolean pref */
+  /** Get a cached boolean pref, by its type */
   // *  - initially created for bugs 31816, 20760, 22963
   PRBool GetCachedBoolPref(PRUint32 aPrefType) const
   {
@@ -225,12 +232,21 @@ public:
     return PR_FALSE;
   }
 
-  /** Get a cached integer pref, by its type
-       if the type is not supported, then NS_ERROR_INVALID_ARG is returned
-       and the aValue argument is undefined, otherwise aValue is set
-       to the value of the integer pref */
+  /** Get a cached integer pref, by its type */
   // *  - initially created for bugs 30910, 61883, 74186, 84398
-  NS_IMETHOD GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue) = 0;
+  PRInt32 GetCachedIntPref(PRUint32 aPrefType) const
+  {
+    // If called with a constant parameter, the compiler should optimize
+    // this switch statement away.
+    switch (aPrefType) {
+    case kPresContext_MinimumFontSize:
+      return mMinimumFontSize;
+    default:
+      NS_ERROR("invalid arg passed to GetCachedIntPref");
+    }
+
+    return PR_FALSE;
+  }
 
   /**
    * Access Nav's magic font scaler value
@@ -355,8 +371,10 @@ public:
    *
    * @param aType returns type, must be non-NULL
    */
-  NS_IMETHOD GetLanguageSpecificTransformType(
-              nsLanguageSpecificTransformType* aType) = 0;
+  nsLanguageSpecificTransformType LanguageSpecificTransformType() const
+  {
+    return mLanguageSpecificTransformType;
+  }
 
   /**
    * Set and get methods for controling the background drawing
@@ -383,14 +401,14 @@ public:
    *
    *  @lina 07/12/2000
    */
-  NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const = 0;
+  virtual PRBool BidiEnabled() const = 0;
 
   /**
    *  Set bidi enabled. This means we should apply the Unicode Bidi Algorithm
    *
    *  @lina 07/12/2000
    */
-  NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled) const  = 0;
+  virtual void SetBidiEnabled(PRBool aBidiEnabled) const  = 0;
 
   /**
    *  Set visual or implicit mode into the pres context.
@@ -526,7 +544,9 @@ protected:
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsILanguageAtom*      mLanguage;      // [STRONG]
 
+  nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   PRInt32               mFontScaler;
+  nscoord               mMinimumFontSize;
 
   nsRect                mVisibleArea;
 
@@ -540,10 +560,9 @@ protected:
   nscolor               mFocusBackgroundColor;
   nscolor               mFocusTextColor;
 
-  PRUint8               mFocusRingWidth;
-
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;
+  PRUint8               mFocusRingWidth;
 
   unsigned              mUseDocumentFonts : 1;
   unsigned              mUseDocumentColors : 1;

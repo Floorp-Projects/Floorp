@@ -74,10 +74,7 @@ public:
 
   virtual nsresult GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
-  NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult);
-  NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk);
   virtual const nsFont* GetDefaultFont(PRUint8 aFontID) const;
-  NS_IMETHOD GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue);
 
   virtual nsresult LoadImage(imgIRequest* aImage,
                              nsIFrame* aTargetFrame,
@@ -90,8 +87,6 @@ public:
   virtual void SetPageDim(nsRect* aRect) = 0;
   NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const;
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
-  NS_IMETHOD GetLanguageSpecificTransformType(
-              nsLanguageSpecificTransformType* aType);
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
@@ -104,8 +99,8 @@ public:
                      const PRUnichar* aData);
 
 #ifdef IBMBIDI
-  NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const;
-  NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled) const;
+  virtual PRBool BidiEnabled() const;
+  virtual void SetBidiEnabled(PRBool aBidiEnabled) const;
   NS_IMETHOD GetBidiUtils(nsBidiPresUtils** aBidiUtils);
   NS_IMETHOD SetBidi(PRUint32 aSource, PRBool aForceReflow = PR_FALSE);
   NS_IMETHOD GetBidi(PRUint32* aDest) const;
@@ -128,7 +123,6 @@ protected:
 
   nsCOMPtr<nsIPref>     mPrefs;
   nsCOMPtr<nsILanguageAtomService> mLangService;
-  nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   nsWeakPtr             mContainer;
 
   nsFont                mDefaultVariableFont;
@@ -138,7 +132,6 @@ protected:
   nsFont                mDefaultMonospaceFont;
   nsFont                mDefaultCursiveFont;
   nsFont                mDefaultFantasyFont;
-  nscoord               mMinimumFontSize;
 
   nsSupportsHashtable   mImageLoaders;
 

@@ -79,9 +79,7 @@ public:
   }
 
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
-    void* result = nsnull;
-    aContext->AllocateFromShell(sz, &result);
-    return result;
+    return aContext->AllocateFromShell(sz);
   };
   void operator delete(void* aPtr) {} // Does nothing. The arena will free us up when the rule tree
                                       // dies.
@@ -369,9 +367,7 @@ void*
 nsRuleNode::operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
-  void* result = nsnull;
-  aPresContext->AllocateFromShell(sz, &result);
-  return result;
+  return aPresContext->AllocateFromShell(sz);
 }
 
 // Overridden to prevent the global delete from being called, since the memory
@@ -1385,8 +1381,9 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     {
       nsStyleFont* fontData = new (mPresContext) nsStyleFont(mPresContext);
 
-      nscoord minimumFontSize = 0;
-      mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize, minimumFontSize);
+      nscoord minimumFontSize =
+        mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
+
       if (minimumFontSize > 0 && !IsChrome(mPresContext)) {
         fontData->mFont.size = PR_MAX(fontData->mSize, minimumFontSize);
       }
@@ -1976,8 +1973,9 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
     parentFont = font;
 
   // See if there is a minimum font-size constraint to honor
-  nscoord minimumFontSize = 0; // unconstrained by default
-  mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize, minimumFontSize);
+  nscoord minimumFontSize = 
+    mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
+
   if (minimumFontSize < 0)
     minimumFontSize = 0;
 
@@ -2114,9 +2112,9 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
         textData.mLineHeight.GetUnit() == eCSSUnit_Pixel) {
       nscoord lh = nsStyleFont::ZoomText(mPresContext,
                                          text->mLineHeight.GetCoordValue());
-      nscoord minimumFontSize = 0;
-      mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize,
-                                     minimumFontSize);
+      nscoord minimumFontSize =
+        mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
+
       if (minimumFontSize > 0 && !IsChrome(mPresContext)) {
         // If we applied a minimum font size, scale the line height by
         // the same ratio.  (If we *might* have applied a minimum font

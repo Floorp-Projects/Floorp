@@ -193,8 +193,8 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
 {
   MOZ_COUNT_CTOR(nsTextTransformer);
 
-  aPresContext->
-    GetLanguageSpecificTransformType(&mLanguageSpecificTransformType);
+  mLanguageSpecificTransformType =
+    aPresContext->LanguageSpecificTransformType();
 
 #ifdef IBMBIDI
   mPresContext = aPresContext;
@@ -236,10 +236,7 @@ nsTextTransformer::Init(nsIFrame* aFrame,
    *
    *  We do numeric shaping in all Bidi documents.
    */
-  PRBool bidiEnabled;
-
-  mPresContext->GetBidiEnabled(&bidiEnabled);
-  if (bidiEnabled) {
+  if (mPresContext->BidiEnabled()) {
     aFrame->GetBidiProperty(mPresContext, nsLayoutAtoms::charType,
                             (void**)&mCharType, sizeof(mCharType));
     if (mCharType == eCharType_RightToLeftArabic) {

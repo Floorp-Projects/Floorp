@@ -578,8 +578,8 @@ public:
   ~FrameArena();
 
   // Memory management functions
-  nsresult  AllocateFrame(size_t aSize, void** aResult);
-  nsresult  FreeFrame(size_t aSize, void* aPtr);
+  NS_HIDDEN_(void*) AllocateFrame(size_t aSize);
+  NS_HIDDEN_(void)  FreeFrame(size_t aSize, void* aPtr);
 
 private:
 #if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
@@ -611,11 +611,11 @@ FrameArena::~FrameArena()
 #endif
 } 
 
-nsresult
-FrameArena::AllocateFrame(size_t aSize, void** aResult)
+void*
+FrameArena::AllocateFrame(size_t aSize)
 {
 #if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
-  *aResult = PR_Malloc(aSize);
+  return PR_Malloc(aSize);
 #else
   void* result = nsnull;
   
@@ -639,12 +639,11 @@ FrameArena::AllocateFrame(size_t aSize, void** aResult)
     PL_ARENA_ALLOCATE(result, &mPool, aSize);
   }
 
-  *aResult = result;
+  return result;
 #endif
-  return NS_OK;
 }
 
-nsresult
+void
 FrameArena::FreeFrame(size_t aSize, void* aPtr)
 {
 #ifdef DEBUG
@@ -673,7 +672,6 @@ FrameArena::FreeFrame(size_t aSize, void* aPtr)
   }
 #endif
 #endif
-  return NS_OK;
 }
 
 class PresShellViewEventListener : public nsIScrollPositionListener,
@@ -1020,8 +1018,8 @@ public:
                   nsCompatibility aCompatMode);
   NS_IMETHOD Destroy();
 
-  NS_IMETHOD AllocateFrame(size_t aSize, void** aResult);
-  NS_IMETHOD FreeFrame(size_t aSize, void* aFreeChunk);
+  virtual NS_HIDDEN_(void*) AllocateFrame(size_t aSize);
+  virtual NS_HIDDEN_(void)  FreeFrame(size_t aSize, void* aFreeChunk);
 
   // Dynamic stack memory allocation
   NS_IMETHOD PushStackMemory();
@@ -1959,17 +1957,16 @@ PresShell::FreeDynamicStack()
 }
  
 
-NS_IMETHODIMP
+void
 PresShell::FreeFrame(size_t aSize, void* aPtr)
 {
   mFrameArena.FreeFrame(aSize, aPtr);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-PresShell::AllocateFrame(size_t aSize, void** aResult)
+void*
+PresShell::AllocateFrame(size_t aSize)
 {
-  return mFrameArena.AllocateFrame(aSize, aResult);
+  return mFrameArena.AllocateFrame(aSize);
 }
 
 NS_IMETHODIMP
@@ -4886,8 +4883,7 @@ NS_IMETHODIMP
 PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
 {
   nsCallbackEventRequest* request = nsnull;
-  void* result = nsnull;
-  AllocateFrame(sizeof(nsCallbackEventRequest), &result);
+  void* result = AllocateFrame(sizeof(nsCallbackEventRequest));
   request = (nsCallbackEventRequest*)result;
 
   request->callback = aCallback;
@@ -4950,8 +4946,7 @@ PresShell::PostDOMEvent(nsIContent* aContent, nsEvent* aEvent)
  // ok we have a list of events to handle. Queue them up and handle them
  // after we finish reflow.
   nsDOMEventRequest* request = nsnull;
-  void* result = nsnull;
-  AllocateFrame(sizeof(nsDOMEventRequest), &result);
+  void* result = AllocateFrame(sizeof(nsDOMEventRequest));
   request = (nsDOMEventRequest*)result;
 
   request->content = aContent;
@@ -4986,8 +4981,7 @@ PresShell::PostAttributeChange(nsIContent* aContent,
  // after we finish reflow.
   nsAttributeChangeRequest* request = nsnull;
 
-  void* result = nsnull;
-  AllocateFrame(sizeof(nsAttributeChangeRequest), &result);
+  void* result = AllocateFrame(sizeof(nsAttributeChangeRequest));
   request = (nsAttributeChangeRequest*)result;
 
   request->content = aContent;

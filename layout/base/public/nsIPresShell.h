@@ -140,8 +140,8 @@ public:
   // All frames owned by the shell are allocated from an arena.  They are also recycled
   // using free lists (separate free lists being maintained for each size_t).
   // Methods for recycling frames.
-  NS_IMETHOD AllocateFrame(size_t aSize, void** aResult) = 0;
-  NS_IMETHOD FreeFrame(size_t aSize, void* aFreeChunk) = 0;
+  virtual void* AllocateFrame(size_t aSize) = 0;
+  virtual void  FreeFrame(size_t aSize, void* aFreeChunk) = 0;
 
   // Dynamic stack memory allocation
   NS_IMETHOD PushStackMemory() = 0;

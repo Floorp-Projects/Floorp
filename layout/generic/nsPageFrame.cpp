@@ -536,9 +536,7 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
 #ifdef IBMBIDI
     nsresult rv = NS_ERROR_FAILURE;
 
-    PRBool isBidiEnabled = PR_FALSE;
-    aPresContext->GetBidiEnabled(&isBidiEnabled);
-    if (isBidiEnabled) {
+    if (aPresContext->BidiEnabled()) {
       nsBidiPresUtils* bidiUtils;
       aPresContext->GetBidiUtils(&bidiUtils);
       

@@ -107,7 +107,7 @@ nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 }
 
 #ifdef IBMBIDI
-PRBool
+static PRBool
 IsVisualCharset(const nsCAutoString& aCharset)
 {
   if (aCharset.EqualsIgnoreCase("ibm864")             // Arabic//ahmed
@@ -532,21 +532,6 @@ nsPresContext::GetUserPreferences()
 #endif
 }
 
-NS_IMETHODIMP
-nsPresContext::GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue) 
-{
-  nsresult rv = NS_OK;
-  switch (aPrefType) {
-    case kPresContext_MinimumFontSize:
-      aValue = mMinimumFontSize;
-      break;
-    default:
-      rv = NS_ERROR_INVALID_ARG;
-      NS_ERROR("invalid arg");
-  }
-  return rv;
-}
-
 void
 nsPresContext::ClearStyleDataAndReflow()
 {
@@ -832,22 +817,6 @@ nsPresContext::GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::AllocateFromShell(size_t aSize, void** aResult)
-{
-  if (mShell)
-    return mShell->AllocateFrame(aSize, aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::FreeToShell(size_t aSize, void* aFreeChunk)
-{
-  if (mShell)
-    return mShell->FreeFrame(aSize, aFreeChunk);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 {
   NS_PRECONDITION(aResult, "null out param");
@@ -1031,24 +1000,23 @@ nsPresContext::IsVisRTL(PRBool& aResult) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPresContext::GetBidiEnabled(PRBool* aBidiEnabled) const
+PRBool
+nsPresContext::BidiEnabled() const
 {
-  NS_ENSURE_ARG_POINTER(aBidiEnabled);
-  *aBidiEnabled = PR_FALSE;
+  PRBool bidiEnabled = PR_FALSE;
   NS_ASSERTION(mShell, "PresShell must be set on PresContext before calling nsPresContext::GetBidiEnabled");
   if (mShell) {
     nsCOMPtr<nsIDocument> doc;
     mShell->GetDocument(getter_AddRefs(doc) );
     NS_ASSERTION(doc, "PresShell has no document in nsPresContext::GetBidiEnabled");
     if (doc) {
-      *aBidiEnabled = doc->GetBidiEnabled();
+      bidiEnabled = doc->GetBidiEnabled();
     }
   }
-  return NS_OK;
+  return bidiEnabled;
 }
 
-NS_IMETHODIMP
+void
 nsPresContext::SetBidiEnabled(PRBool aBidiEnabled) const
 {
   if (mShell) {
@@ -1058,7 +1026,6 @@ nsPresContext::SetBidiEnabled(PRBool aBidiEnabled) const
       doc->SetBidiEnabled(aBidiEnabled);
     }
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1114,16 +1081,6 @@ nsPresContext::GetBidiCharset(nsACString &aCharSet) const
 //Mohamed End
 
 #endif //IBMBIDI
-
-NS_IMETHODIMP
-nsPresContext::GetLanguageSpecificTransformType(
-                nsLanguageSpecificTransformType* aType)
-{
-  NS_PRECONDITION(aType, "null out param");
-  *aType = mLanguageSpecificTransformType;
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsPresContext::GetTheme(nsITheme** aResult)

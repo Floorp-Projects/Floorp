@@ -980,11 +980,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   mSpaceManager->Translate(tx, ty);
 
 #ifdef IBMBIDI
-  PRBool bidiEnabled;
-  mPresContext->GetBidiEnabled(&bidiEnabled);
   PRInt32 start, end;
 
-  if (bidiEnabled) {
+  if (mPresContext->BidiEnabled()) {
     if (aFrame->GetStateBits() & NS_FRAME_IS_BIDI) {
       aFrame->GetOffsets(start, end);
     }
