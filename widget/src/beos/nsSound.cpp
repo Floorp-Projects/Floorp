@@ -77,7 +77,7 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(nsIURI *aURI)
+NS_METHOD nsSound::Play(nsIURL *aURL)
 {
 /*
 	char *filename;
