@@ -5255,24 +5255,34 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     //
     // First:
     // Check to see if the new URI is an anchor in the existing document.
-    // Skip this check if we're doing some sort of abnormal load, if
-    // the new load is a non-history load and has postdata, or if
-    // we're doing a history load and there are postdata differences
-    // between what we plan to load and what we have loaded currently.
+    // Skip this check if we're doing some sort of abnormal load, if the
+    // new load is a non-history load and has postdata, or if we're doing
+    // a history load and the page identifiers of mOSHE and aSHEntry
+    // don't match.
     //
-    PRBool samePostData = PR_TRUE;
+    PRBool allowScroll = PR_TRUE;
     if (!aSHEntry) {
-        samePostData = (aPostData == nsnull);
+        allowScroll = (aPostData == nsnull);
     } else if (mOSHE) {
-        nsCOMPtr<nsIInputStream> currentPostData;
-        mOSHE->GetPostData(getter_AddRefs(currentPostData));
-        samePostData = (currentPostData == aPostData);
+        PRUint32 ourPageIdent;
+        mOSHE->GetPageIdentifier(&ourPageIdent);
+        PRUint32 otherPageIdent;
+        aSHEntry->GetPageIdentifier(&otherPageIdent);
+        allowScroll = (ourPageIdent == otherPageIdent);
+#ifdef DEBUG
+        if (allowScroll) {
+            nsCOMPtr<nsIInputStream> currentPostData;
+            mOSHE->GetPostData(getter_AddRefs(currentPostData));
+            NS_ASSERTION(currentPostData == aPostData,
+                         "Different POST data for entries for the same page?");
+        }
+#endif
     }
     
     if ((aLoadType == LOAD_NORMAL ||
          aLoadType == LOAD_NORMAL_REPLACE ||
          aLoadType == LOAD_HISTORY ||
-         aLoadType == LOAD_LINK) && samePostData) {
+         aLoadType == LOAD_LINK) && allowScroll) {
         PRBool wasAnchor = PR_FALSE;
         nscoord cx, cy;
         NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor, aLoadType, &cx, &cy), NS_ERROR_FAILURE);
@@ -5293,14 +5303,17 @@ nsDocShell::InternalLoad(nsIURI * aURI,
              */
             OnNewURI(aURI, nsnull, mLoadType);
             nsCOMPtr<nsIInputStream> postData;
+            PRUint32 pageIdent = PR_UINT32_MAX;
             
             if (mOSHE) {
                 /* save current position of scroller(s) (bug 59774) */
                 mOSHE->SetScrollPosition(cx, cy);
-                // Get the postdata from the current page, if it was
-                // loaded through normal means.
-                if (aLoadType == LOAD_NORMAL || aLoadType == LOAD_LINK)
+                // Get the postdata and page ident from the current page,
+                // if the new load is being done via normal means.
+                if (aLoadType == LOAD_NORMAL || aLoadType == LOAD_LINK) {
                     mOSHE->GetPostData(getter_AddRefs(postData));
+                    mOSHE->GetPageIdentifier(&pageIdent);
+                }
             }
             
             /* Assign mOSHE to mLSHE. This will either be a new entry created
@@ -5314,6 +5327,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 // page will restore the appropriate postData.
                 if (postData)
                     mOSHE->SetPostData(postData);
+                
+                // Propagate our page ident to the new mOSHE so that
+                // we'll know it just differed by a scroll on the page.
+                if (pageIdent != PR_UINT32_MAX)
+                    mOSHE->SetPageIdentifier(pageIdent);
             }
 
             /* restore previous position of scroller(s), if we're moving
