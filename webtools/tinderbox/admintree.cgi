@@ -73,7 +73,7 @@ if (defined($tree)) {
 <INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_sheriff>
 <br><b>Change sheriff info.</b>  (mailto: url, phone number, etc.)<br>
-<TEXTAREA NAME=sheriff ROWS=3 COLS=75 WRAP=SOFT>$current_sheriff
+<TEXTAREA NAME=sheriff ROWS=4 COLS=75 WRAP=SOFT>$current_sheriff
 </TEXTAREA>
 <br>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
