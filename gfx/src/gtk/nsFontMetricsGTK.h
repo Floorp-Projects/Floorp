@@ -46,8 +46,8 @@
 typedef struct nsFontCharSetInfo nsFontCharSetInfo;
 
 typedef gint (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
-  const PRUnichar* aSrcBuf, PRUint32 aSrcLen, PRUint8* aDestBuf,
-  PRUint32 aDestLen);
+  const PRUnichar* aSrcBuf, PRInt32 aSrcLen, char* aDestBuf,
+  PRInt32 aDestLen);
 
 struct nsFontCharSet;
 class nsFontMetricsGTK;
@@ -59,7 +59,7 @@ struct nsFontGTK
   void LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics);
 
   GdkFont*               mFont;
-  PRUint8*               mMap;
+  PRUint32*              mMap;
   nsFontCharSetInfo*     mCharSetInfo;
   char*                  mName;
   PRUint16               mSize;
