@@ -1096,6 +1096,72 @@ int pngSink(void* aContext, const char* aBuffer, int aLen)
 #endif /* HAVE_BOUTELL_GD */
 
 /*
+** FormatNumber
+**
+** Formats a number with thousands separator. Dont free the result. Returns
+** static data.
+*/
+char *FormatNumber(PRInt32 num)
+{
+    static char buf[64];
+    char tmpbuf[64];
+    int len = 0;
+    int bufindex = sizeof(buf) - 1;
+    int mod3;
+
+    PR_snprintf(tmpbuf, sizeof(tmpbuf), "%d", num);
+
+    /* now insert the thousands separator */
+    mod3 = 0;
+    len = strlen(tmpbuf);
+    while (len >= 0)
+    {
+        if (tmpbuf[len] >= '0' && tmpbuf[len] <= '9')
+        {
+            if (mod3 == 3)
+            {
+                buf[bufindex--] = ',';
+                mod3 = 0;
+            }
+            mod3++;
+        }
+        buf[bufindex--] = tmpbuf[len--];
+    }
+    return buf+bufindex+1;
+}
+
+/*
+** actualByteSize
+**
+** Apply alignment and overhead to size to figure out actual byte size
+*/
+PRUint32 actualByteSize(PRUint32 retval)
+{
+    /*
+    ** Need to bump the result by our alignment and overhead.
+    ** The idea here is that an allocation actually costs you more than you
+    **  thought.
+    **
+    ** The msvcrt malloc has an alignment of 16 with an overhead of 8.
+    ** The win32 HeapAlloc has an alignment of 8 with an overhead of 8.
+    */
+    if(0 != retval)
+    {
+        PRUint32 eval = 0;
+        PRUint32 over = 0;
+
+        eval = retval - 1;
+        if(0 != globals.mOptions.mAlignBy)
+        {
+            over = eval % globals.mOptions.mAlignBy;
+        }
+        retval = eval + globals.mOptions.mOverhead + globals.mOptions.mAlignBy - over;
+    }
+
+    return retval;
+}
+
+/*
 ** byteSize
 **
 ** Figuring the byte size of an allocation.
@@ -1120,30 +1186,9 @@ PRUint32 byteSize(STAllocation* aAlloc)
         }
         while(0 == retval && 0 != index);
     }
-
-    /*
-    ** Need to bump the result by our alignment and overhead.
-    ** The idea here is that an allocation actually costs you more than you
-    **  thought.
-    **
-    ** The msvcrt malloc has an alignment of 16 with an overhead of 8.
-    ** The win32 HeapAlloc has an alignment of 8 with an overhead of 8.
-    */
-    if(0 != retval)
-    {
-        PRUint32 eval = 0;
-        PRUint32 over = 0;
-
-        eval = retval - 1;
-        if(0 != globals.mOptions.mAlignBy)
-        {
-            over = eval % globals.mOptions.mAlignBy;
-        }
-        retval = eval + globals.mOptions.mOverhead + globals.mOptions.mAlignBy - over;
-    }
-
-    return retval;
+    return actualByteSize(retval);
 }
+
 
 /*
 ** appendAllocation
@@ -1962,6 +2007,10 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
     STAllocation* retval = NULL;
     static int compactor = 1;
     const int frequency = 10000;
+    PRUint32 actualSize, actualOldSize = 0;
+    actualSize = actualByteSize(aSize);
+    if (aOldSize)
+        actualOldSize = actualByteSize(aOldSize);
 
     if(NULL != aCallsite)
     {
@@ -1997,6 +2046,11 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
                 globals.mFreeCount++;
 
                 /*
+                ** Update our peak memory used counter
+                */
+                globals.mMemoryUsed -= actualSize;
+
+                /*
                 ** Not a new allocation, will need to search passed in site
                 **  for the original allocation.
                 */
@@ -2013,6 +2067,15 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
                 globals.mMallocCount++;
 
                 /*
+                ** Update our peak memory used counter
+                */
+                globals.mMemoryUsed += actualSize;
+                if (globals.mMemoryUsed > globals.mPeakMemoryUsed)
+                {
+                    globals.mPeakMemoryUsed = globals.mMemoryUsed;
+                }
+
+                /*
                 ** This will be a new allocation.
                 */
                 newAllocation = __LINE__;
@@ -2027,6 +2090,15 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
                 globals.mCallocCount++;
 
                 /*
+                ** Update our peak memory used counter
+                */
+                globals.mMemoryUsed += actualSize;
+                if (globals.mMemoryUsed > globals.mPeakMemoryUsed)
+                {
+                    globals.mPeakMemoryUsed = globals.mMemoryUsed;
+                }
+
+                /*
                 ** This will be a new allocation.
                 */
                 newAllocation = __LINE__;
@@ -2039,6 +2111,15 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
                 ** Update the global counter.
                 */
                 globals.mReallocCount++;
+
+                /*
+                ** Update our peak memory used counter
+                */
+                globals.mMemoryUsed += actualSize - actualOldSize;
+                if (globals.mMemoryUsed > globals.mPeakMemoryUsed)
+                {
+                    globals.mPeakMemoryUsed = globals.mMemoryUsed;
+                }
 
                 /*
                 ** This might be a new allocation.
@@ -5525,6 +5606,14 @@ int serverMode(tmreader* aTMR)
                 PR_snprintf(message, sizeof(message), "server accepting connections on port %u....", globals.mOptions.mHttpdPort);
                 REPORT_INFO(message);
 
+                PR_fprintf(PR_STDOUT, "Peak memory used: %s bytes\n", FormatNumber(globals.mPeakMemoryUsed));
+                PR_fprintf(PR_STDOUT, "Total calls     : %s",
+                           FormatNumber(globals.mMallocCount + globals.mCallocCount + globals.mReallocCount + globals.mFreeCount));
+                PR_fprintf(PR_STDOUT, " [%s", FormatNumber(globals.mMallocCount));
+                PR_fprintf(PR_STDOUT, " + %s", FormatNumber(globals.mCallocCount));
+                PR_fprintf(PR_STDOUT, " + %s", FormatNumber(globals.mReallocCount));
+                PR_fprintf(PR_STDOUT, " + %s]\n", FormatNumber(globals.mFreeCount));
+
                 /*
                 ** Keep accepting until we know otherwise.
                 ** We stay single threaded, as a result page may output
@@ -5815,6 +5904,12 @@ int main(int aArgCount, char** aArgArray)
     **  that checks the timeval will get it right.
     */
     globals.mMinTimeval = ST_TIMEVAL_MAX;
+
+    /*
+    ** Initialize globals
+    */
+    globals.mPeakMemoryUsed = 0;
+    globals.mMemoryUsed = 0;
 
     /*
     ** NSPR init.

@@ -503,6 +503,12 @@ typedef struct __struct_STGlobals
         **  connections.
         */
         int mStopHttpd;
+
+        /*
+        ** Calculates peak allocation overall for all allocations.
+        */
+        PRUint32 mPeakMemoryUsed;
+        PRUint32 mMemoryUsed;
 } STGlobals;
 
 #endif /* spacetrace_h__ */
