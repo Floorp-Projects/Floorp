@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.19 2001/04/11 00:29:17 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.20 2001/06/05 00:26:37 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2515,6 +2515,7 @@ ssl3_SendClientHello(sslSocket *ss)
 {
     sslSecurityInfo *sec = ss->sec;
     sslSessionID *   sid;
+    ssl3CipherSpec * cwSpec;
     SECStatus        rv;
     int              i;
     int              length;
@@ -2626,6 +2627,7 @@ ssl3_SendClientHello(sslSocket *ss)
 
 	PRINT_BUF(4, (ss, "client, found session-id:", sid->u.ssl3.sessionID,
 		      sid->u.ssl3.sessionIDLength));
+
 	ss->ssl3->policy = sid->u.ssl3.policy;
     } else {
 	++ssl3stats.sch_sid_cache_misses;
@@ -2639,6 +2641,14 @@ ssl3_SendClientHello(sslSocket *ss)
 	    return SECFailure;	/* memory error is set */
         }
     }
+
+    ssl_GetSpecWriteLock(ss);
+    cwSpec = ss->ssl3->cwSpec;
+    if (cwSpec->mac_def->mac == mac_null) {
+	/* SSL records are not being MACed. */
+	cwSpec->version = ss->version;
+    }
+    ssl_ReleaseSpecWriteLock(ss);
 
     if (sec->ci.sid != NULL) {
 	ssl_FreeSID(sec->ci.sid);	/* decrement ref count, free if zero */
