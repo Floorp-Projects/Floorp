@@ -63,10 +63,7 @@ public:
     
     virtual ~nsSimpleArray()
     {
-        if (m_pData)
-        {
-            free(m_pData);
-        }
+        Empty();
     }
 
     Entry ElementAt(unsigned long aIndex) const
@@ -132,6 +129,15 @@ public:
         }
     }
 
+    void Empty()
+    {
+        if (m_pData)
+        {
+            free(m_pData);
+            m_pData = NULL;
+            m_nSize = m_nMaxSize = 0;
+        }
+    }
     BOOL IsEmpty() const { return m_nSize == 0 ? TRUE : FALSE; }
     unsigned long Count() const { return m_nSize; }
 };
