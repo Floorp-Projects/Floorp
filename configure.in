@@ -1381,6 +1381,23 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
 
 dnl ========================================================
 dnl =
+dnl = nsString hackery - This is expected to be a shirt lived
+dnl = variable.  It will be yanked once nsString2 replaces
+dnl = nsString completely.
+dnl = 
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(string2,
+[  --enable-string2           Enable the use of nsString2 ],
+  USE_STRING2=1)
+
+if test "$USE_STRING2"
+then
+  AC_DEFINE(USE_STRING2)
+fi
+
+
+dnl ========================================================
+dnl =
 dnl = Misc. Options
 dnl = 
 dnl ========================================================
@@ -1705,6 +1722,8 @@ AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
+
+AC_SUBST(USE_STRING2)
 
 AC_SUBST(WRAP_MALLOC_CFLAGS)
 AC_SUBST(WRAP_MALLOC_LIB)
