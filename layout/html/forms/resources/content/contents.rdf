@@ -47,7 +47,7 @@
         chrome:displayName="Forms"
         chrome:author="mozilla.org"
         chrome:name="forms"
-        chrome:skinVersion="0.9.4">
+        chrome:skinVersion="1.0">
 </RDF:Description>
 
 </RDF:RDF>
