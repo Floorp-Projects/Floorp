@@ -17,6 +17,7 @@
  * 
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
+ *   Ramiro Estrugo <ramiro@eazel.com>
  */
 
 #ifndef gtkmozembed_h
@@ -50,7 +51,7 @@ struct _GtkMozEmbedClass
 
 extern GtkType    gtk_moz_embed_get_type(void);
 extern GtkWidget *gtk_moz_embed_new(void);
-extern void       gtk_moz_embed_load_url(GtkWidget *widget, char *url);
+extern void       gtk_moz_embed_load_url(GtkWidget *widget, const char *url);
 
 #ifdef __cplusplus
 }
