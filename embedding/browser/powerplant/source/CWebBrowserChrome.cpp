@@ -87,7 +87,8 @@ CWebBrowserPrompter::~CWebBrowserPrompter()
 //*****************************************************************************
 
 CWebBrowserChrome::CWebBrowserChrome() :
-   mBrowserWindow(nsnull), mBrowserShell(nsnull), mPreviousBalloonState(false)
+   mBrowserWindow(nsnull), mBrowserShell(nsnull),
+   mPreviousBalloonState(false), mInModalLoop(false)
 {
 	NS_INIT_REFCNT();
 }
@@ -226,6 +227,7 @@ NS_IMETHODIMP CWebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt3
 
 NS_IMETHODIMP CWebBrowserChrome::DestroyBrowserWindow()
 {
+    mInModalLoop = false;
     delete mBrowserWindow;
     return NS_OK;
 }
@@ -247,14 +249,35 @@ NS_IMETHODIMP CWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 
 NS_IMETHODIMP CWebBrowserChrome::ShowAsModal(void)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+    // We need this override because StDialogHandler deletes
+    // its window in its destructor. We don't want that here. 
+    class CChromeDialogHandler : public StDialogHandler
+    {
+        public:
+						CChromeDialogHandler(LWindow*		inWindow,
+								             LCommander*	inSuper) :
+					        StDialogHandler(inWindow, inSuper)
+					    { }
+					        
+	    virtual         ~CChromeDialogHandler()
+	                    { mDialog = nil; }
+    };
+    
+    CChromeDialogHandler	 theHandler(mBrowserWindow, mBrowserWindow->GetSuperCommander());
+	
+	// Set to false by ExitModalEventLoop or DestroyBrowserWindow
+	mInModalLoop = true;
+	while (mInModalLoop) 
+	    theHandler.DoDialog();
+
+    return NS_OK;
+
 }
 
 NS_IMETHODIMP CWebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   mInModalLoop = false;
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -353,6 +376,7 @@ NS_IMETHODIMP CWebBrowserChrome::SetDimensions(PRUint32 flags, PRInt32 x, PRInt3
     }
     else                                                        // setting size
     {
+        mBrowserWindow->SetSizeToContent(false);
         if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER)
         {
             browserShell = mBrowserWindow->GetBrowserShell();
@@ -441,7 +465,7 @@ NS_IMETHODIMP CWebBrowserChrome::GetVisibility(PRBool *aVisibility)
     NS_ENSURE_STATE(mBrowserWindow);
     NS_ENSURE_ARG_POINTER(aVisibility);
     
-    *aVisibility = mBrowserWindow->IsVisible();
+    mBrowserWindow->GetVisibility(aVisibility);
     return NS_OK;
 }
 

@@ -76,6 +76,7 @@ protected:
    CBrowserShell*   mBrowserShell;
    
    Boolean mPreviousBalloonState;     // are balloons on or off?
+   Boolean mInModalLoop;
    
    nsCOMPtr<nsIPrompt> mPrompter;   
 };
