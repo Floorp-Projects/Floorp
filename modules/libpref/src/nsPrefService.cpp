@@ -145,6 +145,9 @@ nsresult nsPrefService::Init()
     rv = observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     if (NS_SUCCEEDED(rv)) {
       rv = observerService->AddObserver(this, "profile-do-change", PR_TRUE);
+      if (NS_SUCCEEDED(rv)) {
+        rv = observerService->AddObserver(this, "session-logout", PR_TRUE);
+      }
     }
   }
   return(rv);
@@ -166,6 +169,8 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const char *aTopic, 
   } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     ResetUserPrefs();
     rv = ReadUserPrefs(nsnull);
+  } else if (!nsCRT::strcmp(aTopic, "session-logout")) {
+    rv = SavePrefFile(nsnull);
   }
   return rv;
 }
