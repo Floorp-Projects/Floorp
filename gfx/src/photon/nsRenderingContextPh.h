@@ -33,8 +33,6 @@
 //#include "nsImagePh.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIDOMRenderingContext.h"
 #include "nsIRenderingContextPh.h"
 
 #include "nsDrawingSurfacePh.h"
@@ -46,9 +44,7 @@ class nsImagePh;
 class nsRegionPh;
 
 class nsRenderingContextPh : public nsIRenderingContext,
-                              nsIRenderingContextPh,
-                              nsIDOMRenderingContext,
-                              nsIScriptObjectOwner
+                             nsIRenderingContextPh
 {
 public:
   nsRenderingContextPh();
@@ -161,13 +157,6 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-
-  // nsIDOMRenderingContext
-  NS_DECL_IDOMRENDERINGCONTEXT
-
   // nsIRenderingContextPh
   NS_IMETHOD CreateDrawingSurface(PhGC_t *aGC, nsDrawingSurface &aSurface);
 
@@ -212,8 +201,6 @@ protected:
 #ifdef NS_DEBUG
   PRBool            mInitialized;
 #endif
-
-  void* mScriptObject;
 };
 
 #endif /* nsRenderingContextPh_h___ */

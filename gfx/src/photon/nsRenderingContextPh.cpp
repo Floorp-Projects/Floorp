@@ -21,7 +21,6 @@
 #include <math.h>
 #include "libimg.h"
 #include "nsDeviceContextPh.h"
-#include "nsIScriptGlobalObject.h"
 #include "prprf.h"
 #include "nsDrawingSurfacePh.h"
 #include "nsGfxCIID.h"
@@ -43,10 +42,8 @@
   #define VERIFY(exp)                 (exp)
 #endif  // !_DEBUG
 
-static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextPhIID, NS_IRENDERING_CONTEXT_PH_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
 static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
 
@@ -150,7 +147,6 @@ nsRenderingContextPh :: nsRenderingContextPh()
   mStates          = nsnull;
   mStateCache      = new nsVoidArray();
   mGammaTable      = nsnull;
-  mScriptObject    = nsnull;
   
   if( mPtGC == nsnull )
     mPtGC = PgGetGC();
@@ -251,22 +247,6 @@ nsresult nsRenderingContextPh :: QueryInterface(REFNSIID aIID, void** aInstanceP
   if (aIID.Equals(kIRenderingContextPhIID))
   {
     nsIRenderingContextPh* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kIScriptObjectOwnerIID))
-  {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kIDOMRenderingContextIID))
-  {
-    nsIDOMRenderingContext* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -1665,41 +1645,6 @@ void nsRenderingContextPh :: PushClipState(void)
 {
 printf ("unimp pushclipstate\n");
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::PushClipState - Not implemented.\n"));
-}
-
-NS_IMETHODIMP nsRenderingContextPh::GetScriptObject(nsIScriptContext* aContext,
-                                       void** aScriptObject)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetScriptObject - Not implemented.\n"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh::SetScriptObject(void* aScriptObject)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetScriptObject - Not implemented.\n"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh::GetColor(nsString& aColor)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetColor - Not implemented.\n"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh::SetColor(const nsString& aColor)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetColor - Not implemented.\n"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh::DrawLine2(PRInt32 aX0, PRInt32 aY0,
-                                 PRInt32 aX1, PRInt32 aY1)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine2.\n"));
-
-  DrawLine( (nscoord)aX0, (nscoord)aY0, (nscoord)aX1, (nscoord)aY1 );
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( PhGC_t *aGC, nsDrawingSurface &aSurface)

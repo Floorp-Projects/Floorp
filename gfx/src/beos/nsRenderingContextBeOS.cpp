@@ -17,7 +17,6 @@
  */
 
 #include "nsRenderingContextBeOS.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsRegionBeOS.h"
 #include "nsGfxCIID.h"
 #include <math.h>

@@ -33,8 +33,6 @@
 #include "nsImageWin.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIDOMRenderingContext.h"
 #include "nsIRenderingContextWin.h"
 #include "nsDrawingSurfaceWin.h"
 
@@ -42,9 +40,7 @@ class GraphicsState;
 class nsDrawingSurfaceWin;
 
 class nsRenderingContextWin : public nsIRenderingContext,
-                              nsIRenderingContextWin,
-                              nsIDOMRenderingContext,
-                              nsIScriptObjectOwner
+                              nsIRenderingContextWin
 {
 public:
   nsRenderingContextWin();
@@ -158,13 +154,6 @@ public:
   //~~~
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-
-  // nsIDOMRenderingContext
-  NS_DECL_IDOMRENDERINGCONTEXT
-
   // nsIRenderingContextWin
   NS_IMETHOD CreateDrawingSurface(HDC aDC, nsDrawingSurface &aSurface);
 
@@ -225,8 +214,6 @@ protected:
 #ifdef NS_DEBUG
   PRBool            mInitialized;
 #endif
-
-  void* mScriptObject;
 };
 
 

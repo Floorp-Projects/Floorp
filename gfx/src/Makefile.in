@@ -62,30 +62,30 @@ REQUIRES=util img xpcom raptor netlib dom js
 
 DEFINES += -D_IMPL_NS_GFX 
 
-CPPSRCS =\
-	nsColor.cpp \
-	nsColorNames.cpp \
-	nsFont.cpp \
-    nsImageGroup.cpp \
-	nsImageManager.cpp \
-	nsImageNetContextAsync.cpp \
-    nsImageRenderer.cpp \
-	nsImageRequest.cpp \
-	nsImageSystemServices.cpp \
-    nsImageURL.cpp \
-	nsRect.cpp \
-	nsTransform2D.cpp \
-    nsDeviceContext.cpp \
-	nsBlender.cpp \
-    nsImageNetContextSync.cpp \
-    nsJSRenderingContext.cpp \
+# Alphabetical list of source files
+CPPSRCS =				\
+	nsBlender.cpp			\
+	nsColor.cpp			\
+	nsColorNames.cpp		\
+	nsDeviceContext.cpp		\
+	nsFont.cpp			\
+	nsImageGroup.cpp		\
+	nsImageManager.cpp		\
+	nsImageNetContextAsync.cpp	\
+	nsImageNetContextSync.cpp	\
+	nsImageRenderer.cpp		\
+	nsImageRequest.cpp		\
+	nsImageSystemServices.cpp	\
+	nsImageURL.cpp			\
+	nsRect.cpp			\
+	nsTransform2D.cpp		\
 	$(NULL)
 
-EXTRA_DSO_LDOPTS =\
-				-L$(DIST)/lib \
-				-limg_s \
-				-lneckoutil_s \
-				-lmozutil_s \
-				$(NULL)
+EXTRA_DSO_LDOPTS =	\
+	-L$(DIST)/lib	\
+	-limg_s		\
+	-lneckoutil_s	\
+	-lmozutil_s	\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
