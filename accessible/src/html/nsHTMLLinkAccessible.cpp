@@ -45,8 +45,12 @@
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIPresContext.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMElement.h"
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLLinkAccessible, nsLinkableAccessible, nsIAccessibleHyperLink)
 
 nsHTMLLinkAccessible::nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsLinkableAccessible(aDomNode, aShell)
@@ -77,3 +81,63 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
+/* readonly attribute long anchors; */
+NS_IMETHODIMP nsHTMLLinkAccessible::GetAnchors(PRInt32 *aAnchors)
+{
+  if (!IsALink())
+    return NS_ERROR_FAILURE;
+  
+  *aAnchors = 1;
+  return NS_OK;
+}
+
+/* readonly attribute long startIndex; */
+NS_IMETHODIMP nsHTMLLinkAccessible::GetStartIndex(PRInt32 *aStartIndex)
+{
+  //not see the value to implement this attributes
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute long endIndex; */
+NS_IMETHODIMP nsHTMLLinkAccessible::GetEndIndex(PRInt32 *aEndIndex)
+{
+  //not see the value to implement this attributes
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIURI getURI (in long i); */
+NS_IMETHODIMP nsHTMLLinkAccessible::GetURI(PRInt32 i, nsIURI **_retval)
+{
+  //I do not know why we have to retrun a nsIURI instead of
+  //nsILink or just a string of url. Anyway, maybe nsIURI is
+  //more powerful for the future.
+  *_retval = nsnull;
+
+  nsCOMPtr<nsILink> link(do_QueryInterface(mLinkContent));
+  if (link) {
+    nsXPIDLCString hrefValue;
+    if (NS_SUCCEEDED(link->GetHrefCString(*getter_Copies(hrefValue)))) {
+      return NS_NewURI(_retval, hrefValue, nsnull, nsnull);
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+/* nsIAccessible getObject (in long i); */
+NS_IMETHODIMP nsHTMLLinkAccessible::GetObject(PRInt32 aIndex,
+                                              nsIAccessible **_retval)
+{
+  if (0 != aIndex)
+    return NS_ERROR_FAILURE;
+  
+  return QueryInterface(NS_GET_IID(nsIAccessible), (void **)_retval);
+}
+
+/* boolean isValid (); */
+NS_IMETHODIMP nsHTMLLinkAccessible::IsValid(PRBool *_retval)
+{
+  // I have not found the cause which makes this attribute false.
+  *_retval = PR_TRUE;
+  return NS_OK;
+}

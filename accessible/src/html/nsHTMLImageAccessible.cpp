@@ -49,6 +49,7 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 #include "nsIImageFrame.h"
+#include "nsNetUtil.h"
 
 // --- image -----
 
@@ -148,13 +149,13 @@ nsIAccessible *nsHTMLImageAccessible::CreateAreaAccessible(PRUint32 areaNum)
     areaNum = NS_STATIC_CAST(PRUint32,numAreaMaps-1);
   }
 
-  nsIDOMHTMLCollection *mapAreas;
-  mMapElement->GetAreas(&mapAreas);
+  nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
+  mMapElement->GetAreas(getter_AddRefs(mapAreas));
   if (!mapAreas) 
     return nsnull;
 
-  nsIDOMNode *domNode = nsnull;
-  mapAreas->Item(areaNum,&domNode);
+  nsCOMPtr<nsIDOMNode> domNode;
+  mapAreas->Item(areaNum,getter_AddRefs(domNode));
   if (!domNode)
     return nsnull;
 
@@ -203,3 +204,73 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccChildCount(PRInt32 *_retval)
   return NS_OK;
 }
 
+// Image map hyperlink
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageMapAccessible, nsHTMLImageAccessible, nsIAccessibleHyperLink)
+
+/* readonly attribute long anchors; */
+NS_IMETHODIMP nsHTMLImageMapAccessible::GetAnchors(PRInt32 *aAnchors)
+{
+  return GetAccChildCount(aAnchors);
+}
+
+/* readonly attribute long startIndex; */
+NS_IMETHODIMP nsHTMLImageMapAccessible::GetStartIndex(PRInt32 *aStartIndex)
+{
+  //should not be supported in image map hyperlink
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute long endIndex; */
+NS_IMETHODIMP nsHTMLImageMapAccessible::GetEndIndex(PRInt32 *aEndIndex)
+{
+  //should not be supported in image map hyperlink
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* nsIURI getURI (in long i); */
+NS_IMETHODIMP nsHTMLImageMapAccessible::GetURI(PRInt32 aIndex, nsIURI **_retval)
+{
+  *_retval = nsnull;
+
+  nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
+  mMapElement->GetAreas(getter_AddRefs(mapAreas));
+  if (!mapAreas)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> domNode;
+  mapAreas->Item(aIndex,getter_AddRefs(domNode));
+  if (!domNode)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (content) {
+    nsCOMPtr<nsIDocument> doc;
+    if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc)))) {
+      nsCOMPtr<nsIURI> baseURI;
+      if (NS_SUCCEEDED(doc->GetBaseURL(*getter_AddRefs(baseURI)))) {
+        nsCOMPtr<nsIDOMElement> area(do_QueryInterface(domNode));
+        nsAutoString hrefValue;
+        if (NS_SUCCEEDED(area->GetAttribute(NS_LITERAL_STRING("href"), hrefValue))) {
+          return NS_NewURI(_retval, hrefValue, nsnull, baseURI);
+        }
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+/* nsIAccessible getObject (in long i); */
+NS_IMETHODIMP nsHTMLImageMapAccessible::GetObject(PRInt32 aIndex,
+                                                  nsIAccessible **_retval)
+{
+  *_retval = CreateAreaAccessible(aIndex);
+  return NS_OK;
+}
+
+/* boolean isValid (); */
+NS_IMETHODIMP nsHTMLImageMapAccessible::IsValid(PRBool *_retval)
+{
+  *_retval = PR_TRUE;
+  return NS_OK;
+}
