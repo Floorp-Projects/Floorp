@@ -1132,7 +1132,7 @@ PRInt32 StyleTextBlob::CalcDifference(const nsStyleStruct* aOther) const
       (mTextIndent == other->mTextIndent) &&
       (mWordSpacing == other->mWordSpacing) &&
 #ifdef IBMBIDI
-      (mUnicodeBidi == other.mUnicodeBidi) &&
+      (mUnicodeBidi == other->mUnicodeBidi) &&
 #endif // IBMBIDI
       (mVerticalAlign == other->mVerticalAlign)) {
     if (mTextDecoration == other->mTextDecoration) {
