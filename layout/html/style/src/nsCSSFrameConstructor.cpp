@@ -4262,7 +4262,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 					{
 						// Calling content removed on each of our content node children
 						// should do the trick.
-						PRInt32 count;
+						PRInt32 count = 0;
+            aContainer->ChildCount(count);
 						for (PRInt32 i = 0; i < count; i++)
 						{
 							nsCOMPtr<nsIContent> childContent;
