@@ -1209,7 +1209,7 @@ public:
   virtual mdb_err GetPos(nsIMdbEnv* ev, mdb_pos* outPos) = 0;
   
   virtual mdb_err SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool inFail) = 0;
-  virtual mdb_err SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail) = 0;
+  virtual mdb_err GetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail) = 0;
   // } ----- end attribute methods -----
 
 // } ===== end nsIMdbCursor methods =====
@@ -1487,10 +1487,20 @@ public:
   // } ----- end row position methods -----
 
   // { ----- begin row position methods -----
-  virtual mdb_err RowPosToOid( // get row member for a table position
+  virtual mdb_err PosToOid( // get row member for a table position
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     mdbOid* outOid) = 0; // row oid at the specified position
+
+  virtual mdb_err OidToPos( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid, // row to find in table
+    mdb_pos* outPos) = 0; // zero-based ordinal position of row in table
+    
+  virtual mdb_err PosToRow( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    mdb_pos inRowPos, // zero-based ordinal position of row in table
+    nsIMdbRow** acqRow) = 0; // acquire row at table position inRowPos
     
   virtual mdb_err RowToPos( // test for the table position of a row member
     nsIMdbEnv* ev, // context
@@ -1507,11 +1517,6 @@ public:
     nsIMdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
     mdb_bool* outHasOid) = 0; // whether inOid is a member row
-
-  virtual mdb_err OidToPos( // test for the table position of a row member
-    nsIMdbEnv* ev, // context
-    const mdbOid* inOid, // row to find in table
-    mdb_pos* outPos) = 0; // zero-based ordinal position of row in table
 
   virtual mdb_err CutOid( // make sure the row with inOid is not a member 
     nsIMdbEnv* ev, // context
