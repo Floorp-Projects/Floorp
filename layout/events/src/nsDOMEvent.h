@@ -38,7 +38,7 @@ public:
   enum nsDOMEvents {
     eDOMEvents_mousedown=0, eDOMEvents_mouseup=1, eDOMEvents_click=2, eDOMEvents_dblclick=3, eDOMEvents_mouseover=4, eDOMEvents_mouseout=5,
     eDOMEvents_mousemove=6, eDOMEvents_keydown=7, eDOMEvents_keyup=8, eDOMEvents_keypress=9, eDOMEvents_focus=10, eDOMEvents_blur=11,
-    eDOMEvents_load=12, eDOMEvents_abort=13, eDOMEvents_error=14
+    eDOMEvents_load=12, eDOMEvents_unload=13, eDOMEvents_abort=14, eDOMEvents_error=15
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent);
