@@ -34,6 +34,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS            = xul
+
 JSLIBFILES	= \
 		$(srcdir)/js/lib/utils.js \
 		$(srcdir)/js/lib/events.js \

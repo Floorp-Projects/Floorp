@@ -31,6 +31,8 @@
 
 DEPTH   =..\..
 
+DIRS = xul
+
 JSLIBFILES = \
     .\js\lib\utils.js \
     .\js\lib\events.js \

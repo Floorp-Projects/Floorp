@@ -113,7 +113,7 @@ CBSConnection.prototype.readData = function(timeout)
         var len = this._inputStream.read(this._buffer);
         // dd ("read done, len = " + len + ", buffer = " + this._buffer);
 
-        rv = new java.lang.String(this._buffer, 0, 0, len);
+        rv = String(new java.lang.String(this._buffer, 0, 0, len));
     } catch (ex) {
         // dd ("read caught exception " + ex + ".");
         

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzillaOverlay.dtd" >
+
+<!-- This is the overlay that addes "Chatzilla" to the (global) task menu. -->
+
+<overlay id="ChatzillaTaskMenuID"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript" src="chrome://chatzilla/content/chatzillaOverlay.js"/>
+
+<menupopup id="taskPopup">
+	<menuitem
+        position="7"
+        value="&ircCmd.label;"
+        oncommand="toIRC()"/>
+</menupopup>
+
+</overlay>
