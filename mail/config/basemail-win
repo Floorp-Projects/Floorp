@@ -53,9 +53,6 @@ components\msgsmime.dll
 chrome\qute.jar
 chrome\en-US-mail.jar
 chrome\en-win.jar
-chrome\pippki.jar
-chrome\pipnss.jar
-;chrome\chrome.rdf
 chrome\overlayinfo\messenger\content\overlays.rdf
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -161,3 +161,10 @@ content/global/nsProgressDlg.xul,                     toolkit/content/global/nsP
 content/global/nsProgressDialog.xul,                  toolkit/content/global/nsProgressDialog.xul
 content/global/nsProgressDlg.js,                      toolkit/content/global/nsProgressDlg.js
 
+#################################################################################################
+# Files we need from pipnss and pippki jars
+#################################################################################################
+content/pipnss/contents.rdf,                          pipnss/content/pipnss/contents.rdf
+content/pippki,                                       pippki/content/pippki
+
+
