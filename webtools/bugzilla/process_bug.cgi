@@ -226,13 +226,17 @@ SWITCH: for ($::FORM{'knob'}) {
             exit;
         }
         if ($::FORM{'dup_id'} == $::FORM{'id'}) {
-            print "Nice try.  But it doesn't really make sense to mark a\n";
+            print "Nice try, $::FORM{'who'}.  But it doesn't really make sense to mark a\n";
             print "bug as a duplicate of itself, does it?\n";
             exit;
         }
         AppendComment($::FORM{'dup_id'}, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $::FORM{'dup_id'} ***";
-        system("./processmail $::FORM{'dup_id'} < /dev/null > /dev/null 2> /dev/null &");
+
+        print "<TABLE BORDER=1><TD><H2>Notation added to bug $::FORM{'dup_id'}</H2>\n";
+        system("./processmail $::FORM{'dup_id'} $::FORM{'who'}");
+        print "<TD><A HREF=\"show_bug.cgi?id=$::FORM{'dup_id'}\">Go To BUG# $::FORM{'dup_id'}</A></TABLE>\n";
+
         last SWITCH;
     };
     # default
@@ -327,20 +331,19 @@ foreach my $id (@idlist) {
         }
     }
     
-    print "<TABLE BORDER=1><TD><H1>Changes Submitted</H1>\n";
-    print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
-
+    print "<TABLE BORDER=1><TD><H2>Changes to bug $id submitted</H2>\n";
     SendSQL("unlock tables");
-
-    system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
+    system("./processmail $id $::FORM{'who'}");
+    print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 }
 
 if (defined $::next_bug) {
+    print("<P>The next bug in your list is:\n");
     $::FORM{'id'} = $::next_bug;
     print "<HR>\n";
 
     navigation_header();
     do "bug_form.pl";
 } else {
-    print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
+    navigation_header();
 }
