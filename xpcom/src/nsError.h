@@ -109,66 +109,66 @@ typedef PRUint32 nsresult;
  * @name Standard return values
  */
 
-//@{
+/*@{*/
 
-/// Standard "it worked" return value
+/* Standard "it worked" return value */
 #define NS_OK                              0
 
-/// The backwards COM false
+/* The backwards COM false */
 #define NS_COMFALSE                        1
 
 #define NS_ERROR_BASE                      ((nsresult) 0xC1F30000)
 
-/// Returned when an instance is not initialized
+/* Returned when an instance is not initialized */
 #define NS_ERROR_NOT_INITIALIZED           (NS_ERROR_BASE + 1)
 
-/// Returned when an instance is already initialized
+/* Returned when an instance is already initialized */
 #define NS_ERROR_ALREADY_INITIALIZED       (NS_ERROR_BASE + 2)
 
-/// Returned by a not implemented function
+/* Returned by a not implemented function */
 #define NS_ERROR_NOT_IMPLEMENTED           ((nsresult) 0x80004001L)
 
-/// Returned when a given interface is not supported.
+/* Returned when a given interface is not supported. */
 #define NS_NOINTERFACE                     ((nsresult) 0x80004002L)
 #define NS_ERROR_NO_INTERFACE              NS_NOINTERFACE
 
 #define NS_ERROR_INVALID_POINTER           ((nsresult) 0x80004003L)
 #define NS_ERROR_NULL_POINTER              NS_ERROR_INVALID_POINTER
 
-/// Returned when a function aborts
+/* Returned when a function aborts */
 #define NS_ERROR_ABORT                     ((nsresult) 0x80004004L)
 
-/// Returned when a function fails
+/* Returned when a function fails */
 #define NS_ERROR_FAILURE                   ((nsresult) 0x80004005L)
 
-/// Returned when an unexpected error occurs
+/* Returned when an unexpected error occurs */
 #define NS_ERROR_UNEXPECTED                ((nsresult) 0x8000ffffL)
 
-/// Returned when a memory allocation failes
+/* Returned when a memory allocation failes */
 #define NS_ERROR_OUT_OF_MEMORY             ((nsresult) 0x8007000eL)
 
-/// Returned when an illegal value is passed
+/* Returned when an illegal value is passed */
 #define NS_ERROR_ILLEGAL_VALUE             ((nsresult) 0x80070057L)
 
-/// Returned when a class doesn't allow aggregation
+/* Returned when a class doesn't allow aggregation */
 #define NS_ERROR_NO_AGGREGATION            ((nsresult) 0x80040110L)
 
-/// Returned when a class doesn't allow aggregation
+/* Returned when a class doesn't allow aggregation */
 #define NS_ERROR_NOT_AVAILABLE             ((nsresult) 0x80040111L)
 
-/// Returned when a class is not registered
+/* Returned when a class is not registered */
 #define NS_ERROR_FACTORY_NOT_REGISTERED    ((nsresult) 0x80040154L)
 
-/// Returned when a dynamically loaded factory couldn't be found
+/* Returned when a dynamically loaded factory couldn't be found */
 #define NS_ERROR_FACTORY_NOT_LOADED        ((nsresult) 0x800401f8L)
 
-/// Returned when a factory doesn't support signatures
+/* Returned when a factory doesn't support signatures */
 #define NS_ERROR_FACTORY_NO_SIGNATURE_SUPPORT \
                                            (NS_ERROR_BASE + 0x101)
 
-/// Returned when a factory already is registered
+/* Returned when a factory already is registered */
 #define NS_ERROR_FACTORY_EXISTS            (NS_ERROR_BASE + 0x100)
 
-//@}
+/*@}*/
 #endif
 
