@@ -121,7 +121,7 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
   PRUint32 NumOfBytes;
   PRBool TempBufAllocated = PR_FALSE;
 
-  PVOID pClipboardData = NS_STATIC_CAST(PVOID, WinQueryClipbrdData( 0, ulFormatID ));
+  PVOID pClipboardData = NS_REINTERPRET_CAST(PVOID, WinQueryClipbrdData( 0, ulFormatID ));
 
   if (!pClipboardData) 
     return PR_FALSE;
@@ -147,7 +147,7 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
       // DOM wants LF only, so convert from CRLF
       nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks( aFlavor, &pDataMem,   // pDataMem could be reallocated !!
-                                                          NS_STATIC_CAST(PRInt32*, &NumOfBytes) );  // yuck
+                                                          NS_REINTERPRET_CAST(PRInt32*, &NumOfBytes) );  // yuck
     }
     else                           // All other text/.. flavors are in unicode
     {
@@ -226,13 +226,13 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
     {
       char* pByteMem = nsnull;
 
-      if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + sizeof(char), 
+      if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + sizeof(char), 
                              PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR)
       {
         memcpy( pByteMem, pMozData, NumOfBytes );       // Copy text string
         pByteMem[NumOfBytes] = '\0';                    // Append terminator
 
-        WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pByteMem), ulFormatID, CFI_POINTER );
+        WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), ulFormatID, CFI_POINTER );
       }
     }
     else                           // All other text/.. flavors are in unicode
@@ -240,7 +240,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
       UniChar* pUnicodeMem = nsnull;
       PRUint32 NumOfChars = NumOfBytes / sizeof(UniChar);
    
-      if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pUnicodeMem), nsnull, NumOfBytes + sizeof(UniChar), 
+      if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pUnicodeMem), nsnull, NumOfBytes + sizeof(UniChar), 
                              PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
       {
         memcpy( pUnicodeMem, pMozData, NumOfBytes );    // Copy text string
@@ -256,13 +256,13 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
       {
         char* pByteMem = nsnull;
 
-        if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + 1, 
+        if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + 1, 
                                PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
           gModuleData.ConvertFromUcs( NS_STATIC_CAST(PRUnichar*, pMozData), pByteMem, NumOfBytes + 1 );
           pByteMem [NumOfBytes] = '\0';
 
-          WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
+          WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
         }
       }
     }
@@ -271,13 +271,13 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
   {
     PBYTE pBinaryMem = nsnull;
 
-    if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pBinaryMem), nsnull, NumOfBytes + sizeof(PRUint32), 
+    if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pBinaryMem), nsnull, NumOfBytes + sizeof(PRUint32), 
                            PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
     {
-      *(NS_STATIC_CAST(PRUint32*, pBinaryMem)) = NumOfBytes;          // First DWORD contains data length
+      *(NS_REINTERPRET_CAST(PRUint32*, pBinaryMem)) = NumOfBytes;          // First DWORD contains data length
       memcpy( pBinaryMem + sizeof(PRUint32), pMozData, NumOfBytes );  // Copy binary data
 
-      WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pBinaryMem), ulFormatID, CFI_POINTER );
+      WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pBinaryMem), ulFormatID, CFI_POINTER );
     }
 
     // If the flavor is image, we also put it on clipboard as CF_BITMAP
