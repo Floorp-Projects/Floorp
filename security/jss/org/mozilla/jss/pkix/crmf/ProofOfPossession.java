@@ -196,7 +196,7 @@ public class ProofOfPossession implements ASN1Value {
 
     public void encode(Tag implicitTag, OutputStream ostream)
             throws IOException {
-        Assert.notReached("A CHOICE cannot be implicitly tagged");
+        Assert._assert(implicitTag.equals(getTag()));
         encode(ostream);
     }
 
