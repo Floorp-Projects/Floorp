@@ -136,6 +136,7 @@ pref("browser.forms.submit.backwards_compatible", true);
 pref("browser.tabs.autoHide", true);
 pref("browser.tabs.forceHide", false);
 pref("browser.tabs.loadInBackground", true);
+pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.opentabfor.urlbar", true);
 

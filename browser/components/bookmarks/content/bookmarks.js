@@ -514,26 +514,44 @@ var BookmarksCommand = {
       var urlArc   = RDF.GetResource(NC_NS+"URL");
       RDFC.Init(BMDS, resource);
       var containerChildren = RDFC.GetElements();
+      var tabs      = browser.mTabContainer.childNodes;
       var tabPanels = browser.mPanelContainer.childNodes;
-      var tabCount = tabPanels.length;
-      var index = 0;
-      for (; containerChildren.hasMoreElements(); ++index) {
+      var tabCount  = tabPanels.length;
+      // Get the preferences service
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefService);
+      var doReplace = prefService.getBranch(null)
+                                 .getBoolPref("browser.tabs.loadFolderAndReplace");
+      var index0 = doReplace? 0:tabCount;
+      var index  = index0;
+      while (containerChildren.hasMoreElements()) {
         var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
         var target = BMDS.GetTarget(res, urlArc, true);
         if (target) {
           var uri = target.QueryInterface(kRDFLITIID).Value;
-          browser.addTab(uri);
+          if (index < tabCount)
+            tabPanels[index].loadURI(uri, null, nsIWebNavigation.LOAD_FLAGS_NONE);
+          else
+            browser.addTab(uri);
+          ++index;
         }
-      } 
-  
-      if (index == 0)
-        return; // If the bookmark group was completely invalid, just bail.
-     
+      }
+
+      // If the bookmark group was completely invalid, just bail.
+      if (index == index0)
+        return;
+
       // Select the first tab in the group.
-      var tabs = browser.mTabContainer.childNodes;
-      browser.selectedTab = tabs[tabCount];
+      browser.selectedTab = tabs[index0];
+
+      // Close any remaining open tabs that are left over.
+      // (Always skipped when we append tabs)
+      for (var i = tabCount-1; i >= index; --i)
+        browser.removeTab(tabs[i]);
+
       // and focus the content
       browser.focus();
+
     } else {
       dump("Open Group in new window: not implemented...\n");
     }
