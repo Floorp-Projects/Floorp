@@ -196,8 +196,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetLocation (char **retval)
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetLocation\n"));
   NS_ENSURE_ARG_POINTER(retval);
   *retval = NULL;
-  if (mJSStatus)
-    *retval = nsCRT::strdup(mJSStatus);
+  if (mLocation)
+    *retval = nsCRT::strdup(mLocation);
   return NS_OK;
 }
 
@@ -279,10 +279,10 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask,
 					       nsIWebBrowser **_retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetNewBrowser\n"));
-  NS_ENSURE_STATE(mNewBrowserCB);
   if (mNewBrowserCB)
     return mNewBrowserCB(chromeMask, _retval, mNewBrowserCBData);
-  return NS_ERROR_FAILURE;
+  else
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName, 
@@ -392,8 +392,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 c
 						  PRInt32 maxTotalProgress)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnProgressChange\n"));
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("maxTotalProgress is %d and curTotalProgress is %d\n",
-				    maxTotalProgress, curTotalProgress));
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("curTotalProgress is %d and maxTotalProgress is %d\n",
+				    curTotalProgress, maxTotalProgress));
   if (maxTotalProgress >= 0)
   {
     PRUint32 percentage = (curTotalProgress * 100) / maxTotalProgress;
@@ -406,7 +406,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 c
   
   // call our callback if it's been registered
   if (mProgressCB)
-    mProgressCB(mProgressCBData, maxTotalProgress, curTotalProgress);
+    mProgressCB(mProgressCBData, curTotalProgress, maxTotalProgress);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

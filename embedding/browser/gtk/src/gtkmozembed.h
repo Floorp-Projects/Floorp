@@ -52,20 +52,20 @@ struct _GtkMozEmbedClass
   void (* js_status)    (GtkMozEmbed *embed);
   void (* location)     (GtkMozEmbed *embed);
   void (* title)        (GtkMozEmbed *embed);
-  void (* progress)     (GtkMozEmbed *embed, gint32 maxprogress, gint32 curprogress);
-  void (* net_status)   (GtkMozEmbed *embed, gint32 status);
+  void (* progress)     (GtkMozEmbed *embed, gint maxprogress, gint curprogress);
+  void (* net_status)   (GtkMozEmbed *embed, gint status);
   void (* net_start)    (GtkMozEmbed *embed);
   void (* net_stop)     (GtkMozEmbed *embed);
 };
 
 extern GtkType      gtk_moz_embed_get_type         (void);
 extern GtkWidget   *gtk_moz_embed_new              (void);
-extern void         gtk_moz_embed_load_url         (GtkWidget *widget, const char *url);
-extern void         gtk_moz_embed_stop_load        (GtkWidget *widget);
-extern char        *gtk_moz_embed_get_link_message (GtkWidget *widget);
-extern char        *gtk_moz_embed_get_js_status    (GtkWidget *widget);
-extern char        *gtk_moz_embed_get_title        (GtkWidget *widget);
-extern char        *gtk_moz_embed_get_location     (GtkWidget *widget);
+extern void         gtk_moz_embed_load_url         (GtkMozEmbed *embed, const char *url);
+extern void         gtk_moz_embed_stop_load        (GtkMozEmbed *embed);
+extern char        *gtk_moz_embed_get_link_message (GtkMozEmbed *embed);
+extern char        *gtk_moz_embed_get_js_status    (GtkMozEmbed *embed);
+extern char        *gtk_moz_embed_get_title        (GtkMozEmbed *embed);
+extern char        *gtk_moz_embed_get_location     (GtkMozEmbed *embed);
 
 /* These are straight out of nsIWebProgress.h */
 
