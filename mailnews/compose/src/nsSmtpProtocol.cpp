@@ -726,7 +726,7 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   {
   case 2:
 	  {
-		  const char * mailPassword = nsnull;
+		  const nsString * mailPassword = nsnull;
 		  m_runningURL->GetUserPassword(&mailPassword);
 		  m_nextState = SMTP_SEND_HELO_RESPONSE;
 #ifdef UNREADY_CODE
@@ -1075,11 +1075,10 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 
 PRInt32 nsSmtpProtocol::SendMessageInFile()
 {
-	const char * fileName = nsnull;
-	m_runningURL->GetPostMessageFile(&fileName);
-	if (fileName && *fileName)
+	const nsFilePath * filePath = nsnull;
+	m_runningURL->GetPostMessageFile(&filePath);
+	if (filePath && *filePath)
 	{
-		nsFilePath * filePath = new nsFilePath(fileName);
 		nsInputFileStream * fileStream = new nsInputFileStream(*filePath, PR_RDONLY, 00700);
 		if (fileStream)
 		{
@@ -1163,7 +1162,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 
 			SendData(buffer); 
 		}
-	}
+	} // if filePath
 
 	SetFlag(SMTP_PAUSE_FOR_READ);
 
@@ -1487,6 +1486,8 @@ PRInt32	  nsSmtpProtocol::CloseConnection()
 {
 	return 0;
 }
+
+
 
 #ifdef UNREADY_CODE
 static void
