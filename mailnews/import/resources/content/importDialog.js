@@ -28,6 +28,8 @@ var errorStr = null;
 var progressInfo = null;
 var selectedModuleName = null;
 
+
+
 function GetBundleString( strId)
 {
 	try {
@@ -35,6 +37,15 @@ function GetBundleString( strId)
 	} catch( ex) {
 	}
 	
+	return( "String Bundle Bad");
+}
+
+function GetFormattedBundleString( strId, formatStr)
+{
+	try {
+		return( top.bundle.formatStringFromName( strId, [ formatStr ], 1));
+	} catch( ex) {
+	}
 	return( "String Bundle Bad");
 }
 
@@ -77,9 +88,7 @@ function SetUpImportType()
 	switch ( top.importType )
 	{
 		case "mail":
-			// top.window.title = top.bundle.GetStringFromName('ImportMailDialogTitle');
-			document.getElementById( "listLabel").setAttribute('value', GetBundleString('ImportMailListLabel'));
-			//SetDivText('listLabel', GetBundleString('ImportMailListLabel'));
+			document.getElementById( "listLabel").setAttribute('value', GetBundleString( 'ImportMailListLabel'));
 			document.getElementById( "mailRadio").checked = true;
 			document.getElementById( "addressbookRadio").checked = false;
 			document.getElementById( "settingsRadio").checked = false;
@@ -156,7 +165,7 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
-							var meterText = GetBundleString( 'MailProgressMeterText') + " " + name;
+							var meterText = GetFormattedBundleString( 'MailProgressMeterText', name);
 							// show the progress window...
 							top.window.openDialog(
 								"chrome://messenger/content/importProgress.xul",
@@ -198,13 +207,14 @@ function ImportDialogOKButton()
 							return( true);
 						}
 						else {
-							var meterText = GetBundleString( 'AddrProgressMeterText') + " " + name;
+							var meterText = GetFormattedBundleString( 'AddrProgressMeterText', name);
+							var titleText = GetBundleString( 'AddrProgressTitle');
 							// show the progress window...
 							top.window.openDialog(
 								"chrome://messenger/content/importProgress.xul",
 								"",
 								"chrome,modal",
-								{windowTitle: GetBundleString( 'AddrProgressTitle'),
+								{windowTitle: titleText,
 								 progressTitle: meterText,
 								 progressStatus: "",
 								 progressInfo: top.progressInfo});
@@ -229,7 +239,7 @@ function ImportDialogOKButton()
 						{
 							// Show error alert with error
 							// information
-							alert( GetBundleString( 'ImportSettingsError') + name + ":\n" + error.value);
+							alert( GetBundleString( 'ImportSettingsFailed'));
 						}
 						// the user canceled the operation, shoud we dismiss
 						// this dialog or not?
@@ -238,7 +248,7 @@ function ImportDialogOKButton()
 					else
 					{
 						// Alert to show success
-						alert( GetBundleString( 'ImportSettingsSuccess') + name);
+						alert( GetFormattedBundleString( 'ImportSettingsSuccess', name));
 					}
 					break;
 			}
@@ -362,17 +372,21 @@ function ShowMailComplete( good)
 {
 	var str = null;
 	if (good == true) {
-		str = GetBundleString( 'ImportMailSuccess');
 		if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
-			str += " " + top.selectedModuleName;
+			str = GetFormattedBundleString( 'ImportMailSuccess', top.selectedModuleName);
+		else
+			str = GetFormattedBundleString( 'ImportMailSuccess', "");
+
 		str += "\n";
-		str += "\n" + top.successStr.data;
-		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0))
-			str += "\n" + "\n" + top.errorStr.data;
+		if ((top.successStr.data != null) && (top.successStr.data.length > 0))
+			str += "\n" + "\n" + top.successStr.data;
 	}
 	else {
 		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0)) {
-			str = GetBundleString( 'ImportMailFailed');
+			if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
+				str = GetFormattedBundleString( 'ImportMailFailed', top.selectedModuleName);
+			else
+				str = GetFormattedBundleString( 'ImportMailFailed', "");
 			str += "\n" + top.errorStr.data;
 		}
 	}
@@ -386,15 +400,19 @@ function ShowAddressComplete( good)
 {
 	var str = null;
 	if (good == true) {
-		str = GetBundleString( 'ImportAddressSuccess');
 		if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
-			str += " " + top.selectedModuleName;
+			str = GetFormattedBundleString( 'ImportAddressSuccess', top.selectedModuleName);
+		else
+			str = GetFormattedBundleString( 'ImportAddressSuccess', "");
 		str += "\n";
 		str += "\n" + top.successStr.data;
 	}
 	else {
 		if ((top.errorStr.data != null) && (top.errorStr.data.length > 0)) {
-			str = GetBundleString( 'ImportAddressFailed');
+			if ((top.selectedModuleName != null) && (top.selectedModuleName.length > 0))
+				str = GetFormattedBundleString( 'ImportAddressFailed', top.selectedModuleName);
+			else
+				str = GetFormattedBundleString( 'ImportAddressFailed', "");
 			str += "\n" + top.errorStr.data;
 		}
 	}
@@ -434,9 +452,9 @@ function ImportSettings( module, newAccount, error) {
 			if (filePicker != null) {
 				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFileSpecWithUI);
 				if (filePicker != null) {
-					// filePicker.create( window.top, "Select settings file", filePicker.modeLoad);
+					// filePicker.create( window.top, GetBundleString( 'ImportSelectSettings'), filePicker.modeLoad);
 					try {
-						filePicker.chooseInputFile( "Select settings file", filePicker.eAllFiles, null, null);
+						filePicker.chooseInputFile( GetBundleString( 'ImportSelectSettings'), filePicker.eAllFiles, null, null);
 						setIntf.SetLocation( filePicker.QueryInterface( Components.interfaces.nsIFileSpec));
 					} catch( ex) {
 						error.value = null;
@@ -508,7 +526,7 @@ function ImportMail( module, success, error) {
 				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFileSpecWithUI);
 				if (filePicker != null) {
 					try {
-						filePicker.chooseDirectory( "Select mail directory");
+						filePicker.chooseDirectory( GetBundleString( 'ImportSelectMailDir'));
 						mailInterface.SetData( "mailLocation", CreateNewFileSpec( filePicker.QueryInterface( Components.interfaces.nsIFileSpec)));
 					} catch( ex) {
 						// don't show an error when we return!
@@ -614,7 +632,7 @@ function ImportAddress( module, success, error) {
 		if (addInterface.GetStatus( "supportsMultiple") != 0) {
 			// ask for dir
 			try {
-				filePicker.chooseDirectory( "Select address book directory");
+				filePicker.chooseDirectory( GetBundleString( 'ImportSelectAddrDir'));
 				file = filePicker.QueryInterface( Components.interfaces.nsIFileSpec);
 			} catch( ex) {
 				file = null;
@@ -623,7 +641,7 @@ function ImportAddress( module, success, error) {
 		else {
 			// ask for file
 			try {
-				filePicker.chooseInputFile( "Select address book file", filePicker.eAllFiles, null, null);
+				filePicker.chooseInputFile( GetBundleString( 'ImportSelectAddrFile'), filePicker.eAllFiles, null, null);
 				file = filePicker.QueryInterface( Components.interfaces.nsIFileSpec);
 			} catch( ex) {
 				file = null;
