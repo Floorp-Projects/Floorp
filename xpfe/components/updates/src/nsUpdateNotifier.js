@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -87,6 +88,10 @@ var nsUpdateNotifier =
           classes["@mozilla.org/observer-service;1"].
           getService(Components.interfaces.nsIObserverService);
         observerService.removeObserver(this, "domwindowopened");
+
+        // but we are interested in removing our timer reference on XPCOM
+        // shutdown so as not to leak.
+        observerService.addObserver(this, "xpcom-shutdown", false);
       }
       catch (ex)
       {
@@ -97,6 +102,14 @@ var nsUpdateNotifier =
     {
       this.mTimer = null; // free up timer so it can be gc'ed
       this.checkForUpdate();
+    }
+    else if (aTopic == "xpcom-shutdown")
+    {
+      /*
+       * We need to drop our timer reference here to avoid a leak
+       * since the timer keeps a reference to the observer.
+       */
+      this.mTimer = null;
     }
   },
 
