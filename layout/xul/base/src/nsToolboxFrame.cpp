@@ -636,16 +636,20 @@ NS_IMETHODIMP
 nsToolboxFrame :: GetFrameForPoint(const nsPoint& aPoint, 
                                   nsIFrame**     aFrame)
 {
-  nsIFrame* incoming = *aFrame;
   nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
-  
-  if ( retVal == NS_ERROR_FAILURE ) {
+
+  // returning NS_OK means that we tell the frame finding code that we have something
+  // and to stop looking elsewhere for a frame.
+  if ( aFrame && *aFrame == this )
+    retVal = NS_OK;
+  else if ( retVal != NS_OK ) {
     *aFrame = this;
     retVal = NS_OK;
   }
-    
+     
   return retVal;
-}
+  
+} // GetFrameForPoint
 
 
 //
@@ -662,7 +666,8 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
  
   switch ( aEvent->message ) {
 
-    case NS_MOUSE_LEFT_CLICK:
+//  case NS_MOUSE_LEFT_CLICK:
+    case NS_MOUSE_LEFT_BUTTON_UP:
       OnMouseLeftClick ( aEvent->point );
       break;
     
@@ -673,6 +678,21 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
     case NS_MOUSE_EXIT:
       OnMouseExit ( );
       break;
+
+    case NS_DRAGDROP_ENTER: 
+      // show drop feedback 
+      break; 
+
+    case NS_DRAGDROP_OVER: 
+      break; 
+
+    case NS_DRAGDROP_EXIT: 
+      // remove drop feedback 
+      break; 
+
+    case NS_DRAGDROP_DROP: 
+      // do drop coolness stuff 
+      break; 
 
     default:
       break;
