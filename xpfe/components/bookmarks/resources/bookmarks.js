@@ -93,7 +93,7 @@ function fillViewMenu(aEvent)
       
       var menuitem = document.createElement("menuitem");
       var nameTemplate = bookmarksView._bundle.GetStringFromName("SortMenuItem");
-      var name = nameTemplate.replace(/%NAME%/g, columns[i].label);
+      name = nameTemplate.replace(/%NAME%/g, columns[i].label);
       menuitem.setAttribute("label", name);
       menuitem.setAttribute("accesskey", columns[i].accesskey);
       menuitem.setAttribute("resource", columns[i].resource);
@@ -173,9 +173,10 @@ function fillColumnsMenu(aEvent)
 {
   var bookmarksView = document.getElementById("bookmarks-view");
   var columns = bookmarksView.columns;
+  var i;
 
   if (!gConstructedColumnsMenuItems) {
-    for (var i = 0; i < columns.length; ++i) {
+    for (i = 0; i < columns.length; ++i) {
       var menuitem = document.createElement("menuitem");
       menuitem.setAttribute("label", columns[i].label);
       menuitem.setAttribute("resource", columns[i].resource);
@@ -188,7 +189,7 @@ function fillColumnsMenu(aEvent)
     gConstructedColumnsMenuItems = true;
   }
   else {
-    for (var i = 0; i < columns.length; ++i) {
+    for (i = 0; i < columns.length; ++i) {
       var element = document.getElementById("columnMenuItem:" + columns[i].resource);
       if (element && columns[i].hidden != "true")
         element.setAttribute("checked", "true");
