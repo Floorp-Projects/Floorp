@@ -54,9 +54,9 @@ public:
   /**
    * SetString
    */
-  void SetString(nsAutoString *aTheString) {}
+  void SetString(nsAutoString *aTheString) {mTheTagName = *aTheString;}
 
-  nsAutoString* GetString() {return 0;}
+  nsAutoString* GetString() {return &mTheTagName;}
 
   /**
    *  Handle this token prior to the DTD
