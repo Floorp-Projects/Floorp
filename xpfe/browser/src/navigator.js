@@ -21,6 +21,7 @@
   var appCoreName = "";
   var defaultStatus = "default status text";
   var debugSecurity = false; // Set this true to enable Security chrome testing.
+  var explicitURL = false;
 
   function Startup()
   {
@@ -50,6 +51,8 @@
     } else {
         // onLoad handler timing is not correct yet.
         dump( "onLoadWithArgs not needed yet\n" );
+        // Remember that we want this url.
+        explicitURL = true;
     }
   }
 
@@ -59,50 +62,52 @@
         appCore.setContentWindow( window.frames[0].frames[1] );
         // Have browser app core load appropriate initial page.
 
-        var pref = Components.classes['component://netscape/preferences'];
-
-        // if all else fails, use trusty "about:" as the start page
-        var startpage = "about:";  
-        if (pref) {
-          pref = pref.getService();
+        if ( !explicitURL ) {
+            var pref = Components.classes['component://netscape/preferences'];
+    
+            // if all else fails, use trusty "about:" as the start page
+            var startpage = "about:";  
+            if (pref) {
+              pref = pref.getService();
+            }
+            if (pref) {
+              pref = pref.QueryInterface(Components.interfaces.nsIPref);
+            }
+            if (pref) {
+              // from mozilla/modules/libpref/src/init/all.js
+              // 0 = blank 
+              // 1 = home (browser.startup.homepage)
+              // 2 = last 
+              // 3 = splash (browser.startup.splash)
+              choice = pref.GetIntPref("browser.startup.page");
+    	  switch (choice) {
+    		case 0:
+                		startpage = "about:blank";
+          			break;
+    		case 1:
+                		startpage = pref.CopyCharPref("browser.startup.homepage");
+          			break;
+    		case 2:
+                		var history = Components.classes['component://netscape/browser/global-history'];
+    			if (history) {
+                   			history = history.getService();
+    	    		}
+    	    		if (history) {
+                  			history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+    	    		}
+    	    		if (history) {
+    				startpage = history.GetLastPageVisted();
+    	    		}
+          			break;
+    		case 3:
+                		startpage = pref.CopyCharPref("browser.startup.splash");
+          			break;
+       		default:
+                		startpage = "about:";
+    	  }
+            }
+            document.getElementById("args").setAttribute("value", startpage);
         }
-        if (pref) {
-          pref = pref.QueryInterface(Components.interfaces.nsIPref);
-        }
-        if (pref) {
-          // from mozilla/modules/libpref/src/init/all.js
-          // 0 = blank 
-          // 1 = home (browser.startup.homepage)
-          // 2 = last 
-          // 3 = splash (browser.startup.splash)
-          choice = pref.GetIntPref("browser.startup.page");
-	  switch (choice) {
-		case 0:
-            		startpage = "about:blank";
-      			break;
-		case 1:
-            		startpage = pref.CopyCharPref("browser.startup.homepage");
-      			break;
-		case 2:
-            		var history = Components.classes['component://netscape/browser/global-history'];
-			if (history) {
-               			history = history.getService();
-	    		}
-	    		if (history) {
-              			history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-	    		}
-	    		if (history) {
-				startpage = history.GetLastPageVisted();
-	    		}
-      			break;
-		case 3:
-            		startpage = pref.CopyCharPref("browser.startup.splash");
-      			break;
-   		default:
-            		startpage = "about:";
-	  }
-        }
-        document.getElementById("args").setAttribute("value", startpage);
         appCore.loadInitialPage();
     } else {
         // Try again.
