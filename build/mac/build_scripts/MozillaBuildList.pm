@@ -1997,6 +1997,7 @@ sub RunBuild($$$)
                      \%main::options,
                      \%main::optiondefines,
                      \%main::filepaths,
+                     "MozillaBuildFlags.txt",
                      $build_prefs);
 
     if ($main::LOG_TO_FILE) {
