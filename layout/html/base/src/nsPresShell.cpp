@@ -6138,7 +6138,7 @@ PresShell::AddDummyLayoutRequest(void)
 { 
   nsresult rv = NS_OK;
 
-  if (gAsyncReflowDuringDocLoad) {
+  if (gAsyncReflowDuringDocLoad && !mIsReflowing) {
     rv = DummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest), this);
     if (NS_FAILED(rv)) return rv;
 
