@@ -21,15 +21,21 @@
  * continue to use -Dplatform WHERE NECESSARY instead of learning each
  * set of compiler defines. 
  */
+#ifndef _platform_h
+#define _platform_h
 
 #ifdef __sun
-#ifdef __svr4__
+#ifdef __SVR4
+#undef SOLARIS
 #define SOLARIS 1
 #else
+#undef SUNOS4
 #define SUNOS4 1
-#endif /* __svr4__ */
+#endif /* __SVR4 */
 #endif /* __sun */
 
 #ifdef linux
 #define LINUX 1
 #endif /* linux */
+
+#endif /* _platform_h */
