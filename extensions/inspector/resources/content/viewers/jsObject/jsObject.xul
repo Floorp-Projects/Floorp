@@ -24,7 +24,7 @@
   </commandset>
   
   <popupset>
-    <popup id="popupContext" onpopupshowing="return viewer.onpopupshowingContext(this)">
+    <popup id="popupContext">
       <menuitem label="&inspectNewWindow.label;" observes="cmdInspectInNewView"/>
       <menuseparator/>
       <menuitem label="&jsCopyValue.label;" observes="cmdCopyValue"/>
