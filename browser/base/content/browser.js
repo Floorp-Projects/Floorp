@@ -471,8 +471,9 @@ function delayedStartup()
   updateHomeTooltip();
   
   // Initialize Plugin Overrides
-  try {
-    var types = gPrefService.getCharPref("browser.download.pluginOverrideTypes");
+  const kOverridePref = "browser.download.pluginOverrideTypes";
+  if (gPrefService.prefHasUserValue(kOverridePref)) {
+    var types = gPrefService.getCharPref(kOverridePref);
     types = types.split(",");
     
     const kPluginOverrideTypesNotHandled = "browser.download.pluginOverrideTypesNotHandled";
@@ -503,7 +504,6 @@ function delayedStartup()
     else if (gPrefService.prefHasUserValue(kPluginOverrideTypesNotHandled))
       gPrefService.clearUserPref(kPluginOverrideTypesNotHandled);
   }
-  catch (e) { }
 }
 
 function Shutdown()
