@@ -230,10 +230,19 @@ Contributor(s):
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
   <popup id="SearchBarPopup" position="after_start"
+         datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" 
          oncommand="return SearchBarPopupCommand(event);"
          onpopupshowing="return SearchBarPopupShowing(event);">
+    <menuitem id="miSearchModeFind" type="checkbox"
+              label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"/>
     <menuseparator/>
-    <menuitem id="miSearchModeFind" type="checkbox" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"/>
+
+    <template>
+      <menuitem type="checkbox"
+                uri="..." value="..."
+                src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+    </template>
   </popup>
 
   <popup type="autocomplete" id="PopupAutoComplete"/>
@@ -766,11 +775,9 @@ Contributor(s):
         <textbox id="search-bar" type="autocomplete" flex="1"
                  autocompletepopup="PopupAutoComplete"
                  autocompletesearch="form-history"
-                 autocompletesearchparam="q"
-                 searchmode="web"
                  tabscrolling="true"
                  ontextentered="return handleSearchBarCommand(param);"
-                 persist="searchmode,searchparam">
+                 persist="searchmode,autocompletesearchparam">
           <image id="search-proxy-button" popup="SearchBarPopup"/>
         </textbox>
       </toolbaritem>

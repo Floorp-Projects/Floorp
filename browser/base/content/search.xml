@@ -11,6 +11,9 @@
         var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
         if (pbi)
           pbi.addObserver("browser.search", this.mPrefObserver, false);
+
+        if (this.hasAttribute("searchmode"))
+          updateEngines();
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -46,6 +49,10 @@
 
       <field name="currentSearchIcon">""</field>
 
+      <property name="searchMode"
+                onget="return this.getAttribute('searchmode');"
+                onset="this.setAttribute('searchmode', val); return val;"/>
+      
       <property name="searchValue" readonly="true">
         <getter>
         <![CDATA[
@@ -98,6 +105,9 @@
               this.currentSearchId = res.Value;
               this.currentSearchName = this.readRDFString(ds, res, kNC_Name);
               this.currentSearchIcon = this.readRDFString(ds, res, kNC_Icon);
+
+              if (this.firstChild && this.firstChild.localName == "image");
+                this.firstChild.setAttribute("src", this.currentSearchIcon);
             }
           }
           

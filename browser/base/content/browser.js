@@ -1167,34 +1167,17 @@ function PageProxyDragGesture(aEvent)
 
 function SearchBarPopupShowing(aEvent)
 {
-  var popup = aEvent.target;
-  if (popup.firstChild.localName == "menuitem")
-    popup.removeChild(popup.firstChild);
-  
   var searchBar = document.getElementById("search-bar");
-  var searchMode = searchBar.getAttribute("searchmode");
-  var findItem = document.getElementById("miSearchModeFind");
-  findItem.setAttribute("checked", searchMode == "findinpage");
+  var searchMode = searchBar.searchMode;
 
-  var searchBar = document.getElementById("search-bar");
-  if (!searchBar.enginesReady)
-    searchBar.updateEngines();
-  
-  if (searchBar.currentSearchId) {
-    var menuitem = document.createElement("menuitem");
-    menuitem.setAttribute("label", searchBar.currentSearchName);
-
-    if (searchBar.currentSearchIcon) {
-      menuitem.setAttribute("class", "menuitem-iconic");
-      menuitem.setAttribute("image", searchBar.currentSearchIcon);
-    } else {
-      menuitem.setAttribute("type", "checkbox");
-      menuitem.setAttribute("checked", searchMode == "web");
-    }
-    
-    popup.insertBefore(menuitem, popup.firstChild);
+  var node = popup.firstChild;
+  while (node) {
+    node.setAttribute("checked", node.id == searchMode);
+    node = node.nextSibling;
   }
-    
+
+  var findItem = document.getElementById("miSearchModeFind");
+  findItem.setAttribute("checked", !searchMode);
 }
 
 function SearchBarPopupCommand(aEvent)
@@ -1202,15 +1185,20 @@ function SearchBarPopupCommand(aEvent)
   var searchBar = document.getElementById("search-bar");
 
   if (aEvent.target.id == "miSearchModeFind") {
+    searchBar.removeAttribute("searchmode");
     searchBar.setAttribute("autocompletesearchparam", "__PhoenixFindInPage");
-    searchBar.setAttribute("searchmode", "findinpage");
+    pref.setCharPref("browser.search.defaultengine", "");
+
+    // Clear out the search engine icon
+    searchBar.firstChild.removeAttribute("src");
   } else {
+    searchBar.setAttribute("searchmode", aEvent.target.id);
     searchBar.setAttribute("autocompletesearchparam", "q");
-    searchBar.setAttribute("searchmode", "web");
+    pref.setCharPref("browser.search.defaultengine", aEvent.target.id);
   }
   
   searchBar.detachController();
-  searchBar.focus();
+  focusSearchBar();
 }
 
 function handleSearchBarCommand(aEvent)
@@ -1223,7 +1211,7 @@ function handleSearchBarCommand(aEvent)
                              .getService(Components.interfaces.nsIFormHistory);
   gFormHistory.addEntry(searchBar.getAttribute("autocompletesearchparam"), searchBar.value);
 
-  if (searchBar.getAttribute("searchmode") == "web") {
+  if (searchBar.hasAttribute("searchmode")) {
     gURLBar.value = searchBar.searchValue;
     BrowserLoadURL(aEvent);
   } else {
