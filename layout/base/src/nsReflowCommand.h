@@ -29,13 +29,16 @@ class nsReflowCommand {
 public:
   enum ReflowType {
     // Reflow commands generated in response to a content insert/delete/append
-    // notification
+    // notification. The target of the reflow command is the container frame
+    // itself
     FrameAppended,
     FrameInserted,
     FrameDeleted,
 
-    // This reflow command is used when a leaf node's content changes
-    // (e.g. some text in a text run, an image's source, etc.)
+    // This reflow command is used when a leaf node's content changes (e.g. some
+    // text in a text run, an image's source, etc.). The target of the reflow
+    // command is the frame that changed (see nsIFrame#ContentChanged() for how
+    // the target frame is determined).
     ContentChanged,
 
     // When an incremental reflow operation affects a next-in-flow,

@@ -1368,7 +1368,7 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
       else {
         rv = ReflowUnmapped(state);
       }
-
+#if 0
     } else if (aReflowCommand.GetType() == nsReflowCommand::ContentChanged) {
       // Restore our state as if the child that changed is the next frame to reflow
       nsLineData* line = FindLine(aReflowCommand.GetChildFrame());
@@ -1380,7 +1380,7 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
       // Reflow the affected line, and all the lines that follow...
       // XXX Obviously this needs to be more efficient
       rv = ReflowMappedFrom(state, line);
-
+#endif
     } else {
       NS_NOTYETIMPLEMENTED("unexpected reflow command");
     }
