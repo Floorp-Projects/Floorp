@@ -32,19 +32,13 @@ REQUIRES	= xpcom \
 		  necko \
 		  shistory \
 		  widget \
-		  layout \
 		  docshell \
 		  appshell \
 		  dom \
 		  uriloader \
 		  pref \
-		  editor \
-		  appcomps \
 		  webBrowser_core \
-		  uconv \
-		  chardet \
 		  windowwatcher \
-		  urlbarhistory \
 		  content \
 		  gfx \
 		  history \
