@@ -133,11 +133,15 @@ class nsReadingIterator
           return *get();
         }
 
+//#if 0
+        // An iterator really deserves this, but some compilers (notably IBM VisualAge for OS/2)
+        //  don't like this when |CharT| is a type without members.
       pointer
       operator->() const
         {
           return get();
         }
+//#endif
 
       nsReadingIterator<CharT>&
       operator++()
@@ -534,11 +538,11 @@ basic_nsAReadableString<CharT>::Implementation() const
   */
 
 template <class CharT>
-inline
 CharT
 basic_nsAReadableString<CharT>::CharAt( PRUint32 aIndex ) const
   {
-      // ??? Is |CharAt()| supposed to be the 'safe' version?
+    NS_ASSERTION(aIndex<Length(), "|CharAt| out-of-range");
+
     nsReadableFragment<CharT> fragment;
     return *GetReadableFragment(fragment, kFragmentAt, aIndex);
   }
@@ -604,6 +608,7 @@ basic_nsAReadableString<CharT>::Mid( basic_nsAWritableString<CharT>& aResult, PR
   }
 
 template <class CharT>
+inline
 PRUint32
 basic_nsAReadableString<CharT>::Left( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
@@ -872,6 +877,13 @@ class nsPromiseConcatenation
     public:
       nsPromiseConcatenation( const basic_nsAReadableString<CharT>& aLeftString, const basic_nsAReadableString<CharT>& aRightString, PRUint32 aMask = 1 )
           : mFragmentIdentifierMask(aMask)
+        {
+          mStrings[kLeftString] = &aLeftString;
+          mStrings[kRightString] = &aRightString;
+        }
+
+      nsPromiseConcatenation( const nsPromiseConcatenation<CharT>& aLeftString, const basic_nsAReadableString<CharT>& aRightString )
+          : mFragmentIdentifierMask(aLeftString.mFragmentIdentifierMask<<1)
         {
           mStrings[kLeftString] = &aLeftString;
           mStrings[kRightString] = &aRightString;
@@ -1239,7 +1251,13 @@ typedef basic_nsAReadableString<char>       nsAReadableCString;
 typedef basic_nsLiteralString<PRUnichar>    nsLiteralString;
 typedef basic_nsLiteralString<char>         nsLiteralCString;
 
-#define NS_LITERAL_STRING(s)  nsLiteralString(s, (sizeof(s)/sizeof(wchar_t))-1)
+
+#ifdef HAVE_CPP_2BYTE_WCHAR_T
+  #define NS_LITERAL_STRING(s)  nsLiteralString(L##s, (sizeof(L##s)/sizeof(wchar_t))-1)
+#else
+  #define NS_LITERAL_STRING(s)  NS_ConvertASCIItoUCS2(s, sizeof(s)-1)
+#endif
+
 #define NS_LITERAL_CSTRING(s) nsLiteralCString(s, sizeof(s)-1)
 
 typedef basic_nsLiteralChar<char>       nsLiteralChar;
