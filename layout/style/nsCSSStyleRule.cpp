@@ -132,7 +132,7 @@ void nsCSSSelector::Set(const nsString& aTag, const nsString& aID,
     mClass = NS_NewAtom(aClass);
   }
   if (0 < aPseudoClass.Length()) {
-    aPseudoClass.ToLowerCase(buffer);
+    aPseudoClass.ToUpperCase(buffer);
     mPseudoClass = NS_NewAtom(buffer);
     if (nsnull == mTag) {
       mTag = nsHTMLAtoms::a;

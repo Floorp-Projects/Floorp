@@ -23,6 +23,10 @@
 #include "nsISupportsArray.h"
 #include "nsICSSStyleRule.h"
 #include "nsIHTMLContent.h"
+#include "nsIDocument.h"
+#include "nsIPresContext.h"
+#include "nsILinkHandler.h"
+#include "nsHTMLAtoms.h"
 #include "nsIFrame.h"
 #include "nsString.h"
 #include "nsIPtr.h"
@@ -54,7 +58,8 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
-  virtual PRBool SelectorMatches(nsCSSSelector* aSelector, 
+  virtual PRBool SelectorMatches(nsIPresContext* aPresContext,
+                                 nsCSSSelector* aSelector, 
                                  nsIContent* aContent);
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
@@ -186,17 +191,64 @@ nsresult CSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-PRBool CSSStyleSheetImpl::SelectorMatches(nsCSSSelector* aSelector, nsIContent* aContent)
+PRBool CSSStyleSheetImpl::SelectorMatches(nsIPresContext* aPresContext,
+                                          nsCSSSelector* aSelector, nsIContent* aContent)
 {
   PRBool  result = PR_FALSE;
+  nsIAtom*  contentTag = aContent->GetTag();
 
-  if ((nsnull == aSelector->mTag) || (aSelector->mTag == aContent->GetTag())) {
-    if ((nsnull != aSelector->mClass) || (nsnull != aSelector->mID)) {
+  if ((nsnull == aSelector->mTag) || (aSelector->mTag == contentTag)) {
+    if ((nsnull != aSelector->mClass) || (nsnull != aSelector->mID) || 
+        (nsnull != aSelector->mPseudoClass)) {
       nsIHTMLContentPtr htmlContent;
       if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, htmlContent.Query())) {
         if ((nsnull == aSelector->mClass) || (aSelector->mClass == htmlContent->GetClass())) {
           if ((nsnull == aSelector->mID) || (aSelector->mID == htmlContent->GetID())) {
-            result = PR_TRUE;
+            if ((contentTag == nsHTMLAtoms::a) && (nsnull != aSelector->mPseudoClass)) {
+              // test link state
+              nsILinkHandler* linkHandler;
+
+              if (NS_OK == aPresContext->GetLinkHandler(&linkHandler)) {
+                nsAutoString base, href;  // XXX base??
+                htmlContent->GetAttribute("href", href);
+
+                nsIURL* docURL = nsnull;
+                nsIDocument* doc = aContent->GetDocument();
+                if (nsnull != doc) {
+                  docURL = doc->GetDocumentURL();
+                  NS_RELEASE(doc);
+                }
+
+                nsAutoString absURLSpec;
+                nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+                NS_IF_RELEASE(docURL);
+
+                nsLinkState  state;
+                if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
+                  switch (state) {
+                    case eLinkState_Unvisited:
+                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::link);
+                      break;
+                    case eLinkState_Visited:
+                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::visited);
+                      break;
+                    case eLinkState_OutOfDate:
+                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::outOfDate);
+                      break;
+                    case eLinkState_Active:
+                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::active);
+                      break;
+                    case eLinkState_Hover:
+                      result = PRBool (aSelector->mPseudoClass == nsHTMLAtoms::hover);
+                      break;
+                  }
+                }
+                NS_RELEASE(linkHandler);
+              }
+            }
+            else {
+              result = PR_TRUE;
+            }
           }
         }
       }
@@ -237,7 +289,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
 
       nsCSSSelector* selector = rule->FirstSelector();
-      if (SelectorMatches(selector, aContent)) {
+      if (SelectorMatches(aPresContext, selector, aContent)) {
         selector = selector->mNext;
         nsIFrame* frame = aParentFrame;
         nsIContentPtr lastContent;
@@ -245,7 +297,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           nsIContentPtr content;
           frame->GetContent(content.AssignRef());
           if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
-              SelectorMatches(selector, content)) {
+              SelectorMatches(aPresContext, selector, content)) {
             selector = selector->mNext;
           }
           frame->GetGeometricParent(frame);
@@ -295,7 +347,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         nsIContentPtr content;
         frame->GetContent(content.AssignRef());
         if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
-            SelectorMatches(selector, content)) {
+            SelectorMatches(aPresContext, selector, content)) {
           selector = selector->mNext;
         }
         frame->GetGeometricParent(frame);

@@ -753,7 +753,7 @@ static PRBool IsPseudoClass(const nsString& aBuffer)
   return (aBuffer.EqualsIgnoreCase("link") ||
           aBuffer.EqualsIgnoreCase("visited") ||
           aBuffer.EqualsIgnoreCase("hover") ||
-          aBuffer.EqualsIgnoreCase("out-of-date") ||  // XXX ??
+          aBuffer.EqualsIgnoreCase("out-of-date") ||  // our extension
           aBuffer.EqualsIgnoreCase("active"));
 }
 
