@@ -244,6 +244,8 @@ textarea[disabled],
 option[disabled],
 optgroup[disabled],
 select[disabled] {
+  -moz-user-input: disabled;
+  -moz-user-focus: ignore;
   color: GrayText;
   background-color: ThreeDFace;
   cursor: default;
