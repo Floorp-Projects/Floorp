@@ -27,6 +27,10 @@
 #include "nsIFrameImageLoader.h"
 #include "nsIStyleContext.h"
 #include "nsStyleUtil.h"
+#include "nsIScrollableView.h"
+#include "nsLayoutAtoms.h"
+
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
@@ -1625,6 +1629,17 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
 
 //----------------------------------------------------------------------
 
+// Returns the anchor point to use for the background image. The
+// anchor point is the (x, y) location where the first tile should
+// be placed
+//
+// The anchor values are normalized wrt to the upper-left edge of the
+// bounds, and are always in the range:
+// -(aTileWidth - 1) <= anchor.x <= 0
+// -(aTileHeight - 1) <= anchor.y <= 0
+//
+// i.e., they are either 0 or a negative number which is less than the
+// tile size in that dimension
 static void
 ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
                              const nsRect& aBounds,
@@ -1637,10 +1652,6 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
   }
   else {
     nscoord t = aColor.mBackgroundXPosition;
-    if (0 == (NS_STYLE_BG_X_POSITION_PERCENT & aColor.mBackgroundFlags)) {
-      // XXX map enum to pct here
-      t = 0;
-    }
     float pct = float(t) / 100.0f;
     nscoord tilePos = nscoord(pct * aTileWidth);
     nscoord boxPos = nscoord(pct * aBounds.width);
@@ -1660,7 +1671,7 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
       x %= aTileWidth;
       x = -x;
     }
-    else {
+    else if (x != 0) {
       x %= aTileWidth;
       x = x - aTileWidth;
     }
@@ -1673,10 +1684,6 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
   }
   else {
     nscoord t = aColor.mBackgroundYPosition;
-    if (0 == (NS_STYLE_BG_Y_POSITION_PERCENT & aColor.mBackgroundFlags)) {
-      // XXX map enum to pct here
-      t = 0;
-    }
     float pct = float(t) / 100.0f;
     nscoord tilePos = nscoord(pct * aTileHeight);
     nscoord boxPos = nscoord(pct * aBounds.height);
@@ -1696,12 +1703,54 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
       y %= aTileHeight;
       y = -y;
     }
-    else {
+    else if (y != 0) {
       y %= aTileHeight;
       y = y - aTileHeight;
     }
   }
   aResult.y = y;
+
+  NS_POSTCONDITION((aResult.x >= -(aTileWidth - 1)) && (aResult.x <= 0) &&
+                   (aResult.y >= -(aTileHeight - 1)) && (aResult.y <= 0),
+                   "bad computed anchor value");
+}
+
+// Returns the clip view associated with the scroll frame's scrolling
+// view
+static const nsIView*
+GetClipView(nsIFrame* aScrollFrame)
+{
+  nsIView*           view;
+  nsIScrollableView* scrollingView;
+  const nsIView*     clipView;
+
+  // Get the scrolling view
+  aScrollFrame->GetView(&view);
+  view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+
+  // Get the clip view
+  scrollingView->GetClipView(&clipView);
+  return clipView;
+}
+
+// Returns the nearest scroll frame ancestor
+static nsIFrame*
+GetNearestScrollFrame(nsIFrame* aFrame)
+{
+  for (nsIFrame* f = aFrame; f; f->GetParent(&f)) {
+    nsIAtom*  frameType;
+    
+    // Is it a scroll frame?
+    f->GetFrameType(&frameType);
+    if (nsLayoutAtoms::scrollFrame == frameType) {
+      NS_RELEASE(frameType);
+      return f;
+    }
+
+    NS_IF_RELEASE(frameType);
+  }
+
+  return nsnull;
 }
 
 void
@@ -1813,12 +1862,54 @@ nsStyleCoord  borderRadius;
       aRenderingContext.FillRect(aBorderArea);
     }
 
-    // Compute the anchor point, relative to the padding area where the
-    // background image rendering should begin. When tiling, the anchor
-    // coordinate values will be negative offsets from the padding area
+    // If it's a fixed background attachment, then get the nearest scrolling
+    // ancestor
+    nsIFrame*      scrollFrame = nsnull;
+    const nsIView* clipView = nsnull;
+    nsRect         viewportArea(0, 0, 0, 0);
+
+    if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
+      scrollFrame = GetNearestScrollFrame(aForFrame);
+      
+      // Get the viewport size
+      nsSize  clipSize;
+      clipView = GetClipView(scrollFrame);
+      clipView->GetDimensions(&viewportArea.width, &viewportArea.height);
+    }
+
+    // Compute the anchor point. If it's a fixed background attachment, then
+    // the image is placed relative to the viewport; otherwise, it's placed
+    // relative to the element's padding area.
+    //
+    // When tiling, the anchor coordinate values will be negative offsets
+    // from the padding area
     nsPoint anchor;
-    ComputeBackgroundAnchorPoint(aColor, paddingArea,
+    ComputeBackgroundAnchorPoint(aColor, scrollFrame ? viewportArea : paddingArea,
                                  tileWidth, tileHeight, anchor);
+
+    // If it's a fixed background attachment, then convert the anchor point
+    // to aForFrame's coordinate space
+    if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
+      nsIView*  view;
+
+      aForFrame->GetView(&view);
+      if (!view) {
+        nsPoint offset;
+        aForFrame->GetOffsetFromView(offset, &view);
+        anchor -= offset;
+      }
+      NS_ASSERTION(view, "expected a view");
+      while (view && (view != clipView)) {
+        nscoord x, y;
+
+        view->GetPosition(&x, &y);
+        anchor.x -= x;
+        anchor.y -= y;
+
+        // Get the parent view
+        view->GetParent(view);
+      }
+    }
 
     // Setup clipping so that rendering doesn't leak out of the computed
     // dirty rect
@@ -1829,37 +1920,71 @@ nsStyleCoord  borderRadius;
 
     // Compute the x and y starting points and limits for tiling
     nscoord x0, x1;
-    if (NS_STYLE_BG_REPEAT_X & repeat) {
-      // When tiling in the x direction, adjust the starting position of the
-      // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
-      // will be a negative value used to adjust the starting coordinate.
-      x0 = (dirtyRect.x / tileWidth) * tileWidth + anchor.x;
-      x1 = x0 + xDistance + tileWidth;
-      if (0 != anchor.x) {
-        x1 += tileWidth;
+    if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
+      if (NS_STYLE_BG_REPEAT_X & repeat) {
+        x0 = ((dirtyRect.x - anchor.x) / tileWidth) * tileWidth + anchor.x;
+        x1 = x0 + xDistance + tileWidth;
+        if (0 != anchor.x) {
+          x1 += tileWidth;
+        }
+      }
+      else {
+        // For fixed attachment, the anchor is relative to the nearest scrolling
+        // ancestor (or the viewport)
+        x0 = anchor.x;
+        x1 = x0 + tileWidth;
       }
     }
     else {
-      // When tiling is off in x, anchor.x is relative to padding area
-      x0 = paddingArea.x + anchor.x;
-      x1 = x0 + tileWidth;
+      if (NS_STYLE_BG_REPEAT_X & repeat) {
+        // When tiling in the x direction, adjust the starting position of the
+        // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
+        // will be a negative value used to adjust the starting coordinate.
+        x0 = (dirtyRect.x / tileWidth) * tileWidth + anchor.x;
+        x1 = x0 + xDistance + tileWidth;
+        if (0 != anchor.x) {
+          x1 += tileWidth;
+        }
+      }
+      else {
+        // For scrolling attachment, the anchor is relative to the padding area
+        x0 = paddingArea.x + anchor.x;
+        x1 = x0 + tileWidth;
+      }
     }
 
     nscoord y0, y1;
-    if (NS_STYLE_BG_REPEAT_Y & repeat) {
-      // When tiling in the y direction, adjust the starting position of the
-      // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
-      // will be a negative value used to adjust the starting coordinate.
-      y0 = (dirtyRect.y / tileHeight) * tileHeight + anchor.y;
-      y1 = y0 + yDistance + tileHeight;
-      if (0 != anchor.y) {
-        y1 += tileHeight;
+    if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
+      if (NS_STYLE_BG_REPEAT_Y & repeat) {
+        y0 = ((dirtyRect.y - anchor.y) / tileHeight) * tileHeight + anchor.y;
+        y1 = y0 + yDistance + tileHeight;
+        if (0 != anchor.y) {
+          y1 += tileHeight;
+        }
+      }
+      else {
+        // For fixed attachment, the anchor is relative to the nearest scrolling
+        // ancestor (or the viewport)
+        y0 = anchor.y;
+        y1 = y0 + tileHeight;
       }
     }
     else {
-      // When tiling is off in y, anchor.y is relative to padding area
-      y0 = paddingArea.y + anchor.y;
-      y1 = y0 + tileHeight;
+      if (NS_STYLE_BG_REPEAT_Y & repeat) {
+        // When tiling in the y direction, adjust the starting position of the
+        // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
+        // will be a negative value used to adjust the starting coordinate.
+        y0 = (dirtyRect.y / tileHeight) * tileHeight + anchor.y;
+        y1 = y0 + yDistance + tileHeight;
+        if (0 != anchor.y) {
+          y1 += tileHeight;
+        }
+      }
+      else {
+        // For scrolling attachment, the anchor is relative to the padding area
+        y0 = paddingArea.y + anchor.y;
+        y1 = y0 + tileHeight;
+      }
     }
 
     // Tile the image in x and y
@@ -1869,7 +1994,7 @@ nsStyleCoord  borderRadius;
         aRenderingContext.DrawImage(image, x, y, tileWidth, tileHeight);
       }
     }
-
+    
     // Restore clipping
     aRenderingContext.PopState(clipState);
 
