@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2000/10/18 20:31:34 $ 
+# $Revision: 1.8 $ 
+# $Date: 2000/11/09 19:55:52 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -139,6 +139,9 @@ use File::Basename;
 
 # Load Tinderbox libraries
 
+use lib '#tinder_libdir#';
+
+use BuildStatus;
 use TinderDB::BasicTxtDB;
 use VCDisplay;
 use Utils;
@@ -153,116 +156,6 @@ $VERSION = '#tinder_version#';
 # the order of the HTML columns.
 
 push @TinderDB::HTML_COLUMNS, TinderDB::Build->new();
-
-
-
-# for each Build status we have:
-
-# color: to display it in on the buildpage
-# handler: to execute actions each time the status is reported.
-# description: to put in the legend
-# order: to show us the how well this build did compared with other builds, 
-#	bigger numbers means more progress
-
-# The Tinderbox code should not depend on the set of status values in
-# case we need to add more types later.
-
-# possible new types include: unit-test-failed,
-# perforance-test-failed, coverage-failed, lint-failed
-
-# The Tinderbox code only hardcodes the values of: 'not_running',
-# 'building' to determine if the build in question has completed and
-# 'success' to dertermine if the build finished all that it was
-# intended to do.  The various gradations of failure are not tracked
-# inside tinerbox but are useful for project managment.
-
-
-# If new types are added, try and keep to a small set of colors or the
-# display will get confusing.  You may find it convienent to keep a
-# distinction between different kinds of warnings or different kinds
-# of tests but we suggest keeping all warnings and all tests get the
-# same color.
-
-# Each time a build update is sent to the tinderbox server, a handler
-# function is run.  This allows the local administrator to specify an
-# arbitrary action to take each time a particular status is reported.
-
-# This handler could be used to open a trouble ticket each time the
-# build fails.  There could be a new web page where developers could
-# request notification (email, page) when the next build is done.
-# This would allow developers to not watch the tinderbox webpage so
-# intently but be informed when an interesting change has occured.
-
-# Please send us interesting uses for the handler.  We would like to
-# make examples availible.
-
-%STATUS = (
-
-           'not_running'=> {
-
-                            # You may want this to be 'aqua' if you
-                            # need to distinguish from 'building'
-
-                            'html_color'=>  'yellow',
-                            'hdml_char'=> '.',
-                            'handler'=> \&main::null,
-                            'description'=>  'Build is not running',
-                            'order'=>  0,
-                           },
-           
-           'building' => {
-                          'html_color'=>  'yellow',
-                          'hdml_char'=> '.',
-                          'handler'=> \&main::null,
-                          'description'=>  'Build in progress',
-                          'order'=>  1,
-                         },
-           
-           'build_failed' => {
-                        'html_color' => 'red',
-                        'hdml_char'=> '!',
-                        'handler' => \&main::null,
-                        'description' => 'Build failed',
-                        'order' => 2
-                       },
-
-           'test_failed' => {
-                            'html_color' => 'orange',
-                            'hdml_char'=> '~',
-                            'handler' => \&main::null,
-                            'description' => 'Build succeded but tests failed',
-                            'order' => 3,
-                           },
-
-           'success' => {
-                         'html_color' => 'lime',
-                         'hdml_char'=> '+',
-                         'handler' => \&main::null,
-                         'description'=> 'Build and all tests were successful',
-                         'order' => 4,
-                        },
-          );
-
-
-
-
-sub is_status_valid {
-  my ($status) = @_;
-
-  if ( defined ($STATUS{$status}) ) {
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-
-
-sub get_all_status {
-  my (@status) = sort keys %STATUS;
-
-  return @status;
-}
 
 
 
@@ -348,37 +241,6 @@ sub latest_status {
   return @outrow;
 }
 
-
-# convert a list of status strings into a list of html_colors
-
-sub status2html_colors {
-  my (@latest_status) = @_;
-  my @out;
-
-  for ($i=0; $i <= $#latest_status; $i++) {
-    my ($status) = $latest_status[$i];
-    my ($out) = $STATUS{$status}{'html_color'};
-    push @out, $out;
-  }
-
-  return @out;
-}
-
-
-# convert a list of status strings into a list of hdml_chars
-
-sub status2hdml_chars {
-  my (@latest_status) = @_;
-  my @out;
-
-  for ($i=0; $i <= $#latest_status; $i++) {
-    my ($status) = $latest_status[$i];
-    my ($out) = $STATUS{$status}{'hdml_char'};
-    push @out, $out;
-  }
-
-  return @out;
-}
 
 
 #  Prepare information for popupwindows on row headers and also the
@@ -642,21 +504,16 @@ $out .=<<EOF;
 EOF
   ;
 
-  # print the states in an order sorted by $STATUS{*}{'order'}
+  my @build_states = BuildStatus::get_all_sorted_status();
 
-  my @build_states = (
-                      map { $_->[0] }
-                      sort{ $a->[1] <=> $b->[1] }	
-                      map { [ $_, $STATUS{$_}{'order'} ] }
-                      (keys %STATUS ) 
-                     );
   my $state_rows;
 
   foreach $state (@build_states) {
-    
+    my ($color) = BuildStatus::status2html_colors($state);
+    my ($description) = BuildStatus::status2descriptions($state);
     $state_rows .= (
-                    "\t\t<tr bgcolor=\"$STATUS{$state}{'html_color'}\">\n".
-                    "\t\t<td>$STATUS{$state}{'description'}</td>\n".
+                    "\t\t<tr bgcolor=\"$color\">\n".
+                    "\t\t<td>$description</td>\n".
                     "\t\t</tr>\n"
                    );
     
@@ -683,18 +540,11 @@ sub hdml_legend {
   my ($out);
   my ($state_rows);
 
-  # print the states in an order sorted by $STATUS{*}{'order'}
-
-  my @build_states = (
-                      map { $_->[0] }
-                      sort{ $a->[1] <=> $b->[1] }	
-                      map { [ $_, $STATUS{$_}{'order'} ] }
-                      (keys %STATUS ) 
-                     );
+  my @build_states = BuildStatus::get_all_sorted_status();
 
   foreach $state (@build_states) {
-    my $char = $STATUS{$state}{'hdml_char'};
-    my $description = $STATUS{$state}{'description'};
+    my ($char) = BuildStatus::status2hdml_chars($state);
+    my ($description) = BuildStatus::status2descriptions($state);
 
     $state_rows .= "\t$char : $description<br>\n";
     
@@ -737,7 +587,7 @@ sub status_table_header {
     my $avg_buildtime = $DATABASE{$tree}{$buildname}{'average_buildtime'};
     my $avg_deadtime = $DATABASE{$tree}{$buildname}{'average_deadtime'};
     my $current_starttime = $DATABASE{$tree}{$buildname}{'recs'}[0]{'starttime'};
-    my $previous_endtime = $DATABASE{$tree}{$buildname}{'recs'}[1]{'endtime'};
+    my $current_endtime = $DATABASE{$tree}{$buildname}{'recs'}[0]{'endtime'};
     
     my $txt ='';    
     my $num_lines;
@@ -775,9 +625,16 @@ sub status_table_header {
       $num_lines++;
     }
     
-    if ($current_starttime) {
-      my $min =  sprintf ("%.0f",         # round
-                          ($main::TIME  - $current_starttime)/60);
+    if ($current_endtime) {
+      my ($min) =  sprintf ("%.0f",         # round
+                            ($main::TIME  - $current_endtime)/60);
+      $txt .= "previous end_time: &nbsp;";
+      $txt .= &HTMLPopUp::timeHTML($current_endtime)."<br>";
+      $txt .= "current dead_time (minutes): &nbsp;$min<br>";
+      $num_lines += 2;
+    } elsif ($current_starttime) {
+      my ($min) =  sprintf ("%.0f",         # round
+                            ($main::TIME  - $current_starttime)/60);
       $txt .= "current start_time: &nbsp;";
       $txt .= &HTMLPopUp::timeHTML($current_starttime)."<br>";
       $txt .= "current build_time (minutes): &nbsp;$min<br>";
@@ -785,17 +642,19 @@ sub status_table_header {
     }
 
     my $estimated_remaining = undef;
-    if ( ($avg_buildtime) && ($current_starttime) ) {
+
+    if (0){
+    } elsif ( ($avg_deadtime) && ($avg_buildtime) && ($current_endtime) ) {
+      $estimated_remaining = ($avg_deadtime + $avg_buildtime) + 
+        ($current_endtime - $main::TIME);
+    } elsif ( ($avg_buildtime) && ($current_starttime) ) {
       $estimated_remaining = ($avg_buildtime) + 
         ($current_starttime - $main::TIME);
-    } elsif ( ($avg_deadtime) && ($avg_buildtime) && ($previous_endtime) ) {
-      $estimated_remaining = ($avg_deadtime + $avg_buildtime) + 
-        ($previus_endtime - $main::TIME);
     }
 
     if ($estimated_remaining) {
       my $min =  sprintf ("%.0f",         # round
-                          ($estimated_finish/60) );
+                          ($estimated_remaining/60) );
       $txt .= "time_remaining (estimate): &nbsp;$min<br>";
       $num_lines++;
     }
@@ -815,7 +674,7 @@ sub status_table_header {
 
     my $font_face = "<font face='Arial,Helvetica' size=-1>";
 
-    my ($bg) = $STATUS{$latest_status}{'html_color'};
+    my ($bg) = BuildStatus::status2html_colors($latest_status);
     my ($header) = ("\t<th rowspan=1 bgcolor=$bg>".
                     $font_face.
                     "$link</font></th>\n");
@@ -872,7 +731,7 @@ sub apply_db_updates {
 
     # sanity check the record, taint checks are done in processmail.
     {
-      is_status_valid($buildstatus) ||
+      BuildStatus::is_status_valid($buildstatus) ||
         die("Error in updatefile: $full_file, Status not valid");
       
       ($tree eq $record->{'tree'}) ||
@@ -890,15 +749,30 @@ sub apply_db_updates {
       ($starttime < $timenow) ||
         die("Error in updatefile: $full_file, ".
             "starttime: $starttime, is less then timenow: $timenow.");
+
    }  
 
     # ignore updates which arrive out of order
-    
-    if ( defined($DATABASE{$tree}{$build}{'recs'}) &&
-        ($record->{'starttime'} < 
-         $DATABASE{$tree}{$build}{'recs'}[0]{'starttime'})
-      ) {
-      next;
+    # or which start too fast
+
+    if ( defined($DATABASE{$tree}{$build}{'recs'}) ) {
+
+         ($record->{'starttime'} < 
+          $DATABASE{$tree}{$build}{'recs'}[0]{'starttime'}) &&
+         next;
+
+         # Keep the spacing between builds greater then our HTML grid
+         # spacing.  There can be very frequent updates for any build
+         # but different builds must be spaced apart.
+
+         my ($safe_separation) = (TinderDB::TABLE_SPACING + 
+                                $main::SECONDS_PER_MINUTE);
+         
+         my ($separation) = ($record->{'starttime'} - 
+                           $DATABASE{$tree}{$build}{'recs'}[0]{'starttime'});
+         
+         ($separation < $safe_separation) &&
+         next;
     }
 
     # The time which the previous build started
@@ -973,7 +847,7 @@ sub apply_db_updates {
       $record->{'info'} = $info;
 
       # run status dependent hook.
-      &{$STATUS{$buildstatus}{'handler'}}($record);
+      BuildStatus::run_status_handler($record);
 
       $record = '';
 
@@ -1086,7 +960,7 @@ sub status_table_row {
         $rowspan++ ;
       }
 
-      my ($cell_color) = $STATUS{'not_running'}{'html_color'};
+      my ($cell_color) = BuildStatus::status2html_colors('not_running');
       my ($cell_options) = ("rowspan=$rowspan ".
                             "bgcolor=$cell_color ");
 
@@ -1115,8 +989,7 @@ sub status_table_row {
       $rowspan++ ;
     }
     
-    my ($cell_color) = 
-      $STATUS{$current_rec->{'status'}}{'html_color'};
+    my ($cell_color) = BuildStatus::status2html_colors($current_rec->{'status'});
 
     my ($cell_options) = ("rowspan=$rowspan ".
                           "bgcolor=$cell_color ");
