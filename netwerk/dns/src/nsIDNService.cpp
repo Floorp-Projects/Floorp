@@ -232,7 +232,7 @@ static nsresult punycode(const char* prefix, const nsAString& in, nsACString& ou
   // (include null terminator)
   const PRUint32 kEncodedBufSize = kMaxDNSNodeLen * 20 / 8 + 1 + 1;  
   char encodedBuf[kEncodedBufSize];
-  punycode_uint encodedLength;
+  punycode_uint encodedLength = kEncodedBufSize;
 
   enum punycode_status status = punycode_encode(ucs4Len,
                                                 ucs4Buf,
@@ -240,9 +240,11 @@ static nsresult punycode(const char* prefix, const nsAString& in, nsACString& ou
                                                 &encodedLength,
                                                 encodedBuf);
 
-  if (punycode_success != status)
+  if (punycode_success != status ||
+      encodedLength >= kEncodedBufSize)
     return NS_ERROR_FAILURE;
 
+  encodedBuf[encodedLength] = '\0';
   out.Assign(nsDependentCString(prefix) + nsDependentCString(encodedBuf));
 
   return NS_OK;
