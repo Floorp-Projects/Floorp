@@ -1099,21 +1099,16 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       mRect.width = screenParentFrameRect.width;
     }
 
-    // Neither let it spill off the screen to the top...
+    // Don't let it spill off the screen to the top
     if (screenViewLocY < screenTopTwips) {
       PRInt32 moveDist = screenTopTwips - screenViewLocY;
       screenViewLocY = screenTopTwips;
       ypos += moveDist;
     }
-    // ... nor to the left.
-    if (screenViewLocX < screenLeftTwips) {
-      PRInt32 moveDist = screenLeftTwips - screenViewLocX;
-      screenViewLocX = screenLeftTwips;
-      xpos += moveDist;
-    }
     
     // if it doesn't fit on the screen, do our magic.
     if ( (screenViewLocX + mRect.width) > screenRightTwips ||
+           screenViewLocX < screenLeftTwips ||
           (screenViewLocY + mRect.height) > screenBottomTwips ) {
       
       // figure out which side of the parent has the most free space so we can move/resize
@@ -1139,6 +1134,13 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
             moveDistX = screenViewLocX - screenLeftTwips;          
           screenViewLocX -= moveDistX;
           xpos -= moveDistX;
+        } else if (screenViewLocX < screenLeftTwips) {
+          // move right to be on screen, but don't let it go off the screen at the right
+          PRInt32 moveDistX = screenLeftTwips - screenViewLocX;
+          if ( (screenViewLocX + mRect.width + moveDistX) > screenRightTwips )
+            moveDistX = screenRightTwips - screenViewLocX - mRect.width;
+          screenViewLocX += moveDistX;
+          xpos += moveDistX;
         }
       }
       else {
