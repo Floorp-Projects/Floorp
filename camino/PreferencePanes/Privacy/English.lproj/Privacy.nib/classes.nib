@@ -49,6 +49,25 @@
             OUTLETS = {_firstKeyView = id; _initialKeyView = id; _lastKeyView = id; _window = id; }; 
             SUPERCLASS = NSObject; 
         }, 
+        {
+            ACTIONS = {
+                clearCookies = id; 
+                clearDiskCache = id; 
+                clickEnableCookies = id; 
+                clickEnableJS = id; 
+                clickEnableJava = id; 
+                clickPromptForCookie = id; 
+            }; 
+            CLASS = OrgMozillaChimeraPreferencePrivacy; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mCookies = id; 
+                mEnableJS = NSButton; 
+                mEnableJava = NSButton; 
+                mPromptForCookie = NSButton; 
+            }; 
+            SUPERCLASS = NSPreferencePane; 
+        }, 
         {CLASS = PersonalPane; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }, 
         {
             ACTIONS = {clearCookies = id; clearDiskCache = id; }; 
