@@ -401,9 +401,9 @@ nsresult nsWebShell::CreatePluginHost(PRBool aAllowPlugins)
   {
     if (nsnull == mPluginManager)
     {
-      rv = nsRepository::CreateInstance(kCPluginManagerCID, nsnull,
-                                        kIPluginManagerIID,
-                                        (void**)&mPluginManager);
+      // use the service manager to obtain the plugin manager.
+      rv = nsServiceManager::GetService(kCPluginManagerCID, kIPluginManagerIID,
+      									(nsISupports**)&mPluginManager);
       if (NS_OK == rv)
       {
         if (NS_OK == mPluginManager->QueryInterface(kIPluginHostIID,
@@ -428,11 +428,17 @@ nsresult nsWebShell::DestroyPluginHost(void)
 
   if (0 == mPluginInitCnt)
   {
-    if (nsnull != mPluginHost)
+    if (nsnull != mPluginHost) {
       mPluginHost->Destroy();
-
-    NS_IF_RELEASE(mPluginManager);
-    NS_IF_RELEASE(mPluginHost);
+      mPluginHost->Release();
+      mPluginHost = NULL;
+    }
+    
+    // use the service manager to release the plugin manager.
+    if (nsnull != mPluginManager) {
+      nsServiceManager::ReleaseService(kCPluginManagerCID, mPluginManager);
+      mPluginManager = NULL;
+    }
   }
 
   return NS_OK;
