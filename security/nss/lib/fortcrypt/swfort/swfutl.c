@@ -703,7 +703,9 @@ static int path_table_size = sizeof(path_table)/sizeof(path_table[0]);
 char *fort_LookupFORTEZZAInitFile(void)
 {
     char *fname = NULL;
+#if defined(XP_UNIX) || defined(XP_WIN)
     char *home = NULL;
+#endif
 #ifdef XP_UNIX
     char unix_home[512];
 #endif
