@@ -26,6 +26,9 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult CreateNewUser5Tree(char* oldProfilePath, 
                                   char* newProfilePath);
 
+      nsresult ComputeMailPath(nsFileSpec oldPath, 
+                               nsFileSpec *newPath);
+
       nsresult GetDirFromPref(char* newProfilePath, 
                               char* pref, 
                               char* newPath, 
