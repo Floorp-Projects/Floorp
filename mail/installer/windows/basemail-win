@@ -40,6 +40,17 @@ thunderbird\mozz.dll
 [offline]
 thunderbird\chrome\offline.jar
 
+; [Additional Developer Tools]
+[adt]
+; [Document Inspector]
+thunderbird\components\inspector-cmdline.js
+thunderbird\components\inspector.dll
+thunderbird\components\inspector.xpt
+thunderbird\chrome\inspector.jar
+thunderbird\defaults\pref\inspector.js
+thunderbird\res\inspector\viewer-registry.rdf
+thunderbird\res\inspector\search-registry.rdf
+
 [mail]
 
 thunderbird\xpicleanup.exe
