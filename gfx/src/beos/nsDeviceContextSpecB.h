@@ -24,11 +24,13 @@
 #define nsDeviceContextSpecB_h___
 
 #include "nsIDeviceContextSpec.h"
-//#include "nsDeviceContextSpecB.h"
-
-//#include "nsPrintdBeOS.h"
-
-class nsDeviceContextSpecBeOS : public nsIDeviceContextSpec
+#include "nsDeviceContextSpecB.h" 
+#include "nsIDeviceContextSpecPS.h" 
+ 
+#include "nsPrintdBeOS.h" 
+ 
+class nsDeviceContextSpecBeOS : public nsIDeviceContextSpec , 
+                                      public nsIDeviceContextSpecPS 
 {
 public:
 /**
@@ -40,7 +42,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /**
- * Initialize the nsDeviceContextSpecMac for use.  This will allocate a printrecord for use
+ * Initialize the nsDeviceContextSpecBeOS for use.  This will allocate a printrecord for use
  * @update   dc 2/16/98
  * @param aQuiet if PR_TRUE, prevent the need for user intervention
  *        in obtaining device context spec. if nsnull is passed in for
@@ -59,6 +61,30 @@ public:
  */
   NS_IMETHOD ClosePrintManager();
 
+  NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
+ 
+  NS_IMETHOD GetFirstPageFirst ( PRBool &aFpf );     
+ 
+  NS_IMETHOD GetGrayscale( PRBool &aGrayscale );   
+ 
+  NS_IMETHOD GetSize ( int &aSize ); 
+ 
+  NS_IMETHOD GetTopMargin ( float &value ); 
+ 
+  NS_IMETHOD GetBottomMargin ( float &value ); 
+ 
+  NS_IMETHOD GetLeftMargin ( float &value ); 
+ 
+  NS_IMETHOD GetRightMargin ( float &value ); 
+ 
+  NS_IMETHOD GetCommand ( char **aCommand );   
+ 
+  NS_IMETHOD GetPath ( char **aPath );    
+ 
+  NS_IMETHOD GetPageDimensions (float &aWidth, float &aHeight ); 
+ 
+  NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
+
 protected:
 /**
  * Destuct a nsDeviceContextSpecMac, this will release the printrecord
@@ -68,7 +94,7 @@ protected:
 
 protected:
 
-//  UnixPrData mPrData;
+  BeOSPrData mPrData;
 	
 };
 

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gfx_beos
-
+IS_COMPONENT   = 1 
 
 CPPSRCS		= \
 		nsDeviceContextBeOS.cpp \
@@ -37,9 +37,12 @@ CPPSRCS		= \
 		nsDrawingSurfaceBeOS.cpp \
 		nsFontMetricsBeOS.cpp \
 		nsGfxFactoryBeOS.cpp \
+		nsGraphicsStateBeOS.cpp \
 		nsRenderingContextBeOS.cpp \
 		nsImageBeOS.cpp \
 		nsRegionBeOS.cpp \
+		nsScreenBeOS.cpp \
+		nsScreenManagerBeOS.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -48,8 +51,13 @@ DEFINES		+= -D_IMPL_NS_GFXONXP
 CXXFLAGS	+= $(TK_CFLAGS)
 INCLUDES	+= $(TK_CFLAGS)
 
-EXTRA_DSO_LDOPTS += \
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(MOZ_JS_LIBS) \
 	-lgkgfx \
 	$(XPCOM_LIBS) \
 	$(TK_LIBS) \
-	$(NSPR_LIBS) 
+	$(NSPR_LIBS)
+
+INCLUDES       += \
+	-I$(srcdir)/. \
+	-I$(srcdir)/.. \
+	$(NULL)

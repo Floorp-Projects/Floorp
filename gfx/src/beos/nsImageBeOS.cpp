@@ -22,12 +22,13 @@
 
 #include "nsImageBeOS.h"
 #include "nsRenderingContextBeOS.h"
+
 #include "nspr.h"
-#include <string.h>
+//#include <string.h>
 
 #define IsFlagSet(a,b) (a & b)
 
-static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
+NS_IMPL_ISUPPORTS1(nsImageBeOS, nsIImage)
 
 //------------------------------------------------------------
 
@@ -40,7 +41,11 @@ nsImageBeOS::nsImageBeOS()
   mHeight = 0;
   mDepth = 0;
   mAlphaBits = nsnull;
-  mAlphaPixmap = nsnull;
+  mAlphaDepth = 0; 
+  mRowBytes = 0; 
+  mSizeImage = 0; 
+  mAlphaHeight = 0; 
+  mAlphaWidth = 0;
   mImage = nsnull;
   mNaturalWidth = 0;
   mNaturalHeight = 0;
@@ -64,11 +69,8 @@ nsImageBeOS::~nsImageBeOS()
   if (nsnull != mAlphaBits) {
     delete[] (PRUint8*)mAlphaBits;
     mAlphaBits = nsnull;
-    delete mAlphaPixmap;
   }
 }
-
-NS_IMPL_ISUPPORTS(nsImageBeOS, kIImageIID);
 
 //------------------------------------------------------------
 
@@ -84,9 +86,11 @@ nsresult
   if (nsnull != mAlphaBits) {
     delete[] (PRUint8*)mAlphaBits;
     mAlphaBits = nsnull;
-    delete mAlphaPixmap;
-    mAlphaPixmap = nsnull;
   }
+
+  SetDecodedRect(0,0,0,0);  //init 
+  SetNaturalWidth(0); 
+  SetNaturalHeight(0); 
 
   if (24 == aDepth) {
     mNumBytesPixel = 3;
@@ -95,16 +99,13 @@ nsresult
     return NS_ERROR_UNEXPECTED;
   }
 
-  SetDecodedRect(0,0,0,0);  //init
-  SetNaturalWidth(0);
-  SetNaturalHeight(0);
-
   mWidth = aWidth;
   mHeight = aHeight;
   mDepth = aDepth;
+  mIsTopToBottom = PR_TRUE; 
 
   // create the memory for the image
-  ComputMetrics();
+  ComputeMetrics();
 
   mImageBits = (PRUint8*) new PRUint8[mSizeImage];
 
@@ -123,17 +124,21 @@ nsresult
       // 32-bit align each row
       mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
-      mAlphaBits = new unsigned char[8 * mAlphaRowBytes * aHeight];
+      mAlphaBits = new PRUint8[8 * mAlphaRowBytes * aHeight]; 
 	  memset(mAlphaBits, 255, 8*mAlphaRowBytes * aHeight);
       mAlphaWidth = aWidth;
       mAlphaHeight = aHeight;
       break;
 
     case nsMaskRequirements_kNeeds8Bit:
-      mAlphaBits = nsnull;
-      mAlphaWidth = 0;
-      mAlphaHeight = 0;
-printf("nsImageBeOS::Init: 8 bit image mask unimplemented\n");
+      mAlphaRowBytes = aWidth; 
+      mAlphaDepth = 8; 
+ 
+      // 32-bit align each row 
+      mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3; 
+      mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight]; 
+      mAlphaWidth = aWidth; 
+      mAlphaHeight = aHeight; 
       break;
   }
 
@@ -142,123 +147,77 @@ printf("nsImageBeOS::Init: 8 bit image mask unimplemented\n");
 
 //------------------------------------------------------------
 
-void nsImageBeOS::ComputMetrics()
-{
-  mRowBytes = CalcBytesSpan(mWidth);
-  mSizeImage = mRowBytes * mHeight;
-}
-
-PRInt32
-nsImageBeOS::GetBytesPix()
-{
-  NS_NOTYETIMPLEMENTED("somebody called this thang");
-  return 0;/* XXX */
-}
-
-PRInt32
-nsImageBeOS::GetHeight()
+PRInt32 nsImageBeOS::GetHeight()
 {
   return mHeight;
 }
 
-PRInt32
-nsImageBeOS::GetWidth()
+PRInt32 nsImageBeOS::GetWidth()
 {
   return mWidth;
 }
 
-PRUint8*
-nsImageBeOS::GetBits()
+PRUint8 *nsImageBeOS::GetBits()
 {
   return mImageBits;
 }
 
-void*
-nsImageBeOS::GetBitInfo()
+void *nsImageBeOS::GetBitInfo()
 {
   return nsnull;
 }
 
-PRInt32
-nsImageBeOS::GetLineStride()
+PRInt32 nsImageBeOS::GetLineStride()
 {
   return mRowBytes;
 }
 
-nsColorMap*
-nsImageBeOS::GetColorMap()
+nsColorMap *nsImageBeOS::GetColorMap()
 {
   return nsnull;
 }
 
-PRBool
-nsImageBeOS::IsOptimized()
+PRBool nsImageBeOS::IsOptimized()
 {
   return mStaticImage;
 }
 
-PRUint8*
-nsImageBeOS::GetAlphaBits()
+PRUint8 *nsImageBeOS::GetAlphaBits()
 {
   return mAlphaBits;
 }
 
-PRInt32
-nsImageBeOS::GetAlphaWidth()
+PRInt32 nsImageBeOS::GetAlphaWidth()
 {
   return mAlphaWidth;
 }
 
-PRInt32
-nsImageBeOS::GetAlphaHeight()
+PRInt32 nsImageBeOS::GetAlphaHeight()
 {
   return mAlphaHeight;
 }
 
-PRInt32
-nsImageBeOS::GetAlphaLineStride()
+PRInt32 nsImageBeOS::GetAlphaLineStride()
 {
   return mAlphaRowBytes;
 }
 
-nsIImage*
-nsImageBeOS::DuplicateImage()
+nsIImage *nsImageBeOS::DuplicateImage()
 {
-	printf("nsImageBeOS::DuplicateImage - FIXME: not implamented\n");
 	return nsnull;
 }
 
-void
-nsImageBeOS::SetAlphaLevel(PRInt32 aAlphaLevel)
+void nsImageBeOS::SetAlphaLevel(PRInt32 aAlphaLevel)
 {
-	printf("nsImageBeOS::SetAlphaLevel - FIXME: not implamented\n");
 }
 
-PRInt32
-nsImageBeOS::GetAlphaLevel()
+PRInt32 nsImageBeOS::GetAlphaLevel()
 {
-	printf("nsImageBeOS::GetAlphaLevel - FIXME: not implamented\n");
 	return 0;
 }
 
-void
-nsImageBeOS::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
+void nsImageBeOS::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
 {
-	printf("nsImageBeOS::MoveAlphaMask - FIXME: not implamented\n");
-}
-
-//------------------------------------------------------------
-
-PRInt32  nsImageBeOS::CalcBytesSpan(PRUint32  aWidth)
-{
-  PRInt32 spanbytes;
-
-  spanbytes = (aWidth * mDepth) >> 5;
-
-  if (((PRUint32)aWidth * mDepth) & 0x1F)
-    spanbytes++;
-  spanbytes <<= 2;
-  return(spanbytes);
 }
 
 //------------------------------------------------------------
@@ -269,9 +228,9 @@ nsImageBeOS::ImageUpdated(nsIDeviceContext *aContext,
                          PRUint8 aFlags,
                          nsRect *aUpdateRect)
 {
-}
-
-//------------------------------------------------------------
+  mFlags = aFlags; // this should be 0'd out by Draw() 
+ 
+} 
 
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP
@@ -281,7 +240,8 @@ nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 {
 	nsDrawingSurfaceBeOS	*beosdrawing =(nsDrawingSurfaceBeOS *) aSurface;
 	BView	*view;
-	beosdrawing->GetView(&view);
+
+       beosdrawing->AcquireView(&view); 
 	
 	if((PR_FALSE == mStaticImage) || (NULL == mImage))
 		BuildImage(aSurface);
@@ -321,7 +281,8 @@ nsImageBeOS::Draw(nsIRenderingContext &aContext,
 	
 	nsDrawingSurfaceBeOS	*beosdrawing = (nsDrawingSurfaceBeOS *) aSurface;
 	BView	*view;
-	beosdrawing->GetView(&view);
+       
+  beosdrawing->AcquireView(&view); 
 
 	if((PR_FALSE == mStaticImage) || (NULL == mImage))
 		BuildImage(aSurface);
@@ -341,6 +302,84 @@ nsImageBeOS::Draw(nsIRenderingContext &aContext,
 	return NS_OK;
 }
 
+/** 
+ * Draw a tiled version of the bitmap 
+ * @update - dwc 3/30/00 
+ * @param aSurface  the surface to blit to 
+ * @param aX0 starting x 
+ * @param aY0 starting y 
+ * @param aX1 ending x 
+ * @param aY1 ending y 
+ * @param aWidth The destination width of the pixelmap 
+ * @param aHeight The destination height of the pixelmap 
+ */ 
+NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, 
+                                   nsDrawingSurface aSurface, 
+                                   nsRect &aSrcRect, 
+                                   nsRect &aTileRect) 
+{ 
+  PRInt32 aY0 = aTileRect.y, 
+          aX0 = aTileRect.x, 
+          aY1 = aTileRect.y + aTileRect.height, 
+          aX1 = aTileRect.x + aTileRect.width; 
+ 
+          for (PRInt32 y = aY0; y < aY1; y+=aSrcRect.height) 
+            for (PRInt32 x = aX0; x < aX1; x+=aSrcRect.width) 
+              Draw(aContext,aSurface,x,y, 
+                   PR_MIN(aSrcRect.width, aX1-x), 
+                   PR_MIN(aSrcRect.height, aY1-y)); 
+  return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, 
+                                   nsDrawingSurface aSurface, 
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset, 
+                                   const nsRect &aTileRect) 
+{ 
+  PRInt32 
+    validX = 0, 
+    validY = 0, 
+    validWidth  = mWidth, 
+    validHeight = mHeight; 
+  
+  // limit the image rectangle to the size of the image data which 
+  // has been validated. 
+  if ((mDecodedY2 < mHeight)) { 
+    validHeight = mDecodedY2 - mDecodedY1; 
+  } 
+  if ((mDecodedX2 < mWidth)) { 
+    validWidth = mDecodedX2 - mDecodedX1; 
+  } 
+  if ((mDecodedY1 > 0)) {   
+    validHeight -= mDecodedY1; 
+    validY = mDecodedY1; 
+  } 
+  if ((mDecodedX1 > 0)) { 
+    validWidth -= mDecodedX1; 
+    validX = mDecodedX1; 
+  } 
+ 
+  PRInt32 aY0 = aTileRect.y - aSYOffset, 
+          aX0 = aTileRect.x - aSXOffset, 
+          aY1 = aTileRect.y + aTileRect.height, 
+          aX1 = aTileRect.x + aTileRect.width; 
+ 
+  // Set up clipping and call Draw(). 
+  PRBool clipState; 
+  aContext.PushState(); 
+  aContext.SetClipRect(aTileRect, nsClipCombine_kIntersect, 
+                       clipState); 
+ 
+  for (PRInt32 y = aY0; y < aY1; y+=validHeight) 
+    for (PRInt32 x = aX0; x < aX1; x+=validWidth) 
+      Draw(aContext,aSurface,x,y, PR_MIN(validWidth, aX1-x), 
+           PR_MIN(validHeight, aY1-y)); 
+ 
+  aContext.PopState(clipState); 
+ 
+  return NS_OK; 
+} 
+ 
 nsresult nsImageBeOS::BuildImage(nsDrawingSurface aDrawingSurface)
 {
 	if(NULL != mImage)
@@ -357,9 +396,6 @@ nsresult nsImageBeOS::BuildImage(nsDrawingSurface aDrawingSurface)
 
 void nsImageBeOS::CreateImage(nsDrawingSurface aSurface)
 {
-	PRUint32 wdepth;
-	nsDrawingSurfaceBeOS	*beosdrawing = (nsDrawingSurfaceBeOS *) aSurface;
-	
 	if(mImageBits)
 	{
 		color_space cs;
@@ -369,7 +405,11 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface)
 			cs = B_RGBA32;
 		mImage = new BBitmap(BRect(0, 0, mWidth - 1, mHeight - 1), cs);
 
-		PRInt32 span = CalcBytesSpan(mWidth);
+    PRInt32 span = (mWidth * mDepth) >> 5; 
+ 
+    if (((PRUint32)mWidth * mDepth) & 0x1F) 
+      span++; 
+    span <<= 2; 
 		if( mImage && mImage->IsValid() )
 		{
 			uint8 *dest = (uint8*)mImage->Bits();
@@ -389,7 +429,8 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface)
 							// ANSI Shit, can't cast the lvalue!
 							*pdest = *psrc;
 							dest[3] = mAlphaDepth == 1 ? ((alpha[i / 8] & (1 << (7 - (i % 8)))) ? 255 : 0) : alpha[i];
-							dest += 4; src+=4;
+              dest += 4; 
+              src+=4; 
 						}
 						src += span - (mWidth*mNumBytesPixel);
 						alpha += mAlphaRowBytes;
@@ -497,7 +538,6 @@ nsImageBeOS::UnlockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsImageBeOS::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
 {
-    
   mDecodedX1 = x1; 
   mDecodedY1 = y1; 
   mDecodedX2 = x2; 

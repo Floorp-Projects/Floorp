@@ -31,19 +31,22 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsTransform2D.h"
-#include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsImageBeOS.h"
+#include "nsIImage.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
+#include "nsGfxCIID.h"
 #include "nsDrawingSurfaceBeOS.h"
 #include "nsRegionBeOS.h"
+
+#define USE_NATIVE_TILING 1
 
 class nsRenderingContextBeOS : public nsRenderingContextImpl
 {
 public:
   nsRenderingContextBeOS();
+  virtual ~nsRenderingContextBeOS();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -95,6 +98,7 @@ public:
   NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
 
   NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
   NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
 
   NS_IMETHOD DrawRect(const nsRect& aRect);
@@ -149,35 +153,71 @@ public:
                        nscoord aWidth, nscoord aHeight); 
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
-
+#ifdef USE_NATIVE_TILING
+  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+                      nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
+                      nscoord aSrcYOffset, const nsRect &aTileRect);
+#endif
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
+  //locals
+  NS_IMETHOD	CommonInit();
+
+  void CreateClipRegion() {
+    static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+    if (mClipRegion)
+      return;
+
+    PRUint32 w, h;
+    mSurface->GetSize(&w, &h);
+    
+    mClipRegion = do_CreateInstance(kRegionCID);
+    if (mClipRegion) {
+      mClipRegion->Init();
+      mClipRegion->SetTo(0,0,w,h);
+    }
+  }
+
 protected:
-	virtual		~nsRenderingContextBeOS();
-	NS_IMETHOD	CommonInit();
-	nsresult	SetupView(BView *oldview, BView *newview);
+  nsDrawingSurfaceBeOS *mOffscreenSurface;
+  nsDrawingSurfaceBeOS	*mSurface;
+  nsIDeviceContext		*mContext;
+  nsIFontMetrics			*mFontMetrics;
+  nsCOMPtr<nsIRegion>    mClipRegion;
+  float					mP2T;
 
-	nsDrawingSurfaceBeOS	*mMainSurface;  
-	nsDrawingSurfaceBeOS	*mSurface;
-	nsIDeviceContext		*mContext;
-	nsIFontMetrics			*mFontMetrics;
-	nsRegionBeOS			*mRegion;
-	nsTransform2D			*mTMatrix;
-	float					mP2T;
-	BView					*mView;
-	BView					*mMainView;
-	PRUint8					*mGammaTable;
-	nsIWidget				*mViewOwner;
-
-	// graphic state stack (GraphicsState)
-	nsVoidArray				*mStateCache;
+  // graphic state stack (GraphicsState)
+  nsVoidArray				*mStateCache;
 	
-	nscolor					mCurrentColor;	// real untranslated color
-	rgb_color				mColor;		// gamma corrected, BeOS native color
-	BFont					*mCurrentFont;
-	nsLineStyle				mCurrentLineStyle;
+  BView					*mView;
+  PRUint8				*mGammaTable;
+  nscolor                mCurrentColor;
+  BFont					*mCurrentFont;
+  nsLineStyle				mCurrentLineStyle;
+  
+  void UpdateView();
+  // ConditionRect is used to fix coordinate overflow problems for
+  // rectangles after they are transformed to screen coordinates
+  void ConditionRect(nscoord &x, nscoord &y, nscoord &w, nscoord &h) {
+    if ( y < -32766 ) {
+      y = -32766;
+    }
+
+    if ( y + h > 32766 ) {
+      h  = 32766 - y;
+    }
+
+    if ( x < -32766 ) {
+      x = -32766;
+    }
+
+    if ( x + w > 32766 ) {
+      w  = 32766 - x;
+    }
+  }  
 };
 
 #endif /* nsRenderingContextBeOS_h___ */

@@ -21,19 +21,28 @@
  */
 
 #include "nsDrawingSurfaceBeOS.h"
-#include "prmem.h"
 
-static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
+NS_IMPL_ISUPPORTS2(nsDrawingSurfaceBeOS, nsIDrawingSurface, nsIDrawingSurfaceBeOS)
 
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
+static PRTime mLockTime, mUnlockTime; 
+#endif 
+ 
 nsDrawingSurfaceBeOS :: nsDrawingSurfaceBeOS()
 {
   NS_INIT_REFCNT();
-
   mView = NULL;
+
   mBitmap = nsnull;
-  mWidth = mHeight = 0;
-  mLockOffset = mLockHeight = 0;
+  mWidth = 0; 
+  mHeight = 0; 
+  
+  mLockWidth = 0; 
+  mLockHeight = 0;
   mLockFlags = 0;
+  mLockX = 0; 
+  mLockY = 0; 
+  mLocked = PR_FALSE;
 }
 
 nsDrawingSurfaceBeOS :: ~nsDrawingSurfaceBeOS()
@@ -45,164 +54,91 @@ nsDrawingSurfaceBeOS :: ~nsDrawingSurfaceBeOS()
   }
 }
 
-NS_IMETHODIMP nsDrawingSurfaceBeOS :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(kIDrawingSurfaceIID))
-  {
-    nsIDrawingSurface* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    nsIDrawingSurface* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsDrawingSurfaceBeOS)
-NS_IMPL_RELEASE(nsDrawingSurfaceBeOS)
-
+/** 
+ * Lock a rect of a drawing surface and return a 
+ * pointer to the upper left hand corner of the 
+ * bitmap. 
+ * @param  aX x position of subrect of bitmap 
+ * @param  aY y position of subrect of bitmap 
+ * @param  aWidth width of subrect of bitmap 
+ * @param  aHeight height of subrect of bitmap 
+ * @param  aBits out parameter for upper left hand 
+ *         corner of bitmap 
+ * @param  aStride out parameter for number of bytes 
+ *         to add to aBits to go from scanline to scanline 
+ * @param  aWidthBytes out parameter for number of 
+ *         bytes per line in aBits to process aWidth pixels 
+ * @return error status 
+ * 
+ **/ 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Lock(PRInt32 aX, PRInt32 aY,
                                           PRUint32 aWidth, PRUint32 aHeight,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-#if 0
-#ifdef NGLAYOUT_DDRAW
-  if (mSurfLockCnt == 0)
-  {
-    RECT  srect;
-    DWORD lockflags = 0;
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
+  mLockTime = PR_Now(); 
+  //  MOZ_TIMER_RESET(mLockTime); 
+  //  MOZ_TIMER_START(mLockTime); 
+#endif 
 
-    srect.left = aX;
-    srect.top = aY;
-    srect.right = aX + aWidth;
-    srect.bottom = aY + aHeight;
-
-    if (aFlags & NS_LOCK_SURFACE_READ_ONLY)
-      lockflags |= DDLOCK_READONLY;
-
-    if (aFlags & NS_LOCK_SURFACE_WRITE_ONLY)
-      lockflags |= DDLOCK_WRITEONLY;
-
-    if (PR_TRUE == LockSurface(mSurface, &mSurfDesc, &mBitmap, &srect, lockflags, &mPixFormat))
-      mSurfLockCnt++;
-  }
-  else
+  if (mLocked)
   {
     NS_ASSERTION(0, "nested lock attempt");
     return NS_ERROR_FAILURE;
   }
+  mLocked = PR_TRUE;
 
-  if (mSurfLockCnt == 0)
-#endif
-  {
-    if (nsnull == mLockedBitmap)
-    {
-      if (nsnull == mSelectedBitmap)
-      {
-        HBITMAP tbits = ::CreateCompatibleBitmap(mView, 2, 2);
-        mLockedBitmap = (HBITMAP)::SelectObject(mView, tbits);
-
-        ::GetObject(mLockedBitmap, sizeof(BITMAP), &mBitmap);
-
-        mLockOffset = aY;
-        mLockHeight = min((PRInt32)aHeight, (mBitmap.bmHeight - aY));
-
-        mBitmapInfo = CreateBitmapInfo(mBitmap.bmWidth, mBitmap.bmHeight, mBitmap.bmBitsPixel, (void **)&mDIBits, &mPixFormat);
-
-        if (!(aFlags & NS_LOCK_SURFACE_WRITE_ONLY))
-          ::GetDIBits(mView, mLockedBitmap, mLockOffset, mLockHeight, mDIBits, mBitmapInfo, DIB_RGB_COLORS);
-
-        mBitmap.bmBits = mDIBits;
-      }
-      else
-      {
-        mLockedBitmap = mSelectedBitmap;
-        mBitmap.bmBits = mDIBits + mBitmap.bmWidthBytes * aY;
-      }
-    }
-    else
-    {
-      NS_ASSERTION(0, "nested lock attempt");
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  *aBits = (PRUint8 *)mBitmap.bmBits + (aX * (mBitmap.bmBitsPixel >> 3));
-  *aStride = mBitmap.bmWidthBytes;
-  *aWidthBytes = aWidth * (mBitmap.bmBitsPixel >> 3);
+  mLockX = aX; 
+  mLockY = aY; 
+  mLockWidth = aWidth; 
+  mLockHeight = aHeight; 
   mLockFlags = aFlags;
+
+  // Obtain an ximage from the pixmap.  ( I think this copy the bitmap ) 
+       // FIX ME !!!!  We need to copy the part locked into the mImage 
+  mView->LockLooper(); 
+
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
+  //  MOZ_TIMER_STOP(mLockTime); 
+  //  MOZ_TIMER_LOG(("Time taken to lock: ")); 
+  //  MOZ_TIMER_PRINT(mLockTime); 
+  printf("Time taken to lock:   %d\n", PR_Now() - mLockTime);
 #endif
-	mView->LockLooper();
-printf("nsDrawingSurfaceBeOS :: Lock not implemented\n");
 
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Unlock(void)
 {
-	mView->UnlockLooper();
-printf("nsDrawingSurfaceBeOS :: Unlock not implemented\n");
-	return NS_OK;
-#if 0
 
-#ifdef NGLAYOUT_DDRAW
-  NS_ASSERTION(!(mView != nsnull), "attempt to unlock with view");
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
+  mUnlockTime = PR_Now(); 
+#endif 
 
-  if (nsnull == mView)
+  //  g_print("nsDrawingSurfaceGTK::UnLock() called\n"); 
+  if (!mLocked) 
   {
-    mSurfLockCnt--;
-
-    NS_ASSERTION(!(mSurfLockCnt != 0), "nested surface locks");
-
-    if (mSurfLockCnt == 0)
-      mSurface->Unlock(mSurfDesc.lpSurface);
+    NS_ASSERTION(0, "attempting to unlock an DS that isn't locked"); 
+    return NS_ERROR_FAILURE;
   }
-  else
-#endif
-  {
-    if (nsnull != mLockedBitmap)
-    {
-      if (nsnull == mSelectedBitmap)
-      {
-        HBITMAP tbits;
 
+  // If the lock was not read only, put the bits back on the pixmap
         if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
-          ::SetDIBits(mView, mLockedBitmap, mLockOffset, mLockHeight, mDIBits, mBitmapInfo, DIB_RGB_COLORS);
-
-        tbits = (HBITMAP)::SelectObject(mView, mLockedBitmap);
-        ::DeleteObject(tbits);
-
-        if (nsnull != mBitmapInfo)
         {
-          PR_Free(mBitmapInfo);
-          mBitmapInfo = nsnull;
+    // FIX ME!!! 
+    // Now draw the image ... 
         }
 
-        if (nsnull != mDIBits)
-        {
-          PR_Free(mDIBits);
-          mDIBits = nsnull;
-        }
-      }
+  // FIX ME!!! 
+  // Destroy mImage 
+       mView->UnlockLooper();
 
-      mLockedBitmap = nsnull;
-    }
-  }
+  mLocked = PR_FALSE; 
+ 
+ 
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT 
+  printf("Time taken to unlock: %d\n", PR_Now() - mUnlockTime);
 #endif
 }
 
@@ -216,15 +152,13 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetDimensions(PRUint32 *aWidth, PRUint32 *
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: IsOffscreen(PRBool *aOffScreen)
 {
-	*aOffScreen = mBitmap ? PR_TRUE : PR_FALSE;
-	
+  *aOffScreen = mIsOffscreen;//mBitmap ? PR_TRUE : PR_FALSE;
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: IsPixelAddressable(PRBool *aAddressable)
 {
-	*aAddressable = PR_TRUE;
-
+  *aAddressable = PR_FALSE; 
 	return NS_OK;
 }
 
@@ -237,7 +171,21 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetPixelFormat(nsPixelFormat *aFormat)
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView)
 {
+  if(aView->LockLooper()) 
+  { 
+    //remember dimensions 
+    mWidth=nscoord(aView->Bounds().Width()); 
+    mHeight=nscoord(aView->Bounds().Height()); 
+    
 	mView = aView;
+
+    aView->UnlockLooper(); 
+  } 
+ 
+  // XXX was i smoking crack when i wrote this comment? 
+  // this is definatly going to be on the screen, as it will be the window of a 
+  // widget or something. 
+  mIsOffscreen = PR_FALSE; 
 
 	return NS_OK;
 }
@@ -250,6 +198,10 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
        //remember dimensions
        mWidth=aWidth;
        mHeight=aHeight;
+  mFlags = aFlags; 
+  
+  // we can draw on this offscreen because it has no parent 
+  mIsOffscreen = PR_TRUE; 
 
 	BRect r = aView->Bounds();
 	mView = new BView(r, "", 0, 0);
@@ -279,14 +231,14 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetView(BView **aView)
+NS_IMETHODIMP nsDrawingSurfaceBeOS :: AcquireView(BView **aView) 
 {
 	*aView = mView;
 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfaceBeOS :: GetBitmap(BBitmap **aBitmap)
+NS_IMETHODIMP nsDrawingSurfaceBeOS :: AcquireBitmap(BBitmap **aBitmap)
 {
 	if(mBitmap && mBitmap->Lock())
 	{
