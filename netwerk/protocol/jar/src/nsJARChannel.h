@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998,2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -36,6 +36,8 @@
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "prmon.h"
+#include "nsIDownloader.h"
+#include "nsIInputStream.h"
 
 class nsIFileChannel;
 class nsJARChannel;
@@ -48,14 +50,10 @@ class nsJARChannel;
     {0x9f, 0x63, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9} \
 }
 
-#define JAR_DIRECTORY "jarCache"
-
-typedef nsresult
-(*OnJARFileAvailableFun)(nsJARChannel* channel, void* closure);
-
 class nsJARChannel : public nsIJARChannel, 
                      public nsIStreamListener,
-                     public nsIStreamIO
+                     public nsIStreamIO,
+                     public nsIDownloadObserver
 {
 public:
     NS_DECL_ISUPPORTS
@@ -65,6 +63,7 @@ public:
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISTREAMIO
+    NS_DECL_NSIDOWNLOADOBSERVER
 
     nsJARChannel();
     virtual ~nsJARChannel();
@@ -74,10 +73,9 @@ public:
     Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init(nsIJARProtocolHandler* aHandler, nsIURI* uri);
-    nsresult EnsureJARFileAvailable(OnJARFileAvailableFun fun,
-                                    void* closure);
+    nsresult EnsureJARFileAvailable();
+    nsresult OpenJARElement();
     nsresult AsyncReadJARElement();
-    nsresult GetCacheFile(nsIFile* *cacheFile);
     nsresult EnsureZipReader();
 
     friend class nsJARDownloadObserver;
@@ -99,15 +97,17 @@ protected:
     char*                               mContentType;
     PRInt32                             mContentLength;
     nsCOMPtr<nsIURI>                    mJARBaseURI;
-    nsCOMPtr<nsIFileChannel>            mJARBaseFile;
     char*                               mJAREntry;
     nsCOMPtr<nsIZipReader>              mJAR;
+    nsCOMPtr<nsIFile>                   mDownloadedJARFile;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;
+    PRBool                              mSynchronousRead;
+    nsCOMPtr<nsIInputStream>            mSynchronousInputStream;
 
     PRMonitor*                          mMonitor;
-    nsCOMPtr<nsIChannel>                mJarCacheTransport;
+    nsCOMPtr<nsIDownloader>             mDownloader;
     nsCOMPtr<nsIChannel>                mJarExtractionTransport;
 
 };
