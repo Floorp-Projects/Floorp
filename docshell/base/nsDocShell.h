@@ -88,8 +88,6 @@ public:
                    const char* aCommand,
                    nsISupports* aExtraInfo);
 
-   NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
-
    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
                                       nsIChannel* channel,
                                       const char *aContentType,

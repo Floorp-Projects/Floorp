@@ -312,6 +312,15 @@ NS_IMETHODIMP nsDocShell::GetPresContext(nsIPresContext** aPresContext)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
+{
+   NS_ENSURE_ARG_POINTER(aContentViewer);
+
+   *aContentViewer = mContentViewer;
+   NS_IF_ADDREF(*aContentViewer);
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::GetParent(nsIDocShell** parent)
 {
    NS_ENSURE_ARG_POINTER(parent);
@@ -1613,15 +1622,6 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
   // Now that we have switched documents, forget all of our children
   DestroyChildren();
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
-{
-  NS_ENSURE_ARG_POINTER(aContentViewer);
-
-  *aContentViewer = mContentViewer;
-  NS_IF_ADDREF(*aContentViewer);
   return NS_OK;
 }
 

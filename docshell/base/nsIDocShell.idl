@@ -29,6 +29,7 @@
 
 %{ C++
 #include "nsIPresContext.h"
+#include "nsIContentViewer.h"
 #include "nsIDocumentLoaderObserver.h"
 %}
 
@@ -51,6 +52,7 @@
 
 [ptr] native nsIPresContext(nsIPresContext);
 [ptr] native nsIDocumentLoaderObserver(nsIDocumentLoaderObserver);
+[ptr] native nsIContentViewer(nsIContentViewer);
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
@@ -114,6 +116,12 @@ interface nsIDocShell : nsISupports
 	Presentation context for the currently loaded document.  This may be null.
 	*/
 	readonly attribute nsIPresContext presContext;
+
+	/*
+	Content Viewer that is currently loaded for this DocShell.  This may change
+	as the underlying content changes.
+	*/
+	readonly attribute nsIContentViewer contentViewer;
 
 	/*
 	Parent DocShell..  Note Implementers of this interface should NOT effect
