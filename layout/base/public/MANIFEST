@@ -8,7 +8,6 @@ nsIContentIterator.h
 nsIDocument.h
 nsIDocumentContainer.h
 nsIDocumentObserver.h
-nsIDOMSelection.h
 nsIFocusTracker.h
 nsIFrame.h
 nsIFrameSelection.h
@@ -36,4 +35,3 @@ nsIStyleSheet.h
 nsIStyleSheetLinkingElement.h
 nsITextContent.h
 nsTextFragment.h
-nsIDOMSelectionListener.h
