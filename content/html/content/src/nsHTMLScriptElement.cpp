@@ -441,62 +441,6 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-// Helper method for checking if the script element has a "for"
-// attribute with a value that matches "\s*window\s*", and an "event"
-// attribute that matches "\s*onload([ \(].*)?", both case
-// insensitive. This is how IE seems to filter out a window's onload
-// handler from a <script for=... event=...> element.
-
-PRBool
-nsHTMLScriptElement::IsOnloadEventForWindow()
-{
-  nsAutoString str;
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::_for, str);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const nsAString& for_str = nsContentUtils::TrimWhitespace(str);
-
-  if (!for_str.Equals(NS_LITERAL_STRING("window"),
-                      nsCaseInsensitiveStringComparator())) {
-    return PR_FALSE;
-  }
-
-  // We found for="window", now check for event="onload".
-
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, str);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const nsAString& event_str = nsContentUtils::TrimWhitespace(str, PR_FALSE);
-
-  if (event_str.Length() < 6) {
-    // String too short, can't be "onload".
-
-    return PR_FALSE;
-  }
-
-  if (!Substring(event_str, 0, 6).Equals(NS_LITERAL_STRING("onload"),
-                                         nsCaseInsensitiveStringComparator())) {
-    // It ain't "onload.*".
-
-    return PR_FALSE;
-  }
-
-  nsAutoString::const_iterator start, end;
-  event_str.BeginReading(start);
-  event_str.EndReading(end);
-
-  start.advance(6); // advance past "onload"
-
-  if (start != end && *start != '(' && *start != ' ') {
-    // We got onload followed by something other than space or
-    // '('. Not good enough.
-
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
 NS_IMETHODIMP 
 nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              const nsAString& aValue, PRBool aNotify)
@@ -513,39 +457,6 @@ nsHTMLScriptElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   if (aNotify && aName == nsHTMLAtoms::src) {
     MaybeProcessScript();
-  } else if (((aName == nsHTMLAtoms::_for &&
-               HasAttr(kNameSpaceID_None, nsHTMLAtoms::_event)) ||
-              (aName == nsHTMLAtoms::_event &&
-               HasAttr(kNameSpaceID_None, nsHTMLAtoms::_for))) &&
-             !IsOnloadEventForWindow()) {
-    // If the script has NOT been executed yet then create a script
-    // event handler if necessary...
-    if (!mIsEvaluated && !mScriptEventHandler) {
-      mScriptEventHandler = new nsHTMLScriptEventHandler(this);
-      if (!mScriptEventHandler) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      NS_ADDREF(mScriptEventHandler);
-
-      // Mark the script as having already been executed.
-      //
-      // Event handlers are only compiled and executed in response to
-      // an event firing...
-      mIsEvaluated = PR_TRUE;
-    }
-
-    if (mScriptEventHandler) {
-      if (aName == nsHTMLAtoms::_event) {
-        rv = mScriptEventHandler->ParseEventString(aValue);
-      } else {
-        nsAutoString event_val;
-        rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, event_val);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mScriptEventHandler->ParseEventString(event_val);
-      }
-    }
   }
 
   return rv;
@@ -741,12 +652,40 @@ nsHTMLScriptElement::MaybeProcessScript()
 
   // We'll always call this to make sure that
   // ScriptAvailable/ScriptEvaluated gets called. See bug 153600
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIScriptLoader> loader;
   mDocument->GetScriptLoader(getter_AddRefs(loader));
   if (loader) {
     mEvaluating = PR_TRUE;
-    loader->ProcessScriptElement(this, this);
+    rv = loader->ProcessScriptElement(this, this);
     mEvaluating = PR_FALSE;
+  }
+
+  if (rv == NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
+
+    // If the script has NOT been executed yet then create a script
+    // event handler if necessary...
+    if (!mIsEvaluated && !mScriptEventHandler) {
+      // Set mIsEvaluated, this element will be handled by the
+      // nsIScriptEventManager
+      mIsEvaluated = PR_TRUE;
+
+      mScriptEventHandler = new nsHTMLScriptEventHandler(this);
+      if (!mScriptEventHandler) {
+        return;
+      }
+
+      NS_ADDREF(mScriptEventHandler);
+
+      // The script-loader will make sure that the script is not evaluated
+      // right away.
+    }
+
+    if (mScriptEventHandler) {
+      nsAutoString event_val;
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, event_val);
+      mScriptEventHandler->ParseEventString(event_val);
+    }
   }
 
   // But we'll only set mIsEvaluated if we did really load or evaluate

@@ -52,6 +52,7 @@ public:
 
 protected:
   PRBool InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement);
+  PRBool IsScriptEventHandler(nsIDOMHTMLScriptElement* aScriptElement);
   nsresult FireErrorNotification(nsresult aResult,
                                  nsIDOMHTMLScriptElement* aElement,
                                  nsIScriptLoaderObserver* aObserver);

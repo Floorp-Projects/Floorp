@@ -42,6 +42,8 @@
 #include "nsIScriptElement.h"
 #include "nsIDocShell.h"
 #include "jsapi.h"
+#include "nsContentUtils.h"
+#include "nsUnicharUtils.h"
 
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
@@ -234,6 +236,72 @@ nsScriptLoader::InNonScriptingContainer(nsIDOMHTMLScriptElement* aScriptElement)
   return PR_FALSE;
 }
 
+// Helper method for checking if the script element is an event-handler
+// This means that it has both a for-attribute and a event-attribute.
+// Also, if the for-attribute has a value that matches "\s*window\s*",
+// and the event-attribute matches "\s*onload([ \(].*)?" then it isn't an
+// eventhandler. (both matches are case insensitive).
+// This is how IE seems to filter out a window's onload handler from a
+// <script for=... event=...> element.
+
+PRBool
+nsScriptLoader::IsScriptEventHandler(nsIDOMHTMLScriptElement *aScriptElement)
+{
+  nsCOMPtr<nsIContent> contElement = do_QueryInterface(aScriptElement);
+  if (!contElement ||
+      !contElement->HasAttr(kNameSpaceID_None, nsHTMLAtoms::_event) ||
+      !contElement->HasAttr(kNameSpaceID_None, nsHTMLAtoms::_for)) {
+      return PR_FALSE;
+  }
+
+  nsAutoString str;
+  nsresult rv = contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_for,
+                                     str);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  const nsAString& for_str = nsContentUtils::TrimWhitespace(str);
+
+  if (!for_str.Equals(NS_LITERAL_STRING("window"),
+                      nsCaseInsensitiveStringComparator())) {
+    return PR_TRUE;
+  }
+
+  // We found for="window", now check for event="onload".
+
+  rv = contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, str);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  const nsAString& event_str = nsContentUtils::TrimWhitespace(str, PR_FALSE);
+
+  if (event_str.Length() < 6) {
+    // String too short, can't be "onload".
+
+    return PR_TRUE;
+  }
+
+  if (!Substring(event_str, 0, 6).Equals(NS_LITERAL_STRING("onload"),
+                                         nsCaseInsensitiveStringComparator())) {
+    // It ain't "onload.*".
+
+    return PR_TRUE;
+  }
+
+  nsAutoString::const_iterator start, end;
+  event_str.BeginReading(start);
+  event_str.EndReading(end);
+
+  start.advance(6); // advance past "onload"
+
+  if (start != end && *start != '(' && *start != ' ') {
+    // We got onload followed by something other than space or
+    // '('. Not good enough.
+
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 /* void processScriptElement (in nsIDOMHTMLScriptElement aElement, in nsIScriptLoaderObserver aObserver); */
 NS_IMETHODIMP 
 nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement, 
@@ -252,6 +320,12 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   // suppresses script evaluation within it.
   if (!mEnabled || InNonScriptingContainer(aElement)) {
     return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+  }
+
+  // Check that the script is not an eventhandler
+  if (IsScriptEventHandler(aElement)) {
+    return FireErrorNotification(NS_CONTENT_SCRIPT_IS_EVENTHANDLER, aElement,
+                                 aObserver);
   }
 
   // See if script evaluation is enabled.
