@@ -1334,7 +1334,7 @@ js_Interpret(JSContext *cx, jsval *result)
                                 JS_GetStringBytes(str));
                     }
                 }
-                putc('\n', tracefp);
+                fprintf(tracefp, " @ %d\n", sp - fp->spbase);
             }
         }
 #endif
@@ -1422,9 +1422,16 @@ js_Interpret(JSContext *cx, jsval *result)
             fp->scopeChain = JSVAL_TO_OBJECT(rval);
             break;
 
+          case JSOP_SETRVAL:
+            fp->rval = POP_OPND();
+            break;
+
           case JSOP_RETURN:
             CHECK_BRANCH(-1);
             fp->rval = POP_OPND();
+            /* FALL THROUGH */
+
+          case JSOP_RETRVAL:    /* fp->rval already set */
             if (inlineCallCount)
           inline_return:
             {
@@ -3876,6 +3883,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #ifdef DEBUG
         if (tracefp) {
             intN ndefs, n;
+            jsval *siter;
 
             ndefs = cs->ndefs;
             if (ndefs) {
@@ -3888,8 +3896,15 @@ js_Interpret(JSContext *cx, jsval *result)
                                 JS_GetStringBytes(str));
                     }
                 }
-                putc('\n', tracefp);
+                fprintf(tracefp, " @ %d\n", sp - fp->spbase);
             }
+            fprintf(tracefp, "  stack: ");
+            for (siter = fp->spbase; siter < sp; siter++) {
+                str = js_ValueToSource(cx, *siter);
+                fprintf(tracefp, "%s ",
+                        str ? JS_GetStringBytes(str) : "<null>");
+            }
+            fputc('\n', tracefp);
         }
 #endif
     }

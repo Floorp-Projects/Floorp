@@ -927,7 +927,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		switch (sn ? SN_TYPE(sn) : SRC_NULL) {
 #if JS_HAS_DO_WHILE_LOOP
 		  case SRC_WHILE:
-		    js_printf(jp, "\tdo {\n");	/* balance} */
+		    js_printf(jp, "\tdo {\n");
 		    jp->indent += 4;
 		    break;
 #endif /* JS_HAS_DO_WHILE_LOOP */
@@ -999,7 +999,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    jp->indent -= 4;
 		    sn = js_GetSrcNote(jp->script, pc);
 		    pc += oplen;
-		    js_printf(jp, "\t} catch ("); /* balance) */
+		    js_printf(jp, "\t} catch (");
 
                     LOCAL_ASSERT(*pc == JSOP_NAME);
                     pc += js_CodeSpec[JSOP_NAME].length;
@@ -1026,7 +1026,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         pc += js_CodeSpec[*pc].length;
 		    }
 
-		    js_printf(jp, ") {\n"); /* balance} */
+		    js_printf(jp, ") {\n");
 		    jp->indent += 4;
 		    len = 0;
 		    break;
@@ -1053,6 +1053,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 		  default:;
 		}
+              case JSOP_RETRVAL:
 		break;
 
               case JSOP_GROUP:
@@ -1078,25 +1079,68 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_TRY:
                 js_printf(jp, "\ttry {\n");
                 jp->indent += 4;
+		todo = -2;
                 break;
+
+            {
+              static const char finally_cookie[] = "finally-cookie";
 
               case JSOP_FINALLY:
                 jp->indent -= 4;
                 js_printf(jp, "\t} finally {\n");
                 jp->indent += 4;
+
+                /*
+                 * We must push an empty string placeholder for gosub's return
+                 * address, popped by JSOP_RETSUB and counted by script->depth
+                 * but not by ss->top (see JSOP_SETSP, below).
+                 */
+                todo = Sprint(&ss->sprinter, finally_cookie);
                 break;
+
+              case JSOP_RETSUB:
+                rval = POP_STR();
+                LOCAL_ASSERT(strcmp(rval, finally_cookie) == 0);
+                todo = -2;
+                break;
+            }
+
+              case JSOP_SWAP:
+                /*
+                 * We don't generate this opcode currently, and previously we
+                 * did not need to decompile it.  If old, serialized bytecode
+                 * uses it still, we should fall through and set todo = -2.
+                 */
+                /* FALL THROUGH */
 
 	      case JSOP_GOSUB:
 	      case JSOP_GOSUBX:
-	      case JSOP_RETSUB:
-	      case JSOP_SETSP:
+                /*
+                 * JSOP_GOSUB and GOSUBX have no effect on the decompiler's
+                 * string stack because the next op in bytecode order finds
+                 * the stack balanced by a JSOP_RETSUB executed elsewhere.
+                 */
 		todo = -2;
 		break;
 
+	      case JSOP_SETSP:
+                /*
+                 * The compiler models operand stack depth and fixes the stack
+                 * pointer on entry to a catch clause based on its depth model.
+                 * The decompiler must match the code generator's model, which
+                 * is why JSOP_FINALLY pushes a cookie that JSOP_RETSUB pops.
+                 */
+                ss->top = (uintN) GET_ATOM_INDEX(pc);
+		break;
+
 	      case JSOP_EXCEPTION:
-		sn = js_GetSrcNote(jp->script, pc);
-		if (sn && SN_TYPE(sn) == SRC_HIDDEN)
-		    todo = -2;
+                /*
+                 * The only other JSOP_EXCEPTION case occurs as part of a code
+                 * sequence that follows a SRC_CATCH-annotated JSOP_NOP.
+                 */
+                sn = js_GetSrcNote(jp->script, pc);
+                LOCAL_ASSERT(sn && SN_TYPE(sn) == SRC_HIDDEN);
+                todo = -2;
 		break;
 #endif /* JS_HAS_EXCEPTIONS */
 
@@ -1154,32 +1198,41 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		todo = -2;
 		break;
 
+            {
+              static const char with_cookie[] = "with-cookie";
+
 	      case JSOP_ENTERWITH:
 		sn = js_GetSrcNote(jp->script, pc);
-		todo = -2;
-		if (sn && SN_TYPE(sn) == SRC_HIDDEN)
-		    break;
-		rval = POP_STR();
-		js_printf(jp, "\twith (%s) {\n", rval);
-		jp->indent += 4;
+		if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
+                    todo = -2;
+                    break;
+                }
+                rval = POP_STR();
+                js_printf(jp, "\twith (%s) {\n", rval);
+                jp->indent += 4;
+                todo = Sprint(&ss->sprinter, with_cookie);
 		break;
 
 	      case JSOP_LEAVEWITH:
 		sn = js_GetSrcNote(jp->script, pc);
-		todo = -2;
+                todo = -2;
 		if (sn && SN_TYPE(sn) == SRC_HIDDEN)
-		    break;
-		jp->indent -= 4;
-		js_printf(jp, "\t}\n");
+                    break;
+                rval = POP_STR();
+                LOCAL_ASSERT(strcmp(rval, with_cookie) == 0);
+                jp->indent -= 4;
+                js_printf(jp, "\t}\n");
 		break;
+            }
 
+              case JSOP_SETRVAL:
 	      case JSOP_RETURN:
 		rval = POP_STR();
 		if (*rval != '\0')
 		    js_printf(jp, "\t%s %s;\n", cs->name, rval);
 		else
 		    js_printf(jp, "\t%s;\n", cs->name);
-		todo = -2;
+                todo = -2;
 		break;
 
 #if JS_HAS_EXCEPTIONS
@@ -1293,7 +1346,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #if JS_HAS_DO_WHILE_LOOP
 		/* Currently, this must be a do-while loop's upward branch. */
                 jp->indent -= 4;
-                /* {balance: */
                 js_printf(jp, "\t} while (%s);\n", POP_STR());
                 todo = -2;
 #else
@@ -1433,12 +1485,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	      case JSOP_DUP2:
 		rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-2]);
 		todo = SprintPut(&ss->sprinter, rval, strlen(rval));
-		if (todo < 0 || !PushOff(ss, todo, op))
+		if (todo < 0 || !PushOff(ss, todo, ss->opcodes[ss->top-2]))
 		    return JS_FALSE;
 		/* FALL THROUGH */
 
 	      case JSOP_DUP:
 		rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
+                op = ss->opcodes[ss->top-1];
 		todo = SprintPut(&ss->sprinter, rval, strlen(rval));
 		break;
 
@@ -2073,12 +2126,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    todo = Sprint(&ss->sprinter, "#%u=%c",
 				  (unsigned) i,
 				  (*lval == 'O') ? '{' : '[');
-		    /* balance}] */
 		} else
 #endif /* JS_HAS_SHARP_VARS */
 		{
 		    todo = Sprint(&ss->sprinter, (*lval == 'O') ? "{" : "[");
-		    /* balance}] */
 		}
 		break;
 
@@ -2088,7 +2139,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		todo = Sprint(&ss->sprinter, "%s%s%c",
 			      rval,
 			      (sn && SN_TYPE(sn) == SRC_CONTINUE) ? ", " : "",
-			      /* [balance */
 			      (*rval == '{') ? '}' : ']');
 		break;
 

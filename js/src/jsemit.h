@@ -60,7 +60,8 @@ typedef enum JSStmtType {
     STMT_DO_LOOP      = 9,      /* do/while loop statement */
     STMT_FOR_LOOP     = 10,     /* for loop statement */
     STMT_FOR_IN_LOOP  = 11,     /* for/in loop statement */
-    STMT_WHILE_LOOP   = 12      /* while loop statement */
+    STMT_WHILE_LOOP   = 12,     /* while loop statement */
+    STMT_SUBROUTINE   = 13      /* gosub-target subroutine body */
 } JSStmtType;
 
 #define STMT_IS_LOOP(stmt)      ((stmt)->type >= STMT_DO_LOOP)
@@ -69,7 +70,6 @@ typedef struct JSStmtInfo JSStmtInfo;
 
 struct JSStmtInfo {
     JSStmtType      type;           /* statement type */
-    ptrdiff_t       top;            /* offset of loop top from cg base */
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
@@ -80,7 +80,7 @@ struct JSStmtInfo {
 };
 
 #define SET_STATEMENT_TOP(stmt, top)                                          \
-    ((stmt)->top = (stmt)->update = (top), (stmt)->breaks =                   \
+    ((stmt)->update = (top), (stmt)->breaks =                                 \
      (stmt)->continues = (stmt)->catchJump = (stmt)->gosub = (-1))
 
 struct JSTreeContext {              /* tree context for semantic checks */
