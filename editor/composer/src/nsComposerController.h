@@ -40,7 +40,7 @@
 #define nsComposerController_h__
 
 
-class nsIControllerCommandManager;
+class nsIControllerCommandTable;
 
 
 // The plaintext editor controller is used for basic text editing and html editing
@@ -58,8 +58,8 @@ class nsIControllerCommandManager;
 class nsComposerController
 {
 public:
-  static nsresult RegisterEditorDocStateCommands(nsIControllerCommandManager* inCommandManager);
-  static nsresult RegisterHTMLEditorCommands(nsIControllerCommandManager* inCommandManager);
+  static nsresult RegisterEditorDocStateCommands(nsIControllerCommandTable* inCommandTable);
+  static nsresult RegisterHTMLEditorCommands(nsIControllerCommandTable* inCommandTable);
 };
 
 #endif /* nsComposerController_h__ */

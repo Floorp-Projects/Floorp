@@ -108,12 +108,12 @@ protected:
   
   nsresult        SetupEditorCommandController(const char *aControllerClassName,
                                                nsIDOMWindow *aWindow,
-                                               nsISupports *aRefCon,
+                                               nsISupports *aContext,
                                                PRUint32 *aControllerId);
   nsresult        SetEditorOnControllers(nsIDOMWindow *aWindow, 
                                          nsIEditor* aEditor);
-  nsresult        SetRefConOnControllerById(nsIControllers* aControllers, 
-                                            nsISupports* aRefCon,
+  nsresult        SetContextOnControllerById(nsIControllers* aControllers, 
+                                            nsISupports* aContext,
                                             PRUint32 aID);
 
   nsresult        PrepareForEditing();

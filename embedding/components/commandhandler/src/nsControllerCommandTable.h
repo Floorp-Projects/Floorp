@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *        Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,33 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsControllerCommandManager_h_
-#define nsControllerCommandManager_h_
+#ifndef nsControllerCommandTable_h_
+#define nsControllerCommandTable_h_
 
 
-#include "nsIControllerCommandManager.h"
-#include "nsIControllerCommand.h"
+#include "nsIControllerCommandTable.h"
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
 
+class nsIControllerCommand;
 
-
-class  nsControllerCommandManager : public nsIControllerCommandManager,
-                                    public nsSupportsWeakReference
+class  nsControllerCommandTable : public nsIControllerCommandTable,
+                                  public nsSupportsWeakReference
 {
 public:
 
-                  nsControllerCommandManager();
-  virtual         ~nsControllerCommandManager();
+                  nsControllerCommandTable();
+  virtual         ~nsControllerCommandTable();
 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_NSICONTROLLERCOMMANDMANAGER
+  NS_DECL_NSICONTROLLERCOMMANDTABLE
 
 protected:
 
   nsSupportsHashtable   mCommandsTable;   // hash table of nsIControllerCommands, keyed by command name
+  PRBool                mMutable;         // are we mutable?
 };
 
 
-#endif // nsControllerCommandManager_h_
+#endif // nsControllerCommandTable_h_

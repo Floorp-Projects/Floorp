@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIComponentManager.h"
-#include "nsIControllerCommandManager.h"
+#include "nsIControllerCommandTable.h"
 #include "nsComposerController.h"
 #include "nsComposerCommands.h"
 
@@ -49,7 +49,7 @@
     _cmdClass* theCmd;                                                  \
     NS_NEWXPCOM(theCmd, _cmdClass);                                     \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                         \
-    rv = inCommandManager->RegisterCommand(_cmdName, \
+    rv = inCommandTable->RegisterCommand(_cmdName,                      \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
   }
 
@@ -58,15 +58,15 @@
     _cmdClass* theCmd;                                                  \
     NS_NEWXPCOM(theCmd, _cmdClass);                                     \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                         \
-    rv = inCommandManager->RegisterCommand(_cmdName, \
+    rv = inCommandTable->RegisterCommand(_cmdName,                      \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                   \
-    rv = inCommandManager->RegisterCommand(_cmdName, \
+    rv = inCommandTable->RegisterCommand(_cmdName,                      \
                         NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                   \
-    rv = inCommandManager->RegisterCommand(_cmdName, \
+    rv = inCommandTable->RegisterCommand(_cmdName,                      \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
   }
 
@@ -74,7 +74,7 @@
   {                                                                     \
     _cmdClass* theCmd = new _cmdClass(_styleTag);                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                         \
-    rv = inCommandManager->RegisterCommand(_cmdName, \
+    rv = inCommandTable->RegisterCommand(_cmdName,                      \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
   }
   
@@ -82,7 +82,7 @@
   {                                                                     \
     _cmdClass* theCmd = new _cmdClass(_tagName);                        \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                         \
-    rv = inCommandManager->RegisterCommand(_cmdName,                    \
+    rv = inCommandTable->RegisterCommand(_cmdName,                      \
                        NS_STATIC_CAST(nsIControllerCommand *, theCmd)); \
   }
   
@@ -90,26 +90,26 @@
 // static
 nsresult
 nsComposerController::RegisterEditorDocStateCommands(
-                        nsIControllerCommandManager *inCommandManager)
+                        nsIControllerCommandTable *inCommandTable)
 {
   nsresult rv;
 
   // observer commands for document state
-  NS_REGISTER_ONE_COMMAND(nsDocumentStateCommand, "obs_documentCreated")
-  NS_REGISTER_ONE_COMMAND(nsDocumentStateCommand, "obs_documentWillBeDestroyed")
-  NS_REGISTER_ONE_COMMAND(nsDocumentStateCommand, "obs_documentLocationChanged")
+  NS_REGISTER_FIRST_COMMAND(nsDocumentStateCommand, "obs_documentCreated")
+  NS_REGISTER_NEXT_COMMAND(nsDocumentStateCommand, "obs_documentWillBeDestroyed")
+  NS_REGISTER_LAST_COMMAND(nsDocumentStateCommand, "obs_documentLocationChanged")
 
   // commands that may get or change state
-  NS_REGISTER_ONE_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentModified")
-  NS_REGISTER_ONE_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentUseCSS")
-  NS_REGISTER_ONE_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentReadOnly")
+  NS_REGISTER_FIRST_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentModified")
+  NS_REGISTER_NEXT_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentUseCSS")
+  NS_REGISTER_LAST_COMMAND(nsSetDocumentStateCommand, "cmd_setDocumentReadOnly")
   return NS_OK;
 }
 
 // static
 nsresult
 nsComposerController::RegisterHTMLEditorCommands(
-                        nsIControllerCommandManager *inCommandManager)
+                        nsIControllerCommandTable *inCommandTable)
 {
   nsresult rv;
   

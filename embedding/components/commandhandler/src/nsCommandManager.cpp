@@ -189,7 +189,7 @@ nsCommandManager::IsCommandSupported(const char *aCommandName,
   NS_ENSURE_ARG_POINTER(outCommandSupported);
 
   nsCOMPtr<nsIController> controller;
-  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
+  GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
   *outCommandSupported = (controller.get() != nsnull);
   return NS_OK;
 }
@@ -206,7 +206,7 @@ nsCommandManager::IsCommandEnabled(const char *aCommandName,
   PRBool  commandEnabled = PR_FALSE;
   
   nsCOMPtr<nsIController> controller;
-  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
+  GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
   if (controller)
   {
     controller->IsCommandEnabled(aCommandName, &commandEnabled);

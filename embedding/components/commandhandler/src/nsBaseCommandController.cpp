@@ -56,13 +56,8 @@ NS_INTERFACE_MAP_BEGIN(nsBaseCommandController)
 NS_INTERFACE_MAP_END
 
 nsBaseCommandController::nsBaseCommandController()
-: mCommandRefCon(nsnull), mImmutableManager(PR_FALSE)
+: mCommandContext(nsnull)
 {
-  nsresult rv;
-  mCommandManager = 
-    do_CreateInstance(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to create CommandManager in nsBaseCommandController");
 }
 
 nsBaseCommandController::~nsBaseCommandController()
@@ -70,20 +65,22 @@ nsBaseCommandController::~nsBaseCommandController()
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::SetCommandRefCon(nsISupports *aCommandRefCon)
+nsBaseCommandController::Init(nsIControllerCommandTable *aCommandTable)
 {
-  mCommandRefCon = aCommandRefCon;     // no addref  
-  return NS_OK;
+  nsresult rv = NS_OK;
+
+  if (aCommandTable)
+    mCommandTable = aCommandTable;    // owning addref
+  else
+    mCommandTable = do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
+  
+  return rv;
 }
 
 NS_IMETHODIMP
-nsBaseCommandController::SetControllerCommandManager(
-                            nsIControllerCommandManager *aCommandManager)
+nsBaseCommandController::SetCommandContext(nsISupports *aCommandContext)
 {
-  if (!aCommandManager)
-    return NS_ERROR_NULL_POINTER;
-  mCommandManager = aCommandManager;
-  mImmutableManager = PR_TRUE;
+  mCommandContext = aCommandContext;     // no addref  
   return NS_OK;
 }
 
@@ -94,11 +91,13 @@ nsBaseCommandController::GetInterface(const nsIID & aIID, void * *result)
 
   if (NS_SUCCEEDED(QueryInterface(aIID, result)))
     return NS_OK;
-  // Don't let users get the command manager if it's 
-  // immutable. They may harm it in some way.
-  if (!mImmutableManager && mCommandManager && 
-      aIID.Equals(NS_GET_IID(nsIControllerCommandManager)))
-    return mCommandManager->QueryInterface(aIID, result);
+
+  if (aIID.Equals(NS_GET_IID(nsIControllerCommandTable)))
+  {
+    if (mCommandTable)
+      return mCommandTable->QueryInterface(aIID, result);
+    return NS_ERROR_NOT_INITIALIZED;
+  }
     
   return NS_NOINTERFACE;
 }
@@ -115,7 +114,7 @@ nsBaseCommandController::IsCommandEnabled(const char *aCommand,
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
-  return mCommandManager->IsCommandEnabled(aCommand, mCommandRefCon, aResult);
+  return mCommandTable->IsCommandEnabled(aCommand, mCommandContext, aResult);
 }
 
 NS_IMETHODIMP
@@ -123,14 +122,14 @@ nsBaseCommandController::SupportsCommand(const char *aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
-  return mCommandManager->SupportsCommand(aCommand, mCommandRefCon, aResult);
+  return mCommandTable->SupportsCommand(aCommand, mCommandContext, aResult);
 }
 
 NS_IMETHODIMP
 nsBaseCommandController::DoCommand(const char *aCommand)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
-  return mCommandManager->DoCommand(aCommand, mCommandRefCon);
+  return mCommandTable->DoCommand(aCommand, mCommandContext);
 }
 
 NS_IMETHODIMP
@@ -138,7 +137,7 @@ nsBaseCommandController::DoCommandWithParams(const char *aCommand,
                                              nsICommandParams *aParams)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
-  return mCommandManager->DoCommandParams(aCommand, aParams, mCommandRefCon);
+  return mCommandTable->DoCommandParams(aCommand, aParams, mCommandContext);
 }
 
 NS_IMETHODIMP
@@ -146,7 +145,7 @@ nsBaseCommandController::GetCommandStateWithParams(const char *aCommand,
                                                    nsICommandParams *aParams)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
-  return mCommandManager->GetCommandState(aCommand, aParams, mCommandRefCon);
+  return mCommandTable->GetCommandState(aCommand, aParams, mCommandContext);
 }
 
 NS_IMETHODIMP
@@ -155,5 +154,3 @@ nsBaseCommandController::OnEvent(const char * aEventName)
   NS_ENSURE_ARG_POINTER(aEventName);
   return NS_OK;
 }
-
-

@@ -48,8 +48,8 @@ var gComposerJSCommandControllerID = 0;
 //-----------------------------------------------------------------------------------
 function SetupHTMLEditorCommands()
 {
-  var commandManager = GetComposerCommandManager();
-  if (!commandManager)
+  var commandTable = GetComposerCommandTable();
+  if (!commandTable)
     return;
   
   // Include everthing a text editor does
@@ -57,76 +57,76 @@ function SetupHTMLEditorCommands()
 
   //dump("Registering HTML editor commands\n");
 
-  commandManager.registerCommand("cmd_renderedHTMLEnabler", nsDummyHTMLCommand);
+  commandTable.registerCommand("cmd_renderedHTMLEnabler", nsDummyHTMLCommand);
 
-  commandManager.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
-  commandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
-  commandManager.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
-  commandManager.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
-  commandManager.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
-  commandManager.registerCommand("cmd_removeNamedAnchors", nsRemoveNamedAnchorsCommand);
-  commandManager.registerCommand("cmd_editLink",        nsEditLinkCommand);
+  commandTable.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
+  commandTable.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
+  commandTable.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
+  commandTable.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
+  commandTable.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
+  commandTable.registerCommand("cmd_removeNamedAnchors", nsRemoveNamedAnchorsCommand);
+  commandTable.registerCommand("cmd_editLink",        nsEditLinkCommand);
   
-  commandManager.registerCommand("cmd_form",          nsFormCommand);
-  commandManager.registerCommand("cmd_inputtag",      nsInputTagCommand);
-  commandManager.registerCommand("cmd_inputimage",    nsInputImageCommand);
-  commandManager.registerCommand("cmd_textarea",      nsTextAreaCommand);
-  commandManager.registerCommand("cmd_select",        nsSelectCommand);
-  commandManager.registerCommand("cmd_button",        nsButtonCommand);
-  commandManager.registerCommand("cmd_label",         nsLabelCommand);
-  commandManager.registerCommand("cmd_fieldset",      nsFieldSetCommand);
-  commandManager.registerCommand("cmd_isindex",       nsIsIndexCommand);
-  commandManager.registerCommand("cmd_image",         nsImageCommand);
-  commandManager.registerCommand("cmd_hline",         nsHLineCommand);
-  commandManager.registerCommand("cmd_link",          nsLinkCommand);
-  commandManager.registerCommand("cmd_anchor",        nsAnchorCommand);
-  commandManager.registerCommand("cmd_insertHTMLWithDialog", nsInsertHTMLWithDialogCommand);
-  commandManager.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
-  commandManager.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
+  commandTable.registerCommand("cmd_form",          nsFormCommand);
+  commandTable.registerCommand("cmd_inputtag",      nsInputTagCommand);
+  commandTable.registerCommand("cmd_inputimage",    nsInputImageCommand);
+  commandTable.registerCommand("cmd_textarea",      nsTextAreaCommand);
+  commandTable.registerCommand("cmd_select",        nsSelectCommand);
+  commandTable.registerCommand("cmd_button",        nsButtonCommand);
+  commandTable.registerCommand("cmd_label",         nsLabelCommand);
+  commandTable.registerCommand("cmd_fieldset",      nsFieldSetCommand);
+  commandTable.registerCommand("cmd_isindex",       nsIsIndexCommand);
+  commandTable.registerCommand("cmd_image",         nsImageCommand);
+  commandTable.registerCommand("cmd_hline",         nsHLineCommand);
+  commandTable.registerCommand("cmd_link",          nsLinkCommand);
+  commandTable.registerCommand("cmd_anchor",        nsAnchorCommand);
+  commandTable.registerCommand("cmd_insertHTMLWithDialog", nsInsertHTMLWithDialogCommand);
+  commandTable.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
+  commandTable.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
 
-  commandManager.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
-  commandManager.registerCommand("cmd_editTable",          nsEditTableCommand);
-  commandManager.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
-  commandManager.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
-  commandManager.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
-  commandManager.registerCommand("cmd_SelectCell",         nsSelectTableCellCommand);
-  commandManager.registerCommand("cmd_SelectAllCells",     nsSelectAllTableCellsCommand);
-  commandManager.registerCommand("cmd_InsertTable",        nsInsertTableCommand);
-  commandManager.registerCommand("cmd_InsertRowAbove",     nsInsertTableRowAboveCommand);
-  commandManager.registerCommand("cmd_InsertRowBelow",     nsInsertTableRowBelowCommand);
-  commandManager.registerCommand("cmd_InsertColumnBefore", nsInsertTableColumnBeforeCommand);
-  commandManager.registerCommand("cmd_InsertColumnAfter",  nsInsertTableColumnAfterCommand);
-  commandManager.registerCommand("cmd_InsertCellBefore",   nsInsertTableCellBeforeCommand);
-  commandManager.registerCommand("cmd_InsertCellAfter",    nsInsertTableCellAfterCommand);
-  commandManager.registerCommand("cmd_DeleteTable",        nsDeleteTableCommand);
-  commandManager.registerCommand("cmd_DeleteRow",          nsDeleteTableRowCommand);
-  commandManager.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
-  commandManager.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
-  commandManager.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
-  commandManager.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
-  commandManager.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
-  commandManager.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
-  commandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
-  commandManager.registerCommand("cmd_smiley",             nsSetSmiley);
-  commandManager.registerCommand("cmd_ConvertToTable",     nsConvertToTable);
+  commandTable.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
+  commandTable.registerCommand("cmd_editTable",          nsEditTableCommand);
+  commandTable.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
+  commandTable.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
+  commandTable.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
+  commandTable.registerCommand("cmd_SelectCell",         nsSelectTableCellCommand);
+  commandTable.registerCommand("cmd_SelectAllCells",     nsSelectAllTableCellsCommand);
+  commandTable.registerCommand("cmd_InsertTable",        nsInsertTableCommand);
+  commandTable.registerCommand("cmd_InsertRowAbove",     nsInsertTableRowAboveCommand);
+  commandTable.registerCommand("cmd_InsertRowBelow",     nsInsertTableRowBelowCommand);
+  commandTable.registerCommand("cmd_InsertColumnBefore", nsInsertTableColumnBeforeCommand);
+  commandTable.registerCommand("cmd_InsertColumnAfter",  nsInsertTableColumnAfterCommand);
+  commandTable.registerCommand("cmd_InsertCellBefore",   nsInsertTableCellBeforeCommand);
+  commandTable.registerCommand("cmd_InsertCellAfter",    nsInsertTableCellAfterCommand);
+  commandTable.registerCommand("cmd_DeleteTable",        nsDeleteTableCommand);
+  commandTable.registerCommand("cmd_DeleteRow",          nsDeleteTableRowCommand);
+  commandTable.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
+  commandTable.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
+  commandTable.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
+  commandTable.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
+  commandTable.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
+  commandTable.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
+  commandTable.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
+  commandTable.registerCommand("cmd_smiley",             nsSetSmiley);
+  commandTable.registerCommand("cmd_ConvertToTable",     nsConvertToTable);
 }
 
 function SetupTextEditorCommands()
 {
-  var commandManager = GetComposerCommandManager();
-  if (!commandManager)
+  var commandTable = GetComposerCommandTable();
+  if (!commandTable)
     return;
   
   //dump("Registering plain text editor commands\n");
   
-  commandManager.registerCommand("cmd_find",       nsFindCommand);
-  commandManager.registerCommand("cmd_findNext",   new nsFindAgainCommand(false));
-  commandManager.registerCommand("cmd_findPrev",   new nsFindAgainCommand(true));
-  commandManager.registerCommand("cmd_rewrap",     nsRewrapCommand);
-  commandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
-  commandManager.registerCommand("cmd_validate",   nsValidateCommand);
-  commandManager.registerCommand("cmd_checkLinks", nsCheckLinksCommand);
-  commandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
+  commandTable.registerCommand("cmd_find",       nsFindCommand);
+  commandTable.registerCommand("cmd_findNext",   new nsFindAgainCommand(false));
+  commandTable.registerCommand("cmd_findPrev",   new nsFindAgainCommand(true));
+  commandTable.registerCommand("cmd_rewrap",     nsRewrapCommand);
+  commandTable.registerCommand("cmd_spelling",   nsSpellingCommand);
+  commandTable.registerCommand("cmd_validate",   nsValidateCommand);
+  commandTable.registerCommand("cmd_checkLinks", nsCheckLinksCommand);
+  commandTable.registerCommand("cmd_insertChars", nsInsertCharsCommand);
 }
 
 function SetupComposerWindowCommands()
@@ -147,15 +147,18 @@ function SetupComposerWindowCommands()
 
   if (!windowControllers) return;
 
-  var commandManager;
+  var commandTable;
   var composerController;
   var editorController;
   try {
     composerController = Components.classes["@mozilla.org/embedcomp/base-command-controller;1"].createInstance();
-    // Get the nsIControllerCommandManager interface we need to register commands
+
+    editorController = composerController.QueryInterface(Components.interfaces.nsIControllerContext);
+    editorController.init(null); // init it without passing in a command table
+
+    // Get the nsIControllerCommandTable interface we need to register commands
     var interfaceRequestor = composerController.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
-    editorController = interfaceRequestor.QueryInterface(Components.interfaces.nsIControllerContext);
+    commandTable = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandTable);
   }
   catch (e)
   {
@@ -164,41 +167,41 @@ function SetupComposerWindowCommands()
   }
 
 
-  if (!commandManager)
+  if (!commandTable)
   {
     dump("Failed to get interface for nsIControllerCommandManager\n");
     return;
   }
 
   // File-related commands
-  commandManager.registerCommand("cmd_open",           nsOpenCommand);
-  commandManager.registerCommand("cmd_save",           nsSaveCommand);
-  commandManager.registerCommand("cmd_saveAs",         nsSaveAsCommand);
-  commandManager.registerCommand("cmd_exportToText",   nsExportToTextCommand);
-  commandManager.registerCommand("cmd_saveAsCharset",  nsSaveAsCharsetCommand);
-  commandManager.registerCommand("cmd_publish",        nsPublishCommand);
-  commandManager.registerCommand("cmd_publishAs",      nsPublishAsCommand);
-  commandManager.registerCommand("cmd_publishSettings",nsPublishSettingsCommand);
-  commandManager.registerCommand("cmd_revert",         nsRevertCommand);
-  commandManager.registerCommand("cmd_openRemote",     nsOpenRemoteCommand);
-  commandManager.registerCommand("cmd_preview",        nsPreviewCommand);
-  commandManager.registerCommand("cmd_editSendPage",   nsSendPageCommand);
-  commandManager.registerCommand("cmd_print",          nsPrintCommand);
-  commandManager.registerCommand("cmd_printSetup",     nsPrintSetupCommand);
-  commandManager.registerCommand("cmd_quit",           nsQuitCommand);
-  commandManager.registerCommand("cmd_close",          nsCloseCommand);
-  commandManager.registerCommand("cmd_preferences",    nsPreferencesCommand);
+  commandTable.registerCommand("cmd_open",           nsOpenCommand);
+  commandTable.registerCommand("cmd_save",           nsSaveCommand);
+  commandTable.registerCommand("cmd_saveAs",         nsSaveAsCommand);
+  commandTable.registerCommand("cmd_exportToText",   nsExportToTextCommand);
+  commandTable.registerCommand("cmd_saveAsCharset",  nsSaveAsCharsetCommand);
+  commandTable.registerCommand("cmd_publish",        nsPublishCommand);
+  commandTable.registerCommand("cmd_publishAs",      nsPublishAsCommand);
+  commandTable.registerCommand("cmd_publishSettings",nsPublishSettingsCommand);
+  commandTable.registerCommand("cmd_revert",         nsRevertCommand);
+  commandTable.registerCommand("cmd_openRemote",     nsOpenRemoteCommand);
+  commandTable.registerCommand("cmd_preview",        nsPreviewCommand);
+  commandTable.registerCommand("cmd_editSendPage",   nsSendPageCommand);
+  commandTable.registerCommand("cmd_print",          nsPrintCommand);
+  commandTable.registerCommand("cmd_printSetup",     nsPrintSetupCommand);
+  commandTable.registerCommand("cmd_quit",           nsQuitCommand);
+  commandTable.registerCommand("cmd_close",          nsCloseCommand);
+  commandTable.registerCommand("cmd_preferences",    nsPreferencesCommand);
 
   // Edit Mode commands
   if (GetCurrentEditorType() == "html")
   {
-    commandManager.registerCommand("cmd_NormalMode",         nsNormalModeCommand);
-    commandManager.registerCommand("cmd_AllTagsMode",        nsAllTagsModeCommand);
-    commandManager.registerCommand("cmd_HTMLSourceMode",     nsHTMLSourceModeCommand);
-    commandManager.registerCommand("cmd_PreviewMode",        nsPreviewModeCommand);
-    commandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
-    commandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
-    commandManager.registerCommand("cmd_updateStructToolbar", nsUpdateStructToolbarCommand);
+    commandTable.registerCommand("cmd_NormalMode",         nsNormalModeCommand);
+    commandTable.registerCommand("cmd_AllTagsMode",        nsAllTagsModeCommand);
+    commandTable.registerCommand("cmd_HTMLSourceMode",     nsHTMLSourceModeCommand);
+    commandTable.registerCommand("cmd_PreviewMode",        nsPreviewModeCommand);
+    commandTable.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
+    commandTable.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
+    commandTable.registerCommand("cmd_updateStructToolbar", nsUpdateStructToolbarCommand);
   }
 
   windowControllers.insertControllerAt(0, editorController);
@@ -208,9 +211,9 @@ function SetupComposerWindowCommands()
 }
 
 //-----------------------------------------------------------------------------------
-function GetComposerCommandManager()
+function GetComposerCommandTable()
 {
-	var controller;
+  var controller;
   if (gComposerJSCommandControllerID)
   {
     try { 
@@ -221,6 +224,9 @@ function GetComposerCommandManager()
   {
     //create it
     controller = Components.classes["@mozilla.org/embedcomp/base-command-controller;1"].createInstance();
+
+    var editorController = controller.QueryInterface(Components.interfaces.nsIControllerContext);
+    editorController.init(null);
     window.content.controllers.insertControllerAt(0, controller);
   
     // Store the controller ID so we can be sure to get the right one later
@@ -230,7 +236,7 @@ function GetComposerCommandManager()
   if (controller)
   {
     var interfaceRequestor = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    return interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
+    return interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandTable);
   }
   return null;
 }

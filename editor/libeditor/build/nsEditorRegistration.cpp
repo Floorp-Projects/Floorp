@@ -43,7 +43,9 @@
 #include "nsEditor.h"				// for gInstanceCount
 #include "nsPlaintextEditor.h"
 #include "nsEditorController.h" //CID
+#include "nsIController.h"
 #include "nsIControllerContext.h"
+#include "nsIControllerCommandTable.h"
 #include "nsIServiceManager.h"
 
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
@@ -52,46 +54,60 @@
 #include "nsTextServicesCID.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////
-// Define the contructor function for the objects
-//
-// NOTE: This creates an instance of objects by using the default constructor
-//
+#define NS_EDITORCOMMANDTABLE_CID \
+{ 0x8b975b0a, 0x6ae5, 0x11d7, { 0xa44c, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }
+
+static NS_DEFINE_CID(kEditorCommandTableCID, NS_EDITORCOMMANDTABLE_CID);
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 
-NS_IMETHODIMP nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
+
+// Constructor of a controller which is set up to use, internally, a
+// singleton command-table pre-filled with editor commands.
+static nsresult
+nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
                                             void **aResult)
 {
-  static PRBool commandsRegistered = PR_FALSE;
   nsresult rv;
-  nsCOMPtr<nsIControllerContext> context =
-      do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1",&rv);
-  if (NS_FAILED(rv))
-    return rv;
-  if (!context)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIControllerCommandManager> editorCommandManager(
-      do_GetService(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  if (!editorCommandManager)
-    return NS_ERROR_OUT_OF_MEMORY;
-  if (!commandsRegistered)
-  {
-    rv = nsEditorController::RegisterEditorCommands(editorCommandManager);
-    if (NS_FAILED(rv))
-    {
-      return rv;
-    }
-    commandsRegistered = PR_TRUE;
-  }
-
+  nsCOMPtr<nsIControllerCommandTable> editorCommandTable = do_GetService(kEditorCommandTableCID, &rv);
+  if (NS_FAILED(rv)) return rv;
   
-  context->SetControllerCommandManager(editorCommandManager);
-  return context->QueryInterface(aIID, aResult);
+  // this guy is a singleton, so make it immutable
+  editorCommandTable->MakeImmutable();
+  
+  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = controllerContext->Init(editorCommandTable);
+  if (NS_FAILED(rv)) return rv;
+  
+  return controller->QueryInterface(aIID, aResult);
 }
+
+
+// Constructor for a command-table pref-filled with editor commands
+static nsresult
+nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                            void **aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIControllerCommandTable> commandTable =
+      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = nsEditorController::RegisterEditorCommands(commandTable);
+  if (NS_FAILED(rv)) return rv;
+  
+  // we don't know here whether we're being created as an instance,
+  // or a service, so we can't become immutable
+
+  return commandTable->QueryInterface(aIID, aResult);
+}
+
 
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
@@ -111,6 +127,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
 static const nsModuleComponentInfo components[] = {
     { "Text Editor", NS_TEXTEDITOR_CID,
       "@mozilla.org/editor/texteditor;1", nsPlaintextEditorConstructor, },
+
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
     { "HTML Editor", NS_HTMLEDITOR_CID,
@@ -120,9 +137,15 @@ static const nsModuleComponentInfo components[] = {
       "@mozilla.org/editor/htmleditor;1", nsHTMLEditorConstructor, },
 #endif
 #endif
+
     { "Editor Controller", NS_EDITORCONTROLLER_CID,
       "@mozilla.org/editor/editorcontroller;1",
       nsEditorControllerConstructor, },
+
+    { "Editor Command Table", NS_EDITORCOMMANDTABLE_CID,
+      "",   // no point in using a contract ID
+      nsEditorCommandTableConstructor, },
+
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
     { NULL, NS_TEXTSERVICESDOCUMENT_CID,
       "@mozilla.org/textservices/textservicesdocument;1",

@@ -44,7 +44,7 @@ CPPSRCS		= \
       nsCommandGroup.cpp \
       nsCommandManager.cpp \
       nsCommandParams.cpp \
-      nsControllerCommandManager.cpp \
+      nsControllerCommandTable.cpp \
       $(NULL)
 
 

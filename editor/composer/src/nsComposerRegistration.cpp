@@ -46,6 +46,18 @@
 #include "nsEditorService.h"
 #include "nsComposeTxtSrvFilter.h"
 #include "nsIControllerContext.h"
+#include "nsIControllerCommandTable.h"
+
+#define NS_HTMLEDITOR_COMMANDTABLE_CID \
+{ 0x7a727843, 0x6ae1, 0x11d7, { 0xa5eb, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }
+
+#define NS_HTMLEDITOR_DOCSTATE_COMMANDTABLE_CID \
+{ 0x800e07bc, 0x6ae1, 0x11d7, { 0x959b, 0x00, 0x03, 0x93, 0x63, 0x65, 0x92 } }
+
+
+static NS_DEFINE_CID(kHTMLEditorCommandTableCID, NS_HTMLEDITOR_COMMANDTABLE_CID);
+static NS_DEFINE_CID(kHTMLEditorDocStateCommandTableCID, NS_HTMLEDITOR_DOCSTATE_COMMANDTABLE_CID);
+
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -85,7 +97,7 @@ nsComposeTxtSrvFilterConstructor(nsISupports *aOuter, REFNSIID aIID,
     return rv;
 }
 
-static NS_IMETHODIMP
+static nsresult
 nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter, 
                                             REFNSIID aIID,
                                             void **aResult)
@@ -93,7 +105,7 @@ nsComposeTxtSrvFilterConstructorForComposer(nsISupports *aOuter,
     return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_FALSE);
 }
 
-static NS_IMETHODIMP
+static nsresult
 nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter, 
                                         REFNSIID aIID,
                                         void **aResult)
@@ -101,71 +113,101 @@ nsComposeTxtSrvFilterConstructorForMail(nsISupports *aOuter,
     return nsComposeTxtSrvFilterConstructor(aOuter, aIID, aResult, PR_TRUE);
 }
 
-NS_IMETHODIMP nsEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
-                                              void **aResult)
+
+// Constructor for a controller set up with a command table specified
+// by the CID passed in. This function uses do_GetService to get the
+// command table, so that every controller shares a single command
+// table, for space-efficiency.
+// 
+// The only reason to go via the service manager for the command table
+// is that it holds onto the singleton for us, avoiding static variables here.
+static nsresult
+CreateControllerWithSingletonCommandTable(const nsCID& inCommandTableCID, nsIController **aResult)
 {
-    static PRBool sDocStateCommandsRegistered = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
+  if (NS_FAILED(rv)) return rv;
 
-    nsresult rv;
-    nsCOMPtr<nsIControllerContext> context =
-        do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
-    if (NS_FAILED(rv))
-        return rv;
-    if (!context)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIControllerCommandManager> composerCommandManager(
-        do_GetService(NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CONTRACTID, &rv));
-
-    if (NS_FAILED(rv))
-        return rv;
-    if (!composerCommandManager)
-        return NS_ERROR_OUT_OF_MEMORY;
-    if (!sDocStateCommandsRegistered)
-    {
-        rv = nsComposerController::RegisterEditorDocStateCommands(composerCommandManager);
-        if (NS_FAILED(rv))
-        {
-            return rv;
-        }
-        sDocStateCommandsRegistered = PR_TRUE;
-    }
+  nsCOMPtr<nsIControllerCommandTable> composerCommandTable = do_GetService(inCommandTableCID, &rv);
+  if (NS_FAILED(rv)) return rv;
   
-    context->SetControllerCommandManager(composerCommandManager);
-    return context->QueryInterface(aIID, aResult);
+  // this guy is a singleton, so make it immutable
+  composerCommandTable->MakeImmutable();
+  
+  nsCOMPtr<nsIControllerContext> controllerContext = do_QueryInterface(controller, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = controllerContext->Init(composerCommandTable);
+  if (NS_FAILED(rv)) return rv;
+  
+  *aResult = controller;
+  NS_ADDREF(*aResult);
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
+
+// Here we make an instance of the controller that holds doc state commands.
+// We set it up with a singleton command table.
+static nsresult
+nsHTMLEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
                                               void **aResult)
 {
-  static PRBool sHTMLCommandsRegistered = PR_FALSE;
+  nsCOMPtr<nsIController> controller;
+  nsresult rv = CreateControllerWithSingletonCommandTable(kHTMLEditorDocStateCommandTableCID, getter_AddRefs(controller));
+  if (NS_FAILED(rv)) return rv;
 
+  return controller->QueryInterface(aIID, aResult);
+}
+
+// Tere we make an instance of the controller that holds composer commands.
+// We set it up with a singleton command table.
+static nsresult
+nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsCOMPtr<nsIController> controller;
+  nsresult rv = CreateControllerWithSingletonCommandTable(kHTMLEditorCommandTableCID, getter_AddRefs(controller));
+  if (NS_FAILED(rv)) return rv;
+
+  return controller->QueryInterface(aIID, aResult);
+}
+
+// Constructor for a command table that is pref-filled with HTML editor commands
+static nsresult
+nsHTMLEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID, 
+                                              void **aResult)
+{
   nsresult rv;
-  nsCOMPtr<nsIControllerContext> context =
-      do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  if (!context)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIControllerCommandManager> composerCommandManager(
-      do_GetService(NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-  if (!composerCommandManager)
-    return NS_ERROR_OUT_OF_MEMORY;
-  if (!sHTMLCommandsRegistered)
-  {
-    rv = nsComposerController::RegisterHTMLEditorCommands(composerCommandManager);
-    if (NS_FAILED(rv))
-    {
-      return rv;
-    }
-    sHTMLCommandsRegistered = PR_TRUE;
-  }
+  nsCOMPtr<nsIControllerCommandTable> commandTable =
+      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
   
-  context->SetControllerCommandManager(composerCommandManager);
-  return context->QueryInterface(aIID, aResult);
+  rv = nsComposerController::RegisterHTMLEditorCommands(commandTable);
+  if (NS_FAILED(rv)) return rv;
+  
+  // we don't know here whether we're being created as an instance,
+  // or a service, so we can't become immutable
+  
+  return commandTable->QueryInterface(aIID, aResult);
+}
+
+
+// Constructor for a command table that is pref-filled with HTML editor doc state commands
+static nsresult
+nsHTMLEditorDocStateCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID, 
+                                              void **aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIControllerCommandTable> commandTable =
+      do_CreateInstance(NS_CONTROLLERCOMMANDTABLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = nsComposerController::RegisterEditorDocStateCommands(commandTable);
+  if (NS_FAILED(rv)) return rv;
+  
+  // we don't know here whether we're being created as an instance,
+  // or a service, so we can't become immutable
+  
+  return commandTable->QueryInterface(aIID, aResult);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -174,30 +216,47 @@ NS_IMETHODIMP nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aI
 // class name.
 //
 static const nsModuleComponentInfo components[] = {
-    { "Editor DocState Controller", NS_EDITORDOCSTATECONTROLLER_CID,
-      "@mozilla.org/editor/editordocstatecontroller;1",
-      nsEditorDocStateControllerConstructor, },
+
     { "HTML Editor Controller", NS_HTMLEDITORCONTROLLER_CID,
       "@mozilla.org/editor/htmleditorcontroller;1",
       nsHTMLEditorControllerConstructor, },
+
+    { "HTML Editor DocState Controller", NS_EDITORDOCSTATECONTROLLER_CID,
+      "@mozilla.org/editor/editordocstatecontroller;1",
+      nsHTMLEditorDocStateControllerConstructor, },
+
+    { "HTML Editor command table", NS_HTMLEDITOR_COMMANDTABLE_CID,
+      "", // no point using a contract-ID
+      nsHTMLEditorCommandTableConstructor, },
+
+    { "HTML Editor doc state command table", NS_HTMLEDITOR_DOCSTATE_COMMANDTABLE_CID,
+      "", // no point using a contract-ID
+      nsHTMLEditorDocStateCommandTableConstructor, },
+
     { "Editing Session", NS_EDITINGSESSION_CID,
       "@mozilla.org/editor/editingsession;1", nsEditingSessionConstructor, },
+
     { "Editor Service", NS_EDITORSERVICE_CID,
       "@mozilla.org/editor/editorservice;1", nsEditorServiceConstructor,},
+
     { "Editor Spell Checker", NS_EDITORSPELLCHECK_CID,
       "@mozilla.org/editor/editorspellchecker;1",
       nsEditorSpellCheckConstructor,},
+
     { "Editor Startup Handler", NS_EDITORSERVICE_CID,
       "@mozilla.org/commandlinehandler/general-startup;1?type=editor",
       nsEditorServiceConstructor,
       nsEditorService::RegisterProc,
       nsEditorService::UnregisterProc, },
+
     { "Edit Startup Handler", NS_EDITORSERVICE_CID,
       "@mozilla.org/commandlinehandler/general-startup;1?type=edit",
       nsEditorServiceConstructor, },
+
     { "TxtSrv Filter", NS_COMPOSERTXTSRVFILTER_CID,
       COMPOSER_TXTSRVFILTER_CONTRACTID,
       nsComposeTxtSrvFilterConstructorForComposer, },
+
     { "TxtSrv Filter For Mail", NS_COMPOSERTXTSRVFILTER_CID,
       COMPOSER_TXTSRVFILTERMAIL_CONTRACTID,
       nsComposeTxtSrvFilterConstructorForMail, },
