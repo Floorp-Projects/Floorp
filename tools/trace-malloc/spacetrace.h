@@ -642,6 +642,13 @@ typedef struct __struct_STGlobals
        ** Categorized allocations. For now we support only one tree.
        */
        STCategoryNode mCategoryRoot;
+
+       /*
+       **   tmreader hash tables.
+       **   Moved into globals since we need to destroy these only after all
+       **       client threads are finishes (after PR_Cleanup).
+       */
+       tmreader* mTMR;
 } STGlobals;
 
 

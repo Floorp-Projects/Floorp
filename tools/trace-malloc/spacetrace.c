@@ -6181,13 +6181,12 @@ int batchMode(tmreader* aTMR)
 int doRun(void)
 {
     int retval = 0;
-    tmreader* tmr = NULL;
 
     /*
     ** Create the new trace-malloc reader.
     */
-    tmr = tmreader_new(globals.mOptions.mProgramName, NULL);
-    if(NULL != tmr)
+    globals.mTMR = tmreader_new(globals.mOptions.mProgramName, NULL);
+    if(NULL != globals.mTMR)
     {
         int tmResult = 0;
         int outputResult = 0;
@@ -6196,7 +6195,7 @@ int doRun(void)
         PRIntervalTime start = PR_IntervalNow();
         fprintf(stderr, "DEBUG: reading tracemalloc data...\n");
 #endif
-        tmResult = tmreader_eventloop(tmr, globals.mOptions.mFileName, tmEventHandler);
+        tmResult = tmreader_eventloop(globals.mTMR, globals.mOptions.mFileName, tmEventHandler);
 #if defined(DEBUG_dp)
         fprintf(stderr, "DEBUG: reading tracemalloc data ends: %dms [%d allocations]\n",
                 PR_IntervalToMilliseconds(PR_IntervalNow() - start), globals.mRun.mAllocationCount);
@@ -6234,7 +6233,7 @@ int doRun(void)
                     /*
                     ** Output in one big step while everything still exists.
                     */
-                    outputResult = batchMode(tmr);
+                    outputResult = batchMode(globals.mTMR);
                     if(0 != outputResult)
                     {
                         REPORT_ERROR(__LINE__, batchMode);
@@ -6248,7 +6247,7 @@ int doRun(void)
                     /*
                     ** httpd time.
                     */
-                    serverRes = serverMode(tmr);
+                    serverRes = serverMode(globals.mTMR);
                     if(0 != serverRes)
                     {
                         REPORT_ERROR(__LINE__, serverMode);
@@ -6274,12 +6273,6 @@ int doRun(void)
                 REPORT_ERROR(__LINE__, createRunFromGlobal);
             }
         }
-
-        /*
-        ** All done.
-        */
-        tmreader_destroy(tmr);
-        tmr = NULL;
     }
     else
     {
@@ -6312,8 +6305,7 @@ int main(int aArgCount, char** aArgArray)
     /*
     ** Initialize globals
     */
-    globals.mPeakMemoryUsed = 0;
-    globals.mMemoryUsed = 0;
+    memset(&globals, 0, sizeof(globals));
 
     /*
     ** NSPR init.
@@ -6362,19 +6354,28 @@ int main(int aArgCount, char** aArgArray)
         }
     }
 
-    /*
-    ** All done.
-    */
     if(0 != retval)
     {
         REPORT_ERROR(retval, main);
     }
 
+    /*
+    **  Have NSPR join all client threads we started.
+    */
     prResult = PR_Cleanup();
     if(PR_SUCCESS != prResult)
     {
         REPORT_ERROR(retval, PR_Cleanup);
         retval = __LINE__;
+    }
+
+    /*
+    **  Once threads are dead, we are safe to kill our tmreader data.
+    */
+    if(NULL != globals.mTMR)
+    {
+        tmreader_destroy(globals.mTMR);
+        globals.mTMR = NULL;
     }
 
     return retval;
