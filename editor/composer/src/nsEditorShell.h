@@ -32,7 +32,7 @@
 #include "nsIDOMDocument.h"
 #include "nsVoidArray.h"
 #include "nsTextServicesCID.h"
-#include "nsISpellCheck.h"
+#include "nsIEditorSpellCheck.h"
 #include "nsISpellChecker.h"
 
 class nsIBrowserWindow;
@@ -61,7 +61,7 @@ class nsIOutputStream;
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsEditorShell :   public nsIEditorShell,
-                        public nsISpellCheck,
+                        public nsIEditorSpellCheck,
                         public nsIDocumentLoaderObserver
 {
   public:

@@ -358,7 +358,7 @@ function EditorPrintPreview()
 
 function CheckSpelling()
 {
-  var spellChecker = window.editorShell.QueryInterface(Components.interfaces.nsISpellCheck);
+  var spellChecker = window.editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
   if (spellChecker)
   {
     dump("Check Spelling starting...\n");

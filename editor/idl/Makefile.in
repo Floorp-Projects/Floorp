@@ -23,7 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS = nsIEditorShell.idl \
-						nsISpellCheck.idl  \
+						nsIEditorSpellCheck.idl  \
 						$(NULL)
 
 MODULE	= editor

@@ -8,7 +8,7 @@ function Startup()
 
   // get the editor shell from the parent window
   editorShell = window.opener.editorShell;
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsISpellCheck);
+  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
   if(!editorShell) {
     dump("EditoreditorShell not found!!!\n");
     window.close();
