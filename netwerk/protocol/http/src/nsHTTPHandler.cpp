@@ -819,26 +819,26 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 
     // Ask the channel for proxy info... since that overrides
     PRBool usingProxy = PR_FALSE;
-    i_Channel -> GetUsingProxy(&usingProxy);
+    i_Channel -> GetUsingProxy (&usingProxy);
 
     if (usingProxy)
     {
-        rv = i_Channel->GetProxyHost(getter_Copies(proxy));
-        if (NS_FAILED(rv)) return rv;
+        rv = i_Channel -> GetProxyHost (getter_Copies (proxy));
+        if (NS_FAILED (rv)) return rv;
         
-        rv = i_Channel->GetProxyPort(&proxyPort);
-        if (NS_FAILED(rv)) return rv;
+        rv = i_Channel -> GetProxyPort (&proxyPort);
+        if (NS_FAILED (rv)) return rv;
     }
     else
     {
-        rv = i_Uri->GetHost(getter_Copies(host));
+        rv = i_Uri -> GetHost (getter_Copies (host));
         if (NS_FAILED(rv)) return rv;
         
-        rv = i_Uri->GetPort(&port);
+        rv = i_Uri -> GetPort (&port);
         if (NS_FAILED(rv)) return rv;
         
         if (port == -1)
-            GetDefaultPort(&port);
+            GetDefaultPort (&port);
     }
 
     nsIChannel* trans = nsnull;
@@ -847,76 +847,67 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     PRInt32 index = 0;
     if (mDoKeepAlive)
     {
-        mIdleTransports->Count(&count);
+        mIdleTransports -> Count (&count);
 
         // remove old and dead transports first
 
-        for (index=count-1; index >= 0; --index)
+        for (index = count - 1; index >= 0; --index)
         {
-            trans = (nsIChannel*) mIdleTransports -> ElementAt (index);
+            nsIChannel* cTrans = (nsIChannel*) mIdleTransports -> ElementAt (index);
 
-            nsresult rv;
-            nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface (trans, &rv);
-            PRBool isAlive = PR_TRUE;
+            if (cTrans)
+            {
+                nsresult rv;
+                nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface (cTrans, &rv);
+                PRBool isAlive = PR_TRUE;
 
-            if (NS_FAILED (rv) || NS_FAILED (sTrans -> IsAlive (mKeepAliveTimeout, &isAlive))
-                || !isAlive)
-                mIdleTransports -> RemoveElement (trans);
+                if (NS_FAILED (rv) || NS_FAILED (sTrans -> IsAlive (mKeepAliveTimeout, &isAlive))
+                    || !isAlive)
+                    mIdleTransports -> RemoveElement (cTrans);
+            }
         }
 
-        mIdleTransports->Count(&count);
+        mIdleTransports -> Count (&count);
 
-        for (index=count-1; index >= 0; --index, trans = nsnull)
+        for (index = count - 1; index >= 0; --index)
         {
             nsCOMPtr<nsIURI> uri;
-            trans = (nsIChannel*) mIdleTransports->ElementAt(index);
-            if (trans && 
-                    (NS_SUCCEEDED(trans->GetURI(getter_AddRefs(uri)))))
+            nsIChannel* cTrans = (nsIChannel*) mIdleTransports -> ElementAt (index);
+            
+            if (cTrans && 
+                    (NS_SUCCEEDED (cTrans -> GetURI (getter_AddRefs (uri)))))
             {
                 nsXPIDLCString idlehost;
-                if (NS_SUCCEEDED(uri->GetHost(getter_Copies(idlehost))))
+                if (NS_SUCCEEDED (uri -> GetHost (getter_Copies (idlehost))))
                 {
-                    if (0 == PL_strcasecmp (usingProxy ? proxy : host, idlehost))
+                    if (!PL_strcasecmp (usingProxy ? proxy : host, idlehost))
                     {
                         PRInt32 idleport;
-                        if (NS_SUCCEEDED(uri->GetPort(&idleport)))
+                        if (NS_SUCCEEDED (uri -> GetPort (&idleport)))
                         {
                             if (idleport == -1)
-                                GetDefaultPort(&idleport);
+                                GetDefaultPort (&idleport);
 
                             if (idleport == usingProxy ? proxyPort : port)
                             {
                                 // Addref it before removing it!
-                                NS_ADDREF(trans);
+                                NS_ADDREF (cTrans);
                                 // Remove it from the idle
-                                mIdleTransports->RemoveElement(trans);
+                                mIdleTransports -> RemoveElement (cTrans);
+                                trans = cTrans;
                                 break;// break out of the for loop 
                             }
                         }
                     }
                 }
             }
-            // else delibrately ignored.
-        }
+        } /* for */
     }
     // if we didn't find any from the keep-alive idlelist
     if (trans == nsnull)
     {
-        // Ask the channel for proxy info... since that overrides
-        PRBool usingProxy = PR_FALSE;
-            
-        i_Channel->GetUsingProxy(&usingProxy);
         if (usingProxy)
         {
-            nsXPIDLCString proxy;
-            PRInt32 proxyPort = -1;
-
-            rv = i_Channel->GetProxyHost(getter_Copies(proxy));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = i_Channel->GetProxyPort(&proxyPort);
-            if (NS_FAILED(rv)) return rv;
-
             rv = CreateTransport(proxy, proxyPort, host,
                      bufferSegmentSize, bufferMaxSize, &trans);
         }
