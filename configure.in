@@ -1295,7 +1295,7 @@ case "$target" in
 *-*-os2*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-aix4.3*)
+*-aix4.3*|*-aix5*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
 *-openvms*)
@@ -1571,7 +1571,7 @@ dnl These are all the places some variant of statfs can be hiding.
 AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 case $target in
-*-aix4.3*)
+*-aix4.3*|*-aix5*)
 	;;
 *)
 	AC_CHECK_HEADERS(sys/cdefs.h)
@@ -1800,7 +1800,7 @@ then
 			AC_DEFINE(_REENTRANT) 
 			;;
 
-	    *-aix4.3*)
+	    *-aix4.3*|*-aix5*)
 			AC_DEFINE(_REENTRANT) 
 			;;
 
