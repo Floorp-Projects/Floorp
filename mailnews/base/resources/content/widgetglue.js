@@ -263,6 +263,7 @@ function CommandUpdate_Mail()
 			messagePane.removeAttribute('draw-focus-border');
 	}*/
 		
+	goUpdateCommand('cmd_delete');
 	goUpdateCommand('button_delete');
 }
 
