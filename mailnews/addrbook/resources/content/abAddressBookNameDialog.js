@@ -5,16 +5,15 @@ function abNameOnLoad()
 	doSetOKCancel(abNameOKButton, 0);
 
 	// look in arguments[0] for parameters
-	if (window.arguments && window.arguments[0])
+	if ("arguments" in window && window.arguments[0])
 	{
-		if ( window.arguments[0].title )
+		if ("title" in window.arguments[0])
 		{
-			dump("title = " + window.arguments[0].title + "\n");
 			var title = window.arguments[0].title;
 			top.window.title = title;
 		}
 		
-		if ( window.arguments[0].okCallback )
+		if ("okCallback" in window.arguments[0])
 			top.okCallback = window.arguments[0].okCallback;
 	}
 	
