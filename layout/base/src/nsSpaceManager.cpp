@@ -203,6 +203,7 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
     }
   }
 
+  NS_POSTCONDITION(aBandData.count > 0, "unexpected band data count");
   return aBandData.count;
 }
 
@@ -493,8 +494,10 @@ void SpaceManager::AddRectToBand(nsBandRect*   aBand,
 // |  R  |
 // +-----+
 //
-void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFrame)
+PRBool SpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
 {
+  NS_PRECONDITION(nsnull != aFrame, "null frame");
+
   // Convert from local to world coordinates
   nsRect  rect(aUnavailableSpace.x + mX, aUnavailableSpace.y + mY,
                aUnavailableSpace.width, aUnavailableSpace.height);
@@ -504,7 +507,7 @@ void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFra
   if ((0 == mRectArray.mCount) || (rect.y >= mRectArray.YMost())) {
       // Append a new bottommost band
       mRectArray.Append(rect, aFrame);
-      return;
+      return PR_TRUE;
   }
 
   // Examine each band looking for a band that intersects this rect
@@ -590,6 +593,37 @@ void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFra
       }
     }
   }
+
+  return PR_TRUE;
+}
+
+PRBool SpaceManager::ReshapeRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
+{
+  NS_NOTYETIMPLEMENTED("offseting a region");
+  return PR_FALSE;
+}
+
+PRBool SpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy)
+{
+  NS_NOTYETIMPLEMENTED("offseting a region");
+  return PR_FALSE;
+}
+
+PRBool SpaceManager::RemoveRegion(nsIFrame* aFrame)
+{
+  PRBool  result = PR_FALSE;
+
+  // Walk the list of rects and remove those tagged with aFrame.
+  // XXX We need to properly handle overlapped rects
+  for (PRInt32 i = 0; i < mRectArray.mCount; i++) {
+    if (mRectArray.mRects[i].frame == aFrame) {
+      mRectArray.RemoveAt(i);
+      result = PR_TRUE;
+    }
+  }
+
+  // XXX We should try and coalesce adjacent bands...
+  return result;
 }
 
 void SpaceManager::ClearRegions()

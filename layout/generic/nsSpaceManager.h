@@ -33,14 +33,20 @@ public:
 
   virtual nsIFrame* GetFrame() const;
 
-  virtual void Translate(nscoord aDx, nscoord aDy);
-  virtual void GetTranslation(nscoord& aX, nscoord& aY) const;
+  virtual void    Translate(nscoord aDx, nscoord aDy);
+  virtual void    GetTranslation(nscoord& aX, nscoord& aY) const;
   virtual nscoord YMost() const;
+
   virtual PRInt32 GetBandData(nscoord       aYOffset,
                               const nsSize& aMaxSize,
                               nsBandData&   aBandData) const;
-  virtual void AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFrame);
-  virtual void ClearRegions();
+
+  virtual PRBool AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace);
+  virtual PRBool ReshapeRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace);
+  virtual PRBool OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy);
+  virtual PRBool RemoveRegion(nsIFrame* aFrame);
+
+  virtual void   ClearRegions();
 
 protected:
   struct nsBandRect : nsRect {
@@ -73,6 +79,7 @@ protected:
   nsIFrame* const mFrame;      // frame associated with the space manager
   nscoord         mX, mY;      // translation from local to global coordinate space
   RectArray       mRectArray;  // y-x banded array of rectangles of unavailable space
+  RectArray       mEmptyRects; // list of empty height rects
 
 protected:
   PRBool  GetNextBand(nsBandRect*& aRect, PRInt32& aIndex) const;
