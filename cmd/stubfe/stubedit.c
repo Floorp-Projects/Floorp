@@ -156,3 +156,13 @@ FE_DisplayEntireTableOrCell(MWContext * pMWContext,
 			    LO_Element * pLoElement)
 {
 }
+
+FE_AlternateCompose(char * from, char * reply_to, char * to, 
+					char * cc, char * bcc,
+					char * fcc, char * newsgroups, char * followup_to,
+					char * organization, char * subject, char * references,
+					char * other_random_headers, char * priority,
+					char * attachment, char * newspost_url, char * body)
+{
+
+}
