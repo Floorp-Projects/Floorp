@@ -65,6 +65,7 @@ gre\components\gkview.dll
 gre\components\gkwidget.dll
 gre\components\history.xpt
 gre\components\htmlparser.xpt
+gre\components\i18n.dll
 gre\components\imgbmp.dll
 gre\components\imggif.dll
 gre\components\imgicon.dll
