@@ -20,7 +20,10 @@ that you have configured the program correctly.
 5) run make install
 
 6) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
-	every five minutes
+	every five minutes.
+   set up a cron job to run $prefix/bin/tinder.cgi/rmlogs once a day.
+     six am is a good time to run this as the machine load is light and 
+     will avoids any day light savings problems.
 
 7) set up $prefix/bin/processmail to receive the incoming tinderbox
 mail.  We use the mail address 'tinder-builds' for build information
