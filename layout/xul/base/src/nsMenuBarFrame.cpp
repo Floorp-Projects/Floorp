@@ -579,7 +579,9 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
     aMenuItem->SelectMenu(PR_TRUE);
     aMenuItem->MarkAsGenerated(); // Have the menu building. Get it ready to be shown.
 
-    if (wasOpen)
+    PRBool isDisabled = PR_FALSE;
+    aMenuItem->MenuIsDisabled(isDisabled);
+    if (wasOpen&&!isDisabled)
       aMenuItem->OpenMenu(PR_TRUE);
   }
 
