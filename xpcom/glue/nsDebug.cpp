@@ -95,8 +95,13 @@ NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
          ("Abort: at file %s, line %d", aFile, aLine));
   PR_LogFlush();
 #if defined(_WIN32)
+#ifdef _M_IX86
   long* __p = (long*) 0x7;
   *__p = 0x7;
+#else /* _M_ALPHA */
+  fprintf(stderr, "\07 Abort\n");  fflush(stderr);
+  PR_Abort();
+#endif
 #elif defined(XP_MAC)
   ExitToShell();
 #elif defined(XP_UNIX)
@@ -118,7 +123,11 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
          ("Break: at file %s, line %d", aFile, aLine));
   PR_LogFlush();
 #if defined(_WIN32)
-  ::DebugBreak();
+#ifdef _M_IX86
+   ::DebugBreak();
+#else /* _M_ALPHA */
+   fprintf(stderr, "Break: at file %s\n",aFile, aLine);  fflush(stderr);
+#endif
 #elif defined(XP_UNIX) && !defined(UNIX_CRASH_ON_ASSERT)
   fprintf(stderr, "\07");  fflush(stderr);
 #elif defined(XP_BEOS)
@@ -160,7 +169,7 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
   PR_LOG(gDebugLog, PR_LOG_ERROR,
          ("Assertion: \"%s\" (%s) at file %s, line %d", aStr, aExpr,
           aFile, aLine));
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || (defined(_M_ALPHA) && defined(_WIN32))
   fprintf(stderr, "Assertion: \"%s\" (%s) at file %s, line %d\n", aStr, aExpr,
           aFile, aLine);
 #endif
