@@ -5076,7 +5076,8 @@ nsCSSFrameConstructor::GetFloaterContainingBlock(nsIPresContext* aPresContext,
 {
   NS_PRECONDITION(mInitialContainingBlock, "no initial containing block");
   
-  // Starting with aFrame, look for a frame that is a real block frame
+  // Starting with aFrame, look for a frame that is a real block frame,
+  // or a floated inline or absolutely positioned inline frame
   nsIFrame* containingBlock = aFrame;
   while (nsnull != containingBlock) {
     const nsStyleDisplay* display;
@@ -5085,6 +5086,16 @@ nsCSSFrameConstructor::GetFloaterContainingBlock(nsIPresContext* aPresContext,
     if ((NS_STYLE_DISPLAY_BLOCK == display->mDisplay) ||
         (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay)) {
       break;
+    }
+    else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
+      const nsStylePosition* position;
+      containingBlock->GetStyleData(eStyleStruct_Position,
+                                    (const nsStyleStruct*&)position);
+
+      if ((NS_STYLE_FLOAT_NONE != display->mDisplay) ||
+          (position->IsAbsolutelyPositioned())) {
+        break;
+      }
     }
 
     // Continue walking up the hierarchy
