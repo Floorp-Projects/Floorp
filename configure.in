@@ -2910,9 +2910,6 @@ MOZ_MAIL_NEWS=1
 MOZ_ARG_DISABLE_BOOL(mailnews,
 [  --disable-mailnews      Disable building of mail & news components],
   MOZ_MAIL_NEWS= )
-if test "$MOZ_MAIL_NEWS"; then
-  AC_DEFINE(MOZ_MAIL_NEWS)
-fi
 AC_SUBST(MOZ_MAIL_NEWS)
 
 dnl Turn on the new lightweight gfx text control frames

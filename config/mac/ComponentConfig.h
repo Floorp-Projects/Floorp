@@ -37,7 +37,6 @@
 	#define MOZ_COMMUNICATOR_CONFIG_JS
 	#define MOZ_SPELLCHK
 #else	/* The WHOLE enchilada */
-	#define MOZ_MAIL_NEWS
 	#define EDITOR
 	#define MOZ_OFFLINE
 	#define MOZ_LOC_INDEP
