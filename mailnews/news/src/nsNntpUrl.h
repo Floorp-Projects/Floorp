@@ -46,8 +46,6 @@ public:
     NS_IMETHOD SetMessageToPost(nsINNTPNewsgroupPost *post);
     NS_IMETHOD GetMessageToPost(nsINNTPNewsgroupPost **post);
     
-    NS_IMETHOD GetFilePath(const nsFileSpec ** aFilePath);
-    
     NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
     
     // this should be an IDL attribute

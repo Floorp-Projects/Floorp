@@ -55,7 +55,6 @@ nsNntpUrl::nsNntpUrl()
     m_messageKey = nsMsgKey_None;
     
     m_port = NEWS_PORT;	
-	m_filePath = nsnull;
 }
  
 nsNntpUrl::~nsNntpUrl()
@@ -67,8 +66,6 @@ nsNntpUrl::~nsNntpUrl()
 	NS_IF_RELEASE(m_newsgroupList);
     PR_FREEIF(m_newsgroupPost);
     PR_FREEIF(m_newsgroupName);
-    
-    delete m_filePath;
 }
   
 NS_IMPL_ADDREF_INHERITED(nsNntpUrl, nsMsgMailNewsUrl)
@@ -225,33 +222,21 @@ nsresult nsNntpUrl::GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList) con
     return NS_OK;
 }
 
-nsresult nsNntpUrl::GetFilePath(const nsFileSpec ** aFilePath)
-{
-	if (aFilePath)
-		*aFilePath = m_filePath;
-	return NS_OK;
-}
-
 // from nsIMsgUriUrl
 NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 {	
+	nsresult rv;
 	if (aURI)
 	{
-		const nsFileSpec * filePath = nsnull;
-		GetFilePath(&filePath);
-		if (filePath)
-		{
-			char * uri = nsnull;
-			nsFileSpec folder = *filePath;
-			nsBuildNewsMessageURI(m_spec, m_messageKey, &uri);
-			*aURI = uri;
-		}
-		else
-			*aURI = nsnull;
-
+		char * uri = nsnull;
+		rv = nsBuildNewsMessageURI(m_spec, m_messageKey, &uri);
+		if (NS_FAILED(rv)) return rv;
+		*aURI = uri;
+		return NS_OK;
 	}
-
-	return NS_OK;
+	else {
+		return NS_ERROR_NULL_POINTER;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -453,10 +438,6 @@ nsresult nsNntpUrl::ParseUrl(const nsString& aSpec)
     printf("protocol='%s' host='%s' file='%s'\n", m_protocol, m_host, m_file);
 #endif
     delete [] cSpec;
-
-    if (m_filePath)
-        delete m_filePath;
-	m_filePath = new nsFileSpec(nsFilePath(m_file));
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;
