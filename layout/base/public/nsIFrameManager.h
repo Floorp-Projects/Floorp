@@ -63,6 +63,14 @@ public:
                                     nsIFrame* aPlaceholderFrame) = 0;
   NS_IMETHOD ClearPlaceholderFrameMap() = 0;
 
+  // Mapping undisplayed content
+  NS_IMETHOD SetUndisplayedContent(nsIContent* aContent, nsIStyleContext* aStyleContext) = 0;
+  NS_IMETHOD SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
+                                    nsIContent* aParentContent) = 0;
+  NS_IMETHOD ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent) = 0;
+  NS_IMETHOD ClearAllUndisplayedContentIn(nsIContent* aParentContent) = 0;
+  NS_IMETHOD ClearUndisplayedContentMap() = 0;
+
   // Functions for manipulating the frame model
   NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
                           nsIPresShell&   aPresShell,
