@@ -37,6 +37,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOUTLINERSELECTION
 
+  friend struct nsOutlinerRange;
+
 protected:
   // Members
   nsIOutlinerBoxObject* mOutliner; // [Weak]. The outliner will hold on to us through the view and let go when it dies.

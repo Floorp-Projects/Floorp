@@ -34,8 +34,11 @@ struct nsOutlinerRange
   nsOutlinerRange* mNext;
   nsOutlinerRange* mPrev;
 
-  nsOutlinerRange(PRInt32 aSingleVal):mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {};
-  nsOutlinerRange(PRInt32 aMin, PRInt32 aMax) :mNext(nsnull), mMin(aMin), mMax(aMax) {};
+  nsOutlinerSelection* mSelection;
+
+  nsOutlinerRange(nsOutlinerSelection* aSel, PRInt32 aSingleVal)
+    :mSelection(aSel), mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {};
+  nsOutlinerRange(nsOutlinerSelection* aSel, PRInt32 aMin, PRInt32 aMax) :mNext(nsnull), mMin(aMin), mMax(aMax) {};
 
   ~nsOutlinerRange() { delete mNext; };
 
@@ -53,6 +56,40 @@ struct nsOutlinerRange
 
     return PR_FALSE;
   };
+
+  PRInt32 Count() {
+    PRInt32 total = mMax - mMin + 1;
+    if (mNext)
+      total += mNext->Count();
+    return total;
+  };
+
+  void Invalidate() {
+    mSelection->mOutliner->InvalidateRange(mMin, mMax);
+    if (mNext)
+      mNext->Invalidate();
+  };
+
+  void RemoveAllBut(PRInt32 aIndex) {
+    if (aIndex >= mMin && aIndex <= mMax) {
+      mMin = aIndex;
+      mMax = aIndex;
+      
+      nsOutlinerRange* first = mSelection->mFirstRange;
+      if (mPrev)
+        mPrev->mNext = mNext;
+      if (mNext)
+        mNext->mPrev = mPrev;
+      mNext = mPrev = nsnull;
+      
+      // Invalidate everything in this list.
+      mSelection->mFirstRange->Invalidate();
+      delete mSelection->mFirstRange;
+      mSelection->mFirstRange = this;
+    }
+    else if (mNext)
+      mNext->RemoveAllBut(aIndex);
+  };
 };
 
 nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
@@ -65,6 +102,7 @@ nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
 
 nsOutlinerSelection::~nsOutlinerSelection()
 {
+  delete mFirstRange;
 }
 
 NS_IMPL_ISUPPORTS1(nsOutlinerSelection, nsIOutlinerSelection)
@@ -91,9 +129,26 @@ NS_IMETHODIMP nsOutlinerSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 index)
+NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (mFirstRange) {
+    PRBool alreadySelected = mFirstRange->Contains(aIndex);
+
+    if (alreadySelected) {
+      PRInt32 count = mFirstRange->Count();
+      if (count > 1) {
+        // We need to deselect everything but our item.
+        mFirstRange->RemoveAllBut(aIndex);
+        return NS_OK;
+      }
+    }
+  }
+
+  delete mFirstRange;
+  mFirstRange = new nsOutlinerRange(this, aIndex);
+
+  // XXX Fire the select event if not suppressed!
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 index)
