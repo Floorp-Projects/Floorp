@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.1 2004/12/02 04:21:27 jake%bugzilla.org Exp $ -->
+<!-- $Id: security.xml,v 1.2 2004/12/03 22:56:31 jake%bugzilla.org Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -32,7 +32,7 @@
       audit your server and make sure that you aren't listening on any ports
       you don't need to be. It's also highly recommended that the server
       Bugzilla resides on, along with any other machines you administer, be
-      placed behind some kinda of firewall.
+      placed behind some kind of firewall.
       </para>
     
     </section>
@@ -40,7 +40,7 @@
     <section id="security-os-accounts">
     <title>System User Accounts</title>
     
-      <para>Many <glossterm linkend="gloss-daemon">daemon</glossterm>, such
+      <para>Many <glossterm linkend="gloss-daemon">daemons</glossterm>, such
       as Apache's <filename>httpd</filename> or MySQL's
       <filename>mysqld</filename>, run as either <quote>root</quote> or
       <quote>nobody</quote>. This is even worse on Windows machines where the
@@ -51,7 +51,7 @@
       not be so obvious. Basically, if you run every daemon as
       <quote>nobody</quote> and one of them gets comprimised it can
       comprimise every other daemon running as <quote>nobody</quote> on your
-      machine. For this reason it is recommended that you create a user
+      machine. For this reason, it is recommended that you create a user
       account for each daemon.
       </para>
     
@@ -187,7 +187,7 @@ skip-networking
       Bugzilla is currently layed out, the list of what should and should not
       be accessible is rather complicated. A new installation method is
       currently in the works which should solve this by allowing files that
-      shouldn't be accessible from the web to be placed in directory outside
+      shouldn't be accessible from the web to be placed in a directory outside
       the webroot. See 
       <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=44659">bug 44659</ulink>
       for more information.
@@ -318,7 +318,8 @@ skip-networking
       To test, simply point your web browser at the file; for example, to
       test mozilla.org's installation, we'd try to access
       <ulink url="http://bugzilla.mozilla.org/localconfig"/>. You should get
-      a <errorcode>403</errorcode> <errorname>Forbidden</errorname> error.
+      a <quote><errorcode>403</errorcode> <errorname>Forbidden</errorname></quote>
+      error.
       </para>
       
       <tip>
@@ -372,18 +373,21 @@ skip-networking
       Due to internationalization concerns, we are unable to
       incorporate by default the code changes suggested by 
       <ulink
-      url="http://www.cert.org/tech_tips/malicious_code_mitigation.html#3">
-      the CERT advisory</ulink> on this issue.
+      url="http://www.cert.org/tech_tips/malicious_code_mitigation.html#3">the
+      CERT advisory</ulink> on this issue.
       If your installation is for an English speaking audience only, making the
-      change below will prevent this problem. 
+      change in <xref linkend="security-bugzilla-charset-ex"/> will prevent
+      this problem. 
       </para>
 
-      <para>Simply locate the following line in
-      <filename>Bugzilla/CGI.pm</filename>:
-      <programlisting>$self->charset('');</programlisting>
-      and change it to:
-      <programlisting>$self->charset('ISO-8859-1');</programlisting>
-      </para>
+      <example id="security-bugzilla-charset-ex">
+        <para>Locate the following line in
+        <filename>Bugzilla/CGI.pm</filename>:
+        <programlisting>$self->charset('');</programlisting>
+        and change it to:
+        <programlisting>$self->charset('ISO-8859-1');</programlisting>
+        </para>
+      </example>
     </section>    
     
   </section>
@@ -409,3 +413,4 @@ sgml-parent-document:("Bugzilla-Guide.xml" "book" "chapter")
 sgml-shorttag:t 
 sgml-tag-region-if-active:t 
 End: -->
+
