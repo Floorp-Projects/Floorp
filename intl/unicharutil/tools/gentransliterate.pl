@@ -114,9 +114,9 @@ entity.8221="
 # BULLET
 entity.8226=.
 # EN DASH
-entity.8211=-
+entity.8211=--
 # EM DASH
-entity.8212=--
+entity.8212=---
 # SMALL TILDE
 entity.732=~
 # SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
@@ -124,9 +124,9 @@ entity.8250=>
 # LATIN SMALL LIGATURE OE
 entity.339=oe
 # U+2000 EN QUAD
-entity.8192=\u0020
+entity.8192=\\u0020
 # U+2001 EM QUAD
-entity.8193=\u0020
+entity.8193=\\u0020
 # U+2010 HYPHEN
 entity.8208=-
 # U+2011 NON-BREAKING HYPHEN
@@ -167,7 +167,7 @@ sub FromLatinComment
 {
   my ($cmt) = (@_);
   $char = "";
-  if($cmt =~ /PRESEDED BY APOSTROPHE/) {
+  if($cmt =~ /PRECEDED BY APOSTROPHE/) {
       $char = "\'";
   }
   if($cmt =~ /CAPITAL LETTER ([A-Z]*)/) {

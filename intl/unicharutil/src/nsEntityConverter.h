@@ -72,6 +72,7 @@ public:
 	//
 	// nsIEntityConverter
 	//
+	NS_IMETHOD ConvertUTF32ToEntity(PRUint32 character, PRUint32 entityVersion, char **_retval);
 	NS_IMETHOD ConvertToEntity(PRUnichar character, PRUint32 entityVersion, char **_retval);
 
 	NS_IMETHOD ConvertToEntities(const PRUnichar *inString, PRUint32 entityVersion, PRUnichar **_retval);

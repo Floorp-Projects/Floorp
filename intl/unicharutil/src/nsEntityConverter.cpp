@@ -44,6 +44,7 @@
 #include "nsLiteralString.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 
 //
 // implementation methods
@@ -179,6 +180,12 @@ NS_IMPL_ISUPPORTS1(nsEntityConverter,nsIEntityConverter)
 //
 NS_IMETHODIMP
 nsEntityConverter::ConvertToEntity(PRUnichar character, PRUint32 entityVersion, char **_retval)
+{ 
+  return ConvertUTF32ToEntity((PRUint32)character, entityVersion, _retval);
+}
+
+NS_IMETHODIMP
+nsEntityConverter::ConvertUTF32ToEntity(PRUint32 character, PRUint32 entityVersion, char **_retval)
 {
   NS_ASSERTION(_retval, "null ptr- _retval");
   if(nsnull == _retval)
@@ -226,7 +233,14 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
   PRUint32 len = nsCRT::strlen(inString);
   for (PRUint32 i = 0; i < len; i++) {
     nsAutoString key(NS_LITERAL_STRING("entity."));
-    key.AppendInt(inString[i],10);
+    if (IS_HIGH_SURROGATE(inString[i]) &&
+        i + 2 < len &&
+        IS_LOW_SURROGATE(inString[i + 1])) {
+      key.AppendInt(SURROGATE_TO_UCS4(inString[i], inString[++i]), 10);
+    }
+    else {
+      key.AppendInt(inString[i],10);
+    }
     
     nsXPIDLString value;
     

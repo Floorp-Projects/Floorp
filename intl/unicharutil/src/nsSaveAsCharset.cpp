@@ -315,10 +315,9 @@ nsSaveAsCharset::DoConversionFallBack(PRUint32 inUCS4, char *outString, PRInt32 
   if (ATTR_NO_FALLBACK(mAttribute)) {
     return NS_OK;
   }
-  if (attr_EntityAfterCharsetConv == MASK_ENTITY(mAttribute) && 
-      !(inUCS4 & 0xff0000) ) {
+  if (attr_EntityAfterCharsetConv == MASK_ENTITY(mAttribute)) {
     char *entity = NULL;
-    rv = mEntityConverter->ConvertToEntity((PRUnichar)inUCS4, mEntityVersion, &entity);
+    rv = mEntityConverter->ConvertUTF32ToEntity(inUCS4, mEntityVersion, &entity);
     if (NS_SUCCEEDED(rv)) {
       if (NULL == entity || (PRInt32)strlen(entity) > bufferLength) {
         return NS_ERROR_OUT_OF_MEMORY;
