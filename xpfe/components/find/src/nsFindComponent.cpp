@@ -795,9 +795,9 @@ static nsresult OpenDialogWithArg( nsIDOMWindow     *parent,
                     void *stackPtr;
                     jsval *argv = JS_PushArguments( jsContext,
                                                     &stackPtr,
-                                                    "svs%ip",
+                                                    "sss%ip",
                                                     url,
-                                                    JSVAL_NULL,
+                                                    "_blank",
                                                     "chrome,resizable=no,dependent=yes",
                                                     (const nsIID*)(&nsISearchContext::GetIID()),
                                                     (nsISupports*)arg );
