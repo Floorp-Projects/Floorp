@@ -57,125 +57,125 @@ xpcTestIn :: xpcTestIn() {
 };
 
 NS_IMETHODIMP xpcTestIn :: EchoLong(PRInt32 l, PRInt32 *_retval) {
-	*_retval = l;
-	return NS_OK;
+    *_retval = l;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoShort(PRInt16 a, PRInt16 *_retval) {
-	*_retval = a;
-	return NS_OK;
+    *_retval = a;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoChar(char c, char *_retval) {
-	*_retval = c;
-	return NS_OK;
+    *_retval = c;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoBoolean(PRBool b, PRBool *_retval) {
-	*_retval = b;
-	return NS_OK;
+    *_retval = b;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoOctet(PRUint8 o, PRUint8 *_retval) {
-	*_retval = o;
-	return NS_OK;
+    *_retval = o;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoLongLong(PRInt64 ll, PRInt64 *_retval) {
-	*_retval = ll;
-	return NS_OK;
+    *_retval = ll;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoUnsignedShort(PRUint16 us, PRUint16 *_retval) {
-	*_retval = us;
-	return NS_OK;
+    *_retval = us;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoUnsignedLong(PRUint32 ul, PRUint32 *_retval) {
-	*_retval = ul;
-	return NS_OK;
+    *_retval = ul;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoFloat(float f, float *_retval) {
-	*_retval = f;
-	return NS_OK;
+    *_retval = f;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoDouble(double d, double *_retval) {
-	*_retval = d;
-	return NS_OK;
+    *_retval = d;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoWchar(PRUnichar wc, PRUnichar *_retval) {
-	*_retval = wc;
-	return NS_OK;
+    *_retval = wc;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoString(const PRUnichar *ws, char **_retval) {
-/*	const char s[] = *ws;
+/*  const char s[] = *ws;
     **_retval= (char*) nsMemory::Clone(s, 
                                     sizeof(char)*(strlen(s)+1));
-	return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return **_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 */
-	return NS_OK;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoPRBool(PRBool b, PRBool *_retval) {
-	*_retval = b;
-	return NS_OK;
+    *_retval = b;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoPRInt32(PRInt32 l, PRInt32 *_retval) {
-	*_retval = l;
-	return NS_OK;
+    *_retval = l;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoPRInt16(PRInt16 l, PRInt16 *_retval) {
-	*_retval = l;
-	return NS_OK;
+    *_retval = l;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoPRInt64(PRInt64 i, PRInt64 *_retval) {
-	*_retval = i;
-	return NS_OK;
+    *_retval = i;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoPRUint8(PRUint8 i, PRUint8 *_retval){
-	*_retval = i;
-	return NS_OK;
+    *_retval = i;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoPRUint16(PRUint16 i, PRUint16 *_retval){
-	*_retval = i;
-	return NS_OK;
+    *_retval = i;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoPRUint32(PRUint32 i, PRUint32 *_retval){
-	*_retval = i;
-	return NS_OK;
+    *_retval = i;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoPRUint64(PRUint64 i, PRUint64 *_retval) {
-	*_retval = i;
-	return NS_OK;
+    *_retval = i;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestIn :: EchoVoidPtr(void * vs, void * *_retval) {
-	*_retval = vs;
-	return NS_OK;
+    *_retval = vs;
+    return NS_OK;
 }; 
 
 NS_IMETHODIMP xpcTestIn :: EchoCharPtr(char * cs, char * *_retval) {
-	**_retval = *cs;
-	return NS_OK;
+    **_retval = *cs;
+    return NS_OK;
 };
 
 NS_IMETHODIMP xpcTestIn :: EchoPRUint32_2(PRUint32 i, PRUint32 *_retval){
-	*_retval = i;
-	return NS_OK;
+    *_retval = i;
+    return NS_OK;
 };
  /*
 NS_IMETHODIMP xpcTestIn :: EchoNsIDRef(const nsID & r, nsID & *_retval) {
-	&*_retval = r;
+    &*_retval = r;
 };
 NS_IMETHODIMP xpcTestIn :: EchoNsCIDRef(const nsCID & r, nsCID & *_retval) {
-	&*_retval = r;
+    &*_retval = r;
 };
 NS_IMETHODIMP xpcTestIn :: EchoNsIDPtr(const nsID * p, nsID * *_retval) {
-	**_retval = p;
+    **_retval = p;
 };
 NS_IMETHODIMP xpcTestIn :: EchoNsIIDPtr(const nsIID * p, nsIID * *_retval) {
-	*_retval = p;
+    *_retval = p;
 };
 NS_IMETHODIMP xpcTestIn :: EchoNsCIDPtr(const nsCID * p, nsCID * *_retval) {
-	*_retval = p;
+    *_retval = p;
 };
 NS_IMETHODIMP xpcTestIn :: EchoNsQIResult(void * r, void * *_retval) {
-	**_retval = r;
+    **_retval = r;
 };
 */
 NS_IMETHODIMP xpcTestIn :: EchoVoid(void) {
-	return NS_OK;
+    return NS_OK;
 };
 
 NS_IMETHODIMP

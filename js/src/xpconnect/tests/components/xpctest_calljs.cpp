@@ -40,14 +40,14 @@
 
 class xpcTestCallJS : public nsIXPCTestCallJS, public nsIXPCScriptable {
 public:
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSIXPCTESTCALLJS
-	XPC_DECLARE_IXPCSCRIPTABLE
-	xpcTestCallJS();
-	virtual ~xpcTestCallJS();
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCTESTCALLJS
+    XPC_DECLARE_IXPCSCRIPTABLE
+    xpcTestCallJS();
+    virtual ~xpcTestCallJS();
 
 private:
-	nsIXPCTestCallJS* jsobject;
+    nsIXPCTestCallJS* jsobject;
 };
 
 
@@ -65,43 +65,43 @@ xpcTestCallJS :: ~xpcTestCallJS() {
 };
 
 NS_IMETHODIMP xpcTestCallJS :: SetJSObject( nsIXPCTestCallJS* o ) {
-	//if (jsobject)
-	//		NS_RELEASE( jsobject );
-	jsobject = o;
-	if ( jsobject ) 
-		NS_ADDREF( jsobject );
-	return NS_OK;
+    //if (jsobject)
+    //  NS_RELEASE( jsobject );
+    jsobject = o;
+    if ( jsobject ) 
+        NS_ADDREF( jsobject );
+    return NS_OK;
 };
 
 NS_IMETHODIMP xpcTestCallJS :: CallMethodNoArgs(PRBool *_retval) {
-	*_retval = PR_TRUE;
-	return NS_OK;
+    *_retval = PR_TRUE;
+    return NS_OK;
 };
 
 NS_IMETHODIMP xpcTestCallJS :: Evaluate ( const char *s ) {
-	if (jsobject)
-		return jsobject->Evaluate(s);
-	return NS_OK;
+    if (jsobject)
+        return jsobject->Evaluate(s);
+    return NS_OK;
 };
 
 NS_IMETHODIMP 
 xpcTestCallJS :: EvaluateAndReturnError(nsresult in, nsresult *_retval){
-	if (jsobject) {
-		jsobject->EvaluateAndReturnError(in, _retval);
-	} else {
-		*_retval = in;
-	}
-	return *_retval;
+    if (jsobject) {
+        jsobject->EvaluateAndReturnError(in, _retval);
+    } else {
+        *_retval = in;
+    }
+    return *_retval;
 };
 
 NS_IMETHODIMP xpcTestCallJS :: EvaluateAndEatErrors(const char *s) {
-	if ( jsobject ) 
-		jsobject->Evaluate(s);
-	return NS_OK;
+    if ( jsobject ) 
+        jsobject->Evaluate(s);
+    return NS_OK;
 };
 
 NS_IMETHODIMP xpcTestCallJS :: UnscriptableMethod() {
-	return NS_OK;
+    return NS_OK;
 };
 
 NS_IMETHODIMP

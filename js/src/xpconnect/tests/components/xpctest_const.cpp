@@ -58,7 +58,7 @@ xpctest::ConstructXPCTestConst(nsISupports *aOuter, REFNSIID aIID, void **aResul
     NS_ASSERTION(aOuter == nsnull, "no aggregation");
     xpcTestConst *obj = new xpcTestConst();
     if(obj)
-	{
+    {
         rv = obj->QueryInterface(aIID, aResult);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
         NS_RELEASE(obj);
