@@ -1693,6 +1693,10 @@ PresShell::Init(nsIDocument* aDocument,
   nsresult result = aStyleSet->Init(aPresContext);
   NS_ENSURE_SUCCESS(result, result);
 
+  // From this point on, any time we return an error we need to make
+  // sure to null out mStyleSet first, since an error return from this
+  // method will cause the caller to delete the style set, so we don't
+  // want to delete it in our destructor.
   mStyleSet = aStyleSet;
 
   // Set the compatibility mode after attaching the pres context and
@@ -1704,16 +1708,24 @@ PresShell::Init(nsIDocument* aDocument,
   SetPreferenceStyleRules(PR_FALSE);
 
   mSelection = do_CreateInstance(kFrameSelectionCID, &result);
-  if (NS_FAILED(result))
+  if (NS_FAILED(result)) {
+    mStyleSet = nsnull;
     return result;
+  }
 
   // Create and initialize the frame manager
   result = FrameManager()->Init(this, mStyleSet);
-  NS_ENSURE_SUCCESS(result, result);
+  if (NS_FAILED(result)) {
+    NS_WARNING("Frame manager initialization failed");
+    mStyleSet = nsnull;
+    return result;
+  }
 
   result = mSelection->Init((nsIFocusTracker *) this, nsnull);
-  if (NS_FAILED(result))
+  if (NS_FAILED(result)) {
+    mStyleSet = nsnull;
     return result;
+  }
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
   // make the caret
@@ -1744,6 +1756,7 @@ PresShell::Init(nsIDocument* aDocument,
 
   if (!mEventQueueService) {
     NS_WARNING("couldn't get event queue service");
+    mStyleSet = nsnull;
     return NS_ERROR_FAILURE;
   }
 
@@ -1765,6 +1778,7 @@ PresShell::Init(nsIDocument* aDocument,
   mObserverService = do_GetService("@mozilla.org/observer-service;1",
                                    &result);
   if (NS_FAILED(result)) {
+    mStyleSet = nsnull;
     return result;
   }
 
