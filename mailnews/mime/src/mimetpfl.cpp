@@ -470,6 +470,10 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   }
   exdata->quotelevel = linequotelevel;
 
+  PRBool in_tag = PR_FALSE; 
+  PRBool in_quote_in_tag = PR_FALSE;
+  char quote_char;
+  
   if(flowed) {
     // Check RFC 2646 "4.3. Usenet Signature Convention": "-- "+CRLF is
     // not a flowed line
@@ -509,17 +513,22 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       }
       templinep += 3;  // Above, we already outputted the equvivalent to "-- "
     } else {
+
       // Output templinep
+      
+      /* Convert all spaces but the first in a row into nbsp
+         (i.e. always wrap) */
+      const PRBool firstSpaceNbsp = PR_FALSE;
+      PRBool nextSpaceIsNbsp = firstSpaceNbsp;
+
       while(*templinep && (*templinep != '\r') && (*templinep != '\n'))
       {
-        uint32 intag = 0;
-        const PRBool firstSpaceNbsp = PR_FALSE;   /* Convert all spaces but
-             the first in a row into nbsp (i.e. always wrap) */
-        PRBool nextSpaceIsNbsp = firstSpaceNbsp;
 
-        if ('<' == *templinep)
-          intag = 1;
-        if (!intag) {
+        Update_in_tag_info(&in_tag, &in_quote_in_tag,
+                           &quote_char, *templinep);
+
+        // We don't touch anything insida a tag.
+        if (!in_tag) {
           if (' ' == *templinep) {
             if (nextSpaceIsNbsp)
             {
@@ -573,28 +582,21 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
     exdata->inflow=PR_TRUE;
   } else {
-    // Fixed
+    // Fixed paragraph.
 
-    /*    // Output the stripped '>':s
-    while(linequotelevel) {
-      // output '>'
-      *outlinep='&'; outlinep++;
-      *outlinep='g'; outlinep++;
-      *outlinep='t'; outlinep++;
-      *outlinep=';'; outlinep++;
-      linequotelevel--;
-    }
-    */
     
-    uint32 intag = 0; 
     const PRBool firstSpaceNbsp = !plainHTML &&
                                   !obj->options->wrap_long_lines_p;
          /* If wrap, convert all spaces but the first in a row into nbsp,
             otherwise all. */
     PRBool nextSpaceIsNbsp = firstSpaceNbsp;
     while(*templinep && (*templinep != '\r') && (*templinep != '\n')) {
-      if('<' == *templinep) intag = 1;
-      if(!intag) {
+
+      Update_in_tag_info(&in_tag, &in_quote_in_tag,
+                         &quote_char, *templinep);
+      
+      // We don't touch anything insida a tag.
+      if(!in_tag) {
         if(' ' == *templinep) {
           if (nextSpaceIsNbsp)
           {
@@ -664,4 +666,69 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     return MimeObject_write(obj, obj->obuffer, outlinep-obj->obuffer-1, PR_TRUE);
   else
     return NS_OK;
+}
+
+
+/**
+ * Maintains a small state machine with three states. "Not in tag",
+ * "In tag, but not in quote" and "In quote inside a tag". It also
+ * remembers what character started the quote (" or '). The state
+ * variables are kept outside this function and are included as
+ * parameters.
+ *
+ * @param in/out a_in_tag, if we are in a tag right now.
+ * @param in/out a_in_quote_in_tag, if we are in a quote inside a tag.
+ * @param in/out a_quote_char, the kind of quote (" or ').
+ * @param in a_current_char, the next char. It decides which state
+ *                           will be next.
+ */
+void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
+                   PRBool *a_in_quote_in_tag, /* IN/OUT */
+                   char *a_quote_char, /* IN/OUT (pointer to single char) */
+                   char a_current_char) /* IN */
+{
+
+  if(*a_in_tag) {
+    // Keep us informed of what's quoted so that we
+    // don't end the tag too soon. For instance in
+    // <font face="weird>font<name">
+    if(*a_in_quote_in_tag) {
+      // We are in a quote. A quote is ended by the same
+      // character that started it ('...' or "...")
+      if(*a_quote_char == a_current_char) {
+        *a_in_quote_in_tag = PR_FALSE;
+      }
+    } else {
+      // We are not currently in a quote, but we may enter
+      // one right this minute.
+      switch(a_current_char) {
+      case '"':
+      case '\'':
+        *a_in_quote_in_tag = PR_TRUE;
+        *a_quote_char = a_current_char;
+        break;
+        
+      case '>':
+        // Tag is ended
+        *a_in_tag = PR_FALSE;
+        break;
+        
+      default:
+        // Do nothing
+        ;
+      }
+      
+    }
+    return;
+  }
+
+  // Not in a tag. 
+  // Check if we are entering a tag by looking for '<'.
+  // All normal occurances of '<' should have been replaced
+  // by &lt;
+  if ('<' == a_current_char) {
+    *a_in_tag = PR_TRUE;
+    *a_in_quote_in_tag = PR_FALSE;
+  }
+  
 }
