@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../../..
 SRCS=					\
 	MimeBase64Decoder.java		\
 	MimeBase64Encoder.java		\
@@ -29,4 +30,4 @@ SRCS=					\
 	MimeUUEncoder.java		\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../../rules.mk

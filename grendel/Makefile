@@ -21,34 +21,22 @@
 #               Edwin Woudt <edwin@woudt.nl>
 #
 
+TOPDIR=.
+
 SUBDIRS=		\
-	addressbook	\
-	calypso		\
-	composition	\
-	dnd		\
-	dog		\
-	mime		\
-	prefs		\
-	search		\
-	storage		\
-	ui		\
-	util		\
-	view		\
-	widgets		\
+	sources		\
 	$(NULL)
-
-# Temporarily removed because FilterMaster is broken (edwin)
-#	filters		\
-
-SRCS=				\
-	Main.java		\
-	$(NULL)
-
-#	TestFolderViewer.java	\
-#	SelfTest.java		\
 
 
 include rules.mk
+
+JARDIR=dist/classes
+jar::
+	@echo Creating jarfile...;	\
+	cd $(JARDIR) ; jar cvfm manifest Grendel.jar calypso dog grendel
+
+clean::
+	cd $(JARDIR) ;	rm -rf calypso dog grendel
 
 TARFILE=/tmp/grendel.tar.gz
 tar::

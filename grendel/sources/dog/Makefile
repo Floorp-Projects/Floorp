@@ -19,9 +19,10 @@
 #
 # Contributor(s): 
 
+TOPDIR=../..
 SUBDIRS=		\
 	mail		\
 	util		\
 	$(NULL)
 
-include ../rules.mk
+include ../../rules.mk

@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
 SRCS=					\
 	DummyThreadable.java		\
 	FolderView.java			\
@@ -41,4 +42,4 @@ SRCS=					\
 	ViewedStoreListener.java	\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

@@ -20,6 +20,7 @@
 # Contributor(s): Jeff Galyan <talisman@anamorphic.com>
 #               Giao Nguyen <grail@cafebabe.org>
 
+TOPDIR=../../..
 SRCS=						\
 	ActionFactory.java			\
 	BiffIcon.java				\
@@ -64,4 +65,4 @@ SRCS=						\
 	XMLWidgetBuilder.java			\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

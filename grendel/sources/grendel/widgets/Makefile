@@ -19,6 +19,7 @@
 #
 # Contributor(s): Jeff Galyan <talisman@anamorphic.com>
 
+TOPDIR=../../..
 SRCS=					\
 	Animation.java			\
 	CellEditor.java			\
@@ -55,4 +56,4 @@ SRCS=					\
 	TreeTableModelListener.java	\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
 SRCS=						\
 	Abacus.java				\
 	ArrayEnumeration.java			\
@@ -83,4 +84,4 @@ SRCS=						\
 	WeakLinkArrayEnumeration.java		\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../rules.mk

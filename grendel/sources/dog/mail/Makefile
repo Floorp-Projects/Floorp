@@ -19,9 +19,11 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
+
 SUBDIRS=		\
 	nntp		\
 	util		\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../rules.mk

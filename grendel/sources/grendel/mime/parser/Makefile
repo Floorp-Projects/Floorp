@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../../..
 SRCS=					\
 	MimeContainer.java		\
 	MimeDwimText.java		\
@@ -32,4 +33,4 @@ SRCS=					\
 	MimeXSunAttachment.java		\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../../rules.mk

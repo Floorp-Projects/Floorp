@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
 SRCS=				\
 	AndPanel.java		\
 	AttributeLayout.java	\
@@ -37,4 +38,4 @@ SRCS=				\
 	TermPanel.java		\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

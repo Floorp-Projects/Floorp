@@ -19,6 +19,7 @@
 #
 # Contributor(s): Edwin Woudt <edwin@woudt.nl>
 
+TOPDIR=../../..
 SUBDIRS=					\
 	addressparser				\
 	intertwingle				\
@@ -76,4 +77,4 @@ SRCS=						\
 #	SelfTest.java				\
 
 
-include ../rules.mk
+include ../../../rules.mk

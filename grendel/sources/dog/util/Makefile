@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
 SRCS=				\
 	ObjectCollator.java	\
 	Referential.java	\
@@ -33,4 +34,4 @@ SRCS=				\
 	TreeEvent.java		\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../rules.mk

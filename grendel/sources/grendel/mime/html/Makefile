@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../../..
 SRCS=						\
 	BriefHeaderFormatter.java		\
 	FullHeaderFormatter.java		\
@@ -43,4 +44,4 @@ SRCS=						\
 	TextHTMLConverter.java			\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../../rules.mk

@@ -39,22 +39,16 @@ MOZILLA_HOME = /usr/local/netscape-4.5
 JAVAC	= javac
 
 RM	= rm -f
+DISTDIR = $(TOPDIR)/dist/classes
 
 OBJS	= $(subst .java,.class,$(SRCS))
 
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JAVAC) -J-mx64m -g $*.java
+	$(JAVAC) -J-mx64m -d $(DISTDIR) -g $*.java
 
 all:: $(OBJS)
-
-
-#clean::
-#	$(RM) $(OBJS)
-
-clean::
-	$(RM) *.class
 
 distclean::
 	$(RM) *.class *~ core

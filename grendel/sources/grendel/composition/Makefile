@@ -18,7 +18,8 @@
 # Rights Reserved.
 #
 # Contributor(s): Giao Nguyen <grail@cafebabe.org>
- 
+
+TOPDIR=../../.. 
 SRCS=					\
 	AddressBar.java			\
 	AddressDialog.java		\
@@ -36,4 +37,4 @@ SRCS=					\
 	# TestDataSource2.java		\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

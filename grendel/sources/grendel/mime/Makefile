@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
 SUBDIRS=				\
 	html				\
 	parser				\
@@ -34,4 +35,4 @@ SRCS=					\
 	TestMime.java			\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

@@ -19,8 +19,9 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../../..
 SRCS=						\
 	MimeExtractorOperatorFactory.java	\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../../rules.mk

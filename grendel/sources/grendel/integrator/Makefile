@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
 SRCS=				\
 	CompositionShell.java	\
 	CompositionView.java	\
@@ -29,4 +30,4 @@ SRCS=				\
 	StoreCtx.java		\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

@@ -19,10 +19,11 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../../..
 SRCS=				\
 	Article.java		\
 	NNTPStore.java		\
 	Newsgroup.java		\
 	$(NULL)
 
-include ../../../rules.mk
+include ../../../../rules.mk

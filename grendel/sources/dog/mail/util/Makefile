@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../../..
 SRCS=					\
 	CRLFInputStream.java		\
 	CRLFOutputStream.java		\
@@ -26,4 +27,4 @@ SRCS=					\
 	MessageOutputStream.java	\
 	$(NULL)
 
-include ../../../rules.mk
+include ../../../../rules.mk

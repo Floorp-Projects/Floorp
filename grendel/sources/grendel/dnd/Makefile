@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
 SRCS=						\
 	DnDConstants.java			\
 	DragSource.java				\
@@ -36,4 +37,4 @@ SRCS=						\
 	InvalidDnDOperationException.java	\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

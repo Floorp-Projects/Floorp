@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-TOPDIR = ../..
+TOPDIR = ../../../..
 
 SRCS=				\
 	ACS_Personal.java	\
@@ -47,4 +47,4 @@ SRCS=				\
 	TermOr.java		\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../../rules.mk

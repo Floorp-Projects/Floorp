@@ -20,10 +20,11 @@
 # Contributor(s): Giao Nguyen <grail@cafebabe.org>
 #               Edwin Woudt <edwin@woudt.nl>
 
+TOPDIR=../../..
 SUBDIRS=		\
 	base	\
 	ui \
 	$(NULL)
 
 
-include ../rules.mk
+include ../../../rules.mk

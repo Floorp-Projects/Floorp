@@ -19,10 +19,10 @@
 #
 # Contributor(s): Edwin Woudt <edwin@woudt.nl>
 
-
+TOPDIR=../../..
 SRCS=					\
 	Constants.java			\
 	MessageIDGenerator.java		\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../..
 SRCS=					\
 	DeleteFilterActionFactory.java	\
 	FilterBase.java			\
@@ -34,4 +35,4 @@ SRCS=					\
 	SubjectTermFactory.java		\
 	$(NULL)
 
-include ../rules.mk
+include ../../../rules.mk

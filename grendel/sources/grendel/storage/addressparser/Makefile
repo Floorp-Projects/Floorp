@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../../..
 SRCS=					\
 	AddressCorrector.java		\
 	AddressToken.java		\
@@ -37,4 +38,4 @@ SRCS=					\
 	RouteAddrNoPhraseException.java	\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../../rules.mk

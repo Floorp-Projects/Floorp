@@ -19,6 +19,7 @@
 #
 # Contributor(s): Giao Nguyen <grail@cafebabe.org>
 
+TOPDIR=../../../..
 SRCS=               \
   General.java      \
 	Identities.java   \
@@ -26,4 +27,4 @@ SRCS=               \
 	UI.java           \
 	$(NULL)
 
-include ../../rules.mk
+include ../../../../rules.mk

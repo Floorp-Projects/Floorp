@@ -19,6 +19,7 @@
 #
 # Contributor(s): 
 
+TOPDIR=../../../..
 SRCS=			\
 	BGDB.java	\
 	BaseDB.java	\
@@ -31,4 +32,4 @@ SRCS=			\
 	Twingle.java	\
 	$(NULL)
 
-include ../../rules.mk
+include ../../../../rules.mk
