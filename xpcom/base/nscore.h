@@ -136,7 +136,7 @@
  *           NS_HIDDEN_(int) NS_FASTCALL func2(char *foo);
  */
 
-#if defined(__i386__) && defined(__GNUC__)
+#if defined(__i386__) && defined(__GNUC__) && (__GNUC__ >= 3)
 #define NS_FASTCALL __attribute__ ((regparm (3), stdcall))
 #else
 #define NS_FASTCALL
@@ -146,7 +146,7 @@
  * NS_DEFCALL undoes the effect of a global regparm/stdcall setting
  * so that xptcall works correctly.
  */
-#if defined(__i386__) && defined(__GNUC__)
+#if defined(__i386__) && defined(__GNUC__) && (__GNUC__ >= 3)
 #define NS_DEFCALL __attribute__ ((regparm (0), cdecl))
 #else
 #define NS_DEFCALL
