@@ -678,6 +678,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     mComputedPadding.SizeTo(0, 0, 0, 0);
     mComputedBorderPadding.SizeTo(0, 0, 0, 0);
     computedOffsets.SizeTo(0, 0, 0, 0);
+    mComputedMinWidth = mComputedMinHeight = 0;
+    mComputedMaxWidth = mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
   } else {
     // Get the containing block reflow state
     const nsHTMLReflowState* cbrs =
@@ -769,6 +771,9 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       }
     }
 
+    // Calculate the computed values for min and max properties
+    ComputeMinMaxValues(containingBlockWidth, containingBlockHeight, cbrs);
+
     // Calculate the computed width and height. This varies by frame type
     if ((NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE) == frameType) ||
         (NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_FLOATING) == frameType)) {
@@ -857,6 +862,11 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                              mStylePosition->mHeight,
                              computedHeight);
       }
+
+      // Doesn't apply to table elements
+      mComputedMinWidth = mComputedMinHeight = 0;
+      mComputedMaxWidth = mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
+
     } else if (NS_FRAME_GET_TYPE(frameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
       InitAbsoluteConstraints(aPresContext, cbrs, containingBlockWidth,
                               containingBlockHeight);
@@ -867,6 +877,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       computedHeight = NS_UNCONSTRAINEDSIZE;
       computedMargin.top = 0;
       computedMargin.bottom = 0;
+      mComputedMinWidth = mComputedMinHeight = 0;
+      mComputedMaxWidth = mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
     } else {
       ComputeBlockBoxData(aPresContext, cbrs, widthUnit, heightUnit,
                           containingBlockWidth,
@@ -1372,5 +1384,40 @@ nsHTMLReflowState::ComputeBorderPaddingFor(nsIFrame* aFrame,
   }
   else {
     aResult.SizeTo(0, 0, 0, 0);
+  }
+}
+
+void
+nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
+                                       nscoord aContainingBlockHeight,
+                                       const nsHTMLReflowState* aContainingBlockRS)
+{
+  nsStyleUnit minWidthUnit = mStylePosition->mMinWidth.GetUnit();
+  if (eStyleUnit_Inherit == minWidthUnit) {
+    mComputedMinWidth = aContainingBlockRS->mComputedMinWidth;
+  } else {
+    ComputeHorizontalValue(aContainingBlockWidth, minWidthUnit,
+                           mStylePosition->mMinWidth, mComputedMinWidth);
+  }
+  nsStyleUnit maxWidthUnit = mStylePosition->mMaxWidth.GetUnit();
+  if (eStyleUnit_Inherit == maxWidthUnit) {
+    mComputedMaxWidth = aContainingBlockRS->mComputedMaxWidth;
+  } else {
+    ComputeHorizontalValue(aContainingBlockWidth, maxWidthUnit,
+                           mStylePosition->mMaxWidth, mComputedMaxWidth);
+  }
+  nsStyleUnit minHeightUnit = mStylePosition->mMinHeight.GetUnit();
+  if (eStyleUnit_Inherit == minHeightUnit) {
+    mComputedMinHeight = aContainingBlockRS->mComputedMinHeight;
+  } else {
+    ComputeVerticalValue(aContainingBlockHeight, minHeightUnit,
+                         mStylePosition->mMinHeight, mComputedMinHeight);
+  }
+  nsStyleUnit maxHeightUnit = mStylePosition->mMaxHeight.GetUnit();
+  if (eStyleUnit_Inherit == maxHeightUnit) {
+    mComputedMaxHeight = aContainingBlockRS->mComputedMaxHeight;
+  } else {
+    ComputeVerticalValue(aContainingBlockHeight, maxHeightUnit,
+                         mStylePosition->mMaxHeight, mComputedMaxHeight);
   }
 }
