@@ -35,6 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef HAVE_RES_NINIT
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>   
+#include <arpa/nameser.h>
+#include <resolv.h>
+#endif
+
 #include "nsDnsService.h"
 
 #include "nsIDNSListener.h"
@@ -268,8 +276,8 @@ private:
 
 
 #if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
-
     void                DoSyncLookup();
+    PRStatus            DoSyncLookupInternal();
 #endif
 };
 
@@ -743,7 +751,8 @@ nsDNSLookup::MarkComplete(nsresult status)
 {
     mStatus = status;
     mState  = LOOKUP_COMPLETE;
-    if (NS_FAILED(status))  MarkNotCacheable();
+    if (NS_FAILED(status)) 
+        MarkNotCacheable();
 }
 
 
@@ -819,11 +828,11 @@ nsDNSLookup::IsExpired()
 
 #if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
 
-void
-nsDNSLookup::DoSyncLookup()
+
+PRStatus
+nsDNSLookup::DoSyncLookupInternal()
 {
     PRStatus status;
-    nsresult rv = NS_OK;
 
     // must not hold the service lock while resolving, otherwise we could
     // end up locking up the DNS service and anyone who accesses it until
@@ -839,11 +848,19 @@ nsDNSLookup::DoSyncLookup()
                                 &(mHostEntry.hostEnt));
 
     nsDNSService::Lock();
+    return status;
+}
 
-    if (PR_SUCCESS != status)
-        rv = NS_ERROR_UNKNOWN_HOST;
-
-    MarkComplete(rv);
+void
+nsDNSLookup::DoSyncLookup()
+{
+    PRStatus status = DoSyncLookupInternal();
+    
+    if (PR_SUCCESS != status) {
+        if (nsDNSService::Reset());
+            status = DoSyncLookupInternal();
+    }
+    MarkComplete(PR_SUCCESS == status ? NS_OK : NS_ERROR_UNKNOWN_HOST);
 }
 
 #endif /* XP_UNIX || XP_BEOS || XP_OS2*/
@@ -902,6 +919,10 @@ nsDNSService::nsDNSService()
     
     PR_INIT_CLIST(&mPendingQ);
     PR_INIT_CLIST(&mEvictionQ);
+
+    // Let us say that the most times a reset can happen is one time every second.
+    mResetMaxInterval = PR_SecondsToInterval(1);
+    mLastReset = PR_IntervalNow();
 
 #if defined(XP_MAC)
     gNeedLateInitialization = PR_TRUE;
@@ -1130,6 +1151,30 @@ nsDNSService::Unlock()
     }
 }
 
+PRBool
+nsDNSService::Reset()
+{
+#ifdef HAVE_RES_NINIT
+    // On platforms where res_ninit() is available and supported
+    // by Mozilla, we shall attempt to reinitialize the dns
+    // resolver.  Since this method may be called many times in
+    // a row, we shall restrict calling into res_init no more than
+    // once every mResetMaxInterval.
+    //
+    // For the linux multithreaded resolver discussion see:
+    // http://sources.redhat.com/ml/libc-hacker/2000-07/msg00487.html
+
+    if (gService &&
+        PR_IntervalNow() - gService->mLastReset >= gService->mResetMaxInterval) {
+
+        (void) res_ninit(&_res);
+
+        gService->mLastReset = PR_IntervalNow();
+        return PR_TRUE;
+    }
+#endif
+    return PR_FALSE;
+}
 
 PRInt32
 nsDNSService::ExpirationInterval()
