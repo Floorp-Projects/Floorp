@@ -697,6 +697,9 @@ embedding/browser/setup/Makefile
 embedding/browser/gtk/Makefile
 embedding/browser/gtk/src/Makefile
 embedding/browser/gtk/tests/Makefile
+embedding/browser/photon/Makefile
+embedding/browser/photon/src/Makefile
+embedding/browser/photon/tests/Makefile
 "
 
 MAKEFILES_security="
