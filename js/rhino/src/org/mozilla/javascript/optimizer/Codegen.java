@@ -2255,252 +2255,15 @@ class BodyCodegen
 
     private void visitCall(Node node, int type, Node child)
     {
-        Node firstArgChild = child.getNext();
-
         OptFunctionNode
             target = (OptFunctionNode)node.getProp(Node.DIRECTCALL_PROP);
 
-        if (target == null && type == Token.CALL) {
-            int childType = child.getType();
-            if (firstArgChild == null) {
-                if (childType == Token.NAME) {
-                    String name = child.getString();
-                    cfw.addPush(name);
-                    cfw.addALoad(contextLocal);
-                    cfw.addALoad(variableObjectLocal);
-                    addOptRuntimeInvoke(
-                        "callName0",
-                        "(Ljava/lang/String;"
-                        +"Lorg/mozilla/javascript/Context;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Ljava/lang/Object;");
-                } else if (childType == Token.GETPROP) {
-                    // x.name() call
-                    Node propTarget = child.getFirstChild();
-                    generateExpression(propTarget, node);
-                    Node id = propTarget.getNext();
-                    String property = id.getString();
-                    cfw.addPush(property);
-                    cfw.addALoad(contextLocal);
-                    cfw.addALoad(variableObjectLocal);
-                    addOptRuntimeInvoke(
-                        "callProp0",
-                        "(Ljava/lang/Object;"
-                        +"Ljava/lang/String;"
-                        +"Lorg/mozilla/javascript/Context;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Ljava/lang/Object;");
-                } else {
-                    generateFunctionAndThisObj(child, node);
-                    cfw.addALoad(contextLocal);
-                    cfw.addALoad(variableObjectLocal);
-                    addOptRuntimeInvoke(
-                        "call0",
-                        "(Lorg/mozilla/javascript/Function;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
-                        +"Lorg/mozilla/javascript/Context;"
-                        +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Ljava/lang/Object;");
-                }
-                return;
-            }
-
-            if (childType == Token.NAME) {
-                // XXX: this optimization is only possible if name
-                // resolution
-                // is not affected by arguments evaluation and currently
-                // there are no checks for it
-                String name = child.getString();
-                generateCallArgArray(node, firstArgChild, false);
-                cfw.addPush(name);
-                cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
-                addOptRuntimeInvoke(
-                    "callName",
-                    "([Ljava/lang/Object;"
-                    +"Ljava/lang/String;"
-                    +"Lorg/mozilla/javascript/Context;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
-                    +")Ljava/lang/Object;");
-                return;
-            }
-
-            if (firstArgChild.getNext() == null) {
-                // ...(something) call
-                generateFunctionAndThisObj(child, node);
-                // stack: ... functionObj thisObj
-                generateExpression(firstArgChild, node);
-                // stack: ... functionObj thisObj arg0
-                cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
-                addOptRuntimeInvoke(
-                    "call1",
-                    "(Lorg/mozilla/javascript/Function;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
-                    +"Ljava/lang/Object;"
-                    +"Lorg/mozilla/javascript/Context;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
-                    +")Ljava/lang/Object;");
-                return;
-            }
-        }
-
-        if (type == Token.NEW) {
-            generateExpression(child, node);
-            // stack: ... functionObj
-        } else {
-            generateFunctionAndThisObj(child, node);
-            // stack: ... functionObj thisObj
-        }
-
-        int beyond = 0;
-        if (target == null) {
-            if (type == Token.NEW) {
-                cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
-                // stack: ... functionObj cx scope
-            } else {
-                cfw.addALoad(contextLocal);
-                cfw.add(ByteCode.SWAP);
-                cfw.addALoad(variableObjectLocal);
-                cfw.add(ByteCode.SWAP);
-                // stack: ... functionObj cx scope thisObj
-            }
-            generateCallArgArray(node, firstArgChild, false);
-        } else {
-            beyond = cfw.acquireLabel();
-
-            short thisObjLocal = 0;
-            if (type != Token.NEW) {
-                thisObjLocal = getNewWordLocal();
-                cfw.addAStore(thisObjLocal);
-            }
-            // stack: ... functionObj
-
-            int directTargetIndex = target.getDirectTargetIndex();
-            if (isTopLevel) {
-                cfw.add(ByteCode.ALOAD_0);
-            } else {
-                cfw.add(ByteCode.ALOAD_0);
-                cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
-                        Codegen.DIRECT_CALL_PARENT_FIELD,
-                        codegen.mainClassSignature);
-            }
-            cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
-                    Codegen.getDirectTargetFieldName(directTargetIndex),
-                    codegen.mainClassSignature);
-
-            cfw.add(ByteCode.DUP2);
-            // stack: ... functionObj directFunct functionObj directFunct
-
-            int regularCall = cfw.acquireLabel();
-            cfw.add(ByteCode.IF_ACMPNE, regularCall);
-
-            // stack: ... functionObj directFunct
-            short stackHeight = cfw.getStackTop();
-            cfw.add(ByteCode.SWAP);
-            cfw.add(ByteCode.POP);
-            // stack: ... directFunct
-            if (compilerEnv.isUseDynamicScope()) {
-                cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
-            } else {
-                cfw.add(ByteCode.DUP);
-                // stack: ... directFunct directFunct
-                cfw.addInvoke(ByteCode.INVOKEINTERFACE,
-                              "org/mozilla/javascript/Scriptable",
-                              "getParentScope",
-                              "()Lorg/mozilla/javascript/Scriptable;");
-                // stack: ... directFunct scope
-                cfw.addALoad(contextLocal);
-                // stack: ... directFunct scope cx
-                cfw.add(ByteCode.SWAP);
-            }
-            // stack: ... directFunc cx scope
-
-            if (type == Token.NEW) {
-                cfw.add(ByteCode.ACONST_NULL);
-            } else {
-                cfw.addALoad(thisObjLocal);
-            }
-            // stack: ... directFunc cx scope thisObj
-/*
-    Remember that directCall parameters are paired in 1 aReg and 1 dReg
-    If the argument is an incoming arg, just pass the orginal pair thru.
-    Else, if the argument is known to be typed 'Number', pass Void.TYPE
-    in the aReg and the number is the dReg
-    Else pass the JS object in the aReg and 0.0 in the dReg.
-*/
-            Node argChild = firstArgChild;
-            while (argChild != null) {
-                int dcp_register = nodeIsDirectCallParameter(argChild);
-                if (dcp_register >= 0) {
-                    cfw.addALoad(dcp_register);
-                    cfw.addDLoad(dcp_register + 1);
-                } else if (argChild.getIntProp(Node.ISNUMBER_PROP, -1)
-                           == Node.BOTH)
-                {
-                    cfw.add(ByteCode.GETSTATIC,
-                            "java/lang/Void",
-                            "TYPE",
-                            "Ljava/lang/Class;");
-                    generateExpression(argChild, node);
-                } else {
-                    generateExpression(argChild, node);
-                    cfw.addPush(0.0);
-                }
-                argChild = argChild.getNext();
-            }
-
-            cfw.add(ByteCode.GETSTATIC,
-                    "org/mozilla/javascript/ScriptRuntime",
-                    "emptyArgs", "[Ljava/lang/Object;");
-            cfw.addInvoke(ByteCode.INVOKESTATIC,
-                          codegen.mainClassName,
-                          (type == Token.NEW)
-                              ? codegen.getDirectCtorName(target.fnode)
-                              : codegen.getBodyMethodName(target.fnode),
-                          codegen.getBodyMethodSignature(target.fnode));
-
-            cfw.add(ByteCode.GOTO, beyond);
-
-            cfw.markLabel(regularCall, stackHeight);
-            // stack: ... functionObj directFunct
-            cfw.add(ByteCode.POP);
-            cfw.addALoad(contextLocal);
-            cfw.addALoad(variableObjectLocal);
-            // stack: ... functionObj cx scope
-            if (type != Token.NEW) {
-                cfw.addALoad(thisObjLocal);
-                releaseWordLocal(thisObjLocal);
-                // stack: ... functionObj cx scope thisObj
-            }
-            // XXX: this will generate code for the child array the second time,
-            // so the code better not to alter tree structure...
-            generateCallArgArray(node, firstArgChild, true);
-        }
-
-        if (type == Token.NEW) {
-            addScriptRuntimeInvoke(
-                "newObject",
-                "(Ljava/lang/Object;"
-                +"Lorg/mozilla/javascript/Context;"
-                +"Lorg/mozilla/javascript/Scriptable;"
-                +"[Ljava/lang/Object;"
-                +")Lorg/mozilla/javascript/Scriptable;");
-        } else {
-            cfw.addInvoke(ByteCode.INVOKEINTERFACE,
-                "org/mozilla/javascript/Function",
-                "call",
-                "(Lorg/mozilla/javascript/Context;"
-                +"Lorg/mozilla/javascript/Scriptable;"
-                +"Lorg/mozilla/javascript/Scriptable;"
-                +"[Ljava/lang/Object;"
-                +")Ljava/lang/Object;");
-        }
-
         if (target != null) {
-            cfw.markLabel(beyond);
+            visitOptimizedCall(node, target, type, child);
+        } else if (type == Token.CALL) {
+            visitStandardCall(node, child);
+        } else {
+            visitStandardNew(node, child);
         }
     }
 
@@ -2572,6 +2335,269 @@ class BodyCodegen
                                +"Lorg/mozilla/javascript/Context;"
                                +"Lorg/mozilla/javascript/Scriptable;"
                                +")Ljava/lang/Object;");
+    }
+
+    private void visitStandardCall(Node node, Node child)
+    {
+        if (node.getType() != Token.CALL) throw Codegen.badTree();
+
+        Node firstArgChild = child.getNext();
+        int childType = child.getType();
+
+        String methodName;
+        String signature;
+
+        if (firstArgChild == null) {
+            if (childType == Token.NAME) {
+                // name() call
+                String name = child.getString();
+                cfw.addPush(name);
+                methodName = "callName0";
+                signature = "(Ljava/lang/String;"
+                            +"Lorg/mozilla/javascript/Context;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +")Ljava/lang/Object;";
+            } else if (childType == Token.GETPROP) {
+                // x.name() call
+                Node propTarget = child.getFirstChild();
+                generateExpression(propTarget, node);
+                Node id = propTarget.getNext();
+                String property = id.getString();
+                cfw.addPush(property);
+                methodName = "callProp0";
+                signature = "(Ljava/lang/Object;"
+                            +"Ljava/lang/String;"
+                            +"Lorg/mozilla/javascript/Context;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +")Ljava/lang/Object;";
+            } else {
+                generateFunctionAndThisObj(child, node);
+                methodName = "call0";
+                signature = "(Lorg/mozilla/javascript/Function;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +"Lorg/mozilla/javascript/Context;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +")Ljava/lang/Object;";
+            }
+
+        } else if (childType == Token.NAME) {
+            // XXX: this optimization is only possible if name
+            // resolution
+            // is not affected by arguments evaluation and currently
+            // there are no checks for it
+            String name = child.getString();
+            generateCallArgArray(node, firstArgChild, false);
+            cfw.addPush(name);
+            methodName = "callName";
+            signature = "([Ljava/lang/Object;"
+                        +"Ljava/lang/String;"
+                        +"Lorg/mozilla/javascript/Context;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +")Ljava/lang/Object;";
+        } else {
+            int argCount = 0;
+            for (Node arg = firstArgChild; arg != null; arg = arg.getNext()) {
+                ++argCount;
+            }
+            generateFunctionAndThisObj(child, node);
+            // stack: ... functionObj thisObj
+            if (argCount == 1) {
+                generateExpression(firstArgChild, node);
+                methodName = "call1";
+                signature = "(Lorg/mozilla/javascript/Function;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +"Ljava/lang/Object;"
+                            +"Lorg/mozilla/javascript/Context;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +")Ljava/lang/Object;";
+            } else if (argCount == 2) {
+                generateExpression(firstArgChild, node);
+                generateExpression(firstArgChild.getNext(), node);
+                methodName = "call2";
+                signature = "(Lorg/mozilla/javascript/Function;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +"Ljava/lang/Object;"
+                            +"Ljava/lang/Object;"
+                            +"Lorg/mozilla/javascript/Context;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +")Ljava/lang/Object;";
+            } else {
+                generateCallArgArray(node, firstArgChild, false);
+                methodName = "callN";
+                signature = "(Lorg/mozilla/javascript/Function;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +"[Ljava/lang/Object;"
+                            +"Lorg/mozilla/javascript/Context;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +")Ljava/lang/Object;";
+            }
+        }
+
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
+        addOptRuntimeInvoke(methodName, signature);
+    }
+
+    private void visitStandardNew(Node node, Node child)
+    {
+        if (node.getType() != Token.NEW) throw Codegen.badTree();
+
+        Node firstArgChild = child.getNext();
+
+        generateExpression(child, node);
+        // stack: ... functionObj
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
+        // stack: ... functionObj cx scope
+        generateCallArgArray(node, firstArgChild, false);
+        addScriptRuntimeInvoke(
+            "newObject",
+            "(Ljava/lang/Object;"
+            +"Lorg/mozilla/javascript/Context;"
+            +"Lorg/mozilla/javascript/Scriptable;"
+            +"[Ljava/lang/Object;"
+            +")Lorg/mozilla/javascript/Scriptable;");
+    }
+
+    private void visitOptimizedCall(Node node, OptFunctionNode target,
+                                    int type, Node child)
+    {
+        Node firstArgChild = child.getNext();
+
+        short thisObjLocal = 0;
+        if (type == Token.NEW) {
+            generateExpression(child, node);
+        } else {
+            generateFunctionAndThisObj(child, node);
+            thisObjLocal = getNewWordLocal();
+            cfw.addAStore(thisObjLocal);
+        }
+        // stack: ... functionObj
+
+        int beyond = cfw.acquireLabel();
+
+        int directTargetIndex = target.getDirectTargetIndex();
+        if (isTopLevel) {
+            cfw.add(ByteCode.ALOAD_0);
+        } else {
+            cfw.add(ByteCode.ALOAD_0);
+            cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
+                    Codegen.DIRECT_CALL_PARENT_FIELD,
+                    codegen.mainClassSignature);
+        }
+        cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
+                Codegen.getDirectTargetFieldName(directTargetIndex),
+                codegen.mainClassSignature);
+
+        cfw.add(ByteCode.DUP2);
+        // stack: ... functionObj directFunct functionObj directFunct
+
+        int regularCall = cfw.acquireLabel();
+        cfw.add(ByteCode.IF_ACMPNE, regularCall);
+
+        // stack: ... functionObj directFunct
+        short stackHeight = cfw.getStackTop();
+        cfw.add(ByteCode.SWAP);
+        cfw.add(ByteCode.POP);
+        // stack: ... directFunct
+        if (compilerEnv.isUseDynamicScope()) {
+            cfw.addALoad(contextLocal);
+            cfw.addALoad(variableObjectLocal);
+        } else {
+            cfw.add(ByteCode.DUP);
+            // stack: ... directFunct directFunct
+            cfw.addInvoke(ByteCode.INVOKEINTERFACE,
+                          "org/mozilla/javascript/Scriptable",
+                          "getParentScope",
+                          "()Lorg/mozilla/javascript/Scriptable;");
+            // stack: ... directFunct scope
+            cfw.addALoad(contextLocal);
+            // stack: ... directFunct scope cx
+            cfw.add(ByteCode.SWAP);
+        }
+        // stack: ... directFunc cx scope
+
+        if (type == Token.NEW) {
+            cfw.add(ByteCode.ACONST_NULL);
+        } else {
+            cfw.addALoad(thisObjLocal);
+        }
+        // stack: ... directFunc cx scope thisObj
+/*
+Remember that directCall parameters are paired in 1 aReg and 1 dReg
+If the argument is an incoming arg, just pass the orginal pair thru.
+Else, if the argument is known to be typed 'Number', pass Void.TYPE
+in the aReg and the number is the dReg
+Else pass the JS object in the aReg and 0.0 in the dReg.
+*/
+        Node argChild = firstArgChild;
+        while (argChild != null) {
+            int dcp_register = nodeIsDirectCallParameter(argChild);
+            if (dcp_register >= 0) {
+                cfw.addALoad(dcp_register);
+                cfw.addDLoad(dcp_register + 1);
+            } else if (argChild.getIntProp(Node.ISNUMBER_PROP, -1)
+                       == Node.BOTH)
+            {
+                cfw.add(ByteCode.GETSTATIC,
+                        "java/lang/Void",
+                        "TYPE",
+                        "Ljava/lang/Class;");
+                generateExpression(argChild, node);
+            } else {
+                generateExpression(argChild, node);
+                cfw.addPush(0.0);
+            }
+            argChild = argChild.getNext();
+        }
+
+        cfw.add(ByteCode.GETSTATIC,
+                "org/mozilla/javascript/ScriptRuntime",
+                "emptyArgs", "[Ljava/lang/Object;");
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      codegen.mainClassName,
+                      (type == Token.NEW)
+                          ? codegen.getDirectCtorName(target.fnode)
+                          : codegen.getBodyMethodName(target.fnode),
+                      codegen.getBodyMethodSignature(target.fnode));
+
+        cfw.add(ByteCode.GOTO, beyond);
+
+        cfw.markLabel(regularCall, stackHeight);
+        // stack: ... functionObj directFunct
+        cfw.add(ByteCode.POP);
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
+        // stack: ... functionObj cx scope
+        if (type != Token.NEW) {
+            cfw.addALoad(thisObjLocal);
+            releaseWordLocal(thisObjLocal);
+            // stack: ... functionObj cx scope thisObj
+        }
+        // XXX: this will generate code for the child array the second time,
+        // so expression code generation better not to alter tree structure...
+        generateCallArgArray(node, firstArgChild, true);
+
+        if (type == Token.NEW) {
+            addScriptRuntimeInvoke(
+                "newObject",
+                "(Ljava/lang/Object;"
+                +"Lorg/mozilla/javascript/Context;"
+                +"Lorg/mozilla/javascript/Scriptable;"
+                +"[Ljava/lang/Object;"
+                +")Lorg/mozilla/javascript/Scriptable;");
+        } else {
+            cfw.addInvoke(ByteCode.INVOKEINTERFACE,
+                "org/mozilla/javascript/Function",
+                "call",
+                "(Lorg/mozilla/javascript/Context;"
+                +"Lorg/mozilla/javascript/Scriptable;"
+                +"Lorg/mozilla/javascript/Scriptable;"
+                +"[Ljava/lang/Object;"
+                +")Ljava/lang/Object;");
+        }
+
+        cfw.markLabel(beyond);
     }
 
     private void generateCallArgArray(Node node, Node argChild, boolean directCall)

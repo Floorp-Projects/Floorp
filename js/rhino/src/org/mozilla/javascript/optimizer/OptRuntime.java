@@ -92,7 +92,7 @@ public final class OptRuntime extends ScriptRuntime
     }
 
     /**
-     * Implement ....() call. This is mostly to shrink optimizer code
+     * Implement ....() call shrinking optimizer code.
      */
     public static Object call0(Function fun, Scriptable thisObj,
                                Context cx, Scriptable scope)
@@ -101,17 +101,35 @@ public final class OptRuntime extends ScriptRuntime
     }
 
     /**
-     * Implement ....(arg) call. This is mostly to shrink optimizer code
+     * Implement ....(arg) call shrinking optimizer code.
      */
     public static Object call1(Function fun, Scriptable thisObj, Object arg0,                                   Context cx, Scriptable scope)
     {
-        Object[] args = new Object[1];
-        args[0] = arg0;
+        return fun.call(cx, scope, thisObj, new Object[] { arg0 } );
+    }
+
+    /**
+     * Implement ....(arg0, arg1) call shrinking optimizer code.
+     */
+    public static Object call2(Function fun, Scriptable thisObj,
+                               Object arg0, Object arg1,
+                               Context cx, Scriptable scope)
+    {
+        return fun.call(cx, scope, thisObj, new Object[] { arg0, arg1 });
+    }
+
+    /**
+     * Implement ....(arg0, arg1, ...) call shrinking optimizer code.
+     */
+    public static Object callN(Function fun, Scriptable thisObj,
+                               Object[] args,
+                               Context cx, Scriptable scope)
+    {
         return fun.call(cx, scope, thisObj, args);
     }
 
     /**
-     * Implement name(args) call. This is mostly to shrink optimizer code
+     * Implement name(args) call shrinking optimizer code.
      */
     public static Object callName(Object[] args, String name,
                                   Context cx, Scriptable scope)
@@ -122,7 +140,7 @@ public final class OptRuntime extends ScriptRuntime
     }
 
     /**
-     * Implement name() call. This is mostly to shrink optimizer code
+     * Implement name() call shrinking optimizer code.
      */
     public static Object callName0(String name,
                                    Context cx, Scriptable scope)
@@ -133,7 +151,7 @@ public final class OptRuntime extends ScriptRuntime
     }
 
     /**
-     * Implement x.property() call. This is mostly to shrink optimizer code
+     * Implement x.property() call shrinking optimizer code.
      */
     public static Object callProp0(Object value, String property,
                                    Context cx, Scriptable scope)
