@@ -34,7 +34,7 @@
 /*
  * CMS digesting.
  *
- * $Id: cmsdigest.c,v 1.5 2003/12/12 23:55:06 nelsonb%netscape.com Exp $
+ * $Id: cmsdigest.c,v 1.6 2003/12/17 03:49:10 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -78,17 +78,15 @@ NSS_CMSDigestContext_StartMultiple(SECAlgorithmID **digestalgs)
     NSSCMSDigestContext *cmsdigcx;
     int digcnt;
     int i;
-    int num_digests = 0;
 
 #ifdef CMS_FIND_LEAK_MULTIPLE
     PORT_Assert(global_num_digests == 0 || !stop_on_err);
 #endif
 
     digcnt = (digestalgs == NULL) ? 0 : NSS_CMSArray_Count((void **)digestalgs);
-    if (digcnt <= 0) {
-    	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return NULL;
-    }
+    /* It's OK if digcnt is zero.  We have to allow this for "certs only"
+    ** messages.
+    */
     pool = PORT_NewArena(2048);
     if (!pool)
     	return NULL;
@@ -130,14 +128,12 @@ NSS_CMSDigestContext_StartMultiple(SECAlgorithmID **digestalgs)
 	    (*digobj->begin) (digcx);
 	    cmsdigcx->digPairs[i].digobj = digobj;
 	    cmsdigcx->digPairs[i].digcx  = digcx;
-	    num_digests++;
 #ifdef CMS_FIND_LEAK_MULTIPLE
 	    global_num_digests++;
 #endif
 	}
     }
-    if (num_digests > 0)
-	return cmsdigcx;
+    return cmsdigcx;
 
 loser:
     /* no digest objects have been created, or need to be destroyed. */
