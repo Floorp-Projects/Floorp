@@ -114,11 +114,17 @@ NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, nsINNTPNewsgroupList::GetIID());
 nsresult
 nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINNTPNewsgroup *newsgroup, const char *username, const char *hostname, const char *groupname)
 {
-	m_groupName = PL_strdup(groupname);
-    m_hostname = PL_strdup(hostname);
-	m_username = PL_strdup(username);
-    
-    if (username) {
+	m_newsDB = nsnull;
+
+	if (groupname) {
+		m_groupName = PL_strdup(groupname);
+	}
+	if (hostname) {
+		m_hostname = PL_strdup(hostname);
+	}
+
+	if (username) {
+		m_username = PL_strdup(username);
 		m_uri = PR_smprintf("%s/%s@%s/%s",kNewsRootURI,username,hostname,groupname);
 	}
     else {
@@ -128,11 +134,7 @@ nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINN
 	m_lastProcessedNumber = 0;
 	m_lastMsgNumber = 0;
 	m_set = nsnull;
-#ifdef HAVE_PANES
-	NS_ASSERTION(pane, "null ptr");
-	m_pane = pane;
-	m_master = pane->GetMaster();
-#endif
+
     m_finishingXover = PR_FALSE;
 
 	m_startedUpdate = PR_FALSE;
