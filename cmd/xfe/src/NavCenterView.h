@@ -31,7 +31,7 @@
 #include "RDFImage.h"
 
 class XFE_HTMLView;
-class XFE_RDFView;
+class XFE_RDFChromeTreeView;
 
 
 
@@ -51,7 +51,7 @@ public:
   Widget  getSelector(void);
   static void selector_activate_cb(Widget,XtPointer,XtPointer);
   static void selector_destroy_cb(Widget,XtPointer,XtPointer);
-#endif /*USE_SELECTORY_BAR*/
+#endif /*MOZ_SELECTORY_BAR*/
 
 
   virtual void handleDisplayPixmap(Widget, IL_Pixmap *, IL_Pixmap *, PRInt32 width, PRInt32 height);
@@ -60,10 +60,13 @@ public:
 
 private:
   XFE_HTMLView * m_htmlview;
-  XFE_RDFView  * m_rdfview;
+  XFE_RDFChromeTreeView  * m_rdfview;
 #ifdef MOZ_SELECTOR_BAR
   Widget         m_selector;
-#endif /*USE_SELECTORY_BAR*/
+#else
+    // hack to pick the first added view (this will go away)
+  int _firstViewAdded;
+#endif /*!MOZ_SELECTORY_BAR*/
   Widget         rdf_parent;
   XP_Bool        m_isStandalone; // as oppposed to embedded in a browser
 };

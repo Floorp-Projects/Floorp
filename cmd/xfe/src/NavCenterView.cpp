@@ -24,7 +24,7 @@
 
 #include "NavCenterView.h"
 #include "HTMLView.h"
-#include "RDFView.h"
+#include "RDFChromeTreeView.h"
 #include "IconGroup.h"
 #include "xp_ncent.h"
 
@@ -54,6 +54,7 @@ typedef struct _SelectorCBStruct {
 XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                                      Widget parent, XFE_View *parent_view,
                                      MWContext *context)
+
   : XFE_View(toplevel_component, parent_view, context)
 {
   D(printf("XFE_NavCenterView Constructor\n"););
@@ -95,9 +96,12 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   XtVaSetValues(toolbar,
                 XmNshadowThickness,      0,
                 NULL);
+#else
+  // hack to pick the first view added (this will go away soon)
+  _firstViewAdded = 0;
 #endif /*MOZ_SELECTOR_BAR*/
 
-  m_rdfview = new XFE_RDFView(this, m_widget, this, context);
+  m_rdfview = new XFE_RDFChromeTreeView(this, m_widget, this, context);
 
   XtVaSetValues(m_rdfview->getBaseWidget(),
                 XmNtopAttachment,    XmATTACH_FORM,
@@ -206,16 +210,13 @@ void
 XFE_NavCenterView::notify(HT_Resource		n, 
 						  HT_Event			whatHappened)
 {
+  D(debugEvent(n, whatHappened,"NCV"););
+
   switch (whatHappened) {
   case HT_EVENT_VIEW_CLOSED:
-    D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_CLOSED",
-             HT_GetNodeName(n)););
     break;
   case HT_EVENT_VIEW_SELECTED:
     {
-      D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_SELECTED",
-               HT_GetNodeName(n)););
-      
 #ifdef MOZ_SELECTOR_BAR
       HT_View view = HT_GetView(n);
 
@@ -252,15 +253,22 @@ XFE_NavCenterView::notify(HT_Resource		n,
     break;
   case HT_EVENT_VIEW_ADDED: 
     {
-      D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_ADDED",
-               HT_GetNodeName(n)););
-      
 #ifdef MOZ_SELECTOR_BAR
       HT_View view = HT_GetView(n);
       
       addRDFView(view);
+#else
+      // hack to pick the first view added (this will go away soon)
+      if (!_firstViewAdded) {
+          HT_View view = HT_GetView(n);
+          HT_Pane pane = HT_GetPane(view);
+          m_rdfview->setHTView(view);
+          HT_SetSelectedView(pane, view);
+          _ht_view = view;
+
+          _firstViewAdded = 1;
+      }
 #endif
-      return;
     }
     break;
   case HT_EVENT_NODE_ADDED:
@@ -275,9 +283,7 @@ XFE_NavCenterView::notify(HT_Resource		n,
     D(printf("HT_Event(%d): Unknown type on %s\n",whatHappened,HT_GetNodeName(n)););
     break;
   }
-  // Pass through to the outliner
-  // xxxShould check to make sure that it applies to rdfview's view.
-  m_rdfview->notify(n,whatHappened);
+  XFE_RDFBase::notify(n, whatHappened);
 }
 //////////////////////////////////////////////////////////////////////
 #ifdef MOZ_SELECTOR_BAR
@@ -288,6 +294,8 @@ XFE_NavCenterView::setRDFView(HT_View view)
   //  WidgetList tool_items = NULL;
   XtVaGetValues(m_selector,XmNtoolBar,&toolbar,NULL);
   //XfeToolBarSetSelectedButton(toolbar, xxx);
+
+  m_rdfview->setHTView(view);
 
   HT_SetSelectedView(_ht_pane, view);
   _ht_view = view;
