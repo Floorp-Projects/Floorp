@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.249 $ ';
+$::UtilsVersion = '$Revision: 1.250 $ ';
 
 package TinderUtils;
 
@@ -2396,19 +2396,13 @@ sub BloatTest {
 
     if($Settings::TestsPhoneHome) {
         # Generate and print tbox output strings for leak, bloat.
-        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . $embed_prefix . "Lk:" . PrintSize($leaks,3) . "B</a>\n\n";
+        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . $embed_prefix . "RLk:" . PrintSize($leaks,3) . "B</a>\n\n";
         print_log $leaks_string;
-
-        my $bloat_string = "\n\nTinderboxPrint:<a title=\"" . $bloat_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . $embed_prefix . "Bl:" . PrintSize($bloat,3) . "B</a>\n\n";
-        print_log $bloat_string;
 
         # Report numbers to server.
         send_results_to_server($leaks, "--", $leaks_testname, ::hostname() );
-        send_results_to_server($bloat, "--", $bloat_testname, ::hostname() );
-
     } else {
-        print_log "TinderboxPrint:" . $label_prefix . $embed_prefix . "Lk:<a title=\"" . $leaks_testname_label . "\">" . PrintSize($leaks,3) . "B</a>\n\n";
-        print_log "TinderboxPrint:" . $label_prefix . $embed_prefix . "Bl:<a title=\"" . $bloat_testname_label . "\">" . PrintSize($bloat,3) . "B</a>\n\n";
+        print_log "TinderboxPrint:" . $label_prefix . $embed_prefix . "RLk:<a title=\"" . $leaks_testname_label . "\">" . PrintSize($leaks,3) . "B</a>\n\n";
     }
 
     return 'success';
