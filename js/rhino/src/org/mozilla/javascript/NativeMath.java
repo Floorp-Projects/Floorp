@@ -47,7 +47,7 @@ public class NativeMath extends IdScriptable
     public String getClassName() { return "Math"; }
 
     public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
-        super.scopeInit(cx, scope, sealed);
+        activateIdMap(cx, sealed);
         setPrototype(getObjectPrototype(scope));
         setParentScope(scope);
         if (sealed) {

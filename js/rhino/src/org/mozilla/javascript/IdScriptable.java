@@ -59,38 +59,41 @@ public abstract class IdScriptable extends ScriptableObject
     implements IdFunction.Master, ScopeInitializer
 {
     public boolean has(String name, Scriptable start) {
-        Object[] data = idMapData;
-        if (data != null) {
-            int id = getId(name, data);
+        if (maxId != 0) {
+            int id = getId(name);
             if (id != 0) {
-                return data[id * ID_MULT + VALUE_SHIFT] != NOT_FOUND;
+                return hasIdValue(id);
             }
         }
         return super.has(name, start);
     }
 
     public Object get(String name, Scriptable start) {
-        Object[] data = idMapData;
-        if (data != null) {
-            int id = getId(name, data);
+        if (maxId != 0) {
+            int id = getId(name);
             if (id != 0) {
-                Object value = data[id * ID_MULT + VALUE_SHIFT];
-                if (value == null) {
-                    value = getIdValue(id, start);
+                Object[] data = idMapData;
+                if (data == null) {
+                    return getIdValue(id, start);
                 }
-                else if (value == NULL_TAG) {
-                    value = null;
+                else {
+                    Object value = data[id - 1];
+                    if (value == null) {
+                        value = getIdValue(id, start);
+                    }
+                    else if (value == NULL_TAG) {
+                        value = null;
+                    }
+                    return value;
                 }
-                return value;
             }
         }
         return super.get(name, start);
     }
 
     public void put(String name, Scriptable start, Object value) {
-        Object[] data = idMapData;
-        if (data != null) {
-            int id = getId(name, data);
+        if (maxId != 0) {
+            int id = getId(name);
             if (id != 0) {
                 int attr = getAttributes(id);
                 if ((attr & READONLY) == 0) {
@@ -99,17 +102,19 @@ public abstract class IdScriptable extends ScriptableObject
                 return;
             }
         }
-           super.put(name, start, value);
+        super.put(name, start, value);
     }
 
     public void delete(String name) {
-        Object[] data = idMapData;
-        if (data != null) {
-            int id = getId(name, data);
+        if (maxId != 0) {
+            int id = getId(name);
             if (id != 0) {
                 // Let the super class to throw exceptions for sealed objects
                 if (!isSealed()) {
-                    deleteId(id);
+                    int attr = getAttributes(id);
+                    if ((attr & PERMANENT) == 0) {
+                        deleteIdValue(id);
+                    }
                     return;
                 }
             }
@@ -120,11 +125,10 @@ public abstract class IdScriptable extends ScriptableObject
     public int getAttributes(String name, Scriptable start)
         throws PropertyException
     {
-        Object[] data = idMapData;
-        if (data != null) {
-            int id = getId(name, data);
+        if (maxId != 0) {
+            int id = getId(name);
             if (id != 0) {
-                if (data[id * ID_MULT + VALUE_SHIFT] != NOT_FOUND) {
+                if (hasIdValue(id)) {
                     return getAttributes(id);
                 }
                 // For ids with deleted values super will throw exceptions
@@ -137,16 +141,14 @@ public abstract class IdScriptable extends ScriptableObject
                               int attributes)
         throws PropertyException
     {
-        Object[] data = idMapData;
-        if (data != null) {
-            int id = getId(name, data);
+        if (maxId != 0) {
+            int id = getId(name);
             if (id != 0) {
-                synchronized (this) {
-                    if (data[id * ID_MULT + VALUE_SHIFT] != NOT_FOUND) 
-                    {
+                if (hasIdValue(id)) {
+                    synchronized (this) {
                         setAttributes(id, attributes);
-                        return;
                     }
+                    return;
                 }
                 // For ids with deleted values super will throw exceptions
             }
@@ -156,8 +158,7 @@ public abstract class IdScriptable extends ScriptableObject
 
     synchronized void addPropertyAttribute(int attribute) {
         extraIdAttributes |= attribute;
-        Object[] data = idMapData;
-        if (data != null) {
+        if (maxId != 0) {
             byte[] array = attributesArray;
             if (array != null) {
                 for (int i = attributesArray.length; i-- != 0;) {
@@ -174,31 +175,18 @@ public abstract class IdScriptable extends ScriptableObject
     Object[] getIds(boolean getAll) {
         Object[] result = super.getIds(getAll);
         
-        Object[] data = idMapData;
-        if (data != null) {
+        if (maxId != 0) {
             Object[] ids = null;
             int count = 0;
             
-            for (int id = getMaximumId(); id != 0; --id) {
-                if (data[id * ID_MULT + VALUE_SHIFT] != NOT_FOUND) {
+            for (int id = maxId; id != 0; --id) {
+                if (hasIdValue(id)) {
                     if (getAll || (getAttributes(id) & DONTENUM) == 0) {
-                        Object name;
-                        if (!CACHE_NAMES) {
-                            name = getIdName(id);
-                        }
-                        else {
-                            int offset = id * ID_MULT + NAME_CACHE_SHIFT;
-                            name = data[offset];
-                            if (name == null) {
-                                name = getIdName(id);
-                                data[offset] = name;
-                            }
-                        }
                         if (count == 0) {
                             // Need extra room for nor more then [1..id] names
                             ids = new Object[id];
                         }
-                        ids[count++] = name;
+                        ids[count++] = getIdName(id);
                     }
                 }
             }
@@ -215,6 +203,7 @@ public abstract class IdScriptable extends ScriptableObject
         }
         return result;
     }
+
 
     /** Return minimum possible id, must be 0 or negative number.
      ** If descendant needs to use ids not visible via mapNameToId, 
@@ -246,10 +235,18 @@ public abstract class IdScriptable extends ScriptableObject
         return DONTENUM;
     }
 
+    /** Check if id value exists.
+     ** Default implementation return false only if id were explicitly deleted
+     ** via deleteIdValue */
+    protected boolean hasIdValue(int id) {
+        Object[] data = idMapData;
+        return data == null || data[id - 1] != NOT_FOUND;
+    }
+
     /** Get id value. 
      ** Default implementation returns IdFunction instance for given id.
      ** If id value is constant, descendant can call cacheIdValue to store
-     ** value in permanent cache.
+     ** value in the permanent cache.
      */
     protected Object getIdValue(int id, Scriptable start) {
         return cacheIdValue(id, newIdFunction(id));
@@ -259,8 +256,7 @@ public abstract class IdScriptable extends ScriptableObject
     protected void setIdValue(int id, Scriptable start, Object value) {
         if (start == this) {
             synchronized (this) {
-                idMapData[id * ID_MULT + VALUE_SHIFT] 
-                    = (value != null) ? value : NULL_TAG;
+                ensureIdData()[id - 1] = (value != null) ? value : NULL_TAG;
             }
         }
         else {
@@ -271,12 +267,11 @@ public abstract class IdScriptable extends ScriptableObject
     /** Store value in a permamnet cache. After this call getIdValue will
      ** never be called for id. */
     protected Object cacheIdValue(int id, Object value) {
-           Object[] data = idMapData;
         synchronized (this) {
-            Object curValue = data[id * ID_MULT + VALUE_SHIFT];
+            Object[] data = ensureIdData();
+            Object curValue = data[id - 1];
             if (curValue == null) {
-                data[id * ID_MULT + VALUE_SHIFT] 
-                    = (value != null) ? value : NULL_TAG;
+                data[id - 1] = (value != null) ? value : NULL_TAG;
             }
             else {
                 value = curValue;
@@ -285,6 +280,15 @@ public abstract class IdScriptable extends ScriptableObject
         return value;
     }
 
+    /** Delete value represented by id so hasIdValue return false. 
+     ** Note: this will be called only for id without PERMANENT attribute.
+     */
+    protected void deleteIdValue(int id) {
+        synchronized (this) {
+            ensureIdData()[id - 1] = NOT_FOUND;
+        }
+    }
+    
     /** 'thisObj' will be null if invoked as constructor, in which case
      ** instance of Scriptable should be returned. */
     public Object execMethod(int methodId, IdFunction function,
@@ -302,6 +306,12 @@ public abstract class IdScriptable extends ScriptableObject
         return -1;
     }
     
+    protected void activateIdMap(Context cx, boolean sealed) {
+        maxId = getMaximumId();
+        useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
+        sealFunctions = sealed;
+    }
+
     /** Do scope initialization. 
      ** Default implementation calls activateIdMap() and then if 
      ** mapNameToId("constructor") returns positive id, defines EcmaScript
@@ -310,10 +320,7 @@ public abstract class IdScriptable extends ScriptableObject
      */ 
     public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
 
-        useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
-        sealFunctions = sealed;
-
-        activateIdMap();
+        activateIdMap(cx, sealed);
 
         int constructorId = mapNameToId("constructor");
         if (constructorId > 0) {
@@ -350,13 +357,6 @@ public abstract class IdScriptable extends ScriptableObject
         }
     }
 
-    protected void activateIdMap() {
-        int max = getMaximumId();
-        if (max != 0) {
-            idMapData = new Object[max * ID_MULT + VALUE_SHIFT + 1];
-        }
-    }
-    
     protected void fillConstructorProperties
         (Context cx, IdFunction ctor, boolean sealed)
     {
@@ -402,7 +402,9 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     protected IdFunction newIdFunction(int id) {
-        return new IdFunction(this, getIdName(id), id);
+        IdFunction f = new IdFunction(this, getIdName(id), id);
+        if (sealFunctions) { f.sealObject(); }
+        return f;
     }
 
     protected final Object wrap_double(double x) {
@@ -425,35 +427,34 @@ public abstract class IdScriptable extends ScriptableObject
         return x ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private int getId(String name, Object[] data) {
-        if (!CACHE_NAMES) { return mapNameToId(name); }
+    private int getId(String name) {
+        Object[] data = idMapData;
+        if (data == null || !CACHE_NAMES) { return mapNameToId(name); }
         else {
             int id = lastIdCache;
-            if (data[id * ID_MULT + NAME_CACHE_SHIFT] != name) {
+            if (data[id - 1 + maxId] != name) {
                 id = mapNameToId(name);
                 if (id != 0) {
-                    data[id * ID_MULT + NAME_CACHE_SHIFT] = name;
+                    data[id - 1 + maxId] = name;
                     lastIdCache = id;
                 }
             }
             return id;
         }
     }
-
-    private void deleteId(int id) {
-        synchronized (this) {
-            int attr = getAttributes(id);
-            if ((attr & PERMANENT) == 0) {
-                setAttributes(id, EMPTY);
-                idMapData[id * ID_MULT + VALUE_SHIFT] = NOT_FOUND;
-            }
+    
+    private Object[] ensureIdData() {
+        Object[] data = idMapData;
+        if (data == null) { 
+            idMapData = data = new Object[CACHE_NAMES ? maxId * 2 : maxId];
         }
+        return data;
     }
     
     private int getAttributes(int id) {
         int attributes;
         byte[] array = attributesArray;
-        if (array == null || (attributes = array[id]) == 0) { 
+        if (array == null || (attributes = array[id - 1]) == 0) { 
             attributes = getIdDefaultAttributes(id) | extraIdAttributes; 
         }
         return VISIBLE_ATTR_MASK & attributes;
@@ -465,26 +466,15 @@ public abstract class IdScriptable extends ScriptableObject
             synchronized (this) {
                 array = attributesArray;
                 if (array == null) {
-                    attributesArray = array = new byte[getMaximumId() + 1];
+                    attributesArray = array = new byte[maxId];
                 }
             }
         }
         attributes &= VISIBLE_ATTR_MASK;
-        array[id] = (byte)(ASSIGNED_ATTRIBUTE_MASK | attributes);
+        array[id - 1] = (byte)(ASSIGNED_ATTRIBUTE_MASK | attributes);
     }
 
-/*
-    private static final boolean CACHE_NAMES = false;
-    private static final int ID_MULT = 1;
-    private static final int VALUE_SHIFT = -1;
-*/    
-///*
     private static final boolean CACHE_NAMES = true;
-    private static final int ID_MULT = 2;
-    private static final int VALUE_SHIFT = 1;
-//*/
-    private static final int NAME_CACHE_SHIFT = 0;
-
 
     private static final int 
         VISIBLE_ATTR_MASK = READONLY | DONTENUM | PERMANENT;
@@ -493,6 +483,7 @@ public abstract class IdScriptable extends ScriptableObject
     
     private static final Object NULL_TAG = new Object();
 
+    private int maxId;
     private Object[] idMapData;
     private byte[] attributesArray;
     private int extraIdAttributes;
