@@ -219,7 +219,8 @@ static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* 
   nsCOMPtr<nsIFrameManager> frameManager;
   aShell->GetFrameManager(getter_AddRefs(frameManager));
   nsCOMPtr<nsIContent> child;
-  aChild->GetContent(getter_AddRefs(child));
+  if (aChild)
+    aChild->GetContent(getter_AddRefs(child));
   frameManager->GetInsertionPoint(aShell, aFrame, child, aResult);
 }
 
