@@ -140,8 +140,6 @@ private:
 
   nsresult getPrefService();
   nsresult initializeStrings();
-  
-  nsresult ResetState();
 
   nsCOMPtr <nsIPref> m_prefs;
   PRBool m_haveShutdown;
