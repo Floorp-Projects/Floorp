@@ -34,7 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 #define __cplusplus__ 1
 

@@ -34,9 +34,37 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH=..
+DEPTH=..\..
 
-DIRS=libxpical resources
+MODULE          = calendar
+XPIDL_MODULE    = calendar
+
+REQUIRES        = xpcom \
+                  appshell \
+                  string \
+                  libical \
+                  libicalss \
+                  libicalvcal \
+                  $(NULL)
+include <$(DEPTH)/config/config.mak>
+
+LIBRARY_NAME    = xpical
+MODULE_NAME     = oeICalModule
+
+XPIDLSRCS = .\oeIICal.idl
+
+OBJS            = \
+                  .\$(OBJDIR)\oeICalEventImpl.obj \
+                  .\$(OBJDIR)\oeICalFactory.obj \
+                  .\$(OBJDIR)\oeICalImpl.obj \
+                  .\$(OBJDIR)\oeICalStartupHandler.obj \
+                  $(NULL)
+
+LLIBS           = \
+                  $(DIST)\lib\libical$(MOZ_BITS)$(VERSION_NUMBER).lib \
+                  $(DIST)\lib\libicalss$(MOZ_BITS)$(VERSION_NUMBER).lib \
+                  $(DIST)\lib\xpcom.lib \
+                  $(LIBNSPR) \
+                  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
