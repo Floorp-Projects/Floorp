@@ -146,6 +146,11 @@ private:
                           const nsACString& aPath,
                           nsACString& aResult);
   
+  nsresult VerifyCompatibleProvider(nsIRDFResource* aPackageResource,
+                                    nsIRDFResource* aProviderResource,
+                                    nsIRDFResource* aArc,
+                                    PRBool *aAcceptable);
+
   nsresult FindProvider(const nsACString& aPackage,
                         const nsACString& aProvider,
                         nsIRDFResource *aArc,
@@ -218,6 +223,7 @@ protected:
   nsCString mInstallRoot;
 
   nsCOMPtr<nsIRDFCompositeDataSource> mChromeDataSource;
+  nsCOMPtr<nsIRDFDataSource> mInstallDirChromeDataSource;
   nsCOMPtr<nsIRDFDataSource> mUIDataSource;
 
   nsSupportsHashtable* mDataSourceTable;
