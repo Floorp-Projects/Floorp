@@ -80,7 +80,7 @@ GetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMElement* prop;
-        if (NS_OK == a->GetCurrent(&prop)) {
+        if (NS_SUCCEEDED(a->GetCurrent(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -197,7 +197,10 @@ XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.addfocuslistener", &ok);
     if (!ok) {
@@ -206,16 +209,17 @@ XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval 
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function addFocusListener requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIElementIID,
@@ -230,10 +234,6 @@ XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval 
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function addFocusListener requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -253,7 +253,10 @@ XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.removefocuslistener", &ok);
     if (!ok) {
@@ -262,16 +265,17 @@ XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function removeFocusListener requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIElementIID,
@@ -286,10 +290,6 @@ XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsv
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function removeFocusListener requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -308,7 +308,10 @@ XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.focuschanged", &ok);
     if (!ok) {
@@ -317,26 +320,19 @@ XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->FocusChanged()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function focusChanged requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -356,7 +352,10 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.getcontroller", &ok);
     if (!ok) {
@@ -365,16 +364,13 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  {
 
     if (NS_OK != nativeThis->GetController(&nativeRet)) {
       return JS_FALSE;
@@ -382,10 +378,6 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
     // n.b., this will release nativeRet
     nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, nsIController::GetIID(), cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function getController requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -405,7 +397,10 @@ XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.setcontroller", &ok);
     if (!ok) {
@@ -414,16 +409,17 @@ XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function setController requires 1 parameter");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**) &b0,
                                            kIControllerIID, cx, argv[0])) {
@@ -435,10 +431,6 @@ XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function setController requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

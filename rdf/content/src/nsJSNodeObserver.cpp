@@ -156,7 +156,10 @@ NodeObserverOnSetNodeValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nodeobserver.onsetnodevalue", &ok);
     if (!ok) {
@@ -165,16 +168,17 @@ NodeObserverOnSetNodeValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function onSetNodeValue requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
@@ -183,7 +187,6 @@ NodeObserverOnSetNodeValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
                                            argv[0])) {
       return JS_FALSE;
     }
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
     if (NS_OK != nativeThis->OnSetNodeValue(b0, b1)) {
@@ -191,10 +194,6 @@ NodeObserverOnSetNodeValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onSetNodeValue requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -216,7 +215,10 @@ NodeObserverOnInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nodeobserver.oninsertbefore", &ok);
     if (!ok) {
@@ -225,16 +227,17 @@ NodeObserverOnInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  {
+    if (argc < 3) {
+      JS_ReportError(cx, "Function onInsertBefore requires 3 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
@@ -243,7 +246,6 @@ NodeObserverOnInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
                                            argv[0])) {
       return JS_FALSE;
     }
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kINodeIID,
                                            "Node",
@@ -251,7 +253,6 @@ NodeObserverOnInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
                                            argv[1])) {
       return JS_FALSE;
     }
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b2,
                                            kINodeIID,
                                            "Node",
@@ -265,10 +266,6 @@ NodeObserverOnInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onInsertBefore requires 3 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -290,7 +287,10 @@ NodeObserverOnReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nodeobserver.onreplacechild", &ok);
     if (!ok) {
@@ -299,16 +299,17 @@ NodeObserverOnReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  {
+    if (argc < 3) {
+      JS_ReportError(cx, "Function onReplaceChild requires 3 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
@@ -317,7 +318,6 @@ NodeObserverOnReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
                                            argv[0])) {
       return JS_FALSE;
     }
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kINodeIID,
                                            "Node",
@@ -325,7 +325,6 @@ NodeObserverOnReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
                                            argv[1])) {
       return JS_FALSE;
     }
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b2,
                                            kINodeIID,
                                            "Node",
@@ -339,10 +338,6 @@ NodeObserverOnReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onReplaceChild requires 3 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -363,7 +358,10 @@ NodeObserverOnRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nodeobserver.onremovechild", &ok);
     if (!ok) {
@@ -372,16 +370,17 @@ NodeObserverOnRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function onRemoveChild requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
@@ -390,7 +389,6 @@ NodeObserverOnRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                                            argv[0])) {
       return JS_FALSE;
     }
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kINodeIID,
                                            "Node",
@@ -404,10 +402,6 @@ NodeObserverOnRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onRemoveChild requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -428,7 +422,10 @@ NodeObserverOnAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nodeobserver.onappendchild", &ok);
     if (!ok) {
@@ -437,16 +434,17 @@ NodeObserverOnAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function onAppendChild requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
@@ -455,7 +453,6 @@ NodeObserverOnAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                                            argv[0])) {
       return JS_FALSE;
     }
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kINodeIID,
                                            "Node",
@@ -469,10 +466,6 @@ NodeObserverOnAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onAppendChild requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;

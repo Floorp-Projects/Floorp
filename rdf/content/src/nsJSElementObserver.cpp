@@ -160,7 +160,10 @@ ElementObserverOnSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "elementobserver.onsetattribute", &ok);
     if (!ok) {
@@ -169,16 +172,17 @@ ElementObserverOnSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  {
+    if (argc < 3) {
+      JS_ReportError(cx, "Function onSetAttribute requires 3 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIElementIID,
@@ -187,9 +191,7 @@ ElementObserverOnSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *a
                                            argv[0])) {
       return JS_FALSE;
     }
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
-
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
     if (NS_OK != nativeThis->OnSetAttribute(b0, b1, b2)) {
@@ -197,10 +199,6 @@ ElementObserverOnSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onSetAttribute requires 3 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -221,7 +219,10 @@ ElementObserverOnRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "elementobserver.onremoveattribute", &ok);
     if (!ok) {
@@ -230,16 +231,17 @@ ElementObserverOnRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function onRemoveAttribute requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIElementIID,
@@ -248,7 +250,6 @@ ElementObserverOnRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
                                            argv[0])) {
       return JS_FALSE;
     }
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
     if (NS_OK != nativeThis->OnRemoveAttribute(b0, b1)) {
@@ -256,10 +257,6 @@ ElementObserverOnRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onRemoveAttribute requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -280,7 +277,10 @@ ElementObserverOnSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "elementobserver.onsetattributenode", &ok);
     if (!ok) {
@@ -289,16 +289,17 @@ ElementObserverOnSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsva
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function onSetAttributeNode requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIElementIID,
@@ -307,7 +308,6 @@ ElementObserverOnSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsva
                                            argv[0])) {
       return JS_FALSE;
     }
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kIAttrIID,
                                            "Attr",
@@ -321,10 +321,6 @@ ElementObserverOnSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsva
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onSetAttributeNode requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -345,7 +341,10 @@ ElementObserverOnRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, j
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "elementobserver.onremoveattributenode", &ok);
     if (!ok) {
@@ -354,16 +353,17 @@ ElementObserverOnRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, j
     }
     NS_RELEASE(secMan);
   }
-  else {
-    return JS_FALSE;
-  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function onRemoveAttributeNode requires 2 parameters");
+      return JS_FALSE;
+    }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kIElementIID,
@@ -372,7 +372,6 @@ ElementObserverOnRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, j
                                            argv[0])) {
       return JS_FALSE;
     }
-
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kIAttrIID,
                                            "Attr",
@@ -386,10 +385,6 @@ ElementObserverOnRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, j
     }
 
     *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function onRemoveAttributeNode requires 2 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
