@@ -74,12 +74,12 @@ void nsNewsSummarySpec::CreateSummaryFileName()
                   (unsigned long) StringHash(leafName));
     }
     
-	nsString fullLeafName(hashedname);
+	nsAutoString fullLeafName(hashedname, MAX_LEN + 1, eOneByte);
 
 	// Append .msf (message summary file) 
 	fullLeafName += ".msf";	
 
-	SetLeafName(nsAutoCString(fullLeafName));
+	SetLeafName(fullLeafName.GetBuffer());
 	PL_strfree(leafName);
 }
 

@@ -45,15 +45,14 @@ nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService)
 {
 
-	nsString progID;
+	nsAutoString progID (eOneByte);
 	nsresult rv;
 
 	rv = GetMessageServiceProgIDForURI(uri, progID);
-	nsAutoCString progIDStr(progID);
 
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = nsServiceManager::GetService((const char*)progIDStr, nsIMsgMessageService::GetIID(),
+		rv = nsServiceManager::GetService(progID.GetBuffer(), nsIMsgMessageService::GetIID(),
 		           (nsISupports**)messageService, nsnull);
 	}
 
@@ -63,15 +62,12 @@ nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messag
 
 nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService)
 {
-	nsString progID;
+	nsAutoString progID (eOneByte);
 	nsresult rv;
 
 	rv = GetMessageServiceProgIDForURI(uri, progID);
 	if(NS_SUCCEEDED(rv))
-	{
-		nsAutoCString progIDStr(progID);
-		rv = nsServiceManager::ReleaseService((const char*)progIDStr, messageService);
-	}
+		rv = nsServiceManager::ReleaseService(progID.GetBuffer(), messageService);
 	return rv;
 }
 
