@@ -509,7 +509,8 @@ sub GetSelectableProducts {
 
     my $extra_sql = $by_id ? "id, " : "";
 
-    my $extra_from_sql = $by_classification ? ", classifications" : "";
+    my $extra_from_sql = $by_classification ? " INNER JOIN classifications"
+        . " ON classifications.id = products.classification_id" : "";
 
     my $query = "SELECT $extra_sql products.name " .
                 "FROM products $extra_from_sql " .
@@ -527,7 +528,6 @@ sub GetSelectableProducts {
     }
     $query .= "WHERE group_id IS NULL ";
     if ($by_classification) {
-        $query .= "AND classifications.id = products.classification_id ";
         $query .= "AND classifications.name = ";
         $query .= SqlQuote($by_classification) . " ";
     }
