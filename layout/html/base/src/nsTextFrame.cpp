@@ -4915,7 +4915,8 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 
     // Find the index of the last segment that fit
     PRInt32 lastSegment;
-    if (numCharsFit == textRun.mTotalNumChars) { // fast path, normal case
+    if (numCharsFit >= textRun.mTotalNumChars) { // fast path, normal case
+      NS_ASSERTION(numCharsFit == textRun.mTotalNumChars, "shouldn't overshoot");
       lastSegment = textRun.mNumSegments - 1;
     } else {
       for (lastSegment = 0; textRun.mBreaks[lastSegment] < numCharsFit; lastSegment++) ;
