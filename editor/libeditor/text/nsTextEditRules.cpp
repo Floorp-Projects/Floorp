@@ -417,7 +417,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
   else  // we have no selection, so insert a style tag in the body
   {
 		nsCOMPtr<nsIDOMElement> bodyElement;
-		nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+		res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
 		if (NS_FAILED(res)) return res;
 		if (!bodyElement) return NS_ERROR_NULL_POINTER;
     
