@@ -5088,7 +5088,7 @@ GetStyleInfo(const nsIFrame&  aFrame,
 }
 
 static PRBool
-CalcDominateBorder(PRBool          aIsCorner,
+CalcDominantBorder(PRBool          aIsCorner,
                    BCBorderOwner   aOwner1,
                    PRUint8         aStyle1,
                    PRUint16        aWidth1,
@@ -5143,7 +5143,7 @@ CalcDominateBorder(PRBool          aIsCorner,
 
 // calc the dominate border by considering the table, row/col group, row/col, cell, 
 static void 
-CalcDominateBorder(const nsIFrame*  aTableFrame,
+CalcDominantBorder(const nsIFrame*  aTableFrame,
                    const nsIFrame*  aColGroupFrame,
                    const nsIFrame*  aColFrame,
                    const nsIFrame*  aRowGroupFrame,
@@ -5353,7 +5353,7 @@ BCCornerInfo::Update(PRUint8       aSide,
     BCBorderOwner tempBorderOwner = (BCBorderOwner)ownerElem;
     PRUint8 tempStyle = ownerStyle;
     existingWins = 
-      CalcDominateBorder(PR_TRUE, (BCBorderOwner)ownerElem, ownerStyle, ownerWidth, ownerColor, 
+      CalcDominantBorder(PR_TRUE, (BCBorderOwner)ownerElem, ownerStyle, ownerWidth, ownerColor, 
                          (BCBorderOwner)aBorderOwner, aOwnerBStyle, aOwnerWidth, aOwnerColor, 
                          tempBorderOwner, tempStyle, ownerWidth, ownerColor, horizontal);
     ownerElem = tempBorderOwner;
@@ -5365,7 +5365,7 @@ BCCornerInfo::Update(PRUint8       aSide,
         tempBorderOwner = (BCBorderOwner)ownerElem;
         PRUint8 tempStyle = subStyle;
         PRBool firstWins = 
-          CalcDominateBorder(PR_TRUE, (BCBorderOwner)subElem, subStyle, subWidth, color, 
+          CalcDominantBorder(PR_TRUE, (BCBorderOwner)subElem, subStyle, subWidth, color, 
                              (BCBorderOwner)aBorderOwner, aOwnerBStyle, aOwnerWidth, aOwnerColor, 
                              tempBorderOwner, tempStyle, subWidth, color, horizontal);
         subElem = tempBorderOwner;
@@ -5741,7 +5741,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
       for (PRInt32 colX = info.colIndex; colX <= cellEndColIndex; colX++) {
         nsIFrame* colFrame = GetColFrame(colX); if (!colFrame) ABORT0();
         nsIFrame* cgFrame = colFrame->GetParent(); if (!cgFrame) ABORT0();
-        CalcDominateBorder(this, cgFrame, colFrame, info.rg, info.topRow, info.cell, PR_TRUE, NS_SIDE_TOP, 
+        CalcDominantBorder(this, cgFrame, colFrame, info.rg, info.topRow, info.cell, PR_TRUE, NS_SIDE_TOP, 
                            PR_FALSE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
         // update/store the top left & top right corners of the seg 
         BCCornerInfo& tlCorner = topCorners[colX]; // top left
@@ -5795,7 +5795,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
       nsTableRowFrame* rowFrame = nsnull;
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
         rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
-        CalcDominateBorder(this, info.cg, info.leftCol, info.rg, rowFrame, info.cell, PR_TRUE, NS_SIDE_LEFT, 
+        CalcDominantBorder(this, info.cg, info.leftCol, info.rg, rowFrame, info.cell, PR_TRUE, NS_SIDE_LEFT, 
                            PR_FALSE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
         BCCornerInfo& tlCorner = (0 == rowX) ? topCorners[0] : bottomCorners[0]; // top left
         tlCorner.Update(NS_SIDE_BOTTOM, owner, ownerBStyle, ownerWidth, ownerColor); 
@@ -5828,7 +5828,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
       nsTableRowFrame* rowFrame = nsnull;
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX++) {
         rowFrame = (rowX == info.rowIndex) ? info.topRow : rowFrame->GetNextRow();
-        CalcDominateBorder(this, info.cg, info.rightCol, info.rg, rowFrame, info.cell, PR_TRUE, NS_SIDE_RIGHT, 
+        CalcDominantBorder(this, info.cg, info.rightCol, info.rg, rowFrame, info.cell, PR_TRUE, NS_SIDE_RIGHT, 
                            PR_TRUE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
         // update/store the top right & bottom right corners 
         BCCornerInfo& trCorner = (0 == rowX) ? topCorners[cellEndColIndex + 1] : bottomCorners[cellEndColIndex + 1]; 
@@ -5861,12 +5861,12 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
       for (PRInt32 rowX = info.rowIndex; rowX <= cellEndRowIndex; rowX += segLength) {
         iter.PeekRight(info, rowX, ajaInfo);
         const nsIFrame* cg = (info.cgRight) ? info.cg : nsnull;
-        CalcDominateBorder(nsnull, cg, info.rightCol, nsnull, nsnull, info.cell, PR_FALSE, NS_SIDE_RIGHT, 
+        CalcDominantBorder(nsnull, cg, info.rightCol, nsnull, nsnull, info.cell, PR_FALSE, NS_SIDE_RIGHT, 
                            PR_TRUE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
         cg = (ajaInfo.cgLeft) ? ajaInfo.cg : nsnull;
-        CalcDominateBorder(nsnull, cg, ajaInfo.leftCol, nsnull, nsnull, ajaInfo.cell, PR_FALSE, NS_SIDE_LEFT, 
+        CalcDominantBorder(nsnull, cg, ajaInfo.leftCol, nsnull, nsnull, ajaInfo.cell, PR_FALSE, NS_SIDE_LEFT, 
                            PR_FALSE, t2p, ajaOwner, ajaBStyle, ajaWidth, ajaColor);
-        CalcDominateBorder(PR_FALSE, owner, ownerBStyle, ownerWidth, ownerColor, ajaOwner, ajaBStyle, 
+        CalcDominantBorder(PR_FALSE, owner, ownerBStyle, ownerWidth, ownerColor, ajaOwner, ajaBStyle, 
                            ajaWidth, ajaColor, owner, ownerBStyle, ownerWidth, ownerColor, PR_FALSE);
         segLength = PR_MAX(1, ajaInfo.rowIndex + ajaInfo.rowSpan - rowX);
         segLength = PR_MIN(segLength, info.rowIndex + info.rowSpan - rowX);
@@ -5900,12 +5900,12 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
         // if this is not the first time through, consider the segment to the right
         if (rowX != info.rowIndex) {
           const nsIFrame* rg = (priorAjaInfo.rgBottom) ? priorAjaInfo.rg : nsnull;
-          CalcDominateBorder(nsnull, nsnull, nsnull, rg, priorAjaInfo.bottomRow, priorAjaInfo.cell, PR_FALSE, 
+          CalcDominantBorder(nsnull, nsnull, nsnull, rg, priorAjaInfo.bottomRow, priorAjaInfo.cell, PR_FALSE, 
                              NS_SIDE_BOTTOM, PR_TRUE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
           rg = (ajaInfo.rgTop) ? ajaInfo.rg : nsnull;
-          CalcDominateBorder(nsnull, nsnull, nsnull, rg, ajaInfo.topRow, ajaInfo.cell, PR_FALSE, NS_SIDE_TOP, 
+          CalcDominantBorder(nsnull, nsnull, nsnull, rg, ajaInfo.topRow, ajaInfo.cell, PR_FALSE, NS_SIDE_TOP, 
                              PR_FALSE, t2p, ajaOwner, ajaBStyle, ajaWidth, ajaColor);
-          CalcDominateBorder(PR_FALSE, owner, ownerBStyle, ownerWidth, ownerColor, ajaOwner, ajaBStyle, 
+          CalcDominantBorder(PR_FALSE, owner, ownerBStyle, ownerWidth, ownerColor, ajaOwner, ajaBStyle, 
                              ajaWidth, ajaColor, owner, ownerBStyle, ownerWidth, ownerColor, PR_TRUE);
           trCorner->Update(NS_SIDE_RIGHT, owner, ownerBStyle, ownerWidth, ownerColor);   
         }
@@ -5942,7 +5942,7 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
       for (PRInt32 colX = info.colIndex; colX <= cellEndColIndex; colX++) {
         nsIFrame* colFrame = GetColFrame(colX); if (!colFrame) ABORT0();
         nsIFrame* cgFrame = colFrame->GetParent(); if (!cgFrame) ABORT0();
-        CalcDominateBorder(this, cgFrame, colFrame, info.rg, info.bottomRow, info.cell, PR_TRUE, NS_SIDE_BOTTOM, 
+        CalcDominantBorder(this, cgFrame, colFrame, info.rg, info.bottomRow, info.cell, PR_TRUE, NS_SIDE_BOTTOM, 
                            PR_TRUE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
         // update/store the bottom left & bottom right corners 
         BCCornerInfo& blCorner = bottomCorners[colX]; // bottom left
@@ -5986,12 +5986,12 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
       for (PRInt32 colX = info.colIndex; colX <= cellEndColIndex; colX += segLength) {
         iter.PeekBottom(info, colX, ajaInfo);
         const nsIFrame* rg = (info.rgBottom) ? info.rg : nsnull;
-        CalcDominateBorder(nsnull, nsnull, nsnull, rg, info.bottomRow, info.cell, PR_FALSE, NS_SIDE_BOTTOM, 
+        CalcDominantBorder(nsnull, nsnull, nsnull, rg, info.bottomRow, info.cell, PR_FALSE, NS_SIDE_BOTTOM, 
                            PR_TRUE, t2p, owner, ownerBStyle, ownerWidth, ownerColor);
         rg = (ajaInfo.rgTop) ? ajaInfo.rg : nsnull;
-        CalcDominateBorder(nsnull, nsnull, nsnull, rg, ajaInfo.topRow, ajaInfo.cell, PR_FALSE, NS_SIDE_TOP, 
+        CalcDominantBorder(nsnull, nsnull, nsnull, rg, ajaInfo.topRow, ajaInfo.cell, PR_FALSE, NS_SIDE_TOP, 
                            PR_FALSE, t2p, ajaOwner, ajaBStyle, ajaWidth, ajaColor);
-        CalcDominateBorder(PR_FALSE, owner, ownerBStyle, ownerWidth, ownerColor, ajaOwner, ajaBStyle, ajaWidth,
+        CalcDominantBorder(PR_FALSE, owner, ownerBStyle, ownerWidth, ownerColor, ajaOwner, ajaBStyle, ajaWidth,
                            ajaColor, owner, ownerBStyle, ownerWidth, ownerColor, PR_TRUE);
         segLength = PR_MAX(1, ajaInfo.colIndex + ajaInfo.colSpan - colX);
         segLength = PR_MIN(segLength, info.colIndex + info.colSpan - colX);
