@@ -350,13 +350,8 @@ static int do_lzw(gif_struct *gs, const PRUint8 *q)
         continue;
       }
 
-      /* Check for a code not defined in the dictionary yet. */
-      if (code > avail)
-        return -1;
-
       incode = code;
-      if (code == avail) {
-        /* the first code is always < avail */
+      if (code >= avail) {
         *stackp++ = firstchar;
         code = oldcode;
 
@@ -364,10 +359,8 @@ static int do_lzw(gif_struct *gs, const PRUint8 *q)
           return -1;
       }
 
-      int code2 = 0;
-      while (code > clear_code)
+      while (code >= clear_code)
       {
-        code2 = code;
         if (code == prefix[code])
           return -1;
 
@@ -375,9 +368,6 @@ static int do_lzw(gif_struct *gs, const PRUint8 *q)
         code = prefix[code];
 
         if (stackp == stack + MAX_BITS)
-          return -1;
-
-        if (code2 == prefix[code])
           return -1;
       }
 
