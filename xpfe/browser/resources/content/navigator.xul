@@ -332,10 +332,7 @@ Contributor(s): ______________________________________. -->
         <box id="component-bar" class="component-bar-box"/>
         <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
         <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
-        <statusbarpanel id="statusbar-empty-spacer" flex="2" />
-        
         <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
-        
         <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
       </statusbar> 
        
