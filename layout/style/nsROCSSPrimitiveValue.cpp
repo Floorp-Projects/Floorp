@@ -155,6 +155,12 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         break;
       }
     case CSS_IDENT :
+      {
+        const char *atomValue;
+        mValue.mAtom->GetUTF8String(&atomValue);
+        AppendUTF8toUTF16(atomValue, tmpStr);
+        break;
+      }
     case CSS_STRING :
       {
         tmpStr.Append(mValue.mString);
@@ -410,6 +416,8 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
 {
   switch (mType) {
     case CSS_IDENT:
+      mValue.mAtom->ToString(aReturn);
+      break;
     case CSS_STRING:
       aReturn.Assign(mValue.mString);
       break;
@@ -423,7 +431,6 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
     default:
       aReturn.Truncate();
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-      break;
   }
   return NS_OK;
 }
