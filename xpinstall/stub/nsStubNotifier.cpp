@@ -37,7 +37,7 @@ nsStubNotifier::nsStubNotifier( pfnXPIStart aStart,
 nsStubNotifier::~nsStubNotifier()
 {}
 
-NS_IMPL_ISUPPORTS(nsStubNotifier, NS_IXPINOTIFIER_IID);
+NS_IMPL_ISUPPORTS(nsStubNotifier, NS_GET_IID(nsIXPINotifier));
 
 
 NS_IMETHODIMP
