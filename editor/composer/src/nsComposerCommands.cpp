@@ -84,15 +84,6 @@ nsBaseComposerCommand::nsBaseComposerCommand()
 NS_IMPL_ISUPPORTS1(nsBaseComposerCommand, nsIControllerCommand)
 
 
-PRBool
-nsBaseComposerCommand::EditingHTML(nsIEditor* inEditor)
-//--------------------------------------------------------------------------------------------------------------------
-{
-  //look at mime type
-  return PR_TRUE;
-}
-
-
 #ifdef XP_MAC
 #pragma mark -
 #endif
@@ -115,13 +106,8 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsBaseStateUpdatingCommand, nsBaseComposerCommand);
 NS_IMETHODIMP
 nsBaseStateUpdatingCommand::IsCommandEnabled(const char *aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
-  *outCmdEnabled = PR_FALSE;  
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
-  {
-    *outCmdEnabled = PR_TRUE;
-  }
-  
+  *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
@@ -167,11 +153,12 @@ nsBaseStateUpdatingCommand::GetCommandStateParams(const char *aCommandName, nsIC
 NS_IMETHODIMP
 nsPasteQuotationCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
-  *outCmdEnabled = PR_FALSE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   if (editor)
     editor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
-  
+  else
+    *outCmdEnabled = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -488,9 +475,8 @@ nsListItemCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
 NS_IMETHODIMP
 nsRemoveListCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
-  *outCmdEnabled = PR_FALSE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
+  if (editor)
   {
     // It is enabled if we are in any list type
     PRBool bMixed;
@@ -505,7 +491,9 @@ nsRemoveListCommand::IsCommandEnabled(const char * aCommandName, nsISupports *re
     
     if (tagStr) nsCRT::free(tagStr);
   }
-  
+  else
+    *outCmdEnabled = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -546,13 +534,14 @@ nsRemoveListCommand::GetCommandStateParams(const char *aCommandName, nsICommandP
 NS_IMETHODIMP
 nsIndentCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
-  *outCmdEnabled = PR_FALSE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
+  if (editor)
   {
     *outCmdEnabled = PR_TRUE;     // can always indent (I guess)
   }
-  
+  else
+    *outCmdEnabled = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -603,20 +592,17 @@ nsIndentCommand::GetCommandStateParams(const char *aCommandName, nsICommandParam
 NS_IMETHODIMP
 nsOutdentCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
-  *outCmdEnabled = PR_FALSE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (htmlEditor)
   {
-    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-    if (htmlEditor)
-    {
-      PRBool canIndent, canOutdent;
-      htmlEditor->GetIndentState(&canIndent, &canOutdent);
-      
-      *outCmdEnabled = canOutdent;
-    }
+    PRBool canIndent, canOutdent;
+    htmlEditor->GetIndentState(&canIndent, &canOutdent);
+    *outCmdEnabled = canOutdent;
   }
-  
+  else
+    *outCmdEnabled = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -627,7 +613,7 @@ nsOutdentCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
 
   nsresult rv = NS_OK;
-  if (editor && EditingHTML(editor))
+  if (editor)
   {
     NS_NAMED_LITERAL_STRING(indentStr, "outdent");
     nsAutoString aIndent(indentStr);
@@ -645,7 +631,7 @@ nsOutdentCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aP
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
 
   nsresult rv = NS_OK;
-  if (editor && EditingHTML(editor))
+  if (editor)
   {
     NS_NAMED_LITERAL_STRING(indentStr, "outdent");
     nsAutoString aIndent(indentStr);
@@ -685,14 +671,15 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsMultiStateCommand, nsBaseComposerCommand);
 NS_IMETHODIMP
 nsMultiStateCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
-  *outCmdEnabled = PR_FALSE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
+  if (editor)
   {
     // should be disabled sometimes, like if the current selection is an image
     *outCmdEnabled = PR_TRUE;
   }
-    
+  else
+    *outCmdEnabled = PR_FALSE;
+
   return NS_OK; 
 }
 
@@ -998,15 +985,15 @@ nsHighlightColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
 NS_IMETHODIMP
 nsHighlightColorStateCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
-  *outCmdEnabled = PR_FALSE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (htmlEditor)
   {
-    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
-    if (!htmlEditor) return NS_ERROR_FAILURE;
-      
     *outCmdEnabled = PR_TRUE;
   }
+  else
+    *outCmdEnabled = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -1027,7 +1014,6 @@ nsBackgroundColorStateCommand::GetCurrentState(nsIEditor *aEditor, nsString& out
   
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(aEditor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
-
 
   return htmlEditor->GetBackgroundColorState(&outMixed, outStateString);
 }
@@ -1169,7 +1155,7 @@ NS_IMETHODIMP
 nsRemoveStylesCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
+  if (editor)
   {
     // test if we have any styles?
     *outCmdEnabled = PR_TRUE;
@@ -1219,7 +1205,7 @@ NS_IMETHODIMP
 nsIncreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
+  if (editor)
   {
     // test if we have any styles?
     *outCmdEnabled = PR_TRUE;
@@ -1275,7 +1261,7 @@ NS_IMETHODIMP
 nsDecreaseFontSizeCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  if (editor && EditingHTML(editor))
+  if (editor)
   {
     // test if we are at min size?
     *outCmdEnabled = PR_TRUE;
