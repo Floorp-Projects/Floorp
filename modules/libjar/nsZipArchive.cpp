@@ -1089,12 +1089,14 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
     }
 
     if(bRead || bWrote)
+    {
       zerr = inflate( &zs, Z_PARTIAL_FLUSH );
+
+      //-- incrementally update crc32
+      crc = crc32(crc, (const unsigned char*)outbuf, zs.total_out - outpos);
+    }
     else
       zerr = Z_STREAM_END;
-
-    //-- incrementally update crc32
-    crc = crc32(crc, (const unsigned char*)outbuf, zs.total_out - outpos);
 
 #if defined STANDALONE && defined WIN32
     while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
