@@ -21,9 +21,11 @@
   #%]
 
 [%# INTERFACE:
-  # bug_list: list of integers. List of bug numbers of current query (if any). 
+  # bug_list: list of integers. List of bug numbers of current query (if any).
   # bug.bug_id: integer. Number of current bug (for navigation purposes)
   #%]
+
+[% PROCESS global/variables.none.tmpl %]
 
 [% USE Bugzilla %]
 [% cgi = Bugzilla.cgi %]
@@ -56,14 +58,14 @@
     <link rel="Show" title="Dependency Tree"
           href="showdependencytree.cgi?id=[% bug.bug_id %]">
     <link rel="Show" title="Dependency Graph"
-          href="showdependencygraph.cgi?id=[% bug.bug_id %]"> 
+          href="showdependencygraph.cgi?id=[% bug.bug_id %]">
 
     [% IF use_votes %]
       <link rel="Show" title="Votes ([% bug.votes %])"
             href="votes.cgi?action=show_bug&amp;bug_id=[% bug.bug_id %]">
     [% END %]
 
-      <link rel="Show" title="Bug Activity"
+      <link rel="Show" title="[% terms.Bug %] Activity"
             href="show_activity.cgi?id=[% bug.bug_id %]">
       <link rel="Show" title="Printer-Friendly Version"
             href="long_list.cgi?buglist=[% bug.bug_id %]">
@@ -73,7 +75,7 @@
   [%# *** Preset Queries *** %]
   [% IF user.showmybugslink %]
     [% user_login = user.login FILTER url_quote %]
-    <link rel="Preset&nbsp;Queries" title="My Bugs"                 
+    <link rel="Preset&nbsp;Queries" title="My [% terms.Bugs %]"                 
           href="[% Param('mybugstemplate').replace('%userid%', user_login) %]">
   [% END %]
 

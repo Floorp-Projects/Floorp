@@ -19,16 +19,19 @@
   # Contributor(s):     John Vandenberg <zeroj@null.net>
   #                     Tobias Burnus <burnus@net-b.de>
   #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
 From: bugzilla-admin-daemon
 To: [% emailaddress %]
 Subject: [% PROCESS subject %]
 
 A request was cancelled from [% remoteaddress %].
 
-If you did not request this, it could be either an honest 
-mistake or someone attempting to break into your Bugzilla account.
+If you did not request this, it could be either an honest
+mistake or someone attempting to break into your [% terms.Bugzilla %] account.
 
-Take a look at the information below and forward this email 
+Take a look at the information below and forward this email
 to [% maintainer %] if you suspect foul play.
 
             Token: [% token %]
@@ -84,12 +87,12 @@ Cancelled Because:
 
   [% ELSE %]
     [%# Give sensible error if the cancel-token function is used incorrectly.
-      #%]        
-    You are using Bugzilla's cancel-token function incorrectly. You
+      #%]
+    You are using [% terms.Bugzilla %]'s cancel-token function incorrectly. You
     passed in the string '[% cancelaction %]'. The correct use is to pass
     in a tag, and define that tag in the file cancel-token.txt.tmpl.
 
-    If you are a Bugzilla end-user seeing this message, please forward this
+    If you are a [% terms.Bugzilla %] end-user seeing this message, please forward this
     email to [% Param('maintainer') %].
   [% END %]
 [% END %]

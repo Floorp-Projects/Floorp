@@ -19,15 +19,17 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% PROCESS global/header.html.tmpl 
-   title = "Search by bug number"
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+   title = "Search by $terms.bug number"
  %]
 
 <form method="get" action="show_bug.cgi">
   <p>
-    You may find a single bug by entering its bug id here:
+    You may find a single [% terms.bug %] by entering its [% terms.bug %] id here:
     <input name="id" size="6">
-    <input type="submit" value="Show Me This Bug">
+    <input type="submit" value="Show Me This [% terms.Bug %]">
   </p>
 </form>
 

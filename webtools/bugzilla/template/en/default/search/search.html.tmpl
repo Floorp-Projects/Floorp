@@ -25,11 +25,13 @@
   # search/boolean-charts.html.tmpl.
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% USE Bugzilla %]
 [% cgi = Bugzilla.cgi %]
 
-[% PROCESS global/header.html.tmpl 
-  title = "Search for bugs"
+[% PROCESS global/header.html.tmpl
+  title = "Search for $terms.bugs"
   onload = "selectProduct(document.forms['queryform']);initHelp();"
 %]
 
@@ -56,13 +58,13 @@
       <font color="red">
       [% IF cgi.user_agent("Mozilla/5") %]
         Note that if the help popups are hidden by form element scroll bars,
-        this is a bug in your browser, not in Bugzilla.
+        this is a bug in your browser, not in [% terms.Bugzilla %].
       [% END %]
-    </font>    
+    </font>
   </p>
-[% END %]     
+[% END %]
 <form method="get" action="buglist.cgi" name="queryform">
-  
+
 [% PROCESS search/form.html.tmpl %]
 
 [% PROCESS search/knob.html.tmpl %]

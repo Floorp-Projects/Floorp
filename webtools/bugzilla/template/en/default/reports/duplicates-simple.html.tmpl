@@ -22,13 +22,15 @@
 [%# INTERFACE:
   # You need to fulfill the interface to duplicates-table.html.tmpl.
   #%]
-  
+
+[% PROCESS global/variables.none.tmpl %]
+
 <html>
 
   [% IF product %]
-    [% title = "Most Frequently Reported Bugs for $product" %]
-  [% ELSE %]   
-    [% title = "Most Frequently Reported Bugs" %]
+    [% title = "Most Frequently Reported $terms.Bugs for $product" %]
+  [% ELSE %]
+    [% title = "Most Frequently Reported $terms.Bugs" %]
   [% END%]
 
   <head>

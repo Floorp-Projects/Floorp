@@ -20,8 +20,10 @@
   #                 Gervase Markham <gerv@gerv.net>
   #%]
 
-[% PROCESS global/header.html.tmpl 
-  title = "Full Text Bug Listing"
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Full Text $terms.Bug Listing"
   style_urls = [ "css/show_multiple.css" ]
 %]
 [% PROCESS bug/time.html.tmpl %]
@@ -31,7 +33,7 @@
   [% END %]
 [% ELSE %]
   <p>
-    You'd have more luck if you gave me some bug numbers.
+    You'd have more luck if you gave me some [% terms.bug %] numbers.
   </p>
 [% END %]
 
@@ -47,54 +49,54 @@
   <img alt="" src="1x1.gif" width="1" height="80" align="left">
   <div align="center">
     <b>
-      <font size="+3">Bug [% bug.bug_id %] - [% bug.short_desc FILTER html %]</font>
+      <font size="+3">[% terms.Bug %]&nbsp;[% bug.bug_id %] - [% bug.short_desc FILTER html %]</font>
     </b>
   </div>
 
   <table width="100%">
     <tr>
       <td>
-        <b>Bug#:</b>
+        <b>[% terms.Bug %]#:</b>
         <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
       </td>
-      [% PROCESS cell attr = { description => "Product", 
+      [% PROCESS cell attr = { description => "Product",
                                name => "product" } %]
-      [% PROCESS cell attr = { description => "Version", 
+      [% PROCESS cell attr = { description => "Version",
                                name => "version" } %]
-      [% PROCESS cell attr = { description => "Platform", 
+      [% PROCESS cell attr = { description => "Platform",
                                name => "rep_platform" } %]
     </tr>
-    
+
     <tr>
-      [% PROCESS cell attr = { description => "OS/Version", 
+      [% PROCESS cell attr = { description => "OS/Version",
                                name => "op_sys" } %]
-      [% PROCESS cell attr = { description => "Status", 
+      [% PROCESS cell attr = { description => "Status",
                                name => "bug_status" } %]
-      [% PROCESS cell attr = { description => "Severity", 
+      [% PROCESS cell attr = { description => "Severity",
                                name => "bug_severity" } %]
-      [% PROCESS cell attr = { description => "Priority", 
+      [% PROCESS cell attr = { description => "Priority",
                                name => "priority" } %]
     </tr>
-    
+
     <tr>
-      [% PROCESS cell attr = { description => "Resolution", 
+      [% PROCESS cell attr = { description => "Resolution",
                                name => "resolution" } %]
-      [% PROCESS cell attr = { description => "Assigned To", 
+      [% PROCESS cell attr = { description => "Assigned To",
                                name => "assigned_to" } %]
-      [% PROCESS cell attr = { description => "Reported By", 
+      [% PROCESS cell attr = { description => "Reported By",
                                name => "reporter" } %]
       [% IF Param('useqacontact') %]
-        [% PROCESS cell attr = { description => "QA Contact", 
+        [% PROCESS cell attr = { description => "QA Contact",
                                  name => "qa_contact" } %]
       [% END %]
     </tr>
-    
+
     <tr>
       <td colspan="2">
         <b>Component:</b>&nbsp;
         [% bug.component %]
       </td>
-    
+
       <td colspan="2">
       [% IF Param('usetargetmilestone') %]
           <b>Target Milestone:</b>&nbsp;
@@ -102,20 +104,20 @@
       [% END %]
       </td>
     </tr>
-    
+
     <tr>
       <td colspan="4">
         <b>URL:</b>&nbsp;
         <a href="[% bug.bug_file_loc FILTER html %]">
-                 [% bug.bug_file_loc FILTER html %]</a> 
+                 [% bug.bug_file_loc FILTER html %]</a>
     </tr>
-    
+
     <tr>
       <td colspan="4">
         <b>Summary:</b>&nbsp;[% bug.short_desc FILTER html %]
       </td>
     </tr>
-     
+
     [% IF use_keywords %]
       <tr>
         <td colspan="4">
@@ -140,7 +142,7 @@
           [% PROCESS formattimeunit time_unit=bug.estimated_time %]
           &nbsp;
           <b>Current Est.:</b>&nbsp;
-          [% PROCESS formattimeunit 
+          [% PROCESS formattimeunit
                      time_unit=(bug.remaining_time + bug.actual_time) %]
           &nbsp;
           <b>Hours Worked:</b>&nbsp;
@@ -149,10 +151,10 @@
           [% PROCESS formattimeunit time_unit=bug.remaining_time %]
           &nbsp;
           <b>Percentage Complete:</b>&nbsp;
-          [% PROCESS calculatepercentage act=bug.actual_time 
+          [% PROCESS calculatepercentage act=bug.actual_time
                                          rem=bug.remaining_time %]&nbsp;
           <b>Gain</b>&nbsp;
-          [% PROCESS formattimeunit 
+          [% PROCESS formattimeunit
                      time_unit=bug.estimated_time - (bug.actual_time + bug.remaining_time) %]
           &nbsp;
         </td>
@@ -172,9 +174,9 @@
     </tr>
   </table>
 
-  [% PROCESS bug/comments.html.tmpl 
+  [% PROCESS bug/comments.html.tmpl
      comments = bug.comments %]
-  
+
   <hr>
 [% END %]
 

@@ -21,10 +21,12 @@
   #                 Jouni Heikniemi <jouni@heikniemi.net>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [%# This is not necessary for English templates, but useful for localisers. %]
 [% ordersdesc = {
    "Reuse same sort as last time" => "Reuse same sort as last time",
-   "Bug Number"   => "Bug Number",
+   "Bug Number"   => "$terms.Bug Number",
    "Importance"   => "Importance",
    "Assignee"     => "Assignee",
    "Last Changed" => "Last Changed" } %]
@@ -81,7 +83,7 @@
         [% IF namedqueries.size > 0 %]
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         [% END %]
-        <input type="checkbox" id="remember" name="remember" value="1" 
+        <input type="checkbox" id="remember" name="remember" value="1"
                onclick="remCheckboxChanged()">
         [% IF namedqueries.size > 0 %]
           <label for="remember">and remember it</label>
@@ -108,7 +110,7 @@
         </label><br>
       </td>
     </tr>
-  
+
     <tr>
       <td colspan="2">
         [% IF namedqueries.size > 0 %]
@@ -124,12 +126,12 @@
               <option value="[% query FILTER html %]">
                 [% query FILTER html %]</option>
             [% END %]
-          </select>        
+          </select>
         [% END %]
       </td>
     </tr>
   </table>
-  
+
   <script type="text/javascript"> <!--
     remCheckboxChanged();
     // -->
@@ -142,12 +144,12 @@
   [% FOREACH order = orders %]
     <option value="[% order FILTER html %]"
       [% " selected" IF default.order.0 == order %]>
-         [% ordersdesc.$order FILTER html %]</option> 
+         [% ordersdesc.$order FILTER html %]</option>
   [% END %]
   </select>
 
   <input type="submit" value="[% button_name %]">
-  
+
   [% IF userdefaultquery %]
      <p>
        <a href="query.cgi?nukedefaultquery=1">

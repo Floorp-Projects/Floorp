@@ -23,7 +23,9 @@
 [%# Template Initialization                                                  #%]
 [%############################################################################%]
 
-[% DEFAULT title = "Bug List" %]
+[% PROCESS global/variables.none.tmpl %]
+
+[% DEFAULT title = "$terms.Bug List" %]
 [% style_urls = [ "css/buglist.css" ] %]
 [% qorder = order FILTER url_quote IF order %]
 
@@ -45,7 +47,7 @@
   [% END %]
 
   [% IF Param('enablequips') != 'off' %]
-    [% DEFAULT quip = "Bugzilla would like to put a random quip here, but no one has entered any." %]
+    [% DEFAULT quip = "$terms.Bugzilla would like to put a random quip here, but no one has entered any." %]
     <a href="quips.cgi"><i>[% quip FILTER html %]</i></a>
   [% END %]
 
@@ -53,8 +55,8 @@
 
 [% IF toolong %]
   <h2>
-    This list is too long for Bugzilla's little mind; the 
-    Next/Prev/First/Last buttons won't appear on individual bugs.
+    This list is too long for [% terms.Bugzilla %]'s little mind; the
+    Next/Prev/First/Last buttons won't appear on individual [% terms.bugs %].
   </h2>
 [% END %]
 
@@ -66,7 +68,7 @@
 [%############################################################################%]
 
 [% IF bugs.size > 9 %]
-  [% bugs.size %] bugs found.
+  [% bugs.size %]&nbsp;[% terms.bugs %] found.
 [% END %]
 
 
@@ -91,18 +93,18 @@
 [%############################################################################%]
 
 [% IF bugs.size == 0 %]
-  Zarro Boogs found.
+  [% terms.zeroSearchResults %].
   <p>
     <a href="query.cgi">Query Page</a>
-    &nbsp;&nbsp;<a href="enter_bug.cgi">Enter New Bug</a>
+    &nbsp;&nbsp;<a href="enter_bug.cgi">Enter New [% terms.Bug %]</a>
     <a href="query.cgi?[% urlquerypart FILTER html %]">Edit this query</a>
   </p>
 
 [% ELSIF bugs.size == 1 %]
-  One bug found.
+  One [% terms.bug %] found.
 
 [% ELSE %]
-  [% bugs.size %] bugs found.
+  [% bugs.size %]&nbsp;[% terms.bugs %] found.
 
 [% END %]
 
@@ -116,7 +118,7 @@
 [% IF dotweak %]
 
   [% PROCESS "list/edit-multiple.html.tmpl" %]
-  
+
   </form>
 
   <hr>
@@ -140,13 +142,13 @@
 
     [% IF bugs.size > 1 && caneditbugs && !dotweak %]
       <a href="buglist.cgi?[% urlquerypart FILTER html %]
-        [%- "&order=$qorder" FILTER html IF order %]&amp;tweak=1">Change Several 
-        Bugs at Once</a>
+        [%- "&order=$qorder" FILTER html IF order %]&amp;tweak=1">Change Several&nbsp;
+        [% terms.Bugs %] at Once</a>
       &nbsp;&nbsp;
     [% END %]
 
     [% IF bugowners %]
-      <a href="mailto:[% bugowners %]">Send Mail to Bug Owners</a> &nbsp;&nbsp;
+      <a href="mailto:[% bugowners %]">Send Mail to [% terms.Bug %] Owners</a> &nbsp;&nbsp;
     [% END %]
 
     <a href="query.cgi?

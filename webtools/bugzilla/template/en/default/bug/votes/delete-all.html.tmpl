@@ -20,16 +20,18 @@
   #%]
 
 [%# INTERFACE:
-  # This template has no interface. 
+  # This template has no interface.
   #%]
-  
+
+[% PROCESS global/variables.none.tmpl %]
+
 [% PROCESS global/header.html.tmpl
            title = "Remove your votes?"
  %]
 
 <p>
-  You are about to remove all of your bug votes. Are you sure you wish to 
-  remove your vote from every bug you've voted on?
+  You are about to remove all of your [% terms.bug %] votes. Are you sure you wish to
+  remove your vote from every [% terms.bug %] you've voted on?
 </p>
 
 <form action="votes.cgi" method="post">

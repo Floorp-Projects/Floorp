@@ -21,6 +21,9 @@
   #                 Scott Collins <scc@mozilla.org>
   #                 Christopher A. Aillon <christopher@aillon.com>
   #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
 <?xml version="1.0"?>
 <!-- [% template_version %] -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -69,7 +72,7 @@ function normal_keypress_handler( aEvent ) {
     <box orient="vertical" flex="1">
       <text class="text-link" onclick="load_relative_url('query.cgi')" value="new query"/>
       <text class="text-link" onclick="load_relative_url('report.cgi')" value="reports"/>
-      <text class="text-link" onclick="load_relative_url('enter_bug.cgi')" value="new bug"/>
+      <text class="text-link" onclick="load_relative_url('enter_bug.cgi')" value="new [% terms.bug %]"/>
       <separator class="thin"/>
 
 [% IF user %]
@@ -96,7 +99,7 @@ function normal_keypress_handler( aEvent ) {
       <separator class="thin"/>
   [%- IF user.showmybugslink %]
       [% filtered_username = user.login FILTER url_quote %]
-      <text class="text-link" onclick="load_relative_url('[% Param('mybugstemplate').replace('%userid%', filtered_username) FILTER js FILTER html %]')" value="my bugs"/>
+      <text class="text-link" onclick="load_relative_url('[% Param('mybugstemplate').replace('%userid%', filtered_username) FILTER js FILTER html %]')" value="my [% terms.bugs %]"/>
   [%- END %]
   [%- IF Param('usevotes') %]
       <text class="text-link" onclick="load_relative_url('votes.cgi?action=show_user')" value="my votes"/>

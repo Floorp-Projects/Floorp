@@ -21,7 +21,9 @@
 [%# INTERFACE:
   # See report-table.html.tmpl.
   #%]
-[% num_bugs = "Number of bugs" %]
+[% PROCESS global/variables.none.tmpl %]
+
+[% num_bugs = BLOCK %]Number of [% terms.bugs %][% END %]
 [% tbl_field_disp = field_descs.$tbl_field || tbl_field %]
 [% col_field_disp = field_descs.$col_field || col_field %]
 [% row_field_disp = field_descs.$row_field || row_field %]

@@ -40,7 +40,7 @@
 
 [% DEFAULT
   h2 = ""
-  h3 = "" 
+  h3 = ""
   bgcolor = "#ffffff"
   onload = ""
 %]
@@ -58,33 +58,33 @@
 <html>
   <head>
     <title>[% title FILTER html %]</title>
-    
+
 [%# Migration note: contents of the old Param 'headerhtml' would go here %]
 
     [% PROCESS "global/site-navigation.html.tmpl" %]
-    
+
     [% IF javascript %]
       <script type="text/javascript" language="JavaScript">
         [% javascript %]
       </script>
     [% END %]
-    
-    [%+ INCLUDE "global/help-header.html.tmpl" %]        
+
+    [%+ INCLUDE "global/help-header.html.tmpl" %]
 
     [% IF style %]
       <style type="text/css">
         [% style %]
       </style>
     [% END %]
-    
+
     [% IF style_urls %]
       [% FOREACH style_url = style_urls %]
         <link href="[% style_url %]" rel="stylesheet" type="text/css">
       [% END %]
     [% END %]
-  
+
   </head>
-  
+
 [%# Migration note: contents of the old Param 'bodyhtml' go in the body tag,
   # but set the bgcolor and onload attributes in the DEFAULT directive above.
   #%]
@@ -94,9 +94,9 @@
 [%# Migration note: the following file corresponds to the old Param
   # 'bannerhtml'
   #%]
-  
+
 [% INCLUDE global/banner.html.tmpl %]
-    
+
 [% IF h1 || h2 %]
     <table border="0" cellspacing="0" width="100%">
       <tr>

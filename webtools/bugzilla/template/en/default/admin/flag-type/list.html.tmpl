@@ -19,7 +19,9 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
   title = 'Administer Flag Types'
   style = "
     table#flag_types tr th { text-align: left; }
@@ -28,7 +30,7 @@
 %]
 
 <p>
-  Flags are markers that identify whether a bug or attachment has been granted
+  Flags are markers that identify whether [% terms.abug %] or attachment has been granted
   or denied some status.  Flags appear in the UI as a name and a status symbol
   ("+" for granted, "-" for denied, and "?" for statuses requested by users).
 </p>
@@ -40,13 +42,13 @@
   either the string "review+" or the string "review-" will appear in the patch,
   depending on whether the patch passed or failed review.
 </p>
-  
-<h3>Flag Types for Bugs</h3>
+
+<h3>Flag Types for [% terms.Bugs %]</h3>
 
 [% PROCESS display_flag_types types=bug_types %]
 
 <p>
-  <a href="editflagtypes.cgi?action=enter&amp;target_type=bug">Create Flag Type for Bugs</a>
+  <a href="editflagtypes.cgi?action=enter&amp;target_type=bug">Create Flag Type for [% terms.Bugs %]</a>
 </p>
 
 <h3>Flag Types for Attachments</h3>
@@ -63,8 +65,8 @@
   {
     if (count > 0) {
         var msg = 'There are ' + count + ' flags of type ' + name + '. ' +
-                  'If you delete this type, those flags will also be ' + 
-                  'deleted.\n\nNote: to deactivate the type instead ' + 
+                  'If you delete this type, those flags will also be ' +
+                  'deleted.\n\nNote: to deactivate the type instead ' +
                   'of deleting it, edit it and uncheck its "is active" ' +
                   'flag.\n\nDo you really want to delete this flag type?';
         if (!confirm(msg)) return false;
@@ -95,12 +97,12 @@
         <td>[% type.description FILTER html %]</td>
         <td>
           <a href="editflagtypes.cgi?action=copy&amp;id=[% type.id %]">Copy</a>
-          | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]" 
-               onclick="return confirmDelete([% type.id %], '[% type.name FILTER js %]', 
+          | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]"
+               onclick="return confirmDelete([% type.id %], '[% type.name FILTER js %]',
                                              [% type.flag_count %]);">Delete</a>
         </td>
       </tr>
-    
+
     [% END %]
 
   </table>

@@ -25,11 +25,13 @@
   # This template also needs to be called with the interface to the
   # activity.html.tmpl template fulfilled.
   #%]
- 
-[% PROCESS global/header.html.tmpl 
-  title = "Changes made to bug $bug_id"
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "Changes made to $terms.bug $bug_id"
   h1 = "Activity log"
-  h2 = "Bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>"
+  h2 = "$terms.Bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>"
  %]
 
 <br>
@@ -37,7 +39,7 @@
 [% PROCESS bug/activity/table.html.tmpl %]
 
 <p>
-  <a href="show_bug.cgi?id=[% bug_id %]">Back to bug [% bug_id %]</a>
+  <a href="show_bug.cgi?id=[% bug_id %]">Back to [% terms.bug %]&nbsp;[% bug_id %]</a>
 </p>
 
 [% PROCESS global/footer.html.tmpl %]

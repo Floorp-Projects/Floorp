@@ -20,25 +20,27 @@
   #%]
 
 [%# INTERFACE:
-  # mybugslink: boolean. True if the user wishes the My Bugs link to appear. 
+  # mybugslink: boolean. True if the user wishes the My Bugs link to appear.
   # queries: array of hashes. May be empty. Each hash has two members:
   #   name:   string. The name of the query.
   #   footer: boolean. True if the query appears in the footer.
   #%]
- 
+
+[% PROCESS global/variables.none.tmpl %]
+
 <table>
   <tr>
-    <th align="right">The 'My bugs' link:</th>
+    <th align="right">The 'My [% terms.bugs %]' link:</th>
     <td>
       <select name="mybugslink">
-        <option value="1">should appear on the footer of every page</option>  
-        <option value="0" 
+        <option value="1">should appear on the footer of every page</option>
+        <option value="0"
           [% " selected" IF NOT mybugslink %]>should not be displayed
-        </option>  
+        </option>
       </select>
     </td>
-  </tr>    
-    
+  </tr>
+
   <input type="hidden" name="numqueries" value="[% queries.size %]">
   [% IF queries.size %]
     [% FOREACH query = queries %]
@@ -46,31 +48,31 @@
         <th align="right">Your query named '[% query.name FILTER html %]':</th>
         <td>
           <select name="query-[% loop.index %]">
-            <option value="0">should only appear in the query page</option>  
-            <option value="1" 
+            <option value="0">should only appear in the query page</option>
+            <option value="1"
               [% " selected" IF query.footer %]>
               should appear on the footer of every page
-            </option>  
+            </option>
           </select>
         </td>
       </tr>
 
-      <input type="hidden" name="name-[% loop.index %]" 
+      <input type="hidden" name="name-[% loop.index %]"
              value="[% query.name FILTER html %]">
     [% END %]
 
   [% ELSE %]
     <tr>
       <td colspan="4">
-        <br>                            
-        If you create remembered queries using the 
+        <br>
+        If you create remembered queries using the
         <a href="query.cgi">query page</a>,
-        you can then come to this page and choose to have some of them  
-        appear in the footer of each Bugzilla page.
+        you can then come to this page and choose to have some of them
+        appear in the footer of each [% terms.Bugzilla %] page.
         <br>
         <br>
       </td>
     </tr>
   [% END %]
-    
+
 </table>

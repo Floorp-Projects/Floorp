@@ -19,13 +19,15 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [%# Define strings that will serve as the title and header of this page %]
-[% title = BLOCK %]Create New Attachment for Bug #[% bugid %][% END %]
+[% title = BLOCK %]Create New Attachment for [% terms.Bug %] #[% bugid %][% END %]
 [% h1 = BLOCK %]Create New Attachment for
-  [%+ GetBugLink(bugid, "Bug $bugid") %][% END %]
+  [%+ GetBugLink(bugid, "$terms.Bug $bugid") %][% END %]
 [% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
 
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl
   title = title
   h1 = h1
   h2 = h2
@@ -48,7 +50,7 @@
 <form name="entryform" method="post" action="attachment.cgi" enctype="multipart/form-data">
   <input type="hidden" name="bugid" value="[% bugid %]">
   <input type="hidden" name="action" value="insert">
-   
+
   <table class="attachment_entry">
     <tr>
       <th>File:</th>
@@ -74,15 +76,15 @@
       <td>
         <em>If the attachment is a patch, check the box below.</em><br>
         <input type="checkbox" id="ispatch" name="ispatch" value="1"
-               onchange="setContentTypeDisabledState();"> 
+               onchange="setContentTypeDisabledState();">
         <label for="ispatch">patch</label><br><br>
 
         <em>Otherwise, choose a method for determining the content type.</em><br>
         <input type="radio" id="autodetect"
-               name="contenttypemethod" value="autodetect"> 
+               name="contenttypemethod" value="autodetect">
           <label for="autodetect">auto-detect</label><br>
         <input type="radio" id="list"
-               name="contenttypemethod" value="list"> 
+               name="contenttypemethod" value="list">
           <label for="list">select from list:</label>
           <select name="contenttypeselection"
                   onchange="this.form.contenttypemethod[1].checked = true;">
@@ -128,17 +130,17 @@
       <tr>
         <th>Reassignment:</th>
         <td>
-          <em>If you want to assign this bug to yourself, 
+          <em>If you want to assign this [% terms.bug %] to yourself,
               check the box below.</em><br>
-          <input type="checkbox" id="takebug" name="takebug" value="1"> 
-          <label for="takebug">take bug</label>
+          <input type="checkbox" id="takebug" name="takebug" value="1">
+          <label for="takebug">take [% terms.bug %]</label>
         </td>
       </tr>
     [% END %]
     <tr>
       <th>Comment:</th>
       <td>
-        <em>(optional) Add a comment about this attachment to the bug.</em><br>
+        <em>(optional) Add a comment about this attachment to the [% terms.bug %].</em><br>
         <textarea wrap="soft" name="comment" rows="6" cols="80"></textarea>
       </td>
     </tr>
@@ -152,12 +154,12 @@
 
 <script language="JavaScript" type="text/javascript">
   <!--
-  function setContentTypeDisabledState() 
+  function setContentTypeDisabledState()
   {
     var entryform = document.entryform;
 
     var isdisabled = false;
-    if (entryform.ispatch.checked) 
+    if (entryform.ispatch.checked)
       isdisabled = true;
 
     for (var i=0 ; i<entryform.contenttypemethod.length ; i++)

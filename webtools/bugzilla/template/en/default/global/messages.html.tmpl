@@ -18,11 +18,13 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
-  
+
 [%# This is a list of all the possible messages. Please keep them in
   # alphabetical order by message tag, and leave a blank line between messages.
-  #%]  
-  
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
 [% message_tag = message %]
 
 [% message = BLOCK %]
@@ -83,12 +85,12 @@
     [% url = "query.cgi?GoAheadAndLogIn=1" %]
     [% link = "Log in again." %]
     <b>Your login has been forgotten</b>.
-    The cookie that was remembering your login is now gone. You will be 
+    The cookie that was remembering your login is now gone. You will be
     prompted for a login the next time it is required.
 
   [% ELSIF message_tag == "login_changed" %]
-    [% title = "Bugzilla Login Changed" %]
-    Your Bugzilla login has been changed.
+    [% title = "$terms.Bugzilla Login Changed" %]
+    Your [% terms.Bugzilla %] login has been changed.
 
   [% ELSIF message_tag == "password_change_canceled" %]
     [% title = "Cancel Request to Change Password" %]
@@ -155,18 +157,18 @@
       <a href="query.cgi?format=create-series">create another series</a>.
     
   [% ELSIF message_tag == "shutdown" %]
-    [% title = "Bugzilla is Down" %]
+    [% title = "$terms.Bugzilla is Down" %]
     [% Param("shutdownhtml") %]
     
   [% ELSE %]
     [%# Give sensible error if error functions are used incorrectly.
       #%]        
-    You are using Bugzilla's messaging functions incorrectly. You
+    You are using [% terms.Bugzilla %]'s messaging functions incorrectly. You
     passed in the string '[% message_tag %]'. The correct use is to pass
     in a tag, and define that tag in the file messages.html.tmpl.<br>
     <br>
-    If you are a Bugzilla end-user seeing this message, please save this
-    page and send it to [% Param('maintainer') %].
+    If you are a [% terms.Bugzilla %] end-user seeing this message, please 
+    save this page and send it to [% Param('maintainer') %].
     
   [% END %]
 [% END %]

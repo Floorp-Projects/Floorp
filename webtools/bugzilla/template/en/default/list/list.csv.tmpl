@@ -20,6 +20,8 @@
   #                 Gervase Markham <gerv@gerv.net>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 bug_id,
 [% FOREACH column = displaycolumns %]
   [% column FILTER csv %],
@@ -30,5 +32,5 @@ bug_id,
     [% FOREACH column = displaycolumns %]
       [% bug.$column FILTER csv %],
     [% END %]
-    
+
 [% END %]

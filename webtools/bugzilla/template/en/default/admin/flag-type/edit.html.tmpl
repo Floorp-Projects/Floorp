@@ -19,6 +19,8 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [%# The javascript and header_html blocks get used in header.html.tmpl. %]
 [% javascript = BLOCK %]
   var usetms = 0; // do we have target milestone?
@@ -26,7 +28,7 @@
   var last_sel = []; // caches last selection
   var cpts = new Array();
   [% FOREACH p = products %]
-    cpts['[% p FILTER js %]'] = [ 
+    cpts['[% p FILTER js %]'] = [
       [%- FOREACH item = components_by_product.$p %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% END %]
 [% END %]
@@ -36,9 +38,13 @@
 [% END %]
 
 [% IF type.target_type == "bug" %]
-  [% title = "Create Flag Type for Bugs" %]
+  [% title = BLOCK %]Create Flag Type for [% terms.Bugs %][% END %]
+  [% typeLabelLowerPlural = BLOCK %][% terms.bugs %][% END %]
+  [% typeLabelLowerSingular = BLOCK %][% terms.bug %][% END %]
 [% ELSE %]
   [% title = "Create Flag Type for Attachments" %]
+  [% typeLabelLowerPlural = BLOCK %]attachments[% END %]
+  [% typeLabelLowerSingular = BLOCK %]attachment[% END %]
 [% END %]
 
 [% IF last_action == "copy" %]
@@ -47,7 +53,7 @@
   [% title = "Edit Flag Type $type.name" %]
 [% END %]
 
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl
   title = title
   style = "
     table#form th { text-align: right; vertical-align: baseline; white-space: nowrap; }
@@ -66,13 +72,13 @@
   [% FOREACH category = type.exclusions %]
     <input type="hidden" name="exclusions" value="[% category %]">
   [% END %]
-  
+
   <table id="form" cellspacing="0" cellpadding="4" border="0">
     <tr>
       <th>Name:</th>
       <td>
         a short name identifying this type<br>
-        <input type="text" name="name" value="[% type.name FILTER html %]" 
+        <input type="text" name="name" value="[% type.name FILTER html %]"
                size="50" maxlength="50">
       </td>
     </tr>
@@ -84,12 +90,13 @@
         <textarea name="description" rows="4" cols="80">[% type.description FILTER html %]</textarea>
       </td>
     </tr>
-    
+
     <tr>
       <th>Category:</th>
+
       <td>
-        the products/components to which [% type.target_type %]s must 
-        (inclusions) or must not (exclusions) belong in order for users 
+        the products/components to which [% typeLabelLowerPlural %] must
+        (inclusions) or must not (exclusions) belong in order for users
         to be able to set flags of this type for them
         <table>
           <tr>
@@ -124,11 +131,11 @@
         </table>
       </td>
     </tr>
-    
+
     <tr>
       <th>Sort Key:</th>
       <td>
-        a number between 1 and 32767 by which this type will be sorted 
+        a number between 1 and 32767 by which this type will be sorted
         when displayed to users in a list; ignore if you don't care
         what order the types appear in or if you want them to appear
         in alphabetical order<br>
@@ -147,7 +154,7 @@
     <tr>
       <th>&nbsp;</th>
       <td>
-        <input type="checkbox" name="is_requestable" [% "checked" IF type.is_requestable || !type.is_requestable.defined %]> 
+        <input type="checkbox" name="is_requestable" [% "checked" IF type.is_requestable || !type.is_requestable.defined %]>
         requestable (users can ask for flags of this type to be set)
       </td>
     </tr>
@@ -159,11 +166,11 @@
         <input type="text" name="cc_list" value="[% type.cc_list FILTER html %]" size="80" maxlength="200">
       </td>
     </tr>
-    
+
     <tr>
       <th>&nbsp;</th>
       <td>
-        <input type="checkbox" name="is_requesteeble" [% "checked" IF type.is_requesteeble || !type.is_requesteeble.defined %]> 
+        <input type="checkbox" name="is_requesteeble" [% "checked" IF type.is_requesteeble || !type.is_requesteeble.defined %]>
         specifically requestable (users can ask specific other users to set flags of this type as opposed to just asking the wind)
       </td>
     </tr>
@@ -172,7 +179,7 @@
       <th>&nbsp;</th>
       <td>
         <input type="checkbox" name="is_multiplicable" [% "checked" IF type.is_multiplicable || !type.is_multiplicable.defined %]>
-        multiplicable (multiple flags of this type can be set on the same [% type.target_type %])
+        multiplicable (multiple flags of this type can be set on the same [% typeLabelLowerSingular %])
       </td>
     </tr>
 

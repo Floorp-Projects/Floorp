@@ -31,36 +31,38 @@
   #   short_desc: string. The bug's summary.
   #   bug_status: string. The bug's status.
   #   resolution: string. The bug's resolution, if any.
-  #   
+  #
   # bug_ids: list of integers. May be empty. The IDs of the bugs in $bugs.
-  #  
+  #
   # sortby: string. the column on which we are sorting the buglist.
   # reverse: boolean. True if we are reversing the current sort.
   # maxrows: integer. Max number of rows to display.
   # changedsince: integer. The number of days ago for the changedsince column.
-  # openonly: boolean. True if we are only showing open bugs.    
+  # openonly: boolean. True if we are only showing open bugs.
   # product: string. Restrict to this product only.
   #%]
-  
+
+[% PROCESS global/variables.none.tmpl %]
+
 [%# *** Column Headers *** %]
 
 [% IF bug_ids.size > 0 %]
   <table border>
     <tr bgcolor="#CCCCCC">
-      [% FOREACH column = [ { name => "id", description => "Bug #" },
+      [% FOREACH column = [ { name => "id", description => "$terms.Bug #" },
                             { name => "count", description => "Dupe<br>Count" },
-                            { name => "delta", 
+                            { name => "delta",
                         description => "Change in last<br>$changedsince day(s)" },
                             { name => "component", description => "Component" },
                             { name => "bug_severity", description => "Severity" },
-                            { name => "op_sys", description => "Op Sys" }, 
-                            { name => "target_milestone", 
+                            { name => "op_sys", description => "Op Sys" },
+                            { name => "target_milestone",
                               description => "Target<br>Milestone" },
-                            { name => "short_desc", description => "Summary" } ] 
+                            { name => "short_desc", description => "Summary" } ]
        %]
 
         [%# Small hack to keep delta column out if we don't need it %]
-        [% NEXT IF column.name == "delta" AND NOT dobefore %]                     
+        [% NEXT IF column.name == "delta" AND NOT dobefore %]
 
         <td>
           <center>
@@ -112,7 +114,7 @@
 
   [% FOREACH bug = bugs %]
     [% LAST IF loop.index() >= maxrows %]
-    [% vis_bug_ids.push(bug.id) %]      
+    [% vis_bug_ids.push(bug.id) %]
 
     <tr [% "class='resolved'" IF bug.resolution != "" %]>
       <td>
@@ -143,5 +145,5 @@
 
   </table>
 [% ELSE %]
-  <h3>No duplicate bugs found.</h3>
+  <h3>No duplicate [% terms.bugs %] found.</h3>
 [% END %]

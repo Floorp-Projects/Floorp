@@ -24,14 +24,16 @@
   # users: list of hashes. May be empty. Each hash has two members:
   #   name: string. The login name of the user whose vote is attached
   #   count: integer. The number of times that user has votes for this bug.
-  # total: integer. The total number of votes for this bug. 
+  # total: integer. The total number of votes for this bug.
   #%]
-  
+
+[% PROCESS global/variables.none.tmpl %]
+
 [% PROCESS global/header.html.tmpl
            title = "Show Votes"
-           h2 = "Bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>"
+           h2 = "$terms.Bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>"
  %]
- 
+
 <table cellspacing="4">
   <tr>
     <th>Who</th>

@@ -136,6 +136,9 @@ foreach my $path (@Support::Templates::include_paths) {
             # Special Template Toolkit loop variable
             next if $directive =~ /^loop\.(index|count)$/;
             
+            # Branding terms
+            next if $directive =~ /^terms\./;
+            
             # Things which are already filtered
             # Note: If a single directive prints two things, and only one is 
             # filtered, we may not catch that case.

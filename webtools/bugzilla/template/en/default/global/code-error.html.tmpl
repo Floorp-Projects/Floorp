@@ -25,16 +25,18 @@
   # variables: hash. Useful data about the problem. The keys are the variable
   #  names, and the values the variable values.
   #%]
-  
+
 [%# This is a list of all the possible code errors. Please keep them in
   # alphabetical order by error tag, and leave a blank line between errors.
-  #%]  
+  #%]
+
+[% PROCESS global/variables.none.tmpl %]
 
 [% DEFAULT title = "Internal Error" %]
-  
+
 [% error_message = BLOCK %]
   [% IF    error == "aaa_example_error_tag" %]
-    [% title = "Example Error" %]    
+    [% title = "Example Error" %]
     This is an example error. The title is set above. This text is the body
     of the error. It can contain arbitrary <b>HTML</b>, and also references
     to any [% parameters %] which you may have set before calling
@@ -59,11 +61,11 @@
     An authorization handler return value was not handled by the login code.
 
   [% ELSIF error == "bug_error" %]
-    Trying to retrieve bug [% bug.bug_id %] returned the error
+    Trying to retrieve [% terms.bug %] [%+ bug.bug_id %] returned the error
     [% bug.error FILTER html %]
     
   [% ELSIF error == "chart_data_not_generated" %]
-    The tool which gathers bug counts has not been run yet.
+    The tool which gathers [% terms.bug %] counts has not been run yet.
         
   [% ELSIF error == "chart_datafile_corrupt" %]
     The chart data file [% file FILTER html %] is corrupt.
@@ -82,7 +84,7 @@
   [% ELSIF error == "field_type_mismatch" %]
     Cannot seem to handle <code>[% field %]</code>
     and <code>[% type FILTER html %]</code> together.
- 
+
   [% ELSIF error == "gd_not_installed" %]
     Charts will not work without the GD Perl module being installed.
     Run checksetup.pl for installation instructions.
@@ -93,17 +95,17 @@
   [% ELSIF error == "illegal_content_type_method" %]
     Your form submission got corrupted somehow.  The <em>content
     method</em> field, which specifies how the content type gets determined,
-    should have been either <em>autodetect</em>, <em>list</em>, 
-    or <em>manual</em>, but was instead 
+    should have been either <em>autodetect</em>, <em>list</em>,
+    or <em>manual</em>, but was instead
     <em>[% contenttypemethod FILTER html %]</em>.
-        
+
   [% ELSIF error == "illegal_field" %]
     A legal [% field FILTER html %] was not set.
-    
+
   [% ELSIF error == "inactive_group" %]
-    Attempted to add bug to an inactive group, identified by the bit 
+    Attempted to add [% terms.bug %] to an inactive group, identified by the bit
     '[% bit FILTER html %]'.
-    
+
   [% ELSIF error == "bad_arg" %]
     Bad argument <code>[% argument %]</code> sent to
     <code>[% function %]</code> function.
@@ -139,12 +141,12 @@
     
   [% ELSIF error == "mismatched_bug_ids_on_obsolete" %]
     Attachment [% attach_id FILTER html %] ([% description FILTER html %]) 
-    is attached to bug [% attach_bug_id FILTER html %], but you tried to 
-    flag it as obsolete while creating a new attachment to bug 
-    [% my_bug_id FILTER html %].
+    is attached to [% terms.bug %] [%+ attach_bug_id FILTER html %], 
+    but you tried to flag it as obsolete while creating a new attachment to 
+    [% terms.bug %] [%+ my_bug_id FILTER html %].
         
   [% ELSIF error == "no_bug_data" %]
-    No data when fetching bug [% bug_id %].
+    No data when fetching [% terms.bug %] [%+ bug_id %].
     
   [% ELSIF error == "flag_nonexistent" %]
     There is no flag with ID #[% variables.id %].
@@ -170,7 +172,7 @@
     The product <em>[% variables.product FILTER html %]</em> does not exist.
   
   [% ELSIF error == "flag_type_target_type_invalid" %]
-    The target type was neither <em>bug</em> nor <em>attachment</em>
+    The target type was neither <em>[% terms.bug %]</em> nor <em>attachment</em>
     but rather <em>[% variables.target_type FILTER html %]</em>.
   
   [% ELSIF error == "invalid_field_name" %]
@@ -181,7 +183,7 @@
     Invalid output type [% type FILTER html %].
     
   [% ELSIF error == "missing_bug_id" %]
-    No bug ID was given.
+    No [% terms.bug %] ID was given.
     
   [% ELSIF error == "missing_series_id" %]
     Having inserted a series into the database, no series_id was returned for
@@ -200,7 +202,7 @@
     The group field <em>[% group FILTER html %]</em> is invalid.
 
   [% ELSIF error == "report_axis_invalid" %]
-    <em>[% variables.val FILTER html %]</em> is not a valid value for 
+    <em>[% variables.val FILTER html %]</em> is not a valid value for
     [%+ IF    variables.fld == "x" %]the horizontal axis
     [%+ ELSIF variables.fld == "y" %]the vertical axis
     [%+ ELSIF variables.fld == "z" %]the multiple tables/images
@@ -214,7 +216,7 @@
 
   [% ELSIF error == "unable_to_retrieve_password" %]
      I was unable to retrieve your old password from the database.
-     
+
   [% ELSIF error == "undefined_field" %]
     [% field FILTER html %] was not defined; [% Param('browserbugmessage') %]
 
@@ -224,7 +226,7 @@
     [% ELSE %]
        I could not figure out what you wanted to do.
     [% END %]
-    
+
   [% ELSIF error == "unknown_component" %]
     [% title = "Unknown Component" %]
     There is no component named <em>[% variables.component FILTER html %]</em>.
@@ -235,12 +237,12 @@
 
   [% ELSE %]
     [%# Give sensible error if error functions are used incorrectly.
-      #%]        
-    You are using Bugzilla's ThrowCodeError() function incorrectly. You
+      #%]
+    You are using [% terms.Bugzilla %]'s ThrowCodeError() function incorrectly. You
     passed in the string '[% error %]'. The correct use is to pass
     in a tag, and define that tag in the file code-error.html.tmpl.<br>
     <br>
-    If you are a Bugzilla end-user seeing this message, please save this
+    If you are a [% terms.Bugzilla %] end-user seeing this message, please save this
     page and send it to [% Param('maintainer') %].
   [% END %]
 [% END %]
@@ -251,8 +253,8 @@
 
 <tt>
   <p>
-    Bugzilla has suffered an internal error. Please save this page and send
-    it to [% Param("maintainer") %] with details of what you were doing at 
+    [% terms.Bugzilla %] has suffered an internal error. Please save this page and send
+    it to [% Param("maintainer") %] with details of what you were doing at
     the time this message appeared.
   </p>
   <script type="text/javascript"> <!--

@@ -19,6 +19,8 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% PROCESS global/header.html.tmpl
            title = "Show Votes"
            h2 = voting_user.name
@@ -42,7 +44,7 @@
     <table cellspacing="4">
       <tr>
         <td></td>
-        <th>Bug #</th>
+        <th>[% terms.Bug %] #</th>
         <th>Summary</th>
         <th>Votes</th>
       </tr>
@@ -63,7 +65,7 @@
             <td>
               <font size="-1">
                 (Note: only [% product.maxperbug %] vote
-                [% "s" IF product.maxperbug != 1 %] allowed per bug in 
+                [% "s" IF product.maxperbug != 1 %] allowed per [% terms.bug %] in
                 this product.)
               </font>
             </td>
@@ -90,7 +92,7 @@
                   <input type="checkbox" name="[% bug.id %]" value="1"
                     [% " checked" IF bug.count %]>
                 [% ELSE %]
-                  <input name="[% bug.id %]" value="[% bug.count %]" 
+                  <input name="[% bug.id %]" value="[% bug.count %]"
                          size="2">
                 [% END %]
               [% ELSE %]
@@ -125,7 +127,7 @@
         change the checkbox
       [% END %]
       and then click <b>Change My Votes</b>.
-    [% END %]  
+    [% END %]
   </form>
 [% ELSE %]
   <p>
@@ -134,7 +136,7 @@
     [% ELSE %]
     This user is
     [% END %]
-    currently not voting on any bugs.
+    currently not voting on any [% terms.bugs %].
   </p>
 [% END %]
 

@@ -26,9 +26,11 @@
   #   bugcount: number of bugs with that keyword
   # caneditkeywords: boolean. True if this user can edit keywords
  %]
- 
-[% PROCESS global/header.html.tmpl 
-  title = "Bugzilla Keyword Descriptions"
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+  title = "$terms.Bugzilla Keyword Descriptions"
 %]
 
 [% FOREACH keyword = keywords %]
@@ -36,15 +38,15 @@
     [% IF loop.index != 0 %]
        </table>
     [% END %]
-    
+
     <table border="1" cellpadding="4" cellspacing="0">
       <tr bgcolor="#6666FF">
         <th align="left">Name</th>
         <th align="left">Description</th>
-        <th align="left">Bugs</th>
+        <th align="left">[% terms.Bugs %]</th>
       </tr>
-  [% END %]  
-  
+  [% END %]
+
   <tr>
     <th>
       <a name="[% keyword.name FILTER html %]">

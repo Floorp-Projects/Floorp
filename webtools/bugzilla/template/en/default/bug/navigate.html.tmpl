@@ -18,18 +18,20 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
-  
+
+[% PROCESS global/variables.none.tmpl %]
+
 [% IF bug_list && bug_list.size > 0 %]
   [% this_bug_idx = lsearch(bug_list, bug.bug_id) %]
-  <b>Bug List:</b>
+  <b>[% terms.Bug %] List:</b>
   [% IF this_bug_idx != -1 %]
     ([% this_bug_idx + 1 %] of [% bug_list.size %])
   [% END %]
-  
+
   <a href="show_bug.cgi?id=[% bug_list.first %]">First</a>
   <a href="show_bug.cgi?id=[% bug_list.last %]">Last</a>
 
-  [% IF bug.bug_id %] 
+  [% IF bug.bug_id %]
     [% IF this_bug_idx != -1 %]
       [% IF this_bug_idx > 0 %]
         [% prev_bug = this_bug_idx - 1 %]
@@ -37,7 +39,7 @@
       [% ELSE %]
         <i><font color="#777777">Prev</font></i>
       [% END %]
-  
+
       [% IF this_bug_idx + 1 < bug_list.size %]
         [% next_bug = this_bug_idx + 1 %]
         <a href="show_bug.cgi?id=[% bug_list.$next_bug %]">Next</a>
@@ -45,14 +47,14 @@
         <i><font color="#777777">Next</font></i>
       [% END %]
     [% ELSE %]
-      (This bug is not in your list)
+      (This [% terms.bug %] is not in your list)
     [% END %]
   [% ELSE %]
     &nbsp;&nbsp;
   [% END %]
-  
+
   &nbsp;&nbsp;<a href="buglist.cgi?regetlastlist=1">Show list</a>
 [% END %]
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="query.cgi">Query page</a>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="enter_bug.cgi">Enter new bug</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="enter_bug.cgi">Enter new [% terms.bug %]</a>

@@ -19,11 +19,12 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
 [% filtered_summary = bugsummary FILTER html %]
 [% h1 = BLOCK %]View All Attachments for
-  [%+ GetBugLink(bugid, "Bug $bugid") %][% END %]
-[% PROCESS global/header.html.tmpl 
-  title = "View All Attachments for Bug #$bugid"
+  [%+ GetBugLink(bugid, "$terms.Bug $bugid") %][% END %]
+[% PROCESS global/header.html.tmpl
+  title = "View All Attachments for $terms.Bug #$bugid"
   h1 = h1
   h2 = filtered_summary
   style = "
@@ -73,7 +74,7 @@
       </td>
 
       <td valign="top">
-        <a href="attachment.cgi?id=[% a.attachid %]&amp;action=edit">Edit</a> 
+        <a href="attachment.cgi?id=[% a.attachid %]&amp;action=edit">Edit</a>
       </td>
     </tr>
   </table>

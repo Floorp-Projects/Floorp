@@ -19,14 +19,17 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% PROCESS global/header.html.tmpl 
-  title = "Create a new Bugzilla account"
-%]
+[% PROCESS global/variables.none.tmpl %]
+
+[% title = BLOCK %]
+Create a new [% terms.Bugzilla %] account
+[% END %]
+[% PROCESS global/header.html.tmpl %]
 
 <p>
-  To create a Bugzilla account, all that you need to do is to enter a
+  To create a [% terms.Bugzilla %] account, all that you need to do is to enter a
   legitimate e-mail address.  The account will be created, and its
-  password will be mailed to you. Optionally you may enter your real name 
+  password will be mailed to you. Optionally you may enter your real name
   as well.
 </p>
 
@@ -41,7 +44,7 @@
         [% Param('emailsuffix') FILTER html %]
       </td>
     </tr>
-    
+
     <tr>
       <td align="right">
         <b>Real name:</b>
@@ -55,4 +58,4 @@
   <input type="submit" value="Create Account">
 </form>
 
-[% PROCESS global/footer.html.tmpl %] 
+[% PROCESS global/footer.html.tmpl %]

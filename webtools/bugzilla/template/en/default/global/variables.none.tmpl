@@ -1,4 +1,4 @@
-<!-- 1.0@bugzilla.org -->
+[%# 1.0@bugzilla.org %]
 [%# The contents of this file are subject to the Mozilla Public
   # License Version 1.1 (the "License"); you may not use this file
   # except in compliance with the License. You may obtain a copy of
@@ -16,35 +16,29 @@
   # Copyright (C) 1998 Netscape Communications Corporation. All
   # Rights Reserved.
   #
-  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  # Contributor(s):
   #%]
 
-[% PROCESS global/variables.none.tmpl %]
+[%# This is a list of terms that may be changed to "brand" the Bugzilla 
+  # instance (for example, referring to "bugs" as "issues".) When used, these
+  # strings are used in several different types of content, and are not  
+  # protected with Template-Toolkit FILTERs. Consequently, no special 
+  # characters are allowed.
+  #
+  # Remember to PROCESS rather than INCLUDE this template. 
+  #%]
 
-[% PROCESS global/header.html.tmpl
-  title = "$terms.Bug $id Submitted"
+[% terms = {
+  "bug" => "bug",
+  "Bug" => "Bug",
+  "abug" = "a bug",
+  "Abug" = "A bug",
+  "ABug" = "A Bug",
+  "bugs" = "bugs",
+  "Bugs" = "Bugs",
+  "zeroSearchResults" = "Zarro Boogs found",
+  "bit" = "bit",
+  "bits" = "bits",
+  "Bugzilla" = "Bugzilla"
+  }
 %]
-
-[% header_done = 1 %]
-
-[% FOREACH item = sentmail %]
-  [% PROCESS bug/process/results.html.tmpl
-     type = item.type
-     id = item.id
-     mail = item.mail
-   %]
-[% END %]
-
-<br>
-
-<hr>
-
-[% PROCESS bug/edit.html.tmpl %]
-
-<hr>
-
-[% PROCESS bug/navigate.html.tmpl %]
-
-<br>
-
-[% PROCESS global/footer.html.tmpl %]

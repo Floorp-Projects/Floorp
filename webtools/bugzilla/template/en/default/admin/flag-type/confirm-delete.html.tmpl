@@ -19,20 +19,22 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [%# Filter off the name here to be used multiple times below %]
 [% name = BLOCK %][% flag_type.name FILTER html %][% END %]
 
-[% PROCESS global/header.html.tmpl 
-  title = "Confirm Deletion of Flag Type '$name'" 
+[% PROCESS global/header.html.tmpl
+  title = "Confirm Deletion of Flag Type '$name'"
 %]
 
 <p>
-   There are [% flag_count %] flags of type [% name %].  
-   If you delete this type, those flags will also be deleted.  Note that 
-   instead of deleting the type you can 
+   There are [% flag_count %] flags of type [% name %].
+   If you delete this type, those flags will also be deleted.  Note that
+   instead of deleting the type you can
    <a href="editflagtypes.cgi?action=deactivate&amp;id=[% flag_type.id %]">deactivate it</a>,
    in which case the type and its flags will remain in the database
-   but will not appear in the Bugzilla UI.
+   but will not appear in the [% terms.Bugzilla %] UI.
 </p>
 
 <table>

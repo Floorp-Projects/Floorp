@@ -22,11 +22,13 @@
 [%# INTERFACE:
   # As global/header.html.tmpl.
   #%]
- 
+
+[% PROCESS global/variables.none.tmpl %]
+
 [% IF    title_tag == "bug_processed" %]
-  [% title = "Bug processed" %]
+  [% title = "$terms.Bug processed" %]
 [% ELSIF title_tag == "mid_air" %]
   [% title = "Mid-air collision!" %]
 [% END %]
- 
+
 [% PROCESS global/header.html.tmpl %]

@@ -20,14 +20,16 @@
   #%]
 
 [%# INTERFACE:
-  # added_quip: string. Defined if the CGI added a quip data before 
+  # added_quip: string. Defined if the CGI added a quip data before
   #                displaying anything; if defined, its value is that quip.
   # show_quips: boolean. True if we are showing the entire quip list.
   # quips: list of strings. Defined iff show_quips is true. List of all quips.
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% PROCESS global/header.html.tmpl
-           title = "Bugzilla Quip System"
+           title = "$terms.Bugzilla Quip System"
            h1 = "Add your own clever headline"
  %]
 
@@ -55,8 +57,8 @@
 [% END %]
 
 <p>
-  Bugzilla will pick a random quip for the headline on each bug list, and 
-  you can extend the quip list. Type in something clever or funny or boring 
+  [% terms.Bugzilla %] will pick a random quip for the headline on each [% terms.bug %] list, and
+  you can extend the quip list. Type in something clever or funny or boring
   (but not obscene or offensive, please) and bonk on the button.
   [% IF Param("enablequips") == "approved" AND !user.groups.admin %]
     Note that your quip has to be approved before it is used.
@@ -141,8 +143,8 @@
   [% END %]
 [% ELSE %]
   <p>
-    Those who like their wisdom in large doses can 
-    <a href="quips.cgi?action=show">view 
+    Those who like their wisdom in large doses can
+    <a href="quips.cgi?action=show">view
     [% IF UserInGroup('admin') %]
       and edit
     [% END %]

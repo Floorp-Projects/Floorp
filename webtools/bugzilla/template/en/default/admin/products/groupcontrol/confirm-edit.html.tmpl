@@ -17,29 +17,30 @@
   # Rights Reserved.
   #
   # Contributor(s): Joel Peshkin <bugreport@peshkin.net>
-  #                 
+  #
   #%]
 
-
+[% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl title="Confirm Group Control Change for product \'$product\'" %]
 
 [% FOREACH group = mandatory_groups %]
 <P>
-group '[% group.name FILTER html %]' impacts [% group.count %] bugs for which the group is
-newly mandatory and will be added.
+group '[% group.name FILTER html %]' impacts [% group.count %]&nbsp;[% terms.bugs %] for
+which the group is newly mandatory and will be added.
 [% END %]
 
 [% FOREACH group = na_groups %]
 <P>
-group '[% group.name FILTER html %]' impacts [% group.count %] bugs for which the group is no longer applicable and will be removed.
-[% END %]
+group '[% group.name FILTER html %]' impacts [% group.count %]&nbsp;
+[% terms.bugs %] for which the group is no longer applicable and will
+be removed.[% END %]
 <form method="post" >
 
   [% PROCESS "global/hidden-fields.html.tmpl" exclude="^Bugzilla_(login|password)$" %]
 
   <br>
-     Click "Continue" to proceed with the change including the changes 
+     Click "Continue" to proceed with the change including the changes
      indicated above.  If you do not want these changes, use "back" to
      return to the previous page.
   <p>

@@ -24,21 +24,23 @@
   # multiple_bugs: boolean. True if bug_id contains > 1 bug number.
   # doall: boolean. True if we are displaying every bug in the database.
   # showsummary: boolean. True if we are showing bug summaries.
-  # rankdir: string. "TB" if we are ranking top-to-bottom, 
+  # rankdir: string. "TB" if we are ranking top-to-bottom,
                      "LR" if left-to-right.
   # image_url: string. The URL of the graphic showing the dependencies.
   # map_url: string. The URL of the map file for the image.  (Optional)
-  # image_map: string. The image map for the graphic showing the 
+  # image_map: string. The image map for the graphic showing the
                        dependencies. (Optional)
   #%]
+
+[% PROCESS global/variables.none.tmpl %]
 
 [% title = "Dependency Graph"
    h1 = title
  %]
- 
+
 [% IF NOT multiple_bugs AND NOT doall %]
-  [% title = "$title for bug $bug_id"
-     h1 = "$h1 for bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>" 
+  [% title = "$title for $terms.bug $bug_id"
+     h1 = "$h1 for $terms.bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>"
    %]
 [% END %]
 
@@ -47,14 +49,14 @@
 [% image_map %]
 
 <p>
-  Green circles represent open bugs.
+  Green circles represent open [% terms.bugs %].
 </p>
 
 [% IF image_map %]
-  <img src="[% image_url %]" alt="Dependency graph" usemap="#imagemap"> 
+  <img src="[% image_url %]" alt="Dependency graph" usemap="#imagemap">
 [% ELSE %]
   <a href="[% map_url %]">
-    <img src="[% image_url %]" alt="Dependency graph" ismap="ismap"> 
+    <img src="[% image_url %]" alt="Dependency graph" ismap="ismap">
   </a>
 [% END %]
 
@@ -64,27 +66,27 @@
   <table>
     <tr>
       <td>
-        Bug numbers:
+        [% terms.Bug %] numbers:
         <input name="id" value="[% bug_id %]">
       </td>
     </tr>
-    
+
     <tr>
       <td>
-        <input type="checkbox" name="doall" 
+        <input type="checkbox" name="doall"
         [% " checked" IF doall %]>
-        Show <b>every</b> bug in the system with dependencies
+        Show <b>every</b> [% terms.bug %] in the system with dependencies
       </td>
     </tr>
-    
+
     <tr>
       <td colspan="3">
-        <input type="checkbox" name="showsummary" 
+        <input type="checkbox" name="showsummary"
           [% " checked" IF showsummary %]>
-        Show the summaries of all displayed bugs
+        Show the summaries of all displayed [% terms.bugs %]
       </td>
     </tr>
-    
+
     <tr>
       <td colspan="3">
         <select name="rankdir">

@@ -21,20 +21,22 @@
 
 [%# INTERFACE:
   # has_bits: array of hashes. May be empty.
-  #           name => Names of the permissions the user has. 
-  #           desc => Descriptions of the permissions the user has. 
-  # set_bits: array of hashes. May be empty. 
-  #           name => Names of the permissions the user can set for 
+  #           name => Names of the permissions the user has.
+  #           desc => Descriptions of the permissions the user has.
+  # set_bits: array of hashes. May be empty.
+  #           name => Names of the permissions the user can set for
   #           other people.
-  #           desc => Descriptions of the permissions the user can set for 
+  #           desc => Descriptions of the permissions the user can set for
   #           other people.
   #%]
- 
+
+[% PROCESS global/variables.none.tmpl %]
+
 <table align="center">
   <tr>
     <td>
       [% IF has_bits.size %]
-        You have the following permission bits set on your account:
+        You have the following permission [% terms.bits %] set on your account:
         <p>
         <br>
         <table align="center">
@@ -46,16 +48,16 @@
           [% END %]
         </table>
       [% ELSE %]
-        There are no permission bits set on your account.
+        There are no permission [% terms.bits %] set on your account.
       [% END %]
 
       [% IF user.groups.editusers %]
         <br>
-        You have editusers privileges.  You can turn on and off 
+        You have editusers privileges.  You can turn on and off
         all permissions for all users.
       [% ELSIF set_bits.size %]
         <br>
-        And you can turn on or off the following bits for
+        And you can turn on or off the following [% terms.bits %] for
         <a href="editusers.cgi">other users</a>:
         <p>
           <table align="center">

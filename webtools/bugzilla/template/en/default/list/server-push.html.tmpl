@@ -23,10 +23,12 @@
   # debug: boolean. True if we want the query displayed while we wait.
   # query: string. The SQL query which makes the buglist.
   #%]
-  
+
+[% PROCESS global/variables.none.tmpl %]
+
 <html>
   <head>
-    <title>Bugzilla is pondering your query</title>
+    <title>[% terms.Bugzilla %] is pondering your query</title>
   </head>
   <body>
     <h1 style="margin-top: 20%; text-align: center;">Please stand by ...</h1>

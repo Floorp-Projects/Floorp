@@ -23,7 +23,7 @@
   # operations: array of hashes. May be empty. Each has has three members:
   #   who: string. who performed the operation
   #   when: string. when they performed it
-  #   changes: hash. Details of what they changed. This hash has three 
+  #   changes: hash. Details of what they changed. This hash has three
   #            compulsory and one optional member:
   #     field: string. The name of the field
   #     removed: string. What was removed from the field
@@ -33,14 +33,16 @@
   #                  it was affected by an old Bugzilla bug.)
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% PROCESS bug/time.html.tmpl %]
- 
+
 [% IF incomplete_data %]
   <p>
-    There used to be a bug Bugzilla which caused activity data
+    There used to be a [% terms.bug %] in [% terms.Bugzilla %] which caused activity data
     to be lost if there was a large number of cc's or dependencies.  That
-    has been fixed, however, there was some data already lost on this bug
-    that could not be regenerated.  The changes that the script could not
+    has been fixed, however, there was some data already lost on this [% terms.bug %] that
+    could not be regenerated.  The changes that the script could not
     reliably determine are prefixed by '?'.
   </p>
 [% END %]
@@ -55,7 +57,7 @@
       <th>Added</th>
     </tr>
 
-    [% FOREACH operation = operations %]     
+    [% FOREACH operation = operations %]
       <tr>
         <td rowspan="[% operation.changes.size %]" valign="top">
           [% operation.who %]
@@ -68,7 +70,7 @@
             <td>
               [% IF change.attachid %]
                 <a href="attachment.cgi?id=[% change.attachid %]&amp;action=view">
-                Attachment #[% change.attachid %]</a>         
+                Attachment #[% change.attachid %]</a>
               [% END %]
               [% change.field %]
             </td>

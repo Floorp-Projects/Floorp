@@ -22,12 +22,14 @@
 
 [%# Migration note: this file corresponds to the old Param 'bannerhtml' %]
 
+[% PROCESS global/variables.none.tmpl %]
+
     <table bgcolor="#000000" width="100%" border="0" cellpadding="0"
            cellspacing="0">
       <tr>
         <td>
           <center><font color="#FFFFFF" size="8">
-            This is Bugzilla
+            This is [% terms.Bugzilla %]
           </font></center>
         </td>
       </tr>

@@ -19,13 +19,15 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [%# Define strings that will serve as the title and header of this page %]
-[% title = BLOCK %]Edit Attachment #[% attachid %] for Bug #[% bugid %][% END %]
+[% title = BLOCK %]Edit Attachment #[% attachid %] for [% terms.Bug %] #[% bugid %][% END %]
 [% h1 = BLOCK %]Edit Attachment #[% attachid %] for
-  [%+ GetBugLink(bugid, "Bug $bugid") %][% END %]
+  [%+ GetBugLink(bugid, "$terms.Bugs $bugid") %][% END %]
 [% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
 
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl
   title = title
   h1 = h1
   h2 = h2
@@ -33,7 +35,7 @@
     table.attachment_info th { text-align: right; vertical-align: top; }
     table.attachment_info td { text-align: left; vertical-align: top; }
     #noview { text-align: left; vertical-align: center; }
-    
+
     table#flags th, table#flags td { font-size: small; vertical-align: baseline; text-align: left; }
   "
 %]
@@ -161,7 +163,7 @@
 
         <b>MIME Type:</b><br>
           <input type="text" size="20" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
-          
+
           <input type="checkbox" id="ispatch" name="ispatch" value="1"
                  [% 'checked="checked"' IF ispatch %]>
           <label for="ispatch">patch</label>
@@ -176,9 +178,9 @@
         [% IF flag_types.size > 0 %]
           [% PROCESS "flag/list.html.tmpl" bug_id=bugid attach_id=attachid %]<br>
         [% END %]
-        
+
         <div id="smallCommentFrame">
-          <b>Comment (on the bug):</b><br>
+          <b>Comment (on the [% terms.bug %]):</b><br>
             <textarea name="comment" rows="5" cols="25" wrap="soft"></textarea><br>
         </div>
 
@@ -217,7 +219,7 @@
 
   </table>
 
-  Attachments on this Bug:
+  Attachments on this [% terms.Bug %]:
   [% FOREACH a = attachments %]
     [% IF a == attachid %]
       #[% a %]

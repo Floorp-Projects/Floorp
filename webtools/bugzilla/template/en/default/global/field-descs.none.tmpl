@@ -20,12 +20,14 @@
   #%]
 
 [%# Remember to PROCESS rather than INCLUDE this template. %]
-  
-[% field_descs = { "[Bug creation]"       => "[Bug creation]",
+
+[% PROCESS global/variables.none.tmpl %]
+
+[% field_descs = { "[Bug creation]"       => "[$terms.Bug creation]",
                    "alias"                => "Alias",
                    "assigned_to"          => "Assignee",
                    "bug_file_loc"         => "URL",
-                   "bug_id"               => "Bug ID",
+                   "bug_id"               => "$terms.Bug ID",
                    "bug_severity"         => "Severity",
                    "bug_status"           => "Status",
                    "changeddate"          => "Last Changed Date",
@@ -33,7 +35,7 @@
                    "cclist_accessible"    => "CC list accessible?",
                    "component_id"         => "Component ID",
                    "component"            => "Component",
-                   "creation_ts"          => "Bug Creation time",
+                   "creation_ts"          => "$terms.Bug Creation time",
                    "delta_ts"             => "Last Changed time",
                    "estimated_time"       => "Orig. Est.",
                    "everconfirmed"        => "Ever confirmed?",

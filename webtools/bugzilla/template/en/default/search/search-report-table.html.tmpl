@@ -24,7 +24,9 @@
   # the interfaces of the templates it contains.
   #%]
 
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
   title = "Generate Report"
   onload = "selectProduct(document.forms['reportform']);"
 %]
@@ -32,8 +34,8 @@
 [% PROCESS "search/search-report-select.html.tmpl" %]
 
 <p>
-  Produce a table of bug counts by choosing one or more fields as your axes, 
-  and then refining your set of bugs using the rest of the form. 
+  Produce a table of [% terms.bug %] counts by choosing one or more fields as your axes,
+  and then refining your set of [% terms.bugs %] using the rest of the form.
   If you choose a third axis, it will be represented by multiple tables of data.
 </p>
 
@@ -56,7 +58,7 @@
       <input type="radio" name="ctype" value="csv">CSV
     </td>
   </tr>
-  
+
   <tr>
     <td valign="middle" align="center">
       <b>Vertical Axis:</b><br>
@@ -73,7 +75,7 @@
       </table>
     </td>
   </tr>
-</table>  
+</table>
 
 <hr>
 

@@ -19,16 +19,17 @@
   # Contributor(s): Joel Peshkin <bugreport@peshkin.net>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
 
 [% filt_product = product FILTER html %]
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl
   title = "Edit Group Controls for '$filt_product'"
 %]
 
 <form method="post" action="editproducts.cgi">
   <input type="hidden" name="action" value="updategroupcontrols">
   <input type="hidden" name="product" value="[% filt_product %]">
-  
+
   <table id="form" cellspacing="0" cellpadding="4" border="1">
     <tr bgcolor="#6666ff">
       <th>Group</th>
@@ -36,7 +37,7 @@
       <th>MemberControl</th>
       <th>OtherControl</th>
       <th>Canedit</th>
-      <th>Bugs</th>
+      <th>[% terms.Bugs %]</th>
     </tr>
     [% FOREACH group = groups %]
       [% IF group.isactive == 0 AND group.bugcount > 0 %]
@@ -63,22 +64,22 @@
           <td>
             <select name="membercontrol_[% group.id %]">
               <option value=[% const.CONTROLMAPNA %]
-                [% " selected=\"selected\"" 
+                [% " selected=\"selected\""
                   IF group.membercontrol == const.CONTROLMAPNA %]
                 >NA
               </option>
               <option value=[% const.CONTROLMAPSHOWN %]
-                [% " selected=\"selected\"" 
+                [% " selected=\"selected\""
                   IF group.membercontrol == const.CONTROLMAPSHOWN %]
                 >Shown
               </option>
               <option value=[% const.CONTROLMAPDEFAULT %]
-                [% " selected=\"selected\"" 
+                [% " selected=\"selected\""
                   IF group.membercontrol == const.CONTROLMAPDEFAULT %]
                 >Default
               </option>
               <option value=[% const.CONTROLMAPMANDATORY %]
-                [% " selected=\"selected\"" 
+                [% " selected=\"selected\""
                   IF group.membercontrol == const.CONTROLMAPMANDATORY %]
                 >Mandatory
               </option>
@@ -87,22 +88,22 @@
           <td>
             <select name="othercontrol_[% group.id %]">
               <option value=[% const.CONTROLMAPNA %]
-                [% " selected=\"selected\"" 
+                [% " selected=\"selected\""
                   IF group.othercontrol == const.CONTROLMAPNA %]
                 >NA
               </option>
               <option value=[% const.CONTROLMAPSHOWN %]
-                [% " selected=\"selected\"" 
+                [% " selected=\"selected\""
                   IF group.othercontrol == const.CONTROLMAPSHOWN %]
                 >Shown
               </option>
               <option value=[% const.CONTROLMAPDEFAULT %]
-                [% " selected=\"selected\"" 
+                [% " selected=\"selected\""
                   IF group.othercontrol == const.CONTROLMAPDEFAULT %]
                 >Default
               </option>
               <option value=[% const.CONTROLMAPMANDATORY %]
-                [% " selected=\"selected\"" 
+                [% " selected=\"selected\""
                   IF group.othercontrol == const.CONTROLMAPMANDATORY %]
                 >Mandatory
               </option>
@@ -131,7 +132,7 @@ These settings control the relationship of the groups to this
 product.
 <p>
 If any group has <b>Entry</b> selected, then this product will
-restrict bug entry to only those users who are members of all the
+restrict [% terms.bug %] entry to only those users who are members of all the
 groups with entry selected.
 <p>
 If any group has <b>Canedit</b> selected, then this product
@@ -141,7 +142,7 @@ all the canedit groups will be able to edit. This is an additional
 restriction that further restricts what can be edited by a user.
 <p>
 The <b>MemberControl</b> and <b>OtherControl</b> fields
-indicate which bugs will be placed in
+indicate which [% terms.bugs %] will be placed in
 this group according to the following definitions.
 <br>
 <table border=1>
@@ -164,7 +165,7 @@ this group according to the following definitions.
       NA
     </td>
     <td>
-      Bugs in this product are never associated with this group.
+      [% terms.Bugs %] in this product are never associated with this group.
     </td>
   </tr>
   <tr>
@@ -175,9 +176,9 @@ this group according to the following definitions.
       NA
     </td>
     <td>
-      Bugs in this product are permitted to be restricted to this
-      group.  Users who are a member of this group will be able
-      to place bugs in this group.
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group.  Users who are a member of this group will be able to place [% terms.bugs %] in
+      this group.
     </td>
   </tr>
   <tr>
@@ -188,8 +189,8 @@ this group according to the following definitions.
       Shown
     </td>
     <td>
-      Bugs in this product can be placed in this group by anyone
-      with permission to edit the bug even if they are not a member
+      [% terms.Bugs %] in this product can be placed in this group by anyone
+      with permission to edit the [% terms.bug %] even if they are not a member
       of this group.
     </td>
   </tr>
@@ -201,9 +202,9 @@ this group according to the following definitions.
       Default
     </td>
     <td>
-      Bugs in this product can be placed in this group by anyone
-      with permission to edit the bug even if they are not a member
-      of this group. Non-members place bugs in this group by default.
+      [% terms.Bugs %] in this product can be placed in this group by anyone
+      with permission to edit the [% terms.bug %] even if they are not a member
+      of this group. Non-members place [% terms.bugs %] in this group by default.
     </td>
   </tr>
   <tr>
@@ -214,11 +215,10 @@ this group according to the following definitions.
       Mandatory
     </td>
     <td>
-      Bugs in this product are permitted to be restricted to this
-      group.  Users who are a member of this group will be able
-      to place bugs in this group.
-      Non-members will be forced to restrict bugs to this group
-      when they initially enter a bug in this product.
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group.  Users who are a member of this group will be able to place [% terms.bugs %]
+       in this group.  Non-members will be forced to restrict [% terms.bugs %] to
+       this group when they initially enter [% terms.abug %] in this product.
     </td>
   </tr>
   <tr>
@@ -229,10 +229,9 @@ this group according to the following definitions.
       NA
     </td>
     <td>
-      Bugs in this product are permitted to be restricted to this
-      group and are placed in this group by default.
-      Users who are a member of this group will be able
-      to place bugs in this group.
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group and are placed in this group by default.  Users who are a member of this
+      group will be able to place [% terms.bugs %] in this group.
     </td>
   </tr>
   <tr>
@@ -243,11 +242,10 @@ this group according to the following definitions.
       Default
     </td>
     <td>
-      Bugs in this product are permitted to be restricted to this
-      group and are placed in this group by default.
-      Users who are a member of this group will be able
-      to place bugs in this group. Non-members will be able to
-      restrict bugs to this group on entry and will do so by default
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group and are placed in this group by default.  Users who are a member of this group
+      will be able to place [% terms.bugs %] in this group.  Non-members will be
+      able to restrict [% terms.bugs %] to this group on entry and will do so by default
     </td>
   </tr>
   <tr>
@@ -258,11 +256,10 @@ this group according to the following definitions.
       Mandatory
     </td>
     <td>
-      Bugs in this product are permitted to be restricted to this
-      group and are placed in this group by default.
-      Users who are a member of this group will be able
-      to place bugs in this group. Non-members will be forced
-      to place bugs in this group on entry.
+      [% terms.Bugs %] in this product are permitted to be restricted to this
+      group and are placed in this group by default.  Users who are a member of this group
+      will be able to place [% terms.bugs %] in this group. Non-members will be forced
+      to place [% terms.bugs %] in this group on entry.
     </td>
   </tr>
   <tr>
@@ -273,7 +270,7 @@ this group according to the following definitions.
       Mandatory
     </td>
     <td>
-      Bugs in this product are required to be restricted to this
+      [% terms.Bugs %] in this product are required to be restricted to this
       group.  Users are not given any option.
     </td>
   </tr>

@@ -25,6 +25,8 @@
   #   of the error.
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% SWITCH auth_err_tag %]
   [% CASE "cannot_retreive_attr" %]
     The specified LDAP attribute [% info.attr FILTER html %] was not found.
@@ -36,12 +38,12 @@
     [% END %]
 
   [% CASE "no_userid" %]
-    Bugzilla created a new account for you, but then could not find the
+    [% terms.Bugzilla %] created a new account for you, but then could not find the
     new userid.
 
   [% CASE "server_not_defined" %]
     The LDAP server for authentication has not been defined.
-    
+
   [% CASE %]
     Unhandled authentication error: [% auth_err_tag FILTER html %]
 

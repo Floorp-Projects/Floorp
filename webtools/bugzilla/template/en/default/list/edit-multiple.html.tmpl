@@ -19,6 +19,8 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% dontchange = "--do_not_change--" %]
 <input type="hidden" name="dontchange" value="[% dontchange FILTER html %]">
 
@@ -38,9 +40,9 @@
 <hr>
 
 <p><font size="-1">
-  To change multiple bugs:
+  To change multiple [% terms.bugs %]:
   <ol>
-    <li>Check the bugs you want to change above.</li>
+    <li>Check the [% terms.bugs %] you want to change above.</li>
     <li>Make your changes in the form fields below.  If the change
         you are making requires an explanation, include it in
         the comments box.</li>
@@ -53,13 +55,13 @@
 
     <th><label for="product">Product:</label></th>
     <td>
-      [% PROCESS selectmenu menuname = "product" 
+      [% PROCESS selectmenu menuname = "product"
                             menuitems = products %]
     </td>
 
     <th><label for="version">Version:</label></th>
     <td>
-      [% PROCESS selectmenu menuname = "version" 
+      [% PROCESS selectmenu menuname = "version"
                             menuitems = versions %]
     </td>
 
@@ -72,7 +74,7 @@
       </label>
     </th>
     <td>
-      [% PROCESS selectmenu menuname = "rep_platform" 
+      [% PROCESS selectmenu menuname = "rep_platform"
                             menuitems = platforms %]
     </td>
 
@@ -82,7 +84,7 @@
       </label>
     </th>
     <td>
-      [% PROCESS selectmenu menuname = "priority" 
+      [% PROCESS selectmenu menuname = "priority"
                             menuitems = priorities %]
     </td>
 
@@ -91,7 +93,7 @@
 
     <th><label for="component">Component:</label></th>
     <td>
-      [% PROCESS selectmenu menuname = "component" 
+      [% PROCESS selectmenu menuname = "component"
                             menuitems = components %]
     </td>
 
@@ -101,7 +103,7 @@
       </label>
     </th>
     <td>
-      [% PROCESS selectmenu menuname = "bug_severity" 
+      [% PROCESS selectmenu menuname = "bug_severity"
                             menuitems = severities %]
     </td>
 
@@ -110,7 +112,7 @@
 
     <th><label for="target_milestone">Target Milestone:</label></th>
     <td colspan="3">
-      [% PROCESS selectmenu menuname = "target_milestone" 
+      [% PROCESS selectmenu menuname = "target_milestone"
                             menuitems = targetmilestones %]
     </td>
 
@@ -139,9 +141,9 @@
     <tr>
       <th><label for="qa_contact">QA Contact:</label></th>
       <td colspan="3">
-        <input id="qa_contact" 
-               name="qa_contact" 
-               value="[% dontchange FILTER html %]" 
+        <input id="qa_contact"
+               name="qa_contact"
+               value="[% dontchange FILTER html %]"
                size="32">
       </td>
     </tr>
@@ -192,9 +194,9 @@
   <b>Groupset:</b><br>
   <table border="1">
     <tr>
-      <th>Don&apos;t<br>change<br>this group<br>restriction</td>
-      <th>Remove<br>bugs<br>from this<br>group</td>
-      <th>Add<br>bugs<br>to this<br>group</td>
+      <th>Don't<br>change<br>this group<br>restriction</td>
+      <th>Remove<br>[% terms.bugs %]<br>from this<br>group</td>
+      <th>Add<br>[% terms.bugs %]<br>to this<br>group</td>
       <th>Group Name:</td>
     </tr>
 
@@ -229,7 +231,7 @@
   </table>
 
   [% IF foundinactive %]
-    <font size="-1">(Note: Bugs may not be added to <strike>inactive 
+    <font size="-1">(Note: [% terms.Bugs %] may not be added to <strike>inactive
     groups</strike>, only removed.)</font><br>
   [% END %]
 
@@ -245,14 +247,14 @@
   [% knum = knum + 1 %]
   <input id="knob-confirm" type="radio" name="knob" value="confirm">
   <label for="knob-confirm">
-    Confirm bugs (change status to <b>NEW</b>)
+    Confirm [% terms.bugs %] (change status to <b>NEW</b>)
   </label><br>
 [% END %]
 
 [% knum = knum + 1 %]
 <input id="knob-accept" type="radio" name="knob" value="accept">
 <label for="knob-accept">
-  Accept bugs (change status to <b>ASSIGNED</b>)
+  Accept [% terms.bugs %] (change status to <b>ASSIGNED</b>)
 </label><br>
 
 [%# If all the bugs being changed are open, allow the user to close them. %]
@@ -264,7 +266,7 @@
   [% knum = knum + 1 %]
   <input id="knob-resolve" type="radio" name="knob" value="resolve">
   <label for="knob-resolve">
-    Resolve bugs, changing <a href="bug_status.html">resolution</a> to
+    Resolve [% terms.bugs %], changing <a href="bug_status.html">resolution</a> to
   </label>
   <select name="resolution" onchange="document.forms.changeform.knob[[% knum %]].checked=true">
     [% FOREACH resolution = resolutions %]
@@ -281,38 +283,38 @@
 [% IF !bugstatuses.containsany(openstates) %]
   [% knum = knum + 1 %]
   <input id="knob-reopen" type="radio" name="knob" value="reopen">
-  <label for="knob-reopen">Reopen bugs</label><br>
+  <label for="knob-reopen">Reopen [% terms.bugs %]</label><br>
 [% END %]
 
 [% IF bugstatuses.size == 1 %]
   [% IF bugstatuses.contains('RESOLVED') %]
     [% knum = knum + 1 %]
     <input id="knob-verify" type="radio" name="knob" value="verify">
-    <label for="knob-verify">Mark bugs as <b>VERIFIED</b></label><br>
+    <label for="knob-verify">Mark [% terms.bugs %] as <b>VERIFIED</b></label><br>
   [% ELSIF bugstatuses.contains('VERIFIED') %]
     [% knum = knum + 1 %]
     <input id="knob-close" type="radio" name="knob" value="close">
-    <label for="knob-close">Mark bugs as <b>CLOSED</b></label><br>
+    <label for="knob-close">Mark [% terms.bugs %] as <b>CLOSED</b></label><br>
   [% END %]
 [% END %]
 
 [% knum = knum + 1 %]
 <input id="knob-reassign" type="radio" name="knob" value="reassign">
 <label for="knob-reassign"><a href="bug_status.html#assigned_to">
-  Reassign</a> bugs to
+  Reassign</a> [% terms.bugs %] to
 </label>
-<input name="assigned_to" 
+<input name="assigned_to"
        value="[% user.login FILTER html %]"
        onchange="document.forms.changeform.knob[[% knum %]].checked = true;"
        size="32"><br>
 
 [% knum = knum + 1 %]
-<input id="knob-reassignbycomponent" 
-       type="radio" 
-       name="knob" 
+<input id="knob-reassignbycomponent"
+       type="radio"
+       name="knob"
        value="reassignbycomponent">
 <label for="knob-reassignbycomponent">
-  Reassign bugs to owner of selected component
+  Reassign [% terms.bugs %] to owner of selected component
 </label><br>
 
 <input type="submit" value="Commit">

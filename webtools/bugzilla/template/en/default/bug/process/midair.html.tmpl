@@ -33,7 +33,9 @@
   # comments: array; all the comments on the bug.
   # bug_id: number; the ID of the bug being changed.
   #%]
- 
+
+[% PROCESS global/variables.none.tmpl %]
+
 [% UNLESS header_done %]
   [% PROCESS bug/process/header.html.tmpl %]
 [% END %]
@@ -41,14 +43,14 @@
 <h1>Mid-air collision detected!</h1>
 
 <p>
-  Someone else has made changes to this bug at the same time you were trying to.
+  Someone else has made changes to this [% terms.bug %] at the same time you were trying to.
   The changes made were:
 </p>
 
 <p>
   [% PROCESS "bug/activity/table.html.tmpl" incomplete_data=0 %]
 </p>
-          
+
 [% IF comments.size > start_at %]
 <p>
   Added comments:
@@ -72,8 +74,8 @@ You have the following choices:
     </form>
   </li>
   <li>
-    <a href="show_bug.cgi?id=[% bug_id %]">Throw away my changes, 
-      and revisit bug [% bug_id %]</a>
+    <a href="show_bug.cgi?id=[% bug_id %]">Throw away my changes,
+      and revisit [% terms.bug %]&nbsp;[% bug_id %]</a>
   </li>
 </ul>
 

@@ -22,19 +22,21 @@
 
 [%# INTERFACE:
   # mailing_bugid: string. ID of the bug this mail is concerning.
-  # mailrecipients: hash. People involved in this change. Hash has up to five 
+  # mailrecipients: hash. People involved in this change. Hash has up to five
   #                elements:
-  #                changer: string. The login name of the user who made the 
+  #                changer: string. The login name of the user who made the
   #                change.
   #
   #                For bug changes where people need to be notified:
   #                 owner: string. The login name of the bug assignee.
   #                 reporter: string. The login name of the bug reporter.
-  #                 qacontact: string. The login name of the bug's QA contact. 
+  #                 qacontact: string. The login name of the bug's QA contact.
   #                  Optional.
-  #                 cc: list of strings. The login names of those on the CC 
+  #                 cc: list of strings. The login names of those on the CC
   #                  list.
   #%]
+
+[% PROCESS global/variables.none.tmpl %]
 
 [% mail = SendBugMail(mailing_bugid, mailrecipients) %]
 
@@ -49,7 +51,7 @@
 %]
 <br>
 <center>
-  If you wish to tweak the kinds of mail Bugzilla sends you, you can
+  If you wish to tweak the kinds of mail [% terms.Bugzilla %] sends you, you can
   <a href="userprefs.cgi?tab=email">change your preferences</a>.
 </center>
 
@@ -62,7 +64,7 @@
   <b>[% description %]:</b>
   [% IF names.size > 0 %]
     [%+ FOREACH name = names %]
-      [% name %][% ", " UNLESS loop.last() %] 
+      [% name %][% ", " UNLESS loop.last() %]
     [% END %]
   [% ELSE %]
     no one

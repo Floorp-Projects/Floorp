@@ -17,8 +17,10 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
-  #                 Vaskin Kissoyan <vkissoyan@yahoo.com> 
+  #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
   #%]
+
+[% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS bug/time.html.tmpl %]
 
@@ -33,7 +35,7 @@
      new_time =
         fRemainingTime - document.changeform.work_time.value;
      // get upto 2 decimal places
-     document.changeform.remaining_time.value = 
+     document.changeform.remaining_time.value =
           Math.round(new_time * 100)/100;
   }
 
@@ -55,42 +57,42 @@
 [%# *** Hardware Reporter Product OS AddCC *** %]
 
   <table cellspacing="1" cellpadding="1" border="0">
-    <tr>      
+    <tr>
       <td align="right">
-        <b>Bug#:</b>
+        <b>[% terms.Bug %]#:</b>
       </td>
       <td>
         <a href="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
           [% bug.bug_id %]</a>
           [% IF Param("usebugaliases") %]
-            <label title="a name for the bug that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
+            <label title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
               <b>alias:</b>
               <input name="alias" value="[% bug.alias FILTER html %]" size="20" maxlength="20">
             </label>
           [% END %]
       </td>
-      
+
       <td>&nbsp;</td>
 
       <td align="right">
         <b><u>H</u>ardware:</b>
       </td>
       [% PROCESS select selname => "rep_platform" accesskey => "h" %]
-      
+
       <td align="right">
         <b>Reporter:</b>
       </td>
       <td>
         [% bug.reporter.identity FILTER html %]
-      </td>    
+      </td>
     </tr>
-    
+
     <tr>
       <td align="right">
         <b><u>P</u>roduct:</b>
       </td>
       [% PROCESS select selname => "product" accesskey => "p" %]
-      
+
       <td align="right">
         <b><u>O</u>S:</b>
       </td>
@@ -104,7 +106,7 @@
       </td>
     </tr>
 
-[%# *** Component Version CC Priority Severity AssignedTo Milestone *** %]    
+[%# *** Component Version CC Priority Severity AssignedTo Milestone *** %]
 
     <tr>
       <td align="right">
@@ -114,16 +116,16 @@
         </b>
       </td>
       [% PROCESS select selname => "component" accesskey => "m" %]
- 
+
       <td align="right">
         <b><u>V</u>ersion:</b>
       </td>
       [% PROCESS select selname => "version" accesskey => "v" %]
-      
+
       <td rowspan="4" align="right" valign="top">
         <b>CC:</b>
       </td>
-      <td rowspan="4" valign="top"> 
+      <td rowspan="4" valign="top">
       [% IF bug.cc %]
         <select name="cc" multiple="multiple" size="5">
         [% FOREACH c = bug.cc %]
@@ -138,22 +140,22 @@
       [% END %]
       </td>
     </tr>
-    
+
     <tr>
       <td align="right">
         <b>
           <a href="bug_status.html">Status</a>:
         </b>
       </td>
-      <td>[% bug.bug_status FILTER html %]</td>      
+      <td>[% bug.bug_status FILTER html %]</td>
       <td>&nbsp;</td>
-      
+
       <td align="right">
         <b><a href="bug_status.html#priority">Pr<u>i</u>ority</a>:</b>
       </td>
       [% PROCESS select selname => "priority" accesskey => "i" %]
     </tr>
-    
+
     <tr>
       <td align="right">
         <b>
@@ -163,18 +165,18 @@
       <td>
         [% bug.resolution FILTER html %]
         [% IF bug.resolution == "DUPLICATE" %]
-          of [% "bug ${bug.dup_id}" FILTER bug_link(bug.dup_id) %]
+          of [% terms.bug %]&nbsp;[% "${bug.dup_id}" FILTER bug_link(bug.dup_id) %]
         [% END %]
-      </td>      
+      </td>
       <td>&nbsp;</td>
-      
+
       <td align="right">
         <b><a href="bug_status.html#severity">S<u>e</u>verity</a>:</b>
       </td>
       [% PROCESS select selname = "bug_severity" accesskey => "e" %]
-      
+
     </tr>
-    
+
     <tr>
       <td align="right">
         <b>
@@ -183,7 +185,7 @@
       </td>
       <td>[% bug.assigned_to.identity FILTER html %]</td>
       <td>&nbsp;</td>
- 
+
       [% IF Param("usetargetmilestone") && bug.target_milestone %]
         <td align="right">
           <b>
@@ -228,7 +230,7 @@
       <input name="bug_file_loc" accesskey="u"
              value="[% bug.bug_file_loc FILTER html %]" size="60">
     </td>
-    <td rowspan="4" colspan="2" valign="top"> 
+    <td rowspan="4" colspan="2" valign="top">
         [% IF bug.flag_types.size > 0 %]
           [% PROCESS "flag/list.html.tmpl"
              flag_types = bug.flag_types
@@ -236,7 +238,7 @@
         [% END %]
     </td>
   </tr>
-  
+
   <tr>
     <td align="right">
       <b><u>S</u>ummary:</b>
@@ -247,7 +249,7 @@
     </td>
   </tr>
 
-  [% IF Param('usestatuswhiteboard') %] 
+  [% IF Param('usestatuswhiteboard') %]
     <tr>
       <td align="right">
         <b>Status <u>W</u>hiteboard:</b>
@@ -269,7 +271,7 @@
         <input name="keywords" accesskey="k"
                value="[% bug.keywords.join(', ') FILTER html %]" size="60">
       </td>
-    </tr> 
+    </tr>
   [% END %]
   </table>
 
@@ -299,16 +301,16 @@
       <tr>
         <td align="center">
           <input name="estimated_time"
-                 value="[% PROCESS formattimeunit 
+                 value="[% PROCESS formattimeunit
                                    time_unit=bug.estimated_time %]"
                  size="6" maxlength="6">
         </td>
         <td align="center">
-          [% PROCESS formattimeunit 
+          [% PROCESS formattimeunit
                      time_unit=(bug.actual_time + bug.remaining_time) %]
         </td>
         <td align="center">
-          [% PROCESS formattimeunit time_unit=bug.actual_time %] + 
+          [% PROCESS formattimeunit time_unit=bug.actual_time %] +
           <input name="work_time" value="0" size="3" maxlength="6"
                  onchange="adjustRemainingTime();">
         </td>
@@ -328,11 +330,11 @@
       </tr>
     </table>
   [% END %]
-  
+
 [%# *** Attachments *** %]
 
-  [% PROCESS attachment/list.html.tmpl 
-             attachments = bug.attachments 
+  [% PROCESS attachment/list.html.tmpl
+             attachments = bug.attachments
              bugid       = bug.bug_id
              num_attachment_flag_types = bug.num_attachment_flag_types
              show_attachment_flags = bug.show_attachment_flags
@@ -345,12 +347,12 @@
     [% PROCESS dependencies accesskey = "d"
        dep = { title => "<u>d</u>epends on", fieldname => "dependson" } %]
       <td rowspan="2">
-        <a href="showdependencytree.cgi?id=[% bug.bug_id %]">Show 
-        dependency tree</a>  
+        <a href="showdependencytree.cgi?id=[% bug.bug_id %]">Show
+        dependency tree</a>
 
-        [% IF Param('webdotbase') %]  
+        [% IF Param('webdotbase') %]
           <br>
-          <a href="showdependencygraph.cgi?id=[% bug.bug_id %]">Show 
+          <a href="showdependencygraph.cgi?id=[% bug.bug_id %]">Show
           dependency graph</a>
         [% END %]
       </td>
@@ -370,10 +372,10 @@
       </th>
       <td>
         [% bug.votes %]&nbsp;&nbsp;&nbsp;
-        <a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.bug_id %]">Show 
-        votes for this bug</a>&nbsp;&nbsp;&nbsp;
-        <a href="votes.cgi?action=show_user&amp;bug_id=[% bug.bug_id %]">Vote 
-        for this bug</a>
+        <a href="votes.cgi?action=show_bug&amp;bug_id=[% bug.bug_id %]">Show
+        votes for this [% terms.bug %]</a>&nbsp;&nbsp;&nbsp;
+        <a href="votes.cgi?action=show_user&amp;bug_id=[% bug.bug_id %]">Vote
+        for this [% terms.bug %]</a>
       </td>
     </tr>
   </table>
@@ -402,17 +404,17 @@
         [% IF NOT emitted_description %]
           [% emitted_description = 1 %]
           <br>
-          <b>Only users in all of the selected groups can view this bug:</b>
+          <b>Only users in all of the selected groups can view this [% terms.bug %]:</b>
           <br>
           <font size="-1">
-            (Unchecking all boxes makes this a more public bug.)
+            (Unchecking all boxes makes this a more public [% terms.bug %].)
           </font>
           <br>
           <br>
         [% END %]
 
       &nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="checkbox" name="bit-[% group.bit %]" value="1" 
+      <input type="checkbox" name="bit-[% group.bit %]" value="1"
         [% " checked=\"checked\"" IF group.ison %]
         [% " disabled=\"disabled\"" IF NOT group.ingroup %]>
       [% group.description %]
@@ -422,7 +424,7 @@
 
     [% IF NOT inallgroups %]
       <b>
-        Only members of a group can change the visibility of a bug for 
+        Only members of a group can change the visibility of [% terms.abug %] for
         that group
       </b>
     <br>
@@ -430,15 +432,15 @@
 
     [% IF inagroup %]
       <p>
-        <b>Users in the roles selected below can always view this bug:</b>
+        <b>Users in the roles selected below can always view this [% terms.bug %]:</b>
         <br>
         <small>
-          (The assignee                                                
+          (The assignee
           [% IF (Param('useqacontact')) %]
              and QA contact
           [% END %]
-          can always see a bug, and this section does not take effect unless 
-          the bug is restricted to at least one group.)
+          can always see [% terms.abug %], and this section does not take effect unless
+          the [% terms.bug %] is restricted to at least one group.)
         </small>
       </p>
 
@@ -447,7 +449,7 @@
           [% " checked" IF bug.reporter_accessible %]>Reporter
         <input type="checkbox" name="cclist_accessible" value="1"
           [% " checked" IF bug.cclist_accessible %]>CC List
-      </p>  
+      </p>
     [% END %]
   [% END %]
 
@@ -461,10 +463,10 @@
 
   [% knum = 1 %]
 
-  [% IF bug.bug_status == "UNCONFIRMED" && 
+  [% IF bug.bug_status == "UNCONFIRMED" &&
         bug.user.canconfirm %]
     <input type="radio" name="knob" value="confirm">
-    Confirm bug (change status to <b>NEW</b>)
+    Confirm [% terms.bug %] (change status to <b>NEW</b>)
     <br>
     [% knum = knum + 1 %]
   [% END %]
@@ -473,8 +475,8 @@
     [% IF bug.isopened %]
       [% IF bug.bug_status != "ASSIGNED" && bug.user.canconfirm %]
         <input type="radio" name="knob" value="accept">
-        Accept bug (
-        [% "confirm bug, " IF bug.isunconfirmed %]change
+        Accept [% terms.bug %] (
+        [% IF bug.isunconfirmed %]confirm [% terms.bug %], [% END %]change
         status to <b>ASSIGNED</b>)
         <br>
         [% knum = knum + 1 %]
@@ -483,13 +485,13 @@
       [% IF bug.resolution %]
         <input type="radio" name="knob" value="clearresolution">
         Clear the resolution (remove the current resolution of
-        <b>[% bug.resolution FILTER html %]</b>)<br>      
+        <b>[% bug.resolution FILTER html %]</b>)<br>
         [% knum = knum + 1 %]
       [% END %]
 
       <input type="radio" name="knob" value="resolve">
-      Resolve bug, changing <a href="bug_status.html">resolution</a> to
-      <select name="resolution" 
+      Resolve [% terms.bug %], changing <a href="bug_status.html">resolution</a> to
+      <select name="resolution"
               onchange="document.changeform.knob[[% knum %]].checked=true">
       [% FOREACH r = bug.choices.resolution %]
         <option value="[% r FILTER html %]">[% r FILTER html %]</option>
@@ -499,66 +501,66 @@
       [% knum = knum + 1 %]
 
       <input type="radio" name="knob" value="duplicate">
-      Resolve bug, mark it as duplicate of bug # 
-      <input name="dup_id" size="6" 
+      Resolve [% terms.bug %], mark it as duplicate of [% terms.bug %] #
+      <input name="dup_id" size="6"
              onchange="if (this.value != '')
                        {document.changeform.knob[[% knum %]].checked=true}">
       <br>
       [% knum = knum + 1 %]
 
-      <input type="radio" name="knob" value="reassign"> 
-      <a href="bug_status.html#assigned_to">Reassign</a> bug to
-      <input name="assigned_to" size="32" 
-             onchange="if ((this.value != '[% bug.assigned_to.email FILTER js %]') && 
+      <input type="radio" name="knob" value="reassign">
+      <a href="bug_status.html#assigned_to">Reassign</a> [% terms.bug %] to
+      <input name="assigned_to" size="32"
+             onchange="if ((this.value != '[% bug.assigned_to.email FILTER js %]') &&
                             (this.value != '')) {
-                         document.changeform.knob[[% knum %]].checked=true; 
-                       }"  
+                         document.changeform.knob[[% knum %]].checked=true;
+                       }"
              value="[% bug.assigned_to.email FILTER html %]">
       <br>
       [% IF bug.isunconfirmed && bug.user.canconfirm %]
         &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="andconfirm">
-        and confirm bug (change status to <b>NEW</b>)
+        and confirm [% terms.bug %] (change status to <b>NEW</b>)
         <br>
       [% END %]
       [% knum = knum + 1 %]
 
       <input type="radio" name="knob" value="reassignbycomponent">
-      Reassign bug to owner
+      Reassign [% terms.bug %] to owner
       [% " and QA contact" IF Param('useqacontact') %]
       of selected component
       <br>
       [% IF bug.isunconfirmed && bug.user.canconfirm %]
         &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="compconfirm">
-        and confirm bug (change status to <b>NEW</b>)
+        and confirm [% terms.bug %] (change status to <b>NEW</b>)
         <br>
       [% END %]
       [% knum = knum + 1 %]
     [% ELSE %]
       [% IF bug.resolution != "MOVED" ||
-           (bug.resolution == "MOVED" && bug.user.canmove) %]  
-        <input type="radio" name="knob" value="reopen"> Reopen bug
+           (bug.resolution == "MOVED" && bug.user.canmove) %]
+        <input type="radio" name="knob" value="reopen"> Reopen [% terms.bug %]
         <br>
         [% knum = knum + 1 %]
       [% END %]
       [% IF bug.bug_status == "RESOLVED" %]
         <input type="radio" name="knob" value="verify">
-        Mark bug as <b>VERIFIED</b><br>
+        Mark [% terms.bug %] as <b>VERIFIED</b><br>
         [% knum = knum + 1 %]
       [% END %]
       [% IF bug.bug_status != "CLOSED" %]
         <input type="radio" name="knob" value="close">
-        Mark bug as <b>CLOSED</b><br>
+        Mark [% terms.bug %] as <b>CLOSED</b><br>
         [% knum = knum + 1 %]
       [% END %]
     [% END %]
-  [% END %]  
-  
+  [% END %]
+
   <input type="submit" value="Commit">
   <input type="hidden" name="form_name" value="process_bug">
   <p>
     <font size="+1">
       <b>
-        <a href="show_activity.cgi?id=[% bug.bug_id %]">View Bug Activity</a>
+        <a href="show_activity.cgi?id=[% bug.bug_id %]">View [% terms.Bug %] Activity</a>
         &nbsp; | &nbsp;
         <a href="long_list.cgi?buglist=[% bug.bug_id %]">Format For Printing</a>
       </b>
@@ -566,10 +568,10 @@
 
     [% IF bug.user.canmove %]
       &nbsp; <font size="+1"><b> | </b></font> &nbsp;
-      <input type="submit" name="action" 
+      <input type="submit" name="action"
              value="[% Param("move-button-text") %]">
     [% END %]
-  </p>  
+  </p>
 
 [%# *** Additional Comments *** %]
 
@@ -587,11 +589,11 @@
 </table>
 <hr>
 
-[% PROCESS bug/comments.html.tmpl 
-   comments = bug.longdescs 
+[% PROCESS bug/comments.html.tmpl
+   comments = bug.longdescs
    mode = "edit"
  %]
-  
+
 </form>
 
 [%############################################################################%]
@@ -599,7 +601,7 @@
 [%############################################################################%]
 
 [% BLOCK dependencies %]
-  <th align="right">Bug [% bug.bug_id %] [%+ dep.title %]:</th>
+  <th align="right">[% terms.Bug %]&nbsp;[% bug.bug_id %] [%+ dep.title %]:</th>
   <td>
   [% FOREACH depbug = bug.${dep.fieldname} %]
     [% depbug FILTER bug_link(depbug) %][% " " %]
@@ -616,7 +618,7 @@
 [%# Block for SELECT fields                                                  #%]
 [%############################################################################%]
 
-[% BLOCK select %]  
+[% BLOCK select %]
   <td>
     <label for="[% selname %]" accesskey="[% accesskey %]">
       <select name="[% selname %]" id="[% selname %]">

@@ -23,10 +23,12 @@
   # bug : Bug object; the next bug to show
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 <hr>
 
 <p>
-  The next bug in your list is bug
+  The next [% terms.bug %] in your list is [% terms.bug %]
   <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>:
 </p>
 

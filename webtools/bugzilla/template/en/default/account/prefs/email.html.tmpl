@@ -21,19 +21,21 @@
   #%]
 
 [%# INTERFACE:
-  # watchedusers: string. 
+  # watchedusers: string.
   #               Comma-separated list of email addresses this user watches.
   # excludeself:  boolean.
   #               True if user is not receiving self-generated mail.
-  # <rolename>:   Multiple hashes, one for each rolename (e.g. owner; see 
-  #               below), keyed by reasonname (e.g. comments; again, see 
-  #               below). The value is a boolean - true if the user is 
+  # <rolename>:   Multiple hashes, one for each rolename (e.g. owner; see
+  #               below), keyed by reasonname (e.g. comments; again, see
+  #               below). The value is a boolean - true if the user is
   #               receiving mail for that reason when in that role.
   # Also references the 'supportwatchers' Param.
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [% useqacontact = Param('useqacontact') %]
- 
+
 <table>
   [% IF Param('supportwatchers') %]
     <tr>
@@ -45,8 +47,8 @@
     <tr>
       <td colspan="4">
         If you want to help cover for someone when they're on vacation, or if
-        you need to do the QA related to all of their bugs, you can tell 
-        Bugzilla to send mail related to their bugs to you also.  List the 
+        you need to do the QA related to all of their [% terms.bugs %], you can tell
+        [% terms.Bugzilla %] to send mail related to their [% terms.bugs %] to you also.  List the
         email addresses of any users you wish to watch here, separated by
         commas.
       </td>
@@ -64,7 +66,7 @@
     <td colspan="2">
       <p>
         If you don't like getting a notification for "trivial"
-        changes to bugs, you can use the settings below to
+        changes to [% terms.bugs %], you can use the settings below to
         filter some (or even all) notifications.
       </p>
     </td>
@@ -138,7 +140,7 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
 <table width="100%" border="1">
   <tr>
     <td colspan="[% useqacontact ? '5' : '4' %]" align="center" width="50%">
-      <b>When my relationship to this bug is:</b>
+      <b>When my relationship to this [% terms.bug %] is:</b>
     </td>
     <td rowspan="2" width="50%">
       <b>I want to receive mail when:</b>
@@ -165,28 +167,32 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
     </td>
   </tr>
 
-  [% FOREACH reason = [ 
-      { name = 'Removeme',    
-        description = 'I\'m added to or removed from this capacity' },
-      { name = 'Comments',    
-        description = 'New Comments are added' },
-      { name = 'Attachments', 
-        description = 'New Attachments are added' },
-      { name = 'Status',      
-        description = 'Priority, status, severity, and/or milestone changes' },
-      { name = 'Resolved',    
-        description = 'The bug is resolved or verified' },
-      { name = 'Keywords',    
-        description = 'Keywords field changes' },
-      { name = 'CC',          
-        description = 'CC field changes' },
-      { name = 'Other',       
-        description = 'Any field not mentioned above changes' },
-      { name = 'Unconfirmed',       
-        description = 'The bug is in the unconfirmed state' },
+[% bugLabelLower = BLOCK %]
+[% terms.bug %]
+[% END %]
+
+  [% FOREACH reason = [
+      { name = 'Removeme',
+        description = "I'm added to or removed from this capacity" },
+      { name = 'Comments',
+        description = "New Comments are added" },
+      { name = 'Attachments',
+        description = "New Attachments are added" },
+      { name = 'Status',
+        description = "Priority, status, severity, and/or milestone changes" },
+      { name = 'Resolved',
+        description = "The ${bugLabelLower} is resolved or verified" },
+      { name = 'Keywords',
+        description = "Keywords field changes" },
+      { name = 'CC',
+        description = "CC field changes" },
+      { name = 'Other',
+        description = "Any field not mentioned above changes" },
+      { name = 'Unconfirmed',
+        description = "The ${bugLabelLower} is in the unconfirmed state" },
   ] %]
     <tr>
-      [% FOREACH role = [ "Reporter", "Owner", "QAcontact", "CClist", "Voter" ] 
+      [% FOREACH role = [ "Reporter", "Owner", "QAcontact", "CClist", "Voter" ]
        %]
         [% NEXT IF role == "QAcontact" AND NOT useqacontact %]
         <td align="center">
@@ -199,6 +205,6 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
       </td>
     </tr>
   [% END %]
-</table>       
+</table>
 
 <br>

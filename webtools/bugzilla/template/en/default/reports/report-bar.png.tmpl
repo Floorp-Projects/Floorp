@@ -19,7 +19,9 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% y_label = "Bugs" %]
+[% PROCESS global/variables.none.tmpl %]
+
+[% y_label = "$terms.Bugs" %]
 
 [% PROCESS "global/field-descs.none.tmpl" %]
 
@@ -30,26 +32,26 @@
 
   graph.set(x_label           => col_field_disp,
             y_label           => y_label,
-            y_tick_number     => 8, 
-            y_number_format   => "%d", 
+            y_tick_number     => 8,
+            y_number_format   => "%d",
             x_label_position  => 0.5,
             x_labels_vertical => x_labels_vertical,
             bar_spacing       => 8,
-            shadow_depth      => 4, 
+            shadow_depth      => 4,
             shadowclr         => 'dred',
-            show_values       => 1,    
+            show_values       => 1,
             legend_placement  => "RT");
-  
+
   graph.set(cumulate          => "true",
             show_values       => 0) IF cumulate;
-  
-  # Workaround for the fact that set_legend won't take row_names directly, 
+
+  # Workaround for the fact that set_legend won't take row_names directly,
   # because row_names is an array reference rather than an array.
   graph.set_legend(row_names.0, row_names.1, row_names.2, row_names.3,
                    row_names.4, row_names.5, row_names.6, row_names.7,
                    row_names.8, row_names.9, row_names.10, row_names.11,
                    row_names.12, row_names.13, row_names.14, row_names.15);
-                                            
+
   graph.plot(data.0).png | stdout(1);
   END;
 -%]

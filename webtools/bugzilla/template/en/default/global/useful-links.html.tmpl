@@ -22,6 +22,8 @@
 [%# Migration note: this whole file corresponds to the old %commandmenu% 
     substitution param in 'footerhtml' %]
 
+[% PROCESS global/variables.none.tmpl %]
+
 <form method="get" action="show_bug.cgi">
   <table width="100%">
     <tr>
@@ -33,7 +35,7 @@
         <a href="enter_bug.cgi">New</a> | 
         <a href="query.cgi">Query</a> |
         
-        <input type="submit" value="Find"> bug # 
+        <input type="submit" value="Find"> [% terms.bug %] # 
         <input name="id" size="6"> | 
         
         <a href="report.cgi">Reports</a> 
@@ -97,7 +99,7 @@
       <td colspan="3">
         [% IF user.showmybugslink %]
           [% filtered_username = user.login FILTER url_quote %]
-          <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My&nbsp;Bugs</a>
+          <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">My&nbsp;[% terms.Bugs %]</a>
           [% print_pipe = 1 %]
         [% END %]
 
@@ -106,20 +108,20 @@
             [% " | " IF print_pipe %]
             <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]"><nobr>[% q.name FILTER html %]</nobr></a>
             [% print_pipe = 1 %]
-          [% END %]        
+          [% END %]
         [% END %]
       </td>
     </tr>
-      
-    [% ELSE %]    
+
+    [% ELSE %]
       <td valign="middle" align="right">
         [% IF Param('createemailregexp') %]
-          <a href="createaccount.cgi">New&nbsp;Account</a> | 
+          <a href="createaccount.cgi">New&nbsp;Account</a> |
         [% END %]
         <a href="query.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
       </td>
     </tr>
     [% END %]
-    
-  </table>                
+
+  </table>
 </form>

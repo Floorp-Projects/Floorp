@@ -19,6 +19,9 @@
   # Contributor(s):     Myk Melez <myk@mozilla.org>
   #                     Jeff Hedlund <jeff.hedlund@matrixsi.com>
   #%]
+
+[% PROCESS global/variables.none.tmpl %]
+
 [% bugidsummary = flag.target.bug.id _ ': ' _ flag.target.bug.summary %]
 [% attidsummary = flag.target.attachment.id _ ': ' _
                   flag.target.attachment.summary %]
@@ -36,8 +39,8 @@
 From: bugzilla-request-daemon
 To: [% to_email %]
 CC: [% flag.type.cc_list %]
-Subject: [% flag.type.name %] [%+ subject_status %]: [Bug [% flag.target.bug.id %]] [% flag.target.bug.summary %]
-[%- IF flag.target.attachment.exists %] : 
+Subject: [% flag.type.name %] [%+ subject_status %]: [[% terms.Bug %]&nbsp;[% flag.target.bug.id %]] [% flag.target.bug.summary %]
+[%- IF flag.target.attachment.exists %] :
   [Attachment [% flag.target.attachment.id %]] [% flag.target.attachment.summary %][% END %]
 
 [%+ USE wrap -%]
@@ -45,7 +48,7 @@ Subject: [% flag.type.name %] [%+ subject_status %]: [Bug [% flag.target.bug.id 
 
 [% user.identity %] has [% statuses.${flag.status} %] [%+ to_identity %] for [% flag.type.name %]:
 
-Bug [% bugidsummary %]
+[% terms.Bug %]&nbsp;[% bugidsummary %]
 [% END %]
 [%+ Param('urlbase') %]show_bug.cgi?id=[% flag.target.bug.id %]
 [% IF flag.target.attachment.exists %]

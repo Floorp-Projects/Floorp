@@ -19,6 +19,8 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[% PROCESS global/variables.none.tmpl %]
+
 [%# The javascript and header_html blocks get used in header.html.tmpl. %]
 [% javascript = BLOCK %]
   var usetms = 0; // do we have target milestone?
@@ -26,7 +28,7 @@
   var last_sel = []; // caches last selection
   var cpts = new Array();
   [% FOREACH p = products %]
-    cpts['[% p FILTER js %]'] = [ 
+    cpts['[% p FILTER js %]'] = [
       [%- FOREACH item = components_by_product.$p %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% END %]
 [% END %]
@@ -48,30 +50,30 @@
         <select name="product" onchange="selectProduct(this.form, 'product', 'component', 'Any');">
           <option value="">Any</option>
           [% FOREACH item = products %]
-            <option value="[% item FILTER html %]" 
+            <option value="[% item FILTER html %]"
                     [% "selected" IF form.product == item %]>[% item FILTER html %]</option>
           [% END %]
         </select>
       </td>
       <th>Flag:</th>
       <td>
-        [% PROCESS "global/select-menu.html.tmpl" 
-                    name="type" 
+        [% PROCESS "global/select-menu.html.tmpl"
+                    name="type"
                     options=types
                     default=form.type %]
       </td>
-      
+
       [%# We could let people see a "queue" of non-pending requests. %]
       <!--
       <th>Status:</th>
       <td>
-        [%# PROCESS "global/select-menu.html.tmpl" 
-                    name="status" 
+        [%# PROCESS "global/select-menu.html.tmpl"
+                    name="status"
                     options=["all", "?", "+-", "+", "-"]
                     default=form.status %]
       </td>
       -->
-    
+
     </tr>
     <tr>
       <th>Requestee:</th>
@@ -81,18 +83,18 @@
         <select name="component">
           <option value="">Any</option>
           [% FOREACH item = components %]
-            <option value="[% item FILTER html %]" [% "selected" IF form.component == item %]> 
+            <option value="[% item FILTER html %]" [% "selected" IF form.component == item %]>
               [% item FILTER html %]</option>
           [% END %]
         </select>
       </td>
       <th>Group By:</th>
       <td>
-        [% groups = { 
-            "Requester" => 'requester' , 
-            "Requestee" => 'requestee', 
-            "Flag" => 'type' , 
-            "Product/Component" => 'category' 
+        [% groups = {
+            "Requester" => 'requester' ,
+            "Requestee" => 'requestee',
+            "Flag" => 'type' ,
+            "Product/Component" => 'category'
           } %]
         [% PROCESS "global/select-menu.html.tmpl" name="group" options=groups default=form.group %]
       </td>
@@ -103,14 +105,14 @@
 </form>
 [% END %]
 
-[% column_headers = { 
-      "type"       => "Flag" , 
-      "status"     => "Status" , 
-      "bug"        => "Bug" , 
-      "attachment" => "Attachment" , 
+[% column_headers = {
+      "type"       => "Flag" ,
+      "status"     => "Status" ,
+      "bug"        => "$terms.Bug" ,
+      "attachment" => "Attachment" ,
       "requester"  => "Requester" ,
-      "requestee"  => "Requestee" , 
-      "created"    => "Created" , 
+      "requestee"  => "Requestee" ,
+      "created"    => "Created" ,
       "category"   => "Product/Component"    } %]
 
 [% DEFAULT display_columns = ["requester", "requestee", "type", "bug", "attachment", "created"]
@@ -119,7 +121,7 @@
 %]
 
 
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/header.html.tmpl
   title="Request Queue"
   h2=filter_form
   style = "

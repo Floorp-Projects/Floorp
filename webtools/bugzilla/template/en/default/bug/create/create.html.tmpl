@@ -86,7 +86,7 @@ function set_assign_to() {
     [% INCLUDE 'bug/create/user-message.html.tmpl' %]
     </td>
   </tr>
-  
+
   <tr>
     <td><br></td>
   </tr>
@@ -94,11 +94,11 @@ function set_assign_to() {
   <tr>
     <td align="right" valign="top"><strong>Reporter:</strong></td>
     <td valign="top">[% reporter FILTER html %]</td>
-    
+
     <td align="right" valign="top"><strong>Product:</strong></td>
     <td valign="top">[% product FILTER html %]</td>
   </tr>
-  
+
   [%# We can't use the select block in these two cases for various reasons. %]
   <tr>
     <td align="right" valign="top">
@@ -112,8 +112,8 @@ function set_assign_to() {
           </option>
         [%- END %]
       </select>
-    </td>  
-    
+    </td>
+
     <td align="right" valign="top">
       <strong>
         <a href="describecomponents.cgi?product=[% product FILTER url_quote %]">
@@ -129,49 +129,49 @@ function set_assign_to() {
           </option>
         [%- END %]
       </select>
-    </td>  
+    </td>
   </tr>
-  
+
   <tr>
     <td>&nbsp;</td>
     <td colspan="3"></td>
   </tr>
-  
+
   <tr>
     [% sel = { description => 'Platform', name => 'rep_platform' } %]
     [% INCLUDE select %]
-    
+
     [% sel = { description => 'OS', name => 'op_sys' } %]
     [% INCLUDE select %]
   </tr>
-  
-  <tr>  
+
+  <tr>
   [% IF Param('letsubmitterchoosepriority') %]
     [% sel = { description => 'Priority', name => 'priority' } %]
     [% INCLUDE select %]
   [% ELSE %]
-    <input type="hidden" name="priority" 
+    <input type="hidden" name="priority"
            value="[% default.priority FILTER html %]">
   [% END %]
 
   [% sel = { description => 'Severity', name => 'bug_severity' } %]
-  [% INCLUDE select %]    
+  [% INCLUDE select %]
   </tr>
-  
+
   <tr>
     <td>&nbsp;</td>
     <td colspan="3"></td>
   </tr>
 
-[% IF bug_status.size > 1 %] 
+[% IF bug_status.size > 1 %]
   <tr>
     [% sel = { description => 'Initial State', name => 'bug_status' } %]
     [% INCLUDE select %]
-    
+
     <td colspan="2"></td>
   </tr>
 [% ELSE %]
-  <input type="hidden" name="bug_status" value="[% default.bug_status %]">  
+  <input type="hidden" name="bug_status" value="[% default.bug_status %]">
 [% END %]
 
   <tr>
@@ -216,18 +216,18 @@ function set_assign_to() {
   <tr>
     <td align="right"><strong>URL:</strong></td>
     <td colspan="3">
-      <input name="bug_file_loc" size="60" 
+      <input name="bug_file_loc" size="60"
              value="[% bug_file_loc FILTER html %]">
     </td>
   </tr>
-  
+
   <tr>
     <td align="right"><strong>Summary:</strong></td>
     <td colspan="3">
       <input name="short_desc" size="60" value="[% short_desc FILTER html %]">
     </td>
   </tr>
-  
+
   <tr><td align="right" valign="top"><strong>Description:</strong></td>
     <td colspan="3">
       <textarea wrap="hard" name="comment" rows="10" cols="80">
@@ -266,18 +266,18 @@ function set_assign_to() {
       </td>
     </tr>
   [% END %]
-  
+
   <tr>
     <td></td>
     <td colspan="3">
     [% IF group.size %]
       <br>
         <strong>
-          Only users in all of the selected groups can view this bug:
+          Only users in all of the selected groups can view this [% terms.bug %]:
         </strong>
       <br>
       <font size="-1">
-        (Leave all boxes unchecked to make this a public bug.)
+        (Leave all boxes unchecked to make this a public [% terms.bug %].)
       </font>
       <br>
       <br>
@@ -294,16 +294,16 @@ function set_assign_to() {
     [% END %]
     </td>
   </tr>
-  
+
   <tr>
     <td></td>
     <td colspan="3">
-      <input type="submit" value="    Commit    " 
-             onclick="if (this.form.short_desc.value == '') 
-             { alert('Please enter a summary sentence for this bug.'); 
+      <input type="submit" value="    Commit    "
+             onclick="if (this.form.short_desc.value == '')
+             { alert('Please enter a summary sentence for this [% terms.bug %].');
                return false; } return true;">
       &nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="submit" name="maketemplate" 
+      <input type="submit" name="maketemplate"
              value="Remember values as bookmarkable template">
     </td>
   </tr>
@@ -313,8 +313,8 @@ function set_assign_to() {
     <td></td>
     <td colspan="3">
       <br>
-      We've made a guess at your operating system and platform. 
-      Please check them and, if we got it wrong, email 
+      We've made a guess at your operating system and platform.
+      Please check them and, if we got it wrong, email
       [% Param('maintainer') %].
     </td>
   </tr>
@@ -338,7 +338,7 @@ function set_assign_to() {
     </strong>
   </td>
   [% END %]
-  
+
   <td>
     <select name="[% sel.name %]">
     [%- FOREACH x = ${sel.name} %]

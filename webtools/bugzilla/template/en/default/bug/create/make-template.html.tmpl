@@ -19,14 +19,16 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
   title = "Bookmarks are your friend"
   h1 = "Template constructed"
 %]
 
 <p>
 If you bookmark <a href="enter_bug.cgi?[% url FILTER html %]">this link</a>,
-going to the bookmark will bring up the enter bug page with the fields
+going to the bookmark will bring up the enter [% terms.bug %] page with the fields
 initialized as you've requested.
 </p>
 

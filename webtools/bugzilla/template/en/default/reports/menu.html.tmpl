@@ -24,12 +24,14 @@
   # types in Bugzilla.
   #%]
 
-[% PROCESS global/header.html.tmpl 
+[% PROCESS global/variables.none.tmpl %]
+
+[% PROCESS global/header.html.tmpl
   title = "Reporting and Charting Kitchen"
 %]
 
 <p>
-  Bugzilla allows you to view and track the state of the bug database in
+  [% terms.Bugzilla %] allows you to view and track the state of the [% terms.bug %] database in
   all manner of exciting ways.
 </p>
 
@@ -37,14 +39,14 @@
 
 <ul>
   <li>
-    <strong><a href="query.cgi">Search</a></strong> - 
-    list sets of bugs.
+    <strong><a href="query.cgi">Search</a></strong> -
+    list sets of [% terms.bugs %].
   </li>
   <li>
     <strong>
       <a href="query.cgi?format=report-table">Tabular reports</a>
     </strong> -
-    tables of bug counts in 1, 2 or 3 dimensions, as HTML or CSV.
+    tables of [% terms.bug %] counts in 1, 2 or 3 dimensions, as HTML or CSV.
   </li>
   <li>
     <strong>
@@ -59,7 +61,7 @@
 <ul>
   <li>
     <strong><a href="reports.cgi">Old Charts</a></strong> - 
-    plot the status and/or resolution of bugs against
+    plot the status and/or resolution of [% terms.bugs %] against
     time, for each product in your database.
   </li>
   <li>

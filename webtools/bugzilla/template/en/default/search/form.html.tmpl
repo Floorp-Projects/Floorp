@@ -20,7 +20,9 @@
   #                 Christian Reis <kiko@async.com.br> [javascript rewrite]
   #                 Gervase Markham <gerv@gerv.net>
   #%]
-  
+
+[% PROCESS global/variables.none.tmpl %]
+
   [%# Note: use Template comments and not JS ones here, to avoid bloating
     what we actually send to the browser %]
 
@@ -35,17 +37,17 @@ var vers = new Array();
 var tms = new Array();
 [% END %]
 
-[%# Create three arrays of components, versions and target milestones, indexed 
+[%# Create three arrays of components, versions and target milestones, indexed
   # numerically according to the product they refer to. #%]
 
 [% n = 0 %]
 [% FOREACH p = product %]
-  cpts[[% n %]] = [ 
+  cpts[[% n %]] = [
     [%- FOREACH item = p.components %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
-  vers[[% n %]] = [ 
+  vers[[% n %]] = [
     [%- FOREACH item = p.versions -%]'[%  item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% IF Param('usetargetmilestone') %]
-  tms[[% n %]]  = [ 
+  tms[[% n %]]  = [
      [%- FOREACH item = p.milestones %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% END %]
   [% n = n+1 %]
@@ -57,7 +59,7 @@ var tms = new Array();
   # correspond to the elements selected in source.
   # - array should be a array of arrays, indexed by number. the
   #   array should contain the elements that correspond to that
-  #   product. 
+  #   product.
   # - sel is a list of selected items, either whole or a diff
   #   depending on merging.
   # - target should be the target select object.
@@ -78,7 +80,7 @@ var tms = new Array();
   %]
 
 function updateSelect(array, sel, target, merging) {
-        
+
     var i, item;
 
     [%# If we have no versions/components/milestones %]
@@ -119,7 +121,7 @@ function updateSelect(array, sel, target, merging) {
     return true;
 }
 
-[%# Returns elements in a that are not in b. 
+[%# Returns elements in a that are not in b.
   # NOT A REAL DIFF: does not check the reverse.
   #    - a,b: arrays of values to be compare. %]
 function fake_diff_array(a, b) {
@@ -203,7 +205,7 @@ function merge_arrays(a, b, b_is_select) {
 
 [%# Returns an array of indexes or values from a select form control.
   #    - control: select control from which to find selections
-  #    - findall: boolean, store all options when true or just the selected 
+  #    - findall: boolean, store all options when true or just the selected
   #      indexes
   #    - want_values: boolean; we store values when true and indexes when
   #      false %]
@@ -263,7 +265,7 @@ function selectProduct(f) {
         first_load = false;
         return;
     }
-    
+
     [%# turn first_load off. this is tricky, since it seems to be
         redundant with the above clause. It's not: if when we first load
         the page there is _one_ element selected, it won't fall into that
@@ -273,7 +275,7 @@ function selectProduct(f) {
         without merge/sorting. %]
     first_load = false;
 
-    [%# - sel keeps the array of products we are selected. 
+    [%# - sel keeps the array of products we are selected.
         - merging says if it is a full list or just a list of products that
           were added to the current selection. %]
     var merging = false;
@@ -285,10 +287,10 @@ function selectProduct(f) {
     if (!findall) {
         [%# save sel for the next invocation of selectProduct() %]
         var tmp = sel;
-    
+
         [%# this is an optimization: if we have just added products to an
-            existing selection, no need to clear the form controls and add 
-            everybody again; just merge the new ones with the existing 
+            existing selection, no need to clear the form controls and add
+            everybody again; just merge the new ones with the existing
             options. %]
         if ((last_sel.length > 0) && (last_sel.length < sel.length)) {
             sel = fake_diff_array(sel, last_sel);
@@ -317,7 +319,7 @@ function selectProduct(f) {
 // -->
 </script>
 
-[% query_variants = [ 
+[% query_variants = [
   { value => "allwordssubstr", description => "contains all of the words/strings" },
   { value => "anywordssubstr", description => "contains any of the words/strings" },
   { value => "substring", description => "contains the string" },
@@ -342,7 +344,7 @@ function selectProduct(f) {
       [% FOREACH qv = query_variants %]
         <option value="[% qv.value %]"
           [% " selected" IF default.short_desc_type.0 == qv.value %]>[% qv.description %]</option>
-      [% END %]              
+      [% END %]
       </select>
     </td>
     <td>
@@ -352,7 +354,7 @@ function selectProduct(f) {
     <td>
       <input type="submit" value="[% button_name %]">
     </td>
-  </tr>  
+  </tr>
 
 [%# *** Product Component Version Target *** %]
 
@@ -394,7 +396,7 @@ function selectProduct(f) {
                     reserved word - we use 'component_' instead. %]
                 <td align="left">
                   <label for="component" accesskey="m">
-                    <select name="component" id="component" 
+                    <select name="component" id="component"
                             multiple="multiple" size="5">
                     [% FOREACH c = component_ %]
                       <option value="[% c FILTER html %]"
@@ -413,8 +415,8 @@ function selectProduct(f) {
                 <th align="left"><u>V</u>ersion:</th>
               </tr>
               <tr valign="top">
-                [% PROCESS select sel = { name => 'version', 
-                                          size => 5, 
+                [% PROCESS select sel = { name => 'version',
+                                          size => 5,
                                           accesskey => 'v' } %]
               </tr>
             </table>
@@ -426,7 +428,7 @@ function selectProduct(f) {
                 <th align="left"><u>T</u>arget:</th>
               </tr>
               <tr valign="top">
-                [% PROCESS select sel = { name => 'target_milestone', 
+                [% PROCESS select sel = { name => 'target_milestone',
                                           size => 5,
                                           accesskey => 't' } %]
               </tr>
@@ -437,15 +439,15 @@ function selectProduct(f) {
       </table>
     </td>
   </tr>
-  
+
 [%# *** Comment URL Whiteboard Keywords *** %]
 
-  [% FOREACH field = [ 
-    { name => "long_desc", description => "A&nbsp;<u>C</u>omment", 
+  [% FOREACH field = [
+    { name => "long_desc", description => "A&nbsp;<u>C</u>omment",
       accesskey => 'c' },
-    { name => "bug_file_loc", description => "The&nbsp;<u>U</u>RL", 
+    { name => "bug_file_loc", description => "The&nbsp;<u>U</u>RL",
       accesskey => 'u' },
-    { name => "status_whiteboard", description => "<u>W</u>hiteboard",  
+    { name => "status_whiteboard", description => "<u>W</u>hiteboard",
       accesskey => 'w' } ] %]
 
     [% UNLESS field.name == 'status_whiteboard' AND NOT Param('usestatuswhiteboard') %]
@@ -454,10 +456,10 @@ function selectProduct(f) {
       <td>
         <select name="[% field.name %]_type">
         [% FOREACH qv = query_variants %]
-          [% type = "${field.name}_type" %]                   
+          [% type = "${field.name}_type" %]
           <option value="[% qv.value %]"
             [% " selected" IF default.$type.0 == qv.value %]>[% qv.description %]</option>
-        [% END %]              
+        [% END %]
         </select>
       </td>
       <td><input name="[% field.name %]" size="40"
@@ -465,7 +467,7 @@ function selectProduct(f) {
                  value="[% default.${field.name}.0 FILTER html %]">
       </td>
       <td></td>
-    </tr>  
+    </tr>
     [% END %]
   [% END %]
 
@@ -476,7 +478,7 @@ function selectProduct(f) {
       </th>
       <td>
         <select name="keywords_type">
-        [% FOREACH qv = [ 
+        [% FOREACH qv = [
           { name => "allwords", description => "contains all of the keywords" },
           { name => "anywords", description => "contains any of the keywords" },
           { name => "nowords",  description => "contains none of the keywords" } ] %]
@@ -493,7 +495,7 @@ function selectProduct(f) {
       </td>
     </tr>
   [% END %]
-</table>  
+</table>
 
 <hr>
 
@@ -507,7 +509,7 @@ function selectProduct(f) {
           <th align="left"><a href="queryhelp.cgi#status">St<u>a</u>tus</a>:</th>
         </tr>
         <tr valign="top">
-          [% PROCESS select sel = { name => 'bug_status', 
+          [% PROCESS select sel = { name => 'bug_status',
                                     size => 7,
                                     accesskey => 'a' } %]
         </tr>
@@ -521,7 +523,7 @@ function selectProduct(f) {
           </th>
         </tr>
         <tr valign="top">
-          [% PROCESS select sel = { name => 'resolution', 
+          [% PROCESS select sel = { name => 'resolution',
                                     size => 7,
                                     accesskey => 'r' } %]
         </tr>
@@ -533,9 +535,9 @@ function selectProduct(f) {
           <th align="left"><a href="queryhelp.cgi#severity">S<u>e</u>verity</a>:</th>
         </tr>
         <tr valign="top">
-          [% PROCESS select sel = { name => 'bug_severity', 
+          [% PROCESS select sel = { name => 'bug_severity',
                                     size => 7,
-                                    accesskey => 'e' } %]    
+                                    accesskey => 'e' } %]
         </tr>
       </table>
     </td>
@@ -545,9 +547,9 @@ function selectProduct(f) {
           <th align="left"><a href="queryhelp.cgi#priority">Pr<u>i</u>ority</a>:</th>
         </tr>
         <tr valign="top">
-          [% PROCESS select sel = { name => 'priority', 
-                                    size => 7, 
-                                    accesskey => 'i' } %]    
+          [% PROCESS select sel = { name => 'priority',
+                                    size => 7,
+                                    accesskey => 'i' } %]
         </tr>
       </table>
     </td>
@@ -557,7 +559,7 @@ function selectProduct(f) {
           <th align="left"><a href="queryhelp.cgi#platform"><u>H</u>ardware</a>:</th>
         </tr>
         <tr valign="top">
-          [% PROCESS select sel = { name => 'rep_platform', 
+          [% PROCESS select sel = { name => 'rep_platform',
                                     size => 7,
                                     accesskey => 'h' } %]
         </tr>
@@ -569,8 +571,8 @@ function selectProduct(f) {
           <th align="left"><a href="queryhelp.cgi#opsys"><u>O</u>S</a>:</th>
         </tr>
         <tr valign="top">
-          [% PROCESS select sel = { name => 'op_sys', 
-                                    size => 7, 
+          [% PROCESS select sel = { name => 'op_sys',
+                                    size => 7,
                                     accesskey => 'o' } %]
         </tr>
       </table>
@@ -589,7 +591,7 @@ function selectProduct(f) {
         <legend>
           <strong>
             <a href="queryhelp.cgi#peopleinvolved">Email</a> and Numbering
-          </strong>  
+          </strong>
         </legend>
 
 
@@ -607,17 +609,17 @@ function selectProduct(f) {
   </tr>
   <tr>
     <td>
-      <input type="checkbox" name="emailassigned_to[% n %]" 
+      <input type="checkbox" name="emailassigned_to[% n %]"
              id="emailassigned_to[% n %]" value="1"
              [% " checked" IF default.emailassigned_to.$n %]>
       <label for="emailassigned_to[% n %]">
-        bug owner
+        [% terms.bug %] owner
       </label>
     </td>
   </tr>
   <tr>
     <td>
-      <input type="checkbox" name="emailreporter[% n %]" 
+      <input type="checkbox" name="emailreporter[% n %]"
              id="emailreporter[% n %]" value="1"
              [% " checked" IF default.emailreporter.$n %]>
       <label for="emailreporter[% n %]">
@@ -628,7 +630,7 @@ function selectProduct(f) {
   [% IF Param('useqacontact') %]
   <tr>
     <td>
-      <input type="checkbox" name="emailqa_contact[% n %]" 
+      <input type="checkbox" name="emailqa_contact[% n %]"
              id="emailqa_contact[% n %]" value="1"
              [% " checked" IF default.emailqa_contact.$n %]>
       <label for="emailqa_contact[% n %]">
@@ -639,7 +641,7 @@ function selectProduct(f) {
   [% END %]
   <tr>
     <td>
-      <input type="checkbox" name="emailcc[% n %]" 
+      <input type="checkbox" name="emailcc[% n %]"
              id="emailcc[% n %]" value="1"
              [% " checked" IF default.emailcc.$n %]>
       <label for="emailcc[% n %]">
@@ -649,7 +651,7 @@ function selectProduct(f) {
   </tr>
   <tr>
     <td>
-        <input type="checkbox" name="emaillongdesc[% n %]" 
+        <input type="checkbox" name="emaillongdesc[% n %]"
                id="emaillongdesc[% n %]" value="1"
                [% " checked" IF default.emaillongdesc.$n %]>
       <label for="emaillongdesc[% n %]">
@@ -660,12 +662,12 @@ function selectProduct(f) {
   <tr>
     <td>
       <select name="emailtype[% n %]">
-      [% FOREACH qv = [ 
+      [% FOREACH qv = [
         { name => "substring", description => "contains" },
         { name => "exact", description => "is" },
         { name => "regexp", description => "matches regexp" },
         { name => "notregexp", description => "doesn't match regexp" } ] %]
-        
+
         <option value="[% qv.name %]"
           [% " selected" IF default.emailtype.$n == qv.name %]>[% qv.description %]</option>
       [% END %]
@@ -679,20 +681,20 @@ function selectProduct(f) {
   </tr>
 </table>
 
-    
+
     </td>
   [% END %]
   </tr>
 </table>
 <hr>
-<table>  
+<table>
   <tr>
     <td>
       <select name="bugidtype">
         <option value="include"[% " selected" IF default.bugidtype.0 == "include" %]>Only include</option>
         <option value="exclude"[% " selected" IF default.bugidtype.0 == "exclude" %]>Exclude</option>
       </select>
-      bugs numbered: 
+      [% terms.bugs %] numbered:
     </td>
     <td>
       <input type="text" name="bug_id" value="[% default.bug_id.0 FILTER html %]" size="20">
@@ -705,7 +707,7 @@ function selectProduct(f) {
   [% IF Param('usevotes') %]
     <tr>
       <td align="right">
-        Only bugs with at least:
+        Only [% terms.bugs %] with at least:
       </td>
       <td>
         <input name="votes" size="3" value="[% default.votes.0 FILTER html %]"> votes
@@ -722,11 +724,11 @@ function selectProduct(f) {
 
     <td valign="top">
       <fieldset>
-        <legend><strong>Bug Changes</strong></legend>
+        <legend><strong>[% terms.Bug %] Changes</strong></legend>
 
 
 <dl>
-  <dt>Only bugs changed between:</dt>
+  <dt>Only [% terms.bugs %] changed between:</dt>
   <dd>
     <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
     and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
