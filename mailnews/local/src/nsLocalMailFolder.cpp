@@ -250,12 +250,7 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
       // unfortunately we can't just say:
       //          path += sep;
       // here because of the way nsFileSpec concatenates
-#if defined(XP_MAC)     
-	  nsAutoString str((nsFilePath)path);	//ducarroz: please don't cast a nsFilePath to char* on Mac
-#else
-      const char *chpath = path;
-      nsAutoString str(chpath);
-#endif
+      nsAutoString str((nsFilePath)path);
       str += sep;
       path = str;
     }
