@@ -43,6 +43,7 @@
 interface nsIChromeEventHandler;
 interface nsIDocumentLoaderObserver;
 interface nsIDocShellLoadInfo;
+interface nsIDocumentCharsetInfo;
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
@@ -120,6 +121,12 @@ interface nsIDocShell : nsISupports
 	nulled out by the parent when the parent is going away.
 	*/
 	attribute nsIURIContentListener parentURIContentListener;
+
+   /*
+	The document charset info.  This is used by a load to determine priorities for 
+	charset detection etc.
+	*/
+	attribute nsIDocumentCharsetInfo documentCharsetInfo;
 
 	/*
 	Attribute stating if it should allow plugins or not.
