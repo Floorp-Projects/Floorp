@@ -1732,12 +1732,9 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
           break;
 
         case IDWIZBACK:
+        case IDCANCEL:
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
           break;
 
         default:
