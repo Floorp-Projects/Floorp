@@ -24,14 +24,12 @@ include <$(DEPTH)/config/config.mak>
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-    $(MAKE_INSTALL) NavSecurityOverlay.xul     $(DIST)\bin\chrome\packages\core\navigator\content
-    $(MAKE_INSTALL) NavSecurityUI.js           $(DIST)\bin\chrome\packages\core\navigator\content
-
-install:: $(DLL)
-    $(MAKE_INSTALL) PSMTaskMenu.xul	$(DIST)\bin\chrome\packages\widget-toolkit\global\content
+    $(MAKE_INSTALL) securityOverlay.xul     $(DIST)\bin\chrome\packages\core\communicator\content
+    $(MAKE_INSTALL) securityUI.js           $(DIST)\bin\chrome\packages\core\communicator\content
+    $(MAKE_INSTALL) PSMTaskMenu.xul	$(DIST)\bin\chrome\packages\core\communicator\content
     
 clobber::
-    $(RM) $(DIST)\bin\chrome\packages\core\navigator\content\NavSecurityOverlay.xul
-    $(RM) $(DIST)\bin\chrome\packages\core\navigator\content\NavSecurityUI.js
-    $(RM) $(DIST)\bin\chrome\packages\widget-toolkit\global\content\PSMTaskMenu.xul
+    $(RM) $(DIST)\bin\chrome\packages\core\communicator\content\securityOverlay.xul
+    $(RM) $(DIST)\bin\chrome\packages\core\communicator\content\securityUI.js
+    $(RM) $(DIST)\bin\chrome\packages\core\communicator\content\PSMTaskMenu.xul
 

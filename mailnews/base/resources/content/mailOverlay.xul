@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailOverlay.dtd">
+
+<overlay id="mailOverlay.xul"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="JavaScript">
+  <![CDATA[
+    function goNewCardDialog(selectedAB)
+      {
+      	window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
+      					  "",
+    	  				  "chrome,resizeable=no,modal",
+    		  			  {selectedAB:selectedAB});
+      }
+
+    function goOpenNewMessage()
+      {
+      	var msgComposeService = Components.classes["component://netscape/messengercompose"].getService(); 
+      	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
+        msgComposeService.OpenComposeWindow(null, null,
+										                        Components.interfaces.nsIMsgCompType.New,
+                        										Components.interfaces.nsIMsgCompFormat.Default,
+                        										null); 
+      }  
+
+  ]]>
+  </script>
+         
+  <!-- generic commands -->  
+  <broadcasterset id="broadcasterset">
+  	<broadcaster id="cmd_newMessage" value="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" oncommand="goOpenNewMessage();"/>
+	  <broadcaster id="cmd_newCard" value="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" oncommand="goNewCardDialog(0)"/>
+  </broadcasterset>    
+
+  <keyset id="keyset">
+  	<key id="key_newMessage" xulkey="true" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
+  </keyset>
+         
+</overlay>

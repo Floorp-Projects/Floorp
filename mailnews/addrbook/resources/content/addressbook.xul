@@ -23,14 +23,13 @@ Rights Reserved.
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abResultsTreeOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardViewOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd">
-
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

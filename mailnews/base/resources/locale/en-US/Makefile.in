@@ -41,6 +41,10 @@ CHROME_L10N = \
 		sidebar-messenger.dtd \
 		sidebar-messenger-rdf.dtd \
 		msgFolderPickerOverlay.dtd	\
+		mailTasksOverlay.dtd \
+		mailNavigatorOverlay.dtd \
+		mailEditorOverlay.dtd \
+		mailOverlay.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

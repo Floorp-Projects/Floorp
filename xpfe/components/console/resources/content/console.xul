@@ -21,10 +21,12 @@ Rights Reserved.
 Contributor(s): ______________________________________. -->
 
 <?xml-stylesheet href="chrome://global/skin/console.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/content/console.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/console.dtd" >
 
@@ -48,31 +50,55 @@ Contributor(s): ______________________________________. -->
         <broadcaster id="cmd_quit"/>
 </broadcasterset>
 
-<menubar id="main-menubar" class="chromeclass-menubar">
+<toolbox>
+  <menubar id="main-menubar" class="chromeclass-menubar">
+    <menu id="menu_File">
+      <menupopup id="menu_FilePopup">
+        <menuitem id="menu_close" oncommand="window.close()"/>
+      </menupopup>
+    </menu>
 
-        <menu id="menu_File">
-                <menupopup id="menu_FilePopup">
-                        <menuitem id="menu_close" oncommand="window.close()"/>
-                </menupopup>
-        </menu>
+    <menu id="menu_Edit">
+      <menupopup id="dummyid">
+        <menuitem id="menu_cut" disabled="true"/>
+        <menuitem id="menu_copy" disabled="true"/>
+        <menuitem id="menu_paste" disabled="true"/>
+      </menupopup>
+    </menu>
+  
+    <!-- tasks menu filled from tasksOverlay -->
+    <menu accesskey="t" id="tasksMenu"/>
 
-        <menu id="menu_Edit">
-                <menupopup id="dummyid">
-                        <menuitem id="menu_cut" disabled="true"/>
-                        <menuitem id="menu_copy" disabled="true"/>
-                        <menuitem id="menu_paste" disabled="true"/>
-                </menupopup>
-        </menu>
+    <!-- help menu filled from globalOverlay -->
+    <menu accesskey="h" id="menu_Help"/>
+  </menubar>
 
-        <!-- tasks menu filled from tasksOverlay -->
-        <menu accesskey="t" id="tasksMenu"/>
+  <toolbar id="toolbar">
+    <button class="button-toolbar" observes="Console:ShowAll" oncommand="changeMode('all', this);" value="&all.label;"/>
+    <button class="button-toolbar" observes="Console:ShowErrors" oncommand="changeMode('errors', this);" value="&errors.label;"/>
+    <button class="button-toolbar" observes="Console:ShowWarnings" oncommand="changeMode('warnings', this);" value="&warnings.label;"/>
+  </toolbar>
+</toolbox>
+  
+  <tree flex="1" id="console" context="context">
+    <treecolgroup>
+      <treecol flex="1"/>
+    </treecolgroup>
+    <treechildren id="consoleTreeChildren" flex="1"/>
+  </tree>
 
-        <!-- help menu filled from globalOverlay -->
-        <menu accesskey="h" id="menu_Help"/>
-</menubar>
-
-<box align="vertical" id="console" style="overflow:auto" flex="1"/>
-
-<toolbar id="taskbar"/>
-
+  <popupset>
+    <popup id="context">
+      <menuitem type="radio" observes="Console:ShowAll" value="&all.label;" oncommand="changeMode('all', this);"/>
+      <menuitem type="radio" observes="Console:ShowErrors" value="&errors.label;" oncommand="changeMode('errors', this);"/>
+      <menuitem type="radio" observes="Console:ShowWarnings" value="&warnings.label;" oncommand="changeMode('warnings', this);"/>
+    </popup>
+  </popupset>  
+  
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="Console:ShowAll" toggled="true" checked="true"/>
+    <broadcaster id="Console:ShowErrors"/>
+    <broadcaster id="Console:ShowWarnings"/>
+  </broadcasterset>
+  
 </window>

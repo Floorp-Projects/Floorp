@@ -67,6 +67,13 @@ CHROME_CONTENT = \
 	.\msgPrintEngine.xul \
 	.\openSaveAttachment.xul \
 	.\openSaveAttachment.js \
+	.\mailTasksOverlay.xul \
+	.\mailNavigatorOverlay.xul \
+	.\mailEditorOverlay.xul \
+	.\mailABOverlay.xul \
+	.\mailMessengerOverlay.xul \
+	.\mailMessengerComposeOverlay.xul \
+	.\mailOverlay.xul \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

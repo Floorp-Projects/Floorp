@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<!-- retrieve generic commands -->
+<?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/mailNavigatorOverlay.dtd">
+
+<overlay id="mailNavigatorOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="JavaScript">
+  <![CDATA[
+
+    function sendLink(pageUrl, pageTitle)
+      {
+        window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
+                           "chrome,all,dialog=no",
+                           "body='" + pageUrl + "',subject='" + pageTitle +
+                           "',bodyislink=true");
+      }
+
+    function sendPage()
+      {
+        var pageUrl = window.content.location.href;
+        var pageTitle =  window.content.document.title;
+        window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
+                           "chrome,all,dialog=no", 
+                           "attachment='" + pageUrl + "',body='" + pageUrl +
+                           "',subject='" + pageTitle + "',bodyislink=true");
+      }
+  
+  ]]>
+  </script>         
+
+  <!-- navigator specific commands -->
+  <broadcasterset id="broadcasterset">
+  	<broadcaster id="cmd_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="SendPage();"/>
+  	<broadcaster id="Browser:SendLink" value="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" oncommand="sendLink(window.content.location.href, window.content.document.title);"/>
+  </broadcasterset>
+         
+  <!-- navigator specific UI items -->
+  <menupopup id="menu_NewPopup">
+    <menuitem id="menu_newMessage"   observes="cmd_newMessage" position="2"/>
+    <menuitem id="menu_newCard"      observes="cmd_newCard" position="3"/>
+  </menupopup>
+
+  <menupopup id="menu_FilePopup">
+    <menuitem id="menu_sendPage" observes="cmd_sendPage" position="11"/>
+	  <menuitem id="menu_sendLink" observes="Browser:SendLink" position="12"/>
+  </menupopup>
+  
+</overlay>
+

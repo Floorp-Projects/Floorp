@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *	Seth Spitzer <sspitzer@netscape.com>
+ *  Ben Goodger <ben@netscape.com>
  */  
 
 var newmessages = "";
@@ -63,11 +64,15 @@ function OnLoad()
 		var downloadHeadersTitlePrefix = Bundle.GetStringFromName("downloadHeadersTitlePrefix");
 		var downloadHeadersInfoText1 = Bundle.GetStringFromName("downloadHeadersInfoText1");
 		var downloadHeadersInfoText2 = Bundle.GetStringFromName("downloadHeadersInfoText2");
+    var okButtonText = Bundle.GetStringFromName("okButtonText");
 
 		// doesn't JS have a printf?
-		window.title = downloadHeadersTitlePrefix + " " + newsgroupname;
+		window.title = downloadHeadersTitlePrefix;
 		var infotext = downloadHeadersInfoText1 + " " + newmessages + " " + downloadHeadersInfoText2;
-		setText('info',infotext);
+		setText('info',infotext); 
+    var okbutton = document.getElementById("ok");
+    okbutton.setAttribute("value", okButtonText);
+    setText("newsgroupLabel", newsgroupname);
 	}
 
 
@@ -83,7 +88,10 @@ function OnLoad()
 function setText(id, value) {
     var element = document.getElementById(id);
     if (!element) return;
- 	element.setAttribute('value',value);
+ 	  if (element.hasChildNodes())  
+      element.removeChild(element.firstChild);
+    var textNode = document.createTextNode(value);
+    element.appendChild(textNode);
 }
 
 function OkButtonCallback() {
@@ -110,4 +118,18 @@ function OkButtonCallback() {
 function CancelButtonCallback() {
     param.SetInt(0, 0); /* user hit Cancel */
 	return true;
+}
+
+function doCheckboxEnabling() {
+  var allRadio = document.getElementById("all");
+  var checkbox = document.getElementById("markread");
+  var numberFld = document.getElementById("number");
+  if (allRadio && allRadio.checked) {
+    checkbox.setAttribute("disabled", "true");
+    numberFld.setAttribute("disabled", "true");
+  }
+  else {
+    checkbox.removeAttribute("disabled");
+    numberFld.removeAttribute("disabled");
+  }
 }

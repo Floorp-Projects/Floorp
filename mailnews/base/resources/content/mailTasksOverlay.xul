@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % mailTasksOverlayDTD SYSTEM "chrome://messenger/locale/mailTasksOverlay.dtd" >
+%mailTasksOverlayDTD;
+]>
+
+<overlay id="mailPrefsOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="JavaScript">
+  <![CDATA[
+    // uses "toOpenWindowByType" function provided by utilityOverlay.js
+    // which is included by most clients. 
+    function toMessengerWindow()
+      {
+        var windowDoc = "chrome://messenger/content/messenger.xul";
+      	try
+          {
+    	    	var layoutType = pref.GetIntPref("mail.pane_config");
+    			  windowDoc = !layoutType ? "chrome://messenger/content/messenger.xul" : 
+                                          "chrome://messenger/content/mail3PaneWindowVertLayout.xul";
+    	    }
+    	  catch(ex)
+    	    {
+    	    }
+		    toOpenWindowByType("mail:3pane", windowDoc);
+      }
+    
+    function toAddressBook() 
+      {
+    	  toOpenWindowByType("mail:addressbook", "chrome://messenger/content/addressbook/addressbook.xul");
+      }
+    
+    function toNewsgroups() 
+      {
+        dump ("Sorry, command not implemented.\n");
+      }
+
+    function toImport()
+      {
+      	window.openDialog("chrome://messenger/content/importDialog.xul","importDialog","chrome, modal", {importType: "addressbook"});
+      }
+
+  ]]>
+  </script>         
+         
+  <box id="taskButtons">
+    <button class="button-toolbar-4 plain taskbutton" id="mini-mail" onclick="toMessengerWindow()" 
+            position="2" tooltip="aTooltip" tooltiptext="&taskMessenger.tooltip;"/>
+  </box>
+  
+  <menupopup id="taskPopup">
+    <menuitem position="2" value="&messengerCmd.label;" oncommand="toMessengerWindow()"/>
+  </menupopup>
+  
+</overlay>         
+

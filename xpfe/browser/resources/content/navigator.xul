@@ -24,10 +24,10 @@ Contributor(s): ______________________________________. -->
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
-<?xul-overlay href="chrome://navigator/content/NavSecurityOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -109,6 +109,7 @@ Contributor(s): ______________________________________. -->
                   value="&openLinkCmd.label;"
                   accesskey=""
                   oncommand="contextMenu.openLink();"/>
+        <!-- XXX - DEPENDENT ON PRESENCE OF EDITOR!! - XXX -->
         <menuitem id="context-editlink"
                   value="&editLinkCmd.label;"
                   accesskey=""
@@ -163,7 +164,7 @@ Contributor(s): ______________________________________. -->
                   oncommand="contextMenu.blockImage();"/>
         <menuseparator/>
         <!-- Misc ==================================== -->
-		<menuitem id="context-bookmarkpage"
+    		<menuitem id="context-bookmarkpage"
                   value="&bookmarkPageCmd.label;"
                   accesskey="&bookmarkPageCmd.accesskey;"
                   oncommand="BrowserAddBookmark( window.content.location.href,

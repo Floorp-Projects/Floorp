@@ -17,6 +17,10 @@ The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
+
+Contributor(s):
+  Ben Goodger <ben@netscape.com>
+
 --> 
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
@@ -27,35 +31,33 @@ Rights Reserved.
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog" style="max-width: 27em; user-focus: ignore !important"
         orient="vertical"
-        class="dialog"
-		onload="OnLoad()">
+        onload="OnLoad()">
 
-<script language="JavaScript" src="chrome://global/content/strres.js" />
-<script language="JavaScript" src="chrome://messenger/content/downloadheaders.js" />
+  <script language="JavaScript" src="chrome://global/content/strres.js" />
+  <script language="JavaScript" src="chrome://messenger/content/downloadheaders.js" />
 
-	<box orient="vertical">
-		<spring flex="100%"/>
-		<text id="info"/>
-		<radiogroup orient="vertical" id="downloadGroup">
-			<box orient="horizontal">
-				<radio group="downloadGroup" id="all" /> 
-				<text value="&all.label;" />
-			</box>
-			<box orient="horizontal">
-				<radio group="downloadGroup" id="some" checked="true" />
-				<text value="&download.label;" />
-				<textfield id="number" size="10"/>
-				<text value="&headers.label;" />
-			</box>
-		</radiogroup>
-
-		<box orient="horizontal" flex="100%">
-			<checkbox id="markread"/>
-			<text value="&mark.label;" />
-		</box>
-
-		<spring flex="100%"/>
-		<box id="okCancelButtons"/>
-	</box>
+  <keyset id="keyset"/>
+  
+  <html class="header" style="width: 25em; max-width: 25em;" id="newsgroupLabel"/> 
+  <html style="width: 25em; max-width: 25em;" id="info"/>
+  <separator class="thin"/>
+  <box class="indent" orient="vertical">
+    <radiogroup orient="vertical" id="downloadGroup" autostretch="never">
+      <radio group="downloadGroup" id="all" value="&all.label;" oncommand="doCheckboxEnabling(this);"/> 
+      <separator class="thin"/>
+      <box autostretch="never" valign="middle">
+        <radio group="downloadGroup" id="some" checked="true" value="&download.label;" oncommand="doCheckboxEnabling(this);"/>
+        <textfield id="number" size="7"/>
+        <text class="label" value="&headers.label;" />
+      </box>
+    </radiogroup>
+    <box class="indent" autostretch="never">
+      <checkbox id="markread" value="&mark.label;"/>
+    </box>
+  </box>
+  <separator/>
+  <box id="okCancelButtonsRight"/>
+  
 </window>

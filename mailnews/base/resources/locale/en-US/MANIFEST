@@ -9,3 +9,7 @@ sidebar-messenger.dtd
 sidebar-messenger-rdf.dtd
 msgFolderPickerOverlay.dtd
 msgHdrViewOverlay.dtd
+mailTasksOverlay.dtd
+mailNavigatorOverlay.dtd
+mailEditorOverlay.dtd
+mailOverlay.dtd

@@ -75,6 +75,7 @@ CHROME_CONTENT = \
 	.\SmtpServerEdit.js \
 	.\smtpEditOverlay.xul \
 	.\smtpEditOverlay.js \
+	.\mailPrefsOverlay.xul \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

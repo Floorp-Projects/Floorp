@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % mailPrefsOverlayDTD SYSTEM "chrome://messenger/locale/mailPrefsOverlay.dtd" >
+%mailPrefsOverlayDTD;
+]>
+
+<overlay id="mailPrefsOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="JavaScript">
+  <![CDATA[
+    if (panel) {
+      switch(panel) 
+      {
+      case "chrome://communicator/content/pref/pref-advanced.xul":
+        _elementIDs.push("javascriptAllowMailNews");
+        break;
+      case "chrome://communicator/content/pref/pref-appearance.xul":
+        _elementIDs.push("generalStartupMail");
+        break;
+      }
+    }
+  ]]>
+  </script>         
+
+  <!-- javascript toggle for mail/news -->
+  <titledbox id="advancedSettings">
+    <checkbox id="javascriptAllowMailNews" position="5"
+              value="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
+              pref="true" preftype="bool" prefstring="javascript.allow.mailnews"
+              prefattribute="checked"/>
+  </titledbox>
+
+  <!-- mail startup toggle -->
+  <titledbox id="generalStartupPreferences">           
+    <checkbox id="generalStartupMail" wsm_persist="true" position="3"
+              value="&mesCheck.label;" accesskey="&mesCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="general.startup.mail"
+              prefattribute="checked"/>         
+  </titledbox>
+
+  <!-- category tree entries for mail/news -->
+  <treechildren id="panelChildren">
+    <treeitem container="true" open="true" id="mailnews" position="3">
+      <treerow>       
+        <treecell class="treecell-indent" url="chrome://messenger/content/pref-mailnews.xul" value="&mail.label;"/> 
+      </treerow>
+      <treechildren id="messengerChildren">
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://messenger/content/pref-viewing_messages.xul" value="&viewingMessages.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" value="&composingMessages.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-formatting.xul" value="&format.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://messenger/content/addressbook/pref-addressing.xul" value="&address.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://messenger/content/pref-diskspace.xul" value="&disk.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+  </treechildren>
+           
+</overlay>         

@@ -86,7 +86,7 @@ Rights Reserved.
               onclick="SubscribeOnClick(event);"> 
           <template>
             <rule>    
-              <treechildren>
+              <treechildren flex="1">
                 <treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed">
                   <treerow>
                     <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#LeafName"/>
@@ -99,9 +99,9 @@ Rights Reserved.
           </template>
     
           <treecolgroup id="theSubscribeColumns">
-            <treecol width="7*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-            <treecol width="1*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
-            <treecol width="1*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+            <treecol flex="7*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+            <treecol flex="1*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
+            <treecol flex="1*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
           </treecolgroup>
     
           <treehead>	

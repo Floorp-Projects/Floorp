@@ -23,14 +23,15 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-GLOBAL_DIST=$(DIST)\bin\chrome\locales\en-US\global\locale
-NAV_DIST=$(DIST)\bin\chrome\locales\en-US\navigator\locale
+COMMUNICATOR_DIST=$(DIST)\bin\chrome\locales\en-US\communicator\locale
 
 
 install::
-	$(MAKE_INSTALL) PSMTaskMenu.dtd $(GLOBAL_DIST)
-	$(MAKE_INSTALL) security.properties $(NAV_DIST)
+	$(MAKE_INSTALL) PSMTaskMenu.dtd $(COMMUNICATOR_DIST)
+	$(MAKE_INSTALL) security.properties $(COMMUNICATOR_DIST)
+	$(MAKE_INSTALL) securityOverlay.dtd $(COMMUNICATOR_DIST)
 
 clobber::
-  $(RM) -f $(DIST)\bin\chrome\locales\en-US\global\locale\PSMTaskMenu.dtd
-  $(RM) -f $(DIST)\bin\chrome\locales\en-US\navigator\locale\security.properties
+  $(RM) -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\PSMTaskMenu.dtd
+  $(RM) -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\security.properties
+  $(RM) -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\securityOverlay.dtd

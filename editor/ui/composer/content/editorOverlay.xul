@@ -42,7 +42,6 @@
 
     <!-- defined in globalOverlay -->
     <key id="key_newNavigator"/>
-    <key id="key_newMessage"/>
     <key id="key_newBlankPage"/>
 
     <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;"  observes="cmd_open" />
@@ -84,7 +83,6 @@
 					events="create"
 					oncommandupdate="goUpdateComposerMenuItems(this)"
   >
-    <command id="cmd_sendPage"/>
 
     <command id="cmd_open"                                          oncommand="goDoCommand('cmd_open')"/>
     <command id="cmd_openRemote"   value="&openremoteCmd.label;"    oncommand="goDoCommand('cmd_openRemote')"/>
@@ -264,8 +262,6 @@
             <menuseparator/>
 -->
             <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-            <menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
-            <menuitem id="menu_newCard"      observes="cmd_newCard"/>
           </menupopup>
         </menu>
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
@@ -282,7 +278,6 @@
       <menuitem accesskey="&filesaveascharset.accesskey;"                               observes="cmd_saveAsCharset"/>
       <menuseparator />
       <!-- FRAME, LINK should go here, but nav must put them in global files -->
-      <menuitem id="menu_sendPage" observes="cmd_sendPage"/>
       <menuitem id="menu_preview" value="&previewCmd.label;" accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
       <menuseparator />
       <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />

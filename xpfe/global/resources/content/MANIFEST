@@ -5,12 +5,8 @@ textAreaBindings.xul
 hiddenWindow.xul
 globalOverlay.xul
 globalOverlay.js
-tasksOverlay.xul
-tasksOverlay.js
-taskbarOverlay.xul
 dialogOverlay.xul
 dialogOverlay.js
-dialogBindings.xml
 commonDialog.xul
 commonDialog.js
 strres.js

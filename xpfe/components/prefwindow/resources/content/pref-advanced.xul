@@ -28,11 +28,12 @@
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         align="vertical" title="&window.title;"
-  		  onload="imageBlockingEnabled(); parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');">
+  		  onload="imageBlockingEnabled(); parent.initPanel(panel);">
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptAllowMailNews", "javascriptEnabled", "advancedMailFTP"];
+    var panel = "chrome://communicator/content/pref/pref-advanced.xul";
+    _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptEnabled", "advancedMailFTP"];
     
   function imageBlockingEnabled()
     {
@@ -61,14 +62,6 @@
     <checkbox id="javascriptEnabled" value="&enbJsCheck.label;" accesskey="&enbJsCheck.accesskey;"
               pref="true" preftype="bool" prefstring="javascript.enabled"
               prefattribute="checked"/>
-
-    <!-- XXX remove when overlays.rdf for messenger works -->
-    <checkbox class="indent" id="javascriptAllowMailNews" position="4"
-              value="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
-              pref="true" preftype="bool" prefstring="javascript.allow.mailnews"
-              prefattribute="checked"/>
-    <!-- XXX -->              
-              
     <checkbox id="advancedMailFTP" value="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
               pref="true" preftype="bool" prefstring="advanced.mailftp"
               prefattribute="checked"/>

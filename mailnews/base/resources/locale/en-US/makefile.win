@@ -36,6 +36,10 @@ CHROME_L10N = \
 	.\sidebar-messenger-rdf.dtd \
 	.\msgFolderPickerOverlay.dtd \
 	.\msgHdrViewOverlay.dtd \
+	.\mailTasksOverlay.dtd \
+	.\mailNavigatorOverlay.dtd \
+	.\mailEditorOverlay.dtd \
+	.\mailOverlay.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

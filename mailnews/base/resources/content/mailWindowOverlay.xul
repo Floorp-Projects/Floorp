@@ -39,7 +39,6 @@ Rights Reserved.
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
-	<broadcaster id="cmd_newMessage"/>
 	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_close" oncommand="CloseMailWindow()"/>
  	<broadcaster id="cmd_quit"/>
@@ -102,7 +101,6 @@ Rights Reserved.
 <keyset id="keyset">
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
-	<key id="key_newMessage"/>
 	<key id="key_close"/>
 	<key id="key_quit"/>
 	<!-- Edit Menu -->
@@ -338,8 +336,6 @@ Rights Reserved.
                      oncommand="MsgAccountWizard();"/>
 					<menuseparator/>
 					<menuitem id="menu_newNavigator"/>
-					<menuitem id="menu_newMessage"/>
-					<menuitem id="cmd_newCard"/>
 					<menuitem id="menu_newEditor"/>
 				</menupopup>
 			</menu>

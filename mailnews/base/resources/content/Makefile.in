@@ -76,6 +76,13 @@ CHROME_CONTENT = \
 		imapTest.js \
 		openSaveAttachment.xul \
 		openSaveAttachment.js \
+		mailTasksOverlay.xul \
+		mailNavigatorOverlay.xul \
+		mailEditorOverlay.xul \
+		mailABOverlay.xul \
+		mailMessengerOverlay.xul \
+		mailMessengerComposeOverlay.xul \
+		mailOverlay.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

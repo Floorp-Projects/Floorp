@@ -55,6 +55,7 @@ CHROME_L10N = \
 		am-serverwithnoidentities.dtd   \
 		SmtpServerList.dtd \
 		smtpEditOverlay.dtd \
+		mailPrefsOverlay.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -38,6 +38,9 @@ CHROME_MISC = \
 CHROME_L10N = \
 		utilityOverlay.dtd \
 		utilityOverlay.properties \
+		taskbar.rdf \
+		taskbarOverlay.dtd \
+		tasksOverlay.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
