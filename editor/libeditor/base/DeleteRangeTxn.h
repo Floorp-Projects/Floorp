@@ -45,8 +45,6 @@
 #include "nsIEditor.h"
 #include "nsCOMPtr.h"
 
-class nsIDOMDocument;
-
 #define DELETE_RANGE_TXN_CID \
 {/* 5ec6b260-ac49-11d2-86d8-000064657374 */ \
 0x5ec6b260, 0xac49, 0x11d2, \
