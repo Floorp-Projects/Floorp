@@ -23,8 +23,19 @@
  *   Neil Rashbrook <neil@parkwaycc.co.uk> (Separated from EdImageProps.js)
  */
 
+/*
+ Note: We encourage non-empty alt text for images inserted into a page. 
+ When there's no alt text, we always write 'alt=""' as the attribute, since "alt" is a required attribute.
+ We allow users to not have alt text by checking a "Don't use alterate text" radio button,
+ and we don't accept spaces as valid alt text. A space used to be required to avoid the error message
+ if user didn't enter alt text, but is uneccessary now that we no longer annoy the user 
+ with the error dialog if alt="" is present on an img element.
+ We trim all spaces at the beginning and end of user's alt text
+*/
+
 var gInsertNewImage = true;
 var gInsertNewIMap = true;
+var gDoAltTextError = false;
 var gConstrainOn = false;
 // Note used in current version, but these are set correctly
 //  and could be used to reset width and height used for constrain ratio
@@ -35,8 +46,6 @@ var gImageMap = 0;
 var gCanRemoveImageMap = false;
 var gRemoveImageMap = false;
 var gImageMapDisabled = false;
-var firstTimeOkUsed = true;
-var doAltTextError = false;
 var actualWidth = "";
 var gOriginalSrc = "";
 var actualHeight = "";
@@ -59,6 +68,9 @@ function ImageStartup()
   gDialog.tabBorder         = document.getElementById( "imageBorderTab" );
   gDialog.srcInput          = document.getElementById( "srcInput" );
   gDialog.altTextInput      = document.getElementById( "altTextInput" );
+  gDialog.altTextRadioGroup = document.getElementById( "altTextRadioGroup" );
+  gDialog.altTextRadio      = document.getElementById( "altTextRadio" );
+  gDialog.noAltTextRadio    = document.getElementById( "noAltTextRadio" );
   gDialog.customSizeRadio   = document.getElementById( "customSizeRadio" );
   gDialog.actualSizeRadio   = document.getElementById( "actualSizeRadio" );
   gDialog.constrainCheckbox = document.getElementById( "constrainCheckbox" );
@@ -92,7 +104,20 @@ function InitImage()
   // Force loading of image from its source and show preview image
   LoadPreviewImage();
 
-  gDialog.altTextInput.value = globalElement.getAttribute("alt");
+  var hasAltText = globalElement.hasAttribute("alt");
+  if (hasAltText)
+    gDialog.altTextInput.value = globalElement.getAttribute("alt");
+
+  if (gInsertNewImage || !hasAltText || (hasAltText && gDialog.altTextInput.value))
+  {
+    SetAltTextDisabled(false);
+    gDialog.altTextRadioGroup.selectedItem = gDialog.altTextRadio;
+  }
+  else
+  {
+    SetAltTextDisabled(true);
+    gDialog.altTextRadioGroup.selectedItem = gDialog.noAltTextRadio;
+  }
 
   // setup the height and width widgets
   var width = InitPixelOrPercentMenulist(globalElement,
@@ -119,7 +144,7 @@ function InitImage()
   gDialog.imagetbInput.value = globalElement.getAttribute("vspace");
 
   // dialog.border.value       = globalElement.getAttribute("border");
-  bv = GetHTMLOrCSSStyleValue(globalElement, "border", "border-top-width");
+  var bv = GetHTMLOrCSSStyleValue(globalElement, "border", "border-top-width");
   var pxIndex = bv.search(/px/);
   if (pxIndex  > 0)
   {
@@ -142,11 +167,12 @@ function InitImage()
 
   // Get alignment setting
   var align = globalElement.getAttribute("align");
-  if (align) {
+  if (align)
     align = align.toLowerCase();
-  }
+
   var imgClass;
   var textID;
+
   switch ( align )
   {
     case "top":
@@ -164,6 +190,12 @@ function InitImage()
 
   doOverallEnabling();
   doDimensionEnabling();
+}
+
+// Disable alt text input when "Don't use alt" radio is checked
+function SetAltTextDisabled(disable)
+{
+  gDialog.altTextInput.disabled = disable;
 }
 
 function GetImageMap()
@@ -452,16 +484,18 @@ function ValidateImage()
   var src = TrimString(gDialog.srcInput.value);
   globalElement.setAttribute("src", src);
 
-  // Note: allow typing spaces,
-  // Warn user if empty string just once per dialog session
-  //   but don't consider this a failure
-  var alt = gDialog.altTextInput.value;
-  if (doAltTextError && !alt)
+  // Force user to enter Alt text only if "Alternate text" radio is checked
+  // Don't allow just spaces in alt text
+  var alt = "";
+  var useAlt = gDialog.altTextRadioGroup.selectedItem == gDialog.altTextRadio;
+  if (useAlt)
+    alt = TrimString(gDialog.altTextInput.value);
+
+  if (gDoAltTextError && useAlt && !alt)
   {
     AlertWithTitle(null, GetString("NoAltText"));
     SwitchToValidatePanel();
     gDialog.altTextInput.focus();
-    doAltTextError = false;
     return false;
   }
   globalElement.setAttribute("alt", alt);
@@ -543,12 +577,8 @@ function ValidateImage()
 
 function onAccept()
 {
-  // Show alt text error only once
-  // (we don't initialize doAltTextError=true
-  //  so Advanced edit button dialog doesn't trigger that error message)
-  doAltTextError = firstTimeOkUsed;
-  firstTimeOkUsed = false;
-
+  // Use this now (default = false) so Advanced Edit button dialog doesn't trigger error message
+  gDoAltTextError = true;
 
   if (ValidateData())
   {
@@ -623,5 +653,8 @@ function onAccept()
     SaveWindowLocation();
     return true;
   }
+
+  gDoAltTextError = false;
+
   return false;
 }
