@@ -353,7 +353,7 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
       oldkeysetNode->GetNextSibling(getter_AddRefs(keysetNode));
 	} // end while(keysetNode)
   } // end if(aKeyEvent && mDOMDocument) 
-  return res;
+  return NS_ERROR_BASE;
 }
 
 ////////////////////////////////////////////////////////////////
