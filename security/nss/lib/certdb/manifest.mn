@@ -48,6 +48,12 @@ PRIVATE_EXPORTS = \
 MODULE = security
 
 CERTINIT=certinit.c
+ifdef NSS_STAN_MODULE
+PCERTDB=stanpcertdb.c
+DEFINES=-DSTAN_CERT_DB
+else
+PCERTDB=pcertdb.c
+endif
 
 CSRCS = \
 	alg1485.c \
@@ -57,7 +63,7 @@ CSRCS = \
 	certxutl.c \
 	crl.c \
 	genname.c \
-	pcertdb.c \
+	$(PCERTDB) \
 	polcyxtn.c \
 	secname.c \
 	xauthkid.c \
