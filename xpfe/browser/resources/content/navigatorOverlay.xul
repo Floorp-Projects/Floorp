@@ -28,21 +28,21 @@ Contributor(s): ______________________________________. -->
 <keyset id="defaultBrowserKeySet">
   <!-- key id="newmessagekb" disabled="false" command="true" key="m" onkeypress="NewMessage()" / -->
 
-    <key id="newBrowserKb"   	disabled="false" command="true" key="n" observes="Browser:NewWindow" />
-    <key id="newMailKb"  		disabled="false" command="true" key="m" observes="Browser:NewMail" />
-    <key id="newBlankPageKB"    disabled="false" command="true" shift="true" key="n" observes="Browser:NewEditor"/>
-    <key id="openBrowserKb"     disabled="false" command="true" key="o" observes="Browser:OpenUrl" />
-    <key id="openFileKb"        disabled="false" command="true" key="l" observes="Browser:OpenFile" />
-    <key id="printKb"           disabled="false" command="true" key="p" observes="Browser:Print" />
-	<key id="closeKb"           disabled="false" command="true" key="w" observes="Browser:Close" />
-    <key id="quitKb"            disabled="false" command="true" key="q" observes="Browser:Quit" />
+    <key id="newBrowserKb"   	disabled="false" command="true" key="&browserCmd.commandkey;" observes="Browser:NewWindow" />
+    <key id="newMailKb"  		disabled="false" command="true" key="&newMailCmd.commandkey;" observes="Browser:NewMail" />
+    <key id="newBlankPageKB"    disabled="false" command="true" shift="true" key="&newBlankPageCmd.commandkey;" observes="Browser:NewEditor"/>
+    <key id="openBrowserKb"     disabled="false" command="true" key="&openCmd.commandkey;" observes="Browser:OpenUrl" />
+    <key id="openFileKb"        disabled="false" command="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
+    <key id="printKb"           disabled="false" command="true" key="&printCmd.commandkey;" observes="Browser:Print" />
+	<key id="closeKb"           disabled="false" command="true" key="&closeCmd.commandkey;" observes="Browser:Close" />
+    <key id="quitKb"            disabled="false" command="true" key="&quitCmd.commandkey;" observes="Browser:Quit" />
 
-	<key id="goForwardKb"         disabled="false" command="true" key="]" observes="Browser:GoForward" />
-	<key id="goBackwardKb"        disabled="false" command="true" key="[" observes="Browser:GoBackwards" />
-    <key id="goHomeKb"            disabled="false" command="true" key="h" observes="Browser:GoHome" />
+	<key id="goForwardKb"         disabled="false" command="true" key="&goBackCmd.commandkey;" observes="Browser:GoForward" />
+	<key id="goBackwardKb"        disabled="false" command="true" key="&goForwardCmd.commandkey;" observes="Browser:GoBackwards" />
+    <key id="goHomeKb"            disabled="false" command="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
     
-    <key id="addBookmarkKb"        disabled="false" command="true" key="d" observes="Browser:AddBookmark" />
-    <key id="manBookmarkKb"        disabled="false" command="true" key="b" observes="Browser:ManageBookmark" />
+    <key id="addBookmarkKb"        disabled="false" command="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
+    <key id="manBookmarkKb"        disabled="false" command="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
 
 <!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
   </keyset>
