@@ -311,7 +311,7 @@ nsresult nsSocketTransport::CheckForTimeout (PRIntervalTime aCurrentTime)
     //
     // Only timeout if the transport is waiting to connect to the server
     //
-    if ((mCurrentState  == eSocketState_WaitConnect || mCurrentState == eSocketState_WaitReadWrite)
+    if ((mCurrentState  == eSocketState_WaitConnect)
         && idleInterval >= gTimeoutInterval)
     {
         PR_LOG(gSocketLog, PR_LOG_ERROR, 
