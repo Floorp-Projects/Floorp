@@ -88,7 +88,7 @@ className::Release(void)                                                    \
     NS_PRECONDITION(PRInt32(mRefCnt) == 0, "illegal mRefCnt");              \
     NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");            \
     --mJSPrincipals.refcount;                                               \
-    NS_LOG_RELEASE(this, mJSPrincipals.refcount, "nsCodebasePrincipal");    \
+    NS_LOG_RELEASE(this, mJSPrincipals.refcount, #className);               \
     if (mJSPrincipals.refcount == 0) {                                      \
         NS_DELETEXPCOM(this);                                               \
         return 0;                                                           \

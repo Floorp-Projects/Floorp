@@ -30,7 +30,7 @@ NS_NewTextContentChangeData(nsTextContentChangeData** aResult)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  it->mRefCnt++;
+  NS_ADDREF(it);
   *aResult = it;
   return NS_OK;
 }

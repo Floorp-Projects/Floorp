@@ -118,6 +118,8 @@ public:
 
   ~BloatEntry() {}
 
+  PRUint32 GetClassSize() { return (PRUint32)mClassSize; }
+
   static void Clear(nsTraceRefcntStats* stats) {
     stats->mAddRefs = 0;
     stats->mReleases = 0;
@@ -265,19 +267,24 @@ public:
     if (gLogLeaksOnly && !HaveLeaks(stats)) {
       return NS_OK;
     }
+
     double nRefs = stats->mAddRefs + stats->mReleases;
-    double meanRefs = nRefs != 0.0 ? stats->mRefsOutstandingTotal / nRefs : 0.0;
-    double varRefs = fabs(stats->mRefsOutstandingVariance /
-                          stats->mRefsOutstandingTotal - meanRefs * meanRefs);
-    // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
-    double stddevRefs = varRefs != 0.0 ? sqrt(varRefs) : 0.0;
+    double meanRefs = 0.0, varRefs = 0.0, stddevRefs = 0.0;
+    if (nRefs > 0.0 && stats->mRefsOutstandingTotal >= 0) {
+      meanRefs = stats->mRefsOutstandingTotal / nRefs;
+      varRefs = fabs(stats->mRefsOutstandingVariance / nRefs - meanRefs * meanRefs);
+      // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
+      stddevRefs = varRefs != 0.0 ? sqrt(varRefs) : 0.0;
+    }
 
     double nObjs = stats->mCreates + stats->mDestroys;
-    double meanObjs = nObjs != 0.0 ? stats->mObjsOutstandingTotal / nObjs : 0.0;
-    double varObjs = fabs(stats->mObjsOutstandingVariance /
-                          stats->mObjsOutstandingTotal - meanObjs * meanObjs);
-    // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
-    double stddevObjs = varObjs != 0.0 ? sqrt(varObjs) : 0.0;
+    double meanObjs = 0.0, varObjs = 0.0, stddevObjs = 0.0;
+    if (nObjs > 0.0 && stats->mObjsOutstandingTotal >= 0) {
+      meanObjs = stats->mObjsOutstandingTotal / nObjs;
+      varObjs = fabs(stats->mObjsOutstandingVariance / nObjs - meanObjs * meanObjs);
+      // for some reason, Windows says sqrt(0.0) is "-1.#J" (?!) so do this:
+      stddevObjs = varObjs != 0.0 ? sqrt(varObjs) : 0.0;
+    }
     if ((stats->mAddRefs - stats->mReleases) != 0 ||
         stats->mAddRefs != 0 ||
         meanRefs != 0 ||
@@ -335,6 +342,9 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
         delete entry;
         entry = NULL;
       }
+    }
+    else {
+      NS_ASSERTION(aInstanceSize == 0 || entry->GetClassSize() == aInstanceSize, "bad size recorded");
     }
   }
   return entry;
@@ -1180,7 +1190,7 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     LOCK_TRACELOG();
 
     if (gBloatLog) {
-      BloatEntry* entry = GetBloatEntry(aClazz, (PRUint32)-1);
+      BloatEntry* entry = GetBloatEntry(aClazz, 0);
       if (entry) {
         entry->Release(aRefCnt);
       }
