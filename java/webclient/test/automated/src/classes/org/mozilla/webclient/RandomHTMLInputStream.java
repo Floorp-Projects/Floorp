@@ -104,7 +104,7 @@ public RandomHTMLInputStream(int yourNumReads, boolean yourRandomExceptions)
     ParameterCheck.greaterThan(yourNumReads, 1);
     randomExceptions = yourRandomExceptions;
 
-    random = new Random();
+    random = new Random(1234);
     Assert.assert_it(null != random);
 
     isClosed = false;
@@ -226,6 +226,7 @@ public int read(byte[] b, int off, int len) throws IOException
             if (random.nextBoolean()) {
                 try {
                     System.out.println("RandomHTMLInputStream:: sleeping");
+                    System.out.flush();
                     Thread.sleep(3000);
                 }
                 catch (Exception e) {

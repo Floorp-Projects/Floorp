@@ -29,8 +29,9 @@
 #include "prthread.h"
 
 #include "ns_globals.h"
+#include "nsMemory.h"
 
-static const PRInt32 buffer_increment = 1024;
+static const PRInt32 buffer_increment = 5120;
 static const PRInt32 do_close_code = -524;
 
 InputStreamShim::InputStreamShim(jobject yourJavaStreamRef, 
@@ -55,7 +56,7 @@ InputStreamShim::~InputStreamShim()
 
     PR_Lock(mLock);
 
-    delete [] mBuffer;
+    nsMemory::Free(mBuffer);
     mBuffer = nsnull;
     mBufferLength = 0;
 
@@ -101,8 +102,6 @@ nsresult InputStreamShim::doReadFromJava()
     nsresult rv = NS_ERROR_FAILURE;
     PR_ASSERT(mLock);
 
-    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-           ("InputStreamShim::doReadFromJava: entering\n"));
 
     PR_Lock(mLock);
 
@@ -145,8 +144,6 @@ nsresult InputStreamShim::doReadFromJava()
     
     PR_Unlock(mLock);
 
-    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-           ("InputStreamShim::doReadFromJava: exiting\n"));
     return rv;
 }
 
@@ -195,15 +192,12 @@ InputStreamShim::doRead(void)
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-           ("InputStreamShim::doRead: entering\n"));
-
     PR_ASSERT(0 != mAvailable);
 
     // if we don't have a buffer, create one
     if (!mBuffer) {
         if (0 < mContentLength) {
-            mBuffer = new char[mContentLength];
+            mBuffer = (char *) nsMemory::Alloc(mContentLength);
             mBufferLength = mContentLength;
         }
         else {
@@ -218,7 +212,7 @@ InputStreamShim::doRead(void)
                 mBufferLength = buffer_increment + 
                     (bufLengthCalc * buffer_increment);
             }
-            mBuffer = new char[mBufferLength];
+            mBuffer = (char *) nsMemory::Alloc(mBufferLength);
                 
         }
         if (!mBuffer) {
@@ -233,14 +227,22 @@ InputStreamShim::doRead(void)
 
         if (mBufferLength < (mCountFromJava + mAvailable)) {
             // create the new buffer
-            char *tBuffer = new char[mBufferLength + buffer_increment];
+            char *tBuffer = (char *) nsMemory::Alloc(mBufferLength + 
+                                                     buffer_increment);
             if (!tBuffer) {
-                return NS_ERROR_FAILURE;
+                tBuffer = (char *) malloc(mBufferLength + 
+                                          buffer_increment);
+                if (!tBuffer) {
+                    mDoClose = PR_TRUE;
+                    return NS_ERROR_NOT_AVAILABLE;
+                }
             }
             // copy the old buffer into the new buffer
             memcpy(tBuffer, mBuffer, mBufferLength);
             // delete the old buffer
-            delete [] mBuffer;
+            
+            nsMemory::Free(mBuffer);
+
             // update mBuffer;
             mBuffer = tBuffer;
             // update our bufferLength
@@ -280,14 +282,9 @@ InputStreamShim::doRead(void)
         mCountFromJava += mNumRead;
         mAvailableForMozilla = mCountFromJava - mCountFromMozilla;
     }
-    printf("InputStreamShim::doRead: read %d bytes\n", mNumRead);
-    fflush(stdout);
 
     rv = NS_OK;
 #endif
-
-    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-           ("InputStreamShim::doRead: exiting\n"));
 
     return rv;
 }
@@ -366,8 +363,7 @@ InputStreamShim::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
     if (!aBuffer || !aNumRead) {
         return NS_ERROR_NULL_POINTER;
     }
-    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-           ("InputStreamShim::Read: entering\n"));
+
     *aNumRead = 0;
     PR_ASSERT(mLock);
     PR_ASSERT(mCountFromMozilla <= mCountFromJava);
@@ -377,13 +373,13 @@ InputStreamShim::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
     // wait for java to load the buffer with some data
     do {
         if (mAvailableForMozilla == 0) {
-            PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-                   ("InputStreamShim::Read: wait for java: release lock\n"));
             PR_Unlock(mLock);
             PR_Sleep(PR_INTERVAL_MIN);
             PR_Lock(mLock);
-            PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-                   ("InputStreamShim::Read: wait for java: acquire lock\n"));
+            if (mDoClose) {
+                PR_Unlock(mLock);
+                return NS_OK;
+            }
         }
         else {
             break;
@@ -408,14 +404,8 @@ InputStreamShim::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
         mAvailableForMozilla -= *aNumRead;
     }
 
-    printf("InputStreamShim::Read: read %d bytes\n", *aNumRead);
-    fflush(stdout);
-
-    
     rv = NS_OK;
     PR_Unlock(mLock);
-    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-           ("InputStreamShim::Read: exiting\n"));
 
     return rv;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.6 2004/06/02 14:31:24 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.7 2004/06/02 17:26:49 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -59,6 +59,7 @@ public class NavigationTest extends WebclientTestCase {
 
     public void testNavigation() throws Exception {
 	BrowserControl firstBrowserControl = null;
+	Selection selection = null;
 	BrowserControlFactory.setAppData(getBrowserBinDir());
 	firstBrowserControl = BrowserControlFactory.newBrowserControl();
 	assertNotNull(firstBrowserControl);
@@ -75,35 +76,53 @@ public class NavigationTest extends WebclientTestCase {
 	Navigation2 nav = (Navigation2) 
 	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
 	assertNotNull(nav);
-	File testPage = new File(getBrowserBinDir(), 
-				 "../../java/webclient/test/automated/src/test/NavigationTest.txt");
-
-	System.out.println("Loading url: " + testPage.toURL().toString());
-	nav.loadURLBlocking(testPage.toURL().toString());
-
 	CurrentPage2 currentPage = (CurrentPage2) 
           firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
 	
 	assertNotNull(currentPage);
+
+	File testPage = new File(getBrowserBinDir(), 
+				 "../../java/webclient/test/automated/src/test/NavigationTest.txt");
+
+	// try loading a file: url
+	System.out.println("Loading url: " + testPage.toURL().toString());
+	nav.loadURL(testPage.toURL().toString());
+	Thread.currentThread().sleep(1000);
+
 	currentPage.selectAll();
-	Selection selection = currentPage.getSelection();
+	selection = currentPage.getSelection();
 	assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
 	System.out.println("Selection is: " + selection.toString());
 
 
 	// try loading from a FileInputStream
 	FileInputStream fis = new FileInputStream(testPage);
-	nav.loadFromStreamBlocking(fis, "http://somefile.com/",
-				   "text/html", -1, null);
+	nav.loadFromStream(fis, "http://somefile.com/",
+			   "text/html", -1, null);
 	currentPage.selectAll();
 	selection = currentPage.getSelection();
 	assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
 	System.out.println("Selection is: " + selection.toString());
 
+	// try loading from the dreaded RandomHTMLInputStream
+	RandomHTMLInputStream rhis = new RandomHTMLInputStream(5, false);
+	
+	nav.loadFromStreamBlocking(rhis, "http://randomstream.com/",
+				   "text/html", -1, null);
+	boolean keepWaiting = true;
+	//while (keepWaiting) {
+	    Thread.currentThread().sleep(8000);
+	    //	}
+
+	currentPage.selectAll();
+	selection = currentPage.getSelection();
+	System.out.println("Selection is: " + selection.toString());
+
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
 	BrowserControlFactory.appTerminate();
-
+	assertTrue(-1 != selection.toString().indexOf("START Random Data"));
+	assertTrue(-1 != selection.toString().indexOf("END Random Data"));
     }
 
 }
