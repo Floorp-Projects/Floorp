@@ -215,19 +215,27 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
     DOMWindowToWebShellWindow(currentFrontWin, &parent);
 
 
-#if defined(MODELESS_PREF_DIALOG)||defined(DEBUG_mcafee)||defined(DEBUG_akkana)||defined(DEBUG_pavlov)
-    // testing modeless pref window.  -mcafee
-    nsIWebShellWindow *foo = nsnull;
-    // pass 0 for the height and width because we want to leave the size up to the xul (see prefs.xul for the window size)
-    rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
-                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
-                               cb, 0, 0, &foo);
-#else
-    // pass 0 for the height and width because we want to leave the size up to the xul (see prefs.xul for the window size)
-    rv = appShell->RunModalDialog(nsnull, parent, urlObj,
-                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
-                               cb, 0, 0);
-#endif
+    static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    PRBool modelessPrefWindow = PR_FALSE;
+    if(NS_SUCCEEDED(rv))
+      prefs->GetBoolPref("browser.prefs_window.modeless", &modelessPrefWindow);
+    else
+      ; // Assume false.
+
+    if(modelessPrefWindow) {
+      nsIWebShellWindow *foo = nsnull;
+      // pass 0 for the height and width because we want to leave the size up to the xul (see prefs.xul for the window size)
+      rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
+                                          NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                                          cb, 0, 0, &foo);
+    } else {
+      // pass 0 for the height and width because we want to leave the size up to the xul (see prefs.xul for the window size)
+      rv = appShell->RunModalDialog(nsnull, parent, urlObj,
+                                    NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
+                                    cb, 0, 0);
+    }
+
     return rv;
 } // nsPrefWindow::ShowWindow()
 

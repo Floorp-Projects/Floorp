@@ -92,6 +92,7 @@ pref("browser.custom_text_color",           false);
 pref("browser.use_document_colors",         true);
 pref("browser.ldapfile_location",       "");
 pref("browser.print_background",            false);
+pref("browser.prefs_window.modeless",       false);
 pref("browser.prefs_window_rect",           "-1,-1,-1,-1");
 pref("browser.find_window_rect",            "-1,-1,-1,-1");
 pref("browser.bookmark_window_rect",        "-1,-1,-1,-1");
