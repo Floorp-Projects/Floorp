@@ -352,38 +352,6 @@ nsFastLoadService::AddDependency(nsIFile* aFile)
 }
 
 NS_IMETHODIMP
-nsFastLoadService::MaxDependencyModifiedTime(nsIFastLoadReadControl* aControl,
-                                             PRTime *aTime)
-{
-    *aTime = LL_ZERO;
-
-    nsAutoLock lock(mLock);
-
-    nsCOMPtr<nsISimpleEnumerator> dependencies;
-    nsresult rv = aControl->GetDependencies(getter_AddRefs(dependencies));
-    if (NS_FAILED(rv))
-        return rv;
-
-    PRBool more;
-    while (NS_SUCCEEDED(dependencies->HasMoreElements(&more)) && more) {
-        nsCOMPtr<nsIFile> file;
-        dependencies->GetNext(getter_AddRefs(file));
-        if (!file)
-            return NS_ERROR_UNEXPECTED;
-
-        PRTime lastModifiedTime;
-        rv = file->GetLastModificationDate(&lastModifiedTime);
-        if (NS_FAILED(rv))
-            return rv;
-
-        if (LL_CMP(*aTime, <, lastModifiedTime))
-            *aTime = lastModifiedTime;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFastLoadService::ComputeChecksum(nsIFile* aFile,
                                    nsIFastLoadReadControl* aControl,
                                    PRUint32 *aChecksum)

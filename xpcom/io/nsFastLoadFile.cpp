@@ -731,10 +731,30 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
         if (NS_FAILED(rv))
             return rv;
 
+        PRInt64 fastLoadMtime;
+        rv = Read64(NS_REINTERPRET_CAST(PRUint64*, &fastLoadMtime));
+        if (NS_FAILED(rv))
+            return rv;
+
         nsCOMPtr<nsILocalFile> file;
         rv = NS_NewLocalFile(filename, PR_TRUE, getter_AddRefs(file));
         if (NS_FAILED(rv))
             return rv;
+
+        PRInt64 currentMtime;
+        rv = file->GetLastModificationDate(&currentMtime);
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (LL_NE(fastLoadMtime, currentMtime)) {
+#ifdef DEBUG
+            nsXPIDLCString path;
+            file->GetPath(getter_Copies(path));
+            printf("%s mtime changed, invalidating FastLoad file\n",
+                   (const char *)path);
+#endif
+            return NS_ERROR_FAILURE;
+        }
 
         rv = readDeps->AppendElement(file);
         if (NS_FAILED(rv))
@@ -1461,6 +1481,10 @@ nsFastLoadFileWriter::EndMuxedDocument(nsISupports* aURI)
     return NS_OK;
 }
 
+struct nsDependencyMapEntry : public nsStringMapEntry {
+    PRInt64 mLastModified;
+};
+
 NS_IMETHODIMP
 nsFastLoadFileWriter::AddDependency(nsIFile* aFile)
 {
@@ -1469,8 +1493,8 @@ nsFastLoadFileWriter::AddDependency(nsIFile* aFile)
     if (NS_FAILED(rv))
         return rv;
 
-    nsStringMapEntry* entry =
-        NS_STATIC_CAST(nsStringMapEntry*,
+    nsDependencyMapEntry* entry =
+        NS_STATIC_CAST(nsDependencyMapEntry*,
                        PL_DHashTableOperate(&mDependencyMap, path.get(),
                                             PL_DHASH_ADD));
     if (!entry)
@@ -1482,8 +1506,9 @@ nsFastLoadFileWriter::AddDependency(nsIFile* aFile)
         if (!tmp)
             return NS_ERROR_OUT_OF_MEMORY;
         entry->mString = NS_REINTERPRET_CAST(const char*, tmp);
+        rv = aFile->GetLastModificationDate(&entry->mLastModified);
     }
-    return NS_OK;
+    return rv;
 }
 
 nsresult
@@ -1661,10 +1686,12 @@ nsFastLoadFileWriter::DependencyMapEnumerate(PLDHashTable *aTable,
 {
     nsFastLoadFileWriter* writer =
         NS_REINTERPRET_CAST(nsFastLoadFileWriter*, aTable->data);
-    nsStringMapEntry* entry = NS_STATIC_CAST(nsStringMapEntry*, aHdr);
+    nsDependencyMapEntry* entry = NS_STATIC_CAST(nsDependencyMapEntry*, aHdr);
     nsresult* rvp = NS_REINTERPRET_CAST(nsresult*, aData);
 
     *rvp = writer->WriteStringZ(entry->mString);
+    if (NS_SUCCEEDED(*rvp))
+        *rvp = writer->Write64(entry->mLastModified);
 
     return NS_FAILED(*rvp) ? PL_DHASH_STOP :PL_DHASH_NEXT;
 }
@@ -1764,7 +1791,7 @@ nsFastLoadFileWriter::Init()
     }
 
     if (!PL_DHashTableInit(&mDependencyMap, &strmap_DHashTableOps, (void *)this,
-                           sizeof(nsStringMapEntry), PL_DHASH_MIN_SIZE)) {
+                           sizeof(nsDependencyMapEntry), PL_DHASH_MIN_SIZE)) {
         mDependencyMap.ops = nsnull;
         return NS_ERROR_OUT_OF_MEMORY;
     }
