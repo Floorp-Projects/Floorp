@@ -151,6 +151,50 @@ cert_init_cert()
     noise
 }
 
+############################# hw_acc #################################
+# local shell function to add hw accelerator modules to the db
+########################################################################
+hw_acc()
+{
+    HW_ACC_RET=0
+    HW_ACC_ERR=""
+    if [ -n "$O_HWACC" -a "$O_HWACC" = ON ] ; then
+        echo "creating $CERTNAME s cert with hwaccelerator..."
+        #case $ACCELERATOR in
+        #rainbow)
+   
+
+        echo "modutil -add rainbow -libfile /usr/lib/libcryptoki22.so "
+        echo "         -dbdir . 2>&1 "
+        echo | modutil -add rainbow -libfile /usr/lib/libcryptoki22.so \
+            -dbdir . 2>&1 
+        if [ "$?" -ne 0 ]; then
+	    echo "modutil -add rainbow failed in `pwd`"
+            HW_ACC_RET=1
+            HW_ACC_ERR="modutil -add rainbow"
+        fi
+    
+        echo "modutil -add ncipher "
+        echo "         -libfile /opt/nfast/toolkits/pkcs11/libcknfast.so "
+        echo "         -dbdir . 2>&1 "
+        echo | modutil -add ncipher \
+            -libfile /opt/nfast/toolkits/pkcs11/libcknfast.so \
+            -dbdir . 2>&1 
+        if [ "$?" -ne 0 ]; then
+	    echo "modutil -add ncipher failed in `pwd`"
+            HW_ACC_RET=`expr $HW_ACC_RET + 2`
+            HW_ACC_ERR="$HW_ACC_ERR,modutil -add ncipher"
+        fi
+        if [ "$HW_ACC_RET" -ne 0 ]; then
+            html_failed "<TR><TD>Adding HW accelerators to certDB for ${CERTNAME} ($HW_ACC_RET) " 
+        else
+            html_passed "<TR><TD>Adding HW accelerators to certDB for ${CERTNAME}"
+        fi
+
+    fi
+    return $HW_ACC_RET
+}
+
 ############################# cert_create_cert #########################
 # local shell function to create client certs 
 #     initialize DB, import
@@ -166,7 +210,7 @@ cert_create_cert()
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
-
+    hw_acc
     CU_ACTION="Import Root CA for $CERTNAME"
     certu -A -n "TestCA" -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
           -i "${R_CADIR}/root.cert" 2>&1
@@ -283,6 +327,7 @@ cert_smime_client()
   echo "$SCRIPTNAME: Creating Dave's Certificate -------------------------"
   cert_init_cert "${DAVEDIR}" Dave 5
   cp ${CADIR}/*.db .
+  hw_acc
 
   #########################################################################
   #
@@ -337,6 +382,7 @@ cert_ssl()
   echo "             ${HOSTADDR} ------------------------------------"
   cert_init_cert ${SERVERDIR} "${HOSTADDR}" 1
   cp ${CADIR}/*.db .
+  hw_acc
   CU_ACTION="Creating ${CERTNAME}'s Server Cert"
   CU_SUBJECT="CN=${CERTNAME}, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
   certu -S -n "${CERTNAME}" -c "TestCA" -t "Pu,Pu,Pu" -d . -f "${R_PWFILE}" \
