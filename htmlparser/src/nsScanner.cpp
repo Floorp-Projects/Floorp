@@ -75,8 +75,10 @@ CScanner::CScanner(nsString& aFilename,PRBool aCreateStream) :
     #if defined(HAVE_IOS_BINARY) || !defined(XP_UNIX)
       /* XXX: HAVE_IOS_BINARY needs to be set for mac & win */
       mFileStream=new fstream(buffer,ios::in|ios::binary);
-    #else
+    #elif defined(HAVE_IOS_BIN)
       mFileStream=new fstream(buffer,ios::in|ios::bin);
+    #else
+      mFileStream=new fstream(buffer,ios::in);
     #endif
   } //if
 }
