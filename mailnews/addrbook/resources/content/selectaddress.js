@@ -85,19 +85,12 @@ function AddAddressIntoBucket(doc, address)
 function RemoveSelectedFromBucket()
 {
 	var bucketDoc = frames["browser.addressbucket"].document;
-	dump("bucketDoc = " + bucketDoc + "\n");
 	var body = bucketDoc.getElementById("bucketBody");
-	dump("body = " + body + "\n");
 	
 	var selArray = body.getElementsByAttribute('selected', 'true');
-	dump("selArray = " + selArray + "\n");
 	if ( selArray && selArray.length )
 	{
 		for ( var item = selArray.length - 1; item >= 0; item-- )
-		{
-			dump("selArray[item] = " + selArray[item] + "\n");
-			DumpDOM(selArray[item]);
 			body.removeChild(selArray[item]);
-		}
 	}	
 }
