@@ -103,7 +103,7 @@ nsMsgMessageDataSource::QueryInterface(REFNSIID iid, void** result)
       iid.Equals(kISupportsIID))
   {
     *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-    AddRef();
+    NS_ADDREF(this);
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -501,8 +501,8 @@ nsMsgMessageDataSource::createMessageDateNode(nsIMessage *message,
 	if(NS_FAILED(rv))
 		return rv;
   PRInt32 error;
-  time_t time = date.ToInteger(&error, 16);
-  struct tm* tmTime = localtime(&time);
+  time_t aTime = date.ToInteger(&error, 16);
+  struct tm* tmTime = localtime(&aTime);
   char dateBuf[100];
   strftime(dateBuf, 100, "%m/%d/%Y %I:%M %p", tmTime);
   date = dateBuf;
