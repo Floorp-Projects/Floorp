@@ -1801,9 +1801,10 @@ NS_IMETHODIMP nsFrame::GetView(nsIPresContext* aPresContext, nsIView** aView) co
     
       if (frameManager) {
         void* value;
-        frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::viewProperty, 0, &value);
-        *aView = (nsIView*)value;
-        NS_ASSERTION(value != 0, "frame state bit was set but frame has no view");
+        if (NS_SUCCEEDED(frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::viewProperty, 0, &value))) {
+          *aView = (nsIView*)value;
+          NS_ASSERTION(value != 0, "frame state bit was set but frame has no view");
+        }
       }
     }
   }
