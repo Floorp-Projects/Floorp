@@ -78,10 +78,11 @@ class nsIMEStatus {
   int mHeight;
   GC mGC;
   char *mText;
-  void move();
   void resize(const char *);
   void remove_decoration();
   void getAtoms();
+  static Bool client_filter(Display *d, Window w, XEvent *ev,
+                               XPointer client_data);
   static Bool repaint_filter(Display *d, Window w, XEvent *ev,
                              XPointer client_data);
   static Bool clientmessage_filter(Display *d, Window w, XEvent *ev,
@@ -93,6 +94,8 @@ class nsIMEStatus {
   nsIMEStatus(GdkFont*);
   void SetFont(GdkFont*);
   ~nsIMEStatus();
+  void UnregisterClientFilter(Window);
+  void RegisterClientFilter(Window);
   void setText(const char*);
   void setParentWindow(GdkWindow*);
   void show();

@@ -344,8 +344,13 @@ nsIMEPreedit::IMSetTextRange(const PRInt32 aLen,
 
 extern "C" {
   extern void
-  _XRegisterFilterByType(Display *display, Window window,
+    _XRegisterFilterByType(Display *display, Window window,
                          int start_type, int end_type, 
+                         Bool (*filter)(Display*, Window,
+                                        XEvent*, XPointer),
+                         XPointer client_data);
+  extern void
+    _XUnregisterFilter(Display *display, Window window,
                          Bool (*filter)(Display*, Window,
                                         XEvent*, XPointer),
                          XPointer client_data);
@@ -442,27 +447,6 @@ validateCoordinates(Display * display, Window w,
   }
   return 0;
 }
-void
-nsIMEStatus::move() {
-  Display *display = GDK_DISPLAY();
-  gint wx, wy, wwidth, wheight;
-  wx=((GdkWindowPrivate*)mParent)->x;
-  wy=((GdkWindowPrivate*)mParent)->y;
-  wwidth=((GdkWindowPrivate*)mParent)->width;
-  wheight=((GdkWindowPrivate*)mParent)->height;
-
-  wy += wheight;
-  validateCoordinates(display,mIMStatusWindow,
-                      &wx, &wy);
-
-  XWindowChanges changes;
-  int mask = CWX|CWY;
-  changes.x = wx;
-  changes.y = wy;
-
-  XConfigureWindow(display, mIMStatusWindow,
-                   mask, &changes);
-}
 
 void
 nsIMEStatus::hide() {
@@ -479,18 +463,59 @@ nsIMEStatus::hide() {
 }
 
 void
+nsIMEStatus::UnregisterClientFilter(Window aWindow) {
+  Display *display = GDK_DISPLAY();
+  _XUnregisterFilter(display, aWindow,
+                     client_filter, (XPointer)this);
+}
+
+void
+nsIMEStatus::RegisterClientFilter(Window aWindow) {
+  Display *display = GDK_DISPLAY();
+  _XRegisterFilterByType(display, aWindow,
+                         ConfigureNotify, ConfigureNotify,
+                         client_filter,
+                         (XPointer)this);
+  _XRegisterFilterByType(display, aWindow,
+                         DestroyNotify, DestroyNotify,
+                         client_filter,
+                         (XPointer)this);
+}
+
+void
 nsIMEStatus::setParentWindow(GdkWindow *aWindow) {
   Display *display = GDK_DISPLAY();
   GdkWindow *newParent = gdk_window_get_toplevel(aWindow);
+
   if (newParent != mParent) {
-    mParent = newParent;
+    setText("");
     hide();
+    if (mParent) {
+      UnregisterClientFilter(GDK_WINDOW_XWINDOW(mParent));
+    }
+    mParent = newParent;
     if (mIMStatusWindow) {
       XSetTransientForHint(display, mIMStatusWindow,
                            GDK_WINDOW_XWINDOW(mParent));
+      RegisterClientFilter(GDK_WINDOW_XWINDOW(mParent));
+    }
+    if (mText) show();
+  }
+}
+
+Bool
+nsIMEStatus::client_filter(Display *aDisplay, Window aWindow,
+                            XEvent *aEvent, XPointer aClientData) {
+  nsIMEStatus *thiswindow = (nsIMEStatus*)aClientData;
+  if (thiswindow && NULL != aEvent) {
+    if (ConfigureNotify == aEvent->type) {
+      thiswindow->show();
+    } else if (DestroyNotify == aEvent->type) {
+      thiswindow->UnregisterClientFilter(aWindow);
+      thiswindow->hide();
     }
   }
-  if (mText) show();
+  return False;
 }
 
 Bool
@@ -614,18 +639,71 @@ nsIMEStatus::resize(const char *aString) {
 // public
 void
 nsIMEStatus::show() {
+  if (!mText || !nsCRT::strlen(mText)) {
+    // don't map if text is ""
+    return;
+  }
+
   Display *display = GDK_DISPLAY();
+
   if (!mIMStatusWindow) {
     CreateNative();
   }
+
   XWindowAttributes win_att;
+  int               wx, wy;
+  Window            w_none;
+  Window            parent = GDK_WINDOW_XWINDOW(mParent);
+
+  // parent window is destroyed
+  if (!parent || ((GdkWindowPrivate*)mParent)->destroyed) {
+      return;
+  }
+
+  // parent window exists but isn't mapped yet
+  if (XGetWindowAttributes(display, parent,
+                           &win_att) > 0) {
+    if (win_att.map_state == IsUnmapped) {
+      return;
+    }
+  }
+
+  if (XGetWindowAttributes(display, parent, &win_att) > 0) {
+    XTranslateCoordinates(display, parent,
+                          win_att.root,
+                          -(win_att.border_width),
+                          -(win_att.border_width),
+                          &wx, &wy, &w_none);
+    wy += win_att.height;
+
+    // adjust position
+    validateCoordinates(display,mIMStatusWindow,
+                        &wx, &wy);
+
+    // set position
+    // Linux window manager doesn't work properly
+    // when only XConfigureWindow() is called
+    XSizeHints                   xsh;
+    (void) memset(&xsh, 0, sizeof(xsh));
+    xsh.flags |= USPosition;
+    xsh.x = wx;
+    xsh.y = wy;
+    XSetWMNormalHints(display, mIMStatusWindow, &xsh);
+
+    XWindowChanges changes;
+    int mask = CWX|CWY;
+    changes.x = wx;
+    changes.y = wy;
+    XConfigureWindow(display, mIMStatusWindow,
+                     mask, &changes);
+  }
+
   if (XGetWindowAttributes(display, mIMStatusWindow,
                            &win_att) > 0) {
     if (win_att.map_state == IsUnmapped) {
       XMapWindow(display, mIMStatusWindow);
     }
   }
-  move();
   return;
 }
 
@@ -779,6 +857,15 @@ int
 nsIMEGtkIC::status_start_cbproc(XIC xic, XPointer client_data,
                                 XPointer call_data_p)
 {
+  nsIMEGtkIC *thisXIC = (nsIMEGtkIC*)client_data;
+  if (!thisXIC) return 0;
+  nsWidget *widget = thisXIC->mFocusWidget;
+  if (!widget) return 0;
+  if (!gStatus) return 0;
+
+  // focus_window is changed
+  gStatus->setText("");
+  gStatus->hide();
   return 0;
 }
 
@@ -799,10 +886,10 @@ nsIMEGtkIC::status_draw_cbproc(XIC xic, XPointer client_data,
   if (call_data->type == XIMTextType) {
     XIMText *text = (XIMText *) call_data->data.text;
     if (!text || !text->length) {
-      //gStatus->setText("");
+      // turn conversion off
+      gStatus->setText("");
       gStatus->hide();
     } else {
-      gStatus->show();
       char *statusStr = 0;
       if (text->encoding_is_wchar) {
         if (text->string.wide_char) {
@@ -816,7 +903,9 @@ nsIMEGtkIC::status_draw_cbproc(XIC xic, XPointer client_data,
       } else {
         statusStr = text->string.multi_byte;
       }
+      // turn conversion on
       gStatus->setText(statusStr);
+      gStatus->show();
       if (statusStr && text->encoding_is_wchar) {
         delete [] statusStr;
       }
@@ -863,6 +952,7 @@ nsIMEGtkIC::SetFocusWidget(nsWidget * aFocusWidget)
   mFocusWidget = aFocusWidget;
   GdkWindow *gdkWindow = (GdkWindow*)aFocusWidget->GetNativeData(NS_NATIVE_WINDOW);
   if (!gdkWindow) return;
+
   gdk_im_begin((GdkIC *) mIC, gdkWindow);
 
   if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
@@ -870,11 +960,11 @@ nsIMEGtkIC::SetFocusWidget(nsWidget * aFocusWidget)
 		   (int)((GdkWindowPrivate*)gdkWindow)->width,
 		   (int)((GdkWindowPrivate*)gdkWindow)->height);
   }
+
   if (gInputStyle & GDK_IM_STATUS_CALLBACKS) {
-    if (!gStatus) {
-      gStatus = new nsIMEStatus();
+    if (gStatus) {
+      gStatus->setParentWindow(gdkWindow);
     }
-    gStatus->setParentWindow(gdkWindow);
   }
 }
 
@@ -902,7 +992,7 @@ nsIMEGtkIC *nsIMEGtkIC::GetXIC(nsWidget * aFocusWidget,
 
 nsIMEGtkIC::~nsIMEGtkIC()
 {
-  /* XSetTransientForHint does not work for popup-shell, workaroun */
+  /* XSetTransientForHint does not work for popup-shell, workaround */
   if (gStatus) {
     gStatus->hide();
   }
@@ -1002,6 +1092,7 @@ XIMErrorHandler(Display *dpy, XErrorEvent *event) {
     }
   }
   _XDefaultError(dpy, event);
+  return 0;
 }
 #endif
 
@@ -1390,6 +1481,14 @@ nsIMEGtkIC::nsIMEGtkIC(nsWidget *aFocusWidget, GdkFont *aFontSet,
                  XNStatusAttributes, status_attr,
                  0);
     XFree(status_attr);
+
+    if (gInputStyle & GDK_IM_STATUS_CALLBACKS) {
+      if (!gStatus) {
+        gStatus = new nsIMEStatus();
+      }
+      gStatus->setText("");
+      gStatus->setParentWindow(gdkWindow);
+    }
   }
   return;
 }
