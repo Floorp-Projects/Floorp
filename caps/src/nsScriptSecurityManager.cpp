@@ -1255,6 +1255,11 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                     mSecurityPref->SecurityGetBoolPref("security.checkloaduri", &doCheck);
                     if (doCheck)
                     {
+                        // resource: and chrome: are equivalent, securitywise
+                        if ((PL_strcmp(sourceScheme, "chrome") == 0) ||
+                            (PL_strcmp(sourceScheme, "resource") == 0))
+                            return NS_OK;
+
                         ReportError(nsnull, errorTag, aSourceURI, aTargetURI);
                         return NS_ERROR_DOM_BAD_URI;
                     }
