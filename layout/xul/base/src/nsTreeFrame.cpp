@@ -62,9 +62,36 @@ void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 	PRInt32 inArray = mSelectedItems.IndexOf((void*)pFrame);
 	if (inArray == -1)
 	{
-		// Add this to our array of items.
-		mSelectedItems.AppendElement(pFrame);
-		pFrame->Select(aPresContext, PR_TRUE);
+		// Add this row to our array of items.
+		PRInt32 count = mSelectedItems.Count();
+		if (count > 0)
+		{
+			// Some column is already selected.  This means we want to select the
+			// cell in our row that is found in this column.
+			nsTreeCellFrame* pOtherFrame = (nsTreeCellFrame*)mSelectedItems[0];
+			
+			PRInt32 colIndex = pOtherFrame->GetColIndex();
+			PRInt32 rowIndex = pFrame->GetRowIndex();
+
+			// We now need to find the cell at this particular row and column.
+			// This is the cell we should really select.
+			nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(rowIndex, colIndex);
+			if (nsnull==cellFrame)
+			{
+				CellData *cellData = mCellMap->GetCellAt(rowIndex, colIndex);
+				if (nsnull!=cellData)
+					cellFrame = cellData->mRealCell->mCell;
+			}
+
+			// Select this cell frame.
+			mSelectedItems.AppendElement(cellFrame);
+			((nsTreeCellFrame*)cellFrame)->Select(aPresContext, PR_TRUE);
+		}
+		else
+		{
+			mSelectedItems.AppendElement(pFrame);
+			pFrame->Select(aPresContext, PR_TRUE);
+		}
 	}
 	else
 	{
@@ -109,17 +136,12 @@ void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 		// way we batch up the changes and only do one reflow.
 		nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
 		mSelectedItems.AppendElement(pTreeCell);
-
-		//PRBool notify = PR_FALSE;
-		//if (i == end)
-		//	notify = PR_TRUE;
 		pTreeCell->Select(aPresContext, PR_TRUE);
 	}
 }
 
 void nsTreeFrame::ClearSelection(nsIPresContext& aPresContext)
 {
-	// CLEAR SELECTION NEVER TRIGGERS A REFLOW.
 	PRInt32 count = mSelectedItems.Count();
 	for (PRInt32 i = 0; i < count; i++)
 	{
