@@ -101,13 +101,16 @@ function createPanelTitle(titletext, id)
   var panelbar  = document.createElement('box');
   var title     = document.createElement('titledbutton');
   var spring    = document.createElement('spring');
+  var corner   = document.createElement('html:img');
 
   title.setAttribute('value', titletext);
   title.setAttribute('class', 'borderless paneltitle');
   title.setAttribute('onclick', 'resize("'+id+'")');
   spring.setAttribute('flex', '100%');
   panelbar.setAttribute('class', 'panelbar');
+  corner.setAttribute('src', 'chrome://sidebar/skin/corner.gif');
 
+  panelbar.appendChild(corner);
   panelbar.appendChild(title);
   panelbar.appendChild(spring);
 
