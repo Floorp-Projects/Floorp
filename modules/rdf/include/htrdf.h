@@ -135,6 +135,7 @@ typedef HT_NotificationStruct* HT_Notification;
 #define	HT_EVENT_COLUMN_REORDER			0x00800000UL
 #define	HT_EVENT_COLUMN_SHOW			0x01000000UL
 #define	HT_EVENT_COLUMN_HIDE			0x02000000UL
+#define HT_EVENT_VIEW_MODECHANGED		0x04000000UL
 
 #define HT_EVENT_NO_NOTIFICATION_MASK           0x00000000UL
 #define HT_EVENT_DEFAULT_NOTIFICATION_MASK      0xFFFFFFFFUL
@@ -272,6 +273,8 @@ PR_PUBLIC_API(HT_Resource)  HT_GetParent (HT_Resource node);
 PR_PUBLIC_API(HT_Error)     HT_NodeDisplayString (HT_Resource node, char *buffer, int bufferLen);	/* obsolete! */
 PR_PUBLIC_API(HT_Error)     HT_ViewDisplayString (HT_View view, char *buffer, int bufferLen);		/* obsolete! */
 
+PR_PUBLIC_API(PRBool)
+HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData);
 PR_PUBLIC_API(PRBool)	HT_GetNodeData (HT_Resource node, void *token,
 					uint32 tokenType, void **data);
 PR_PUBLIC_API(PRBool)	HT_IsNodeDataEditable(HT_Resource node,
@@ -279,6 +282,10 @@ PR_PUBLIC_API(PRBool)	HT_IsNodeDataEditable(HT_Resource node,
 PR_PUBLIC_API(HT_Error) HT_SetNodeData (HT_Resource node, void *token,
 					uint32 tokenType, void *data);
 PR_PUBLIC_API(HT_Error) HT_SetNodeName (HT_Resource node, void *data);
+PR_PUBLIC_API(HT_Error) HT_ToggleTreeMode(HT_View view);
+PR_PUBLIC_API(PRBool) HT_InNavigationMode(HT_View view);
+PR_PUBLIC_API(HT_Error) HT_SetTreeStateForButton(HT_Resource node, char* state);
+PR_PUBLIC_API(char*) HT_GetTreeStateForButton(HT_Resource node);
 
 /*
  * HT_GetLargeIconURL / HT_GetSmallIconURL

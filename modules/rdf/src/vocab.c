@@ -253,6 +253,13 @@ createNavCenterVocab () {
   gNavCenter->viewRolloverColor = newResource("viewRolloverColor", 0 /* XXX */);
   gNavCenter->viewPressedColor = newResource("viewPressedColor", 0 /* XXX */);
   gNavCenter->viewDisabledColor = newResource("viewDisabledColor", 0 /* XXX */);
+  gNavCenter->controlStripFGColor = newResource("controlStripFGColor", 0 /* XXX */);
+  gNavCenter->controlStripBGColor = newResource("controlStripBGColor", 0 /* XXX */);
+  gNavCenter->controlStripBGURL = newResource("controlStripBGURL", 0 /* XXX */);
+
+  /* Buttons */
+  gNavCenter->buttonTreeMode = newResource("buttonTreeMode", 0 /* XXX */);
+  gNavCenter->buttonTreeState = newResource("buttonTreeState", 0 /* XXX */);
 
   /* Cookies */
   gNavCenter->cookieDomain = newResource("cookieDomain", 0 /* XXX */);

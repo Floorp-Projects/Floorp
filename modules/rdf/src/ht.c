@@ -89,6 +89,9 @@ extern char		*gRLForbiddenDomains;
 
 void			FE_Print(const char *pUrl);	/* XXX this should be added to fe_proto.h */
 
+HT_Pane gNavigationTemplate = NULL;
+HT_Pane gChromeTemplate = NULL;
+HT_Pane gManagementTemplate = NULL;
 
 
 void
@@ -100,6 +103,11 @@ HT_Startup()
 		gMissionControlEnabled = false;
 		PREF_GetBoolPref(MISSION_CONTROL_RDF_PREF, &gMissionControlEnabled);
 		
+		/* Initialize the HT templates. */
+		gChromeTemplate = newTemplatePane("NC:ChromeDefaults");
+		gNavigationTemplate = newTemplatePane("NC:NavigationDefaults");
+		gManagementTemplate = newTemplatePane("NC:ManagementDefaults");
+
 		/* HT timer every 12 seconds */
 		htTimerID = FE_SetTimeout(htTimerRoutine, NULL, 1000 * 12);
 	}
@@ -110,6 +118,11 @@ HT_Startup()
 void
 HT_Shutdown()
 {
+	/* Free templates */
+	HT_DeletePane(gNavigationTemplate);
+	HT_DeletePane(gChromeTemplate);
+	HT_DeletePane(gManagementTemplate);
+
 	freeMenuCommandList();
 	gInited = PR_FALSE;
 	gMissionControlEnabled = false;
@@ -1289,6 +1302,16 @@ HT_NewQuickFilePane(HT_Notification notify)
 	return(pane);
 }
 
+HT_Pane newTemplatePane(char* templateName)
+{
+	HT_Pane			pane = NULL;
+	RDF_Resource		tmpl;
+
+	if ((tmpl = RDF_GetResource(NULL, templateName, PR_TRUE)) != NULL)
+		pane = paneFromResource(newNavCenterDB(), tmpl, NULL, true, true, 0);
+		
+	return(pane);
+}
 
 
 PR_PUBLIC_API(HT_Pane)
@@ -5054,6 +5077,27 @@ ht_isURLReal(HT_Resource node)
 }
 
 
+PR_PUBLIC_API(PRBool)
+HT_GetTemplateData(HT_Resource node, void* token, uint32 tokenType, void **nodeData)
+{
+	void* data = NULL;
+
+	if (HT_GetNodeData(node, token, tokenType, nodeData))
+		return PR_TRUE;
+	
+	/* Use the template instead */
+	
+	/* Figure out which template to use based on the current mode of this view. */
+	if (HT_GetPane(HT_GetView(node))->toolbar)
+		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gChromeTemplate)),
+							  token, tokenType, nodeData);
+	if (HT_InNavigationMode(HT_GetView(node)))
+		return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gNavigationTemplate)), 
+							  token, tokenType, nodeData);
+	return HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gManagementTemplate)),
+							  token, tokenType, nodeData);
+}
+
 
 PR_PUBLIC_API(PRBool)
 HT_GetNodeData (HT_Resource node, void *token, uint32 tokenType, void **nodeData)
@@ -5166,7 +5210,6 @@ htVerifyUniqueToken(HT_Resource node, void *token, uint32 tokenType, char *data)
 	}
 	return(ok);
 }
-
 
 
 PR_PUBLIC_API(HT_Error)
@@ -5287,6 +5330,20 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 		    (token == gNavCenter->showDivider) || (token == gNavCenter->selectedColumnHeaderFGColor) ||
 		    (token == gNavCenter->selectedColumnHeaderBGColor) || (token == gNavCenter->showColumnHilite) ||
 		    (token == gNavCenter->triggerPlacement) ||
+			(token == gNavCenter->viewRolloverColor) ||
+			(token == gNavCenter->viewPressedColor) || (token == gNavCenter->viewDisabledColor) ||
+			(token == gNavCenter->toolbarBitmapPosition) || (token == gNavCenter->toolbarButtonsFixedSize) ||
+			(token == gNavCenter->RDF_smallDisabledIcon) || (token == gNavCenter->RDF_largeDisabledIcon) ||
+			(token == gNavCenter->RDF_smallRolloverIcon) || (token == gNavCenter->RDF_largeRolloverIcon) ||
+			(token == gNavCenter->RDF_smallPressedIcon) || (token == gNavCenter->RDF_largePressedIcon) ||
+			(token == gNavCenter->buttonTooltipText) || (token == gNavCenter->buttonStatusbarText) ||
+			(token == gNavCenter->urlBar) || (token == gNavCenter->urlBarWidth) || 
+			(token == gNavCenter->buttonTreeMode) || (token == gNavCenter->buttonTreeState) ||
+			(token == gNavCenter->useInlineEditing) || (token == gNavCenter->useSingleClick) ||
+			(token == gNavCenter->loadOpenState) || (token == gNavCenter->saveOpenState) ||
+			(token == gNavCenter->useSelection) || (token == gNavCenter->controlStripFGColor) ||
+			(token == gNavCenter->controlStripBGColor) || (token == gNavCenter->controlStripBGURL) ||
+
 		/*  ((token == gWebData->RDF_URL) && ht_isURLReal(node)) || */
 #ifdef	HT_PASSWORD_RTNS
 			(token == gNavCenter->RDF_Password) ||
@@ -5326,6 +5383,94 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 	return(canEditFlag);
 }
 
+PR_PUBLIC_API(PRBool)
+HT_InNavigationMode(HT_View view)
+{
+	char* answer;
+	XP_ASSERT(view != NULL);
+
+	/* First check this view. */
+	if (HT_GetNodeData(HT_TopNode(view), gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &answer))
+	{
+		return stricmp("Management", answer);
+	}
+
+	/* Need to check the chrome default template to determine which mode is dominant
+		by default */
+	if (HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gChromeTemplate)), 
+						  gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &answer))
+	{
+		return stricmp("Management", answer);
+	}
+
+	return PR_TRUE;
+}
+	
+PR_PUBLIC_API(HT_Error)
+HT_ToggleTreeMode(HT_View view)
+{
+	HT_Resource nodeToModify;
+	HT_Error result;
+	char* data;
+
+	XP_ASSERT(view != NULL);
+
+	/* Query this node for its current state. */
+	if (HT_GetNodeData(HT_TopNode(view), gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &data))
+		nodeToModify = HT_TopNode(view);
+	else 
+	{
+		nodeToModify = HT_TopNode(HT_GetSelectedView(gChromeTemplate));
+		HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gChromeTemplate)), 
+							gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &data);
+	}
+
+	if (stricmp("Navigation", data))
+	{
+		result = HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeMode, HT_COLUMN_STRING, 
+						"Navigation");
+		resynchItem(nodeToModify, gNavCenter->buttonTreeMode, (void*)("Navigation"), TRUE);
+	}
+
+	else 
+	{
+		result = HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeMode, HT_COLUMN_STRING,
+						"Management");
+		resynchItem(nodeToModify, gNavCenter->buttonTreeMode, (void*)("Management"), TRUE);
+	}
+
+	sendNotification(HT_TopNode(view),  HT_EVENT_VIEW_MODECHANGED);
+
+	return result;
+}
+
+PR_PUBLIC_API(char*)
+HT_GetTreeStateForButton(HT_Resource node)
+{
+	char* answer = NULL;
+	
+	if (HT_GetTemplateData(node, gNavCenter->buttonTreeState, HT_COLUMN_STRING, &answer))
+	{
+		return answer;
+	}
+
+	return "Popup";
+}
+	
+PR_PUBLIC_API(HT_Error)
+HT_SetTreeStateForButton(HT_Resource node, char* state)
+{
+	HT_Resource nodeToModify;
+	void* data;
+
+	/* Query this node for its current state. */
+	if (HT_GetNodeData(node, gNavCenter->buttonTreeState, HT_COLUMN_STRING, &data))
+		nodeToModify = node;
+	else nodeToModify = HT_TopNode(HT_GetSelectedView(gChromeTemplate));
+
+	return HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeState, HT_COLUMN_STRING,
+						  state);
+}
 
 
 /* XXX HT_NodeDisplayString is obsolete! Don't use. */
@@ -5703,7 +5848,13 @@ htIsPropertyInMoreOptions(RDF_Resource r)
 	    (r == gNavCenter->RDF_smallRolloverIcon) || (r == gNavCenter->RDF_largeRolloverIcon) ||
 	    (r == gNavCenter->RDF_smallPressedIcon) || (r == gNavCenter->RDF_largePressedIcon) ||
 	    (r == gNavCenter->buttonTooltipText) || (r == gNavCenter->buttonStatusbarText) ||
-	    (r == gNavCenter->urlBar) || (r == gNavCenter->urlBarWidth))
+	    (r == gNavCenter->urlBar) || (r == gNavCenter->urlBarWidth) || 
+		(r == gNavCenter->buttonTreeMode) || (r == gNavCenter->buttonTreeState) ||
+		(r == gNavCenter->useInlineEditing) || (r == gNavCenter->useSingleClick) ||
+		(r == gNavCenter->loadOpenState) || (r == gNavCenter->saveOpenState) ||
+		(r == gNavCenter->useSelection) || (r == gNavCenter->controlStripFGColor) ||
+		(r == gNavCenter->controlStripBGColor) || (r == gNavCenter->controlStripBGURL))
+
 	{
 		retVal = PR_TRUE;
 	}
@@ -9215,6 +9366,7 @@ RetainOldSitemaps (HT_Pane htPane, char *pUrl)
     nsmp = nsmp->next;
   }
 }
+
 
 void cleanupInt (HT_Pane htPane, HT_URLSiteMapAssoc *nsmp, RDF_Resource parent) {
  while (nsmp != NULL) {    

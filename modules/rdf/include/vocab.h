@@ -180,6 +180,14 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource viewDisabledColor; /* Color to use when item is disabled in a view. */
   RDF_Resource urlBar; /* Whether or not the button is a URL bar. */
   RDF_Resource urlBarWidth; /* The width of the URL bar. */
+  
+  RDF_Resource buttonTreeMode; /* The tree mode (navigation, management) for the button. */
+  RDF_Resource buttonTreeState; /* The tree state (docked, popup) for a button. */
+
+  RDF_Resource controlStripFGColor; /* The tree's control strip foreground */
+  RDF_Resource controlStripBGColor; /* The tree's control strip background */
+  RDF_Resource controlStripBGURL; /* The tree's control strip BG URL */
+
   RDF_Resource pos;
   RDF_Resource from;
   RDF_Resource to;
