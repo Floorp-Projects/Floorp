@@ -2171,9 +2171,12 @@ static nsresult UCS2toFS(const PRUnichar *aBuffer, char **aResult)
     if (!*aResult)
         return NS_ERROR_OUT_OF_MEMORY;
     
+    // default "defaultChar" is '?', which is an illegal character on windows file system.
+    // That will cause file uncreatable. Change it to '_'
+    const char defaultChar = '_';
     chars = ::WideCharToMultiByte(CP_ACP, 0,
                                   aBuffer, -1,
-                                  *aResult, chars, NULL, NULL);
+                                  *aResult, chars, &defaultChar, NULL);
     if (chars == 0)
         return NS_ERROR_FAILURE;
     
