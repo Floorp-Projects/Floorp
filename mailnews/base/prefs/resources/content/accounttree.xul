@@ -1,18 +1,15 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/accounttree.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/accounttree.dtd" >
 <window	xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width:100%">
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <html:script src="AccountManager.js"/>
+<html:div flex="100%">
 	<tree rdf:datasources="rdf:msgaccountmanager"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
-          onclick="showPage(event)" id="accounttree"
+          onclick="parent.onAccountClick(event)" id="accounttree"
           style="height: 100%"
           ref="msgaccounts:/">
 
@@ -22,29 +19,21 @@
 			<treeitem uri="..."
                 PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
 		  		<treerow >
-                    <treecell treeallowevents="true">
-                      <titledbutton class="twisty" onclick="ToggleTwisty(event.target.parentNode.parentNode.parentNode)"/>
-                    </treecell>
-					<treecell>
-                        <treeindentation/>
-						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
-					</treecell>
+					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 		  		</treerow>
 			</treeitem>
             </treechildren>
 		</rule>
 	  </template>
 
-      <treecol style="width:20px"/>
-	  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+	  <treecol style="width: 100%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 	  <treehead>
 		<treerow>
-          <treecell/>
-	      <treecell>&nameCol.label;</treecell>
+	      <treecell value="&nameCol.label;"/>
 		</treerow>
 	  </treehead>
 
 	</tree>
-
+</html:div>
 </window>
 	
