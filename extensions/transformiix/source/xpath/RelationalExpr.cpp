@@ -29,7 +29,6 @@
 
 #include "Expr.h"
 #include "NodeSet.h"
-#include "TxString.h"
 #include "XMLDOMUtils.h"
 
   //------------------/
@@ -67,7 +66,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 
         NodeSet* nodeSet = (NodeSet*)left;
         for ( int i = 0; i < nodeSet->size(); i++) {
-                String str;
+                nsAutoString str;
                 Node* node = nodeSet->get(i);
                 XMLDOMUtils::getNodeValue(node, str);
                 StringResult strResult(str);
@@ -84,7 +83,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 
         NodeSet* nodeSet = (NodeSet*)right;
         for ( int i = 0; i < nodeSet->size(); i++) {
-                String str;
+                nsAutoString str;
                 Node* node = nodeSet->get(i);
                 XMLDOMUtils::getNodeValue(node, str);
                 StringResult strResult(str);
@@ -114,9 +113,9 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 #endif
             }
             else {
-                String lStr;
+                nsAutoString lStr;
                 left->stringValue(lStr);
-                String rStr;
+                nsAutoString rStr;
                 right->stringValue(rStr);
                 result = !lStr.Equals(rStr);
             }
@@ -141,9 +140,9 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 #endif
             }
             else {
-                String lStr;
+                nsAutoString lStr;
                 left->stringValue(lStr);
-                String rStr;
+                nsAutoString rStr;
                 right->stringValue(rStr);
                 result = lStr.Equals(rStr);
             }
@@ -237,7 +236,7 @@ ExprResult* RelationalExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void RelationalExpr::toString(String& str) {
+void RelationalExpr::toString(nsAString& str) {
 
     if ( leftExpr ) leftExpr->toString(str);
     else str.Append(NS_LITERAL_STRING("null"));

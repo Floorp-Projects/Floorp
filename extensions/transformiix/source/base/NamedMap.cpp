@@ -32,7 +32,7 @@
 **/
 
 #include "NamedMap.h"
-#include "StringList.h"
+#include "nsReadableUtils.h"
 
   //-------------/
  //- Constants -/
@@ -148,7 +148,7 @@ void NamedMap::dumpMap() {
  *  Returns the object reference in this Map associated with the given name
  * @return the object reference in this Map associated with the given name
 **/
-TxObject* NamedMap::get(const String& key) {
+TxObject* NamedMap::get(const nsAString& key) {
     BucketItem* item = getBucketItem(key);
     if ( item ) return item->item;
     return 0;
@@ -164,34 +164,11 @@ MBool NamedMap::isEmpty() {
 
 
 /**
- * Returns a StringList of all the keys in this NamedMap.
- * Please delete this List when you are done with it
-**/
-StringList* NamedMap::keys() {
-    StringList* list = new StringList();
-    if (!list)
-        return NULL;
-
-    for (int i = 0; i < numberOfBuckets; i++) {
-        BucketItem* item = elements[i];
-        while (item) {
-            list->add(new String(item->key));
-            item = item->next;
-        }
-    }
-    return list;
-} //-- keys
-
-/**
  * Adds the specified Node to the top of this Stack.
  * @param node the Node to add to the top of the Stack
 **/
-void NamedMap::put(const String& key, TxObject* obj) {
-
-    //-- compute hash for key
-    unsigned long hashCode = hashKey(key);
-    //-- calculate index
-    int idx = hashCode % numberOfBuckets;
+void NamedMap::put(const nsAString& key, TxObject* obj) {
+    int idx = HashString(key) % numberOfBuckets;
 
     //-- fetch first item in bucket
     BucketItem* bktItem = elements[idx];
@@ -229,17 +206,14 @@ void NamedMap::put(const String& key, TxObject* obj) {
         }
     }
 } //-- put
+
 /**
  * Removes the the specified Object from the NamedMap
  * @param key the key of the Object to remove from the NamedMap
  * @return the Object being removed
 **/
-TxObject* NamedMap::remove(const String& key) {
-
-    // compute hash for key
-    long hashCode = hashKey(key);
-
-    int idx = hashCode % numberOfBuckets;
+TxObject* NamedMap::remove(const nsAString& key) {
+    int idx = HashString(key) % numberOfBuckets;
 
     BucketItem* bktItem = elements[idx];
 
@@ -285,7 +259,7 @@ int NamedMap::size() {
  //- Private Methods -/
 //-------------------/
 
-NamedMap::BucketItem* NamedMap::createBucketItem(const String& key, TxObject* objPtr)
+NamedMap::BucketItem* NamedMap::createBucketItem(const nsAString& key, TxObject* objPtr)
 {
     BucketItem* bktItem = new BucketItem;
     if (bktItem) {
@@ -297,11 +271,8 @@ NamedMap::BucketItem* NamedMap::createBucketItem(const String& key, TxObject* ob
     return bktItem;
 } //-- createBucketItem
 
-NamedMap::BucketItem* NamedMap::getBucketItem(const String& key) {
-    // compute hash for key
-    long hashCode = hashKey(key);
-
-    int idx = hashCode % numberOfBuckets;
+NamedMap::BucketItem* NamedMap::getBucketItem(const nsAString& key) {
+    int idx = HashString(key) % numberOfBuckets;
 
     BucketItem* bktItem = elements[idx];
 
@@ -313,18 +284,3 @@ NamedMap::BucketItem* NamedMap::getBucketItem(const String& key) {
     return bktItem;
 
 } //-- getBucketItem
-
-/**
-**/
-unsigned long NamedMap::hashKey(const String& key)
-{
-    PRUint32 len = key.Length();
-
-    unsigned long hashCode = 0;
-    for (PRUint32 i = 0; i < len; ++i) {
-        hashCode += ((PRInt32)key.CharAt(i)) << 3;
-    }
-    return hashCode;
-} //-- hashKey
-
-

@@ -29,7 +29,7 @@
 #include "baseutils.h"
 
 class Node;
-class String;
+class nsAString;
 
 /*
  * A utility class for use with XML DOM implementations
@@ -40,7 +40,7 @@ public:
     /*
      *  Appends the value of the given node to aResult.
      */
-    static void getNodeValue(Node* aNode, String& aResult);
+    static void getNodeValue(Node* aNode, nsAString& aResult);
 };
 
 #endif

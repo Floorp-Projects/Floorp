@@ -100,7 +100,7 @@ private:
      *
      * @param aMessage the message to log
      */
-    static void logMessage(const String& aMessage);
+    static void logMessage(const nsAString& aMessage);
 
     /**
      * Instantiate aAction in the result tree.
@@ -148,7 +148,7 @@ private:
     static void processChildrenAsValue(Element* aElement,
                                        ProcessorState* aPs,
                                        MBool aOnlyText,
-                                       String& aValue);
+                                       nsAString& aValue);
 
     /**
      * Invokes the default template for the specified node.
@@ -166,7 +166,7 @@ private:
      * @param aImportFrame current importFrame iterator
      * @param aPs the current ProcessorState
      */
-    static void processInclude(String& aHref,
+    static void processInclude(const nsAString& aHref,
                                txListIterator* aImportFrame,
                                ProcessorState* aPs);
 

@@ -24,7 +24,7 @@
  */
 
 #include "ErrorObserver.h"
-#include "TxString.h"
+#include "nsString.h"
 
 /**
  * Creates a new SimpleErrorObserver.
@@ -49,7 +49,7 @@ SimpleErrorObserver::SimpleErrorObserver(ostream& errStream) {
 /**
  *  Notifies this Error observer of a new error using the given error level
 **/
-void SimpleErrorObserver::receiveError(const String& errorMessage,
+void SimpleErrorObserver::receiveError(const nsAString& errorMessage,
                                        nsresult aRes)
 {
 #ifdef TX_EXE
@@ -57,7 +57,7 @@ void SimpleErrorObserver::receiveError(const String& errorMessage,
         *errStream << "error: ";
     }
 
-    *errStream << errorMessage << endl;
+    *errStream << NS_LossyConvertUCS2toASCII(errorMessage).get() << endl;
     errStream->flush();
 #endif
 }

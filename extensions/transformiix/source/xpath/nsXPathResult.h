@@ -47,7 +47,6 @@
 #include "nsCOMArray.h"
 
 class ExprResult;
-class String;
 
 // {15b9b301-2012-11d6-a7f2-e6d0a678995c}
 #define NS_IXPATHRESULT_IID \
@@ -90,7 +89,7 @@ private:
 
     union {
         double mNumberValue;
-        String* mStringValue;
+        nsString* mStringValue;
         PRBool mBooleanValue;
         nsIDOMNode* mNode;
         nsCOMArray<nsIDOMNode>* mElements;

@@ -26,8 +26,10 @@
 
 #include "baseutils.h"
 #include "txError.h"
-class String;
+
+class nsAString;
 class txOutputFormat;
+
 #ifdef TX_EXE
 #include <iostream.h>
 #else
@@ -58,23 +60,23 @@ public:
      * @param aNsID the namespace ID of the attribute
      * @param aValue the value of the attribute
      */
-    virtual void attribute(const String& aName,
+    virtual void attribute(const nsAString& aName,
                            const PRInt32 aNsID,
-                           const String& aValue) = 0;
+                           const nsAString& aValue) = 0;
 
     /**
      * Signals to receive characters.
      *
      * @param aData the characters to receive
      */
-    virtual void characters(const String& aData) = 0;
+    virtual void characters(const nsAString& aData) = 0;
 
     /**
      * Signals to receive data that should be treated as a comment.
      *
      * @param data the comment data to receive
      */
-    virtual void comment(const String& aData) = 0;
+    virtual void comment(const nsAString& aData) = 0;
 
     /**
      * Signals the end of a document. It is an error to call
@@ -88,7 +90,7 @@ public:
      * @param aName the name of the element
      * @param aNsID the namespace ID of the element
      */
-    virtual void endElement(const String& aName,
+    virtual void endElement(const nsAString& aName,
                             const PRInt32 aNsID) = 0;
 
     /**
@@ -97,8 +99,8 @@ public:
      * @param aTarget the target of the processing instruction
      * @param aData the data of the processing instruction
      */
-    virtual void processingInstruction(const String& aTarget, 
-                                       const String& aData) = 0;
+    virtual void processingInstruction(const nsAString& aTarget, 
+                                       const nsAString& aData) = 0;
 
     /**
      * Signals the start of a document.
@@ -111,7 +113,7 @@ public:
      * @param aName the name of the element
      * @param aNsID the namespace ID of the element
      */
-    virtual void startElement(const String& aName,
+    virtual void startElement(const nsAString& aName,
                               const PRInt32 aNsID) = 0;
 };
 
@@ -132,7 +134,7 @@ public:
      *
      * @param aData the characters to receive
      */
-    virtual void charactersNoOutputEscaping(const String& aData) = 0;
+    virtual void charactersNoOutputEscaping(const nsAString& aData) = 0;
 
     /**
      * Returns whether the output handler supports
@@ -182,7 +184,7 @@ public:
      */
     virtual nsresult
     createHandlerWith(txOutputFormat* aFormat,
-                      const String& aName,
+                      const nsAString& aName,
                       PRInt32 aNsID,
                       txIOutputXMLEventHandler** aHandler) = 0;
 };
@@ -191,7 +193,7 @@ public:
     nsresult createHandlerWith(txOutputFormat* aFormat,               \
                                txIOutputXMLEventHandler** aHandler);  \
     nsresult createHandlerWith(txOutputFormat* aFormat,               \
-                               const String& aName,                   \
+                               const nsAString& aName,                \
                                PRInt32 aNsID,                         \
                                txIOutputXMLEventHandler** aHandler)   \
 

@@ -25,9 +25,9 @@
 
 #include "XMLDOMUtils.h"
 #include "dom.h"
-#include "TxString.h"
+#include "nsString.h"
 
-void XMLDOMUtils::getNodeValue(Node* aNode, String& aResult)
+void XMLDOMUtils::getNodeValue(Node* aNode, nsAString& aResult)
 {
     if (!aNode)
         return;
@@ -41,7 +41,9 @@ void XMLDOMUtils::getNodeValue(Node* aNode, String& aResult)
         case Node::PROCESSING_INSTRUCTION_NODE:
         case Node::TEXT_NODE:
         {
-            aResult.Append(aNode->getNodeValue());
+            nsAutoString nodeValue;
+            aNode->getNodeValue(nodeValue);
+            aResult.Append(nodeValue);
             break;
         }
         case Node::DOCUMENT_NODE:
@@ -57,10 +59,14 @@ void XMLDOMUtils::getNodeValue(Node* aNode, String& aResult)
             while (tmpNode) {
                 nodeType = tmpNode->getNodeType();
                 if ((nodeType == Node::TEXT_NODE) ||
-                    (nodeType == Node::CDATA_SECTION_NODE))
-                    aResult.Append(tmpNode->getNodeValue());
-                else if (nodeType == Node::ELEMENT_NODE)
+                    (nodeType == Node::CDATA_SECTION_NODE)) {
+                    nsAutoString nodeValue;
+                    tmpNode->getNodeValue(nodeValue);
+                    aResult.Append(nodeValue);
+                }
+                else if (nodeType == Node::ELEMENT_NODE) {
                     getNodeValue(tmpNode, aResult);
+                }
                 tmpNode = tmpNode->getNextSibling();
             }
             break;

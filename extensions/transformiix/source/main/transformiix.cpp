@@ -34,105 +34,16 @@
 
 
 #include "txStandaloneXSLTProcessor.h"
-#include "CommandLineUtils.h"
 #include "nsXPCOM.h"
 #include <fstream.h>
-
-  //--------------/
- //- Prototypes -/
-//--------------/
+#include "nsDoubleHashtable.h"
+#include "nsVoidArray.h"
 
 /**
  * Prints the command line help screen to the console
-**/
-void printHelp();
-
-/**
- * prints the command line usage information to the console
-**/
-void printUsage();
-
-/**
- * The TransforMiiX command line interface
-**/
-int main(int argc, char** argv) {
-
-    nsresult rv;
-    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!txXSLTProcessor::txInit())
-        return 1;
-
-    //-- available flags
-    StringList flags;
-    flags.add(new String(NS_LITERAL_STRING("i")));          // XML input
-    flags.add(new String(NS_LITERAL_STRING("s")));          // XSL input
-    flags.add(new String(NS_LITERAL_STRING("o")));          // Output filename
-    flags.add(new String(NS_LITERAL_STRING("h")));          // help
-    flags.add(new String(NS_LITERAL_STRING("q")));          // quiet
-
-    NamedMap options;
-    options.setObjectDeletion(MB_TRUE);
-    CommandLineUtils::getOptions(options, argc, argv, flags);
-
-    if (!options.get(String(NS_LITERAL_STRING("q")))) {
-        String copyright(NS_LITERAL_STRING("(C) 1999 The MITRE Corporation, Keith Visco, and contributors"));
-        cerr << "TransforMiiX ";
-        cerr << "1.2b pre" << endl;
-        cerr << copyright << endl;
-        //-- print banner line
-        PRUint32 fillSize = copyright.Length() + 1;
-        PRUint32 counter;
-        for (counter = 0; counter < fillSize; ++counter)
-            cerr << '-';
-        cerr << endl << endl;
-    }
-
-    if (options.get(String(NS_LITERAL_STRING("h")))) {
-        printHelp();
-        return 0;
-    }
-    String* xmlFilename = (String*)options.get(String(NS_LITERAL_STRING("i")));
-    String* xsltFilename = (String*)options.get(String(NS_LITERAL_STRING("s")));
-    String* outFilename = (String*)options.get(String(NS_LITERAL_STRING("o")));
-
-    //-- handle output stream
-    ostream* resultOutput = &cout;
-    ofstream resultFileStream;
-    if (outFilename && !outFilename->getConstNSString().Equals(NS_LITERAL_STRING("-"))) {
-        resultFileStream.open(NS_LossyConvertUCS2toASCII(*outFilename).get(),
-                              ios::out);
-        if (!resultFileStream) {
-            cerr << "error opening output file: " << *xmlFilename << endl;
-            return -1;
-        }
-        resultOutput = &resultFileStream;
-    }
-
-    SimpleErrorObserver obs;
-    txStandaloneXSLTProcessor proc;
-    //-- process
-    if (!xsltFilename) {
-        if (!xmlFilename) {
-            cerr << "you must specify at least a source XML path" << endl;
-            printUsage();
-            return -1;
-        }
-        rv = proc.transform(*xmlFilename, *resultOutput, obs);
-    }
-    else {
-        //-- open XSLT file
-        rv = proc.transform(*xmlFilename, *xsltFilename, *resultOutput, obs);
-    }
-    resultFileStream.close();
-    txXSLTProcessor::txShutdown();
-    rv = NS_ShutdownXPCOM(nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return 0;
-} //-- main
-
-void printHelp() {
+ */
+void printHelp()
+{
   cerr << "transfrmx [-h] [-i xml-file] [-s xslt-file] [-o output-file]" << endl << endl;
   cerr << "Options:";
   cerr << endl << endl;
@@ -146,8 +57,140 @@ void printHelp() {
   cerr << "standard output." << endl;
   cerr << endl;
 }
-void printUsage() {
-  cerr << "transfrmx [-h] [-i xml-file] [-s xslt-file] [-o output-file]" << endl << endl;
-  cerr << "For more infomation use the -h flag"<<endl;
-} //-- printUsage
 
+/**
+ * Prints the command line usage information to the console
+ */
+void printUsage()
+{
+  cerr << "transfrmx [-h] [-i xml-file] [-s xslt-file] [-o output-file]" << endl << endl;
+  cerr << "For more infomation use the -h flag" << endl;
+}
+
+class txOptionEntry : public PLDHashCStringEntry
+{
+public:
+    txOptionEntry(const void* aKey) : PLDHashCStringEntry(aKey)
+    {
+    }
+    ~txOptionEntry()
+    {
+    }
+    nsCStringArray mValues;
+};
+
+DECL_DHASH_WRAPPER(txOptions, txOptionEntry, nsACString&)
+DHASH_WRAPPER(txOptions, txOptionEntry, nsACString&)
+
+/**
+ * Parses the command line
+ */
+void parseCommandLine(int argc, char** argv, txOptions& aOptions)
+{
+    nsCAutoString flag;
+
+    for (int i = 1; i < argc; ++i) {
+        nsDependentCString arg(argv[i]);
+        if (*argv[i] == '-' && arg.Length() > 1) {
+            // clean up previous flag
+            if (!flag.IsEmpty()) {
+                txOptionEntry* option = aOptions.AddEntry(flag);
+                flag.Truncate();
+            }
+
+            // get next flag
+            flag = Substring(arg, 1, arg.Length() - 1);
+        }
+        else {
+            txOptionEntry* option = aOptions.AddEntry(flag);
+            if (option) {
+                option->mValues.AppendCString(nsCString(arg));
+            }
+            flag.Truncate();
+        }
+    }
+
+    if (!flag.IsEmpty()) {
+        txOptionEntry* option = aOptions.AddEntry(flag);
+    }
+}
+
+/**
+ * The TransforMiiX command line interface
+ */
+int main(int argc, char** argv)
+{
+    nsresult rv;
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!txXSLTProcessor::txInit())
+        return 1;
+
+    txOptions options;
+    if (NS_FAILED(options.Init(4))) {
+        return 1;
+    }
+    parseCommandLine(argc, argv, options);
+
+    if (!options.GetEntry(NS_LITERAL_CSTRING("q"))) {
+        NS_NAMED_LITERAL_CSTRING(copyright, "(C) 1999 The MITRE Corporation, Keith Visco, and contributors");
+        cerr << "TransforMiiX ";
+        cerr << "1.3a pre" << endl;
+        cerr << copyright.get() << endl;
+        //-- print banner line
+        PRUint32 fillSize = copyright.Length() + 1;
+        PRUint32 counter;
+        for (counter = 0; counter < fillSize; ++counter)
+            cerr << '-';
+        cerr << endl << endl;
+    }
+
+    if (options.GetEntry(NS_LITERAL_CSTRING("h"))) {
+        printHelp();
+        return 0;
+    }
+
+    //-- handle output stream
+    ostream* resultOutput = &cout;
+    ofstream resultFileStream;
+
+    txOptionEntry* option = options.GetEntry(NS_LITERAL_CSTRING("o"));
+    if (option &&
+        option->mValues.Count() > 0 &&
+        !option->mValues[0]->Equals(NS_LITERAL_CSTRING("-"))) {
+        resultFileStream.open(option->mValues[0]->get(), ios::out);
+        if (!resultFileStream) {
+            cerr << "error opening output file: ";
+            cerr << option->mValues[0]->get() << endl;
+            return -1;
+        }
+        resultOutput = &resultFileStream;
+    }
+
+    option = options.GetEntry(NS_LITERAL_CSTRING("i"));
+    if (!option || option->mValues.Count() == 0) {
+        cerr << "you must specify at least a source XML path" << endl;
+        printUsage();
+        return -1;
+    }
+
+    SimpleErrorObserver obs;
+    txStandaloneXSLTProcessor proc;
+
+    txOptionEntry* styleOption = options.GetEntry(NS_LITERAL_CSTRING("s"));
+    if (!styleOption || styleOption->mValues.Count() == 0) {
+        rv = proc.transform(*option->mValues[0], *resultOutput, obs);
+    }
+    else {
+        // XXX TODO: Handle multiple stylesheets
+        rv = proc.transform(*option->mValues[0], *styleOption->mValues[0],
+                            *resultOutput, obs);
+    }
+
+    resultFileStream.close();
+    txXSLTProcessor::txShutdown();
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return 0;
+}

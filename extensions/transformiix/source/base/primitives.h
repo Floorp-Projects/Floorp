@@ -40,8 +40,7 @@
 #define MITRE_PRIMITIVES_H
 
 #include "baseutils.h"
-
-class String;
+class nsAString;
 
 /*
  * Utility class for doubles
@@ -76,15 +75,14 @@ public:
     /*
      * Converts the value of the given double to a String, and appends
      * the result to the destination String.
-     * @return the given dest string
      */
-    static String& toString(double aValue, String& aDest);
+    static void toString(double aValue, nsAString& aDest);
 
     /*
      * Converts the given String to a double, if the String value does not
      * represent a double, NaN will be returned
      */
-    static double toDouble(const String& aStr);
+    static double toDouble(const nsAString& aStr);
 };
 
 #endif

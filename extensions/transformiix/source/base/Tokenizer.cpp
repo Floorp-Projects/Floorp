@@ -60,7 +60,7 @@
 /*
  * Creates a new Tokenizer using the given source string
  */
-txTokenizer::txTokenizer(const String& aSource)
+txTokenizer::txTokenizer(const nsAString& aSource)
 {
     mCurrentPos = 0;
     mSource = aSource;
@@ -80,7 +80,7 @@ MBool txTokenizer::hasMoreTokens()
     return mCurrentPos < mSize;
 }
 
-void txTokenizer::nextToken(String& aBuffer)
+void txTokenizer::nextToken(nsAString& aBuffer)
 {
     aBuffer.Truncate();
     while (mCurrentPos < mSize) {

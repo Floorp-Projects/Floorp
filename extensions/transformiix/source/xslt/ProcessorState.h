@@ -34,7 +34,6 @@
 #include "NamedMap.h"
 #include "txPatternParser.h"
 #include "Expr.h"
-#include "StringList.h"
 #include "txOutputFormat.h"
 #include "Map.h"
 #include "txIXPathContext.h"
@@ -42,6 +41,7 @@
 #include "txXMLEventHandler.h"
 #include "XSLTFunctions.h"
 #include "txError.h"
+#include "nsVoidArray.h"
 
 class txVariableMap;
 class txXSLKey;
@@ -192,12 +192,15 @@ public:
      * @return loaded document or element pointed to by fragment identifier. If
      *         loading or parsing fails NULL will be returned.
      */
-    Node* retrieveDocument(const String& uri, const String& baseUri);
+    Node* retrieveDocument(const nsAString& uri, const nsAString& baseUri);
 
     /**
      * Return stack of urls of currently entered stylesheets
      */
-    Stack* getEnteredStylesheets();
+    nsStringArray& getEnteredStylesheets()
+    {
+        return mEnteredStylesheets;
+    }
 
     /**
      * Return list of import containers
@@ -257,11 +260,11 @@ public:
     /**
      * Adds the set of names to the Whitespace preserving element set
      */
-    void preserveSpace(String& names);
+    void preserveSpace(nsAString& names);
 
-    void processAttrValueTemplate(const String& aAttValue,
+    void processAttrValueTemplate(const nsAFlatString& aAttValue,
                                   Element* aContext,
-                                  String& aResult);
+                                  nsAString& aResult);
 
     /**
      * Adds the set of names to the Whitespace stripping handling list.
@@ -269,7 +272,7 @@ public:
      * with MB_FALSE
      * aElement is used to resolve QNames
      */
-    void shouldStripSpace(String& aNames, Element* aElement,
+    void shouldStripSpace(const nsAString& aNames, Element* aElement,
                           MBool aShouldStrip,
                           ImportFrame* aImportFrame);
 
@@ -338,7 +341,7 @@ public:
     /**
      * More other functions
      */
-    void receiveError(String& errorMessage)
+    void receiveError(const nsAString& errorMessage)
     {
         receiveError(errorMessage, NS_ERROR_FAILURE);
     }
@@ -399,7 +402,7 @@ private:
     /**
      * Stack of URIs for currently entered stylesheets
      */
-    Stack enteredStylesheets;
+    nsStringArray mEnteredStylesheets;
 
     /**
      * List of import containers. Sorted by ascending import precedence
@@ -522,7 +525,7 @@ public:
     nsresult resolveNamespacePrefix(txAtom* aPrefix, PRInt32& aID);
     nsresult resolveFunctionCall(txAtom* aName, PRInt32 aID,
                                  FunctionCall*& aFunction);
-    void receiveError(const String& aMsg, nsresult aRes);
+    void receiveError(const nsAString& aMsg, nsresult aRes);
 
 protected:
     ProcessorState* mPS;

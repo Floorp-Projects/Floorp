@@ -286,7 +286,7 @@ Node* Document::createDocumentFragment()
  *
  * @return the Element
  */
-Element* Document::getElementById(const String aID)
+Element* Document::getElementById(const nsAString& aID)
 {
     NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMElement> element;
@@ -314,8 +314,8 @@ IMPL_CREATE_WRAPPER(Element)
  *
  * @return the Element
  */
-Element* Document::createElementNS(const String& aNamespaceURI,
-                                   const String& aTagName)
+Element* Document::createElementNS(const nsAString& aNamespaceURI,
+                                   const nsAString& aTagName)
 {
     NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMElement> element;
@@ -396,7 +396,7 @@ Attr* Document::createAttribute(nsIDOMAttr* aAttr)
  *
  * @return the Text node
  */
-Node* Document::createTextNode(const String& aData)
+Node* Document::createTextNode(const nsAString& aData)
 {
     NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMText> text;
@@ -415,7 +415,7 @@ Node* Document::createTextNode(const String& aData)
  *
  * @return the Comment node
  */
-Node* Document::createComment(const String& aData)
+Node* Document::createComment(const nsAString& aData)
 {
     NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMComment> comment;
@@ -437,7 +437,7 @@ Node* Document::createComment(const String& aData)
  * @return the ProcessingInstruction node
  */
 ProcessingInstruction* Document::createProcessingInstruction(
-            const String& aTarget, const String& aData)
+            const nsAString& aTarget, const nsAString& aData)
 {
     NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMProcessingInstruction> pi;
@@ -563,7 +563,7 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
     }
 }
 
-PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
+PRInt32 Document::namespaceURIToID(const nsAString& aNamespaceURI)
 {
     PRInt32 namesspaceID = kNameSpaceID_Unknown;
     if (gTxNameSpaceManager) {
@@ -573,7 +573,7 @@ PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
     return namesspaceID;
 }
 
-void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
+void Document::namespaceIDToURI(PRInt32 aNamespaceID, nsAString& aNamespaceURI)
 {
     if (gTxNameSpaceManager) {
         gTxNameSpaceManager->GetNameSpaceURI(aNamespaceID,

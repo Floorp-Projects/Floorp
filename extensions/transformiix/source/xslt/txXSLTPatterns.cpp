@@ -135,7 +135,7 @@ nsresult txUnionPattern::getSimplePatterns(txList& aList)
  * destination String, to allow cascading calls to other
  * toString() methods for mLocPathPatterns.
  */
-void txUnionPattern::toString(String& aDest)
+void txUnionPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txUnionPattern{"));
@@ -255,7 +255,7 @@ double txLocPathPattern::getDefaultPriority()
     return ((Step*)mSteps.get(0))->pattern->getDefaultPriority();
 }
 
-void txLocPathPattern::toString(String& aDest)
+void txLocPathPattern::toString(nsAString& aDest)
 {
     txListIterator iter(&mSteps);
 #ifdef DEBUG
@@ -298,7 +298,7 @@ double txRootPattern::getDefaultPriority()
     return 0.5;
 }
 
-void txRootPattern::toString(String& aDest)
+void txRootPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txRootPattern{"));
@@ -318,15 +318,14 @@ void txRootPattern::toString(String& aDest)
  * This looks like the id() function, but may only have LITERALs as
  * argument.
  */
-txIdPattern::txIdPattern(const String& aString)
+txIdPattern::txIdPattern(const nsAString& aString)
 {
 #ifdef TX_EXE
     mIds = aString;
 #else
-    const nsString& ids = aString.getConstNSString();
     nsAString::const_iterator pos, begin, end;
-    ids.BeginReading(begin);
-    ids.EndReading(end);
+    aString.BeginReading(begin);
+    aString.EndReading(end);
     pos = begin;
     while (pos != end) {
         while (pos != end && XMLUtils::isWhitespace(*pos))
@@ -403,17 +402,13 @@ double txIdPattern::getDefaultPriority()
     return 0.5;
 }
 
-void txIdPattern::toString(String& aDest)
+void txIdPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txIdPattern{"));
 #endif
     aDest.Append(NS_LITERAL_STRING("id('"));
-#ifdef TX_EXE
     aDest.Append(mIds);
-#else
-    aDest.getNSString().Append(mIds);
-#endif
     aDest.Append(NS_LITERAL_STRING("')"));
 #ifdef DEBUG
     aDest.Append(PRUnichar('}'));
@@ -453,13 +448,13 @@ double txKeyPattern::getDefaultPriority()
     return 0.5;
 }
 
-void txKeyPattern::toString(String& aDest)
+void txKeyPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txKeyPattern{"));
 #endif
     aDest.Append(NS_LITERAL_STRING("key('"));
-    String tmp;
+    nsAutoString tmp;
     if (mPrefix) {
         TX_GET_ATOM_STRING(mPrefix, tmp);
         aDest.Append(tmp);
@@ -603,7 +598,7 @@ double txStepPattern::getDefaultPriority()
     return 0.5;
 }
 
-void txStepPattern::toString(String& aDest)
+void txStepPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txStepPattern{"));

@@ -68,23 +68,23 @@ public:
      * @param aNsID the namespace ID of the attribute
      * @param aValue the value of the attribute
      */
-    void attribute(const String& aName,
+    void attribute(const nsAString& aName,
                    const PRInt32 aNsID,
-                   const String& aValue);
+                   const nsAString& aValue);
 
     /**
      * Signals to receive characters.
      *
      * @param aData the characters to receive
      */
-    void characters(const String& aData);
+    void characters(const nsAString& aData);
 
     /**
      * Signals to receive characters that don't need output escaping.
      *
      * @param aData the characters to receive
      */
-    void charactersNoOutputEscaping(const String& aData)
+    void charactersNoOutputEscaping(const nsAString& aData)
     {
         NS_ASSERTION(0, "Don't call this in module, we don't do d-o-e");
     }
@@ -94,7 +94,7 @@ public:
      *
      * @param data the comment data to receive
      */
-    void comment(const String& aData);
+    void comment(const nsAString& aData);
 
     /**
      * Signals the end of a document. It is an error to call
@@ -108,7 +108,7 @@ public:
      * @param aName the name of the element
      * @param aNsID the namespace ID of the element
      */
-    void endElement(const String& aName,
+    void endElement(const nsAString& aName,
                     const PRInt32 aNsID);
 
     /**
@@ -129,7 +129,8 @@ public:
      * @param aTarget the target of the processing instruction
      * @param aData the data of the processing instruction
      */
-    void processingInstruction(const String& aTarget, const String& aData);
+    void processingInstruction(const nsAString& aTarget,
+                               const nsAString& aData);
 
     /**
      * Signals the start of a document.
@@ -142,7 +143,7 @@ public:
      * @param aName the name of the element
      * @param aNsID the namespace ID of the element
      */
-    void startElement(const String& aName,
+    void startElement(const nsAString& aName,
                       const PRInt32 aNsID);
 
     /**

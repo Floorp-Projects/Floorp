@@ -39,6 +39,8 @@
 **/
 
 #include "ExprLexer.h"
+#include "txAtoms.h"
+#include "txStringUtils.h"
 #include "XMLUtils.h"
 
   //---------------------------/
@@ -68,7 +70,7 @@ Token::Token(short type)
  * @param value the value of this Token
  * @param type, the type of Token being represented
 **/
-Token::Token(const String& value, short type)
+Token::Token(const nsAString& value, short type)
 {
   this->type = type;
   //-- make copy of value String
@@ -103,44 +105,14 @@ Token::~Token()
  //- Implementation of ExprLexer -/
 //-------------------------------/
 
-/*
- * Complex Tokens
-*/
-//-- Nodetype tokens
-const String ExprLexer::COMMENT(NS_LITERAL_STRING("comment"));
-const String ExprLexer::NODE(NS_LITERAL_STRING("node"));
-const String ExprLexer::PROC_INST(NS_LITERAL_STRING("processing-instruction"));
-const String ExprLexer::TEXT(NS_LITERAL_STRING("text"));
-
-//-- boolean
-const String ExprLexer::AND(NS_LITERAL_STRING("and"));
-const String ExprLexer::OR(NS_LITERAL_STRING("or"));
-
-//-- multiplicative operators
-const String ExprLexer::MODULUS(NS_LITERAL_STRING("mod"));
-const String ExprLexer::DIVIDE(NS_LITERAL_STRING("div"));
-
-/**
- * The set of Lexer error messages
- **/
-const String ExprLexer::error_message[] =
-{
-  String(NS_LITERAL_STRING("VariableReference expected")),
-  String(NS_LITERAL_STRING("Operator expected")),
-  String(NS_LITERAL_STRING("Literal is not closed")),
-  String(NS_LITERAL_STRING(": not expected")),
-  String(NS_LITERAL_STRING("! not expected, use != or not()")),
-  String(NS_LITERAL_STRING("found a unkown character"))
-};
-
   //---------------/
  //- Contructors -/
 //---------------/
 
 /**
- * Creates a new ExprLexer using the given String
+ * Creates a new ExprLexer using the given string
 **/
-ExprLexer::ExprLexer(const String& pattern)
+ExprLexer::ExprLexer(const nsAFlatString& pattern)
 {
   firstItem    = 0;
   lastItem     = 0;
@@ -230,14 +202,14 @@ MBool ExprLexer::nextIsOperatorToken(Token* token)
 } //-- nextIsOperatorToken
 
 /**
- *  Parses the given String into the set of Tokens
+ *  Parses the given string into the set of Tokens
 **/
-void ExprLexer::parse(const String& pattern)
+void ExprLexer::parse(const nsAFlatString& pattern)
 {
   if (pattern.IsEmpty())
     return;
 
-  String tokenBuffer;
+  nsAutoString tokenBuffer;
   PRUint32 iter = 0, start;
   PRUint32 size = pattern.Length();
   short defType;
@@ -291,13 +263,17 @@ void ExprLexer::parse(const String& pattern)
             iter--; // step back
       }
       if (nextIsOperatorToken(prevToken)) {
-        if (pattern.subString(start,iter,subStr).Equals(AND))
+        if (TX_StringEqualsAtom(Substring(pattern, start, iter - start),
+                                txXPathAtoms::_and))
           defType = Token::AND_OP;
-        else if (pattern.subString(start,iter,subStr).Equals(OR))
+        else if (TX_StringEqualsAtom(Substring(pattern, start, iter - start),
+                                     txXPathAtoms::_or))
           defType = Token::OR_OP;
-        else if (pattern.subString(start,iter,subStr).Equals(MODULUS))
+        else if (TX_StringEqualsAtom(Substring(pattern, start, iter - start),
+                                     txXPathAtoms::mod))
           defType = Token::MODULUS_OP;
-        else if (pattern.subString(start,iter,subStr).Equals(DIVIDE))
+        else if (TX_StringEqualsAtom(Substring(pattern, start, iter - start),
+                                     txXPathAtoms::div))
           defType = Token::DIVIDE_OP;
         else {
           // Error "operator expected"
@@ -312,7 +288,7 @@ void ExprLexer::parse(const String& pattern)
           iter=size; // bail
         }
       }
-      addToken(new Token(pattern.subString(start,iter,subStr),defType));
+      addToken(new Token(Substring(pattern, start, iter - start), defType));
     }
     else if (isXPathDigit(ch)) {
       start = iter;
@@ -321,7 +297,8 @@ void ExprLexer::parse(const String& pattern)
       if (iter < size && pattern.CharAt(iter) == '.')
         while (++iter < size && 
                isXPathDigit(pattern.CharAt(iter))) /* just go */;
-      addToken(new Token(pattern.subString(start,iter,subStr),Token::NUMBER));
+      addToken(new Token(Substring(pattern, start, iter - start),
+                         Token::NUMBER));
     }
     else {
       switch (ch) {
@@ -335,7 +312,7 @@ void ExprLexer::parse(const String& pattern)
       case S_QUOTE :
       case D_QUOTE :
         start=iter;
-        iter = pattern.indexOf(ch, (PRInt32)start + 1);
+        iter = pattern.FindChar(ch, start + 1);
         if ((PRInt32)iter == kNotFound) {
           // XXX Error reporting "unclosed literal"
           errorPos = start;
@@ -347,7 +324,7 @@ void ExprLexer::parse(const String& pattern)
           iter=size; // bail
         }
         else {
-          addToken(new Token(pattern.subString(start+1,iter,subStr),
+          addToken(new Token(Substring(pattern, start + 1, iter - (start + 1)),
                              Token::LITERAL));
           ++iter;
         }
@@ -360,11 +337,11 @@ void ExprLexer::parse(const String& pattern)
             start=iter-1;
             while (++iter < size && 
                    isXPathDigit(pattern.CharAt(iter))) /* just go */;
-            addToken(new Token(pattern.subString(start,iter,subStr),
+            addToken(new Token(Substring(pattern, start, iter - start),
                                Token::NUMBER));
           }
           else if (ch==PERIOD) {
-            addToken(new Token(pattern.subString(iter-1,iter++,subStr),
+            addToken(new Token(Substring(pattern, ++iter - 2, 2),
                                Token::PARENT_NODE));
           }
           else
@@ -376,7 +353,7 @@ void ExprLexer::parse(const String& pattern)
         
         break;
       case COLON: // QNames are dealt above, must be axis ident
-        if (++iter < size && pattern.CharAt(iter)==COLON &&
+        if (++iter < size && pattern.CharAt(iter) == COLON &&
             prevToken->type == Token::CNAME) {
           prevToken->type = Token::AXIS_IDENTIFIER;
           ++iter;
@@ -393,8 +370,8 @@ void ExprLexer::parse(const String& pattern)
         }
         break;
       case FORWARD_SLASH :
-        if (++iter < size && pattern.CharAt(iter)==ch) {
-          addToken(new Token(pattern.subString(iter-1,++iter,subStr),
+        if (++iter < size && pattern.CharAt(iter) == ch) {
+          addToken(new Token(Substring(pattern, ++iter - 2, 2),
                              Token::ANCESTOR_OP));
         }
         else {
@@ -402,8 +379,8 @@ void ExprLexer::parse(const String& pattern)
         }
         break;
       case BANG : // can only be !=
-        if (++iter < size && pattern.CharAt(iter)==EQUAL) {
-          addToken(new Token(pattern.subString(iter-1,++iter,subStr),
+        if (++iter < size && pattern.CharAt(iter) == EQUAL) {
+          addToken(new Token(Substring(pattern, ++iter - 2, 2),
                              Token::NOT_EQUAL_OP));
         }
         else {
@@ -422,16 +399,16 @@ void ExprLexer::parse(const String& pattern)
         ++iter;
         break;
       case L_ANGLE:
-        if (++iter < size && pattern.CharAt(iter)==EQUAL) {
-          addToken(new Token(pattern.subString(iter-1,++iter,subStr),
+        if (++iter < size && pattern.CharAt(iter) == EQUAL) {
+          addToken(new Token(Substring(pattern, ++iter - 2, 2),
                              Token::LESS_OR_EQUAL_OP));
         }
         else
           addToken(new Token(ch,Token::LESS_THAN_OP));
         break;
       case R_ANGLE:
-        if (++iter < size && pattern.CharAt(iter)==EQUAL) {
-          addToken(new Token(pattern.subString(iter-1,++iter,subStr),
+        if (++iter < size && pattern.CharAt(iter) == EQUAL) {
+          addToken(new Token(Substring(pattern, ++iter - 2, 2),
                              Token::GREATER_OR_EQUAL_OP));
         }
         else
@@ -450,13 +427,14 @@ void ExprLexer::parse(const String& pattern)
         break;
       case L_PAREN:
         if (prevToken->type == Token::CNAME) {
-          if (prevToken->value.Equals(COMMENT))
+          if (TX_StringEqualsAtom(prevToken->value, txXPathAtoms::comment))
             prevToken->type = Token::COMMENT;
-          else if (prevToken->value.Equals(NODE))
+          else if (TX_StringEqualsAtom(prevToken->value, txXPathAtoms::node))
             prevToken->type = Token::NODE;
-          else if (prevToken->value.Equals(PROC_INST))
+          else if (TX_StringEqualsAtom(prevToken->value,
+                                       txXPathAtoms::processingInstruction))
             prevToken->type = Token::PROC_INST;
-          else if (prevToken->value.Equals(TEXT))
+          else if (TX_StringEqualsAtom(prevToken->value, txXPathAtoms::text))
             prevToken->type = Token::TEXT;
           else
             prevToken->type = Token::FUNCTION_NAME;

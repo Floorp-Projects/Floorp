@@ -98,7 +98,7 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                 NodeSet* nodes = (NodeSet*)exprResult;
                 int i;
                 for (i = 0; i < nodes->size(); i++) {
-                    String idList, id;
+                    nsAutoString idList, id;
                     XMLDOMUtils::getNodeValue(nodes->get(i), idList);
                     txTokenizer tokenizer(idList);
                     while (tokenizer.hasMoreTokens()) {
@@ -110,7 +110,7 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                 }
             }
             else {
-                String idList, id;
+                nsAutoString idList, id;
                 exprResult->stringValue(idList);
                 txTokenizer tokenizer(idList);
                 while (tokenizer.hasMoreTokens()) {
@@ -160,7 +160,7 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
             switch (mType) {
                 case LOCAL_NAME:
                 {
-                    String localName;
+                    nsAutoString localName;
                     txAtom* localNameAtom;
                     node->getLocalName(&localNameAtom);
                     if (localNameAtom) {
@@ -173,7 +173,11 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                 }
                 case NAMESPACE_URI:
                 {
-                    return new StringResult(node->getNamespaceURI());
+                    StringResult* result = new StringResult();
+                    if (result) {
+                        node->getNamespaceURI(result->mValue);
+                    }
+                    return result;
                 }
                 case NAME:
                 {
@@ -181,10 +185,18 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                         case Node::ATTRIBUTE_NODE:
                         case Node::ELEMENT_NODE:
                         case Node::PROCESSING_INSTRUCTION_NODE:
+                        {
                         // XXX Namespace: namespaces have a name
-                            return new StringResult(node->getNodeName());
+                            StringResult* result = new StringResult();
+                            if (result) {
+                                node->getNodeName(result->mValue);
+                            }
+                            return result;
+                        }
                         default:
+                        {
                             break;
+                        }
                     }
                     return new StringResult();
                 }
@@ -203,8 +215,8 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
         }
     }
 
-    String err(NS_LITERAL_STRING("Internal error"));
-    aContext->receiveError(err, NS_ERROR_UNEXPECTED);
+    aContext->receiveError(NS_LITERAL_STRING("Internal error"),
+                           NS_ERROR_UNEXPECTED);
     return new StringResult(NS_LITERAL_STRING("error"));
 }
 

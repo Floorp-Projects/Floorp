@@ -59,7 +59,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     }
 
     txListIterator iter(&params);
-    String keyQName;
+    nsAutoString keyQName;
     evaluateToString((Expr*)iter.next(), aContext, keyQName);
     Expr* param = (Expr*) iter.next();
 
@@ -71,7 +71,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     }
 
     if (!key) {
-        String err(NS_LITERAL_STRING("No key with that name in: "));
+        nsAutoString err(NS_LITERAL_STRING("No key with that name in: "));
         toString(err);
         aContext->receiveError(err, NS_ERROR_INVALID_ARG);
         return res;
@@ -91,13 +91,13 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     if (exprResult->getResultType() == ExprResult::NODESET) {
         NodeSet* nodeSet = (NodeSet*) exprResult;
         for (int i=0; i<nodeSet->size(); i++) {
-            String val;
+            nsAutoString val;
             XMLDOMUtils::getNodeValue(nodeSet->get(i), val);
             res->add(key->getNodes(val, contextDoc));
         }
     }
     else {
-        String val;
+        nsAutoString val;
         exprResult->stringValue(val);
         res->append(key->getNodes(val, contextDoc));
     }
@@ -145,7 +145,7 @@ txXSLKey::~txXSLKey()
  * @return a NodeSet* containing all nodes in doc matching with value
  *         keyValue
  */
-const NodeSet* txXSLKey::getNodes(String& aKeyValue, Document* aDoc)
+const NodeSet* txXSLKey::getNodes(const nsAString& aKeyValue, Document* aDoc)
 {
     NS_ASSERTION(aDoc, "missing document");
     if (!aDoc)
@@ -196,7 +196,7 @@ NamedMap* txXSLKey::addDocument(Document* aDoc)
 {
     NamedMap* map = new NamedMap;
     if (!map)
-        return NULL;
+        return nsnull;
     map->setObjectDeletion(MB_TRUE);
     mMaps.put(aDoc, map);
     indexTree(aDoc, map);
@@ -236,7 +236,7 @@ void txXSLKey::indexTree(Node* aNode, NamedMap* aMap)
  */
 void txXSLKey::testNode(Node* aNode, NamedMap* aMap)
 {
-    String val;
+    nsAutoString val;
     NodeSet *nodeSet;
 
     txListIterator iter(&mKeys);

@@ -38,11 +38,11 @@
 
 #include "txPatternParser.h"
 #include "ExprLexer.h"
-#include "Names.h"
 #include "txAtoms.h"
+#include "txStringUtils.h"
 #include "txXSLTPatterns.h"
 
-txPattern* txPatternParser::createPattern(const String& aPattern,
+txPattern* txPatternParser::createPattern(const nsAFlatString& aPattern,
                                           txIParseContext* aContext,
                                           ProcessorState* aPs)
 {
@@ -151,15 +151,13 @@ nsresult txPatternParser::createLocPathPattern(ExprLexer& aLexer,
         case Token::FUNCTION_NAME:
             // id(Literal) or key(Literal, Literal)
             {
-                String& name = aLexer.nextToken()->value;
-                txAtom* nameAtom = TX_GET_ATOM(name);
+                nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLexer.nextToken()->value);
                 if (nameAtom == txXPathAtoms::id) {
                     rv = createIdPattern(aLexer, stepPattern);
                 }
                 else if (nameAtom == txXSLTAtoms::key) {
                     rv = createKeyPattern(aLexer, aContext, aPs, stepPattern);
                 }
-                TX_IF_RELEASE_ATOM(nameAtom);
                 if (NS_FAILED(rv))
                     return rv;
             }
@@ -238,7 +236,7 @@ nsresult txPatternParser::createIdPattern(ExprLexer& aLexer,
     if (aLexer.nextToken()->type != Token::L_PAREN && 
         aLexer.peek()->type != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILED;
-    const String& value = aLexer.nextToken()->value;
+    const nsString& value = aLexer.nextToken()->value;
     if (aLexer.nextToken()->type != Token::R_PAREN)
         return NS_ERROR_XPATH_PARSE_FAILED;
     aPattern  = new txIdPattern(value);
@@ -254,11 +252,11 @@ nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
     if (aLexer.nextToken()->type != Token::L_PAREN && 
         aLexer.peek()->type != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILED;
-    const String& key = aLexer.nextToken()->value;
+    const nsString& key = aLexer.nextToken()->value;
     if (aLexer.nextToken()->type != Token::COMMA && 
         aLexer.peek()->type != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILED;
-    const String& value = aLexer.nextToken()->value;
+    const nsString& value = aLexer.nextToken()->value;
     if (aLexer.nextToken()->type != Token::R_PAREN)
         return NS_ERROR_XPATH_PARSE_FAILED;
 
@@ -285,10 +283,10 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
     MBool isAttr = MB_FALSE;
     Token* tok = aLexer.peek();
     if (tok->type == Token::AXIS_IDENTIFIER) {
-        if (ATTRIBUTE_AXIS.Equals(tok->value)) {
+        if (TX_StringEqualsAtom(tok->value, txXPathAtoms::attribute)) {
             isAttr = MB_TRUE;
         }
-        else if (!CHILD_AXIS.Equals(tok->value)) {
+        else if (!TX_StringEqualsAtom(tok->value, txXPathAtoms::child)) {
             // all done already for CHILD_AXIS, for all others
             // XXX report unexpected axis error
             return NS_ERROR_XPATH_PARSE_FAILED;

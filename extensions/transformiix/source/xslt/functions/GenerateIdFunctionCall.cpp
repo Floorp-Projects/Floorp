@@ -73,7 +73,7 @@ ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
             return 0;
 
         if (exprResult->getResultType() != ExprResult::NODESET) {
-            String err(NS_LITERAL_STRING("Invalid argument passed to generate-id(), expecting NodeSet"));
+            NS_NAMED_LITERAL_STRING(err, "Invalid argument passed to generate-id(), expecting NodeSet");
             aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
             delete exprResult;
             return new StringResult(err);

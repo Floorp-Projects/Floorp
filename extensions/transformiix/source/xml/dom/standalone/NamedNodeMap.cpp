@@ -35,14 +35,14 @@ NamedNodeMap::~NamedNodeMap()
 {
 }
 
-Node* NamedNodeMap::getNamedItem(const String& name)
+Node* NamedNodeMap::getNamedItem(const nsAString& name)
 {
   ListItem* pSearchItem = findListItemByName(name);
 
   if (pSearchItem)
     return pSearchItem->node;
   else
-    return NULL;
+    return nsnull;
 }
 
 Node* NamedNodeMap::setNamedItem(Node* arg)
@@ -51,14 +51,16 @@ Node* NamedNodeMap::setNamedItem(Node* arg)
   //try and remove the new node (arg).  If successful, return a pointer to
   //the removed item.  Reguardless of wheter the node already existed or not,
   //insert the new node at the end of the list.
-  Node* pReplacedNode = removeNamedItem(arg->getNodeName());
+  nsAutoString nodeName;
+  arg->getNodeName(nodeName);
+  Node* pReplacedNode = removeNamedItem(nodeName);
 
   NodeListDefinition::append(arg);
 
   return pReplacedNode;
 }
 
-Node* NamedNodeMap::removeNamedItem(const String& name)
+Node* NamedNodeMap::removeNamedItem(const nsAString& name)
 {
   NodeListDefinition::ListItem* pSearchItem;
   Node* returnNode;
@@ -77,8 +79,8 @@ Node* NamedNodeMap::removeNamedItem(const String& name)
       else
         lastItem = pSearchItem->prev;
 
-      pSearchItem->next = NULL;
-      pSearchItem->prev = NULL;
+      pSearchItem->next = nsnull;
+      pSearchItem->prev = nsnull;
 
       length--;
       returnNode = pSearchItem->node;
@@ -88,28 +90,30 @@ Node* NamedNodeMap::removeNamedItem(const String& name)
     }
 
 
-  return NULL;
+  return nsnull;
 }
 
 NodeListDefinition::ListItem*
-  NamedNodeMap::findListItemByName(const String& name)
+  NamedNodeMap::findListItemByName(const nsAString& name)
 {
   NodeListDefinition::ListItem* pSearchItem = firstItem;
 
   while (pSearchItem)
     {
-      if (name.Equals(pSearchItem->node->getNodeName()))
+      nsAutoString nodeName;
+      pSearchItem->node->getNodeName(nodeName);
+      if (name.Equals(nodeName))
         return pSearchItem;
 
       pSearchItem = pSearchItem->next;
     }
 
-  return NULL;
+  return nsnull;
 }
 
 AttrMap::AttrMap()
 {
-    ownerElement = NULL;
+    ownerElement = nsnull;
 }
 
 AttrMap::~AttrMap()
@@ -119,16 +123,16 @@ AttrMap::~AttrMap()
 Node* AttrMap::setNamedItem(Node* arg)
 {
   if (arg->getNodeType() != Node::ATTRIBUTE_NODE)
-    return NULL;
+    return nsnull;
   ((Attr*)arg)->ownerElement = ownerElement;
   return NamedNodeMap::setNamedItem(arg);
 }
 
-Node* AttrMap::removeNamedItem(const String& name)
+Node* AttrMap::removeNamedItem(const nsAString& name)
 {
   Attr* node = (Attr*)NamedNodeMap::removeNamedItem(name);
   if (node)
-    node->ownerElement = NULL;
+    node->ownerElement = nsnull;
   return node;
 }
 

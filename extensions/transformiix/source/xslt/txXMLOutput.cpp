@@ -40,7 +40,8 @@
 
 const int txXMLOutput::DEFAULT_INDENT = 2;
 
-txAttribute::txAttribute(PRInt32 aNsID, txAtom* aLocalName, const String& aValue) :
+txAttribute::txAttribute(PRInt32 aNsID, txAtom* aLocalName,
+                         const nsAString& aValue) :
     mName(aNsID, aLocalName),
     mValue(aValue),
     mShorthand(MB_FALSE)
@@ -64,18 +65,17 @@ txXMLOutput::~txXMLOutput()
 {
 }
 
-void txXMLOutput::attribute(const String& aName,
+void txXMLOutput::attribute(const nsAString& aName,
                             const PRInt32 aNsID,
-                            const String& aValue)
+                            const nsAString& aValue)
 {
     if (!mStartTagOpen)
         // XXX Signal this? (can't add attributes after element closed)
         return;
 
     txListIterator iter(&mAttributes);
-    String localPart;
-    XMLUtils::getLocalPart(aName, localPart);
-    txAtom* localName = TX_GET_ATOM(localPart);
+    nsCOMPtr<nsIAtom> localName;
+    XMLUtils::getLocalPart(aName, getter_AddRefs(localName));
     txExpandedName att(aNsID, localName);
 
     txAttribute* setAtt = 0;
@@ -89,16 +89,13 @@ void txXMLOutput::attribute(const String& aName,
         setAtt = new txAttribute(aNsID, localName, aValue);
         mAttributes.add(setAtt);
     }
-    TX_IF_RELEASE_ATOM(localName);
 }
 
-void txXMLOutput::characters(const String& aData)
+void txXMLOutput::characters(const nsAString& aData)
 {
     closeStartTag(MB_FALSE);
 
     if (mInCDATASection) {
-        PRUint32 i = 0;
-        PRUint32 j = 0;
         PRUint32 length = aData.Length();
 
         *mOut << CDATA_START;
@@ -107,12 +104,17 @@ void txXMLOutput::characters(const String& aData)
             printUTF8Chars(aData);
         }
         else {
-            mBuffer[j++] = aData.CharAt(i++);
-            mBuffer[j++] = aData.CharAt(i++);
-            mBuffer[j++] = aData.CharAt(i++);
+            PRUint32 j = 0;
+            nsAString::const_iterator iter;
+            aData.BeginReading(iter);
+            mBuffer[j++] = *(iter++);
+            mBuffer[j++] = *(iter++);
+            mBuffer[j++] = *(iter++);
 
-            while (i < length) {
-                mBuffer[j++] = aData.CharAt(i++);
+            nsAString::const_iterator end;
+            aData.EndReading(end);
+            while (iter != end) {
+                mBuffer[j++] = *(iter++);
                 if (mBuffer[(j - 1) % 4] == ']' &&
                     mBuffer[j % 4] == ']' &&
                     mBuffer[(j + 1) % 4] == '>') {
@@ -138,19 +140,16 @@ void txXMLOutput::characters(const String& aData)
     }
 }
 
-void txXMLOutput::charactersNoOutputEscaping(const String& aData)
+void txXMLOutput::charactersNoOutputEscaping(const nsAString& aData)
 {
     closeStartTag(MB_FALSE);
 
     printUTF8Chars(aData);
 }
 
-void txXMLOutput::comment(const String& aData)
+void txXMLOutput::comment(const nsAString& aData)
 {
     closeStartTag(MB_FALSE);
-
-    if (&aData == &NULL_STRING)
-        return;
 
     if (mOutputFormat.mIndent == eTrue) {
         for (PRUint32 i = 0; i < mIndentLevel; i++)
@@ -167,7 +166,7 @@ void txXMLOutput::endDocument()
 {
 }
 
-void txXMLOutput::endElement(const String& aName,
+void txXMLOutput::endElement(const nsAString& aName,
                              const PRInt32 aNsID)
 {
     MBool newLine = (mOutputFormat.mIndent == eTrue) && mAfterEndTag;
@@ -183,7 +182,7 @@ void txXMLOutput::endElement(const String& aName,
                 *mOut << ' ';
         }
         *mOut << L_ANGLE_BRACKET << FORWARD_SLASH;
-        *mOut << aName;
+        printUTF8Chars(aName);
         *mOut << R_ANGLE_BRACKET;
     }
     if (mOutputFormat.mIndent == eTrue)
@@ -192,15 +191,19 @@ void txXMLOutput::endElement(const String& aName,
     mInCDATASection = (MBool)mCDATASections.pop();
 }
 
-void txXMLOutput::processingInstruction(const String& aTarget,
-                                        const String& aData)
+void txXMLOutput::processingInstruction(const nsAString& aTarget,
+                                        const nsAString& aData)
 {
     closeStartTag(MB_FALSE);
     if (mOutputFormat.mIndent == eTrue) {
         for (PRUint32 i = 0; i < mIndentLevel; i++)
             *mOut << ' ';
     }
-    *mOut << PI_START << aTarget << SPACE << aData << PI_END;
+    *mOut << PI_START;
+    printUTF8Chars(aTarget);
+    *mOut << SPACE;
+    printUTF8Chars(aData);
+    *mOut << PI_END;
     if (mOutputFormat.mIndent == eTrue)
         *mOut << endl;
 }
@@ -216,7 +219,7 @@ void txXMLOutput::startDocument()
     *mOut << DOUBLE_QUOTE << PI_END << endl;
 }
 
-void txXMLOutput::startElement(const String& aName,
+void txXMLOutput::startElement(const nsAString& aName,
                                const PRInt32 aNsID)
 {
     if (!mHaveDocumentElement) {
@@ -235,7 +238,7 @@ void txXMLOutput::startElement(const String& aName,
         }
     }
     *mOut << L_ANGLE_BRACKET;
-    *mOut << aName;
+    printUTF8Chars(aName);
     mStartTagOpen = MB_TRUE;
     if (mOutputFormat.mIndent == eTrue)
         mIndentLevel += DEFAULT_INDENT;
@@ -303,28 +306,19 @@ void txXMLOutput::printUTF8Char(PRUnichar& ch)
     }
 }
 
-void txXMLOutput::printUTF8Chars(const String& aData)
+void txXMLOutput::printUTF8Chars(const nsAString& aData)
 {
-    PRUnichar currChar;
-    PRUint32 i = 0;
-
-    while (i < aData.Length()) {
-        currChar = aData.CharAt(i++);
-        printUTF8Char(currChar);
-    }
+    *mOut << NS_ConvertUCS2toUTF8(aData).get();
 }
 
-void txXMLOutput::printWithXMLEntities(const String& aData,
+void txXMLOutput::printWithXMLEntities(const nsAString& aData,
                                        MBool aAttribute)
 {
-    PRUnichar currChar;
-    PRUint32 i;
+    nsAString::const_iterator iter, end;
+    aData.EndReading(end);
 
-    if (&aData == &NULL_STRING)
-        return;
-
-    for (i = 0; i < aData.Length(); i++) {
-        currChar = aData.CharAt(i);
+    for (aData.BeginReading(iter); iter != end; ++iter) {
+        PRUnichar currChar = *iter;
         switch (currChar) {
             case AMPERSAND:
                 *mOut << AMP_ENTITY;

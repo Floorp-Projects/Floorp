@@ -380,7 +380,7 @@ MBool NodeSet::booleanValue()
  */
 double NodeSet::numberValue()
 {
-    String str;
+    nsAutoString str;
     stringValue(str);
     return Double::toDouble(str);
 }
@@ -389,7 +389,7 @@ double NodeSet::numberValue()
  * Creates a String representation of this ExprResult
  * @param aStr the destination string to append the String representation to.
  */
-void NodeSet::stringValue(String& aStr)
+void NodeSet::stringValue(nsAString& aStr)
 {
     if (mElementCount > 0)
         XMLDOMUtils::getNodeValue(get(0), aStr);

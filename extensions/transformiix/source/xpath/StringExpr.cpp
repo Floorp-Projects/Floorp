@@ -33,7 +33,7 @@
 /**
  * Creates a new StringExpr
 **/
-StringExpr::StringExpr(const String& value) {
+StringExpr::StringExpr(const nsAString& value) {
     //-- copy value
     this->value.Append(value);
 } //-- StringExpr
@@ -58,9 +58,9 @@ ExprResult* StringExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void StringExpr::toString(String& str) {
+void StringExpr::toString(nsAString& str) {
     PRUnichar ch = '\'';
-    if (value.indexOf(ch) != kNotFound)
+    if (value.FindChar(ch) != kNotFound)
         ch = '\"';
     str.Append(ch);
     str.Append(value);

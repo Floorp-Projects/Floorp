@@ -59,7 +59,7 @@ short NumberResult::getResultType() {
     return ExprResult::NUMBER;
 } //-- getResultType
 
-void NumberResult::stringValue(String& str)  {
+void NumberResult::stringValue(nsAString& str)  {
     Double::toString(value, str);
 } //-- stringValue
 

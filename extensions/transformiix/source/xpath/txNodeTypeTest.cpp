@@ -40,7 +40,7 @@ txNodeTypeTest::~txNodeTypeTest()
     TX_IF_RELEASE_ATOM(mNodeName);
 }
 
-void txNodeTypeTest::setNodeName(const String& aName)
+void txNodeTypeTest::setNodeName(const nsAString& aName)
 {
     mNodeName = TX_GET_ATOM(aName);
 }
@@ -94,7 +94,7 @@ double txNodeTypeTest::getDefaultPriority()
  * @param aDest the String to use when creating the string representation.
  *              The string representation will be appended to the string.
  */
-void txNodeTypeTest::toString(String& aDest)
+void txNodeTypeTest::toString(nsAString& aDest)
 {
     switch (mNodeType) {
         case COMMENT_TYPE:
@@ -106,7 +106,7 @@ void txNodeTypeTest::toString(String& aDest)
         case PI_TYPE:
             aDest.Append(NS_LITERAL_STRING("processing-instruction("));
             if (mNodeName) {
-                String str;
+                nsAutoString str;
                 TX_GET_ATOM_STRING(mNodeName, str);
                 aDest.Append(PRUnichar('\''));
                 aDest.Append(str);

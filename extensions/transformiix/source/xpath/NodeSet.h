@@ -172,7 +172,7 @@ public:
     short getResultType();
     MBool booleanValue();
     double numberValue();
-    void stringValue(String& aStr);
+    void stringValue(nsAString& aStr);
 
 private:
 

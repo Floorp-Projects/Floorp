@@ -178,8 +178,8 @@ MBool nsXPathExpression::EvalContextImpl::isStripSpaceAllowed(Node* aNode)
     return MB_FALSE;
 }
 
-void nsXPathExpression::EvalContextImpl::receiveError(const String& aMsg,
-                                                       nsresult aRes)
+void nsXPathExpression::EvalContextImpl::receiveError(const nsAString& aMsg,
+                                                      nsresult aRes)
 {
     mLastError = aRes;
     // forward aMsg to console service?

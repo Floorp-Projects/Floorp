@@ -35,8 +35,8 @@
 //
 NodeListDefinition::NodeListDefinition()
 {
-  firstItem = NULL;
-  lastItem = NULL;
+  firstItem = nsnull;
+  lastItem = nsnull;
   length = 0;
 }
 
@@ -75,7 +75,7 @@ void NodeListDefinition::append(Node& newNode)
   // Setup the new list item
   newListItem->node = &newNode;
   newListItem->prev = lastItem;
-  newListItem->next = NULL;
+  newListItem->next = nsnull;
 
   //Append the list item
   if (lastItem)
@@ -107,7 +107,7 @@ Node* NodeListDefinition::item(PRUint32 index)
       return pListItem->node;
     }
 
-  return NULL;
+  return nsnull;
 }
 
 //

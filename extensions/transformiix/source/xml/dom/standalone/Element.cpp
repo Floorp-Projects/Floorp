@@ -34,27 +34,26 @@
 //Simply call the constructor for NodeDefinition, and specify the proper node
 //type.
 //
-Element::Element(const String& tagName, Document* owner) :
-         NodeDefinition(Node::ELEMENT_NODE, tagName, NULL_STRING, owner)
+Element::Element(const nsAString& tagName, Document* owner) :
+         NodeDefinition(Node::ELEMENT_NODE, tagName, nsString(), owner)
 {
   mAttributes.ownerElement = this;
   mNamespaceID = kNameSpaceID_Unknown;
 
-  int idx = nodeName.indexOf(':');
+  int idx = tagName.FindChar(':');
   if (idx == kNotFound) {
-    mLocalName = TX_GET_ATOM(nodeName);
+    mLocalName = TX_GET_ATOM(tagName);
   }
   else {
-    String tmp;
-    nodeName.subString(idx+1, tmp);
-    mLocalName = TX_GET_ATOM(tmp);
+    mLocalName = TX_GET_ATOM(Substring(tagName, idx + 1,
+                                       tagName.Length() - (idx + 1)));
   }
 }
 
-Element::Element(const String& aNamespaceURI,
-                 const String& aTagName,
+Element::Element(const nsAString& aNamespaceURI,
+                 const nsAString& aTagName,
                  Document* aOwner) :
-         NodeDefinition(Node::ELEMENT_NODE, aTagName, NULL_STRING, aOwner)
+         NodeDefinition(Node::ELEMENT_NODE, aTagName, nsString(), aOwner)
 {
   Element(aTagName, aOwner);
   if (aNamespaceURI.IsEmpty())
@@ -116,11 +115,11 @@ PRInt32 Element::getNamespaceID()
 {
   if (mNamespaceID>=0)
     return mNamespaceID;
-  int idx = nodeName.indexOf(':');
+  int idx = nodeName.FindChar(':');
   if (idx == kNotFound) {
     Node* node = this;
     while (node && node->getNodeType() == Node::ELEMENT_NODE) {
-      String nsURI;
+      nsAutoString nsURI;
       if (((Element*)node)->getAttr(txXMLAtoms::xmlns, kNameSpaceID_XMLNS,
                                     nsURI)) {
         // xmlns = "" sets the default namespace ID to kNameSpaceID_None;
@@ -137,11 +136,8 @@ PRInt32 Element::getNamespaceID()
     mNamespaceID = kNameSpaceID_None;
   }
   else {
-    String prefix;
-    nodeName.subString(0, idx, prefix);
-    txAtom* prefixAtom = TX_GET_ATOM(prefix);
-    mNamespaceID = lookupNamespaceID(prefixAtom);
-    TX_IF_RELEASE_ATOM(prefixAtom);
+    nsCOMPtr<nsIAtom> prefix = do_GetAtom(Substring(nodeName, 0, idx));
+    mNamespaceID = lookupNamespaceID(prefix);
   }
   return mNamespaceID;
 }
@@ -156,7 +152,7 @@ NamedNodeMap* Element::getAttributes()
 //name and value specified.  Then add the Attr to the the Element's
 //mAttributes NamedNodeMap.
 //
-void Element::setAttribute(const String& name, const String& value)
+void Element::setAttribute(const nsAString& name, const nsAString& value)
 {
   // Check to see if an attribute with this name already exists. If it does
   // overwrite its value, if not, add it.
@@ -172,16 +168,15 @@ void Element::setAttribute(const String& name, const String& value)
   }
 }
 
-void Element::setAttributeNS(const String& aNamespaceURI,
-                             const String& aName,
-                             const String& aValue)
+void Element::setAttributeNS(const nsAString& aNamespaceURI,
+                             const nsAString& aName,
+                             const nsAString& aValue)
 {
   // Check to see if an attribute with this name already exists. If it does
   // overwrite its value, if not, add it.
   PRInt32 namespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
-  String localPart;
-  XMLUtils::getLocalPart(aName, localPart);
-  txAtom* localName = TX_GET_ATOM(localPart);
+  nsCOMPtr<nsIAtom> localName;
+  XMLUtils::getLocalPart(aName, getter_AddRefs(localName));
 
   Attr* foundNode = 0;
   AttrMap::ListItem* item = mAttributes.firstItem;
@@ -198,7 +193,6 @@ void Element::setAttributeNS(const String& aNamespaceURI,
     foundNode = 0;
     item = item->next;
   }
-  TX_IF_RELEASE_ATOM(localName);
 
   if (foundNode) {
     foundNode->setNodeValue(aValue);
@@ -215,7 +209,7 @@ void Element::setAttributeNS(const String& aNamespaceURI,
 //
 //Return the attribute specified by name
 //
-Attr* Element::getAttributeNode(const String& name)
+Attr* Element::getAttributeNode(const nsAString& name)
 {
   return (Attr*)mAttributes.getNamedItem(name);
 }
@@ -226,7 +220,7 @@ Attr* Element::getAttributeNode(const String& name)
 // Return false, if the attribute does not exist.
 //
 MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
-                       String& aValue)
+                       nsAString& aValue)
 {
   aValue.Truncate();
   AttrMap::ListItem* item = mAttributes.firstItem;
@@ -236,7 +230,7 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
     if (attrNode->getLocalName(&localName) &&
         aNSID == attrNode->getNamespaceID() &&
         aLocalName == localName) {
-      aValue.Append(attrNode->getValue());
+      attrNode->getNodeValue(aValue);
       TX_IF_RELEASE_ATOM(localName);
       return MB_TRUE;
     }
