@@ -55,10 +55,10 @@ function Startup()
     // Get last-modified file date+time
     // TODO: Convert this to local time?
     var lastmod = editorShell.editorDocument.lastModified;  // get string of last modified date
-    var lastmoddate = Date.parse(lastmod);                  // convert modified string to date
-    if(lastmoddate != 0)                                    // unknown date (or January 1, 1970 GMT)
-      lastmodString = lastmoddate;
 
+    // Convert modified string to date (0 = unknown date or January 1, 1970 GMT)
+    if (Date.parse(lastmod))
+      lastmodString = lastmod;
   }
   document.getElementById("PageModDate").setAttribute("value", lastmodString);
 

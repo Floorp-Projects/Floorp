@@ -25,7 +25,6 @@
 
 var gInsertNewImage = true;
 var gInsertNewIMap = true;
-var wasEnableAll  = false;
 var constrainOn = false;
 // Note used in current version, but these are set correctly
 //  and could be used to reset width and height used for constrain ratio
@@ -42,6 +41,7 @@ var actualWidth = "";
 var gOriginalSrc = "";
 var actualHeight = "";
 var gHaveDocumentUrl = false;
+var gTimerID;
 
 // These must correspond to values in EditorDialog.css for each theme
 // (unfortunately, setting "style" attribute here doesn't work!)
@@ -108,7 +108,7 @@ function Startup()
     //  so create one with default attributes
 
     imageElement = editorShell.CreateElementWithDefaults(tagName);
-    if( !imageElement )
+    if (!imageElement)
     {
       dump("Failed to get selected element or create a new one!\n");
       window.close();
@@ -209,8 +209,6 @@ function InitDialog()
   // Get image map for image
   gImageMap = GetImageMap();
 
-  // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
-  wasEnableAll = !IsValidImage(gDialog.srcInput.value);
   doOverallEnabling();
   doDimensionEnabling();
 }
@@ -307,48 +305,44 @@ function LoadPreviewImage()
   if (!imageSrc)
     return;
 
-  if (IsValidImage(gDialog.srcInput.value))
-  {
-    try {
-      // Remove the image URL from image cache so it loads fresh
-      //  (if we don't do this, loads after the first will always use image cache
-      //   and we won't see image edit changes or be able to get actual width and height)
-      
-      var IOService = GetIOService();
-      if (IOService)
+  try {
+    // Remove the image URL from image cache so it loads fresh
+    //  (if we don't do this, loads after the first will always use image cache
+    //   and we won't see image edit changes or be able to get actual width and height)
+    
+    var IOService = GetIOService();
+    if (IOService)
+    {
+      // We must have an absolute URL to preview it or remove it from the cache
+      imageSrc = MakeAbsoluteUrl(imageSrc);
+
+      if (GetScheme(imageSrc))
       {
-        // We must have an absolute URL to preview it or remove it from the cache
-        imageSrc = MakeAbsoluteUrl(imageSrc);
-
-        if (GetScheme(imageSrc))
+        var uri = IOService.newURI(imageSrc, null);
+        if (uri)
         {
-          var uri = IOService.newURI(imageSrc, null);
-          if (uri)
-          {
-            var imgCacheService = Components.classes["@mozilla.org/image/cache;1"].getService();
-            var imgCache = imgCacheService.QueryInterface(Components.interfaces.imgICache);
+          var imgCacheService = Components.classes["@mozilla.org/image/cache;1"].getService();
+          var imgCache = imgCacheService.QueryInterface(Components.interfaces.imgICache);
 
-            // This returns error if image wasn't in the cache; ignore that
-            if (imgCache)
-              imgCache.removeEntry(uri);
-          }
+          // This returns error if image wasn't in the cache; ignore that
+          imgCache.removeEntry(uri);
         }
       }
-    } catch(e) {}
-
-    if(gDialog.PreviewImage)
-      removeEventListener("load", PreviewImageLoaded, true);
-
-    if (gDialog.ImageHolder.firstChild)
-      gDialog.ImageHolder.removeChild(gDialog.ImageHolder.firstChild);
-      
-    gDialog.PreviewImage = document.createElementNS("http://www.w3.org/1999/xhtml", "html:img");
-    if(gDialog.PreviewImage)
-    {
-      gDialog.ImageHolder.appendChild(gDialog.PreviewImage);
-      gDialog.PreviewImage.addEventListener("load", PreviewImageLoaded, true);
-      gDialog.PreviewImage.src = imageSrc;
     }
+  } catch(e) {}
+
+  if (gDialog.PreviewImage)
+    removeEventListener("load", PreviewImageLoaded, true);
+
+  if (gDialog.ImageHolder.firstChild)
+    gDialog.ImageHolder.removeChild(gDialog.ImageHolder.firstChild);
+    
+  gDialog.PreviewImage = document.createElementNS("http://www.w3.org/1999/xhtml", "html:img");
+  if (gDialog.PreviewImage)
+  {
+    gDialog.ImageHolder.appendChild(gDialog.PreviewImage);
+    gDialog.PreviewImage.addEventListener("load", PreviewImageLoaded, true);
+    gDialog.PreviewImage.src = imageSrc;
   }
 }
 
@@ -363,8 +357,12 @@ function SetActualSize()
 
 function ChangeImageSrc()
 {
+  if (gTimerID)
+    clearTimeout(gTimerID);
+
+  gTimerID = setTimeout("LoadPreviewImage()", 800);
+
   SetRelativeCheckbox();
-  LoadPreviewImage();
   doOverallEnabling();
 }
 
@@ -393,22 +391,15 @@ function doDimensionEnabling()
 
 function doOverallEnabling()
 {
-  // An image is "valid" if it loaded correctly in the preview window
-  //  or has the proper file extension
-  var canEnableOk = IsValidImage(gDialog.srcInput.value);
-  if ( wasEnableAll == canEnableOk )
-    return;
+  var enabled = TrimString(gDialog.srcInput.value) != "";
 
-  wasEnableAll = canEnableOk;
+  SetElementEnabled(gDialog.OkButton, enabled);
+  SetElementEnabledById("AdvancedEditButton1", enabled);
+  SetElementEnabledById("imagemapLabel", enabled);
 
-  SetElementEnabled(gDialog.OkButton, canEnableOk);
-
-  SetElementEnabledById("AdvancedEditButton1", canEnableOk );
-  SetElementEnabledById( "imagemapLabel",  canEnableOk );
   //TODO: Restore when Image Map editor is finished
-  //SetElementEnabledById( "editImageMap",   canEnableOk );
-  SetElementEnabledById( "removeImageMap", gCanRemoveImageMap);
-
+  //SetElementEnabledById("editImageMap", enabled);
+  SetElementEnabledById("removeImageMap", gCanRemoveImageMap);
 }
 
 function ToggleConstrain()
@@ -486,13 +477,6 @@ function removeImageMap()
 //   accessible to AdvancedEdit() [in EdDialogCommon.js]
 function ValidateData()
 {
-  if ( !IsValidImage(gDialog.srcInput.value))
-  {
-    AlertWithTitle(null, GetString("MissingImageError"));
-    window.focus();
-    return false;
-  }
-
   //TODO: WE NEED TO DO SOME URL VALIDATION HERE, E.G.:
   // We must convert to "file:///" or "http://" format else image doesn't load!
   var src = TrimString(gDialog.srcInput.value);
