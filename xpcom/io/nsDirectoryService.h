@@ -46,7 +46,9 @@
 #include "nsXPIDLString.h"
 
 
-class nsDirectoryService : public nsIDirectoryService, public nsIProperties, public nsIDirectoryServiceProvider
+class nsDirectoryService : public nsIDirectoryService,
+                           public nsIProperties,
+                           public nsIDirectoryServiceProvider2
 {
   public:
 
@@ -60,6 +62,8 @@ class nsDirectoryService : public nsIDirectoryService, public nsIProperties, pub
   NS_DECL_NSIDIRECTORYSERVICE
 
   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+  
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
 
   nsDirectoryService();
   virtual ~nsDirectoryService();

@@ -39,21 +39,99 @@
 #include "nsIFile.idl"
 
 /**
+ * nsIDirectoryServiceProvider
+ *
+ * Used by Directory Service to get file locations.
+ *
  * @status FROZEN
- * @version 1.0
  */
 
 [scriptable, uuid(bbf8cab0-d43a-11d3-8cc2-00609792278c)]
 interface nsIDirectoryServiceProvider: nsISupports
 {
-  nsIFile getFile(in string prop, out PRBool persistant);
+ /**
+  * getFile
+  *
+  * Directory Service calls this when it gets the first request for
+  * a prop or on every request if the prop is not persistent.
+  *
+  * @param prop         The symbolic name of the file.
+  * @param persistent   TRUE - The returned file will be cached by Directory
+  *                     Service. Subsequent requests for this prop will
+  *                     bypass the provider and use the cache.
+  *                     FALSE - The provider will be asked for this prop
+  *                     each time it is requested.
+  *
+  * @return             The file represented by the property.
+  *
+  */ 
+  nsIFile getFile(in string prop, out PRBool persistent);
 };
+
+/**
+ * nsIDirectoryServiceProvider2
+ *
+ * An extension of nsIDirectoryServiceProvider which allows
+ * multiple files to be returned for the given key.
+ *
+ * @status UNDER_REVIEW
+ */
+
+[scriptable, uuid(2f977d4b-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIDirectoryServiceProvider2: nsIDirectoryServiceProvider
+{
+ /**
+  * getFiles
+  *
+  * Directory Service calls this when it gets a request for
+  * a prop and the requested type is nsISimpleEnumerator.
+  *
+  * @param prop         The symbolic name of the file list.
+  *
+  * @return             An enumerator for a list of file locations.
+  *                     The elements in the enumeration are nsIFile
+  *
+  */
+  nsISimpleEnumerator getFiles(in string prop);
+};
+
+/**
+ * nsIDirectoryService
+ *
+ * @status FROZEN
+ */
 
 [scriptable, uuid(57a66a60-d43a-11d3-8cc2-00609792278c)]
 interface nsIDirectoryService: nsISupports
 {
+ /**
+  * init
+  *
+  * Must be called. Used internally by XPCOM initialization.
+  *
+  */
   void init();
+
+ /**
+  * registerProvider
+  *
+  * Register a provider with the service.
+  *
+  * @param prov            The service will keep a strong reference
+  *                        to this object. It will be released when
+  *                        the service is released.
+  *
+  */  
   void registerProvider(in nsIDirectoryServiceProvider prov);
+  
+ /**
+  * unregisterProvider
+  *
+  * Unregister a provider with the service.
+  *
+  * @param prov            
+  *
+  */  
   void unregisterProvider(in nsIDirectoryServiceProvider prov);
 };
 

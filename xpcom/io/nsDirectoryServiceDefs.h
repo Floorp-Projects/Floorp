@@ -45,6 +45,9 @@
 // dirs are always available even if no nsIDirectoryServiceProviders have been registered
 // with the service. Application level keys are defined in nsAppDirectoryServiceDefs.h.
 //
+// Keys whose definition ends in "DIR" or "FILE" return a single nsIFile (or subclass).
+// Keys whose definition ends in "LIST" return an nsISimpleEnumerator which enumerates a
+// list of file objects.
 //========================================================================================
 
 
@@ -65,6 +68,8 @@
 #if !defined (XP_UNIX) || defined(XP_MACOSX)
     #define NS_OS_SYSTEM_DIR                    "SysD"
 #endif
+
+#define NS_OS_PLUGINS_DIR_LIST                  "OSPluginsDL"
 
 // for MacOSX we need the UNIX entries, plus the MAC entries
 #if defined (XP_UNIX) || defined(XP_MACOSX)
@@ -113,7 +118,7 @@
     #define NS_WIN_COMMON_STARTUP_DIR           "CmStrt"
     #define NS_WIN_COMMON_DESKTOP_DIRECTORY     "CmDeskP"
     #define NS_WIN_APPDATA_DIR                  "AppData"
-    #define NS_WIN_PRINTHOOD                    "PrntHd" 
+    #define NS_WIN_PRINTHOOD                    "PrntHd"
 #elif defined (XP_OS2)
     #define NS_OS2_DIR                          "OS2Dir"
     #define NS_OS2_HOME_DIR                     "Home"

@@ -48,6 +48,7 @@
 #include <Files.h>
 #include <Memory.h>
 #include <Processes.h>
+#include <Gestalt.h>
 #ifdef XP_MACOSX
 #include "prenv.h"
 #endif
@@ -583,7 +584,7 @@ nsDirectoryService::~nsDirectoryService()
 
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDirectoryService, nsIProperties, nsIDirectoryService, nsIDirectoryServiceProvider)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsDirectoryService, nsIProperties, nsIDirectoryService, nsIDirectoryServiceProvider, nsIDirectoryServiceProvider2)
 
 
 NS_IMETHODIMP
@@ -603,26 +604,45 @@ nsDirectoryService::Undefine(const char* prop)
     return NS_OK;
 }
 
-typedef struct FileData
-
+struct FileData
 {
-  const char* property;
-  nsIFile*    file;
-  PRBool	  persistent;
-
-} FileData;
+  FileData(const char* aProperty,
+           const nsIID& aUUID) :
+    property(aProperty),
+    data(nsnull),
+    persistent(PR_TRUE),
+    uuid(aUUID) {}
+    
+  const char*   property;
+  nsISupports*  data;
+  PRBool        persistent;
+  const nsIID&  uuid;
+};
 
 static PRBool FindProviderFile(nsISupports* aElement, void *aData)
 {
   nsresult rv;
-  nsCOMPtr<nsIDirectoryServiceProvider> prov = do_QueryInterface(aElement);
-  if (!prov)
-      return PR_FALSE;
-
   FileData* fileData = (FileData*)aData;
-  rv = prov->GetFile(fileData->property, &fileData->persistent, &(fileData->file) );
-  if (NS_SUCCEEDED(rv) && fileData->file)
-      return PR_FALSE;
+  if (fileData->uuid.Equals(NS_GET_IID(nsISimpleEnumerator)))
+  {
+      // Not all providers implement this iface
+      nsCOMPtr<nsIDirectoryServiceProvider2> prov2 = do_QueryInterface(aElement);
+      if (prov2)
+      {
+          rv = prov2->GetFiles(fileData->property, (nsISimpleEnumerator **)&fileData->data);
+          if (NS_SUCCEEDED(rv) && fileData->data)
+              return PR_FALSE;
+      }
+  }
+  else
+  {
+      nsCOMPtr<nsIDirectoryServiceProvider> prov = do_QueryInterface(aElement);
+      if (!prov)
+          return PR_FALSE;
+      rv = prov->GetFile(fileData->property, &fileData->persistent, (nsIFile **)&fileData->data);
+      if (NS_SUCCEEDED(rv) && fileData->data)
+          return PR_FALSE;
+  }
 
   return PR_TRUE;
 }
@@ -647,32 +667,29 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
     }
 
     // it is not one of our defaults, lets check any providers
-    FileData fileData;
-    fileData.property   = prop;
-    fileData.file       = nsnull;
-    fileData.persistent = PR_TRUE;
+    FileData fileData(prop, uuid);
 
     mProviders->EnumerateForwards(FindProviderFile, &fileData);
-    if (fileData.file)
+    if (fileData.data)
     {
         if (fileData.persistent)
         {
-            Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
+            Set(prop, NS_STATIC_CAST(nsIFile*, fileData.data));
         }
-        nsresult rv = (fileData.file)->QueryInterface(uuid, result);
-        NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
+        nsresult rv = (fileData.data)->QueryInterface(uuid, result);
+        NS_RELEASE(fileData.data);  // addref occurs in FindProviderFile()
         return rv;
     }
     
     FindProviderFile(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this), &fileData);
-    if (fileData.file)
+    if (fileData.data)
     {
         if (fileData.persistent)
         {
-            Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
+            Set(prop, NS_STATIC_CAST(nsIFile*, fileData.data));
         }
-        nsresult rv = (fileData.file)->QueryInterface(uuid, result);
-        NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
+        nsresult rv = (fileData.data)->QueryInterface(uuid, result);
+        NS_RELEASE(fileData.data);  // addref occurs in FindProviderFile()
         return rv;
     }
 
@@ -1079,6 +1096,121 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
 	return rv;
 }
 
+#if defined (XP_MAC)
 
+struct FindFolderParms
+{
+    short   vRefNumOrDomain;
+    OSType  folderType;
+};
 
+class nsSystemDirEnumeratorMac : public nsISimpleEnumerator
+{
+  public:
+    NS_DECL_ISUPPORTS
 
+    nsSystemDirEnumeratorMac(const FindFolderParms aFolderList[],
+                             PRInt32 aListCount) :
+        mFolderList(aFolderList),
+        mCurrentIndex(0), mMaxIndex(aListCount)
+    {
+        NS_INIT_REFCNT();
+    }
+
+    NS_IMETHOD HasMoreElements(PRBool *result) 
+    {
+        *result = ((mCurrentIndex < mMaxIndex) && mFolderList);
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetNext(nsISupports **result) 
+    {
+        NS_ENSURE_ARG_POINTER(result);
+        *result = nsnull;
+
+        PRBool hasMore;
+        HasMoreElements(&hasMore);
+        if (!hasMore)
+            return NS_ERROR_FAILURE;
+
+        OSErr err;
+        short foundVRefNum;
+        long foundDirID;
+        FSSpec fileSpec;
+
+        const FindFolderParms *currentFolder = mFolderList + mCurrentIndex++;
+        err = ::FindFolder(currentFolder->vRefNumOrDomain,
+                           currentFolder->folderType,
+                           kDontCreateFolder, &foundVRefNum, &foundDirID);
+        if (err == noErr)
+            err = ::FSMakeFSSpec(foundVRefNum, foundDirID, "\p", &fileSpec);
+        if (err != noErr)
+            return NS_ERROR_FAILURE;
+                
+        nsCOMPtr<nsILocalFileMac> newFile;
+        nsresult rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(newFile));
+        if (NS_FAILED(rv))
+            return rv;
+
+        *result = newFile;
+        NS_ADDREF(*result);
+
+        return NS_OK;
+    }
+
+    ~nsSystemDirEnumeratorMac() // I don't expect to be subclassed
+    {
+    }
+
+  protected:
+    const FindFolderParms *mFolderList;
+    PRInt32     mCurrentIndex, mMaxIndex;
+};
+
+NS_IMPL_ISUPPORTS1(nsSystemDirEnumeratorMac, nsISimpleEnumerator)
+#endif // XP_MAC
+
+NS_IMETHODIMP
+nsDirectoryService::GetFiles(const char *prop, nsISimpleEnumerator **_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = nsnull;
+    nsresult rv = NS_ERROR_FAILURE;
+        
+    if (!nsCRT::strcmp(prop, NS_OS_PLUGINS_DIR_LIST))
+    {
+#if defined(XP_MAC)       
+        static const FindFolderParms sClassicPluginsList[] = {
+            { kOnAppropriateDisk, kInternetPlugInFolderType}
+        };
+
+        const FindFolderParms *parmList;
+        PRInt32 parmListSize;
+        
+#if TARGET_CARBON
+        static const FindFolderParms sOSXPluginsList[] = {
+            { kUserDomain, kInternetPlugInFolderType },
+            { kLocalDomain, kInternetPlugInFolderType }
+        };
+
+        OSErr err;
+        long response;
+        err = ::Gestalt(gestaltSystemVersion, &response); 
+        if (!err && response >= 0x00001000)
+        {
+            parmList = sOSXPluginsList;
+            parmListSize = sizeof(sOSXPluginsList) / sizeof(sOSXPluginsList[0]);
+        }
+        else
+#endif
+        {
+            parmList = sClassicPluginsList;
+            parmListSize = sizeof(sClassicPluginsList) / sizeof(sClassicPluginsList[0]);
+        }
+        *_retval = new nsSystemDirEnumeratorMac(parmList, parmListSize);
+        NS_IF_ADDREF(*_retval);
+        rv = *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
+#endif // XP_MAC       
+    }
+    return rv;
+}
