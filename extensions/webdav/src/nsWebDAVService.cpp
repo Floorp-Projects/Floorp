@@ -227,8 +227,8 @@ nsWebDAVService::CreatePropfindDocument(nsIURI *resourceURI,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDocument> baseDoc = do_QueryInterface(doc);
-    baseDoc->SetXMLDeclaration(NS_LITERAL_STRING("1.0"), emptyString,
-                               emptyString);
+    baseDoc->SetXMLDeclaration(NS_LITERAL_STRING("1.0").get(),
+                               emptyString.get(), -1);
     baseDoc->SetDocumentURI(resourceURI);
 
     nsCOMPtr<nsIDOMElement> elt;
@@ -286,7 +286,9 @@ nsWebDAVService::nsWebDAVService() :
     mDAVNSString(NS_LITERAL_STRING("DAV:"))
 
 {
+#ifdef PR_LOGGING
     gDAVLog = PR_NewLogModule("webdav");
+#endif
 }
 
 nsWebDAVService::~nsWebDAVService()
