@@ -308,10 +308,13 @@ void nsTransform2D :: ScaleXCoords(const nscoord* aSrc,
                                    PRUint32 aNumCoords,
                                    PRIntn* aDst)
 {
+const nscoord* end = aSrc + aNumCoords;
 
-  if (type != MG_2DIDENTITY)
-  {
-    const nscoord* end = aSrc + aNumCoords;
+  if (type == MG_2DIDENTITY){
+    while (aSrc < end ) {
+      *aDst++ = PRIntn(*aSrc++);
+    }
+  } else {
     float scale = m00;
     while (aSrc < end) {
       nscoord c = *aSrc++;
@@ -324,10 +327,13 @@ void nsTransform2D :: ScaleYCoords(const nscoord* aSrc,
                                    PRUint32 aNumCoords,
                                    PRIntn* aDst)
 {
+const nscoord* end = aSrc + aNumCoords;
 
-  if (type != MG_2DIDENTITY)
-  {
-    const nscoord* end = aSrc + aNumCoords;
+  if (type == MG_2DIDENTITY){
+    while (aSrc < end ) {
+      *aDst++ = PRIntn(*aSrc++); 
+    } 
+  } else {
     float scale = m11;
     while (aSrc < end) {
       nscoord c = *aSrc++;
