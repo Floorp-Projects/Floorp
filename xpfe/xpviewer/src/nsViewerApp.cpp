@@ -191,7 +191,39 @@ nsViewerApp::Initialize(int argc, char** argv)
 #ifdef MOZ_FULLCIRCLE
   // This probably needs to be surrounded by a pref, the
   // old 5.0 world used "general.fullcircle_enable".
-  FCInitialize();
+
+  {
+	  FC_ERROR fcstatus = FC_ERROR_FAILED;
+	  fcstatus = FCInitialize();
+	  
+	  // Print out error status.
+	  switch(fcstatus) {
+	  case FC_ERROR_OK:
+		  printf("Talkback loaded Ok.\n");
+		  break;
+	  case FC_ERROR_CANT_INITIALIZE:
+		  printf("Talkback error: Can't initialize.\n");
+		  break;
+	  case FC_ERROR_NOT_INITIALIZED:
+		  printf("Talkback error: Not initialized.\n");
+		  break;
+	  case FC_ERROR_ALREADY_INITIALIZED:
+		  printf("Talkback error: Already initialized.\n");
+		  break;
+	  case FC_ERROR_FAILED:
+		  printf("Talkback error: Failure.\n");
+		  break;
+	  case FC_ERROR_OUT_OF_MEMORY:
+		  printf("Talkback error: Out of memory.\n");
+		  break;
+	  case FC_ERROR_INVALID_PARAMETER:
+		  printf("Talkback error: Invalid parameter.\n");
+		  break;
+	  default:
+		  printf("Talkback error: Unknown error status.\n");
+		  break;
+	  }
+  }
 #endif
 
   // Setup networking library
