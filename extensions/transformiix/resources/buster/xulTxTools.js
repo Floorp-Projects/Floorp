@@ -1,10 +1,10 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- *
+ * 
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
@@ -25,24 +25,103 @@ var isinited=false;
 var xalan_base, xalan_xml, xalan_elems, xalan_length, content_row, target;
 var matchRE, matchNameTag, matchFieldTag;
 var tests_run, tests_passed, tests_failed;
+var view = ({
+// nsIOutlinerView
+  rowCount : 0,
+  getRowProperties : function(i, prop) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (this.success[i]==1) prop.AppendElement(this.smile);
+    if (this.success[i]==-1) prop.AppendElement(this.sad);
+  },
+  getColumnProperties : function(index, prop) {},
+  getCellProperties : function(index, prop) {},
+  isContainer : function(index) {return false;},
+  outliner : null,
+  setOutliner : function(out) { this.outliner = out; },
+  getCellText : function(i, col) {
+    switch(col){
+      case "name":
+        return this.names[i];
+      case "purp":
+        return this.purps[i];
+      case "comm":
+        return this.comms[i];
+      default:
+        return "XXX in "+ col+" and "+i;
+     }
+   },
+// privates
+  names : null,
+  purps : null,
+  comms : null,
+  success : null,
+  smile : null,
+  sad : null,
+  select : function(index) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (!this.selection.isSelected(index)) 
+      this.selection.toggleSelect(index);
+  },
+  unselect : function(index) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (this.selection.isSelected(index)) 
+      this.selection.toggleSelect(index);
+  },
+  swallow : function(initial) {
+    this.rowCount = initial.length;
+    this.content = initial;
+    this.success = new Array(this.rowCount);
+    this.names = new Array(this.rowCount);
+    this.purps = new Array(this.rowCount);
+    this.comms = new Array(this.rowCount);
+    for (k=0;k<this.rowCount;k++) {
+      var cur = initial.item(k);
+      this.names[k] = cur.getAttribute("file");
+      if (cur.childNodes.length>1)
+        this.purps[k] = cur.childNodes.item(1).firstChild.nodeValue;
+      if (cur.childNodes.length>3)
+        this.comms[k] = cur.childNodes.item(3).firstChild.nodeValue;
+    }
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    this.outliner.rowCountChanged(0,this.rowCount);
+  },
+  remove : function(first,last){
+    last = Math.min(this.rowCount,last); 
+    first = Math.max(0,first);
+    this.names.splice(first,last-first+1);
+    this.purps.splice(first,last-first+1);
+    this.comms.splice(first,last-first+1);
+    this.success.splice(first,last-first+1);
+    this.rowCount=this.names.length;
+    this.outliner.rowCountChanged(first,this.rowCount);
+  },
+  getNames : function(first,last){
+    last = Math.min(this.rowCount,last); 
+    first = Math.max(0,first);
+    list = new Array(last-first+1);
+    for (k=first;k<=last;k++)
+      list[k-first] = this.names[k];
+    return list;
+  }
+});
+
+function setView(outliner, v) {
+  outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = v;
+}
 
 function loaderstuff(eve) {
   var ns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  content_row = document.createElementNS(ns,"row");
-  content_row.setAttribute("flex","1");
-  content_row.appendChild(document.createElementNS(ns,"checkbox"));
-  content_row.appendChild(document.createElementNS(ns,"text"));
-  content_row.appendChild(document.createElementNS(ns,"text"));
-  content_row.appendChild(document.createElementNS(ns,"text"));
-  content_row.setAttribute("class", "notrun");
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  target = document.getElementById("xalan_grid");
+  var atomservice = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
+  view.smile = atomservice.getAtom("success");
+  view.sad = atomservice.getAtom("fail");
   matchNameTag = document.getElementById("search-name");
   matchFieldTag = document.getElementById("search-field");
   tests_run = document.getElementById("tests_run");
   tests_passed = document.getElementById("tests_passed");
   tests_failed = document.getElementById("tests_failed");
   xalan_base = document.getElementById("xalan_base");
+  setView(document.getElementById('out'), view)
   xalan_xml = document.implementation.createDocument("","",null);
   xalan_xml.addEventListener("load", xalanIndexLoaded, false);
   xalan_xml.load("complete-xalanindex.xml");
@@ -51,122 +130,99 @@ function loaderstuff(eve) {
 }
 
 function xalanIndexLoaded(e) {
-  xalan_elems = xalan_xml.documentElement;
-  xalan_length = Math.floor(xalan_elems.childNodes.length/2);
+  populate_xalan();
   return true;
 }
 
 function refresh_xalan() {
-  while(target.childNodes.length>1) target.removeChild(target.lastChild);
-  pop_last = 0;
   populate_xalan();
   return true;
 }
 
 
 function populate_xalan() {
-  var upper=pop_last+pop_chunk;
-  var current,test,i,j, lName, re=/\/err\//;
-  var searchField = matchFieldTag.getAttribute("value");
-  var matchValue = matchNameTag.value;
-  if (matchValue.length==0) matchValue='.';
-  var matchRE = new RegExp(matchValue);
-  for (i=pop_last;i<Math.min(upper,xalan_length);i++){
-    current = content_row.cloneNode(true);
-    test = xalan_elems.childNodes.item(2*i+1);
-    if (!test.getAttribute("file").match(re)){
-      current.setAttribute("id", test.getAttribute("file"));
-      current.childNodes.item(1).setAttribute("label",
-      test.getAttribute("file"));
-      for (j=1;j<test.childNodes.length;j+=2){
-        lName = test.childNodes.item(j).localName;
-        if (lName=="purpose")
-          current.childNodes.item(2).setAttribute("value",
-                             test.childNodes.item(j).firstChild.nodeValue);
-        if (lName=="comment")
-          current.childNodes.item(3).setAttribute("value",
-                             test.childNodes.item(j).firstChild.nodeValue);
-      }
-      if (matchRE.test(current.childNodes.item(searchField)
-                       .getAttribute("value"))) target.appendChild(current);
-    }
-  }
-  if (pop_last+pop_chunk<xalan_length){
-    pop_last+=pop_chunk;
-    window.status="Loaded "+Math.ceil(pop_last/xalan_length*100)+"% of xalanindex.xml";
-    setTimeout("populate_xalan()",10);
-  } else {
-    window.status="";
-  }
+  view.swallow(xalan_xml.getElementsByTagName("test"));
 }
 
 function dump_checked(){
-  var nds = target.childNodes;
-  var todo = new Array();
-  for (i=1;i<nds.length;i++){
-    node=nds.item(i);
-    if(node.getAttribute("class") != "notrun")
-      node.setAttribute("class", "notrun");
-    node=node.firstChild;
-    if(node.hasAttribute("checked"))
-      todo.push(node.nextSibling.getAttribute("value"));
-  }
+  var sels = view.selection,a=new Object(),b=new Object(),k;
   reset_stats();
-  do_transforms(todo);
+  var todo = new Array();
+  var nums = new Array();
+  for (k=0;k<sels.getRangeCount();k++){
+    sels.getRangeAt(k,a,b);
+    todo = todo.concat(view.getNames(a.value,b.value));
+    for (l=a.value;l<=b.value;l++) nums.push(l);
+  }
+  do_transforms(todo,nums);
 }
 
-function handle_result(name,success){
-  var classname = (success ? "succeeded" : "failed");
-  var content_row = document.getElementById(name);
-  if (content_row){
-    content_row.setAttribute("class",classname);
-  }
+function handle_result(index,success){
   tests_run.getAttributeNode("value").nodeValue++;
-  if (success)
+  if (success) {
+    view.success[index] = 1;
     tests_passed.getAttributeNode("value").nodeValue++;
-  else
+  } else {
+    view.success[index] = -1;
     tests_failed.getAttributeNode("value").nodeValue++;
+  }
+  view.unselect(index);
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  view.outliner.invalidateRow(index);
 }
 
 function hide_checked(yes){
-  var checks = document.getElementsByTagName("checkbox");
-  for (i=0;i<checks.length;i++){
-    node=checks.item(i);
-    if (node.hasAttribute("checked")==yes)
-      node.parentNode.parentNode.removeChild(node.parentNode);
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var sels = view.selection,a=new Object(),b=new Object(),k;
+  if (yes) {
+    for (k=sels.getRangeCount()-1;k>=0;k--){
+      sels.getRangeAt(k,a,b);
+      view.remove(a.value,b.value);
+      view.selection.clearRange(a.value,b.value);
+    }
+  } else {
+    var last=view.rowCount;
+    for (k=view.selection.getRangeCount()-1;k>=0;k--){
+      view.selection.getRangeAt(k,a,b);
+      view.remove(b.value+1,last);
+      view.selection.clearRange(a.value,b.value);
+      last = a.value-1;
+    }
+  view.remove(0,last);
   }
 }
 
 function select(){
-  var searchField = matchFieldTag.getAttribute("value");
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var searchField = matchFieldTag.getAttribute("data");
   var matchRE = new RegExp(matchNameTag.value);
-  var nds = target.childNodes;
-  for (i=1;i<nds.length;i++){
-    node=nds.item(i).childNodes.item(searchField);
-    if (matchRE.test(node.getAttribute("value")))
-      nds.item(i).firstChild.setAttribute("checked",true);
+  for (k=0;k<view.rowCount;k++){
+    switch (searchField) {
+      case "1":
+        if (view.names[k] && view.names[k].match(matchRE))
+          view.select(k);
+        break;
+      case "2":
+        if (view.purps[k] && view.purps[k].match(matchRE))
+          view.select(k);
+        break;
+      case "3":
+        if (view.comms[k] && view.comms[k].match(matchRE))
+          view.select(k);
+        break;
+      default: dump(searchField+"|"+typeof(searchField)+"\n");
+    }
   }
 }
 
 function check(yes){
-  var i, nds = target.childNodes;
-  for (i=1;i<nds.length;i++){
-    if (yes)
-      nds.item(i).firstChild.setAttribute("checked",true);
-    else
-      nds.item(i).firstChild.removeAttribute("checked");
-  }
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  if (yes) view.selection.selectAll();
+  else view.selection.clearSelection();
 }
 
 function invert_check(){
-  var i, checker, nds = target.childNodes;
-  for (i=0;i<nds.length;i++){
-    checker = nds.item(i).firstChild;
-    if (checker.hasAttribute("checked"))
-      checker.removeAttribute("checked");
-    else
-      checker.setAttribute("checked",true);
-  }
+  alert("not yet implemented");
 }
 
 function browse_base_dir(){

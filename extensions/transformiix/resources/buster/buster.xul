@@ -66,24 +66,11 @@
 </titledbox>  
 <spring flex="1" /></box>
 
-<box id="tests" flex="1" orient="vertical">
-  <grid>
-    <columns> 
-      <column/> 
-      <column flex="1"/> 
-      <column flex="1"/> 
-      <column flex="1"/> 
-    </columns> 
-  
-    <rows id="xalan_grid">
-      <row flex="1">
-    <text value=" " class="head"/> 
-    <text value="Name" class="head"/> 
-    <text value="Purpose" class="head"/> 
-    <text value="Comment" class="head"/> 
-      </row> 
-    </rows> 
-  </grid>
-  <spring flex="1" />
-</box>
+<outliner id="out" flex="1">
+  <outlinercol id="name" label="Name" flex="1"/>
+  <outlinercol id="purp" label="Purpose" flex="2"/>
+  <outlinercol id="comm" label="Comment" flex="1"/>
+  <outlinerbody flex="1" onselect="dump('selection changed!\n')"/>
+</outliner>
+
 </window>
