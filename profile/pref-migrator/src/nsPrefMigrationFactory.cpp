@@ -77,23 +77,8 @@ nsPrefMigrationFactory::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-NS_IMETHODIMP
-nsPrefMigrationFactory::AddRef(void)
-{
-  return ++mRefCnt;
-}
-
-NS_IMETHODIMP
-nsPrefMigrationFactory::Release(void)
-{
-  if (--mRefCnt ==0)
-  {
-    delete this;
-    return 0; // Don't access mRefCnt after deleting!
-  }
-  return mRefCnt;
-}
-
+NS_IMPL_ADDREF(nsPrefMigrationFactory);
+NS_IMPL_RELEASE(nsPrefMigrationFactory);
 /*------------------------------------------------------------------------*/
 /* The PrefMigration CreateInstance Method
 /*------------------------------------------------------------------------*/
