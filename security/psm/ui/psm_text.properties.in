@@ -565,7 +565,7 @@ people while it is in transit.
 
 web_site_ident_verified=Web Site Identity Verified
 web_site_supports_encr_verified_by:
-The web site <strong> %1$s</strong> supports {glossary authentication,authentication} for the page you are viewing. The identity of this web site has been verified by %2$s, a certificate authority you trust for this purpose.
+The web site <strong> %1$s</strong> supports {glossary authentication,authentication} for the page you are viewing. The identity of this web site has been verified by %2$s, a certificate authority you trust for this purpose - not by Netscape.
 :web_site_supports_encr_verified_by
 view_verifier="View the security certificate that verifies this web site's identity."
 connection_encrypted="Connection Encrypted: %5$s (%6$s %7$d bits)"
