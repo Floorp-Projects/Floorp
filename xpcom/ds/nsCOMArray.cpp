@@ -87,7 +87,7 @@ nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex)
 {
     // its ok if oldObject is null here
     nsISupports *oldObject =
-        NS_REINTERPRET_CAST(nsISupports*, mArrray.SafeElementAt(aIndex));
+        NS_REINTERPRET_CAST(nsISupports*, mArray.SafeElementAt(aIndex));
 
     PRBool result = mArray.ReplaceElementAt(aObject, aIndex);
 
