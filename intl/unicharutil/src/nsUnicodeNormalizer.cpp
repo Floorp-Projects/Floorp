@@ -630,8 +630,13 @@ workbuf_extend(workbuf_t *wb) {
 		wb->ucs = (PRUint32*)nsMemory::Realloc(wb->ucs, sizeof(wb->ucs[0]) * newsize);
 		wb->cclass = (PRInt32*)nsMemory::Realloc(wb->cclass, sizeof(wb->cclass[0]) * newsize);
 	}
-	if (wb->ucs == NULL || wb->cclass == NULL)
+	if (wb->ucs == NULL || wb->cclass == NULL) {
+		if (wb->ucs)
+			nsMemory::Free(wb->ucs);
+		if (wb->cclass)
+			nsMemory::Free(wb->cclass);
 		return (NS_ERROR_OUT_OF_MEMORY);
+	}
 	else
 		return (NS_OK);
 }
