@@ -55,7 +55,7 @@ class nsIDOMText;
 class nsINodeInfo;
 class nsURI;
 
-#define PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER ((PtrBits)0x1 << 0)
+#define PARENT_BIT_IS_IN_A_HASH ((PtrBits)0x1 << 0)
 
 class nsGenericDOMDataNode : public nsITextContent
 {
@@ -276,34 +276,33 @@ private:
 
   already_AddRefed<nsIAtom> GetCurrentValueAtom();
 
-  void SetHasRangeList(PRBool aHasRangeList)
+  void SetIsInAHash()
   {
-    if (aHasRangeList) {
-      mParentPtrBits |= PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER;
-    } else {
-      mParentPtrBits &= ~PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER;
-    }
+    mParentPtrBits |= PARENT_BIT_IS_IN_A_HASH;
+  }
+  PRBool GetIsInAHash() const
+  {
+    return (mParentPtrBits & PARENT_BIT_IS_IN_A_HASH);
   }
 
-  void SetHasEventListenerManager(PRBool aHasRangeList)
+  void SetHasRangeList()
   {
-    if (aHasRangeList) {
-      mParentPtrBits |= PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER;
-    } else {
-      mParentPtrBits &= ~PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER;
-    }
+    SetIsInAHash();
   }
 
-  PRBool HasRangeList() const
+  void SetHasEventListenerManager()
   {
-    return (mParentPtrBits & PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER &&
-            nsGenericElement::sRangeListsHash.ops);
+    SetIsInAHash();
   }
 
-  PRBool HasEventListenerManager() const
+  PRBool CouldHaveRangeList() const
   {
-    return (mParentPtrBits & PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER &&
-            nsGenericElement::sEventListenerManagersHash.ops);
+    return GetIsInAHash() && nsGenericElement::sRangeListsHash.ops;
+  }
+
+  PRBool CouldHaveEventListenerManager() const
+  {
+    return GetIsInAHash() && nsGenericElement::sEventListenerManagersHash.ops;
   }
 
   nsIDocument *mDocument;

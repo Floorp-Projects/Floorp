@@ -119,7 +119,11 @@ public:
   
   static NS_METHOD    OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aReplacedNode);
   
-  static NS_METHOD    TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartOffset, PRInt32 aEndOffset, PRInt32 aReplaceLength);
+  static nsresult TextOwnerChanged(nsIContent *aTextNode,
+                                   nsVoidArray *aRangeList,
+                                   PRInt32 aStartOffset,
+                                   PRInt32 aEndOffset,
+                                   PRInt32 aReplaceLength);
 
 protected:
 

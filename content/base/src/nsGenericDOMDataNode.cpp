@@ -64,12 +64,12 @@ nsGenericDOMDataNode::nsGenericDOMDataNode(nsIDocument *aDocument)
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
-  if (HasEventListenerManager()) {
+  if (CouldHaveEventListenerManager()) {
     PL_DHashTableOperate(&nsGenericElement::sEventListenerManagersHash,
                          this, PL_DHASH_REMOVE);
   }
 
-  if (HasRangeList()) {
+  if (CouldHaveRangeList()) {
     PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
                          this, PL_DHASH_REMOVE);
   }
@@ -339,8 +339,9 @@ nsGenericDOMDataNode::SetData(const nsAString& aData)
   // we can lie and say we are deleting all the text, since in a total
   // text replacement we should just collapse all the ranges.
 
-  if (HasRangeList()) {
-    nsRange::TextOwnerChanged(this, 0, mText.GetLength(), 0);
+  nsVoidArray *rangeList = LookupRangeList();
+  if (rangeList) {
+    nsRange::TextOwnerChanged(this, rangeList, 0, mText.GetLength(), 0);
   }
 
   nsCOMPtr<nsITextContent> textContent = do_QueryInterface(this);
@@ -465,9 +466,9 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   }
 
   // inform any enclosed ranges of change
-
-  if (HasRangeList()) {
-    nsRange::TextOwnerChanged(this, aOffset, endOffset, dataLength);
+  nsVoidArray *rangeList = LookupRangeList();
+  if (rangeList) {
+    nsRange::TextOwnerChanged(this, rangeList, aOffset, endOffset, dataLength);
   }
 
   // Copy over appropriate data
@@ -524,7 +525,7 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager **aResult)
 
   entry->mListenerManager->SetListenerTarget(this);
 
-  SetHasEventListenerManager(PR_TRUE);
+  SetHasEventListenerManager();
 
   return NS_OK;
 }
@@ -864,7 +865,7 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
 
     entry->mRangeList = range_list;
 
-    SetHasRangeList(PR_TRUE);
+    SetHasRangeList();
   } else {
     // Make sure we don't add a range that is already
     // in the list!
@@ -887,27 +888,20 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
 void
 nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
 {
-  RangeListMapEntry *entry = nsnull;
-
-  if (HasRangeList()) {
-    entry =
-      NS_STATIC_CAST(RangeListMapEntry *,
-                     PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
-                                          this, PL_DHASH_LOOKUP));
+  if (!CouldHaveRangeList()) {
+    return;
   }
 
-  if (entry && PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    // dont need to release - this call is made by the range object
-    // itself
-    PRBool rv = entry->mRangeList->RemoveElement(aRange);
+  RangeListMapEntry *entry =
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
+                                        this, PL_DHASH_LOOKUP));
 
-    if (rv) {
-      if (entry->mRangeList->Count() == 0) {
-        PL_DHashTableRawRemove(&nsGenericElement::sRangeListsHash, entry);
-
-        SetHasRangeList(PR_FALSE);
-      }
-    }
+  // Don't need to release: this call is made by the range object itself.
+  if (entry && PL_DHASH_ENTRY_IS_BUSY(entry) &&
+      entry->mRangeList->RemoveElement(aRange) &&
+      entry->mRangeList->Count() == 0) {
+    PL_DHashTableRawRemove(&nsGenericElement::sRangeListsHash, entry);
   }
 }
 
@@ -1212,7 +1206,7 @@ nsGenericDOMDataNode::LookupListenerManager(nsIEventListenerManager **aListenerM
 {
   *aListenerManager = nsnull;
 
-  if (!HasEventListenerManager()) {
+  if (!CouldHaveEventListenerManager()) {
     return;
   }
 
@@ -1231,7 +1225,7 @@ nsGenericDOMDataNode::LookupListenerManager(nsIEventListenerManager **aListenerM
 nsVoidArray *
 nsGenericDOMDataNode::LookupRangeList() const
 {
-  if (!HasRangeList()) {
+  if (!CouldHaveRangeList()) {
     return nsnull;
   }
 
