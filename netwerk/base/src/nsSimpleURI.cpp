@@ -27,7 +27,6 @@
 #include "nsString.h"
 #include "prmem.h"
 #include "prprf.h"
-#include "nsURLHelper.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
@@ -144,30 +143,6 @@ nsSimpleURI::SetPreHost(const char* preHost)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetUsername(char* *result)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::SetUsername(const char* userName)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::GetPassword(char* *result)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::SetPassword(const char* password)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsSimpleURI::GetHost(char* *result)
 {
     return NS_ERROR_FAILURE;
@@ -204,18 +179,6 @@ nsSimpleURI::SetPath(const char* path)
     if (mPath) nsCRT::free(mPath);
     mPath = nsCRT::strdup(path);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::GetURLParser(nsIURLParser* *result)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSimpleURI::SetURLParser(nsIURLParser* URLParser)
-{
-    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -266,7 +229,8 @@ nsSimpleURI::SetRelativePath(const char *i_RelativePath)
 NS_IMETHODIMP
 nsSimpleURI::Resolve(const char *relativePath, char **result) 
 {
-    return DupString(result,(char*)relativePath);
+    NS_ASSERTION(PR_FALSE, "This is meaningless in hack context!"); 
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -20,10 +20,7 @@
  * Contributor(s): 
  */
 
-#include "nsIIOService.h"
-#include "nsURLHelper.h"
 #include "nsStdURL.h"
-#include "nsStdURLParser.h"
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsString.h"
@@ -31,115 +28,165 @@
 #include "prprf.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kStdURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kThisStdURLImplementationCID,
                      NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
-static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
 
-nsStdURL::nsStdURL()
-    : mScheme(nsnull),
-      mUsername(nsnull),
-      mPassword(nsnull),
-      mHost(nsnull),
-      mPort(-1),
-      mDirectory(nsnull),
-      mFileBaseName(nsnull),
-      mFileExtension(nsnull),
-      mParam(nsnull),
-      mQuery(nsnull),
-      mRef(nsnull),
-      mURLParser(nsnull)
+//----------------------------------------
+
+// Helper function to extract the port # from a string
+// PR_sscanf handles spaces and non-digits correctly
+static PRInt32 ExtractPortFrom(char* src)
 {
-    NS_INIT_REFCNT();
-    /* Create the standard URLParser */
-    nsComponentManager::CreateInstance(kStdURLParserCID, 
-                                       nsnull, NS_GET_IID(nsIURLParser),
-                                       (void**)&mURLParser);
-
+    PRInt32 returnValue = -1;
+    return (0 < PR_sscanf(src, "%d", &returnValue)) ? returnValue : -1;
 }
+
+// Replace all /./ with a /
+// Also changes all \ to / 
+// But only till #?; 
+static void ReplaceMess(char* io_Path)
+{
+    /* Stolen from the old netlib's mkparse.c.
+     *
+     * modifies a url of the form   /foo/../foo1  ->  /foo1
+     *                       and    /foo/./foo1   ->  /foo/foo1
+     *                       and    /foo/foo1/..  ->  /foo/
+     */
+    char *fwdPtr = io_Path;
+    char *urlPtr = io_Path;
+    
+    for(; (*fwdPtr != '\0') && 
+            (*fwdPtr != ';') && 
+            (*fwdPtr != '?') && 
+            (*fwdPtr != '#'); ++fwdPtr)
+    {
+        if (*fwdPtr == '\\')
+            *fwdPtr = '/';
+        if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && 
+            (*(fwdPtr+2) == '/' || *(fwdPtr+2) == '\\'))
+        {
+            // remove . followed by slash or a backslash
+            fwdPtr += 1;
+        }
+        else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
+                (*(fwdPtr+3) == '/' || 
+                    *(fwdPtr+3) == '\0' ||
+                    *(fwdPtr+3) == ';' ||   // This will take care of likes of
+                    *(fwdPtr+3) == '?' ||   //    foo/bar/..#sometag
+                    *(fwdPtr+3) == '#' ||
+                    *(fwdPtr+3) == '\\'))
+        {
+            // remove foo/.. 
+            // reverse the urlPtr to the previous slash 
+            if(urlPtr != io_Path) 
+                urlPtr--; // we must be going back at least by one 
+            for(;*urlPtr != '/' && urlPtr != io_Path; urlPtr--)
+                ;  // null body 
+
+            // forward the fwd_prt past the ../
+            fwdPtr += 2;
+            // special case if we have reached the end to preserve the last /
+            if (*fwdPtr == '.' && *(fwdPtr+1) == '\0')
+                urlPtr +=1;
+        }
+        else
+        {
+            // copy the url incrementaly 
+            *urlPtr++ = *fwdPtr;
+        }
+    }
+    // Copy remaining stuff past the #?;
+    for (; *fwdPtr != '\0'; ++fwdPtr)
+    {
+        *urlPtr++ = *fwdPtr;
+    }
+    *urlPtr = '\0';  // terminate the url 
+
+    /* 
+     *  Now lets remove trailing . case
+     *     /foo/foo1/.   ->  /foo/foo1/
+     */
+
+    if ((urlPtr > (io_Path+1)) && (*(urlPtr-1) == '.') && (*(urlPtr-2) == '/'))
+        *(urlPtr-1) = '\0';
+}
+
+
+
+//----------------------------------------
+
+class nsParsePath
+{
+public:
+    nsParsePath(nsStdURL* i_URL): mURL(i_URL) {}
+    virtual ~nsParsePath() {mURL->ParsePath();}
+private:
+    nsStdURL* mURL;
+};
 
 nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
     : mScheme(nsnull),
-      mUsername(nsnull),
-      mPassword(nsnull),
+      mPreHost(nsnull),
       mHost(nsnull),
       mPort(-1),
+      mPath(nsnull),
       mDirectory(nsnull),
-      mFileBaseName(nsnull),
-      mFileExtension(nsnull),
+      mFileName(nsnull),
       mParam(nsnull),
       mQuery(nsnull),
-      mRef(nsnull),
-      mURLParser(nsnull)
+      mRef(nsnull)
 {
-    NS_INIT_REFCNT();
-
-    // Skip leading spaces and control-characters
+    // Skip leading spaces
     char* fwdPtr= (char*) i_Spec;
-    while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
+    while (fwdPtr && (*fwdPtr != '\0') && (*fwdPtr == ' '))
         fwdPtr++;
-    // Remove trailing spaces and control-characters
+    // Remove trailing spaces
     if (fwdPtr) {
         char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
-        if (*bckPtr > '\0' && *bckPtr <= ' ') {
-            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr <= ' ')) {
+        if (*bckPtr == ' ') {
+            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr == ' ')) {
                 bckPtr--;
             }
             *(bckPtr+1) = '\0';
         }
     }
-
-    /* Create the standard URLParser */
-    nsComponentManager::CreateInstance(kStdURLParserCID, 
-                                       nsnull, NS_GET_IID(nsIURLParser),
-                                       (void**)&mURLParser);
-
+    mSpec = fwdPtr ? nsCRT::strdup(fwdPtr) : nsnull;
     NS_INIT_AGGREGATED(outer);
-    if (fwdPtr && mURLParser)
-        Parse((char*)fwdPtr);
+    if (fwdPtr)
+        Parse();
 }
 
 nsStdURL::nsStdURL(const nsStdURL& otherURL)
     : mPort(otherURL.mPort)
 {
-    NS_INIT_REFCNT();
-
+    mSpec = otherURL.mSpec ? nsCRT::strdup(otherURL.mSpec) : nsnull;
     mScheme = otherURL.mScheme ? nsCRT::strdup(otherURL.mScheme) : nsnull;
-    mUsername = otherURL.mUsername ? nsCRT::strdup(otherURL.mUsername) : nsnull;
-    mPassword = otherURL.mPassword ? nsCRT::strdup(otherURL.mPassword) : nsnull;
+    mPreHost = otherURL.mPreHost ? nsCRT::strdup(otherURL.mPreHost) : nsnull;
     mHost = otherURL.mHost ? nsCRT::strdup(otherURL.mHost) : nsnull;
+    mPath = otherURL.mPath ? nsCRT::strdup(otherURL.mPath) : nsnull;
     mDirectory = otherURL.mDirectory ? nsCRT::strdup(otherURL.mDirectory) : nsnull;
-    mFileBaseName = otherURL.mFileBaseName ? nsCRT::strdup(otherURL.mFileBaseName) : nsnull;
-    mFileExtension = otherURL.mFileExtension ? nsCRT::strdup(otherURL.mFileExtension) : nsnull;
+    mFileName = otherURL.mFileName ? nsCRT::strdup(otherURL.mFileName) : nsnull;
     mParam = otherURL.mParam ? nsCRT::strdup(otherURL.mParam) : nsnull;
     mQuery = otherURL.mQuery ? nsCRT::strdup(otherURL.mQuery) : nsnull;
     mRef= otherURL.mRef ? nsCRT::strdup(otherURL.mRef) : nsnull;
-
-    NS_IF_ADDREF(otherURL.mURLParser);
-    mURLParser = otherURL.mURLParser;
-
     NS_INIT_AGGREGATED(nsnull); // Todo! How?
 }
 
 nsStdURL& 
 nsStdURL::operator=(const nsStdURL& otherURL)
 {
+    mSpec = otherURL.mSpec ? nsCRT::strdup(otherURL.mSpec) : nsnull;
     mScheme = otherURL.mScheme ? nsCRT::strdup(otherURL.mScheme) : nsnull;
-    mUsername = otherURL.mUsername ? nsCRT::strdup(otherURL.mUsername) : nsnull;
-    mPassword = otherURL.mPassword ? nsCRT::strdup(otherURL.mPassword) : nsnull;
+    mPreHost = otherURL.mPreHost ? nsCRT::strdup(otherURL.mPreHost) : nsnull;
     mHost = otherURL.mHost ? nsCRT::strdup(otherURL.mHost) : nsnull;
+    mPath = otherURL.mPath ? nsCRT::strdup(otherURL.mPath) : nsnull;
     mDirectory = otherURL.mDirectory ? nsCRT::strdup(otherURL.mDirectory) : nsnull;
-    mFileBaseName = otherURL.mFileBaseName ? nsCRT::strdup(otherURL.mFileBaseName) : nsnull;
-    mFileExtension = otherURL.mFileExtension ? nsCRT::strdup(otherURL.mFileExtension) : nsnull;
+    mFileName = otherURL.mFileName ? nsCRT::strdup(otherURL.mFileName) : nsnull;
     mParam = otherURL.mParam ? nsCRT::strdup(otherURL.mParam) : nsnull;
     mQuery = otherURL.mQuery ? nsCRT::strdup(otherURL.mQuery) : nsnull;
     mRef= otherURL.mRef ? nsCRT::strdup(otherURL.mRef) : nsnull;
-
-    NS_IF_ADDREF(otherURL.mURLParser);
-    mURLParser = otherURL.mURLParser;
-
     NS_INIT_AGGREGATED(nsnull); // Todo! How?
     return *this;
 }
@@ -155,16 +202,15 @@ nsStdURL::operator==(const nsStdURL& otherURL) const
 nsStdURL::~nsStdURL()
 {
     CRTFREEIF(mScheme);
-    CRTFREEIF(mUsername);
-    CRTFREEIF(mPassword);
+    CRTFREEIF(mPreHost);
     CRTFREEIF(mHost);
-    CRTFREEIF(mDirectory);
-    CRTFREEIF(mFileBaseName);
-    CRTFREEIF(mFileExtension);
+    CRTFREEIF(mPath);
+    CRTFREEIF(mRef);
     CRTFREEIF(mParam);
     CRTFREEIF(mQuery);
-    CRTFREEIF(mRef);
-    NS_IF_RELEASE(mURLParser);
+    CRTFREEIF(mSpec);
+    CRTFREEIF(mDirectory);
+    CRTFREEIF(mFileName);
 }
 
 NS_IMPL_AGGREGATED(nsStdURL);
@@ -196,12 +242,9 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
     PRBool eq = PR_FALSE;
     if (i_OtherURI) {
         nsXPIDLCString spec;
-        nsXPIDLCString spec2;
         nsresult rv = i_OtherURI->GetSpec(getter_Copies(spec));
         if (NS_FAILED(rv)) return rv;
-        rv = this->GetSpec(getter_Copies(spec2));
-        if (NS_FAILED(rv)) return rv;
-        eq = nsAutoString(spec).Equals(spec2);
+        eq = nsAutoString(spec).Equals(this->mSpec);
     }
     *o_Equals = eq;
     return NS_OK;
@@ -220,146 +263,433 @@ nsStdURL::Clone(nsIURI **o_URI)
     return rv;
 }
 
-nsresult 
-nsStdURL::GetURLParser(nsIURLParser* *aURLParser)
-{
-    *aURLParser = mURLParser;
-    NS_IF_ADDREF(*aURLParser);
-    return NS_OK;
-}
-
-nsresult 
-nsStdURL::SetURLParser(nsIURLParser* aURLParser)
-{
-    NS_IF_RELEASE(mURLParser);
-    mURLParser = aURLParser;
-    return NS_OK;
-}
-
 nsresult
-nsStdURL::Parse(const char* i_Spec)
+nsStdURL::Parse(void)
 {
-    // Main parser
-    NS_PRECONDITION( (nsnull != i_Spec), "Parse called on empty url!");
-    if (!i_Spec)
+
+    NS_PRECONDITION( (nsnull != mSpec), "Parse called on empty url!");
+    if (!mSpec)
         return NS_ERROR_MALFORMED_URI;
 
-    NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
+    // Parse the path into its individual elements 
+    // when we are done from here.
+    nsParsePath pp(this);
 
-    // Parse the spec
-    char* ePath = nsnull;
-    nsresult rv = mURLParser->ParseAtScheme(i_Spec, &mScheme, &mUsername, 
-                                            &mPassword, &mHost, &mPort, 
-                                            &ePath);
-    if (NS_SUCCEEDED(rv)) {
-        // Now parse the path
-        rv = mURLParser->ParseAtDirectory(ePath, &mDirectory, &mFileBaseName, 
-                                          &mFileExtension, &mParam, 
-                                          &mQuery, &mRef);
-    }
-    CRTFREEIF(ePath);
-    return rv;
-}
-
-nsresult
-nsStdURL::GetString(char** result, char* fromEscapedStr, Format toFormat)
-{
-    // Given str "foo%20bar", gets "foo bar" if UNESCAPED
-    nsresult rv = NS_OK;
-    if (toFormat == UNESCAPED) {
-        rv = nsURLUnescape(fromEscapedStr, result);
-    } else
-        rv = DupString(result, fromEscapedStr);
-    return rv;
-}
-
-nsresult
-nsStdURL::AppendString(nsCString& buffer, char * fromUnescapedStr,
-                       Format toFormat, PRInt16 mask)
-{
-    // Given str "foo bar", appends "foo%20bar" to buffer if ESCAPED
-    nsresult rv = NS_OK; 
-
-    if (!fromUnescapedStr)
-        return NS_ERROR_FAILURE;
-
-    char* temp = nsnull;
-    if (toFormat == ESCAPED) {
-        rv = nsURLEscape(fromUnescapedStr, mask, &temp);
-        if (NS_SUCCEEDED(rv))
-            buffer += temp;
-    } else {
-        buffer += fromUnescapedStr;
-    }
-
-    CRTFREEIF(temp);
-    return rv;
-}
-
-nsresult
-nsStdURL::AppendPreHost(nsCString& buffer, char* i_Username, 
-                        char* i_Password, Format toFormat)
-{
-    nsresult rv = NS_OK;
-    if (i_Username)
+    // Leading spaces are now removed by SetSpec. 
+    int len = PL_strlen(mSpec);
+    static const char delimiters[] = "/:@?"; //this order is optimized.
+    char* brk = PL_strpbrk(mSpec, delimiters);
+    char* lastbrk = brk;
+    if (!brk) // everything is a host
     {
-        rv = AppendString(buffer,i_Username,ESCAPED,
-                          nsIIOService::url_Username);
-        if (NS_FAILED(rv))
-            return rv;
-        if (i_Password) 
+        ExtractString(mSpec, &mHost, len);
+        return NS_OK;
+    }
+
+    switch (*brk)
+    {
+    case '/' :
+    case '?' :
+        // If the URL starts with a slash then everything is a path
+        if (brk == mSpec)
         {
-           buffer += ':';
-           rv = AppendString(buffer,i_Password,ESCAPED,
-                             nsIIOService::url_Password);
-           if (NS_FAILED(rv))
-               return rv;
+            ExtractString(mSpec, &mPath, len);
+            return NS_OK;
         }
-        buffer += '@';
+        else // The first part is host, so its host/path
+        {
+            ExtractString(mSpec, &mHost, (brk - mSpec));
+            ExtractString(brk, &mPath, (len - (brk - mSpec)));
+            return NS_OK;
+        }
+        break;
+    case ':' :
+        if (*(brk+1) == '/') 
+        {
+            ExtractString(mSpec, &mScheme, (brk - mSpec));
+
+            if (*(brk+2) == '/') // e.g. http://
+            // If the first colon is followed by // then its definitely a spec
+            {
+                lastbrk = brk+3;
+                brk = PL_strpbrk(lastbrk, delimiters);
+                if (!brk) // everything else is a host, as in http://host
+                {
+                    ExtractString(lastbrk, &mHost, len - (lastbrk - mSpec));
+                    return NS_OK;
+                }
+                switch (*brk)
+                {
+                    case '/' : // standard case- http://host/path
+                    case '?' : // missing path cases
+                        ExtractString(lastbrk, &mHost, (brk - lastbrk));
+                        ExtractString(brk, &mPath, (len - (brk - mSpec)));
+
+                        return NS_OK;
+                        break;
+                    case ':' : // http://user:... or http://host:...
+                    {
+                        // It could be http://user:pass@host/path 
+                        // or http://host:port/path we find that by checking further...
+                        char* nextbrk = PL_strpbrk(brk+1, delimiters);
+                        if (!nextbrk) // http://host:port
+                        {
+                            ExtractString(lastbrk, &mHost, (brk-lastbrk));
+                            mPort = ExtractPortFrom(brk+1);
+                            if (mPort <= 0) 
+                                return NS_ERROR_MALFORMED_URI;
+                            else
+                                return NS_OK;
+                        }
+
+                        switch (*nextbrk)
+                        {
+                            case '/': // http://host:port/path
+                            case '?': // http://host:port?path
+                                ExtractString(lastbrk, &mHost, 
+                                    (brk-lastbrk));
+                                mPort = ExtractPortFrom(brk+1);
+                                if (mPort <= 0)
+                                    return NS_ERROR_MALFORMED_URI;
+                                ExtractString(nextbrk, &mPath, 
+                                    len - (nextbrk-mSpec));
+                                return NS_OK;
+                                break;
+                            case '@': // http://user:pass@host...
+                                ExtractString(lastbrk, &mPreHost, 
+                                    (nextbrk - lastbrk));
+
+                                brk = PL_strpbrk(nextbrk+1, delimiters);
+                                if (!brk) // its just http://user:pass@host
+                                {
+                                    ExtractString(nextbrk+1, &mHost, 
+                                        len - (nextbrk+1 - mSpec));
+                                    return NS_OK;
+                                }
+
+                                ExtractString(nextbrk+1, &mHost, 
+                                    brk - (nextbrk+1));
+
+                                switch (*brk)
+                                {
+                                    case '/': // http://user:pass@host/path
+                                    case '?':
+                                        ExtractString(brk, &mPath,
+                                            len - (brk - mSpec));
+                                        return NS_OK;
+                                        break;
+                                    case ':': // http://user:pass@host:port...
+                                        lastbrk = brk+1;
+                                        brk = PL_strpbrk(lastbrk, "/?");
+                                        if (brk) // http://user:pass@host:port/path
+                                        {
+                                            mPort = ExtractPortFrom(lastbrk);
+                                            if (mPort <= 0)
+                                                return NS_ERROR_MALFORMED_URI;
+                                            ExtractString(brk, &mPath, 
+                                                len - (brk-mSpec));
+                                            return NS_OK;
+                                         }
+                                         else   // http://user:pass@host:port
+                                         {
+                                            mPort = ExtractPortFrom(lastbrk);
+                                            if (mPort <= 0)
+                                                return NS_ERROR_MALFORMED_URI;
+                                            return NS_OK;
+                                         }
+                                         break;
+                                    default: NS_POSTCONDITION(0, "This just can't be!");
+                                         break;
+                                }
+                                break;
+                            case ':': // three colons!
+                                return NS_ERROR_MALFORMED_URI;
+                                break;
+                            default: NS_POSTCONDITION(0, "This just can't be!");
+                                break;
+                            }
+                        }
+                        break;
+                    case '@' : // http://user@host...
+                        {
+                            ExtractString(lastbrk, &mPreHost, 
+                                (brk-lastbrk));
+                            lastbrk = brk+1;
+                            brk = PL_strpbrk(lastbrk, delimiters);
+                            if (!brk) // its just http://user@host
+                            {
+                                ExtractString(lastbrk, &mHost, 
+                                    len - (lastbrk - mSpec));
+                                return NS_OK;
+                            }
+                            ExtractString(lastbrk, &mHost, 
+                                (brk - lastbrk));
+                            switch (*brk)
+                            {
+                                case ':' : // http://user@host:port...
+                                    lastbrk = brk+1;
+                                    brk = PL_strpbrk(lastbrk, "/?");
+                                    if (brk)    // http://user@host:port/path
+                                    {
+                                        mPort = ExtractPortFrom(lastbrk);
+                                        if (mPort <= 0)
+                                            return NS_ERROR_MALFORMED_URI;
+                                        ExtractString(brk, &mPath, 
+                                            len - (brk-mSpec));
+                                        return NS_OK;
+                                    }
+                                    else        // http://user@host:port
+                                    {
+                                        mPort = ExtractPortFrom(lastbrk);
+                                        if (mPort <= 0)
+                                            return NS_ERROR_MALFORMED_URI;
+                                        return NS_OK;
+                                    }
+                                    break;
+                                case '/' : // http://user@host/path
+                                case '?' : // http://user@host?path
+                                    ExtractString(brk, &mPath, 
+                                        len - (brk - mSpec));
+                                    return NS_OK;
+                                    break;
+                                case '@' :
+                                    return NS_ERROR_MALFORMED_URI;
+                                default : NS_POSTCONDITION(0, 
+                                    "This just can't be!");
+                                    break;
+                            }
+                        }
+                        break;
+                    default: NS_POSTCONDITION(0, "This just can't be!");
+                        break;
+                }
+            }
+            else // This is a no // path alone case like file:/path, 
+                // there is never a prehost/host in this case.
+            {
+                ExtractString(brk+1, &mPath, len - (brk-mSpec+1)); 
+                return NS_OK;
+            }
+        }
+        else // scheme:host or host:port...
+        {
+            lastbrk = brk+1;
+
+            if ((*lastbrk >= '0') && (*lastbrk <= '9')) //host:port...
+            {
+                ExtractString(mSpec, &mHost, (brk - mSpec));
+                brk = PL_strpbrk(lastbrk, delimiters);
+                if (!brk) // Everything else is just the port
+                {
+                    mPort = ExtractPortFrom(lastbrk);
+                    if (mPort <= 0)
+                        return NS_ERROR_MALFORMED_URI;
+                    return NS_OK;
+                }
+                switch (*brk)
+                {
+                    case '/' : // The path, so its host:port/path
+                    case '?' : // The path, so its host:port?path
+                        mPort = ExtractPortFrom(lastbrk);
+                        if (mPort <= 0)
+                            return NS_ERROR_MALFORMED_URI;
+                        ExtractString(brk, &mPath, len - (brk-mSpec));
+                        return NS_OK;
+                        break;
+                    case ':' : 
+                        return NS_ERROR_MALFORMED_URI;
+                        break;
+                    case '@' :
+                        // This is a special case of user:pass@host... so 
+                        // Cleanout our earliar knowledge of host
+                        CRTFREEIF(mHost);
+
+                        ExtractString(mSpec, &mPreHost, (brk-mSpec));
+                        lastbrk = brk+1;
+                        brk = PL_strpbrk(lastbrk, ":/?");
+                    // its user:pass@host so everthing else is just the host
+                        if (!brk)
+                        {
+                            ExtractString(lastbrk, &mHost, len - (lastbrk-mSpec));
+                            return NS_OK;
+                        }
+                        ExtractString(lastbrk, &mHost, (brk-lastbrk));
+                        if (*brk == ':') // user:pass@host:port...
+                        {
+                            lastbrk = brk+1;
+                            brk = PL_strpbrk(lastbrk, "/?");
+                            if (brk)    // user:pass@host:port/path
+                            {
+                                mPort = ExtractPortFrom(lastbrk);
+                                if (mPort <= 0)
+                                    return NS_ERROR_MALFORMED_URI;
+                                ExtractString(brk, &mPath, len - (brk-mSpec));
+                                return NS_OK;
+                            }
+                            else        // user:pass@host:port
+                            {
+                                mPort = ExtractPortFrom(lastbrk);
+                                if (mPort <= 0)
+                                    return NS_ERROR_MALFORMED_URI;
+                                return NS_OK;
+                            }
+                        }
+                        else // (*brk == '/') || (*brk == '?') 
+                            // so user:pass@host/path
+                        {
+                            ExtractString(brk, &mPath, len - (brk - mSpec));
+                            return NS_OK;
+                        }
+                        break;
+                    default: NS_POSTCONDITION(0, "This just can't be!");
+                        break;
+                }
+            }
+            else // scheme:host...
+            {
+                ExtractString(mSpec, &mScheme, (brk - mSpec));
+                brk = PL_strpbrk(lastbrk, delimiters);
+                if (!brk) // its just scheme:host
+                {
+                    ExtractString(lastbrk, &mHost, len - (lastbrk-mSpec));
+                    return NS_OK;
+                }
+                switch (*brk)
+                {
+                    case '/' : // The path, so its scheme:host/path
+                    case '?' : // The path, so its scheme:host?path
+                        ExtractString(lastbrk, &mHost, (brk-lastbrk));
+                        ExtractString(brk, &mPath, len - (brk - mSpec));
+                        return NS_OK;
+                        break;
+                    case '@' : // scheme:user@host...
+                        ExtractString(lastbrk, &mPreHost, (brk-lastbrk));
+                        lastbrk = brk+1;
+                        brk = PL_strpbrk(lastbrk, delimiters);
+                        if (!brk) // scheme:user@host only
+                        {
+                            ExtractString(lastbrk, &mHost, len - (lastbrk-mSpec));
+                            return NS_OK;
+                        }
+                        ExtractString(lastbrk, &mHost, (brk - lastbrk));
+                        switch (*brk)
+                        {
+                            case ':' : // scheme:user@host:port...
+                                lastbrk = brk+1;
+                                brk = PL_strpbrk(lastbrk, "/?");
+                                if (brk)    // user:pass@host:port/path
+                                {
+                                    mPort = ExtractPortFrom(lastbrk);
+                                    if (mPort <= 0)
+                                        return NS_ERROR_MALFORMED_URI;
+                                    ExtractString(brk, &mPath, len - (brk-mSpec));
+                                    return NS_OK;
+                                }
+                                else        // user:pass@host:port
+                                {
+                                    mPort = ExtractPortFrom(lastbrk);
+                                    if (mPort <= 0)
+                                        return NS_ERROR_MALFORMED_URI;
+                                    return NS_OK;
+                                }
+                                break;
+                            case '/' :
+                            case '?' :
+                                ExtractString(brk, &mPath, len - (brk-mSpec));
+                                return NS_OK;
+                                break;
+                            case '@' : // bad case
+                                return NS_ERROR_MALFORMED_URI;
+                                break;
+                            default: NS_POSTCONDITION(0, "This just can't be!");
+                                break;
+                        }
+                        break;
+                    case ':' : // scheme:user:pass@host...or scheme:host:port...
+                        /* TODO 
+                        if you find @ in the remaining string 
+                        then // scheme:user:pass@host...
+                        {
+                            
+
+                        }
+                        else // scheme:host:port
+                        {
+                            ExtractString(lastbrk, &mHost, (brk-lastbrk));
+                        }
+                        */
+                        break;
+                    default: NS_POSTCONDITION(0, "This just can't be!");
+                        break;
+                }
+            }
+        }
+        break;
+    case '@' :
+        //Everything before the @ is the prehost stuff
+        ExtractString(mSpec, &mPreHost, brk-mSpec);
+        lastbrk = brk+1;
+        brk = PL_strpbrk(lastbrk, ":/");
+        if (!brk) // its user@host so everything else is just the host
+        {
+            ExtractString(lastbrk, &mHost, (len - (lastbrk-mSpec)));
+            return NS_OK;
+        }
+        ExtractString(lastbrk, &mHost, (brk-lastbrk));
+        if (*brk == ':') // user@host:port...
+        {
+            lastbrk = brk+1;
+            brk = PL_strpbrk(lastbrk, "/?");
+            if (brk)    // user@host:port/path
+            {
+                mPort = ExtractPortFrom(lastbrk);
+                if (mPort <= 0)
+                    return NS_ERROR_MALFORMED_URI;
+                ExtractString(brk, &mPath, len - (brk-mSpec));
+                return NS_OK;
+            }
+            else        // user@host:port
+            {
+                mPort = ExtractPortFrom(lastbrk);
+                if (mPort <= 0)
+                    return NS_ERROR_MALFORMED_URI;
+                return NS_OK;
+            }
+        }
+        else // (*brk == '/') so user@host/path
+        {
+            ExtractString(brk, &mPath, len - (brk - mSpec));
+            return NS_OK;
+        }
+        break;
+    default:
+        NS_ASSERTION(0, "This just can't be!");
+        break;
     }
-    return rv;
+
+    return NS_OK;
 }
 
 nsresult
-nsStdURL::AppendFileName(nsCString& buffer, char* i_FileBaseName, 
-                         char* i_FileExtension, Format toFormat)
+nsStdURL::ReconstructSpec()
 {
-    nsresult rv = NS_OK;
-    if (i_FileBaseName)
-    {
-        rv = AppendString(buffer,i_FileBaseName,ESCAPED,
-                          nsIIOService::url_FileBaseName);
-        if (NS_FAILED(rv))
-            return rv;
-    }
-    if (i_FileExtension) 
-    {
-        buffer += '.';
-        rv = AppendString(buffer,i_FileExtension,ESCAPED,
-                          nsIIOService::url_FileExtension);
-    }
-    return rv;
-}
+    if (mSpec) nsCRT::free(mSpec);
 
-nsresult
-nsStdURL::GetSpec(char **o_Spec)
-{
-    nsresult rv = NS_OK;
     nsCAutoString finalSpec; // guaranteed to be singlebyte.
     finalSpec.SetCapacity(64);
     if (mScheme)
     {
-        rv = AppendString(finalSpec,mScheme,ESCAPED,nsIIOService::url_Scheme);
+        finalSpec = mScheme;
         finalSpec += "://";
     }
-
-    rv = AppendPreHost(finalSpec,mUsername,mPassword,ESCAPED);
-    
+    if (mPreHost)
+    {
+        finalSpec += mPreHost;
+        finalSpec += '@';
+    }
     if (mHost)
     {
-        rv = AppendString(finalSpec,mHost,ESCAPED,nsIIOService::url_Host);
+        finalSpec += mHost;
         if (-1 != mPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);
@@ -370,21 +700,12 @@ nsStdURL::GetSpec(char **o_Spec)
             portBuffer = 0;
         }
     }
-    char* ePath = nsnull;
-    rv = GetPath(&ePath);
-    if NS_FAILED(rv) {
-        CRTFREEIF(ePath);
-        return rv;
-    }
-
-    if (ePath)
+    if (mPath)
     {
-        finalSpec += ePath;
+        finalSpec += mPath;
     }
-    *o_Spec = finalSpec.ToNewCString();
-    CRTFREEIF(ePath);
-
-    return (*o_Spec ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+    mSpec = finalSpec.ToNewCString();
+    return (mSpec ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
 NS_METHOD
@@ -403,31 +724,40 @@ nsStdURL::Create(nsISupports *aOuter,
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = url->AggregatedQueryInterface(aIID, aResult);
-    if (NS_FAILED(rv)) {
-        delete url;
-        return rv;
-    }
-
+     if (NS_FAILED(rv)) {
+         delete url;
+          return rv;
+     }
+         
     return rv;
 }
 
-NS_METHOD
-nsStdURL::GetPreHost(char **o_PreHost)
+nsresult 
+nsStdURL::ExtractString(char* i_Src, char* *o_Dest, PRUint32 length)
 {
-    if (!o_PreHost)
+    NS_PRECONDITION( (nsnull != i_Src), "Exract called on empty string!");
+    CRTFREEIF(*o_Dest);
+    if (0 == length)
+        return NS_OK;
+    *o_Dest = PL_strndup(i_Src, length);
+    return (*o_Dest ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+}
+
+nsresult 
+nsStdURL::DupString(char* *o_Dest, const char* i_Src)
+{
+    if (!o_Dest)
         return NS_ERROR_NULL_POINTER;
-    
-    nsCAutoString temp;
-
-    nsresult rv = AppendPreHost(temp,mUsername,mPassword,ESCAPED);
-
-    if (NS_FAILED(rv))
-        return rv;
-
-    *o_PreHost = temp.ToNewCString();
-    if (!*o_PreHost)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    if (i_Src)
+    {
+        *o_Dest = nsCRT::strdup(i_Src);
+        return (*o_Dest == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
+    else
+    {
+        *o_Dest = nsnull;
+        return NS_OK;
+    }
 }
 
 NS_IMETHODIMP
@@ -451,11 +781,10 @@ nsStdURL::SetDirectory(const char* i_Directory)
         dir += "/";
     }
 
-    CRTFREEIF(mDirectory);
     mDirectory = dir.ToNewCString();
     if (!mDirectory)
         return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    return ReconstructPath();
 }
 
 NS_IMETHODIMP
@@ -464,50 +793,54 @@ nsStdURL::SetFileName(const char* i_FileName)
     if (!i_FileName)
         return NS_ERROR_NULL_POINTER;
     
-    NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
+    //Cleanout param, query and ref
+    CRTFREEIF(mParam);
+    CRTFREEIF(mQuery);
+    CRTFREEIF(mRef);
 
     //If it starts with a / then everything is the path.
     if ('/' == *i_FileName) {
         return SetPath(i_FileName);
     }
  
-    // Otherwise concatenate Directory and Filename and the call SetPath
-    nsCAutoString dir;
-    nsresult status = AppendString(dir,mDirectory,ESCAPED,
-                                   nsIIOService::url_Directory);
-    dir += i_FileName;
-    char *eNewPath = dir.ToNewCString();
-    if (!eNewPath) 
-        return NS_ERROR_OUT_OF_MEMORY;
-    status = SetPath(eNewPath);
-    CRTFREEIF(eNewPath);
+    CRTFREEIF(mFileName);
+    nsresult status = DupString(&mFileName, i_FileName);
+
+    // XXX This is ineffecient
+    ReconstructPath();
+    ParsePath();
+
     return status;
-}
-
-NS_IMETHODIMP
-nsStdURL::SetParam(const char* i_Param)
-{
-    CRTFREEIF(mParam);
-    return DupString(&mParam, (i_Param && (*i_Param == ';')) ? 
-                     (i_Param+1) : i_Param);
-}
-
-NS_IMETHODIMP
-nsStdURL::SetQuery(const char* i_Query)
-{
-    CRTFREEIF(mQuery);
-    return DupString(&mQuery, (i_Query && (*i_Query == '?')) ? 
-                     (i_Query+1) : i_Query);
 }
 
 NS_IMETHODIMP
 nsStdURL::SetRef(const char* i_Ref)
 {
-    CRTFREEIF(mRef);
-    return DupString(&mRef, (i_Ref && (*i_Ref == '#')) ? 
-                     (i_Ref+1) : i_Ref);
+    /* 
+        no check for i_Ref = nsnull becuz you can remove # by using it that way
+        So SetRef(nsnull) removed any existing ref values whereas
+        SetRef("") will ensure that there is a # at the end.  These apply to 
+        ? and ; as well. 
+    */
+    nsresult status = DupString(&mRef, 
+           (i_Ref && (*i_Ref == '#')) ?  (i_Ref+1) : i_Ref);
+    return (NS_FAILED(status) ? status : ReconstructPath());
+}
+
+NS_IMETHODIMP
+nsStdURL::SetParam(const char* i_Param)
+{
+    nsresult status = DupString(&mParam, 
+            (i_Param && (*i_Param == ';')) ? (i_Param+1) : i_Param);
+    return (NS_FAILED(status) ? status : ReconstructPath());
+}
+
+NS_IMETHODIMP
+nsStdURL::SetQuery(const char* i_Query)
+{
+    nsresult status = DupString(&mQuery, 
+            (i_Query && (*i_Query == '?')) ? (i_Query+1) : i_Query);
+    return (NS_FAILED(status) ? status : ReconstructPath());
 }
 
 NS_IMETHODIMP
@@ -518,14 +851,8 @@ nsStdURL::SetRelativePath(const char* i_Relative)
     char* ref;
     char* query;
     char* file;
-    char* i_Path;
-    char* ePath = nsnull;
 
     if (!i_Relative)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
         return NS_ERROR_NULL_POINTER;
 
     // Make sure that if there is a : its before other delimiters
@@ -538,56 +865,32 @@ nsStdURL::SetRelativePath(const char* i_Relative)
         return rv;
     }
 
-    if (*i_Relative == '/' && *(i_Relative+1) != '\0' && 
-        *(i_Relative+1) == '/') {
-        CRTFREEIF(mUsername);
-        CRTFREEIF(mPassword);
-        CRTFREEIF(mHost);
-        mPort = -1;
-        rv = mURLParser->ParseAtPreHost((char*)i_Relative, &mUsername, 
-                                        &mPassword, &mHost, &mPort, &ePath);
-        if (NS_FAILED(rv))
-            return rv;
-        i_Path = ePath;
-    } else {
-        i_Path = (char*)i_Relative;
-    } 
-
-    char* eFileName = nsnull;
-
-    switch (*i_Path) 
+    switch (*i_Relative) 
     {
         case '/':
-            rv = SetPath((char*) i_Path);
-            CRTFREEIF(ePath);
-            return rv;
+            return SetPath((char*) i_Relative);
 
         case ';': 
-            // Append to Filename add then call SetFileName
-            rv = GetFileName(&eFileName);
-            options = eFileName;
-            CRTFREEIF(eFileName);
-            options += (char*)i_Path;
-            file = options.ToNewCString();
+            // Append to Filename add then call SetFilePath
+            options = mFileName;
+            options += (char*)i_Relative;
+            file = (char*)options.GetBuffer();
             rv = SetFileName(file);
-            CRTFREEIF(ePath);
             return rv;
 
         case '?': 
             // check for ref part
-            ref = PL_strrchr(i_Path, '#');
+            ref = PL_strrchr(i_Relative, '#');
             if (!ref) {
                 CRTFREEIF(mRef);
-                rv = SetQuery((char*)i_Path);
-                CRTFREEIF(ePath);
-                return rv;
+                return SetQuery((char*)i_Relative);
             } else {
                 DupString(&query,nsnull);
-                ExtractString((char*)i_Path, &query, 
-                    (PL_strlen(i_Path)-(ref-i_Path)));
-                CRTFREEIF(ePath);
+                ExtractString((char*)i_Relative, &query, 
+                    (PL_strlen(i_Relative)-(ref-i_Relative)));
+
                 rv = SetQuery(query);
-                CRTFREEIF(query);
+                nsCRT::free(query);
                 if (NS_FAILED(rv)) return rv;
                 rv = SetRef(ref);
                 return rv;
@@ -595,21 +898,17 @@ nsStdURL::SetRelativePath(const char* i_Relative)
             break;
 
         case '#':
-            rv = SetRef((char*)i_Path);
-            CRTFREEIF(ePath);
-            return rv;
+            return SetRef((char*)i_Relative);
 
         default:
-            rv = SetFileName((char*)i_Path);
-            CRTFREEIF(ePath);
-            return rv;
+            return SetFileName((char*)i_Relative);
     }
 }
 
 NS_IMETHODIMP
 nsStdURL::Resolve(const char *relativePath, char **result) 
 {
-    nsresult rv = NS_OK;
+    nsresult rv;
 
     if (!relativePath) return NS_ERROR_NULL_POINTER;
 
@@ -624,51 +923,26 @@ nsStdURL::Resolve(const char *relativePath, char **result)
         if (path) {
             path = PL_strstr((char*)(path+3),"/");
             if (path) 
-                CoaleseDirs(path);
+                ReplaceMess(path);
         }
         return rv;
     }
 
     nsCAutoString finalSpec; // guaranteed to be singlebyte.
 
-    // This is another case of an almost absolute URL 
-    if (*relativePath == '/' && *(relativePath+1) != '\0' && 
-        *(relativePath+1) == '/') {
-
-        if (mScheme)
-        {
-            rv = AppendString(finalSpec,mScheme,ESCAPED,
-                              nsIIOService::url_Scheme);
-            finalSpec += ":";
-        }
-
-        finalSpec += relativePath;
-        *result = finalSpec.ToNewCString();
-        if (*result) {
-            char* path = PL_strstr(*result,"://");
-            if (path) {
-                path = PL_strstr((char*)(path+3),"/");
-                if (path)
-                    CoaleseDirs(path);
-            }
-            return NS_OK;
-        } else
-            return NS_ERROR_OUT_OF_MEMORY;
-    } 
-
-    const char *start = relativePath;
-
     if (mScheme)
     {
-        rv = AppendString(finalSpec,mScheme,ESCAPED,nsIIOService::url_Scheme);
+        finalSpec = mScheme;
         finalSpec += "://";
     }
-
-    rv = AppendPreHost(finalSpec,mUsername,mPassword,ESCAPED);
-
+    if (mPreHost)
+    {
+        finalSpec += mPreHost;
+        finalSpec += '@';
+    }
     if (mHost)
     {
-        rv = AppendString(finalSpec,mHost,ESCAPED,nsIIOService::url_Host);
+        finalSpec += mHost;
         if (-1 != mPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);
@@ -680,65 +954,52 @@ nsStdURL::Resolve(const char *relativePath, char **result)
         }
     }
 
-    if (start) {
-      switch (*start) 
-      {
+    switch (*relativePath) 
+    {
         case '/':
-            finalSpec += (char*)start;
+            finalSpec += (char*)relativePath;
             break;
         case ';': 
-            rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
-            rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
-                                ESCAPED);
-            finalSpec += (char*)start;
+            finalSpec += mDirectory;
+            finalSpec += mFileName;
+            finalSpec += (char*)relativePath;
             break;
         case '?': 
-            rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
-            rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
-                                ESCAPED);
+            finalSpec += mDirectory;
+            finalSpec += mFileName;
             if (mParam)
             {
                 finalSpec += ';';
-                rv = AppendString(finalSpec,mParam,ESCAPED,
-                                  nsIIOService::url_Param);
+                finalSpec += mParam;
             }
-            finalSpec += (char*)start;
+            finalSpec += (char*)relativePath;
             break;
         case '#':
-            rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
-            rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
-                                ESCAPED);
+            finalSpec += mDirectory;
+            finalSpec += mFileName;
             if (mParam)
             {
                 finalSpec += ';';
-                rv = AppendString(finalSpec,mParam,ESCAPED,
-                                  nsIIOService::url_Param);
+                finalSpec += mParam;
             }
             if (mQuery)
             {
                 finalSpec += '?';
-                rv = AppendString(finalSpec,mQuery,ESCAPED,
-                                  nsIIOService::url_Query);
+                finalSpec += mQuery;
             }
-            finalSpec += (char*)start;
+            finalSpec += (char*)relativePath;
             break;
         default:
-            rv = AppendString(finalSpec,mDirectory,ESCAPED,
-                              nsIIOService::url_Directory);
-            finalSpec += (char*)start;
-      }
+            finalSpec += mDirectory;
+            finalSpec += (char*)relativePath;
     }
     *result = finalSpec.ToNewCString();
-
     if (*result) {
         char* path = PL_strstr(*result,"://");
         if (path) {
             path = PL_strstr((char*)(path+3),"/");
             if (path)
-                CoaleseDirs(path);
+                ReplaceMess(path);
         }
         return NS_OK;
     } else
@@ -746,144 +1007,255 @@ nsStdURL::Resolve(const char *relativePath, char **result)
 }
 
 nsresult
-nsStdURL::GetPath(char** o_Path)
+nsStdURL::ReconstructPath(void)
 {
+    if (mPath) nsCRT::free(mPath);
+
     //Take all the elements of the path and construct it
     nsCAutoString path;
-    nsresult rv = NS_OK;
     path.SetCapacity(64);
     if (mDirectory)
     {
-        rv = AppendString(path,mDirectory,ESCAPED,nsIIOService::url_Directory);
-        if (NS_FAILED(rv))
-            return rv;
+        path = mDirectory;
     }
-
-    rv = AppendFileName(path,mFileBaseName,mFileExtension, ESCAPED);
-    if (NS_FAILED(rv))
-        return rv;
-
+    if (mFileName)
+    {
+        path += mFileName;
+    }
     if (mParam)
     {
         path += ';';
-        rv = AppendString(path,mParam,ESCAPED,nsIIOService::url_Param);
-        if (NS_FAILED(rv))
-            return rv;
+        path += mParam;
     }
     if (mQuery)
     {
         path += '?';
-        rv = AppendString(path,mQuery,ESCAPED,nsIIOService::url_Query);
-        if (NS_FAILED(rv))
-            return rv;
+        path += mQuery;
     }
     if (mRef)
     {
         path += '#';
-        rv = AppendString(path,mRef,ESCAPED,nsIIOService::url_Ref);
-        if (NS_FAILED(rv))
-            return rv;
+        path += mRef;
     }
-    *o_Path = path.ToNewCString();
-    return (*o_Path ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+    mPath = path.ToNewCString();
+
+    return (mPath ? ReconstructSpec() : NS_ERROR_OUT_OF_MEMORY);
 }
 
+/** Extract the elements like directory/filename, query, or ref from
+ * the path.
+ */
 nsresult
-nsStdURL::GetDirectory(char** o_Directory)
+nsStdURL::ParsePath(void)
 {
-    nsCAutoString directory;
-    nsresult rv = NS_OK;
-    rv = AppendString(directory,mDirectory,ESCAPED,
-                      nsIIOService::url_Directory);
-    if (NS_FAILED(rv))
-        return rv;
-    *o_Directory = directory.ToNewCString();
-    return (*o_Directory ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+    CRTFREEIF(mDirectory);
+    CRTFREEIF(mFileName);
+    CRTFREEIF(mParam);
+    CRTFREEIF(mQuery);
+    CRTFREEIF(mRef);
+
+    if (!mPath) 
+    {
+        DupString(&mDirectory, "/");
+        return (mDirectory ? ReconstructPath() : NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    char* dirfile = nsnull;
+    char* options = nsnull;
+
+    int len = PL_strlen(mPath);
+
+    /* Factor out the optionpart with ;?# */
+    static const char delimiters[] = ";?#"; // for param, query and ref
+    char* brk = PL_strpbrk(mPath, delimiters);
+
+    if (!brk) // Everything is just path and filename
+    {
+        DupString(&dirfile, mPath); 
+    } 
+    else 
+    {
+        int dirfileLen = brk - mPath;
+        ExtractString(mPath, &dirfile, dirfileLen);
+        len -= dirfileLen;
+        ExtractString(mPath + dirfileLen, &options, len);
+        brk = options;
+    }
+
+    /* now that we have broken up the path treat every part differently */
+    /* first dir+file */
+
+    char* file;
+
+    int dlen = PL_strlen(dirfile);
+    if (dlen == 0)
+    {
+        DupString(&mDirectory, "/");
+        file = dirfile;
+    } else {
+        ReplaceMess(dirfile);
+        // check new length
+        dlen = PL_strlen(dirfile);
+
+        // First find the last slash
+        file = PL_strrchr(dirfile, '/');
+        if (!file) 
+        {
+            DupString(&mDirectory, "/");
+            file = dirfile;
+        }
+
+        // If its not the same as the first slash then extract directory
+        if (file != dirfile)
+        {
+            ExtractString(dirfile, &mDirectory, (file - dirfile)+1);
+        } else {
+            DupString(&mDirectory, "/");
+        }
+    }
+
+    /* Extract Filename */
+    if (dlen > 0) {
+        // Look again if there was a slash
+        char* slash = PL_strrchr(dirfile, '/');
+        if (slash) {
+            ExtractString(file+1, &mFileName, dlen-(file-dirfile-1));
+        } else {
+            // Use the full String as Filename
+            ExtractString(dirfile, &mFileName, dlen);
+        } 
+    }
+
+#if 0
+    // Now take a look at the options. "#" has precedence over "?"
+    // which has precedence over ";"
+    if (options) {
+        // Look for "#" first. Everything following it is in the ref
+        brk = PL_strchr(options, '#');
+        if (brk) {
+            *brk = 0;
+            int pieceLen = len - (brk + 1 - options);
+            ExtractString(brk+1, &mRef, pieceLen);
+            len -= pieceLen + 1;
+        }
+
+        // Now look for "?"
+        brk = PL_strchr(options, '?');
+        if (brk) {
+            *brk = 0;
+            int pieceLen = len - (brk + 1 - options);
+            ExtractString(brk+1, &mQuery, pieceLen);
+            len -= pieceLen + 1;
+        }
+
+        // Now look for ';'
+        brk = PL_strchr(options, ';');
+        if (brk) {
+            int pieceLen = len - (brk + 1 - options);
+            ExtractString(brk+1, &mParam, pieceLen);
+            len -= pieceLen + 1;
+        }
+    }
+
+#endif
+    while (brk)
+    {
+        int pieceLen;
+        char* lastbrk = brk;
+        brk = PL_strpbrk(lastbrk+1, delimiters);
+        switch (*lastbrk)
+        {
+            case ';': // handles cases of ;foo?bar#baz correctly
+              pieceLen = (brk ? (brk-lastbrk-1) : len);
+              ExtractString(lastbrk+1, &mParam, pieceLen);
+              len -= pieceLen;
+              break;
+            case '?': // Only # takes higher precedence than this
+              // so changing brk to only check for #
+              brk = PL_strpbrk(lastbrk+1 , "#");
+              pieceLen = (brk ? (brk-lastbrk-1) : len);
+              ExtractString(lastbrk+1, &mQuery, pieceLen);
+              len -= pieceLen;
+              break;
+            case '#':
+              // Since this has the highest precedence everything following it
+              // is a ref. So...
+              pieceLen = len;
+              ExtractString(lastbrk+1, &mRef, pieceLen);
+              len -= pieceLen;
+              break;
+            default:
+              NS_ASSERTION(0, "This just can't be!");
+              break;
+        }
+    }
+
+    nsCRT::free(dirfile);
+    nsCRT::free(options);
+
+    ReconstructPath();
+    return NS_OK;
 }
 
 NS_METHOD
 nsStdURL::SetSpec(const char* i_Spec)
 {
-    // Skip leading spaces and control-characters
+    // Skip leading spaces
     char* fwdPtr= (char*) i_Spec;
-    while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
+    while (fwdPtr && (*fwdPtr != '\0') && (*fwdPtr == ' '))
         fwdPtr++;
-    // Remove trailing spaces and control-characters
+    // Remove trailing spaces
     if (fwdPtr) {
         char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
-        if (*bckPtr > '\0' && *bckPtr <= ' ') {
-            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr <= ' ')) {
+        if (*bckPtr == ' ') {
+            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr == ' ')) {
                 bckPtr--;
             }
             *(bckPtr+1) = '\0';
         }
     }
 
+    CRTFREEIF(mSpec);
+    nsresult status = DupString(&mSpec, fwdPtr);
     // If spec is being rewritten clean up everything-
     CRTFREEIF(mScheme);
-    CRTFREEIF(mUsername);
-    CRTFREEIF(mPassword);
+    CRTFREEIF(mPreHost);
     CRTFREEIF(mHost);
     mPort = -1;
+    CRTFREEIF(mPath);
     CRTFREEIF(mDirectory);
-    CRTFREEIF(mFileBaseName);
-    CRTFREEIF(mFileExtension);
+    CRTFREEIF(mFileName);
     CRTFREEIF(mParam);
     CRTFREEIF(mQuery);
     CRTFREEIF(mRef);
-    return Parse(fwdPtr);
-}
-
-NS_METHOD
-nsStdURL::SetPreHost(const char* i_PreHost)
-{
-    NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
-
-    CRTFREEIF(mUsername);
-    CRTFREEIF(mPassword);
-
-    return mURLParser->ParsePreHost(i_PreHost,&mUsername,&mPassword);
+    return (NS_FAILED(status) ? status : Parse());
 }
 
 NS_METHOD
 nsStdURL::SetPath(const char* i_Path)
 {
-    NS_PRECONDITION( (nsnull != mURLParser), "Parse called without parser!");
-    if (!mURLParser)
-        return NS_ERROR_NULL_POINTER;
-
-    CRTFREEIF(mDirectory);
-    CRTFREEIF(mFileBaseName);
-    CRTFREEIF(mFileExtension);
-    CRTFREEIF(mParam);
-    CRTFREEIF(mQuery);
-    CRTFREEIF(mRef);
-
-    return mURLParser->ParseAtDirectory((char*)i_Path, &mDirectory, 
-                                        &mFileBaseName, 
-                                        &mFileExtension, &mParam, 
-                                        &mQuery, &mRef);
+    if (mPath) nsCRT::free(mPath);
+    nsresult status = DupString(&mPath, i_Path);
+    ParsePath();
+    ReconstructSpec();
+    return status;
 }
-
+    
 NS_METHOD
 nsStdURL::GetFilePath(char **o_DirFile)
 {
     if (!o_DirFile)
         return NS_ERROR_NULL_POINTER;
-
-    nsresult rv = NS_OK;
-    nsCAutoString temp;
+    
+    nsAutoString temp;
     if (mDirectory)
     {
-        rv = AppendString(temp,mDirectory,ESCAPED,nsIIOService::url_Directory);
+        temp = mDirectory;
     }
-
-    rv = AppendFileName(temp,mFileBaseName,mFileExtension,ESCAPED);
-    if (NS_FAILED(rv))
-        return rv;
-
+    if (mFileName)
+    {
+        temp += mFileName;
+    }
     *o_DirFile = temp.ToNewCString();
     if (!*o_DirFile)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -891,26 +1263,19 @@ nsStdURL::GetFilePath(char **o_DirFile)
 }
 
 NS_METHOD
-nsStdURL::GetFileName(char **o_FileName)
+nsStdURL::SetFilePath(const char *filePath)
 {
-    if (!o_FileName)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv = NS_OK;    
-    nsCAutoString temp;
-
-    rv = AppendFileName(temp,mFileBaseName,mFileExtension,ESCAPED);
-    if (NS_FAILED(rv))
-        return rv;
-
-    *o_FileName = temp.ToNewCString();
-    if (!*o_FileName)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD
-nsStdURL::SetFilePath(const char *filePath)
+nsStdURL::GetFileBaseName(char **o_name)
 {
-    return SetPath(filePath);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_METHOD
+nsStdURL::SetFileBaseName(const char *name)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
