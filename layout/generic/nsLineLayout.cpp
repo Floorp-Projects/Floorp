@@ -1916,7 +1916,7 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
 #ifdef HACK_MEW
         // if in Quirks mode and in a table cell with an unconstrained width, then emulate an IE
         // quirk to keep consecutive images from breaking the line
-        // NOTE: we check for the maxElementWidth == the CcombinedAreaWidth to detect when
+        // NOTE: we check for the maxElementWidth == the CombinedAreaWidth to detect when
         //       a textframe has whitespace in it and thus should not be used as the basis
         //       for accumulating the image width
         // - this is to handle images in a text run
@@ -1925,8 +1925,8 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
         //       image frames as well, thus eliminating the need for this code
         if (!strictMode && 
             inUnconstrainedTable && 
-            pfd->mMaxElementSize.width == pfd->mCombinedArea.width &&
-            pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
+            pfd->mMaxElementSize.width == pfd->mCombinedArea.width) {
+
           PRBool inChild = PR_FALSE;
           nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame, inChild);
           PRBool curFrameAccumulates = (imgSizes > 0);
