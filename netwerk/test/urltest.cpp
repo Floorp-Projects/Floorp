@@ -92,7 +92,7 @@ int writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
 
 nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 {
-    const int tests = 8;
+    const int tests = 9;
 
 	/* 
 		If you add a test case then make sure you also add the expected
@@ -114,7 +114,8 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 			"", //empty string
 			"mailbox:///foo", // No host specified path should be /foo
 			"user:pass@hostname.edu:80/pathname", //this is always user:pass and not http:user
-			"http://username:password@hostname:80/pathname"
+			"http://username:password@hostname:80/pathname",
+			"resource:/pathname"
 		};
 
 		const char* resultset[tests] =
@@ -126,12 +127,13 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 			",,,-1,",
 			"mailbox,,,-1,/foo",
 			",user:pass,hostname.edu,80,/pathname",
-			"http,username:password,hostname,80,/pathname"
+			"http,username:password,hostname,80,/pathname",
+			"resource,,,-1,/pathname"
 		};
 
 		// These tests will fail to create a URI from NS_NewURI calls...
 		// because of a missing scheme: in front. This set assumes
-		// an only working HTTP Handler is available.
+		// an only working the handler is available.
 		PRBool failWithURI[tests] =
 		{
 			PR_FALSE,
@@ -141,6 +143,7 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 			PR_TRUE,
 			PR_TRUE,
 			PR_TRUE,
+			PR_FALSE,
 			PR_FALSE
 		};
 		nsresult stat;
