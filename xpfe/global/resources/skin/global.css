@@ -610,9 +610,10 @@ progressmeter[mode="undetermined"]
 /********* XP Menus ***********/
 
 menubar {
-	background-color: white;
+  background-color: white;
   min-width: 1px;
   overflow: hidden;
+  margin-bottom: 2px;
 }
 
 menu {
