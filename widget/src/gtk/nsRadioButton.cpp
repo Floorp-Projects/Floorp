@@ -84,7 +84,7 @@ NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 
   gtk_widget_show(mRadioButton);
 
-  gtk_widget_set_name(mRadioButton, "nsRadioButton");
+  gtk_widget_set_name(mWidget, "nsRadioButton");
 
   gtk_radio_button_set_group(GTK_RADIO_BUTTON(mRadioButton), nsnull);
 
@@ -206,3 +206,31 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
   }
   return NS_OK;
 }
+
+//////////////////////////////////////////////////////////////////////
+// SetBackgroundColor for RadioButton
+/*virtual*/
+void nsRadioButton::SetBackgroundColorNative(GdkColor *aColorNor,
+                                        GdkColor *aColorBri,
+                                        GdkColor *aColorDark)
+{
+  // use same style copy as SetFont
+  GtkStyle *style = gtk_style_copy(GTK_WIDGET (g_list_nth_data(gtk_container_children(GTK_CONTAINER (mWidget)),0))->style);
+  
+  style->bg[GTK_STATE_NORMAL]=*aColorNor;
+  
+  // Mouse over button
+  style->bg[GTK_STATE_PRELIGHT]=*aColorBri;
+
+  // Button is down
+  style->bg[GTK_STATE_ACTIVE]=*aColorDark;
+
+  // other states too? (GTK_STATE_ACTIVE, GTK_STATE_PRELIGHT,
+  //               GTK_STATE_SELECTED, GTK_STATE_INSENSITIVE)
+  gtk_widget_set_style(GTK_WIDGET (g_list_nth_data(gtk_container_children(GTK_CONTAINER (mWidget)),0)), style);
+  // set style for eventbox too
+  gtk_widget_set_style(mWidget, style);
+
+  gtk_style_unref(style);
+}
+

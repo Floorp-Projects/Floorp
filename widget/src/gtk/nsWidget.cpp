@@ -19,7 +19,6 @@
 #include "nsWidget.h"
 
 #include "nsGtkEventHandler.h"
-#include "nsGtkUtils.h"
 #include "nsIAppShell.h"
 #include "nsIComponentManager.h"
 #include "nsIDeviceContext.h"
@@ -39,11 +38,12 @@
   gdk.height = ns.height; \
   PR_END_MACRO
 
-// BGR, not RGB
-#define NSCOLOR_TO_GDKCOLOR(g,n) \
-  g.red=NS_GET_B(n); \
-  g.green=NS_GET_G(n); \
-  g.blue=NS_GET_R(n);
+#define NSCOLOR_TO_GDKCOLOR(n,g) \
+  PR_BEGIN_MACRO \
+  g ## .red = 256 * NS_GET_R(n); \
+  g ## .green = 256 * NS_GET_G(n); \
+  g ## .blue = 256 * NS_GET_B(n); \
+  PR_END_MACRO
 
 // Taken from nsRenderingContextGTK.cpp
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
@@ -446,32 +446,36 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 // Set the background color
 //
 //-------------------------------------------------------------------------
+
 NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
   nsBaseWidget::SetBackgroundColor(aColor);
 
-  // There are some "issues" with the conversion of rgb values
-#if 0
-  if (nsnull != mWidget)
-  {
-    GdkColor gdk_color;
+  if (nsnull != mWidget) {
+    GdkColor color_nor, color_bri, color_dark;
+
+    NSCOLOR_TO_GDKCOLOR(aColor, color_nor);
+    NSCOLOR_TO_GDKCOLOR(NS_BrightenColor(aColor), color_bri);
+    NSCOLOR_TO_GDKCOLOR(NS_DarkenColor(aColor), color_dark);
+
+    //    gdk_color.red = 256 * NS_GET_R(aColor);
+    // gdk_color.green = 256 * NS_GET_G(aColor);
+    // gdk_color.blue = 256 * NS_GET_B(aColor);
+    // gdk_color.pixel ?
+
+    // calls virtual native set color
+    SetBackgroundColorNative(&color_nor, &color_bri, &color_dark);
 
 #if 0
-//     gdk_color.red = NS_GET_R(NS_TO_GDK_RGB(aColor));
-//     gdk_color.green = NS_GET_G(NS_TO_GDK_RGB(aColor));
-//     gdk_color.blue = NS_GET_B(NS_TO_GDK_RGB(aColor));
-#else
-//     gdk_color.pixel = gdk_rgb_xpixel_from_rgb(aColor);
+    GtkStyle *style = gtk_style_copy(mWidget->style);
+  
+    style->bg[GTK_STATE_NORMAL]=gdk_color;
+    // other states too? (GTK_STATE_ACTIVE, GTK_STATE_PRELIGHT,
+    //               GTK_STATE_SELECTED, GTK_STATE_INSENSITIVE)
+    gtk_widget_set_style(mWidget, style);
+    gtk_style_unref(style);
 #endif
-
-    GtkRcFlags rc_flags = GTK_RC_BG | GTK_RC_BASE;
-
-    nsGtkUtils::gtk_widget_set_color(mWidget,
-                                     rc_flags,
-                                     GTK_STATE_NORMAL,
-                                     &gdk_color);
   }
-#endif
 
   return NS_OK;
 }
@@ -1811,3 +1815,28 @@ void nsWidget::SetFontNative(GdkFont *aFont)
   
   gtk_style_unref(style);
 }
+
+//////////////////////////////////////////////////////////////////////
+// default SetBackgroundColor for most widgets
+/*virtual*/
+void nsWidget::SetBackgroundColorNative(GdkColor *aColorNor,
+                                        GdkColor *aColorBri,
+                                        GdkColor *aColorDark)
+{
+  // use same style copy as SetFont
+  GtkStyle *style = gtk_style_copy(mWidget->style);
+  
+  style->bg[GTK_STATE_NORMAL]=*aColorNor;
+  
+  // Mouse over button
+  style->bg[GTK_STATE_PRELIGHT]=*aColorBri;
+
+  // Button is down
+  style->bg[GTK_STATE_ACTIVE]=*aColorDark;
+
+  // other states too? (GTK_STATE_ACTIVE, GTK_STATE_PRELIGHT,
+  //               GTK_STATE_SELECTED, GTK_STATE_INSENSITIVE)
+  gtk_widget_set_style(mWidget, style);
+  gtk_style_unref(style);
+}
+

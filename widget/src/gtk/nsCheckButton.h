@@ -57,6 +57,11 @@ protected:
   virtual void InitCallbacks(char * aName = nsnull);
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
+  // Sets background for checkbutton
+  virtual void SetBackgroundColorNative(GdkColor *aColorNor,
+                                        GdkColor *aColorBri,
+                                        GdkColor *aColorDark);
+
   GtkWidget *mLabel;
   GtkWidget *mCheckButton;
 

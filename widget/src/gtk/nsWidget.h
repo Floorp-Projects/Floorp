@@ -156,6 +156,10 @@ class nsWidget : public nsBaseWidget
 
   // Sets font for widgets
   virtual void SetFontNative(GdkFont *aFont);
+  // Sets backround for widgets
+  virtual void SetBackgroundColorNative(GdkColor *aColorNor,
+                                        GdkColor *aColorBri,
+                                        GdkColor *aColorDark);
 
   //////////////////////////////////////////////////////////////////
   //
