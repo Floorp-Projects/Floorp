@@ -179,7 +179,10 @@ pascal void* Install(void* unused)
 			InitProgressBar();
 			
 			/* extract contents of downloaded or packaged core file */
-			IfRemoveOldCore(vRefNum, dirID);
+			
+			// XXX move this call to the end by 06/18/2000 if the issue is cleared
+			// XXX IfRemoveOldCore(vRefNum, dirID);
+			
 			err = ExtractCoreFile(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr) 
 			{
