@@ -46,6 +46,7 @@ interface nsIURI;
 interface nsILocalFile;
 interface nsIDownload;
 interface nsIWebBrowserPersist;
+interface nsIMIMEInfo;
 
 [scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
 interface nsIDownloadManager : nsISupports {
@@ -75,7 +76,7 @@ interface nsIDownloadManager : nsISupports {
   nsIDownload addDownload(in nsIURI aSource,
                           in nsILocalFile aTarget,
                           in wstring aDisplayName,
-                          in wstring openingWith,
+                          in nsIMIMEInfo aMIMEInfo,
                           in long long startTime,
                           in nsIWebBrowserPersist aPersist);
 

@@ -1471,32 +1471,10 @@ nsresult nsExternalAppHandler::InitializeDownload(nsIDownload* aDownload)
 {
   nsresult rv;
   
-  nsXPIDLString openWith(NS_LITERAL_STRING(""));  
-  nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
-  mMimeInfo->GetPreferredAction(&action);
-  if (action != nsIMIMEInfo::saveToDisk)
-  {
-    // Opening with an application; use either description or application file name.
-    mMimeInfo->GetApplicationDescription(getter_Copies(openWith));
-    if (openWith.IsEmpty())
-    {
-      nsCOMPtr<nsIFile> appl;
-      mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(appl));
-      if (appl)
-      {
-        nsCOMPtr<nsILocalFile> file = do_QueryInterface(appl);
-        if (file)
-        {
-          file->GetLeafName(openWith);
-        }
-      }
-    }
-  }
-  
   nsCOMPtr<nsILocalFile> local = do_QueryInterface(mFinalFileDestination);
   
   rv = aDownload->Init(mSourceUrl, local, nsnull,
-                       openWith, mTimeDownloadStarted, nsnull);
+                       mMimeInfo, mTimeDownloadStarted, nsnull);
   if (NS_FAILED(rv)) return rv;
   
   rv = aDownload->SetObserver(this);

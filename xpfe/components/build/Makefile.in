@@ -45,9 +45,10 @@ REQUIRES	= xpcom \
 		  dom \
 		  downloadmanager \
                   alerts\
-      uriloader \
-      webbrowserpersist \
-      progressDlg \
+                  uriloader \
+                  mimetype \
+                  webbrowserpersist \
+                  progressDlg \
 		  pref \
 		  docshell \
 		  webshell \

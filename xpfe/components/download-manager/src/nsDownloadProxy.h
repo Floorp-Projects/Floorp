@@ -43,6 +43,7 @@
 #include "nsIDownloadManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsIMIMEInfo.h"
 
 #define DOWNLOAD_MANAGER_BEHAVIOR_PREF "browser.downloadmanager.behavior"
 
@@ -59,14 +60,14 @@ public:
   NS_IMETHODIMP Init(nsIURI* aSource,
                      nsILocalFile* aTarget,
                      const PRUnichar* aDisplayName,
-                     const PRUnichar* aOpeningWith,
+                     nsIMIMEInfo *aMIMEInfo,
                      PRInt64 aStartTime,
                      nsIWebBrowserPersist* aPersist) {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
     if (NS_FAILED(rv)) return rv;
     
-    rv = dm->AddDownload(aSource, aTarget, aDisplayName, aOpeningWith, aStartTime, aPersist, getter_AddRefs(mInner));
+    rv = dm->AddDownload(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime, aPersist, getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
 
     PRInt32 behavior = 0;
@@ -97,9 +98,9 @@ public:
     return mInner->SetDisplayName(aDisplayName);
   }
   
-  NS_IMETHODIMP GetOpeningWith(PRUnichar** aOpeningWith)
+  NS_IMETHODIMP GetMIMEInfo(nsIMIMEInfo** aMIMEInfo)
   {
-    return mInner->GetOpeningWith(aOpeningWith);
+    return mInner->GetMIMEInfo(aMIMEInfo);
   }
   
   NS_IMETHODIMP GetSource(nsIURI** aSource)

@@ -34,6 +34,7 @@ REQUIRES  = xpcom \
             string \
             rdf \
             uriloader \
+            mimetype \
             necko \
             progressDlg \
             intl \

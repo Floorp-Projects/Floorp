@@ -397,7 +397,7 @@ NS_IMETHODIMP
 nsDownloadManager::AddDownload(nsIURI* aSource,
                                nsILocalFile* aTarget,
                                const PRUnichar* aDisplayName,
-                               const PRUnichar* aOpeningWith,
+                               nsIMIMEInfo *aMIMEInfo,
                                PRInt64 aStartTime,
                                nsIWebBrowserPersist* aPersist,
                                nsIDownload** aDownload)
@@ -480,7 +480,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     return rv;
   }
   
-  internalDownload->SetOpeningWith(aOpeningWith);
+  internalDownload->SetMIMEInfo(aMIMEInfo);
   internalDownload->SetStartTime(aStartTime);
 
   // Assert file information
@@ -797,10 +797,10 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPath, nsIDOMWindow* aParen
   download->GetTarget(getter_AddRefs(target));
   
   // helper app...
-  nsXPIDLString openingWith;
-  download->GetOpeningWith(getter_Copies(openingWith));
+  nsCOMPtr<nsIMIMEInfo> mimeInfo;
+  download->GetMIMEInfo(getter_AddRefs(mimeInfo));
 
-  dl->Init(source, target, nsnull, openingWith, startTime, nsnull); 
+  dl->Init(source, target, nsnull, mimeInfo, startTime, nsnull); 
   dl->SetObserver(this);
 
   // now set the listener so we forward notifications to the dialog
@@ -904,7 +904,7 @@ nsDownload::nsDownload():mStartTime(0),
                          mMaxBytes(0),
                          mDownloadState(NOTSTARTED),
                          mLastUpdate(-500),
-                         mOpeningWith(nsnull)
+                         mMIMEInfo(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -1006,9 +1006,9 @@ nsDownload::SetStartTime(PRInt64 aStartTime)
 }
 
 nsresult
-nsDownload::SetOpeningWith(const PRUnichar* aOpeningWith)
+nsDownload::SetMIMEInfo(nsIMIMEInfo *aMIMEInfo)
 {
-  mOpeningWith = aOpeningWith;
+  mMIMEInfo = aMIMEInfo;
   return NS_OK;
 }
 
@@ -1221,7 +1221,7 @@ NS_IMETHODIMP
 nsDownload::Init(nsIURI* aSource,
                  nsILocalFile* aTarget,
                  const PRUnichar* aDisplayName,
-                 const PRUnichar* aOpeningWith,
+                 nsIMIMEInfo *aMIMEInfo,
                  PRInt64 aStartTime,
                  nsIWebBrowserPersist* aPersist)
 {
@@ -1327,8 +1327,9 @@ nsDownload::GetObserver(nsIObserver** aObserver)
 }
 
 NS_IMETHODIMP
-nsDownload::GetOpeningWith(PRUnichar** aOpeningWith)
+nsDownload::GetMIMEInfo(nsIMIMEInfo** aMIMEInfo)
 {
-  *aOpeningWith = ToNewUnicode(mOpeningWith);
+  *aMIMEInfo = mMIMEInfo;
+  NS_IF_ADDREF(*aMIMEInfo);
   return NS_OK;
 }
