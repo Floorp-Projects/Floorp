@@ -706,16 +706,6 @@ function onBeginLinkDrag(event,urlField,descField)
 }
 
 //******** Image Stuff
-function getSource(item)
-{
-  // Return the correct source without strict warnings
-  if ("href" in item && item.href)
-    return item.href;
-  if ("src" in item && item.src)
-    return item.src;
-  return null;
-}
-
 function getSelectedImage(tree)
 {
   if (!imageView.rowCount) return null;
@@ -730,10 +720,10 @@ function saveMedia()
 {
   var tree = document.getElementById("imagetree");
   var item = getSelectedImage(tree);
-  var url = getAbsoluteURL(getSource(item), item);
+  var url = imageView.data[tree.currentIndex][0];
 
   if (url)
-    saveURL(url, null, 'SaveImageTitle', false );
+    saveURL(url, null, 'SaveImageTitle', false, false, makeURL(item.baseURI));
 }
 
 function onImageSelect()
