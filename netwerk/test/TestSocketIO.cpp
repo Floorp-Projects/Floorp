@@ -270,9 +270,7 @@ main(int argc, char* argv[])
     TestWriteObserver* observer = new TestWriteObserver(transport);
 
     gElapsedTime = PR_Now();
-    PRUint32 count;
-    rv = stream->GetLength(&count);
-    transport->AsyncWrite(stream, 0, count, nsnull, gEventQ, observer);
+    transport->AsyncWrite(stream, 0, bytesWritten, nsnull, gEventQ, observer);
 
     NS_RELEASE(transport);
   }

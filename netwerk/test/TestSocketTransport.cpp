@@ -451,9 +451,7 @@ nsresult TestConnection::WriteBuffer(void)
 
       // Write the buffer to the server...
       if (NS_SUCCEEDED(rv)) {
-        PRUint32 count;
-        rv = mStream->GetLength(&count);
-        rv = mTransport->AsyncWrite(mStream, 0, count, mTransport, gEventQ, /* mOutputObserver */ nsnull);
+        rv = mTransport->AsyncWrite(mStream, 0, bytesWritten, mTransport, gEventQ, /* mOutputObserver */ nsnull);
       } 
       // Wait for the write to complete...
       if (NS_SUCCEEDED(rv)) {
