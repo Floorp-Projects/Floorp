@@ -181,7 +181,7 @@ InitGlobals(void)
   ULONG numCP = ::WinQueryCpList((HAB)0, 0, NULL);
   if (numCP > 0) {
      ULONG * pCPList = (ULONG*)malloc(numCP*sizeof(ULONG));
-     if (WinQueryCpList( (HAB)0, numCP, pCPList)) {
+     if (::WinQueryCpList( (HAB)0, numCP, pCPList)) {
         for (int i = 0;i<numCP ;i++ ) {
            if (pCPList[i] == 1386) {
               gCharSetInfo[11].mCodePage = 1386;
@@ -674,17 +674,23 @@ HDC   ps = NULL;
      return NS_ERROR_OUT_OF_MEMORY;
 
    // 3) Work out what our options are wrt. image/outline, prefer image.
-   BOOL bOutline = FALSE, bImage = FALSE;
-   long lFonts = 0; int i;
-   PFONTMETRICS pMetrics = getMetrics( lFonts, szFamily, ps);
+   BOOL bImage = FALSE;
 
-   for( i = 0; i < lFonts && !(bImage && bOutline); i++)
-      if( pMetrics[ i].fsDefn & FM_DEFN_OUTLINE) bOutline = TRUE;
-      else                                       bImage = TRUE;
-   delete [] pMetrics;
+   if (mDeviceContext->SupportsRasterFonts()) {
+      long lFonts = 0; int i;
+      PFONTMETRICS pMetrics = getMetrics( lFonts, szFamily, ps);
 
-   if( !bImage) fh->fattrs.fsFontUse = FATTR_FONTUSE_OUTLINE |
-                                       FATTR_FONTUSE_TRANSFORMABLE;
+      for (i = 0 ; i < lFonts ; i++)
+         if (!(pMetrics [i].fsDefn & FM_DEFN_OUTLINE))
+         {
+            bImage = TRUE;
+            break;
+         }
+      delete [] pMetrics;
+   } /* endif */
+
+   if (!bImage) 
+      fh->fattrs.fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
 
    // 4) Try to munge the face for italic & bold effects (could do better)
    BOOL bBold = mFont->weight > NS_FONT_WEIGHT_NORMAL;
@@ -695,8 +701,8 @@ HDC   ps = NULL;
                         0,
                         bItalic ? FTYPE_ITALIC : 0 };
    
-   ULONG rc = GpiQueryFaceString( ps, szFamily, &fnd,
-                                  FACESIZE, fh->fattrs.szFacename);
+   ULONG rc = ::GpiQueryFaceString( ps, szFamily, &fnd,
+                                    FACESIZE, fh->fattrs.szFacename);
 
    if( rc == GPI_ERROR)
    {  // no real font, fake it
@@ -762,8 +768,9 @@ HDC   ps = NULL;
       HDC    hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
 
       long   res[ 2];
-      ::DevQueryCaps( hdc, CAPS_HORIZONTAL_FONT_RES, 2, res);
-      pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, ps);
+      GFX (::DevQueryCaps( hdc, CAPS_HORIZONTAL_FONT_RES, 2, res), FALSE);
+      long lFonts = 0; int i;
+      PFONTMETRICS pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, ps);
 
       
       int curPoints = 0;
@@ -861,6 +868,7 @@ HDC   ps = NULL;
 nsresult nsFontMetricsOS2::GetSpaceWidth(nscoord &aSpaceWidth)
 {
   aSpaceWidth = mSpaceWidth;
+  return NS_OK;
 }
 
 // Other metrics

@@ -97,6 +97,7 @@ protected:
   PRInt32               mHeight;
   nsRect                mClientRect;
   nsIDeviceContextSpec  *mSpec;
+  PRBool                mSupportsRasterFonts;
 
   nsCOMPtr<nsIScreenManager> mScreenManager;
   static PRUint32 sNumberOfScreens;
@@ -117,6 +118,7 @@ public:
   } mPrintState;
 
   BOOL isPrintDC();
+  PRBool SupportsRasterFonts();
   nsresult nsDeviceContextOS2::CreateFontAliasTable();
 };
 

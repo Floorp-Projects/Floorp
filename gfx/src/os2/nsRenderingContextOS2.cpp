@@ -53,8 +53,6 @@
 #include "libimg.h"
 #include "prprf.h"
 
-#define RGB_PRINTING 1 // Makes most things work
-
 // helper clip region functions - defined at the bottom of this file.
 LONG OS2_CombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lMode);
 HRGN OS2_CopyClipRegion( HPS hps);
@@ -321,19 +319,23 @@ nsresult nsRenderingContextOS2::CommonInit()
  
     // Select the palette in the background
     GFX (::GpiSelectPalette (mSurface->mPS, (HPAL)palInfo.palette), PAL_ERROR);
-    ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
+    if (mDCOwner) {
+      ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
+    } /* endif */
   }
-#ifndef RGB_PRINTING
-  else if (!palInfo.isPaletteDevice && palInfo.palette) {
-    GFX (::GpiCreateLogColorTable (mSurface->mPS, LCOL_RESET, LCOLF_CONSECRGB,
-                                   0, palInfo.sizePalette, (PLONG)palInfo.palette),
-         FALSE);
-  }
-#endif
   else
   {
     GFX (::GpiCreateLogColorTable (mSurface->mPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
   }
+
+  // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
+  IMAGEBUNDLE ib;
+  ib.lColor     = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, MK_RGB (0, 0, 0)), GPI_ALTERROR);  // 1 in monochrome image maps to white
+  ib.lBackColor = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, MK_RGB (255, 255, 255)), GPI_ALTERROR);        // 0 in monochrome image maps to black
+  ib.usMixMode  = FM_OVERPAINT;
+  ib.usBackMixMode = BM_OVERPAINT;
+  GFX (::GpiSetAttrs (mSurface->mPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
+
   return NS_OK;
 }
 
@@ -356,15 +358,10 @@ nsresult nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface 
         ULONG cclr;
         // Select the palette in the background
         GFX (::GpiSelectPalette (mSurface->mPS, (HPAL)palInfo.palette), PAL_ERROR);
-        ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
+        if (mDCOwner) {
+          ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
+        } /* endif */
       }
-#ifndef RGB_PRINTING
-      else if (!palInfo.isPaletteDevice && palInfo.palette) {
-        GFX (::GpiCreateLogColorTable (mSurface->mPS, LCOL_RESET, LCOLF_CONSECRGB,
-                                       0, palInfo.sizePalette, (PLONG)palInfo.palette),
-             FALSE);
-      }
-#endif
       else
       {
         GFX (::GpiCreateLogColorTable (mSurface->mPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
@@ -376,6 +373,14 @@ nsresult nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface 
       mSurface = mFrontSurface;
       rc = NS_OK;
    }
+
+   // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
+   IMAGEBUNDLE ib;
+   ib.lColor     = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, MK_RGB (255, 255, 255)), GPI_ALTERROR);  // 1 in monochrome image maps to white
+   ib.lBackColor = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, MK_RGB (0, 0, 0)), GPI_ALTERROR);        // 0 in monochrome image maps to black
+   ib.usMixMode  = FM_OVERPAINT;
+   ib.usBackMixMode = BM_OVERPAINT;
+   GFX (::GpiSetAttrs (mSurface->mPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
 
    // need to force a state refresh because the offscreen is something of
    // an unknown quantity.
@@ -906,8 +911,8 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
 
       if (((nsDeviceContextOS2 *) mContext)->mPrintDC )
       {
-         areaBundle.lBackColor = CLR_BACKGROUND;
-         lineBundle.lBackColor = CLR_BACKGROUND;
+         areaBundle.lBackColor = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, CLR_BACKGROUND), GPI_ALTERROR);
+         lineBundle.lBackColor = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, CLR_BACKGROUND), GPI_ALTERROR);
 
          areaBundle.usMixMode     = FM_OVERPAINT;
          areaBundle.usBackMixMode = BM_OVERPAINT;
