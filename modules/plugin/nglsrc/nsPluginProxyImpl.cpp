@@ -51,34 +51,37 @@ NS_IMETHODIMP nsPluginProxyImpl::GetProxyHost(char * *aProxyHost)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsresult rc = NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
   if (mProxyHost) {
-    if (*aProxyHost = nsCRT::strdup(mProxyHost)) {
-      rc = NS_OK;
+    if ((*aProxyHost = nsCRT::strdup(mProxyHost))) {
+      rv = NS_OK;
     }
   }
-  return rc;
+  return rv;
 }
+
 NS_IMETHODIMP nsPluginProxyImpl::SetProxyHost(const char * aProxyHost)
 {
-  nsresult rc = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
+  char *newProxyHost;
 
-  if (mProxyHost) {
-    nsCRT::free(mProxyHost);
-    mProxyHost = nsnull;
-  }
   if (aProxyHost) {
-    if (mProxyHost = nsCRT::strdup(aProxyHost)) {
-      rc = NS_OK;
+    if ((newProxyHost = nsCRT::strdup(aProxyHost))) {
+      nsCRT::free(mProxyHost);
+      mProxyHost = newProxyHost;
+    }
+    else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
   else {
     // setting our mProxyHost to nsnull
-    rc = NS_OK;
+    nsCRT::free(mProxyHost);
+    mProxyHost = nsnull;
   }
 
-  return rc;
+  return rv;
 }
 
 /* attribute long proxyPort; */
@@ -103,32 +106,34 @@ NS_IMETHODIMP nsPluginProxyImpl::GetProxyType(char * *aProxyType)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsresult rc = NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
   if (mProxyType) {
-    if (*aProxyType = nsCRT::strdup(mProxyType)) {
-      rc = NS_OK;
+    if ((*aProxyType = nsCRT::strdup(mProxyType))) {
+      rv = NS_OK;
     }
   }
-  return rc;
+  return rv;
 }
 NS_IMETHODIMP nsPluginProxyImpl::SetProxyType(const char * aProxyType)
 {
-  nsresult rc = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
+  char *newProxyType;
 
-  if (mProxyType) {
-    nsCRT::free(mProxyType);
-    mProxyType = nsnull;
-  }
   if (aProxyType) {
-    if (mProxyType = nsCRT::strdup(aProxyType)) {
-      rc = NS_OK;
+    if ((newProxyType = nsCRT::strdup(aProxyType))) {
+      nsCRT::free(mProxyType);
+      mProxyType = newProxyType;
+    }
+    else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
   else {
     // setting our mProxyType to nsnull
-    rc = NS_OK;
+    nsCRT::free(mProxyType);
+    mProxyType = nsnull;
   }
 
-  return rc;
+  return rv;
 }
