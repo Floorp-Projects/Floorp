@@ -108,7 +108,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
                                                                                 
     sidebarURLSecurityCheck(aContentURL);
     win.openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                   "centerscreen,chrome,dialog=yes,resizable=no,dependent",
+                   "centerscreen,chrome,dialog,resizable,dependent",
                    aTitle, aContentURL, null, null, null, null, true);
 }
 

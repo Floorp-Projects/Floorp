@@ -1382,7 +1382,7 @@ var BookmarksUtils = {
   addBookmark: function (aURL, aTitle, aCharset, aIsWebPanel)
   {
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-               "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharset,
+               "centerscreen,chrome,dialog,resizable,dependent", aTitle, aURL, null, aCharset,
                null, null, aIsWebPanel);
   },
 
