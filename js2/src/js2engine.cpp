@@ -155,6 +155,8 @@ namespace MetaData {
                             localFrame = activationStackTop->localFrame;
                             parameterFrame = activationStackTop->parameterFrame;
                             parameterSlots = activationStackTop->parameterSlots;
+                            if (parameterFrame)
+                                parameterFrame->argSlots = parameterSlots;
                             bCon = activationStackTop->bCon;
                             if (hndlr->mActivation != curAct) {
                                 while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
@@ -169,6 +171,8 @@ namespace MetaData {
                         localFrame = activationStackTop->localFrame;
                         parameterFrame = activationStackTop->parameterFrame;
                         parameterSlots = activationStackTop->parameterSlots;
+                        if (parameterFrame)
+                            parameterFrame->argSlots = parameterSlots;
                         bCon = activationStackTop->bCon;
                         meta->env = activationStackTop->env;
                     }
@@ -1046,7 +1050,9 @@ namespace MetaData {
         activationStackTop->localFrame = localFrame;
         activationStackTop->parameterFrame = parameterFrame;
         activationStackTop->parameterSlots = parameterSlots;
-//		if (pFrame && pFrame->)
+        activationStackTop->parameterCount = parameterCount;
+        activationStackTop->superConstructorCalled = superConstructorCalled;
+        activationStackTop->thisVal = thisVal;
         activationStackTop++;
         if (new_bCon) {
             bCon = new_bCon;
@@ -1078,6 +1084,15 @@ namespace MetaData {
         localFrame = activationStackTop->localFrame;
         parameterFrame = activationStackTop->parameterFrame;
         parameterSlots = activationStackTop->parameterSlots;
+        parameterCount = activationStackTop->parameterCount;
+        superConstructorCalled = activationStackTop->superConstructorCalled;
+        thisVal = activationStackTop->thisVal;
+        if (parameterFrame) {
+            parameterFrame->argSlots = parameterSlots;
+            parameterFrame->argCount = parameterCount;
+            parameterFrame->superConstructorCalled = superConstructorCalled;
+            parameterFrame->thisObject = thisVal;
+        }
         // reset the env. top
         while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
             activationStackTop->newEnv->removeTopFrame();
@@ -1114,8 +1129,8 @@ namespace MetaData {
                 JS2Object::mark(float64Table[i]);
         }
         if (parameterSlots) {
-            for (i = 0; i < parameterSlots->size(); i++) {
-                GCMARKVALUE((*parameterSlots)[i]);
+            for (i = 0; i < parameterFrame->frameSlots->size(); i++) {
+                GCMARKVALUE(parameterSlots[i]);
             }
         }
         GCMARKVALUE(retval);

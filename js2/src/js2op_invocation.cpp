@@ -85,9 +85,8 @@
                         pFrame->instantiate(meta->env);
                         baseVal = OBJECT_TO_JS2VAL(new (meta) SimpleInstance(meta, protoVal, meta->objectType(protoVal)));
                         pFrame->thisObject = baseVal;
-                        pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
+                        parameterSlots = pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);
-                        parameterSlots = pFrame->frameSlots;
                         meta->env->addFrame(pFrame, baseVal);
                         parameterFrame = pFrame;
                         pFrame = NULL;
@@ -143,13 +142,12 @@ doCall:
                 }
                 else {
                     if (length || fInst->isMethodClosure || fWrap->compileFrame->buildArguments) {
-                        pFrame = new (meta) ParameterFrame(fWrap->compileFrame);
-                        pFrame->instantiate(meta->env);
+                        pFrame = fWrap->compileFrame;//new (meta) ParameterFrame(fWrap->compileFrame);
+                        //pFrame->instantiate(meta->env);
                         pFrame->thisObject = a;
                         // XXX (use fWrap->compileFrame->signature)
-                        pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
+                        parameterSlots = pFrame->assignArguments(meta, fObj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 2) - execStack, JS2VAL_VOID, fWrap->env);
-                        parameterSlots = pFrame->frameSlots;
                         if (fInst->isMethodClosure)
                             meta->env->addFrame(meta->objectType(a));
                         meta->env->addFrame(pFrame, a);
@@ -162,7 +160,7 @@ doCall:
                         // need to find a more efficient way of stashing 'this'
                         // used to be : "meta->env->addFrame(fWrap->compileFrame->prototype);"
                         // Still need to mark the frame as a runtime frame (see stmtnode::return in validate)
-                        pFrame = new (meta) ParameterFrame(a, fWrap->compileFrame->prototype);
+                        pFrame = fWrap->compileFrame; //new (meta) ParameterFrame(a, fWrap->compileFrame->prototype);
                         pFrame->pluralFrame = fWrap->compileFrame;
                         meta->env->addFrame(pFrame, a);
                     }

@@ -312,7 +312,8 @@ public:
         Frame *topFrame;
         NonWithFrame *localFrame;
         ParameterFrame *parameterFrame;
-        ValueList *parameterSlots;
+        js2val *parameterSlots;
+        uint32 parameterCount;
     };
     void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }
@@ -363,9 +364,13 @@ public:
 
     // For frame slot references:
     NonWithFrame *packageFrame;
-    ParameterFrame *parameterFrame;
     NonWithFrame *localFrame;
-    ValueList *parameterSlots;
+
+    ParameterFrame *parameterFrame;
+    js2val *parameterSlots;             // just local copies of paramterFrame->argSlots
+    uint32 parameterCount;              // ... and parameterFrame->argCount
+    bool superConstructorCalled;
+    js2val thisVal;
 
     void pushHandler(uint8 *pc);
     void popHandler();

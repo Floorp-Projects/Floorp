@@ -259,7 +259,7 @@ namespace MetaData {
 
         CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
         try {
-            LexicalReference rVal(new (this) Multiname(world.identifiers[widenCString(fname)]), false);
+            LexicalReference rVal(new (this) Multiname(world.identifiers[widenCString(fname)]), false, bCon);
             rVal.emitReadForInvokeBytecode(bCon, 0);
             bCon->emitOp(eCall, 0, -(0 + 2) + 1);    // pop argCount args, the base & function, and push a result
             bCon->addShort(0);
@@ -319,24 +319,29 @@ namespace MetaData {
                 uint8 *savePC = NULL;
                 BytecodeContainer *bCon = fWrap->bCon;
 
+                // XXX why construct a new bCon at this point, why not just save off the old one (that's necessary
+                // because we may be in the process of generating into it) and restore it below like everything else?
                 CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
                 DEFINE_ROOTKEEPER(this, rk, runtimeFrame);
                 if (runtimeFrame == NULL)
                     runtimeFrame = new (this) ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(fWrap->env);
                 runtimeFrame->thisObject = thisValue;
-                runtimeFrame->assignArguments(this, fnObj, argv, argc, argc);
+                uint32 newSlotsCount = 0;
+                js2val *newSlots = runtimeFrame->assignArguments(this, fnObj, argv, argc, newSlotsCount);
                 Frame *oldTopFrame = fWrap->env->getTopFrame();
                 if (fInst->isMethodClosure)
                     fWrap->env->addFrame(objectType(thisValue));
                 fWrap->env->addFrame(runtimeFrame);
                 ParameterFrame *oldPFrame = engine->parameterFrame;
-                ValueList *oldPSlots = engine->parameterSlots;
+                js2val *oldPSlots = engine->parameterSlots;
+                uint32 oldPCount = engine->parameterCount;
                 try {
                     savePC = engine->pc;
                     engine->pc = NULL;
                     engine->parameterFrame = runtimeFrame;
-                    engine->parameterSlots = runtimeFrame->frameSlots;
+                    engine->parameterSlots = newSlots;
+                    engine->parameterCount = newSlotsCount;
                     result = engine->interpret(RunPhase, bCon, fWrap->env);
                 }
                 catch (Exception &x) {
@@ -345,6 +350,8 @@ namespace MetaData {
                     fWrap->env->setTopFrame(oldTopFrame);
                     engine->parameterFrame = oldPFrame;
                     engine->parameterSlots = oldPSlots;
+                    if (engine->parameterFrame)
+                        engine->parameterFrame->argSlots = engine->parameterSlots;
                     throw x;
                 }
                 engine->pc = savePC;
@@ -352,13 +359,15 @@ namespace MetaData {
                 fWrap->env->setTopFrame(oldTopFrame);
                 engine->parameterFrame = oldPFrame;
                 engine->parameterSlots = oldPSlots;
+                if (engine->parameterFrame)
+                    engine->parameterFrame->argSlots = engine->parameterSlots;
             }
         }
         return result;
     }
 
     // Save off info about the current compilation and begin a
-    // new one - using the given parser.
+    // new one - using the given source information.
     CompilationData *JS2Metadata::startCompilationUnit(BytecodeContainer *newBCon, const String &source, const String &sourceLocation)
     {
         CompilationData *result = new CompilationData();
@@ -860,11 +869,11 @@ namespace MetaData {
         if ((multiname->nsList->size() == 1) 
                 && (multiname->nsList->back() == meta->publicNamespace) 
                 && isValidIndex(multiname->name, index)
-                && (index < args->mSlots->size())) {
+                && (index < args->count)) {
             if (args->mSplit[index])
-                *rval = (*args->mSplitValue)[index];
+                *rval = args->mSplitValue[index];
             else
-                *rval = (*args->mSlots)[index];
+                *rval = args->mSlots[index];
             return true;
         }
         else
@@ -881,11 +890,11 @@ namespace MetaData {
         if ((multiname->nsList->size() == 1) 
                 && (multiname->nsList->back() == meta->publicNamespace) 
                 && isValidIndex(multiname->name, index)
-                && (index < args->mSlots->size())) {
+                && (index < args->count)) {
             if (args->mSplit[index])
-                (*args->mSplitValue)[index] = newValue;
+                args->mSplitValue[index] = newValue;
             else
-                (*args->mSlots)[index] = newValue;
+                args->mSlots[index] = newValue;
             return true;
         }
         else
@@ -902,11 +911,11 @@ namespace MetaData {
         if ((multiname->nsList->size() == 1) 
                 && (multiname->nsList->back() == meta->publicNamespace) 
                 && isValidIndex(multiname->name, index)
-                && (index < args->mSlots->size())) {
+                && (index < args->count)) {
             if (!args->mSplitValue)
-                args->mSplitValue = new std::vector<js2val>(slotCount);
+                args->mSplitValue = new js2val[slotCount];
             args->mSplit[index] = true;
-            (*args->mSplitValue)[index] = JS2VAL_VOID;
+            args->mSplitValue[index] = JS2VAL_VOID;
             return true;
         }
         else

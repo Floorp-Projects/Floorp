@@ -715,7 +715,7 @@ public:
 // a list of two or more frames. Each frame corresponds to a scope. More specific frames are listed first
 // -each frame's scope is directly contained in the following frame's scope. The last frame is always the
 // SYSTEMFRAME. The next-to-last frame is always a PACKAGE or GLOBAL frame.
-typedef std::deque<std::pair<Frame *, js2val> > FrameList;
+typedef std::deque<Frame *> FrameList;
 typedef FrameList::iterator FrameListIterator;
 
 // Deriving from JS2Object for gc sake only
@@ -723,8 +723,8 @@ class Environment : public JS2Object {
 public:
     Environment(SystemFrame *systemFrame, Frame *nextToLast) : JS2Object(EnvironmentKind) 
         { 
-            frameList.push_back(std::pair<Frame *, js2val>(nextToLast, JS2VAL_VOID)); 
-            frameList.push_back(std::pair<Frame *, js2val>(systemFrame, JS2VAL_VOID));  
+            frameList.push_back(nextToLast); 
+            frameList.push_back(systemFrame);  
         }
     virtual ~Environment()                  { }
 
@@ -734,16 +734,15 @@ public:
     ParameterFrame *Environment::getEnclosingParameterFrame(js2val *thisP);
     FrameListIterator getRegionalFrame();
     FrameListIterator getRegionalEnvironment();
-    Frame *getTopFrame()                    { return frameList.front().first; }
+    Frame *getTopFrame()                    { return frameList.front(); }
     FrameListIterator getBegin()            { return frameList.begin(); }
     FrameListIterator getEnd()              { return frameList.end(); }
     Package *getPackageFrame();
-    SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back().first); }
+    SystemFrame *getSystemFrame()           { return checked_cast<SystemFrame *>(frameList.back()); }
 
-    void setTopFrame(Frame *f)              { while (frameList.front().first != f) frameList.pop_front(); }
+    void setTopFrame(Frame *f)              { while (frameList.front() != f) frameList.pop_front(); }
 
-    void addFrame(Frame *f)                 { frameList.push_front(std::pair<Frame *, js2val>(f, JS2VAL_VOID)); }
-    void addFrame(Frame *f, js2val x)       { frameList.push_front(std::pair<Frame *, js2val>(f, x)); }
+    void addFrame(Frame *f)                 { frameList.push_front(f); }
     void removeTopFrame()                   { frameList.pop_front(); }
 
     js2val readImplicitThis(JS2Metadata *meta);
@@ -1069,11 +1068,12 @@ public:
 class ArgumentsInstance : public SimpleInstance {
 public:
     ArgumentsInstance(JS2Metadata *meta, js2val parent, JS2Class *type) 
-                        : SimpleInstance(meta, parent, type), mSlots(NULL), mSplit(NULL), mSplitValue(NULL) { }
+                        : SimpleInstance(meta, parent, type), mSlots(NULL), count(0), mSplit(NULL), mSplitValue(NULL) { }
 
-    ValueList *mSlots;
+    js2val *mSlots;
+    uint32 count;
     bool *mSplit;
-    ValueList *mSplitValue;
+    js2val *mSplitValue;
 
     virtual void markChildren();
     virtual ~ArgumentsInstance();
@@ -1136,7 +1136,8 @@ class LexicalReference : public Reference {
 // of a given set of qualified names. LEXICALREFERENCE tuples arise from evaluating identifiers a and qualified identifiers
 // q::a.
 public:
-    LexicalReference(Multiname *mname, bool strict) : variableMultiname(mname), env(NULL), strict(strict) { }
+    LexicalReference(Multiname *mname, bool strict, BytecodeContainer *bCon) 
+        : variableMultiname(mname), env(NULL), strict(strict), mn_index(bCon->saveMultiname(mname)) { }
 //    LexicalReference(const String *name, bool strict) : variableMultiname(name), env(NULL), strict(strict) { }
 //    LexicalReference(const String *name, Namespace *nameSpace, bool strict) : variableMultiname(name, nameSpace), env(NULL), strict(strict) { }
     virtual ~LexicalReference() { }
@@ -1144,21 +1145,23 @@ public:
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
     Environment *env;               // The environment in which the reference was created.
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
+
+    uint16 mn_index;
     
-    void emitInitBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalInit, pos); bCon->addMultiname(variableMultiname); }
+    void emitInitBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalInit, pos); bCon->addShort(mn_index); }
     
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalRef, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addShort(mn_index); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addShort(mn_index); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalRef, pos); bCon->addShort(mn_index); }
     virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
-    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostInc, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addMultiname(variableMultiname); }
-    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostInc, pos); bCon->addShort(mn_index); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eLexicalPostDec, pos); bCon->addShort(mn_index); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addShort(mn_index); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addShort(mn_index); }
     
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addShort(mn_index); }
 
     virtual int hasStackEffect()                                           { return 0; }
 };
@@ -1169,7 +1172,7 @@ class DotReference : public Reference {
 // a.q::b.
 public:
 //    DotReference(const String *name) : propertyMultiname(name) { }
-    DotReference(Multiname *mn) : propertyMultiname(mn) { }
+    DotReference(Multiname *mn, BytecodeContainer *bCon) : propertyMultiname(mn), mn_index(bCon->saveMultiname(propertyMultiname)) { }
     virtual ~DotReference() { }
 
     // In this implementation, the base is established by the execution of the preceding expression and
@@ -1178,21 +1181,24 @@ public:
                                     // object may be a LIMITEDINSTANCE if a is a super expression, in which case
                                     // the property lookup will be restricted to members defined in proper ancestors
                                     // of base.limit.
-    Multiname *propertyMultiname;    // A nonempty set of qualified names to which this reference can refer (b
+    Multiname *propertyMultiname;   // A nonempty set of qualified names to which this reference can refer (b
                                     // qualified with the namespace q or all currently open namespaces in the
                                     // example above)
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotRef, pos); bCon->addMultiname(propertyMultiname); }
+    uint16 mn_index;
+
+    
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addShort(mn_index); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addShort(mn_index); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotRef, pos); bCon->addShort(mn_index); }
     virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
-    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostInc, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addMultiname(propertyMultiname); }
-    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostInc, pos); bCon->addShort(mn_index); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eDotPostDec, pos); bCon->addShort(mn_index); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addShort(mn_index); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addShort(mn_index); }
 
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addShort(mn_index); }
 
     virtual int hasStackEffect()                                            { return 1; }
 };
@@ -1343,8 +1349,10 @@ public:
                 isConstructor(false),
                 isInstance(false),
                 callsSuperConstructor(false),
-                superConstructorCalled(true)
-                    { }    
+                superConstructorCalled(true),
+                argSlots(NULL)
+                    { }
+/*
     ParameterFrame(ParameterFrame *pluralFrame) 
         : NonWithFrame(ParameterFrameKind, pluralFrame), 
                 thisObject(JS2VAL_UNDEFINED), 
@@ -1353,9 +1361,11 @@ public:
                 isConstructor(pluralFrame->isConstructor),
                 isInstance(pluralFrame->isInstance),
                 callsSuperConstructor(pluralFrame->callsSuperConstructor),
-                superConstructorCalled(false)  // initialized to false for each construction of a singular frame
+                superConstructorCalled(false), // initialized to false for each construction of a singular frame
                                                // and then set true when/if the call occurs
+                argSlots(NULL)
                     { }
+*/
 
 //    Plurality plurality;
     js2val thisObject;              // The value of this; none if this function doesn't define this;
@@ -1370,11 +1380,19 @@ public:
     bool callsSuperConstructor;
     bool superConstructorCalled;
 
+    // these relate to the 'most active' invocation
+    js2val *argSlots;               // if the corresponding function uses 'arguments', this pointer is borrowed
+                                    // from the arguments instance.
+    uint32 argCount;                // may be more than frameSlots->size() if more arguments are passed
+
+
+
+
 //    Variable **positional;          // list of positional parameters, in order
 //    uint32 positionalCount;
 
     virtual void instantiate(Environment *env);
-    void assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 length);
+    js2val *assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 &argsLength);
     virtual void markChildren();
     virtual ~ParameterFrame();
 };

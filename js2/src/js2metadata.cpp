@@ -1005,7 +1005,7 @@ namespace MetaData {
                 if (f->initializer->getKind() == StmtNode::Var) {
                     VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
                     VariableBinding *vb = vs->bindings;
-                    v = new (*referenceArena) LexicalReference(new (this) Multiname(*vb->name), cxt.strict);
+                    v = new (*referenceArena) LexicalReference(new (this) Multiname(*vb->name), cxt.strict, bCon);
                     referenceArena->registerDestructor(v);
                 }
                 else {
@@ -1301,7 +1301,7 @@ namespace MetaData {
                         }
                         // write the exception object (on stack top) into the named
                         // local variable
-                        Reference *r = new (*referenceArena) LexicalReference(new (this) Multiname(c->name), false);
+                        Reference *r = new (*referenceArena) LexicalReference(new (this) Multiname(c->name), false, bCon);
                         referenceArena->registerDestructor(r);
                         r->emitWriteBytecode(bCon, p->pos);
                         bCon->emitOp(ePop, p->pos);
@@ -1400,7 +1400,7 @@ namespace MetaData {
                                             throw x;
                                         Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                                         if (r) r->emitReadBytecode(bCon, p->pos);
-                                        LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict);
+                                        LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict, bCon);
                                         referenceArena->registerDestructor(lVal);
                                         lVal->emitWriteBytecode(bCon, p->pos);      
                                         bCon->emitOp(ePop, p->pos);
@@ -1419,13 +1419,13 @@ namespace MetaData {
                                     if (r) r->emitReadBytecode(bCon, p->pos);
                                     bCon->emitOp(eCoerce, p->pos);
                                     bCon->addType(v->type);
-                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict);
+                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict, bCon);
                                     referenceArena->registerDestructor(lVal);
                                     lVal->emitInitBytecode(bCon, p->pos);      
                                 }
                                 else {
                                     v->type->emitDefaultValue(bCon, p->pos);
-                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict);
+                                    LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(vb->mn), cxt.strict, bCon);
                                     referenceArena->registerDestructor(lVal);
                                     lVal->emitInitBytecode(bCon, p->pos);      
                                 }
@@ -1470,7 +1470,7 @@ namespace MetaData {
                         if (vb->initializer) {
                             Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
-                            LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(*vb->name), cxt.strict);
+                            LexicalReference *lVal = new (*referenceArena) LexicalReference(new (this) Multiname(*vb->name), cxt.strict, bCon);
                             referenceArena->registerDestructor(lVal);
                             lVal->variableMultiname->addNamespace(publicNamespace);
                             lVal->emitInitBytecode(bCon, p->pos);                                                        
@@ -2407,7 +2407,7 @@ doUnary:
                     reportError(Exception::badValueError, "Namespace expected in qualifier", p->pos);
                 Namespace *ns = checked_cast<Namespace *>(obj);
                 
-                returnRef = new (*referenceArena) LexicalReference(new (this) Multiname(name, ns), cxt.strict);
+                returnRef = new (*referenceArena) LexicalReference(new (this) Multiname(name, ns), cxt.strict, bCon);
                 referenceArena->registerDestructor(returnRef);
             }
             break;
@@ -2433,7 +2433,7 @@ doUnary:
                         fi++;
                     }
                 }
-                returnRef = new (*referenceArena) LexicalReference(new (this) Multiname(i->name), cxt.strict);
+                returnRef = new (*referenceArena) LexicalReference(new (this) Multiname(i->name), cxt.strict, bCon);
                 referenceArena->registerDestructor(returnRef);
                 ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
                 // Try to find this identifier at compile time, we have to stop if we reach
@@ -2470,7 +2470,7 @@ doUnary:
                                     break;
                                 }                                
                             }
-                            keepLooking = false;
+                            keepLooking = false;    // don't look beneath the current function, as the slot base pointers aren't relevant
                         }
                         break;
                     case BlockFrameKind:
@@ -2644,7 +2644,7 @@ doUnary:
                     }
 
                     if (returnRef == NULL) {
-                        returnRef = new (*referenceArena) DotReference(new (this) Multiname(i->name));
+                        returnRef = new (*referenceArena) DotReference(new (this) Multiname(i->name), bCon);
                         referenceArena->registerDestructor(returnRef);
                         checked_cast<DotReference *>(returnRef)->propertyMultiname->addNamespace(cxt);
                     }
@@ -2653,7 +2653,7 @@ doUnary:
                     if (b->op2->getKind() == ExprNode::qualify) {
                         Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
-                        returnRef = new (*referenceArena) DotReference(((LexicalReference *)rVal)->variableMultiname);
+                        returnRef = new (*referenceArena) DotReference(((LexicalReference *)rVal)->variableMultiname, bCon);
                         referenceArena->registerDestructor(returnRef);
                         checked_cast<DotReference *>(returnRef)->propertyMultiname->addNamespace(cxt);
                     }
@@ -3144,7 +3144,8 @@ doUnary:
     { 
         FrameListIterator fi = getBegin(), end = getEnd();
         while (fi != end) {
-            GCMARKOBJECT(fi->first)
+            GCMARKOBJECT(fi->first);
+            GCMARKVALUE(fi->second);
             fi++;
         }
     }
@@ -4498,7 +4499,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 case FrameVariable::Parameter:
                     {
                         ASSERT(container->kind == ParameterFrameKind);
-                        *rval = (*(checked_cast<ParameterFrame *>(container))->frameSlots)[fv->frameSlot];
+                        ASSERT(fv->frameSlot < (checked_cast<ParameterFrame *>(container))->frameSlots->size());
+                        *rval = (checked_cast<ParameterFrame *>(container))->argSlots[fv->frameSlot];
+//                        *rval = (*(checked_cast<ParameterFrame *>(container))->frameSlots)[fv->frameSlot];
                     }
                     break;
                 }
@@ -4569,7 +4572,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 case FrameVariable::Parameter:
                     {
                         ASSERT(container->kind == ParameterFrameKind);
-                        (*(checked_cast<ParameterFrame *>(container))->frameSlots)[fv->frameSlot] = newValue;
+                        ASSERT(fv->frameSlot < (checked_cast<ParameterFrame *>(container))->frameSlots->size());
+                        (checked_cast<ParameterFrame *>(container))->argSlots[fv->frameSlot] = newValue;
+//                        (*(checked_cast<ParameterFrame *>(container))->frameSlots)[fv->frameSlot] = newValue;
                     }
                     break;
                 }
@@ -4600,18 +4605,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return (findCommonMember(&val, mn, ReadWriteAccess, true) != NULL);
     }
 
-    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable) 
-    {
-        return createDynamicProperty(obj, world.identifiers[widenCString(name)], initVal, access, sealed, enumerable); 
-    }
-/*
-    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
-    {
-        DEFINE_ROOTKEEPER(this, rk, name);
-        QualifiedName qName(publicNamespace, name); 
-        return createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
-    }
-*/
+    // Add the local member with access etc. by name into the map, using the public namespace. An entry may or may not be in the map already
     void JS2Metadata::addPublicVariableToLocalMap(LocalBindingMap *lMap, const StringAtom &name, LocalMember *v, Access access, bool enumerable)
     {
         LocalBinding *new_b = new LocalBinding(access, v, enumerable);
@@ -4639,18 +4633,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             else
                 ASSERT(false);
         addPublicVariableToLocalMap(lMap, name, dv, access, enumerable);
-/*
-        LocalBindingEntry **lbeP = (*lMap)[*qName->name];
-        LocalBindingEntry *lbe;
-        if (lbeP == NULL) {
-            lbe = new LocalBindingEntry(*qName->name);
-            lMap->insert(*qName->name, lbe);
-        }
-        else
-            lbe = *lbeP;
-        lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(qName->nameSpace, new_b));
-*/
         return dv;
+    }
+
+    // char * version of above (XXX inline?)
+    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable) 
+    {
+        return createDynamicProperty(obj, world.identifiers[widenCString(name)], initVal, access, sealed, enumerable); 
     }
 
     // Use the slotIndex from the instanceVariable to access the slot
@@ -5162,12 +5151,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         SimpleInstance::markChildren();
         if (mSlots) {
-            for (uint32 i = 0; i < mSlots->size(); i++)
-                GCMARKVALUE((*mSlots)[i]);
+            for (uint32 i = 0; i < count; i++)
+                GCMARKVALUE(mSlots[i]);
         }
         if (mSplitValue) {
-            for (uint32 i = 0; i < mSlots->size(); i++)
-                GCMARKVALUE((*mSplitValue)[i]);
+            for (uint32 i = 0; i < count; i++)
+                GCMARKVALUE(mSplitValue[i]);
         }
     }
 
@@ -5280,32 +5269,31 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // the cloned Variables assigned into this (singular) frame. Use the 
     // incoming values to initialize the positionals.
     // Pad out to 'length' args with undefined values if argCount is insufficient
-    void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 length)
+    js2val *ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 &argsLength)
     {
         uint32 i;
-        ASSERT(pluralFrame->kind == ParameterFrameKind);
-        ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         
         ArgumentsInstance *argsObj = NULL;
         DEFINE_ROOTKEEPER(meta, rk2, argsObj);
 
 		// slotCount is the number of slots required by the parameter frame
-        uint32 slotCount = (plural->frameSlots) ? plural->frameSlots->size() : 0;
+        uint32 slotCount = (frameSlots) ? frameSlots->size() : 0;
 		ASSERT(length == slotCount);
 
-        if (plural->buildArguments) {
+        if (buildArguments) {
             // If we're building an arguments object, the slots for the parameter frame are located
             // there so that the arguments object itself can survive beyond the life of the function.
             argsObj = new (meta) ArgumentsInstance(meta, meta->objectClass->prototype, meta->argumentsClass);
 			if (argCount > slotCount)
 				slotCount = argCount;
             if (slotCount) {
-                argsObj->mSlots = new std::vector<js2val>(slotCount);
+                argsObj->mSlots = new js2val[slotCount];
+                argsObj->count = slotCount;
                 argsObj->mSplit = new bool[slotCount];
                 for (i = 0; (i < slotCount); i++)
                     argsObj->mSplit[i] = false;
             }
-            frameSlots = argsObj->mSlots;
+            argSlots = argsObj->mSlots;
             // Add the 'arguments' property
             const StringAtom &name = meta->world.identifiers["arguments"];
             ASSERT(localBindings[name] == NULL);
@@ -5318,21 +5306,23 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 			if (argCount > slotCount)
 				slotCount = argCount;
             if (slotCount)
-                frameSlots = new std::vector<js2val>(slotCount);
+                argSlots = new js2val[slotCount];
         }
+        argsLength = slotCount;
 
         for (i = 0; (i < argCount); i++) {
             if (i < slotCount) {
-                (*frameSlots)[i] = argBase[i];
+                argSlots[i] = argBase[i];
             }
         }
         for ( ; (i < slotCount); i++) {
-			(*frameSlots)[i] = JS2VAL_UNDEFINED;
+			argSlots[i] = JS2VAL_UNDEFINED;
         }
-        if (plural->buildArguments) {
+        if (buildArguments) {
             setLength(meta, argsObj, argCount);
             meta->argumentsClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->world.identifiers["callee"], true, OBJECT_TO_JS2VAL(fnObj));
         }
+        return argSlots;
     }
 
 
@@ -5481,9 +5471,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     p->resetMark();      // might have lingering mark from previous gc
                     p->clearFlags();
                     p->setFlag(flag);
-#ifdef DEBUG
+//#ifdef DEBUG
                     memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
-#endif
+//#endif
                     return (p + 1);
                 }
                 pre = p;
@@ -5501,9 +5491,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
-#ifdef DEBUG
+//#ifdef DEBUG
         memset(p, 0xB7, sz);
-#endif
+//#endif
         p->owner = this;
         p->setSize(sz);
         p->setFlag(flag);
@@ -5517,9 +5507,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         p->owner = (Pond *)freeHeader;
         uint8 *t = (uint8 *)(p + 1);
-#ifdef DEBUG
+//#ifdef DEBUG
         memset(t, 0xB3, p->getSize() - sizeof(PondScum));
-#endif
+//#endif
         freeHeader = p;
         return p->getSize() - sizeof(PondScum);
     }

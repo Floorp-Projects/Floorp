@@ -338,8 +338,8 @@
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
             a = top();
-            ASSERT(parameterSlots && slotIndex < parameterSlots->size());
-            (*parameterSlots)[slotIndex] = a;
+            ASSERT(parameterSlots && slotIndex < parameterFrame->frameSlots->size());
+            parameterSlots[slotIndex] = a;
         }
         break;
 
@@ -347,7 +347,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(parameterSlots && slotIndex < parameterSlots->size());
+            ASSERT(parameterSlots && slotIndex < parameterFrame->frameSlots->size());
             // XXX some kind of code here?
             push(JS2VAL_TRUE);
         }
@@ -357,8 +357,8 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
-            ASSERT(parameterSlots && slotIndex < parameterSlots->size());
-            push((*parameterSlots)[slotIndex]);
+            ASSERT(parameterSlots && slotIndex < parameterFrame->frameSlots->size());
+            push(parameterSlots[slotIndex]);
         }
         break;
 
@@ -367,8 +367,8 @@
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
             push(JS2VAL_NULL);
-            ASSERT(parameterSlots && slotIndex < parameterSlots->size());
-            push((*parameterSlots)[slotIndex]);
+            ASSERT(parameterSlots && slotIndex < parameterFrame->frameSlots->size());
+            push(parameterSlots[slotIndex]);
         }
         break;
 
