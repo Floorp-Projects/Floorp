@@ -199,13 +199,6 @@ nsresult nsExternalHelperAppService::InitDataSource()
   rv = rdf->GetDataSourceBlocking( urlSpec, getter_AddRefs( mOverRideDataSource ) );
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_mscott
-    PRBool loaded;
-    rv = remoteDS->GetLoaded(&loaded);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed getload\n");
-    printf("After refresh: datasource is %s\n", loaded ? "loaded" : "not loaded");
-#endif
-
   // initialize our resources if we haven't done so already...
   if (!kNC_Description)
   {
@@ -513,6 +506,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const char * a
 nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * aFileExtension, nsIMIMEInfo ** aMIMEInfo)
 {
   nsresult rv = NS_OK;
+  *aMIMEInfo = nsnull;
 
   rv = InitDataSource();
   if (NS_FAILED(rv)) return rv;
@@ -536,27 +530,25 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * 
                                         PR_TRUE,
                                         getter_AddRefs(contentTypeNodeResource));
     nsCAutoString contentTypeStr;
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && contentTypeNodeResource)
     {
       const PRUnichar* contentType = nsnull;
       rv = FillLiteralValueFromTarget(contentTypeNodeResource, kNC_Value, &contentType);
       if (contentType)
         contentTypeStr.AssignWithConversion(contentType);
-    }
-    if (NS_SUCCEEDED(rv))
-    {
-       // create a mime info object and we'll fill it in based on the values from the data source
-       nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID, &rv));
-       NS_ENSURE_SUCCESS(rv, rv);
-       rv = FillTopLevelProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, mimeInfo);
-       NS_ENSURE_SUCCESS(rv, rv);
-       rv = FillContentHandlerProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, mimeInfo);
-
-       *aMIMEInfo = mimeInfo;
-       NS_IF_ADDREF(*aMIMEInfo);
-    } // if we have a node in the graph for this extension
-    else
-      *aMIMEInfo = nsnull;
+      if (NS_SUCCEEDED(rv))
+      {
+        // create a mime info object and we'll fill it in based on the values from the data source
+        nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = FillTopLevelProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, mimeInfo);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = FillContentHandlerProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, mimeInfo);
+        
+        *aMIMEInfo = mimeInfo;
+        NS_IF_ADDREF(*aMIMEInfo);
+      }
+    }  // if we have a node in the graph for this extension
   } // if we have a data source
   else
     rv = NS_ERROR_FAILURE;
