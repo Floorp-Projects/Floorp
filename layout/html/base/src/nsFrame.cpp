@@ -51,7 +51,7 @@
 #include "nsCOMPtr.h"
 #include "nsStyleChangeList.h"
 
-#define NORMAL_DRAG_HANDLING 1       // remove this to try out new D&D stuff.
+#define NORMAL_DRAG_HANDLING 1
 #if !NORMAL_DRAG_HANDLING
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"
@@ -830,12 +830,12 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
       trans->AddDataFlavor(&textPlainFlavor);
       nsString dragText = "Drag Text";
       PRUint32 len = 9; 
-      trans->SetTransferData(flavor, dragText.ToNewCString(), len);   // transferable consumes the data
+      trans->SetTransferData(&textPlainFlavor, dragText.ToNewCString(), len);   // transferable consumes the data
 
       trans2->AddDataFlavor(&textPlainFlavor);
       nsString dragText2 = "More Drag Text";
       len = 14; 
-      trans2->SetTransferData(flavor2, dragText2.ToNewCString(), len);   // transferable consumes the data
+      trans2->SetTransferData(&textPlainFlavor, dragText2.ToNewCString(), len);   // transferable consumes the data
 
       nsCOMPtr<nsISupportsArray> items;
       NS_NewISupportsArray(getter_AddRefs(items));
