@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:18:41 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/24 14:49:19 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/gennotices.tst,v $ 
 # $Name:  $ 
@@ -44,6 +44,7 @@
 # Load the tinderbox specific libraries
 use lib '#tinder_libdir#';
 
+use TinderConfig;
 use Utils;
 use HTMLPopUp;
 
@@ -145,7 +146,7 @@ foreach $tree (@TREES) {
 
 $out = <<EOF;
 
-\$record = {
+\$r = {
 		'tree' => '$tree',
 		'mailaddr' => '$mailaddr',
 		'rendered_notice' => '$rendered_notice', 
