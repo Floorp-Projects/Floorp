@@ -135,6 +135,10 @@ button {
     padding				: 0px 3px;
 }
 
+.button-text {
+  margin: 0px !important;
+}
+
 .button-image-right {
 	background: url(chrome://global/skin/button-normal-right.gif) no-repeat;
 	width				: 4px;

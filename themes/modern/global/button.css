@@ -48,10 +48,7 @@ button {
 }
 
 .button-text-mid {
-  margin-left: 3px;
-  margin-right: 3px;
-  margin-top: 0px;
-  margin-bottom: 0px;
+  margin: 0px 3px !important;
   text-align: center;
 }
 

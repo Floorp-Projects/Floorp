@@ -332,11 +332,11 @@
   font-weight: bold;
 }
 
-#search-button > .button-stack > .button-text-box {
+#search-button > .box-inherit > .button-stack > .button-text-box {
   padding: 2px 0px;
 }
 
-#search-button > .button-stack > .button-text-box > .button-text-mid {
+#search-button > .box-inherit > .button-stack > .button-text-box > .button-text-mid {
   margin-right: 0px;
 }
 
