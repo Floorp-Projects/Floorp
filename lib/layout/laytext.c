@@ -484,7 +484,15 @@ lo_new_text_element(MWContext *context,
 		text_ele->text_len = 0;
 	}
 
+	/* Fix for bug#124552.  Look at both the state structure and the 
+	   current text block for anchor information. */
 	text_ele->anchor_href = state->current_anchor;
+	if (state->current_anchor == NULL && 
+		state->cur_text_block != NULL && 
+		state->cur_text_block->anchor_href != NULL)
+	{
+		text_ele->anchor_href = state->cur_text_block->anchor_href;
+	}
 
 	if (state->font_stack == NULL)
 	{
