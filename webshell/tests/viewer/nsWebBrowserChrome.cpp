@@ -86,7 +86,7 @@ NS_IMETHODIMP nsWebBrowserChrome::SetJSStatus(const PRUnichar* aStatus)
    NS_ENSURE_STATE(mBrowserWindow->mStatus);
 
    PRUint32 size;
-   mBrowserWindow->mStatus->SetText(aStatus, size);
+   mBrowserWindow->mStatus->SetText(nsAutoString(aStatus), size);
 
    return NS_OK;
 }
@@ -102,7 +102,7 @@ NS_IMETHODIMP nsWebBrowserChrome::SetOverLink(const PRUnichar* aLink)
       return NS_OK;
 
    PRUint32 size;
-   mBrowserWindow->mStatus->SetText(aLink, size);
+   mBrowserWindow->mStatus->SetText(nsAutoString(aLink), size);
 
    return NS_OK;
 }
@@ -475,7 +475,7 @@ nsWebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
 {
     if (mBrowserWindow->mStatus) {
         PRUint32 size;
-        mBrowserWindow->mStatus->SetText(aMessage, size);
+        mBrowserWindow->mStatus->SetText(nsAutoString(aMessage), size);
     }
     return NS_OK;
 }

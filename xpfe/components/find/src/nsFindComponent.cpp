@@ -421,7 +421,7 @@ nsFindComponent::Context::DoFind(PRBool *aDidFind)
 
 	*aDidFind = PR_FALSE;
 	
-	nsAutoString		matchString = mSearchString;
+	nsAutoString		matchString(mSearchString);
 	if (!mCaseSensitive)
 		matchString.ToLowerCase();
 	
