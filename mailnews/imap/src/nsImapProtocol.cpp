@@ -49,6 +49,12 @@
 #include "nsIPipe.h"
 #include "nsIMsgFolder.h"
 #include "nsImapStringBundle.h"
+
+// for the memory cache...
+#include "nsINetDataCacheManager.h"
+#include "nsINetDataCache.h"
+#include "nsICachedNetData.h"
+
 #include "nsCOMPtr.h"
 PRLogModuleInfo *IMAP;
 
@@ -1127,8 +1133,6 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // a place where we know we're finished with the url.
   if (m_runningUrl && m_imapServerSink)
     m_imapServerSink->RemoveChannelFromUrl(mailnewsurl, NS_OK);
-    
-    m_runningUrl->RemoveChannel(NS_OK);
 
   // release this by hand so that we can load the next queued url without thinking
   // this connection is busy running a url.
@@ -2062,34 +2066,35 @@ void nsImapProtocol::BeginMessageDownLoad(
         m_imapMailFolderSink->SetupHeaderParseStream(this, total_message_size, content_type, nsnull);
       }
     }
-          // if we have a mock channel, that means we have a channel listener who wants the
-          // message. So set up a pipe. We'll write the messsage into one end of the pipe
-          // and they will read it out of the other end.
-          else if (m_channelListener)
-          {
-           // create a pipe to pump the message into...the output will go to whoever
-           // is consuming the message display
-            nsresult rv;
-              rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
-              NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed!");
-          }
-          // else, if we are saving the message to disk!
-          else if (m_imapMessageSink /* && m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk */) 
-          {
-              nsCOMPtr<nsIFileSpec> fileSpec;
-              PRBool addDummyEnvelope = PR_TRUE;
-              nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningUrl);
-              msgurl->GetMessageFile(getter_AddRefs(fileSpec));
-              msgurl->GetAddDummyEnvelope(&addDummyEnvelope);
+
+    // if we have a mock channel, that means we have a channel listener who wants the
+    // message. So set up a pipe. We'll write the messsage into one end of the pipe
+    // and they will read it out of the other end.
+    else if (m_channelListener)
+    {
+     // create a pipe to pump the message into...the output will go to whoever
+     // is consuming the message display
+      nsresult rv;
+        rv = NS_NewPipe(getter_AddRefs(m_channelInputStream), getter_AddRefs(m_channelOutputStream));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed!");
+    }
+    // else, if we are saving the message to disk!
+    else if (m_imapMessageSink /* && m_imapAction == nsIImapUrl::nsImapSaveMessageToDisk */) 
+    {
+        nsCOMPtr<nsIFileSpec> fileSpec;
+        PRBool addDummyEnvelope = PR_TRUE;
+        nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningUrl);
+        msgurl->GetMessageFile(getter_AddRefs(fileSpec));
+        msgurl->GetAddDummyEnvelope(&addDummyEnvelope);
 //                m_imapMessageSink->SetupMsgWriteStream(fileSpec, addDummyEnvelope);
-              nsXPIDLCString nativePath;
-              NS_ASSERTION(fileSpec, "no fileSpec!");
-              if (fileSpec) 
-			  {
-                 fileSpec->GetNativePath(getter_Copies(nativePath));
-                 m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
-			  }
-		  }
+        nsXPIDLCString nativePath;
+        NS_ASSERTION(fileSpec, "no fileSpec!");
+        if (fileSpec) 
+	      {
+           fileSpec->GetNativePath(getter_Copies(nativePath));
+           m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
+	       }
+		}
   }
   else
     HandleMemoryFailure();
@@ -6254,13 +6259,18 @@ NS_IMPL_ISUPPORTS2(nsImapMockChannel, nsIImapMockChannel, nsIChannel)
 
 nsImapMockChannel::nsImapMockChannel()
 {
-    NS_INIT_REFCNT();
-    m_channelContext = nsnull;
+  NS_INIT_REFCNT();
+  m_channelContext = nsnull;
   m_cancelled = PR_FALSE;
+  mOwningRefToUrl = PR_FALSE;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
 {
+  // only release the url if we have a owning ref on it...
+  // this only occurrs when we are loading the url from the cache...
+  if (mOwningRefToUrl && m_url)
+    NS_RELEASE(m_url);
 }
 
 
@@ -6341,12 +6351,60 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamObserver *observer, nsISuppo
 
 NS_IMETHODIMP nsImapMockChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener)
 {
+  nsCOMPtr<nsICachedNetData>  cacheEntry;
+  PRUint32 contentLength = 0;
+  PRBool partialFlag = PR_FALSE;
+
   // set the stream listener and then load the url
   m_channelContext = ctxt;
   m_channelListener = listener;
 
-  // the following load group code is completely bogus....
   nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(m_url);
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // look to see if this url should be added to the memory cache..
+  PRBool useMemoryCache = PR_FALSE;
+  mailnewsUrl->GetAddToMemoryCache(&useMemoryCache);
+  nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && cacheManager)
+  {
+    // Retrieve an existing cache entry or create a new one if none exists for the
+    // given URL.
+    nsXPIDLCString urlCString; 
+    // eventually we are going to want to use the url spec - the query/ref part 'cause that doesn't
+    // distinguish urls.......
+    m_url->GetSpec(getter_Copies(urlCString));
+    // for now, truncate of the query part so we don't duplicate urls in the cache...
+    char * anchor = PL_strrchr(urlCString, '?');
+    if (anchor)
+      *anchor = '\0';
+    rv = cacheManager->GetCachedNetData(urlCString, 0, 0, nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE,
+                                        getter_AddRefs(cacheEntry));
+    if (NS_SUCCEEDED(rv) && cacheEntry)
+    {
+      PRBool updateInProgress;
+      cacheEntry->GetPartialFlag(&partialFlag);
+      cacheEntry->GetUpdateInProgress(&updateInProgress);        
+      cacheEntry->GetStoredContentLength(&contentLength);
+      // only try to update the cache entry if it isn't being used.
+      // and we want to write to the memory cache.
+      if (!updateInProgress && useMemoryCache)
+      {
+        // now we need to figure out if the entry is new / or partially unfinished...
+        // this determines if we are going to USE the cache entry for reading the data
+        // vs. if we need to write data into the cache entry...
+        if (!contentLength || partialFlag)
+          // we're going to fill up this cache entry, 
+          rv = cacheEntry->InterceptAsyncRead(listener, 0, getter_AddRefs(m_channelListener));
+      }
+    }
+  }
+
+  // regardless as to whether we are inserting into the cache or not, proceed with
+  // setting up the load group!
   if (m_loadGroup)
   {
     nsCOMPtr<nsILoadGroupListenerFactory> factory;
@@ -6363,10 +6421,28 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(PRUint32 startPosition, PRInt32 readC
     }
   } // if aLoadGroup
 
+  // now, determine if we should be loading from the cache or if we have
+  // to really load the msg with a protocol connection...
+  if (cacheEntry && contentLength > 0 && !partialFlag)
+  {
+    nsCOMPtr<nsIChannel> cacheChannel;
+    rv = cacheEntry->NewChannel(m_loadGroup, this, getter_AddRefs(cacheChannel));
+    if (NS_SUCCEEDED(rv))
+    {
+      // turn around and make our ref on m_url an owning ref...and force the url to remove
+      // its reference on the mock channel...this is a complicated texas two step to solve
+      // a nasty reference counting problem...
+      NS_IF_ADDREF(m_url);
+      mOwningRefToUrl = PR_TRUE;
+      imapUrl->SetMockChannel(nsnull);
+
+      rv = cacheChannel->AsyncRead(startPosition, readCount, m_channelContext, m_channelListener);
+      if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
+        return rv;
+    }    
+  }
+
   // loading the url consists of asking the server to add the url to it's imap event queue....
-  nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(m_url);
-  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
-  if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = mailnewsUrl->GetServer(getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;

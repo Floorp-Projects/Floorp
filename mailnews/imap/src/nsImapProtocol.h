@@ -552,21 +552,25 @@ class nsImapMockChannel : public nsIImapMockChannel
 public:
 
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSIIMAPMOCKCHANNEL
-    NS_DECL_NSICHANNEL
-    NS_DECL_NSIREQUEST
+  NS_DECL_NSIIMAPMOCKCHANNEL
+  NS_DECL_NSICHANNEL
+  NS_DECL_NSIREQUEST
 	
-    nsImapMockChannel();
+  nsImapMockChannel();
 	virtual ~nsImapMockChannel();
-
-    static nsresult Create (const nsIID& iid, void **result);
+  static nsresult Create (const nsIID& iid, void **result);
 
 protected:
     // we CANNOT own the uri else we will have a circular ref count
     // because the imap uri ref counts us....so don't think about
-    // turning this into a com ptr!
-    nsCOMPtr<nsIURI> m_originalUrl;
+    // turning this into a com ptr! HOWEVER, because life is complicated,
+    // there is one scenario where we need to own the url....and that
+    // is when we are loading the url from the cache....so in that case,
+    // we'll turn around and make our m_url ptr an owning reference... *sigh*
     nsIURI * m_url;
+    PRBool mOwningRefToUrl;
+
+    nsCOMPtr<nsIURI> m_originalUrl;
     nsCOMPtr<nsILoadGroup> m_loadGroup;
     nsCOMPtr<nsIStreamListener> m_channelListener;
     // non owning ref of the context in order to fix a circular ref count
