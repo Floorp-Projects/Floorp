@@ -98,6 +98,9 @@ typedef unsigned long HMTX;
 #include "nsISocketTransportService.h"
 #include "nsILayoutHistoryState.h"
 #include "nsTextFormatter.h"
+#include "nsPIDOMWindow.h"
+#include "nsIController.h"
+#include "nsIFocusController.h"
 
 #include "nsIHTTPChannel.h" // add this to the ick include list...we need it to QI for post data interface
 #include "nsHTTPEnums.h"
@@ -1213,17 +1216,68 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
   return NS_OK;
 }
 
-//----------------------------------------------------
+
+//
+// Routines for selection and clipboard
+//
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsresult
+nsWebShell :: GetControllerForCommand ( nsAReadableString & inCommand, nsIController** outController )
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsPIDOMWindow> window ( do_QueryInterface(mScriptGlobal) );
+  if ( window ) {
+    nsCOMPtr<nsIFocusController> focusController;
+    rv = window->GetRootFocusController ( getter_AddRefs(focusController) );
+    if ( focusController )
+      rv = focusController->GetControllerForCommand ( inCommand, getter_AddRefs(outController) ) ;
+  } // if window
+
+  return rv;
+  
+} // GetControllerForCommand
+
+
+nsresult
+nsWebShell :: IsCommandEnabled ( nsAReadableString & inCommand, PRBool* outEnabled )
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIController> controller;
+  rv = GetControllerForCommand ( inCommand, getter_AddRefs(controller) );
+  if ( controller )
+    rv = controller->IsCommandEnabled(nsPromiseFlatString(inCommand), outEnabled);
+  
+  return rv;
+}
+
+
+nsresult
+nsWebShell :: DoCommand ( nsAReadableString & inCommand )
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIController> controller;
+  rv = GetControllerForCommand ( inCommand, getter_AddRefs(controller) );
+  if ( controller )
+    rv = controller->DoCommand(nsPromiseFlatString(inCommand));
+  
+  return rv;
+}
+
+
 NS_IMETHODIMP
 nsWebShell::CanCutSelection(PRBool* aResult)
 {
-  nsresult rv = NS_OK;
+  nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (nsnull == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-  } else {
-    *aResult = PR_FALSE;
-  }
+  if ( aResult )
+    rv = IsCommandEnabled ( NS_LITERAL_STRING("cmd_cut"), aResult );
 
   return rv;
 }
@@ -1231,13 +1285,10 @@ nsWebShell::CanCutSelection(PRBool* aResult)
 NS_IMETHODIMP
 nsWebShell::CanCopySelection(PRBool* aResult)
 {
-  nsresult rv = NS_OK;
+  nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (nsnull == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-  } else {
-    *aResult = PR_FALSE;
-  }
+  if ( aResult )
+    rv = IsCommandEnabled ( NS_LITERAL_STRING("cmd_copy"), aResult );
 
   return rv;
 }
@@ -1245,13 +1296,10 @@ nsWebShell::CanCopySelection(PRBool* aResult)
 NS_IMETHODIMP
 nsWebShell::CanPasteSelection(PRBool* aResult)
 {
-  nsresult rv = NS_OK;
+  nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (nsnull == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-  } else {
-    *aResult = PR_FALSE;
-  }
+  if ( aResult )
+    rv = IsCommandEnabled ( NS_LITERAL_STRING("cmd_paste"), aResult );
 
   return rv;
 }
@@ -1259,19 +1307,19 @@ nsWebShell::CanPasteSelection(PRBool* aResult)
 NS_IMETHODIMP
 nsWebShell::CutSelection(void)
 {
-  return NS_ERROR_FAILURE;
+  return DoCommand ( NS_LITERAL_STRING("cmd_cut") );
 }
 
 NS_IMETHODIMP
 nsWebShell::CopySelection(void)
 {
-  return NS_ERROR_FAILURE;
+  return DoCommand ( NS_LITERAL_STRING("cmd_copy") );
 }
 
 NS_IMETHODIMP
 nsWebShell::PasteSelection(void)
 {
-  return NS_ERROR_FAILURE;
+  return DoCommand ( NS_LITERAL_STRING("cmd_paste") );
 }
 
 NS_IMETHODIMP
@@ -1349,6 +1397,10 @@ nsWebShell::FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSe
 {
   return NS_ERROR_FAILURE;
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 //*****************************************************************************
 // nsWebShell::nsIBaseWindow
