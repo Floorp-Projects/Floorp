@@ -52,6 +52,7 @@ XUL_ATOM(toolbar, "toolbar")
 XUL_ATOM(toolbaritem, "toolbaritem")
 XUL_ATOM(toolbox, "toolbox")
 XUL_ATOM(image, "image")
+XUL_ATOM(description, "description")
 
   // The tree atoms
 XUL_ATOM(tree, "tree") // The start of a tree view

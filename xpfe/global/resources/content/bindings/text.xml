@@ -5,7 +5,41 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding id="text-label">
+  <binding id="text-base">
+    <implementation>
+      <property name="disabled" onget="if (this.getAttribute('disabled') == 'true') return true; return false;"
+                                onset="if (val) this.setAttribute('disabled', 'true');
+                                       else this.removeAttribute('disabled'); 
+                                       return val;"/>
+      <property name="value" onget="return this.getAttribute('value');"
+                             onset="this.setAttribute('value', val); return val;"/>
+      <property name="crop" onget="return this.getAttribute('crop');"
+                            onset="this.setAttribute('crop', val); return val;"/>
+    </implementation>
+  </binding>
+
+  <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
+    <implementation>
+      <property name="accesskey" onget="return this.getAttribute('accesskey');"
+                                 onset="this.setAttribute('accesskey', val); return val;"/>
+      <property name="control" onget="return this.getAttribute('control');"
+                               onset="this.setAttribute('control', val); return val;"/>
+    </implementation>
+  </binding>
+
+  <binding id="label-control" extends="chrome://global/content/bindings/text.xml#text-label">
+    <handlers>
+      <handler event="click" action="if (this.disabled) return;
+                                     var forElementID = this.getAttribute('control');
+                                     if (forElementID)
+                                       var forElement = document.getElementById(forElementID);
+                                     if(forElement)
+                                       forElement.focus();
+                                    "/>
+    </handlers>
+  </binding>
+
+  <binding id="text-for" extends="chrome://global/content/bindings/text.xml#text-base">
     <handlers>
       <handler event="click" action="var forElementID = this.getAttribute('for');
                                      if (forElementID)
@@ -16,18 +50,5 @@
     </handlers>
   </binding>
   
-  <binding id="text-editable-display" extends="chrome://global/content/bindings/text.xml#text"/>
-  
-  <binding id="text-editable-edit" extends="xul:box">
-    <content>
-      <xul:hbox flex="1">
-        <html:input type="text" inherits="value,type,maxlength,disabled,size,readonly"/>
-      </xul:hbox>
-    </content>
-    <handlers>
-      <handler event="blur" action="this.setAttribute('mode','display');"/>
-    </handlers>
-  </binding>
-
 </bindings>
 

@@ -5528,9 +5528,15 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         rv = NS_NewOutlinerColFrame(aPresShell, &newFrame);
       }
       // TEXT CONSTRUCTION
-      else if (aTag == nsXULAtoms::text) {
-          processChildren = PR_TRUE;
+      else if (aTag == nsXULAtoms::text || aTag == nsHTMLAtoms::label ||
+               aTag == nsXULAtoms::description) {
         isReplaced = PR_TRUE;
+        if (aTag == nsHTMLAtoms::label || aTag == nsXULAtoms::description) {
+          nsAutoString value;
+          if (aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value) ==
+              NS_CONTENT_ATTR_NOT_THERE)
+            return NS_OK;
+        }
         rv = NS_NewTextBoxFrame(aPresShell, &newFrame);
       }
       // End of TEXT CONSTRUCTION logic

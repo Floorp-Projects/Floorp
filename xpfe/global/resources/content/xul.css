@@ -442,31 +442,32 @@ progressmeter {
   -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
 }
 
-/********** text **********/
+/********** label **********/
+
+/* XXXdwh <text> and <html> are deprecated. */
 
 text, spring {
   display: inline;
 }
 
-html {
+label, description, html {
   display: block;
 }
 
-text[for] {
+description {
+  -moz-binding: url("chrome://global/content/bindings/text.xml#text-base");
+}
+
+label {
   -moz-binding: url("chrome://global/content/bindings/text.xml#text-label");
 }
 
-text[editable="true"] {
-  -moz-user-select: text;
+label[control] {
+  -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
 }
 
-text[editable="true"],
-text[editable="true"][mode="display"] {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-editable-display");
-}
-
-text[editable="true"][mode="edit"] {
-  -moz-binding: url("chrome://global/content/bindings/text.xml#text-editable-edit");
+text[for] {
+  -moz-binding: url("chrome://global/content/bindings/text.xml#text-for");
 }
 
 /********** textbox **********/
