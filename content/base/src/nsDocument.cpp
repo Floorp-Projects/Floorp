@@ -1698,7 +1698,7 @@ NS_IMETHODIMP nsDocument::SelectAll() {
         body = child;
         break;
       }
-
+      NS_IF_RELEASE(atom);
     }
     NS_RELEASE(child);
   }
@@ -1709,6 +1709,7 @@ NS_IMETHODIMP nsDocument::SelectAll() {
 
   start = body;
   // Find Very first Piece of Content
+  NS_ADDREF(start); //to balance release below
   for (;;) {
     start->ChildCount(n);
     if (n <= 0) {
@@ -1720,6 +1721,7 @@ NS_IMETHODIMP nsDocument::SelectAll() {
   }
 
   end = body;
+  NS_ADDREF(end); //to balance release below
   // Last piece of Content
   for (;;) {
     end->ChildCount(n);
@@ -1731,8 +1733,7 @@ NS_IMETHODIMP nsDocument::SelectAll() {
     NS_RELEASE(child);
   }
 
-  //NS_RELEASE(start);
-  //NS_RELEASE(end);
+  NS_RELEASE(body);
   SetDisplaySelection(PR_TRUE);
 
   return NS_OK;
