@@ -342,6 +342,8 @@ protected:
 
     nsresult CheckLoadingPermissions();
 
+    void SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest);
+
 protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
