@@ -218,8 +218,17 @@ nsSmtpProtocol::nsSmtpProtocol(nsIURL * aURL, nsITransport * transportLayer)
 nsSmtpProtocol::~nsSmtpProtocol()
 {
 	// release all of our event sinks
-
+	
 	// free our local state
+	PR_FREEIF(m_responseText);
+	PR_FREEIF(m_hostName);
+	PR_FREEIF(m_addressCopy);
+	PR_FREEIF(m_verifyAddress);
+	PR_FREEIF(m_dataBuf);
+
+	// free handles on all networking objects...
+	NS_IF_RELEASE(m_outputStream); 
+	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
 }
 
