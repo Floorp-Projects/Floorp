@@ -286,18 +286,23 @@ foreach $revision (@revision_map)
     if ($old_revision ne $revision) {
       if ($useAlternateColor) {
 	$useAlternateColor = 0;
-	$output .= "</td></tr></TABLE><pre>" if $inTable and not $inMark;
+	if ($inTable and not $inMark) {
+	  $output .= "</td></tr></TABLE><pre>";
+	  $inTable = 0;
+	}	
       } else {
 	$useAlternateColor = 1;
-	$output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
-	  . "<TR><TD BGCOLOR=#e7e7e7><pre>" unless $inTable;
-	$inTable = 1;
+	if (not $inTable) {
+	  $output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
+	    . "<TR><TD BGCOLOR=#e7e7e7><pre>";
+	  $inTable = 1;
+	}
       }
     }
 
     $output .= sprintf("%${line_num_width}s ", $line) if $opt_line_nums;
 
-    if ($old_revision ne $revision || $rev_count > 20) {
+    if ($old_revision ne $revision or $rev_count > 20) {
 
         $revision_width = max($revision_width,length($revision));
 
@@ -314,7 +319,7 @@ foreach $revision (@revision_map)
         $old_revision = $revision;
         $rev_count = 0;
     } else {
-        $output .= '| ' . ' ' x ($author_width + $revision_width);
+        $output .= '  ' . ' ' x ($author_width + $revision_width);
     }
     $rev_count++;
 
