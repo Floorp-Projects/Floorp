@@ -14,12 +14,14 @@ SSLSTRESS=${CURDIR}/sslstress.txt
 REQUEST_FILE=${CURDIR}/sslreq.txt
 
 #temparary files
-PWFILE=/tmp/tests.pw.$$
-CERTSCRIPT=/tmp/tests.certs.$$
-NOISE_FILE=/tmp/tests.noise.$$
-SERVEROUTFILE=/tmp/tests.server.$$
+TMP=${TMP-/tmp}
+PWFILE=${TMP}/tests.pw.$$
+CERTSCRIPT=${TMP}/tests_certs.$$
+NOISE_FILE=${TMP}/tests_noise.$$
+SERVEROUTFILE=${TMP}/tests_server.$$
+SERVERPID=${TMP}/tests_pid.$$
 
-TEMPFILES="${PWFILE} ${CERTSCRIPT} ${SERVEROUTFILE} ${NOISE_FILE}"
+TEMPFILES="${PWFILE} ${CERTSCRIPT} ${SERVEROUTFILE} ${NOISE_FILE} ${SERVERPID}"
 
 none=1
 coverage=0
@@ -93,6 +95,7 @@ echo nss > ${PWFILE}
 echo "   certutil -N -d . -f ${PWFILE}"
 certutil -N -d . -f ${PWFILE}
 
+echo initialized
 echo 5 > ${CERTSCRIPT}
 echo 9 >> ${CERTSCRIPT}
 echo n >> ${CERTSCRIPT}
@@ -150,8 +153,8 @@ if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Sign User Cert"}
 fi
 echo "Import the new Cert"
-echo "certutil -A -n \"TestUser\" -t \"u,u,u\" -d . -f {PWFILE} -i user.cert"
-certutil -A -n "TestUser" -t "u,u,u" -d . -f {PWFILE} -i user.cert
+echo "certutil -A -n \"TestUser\" -t \"u,u,u\" -d . -f ${PWFILE} -i user.cert"
+certutil -A -n "TestUser" -t "u,u,u" -d . -f ${PWFILE} -i user.cert
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import User"}
 fi
@@ -201,12 +204,12 @@ do
 	if [ ${param} = "i" ]; then
 		sparam='-c i'
 	fi
+	echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss ${sparam} & "
 	if [ ${fileout} -eq 1 ]; then
-	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} > ${SERVEROUTFILE} 2>&1 &
+	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss ${sparam} > ${SERVEROUTFILE} 2>&1 & 
 	else
-	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} &
+	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} & 
 	fi
-	SERVERPID=$!
 	sleep 10
 
 	tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
@@ -215,8 +218,8 @@ do
 	else
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 	fi
-	${KILL} ${SERVERPID}
-	wait ${SERVERPID}
+	${KILL} `cat ${SERVERPID}`
+	wait `cat ${SERVERPID}`
 	if [ ${fileout} -eq 1 ]; then
 	   cat ${SERVEROUTFILE}
 	fi
@@ -239,24 +242,23 @@ do
 	echo "***** $testname ****"
 	sparam=`echo $sparam | sed -e 's;_; ;g'`
 	cparam=`echo $cparam | sed -e 's;_; ;g'`
-	echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} &"
+	echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &"
 	if [ ${fileout} -eq 1 ]; then
-	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} > ${SERVEROUTFILE} 2>&1 &
+	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} > ${SERVEROUTFILE} 2>&1 &
 	else
-	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} &
+	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
 	fi
-	SERVERPID=$!
 	sleep 10
 	pwd
 	echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam}"
 	tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} < ${REQUEST_FILE}
-	if [ $? -ne $value ]; then
+	if [ $? $value 0 ]; then
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
 	else
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 	fi
-	${KILL} ${SERVERPID}
-	wait ${SERVERPID}
+	${KILL} `cat ${SERVERPID}`
+	wait `cat ${SERVERPID}`
 	if [ ${fileout} -eq 1 ]; then
 	   cat ${SERVEROUTFILE}
 	fi
@@ -280,12 +282,12 @@ do
 	echo "********************* $testname ****************************"
 	sparam=`echo $sparam | sed -e 's;_; ;g'`
 	cparam=`echo $cparam | sed -e 's;_; ;g'`
+	echo "selfserv -p ${PORT} -d ${SERVERDIR}  -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &"
 	if [ ${fileout} -eq 1 ]; then
-	    selfserv -p ${PORT} -d ${SERVERDIR}  -n ${HOST}.${DOMSUF} -w nss ${sparam} > ${SERVEROUTFILE} 2>&1 &
+	    selfserv -p ${PORT} -d ${SERVERDIR}  -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} > ${SERVEROUTFILE} 2>&1 &
 	else
-	    selfserv -p ${PORT} -d ${SERVERDIR}  -n ${HOST}.${DOMSUF} -w nss ${sparam} &
+	    selfserv -p ${PORT} -d ${SERVERDIR}  -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
 	fi
-	SERVERPID=$!
 	sleep 10
 
 	strsclnt -p ${PORT} ${HOST} -d . -w nss $cparam 
@@ -294,8 +296,8 @@ do
 	else
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 	fi
-	${KILL} ${SERVERPID}
-	wait ${SERVERPID}
+	${KILL} `cat ${SERVERPID}`
+	wait `cat ${SERVERPID}`
 	if [ ${fileout} -eq 1 ]; then
 	   cat ${SERVEROUTFILE}
 	fi
