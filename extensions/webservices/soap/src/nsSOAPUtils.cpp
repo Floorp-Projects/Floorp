@@ -111,6 +111,7 @@ nsSOAPStrings::nsSOAPStrings()
   , NS_LITERAL_STRING_INIT(kIntegerSchemaType, "integer")
   , NS_LITERAL_STRING_INIT(kNonPositiveIntegerSchemaType, "nonPositiveInteger")
   , NS_LITERAL_STRING_INIT(kNonNegativeIntegerSchemaType, "nonNegativeInteger")
+  , NS_LITERAL_STRING_INIT(kBase64BinarySchemaType, "base64Binary")
 {
   kSOAPEnvURI[0] = &kSOAPEnvURI1;
   kSOAPEnvURI[1] = &kSOAPEnvURI2;

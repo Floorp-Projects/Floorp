@@ -156,6 +156,7 @@ struct nsSOAPStrings
   const nsLiteralString  kIntegerSchemaType;
   const nsLiteralString  kNonPositiveIntegerSchemaType;
   const nsLiteralString  kNonNegativeIntegerSchemaType;
+  const nsLiteralString  kBase64BinarySchemaType;
 
   nsSOAPStrings();
 };

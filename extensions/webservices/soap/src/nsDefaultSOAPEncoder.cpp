@@ -57,6 +57,8 @@
 #include "nsSOAPException.h"
 #include "prprf.h"
 #include "prdtoa.h"
+#include "plbase64.h"
+#include "prmem.h"
 #include "nsReadableUtils.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
@@ -108,6 +110,7 @@ ns##name##Encoder::~ns##name##Encoder() {}
     DECLARE_ENCODER(UnsignedInt)
     DECLARE_ENCODER(UnsignedShort) 
     DECLARE_ENCODER(UnsignedByte)
+    DECLARE_ENCODER(Base64Binary)
 
 /**
  * This now separates the version with respect to the SOAP specification from the version
@@ -147,7 +150,8 @@ ns##name##Encoder::~ns##name##Encoder() {}
   REGISTER_SCHEMA_ENCODER(UnsignedLong)\
   REGISTER_SCHEMA_ENCODER(UnsignedInt)\
   REGISTER_SCHEMA_ENCODER(UnsignedShort)\
-  REGISTER_SCHEMA_ENCODER(UnsignedByte)
+  REGISTER_SCHEMA_ENCODER(UnsignedByte)\
+  REGISTER_SCHEMA_ENCODER(Base64Binary)
 
 //
 // Default SOAP Encodings
@@ -1729,6 +1733,106 @@ NS_IMETHODIMP
                            aReturnValue);
 }
 
+NS_IMETHODIMP
+nsBase64BinaryEncoder::Encode(nsISOAPEncoding * aEncoding,
+                              nsIVariant * aSource,
+                              const nsAString & aNamespaceURI,
+                              const nsAString & aName,
+                              nsISchemaType * aSchemaType,
+                              nsISOAPAttachments * aAttachments,
+                              nsIDOMElement * aDestination,
+                              nsIDOMElement * *aReturnValue)
+{
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+
+  *aReturnValue = nsnull;
+
+  PRUint16 typeValue;
+  nsresult rv = aSource->GetDataType(&typeValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (typeValue != nsIDataType::VTYPE_ARRAY) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIID iid;
+  PRUint32 count;
+  void* array;
+  rv = aSource->GetAsArray(&typeValue, &iid, &count, &array);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  if (typeValue != nsIDataType::VTYPE_UINT8) {
+    return NS_ERROR_FAILURE;
+  }
+
+  char* encodedVal = PL_Base64Encode(NS_STATIC_CAST(const char*, array), count, nsnull);
+  if (!encodedVal) {
+    return NS_ERROR_FAILURE;
+  }
+  nsAdoptingCString encodedString(encodedVal);
+
+  nsAutoString name, ns;
+  if (aName.IsEmpty()) {
+    // If we don't have a name, we pick soapenc:base64Binary.
+    rv = aEncoding->GetStyleURI(ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+    name.Append(gSOAPStrings->kBase64BinarySchemaType);
+  }
+  else {
+    name = aName;
+    // ns remains empty. This is ok.
+  }
+
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = aDestination->GetOwnerDocument(getter_AddRefs(document));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMElement> element;
+  rv = document->CreateElementNS(ns, name, getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> ignore;
+  rv = aDestination->AppendChild(element, getter_AddRefs(ignore));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aSchemaType) {
+    nsAutoString typeName, typeNS;
+    rv = aSchemaType->GetName(typeName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aSchemaType->GetTargetNamespace(typeNS);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString qname;
+    rv = nsSOAPUtils::MakeNamespacePrefix(nsnull, element, typeNS, qname);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    qname.Append(gSOAPStrings->kQualifiedSeparator + typeName);
+    
+    nsAutoString ns;
+    rv = aEncoding->GetExternalSchemaURI(gSOAPStrings->kXSIURI, ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = element->SetAttributeNS(ns, gSOAPStrings->kXSITypeAttribute, qname);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsIDOMText> text;
+  rv = document->CreateTextNode(NS_ConvertASCIItoUTF16(encodedString),
+                                getter_AddRefs(text));
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  rv = element->AppendChild(text, getter_AddRefs(ignore));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*aReturnValue = element);
+
+  return rv;
+}
+
+
 //  PRUint16
 
 NS_IMETHODIMP
@@ -3179,6 +3283,51 @@ NS_IMETHODIMP
   p->SetAsUint32(f);
   *_retval = p;
   NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBase64BinaryEncoder::Decode(nsISOAPEncoding * aEncoding,
+                              nsIDOMElement * aSource,
+                              nsISchemaType * aSchemaType,
+                              nsISOAPAttachments * aAttachments,
+                              nsIVariant ** _retval)
+{
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+
+
+  nsString value;
+  nsresult rv = nsSOAPUtils::GetElementTextContent(aSource, value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_LossyConvertUTF16toASCII valueStr(value);
+  valueStr.StripChars(" \n\r\t");
+
+  char* decodedVal = PL_Base64Decode(valueStr.get(), valueStr.Length(), nsnull);
+  if (!decodedVal) {
+    return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,
+                          "SOAP_ILLEGAL_BASE64",
+                          "Data cannot be decoded as Base64");
+  }
+
+  nsCOMPtr<nsIWritableVariant> p = 
+    do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
+
+  if (NS_SUCCEEDED(rv)) {
+
+    rv = p->SetAsArray(nsIDataType::VTYPE_UINT8, nsnull,
+                       strlen(decodedVal), decodedVal);
+  }
+
+  PR_Free(decodedVal);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*_retval = p);
+
   return NS_OK;
 }
 
