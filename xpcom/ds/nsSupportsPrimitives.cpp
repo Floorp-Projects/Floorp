@@ -24,6 +24,7 @@
 #include "nsCRT.h"
 #include "nsMemory.h"
 #include "prprf.h"
+#include "nsIInterfaceInfoManager.h"
 
 /***************************************************************************/
 
@@ -872,5 +873,91 @@ NS_IMETHODIMP nsSupportsVoidImpl::ToString(char **_retval)
     *_retval = result;
     return  result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
+
+/***************************************************************************/
+
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSupportsInterfacePointerImpl,
+                              nsISupportsInterfacePointer,
+                              nsISupportsPrimitive)
+
+nsSupportsInterfacePointerImpl::nsSupportsInterfacePointerImpl()
+    : mIID(nsnull)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsSupportsInterfacePointerImpl::~nsSupportsInterfacePointerImpl()
+{
+    if (mIID) {
+        nsMemory::Free(mIID);
+    }
+}
+
+NS_IMETHODIMP nsSupportsInterfacePointerImpl::GetType(PRUint16 *aType)
+{
+    NS_ASSERTION(aType, "Bad pointer");
+    *aType = TYPE_INTERFACE_POINTER;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsInterfacePointerImpl::GetData(nsISupports **aData)
+{
+    NS_ASSERTION(aData,"Bad pointer");
+
+    *aData = mData;
+    NS_IF_ADDREF(*aData);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsInterfacePointerImpl::SetData(nsISupports * aData)
+{
+    mData = aData;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsInterfacePointerImpl::GetDataIID(nsID **aIID)
+{
+    NS_ASSERTION(aIID,"Bad pointer");
+
+    if(mIID)
+    {
+        *aIID = (nsID*) nsMemory::Clone(mIID, sizeof(nsID));
+        return *aIID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
+    else
+    {
+        *aIID = nsnull;
+        return NS_OK;
+    }
+}
+
+NS_IMETHODIMP nsSupportsInterfacePointerImpl::SetDataIID(const nsID *aIID)
+{
+    if(mIID)
+        nsMemory::Free(mIID);
+    if(aIID)
+        mIID = (nsID*) nsMemory::Clone(aIID, sizeof(nsID));
+    else
+        mIID = nsnull;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsInterfacePointerImpl::ToString(char **_retval)
+{
+    NS_ASSERTION(_retval, "Bad pointer");
+
+    static const char str[] = "[interface pointer]";
+
+    // jband sez: think about asking nsIInterfaceInfoManager whether
+    // the interface has a known human-readable name
+    char* result = (char*) nsMemory::Clone(str, sizeof(str));
+    *_retval = result;
+    return  result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
 
 /***************************************************************************/

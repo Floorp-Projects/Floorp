@@ -1621,6 +1621,36 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
 
       break;
     }
+    case nsISupportsPrimitive::TYPE_INTERFACE_POINTER : {
+      nsCOMPtr<nsISupportsInterfacePointer> p(do_QueryInterface(argPrimitive));
+      NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
+
+      nsCOMPtr<nsISupports> data;
+      nsIID *iid = nsnull;
+
+      p->GetData(getter_AddRefs(data));
+      p->GetDataIID(&iid);
+      NS_ENSURE_TRUE(iid, NS_ERROR_UNEXPECTED);
+
+      AutoFree iidGuard(iid); // Free iid upon destruction.
+
+      nsresult rv;
+      nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+      rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), data,
+                           *iid, getter_AddRefs(wrapper));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      JSObject *obj;
+      rv = wrapper->GetJSObject(&obj);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      *aArgv = OBJECT_TO_JSVAL(obj);
+
+      break;
+    }
     case nsISupportsPrimitive::TYPE_ID :
     case nsISupportsPrimitive::TYPE_PRUINT64 :
     case nsISupportsPrimitive::TYPE_PRINT64 :
