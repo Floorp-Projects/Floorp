@@ -51,6 +51,9 @@ protected:
   virtual OSStatus HandlePosToOffset( CBrowserShell* aBrwoserShell, 
                                       EventHandlerCallRef inHandlerCallRef, 
                                       EventRef inEvent);
+  virtual OSStatus HandleGetSelectedText( CBrowserShell* aBrwoserShell, 
+                                      EventHandlerCallRef inHandlerCallRef, 
+                                      EventRef inEvent);
   
   virtual CBrowserShell* GetGeckoTarget();
  
