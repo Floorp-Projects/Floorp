@@ -600,7 +600,7 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
    // Don't bother tiling if we only have to draw the bitmap a couple of times
    // Can't tile with 8bit alpha masks because need access destination bitmap values
    if ((ImageWidth > DrawRect.width / 2 && ImageHeight > DrawRect.height / 2) ||
-       (ImageWidth > MAX_BUFFER_WIDTH && ImageHeight > MAX_BUFFER_HEIGHT) ||
+       (ImageWidth > MAX_BUFFER_WIDTH) || (ImageHeight > MAX_BUFFER_HEIGHT) ||
         mAlphaDepth > 1)
       return SlowTile (aContext, aSurface, aSXOffset, aSYOffset, aTileRect);   
 
