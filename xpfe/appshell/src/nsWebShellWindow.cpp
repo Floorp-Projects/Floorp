@@ -438,14 +438,13 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
           nsIXULCommand * xulCmdInterface = nsnull;
           rv = nsRepository::CreateInstance(kXULCommandCID, nsnull, kIXULCommandIID,
             (void**)&xulCmdInterface);
-          if (NS_OK != rv) {
-            // Error
+          if (NS_OK == rv) {
+            xulCmdInterface->SetName(name);//nsIXULCommand
+            xulCmdInterface->SetCommand(value);//nsIXULCommand
+            xulCmdInterface->SetWebShell(aWebShell);// Added to nsIXULCommand
+            xulCmdInterface->SetDOMElement(element);// Added to nsIXULCommand
+		        mCommands.AppendElement(xulCmdInterface);
           }
-          xulCmdInterface->SetName(name);//nsIXULCommand
-          xulCmdInterface->SetCommand(value);//nsIXULCommand
-          xulCmdInterface->SetWebShell(aWebShell);// Added to nsIXULCommand
-          xulCmdInterface->SetDOMElement(element);// Added to nsIXULCommand
-		  mCommands.AppendElement(xulCmdInterface);
 
           /*
           nsXULCommand * xulCmd = new nsXULCommand();
@@ -488,17 +487,16 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
           nsIXULCommand * xulCmdInterface = nsnull;
           rv = nsRepository::CreateInstance(kXULCommandCID, nsnull, kIXULCommandIID,
             (void**)&xulCmdInterface);
-          if (NS_OK != rv) {
-            // Error
-          }
-          xulCmdInterface->SetName(name);
-          xulCmdInterface->SetCommand(value);
-          xulCmdInterface->SetWebShell(aWebShell);
-          xulCmdInterface->SetDOMElement(element);
+          if (NS_OK == rv) {
+            xulCmdInterface->SetName(name);
+            xulCmdInterface->SetCommand(value);
+            xulCmdInterface->SetWebShell(aWebShell);
+            xulCmdInterface->SetDOMElement(element);
           
-          mCommands.AppendElement(xulCmdInterface);
+            mCommands.AppendElement(xulCmdInterface);
             
-          xulCmdInterface->AddUINode(node);
+            xulCmdInterface->AddUINode(node);
+          }
           /*
           nsXULCommand * xulCmd = new nsXULCommand();
           xulCmd->SetName(name);
