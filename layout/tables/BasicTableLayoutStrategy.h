@@ -80,7 +80,8 @@ public:
   /** Public constructor.
     * @paran aFrame           the table frame for which this delegate will do layout
     */
-  BasicTableLayoutStrategy(nsTableFrame *aFrame);
+  BasicTableLayoutStrategy(nsTableFrame *aFrame,
+                           PRBool        aIsNavQuirksMode = PR_TRUE);
 
   /** destructor */
   virtual ~BasicTableLayoutStrategy();
@@ -288,6 +289,7 @@ protected:
   nscoord        mMinTableWidth;          // the smallest size for the table
   nscoord        mMaxTableWidth;          // the "natural" size for the table, if unconstrained
   nscoord        mFixedTableWidth;        // the amount of space taken up by fixed-width columns
+  PRBool         mIsNavQuirksMode;
 
 };
 
