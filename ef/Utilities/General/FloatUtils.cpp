@@ -104,7 +104,7 @@ struct DummyInit
 	du.s.lo = 0x00000000;
 	doubleNegativeInfinity = du.d;
 
-    su.s = 0x7f900000;
+    su.s = 0x7fc00000;
     floatNaN = su.f;
 
 	du.s.hi = DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK;
