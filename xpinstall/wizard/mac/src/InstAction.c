@@ -20,10 +20,7 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
 
 
 /*-----------------------------------------------------------*

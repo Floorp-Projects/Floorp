@@ -20,10 +20,7 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
 
 #define XP_MAC 1
 #include "xpistub.h"
@@ -53,6 +50,7 @@ void 		xpicbStart(const char *URL, const char* UIName);
 void	 	xpicbProgress(const char* msg, PRInt32 val, PRInt32 max);
 void 		xpicbFinal(const char *URL, PRInt32 finalStatus);
 
+//dougt: has nothing to do with xpcom.  Use the one in MacInstallWizard.h.
 #define XPCOM_ERR_CHECK(_call) 	\
 rv = _call;						\
 if (NS_FAILED(rv))				\
@@ -60,7 +58,7 @@ if (NS_FAILED(rv))				\
 	ErrorHandler();				\
 	return rv;						\
 }
-
+//dougt: should be pulled from an ini file.  This file may have a different name.
 #define XPISTUB_DLL "\pxpistubDebug.shlb";
  
 
@@ -131,17 +129,15 @@ LoadXPIStub(XPI_InitProc* pfnInit, XPI_InstallProc* pfnInstall, XPI_ExitProc* pf
 	if (err!=noErr)
 		return false;
 		
-	// TO DO use aTargetDir to load XPISTUB_DLL
+	// TO DO use aTargetDir to load XPISTUB_DLL 
 	
 	err = FSMakeFSSpec(currVRefNum, currDirID, fragName, &fslib);
 	if (err!=noErr)
 		return err;
-		
-	err = GetDiskFragment(&fslib, 0, kCFragGoesToEOF, nil, kPrivateCFragCopy/*kReferenceCFrag*/, connID, &mainAddr, errName);
-	if (err != noErr)
-		return err;
+		//dougt: verify the use of the constant kPrivateCFragCopy.
+	err = GetDiskFragment(&fslib, kWholeFork, kCFragGoesToEOF, nil, kPrivateCFragCopy/*kReferenceCFrag*/, connID, &mainAddr, errName);
 										   
-	if ( *connID != NULL)
+	if ( err == noErr && *connID != NULL)
 	{
 		ERR_CHECK_RET( FindSymbol(*connID, "\pXPI_Init", &symAddr, &symClass), err );
 		*pfnInit = (XPI_InitProc) symAddr;
@@ -159,13 +155,13 @@ LoadXPIStub(XPI_InitProc* pfnInit, XPI_InstallProc* pfnInstall, XPI_ExitProc* pf
 Boolean
 UnloadXPIStub(CFragConnectionID* connID)
 {
-	if (*connID != NULL)
+//dougt: what happens if connID is null... evil
+    if (*connID != NULL)
 	{
 		CloseConnection(connID);
 		*connID = NULL;
+        return true;
 	}
-	else
-		return false;
 	
-	return true; 
+	return false; 
 }

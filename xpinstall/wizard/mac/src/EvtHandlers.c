@@ -20,10 +20,7 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
 
 
 /*--------------------------------------------------------------*
@@ -82,7 +79,7 @@ void HandleMouseDown(EventRecord* evt)
 				SelectWindow(wCurrPtr);
 			}
 			else
-				React2InContent(evt, wCurrPtr);
+				React2InContent(evt, wCurrPtr);  //dougt: what does this do?  
 			break;
 		
 		case inDrag:
@@ -103,8 +100,8 @@ void HandleKeyDown(EventRecord* evt)
 	
 	keyPressed = evt->message & charCodeMask;
 	if ( (keyPressed == 'z') || (keyPressed == 'Z'))
-		gDone = true;	// backdoor exit
-	if (keyPressed == '\r')
+		gDone = true;	// backdoor exit      //dougt:  Get rid of this.  (or make it debug only)
+	if (keyPressed == '\r')                   //dougt: what about tab, esc, arrows, doublebyte?
 	{		
 		switch(gCurrWin)
 		{
@@ -150,7 +147,7 @@ void HandleUpdateEvt(EventRecord* evt)
 	SetPort( gWPtr );
 		
 	cntlPartCode = FindWindow( evt->where, &wCurrPtr );
-	
+	//dougt: check for null
 	BeginUpdate( gWPtr );
 	DrawControls( gWPtr );
 	ShowLogo();
@@ -199,7 +196,7 @@ void HandleActivateEvt(EventRecord* evt)
 
 void HandleOSEvt(EventRecord* evt)
 {
-	switch ( (evt->message >> 24) & 0x000000FF)
+	switch ( (evt->message >> 24) & 0x000000FF)  //dougt: Okay, what is this?
 	{
 		case suspendResumeMessage:
 			if ((evt->message & resumeFlag) == 1)
@@ -276,7 +273,7 @@ void React2InContent(EventRecord* evt, WindowPtr wCurrPtr)
 			break;
 			
 		default:
-			gDone = true;
+			gDone = true;  //dougt: are you sure you want to do this?
 			break;
 	}
 }

@@ -21,9 +21,8 @@
  */
 
 
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
+
 
 
 /*-----------------------------------------------------------*
@@ -48,9 +47,10 @@ ShowSetupTypeWin(void)
 	Str255				instLocTitle, selectFolder;
 	GrafPtr				oldPort;
 	GetPort(&oldPort);
-	
+	//dougt: check gWPtr for null..
 	SetPort(gWPtr);
 	
+    //dougt: change this naming scheme before I pop.
 	gCurrWin = SETUP_TYPE; 
 	/* gControls->stw = (SetupTypeWin *) NewPtrClear(sizeof(SetupTypeWin));	*/
 
@@ -62,13 +62,16 @@ ShowSetupTypeWin(void)
 	gControls->stw->instDescBox = GetNewControl( rInstDescBox, gWPtr);
 	gControls->stw->destLocBox = GetNewControl( rDestLocBox, gWPtr);
 	gControls->stw->destLoc = GetNewControl(rDestLoc, gWPtr);
+    //dougt: check for failure;
 
 	// populate popup button menus
+    //dougt: no hi
 	HLockHi((Handle)gControls->stw->instType);
 	pvtDataHdl = (PopupPrivateData **) (*(gControls->stw->instType))->contrlData;
 	popupMenu = (MenuHandle) (**pvtDataHdl).mHandle;
 	for (i=0; i<gControls->cfg->numSetupTypes; i++)
 	{
+        //dougt: no hi.
 		HLockHi(gControls->cfg->st[i].shortDesc);
 		currMenuItem = CToPascal(*gControls->cfg->st[i].shortDesc);		
 		HUnlock(gControls->cfg->st[i].shortDesc);
@@ -151,7 +154,7 @@ OurNavEventFunction(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBa
 	WindowPtr  windowPtr;
                      
 	windowPtr = (WindowPtr) callBackParms->eventData.eventDataParms.event->message;
-
+    //dougt: check for null
 	switch(callBackSelector)
 	{
 		case kNavCBEvent:

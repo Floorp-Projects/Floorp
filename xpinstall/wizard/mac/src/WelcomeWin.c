@@ -20,10 +20,7 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
 
 
 /*-----------------------------------------------------------*
@@ -42,7 +39,8 @@ ShowWelcomeWin(void)
 	GetPort(&oldPort);
 	
 	SetPort(gWPtr);
-	
+
+//dougt: think about changing this to a constant that is more understandable.	
 	gCurrWin = WELCOME; 
 	/* gControls->ww = (WelcWin *) NewPtrClear(sizeof(WelcWin)); */
 	
@@ -51,9 +49,10 @@ ShowWelcomeWin(void)
 	
 	gControls->ww->scrollBar = GetNewControl( rLicScrollBar, gWPtr);
 	gControls->ww->welcBox = GetNewControl( rLicBox, gWPtr);
-
+//dougt: you may want to do something in addition to a check for failure
 	if(gControls->ww->scrollBar && gControls->ww->welcBox)
 	{
+        //dougt: no hi.
 		HLockHi( (Handle) gControls->ww->scrollBar);
 		sbRect = (*(gControls->ww->welcBox))->contrlRect;
 				
@@ -86,6 +85,8 @@ InitWelcTxt(void)
 	char *		newPara;
 	
 	/* TE specific init */
+
+    //dougt: no hi.
 	HLockHi( (Handle) gControls->ww->welcBox);
 	viewRect = (*(gControls->ww->welcBox))->contrlRect;	
 	HUnlock( (Handle) gControls->ww->welcBox);
@@ -97,14 +98,17 @@ InitWelcTxt(void)
 	destRect.bottom = viewRect.bottom * kNumWelcScrns; /* XXX: hack */
 	
 	gControls->ww->welcTxt = (TEHandle) NewPtrClear(sizeof(TEPtr));
-	
+	//dougt: check for null
+
 	TextFont(applFont);
 	TextFace(normal);
 	TextSize(12);
 
-	newPara = "\r\r";
+	newPara = "\r\r";  //dougt why this constant?
 	
 	gControls->ww->welcTxt = TENew( &destRect, &viewRect);
+    //dougt: check for null.
+
 	for (i=0; i<kNumWelcMsgs; i++)
 	{
 		HLockHi(gControls->cfg->welcMsg[i]);
@@ -143,6 +147,7 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		case kControlDownButtonPart:
 		case kControlPageUpPart:
 		case kControlPageDownPart:
+            //dougt: this point never gets destroyed.  evil
 			scrollActionFunctionUPP = NewControlActionProc((ProcPtr) DoScrollProc);
 			value = TrackControl(scrollBar, localPt, scrollActionFunctionUPP);
 			return;
@@ -162,7 +167,7 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 			return;
 			break;
 	}	
-				
+	//dougt: remove the hi.			
 	HLockHi((Handle)gControls->backB);
 	r = (**(gControls->backB)).contrlRect;
 	HUnlock((Handle)gControls->backB);
@@ -176,7 +181,8 @@ InWelcomeContent(EventRecord* evt, WindowPtr wCurrPtr)
 			return;
 		}
 	}
-			
+	
+    //dougt: remove the hi.
 	HLockHi((Handle)gControls->nextB);			
 	r = (**(gControls->nextB)).contrlRect;
 	HUnlock((Handle)gControls->nextB);

@@ -21,9 +21,7 @@
  */
   
 
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
 
 #define STANDALONE 1
 #define XP_MAC 1

@@ -21,9 +21,7 @@
  */
 
 
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
+#include "MacInstallWizard.h"
 
 
 /*-----------------------------------------------------------*
@@ -42,7 +40,8 @@ ShowLicenseWin(void)
 	GetPort(&oldPort);
 	
 	SetPort(gWPtr);
-	
+
+//dougt: nitpick, your use of the define LICENSE is vage.  I had no initial idea of what it was.  How about kLicenseID?
 	gCurrWin = LICENSE; 
 	/* gControls->lw = (LicWin *) NewPtrClear(sizeof(LicWin)); */
 	
@@ -51,9 +50,11 @@ ShowLicenseWin(void)
 	
 	gControls->lw->scrollBar = GetNewControl( rLicScrollBar, gWPtr);
 	gControls->lw->licBox = GetNewControl( rLicBox, gWPtr);
-
+//dougt:  what happens if these fail? don't you want to bail instead of just checking on the next line?
 	if(gControls->lw->scrollBar && gControls->lw->licBox)
 	{
+        //dougt: you don't need to lock hi here.
+
 		HLockHi( (Handle) gControls->lw->scrollBar);
 		sbRect = (*(gControls->lw->licBox))->contrlRect;
 				
@@ -94,6 +95,7 @@ InitLicTxt(void)
 	ERR_CHECK(GetCWD(&dirID, &vRefNum));
 	
 	/* open and read license file */
+//dougt: no need to lock hi.,
 	HLockHi(gControls->cfg->licFileName);
 	if(**gControls->cfg->licFileName != nil)
 	{
@@ -101,6 +103,7 @@ InitLicTxt(void)
 		cLicFName = CToPascal(*gControls->cfg->licFileName);
 		
 		ERR_CHECK(FSMakeFSSpec(vRefNum, dirID, cLicFName, &licFile));
+//dougt:  on any dispose, check for null!
 		DisposePtr((char*)cLicFName);
 	}
 	else /* assume default license filename from str rsrc */
@@ -117,7 +120,7 @@ InitLicTxt(void)
 	if (dataSize > 0)
 	{
 		if (!(text = NewHandle(dataSize)))
-			ErrorHandler();
+			ErrorHandler();                                //dougt: since errorhandler() return, you will crash on the next line
 		ERR_CHECK(FSRead(dataRef, &dataSize, *text));
 	}
 	else
@@ -198,7 +201,7 @@ ShowTxt(void)
 			}
 			break;
 		default:
-			ErrorHandler();
+			ErrorHandler(); //dougt: i don;t think so tim,
 			break;
 	}		
 }
@@ -212,17 +215,19 @@ ShowLogo(void)
 	Handle		logoRectH; 
 	
 	/* initialize Netscape logo */
-	logoPicH = GetPicture(rNSLogo);
+	logoPicH = GetPicture(rNSLogo);  //dougt: isn;t this something that should be pulled from an ini file?  Also, what about
+                                     // better error handling?
 
 	/* draw Netscape logo */
 	if (logoPicH != nil)
 	{		
 		logoRectH = Get1Resource('RECT', rNSLogoBox);
-		HLockHi(logoRectH);
+        //dougt: check failure
+		HLockHi(logoRectH);//dougt: no lock hi
 		derefd = (Rect) **((Rect**)logoRectH);
 		SetRect(&logoRect, derefd.left, derefd.top, derefd.bottom, derefd.right);
 		HUnlock(logoRectH);
-		reserr = ResError();
+		reserr = ResError();  //dougt: checking this does not gaurentee you the correct ResError().
 		if (reserr == noErr)
 		{		
 			DrawPicture(logoPicH, &logoRect);
@@ -435,7 +440,7 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 	
 	gControls->backB = GetNewControl( rBackBtn, gWPtr);
 	gControls->nextB = GetNewControl( rNextBtn, gWPtr);
-
+//dougt: check for failure...
 	if( gControls->backB != NULL)
 	{
 		SetControlTitle( gControls->backB, backTitle); 
@@ -446,7 +451,7 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 	{
 		SetControlTitle( gControls->nextB, nextTitle);
 		ShowControl( gControls->nextB);
-
+//dougt: no hi.
 		HLockHi( (Handle) gControls->nextB);
 	
 		bounds = (*(gControls->nextB))->contrlRect;

@@ -21,10 +21,7 @@
  */
 
 
-#ifndef _MIW_H_
-	#include "MacInstallWizard.h"
-#endif
-
+#include "MacInstallWizard.h"
 
 /*-----------------------------------------------------------*
  *   Terminal Window
@@ -39,9 +36,10 @@ ShowTerminalWin(void)
 	short		reserr;
 	GrafPtr		oldPort;
 	GetPort(&oldPort);
-	
+	//dougt: check for gWPtr being null
 	SetPort(gWPtr);
 	
+    //dougt: think about changing the constant to something more readable.
 	gCurrWin = TERMINAL; 
 	/* gControls->tw = (TermWin*) NewPtrClear(sizeof(TermWin)); */
 	
@@ -50,7 +48,7 @@ ShowTerminalWin(void)
 	
 	// malloc and get control
 	rectH = Get1Resource('RECT', rStartMsgBox);
-	reserr = ResError();
+	reserr = ResError();  //dougt: this does not do what you thing.  It does not always return the last error.
 	if (reserr == noErr)
 		viewRect = (Rect) **((Rect **)rectH);
 	else
@@ -61,8 +59,10 @@ ShowTerminalWin(void)
 	gControls->tw->startMsgBox = viewRect;
 	
 	gControls->tw->startMsg = TENew(&viewRect, &viewRect);
+    //dougt: check for null
 	
 	// populate control
+    //dougt: remove hi.
 	HLockHi(gControls->cfg->startMsg);
 	TESetText(*gControls->cfg->startMsg, strlen(*gControls->cfg->startMsg), 
 				gControls->tw->startMsg);
