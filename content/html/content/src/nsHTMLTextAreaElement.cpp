@@ -114,6 +114,7 @@ public:
   // nsITextControlElement
   NS_IMETHOD GetValueInternal(nsAWritableString& str);
   NS_IMETHOD SetValueInternal(nsAReadableString& str);
+  NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
@@ -443,6 +444,13 @@ nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
   // Always set the value internally, since it affects layout
   SetValueInternal(aValue);
 
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
+{
   return NS_OK;
 }
 
@@ -806,4 +814,3 @@ nsHTMLTextAreaElement::RestoreState(nsIPresContext* aPresContext,
 
   return rv;
 }
-

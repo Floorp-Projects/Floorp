@@ -184,6 +184,7 @@ public: //for methods who access nsGfxTextControlFrame2 directly
   virtual PRBool IsSingleLineTextControl() const;
   virtual PRBool IsPlainTextControl() const;
   virtual PRBool IsPasswordTextControl() const;
+  void SetValueChanged(PRBool aValueChanged);
 
 protected:
 

@@ -313,6 +313,8 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;
   }
 
+  mFrame->SetValueChanged(PR_TRUE);
+
   if (mFrame && mFrame->IsSingleLineTextControl())
   {
     PRUint32     keyCode;
@@ -2631,6 +2633,11 @@ NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, 
       if (mEditor) {
         mEditor->EnableUndo(PR_FALSE);    // wipe out undo info
       }
+      if (mEditor && mUseEditor) {
+        // If the editor exists, the control needs to be informed that the value
+        // has changed.
+        SetValueChanged(PR_TRUE);
+      }
       SetTextControlFrameState(aValue);   // set new text value
       if (mEditor)  {
         mEditor->EnableUndo(PR_TRUE);     // fire up a new txn stack
@@ -3533,4 +3540,13 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::OnContentReset()
 {
   return NS_OK;
+}
+
+void
+nsGfxTextControlFrame2::SetValueChanged(PRBool aValueChanged)
+{
+  nsCOMPtr<nsITextControlElement> elem = do_QueryInterface(mContent);
+  if (elem) {
+    elem->SetValueChanged(aValueChanged);
+  }
 }

@@ -155,9 +155,36 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue, PRBool aNotify) {
+    nsresult rv = nsGenericHTMLLeafFormElement::SetAttr(aNameSpaceID, aName,
+                                                        aValue, aNotify);
+    if (aName == nsHTMLAtoms::value && !mValueChanged) {
+      Reset();
+    }
+    return rv;
+  }
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
+                     PRBool aNotify) {
+    // This will end up calling the other SetAttr().
+    return nsGenericHTMLLeafFormElement::SetAttr(aNodeInfo, aValue, aNotify);
+  }
+
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                       PRBool aNotify) {
+    nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID,
+                                                      aAttribute,
+                                                      aNotify);
+    if (aAttribute == nsHTMLAtoms::value) {
+      Reset();
+    }
+    return rv;
+  }
+
   // nsITextControlElement
   NS_IMETHOD GetValueInternal(nsAWritableString& str);
   NS_IMETHOD SetValueInternal(nsAReadableString& str);
+  NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
 protected:
   // Helper method
@@ -190,6 +217,7 @@ protected:
   PRInt8                   mType;
   PRPackedBool             mSkipFocusEvent;
   PRPackedBool             mHandlingClick;
+  PRPackedBool             mValueChanged;
   char*                    mValue;
 };
 
@@ -227,6 +255,7 @@ nsHTMLInputElement::nsHTMLInputElement()
   mType = NS_FORM_INPUT_TEXT; // default value
   mSkipFocusEvent = PR_FALSE;
   mHandlingClick = PR_FALSE;
+  mValueChanged = PR_FALSE;
   mValue = nsnull;
 }
 
@@ -305,9 +334,9 @@ nsHTMLInputElement::GetDefaultValue(nsAWritableString& aDefaultValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
 {
-  return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_HTML,
-                                               nsHTMLAtoms::value,
-                                               aDefaultValue, PR_TRUE); 
+  return SetAttr(kNameSpaceID_HTML,
+                 nsHTMLAtoms::value,
+                 aDefaultValue, PR_TRUE); 
 }
 
 NS_IMETHODIMP 
@@ -384,13 +413,8 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetValueInternal(nsAWritableString& aValue)
 {
   aValue.Truncate();
-  if (!mValue) {
+  if (!mValueChanged || !mValue) {
     GetDefaultValue(aValue);
-
-    mValue = ToNewUTF8String(aValue);
-    if (!mValue) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
   } else {
     aValue = NS_ConvertUTF8toUCS2(mValue);
   }
@@ -413,7 +437,7 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
     } else {
       GetValueInternal(aValue);
     }
-      
+ 
     return NS_OK;
   }
 
@@ -441,6 +465,7 @@ nsHTMLInputElement::SetValueInternal(nsAReadableString& aValue)
 
   mValue = ToNewUTF8String(aValue);
 
+  SetValueChanged(PR_TRUE);
   return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -496,6 +521,19 @@ nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
   return nsGenericHTMLLeafFormElement::SetAttr(kNameSpaceID_HTML,
                                                nsHTMLAtoms::value,
                                                aValue, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
+{
+  mValueChanged = aValueChanged;
+  if (!aValueChanged) {
+    if (mValue) {
+      nsMemory::Free(mValue);
+      mValue = nsnull;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1671,6 +1709,9 @@ nsHTMLInputElement::Reset()
   PRInt32 type;
   GetType(&type);
 
+  nsIFormControlFrame* formControlFrame = nsnull;
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+
   // Seems like a dumb idea to reset image.
   switch (type) {
     case NS_FORM_INPUT_CHECKBOX:
@@ -1685,9 +1726,14 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEXT:
     {
-      nsAutoString resetVal;
-      GetDefaultValue(resetVal);
-      rv = SetValue(resetVal);
+      // If the frame is there, we have to set the value so that it will show
+      // up.
+      if (formControlFrame) {
+        nsAutoString resetVal;
+        GetDefaultValue(resetVal);
+        rv = SetValue(resetVal);
+      }
+      SetValueChanged(PR_FALSE);
       break;
     }
     case NS_FORM_INPUT_FILE:
@@ -1698,6 +1744,11 @@ nsHTMLInputElement::Reset()
     }
     default:
       break;
+  }
+
+  // Notify frame that it has been reset
+  if (formControlFrame) {
+    formControlFrame->OnContentReset();
   }
   return rv;
 }
