@@ -183,17 +183,16 @@ PR_EXTERN(PRThread *) PR_GetPrimaryThread();
 #define _MD_GET_SP(_t) (*((PRUint32 *)((_t)->md.jb) + 2))
 #define _MD_GET_TOC(_t) (*((PRUint32 *)((_t)->md.jb) + 3))
 #define INIT_STACKPTR(stackTop) ((unsigned char*)stackTop - 128)
-#define kDefaultMacintoshStackSize 58 * 1024
 #define PR_NUM_GCREGS 70
 #else
 #define _MD_GET_PC(_t) (*((PRUint32 *)((_t)->md.jb) + 6))
 #define _MD_GET_SP(_t) (*((PRUint32 *)((_t)->md.jb) + 12))
 #define INIT_STACKPTR(stackTop) ((unsigned char*)stackTop - 4)
-#define kDefaultMacintoshStackSize 58 * 1024
 #define PR_NUM_GCREGS 13
 #endif
 
-#define _MD_DEFAULT_STACK_SIZE kDefaultMacintoshStackSize
+#define _MD_DEFAULT_STACK_SIZE (58 * 1024)
+#define _MD_MINIMUM_STACK_SIZE (58 * 1024)
 
 /*
 ** Initialize the thread machine dependent data structure
