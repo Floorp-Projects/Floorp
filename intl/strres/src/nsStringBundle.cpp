@@ -184,9 +184,9 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
     return ret;
   }
 
-  *aResult = (PRUnichar *) PR_Malloc(len);
-  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), len);
-  
+  *aResult = (PRUnichar *) PR_Malloc(2*(len+1));
+  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), 2*len);
+  (*aResult)[len] = 0;
   return ret;
 }
 
