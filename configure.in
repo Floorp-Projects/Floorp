@@ -1998,16 +1998,7 @@ AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint)
 AC_CHECK_FUNCS(nl_langinfo flockfile)
 
 dnl localtime_r and strtok_r are only present on MacOS version 10.2 and higher
-CHECK_MACOS_10_2_FUNCS=
-if test -z "$MACOS_DEPLOYMENT_TARGET"; then
-CHECK_MACOS_10_2_FUNCS=1
-else
-if test "$MACOS_DEPLOYMENT_TARGET" -ge "100200"; then
-CHECK_MACOS_10_2_FUNCS=1
-fi
-fi
-
-if test "$CHECK_MACOS_10_2_FUNCS"; then
+if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100200"; then
   AC_CHECK_FUNCS(localtime_r strtok_r)
 fi
 
