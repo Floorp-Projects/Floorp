@@ -127,7 +127,6 @@ var folderListener = {
                  gCurrentLoadingFolderViewType = 0;
                  gCurrentLoadingFolderViewFlags = 0;
 
-                 SetFocusThreadPane();
                  var scrolled = false;
 
                  if (gStartMsgKey != -1) { 

@@ -276,5 +276,7 @@ function GoNextMessage(type, startFromBeginning)
   catch (ex) {
     dump("GoNextMessage ex = " + ex + "\n");
   }
+
+  SetFocusThreadPaneIfNotOnMessagePane();
 }
 
