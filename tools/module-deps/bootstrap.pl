@@ -382,8 +382,8 @@ sub FindMakefiles {
   chdir("$basedir/mozilla");
 
   # Export-phase first.  Export IDL stuff first to avoid IDL order problems.
-  # system("$makecmd export-idl"); # testing, not part of make system yet.
-  system("$makecmd export");  # run_shell_command("$makecmd export");
+  system("$makecmd export-idl"); # workaround for idl order problems.
+  system("$makecmd export");     # run_shell_command("$makecmd export");
 
   # Libs-phase next.
   system("$makecmd libs");  # run_shell_command("$makecmd libs");

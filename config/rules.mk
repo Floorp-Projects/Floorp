@@ -1504,6 +1504,29 @@ endif
 
 endif # XPIDLSRCS
 
+
+
+#
+# General rules for exporting idl files.
+#
+# WORK-AROUND ONLY, for mozilla/tools/module-deps/bootstrap.pl build.
+# Bug to fix idl dependecy problems w/o this extra build pass is
+#   http://bugzilla.mozilla.org/show_bug.cgi?id=145777
+#
+$(IDL_DIR)::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+
+export-idl:: $(XPIDLSRCS) $(SDK_XPIDLSRCS) $(IDL_DIR)
+ifneq ($(XPIDLSRCS),)
+ifndef NO_DIST_INSTALL
+	$(INSTALL) $(IFLAGS1) $^
+endif
+endif
+	+$(LOOP_OVER_DIRS)
+
+
+
+
 ifneq ($(SDK_XPIDLSRCS),)
 # export .idl files to $(IDL_DIR) & $(SDK_IDL_DIR)
 export:: $(IDL_DIR) $(SDK_IDL_DIR)
