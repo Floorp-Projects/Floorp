@@ -67,6 +67,17 @@ function nsBackgroundUpdateService()
 nsBackgroundUpdateService.prototype = {
   _timer: null,
   _pref: null,
+  _updateObserver: null,
+  
+  // whether or not we're currently updating. prevents multiple simultaneous
+  // update operations.
+  updating: false,
+  
+  updateEnded: function ()
+  {
+    this.updating = false;
+    delete this._updateObserver;
+  },
   
   /////////////////////////////////////////////////////////////////////////////
   // nsIUpdateService
@@ -86,17 +97,21 @@ nsBackgroundUpdateService.prototype = {
     this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
                                  nsIUpdateService.SOURCE_EVENT_BACKGROUND);  /// XXXben
     
-    if (timeSinceLastCheck > interval)
-      this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
-                                   nsIUpdateService.SOURCE_EVENT_BACKGROUND);
+    if (timeSinceLastCheck > interval) {
+      if (!this.updating)
+        this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
+                                     nsIUpdateService.SOURCE_EVENT_BACKGROUND);
+    }
     else
       this._makeTimer(interval - timeSinceLastCheck);
   },
   
   checkForUpdates: function (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
   {
+    if (this.updating) return;
+    
     switch (aSourceEvent) {
-    case Components.interfaces.nsIExtensionManager.SOURCE_EVENT_MISMATCH:
+    case nsIUpdateService.SOURCE_EVENT_MISMATCH:
     case nsIUpdateService.SOURCE_EVENT_USER:
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                         .getService(Components.interfaces.nsIWindowWatcher);
@@ -131,14 +146,16 @@ nsBackgroundUpdateService.prototype = {
   
   checkForUpdatesInternal: function (aItems, aItemCount, aUpdateTypes, aSourceEvent)
   {
+    this.updating = true;
+  
     // Listen for notifications sent out by the app updater (implemented here) and the
     // extension updater (implemented in nsExtensionItemUpdater)
-    var updateObserver = new nsUpdateObserver(aUpdateTypes, aSourceEvent);
+    this._updateObserver = new nsUpdateObserver(aUpdateTypes, aSourceEvent, this);
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
-    os.addObserver(updateObserver, "Update:Extension:Item-Ended", false);
-    os.addObserver(updateObserver, "Update:Extension:Ended", false);
-    os.addObserver(updateObserver, "Update:App:Ended", false);
+    os.addObserver(this._updateObserver, "Update:Extension:Item-Ended", false);
+    os.addObserver(this._updateObserver, "Update:Extension:Ended", false);
+    os.addObserver(this._updateObserver, "Update:App:Ended", false);
     
     var appUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED);
     var extUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
@@ -150,8 +167,13 @@ nsBackgroundUpdateService.prototype = {
       var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                           .getService(Components.interfaces.nsIRDFService);
       var ds = rdf.GetDataSource(dsURI);
-      ds = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
-      ds.addXMLSinkObserver(new nsAppUpdateXMLRDFDSObserver(this));
+      var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource)
+      if (rds.loaded)
+        this.datasourceLoaded(ds);
+      else {
+        var sink = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
+        sink.addXMLSinkObserver(new nsAppUpdateXMLRDFDSObserver(this));
+      }
     }
     if (extUpdatesEnabled && (aUpdateTypes != nsIUpdateItem.TYPE_APP)) {
       var em = Components.classes["@mozilla.org/extensions/manager;1"]
@@ -160,6 +182,74 @@ nsBackgroundUpdateService.prototype = {
     }
   },
   
+  _rdf: null,
+  _ncR: function (aProperty)
+  {
+    return this._rdf.GetResource("http://home.netscape.com/NC-rdf#" + aProperty);
+  },
+  
+  _getProperty: function (aDS, aAppID, aProperty)
+  {
+    var app = this._rdf.GetResource("urn:mozilla:app:" + aAppID);
+    return aDS.GetTarget(app, this._ncR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  },
+
+  // This is called when the remote update datasource is ready to be parsed.  
+  datasourceLoaded: function (aDataSource)
+  {
+    if (!this._rdf) {
+      this._rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                            .getService(Components.interfaces.nsIRDFService);
+    }
+    // <?xml version="1.0"?>
+    // <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    //          xmlns:NC="http://home.netscape.com/NC-rdf#">
+    //   <RDF:Description about="urn:mozilla:app:{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+    //     <NC:version>1.2</NC:version>
+    //     <NC:severity>0</NC:severity>
+    //     <NC:URL>http://www.mozilla.org/products/firefox/</NC:URL>
+    //     <NC:description>Firefox 1.2 features new goats.</NC:description>
+    //   </RDF:Description>
+    // </RDF:RDF>
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var appID = pref.getCharPref(PREF_APP_ID);
+    var appVersion = pref.getCharPref(PREF_APP_VERSION);
+ 
+    // do update checking here, parsing something like this format:
+    var version = this._getProperty(aDataSource, appID, "version");
+    var checker = new VersionChecker(appVersion, version);
+    if (checker.isNewer) {
+      pref.setCharPref(PREF_UPDATE_APP_UPDATEVERSION, version);
+    
+      var severity = this._getProperty(aDataSource, appID, "severity");
+      // Synthesize the real severity value using the hint from the web site
+      // and the version.
+      pref.setIntPref(PREF_UPDATE_SEVERITY, severity);
+      pref.setBoolPref(PREF_UPDATE_APP_UPDATESAVAILABLE, true);
+      
+      var urlStr = Components.classes["@mozilla.org/supports-string;1"]
+                             .createInstance(Components.interfaces.nsISupportsString);
+      urlStr.data = this._getProperty(aDataSource, appID, "URL");
+      pref.setComplexValue(PREF_UPDATE_APP_UPDATEURL, 
+                           Components.interfaces.nsISupportsString, 
+                           urlStr);
+
+      var descStr = Components.classes["@mozilla.org/supports-string;1"]
+                              .createInstance(Components.interfaces.nsISupportsString);
+      descStr.data = this._getProperty(aDataSource, appID, "description");
+      pref.setComplexValue(PREF_UPDATE_APP_UPDATEDESCRIPTION, 
+                           Components.interfaces.nsISupportsString, 
+                           descStr);
+    }
+    
+    // The Update Wizard uses this notification to determine that the application
+    // update process is now complete. 
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                      .getService(Components.interfaces.nsIObserverService);
+    os.notifyObservers(null, "Update:App:Ended", "");
+  },
+
   get updateCount()
   {
     // The number of available updates is the number of extension/theme/other
@@ -197,8 +287,11 @@ nsBackgroundUpdateService.prototype = {
   // nsITimerCallback
   notify: function (aTimer)
   {
+    if (this.updating) return;
+    
     this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
                                  nsIUpdateService.SOURCE_EVENT_BACKGROUND);
+    this._makeTimer(this._pref.getIntPref(PREF_UPDATE_INTERVAL));
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -225,18 +318,20 @@ nsBackgroundUpdateService.prototype = {
   }
 };
 
-function nsUpdateObserver(aUpdateTypes, aSourceEvent)
+function nsUpdateObserver(aUpdateTypes, aSourceEvent, aService)
 {
   this._pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
   this._updateTypes = aUpdateTypes;
   this._sourceEvent = aSourceEvent;
+  this._service = aService;
 }
 
 nsUpdateObserver.prototype = {
   _updateTypes: 0,
   _sourceEvent: 0,
   _updateState: 0,
+  
   get _doneUpdating()
   {
     var test = 0;
@@ -281,6 +376,8 @@ nsUpdateObserver.prototype = {
       os.removeObserver(this, "Update:Extension:Item-Ended");
       os.removeObserver(this, "Update:Extension:Ended");
       os.removeObserver(this, "Update:App:Ended");
+      
+      this._service.updating = false;
     }
   }
 };
@@ -293,92 +390,27 @@ function nsAppUpdateXMLRDFDSObserver(aUpdateService)
 nsAppUpdateXMLRDFDSObserver.prototype = 
 { 
   _updateService: null,
-  _rdf: null,
   
   /////////////////////////////////////////////////////////////////////////////
   // nsIRDFXMLSinkObserver
   onBeginLoad: function(aSink)
   {
   },
-
   onInterrupt: function(aSink)
   {
   },
-
   onResume: function(aSink)
   {
-  },
-  
-  _ncR: function (aProperty)
-  {
-    return this._rdf.GetResource("http://home.netscape.com/NC-rdf#" + aProperty);
-  },
-  
-  _getProperty: function (aDS, aAppID, aProperty)
-  {
-    var app = this._rdf.GetResource("urn:mozilla:app:" + aAppID);
-    return aDS.GetTarget(app, this._ncR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   },
   
   onEndLoad: function(aSink)
   {
     aSink.removeXMLSinkObserver(this);
-
-    if (!this._rdf) {
-      this._rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                            .getService(Components.interfaces.nsIRDFService);
-    }
+    
     var ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
-    
-    // <?xml version="1.0"?>
-    // <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    //          xmlns:NC="http://home.netscape.com/NC-rdf#">
-    //   <RDF:Description about="urn:mozilla:app:{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-    //     <NC:version>1.2</NC:version>
-    //     <NC:severity>0</NC:severity>
-    //     <NC:URL>http://www.mozilla.org/products/firefox/</NC:URL>
-    //     <NC:description>Firefox 1.2 features new goats.</NC:description>
-    //   </RDF:Description>
-    // </RDF:RDF>
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    var appID = pref.getCharPref(PREF_APP_ID);
-    var appVersion = pref.getCharPref(PREF_APP_VERSION);
- 
-    // do update checking here, parsing something like this format:
-    var version = this._getProperty(ds, appID, "version");
-    var checker = new VersionChecker(appVersion, version);
-    if (checker.isNewer) {
-      pref.setCharPref(PREF_UPDATE_APP_UPDATEVERSION, version);
-    
-      var severity = this._getProperty(ds, appID, "severity");
-      // Synthesize the real severity value using the hint from the web site
-      // and the version.
-      pref.setIntPref(PREF_UPDATE_SEVERITY, severity);
-      pref.setBoolPref(PREF_UPDATE_APP_UPDATESAVAILABLE, true);
-      
-      var urlStr = Components.classes["@mozilla.org/supports-string;1"]
-                             .createInstance(Components.interfaces.nsISupportsString);
-      urlStr.data = this._getProperty(ds, appID, "URL");
-      pref.setComplexValue(PREF_UPDATE_APP_UPDATEURL, 
-                           Components.interfaces.nsISupportsString, 
-                           urlStr);
-
-      var descStr = Components.classes["@mozilla.org/supports-string;1"]
-                              .createInstance(Components.interfaces.nsISupportsString);
-      descStr.data = this._getProperty(ds, appID, "description");
-      pref.setComplexValue(PREF_UPDATE_APP_UPDATEDESCRIPTION, 
-                           Components.interfaces.nsISupportsString, 
-                           descStr);
-    }
-    
-    // The Update Wizard uses this notification to determine that the application
-    // update process is now complete. 
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                      .getService(Components.interfaces.nsIObserverService);
-    os.notifyObservers(null, "Update:App:Ended", "");
+    this._updateService.datasourceLoaded(ds);
   },
-
+  
   onError: function(aSink, aStatus, aErrorMsg)
   {
     aSink.removeXMLSinkObserver(this);

@@ -46,7 +46,8 @@
                                     .getService(Components.interfaces.nsIUpdateService);
             this.severity     = updates.updateSeverity;
             this.updateCount  = updates.updateCount;
-            
+            delete updates;
+            updates = null;
 #ifdef XP_WIN
             if (parseInt(aData) == Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND)
               this._showUpdateInfo();

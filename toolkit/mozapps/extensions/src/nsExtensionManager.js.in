@@ -37,6 +37,9 @@
 
 var gExtensionManager = null;
 
+const nsIExtensionManager       = Components.interfaces.nsIExtensionManager;
+const nsIUpdateService          = Components.interfaces.nsIUpdateService;
+
 const PREF_EM_APP_ID            = "app.id";
 const PREF_EM_APP_VERSION       = "app.version";
 const PREF_EM_LAST_APP_VERSION  = "extensions.lastAppVersion";
@@ -123,9 +126,11 @@ function nsExtensionManager()
 
 nsExtensionManager.prototype = {
 
+  // goats
   
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
+  // XXXben this can go away once appstartup/runner code calls us. 
   observe: function (aSubject, aTopic, aData)
   {
     if (aTopic == "profile-after-change") {
@@ -133,40 +138,51 @@ nsExtensionManager.prototype = {
                         .getService(Components.interfaces.nsIObserverService);
       os.removeObserver(this, "profile-after-change");
       
-      // Check to see if the version of the application that is being started
-      // now is the same one that was started last time. 
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
-      var currAppVersion = pref.getCharPref(PREF_EM_APP_VERSION);
-      try {
-        var lastAppVersion = pref.getCharPref(PREF_EM_LAST_APP_VERSION);
-      }
-      catch (e) {}
-      if (currAppVersion != lastAppVersion) {
-        // Version mismatch, we're have to load the extensions datasource
-        // and do version checking. Time hit here doesn't matter since this 
-        // doesn't happen all that often.
-        this._ensureDS();
-        var currAppID = pref.getCharPref(PREF_EM_APP_ID);
-        var items = this._ds.getIncompatibleItemList(currAppID, currAppVersion);
-
-        if (items.length > 0) {
-          for (var i = 0; i < items.length; ++i) {
-            // Now disable the extension so it won't hurt anything. 
-            this.disableExtension(items[i].id);
-          }
-          var updates = Components.classes["@mozilla.org/updates/update-service;1"]
-                                  .getService(Components.interfaces.nsIUpdateService);
-          updates.checkForUpdates(items, items.length, Components.interfaces.nsIUpdateItem.TYPE_ADDON, 
-                                  Components.interfaces.nsIExtensionManager.SOURCE_EVENT_MISMATCH,
-                                  null);
-        }
-      }
-      
-      // Now update the last app version so we don't do this checking 
-      // again.
-      pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+      this.checkForMismatches();
     }
+  },
+  
+  checkForMismatches: function () 
+  {
+    var rv = nsIExtensionManager.MISMATCH_RESULT_OK;
+    
+    // Check to see if the version of the application that is being started
+    // now is the same one that was started last time. 
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch);
+    var currAppVersion = pref.getCharPref(PREF_EM_APP_VERSION);
+    try {
+      var lastAppVersion = pref.getCharPref(PREF_EM_LAST_APP_VERSION);
+    }
+    catch (e) {}
+    if (currAppVersion != lastAppVersion) {
+      // Version mismatch, we're have to load the extensions datasource
+      // and do version checking. Time hit here doesn't matter since this 
+      // doesn't happen all that often.
+      this._ensureDS();
+      var currAppID = pref.getCharPref(PREF_EM_APP_ID);
+      var items = this._ds.getIncompatibleItemList(currAppID, currAppVersion);
+
+      if (items.length > 0) {
+        for (var i = 0; i < items.length; ++i) {
+          // Now disable the extension so it won't hurt anything. 
+          this.disableExtension(items[i].id);
+        }
+        var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                                .getService(Components.interfaces.nsIUpdateService);
+        updates.checkForUpdates(items, items.length, Components.interfaces.nsIUpdateItem.TYPE_ADDON, 
+                                nsIUpdateService.SOURCE_EVENT_MISMATCH,
+                                null);
+        
+        rv = nsIExtensionManager.MISMATCH_RESULT_RESTART;
+      }
+    }
+    
+    // Now update the last app version so we don't do this checking 
+    // again.
+    // pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+    
+    return rv;
   },
   
   // nsIExtensionManager

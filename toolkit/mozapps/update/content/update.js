@@ -401,8 +401,8 @@ var gFinishedPage = {
       iR2.hidden = true;
       fEC.hidden = true;
     }
-    
-    if (gSourceEvent == nsIExtensionManager.SOURCE_EVENT_MISMATCH) {
+
+    if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
       document.getElementById("finishedMismatch").hidden = false;
       document.getElementById("incompatibleAlert").hidden = false;
     }
