@@ -313,6 +313,9 @@ XULPopupListenerImpl::Blur(nsIDOMEvent* aMouseEvent)
     }
   }
 
+  // XXX Figure out how to fire the DESTRUCT event for the
+  // arbitrary XUL case
+
   return rv;
 }
 
