@@ -65,7 +65,6 @@ typedef struct {
 Handle       gMDEF = nsnull;
 Handle       gSystemMDEFHandle = nsnull;
 nsWeakPtr    gMacMenubar;
-nsWeakPtr    gOriginalMenuBar;
 bool         gFirstMenuBar = true; 
 
 // The four Golden Hierarchical Child Menus
@@ -160,15 +159,10 @@ nsMenuBar::~nsMenuBar()
     doc->RemoveObserver(observer);
   }
 
-  --gMenuBarCounter;
-  if(gMenuBarCounter == 1) {
-    nsCOMPtr<nsIMenuBar> menubar = do_QueryReferent(gOriginalMenuBar);
-    if(menubar)
-      menubar->Paint();
-  } 
-  
-  ::DisposeHandle(mOriginalMacMBarHandle);   
   ::DisposeHandle(mMacMBarHandle);
+  ::DisposeHandle(mOriginalMacMBarHandle);
+
+  --gMenuBarCounter;
     
 }
 
@@ -246,18 +240,6 @@ nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
-nsEventStatus 
-nsMenuBar::CheckRebuild(PRBool & aNeedsRebuild)
-{
-  aNeedsRebuild = PR_TRUE;
-  return nsEventStatus_eIgnore;
-}
-
-nsEventStatus
-nsMenuBar::SetRebuild(PRBool & aNeedsRebuild)
-{
-  return nsEventStatus_eIgnore;
-}
 
 void
 nsMenuBar :: GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument )
@@ -307,8 +289,6 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
   mDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);   // strong ref
       
   if(gFirstMenuBar) {
-      gOriginalMenuBar = getter_AddRefs(NS_GetWeakReference((nsIMenuBar *)this));
-      
 	  gFirstMenuBar = false;
 	  // Add the 4 Golden Hierarchical Menus to the MenuList        
 				
