@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 # 
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -20,6 +20,7 @@
 # 
 # Contributor(s): 
 # Sean Su <ssu@netscape.com>
+# Samir Gehani <sgehani@netscape.com>
 # 
 
 #
@@ -40,7 +41,8 @@ if($#ARGV < 3)
 
        staging path      : full path to where the components are staged at
 
-       dist install path : full path to where the mozilla/dist/bin is at.
+       dist install path : full path to target dist area
+
        \n";
 }
 
@@ -55,38 +57,25 @@ if(!(-e "$inStagePath"))
   die "invalid path: $inStagePath\n";
 }
 
-# Make sure inDestPath exists
+# Make sure inDistPath exists
 if(!(-e "$inDistPath"))
 {
-  system("mkdir $inDestPath");
+  system("mkdir $inDistPath");
 }
 
-MakeConfigFile();
-MakeJsFile();
+# Make .js files
+MakeJsFile("install");
+MakeJsFile("browser");
+MakeJsFile("mail");
 
 # Make all xpi files
-MakeXpiFile("core");
+MakeXpiFile("install");
+MakeXpiFile("browser");
 MakeXpiFile("mail");
-MakeXpiFile("editor");
-
-if(-e "$inDistPath/setup")
-{
-  unlink <$inDistPath/setup/*>;
-}
-else
-{
-  system("mkdir $inDistPath/setup");
-}
-
-# Copy the setup files to the dist setup directory.
-system("cp config.ini                      $inDistPath");
-system("cp config.ini                      $inDistPath\\setup");
-system("cp $inDistPath/mozilla-install     $inDistPath\\setup");
-#system("cp $inDistPath\\setuprsc.dll  $inDistPath\\setup");
 
 # build the self-extracting .exe file.
-printf "\nbuilding self-extracting .exe installer...";
-#system("$inDistPath/nszip.exe $inDistPath/nsinstall.exe $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
+# printf "\nbuilding self-extracting .exe installer...";
+# PORT system("$inDistPath\\nszip.exe $inDistPath\\nsinstall.exe $inDistPath\\setup\\*.*");
 
 print " done!\n";
 
@@ -96,7 +85,7 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inStagePath $inURLPath") != 0)
+  if(system("perl makecfgini.pl config.it $inStagePath $inDistPath $inURLPath") != 0)
   {
     exit(1);
   }
@@ -104,14 +93,12 @@ sub MakeConfigFile
 
 sub MakeJsFile
 {
-  # Make .js files
-  @jstFiles = <*.jst>;
-  foreach $jst (@jstFiles)
+  my($componentName) = @_;
+
+  # Make .js file
+  if(system("perl makejs.pl $componentName.jst $inDefaultVersion $inStagePath/$componentName") != 0)
   {
-    if(system("perl makejs.pl $jst $inDefaultVersion") != 0)
-    {
-      exit(1);
-    }
+    exit(1);
   }
 }
 
@@ -120,7 +107,7 @@ sub MakeXpiFile
   my($componentName) = @_;
 
   # Make .xpi file
-  if(system("perl makexpi.pl $componentName $inStagePath $inDistPath\\xpi") != 0)
+  if(system("perl makexpi.pl $componentName $inStagePath $inDistPath") != 0)
   {
     exit(1);
   }

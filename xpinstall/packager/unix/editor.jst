@@ -1,18 +1,28 @@
-var err = StartInstall("Mozilla Editor", "Seamonkey", "$Version$"); 
-LogComment("StartInstall: " + err);
+var err = startInstall("Mozilla Editor", "Seamonkey", "$Version$"); 
+logComment("startInstall: " + err);
 
-var communicatorFolder = Install.GetFolder("Communicator");
-LogComment("communicatorFolder: " + communicatorFolder);
+var communicatorFolder = getFolder("Communicator");
+logComment("communicatorFolder: " + communicatorFolder);
 
-err = AddDirectory("Program",
+err = addDirectory("Program",
                    "$Version$",
-                   "bin",              // fileName in jar, 
-                   communicatorFolder, // Where to put this file (Returned from GetFolder) 
-                   "",                 // fileName in jar, 
-                   true );             // Force Flag 
+                   "bin",              // jar source folder
+                   communicatorFolder, // target folder 
+                   "",                 // target subdir 
+                   true );             // force Flag 
 
-LogComment("AddDirectory() returned: " + err);
+logComment("addDirectory() returned: " + err);
 
-err = FinalizeInstall(); 
-LogComment("FinalizeInstall() returned: " + err);
+err = getLastError();
+if (err==SUCCESS || err==REBOOT_NEEDED)
+{
+	err = finalizeInstall(); 
+	logComment("finalizeInstall() returned: " + err);
+}
+else
+{
+	abortInstall();
+	logComment("abortInstall() due to error: " + err);
+}
+
 

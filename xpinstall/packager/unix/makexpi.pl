@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 # 
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -20,6 +20,7 @@
 # 
 # Contributor(s): 
 # Sean Su <ssu@netscape.com>
+# Samir Gehani <sgehani@netscape.com>
 # 
 
 #
@@ -33,7 +34,8 @@
 #             - path to where the .xpi files are are to be created at.
 #               ** MUST BE AN ABSOLUTE PATH, NOT A RELATIVE PATH **
 #
-#   ie: perl makexpi.pl core z:\exposed\windows\32bit\en\5.0 d:\build\mozilla\dist\win32_o.obj\install\working
+#   ie: perl makexpi.pl core z:\exposed\windows\32bit\en\5.0 
+#            d:\build\mozilla\dist\win32_o.obj\install\working
 #
 
 use File::Copy;
@@ -54,13 +56,13 @@ $inComponentName  = $ARGV[0];
 $inStagePath      = $ARGV[1];
 $inDestPath       = $ARGV[2];
 
-# check for existance of staging component path
+# check for existence of staging component path
 if(!(-e "$inStagePath/$inComponentName"))
 {
   die "invalid path: $inStagePath/$inComponentName\n";
 }
 
-# check for existance of .js script
+# check for existence of .js script
 if(!(-e "$inComponentName.js"))
 {
   die "missing .js script: $inComponentName.js\n";
@@ -71,7 +73,7 @@ if(-e "$inDestPath/$inComponentName.xpi")
 {
   unlink("$inDestPath/$inComponentName.xpi");
 }
-if(-e "$inStagePath/$incomponentName/$inComponentName.xpi")
+if(-e "$inStagePath/$inComponentName/$inComponentName.xpi")
 {
   unlink("$inDestPath/$inComponentName.xpi");
 }
