@@ -4312,7 +4312,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     name.EqualsIgnoreCase("_new")) {
                     name.Assign(NS_LITERAL_STRING("_top"));
                 }
-                else {
+                else if (!name.EqualsIgnoreCase("_parent") &&
+                         !name.EqualsIgnoreCase("_self") &&
+                         !name.EqualsIgnoreCase("_content")) {
                     nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
                     FindItemWithName(name.get(),
                                      NS_STATIC_CAST(nsIInterfaceRequestor *, this),
