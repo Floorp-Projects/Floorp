@@ -160,12 +160,15 @@ then                # want the init to wait forever for directories to
     WIN_WAIT_FOREVER=OFF
 fi
 
+                          # NOTE: following variables have to change 
+                          # from release to release
 if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
 then                      # a linux compiler bug prevents us from doing the 
                           # testing against a rtm - so we rebuild the branch
-    #BC_MASTER="20010212.1.nss32_rtm"
-    BC_MASTER="nss32/builds/20010420-nss-3.2-ref"
+    BC_MASTER="nss32/builds/20010510.1-nss-3.2-ref"
 fi
+BC_RELEASE=3.2
+export BC_RELEASE
 
 EARLY_EXIT=TRUE     #before the report file has been created, causes Exit to 
                     #create it
