@@ -157,7 +157,10 @@ nsHTMLURIRefObject::GetNextURI(nsAWritableString & aURI)
     if (!mAttributeCnt) return NS_ERROR_FAILURE;
     mCurAttrIndex = 0;
   }
-
+#ifdef DEBUG_akkana
+  printf("Looking at tag '%s'\n",
+         NS_LossyConvertUCS2toASCII(tagName).get());
+#endif
   while (mCurAttrIndex < mAttributeCnt)
   {
     nsCOMPtr<nsIDOMNode> attrNode;
@@ -165,14 +168,18 @@ nsHTMLURIRefObject::GetNextURI(nsAWritableString & aURI)
       // XXX Does Item() addref, or not?
       // The comparable code in nsEditor assumes it doesn't.
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!attrNode) return NS_ERROR_FAILURE;
+    NS_ENSURE_ARG_POINTER(attrNode);
     nsCOMPtr<nsIDOMAttr> curAttrNode (do_QueryInterface(attrNode));
-    if (!curAttrNode) return NS_ERROR_FAILURE;
+    NS_ENSURE_ARG_POINTER(curAttrNode);
     nsString curAttr;
     rv = curAttrNode->GetName(curAttr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // href >> A, AREA, BASE, LINK
+#ifdef DEBUG_akkana
+    printf("Trying to match attribute '%s'\n",
+           NS_LossyConvertUCS2toASCII(curAttr).get());
+#endif
     if (MATCHES(curAttr, "href"))
     {
       if (!MATCHES(tagName, "a") && !MATCHES(tagName, "area")
@@ -266,9 +273,9 @@ nsHTMLURIRefObject::GetNextURI(nsAWritableString & aURI)
         continue;
     }
   }
-  // We should return some specific code here to indicate that
-  // there are no more, to distinguish that case from real errors.
-  return NS_ERROR_FAILURE;
+  // Return a code to indicate that there are no more,
+  // to distinguish that case from real errors.
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
@@ -276,7 +283,9 @@ nsHTMLURIRefObject::RewriteAllURIs(const nsAReadableString & aOldPat,
                             const nsAReadableString & aNewPat,
                             PRBool aMakeRel)
 {
+#ifdef DEBUG_akkana
   printf("Can't rewrite URIs yet\n");
+#endif
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
