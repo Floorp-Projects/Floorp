@@ -37,7 +37,6 @@
 
 #include "xp.h"
 
-#include "resource.h"
 #include "epmanager.h"
 #include "plugload.h"
 #include "logger.h"
