@@ -34,7 +34,7 @@ class A
 
   constructor function A()
   {
-    obj = objB;
+    obj = objB; // defined below (BUT TOO LATE)
   }
 }
 
