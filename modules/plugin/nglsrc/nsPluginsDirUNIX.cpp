@@ -32,7 +32,7 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "prmem.h"
-
+#include <dlfcn.h>
 #include "nsSpecialSystemDirectory.h"
 
 /* Local helper functions */
@@ -71,20 +71,24 @@ static PRUint32 CalculateVariantCount(char* mimeTypes)
 
 nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
-  // this is somewhat lacking, in that it doesn't fall back to any other directories.
-  // then again, I'm not sure we should be falling back at all.  plugins have been (and probably
-  // should continue to be) loaded from both <libdir>/plugins and ~/.mozilla/plugins.  There
-  // doesn't seem to be any way to do this in the current nsPluginsDir code, which is disheartening.
-  //
+    // this is somewhat lacking, in that it doesn't fall back to any 
+    // other directories. then again, I'm not sure we should be falling 
+    // back at all.  plugins have been (and probably should continue to be) 
+    // loaded from both <libdir>/plugins and ~/.mozilla/plugins.  There
+    // doesn't seem to be any way to do this in the current nsPluginsDir 
+    // code, which is disheartening.
 
-  // use MOZILLA_FIVE_HOME/plugins
+    // use MOZILLA_FIVE_HOME/plugins
 
   nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory); 
   sysdir += "plugins"; 
   const char *pluginsDir = sysdir.GetCString(); // native path
   if (pluginsDir != NULL)
   {
-      *(nsFileSpec*)this = pluginsDir;
+      const char* allocPath;
+      
+      allocPath = PL_strdup(pluginsDir);
+      *(nsFileSpec*)this = allocPath;
   }
 }
 
@@ -96,6 +100,7 @@ nsPluginsDir::~nsPluginsDir()
 PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
     const char* pathname = fileSpec.GetCString();
+
 
 #ifdef NS_DEBUG
 	printf("IsPluginFile(%s)\n", pathname);
@@ -125,14 +130,23 @@ nsPluginFile::~nsPluginFile()
  */
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
-        const char* path = this->GetCString();
-        pLibrary = outLibrary = PR_LoadLibrary(path);
+    PRLibSpec libSpec;
+    void * handle;
 
+    // Ok, now to pull a rabbit out of my hat
+    handle = dlopen("libXt.so", RTLD_LAZY|RTLD_GLOBAL);
+    handle = dlopen("libXext.so", RTLD_NOW|RTLD_GLOBAL);
+
+    libSpec.type = PR_LibSpec_Pathname;
+    libSpec.value.pathname = this->GetCString();
+    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
+    
 #ifdef NS_DEBUG
-        printf("LoadPlugin() %s returned %lx\n",path,(unsigned long)pLibrary);
+    printf("LoadPlugin() %s returned %lx\n", 
+           libSpec.value.pathname, (unsigned long)pLibrary);
 #endif
-
-        return NS_OK;
+    
+    return NS_OK;
 }
 
 typedef char* (*UNIX_Plugin_GetMIMEDescription)();
@@ -222,8 +236,10 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         }
         start=nexttoc;
     }
+
 	return NS_OK;
 }
+
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
