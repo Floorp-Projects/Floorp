@@ -12,7 +12,7 @@
 "MEMBER","const char*",
 "PARTSTAT","icalparameter_partstat","NEEDS-ACTION;ACCEPTED;DECLINED;TENTATIVE;DELEGATED;COMPLETED;INPROCESS"
 "RANGE","icalparameter_range","THISANDPRIOR;THISANDFUTURE"
-"RELATED","icalparameter_related","START;END "
+"RELATED","icalparameter_related","START;END"
 "RELTYPE","icalparameter_reltype","PARENT;CHILD;SIBLING"
 "ROLE","icalparameter_role","CHAIR;REQ-PARTICIPANT;OPT-PARTICIPANT;NON-PARTICIPANT"
 "RSVP","icalparameter_rsvp","TRUE;FALSE"

@@ -14,7 +14,6 @@ To build all of the Makefiles for your system. If you will be installing the lib
 
 	./configure --prefix=/proj/local/
 
-
 If configure runs fine, run "make" to build the library and 
 "make install" to install it.
 

@@ -3,7 +3,7 @@
   FILE: icalarray.c
   CREATOR: Damon Chaplin 07 March 2001
   
-  $Id: icalarray.c,v 1.1 2001/12/21 19:04:01 mikep%oeone.com Exp $
+  $Id: icalarray.c,v 1.2 2002/04/18 18:47:25 mostafah%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2001, Ximian, Inc.
@@ -134,8 +134,14 @@ icalarray_expand		(icalarray	*array,
     if (space_needed > array->increment_size) 
 	new_space_allocated += space_needed;
 
+	/*
     new_data = realloc (array->data,
 			new_space_allocated * array->element_size);
+	*/
+	new_data = malloc(new_space_allocated * array->element_size);
+	memcpy(new_data,array->data,array->element_size*array->space_allocated);
+	free(array->data);
+
     if (new_data) {
 	array->data = new_data;
 	array->space_allocated = new_space_allocated;

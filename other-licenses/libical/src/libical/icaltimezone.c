@@ -4,7 +4,7 @@
  CREATOR: Damon Chaplin 15 March 2001
 
 
- $Id: icaltimezone.c,v 1.3 2002/04/02 16:14:32 mikep%oeone.com Exp $
+ $Id: icaltimezone.c,v 1.4 2002/04/18 18:47:26 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2001, Damon Chaplin
@@ -1420,7 +1420,7 @@ icaltimezone_parse_zone_tab		(void)
 		    &latitude_seconds,
 		    &longitude_degrees, &longitude_minutes,
 		    &longitude_seconds,
-		    &location) != 7) {
+		    location) != 7) {
 	    fprintf (stderr, "Invalid timezone description line: %s\n", buf);
 	    continue;
 	}
@@ -1589,7 +1589,7 @@ icaltimezone_dump_changes		(icaltimezone	*zone,
 
 	fprintf (fp, "\n");
     }
-    return 1;
+	return 1;
 }
 
 

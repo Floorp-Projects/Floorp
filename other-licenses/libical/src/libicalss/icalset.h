@@ -12,7 +12,7 @@
     icalheapset   Store components on the heap
     icalmysqlset  Store components in a mysql database. 
 
- $Id: icalset.h,v 1.2 2001/12/21 18:56:38 mikep%oeone.com Exp $
+ $Id: icalset.h,v 1.3 2002/04/18 18:47:31 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -63,7 +63,13 @@ typedef enum icalset_kind {
 
 /* Create a specific derived type of set */
 icalset* icalset_new_file(const char* path);
+icalset* icalset_new_file_reader(const char* path);
+icalset* icalset_new_file_writer(const char* path);
+
 icalset* icalset_new_dir(const char* path);
+icalset* icalset_new_file_reader(const char* path);
+icalset* icalset_new_file_writer(const char* path);
+
 icalset* icalset_new_heap(void);
 icalset* icalset_new_mysql(const char* path);
 /*icalset* icalset_new_cap(icalcstp* cstp);*/

@@ -4,7 +4,7 @@
  CREATOR: eric 28 November 1999
 
 
- $Id: icaldirset.h,v 1.2 2001/12/21 18:56:36 mikep%oeone.com Exp $
+ $Id: icaldirset.h,v 1.3 2002/04/18 18:47:30 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -38,6 +38,10 @@ typedef void icaldirset;
 
 
 icaldirset* icaldirset_new(const char* path);
+
+icaldirset* icaldirset_new_reader(const char* path);
+icaldirset* icaldirset_new_writer(const char* path);
+
 
 void icaldirset_free(icaldirset* store);
 

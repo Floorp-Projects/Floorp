@@ -3,7 +3,7 @@
   FILE: icalfileset.c
   CREATOR: eric 23 December 1999
   
-  $Id: icalfileset.c,v 1.7 2002/03/19 14:20:54 mikep%oeone.com Exp $
+  $Id: icalfileset.c,v 1.8 2002/04/18 18:47:30 mostafah%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -86,6 +86,16 @@ icalfileset* icalfileset_new_impl()
 icalfileset* icalfileset_new(const char* path)
 {
     return icalfileset_new_open(path, O_RDWR|O_CREAT, 0664);
+}
+
+icalfileset* icalfileset_new_reader(const char* path)
+{
+    return icalfileset_new_open(path, O_RDONLY, 0644);
+}
+
+icalfileset* icalfileset_new_writer(const char* path)
+{
+    return icalfileset_new_open(path, O_WRONLY|O_CREAT|O_TRUNC, 0664);
 }
 
 icalfileset* icalfileset_new_open(const char* path, int flags, mode_t mode)
@@ -335,7 +345,7 @@ icalerrorenum icalfileset_commit(icalfileset* cluster)
     
     if(icalfileset_safe_saves == 1){
 #ifndef WIN32
-	snprintf(tmp,ICAL_PATH_MAX,"cp %s %s.bak",impl->path,impl->path);
+	snprintf(tmp,ICAL_PATH_MAX,"cp '%s' '%s.bak'",impl->path,impl->path);
 #else
 	snprintf(tmp,ICAL_PATH_MAX,"copy %s %s.bak",impl->path,impl->path);
 #endif
@@ -346,7 +356,7 @@ icalerrorenum icalfileset_commit(icalfileset* cluster)
 	}
     }
 
-    if(lseek(impl->fd,SEEK_SET,0) < 0){
+    if(lseek(impl->fd,0,SEEK_SET) < 0){
 	icalerror_set_errno(ICAL_FILE_ERROR);
 	return ICAL_FILE_ERROR;
     }
@@ -376,7 +386,7 @@ icalerrorenum icalfileset_commit(icalfileset* cluster)
 	return ICAL_FILE_ERROR;
     }
 #else
-    chsize( impl->fd, tell( impl->fd ) );
+	chsize( impl->fd, tell( impl->fd ) );
 #endif
     
     return ICAL_NO_ERROR;
@@ -475,25 +485,31 @@ icalcomponent* icalfileset_fetch(icalfileset* store,const char* uid)
     for(i = icalcomponent_begin_component(impl->cluster,ICAL_ANY_COMPONENT);
 	icalcompiter_deref(&i)!= 0; icalcompiter_next(&i)){
 	
-	icalcomponent *this = icalcompiter_deref(&i);
-	icalcomponent *inner = icalcomponent_get_first_real_component(this);
-	icalcomponent *p;
-	const char *this_uid;
+		icalcomponent *this = icalcompiter_deref(&i);
+		icalcomponent *inner;
+		icalcomponent *p;
+		const char *this_uid;
 
-	if(inner != 0){
-	    p = icalcomponent_get_first_property(inner,ICAL_UID_PROPERTY);
-	    this_uid = icalproperty_get_uid(p);
+		for(inner = icalcomponent_get_first_component(this,ICAL_ANY_COMPONENT);
+			inner != 0;
+			inner = icalcomponent_get_next_component(this,ICAL_ANY_COMPONENT)){
 
-	    if(this_uid==0){
-		icalerror_warn("icalfileset_fetch found a component with no UID");
-		continue;
-	    }
+			p = icalcomponent_get_first_property(inner,ICAL_UID_PROPERTY);
+			if ( p )
+			{
+				this_uid = icalproperty_get_uid(p);
 
-	    if (strcmp(uid,this_uid)==0){
-		return this;
-	    }
+				if(this_uid==0){
+				icalerror_warn("icalfileset_fetch found a component with no UID");
+				continue;
+				}
+
+				if (strcmp(uid,this_uid)==0){
+					return this;
+				}
+			}
+		}
 	}
-    }
 
     return 0;
 }

@@ -12,7 +12,7 @@
     icalheapset   Store components on the heap
     icalmysqlset  Store components in a mysql database. 
 
- $Id: icalset.c,v 1.3 2001/12/21 18:56:38 mikep%oeone.com Exp $
+ $Id: icalset.c,v 1.4 2002/04/18 18:47:31 mostafah%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -201,6 +201,28 @@ icalset* icalset_new_file(const char* path)
     return (icalset*)icalset_new_file_from_ref(fset);
 }
 
+icalset* icalset_new_file_writer(const char* path)
+{
+    icalfileset *fset = icalfileset_new_writer(path);
+
+    if(fset == 0){
+	return 0;
+    }
+
+    return (icalset*)icalset_new_file_from_ref(fset);
+}
+
+icalset* icalset_new_file_reader(const char* path)
+{
+    icalfileset *fset = icalfileset_new_reader(path);
+
+    if(fset == 0){
+	return 0;
+    }
+
+    return (icalset*)icalset_new_file_from_ref(fset);
+}
+
 icalset* icalset_new_dir_from_ref(icaldirset *dset)
 {
 
@@ -227,6 +249,28 @@ icalset* icalset_new_dir_from_ref(icaldirset *dset)
 icalset* icalset_new_dir(const char* path)
 {
     icaldirset *dset = icaldirset_new(path);
+
+    if(dset == 0){
+	return 0;
+    }
+
+    return icalset_new_dir_from_ref(dset);
+}
+
+icalset* icalset_new_dir_writer(const char* path)
+{
+    icaldirset *dset = icaldirset_new_writer(path);
+
+    if(dset == 0){
+	return 0;
+    }
+
+    return icalset_new_dir_from_ref(dset);
+}
+
+icalset* icalset_new_dir_reader(const char* path)
+{
+    icaldirset *dset = icaldirset_new_reader(path);
 
     if(dset == 0){
 	return 0;
