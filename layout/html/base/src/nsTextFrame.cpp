@@ -41,13 +41,8 @@
 #include "nsIDeviceContext.h"
 #include "nsXIFConverter.h"
 #include "nsITextContent.h"
-
-// Selection includes
 #include "nsISelection.h"
 #include "nsSelectionRange.h"
-
-#define CALC_DEBUG 0
-#define DO_SELECTION 0
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
@@ -268,7 +263,6 @@ void BlinkTimer::AddFrame(TextFrame* aFrame) {
   if (1 == mFrames.Count()) {
     Start();
   }
-printf("%d blinking frames [add %p]\n", mFrames.Count(), aFrame);
 }
 
 PRBool BlinkTimer::RemoveFrame(TextFrame* aFrame) {
@@ -276,8 +270,6 @@ PRBool BlinkTimer::RemoveFrame(TextFrame* aFrame) {
   if (0 == mFrames.Count()) {
     Stop();
   }
-printf("%d blinking frames [remove %p] [%s]\n",
-       mFrames.Count(), aFrame, rv ? "true" : "FALSE");
   return rv;
 }
 
@@ -888,8 +880,6 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
                       nscoord dx, nscoord dy, nscoord aHeight,
                       nscolor aCursorColor)
 {
-  // Draw little blue triangle
-  aRenderingContext.SetColor(aCursorColor);
   nsPoint pnts[4];
   nscoord ox = aHeight / 4;
   nscoord oy = ox;
@@ -904,6 +894,8 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
   pnts[3].x = x0 - ox;
   pnts[3].y = y0;
 
+  // Draw little blue triangle
+  aRenderingContext.SetColor(aCursorColor);
   aRenderingContext.FillPolygon(pnts, 4);
 }
 
