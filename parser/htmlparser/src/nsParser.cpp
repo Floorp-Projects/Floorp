@@ -1001,14 +1001,15 @@ static void VerifyPublicIDs()
   static PRBool gVerified = PR_FALSE;
   if (!gVerified) {
     gVerified = PR_TRUE;
-    for (PRUint32 i = 0; i < ELEMENTS_OF(kPublicIDs) - 1; ++i) {
+    PRUint32 i;
+    for (i = 0; i < ELEMENTS_OF(kPublicIDs) - 1; ++i) {
       if (nsCRT::strcmp(kPublicIDs[i].name, kPublicIDs[i+1].name) >= 0) {
         NS_NOTREACHED("doctypes out of order");
         printf("Doctypes %s and %s out of order.\n",
                kPublicIDs[i].name, kPublicIDs[i+1].name);
       }
     }
-    for (PRUint32 i = 0; i < ELEMENTS_OF(kPublicIDs); ++i) {
+    for (i = 0; i < ELEMENTS_OF(kPublicIDs); ++i) {
       nsCAutoString lcPubID(kPublicIDs[i].name);
       lcPubID.ToLowerCase();
       if (nsCRT::strcmp(kPublicIDs[i].name, lcPubID.get()) != 0) {
