@@ -78,8 +78,8 @@ public:
 
 protected:
   void ClearFileList();
-  NS_IMETHODIMP nsFileListTransferable::CopyFileList(nsVoidArray * aFromFileList,
-                                                     nsVoidArray * aToFileList);
+  CopyFileList(nsVoidArray * aFromFileList,
+               nsVoidArray * aToFileList);
 
   nsVoidArray * mFileList;
   nsString      mFileListDataFlavor;
