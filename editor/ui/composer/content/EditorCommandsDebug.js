@@ -45,7 +45,7 @@ function EditorGetText()
 {
   if (editorShell) {
     dump("Getting text\n");
-    var  outputText = editorShell.GetContentsAs("text/plain", 2);
+    var  outputText = GetCurrentEditor().outputToString("text/plain", 2);
     dump("<<" + outputText + ">>\n");
   }
 }
@@ -54,28 +54,26 @@ function EditorGetHTML()
 {
   if (editorShell) {
     dump("Getting HTML\n");
-    var  outputHTML = editorShell.GetContentsAs("text/html", 256);
+    var  outputHTML = GetCurrentEditor().outputToString("text/html", 256);
     dump(outputHTML + "\n");
   }
 }
 
 function EditorDumpContent()
 {
-  if (window.editorShell) {
-    dump("==============  Content Tree: ================\n");
-    window.editorShell.DumpContentTree();
-  }
+  dump("==============  Content Tree: ================\n");
+  GetCurrentEditor().dumpContentTree();
 }
 
 function EditorInsertText(textToInsert)
 {
-  editorShell.InsertText(textToInsert);
+  GetCurrentEditor().insertText(textToInsert);
 }
 
 function EditorTestSelection()
 {
   dump("Testing selection\n");
-  var selection = editorShell.editorSelection;
+  var selection = GetCurrentEditor().selection;
   if (!selection)
   {
     dump("No selection!\n");
@@ -84,11 +82,12 @@ function EditorTestSelection()
 
   dump("Selection contains:\n");
   // 3rd param = column to wrap
-  dump(selection.QueryInterface(Components.interfaces.nsISelectionPrivate).toStringWithFormat("text/plain",
-                                    3,  // OutputFormatted & gOutputSelectionOnly
-                                    0) + "\n");
+  dump(selection.QueryInterface(Components.interfaces.nsISelectionPrivate)
+       .toStringWithFormat("text/plain",
+                           3,  // OutputFormatted & gOutputSelectionOnly
+                           0) + "\n");
 
-  var output;
+  var output, i;
 
   dump("====== Selection as node and offsets==========\n");
   dump("rangeCount = " + selection.rangeCount + "\n");
@@ -102,36 +101,39 @@ function EditorTestSelection()
     }
   }
 
+  var editor = GetCurrentEditor();
+
   dump("====== Selection as unformatted text ==========\n");
-  output = editorShell.GetContentsAs("text/plain", 1);
+  output = editor.outputToString("text/plain", 1);
   dump(output + "\n\n");
 
   dump("====== Selection as formatted text ============\n");
-  output = editorShell.GetContentsAs("text/plain", 3);
+  output = editor.outputToString("text/plain", 3);
   dump(output + "\n\n");
 
   dump("====== Selection as HTML ======================\n");
-  output = editorShell.GetContentsAs("text/html", 1);
+  output = editor.outputToString("text/html", 1);
   dump(output + "\n\n");  
 
   dump("====== Selection as prettyprinted HTML ========\n");
-  output = editorShell.GetContentsAs("text/html", 3);
+  output = editor.outputToString("text/html", 3);
   dump(output + "\n\n");  
 
   dump("====== Length and status =====================\n");
   output = "Document is ";
-  if (editorShell.documentIsEmpty)
+  if (editor.documentIsEmpty)
     output += "empty\n";
   else
     output += "not empty\n";
-  output += "Document length is " + editorShell.documentLength + " characters";
+  output += "Text length is " + editor.textLength + " characters";
   dump(output + "\n\n");
 }
 
 function EditorTestTableLayout()
 {
   dump("\n\n\n************ Dump Selection Ranges ************\n");
-  var selection = editorShell.editorSelection;
+  var selection = GetCurrentEditor().selection;
+  var i;
   for (i = 0; i < selection.rangeCount; i++)
   {
     var range = selection.getRangeAt(i);
@@ -142,7 +144,8 @@ function EditorTestTableLayout()
   }
   dump("\n\n");
 
-  var table = editorShell.GetElementOrParentByTagName("table", null);
+  var editor = GetCurrentEditor();
+  var table = editor.getElementOrParentByTagName("table", null);
   if (!table) {
     dump("Enclosing Table not found: Place caret in a table cell to do this test\n\n");
     return;
@@ -181,9 +184,11 @@ function EditorTestTableLayout()
     while(!doneWithCol)  // Iterate through cells in the row
     {
       try {
-        cell = editorShell.GetCellDataAt(table, row, col, startRowIndexObj, startColIndexObj,
-                                         rowSpanObj, colSpanObj, actualRowSpanObj, actualColSpanObj, 
-                                         isSelectedObj);
+        cell = editor.getCellDataAt(table, row, col,
+                                    startRowIndexObj, startColIndexObj,
+                                    rowSpanObj, colSpanObj,
+                                    actualRowSpanObj, actualColSpanObj,
+                                    isSelectedObj);
 
         if (cell)
         {
@@ -238,30 +243,34 @@ function EditorTestTableLayout()
     }      
   }
   dump("Counted during scan: Number of rows="+rowCount+" Number of Columns="+maxColCount+"\n");
-  rowCount = editorShell.GetTableRowCount(table);
-  maxColCount = editorShell.GetTableColumnCount(table);
+  rowCount = editor.getTableRowCount(table);
+  maxColCount = editor.getTableColumnCount(table);
   dump("From nsITableLayout: Number of rows="+rowCount+" Number of Columns="+maxColCount+"\n****** End of Table Layout Test *****\n\n");
 }
 
 function EditorShowEmbeddedObjects()
 {
   dump("\nEmbedded Objects:\n");
-  var objectArray = editorShell.GetEmbeddedObjects();
-  dump(objectArray.Count() + " embedded objects\n");
-  for (var i=0; i < objectArray.Count(); ++i)
-    dump(objectArray.GetElementAt(i) + "\n");
+  try {
+    var objectArray = GetCurrentEditor().getEmbeddedObjects();
+    dump(objectArray.Count() + " embedded objects\n");
+    for (var i=0; i < objectArray.Count(); ++i)
+      dump(objectArray.GetElementAt(i) + "\n");
+  } catch(e) {}
 }
 
 function EditorUnitTests()
 {
   dump("Running Unit Tests\n");
-  editorShell.RunUnitTests();
+  var numTests       = { value:0 };
+  var numTestsFailed = { value:0 };
+  GetCurrentEditor().debugUnitTests(numTests, numTestsFailed);
 }
 
 function EditorTestDocument()
 {
   dump("Getting document\n");
-  var theDoc = editorShell.editorDocument;
+  var theDoc = GetCurrentEditor().document;
   if (theDoc)
   {
     dump("Got the doc\n");
@@ -376,7 +385,7 @@ function EditorRunLog()
 function DumpUndoStack()
 {
   try {
-    var txmgr = editorShell.transactionManager;
+    var txmgr = GetCurrentEditor().transactionManager;
 
     if (!txmgr)
     {
@@ -398,7 +407,7 @@ function DumpUndoStack()
 function DumpRedoStack()
 {
   try {
-    var txmgr = editorShell.transactionManager;
+    var txmgr = GetCurrentEditor().transactionManager;
 
     if (!txmgr)
     {
