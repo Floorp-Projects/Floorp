@@ -622,7 +622,6 @@ nsHeaderSniffer.prototype = {
         }
       }
     }
-    fileName = fileName.replace(/^"|"$/g, "");
     return fileName;
   }
 };
