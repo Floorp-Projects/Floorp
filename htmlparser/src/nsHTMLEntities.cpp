@@ -119,8 +119,9 @@ static const PLDHashTableOps UnicodeToEntityOps = {
   nsnull,
 };
 
-PLDHashTable gEntityToUnicode = { 0 };
-PLDHashTable gUnicodeToEntity = { 0 };
+static PLDHashTable gEntityToUnicode = { 0 };
+static PLDHashTable gUnicodeToEntity = { 0 };
+static nsrefcnt gTableRefCnt = 0;
 
 #define HTML_ENTITY(_name, _value) { #_name, _value },
 static const EntityNode gEntityArray[] = {
@@ -128,46 +129,54 @@ static const EntityNode gEntityArray[] = {
 };
 #undef HTML_ENTITY
 
-#define NS_HTML_ENTITY_COUNT ((PRInt32)(sizeof(gEntityArray) / sizeof(gEntityArray[0])))
+#define NS_HTML_ENTITY_COUNT ((PRInt32)NS_ARRAY_LENGTH(gEntityArray))
 
 void
 nsHTMLEntities::AddRefTable(void) 
 {
-  if (!gEntityToUnicode.ops)
-    PL_DHashTableInit(&gEntityToUnicode, &EntityToUnicodeOps,
-                      nsnull, sizeof(EntityNodeEntry), NS_HTML_ENTITY_COUNT);
-                         
-  if (!gUnicodeToEntity.ops)
-    PL_DHashTableInit(&gUnicodeToEntity, &UnicodeToEntityOps,
-                      nsnull, sizeof(EntityNodeEntry), NS_HTML_ENTITY_COUNT);
+  if (++gTableRefCnt != 1)
+    return;
 
-  PRUint32 i;
-  for (i=0; i<NS_HTML_ENTITY_COUNT; i++) {
+  PL_DHashTableInit(&gEntityToUnicode, &EntityToUnicodeOps,
+                    nsnull, sizeof(EntityNodeEntry),
+                    PRUint32(NS_HTML_ENTITY_COUNT / 0.75));
+  PL_DHashTableInit(&gUnicodeToEntity, &UnicodeToEntityOps,
+                    nsnull, sizeof(EntityNodeEntry),
+                    PRUint32(NS_HTML_ENTITY_COUNT / 0.75));
+
+  for (const EntityNode *node = gEntityArray,
+                    *node_end = gEntityArray + NS_ARRAY_LENGTH(gEntityArray);
+       node < node_end; ++node) {
     EntityNodeEntry* entry;
 
     // add to Entity->Unicode table
     entry = NS_STATIC_CAST(EntityNodeEntry*,
                            PL_DHashTableOperate(&gEntityToUnicode,
-                                                gEntityArray[i].mStr,
+                                                node->mStr,
                                                 PL_DHASH_ADD));
     NS_ASSERTION(entry, "Error adding an entry");
-    entry->node = &gEntityArray[i];
+    // Prefer earlier entries when we have duplication.
+    if (!entry->node)
+      entry->node = node;
 
     // add to Unicode->Entity table
     entry = NS_STATIC_CAST(EntityNodeEntry*,
                            PL_DHashTableOperate(&gUnicodeToEntity,
-                                                NS_INT32_TO_PTR(gEntityArray[i].mUnicode),
+                                                NS_INT32_TO_PTR(node->mUnicode),
                                                 PL_DHASH_ADD));
     NS_ASSERTION(entry, "Error adding an entry");
-    entry->node = &gEntityArray[i];
-
+    // Prefer earlier entries when we have duplication.
+    if (!entry->node)
+      entry->node = node;
   }
-    
 }
 
 void
 nsHTMLEntities::ReleaseTable(void) 
 {
+  if (--gTableRefCnt != 0)
+    return;
+
   if (gEntityToUnicode.ops) {
     PL_DHashTableFinish(&gEntityToUnicode);
     gEntityToUnicode.ops = nsnull;
