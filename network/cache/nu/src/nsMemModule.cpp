@@ -165,6 +165,12 @@ nsCacheObject* nsMemModule::GetObject(const char* i_url) const
     return 0;
 }
 
+nsStream* nsMemModule::GetStreamFor(const nsCacheObject* i_pObject)
+{
+    MonitorLocker ml(this);
+    return 0;
+}
+
 nsMemCacheObject* nsMemModule::LastObject(void) const
 {
     MonitorLocker ml((nsMonitorable*)this);
@@ -177,11 +183,6 @@ nsMemCacheObject* nsMemModule::LastObject(void) const
             pLast = pLast->Next();
     }
     return pLast;
-}
-
-PRUint32 nsMemModule::Read(nsCacheObject* pObject, char* o_Buffer, PRUint32 len)
-{
-    return 0;
 }
 
 PRBool nsMemModule::ReduceSizeTo(const PRUint32 i_NewSize)
@@ -200,11 +201,6 @@ PRBool nsMemModule::Remove(const PRUint32 i_index)
 {
     //TODO
     return PR_FALSE;
-}
-
-PRUint32 nsMemModule::Write(nsCacheObject* pObject, const char* i_Buffer, PRUint32 len)
-{
-    return 0;
 }
 
 /*

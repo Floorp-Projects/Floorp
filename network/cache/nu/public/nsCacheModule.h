@@ -74,6 +74,9 @@ public:
     virtual
         nsCacheObject*  GetObject(const PRUint32 i_index) const =0;
 
+    virtual
+        nsStream*       GetStreamFor(const nsCacheObject* i_pObject)=0;
+
     PRBool              IsEnabled(void) const;
 
     /* Cant do additions, deletions, validations, expirations */
@@ -81,9 +84,6 @@ public:
 
     nsCacheModule*      NextModule(void) const;
     void                NextModule(nsCacheModule*);
-
-    virtual 
-        PRUint32        Read(nsCacheObject* pObject, char* o_Buffer, PRUint32 len);
 
     virtual
         PRBool          Remove(const char* i_url) = 0;
@@ -105,9 +105,6 @@ public:
     PRUint32            SizeInUse(void) const;
 
     const char*         Trace(void) const;
-
-    virtual
-        PRUint32        Write(nsCacheObject* pObject, const char* i_Buffer, PRUint32 len);
 
 protected:
 

@@ -63,7 +63,7 @@ nsDiskModule::~nsDiskModule()
 
 PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
 {
-	ENSURE_INIT;
+    ENSURE_INIT;
     
     if (!m_pDB || !io_pObject)
     {   
@@ -73,7 +73,7 @@ PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
 
     if (io_pObject->Address())
     {
-		MonitorLocker ml(this);
+        MonitorLocker ml(this);
         // TODO optimize these further- make static - Gagan
         DBT* key = PR_NEW(DBT);
         DBT* data = PR_NEW(DBT);
@@ -82,7 +82,7 @@ PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
 
         
         key->data = (void*)io_pObject->Address(); 
-		/* Later on change this to include post data- io_pObject->KeyData() */
+        /* Later on change this to include post data- io_pObject->KeyData() */
         key->size = PL_strlen(io_pObject->Address());
 
         data->data = io_pObject->Info();
@@ -140,7 +140,7 @@ PRBool nsDiskModule::Contains(const char* i_url) const
 
 void nsDiskModule::GarbageCollect(void)
 {
-	MonitorLocker ml(this);
+    MonitorLocker ml(this);
 }
 
 nsCacheObject* nsDiskModule::GetObject(const PRUint32 i_index) const
@@ -174,9 +174,15 @@ nsCacheObject* nsDiskModule::GetObject(const char* i_url) const
     return 0;
 }
 
+nsStream* nsDiskModule::GetStreamFor(const nsCacheObject* i_pObject)
+{
+    ENSURE_INIT;
+    return 0;
+}
+
 PRBool nsDiskModule::InitDB(void) 
 {
-	MonitorLocker ml(this);
+    MonitorLocker ml(this);
 
     if (m_pDB)
         return PR_TRUE;
@@ -217,11 +223,6 @@ PRBool nsDiskModule::InitDB(void)
         return PR_FALSE;
 
     return PR_TRUE;
-}
-
-PRUint32 nsDiskModule::Read(nsCacheObject* pObject, char* o_Buffer, PRUint32 len)
-{
-    return 0;
 }
 
 PRBool nsDiskModule::ReduceSizeTo(const PRUint32 i_NewSize)
@@ -265,12 +266,6 @@ void nsDiskModule::SetSize(const PRUint32 i_Size)
     {
         RemoveAll();
     }
-}
-
-PRUint32 nsDiskModule::Write(nsCacheObject* pObject, const char* i_Buffer, PRUint32 len)
-{
-    ENSURE_INIT;
-    return 0;
 }
 
 #undef ENSURE_INIT

@@ -46,7 +46,7 @@ public:
     nsCacheObject*  GetObject(const PRUint32 i_index) const;
     nsCacheObject*  GetObject(const char* i_url) const;
 
-    PRUint32        Read(nsCacheObject* pObject, char* o_Buffer, PRUint32 len);
+    nsStream*       GetStreamFor(const nsCacheObject* i_pObject);
 
     PRBool          ReduceSizeTo(const PRUint32 i_NewSize);
 
@@ -57,8 +57,6 @@ public:
     void            SetSize(const PRUint32 i_size);
 
     PRBool          Revalidate(void);
-
-    PRUint32        Write(nsCacheObject* pObject, const char* i_Buffer, PRUint32 len);
 
 private:
     enum sync_frequency
