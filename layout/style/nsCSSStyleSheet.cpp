@@ -185,7 +185,6 @@ void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyl
       value = value->mNext;
     }
     value->mNext = new RuleValue(aRule, mRuleCount++);
-    value = value->mNext;
   }
 }
 
