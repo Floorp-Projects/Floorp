@@ -27,7 +27,7 @@
 #include "nsNntpService.h"
 #include "nsINetService.h"
 #include "nsINntpUrl.h"
-#include "nsNntpProtocol.h"
+#include "nsNNTPProtocol.h"
 
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 
