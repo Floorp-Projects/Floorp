@@ -507,8 +507,38 @@
           <![CDATA[
             var newBrowser = this.mPanelContainer.childNodes[this.mPanelContainer.selectedIndex];
             if (this.mCurrentBrowser) {
-              this.mCurrentBrowser.focusedWindow = document.commandDispatcher.focusedWindow;
-              this.mCurrentBrowser.focusedElement = document.commandDispatcher.focusedElement;
+              // Only save the focused element if it is in our content window
+              // or in an ancestor window.
+              var focusedWindow = document.commandDispatcher.focusedWindow;
+              var saveFocus = false;
+
+              if (focusedWindow.top == window.content) {
+                saveFocus = true;
+              } else {
+                var contentWindow = window;
+
+                while (contentWindow) {
+                  if (contentWindow == focusedWindow) {
+                    saveFocus = true;
+                    break;
+                  }
+
+                  if (contentWindow.parent == contentWindow) {
+                    break;
+                  }
+
+                  contentWindow = contentWindow.parent;
+                }
+              }
+
+              if (saveFocus) {
+                // Preserve the currently-focused element or DOM window for
+                // this tab.
+
+                this.mCurrentBrowser.focusedWindow = focusedWindow;
+                this.mCurrentBrowser.focusedElement = document.commandDispatcher.focusedElement;
+              }
+
               if (this.mCurrentBrowser.focusedElement) {
                 // Clear focus outline before we draw on top of it
                 this.mCurrentBrowser.focusedElement.blur();
