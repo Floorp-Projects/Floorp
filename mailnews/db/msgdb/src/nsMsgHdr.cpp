@@ -227,7 +227,7 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 
 		if (strlen(curName))
 		{
-			allRecipients = curName;
+			allRecipients += curName;
 			allRecipients += ' ';
 		}
 
