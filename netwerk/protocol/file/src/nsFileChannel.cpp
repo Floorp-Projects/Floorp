@@ -242,11 +242,8 @@ nsFileChannel::EnsureTransport()
                               getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) return rv;
 
-    mFileTransport->SetNotificationCallbacks(this,
-                                            ((mLoadFlags & LOAD_BACKGROUND) 
-                                            ? nsITransport::DONT_REPORT_PROGRESS
-                                            : 0));
-
+    mFileTransport->SetNotificationCallbacks(mCallbacks,
+                                             (mLoadFlags & LOAD_BACKGROUND));
     return rv;
 }
 
