@@ -1505,7 +1505,6 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
 
 #ifdef XP_MAC
   mInstanceOwner->FixUpPluginWindow();
-  return rv;
 #endif // XP_MAC
 
   if (bHidden)
