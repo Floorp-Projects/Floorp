@@ -191,7 +191,8 @@
       <menuitem name="Page Info" onclick="MsgViewPageInfo();"/>
       <separator/>
       <menu name="Character Set">
-        <menuitem name="Western (ISO-8859-1)" onclick="CharacterSet();"/>
+        <menuitem name="Western (ISO-8859-1)" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
+        <menuitem name="Japanese (ISO-2022-JP)" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
       </menu>
     </menu>
     <menu name="Go">
