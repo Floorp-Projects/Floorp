@@ -68,8 +68,10 @@ typedef PRUcs2 PRUnichar;
 /* XXX do something useful? */
 #define NS_IMPORT
 #define NS_IMPORT_(type) type
-#define NS_EXPORT
-#define NS_EXPORT_(type) type
+#ifndef NS_EXPORT /* also declared in nsCom.h. */
+#define NS_EXPORT __declspec(export)
+#define NS_EXPORT_(type) __declspec(export) type
+#endif
 #endif
 
 #ifdef _IMPL_NS_BASE
