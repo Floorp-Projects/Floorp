@@ -143,7 +143,7 @@ public:
     NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
     // nsIXULContentSink
-    NS_IMETHOD Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFDataSource* aDataSource);
+    NS_IMETHOD Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource);
 
 protected:
     static nsrefcnt             gRefCnt;
@@ -841,7 +841,7 @@ XULContentSinkImpl::AddEntityReference(const nsIParserNode& aNode)
 // nsIRDFContentSink interface
 
 NS_IMETHODIMP
-XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFDataSource* aDataSource)
+XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
 {
     nsresult rv;
 

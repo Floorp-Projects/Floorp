@@ -25,7 +25,6 @@
 
 class nsIDocument;
 class nsIRDFDataSource;
-class nsIWebShell;
 
 // {E49AA620-C16C-11d2-A6AA-00104BDE6048}
 #define NS_IXULCONTENTSINK_IID \
@@ -38,7 +37,6 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_IXULCONTENTSINK_IID; return iid; }
 
     NS_IMETHOD Init(nsIDocument* aDocument,
-                    nsIWebShell* aWebShell,
                     nsIRDFDataSource* aDataSource) = 0;
 };
 
