@@ -41,7 +41,7 @@
 #include <Menus.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsContextMenuLog, 0)
+NS_IMPL_LOG(nsContextMenuLog)
 #define PRINTF NS_LOG_PRINTF(nsContextMenuLog)
 #define FLUSH  NS_LOG_FLUSH(nsContextMenuLog)
 
