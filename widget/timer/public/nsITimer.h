@@ -25,6 +25,8 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
 
 class nsITimer;
 class nsITimerCallback;
@@ -143,7 +145,20 @@ public:
 // Warning: This function should NOT be defined with NS_TIMER because
 // the intention is that it be linked statically with the library/DLL
 // or app that uses it.
-
+#ifdef XP_UNIX
+inline nsresult NS_NewTimer(nsITimer **aInstancePtrResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsITimer> timer = do_CreateInstance("component://netscape/timer", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    *aInstancePtrResult = timer;
+    NS_ADDREF(*aInstancePtrResult);
+  }
+  return rv;
+}
+#else
 extern nsresult NS_NewTimer(nsITimer** aInstancePtrResult);
+#endif
+
 
 #endif // nsITimer_h___

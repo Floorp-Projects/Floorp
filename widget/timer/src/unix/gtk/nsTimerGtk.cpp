@@ -157,7 +157,7 @@ nsTimerGtk::Init(nsITimerCallback *aCallback,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsTimerGtk, kITimerIID)
+NS_IMPL_ISUPPORTS1(nsTimerGtk, nsITimer)
 
 void
 nsTimerGtk::Cancel()
