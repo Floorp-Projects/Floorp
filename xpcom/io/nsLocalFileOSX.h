@@ -78,14 +78,15 @@ protected:
                         nsLocalFile(const FSRef& aFSRef, const nsAString& aRelativePath);
                         nsLocalFile(const nsLocalFile& src);
     
-    nsresult						Resolve();
-    nsresult						GetFSRefInternal(FSRef& aFSSpec);
+    nsresult            Resolve();
+    nsresult            GetFSRefInternal(FSRef& aFSSpec);
+    nsresult            GetPathInternal(nsACString& path);  // Returns path WRT mFollowLinks
     nsresult            ResolveNonExtantNodes(PRBool aCreateDirs);
 
-    nsresult						MoveCopy(nsIFile* newParentDir, const nsAString &newName, PRBool isCopy, PRBool followLinks);
+    nsresult            MoveCopy(nsIFile* newParentDir, const nsAString &newName, PRBool isCopy, PRBool followLinks);
 
-    static PRInt64 			HFSPlustoNSPRTime(const UTCDateTime& utcTime);
-    static void					NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime);
+    static PRInt64      HFSPlustoNSPRTime(const UTCDateTime& utcTime);
+    static void         NSPRtoHFSPlusTime(PRInt64 nsprTime, UTCDateTime& utcTime);
     
 protected:
     FSRef               mFSRef;
@@ -93,16 +94,16 @@ protected:
     
     FSRef               mTargetFSRef; // If mFSRef is an alias file, its target
 
-    PRPackedBool				mFollowLinks;
+    PRPackedBool        mFollowLinks;
 
-    PRPackedBool				mIdentityDirty;
-    PRPackedBool				mFollowLinksDirty;
+    PRPackedBool        mIdentityDirty;
+    PRPackedBool        mFollowLinksDirty;
 
-    static PRInt64			kJanuaryFirst1970Seconds;    
+    static PRInt64      kJanuaryFirst1970Seconds;    
     static PRUnichar    kPathSepUnichar;
-    static char					kPathSepChar;
+    static char         kPathSepChar;
     static FSRef        kInvalidFSRef;
-    static FSRef				kRootFSRef;
+    static FSRef        kRootFSRef;
 };
 
 #endif // nsLocalFileMac_h__
