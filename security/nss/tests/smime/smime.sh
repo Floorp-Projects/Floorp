@@ -107,6 +107,7 @@ smime_main()
   cmsutil -E -r bob@bogus.com -i alice.txt -d ${R_ALICEDIR} -p nss -o alice.env
   html_msg $? 0 "Create Enveloped Data Alice" "."
 
+
   echo "cmsutil -D -i alice.env -d ${R_BOBDIR} -p nss -o alice.data1"
   cmsutil -D -i alice.env -d ${R_BOBDIR} -p nss -o alice.data1
   html_msg $? 0 "Decode Enveloped Data Alice" "."
@@ -121,7 +122,14 @@ smime_main()
   echo "        -r bob@bogus.com,dave@bogus.com"
   cmsutil -E -i alice.txt -d ${R_ALICEDIR} -o alicecc.env \
           -r bob@bogus.com,dave@bogus.com
-  html_msg $? 0 "Create Multiple Recipients Enveloped Data Alice" "."
+  ret=$?
+  html_msg $ret 0 "Create Multiple Recipients Enveloped Data Alice" "."
+  if [ $ret != 0 ] ; then
+	echo "certutil -L -d ${R_ALICEDIR}"
+	certutil -L -d  -d ${R_ALICEDIR}
+	echo "certutil -L -d ${R_ALICEDIR} -n dave@bogus.com"
+	certutil -L -d ${R_ALICEDIR} -n dave@bogus.com
+  fi
 
   echo "cmsutil -D -i alicecc.env -d ${R_BOBDIR} -p nss -o alice.data2"
   cmsutil -D -i alicecc.env -d ${R_BOBDIR} -p nss -o alice.data2
