@@ -1845,7 +1845,7 @@ PresShell::HandleEvent(nsIView         *aView,
         manager->GetFocusedContent(&focusContent);
         if (focusContent)
           GetPrimaryFrameFor(focusContent, &mCurrentEventFrame);
-        else mCurrentEventFrame = nsnull;
+        else frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
       }
       else frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
       NS_IF_RELEASE(mCurrentEventContent);
