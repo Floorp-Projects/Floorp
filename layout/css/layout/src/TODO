@@ -1,13 +1,26 @@
 todo for AOL August 1st deadline:
 ---------------------------------
 
-x scroll to #ref
+o implement base tag support:
+  o frame, iframe, frameset
+  o layer
+
+o TEST base tag support:
+  x images
+  x links
+  x image maps (area tags)
+  o script src=
+  o style src=
+
+o missing space after ampersand on http://home.netscape.com
 
 o fast scroll to #ref for a link targeted at the same document as is
 currently showing
 
 force-refresh needs to get the nsIScrollableView and update that view,
 not the root view
+
+o f:/html/bug8.html (descent bug in vertically align children)
 
 Viewer:
   make the print-preview menu item work
@@ -50,12 +63,26 @@ slide show resize bug
 fix assertion on LCIC in nscssblockframe::content-inserted when
 running rotate.html/js test
 
+docloader needs to disconnect itself as an observer when it's done
+
 ----------------------------------------------------------------------
 
-have michael fix up the scrolling-view code so that if a document is
-scrolled and grown the relative scroll position is maintained so that
-the view doesn't jump around. Then re-enable the html content sink
-scroll-to-ref code in the incremental reflow cases.
+ebina margin bugs:
+  BR tags
+  line-height adjustment (sometimes; see test0.html and the large font)
+  P's in LI's
+  f:/html/bug3.html (yikes!)
+  f:/html/bug6.html 
+
+tinderbox: add selftest to our makefile so that it will run whatever
+we want and verify the results of a build
+
+o have michael fix up the scrolling-view code so that if a document is
+  scrolled and grown the relative scroll position is maintained so that
+  the view doesn't jump around. Then re-enable the html content sink
+  scroll-to-ref code in the incremental reflow cases.
+  o scroll to #ref needs to be able to update the scrollbars when it
+    finds the target frame has been reflowed.
 
 parser calls WillInterrupt at the *wrong time*
 
@@ -72,6 +99,9 @@ o ListTag(nsString& aResult) instead of FILE*
 o style attributes of BODY tag
 o style attributes of HTML tag
 o turn noisy code in nsContainerFrame into NS_FRAME_TRACE calls
+
+o implement the LINK tag including base attributes for style sheets
+  and other linked objects
 
 ----------------------------------------
 
@@ -90,13 +120,6 @@ block-margins.html: margin after block & before text is lost
 Content objects for: FORM, /FORM, MAP, AREA, SCRIPT, STYLE
 
 width/height sizing stuff into body/block/inline code
-
-ebina margin bugs:
-  BR tags
-  line-height adjustment (sometimes; see test0.html and the large font)
-  P's in LI's
-  f:/html/bug3.html (yikes!)
-  f:/html/bug6.html 
 
 image-map.html: top border is black; why?
 
