@@ -251,7 +251,63 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     dumpBytecode(fWrap->bCon);
             }
             else {
-                // dumping a class would be interesting...
+                if (fObj->kind == ClassKind) {
+                    JS2Class *c = checked_cast<JS2Class *>(fObj);
+                    stdOut << "class " << *c->getName();
+                    if (c->super)
+                        stdOut << " extends " << *c->super->getName();
+                    stdOut << "\n";
+                    stdOut << ((c->dynamic) ? " dynamic, " : " non-dynamic, ") << ((c->final) ? "final" : "non-final") << "\n";
+                    stdOut << " slotCount = " << c->slotCount << "\n";
+
+                    stdOut << " Static Bindings:\n";                    
+                    for (StaticBindingIterator rsb = c->staticReadBindings.begin(), rsend = c->staticReadBindings.end(); (rsb != rsend); rsb++) {
+                        stdOut << "\t" << *rsb->second->qname.nameSpace->name << "::" << rsb->second->qname.id;
+                        bool found = false;
+                        for (StaticBindingIterator wsb = c->staticWriteBindings.begin(), wsend = c->staticWriteBindings.end(); (wsb != wsend); wsb++) {
+                            if (rsb->second->qname == wsb->second->qname) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        stdOut << ((found) ? " [read/write]" : " [read-only]") << "\n";
+                    }
+                    for (StaticBindingIterator wsb = c->staticWriteBindings.begin(), wsend = c->staticWriteBindings.end(); (wsb != wsend); wsb++) {
+                        bool found = false;
+                        for (StaticBindingIterator rsb = c->staticReadBindings.begin(), rsend = c->staticReadBindings.end(); (rsb != rsend); rsb++) {
+                            if (rsb->second->qname == wsb->second->qname) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found)
+                            stdOut << "\t" << *wsb->second->qname.nameSpace->name << "::" << wsb->second->qname.id << " [write-only]" << "\n";
+                    }
+
+                    stdOut << " Instance Bindings:\n";                    
+                    for (InstanceBindingIterator rib = c->instanceReadBindings.begin(), riend = c->instanceReadBindings.end(); (rib != riend); rib++) {
+                        stdOut << "\t" << *rib->second->qname.nameSpace->name << "::" << rib->second->qname.id;
+                        bool found = false;
+                        for (InstanceBindingIterator wib = c->instanceWriteBindings.begin(), wiend = c->instanceWriteBindings.end(); (wib != wiend); wib++) {
+                            if (rib->second->qname == wib->second->qname) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        stdOut << ((found) ? " [read/write]" : " [read-only]") << "\n";
+                    }
+                    for (InstanceBindingIterator wib = c->instanceWriteBindings.begin(), wiend = c->instanceWriteBindings.end(); (wib != wiend); wib++) {
+                        bool found = false;
+                        for (InstanceBindingIterator rib = c->instanceReadBindings.begin(), riend = c->instanceReadBindings.end(); (rib != riend); rib++) {
+                            if (rib->second->qname == wib->second->qname) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found)
+                            stdOut << "\t" << *wib->second->qname.nameSpace->name << "::" << wib->second->qname.id << " [write-only]" << "\n";
+                    }
+                }
             }
         }
     }
