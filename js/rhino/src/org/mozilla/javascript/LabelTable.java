@@ -39,26 +39,25 @@ public class LabelTable {
 
     public int acquireLabel()
     {
+        int top;
         if (itsLabelTable == null) {
-            itsLabelTable = new Label[LabelTableSize];
-            itsLabelTable[0] = new Label();
-            itsLabelTableTop = 1;
-            return 0x80000000;
-        }
-        else {
-            if (itsLabelTableTop == itsLabelTable.length) {
-                Label oldTable[] = itsLabelTable;
-                itsLabelTable = new Label[itsLabelTableTop * 2];
-                System.arraycopy(oldTable, 0, itsLabelTable, 0, itsLabelTableTop);
+            top = 0;
+            itsLabelTable = new short[MIN_LABEL_TABLE_SIZE];
+        }else {
+            top = itsLabelTableTop;
+            if (top == itsLabelTable.length) {
+                short[] tmp = new short[top * 2];
+                System.arraycopy(itsLabelTable, 0, tmp, 0, top);
+                itsLabelTable = tmp;
             }
-            itsLabelTable[itsLabelTableTop] = new Label();
-            int result = itsLabelTableTop++;
-            return result | 0x80000000;
         }
+        itsLabelTableTop = top + 1;
+        itsLabelTable[top] = (short)-1;
+        return top | 0x80000000;
     }
 
     public short getLabelPC(int theLabel) {
-        return itsLabelTable[theLabel].getPC();
+        return itsLabelTable[theLabel];
     }
 
     public int markLabel(int theLabel, int pc)
@@ -71,28 +70,63 @@ public class LabelTable {
         if (DEBUGLABELS) {
             System.out.println("Marking label " + theLabel + " at " + pc);
         }
-        itsLabelTable[theLabel].setPC((short)pc);
+        if (itsLabelTable[theLabel] != -1) {
+            // Can mark label only once
+            throw new RuntimeException();
+        }
+        itsLabelTable[theLabel] = (short)pc;
         return theLabel | 0x80000000;
     }
 
     public void addLabelFixup(int theLabel, int fixupSite) {
-        itsLabelTable[theLabel].addFixup(fixupSite);
+        int top;
+        if (itsFixupTable == null) {
+            top = 0;
+            itsFixupTable = new long[MIN_FIXUP_TABLE_SIZE];
+        }else {
+            top = itsFixupTableTop;
+            if (top == itsFixupTable.length) {
+                long[] tmp = new long[top * 2];
+                System.arraycopy(itsFixupTable, 0, tmp, 0, top);
+                itsFixupTable = tmp;
+            }
+        }
+        itsFixupTableTop = top + 1;
+        itsFixupTable[top] = ((long)theLabel << 32) | fixupSite;
     }
 
     public void fixLabelGotos(byte[] codeBuffer) {
-        for (int i = 0; i < itsLabelTableTop; i++) {
-            itsLabelTable[i].fixGotos(codeBuffer);
+        for (int i = 0; i < itsFixupTableTop; i++) {
+            long fixup = itsFixupTable[i];
+            int label = (int)(fixup >> 32);
+            int fixupSite = (int)fixup;
+            short pc = itsLabelTable[label];
+            if (pc == -1) {
+                // Unlocated label
+                throw new RuntimeException();
+            }
+            // -1 to get delta from instruction start
+            short offset = (short)(pc - (fixupSite - 1));
+            codeBuffer[fixupSite] = (byte)(offset >> 8);
+            codeBuffer[fixupSite + 1] = (byte)offset;
         }
+        itsFixupTableTop = 0;
     }
 
     public void clearLabels() {
         itsLabelTableTop = 0;
+        itsFixupTableTop = 0;
     }
 
     private static final boolean DEBUGLABELS = false;
 
-    private static final int LabelTableSize = 32;
-    private Label itsLabelTable[];
+    private static final int MIN_LABEL_TABLE_SIZE = 32;
+    private short[] itsLabelTable;
     private int itsLabelTableTop;
+
+// itsFixupTable[i] = (label_index << 32) | fixup_site
+    private static final int MIN_FIXUP_TABLE_SIZE = 40;
+    private long[] itsFixupTable;
+    private int itsFixupTableTop;
 
 }
