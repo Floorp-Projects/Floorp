@@ -29,6 +29,7 @@ CHROME_CONTENT = \
 	.\editor.xul \
 	.\TextEditorAppShell.xul \
 	.\editor.js \
+	.\publish.js \
 	.\ComposerCommands.js \
 	.\EditorCommandsDebug.js \
 	.\EditorContextMenu.js \
