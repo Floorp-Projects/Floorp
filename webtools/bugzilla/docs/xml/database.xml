@@ -1,197 +1,153 @@
-<!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+<!-- <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
 
-<APPENDIX id="database">
+<appendix id="database">
 
-<TITLE>The Bugzilla Database</TITLE>
-<NOTE>
-<PARA>This document really needs to be updated with more fleshed out information about primary keys, interrelationships, and maybe some nifty tables to document dependencies.  Any takers?</PARA>
-</NOTE>
-  <SECTION id="dbschema">
-    <TITLE>Database Schema Chart</TITLE>
-    <PARA>
-      <MEDIAOBJECT>
-	<IMAGEOBJECT>
-	  <IMAGEDATA FILEREF="dbschema.jpg" FORMAT="jpg">
-	</IMAGEOBJECT>
-
-	<TEXTOBJECT>
-	  <PHRASE>Database Relationships</PHRASE>
-	</TEXTOBJECT>
-
-	<CAPTION>
-	  <PARA>Bugzilla database relationships chart</PARA>
-	</CAPTION>
-      </MEDIAOBJECT>
-    </PARA>
-  </SECTION>
-
-  <SECTION id="dbdoc">
-<TITLE>MySQL Bugzilla Database Introduction</TITLE>
-<LITERALLAYOUT>
-
-Contributor(s):  Matthew P. Barnson (mbarnson@excitehome.net)
-
-Last update: May 16, 2000
-
-Changes:
-Version 1.0: Initial public release (May 16, 2000)
-
-Maintainer:  Matthew P. Barnson (mbarnson@excitehome.net)
-
-
-===
-Table Of Contents
-===
-
-FOREWORD
-INTRODUCTION
-THE BASICS
-THE TABLES
-THE DETAILS
-
-
-
-===
-FOREWORD
-===
-
-  This information comes straight from my life.  I was forced to learn how
-Bugzilla organizes database because of nitpicky requests from users for tiny
-changes in wording, rather than having people re-educate themselves or
-figure out how to work our procedures around the tool.  It sucks, but it can
-and will happen to you, so learn how the schema works and deal with it when it
-comes.
-
-  I'm sorry this version is plain text.  I can whip this info out a lot faster
-if I'm not concerned about complex formatting.  I'll get it into sgml for easy
-portability as time permits.
-
-  The Bugzilla Database Schema has a home!  In addition to availability via CVS
-and released versions 2.12 and higher of Bugzilla, you can find the latest &
-greatest version of the Bugzilla Database Schema at
-http://www.trilobyte.net/barnsons/. This is a living document; please be sure
-you are up-to-date with the latest version before mirroring.
-
-  The Bugzilla Database Schema is designed to provide vital information
-regarding the structure of the MySQL database.  Where appropriate, this
-document will refer to URLs rather than including documents in their entirety
-to ensure completeness even should this paper become out of date.
-
-  This document is not maintained by Netscape or Netscape employees, so please
-do not contact them regarding errors or omissions contained herein. Please
-direct all questions, comments, updates, flames, etc. to Matthew P. Barnson
-mbarnson@excitehome.net) (barnboy or barnhome on irc.mozilla.org in
-#mozwebtools).
-
-  I'm sure I've made some glaring errors or omissions in this paper -- please
-email me corrections or post corrections to the
-netscape.public.mozilla.webtools newsgroup.
-
-
-
-===
-INTRODUCTION
-===
-
-
-
-  So, here you are with your brand-new installation of Bugzilla.  You've got
-MySQL set up, Apache working right, Perl DBI and DBD talking to the database
-flawlessly.  Maybe you've even entered a few test bugs to make sure email's
-working; people seem to be notified of new bugs and changes, and you can
-enter and edit bugs to your heart's content.  Perhaps you've gone through the
-trouble of setting up a gateway for people to submit bugs to your database via
-email, have had a few people test it, and received rave reviews from your beta
-testers.
-
-  What's the next thing you do?  Outline a training strategy for your
-development team, of course, and bring them up to speed on the new tool you've
-labored over for hours.
-
-  Your first training session starts off very well!  You have a captive
-audience which seems enraptured by the efficiency embodied in this thing called
-"Bugzilla".  You are caught up describing the nifty features, how people can
-save favorite queries in the database, set them up as headers and footers on
-their pages, customize their layouts, generate reports, track status with
-greater efficiency than ever before, leap tall buildings with a single bound
-and rescue Jane from the clutches of Certain Death!
-
-  But Certain Death speaks up -- a tiny voice, from the dark corners of the
-conference room.  "I have a concern," the voice hisses from the darkness,
-"about the use of the word 'verified'.
-
-  The room, previously filled with happy chatter, lapses into reverential
-silence as Certain Death (better known as the Vice President of Software
-Engineering) continues.  "You see, for two years we've used the word 'verified'
-to indicate that a developer or quality assurance engineer has confirmed that,
-in fact, a bug is valid. I don't want to lose two years of training to a
-new software product.  You need to change the bug status of 'verified' to
-'approved' as soon as possible. To avoid confusion, of course."
-
-  Oh no!  Terror strikes your heart, as you find yourself mumbling "yes, yes, I
-don't think that would be a problem," You review the changes with Certain
-Death, and continue to jabber on, "no, it's not too big a change. I mean, we
-have the source code, right? You know, 'Use the Source, Luke' and all that...
-no problem," All the while you quiver inside like a beached jellyfish bubbling,
-burbling, and boiling on a hot Jamaican sand dune...
-
-  Thus begins your adventure into the heart of Bugzilla.  You've been forced
-to learn about non-portable enum() fields, varchar columns, and tinyint
-definitions. The Adventure Awaits You!
-
-
-
-===
-The Basics
-===
-
-  If you were like me, at this point you're totally clueless about the
-internals of MySQL, and if it weren't for this executive order from the Vice
-President you couldn't care less about the difference between a "bigint" and a
-"tinyint" entry in MySQL.  I'd refer you first to the MySQL documentation,
-available at http://www.mysql.com/doc.html, but that's mostly a confusing
-morass of high-level database jargon.  Here are the basics you need to know
-about the database to proceed:
-
-1.  To connect to your database, type "mysql -u root" at the command prompt as
-any user. If this works without asking you for a password, SHAME ON YOU!  You
-should have locked your security down like the README told you to.  You can
-find details on locking down your database in the Bugzilla FAQ in this
-directory (under "Security"), or more robust security generalities in the
-MySQL searchable documentation at
-http://www.mysql.com/php/manual.php3?section=Privilege_system .
-
-2.  You should now be at a prompt that looks like this:
-
-mysql>
+<title>The Bugzilla Database</title>
+<note>
+<para>
+      This document really needs to be updated with more fleshed out information about primary keys, interrelationships, and maybe some nifty tables to document dependencies.  Any takers?
+    </para>
+  </note>
+  <section id="dbschema">
+    <title>Database Schema Chart</title>
+    <para>
+      <mediaobject>
+	<imageobject>
+	  <imagedata fileref="dbschema.jpg" format="jpg">
+	</imageobject>
 	
-	At the prompt, if "bugs" is the name of your Bugzilla database, type:
-	
-mysql> use bugs;
-	
-	(don't forget the ";" at the end of each line, or you'll be kicking yourself
-all the way through this documentation)
-  Young Grasshopper, you are now ready for the unveiling of the Bugzilla
-database, in the next section...
+	<textobject>
+	  <phrase>Database Relationships</phrase>
+	</textobject>
 
+	<caption>
+	  <para>Bugzilla database relationships chart</para>
+	</caption>
+      </mediaobject>
+    </para>
+  </section>
 
+  <section id="dbdoc">
+<title>MySQL Bugzilla Database Introduction</title>
+    <para>
+      This information comes straight from my life.  I was forced to learn how
+      Bugzilla organizes database because of nitpicky requests from users for tiny
+      changes in wording, rather than having people re-educate themselves or
+      figure out how to work our procedures around the tool.  It sucks, but it can
+      and will happen to you, so learn how the schema works and deal with it when it
+      comes.
+    </para>
 
-===
-THE TABLES
-===
+  <para>
+      So, here you are with your brand-new installation of Bugzilla.  You've got
+      MySQL set up, Apache working right, Perl DBI and DBD talking to the database
+      flawlessly.  Maybe you've even entered a few test bugs to make sure email's
+      working; people seem to be notified of new bugs and changes, and you can
+      enter and edit bugs to your heart's content.  Perhaps you've gone through the
+      trouble of setting up a gateway for people to submit bugs to your database via
+      email, have had a few people test it, and received rave reviews from your beta
+      testers.
+    </para>
+    <para>
+      What's the next thing you do?  Outline a training strategy for your
+      development team, of course, and bring them up to speed on the new tool you've
+      labored over for hours.
+    </para>
+    <para>
+      Your first training session starts off very well!  You have a captive
+      audience which seems enraptured by the efficiency embodied in this thing called
+      "Bugzilla".  You are caught up describing the nifty features, how people can
+      save favorite queries in the database, set them up as headers and footers on
+      their pages, customize their layouts, generate reports, track status with
+      greater efficiency than ever before, leap tall buildings with a single bound
+      and rescue Jane from the clutches of Certain Death!
+    </para>
+    <para>
+      But Certain Death speaks up -- a tiny voice, from the dark corners of the
+      conference room.  "I have a concern," the voice hisses from the darkness,
+      "about the use of the word 'verified'.
+    </para>
+    <para>
+      The room, previously filled with happy chatter, lapses into reverential
+      silence as Certain Death (better known as the Vice President of Software
+      Engineering) continues.  "You see, for two years we've used the word 'verified'
+      to indicate that a developer or quality assurance engineer has confirmed that,
+      in fact, a bug is valid. I don't want to lose two years of training to a
+      new software product.  You need to change the bug status of 'verified' to
+      'approved' as soon as possible. To avoid confusion, of course."
+    </para>
+    <para>
+      Oh no!  Terror strikes your heart, as you find yourself mumbling "yes, yes, I
+      don't think that would be a problem," You review the changes with Certain
+      Death, and continue to jabber on, "no, it's not too big a change. I mean, we
+      have the source code, right? You know, 'Use the Source, Luke' and all that...
+      no problem," All the while you quiver inside like a beached jellyfish bubbling,
+      burbling, and boiling on a hot Jamaican sand dune...
+    </para>
+    <para>
+      Thus begins your adventure into the heart of Bugzilla.  You've been forced
+      to learn about non-portable enum() fields, varchar columns, and tinyint
+      definitions. The Adventure Awaits You!
+    </para>
 
-  Imagine your MySQL database as a series of spreadsheets, and you won't be too
-far off.  If you use this command:
+    <section>
+      <title>Bugzilla Database Basics</title>
+      <para>
+	If you were like me, at this point you're totally clueless
+	about the internals of MySQL, and if it weren't for this
+	executive order from the Vice President you couldn't care less
+	about the difference between a <quote>bigint</quote> and a
+	<quote>tinyint</quote> entry in MySQL.   I recommend you refer
+	to the MySQL documentation, available at <ulink url="http://www.mysql.com/doc.html">MySQL.com</ulink>.  Below are the basics you need to know about the Bugzilla database.  Check the chart above for more details.
+      </para>
+      <para><orderedlist>
+	  <listitem>
+	    <para>
+	      To connect to your database:
+	    </para>
+	    <para>
+	      <prompt>bash#</prompt><command>mysql</command><parameter>-u root</parameter>
+	    </para>
+	    <para>
+	      If this works without asking you for a password,
+	      <emphasis>shame on you</emphasis>!  You should have
+	      locked your security down like the installation
+	      instructions told you to.  You can find details on
+	      locking down your database in the Bugzilla FAQ in this
+	      directory (under "Security"), or more robust security
+	      generalities in the MySQL searchable documentation at
+	      http://www.mysql.com/php/manual.php3?section=Privilege_system .
+	    </para>
+	  </listitem>
 
-mysql> show tables from bugs;
-	
-	you'll be able to see all the "spreadsheets" (tables) in your database.  Cool,
-huh?  It's kinda' like a filesystem, only much faster and more robust.  Come
-on, I'll show you more!
-
-  From the command issued above, you should now have some output that looks
-like this:
-
+	  <listitem>
+	    <para>You should now be at a prompt that looks like
+	      this:</para>
+	    <para><prompt>mysql></prompt></para>
+	    <para>At the prompt, if <quote>bugs</quote> is the name
+	      you chose in the<filename>localconfig</filename> file
+	      for your Bugzilla database, type:</para>
+	    <para><prompt>mysql</prompt><command>use bugs;</command></para>
+	    <note>
+	      <para>Don't forget the <quote>;</quote> at the end of
+		each line, or you'll be kicking yourself later.</para>
+	    </note>
+	  </listitem>
+	</orderedlist>
+      </para>
+      <section>
+	<title>Bugzilla Database Tables</title>
+	<para>  Imagine your MySQL database as a series of
+	  spreadsheets, and you won't be too far off.  If you use this
+	  command:</para>
+	<para><prompt>mysql></prompt><command>show tables from bugs;</command></para>
+	<para>you'll be able to see all the
+	  <quote>spreadsheets</quote> (tables) in your database.  It
+	  is similar to a file system, only faster and more robust for
+	  certain types of operations.</para>
+	<para>From the command issued above, ou should have some
+	  output that looks like this:
+	  <programlisting>
 +-------------------+
 | Tables in bugs    |
 +-------------------+
@@ -213,14 +169,13 @@ like this:
 | profiles          |
 | profiles_activity |
 | shadowlog         |
+| tokens            |
 | versions          |
 | votes             |
 | watch             |
 +-------------------+
-
-
-          If it doesn't look quite the same, that probably means it's time to
-update this documentation :)
+	  </programlisting></para>
+<literallayout>
 
   Here's an overview of what each table does.  Most columns in each table have
 descriptive names that make it fairly trivial to figure out their jobs.
@@ -398,23 +353,36 @@ LINKS
 Great MySQL tutorial site:
 http://www.devshed.com/Server_Side/MySQL/
 
-    </LITERALLAYOUT>
-  </SECTION>
+	</literallayout>
+      </section>
+    </section>
+  </section>
 
-  <SECTION id="granttables">
-    <TITLE>MySQL Permissions & Grant Tables</TITLE>
-
-    <NOTE>
-      <PARA>The following portion of documentation comes from my answer to an old discussion of Keystone,
-	a cool product that does trouble-ticket tracking for IT departments.  I wrote this post to the 
-	Keystone support group regarding MySQL grant table permissions, and how to use them effectively.
-	It is badly in need of updating, as I believe MySQL has added a field or two to the grant tables 
-	since this time, but it serves as a decent introduction and troubleshooting document for grant
-	table issues.  I used Keynote to track my troubles until I discovered Bugzilla,
-	which gave me a whole new set of troubles to work on : )</PARA>
-    </NOTE>
-
-    <LITERALLAYOUT>
+  <section id="granttables">
+    <title>MySQL Permissions & Grant Tables</title>
+    
+    <note>
+      <para>The following portion of documentation comes from my
+	answer to an old discussion of Keystone, a cool product that
+	does trouble-ticket tracking for IT departments.  I wrote this
+	post to the  Keystone support group regarding MySQL grant
+	table permissions, and how to use them effectively. It is
+	badly in need of updating, as I believe MySQL has added a
+	field or two to the grant tables  since this time, but it
+	serves as a decent introduction and troubleshooting document
+	for grant table issues.  I used Keynote to track my troubles
+	until I discovered Bugzilla, which gave me a whole new set of
+	troubles to work on : )  Although it is of limited use, it
+	still has SOME use, thus it's still included.</para>
+      <para>
+	Please note, however, that I was a relatively new user to
+	MySQL at the time.  Some of my suggestions, particularly in
+	how to set up security, showed a terrible lack of
+	security-related database experience.
+      </para>
+    </note>
+    
+    <literallayout>
 From matt_barnson@singletrac.com Wed Jul  7 09:00:07 1999
 Date: Mon, 1 Mar 1999 21:37:04 -0700 
 From: Matthew Barnson matt_barnson@singletrac.com
@@ -577,59 +545,28 @@ Once again, you can't go wrong by reading section 6 of the MySQL manual.  It
 is more detailed than I!
 http://www.mysql.com/Manual/manual.html.
 
-----------------------------------------------------------------------------
-10/12/2000
-Matthew sent in some mail with updated contact information:
-NEW CONTACT INFORMATION: 
-
-                        ------------------------ 
-                        Matthew P. Barnson 
-                        Manager, Systems Administration 
-                        Excite@Home Business Applications 
-                        mbarnson@excitehome.net 
-                        (801)234-8300 
-
-
-    </LITERALLAYOUT>
-  </SECTION>
-  <SECTION id="cleanupwork">
-    <TITLE>Cleaning up after mucking with Bugzilla</TITLE>
-    <LITERALLAYOUT>
-Contributed by Eric Hanson:
-There are several things, and one trick.  There is a small tiny piece of
-documentation I saw once that said something very important.
-1)  After pretty much any manual working of the Mysql db, you must
-delete a file in the bugzilla directory: data/versioncache
-Versioncache basically is a way to speed up bugzilla (from what I
-understand).  It stores a lot of commonly used information.  However,
-this file is refreshed every so often (I can't remember the time
-interval though).  So eventually all changes do propogate out, so you
-may see stuff suddenly working.
-2)  Assuming that failed, you will also have to check something with the
-checksetup.pl file.  It actually is run twice.  The first time it
-creates the file: localconfig.  You can modify localconfig, (or not if
-you are doing bug_status stuff) or you should delete localconfig and
-rerun your modified checksetup.pl.  Since I don't actually see anything
-in localconfig pertaining to bug_status, this point is mainly a FYI.
-    </LITERALLAYOUT>
-  </SECTION>
-
-</APPENDIX>
+    </literallayout>
+  </section>
+  
+</appendix>
 
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
-sgml-omittag:t
-sgml-shorttag:t
-sgml-namecase-general:t
-sgml-general-insert-case:upper
-sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
-sgml-indent-step:2
-sgml-indent-data:t
-sgml-parent-document:nil
+sgml-auto-insert-required-elements:t
+sgml-balanced-tag-edit:t
 sgml-exposed-tags:nil
+sgml-general-insert-case:lower
+sgml-indent-data:t
+sgml-indent-step:2
 sgml-local-catalogs:nil
 sgml-local-ecat-files:nil
+sgml-minimize-attributes:nil
+sgml-namecase-general:t
+sgml-omittag:t
+sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-shorttag:t
+sgml-tag-region-if-active:t
 End:
 -->

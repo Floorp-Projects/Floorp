@@ -1,4 +1,4 @@
-<!DOCTYPE BOOK PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
 
 <!-- Include macros -->
 <!ENTITY about SYSTEM "about.sgml">
@@ -17,99 +17,156 @@
 <!ENTITY patches SYSTEM "patches.sgml">
 <!ENTITY variants SYSTEM "variants.sgml">
 <!ENTITY requiredsoftware SYSTEM "requiredsoftware.sgml">
+<!ENTITY revhistory SYSTEM "revhistory.sgml">
+
+<!ENTITY bz "http://www.mozilla.org/projects/bugzilla">
+<!ENTITY bz-ver "2.14">
+<!ENTITY bz-cvs-ver "2.15">
+<!ENTITY bzg-date "August 10, 2001">
+<!ENTITY bzg-ver "2.14.0">
+<!ENTITY bzg-cvs-ver "2.15.0">
+<!ENTITY bzg-auth "Matthew P. Barnson">
+<!ENTITY bzg-auth-email "<email>barnboy@NOSPAM.trilobyte.net</email>">
+<!ENTITY mysql "http://www.mysql.com/">
+<!ENTITY perl-ver "5.6.1">
 
 ]>
 
+
 <!-- Coding standards for this document 
 
-1.  Preface new or modified sections with a comment stating who
- modified it and when; please also use the "authorinitials" tag.
-
-2.  There is no "two".
-
-3.  Other than the GFDL, please use the "section" tag instead of "sect1", "sect2", etc.
-
-4.  Use Entities to include files for new chapters in Bugzilla-Guide.sgml.
-
-5.  Ensure all documents compile cleanly to HTML after modification.
-  The errors "DTD Declaration not allowed here" and "DTDDECL catalog types not supported"
- are normal errors to be expected when compiling the whole guide.
-
-6.  Try to index important terms wherever possible.
-
-7.  Follow coding standards at http://www.linuxdoc.org.
-
-8.  All tags should be lowercase (needsfix)
-
-9.  Code being submitted for review should use the 
-"review" tag. Documentation on this is available at 
-http://www.linuxdoc.org/LDP/LDP-Author-Guide/tools-hints.html
- under section 4.9.4, "Making notes on the text while it's being written".
-
-10.  Please use sensible spacing.  The comments at the very end of each Guide
- file define reasonable defaults for PSGML mode in EMACS.
-  Double-indent tags, use double spacing whenever possible,
- try to avoid clutter and feel free to waste space in the code to make it more readable.
+*  Other than the GFDL, please use the "section" tag instead of "sect1", "sect2", etc.
+*  Use Entities to include files for new chapters in Bugzilla-Guide.sgml.
+*  Try to use Entities for frequently-used passages of text as well.
+*  Ensure all documents compile cleanly to HTML after modification.
+The warning, "DTDDECL catalog types not supported" is normal.
+*  Try to index important terms wherever possible.
+*  Use "glossterm" whenever you introduce a new term.
+*  Follow coding standards at http://www.linuxdoc.org, and
+check out the KDE guidelines (they are nice, too)
+http://i18n.kde.org/doc/markup.html
+*  All tags should be lowercase (needsfix)
+*  Please use sensible spacing.  The comments at the very end of each
+file define reasonable defaults for PSGML mode in EMACS.
+Double-indent tags, use double spacing whenever possible, and
+try to avoid clutter and feel free to waste space in the code to make it more readable.
 
 -->
 
-<BOOK ID="index">
+<book id="index">
 
 <!-- Header -->
 
-  <BOOKINFO>
-    <TITLE>The Bugzilla Guide</TITLE>
-    <PUBDATE>2001-04-25</PUBDATE>
-    <AUTHOR>
-      <FIRSTNAME>Matthew</FIRSTNAME>
-      <OTHERNAME>P.</OTHERNAME>
-      <SURNAME>Barnson</SURNAME>
-      <affiliation>
-	<address><email>barnboy@trilobyte.net</email></address>
-      </affiliation>
-    </AUTHOR>
-
-    <ABSTRACT>
-      <PARA>This is the documentation for Bugzilla, the Mozilla bug-tracking system.</PARA>
-    </ABSTRACT>
-
-    <REVHISTORY>
-      <REVISION>
-	<REVNUMBER>v2.11</REVNUMBER>
-	<DATE>20 December 2000</DATE>
-	<AUTHORINITIALS>MPB</AUTHORINITIALS>
-	<REVREMARK>Converted the README, FAQ, and DATABASE information into SGML
-	  docbook format.</REVREMARK>
-      </REVISION>
+  <bookinfo>
+    <title>The Bugzilla Guide</title>
+    <pubdate>2001-04-25</pubdate>
+    <revhistory>
+      <revision>
+	<revnumber>v2.11</revnumber>
+	<date>20 December 2000</date>
+	<authorinitials>MPB</authorinitials>
+	<revremark>
+	  Converted the README, FAQ, and DATABASE information into
+	  SGML docbook format.
+	</revremark>
+      </revision>
 
       <revision>
 	<revnumber>2.11.1</revnumber>
 	<date>06 March 2001</date>
 	<authorinitials>MPB</authorinitials>
 	<revremark>
-	  Took way too long to revise this for 2.12 release.
-	  Updated FAQ to use qandaset tags instead of literallayout,
-	  cleaned up administration section, added User Guide section,
-	  miscellaneous FAQ updates and third-party integration information.
-	  From this point on all new tags are lowercase in preparation for the
-	  2.13 release of the Guide in XML format instead of SGML.
+	  Took way too long to revise this for 2.12 release. Updated
+	  FAQ to use qandaset tags instead of literallayout, cleaned
+	  up administration section, added User Guide section,
+	  miscellaneous FAQ updates and third-party integration
+	  information. From this point on all new tags are lowercase
+	  in preparation for the 2.13 release of the Guide in XML
+	  format instead of SGML.
 	</revremark>
       </revision>
-
+      
       <revision>
 	<revnumber>2.12.0</revnumber>
 	<date>24 April 2001</date>
 	<authorinitials>MPB</authorinitials>
 	<revremark>
-	  Things fixed this release: Elaborated on queryhelp interface, added FAQ regarding
-	  moving bugs from one keyword to another, clarified possible problems with the Landfill
-	  tutorial, fixed a boatload of typos and unclear sentence structures.  Incorporated the
-	  README into the UNIX installation section, and changed the README to indicate the deprecated
-	  status.  Things I know need work:  Used "simplelist" a lot, where I should have used
-	  "procedure" to tag things.  Need to lowercase all tags to be XML compliant.
+	  Things fixed this release: Elaborated on queryhelp
+	  interface, added FAQ regarding moving bugs from one keyword
+	  to another, clarified possible problems with the Landfill
+	  tutorial, fixed a boatload of typos and unclear sentence
+	  structures.  Incorporated the README into the UNIX
+	  installation section, and changed the README to indicate the
+	  deprecated status.  Things I know need work:  Used
+	  "simplelist" a lot, where I should have used "procedure" to
+	  tag things.  Need to lowercase all tags to be XML compliant.
 	</revremark>
       </revision>
-    </REVHISTORY>
+      
+      <revision>
+	<revnumber>2.14.0</revnumber>
+	<date>07 August 2001</date>
+	<authorinitials>MPB</authorinitials>
+	<revremark>
+	  Attempted to integrate relevant portions of the UNIX and
+	  Windows installation instructions, moved some data from FAQ
+	  to Install, removed references to README from text, added
+	  Mac OS X install instructions, fixed a bunch
+	  of tpyos (Mark Harig), linked text that referenced other
+	  parts of the Guide, and nuked the old MySQL permissions
+	  section.
+	</revremark>
+      </revision>
+    </revhistory>
+
+    <authorgroup>
+
+      <author>
+	<firstname>Matthew</firstname>
+	<othername>P.</othername>
+	<surname>Barnson</surname>
+	<affiliation>
+	  <address><email>barnboy@NOSPAM.trilobyte.net</email></address>
+	</affiliation>
+      </author>
+
+      <collab>
+	<collabname>Zach Lipton</collabname>
+	<affiliation>
+	  <address><email>zach@NOSPAM.zachlipton.com</email></address>
+	</affiliation>
+      </collab>
+
+      <editor>
+	<firstname>I.</firstname>
+	<surname>Freely</surname>
+	<othername>P.</othername>
+	<affiliation>
+	  <address><email>ipfreely@freely.eye-p.net</email></address>
+	</affiliation>
+      </editor>
+
+    </authorgroup>
+
+    <abstract>
+      <para>
+	This is the documentation for Bugzilla, the Mozilla
+	bug-tracking system.
+      </para>
+      <para>
+	Bugzilla is an enterprise-class set of software utilities
+	that, when used together, power issue-tracking for hundreds of
+	organizations around the world, tracking millions of bugs.
+	While it is easy to use and quite flexible, it is very
+	difficult for a novice to install and maintain.  Although we
+	have provided step-by-step directions, Bugzilla is not always
+	easy to get working.  Please be sure the person responsible
+	for installing and maintaining this software is a qualified
+	professional on operating system upon which you install
+	Bugzilla.
+      </para>
+    </abstract>
+
 
     <KEYWORDSET>
       <KEYWORD>Bugzilla</KEYWORD>
@@ -127,14 +184,14 @@ http://www.linuxdoc.org/LDP/LDP-Author-Guide/tools-hints.html
 <!-- About This Guide -->
 &about;
 
+<!-- Using Bugzilla -->
+&using;
+
 <!-- Installing Bugzilla -->
 &installation;
 
 <!-- Administering Bugzilla -->
 &administration;
-
-<!-- Using Bugzilla -->
-&using;
 
 <!-- Integrating Bugzilla with Third-Party Tools -->
 &integration;
@@ -166,31 +223,26 @@ http://www.linuxdoc.org/LDP/LDP-Author-Guide/tools-hints.html
 <!-- Index -->
 &index;
 
-</BOOK>
+
+</book>
 
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
-sgml-omittag:t
-sgml-shorttag:t
-sgml-namecase-general:t
-sgml-general-insert-case:lower
-sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
-sgml-indent-step:2
-sgml-indent-data:t
-sgml-parent-document:nil
+sgml-auto-insert-required-elements:t
+sgml-balanced-tag-edit:t
 sgml-exposed-tags:nil
+sgml-general-insert-case:lower
+sgml-indent-data:t
+sgml-indent-step:2
 sgml-local-catalogs:nil
 sgml-local-ecat-files:nil
+sgml-minimize-attributes:nil
+sgml-namecase-general:t
+sgml-omittag:t
+sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-shorttag:t
+sgml-tag-region-if-active:t
 End:
 -->
-
-
-
-
-
-
-
-
-

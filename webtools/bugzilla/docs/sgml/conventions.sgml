@@ -89,23 +89,28 @@
   </informaltable>
   
 </section>
+
+
+
+
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
-sgml-omittag:t
-sgml-shorttag:t
-sgml-namecase-general:t
-sgml-general-insert-case:upper
-sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
-sgml-indent-step:2
-sgml-indent-data:t
-sgml-parent-document:nil
+sgml-auto-insert-required-elements:t
+sgml-balanced-tag-edit:t
 sgml-exposed-tags:nil
+sgml-general-insert-case:lower
+sgml-indent-data:t
+sgml-indent-step:2
 sgml-local-catalogs:nil
 sgml-local-ecat-files:nil
+sgml-minimize-attributes:nil
+sgml-namecase-general:t
+sgml-omittag:t
+sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-shorttag:t
+sgml-tag-region-if-active:t
 End:
 -->
-
-
-

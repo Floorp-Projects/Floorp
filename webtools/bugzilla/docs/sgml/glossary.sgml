@@ -1,108 +1,177 @@
 <!-- <!DOCTYPE glossary PUBLIC "-//OASIS//DTD DocBook V4.1//EN" > -->
 
-<glossary id="glossary">
-
-  <glossdiv id="gloss_a">
-    <title>A</title>
-    <glossentry>
-      <glossterm>There are no entries for A</glossterm>
-      <glossdef>
-	<para></para>
-      </glossdef>
-    </glossentry>
-  </glossdiv>
-
-  <glossdiv id="gloss_b">
-    <title>B</title>
-    <glossentry>
-      <glossterm>Bug</glossterm>
-      <glossdef>
-	<para>A "Bug" in Bugzilla refers to an issue entered into the database which has an associated number, assignments, comments, etc.  Many also refer to a "Ticket" or "Issue"; in this context, they are synonymous.</para>
-      </glossdef>
-    </glossentry>
-
-    <glossentry>
-      <glossterm>Bug Number</glossterm>
-      <glossdef>
-	<para>Each Bugzilla Bug is assigned a number that uniquely identifies that Bug.  The Bug associated with a Bug Number can be pulled up via a query, or easily from the very front page by typing the number in the "Find" box.</para>
-      </glossdef>
-    </glossentry>
-
-    <glossentry>
-      <glossterm>Bug Life Cycle</glossterm>
-      <glossdef>
-      <para>A Bug has stages through which it must pass before becoming a "closed bug", including acceptance, resolution, and verification.  The "Bug Life Cycle" is moderately flexible according to the needs of the organization using it, though.</para>
-      </glossdef>
-    </glossentry>
-  </glossdiv>
-
-  <glossdiv id="gloss_i">
-    <title>I</title>
-    <glossentry id="gloss_infiniteloop">
-      <glossterm>Infinite Loop</glossterm>
-      <glosssee otherterm="gloss_recursion">
-    </glossentry>
-  </glossdiv>
-
-<glossdiv id="gloss_p">
-    <title>P</title>
-    <glossentry>
-      <glossterm id="gloss_product">Product</glossterm>
-      <glossdef>
-	<para>A Product is a broad category of types of bugs.  In general, there are several Components to a Product.  A Product also defines a default Group (used for Bug Security) for all bugs entered into components beneath it.</para>
-	<example>
-	  <title>A Sample Product</title>
-	  <para>A company sells a software product called "X".  They also maintain some older software called "Y", and have a secret project "Z".  An effective use of Products might be to create Products "X", "Y", and "Z", each with Components "User Interface", "Database", and "Business Logic".  They might also change group permissions so that only those people who are members of Group "Z" can see components and bugs under Product "Z".</para>
-	</example>
-      </glossdef>
-    </glossentry>
-  </glossdiv>
-
-  <glossdiv id="gloss_q">
-    <title>Q</title>
-    <glossentry>
-      <glossterm>Q/A</glossterm>
-      <glossdef>
-	<para>"Q/A" is short for "Quality Assurance".  In most large software development organizations, there is a team devoted to ensuring the product meets minimum standards before shipping.  This team will also generally want to track the progress of bugs over their life cycle, thus the need for the "Q/A Contact" field in a Bug.</para>
-      </glossdef>
-    </glossentry>
-  </glossdiv>
-
-<glossdiv id="gloss_r">
-    <title>R</title>
-    <glossentry>
-      <glossterm id="gloss_recursion">Recursion</glossterm>
-      <glosssee otherterm="gloss_infiniteloop">
-    </glossentry>
-  </glossdiv>
-
-<glossdiv id="gloss_z">
-    <title>Z</title>
-    <glossentry>
-      <glossterm>Zarro Boogs Found</glossterm>
-      <glossdef>
-	<para>This is the cryptic response sent by Bugzilla when a query returned no results.  It is just a goofy way of saying "Zero Bugs Found".</para>
-      </glossdef>
-    </glossentry>
-</glossdiv>
-
-</glossary>
-
-
+  <glossary id="glossary">
+    <glossdiv>
+      <title>0-9, high ascii</title>
+      <glossentry>
+	<glossterm>.htaccess</glossterm>
+	<glossdef>
+	  <para>
+	    Apache web server, and other NCSA-compliant web servers,
+	    observe the convention of using files in directories
+	    called <filename>.htaccess</filename> files.  These
+	    restrict parameters of the web server.  In Bugzilla, they
+	    are used to restrict access to certain files which would
+	    otherwise compromise your installation.  For instance, the
+	    <filename>localconfig</filename> file contains the
+	    password to your database.  If this information were
+	    generally available, and remote access to your database
+	    turned on, you risk corruption of your database by
+	    computer criminals or the curious.
+	  </para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+    
+    <glossdiv id="gloss_a">
+      <title>A</title>
+      <glossentry>
+	<glossterm>There are no entries for A</glossterm>
+	<glossdef>
+	  <para></para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+    
+    <glossdiv id="gloss_b">
+      <title>B</title>
+      <glossentry>
+	<glossterm>Bug</glossterm>
+	<glossdef>
+	<para>
+	    A <quote>Bug</quote> in Bugzilla refers to an issue
+	    entered into the database which has an associated number,
+	    assignments, comments, etc. Some also refer to a
+	    <quote>tickets</quote> or <quote>issues</quote>; in the
+	    context of Bugzilla, they are synonymous.
+	  </para>
+	</glossdef>
+      </glossentry>
+      
+      <glossentry>
+	<glossterm>Bug Number</glossterm>
+	<glossdef>
+	  <para>
+	    Each Bugzilla Bug is assigned a number that uniquely
+	    identifies that Bug.  The Bug associated with a Bug Number
+	    can be pulled up via a query, or easily from the very
+	    front page by typing the number in the "Find" box.
+	  </para>
+	</glossdef>
+      </glossentry>
+      
+      <glossentry>
+	<glossterm>Bug Life Cycle</glossterm>
+	<glossdef>
+	  <para>A Bug has stages through which it must pass before
+	    becoming a <quote>closed bug</quote>, including
+	    acceptance, resolution, and verification.  The <quote>Bug
+	      Life Cycle</quote> is moderately flexible according to
+	    the needs of the organization using it, though.</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+    
+    <glossdiv id="gloss_i">
+      <title>I</title>
+      <glossentry id="gloss_infiniteloop">
+	<glossterm>Infinite Loop</glossterm>
+	<glossdef>
+	  <para>A loop of information that never ends; see recursion.</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+    
+    <glossdiv id="gloss_p">
+      <title>P</title>
+      <glossentry>
+	<glossterm id="gloss_product">Product</glossterm>
+	<glossdef>
+	  <para>A Product is a broad category of types of bugs.  In
+	    general, there are several Components to a Product.  A
+	    Product also defines a default Group (used for Bug
+	    Security) for all bugs entered into components beneath
+	    it.</para>
+	  <example>
+	    <title>A Sample Product</title>
+	    <para>A company sells a software product called
+	      <quote>X</quote>.  They also maintain some older
+	      software called <quote>Y</quote>, and have a secret
+	      project <quote>Z</quote>.  An effective use of Products
+	      might be to create Products <quote>X</quote>,
+	      <quote>Y</quote>, <quote>Z</quote>, each with Components
+	      of User Interface, Database, and Business Logic.  They
+	      might also change group permissions so that only those
+	      people who are members of Group <quote>Z</quote> can see
+	      components and bugs under Product
+	      <quote>Z</quote>.</para>
+	  </example>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+    
+    <glossdiv id="gloss_q">
+      <title>Q</title>
+      <glossentry>
+	<glossterm>QA</glossterm>
+	<glossdef>
+	  <para><quote>QA</quote>, <quote>Q/A</quote>, and
+	    <quote>Q.A.</quote> are short for <quote>Quality
+	      Assurance</quote>.  In most large software development
+	    organizations, there is a team devoted to ensuring the
+	    product meets minimum standards before shipping.  This
+	    team will also generally want to track the progress of
+	    bugs over their life cycle, thus the need for the
+	    <quote>QA Contact</quote> field in a Bug.</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+    
+    <glossdiv id="gloss_r">
+      <title>R</title>
+      <glossentry>
+	<glossterm id="gloss_recursion">Recursion</glossterm>
+	<glossdef>
+	  <para>The property of a function looking back at itself for
+	    something.  <quote>GNU</quote>, for instance, stands for
+	    <quote>GNU's Not UNIX</quote>, thus recursing upon itself
+	    for definition.  For further clarity, see Infinite
+	    Loop.</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+    
+    <glossdiv id="gloss_z">
+      <title>Z</title>
+      <glossentry>
+	<glossterm>Zarro Boogs Found</glossterm>
+	<glossdef>
+	  <para>This is the cryptic response sent by Bugzilla when a
+	    query returned no results.  It is just a goofy way of
+	    saying "Zero Bugs Found".</para>
+	</glossdef>
+      </glossentry>
+    </glossdiv>
+    
+  </glossary>
+  
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
-sgml-omittag:t
-sgml-shorttag:t
-sgml-namecase-general:t
-sgml-general-insert-case:lower
-sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
-sgml-indent-step:2
-sgml-indent-data:t
-sgml-parent-document:nil
+sgml-auto-insert-required-elements:t
+sgml-balanced-tag-edit:t
 sgml-exposed-tags:nil
+sgml-general-insert-case:lower
+sgml-indent-data:t
+sgml-indent-step:2
 sgml-local-catalogs:nil
 sgml-local-ecat-files:nil
+sgml-minimize-attributes:nil
+sgml-namecase-general:t
+sgml-omittag:t
+sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-shorttag:t
+sgml-tag-region-if-active:t
 End:
 -->

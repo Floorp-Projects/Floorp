@@ -1,4 +1,4 @@
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" >
+<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" > -->
 
 <!-- Keep these tools listings in alphabetical order please. -MPB -->
 
@@ -12,14 +12,13 @@
 
   <section id="cvs">
     <title>CVS</title>
-    <para>We need CVS integration information</para>
+    <para>CVS integration is best accomplished, at this point, using the Bugzilla Email Gateway.</para>
   </section>
 
   <section id="scm">
     <title>Perforce SCM</title>
     <para>
-      Richard Brooksby created a Perforce integration tool for Bugzilla and TeamTrack.
-      You can find the main project page at
+      You can find the project page for Bugzilla and Teamtrack Perforce integration at:
       <ulink url="http://www.ravenbrook.com/project/p4dti/">
 	http://www.ravenbrook.com/project/p4dti</ulink>.  "p4dti" is now an officially
       supported product from Perforce, and you can find the "Perforce Public Depot"
@@ -54,22 +53,25 @@
 </chapter>
 
 
+
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
-sgml-omittag:t
-sgml-shorttag:t
-sgml-namecase-general:t
-sgml-general-insert-case:lower
-sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
-sgml-indent-step:2
-sgml-indent-data:t
-sgml-parent-document:nil
+sgml-auto-insert-required-elements:t
+sgml-balanced-tag-edit:t
 sgml-exposed-tags:nil
+sgml-general-insert-case:lower
+sgml-indent-data:t
+sgml-indent-step:2
 sgml-local-catalogs:nil
 sgml-local-ecat-files:nil
+sgml-minimize-attributes:nil
+sgml-namecase-general:t
+sgml-omittag:t
+sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-shorttag:t
+sgml-tag-region-if-active:t
 End:
 -->
-
-

@@ -1,4 +1,4 @@
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
 
 <!-- TOC
 Chapter: Using Bugzilla
@@ -38,19 +38,19 @@ Chapter: Using Bugzilla
   <section id="whatis">
     <title>What is Bugzilla?</title>
     <para>
-      Bugzilla is one example of a class of programs called "Defect Tracking Systems",
-      or, more commonly, "Bug-Tracking Systems".  Defect Tracking Systems allow individual or
-      groups of developers to keep track of outstanding bugs in their product effectively.
-      Bugzilla was originally written by Terry Weissman in a programming language called
-      "TCL", to replace a crappy
-      bug-tracking database used internally for Netscape Communications.  Terry later ported
-      Bugzilla to
-      Perl from TCL, and in Perl it remains to this day.
-      Most commercial defect-tracking software vendors at the
-      time charged enormous licensing fees, and Bugzilla quickly became a favorite of the
-      open-source crowd (with its genesis in the open-source browser project, Mozilla).  It
-      is now the de-facto standard defect-tracking system against which all others are
-      measured.
+      Bugzilla is one example of a class of programs called "Defect
+Tracking Systems", or, more commonly, "Bug-Tracking Systems".  Defect
+Tracking Systems allow individual or groups of developers to keep
+track of outstanding bugs in their product effectively. Bugzilla was
+originally written by Terry Weissman in a programming language called
+"TCL", to replace a crappy bug-tracking database used internally for
+Netscape Communications.  Terry later ported Bugzilla to Perl from
+TCL, and in Perl it remains to this day. Most commercial
+defect-tracking software vendors at the time charged enormous
+licensing fees, and Bugzilla quickly became a favorite of the
+open-source crowd (with its genesis in the open-source browser
+project, Mozilla).  It is now the de-facto standard defect-tracking
+system against which all others are measured.
     </para>
     <para>
       Bugzilla has matured immensely, and now boasts many advanced features.  These include:
@@ -87,13 +87,13 @@ Chapter: Using Bugzilla
 	</listitem>
 	<listitem>
 	  <para>
-	    email, XML, and HTTP APIs
+	    email, XML, console, and HTTP APIs
 	  </para>
 	</listitem>
 	<listitem>
 	  <para>
 	    available integration with automated software configuration management systems, including
-	    Perforce and CVS.
+	    Perforce and CVS
 	  </para>
 	</listitem>
 	<listitem>
@@ -137,7 +137,7 @@ Chapter: Using Bugzilla
       with bug-tracking software, and instead simply relied on shared lists and
       email to monitor the status of defects.  This procedure is error-prone and
       tends to cause those bugs judged least significant by developers to be
-      dropped or ignored
+      dropped or ignored.
     </para>
     <para>
       These days, many companies are finding that integrated defect-tracking
@@ -223,12 +223,12 @@ Chapter: Using Bugzilla
     <section id="myaccount">
       <title>Create a Bugzilla Account</title>
       <para>
-	First thing's first!  If you want to use Bugzilla, first you need to create
+	First things first!  If you want to use Bugzilla, first you need to create
 	an account.  Consult with the administrator responsible for your installation
 	of Bugzilla for the URL you should use to access it.
 	If you're test-driving the end-user Bugzilla experience, use this URL:
-	<ulink url="http://landfill.tequilarista.org/mozilla/bugzilla/">
-	  http://landfill.tequilarista.org/mozilla/bugzilla/</ulink>
+	<ulink url="http://landfill.tequilarista.org/bugzilla-tip/">
+	  http://landfill.tequilarista.org/bugzilla-tip/</ulink>
       </para>
       <orderedlist>
 	<listitem>
@@ -560,15 +560,15 @@ Chapter: Using Bugzilla
 	<orderedlist>
 	  <listitem>
 	    <para>
-	      Go back to <ulink url="http://landfill.tequilarista.org/mozilla/bugzilla/">
-		http://landfill.tequilarista.org/mozilla/bugzilla/</ulink>
+	      Go back to <ulink url="http://landfill.tequilarista.org/bugzilla-tip/">
+		http://landfill.tequilarista.org/bugzilla-tip/</ulink>
 	      in your browser.
 	    </para>
 	  </listitem>
 	  <listitem>
 	    <para>
 	      Select the 
-	      <ulink url="http://landfill.tequilarista.org/mozilla/bugzilla/enter_bug.cgi">
+	      <ulink url="http://landfill.tequilarista.org/bugzilla-tip/enter_bug.cgi">
 		Enter a new bug report</ulink> link.
 	    </para>
 	  </listitem>
@@ -716,7 +716,7 @@ Chapter: Using Bugzilla
       Let's plunge into what you can do!  The first step is to click
       the "Edit prefs" link at the footer of each page once you
       have logged in to
-      <ulink url="http://landfill.tequilarista.org/mozilla/bugzilla/query.cgi?GoAheadAndLogIn=1">
+      <ulink url="http://landfill.tequilarista.org/bugzilla-tip/query.cgi?GoAheadAndLogIn=1">
       Landfill</ulink>.
     </para>
     <section id="accountsettings">
@@ -861,17 +861,20 @@ Chapter: Using Bugzilla
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
-sgml-omittag:t
-sgml-shorttag:t
-sgml-namecase-general:t
-sgml-general-insert-case:lower
-sgml-minimize-attributes:nil
 sgml-always-quote-attributes:t
-sgml-indent-step:2
-sgml-indent-data:t
-sgml-parent-document:Bugzilla-Guide\.sgml
+sgml-auto-insert-required-elements:t
+sgml-balanced-tag-edit:t
 sgml-exposed-tags:nil
+sgml-general-insert-case:lower
+sgml-indent-data:t
+sgml-indent-step:2
 sgml-local-catalogs:nil
 sgml-local-ecat-files:nil
+sgml-minimize-attributes:nil
+sgml-namecase-general:t
+sgml-omittag:t
+sgml-parent-document:("Bugzilla-Guide.sgml" "book" "chapter")
+sgml-shorttag:t
+sgml-tag-region-if-active:t
 End:
 -->
