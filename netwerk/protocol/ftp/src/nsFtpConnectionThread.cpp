@@ -872,7 +872,8 @@ nsFtpState::Process()
           case FTP_R_MDTM:
             mState = R_mdtm();
 
-            if (FTP_ERROR == mState)
+            // Don't want to overwrite a more explicit status code
+            if (FTP_ERROR == mState && NS_SUCCEEDED(mInternalError))
                 mInternalError = NS_ERROR_FAILURE;
             
             break;
