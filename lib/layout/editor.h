@@ -3059,6 +3059,7 @@ public:
     char *m_pBodyExtra;
 #ifdef ENDER
 	char *m_pImportedStream; //dont forget to XP_FREE this memory //ENDER
+	char *m_pImportedHTMLStream; //dont forget to XP_FREE this memory //ENDER
 #endif //ENDER
     CEditImageLoader *m_pLoadingImage;
     CFileSaveObject *m_pSaveObject;

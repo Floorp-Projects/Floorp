@@ -1526,6 +1526,7 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_pBodyExtra(0),
 #ifdef ENDER
 		m_pImportedStream(0), //ENDER
+		m_pImportedHTMLStream(0), //ENDER
 #endif //ENDER
         m_pLoadingImage(0),
         m_pSaveObject(0),
@@ -10216,7 +10217,22 @@ void CEditBuffer::FinishedLoad2()
 
     m_pCreationCursor = NULL;
 
-	// protect empty SOME empty lines! //i.e. list items with nothing in their containers
+#ifdef ENDER
+    XP_Bool isEmbedded = FALSE;
+    if (m_pImportedHTMLStream && XP_STRLEN(m_pImportedHTMLStream))//ENDER
+	{
+        char *t_ptr=m_pImportedHTMLStream;
+        m_pImportedHTMLStream = NULL;
+        if (m_pImportedStream)
+        {
+	    	XP_FREE(m_pImportedStream);
+    		m_pImportedStream=NULL;
+        }
+		ReadFromBuffer(t_ptr);
+        return;
+	}
+#endif //ENDER
+    // protect empty SOME empty lines! //i.e. list items with nothing in their containers
 	Protect( m_pRoot );
     // Get rid of empty items.
     Reduce( m_pRoot );
@@ -10276,8 +10292,7 @@ void CEditBuffer::FinishedLoad2()
                                     && !GetCommandLog()->InReload();
 
 #if ENDER
-    XP_Bool isEmbedded = FALSE;
-	if (m_pImportedStream)//ENDER
+	if (m_pImportedStream && (!m_pImportedHTMLStream || !XP_STRLEN(m_pImportedHTMLStream)) )//ENDER
 	{
         isEmbedded = TRUE;
 		PasteText( m_pImportedStream, FALSE, FALSE, TRUE ,TRUE);

@@ -1809,6 +1809,21 @@ EDT_ClipboardResult EDT_SetDefaultText(  MWContext *pContext, char *pText ) {
 	}
 	return EDT_COP_DOCUMENT_BUSY;
 }
+
+EDT_ClipboardResult EDT_SetDefaultHTML(  MWContext *pContext, char *pHTML ) {
+	CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );
+	if (pEditBuffer && pHTML)
+	{
+		if (!CEditBuffer::IsAlive(pEditBuffer) || !pEditBuffer->IsReady() || !pEditBuffer->IsWritable() )
+		{ //set up the default data for finishedload2
+			pEditBuffer->m_pImportedHTMLStream=XP_STRDUP(pHTML);
+			return EDT_COP_OK;
+		}
+		else
+			return EDT_PasteHTML(pContext,pHTML,ED_PASTE_NORMAL);
+	}
+	return EDT_COP_DOCUMENT_BUSY;
+}
 #endif //ENDER
 
 EDT_ClipboardResult EDT_PasteQuoteBegin( MWContext *pContext, XP_Bool bHTML ) {
