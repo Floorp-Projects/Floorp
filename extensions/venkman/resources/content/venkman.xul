@@ -47,7 +47,8 @@
 
 <window id="venkman-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="console.onLoad();" onunload="return console.onUnload();"
+  onload="console.onLoad();" onclose="return console.onClose();"
+  onunload="return console.onUnload();"
   width="640" height="480"
   persist="width height screenX screenY" title="&MainWindow.title;"
   windowtype="mozapp:venkman">

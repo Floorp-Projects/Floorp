@@ -82,6 +82,31 @@ function con_load (e)
     }
 }
 
+console.onClose =
+function con_onclose (e)
+{
+    if (typeof console == "object" && "frames" in console)
+    {
+        if (confirm(MSG_QUERY_CLOSE))
+        {
+            console.__exitAfterContinue__ = true;
+            dispatch ("cont");
+        }
+        return false;
+    }
+
+    return true;
+}
+
+console.onUnload =
+function con_unload (e)
+{
+    dd ("Application venkman, 'JavaScript Debugger' unloading.");
+
+    destroy();
+    return true;
+}
+
 console.onFrameChanged =
 function con_fchanged (currentFrame, currentFrameIndex)
 {
@@ -452,15 +477,6 @@ function con_tabcomplete (e)
                 
     }
 
-}
-
-console.onUnload =
-function con_unload (e)
-{
-    dd ("Application venkman, 'JavaScript Debugger' unloading.");
-
-    destroy();
-    return true;
 }
 
 window.onresize =

@@ -140,4 +140,23 @@ var observer = {
     onFoo: function (){}
 }
 
+function switchTest ()
+{
+    var x = 1;
     
+    switch (x)
+    {
+        case 1:
+            ++x;
+            break;
+            
+        case 2:
+            --x;
+            break;
+            
+        default:
+            x += 3;
+            break;
+    }
+}
+

@@ -189,7 +189,8 @@ function getCommandContext (id, cx)
         cx.commandManager = console.commandManager;
         if (!("contextSource" in cx))
             cx.contextSource = id;
-        //dd ("context '" + id + "'\n" + dumpObjectTree(cx));
+        if (console.dbgContexts)
+            dd ("context '" + id + "'\n" + dumpObjectTree(cx));
     }
 
     return cx;
@@ -292,13 +293,24 @@ function cmdChromeFilter (e)
                 {
                     /* filter is on, remove chrome file from scripts view */
                     if ("parentRecord" in rec)
+                    {
+                        //dd ("remove index " + rec.childIndex + ", " +
+                        //    rec.fileName);
                         scriptList.removeChildAtIndex(rec.childIndex);
+                    }
+                    else
+                        dd ("record already seems to out of the tree");
                 }
                 else
                 {
                     /* filter is off, add chrome file to scripts view */
                     if (!("parentRecord" in rec))
+                    {
+                        //dd ("append " + rec.fileName);
                         scriptList.appendChild(rec);
+                    }
+                    else
+                        dd ("record already seems to be in the tree");
                 }
             }
         }
@@ -315,10 +327,24 @@ function cmdChromeFilter (e)
 
 function cmdClear (e)
 {
+    if ("breakpointIndexList" in e && e.breakpointIndexList.length > 0)
+    {
+        var ev = new Object();
+        if ("isInteractive" in e)
+            ev.isInteractive = true;
+        e.breakpointIndexList.sort();
+        for (var i = e.breakpointIndexList.length - 1; i >= 0 ; --i)
+        {
+            ev.breakpointIndex = e.breakpointIndexList[i];
+            cmdClear(ev);
+        }
+        return;
+    }
+            
     var bpr = clearBreakpointByNumber (e.breakpointIndex);
     if (bpr)
-        feedback (getMsg(MSN_BP_CLEARED, [bpr.fileName, bpr.line,
-                                          bpr.scriptMatches]));
+        feedback (e, getMsg(MSN_BP_CLEARED, [bpr.fileName, bpr.line,
+                                             bpr.scriptMatches]));
 }
 
 function cmdClearAll(e)
@@ -504,15 +530,15 @@ function cmdFinish (e)
 
 function cmdFindBp (e)
 {
-    var scriptRec = console.scripts[e.breakpointRec.fileName];
-    if (!scriptRec)
+    var containerRec = console.scripts[e.breakpointRec.fileName];
+    if (!containerRec)
     {
         dd ("breakpoint in unknown source");
         return false;
     }
 
     var sourceView = console.sourceView;
-    cmdFindURL ({url: scriptRec.script.fileName,
+    cmdFindURL ({url: containerRec.fileName,
                   rangeStart: e.breakpointRec.line,
                   rangeEnd: e.breakpointRec.line});
     return true;

@@ -152,7 +152,17 @@ function dispatch (text, e, flags)
             
         case 1:
             /* one match, good for you */
-            return dispatchCommand(ary[0], e, flags);
+            var rv;
+            var ex;
+            try
+            {
+                rv = dispatchCommand(ary[0], e, flags);
+            }
+            catch (ex)
+            {
+                display (getMsg(MSN_ERR_INTERNAL_DISPATCH, ary[0]), MT_ERROR);
+                display (formatException(ex), MT_ERROR);
+            }
             break;
             
         default:
@@ -201,9 +211,24 @@ function dispatchCommand (command, e, flags)
         if (e.command.usage)
             console.commandManager.parseArguments (e);
         if ("parseError" in e)
+        {
             displayUsageError (e, e.parseError);
+        }
         else
-            e.returnValue = e.command.func(e);
+        {
+            if ("dbgDispatch" in console)
+            {
+                dd ("dispatching command ``" +
+                    dumpObjectTree(e.command.name) + "''\n");
+                e.returnValue = e.command.func(e);
+                console.lastEvent = e;
+            }
+            else
+            {
+                e.returnValue = e.command.func(e);
+            }
+
+        }
         return e;
     }
     

@@ -39,15 +39,22 @@ function initDev()
         [["dumpcontexts",  cmdDumpContexts,  CMD_CONSOLE | CMD_NO_HELP],
          ["dumpfilters",   cmdDumpFilters,   CMD_CONSOLE | CMD_NO_HELP],
          ["reloadui",      cmdReloadUI,      CMD_CONSOLE | CMD_NO_HELP],
+         ["sync-debug",    cmdSyncDebug,     CMD_CONSOLE | CMD_NO_HELP],
          ["testargs",      cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
          ["testargs1",     cmdTestArgs,      CMD_CONSOLE | CMD_NO_HELP],
          ["testfilters",   cmdTestFilters,   CMD_CONSOLE | CMD_NO_HELP],
          ["treetest",      cmdTreeTest,      CMD_CONSOLE | CMD_NO_HELP],
 
          ["multialias",    "help pref; help props", CMD_CONSOLE | CMD_NO_HELP]];
+         
     
     defineVenkmanCommands (cmdary);
 
+    console.addPref ("dbgContexts", false);
+    console.addPref ("dbgDispatch", false);
+    console.addPref ("dbgRealize", false);
+    dispatch ("sync-debug");
+    
     return "Venkman development functions loaded OK.";
 }
 
@@ -106,6 +113,24 @@ function cmdReloadUI()
     bs.flushBundles();
     window.location.href = window.location.href;
 }    
+
+function cmdSyncDebug()
+{
+    if (console.prefs["dbgContexts"])
+        console.dbgContexts = true;
+    else
+        delete console.dbgContexts;
+
+    if (console.prefs["dbgDispatch"])
+        console.dbgDispatch = true;
+    else
+        delete console.dbgDispatch;
+
+    if (console.prefs["dbgRealize"])
+        console.dbgRealize = true;
+    else
+        delete console.dbgRealize;
+}
 
 function cmdTestArgs (e)
 {

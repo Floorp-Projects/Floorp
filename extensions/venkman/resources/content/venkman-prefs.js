@@ -68,34 +68,41 @@ function initPrefs()
 console.addPref =
 function con_addpref (prefName, defaultValue)
 {
+    var realValue;
+    
     function prefGetter ()
     {
-        var type = this.prefBranch.getPrefType (prefName);
-        try
-        {    
-            switch (type)
-            {
-                case nsIPrefBranch.PREF_STRING:
-                    return this.prefBranch.getCharPref (prefName);
-                    
-                case nsIPrefBranch.PREF_INT:
-                    return this.prefBranch.getIntPref (prefName);
-                
-                case nsIPrefBranch.PREF_BOOL:
-                    return this.prefBranch.getBoolPref (prefName);
-                
-                default:
-                    return defaultValue;
-            }
-        
-            return null;
-        }
-        catch (ex)
+        if (typeof realValue == "undefined")
         {
-            dd ("caught exception reading pref ``" + prefName + "'' " + type +
-                "\n" + ex);
-            return defaultValue;
+            var type = this.prefBranch.getPrefType (prefName);
+            try
+            {
+                switch (type)
+                {
+                    case nsIPrefBranch.PREF_STRING:
+                        realValue = this.prefBranch.getCharPref (prefName);
+                        break;
+                        
+                    case nsIPrefBranch.PREF_INT:
+                        realValue = this.prefBranch.getIntPref (prefName);
+                        break;
+                        
+                    case nsIPrefBranch.PREF_BOOL:
+                        realValue = this.prefBranch.getBoolPref (prefName);
+                        break;
+                        
+                    default:
+                        realValue = defaultValue;
+                }
+            }
+            catch (ex)
+            {
+                dd ("caught exception reading pref ``" + prefName + "'' " +
+                    type + "\n" + ex);
+                realValue = defaultValue;
+            }
         }
+        return realValue;
     }
     
     function prefSetter (value)
@@ -105,14 +112,17 @@ function con_addpref (prefName, defaultValue)
             switch (typeof value)
             {
                 case "int":
+                    realValue = value;
                     this.prefBranch.setIntPref (prefName, value);
                     break;
                     
                 case "boolean":
+                    realValue = value;
                     this.prefBranch.setBoolPref (prefName, value);
                     break;
                     
                 default:
+                    realValue = value;
                     this.prefBranch.setCharPref (prefName, value);
                     break;       
             }

@@ -1442,18 +1442,30 @@ function pv_getcx(cx)
     
     var rangeCount = this.outliner.selection.getRangeCount();
     if (rangeCount > 0)
+    {
         cx.breakpointRecList = new Array();
+        cx.breakpointIndexList = new Array();
+    }
     
     for (var range = 0; range < rangeCount; ++range)
     {
         var min = new Object();
         var max = new Object();
         this.outliner.selection.getRangeAt(range, min, max);
-        for (var i = min; i < max; ++i)
+        min = min.value;
+        max = max.value;
+        dd ("range " + range + ", " + min + "..." + max);
+        for (var i = min; i <= max; ++i)
         {
             rec = this.childData.locateChildByVisualRow(i);
             if (rec instanceof BPRecord)
+            {
+                dd ("row " + i + " is a bprecord");
                 cx.breakpointRecList.push(rec);
+                cx.breakpointIndexList.push(rec.childIndex);
+            }
+            else
+                dd ("row " + i + " is NOT a bprecord");
         }
     }
 

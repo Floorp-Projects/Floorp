@@ -102,6 +102,9 @@ console._executionHook = {
                                "Execution hook called with no script");
 
                    delete console.frames;
+                   if ("__exitAfterContinue__" in console)
+                       window.close();
+
                    return hookReturn;
                }
 };
@@ -272,6 +275,12 @@ function realizeScript(script)
     }
     
     var scriptRec = new ScriptRecord (script);
+    if ("dbgRealize" in console)
+    {
+        dd ("new scriptrecord: " + formatScript(script) + "\n" + 
+            script.functionSource);
+    }
+    
     container.appendScriptRecord (scriptRec);
     /* check to see if this script contains a breakpoint */
     for (var i = 0; i < console.breakpoints.childData.length; ++i)
@@ -305,6 +314,9 @@ function unrealizeScript(script)
         return;
     }
 
+    if ("dbgRealize" in console)
+        dd ("remove scriptrecord: " + formatScript(script));
+
     var scriptRec = container.locateChildByScript (script);
     if (!scriptRec)
     {
@@ -334,7 +346,7 @@ function unrealizeScript(script)
     }
     
     container.removeChildAtIndex (scriptRec.childIndex);
-    if (container.childData.length == 0)
+    if (container.childData.length == 0 && "parentRecord" in container)
     {
         console.scriptsView.childData.removeChildAtIndex(container.childIndex);
     }

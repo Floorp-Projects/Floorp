@@ -610,6 +610,9 @@ function tovr_appchild (children)
 TreeOViewRecord.prototype.removeChildAtIndex =
 function tovr_remchild (index)
 {
+    if (!ASSERT(this.childData.length, "removing from empty childData"))
+        return;
+    
     for (var i = index + 1; i < this.childData.length; ++i)
         --this.childData[i].childIndex;
     
@@ -1071,6 +1074,7 @@ function tov_thaw ()
         this.childData.onVisualFootprintChanged(this.changeStart,
                                                 this.changeAmount);
     }
+    
     if ("needsResort" in this) {
         this.childData.resort();
         delete this.needsResort;

@@ -105,7 +105,6 @@ const exceptionMsgNames = ["err.notimplemented",
 /* message values for non-parameterized messages */
 const MSG_ERR_NO_STACK     = getMsg("msg.err.nostack");
 const MSG_ERR_DISABLED     = getMsg("msg.err.disabled");
-const MSG_ERR_CANT_CLOSE   = getMsg("msg.err.cant.close");
 const MSG_ERR_INTERNAL_BPT = getMsg("msg.err.internal.bpt");
 
 const MSG_TYPE_BOOLEAN    = getMsg("msg.type.boolean");
@@ -155,6 +154,7 @@ const MSG_VF_HINTED        = getMsg("vf.hinted");
 
 const MSG_HELLO            = getMsg("msg.hello");
 
+const MSG_QUERY_CLOSE      = getMsg("msg.query.close");
 const MSG_STATUS_DEFAULT   = getMsg("msg.status.default");
 
 const MSG_TIP_HELP           = getMsg("msg.tip.help");
@@ -178,6 +178,7 @@ const MSG_DOC_DESCRIPTION  = getMsg("msg.doc.description");
 const MSG_HELP_TITLE       = getMsg("msg.help.title");
 
 /* message names for parameterized messages */
+const MSN_ERR_INTERNAL_DSPATCH = getMsg("msg.err.internal.dispatch");
 const MSN_CHROME_FILTER    = "msg.chrome.filter";
 const MSN_ERR_NO_SCRIPT    = "msg.err.noscript";
 const MSN_IASMODE          = "msg.iasmode";
