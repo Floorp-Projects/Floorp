@@ -144,10 +144,29 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 }
 
 
+LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+	MessageBox(_T("No page setup yet!"), _T("Control Message"), MB_OK);
+	// TODO show the page setup dialog
+	return 0;
+}
+
+
 LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
-	MessageBox(_T("Control doesn't print yet!"), _T("Control Message"), MB_OK);
-	// TODO print the current page
+	// TODO show a print dialog
+
+	// Print the contents
+	if (m_pIWebShell)
+	{
+		nsIContentViewer *pContentViewer = nsnull;
+		m_pIWebShell->GetContentViewer(pContentViewer);
+		if (nsnull != pContentViewer)
+		{
+			pContentViewer->Print();
+			NS_RELEASE(pContentViewer);
+		}
+	}
 	return 0;
 }
 
@@ -186,6 +205,11 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	RECT rcLocation;
 	GetClientRect(&rcLocation);
+	if (IsRectEmpty(&rcLocation))
+	{
+		rcLocation.bottom++;
+		rcLocation.top++;
+	}
 
 	nsresult rv;
 
@@ -241,6 +265,32 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	return S_OK;
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+// IOleObject overrides
+
+
+HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetClientSite(IOleClientSite **ppClientSite)
+{
+	NG_ASSERT(ppClientSite);
+
+	// This fixes a problem in the base class which asserts if the client
+	// site has not been set when this method is called. 
+
+	HRESULT hRes = E_POINTER;
+	if (ppClientSite != NULL)
+	{
+		*ppClientSite = NULL;
+		if (m_spClientSite == NULL)
+		{
+			return S_OK;
+		}
+	}
+
+	return IOleObjectImpl<CMozillaBrowser>::GetClientSite(ppClientSite);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 // IWebBrowser
@@ -1569,7 +1619,7 @@ static OleCommandInfo s_aSupportedCommands[] =
 {
 	{ OLECMDID_PRINT, ID_PRINT, L"Print", L"Print the page" },
 	{ OLECMDID_SAVEAS, 0, L"SaveAs", L"Save the page" },
-	{ OLECMDID_PAGESETUP, 0, L"Page Setup", L"Page Setup" },
+	{ OLECMDID_PAGESETUP, ID_PAGESETUP, L"Page Setup", L"Page Setup" },
 	{ OLECMDID_PROPERTIES, 0, L"Properties", L"Show page properties" },
 	{ OLECMDID_CUT, 0, L"Cut", L"Cut selection" },
 	{ OLECMDID_COPY, 0, L"Copy", L"Copy selection" },

@@ -74,6 +74,7 @@ typedef long int32;
 
 #include "nsGlobalVariables.h"
 #include "nsIWebShell.h"
+#include "nsIContentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
