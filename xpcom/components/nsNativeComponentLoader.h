@@ -51,10 +51,13 @@ class nsNativeComponentLoader : public nsIComponentLoader {
     nsIRegistry::Key mXPCOMKey;
 
  private:
-    nsresult CreateDll(nsIFileSpec *spec, const char *aLocation, nsDll **aDll);
+    nsresult CreateDll(nsIFileSpec *aSpec, const char *aLocation,
+                       PRUint32 modifiedTime, PRUint32 fileSize, nsDll **aDll);
     nsresult SelfRegisterDll(nsDll *dll, const char *registryLocation);
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult GetRegistryDllInfo(const char *aLocation, PRUint32 *lastModifiedTime,
+                                PRUint32 *fileSize);
+    nsresult GetRegistryDllInfo(nsIRegistry::Key key, PRUint32 *lastModifiedTime,
                                 PRUint32 *fileSize);
     nsresult SetRegistryDllInfo(const char *aLocation, PRUint32 lastModifiedTime,
                                 PRUint32 fileSize);
