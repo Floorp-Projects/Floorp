@@ -2809,8 +2809,10 @@ public class Codegen extends Interpreter {
             }
             else {
                 if (op == TokenStream.IN) {
+                    aload(variableObjectLocal);
                     addScriptRuntimeInvoke("in",
-                                  "(Ljava/lang/Object;Ljava/lang/Object;)","Z");
+                                  "(Ljava/lang/Object;Ljava/lang/Object;" +
+                                   "Lorg/mozilla/javascript/Scriptable;)","Z");
                     addByteCode(ByteCode.IFNE, trueGOTO);
                 }
                 else {
