@@ -2670,7 +2670,7 @@ private:
     nsDeque     mStack;
     JSContext*  mSafeJSContext;
 
-    // If if non-null, we own it; same as mSafeJSContext if SetSafeJSContext
+    // If non-null, we own it; same as mSafeJSContext if SetSafeJSContext
     // not called.
     JSContext*  mOwnSafeJSContext;
 };
