@@ -264,13 +264,13 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       case NS_MOUSE_LEFT_BUTTON_UP:
       {
         nsIEventStateManager *stateManager;
-        nsIContent *activeLink;
+        nsLinkEventState linkState;
         if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          stateManager->GetActiveLink(&activeLink);
+          stateManager->GetLinkState(this, linkState);
           NS_RELEASE(stateManager);
         }
 
-        if (activeLink == this) {
+        if (eLinkState_Active == linkState) {
           if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
             nsAutoString target;
             nsIURL* baseURL = nsnull;

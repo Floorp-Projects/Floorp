@@ -702,12 +702,14 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                     matchCount++;
                   }
                   break;
-                case eLinkState_Active:
+                //This case have been moved from nsILinkHandler to to nsIEventStateManager.
+                //Code needs to be adjusted to get this state item from new location.
+                /*case eLinkState_Active:
                   if (nsnull != mActiveRule) {
                     aResults->AppendElement(mActiveRule);
                     matchCount++;
                   }
-                  break;
+                  break;*/
               }
             }
           }

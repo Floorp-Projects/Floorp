@@ -1062,12 +1062,14 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                 case eLinkState_OutOfDate:
                   result = PRBool (pseudo == nsCSSAtoms::outOfDatePseudo);
                   break;
-                case eLinkState_Active:
+                //These cases have been moved from nsILinkHandler to to nsIEventStateManager.
+                //Code needs to be adjusted to get these state items from their new location.
+                /*case eLinkState_Active:
                   result = PRBool (pseudo == nsCSSAtoms::activePseudo);
                   break;
                 case eLinkState_Hover:
                   result = PRBool (pseudo == nsCSSAtoms::hoverPseudo);
-                  break;
+                  break;*/
               }
             }
           }
