@@ -859,6 +859,20 @@ NS_IMETHODIMP nsRegistry::GetValueLength( nsRegistryKey baseKey, const char *pat
     return rv;
 }
 
+/*-------------------------- nsRegistry::DeleteValue ---------------------------
+| Remove the registry value with the specified name                            |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::DeleteValue( nsRegistryKey baseKey, const char *path)
+{
+    REGERR err = REGERR_OK;
+    // Delete the value
+    PR_Lock(mregLock);
+    err = NR_RegDeleteEntry( mReg,(RKEY)baseKey,(char*)path );
+    PR_Unlock(mregLock);
+    // Convert result.
+    return regerr2nsresult( err );
+}
+
 /*------------------------ nsRegistry::EnumerateValues -------------------------
 | Allocates and returns an instance of nsRegValueEnumerator constructed in     |
 | a similar fashion as the nsRegSubtreeEnumerator is allocated/returned by     |
@@ -1169,7 +1183,7 @@ nsRegistryValue::nsRegistryValue( HREG hReg, RKEY key, REGENUM slot )
 #ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
 #endif
-    return;
+    mInfo.size = sizeof(REGINFO);
 }
 
 nsRegistryValue::~nsRegistryValue()

@@ -61,6 +61,7 @@ interface nsIRegistry : nsISupports
     
     unsigned long getValueType(in nsRegistryKey baseKey, in string path);
     PRUint32 getValueLength(in nsRegistryKey baseKey, in string path);
+    void deleteValue(in nsRegistryKey baseKey, in string path);
 
     attribute string currentUserName;
 
