@@ -53,7 +53,8 @@
                  prefattribute="value"/>
       <spring flex="1"/>
     </box>
-  </box>
+  </vbox>
+  <spring class="smallspacer"/>
   <titledbox orient="vertical" autostretch="never">
     <label value="&pageColorHeader;"/> 
     <radiogroup id="useCustomColors" orient="vertical" autostretch="never"  
@@ -146,7 +147,7 @@
         <spring flex="1"/>
         <text class="label larger" id="VisitedLinkText" value="&visitedLinkText.label;"/>
         <spring flex="1"/>
-      </box>
+      </vbox>
       <spring flex="1"/>
     </box>
     <spring class="spacer"/>
