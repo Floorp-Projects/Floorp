@@ -187,7 +187,7 @@ const nsString& nsCParserNode::GetName() const {
  *  @return  string ref of text from internal token
  */
 const nsAReadableString& nsCParserNode::GetText() const {
-  return (mToken) ? mToken->GetStringValue() : GetEmptyString();
+  return (mToken) ? mToken->GetStringValue() : NS_STATIC_CAST(const nsAReadableString&,GetEmptyString());
 }
 
 /**
