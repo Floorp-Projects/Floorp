@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,34 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXFormsElement.h"
-#include "nsMemory.h"
+#include "nsISupports.idl"
 
-nsresult
-nsXFormsElement::CloneScriptingInterfaces(const nsIID *aIIDList,
-                                          unsigned int aIIDCount,
-                                          PRUint32 *aOutCount,
-                                          nsIID ***aOutArray)
+/**
+ * Private interface implemented by the instance element.
+ */
+
+interface nsIDOMDocument;
+
+[uuid(8c9dd10d-4189-4a7b-a2eb-fd695cf33b27)]
+interface nsIInstanceElementPrivate : nsISupports
 {
-  nsIID **iids = NS_STATIC_CAST(nsIID**,
-                                nsMemory::Alloc(aIIDCount * sizeof(nsIID*)));
-  if (!iids) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
- 
-  for (PRUint32 i = 0; i < aIIDCount; ++i) {
-    iids[i] = NS_STATIC_CAST(nsIID*,
-                             nsMemory::Clone(&aIIDList[i], sizeof(nsIID)));
- 
-    if (!iids[i]) {
-      for (PRUint32 j = 0; j < i; ++j)
-        nsMemory::Free(iids[j]);
-      nsMemory::Free(iids);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
- 
-  *aOutArray = iids;
-  *aOutCount = aIIDCount;
-  return NS_OK;
-}
+  /**
+   * The document which holds the live instance data.
+   */
+  attribute nsIDOMDocument document;
+};

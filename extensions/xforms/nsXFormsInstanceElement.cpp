@@ -46,6 +46,8 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMDOMImplementation.h"
+#include "nsIXTFGenericElementWrapper.h"
+#include "nsXFormsUtils.h"
 
 static const nsIID sScriptingIIDs[] = {
   NS_IDOMELEMENT_IID,
@@ -59,11 +61,16 @@ NS_IMPL_RELEASE(nsXFormsInstanceElement)
 NS_INTERFACE_MAP_BEGIN(nsXFormsInstanceElement)
   NS_INTERFACE_MAP_ENTRY(nsIXTFGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIXTFElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFPrivate)
+  NS_INTERFACE_MAP_ENTRY(nsIInstanceElementPrivate)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXTFGenericElement)
 NS_INTERFACE_MAP_END
+
+nsXFormsInstanceElement::nsXFormsInstanceElement()
+  : mElement(nsnull)
+{
+}
 
 NS_IMETHODIMP
 nsXFormsInstanceElement::OnDestroyed()
@@ -93,9 +100,9 @@ NS_IMETHODIMP
 nsXFormsInstanceElement::GetScriptingInterfaces(PRUint32 *aCount,
                                                 nsIID ***aArray)
 {
-  return CloneScriptingInterfaces(sScriptingIIDs,
-                                  NS_ARRAY_LENGTH(sScriptingIIDs),
-                                  aCount, aArray);
+  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
+                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
+                                                 aCount, aArray);
 }
 
 NS_IMETHODIMP
@@ -206,12 +213,8 @@ nsXFormsInstanceElement::DoneAddingChildren()
   // and have all of our child elements, so this is our first opportunity
   // to create the instance document.
 
-  nsCOMPtr<nsIDOMElement> element;
-  mWrapper->GetElementNode(getter_AddRefs(element));
-  NS_ASSERTION(element, "no wrapper element");
-
   nsAutoString src;
-  element->GetAttribute(NS_LITERAL_STRING("src"), src);
+  mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
 
   if (src.IsEmpty()) {
     // If we don't have a linked external instance, use our inline data.
@@ -238,7 +241,16 @@ nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
                                  nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED |
                                  nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
 
-  mWrapper = aWrapper;
+  nsCOMPtr<nsIDOMElement> node;
+  aWrapper->GetElementNode(getter_AddRefs(node));
+
+  // It's ok to keep a weak pointer to mElement.  mElement will have an
+  // owning reference to this object, so as long as we null out mElement in
+  // OnDestroyed, it will always be valid.
+
+  mElement = node;
+  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
+
   return NS_OK;
 }
 
@@ -247,9 +259,9 @@ nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 NS_IMETHODIMP
 nsXFormsInstanceElement::Load(nsIDOMEvent *aEvent)
 {
-  nsXFormsModelElement *model = GetModel();
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   if (model)
-    model->RemovePendingInstance();
+    model->InstanceLoadFinished(PR_TRUE);
 
   return NS_OK;
 }
@@ -269,11 +281,9 @@ nsXFormsInstanceElement::Unload(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsInstanceElement::Abort(nsIDOMEvent *aEvent)
 {
-  nsXFormsModelElement *model = GetModel();
-  if (model) {
-    model->RemovePendingInstance();
-    model->DispatchEvent(eEvent_LinkException);
-  }
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  if (model)
+    model->InstanceLoadFinished(PR_FALSE);
 
   return NS_OK;
 }
@@ -281,11 +291,9 @@ nsXFormsInstanceElement::Abort(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsInstanceElement::Error(nsIDOMEvent *aEvent)
 {
-  nsXFormsModelElement *model = GetModel();
-  if (model) {
-    model->RemovePendingInstance();
-    model->DispatchEvent(eEvent_LinkException);
-  }
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  if (model)
+    model->InstanceLoadFinished(PR_FALSE);
 
   return NS_OK;
 }
@@ -298,17 +306,21 @@ nsXFormsInstanceElement::HandleEvent(nsIDOMEvent *aEvent)
   return NS_OK;
 }
 
-// nsIXTFPrivate
+// nsIInstanceElementPrivate
 
 NS_IMETHODIMP
-nsXFormsInstanceElement::GetInner(nsISupports **aInner)
+nsXFormsInstanceElement::GetDocument(nsIDOMDocument **aDocument)
 {
-  NS_ENSURE_ARG_POINTER(aInner);
-
-  NS_ADDREF(*aInner = NS_STATIC_CAST(nsIXTFGenericElement*, this));
+  NS_IF_ADDREF(*aDocument = mDocument);
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsInstanceElement::SetDocument(nsIDOMDocument *aDocument)
+{
+  mDocument = aDocument;
+  return NS_OK;
+}
 
 // private methods
 
@@ -321,11 +333,8 @@ nsXFormsInstanceElement::CloneInlineInstance()
     return rv; // don't warn, we might just not be in the document yet
 
   // look for our first child element (skip over text nodes, etc.)
-  nsCOMPtr<nsIDOMElement> element;
-  mWrapper->GetElementNode(getter_AddRefs(element));
   nsCOMPtr<nsIDOMNode> child, temp;
-
-  element->GetFirstChild(getter_AddRefs(child));
+  mElement->GetFirstChild(getter_AddRefs(child));
   while (child) {
     PRUint16 nodeType;
     child->GetNodeType(&nodeType);
@@ -363,30 +372,23 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
   nsCOMPtr<nsIDOMXMLDocument> xmlDoc = do_QueryInterface(mDocument);
   NS_ASSERTION(xmlDoc, "we created a document but it's not an XMLDocument?");
 
-  nsCOMPtr<nsIDOMElement> element;
-  mWrapper->GetElementNode(getter_AddRefs(element));
-
   PRBool success;
   xmlDoc->Load(aSrc, &success);
 
-  nsXFormsModelElement *model = GetModel();
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   if (model) {
-    if (success)
-      model->AddPendingInstance();
-    else
-      model->DispatchEvent(eEvent_LinkException);
+    model->InstanceLoadStarted();
+    if (!success) {
+      model->InstanceLoadFinished(PR_FALSE);
+    }
   }
 }
 
 nsresult
 nsXFormsInstanceElement::CreateInstanceDocument()
 {
-  nsCOMPtr<nsIDOMElement> element;
-  mWrapper->GetElementNode(getter_AddRefs(element));
-  NS_ASSERTION(element, "no wrapper element");
-
   nsCOMPtr<nsIDOMDocument> doc;
-  nsresult rv = element->GetOwnerDocument(getter_AddRefs(doc));
+  nsresult rv = mElement->GetOwnerDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!doc) // could be we just aren't inserted yet, so don't warn
@@ -400,30 +402,16 @@ nsXFormsInstanceElement::CreateInstanceDocument()
                                  getter_AddRefs(mDocument));
 }
 
-nsXFormsModelElement*
+already_AddRefed<nsIModelElementPrivate>
 nsXFormsInstanceElement::GetModel()
 {
-  nsCOMPtr<nsIDOMElement> element;
-  mWrapper->GetElementNode(getter_AddRefs(element));
-  NS_ASSERTION(element, "no wrapper element");
-
   nsCOMPtr<nsIDOMNode> parentNode;
-  element->GetParentNode(getter_AddRefs(parentNode));
+  mElement->GetParentNode(getter_AddRefs(parentNode));
 
-  nsCOMPtr<nsIXFormsModelElement> modelElt = do_QueryInterface(parentNode);
-  if (!modelElt)
-    return nsnull;
-
-  nsCOMPtr<nsIXTFPrivate> xtfPriv = do_QueryInterface(modelElt);
-  NS_ENSURE_TRUE(xtfPriv, nsnull);
-
-  nsCOMPtr<nsISupports> modelInner;
-  xtfPriv->GetInner(getter_AddRefs(modelInner));
-  NS_ENSURE_TRUE(modelInner, nsnull);
-
-  nsISupports *isupp = NS_STATIC_CAST(nsISupports*, modelInner.get());
-  return NS_STATIC_CAST(nsXFormsModelElement*,
-                        NS_STATIC_CAST(nsIXFormsModelElement*, isupp));
+  nsIModelElementPrivate *model = nsnull;
+  if (parentNode)
+    CallQueryInterface(parentNode, &model);
+  return model;
 }
 
 nsresult

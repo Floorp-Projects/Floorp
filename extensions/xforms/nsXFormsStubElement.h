@@ -40,10 +40,8 @@
 #define nsXFormsStubElement_h_
 
 #include "nsIXTFGenericElement.h"
-#include "nsXFormsElement.h"
 
-class nsXFormsStubElement : public nsXFormsElement,
-                            public nsIXTFGenericElement
+class nsXFormsStubElement : public nsIXTFGenericElement
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT

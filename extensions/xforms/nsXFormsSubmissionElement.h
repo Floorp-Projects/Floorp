@@ -42,10 +42,9 @@
 #include "nsIXTFGenericElement.h"
 #include "nsIRequestObserver.h"
 #include "nsIInputStream.h"
-#include "nsXFormsElement.h"
 #include "nsCOMPtr.h"
+#include "nsIModelElementPrivate.h"
 
-class nsXFormsModelElement;
 class nsIMultiplexInputStream;
 class nsIDOMElement;
 class nsIChannel;
@@ -55,8 +54,7 @@ class nsString;
 
 class SubmissionAttachmentArray;
 
-class nsXFormsSubmissionElement : public nsXFormsElement,
-                                  public nsIXTFGenericElement,
+class nsXFormsSubmissionElement : public nsIXTFGenericElement,
                                   public nsIRequestObserver
 {
 public:
@@ -69,7 +67,7 @@ public:
     : mElement(nsnull)
   {}
 
-  NS_HIDDEN_(nsXFormsModelElement *) GetModel();
+  NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>) GetModel();
 
   NS_HIDDEN_(nsresult) LoadReplaceInstance(nsIChannel *);
   NS_HIDDEN_(nsresult) LoadReplaceAll(nsIChannel *);

@@ -65,12 +65,16 @@ REQUIRES	= \
 		js \
 		$(NULL)
 
-XPIDLSRCS	= nsIXFormsModelElement.idl
+XPIDLSRCS	= \
+		nsIXFormsModelElement.idl \
+		nsIInstanceElementPrivate.idl \
+		nsIModelElementPrivate.idl \
+		nsIXFormsControl.idl \
+		$(NULL)
 
 CPPSRCS		= \
 		nsXFormsElementFactory.cpp \
-		nsXFormsElement.cpp \
-		nsXFormsControl.cpp \
+		nsXFormsUtils.cpp \
 		nsXFormsModelElement.cpp \
 		nsXFormsInputElement.cpp \
 		nsXFormsSubmissionElement.cpp \

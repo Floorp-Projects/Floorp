@@ -41,6 +41,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3Node.h"
 #include "nsMemory.h"
+#include "nsXFormsUtils.h"
 
 static const nsIID sScriptingIIDs[] = {
   NS_IDOMELEMENT_IID,
@@ -73,9 +74,9 @@ nsXFormsStubElement::GetIsAttributeHandler(PRBool *aIsAttributeHandler)
 NS_IMETHODIMP
 nsXFormsStubElement::GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray)
 {
-  return CloneScriptingInterfaces(sScriptingIIDs,
-                                  NS_ARRAY_LENGTH(sScriptingIIDs),
-                                  aCount, aArray);
+  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
+                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
+                                                 aCount, aArray);
 }
 
 NS_IMETHODIMP

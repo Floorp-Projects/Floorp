@@ -45,14 +45,17 @@
 #include "nsString.h"
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsIDOMDocument.h"
-#include "nsXFormsControl.h"
+#include "nsIXFormsControl.h"
 #include "nsISchema.h"
-#include "nsXFormsModelElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsXFormsAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMFocusListener.h"
+#include "nsXFormsUtils.h"
+#include "nsIModelElementPrivate.h"
+#include "nsIContent.h"
+#include "nsIDOMXPathExpression.h"
 
 static const nsIID sScriptingIIDs[] = {
   NS_IDOMELEMENT_IID,
@@ -60,15 +63,16 @@ static const nsIID sScriptingIIDs[] = {
   NS_IDOM3NODE_IID
 };
 
-class nsXFormsInputElement : public nsXFormsControl,
-                             public nsIXTFXMLVisual,
-                             public nsIDOMFocusListener
+class nsXFormsInputElement : public nsIXTFXMLVisual,
+                             public nsIDOMFocusListener,
+                             public nsIXFormsControl
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFXMLVISUAL
   NS_DECL_NSIXTFVISUAL
   NS_DECL_NSIXTFELEMENT
+  NS_DECL_NSIXFORMSCONTROL
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
@@ -77,11 +81,11 @@ public:
   NS_IMETHOD Focus(nsIDOMEvent *aEvent);
   NS_IMETHOD Blur(nsIDOMEvent *aEvent);
 
-  // nsXFormsControl
-  virtual NS_HIDDEN_(void) Refresh();
+  nsXFormsInputElement() : mElement(nsnull) {}
 
 private:
   nsCOMPtr<nsIDOMHTMLInputElement> mInput;
+  nsIDOMElement *mElement;
 };
 
 NS_IMPL_ADDREF(nsXFormsInputElement)
@@ -92,6 +96,7 @@ NS_INTERFACE_MAP_BEGIN(nsXFormsInputElement)
   NS_INTERFACE_MAP_ENTRY(nsIXTFElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
+  NS_INTERFACE_MAP_ENTRY(nsIXFormsControl)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXTFXMLVisual)
 NS_INTERFACE_MAP_END
 
@@ -101,12 +106,19 @@ NS_IMETHODIMP
 nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET);
-
-  mWrapper = aWrapper;
+                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
+                                nsIXTFElement::NOTIFY_PARENT_CHANGED);
 
   nsCOMPtr<nsIDOMElement> node;
-  mWrapper->GetElementNode(getter_AddRefs(node));
+  aWrapper->GetElementNode(getter_AddRefs(node));
+
+  // It's ok to keep a weak pointer to mElement.  mElement will have an
+  // owning reference to this object, so as long as we null out mElement in
+  // OnDestroyed, it will always be valid.
+
+  mElement = node;
+  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   node->GetOwnerDocument(getter_AddRefs(domDoc));
 
@@ -191,9 +203,9 @@ nsXFormsInputElement::GetIsAttributeHandler(PRBool *aIsHandler)
 NS_IMETHODIMP
 nsXFormsInputElement::GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray)
 {
-  return CloneScriptingInterfaces(sScriptingIIDs,
-                                  NS_ARRAY_LENGTH(sScriptingIIDs),
-                                  aCount, aArray);
+  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
+                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
+                                                 aCount, aArray);
 }
 
 NS_IMETHODIMP
@@ -217,6 +229,9 @@ nsXFormsInputElement::WillChangeParent(nsIDOMElement *aNewParent)
 NS_IMETHODIMP
 nsXFormsInputElement::ParentChanged(nsIDOMElement *aNewParent)
 {
+  // We need to re-evaluate our instance data binding when our parent
+  // changes, since xmlns declarations in effect could have changed.
+  Refresh();
   return NS_OK;
 }
 
@@ -261,7 +276,9 @@ nsXFormsInputElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
 {
   if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
     nsCOMPtr<nsIDOMElement> bindElement;
-    nsXFormsModelElement *model = GetModelAndBind(getter_AddRefs(bindElement));
+    nsCOMPtr<nsIModelElementPrivate> model;
+
+    model = do_QueryInterface(nsXFormsUtils::GetModelAndBind(mElement, getter_AddRefs(bindElement)));
     if (model)
       model->RemoveFormControl(this);
   }
@@ -324,11 +341,13 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
   if (!mInput)
     return NS_OK;
 
-  nsRefPtr<nsXFormsModelElement> model;
+  nsCOMPtr<nsIDOMNode> modelNode;
   nsCOMPtr<nsIDOMElement> bindElement;
   nsCOMPtr<nsIDOMXPathResult> result =
-    EvaluateBinding(nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                    getter_AddRefs(model), getter_AddRefs(bindElement));
+    nsXFormsUtils::EvaluateNodeBinding(mElement,
+                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                                       getter_AddRefs(modelNode),
+                                       getter_AddRefs(bindElement));
 
   if (!result)
     return NS_OK;
@@ -372,26 +391,54 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 
 // other methods
 
-void
+NS_IMETHODIMP
 nsXFormsInputElement::Refresh()
 {
   if (!mInput)
-    return;
+    return NS_OK;
 
-  nsRefPtr<nsXFormsModelElement> model;
+  nsCOMPtr<nsIDOMNode> modelNode;
   nsCOMPtr<nsIDOMElement> bindElement;
   nsCOMPtr<nsIDOMXPathResult> result =
-    EvaluateBinding(nsIDOMXPathResult::STRING_TYPE,
-                    getter_AddRefs(model), getter_AddRefs(bindElement));
+    nsXFormsUtils::EvaluateNodeBinding(mElement,
+                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                                       getter_AddRefs(modelNode),
+                                       getter_AddRefs(bindElement));
+
+  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
 
   if (model) {
     model->AddFormControl(this);
 
-    if (result) {
-      nsAutoString nodeValue;
-      result->GetStringValue(nodeValue);
+    nsCOMPtr<nsIDOMNode> resultNode;
+    if (result)
+      result->GetSingleNodeValue(getter_AddRefs(resultNode));
 
-      nsCOMPtr<nsISchemaType> type = model->GetTypeForControl(this);
+    if (resultNode) {
+      PRUint16 nodeType = 0;
+      resultNode->GetNodeType(&nodeType);
+
+      nsAutoString text;
+
+      switch (nodeType) {
+      case nsIDOMNode::TEXT_NODE:
+      case nsIDOMNode::ATTRIBUTE_NODE:
+        resultNode->GetNodeValue(text);
+        break;
+      case nsIDOMNode::ELEMENT_NODE:
+        {
+          nsCOMPtr<nsIDOMNode> firstChild;
+          resultNode->GetFirstChild(getter_AddRefs(firstChild));
+          if (firstChild)
+            firstChild->GetNodeValue(text);
+          break;
+        }
+      default:
+        NS_ERROR("form control references invalid node type in instance data");
+      }
+
+      nsCOMPtr<nsISchemaType> type;
+      model->GetTypeForControl(this, getter_AddRefs(type));
       nsCOMPtr<nsISchemaBuiltinType> biType = do_QueryInterface(type);
       PRUint16 typeValue = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
 
@@ -402,14 +449,35 @@ nsXFormsInputElement::Refresh()
         mInput->SetAttribute(NS_LITERAL_STRING("type"),
                              NS_LITERAL_STRING("checkbox"));
 
-        mInput->SetChecked(nodeValue.EqualsLiteral("true") ||
-                           nodeValue.EqualsLiteral("1"));
+        mInput->SetChecked(text.EqualsLiteral("true") ||
+                           text.EqualsLiteral("1"));
       } else {
         mInput->RemoveAttribute(NS_LITERAL_STRING("type"));
-        mInput->SetValue(nodeValue);
+        mInput->SetValue(text);
       }
+
+      PRBool isReadOnly = PR_FALSE;
+      nsCOMPtr<nsIContent> nodeContent = do_QueryInterface(resultNode);
+      if (nodeContent) {
+        nsIDOMXPathExpression *expr =
+          NS_STATIC_CAST(nsIDOMXPathExpression*,
+                         nodeContent->GetProperty(nsXFormsAtoms::readonly));
+
+        if (expr) {
+          expr->Evaluate(mElement,
+                         nsIDOMXPathResult::BOOLEAN_TYPE, nsnull,
+                         getter_AddRefs(result));
+          if (result) {
+            result->GetBooleanValue(&isReadOnly);
+          }
+        }
+      }
+
+      mInput->SetReadOnly(isReadOnly);
     }
   }
+
+  return NS_OK;
 }
 
 NS_HIDDEN_(nsresult)

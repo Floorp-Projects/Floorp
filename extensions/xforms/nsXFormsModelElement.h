@@ -40,8 +40,7 @@
 #define nsXFormsModelElement_h_
 
 #include "nsIXTFGenericElement.h"
-#include "nsIXTFPrivate.h"
-#include "nsIXFormsModelElement.h"
+#include "nsIModelElementPrivate.h"
 #include "nsISchema.h"
 #include "nsCOMArray.h"
 #include "nsVoidArray.h"
@@ -49,7 +48,6 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDocument.h"
 #include "nsXFormsMDG.h"
-#include "nsXFormsElement.h"
 
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
@@ -58,7 +56,6 @@ class nsIDOMElement;
 class nsIDOMNode;
 class nsIDOMXPathEvaluator;
 class nsXFormsControl;
-class nsXFormsInstanceElement;
 
 enum nsXFormsModelEvent {
   eEvent_ModelConstruct,
@@ -76,10 +73,8 @@ enum nsXFormsModelEvent {
   eEvent_ComputeException
 };
 
-class nsXFormsModelElement : public nsXFormsElement,
-                             public nsIXTFGenericElement,
-                             public nsIXTFPrivate,
-                             public nsIXFormsModelElement,
+class nsXFormsModelElement : public nsIXTFGenericElement,
+                             public nsIModelElementPrivate,
                              public nsISchemaLoadListener,
                              public nsIDOMLoadListener
 {
@@ -89,8 +84,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT
   NS_DECL_NSIXTFGENERICELEMENT
-  NS_DECL_NSIXTFPRIVATE
   NS_DECL_NSIXFORMSMODELELEMENT
+  NS_DECL_NSIMODELELEMENTPRIVATE
   NS_DECL_NSISCHEMALOADLISTENER
   NS_DECL_NSIWEBSERVICEERRORHANDLER
   NS_DECL_NSIDOMEVENTLISTENER
@@ -102,30 +97,20 @@ public:
   NS_IMETHOD Abort(nsIDOMEvent* aEvent);
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
-  NS_HIDDEN_(nsresult) DispatchEvent(nsXFormsModelEvent aEvent);
-
-  NS_HIDDEN_(already_AddRefed<nsISchemaType>)
-    GetTypeForControl(nsXFormsControl *aControl);
-
-  NS_HIDDEN_(void) AddFormControl(nsXFormsControl *aControl);
-  NS_HIDDEN_(void) RemoveFormControl(nsXFormsControl *aControl);
-
-  NS_HIDDEN_(void) AddPendingInstance() { ++mPendingInstanceCount; }
-  NS_HIDDEN_(void) RemovePendingInstance();
-
-  NS_HIDDEN_(nsXFormsInstanceElement*) FindInstanceElement(const nsAString &aID);
-  NS_HIDDEN_(nsIDOMDocument*)          FindInstanceDocument(const nsAString &aID);
-
-  NS_HIDDEN_(PRBool) IsSubmissionActive()            { return mSubmissionActive; }
-  NS_HIDDEN_(void)   SetSubmissionActive(PRBool val) { mSubmissionActive = val; }
-
   // Called after nsXFormsAtoms is registered
   static NS_HIDDEN_(void) Startup();
 
 private:
+  NS_HIDDEN_(nsresult) DispatchEvent(nsXFormsModelEvent aEvent);
+
+  NS_HIDDEN_(already_AddRefed<nsIDOMDocument>)
+    FindInstanceDocument(const nsAString &aID);
+
   NS_HIDDEN_(nsresult) FinishConstruction();
+
   NS_HIDDEN_(PRBool)   ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
                                    nsIDOMNode           *aContextNode,
+                                   nsIDOMXPathResult    *aOuterNodeset,
                                    nsIDOMElement        *aBindElement);
 
   NS_HIDDEN_(void)     RemoveModelFromDocument();

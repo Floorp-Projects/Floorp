@@ -62,11 +62,12 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsNetUtil.h"
-#include "nsXFormsControl.h"
+#include "nsIXFormsControl.h"
 #include "nsXFormsTypes.h"
 #include "nsXFormsXPathParser.h"
 #include "nsXFormsXPathAnalyzer.h"
-#include "nsXFormsInstanceElement.h"
+#include "nsIInstanceElementPrivate.h"
+#include "nsXFormsUtils.h"
 
 #include "nsISchemaLoader.h"
 #include "nsAutoPtr.h"
@@ -121,8 +122,8 @@ NS_IMPL_RELEASE(nsXFormsModelElement)
 NS_INTERFACE_MAP_BEGIN(nsXFormsModelElement)
   NS_INTERFACE_MAP_ENTRY(nsIXTFElement)
   NS_INTERFACE_MAP_ENTRY(nsIXTFGenericElement)
-  NS_INTERFACE_MAP_ENTRY(nsIXTFPrivate)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsModelElement)
+  NS_INTERFACE_MAP_ENTRY(nsIModelElementPrivate)
   NS_INTERFACE_MAP_ENTRY(nsISchemaLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIWebServiceErrorHandler)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
@@ -188,9 +189,9 @@ nsXFormsModelElement::GetIsAttributeHandler(PRBool *aIsHandler)
 NS_IMETHODIMP
 nsXFormsModelElement::GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray)
 {
-  return CloneScriptingInterfaces(sScriptingIIDs,
-                                  NS_ARRAY_LENGTH(sScriptingIIDs),
-                                  aCount, aArray);
+  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
+                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
+                                                 aCount, aArray);
 }
 
 NS_IMETHODIMP
@@ -395,7 +396,7 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
     // refresh all of our form controls
     PRInt32 controlCount = mFormControls.Count();
     for (PRInt32 i = 0; i < controlCount; ++i) {
-      NS_STATIC_CAST(nsXFormsControl*, mFormControls[i])->Refresh();
+      NS_STATIC_CAST(nsIXFormsControl*, mFormControls[i])->Refresh();
     }
   } else if (type.EqualsLiteral("xforms-revalidate")) {
     Revalidate();
@@ -438,15 +439,6 @@ nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   return NS_OK;
 }
 
-// nsIXTFPrivate
-NS_IMETHODIMP
-nsXFormsModelElement::GetInner(nsISupports **aInner)
-{
-  NS_ENSURE_ARG_POINTER(aInner);
-  NS_ADDREF(*aInner = NS_STATIC_CAST(nsIXFormsModelElement*, this));
-  return NS_OK;
-}
-
 // nsIXFormsModelElement
 
 NS_IMETHODIMP
@@ -455,7 +447,7 @@ nsXFormsModelElement::GetInstanceDocument(const nsAString& aInstanceID,
 {
   NS_ENSURE_ARG_POINTER(aDocument);
 
-  NS_IF_ADDREF(*aDocument = FindInstanceDocument(aInstanceID));
+  *aDocument = FindInstanceDocument(aInstanceID).get();  // transfer reference
   return *aDocument ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -609,16 +601,64 @@ nsXFormsModelElement::Error(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-// internal methods
+// nsIModelElementPrivate
 
-nsXFormsInstanceElement *
-nsXFormsModelElement::FindInstanceElement(const nsAString &aID)
+NS_IMETHODIMP
+nsXFormsModelElement::AddFormControl(nsIXFormsControl *aControl)
 {
+  if (mFormControls.IndexOf(aControl) == -1)
+    mFormControls.AppendElement(aControl);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::RemoveFormControl(nsIXFormsControl *aControl)
+{
+  mFormControls.RemoveElement(aControl);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
+                                        nsISchemaType    **aType)
+{
+  *aType = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::InstanceLoadStarted()
+{
+  ++mPendingInstanceCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::InstanceLoadFinished(PRBool aSuccess)
+{
+  --mPendingInstanceCount;
+  if (!aSuccess) {
+    DispatchEvent(eEvent_LinkException);
+  } else if (IsComplete()) {
+    nsresult rv = FinishConstruction();
+    if (NS_SUCCEEDED(rv))
+      DispatchEvent(eEvent_Refresh);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::FindInstanceElement(const nsAString &aID,
+                                          nsIInstanceElementPrivate **aElement)
+{
+  *aElement = nsnull;
+
   nsCOMPtr<nsIDOMNodeList> children;
   mElement->GetChildNodes(getter_AddRefs(children));
 
   if (!children)
-    return nsnull;
+    return NS_OK;
 
   PRUint32 childCount = 0;
   children->GetLength(&childCount);
@@ -637,40 +677,42 @@ nsXFormsModelElement::FindInstanceElement(const nsAString &aID)
 
     element->GetAttribute(NS_LITERAL_STRING("id"), id);
     if (aID.IsEmpty() || aID.Equals(id)) {
-      // make sure this is an xforms instance element
-      nsAutoString namespaceURI, localName;
-      element->GetNamespaceURI(namespaceURI);
-      element->GetLocalName(localName);
-
-      if (localName.EqualsLiteral("instance") &&
-          namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
-
-        // This is the requested instance, so get its document.
-        nsCOMPtr<nsIXTFPrivate> xtfPriv = do_QueryInterface(element);
-        NS_ENSURE_TRUE(xtfPriv, nsnull);
-
-        nsCOMPtr<nsISupports> instanceInner;
-        xtfPriv->GetInner(getter_AddRefs(instanceInner));
-        NS_ENSURE_TRUE(instanceInner, nsnull);
-
-        nsISupports *isupp = NS_STATIC_CAST(nsISupports*, instanceInner.get());
-        nsXFormsInstanceElement *instance =
-          NS_STATIC_CAST(nsXFormsInstanceElement*,
-                         NS_STATIC_CAST(nsIXTFGenericElement*, isupp));
-
-        return instance;
-      }
+      CallQueryInterface(element, aElement);
+      if (*aElement)
+        break;
     }
   }
 
-  return nsnull;
+  return NS_OK;
 }
 
-nsIDOMDocument *
+NS_IMETHODIMP
+nsXFormsModelElement::GetSubmissionActive(PRBool *aIsActive)
+{
+  *aIsActive = mSubmissionActive;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::SetSubmissionActive(PRBool aIsActive)
+{
+  mSubmissionActive = aIsActive;
+  return NS_OK;
+}
+
+// internal methods
+
+already_AddRefed<nsIDOMDocument>
 nsXFormsModelElement::FindInstanceDocument(const nsAString &aID)
 {
-  nsXFormsInstanceElement *instance = FindInstanceElement(aID);
-  return instance ? instance->GetDocument() : nsnull;
+  nsCOMPtr<nsIInstanceElementPrivate> instance;
+  nsXFormsModelElement::FindInstanceElement(aID, getter_AddRefs(instance));
+
+  nsIDOMDocument *doc = nsnull;
+  if (instance)
+    instance->GetDocument(&doc); // addrefs
+
+  return doc;
 }
 
 nsresult
@@ -683,7 +725,8 @@ nsXFormsModelElement::FinishConstruction()
 
   // we get the instance data from our instance child nodes
 
-  nsIDOMDocument *firstInstanceDoc = FindInstanceDocument(EmptyString());
+  nsCOMPtr<nsIDOMDocument> firstInstanceDoc =
+    FindInstanceDocument(EmptyString());
   if (!firstInstanceDoc)
     return NS_OK;
 
@@ -710,7 +753,7 @@ nsXFormsModelElement::FinishConstruction()
     if (localName.EqualsLiteral("bind")) {
       child->GetNamespaceURI(namespaceURI);
       if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
-        if (!ProcessBind(xpath, firstInstanceRoot,
+        if (!ProcessBind(xpath, firstInstanceRoot, nsnull,
                          nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)))) {
           DispatchEvent(eEvent_BindingException);
           return NS_OK;
@@ -744,24 +787,19 @@ ReleaseExpr(void    *aElement,
 
 PRBool
 nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
-                                  nsIDOMNode    *aContextNode,
-                                  nsIDOMElement *aBindElement)
+                                  nsIDOMNode           *aContextNode,
+                                  nsIDOMXPathResult    *aOuterNodeset,
+                                  nsIDOMElement        *aBindElement)
 {
-  // Get the expression for the nodes that this <bind> applies to.
-  nsAutoString expr;
-  aBindElement->GetAttribute(NS_LITERAL_STRING("nodeset"), expr);
-  if (expr.IsEmpty())
-    return PR_TRUE;
-
-  nsCOMPtr<nsIDOMXPathNSResolver> resolver;
-  aEvaluator->CreateNSResolver(aBindElement, getter_AddRefs(resolver));
-
   // Get the model item properties specified by this <bind>.
   nsCOMPtr<nsIDOMXPathExpression> props[eModel__count];
   nsAutoString exprStrings[eModel__count];
   PRInt32 propCount = 0;
   nsresult rv = NS_OK;
   nsAutoString attrStr;
+
+  nsCOMPtr<nsIDOMXPathNSResolver> resolver;
+  aEvaluator->CreateNSResolver(aBindElement, getter_AddRefs(resolver));
 
   for (int i = 0; i < eModel__count; ++i) {
     sModelPropsList[i]->ToString(attrStr);
@@ -777,15 +815,20 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     }
   }
 
-  if (propCount == 0)
-    return PR_TRUE;  // successful, but nothing to do
-
+  // Find the nodeset that this bind applies to.
   nsCOMPtr<nsIDOMXPathResult> result;
-  rv = aEvaluator->Evaluate(expr, aContextNode, resolver,
-                            nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
-                            nsnull, getter_AddRefs(result));
-  if (NS_FAILED(rv))
-    return PR_FALSE;
+
+  nsAutoString expr;
+  aBindElement->GetAttribute(NS_LITERAL_STRING("nodeset"), expr);
+  if (expr.IsEmpty()) {
+    result = aOuterNodeset;
+  } else {
+    rv = aEvaluator->Evaluate(expr, aContextNode, resolver,
+                              nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                              nsnull, getter_AddRefs(result));
+    if (NS_FAILED(rv))
+      return PR_FALSE; // dispatch a binding exception
+  }
 
   PRUint32 snapLen;
   rv = result->GetSnapshotLength(&snapLen);
@@ -839,7 +882,38 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
     }
   }
 
-  
+  // Now evaluate any child <bind> elements.
+  nsCOMPtr<nsIDOMNode> childContext;
+  result->SnapshotItem(0, getter_AddRefs(childContext));
+
+  nsCOMPtr<nsIDOMNodeList> children;
+  aBindElement->GetChildNodes(getter_AddRefs(children));
+  if (children) {
+    PRUint32 childCount = 0;
+    children->GetLength(&childCount);
+
+    nsCOMPtr<nsIDOMNode> child;
+    nsAutoString value;
+
+    for (PRUint32 k = 0; k < childCount; ++k) {
+      children->Item(k, getter_AddRefs(child));
+      if (child) {
+        child->GetLocalName(value);
+        if (!value.EqualsLiteral("bind"))
+          continue;
+
+        child->GetNamespaceURI(value);
+        if (!value.EqualsLiteral(NS_NAMESPACE_XFORMS))
+          continue;
+
+        if (!ProcessBind(aEvaluator, childContext, result,
+                         nsCOMPtr<nsIDOMElement>(do_QueryInterface(child))))
+          return PR_FALSE;
+
+      }
+    }
+  }
+
   return PR_TRUE;
 }
 
@@ -862,36 +936,6 @@ nsXFormsModelElement::DispatchEvent(nsXFormsModelEvent aEvent)
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mElement);
   PRBool cancelled;
   return target->DispatchEvent(event, &cancelled);
-}
-
-already_AddRefed<nsISchemaType>
-nsXFormsModelElement::GetTypeForControl(nsXFormsControl *aControl)
-{
-  return nsnull;
-}
-
-void
-nsXFormsModelElement::AddFormControl(nsXFormsControl *aControl)
-{
-  if (mFormControls.IndexOf(aControl) == -1)
-    mFormControls.AppendElement(aControl);
-}
-
-void
-nsXFormsModelElement::RemoveFormControl(nsXFormsControl *aControl)
-{
-  mFormControls.RemoveElement(aControl);
-}
-
-void
-nsXFormsModelElement::RemovePendingInstance()
-{
-  --mPendingInstanceCount;
-  if (IsComplete()) {
-    nsresult rv = FinishConstruction();
-    if (NS_SUCCEEDED(rv))
-      DispatchEvent(eEvent_Refresh);
-  }
 }
 
 /* static */ void

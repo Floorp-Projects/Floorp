@@ -45,11 +45,8 @@
 
 #include <stdlib.h>
 
-#include "nsXFormsModelElement.h"
-#include "nsXFormsInstanceElement.h"
 #include "nsXFormsSubmissionElement.h"
-#include "nsXFormsAtoms.h"
-#include "nsIXFormsModelElement.h"
+#include "nsIInstanceElementPrivate.h"
 #include "nsIXTFGenericElementWrapper.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -61,9 +58,6 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMXPathResult.h"
-#include "nsIDOMXPathEvaluator.h"
-#include "nsIDOMXPathNSResolver.h"
-#include "nsIDOMXPathExpression.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -89,6 +83,7 @@
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
+#include "nsXFormsUtils.h"
 
 // namespace literals
 #define NAMESPACE_XML_SCHEMA \
@@ -272,9 +267,9 @@ nsXFormsSubmissionElement::GetIsAttributeHandler(PRBool *aIsAttributeHandler)
 NS_IMETHODIMP
 nsXFormsSubmissionElement::GetScriptingInterfaces(PRUint32 *aCount, nsIID ***aArray)
 {
-  return CloneScriptingInterfaces(sScriptingIIDs,
-                                  NS_ARRAY_LENGTH(sScriptingIIDs),
-                                  aCount, aArray);
+  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
+                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
+                                                 aCount, aArray);
 }
 
 NS_IMETHODIMP
@@ -448,26 +443,16 @@ nsXFormsSubmissionElement::OnStopRequest(nsIRequest *request, nsISupports *ctx, 
 
 // private methods
 
-nsXFormsModelElement*
+already_AddRefed<nsIModelElementPrivate>
 nsXFormsSubmissionElement::GetModel()
 {
   nsCOMPtr<nsIDOMNode> parentNode;
   mElement->GetParentNode(getter_AddRefs(parentNode));
 
-  nsCOMPtr<nsIXFormsModelElement> modelElt = do_QueryInterface(parentNode);
-  if (!modelElt)
-    return nsnull;
-
-  nsCOMPtr<nsIXTFPrivate> xtfPriv = do_QueryInterface(modelElt);
-  NS_ENSURE_TRUE(xtfPriv, nsnull);
-
-  nsCOMPtr<nsISupports> modelInner;
-  xtfPriv->GetInner(getter_AddRefs(modelInner));
-  NS_ENSURE_TRUE(modelInner, nsnull);
-
-  nsISupports *isupp = NS_STATIC_CAST(nsISupports*, modelInner.get());
-  return NS_STATIC_CAST(nsXFormsModelElement*,
-                        NS_STATIC_CAST(nsIXFormsModelElement*, isupp));
+  nsIModelElementPrivate *model = nsnull;
+  if (parentNode)
+    CallQueryInterface(parentNode, &model);
+  return model;
 }
 
 nsresult
@@ -510,9 +495,14 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
     }
   }
 
-  nsXFormsInstanceElement *instance =
-      GetModel()->FindInstanceElement(EmptyString());
-  instance->SetDocument(newDoc);
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  if (model) {
+    nsCOMPtr<nsIInstanceElementPrivate> instance;
+    model->FindInstanceElement(EmptyString(), getter_AddRefs(instance));
+    if (instance) {
+      instance->SetDocument(newDoc);
+    }
+  }
 
   return NS_OK;
 }
@@ -553,8 +543,12 @@ nsXFormsSubmissionElement::Submit()
   nsresult rv;
 
   // 1. ensure that we are not currently processing a xforms-submit on our model
-  nsXFormsModelElement *model = GetModel();
-  NS_ENSURE_STATE(!model->IsSubmissionActive());
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+
+  PRBool submissionActive = PR_FALSE;
+  model->GetSubmissionActive(&submissionActive);
+  NS_ENSURE_STATE(!submissionActive);
+
   model->SetSubmissionActive(PR_TRUE);
 
 
@@ -595,7 +589,8 @@ nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
 {
   LOG(("xforms submission complete [succeeded=%d]\n", succeeded));
 
-  GetModel()->SetSubmissionActive(PR_FALSE);
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  model->SetSubmissionActive(PR_FALSE);
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
@@ -628,60 +623,18 @@ nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
 nsresult
 nsXFormsSubmissionElement::GetSelectedInstanceData(nsIDOMNode **result)
 {
-  // XXX need to support 'instance(id)' xpath function.  for now, we assume
-  // that any xpath expression is relative to the first <instance> element.
+  nsCOMPtr<nsIDOMNode> model;
+  nsCOMPtr<nsIDOMElement> bind;
+  nsCOMPtr<nsIDOMXPathResult> xpRes =
+    nsXFormsUtils::EvaluateNodeBinding(mElement,
+                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                                       getter_AddRefs(model),
+                                       getter_AddRefs(bind));
 
-  nsCOMPtr<nsIDOMNode> instance;
-  GetDefaultInstanceData(getter_AddRefs(instance));
-  NS_ENSURE_TRUE(instance, NS_ERROR_UNEXPECTED);
+  if (!xpRes)
+    return NS_ERROR_UNEXPECTED;
 
-  nsAutoString value;
-  mElement->GetAttribute(NS_LITERAL_STRING("bind"), value);
-  if (value.IsEmpty())
-  {
-    // inspect 'ref' attribute
-    mElement->GetAttribute(NS_LITERAL_STRING("ref"), value);
-  }
-  else
-  {
-    // ok, value contains the 'ID' of a <bind> element.
-    nsCOMPtr<nsIDOMDocument> doc;
-    mElement->GetOwnerDocument(getter_AddRefs(doc));
-
-    nsCOMPtr<nsIDOMElement> bindElement;
-    doc->GetElementById(value, getter_AddRefs(bindElement));
-    NS_ENSURE_TRUE(bindElement, NS_ERROR_UNEXPECTED);
-
-    bindElement->GetAttribute(NS_LITERAL_STRING("nodeset"), value);
-  }
-
-  if (value.IsEmpty())
-  {
-    // select first <instance> element
-    // instance->GetFirstChild(result);
-    NS_ADDREF(*result = instance);
-    return NS_OK;
-  }
-
-  // evaluate 'value' as an xpath expression
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDOMXPathEvaluator> xpath = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(xpath, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIDOMXPathNSResolver> resolver;
-  xpath->CreateNSResolver(instance, getter_AddRefs(resolver));
-  NS_ENSURE_TRUE(resolver, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsISupports> xpathResult;
-  xpath->Evaluate(value, instance, resolver,
-                  nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE, nsnull,
-                  getter_AddRefs(xpathResult));
-  nsCOMPtr<nsIDOMXPathResult> nodeset = do_QueryInterface(xpathResult);
-  NS_ENSURE_TRUE(nodeset, NS_ERROR_UNEXPECTED);
-
-  return nodeset->GetSingleNodeValue(result);
+  return xpRes->GetSingleNodeValue(result);
 }
 
 PRBool

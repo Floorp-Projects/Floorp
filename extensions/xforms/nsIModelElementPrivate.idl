@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,41 +36,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXFormsControl_h_
-#define nsXFormsControl_h_
+/**
+ * Private interface implemented by the model element for other
+ * elements to use.
+ */
 
-#include "nscore.h"
-#include "nsIXTFXMLVisualWrapper.h"
-#include "nsIDOMNode.h"
-#include "nsCOMPtr.h"
-#include "nsXFormsElement.h"
+#include "nsIXFormsModelElement.idl"
 
-class nsXFormsModelElement;
-class nsIDOMElement;
-class nsIDOMXPathResult;
+interface nsIXFormsControl;
+interface nsISchemaType;
+interface nsIInstanceElementPrivate;
 
-#define NS_XFORMSCONTROL_IID \
-{0x49bad098, 0xaa62, 0x49be, {0x98, 0x7b, 0xdb, 0x32, 0x66, 0x92, 0x1e, 0x0a}}
-
-// Common implementation for XForms form controls
-
-class nsXFormsControl : public nsXFormsElement,
-                        public nsISupports
+[uuid(b21b65d3-3305-4ce0-a604-3648cff61aca)]
+interface nsIModelElementPrivate : nsIXFormsModelElement
 {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_XFORMSCONTROL_IID)
+  /**
+   * Called by form control elements when they are bound to or unbound from
+   * this model.  These form controls will be refreshed when refresh() is
+   * called on the model.
+   */
+  void addFormControl(in nsIXFormsControl control);
+  void removeFormControl(in nsIXFormsControl control);
 
-  NS_DECL_ISUPPORTS
+  /**
+   * Determine the type for a form control based on the schema included by
+   * this model.
+   */
+  nsISchemaType getTypeForControl(in nsIXFormsControl control);
 
-  virtual NS_HIDDEN_(void) Refresh() = 0;
+  /**
+   * Notification that an instance element has started or finished loading
+   * its instance data.  Model contstruction cannot complete until all of
+   * the instances have loaded their data.
+   */
+  void instanceLoadStarted();
+  void instanceLoadFinished(in boolean success);
 
-  NS_HIDDEN_(nsXFormsModelElement*) GetModelAndBind(nsIDOMElement **aBindElement);
-  NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)
-    EvaluateBinding(PRUint16 aResultType,
-                    nsXFormsModelElement **aModel, nsIDOMElement **aBind);
+  /**
+   * Locate the instance element child with the given id.
+   */
+  nsIInstanceElementPrivate findInstanceElement(in AString id);
 
-protected:
-  nsCOMPtr<nsIXTFXMLVisualWrapper> mWrapper;
+  /**
+   * Track whether there is a form submit in progress for this model.
+   */
+  attribute boolean submissionActive;
 };
-
-#endif

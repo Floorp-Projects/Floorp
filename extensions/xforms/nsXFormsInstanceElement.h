@@ -46,24 +46,23 @@
 #define nsXFormsInstanceElement_h_
 
 #include "nsIXTFGenericElement.h"
-#include "nsIXTFPrivate.h"
-#include "nsXFormsElement.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
-#include "nsIXTFGenericElementWrapper.h"
 #include "nsIDOMLoadListener.h"
-#include "nsXFormsModelElement.h"
+#include "nsIModelElementPrivate.h"
+#include "nsIInstanceElementPrivate.h"
 
-class nsXFormsInstanceElement : public nsXFormsElement,
-                                public nsIXTFGenericElement,
-                                public nsIXTFPrivate,
+class nsIDOMElement;
+
+class nsXFormsInstanceElement : public nsIXTFGenericElement,
+                                public nsIInstanceElementPrivate,
                                 public nsIDOMLoadListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXTFELEMENT
   NS_DECL_NSIXTFGENERICELEMENT
-  NS_DECL_NSIXTFPRIVATE
+  NS_DECL_NSIINSTANCEELEMENTPRIVATE
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
@@ -75,17 +74,16 @@ public:
   NS_IMETHOD Abort(nsIDOMEvent *aEvent);
   NS_IMETHOD Error(nsIDOMEvent *aEvent);
 
-  NS_HIDDEN_(nsIDOMDocument*) GetDocument() { return mDocument; }
-  NS_HIDDEN_(void) SetDocument(nsIDOMDocument *doc) { mDocument = doc; }
+  nsXFormsInstanceElement() NS_HIDDEN;
 
 private:
   NS_HIDDEN_(nsresult) CloneInlineInstance();
   NS_HIDDEN_(void) LoadExternalInstance(const nsAString &aSrc);
   NS_HIDDEN_(nsresult) CreateInstanceDocument();
-  NS_HIDDEN_(nsXFormsModelElement*) GetModel();
+  NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>) GetModel();
 
-  nsCOMPtr<nsIDOMDocument>              mDocument;
-  nsCOMPtr<nsIXTFGenericElementWrapper> mWrapper;
+  nsCOMPtr<nsIDOMDocument>  mDocument;
+  nsIDOMElement            *mElement;
 };
 
 NS_HIDDEN_(nsresult)

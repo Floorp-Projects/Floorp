@@ -38,6 +38,16 @@
 
 #include "domstubs.idl"
 
+/**
+ * The nsIXFormsModelElement interface defines scriptable methods for
+ * manipulating instance data and updating computed and displayed values.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/xforms/
+ *
+ * @status FROZEN
+ */
+
 interface nsIDOMDocument;
 interface nsIDOMDOMException;
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,24 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXFormsElement_h_
-#define nsXFormsElement_h_
+/**
+ * Interface implemented by all XForms form control classes.
+ */
 
-#include "prtypes.h"
-#include "nsIID.h"
+#include "nsISupports.idl"
 
-// base class for all XForms elements
-
-#define NS_NAMESPACE_XFORMS  "http://www.w3.org/2002/xforms"
-#define NS_NAMESPACE_XHTML   "http://www.w3.org/1999/xhtml"
-
-class nsXFormsElement
+[uuid(8377c845-5d55-4eee-9a76-0f86751dcbc8)]
+interface nsIXFormsControl : nsISupports
 {
-protected:
-  NS_HIDDEN_(nsresult) CloneScriptingInterfaces(const nsIID *aIIDList,
-                                                unsigned int aIIDCount,
-                                                PRUint32 *aOutCount,
-                                                nsIID ***aOutArray);
+  /**
+   * This tells the form control to update its state based on the current
+   * instance data.
+   */
+  void refresh();
 };
-
-#endif
