@@ -526,6 +526,9 @@ struct sSysInfo
   ULONG ulMemoryAvailablePhysical;
   LONG  lScreenX;
   LONG  lScreenY;
+  LONG  lDlgFrameX;
+  LONG  lDlgFrameY;
+  LONG  lTitleBarY;
   BOOL  bScreenReader;
 };
 

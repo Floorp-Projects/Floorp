@@ -50,6 +50,9 @@ BOOL InitInstance()
 {
   gSystemInfo.lScreenX = WinQuerySysValue(HWND_DESKTOP, SV_CXSCREEN);
   gSystemInfo.lScreenY = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN);
+  gSystemInfo.lDlgFrameX = WinQuerySysValue(HWND_DESKTOP, SV_CXDLGFRAME);
+  gSystemInfo.lDlgFrameY = WinQuerySysValue(HWND_DESKTOP, SV_CYDLGFRAME);
+  gSystemInfo.lTitleBarY = WinQuerySysValue(HWND_DESKTOP, SV_CYTITLEBAR);
 
   hWndMain = NULL;
 
@@ -4648,7 +4651,6 @@ HRESULT CheckInstances()
   char  szSection[MAX_BUF];
   char  szProcessName[MAX_BUF];
   char  szClassName[MAX_BUF];
-  char  szWindowName[MAX_BUF];
   char  szCloseAllWindows[MAX_BUF];
   char  szAttention[MAX_BUF];
   char  szMessage[MAX_BUF];
@@ -4658,7 +4660,6 @@ HRESULT CheckInstances()
   BOOL  bContinue;
   BOOL  bCloseAllWindows;
   HWND  hwndFW;
-  LPSTR szWN;
   LPSTR szCN;
   DWORD dwRv0;
   DWORD dwRv1;
@@ -4669,7 +4670,6 @@ HRESULT CheckInstances()
   while(bContinue)
   {
     memset(szClassName,            0, sizeof(szClassName));
-    memset(szWindowName,           0, sizeof(szWindowName));
     memset(szMessage,              0, sizeof(szMessage));
     memset(szMessageFulInstaller, 0, sizeof(szMessageFulInstaller));
 
@@ -4745,29 +4745,23 @@ HRESULT CheckInstances()
 
     /* Process Name= key did not exist, so look for other keys */
     dwRv0 = GetPrivateProfileString(szSection, "Class Name",  "", szClassName,  sizeof(szClassName), szFileIniConfig);
-    dwRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, sizeof(szWindowName), szFileIniConfig);
     if((dwRv0 == 0L) &&
        (dwRv1 == 0L))
     {
       bContinue = FALSE;
     }
-    else if((*szClassName != '\0') || (*szWindowName != '\0'))
+    else if(*szClassName != '\0')
     {
       if(*szClassName == '\0')
         szCN = NULL;
       else
         szCN = szClassName;
 
-      if(*szWindowName == '\0')
-        szWN = NULL;
-      else
-        szWN = szWindowName;
-
       /* If an instance is found, call PreCheckInstance first */
-      if((hwndFW = FindWindow(szCN, szWN)) != NULL)
+      if((hwndFW = FindWindow(szCN)) != NULL)
         PreCheckInstance(szSection, szFileIniConfig);
 
-      if((hwndFW = FindWindow(szCN, szWN)) != NULL)
+      if((hwndFW = FindWindow(szCN)) != NULL)
       {
         if(*szMessage != '\0')
         {
@@ -6589,39 +6583,29 @@ BOOL ShowAdditionalOptionsDialog(void)
   return(TRUE);
 }
 
-/* Only checks for class or window name right now */
-HWND FindWindow(PCSZ pszClassName, PCSZ pszWindowName)
+HWND FindWindow(PCSZ pszAtomString)
 {
+  ATOM atom;
   HENUM henum;
   HWND hwndClient, hwnd = NULLHANDLE;
-#ifdef OLDCODE
-  char pszT[256];
 
-  henum = WinBeginEnumWindows(HWND_DESKTOP);
-  while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
-  {
-    HWND hwndClient = NULLHANDLE;
 
-    /* If the window is a frame window, use the client for the class
-     * comparison.
-     */
-    if (((ULONG)WinSendMsg(hwnd, WM_QUERYFRAMEINFO, NULL, NULL)) & FI_FRAME)
-        hwndClient = WinWindowFromID(hwnd, FID_CLIENT);
-
-    /* See if the class matches.
-     */
-    if (pszClassName) {
-      WinQueryClassName(hwndClient ? hwndClient : hwnd, sizeof(pszT), pszT);
-      if (strcmp(pszT, pszClassName) == 0)
-        break;
-    }
-    if (pszWindowName) {
-      WinQueryWindowText(hwnd, sizeof(pszT), pszT);
-      if (strcmp(pszT, pszWindowName) == 0)
-        break;
+  atom = WinFindAtom(WinQuerySystemAtomTable(), pszAtomString);
+  if (atom) {
+    henum = WinBeginEnumWindows(HWND_DESKTOP);
+    while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
+    {
+      ULONG ulWindowWord;
+      printf("found window %x\n", hwnd);
+//      ulWindowWord = WinQueryWindowULong(hwnd, QWL_STYLE);
+//      if (ulWindowWord & CS_FRAME) {
+        ulWindowWord = WinQueryWindowULong(hwnd, QWL_USER);
+        if (ulWindowWord == atom) {
+          break;
+        }
+//      }
     }
   }
   WinEndEnumWindows(henum);
-#endif
   return  hwnd;
 }

@@ -50,7 +50,7 @@ BOOL AskCancelDlg(HWND hDlg)
       WinPostQueueMsg(0, WM_QUIT, 1, 0);
     else if(!GetPrivateProfileString("Messages", "DLGQUITMSG", "", szDlgQuitMsg, sizeof(szDlgQuitMsg), szFileIniInstall))
       WinPostQueueMsg(0, WM_QUIT, 1, 0);
-    else if(WinMessageBox(HWND_DESKTOP, hDlg, szDlgQuitMsg, szDlgQuitTitle, 0, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_APPLMODAL) == MBID_YES)
+    else if(WinMessageBox(HWND_DESKTOP, hDlg, szDlgQuitMsg, szDlgQuitTitle, 0, MB_YESNO | MB_ICONQUESTION | MB_MOVEABLE | MB_DEFBUTTON2 | MB_APPLMODAL) == MBID_YES)
     {
       WinDestroyWindow(hDlg);
       WinPostQueueMsg(0, WM_QUIT, 0, 0);
@@ -69,6 +69,63 @@ BOOL AskCancelDlg(HWND hDlg)
   return(bRv);
 } 
 
+/* This function relayouts a dialog so that the values used in the */
+/* resource files represent real pixel values and are from the upper */
+/* left like windows. It does NOT reposition the dialog itself. */
+/* It also uses windows type sizing which means that the size specified in */
+/* the resource file is the size of the inner dialog */
+/* Note that for optimum display at 1024x768, ALL y value in the */
+/* resource file must be even */
+/* This does NOT work on controls that are bitmaps. */
+void AdjustDialogSize(HWND hwndDlg)
+{
+  FONTMETRICS fm;
+  HPS hps;
+  float duX, duY;
+  LONG cxDlgFrame, cyDlgFrame, cyTitleBar;
+  SWP swpCurrent, swpDlg;
+  HENUM henum;
+  HWND hwndNext;
+  USHORT id;
+
+  hps = WinGetPS(hwndDlg);
+  GpiQueryFontMetrics(hps, sizeof(FONTMETRICS), &fm);
+  WinReleasePS(hps);
+  duX = fm.lAveCharWidth*0.25;
+  duY = fm.lMaxBaselineExt*0.125;
+  cxDlgFrame = WinQuerySysValue(HWND_DESKTOP, SV_CXDLGFRAME);
+  cyDlgFrame = WinQuerySysValue(HWND_DESKTOP, SV_CYDLGFRAME);
+  cyTitleBar = WinQuerySysValue(HWND_DESKTOP, SV_CYTITLEBAR);
+
+  WinQueryWindowPos(hwndDlg, &swpDlg);
+  swpDlg.cx = ((swpDlg.cx-(cxDlgFrame*2))/duX)+(cxDlgFrame*2);
+  swpDlg.cy = ((swpDlg.cy-cyTitleBar-(cyDlgFrame*2))/duY)+cyTitleBar+(cyDlgFrame*2);
+  WinSetWindowPos(hwndDlg, 0, 0, 0,
+                  swpDlg.cx,
+                  swpDlg.cy,
+                  SWP_SIZE);
+
+  henum = WinBeginEnumWindows(hwndDlg);
+  while ((hwndNext = WinGetNextWindow(henum)) != NULLHANDLE)
+  {
+    id = WinQueryWindowUShort( hwndNext, QWS_ID );
+    if ((id == FID_TITLEBAR) ||
+        (id == FID_SYSMENU) ||
+        (id == FID_MINMAX) ||
+        (id == FID_MENU))
+    {
+      continue;
+    }
+    WinQueryWindowPos(hwndNext, &swpCurrent);
+    WinSetWindowPos(hwndNext, 0,
+                    (swpCurrent.x-4)/duX+cyDlgFrame,
+                    (swpCurrent.y-4)/duY+cyDlgFrame,
+                    swpCurrent.cx/duX,
+                    swpCurrent.cy/duY,
+                    SWP_MOVE | SWP_SIZE);
+  }
+}
+
 MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
   BOOL rc;
@@ -80,8 +137,9 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hDlg);
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
       /* Initialize controls */
       WinSetWindowText(hDlg, diWelcome.szTitle);
       sprintf(szBuf, diWelcome.szMessage0, sgProduct.szProductName, sgProduct.szProductName);
@@ -91,6 +149,7 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
       WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
 
+#ifdef OLDCODE
       /* Position image */
       WinQueryWindowPos(WinWindowFromID(hDlg, IDC_MOZILLA), &swpImage);
       WinQueryWindowPos(WinWindowFromID(hDlg, IDC_STATIC3), &swpImageBorder);
@@ -101,6 +160,7 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                       swpImageBorder.x+((swpImageBorder.cx-swpImage.cx)/2),
                       swpImageBorder.y+((swpImageBorder.cy-swpImage.cy)/2),
                       0, 0, SWP_MOVE);
+#endif
 
       /* Center dialog */
       WinQueryWindowPos(hDlg, &swpDlg);
@@ -152,8 +212,9 @@ MRESULT EXPENTRY DlgProcLicense(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hDlg);
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
       /* Initialize controls */
       WinSetWindowText(hDlg, diLicense.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0, diLicense.szMessage0);
@@ -249,9 +310,10 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          HWND hwndDriveCB;
          HWND hwndOK;
          HWND hwndCancel;
+         HWND hwndEF;
 
       WinSetPresParam(hwndDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
          hwndFileST = WinWindowFromID(hwndDlg, DID_FILENAME_TXT);
          hwndDirST = WinWindowFromID(hwndDlg, DID_DIRECTORY_TXT);
          hwndDirLB = WinWindowFromID(hwndDlg, DID_DIRECTORY_LB);
@@ -316,8 +378,10 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          WinShowWindow(WinWindowFromID(hwndDlg, 0x503D), FALSE);
 
          // Create an entryfield
-         WinCreateWindow(hwndDlg, WC_ENTRYFIELD, "", ES_MARGIN | WS_VISIBLE, swpFileST.x, swpFileST.y,
-                         swpFileST.cx, swpFileST.cy, hwndDlg, HWND_TOP, 777, NULL, NULL);
+         hwndEF = WinCreateWindow(hwndDlg, WC_ENTRYFIELD, "", ES_MARGIN | WS_VISIBLE, swpFileST.x, swpFileST.y,
+                                  swpFileST.cx, swpFileST.cy, hwndDlg, HWND_TOP, 777, NULL, NULL);
+         WinSendMsg(hwndEF, EM_SETTEXTLIMIT, MAX_BUF, 0);
+
          WinShowWindow(hwndFileST, FALSE);
 
          }
@@ -507,8 +571,9 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hDlg);
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
       WinSetWindowText(hDlg, diSetupType.szTitle);
 
       hDestinationPath = WinWindowFromID(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
@@ -798,10 +863,12 @@ void DrawLBText(POWNERITEM poi, DWORD dwACFlag)
        rclTemp.xLeft += CX_CHECKBOX+4+4;
        if(siCTemp->dwAttributes & SIC_DISABLED)
          flags |= DT_HALFTONE;
+       WinFillRect(poi->hps, &rclTemp, CLR_BACKGROUND);
        WinDrawText(poi->hps, -1, chBuffer, &rclTemp, 0, 0,
                    flags);
        if (poi->fsState) {
-         WinInvertRect(poi->hps, &poi->rclItem);
+         if (!(siCTemp->dwAttributes & SIC_DISABLED))
+           WinInvertRect(poi->hps, &poi->rclItem);
        }
     }
     poi->fsState = poi->fsStateOld = 0;
@@ -954,8 +1021,9 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
   switch(msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hDlg);
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
       WinSetWindowText(hDlg, diSelectComponents.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0, diSelectComponents.szMessage0);
 
@@ -1093,8 +1161,9 @@ MRESULT EXPENTRY DlgProcAdvancedSettings(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
   switch(msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hDlg);
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
       WinSetWindowText(hDlg, diAdvancedSettings.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
       WinSetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
@@ -1221,8 +1290,9 @@ MRESULT EXPENTRY DlgProcAdditionalOptions(HWND hDlg, ULONG msg, MPARAM mp1, MPAR
   switch(msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hDlg);
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
 //      if(gdwSiteSelectorStatus == SS_HIDE)
 //      {
 //        WinShowWindow(WinWindowFromID(hDlg, IDC_MESSAGE0),  FALSE);
@@ -1609,8 +1679,9 @@ MRESULT EXPENTRY DlgProcStartInstall(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp
   switch(msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hDlg);
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
       WinSetWindowText(hDlg, diStartInstall.szTitle);
 
       WinSetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
@@ -1689,7 +1760,7 @@ MRESULT EXPENTRY DlgProcReboot(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   {
     case WM_INITDLG:
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
       WinCheckButton(hDlg, IDC_RADIO_YES, 1);
       WinSetFocus(HWND_DESKTOP, hRadioYes);
 
@@ -1761,8 +1832,9 @@ MRESULT EXPENTRY DlgProcMessage(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hDlg);
       WinSetPresParam(hDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
       if(GetPrivateProfileString("Messages", "STR_MESSAGEBOX_TITLE", "", szBuf2, sizeof(szBuf2), szFileIniInstall))
       {
         if((sgProduct.szProductName != NULL) && (*sgProduct.szProductName != '\0'))
@@ -1810,19 +1882,20 @@ MRESULT EXPENTRY DlgProcMessage(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                       (gSystemInfo.lScreenY/2)-((rectlString.yTop + 50)/2),
                       rectlString.xRight + 55,
                       rectlString.yTop + 50,
-                      SWP_SHOW);
+                      SWP_SIZE | SWP_MOVE);
 
           WinQueryWindowPos(hDlg, &swpDlg);
 
           WinSetWindowPos(hSTMessage,
                          HWND_TOP,
-                         swpDlg.x,
-                         swpDlg.y,
-                         swpDlg.cx,
-                         swpDlg.cy,
-                         SWP_SHOW);
+                         gSystemInfo.lDlgFrameX,
+                         gSystemInfo.lDlgFrameY,
+                         swpDlg.cx-2*gSystemInfo.lDlgFrameX,
+                         swpDlg.cy-2*gSystemInfo.lDlgFrameY-gSystemInfo.lTitleBarY,
+                         SWP_SIZE | SWP_MOVE);
 
           WinSetDlgItemText(hDlg, IDC_MESSAGE, (PSZ)mp2);
+          return (MRESULT)TRUE;
           break;
       }
       break;
@@ -1852,7 +1925,6 @@ void ShowMessage(PSZ szMessage, BOOL bShow)
       GetPrivateProfileString("Messages", "MB_MESSAGE_STR", "", szBuf, sizeof(szBuf), szFileIniInstall);
       hDlgMessage = InstantiateDialog(hWndMain, DLG_MESSAGE, szBuf, DlgProcMessage);
       WinSendMsg(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (LPARAM)szMessage);
-      WinSetPresParam(hDlgMessage, PP_FONTNAMESIZE, strlen(sgInstallGui.szDefinedFont) + 1, sgInstallGui.szDefinedFont);
     }
     else if(!bShow && hDlgMessage)
     {
@@ -1866,9 +1938,11 @@ HWND InstantiateDialog(HWND hParent, ULONG ulDlgID, PSZ szTitle, PFNWP pfnwpDlgP
 {
   char szBuf[MAX_BUF];
   HWND hDlg = NULL;
+  ATOM atom;
 
+  hDlg = WinLoadDlg(HWND_DESKTOP, hParent, pfnwpDlgProc, hSetupRscInst, ulDlgID, NULL);
 
-  if(hDlg = WinLoadDlg(HWND_DESKTOP, hParent, pfnwpDlgProc, hSetupRscInst, ulDlgID, NULL) == NULL)
+  if (hDlg == NULL)
   {
     char szEDialogCreate[MAX_BUF];
 
@@ -1879,6 +1953,9 @@ HWND InstantiateDialog(HWND hParent, ULONG ulDlgID, PSZ szTitle, PFNWP pfnwpDlgP
     }
     WinPostQueueMsg(NULL, WM_QUIT, 1, 0);
   }
+
+  atom = WinFindAtom(WinQuerySystemAtomTable(), CLASS_NAME_SETUP_DLG);
+  WinSetWindowULong(hDlg, QWL_USER, atom);
 
   return(hDlg);
 }

@@ -110,9 +110,12 @@ int main(int argc, char *argv[], char *envp[])
   int   iRv = WIZ_OK;
   HWND  hwndFW;
   int rc = 0;
+  ATOM atom;
 
   hab = WinInitialize( 0 );
   hmq = WinCreateMsgQueue( hab, 0 );
+
+  atom = WinAddAtom(WinQuerySystemAtomTable(), CLASS_NAME_SETUP_DLG);
 
   /* Allow only one instance of setup to run.
    * Detect a previous instance of setup, bring it to the 
@@ -121,9 +124,8 @@ int main(int argc, char *argv[], char *envp[])
   /* Iterate over top level windows searching for one of the required class
    * and a matching title.
    */
-  if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
+  if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG)) != NULL)
   {
-    WinSetWindowPos(hwndFW, 0, 0, 0, 0, 0, SWP_RESTORE);
     WinSetActiveWindow(HWND_DESKTOP, hwndFW);
     iRv = WIZ_SETUP_ALREADY_RUNNING;
     WinPostQueueMsg(0, WM_QUIT, 1, 0);
@@ -154,7 +156,7 @@ int main(int argc, char *argv[], char *envp[])
   }
   else if(GetInstallIni())
   {
-    rc = 1;
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
   }
   else if(ParseInstallIni())
   {
@@ -182,6 +184,8 @@ int main(int argc, char *argv[], char *envp[])
     /* Do clean up before exiting from the application */
     DeInitialize();
 #endif
+
+  WinDeleteAtom(WinQuerySystemAtomTable(), atom);
 
   WinDestroyMsgQueue( hmq );
   WinTerminate( hab ); 

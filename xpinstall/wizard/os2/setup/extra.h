@@ -208,7 +208,7 @@ DWORD             ParseOSType(char *szOSType);
 BOOL              ShowAdditionalOptionsDialog(void);
 DWORD             GetPreviousUnfinishedState(void);
 
-HWND              FindWindow(PCSZ pszClassName, PCSZ pszWindowName);
+HWND              FindWindow(PCSZ pszAtomString);
 
 #endif /* _EXTRA_H_ */
 
