@@ -129,55 +129,63 @@ sub EmitFormElements ($$$$$$)
     }
         
     
-    SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
-            "       bit & $blessgroupset " .
-            "FROM groups " .
-            "WHERE bit & $opblessgroupset != 0 AND isbuggroup " .
-            "ORDER BY name");
-    print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
-    if (MoreSQLData()) {
-        if ($editall) {
-          print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
-          print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
+    if($user ne "") {
+        print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
+        SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
+                "       bit & $blessgroupset " .
+                "FROM groups " .
+                "WHERE bit & $opblessgroupset != 0 AND isbuggroup " .
+                "ORDER BY name");
+        if (MoreSQLData()) {
+            if ($editall) {
+                print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
+                print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
+            }
+            print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
         }
-        print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
-    }
-    while (MoreSQLData()) {
-	my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
-	print "</TR><TR>\n";
-        if ($editall) {
-          $blchecked = ($blchecked) ? "CHECKED" : "";
-          print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+        while (MoreSQLData()) {
+            my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+            print "</TR><TR>\n";
+            if ($editall) {
+                $blchecked = ($blchecked) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+            }
+            $checked = ($checked) ? "CHECKED" : "";
+            print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
+            print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
         }
-	$checked = ($checked) ? "CHECKED" : "";
-	print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-	print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
-    }
-    print "</TR></TABLE></TD>\n";
-
-    SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
-            "       bit & $blessgroupset " .
-            "FROM groups " .
-            "WHERE bit & $opblessgroupset != 0 AND !isbuggroup " .
-            "ORDER BY name");
-    print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD><TABLE><TR>";
-    if (MoreSQLData()) {
-        if ($editall) {
-          print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
-          print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
+        print "</TR></TABLE></TD>\n";
+    
+        print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD><TABLE><TR>";
+        SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
+                "       bit & $blessgroupset " .
+                "FROM groups " .
+                "WHERE bit & $opblessgroupset != 0 AND !isbuggroup " .
+                "ORDER BY name");
+        if (MoreSQLData()) {
+            if ($editall) {
+                print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
+                print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
+            }
+            print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these priveleges</B></TD>\n";
         }
-        print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these priveleges</B></TD>\n";
-    }
-    while (MoreSQLData()) {
-	my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
-	print "</TR><TR>\n";
-        if ($editall) {
-          $blchecked = ($blchecked) ? "CHECKED" : "";
-          print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+        while (MoreSQLData()) {
+            my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+            print "</TR><TR>\n";
+            if ($editall) {
+                $blchecked = ($blchecked) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+            }
+            $checked = ($checked) ? "CHECKED" : "";
+            print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
+            print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
         }
-	$checked = ($checked) ? "CHECKED" : "";
-	print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-	print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
+    } else {
+        print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Priveleges:</TH><TD><TABLE><TR>";        
+        print "<TD COLSPAN=3>The new user will be inserted into groups " .
+          "based on their userregexps.<BR>To change the group " .
+          "permissions for this user, you must edit the account after ".
+          "creating it.</TD>\n";
     }
     print "</TR></TABLE></TD>\n";
 
@@ -445,13 +453,23 @@ if ($action eq 'new') {
         exit;
     }
 
+    # For new users, we use the regexps from the groups table to determine
+    # their initial group membership.
+    # We also keep a list of groups the user was added to for display on the
+    # confirmation page.
     my $bits = "0";
-    foreach (keys %::FORM) {
-	next unless /^bit_/;
-	#print "$_=$::FORM{$_}<br>\n";
-	$bits .= "+ $::FORM{$_}";
+    my @grouplist = ();
+    SendSQL("select bit, name, userregexp from groups where userregexp != ''");
+    while (MoreSQLData()) {
+        my @row = FetchSQLData();
+        if ($user =~ m/$row[2]/i) {
+            $bits .= "+ $row[0]"; # Silly hack to let MySQL do the math,
+                                  # not Perl, since we're dealing with 64
+                                  # bit ints here, and I don't *think* Perl
+                                  # does that.
+            push(@grouplist, $row[1]);
+        }
     }
-    
 
     # Add the new user
     SendSQL("INSERT INTO profiles ( " .
@@ -467,7 +485,19 @@ if ($action eq 'new') {
 
     #+++ send e-mail away
 
-    print "OK, done.<p>\n";
+    print "OK, done.<br>\n";
+    if($#grouplist > -1) {
+        print "New user added to these groups based on group regexps:\n";
+        print "<ul>\n";
+        foreach (@grouplist) {
+            print "<li>$_</li>\n";
+        }
+        print "</ul>\n";
+    } else {
+        print "New user not added to any groups.<br><br>\n";
+    }
+    print "To change ${user}'s permissions, go back and <a href=\"editusers.cgi?action=edit&user=" . url_quote($user)."\">edit this user</A>";
+    print "<p>\n";
     PutTrailer($localtrailer,
 	"<a href=\"editusers.cgi?action=add\">add</a> another user.");
     exit;
@@ -518,18 +548,16 @@ if ($action eq 'del') {
     print "</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Group set:</TD>\n";
     print "  <TD VALIGN=\"top\">";
-    SendSQL("SELECT bit, name
+    SendSQL("SELECT name
 	     FROM groups
-	     ORDER BY name");
+             WHERE bit & $groupset = bit
+	     ORDER BY isbuggroup, name");
     my $found = 0;
     while ( MoreSQLData() ) {
-	my ($bit,$name) = FetchSQLData();
-        my $cmpr = $bit & $groupset;
-        if ($cmpr) {
-	    print "<br>\n" if $found;
-	    print ucfirst $name;
-	    $found = 1;
-	}
+	my ($name) = FetchSQLData();
+        print "<br>\n" if $found;
+        print ucfirst $name;
+        $found = 1;
     }
     print "none" unless $found;
     print "</TD>\n</TR>";
