@@ -44,7 +44,7 @@ LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib \
       -I$(PUBLIC)\plugin -I$(PUBLIC)\java -I$(PUBLIC)\pref \
       -I$(PUBLIC)\js -I$(DEPTH)\include -I$(PUBLIC)\jsurl \
-      -I$(PUBLIC)\editor
+      -I$(PUBLIC)\editor -I$(PUBLIC)\rdf
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorweb
