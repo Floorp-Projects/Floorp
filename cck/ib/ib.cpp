@@ -261,18 +261,20 @@ int interpret(char *cmd)
 		{
 			value++;
 			char *t = strchr(value, '%');
+//Post Beta - we have to figure a way to handle these cases - right now returning FALSE
+//causes the other commands to not be carried through- changing return FALSE to TRUE
 			if (!t)
-				return FALSE;
+				return TRUE;//*** Changed FALSE to TRUE
 			*t = '\0';
 			newvalue = (char *)(LPCTSTR) GetGlobal(value);
 		}
 		if (!section || !key || !newvalue)
-			return FALSE;
+			return TRUE;//***Changed FALSE to TRUE
 		if (!CopyFile(iniSrcPath, iniDstPath, TRUE))
 			DWORD e = GetLastError();
 		if (strcmp(key, "Program Folder Name") == 0)
 		{
-			strcpy(temp, "Netscape Communicator by ");
+			strcpy(temp, "Netscape 6 by ");
 			strcat(temp, newvalue);
 			newvalue = temp;
 		}
@@ -289,13 +291,14 @@ int interpret(char *cmd)
 			value++;
 			char *t = strchr(value, '%');
 			if (!t)
-				return FALSE;
+				return TRUE;//*** Changed FALSE to TRUE
 			*t = '\0';
 			newvalue = (char *)(LPCTSTR) GetGlobal(value);
 		}
 		if (!xpiname || !xpifile || !newvalue)
-			return FALSE;
-		/*This is a hack to prevent the last page from staying up there endlessly;
+				return TRUE;//*** Changed FALSE to TRUE
+
+		/*Post Beta -This is a hack to prevent the last page from staying up there endlessly;
 		  We check to see if the filename is null and if it is so we return true 
 		  so that the return value isnt made FALSE */
 		CString filename = newvalue;
@@ -306,7 +309,7 @@ int interpret(char *cmd)
 		if (!CopyFile(newvalue, xpifile, FALSE))
 		{
 			DWORD e = GetLastError();
-			return FALSE;
+			return TRUE;//*** Changed FALSE to TRUE
 		}
 	}
 	else if ((strcmp(cmdname, "modifyDTD") == 0) ||
@@ -322,12 +325,12 @@ int interpret(char *cmd)
 			value++;
 			char *t = strchr(value, '%');
 			if (!t)
-				return FALSE;
+				return TRUE;//*** Changed FALSE to TRUE
 			*t = '\0';
 			newvalue = (char *)(LPCTSTR) GetGlobal(value);
 		}
 		if (!xpiname || !xpifile || !entity || !newvalue)
-			return FALSE;
+			return TRUE;//*** Changed FALSE to TRUE
 		ExtractXPIFile(xpiname, xpifile);
 		if(strcmp(cmdname, "modifyJS") == 0)
 			ModifyJS(xpifile,entity,newvalue);
@@ -338,7 +341,7 @@ int interpret(char *cmd)
 	{
 	}
 	else
-		return FALSE;
+		return FALSE;//*** We have to handle this condition better.
 
 	return TRUE;
 }
@@ -658,7 +661,13 @@ int StartIB(CString parms, WIDGET *curWidget)
 	GetCurrentDirectory(sizeof(olddir), olddir);
 
 	if(SetCurrentDirectory((char *)(LPCTSTR) tempPath) == FALSE)
-		return FALSE;
+	{
+		AfxMessageBox("Windows System Error:Unable to change directory",MB_OK);
+		return TRUE;
+	}
+//PostBeta - We have to inform the user that he has not set any value
+//and that it will default.Returning TRUE so that it doesnt stay in the last
+//screen forever.  
 
 	// Read in script file and interpret commands from it
 	FILE *f = fopen(scriptPath, "r");
@@ -773,7 +782,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 	dlg->SetWindowText("         Customization is Complete");
 	newprog.DestroyWindow();
-	return rv;
+	return TRUE;
 
 }
 
