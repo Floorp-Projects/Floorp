@@ -200,7 +200,6 @@ nsCacheProfilePrefObserver::Remove()
     // remove Observer Service observers
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
-    NS_ENSURE_ARG(observerService);
 
     rv = observerService->RemoveObserver(this, "profile-before-change");
     if (NS_FAILED(rv)) rv2 = rv;
