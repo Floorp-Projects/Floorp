@@ -28,6 +28,7 @@
 #include "nsBlender.h"
 #include "nsDeviceContextSpecWin.h"
 #include "nsDeviceContextSpecFactoryW.h"
+#include "nsScriptableRegion.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
@@ -41,6 +42,7 @@ static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
 
 class nsGfxFactoryWin : public nsIFactory
 {   
@@ -185,7 +187,16 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
     nsDeviceContextSpecFactoryWin* dcs;
     NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryWin);
     inst = (nsISupports *)dcs;
+  } 
+  else if (mClassID.Equals(kCScriptableRegion)) {
+    nsCOMPtr<nsIRegion> rgn;
+    NS_NEWXPCOM(rgn, nsRegionWin);
+    if (rgn != nsnull) {
+      nsIScriptableRegion* scriptableRgn = new nsScriptableRegion(rgn);
+      inst = (nsISupports *)scriptableRgn;
+    }
   }
+
 
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
