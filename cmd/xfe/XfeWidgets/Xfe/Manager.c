@@ -44,6 +44,7 @@
 #define MESSAGE12 "The XmNy position of a child cannot be set explicitly."
 #define MESSAGE13 "The XmNborderWidth of a child cannot be set explicitly."
 #define MESSAGE14 "Cannot accept new child '%s'."
+#define MESSAGE15 "XmNnumPrivateComponents is a read-only resource."
 
 #define MIN_LAYOUT_WIDTH	10
 #define MIN_LAYOUT_HEIGHT	10
@@ -189,6 +190,24 @@ static XtResource resources[] =
 
 
 	/* Geometry resources */
+	{ 
+		XmNpreferredHeight,
+		XmCReadOnly,
+		XmRVerticalDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . preferred_height),
+		XmRImmediate, 
+		(XtPointer) True
+    },
+    { 
+		XmNpreferredWidth,
+		XmCReadOnly,
+		XmRHorizontalDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . preferred_width),
+		XmRImmediate, 
+		(XtPointer) True
+    },
 	{
 		XmNusePreferredHeight,
 		XmCUsePreferredHeight,
@@ -207,6 +226,26 @@ static XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) True
 	},
+    { 
+		XmNminWidth,
+		XmCMinWidth,
+		XmRHorizontalDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . min_width),
+		XmRImmediate, 
+		(XtPointer) 2
+    },
+    { 
+		XmNminHeight,
+		XmCMinHeight,
+		XmRVerticalDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . min_height),
+		XmRImmediate, 
+		(XtPointer) 2
+    },
+
+	/* Margin resources */
     { 
 		XmNmarginBottom,
 		XmCMarginBottom,
@@ -243,24 +282,6 @@ static XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) XfeDEFAULT_MARGIN_TOP
     },
-    { 
-		XmNminWidth,
-		XmCMinWidth,
-		XmRHorizontalDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . min_width),
-		XmRImmediate, 
-		(XtPointer) 2
-    },
-    { 
-		XmNminHeight,
-		XmCMinHeight,
-		XmRVerticalDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . min_height),
-		XmRImmediate, 
-		(XtPointer) 2
-    },
 
 	/* For c++ usage */
 	{ 
@@ -273,25 +294,15 @@ static XtResource resources[] =
 		(XtPointer) NULL
 	},
 
-
-	/* Read-only resources */
+	/* Private Component resources */
 	{ 
-		XmNpreferredHeight,
+		XmNnumPrivateComponents,
 		XmCReadOnly,
-		XmRVerticalDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . preferred_height),
+		XmRCardinal,
+		sizeof(Cardinal),
+		XtOffsetOf(XfeManagerRec , xfe_manager . num_private_components),
 		XmRImmediate, 
-		(XtPointer) True
-    },
-    { 
-		XmNpreferredWidth,
-		XmCReadOnly,
-		XmRHorizontalDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeManagerRec , xfe_manager . preferred_width),
-		XmRImmediate, 
-		(XtPointer) True
+		(XtPointer) 0
     },
 
 	/* Popup children resources */
@@ -411,7 +422,7 @@ static XtResource constraint_resources[] =
 		sizeof(int),
 		XtOffsetOf(XfeManagerConstraintRec , xfe_manager . position_index),
 		XmRImmediate,
-		(XtPointer) -1
+		(XtPointer) XmLAST_POSITION
     },
     { 
 		XmNprivateComponent,
@@ -720,6 +731,14 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		_XfeWarning(nw,MESSAGE9);
 	}
 
+	/* num_private_components */
+	if (_XfemNumPrivateComponents(nw) != _XfemNumPrivateComponents(ow))
+	{
+		_XfemNumPrivateComponents(nw) = _XfemNumPrivateComponents(ow);
+      
+		_XfeWarning(nw,MESSAGE15);
+	}
+
 	/* height */
 	if (_XfeHeight(nw) != _XfeHeight(ow))
 	{
@@ -873,15 +892,25 @@ InsertChild(Widget child)
 		/* Mark the child as a private component */
 		_XfeManagerPrivateComponent(child) = True;
 
+		/* Increment the private component count */
+		_XfemNumPrivateComponents(w)++;
+
         /* Call XmManager's InsertChild */
         (*mwc->composite_class.insert_child)(child);
-
     }
     /* Accept or reject other children */
     else if (_XfeManagerAcceptChild(child))
     {
         /* Call XmManager's InsertChild */
         (*mwc->composite_class.insert_child)(child);
+
+		/* Assign the position index for this child.
+		 *
+		 * This will probably turn out to be a not so trivial thing,
+		 * cause of managing state and other stuff.  Fix as needed.
+		 */
+		_XfeManagerPositionIndex(child) = 
+			_XfemNumChildren(w) - _XfemNumPrivateComponents(w) - 1;
         
         /* Insert the child and relayout if necessary */
         if (_XfeManagerInsertChild(child))
@@ -907,6 +936,11 @@ DeleteChild(Widget child)
     {
         /* Delete the child and relayout if necessary */
         layout = _XfeManagerDeleteChild(child);
+	}
+	else
+	{
+		/* Increment the private component count */
+		_XfemNumPrivateComponents(w)++;
     }
     
     /* call manager DeleteChild to update child info */

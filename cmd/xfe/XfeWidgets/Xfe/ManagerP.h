@@ -101,8 +101,12 @@ typedef struct _XfeManagerPart
 	Boolean				ignore_configure;		/* Ignore Configure		*/
 
 	/* Geometry resources */
+	Dimension			preferred_width;		/* Preferred Width		*/
+	Dimension			preferred_height;		/* Preferred Height		*/
 	Boolean				use_preferred_width;	/* use preferred width	*/
 	Boolean				use_preferred_height;	/* use preferred height	*/
+	Dimension			min_width;				/* Min width			*/
+	Dimension			min_height;				/* Min height			*/
 
 	/* Margin resources */
 	Dimension			margin_left;			/* Margin Left			*/
@@ -110,16 +114,12 @@ typedef struct _XfeManagerPart
 	Dimension			margin_top;				/* Margin Top			*/
 	Dimension			margin_bottom;			/* Margin Bottom		*/
 
-	Dimension			min_width;				/* Min width			*/
-	Dimension			min_height;				/* Min height			*/
-
-	/* Read Only Resources */
-	Dimension			preferred_width;		/* Preferred Width		*/
-	Dimension			preferred_height;		/* Preferred Height		*/
-
 	/* For c++ usage */
 	XtPointer			instance_pointer;		/* Instance pointer		*/
-	
+
+	/* Private Component resources */
+	Cardinal			num_private_components;	/* Num private components*/
+
 	/* Private Data Members */
 	int					config_flags;			/* Require Geometry		*/
 	int					prepare_flags;			/* Require Geometry		*/
@@ -471,6 +471,9 @@ _XfeManagerComponentInfo		(Widget			w,
 /*----------------------------------------------------------------------*/
 #define _XfemOldHeight(w) \
 (((XfeManagerWidget) (w))->xfe_manager . old_dimensions . height)
+/*----------------------------------------------------------------------*/
+#define _XfemNumPrivateComponents(w) \
+(((XfeManagerWidget) (w))->xfe_manager . num_private_components)
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
