@@ -1255,7 +1255,8 @@ html|input[type=password] {
 }
 
 html|input {
-  background-color: transparent;
+  background-color: white;
+	text-align: left;
   color: black;
   user-focus: normal;
 }
