@@ -42,7 +42,7 @@ nsresult NS_NewKeyBindMgr(nsIKeyBindMgr** aInstancePtrResult);
 nsresult NS_NewKeyBindMgr(nsIKeyBindMgr** aInstancePtrResult)
 {
   nsKeyBindMgr* sm = new nsKeyBindMgr();
-  return sm->QueryInterface(nsIKeyBindMgr::GetIID(),
+  return sm->QueryInterface(nsCOMTypeInfo<nsIKeyBindMgr>::GetIID(),
                             (void**) aInstancePtrResult);
 }
 
@@ -71,7 +71,7 @@ nsresult nsKeyBindMgr::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIKeyBindMgr::GetIID())) 
+  if (aIID.Equals(nsCOMTypeInfo<nsIKeyBindMgr>::GetIID())) 
   {
     *aInstancePtrResult = (void*)(nsIKeyBindMgr*)this;
     NS_ADDREF_THIS();

@@ -25,7 +25,7 @@
 #undef NS_FILE_FAILURE
 #define NS_FILE_FAILURE NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES,(0xFFFF))
 
-NS_IMPL_ISUPPORTS(nsFileSpecWithUIImpl, nsIFileSpecWithUI::GetIID())
+NS_IMPL_ISUPPORTS(nsFileSpecWithUIImpl, nsCOMTypeInfo<nsIFileSpecWithUI>::GetIID())
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 
@@ -39,7 +39,7 @@ nsFileSpecWithUIImpl::nsFileSpecWithUIImpl()
 	nsresult rv = nsComponentManager::CreateInstance(
 		(const char*)NS_FILESPEC_PROGID,
 		(nsISupports*)nsnull,
-		(const nsID&)nsIFileSpec::GetIID(),
+		(const nsID&)nsCOMTypeInfo<nsIFileSpec>::GetIID(),
 		(void**)getter_AddRefs(mBaseFileSpec));
 	NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
 }
@@ -62,7 +62,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::chooseOutputFile(
     nsresult rv = nsComponentManager::CreateInstance(
     	kCFileWidgetCID,
         nsnull,
-        nsIFileWidget::GetIID(),
+        nsCOMTypeInfo<nsIFileWidget>::GetIID(),
         (void**)getter_AddRefs(fileWidget));
     if (NS_FAILED(rv))
     	return rv;
@@ -94,7 +94,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::chooseInputFile(
     rv = nsComponentManager::CreateInstance(
     	kCFileWidgetCID,
         nsnull,
-        nsIFileWidget::GetIID(),
+        nsCOMTypeInfo<nsIFileWidget>::GetIID(),
         (void**)getter_AddRefs(fileWidget));
 	if (NS_FAILED(rv))
 		return rv;
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::chooseDirectory(const char *title)
     nsresult rv = nsComponentManager::CreateInstance(
     	kCFileWidgetCID,
         nsnull,
-        nsIFileWidget::GetIID(),
+        nsCOMTypeInfo<nsIFileWidget>::GetIID(),
         (void**)getter_AddRefs(fileWidget));
 	if (NS_FAILED(rv))
 		return rv;

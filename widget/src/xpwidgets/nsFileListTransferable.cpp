@@ -66,13 +66,13 @@ nsresult nsFileListTransferable::QueryInterface(const nsIID& aIID, void** aInsta
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(nsITransferable::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsITransferable>::GetIID())) {
     *aInstancePtr = (void*) ((nsITransferable*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIFileListTransferable::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIFileListTransferable>::GetIID())) {
     *aInstancePtr = (void*) ((nsIFileListTransferable*)this);
     NS_ADDREF_THIS();
     return NS_OK;

@@ -69,12 +69,12 @@ nsresult nsBaseDragService::QueryInterface(const nsIID& aIID, void** aInstancePt
 
   nsresult rv = NS_NOINTERFACE;
 
-  if ( aIID.Equals(nsIDragService::GetIID()) ) {
+  if ( aIID.Equals(nsCOMTypeInfo<nsIDragService>::GetIID()) ) {
     *aInstancePtr = NS_STATIC_CAST(nsIDragService*,this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(nsIDragSession::GetIID())) {
+  else if (aIID.Equals(nsCOMTypeInfo<nsIDragSession>::GetIID())) {
     *aInstancePtr = NS_STATIC_CAST(nsIDragSession*,this);
     NS_ADDREF_THIS();
     return NS_OK;

@@ -25,17 +25,15 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 
-static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
 #ifndef LOG_ADDREF_RELEASE
-NS_IMPL_ISUPPORTS(nsBaseWidget, kIWidgetIID)
+NS_IMPL_ISUPPORTS(nsBaseWidget, nsCOMTypeInfo<nsIWidget>::GetIID())
 #else
 extern "C" {
   void __log_addref(void* p, int oldrc, int newrc);
   void __log_release(void* p, int oldrc, int newrc);
 }
 
-NS_IMPL_QUERY_INTERFACE(nsBaseWidget, kIWidgetIID)
+NS_IMPL_QUERY_INTERFACE(nsBaseWidget, nsCOMTypeInfo<nsIWidget>::GetIID())
 
 nsrefcnt nsBaseWidget::AddRef(void)
 {
@@ -65,8 +63,8 @@ nsBaseWidget::Enumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr)
     return NS_ERROR_NULL_POINTER; 
 
-  if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
-      aIID.Equals(nsIEnumerator::GetIID()) || 
+  if (aIID.Equals(nsCOMTypeInfo<nsIBidirectionalEnumerator>::GetIID()) || 
+      aIID.Equals(nsCOMTypeInfo<nsIEnumerator>::GetIID()) || 
       aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     *aInstancePtr = (void*) this; 
     NS_ADDREF_THIS(); 
