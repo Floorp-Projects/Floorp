@@ -808,7 +808,7 @@ function cmdOpenDialog (e)
 
 function cmdOpenURL (e)
 {
-    var url = prompt (MSG_OPEN_URL);
+    var url = prompt (MSG_OPEN_URL, "http://");
     if (url)
         return dispatch ("find-url",{url: url});
 
