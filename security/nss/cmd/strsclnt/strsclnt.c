@@ -1104,6 +1104,20 @@ main(int argc, char **argv)
 
     client_main(port, connections, privKey, cert, hostName, nickName);
 
+    /* clean up */
+    if (cert[kt_rsa]) {
+	CERT_DestroyCertificate(cert[kt_rsa]);
+    }
+    if (cert[kt_fortezza]) {
+	CERT_DestroyCertificate(cert[kt_fortezza]);
+    }
+    if (privKey[kt_rsa]) {
+	SECKEY_DestroyPrivateKey(privKey[kt_rsa]);
+    }
+    if (privKey[kt_fortezza]) {
+	SECKEY_DestroyPrivateKey(privKey[kt_fortezza]);
+    }
+
     /* some final stats. */
     if (ssl3stats->hsh_sid_cache_hits + ssl3stats->hsh_sid_cache_misses +
         ssl3stats->hsh_sid_cache_not_ok == 0) {
