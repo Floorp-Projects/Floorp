@@ -3875,7 +3875,7 @@ fprintf(stderr, "====> nick: %s  email: %s  has-any-user: %d  hash-any-ca: %d  h
   if (nick) {
     if (trust.HasAnyUser())
       return nsIX509Cert::USER_CERT;
-    if (trust.HasAnyCA())
+    if (trust.HasAnyCA() || CERT_IsCACert(cert,NULL))
       return nsIX509Cert::CA_CERT;
     if (trust.HasPeer(PR_TRUE, PR_FALSE, PR_FALSE))
       return nsIX509Cert::SERVER_CERT;
