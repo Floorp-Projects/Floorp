@@ -373,7 +373,6 @@ Feed.prototype.parseAsRSS1 = function() {
     this.itemsToStore[index++] = item;
   }
   
-  if (index) // at least one item to store?
   this.storeNextItem();
 }
 
@@ -518,6 +517,21 @@ Feed.prototype.removeInvalidItems = function() {
 // otherwise it triggers a download done notification to the UI
 Feed.prototype.storeNextItem = function()
 {
+  if (!this.itemsToStore.length)
+  {
+    // create a folder for the feed if one does not exist already...
+    var folder;
+
+    try {
+        folder = this.server.rootMsgFolder.getChildNamed(this.name);
+     } catch(e) {}
+
+    if (!folder) 
+      this.server.rootMsgFolder.createSubfolder(this.name, null /* supposed to be a msg window */);
+
+    return this.cleanupParsingState(this);
+  }
+
   var item = this.itemsToStore[this.itemsToStoreIndex]; 
 
   item.store();
@@ -537,27 +551,29 @@ Feed.prototype.storeNextItem = function()
       this.storeItemsTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
     this.storeItemsTimer.initWithCallback(this, 50, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
   }
-  else
-  {    
-    // now that we are done parsing the feed, remove the feed from our feed cache
-    gFzFeedCache[item.feed.url] = "";
+  else   
+    this.cleanupParsingState(item.feed);   
+}
 
-    item.feed.removeInvalidItems();
+Feed.prototype.cleanupParsingState = function(feed) {
+  // now that we are done parsing the feed, remove the feed from our feed cache
+  gFzFeedCache[feed.url] = "";
 
-    // let's be sure to flush any feed item changes back to disk
-    var ds = getItemsDS(item.feed.server);
-    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
+  feed.removeInvalidItems();
 
-    if (item.feed.downloadCallback)
-      item.feed.downloadCallback.downloaded(item.feed, kNewsBlogSuccess);
+  // let's be sure to flush any feed item changes back to disk
+  var ds = getItemsDS(feed.server);
+  ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 
-    item.feed.request = null; // force the xml http request to go away. This helps reduce some
-                              // nasty assertions on shut down of all things.
+  if (feed.downloadCallback)
+    feed.downloadCallback.downloaded(feed, kNewsBlogSuccess);
 
-    this.itemsToStore = "";
-    this.itemsToStoreIndex = 0;
-    this.storeItemsTimer = null;
-  }   
+  feed.request = null; // force the xml http request to go away. This helps reduce some
+                       // nasty assertions on shut down of all things.
+
+  this.itemsToStore = "";
+  this.itemsToStoreIndex = 0;
+  this.storeItemsTimer = null;
 }
 
 Feed.prototype.notify = function(aTimer) {
