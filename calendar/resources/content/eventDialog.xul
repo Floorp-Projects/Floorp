@@ -289,15 +289,6 @@
                             </menupopup>
                         </menulist>
                     </row>
-                    
-                    <!-- Cancelled -->    
-                    <row align="center">
-                        <spacer />
-                        <checkbox id="cancelled-checkbox" checked="false" label="&newevent.cancelled.label;"/>
-                    </row>
-            
-            
-                    
                   </rows>
                </grid>
                 </tabpanel>

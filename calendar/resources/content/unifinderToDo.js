@@ -440,56 +440,31 @@ function toDoUnifinderItemUpdate( calendarToDo )
 }
 
 
-function contextChangeProgress( event, Progress )
+function contextChangePriority( Priority, event )
 {
-   var tree = document.getElementById( ToDoUnifinderTreeName );
-
    if (tree.treeBoxObject.selection.count > 0)
    {
       var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.currentIndex );
       if(treeitem)
       {
          var todoId = treeitem.getAttribute("toDoID");
-         var ToDoItem = gICalLib.fetchTodo( todoId );
-         ToDoItem.percent = Progress;
-         
-         if( Progress == 0 )
-         {
-            ToDoItem.completed.clear();
-            ToDoItem.status = ToDoItem.ICAL_STATUS_NEEDSACTION;
-         }
-         else if( Progress > 0 && Progress < 100 )
-         {
-            ToDoItem.completed.clear();
-            ToDoItem.status = ToDoItem.ICAL_STATUS_INPROCESS;
-         }
-         if( Progress == 100 )
-         {
-            var completedDate = new Date();
-
-            ToDoItem.completed.year = completedDate.getYear() + 1900;
-            ToDoItem.completed.month = completedDate.getMonth();
-            ToDoItem.completed.day = completedDate.getDate();
-            ToDoItem.status = ToDoItem.ICAL_STATUS_COMPLETED;
-         }
-
+         var ToDoItem = gICalLib.fetchToDo( todoId );
+         ToDoItem.priority = Priority;
          gICalLib.modifyTodo( ToDoItem );
       }
    }
 }
 
 
-function contextChangePriority( event, Priority )
+function contextChangePriority( Priority, event )
 {
-   var tree = document.getElementById( ToDoUnifinderTreeName );
-
    if (tree.treeBoxObject.selection.count > 0)
    {
       var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.currentIndex );
       if(treeitem)
       {
          var todoId = treeitem.getAttribute("toDoID");
-         var ToDoItem = gICalLib.fetchTodo( todoId );
+         var ToDoItem = gICalLib.fetchToDo( todoId );
          ToDoItem.priority = Priority;
          gICalLib.modifyTodo( ToDoItem );
       }
