@@ -30,6 +30,7 @@
   # bodyattrs: any extra attributes for the <body> tag
   # onload: string. JavaScript code to run when the page finishes loading.
   # javascript: string. Javascript to go in the header.
+  # javascript_urls: list. List of URLs to Javascript.
   # style: string. CSS style.
   # style_urls: list. List of URLs to CSS style sheets.
   # message: string. A message to display to the user. May contain HTML.
@@ -69,6 +70,12 @@
       <script type="text/javascript" language="JavaScript">
         [% javascript %]
       </script>
+    [% END %]
+    
+    [% IF javascript_urls %]
+      [% FOREACH javascript_url = javascript_urls %]
+        <script src="[% javascript_url %]" type="text/javascript" language="JavaScript"></script>
+      [% END %]
     [% END %]
 
     [%+ INCLUDE "global/help-header.html.tmpl" %]
