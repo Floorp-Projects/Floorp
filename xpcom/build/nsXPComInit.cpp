@@ -31,6 +31,7 @@
 #include "nsScriptableInputStream.h"
 
 #include "nsMemoryImpl.h"
+#include "nsErrorService.h"
 #include "nsArena.h"
 #include "nsByteBuffer.h"
 #ifdef PAGE_MANAGER
@@ -79,6 +80,7 @@
 // base
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kConsoleServiceCID, NS_CONSOLESERVICE_CID);
+static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 // ds
 static NS_DEFINE_CID(kArenaCID, NS_ARENA_CID);
 static NS_DEFINE_CID(kByteBufferCID, NS_BYTEBUFFER_CID);
@@ -311,6 +313,12 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 NS_MEMORY_CLASSNAME,
                                 NS_MEMORY_PROGID,
                                 nsMemoryImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kErrorServiceCID,
+                                NS_ERRORSERVICE_NAME,
+                                NS_ERRORSERVICE_PROGID,
+                                nsErrorService::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kArenaCID,
