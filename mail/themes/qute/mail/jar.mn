@@ -1,6 +1,7 @@
 classic.jar:
 +   skin/classic/global/tree.css
 *+  skin/classic/global/contents.rdf                         (global-contents.rdf)
++   skin/classic/global/alerts/alert.css
 *   skin/classic/messenger/contents.rdf
     skin/classic/communicator/communicator.css
     skin/classic/communicator/smileys.css
@@ -24,7 +25,6 @@ classic.jar:
     skin/classic/messenger/msgSelectOffline.css
     skin/classic/messenger/filterDialog.css
     skin/classic/messenger/dialogs.css 
-    skin/classic/communicator/alerts/alert.css
     skin/classic/messenger/addressbook/addressbook.css          (addrbook/addressbook.css)
     skin/classic/messenger/addressbook/abContactsPanel.css      (addrbook/abContactsPanel.css)
     skin/classic/messenger/addressbook/cardDialog.css           (addrbook/cardDialog.css)
