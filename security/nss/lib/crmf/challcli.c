@@ -36,6 +36,7 @@
 #include "cmmfi.h"
 #include "secitem.h"
 #include "pk11func.h"
+#include "secder.h"
 
 CMMFPOPODecKeyChallContent*
 CMMF_CreatePOPODecKeyChallContentFromDER(const char *buf, long len)

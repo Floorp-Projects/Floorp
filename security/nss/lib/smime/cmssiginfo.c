@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.4 2000/06/20 16:28:57 chrisk%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.5 2001/01/07 07:56:35 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -47,6 +47,7 @@
 #include "pk11func.h"
 #include "prtime.h"
 #include "secerr.h"
+#include "secder.h"
 #include "cryptohi.h"
 
 #include "smime.h"

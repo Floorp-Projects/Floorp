@@ -36,6 +36,7 @@
 #include "cmmf.h"
 #include "cmmfi.h"
 #include "secitem.h"
+#include "secder.h"
 
 SECStatus 
 cmmf_DestroyPKIStatusInfo (CMMFPKIStatusInfo *info, PRBool freeit)

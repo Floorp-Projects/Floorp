@@ -1879,7 +1879,7 @@ PK11_FindCertAndKeyByRecipientListNew(NSSCMSRecipient **recipientlist, void *win
 
     certHandle = pk11_AllFindCertObjectByRecipientNew(recipientlist, wincx, &rlIndex);
     if (certHandle == CK_INVALID_KEY) {
-	return NULL;
+	return -1;
     }
 
     rl = recipientlist[rlIndex];
@@ -1915,7 +1915,7 @@ PK11_FindCertAndKeyByRecipientListNew(NSSCMSRecipient **recipientlist, void *win
 	SECKEY_DestroyPrivateKey(rl->privkey);
 	rl->slot = NULL;
 	rl->privkey = NULL;
-	return NULL;
+	return -1;
     }
     return rlIndex;
 }
