@@ -632,11 +632,11 @@ sub BuildFolderResourceAliases($$)
 	closedir(SRCDIR);
 	
 	# make aliases for each one into the dest directory
+	print("Placing aliases to all files from $src_dir in $dest_dir\n");
 	for ( @resource_files ) {
 		next if $_ eq "CVS";
 		
 		my($file_name) = $src_dir . $_;	
-		print("Placing alias to file $file_name in $dest_dir\n");
 		MakeAlias($file_name, $dest_dir);
 	}
 }
