@@ -1883,9 +1883,9 @@ void VerifyAndDeleteInstallationFolder()
     {
       GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", msgBoxTitle, sizeof(msgBoxTitle), szFileIniUninstall);
       GetPrivateProfileString("Messages", "MSG_DELETE_INSTALLATION_PATH", "", buf, sizeof(buf), szFileIniUninstall);
+      ReplacePrivateProfileStrCR(buf);
       _snprintf(msg, sizeof(msg), buf, installationPath);
       msg[sizeof(msg) - 1] = '\0';
-      ReplacePrivateProfileStrCR(msg);
 
       /* Prompt user on if they want the completely remove the
        * installation folder */
