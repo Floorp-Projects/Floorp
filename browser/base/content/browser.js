@@ -354,16 +354,14 @@ function Startup()
         loadURI(uriToLoad);
       }
     }
-#ifdef XP_UNIX
+#ifdef MOZ_ENABLE_XREMOTE
     // hook up remote support
-    if (XREMOTESERVICE_CONTRACTID in Components.classes) {
-      var remoteService;
-      remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
-                                .getService(Components.interfaces.nsIXRemoteService);
-      remoteService.addBrowserInstance(window);
+    var remoteService;
+    remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
+                              .getService(Components.interfaces.nsIXRemoteService);
+    remoteService.addBrowserInstance(window);
 
-      RegisterTabOpenObserver();
-    }
+    RegisterTabOpenObserver();
   }
 #endif
   if (window.opener) {
@@ -453,14 +451,12 @@ function WindowFocusTimerCallback(element)
 
 function Shutdown()
 {
-#ifdef XP_UNIX
+#ifdef MOZ_ENABLE_XREMOTE
   // remove remote support
-  if (XREMOTESERVICE_CONTRACTID in Components.classes) {
-    var remoteService;
-    remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
-                              .getService(Components.interfaces.nsIXRemoteService);
-    remoteService.removeBrowserInstance(window);
-  }
+  var remoteService;
+  remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
+                            .getService(Components.interfaces.nsIXRemoteService);
+  remoteService.removeBrowserInstance(window);
 #endif
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
