@@ -346,7 +346,7 @@ nsldapi_os_connect_with_to(LBER_SOCKET sockfd, struct sockaddr *saptr,
 		errno = ETIMEDOUT;
 		return (-1);
 	}
-	if (pfd.revents & POLLOUT) {
+	if (pfd.revents & (POLLOUT|POLLERR|POLLHUP|POLLNVAL)) {
 		len = sizeof(error);
 		if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, (char *)&error, &len)
 			< 0)
