@@ -30,7 +30,25 @@ struct DOMTreePos
     nsCOMPtr<nsIDOMNode> current;
 };
 
-nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallback)
+nsDOMWalker::nsDOMWalker()
+{
+    NS_INIT_REFCNT();
+}
+
+nsDOMWalker::~nsDOMWalker()
+{
+}
+
+//*****************************************************************************
+// nsDOMWalker::nsISupports
+//*****************************************************************************
+
+NS_IMPL_ISUPPORTS1(nsDOMWalker, nsIDOMWalker);
+
+//*****************************************************************************
+// nsIDOMWalker
+
+nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsIDOMWalkerCallback *aCallback)
 {
     NS_ENSURE_ARG_POINTER(aRootNode);
     NS_ENSURE_ARG_POINTER(aCallback);

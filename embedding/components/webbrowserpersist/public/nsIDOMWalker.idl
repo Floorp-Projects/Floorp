@@ -1,0 +1,57 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Adam Lock <adamlock@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMNode;
+
+/**
+ * @status UNDER_REVIEW
+ */
+
+/**
+ * Interface for callback
+ */
+[scriptable, uuid(2d247cde-bae6-4c1e-8c17-102934b8694b)]
+interface nsIDOMWalkerCallback : nsISupports
+{
+  /**
+   * Called for each DOM node to be traversed. Set the aAbort parameter
+   * to PR_TRUE to stop further traversal.
+   */ 
+  void onWalkDOMNode(in nsIDOMNode aNode, inout boolean aAbort);
+};
+
+/**
+ * Interface for walking through a DOM tree.
+ */
+[scriptable, uuid(d489d5a0-375d-41ab-b647-fe6a489544a5)]
+interface nsIDOMWalker : nsISupports
+{
+  /**
+   * Traverse the specified DOM recursively starting with the supplied root
+   * node and walking through each child node in turn. The supplied callback
+   * interface will be called on each DOM node until traversal is completed
+   * or the operation is cancelled.
+   */
+  void walkDOM(in nsIDOMNode aRootNode, in nsIDOMWalkerCallback aCallback);
+};

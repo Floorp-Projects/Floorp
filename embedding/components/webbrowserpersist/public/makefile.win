@@ -25,6 +25,8 @@ MODULE=webbrowserpersist
 XPIDLSRCS = \
     .\nsIWebBrowserPersist.idl \
     .\nsCWebBrowserPersist.idl \
+    .\nsIDOMWalker.idl \
+    .\nsCDOMWalker.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -203,6 +203,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMWalkerCallback)
 NS_INTERFACE_MAP_END
 
 
@@ -1370,8 +1371,10 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         mDocList.AppendElement(docData);
 
         // Walk the DOM gathering a list of externally referenced URIs in the uri map
-        nsDOMWalker walker;
-        walker.WalkDOM(docAsNode, this);
+        nsCOMPtr<nsIDOMWalker> walker =
+            do_CreateInstance(NS_DOMWALKER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+        walker->WalkDOM(docAsNode, this);
 
         // If there are things to persist, create a directory to hold them
         if (mCurrentThingsToPersist > 0)
