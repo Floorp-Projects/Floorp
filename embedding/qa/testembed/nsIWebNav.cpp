@@ -82,8 +82,8 @@ NavElement UrlTable[] = {
    {"http://www.sun.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH},
    {"ftp://ftp.netscape.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY},
    {"ftp://ftp.mozilla.org/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY},
-   {"https://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE},
-   {"https://www.cisco.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY},
+   {"https://www.worldcom.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE},
+   {"https://www.amazon.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY},
    {"about:plugins", nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE},
    {"javascript: alert('Test!')", nsIWebNavigation::LOAD_FLAGS_NONE},
    {"file://C|/Program Files", nsIWebNavigation::LOAD_FLAGS_NONE}
@@ -148,7 +148,7 @@ void CNsIWebNav::RunAllTests()
    }
 
    // load a couple of URLs to get things going
-	LoadUriTest("http://www.netscape.com", nsIWebNavigation::LOAD_FLAGS_NONE);
+	LoadUriTest("http://www.cisco.com", nsIWebNavigation::LOAD_FLAGS_NONE);
 	LoadUriTest("www.google.com", nsIWebNavigation::LOAD_FLAGS_NONE);
 	
    // canGoBack attribute test
