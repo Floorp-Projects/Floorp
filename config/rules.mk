@@ -602,9 +602,13 @@ ifeq ($(NO_LD_ARCHIVE_FLAGS),1)
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
-endif
-endif
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(SUB_LOBJS) $(EXTRA_DSO_LDOPTS)
+else
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
+endif
+else
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
+endif
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 ifdef MOZ_STRIP_NOT_EXPORTED
 ifdef INHIBIT_STRIP_NOT_EXPORTED
