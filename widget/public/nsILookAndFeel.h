@@ -113,15 +113,19 @@ public:
     eColor__moz_dialogtext,
     eColor__moz_dragtargetzone,				//used to highlight valid regions to drop something onto
 
+    eColor__moz_cellhighlight,                               //used to cell text background, selected but not focus
+    eColor__moz_cellhighlighttext,                           //used to cell text, selected but not focus
+    eColor__moz_buttonhoverface,                             //used to button text background, when mouse is over
+    eColor__moz_buttonhovertext,                             //used to button text, when mouse is over
+    eColor__moz_menuhover,                                   //used to menu item background, when mouse is over
+    eColor__moz_menuhovertext,                               //used to menu item text, when mouse is over
+
     //colours needed by Mac Classic skin
     eColor__moz_mac_focusring,				//ring around text fields and lists
     eColor__moz_mac_menuselect,				//colour used when mouse is over a menu item
     eColor__moz_mac_menushadow,				//colour used to do shadows on menu items
     eColor__moz_mac_menutextselect,			//colour used to display text while mouse is over a menu item
 
-    //colour needed by GTK2 Classic skin
-    eColor__moz_gtk2_hovertext,
-    
   	//all of the accent colours
   	eColor__moz_mac_accentlightesthighlight,
     eColor__moz_mac_accentregularhighlight,

@@ -138,6 +138,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       }
       break;
     case eColor_buttonface:
+    case eColor__moz_buttonhoverface:
       aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
     //should be lighter of 2 possible highlight colours available
@@ -149,6 +150,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       aColor = NS_RGB(0x77, 0x77, 0x77);
       break;
     case eColor_buttontext:
+    case eColor__moz_buttonhovertext:
       aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColor_captiontext:
@@ -158,6 +160,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       aColor = NS_RGB(0x77, 0x77, 0x77);
       break;
     case eColor_highlight:
+    case eColor__moz_menuhover:
       {
         // B_MENU_SELECTION_BACKGROUND_COLOR  is used for text selection
         // this blue colors seems more suitable
@@ -166,6 +169,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       }
       break;
     case eColor_highlighttext:
+    case eColor__moz_menuhovertext:
       {
         color = ui_color(B_MENU_SELECTED_ITEM_TEXT_COLOR);
         aColor = NS_RGB(color.red, color.green, color.blue);
@@ -235,10 +239,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       aColor = NS_RGB(0x00, 0x00, 0x00);
       break;  
     case eColor__moz_dialog:
+    case eColor__moz_cellhighlight:
       //all bars  including MenuBar
       aColor = NS_RGB(0xdd, 0xdd, 0xdd);
       break;  
     case eColor__moz_dialogtext:
+    case eColor__moz_cellhighlighttext:
       aColor = NS_RGB(0x00, 0x00, 0x00);
       break;  
     case eColor__moz_dragtargetzone:

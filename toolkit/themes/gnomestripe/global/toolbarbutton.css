@@ -52,7 +52,8 @@ toolbarbutton {
 toolbarbutton:hover,
 toolbarbutton[buttonover="true"] {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
-  color: -moz-gtk2-hovertext;
+  color: -moz-buttonhovertext;
+  background-color: -moz-buttonhoverface;
 }
 
 toolbarbutton:hover:active,
