@@ -32,7 +32,7 @@ var TextType = false;
 var TableOrCell = false;
 var LastPickedIsDefault = true;
 var NoDefault = false;
-
+var gColorObj;
 
 // dialog initialization code
 function Startup()
@@ -43,7 +43,9 @@ function Startup()
     return;
   }
 
-  window.arguments[1].Cancel = false;
+  // window.arguments[1] is object to get initial values and return color data
+  gColorObj = window.arguments[1];
+  gColorObj.Cancel = false;
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -60,9 +62,9 @@ function Startup()
   // The type of color we are setting: 
   //  text: Text, Link, ActiveLink, VisitedLink, 
   //  or background: Page, Table, or Cell
-  if (window.arguments[1].Type)
+  if (gColorObj.Type)
   {
-    ColorType = window.arguments[1].Type;
+    ColorType = gColorObj.Type;
     // Get string for dialog title from passed-in type 
     //   (note constraint on editor.properties string name)
     window.title = GetString(ColorType+"Color");
@@ -75,52 +77,59 @@ function Startup()
   dialog.ColorInput.value = "";
   var tmpColor;
 
-  // window.arguments[1] is object to set initial and return color
   switch (ColorType)
   {
     case "Page":
-      tmpColor = window.arguments[1].PageColor;
+      tmpColor = gColorObj.PageColor;
       if (tmpColor && tmpColor.toLowerCase() != "window")
         color = tmpColor;
       break;
     case "Table":
-      if (window.arguments[1].TableColor)
-        color = window.arguments[1].TableColor;
+      if (gColorObj.TableColor)
+        color = gColorObj.TableColor;
       break;
     case "Cell":
-      if (window.arguments[1].CellColor)
-        color = window.arguments[1].CellColor;
+      if (gColorObj.CellColor)
+        color = gColorObj.CellColor;
       break;
     case "TableOrCell":
       TableOrCell = true;
       document.getElementById("TableOrCellGroup").setAttribute("collapsed", "false");
-      if (window.arguments[1].TableColor)
+      if (gColorObj.TableColor)
       {
-        color = window.arguments[1].TableColor;
+        color = gColorObj.TableColor;
         dialog.TableRadio.checked = true;
       }
       else 
       {
-        color = window.arguments[1].CellColor;
+        color = gColorObj.CellColor;
         dialog.CellRadio.checked = true;
       }
       break;
     default:
       // Any other type will change some kind of text,
       TextType = true;
-      tmpColor = window.arguments[1].TextColor;
+      tmpColor = gColorObj.TextColor;
       if (tmpColor && tmpColor.toLowerCase() != "windowtext")
-        color = window.arguments[1].TextColor;
+        color = gColorObj.TextColor;
       break;
   }
 
   SetCurrentColor(color)
 
+  // Use last-picked colors passed in, or those persistent on dialog
   if (TextType)
-    LastPickedColor = dialog.LastPickedColor.getAttribute("LastTextColor");
+  {
+    if ( !("LastTextColor" in gColorObj) || !gColorObj.LastTextColor)
+      gColorObj.LastTextColor = dialog.LastPickedColor.getAttribute("LastTextColor");
+    LastPickedColor = gColorObj.LastTextColor;
+  }
   else
-    LastPickedColor = dialog.LastPickedColor.getAttribute("LastBackgroundColor");
-
+  {
+    if ( !("LastBackgroundColor" in gColorObj) || !gColorObj.LastBackgroundColor)
+      gColorObj.LastBackgroundColor = dialog.LastPickedColor.getAttribute("LastBackgroundColor");
+    LastPickedColor = gColorObj.LastBackgroundColor;
+  }
   dialog.LastPickedColor.setAttribute("style","background-color: "+LastPickedColor);
 
   doSetOKCancel(onOK, onCancelColor);
@@ -135,7 +144,7 @@ function Startup()
   dialog.LastPickedButton.setAttribute("default","true");
 
   // Caller can prevent user from submitting an empty, i.e., default color
-  NoDefault = window.arguments[1].NoDefault;
+  NoDefault = gColorObj.NoDefault;
   if (NoDefault)
   {
     // Hide the "Default button -- user must pick a color
@@ -245,19 +254,24 @@ function onOK()
   // Set return values and save in persistent color attributes
   if (TextType)
   {
-    window.arguments[1].TextColor = color;
+    gColorObj.TextColor = color;
     if (color.length > 0)
+    {
       dialog.LastPickedColor.setAttribute("LastTextColor", color);
+      gColorObj.LastTextColor = color;
+    }
   }
   else
   {
-    window.arguments[1].BackgroundColor = color;
+    gColorObj.BackgroundColor = color;
     if (color.length > 0)
+    {
       dialog.LastPickedColor.setAttribute("LastBackgroundColor", color);
-
+      gColorObj.LastBackgroundColor = color;
+    }
     // If table or cell requested, tell caller which element to set on
     if (TableOrCell && dialog.TableRadio.checked)
-      window.arguments[1].Type = "Table";
+      gColorObj.Type = "Table";
   }
   SaveWindowLocation();
 
@@ -267,7 +281,7 @@ function onOK()
 function onCancelColor()
 {
   // Tells caller that user canceled
-  window.arguments[1].Cancel = true;
+  gColorObj.Cancel = true;
   SaveWindowLocation();
   window.close();
 }

@@ -256,7 +256,10 @@ function EditorSharedStartup()
     gDefaultTextColor = BrowserColors.TextColor;
     gDefaultBackgroundColor = BrowserColors.BackgroundColor;
   }
-//dump(" *** EditorShared startup: gDefaultTextColor="+gDefaultTextColor+", gDefaultBackgroundColor="+gDefaultBackgroundColor+"\n");
+
+  // For new window, no default last-picked colors
+  gColorObj.LastTextColor = "";
+  gColorObj.LastBackgroundColor = "";
 }
 
 // Get these to use for initial default text and background,
@@ -839,11 +842,13 @@ function SetSmiley(smileyText)
   window._content.focus();
 }
 
-function EditorSelectColor(colorType)
+function EditorSelectColor(colorType, mouseEvent)
 {
   if (!gColorObj)
-   gColorObj = new Object;
+    return;
 
+  // Shift + mouse click automatically applies last color, if available
+  var useLastColor = mouseEvent ? ( mouseEvent.button == 0 && mouseEvent.shiftKey ) : false;
   var element;
   var table;
   var currentColor = "";
@@ -860,6 +865,11 @@ function EditorSelectColor(colorType)
     commandNode = document.getElementById("cmd_fontColor");
     currentColor = commandNode.getAttribute("state");
     gColorObj.TextColor = currentColor;
+
+    if (useLastColor && gColorObj.LastTextColor )
+      gColorObj.TextColor = gColorObj.LastTextColor;
+    else
+      useLastColor = false;
   }
   else
   {

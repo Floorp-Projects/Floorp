@@ -435,7 +435,7 @@
     
     <menuitem id="fontColor" label="&formatFontColor.label;" 
           accesskey="&formatfontcolor.accesskey;"
-          oncommand="EditorSelectColor('Text');"
+          oncommand="EditorSelectColor('Text', null);"
           position="4"/>
     <menuseparator position="5"/>
 
@@ -724,10 +724,10 @@
     <observes element="cmd_fontColor"       attribute="state" onbroadcast="onFontColorChange()"/>
     <observes element="cmd_backgroundColor" attribute="state" onbroadcast="onBackgroundColorChange()"/>
     <text class="color-button" id="BackgroundColorButton"
-          onclick="EditorSelectColor('');"
+          onclick="EditorSelectColor('', event);"
           tooltip="aTooltip"   tooltiptext="&BackgroundColorButton.tooltip;"/>
     <text class="color-button" id="TextColorButton"
-          onclick="EditorSelectColor('Text');"
+          onclick="EditorSelectColor('Text', event);"
           tooltip="aTooltip"   tooltiptext="&TextColorButton.tooltip;"/>
   </stack>
 
