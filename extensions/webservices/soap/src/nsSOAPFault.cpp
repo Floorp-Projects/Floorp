@@ -34,7 +34,7 @@ nsSOAPFault::~nsSOAPFault()
 {
 }
 
-NS_IMPL_ISUPPORTS2_CI(nsSOAPFault, nsISOAPFault, nsISecurityCheckedComponent)
+NS_IMPL_ISUPPORTS2(nsSOAPFault, nsISOAPFault, nsISecurityCheckedComponent)
 
 /* attribute nsIDOMElement element; */
 NS_IMETHODIMP nsSOAPFault::SetElement(nsIDOMElement *aElement)

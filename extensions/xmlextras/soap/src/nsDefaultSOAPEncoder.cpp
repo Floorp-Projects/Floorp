@@ -121,7 +121,7 @@ public:\
   NS_DECL_NSISOAPENCODER\
   NS_DECL_NSISOAPDECODER\
 };\
-NS_IMPL_ISUPPORTS2_CI(ns##name##Encoder,nsISOAPEncoder,nsISOAPDecoder) \
+NS_IMPL_ISUPPORTS2(ns##name##Encoder,nsISOAPEncoder,nsISOAPDecoder) \
 ns##name##Encoder::ns##name##Encoder() {NS_INIT_ISUPPORTS();}\
 ns##name##Encoder::~ns##name##Encoder() {}
 
