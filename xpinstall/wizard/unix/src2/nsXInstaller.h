@@ -55,7 +55,7 @@ private:
 };
 
 int     main(int argc, char **argv);
-int     ErrorHandler(int aErr);
+int     ErrorHandler(int aErr, const char *aErrMsg=NULL);
 void    ErrDlgOK(GtkWidget *aWidget, gpointer aData);
 int     IsErrFatal(int aErr);
 
