@@ -97,6 +97,8 @@ public:
   	NS_IMETHOD ResetInputState();
     NS_IMETHOD PasswordFieldInit();
 
+    void              		MoveToGlobalPoint(PRInt32 aX, PRInt32 aY);
+
 protected:
 
 	pascal static OSErr DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
