@@ -1547,6 +1547,9 @@ $::template ||= Template->new(
     COMPILE_DIR => 'data/',
 
     # Functions for processing text within templates in various ways.
+    # IMPORTANT!  When adding a filter here that does not override a
+    # built-in filter, please also add a stub filter to checksetup.pl
+    # and t/004template.t.
     FILTERS =>
       {
         # Render text in strike-through style.
