@@ -29,6 +29,7 @@ XPIDLSRCS= \
 		nsINNTPArticleList.idl \
 		nsINNTPCategory.idl \
 		nsINNTPCategoryContainer.idl \
+		nsINNTPHost.idl \
 		nsINNTPNewsgroup.idl \
 		nsINNTPNewsgroupList.idl \
 		nsINntpIncomingServer.idl \

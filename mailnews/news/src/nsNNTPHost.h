@@ -24,8 +24,12 @@
 /* some platforms (like Windows and Mac) use a map file, because of
  * file name length limitations. */
 #ifndef XP_UNIX
+#if defined(XP_MAC) || defined(XP_WIN) 
 #define USE_NEWSRC_MAP_FILE
-#endif
+#else
+#error do_you_need_a_newsrc_map_file
+#endif /* XP_MAC || XP_WIN */
+#endif /* XP_UNIX */
 
 NS_BEGIN_EXTERN_C
 

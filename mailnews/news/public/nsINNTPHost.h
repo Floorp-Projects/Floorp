@@ -7,14 +7,8 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
-#include "nsID.h" /* interface nsID */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
-#include "prtime.h"
 
 /* starting interface:    nsINNTPHost */
 
@@ -36,7 +30,7 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD AddExtension(const char *extension) = 0;
 
   /* boolean QueryExtension (in string extension); */
-  NS_IMETHOD QueryExtension(const char *extension, PRBool *retval) = 0;
+  NS_IMETHOD QueryExtension(const char *extension, PRBool *_retval) = 0;
 
   /* attribute boolean postingAllowed; */
   NS_IMETHOD GetPostingAllowed(PRBool *aPostingAllowed) = 0;
@@ -46,27 +40,27 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD GetPushAuth(PRBool *aPushAuth) = 0;
   NS_IMETHOD SetPushAuth(PRBool aPushAuth) = 0;
 
-  /* attribute PRTime lastUpdatedTime; */
+  /* attribute unsigned long lastUpdatedTime; */
   NS_IMETHOD GetLastUpdatedTime(PRUint32 *aLastUpdatedTime) = 0;
   NS_IMETHOD SetLastUpdatedTime(PRUint32 aLastUpdatedTime) = 0;
 
   /* nsINNTPNewsgroupList GetNewsgroupList (in string name); */
-  NS_IMETHOD GetNewsgroupList(const char *name, nsINNTPNewsgroupList **retval) = 0;
+  NS_IMETHOD GetNewsgroupList(const char *name, nsINNTPNewsgroupList **_retval) = 0;
 
   /* nsINNTPNewsgroup FindNewsgroup (in string name, in boolean create); */
-  NS_IMETHOD FindNewsgroup(const char *name, PRBool create, nsINNTPNewsgroup **retval) = 0;
+  NS_IMETHOD FindNewsgroup(const char *name, PRBool create, nsINNTPNewsgroup **_retval) = 0;
 
   /* void AddPropertyForGet (in string name, in string value); */
   NS_IMETHOD AddPropertyForGet(const char *name, const char *value) = 0;
 
   /* string QueryPropertyForGet (in string name); */
-  NS_IMETHOD QueryPropertyForGet(const char *name, char **retval) = 0;
+  NS_IMETHOD QueryPropertyForGet(const char *name, char **_retval) = 0;
 
   /* void AddSearchableGroup (in string name); */
   NS_IMETHOD AddSearchableGroup(const char *name) = 0;
 
   /* boolean QuerySearchableGroup (in string name); */
-  NS_IMETHOD QuerySearchableGroup(const char *name, PRBool *retval) = 0;
+  NS_IMETHOD QuerySearchableGroup(const char *name, PRBool *_retval) = 0;
 
   /* void AddVirtualGroup (in string responseText); */
   NS_IMETHOD AddVirtualGroup(const char *responseText) = 0;
@@ -75,13 +69,13 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD SetIsVirtualGroup(const char *name, PRBool isVirtual) = 0;
 
   /* boolean GetIsVirtualGroup (in string name); */
-  NS_IMETHOD GetIsVirtualGroup(const char *name, PRBool *retval) = 0;
+  NS_IMETHOD GetIsVirtualGroup(const char *name, PRBool *_retval) = 0;
 
   /* void AddSearchableHeader (in string headerName); */
   NS_IMETHOD AddSearchableHeader(const char *headerName) = 0;
 
   /* boolean QuerySearchableHeader (in string headerName); */
-  NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *retval) = 0;
+  NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval) = 0;
 
   /* void GroupNotFound (in string group, in boolean opening); */
   NS_IMETHOD GroupNotFound(const char *group, PRBool opening) = 0;
@@ -90,16 +84,16 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD AddNewNewsgroup(const char *name, PRInt32 first, PRInt32 last, const char *flags, PRBool xactiveFlags) = 0;
 
   /* long GetNumGroupsNeedingCounts (); */
-  NS_IMETHOD GetNumGroupsNeedingCounts(PRInt32 *retval) = 0;
+  NS_IMETHOD GetNumGroupsNeedingCounts(PRInt32 *_retval) = 0;
 
   /* string GetFirstGroupNeedingCounts (); */
-  NS_IMETHOD GetFirstGroupNeedingCounts(char **retval) = 0;
+  NS_IMETHOD GetFirstGroupNeedingCounts(char **_retval) = 0;
 
   /* void DisplaySubscribedGroup (in string name, in long first_message, in long last_message, in long total_messages, in boolean visit_now); */
   NS_IMETHOD DisplaySubscribedGroup(const char *name, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages, PRBool visit_now) = 0;
 
   /* string GetFirstGroupNeedingExtraInfo (); */
-  NS_IMETHOD GetFirstGroupNeedingExtraInfo(char **retval) = 0;
+  NS_IMETHOD GetFirstGroupNeedingExtraInfo(char **_retval) = 0;
 
   /* void SetGroupNeedsExtraInfo (in string name, in boolean needsExtraInfo); */
   NS_IMETHOD SetGroupNeedsExtraInfo(const char *name, PRBool needsExtraInfo) = 0;
@@ -110,7 +104,7 @@ class nsINNTPHost : public nsISupports {
   /* void SetPrettyName (in string name, in string prettyName); */
   NS_IMETHOD SetPrettyName(const char *name, const char *prettyName) = 0;
 
-  /* void LoadNewsrc (); */
+  /* void LoadNewsrc (in string uri); */
   NS_IMETHOD LoadNewsrc(const char *uri) = 0;
 
   /* void WriteNewsrc (); */
@@ -127,10 +121,10 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD SetNewsRCFilename(char * aNewsRCFilename) = 0;
 
   /* nsINNTPNewsgroup FindGroup (in string name); */
-  NS_IMETHOD FindGroup(const char *name, nsINNTPNewsgroup **retval) = 0;
+  NS_IMETHOD FindGroup(const char *name, nsINNTPNewsgroup **_retval) = 0;
 
   /* nsINNTPNewsgroup AddGroup (in string name); */
-  NS_IMETHOD AddGroup(const char *name, nsINNTPNewsgroup **retval) = 0;
+  NS_IMETHOD AddGroup(const char *name, nsINNTPNewsgroup **_retval) = 0;
 
   /* void RemoveGroupByName (in string name); */
   NS_IMETHOD RemoveGroupByName(const char *name) = 0;
@@ -142,12 +136,7 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD GetDbDirName(char * *aDbDirName) = 0;
 
   /* string GetGroupList (); */
-  NS_IMETHOD GetGroupList(char **retval) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsINNTPHost *priv);
-#endif
+  NS_IMETHOD GetGroupList(char **_retval) = 0;
 };
 
 #endif /* __gen_nsINNTPHost_h__ */
