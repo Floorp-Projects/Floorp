@@ -1782,7 +1782,9 @@ nsFontGTK::LoadFont(void)
   }
 
   mAlreadyCalledLoadFont = PR_TRUE;
+  gdk_error_trap_push();
   GdkFont* gdkFont = ::gdk_font_load(mName);
+  gdk_error_trap_pop();
   if (gdkFont) {
     XFontStruct* xFont = (XFontStruct*) GDK_FONT_XFONT(gdkFont);
     if (mCharSetInfo == &ISO106461) {
