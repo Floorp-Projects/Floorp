@@ -23,6 +23,7 @@
 #include "nsXtManageWidget.h"
 
 #include "nsIMenuBar.h"
+#include "nsIMenuListener.h"
 
 class nsIWidget;
 
@@ -30,13 +31,16 @@ class nsIWidget;
  * Native Motif MenuBar wrapper
  */
 
-class nsMenuBar : public nsIMenuBar
+class nsMenuBar : public nsIMenuBar, public nsIMenuListener
 {
 
 public:
   nsMenuBar();
   virtual ~nsMenuBar();
 
+  // nsIMenuListener interface
+  nsEventStatus MenuSelected(const nsGUIEvent & aMenuEvent);
+  
   NS_DECL_ISUPPORTS
 
   
