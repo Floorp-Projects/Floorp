@@ -26,12 +26,14 @@
 #include "nsIServiceManager.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-#include "nsIWebShellWindow.h"
-#include "nsIWebShell.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgIdentity.h"
+#include "nsISmtpUrl.h"
+#include "nsIURI.h"
+#include "nsIChannel.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgDraft.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
@@ -83,7 +85,7 @@ static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgComposeService, nsCOMTypeInfo<nsMsgComposeService>::GetIID());
+NS_IMPL_ISUPPORTS2(nsMsgComposeService, nsIMsgComposeService, nsIContentHandler);
 
 nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI,
 	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity)
@@ -138,6 +140,60 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
                          args.GetUnicode() );
 	
 	return rv;
+}
+
+NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const PRUnichar * aMsgComposeWindowURL, nsIURI * aURI)
+{
+  nsresult rv = NS_OK;
+  if (aURI)
+  { 
+    nsCOMPtr<nsIMailtoUrl> aMailtoUrl;
+    rv = aURI->QueryInterface(NS_GET_IID(nsIMailtoUrl), getter_AddRefs(aMailtoUrl));
+    if (NS_SUCCEEDED(rv))
+    {
+       PRBool aPlainText = PR_FALSE;
+       nsXPIDLCString aToPart;
+       nsXPIDLCString aCcPart;
+       nsXPIDLCString aBccPart;
+       nsXPIDLCString aSubjectPart;
+       nsXPIDLCString aBodyPart;
+       nsXPIDLCString aAttachmentPart;
+       nsXPIDLCString aNewsgroup;
+
+       aMailtoUrl->GetMessageContents(getter_Copies(aToPart), getter_Copies(aCcPart), 
+                                    getter_Copies(aBccPart), nsnull /* from part */,
+                                    nsnull /* follow */, nsnull /* organization */, 
+                                    nsnull /* reply to part */, getter_Copies(aSubjectPart),
+                                    getter_Copies(aBodyPart), nsnull /* html part */, 
+                                    nsnull /* a ref part */, getter_Copies(aAttachmentPart),
+                                    nsnull /* priority */, getter_Copies(aNewsgroup), nsnull /* host */,
+                                    &aPlainText);
+
+       MSG_ComposeFormat format = 0;
+       if (aPlainText)
+         format = nsIMsgCompFormat::PlainText;
+
+       //ugghh more conversion work!!!!
+       // and all our arguments must be escaped!
+       nsAutoString uniToPart = nsEscape(aToPart, url_Path);
+       nsAutoString uniCcPart = nsEscape(aCcPart, url_Path);
+       nsAutoString unicBccPart = nsEscape(aBccPart, url_Path);
+       nsAutoString uniNewsgroup = nsEscape(aNewsgroup, url_Path);
+       nsAutoString uniSubjectPart = nsEscape(aSubjectPart, url_Path);
+       nsAutoString uniBodyPart = nsEscape(aBodyPart, url_Path);
+       nsAutoString uniAttachmentPart = nsEscape(aAttachmentPart, url_Path);
+       
+       rv = OpenComposeWindowWithValues(aMsgComposeWindowURL, format, uniToPart.GetUnicode(), 
+                                        uniCcPart.GetUnicode(),
+                                        unicBccPart.GetUnicode(), 
+                                        uniNewsgroup.GetUnicode(), 
+                                        uniSubjectPart.GetUnicode(),
+                                        uniBodyPart.GetUnicode(), 
+                                        uniAttachmentPart.GetUnicode());
+    }
+  }
+
+  return rv;
 }
 
 nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgComposeWindowURL,
@@ -258,3 +314,23 @@ nsresult nsMsgComposeService::DisposeCompose(nsIMsgCompose *compose, PRBool clos
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgComposeService::HandleContent(const char * aContentType, const char * aCommand,
+                                                const char * aWindowTarget, nsIChannel * aChannel)
+{
+  nsresult rv = NS_OK;
+  if (aChannel)
+  {
+    // First of all, get the content type and make sure it is a content type we know how to handle!
+    if (nsCRT::strcasecmp(aContentType, "x-application-mailto") == 0)
+    {
+      nsCOMPtr<nsIURI> aUri;
+      rv = aChannel->GetURI(getter_AddRefs(aUri));
+      if (aUri)
+         rv = OpenComposeWindowWithURI(nsnull, aUri);
+    }
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+
+  return rv;
+}

@@ -22,9 +22,10 @@
 
 #include "nsIMsgComposeService.h"
 #include "nsISupportsArray.h"
+#include "nsIContentHandler.h"
 #include "nsCOMPtr.h"
 
-class nsMsgComposeService : public nsIMsgComposeService
+class nsMsgComposeService : public nsIMsgComposeService, nsIContentHandler
 {
 public: 
 	nsMsgComposeService();
@@ -32,7 +33,8 @@ public:
 
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
-	NS_DECL_NSIMSGCOMPOSESERVICE
+  NS_DECL_NSIMSGCOMPOSESERVICE
+  NS_DECL_NSICONTENTHANDLER
   
 private:
 	nsCOMPtr<nsISupportsArray> m_msgQueue;
