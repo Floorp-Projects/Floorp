@@ -129,7 +129,8 @@
             event.keyCode == KeyEvent.DOM_VK_RIGHT)
           return window.document.commandDispatcher.advanceFocus();
 
-        if (event.keyCode || event.charCode <= 32)
+        if (event.keyCode || event.charCode <= 32 || event.altKey || 
+            event.ctrlKey || event.metaKey)
           return;  // No printable char pressed, not a potential accesskey
 
         // Possible accesskey pressed
