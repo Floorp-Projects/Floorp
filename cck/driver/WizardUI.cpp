@@ -357,7 +357,7 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		WIDGET* curWidget = CurrentNode->pageWidgets[i];
 		if (curWidget->widgetID != nID) 
 			continue;
-		if (curWidget->type == "EditBox")
+		if (curWidget->type == "EditBox" || curWidget->type == "JSEditBox")
 		{
 			if (wNotifyCode == EN_KILLFOCUS)
 				if(((CEdit*)curWidget->control)->GetModify())
@@ -533,6 +533,38 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
   {
   }
 
+    else if(curWidget->type == "JSEditBox")
+  {
+		CEdit *pEditCtl = ((CEdit*)curWidget->control);
+    pEditCtl->SetSel(0,-1);
+    pEditCtl->Clear();
+
+		CString rootPath	= GetGlobal("Root");
+  	CString configName	= GetGlobal("CustomizationList");
+		CString localJavaScriptFile = rootPath + "Configs\\" + configName + "\\" + curWidget->attrib;
+
+    if (theApp.FileExists(localJavaScriptFile))
+    {
+      CStdioFile sf(localJavaScriptFile,CFile::modeRead | CFile::typeText);
+      CString strLine;
+
+      while (sf.ReadString(strLine))
+      {
+        strLine+="\r\n";
+	      int len=pEditCtl->GetWindowTextLength();
+	      pEditCtl->SetSel(len,len);
+	      pEditCtl->ReplaceSel(strLine);
+      }
+
+      sf.Close();
+    
+      // place cursor at top
+      pEditCtl->SetSel(-1,-1,FALSE);
+
+    }  // local JS file exists
+
+  }  // JSEditBox
+
 }
 
 void CWizardUI::CreateControls() 
@@ -618,6 +650,20 @@ void CWizardUI::CreateControls()
 			{
 				//Set maximum number of characters allowed per line - limit set to 200
 				((CEdit*)curWidget->control)->SetLimitText(int(curWidget->fieldlen.length));
+				((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
+				((CEdit*)curWidget->control)->SetModify(FALSE);
+			}
+		}
+    else if (widgetType == "JSEditBox")
+    {
+			curWidget->control = new CEdit;//Added new style parameter ES_AUTOHSCROLL- to allow *GASP* SCROLLING!!
+			if (rv = ((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
+													_T("EDIT"), 
+													NULL,
+													WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER |ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL,
+													tmpRect,this, ID, 0 ))
+			{
+				//Set maximum number of characters allowed per line - limit set to 200
 				((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
 				((CEdit*)curWidget->control)->SetModify(FALSE);
 			}
@@ -995,13 +1041,19 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 
 		rv = CString(temp);
 	}
-	else if (widgetType == "EditBox") {
+	else if (widgetType == "EditBox")
+  {
 		char myLine[MAX_SIZE];
 		curWidget->control->GetWindowText(myLine, 250);
 
 		CString line = (CString)myLine;
 		rv = line;
 	}
+  else if (widgetType == "JSEditBox")
+  {
+
+  }
+
 	else if (widgetType == "ListBox")
 	{
 		LPINT choices;
@@ -1109,7 +1161,50 @@ void CWizardUI::UpdateGlobals()
 
       ((CPrefEditView*)curWidget->control)->DoSavePrefsTree(localPrefsFile);
     }
+    else if (curWidget->type == "JSEditBox")
+    {
+ 			CString rootPath	= GetGlobal("Root");
+			CString configName	= GetGlobal("CustomizationList");
+			CString localJavaScriptFile = rootPath + "Configs\\" + configName + "\\" + curWidget->attrib;
+
+      // save it to the file, simple text mode
+      CEdit *pJSEB = (CEdit *)curWidget->control;
+      CString strText;
+
+      if (pJSEB->GetModify())
+      {
+        FILE* fp = fopen(localJavaScriptFile, "wt");
+        int nLineCount, nLineLength;
+
+        if (fp)
+        {
+          nLineCount = pJSEB->GetLineCount();
+
+          for (i=0;i < nLineCount;i++)
+          {
+            nLineLength = pJSEB->GetLine(i, strText.GetBuffer(512),1024);
+            strText.ReleaseBuffer(nLineLength);
+
+            if (nLineLength)
+            {
+
+              if (!fwrite(strText, 1, nLineLength, fp))
+               break;
+              fwrite("\n",1,1,fp);
+            }
+
+          }  // line loop
+
+         fclose(fp);
+
+        }  // file open okay
+
+      }  // edit control modified
+
+    }  // JSEditBox
+
 	}
+
 	IsNewValue = TRUE;
 }
 
