@@ -76,6 +76,7 @@ toolkit.jar:
         content/global/bindings/toolbarbutton.xml   (resources/content/bindings/toolbarbutton.xml)
         content/global/bindings/tree.xml            (resources/content/bindings/tree.xml)
         content/global/bindings/wizard.xml          (resources/content/bindings/wizard.xml)
+        content/global/buildconfig.html             (buildconfig.html)
 
 en-US.jar:
     locale/en-US/global/contents.rdf                (resources/locale/en-US/contents.rdf) 

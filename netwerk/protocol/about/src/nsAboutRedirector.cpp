@@ -70,7 +70,8 @@ static RedirEntry kRedirMap[] = {
     { "mozilla", "chrome://global/content/mozilla.xhtml", PR_TRUE },
     { "plugins", "chrome://communicator/content/plugins.html", PR_FALSE },
     { "config", "chrome://global/content/config.xul", PR_FALSE },
-    { "logo", "chrome://global/content/logo.gif", PR_TRUE }
+    { "logo", "chrome://global/content/logo.gif", PR_TRUE },
+    { "buildconfig", "chrome://global/content/buildconfig.html", PR_TRUE },
 };
 static const int kRedirTotal = sizeof(kRedirMap)/sizeof(*kRedirMap);
 

@@ -352,11 +352,15 @@ GNU_AS=
 GNU_LD=
 GNU_CC=
 GNU_CXX=
+CC_VERSION='N/A'
+CXX_VERSION='N/A'
 if test "$GCC" = "yes"; then
     GNU_CC=1
+    CC_VERSION=`$CC -v 2>&1 | grep 'gcc version'`
 fi
 if test "$GXX" = "yes"; then
     GNU_CXX=1
+    CXX_VERSION=`$CXX -v 2>&1 | grep 'gcc version'`
 fi
 if test "`echo | $AS -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_AS=1
@@ -4885,6 +4889,8 @@ AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(BIN_SUFFIX)
 AC_SUBST(ASM_SUFFIX)
 AC_SUBST(USE_N32)
+AC_SUBST(CC_VERSION)
+AC_SUBST(CXX_VERSION)
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
@@ -4970,6 +4976,8 @@ dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$my_perl $my_srcdir/config/milestone.pl -topsrcdir $my_srcdir`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_SUBST(MOZILLA_VERSION)
+
+AC_SUBST(ac_configure_args)
 
 dnl Spit out some output
 dnl ========================================================
