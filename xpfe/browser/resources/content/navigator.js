@@ -410,8 +410,8 @@ function Startup()
     
     if (uriToLoad && uriToLoad != "about:blank") {
       gURLBar.value = uriToLoad;
-      if ("arguments" in window && window.arguments.length >= 4) {
-        loadURI(uriToLoad, window.arguments[3]);
+      if ("arguments" in window && window.arguments.length >= 3) {
+        loadURI(uriToLoad, window.arguments[2]);
       } else {
         loadURI(uriToLoad);
       }
@@ -428,12 +428,11 @@ function Startup()
         return;
     }
 
-    // Focus the content area if the caller instructed us to.
-    if ("arguments" in window && window.arguments.length >= 3 && window.arguments[2] == true ||
-        !window.locationbar.visible)
-      setTimeout(WindowFocusTimerCallback, 0, _content);
-    else
+    // Focus the content area unless we're loading a blank page
+    if (uriToLoad == "about:blank" && window.locationbar.visible)
       setTimeout(WindowFocusTimerCallback, 0, gURLBar);
+    else
+      setTimeout(WindowFocusTimerCallback, 0, _content);
 
     // Perform default browser checking (after window opens).
     setTimeout( checkForDefaultBrowser, 0 );
