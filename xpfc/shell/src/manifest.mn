@@ -26,5 +26,5 @@ CPPSRCS = \
     nsStreamObject.cpp \
 	$(NULL)
 
-REQUIRES = xpcom raptor pref js netlib
+REQUIRES = dom xpcom raptor pref js netlib
 

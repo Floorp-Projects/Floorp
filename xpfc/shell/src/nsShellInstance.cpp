@@ -48,6 +48,9 @@
 #include "nsPluginsCID.h"
 #include "nsIDeviceContext.h"
 #include "nsINetService.h"
+#include "nsDOMCID.h"
+#include "nsLayoutCID.h"
+#include "nsINetService.h"
 
 #ifdef NS_WIN32
 #include "direct.h"
@@ -111,6 +114,11 @@ nsresult nsShellInstance::Init()
   }
 
   mPref->Startup(nsnull);
+
+
+  res = NS_InitINetService((nsINetContainerApplication*) nsnull);
+  if (NS_OK != res)
+    return res;
 
   // Create a Stream Manager
   res = nsRepository::CreateInstance(kCStreamManager, 
@@ -236,6 +244,8 @@ nsresult nsShellInstance::RegisterFactories()
   #define WEB_DLL    "raptorweb.dll"
   #define PLUGIN_DLL "raptorplugin.dll"
   #define NETLIB_DLL "netlib.dll"  
+  #define DOM_DLL    "jsdom.dll"
+  #define LAYOUT_DLL "raptorhtml.dll"
 #else
   #define GFXWIN_DLL "libgfxunix.so"
   #define WIDGET_DLL "libwidgetunix.so"
@@ -245,6 +255,8 @@ nsresult nsShellInstance::RegisterFactories()
   #define WEB_DLL    "libraptorweb.so"
   #define PLUGIN_DLL "raptorplugin.so"
   #define NETLIB_DLL "netlib.so"
+  #define DOM_DLL    "libjsdom.so"
+  #define LAYOUT_DLL "libraptorhtml.so"
 #endif
 
 
@@ -289,6 +301,11 @@ nsresult nsShellInstance::RegisterFactories()
   static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
   static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
   static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
+  static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+  static NS_DEFINE_IID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
+  static NS_DEFINE_IID(kCHTMLDocument, NS_HTMLDOCUMENT_CID);
+  static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
+  static NS_DEFINE_IID(kCHTMLImageElementFactory, NS_HTMLIMAGEELEMENTFACTORY_CID);
 
   nsRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -318,6 +335,12 @@ nsresult nsShellInstance::RegisterFactories()
   nsRepository::RegisterFactory(kCViewManagerCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kCDOMScriptObjectFactory, DOM_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDOMNativeObjectRegistry, DOM_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCHTMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCImageDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
