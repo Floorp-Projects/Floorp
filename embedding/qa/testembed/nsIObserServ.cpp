@@ -71,7 +71,7 @@ ObserverElement ObserverTable[] = {
 	{"xmlparser", PR_TRUE},	
 	{"memory-pressure", PR_FALSE},
 	{"quit-application", PR_TRUE},
-	{"session-logout", PR_FALSE}	
+	{"login-failed", PR_FALSE}	
 }; 
 
 
@@ -278,9 +278,9 @@ NS_IMETHODIMP CnsIObserServ::Observe(nsISupports *aSubject, const char *aTopic, 
     {
  		QAOutput("Observed 'quit-application'.");
     }
-	else if (nsCRT::strcmp(aTopic, "session-logout") == 0)
+	else if (nsCRT::strcmp(aTopic, "login-failed") == 0)
     {
- 		QAOutput("Observed 'session-logout'.");
+ 		QAOutput("Observed 'login-failed'.");
     }
 
     return rv;

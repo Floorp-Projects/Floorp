@@ -85,14 +85,13 @@ NavElement UrlTable[] = {
    {"https://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE},
    {"https://www.cisco.com", nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY},
    {"about:plugins", nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE},
- //  {"javascript:", nsIWebNavigation::LOAD_FLAGS_NONE},
+   {"javascript: alert('Test!')", nsIWebNavigation::LOAD_FLAGS_NONE},
    {"file://C|/Program Files", nsIWebNavigation::LOAD_FLAGS_NONE}
 };
 
 
 void CNsIWebNav::OnStartTests(UINT nMenuID)
 {
-
 	switch(nMenuID)
 	{
 		case ID_INTERFACES_NSIWEBNAV_RUNALLTESTS :
@@ -121,7 +120,7 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_STOP    :
 			StopUriTest("file://C|/Program Files",
-						 nsIWebNavigation::STOP_ALL);
+						 nsIWebNavigation::STOP_CONTENT);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_GETDOCUMENT :
 			GetDocumentTest();
@@ -135,7 +134,6 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 		case ID_INTERFACES_NSIWEBNAV_SETSESSIONHISTORY :
 			break ;
 	}
-
 }
 
 void CNsIWebNav::RunAllTests()
@@ -169,7 +167,7 @@ void CNsIWebNav::RunAllTests()
    QAOutput("Run a few LoadURI() tests.", 2);
 
  	
-   LoadUriandReload(10);
+   LoadUriandReload(11);
 
  
 	// Stop() tests
@@ -308,7 +306,7 @@ void CNsIWebNav::LoadUriTest(char *theUrl, const unsigned long theFlag)
                           nsnull,
                           nsnull);
    sprintf(theTotalString, "%s%s%s%s%s", "LoadURI(): ", theUrl, " w/ ", theFlagName, " test");
-   RvTestResult(rv, theTotalString, 2);
+   RvTestResult(rv, theTotalString, 1);
 }
 
 void CNsIWebNav::ReloadTest(const unsigned long theFlag)
