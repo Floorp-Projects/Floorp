@@ -56,6 +56,12 @@ typedef PRUint16 imapMessageFlagsType;
 											 * piggying back the server support user flag
 											 * info.
 											 */
+
+/* if a url creator does not know the hierarchySeparator, use this */
+#define kOnlineHierarchySeparatorUnknown '^'
+#define kOnlineHierarchySeparatorNil '|'
+
+
 // I think this should really go in an imap.h equivalent file
 typedef enum {
 	kPersonalNamespace = 0,
@@ -79,7 +85,11 @@ typedef enum {
 	kACLCapability = 0x00000100,    /* ACL extension */
 	kNamespaceCapability = 0x00000200,      /* IMAP4 Namespace Extension */
 	kMailboxDataCapability = 0x00000400,    /* MAILBOXDATA SMTP posting extension */
-	kXServerInfoCapability = 0x00000800     /* XSERVERINFO extension for admin urls */
+	kXServerInfoCapability = 0x00000800,     /* XSERVERINFO extension for admin urls */
+	kHasAuthPlainCapability = 0x00001000, /* new form of auth plain base64
+											login */
+	kUidplusCapability = 0x00002000,	/* RFC 2359 UIDPLUS extension */
+	kLiteralPlusCapability = 0x00004000 /* RFC 2088 LITERAL+ extension */
 } eIMAPCapabilityFlag;
 
 // this used to be part of the connection object class - maybe we should move it into 

@@ -154,7 +154,7 @@ private:
 	PRBool			m_socketIsOpen;
 	PRUint32		m_flags;	   // used to store flag information
 	nsIImapUrl		*m_runningUrl; // the nsIImapURL that is currently running
-	nsImapAction	m_imapAction;  // current imap action associated with this connnection...
+	nsIImapUrl::nsImapAction	m_imapAction;  // current imap action associated with this connnection...
 
 	char			*m_dataBuf;
     PRUint32		m_dataBufSize;

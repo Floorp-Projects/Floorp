@@ -20,7 +20,7 @@
 #define nsImapSearchResults_h___
 
 
-class nsImapSearchResultSequence 
+class nsImapSearchResultSequence : public nsVoidArray
 {
 public:
     virtual ~nsImapSearchResultSequence();
@@ -28,11 +28,11 @@ public:
     
     virtual void AddSearchResultLine(const char *searchLine);
     virtual void ResetSequence();
+	void		Clear();
     
     friend class nsImapSearchResultIterator;
 private:
-    nsImapSearcResultSequence();
-    XP_List *fListOfLines;
+    nsImapSearchResultSequence();
 };
 
 class nsImapSearchResultIterator {
@@ -44,7 +44,8 @@ public:
     PRInt32 GetNextMessageNumber();   // returns 0 at end of list
 private:
     nsImapSearchResultSequence &fSequence;
-    XP_List *fCurrentLine;
+	PRInt32 fSequenceIndex;
+	char	*fCurrentLine;
     char    *fPositionInCurrentLine;
 };
 

@@ -24,6 +24,7 @@
 #include "nsImapProxyEvent.h"
 #include "nsIMAPHostSessionList.h"
 #include "nsIMAPBodyShell.h"
+#include "nspr.h"
 
 // netlib required files
 #include "nsIStreamListener.h"

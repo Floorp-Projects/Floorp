@@ -19,7 +19,7 @@
 #ifndef nsImapFlagAndUidState_h___
 #define nsImapFlagAndUidState_h___
 
-class nsMsgKeyArray;
+#include "nsMsgKeyArray.h"
 
 class nsImapFlagAndUidState {
 public:
@@ -27,18 +27,18 @@ public:
     nsImapFlagAndUidState(const nsImapFlagAndUidState& state, PRUint16 flags = 0);
     virtual				 ~nsImapFlagAndUidState();
     
-    int					 GetNumberOfMessages();
-    int					 GetNumberOfDeletedMessages();
+    PRInt32					 GetNumberOfMessages();
+    PRInt32					 GetNumberOfDeletedMessages();
     
-    imap_uid             GetUidOfMessage(int zeroBasedIndex);
-    imapMessageFlagsType GetMessageFlags(int zeroBasedIndex);
-    imapMessageFlagsType GetMessageFlagsFromUID(imap_uid uid, PRBool *foundIt, PRInt32 *ndx);
+    PRUint32             GetUidOfMessage(PRInt32 zeroBasedIndex);
+    imapMessageFlagsType GetMessageFlags(PRInt32 zeroBasedIndex);
+    imapMessageFlagsType GetMessageFlagsFromUID(PRUint32 uid, PRBool *foundIt, PRInt32 *ndx);
 	PRBool				 IsLastMessageUnseen(void);
     void				 ExpungeByIndex(PRUint32 index);
 	// adds to sorted list.  protects against duplicates and going past fNumberOfMessageSlotsAllocated  
-    void				 AddUidFlagPair(imap_uid uid, imapMessageFlagsType flags);
+    void				 AddUidFlagPair(PRUint32 uid, imapMessageFlagsType flags);
     
-    imap_uid			 GetHighestNonDeletedUID();
+    PRUint32			 GetHighestNonDeletedUID();
 	void				 Reset(PRUint32 howManyLeft);
     void                 SetSupportedUserFlags(PRUint16 flags);
     PRUint16               GetSupportedUserFlags() { return fSupportedUserFlags; };
