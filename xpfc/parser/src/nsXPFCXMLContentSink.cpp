@@ -135,9 +135,26 @@ nsXPFCXMLContentSink::~nsXPFCXMLContentSink()
   NS_RELEASE(mXPFCStack);
 
   if (mContainerList != nsnull) {
+
+	  nsIIterator * iterator;
+
+	  mContainerList->CreateIterator(&iterator);
+	  iterator->Init();
+
+    ContainerListEntry * item;
+
+	  while(!(iterator->IsDone()))
+	  {
+		  item = (ContainerListEntry *) iterator->CurrentItem();
+		  delete item;
+		  iterator->Next();
+	  }
+	  NS_RELEASE(iterator);
+
     mContainerList->RemoveAll();
     NS_RELEASE(mContainerList);
   }
+
 }
 
 NS_IMPL_ADDREF(nsXPFCXMLContentSink)
