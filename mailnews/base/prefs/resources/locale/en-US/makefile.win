@@ -48,6 +48,8 @@ install::
 	$(MAKE_INSTALL) am-server-top.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) prefs.properties $(DISTBROWSER)
 	$(MAKE_INSTALL) am-serverwithnoidentities.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) SmtpServerList.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) smtpEditOverlay.dtd $(DISTBROWSER)
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\custreceipt.dtd
@@ -72,3 +74,5 @@ clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-server-top.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\prefs.properties
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-serverwithnoidentities.dtd
+	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\SmtpServerList.dtd
+	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\smtpEditOverlay.dtd
