@@ -42,7 +42,7 @@ static const PRBool gsDebug = PR_FALSE;
 #define UPDATE_QUANTUM  1000 / 40
 
 //#define NO_DOUBLE_BUFFER
-//#define NEW_COMPOSITOR
+#define NEW_COMPOSITOR
 
 //used for debugging new compositor
 //#define SHOW_RECTS
@@ -910,11 +910,24 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
               case BACK_TO_FRONT_OPACITY:
                 if (curflags & VIEW_INCLUDED)
                 {
-                  nsRect blendrect;
+                  nsRect blendrect, pixrect;
 
                   if (blendrect.IntersectRect(*currect, localrect))
                   {
                     PRBool clipstate;
+
+                    pixrect = blendrect;
+
+                    pixrect.x -= localrect.x;
+                    pixrect.y -= localrect.y;
+
+                    pixrect *= t2p;
+
+                    //if there is nothing to render in terms of pixels,
+                    //just bag it right here.
+
+                    if ((pixrect.width == 0) || (pixrect.height == 0))
+                      break;
 
                     if (!translucent)
                       RenderView(curview, *mOffScreenCX, localrect, *currect, clipstate);
@@ -950,23 +963,17 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                       }
 
                       if (nsnull != mBlender)
-                      {
-                        blendrect.x -= localrect.x;
-                        blendrect.y -= localrect.y;
-
-                        blendrect *= t2p;
-
-                        mBlender->Blend(blendrect.x, blendrect.y,
-                                        blendrect.width, blendrect.height,
+                        mBlender->Blend(pixrect.x, pixrect.y,
+                                        pixrect.width, pixrect.height,
                                         mRedCX, mOffScreenCX,
-                                        blendrect.x, blendrect.y,
+                                        pixrect.x, pixrect.y,
                                         opacity, trans ? mBlueCX : nsnull,
                                         NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
-                      }
                     }
                   }
                 }
-                //falls through
+
+                break;
 
               default:
                 break;
