@@ -719,7 +719,8 @@ namespace JavaScript {
 			Interface,					// ClassStmtNode		<attributes> interface <name> extends <supers> <body>
 			Namespace,					// NamespaceStmtNode	<attributes> namespace <name> extends <supers>
 			Language,					// LanguageStmtNode		language <language> ;
-			Package						// PackageStmtNode		package <packageName> <body>
+			Package,    				// PackageStmtNode		package <packageName> <body>
+            Debugger                    // ExprStmtNode         debugger ;
 		};
 		
 	  private:
@@ -744,6 +745,12 @@ namespace JavaScript {
 		ExprNode *expr;					// The expression statement's expression.  May be nil for default: or return-with-no-expression statements.
 
 		ExprStmtNode(uint32 pos, Kind kind, ExprNode *expr): StmtNode(pos, kind), expr(expr) {}
+
+		void print(PrettyPrinter &f, bool noSemi) const;
+	};
+
+	struct DebuggerStmtNode: StmtNode {
+		DebuggerStmtNode(uint32 pos, Kind kind): StmtNode(pos, kind) {}
 
 		void print(PrettyPrinter &f, bool noSemi) const;
 	};

@@ -1727,6 +1727,11 @@ void JS::ExprStmtNode::print(PrettyPrinter &f, bool noSemi) const
 	}
 }
 
+void JS::DebuggerStmtNode::print(PrettyPrinter &f, bool) const
+{
+	f << "debugger;";
+}
+
 void JS::BlockStmtNode::print(PrettyPrinter &f, bool) const
 {
 	PrettyPrinter::Block b(f, 0);
@@ -3269,6 +3274,10 @@ JS::StmtNode *JS::Parser::parseStatement(bool topLevel, bool inSwitch, Semicolon
 	  case Token::Try:
 		s = parseTry(pos);
 		break;
+
+      case Token::Debugger:
+        s = new(arena) DebuggerStmtNode(pos, StmtNode::Debugger);
+        break;
 
 	  case Token::Final:
 	  case Token::Static:
