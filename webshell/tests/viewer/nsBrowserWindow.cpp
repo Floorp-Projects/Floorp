@@ -1048,6 +1048,7 @@ nsBrowserWindow::~nsBrowserWindow()
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mTableInspectorDialog);
   NS_IF_RELEASE(mImageInspectorDialog);
+  NS_IF_RELEASE(mWebCrawler);
 
   if (nsnull != mTableInspector) {
     delete mTableInspector;
