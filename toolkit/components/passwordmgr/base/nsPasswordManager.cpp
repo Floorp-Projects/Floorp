@@ -1458,7 +1458,9 @@ void
 nsPasswordManager::WriteSignonFile()
 {
   nsCOMPtr<nsIOutputStream> fileStream;
-  NS_NewLocalFileOutputStream(getter_AddRefs(fileStream), mSignonFile);
+  NS_NewLocalFileOutputStream(getter_AddRefs(fileStream), mSignonFile, -1,
+                              0600, 0);
+
   if (!fileStream)
     return;
 
