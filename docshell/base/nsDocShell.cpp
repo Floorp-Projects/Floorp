@@ -1574,21 +1574,14 @@ NS_IMETHODIMP nsDocShell::Reload(PRUint32 aReloadFlags)
    	type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
 
     nsresult rv;
-  // If there is a OSHE, make use of it, so that postdata cases are
-  // taken care. Otherwise call InternalLoad() directly.
-  if (OSHE) {
-    nsCOMPtr<nsIInputStream> postData;
-    OSHE->GetPostData(getter_AddRefs(postData));
-    if (postData) {
-      rv = LoadHistoryEntry(OSHE, aReloadFlags);
-      return rv;
-    }
-  }
-  rv =InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
-                    nsnull, nsnull, type); 
+  /* If you change this part of code, make sure bug 45297 does not re-occur */
+  if (OSHE)
+    rv = LoadHistoryEntry(OSHE, type);
+  else if (LSHE) // In case a reload happened before the current load is done
+    rv = LoadHistoryEntry(LSHE, type);
+  else 
+  rv = InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, nsnull, nsnull, type); 
   return rv;
-
-
 }
 
 NS_IMETHODIMP nsDocShell::Stop()
@@ -3378,6 +3371,8 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       if (LSHE) {
         LSHE->GetCacheKey(getter_AddRefs(cacheKey));
       }
+      else if (OSHE) // for reload cases
+        OSHE->GetCacheKey(getter_AddRefs(cacheKey));
 
       // figure out if we need to set the post data stream on the channel...
       // right now, this is only done for http channels.....
@@ -3404,7 +3399,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
            * the user has given us permission to do so.
            */
           if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL) {
-            if (cacheChannel)
+            if (cacheChannel && cacheKey)
               cacheChannel->SetCacheKey(cacheKey, PR_TRUE);
           }
         }
@@ -3416,7 +3411,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
            * method and even on those that say "no-cache"
            */
           if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL) {
-            if (cacheChannel)
+            if (cacheChannel && cacheKey)
               cacheChannel->SetCacheKey(cacheKey, PR_FALSE);
           }
         }
@@ -4293,36 +4288,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
 
    NS_ENSURE_SUCCESS(hEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetReferrerURI(getter_AddRefs(referrerURI)), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
-      NS_ERROR_FAILURE);
-
-#if 0
-   PRBool repost = PR_TRUE;
-
-   /* Ask whether to repost form post data */
-   if (postData) {
-       nsCOMPtr<nsIPrompt> prompter;
-       nsCOMPtr<nsIStringBundle> stringBundle;
-       GetPromptAndStringBundle(getter_AddRefs(prompter), 
-          getter_AddRefs(stringBundle));
- 
-       if (stringBundle && prompter) {
-          nsXPIDLString messageStr;
-          nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repost").GetUnicode(), 
-          getter_Copies(messageStr));
-          
-          if (NS_SUCCEEDED(rv) && messageStr) {
-             prompter->Confirm(nsnull, messageStr, &repost);
-			  /* If the user pressed cancel in the dialog, 
-               * return failure. Don't try to load the page with out 
-               * the post data. 
-               */
-              if (!repost)
-                return NS_ERROR_FAILURE;
-		  }
-	   }
-    }
-#endif  /* 0 */    
+   NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)), NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(InternalLoad(uri, referrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                                   postData, nsnull, aLoadType, aEntry),
