@@ -109,6 +109,15 @@ public:
     ReleaseService(const nsCID& aClass, nsISupports* service,
                    nsIShutdownListener* shutdownListener = NULL) = 0;
 
+    ////////////////////////////////////////////////////////////////////////////
+    // let's do it again, this time with ProgIDs...
+
+    NS_IMETHOD
+    RegisterService(const char* aProgID, nsISupports* aService) = 0;
+
+    NS_IMETHOD
+    UnregisterService(const char* aProgID) = 0;
+
     NS_IMETHOD
     GetService(const char* aProgID, const nsIID& aIID,
                nsISupports* *result,

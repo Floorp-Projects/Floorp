@@ -134,6 +134,12 @@ public:
                    nsIShutdownListener* shutdownListener = NULL);
 
     NS_IMETHOD
+    RegisterService(const char* aProgID, nsISupports* aService);
+
+    NS_IMETHOD
+    UnregisterService(const char* aProgID);
+
+    NS_IMETHOD
     GetService(const char* aProgID, const nsIID& aIID,
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = NULL);
@@ -289,29 +295,6 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
 }
 
 NS_IMETHODIMP
-nsServiceManagerImpl::GetService(const char* aProgID, const nsIID& aIID,
-                                 nsISupports* *result,
-                                 nsIShutdownListener* shutdownListener)
-{
-    nsCID aClass;
-    nsresult rv;
-    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
-    if (NS_FAILED(rv)) return rv;
-    return GetService(aClass, aIID, result, shutdownListener);
-}
-
-NS_IMETHODIMP
-nsServiceManagerImpl::ReleaseService(const char* aProgID, nsISupports* service,
-                                     nsIShutdownListener* shutdownListener)
-{
-    nsCID aClass;
-    nsresult rv;
-    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
-    if (NS_FAILED(rv)) return rv;
-    return ReleaseService(aClass, service, shutdownListener);
-}
-
-NS_IMETHODIMP
 nsServiceManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aService)
 {
     nsresult rv = NS_OK;
@@ -363,6 +346,52 @@ nsServiceManagerImpl::UnregisterService(const nsCID& aClass)
 
     PR_CExitMonitor(this);
     return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// let's do it again, this time with ProgIDs...
+
+NS_IMETHODIMP
+nsServiceManagerImpl::RegisterService(const char* aProgID, nsISupports* aService)
+{
+    nsCID aClass;
+    nsresult rv;
+    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    if (NS_FAILED(rv)) return rv;
+    return RegisterService(aClass, aService);
+}
+
+NS_IMETHODIMP
+nsServiceManagerImpl::UnregisterService(const char* aProgID)
+{
+    nsCID aClass;
+    nsresult rv;
+    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    if (NS_FAILED(rv)) return rv;
+    return UnregisterService(aClass);
+}
+
+NS_IMETHODIMP
+nsServiceManagerImpl::GetService(const char* aProgID, const nsIID& aIID,
+                                 nsISupports* *result,
+                                 nsIShutdownListener* shutdownListener)
+{
+    nsCID aClass;
+    nsresult rv;
+    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    if (NS_FAILED(rv)) return rv;
+    return GetService(aClass, aIID, result, shutdownListener);
+}
+
+NS_IMETHODIMP
+nsServiceManagerImpl::ReleaseService(const char* aProgID, nsISupports* service,
+                                     nsIShutdownListener* shutdownListener)
+{
+    nsCID aClass;
+    nsresult rv;
+    rv = nsComponentManager::ProgIDToCLSID(aProgID, &aClass);
+    if (NS_FAILED(rv)) return rv;
+    return ReleaseService(aClass, service, shutdownListener);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
