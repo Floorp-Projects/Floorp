@@ -266,12 +266,7 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPresContext> presContext;
-    result = mDocShell->GetPresContext(getter_AddRefs(presContext));
-    if (NS_FAILED(result) || !presContext)
-      return NS_ERROR_FAILURE;
-
-    result = mDocShell->LoadURI(uri, presContext);
+    result = mDocShell->LoadURI(uri, (nsIURI*) nsnull);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
