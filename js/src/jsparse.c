@@ -122,37 +122,59 @@ static JSParser PrimaryExpr;
         }                                                                     \
     JS_END_MACRO
 
+#ifdef METER_PARSENODES
+static uint32 parsenodes = 0;
+static uint32 maxparsenodes = 0;
+static uint32 recyclednodes = 0;
+#endif
 
 /*
  * Allocate a JSParseNode from cx's temporary arena.
  */
 static JSParseNode *
-NewParseNode(JSContext *cx, JSToken *tok, JSParseNodeArity arity)
+NewParseNode(JSContext *cx, JSToken *tok, JSParseNodeArity arity,
+             JSTreeContext *tc)
 {
     JSParseNode *pn;
 
-    JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
-    if (!pn)
-        return NULL;
+    pn = tc->nodeList;
+    if (pn) {
+        tc->nodeList = pn->pn_next;
+    } else {
+        JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
+        if (!pn)
+            return NULL;
+    }
     pn->pn_type = tok->type;
     pn->pn_pos = tok->pos;
     pn->pn_op = JSOP_NOP;
     pn->pn_arity = arity;
     pn->pn_next = NULL;
+#ifdef METER_PARSENODES
+    parsenodes++;
+    if (parsenodes - recyclednodes > maxparsenodes)
+        maxparsenodes = parsenodes - recyclednodes;
+#endif
     return pn;
 }
 
 static JSParseNode *
 NewBinary(JSContext *cx, JSTokenType tt,
-          JSOp op, JSParseNode *left, JSParseNode *right)
+          JSOp op, JSParseNode *left, JSParseNode *right,
+          JSTreeContext *tc)
 {
     JSParseNode *pn;
 
     if (!left || !right)
         return NULL;
-    JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
-    if (!pn)
-        return NULL;
+    pn = tc->nodeList;
+    if (pn) {
+        tc->nodeList = pn->pn_next;
+    } else {
+        JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
+        if (!pn)
+            return NULL;
+    }
     pn->pn_type = tt;
     pn->pn_pos.begin = left->pn_pos.begin;
     pn->pn_pos.end = right->pn_pos.end;
@@ -161,7 +183,54 @@ NewBinary(JSContext *cx, JSTokenType tt,
     pn->pn_left = left;
     pn->pn_right = right;
     pn->pn_next = NULL;
+#ifdef METER_PARSENODES
+    parsenodes++;
+    if (parsenodes - recyclednodes > maxparsenodes)
+        maxparsenodes = parsenodes - recyclednodes;
+#endif
     return pn;
+}
+
+static void
+RecycleTree(JSParseNode *pn, JSTreeContext *tc)
+{
+    JSParseNode *pn2;
+
+    if (!pn)
+        return;
+    switch (pn->pn_arity) {
+      case PN_FUNC:
+        RecycleTree(pn->pn_body, tc);
+        break;
+      case PN_LIST:
+        while ((pn2 = pn->pn_head) != NULL) {
+            pn->pn_head = pn2->pn_next;
+            RecycleTree(pn2, tc);
+        }
+        break;
+      case PN_TERNARY:
+        RecycleTree(pn->pn_kid1, tc);
+        RecycleTree(pn->pn_kid2, tc);
+        RecycleTree(pn->pn_kid3, tc);
+        break;
+      case PN_BINARY:
+        RecycleTree(pn->pn_left, tc);
+        RecycleTree(pn->pn_right, tc);
+        break;
+      case PN_UNARY:
+        RecycleTree(pn->pn_kid, tc);
+        break;
+      case PN_NAME:
+        RecycleTree(pn->pn_expr, tc);
+        break;
+      case PN_NULLARY:
+        break;
+    }
+    pn->pn_next = tc->nodeList;
+    tc->nodeList = pn;
+#ifdef METER_PARSENODES
+    recyclednodes++;
+#endif
 }
 
 static JSBool
@@ -234,27 +303,77 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
 /*
  * Parse a top-level JS script.
  */
-JS_FRIEND_API(JSBool)
-js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
-                      JSCodeGenerator *cg)
+JS_FRIEND_API(JSParseNode *)
+js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
 {
     JSStackFrame *fp, frame;
-    JSBool ok;
+    JSTreeContext tc;
     JSParseNode *pn;
+
+    JS_ASSERT(cx->runtime->gcDisabled);
 
     fp = cx->fp;
     if (!fp || fp->varobj != chain || fp->scopeChain != chain) {
         memset(&frame, 0, sizeof frame);
         frame.varobj = frame.scopeChain = chain;
+        if (cx->options & JSOPTION_VAROBJFIX) {
+            while ((chain = JS_GetParent(cx, chain)) != NULL)
+                frame.varobj = chain;
+        }
+        frame.down = fp;
+        cx->fp = &frame;
+    }
+
+    TREE_CONTEXT_INIT(&tc);
+    pn = Statements(cx, ts, &tc);
+    if (pn) {
+        if (!js_MatchToken(cx, ts, TOK_EOF)) {
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                        JSMSG_SYNTAX_ERROR);
+            pn = NULL;
+        } else {
+            pn->pn_type = TOK_LC;
+            if (!js_FoldConstants(cx, pn, &tc))
+                pn = NULL;
+        }
+    }
+
+    TREE_CONTEXT_FINISH(&tc);
+    cx->fp = fp;
+    return pn;
+}
+
+/*
+ * Compile a top-level script.
+ */
+JS_FRIEND_API(JSBool)
+js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
+                      JSCodeGenerator *cg)
+{
+    JSStackFrame *fp, frame;
+    JSParseNode *pn;
+    JSBool ok;
+#ifdef METER_PARSENODES
+    void *sbrk(ptrdiff_t), *before = sbrk(0);
+#endif
+
+    fp = cx->fp;
+    if (!fp || fp->varobj != chain || fp->scopeChain != chain) {
+        memset(&frame, 0, sizeof frame);
+        frame.varobj = frame.scopeChain = chain;
+        if (cx->options & JSOPTION_VAROBJFIX) {
+            while ((chain = JS_GetParent(cx, chain)) != NULL)
+                frame.varobj = chain;
+        }
         frame.down = fp;
         cx->fp = &frame;
     }
 
     /*
-     * Prevent GC activation on this context (possible if out of memory when
-     * atomizing, or from pre-ECMAv2 switch case expr eval in the unlikely
-     * case of a branch-callback -- unlikely because it means the switch case
-     * must have called a function).
+     * Prevent GC activation (possible if out of memory when atomizing,
+     * or from pre-ECMAv2 switch case expr eval in the unlikely case of a
+     * branch-callback -- unlikely because it means the switch case must
+     * have called a function).
      */
     JS_DISABLE_GC(cx->runtime);
 
@@ -266,12 +385,27 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
                                     JSMSG_SYNTAX_ERROR);
         ok = JS_FALSE;
     } else {
+#ifdef METER_PARSENODES
+        printf("Parser growth: %d (%u nodes, %u max, %u unrecycled)\n",
+               (char *)sbrk(0) - (char *)before,
+               parsenodes,
+               maxparsenodes,
+               parsenodes - recyclednodes);
+        before = sbrk(0);
+#endif
         pn->pn_type = TOK_LC;
-        ok = js_FoldConstants(cx, pn) &&
+        ok = js_FoldConstants(cx, pn, &cg->treeContext) &&
              js_AllocTryNotes(cx, cg) &&
              js_EmitTree(cx, cg, pn);
     }
 
+#ifdef METER_PARSENODES
+    printf("Code-gen growth: %d (%u bytecodes, %u srcnotes)\n",
+           (char *)sbrk(0) - (char *)before, CG_OFFSET(cg), cg->noteCount);
+#endif
+#ifdef JS_ARENAMETER
+    JS_DumpArenaStats(stdout);
+#endif
     JS_ENABLE_GC(cx->runtime);
     cx->fp = fp;
     return ok;
@@ -417,7 +551,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
         return JS_FALSE;
     }
 
-    /* Prevent GC activation on this context during compilation. */
+    /* Prevent GC activation while compiling. */
     JS_DISABLE_GC(cx->runtime);
 
     /* Ensure that the body looks like a block statement to js_EmitTree. */
@@ -426,7 +560,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     if (!pn) {
         ok = JS_FALSE;
     } else {
-        ok = js_FoldConstants(cx, pn) &&
+        ok = js_FoldConstants(cx, pn, &funcg.treeContext) &&
              js_EmitFunctionBody(cx, &funcg, pn, fun);
     }
 
@@ -439,8 +573,8 @@ static JSParseNode *
 FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             JSBool lambda)
 {
-    JSParseNode *pn, *pn2, *body;
-    JSOp op;
+    JSParseNode *pn, *body;
+    JSOp op, prevop;
     JSAtom *funAtom, *argAtom;
     JSFunction *fun;
     JSObject *parent;
@@ -451,7 +585,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSAtomListElement *ale;
 
     /* Make a TOK_FUNCTION node. */
-    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_FUNC);
+    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_FUNC, tc);
     if (!pn)
         return NULL;
     op = CURRENT_TOKEN(ts).t_op;
@@ -547,7 +681,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
 
     /*
-     * If we collected flags that include nested functions or with statements
+     * If we collected flags that indicate nested functions or with statements
      * while compiling our body, flag the function as heavyweight (requiring
      * a call object per invocation).  Therefore, update tc->flags to reflect
      * the fact that the outer context contains this function, and may also be
@@ -564,30 +698,29 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (!lambda && funAtom) {
         ATOM_LIST_SEARCH(ale, &tc->decls, funAtom);
         if (ale) {
-            pn2 = ALE_NODE(ale);
-            op = pn2->pn_op;
-            if ((JS_HAS_STRICT_OPTION(cx) || op == JSOP_DEFCONST) &&
+            prevop = ALE_JSOP(ale);
+            if ((JS_HAS_STRICT_OPTION(cx) || prevop == JSOP_DEFCONST) &&
                 !js_ReportCompileErrorNumber(cx, ts, NULL,
-                                             (op != JSOP_DEFCONST)
+                                             (prevop != JSOP_DEFCONST)
                                              ? JSREPORT_WARNING|JSREPORT_STRICT
                                              : JSREPORT_ERROR,
                                              JSMSG_REDECLARED_VAR,
-                                             (pn2->pn_type == TOK_FUNCTION)
+                                             (prevop == JSOP_DEFFUN)
                                              ? js_function_str
-                                             : (op == JSOP_DEFCONST)
+                                             : (prevop == JSOP_DEFCONST)
                                              ? js_const_str
                                              : js_var_str,
                                              ATOM_BYTES(funAtom))) {
                 return NULL;
             }
-            if (op == JSOP_DEFVAR)
+            if (prevop == JSOP_DEFVAR)
                 tc->flags |= TCF_FUN_VS_VAR;
         } else {
             ale = js_IndexAtom(cx, funAtom, &tc->decls);
             if (!ale)
                 return NULL;
         }
-        ALE_SET_NODE(ale, pn);
+        ALE_SET_JSOP(ale, JSOP_DEFFUN);
     }
 
 #if JS_HAS_LEXICAL_CLOSURE
@@ -598,7 +731,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * a function declaration).
          */
         op = fun->atom ? JSOP_NAMEDFUNOBJ : JSOP_ANONFUNOBJ;
-    } else if (!(tc->flags & TCF_TOP_LEVEL) || cx->fp->scopeChain != parent) {
+    } else if (tc->topStmt || cx->fp->scopeChain != parent) {
         /*
          * ECMA ed. 3 extension: a function expression statement not at the
          * top level, e.g., in a compound statement such as the "then" part
@@ -618,7 +751,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_body = body;
     pn->pn_flags = funtc.flags & TCF_FUN_FLAGS;
     pn->pn_tryCount = funtc.tryCount;
-    TREE_CONTEXT_FREE(&funtc);
+    TREE_CONTEXT_FINISH(&funtc);
     return pn;
 }
 
@@ -647,7 +780,7 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSParseNode *pn, *pn2;
     JSTokenType tt;
 
-    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
     if (!pn)
         return NULL;
     PN_INIT_LIST(pn);
@@ -658,7 +791,19 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn2 = Statement(cx, ts, tc);
         if (!pn2)
             return NULL;
-        PN_APPEND(pn, pn2);
+
+        /* If compiling top-level statements, emit as we go to save space. */
+        if (!tc->topStmt && (tc->flags & TCF_COMPILING)) {
+            if (!js_FoldConstants(cx, pn, tc) ||
+                !js_AllocTryNotes(cx, (JSCodeGenerator *)tc) ||
+                !js_EmitTree(cx, (JSCodeGenerator *)tc, pn2)) {
+                return NULL;
+            }
+            RecycleTree(pn2, tc);
+        } else {
+            PN_APPEND(pn, pn2);
+        }
+
         ts->flags |= TSF_REGEXP;
     }
     ts->flags &= ~TSF_REGEXP;
@@ -750,7 +895,7 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSTokenType tt;
 
     MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_IMPORT_NAME);
-    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME);
+    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME, tc);
     if (!pn)
         return NULL;
     pn->pn_op = JSOP_NAME;
@@ -766,7 +911,7 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             goto bad_import;
 
         if (tt == TOK_DOT) {
-            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME);
+            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME, tc);
             if (!pn2)
                 return NULL;
             if (js_MatchToken(cx, ts, TOK_STAR)) {
@@ -784,7 +929,7 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn2->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
         } else {
             /* Make a TOK_LB node. */
-            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY);
+            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
             if (!pn2)
                 return NULL;
             pn3 = Expr(cx, ts, tc);
@@ -853,19 +998,19 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     switch (tt) {
 #if JS_HAS_EXPORT_IMPORT
       case TOK_EXPORT:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
         if (!pn)
             return NULL;
         PN_INIT_LIST(pn);
         if (js_MatchToken(cx, ts, TOK_STAR)) {
-            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
             if (!pn2)
                 return NULL;
             PN_APPEND(pn, pn2);
         } else {
             do {
                 MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_EXPORT_NAME);
-                pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME);
+                pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME, tc);
                 if (!pn2)
                     return NULL;
                 pn2->pn_op = JSOP_NAME;
@@ -885,7 +1030,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_IMPORT:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
         if (!pn)
             return NULL;
         PN_INIT_LIST(pn);
@@ -916,7 +1061,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       case TOK_IF:
         /* An IF node has three kids: condition, then, and optional else. */
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY, tc);
         if (!pn)
             return NULL;
         pn1 = Condition(cx, ts, tc);
@@ -948,7 +1093,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         JSParseNode *pn5;
         JSBool seenDefault = JS_FALSE;
 
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
         if (!pn)
             return NULL;
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_SWITCH);
@@ -962,7 +1107,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_SWITCH);
 
         /* pn2 is a list of case nodes. The default case has pn_left == NULL */
-        pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+        pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
         if (!pn2)
             return NULL;
         PN_INIT_LIST(pn2);
@@ -981,7 +1126,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 /* fall through */
 
               case TOK_CASE:
-                pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY);
+                pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
                 if (!pn3)
                     return NULL;
                 if (tt == TOK_DEFAULT) {
@@ -1009,7 +1154,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             }
             MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_AFTER_CASE);
 
-            pn4 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+            pn4 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
             if (!pn4)
                 return NULL;
             pn4->pn_type = TOK_LC;
@@ -1038,7 +1183,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif /* JS_HAS_SWITCH_STATEMENT */
 
       case TOK_WHILE:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
         if (!pn)
             return NULL;
         js_PushStatement(tc, &stmtInfo, STMT_WHILE_LOOP, -1);
@@ -1056,7 +1201,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
 #if JS_HAS_DO_WHILE_LOOP
       case TOK_DO:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
         if (!pn)
             return NULL;
         js_PushStatement(tc, &stmtInfo, STMT_DO_LOOP, -1);
@@ -1076,7 +1221,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       case TOK_FOR:
         /* A FOR node is binary, left is loop control and right is the body. */
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
         if (!pn)
             return NULL;
         js_PushStatement(tc, &stmtInfo, STMT_FOR_LOOP, -1);
@@ -1141,7 +1286,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             }
 
             /* Parse the object expression as the right operand of 'in'. */
-            pn2 = NewBinary(cx, TOK_IN, JSOP_NOP, pn1, Expr(cx, ts, tc));
+            pn2 = NewBinary(cx, TOK_IN, JSOP_NOP, pn1, Expr(cx, ts, tc), tc);
             if (!pn2)
                 return NULL;
             pn->pn_left = pn2;
@@ -1167,7 +1312,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             }
 
             /* Build the RESERVED node to use as the left kid of pn. */
-            pn4 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY);
+            pn4 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY, tc);
             if (!pn4)
                 return NULL;
             pn4->pn_type = TOK_RESERVED;
@@ -1211,14 +1356,16 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          *
          * finally nodes are unary (just the finally expression)
          */
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY, tc);
         pn->pn_op = JSOP_NOP;
 
         MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_TRY);
+        js_PushStatement(tc, &stmtInfo, STMT_TRY, -1);
         pn->pn_kid1 = Statements(cx, ts, tc);
         if (!pn->pn_kid1)
             return NULL;
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_TRY);
+        js_PopStatement(tc);
 
         catchtail = pn;
         while (js_PeekToken(cx, ts) == TOK_CATCH) {
@@ -1236,7 +1383,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
              * (the latter is legal only #ifdef JS_HAS_CATCH_GUARD)
              */
             (void) js_GetToken(cx, ts); /* eat `catch' */
-            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY);
+            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY, tc);
             if (!pn2)
                 return NULL;
 
@@ -1246,7 +1393,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
              */
             MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
             MUST_MATCH_TOKEN(TOK_NAME, JSMSG_CATCH_IDENTIFIER);
-            pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME);
+            pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME, tc);
             if (!pn3)
                 return NULL;
 
@@ -1284,10 +1431,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (js_MatchToken(cx, ts, TOK_FINALLY)) {
             tc->tryCount++;
             MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_FINALLY);
+            js_PushStatement(tc, &stmtInfo, STMT_FINALLY, -1);
             pn->pn_kid3 = Statements(cx, ts, tc);
             if (!pn->pn_kid3)
                 return NULL;
             MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_FINALLY);
+            js_PopStatement(tc);
         } else {
             pn->pn_kid3 = NULL;
         }
@@ -1301,7 +1450,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       }
 
       case TOK_THROW:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
         pn2 = Expr(cx, ts, tc);
@@ -1330,7 +1479,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif /* JS_HAS_EXCEPTIONS */
 
       case TOK_BREAK:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
         if (!pn)
             return NULL;
         if (!MatchLabel(cx, ts, pn))
@@ -1363,7 +1512,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_CONTINUE:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
         if (!pn)
             return NULL;
         if (!MatchLabel(cx, ts, pn))
@@ -1407,7 +1556,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_WITH:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
         if (!pn)
             return NULL;
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_WITH);
@@ -1456,7 +1605,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                         JSMSG_BAD_RETURN);
             return NULL;
         }
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
 
@@ -1523,7 +1672,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       case TOK_EOL:
       case TOK_SEMI:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
         pn->pn_type = TOK_SEMI;
@@ -1534,7 +1683,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_DEBUGGER:
         if (!WellTerminated(cx, ts, TOK_ERROR))
             return NULL;
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
         if (!pn)
             return NULL;
         pn->pn_type = TOK_DEBUGGER;
@@ -1589,7 +1738,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         }
 
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
         pn->pn_type = TOK_SEMI;
@@ -1613,6 +1762,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSPropertyOp getter, setter, currentGetter, currentSetter;
     JSAtom *atom;
     JSAtomListElement *ale;
+    JSOp prevop;
     JSProperty *prop;
     JSScopeProperty *sprop;
     JSBool ok;
@@ -1626,7 +1776,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * this by looking up the variable id in the current variable scope.
      */
     JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_VAR);
-    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
     if (!pn)
         return NULL;
     pn->pn_op = CURRENT_TOKEN(ts).t_op;
@@ -1661,34 +1811,34 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         ATOM_LIST_SEARCH(ale, &tc->decls, atom);
         if (ale) {
-            pn2 = ALE_NODE(ale);
+            prevop = ALE_JSOP(ale);
             if ((JS_HAS_STRICT_OPTION(cx) ||
                  pn->pn_op == JSOP_DEFCONST ||
-                 pn2->pn_op == JSOP_DEFCONST) &&
+                 prevop == JSOP_DEFCONST) &&
                 !js_ReportCompileErrorNumber(cx, ts, NULL,
                                              (pn->pn_op != JSOP_DEFCONST &&
-                                              pn2->pn_op != JSOP_DEFCONST)
+                                              prevop != JSOP_DEFCONST)
                                              ? JSREPORT_WARNING|JSREPORT_STRICT
                                              : JSREPORT_ERROR,
                                              JSMSG_REDECLARED_VAR,
-                                             (pn2->pn_type == TOK_FUNCTION)
+                                             (prevop == JSOP_DEFFUN)
                                              ? js_function_str
-                                             : (pn2->pn_op == JSOP_DEFCONST)
+                                             : (prevop == JSOP_DEFCONST)
                                              ? js_const_str
                                              : js_var_str,
                                              ATOM_BYTES(atom))) {
                 return NULL;
             }
-            if (pn->pn_op == JSOP_DEFVAR && pn2->pn_type == TOK_FUNCTION)
+            if (pn->pn_op == JSOP_DEFVAR && prevop == JSOP_DEFFUN)
                 tc->flags |= TCF_FUN_VS_VAR;
         } else {
             ale = js_IndexAtom(cx, atom, &tc->decls);
             if (!ale)
                 return NULL;
-            ALE_SET_NODE(ale, pn);
         }
+        ALE_SET_JSOP(ale, pn->pn_op);
 
-        pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME);
+        pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME, tc);
         if (!pn2)
             return NULL;
         pn2->pn_op = JSOP_NAME;
@@ -1834,7 +1984,7 @@ Expr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     pn = AssignExpr(cx, ts, tc);
     if (pn && js_MatchToken(cx, ts, TOK_COMMA)) {
-        pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+        pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
         if (!pn2)
             return NULL;
         pn2->pn_pos.begin = pn->pn_pos.begin;
@@ -1900,7 +2050,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                     JSMSG_BAD_LEFTSIDE_OF_ASS);
         return NULL;
     }
-    pn = NewBinary(cx, TOK_ASSIGN, op, pn2, AssignExpr(cx, ts, tc));
+    pn = NewBinary(cx, TOK_ASSIGN, op, pn2, AssignExpr(cx, ts, tc), tc);
     return pn;
 }
 
@@ -1915,7 +2065,7 @@ CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn = OrExpr(cx, ts, tc);
     if (pn && js_MatchToken(cx, ts, TOK_HOOK)) {
         pn1 = pn;
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_TERNARY, tc);
         if (!pn)
             return NULL;
 #if JS_HAS_IN_OPERATOR
@@ -1954,7 +2104,7 @@ OrExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     pn = AndExpr(cx, ts, tc);
     if (pn && js_MatchToken(cx, ts, TOK_OR))
-        pn = NewBinary(cx, TOK_OR, JSOP_OR, pn, OrExpr(cx, ts, tc));
+        pn = NewBinary(cx, TOK_OR, JSOP_OR, pn, OrExpr(cx, ts, tc), tc);
     return pn;
 }
 
@@ -1965,7 +2115,7 @@ AndExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     pn = BitOrExpr(cx, ts, tc);
     if (pn && js_MatchToken(cx, ts, TOK_AND))
-        pn = NewBinary(cx, TOK_AND, JSOP_AND, pn, AndExpr(cx, ts, tc));
+        pn = NewBinary(cx, TOK_AND, JSOP_AND, pn, AndExpr(cx, ts, tc), tc);
     return pn;
 }
 
@@ -1975,8 +2125,10 @@ BitOrExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSParseNode *pn;
 
     pn = BitXorExpr(cx, ts, tc);
-    while (pn && js_MatchToken(cx, ts, TOK_BITOR))
-        pn = NewBinary(cx, TOK_BITOR, JSOP_BITOR, pn, BitXorExpr(cx, ts, tc));
+    while (pn && js_MatchToken(cx, ts, TOK_BITOR)) {
+        pn = NewBinary(cx, TOK_BITOR, JSOP_BITOR, pn, BitXorExpr(cx, ts, tc),
+                       tc);
+    }
     return pn;
 }
 
@@ -1986,8 +2138,10 @@ BitXorExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSParseNode *pn;
 
     pn = BitAndExpr(cx, ts, tc);
-    while (pn && js_MatchToken(cx, ts, TOK_BITXOR))
-        pn = NewBinary(cx, TOK_BITXOR, JSOP_BITXOR, pn, BitAndExpr(cx, ts, tc));
+    while (pn && js_MatchToken(cx, ts, TOK_BITXOR)) {
+        pn = NewBinary(cx, TOK_BITXOR, JSOP_BITXOR, pn, BitAndExpr(cx, ts, tc),
+                       tc);
+    }
     return pn;
 }
 
@@ -1998,7 +2152,7 @@ BitAndExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     pn = EqExpr(cx, ts, tc);
     while (pn && js_MatchToken(cx, ts, TOK_BITAND))
-        pn = NewBinary(cx, TOK_BITAND, JSOP_BITAND, pn, EqExpr(cx, ts, tc));
+        pn = NewBinary(cx, TOK_BITAND, JSOP_BITAND, pn, EqExpr(cx, ts, tc), tc);
     return pn;
 }
 
@@ -2011,7 +2165,7 @@ EqExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn = RelExpr(cx, ts, tc);
     while (pn && js_MatchToken(cx, ts, TOK_EQOP)) {
         op = CURRENT_TOKEN(ts).t_op;
-        pn = NewBinary(cx, TOK_EQOP, op, pn, RelExpr(cx, ts, tc));
+        pn = NewBinary(cx, TOK_EQOP, op, pn, RelExpr(cx, ts, tc), tc);
     }
     return pn;
 }
@@ -2049,7 +2203,7 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             )) {
         tt = CURRENT_TOKEN(ts).type;
         op = CURRENT_TOKEN(ts).t_op;
-        pn = NewBinary(cx, tt, op, pn, ShiftExpr(cx, ts, tc));
+        pn = NewBinary(cx, tt, op, pn, ShiftExpr(cx, ts, tc), tc);
     }
 #if JS_HAS_IN_OPERATOR
     /* Restore previous state of inForInit flag. */
@@ -2068,7 +2222,7 @@ ShiftExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn = AddExpr(cx, ts, tc);
     while (pn && js_MatchToken(cx, ts, TOK_SHOP)) {
         op = CURRENT_TOKEN(ts).t_op;
-        pn = NewBinary(cx, TOK_SHOP, op, pn, AddExpr(cx, ts, tc));
+        pn = NewBinary(cx, TOK_SHOP, op, pn, AddExpr(cx, ts, tc), tc);
     }
     return pn;
 }
@@ -2086,7 +2240,7 @@ AddExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             js_MatchToken(cx, ts, TOK_MINUS))) {
         tt = CURRENT_TOKEN(ts).type;
         op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
-        pn = NewBinary(cx, tt, op, pn, MulExpr(cx, ts, tc));
+        pn = NewBinary(cx, tt, op, pn, MulExpr(cx, ts, tc), tc);
     }
     return pn;
 }
@@ -2104,7 +2258,7 @@ MulExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             js_MatchToken(cx, ts, TOK_DIVOP))) {
         tt = CURRENT_TOKEN(ts).type;
         op = CURRENT_TOKEN(ts).t_op;
-        pn = NewBinary(cx, tt, op, pn, UnaryExpr(cx, ts, tc));
+        pn = NewBinary(cx, tt, op, pn, UnaryExpr(cx, ts, tc), tc);
     }
     return pn;
 }
@@ -2181,7 +2335,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_UNARYOP:
       case TOK_PLUS:
       case TOK_MINUS:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
         pn->pn_type = TOK_UNARYOP;      /* PLUS and MINUS are binary */
@@ -2195,7 +2349,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       case TOK_INC:
       case TOK_DEC:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
         pn2 = MemberExpr(cx, ts, tc, JS_TRUE);
@@ -2207,7 +2361,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_DELETE:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
         pn2 = UnaryExpr(cx, ts, tc);
@@ -2238,7 +2392,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             tt = js_PeekTokenSameLine(cx, ts);
             if (tt == TOK_INC || tt == TOK_DEC) {
                 (void) js_GetToken(cx, ts);
-                pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+                pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
                 if (!pn2)
                     return NULL;
                 if (!SetIncOpKid(cx, ts, tc, pn2, pn, tt, JS_FALSE))
@@ -2288,7 +2442,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (tt == TOK_NEW) {
         (void) js_GetToken(cx, ts);
 
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
         if (!pn)
             return NULL;
         pn2 = MemberExpr(cx, ts, tc, JS_FALSE);
@@ -2316,7 +2470,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     while ((tt = js_GetToken(cx, ts)) > TOK_EOF) {
         if (tt == TOK_DOT) {
-            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME);
+            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME, tc);
             if (!pn2)
                 return NULL;
             MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NAME_AFTER_DOT);
@@ -2326,7 +2480,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn2->pn_expr = pn;
             pn2->pn_atom = CURRENT_TOKEN(ts).t_atom;
         } else if (tt == TOK_LB) {
-            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY);
+            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
             if (!pn2)
                 return NULL;
             pn3 = Expr(cx, ts, tc);
@@ -2350,10 +2504,19 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 pn2->pn_right = pn3;
             }
         } else if (allowCallSyntax && tt == TOK_LP) {
-            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+            pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
             if (!pn2)
                 return NULL;
+
+            /* Pick JSOP_EVAL and flag tc as heavyweight if eval(...). */
             pn2->pn_op = JSOP_CALL;
+            if (pn->pn_op == JSOP_NAME &&
+                pn->pn_atom == cx->runtime->atomState.evalAtom) {
+                if (JSVERSION_IS_ECMA(cx->version))
+                    pn2->pn_op = JSOP_EVAL;
+                tc->flags |= TCF_FUN_HEAVYWEIGHT;
+            }
+
             PN_INIT_LIST_1(pn2, pn);
 
             pn2 = ArgumentList(cx, ts, tc, pn2);
@@ -2429,7 +2592,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         JSBool matched;
         jsuint atomIndex;
 
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
         if (!pn)
             return NULL;
         pn->pn_type = TOK_RB;
@@ -2459,7 +2622,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 if (tt == TOK_COMMA) {
                     /* So CURRENT_TOKEN gets TOK_COMMA and not TOK_LB. */
                     js_MatchToken(cx, ts, TOK_COMMA);
-                    pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+                    pn2 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
                 } else
                     pn2 = AssignExpr(cx, ts, tc);
                 if (!pn2)
@@ -2480,7 +2643,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       }
 
       case TOK_LC:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST, tc);
         if (!pn)
             return NULL;
         pn->pn_type = TOK_RC;
@@ -2500,7 +2663,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 tt = js_GetToken(cx, ts);
                 switch (tt) {
                   case TOK_NUMBER:
-                    pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+                    pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
                     if (pn3)
                         pn3->pn_dval = CURRENT_TOKEN(ts).t_dval;
                     break;
@@ -2514,7 +2677,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                              ? JSOP_GETTER
                              : JSOP_SETTER;
                         if (js_MatchToken(cx, ts, TOK_NAME)) {
-                            pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME);
+                            pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NAME,
+                                               tc);
                             if (!pn3)
                                 return NULL;
                             pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
@@ -2524,14 +2688,14 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                             CURRENT_TOKEN(ts).t_op = JSOP_NOP;
                             CURRENT_TOKEN(ts).type = TOK_FUNCTION;
                             pn2 = FunctionDef(cx, ts, tc, JS_TRUE);
-                            pn2 = NewBinary(cx, TOK_COLON, op, pn3, pn2);
+                            pn2 = NewBinary(cx, TOK_COLON, op, pn3, pn2, tc);
                             goto skip;
                         }
                     }
                     /* else fall thru ... */
 #endif
                   case TOK_STRING:
-                    pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+                    pn3 = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
                     if (pn3)
                         pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
                     break;
@@ -2564,8 +2728,11 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     return NULL;
                 }
                 op = CURRENT_TOKEN(ts).t_op;
-                pn2 = NewBinary(cx, TOK_COLON, op, pn3, AssignExpr(cx, ts, tc));
-skip:
+                pn2 = NewBinary(cx, TOK_COLON, op, pn3, AssignExpr(cx, ts, tc),
+                                tc);
+#if JS_HAS_GETTER_SETTER
+              skip:
+#endif
                 if (!pn2)
                     return NULL;
                 PN_APPEND(pn, pn2);
@@ -2581,7 +2748,7 @@ skip:
       case TOK_DEFSHARP:
         if (defsharp)
             goto badsharp;
-        defsharp = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        defsharp = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!defsharp)
             return NULL;
         defsharp->pn_kid = NULL;
@@ -2590,7 +2757,7 @@ skip:
 
       case TOK_USESHARP:
         /* Check for forward/dangling references at runtime, to allow eval. */
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
         if (!pn)
             return NULL;
         pn->pn_num = (jsint) CURRENT_TOKEN(ts).t_dval;
@@ -2604,7 +2771,7 @@ skip:
 #if JS_HAS_IN_OPERATOR
         uintN oldflags;
 #endif
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY, tc);
         if (!pn)
             return NULL;
 #if JS_HAS_IN_OPERATOR
@@ -2637,7 +2804,7 @@ skip:
         /* FALL THROUGH */
       case TOK_NAME:
       case TOK_OBJECT:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
         if (!pn)
             return NULL;
         pn->pn_op = CURRENT_TOKEN(ts).t_op;
@@ -2657,7 +2824,7 @@ skip:
         break;
 
       case TOK_NUMBER:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
         if (!pn)
             return NULL;
         pn->pn_dval = CURRENT_TOKEN(ts).t_dval;
@@ -2667,7 +2834,7 @@ skip:
         break;
 
       case TOK_PRIMARY:
-        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
+        pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY, tc);
         if (!pn)
             return NULL;
         pn->pn_op = CURRENT_TOKEN(ts).t_op;
@@ -2715,19 +2882,19 @@ skip:
 }
 
 JSBool
-js_FoldConstants(JSContext *cx, JSParseNode *pn)
+js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 {
     JSParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
 
     switch (pn->pn_arity) {
       case PN_FUNC:
-        if (!js_FoldConstants(cx, pn->pn_body))
+        if (!js_FoldConstants(cx, pn->pn_body, tc))
             return JS_FALSE;
         break;
 
       case PN_LIST:
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            if (!js_FoldConstants(cx, pn2))
+            if (!js_FoldConstants(cx, pn2, tc))
                 return JS_FALSE;
         }
         break;
@@ -2737,11 +2904,11 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
         pn1 = pn->pn_kid1;
         pn2 = pn->pn_kid2;
         pn3 = pn->pn_kid3;
-        if (pn1 && !js_FoldConstants(cx, pn1))
+        if (pn1 && !js_FoldConstants(cx, pn1, tc))
             return JS_FALSE;
-        if (pn2 && !js_FoldConstants(cx, pn2))
+        if (pn2 && !js_FoldConstants(cx, pn2, tc))
             return JS_FALSE;
-        if (pn3 && !js_FoldConstants(cx, pn3))
+        if (pn3 && !js_FoldConstants(cx, pn3, tc))
             return JS_FALSE;
         break;
 
@@ -2749,22 +2916,22 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
         /* First kid may be null (for default case in switch). */
         pn1 = pn->pn_left;
         pn2 = pn->pn_right;
-        if (pn1 && !js_FoldConstants(cx, pn1))
+        if (pn1 && !js_FoldConstants(cx, pn1, tc))
             return JS_FALSE;
-        if (!js_FoldConstants(cx, pn2))
+        if (!js_FoldConstants(cx, pn2, tc))
             return JS_FALSE;
         break;
 
       case PN_UNARY:
         /* Our kid may be null (e.g. return; vs. return e;). */
         pn1 = pn->pn_kid;
-        if (pn1 && !js_FoldConstants(cx, pn1))
+        if (pn1 && !js_FoldConstants(cx, pn1, tc))
             return JS_FALSE;
         break;
 
       case PN_NAME:
         pn1 = pn->pn_expr;
-        if (pn1 && !js_FoldConstants(cx, pn1))
+        if (pn1 && !js_FoldConstants(cx, pn1, tc))
             return JS_FALSE;
         break;
 
@@ -2807,6 +2974,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
             pn->pn_arity = PN_UNARY;
             pn->pn_kid = NULL;
         }
+        RecycleTree(pn2, tc);
+        RecycleTree(pn3, tc);
         break;
 
       case TOK_PLUS:
@@ -2839,6 +3008,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
             pn->pn_type = TOK_STRING;
             pn->pn_op = JSOP_STRING;
             pn->pn_arity = PN_NULLARY;
+            RecycleTree(pn1, tc);
+            RecycleTree(pn2, tc);
             break;
         }
         /* FALL THROUGH */
@@ -2924,6 +3095,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
             pn->pn_op = JSOP_NUMBER;
             pn->pn_arity = PN_NULLARY;
             pn->pn_dval = d;
+            RecycleTree(pn1, tc);
+            RecycleTree(pn2, tc);
         }
         break;
 
@@ -2971,6 +3144,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
             pn->pn_op = JSOP_NUMBER;
             pn->pn_arity = PN_NULLARY;
             pn->pn_dval = d;
+            RecycleTree(pn1, tc);
         }
         break;
 

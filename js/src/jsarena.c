@@ -77,7 +77,7 @@ JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size, JSUint32 al
     pool->mask = JS_BITMASK(JS_CeilingLog2(align));
     pool->first.next = NULL;
     pool->first.base = pool->first.avail = pool->first.limit =
-	(jsuword)JS_ARENA_ALIGN(pool, &pool->first + 1);
+	JS_ARENA_ALIGN(pool, &pool->first + 1);
     pool->current = &pool->first;
     pool->arenasize = size;
 #ifdef JS_ARENAMETER
@@ -131,7 +131,7 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
             JS_COUNT_ARENA(pool,++);
             COUNT(pool, nmallocs);
         claim:
-            a->base = a->avail = (jsuword)JS_ARENA_ALIGN(pool, a + 1);
+            a->base = a->avail = JS_ARENA_ALIGN(pool, a + 1);
             continue;
         }
         a = a->next;                            /* move to next arena */
@@ -139,6 +139,34 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
     p = (void *)a->avail;
     a->avail += nb;
     return p;
+}
+
+JS_PUBLIC_API(void *)
+JS_ArenaRealloc(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
+{
+    JSArena **ap, *a;
+    jsuword aoff;
+
+    ap = &pool->first.next;
+    while ((a = *ap) != pool->current)
+        ap = &a->next;
+    JS_ASSERT(a->base == (jsuword)p);
+    size += incr;
+    aoff = size;
+    JS_ASSERT(size > pool->arenasize);
+    size += sizeof *a + pool->mask;     /* header and alignment slop */
+    a = (JSArena *) realloc(a, size);
+    if (!a)
+        return NULL;
+    *ap = a;
+    pool->current = a;
+#ifdef JS_ARENAMETER
+    pool->stats.nreallocs++;
+#endif
+    a->base = JS_ARENA_ALIGN(pool, a + 1);
+    a->limit = (jsuword)a + size;
+    a->avail = JS_ARENA_ALIGN(pool, a->base + aoff);
+    return (void *)a->base;
 }
 
 JS_PUBLIC_API(void *)
@@ -204,7 +232,7 @@ JS_ArenaRelease(JSArenaPool *pool, char *mark)
 
     for (a = &pool->first; a; a = a->next) {
 	if (JS_UPTRDIFF(mark, a->base) <= JS_UPTRDIFF(a->avail, a->base)) {
-	    a->avail = (jsuword)JS_ARENA_ALIGN(pool, mark);
+	    a->avail = JS_ARENA_ALIGN(pool, mark);
 	    FreeArenaList(pool, a, JS_TRUE);
 	    return;
 	}
@@ -328,14 +356,22 @@ JS_PUBLIC_API(void)
 JS_DumpArenaStats(FILE *fp)
 {
     JSArenaStats *stats;
-    double mean, variance;
+    uint32 nallocs, nbytes;
+    double mean, variance, sigma;
 
     for (stats = arena_stats_list; stats; stats = stats->next) {
-        if (stats->nallocs != 0) {
-	    mean = (double)stats->nbytes / stats->nallocs;
-	    variance = fabs(stats->variance / stats->nallocs - mean * mean);
+        nallocs = stats->nallocs;
+        if (nallocs != 0) {
+            nbytes = stats->nbytes;
+            mean = (double)nbytes / nallocs;
+            variance = stats->variance * nallocs - nbytes * nbytes;
+            if (variance < 0 || nallocs == 1)
+                variance = 0;
+            else
+                variance /= nallocs * (nallocs - 1);
+            sigma = sqrt(variance);
 	} else {
-	    mean = variance = 0;
+	    mean = variance = sigma = 0;
 	}
 
         fprintf(fp, "\n%s allocation statistics:\n", stats->name);
@@ -346,11 +382,12 @@ JS_DumpArenaStats(FILE *fp)
         fprintf(fp, "       number of deallocations: %u\n", stats->ndeallocs);
         fprintf(fp, "  number of allocation growths: %u\n", stats->ngrows);
         fprintf(fp, "    number of in-place growths: %u\n", stats->ninplace);
+        fprintf(fp, " number of realloc'ing growths: %u\n", stats->nreallocs);
         fprintf(fp, "number of released allocations: %u\n", stats->nreleases);
         fprintf(fp, "       number of fast releases: %u\n", stats->nfastrels);
         fprintf(fp, "         total bytes allocated: %u\n", stats->nbytes);
         fprintf(fp, "          mean allocation size: %g\n", mean);
-        fprintf(fp, "            standard deviation: %g\n", sqrt(variance));
+        fprintf(fp, "            standard deviation: %g\n", sigma);
         fprintf(fp, "       maximum allocation size: %u\n", stats->maxalloc);
     }
 }

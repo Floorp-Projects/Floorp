@@ -81,12 +81,12 @@ struct JSAtomListElement {
 
 #define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
 #define ALE_INDEX(ale)  ((jsatomid) (ale)->entry.value)
-#define ALE_NODE(ale)   ((JSParseNode *) (ale)->entry.value)
+#define ALE_JSOP(ale)   ((JSOp) (ale)->entry.value)
 #define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
 
 #define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
 #define ALE_SET_INDEX(ale,index)((ale)->entry.value = (void *)(index))
-#define ALE_SET_NODE(ale,pn)    ((ale)->entry.value = (void *)(pn))
+#define ALE_SET_JSOP(ale,op)    ((ale)->entry.value = (void *)(op))
 #define ALE_SET_NEXT(ale,link)  ((ale)->entry.next = (JSHashEntry *)(link))
 
 struct JSAtomList {

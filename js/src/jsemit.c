@@ -43,8 +43,10 @@
 #include "jstypes.h"
 #include "jsarena.h" /* Added by JSIFY */
 #include "jsutil.h" /* Added by JSIFY */
+#include "jsbit.h"
 #include "jsprf.h"
 #include "jsapi.h"
+#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsemit.h"
@@ -56,13 +58,15 @@
 #include "jsscope.h"
 #include "jsscript.h"
 
-#define CGINCR  256     /* code allocation increment */
-#define SNINCR  64      /* srcnote allocation increment */
-#define TNINCR  64      /* trynote allocation increment */
+/* Allocation grain counts, must be powers of two in general. */
+#define BYTECODE_GRAIN  256     /* code allocation increment */
+#define SRCNOTE_GRAIN   64      /* initial srcnote allocation increment */
+#define TRYNOTE_GRAIN   64      /* trynote allocation increment */
 
-#define CGINCR_SIZE     (CGINCR * sizeof(jsbytecode))
-#define SNINCR_SIZE     (SNINCR * sizeof(jssrcnote))
-#define TNINCR_SIZE     (TNINCR * sizeof(JSTryNote))
+/* Macros to compute byte sizes from typed element counts. */
+#define BYTECODE_SIZE(n)        ((n) * sizeof(jsbytecode))
+#define SRCNOTE_SIZE(n)         ((n) * sizeof(jssrcnote))
+#define TRYNOTE_SIZE(n)         ((n) * sizeof(JSTryNote))
 
 JS_FRIEND_API(JSBool)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
@@ -70,6 +74,8 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
                      JSPrincipals *principals)
 {
     memset(cg, 0, sizeof *cg);
+    TREE_CONTEXT_INIT(&cg->treeContext);
+    cg->treeContext.flags |= TCF_COMPILING;
     cg->codeMark = JS_ARENA_MARK(&cx->codePool);
     cg->noteMark = JS_ARENA_MARK(&cx->notePool);
     cg->tempMark = JS_ARENA_MARK(&cx->tempPool);
@@ -77,18 +83,18 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
     cg->filename = filename;
     cg->firstLine = cg->currentLine = lineno;
     cg->principals = principals;
-    TREE_CONTEXT_INIT(&cg->treeContext);
     ATOM_LIST_INIT(&cg->atomList);
+    cg->noteMask = SRCNOTE_GRAIN - 1;
     return JS_TRUE;
 }
 
 JS_FRIEND_API(void)
 js_FinishCodeGenerator(JSContext *cx, JSCodeGenerator *cg)
 {
+    TREE_CONTEXT_FINISH(&cg->treeContext);
     JS_ARENA_RELEASE(&cx->codePool, cg->codeMark);
     JS_ARENA_RELEASE(&cx->notePool, cg->noteMark);
     JS_ARENA_RELEASE(&cx->tempPool, cg->tempMark);
-    TREE_CONTEXT_FREE(&cg->treeContext);
 }
 
 static ptrdiff_t
@@ -96,29 +102,31 @@ EmitCheck(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t delta)
 {
     jsbytecode *base, *limit, *next;
     ptrdiff_t offset, length;
-    size_t cgincr, cgsize;
+    size_t incr, size;
 
     base = CG_BASE(cg);
     next = CG_NEXT(cg);
     limit = CG_LIMIT(cg);
     offset = PTRDIFF(next, base, jsbytecode);
     if ((jsuword)(next + delta) > (jsuword)limit) {
-        length = PTRDIFF(limit, base, jsbytecode);
-        delta = JS_ROUNDUP(delta, CGINCR);
-        cgincr = delta * sizeof(jsbytecode);
-        if (base) {
-            cgsize = length * sizeof(jsbytecode);
-            JS_ARENA_GROW_CAST(base, jsbytecode *, &cx->codePool, cgsize,
-                               cgincr);
+        length = offset + delta;
+        length = (length <= BYTECODE_GRAIN)
+                 ? BYTECODE_GRAIN
+                 : JS_BIT(JS_CeilingLog2(length));
+        incr = BYTECODE_SIZE(length);
+        if (!base) {
+            JS_ARENA_ALLOCATE_CAST(base, jsbytecode *, &cx->codePool, incr);
         } else {
-            JS_ARENA_ALLOCATE_CAST(base, jsbytecode *, &cx->codePool, cgincr);
+            size = BYTECODE_SIZE(PTRDIFF(limit, base, jsbytecode));
+            incr -= size;
+            JS_ARENA_GROW_CAST(base, jsbytecode *, &cx->codePool, size, incr);
         }
         if (!base) {
             JS_ReportOutOfMemory(cx);
             return -1;
         }
         CG_BASE(cg) = base;
-        CG_LIMIT(cg) = base + length + delta;
+        CG_LIMIT(cg) = base + length;
         CG_NEXT(cg) = base + offset;
     }
     return offset;
@@ -287,8 +295,6 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
     stmt->label = NULL;
     stmt->down = tc->topStmt;
     tc->topStmt = stmt;
-    if (!stmt->down)
-        tc->flags &= ~TCF_TOP_LEVEL;
 }
 
 /*
@@ -422,11 +428,7 @@ js_EmitContinue(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
 extern void
 js_PopStatement(JSTreeContext *tc)
 {
-    JSStmtInfo *stmt = tc->topStmt;
-
-    tc->topStmt = stmt->down;
-    if (!stmt->down)
-        tc->flags |= TCF_TOP_LEVEL;
+    tc->topStmt = tc->topStmt->down;
 }
 
 JSBool
@@ -2436,15 +2438,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * First, emit code for the left operand to evaluate the callable or
          * constructable object expression.
          */
-        op = pn->pn_op;
         pn2 = pn->pn_head;
-        if (pn2->pn_op == JSOP_NAME &&
-            pn2->pn_atom == cx->runtime->atomState.evalAtom) {
-            if (JSVERSION_IS_ECMA(cx->version))
-                op = JSOP_EVAL;
-            cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
-        }
-
         if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
 
@@ -2470,7 +2464,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - off) < 0)
             return JS_FALSE;
         argc = pn->pn_count - 1;
-        if (js_Emit3(cx, cg, op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
+        if (js_Emit3(cx, cg, pn->pn_op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
             return JS_FALSE;
         break;
 
@@ -2743,17 +2737,20 @@ AllocSrcNote(JSContext *cx, JSCodeGenerator *cg)
 {
     intN index;
     JSArenaPool *pool;
-    size_t incr, size;
+    size_t size;
 
     index = cg->noteCount;
-    if ((uintN)index % SNINCR == 0) {
+    if (((uintN)index & cg->noteMask) == 0) {
         pool = &cx->notePool;
-        incr = SNINCR_SIZE;
+        size = SRCNOTE_SIZE(cg->noteMask + 1);
         if (!cg->notes) {
-            JS_ARENA_ALLOCATE_CAST(cg->notes, jssrcnote *, pool, incr);
+            /* Allocate the first note array lazily; leave noteMask alone. */
+            JS_ARENA_ALLOCATE_CAST(cg->notes, jssrcnote *, pool, size);
         } else {
-            size = cg->noteCount * sizeof(jssrcnote);
-            JS_ARENA_GROW_CAST(cg->notes, jssrcnote *, pool, size, incr);
+            /* Grow by doubling note array size; update noteMask on success. */
+            JS_ARENA_GROW_CAST(cg->notes, jssrcnote *, pool, size, size);
+            if (cg->notes)
+                cg->noteMask = (cg->noteMask << 1) | 1;
         }
         if (!cg->notes) {
             JS_ReportOutOfMemory(cx);
@@ -2845,17 +2842,17 @@ static JSBool
 GrowSrcNotes(JSContext *cx, JSCodeGenerator *cg)
 {
     JSArenaPool *pool;
-    size_t incr, size;
+    size_t size;
 
+    /* Grow by doubling note array size; update noteMask on success. */
     pool = &cx->notePool;
-    incr = SNINCR_SIZE;
-    size = cg->noteCount * sizeof(jssrcnote);
-    size = JS_ROUNDUP(size, incr);
-    JS_ARENA_GROW_CAST(cg->notes, jssrcnote *, pool, size, incr);
+    size = SRCNOTE_SIZE(cg->noteMask + 1);
+    JS_ARENA_GROW_CAST(cg->notes, jssrcnote *, pool, size, size);
     if (!cg->notes) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
+    cg->noteMask = (cg->noteMask << 1) | 1;
     return JS_TRUE;
 }
 
@@ -2923,7 +2920,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
              * accomodate either the first or second byte of additional storage
              * required by this 3-byte offset.
              */
-            if ((cg->noteCount + 1) % SNINCR <= 1) {
+            if (((cg->noteCount + 1) & cg->noteMask) <= 1) {
                 if (!GrowSrcNotes(cx, cg))
                     return JS_FALSE;
                 sn = cg->notes + index;
@@ -2933,7 +2930,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
             diff = cg->noteCount - (index + 3);
             JS_ASSERT(diff >= 0);
             if (diff > 0)
-                memmove(sn + 3, sn + 1, diff * sizeof(jssrcnote));
+                memmove(sn + 3, sn + 1, SRCNOTE_SIZE(diff));
         }
         *sn++ = (jssrcnote)(SN_3BYTE_OFFSET_FLAG | (offset >> 16));
         *sn++ = (jssrcnote)(offset >> 8);
@@ -2950,10 +2947,10 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg)
 
     count = cg->noteCount;
     tmp   = cg->notes;
-    final = (jssrcnote *) JS_malloc(cx, (count + 1) * sizeof(jssrcnote));
+    final = (jssrcnote *) JS_malloc(cx, SRCNOTE_SIZE(count + 1));
     if (!final)
         return NULL;
-    memcpy(final, tmp, count * sizeof(jssrcnote));
+    memcpy(final, tmp, SRCNOTE_SIZE(count));
     SN_MAKE_TERMINATOR(&final[count]);
     return final;
 }
@@ -2964,7 +2961,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
     size_t size, incr;
     ptrdiff_t delta;
 
-    size = cg->treeContext.tryCount * sizeof(JSTryNote);
+    size = TRYNOTE_SIZE(cg->treeContext.tryCount);
     if (size <= cg->tryNoteSpace)
         return JS_TRUE;
 
@@ -2974,7 +2971,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
      * in-place growth, and we never recycle old free space in an arena.
      */
     if (!cg->tryBase) {
-        size = JS_ROUNDUP(size, TNINCR_SIZE);
+        size = JS_ROUNDUP(size, TRYNOTE_SIZE(TRYNOTE_GRAIN));
         JS_ARENA_ALLOCATE_CAST(cg->tryBase, JSTryNote *, &cx->tempPool, size);
         if (!cg->tryBase)
             return JS_FALSE;
@@ -2983,7 +2980,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
     } else {
         delta = PTRDIFF((char *)cg->tryNext, (char *)cg->tryBase, char);
         incr = size - cg->tryNoteSpace;
-        incr = JS_ROUNDUP(incr, TNINCR_SIZE);
+        incr = JS_ROUNDUP(incr, TRYNOTE_SIZE(TRYNOTE_GRAIN));
         size = cg->tryNoteSpace;
         JS_ARENA_GROW_CAST(cg->tryBase, JSTryNote *, &cx->tempPool, size, incr);
         if (!cg->tryBase)
@@ -3022,12 +3019,12 @@ js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote **tryp)
     }
 
     tmp = cg->tryBase;
-    final = (JSTryNote *) JS_malloc(cx, (count + 1) * sizeof(JSTryNote));
+    final = (JSTryNote *) JS_malloc(cx, TRYNOTE_SIZE(count + 1));
     if (!final) {
         *tryp = NULL;
         return JS_FALSE;
     }
-    memcpy(final, tmp, count * sizeof(JSTryNote));
+    memcpy(final, tmp, TRYNOTE_SIZE(count));
     final[count].start = 0;
     final[count].length = CG_OFFSET(cg);
     final[count].catchStart = 0;

@@ -282,6 +282,15 @@ struct JSParseNode {
 	(list)->pn_count++;                                                   \
     JS_END_MACRO
 
+/*
+ * Parse a top-level JS script.
+ *
+ * The caller must prevent the GC from running while this function is active,
+ * because atoms and function newborns are not rooted yet.
+ */
+extern JS_FRIEND_API(JSParseNode *)
+js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts);
+
 extern JS_FRIEND_API(JSBool)
 js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 		      JSCodeGenerator *cg);
@@ -289,9 +298,8 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 extern JSBool
 js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun);
 
-/* XXXbe expose js_Parse{TokenStream,FunctionBody} that return trees? */
 extern JSBool
-js_FoldConstants(JSContext *cx, JSParseNode *pn);
+js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc);
 
 JS_END_EXTERN_C
 
