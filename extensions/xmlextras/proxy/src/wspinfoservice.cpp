@@ -1228,7 +1228,8 @@ nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort,
 
     pparamDesc = inParams.GetArray();
 
-    for (PRUint32 k = 0; k < inParams.GetCount(); pparamDesc++, k++) {
+    PRUint32 k;
+    for (k = 0; k < inParams.GetCount(); pparamDesc++, k++) {
       // set direction flag
       pparamDesc->flags |= XPT_PD_IN;
 
