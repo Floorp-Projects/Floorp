@@ -365,7 +365,7 @@ nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode)
   }
   else {
     const nsAReadableString& text = aNode.GetText();
-		(*mOutput) << "\"" << NS_ConvertUCS2toUTF8(text) << " \"";
+		(*mOutput) << "\"" << NS_ConvertUCS2toUTF8(text).get() << " \"";
   }
 
   if (WillWriteAttributes(aNode)) {
@@ -398,7 +398,7 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode)
     const nsAReadableString& k = aNode.GetKeyAt(i);
     const nsString& v = aNode.GetValueAt(i);
 
-		(*mOutput) << " <attr key=\"" << NS_ConvertUCS2toUTF8(k) << "\" value=\"";
+		(*mOutput) << " <attr key=\"" << NS_ConvertUCS2toUTF8(k).get() << "\" value=\"";
  
     tmp.Truncate();
     tmp.Append(v);
