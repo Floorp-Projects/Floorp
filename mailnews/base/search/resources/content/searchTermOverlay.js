@@ -45,6 +45,11 @@ var gSearchScope;
 var gSearchLessButton;
 var gSearchBooleanRadiogroup;
 
+// cache these so we don't have to hit the string bundle for them
+var gBooleanOrText;
+var gBooleanAndText;
+var gBooleanInitialText;
+
 //
 function searchTermContainer() {}
 
@@ -163,12 +168,19 @@ searchTermContainer.prototype = {
 
 var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 
-function initializeSearchWidgets() {
+function initializeSearchWidgets() 
+{    
     gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
     gSearchTermList = document.getElementById("searchTermList");
     gSearchLessButton = document.getElementById("less");
     if (!gSearchLessButton)
         dump("I couldn't find less button!");
+
+    // initialize some strings
+    var bundle = document.getElementById('bundle_search');
+    gBooleanOrText = bundle.getString('orSearchText');
+    gBooleanAndText = bundle.getString('andSearchText');
+    gBooleanInitialText = bundle.getString('initialSearchText');
 }
 
 function initializeBooleanWidgets() 
@@ -186,6 +198,14 @@ function initializeBooleanWidgets()
     var targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("value", targetValue)[0];
 
     gSearchBooleanRadiogroup.selectedItem = targetElement;
+
+    for (var i=1; i<gSearchTerms.length; i++) 
+    {
+      if (booleanAnd)
+        document.getElementById('boolOp' + i).setAttribute('value', gBooleanAndText);
+      else
+        document.getElementById('boolOp' + i).setAttribute('value', gBooleanOrText);
+    }
 }
 
 function initializeSearchRows(scope, searchTerms)
@@ -244,11 +264,17 @@ function booleanChanged(event) {
     // when boolean changes, we have to update all the attributes on the
     // search terms
 
-    var newBoolValue =
-        (event.target.getAttribute("value") == "and") ? true : false;
+    var newBoolValue = (event.target.getAttribute("value") == "and") ? true : false;
     for (var i=0; i<gSearchTerms.length; i++) {
         var searchTerm = gSearchTerms[i].obj;
         searchTerm.booleanAnd = newBoolValue;
+        if (i)
+        {
+          if (newBoolValue)
+            document.getElementById('boolOp' + i).setAttribute('value', gBooleanAndText);
+          else
+            document.getElementById('boolOp' + i).setAttribute('value', gBooleanOrText);
+        }
     }
 }
 
@@ -258,15 +284,27 @@ function createSearchRow(index, scope, searchTerm)
     var searchAttr = document.createElement("searchattribute");
     var searchOp = document.createElement("searchoperator");
     var searchVal = document.createElement("searchvalue");
+    var enclosingBox = document.createElement('vbox');
+    var boolOp = document.createElement('label');
+
+    enclosingBox.setAttribute('align', 'right');
 
     // now set up ids:
     searchAttr.id = "searchAttr" + index;
     searchOp.id  = "searchOp" + index;
     searchVal.id = "searchVal" + index;
+    boolOp.id = "boolOp" + index;
+    if (index == 0)
+      boolOp.setAttribute('value', gBooleanInitialText);
+    else if ( gSearchBooleanRadiogroup.selectedItem.value == 'and')
+      boolOp.setAttribute('value', gBooleanAndText);
+    else
+      boolOp.setAttribute('value', gBooleanOrText);
+    enclosingBox.appendChild(boolOp);
 
     searchAttr.setAttribute("for", searchOp.id + "," + searchVal.id);
 
-    var rowdata = new Array(null, searchAttr,
+    var rowdata = new Array(enclosingBox, searchAttr,
                             null, searchOp,
                             null, searchVal,
                             null);
