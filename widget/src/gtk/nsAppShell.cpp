@@ -171,7 +171,10 @@ NS_METHOD nsAppShell::Run()
     return rv;
   }
 
-  printf("Got thew event queue from the service\n");
+#ifdef DEBUG
+  printf("Got the event queue from the service\n");
+#endif /* DEBUG */
+
   //Get the event queue for the thread.
   rv = mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
 
