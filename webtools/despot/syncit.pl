@@ -66,7 +66,7 @@ if ($hostname ne "lounge.mozilla.org") {
 
 $ENV{"HOME"} = glob("~$mylogin"); # CVS wants this.
 
-$ENV{"CVSPASS"} = "./.cvspass";
+$ENV{"CVS_PASSFILE"} = "./.cvspass";
 
 if ($usertoblame eq "") {
     $usertoblame = $mylogin;
