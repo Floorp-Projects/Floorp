@@ -18,8 +18,8 @@
 <!ENTITY tabCmd.label "Navigator Tab">
 <!ENTITY tabCmd.accesskey "t">
 <!ENTITY tabCmd.commandkey "t">
-<!ENTITY openCmd.label "Open Address...">
-<!ENTITY openCmd.accesskey "r">
+<!ENTITY openCmd.label "Open Web Location...">
+<!ENTITY openCmd.accesskey "l">
 <!ENTITY openCmd.commandkey "l">
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY openFileCmd.accesskey "o">
