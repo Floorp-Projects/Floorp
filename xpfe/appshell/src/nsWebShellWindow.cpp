@@ -835,7 +835,8 @@ void nsWebShellWindow::DoContextMenu(
         NS_RELEASE(supports);
         pnsContextMenu->SetLocation(aX,aY);
         // Set webshell
-        //pnsContextMenu->SetWebShell( );
+        pnsContextMenu->SetWebShell( mWebShell );
+        
         // Set DOM node
         pnsContextMenu->SetDOMNode( aMenuNode );
         
