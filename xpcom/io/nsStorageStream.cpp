@@ -34,7 +34,7 @@
 
 nsStorageStream::nsStorageStream()
     : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(PR_FALSE),
-      mWriteCursor(0), mSegmentEnd(0), mLogicalLength(0), mLastSegmentNum(-1)
+      mLastSegmentNum(-1), mWriteCursor(0), mSegmentEnd(0), mLogicalLength(0)
 {
     NS_INIT_REFCNT();
 }
