@@ -468,13 +468,24 @@ END of Deprecated -->
       <menuitem value="&QAKnownBugCmd.label;"   oncommand="window._content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
       <menuseparator />
       <menuitem value="&strresCmd.label;"       oncommand="window._content.location.href='resource:/res/strres-test.xul'"/>
-      <menu value="&languages.label;">
-        <menupopup>
-           <menuitem value="&en-US.label;"      oncommand="localeTo('', 'en-US');"/>
-           <menuitem value="&da-DK-file.label;" oncommand="localeTo('', 'da-DK');" />
-           <menuitem value="&da-DK-http.label;" oncommand="localeTo('http://www.mozilla.org/projects/intl/chrome/', 'da-DK');" />
-        </menupopup>
+
+      <menu value="&languages.label;" 
+            datasources="rdf:chrome" 
+            ref="urn:mozilla:locale:root" 
+            sortResource="http://www.mozilla.org/rdf/chrome#name"
+            sortDirection="ascending">
+		<template>
+		  <rule>
+            <menupopup>
+			  <menuitem class="standrad" uri="rdf:*" 
+                        value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                        data="rdf:http://www.mozilla.org/rdf/chrome#name" 
+                        oncommand="selectLocale(event)" />
+            </menupopup>
+          </rule>
+		</template>
       </menu>
+
       <menuseparator />
       <menuitem value="&BloatDumpNewCmd.label;" oncommand="window._content.location.href='about:bloat?new'"/>
       <menuitem value="&BloatDumpAllCmd.label;" oncommand="window._content.location.href='about:bloat'"/>
