@@ -419,6 +419,7 @@ PRBool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)
       MATCHES_TAG("body")     ||
       MATCHES_TAG("head")     ||
       MATCHES_TAG("script")   ||
+      MATCHES_TAG("iframe")   ||
       MATCHES_TAG("a")        ||
       MATCHES_TAG("img")      ||
       MATCHES_TAG("table")    ||
