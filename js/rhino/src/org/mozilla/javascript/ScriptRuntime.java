@@ -219,32 +219,31 @@ public class ScriptRuntime {
      */
     public static boolean toBoolean(Object val)
     {
-        if (val == null || val == Undefined.instance)
-            return false;
-        if (val instanceof Boolean)
-            return ((Boolean) val).booleanValue();
-        if (val instanceof Scriptable) {
-            if (Context.getContext().isVersionECMA1()) {
-                // pure ECMA
-                return true;
-            }
-            // ECMA extension
-            val = ((Scriptable) val).getDefaultValue(BooleanClass);
-            if (val instanceof Scriptable)
-                throw errorWithClassName("msg.primitive.expected", val);
+        for (;;) {
             if (val instanceof Boolean)
                 return ((Boolean) val).booleanValue();
-            // fall through
+            if (val == null || val == Undefined.instance)
+                return false;
+            if (val instanceof String)
+                return ((String) val).length() != 0;
+            if (val instanceof Number) {
+                double d = ((Number) val).doubleValue();
+                return (d == d && d != 0.0);
+            }
+            if (val instanceof Scriptable) {
+                if (Context.getContext().isVersionECMA1()) {
+                    // pure ECMA
+                    return true;
+                }
+                // ECMA extension
+                val = ((Scriptable) val).getDefaultValue(BooleanClass);
+                if (val instanceof Scriptable)
+                    throw errorWithClassName("msg.primitive.expected", val);
+                continue;
+            }
+            warnAboutNonJSObject(val);
+            return true;
         }
-        if (val instanceof String)
-            return ((String) val).length() != 0;
-        if (val instanceof Number) {
-            double d = ((Number) val).doubleValue();
-            return (d == d && d != 0.0);
-        }
-
-        warnAboutNonJSObject(val);
-        return true;
     }
 
     public static boolean toBoolean(Object[] args, int index) {
@@ -258,25 +257,26 @@ public class ScriptRuntime {
      */
     public static double toNumber(Object val)
     {
-        if (val instanceof Number)
-            return ((Number) val).doubleValue();
-        if (val == null)
-            return +0.0;
-        if (val instanceof Scriptable) {
-            val = ((Scriptable) val).getDefaultValue(NumberClass);
-            if (val != null && val instanceof Scriptable)
-                throw errorWithClassName("msg.primitive.expected", val);
+        for (;;) {
             if (val instanceof Number)
                 return ((Number) val).doubleValue();
-            // fall through
+            if (val == null)
+                return +0.0;
+            if (val == Undefined.instance)
+                return NaN;
+            if (val instanceof String)
+                return toNumber((String) val);
+            if (val instanceof Boolean)
+                return ((Boolean) val).booleanValue() ? 1 : +0.0;
+            if (val instanceof Scriptable) {
+                val = ((Scriptable) val).getDefaultValue(NumberClass);
+                if (val instanceof Scriptable)
+                    throw errorWithClassName("msg.primitive.expected", val);
+                continue;
+            }
+            warnAboutNonJSObject(val);
+            return NaN;
         }
-        if (val instanceof String)
-            return toNumber((String) val);
-        if (val instanceof Boolean)
-            return ((Boolean) val).booleanValue() ? 1 : +0.0;
-
-        warnAboutNonJSObject(val);
-        return NaN;
     }
 
     public static double toNumber(Object[] args, int index) {
