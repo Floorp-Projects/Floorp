@@ -54,17 +54,16 @@ nsWidget::nsWidget()
   mBounds.y = 0;
   mBounds.width = 0;
   mBounds.height = 0;
+  mIsDestroying = PR_FALSE;
+  mOnDestroyCalled = PR_FALSE;
 }
 
 nsWidget::~nsWidget()
 {
-  if (mWidget)
-  {
-    if (GTK_IS_WIDGET(mWidget))
-      gtk_widget_destroy(mWidget);
-    mWidget = nsnull;
+  mIsDestroying = PR_TRUE;
+  if (nsnull != mWidget) {
+    Destroy();
   }
-  nsBaseWidget::Destroy();
 }
 
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
@@ -90,10 +89,34 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
-  ::gtk_widget_destroy(mWidget);
-  mWidget = nsnull;
-  DispatchStandardEvent(NS_DESTROY);
+  if (!mIsDestroying) {
+    nsBaseWidget::Destroy();
+  }
+  if (mWidget) {
+    ::gtk_widget_destroy(mWidget);
+    mWidget = nsnull;
+    if (PR_FALSE == mOnDestroyCalled)
+      OnDestroy();
+  }
   return NS_OK;
+}
+
+// make sure that we clean up here
+
+void nsWidget::OnDestroy()
+{
+  mOnDestroyCalled = PR_TRUE;
+  // release references to children, device context, toolkit + app shell
+  nsBaseWidget::OnDestroy();
+  // dispatch the event
+  if (!mIsDestroying) {
+    // dispatching of the event may cause the reference count to drop to 0
+    // and result in this object being destroyed. To avoid that, add a reference
+    // and then release it after dispatching the event
+    AddRef();
+    DispatchStandardEvent(NS_DESTROY);
+    Release();
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -171,6 +194,9 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+
+  printf("nsWidget::Resize called.\n");
+
   if (mBounds.width == aWidth && mBounds.height == aHeight)
     return NS_ERROR_FAILURE;
 
@@ -214,6 +240,8 @@ NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
   alloc.y = aY;
   alloc.width = aWidth;
   alloc.height = aHeight;
+
+  printf("nsWidget::Resize with x/y called.\n");
   
   mBounds.x = aX;
   mBounds.y = aY;
@@ -221,6 +249,7 @@ NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
   mBounds.height = aHeight;
 
   gtk_widget_size_allocate (mWidget, &alloc);
+  //gtk_widget_set_usize(mWidget, aWidth, aHeight);
   
   if (aRepaint)
     gtk_widget_queue_draw(mWidget);
