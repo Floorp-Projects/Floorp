@@ -69,12 +69,20 @@ XULDocumentInfoImpl::XULDocumentInfoImpl(void)
 
 XULDocumentInfoImpl::~XULDocumentInfoImpl(void)
 {
+  NS_IF_RELEASE(mParentDocument);
+  NS_IF_RELEASE(mContentSink);
 }
 
 nsresult
 XULDocumentInfoImpl::Init(nsIDocument* aDocument, nsIXULContentSink* aContentSink) {
+  NS_IF_RELEASE(mParentDocument);
+  NS_IF_RELEASE(mContentSink);
+
   mParentDocument = aDocument;
   mContentSink = aContentSink;
+
+  NS_IF_ADDREF(mParentDocument);
+  NS_IF_ADDREF(mContentSink);
 
   return NS_OK;
 }
@@ -82,12 +90,14 @@ XULDocumentInfoImpl::Init(nsIDocument* aDocument, nsIXULContentSink* aContentSin
 nsresult
 XULDocumentInfoImpl::GetDocument(nsIDocument** aDocument) {
   *aDocument = mParentDocument;
+  NS_IF_ADDREF(mParentDocument);
   return NS_OK;
 }
 
 nsresult
 XULDocumentInfoImpl::GetContentSink(nsIXULContentSink** aContentSink) {
   *aContentSink = mContentSink;
+  NS_IF_ADDREF(mContentSink);
   return NS_OK;
 }
 
