@@ -732,9 +732,11 @@ sub filterEmailGroup ($$$) {
 	foreach my $person(@emailList) {
 	    my $personId = DBname_to_id($person);
 	    SendSQL("SELECT watcher FROM watch WHERE watched = $personId");
-	    my $watcher = FetchSQLData();
-	    if ($watcher) {
-	        push (@watchers, DBID_to_name($watcher));
+	    while(MoreSQLData()) {
+	        my ($watcher) = FetchSQLData();
+	        if ($watcher) {
+	            push (@watchers, DBID_to_name($watcher));
+	        }
 	    }
 	}
 	push(@emailList, @watchers);
