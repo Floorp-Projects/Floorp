@@ -141,7 +141,7 @@ nsResProtocolHandler::~nsResProtocolHandler()
         PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsResProtocolHandler, nsIResProtocolHandler, nsIProtocolHandler)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsResProtocolHandler, nsIResProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference)
 
 NS_METHOD
 nsResProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

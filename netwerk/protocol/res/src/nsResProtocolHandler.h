@@ -26,8 +26,9 @@
 #include "nsIResProtocolHandler.h"
 #include "nsHashtable.h"
 #include "nsISupportsArray.h"
+#include "nsWeakReference.h"
 
-class nsResProtocolHandler : public nsIResProtocolHandler
+class nsResProtocolHandler : public nsIResProtocolHandler, public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
