@@ -25,10 +25,6 @@
   <table border="1" cellpadding="3">  
     <tr>
       <th>
-        Show in <br>
-        Footer
-      </th>
-      <th>
         Search
       </th>
       <th>
@@ -40,15 +36,32 @@
       <th>
         Forget
       </th>
+      <th>
+        Show in
+        Footer
+      </th>
+    </tr>
+    <tr>
+      <td>My Bugs</td>
+      <td>
+        [% filtered_username = user.login FILTER url_quote %]
+        <a href="[% Param('mybugstemplate').replace('%userid%', filtered_username) %]">Run</a>
+      </td>
+      <td>
+        &nbsp;
+      </td>
+      <td>
+        &nbsp;
+      </td>
+      <td align="center">
+        <input type="checkbox" 
+               name="showmybugslink"
+               value="1"
+               [% " checked" IF user.showmybugslink %]>
+      </td>
     </tr>
     [% FOREACH q = queries %]
       <tr>
-        <td>
-          <input type="checkbox" 
-                 name="linkinfooter_[% q.name FILTER html %]"
-                 value="1"
-                 [% " checked" IF q.linkinfooter %]>
-        </td>
         <td>[% q.name FILTER html %]</td>
         <td>
           <a href="buglist.cgi?[% q.query FILTER html %]">Run</a>
@@ -59,6 +72,12 @@
         <td>
           <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
                    [% q.name FILTER html %]">Forget</a>
+        </td>
+        <td align="center">
+          <input type="checkbox" 
+                 name="linkinfooter_[% q.name FILTER html %]"
+                 value="1"
+                 [% " checked" IF q.linkinfooter %]>
         </td>
       </tr>
     [% END %]

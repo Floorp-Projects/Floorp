@@ -298,6 +298,7 @@ sub DoPermissions {
 
 
 sub DoSavedSearches() {
+    $vars->{'user'} = Bugzilla->user;
     $vars->{'queries'} = Bugzilla->user->queries;
 }
 
@@ -315,6 +316,11 @@ sub SaveSavedSearches() {
     }
 
     Bugzilla->user->flush_queries_cache;
+    
+    my $showmybugslink = defined($cgi->param("showmybugslink")) ? 1 : 0;
+    $dbh->do("UPDATE profiles SET mybugslink = $showmybugslink " . 
+             "WHERE userid = " . Bugzilla->user->id);    
+    Bugzilla->user->{'showmybugslink'} = $showmybugslink;
 }
 
 
