@@ -741,10 +741,10 @@ sendSMTPStart(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
 
     if (pish->useEHLO != 0) {
 	/* send extended EHLO */
-	sprintf(command, "EHLO %s%s", gs_thishostname, CRLF);
+	sprintf(command, "EHLO %s" CRLF, gs_thishostname);
     } else {
 	/* send normal HELO */
-	sprintf(command, "HELO%s", CRLF);
+	sprintf(command, "HELO %s" CRLF, gs_thishostname);
     }
     event_start(ptcx, &stats->cmd);
     rc = doSmtpCommandResponse(ptcx, ptcx->sock, command, respBuffer, sizeof(respBuffer));
