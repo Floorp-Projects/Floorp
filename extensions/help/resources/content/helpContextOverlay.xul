@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -39,31 +39,17 @@
 <overlay id="contentAreaContextOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <!-- Context menu -->
-  <!-- XXX: Replace strres.js when nsContextMenu.js is converted -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  <script type="application/x-javascript">
-    // Global variable that holds the nsContextMenu instance.
-    var gContextMenu = null;
-    
-    // Global variable that caches the default search engine info
-    var gDefaultEngine = null;
-  </script>
-  <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-
+  <!-- Help Context Menu -->
   <popupset id="contentAreaContextSet">
-    <popup id="contentAreaContextMenu"
-           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-           onpopuphiding="if (event.target == this) gContextMenu = null;">
+    <popup id="contentAreaContextMenu">
       <menuitem id="context-back"
                 label="&goBackCmd.label;"
                 accesskey="&goBackCmd.accesskey;"
-                oncommand="goBack()"/>
+                command="Browser:Back"/>
       <menuitem id="context-forward"
                 label="&goForwardCmd.label;"
                 accesskey="&goForwardCmd.accesskey;"
-                oncommand="goForward()"/>
+                command="Browser:Forward"/>
       <menuseparator id="context-sep-undo"/>
       <menuitem id="context-cut"
                 label="&cutCmd.label;"
@@ -81,12 +67,7 @@
       <menuitem id="context-selectall"
                 label="&selectAllCmd.label;"
                 accesskey="&selectAllCmd.accesskey;"
-                command="cmd_selectAll"/>      
-      <menuseparator id="context-sep-selectall"/>
-
-      <menuitem id="context-searchselect"
-                accesskey="&search.accesskey;"
-                oncommand="OpenSearch('internet', false, gContextMenu.searchSelected(), true);"/>
+                command="cmd_selectAll"/>
     </popup>
   </popupset>
 </overlay>
