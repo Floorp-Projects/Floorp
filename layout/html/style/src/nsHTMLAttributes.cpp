@@ -28,9 +28,6 @@
 #include "nsIHTMLContent.h"
 #include "nsVoidArray.h"
 
-static NS_DEFINE_IID(kIHTMLAttributesIID, NS_IHTML_ATTRIBUTES_IID);
-static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
-
 //#define DEBUG_REFS
 
 struct HTMLAttribute {
@@ -143,6 +140,68 @@ struct HTMLAttribute {
     }
   }
 
+  static void
+  CopyHTMLAttributes(HTMLAttribute* aSource, HTMLAttribute** aDest)
+  {
+    while (aSource && aDest) {
+      (*aDest) = new HTMLAttribute(*aSource);
+      if (! *aDest) {
+        break;
+      }
+      aDest = &((*aDest)->mNext);
+      aSource = aSource->mNext;
+    }
+  }
+
+  static void
+  DeleteHTMLAttributes(HTMLAttribute* aAttr)
+  {
+    while (aAttr) {
+      HTMLAttribute* deadBeef = aAttr;
+      aAttr = aAttr->mNext;
+      delete deadBeef;
+    }
+  }
+
+  static HTMLAttribute*
+  FindHTMLAttribute(nsIAtom* aAttrName, HTMLAttribute* aAttr)
+  {
+    while (aAttr) {
+      if (aAttrName == aAttr->mAttribute) {
+        return aAttr;
+      }
+      aAttr = aAttr->mNext;
+    }
+    return nsnull;
+  }
+
+  static const HTMLAttribute*
+  FindHTMLAttribute(nsIAtom* aAttrName, const HTMLAttribute* aAttr)
+  {
+    while (aAttr) {
+      if (aAttrName == aAttr->mAttribute) {
+        return aAttr;
+      }
+      aAttr = aAttr->mNext;
+    }
+    return nsnull;
+  }
+
+  static PRBool
+  RemoveHTMLAttribute(nsIAtom* aAttrName, HTMLAttribute** aAttr)
+  {
+    while (*aAttr) {
+      if ((*aAttr)->mAttribute == aAttrName) {
+        HTMLAttribute*  attr = *aAttr;
+        *aAttr = (*aAttr)->mNext;
+        delete attr;
+        return PR_TRUE;
+      }
+      aAttr = &((*aAttr)->mNext);
+    }
+    return PR_FALSE;
+  }
+
   nsIAtom*        mAttribute;
   nsHTMLValue     mValue;
   HTMLAttribute*  mNext;
@@ -152,7 +211,7 @@ struct HTMLAttribute {
 
 struct nsClassList {
   nsClassList(nsIAtom* aAtom)
-    : mAtom(aAtom),
+    : mAtom(aAtom), // take ref
       mNext(nsnull)
   {
   }
@@ -160,16 +219,21 @@ struct nsClassList {
     : mAtom(aCopy.mAtom),
       mNext(nsnull)
   {
-    NS_ADDREF(mAtom);
-    if (nsnull != aCopy.mNext) {
+    NS_IF_ADDREF(mAtom);
+    if (aCopy.mNext) {
       mNext = new nsClassList(*(aCopy.mNext));
     }
   }
   ~nsClassList(void)
   {
-    NS_RELEASE(mAtom);
-    if (nsnull != mNext) {
+    Reset();
+  }
+  void Reset(void)
+  {
+    NS_IF_RELEASE(mAtom);
+    if (mNext) {
       delete mNext;
+      mNext = nsnull;
     }
   }
 
@@ -177,53 +241,43 @@ struct nsClassList {
   nsClassList*  mNext;
 };
 
-class HTMLAttributesImpl: public nsIHTMLAttributes, public nsIStyleRule {
+// ----------------
+
+class nsHTMLMappedAttributes : public nsIHTMLMappedAttributes, public nsIStyleRule {
 public:
-  void* operator new(size_t size);
-  void* operator new(size_t size, nsIArena* aArena);
-  void operator delete(void* ptr);
+  nsHTMLMappedAttributes(void);
+  nsHTMLMappedAttributes(const nsHTMLMappedAttributes& aCopy);
+  virtual ~nsHTMLMappedAttributes(void);
 
-  HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet, 
-                     nsMapAttributesFunc aFontMapFunc,
-                     nsMapAttributesFunc aMapFunc);
-  HTMLAttributesImpl(const HTMLAttributesImpl& aCopy);
-  virtual ~HTMLAttributesImpl(void);
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-
-  // nsIHTMLAttributes
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRInt32& aAttrCount);
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                          PRInt32& aAttrCount);
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRInt32& aAttrCount);
-
-  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
-                          nsHTMLValue& aValue) const;
-
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-                                nsIAtom*& aName) const;
-
-  NS_IMETHOD GetAttributeCount(PRInt32& aCount) const;
-  NS_IMETHOD Equals(const nsIHTMLAttributes* aAttributes, PRBool& aResult) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
-
-  NS_IMETHOD GetID(nsIAtom*& aResult) const;
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
-  NS_IMETHOD HasClass(nsIAtom* aClass) const;
-
-  NS_IMETHOD AddContentRef(void);
-  NS_IMETHOD ReleaseContentRef(void);
-  NS_IMETHOD GetContentRefCount(PRInt32& aRefCount) const;
-
-  NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) const;
+  NS_IMETHOD Init(nsIHTMLStyleSheet* aSheet,
+                  nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc);
+  NS_IMETHOD Clone(nsHTMLMappedAttributes** aInstancePtrResult) const;
   NS_IMETHOD Reset(void);
   NS_IMETHOD SetMappingFunctions(nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc);
 
+  NS_IMETHOD SetAttribute(nsIAtom* aAttrName, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttrName, const nsHTMLValue& aValue);
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttrName, PRInt32& aAttrCount);
+
+  NS_IMETHOD GetAttribute(nsIAtom* aAttrName,
+                          nsHTMLValue& aValue) const;
+
+  NS_IMETHOD GetAttributeCount(PRInt32& aCount) const;
+
+  NS_IMETHOD Equals(const nsIHTMLMappedAttributes* aAttributes, PRBool& aResult) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
+
+  NS_IMETHOD AddUse(void);
+  NS_IMETHOD ReleaseUse(void);
+  NS_IMETHOD GetUseCount(PRInt32& aUseCount) const;
+
+  NS_IMETHOD SetUniqued(PRBool aUniqued);
+  NS_IMETHOD GetUniqued(PRBool& aUniqued);
+  NS_IMETHOD DropStyleSheetReference(void);
+
   // nsIStyleRule 
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet);
   // Strength is an out-of-band weighting, always 0 here
@@ -233,6 +287,505 @@ public:
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
+  nsIHTMLStyleSheet*  mSheet;
+  PRInt32             mUseCount;
+  PRInt32             mAttrCount;
+  HTMLAttribute       mFirst;
+  nsMapAttributesFunc mFontMapper;
+  nsMapAttributesFunc mMapper;
+  PRBool              mUniqued;
+};
+
+nsHTMLMappedAttributes::nsHTMLMappedAttributes(void)
+  : mSheet(nsnull),
+    mUseCount(0),
+    mAttrCount(0),
+    mFirst(),
+    mFontMapper(nsnull),
+    mMapper(nsnull),
+    mUniqued(PR_FALSE)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsHTMLMappedAttributes::nsHTMLMappedAttributes(const nsHTMLMappedAttributes& aCopy)
+  : mSheet(aCopy.mSheet),
+    mUseCount(0),
+    mAttrCount(aCopy.mAttrCount),
+    mFirst(aCopy.mFirst),
+    mFontMapper(aCopy.mFontMapper),
+    mMapper(aCopy.mMapper),
+    mUniqued(PR_FALSE)
+{
+  NS_INIT_ISUPPORTS();
+
+  HTMLAttribute::CopyHTMLAttributes(aCopy.mFirst.mNext, &(mFirst.mNext));
+}
+
+nsHTMLMappedAttributes::~nsHTMLMappedAttributes(void)
+{
+  Reset();
+}
+
+NS_IMPL_ADDREF(nsHTMLMappedAttributes);
+NS_IMPL_RELEASE(nsHTMLMappedAttributes);
+
+nsresult 
+nsHTMLMappedAttributes::QueryInterface(const nsIID& aIID,
+                                       void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(nsIHTMLMappedAttributes::GetIID())) {
+    *aInstancePtrResult = (void*) ((nsIHTMLMappedAttributes*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIStyleRule::GetIID())) {
+    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtrResult = (void*) ((nsIHTMLMappedAttributes*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::Init(nsIHTMLStyleSheet* aSheet,
+                             nsMapAttributesFunc aFontMapFunc, 
+                             nsMapAttributesFunc aMapFunc)
+{
+  mSheet = aSheet;
+  mFontMapper = aFontMapFunc;
+  mMapper = aMapFunc;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::Clone(nsHTMLMappedAttributes** aInstancePtrResult) const
+{
+  if (aInstancePtrResult == nsnull) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsHTMLMappedAttributes* clone = new nsHTMLMappedAttributes(*this);
+
+  if (! clone) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(clone);
+  *aInstancePtrResult = clone;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::Reset(void)
+{
+  mAttrCount = 0;
+  mFirst.Reset();
+  HTMLAttribute::DeleteHTMLAttributes(mFirst.mNext);
+  mUniqued = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::SetMappingFunctions(nsMapAttributesFunc aFontMapFunc, 
+                                            nsMapAttributesFunc aMapFunc)
+{
+  mFontMapper = aFontMapFunc;
+  mMapper = aMapFunc;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::SetAttribute(nsIAtom* aAttrName, const nsString& aValue)
+{
+  if (! aAttrName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (mFirst.mAttribute) {  // do we already have any?
+    HTMLAttribute* attr = HTMLAttribute::FindHTMLAttribute(aAttrName, &mFirst);
+    if (attr) {
+      attr->mValue.SetStringValue(aValue);
+    }
+    else {
+      // add new attribute
+      // keep these arbitrarily sorted so they'll equal regardless of set order
+      if (aAttrName < mFirst.mAttribute) {  // before first, move first down one
+        HTMLAttribute*  attr = new HTMLAttribute(mFirst);
+        if (attr) {
+          attr->mNext = mFirst.mNext;
+          mFirst.mNext = attr;
+          mFirst.Set(aAttrName, aValue);
+        }
+        else {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      else {
+        HTMLAttribute* attr = new HTMLAttribute(aAttrName, aValue);
+        if (attr) {
+          HTMLAttribute* prev = &mFirst;
+          while (prev->mNext && (prev->mNext->mAttribute < aAttrName)) {
+            prev = prev->mNext;
+          }
+          attr->mNext = prev->mNext;
+          prev->mNext = attr;
+        }
+        else {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      mAttrCount++;
+    }
+  }
+  else {
+    mFirst.Set(aAttrName, aValue);
+    mAttrCount++;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::SetAttribute(nsIAtom* aAttrName, const nsHTMLValue& aValue)
+{
+  if (! aAttrName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (mFirst.mAttribute) {  // do we already have any?
+    HTMLAttribute* attr = HTMLAttribute::FindHTMLAttribute(aAttrName, &mFirst);
+    if (attr) {
+      attr->mValue = aValue;
+    }
+    else {
+      // add new attribute
+      // keep these arbitrarily sorted so they'll hash regardless of set order
+      if (aAttrName < mFirst.mAttribute) {  // before first, move first down one
+        attr = new HTMLAttribute(mFirst);
+        if (attr) {
+          attr->mNext = mFirst.mNext;
+          mFirst.mNext = attr;
+          mFirst.Set(aAttrName, aValue);
+        }
+        else {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      else {
+        attr = new HTMLAttribute(aAttrName, aValue);
+        if (attr) {
+          HTMLAttribute* prev = &mFirst;
+          while (prev->mNext && (prev->mNext->mAttribute < aAttrName)) {
+            prev = prev->mNext;
+          }
+          attr->mNext = prev->mNext;
+          prev->mNext = attr;
+        }
+        else {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      mAttrCount++;
+    }
+  }
+  else {
+    mFirst.Set(aAttrName, aValue);
+    mAttrCount++;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::UnsetAttribute(nsIAtom* aAttrName, PRInt32& aAttrCount)
+{
+  if (! aAttrName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (aAttrName == mFirst.mAttribute) {
+    if (mFirst.mNext) {
+      HTMLAttribute*  attr = mFirst.mNext;
+      mFirst = *attr;
+      mFirst.mNext = attr->mNext;
+      delete attr;
+    }
+    else {
+      mFirst.Reset();
+    }
+    mAttrCount--;
+  }
+  else {
+    if (HTMLAttribute::RemoveHTMLAttribute(aAttrName, &(mFirst.mNext))) {
+      mAttrCount--;
+    }
+  }
+  aAttrCount = mAttrCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::GetAttribute(nsIAtom* aAttrName,
+                                     nsHTMLValue& aValue) const
+{
+  if (! aAttrName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  const HTMLAttribute* attr = HTMLAttribute::FindHTMLAttribute(aAttrName, &mFirst);
+  if (attr) {
+    aValue = attr->mValue;
+    return ((attr->mValue.GetUnit() == eHTMLUnit_Null) ?
+            NS_CONTENT_ATTR_NO_VALUE :
+            NS_CONTENT_ATTR_HAS_VALUE);
+  }
+  aValue.Reset();
+  return NS_CONTENT_ATTR_NOT_THERE;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::GetAttributeCount(PRInt32& aCount) const
+{
+  aCount = mAttrCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::Equals(const nsIHTMLMappedAttributes* aOther, PRBool& aResult) const
+{
+  const nsHTMLMappedAttributes* other = (const nsHTMLMappedAttributes*)aOther;
+
+  if (this == other) {
+    aResult = PR_TRUE;
+  }
+  else {
+    aResult = PR_FALSE;
+    if ((mFontMapper == other->mFontMapper) && (mMapper == other->mMapper) && 
+        (mAttrCount == other->mAttrCount)) {
+      const HTMLAttribute* attr = &mFirst;
+      const HTMLAttribute* otherAttr = &(other->mFirst);
+
+      aResult = PR_TRUE;
+      while (attr) {
+        if (! ((*attr) == (*otherAttr))) {
+          aResult = PR_FALSE;
+          break;
+        }
+        attr = attr->mNext;
+        otherAttr = otherAttr->mNext;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::HashValue(PRUint32& aValue) const
+{
+  aValue = PRUint32(mFontMapper);
+  aValue = aValue ^ PRUint32(mMapper);
+
+  const HTMLAttribute* attr = &mFirst;
+  while (nsnull != attr) {
+    if (nsnull != attr->mAttribute) {
+      aValue = aValue ^ attr->HashValue();
+    }
+    attr = attr->mNext;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::AddUse(void)
+{
+  mUseCount++;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::ReleaseUse(void)
+{
+  mUseCount--;
+
+  if (mSheet && (0 == mUseCount) && mUniqued) {
+    mSheet->DropMappedAttributes(this);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::GetUseCount(PRInt32& aUseCount) const
+{
+  aUseCount = mUseCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::SetUniqued(PRBool aUniqued)
+{
+  mUniqued = aUniqued;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::GetUniqued(PRBool& aUniqued)
+{
+  aUniqued = mUniqued;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::DropStyleSheetReference(void)
+{
+  mSheet = nsnull;
+  mUniqued = PR_FALSE;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  aSheet = mSheet;
+  NS_IF_ADDREF(aSheet);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::SetStyleSheet(nsIHTMLStyleSheet* aSheet)
+{
+  if (mSheet && mUniqued) {
+    mSheet->DropMappedAttributes(this);
+  }
+  mSheet = aSheet;  // not ref counted
+  mUniqued = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::GetStrength(PRInt32& aStrength) const
+{
+  aStrength = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  if (0 < mAttrCount) {
+    if (mFontMapper) {
+      (*mFontMapper)(this, aContext, aPresContext);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  if (0 < mAttrCount) {
+    NS_ASSERTION(mMapper || mFontMapper, "no mapping function");
+    if (mMapper) {
+      (*mMapper)(this, aContext, aPresContext);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLMappedAttributes::List(FILE* out, PRInt32 aIndent) const
+{
+  const HTMLAttribute*  attr = &mFirst;
+  nsAutoString buffer;
+
+  while (nsnull != attr) {
+    PRInt32 index;
+    for (index = aIndent; --index >= 0; ) fputs("  ", out);
+    attr->ToString(buffer);
+    fputs(buffer, out);
+    fputs("\n", out);
+    attr = attr->mNext;
+  }
+  return NS_OK;
+}
+
+//--------------------
+
+const PRInt32 kNameBufferSize = 4;
+
+class HTMLAttributesImpl: public nsIHTMLAttributes {
+public:
+  void* operator new(size_t size);
+  void* operator new(size_t size, nsIArena* aArena);
+  void operator delete(void* ptr);
+
+  HTMLAttributesImpl(void);
+  HTMLAttributesImpl(const HTMLAttributesImpl& aCopy);
+  virtual ~HTMLAttributesImpl(void);
+
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+
+  // nsIHTMLAttributes
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttrName, const nsHTMLValue& aValue,
+                             PRBool aMappedToStyle, 
+                             nsIHTMLContent* aContent,
+                             nsIHTMLStyleSheet* aSheet,
+                             PRInt32& aAttrCount);
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttrName, const nsString& aValue,
+                             PRBool aMappedToStyle,
+                             nsIHTMLContent* aContent,
+                             nsIHTMLStyleSheet* aSheet);
+  NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttrName, 
+                               nsIHTMLContent* aContent,
+                               nsIHTMLStyleSheet* aSheet,
+                               PRInt32& aAttrCount);
+
+  NS_IMETHOD GetAttribute(nsIAtom* aAttrName,
+                          nsHTMLValue& aValue) const;
+
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                nsIAtom*& aName) const;
+
+  NS_IMETHOD GetAttributeCount(PRInt32& aCount) const;
+
+  NS_IMETHOD GetID(nsIAtom*& aResult) const;
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
+  NS_IMETHOD HasClass(nsIAtom* aClass) const;
+
+  NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) const;
+
+  NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet);
+
+  NS_IMETHOD GetMappedAttributeStyleRules(nsISupportsArray* aArray) const;
+
+#ifdef UNIQUE_ATTR_SUPPORT
+  NS_IMETHOD AddContentRef(void);
+  NS_IMETHOD ReleaseContentRef(void);
+  NS_IMETHOD GetContentRefCount(PRInt32& aCount) const;
+#endif
+  NS_IMETHOD Reset(void);
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+protected:
+  virtual nsresult SetAttributeName(nsIAtom* aAttrName, PRBool& aFound);
+  virtual nsresult UnsetAttributeName(nsIAtom* aAttrName, PRBool& aFound);
+  virtual nsresult EnsureSingleMappedFor(nsIHTMLContent* aContent, 
+                                         nsIHTMLStyleSheet* aSheet,
+                                         PRBool aCreate);
+  virtual nsresult UniqueMapped(nsIHTMLStyleSheet* aSheet);
+
 private:
   HTMLAttributesImpl& operator=(const HTMLAttributesImpl& aCopy);
   PRBool operator==(const HTMLAttributesImpl& aCopy) const;
@@ -241,14 +794,15 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  nsIHTMLStyleSheet*  mSheet;
-  PRInt32             mContentRefCount;
-  PRInt32             mCount;
-  HTMLAttribute       mFirst;
-  nsIAtom*            mID;
-  nsClassList*        mClassList;
-  nsMapAttributesFunc mFontMapper;
-  nsMapAttributesFunc mMapper;
+  nsIAtom**               mAttrNames;
+  PRInt32                 mAttrCount;
+  PRInt32                 mAttrSize;
+  HTMLAttribute*          mFirstUnmapped;
+  nsHTMLMappedAttributes* mMapped;
+  nsIAtom*                mID;
+  nsClassList             mFirstClass;
+
+  nsIAtom*                mNameBuffer[kNameBufferSize];
 
 #ifdef DEBUG_REFS
   PRInt32 mInstance;
@@ -297,17 +851,14 @@ void HTMLAttributesImpl::operator delete(void* ptr)
 }
 
 
-HTMLAttributesImpl::HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet, 
-                                       nsMapAttributesFunc aFontMapFunc,
-                                       nsMapAttributesFunc aMapFunc)
-  : mSheet(aSheet),
-    mFirst(),
-    mCount(0),
+HTMLAttributesImpl::HTMLAttributesImpl(void)
+  : mAttrNames(mNameBuffer),
+    mAttrCount(0),
+    mAttrSize(kNameBufferSize),
+    mFirstUnmapped(nsnull),
+    mMapped(nsnull),
     mID(nsnull),
-    mClassList(nsnull),
-    mContentRefCount(0),
-    mFontMapper(aFontMapFunc),
-    mMapper(aMapFunc)
+    mFirstClass(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -318,30 +869,41 @@ HTMLAttributesImpl::HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet,
 }
 
 HTMLAttributesImpl::HTMLAttributesImpl(const HTMLAttributesImpl& aCopy)
-  : mSheet(aCopy.mSheet),
-    mFirst(aCopy.mFirst),
-    mCount(aCopy.mCount),
+  : mAttrNames(mNameBuffer),
+    mAttrCount(aCopy.mAttrCount),
+    mAttrSize(kNameBufferSize),
+    mFirstUnmapped(nsnull),
+    mMapped(aCopy.mMapped),
     mID(aCopy.mID),
-    mClassList(nsnull),
-    mContentRefCount(0),
-    mFontMapper(aCopy.mFontMapper),
-    mMapper(aCopy.mMapper)
+    mFirstClass(aCopy.mFirstClass)
 {
   NS_INIT_REFCNT();
 
-  HTMLAttribute* next = aCopy.mFirst.mNext;
-  HTMLAttribute* last = &mFirst;
-  while (nsnull != next) {
-    HTMLAttribute* attr = new HTMLAttribute(*next);
-    last->mNext = attr;
-    last = attr;
-    next = next->mNext;
+  if (mAttrCount) {
+    if (mAttrSize < mAttrCount) {
+      mAttrNames = new nsIAtom*[mAttrCount];
+      if (mAttrNames) {
+        mAttrSize = mAttrCount;
+      }
+      else {  // new buffer failed, deal with it
+        mAttrNames = mNameBuffer;
+        mAttrCount = 0;
+      }
+    }
+    PRInt32 index = mAttrCount;
+    while (0 < index--) {
+      mAttrNames[index] = aCopy.mAttrNames[index];
+      NS_ADDREF(mAttrNames[index]);
+    }
+  }
+
+  HTMLAttribute::CopyHTMLAttributes(aCopy.mFirstUnmapped, &mFirstUnmapped);
+  if (mMapped) {
+    mMapped->AddUse();
+    NS_ADDREF(mMapped);
   }
 
   NS_IF_ADDREF(mID);
-  if (nsnull != aCopy.mClassList) {
-    mClassList = new nsClassList(*(aCopy.mClassList));
-  }
 
 #ifdef DEBUG_REFS
   mInstance = ++gInstanceCount;
@@ -354,7 +916,7 @@ HTMLAttributesImpl::~HTMLAttributesImpl(void)
   Reset();
 
 #ifdef DEBUG_REFS
-  fprintf(stdout, "%d of %d - HTMLAttribtues\n", mInstance, gInstanceCount);
+  fprintf(stdout, "%d of %d - HTMLAttributes\n", mInstance, gInstanceCount);
   --gInstanceCount;
 #endif
 }
@@ -384,113 +946,20 @@ NS_IMPL_ADDREF(HTMLAttributesImpl)
 NS_IMPL_RELEASE(HTMLAttributesImpl)
 #endif
 
-
-nsresult HTMLAttributesImpl::QueryInterface(const nsIID& aIID,
-                                            void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kIHTMLAttributesIID)) {
-    *aInstancePtrResult = (void*) ((nsIHTMLAttributes*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIStyleRuleIID)) {
-    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)(nsIHTMLAttributes*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-
-NS_IMETHODIMP
-HTMLAttributesImpl::Equals(const nsIHTMLAttributes* aAttributes, PRBool& aResult) const
-{
-  if (this == aAttributes) {
-    aResult = PR_TRUE;
-  }
-  else {
-    const HTMLAttributesImpl* other = (HTMLAttributesImpl*)aAttributes;
-    aResult = PR_FALSE;
-
-    if (mCount == other->mCount) {
-      if (mID == other->mID) {
-        const HTMLAttribute* attr = &mFirst;
-        const HTMLAttribute* otherAttr = (&other->mFirst);
-
-        aResult = PR_TRUE;
-        while (nsnull != attr) {
-          if (! ((*attr) == (*otherAttr))) {
-            aResult = PR_FALSE;
-            break;
-          }
-          attr = attr->mNext;
-          otherAttr = otherAttr->mNext;
-        }
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
-{
-  nsIHTMLAttributes* iHTMLAttr;
-
-  if (this == aRule) {
-    aResult = PR_TRUE;
-  }
-  else {
-    aResult = PR_FALSE;
-    if ((nsnull != aRule) && 
-        (NS_OK == ((nsIStyleRule*)aRule)->QueryInterface(kIHTMLAttributesIID, (void**) &iHTMLAttr))) {
-
-      Equals(iHTMLAttr, aResult);
-
-      NS_RELEASE(iHTMLAttr);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::HashValue(PRUint32& aValue) const
-{
-  aValue = 0;
-
-  const HTMLAttribute* attr = &mFirst;
-  while (nsnull != attr) {
-    if (nsnull != attr->mAttribute) {
-      aValue = aValue ^ attr->HashValue();
-    }
-    attr = attr->mNext;
-  }
-  return NS_OK;
-}
+NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, NS_IHTML_ATTRIBUTES_IID);
 
 const PRUnichar kNullCh = PRUnichar('\0');
 
-static void ParseClasses(const nsString& aClassString, nsClassList** aClassList)
+static void ParseClasses(const nsString& aClassString, nsClassList& aClassList)
 {
-  NS_ASSERTION(nsnull == *aClassList, "non null start list");
-
   nsAutoString  classStr(aClassString);  // copy to work buffer
   classStr.Append(kNullCh);  // put an extra null at the end
 
   PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr.GetUnicode();
   PRUnichar* end   = start;
 
-  while (kNullCh != *start) {
+  nsClassList*  list = &aClassList;
+  while (list && (kNullCh != *start)) {
     while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
       start++;
     }
@@ -502,179 +971,346 @@ static void ParseClasses(const nsString& aClassString, nsClassList** aClassList)
     *end = kNullCh; // end string here
 
     if (start < end) {
-      *aClassList = new nsClassList(NS_NewAtom(start));
-      aClassList = &((*aClassList)->mNext);
+      if (! list->mAtom) {
+        list->mAtom = NS_NewAtom(start);
+      }
+      else {
+        list->mNext = new nsClassList(NS_NewAtom(start));
+        list = list->mNext;
+      }
     }
 
     start = ++end;
   }
 }
 
-
-NS_IMETHODIMP
-HTMLAttributesImpl::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                                 PRInt32& aCount)
+nsresult
+HTMLAttributesImpl::SetAttributeName(nsIAtom* aAttrName, PRBool& aFound)
 {
-  if (nsHTMLAtoms::id == aAttribute) {
-    NS_IF_RELEASE(mID);
-    mID = NS_NewAtom(aValue);
-  }
-  else if (nsHTMLAtoms::kClass == aAttribute) {
-    if (nsnull != mClassList) {
-      delete mClassList;
-      mClassList = nsnull;
+  PRInt32 index = mAttrCount;
+  while (0 < index--) {
+    if (mAttrNames[index] == aAttrName) {
+      aFound = PR_TRUE;
+      return NS_OK;
     }
-    ParseClasses(aValue, &mClassList);
   }
-
-  HTMLAttribute*  last = nsnull;
-  HTMLAttribute*  attr = &mFirst;
-
-  if (nsnull != mFirst.mAttribute) {
-    while (nsnull != attr) {
-      if (attr->mAttribute == aAttribute) {
-        attr->mValue.SetStringValue(aValue);
-        aCount = mCount;
-        return NS_OK;
+  aFound = PR_FALSE;
+  if (mAttrCount == mAttrSize) {  // no more room, grow buffer
+    nsIAtom** buffer = new nsIAtom*[mAttrSize + 4]; 
+    if (buffer) {
+      nsCRT::memcpy(buffer, mAttrNames, sizeof(nsIAtom*) * mAttrCount);
+      mAttrSize += 4;
+      if (mAttrNames != mNameBuffer) {
+        delete [] mAttrNames;
       }
-      last = attr;
-      attr = attr->mNext;
+      mAttrNames = buffer;
     }
-  }
-
-  if (nsnull == last) {
-    mFirst.Set(aAttribute, aValue);
-  }
-  else {
-    attr = new HTMLAttribute(aAttribute, aValue);
-    if (nsnull == attr) {
+    else {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    last->mNext = attr;
   }
-  aCount = ++mCount;
+  mAttrNames[mAttrCount++] = aAttrName;
+  NS_ADDREF(aAttrName);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLAttributesImpl::SetAttribute(nsIAtom* aAttribute,
-                                 const nsHTMLValue& aValue,
-                                 PRInt32& aCount)
+nsresult
+HTMLAttributesImpl::UnsetAttributeName(nsIAtom* aAttrName, PRBool& aFound)
 {
+  PRInt32 index = mAttrCount;
+  while (0 < index--) {
+    if (mAttrNames[index] == aAttrName) {
+      mAttrCount--;
+      if ((mAttrNames != mNameBuffer) && (mAttrCount <= (kNameBufferSize / 2))) {
+        // go back to using internal buffer
+        if (0 < index) {
+          nsCRT::memcpy(mNameBuffer, mAttrNames, index * sizeof(nsIAtom*));
+        }
+        if (index < mAttrCount) {
+          nsCRT::memcpy(&(mNameBuffer[index]), &(mAttrNames[index + 1]), 
+                        (mAttrCount - index) * sizeof(nsIAtom*));
+        }
+        delete [] mAttrNames;
+        mAttrNames = mNameBuffer;
+        mAttrSize = kNameBufferSize;
+      }
+      else {
+        if (index < mAttrCount) {
+          nsCRT::memmove(&(mAttrNames[index]), &(mAttrNames[index + 1]), 
+                         (mAttrCount - index) * sizeof(nsIAtom*));
+        }
+      }
+      NS_RELEASE(aAttrName);
+      aFound = PR_TRUE;
+      return NS_OK;
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLAttributesImpl::EnsureSingleMappedFor(nsIHTMLContent* aContent,
+                                          nsIHTMLStyleSheet* aSheet,
+                                          PRBool aCreate)
+{
+  nsresult result = NS_OK;
+  if (mMapped) {
+    PRInt32 useCount;
+    mMapped->GetUseCount(useCount);
+    if (1 < useCount) { // shared, clone it
+      nsHTMLMappedAttributes* single;
+      result = mMapped->Clone(&single);
+      if (NS_SUCCEEDED(result)) {
+        mMapped->ReleaseUse();
+        NS_RELEASE(mMapped);
+        mMapped = single;
+        mMapped->AddUse();
+      }
+    }
+    else {  // single use, remove it from unique table before modifying
+      if (aSheet) {
+        aSheet->DropMappedAttributes(mMapped);
+      }
+    }
+  }
+  else if (aCreate) {  // create one
+    mMapped = new nsHTMLMappedAttributes();
+    if (mMapped) {
+      NS_ADDREF(mMapped);
+      mMapped->AddUse();
+      if (aContent) {
+        nsMapAttributesFunc fontMapFunc;
+        nsMapAttributesFunc mapFunc;
+        aContent->GetAttributeMappingFunctions(fontMapFunc, mapFunc);
+        result = mMapped->Init(aSheet, fontMapFunc, mapFunc);
+      }
+    }
+    else {
+      result = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  return result;
+}
+
+nsresult
+HTMLAttributesImpl::UniqueMapped(nsIHTMLStyleSheet* aSheet)
+{
+  nsresult result = NS_OK;
+
+  if (aSheet) {
+    nsIHTMLMappedAttributes*  mapped;
+    result = aSheet->UniqueMappedAttributes(mMapped, mapped);
+    if (NS_SUCCEEDED(result)) {
+      if (mapped != mMapped) {
+        mMapped->ReleaseUse();
+        NS_RELEASE(mMapped);
+        mMapped = (nsHTMLMappedAttributes*)mapped; // take ref
+        mMapped->AddUse();
+      }
+      else {
+        NS_RELEASE(mapped);
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName, const nsString& aValue,
+                                    PRBool aMappedToStyle, nsIHTMLContent* aContent,
+                                    nsIHTMLStyleSheet* aSheet)
+{
+  nsresult result = NS_OK;
+
+  if (nsHTMLAtoms::id == aAttrName) {
+    NS_IF_RELEASE(mID);
+    mID = NS_NewAtom(aValue);
+  }
+  else if (nsHTMLAtoms::kClass == aAttrName) {
+    mFirstClass.Reset();
+    ParseClasses(aValue, mFirstClass);
+  }
+
+  PRBool  haveAttr;
+  result = SetAttributeName(aAttrName, haveAttr);
+  if (NS_SUCCEEDED(result)) {
+    if (haveAttr) {
+      HTMLAttribute*  attr = nsnull;
+      if (aMappedToStyle) {
+        NS_ASSERTION(mMapped, "don't have mapped attributes");
+        if (mMapped) {
+          attr = HTMLAttribute::FindHTMLAttribute(aAttrName, &(mMapped->mFirst));
+        }
+      }
+      else {
+        attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
+      }
+      NS_ASSERTION(attr, "failed to find attribute");
+      if (attr) {
+        attr->mValue.SetStringValue(aValue);
+      }
+    }
+    else {
+      if (aMappedToStyle) {
+        result = EnsureSingleMappedFor(aContent, aSheet, PR_TRUE);
+        if (mMapped) {
+          result = mMapped->SetAttribute(aAttrName, aValue);
+          UniqueMapped(aSheet);
+        }
+      }
+      else {
+        HTMLAttribute*  attr = new HTMLAttribute(aAttrName, aValue);
+        if (attr) {
+          attr->mNext = mFirstUnmapped;
+          mFirstUnmapped = attr;
+        }
+        else {
+          result = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName,
+                                    const nsHTMLValue& aValue,
+                                    PRBool aMappedToStyle,
+                                    nsIHTMLContent* aContent,
+                                    nsIHTMLStyleSheet* aSheet,
+                                    PRInt32& aCount)
+{
+  nsresult result = NS_OK;
+
   if (eHTMLUnit_Null == aValue.GetUnit()) {
-    return UnsetAttribute(aAttribute, aCount);
+    return UnsetAttributeFor(aAttrName, aContent, aSheet, aCount);
   }
   
-  if (nsHTMLAtoms::id == aAttribute) {
+  if (nsHTMLAtoms::id == aAttrName) {
     NS_IF_RELEASE(mID);
     if (eHTMLUnit_String == aValue.GetUnit()) {
       nsAutoString  buffer;
       mID = NS_NewAtom(aValue.GetStringValue(buffer));
     }
   }
-  else if (nsHTMLAtoms::kClass == aAttribute) {
-    if (nsnull != mClassList) {
-      delete mClassList;
-      mClassList = nsnull;
-    }
+  else if (nsHTMLAtoms::kClass == aAttrName) {
+    mFirstClass.Reset();
     if (eHTMLUnit_String == aValue.GetUnit()) {
       nsAutoString  buffer;
       aValue.GetStringValue(buffer);
-      ParseClasses(buffer, &mClassList);
+      ParseClasses(buffer, mFirstClass);
     }
   }
 
-  HTMLAttribute*  last = nsnull;
-  HTMLAttribute*  attr = &mFirst;
-
-  if (nsnull != mFirst.mAttribute) {
-    while (nsnull != attr) {
-      if (attr->mAttribute == aAttribute) {
-        attr->mValue = aValue;
-        aCount = mCount;
-        return NS_OK;
-      }
-      last = attr;
-      attr = attr->mNext;
-    }
-  }
-
-  if (nsnull == last) {
-    mFirst.Set(aAttribute, aValue);
-  }
-  else {
-    attr = new HTMLAttribute(aAttribute, aValue);
-    if (nsnull == attr) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    last->mNext = attr;
-  }
-  aCount = ++mCount;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::UnsetAttribute(nsIAtom* aAttribute,
-                                   PRInt32& aCount)
-{
-  if (nsHTMLAtoms::id == aAttribute) {
-    NS_IF_RELEASE(mID);
-  }
-  else if (nsHTMLAtoms::kClass == aAttribute) {
-    if (nsnull != mClassList) {
-      delete mClassList;
-      mClassList = nsnull;
-    }
-  }
-
-  HTMLAttribute*  prev = nsnull;
-  HTMLAttribute*  attr = &mFirst;
-
-  while (nsnull != attr) {
-    if (attr->mAttribute == aAttribute) {
-      if (nsnull == prev) {
-        if (nsnull != mFirst.mNext) {
-          attr = mFirst.mNext;
-          mFirst = *(mFirst.mNext);
-          mFirst.mNext = mFirst.mNext->mNext;
-          delete attr;
-        }
-        else {
-          mFirst.Reset();
+  PRBool  haveAttr;
+  result = SetAttributeName(aAttrName, haveAttr);
+  if (NS_SUCCEEDED(result)) {
+    if (haveAttr) {
+      HTMLAttribute*  attr = nsnull;
+      if (aMappedToStyle) {
+        NS_ASSERTION(mMapped, "don't have mapped attributes");
+        if (mMapped) {
+          attr = HTMLAttribute::FindHTMLAttribute(aAttrName, &(mMapped->mFirst));
         }
       }
       else {
-        prev->mNext = attr->mNext;
-        delete attr;
+        attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
       }
-      mCount--;
-      break;
+      NS_ASSERTION(attr, "failed to find attribute");
+      if (attr) {
+        attr->mValue = aValue;
+      }
     }
-    prev = attr;
-    attr = attr->mNext;
+    else {
+      if (aMappedToStyle) {
+        result = EnsureSingleMappedFor(aContent, aSheet, PR_TRUE);
+        if (mMapped) {
+          result = mMapped->SetAttribute(aAttrName, aValue);
+          UniqueMapped(aSheet);
+        }
+      }
+      else {
+        HTMLAttribute*  attr = new HTMLAttribute(aAttrName, aValue);
+        if (attr) {
+          attr->mNext = mFirstUnmapped;
+          mFirstUnmapped = attr;
+        }
+        else {
+          result = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+    }
   }
-  aCount = mCount;
+  aCount = mAttrCount;
+
+  return result;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::UnsetAttributeFor(nsIAtom* aAttrName,
+                                      nsIHTMLContent* aContent,
+                                      nsIHTMLStyleSheet* aSheet,
+                                      PRInt32& aCount)
+{
+  nsresult result = NS_OK;
+  if (nsHTMLAtoms::id == aAttrName) {
+    NS_IF_RELEASE(mID);
+  }
+  else if (nsHTMLAtoms::kClass == aAttrName) {
+    mFirstClass.Reset();
+  }
+
+  PRBool haveAttr;
+  result = UnsetAttributeName(aAttrName, haveAttr);
+  if (NS_SUCCEEDED(result) && haveAttr) {
+    if (! HTMLAttribute::RemoveHTMLAttribute(aAttrName, &mFirstUnmapped)) {
+      // must be mapped
+      if (mMapped) {
+        EnsureSingleMappedFor(aContent, aSheet, PR_FALSE);
+        PRInt32 mappedCount = 0;
+        mMapped->UnsetAttribute(aAttrName, mappedCount);
+        if (! mappedCount) {  // toss it when empty
+          mMapped->ReleaseUse();
+          NS_RELEASE(mMapped);
+        }
+        else {
+          UniqueMapped(aSheet);
+        }
+      }
+    }
+  }
+
+  aCount = mAttrCount;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLAttributesImpl::GetAttribute(nsIAtom* aAttribute,
+HTMLAttributesImpl::GetAttribute(nsIAtom* aAttrName,
                                  nsHTMLValue& aValue) const
 {
-  aValue.Reset();
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
 
-  const HTMLAttribute*  attr = &mFirst;
-
-  while (nsnull != attr) {
-    if (attr->mAttribute == aAttribute) {
-      aValue = attr->mValue;
-      return (attr->mValue.GetUnit() == eHTMLUnit_Null)
-        ? NS_CONTENT_ATTR_NO_VALUE
-        : NS_CONTENT_ATTR_HAS_VALUE;
-    }
-    attr = attr->mNext;
+  if (mMapped) {
+    result = mMapped->GetAttribute(aAttrName, aValue);
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+
+  if (NS_CONTENT_ATTR_NOT_THERE == result) {
+    const HTMLAttribute*  attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
+
+    if (attr) {
+      aValue = attr->mValue;
+      result = ((attr->mValue.GetUnit() == eHTMLUnit_Null) ? 
+                NS_CONTENT_ATTR_NO_VALUE : 
+                NS_CONTENT_ATTR_HAS_VALUE);
+    }
+    else {
+      aValue.Reset();
+    }
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -683,21 +1319,10 @@ HTMLAttributesImpl::GetAttributeNameAt(PRInt32 aIndex,
 {
   nsresult result = NS_ERROR_ILLEGAL_VALUE;
 
-  if ((0 <= aIndex) && (aIndex < mCount)) {
-    PRInt32 index = 0;
-    const HTMLAttribute*  attr = &mFirst;
-
-    while (nsnull != attr) {
-      if (nsnull != attr->mAttribute) {
-        if (aIndex == index++) {
-          aName = attr->mAttribute;
-          NS_ADDREF(aName);
-          result = NS_OK;
-          break;
-        }
-      }
-      attr = attr->mNext;
-    }
+  if ((0 <= aIndex) && (aIndex < mAttrCount)) {
+    aName = mAttrNames[aIndex];
+    NS_ADDREF(aName);
+    result = NS_OK;
   }
   return result;
 }
@@ -705,7 +1330,7 @@ HTMLAttributesImpl::GetAttributeNameAt(PRInt32 aIndex,
 NS_IMETHODIMP
 HTMLAttributesImpl::GetAttributeCount(PRInt32& aCount) const
 {
-  aCount = mCount;
+  aCount = mAttrCount;
   return NS_OK;
 }
 
@@ -721,8 +1346,8 @@ NS_IMETHODIMP
 HTMLAttributesImpl::GetClasses(nsVoidArray& aArray) const
 {
   aArray.Clear();
-  const nsClassList* classList = mClassList;
-  while (nsnull != classList) {
+  const nsClassList* classList = &mFirstClass;
+  while (classList && classList->mAtom) {
     aArray.AppendElement(classList->mAtom); // NOTE atom is not addrefed
     classList = classList->mNext;
   }
@@ -732,8 +1357,8 @@ HTMLAttributesImpl::GetClasses(nsVoidArray& aArray) const
 NS_IMETHODIMP
 HTMLAttributesImpl::HasClass(nsIAtom* aClass) const
 {
-  const nsClassList* classList = mClassList;
-  while (nsnull != classList) {
+  const nsClassList* classList = &mFirstClass;
+  while (classList) {
     if (classList->mAtom == aClass) {
       return NS_OK;
     }
@@ -742,6 +1367,7 @@ HTMLAttributesImpl::HasClass(nsIAtom* aClass) const
   return NS_COMFALSE;
 }
 
+#ifdef UNIQUE_ATTR_SUPPORT
 NS_IMETHODIMP
 HTMLAttributesImpl::AddContentRef(void)
 {
@@ -762,6 +1388,7 @@ HTMLAttributesImpl::GetContentRefCount(PRInt32& aCount) const
   aCount = mContentRefCount;
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 HTMLAttributesImpl::Clone(nsIHTMLAttributes** aInstancePtrResult) const
@@ -770,236 +1397,93 @@ HTMLAttributesImpl::Clone(nsIHTMLAttributes** aInstancePtrResult) const
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLAttributesImpl* clown = new HTMLAttributesImpl(*this);
+  HTMLAttributesImpl* clone = new HTMLAttributesImpl(*this);
 
-  if (nsnull == clown) {
+  if (nsnull == clone) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return clown->QueryInterface(kIHTMLAttributesIID, (void **) aInstancePtrResult);
+  return clone->QueryInterface(nsIHTMLAttributes::GetIID(), (void **) aInstancePtrResult);
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::SetStyleSheet(nsIHTMLStyleSheet* aSheet)
+{
+  if (mMapped) {
+    mMapped->SetStyleSheet(aSheet);
+    return UniqueMapped(aSheet);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::GetMappedAttributeStyleRules(nsISupportsArray* aArray) const
+{
+  if (aArray && mMapped) {
+    aArray->AppendElement((nsIStyleRule*)mMapped);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLAttributesImpl::Reset(void)
 {
-  mCount = 0;
-  mFirst.Reset();
-  HTMLAttribute*  next = mFirst.mNext;
-  while (nsnull != next) {
-    HTMLAttribute*  attr = next;
-    next = next->mNext;
-    delete attr;
+  if (mAttrNames != mNameBuffer) {
+    delete [] mAttrNames;
+    mAttrNames = mNameBuffer;
+    mAttrSize = kNameBufferSize;
   }
-  mFirst.mNext = nsnull;
+  mAttrCount = 0;
+
+  if (mFirstUnmapped) {
+    delete mFirstUnmapped;
+  }
+
+  if (mMapped) {
+    mMapped->ReleaseUse();
+    NS_RELEASE(mMapped);
+  }
+
   NS_IF_RELEASE(mID);
-  if (nsnull != mClassList) {
-    delete mClassList;
-    mClassList = nsnull;
-  }
-  mFontMapper = nsnull;
-  mMapper = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::SetMappingFunctions(nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc)
-{
-  mFontMapper = aFontMapFunc;
-  mMapper = aMapFunc;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
-{
-  if (0 < mCount) {
-    if (nsnull != mFontMapper) {
-      (*mFontMapper)(this, aContext, aPresContext);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
-{
-  if (0 < mCount) {
-    NS_ASSERTION(mMapper || mFontMapper, "no mapping function");
-    if (nsnull != mMapper) {
-      (*mMapper)(this, aContext, aPresContext);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-  NS_IF_ADDREF(mSheet);
-  aSheet = mSheet;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::SetStyleSheet(nsIHTMLStyleSheet* aSheet)
-{ // this is not ref-counted, sheet sets to null when it goes away
-  mSheet = aSheet;
-  return NS_OK;
-}
-
-// Strength is an out-of-band weighting, always 0 here
-NS_IMETHODIMP
-HTMLAttributesImpl::GetStrength(PRInt32& aStrength) const
-{
-  aStrength = 0;
+  mFirstClass.Reset();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
 {
-  const HTMLAttribute*  attr = &mFirst;
-  nsAutoString buffer;
+  PRInt32 index = 0;
+  while (index < mAttrCount) {
+    PRInt32 indent;
+    for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
-  while (nsnull != attr) {
-    for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
-    attr->ToString(buffer);
+    nsHTMLValue value;
+    GetAttribute(mAttrNames[index], value);
+    nsAutoString  buffer;
+    mAttrNames[index]->ToString(buffer);
+    if (eHTMLUnit_Null != value.GetUnit()) {
+      buffer.Append(" = ");
+      value.AppendToString(buffer);
+    }
     fputs(buffer, out);
-    fputs("\n", out);
-    attr = attr->mNext;
   }
   return NS_OK;
 }
 
 extern NS_HTML nsresult
-  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult, nsIHTMLStyleSheet* aSheet,
-                       nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc)
+  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLAttributesImpl  *it = new HTMLAttributesImpl(aSheet, aFontMapFunc, aMapFunc);
+  HTMLAttributesImpl  *it = new HTMLAttributesImpl();
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kIHTMLAttributesIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(nsIHTMLAttributes::GetIID(), (void **) aInstancePtrResult);
 }
 
 
-#if 0
-
-
-marginwidth; marginheight:  px
-
-border: px
-
-align(DIV): left, right, center, justify
-align: left, right, center, abscenter
-valign: baseline, top, bottom, middle, center
-align(image): abscenter, left, right, texttop, absbottom, baseline, center, bottom, top, middle, absmiddle
-
-dir: rtl, ltr
-
-width:  px, %
-height: px, %
-
-vspace; hspace: px
-
-type(list): none, disc, (circle | round), square, decimal, lower-roman, upper-roman, lower-alpha, upper-alpha
-
-href: url
-target: string
-src: url(string?)
-color: color
-face: string
-suppress: bool
-
-style: string
-class: string (list)
-id: string
-name: string
-
-//a
-link; vlink; alink: color
-
-//body
-background: url
-bgcolor: color
-text: color
-
-//frameset
-bordercolor: color
-
-//layer
-background: url
-bgcolor: color
-
-//q
-lang: string
-
-//table
-background: url
-bgcolor: color
-bordercolor: color
-cellspacing: px
-cellpadding: px
-toppadding; leftpadding; bottompadding; rightpadding: px
-cols: int
-
-//td
-background: url
-bgcolor: color
-nowrap: bool
-colspan; rowspan: int
-
-//tr
-background: url
-bgcolor: color
-
-//colgroup
-span: int
-
-//col
-repeat: int
-
-//ul;ol
-compact: bool
-start: int
-
-//li
-value: int
-
-//hr;spacer
-size: px
-
-//multicol
-cols: int
-gutter: px
-
-//input
-type: string
-value: string
-
-//factory methods:
-GetStringData
-GetBoolData
-GetInvBoolData
-GetPixelIntData
-GetValueOrPctData
-GetValueData
-
-//tag methods
-getAttribute
-getIntAttribute
-getKeywordAttribute
-getSignedAttribute
-getValueOrPctAttribute
-
-
-//notes
-nsIAtom->value table
-
-#endif
