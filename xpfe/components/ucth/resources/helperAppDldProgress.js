@@ -400,7 +400,7 @@ function onLoad() {
         filesFolder.leafName = filesFolderLeafName;
         
         filesFolder.create(lfIID.DIRECTORY_TYPE, 0644);
-        webBrowserPersist.saveDocument(persistArgs.source, targetFile, filesFolder);
+        webBrowserPersist.saveDocument(persistArgs.source, targetFile, filesFolder, null, 0, 0);
       }
     }
     

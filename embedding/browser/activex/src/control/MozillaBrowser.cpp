@@ -660,7 +660,7 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
         nsCOMPtr<nsILocalFile> dataPath;
         NS_NewLocalFile(szDataPath, TRUE, getter_AddRefs(dataPath));
 
-        persist->SaveDocument(nsnull, file, dataPath);
+        persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);
     }
 
     return hr;

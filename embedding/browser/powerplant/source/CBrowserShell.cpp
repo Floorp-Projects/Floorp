@@ -706,7 +706,7 @@ NS_METHOD CBrowserShell::SaveDocument(const FSSpec& outSpec)
     nsCOMPtr<nsILocalFile> parentDirAsLocal(do_QueryInterface(parentDir, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    rv = wbPersist->SaveDocument(domDoc, localFile, parentDirAsLocal);
+    rv = wbPersist->SaveDocument(domDoc, localFile, parentDirAsLocal, nsnull, 0, 0);
     
     return rv;
 }

@@ -74,20 +74,25 @@ protected:
     nsresult CloneNodeWithFixedUpURIAttributes(
         nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
     nsresult SaveURIInternal(
-        nsIURI *aURI, nsIInputStream *aPostData, nsILocalFile *aFile,
+        nsIURI *aURI, nsIInputStream *aPostData, nsIURI *aFile,
         PRBool aCalcFileExt);
-    nsresult SaveDocumentInternal(nsIDOMDocument *aDocument,
-        nsILocalFile *aFile, nsILocalFile *aDataPath);
+    nsresult SaveDocumentInternal(
+        nsIDOMDocument *aDocument, nsIURI *aFile, nsIURI *aDataPath);
     nsresult SaveDocuments();
 
 // Private members
 private:
     void CleanUp();
+    nsresult GetValidURIFromObject(nsISupports *aObject, nsIURI **aURI) const;
+    nsresult GetLocalFileFromURI(nsIURI *aURI, nsILocalFile **aLocalFile) const;
+    nsresult AppendPathToURI(nsIURI *aURI, const nsAString & aPath) const;
     nsresult MakeAndStoreLocalFilenameInURIMap(
         const char *aURI, PRBool aNeedsPersisting, URIData **aData);
     nsresult MakeOutputStream(
-        nsILocalFile *aFile, PRBool aCalcFileExt,
-        nsIChannel *aChannel, nsIOutputStream **aOutputStream);
+        nsIURI *aFile, nsIChannel *aChannel, nsIOutputStream **aOutputStream);
+    nsresult MakeOutputStreamFromFile(
+        nsILocalFile *aFile, nsIChannel *aChannel, nsIOutputStream **aOutputStream);
+    nsresult CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel);
     nsresult MakeFilenameFromURI(
         nsIURI *aURI, nsString &aFilename);
     nsresult StoreURIAttribute(
@@ -97,11 +102,10 @@ private:
     nsresult FixupNodeAttribute(nsIDOMNode *aNode, const char *aAttribute);
     nsresult FixupAnchor(nsIDOMNode *aNode);
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
-    nsresult SaveDocumentToFileWithFixup(
+    nsresult SaveDocumentWithFixup(
         nsIDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
-        nsIFile *aFile, PRBool aReplaceExisting, PRBool aSaveCopy,
-        const nsString &aFormatType, const nsString &aSaveCharset,
-        PRUint32  aFlags);
+        nsIURI *aFile, PRBool aReplaceExisting, const nsString &aFormatType,
+        const nsString &aSaveCharset, PRUint32  aFlags);
     nsresult SaveSubframeContent(
         nsIDOMDocument *aFrameContent, URIData *aData);
     nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);
@@ -126,7 +130,7 @@ private:
     static PRBool PR_CALLBACK EnumFixRedirect(
         nsHashKey *aKey, void *aData, void* closure);
 
-    nsCOMPtr<nsILocalFile>    mCurrentDataPath;
+    nsCOMPtr<nsIURI>          mCurrentDataPath;
     PRBool                    mCurrentDataPathIsRelative;
     nsCString                 mCurrentRelativePathToData;
     nsCOMPtr<nsIURI>          mCurrentBaseURI;
@@ -147,7 +151,10 @@ private:
     PRUint32                  mPersistResult;
     PRInt32                   mTotalCurrentProgress;
     PRInt32                   mTotalMaxProgress;
-
+    PRBool                    mReplaceExisting;
+    PRInt16                   mWrapColumn;
+    PRUint32                  mEncodingFlags;
+    nsString                  mContentType;
 };
 
 // Helper class does node fixup during persistence

@@ -50,6 +50,8 @@ interface nsIWebBrowserPersist : nsISupports
   const unsigned long PERSIST_FLAGS_IGNORE_IFRAMES = 8;
   /** Do not run the incoming data through a content converter e.g. to decompress it */
   const unsigned long PERSIST_FLAGS_NO_CONVERSION = 16;
+  /** Replace existing files on the disk (use with due diligence!) */
+  const unsigned long PERSIST_FLAGS_REPLACE_EXISTING_FILES = 32;
 
   /** Flags governing how data is fetched from the network. */
   attribute unsigned long persistFlags;
@@ -77,38 +79,102 @@ interface nsIWebBrowserPersist : nsISupports
   readonly attribute unsigned long result;
 
   /**
-   * Callback listener for progress notifications.
+   * Callback listener for progress notifications. The object
+   * may also implement nsIInterfaceRequestor and be prepared to
+   * return nsIAuthPrompt or other interfaces required to download
+   * data.
    */
   attribute nsIWebProgressListener progressListener;
 
   /**
    * Save the specified URI to file.
    *
-   * @param aURI       URI to save to file or <CODE>nsnull</CODE> 
-   *                   to use current URI if the implementation supports such
-   *                   a concept.
+   * @param aURI       URI to save to file. Some implementations of this interface
+   *                   may also support <CODE>nsnull</CODE> to imply the currently
+   *                   loaded URI.
    * @param aPostData  Data to pass with in an HTTP request or nsnull.
    * @param aFile      Target local file.
    *
    * @return NS_OK Operation has been started.
    * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
-  void saveURI(in nsIURI aURI, in nsIInputStream aPostData, in nsILocalFile aFile);
+  void saveURI(in nsIURI aURI, in nsIInputStream aPostData, in nsISupports aFile);
+
+  /** Output only the current selection as opposed to the whole document. */
+  const unsigned long ENCODE_FLAGS_SELECTION_ONLY = 1;
+  /**
+   * For plaintext output. Convert html to plaintext that looks like the html.
+   * Implies wrap (except inside &lt;pre&gt;), since html wraps.
+   * HTML output: always do prettyprinting, ignoring existing formatting.
+   */
+  const unsigned long ENCODE_FLAGS_FORMATTED = 2;
+  /**
+   * Output without formatting or wrapping the content. This flag
+   * may be used to preserve the original formatting as much as possible.
+   */
+  const unsigned long ENCODE_FLAGS_RAW = 4;
+  /** Output only the body section, no HTML tags. */
+  const unsigned long ENCODE_FLAGS_BODY_ONLY = 8;
+  /** Wrap even if when not doing formatted output (e.g. for text fields). */
+  const unsigned long ENCODE_FLAGS_PREFORMATTED = 16;
+  /** Wrap documents at the specified column. */
+  const unsigned long ENCODE_FLAGS_WRAP = 32;
+  /**
+   * For plaintext output. Output for format flowed (RFC 2646). This is used
+   * when converting to text for mail sending. This differs just slightly
+   * but in an important way from normal formatted, and that is that
+   * lines are space stuffed. This can't (correctly) be done later.
+   */
+  const unsigned long ENCODE_FLAGS_FORMAT_FLOWED = 64;
+  /** Convert links to absolute links where possible. */
+  const unsigned long ENCODE_FLAGS_ABSOLUTE_LINKS = 128;
+  /** Encode entities, e.g. output &nbsp; instead of character code 0xa0. */
+  const unsigned long ENCODE_FLAGS_ENCODE_ENTITIES = 256;
+  /**
+   * Output with carriage return line breaks. May also be combined with
+   * ENCODE_FLAGS_LF_LINEBREAKS and if neither is specified, the platform
+   * default format is used.
+   */
+  const unsigned long ENCODE_FLAGS_CR_LINEBREAKS = 512;
+  /**
+   * Output with linefeed line breaks. May also be combined with
+   * ENCODE_FLAGS_CR_LINEBREAKS and if neither is specified, the platform
+   * default format is used.
+   */
+  const unsigned long ENCODE_FLAGS_LF_LINEBREAKS = 1024;
+  /** For plaintext output. Output the content of noscript elements. */
+  const unsigned long ENCODE_FLAGS_NOSCRIPT_CONTENT = 2048;
+  /** For plaintext output. Output the content of noframes elements. */
+  const unsigned long ENCODE_FLAGS_NOFRAMES_CONTENT = 4096;
 
   /**
    * Save the specified DOM document to file and optionally all linked files
    * (e.g. images, CSS, JS & subframes). Do not call this method until the
    * document has finished loading!
    *
-   * @param aDocument  Document to save to file.
-   * @param aFile      Target local file.
-   * @param aDataPath  Path to folder (which must already exist) to save
-   *                   linked files to or nsnull.
+   * @param aDocument          Document to save to file. Some implementations of
+   *                           this interface may also support <CODE>nsnull</CODE>
+   *                           to imply the currently loaded document.
+   * @param aFileURI           Target local file.
+   * @param aDataPathURI       Path to directory where URIs linked to the document
+   *                           are saved or nsnull if no linked URIs should be saved.
+   * @param aOutputContentType The desired MIME type format to save the 
+   *                           document and all subdocuments into or nsnull to use
+   *                           the default behaviour.
+   * @param aEncodingFlags     Flags to pass to the encoder.
+   * @param aWrapColumn        For text documents, indicates the desired width to
+   *                           wrap text at. Parameter is ignored if wrapping is not
+   *                           specified by the encoding flags.
+   *
+   * @see nsIDocumentEncoder
    *
    * @return NS_OK Operation has been started.
    * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
-  void saveDocument(in nsIDOMDocument aDocument, in nsILocalFile aFile, in nsILocalFile aDataPath);
+  void saveDocument(in nsIDOMDocument aDocument,
+     in nsISupports aFile, in nsISupports aDataPath,
+     in string aOutputContentType, in unsigned long aEncodingFlags,
+     in unsigned long aWrapColumn);
 
   /**
    * Cancels the current operation. The caller is responsible for cleaning up

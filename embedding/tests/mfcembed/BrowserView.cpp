@@ -690,7 +690,7 @@ void CBrowserView::OnFileSaveAs()
 
         // Save the file
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
-		if(persist)
+        if(persist)
         {
             nsCOMPtr<nsILocalFile> file;
             NS_NewLocalFile(T2A(pStrFullPath), TRUE, getter_AddRefs(file));
@@ -702,11 +702,11 @@ void CBrowserView::OnFileSaveAs()
             }
 
             if(bSaveAll)
-                persist->SaveDocument(nsnull, file, dataPath);
+                persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);
             else
                 persist->SaveURI(nsnull, nsnull, file);
         }
-	}
+    }
 }
 
 void CBrowserView::OpenURL(const char* pUrl)
@@ -841,9 +841,9 @@ void CBrowserView::OnSaveLinkAs()
         {
             nsCOMPtr<nsILocalFile> file;
             NS_NewLocalFile(strFullPath.GetBuffer(0), TRUE, getter_AddRefs(file));
-			persist->SaveURI(linkURI, nsnull, file);
+            persist->SaveURI(linkURI, nsnull, file);
         }
-	}
+    }
 }
 
 void CBrowserView::OnSaveImageAs()
@@ -883,13 +883,13 @@ void CBrowserView::OnSaveImageAs()
 		CString strFullPath = cf.GetPathName();
 
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
-		if(persist)
+        if(persist)
         {
             nsCOMPtr<nsILocalFile> file;
             NS_NewLocalFile(strFullPath.GetBuffer(0), TRUE, getter_AddRefs(file));
-			persist->SaveURI(linkURI, nsnull, file);
+            persist->SaveURI(linkURI, nsnull, file);
         }
-	}
+    }
 }
 
 void CBrowserView::OnShowFindDlg() 

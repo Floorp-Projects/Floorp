@@ -429,8 +429,8 @@ void SaveWebPage(nsIWebBrowser *aWebBrowser)
             NS_NewLocalFile(pszDataPath, TRUE, getter_AddRefs(dataPath));
         }
 
-        persist->SaveDocument(nsnull, file, dataPath);
-	}
+        persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);
+    }
 }
 
 
