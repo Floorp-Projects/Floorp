@@ -32,7 +32,6 @@
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
-#include "nsIFileChannel.h"
 #include "nsISerializable.h"
 
 #define NS_THIS_STANDARDURL_IMPLEMENTATION_CID       \

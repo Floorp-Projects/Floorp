@@ -48,9 +48,9 @@
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,10 +68,7 @@ nsResProtocolHandler::SetSpecialDir(const char* rootName, const char* sysDir)
     rv = NS_GetSpecialDirectory(sysDir, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIFileURL> fileURL;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                            NS_GET_IID(nsIFileURL),
-                                            getter_AddRefs(fileURL));
+    nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance(kStandardURLCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = fileURL->SetFile(file);
@@ -195,13 +192,7 @@ nsResProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 {
     nsresult rv;
 
-    // Res: URLs (currently) have no additional structure beyond that provided by standard
-    // URLs, so there is no "outer" given to CreateInstance 
-
-    nsIURI* url;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                            NS_GET_IID(nsIURI),
-                                            (void**)&url);
+    nsCOMPtr<nsIURI> url(do_CreateInstance(kStandardURLCID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     if (aBaseURI) {
@@ -213,12 +204,11 @@ nsResProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
         rv = url->SetSpec((char*)aSpec);
     }
 
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
+    if (NS_FAILED(rv))
         return rv;
-    }
 
     *result = url;
+    NS_ADDREF(*result);
     return rv;
 }
 
@@ -256,7 +246,7 @@ nsResProtocolHandler::PrependSubstitution(const char *root, const char *urlStr)
     nsresult rv;
     nsAutoLock lock(mLock);
 
-    nsCOMPtr<nsIIOService> ioServ = do_GetService(kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService(&rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIURI> url;
     rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
@@ -266,7 +256,8 @@ nsResProtocolHandler::PrependSubstitution(const char *root, const char *urlStr)
     nsCOMPtr<nsISupportsArray> strings;
     nsCOMPtr<nsISupportsArray> newStrings;
 
-    strings = getter_AddRefs((nsISupportsArray*)mSubstitutions.Get(&key));
+    strings = dont_AddRef(NS_STATIC_CAST(nsISupportsArray*,
+                                         mSubstitutions.Get(&key)));
     if (strings) {
         // we have to snapshot the array when inserting a new element because
         // someone could be iterating over the existing array
@@ -292,7 +283,7 @@ nsResProtocolHandler::AppendSubstitution(const char *root, const char *urlStr)
     nsresult rv;
     nsAutoLock lock(mLock);
 
-    nsCOMPtr<nsIIOService> ioServ = do_GetService(kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService(&rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIURI> url;
     rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
@@ -348,7 +339,7 @@ nsResProtocolHandler::RemoveSubstitution(const char *root, const char *urlStr)
     nsresult rv;
     nsAutoLock lock(mLock);
 
-    nsCOMPtr<nsIIOService> ioServ = do_GetService(kIOServiceCID, &rv);
+    nsCOMPtr<nsIIOService> ioServ = do_GetIOService(&rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIURI> url;
     rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));

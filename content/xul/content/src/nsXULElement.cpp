@@ -5230,7 +5230,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     JSScript *script = NS_REINTERPRET_CAST(JSScript*,
                                            ::JS_GetPrivate(cx, mJSObject));
     if (! ::JS_XDRScript(xdr, &script)) {
-        rv = NS_ERROR_OUT_OF_MEMORY;    // extremely likely, barring bugs!
+        rv = NS_ERROR_FAILURE;  // likely to be a principals serialization error
     } else {
         // Get the encoded JSXDRState data and write it.  The JSXDRState owns
         // this buffer memory and will free it beneath ::JS_XDRDestroy.
@@ -5303,7 +5303,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
 
             JSScript *script = nsnull;
             if (! ::JS_XDRScript(xdr, &script)) {
-                rv = NS_ERROR_OUT_OF_MEMORY;        // likely error
+                rv = NS_ERROR_FAILURE;  // principals deserialization error?
             } else {
                 mJSObject = ::JS_NewScriptObject(cx, script);
                 if (! mJSObject) {
@@ -5436,15 +5436,13 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
         // XXXbe temporary, until we serialize/deserialize everything from the
         //       nsXULPrototypeDocument on down...
-        nsCOMPtr<nsIFastLoadService> fastLoadService(do_GetService(NS_FAST_LOAD_SERVICE_CONTRACTID));
+        nsCOMPtr<nsIFastLoadService> fastLoadService(do_GetFastLoadService());
         nsCOMPtr<nsIObjectOutputStream> objectOutput;
-        fastLoadService->GetCurrentOutputStream(getter_AddRefs(objectOutput));
+        fastLoadService->GetOutputStream(getter_AddRefs(objectOutput));
         if (objectOutput) {
             rv = Serialize(objectOutput, context);
-            if (NS_FAILED(rv)) {
-                // XXXbe remove FastLoad file
-                fastLoadService->SetCurrentOutputStream(nsnull);
-            }
+            if (NS_FAILED(rv))
+                nsXULDocument::AbortFastLoads();
         }
     }
 

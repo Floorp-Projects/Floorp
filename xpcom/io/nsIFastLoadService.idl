@@ -23,6 +23,7 @@
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
 
+interface nsIFastLoadReadControl;
 interface nsIFile;
 interface nsIInputStream;
 interface nsIOutputStream;
@@ -41,31 +42,25 @@ interface nsIFastLoadService : nsISupports
 {
     nsIFile newFastLoadFile(in string aBaseName);
 
-    nsIObjectInputStream  newInputStream(in nsIInputStream aSrcStream,
-                                         out PRUint32 aChecksum);
+    nsIObjectInputStream  newInputStream(in nsIInputStream aSrcStream);
     nsIObjectOutputStream newOutputStream(in nsIOutputStream aDestStream);
 
-    // Flag values for the currentDirection attribute and the aDirectionFlags
+    // Flag values for the direction attribute and the aDirectionFlags
     // parameter to startMuxedDocument.
     const PRInt32 NS_FASTLOAD_READ = 1;
     const PRInt32 NS_FASTLOAD_WRITE = 2;
 
-    /**
-     * XXX The only stream legal to set as current is one returned by the
-     * newInputStream or newOutputStream methods, above.
-     */
-    attribute nsIObjectInputStream  currentInputStream;
-    attribute nsIObjectOutputStream currentOutputStream;
-    attribute nsIFastLoadFileIO     currentFileIO;
-    readonly attribute PRInt32      currentDirection;
+    attribute nsIObjectInputStream  inputStream;
+    attribute nsIObjectOutputStream outputStream;
+    attribute nsIFastLoadFileIO     fileIO;
+    readonly attribute PRInt32      direction;
 
     /**
-     * Consumers of currentInputStream and currentOutputStream should
-     * attempt to demultiplex data from the current input stream only if
-     * fastLoadService->StartMuxedDocument(uri, urispec, NS_FASTLOAD_READ)
-     * succeeds.  If StartMuxedDocument fails with NS_ERROR_NOT_AVAILABLE,
-     * callers should slow-load the document and multiplex its data to the
-     * current output stream.
+     * Clients of inputStream and outputStream should try to demultiplex data
+     * from the input stream only if fastLoadService->StartMuxedDocument(uri,
+     * urispec, NS_FASTLOAD_READ) succeeds.  If StartMuxedDocument fails with
+     * NS_ERROR_NOT_AVAILABLE, callers should slow-load the documents, muxing
+     * their data to the current output stream.
      */
     void   startMuxedDocument(in nsISupports aURI,
                               in string aURISpec,
@@ -73,8 +68,13 @@ interface nsIFastLoadService : nsISupports
     void   selectMuxedDocument(in nsISupports aURI);
     void   endMuxedDocument(in nsISupports aURI);
 
-    void   appendDependency(in string aFileName);
-    PRTime maxDependencyModifiedTime();
+    void   addDependency(in nsIFile aFile);
+    PRTime maxDependencyModifiedTime(in nsIFastLoadReadControl aControl);
+
+    PRUint32 computeChecksum(in nsIFile aFile,
+                             in nsIFastLoadReadControl aControl);
+    void     cacheChecksum(in nsIFile aFile,
+                           in nsIObjectOutputStream aStream);
 
     [noscript] void getFastLoadReferent(inout nsISupports aPtr);
 
@@ -86,29 +86,41 @@ interface nsIFastLoadService : nsISupports
 };
 
 %{C++
-#define NS_FAST_LOAD_SERVICE_CLASSNAME "Mozilla FastLoad Service"
+#define NS_FASTLOADSERVICE_CLASSNAME "Mozilla FastLoad Service"
 
-#define NS_FAST_LOAD_SERVICE_CID \
+#define NS_FASTLOADSERVICE_CID \
     {0xc943093c,0xac94,0x4bee,{0x84,0x0b,0x8b,0x5a,0x6e,0x31,0x4f,0xa7}}
 
-#define NS_FAST_LOAD_SERVICE_CONTRACTID \
+#define NS_FASTLOADSERVICE_CONTRACTID \
     "@mozilla.org/fast-load-service;1"
 
 #ifndef nsCOMPtr_h___
 # include "nsCOMPtr.h"
 #endif
+#ifndef __gen_nsIFile_h__
+# include "nsIFile.h"
+#endif
 #ifndef nsIServiceManager_h___
 # include "nsIServiceManager.h"
 #endif
 
-inline nsresult
-NS_AppendFastLoadDependency(const char* aFileName)
+inline const nsGetServiceByCID
+do_GetFastLoadService(nsresult *aResultCode = 0)
 {
-    nsCOMPtr<nsIFastLoadService>
-        fastLoadService(do_GetService(NS_FAST_LOAD_SERVICE_CONTRACTID));
-    if (!fastLoadService)
-        return NS_OK;
-    return fastLoadService->AppendDependency(aFileName);
+    static NS_DEFINE_CID(kFastLoadServiceCID, NS_FASTLOADSERVICE_CID);
+    return nsGetServiceByCID(kFastLoadServiceCID, nsnull, aResultCode);
+}
+
+inline nsresult
+NS_AddFastLoadDependency(nsIFile* aFile)
+{
+    nsCOMPtr<nsIFastLoadService> fastLoadService(do_GetFastLoadService());
+    if (fastLoadService) {
+        nsresult rv = fastLoadService->AddDependency(aFile);
+        if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
+            return rv;
+    }
+    return NS_OK;
 }
 
 %}

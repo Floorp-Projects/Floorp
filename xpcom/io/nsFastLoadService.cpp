@@ -34,20 +34,13 @@
 #include "nsString.h"
 
 #include "nsIComponentManager.h"
+#include "nsIEnumerator.h"
+#include "nsIFastLoadFileControl.h"
 #include "nsIFile.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsISeekableStream.h"
 #include "nsISupports.h"
-
-// XXXbe we *know* that nsIObject*Stream is implemented by nsFastLoadFile.cpp
-inline nsFastLoadFileReader* GetReader(nsIObjectInputStream* aStream) {
-    return NS_STATIC_CAST(nsFastLoadFileReader*, aStream);
-}
-
-inline nsFastLoadFileWriter* GetWriter(nsIObjectOutputStream* aStream) {
-    return NS_STATIC_CAST(nsFastLoadFileWriter*, aStream);
-}
 
 PR_IMPLEMENT_DATA(nsIFastLoadService*) gFastLoadService_ = nsnull;
 
@@ -132,13 +125,15 @@ nsFastLoadService::NewFastLoadFile(const char* aBaseName, nsIFile* *aResult)
 
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(file));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCAutoString name(aBaseName);
     MASSAGE_BASENAME(name);
     name += PLATFORM_FASL_SUFFIX;
     rv = file->Append(name);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     *aResult = file;
     NS_ADDREF(*aResult);
@@ -147,20 +142,14 @@ nsFastLoadService::NewFastLoadFile(const char* aBaseName, nsIFile* *aResult)
 
 NS_IMETHODIMP
 nsFastLoadService::NewInputStream(nsIInputStream* aSrcStream,
-                                  PRUint32 *aChecksum,
                                   nsIObjectInputStream* *aResult)
 {
-    nsresult rv;
     nsAutoLock lock(mLock);
 
     nsCOMPtr<nsIObjectInputStream> stream;
-    rv = NS_NewFastLoadFileReader(getter_AddRefs(stream), aSrcStream);
-    if (NS_FAILED(rv)) return rv;
-
-    nsFastLoadFileReader* reader = GetReader(stream);
-
-    rv = reader->GetChecksum(aChecksum);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = NS_NewFastLoadFileReader(getter_AddRefs(stream), aSrcStream);
+    if (NS_FAILED(rv))
+        return rv;
 
     *aResult = stream;
     NS_ADDREF(*aResult);
@@ -173,18 +162,18 @@ nsFastLoadService::NewOutputStream(nsIOutputStream* aDestStream,
 {
     nsAutoLock lock(mLock);
 
-    return NS_NewFastLoadFileWriter(aResult, aDestStream);
+    return NS_NewFastLoadFileWriter(aResult, aDestStream, mFileIO);
 }
 
 NS_IMETHODIMP
-nsFastLoadService::GetCurrentInputStream(nsIObjectInputStream* *aResult)
+nsFastLoadService::GetInputStream(nsIObjectInputStream* *aResult)
 {
     NS_IF_ADDREF(*aResult = mInputStream);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFastLoadService::SetCurrentInputStream(nsIObjectInputStream* aStream)
+nsFastLoadService::SetInputStream(nsIObjectInputStream* aStream)
 {
     nsAutoLock lock(mLock);
     mInputStream = aStream;
@@ -192,14 +181,14 @@ nsFastLoadService::SetCurrentInputStream(nsIObjectInputStream* aStream)
 }
 
 NS_IMETHODIMP
-nsFastLoadService::GetCurrentOutputStream(nsIObjectOutputStream* *aResult)
+nsFastLoadService::GetOutputStream(nsIObjectOutputStream* *aResult)
 {
     NS_IF_ADDREF(*aResult = mOutputStream);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFastLoadService::SetCurrentOutputStream(nsIObjectOutputStream* aStream)
+nsFastLoadService::SetOutputStream(nsIObjectOutputStream* aStream)
 {
     nsAutoLock lock(mLock);
     mOutputStream = aStream;
@@ -207,14 +196,14 @@ nsFastLoadService::SetCurrentOutputStream(nsIObjectOutputStream* aStream)
 }
 
 NS_IMETHODIMP
-nsFastLoadService::GetCurrentFileIO(nsIFastLoadFileIO* *aResult)
+nsFastLoadService::GetFileIO(nsIFastLoadFileIO* *aResult)
 {
     NS_IF_ADDREF(*aResult = mFileIO);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFastLoadService::SetCurrentFileIO(nsIFastLoadFileIO* aFileIO)
+nsFastLoadService::SetFileIO(nsIFastLoadFileIO* aFileIO)
 {
     nsAutoLock lock(mLock);
     mFileIO = aFileIO;
@@ -222,7 +211,7 @@ nsFastLoadService::SetCurrentFileIO(nsIFastLoadFileIO* aFileIO)
 }
 
 NS_IMETHODIMP
-nsFastLoadService::GetCurrentDirection(PRInt32 *aResult)
+nsFastLoadService::GetDirection(PRInt32 *aResult)
 {
     *aResult = mDirection;
     return NS_OK;
@@ -233,38 +222,49 @@ nsFastLoadService::StartMuxedDocument(nsISupports* aURI, const char* aURISpec,
                                       PRInt32 aDirectionFlags)
 {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
+    nsCOMPtr<nsIFastLoadFileControl> control;
     nsAutoLock lock(mLock);
 
     // Try for an input stream first, in case aURISpec's data is multiplexed
     // in the current FastLoad file.
     if ((aDirectionFlags & NS_FASTLOAD_READ) && mInputStream) {
-        nsFastLoadFileReader* reader = GetReader(mInputStream);
-        rv = reader->StartMuxedDocument(aURI, aURISpec);
-        if (NS_SUCCEEDED(rv) || rv != NS_ERROR_NOT_AVAILABLE)
-            return rv;
+        control = do_QueryInterface(mInputStream);
+        if (control) {
+            // If aURISpec is not in the multiplex, control->StartMuxedDocument
+            // will return NS_ERROR_NOT_AVAILABLE.
+            rv = control->StartMuxedDocument(aURI, aURISpec);
+            if (NS_SUCCEEDED(rv) || rv != NS_ERROR_NOT_AVAILABLE)
+                return rv;
 
-        // If aURISpec is not found in the reader, wrap it with an updater
-        // and store the updater at mOutputStream.
-        if (!mOutputStream && mFileIO) {
-            nsCOMPtr<nsIOutputStream> output;
-            rv = mFileIO->GetOutputStream(getter_AddRefs(output));
-            if (NS_FAILED(rv)) return rv;
+            // Ok, aURISpec is not in the existing mux.  If we have no output
+            // stream yet, wrap the reader with a FastLoad file updater.
+            if (!mOutputStream && mFileIO) {
+                nsCOMPtr<nsIOutputStream> output;
+                rv = mFileIO->GetOutputStream(getter_AddRefs(output));
+                if (NS_FAILED(rv))
+                    return rv;
 
-            rv = NS_NewFastLoadFileUpdater(getter_AddRefs(mOutputStream),
-                                           output,
-                                           reader);
-            if (NS_FAILED(rv)) return rv;
-        }
+                // NB: mInputStream must be an nsFastLoadFileReader!
+                rv = NS_NewFastLoadFileUpdater(getter_AddRefs(mOutputStream),
+                                               output,
+                                               mInputStream);
+                if (NS_FAILED(rv))
+                    return rv;
+            }
 
-        if (aDirectionFlags == NS_FASTLOAD_READ) {
-            // Tell our caller to re-start multiplexing, rather than attempt
-            // to select and deserialize now.
-            return NS_ERROR_NOT_AVAILABLE;
+            if (aDirectionFlags == NS_FASTLOAD_READ) {
+                // Tell our caller to re-start multiplexing, rather than attempt
+                // to select and deserialize now.
+                return NS_ERROR_NOT_AVAILABLE;
+            }
         }
     }
 
-    if ((aDirectionFlags & NS_FASTLOAD_WRITE) && mOutputStream)
-        rv = GetWriter(mOutputStream)->StartMuxedDocument(aURI, aURISpec);
+    if ((aDirectionFlags & NS_FASTLOAD_WRITE) && mOutputStream) {
+        control = do_QueryInterface(mOutputStream);
+        if (control)
+            rv = control->StartMuxedDocument(aURI, aURISpec);
+    }
     return rv;
 }
 
@@ -272,20 +272,27 @@ NS_IMETHODIMP
 nsFastLoadService::SelectMuxedDocument(nsISupports* aURI)
 {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
+    nsCOMPtr<nsIFastLoadFileControl> control;
     nsAutoLock lock(mLock);
 
     // Try to select the reader, if any; then only if the URI was not in the
     // file already, select the writer/updater.
     if (mInputStream) {
-        rv = GetReader(mInputStream)->SelectMuxedDocument(aURI);
-        if (NS_SUCCEEDED(rv))
-            mDirection = NS_FASTLOAD_READ;
+        control = do_QueryInterface(mInputStream);
+        if (control) {
+            rv = control->SelectMuxedDocument(aURI);
+            if (NS_SUCCEEDED(rv))
+                mDirection = NS_FASTLOAD_READ;
+        }
     }
 
     if (rv == NS_ERROR_NOT_AVAILABLE && mOutputStream) {
-        rv = GetWriter(mOutputStream)->SelectMuxedDocument(aURI);
-        if (NS_SUCCEEDED(rv))
-            mDirection = NS_FASTLOAD_WRITE;
+        control = do_QueryInterface(mOutputStream);
+        if (control) {
+            rv = control->SelectMuxedDocument(aURI);
+            if (NS_SUCCEEDED(rv))
+                mDirection = NS_FASTLOAD_WRITE;
+        }
     }
 
     return rv;
@@ -295,51 +302,116 @@ NS_IMETHODIMP
 nsFastLoadService::EndMuxedDocument(nsISupports* aURI)
 {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
+    nsCOMPtr<nsIFastLoadFileControl> control;
     nsAutoLock lock(mLock);
 
     // Try to end the document identified by aURI in the reader, if any; then
     // only if the URI was not in the file already, end the writer/updater.
-    if (mInputStream)
-        rv = GetReader(mInputStream)->EndMuxedDocument(aURI);
+    if (mInputStream) {
+        control = do_QueryInterface(mInputStream);
+        if (control)
+            rv = control->EndMuxedDocument(aURI);
+    }
 
-    if (rv == NS_ERROR_NOT_AVAILABLE && mOutputStream)
-        rv = GetWriter(mOutputStream)->EndMuxedDocument(aURI);
+    if (rv == NS_ERROR_NOT_AVAILABLE && mOutputStream) {
+        control = do_QueryInterface(mOutputStream);
+        if (control)
+            rv = control->EndMuxedDocument(aURI);
+    }
 
     mDirection = 0;
     return rv;
 }
 
 NS_IMETHODIMP
-nsFastLoadService::AppendDependency(const char* aFileName)
+nsFastLoadService::AddDependency(nsIFile* aFile)
 {
     nsAutoLock lock(mLock);
-    if (!mOutputStream)
-        return NS_OK;
 
-    if (!GetWriter(mOutputStream)->AppendDependency(aFileName))
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    nsCOMPtr<nsIFastLoadWriteControl> control(do_QueryInterface(mOutputStream));
+    if (!control)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    return control->AddDependency(aFile);
 }
 
 NS_IMETHODIMP
-nsFastLoadService::MaxDependencyModifiedTime(PRTime *aTime)
+nsFastLoadService::MaxDependencyModifiedTime(nsIFastLoadReadControl* aControl,
+                                             PRTime *aTime)
 {
     *aTime = LL_ZERO;
 
     nsAutoLock lock(mLock);
-    if (!mOutputStream)
-        return NS_OK;
 
-    nsFastLoadFileWriter* writer = GetWriter(mOutputStream);
+    nsCOMPtr<nsISimpleEnumerator> dependencies;
+    nsresult rv = aControl->GetDependencies(getter_AddRefs(dependencies));
+    if (NS_FAILED(rv))
+        return rv;
 
-    for (PRUint32 i = 0, n = writer->GetDependencyCount(); i < n; i++) {
-        PRFileInfo info;
-        if (PR_GetFileInfo(writer->GetDependency(i), &info) == PR_SUCCESS &&
-            LL_CMP(*aTime, <, info.modifyTime)) {
-            *aTime = info.modifyTime;
-        }
+    PRBool more;
+    while (NS_SUCCEEDED(dependencies->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsIFile> file;
+        dependencies->GetNext(getter_AddRefs(file));
+        if (!file)
+            return NS_ERROR_UNEXPECTED;
+
+        PRTime lastModifiedTime;
+        rv = file->GetLastModificationDate(&lastModifiedTime);
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (LL_CMP(*aTime, <, lastModifiedTime))
+            *aTime = lastModifiedTime;
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFastLoadService::ComputeChecksum(nsIFile* aFile,
+                                   nsIFastLoadReadControl* aControl,
+                                   PRUint32 *aChecksum)
+{
+    nsXPIDLCString path;
+    nsresult rv = aFile->GetPath(getter_Copies(path));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCStringKey key(path);
+    PRUint32 checksum = NS_PTR_TO_INT32(mChecksumTable.Get(&key));
+    if (checksum) {
+        *aChecksum = checksum;
+        return NS_OK;
+    }
+
+    rv = aControl->ComputeChecksum(&checksum);
+    if (NS_FAILED(rv))
+        return rv;
+
+    mChecksumTable.Put(&key, NS_INT32_TO_PTR(checksum));
+    *aChecksum = checksum;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFastLoadService::CacheChecksum(nsIFile* aFile, nsIObjectOutputStream *aStream)
+{
+    nsCOMPtr<nsIFastLoadFileControl> control(do_QueryInterface(aStream));
+    if (!control)
+        return NS_ERROR_FAILURE;
+
+    PRUint32 checksum;
+    nsresult rv = control->GetChecksum(&checksum);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsXPIDLCString path;
+    rv = aFile->GetPath(getter_Copies(path));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCStringKey key(path);
+    mChecksumTable.Put(&key, NS_INT32_TO_PTR(checksum));
     return NS_OK;
 }
 
@@ -369,10 +441,12 @@ nsFastLoadService::GetFastLoadReferent(nsISupports* *aPtrAddr)
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
 
     rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, entry->mOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = mInputStream->ReadObject(PR_TRUE, aPtrAddr);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     // Shrink the table if half the entries are removed sentinels.
     PRUint32 size = PR_BIT(mFastLoadPtrMap->sizeLog2);
@@ -398,7 +472,8 @@ nsFastLoadService::ReadFastLoadPtr(nsIObjectInputStream* aInputStream,
     nsAutoLock lock(mLock);
 
     rv = aInputStream->Read32(&nextOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(aInputStream));
     if (!seekable)
@@ -406,10 +481,12 @@ nsFastLoadService::ReadFastLoadPtr(nsIObjectInputStream* aInputStream,
 
     PRUint32 thisOffset;
     rv = seekable->Tell(&thisOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, nextOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     if (!mFastLoadPtrMap) {
         mFastLoadPtrMap = PL_NewDHashTable(PL_DHashGetStubOps(), this,
@@ -447,26 +524,33 @@ nsFastLoadService::WriteFastLoadPtr(nsIObjectOutputStream* aOutputStream,
 
     PRUint32 saveOffset;
     rv = seekable->Tell(&saveOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = aOutputStream->Write32(0);       // nextOffset placeholder
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = aOutputStream->WriteObject(aObject, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     PRUint32 nextOffset;
     rv = seekable->Tell(&nextOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, saveOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = aOutputStream->Write32(nextOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, nextOffset);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     return NS_OK;
 }

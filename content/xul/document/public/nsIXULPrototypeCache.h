@@ -78,6 +78,11 @@ public:
      * Determine if the prototype cache is enabled
      */
     NS_IMETHOD GetEnabled(PRBool* aIsEnabled) = 0;
+
+    /**
+     * Stop the FastLoad process abruptly, removing the FastLoad file.
+     */
+    NS_IMETHOD AbortFastLoads() = 0;
 };
 
 
