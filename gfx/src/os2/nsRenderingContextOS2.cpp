@@ -1920,6 +1920,12 @@ void nsRenderingContextOS2::PushClipState(void)
 
     if (nsnull != tstate)
     {
+      // Attempt to fix region leak
+      if( tstate->mClipRegion )
+      {
+         GpiDestroyRegion( mPS, tstate->mClipRegion );
+      }
+
       tstate->mClipRegion = OS2_CopyClipRegion( mPS );
 
       if (tstate->mClipRegion != 0)
