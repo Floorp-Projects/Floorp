@@ -1992,7 +1992,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     if (mTransaction) {
         // grab the security info from the connection object; the transaction
         // is guaranteed to own a reference to the connection.
-        mTransaction->Connection()->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+        mTransaction->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
         // all of the response headers have been acquired, so we can take ownership
         // of them from the transaction.
