@@ -159,22 +159,6 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
     }
 
     /**************************************************
-     * HACK to workaround bug #323494
-     * On internal token, must call C_FindObjectsInit before creating
-     * any token objects.
-     *************************************************/
-    if( slot==PK11_GetInternalSlot() || slot==PK11_GetInternalKeySlot() ) {
-        CK_ATTRIBUTE attr;
-        CK_OBJECT_CLASS class = CKO_PRIVATE_KEY;
-
-        attr.type = CKA_CLASS;
-        attr.pValue = &class;
-        attr.ulValueLen = sizeof(class);
-
-        PK11_NumberObjectsFor(slot, &attr, 1);
-    }
-
-    /**************************************************
      * generate the key pair on the token
      *************************************************/
     privk = PK11_GenerateKeyPair(   slot,
@@ -286,22 +270,6 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
     {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "unable to login to token");
         goto finish;
-    }
-
-    /**************************************************
-     * HACK to workaround bug #323494
-     * On internal token, must call C_FindObjectsInit before creating
-     * any token objects.
-     *************************************************/
-    if( slot==PK11_GetInternalSlot() || slot==PK11_GetInternalKeySlot() ) {
-        CK_ATTRIBUTE attr;
-        CK_OBJECT_CLASS class = CKO_PRIVATE_KEY;
-
-        attr.type = CKA_CLASS;
-        attr.pValue = &class;
-        attr.ulValueLen = sizeof(class);
-
-        PK11_NumberObjectsFor(slot, &attr, 1);
     }
 
     /**************************************************

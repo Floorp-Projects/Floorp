@@ -737,22 +737,6 @@ decodeAndImportEncryptedKey(SECKEYDBKey *dbkey, SECItem *pwitem,
     }
 
 
-    /**************************************************
-     * HACK to workaround bug #323494
-     * On internal token, must call C_FindObjectsInit before creating
-     * any token objects.
-     *************************************************/
-    if( slot==PK11_GetInternalSlot() || slot==PK11_GetInternalKeySlot() ) {
-        CK_ATTRIBUTE attr;
-        CK_OBJECT_CLASS class = CKO_PRIVATE_KEY;
-
-        attr.type = CKA_CLASS;
-        attr.pValue = &class;
-        attr.ulValueLen = sizeof(class);
-
-        PK11_NumberObjectsFor(slot, &attr, 1);
-    }
-    
     nickname.len = 0;
     nickname.data = NULL;
     rv = PK11_ImportEncryptedPrivateKeyInfo(slot, newepki, pwitem, &nickname,
@@ -893,22 +877,6 @@ decodeAndImportKey(SECItem *dervalue,
 		goto loser;
 	}
 
-    /**************************************************
-     * HACK to workaround bug #323494
-     * On internal token, must call C_FindObjectsInit before creating
-     * any token objects.
-     *************************************************/
-    if( slot==PK11_GetInternalSlot() || slot==PK11_GetInternalKeySlot() ) {
-        CK_ATTRIBUTE attr;
-        CK_OBJECT_CLASS class = CKO_PRIVATE_KEY;
-
-        attr.type = CKA_CLASS;
-        attr.pValue = &class;
-        attr.ulValueLen = sizeof(class);
-
-        PK11_NumberObjectsFor(slot, &attr, 1);
-    }
-    
     nickname.len = 0;
     nickname.data = NULL;
 
