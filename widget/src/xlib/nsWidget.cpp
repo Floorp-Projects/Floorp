@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include <X11/cursorfont.h>
+
 #include "nsWidget.h"
 #include "nsGfxCIID.h"
 
@@ -456,6 +458,65 @@ NS_IMETHODIMP nsWidget::ScreenToWidget(const nsRect& aOldRect,
 
 NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 {
+  if (!mBaseWindow)
+    return NS_ERROR_FAILURE;
+
+  // Only change cursor if it's changing
+  if (aCursor != mCursor) {
+    Cursor newCursor = 0;
+
+    switch(aCursor) {
+      case eCursor_select:
+        newCursor = XCreateFontCursor(mDisplay, XC_xterm);
+        break;
+
+      case eCursor_wait:
+        newCursor = XCreateFontCursor(mDisplay, XC_watch);
+        break;
+
+      case eCursor_hyperlink:
+        newCursor = XCreateFontCursor(mDisplay, XC_hand2);
+        break;
+
+      case eCursor_standard:
+        newCursor = XCreateFontCursor(mDisplay, XC_left_ptr);
+        break;
+
+      case eCursor_sizeWE:
+      case eCursor_sizeNS:
+        newCursor = XCreateFontCursor(mDisplay, XC_tcross);
+        break;
+
+      case eCursor_arrow_south:
+      case eCursor_arrow_south_plus:
+        newCursor = XCreateFontCursor(mDisplay, XC_bottom_side);
+        break;
+
+      case eCursor_arrow_north:
+      case eCursor_arrow_north_plus:
+        newCursor = XCreateFontCursor(mDisplay, XC_top_side);
+        break;
+
+      case eCursor_arrow_east:
+      case eCursor_arrow_east_plus:
+        newCursor = XCreateFontCursor(mDisplay, XC_right_side);
+        break;
+
+      case eCursor_arrow_west:
+      case eCursor_arrow_west_plus:
+        newCursor = XCreateFontCursor(mDisplay, XC_left_side);
+        break;
+
+      default:
+        NS_ASSERTION(PR_FALSE, "Invalid cursor type");
+        break;
+    }
+
+    if (nsnull != newCursor) {
+      mCursor = aCursor;
+      XDefineCursor(mDisplay, mBaseWindow, newCursor);
+    }
+  }
   return NS_OK;
 }
 
