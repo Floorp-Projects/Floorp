@@ -118,7 +118,7 @@
 //5.0x, then we can turn this on again. MMP
 //#define USE_NETLIB_FOR_USER_AGENT
 
-static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
+static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
@@ -2325,7 +2325,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 	{
 		char* extension;
 			
-        char* filename;
+    char* filename;
 		aURL->GetPath(&filename);
 		extension = PL_strrchr(filename, '.');
 		if(extension)
@@ -2822,68 +2822,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 	return rv;
 }
 
-#ifndef XP_WIN // for now keep the old plugin finding logic for non-Windows platforms
-
-NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
-{
-  // do not do anything if it is already done
-  // use nsPluginHostImpl::ReloadPlugins to enforce loading
-  if(mPluginsLoaded)
-    return NS_OK;
-
-    // retrieve a path for layout module. Needed for plugin mime types registration
-    nsCOMPtr<nsIFile> path;
-    PRBool isLayoutPath = PR_FALSE;
-    nsresult rv;
-    nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
-    if (NS_SUCCEEDED(rv) && compManager) {
-      isLayoutPath = NS_SUCCEEDED(compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(path)));
-      rv = LoadXPCOMPlugins(compManager, path);
-    }
-
-		// 1. scan the plugins directory (where is it?) for eligible plugin libraries.
-		nsPluginsDir pluginsDir;
-		if (! pluginsDir.Valid())
-			return NS_ERROR_FAILURE;
-
-    for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) {
-			const nsFileSpec& file = iter;
-			if (pluginsDir.IsPluginFile(file)) {
-				nsPluginFile pluginFile(file);
-				PRLibrary* pluginLibrary = NULL;
-
-        // load the plugin's library so we can ask it some questions
-        if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == NULL)
-          continue;
-
-        // create a tag describing this plugin.
-        nsPluginInfo info = { sizeof(info) };
-        nsresult res = pluginFile.GetPluginInfo(info);
-        if(NS_FAILED(res))
-        	continue;
-
-        nsPluginTag* pluginTag = new nsPluginTag(&info);
-        pluginFile.FreePluginInfo(info);
-
-        if(pluginTag == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-				pluginTag->mNext = mPlugins;
-				mPlugins = pluginTag;
-
-        if(isLayoutPath)
-          RegisterPluginMimeTypesWithLayout(pluginTag, compManager, path);
-
-        pluginTag->mLibrary = pluginLibrary;
-			}
-		}
-
-		mPluginsLoaded = PR_TRUE;
-		return NS_OK;
-}
-
-#else // go for new plugin finding logic on Windows
-
 static PRBool areTheSameFileNames(char * name1, char * name2)
 {
   if((name1 == nsnull) || (name2 == nsnull))
@@ -2945,6 +2883,75 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
   return PR_TRUE;
 }
 
+nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir, 
+                                                nsIComponentManager * compManager, 
+                                                nsIFile * layoutPath,
+                                                PRBool checkForUnwantedPlugins,
+                                                PRBool checkForDups)
+{
+  for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) 
+  {
+		const nsFileSpec& file = iter;
+		if (pluginsDir.IsPluginFile(file)) 
+    {
+			nsPluginFile pluginFile(file);
+			PRLibrary* pluginLibrary = nsnull;
+
+      // load the plugin's library so we can ask it some questions, but not for Windows
+#ifndef XP_WIN
+      if (pluginFile.LoadPlugin(pluginLibrary) != NS_OK || pluginLibrary == nsnull)
+        continue;
+#endif
+
+      // create a tag describing this plugin.
+      nsPluginInfo info = { sizeof(info) };
+      nsresult res = pluginFile.GetPluginInfo(info);
+      if(NS_FAILED(res))
+        continue;
+
+      nsPluginTag* pluginTag = new nsPluginTag(&info);
+      pluginFile.FreePluginInfo(info);
+
+      if(pluginTag == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      pluginTag->mLibrary = pluginLibrary;
+
+      PRBool bAddIt = PR_TRUE;
+
+      if(checkForUnwantedPlugins)
+      {
+        if(isUnwantedPlugin(pluginTag))
+          bAddIt = PR_FALSE;
+      }
+
+      if(bAddIt && checkForDups)
+      {
+        for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext)
+        {
+          if(areTheSameFileNames(tag->mFileName, pluginTag->mFileName))
+          {
+            bAddIt = PR_FALSE;
+            break;
+          }
+        }
+      }
+
+      if(bAddIt)
+      {
+        pluginTag->mNext = mPlugins;
+			  mPlugins = pluginTag;
+
+        if(layoutPath)
+          RegisterPluginMimeTypesWithLayout(pluginTag, compManager, layoutPath);
+      }
+      else
+        delete pluginTag;
+		}
+	}
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
   // do not do anything if it is already done
@@ -2953,133 +2960,72 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     return NS_OK;
 
   // retrieve a path for layout module. Needed for plugin mime types registration
-  nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID);
   nsCOMPtr<nsIFile> path;
-  nsresult rvIsLayoutPath = compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(path));
+  PRBool isLayoutPath = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
+  if (NS_SUCCEEDED(rv) && compManager) 
+  {
+    isLayoutPath = NS_SUCCEEDED(compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(path)));
+    rv = LoadXPCOMPlugins(compManager, path);
+  }
 
-  LoadXPCOMPlugins(compManager, path);
+	// scan the 4x plugins directory for eligible legacy plugin libraries
 
-// currently we decided to look in both local plugins dir and 
-// that of the previous 4.x installation combining plugins from both places.
-// See bug #21938
-// As of 1.27.00 this selective mechanism is natively supported in Windows 
-// native implementation of nsPluginsDir.
+#ifndef XP_WIN // old plugin finding logic
 
-	nsPluginsDir pluginsDir4x(PLUGINS_DIR_LOCATION_4DOTX);
-	nsPluginsDir pluginsDirMoz(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
+  // scan Mozilla plugins dir
+  nsPluginsDir pluginsDir;
 
-  if(!pluginsDir4x.Valid() && !pluginsDirMoz.Valid())
-  	return NS_ERROR_FAILURE;
+  if (pluginsDir.Valid())
+    ScanPluginsDirectory(pluginsDir, compManager, isLayoutPath ? path : nsnull);
+
+#ifdef XP_MAC
+  // try to scan old-spelled plugins dir ("Plug-ins") for Mac
+  // should we check for duplicate plugins here? We probably should.
+  nsPluginsDir pluginsDirMacOld(PLUGINS_DIR_LOCATION_MAC_OLD);
+	
+  if (pluginsDirMacOld.Valid())
+    ScanPluginsDirectory(pluginsDirMacOld, 
+                         compManager, 
+                         isLayoutPath ? path : nsnull, 
+                         PR_FALSE, // don't check for specific plugins
+                         PR_TRUE); // check for dups
+#endif // XP_MAC
+
+#else //  XP_WIN go for new plugin finding logic on Windows
+
+  // currently we decided to look in both local plugins dir and 
+  // that of the previous 4.x installation combining plugins from both places.
+  // See bug #21938
+  // As of 1.27.00 this selective mechanism is natively supported in Windows 
+  // native implementation of nsPluginsDir.
 
   // first, make a list from MOZ_LOCAL installation
-  for (nsDirectoryIterator iter(pluginsDirMoz, PR_TRUE); iter.Exists(); iter++) 
-  {
-		const nsFileSpec& file = iter;
-		if (pluginsDirMoz.IsPluginFile(file)) {
-			nsPluginFile pluginFile(file);
-			PRLibrary* pluginLibrary = NULL;
+  nsPluginsDir pluginsDirMoz(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
 
-#ifndef XP_WIN
-			// load the plugin's library so we can ask it some questions but not for Windows for now
-      if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) 
-      {
-#endif
-        // create a tag describing this plugin.
-        nsPluginInfo info = { sizeof(info) };
-        nsresult res = pluginFile.GetPluginInfo(info);
-        if(NS_FAILED(res))
-          continue;
-
-        nsPluginTag* pluginTag = new nsPluginTag(&info);
-
-        pluginFile.FreePluginInfo(info);
-
-        if(pluginTag == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-				pluginTag->mNext = mPlugins;
-				mPlugins = pluginTag;
-				
-        if(NS_SUCCEEDED(rvIsLayoutPath))
-          RegisterPluginMimeTypesWithLayout(pluginTag, compManager, path);
-
-        pluginTag->mLibrary = pluginLibrary;
-
-#ifndef XP_WIN
-			}
-#endif
-		}
-	}
+  if (pluginsDirMoz.Valid())
+    ScanPluginsDirectory(pluginsDirMoz, compManager, isLayoutPath ? path : nsnull);
 
   // now check the 4.x plugins dir and add new files
-  for (nsDirectoryIterator iter2(pluginsDir4x, PR_TRUE); iter2.Exists(); iter2++) 
-  {
-		const nsFileSpec& file = iter2;
-		if (pluginsDir4x.IsPluginFile(file)) 
-    {
-			nsPluginFile pluginFile(file);
-			PRLibrary* pluginLibrary = NULL;
+  // Specifying the last two params as PR_TRUE we make sure that:
+  //   1. we search for a match in the list of MOZ_LOCAL plugins, ignore if found, 
+  //      add if not found (check for dups)
+  //   2. we ignore 4.x Java plugins no matter what and other 
+  //      unwanted plugins as per temporary decision described in bug #23856
+ 	nsPluginsDir pluginsDir4x(PLUGINS_DIR_LOCATION_4DOTX);
+	if (pluginsDir4x.Valid())
+    ScanPluginsDirectory(pluginsDir4x, 
+                         compManager, 
+                         isLayoutPath ? path : nsnull, 
+                         PR_TRUE,  // check for specific plugins
+                         PR_TRUE); // check for dups
 
-#ifndef XP_WIN
-			// load the plugin's library so we can ask it some questions but not for Windows for now
-      if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) 
-      {
-#endif
-        // create a tag describing this plugin.
- 	      nsPluginInfo info = { sizeof(info) };
-        nsresult res = pluginFile.GetPluginInfo(info);
-        if(NS_FAILED(res))
-          continue;
+#endif // !XP_WIN
 
-				nsPluginTag* pluginTag = new nsPluginTag(&info);
-
-        pluginFile.FreePluginInfo(info);
-
-        if(pluginTag == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-				pluginTag->mLibrary = pluginLibrary;
-
-        // search for a match in the list of MOZ_LOCAL plugins, ignore if found, add if not
-        PRBool bAddIt = PR_TRUE;
-
-        // make sure we ignore 4.x Java plugins no matter what
-        // and other unwanted plugins as per temporary decision described in #23856
-        if(isUnwantedPlugin(pluginTag))
-          bAddIt = PR_FALSE;
-        else
-        {
-          for(nsPluginTag* tag = mPlugins; tag != nsnull; tag = tag->mNext)
-          {
-            if(areTheSameFileNames(tag->mFileName, pluginTag->mFileName))
-            {
-              bAddIt = PR_FALSE;
-              break;
-            }
-          }
-        }
-
-        if(bAddIt)
-        {
-				  pluginTag->mNext = mPlugins;
-				  mPlugins = pluginTag;
-  
-          if(NS_SUCCEEDED(rvIsLayoutPath))
-            RegisterPluginMimeTypesWithLayout(pluginTag, compManager, path);
-        }
-        else
-          delete pluginTag;
-
-#ifndef XP_WIN
-			}
-#endif
-		}
-  }
-	mPluginsLoaded = PR_TRUE;
-	return NS_OK;
+  mPluginsLoaded = PR_TRUE;
+  return NS_OK;
 }
-#endif // XP_WIN -- end new plugin finding logic
-
 
 static nsresult
 LoadXPCOMPlugin(nsIComponentManager* aComponentManager,

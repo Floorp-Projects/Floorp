@@ -37,6 +37,7 @@
 #define PLUGINS_DIR_LOCATION_AUTO       0
 #define PLUGINS_DIR_LOCATION_MOZ_LOCAL  1
 #define PLUGINS_DIR_LOCATION_4DOTX      2
+#define PLUGINS_DIR_LOCATION_MAC_OLD    3
 
 class nsPluginsDir : public nsFileSpec {
 public:

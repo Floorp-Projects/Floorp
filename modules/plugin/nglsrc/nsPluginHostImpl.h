@@ -337,6 +337,13 @@ private:
   nsresult 
   RegisterPluginMimeTypesWithLayout(nsPluginTag *pluginTag, nsIComponentManager * compManager, nsIFile * layoutPath);
 
+  nsresult
+  ScanPluginsDirectory(nsPluginsDir& pluginsDir, 
+                       nsIComponentManager * compManager, 
+                       nsIFile * layoutPath,
+                       PRBool checkForUnwantedPlugins = PR_FALSE, 
+                       PRBool checkForDups = PR_FALSE);
+
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   PRBool      mPluginsLoaded;
