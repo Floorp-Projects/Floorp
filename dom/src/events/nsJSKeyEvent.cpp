@@ -554,9 +554,8 @@ KeyEventInitKeyEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 MouseEventInitMouseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMKeyEventPtr nativeThis = nsnull;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kIKeyEventIID, (void **)&nativeThis)) {
+  nsIDOMKeyEvent *privateThis = (nsIDOMKeyEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMMouseEventPtr nativeThis = nsnull;
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kIMouseEventIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);

@@ -716,9 +716,8 @@ HTMLSelectElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLSelectElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLSelectElementPtr nativeThis = nsnull;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kIHTMLSelectElementIID, (void **)&nativeThis)) {
+  nsIDOMHTMLSelectElement *privateThis = (nsIDOMHTMLSelectElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMNSHTMLSelectElementPtr nativeThis = nsnull;
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLSelectElementIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
