@@ -153,6 +153,8 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
     // Configure what the web browser can and cannot do
     nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
     webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, PR_FALSE);
+    // Disable global history since we don't have profile-relative file locations
+    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY, PR_FALSE);
 
     *aWebBrowser = mWebBrowser;
     NS_ADDREF(*aWebBrowser);

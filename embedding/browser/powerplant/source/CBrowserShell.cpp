@@ -36,8 +36,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebProgressListener.h"
-#include "nsIDocShellHistory.h"
-#include "nsIGlobalHistory.h"
 #include "nsIServiceManager.h"
 #include "nsIClipboardCommands.h"
 #include "nsIWalletService.h"
@@ -160,22 +158,11 @@ void CBrowserShell::FinishCreateSelf()
     mWebBrowser->SetContainerWindow(ourChrome);  		
     mWebBrowserAsBaseWin->InitWindow(aWidget->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
     mWebBrowserAsBaseWin->Create();
-
+    
     nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference(ourChrome)));
     rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Call to AddWebBrowserListener failed");
-   
-    // Set the global history
-    nsCOMPtr<nsIDocShell> docShell(do_GetInterface(mWebBrowser));
-    ThrowIfNil_(docShell);
-    nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(docShell));
-    if (dsHistory)
-    {
-        NS_WITH_SERVICE(nsIGlobalHistory, history, NS_GLOBALHISTORY_CONTRACTID, &rv);  
-        if (history)
-            dsHistory->SetGlobalHistory(history);
-    }
-   
+      
     AdjustFrame();   
 	StartRepeating();
 	StartListening();

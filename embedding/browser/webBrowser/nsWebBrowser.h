@@ -52,7 +52,6 @@
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 
-class nsWebBrowserFindImpl;
 
 class nsWebBrowserInitInfo
 {
@@ -118,6 +117,7 @@ protected:
     NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindowInternal **aDomWindow);
     NS_IMETHOD BindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
+    NS_IMETHOD EnableGlobalHistory(PRBool aEnable);
 
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 

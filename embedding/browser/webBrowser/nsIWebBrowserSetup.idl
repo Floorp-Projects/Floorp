@@ -37,7 +37,7 @@ interface nsIWebBrowserSetup : nsISupports
     const unsigned long SETUP_ALLOW_META_REDIRECTS  = 3;
     const unsigned long SETUP_ALLOW_SUBFRAMES       = 4;
  
-
+    const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
 
 	void setProperty(in unsigned long aId, in unsigned long aValue);
 };

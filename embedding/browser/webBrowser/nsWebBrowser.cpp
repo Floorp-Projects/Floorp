@@ -44,6 +44,8 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIPresShell.h"
+#include "nsIGlobalHistory.h"
+#include "nsIDocShellHistory.h"
 
 // for painting the background window
 #include "nsIDeviceContext.h"
@@ -272,6 +274,25 @@ NS_IMETHODIMP nsWebBrowser::UnBindListener(nsISupports *aListener, const nsIID& 
       if (NS_FAILED(rv)) return rv;
       rv = shistory->RemoveSHistoryListener(listener);
     }
+    return rv;
+}
+
+NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(PRBool aEnable)
+{
+    nsresult rv;
+    
+    NS_ENSURE_STATE(mDocShell);
+    nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(mDocShell, &rv));
+    if (NS_FAILED(rv)) return rv;
+    
+    if (aEnable) {
+       NS_WITH_SERVICE(nsIGlobalHistory, history, NS_GLOBALHISTORY_CONTRACTID, &rv);
+       if (NS_FAILED(rv)) return rv;  
+       rv = dsHistory->SetGlobalHistory(history);
+    }
+    else
+       rv = dsHistory->SetGlobalHistory(nsnull);
+       
     return rv;
 }
 
@@ -603,6 +624,8 @@ NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** aDocument)
 /* void setProperty (in unsigned long aId, in unsigned long aValue); */
 NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
 {
+    nsresult rv = NS_OK;
+    
     switch (aId)
     {
     case nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS:
@@ -633,11 +656,18 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            mDocShell->SetAllowSubframes(aValue);
         }
         break;
+    case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY:
+        {
+           NS_ENSURE_STATE(mDocShell);
+           NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
+           rv = EnableGlobalHistory(aValue);
+        }
+        break;
     default:
-        return NS_ERROR_INVALID_ARG;
+        rv = NS_ERROR_INVALID_ARG;
   
     }
-    return NS_OK;
+    return rv;
 }
 
 //*****************************************************************************
@@ -830,6 +860,10 @@ NS_IMETHODIMP nsWebBrowser::Create()
       mInitInfo->sessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID);
    NS_ENSURE_TRUE(mInitInfo->sessionHistory, NS_ERROR_FAILURE);
    mDocShellAsNav->SetSessionHistory(mInitInfo->sessionHistory);
+   
+   // Hook up global history. Do not fail if we can't - just assert.
+   nsresult rv = EnableGlobalHistory(PR_TRUE);
+   NS_ASSERTION(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
       
    NS_ENSURE_SUCCESS(mDocShellAsWin->Create(), NS_ERROR_FAILURE);
 
