@@ -46,6 +46,7 @@
 
   <script src="chrome://communicator/content/bookmarks/bookmarks.js"/>
   <script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
+  <script src="chrome://global/content/nsTreeUtils.js"/>
   <script src="chrome://global/content/treePopups.js"/>
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
