@@ -89,7 +89,7 @@
 /*
 ** the globals variables.  happy joy.
 */
-static STGlobals globals;
+STGlobals globals;
 
 /*
 ** have the heap cleanup at opportune times, if possible.
@@ -378,7 +378,7 @@ int initOptions(int aArgCount, char** aArgArray)
     /*
     ** Default category name - name of root category
     */
-    globals.mOptions.mCategoryName = ST_ROOT_CATEGORY_NAME;
+    globals.mOptions.mCategoryName = strdup(ST_ROOT_CATEGORY_NAME);
 
     /*
     ** Go through all arguments.
@@ -5087,14 +5087,12 @@ int applySettings(void)
     /*
     ** Sanity check options
     */
-    if (!globals.mOptions.mCategoryName || !*globals.mOptions.mCategoryName)
+    if (!globals.mOptions.mCategoryName || !*globals.mOptions.mCategoryName
+        || !findCategoryNode(globals.mOptions.mCategoryName, &globals))
     {
-        globals.mOptions.mCategoryName = ST_ROOT_CATEGORY_NAME;
-    }
-    else if (!findCategoryNode(globals.mOptions.mCategoryName, &globals))
-    {
-        /* Category node is invalid. Reset to root. */
-        globals.mOptions.mCategoryName = ST_ROOT_CATEGORY_NAME;
+        if (globals.mOptions.mCategoryName)
+            free(globals.mOptions.mCategoryName);
+        globals.mOptions.mCategoryName = strdup(ST_ROOT_CATEGORY_NAME);
     }
 
     /*
