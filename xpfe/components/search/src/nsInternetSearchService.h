@@ -61,7 +61,8 @@ class InternetSearchDataSource : public nsIInternetSearchService,
 {
 private:
   static PRInt32          gRefCnt;
-  static PRBool           mEngineListBuilt;
+  static PRInt32          gBrowserSearchMode;
+  static PRBool           gEngineListBuilt;
 
   // pseudo-constants
   static nsIRDFResource    *kNC_SearchResult;
