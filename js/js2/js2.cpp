@@ -148,6 +148,7 @@ static void readEvalFile(FILE* in, const String& fileName)
     String buffer;
     string line;
     LineReader inReader(in);
+    JSValues emptyArgs;
         
     while (inReader.readLine(line) != 0) {
         appendChars(buffer, line.data(), line.size());
@@ -172,7 +173,7 @@ static void readEvalFile(FILE* in, const String& fileName)
             // list of zero or more statements
             ICodeModule* icm = genCode(cx, parsedStatements, fileName);
             if (icm) {
-                JSValue result = cx.interpret(icm, JSValues());
+                cx.interpret(icm, emptyArgs);
                 delete icm;
             }
 
