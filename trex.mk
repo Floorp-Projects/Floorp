@@ -33,7 +33,7 @@ CWD=`pwd`
 TOP=$(CWD)/..
 
 CVS=cvs -q co -P
-CVTREX = $(CVSROOT:pub=src)
+CVTREX = :pserver:$(USER)@cvsserver:/m/src
 CVST=cvs -q -d $(CVTREX) co -P
 
 LIBNLS_BRANCH           = -r libnls_v3_Normandy
@@ -47,7 +47,7 @@ default:  pull_all build_all
 
 pull_and_build_all: pull_all build_all
 
-pull_all: pull_platform pull_julian pull_trex 
+pull_all: pull_platform pull_julian pull_trex pull_trex_ns 
 
 pull_platform:
 	cd $(MOZ_SRC); \
@@ -70,6 +70,9 @@ pull_trex:
 	cd $(MOZ_SRC); \
 	$(CVS)  mozilla/gconfig; \
 	$(CVS)  mozilla/shell; \
+	cd $(MOZ_SRC)/.
+
+pull_trex_ns:
 	cd $(MOZ_SRC)/mozilla; \
 	$(CVST)  -d trex ns/trex; \
 	cd $(MOZ_SRC)/.
