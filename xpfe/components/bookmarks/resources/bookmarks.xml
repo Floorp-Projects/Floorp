@@ -1,0 +1,1674 @@
+<?xml version="1.0" ?> 
+<!DOCTYPE window [
+  <!ENTITY % bookmarksDTD SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd" >
+  %bookmarksDTD;
+]>
+
+<bindings id="bookmarksBindings" 
+          xmlns="http://www.mozilla.org/xbl" 
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+  <binding id="bookmarksBase">
+    <implementation>
+      <!-- RDF Namespace URIs -->
+      <field name="RDF_NS">"http://www.w3.org/1999/02/22-rdf-syntax-ns#"</field>
+      <field name="NC_NS">"http://home.netscape.com/NC-rdf#"</field>
+      <field name="NC_NS_CMD">this.NC_NS + "command?cmd=";</field>
+      <property name="rdfContainer">
+        <getter><![CDATA[
+          const kRDFCContractID = "@mozilla.org/rdf/container;1";
+          const kRDFCIID = Components.interfaces.nsIRDFContainer;
+          return Components.classes[kRDFCContractID].getService(kRDFCIID);
+        ]]></getter>
+      </property>
+      <field name="_rdf">null</field>
+      <property name="rdf">
+        <getter><![CDATA[
+          if (!this._rdf) {
+            const kRDFContractID = "@mozilla.org/rdf/rdf-service;1";
+            const kRDFIID = Components.interfaces.nsIRDFService;
+            this._rdf = Components.classes[kRDFContractID].getService(kRDFIID);
+          }
+          return this._rdf;
+        ]]></getter>
+      </property>
+      <field name="_bundle">null</field>
+      <field name="_bookmarksDS">null</field>
+      <property name="bookmarksDS">
+        <getter><![CDATA[
+          if (!this._bookmarksDS)
+            this._bookmarksDS = this.rdf.GetDataSource("rdf:bookmarks");
+          return this._bookmarksDS;
+        ]]></getter>
+      </property>
+      <method name="resolveType">
+        <parameter name="aResource"/>
+        <body><![CDATA[
+          try {
+            aResource.QueryInterface(Components.interfaces.nsIRDFResource);
+          }
+          catch(ex) {
+            // Not actually a resource, assume resource URI
+            aResource = this.rdf.GetResource(aResource);
+          }
+          var res = aResource;
+          var typeArc = this.rdf.GetResource(this.RDF_NS + "type");
+          var type = this.db.GetTarget(res, typeArc, true);
+          try {
+            return type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+          }
+          catch (e) {
+            try { 
+              return type.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+            }
+            catch (e) {
+              return null;
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="flushBMDatasource">
+        <body><![CDATA[
+          var remoteDS = this.bookmarksDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+          remoteDS.Flush();
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="bookmarks-outliner"
+           extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarksBase">
+    <implementation>
+      <constructor><![CDATA[
+        // We implement nsIController
+        this.outliner.controllers.appendController(this.controller);
+        var olb = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-outlinerbody");
+        olb = olb.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+        olb.addObserver(this.builderObserver);
+        // need to create string bundle manually instead of using <xul:stringbundle/>
+        // see bug 63370 for details
+        var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                      .getService(Components.interfaces.nsILocaleService);
+        var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+        var bundleURL = "chrome://communicator/locale/bookmarks/bookmark.properties";
+        this._bundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
+        setTimeout(this.refreshSort, 0, this);
+      ]]></constructor>
+
+      <property name="outlinerBoxObject">
+        <getter><![CDATA[
+          return this.outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+        ]]></getter>
+      </property>
+
+      <property name="outlinerBuilder">
+        <getter><![CDATA[
+          return this.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+        ]]></getter>
+      </property>
+
+      <property name="outliner">
+        <getter><![CDATA[
+          return document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-outliner");
+        ]]></getter>
+      </property>
+
+      <property name="outlinerBody">
+        <getter><![CDATA[
+          return document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-outlinerbody");
+        ]]></getter>
+      </property>
+
+      <property name="currentIndex">
+        <getter><![CDATA[
+          return this.outlinerBoxObject.selection.currentIndex;
+        ]]></getter>
+      </property>
+
+      <property name="currentRes">
+        <getter><![CDATA[
+          return this.outlinerBuilder.getResourceAtIndex(this.currentIndex);
+        ]]></getter>
+      </property>
+
+      <property name="parentRes">
+        <getter><![CDATA[
+          const currIndex = this.currentIndex;
+
+          if (currIndex == -1)
+            return this.rdf.GetResource("NC:BookmarksRoot");
+
+          var parentIndex = this.outlinerBoxObject.view.getParentIndex(currIndex);
+          if (parentIndex != -1)
+            return this.outlinerBuilder.getResourceAtIndex(parentIndex)
+          return this.rdf.GetResource("NC:BookmarksRoot"); // assume its parent is the root
+        ]]></getter>
+      </property>
+
+      <property name="firstSelectedIndex">
+        <getter><![CDATA[
+          var first = { };
+          this.outlinerBoxObject.selection.getRangeAt(0, first, { });
+          return first.value;
+        ]]></getter>
+      </property>
+
+      <property name="lastSelectedIndex">
+        <getter><![CDATA[
+          var bo = this.outlinerBoxObject;
+          var last = { };
+          var rangeCount = bo.selection.getRangeCount();
+          bo.selection.getRangeAt(rangeCount - 1, { }, last);
+          return last.value;
+        ]]></getter>
+      </property>
+      
+      <property name="_browserURL">
+        <getter><![CDATA[
+          try {
+            var prefs = Components.classes["@mozilla.org/preferences;1"];
+            if (prefs) {
+              prefs = prefs.getService();
+              if (prefs)
+                prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+            }
+            if (prefs) {
+              var url = prefs.CopyCharPref("browser.chromeURL");
+              if (url)
+                return url;
+            }
+          } catch(e) {
+          }
+          return "chrome://navigator/content/navigator.xul";
+        ]]></getter>
+      </property>
+      
+      <!-- Returns the row index of the best row at which to perform an operation
+           relative to the current selection, e.g. creating a new bookmark 
+           adjacent to the current selection. -->
+      <method name="getNextRowIndex">
+        <body><![CDATA[
+          var bo = this.outlinerBoxObject;
+          var rangeCount = bo.selection.getRangeCount();
+          var currLevel, lastIndex = 0;
+          if (!rangeCount) 
+            currLevel = 0;
+          else
+            currLevel = bo.view.getLevel(this.firstSelectedIndex);
+
+          // Walk the selection. If the level for the current item is less than
+          // our running minimum, assume it is higher in the hierarchy than any
+          // previous. In this case, or in the case with a selected item of same
+          // hierarchy, set the lastIndex.
+          // XXXben - erk this comment sort of sucks. A diagram might help. 
+          for (var i = 0; i < rangeCount; ++i) {
+            var rangeMin = { };
+            var rangeMax = { };
+            bo.selection.getRangeAt(i, rangeMin, rangeMax);
+            for (var j = rangeMax.value; j >= rangeMin.value; --j) {
+              var level = bo.view.getLevel(j);
+              if (level <= currLevel) {
+                currLevel = level;
+                lastIndex = j;
+              }
+            } 
+          }
+          return lastIndex;
+        ]]></body>
+      </method>
+
+      <method name="getTypeAtIndex">
+        <parameter name="aIndex" />
+        <body><![CDATA[
+          try {
+            return this.resolveType(this.outlinerBuilder.getResourceAtIndex(aIndex));
+          }
+          catch(ex) {
+            return null;
+          }
+        ]]></body>
+      </method>
+
+      <!-- observer -->
+      <field name="newFolderRDFObserver" readonly="true"><![CDATA[
+      ({
+        _newFolderURI: null,
+        onAssert: function (aDS, aSource, aProperty, aValue)
+        {
+          try {
+            var value = aValue.QueryInterface(Components.interfaces.nsIRDFResource);
+            if (aDS.URI == "rdf:bookmarks" && aProperty.Value == this.RDF_NS + "type" &&
+                value.Value == this.NC_NS + "Folder")
+              this._newFolderURI = aSource.Value;
+          }
+          catch (e) {
+            // Failures are OK, the value could be a literal instead of a resource.
+          }
+        },
+        onUnassert: function (aDS, aSource, aProperty, aTarget) { },
+        onChange: function (aDS, aSource, aProperty, aOldTarget, aNewTarget) { },
+        onMove: function (aDS, aOldSource, aNewSource, aProperty, aTarget) { },
+        beginUpdateBatch: function (aDS) { },
+        endUpdateBatch: function (aDS) { }
+      })
+      ]]></field>
+
+      <!-- observer -->
+      <field name="DNDObserver" readonly="true"><![CDATA[
+      ({
+        mOuter: this,
+        onDragStart: function (aEvent, aXferData, aDragAction)
+        {
+          if (this.mOuter.outlinerBody.getAttribute("sortActive") == "true")
+            throw Components.results.NS_OK; 
+          aXferData.data = new TransferDataSet();
+          var rangeCount = this.mOuter.outlinerBoxObject.selection.getRangeCount();
+          for (var i = rangeCount - 1; i >= 0; --i) {
+            var rangeMin = { };
+            var rangeMax = { };
+            this.mOuter.outlinerBoxObject.selection.getRangeAt(i, rangeMin, rangeMax);
+            for (var j = rangeMax.value; j >= rangeMin.value; --j) {
+              var currRes = this.mOuter.outlinerBuilder.getResourceAtIndex(j); 
+              var parentIndex = this.mOuter.outlinerBoxObject.view.getParentIndex(j);
+              var parentRes;
+              if (parentIndex == -1)
+                parentRes = this.mOuter.rdf.GetResource("NC:BookmarksRoot");
+              else
+                parentRes = this.mOuter.outlinerBuilder.getResourceAtIndex(parentIndex);
+    
+              var type = this.mOuter.db.GetTarget(currRes, this.mOuter.rdf.GetResource(this.mOuter.RDF_NS + "type"), true);
+              type = type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+              if (!type || (type != (this.mOuter.NC_NS + "BookmarkSeparator") && 
+                  type != (this.mOuter.NC_NS + "Bookmark") && 
+                  type != (this.mOuter.NC_NS + "Folder"))) 
+                throw Components.results.NS_OK;
+              var name = this.mOuter.db.GetTarget(currRes, this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "Name"), true);        
+              var data = new TransferData();
+              if (name) {
+                name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+                data.addDataForFlavour("text/x-moz-url", currRes.Value + "\n" + name);
+              }
+              else {
+                data.addDataForFlavour("text/x-moz-url", currRes.Value);
+              }
+              data.addDataForFlavour("moz/rdfitem", currRes.Value + "\n" + parentRes.Value);
+              data.addDataForFlavour("text/unicode", currRes.Value);
+              aXferData.data.push(data);
+            }
+
+           if (aEvent.ctrlKey) {
+             const kDSIID = Components.interfaces.nsIDragService;
+             aDragAction.action = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
+           }
+         }
+       }
+     })
+     ]]></field>      
+        
+      <!-- nsIController -->
+      <field name="controller" readonly="true"><![CDATA[
+      ({
+        mOuter: this,
+        
+        supportsCommand: function BMOLController_supportsCommand(aCommand) 
+        {
+          switch (aCommand) {
+          case "cmd_bm_undo":
+          case "cmd_bm_redo":
+            return false;
+          case "cmd_bm_cut":
+          case "cmd_bm_copy":
+          case "cmd_bm_paste":
+          case "cmd_bm_delete":
+          case "cmd_bm_selectAll":
+          case "cmd_bm_open":
+          case "cmd_bm_openinnewwindow":
+          case "cmd_bm_openfolder":
+          case "cmd_bm_openfolderinnewwindow":
+          case "cmd_bm_newbookmark":
+          case "cmd_bm_newfolder":
+          case "cmd_bm_newseparator":
+          case "cmd_bm_find":
+          case "cmd_bm_properties":
+          case "cmd_bm_rename":
+          case "cmd_bm_setnewbookmarkfolder":
+          case "cmd_bm_setpersonaltoolbarfolder":
+          case "cmd_bm_setnewsearchfolder":
+          case "cmd_bm_import":
+          case "cmd_bm_export":
+          case "cmd_bm_fileBookmark":
+            return true;
+          default:
+            return false;
+          }
+        },
+        
+        isCommandEnabled: function BMOLController_isCommandEnabled(aCommand)
+        {
+          var bo = this.mOuter.outlinerBoxObject;
+          var type;   // The bookmark's RDF:type arc
+          
+          switch (aCommand) {
+          case "cmd_bm_undo":
+          case "cmd_bm_redo":
+            return false;
+          case "cmd_bm_openfolder":
+            // 'Expand' is only available if one item is selected and that item is a
+            // container item.
+            return bo.view.rowCount && bo.selection.count == 1 && bo.view.isContainer(this.mOuter.firstSelectedIndex);
+          case "cmd_bm_open":
+          case "cmd_bm_openinnewwindow":
+            if (bo.selection.count != 1) 
+              return false;
+            return this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex) == this.mOuter.NC_NS + "Bookmark";
+          case "cmd_bm_rename":
+          case "cmd_bm_properties":
+            if (bo.selection.count != 1)  
+              return false;
+            type = this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex);
+            return type == this.mOuter.NC_NS + "Bookmark" || type == this.mOuter.NC_NS + "Folder";
+          case "cmd_bm_cut":
+            type = this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex);
+            if (type != this.mOuter.NC_NS + "Bookmark" && type != this.mOuter.NC_NS + "BookmarkSeparator" && type != this.mOuter.NC_NS + "Folder")
+              return false;
+            return bo.selection.count > 0;
+          case "cmd_bm_find":
+            return true;
+          case "cmd_bm_newbookmark":
+          case "cmd_bm_newfolder":
+          case "cmd_bm_newseparator":
+            // This is not really correct because it gives the false impression
+            // that it is possible to create an item as a child of some immutable folders
+            // like IE Favorites, but it will do for now. 
+            return true;
+          case "cmd_bm_delete":
+            // Determining whether or not the selection is mutable is handled by
+            // the deletion routine.
+            type = this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex);
+            if (type != this.mOuter.NC_NS + "Bookmark" && type != this.mOuter.NC_NS + "BookmarkSeparator" && type != this.mOuter.NC_NS + "Folder")
+              return false;
+            return bo.selection.count >= 1;
+          case "cmd_bm_selectAll":
+            // "Select All" is disabled when all visible rows are selected.
+            // XXXben this could be cleverer. 
+            return bo.view.rowCount != bo.selection.count;
+          case "cmd_bm_copy":
+            return bo.selection.count >= 1;
+          case "cmd_bm_paste":
+            return this.mOuter.canPaste();
+          case "cmd_bm_openfolderinnewwindow":
+            if (bo.selection.count != 1)
+              return false;
+            return this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex) == this.mOuter.NC_NS + "Folder";
+          case "cmd_bm_setnewbookmarkfolder":
+          case "cmd_bm_setpersonaltoolbarfolder":
+          case "cmd_bm_setnewsearchfolder":
+            if (bo.selection.count != 1) 
+              return false;
+            // XXXbar if a folder has more than one of these special attributes,
+            // this won't work
+            var folderURI;
+            if (aCommand == "cmd_bm_setnewbookmarkfolder")
+              folderURI = "NC:NewBookmarkFolder";
+            else if (aCommand == "cmd_bm_setpersonaltoolbarfolder")
+              folderURI = "NC:PersonalToolbarFolder";
+            else
+              folderURI = "NC:NewSearchFolder";
+            return (this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex) == this.mOuter.NC_NS + "Folder")
+                   && (this.mOuter.outlinerBuilder.getResourceAtIndex(this.mOuter.firstSelectedIndex).Value != folderURI);
+          case "cmd_bm_import":
+          case "cmd_bm_export":
+            return true;
+          case "cmd_bm_fileBookmark":
+            if (bo.selection.count < 1) 
+              return false;
+            type = this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex);
+            return type == this.mOuter.NC_NS + "Folder" || type == this.mOuter.NC_NS + "Bookmark";
+          default:
+            return false;
+          }
+        },
+
+        doCommand: function BMOLController_doCommand(aCommand)
+        {
+          switch (aCommand) {
+          case "cmd_bm_cut":
+            this.mOuter.copySelection();
+            this.mOuter.deleteSelection();
+            break;
+          case "cmd_bm_copy":
+            this.mOuter.copySelection();
+            break;
+          case "cmd_bm_paste":
+            this.mOuter.paste();
+            break;
+          case "cmd_bm_delete":
+            this.mOuter.deleteSelection();
+            break;
+          case "cmd_bm_selectAll":
+            this.mOuter.selectAll();
+            break;
+          case "cmd_bm_open":
+            this.mOuter.openItem();
+            break;
+          case "cmd_bm_openfolder":
+            this.mOuter.outlinerBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
+            break;
+          case "cmd_bm_openfolderinnewwindow":
+            this.mOuter.openFolderInNewWindow();
+            break;
+          case "cmd_bm_newbookmark":
+            this.mOuter.addBookmark();
+            break;
+          case "cmd_bm_newfolder":
+            this.mOuter.createNewFolder();
+            break;
+          case "cmd_bm_newseparator":
+            this.mOuter.createNewSeparator();
+            break;
+          case "cmd_bm_find":
+            this.mOuter.openFindDialog();
+            break;
+          case "cmd_bm_properties":
+          case "cmd_bm_rename":
+            this.mOuter.openPropertiesForItem();
+            break;
+          case "cmd_bm_setnewbookmarkfolder":
+            this.mOuter.setAsNewBookmarkFolder();
+            break;
+          case "cmd_bm_setpersonaltoolbarfolder":
+            this.mOuter.setAsPersonalToolbarFolder();
+            break;         
+          case "cmd_bm_setnewsearchfolder":
+            this.mOuter.setAsNewSearchFolder();
+            break;
+          case "cmd_bm_import":
+            this.mOuter.importBookmarks();
+            break;
+          case "cmd_bm_export":
+            this.mOuter.exportBookmarks();
+            break;
+          case "cmd_bm_fileBookmark":
+            this.mOuter.fileBookmark();
+            break;
+          default:
+          }
+        }
+      })
+      ]]></field>
+
+      <method name="onCommandUpdate">
+        <body><![CDATA[
+          var commands = ["cmd_bm_properties", "cmd_bm_rename", "cmd_bm_copy",
+                          "cmd_bm_paste", "cmd_bm_cut", "cmd_bm_delete",
+                          "cmd_bm_setpersonaltoolbarfolder", 
+                          "cmd_bm_setnewbookmarkfolder",
+                          "cmd_bm_setnewsearchfolder", "cmd_bm_fileBookmark", 
+                          "cmd_bm_openfolderinnewwindow", "cmd_bm_openfolder"];
+          for (var i = 0; i < commands.length; ++i) {
+            var enabled = this.controller.isCommandEnabled(commands[i]);
+            var commandNode = document.getElementById(commands[i]);
+            if (commandNode) { 
+              if (enabled) 
+                commandNode.removeAttribute("disabled");
+              else 
+                commandNode.setAttribute("disabled", "true");
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="selectionChanged">
+        <parameter name="aEvent" />
+        <body><![CDATA[
+        ]]></body>
+      </method>
+
+      <!-- nsIXULOutlinerBuilderObserver -->
+      <field name="builderObserver"><![CDATA[
+      ({
+        mOuter: this,
+        inDropBefore: 1,
+        inDropOn: 2,
+        inDropAfter: 3,
+        canDropOn: function(index)
+        {
+          return true;
+        },
+        canDropBeforeAfter: function(index, before)
+        {
+          return true;
+        },
+        onDrop: function(row, orientation)
+        {  
+          var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);  
+          var dragSession = dragService.getCurrentSession();
+          if (!dragSession)
+            return false;
+          const kRDFCContractID = "@mozilla.org/rdf/container;1";
+          const kRDFIID = Components.interfaces.nsIRDFContainer;
+          var RDFC = Components.classes[kRDFCContractID].getService(kRDFIID);
+          var rTarget = this.mOuter.outlinerBuilder.getResourceAtIndex(row);
+          var parentIndex = this.mOuter.outlinerBoxObject.view.getParentIndex(row);
+          var rContainer;
+          if (parentIndex == -1)
+            rContainer = this.mOuter.rdf.GetResource("NC:BookmarksRoot");
+          else
+            rContainer = this.mOuter.outlinerBuilder.getResourceAtIndex(parentIndex);
+
+          var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+          var rBookmark = this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "Bookmark");
+          trans.addDataFlavor("moz/rdfitem");
+          trans.addDataFlavor("text/x-moz-url");
+          trans.addDataFlavor("text/unicode");
+   
+          var list = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+   
+          var sourceUri;
+          var sourceResource;
+          var dirty = false;
+          var additiveFlag = false;
+          for (var i = 0; i < dragSession.numDropItems; ++i) {
+            dragSession.getData(trans, i);
+            var dataObj = {};
+            var bestFlavor = {};
+            var len = {};
+            trans.getAnyTransferData(bestFlavor, dataObj, len);
+            if (dataObj)
+              dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+            if (!dataObj)
+              continue;
+            sourceUri = dataObj.data.substring(0, len.value);
+            if (!sourceUri)
+              continue;
+
+            var sourceID = [], parentID = [], nameRequired = [], name = [];      
+            nameRequired[i] = false;
+            name[i] = null;
+            switch (bestFlavor.value) {
+            case "moz/rdfitem":
+              var ix = sourceUri.indexOf("\n");
+              sourceID[i] = ix >= 0 ? (parentID[i] = sourceUri.substr(ix+1), sourceUri.substr(0, ix)) : sourceUri;
+              break;
+            case "text/x-moz-url":
+              ix = sourceUri.indexOf("\n");
+              sourceID[i] = ix >= 0 ? (name[i] = sourceUri.substr(ix+1), sourceUri.substr(0, ix)) : sourceUri;
+              break;
+            case "text/unicode":
+              sourceID[i] = sourceUri;
+              nameRequired[i] = true;
+              break;
+            default: 
+              continue;
+            }
+            var rSource = this.mOuter.rdf.GetResource(sourceID[i]);
+            var rParent = parentID[i] ? this.mOuter.rdf.GetResource(parentID[i]) : null;
+            const kBMDS = this.mOuter.bookmarksDS;
+            RDFC.Init(kBMDS, rContainer);
+            var dropIx = RDFC.IndexOf(rTarget);
+            // XXX if any of the following fails, the nodes are gone for good!
+            const kDSIID = Components.interfaces.nsIDragService;
+            const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
+            if (rParent) {
+              if (!(dragSession.dragAction & kCopyAction)) {
+                try {
+                  RDFC.Init(kBMDS, rParent);
+                  ix = RDFC.IndexOf(rSource);
+                  if (ix >= 1) 
+                    RDFC.RemoveElementAt(ix, true, rSource);
+                }
+                catch (ex) { }
+              }
+            }
+    
+            var bmType = kBMDS.GetTarget(this.mOuter.rdf.GetResource(sourceID[i]), this.mOuter.rdf.GetResource(this.mOuter.RDF_NS + "type"), true);
+            var rType = this.mOuter.rdf.GetResource(this.mOuter.RDF_NS + "type");
+            if (!bmType) 
+              kBMDS.Assert(rSource, rType, rBookmark, true);
+
+            if (bmType == this.mOuter.NC_NS + "Folder") {
+              // If we're going to copy a folder type, we need to clone the folder 
+              // rather than just asserting the new node as a child of the drop folder.
+              if (dragSession.dragAction & kCopyAction)
+                rSource = BookmarksUtils.cloneFolder(rSource, rContainer, rTarget);
+            }
+            if (orientation == this.inDropBefore || orientation == this.inDropAfter) {
+              if (dropIx == -1) break;
+              RDFC.Init(kBMDS, rContainer);
+              RDFC.InsertElementAt(rSource, rParent ? dropIx : (orientation == this.inDropAfter ? ++dropIx : dropIx), true);
+            }
+            else {
+              rContainer = this.mOuter.outlinerBuilder.getResourceAtIndex(row);
+              RDFC.Init(kBMDS, rContainer);
+              RDFC.AppendElement(rSource); // drop on
+            }
+            dirty = true;
+
+            //if (rParent) {
+            //  gBookmarksShell.selectFolderItem(rContainer.Value, sourceID[i], additiveFlag);
+            //  if (!additiveFlag) additiveFlag = true;
+            //} 
+            // If a name is supplied, we want to assert this information into the 
+            // graph. E.g. user drags an internet shortcut to the app, we want to 
+            // preserve not only the URL but the name of the shortcut. The other case
+            // where we need to assert a name is when the node does not already exist
+            // in the graph, in this case we'll just use the URL as the name.
+            if (name[i] || nameRequired[i]) {
+              var currentName = kBMDS.GetTarget(this.mOuter.rdf.GetResource(sourceID[i]), this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "Name"), true);
+              if (!currentName) {
+                var rDefaultName = this.mOuter.rdf.GetLiteral(name[i] || sourceID[i]);
+                if (rDefaultName) {
+                  var rName = this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "Name");
+                  kBMDS.Assert(rSource, rName, rDefaultName, true);
+                }
+              }
+            } 
+            if (dirty)
+              this.mOuter.flushBMDatasource();
+          }
+        },
+        onToggleOpenState: function BMOLBuilderObserver_onToggleOpenState(aItemIndex)
+        {
+        },
+        
+        onCycleHeader: function BMOLBuilderObserver_onCycleHeader(aColumnID, aHeaderElement)
+        {
+        },
+    
+        onCycleCell: function BMOLBuilderObserver_onCycleCell(aItemIndex, aColumnID)
+        {
+        },
+        
+        onSelectionChanged: function BMOLBuilderObserver_onSelectionChanged()
+        {
+          this.mOuter.onCommandUpdate();
+          const kStatusBar = document.getAnonymousElementByAttribute(this.mOuter, "anonid", "statusbar-text");
+          const currentIndex = this.mOuter.currentIndex;
+          var displayValue = "";
+          if (kStatusBar && this.mOuter.outlinerBoxObject.selection.count == 1) {
+            if (this.mOuter.outlinerBoxObject.view.isContainer(currentIndex)) {
+              const kRDFCContractID = "@mozilla.org/rdf/container;1";
+              const kRDFCIID = Components.interfaces.nsIRDFContainer;
+              const kRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
+              const krSrc = this.mOuter.outlinerBuilder.getResourceAtIndex(currentIndex);
+              try {
+                kRDFC.Init(this.mOuter.db, krSrc);
+                var count = kRDFC.GetCount();
+                displayValue = this.mOuter._bundle.GetStringFromName("status_foldercount");
+                displayValue = displayValue.replace(/%num_items%/, count);
+              }
+              catch (e) {
+              }
+            }
+            else {
+              try {
+                displayValue = this.mOuter.db.GetTarget(this.mOuter.outlinerBuilder.getResourceAtIndex(currentIndex), this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "URL"), true);
+                displayValue = displayValue.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+              }
+              catch (e) {
+                displayValue = "";
+              }
+            }
+            if (displayValue.substring(0, 3) == "NC:")
+              displayValue = "";
+            kStatusBar.label = displayValue;
+          }
+        },
+        
+        isEditable: function BMOLBuilderObserver_isEditable(aItemIndex, aColumnID)
+        {
+        },
+        
+        onSetCellText: function BMOLBuilderObserver_onSetCellText(aItemIndex, aColumnID, aValue)
+        {
+        },
+        
+        onPerformAction: function BMOLBuilderObserver_onPerformAction(aAction)
+        {
+        },
+        
+        onPerformActionOnRow: function BMOLBuilderObserver_onPerformActionOnRow(aAction, aItemIndex)
+        {
+        },
+        
+        onPerformActionOnCell: function BMOLBuilderObserver_onPerformActionOnCell(aAction, aItemIndex, aColumnID)
+        {
+        }
+      })
+      ]]></field>
+
+      <!-- RDF utility functions required by base binding -->
+      <property name="db">
+        <getter><![CDATA[
+          return this.outlinerBody.database;
+        ]]></getter>
+      </property>
+      
+      <method name="doBookmarksCommand">
+        <parameter name="aSourceURI"/>
+        <parameter name="aCommand"/>
+        <parameter name="aArgumentsArray"/>
+        <body><![CDATA[
+          var rCommand = this.rdf.GetResource(aCommand);
+        
+          var kSuppArrayContractID = "@mozilla.org/supports-array;1";
+          var kSuppArrayIID = Components.interfaces.nsISupportsArray;
+          var sourcesArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
+          if (aSourceURI) {
+            var rSource = this.rdf.GetResource(aSourceURI);
+            sourcesArray.AppendElement (rSource);
+          }
+        
+          var argsArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
+          for (var i = 0; i < aArgumentsArray.length; ++i) {
+            var rArc = this.rdf.GetResource(aArgumentsArray[i].property);
+            argsArray.AppendElement(rArc);
+            var rValue = null;
+            if ("resource" in aArgumentsArray[i]) 
+              rValue = this.rdf.GetResource(aArgumentsArray[i].resource);
+            else
+              rValue = this.rdf.GetLiteral(aArgumentsArray[i].literal);
+            argsArray.AppendElement(rValue);
+          }
+      
+          // Exec the command in the Bookmarks datasource. 
+          this.bookmarksDS.DoCommand(sourcesArray, rCommand, argsArray);
+        ]]></body>
+      </method>
+      
+      <method name="refreshSort">
+        <parameter name="aContext"/>
+        <body><![CDATA[
+          var column = document.getAnonymousElementByAttribute(aContext, "sortDirection", "*");
+          if (column)
+            aContext.outlinerBoxObject.view.cycleHeader(column.id, column);
+        ]]></body>
+      </method>
+
+      <method name="selectAll">
+        <body><![CDATA[
+          this.outlinerBoxObject.selection.selectAll();
+        ]]></body>
+      </method>
+
+      <method name="paste">
+        <body><![CDATA[
+          const kXferableContractID = "@mozilla.org/widget/transferable;1";
+          const kXferableIID = Components.interfaces.nsITransferable;
+          var xferable = Components.classes[kXferableContractID].createInstance(kXferableIID);
+          xferable.addDataFlavor("moz/bookmarkclipboarditem");
+          xferable.addDataFlavor("text/x-moz-url");
+          xferable.addDataFlavor("text/unicode");
+      
+          const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
+          const kClipboardIID = Components.interfaces.nsIClipboard;
+          var clipboard = Components.classes[kClipboardContractID].getService(kClipboardIID);
+          clipboard.getData(xferable, kClipboardIID.kGlobalClipboard);
+          
+          var flavour = { };
+          var data = { };
+          var length = { };
+          xferable.getAnyTransferData(flavour, data, length);
+          var nodes = []; var names = [];
+          data = data.value.QueryInterface(Components.interfaces.nsISupportsWString).data;
+          switch (flavour.value) {
+          case "moz/bookmarkclipboarditem":
+            nodes = data.split("\n");
+            break;
+          case "text/x-moz-url":
+            var ix = data.indexOf("\n");
+            nodes.push(data.substring(0, ix != -1 ? ix : data.length));
+            names.push(data.substring(ix));
+            break;
+          default: 
+            return;
+          }
+          const kRDFContractID = "@mozilla.org/rdf/rdf-service;1";
+          const kRDFIID = Components.interfaces.nsIRDFService;
+          const ksRDF = Components.classes[kRDFContractID].getService(kRDFIID);
+          var parentRes;
+          const currentIndex = this.currentIndex;
+          if (!this.outlinerBoxObject.view.isContainer(currentIndex))
+            parentRes = this.parentRes;
+          else
+            parentRes = this.outlinerBuilder.getResourceAtIndex(currentIndex);
+
+          const currentRes = this.currentRes;
+          const kRDFCContractID = "@mozilla.org/rdf/container;1";
+          const kRDFCIID = Components.interfaces.nsIRDFContainer;
+          const ksRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
+          var additiveFlag = false;
+          for (var i = 0; i < nodes.length; ++i) {
+            if (!nodes[i]) continue;
+            var rCurrent = ksRDF.GetResource(nodes[i]);
+            const krTypeProperty = ksRDF.GetResource("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+            var rType = this.db.GetTarget(rCurrent, krTypeProperty, true);
+            try {
+              rType = rType.QueryInterface(Components.interfaces.nsIRDFResource);
+            }
+            catch (e) {
+              try {
+                rType = rType.QueryInterface(Components.interfaces.nsIRDFLiteral);
+              }
+              catch (e) {
+                // OK, no type exists, so node does not exist in the graph. 
+                // (e.g. user pastes url as text)
+                // Do some housekeeping. 
+                const krName = ksRDF.GetResource(names[i]);
+                const krNameProperty = ksRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+                const krBookmark = ksRDF.GetResource("http://home.netscape.com/NC-rdf#Bookmark");
+                kBMDS.Assert(rCurrent, krNameProperty, krName, true);
+                kBMDS.Assert(rCurrent, krTypeProperty, krBookmark, true);
+              }
+            }
+            // If the node is a folder, then we need to create a new anonymous 
+            // resource and copy all the arcs over.
+            if (rType && rType.Value == "http://home.netscape.com/NC-rdf#Folder")
+              rCurrent = BookmarksUtils.cloneFolder(rCurrent, parentRes, currentRes);
+      
+            // If this item already exists in this container, don't paste, as 
+            // this will result in the creation of multiple copies in the datasource
+            // but will not result in an update of the UI. (In Short: we don't
+            // handle multiple bookmarks well)
+            ksRDFC.Init(this.bookmarksDS, parentRes);
+            ix = ksRDFC.IndexOf(rCurrent);
+            if (ix != -1)
+              continue;
+      
+            ix = ksRDFC.IndexOf(currentRes);
+            if (ix != -1)
+              ksRDFC.InsertElementAt(rCurrent, ix+1, true);
+            else
+              ksRDFC.AppendElement(rCurrent);
+      
+            this.flushBMDatasource();
+          }
+        ]]></body>
+      </method>
+
+      <method name="copySelection">
+        <body><![CDATA[
+          const kSuppArrayContractID = "@mozilla.org/supports-array;1";
+          const kSuppArrayIID = Components.interfaces.nsISupportsArray;
+          var itemArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
+          const kRDFContractID = "@mozilla.org/rdf/rdf-service;1";
+          const kRDFIID = Components.interfaces.nsIRDFService;
+          const ksRDF = Components.classes[kRDFContractID].getService(kRDFIID);
+          const kSuppWStringContractID = "@mozilla.org/supports-wstring;1";
+          const kSuppWStringIID = Components.interfaces.nsISupportsWString;
+          var bmstring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
+          var unicodestring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
+          var htmlstring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
+        
+          var sBookmarkItem = ""; var sTextUnicode = ""; var sTextHTML = "";
+          var rangeCount = this.outlinerBoxObject.selection.getRangeCount();
+          for (var i = rangeCount - 1; i >= 0; --i) {
+            var rangeMin = {};
+            var rangeMax = {};
+            this.outlinerBoxObject.selection.getRangeAt(i, rangeMin, rangeMax);
+            for (var j = rangeMax.value; j >= rangeMin.value; --j) {
+              var res = this.outlinerBuilder.getResourceAtIndex(j);
+              var urlRes = ksRDF.GetResource("http://home.netscape.com/NC-rdf#URL");
+              var nameRes = ksRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+              var url = this.db.GetTarget(res, urlRes, true);
+              if (url)
+                url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+              var name = this.db.GetTarget(res, nameRes, true);
+              name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+              // XXXben is "\n" the best delimiter here? I think not. 
+              sBookmarkItem += res.Value + "\n";
+              sTextUnicode += url + "\n";
+              sTextHTML += "<A HREF=\"" + url + "\">" + name + "</A>";
+            }
+          }
+          
+          const kXferableContractID = "@mozilla.org/widget/transferable;1";
+          const kXferableIID = Components.interfaces.nsITransferable;
+          var xferable = Components.classes[kXferableContractID].createInstance(kXferableIID);
+      
+          xferable.addDataFlavor("moz/bookmarkclipboarditem");
+          bmstring.data = sBookmarkItem;
+          xferable.setTransferData("moz/bookmarkclipboarditem", bmstring, sBookmarkItem.length*2)
+          
+          xferable.addDataFlavor("text/html");
+          htmlstring.data = sTextHTML;
+          xferable.setTransferData("text/html", htmlstring, sTextHTML.length*2)
+          
+          xferable.addDataFlavor("text/unicode");
+          unicodestring.data = sTextUnicode;
+          xferable.setTransferData("text/unicode", unicodestring, sTextUnicode.length*2)
+          
+          const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
+          const kClipboardIID = Components.interfaces.nsIClipboard;
+          var clipboard = Components.classes[kClipboardContractID].getService(kClipboardIID);
+          clipboard.setData(xferable, null, kClipboardIID.kGlobalClipboard);
+        ]]></body>
+      </method>
+
+      <method name="deleteSelection">
+        <body><![CDATA[
+          const kRDFCContractID = "@mozilla.org/rdf/container;1";
+          const kRDFContractID = "@mozilla.org/rdf/rdf-service;1";
+          const kRDFIID = Components.interfaces.nsIRDFService;
+          const kRDFCIID = Components.interfaces.nsIRDFContainer;
+          const ksRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
+          const ksRDF = Components.classes[kRDFContractID].getService(kRDFIID);
+ 
+          var nextIndex = 0; // Used to determine which item to select after the deletion
+                             // is performed.
+
+          // Whether or not the selection contains items which cannot be deleted.                             
+          // var selectionContainsImmutableItems = false;
+
+          var boxObject = this.outlinerBoxObject;
+          var outlinerBuilder = this.outlinerBuilder;
+          var rangeCount = this.outlinerBoxObject.selection.getRangeCount();
+          
+          var rangeMax = { };
+          var rangeMin = { };
+          
+          // First, walk the selection and see if there's anything we /can't/ 
+          // delete. If so, present a warning dialog listing the items that 
+          // we can't remove. 
+          const kIMDSContractID = "@mozilla.org/rdf/datasource;1?name=in-memory-datasource";
+          const kIMDSIID = Components.interfaces.nsIRDFDataSource;
+          var imDS = Components.classes[kIMDSContractID].getService(kIMDSIID);
+
+          const kRDFCUContractID = "@mozilla.org/rdf/container-utils;1";
+          const kRDFCUIID = Components.interfaces.nsIRDFContainerUtils;
+          const kRDFCU = Components.classes[kRDFCUContractID].getService(kRDFCUIID);
+
+          /*
+          var immutableList = this.rdf.GetResource("NC:ImmutableBookmarkList");
+          var container = kRDFCU.MakeSeq(imDS, immutableList);
+          
+          for (var i = rangeCount - 1; i >= 0; --i) {
+            boxObject.selection.getRangeAt(i, rangeMin, rangeMax);
+            for (var j = rangeMax.value; j >= rangeMin.value; --j) {
+              var resource = outlinerBuilder.getResourceAtIndex(j);
+              var type = this.getTypeAtIndex(j);
+              if (resource.Value == "NC:BookmarksRoot" || type == this.NC_NS + "IEFavoriteFolder")
+                continue;
+              if (type != this.NC_NS + "Bookmark" && type != this.NC_NS + "BookmarkSeparator" && type != this.NC_NS + "Folder") {
+                // This delete operation contains items which cannot be deleted
+                // for one reason or another. Make a list of the items which
+                // we can't delete, and show a dialog. 
+                container.AppendElement(resource);
+                selectionContainsImmutableItems = true;
+                
+                // Now we need to ensure that this item's parent chain is not
+                // part of the current selection so that we don't delete that. We
+                // preserve selection on any deletable items in the folder chain
+                // however, and these are removed. 
+                for (var parentIndex = boxObject.view.getParentIndex(j);
+                     parentIndex != -1;
+                     parentIndex = boxObject.view.getParentIndex(parentIndex)) {
+                  // Note that we don't combine this with the check in the 
+                  // |while| above, as this would mean that if you had a folder 
+                  // hierarchy consisting of:
+                  // 
+                  //   Folder ->    [ selected ]
+                  //        Folder ->    [ not selected ]
+                  //             Immutable item [ selected ]
+                  //
+                  // This code would not work and the containing folder would be
+                  // deleted. 
+                  if (boxObject.selection.isSelected(parentIndex))
+                    boxObject.selection.toggleSelect(parentIndex);
+                }
+              }
+            }
+          }
+          
+           // Present a dialog showing any items that we can't delete. 
+           // if (selectionContainsImmutableItems) {
+           //   openDialog("chrome://communicator/content/bookmarks/deleteBookmark.xul", "", "modal=yes,resizable=no", imDS);
+            
+            // Now clear the list of immutable items. 
+            ksRDFC.Init(imDS, immutableList);
+            var count = ksRDFC.GetCount();
+            for (var i = 0; i < count; ++i)
+              ksRDFC.RemoveElementAt(i, false);
+          }
+          */
+          for (i = rangeCount - 1; i >= 0; --i) {
+            rangeMax = { };
+            rangeMin = { };
+            boxObject.selection.getRangeAt(i, rangeMin, rangeMax);
+            for (var j = rangeMax.value; j >= rangeMin.value; --j) {
+              var resource = outlinerBuilder.getResourceAtIndex(j);
+              if (resource.Value == "NC:BookmarksRoot")
+                continue;
+              var currType = this.getTypeAtIndex(j);
+              if (currType == this.NC_NS + "IEFavoriteFolder") {
+                const kPrefSvcContractID = "@mozilla.org/preferences;1";
+                const kPrefSvcIID = Components.interfaces.nsIPref;
+                const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+                kPrefSvc.SetBoolPref("browser.bookmarks.import_system_favorites", false);
+              }
+              else if (currType != this.NC_NS + "Bookmark" && 
+                       currType != this.NC_NS + "BookmarkSeparator" &&
+                       currType != this.NC_NS + "Folder")
+                continue;
+              var parentIndex = boxObject.view.getParentIndex(j);
+              var parent;
+              if (parentIndex != -1)
+                parent = outlinerBuilder.getResourceAtIndex(parentIndex);
+              else {
+                // assume its parent is the root
+                parent = ksRDF.GetResource("NC:BookmarksRoot");
+              }
+              ksRDFC.Init(this.bookmarksDS, parent); 
+              ksRDFC.RemoveElement(resource, true);
+              nextIndex = j;
+            }
+          }
+
+          // Select the next row          
+          boxObject.selection.select(nextIndex);
+        ]]></body>
+      </method>
+      <method name="openFindDialog">
+        <body><![CDATA[
+          openDialog("chrome://communicator/content/bookmarks/findBookmark.xul",
+                     "FindBookmarksWindow",
+                     "dialog=no,centerscreen,resizable=no,chrome,dependent");
+        ]]></body>
+      </method>
+      <method name="canSendLink">
+        <body><![CDATA[
+          var selectedIndex = this.outlinerBoxObject.selection.currentIndex;
+          return (this.outlinerBoxObject.selection.count == 1 &&
+                  !this.outlinerBoxObject.view.isContainer(selectedIndex) &&
+                  this.getTypeAtIndex(selectedIndex) != this.NC_NS + "BookmarkSeparator");
+        ]]></body>
+      </method>
+      <method name="sendLink">
+        <body><![CDATA[
+          const currentRes = this.currentRes;
+          var urlLiteral = this.db.GetTarget(currentRes, this.rdf.GetResource(this.NC_NS + "URL"), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+          var nameLiteral = this.db.GetTarget(currentRes, this.rdf.GetResource(this.NC_NS + "Name"), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+          sendLink(urlLiteral, nameLiteral);          
+        ]]></body>
+      </method>
+      <method name="getAllCmds">
+        <parameter name="aNodeID"/>
+        <body><![CDATA[
+          var type = this.resolveType(aNodeID);
+          if (!type) {
+            if (aNodeID == "NC:PersonalToolbarFolder" || aNodeID == "NC:BookmarksRoot")
+              type = "http://home.netscape.com/NC-rdf#Folder";
+            else
+              return null;
+          }
+          var commands = [];
+          switch (type) {
+          case "http://home.netscape.com/NC-rdf#BookmarkSeparator":
+            commands = ["bm_find", "bm_separator", "bm_cut", "bm_copy", "bm_paste", 
+                        "bm_delete", "bm_separator", "bm_fileBookmark", "bm_separator", 
+                        "bm_newfolder"];
+            break;
+          case "http://home.netscape.com/NC-rdf#Bookmark":
+            commands = ["bm_open", "bm_separator", "bm_cut", 
+                        "bm_copy", "bm_paste", "bm_delete", "bm_separator", "bm_rename",
+                        "bm_separator", "bm_fileBookmark", "bm_separator", "bm_newfolder", 
+                        "bm_separator", "bm_properties"];
+            break;
+          case "http://home.netscape.com/NC-rdf#Folder":
+            commands = ["bm_openfolder", "bm_openfolderinnewwindow", "bm_separator", 
+                        "bm_cut", "bm_copy", "bm_paste", "bm_delete", "bm_separator", "bm_rename", 
+                        "bm_separator", "bm_fileBookmark", "bm_separator", 
+                        "bm_newfolder", "bm_separator", "bm_properties"];
+            break;
+          case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
+            commands = ["bm_open", "bm_find", "bm_separator", "bm_copy", "bm_delete", "bm_separator", "bm_rename", "bm_separator",
+                        "bm_fileBookmark", "bm_separator", "bm_separator", "bm_properties"];
+            break;
+          case "http://home.netscape.com/NC-rdf#IEFavorite":
+            commands = ["bm_open", "bm_find", "bm_separator", "bm_copy"];
+            break;
+          case "http://home.netscape.com/NC-rdf#FileSystemObject":
+            commands = ["bm_open", "bm_find", "bm_separator", "bm_copy"];
+            break;
+          default: 
+            var source = this.rdf.GetResource(aNodeID);
+            return this.db.GetAllCmds(source);
+          }
+          return new CommandArrayEnumerator(commands);
+        ]]></body>
+      </method>
+
+      <method name="flattenEnumerator">
+        <parameter name="aEnumerator"/>
+        <body><![CDATA[
+          if ("_index" in aEnumerator)
+            return aEnumerator._inner;
+          
+          var temp = [];
+          while (aEnumerator.hasMoreElements()) 
+            temp.push(aEnumerator.getNext());
+          return temp;
+        ]]></body>
+      </method>
+      <method name="findCommonNodes">
+        <parameter name="aNewArray"/>
+        <parameter name="aOldArray"/>
+        <body><![CDATA[
+          var common = [];
+          for (var i = 0; i < aNewArray.length; ++i) {
+            for (var j = 0; j < aOldArray.length; ++j) {
+              if (common.length > 0 && common[common.length-1] == aNewArray[i])
+                continue;
+              if (aNewArray[i] == aOldArray[j])
+                common.push(aNewArray[i]);
+            }
+          }
+          return common;
+        ]]></body>
+      </method>
+      <method name="createMenuItem">
+        <parameter name="aDisplayName"/>
+        <parameter name="aCommandName"/>
+        <parameter name="aSelectedIndex"/>
+        <body><![CDATA[
+          const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var xulElement = document.createElementNS(kXULNS, "menuitem");
+          xulElement.setAttribute("cmd", aCommandName);
+          xulElement.setAttribute("command", "cmd_" + aCommandName.substring(this.NC_NS_CMD.length));
+          switch (aCommandName) {
+          case this.NC_NS_CMD + "bm_open":
+            xulElement.setAttribute("label", aDisplayName);
+            xulElement.setAttribute("default", "true");
+            break;
+          case this.NC_NS_CMD + "bm_openfolder":
+            aDisplayName = this.outlinerBoxObject.view.isContainerOpen(aSelectedIndex) ? this._bundle.GetStringFromName("cmd_bm_openfolder2") : aDisplayName;
+            xulElement.setAttribute("label", aDisplayName);
+            xulElement.setAttribute("default", "true");
+            break;
+          case this.NC_NS_CMD + "bm_renamebookmark":
+            if (!document.popupNode.hasAttribute("type")) {
+              xulElement.setAttribute("label", this._bundle.GetStringFromName("cmd_bm_renamebookmark2"));
+              xulElement.setAttribute("cmd", (this.NC_NS_CMD + "bm_editurl"));
+            }
+            else
+              xulElement.setAttribute("label", aDisplayName);
+            break;
+          default:
+            xulElement.setAttribute("label", aDisplayName);
+            break;
+          }
+          return xulElement;
+        ]]></body>
+      </method>
+      <method name="getCommandName">
+        <parameter name="aCommand"/>
+        <body><![CDATA[
+          var cmdName = aCommand.substring(this.NC_NS_CMD.length);
+          try {
+            // Note: this will succeed only if there's a string in the bookmarks
+            //       string bundle for this command name. Otherwise, <xul:stringbundle/>
+            //       will throw, we'll catch & stifle the error, and look up the command
+            //       name in the datasource. 
+            return this._bundle.GetStringFromName("cmd_" + cmdName);
+          }
+          catch (e) {
+            // XXX - WORK TO DO HERE! (rjc will cry if we don't fix this) 
+            // need to ask the ds for the commands for this node, however we don't
+            // have the right params. This is kind of a problem. 
+            dump("*** BAD! EVIL! WICKED! NO! ACK! ARGH! ORGH!\n");
+            const rName = this.rdf.GetResource(this.NC_NS + "Name");
+            const rSource = this.rdf.GetResource(aCommand);
+            return this.db.GetTarget(rSource, rName, true).Value;
+          }
+        ]]></body>
+      </method>
+      <method name="createContextMenu">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var popup = aEvent.target;
+          // clear out the old context menu contents (if any)
+          while (popup.hasChildNodes()) 
+            popup.removeChild(popup.firstChild);
+          
+          var popupNode = document.popupNode;
+          var commonCommands = [];
+          var rangeCount = this.outlinerBoxObject.selection.getRangeCount();
+          for (var i = rangeCount - 1; i >= 0; --i) {
+            var minRange = {};
+            var maxRange = {};
+            this.outlinerBoxObject.selection.getRangeAt(i, minRange, maxRange);          
+            for (var j = maxRange.value; j >= minRange.value; --j) {
+              var nodeURI = this.outlinerBuilder.getResourceAtIndex(j).Value;
+              var commands = this.getAllCmds(nodeURI);
+              if (!commands) {
+                aEvent.preventDefault();
+                return;
+              }
+              commands = this.flattenEnumerator(commands);
+              if (!commonCommands.length) commonCommands = commands;
+              commonCommands = this.findCommonNodes(commands, commonCommands);
+            }
+          }
+          if (!commonCommands.length) {
+            aEvent.preventDefault();
+            return;
+          }
+          
+          // Now that we should have generated a list of commands that is valid
+          // for the entire selection, build a context menu.
+          for (i = 0; i < commonCommands.length; ++i) {
+            const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            var currCommand = commonCommands[i].QueryInterface(Components.interfaces.nsIRDFResource).Value;
+            var element = null;
+            if (currCommand != this.NC_NS_CMD + "bm_separator") {
+              var commandName = this.getCommandName(currCommand);
+              var selectedIndex = this.outlinerBoxObject.selection.currentIndex;
+              element = this.createMenuItem(commandName, currCommand, selectedIndex);
+            }
+            else if (i != 0 && i < commonCommands.length-1) {
+              // Never append a separator as the first or last element in a context
+              // menu.
+              element = document.createElementNS(kXULNS, "menuseparator");
+            }
+            
+            if (element) 
+              popup.appendChild(element);
+          }
+        ]]></body>
+      </method>
+      <method name="openPropertiesForItem">
+        <body><![CDATA[
+          // XXX if not bookmarks separator
+          var itemURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
+                     "BookmarkProperties", "centerscreen,chrome,dialog=no,resizable=no", 
+                     itemURI);
+        ]]></body>
+      </method>
+      <method name="setAsPersonalToolbarFolder">
+        <body><![CDATA[
+          var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          var args = [];
+          this.doBookmarksCommand(selectedURI,
+                                            this.NC_NS_CMD + "setpersonaltoolbarfolder", args);
+
+        ]]></body>
+      </method>
+      <method name="setAsNewSearchFolder">
+        <body><![CDATA[
+          var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          var args = [];
+          this.doBookmarksCommand(selectedURI,
+                                            this.NC_NS_CMD + "setnewsearchfolder", args);
+        ]]></body>
+      </method>
+      <method name="setAsNewBookmarkFolder">
+        <body><![CDATA[
+          var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          var args = [];
+          this.doBookmarksCommand(selectedURI,
+                                  this.NC_NS_CMD + "setnewbookmarkfolder", args);
+        ]]></body>
+      </method>
+      <method name="addBookmark">
+        <body><![CDATA[
+          const currentIndex = this.currentIndex;
+          var parentIndex;
+          if (this.outlinerBoxObject.view.rowCount) {
+            if (this.outlinerBoxObject.view.isContainer(currentIndex))
+              parentIndex = currentIndex;
+            else
+              parentIndex = this.outlinerBoxObject.view.getParentIndex(currentIndex);
+          }
+          else
+            parentIndex = -1;
+          var parentURI;
+          if (parentIndex == -1)
+            parentURI = this.rdf.GetResource("NC:BookmarksRoot").Value;
+          else
+            parentURI = this.outlinerBuilder.getResourceAtIndex(parentIndex).Value;
+          openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
+                     "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, parentURI, null, "newBookmark");
+        ]]></body>
+      </method>
+      <method name="fileBookmark">
+        <body><![CDATA[
+          // XXX folder arg
+          var rv = { selectedFolder: null };          
+          openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
+                     "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, null, null, "selectFolder", rv);
+          if (rv.selectedFolder) {
+            var rangeCount = this.outlinerBoxObject.selection.getRangeCount();
+            for (var k = rangeCount - 1; k >= 0; --k) {
+              var rangeMin = {};
+              var rangeMax = {};
+              this.outlinerBoxObject.selection.getRangeAt(k, rangeMin, rangeMax);
+              for (var i = rangeMax.value; i >= rangeMin.value; --i) {
+                var selected = this.outlinerBuilder.getResourceAtIndex(i);
+                if (selected.Value == rv.selectedFolder) 
+                  return; // Selection contains the target folder. Just fail silently.
+                var additiveFlag = false;
+                var parentIndex = this.outlinerBoxObject.view.getParentIndex(i);
+                var parentURI;
+                if (parentIndex == -1)
+                  parentURI = this.rdf.GetResource("NC:BookmarksRoot").Value;
+                else
+                  parentURI = this.outlinerBuilder.getResourceAtIndex(parentIndex).Value;
+                this.moveBookmark(selected.Value, parentURI, rv.selectedFolder);
+               // gBookmarksShell.selectFolderItem(rv.selectedFolder, selected.Value, additiveFlag);
+                if (!additiveFlag) additiveFlag = true;
+              }
+            }
+            this.flushBMDatasource();
+          }
+        ]]></body>
+      </method>
+      <method name="moveBookmark">
+        <parameter name="aBookmarkURI"/>
+        <parameter name="aFromFolderURI"/>
+        <parameter name="aToFolderURI"/>
+        <body><![CDATA[
+          const kRDFCContractID = "@mozilla.org/rdf/container;1";
+          const kRDFCIID = Components.interfaces.nsIRDFContainer;
+          const kRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
+          const krSrc = this.rdf.GetResource(aBookmarkURI);
+          const krOldParent = this.rdf.GetResource(aFromFolderURI);
+          const krNewParent = this.rdf.GetResource(aToFolderURI);
+          kRDFC.Init(this.bookmarksDS, krNewParent);
+          kRDFC.AppendElement(krSrc);
+          kRDFC.Init(this.bookmarksDS, krOldParent);
+          kRDFC.RemoveElement(krSrc, true);
+        ]]></body>
+      </method>
+      <method name="importBookmarks">
+        <body><![CDATA[
+          try {
+            const kFilePickerContractID = "@mozilla.org/filepicker;1";
+            const kFilePickerIID = Components.interfaces.nsIFilePicker;
+            const kFilePicker = Components.classes[kFilePickerContractID].createInstance(kFilePickerIID);
+         
+            const kTitle = this._bundle.GetStringFromName("SelectImport");
+            kFilePicker.init(window, kTitle, kFilePickerIID["modeOpen"]);
+            kFilePicker.appendFilters(kFilePickerIID.filterHTML | kFilePickerIID.filterAll);
+            var fileName;
+            if (kFilePicker.show() != kFilePickerIID.returnCancel) {
+              fileName = kFilePicker.fileURL.spec;
+              if (!fileName) return;
+            }
+            else return;
+          }
+          catch (e) {
+            return;
+          }
+          var seln = null;
+          try {
+            seln = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          }
+          catch(ex) {
+            seln = this.rdf.GetResource("NC:BookmarksRoot").Value;
+          }
+          var args = [{ property: this.NC_NS + "URL", literal: fileName}];
+          this.doBookmarksCommand(seln, this.NC_NS_CMD + "import", args);
+        ]]></body>
+      </method>
+      <method name="exportBookmarks">
+        <body><![CDATA[
+          try {
+            const kFilePickerContractID = "@mozilla.org/filepicker;1";
+            const kFilePickerIID = Components.interfaces.nsIFilePicker;
+            const kFilePicker = Components.classes[kFilePickerContractID].createInstance(kFilePickerIID);
+            
+            const kTitle = this._bundle.GetStringFromName("EnterExport");
+            kFilePicker.init(window, kTitle, kFilePickerIID["modeSave"]);
+            kFilePicker.appendFilters(kFilePickerIID.filterHTML | kFilePickerIID.filterAll);
+            kFilePicker.defaultString = "bookmarks.html";
+            var fileName;
+            if (kFilePicker.show() != kFilePickerIID.returnCancel) {
+              fileName = kFilePicker.fileURL.spec;
+              if (!fileName) return;
+            }
+            else return;
+          }
+          catch (e) {
+            return;
+          }
+          var seln = null;
+          try {
+            seln = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          }
+          catch(ex) {
+            seln = this.rdf.GetResource("NC:BookmarksRoot").Value;
+          }
+          var args = [{ property: this.NC_NS + "URL", literal: fileName}];
+          this.doBookmarksCommand(seln, this.NC_NS_CMD + "export", args);
+        ]]></body>
+      </method>
+      <method name="openFolderInNewWindow">
+        <body><![CDATA[
+          var selectedIndex = this.outlinerBoxObject.selection.currentIndex;
+          var selectedURI = this.outlinerBuilder.getResourceAtIndex(selectedIndex).Value;
+          openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", 
+                     "", "chrome,all,dialog=no", selectedURI);
+        ]]>
+        </body>
+      </method>
+      <method name="createNewSeparator">
+        <body><![CDATA[
+          var currIndex = this.outlinerBoxObject.selection.currentIndex;
+          if (currIndex == -1)
+            currIndex = this.outlinerBoxObject.view.rowCount - 1;
+          var parentIndex = this.outlinerBoxObject.view.getParentIndex(currIndex);
+          var parentValue;
+          if (parentIndex == -1)
+            parentValue = this.rdf.GetResource("NC:BookmarksRoot").Value;
+          else
+            parentValue = this.outlinerBuilder.getResourceAtIndex(parentIndex).Value;
+          args = [{ property: this.NC_NS + "parent", 
+                    resource: parentValue }];
+          this.doBookmarksCommand(this.outlinerBuilder.getResourceAtIndex(currIndex).Value, 
+                                            this.NC_NS_CMD + "newseparator", args);
+        ]]></body>
+      </method>
+      <method name="createNewFolder">
+        <body><![CDATA[
+          const kPromptSvcContractID = "@mozilla.org/embedcomp/prompt-service;1";
+          const kPromptSvcIID = Components.interfaces.nsIPromptService;
+          const kPromptSvc = Components.classes[kPromptSvcContractID].getService(kPromptSvcIID);
+          var defaultValue  = this._bundle.GetStringFromName("ile_newfolder");
+          var dialogTitle   = this._bundle.GetStringFromName("newfolder_dialog_title");
+          var dialogMsg     = this._bundle.GetStringFromName("newfolder_dialog_msg");
+          var stringValue   = { value: defaultValue };
+          var relativeIndex = this.currentIndex;
+          const currentIndex  = this.currentIndex;
+          var parentRes;
+          var isParent = false;
+          if (kPromptSvc.prompt(window, dialogTitle, dialogMsg, stringValue, null, { value: 0 })) {
+            if (currentIndex < this.outlinerBoxObject.view.rowCount) {
+              // If it's an open container, the relative index should be that of the last child. 
+              if (this.outlinerBoxObject.view.isContainerOpen(currentIndex)) {
+                isParent = true;
+                var index = currentIndex + 1;
+                while (index < this.outlinerBoxObject.view.rowCount
+                       && this.outlinerBoxObject.view.getParentIndex(index) == currentIndex)
+                    ++index;
+                  relativeIndex = index - 1;
+              }
+              else if (this.outlinerBoxObject.view.isContainer(currentIndex))
+                isParent = true;
+              if (isParent) {
+                parentRes = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.view.getParentIndex(relativeIndex));
+              } else {
+                parentRes = this.parentRes;
+              }
+            }
+            else {
+              parentRes = this.rdf.GetResource("NC:BookmarksRoot");
+              relativeIndex = -1;
+            }
+            var args = [{ property: this.NC_NS + "parent",
+                          resource: parentRes.Value },
+                        { property: this.NC_NS + "Name",
+                          literal:  stringValue.value }];
+            this.bookmarksDS.AddObserver(this.newFolderRDFObserver);
+            var relativeRes;
+            if (relativeIndex != -1)
+              relativeRes = this.outlinerBuilder.getResourceAtIndex(relativeIndex).Value;
+            else
+              relativeRes = this.rdf.GetResource("NC:BookmarksRoot");;
+   
+            this.doBookmarksCommand(relativeRes, this.NC_NS_CMD + "newfolder", args);
+            this.bookmarksDS.RemoveObserver(this.newFolderRDFObserver);
+          }
+      ]]></body>
+      </method>
+     
+      <method name="openItem">
+      <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex))
+            return;
+          var urlRes = this.rdf.GetResource(this.NC_NS + "URL");
+          var urlValue = this.db.GetTarget(this.currentRes, urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    
+          // Ignore "NC:" and empty urls.
+          if (urlValue.substring(0,3) == "NC:" || !urlValue) return;
+          if (aEvent && aEvent.altKey)
+            this.openPropertiesForItem();
+          else
+            openDialog (this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
+
+          if (aEvent) 
+            aEvent.preventBubble();
+        ]]></body>
+      </method>
+      <method name="canPaste">
+        <body><![CDATA[
+          // XXXben
+          return true;
+        ]]></body>
+      </method>
+      
+      <method name="newBookmark">
+        <body><![CDATA[
+          var insertAt = this.getNextRowIndex();
+          openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
+                     "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, folder, null, "newBookmark");
+          
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+  <!-- Full Bookmarks Outliner, multi-columned -->
+  <!-- Localize column labels! -->
+  <binding id="bookmarks-outliner-full" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl"
+                 contextmenu="_child">
+      <!-- XXXben need focus event handler for cmd update -->
+        <menupopup id="bmContext" 
+                   onpopupshowing="this.parentNode.createContextMenu(event);"/>
+      <vbox flex="1">
+        <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" enableColumnDrag="true">
+          <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
+                        ondblclick="this.parentNode.parentNode.parentNode.openItem(event);"
+                        ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.parentNode.DNDObserver);"
+                        onselect="this.parentNode.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
+            <template>
+              <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+                <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
+              </rule>
+              <rule>
+                <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                  <outlinercell ref="Name" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  <outlinercell ref="URL" label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                  <outlinercell ref="ShortcutURL" label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                  <outlinercell ref="Description" label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                  <outlinercell ref="LastVisitDate" label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                  <outlinercell ref="AddDate" label="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" />
+                  <outlinercell ref="LastModDate" label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                </outlinerrow>
+              </rule>
+            </template>
+          </outlinerbody>
+          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="outlinercol-inset-header sortDirectionIndicator" persist="width hidden sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                       sortActive="true" sortDirection="descending"/>
+          <splitter class="tree-splitter" />
+          <outlinercol id="URL" label="&outlinercol.url.label;" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#URL" persist="width hidden sortActive sortDirection ordinal" />
+          <splitter class="tree-splitter" />
+          <outlinercol id="ShortcutURL" label="&outlinercol.shortcut.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" persist="hidden width sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol id="Description" label="&outlinercol.description.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" persist="hidden width sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
+          <splitter class="tree-splitter"/>
+          <outlinercol id="AddDate" label="&outlinercol.addedon.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" persist="width hidden sortActive sortDirection ordinal" />
+          <splitter class="tree-splitter" />
+          <outlinercol id="LastModDate" label="&outlinercol.lastmod.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" persist="width hidden sortActive sortDirection ordinal" />
+          <splitter class="tree-splitter" />
+          <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" persist="width hidden sortActive sortDirection ordinal" />
+        </outliner>
+        <statusbar inherits="hidden=hidestatusbar" hidden="false">
+          <statusbarpanel anonid="statusbar-text" flex="1"/>
+        </statusbar>
+      </vbox>
+    </xbl:content>
+  </binding>
+  <!-- Single column outliner -->
+  <binding id="bookmarks-outliner-name" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl"
+                 contextmenu="_child">
+      <menupopup id="bmContext" 
+                 onpopupshowing="this.parentNode.createContextMenu(event);"/>
+      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" inherits="class=outlinerclass" enableColumnDrag="true">
+        <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
+                      ondblclick="this.parentNode.parentNode.openItem(event);"
+                      ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
+                      onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
+          <template>
+            <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+              <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
+            </rule>
+            <rule>
+              <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                <outlinercell ref="Name" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+              </outlinerrow>
+            </rule>
+          </template>
+        </outlinerbody>
+        <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="width hidden sortActive sortDirection" sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                     sortActive="true" sortDirection="descending"/>
+      </outliner>
+    </xbl:content>
+  </binding>
+</bindings>
+<!--
+
+API:
+  - root ref
+  - datasources
+  - columns
+  - click count
+  - sort
+  - selection
+  - default action oncommand
+  - context menu
+  - insert, remove bookmarks
+  - 
+
+//-->
+<!-- 
+  ILE: 
+    - impl ILE on outliner.xml
+//-->
+<!--
+  Command handling:
+    - impl |nsIController| 
+    - actual controller implemented by client which intercepts commands and provides
+      special handling for things like open in new browser etc. 
+    - client can alternatively use the built in controller for default functionality.
+    - decisions:
+        Implementation pattern:
+        client: 
+        (A) bookmarksUIElement.prototype.doCommand = function () { .. }
+          OR
+        (B) var ctrlr = { doCommand: function () { bookmarksUIElement.doCommand(); }
+          Tend to prefer (B) as it supports delegation
+//-->
