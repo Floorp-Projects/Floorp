@@ -206,7 +206,23 @@ public:
        and the aValue argument is undefined, otherwise aValue is set
        to the value of the boolean pref */
   // *  - initially created for bugs 31816, 20760, 22963
-  NS_IMETHOD GetCachedBoolPref(PRUint32 aPrefType, PRBool& aValue) = 0;
+  PRBool GetCachedBoolPref(PRUint32 aPrefType) const
+  {
+    // If called with a constant parameter, the compiler should optimize
+    // this switch statement away.
+    switch (aPrefType) {
+    case kPresContext_UseDocumentFonts:
+      return mUseDocumentFonts;
+    case kPresContext_UseDocumentColors:
+      return mUseDocumentColors;
+    case kPresContext_UnderlineLinks:
+      return mUnderlineLinks;
+    default:
+      NS_ERROR("Invalid arg passed to GetCachedBoolPref");
+    }
+
+    return PR_FALSE;
+  }
 
   /** Get a cached integer pref, by its type
        if the type is not supported, then NS_ERROR_INVALID_ARG is returned
@@ -231,9 +247,9 @@ public:
   const nscolor FocusBackgroundColor() const { return mFocusBackgroundColor; }
   const nscolor FocusTextColor() const { return mFocusTextColor; }
 
-  NS_IMETHOD GetUseFocusColors(PRBool& useFocusColors) = 0;
+  PRBool GetUseFocusColors() const { return mUseFocusColors; }
   PRUint8 FocusRingWidth() const { return mFocusRingWidth; }
-  NS_IMETHOD GetFocusRingOnAnything(PRBool& focusRingOnAnything) = 0;
+  PRBool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
  
 
   /**
@@ -347,10 +363,19 @@ public:
   /**
    * Set and get methods for controling the background drawing
   */
-  NS_IMETHOD GetBackgroundImageDraw(PRBool &aCanDraw)=0;
-  NS_IMETHOD SetBackgroundImageDraw(PRBool aCanDraw)=0;
-  NS_IMETHOD GetBackgroundColorDraw(PRBool &aCanDraw)=0;
-  NS_IMETHOD SetBackgroundColorDraw(PRBool aCanDraw)=0;
+  PRBool GetBackgroundImageDraw() const { return mDrawImageBackground; }
+  void   SetBackgroundImageDraw(PRBool aCanDraw)
+  {
+    NS_ASSERTION(!(aCanDraw & ~1), "Value must be true or false");
+    mDrawImageBackground = aCanDraw;
+  }
+
+  PRBool GetBackgroundColorDraw() const { return mDrawColorBackground; }
+  void   SetBackgroundColorDraw(PRBool aCanDraw)
+  {
+    NS_ASSERTION(!(aCanDraw & ~1), "Value must be true or false");
+    mDrawColorBackground = aCanDraw;
+  }
 
 #ifdef IBMBIDI
   /**
@@ -383,14 +408,18 @@ public:
    *
    *  @lina 05/02/2000
    */
-  NS_IMETHOD SetVisualMode(PRBool aIsVisual) = 0;
+  void SetVisualMode(PRBool aIsVisual)
+  {
+    NS_ASSERTION(!(aIsVisual & ~1), "Value must be true or false");
+    mIsVisual = aIsVisual;
+  }
 
   /**
    *  Check whether the content should be treated as visual.
    *
    *  @lina 05/02/2000
    */
-  NS_IMETHOD IsVisualMode(PRBool& aIsVisual) const = 0;
+  PRBool IsVisualMode() const { return mIsVisual; }
 
 //Mohamed
 
@@ -426,13 +455,17 @@ public:
    * Set the Bidi capabilities of the system
    * @param aIsBidi == TRUE if the system has the capability of reordering Bidi text
    */
-  NS_IMETHOD SetIsBidiSystem(PRBool aIsBidi) = 0;
+  void SetIsBidiSystem(PRBool aIsBidi)
+  {
+    NS_ASSERTION(!(aIsBidi & ~1), "Value must be true or false");
+    mIsBidiSystem = aIsBidi;
+  }
 
   /**
    * Get the Bidi capabilities of the system
-   * @return aResult == TRUE if the system has the capability of reordering Bidi text
+   * @return TRUE if the system has the capability of reordering Bidi text
    */
-  NS_IMETHOD GetIsBidiSystem(PRBool &aResult) const = 0;
+  PRBool IsBidiSystem() const { return mIsBidiSystem; }
 
   /**
    * Get the document charset
@@ -445,8 +478,13 @@ public:
   /**
    * Render only Selection
    */
-  NS_IMETHOD SetIsRenderingOnlySelection(PRBool aResult) = 0;
-  NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult) = 0;
+  void SetIsRenderingOnlySelection(PRBool aResult)
+  {
+    NS_ASSERTION(!(aResult & ~1), "Value must be true or false");
+    mIsRenderingOnlySelection = aResult;
+  }
+
+  PRBool IsRenderingOnlySelection() const { return mIsRenderingOnlySelection; }
 
   /*
    * Obtain a native them for rendering our widgets (both form controls and html)
@@ -518,6 +556,21 @@ protected:
 
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;
+
+  unsigned              mUseDocumentFonts : 1;
+  unsigned              mUseDocumentColors : 1;
+  unsigned              mUnderlineLinks : 1;
+  unsigned              mUseFocusColors : 1;
+  unsigned              mFocusRingOnAnything : 1;
+  unsigned              mDrawImageBackground : 1;
+  unsigned              mDrawColorBackground : 1;
+  unsigned              mNeverAnimate : 1;
+  unsigned              mIsRenderingOnlySelection : 1;
+  unsigned              mNoTheme : 1;
+#ifdef IBMBIDI
+  unsigned              mIsVisual : 1;
+  unsigned              mIsBidiSystem : 1;
+#endif
 };
 
 // Bit values for StartLoadImage's aImageStatus

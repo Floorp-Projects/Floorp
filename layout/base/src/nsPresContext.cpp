@@ -150,8 +150,7 @@ nsPresContext::nsPresContext()
     mDefaultCursiveFont("cursive", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, 
       NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
     mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, 
-      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
-    mNoTheme(PR_FALSE)
+      NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12))
 {
   mCompatibilityMode = eCompatibility_FullStandards;
   mImageAnimationMode = imgIContainer::kNormalAnimMode;
@@ -159,9 +158,6 @@ nsPresContext::nsPresContext()
 
   SetBackgroundImageDraw(PR_TRUE);		// always draw the background
   SetBackgroundColorDraw(PR_TRUE);
-
-  mStopped = PR_FALSE;
-  mStopChrome = PR_TRUE;
 
   mShell = nsnull;
   mLinkHandler = nsnull;
@@ -538,28 +534,6 @@ nsPresContext::GetUserPreferences()
 }
 
 NS_IMETHODIMP
-nsPresContext::GetCachedBoolPref(PRUint32 aPrefType, PRBool& aValue)
-{
-  nsresult rv = NS_OK;
-
-  switch (aPrefType) {
-  case kPresContext_UseDocumentFonts :
-    aValue = mUseDocumentFonts;
-    break;
-  case kPresContext_UseDocumentColors:
-    aValue = mUseDocumentColors;
-    break;
-  case kPresContext_UnderlineLinks:
-    aValue = mUnderlineLinks;
-    break;
-  default :
-    rv = NS_ERROR_INVALID_ARG;
-    NS_ERROR("invalid arg");
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsPresContext::GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue) 
 {
   nsresult rv = NS_OK;
@@ -915,22 +889,6 @@ nsPresContext::GetDefaultFont(PRUint8 aFontID) const
 }
 
 NS_IMETHODIMP
-nsPresContext::GetFocusRingOnAnything(PRBool& aFocusRingOnAnything)
-{
-  aFocusRingOnAnything = mFocusRingOnAnything;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsPresContext::GetUseFocusColors(PRBool& aUseFocusColors)
-{
-  aUseFocusColors = mUseFocusColors;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsPresContext::GetTwipsToPixelsForFonts(float* aResult) const
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
@@ -1145,20 +1103,6 @@ nsPresContext::SetBidiEnabled(PRBool aBidiEnabled) const
 }
 
 NS_IMETHODIMP
-nsPresContext::SetVisualMode(PRBool aIsVisual)
-{
-  mIsVisual = aIsVisual;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::IsVisualMode(PRBool& aIsVisual) const
-{
-  aIsVisual = mIsVisual;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPresContext::GetBidiUtils(nsBidiPresUtils** aBidiUtils)
 {
   nsresult rv = NS_OK;
@@ -1203,20 +1147,6 @@ NS_IMETHODIMP   nsPresContext::GetBidi(PRUint32* aDest) const
 
 //Mohamed 17-1-01
 NS_IMETHODIMP
-nsPresContext::SetIsBidiSystem(PRBool aIsBidi)
-{
-  mIsBidiSystem = aIsBidi;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetIsBidiSystem(PRBool& aResult) const
-{
-  aResult = mIsBidiSystem;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPresContext::GetBidiCharset(nsACString &aCharSet) const
 {
   aCharSet = mCharset;
@@ -1232,15 +1162,6 @@ nsPresContext::GetLanguageSpecificTransformType(
 {
   NS_PRECONDITION(aType, "null out param");
   *aType = mLanguageSpecificTransformType;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::IsRenderingOnlySelection(PRBool* aResult)
-{
-  NS_PRECONDITION(aResult, "null out param");
-  *aResult = mIsRenderingOnlySelection;
 
   return NS_OK;
 }

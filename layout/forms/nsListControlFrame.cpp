@@ -530,9 +530,7 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
   if (isPaginated) {
-    PRBool isRendingSelection;;
-    aPresContext->IsRenderingOnlySelection(&isRendingSelection);
-    if (isRendingSelection) {
+    if (aPresContext->IsRenderingOnlySelection()) {
       // Check the quick way first
       PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
       // if we aren't selected in the mState we could be a container

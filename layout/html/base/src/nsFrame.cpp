@@ -2814,9 +2814,7 @@ nsFrame::GetSelectionForVisCheck(nsIPresContext * aPresContext, nsISelection** a
   nsresult rv = aPresContext->IsPaginated(&isPaginated);
   if (NS_SUCCEEDED(rv) && isPaginated) {
     // now see if we are rendering selection only
-    PRBool isRendingSelection;
-    rv = aPresContext->IsRenderingOnlySelection(&isRendingSelection);
-    if (NS_SUCCEEDED(rv) && isRendingSelection) {
+    if (aPresContext->IsRenderingOnlySelection()) {
       // Check the quick way first (typically only leaf nodes)
       PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
       // if we aren't selected in the mState,

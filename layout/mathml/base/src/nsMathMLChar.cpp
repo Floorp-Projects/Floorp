@@ -899,8 +899,9 @@ nsGlyphTableList::GetListFor(nsIPresContext* aPresContext,
   // @see the documentation of -moz-math-stretchy in mathml.css
   // for how this work
   aGlyphTableList->Clear();
-  PRBool useDocumentFonts = PR_TRUE;
-  aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts, useDocumentFonts);
+  PRBool useDocumentFonts =
+    aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
+
   // Check to honor the pref("browser.display.use_document_fonts", 0)
   // Only include fonts from CSS if the pref to disallow authors' fonts isn't set
   if (useDocumentFonts) {
