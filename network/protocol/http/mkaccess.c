@@ -3218,7 +3218,7 @@ NET_AskForProxyAuth(MWContext * context,
 
 
 #if defined(CookieManagement)
-#include "/mozilla/lib/htmldlgs/htmldlgs.h" /* why is full pathname needed? */
+#include "htmldlgs.h"
 extern int XP_EMPTY_STRINGS;
 extern int SA_VIEW_BUTTON_LABEL;
 extern int SA_REMOVE_BUTTON_LABEL;
