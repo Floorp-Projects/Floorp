@@ -52,21 +52,6 @@ public class NativeJavaArray extends NativeJavaObject {
         this.array = array;
         this.length = Array.getLength(array);
         this.cls = cl.getComponentType();
-        setPrototype(ScriptableObject.getClassPrototype(scope, "Array"));
-    }
-
-    /**
-     * Returns the prototype of the object.
-     */
-    public Scriptable getPrototype() {
-        return prototype;
-    }
-
-    /**
-     * Sets the prototype of the object.
-     */
-    public void setPrototype(Scriptable m) {
-        prototype = m;
     }
 
     public boolean has(String id, Scriptable start) {
@@ -128,6 +113,15 @@ public class NativeJavaArray extends NativeJavaObject {
             return false;
         Object instance = ((NativeJavaObject)value).unwrap();
         return cls.isInstance(instance);
+    }
+
+    public Scriptable getPrototype() {
+        if (prototype == null) {
+            prototype = 
+                ScriptableObject.getClassPrototype(this.getParentScope(),
+                                                   "Array");
+        }
+        return prototype;
     }
 
     Object array;

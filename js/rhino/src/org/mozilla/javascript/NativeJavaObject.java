@@ -34,8 +34,11 @@ import java.util.Enumeration;
  */
 
 public class NativeJavaObject implements Scriptable, Wrapper {
-    
-    public NativeJavaObject(Object javaObject, JavaMembers members) {
+
+    public NativeJavaObject(Scriptable scope, Object javaObject, 
+                            JavaMembers members) 
+    {
+        this.parent = scope;
         this.javaObject = javaObject;
         this.members = members;
     }
@@ -43,6 +46,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     public NativeJavaObject(Scriptable scope, Object javaObject, 
                             Class staticType) 
     {
+        this.parent = scope;
         this.javaObject = javaObject;
         Class dynamicType = javaObject != null ? javaObject.getClass()
             : staticType;
@@ -93,17 +97,27 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     }
     
     public Scriptable getPrototype() {
+        if (javaObject.getClass() == ScriptRuntime.StringClass) {
+            return ScriptableObject.getClassPrototype(parent, "String");
+        }
         return null;
     }
 
     public void setPrototype(Scriptable prototype) {
     }
 
+    /**
+     * Returns the parent (enclosing) scope of the object.
+     */
     public Scriptable getParentScope() {
-        return null;
+        return parent;
     }
 
-    public void setParentScope(Scriptable parent) {
+    /**
+     * Sets the parent (enclosing) scope of the object.
+     */
+    public void setParentScope(Scriptable m) {
+        parent = m;
     }
 
     public Object[] getIds() {
@@ -550,12 +564,16 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         }
     }
         
+    /**
+     * The parent scope of this object.
+     */
+    protected Scriptable parent;
+
     protected Object javaObject;
     protected JavaMembers members;
     private Hashtable fieldAndMethods;
     static Class jsObjectClass;
     static Constructor jsObjectCtor;
     static Method jsObjectGetScriptable;
-
 }
 

@@ -40,7 +40,7 @@ import java.util.Hashtable;
 public class NativeJavaClass extends NativeJavaObject implements Function {
 
     public NativeJavaClass(Scriptable scope, Class cl) {
-        super(cl, JavaMembers.lookupClass(scope, cl, cl));
+        super(scope, cl, JavaMembers.lookupClass(scope, cl, cl));
         fieldAndMethods = members.getFieldAndMethodsObjects(javaObject, false);
     }
 
@@ -236,21 +236,6 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         return false;
     }
 
-    public Scriptable getParentScope() {
-        return parent;
-    }
-
-    public void setParentScope(Scriptable scope) {
-        // beard:
-        // need at least the top-most scope, so JavaMembers.reflectMethod()
-        // will work. this fixes a bug where a static field of a class would get
-        // reflected by JavaMembers.reflect() in the scope of a NativeJavaClass,
-        // and calls to ScriptableObject.getFunctionPrototype() would return
-        // null because there was no top-level scope with "Function" defined.
-        // question: should the package hierarchy form the scope chain or is top-level sufficient?
-        parent = scope;
-    }
-    
     private Hashtable fieldAndMethods;
 
     // beard: need a scope for finding top-level prototypes.
