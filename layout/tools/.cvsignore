@@ -7,3 +7,4 @@ nsCSSPropIDs.h
 nsCSSKeywordIDs.h
 nsColorNameIDs.h
 nsHTMLTagIDs.h
+Makefile

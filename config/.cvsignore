@@ -4,3 +4,4 @@ revdepth
 myconfig.mk
 myrules.mk
 motif.mk
+Makefile
