@@ -473,6 +473,9 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 %: %.sh
 	rm -f $@; cp $< $@; chmod +x $@
 
+%.h: %.idl
+	$(IDL_COMPILE) -h -w -I $(DIST)/idl $<
+
 ifdef DIRS
 $(DIRS)::
 	@if test -d $@; then				\
@@ -735,6 +738,18 @@ export:: $(EXPORTS) $(XPDIST)/include$(INCL_SUBDIR)
 endif
 
 ################################################################################
+
+
+ifneq ($(IDLSRCS),)
+$(XPDIST)/idl$(INCL_SUBDIR)::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
+
+export:: $(IDLSRCS) $(XPDIST)/idl$(INCL_SUBDIR)
+	$(INSTALL) -m 444 $^
+
+endif
+
+##############################################################################
 
 
 ifdef USE_AUTOCONF
