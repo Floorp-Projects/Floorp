@@ -135,6 +135,21 @@ nsBaseDragService :: GetSourceDocument ( nsIDOMDocument** aSourceDocument )
   return NS_OK;
 }
 
+//
+// GetSourceNode
+//
+// Returns the DOM node where the drag was initiated. This will be
+// nsnull if the drag began outside of our application.
+//
+NS_IMETHODIMP
+nsBaseDragService :: GetSourceNode ( nsIDOMNode** aSourceNode )
+{
+  *aSourceNode = mSourceNode.get();
+  NS_IF_ADDREF ( *aSourceNode );
+  
+  return NS_OK;
+}
+
 
 //-------------------------------------------------------------------------
 
@@ -157,7 +172,8 @@ NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISup
   if ( aDOMNode ) {
     // stash the document of the dom node
     aDOMNode->GetOwnerDocument ( getter_AddRefs(mSourceDocument) );
-
+    mSourceNode = aDOMNode;
+    
     // When the mouse goes down, the selection code starts a mouse capture. However,
     // this gets in the way of determining drag feedback for things like trees because
     // the event coordinates are in the wrong coord system. Turn off capture by 

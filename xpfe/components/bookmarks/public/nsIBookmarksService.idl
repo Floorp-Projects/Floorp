@@ -45,6 +45,9 @@ interface nsIBookmarksService : nsISupports
     void AddBookmarkToFolder(in string aURI, in nsIRDFResource aFolder, 
                              in wstring aTitle, in wstring docCharSet);
 
+    void insertBookmarkInFolder(in string aURI, in wstring aTitle, in wstring docCharSet, 
+                                in nsIRDFResource aFolder, in long aIndex);
+
     void UpdateBookmarkLastVisitedDate(in string aURL, in wstring docCharset);
     
     string FindShortcut(in wstring aName);

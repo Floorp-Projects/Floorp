@@ -396,7 +396,8 @@ public:
 			     const char*      aShortcutURL,
 			     nsIRDFResource*  aNodeType,
 			     nsIRDFResource** bookmarkNode,
-           const PRUnichar* aCharset);
+           const PRUnichar* aCharset,
+           PRInt32          aIndex);
 
 	nsresult SetIEFavoritesRoot(const char *IEFavoritesRootURL)
 	{
@@ -1366,7 +1367,8 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
                             const char*      aShortcutURL,
                             nsIRDFResource*  aNodeType,
                             nsIRDFResource** bookmarkNode,
-                            const PRUnichar* aCharset)
+                            const PRUnichar* aCharset,
+                            PRInt32          aIndex)
 {
 	nsresult	rv;
 	nsAutoString	fullURL;
@@ -1464,7 +1466,10 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 	}
 
 	// The last thing we do is add the bookmark to the container. This ensures the minimal amount of reflow.
-	rv = aContainer->AppendElement(bookmark);
+  if (aIndex < 0)
+  	rv = aContainer->AppendElement(bookmark);
+  else
+    rv = aContainer->InsertElementAt(bookmark, aIndex, PR_TRUE);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
 	return(rv);
 }
@@ -2482,6 +2487,17 @@ nsBookmarksService::AddBookmarkToFolder(const char *aURI,
                                         const PRUnichar* aTitle,
                                         const PRUnichar *aCharset)
 {
+  return InsertBookmarkInFolder(aURI, aTitle, aCharset, aFolder, -1);
+}
+
+
+NS_IMETHODIMP
+nsBookmarksService::InsertBookmarkInFolder(const char *aURI,
+                                           const PRUnichar* aTitle,
+                                           const PRUnichar *aCharset,
+                                           nsIRDFResource *aFolder,
+                                           PRInt32 aIndex)
+{
 	// XXX Constructing a parser object to do this is bad.
 	// We need to factor AddBookmark() into its own little
 	// routine or something.
@@ -2510,7 +2526,7 @@ nsBookmarksService::AddBookmarkToFolder(const char *aURI,
 	LL_L2I(now32, now64);
 
 	rv = parser.AddBookmark(container, aURI, aTitle, now32,
-				0L, 0L, nsnull, kNC_Bookmark, nsnull, aCharset);
+				0L, 0L, nsnull, kNC_Bookmark, nsnull, aCharset, aIndex);
 
 	if (NS_FAILED(rv)) return rv;
 
@@ -4345,7 +4361,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 						}
 					}
 				}
-
+        
 				strm << indentation;
 				strm << "    ";
 				if (isContainer == PR_TRUE)

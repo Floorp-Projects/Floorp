@@ -64,9 +64,9 @@ protected:
   nsSize             mTargetSize;
   PRUint32           mDragAction;  
   nsCOMPtr<nsIDragTracker> mCurrentlyTracking;
+  nsCOMPtr<nsIDOMNode> mSourceNode;
   nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
                                                   //  if it came from outside the app.
-
 };
 
 #endif // nsBaseDragService_h__
