@@ -121,7 +121,7 @@ nsContextMenu.prototype = {
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
-        this.showItem( "context-viewpartialsource-selection", this.isTextSelected );
+        this.showItem( "context-viewpartialsource-selection", this.isTextSelected && !this.onTextInput );
         this.showItem( "context-viewpartialsource-mathml", this.onMathML && !this.isTextSelected );
         this.showItem( "context-viewsource", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
         this.showItem( "context-viewinfo", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
@@ -149,7 +149,7 @@ nsContextMenu.prototype = {
         // Use "Bookmark This Link" if on a link.
         this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput ) );
         this.showItem( "context-bookmarklink", this.onLink && !this.onMailtoLink );
-        this.showItem( "context-searchselect", this.isTextSelected );
+        this.showItem( "context-searchselect", this.isTextSelected && !this.onTextInput );
         this.showItem( "frame", this.inFrame );
         this.showItem( "frame-sep", this.inFrame );
         var blocking = true;
@@ -175,15 +175,19 @@ nsContextMenu.prototype = {
 
         goUpdateGlobalEditMenuItems();
 
-        this.showItem( "context-undo", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-sep-undo", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-cut", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-copy", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-paste", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-delete", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-sep-paste", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-selectall", this.isTextSelected || this.onTextInput );
-        this.showItem( "context-sep-selectall", this.isTextSelected );
+        this.showItem( "context-undo", this.onTextInput );
+        this.showItem( "context-redo", this.onTextInput );
+        this.showItem( "context-sep-undo", this.onTextInput );
+        this.showItem( "context-cut", this.onTextInput );
+        this.showItem( "context-copy", true );
+        this.showItem( "context-paste", this.onTextInput );
+        this.showItem( "context-delete", this.onTextInput );
+        this.showItem( "context-sep-paste", this.onTextInput );
+        this.showItem( "context-selectall", true );
+        this.showItem( "context-sep-selectall", this.isTextSelected && !this.onTextInput );
+        // In a text area there will be nothing after select all, so we don't want a sep
+        // Otherwise, if there's text selected then there are extra menu items
+        // (search for selection and view selection source), so we do want a sep
 
         // XXX dr
         // ------
@@ -835,7 +839,6 @@ nsContextMenu.prototype = {
                 (attrib != "RADIO") &&
                 (attrib != "SUBMIT") &&
                 (attrib != "RESET") &&
-                (attrib != "FILE") &&
                 (attrib != "HIDDEN") &&
                 (attrib != "RESET") &&
                 (attrib != "BUTTON") );

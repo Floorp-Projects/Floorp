@@ -115,6 +115,7 @@
       <xul:menupopup onpopupshowing="this.parentNode.firstChild.focus(); this.parentNode.doPopupItemEnabling(this);"
                      oncommand="this.parentNode.doCommand(event.originalTarget.getAttribute('cmd'));">
         <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
+        <xul:menuitem label="&redoCmd.label;" accesskey="&redoCmd.accesskey;" cmd="cmd_redo"/>
         <xul:menuseparator/>
         <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
         <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>

@@ -6,6 +6,8 @@
 <!ENTITY pasteCmd.accesskey "p">
 <!ENTITY undoCmd.label "Undo">
 <!ENTITY undoCmd.accesskey "u">
+<!ENTITY redoCmd.label "Redo">
+<!ENTITY redoCmd.accesskey "r">
 <!ENTITY selectAllCmd.label "Select All">
 <!ENTITY selectAllCmd.accesskey "a">
 <!ENTITY deleteCmd.label "Delete">
