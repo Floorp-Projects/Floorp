@@ -520,57 +520,32 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 
 	if (mFontMetrics)
 	{
-		nsString nstr(aFont.name);
-		nstr.Truncate(254);
-		Str255 aStr;
-		aStr[0] = nstr.Length();
-		nstr.ToCString((char*)&aStr[1], 254);
-		short fnum;
-		::GetFNum(aStr, &fnum);
-
-		if (fnum == 0)
-		{
-			StringPtr macfont = "\phelvetica";
-			if (nstr.EqualsIgnoreCase("Times Roman")) {
-				macfont = "\ptimes";
-			}
-			if (nstr.EqualsIgnoreCase("Times New Roman")) {
-				macfont = "\ptimes";
-			}
-			if (nstr.EqualsIgnoreCase("Unicode")) {
-				macfont = "\ptimes";	// "Bitstream Cyberbit";
-			}
-			if (nstr.EqualsIgnoreCase("Courier New")) {
-				macfont = "\pcourier";
-			}
-			if (nstr.EqualsIgnoreCase("Arial")) {
-				macfont = "\phelvetica";
-			}
-
-			  // the CSS generic names
-			if (nstr.EqualsIgnoreCase("serif")) {
-				macfont = "\ptimes";
-			}
-			if (nstr.EqualsIgnoreCase("sans-serif")) {
-				macfont = "\phelvetica";
-			}
-			if (nstr.EqualsIgnoreCase("cursive")) {
-			//    return "XXX";
-			}
-			if (nstr.EqualsIgnoreCase("fantasy")) {
-			//    return "XXX";
-			}
-			if (nstr.EqualsIgnoreCase("monospace")) {
-				macfont = "\pcourier";
-			}
-    		::GetFNum(macfont, &fnum);
-		}
-		::TextFont(fnum);
-
+		short fontNum;
+		nsDeviceContextMac::GetMacFontNumber(aFont.name, fontNum);
+		::TextFont(fontNum);
 
 		float  dev2app;
 		mContext->GetDevUnitsToAppUnits(dev2app);
 		::TextSize(aFont.size / dev2app);
+
+		Style textFace = normal;
+		switch (aFont.style)
+		{
+			case NS_FONT_STYLE_NORMAL: 								break;
+			case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
+			case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
+		}
+		switch (aFont.variant)
+		{
+			case NS_FONT_VARIANT_NORMAL: 							break;
+			case NS_FONT_VARIANT_SMALL_CAPS: textFace |= condense;	break;	//XXX
+		}
+		switch (aFont.weight)
+		{
+			case NS_FONT_WEIGHT_NORMAL: 							break;
+			case NS_FONT_WEIGHT_BOLD:		textFace |= bold;		break;
+		}
+		::TextFace(textFace);
 	}
 }
 
@@ -970,9 +945,15 @@ PRInt32 y = aY;
 		}
   mTMatrix->TransformCoord(&x, &y);
 
+	nsString nsStr;
+	char * cStr = new char[aLength+1];
+	nsStr.SetString(aString, aLength);
+	nsStr.ToCString(cStr, aLength+1);
 
-	::MoveTo(x,y);
-	::DrawText(aString,0,2*aLength);
+		::MoveTo(x,y);
+		::DrawText(cStr, 0, aLength);
+
+	delete[] cStr;
 
   if (mFontMetrics)
   {
@@ -989,8 +970,6 @@ PRInt32 y = aY;
       nscoord descent = 0;
       mFontMetrics->GetMaxDescent(ascent);
       mFontMetrics->GetMaxAscent(descent);
-
-
 
       DrawLine(aX, aY + ascent + (descent >> 1),
                aX + aWidth, aY + ascent + (descent >> 1));
