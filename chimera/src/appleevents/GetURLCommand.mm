@@ -24,11 +24,34 @@
 #import "CHGetURLCommand.h"
 #import <AppKit/AppKit.h>
 
+#import "BrowserWindowController.h"
+
+#include "nsIPref.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManagerUtils.h"
+
 @implementation CHGetURLCommand
 
-- (id)performDefaultImplementation {
-  id controller = [[NSApp delegate] openBrowserWindowWithURLString: [self directParameter]];
+- (id)performDefaultImplementation 
+{
+  // get the pref that specifies if we want to re-use the existing window or
+  // open a new one. There's really no point caching this pref.
+  PRBool reuseWindow = PR_FALSE;
+  nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
+  if ( prefService )
+    prefService->GetBoolPref("browser.always_reuse_window", &reuseWindow);
+  
+  BrowserWindowController* controller = nsnull;
+  if ( reuseWindow ) {
+    controller = [[NSApp mainWindow] windowController];
+    [controller loadURLString:[self directParameter]];
+    [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
+  }
+  else
+    controller = [[NSApp delegate] openBrowserWindowWithURLString: [self directParameter]];
+
   [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
   return nil;
 }
+
 @end
