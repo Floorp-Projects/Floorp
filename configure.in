@@ -895,7 +895,7 @@ Makefile
 base/Makefile
 base/public/Makefile
 base/src/Makefile
-base/src/unix/Makefile
+base/src/motif/Makefile
 base/src/gtk/Makefile
 base/tests/Makefile
 caps/Makefile
