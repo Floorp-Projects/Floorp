@@ -450,7 +450,7 @@ enum {
     // from the UI, this download is still going so close if we're the only one left
     if (![[PreferenceManager sharedInstance] getBooleanPref:"browser.download.progressDnldDialog.keepAlive" withSuccess:&gotPref] &&
         ([mProgressWindowController numDownloadsInProgress] == 1)) {
-      [mProgressWindowController close];
+      [[mProgressWindowController window] performClose:self];
     }
   }
   
