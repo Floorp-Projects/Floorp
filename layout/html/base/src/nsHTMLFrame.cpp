@@ -256,17 +256,20 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
           kidDesiredSize.height = yMost;
         }
       }
-    
+
+      // If our height is fixed, then make sure the child frame plus its top and
+      // bottom margin is at least that high as well...
+      if (NS_AUTOHEIGHT != aReflowState.computedHeight) {
+        nscoord totalHeight = kidDesiredSize.height + kidReflowState.computedMargin.top +
+          kidReflowState.computedMargin.bottom;
+
+        if (totalHeight < aReflowState.computedHeight) {
+          kidDesiredSize.height += aReflowState.computedHeight - totalHeight;
+        }
+      }
       nsRect  rect(kidReflowState.computedMargin.left, kidReflowState.computedMargin.top,
                    kidDesiredSize.width, kidDesiredSize.height);
       kidFrame->SetRect(rect);
-
-      // XXX TROY
-#if 0
-      // XXX We should resolve the details of who/when DidReflow()
-      // notifications are sent...
-      htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
-#endif
     }
 
     // If this is a resize reflow then do a repaint
