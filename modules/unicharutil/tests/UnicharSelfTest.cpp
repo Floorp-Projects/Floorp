@@ -24,7 +24,7 @@
 NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 
-#define UNICHARUTIL_DLL_NAME "unicharutilDebug.shlib"
+#define UNICHARUTIL_DLL_NAME "UNICHARUTIL_DLL"
 
 #define TESTLEN 29
 #define T2LEN TESTLEN
@@ -365,8 +365,8 @@ int main(int argc, char** argv) {
 
    // --------------------------------------------
    cout << "Finish All The Test Cases\n";
-   nsresult res;
-   res = nsRepository::FreeLibraries();
+   nsresult res = NS_OK;
+//   res = nsRepository::FreeLibraries();
 
    if(NS_OK != res)
       cout << "nsRepository failed\n";
