@@ -43,7 +43,7 @@
 #endif
 
 #define VIEW_SOURCE_HTML
-// #define VIEW_SOURCE_COLORING
+//#define VIEW_SOURCE_COLORING
 
 #include "nsIDTDDebug.h"
 #include "nsViewSourceHTML.h"
@@ -87,7 +87,7 @@ static int gErrorThreshold = 10;
 #endif
 
 #ifdef VIEW_SOURCE_HTML
-static const char* kPreStyle = "font-family: monospace; font-weight:normal; color:black; font-size:10pt; padding-top:8px; margin-left:8px;";
+static const char* kPreStyle = "font-family: monospace; font-weight:normal; color:black; padding-top:4px; margin-left:4px;";
 #endif // VIEW_SOURCE_HTML
 
 /**
