@@ -49,14 +49,14 @@ static HINSTANCE g_hInst = NULL;
 ** Define TIMEBOMB_ON for beta builds.
 ** Undef TIMEBOMB_ON for release builds.
 */
-/* #define TIMEBOMB_ON */
-#undef TIMEBOMB_ON  
+#define TIMEBOMB_ON
+/* #undef TIMEBOMB_ON */
 /*
 ** After this date all hell breaks loose
 */
 #ifdef TIMEBOMB_ON
-#define TIME_BOMB_TIME          888739203       /* 3/01/98 + 3 secs */
-#define TIME_BOMB_WARNING_TIME  857203203       /* 3/01/97 + 3 secs */
+#define TIME_BOMB_TIME          917856001	/* 2/01/98 + 1 secs */
+#define TIME_BOMB_WARNING_TIME  915955201	/* 1/10/98 + 1 secs */
 #else
 #define TIME_BOMB_TIME          -1
 #define TIME_BOMB_WARNING_TIME  -1
