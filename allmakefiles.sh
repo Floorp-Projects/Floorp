@@ -951,13 +951,6 @@ extensions/sql/sqltest/Makefile
 extensions/sql/tests/Makefile
 "
 
-
-if [ "$MACOSX" ]; then
-    MAKEFILES_macmorefiles="
-       lib/mac/MoreFiles/Makefile
-"
-fi
-
 if [ "$MOZ_MAIL_NEWS" ]; then
     if [ -f ${srcdir}/mailnews/makefiles ]; then
         MAKEFILES_mailnews=`cat ${srcdir}/mailnews/makefiles`
