@@ -126,6 +126,8 @@ static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 static const PRIntervalTime kImapSleepTime = PR_MillisecondsToInterval(1000);
 static PRInt32 gPromoteNoopToCheckCount = 0;
 nsXPIDLString nsImapProtocol::mAcceptLanguages;
+static PRInt32 kFlagChangesBeforeCheck = 10;
+static PRInt32 kMaxSecondsBeforeCheck = 600;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgImapHdrXferInfo, nsIImapHeaderXferInfo)
 
@@ -401,10 +403,11 @@ nsImapProtocol::nsImapProtocol() :
   m_closeNeededBeforeSelect = PR_FALSE;
   m_needNoop = PR_FALSE;
   m_noopCount = 0;
-  m_promoteNoopToCheckCount = 0;
   m_mailToFetch = PR_FALSE;
   m_fetchMsgListIsNew = PR_FALSE;
   m_fetchBodyListIsNew = PR_FALSE;
+  m_flagChangeCount = 0;
+  m_lastCheckTime = PR_Now();
 
   m_checkForNewMailDownloadsHeaders = PR_TRUE;  // this should be on by default
   m_hierarchyNameState = kNoOperationInProgress;
@@ -1900,7 +1903,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
         if (m_needNoop)
         {
           m_noopCount++;
-          if (gPromoteNoopToCheckCount > 0 && (m_noopCount % gPromoteNoopToCheckCount) == 0)
+          if ((gPromoteNoopToCheckCount > 0 && (m_noopCount % gPromoteNoopToCheckCount) == 0) ||
+              CheckNeeded())
             Check();
           else
             Noop(); // I think this is needed when we're using a cached connection
@@ -2258,17 +2262,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 
           ProcessStoreFlags(messageIdString, bMessageIdsAreUids,
                             msgFlags, PR_TRUE);
-        
-              /*
-              if ( !DeathSignalReceived() &&
-                  GetServerStateParser().Connected() &&
-                   !GetServerStateParser().SyntaxError())
-              {
-                  //if (msgFlags & kImapMsgDeletedFlag)
-                  //    Expunge();      // expunge messages with deleted flag
-                  Check();        // flush servers flag state
-              }
-              */
         }
         break;
       case nsIImapUrl::nsImapSubtractMsgFlags:
@@ -2278,7 +2271,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
               
           ProcessStoreFlags(messageIdString, bMessageIdsAreUids,
                             msgFlags, PR_FALSE);
-            
         }
         break;
       case nsIImapUrl::nsImapSetMsgFlags:
@@ -2733,6 +2725,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
     
     switch (whatToFetch) {
         case kEveryThingRFC822:
+          m_flagChangeCount++;
           GetServerStateParser().SetFetchingEverythingRFC822(PR_TRUE);
           if (m_trackingTime)
             AdjustChunkSize();      // we started another segment
@@ -2761,10 +2754,10 @@ nsImapProtocol::FetchMessage(const char * messageIds,
               commandString.Append(byterangeString);
               PR_Free(byterangeString);
             }
-           }
-           commandString.Append(")");
+          }
+          commandString.Append(")");
 
-           break;
+          break;
 
         case kEveryThingRFC822Peek:
           {
@@ -2902,8 +2895,8 @@ nsImapProtocol::FetchMessage(const char * messageIds,
     (part ? PL_strlen(part) : 0);
   char *protocolString = (char *) PR_CALLOC( protocolStringSize );
     
-    if (protocolString)
-    {
+  if (protocolString)
+  {
     char *cCommandStr = ToNewCString(commandString);
     if ((whatToFetch == kMIMEPart) ||
       (whatToFetch == kMIMEHeader))
@@ -2932,9 +2925,11 @@ nsImapProtocol::FetchMessage(const char * messageIds,
     PR_Free(protocolString);
     GetServerStateParser().SetFetchingFlags(PR_FALSE);
     GetServerStateParser().SetFetchingEverythingRFC822(PR_FALSE); // always clear this flag after every fetch....
-    }
-    else
-        HandleMemoryFailure();
+    if (GetServerStateParser().LastCommandSuccessful() && CheckNeeded())
+      Check();
+  }
+  else
+    HandleMemoryFailure();
 }
 
 void nsImapProtocol::FetchTryChunking(const char * messageIds,
@@ -4529,7 +4524,12 @@ nsImapProtocol::Store(const char * messageList, const char * messageData,
       
     nsresult rv = SendData(protocolString);
     if (NS_SUCCEEDED(rv))
+    {
+      m_flagChangeCount++;
       ParseIMAPandCheckForNewMail(protocolString);
+      if (GetServerStateParser().LastCommandSuccessful() && CheckNeeded())
+        Check();
+    }
     PR_Free(protocolString);
   }
   else
@@ -7048,6 +7048,7 @@ void nsImapProtocol::XAOL_Option(const char *option)
 void nsImapProtocol::Check()
 {
     //ProgressUpdateEvent("Checking mailbox...");
+
     IncrementCommandTagNumber();
     
   nsCString command(GetServerCommandTag());
@@ -7055,7 +7056,11 @@ void nsImapProtocol::Check()
             
     nsresult rv = SendData(command.get());
     if (NS_SUCCEEDED(rv))
+    {
+        m_flagChangeCount = 0;
+        m_lastCheckTime = PR_Now();
         ParseIMAPandCheckForNewMail();
+    }
 }
 
 nsresult nsImapProtocol::GetMsgWindow(nsIMsgWindow **aMsgWindow)
@@ -7256,6 +7261,20 @@ NS_IMETHODIMP nsImapProtocol::OverrideConnectionInfo(const PRUnichar *pHost, PRU
 	m_logonCookie = pCookieData;
 	m_overRideUrlConnectionInfo = PR_TRUE;
 	return NS_OK;
+}
+
+PRBool nsImapProtocol::CheckNeeded()
+{
+  if (m_flagChangeCount >= kFlagChangesBeforeCheck)
+    return PR_TRUE;
+
+  PRTime deltaTime;
+  PRInt32 deltaInSeconds;
+    
+  LL_SUB(deltaTime, PR_Now(), m_lastCheckTime);
+  PRTime2Seconds(deltaTime, &deltaInSeconds);
+    
+  return (deltaInSeconds >= kMaxSecondsBeforeCheck);
 }
 
 nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter)
@@ -8072,4 +8091,3 @@ nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
   
   return NS_OK;
 }
-

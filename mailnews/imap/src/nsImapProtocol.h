@@ -639,7 +639,6 @@ private:
 	PRBool m_checkForNewMailDownloadsHeaders;
 	PRBool m_needNoop;
 	PRInt32 m_noopCount;
-	PRInt32 m_promoteNoopToCheckCount;
   PRBool  m_autoSubscribe, m_autoUnsubscribe, m_autoSubscribeOnOpen;
   PRBool m_closeNeededBeforeSelect;
     enum EMailboxHierarchyNameState {
@@ -656,6 +655,10 @@ private:
   EMailboxDiscoverStatus m_discoveryStatus;
   nsVoidArray m_listedMailboxList;
   nsVoidArray* m_deletableChildren;
+  PRUint32 m_flagChangeCount;
+  PRTime m_lastCheckTime;
+
+  PRBool CheckNeeded();
 };
 
 // This small class is a "mock" channel because it is a mockery of the imap channel's implementation...
