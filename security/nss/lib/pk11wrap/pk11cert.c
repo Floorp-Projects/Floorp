@@ -1566,6 +1566,20 @@ PK11_ImportCertForKey(CERTCertificate *cert, char *nickname,void *wincx) {
     return slot;
 }
 
+PK11SlotInfo *
+PK11_ImportDERCertForKey(SECItem *derCert, char *nickname,void *wincx) {
+    CERTCertificate *cert;
+    PK11SlotInfo *slot = NULL;
+
+    cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), derCert, NULL,
+	                                   PR_FALSE, PR_TRUE);
+    if (cert == NULL) return NULL;
+
+    slot = PK11_ImportCertForKey(cert, nickname, wincx);
+    CERT_DestroyCertificate (cert);
+    return slot;
+}
+
 static CK_OBJECT_HANDLE
 pk11_FindCertObjectByTemplate(PK11SlotInfo **slotPtr, 
 		CK_ATTRIBUTE *searchTemplate, int count, void *wincx) {
