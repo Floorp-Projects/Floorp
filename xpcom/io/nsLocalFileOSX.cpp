@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsLocalFileOSX.h"
+#include "nsLocalFile.h"
 
 #include "nsString.h"
 #include "nsReadableUtils.h"

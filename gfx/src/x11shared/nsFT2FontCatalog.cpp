@@ -54,7 +54,7 @@ PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
 #include <sys/time.h>
 #include <dirent.h>
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsLocalFileUnix.h"
+#include "nsLocalFile.h"
 #include "nsIEnumerator.h"
 #include "nsITimelineService.h"
 

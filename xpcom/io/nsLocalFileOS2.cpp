@@ -27,7 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 
-#include "nsLocalFileOS2.h"
+#include "nsLocalFile.h"
 #include "nsNativeCharsetUtils.h"
 
 #include "nsISimpleEnumerator.h"
@@ -1075,14 +1075,14 @@ nsLocalFile::Remove(PRBool recursive)
             }
         }
 #ifdef XP_OS2_VACPP
-        rv = rmdir((char *) filePath);  // todo: save return value?
+        rv = rmdir((char *) filePath) == -1 ? NSRESULT_FOR_ERRNO() : NS_OK;
 #else
-        rv = rmdir(filePath);  // todo: save return value?
+        rv = rmdir(filePath) == -1 ? NSRESULT_FOR_ERRNO() : NS_OK;
 #endif
     }
     else
     {
-        rv = remove(filePath); // todo: save return value?
+        rv = remove(filePath) == -1 ? NSRESULT_FOR_ERRNO() : NS_OK;
     }
     
     MakeDirty();

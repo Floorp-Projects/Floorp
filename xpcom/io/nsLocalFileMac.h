@@ -30,10 +30,8 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
-#include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIFactory.h"
-#include "nsLocalFile.h"
 
 #include <Processes.h>
 

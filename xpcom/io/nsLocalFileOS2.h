@@ -37,9 +37,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
-#include "nsILocalFile.h"
 #include "nsIFactory.h"
-#include "nsLocalFile.h"
 
 #define INCL_DOSFILEMGR
 #define INCL_DOSERRORS
@@ -52,6 +50,10 @@
 #define INCL_WINWORKPLACE
 
 #include <os2.h>
+
+#ifdef XP_OS2_VACPP
+#define ENOTDIR EBADPOS
+#endif
 
 class NS_COM nsLocalFile : public nsILocalFile
 {

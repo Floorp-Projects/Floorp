@@ -30,9 +30,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
-#include "nsILocalFile.h"
 #include "nsIFactory.h"
-#include "nsLocalFile.h"
 
 #include "windows.h"
 

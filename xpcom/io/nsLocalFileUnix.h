@@ -32,11 +32,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <errno.h>
-
 #include "nscore.h"
-#include "nsILocalFile.h"
-#include "nsLocalFile.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
@@ -67,34 +63,6 @@
     #include <sys/param.h>
     #include <sys/mount.h>
 #endif
-
-#define NSRESULT_FOR_RETURN(ret) (((ret) < 0) ? NSRESULT_FOR_ERRNO() : NS_OK)
-
-inline nsresult
-nsresultForErrno(int err)
-{
-    switch (err) {
-      case 0:
-        return NS_OK;
-      case ENOENT:
-        return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
-      case ENOTDIR:
-        return NS_ERROR_FILE_DESTINATION_NOT_DIR;
-#ifdef ENOLINK
-      case ENOLINK:
-        return NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
-#endif /* ENOLINK */
-      case EEXIST:
-        return NS_ERROR_FILE_ALREADY_EXISTS;
-      case EPERM:
-      case EACCES:
-        return NS_ERROR_FILE_ACCESS_DENIED;
-      default:
-        return NS_ERROR_FAILURE;
-    }
-}
-
-#define NSRESULT_FOR_ERRNO() nsresultForErrno(errno)
 
 class NS_COM nsLocalFile : public nsILocalFile
 {

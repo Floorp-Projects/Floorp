@@ -49,6 +49,10 @@
 // nsXPComInit needs to know about how we are implemented,
 // so here we will export it.  Other users should not depend
 // on this.
+
+#include <errno.h>
+#include "nsILocalFile.h"
+
 #ifdef XP_WIN
 #include "nsLocalFileWin.h"
 #elif defined(XP_MACOSX)
@@ -62,6 +66,36 @@
 #else
 #error NOT_IMPLEMENTED
 #endif
+
+#define NSRESULT_FOR_RETURN(ret) (((ret) < 0) ? NSRESULT_FOR_ERRNO() : NS_OK)
+
+inline nsresult
+nsresultForErrno(int err)
+{
+    switch (err) {
+      case 0:
+        return NS_OK;
+      case ENOENT:
+        return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
+      case ENOTDIR:
+        return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+#ifdef ENOLINK
+      case ENOLINK:
+        return NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+#endif /* ENOLINK */
+      case EEXIST:
+        return NS_ERROR_FILE_ALREADY_EXISTS;
+#ifdef EPERM
+      case EPERM:
+#endif /* EPERM */
+      case EACCES:
+        return NS_ERROR_FILE_ACCESS_DENIED;
+      default:
+        return NS_ERROR_FAILURE;
+    }
+}
+
+#define NSRESULT_FOR_ERRNO() nsresultForErrno(errno)
 
 void NS_StartupLocalFile();
 void NS_ShutdownLocalFile();
