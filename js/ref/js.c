@@ -62,6 +62,28 @@
 
 #ifdef XP_MAC
 #define isatty(f) 1
+
+#include <SIOUX.h>
+#include <MacTypes.h>
+
+static char* mac_argv[] = { "js", NULL };
+
+static void initConsole(StringPtr consoleName, const char* startupMessage, int *argc, char** *argv)
+{
+	SIOUXSettings.autocloseonquit = true;
+	SIOUXSettings.asktosaveonclose = false;
+	// SIOUXSettings.initializeTB = false;
+	// SIOUXSettings.showstatusline = true;
+	puts(startupMessage);
+	SIOUXSetTitle(consoleName);
+	
+	// set up a buffer for stderr (otherwise it's a pig).
+	setvbuf(stderr, malloc(BUFSIZ), _IOLBF, BUFSIZ);
+	
+	*argc = 1;
+	*argv = mac_argv;
+}
+
 #endif
 
 #ifndef JSFILE
@@ -1239,6 +1261,10 @@ main(int argc, char **argv)
     * so we need to unbuffer then to get a reasonable prompt          */
     setbuf(stdout,0);
     setbuf(stderr,0);
+#endif
+
+#ifdef XP_MAC
+	initConsole("\pJavaScript Shell", "Welcome to js shell.", &argc, &argv);
 #endif
 
     version = JSVERSION_DEFAULT;
