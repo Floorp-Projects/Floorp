@@ -1067,21 +1067,10 @@ nsLocalFile::nsLocalFile() :
         mCreator = sCurrentProcessSignature;
 }
 
-nsLocalFile::nsLocalFile(const nsLocalFile& srcFile) :
-    mFollowLinks(srcFile.mFollowLinks),
-    mFollowLinksDirty(srcFile.mFollowLinksDirty),
-    mSpecDirty(srcFile.mSpecDirty),
-    mSpec(srcFile.mSpec),
-    mAppendedPath(srcFile.mAppendedPath),
-    mTargetSpec(srcFile.mTargetSpec),
-    mCatInfoDirty(srcFile.mCatInfoDirty),
-    mType(srcFile.mType),
-    mCreator(srcFile.mCreator)
+nsLocalFile::nsLocalFile(const nsLocalFile& srcFile)
 {
     NS_INIT_REFCNT();
-
-    if (!mCatInfoDirty)
-        mCachedCatInfo = srcFile.mCachedCatInfo;
+    *this = srcFile;
 }
 
 nsLocalFile::nsLocalFile(const FSSpec& aSpec, const nsACString& aAppendedPath) :
@@ -1103,13 +1092,35 @@ nsLocalFile::nsLocalFile(const FSSpec& aSpec, const nsACString& aAppendedPath) :
         mCreator = sCurrentProcessSignature;
 }
 
+nsLocalFile& nsLocalFile::operator=(const nsLocalFile& rhs)
+{
+    mFollowLinks = rhs.mFollowLinks;
+    mFollowLinksDirty = rhs.mFollowLinksDirty;
+    mSpecDirty = rhs.mSpecDirty;
+    mSpec = rhs.mSpec;
+    mAppendedPath = rhs.mAppendedPath;
+    mTargetSpec = rhs.mTargetSpec;
+    mCatInfoDirty = rhs.mCatInfoDirty;
+    mType = rhs.mType;
+    mCreator = rhs.mCreator;
+
+    if (!rhs.mCatInfoDirty)
+        mCachedCatInfo = rhs.mCachedCatInfo;
+
+    return *this;
+}
+
 nsLocalFile::~nsLocalFile()
 {
 }
 
 #pragma mark -
 #pragma mark [nsISupports interface implementation]
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile, nsILocalFileMac, nsILocalFile, nsIFile)
+
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile,
+                              nsILocalFileMac,
+                              nsILocalFile,
+                              nsIFile)
 
 NS_METHOD
 nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
@@ -1289,6 +1300,17 @@ nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
      rv = InitWithPath(fsStr.get());
 
    return rv;
+}
+
+NS_IMETHODIMP  
+nsLocalFile::InitWithFile(nsILocalFile *aFile)
+{
+    NS_ENSURE_ARG(aFile);
+    nsLocalFile *asLocalFile = dynamic_cast<nsLocalFile*>(aFile);
+    if (!asLocalFile)
+        return NS_ERROR_NO_INTERFACE; // Well, sort of.
+    *this = *asLocalFile;
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
@@ -3104,6 +3126,7 @@ NS_IMETHODIMP nsLocalFile::InitWithFSSpec(const FSSpec *fileSpec)
     mAppendedPath  = "";
     return NS_OK;
 }
+
 
 NS_IMETHODIMP nsLocalFile::InitToAppWithCreatorCode(OSType aAppCreator)
 {

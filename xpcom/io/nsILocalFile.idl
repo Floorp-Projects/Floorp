@@ -33,6 +33,7 @@
 #include "prio.h"
 #include "prlink.h"
 #include <stdio.h>
+#include "nsAString.h"
 %}
 
 [ptr] native PRFileDescStar(PRFileDesc);
@@ -61,6 +62,18 @@ interface nsILocalFile : nsIFile
      */
     void initWithPath([const] in string filePath);
     void initWithUnicodePath([const] in wstring filePath);
+    
+    /**
+     * initWithFile
+     *
+     * Initialize this object with another file
+     *
+     * @param aFile
+     *        the file this becomes equivalent to
+     *
+     */
+    void initWithFile(in nsILocalFile aFile);
+
     
     /**
      * followLinks
@@ -119,6 +132,30 @@ interface nsILocalFile : nsIFile
      * This routine only works on platforms which support this functionality.
      */
     void launch();
+    
+    /**
+     *   getRelativeDescriptor
+     *
+     *   Returns a utf-8 encoded relative file path in an XP format.
+     *   It is therefore not a native path.
+     *
+     *   @param fromFile
+     *          the file from which the descriptor is relative
+     */
+    AUTF8String getRelativeDescriptor(in nsILocalFile fromFile);
+
+
+    /**
+     *   setRelativeDescriptor
+     *
+     *   Initializes the file to the location relative to fromFile using
+     *   a string returned by getRelativeDescriptor.
+     *
+     *   @param fromFile
+     *          the file to which the descriptor is relative
+     */
+    void setRelativeDescriptor(in nsILocalFile fromFile, in AUTF8String relativeDesc);    
+
 };
 
 %{C++
