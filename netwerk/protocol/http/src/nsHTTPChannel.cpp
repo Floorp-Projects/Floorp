@@ -25,6 +25,8 @@
  *   Darin Fisher <darin@netscape.com>
  */
 
+#include <limits.h>
+
 #include "nspr.h"
 #include "prlong.h"
 #include "nsHTTPChannel.h"
