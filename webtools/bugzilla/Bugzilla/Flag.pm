@@ -183,7 +183,7 @@ sub process {
     my @old_summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
-        $summary .= "($flag->{'requestee'}->{'nick'})" if $flag->{'requestee'};
+        $summary .= "($flag->{'requestee'}->{'email'})" if $flag->{'requestee'};
         push(@old_summaries, $summary);
     }
     
@@ -222,7 +222,7 @@ sub process {
     my @new_summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
-        $summary .= "($flag->{'requestee'}->{'nick'})" if $flag->{'requestee'};
+        $summary .= "($flag->{'requestee'}->{'email'})" if $flag->{'requestee'};
         push(@new_summaries, $summary);
     }
 
