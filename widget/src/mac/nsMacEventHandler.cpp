@@ -88,12 +88,11 @@ PRBool	nsMacEventHandler::sMouseInWidgetHit = PR_FALSE;
 
 nsMacEventDispatchHandler	gEventDispatchHandler;
 
-enum { kMouseInvalid = PR_FALSE, kMouseValid = PR_TRUE };
-
 static nsEventStatus HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta,
-                                          PRBool inIsMouseValid, Point inMouseLoc, nsIWidget* inWidget ) ;
+                                          Point inMouseLoc, nsIWidget* inWidget ) ;
 static void ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent, nsMouseEvent* outCMEvent);
 static inline PRBool IsContextMenuKey(const nsKeyEvent& inKeyEvent);
+
 
 #if !TARGET_CARBON
 //
@@ -101,8 +100,8 @@ static inline PRBool IsContextMenuKey(const nsKeyEvent& inKeyEvent);
 //
 // Called from ::TrackControl(), this senses which part of the phantom
 // scrollbar the click from the wheelMouse driver was in and sends
-// the correct NS_MOUSE_SCROLL event into Gecko. We have to tell
-// HandleScrollEvent() to ignore the mouse location because it will
+// the correct NS_MOUSE_SCROLL event into Gecko. We have to retrieve the
+// mouse location from the event dispatcher because it will
 // just be the location of the phantom scrollbar, not actually the real
 // mouse position.
 //
@@ -125,8 +124,9 @@ static pascal void ScrollActionProc(ControlHandle ctrl, ControlPartCode partCode
       	nsIWidget* widget = data->mWidgetToGetEvent ? 
                               data->mWidgetToGetEvent : gEventDispatchHandler.GetActive();
         
-        Point ignore = {0,0};
-        HandleScrollEvent ( kEventMouseWheelAxisY, scrollByLine, delta, kMouseInvalid, ignore, widget );
+        Point thePoint = gEventDispatchHandler.GetGlobalPoint();
+        ::GlobalToLocal(&thePoint);
+        HandleScrollEvent ( kEventMouseWheelAxisY, scrollByLine, delta, thePoint, widget );
       }
       break;
   }
@@ -138,13 +138,12 @@ static pascal void ScrollActionProc(ControlHandle ctrl, ControlPartCode partCode
 // HandleScrollEvent
 //
 // Actually dispatch the mouseWheel scroll event to the appropriate widget. If |inByLine| is false,
-// then scroll by a full page. If |inIgnoreMouse| is true, then we don't use the supplied
-// mouse location, but instead make up our own. This is useful for pre-carbon where the mouse
-// location is not actually available to us because of OS hacks to get scrolling working at all.
+// then scroll by a full page. |inMouseLoc| is in OS local coordinates. We convert it to widget-relative
+// coordinates before sending it into Gecko.
 //
 static nsEventStatus
 HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta,
-                     PRBool inIsMouseValid, Point inMouseLoc, nsIWidget* inWidget )
+                     Point inMouseLoc, nsIWidget* inWidget )
 {
   nsMouseScrollEvent scrollEvent;
   
@@ -153,22 +152,13 @@ HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta
   if ( !inByLine )
     scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
   
-  // we may or may not have a valid mouse location (we will for carbon, we won't for
-  // non-carbon). Deal with that to the best of our ability.
+  // convert window-relative (local) mouse coordinates to widget-relative
+  // coords for Gecko.
   nsPoint mouseLocRelativeToWidget(0,0);
-  if ( inIsMouseValid ) {
-    // convert window-relative (local) mouse coordinates to widget-relative
-    // coords for Gecko.
-    nsPoint widgetOrigin(0, 0);
-    inWidget->ConvertToDeviceCoordinates(widgetOrigin.x, widgetOrigin.y);
-    mouseLocRelativeToWidget.x = inMouseLoc.h - widgetOrigin.x;
-    mouseLocRelativeToWidget.y = inMouseLoc.v - widgetOrigin.y;
-  }
-  else {
-    // the mouse location can't help us, we need to say it's just inside the widget
-    // we're working with
-    mouseLocRelativeToWidget.x = mouseLocRelativeToWidget.y = 10;
-  }
+  nsPoint widgetOrigin(0, 0);
+  inWidget->ConvertToDeviceCoordinates(widgetOrigin.x, widgetOrigin.y);
+  mouseLocRelativeToWidget.x = inMouseLoc.h - widgetOrigin.x;
+  mouseLocRelativeToWidget.y = inMouseLoc.v - widgetOrigin.y;
 		
   scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
   scrollEvent.isShift = PR_FALSE;
@@ -199,6 +189,9 @@ nsMacEventDispatchHandler::nsMacEventDispatchHandler()
 	mActiveWidget	= nsnull;
 	mWidgetHit		= nsnull;
 	mWidgetPointed	= nsnull;
+#if TRACK_MOUSE_LOC
+  mLastGlobalMouseLoc.h = mLastGlobalMouseLoc.v = 0;
+#endif
 }
 
 
@@ -422,6 +415,16 @@ void nsMacEventDispatchHandler::NotifyDelete(void* aDeletedObject)
 		mWidgetPointed = nsnull;
 
 }
+
+
+#if TRACK_MOUSE_LOC
+
+void nsMacEventDispatchHandler::SetGlobalPoint(Point inPoint)
+{
+  mLastGlobalMouseLoc = inPoint;
+}
+
+#endif
 
 
 #pragma mark -
@@ -1435,7 +1438,7 @@ nsMacEventHandler :: Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const
   // number of groups of lines to scroll, not the exact number of lines to scroll.
   inDelta *= -3;
   
-  HandleScrollEvent ( inAxis, PR_TRUE, inDelta, kMouseValid, inMouseLoc, widgetToScroll );
+  HandleScrollEvent ( inAxis, PR_TRUE, inDelta, inMouseLoc, widgetToScroll );
   
   return PR_TRUE;
   
@@ -1684,7 +1687,10 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 				retVal |= lastWidgetPointed->DispatchMouseEvent(mouseEvent);
 			}
 
-			gEventDispatchHandler.SetWidgetPointed(widgetPointed);
+      gEventDispatchHandler.SetWidgetPointed(widgetPointed);
+#if TRACK_MOUSE_LOC
+      gEventDispatchHandler.SetGlobalPoint(aOSEvent.where);
+#endif
 
 			if (widgetPointed)
 			{
