@@ -408,7 +408,7 @@ nsProfileAccess::FillProfileInfo(nsIFile* regName)
                                  kRegistryMigratedString.get(), 
                                  getter_Copies(isMigrated));
         if (NS_FAILED(rv)) return rv;
-        nsLiteralString isMigratedString(isMigrated);
+        nsDependentString isMigratedString(isMigrated);
 
         // Not checking the return values of these variables as they
         // are for activation, they are optional and their values 

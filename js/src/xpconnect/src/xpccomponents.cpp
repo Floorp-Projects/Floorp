@@ -1769,7 +1769,7 @@ nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName
     static const NS_NAMED_LITERAL_STRING(s_interfaces, "interfaces");
     static const NS_NAMED_LITERAL_STRING(s_results, "results");
 
-    const nsLiteralString name(propertyName);
+    const nsDependentString name(propertyName);
 
     if(name.Equals(s_interfaces) || name.Equals(s_results))
         *_retval = CloneAllAccess();

@@ -94,7 +94,7 @@ NS_IMETHODIMP nsDiskCacheObserver::Observe(nsISupports *aSubject, const PRUnicha
         }
         
         // which preference changed?
-        nsLiteralString prefName(someData);
+        nsDependentString prefName(someData);
         if (prefName.Equals(NS_LITERAL_STRING(CACHE_DIR_PREF))) {
         	nsCOMPtr<nsILocalFile> cacheDirectory;
             rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(cacheDirectory));
@@ -314,7 +314,7 @@ nsDiskCacheEvictor::VisitRecord(nsDiskCacheRecord *  mapRecord)
         // XXX FIXME compare clientID's without malloc
 
         // get client ID from key
-        rv = ClientIDFromCacheKey(nsLiteralCString(diskEntry->mKeyStart), &clientID);
+        rv = ClientIDFromCacheKey(nsDependentCString(diskEntry->mKeyStart), &clientID);
         if (NS_FAILED(rv))  goto exit;
          
         if (nsCRT::strcmp(mClientID, clientID) != 0) goto exit;

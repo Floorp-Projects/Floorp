@@ -74,7 +74,7 @@ void GetURIStringFromRequest(nsIRequest* request, nsXPIDLCString &aStr)
         request->GetName(getter_Copies(name));
 
         if (name)
-            *getter_Copies(aStr) = ToNewUTF8String(nsLocalString(name));
+            *getter_Copies(aStr) = ToNewUTF8String(nsDependentString(name));
     }
 }
 #endif /* DEBUG */

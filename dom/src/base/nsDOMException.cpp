@@ -162,7 +162,7 @@ NS_IMETHODIMP
 nsDOMException::GetMessage(nsAWritableString& aMessage)
 {
   if (mMessage) {
-    CopyASCIItoUCS2(nsLiteralCString(mMessage), aMessage);
+    CopyASCIItoUCS2(nsDependentCString(mMessage), aMessage);
   }
   else {
     aMessage.Truncate();
@@ -175,7 +175,7 @@ NS_IMETHODIMP
 nsDOMException::GetName(nsAWritableString& aName)
 {
   if (mName) {
-    CopyASCIItoUCS2(nsLiteralCString(mName), aName);
+    CopyASCIItoUCS2(nsDependentCString(mName), aName);
   }
   else {
     aName.Truncate();
@@ -201,7 +201,7 @@ nsDOMException::ToString(nsAWritableString& aReturn)
   GetCode(&code);
   char* temp = PR_smprintf(format, msg, code, mResult, resultName, location);
   if (temp) {
-    CopyASCIItoUCS2(nsLiteralCString(temp), aReturn);
+    CopyASCIItoUCS2(nsDependentCString(temp), aReturn);
     PR_smprintf_free(temp);
   }
 

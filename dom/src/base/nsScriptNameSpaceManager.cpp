@@ -95,10 +95,9 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
       continue;
     }
 
-    nsAutoString name;
-    CopyASCIItoUCS2(nsLiteralCString(categoryEntry), name);
-
-    nsStringKey key(name);
+    const nsAString& temp = NS_ConvertASCIItoUCS2(categoryEntry);
+      // XXX Mac chokes _later_ if we put the |NS_Conv...| right in the |nsStringKey| ctor, so make a temp
+    nsStringKey key(temp);
 
     if (!mGlobalNames.Get(&key)) {
       nsGlobalNameStruct *s = new nsGlobalNameStruct;
@@ -193,12 +192,7 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
 
         s->mType = nsGlobalNameStruct::eTypeInterface;
 
-        nsAutoString name;
-        CopyASCIItoUCS2(nsLiteralCString(if_name.get() +
-                                         strlen(NS_DOM_INTERFACE_PREFIX)),
-                        name);
-
-        nsStringKey key(name);
+        nsStringKey key(NS_ConvertASCIItoUCS2(if_name.get() + strlen(NS_DOM_INTERFACE_PREFIX)));
 
         mGlobalNames.Put(&key, s);
       }

@@ -415,7 +415,7 @@ nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
 
     uri->GetSpec(getter_Copies(spec));
 
-    CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+    CopyASCIItoUCS2(nsDependentCString(spec), aURI);
   }
   
   return NS_OK;

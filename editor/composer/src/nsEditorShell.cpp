@@ -1119,7 +1119,7 @@ nsEditorShell::SetAttribute(nsIDOMElement *element, const PRUnichar *attr, const
   nsresult  result = NS_NOINTERFACE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor) {
-    result = editor->SetAttribute(element, nsLiteralString(attr), nsLiteralString(value)); 
+    result = editor->SetAttribute(element, nsDependentString(attr), nsDependentString(value)); 
   }
 
   return result;
@@ -1134,7 +1134,7 @@ nsEditorShell::RemoveAttribute(nsIDOMElement *element, const PRUnichar *attr)
   nsresult  result = NS_NOINTERFACE;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor) {
-    result = editor->RemoveAttribute(element, nsLiteralString(attr));
+    result = editor->RemoveAttribute(element, nsDependentString(attr));
   }
 
   return result;
@@ -1155,7 +1155,7 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
     case ePlainTextEditorType:
         // should we allow this?
     case eHTMLTextEditorType:
-      err = mEditor->SetInlineProperty(styleAtom, nsLiteralString(attr), nsLiteralString(value));
+      err = mEditor->SetInlineProperty(styleAtom, nsDependentString(attr), nsDependentString(value));
       break;
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
@@ -1229,7 +1229,7 @@ nsEditorShell::GetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
     case ePlainTextEditorType:
         // should we allow this?
     case eHTMLTextEditorType:
-      err = mEditor->GetInlineProperty(styleAtom, nsLiteralString(attr), nsLiteralString(value), firstHas, anyHas, allHas);
+      err = mEditor->GetInlineProperty(styleAtom, nsDependentString(attr), nsDependentString(value), firstHas, anyHas, allHas);
       break;
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
@@ -1831,7 +1831,7 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
             nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
             if (dialog)
             { 
-              PRUnichar *titleUnicode = ToNewUnicode(nsLiteralString(title.get()));
+              PRUnichar *titleUnicode = ToNewUnicode(title);
               nsAutoString captionStr, msgStr1, msgStr2;
               
               GetBundleString(NS_LITERAL_STRING("DocumentTitle"), captionStr);
@@ -1856,8 +1856,11 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
                 return NS_OK;
               }
               // This sets title in HTML node
-              mEditor->SetDocumentTitle(nsLiteralString(titleUnicode));
-              title = titleUnicode;
+              {
+                nsDependentString temp(titleUnicode);
+                mEditor->SetDocumentTitle(temp);
+                title = temp;
+              }
               nsCRT::free(titleUnicode);
               titleChanged = PR_TRUE;
             }
@@ -2323,7 +2326,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
   if (mEditorType != eHTMLTextEditorType)
     return NS_ERROR_NOT_IMPLEMENTED;
 
-  res = mEditor->SetDocumentTitle(nsLiteralString(title));
+  res = mEditor->SetDocumentTitle(nsDependentString(title));
   if (NS_FAILED(res)) return res;
 
   // PR_FALSE means don't save menu to prefs
@@ -2693,7 +2696,7 @@ nsEditorShell::InsertText(const PRUnichar *textToInsert)
       {
         nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor));
         if (textEditor)
-          err = textEditor->InsertText(nsLiteralString(textToInsert));
+          err = textEditor->InsertText(nsDependentString(textToInsert));
       }
       break;
 

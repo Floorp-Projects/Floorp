@@ -591,9 +591,9 @@ class NS_COM NS_ConvertASCIItoUCS2
       explicit NS_ConvertASCIItoUCS2( char );
 
 #if 0
-      operator const nsLocalString() const
+      operator const nsDependentString() const
         {
-          return nsLocalString(mUStr, mLength);
+          return nsDependentString(mUStr, mLength);
         }
 #endif
 

@@ -85,10 +85,10 @@ NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const PRUn
   nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsLiteralString aTopicString(aTopic);
+  nsDependentString aTopicString(aTopic);
   if (aTopicString.Equals(NS_LITERAL_STRING("nsPref:changed")))
   {
-    nsLiteralString prefName(someData);
+    nsDependentString prefName(someData);
     
     if (prefName.Equals(NS_LITERAL_STRING(kMAILNEWS_VIEW_DEFAULT_CHARSET)))
     {

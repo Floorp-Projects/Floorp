@@ -65,7 +65,7 @@ NS_IMETHODIMP nsNonPersistAuthPrompt::Prompt(const PRUnichar *dialogTitle,
     NS_ENSURE_TRUE(mPromptDialogs, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_ARG_POINTER(result);
     
-    *result = ToNewUnicode(nsLiteralString(defaultText));
+    *result = ToNewUnicode(nsDependentString(defaultText));
     if (*result == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     return mPromptDialogs->Prompt(dialogTitle, text, result, nsnull, nsnull, _retval);
 }

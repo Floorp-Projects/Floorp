@@ -2279,10 +2279,8 @@ si_DoDialogIfPrefIsOff(
     DialogType dlg) {
 
   nsresult res;
-  nsAutoString realm;
-  CopyASCIItoUCS2(nsLiteralCString(passwordRealm), realm);
   const PRUnichar * prompt_string = dialogTitle;
-  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0) {
+  if (dialogTitle == nsnull || !dialogTitle[0]) {
     prompt_string = Wallet_Localize("PromptForData");
   }
 

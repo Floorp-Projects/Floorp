@@ -235,9 +235,6 @@ operator+( const nsDependentCConcatenation& lhs, const nsACString& rhs )
     return nsDependentCConcatenation(lhs, rhs, lhs.GetFragmentIdentifierMask()<<1);
   }
 
-#if 0
-  // temporarily comment these two global operators out, until |nsPromiseConcatenation| is removed
-
 inline
 const nsDependentConcatenation
 operator+( const nsAString& lhs, const nsAString& rhs )
@@ -251,7 +248,6 @@ operator+( const nsACString& lhs, const nsACString& rhs )
   {
     return nsDependentCConcatenation(lhs, rhs);
   }
-#endif
 
 #if 0
 inline

@@ -330,7 +330,7 @@ nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen){
 	  } while (NS_FAILED(res) && (aLen > 0));
   }
   else {
-    nsLiteralCString str(aBuffer, aLen);
+    nsDependentCString str(aBuffer, aLen);
     unichars = ToNewUnicode(str);
     AppendToBuffer(unichars, unichars+aLen, unichars+aLen);
     mTotalRead+=aLen;
@@ -378,7 +378,7 @@ nsresult nsScanner::FillBuffer(void) {
     }
 
     if((0<numread) && (0==result)) {
-      nsLiteralCString str(buf, numread);
+      nsDependentCString str(buf, numread);
       PRUnichar* unichars = ToNewUnicode(str);
       AppendToBuffer(unichars, unichars+numread, unichars+kBufsize+1);
     }

@@ -462,18 +462,21 @@ nsresult nsAutoConfig::getEmailAddr(nsAWritableCString & emailAddr)
                                   getter_Copies(prefValue));
     // Checking prefValue and its length.  Since by default the preference 
     // is set to nothing
-    if (NS_SUCCEEDED(rv) && nsCRT::strlen(prefValue) > 0) {
+    PRUint32 len;
+    if (NS_SUCCEEDED(rv) && (len = nsCRT::strlen(prefValue)) > 0) {
         emailAddr = NS_LITERAL_CSTRING("mail.account.") + 
-            nsLocalCString(prefValue) + NS_LITERAL_CSTRING(".identities");
+            nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".identities");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
-        if (NS_FAILED(rv) || nsCRT::strlen(prefValue) < 0) return rv;
+
+          // should the following |strlen|s ask |== 0|?  |PRUint32| can't be |<0|
+        if (NS_FAILED(rv) || (len = nsCRT::strlen(prefValue)) < 0) return rv;
         emailAddr = NS_LITERAL_CSTRING("mail.identity.") + 
-            nsLocalCString(prefValue) + NS_LITERAL_CSTRING(".useremail");
+            nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".useremail");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
-        if (NS_FAILED(rv)  || nsCRT::strlen(prefValue) < 0) return rv;
-        emailAddr = nsLocalCString(prefValue);
+        if (NS_FAILED(rv)  || (len = nsCRT::strlen(prefValue)) < 0) return rv;
+        emailAddr = nsDependentCString(prefValue, len);
     }
     else {
         if (mCurrProfile) {

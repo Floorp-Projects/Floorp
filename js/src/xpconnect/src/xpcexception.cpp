@@ -517,7 +517,7 @@ nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, ch
 {
     static const NS_NAMED_LITERAL_STRING(s_toString, "toString");
 
-    const nsLiteralString name(methodName);
+    const nsDependentString name(methodName);
 
     if(name.Equals(s_toString))
         *_retval = CloneAllAccess();
@@ -535,7 +535,7 @@ nsXPCException::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName,
     static const NS_NAMED_LITERAL_STRING(s_code   , "code");
     static const NS_NAMED_LITERAL_STRING(s_name   , "name");
 
-    const nsLiteralString name(propertyName);
+    const nsDependentString name(propertyName);
 
     if(name.Equals(s_message) ||
        name.Equals(s_result)  ||

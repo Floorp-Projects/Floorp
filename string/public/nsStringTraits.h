@@ -44,10 +44,10 @@
 template <class CharT>
 struct nsStringTraits
   {
-    typedef nsAString             abstract_string_type;
-    typedef nsAPromiseString      abstract_promise_type;
-    typedef nsAFlatString         abstract_flat_type;
-    typedef const nsLocalString   literal_string_type;
+    typedef nsAString                 abstract_string_type;
+    typedef nsAPromiseString          abstract_promise_type;
+    typedef nsAFlatString             abstract_flat_type;
+    typedef const nsDependentString   literal_string_type;
   };
 
 #if 0
@@ -56,20 +56,20 @@ struct nsStringTraits
 NS_SPECIALIZE_TEMPLATE
 struct nsStringTraits<PRUnichar>
   {
-    typedef nsAString             abstract_string_type;
-    typedef nsAPromiseString      abstract_promise_type;
-    typedef nsAFlatString         abstract_flat_type;
-    typedef const nsLocalString   literal_string_type;
+    typedef nsAString                 abstract_string_type;
+    typedef nsAPromiseString          abstract_promise_type;
+    typedef nsAFlatString             abstract_flat_type;
+    typedef const nsDependentString   literal_string_type;
   };
 #endif
 
 NS_SPECIALIZE_TEMPLATE
 struct nsStringTraits<char>
   {
-    typedef nsACString            abstract_string_type;
-    typedef nsAPromiseCString     abstract_promise_type;
-    typedef nsAFlatCString        abstract_flat_type;
-    typedef const nsLocalCString  literal_string_type;
+    typedef nsACString                abstract_string_type;
+    typedef nsAPromiseCString         abstract_promise_type;
+    typedef nsAFlatCString            abstract_flat_type;
+    typedef const nsDependentCString  literal_string_type;
   };
 
 

@@ -134,8 +134,8 @@ public:
             const char *aValue, PRUint32 aValueLen) :
     tokenName(aName, aNameLen),
     tokenValue(aValue, aValueLen) {}
-  nsLiteralCString tokenName;
-  nsLiteralCString tokenValue;
+  nsDependentCString tokenName;
+  nsDependentCString tokenValue;
 };
 
 // individual search term, pulled from token/value structs
@@ -154,9 +154,9 @@ public:
     text.AssignWithConversion(aText, textLen);
   }
   
-  nsLiteralCString datasource;  // should always be "history" ?
-  nsLiteralCString property;    // AgeInDays, Hostname, etc
-  nsLiteralCString method;      // is, isgreater, isless
+  nsDependentCString datasource;  // should always be "history" ?
+  nsDependentCString property;    // AgeInDays, Hostname, etc
+  nsDependentCString method;      // is, isgreater, isless
   nsAutoString text;            // text to match
   rowMatchCallback match;      // matching callback if needed
 };
@@ -505,7 +505,7 @@ nsGlobalHistory::~nsGlobalHistory()
     mExpireNowTimer->Cancel();
 
   for(PRInt32 i = 0; i < mIgnorePrefixes->Count(); ++i) {
-    nsLocalString* entry = (nsLocalString*) mIgnorePrefixes->ElementAt(i);
+    nsDependentString* entry = NS_STATIC_CAST(nsDependentString*, mIgnorePrefixes->ElementAt(i));
     delete entry;
   }
 }
@@ -830,7 +830,7 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   err = aRow->AliasCellYarn(mEnv, aCol, &yarn);
   if (err != 0) return NS_ERROR_FAILURE;
 
-  nsLiteralCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
+  nsDependentCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
   aResult.Assign(url);
   
   return NS_OK;
@@ -954,7 +954,7 @@ nsGlobalHistory::MatchHost(nsIMdbRow *aRow,
   if (err != 0) return PR_FALSE;
 
   // do smart zero-termination
-  nsLiteralCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
+  nsDependentCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
   rv = hostInfo->cachedUrl->SetSpec(nsCAutoString(url).get());
   if (NS_FAILED(rv)) return PR_FALSE;
 
@@ -1036,7 +1036,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
       if (err != 0)
         continue;
       
-      nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+      nsDependentCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
       
       rv = gRDFService->GetResource(nsCAutoString(uri).get(), getter_AddRefs(resource));
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
@@ -2666,7 +2666,7 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
   
   PRInt32 i;
   nsCOMPtr<nsIRDFResource> finduri;
-  nsLiteralCString
+  nsDependentCString
     prefix(FIND_BY_AGEINDAYS_PREFIX "is" "&text=");
   nsCAutoString uri;
   for (i=0; i<7; i++) {
@@ -3060,7 +3060,7 @@ nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
 {
   nsresult rv;
 
-  nsLiteralString aTopicString(aTopic);
+  nsDependentString aTopicString(aTopic);
 
   // pref changing - update member vars
   if (aTopicString.Equals(NS_LITERAL_STRING("nsPref:changed"))) {
@@ -3139,7 +3139,7 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
 
   // Since the URLEnumerator always returns the value of the URL
   // column, we create an RDF resource.
-  nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+  nsDependentCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
 
   nsresult rv;
   nsCOMPtr<nsIRDFResource> resource;
@@ -3330,7 +3330,7 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
 
       if (term->method.Equals("is")) {
         // is the cell in unicode or not? Hmm...let's assume so?
-        nsLiteralCString rowVal((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
+        nsDependentCString rowVal((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
 
         if (NS_ConvertUCS2toUTF8(term->text) != rowVal)
           return PR_FALSE;
@@ -3371,7 +3371,7 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
     if (err != 0) return NS_ERROR_FAILURE;
 
     
-    nsLiteralCString uri((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
+    nsDependentCString uri((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
 
     rv = gRDFService->GetResource(nsCAutoString(uri).get(),
                                   getter_AddRefs(resource));
@@ -3393,7 +3393,7 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
   
   nsCAutoString findUri(mFindUriPrefix);
 
-  nsLiteralCString rowValue((const char *)groupByValue.mYarn_Buf,
+  nsDependentCString rowValue((const char *)groupByValue.mYarn_Buf,
                             groupByValue.mYarn_Fill);
   
   findUri.Append(rowValue);
@@ -3489,7 +3489,7 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
   AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
 
   // pass user input through filter before search
-  nsSharableString filtered = AutoCompletePrefilter(nsLocalString (searchString));
+  nsSharableString filtered = AutoCompletePrefilter(nsDependentString (searchString));
   if (filtered.Length() == 0) {
     listener->OnAutoComplete(results, status);
     return NS_OK;
@@ -3558,7 +3558,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
   if (aPrevResults) {
     nsXPIDLString prevURL;
     aPrevResults->GetSearchString(getter_Copies(prevURL));
-    nsLocalString prevURLStr(prevURL);
+    nsDependentString prevURLStr(prevURL);
     // if search string begins with the previous search string, it's a go
     searchPrevious = Substring(aSearchString, 0, prevURLStr.Length()).Equals(prevURLStr);
   }
@@ -3581,7 +3581,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
       nsXPIDLString url;
       item->GetValue(getter_Copies(url));
       
-      nsLocalString urlstr(url);
+      nsDependentString urlstr(url);
       if (AutoCompleteCompare(urlstr, aSearchString))
         resultItems->AppendElement(item);
     }    

@@ -148,7 +148,7 @@ nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
             nsXPIDLString prefValue;
             nsresult res = prefs->GetLocalizedUnicharPref("intl.menuitems.alwaysappendacceskeys", getter_Copies(prefValue));
             if (NS_SUCCEEDED(res)) {
-                gAlwaysAppendAccessKey = nsLocalString(prefValue).Equals(NS_LITERAL_STRING("true"));
+                gAlwaysAppendAccessKey = nsDependentString(prefValue).Equals(NS_LITERAL_STRING("true"));
             }
         }
     }

@@ -232,7 +232,7 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
 NS_IMETHODIMP
 nsMsgPrintEngine::AddPrintURI(const PRUnichar *aMsgURI)
 {
-  mURIArray.AppendString(nsLiteralString(aMsgURI));
+  mURIArray.AppendString(nsDependentString(aMsgURI));
   return NS_OK;
 }
 

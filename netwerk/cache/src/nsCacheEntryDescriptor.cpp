@@ -354,7 +354,7 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char ** result)
     *result = nsnull;
 
     // XXX not thread safe    
-    nsresult rv = mCacheEntry->GetMetaDataElement(nsLiteralCString(key), &value);
+    nsresult rv = mCacheEntry->GetMetaDataElement(nsDependentCString(key), &value);
     if (NS_FAILED(rv)) return rv;
 
     if (!value) return NS_ERROR_NOT_AVAILABLE;
@@ -374,8 +374,8 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
     if (!key) return NS_ERROR_NULL_POINTER;
     // XXX not thread safe
     // XXX allow null value, for clearing key?
-    nsresult rv = mCacheEntry->SetMetaDataElement(nsLiteralCString(key),
-                                                  nsLiteralCString(value));
+    nsresult rv = mCacheEntry->SetMetaDataElement(nsDependentCString(key),
+                                                  nsDependentCString(value));
     if (NS_SUCCEEDED(rv))
         mCacheEntry->TouchMetaData();
     return rv;

@@ -37,8 +37,8 @@ typedef const nsACString  nsAReadableCString;
 #include "nsLiteralString.h"
 #endif
 
-#ifndef nsPromiseSubstring_h___
-#include "nsPromiseSubstring.h"
+#ifndef nDependentSubstring_h___
+#include "nsDependentSubstring.h"
 #endif
 
 #ifndef nsPromiseFlatString_h___

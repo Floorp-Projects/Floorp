@@ -321,7 +321,7 @@ HistoryImpl::Go()
 
   JSString* jsstr = JS_ValueToString(cx, argv[0]);
 
-  return GoUri(nsLiteralString(NS_REINTERPRET_CAST(const PRUnichar *,
+  return GoUri(nsDependentString(NS_REINTERPRET_CAST(const PRUnichar *,
                                                    ::JS_GetStringChars(jsstr)),
                                ::JS_GetStringLength(jsstr)));
 }

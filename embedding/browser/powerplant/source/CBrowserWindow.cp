@@ -572,7 +572,7 @@ NS_METHOD CBrowserWindow::SetStatus(const PRUnichar* aStatus)
    {
 		nsCAutoString cStr;
 		
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(aStatus), cStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(aStatus), cStr);
 		mStatusBar->SetText(const_cast<char *>(cStr.get()), cStr.Length());
    }
    return NS_OK;

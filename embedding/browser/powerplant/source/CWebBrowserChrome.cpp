@@ -460,7 +460,7 @@ NS_IMETHODIMP CWebBrowserChrome::SetTitle(const PRUnichar * aTitle)
     
     Str255          pStr;
 	
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(aTitle), pStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(aTitle), pStr);
     mBrowserWindow->SetDescriptor(pStr);
     return NS_OK;
 }
@@ -518,7 +518,7 @@ NS_IMETHODIMP
 CWebBrowserChrome::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
 {
   nsCAutoString printable;
-  CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(aTipText), printable);
+  CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(aTipText), printable);
 
 #ifdef DEBUG
   printf("--------- SHOW TOOLTIP AT %ld %ld, |%s|\n", aXCoords, aYCoords, (const char *)printable );

@@ -2424,7 +2424,7 @@ GlobalWindowImpl::Escape(const nsAReadableString& aStr,
   // Escape the string
   char *outBuf =
     nsEscape(dest, nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path));
-  CopyASCIItoUCS2(nsLiteralCString(outBuf), aReturn);
+  CopyASCIItoUCS2(nsDependentCString(outBuf), aReturn);
 
   nsMemory::Free(outBuf);
   nsMemory::Free(dest);

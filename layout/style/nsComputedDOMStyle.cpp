@@ -568,7 +568,7 @@ nsComputedDOMStyle::Item(PRUint32 aIndex, nsAWritableString& aReturn)
   GetLength(&length);
   aReturn.Truncate();
   if (aIndex >= 0 && aIndex < length) {
-    CopyASCIItoUCS2(nsLiteralCString(nsCSSProps::GetStringValue(queryableProperties[aIndex])), aReturn);
+    CopyASCIItoUCS2(nsCSSProps::GetStringValue(queryableProperties[aIndex]), aReturn);
   }
   return NS_OK;
 }
@@ -805,7 +805,7 @@ static void ColorToHex(nscolor aColor, nsAWritableString& aHexString)
                               NS_GET_G(aColor),
                               NS_GET_B(aColor));
 
-   CopyASCIItoUCS2(nsLiteralCString(buf, len), aHexString);
+   CopyASCIItoUCS2(nsDependentCString(buf, len), aHexString);
 }
 
 

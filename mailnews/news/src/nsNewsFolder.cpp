@@ -1392,9 +1392,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
       if (NS_FAILED(rv)) return rv;
 
-      nsAutoString realm;
-      CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, signonURL)), realm);
-      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, realm.GetUnicode(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+      rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, signonURL)).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                   getter_Copies(uniGroupPassword), &okayValue);
       if (NS_FAILED(rv)) return rv;
 
@@ -1461,9 +1459,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
             if (NS_FAILED(rv)) return rv;
 
-            nsAutoString realm;
-            CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, signonURL)), realm);
-            rv = dialog->Prompt(aPromptTitle, aPromptMessage, realm.GetUnicode(), 
+            rv = dialog->Prompt(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, signonURL)).get(), 
                                 nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
                                 getter_Copies(uniGroupUsername), &okayValue);
             if (NS_FAILED(rv)) return rv;

@@ -472,14 +472,14 @@ nsWebShell::GetReferrer(nsIURI **aReferrer)
 void
 nsWebShell::SetReferrer(const PRUnichar* aReferrer)
 {
-   NS_NewURI(getter_AddRefs(mReferrerURI), nsLiteralString(aReferrer), nsnull);
+   NS_NewURI(getter_AddRefs(mReferrerURI), nsDependentString(aReferrer), nsnull);
 }
 
 NS_IMETHODIMP
 nsWebShell::SetURL(const PRUnichar* aURL)
 {
   nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), nsLiteralString(aURL),
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), nsDependentString(aURL),
                               nsnull),
                     NS_ERROR_FAILURE);
   SetCurrentURI(uri);
@@ -788,7 +788,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         // and down in the load document code we'll detect this and
         // set the correct uri loader command
         nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), nsLiteralString(aURLSpec), nsnull);
+        NS_NewURI(getter_AddRefs(uri), nsDependentString(aURLSpec), nsnull);
 
         // No URI object? This may indicate the URLspec is for an
         // unrecognized protocol. Embedders might still be interested

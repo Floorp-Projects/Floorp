@@ -2112,11 +2112,11 @@ private:
 /***************************************************************************/
 
 // class to export a JSString as an nsAReadableString, including refcounting
-class XPCReadableJSStringWrapper : public nsLocalString
+class XPCReadableJSStringWrapper : public nsDependentString
 {
 public:
     XPCReadableJSStringWrapper(JSString *str) :
-        nsLocalString(NS_REINTERPRET_CAST(PRUnichar *,
+        nsDependentString(NS_REINTERPRET_CAST(PRUnichar *,
                                           JS_GetStringChars(str)),
                       JS_GetStringLength(str)),
         mStr(str), mBufferHandle(0), mHandleIsShared(JS_FALSE)

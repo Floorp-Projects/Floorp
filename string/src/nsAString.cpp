@@ -22,8 +22,8 @@
  */
 
 #include "nsAString.h"
-#include "nsPromiseSubstring.h"
-#include "nsLocalString.h"
+#include "nsDependentSubstring.h"
+#include "nsDependentString.h"
 #include "nsCRT.h"
 
 
@@ -88,7 +88,7 @@ Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& a
 PRBool
 nsAString::Equals( const char_type* rhs ) const
   {
-    return Equals(nsLocalString(rhs));
+    return Equals(nsDependentString(rhs));
   }
 
 
@@ -256,19 +256,19 @@ nsAString::do_AssignFromReadable( const self_type& aReadable )
 void
 nsAString::do_AssignFromElementPtr( const char_type* aPtr )
   {
-    do_AssignFromReadable(nsLocalString(aPtr));
+    do_AssignFromReadable(nsDependentString(aPtr));
   }
 
 void
 nsAString::do_AssignFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AssignFromReadable(nsLocalString(aPtr, aLength));
+    do_AssignFromReadable(nsDependentString(aPtr, aLength));
   }
 
 void
 nsAString::do_AssignFromElement( char_type aChar )
   {
-    do_AssignFromReadable(nsLocalString(&aChar, 1));
+    do_AssignFromReadable(nsDependentString(&aChar, 1));
   }
 
 
@@ -319,21 +319,21 @@ nsAString::do_AppendFromReadable( const self_type& aReadable )
   }
 
 void
-nsAString::do_AppendFromElementPtr( const char_type* aChar )
+nsAString::do_AppendFromElementPtr( const char_type* aPtr )
   {
-    do_AppendFromReadable(nsLocalString(aChar));
+    do_AppendFromReadable(nsDependentString(aPtr));
   }
 
 void
-nsAString::do_AppendFromElementPtrLength( const char_type* aChar, size_type aLength )
+nsAString::do_AppendFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AppendFromReadable(nsLocalString(aChar, aLength));
+    do_AppendFromReadable(nsDependentString(aPtr, aLength));
   }
 
 void
 nsAString::do_AppendFromElement( char_type aChar )
   {
-    do_AppendFromReadable(nsLocalString(&aChar, 1));
+    do_AppendFromReadable(nsDependentString(&aChar, 1));
   }
 
 
@@ -390,19 +390,19 @@ nsAString::do_InsertFromReadable( const self_type& aReadable, index_type atPosit
 void
 nsAString::do_InsertFromElementPtr( const char_type* aPtr, index_type atPosition )
   {
-    do_InsertFromReadable(nsLocalString(aPtr), atPosition);
+    do_InsertFromReadable(nsDependentString(aPtr), atPosition);
   }
 
 void
 nsAString::do_InsertFromElementPtrLength( const char_type* aPtr, index_type atPosition, size_type aLength )
   {
-    do_InsertFromReadable(nsLocalString(aPtr, aLength), atPosition);
+    do_InsertFromReadable(nsDependentString(aPtr, aLength), atPosition);
   }
 
 void
 nsAString::do_InsertFromElement( char_type aChar, index_type atPosition )
   {
-    do_InsertFromReadable(nsLocalString(&aChar, 1), atPosition);
+    do_InsertFromReadable(nsDependentString(&aChar, 1), atPosition);
   }
 
 
@@ -454,7 +454,7 @@ nsAString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const s
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_ReplaceFromReadable(cutStart, cutLength, nsLocalString(buffer, length));
+            do_ReplaceFromReadable(cutStart, cutLength, nsDependentString(buffer, length));
             delete buffer;
           }
         // else assert?
@@ -550,7 +550,7 @@ Compare( const nsACString& lhs, const nsACString& rhs, const nsCStringComparator
 PRBool
 nsACString::Equals( const char_type* rhs ) const
   {
-    return Equals(nsLocalCString(rhs));
+    return Equals(nsDependentCString(rhs));
   }
 
 nsACString::char_type
@@ -716,19 +716,19 @@ nsACString::do_AssignFromReadable( const self_type& aReadable )
 void
 nsACString::do_AssignFromElementPtr( const char_type* aPtr )
   {
-    do_AssignFromReadable(nsLocalCString(aPtr));
+    do_AssignFromReadable(nsDependentCString(aPtr));
   }
 
 void
 nsACString::do_AssignFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AssignFromReadable(nsLocalCString(aPtr, aLength));
+    do_AssignFromReadable(nsDependentCString(aPtr, aLength));
   }
 
 void
 nsACString::do_AssignFromElement( char_type aChar )
   {
-    do_AssignFromReadable(nsLocalCString(&aChar, 1));
+    do_AssignFromReadable(nsDependentCString(&aChar, 1));
   }
 
 
@@ -779,21 +779,21 @@ nsACString::do_AppendFromReadable( const self_type& aReadable )
   }
 
 void
-nsACString::do_AppendFromElementPtr( const char_type* aChar )
+nsACString::do_AppendFromElementPtr( const char_type* aPtr )
   {
-    do_AppendFromReadable(nsLocalCString(aChar));
+    do_AppendFromReadable(nsDependentCString(aPtr));
   }
 
 void
-nsACString::do_AppendFromElementPtrLength( const char_type* aChar, size_type aLength )
+nsACString::do_AppendFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AppendFromReadable(nsLocalCString(aChar, aLength));
+    do_AppendFromReadable(nsDependentCString(aPtr, aLength));
   }
 
 void
 nsACString::do_AppendFromElement( char_type aChar )
   {
-    do_AppendFromReadable(nsLocalCString(&aChar, 1));
+    do_AppendFromReadable(nsDependentCString(&aChar, 1));
   }
 
 
@@ -850,19 +850,19 @@ nsACString::do_InsertFromReadable( const self_type& aReadable, index_type atPosi
 void
 nsACString::do_InsertFromElementPtr( const char_type* aPtr, index_type atPosition )
   {
-    do_InsertFromReadable(nsLocalCString(aPtr), atPosition);
+    do_InsertFromReadable(nsDependentCString(aPtr), atPosition);
   }
 
 void
 nsACString::do_InsertFromElementPtrLength( const char_type* aPtr, index_type atPosition, size_type aLength )
   {
-    do_InsertFromReadable(nsLocalCString(aPtr, aLength), atPosition);
+    do_InsertFromReadable(nsDependentCString(aPtr, aLength), atPosition);
   }
 
 void
 nsACString::do_InsertFromElement( char_type aChar, index_type atPosition )
   {
-    do_InsertFromReadable(nsLocalCString(&aChar, 1), atPosition);
+    do_InsertFromReadable(nsDependentCString(&aChar, 1), atPosition);
   }
 
 
@@ -914,7 +914,7 @@ nsACString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const 
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_ReplaceFromReadable(cutStart, cutLength, nsLocalCString(buffer, length));
+            do_ReplaceFromReadable(cutStart, cutLength, nsDependentCString(buffer, length));
             delete buffer;
           }
         // else assert?
