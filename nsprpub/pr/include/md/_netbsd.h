@@ -33,6 +33,8 @@
 #define _PR_SI_ARCHITECTURE "powerpc"
 #elif defined(__sparc__)
 #define _PR_SI_ARCHITECTURE "sparc"
+#elif defined(__mips__)
+#define _PR_SI_ARCHITECTURE "mips"
 #elif defined(__arm32__)
 #define _PR_SI_ARCHITECTURE "arm32"
 #endif
@@ -64,6 +66,8 @@
 
 #if defined(__i386__) || defined(__sparc__) || defined(__m68k__) || defined(__powerpc__)
 #define JB_SP_INDEX 2
+#elif defined(__mips__)
+#define JB_SP_INDEX 4
 #elif defined(__alpha__)
 #define JB_SP_INDEX 34
 #elif defined(__arm32__)
