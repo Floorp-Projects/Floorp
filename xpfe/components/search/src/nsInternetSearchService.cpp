@@ -380,6 +380,7 @@ nsIRDFResource			*InternetSearchDataSource::kWEB_LastPingModDate;
 nsIRDFResource			*InternetSearchDataSource::kWEB_LastPingContentLen;
 
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_AddToBookmarks;
+nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_AddQueryToBookmarks;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterResult;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterSite;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_ClearFilters;
@@ -447,6 +448,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(WEB_NAMESPACE_URI "LastPingContentLen", &kWEB_LastPingContentLen);
 
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=addtobookmarks", &kNC_SearchCommand_AddToBookmarks);
+		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=addquerytobookmarks", &kNC_SearchCommand_AddQueryToBookmarks);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filterresult",   &kNC_SearchCommand_FilterResult);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filtersite",     &kNC_SearchCommand_FilterSite);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=clearfilters",   &kNC_SearchCommand_ClearFilters);
@@ -512,6 +514,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kWEB_LastPingContentLen);
 
 		NS_IF_RELEASE(kNC_SearchCommand_AddToBookmarks);
+		NS_IF_RELEASE(kNC_SearchCommand_AddQueryToBookmarks);
 		NS_IF_RELEASE(kNC_SearchCommand_FilterResult);
 		NS_IF_RELEASE(kNC_SearchCommand_FilterSite);
 		NS_IF_RELEASE(kNC_SearchCommand_ClearFilters);
@@ -1089,6 +1092,8 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 
         if (source == kNC_SearchCommand_AddToBookmarks)
           name = NS_LITERAL_STRING("addtobookmarks");
+        else if (source == kNC_SearchCommand_AddQueryToBookmarks)
+          name = NS_LITERAL_STRING("addquerytobookmarks");
         else if (source == kNC_SearchCommand_FilterResult)
           name = NS_LITERAL_STRING("excludeurl");
         else if (source == kNC_SearchCommand_FilterSite)
@@ -1739,12 +1744,13 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 						&& (isBookmarkedFlag == PR_FALSE))
 					{
 						cmdArray->AppendElement(kNC_SearchCommand_AddToBookmarks);
-						cmdArray->AppendElement(kNC_BookmarkSeparator);
 					}
 					Recycle(uri);
 				}
 			}
 		}
+		cmdArray->AppendElement(kNC_SearchCommand_AddQueryToBookmarks);
+		cmdArray->AppendElement(kNC_BookmarkSeparator);
 
 		// if this is a search result, and it isn't filtered, enable command to be able to filter it
 		PRBool				isURLFiltered = PR_FALSE;
@@ -1857,6 +1863,70 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
 				rv = bookmarks->AddBookmark(uri, name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
 				Recycle(uri);
 			}
+		}
+	}
+
+	return(NS_OK);
+}
+
+
+
+nsresult
+InternetSearchDataSource::addQueryToBookmarks(nsIRDFResource *src)
+{
+	if (!src)	return(NS_ERROR_UNEXPECTED);
+	if (!mInner)	return(NS_ERROR_UNEXPECTED);
+
+	nsresult rv;
+	nsCOMPtr<nsIRDFNode>	refNode;
+	if (NS_FAILED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_Ref, PR_TRUE,
+		getter_AddRefs(refNode))))
+		return(rv);
+	nsCOMPtr<nsIRDFLiteral>	urlLiteral (do_QueryInterface(refNode));
+	if (!urlLiteral)
+	  return(NS_ERROR_UNEXPECTED);
+	const PRUnichar	*uriUni = nsnull;
+	urlLiteral->GetValueConst(&uriUni);
+
+	nsCOMPtr<nsIRDFNode>	textNode;
+	if (NS_FAILED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_LastText, PR_TRUE,
+		getter_AddRefs(textNode))))
+		return(rv);
+	nsCOMPtr<nsIRDFLiteral> textLiteral = do_QueryInterface(textNode);
+	nsXPIDLString value;
+	if (textLiteral)
+	{
+		const PRUnichar *textUni = nsnull;
+		textLiteral->GetValueConst(&textUni);
+  	nsAutoString name;
+		name.Assign(textUni);
+		// replace pluses with spaces
+		name.ReplaceChar(PRUnichar('+'), PRUnichar(' '));
+
+  	nsCOMPtr<nsIStringBundleService>
+  	stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+  	if (NS_SUCCEEDED(rv) && stringService)
+  	{
+  		nsCOMPtr<nsIStringBundle> bundle;
+  		rv = stringService->CreateBundle(SEARCH_PROPERTIES, getter_AddRefs(bundle));
+  		if (bundle)
+  		{
+  			const PRUnichar *strings[] = { name.get() };
+  			rv = bundle->FormatStringFromName(NS_LITERAL_STRING("searchTitle").get(), strings, 1, 
+  				getter_Copies(value));
+			}
+		}
+	}
+
+	nsCOMPtr<nsIRDFDataSource>	datasource;
+	if (NS_SUCCEEDED(rv = gRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
+	{
+		nsCOMPtr<nsIBookmarksService> bookmarks (do_QueryInterface(datasource));
+		if (bookmarks)
+		{
+			nsXPIDLCString  uriUTF8;
+			uriUTF8.Adopt(ToNewUTF8String(nsDependentString(uriUni)));
+			rv = bookmarks->AddBookmark((const char *)uriUTF8, value.get(), nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
 		}
 	}
 
@@ -2191,6 +2261,11 @@ InternetSearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSourc
 		{
 			if (NS_FAILED(rv = addToBookmarks(src)))
 				return(rv);
+		}
+		else if (aCommand == kNC_SearchCommand_AddQueryToBookmarks)
+		{
+		  if (NS_FAILED(rv = addQueryToBookmarks(src)))
+		    return(rv);
 		}
 		else if (aCommand == kNC_SearchCommand_FilterResult)
 		{
