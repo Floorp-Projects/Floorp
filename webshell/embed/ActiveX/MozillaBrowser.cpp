@@ -27,6 +27,7 @@
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
+#include "nsIContentViewerFile.h"
 
 static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
 static const TCHAR *c_szUninitialized = _T("Method called while control is uninitialized");
@@ -294,7 +295,8 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 		res = m_pIWebShell->GetContentViewer(&pContentViewer);
 		if ( NS_SUCCEEDED(res) )
 		{
-			pContentViewer->Print();
+            nsCOMPtr<nsIContentViewerFile> ContentViewerFile = do_QueryInterface(pContentViewer);
+			ContentViewerFile->Print();
 			NS_RELEASE(pContentViewer);
 		}
 	}
