@@ -1,0 +1,129 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+#include "nsIDOMWindow.idl"
+
+[scriptable, uuid(9c911860-7dd9-11d4-9a83-000064657374)]
+interface nsIDOMWindowInternal : nsIDOMWindow
+{
+        
+        readonly attribute  nsIDOMWindowInternal window;
+        readonly attribute  nsIDOMWindowInternal self;
+        readonly attribute  nsIDOMNavigator navigator;
+        readonly attribute  nsIDOMScreen screen;
+        readonly attribute  nsIDOMHistory history;
+
+        /* [replaceable] readonly attribute  nsIDOMWindowInternal _content; */
+        [noscript] readonly attribute  nsIDOMWindowInternal content;
+
+        /* [replaceable] readonly attribute  nsISidebar sidebar; */
+        [noscript] readonly attribute  nsISidebar sidebar;
+
+        /* [replaceable] readonly attribute  nsIPrompt prompter; */
+        [noscript] readonly attribute  nsIPrompt prompter;
+
+
+        /* [replaceable] readonly attribute  nsIDOMBarProp menubar; */
+        [noscript] readonly attribute  nsIDOMBarProp menubar;
+
+        /* [replaceable] readonly attribute  nsIDOMBarProp toolbar; */
+        [noscript] readonly attribute  nsIDOMBarProp toolbar;
+
+        /* [replaceable] readonly attribute  nsIDOMBarProp locationbar; */
+        [noscript] readonly attribute  nsIDOMBarProp locationbar;
+
+        /* [replaceable] readonly attribute  nsIDOMBarProp personalbar; */
+        [noscript] readonly attribute  nsIDOMBarProp personalbar;
+
+        /* [replaceable] readonly attribute  nsIDOMBarProp statusbar; */
+        [noscript] readonly attribute  nsIDOMBarProp statusbar;
+
+        /* [replaceable] readonly attribute  nsIDOMBarProp directories; */
+        [noscript] readonly attribute  nsIDOMBarProp directories;
+        readonly attribute  boolean closed;
+        readonly attribute  nsIDOMCrypto crypto;
+        readonly attribute  nsIDOMPkcs11 pkcs11;
+
+        /* [replaceable] readonly attribute  nsIControllers controllers; */
+        [noscript] readonly attribute  nsIControllers controllers;
+                 attribute  nsIDOMWindowInternal opener;
+                 attribute  DOMString status;
+                 attribute  DOMString defaultStatus;
+		 attribute  jsval location;
+		 attribute  DOMString title;
+                 attribute  long innerWidth;
+                 attribute  long innerHeight;
+                 attribute  long outerWidth;
+                 attribute  long outerHeight;
+                 attribute  long screenX;
+                 attribute  long screenY;
+                 attribute  long pageXOffset;
+                 attribute  long pageYOffset;
+
+        /* [replaceable] readonly attribute  unsigned long length; */
+        [noscript] readonly attribute  unsigned long length;
+
+        void  dump(in DOMString str);
+        void  alert(/* ... */);
+	      boolean  confirm(/* ... */);
+        // XXX prompt() should be changed back to return a string once
+        // the DOM APIs allow us to return null js values for a string.
+        // in the meantime, this is the only way to do that:
+        jsval  prompt(/* ... */);
+        void  focus();
+        void  blur();
+        void  back();
+        void  forward();
+        void  home();
+        void  stop();
+        void  print();
+
+        void  moveTo(in long xPos, in long yPos);
+        void  moveBy(in long xDif, in long yDif);
+        void  resizeTo(in long width, in long height);
+        void  resizeBy(in long widthDif, in long heightDif);
+        void  sizeToContent();
+        void  GetAttention();
+        void  scroll(in long xScroll, in long yScroll);
+
+        void clearTimeout(in long timerID);
+        void clearInterval(in long timerID);
+        long setTimeout(/* ... */);
+        long setInterval(/* ... */);
+
+        void captureEvents(in long eventFlags);
+        void releaseEvents(in long eventFlags);
+        void routeEvent(in nsIDOMEvent evt);
+        void enableExternalCapture();
+        void disableExternalCapture();
+        void setCursor(in DOMString cursor);
+
+        nsIDOMWindowInternal open(/* ... */);
+        nsIDOMWindowInternal openDialog(/* ... */);
+        void  close(/* ... */);
+
+        void updateCommands(in DOMString action);
+
+        DOMString escape(in DOMString str);
+        DOMString unescape(in DOMString str);
+
+};
+
