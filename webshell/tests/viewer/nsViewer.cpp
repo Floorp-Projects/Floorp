@@ -185,7 +185,7 @@ struct OnLinkClickEvent : public PLEvent {
                    const nsString& aTargetSpec, nsIPostData* aPostData = 0);
   ~OnLinkClickEvent();
 
-  void HandleEvent();
+  void HandleEventApp();
 
   DocObserver* mHandler;
   nsString*    mURLSpec;
@@ -193,9 +193,9 @@ struct OnLinkClickEvent : public PLEvent {
   nsIPostData *mPostData;
 };
 
-static void PR_CALLBACK HandleEvent(OnLinkClickEvent* aEvent)
+static void PR_CALLBACK HandleEventApp(OnLinkClickEvent* aEvent)
 {
-  aEvent->HandleEvent();
+  aEvent->HandleEventApp();
 }
 
 static void PR_CALLBACK DestroyEvent(OnLinkClickEvent* aEvent)
@@ -219,7 +219,7 @@ OnLinkClickEvent::OnLinkClickEvent(DocObserver* aHandler,
 
 #ifdef XP_PC
   PL_InitEvent(this, nsnull,
-               (PLHandleEventProc) ::HandleEvent,
+               (PLHandleEventProc) ::HandleEventApp,
                (PLDestroyEventProc) ::DestroyEvent);
 
 
@@ -236,7 +236,7 @@ OnLinkClickEvent::~OnLinkClickEvent()
   if (nsnull != mPostData) delete mPostData;
 }
 
-void OnLinkClickEvent::HandleEvent()
+void OnLinkClickEvent::HandleEventApp()
 {
   mHandler->HandleLinkClickEvent(*mURLSpec, *mTargetSpec, mPostData);
 }
@@ -521,7 +521,7 @@ static DocObserver* NewObserver(nsIWebWidget* ww)
 
 //----------------------------------------------------------------------
 
-nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
+nsEventStatus PR_CALLBACK HandleEventApp(nsGUIEvent *aEvent)
 { 
     nsEventStatus result = nsEventStatus_eIgnore;
     switch(aEvent->message) {
@@ -844,7 +844,7 @@ WindowData* nsViewer::CreateTopLevel(const char* title,
   NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
   nsRect rect(100, 100, aWidth, aHeight);
 
-  window->Create((nsIWidget*)NULL, rect, HandleEvent, nsnull, nsnull, (nsWidgetInitData *)gAppShell->GetNativeData(NS_NATIVE_SHELL));
+  window->Create((nsIWidget*)NULL, rect, HandleEventApp, nsnull, nsnull, (nsWidgetInitData *)gAppShell->GetNativeData(NS_NATIVE_SHELL));
   window->SetTitle(title);
   wd->windowWidget = window; 
   gWindows->AppendElement(wd);
