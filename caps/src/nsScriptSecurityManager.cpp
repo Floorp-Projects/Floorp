@@ -358,7 +358,7 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                                             nsIPrincipal **result)
 {
     JSObject *parent;
-    while (parent = JS_GetParent(aCx, aObj)) 
+    while ((parent = JS_GetParent(aCx, aObj)) != nsnull) 
         aObj = parent;
     
     nsISupports *supports = (nsISupports *) JS_GetPrivate(aCx, aObj);
