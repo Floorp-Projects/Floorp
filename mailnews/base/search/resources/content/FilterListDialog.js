@@ -154,7 +154,7 @@ function setServer(uri)
    var resource = gRDF.GetResource(uri);
    var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-   //Calling getFilterList will detect any errors in rules1.dat, backup the file, and alert the user
+   //Calling getFilterList will detect any errors in rules.dat, backup the file, and alert the user
    //we need to do this because gFilterTree.setAttribute will cause rdf to call getFilterList and there is 
    //no way to pass msgWindow in that case. 
 
