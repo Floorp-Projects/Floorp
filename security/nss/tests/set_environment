@@ -194,7 +194,9 @@ then
     os_name="Windows"
     O_MKS=ON
     O_WIN=ON
-    RSH=c:/winnt/system32/rsh
+    if [ -z $RSH ] ; then 
+        RSH=c:/winnt/system32/rsh
+    fi
     
 else
     EDITOR=vi
@@ -209,7 +211,7 @@ fi
 
 BASEPATH=$PATH    # in  case we we set and reset DIST directories the PATH 
                 # needs to change accordingly
-export PATH EDITOR EMACSLOADPATH PYTHONPATH PAGER XMCD_LIBDIR DISPLAY MANPATH os_full os_name BASEPATH
+export PATH EDITOR EMACSLOADPATH PYTHONPATH PAGER XMCD_LIBDIR DISPLAY MANPATH os_full os_name BASEPATH RSH
 
 umask 022
 
