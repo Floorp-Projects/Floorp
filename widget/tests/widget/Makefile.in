@@ -40,19 +40,7 @@ CPPSRCS = \
 
 LIBS := \
 	-lraptorgfx \
-	-lnetlib \
-	-lremoturl \
-	-lnetcnvts \
-	-lgophurl \
-	-labouturl \
-	-lsockstuburl \
-	-lhttpurl \
-	-lmimetype \
-	-lfileurl \
-	-lftpurl \
-	-lpwcac \
-	-lnetwork \
-	-lnetcache \
+	-lgfxps \
 	-lpref \
 	-lsecfree \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
@@ -75,6 +63,28 @@ LIBS := \
 	-lraptorgfx \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
+
+ifndef NECKO
+LIBS += 	\
+	-lnetlib \
+	-lremoturl \
+	-lnetcnvts \
+	-lgophurl \
+	-labouturl \
+	-lsockstuburl \
+	-lhttpurl \
+	-lmimetype \
+	-lfileurl \
+	-lftpurl \
+	-lpwcac \
+	-lnetwork \
+	-lnetcache \
+	$(NULL)
+else
+LIBS += 	\
+	-lneckoutil_s \
+	$(NULL)
+endif
 	$(NULL)
 
 
