@@ -107,14 +107,8 @@ public class VariableTable {
     public void addLocal(String vName) {
         Integer vIndex = (Integer)(itsVariableNames.get(vName));
         if (vIndex != null) {
-            LocalVariable v = (LocalVariable)
-                            (itsVariables.elementAt(vIndex.intValue()));
-            if (v.isParameter()) {
-                // this is o.k. the parameter subsumes the variable def.
-            }
-            else {
-                return;
-            }
+            // There's already a variable or parameter with this name.
+            return;
         }
         int index = itsVariables.size();
         LocalVariable lVar = createLocalVariable(vName, false);
