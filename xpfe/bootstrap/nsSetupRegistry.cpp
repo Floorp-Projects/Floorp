@@ -35,7 +35,6 @@
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMBrowserAppCore.h"
-#include "nsIDOMEditorAppCore.h"
 #include "nsISessionHistory.h"
 
 
@@ -44,9 +43,7 @@ static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kDOMPropsCoreCID,     NS_DOMPROPSCORE_CID);
 static NS_DEFINE_IID(kProfileCoreCID,      NS_PROFILECORE_CID); 
-static NS_DEFINE_IID(kToolbarCoreCID,      NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
-static NS_DEFINE_IID(kEditorAppCoreCID,    NS_EDITORAPPCORE_CID);
 static NS_DEFINE_IID(kRDFCoreCID,          NS_RDFCORE_CID);
 static NS_DEFINE_IID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
 
@@ -145,9 +142,7 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kToolkitCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kDOMPropsCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kProfileCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE); 
-  nsComponentManager::RegisterComponent(kToolbarCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kEditorAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kSessionHistoryCID,     NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   
