@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "plstr.h"
+
 #include "nsDocument.h"
 #include "nsIArena.h"
 #include "nsIURL.h"
@@ -45,27 +47,74 @@ static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 
+static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);
+
 NS_LAYOUT nsresult
-NS_NewPostData(nsIPostData* aPostData, nsIPostData** aInstancePtrResult)
+NS_NewPostData(PRBool aIsFile, char* aData, 
+               nsIPostData** aInstancePtrResult)
 {
-  *aInstancePtrResult = new nsPostData(aPostData);
-  return NS_OK;
+  nsresult rv = NS_OK;
+
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtrResult = new nsPostData(aIsFile, aData);
+  if (nsnull != *aInstancePtrResult) {
+    NS_ADDREF(*aInstancePtrResult);
+  } else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return rv;
 }
 
-nsPostData::nsPostData(nsIPostData* aPostData) 
+
+nsPostData::nsPostData(PRBool aIsFile, char* aData)
 {
-  mIsFile = PR_FALSE;
-  mData = nsnull;
-  if (aPostData) {
-    mIsFile = aPostData->IsFile();
-    const char* data = aPostData->GetData();
-    if (data) {
-      PRInt32 len = strlen(data);
-      mData = new char[len+1];
-      strcpy(mData, data);
-    }
+  NS_INIT_REFCNT();
+
+  mData    = nsnull;
+  mDataLen = 0;
+  mIsFile  = aIsFile;
+
+  if (aData) {
+    mDataLen = PL_strlen(aData);
+    mData = aData;
   }
 }
+
+nsPostData::~nsPostData()
+{
+  if (nsnull != mData) {
+    delete [] mData;
+    mData = nsnull;
+  }
+}
+
+
+/*
+ * Implementation of ISupports methods...
+ */
+NS_IMPL_ISUPPORTS(nsPostData,kIPostDataIID);
+
+PRBool nsPostData::IsFile() 
+{ 
+  return mIsFile;
+}
+
+const char* nsPostData::GetData()
+{
+  return mData;
+}
+
+PRInt32 nsPostData::GetDataLength()
+{
+  return mDataLen;
+}
+
+
+
 
 nsDocument::nsDocument()
 {
@@ -482,6 +531,7 @@ nsresult nsDocument::ResetScriptObject()
   mScriptObject = nsnull;
   return NS_OK;
 }
+
 
 //
 // nsIDOMDocument interface

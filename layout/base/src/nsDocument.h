@@ -30,14 +30,22 @@ class nsIEventListenerManager;
 
 class nsPostData : public nsIPostData {
 public:
-  nsPostData(PRBool aIsFile, char* aData) : mIsFile(aIsFile), mData(aData) {}
-  nsPostData(nsIPostData* aPostData);
-  PRBool       IsFile() { return mIsFile; }   
-  const char*  GetData() { return mData; }    
+  nsPostData(PRBool aIsFile, char* aData);
+
+  NS_DECL_ISUPPORTS
+
+  virtual PRBool      IsFile();
+  virtual const char* GetData();
+  virtual PRInt32     GetDataLength();
+
 protected:
-  PRBool mIsFile;
-  char*  mData;
+  virtual ~nsPostData();
+
+  PRBool  mIsFile;
+  char*   mData;
+  PRInt32 mDataLen;
 };
+
 
 // Base class for our document implementations
 class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner, public nsIDOMEventCapturer {

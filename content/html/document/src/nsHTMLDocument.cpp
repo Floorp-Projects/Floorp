@@ -31,6 +31,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIPostToServer.h"  
+#include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIWebWidget.h"
 
@@ -74,9 +75,11 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
   return nsDocument::QueryInterface(aIID, aInstancePtr);
 }
 
+
 NS_IMETHODIMP
-nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
-                        nsIWebWidget* aWebWidget, nsIPostData* aPostData)
+nsHTMLDocument::StartDocumentLoad(nsIURL *aURL, 
+                                  nsIWebWidget* aWebWidget,
+                                  nsIStreamListener **aDocListener)
 {
   // Delete references to style sheets - this should be done in superclass...
   PRInt32 index = mStyleSheets.Count();
@@ -96,21 +99,6 @@ nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
   mDocumentURL = aURL;
   NS_ADDREF(aURL);
 
-  static NS_DEFINE_IID(kPostToServerIID, NS_IPOSTTOSERVER_IID);
-  if (aPostData) {
-    const char* data = aPostData->GetData();
-    if (data) {
-      nsIPostToServer* pts;
-      nsresult result = aURL->QueryInterface(kPostToServerIID, (void **)&pts);
-      if (aPostData->IsFile()) {
-        pts->SendDataFromFile(data);
-      }
-      else {
-        pts->SendData(data, strlen(data));
-      }
-    }
-  }
-
   nsIParser* parser;
   nsresult rv = NS_NewParser(&parser);
   if (NS_OK == rv) {
@@ -126,8 +114,14 @@ nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
         AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
       }
 
-      parser->SetContentSink(sink);
-      parser->Parse(aURL, aListener);
+      // Set the parser as the stream listener for the document loader...
+      static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+      rv = parser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
+
+      if (NS_OK == rv) {
+        parser->SetContentSink(sink);
+        parser->BeginParse(aURL);
+      }
       NS_RELEASE(sink);
     }
     NS_RELEASE(parser);
@@ -135,6 +129,8 @@ nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
 
   return rv;
 }
+
+
 
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
