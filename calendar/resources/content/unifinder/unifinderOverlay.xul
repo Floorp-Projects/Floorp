@@ -70,14 +70,14 @@
                 <tabpanels orient="horizontal" flex="1">
                     <vbox id="unifinder-categories-box" flex="1">
                        <vbox id="unifinder-categories-content-box" flex="1"  >
-                           <listbox id="unifinder-categories-tree" class="unifinder-tree-class"  flex="1"/>
+                           <listbox id="unifinder-categories-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class"  flex="1"/>
                        </vbox>
                     </vbox>
             
                     <vbox flex="1">
                         <unifinder-search-controls keypressfunction="unifinderSearchKeyPress( this, event )" />
                         
-                        <listbox id="unifinder-search-results-tree" class="unifinder-tree-class"  flex="1"/>
+                        <listbox id="unifinder-search-results-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class"  flex="1"/>
                     </vbox>
                     
                 </tabpanels>

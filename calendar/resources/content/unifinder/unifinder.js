@@ -43,6 +43,8 @@
 *   improve this to make it usable in general.
 */
 
+var gkungFooDeathGripOnEventBoxes;
+
 function unifinderInit( CalendarWindow )
 {
    var unifinderEventSelectionObserver = 
@@ -50,8 +52,12 @@ function unifinderInit( CalendarWindow )
       onSelectionChanged : function( EventSelectionArray )
       {
          var CategoriesTree = document.getElementById( "unifinder-categories-tree" );
-
+         
+         CategoriesTree.setAttribute( "suppressonselect", "true" );
+         
          var SearchTree = document.getElementById( "unifinder-search-results-tree" );
+         
+         SearchTree.setAttribute( "suppressonselect", "true" );
 
          CategoriesTree.clearSelection();
 
@@ -74,6 +80,10 @@ function unifinderInit( CalendarWindow )
                   SearchTree.addItemToSelection( SearchTreeItem );
             }
          }
+         dump( "\nAllow on select now!" );
+         CategoriesTree.removeAttribute( "suppressonselect" );
+         
+         SearchTree.removeAttribute( "suppressonselect" );
       }
    }
       
@@ -262,20 +272,32 @@ function unifinderDoubleClickEvent( id )
 *  This is attached to the onclik attribute of the events shown in the unifinder
 */
 
-function unifinderClickEvent( id, event )
+function unifinderClickEvent( CallingListBox )
 {
-   var calendarEvent = gICalLib.fetchEvent( id );
+   var ListBox = CallingListBox;
+   dump( "\non unifinder click event" );
+   var ArrayOfEvents = new Array();
    
-   gCalendarWindow.EventSelection.replaceSelection( calendarEvent );
-
-   var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
-   if ( !eventBox )
+   for( i = 0; i < ListBox.selectedItems.length; i++ )
    {
-      var eventStartDate = new Date( calendarEvent.start.getTime() );
-      
-      gCalendarWindow.currentView.goToDay( eventStartDate, true);
-      
+      var calendarEvent = ListBox.selectedItems[i].event;
+            
+      ArrayOfEvents[ ArrayOfEvents.length ] = calendarEvent;
    }
+   
+   gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
+
+   if( ListBox.selectedItems.length > 0 && ListBox.selectedItems.length < 2 )
+   {
+      var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
+      if ( !eventBox )
+      {
+         var eventStartDate = new Date( calendarEvent.start.getTime() );
+         
+         gCalendarWindow.currentView.goToDay( eventStartDate, true);
+         
+      }
+   } 
 }
 
 /**
@@ -339,13 +361,25 @@ function unifinderRemoveCommand( DoNotConfirm )
    }
    else if( SelectedItems.length > 1 )
    {
-      if( confirm( "Are you sure you want to delete everything?" ) )
+      if( !DoNotConfirm )
+      {
+         if( confirm( "Are you sure you want to delete everything?" ) )
+         {
+            while( SelectedItems.length )
+            {
+               var ThisItem = SelectedItems.pop();
+               
+               gICalLib.deleteEvent( ThisItem.id );
+            }
+         }
+      }
+      else
       {
          while( SelectedItems.length )
          {
             var ThisItem = SelectedItems.pop();
-
-            gICalLib.deleteEvent( gICalLib.fetchEvent( ThisItem.calendarEvent.id ) );
+            
+            gICalLib.deleteEvent( ThisItem.id );
          }
       }
    }
@@ -389,6 +423,8 @@ function refreshEventTree( eventArray, childrenName, Categories )
    while( oldTreeChildren.hasChildNodes() )
       oldTreeChildren.removeChild( oldTreeChildren.lastChild );
 
+   gkungFooDeathGripOnEventBoxes = new Array();
+   
    // add: tree item, row, cell, box and text items for every event
    for( var index = 0; index < eventArray.length; ++index )
    {
@@ -402,8 +438,11 @@ function refreshEventTree( eventArray, childrenName, Categories )
       else
          treeItem.setAttribute( "id", "search-unifinder-treeitem-"+calendarEvent.id );
 
+      treeItem.event = calendarEvent;
+      gkungFooDeathGripOnEventBoxes.push( treeItem );
+
       treeItem.setAttribute( "ondblclick" , "unifinderDoubleClickEvent(" + calendarEvent.id + ")" );
-      treeItem.setAttribute( "onclick" , "unifinderClickEvent(" + calendarEvent.id + ")" );
+      //treeItem.setAttribute( "onclick" , "unifinderClickEvent(" + calendarEvent.id + ")" );
       
       var treeCell = document.createElement( "listcell" );
       treeCell.setAttribute( "flex" , "1" );
