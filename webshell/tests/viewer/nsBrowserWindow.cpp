@@ -423,6 +423,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoCopy();
     break;
 
+  case VIEWER_EDIT_PASTE:
+    DoPaste();
+    break;
+
   case VIEWER_EDIT_SELECTALL:
     DoSelectAll();
     break;
@@ -1804,6 +1808,24 @@ nsBrowserWindow::DoCopy()
     nsISelectionMgr* selectionMgr;
     if (NS_SUCCEEDED(mAppShell->GetSelectionMgr(&selectionMgr)))
       shell->DoCopy(selectionMgr);
+    NS_RELEASE(shell);
+  }
+}
+
+void
+nsBrowserWindow::DoPaste()
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsISelectionMgr* selectionMgr;
+    if (NS_SUCCEEDED(mAppShell->GetSelectionMgr(&selectionMgr)))
+    {
+      nsString newString;
+      selectionMgr->PasteTextBlocking(&newString);
+      char* cstring = newString.ToNewCString();
+      printf("Would paste: '%s'\n", cstring);
+      delete[] cstring;
+    }
     NS_RELEASE(shell);
   }
 }
