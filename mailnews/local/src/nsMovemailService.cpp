@@ -53,7 +53,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "nsMsgFolderFlags.h
+#include "nsMsgFolderFlags.h"
 
 #define PREF_MAIL_ROOT_MOVEMAIL "mail.root.movemail"
 
