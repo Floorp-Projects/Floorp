@@ -41,6 +41,7 @@
 
 #ifdef STANDALONE_REGISTRY
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
