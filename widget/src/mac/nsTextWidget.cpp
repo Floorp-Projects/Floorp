@@ -162,12 +162,14 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 //-------------------------------------------------------------------------
 PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 {
-	// hack: if Enter is pressed, pass Return
+	// filter cursor keys
+	PRBool passKeyEvent = PR_TRUE;
 	switch (aEvent.message)
 	{
 		case NS_KEY_DOWN:
 		case NS_KEY_UP:
 		{
+			// hack: if Enter is pressed, pass Return
   			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
 			if (keyEvent->keyCode == 0x03)
 			{
@@ -176,12 +178,27 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 				if (theOSEvent)
 					theOSEvent->message = (theOSEvent->message & ~charCodeMask) + NS_VK_RETURN;
 			}
+			switch (keyEvent->keyCode)
+			{
+//				case NS_VK_PAGE_UP:
+//				case NS_VK_PAGE_DOWN:
+				case NS_VK_END:
+				case NS_VK_HOME:
+				case NS_VK_LEFT:
+				case NS_VK_UP:
+				case NS_VK_RIGHT:
+				case NS_VK_DOWN:
+					passKeyEvent = PR_FALSE;
+					break;
+			}
 			break;
 		}
 	}
 
 	// dispatch the message
-	PRBool eventHandled = Inherited::DispatchWindowEvent(aEvent);
+	PRBool eventHandled = PR_FALSE;
+	if (passKeyEvent)
+		eventHandled = Inherited::DispatchWindowEvent(aEvent);
 
 	// handle the message here if nobody else processed it already
 	if ((! eventHandled) && (mControl != nsnull))
