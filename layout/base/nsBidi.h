@@ -943,6 +943,14 @@ public:
    * @param aDestSize will receive the number of characters that were written to <code>aDest</code>.
    */
   nsresult WriteReverse(const PRUnichar *aSrc, PRInt32 aSrcLength, PRUnichar *aDest, PRUint16 aOptions, PRInt32 *aDestSize);
+
+  /**
+   * Give a Unichar
+   * return PR_TRUE if the Unichar is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
+   * return PR_FALSE, otherwise
+   */
+  PRBool IsBidiControl(PRUnichar aChar);
+
 protected:
   /** length of the current text */
   PRInt32 mLength;
@@ -1021,13 +1029,6 @@ private:
    * return PR_FALSE, otherwise
    */
   PRBool IsBidiCategory(PRUnichar aChar, eBidiCategory aBidiCategory);
-
-  /**
-   * Give a Unichar
-   * return PR_TRUE if the Unichar is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
-   * return PR_FALSE, otherwise
-   */
-  PRBool IsBidiControl(PRUnichar aChar);
 
   /**
    * Give a Unichar, return a nsCharType (compatible with ICU)
