@@ -1032,19 +1032,15 @@ CHyperTreeFlexTable :: HiliteDropRow ( TableIndexT inRow, Boolean inDrawBarAbove
 //
 // ItemIsAcceptable
 //
-// Determine if the current item can be dropped in this pane. Check to see if the 
-// pane as a whole accepts drops (history, for example, will not). The data, at this
-// point, is fairly moot and will be checked in RowCanAcceptDrop*() routines.
+// Determine if the current item can be dropped in this pane. Just always say "yes" for now
+// if the flavor is acceptable to us. It will be verified for real in RowCanAcceptDrop*() routines.
 //
 Boolean
 CHyperTreeFlexTable :: ItemIsAcceptable ( DragReference inDragRef, ItemReference inItemRef )
 {
-	FlavorType ignored;
-	
-	bool paneAllowsDrop = HT_CanDropURLOn ( TopNode(), "http://foo.com" );
-	bool acceptableFlavorFound = FindBestFlavor ( inDragRef, inItemRef, ignored );
-	
-	return paneAllowsDrop && acceptableFlavorFound;
+	FlavorType ignored;	
+	bool acceptableFlavorFound = FindBestFlavor ( inDragRef, inItemRef, ignored );	
+	return acceptableFlavorFound;
 
 } // ItemIsAcceptable
 
