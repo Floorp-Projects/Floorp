@@ -443,7 +443,7 @@ void DocumentViewerImpl::Hide()
 static NS_DEFINE_IID(kIDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
-NS_IMETHODIMP DocumentViewerImpl :: Print(void)
+NS_IMETHODIMP DocumentViewerImpl::Print(void)
 {
   nsIDeviceContextSpecFactory *factory = nsnull;
 
