@@ -1,0 +1,42 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsIURI.idl"
+
+/**
+ * JAR URLs have the following syntax
+ *
+ * jar:<jar-file-uri>!/<jar-entry>
+ *
+ * EXAMPLE: jar:http://www.big.com/blue.jar!/ocean.html
+ */
+[scriptable, uuid(c7e410d3-85f2-11d3-9f63-006008a6efe9)]
+interface nsIJARURI : nsIURI {
+
+    /**
+     * Returns the root URI (the one for the actual JAR file) for this JAR.
+     * eg http://www.big.com/blue.jar
+     */
+    attribute nsIURI JARFile;
+
+    /**
+     * Returns the entry specified for this JAR URI.
+     * eg ocean.html
+     */
+	attribute string JAREntry;
+};

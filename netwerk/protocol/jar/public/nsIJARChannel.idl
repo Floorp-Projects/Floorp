@@ -22,15 +22,18 @@
 
 #include "nsIChannel.idl"
 
-[scriptable, uuid(692303c0-2f83-11d3-8cd0-0060b0fc14a3)]
+interface nsISimpleEnumerator;
+
+[scriptable, uuid(c7e410d1-85f2-11d3-9f63-006008a6efe9)]
 interface nsIJARChannel : nsIChannel 
 {
 
+    /**
+     * Enumerates all the entries in the JAR (the root URI).
+     * ARGUMENTS:
+     *  aRoot - a string representing the root dir to enumerate from
+     *    or null to enumerate the whole thing.
+     */
+    nsISimpleEnumerator EnumerateEntries(in string aRoot);
+
 };
-
-%{C++
-
-#define NS_JAR_CHANNEL_PROGID        "component://netscape/network/protocol/jar" 
-#define NS_JAR_CHANNEL_PROGID_LENGTH 41
-
-%}

@@ -23,21 +23,24 @@
 #ifndef nsJARProtocolHandler_h___
 #define nsJARProtocolHandler_h___
 
+#include "nsIJARProtocolHandler.h"
 #include "nsIProtocolHandler.h"
+#include "nsIJARURI.h"
 
-#define NS_JARPROTOCOLHANDLER_CID                  \
-{ /* 9e3b6c90-2f75-11d3-8cd0-0060b0fc14a3 */         \
-    0x9e3b6c90,                                      \
-    0x2f75,                                          \
+#define NS_JARPROTOCOLHANDLER_CID					 \
+{ /* 0xc7e410d4-0x85f2-11d3-9f63-006008a6efe9 */     \
+    0xc7e410d4,                                      \
+    0x85f2,                                          \
     0x11d3,                                          \
-    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+    {0x9f, 0x63, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9} \
 }
 
-class nsJARProtocolHandler : public nsIProtocolHandler
+
+class nsJARProtocolHandler : public nsIJARProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS
-    ns_DECL_NSIPROTOCOLHANDLER
+	NS_DECL_NSIPROTOCOLHANDLER
 
     // nsJARProtocolHandler methods:
     nsJARProtocolHandler();
