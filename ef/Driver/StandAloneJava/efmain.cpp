@@ -98,8 +98,6 @@ static bool getStage(const char *stageName, CompileStage &stage)
  * -l, -lib <libname> : canonical name of native library to load at init time
  * -nosys, -nosystem : Don't initialize system class on start-up
  * -ta, -traceAll: enable method tracing for all methods
- * -t, -trace <className> <methodName> <signature>: Enable tracing for a method with the given fully
- *                           qualified className, simple methodName and java signature.
  * -bc, -breakCompile <className> <methodName> <signature>: Set a debug breakpoint just before compiling
  *                           the method with the given fully qualified className, simple methodName and
  *                           java signature.
@@ -262,10 +260,9 @@ void Options::printHelp(const char *argv0)
 "             if the compile stage is anything other than genInstructions.\n"
 " -l, -lib <libname> : canonical name of native library to load at init time\n"
 " -nosys, -nosystem : Don't initialize system class on start-up\n"
+#ifdef DEBUG
 " -ta, -traceAll: enable method tracing for all methods\n"
-" -t, -trace <className> <methodName> <signature>:\n"
-"      Enable tracing for a method with the given fully qualified\n"
-"      className, simple methodName and java signature.\n"
+" -html: output a HTML file for each jit'd method\n"
 " -bc, -breakCompile <className> <methodName> <signature>:\n"
 "      Set a debug breakpoint just before compiling the method with\n"
 "      the given fully qualified className, simple methodName and\n"
@@ -274,6 +271,7 @@ void Options::printHelp(const char *argv0)
 "      Set a debug breakpoint just before executing the method with\n"
 "      the given fully qualified className, simple methodName and\n"
 "      java signature.\n"
+#endif
 " -h, -help : Print this help message\n"
 " -log <module-name> <level> :\n"
 "      turn on logging for <module-name> at level <level>. By default,\n"
