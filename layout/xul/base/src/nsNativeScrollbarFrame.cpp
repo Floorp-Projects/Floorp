@@ -245,7 +245,7 @@ nsNativeScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
 
           nsAutoString currentStr;
           currentStr.AppendInt(curPosition);
-          scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_FALSE);
+          scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_TRUE);
         }
       }
       
