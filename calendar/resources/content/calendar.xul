@@ -152,8 +152,8 @@
   <key id="view_multiweek_key" keycode="VK_F3" observes="multiweek_view_command"/>
   <key id="view_month_key" keycode="VK_F4" observes="month_view_command"/>
   
-  <key id="go_forward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
-  <key id="go_backward_key" keycode="VK_PAGE_DOWN" observes="next_command"/>
+  <key id="go_backward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
+  <key id="go_forward_key"  keycode="VK_PAGE_DOWN" observes="next_command"/>
   <key id="go_to_today_key"   keycode="VK_DOWN" modifiers="control" observes="go_today_command"/>
   
   <key id="key_close" key="W" modifiers="control" observes="close_calendar_command"/>

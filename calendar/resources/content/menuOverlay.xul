@@ -248,19 +248,21 @@
          label="&goMenu.label;"
          accesskey="&goMenu.accesskey;">
       <menupopup id="mppView">
-         <menuitem id="calendar-view-menu-today"
+         <menuitem id="calendar-go-menu-today"
                    key="go_to_today_key"
                    label="&goTodayCmd.label;"
                    accesskey="&goTodayCmd.accesskey;"
                    observes="go_today_command"/>
-         <menuitem id="calendar-view-menu-previous"
-                   key="go_forward_key"
-                   label="&goPreviousCmd.label;"
-                   accesskey="&goPreviousCmd.accesskey;"/>
-         <menuitem id="calendar-view-menu-next"
+         <menuitem id="calendar-go-menu-previous"
                    key="go_backward_key"
+                   label="&goPreviousCmd.label;"
+                   accesskey="&goPreviousCmd.accesskey;"
+                   observes="previous_command"/>
+         <menuitem id="calendar-go-menu-next"
+                   key="go_forward_key"
                    label="&goNextCmd.label;"
-                   accesskey="&goNextCmd.accesskey;"/>
+                   accesskey="&goNextCmd.accesskey;"
+                   observes="next_command"/>
       </menupopup>
    </menu>
    
