@@ -344,7 +344,7 @@ sub ProcessJarManifests()
     {
       CreateJarFromManifest(":mozilla:extensions:p3p:resources:jar.mn", $chrome_dir, \%jars);
     }
-    if ($main::options{jsdebugger})
+    if ($main::options{jsd} && $main::options{venkman})
     {
       CreateJarFromManifest(":mozilla:extensions:venkman:resources:jar.mn", $chrome_dir, \%jars);
     }
@@ -901,7 +901,7 @@ sub BuildClientDist()
     }
 
     #JS DEBUGGER
-    if ($main::options{jsdebugger})
+    if ($main::options{jsd})
     {
         InstallFromManifest(":mozilla:js:jsd:idl:MANIFEST_IDL", "$distdirectory:idl:");
         InstallFromManifest(":mozilla:js:jsd:MANIFEST", "$distdirectory:jsdebug:");
@@ -1194,7 +1194,7 @@ sub BuildIDLProjects()
         BuildIDLProject(":mozilla:extensions:p3p:macbuild:p3pIDL.mcp", "p3p");
     }
 
-    if ($main::options{jsdebugger})
+    if ($main::options{jsd})
     {
         BuildIDLProject(":mozilla:js:jsd:macbuild:jsdIDL.mcp", "jsdservice");
     }
@@ -1862,11 +1862,14 @@ sub BuildExtensionsProjects()
     }
     
     # JS Debugger
-    if ($main::options{jsdebugger})
+    if ($main::options{jsd})
     {
         BuildOneProject(":mozilla:js:jsd:macbuild:JSD.mcp", "jsdService$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
-        InstallResources(":mozilla:extensions:venkman:js:MANIFEST_COMPONENTS", "$components_dir");
+        if ($main::options{venkman})
+        {
+            InstallResources(":mozilla:extensions:venkman:js:MANIFEST_COMPONENTS", "$components_dir");
+        }
     }
     
     EndBuildModule("extensions");
