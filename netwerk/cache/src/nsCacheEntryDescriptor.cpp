@@ -423,20 +423,18 @@ nsCacheEntryDescriptor::Close()
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char ** result)
 {
+    *result = nsnull;
+
     nsAutoLock  lock(nsCacheService::ServiceLock());
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     if (!key | !result) return NS_ERROR_NULL_POINTER;
-    const nsACString *value;
-    *result = nsnull;
+    const char *value;
 
-    // XXX not thread safe    
-    nsresult rv = mCacheEntry->GetMetaDataElement(nsDependentCString(key), &value);
-    if (NS_FAILED(rv)) return rv;
-
+    value = mCacheEntry->GetMetaDataElement(key);
     if (!value) return NS_ERROR_NOT_AVAILABLE;
 
-    *result = ToNewCString(*value);
+    *result = PL_strdup(value);
     if (!*result) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
@@ -450,10 +448,10 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     if (!key) return NS_ERROR_NULL_POINTER;
-    // XXX not thread safe
+
     // XXX allow null value, for clearing key?
-    nsresult rv = mCacheEntry->SetMetaDataElement(nsDependentCString(key),
-                                                  nsDependentCString(value));
+
+    nsresult rv = mCacheEntry->SetMetaDataElement(key, value);
     if (NS_SUCCEEDED(rv))
         mCacheEntry->TouchMetaData();
     return rv;
