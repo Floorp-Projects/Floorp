@@ -356,7 +356,7 @@ class JavaMembers
                 }
                 NativeJavaMethod fun = new NativeJavaMethod(methodBoxes);
                 if (scope != null) {
-                    ScriptRuntime.setFunctionProtoAndParent(scope, fun);
+                    ScriptRuntime.setFunctionProtoAndParent(fun, scope);
                 }
                 ht.put(name, fun);
             }

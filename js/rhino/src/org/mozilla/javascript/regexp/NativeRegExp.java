@@ -141,7 +141,7 @@ public class NativeRegExp extends IdScriptableObject implements Function
 
         NativeRegExpCtor ctor = new NativeRegExpCtor();
 
-        ScriptRuntime.setFunctionProtoAndParent(scope, ctor);
+        ScriptRuntime.setFunctionProtoAndParent(ctor, scope);
 
         ctor.setImmunePrototypeProperty(proto);
 
@@ -157,9 +157,7 @@ public class NativeRegExp extends IdScriptableObject implements Function
     {
         this.re = (RECompiled)regexpCompiled;
         this.lastIndex = 0;
-        scope = getTopLevelScope(scope);
-        setPrototype(getClassPrototype(scope, "RegExp"));
-        setParentScope(scope);
+        ScriptRuntime.setObjectProtoAndParent(this, scope);
     }
 
     public String getClassName()

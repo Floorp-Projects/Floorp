@@ -1537,8 +1537,8 @@ public class Context
      */
     public final Scriptable newArray(Scriptable scope, int length)
     {
-        Scriptable result = new NativeArray(length);
-        newArrayHelper(scope, result);
+        NativeArray result = new NativeArray(length);
+        ScriptRuntime.setObjectProtoAndParent(result, scope);
         return result;
     }
 
@@ -1556,8 +1556,8 @@ public class Context
     {
         if (elements.getClass().getComponentType() != ScriptRuntime.ObjectClass)
             throw new IllegalArgumentException();
-        Scriptable result = new NativeArray(elements);
-        newArrayHelper(scope, result);
+        NativeArray result = new NativeArray(elements);
+        ScriptRuntime.setObjectProtoAndParent(result, scope);
         return result;
     }
 
@@ -2425,14 +2425,6 @@ public class Context
             }
         }
         return regExpProxy;
-    }
-
-    private void newArrayHelper(Scriptable scope, Scriptable array)
-    {
-        scope = ScriptableObject.getTopLevelScope(scope);
-        array.setParentScope(scope);
-        array.setPrototype(
-            ScriptableObject.getClassPrototype(scope, array.getClassName()));
     }
 
     final boolean isVersionECMA1()

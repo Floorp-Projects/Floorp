@@ -138,8 +138,7 @@ class NativeScript extends NativeFunction
                             : ScriptRuntime.toString(args[0]);
             Script script = compile(cx, source);
             NativeScript nscript = new NativeScript(script);
-            nscript.setParentScope(scope);
-            nscript.setPrototype(getClassPrototype(scope, "Script"));
+            ScriptRuntime.setObjectProtoAndParent(nscript, scope);
             return nscript;
           }
 

@@ -3076,11 +3076,22 @@ public class ScriptRuntime {
         return nw.getParentScope();
     }
 
-    public static void setFunctionProtoAndParent(Scriptable scope,
-                                                 BaseFunction fn)
+    public static void setFunctionProtoAndParent(BaseFunction fn,
+                                                 Scriptable scope)
     {
-        fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
+        fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
+    }
+
+    public static void setObjectProtoAndParent(ScriptableObject object,
+                                               Scriptable scope)
+    {
+        // Compared with function it always sets the scope to top scope
+        scope = ScriptableObject.getTopLevelScope(scope);
+        object.setParentScope(scope);
+        Scriptable proto
+            = ScriptableObject.getClassPrototype(scope, object.getClassName());
+        object.setPrototype(proto);
     }
 
     public static void initFunction(Context cx, Scriptable scope,

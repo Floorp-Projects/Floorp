@@ -19,6 +19,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ * Norris Boyd
+ * Igor Bukanov
+ * Brendan Eich
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -50,14 +53,11 @@ import java.lang.reflect.Method;
  * @author Brendan Eich
  * @author Norris Boyd
  */
-public class NativeRegExpCtor extends NativeFunction {
+class NativeRegExpCtor extends NativeFunction {
 
-    public NativeRegExpCtor() {
+    NativeRegExpCtor()
+    {
         functionName = "RegExp";
-    }
-
-    public String getClassName() {
-        return "Function";
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -65,7 +65,7 @@ public class NativeRegExpCtor extends NativeFunction {
     {
         if (args.length > 0 && args[0] instanceof NativeRegExp &&
             (args.length == 1 || args[1] == Undefined.instance))
-          {
+        {
             return args[0];
         }
         return construct(cx, scope, args);
@@ -75,20 +75,14 @@ public class NativeRegExpCtor extends NativeFunction {
     {
         NativeRegExp re = new NativeRegExp();
         re.compile(cx, scope, args);
-        re.setPrototype(getClassPrototype(scope, "RegExp"));
-        re.setParentScope(getParentScope());
+        ScriptRuntime.setObjectProtoAndParent(re, scope);
         return re;
     }
 
-    static RegExpImpl getImpl()
+    private static RegExpImpl getImpl()
     {
         Context cx = Context.getCurrentContext();
         return (RegExpImpl) ScriptRuntime.getRegExpProxy(cx);
-    }
-
-    private static String stringResult(Object obj)
-    {
-        return (obj == null) ? "" : obj.toString();
     }
 
 // #string_id_map#
@@ -226,34 +220,46 @@ public class NativeRegExpCtor extends NativeFunction {
         int shifted = id - idBase;
         if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
             RegExpImpl impl = getImpl();
+            Object stringResult;
             switch (shifted) {
-                case Id_multiline:
-                case Id_STAR:
-                    return ScriptRuntime.wrapBoolean(impl.multiline);
+              case Id_multiline:
+              case Id_STAR:
+                return ScriptRuntime.wrapBoolean(impl.multiline);
 
-                case Id_input:
-                case Id_UNDERSCORE:
-                    return stringResult(impl.input);
+              case Id_input:
+              case Id_UNDERSCORE:
+                stringResult = impl.input;
+                break;
 
-                case Id_lastMatch:
-                case Id_AMPERSAND:
-                    return stringResult(impl.lastMatch);
+              case Id_lastMatch:
+              case Id_AMPERSAND:
+                stringResult = impl.lastMatch;
+                break;
 
-                case Id_lastParen:
-                case Id_PLUS:
-                    return stringResult(impl.lastParen);
+              case Id_lastParen:
+              case Id_PLUS:
+                stringResult = impl.lastParen;
+                break;
 
-                case Id_leftContext:
-                case Id_BACK_QUOTE:
-                    return stringResult(impl.leftContext);
+              case Id_leftContext:
+              case Id_BACK_QUOTE:
+                stringResult = impl.leftContext;
+                break;
 
-                case Id_rightContext:
-                case Id_QUOTE:
-                    return stringResult(impl.rightContext);
+              case Id_rightContext:
+              case Id_QUOTE:
+                stringResult = impl.rightContext;
+                break;
+
+              default:
+                {
+                    // Must be one of $1..$9, convert to 0..8
+                    int substring_number = shifted - DOLLAR_ID_BASE - 1;
+                    stringResult = impl.getParenSubString(substring_number);
+                    break;
+                }
             }
-            // Must be one of $1..$9, convert to 0..8
-            int substring_number = shifted - DOLLAR_ID_BASE - 1;
-            return impl.getParenSubString(substring_number).toString();
+            return (stringResult == null) ? "" : stringResult.toString();
         }
         return super.getInstanceIdValue(id);
     }

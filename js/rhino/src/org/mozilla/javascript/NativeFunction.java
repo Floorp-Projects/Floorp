@@ -66,7 +66,7 @@ public class NativeFunction extends BaseFunction
         this.argCount = argCount;
         this.version = version;
 
-        ScriptRuntime.setFunctionProtoAndParent(scope, this);
+        ScriptRuntime.setFunctionProtoAndParent(this, scope);
     }
 
     public final void initScriptObject(int version, String[] varNames)

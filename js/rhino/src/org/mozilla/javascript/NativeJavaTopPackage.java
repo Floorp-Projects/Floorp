@@ -111,7 +111,7 @@ public class NativeJavaTopPackage
 
         String[] names = Kit.semicolonSplit(commonPackages);
         for (int i = 0; i != names.length; ++i) {
-            top.forcePackage(names[i]);
+            top.forcePackage(names[i], scope);
         }
 
         // getClass implementation

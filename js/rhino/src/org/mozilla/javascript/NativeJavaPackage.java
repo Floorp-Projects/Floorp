@@ -108,7 +108,7 @@ public class NativeJavaPackage extends ScriptableObject {
 
     // set up a name which is known to be a package so we don't
     // need to look for a class by that name
-    void forcePackage(String name)
+    void forcePackage(String name, Scriptable scope)
     {
         NativeJavaPackage pkg;
         int end = name.indexOf('.');
@@ -125,12 +125,11 @@ public class NativeJavaPackage extends ScriptableObject {
                                 ? id
                                 : packageName + "." + id;
             pkg = new NativeJavaPackage(true, newPackage, classLoader);
-            pkg.setParentScope(this);
-            pkg.setPrototype(getPrototype());
+            ScriptRuntime.setObjectProtoAndParent(pkg, scope);
             super.put(id, this, pkg);
         }
         if (end < name.length()) {
-            pkg.forcePackage(name.substring(end+1));
+            pkg.forcePackage(name.substring(end+1), scope);
         }
     }
 
@@ -155,14 +154,16 @@ public class NativeJavaPackage extends ScriptableObject {
             }
             if (cl != null) {
                 newValue = new NativeJavaClass(getTopLevelScope(this), cl);
+                newValue.setPrototype(getPrototype());
             }
         }
         if (newValue == null && createPkg) {
-            newValue = new NativeJavaPackage(true, className, classLoader);
+            NativeJavaPackage pkg;
+            pkg = new NativeJavaPackage(true, className, classLoader);
+            ScriptRuntime.setObjectProtoAndParent(pkg, getParentScope());
+            newValue = pkg;
         }
         if (newValue != null) {
-            newValue.setParentScope(this);
-            newValue.setPrototype(getPrototype());
             // Make it available for fast lookup and sharing of
             // lazily-reflected constructors and static members.
             super.put(name, start, newValue);

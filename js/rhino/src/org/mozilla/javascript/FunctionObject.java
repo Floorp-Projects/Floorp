@@ -184,7 +184,7 @@ public class FunctionObject extends BaseFunction
             }
         }
 
-        ScriptRuntime.setFunctionProtoAndParent(scope, this);
+        ScriptRuntime.setFunctionProtoAndParent(this, scope);
     }
 
     /**
@@ -340,8 +340,9 @@ public class FunctionObject extends BaseFunction
      * @see org.mozilla.javascript.Scriptable#setPrototype
      * @see org.mozilla.javascript.Scriptable#getClassName
      */
-    public void addAsConstructor(Scriptable scope, Scriptable prototype) {
-        ScriptRuntime.setFunctionProtoAndParent(scope, this);
+    public void addAsConstructor(Scriptable scope, Scriptable prototype)
+    {
+        ScriptRuntime.setFunctionProtoAndParent(this, scope);
         setImmunePrototypeProperty(prototype);
 
         prototype.setParentScope(this);
