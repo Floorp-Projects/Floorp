@@ -48,18 +48,6 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Date);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Status);
 
-//This really needs to be some place else so that all datasources can use it.
-static PRBool
-peq(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-  PRBool result;
-  if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)) && result) {
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
-}
-
 NS_IMPL_ADDREF(nsMessageViewDataSource)
 NS_IMPL_RELEASE(nsMessageViewDataSource)
 
@@ -201,9 +189,10 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 
 	nsIMsgFolder* folder;
 	nsIMessage *message;
+	PRBool equal;
 	if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
 	{
-		if (peq(kNC_MessageChild, property))
+		if (NS_SUCCEEDED(property->EqualsResource(kNC_MessageChild, &equal)) && equal)
 		{
 
 			if(mShowThreads)
@@ -249,7 +238,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 	}
 	else if (mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
 	{
-		if(peq(kNC_MessageChild, property))
+		if(NS_SUCCEEDED(property->EqualsResource(kNC_MessageChild, &equal)) && equal)
 		{
 			nsIMsgFolder *folder;
 			rv = nsGetFolderFromMessage(message, &folder);
@@ -377,7 +366,7 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 		{
 			nsIMsgThread *thread;
 			rv =folder->GetThreadForMessage(message, &thread);
-			if(NS_SUCCEEDED(rv))
+			if(thread && NS_SUCCEEDED(rv))
 			{
 				nsIEnumerator *messages;
 				nsMsgKey msgKey;
