@@ -58,6 +58,8 @@ public:
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD GetAccessKey(nsString &aText);
+  NS_IMETHOD SetAccessKey(const nsString &aText);
   NS_IMETHOD AddItem(nsISupports * aItem);
   NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
