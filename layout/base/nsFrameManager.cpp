@@ -230,10 +230,10 @@ public:
                               nsIAtom*  aPropertyName,
                               PRUint32  aOptions,
                               void**    aPropertyValue);
-  NS_IMETHOD SetFrameProperty(nsIFrame*          aFrame,
-                              nsIAtom*           aPropertyName,
-                              void*              aPropertyValue,
-                              FMPropertyDtorFunc aPropDtorFunc);
+  NS_IMETHOD SetFrameProperty(nsIFrame*            aFrame,
+                              nsIAtom*             aPropertyName,
+                              void*                aPropertyValue,
+                              NSFMPropertyDtorFunc aPropDtorFunc);
   NS_IMETHOD RemoveFrameProperty(nsIFrame* aFrame,
                                  nsIAtom*  aPropertyName);
 
@@ -243,22 +243,22 @@ public:
 
 private:
   struct PropertyList {
-    nsCOMPtr<nsIAtom>  mName;          // property name
-    nsDST*             mFrameValueMap; // map of frame/value pairs
-    FMPropertyDtorFunc mDtorFunc;      // property specific value dtor function
-    PropertyList*      mNext;
+    nsCOMPtr<nsIAtom>    mName;          // property name
+    nsDST*               mFrameValueMap; // map of frame/value pairs
+    NSFMPropertyDtorFunc mDtorFunc;      // property specific value dtor function
+    PropertyList*        mNext;
 
-    PropertyList(nsIAtom*           aName,
-                 FMPropertyDtorFunc aDtorFunc,
-                 nsDST::NodeArena*  aDSTNodeArena);
+    PropertyList(nsIAtom*             aName,
+                 NSFMPropertyDtorFunc aDtorFunc,
+                 nsDST::NodeArena*    aDSTNodeArena);
     ~PropertyList();
 
     // Removes the property associated with the given frame, and destroys
     // the property value
-    void  RemovePropertyForFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
+    PRBool RemovePropertyForFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
     // Remove and destroy all remaining properties
-    void  RemoveAllProperties(nsIPresContext* aPresContext);
+    void   RemoveAllProperties(nsIPresContext* aPresContext);
   };
 
   nsIPresShell*                   mPresShell;    // weak link, because the pres shell owns us
@@ -298,7 +298,7 @@ private:
 NS_LAYOUT nsresult
 NS_NewFrameManager(nsIFrameManager** aInstancePtrResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
   if (!aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -392,14 +392,14 @@ FrameManager::SetRootFrame(nsIFrame* aRootFrame)
 NS_IMETHODIMP
 FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
 {
-  NS_PRECONDITION(aResult, "null ptr");
-  NS_PRECONDITION(aContent, "no content object");
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG_POINTER(aContent);
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
   if (mPrimaryFrameMap) {
-    *aResult = (nsIFrame*)mPrimaryFrameMap->Search(aContent);
+    mPrimaryFrameMap->Search(aContent, 0, (void**)aResult);
     if (!*aResult) {
       nsCOMPtr<nsIStyleSet>    styleSet;
       nsCOMPtr<nsIPresContext> presContext;
@@ -421,7 +421,7 @@ NS_IMETHODIMP
 FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
                                  nsIFrame*   aPrimaryFrame)
 {
-  NS_PRECONDITION(aContent, "no content object");
+  NS_ENSURE_ARG_POINTER(aContent);
 
   // If aPrimaryFrame is NULL, then remove the mapping
   if (!aPrimaryFrame) {
@@ -438,7 +438,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
     }
 
     // Add a mapping to the hash table
-    mPrimaryFrameMap->Insert(aContent, (void*)aPrimaryFrame);
+    mPrimaryFrameMap->Insert(aContent, (void*)aPrimaryFrame, nsnull);
   }
   return NS_OK;
 }
@@ -457,8 +457,8 @@ NS_IMETHODIMP
 FrameManager::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                      nsIFrame** aResult) const
 {
-  NS_PRECONDITION(aResult, "null ptr");
-  NS_PRECONDITION(aFrame, "no frame");
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG_POINTER(aFrame);
   if (!aResult || !aFrame) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -476,7 +476,7 @@ NS_IMETHODIMP
 FrameManager::SetPlaceholderFrameFor(nsIFrame* aFrame,
                                      nsIFrame* aPlaceholderFrame)
 {
-  NS_PRECONDITION(aFrame, "no frame");
+  NS_ENSURE_ARG_POINTER(aFrame);
 #ifdef NS_DEBUG
   // Verify that the placeholder frame is of the correct type
   if (aPlaceholderFrame) {
@@ -1597,31 +1597,30 @@ FrameManager::GetFrameProperty(nsIFrame* aFrame,
                                PRUint32  aOptions,
                                void**    aPropertyValue)
 {
-  NS_PRECONDITION(aPropertyName, "null property name atom");
+  NS_ENSURE_ARG_POINTER(aPropertyName);
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
+  nsresult      result;
 
   if (propertyList) {
-    // See if we should also remove the property
-    if (aOptions & NS_IFRAME_MGR_REMOVE_PROPERTY) {
-      *aPropertyValue = propertyList->mFrameValueMap->Remove(aFrame);
-    } else {
-      *aPropertyValue = propertyList->mFrameValueMap->Search(aFrame);
-    }
+    result = propertyList->mFrameValueMap->Search(aFrame, aOptions, aPropertyValue);
+
   } else {
     *aPropertyValue = 0;
+    result = NS_IFRAME_MGR_PROP_NOT_THERE;
   }
 
-  return NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP
-FrameManager::SetFrameProperty(nsIFrame*          aFrame,
-                               nsIAtom*           aPropertyName,
-                               void*              aPropertyValue,
-                               FMPropertyDtorFunc aPropDtorFunc)
+FrameManager::SetFrameProperty(nsIFrame*            aFrame,
+                               nsIAtom*             aPropertyName,
+                               void*                aPropertyValue,
+                               NSFMPropertyDtorFunc aPropDtorFunc)
 {
-  NS_PRECONDITION(aPropertyName, "null property name atom");
+  NS_ENSURE_ARG_POINTER(aPropertyName);
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
+  nsresult      result = NS_OK;
 
   if (propertyList) {
     // Make sure the dtor function matches
@@ -1641,34 +1640,38 @@ FrameManager::SetFrameProperty(nsIFrame*          aFrame,
 
   // The current property value (if there is one) is replaced and the current
   // value is destroyed
-  void* aOldValue;
-  
-  aOldValue = propertyList->mFrameValueMap->Insert(aFrame, aPropertyValue);
-  if (aOldValue && propertyList->mDtorFunc) {
-    nsCOMPtr<nsIPresContext> presContext;
-    mPresShell->GetPresContext(getter_AddRefs(presContext));
-    
-    propertyList->mDtorFunc(presContext, aFrame, aPropertyName, aOldValue);
+  void* oldValue;
+  result = propertyList->mFrameValueMap->Insert(aFrame, aPropertyValue, &oldValue);
+  if (NS_DST_VALUE_OVERWRITTEN == result) {
+    if (propertyList->mDtorFunc) {
+      nsCOMPtr<nsIPresContext> presContext;
+      mPresShell->GetPresContext(getter_AddRefs(presContext));
+
+      propertyList->mDtorFunc(presContext, aFrame, aPropertyName, oldValue);
+    }
   }
 
-  return NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP
 FrameManager::RemoveFrameProperty(nsIFrame* aFrame,
                                   nsIAtom*  aPropertyName)
 {
-  NS_PRECONDITION(aPropertyName, "null property name atom");
+  NS_ENSURE_ARG_POINTER(aPropertyName);
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
+  nsresult      result = NS_IFRAME_MGR_PROP_NOT_THERE;
 
   if (propertyList) {
     nsCOMPtr<nsIPresContext> presContext;
     mPresShell->GetPresContext(getter_AddRefs(presContext));
     
-    propertyList->RemovePropertyForFrame(presContext, aFrame);
+    if (propertyList->RemovePropertyForFrame(presContext, aFrame)) {
+      result = NS_OK;
+    }
   }
 
-  return NS_OK;
+  return result;
 }
 
 //----------------------------------------------------------------------
@@ -1825,9 +1828,9 @@ UndisplayedMap::Clear(void)
 
 //----------------------------------------------------------------------
     
-FrameManager::PropertyList::PropertyList(nsIAtom*           aName,
-                                         FMPropertyDtorFunc aDtorFunc,
-                                         nsDST::NodeArena*  aDSTNodeArena)
+FrameManager::PropertyList::PropertyList(nsIAtom*             aName,
+                                         NSFMPropertyDtorFunc aDtorFunc,
+                                         nsDST::NodeArena*    aDSTNodeArena)
   : mName(aName), mFrameValueMap(new nsDST(aDSTNodeArena)),
     mDtorFunc(aDtorFunc), mNext(nsnull)
 {
@@ -1840,18 +1843,18 @@ FrameManager::PropertyList::~PropertyList()
 
 class DestroyPropertyValuesFunctor : public nsDSTNodeFunctor {
 public:
-  DestroyPropertyValuesFunctor(nsIPresContext*    aPresContext,
-                               nsIAtom*           aPropertyName,
-                               FMPropertyDtorFunc aDtorFunc)
+  DestroyPropertyValuesFunctor(nsIPresContext*      aPresContext,
+                               nsIAtom*             aPropertyName,
+                               NSFMPropertyDtorFunc aDtorFunc)
     : mPresContext(aPresContext), mPropertyName(aPropertyName), mDtorFunc(aDtorFunc) {}
 
   virtual void operator () (void *aKey, void *aValue) {
     mDtorFunc(mPresContext, (nsIFrame*)aKey, mPropertyName, aValue);
   }
 
-  nsIPresContext*    mPresContext;
-  nsIAtom*           mPropertyName;
-  FMPropertyDtorFunc mDtorFunc;
+  nsIPresContext*      mPresContext;
+  nsIAtom*             mPropertyName;
+  NSFMPropertyDtorFunc mDtorFunc;
 };
 
 void
@@ -1865,15 +1868,27 @@ FrameManager::PropertyList::RemoveAllProperties(nsIPresContext* aPresContext)
   }
 }
 
-void
+PRBool
 FrameManager::PropertyList::RemovePropertyForFrame(nsIPresContext* aPresContext,
                                                    nsIFrame*       aFrame)
 {
-  void* value = mFrameValueMap->Remove(aFrame);
+  void*     value;
+  nsresult  result;
+   
+  // If the property exists, then we need to run the dtor function so
+  // do a search with the option to remove the key/value pair
+  result = mFrameValueMap->Search(aFrame, NS_DST_REMOVE_KEY_VALUE, &value);
 
-  if (value && mDtorFunc) {
-    // Destroy the property value
-    mDtorFunc(aPresContext, aFrame, mName, value);
+  if (NS_OK == result) {
+    // The property was set
+    if (mDtorFunc) {
+      // Destroy the property value
+      mDtorFunc(aPresContext, aFrame, mName, value);
+    }
+
+    return PR_TRUE;
   }
+
+  return PR_FALSE;
 }
 

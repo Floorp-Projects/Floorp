@@ -21,7 +21,7 @@
 #ifdef HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#include "plarena.h"
+#include "nsError.h"
 #ifdef NS_DEBUG
 #include <stdio.h>
 #endif
@@ -33,6 +33,16 @@ class nsDSTNodeFunctor {
 public:
   virtual void operator() (void* aKey, void* aValue) = 0;  // call operator
 };
+
+// Option flags for Search() member function
+#define NS_DST_REMOVE_KEY_VALUE   0x0001
+
+// nsresult error codes
+#define NS_DST_KEY_NOT_THERE \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 1)
+
+#define NS_DST_VALUE_OVERWRITTEN \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 2)
 
 /**
  * Digital search tree for doing a radix-search of pointer-based keys
@@ -57,11 +67,11 @@ public:
   nsDST(NodeArena* aArena, PtrBits aLevelZeroBit = 0x04);
   ~nsDST();
 
-  void* Search(void* aKey) const;
-  void* Insert(void* aKey, void* aValue);  // returns the previous value (or 0)
-  void* Remove(void* aKey);                // returns the current value (or 0)
-  void  Clear();
-  void  Enumerate(nsDSTNodeFunctor& aFunctor) const;
+  nsresult  Search(void* aKey, unsigned aOptions, void** aValue);
+  nsresult  Insert(void* aKey, void* aValue, void** aOldValue);
+  nsresult  Remove(void* aKey);
+  nsresult  Clear();
+  nsresult  Enumerate(nsDSTNodeFunctor& aFunctor) const;
 
 #ifdef NS_DEBUG
   void  Dump(FILE*) const;
@@ -90,6 +100,7 @@ private:
   TwoNode*    ConvertToTwoNode(LeafNode** aLeafNode);
   void        EnumTree(LeafNode* aNode, nsDSTNodeFunctor& aFunctor) const;
   void        FreeTree(LeafNode* aNode);
+  nsresult    SearchTree(void* aKey, unsigned aOptions, void** aValue);
 
 #ifdef NS_DEBUG
   // Diagnostic functions

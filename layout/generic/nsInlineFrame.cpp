@@ -1348,23 +1348,26 @@ nsInlineFrame::DrainOverflow(nsIPresContext* aPresContext)
   // Check for an overflow list with our prev-in-flow
   nsInlineFrame* prevInFlow = (nsInlineFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
-    if (prevInFlow->mOverflowFrames.NotEmpty()) {
+    nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
+
+    if (prevOverflowFrames) {
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
       // XXX Doing it this way means an extra pass over the frames. We could
       // change InsertFrames() to do this, but that's a general purpose
       // function and it doesn't seem like this functionality belongs there...
-      for (nsIFrame* f = prevInFlow->mOverflowFrames.FirstChild(); f; f->GetNextSibling(&f)) {
+      for (nsIFrame* f = prevOverflowFrames; f; f->GetNextSibling(&f)) {
         nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
       }
-      mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
+      mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
     }
   }
 
   // It's also possible that we have an overflow list for ourselves
-  if (mOverflowFrames.NotEmpty()) {
+  nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
+  if (overflowFrames) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    mFrames.AppendFrames(nsnull, mOverflowFrames);
+    mFrames.AppendFrames(nsnull, overflowFrames);
   }
 }
 
@@ -1441,7 +1444,8 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext* aPresContext,
 #ifdef DEBUG
   if (NS_FRAME_COMPLETE == aStatus) {
     // We can't be complete AND have overflow frames!
-    NS_ASSERTION(mOverflowFrames.IsEmpty(), "whoops");
+    nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_FALSE);
+    NS_ASSERTION(!overflowFrames, "whoops");
   }
 #endif
 
@@ -1682,8 +1686,7 @@ nsInlineFrame::PushFrames(nsIPresContext* aPresContext,
 
   // Add the frames to our overflow list (let our next in flow drain
   // our overflow list when it is ready)
-  NS_ASSERTION(mOverflowFrames.IsEmpty(), "bad overflow list");
-  mOverflowFrames.SetFrames(aFromChild);
+  SetOverflowFrames(aPresContext, aFromChild);
 }
 
 nsresult
@@ -1781,7 +1784,7 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext* aPresContext,
         nsInlineFrame* nextInFlow = (nsInlineFrame*) mNextInFlow;
         while (nsnull != nextInFlow) {
           if (nextInFlow->mFrames.NotEmpty() ||
-              nextInFlow->mOverflowFrames.NotEmpty()) {
+              nextInFlow->GetOverflowFrames(aPresContext, PR_FALSE)) {
             aStatus |= NS_FRAME_NOT_COMPLETE;
             break;
           }
@@ -2013,18 +2016,23 @@ nsFirstLineFrame::DrainOverflow(nsIPresContext* aPresContext)
   // Check for an overflow list with our prev-in-flow
   nsFirstLineFrame* prevInFlow = (nsFirstLineFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
-    if (prevInFlow->mOverflowFrames.NotEmpty()) {
-      ReParentChildListStyle(aPresContext, mStyleContext,
-                             prevInFlow->mOverflowFrames);
-      mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
+    nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
+    if (prevOverflowFrames) {
+      nsFrameList frames(prevOverflowFrames);
+      
+      ReParentChildListStyle(aPresContext, mStyleContext, frames);
+      mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
     }
   }
 
   // It's also possible that we have an overflow list for ourselves
-  if (mOverflowFrames.NotEmpty()) {
+  nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
+  if (overflowFrames) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    ReParentChildListStyle(aPresContext, mStyleContext, mOverflowFrames);
-    mFrames.AppendFrames(nsnull, mOverflowFrames);
+    nsFrameList frames(overflowFrames);
+
+    ReParentChildListStyle(aPresContext, mStyleContext, frames);
+    mFrames.AppendFrames(nsnull, overflowFrames);
   }
 }
 

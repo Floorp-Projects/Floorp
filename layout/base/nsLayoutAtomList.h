@@ -99,6 +99,9 @@ LAYOUT_ATOM(tableRowFrame, "TableRowFrame")
 LAYOUT_ATOM(textFrame, "TextFrame")
 LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 
+  // Alphabetical list of frame property names
+LAYOUT_ATOM(overflowProperty, "OverflowProperty")
+
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code
 LAYOUT_ATOM(cellMap, "TableCellMap")

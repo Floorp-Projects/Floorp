@@ -659,8 +659,10 @@ protected:
   virtual PRBool IsColumnWidthsValid() const;
 
   nsIFrame* GetFirstBodyRowGroupFrame();
-  PRBool MoveOverflowToChildList();
-  void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
+  PRBool MoveOverflowToChildList(nsIPresContext* aPresContext);
+  void PushChildren(nsIPresContext *aPresContext,
+                    nsIFrame*       aFromChild,
+                    nsIFrame*       aPrevSibling);
 
 public:
   // Returns PR_TRUE if there are any cells above the row at
