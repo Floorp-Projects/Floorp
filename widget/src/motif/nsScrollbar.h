@@ -72,6 +72,8 @@ private:
   PRUint32 mLineIncrement;
   int      mOrientation;
 
+  int AdjustScrollBarPosition(int aPosition);
+
   // this should not be public
   static PRInt32 GetOuterOffset() {
     return offsetof(nsScrollbar,mAggWidget);

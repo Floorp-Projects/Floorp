@@ -24,7 +24,7 @@
 
 #include "nsXtEventHandler.h"
 
-#define DBG 0
+#define DBG 1
 
 //-------------------------------------------------------------------------
 //
@@ -184,9 +184,9 @@ PRUint32 nsScrollbar::GetMaxRange()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    int pos = aPos;
-    XtVaSetValues(mWidget, XmNvalue, pos, nsnull);
+    int pos = (int)aPos;
     if (DBG) printf("SetPosition %d\n", pos);
+    XtVaSetValues(mWidget, XmNvalue, pos, nsnull);
 }
 
 
@@ -240,10 +240,12 @@ PRUint32 nsScrollbar::GetThumbSize()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 {
+  if (aLineIncrement > 0) {
     mLineIncrement = aLineIncrement;
     XtVaSetValues(mWidget, XmNincrement, aLineIncrement, nsnull);
+  }
 
-    if (DBG) printf("SetLineIncrement %d\n", aLineIncrement);
+  if (DBG) printf("SetLineIncrement %d\n", aLineIncrement);
 }
 
 
@@ -267,20 +269,26 @@ void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
 
-    int thumbSize = (aThumbSize > 0?aThumbSize:1);
+    int thumbSize = (((int)aThumbSize) > 0?aThumbSize:1);
+    int maxRange  = (((int)aMaxRange) > 0?aMaxRange:10);
+    mLineIncrement = (((int)aLineIncrement) > 0?aLineIncrement:1);
+
+    int maxPos = maxRange - thumbSize;
+    int pos    = ((int)aPosition) > maxPos ? maxPos-1 : ((int)aPosition);
+
+    if (DBG) printf("SetParameters Max: %6d Thumb: %4d Pos: %4d Line: %4d \n", 
+                    maxRange, thumbSize, 
+                    pos, mLineIncrement);
 
     XtVaSetValues(mWidget, 
-                  XmNincrement,     (aLineIncrement > 0?aLineIncrement:1),
+                  XmNincrement,     mLineIncrement,
                   XmNminimum,       0,
-                  XmNmaximum,       (aMaxRange > 0?aMaxRange:10),
+                  XmNmaximum,       maxRange,
                   XmNsliderSize,    thumbSize,
                   XmNpageIncrement, thumbSize,
-                  XmNvalue,         aPosition, 
+                  XmNvalue,         pos,
                   nsnull);
 
-    mLineIncrement = aLineIncrement;
-    if (DBG) printf("SetParameters %d %d %d %d \n", aMaxRange, aThumbSize, 
-                    aPosition, aLineIncrement);
 }
 
 
@@ -303,6 +311,17 @@ printf("Scrollbar onresize\n");
   //return PR_FALSE;
 }
 
+int nsScrollbar::AdjustScrollBarPosition(int aPosition) 
+{
+  int maxRange;
+  int sliderSize;
+
+  XtVaGetValues(mWidget, XmNmaximum, &maxRange, 
+                         XmNsliderSize, &sliderSize, 
+                         nsnull);
+  int cap = maxRange - sliderSize;
+  return aPosition > cap ? cap : aPosition;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -332,7 +351,9 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 result = ConvertStatus((*mEventCallback)(&aEvent));
                 newPosition = aEvent.position;
             }
-            XtVaSetValues(mWidget, XmNvalue, newPosition, nsnull);
+            
+            XtVaSetValues(mWidget, XmNvalue, 
+                          AdjustScrollBarPosition(newPosition), nsnull);
             break;
         }
 
@@ -375,7 +396,8 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 result = ConvertStatus((*mEventCallback)(&aEvent));
                 newPosition = aEvent.position;
             }
-            XtVaSetValues(mWidget, XmNvalue, newPosition + 10, nsnull);
+            XtVaSetValues(mWidget, XmNvalue, 
+                          AdjustScrollBarPosition(newPosition+10), nsnull);
             break;
         }
 
@@ -394,7 +416,7 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 newPosition = aEvent.position;
             }
 
-            XtVaSetValues(mWidget, XmNvalue, newPosition - 10, nsnull);
+            XtVaSetValues(mWidget, XmNvalue, newPosition-10, nsnull);
             break;
         }
 
@@ -413,7 +435,8 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
                 newPosition = aEvent.position;
             }
 
-            XtVaSetValues(mWidget, XmNvalue, newPosition, nsnull);
+            XtVaSetValues(mWidget, XmNvalue, 
+                          AdjustScrollBarPosition(newPosition), nsnull);
 
             break;
         }
