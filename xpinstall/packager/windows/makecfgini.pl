@@ -157,7 +157,8 @@ sub OutputInstallSize()
   my($installSize);
 
   print "   calculating size for $inPath\n";
-  $installSize    = `ds32.exe /L0 /A /S /C 32768 $inPath`;
+  $installSize    = `ds32.exe /D /L0 /A /S /C 32768 $inPath`;
+  $installSize   += 32768; # take into account install.js
   $installSize    = int($installSize / 1024);
   $installSize   += 1;
   return($installSize);
@@ -171,6 +172,7 @@ sub OutputInstallSizeArchive()
 
   print "   calculating size for $inPath\n";
   ($dev, $ino, $mode, $nlink, $uid, $gui, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat $inPath;
+  $installSizeArchive   += 32768; # take into account install.js
   $installSizeArchive    = int($size / 1024);
   $installSizeArchive   += 1;
   return($installSizeArchive);
@@ -193,7 +195,7 @@ sub OutputInstallSizeSystem()
       {
         # calculate the size of component installed using ds32.exe in Kbytes
         print "   calculating size for $inPath\\$_";
-        $installSizeSystem += `ds32.exe /L0 /A /S /C 32768 $inPath\\$_`;
+        $installSizeSystem += `ds32.exe /D /L0 /A /S /C 32768 $inPath\\$_`;
       }
     }
   }
