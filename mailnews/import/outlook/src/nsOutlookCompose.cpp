@@ -61,7 +61,7 @@ static NS_DEFINE_CID( kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
 #ifdef IMPORT_DEBUG
-char *p_test_headers = 
+static char *p_test_headers = 
 "Received: from netppl.fi (IDENT:monitor@get.freebsd.because.microsoftsucks.net [209.3.31.115])\n\
 	by mail4.sirius.com (8.9.1/8.9.1) with SMTP id PAA27232;\n\
 	Mon, 17 May 1999 15:27:43 -0700 (PDT)\n\
@@ -75,7 +75,7 @@ Content-Transfer-Encoding: 7bit\n\
 X-UIDL: 19990517.152941\n\
 Status: RO";
 
-char *p_test_body = 
+static char *p_test_body = 
 "Hello world?\n\
 ";
 #else
