@@ -649,9 +649,15 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
         rv = parent->IndexOf(aContent, index);
         if (NS_SUCCEEDED(rv) && index>0)  // no use looking if it's the first child
         {
-          rv = parent->ChildAt(index-1, *getter_AddRefs(prevSibling));
-          if (NS_SUCCEEDED(rv) && prevSibling)
-          {
+          nsCOMPtr<nsIAtom> tag;
+          do {
+            parent->ChildAt(--index, *getter_AddRefs(prevSibling));
+            prevSibling->GetTag(*getter_AddRefs(tag));
+          } while (index &&
+                   (tag == nsLayoutAtoms::textTagName ||
+                    tag == nsLayoutAtoms::commentTagName ||
+                    tag == nsLayoutAtoms::processingInstructionTagName));
+          if (prevSibling) {
             entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
                 PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling.get(),
                                      PL_DHASH_LOOKUP));

@@ -1644,12 +1644,11 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
 #else  // DO_NEW_REFLOW
 
+  if (
 #ifdef IBMBIDI
-  if (eReflowReason_StyleChange == aReflowState.reason
-      || mCacheSize.width == kSizeNotSet) {
-#else
-  if (mCacheSize.width == kSizeNotSet) {
+      eReflowReason_StyleChange == aReflowState.reason ||
 #endif // IBMBIDI
+      mCacheSize.width == kSizeNotSet) {
     ReflowItems(aPresContext, aReflowState, aDesiredSize);
   } else {
     aDesiredSize.width  = mCacheSize.width;
@@ -2617,9 +2616,13 @@ NS_IMETHODIMP
 nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext,
                                      nsIPresState* aState)
 {
-  nsCOMPtr<nsIStatefulFrame> stateful(do_QueryInterface(mListControlFrame));
-  if (stateful) {
-    return stateful->RestoreState(aPresContext, aState);
-  }
-  return NS_OK;
+  if (!mListControlFrame)
+    return NS_ERROR_FAILURE;
+
+  nsIStatefulFrame* stateful;
+  nsresult rv = CallQueryInterface(mListControlFrame, &stateful);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Must implement nsIStatefulFrame");
+  rv = stateful->RestoreState(aPresContext, aState);
+  InitTextStr();
+  return rv;
 }
