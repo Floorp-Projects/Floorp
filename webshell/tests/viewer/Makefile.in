@@ -98,7 +98,6 @@ BASE_LIBS		= \
 GECKO_LIBS		= \
 			-lwidgetsupport_s \
 			-lraptorgfx \
-			$(TIMER_LIBS) \
 			$(NULL)
 
 IMGLIB_LIBS		= \
@@ -130,12 +129,20 @@ ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
 UNIX_VIEWER_TK_LIBS = -lviewer_$(MOZ_WIDGET_TOOLKIT)_s
 endif
 
-XP_LIBS		= \
+XP_DIST_LIBS = \
 			$(GECKO_LIBS) \
 			$(NETLIB_LIBS) \
 			$(IMGLIB_LIBS) \
+			$(TIMER_LIBS) \
 			$(BASE_LIBS) \
 			$(JSJ_LIB) \
+			$(NULL)
+
+# cls/shaver are responsible for this amazingness
+EXTRA_DEPS = $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.so,$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
+
+XP_LIBS = \
+			$(XP_DIST_LIBS) \
 			$(NSPR_LIBS) \
 			$(NULL)
 
@@ -218,4 +225,7 @@ install:: $(PROGRAM)_motif
 	$(INSTALL) -m 555 $(PROGRAM)_motif $(DIST)/bin
 
 endif
+
+caca:
+	@echo $(EXTRA_DEPS)
 
