@@ -30,3 +30,5 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 # 
+
+SHARED_LIBRARY=
