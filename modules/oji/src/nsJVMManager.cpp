@@ -47,6 +47,7 @@
 #include "nsIEventQueueService.h"
 #include "lcglue.h"
 #include "xpgetstr.h"
+#include "nsCOMPtr.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
@@ -54,8 +55,6 @@ extern "C" int XP_JAVA_NO_CLASSES;
 extern "C" int XP_JAVA_GENERAL_FAILURE;
 extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
-
-extern nsIServiceManager  *theServiceManager;
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kPluginHostIID, NS_IPLUGINHOST_IID);
@@ -245,22 +244,22 @@ RunnableEvent::~RunnableEvent()
 NS_METHOD
 nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
 {
-	nsIEventQueueService* eventService = NULL;
-	nsresult rv = theServiceManager->GetService(kEventQueueServiceCID, kIEventQueueServiceIID, (nsISupports **)&eventService);
-	if (NS_SUCCEEDED(rv)) {
-		nsIEventQueue* eventQueue = NULL;
-		rv = eventService->GetThreadEventQueue((PRThread*)threadID, &eventQueue);
-		theServiceManager->ReleaseService(kEventQueueServiceCID, eventService);
-		if (NS_SUCCEEDED(rv) && eventQueue != NULL) {
-			RunnableEvent* runnableEvent = new RunnableEvent(runnable);
-			if (async)
-				eventQueue->PostEvent(runnableEvent);
-			else
-				eventQueue->PostSynchronousEvent(runnableEvent, nsnull);
-		}
-		NS_IF_RELEASE(eventQueue);
-	}
-	return rv;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIEventQueue> eventQueue = NULL;
+    rv = eventService->GetThreadEventQueue((PRThread*)threadID, getter_AddRefs(eventQueue));
+    if (NS_FAILED(rv)) return rv;
+
+    RunnableEvent* runnableEvent = new RunnableEvent(runnable);
+    if (runnableEvent == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (async)
+        eventQueue->PostEvent(runnableEvent);
+    else
+        eventQueue->PostSynchronousEvent(runnableEvent, nsnull);
+    return rv;
 }
 
 NS_METHOD
@@ -553,9 +552,9 @@ nsJVMManager::StartupJVM(void)
     */
 
 	// beard:  Now uses the nsIPluginHost to load the plugin factory for NS_JVM_MIME_TYPE.
-	nsIPluginHost* pluginHost = NULL;
-    nsresult err = theServiceManager->GetService(kPluginManagerCID, kPluginHostIID, (nsISupports**)&pluginHost);
-	if (err != NS_OK) {
+    nsresult err;
+    NS_WITH_SERVICE(nsIPluginHost, pluginHost, kPluginManagerCID, &err);
+	if (NS_FAILED(err)) {
         fStatus = nsJVMStatus_Failed;
         return fStatus;
     }
@@ -632,7 +631,7 @@ static int PR_CALLBACK
 JavaPrefChanged(const char *prefStr, void* data)
 {
     nsJVMManager* mgr = (nsJVMManager*)data;
-    PRBool prefBool;
+    PRBool prefBool = TRUE;
 #if defined(XP_MAC)
 	// beard: under Mozilla, no way to enable this right now.
 	prefBool = TRUE;
