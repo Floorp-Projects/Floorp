@@ -62,6 +62,7 @@ XPIDLSRCS	= \
 ifdef XPC_IDISPATCH_SUPPORT
 XPIDLSRCS	+= \
 		nsIDispatchSupport.idl \
+		nsIActiveXSecurityPolicy.idl \
 		$(NULL)
 endif
 
