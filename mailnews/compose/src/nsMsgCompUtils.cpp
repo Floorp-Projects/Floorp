@@ -1632,7 +1632,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   	{
   		nsAutoString newSpec("http://");
   		newSpec += aSpec;
-		rv = pNetService->NewURI(nsAutoString(newSpec), nsnull, aInstancePtrResult);
+		rv = pNetService->NewURI(nsCAutoString(newSpec), nsnull, aInstancePtrResult);
   	}
   	else
 		rv = pNetService->NewURI(aSpec, nsnull, aInstancePtrResult);
