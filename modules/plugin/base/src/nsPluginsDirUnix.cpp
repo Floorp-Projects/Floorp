@@ -336,5 +336,9 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
             PL_strfree(info.fExtensionArray[i]);
     }
 
+    PR_FREEIF(info.fMimeTypeArray);
+    PR_FREEIF(info.fMimeDescriptionArray);
+    PR_FREEIF(info.fExtensionArray);
+
     return NS_OK;
 }
