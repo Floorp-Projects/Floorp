@@ -1016,9 +1016,9 @@ sub do_vxml {
   $flames = 0;
 
   foreach my $buildname (sort keys %build) {
-    if ($state_symbols{$build{buildname}} == red)
+    if ($state_symbols{$build{buildname}} == 'red')
       flames = 1;
-    else if ($state_symbols{$build{buildname}} == testfailed)
+    else if ($state_symbols{$build{buildname}} == 'testfailed')
       testFailed = 1;
   }
 
