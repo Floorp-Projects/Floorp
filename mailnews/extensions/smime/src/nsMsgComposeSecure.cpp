@@ -1030,7 +1030,7 @@ NS_IMETHODIMP nsMsgComposeSecure::MimeCryptoWriteBlock (const char *buf, PRInt32
 		 by filtering it through the crypto library. */
 
     /* We want to create equally sized encryption strings */
-    char *inputBytesIterator = buf;
+    const char *inputBytesIterator = buf;
     PRUint32 inputBytesLeft = size;
 
     while (inputBytesLeft) {
