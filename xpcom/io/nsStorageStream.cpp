@@ -328,22 +328,22 @@ nsStorageInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
     remainingCapacity = aCount;
     writeCursor = aBuffer;
     while (remainingCapacity) {
-	availableInSegment = mSegmentEnd - mReadCursor;
-	if (!availableInSegment) {
-	    PRUint32 available = mStorageStream->mLogicalLength - mLogicalCursor;
-	    if (!available)
-            goto out;
+        availableInSegment = mSegmentEnd - mReadCursor;
+        if (!availableInSegment) {
+            PRUint32 available = mStorageStream->mLogicalLength - mLogicalCursor;
+            if (!available)
+                goto out;
 	    
-	    mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(mSegmentNum++);
-	    mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize, available);
-	}
+            mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(mSegmentNum++);
+            mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize, available);
+        }
 	
-	count = PR_MIN(availableInSegment, remainingCapacity);
-	memcpy(writeCursor, mReadCursor, count);
-	remainingCapacity -= count;
-	mReadCursor += count;
-	writeCursor += count;
-	mLogicalCursor += count;
+        count = PR_MIN(availableInSegment, remainingCapacity);
+        memcpy(writeCursor, mReadCursor, count);
+        remainingCapacity -= count;
+        mReadCursor += count;
+        writeCursor += count;
+        mLogicalCursor += count;
     };
 
  out:
