@@ -51,7 +51,8 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mFontMetrics(nsnull),
   mContext(nsnull),
   mEventCallback(nsnull),
-  mIgnoreResize(PR_FALSE)
+  mIgnoreResize(PR_FALSE),
+  mParent(nsnull)
 {
   strcpy(gInstanceClassName, "nsWindow");
   // XXX Til can deal with ColorMaps!
@@ -120,6 +121,8 @@ void nsWindow::Create(nsIWidget *aParent,
 	// if we have a parent, add this widget to the parents list
 	if (aParent)
 	  aParent->AddChild(this);
+	 
+	 mParent = aParent;
 	  
 	// now create our stuff
 	if (0==aParent)
@@ -354,8 +357,7 @@ NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
-   
-   return (0);
+  return  mParent;
 }
 
 
@@ -613,7 +615,8 @@ void nsWindow::SetFont(const nsFont &aFont)
     if (mContext == nsnull) {
       return;
     }
-    nsIFontCache* fontCache = mContext->GetFontCache();
+    nsIFontCache* fontCache = nsnull;
+    mContext->GetFontCache(fontCache);
     if (fontCache != nsnull) {
       nsIFontMetrics* metrics = fontCache->GetMetricsFor(aFont);
       if (metrics != nsnull) {
@@ -950,6 +953,18 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     
     printf("Painting the Widget\n");
     
+    if (mChildren)
+    {
+    	mChildren->Reset();
+    	nsWindow* child = nsnull;
+    	do
+    	{
+    		child = (nsWindow*)mChildren->Next();
+    		if (child)
+    			child->OnPaint(event);
+    	} while (child != nsnull);
+    }
+    
     /*
     if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, 
 					      nsnull, 
@@ -1118,13 +1133,14 @@ nsWindow::GetResized()
   return(mResized);
 }
 
-//-------------------------------------------------------------------------
-//
-// Is the point in this window
-//
-//-------------------------------------------------------------------------
+/*
+ *  @update  gpk 08/27/98
+ *  @param   aX -- x offset in widget local coordinates
+ *  @param   aY -- y offset in widget local coordinates
+ *  @return  PR_TRUE if the pt is contained in the widget
+ */
 PRBool
-nsWindow::ptInWindow(PRInt32 aX,PRInt32 aY)
+nsWindow::PtInWindow(PRInt32 aX,PRInt32 aY)
 {
 PRBool	result = PR_FALSE;
 Point		hitpt;
@@ -1137,9 +1153,53 @@ Point		hitpt;
 	return(result);
 }
 
+
+/*
+ *  @update  gpk 08/27/98
+ *  @param   aX -- x offset in widget local coordinates
+ *  @param   aY -- y offset in widget local coordinates
+ *  @return  PR_TRUE if the pt is contained in the widget
+ */
+void nsWindow::SetBounds(const Rect& aMacRect)
+{
+	MacRectToNSRect(aMacRect,mBounds);
+}
+
+
+/*
+ *  Set a Mac Rect to the value of an nsRect 
+ *  The source rect is assumed to be in pixels not TWIPS
+ *  @update  gpk 08/27/98
+ *  @param   aRect -- The nsRect that is the source
+ *  @param   aMacRect -- The Mac Rect destination
+ */
+void nsWindow::nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const
+{
+		aMacRect.left = aRect.x;
+		aMacRect.top = aRect.y;
+		aMacRect.right = aRect.x + aRect.width;
+		aMacRect.bottom = aRect.y + aRect.height;
+}
+
+/*
+ *  Set an nsRect to the value of a Mac Rect 
+ *  The source rect is assumed to be in pixels not TWIPS
+ *  @update  gpk 08/27/98
+ *  @param   aMacRect -- The Mac Rect that is the source
+ *  @param   aRect -- The nsRect coming in
+ */
+void nsWindow::MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const
+{
+	aRect.x = aMacRect.left;
+	aRect.y = aMacRect.top;
+	aRect.width = aMacRect.right-aMacRect.left;
+	aRect.height = aMacRect.bottom-aMacRect.top;
+}
+
+
 //-------------------------------------------------------------------------
 //
-// find the widget that was hit
+// Locate the widget that contains the point
 //
 //-------------------------------------------------------------------------
 nsWindow* 
@@ -1149,20 +1209,21 @@ nsWindow	*child = this;
 nsWindow	*deeperWindow;
 nsRect		rect;
 
-	if (this->ptInWindow(aThePoint.h,aThePoint.v))
+	if (this->PtInWindow(aThePoint.h,aThePoint.v))
 		{
 		// traverse through all the nsWindows to find out who got hit, lowest level of course
 		if (mChildren) 
 			{
 	    mChildren->ResetToLast();
 	    child = (nsWindow*)mChildren->Previous();
+    	nsRect bounds;
+    	GetBounds(bounds);
+    	aThePoint.h -= bounds.x;
+    	aThePoint.v -= bounds.y;
 	    while(child)
 	    	{
-	    	GetBounds(rect);
-	    	aThePoint.h -= rect.x;
-	    	aThePoint.v -= rect.y;
-		    if (child->ptInWindow(aThePoint.h,aThePoint.v) ) 
-		    	{
+		    if (child->PtInWindow(aThePoint.h,aThePoint.v) ) 
+		    {
 		    	// go down this windows list
 		    	deeperWindow = child->FindWidgetHit(aThePoint);
 		    	if (deeperWindow)
@@ -1445,6 +1506,8 @@ void nsWindow::Enumerator::Reset()
 void nsWindow::Enumerator::ResetToLast()
 {
     mCurrentPosition = mArraySize-1;
+    while (mCurrentPosition > 0 && mChildrens[mCurrentPosition] == nsnull)
+			mCurrentPosition--;    	
 }
 
 //-------------------------------------------------------------------------
