@@ -1249,58 +1249,74 @@ void SiCDepNodeDelete(siCD *siCDepTemp)
   }
 }
 
-HRESULT SiCNodeGetAttributes(DWORD dwIndex)
+HRESULT SiCNodeGetAttributes(DWORD dwIndex, BOOL bIncludeInvisible)
 {
   DWORD dwCount = 0;
   siC   *siCTemp = siComponents;
 
   if(siCTemp != NULL)
   {
-    if(dwIndex == 0)
-      return(siCTemp->dwAttributes);
+    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    {
+      if(dwIndex == 0)
+        return(siCTemp->dwAttributes);
 
-    ++dwCount;
+      ++dwCount;
+    }
+
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if(dwIndex == dwCount)
-        return(siCTemp->dwAttributes);
+      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      {
+        if(dwIndex == dwCount)
+          return(siCTemp->dwAttributes);
+
+        ++dwCount;
+      }
       
-      ++dwCount;
       siCTemp = siCTemp->Next;
     }
   }
   return(-1);
 }
 
-void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet)
+void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIncludeInvisible)
 {
   DWORD dwCount  = 0;
   siC   *siCTemp = siComponents;
 
   if(siCTemp != NULL)
   {
-    if(dwIndex == 0)
+    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
     {
-      if(bSet)
-        siCTemp->dwAttributes |= dwAttributes;
-      else
-        siCTemp->dwAttributes &= ~dwAttributes;
+      if(dwIndex == 0)
+      {
+        if(bSet)
+          siCTemp->dwAttributes |= dwAttributes;
+        else
+          siCTemp->dwAttributes &= ~dwAttributes;
+      }
+
+      ++dwCount;
     }
 
-    ++dwCount;
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if(dwIndex == dwCount)
+      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
       {
-      if(bSet)
-        siCTemp->dwAttributes |= dwAttributes;
-      else
-        siCTemp->dwAttributes &= ~dwAttributes;
+        if(dwIndex == dwCount)
+        {
+          if(bSet)
+            siCTemp->dwAttributes |= dwAttributes;
+          else
+            siCTemp->dwAttributes &= ~dwAttributes;
+        }
+
+        ++dwCount;
       }
-      
-      ++dwCount;
+
       siCTemp = siCTemp->Next;
     }
   }
@@ -1356,48 +1372,64 @@ void SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
   }
 }
 
-char *SiCNodeGetDescriptionLong(DWORD dwIndex)
+char *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible)
 {
   DWORD dwCount = 0;
   siC   *siCTemp = siComponents;
 
   if(siCTemp != NULL)
   {
-    if(dwIndex == 0)
-      return(siCTemp->szDescriptionLong);
+    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    {
+      if(dwIndex == 0)
+        return(siCTemp->szDescriptionLong);
 
-    ++dwCount;
+      ++dwCount;
+    }
+
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if(dwIndex == dwCount)
-        return(siCTemp->szDescriptionLong);
+      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      {
+        if(dwIndex == dwCount)
+          return(siCTemp->szDescriptionLong);
       
-      ++dwCount;
+        ++dwCount;
+      }
+
       siCTemp = siCTemp->Next;
     }
   }
   return(NULL);
 }
 
-ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex)
+ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible)
 {
   DWORD dwCount   = 0;
   siC   *siCTemp  = siComponents;
 
   if(siCTemp != NULL)
   {
-    if(dwIndex == 0)
-      return(siCTemp->ullInstallSize);
+    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    {
+      if(dwIndex == 0)
+        return(siCTemp->ullInstallSize);
 
-    ++dwCount;
+      ++dwCount;
+    }
+    
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if(dwIndex == dwCount)
-        return(siCTemp->ullInstallSize);
+      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      {
+        if(dwIndex == dwCount)
+          return(siCTemp->ullInstallSize);
       
-      ++dwCount;
+        ++dwCount;
+      }
+      
       siCTemp = siCTemp->Next;
     }
   }
@@ -1933,10 +1965,10 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
   {
     if((dwIndex = SiCNodeGetIndexDS(siCDepTemp->szDescriptionShort)) != -1)
     {
-      if((SiCNodeGetAttributes(dwIndex) & SIC_SELECTED) == FALSE)
+      if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == FALSE)
       {
         bMoreToResolve = TRUE;
-        SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE);
+        SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE);
       }
     }
 
@@ -1945,10 +1977,10 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
     {
       if((dwIndex = SiCNodeGetIndexDS(siCDepTemp->szDescriptionShort)) != -1)
       {
-        if((SiCNodeGetAttributes(dwIndex) & SIC_SELECTED) == FALSE)
+        if((SiCNodeGetAttributes(dwIndex, TRUE) & SIC_SELECTED) == FALSE)
         {
           bMoreToResolve = TRUE;
-          SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE);
+          SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE);
         }
       }
 
@@ -1969,7 +2001,7 @@ BOOL ResolveDependencies(DWORD dwIndex)
     /* can resolve specific component or all components (-1) */
     if((dwIndex == dwCount) || (dwIndex == -1))
     {
-      if(SiCNodeGetAttributes(dwCount) & SIC_SELECTED)
+      if(SiCNodeGetAttributes(dwCount, TRUE) & SIC_SELECTED)
       {
          bMoreToResolve = ResolveComponentDependency(siCTemp->siCDDependencies);
          if(dwIndex == dwCount)
@@ -1986,7 +2018,7 @@ BOOL ResolveDependencies(DWORD dwIndex)
       /* can resolve specific component or all components (-1) */
       if((dwIndex == dwCount) || (dwIndex == -1))
       {
-        if(SiCNodeGetAttributes(dwCount) & SIC_SELECTED)
+        if(SiCNodeGetAttributes(dwCount, TRUE) & SIC_SELECTED)
         {
            bMoreToResolve = ResolveComponentDependency(siCTemp->siCDDependencies);
            if(dwIndex == dwCount)
