@@ -18,8 +18,6 @@
  
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsIFileSpec.idl"
-
 
 %{C++
 
@@ -27,9 +25,9 @@ class nsIDOMWindow;
 class nsIDOMDocument;
 class nsIDOMSelection;
 class nsIDOMElement;
-class nsIFileSpec;
 %}
 
+interface nsIFileSpec;
 
 [scriptable, uuid(9afff72b-ca9a-11d2-96c9-0060b0fb9956)]
 interface nsIEditorShell : nsISupports
