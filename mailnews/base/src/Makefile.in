@@ -109,6 +109,11 @@ CPPSRCS		= \
 		nsCidProtocolHandler.cpp \
 		$(NULL)
 
+# MacOSX requires the MoreFiles module
+ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
+REQUIRES += macmorefiles
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS		+= nsMessengerWinIntegration.cpp 
 endif

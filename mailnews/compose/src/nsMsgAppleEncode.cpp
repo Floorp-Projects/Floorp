@@ -35,7 +35,7 @@
 #include "nsMsgAppleDouble.h"
 #include "nsMsgAppleCodes.h"
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
 #include <Errors.h>
 

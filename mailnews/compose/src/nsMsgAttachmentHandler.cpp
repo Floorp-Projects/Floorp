@@ -72,15 +72,20 @@ static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 ///////////////////////////////////////////////////////////////////////////
 // Mac Specific Attachment Handling for AppleDouble Encoded Files
 ///////////////////////////////////////////////////////////////////////////
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
 #define AD_WORKING_BUFF_SIZE                  8192
 
 
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
 
-#include "MoreFilesExtras.h"
 #include "nsIInternetConfigService.h"
+
+#if defined(XP_MAC)
+#include "MoreFilesExtras.h"
+#else
+#include "MoreFilesX.h"
+#endif /* XP_MAC */
 
 #endif /* XP_MAC */
 
@@ -134,7 +139,7 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
   m_x_mac_type = nsnull;
   m_x_mac_creator = nsnull;
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   mAppleFileSpec = nsnull;
 #endif
 
@@ -147,7 +152,7 @@ nsMsgAttachmentHandler::~nsMsgAttachmentHandler()
 #if defined(DEBUG_ducarroz)
   printf("DISPOSE nsMsgAttachmentHandler: %x\n", this);
 #endif
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   if (mAppleFileSpec)
     delete mAppleFileSpec;
 #endif
@@ -460,7 +465,7 @@ FetcherURLDoneCallback(nsresult aStatus,
     ma->m_size = totalSize;
     if (aContentType)
     {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
       //Do not change the type if we are dealing with an apple double file
       if (!ma->mAppleFileSpec)
 #endif
@@ -605,6 +610,20 @@ done:
   return rv;
 }
 
+#if defined(XP_MAC) || defined(XP_MACOSX)
+PRBool nsMsgAttachmentHandler::HasResourceFork(FSSpec *fsSpec)
+{
+  FSRef fsRef;
+  if (::FSpMakeFSRef(fsSpec, &fsRef) == noErr)
+  {
+    FSCatalogInfo catalogInfo;
+    OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoDataSizes + kFSCatInfoRsrcSizes, &catalogInfo, nsnull, nsnull, nsnull);
+    return (err == noErr && catalogInfo.rsrcLogicalSize != 0);
+  }
+  return PR_FALSE;
+}
+#endif
+
 nsresult
 nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 {
@@ -653,7 +672,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 
   mURL->GetSpec(url_string);
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   if ( !m_bogus_attachment && nsMsgIsLocalFile(url_string))
   {
     // convert the apple file to AppleDouble first, and then patch the
@@ -662,9 +681,19 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     if (!src_filename)
       return NS_ERROR_OUT_OF_MEMORY;
 
+    // Unescape the name before making FSSpec
+    nsCAutoString escapedFilename(src_filename);
+    nsUnescape(NS_CONST_CAST(char*, escapedFilename.get()));
+
     //We need to retrieve the file type and creator...
-    nsFileSpec scr_fileSpec(src_filename);
-    FSSpec fsSpec = scr_fileSpec.GetFSSpec();
+    nsFileSpec scr_fileSpec(escapedFilename.get());
+    FSSpec fsSpec;
+#if defined(XP_MAC)
+    fsSpec = scr_fileSpec.GetFSSpec();
+#elif defined(XP_MACOSX)
+    Boolean isDir;
+    FSPathMakeFSSpec((UInt8 *)escapedFilename.get(), &fsSpec, &isDir);
+#endif
     FInfo info;
     if (FSpGetFInfo (&fsSpec, &info) == noErr)
     {
@@ -678,12 +707,8 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       m_x_mac_creator = PL_strdup(filetype);
     }
 
-    long dataSize = 0;
-    long resSize = 0;
-  
     PRBool sendResourceFork = PR_TRUE;
     PRBool icGaveNeededInfo = PR_FALSE;
- 
     nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
     if (icService)
     {
@@ -697,8 +722,9 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
         {
           // before deciding to send the resource fork along the data fork, check if we have one,
           // else don't need to use apple double.
-          if (::FSpGetFileSize(&fsSpec, &dataSize, &resSize) == noErr && resSize == 0)
-            sendResourceFork = PR_FALSE;
+#if defined(XP_MAC) || defined(XP_MACOSX)
+          sendResourceFork = HasResourceFork(&fsSpec);
+#endif
         }
         
         icGaveNeededInfo = PR_TRUE;
@@ -709,8 +735,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     {
       // If InternetConfig cannot help us, then just try our best...
       // first check if we have a resource fork
-      if (::FSpGetFileSize(&fsSpec, &dataSize, &resSize) == noErr)
-        sendResourceFork = (resSize > 0);
+      sendResourceFork = HasResourceFork(&fsSpec);
 
       // then, if we have a resource fork, check the filename extension, maybe we don't need the resource fork!
       if (sendResourceFork)
@@ -819,7 +844,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       //
       //  Setup all the need information on the apple double encoder.
       //
-      ap_encode_init(&(obj->ap_encode_obj), src_filename, separator);
+      ap_encode_init(&(obj->ap_encode_obj), escapedFilename.get(), separator);
 
       PRInt32 count;
 

@@ -415,7 +415,7 @@ nsresult nsBinHexDecoder::ProcessNextChunk(nsIRequest * aRequest, nsISupports * 
 			
 		/* handle decoded characters -- run length encoding (rle) detection */
 
-#ifndef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 		mOctetBuf.val = PR_ntohl(mOctetBuf.val);
 #endif
 

@@ -54,6 +54,10 @@
 #include "nsISupportsObsolete.h"
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsIAppleFileDecoder.h"
+#if defined(XP_MACOSX)
+#include "nsILocalFileMac.h"
+#include "MoreFilesX.h"
+#endif
 #endif
 
 // necko
@@ -207,7 +211,7 @@ nsresult ConvertAndSanitizeFileName(const char * displayName, PRUnichar ** unico
   NS_ConvertUTF8toUCS2 ucs2Str(unescapedName);
 
   nsresult rv = NS_OK;
-#if defined(XP_MAC)
+#if defined(XP_MAC)  /* reviewed for 1.4, XP_MACOSX not needed */
   /* We need to truncate the name to 31 characters, this even on MacOS X until the file API
      correctly support long file name. Using a nsILocalFile will do the trick...
   */
@@ -1755,19 +1759,20 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
         m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
     }
     
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   if (!m_contentType.IsEmpty())
   {
     nsFileSpec realSpec;
     m_fileSpec->GetFileSpec(&realSpec);
 
+    // Create nsILocalFile from a nsFileSpec.
+    nsCOMPtr<nsILocalFile> outputFile;
+    NS_FileSpecToIFile(&realSpec, getter_AddRefs(outputFile));
+
   	/* if we are saving an appledouble or applesingle attachment, we need to use an Apple File Decoder */
     if ((nsCRT::strcasecmp(m_contentType.get(), APPLICATION_APPLEFILE) == 0) ||
         (nsCRT::strcasecmp(m_contentType.get(), MULTIPART_APPLEDOUBLE) == 0))
     {        
-      /* ggrrrrr, I have a nsFileSpec but I need a nsILocalFile... */
-      nsCOMPtr<nsILocalFile> outputFile;
-      NS_FileSpecToIFile(&realSpec, getter_AddRefs(outputFile));
       
       nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv) && appleFileDecoder)
@@ -1789,7 +1794,14 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
           PRUint32 aMacType;
           PRUint32 aMacCreator;
           if (NS_SUCCEEDED(mimeinfo->GetMacType(&aMacType)) && NS_SUCCEEDED(mimeinfo->GetMacCreator(&aMacCreator)))
-            realSpec.SetFileTypeAndCreator((OSType)aMacType, (OSType)aMacCreator);
+          {
+            nsCOMPtr<nsILocalFileMac> macFile =  do_QueryInterface(outputFile, &rv);
+            if (NS_SUCCEEDED(rv) && macFile)
+            {
+              macFile->SetFileCreator((OSType)aMacCreator);
+              macFile->SetFileCreator((OSType)aMacType);
+            }
+          }
         }
       }
       

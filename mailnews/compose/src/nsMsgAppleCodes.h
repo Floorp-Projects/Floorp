@@ -38,6 +38,10 @@
 #endif
 #endif /* XP_MAC */
 
+#if defined(XP_MACOSX)
+#pragma options align=mac68k
+#endif /* XP_MACOSX */
+
 #define APPLESINGLE_MAGIC	0x00051600L
 #define APPLEDOUBLE_MAGIC 	0x00051607L
 #define VERSION 			0x00020000
@@ -118,5 +122,9 @@ PR_END_EXTERN_C
 #pragma options align=reset
 #endif
 #endif /* XP_MAC */
+
+#if defined(XP_MACOSX)
+#pragma options align=reset
+#endif /* XP_MACOSX */
 
 #endif /* ad_codes_h */

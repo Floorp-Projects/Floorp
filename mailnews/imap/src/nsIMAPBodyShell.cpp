@@ -963,7 +963,7 @@ PRBool	nsIMAPBodypartLeaf::ShouldFetchInline()
 					return PR_FALSE;	// we can leave it on the server
 			}
 		}
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 		// If it is either applesingle, or a resource fork for appledouble
 		if (!PL_strcasecmp(m_contentType, "application/applefile"))
 		{

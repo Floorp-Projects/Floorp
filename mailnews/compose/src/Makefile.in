@@ -128,6 +128,17 @@ EXPORTS		= \
 		nsSmtpDelegateFactory.h \
 		$(NULL)
 
+# MacOSX requires the MoreFiles module
+ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
+REQUIRES += macmorefiles \
+		$(NULL)
+CPPSRCS += nsMsgAppleDoubleEncode.cpp \
+		nsMsgAppleEncode.cpp \
+		$(NULL)
+EXPORTS += nsMsgAppleDouble.h \
+		$(NULL)
+endif
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
