@@ -53,9 +53,16 @@ function HistoryInit() {
 
     gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
 
-    if ("arguments" in window && window.arguments && window.arguments.length >= 1) {
+    if ("arguments" in window && window.arguments[0] && window.arguments.length >= 1) {
       // We have been supplied a resource URI to root the tree on
-      setRoot(window.arguments[0]);
+      var uri = window.arguments[0];
+      setRoot(uri);
+      if (uri.substring(0,5) == "find:") {
+        // Update the windowtype so that future searches are directed 
+        // there and the window is not re-used for bookmarks. 
+        var windowNode = document.getElementById("history-window");
+        windowNode.setAttribute("windowtype", "history:searchresults");
+      }
     }
 
     var children = document.getElementById('treechildren-bookmarks');
