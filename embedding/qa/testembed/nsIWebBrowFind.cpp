@@ -122,8 +122,8 @@ void CNsIWebBrowFind::FindNextTest(PRBool didFind)
 	qaWBFind = GetWebBrowFindObject();
 
 	rv = qaWBFind->FindNext(&didFind);
-	RvTestResult(rv, "nsIWebBrowserFind::FindNext(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didFind = ", didFind, 2);
+	RvTestResult(rv, "nsIWebBrowserFind::FindNext() object test", 2);
+	FormatAndPrintOutput("returned didFind = ", didFind, 1);
 }
 
 void CNsIWebBrowFind::SetFindBackwardsTest(PRBool didFindBackwards)
@@ -133,7 +133,7 @@ void CNsIWebBrowFind::SetFindBackwardsTest(PRBool didFindBackwards)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->SetFindBackwards(didFindBackwards);
-	RvTestResult(rv, "nsIWebBrowserFind::SetFindBackwards(PR_TRUE) object test", 2);
+	RvTestResult(rv, "nsIWebBrowserFind::SetFindBackwards() object test", 2);
 }
 
 void CNsIWebBrowFind::GetFindBackwardsTest(PRBool didFindBackwards)
@@ -143,8 +143,8 @@ void CNsIWebBrowFind::GetFindBackwardsTest(PRBool didFindBackwards)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->GetFindBackwards(&didFindBackwards);
-	RvTestResult(rv, "nsIWebBrowserFind::GetFindBackwards(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2);
+	RvTestResult(rv, "nsIWebBrowserFind::GetFindBackwards() object test", 2);
+	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 1);
 }
 
 void CNsIWebBrowFind::SetWrapFindTest(PRBool didWrapFind)
@@ -154,7 +154,7 @@ void CNsIWebBrowFind::SetWrapFindTest(PRBool didWrapFind)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->SetWrapFind(didWrapFind);
-	RvTestResult(rv, "nsIWebBrowserFind::SetWrapFind(PR_TRUE) object test", 2);
+	RvTestResult(rv, "nsIWebBrowserFind::SetWrapFind() object test", 2);
 }
 
 void CNsIWebBrowFind::GetWrapFindTest(PRBool didWrapFind)
@@ -164,8 +164,8 @@ void CNsIWebBrowFind::GetWrapFindTest(PRBool didWrapFind)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->GetWrapFind(&didWrapFind);
-	RvTestResult(rv, "nsIWebBrowserFind::GetWrapFind(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2);
+	RvTestResult(rv, "nsIWebBrowserFind::GetWrapFind() object test", 2);
+	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 1);
 }
 
 void CNsIWebBrowFind::SetEntireWordTest(PRBool didEntireWord)
@@ -175,7 +175,7 @@ void CNsIWebBrowFind::SetEntireWordTest(PRBool didEntireWord)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->SetEntireWord(didEntireWord);
-	RvTestResult(rv, "nsIWebBrowserFind::SetEntireWord(PR_TRUE) object test", 2);
+	RvTestResult(rv, "nsIWebBrowserFind::SetEntireWord() object test", 2);
 }
 
 void CNsIWebBrowFind::GetEntireWordTest(PRBool didEntireWord)
@@ -185,8 +185,8 @@ void CNsIWebBrowFind::GetEntireWordTest(PRBool didEntireWord)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->GetEntireWord(&didEntireWord);
-	RvTestResult(rv, "nsIWebBrowserFind::GetEntireWord(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2);
+	RvTestResult(rv, "nsIWebBrowserFind::GetEntireWord() object test", 2);
+	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 1);
 }
 
 void CNsIWebBrowFind::SetMatchCase(PRBool didMatchCase)
@@ -196,7 +196,7 @@ void CNsIWebBrowFind::SetMatchCase(PRBool didMatchCase)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->SetMatchCase(didMatchCase);
-	RvTestResult(rv, "nsIWebBrowserFind::SetMatchCase(PR_TRUE) object test", 2);
+	RvTestResult(rv, "nsIWebBrowserFind::SetMatchCase() object test", 2);
 }
 
 void CNsIWebBrowFind::GetMatchCase(PRBool didMatchCase)
@@ -206,8 +206,8 @@ void CNsIWebBrowFind::GetMatchCase(PRBool didMatchCase)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->GetMatchCase(&didMatchCase);
-	RvTestResult(rv, "nsIWebBrowserFind::GetMatchCase(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 2);
+	RvTestResult(rv, "nsIWebBrowserFind::GetMatchCase() object test", 2);
+	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 1);
 }
 
 void CNsIWebBrowFind::SetSearchFrames(PRBool didSearchFrames)
@@ -217,7 +217,7 @@ void CNsIWebBrowFind::SetSearchFrames(PRBool didSearchFrames)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->SetSearchFrames(didSearchFrames);
-	RvTestResult(rv, "nsIWebBrowserFind::SetSearchFrames(PR_TRUE) object test", 2);
+	RvTestResult(rv, "nsIWebBrowserFind::SetSearchFrames() object test", 2);
 }
 
 void CNsIWebBrowFind::GetSearchFrames(PRBool didSearchFrames)
@@ -227,8 +227,8 @@ void CNsIWebBrowFind::GetSearchFrames(PRBool didSearchFrames)
 	qaWBFind = GetWebBrowFindObject();
 	
 	rv = qaWBFind->GetSearchFrames(&didSearchFrames);
-	RvTestResult(rv, "nsIWebBrowserFind::GetSearchFrames(PR_TRUE) object test", 2);
-	FormatAndPrintOutput("returned didSearchFrames = ", didSearchFrames, 2);
+	RvTestResult(rv, "nsIWebBrowserFind::GetSearchFrames() object test", 2);
+	FormatAndPrintOutput("returned didSearchFrames = ", didSearchFrames, 1);
 }
 
 void CNsIWebBrowFind::OnStartTests(UINT nMenuID)
@@ -286,26 +286,37 @@ void CNsIWebBrowFind::RunAllTests()
 	SetSearchStringTest();
 	GetSearchStringTest();
 	FindNextTest(PR_TRUE);
+	FindNextTest(PR_TRUE);  // run a 2nd time to advance it
 	SetFindBackwardsTest(PR_TRUE);
 	GetFindBackwardsTest(PR_TRUE);
+	FindNextTest(PR_TRUE);	// to find backwards
 	SetWrapFindTest(PR_TRUE);
 	GetWrapFindTest(PR_TRUE);
+	FindNextTest(PR_TRUE);  // to wrap around
 	SetEntireWordTest(PR_TRUE);
 	GetEntireWordTest(PR_TRUE);
+	FindNextTest(PR_TRUE);  // entire word
 	SetMatchCase(PR_TRUE);
 	GetMatchCase(PR_TRUE);
+	FindNextTest(PR_TRUE);  // match case
 	SetSearchFrames(PR_TRUE);
 	GetSearchFrames(PR_TRUE);
+	FindNextTest(PR_TRUE);  // frames
 
-	FindNextTest(PR_FALSE);
+	QAOutput("PR_FALSE tests", 2);
 	SetFindBackwardsTest(PR_FALSE);
 	GetFindBackwardsTest(PR_FALSE);
+	FindNextTest(PR_FALSE);		// shouldn't find backwards
 	SetWrapFindTest(PR_FALSE);
 	GetWrapFindTest(PR_FALSE);
+	FindNextTest(PR_FALSE);		// shouldn't find wrap around
 	SetEntireWordTest(PR_FALSE);
 	GetEntireWordTest(PR_FALSE);
+	FindNextTest(PR_FALSE);		// shouldn't find entire word
 	SetMatchCase(PR_FALSE);
 	GetMatchCase(PR_FALSE);
+	FindNextTest(PR_FALSE);		// shouldn't find case
 	SetSearchFrames(PR_FALSE);
 	GetSearchFrames(PR_FALSE);
+	FindNextTest(PR_FALSE);		// shouldn't find frame
 }
