@@ -39,7 +39,7 @@ public:
 
 	NS_DECL_ISUPPORTS_INHERITED
 
-	//nsIMessageHdr
+	//nsIMsgHdr
 	NS_IMETHOD GetProperty(const char *propertyName, nsString &resultProperty);
     NS_IMETHOD SetProperty(const char *propertyName, nsString &propertyStr);
     NS_IMETHOD GetUint32Property(const char *propertyName, PRUint32 *pResult);
