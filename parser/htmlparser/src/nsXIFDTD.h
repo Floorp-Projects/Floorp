@@ -161,7 +161,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    NS_IMETHOD WillBuildModel(nsString& aFileName,PRBool aNotifySink);
+    NS_IMETHOD WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  
@@ -169,7 +169,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel,PRBool aNotifySink);
+    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  
@@ -177,7 +177,7 @@ class nsXIFDTD : public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    NS_IMETHOD HandleToken(CToken* aToken);
+    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
 
     /**
      *  This method causes all tokens to be dispatched to the given tag handler.
@@ -198,15 +198,6 @@ class nsXIFDTD : public nsIDTD {
     NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
 
     /**
-     * 
-     *  
-     *  @update  gpk 06/18/98
-     *  @param   
-     *  @return 
-     */
-    virtual void SetParser(nsIParser* aParser);
-
-    /**
      *  Cause the tokenizer to consume the next token, and 
      *  return an error result.
      *  
@@ -214,7 +205,7 @@ class nsXIFDTD : public nsIDTD {
      *  @param   anError -- ref to error code
      *  @return  new token or null
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken);
+    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
 
 
     /**
@@ -267,7 +258,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRBool Verify(nsString& aURLRef);
+    virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser);
 
     /**
      * Set this to TRUE if you want the DTD to verify its
@@ -277,14 +268,6 @@ class nsXIFDTD : public nsIDTD {
      * @return
      */
     virtual void SetVerification(PRBool aEnable);
-
-  /**
-     * Select given content sink into parser for parser output
-     * @update	gpk 06/18/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
-     */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
 
 
     /**

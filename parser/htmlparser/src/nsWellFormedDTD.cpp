@@ -196,31 +196,33 @@ eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsStri
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
+NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
   mFilename=aFilename;
 
-  if((aNotifySink) && (mSink)) {
-    mLineNumber=0;
-    result = mSink->WillBuildModel();
+  if(aParser){
+    mSink=aParser->GetContentSink();
+    if((aNotifySink) && (mSink)) {
+      mLineNumber=0;
+      result = mSink->WillBuildModel();
 
-#if 0
-    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-    {
-      nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
+  #if 0
+      /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+      {
 
-        //now let's automatically open the html...
-      CStartToken theHTMLToken(eHTMLTag_html);
-      nsCParserNode theHTMLNode(&theHTMLToken,0);
-      theSink->OpenHTML(theHTMLNode);
+          //now let's automatically open the html...
+        CStartToken theHTMLToken(eHTMLTag_html);
+        nsCParserNode theHTMLNode(&theHTMLToken,0);
+        mSink->OpenHTML(theHTMLNode);
 
-        //now let's automatically open the body...
-      CStartToken theBodyToken(eHTMLTag_body);
-      nsCParserNode theBodyNode(&theBodyToken,0);
-      theSink->OpenBody(theBodyNode);
+          //now let's automatically open the body...
+        CStartToken theBodyToken(eHTMLTag_body);
+        nsCParserNode theBodyNode(&theBodyToken,0);
+        mSink->OpenBody(theBodyNode);
+      }
+      /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+  #endif
     }
-    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-#endif
   }
 
   return result;
@@ -232,59 +234,37 @@ NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifyS
  * @param 
  * @return
  */
-NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
+NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
 
-  if((aNotifySink) && (mSink)) {
-      result = mSink->DidBuildModel(1);
+  if(aParser){
+    mSink=aParser->GetContentSink();
+    if((aNotifySink) && (mSink)) {
+        result = mSink->DidBuildModel(1);
 
-#if 0
-    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-    {
-      nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
+  #if 0
+      /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+      {
+        nsIHTMLContentSink* mSink=(nsIHTMLContentSink*)mSink;
 
-        //now let's automatically open the body...
-      CEndToken theBodyToken(eHTMLTag_body);
-      nsCParserNode theBodyNode(&theBodyToken,0);
-      theSink->CloseBody(theBodyNode);
+          //now let's automatically open the body...
+        CEndToken theBodyToken(eHTMLTag_body);
+        nsCParserNode theBodyNode(&theBodyToken,0);
+        mSink->CloseBody(theBodyNode);
 
-        //now let's automatically open the html...
-      CEndToken theHTMLToken(eHTMLTag_html);
-      nsCParserNode theHTMLNode(&theBodyToken,0);
-      theSink->CloseHTML(theBodyNode);
+          //now let's automatically open the html...
+        CEndToken theHTMLToken(eHTMLTag_html);
+        nsCParserNode theHTMLNode(&theBodyToken,0);
+        mSink->CloseHTML(theBodyNode);
 
+      }
+      /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+  #endif
     }
-    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-#endif
   }
   return result;
-}
-
-/**
- * 
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return 
- */
-void CWellFormedDTD::SetParser(nsIParser* aParser) {
-  mParser=(nsParser*)aParser;
-}
-
-/**
- *  This method gets called in order to set the content
- *  sink for this parser to dump nodes to.
- *  
- *  @update  gess 3/25/98
- *  @param   nsIContentSink interface for node receiver
- *  @return  
- */
-nsIContentSink* CWellFormedDTD::SetContentSink(nsIContentSink* aSink) {
-  nsIContentSink* old=mSink;
-  mSink=aSink;
-  return old;
 }
 
 static eHTMLTags gSkippedContentTags[]={ eHTMLTag_script, eHTMLTag_style,  eHTMLTag_title,  eHTMLTag_textarea};
@@ -339,6 +319,7 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner
  */
 NS_IMETHODIMP CWellFormedDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
   nsresult result=NS_OK;
+
   aToken=gTokenRecycler.CreateTokenOfType(eToken_text,eHTMLTag_text,aString);
   if(aToken) {
     PRUnichar ch=0;
@@ -632,13 +613,14 @@ NS_IMETHODIMP CWellFormedDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CTok
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-NS_IMETHODIMP CWellFormedDTD::ConsumeToken(CToken*& aToken){
+NS_IMETHODIMP CWellFormedDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser) {
   aToken=0;
   if(mTokenDeque.GetSize()>0) {
     aToken=(CToken*)mTokenDeque.Pop();
     return NS_OK;
   }
 
+  mParser=(nsParser*)aParser;
   nsresult   result=NS_OK;
   CScanner* theScanner=mParser->GetScanner();
   if(NS_OK==result){
@@ -727,8 +709,9 @@ NS_IMETHODIMP CWellFormedDTD::WillInterruptParse(void){
  * @param 
  * @return
  */
-PRBool CWellFormedDTD::Verify(nsString& aURLRef){
+PRBool CWellFormedDTD::Verify(nsString& aURLRef,nsIParser* aParser) {
   PRBool result=PR_TRUE;
+  mParser=(nsParser*)aParser;
   return result;
 }
 
@@ -775,10 +758,13 @@ PRBool CWellFormedDTD::IsContainer(PRInt32 aTag) const{
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken) {
+NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   nsresult        result=NS_OK;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
+
+  mParser=(nsParser*)aParser;
+  mSink=aParser->GetContentSink();
 
   nsCParserNode theNode(theToken,mLineNumber);
   switch(theType) {

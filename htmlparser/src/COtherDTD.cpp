@@ -184,43 +184,6 @@ eAutoDetectResult COtherDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
 
 
 /**
- * 
- * @update	gess5/18/98
- * @param 
- * @return
- */
-NS_IMETHODIMP COtherDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink) {
-  return CNavDTD::WillBuildModel(aFilename, aNotifySink);
-}
-
-/**
- * 
- * @update	gess5/18/98
- * @param 
- * @return
- */
-NS_IMETHODIMP COtherDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
-  return CNavDTD::DidBuildModel(anErrorCode, aNotifySink);
-}
-
-/**
- *  This big dispatch method is used to route token handler calls to the right place.
- *  What's wrong with it? This table, and the dispatch methods themselves need to be 
- *  moved over to the delegate. Ah, so much to do...
- *  
- *  @update  gess 5/21/98
- *  @param   aType
- *  @param   aToken
- *  @param   aParser
- *  @return  
- */
-NS_IMETHODIMP COtherDTD::HandleToken(CToken* aToken){
-  return CNavDTD::HandleToken(aToken);
-}
-
-
-
-/**
  *  This method gets called when a start token has been 
  *  encountered in the parse process. If the current container
  *  can contain this tag, then add it. Otherwise, you have
@@ -861,22 +824,6 @@ nsresult COtherDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToke
  */
 nsresult COtherDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
   return CNavDTD::ConsumeNewline(aChar,aScanner,aToken);
-}
-
-/**
- *  This method repeatedly called by the tokenizer. 
- *  Each time, we determine the kind of token were about to 
- *  read, and then we call the appropriate method to handle
- *  that token type.
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-nsresult COtherDTD::ConsumeToken(CToken*& aToken){
-  return CNavDTD::ConsumeToken(aToken);
 }
 
 

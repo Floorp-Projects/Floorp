@@ -76,15 +76,23 @@ class nsIParser : public nsISupports {
      */
     virtual void RegisterDTD(nsIDTD* aDTD)=0;
 
+
     /**
-     *  Call this method once you've created a parser, and want to instruct it
-	   *  where to send its output.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aContentSink -- ptr to content sink that will receive output
-     *  @return	 ptr to previously set contentsink (usually null)  
+     * Select given content sink into parser for parser output
+     * @update	gess5/11/98
+     * @param   aSink is the new sink to be used by parser
+     * @return  old sink, or NULL
      */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
+    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink)=0;
+
+
+    /**
+     * retrive the sink set into the parser 
+     * @update	gess5/11/98
+     * @param   aSink is the new sink to be used by parser
+     * @return  old sink, or NULL
+     */
+    virtual nsIContentSink* GetContentSink(void)=0;
 
     /**
      *  Call this method once you've created a parser, and want to instruct it

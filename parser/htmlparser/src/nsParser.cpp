@@ -186,7 +186,7 @@ MakeConversionTable()
  *  @param   
  *  @return  
  */
-nsParser::nsParser() : mCommand() {
+nsParser::nsParser() : mCommand("") {
   NS_INIT_REFCNT();
   mStreamListenerState=eNone;
   mParserFilter = 0;
@@ -310,6 +310,16 @@ nsIContentSink* nsParser::SetContentSink(nsIContentSink* aSink) {
 }
 
 /**
+ * retrive the sink set into the parser 
+ * @update	gess5/11/98
+ * @param   aSink is the new sink to be used by parser
+ * @return  old sink, or NULL
+ */
+nsIContentSink* nsParser::GetContentSink(void){
+  return mSink;
+}
+
+/**
  *  Call this static method when you want to
  *  register your dynamic DTD's with the parser.
  *  
@@ -367,8 +377,9 @@ eParseMode nsParser::GetParseMode(void){
 PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand) {
 
     //Let's start by tring the defaultDTD, if one exists...
-  if(aParserContext.mDTD && (aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,0)))
-    return PR_TRUE;
+  if(aParserContext.mDTD)
+    if(aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,0))
+      return PR_TRUE;
 
   PRBool  result=PR_FALSE;
 
@@ -475,17 +486,17 @@ eParseMode DetermineParseMode(nsParser& aParser) {
  * @param 
  * @return  error code -- 0 if ok, non-zero if error.
  */
-PRInt32 nsParser::WillBuildModel(nsString& aFilename){
+PRInt32 nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
 
   mMajorIteration=-1; 
   mMinorIteration=-1; 
   PRInt32 result=kNoError;
   if(mParserContext){
     mParserContext->mParseMode=DetermineParseMode(*this);  
+    mParserContext->mDTD=aDefaultDTD;
     if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand)) {
-      mParserContext->mDTD->SetParser(this);
-      mParserContext->mDTD->SetContentSink(mSink);
-      mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext));
+      //mParserContext->mDTD->SetContentSink(mSink);
+      mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this);
     }
   }
   else result=kInvalidParserContext;
@@ -493,7 +504,9 @@ PRInt32 nsParser::WillBuildModel(nsString& aFilename){
 }
 
 /**
- * 
+ * This gets called when the parser is done with its input.
+ * Note that the parser may have been called recursively, so we
+ * have to check for a prev. context before closing out the DTD/sink.
  * @update	gess5/18/98
  * @param 
  * @return  error code -- 0 if ok, non-zero if error.
@@ -501,8 +514,9 @@ PRInt32 nsParser::WillBuildModel(nsString& aFilename){
 PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   //One last thing...close any open containers.
   PRInt32 result=anErrorCode;
-  if(mParserContext->mDTD) {
-    result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext));
+
+  if((!mParserContext->mPrevContext) && (mParserContext->mDTD)) {
+    result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this);
 
     //Now recycle any tokens that are still hanging around.
     //Come to think of it, there really shouldn't be any.
@@ -570,9 +584,6 @@ PRBool nsParser::EnableParser(PRBool aState){
  *  not have been consumed by the scanner during a given invocation 
  *  of this method. 
  *
- *  NOTE: We don't call willbuildmodel here, because it will happen
- *        as a result of calling OnStartBinding later on.
- *
  *  @update  gess 3/25/98
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
@@ -611,7 +622,7 @@ PRInt32 nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
   mParserContext->mScanner->Eof();
   if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),
                                          mParserContext->mSourceType)) {
-    WillBuildModel(mParserContext->mScanner->GetFilename());
+    WillBuildModel(mParserContext->mScanner->GetFilename(),0);
     status=ResumeParse();
     DidBuildModel(status);
   } //if
@@ -640,14 +651,17 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVeri
   if(0<aSourceBuffer.Length()){
     CParserContext* pc=new CParserContext(new CScanner(aSourceBuffer),&aSourceBuffer,0);
 
+    nsIDTD* thePrevDTD=(mParserContext) ? mParserContext->mDTD: 0;
+      
     PushContext(*pc);
     if(PR_TRUE==anHTMLString)
       pc->mSourceType="text/html";
     if(eValidDetect==AutoDetectContentType(aSourceBuffer,mParserContext->mSourceType)) {
-      WillBuildModel(mParserContext->mScanner->GetFilename());
+      WillBuildModel(mParserContext->mScanner->GetFilename(),thePrevDTD);
       result=ResumeParse();
       DidBuildModel(result);
     }
+    mParserContext->mDTD=0; 
     pc=PopContext();
     delete pc;
   }
@@ -707,9 +721,9 @@ PRInt32 nsParser::BuildModel() {
     CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
     theMarkPos=*mParserContext->mCurrentPos;
     ++(*mParserContext->mCurrentPos);    
-    result=theRootDTD->HandleToken(theToken);
+    result=theRootDTD->HandleToken(theToken,this);
     if(mDTDVerification)
-      theRootDTD->Verify(kEmptyString);
+      theRootDTD->Verify(kEmptyString,this);
   }
 
     //Now it's time to recycle our used tokens.
@@ -906,7 +920,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
 
       if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
         if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),mParserContext->mSourceType)) {
-          WillBuildModel(mParserContext->mScanner->GetFilename());
+          WillBuildModel(mParserContext->mScanner->GetFilename(),0);
         } //if
       }
     } //if
@@ -969,7 +983,7 @@ PRInt32 nsParser::Tokenize(){
   WillTokenize();
   while(kNoError==result) {
     mParserContext->mScanner->Mark();
-    result=mParserContext->mDTD->ConsumeToken(theToken);
+    result=mParserContext->mDTD->ConsumeToken(theToken,this);
     if(kNoError==result) {
       if(theToken) {
 

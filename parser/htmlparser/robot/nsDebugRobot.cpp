@@ -238,7 +238,7 @@ extern "C" NS_EXPORT int DebugRobot(
     sink->AddObserver(myObserver);
 
     parser->SetContentSink(sink);
-    g_bReadyForNextUrl = PR_FALSE; 
+    g_bReadyForNextUrl = PR_FALSE;  
 
     parser->Parse(url, pl,PR_TRUE);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {

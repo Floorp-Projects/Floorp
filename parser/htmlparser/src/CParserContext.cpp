@@ -78,7 +78,7 @@ CParserContext::~CParserContext(){
   if(mTransferBuffer)
     delete [] mTransferBuffer;
 
-  NS_RELEASE(mDTD);
+  NS_IF_RELEASE(mDTD);
 
   //Remember that it's ok to simply ingore the PrevContext.
 

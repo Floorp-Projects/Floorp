@@ -98,6 +98,14 @@ friend class CTokenHandler;
      * @return  old sink, or NULL
      */
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
+
+    /**
+     * retrive the sink set into the parser 
+     * @update	gess5/11/98
+     * @param   aSink is the new sink to be used by parser
+     * @return  old sink, or NULL
+     */
+    virtual nsIContentSink* GetContentSink(void);
     
     /**
      *  Call this method once you've created a parser, and want to instruct it
@@ -209,7 +217,7 @@ protected:
      * @param 
      * @return
      */
-    PRInt32 WillBuildModel(nsString& aFilename);
+    PRInt32 WillBuildModel(nsString& aFilename,nsIDTD* mDefaultDTD=0);
 
     /**
      * 

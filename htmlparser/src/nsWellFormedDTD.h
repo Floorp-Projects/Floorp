@@ -33,13 +33,13 @@
 #include "nshtmlpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
+#include "nsIContentSink.h"
 
 #define NS_WELLFORMED_DTD_IID      \
   {0xa39c6bfd, 0x15f0,  0x11d2, \
   {0x80, 0x41, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4}}
 
 
-class nsIHTMLContentSink;
 class nsIDTDDebug;
 class nsIParserNode;
 class CITokenHandler;
@@ -108,7 +108,7 @@ class CWellFormedDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink);
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
@@ -118,7 +118,7 @@ class CWellFormedDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink);
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  
@@ -126,7 +126,7 @@ class CWellFormedDTD : public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    NS_IMETHOD HandleToken(CToken* aToken);
+    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
 
     /**
      *  This method causes all tokens to be dispatched to the given tag handler.
@@ -147,15 +147,6 @@ class CWellFormedDTD : public nsIDTD {
     NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
 
     /**
-     * 
-     *  
-     *  @update  gess 3/25/98
-     *  @param   
-     *  @return 
-     */
-    virtual void SetParser(nsIParser* aParser);
-
-    /**
      *  Cause the tokenizer to consume the next token, and 
      *  return an error result.
      *  
@@ -163,7 +154,7 @@ class CWellFormedDTD : public nsIDTD {
      *  @param   anError -- ref to error code
      *  @return  new token or null
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken);
+    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
 
 
     /**
@@ -182,14 +173,6 @@ class CWellFormedDTD : public nsIDTD {
      */
     NS_IMETHOD WillInterruptParse(void);
 
-   /**
-     * Select given content sink into parser for parser output
-     * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
-     */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
-
     /**
      * Called by the parser to initiate dtd verification of the
      * internal context stack.
@@ -197,7 +180,7 @@ class CWellFormedDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRBool Verify(nsString& aURLRef);
+    virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser);
 
     /**
      * Set this to TRUE if you want the DTD to verify its

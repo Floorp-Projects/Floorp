@@ -178,7 +178,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRBool Verify(nsString& aURLRef);
+    virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser);
 
    
     /**
@@ -189,7 +189,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink);
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
@@ -199,7 +199,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink);
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser);
 
     /**
      *  This method is called by the parser, once for each token
@@ -208,7 +208,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    NS_IMETHOD HandleToken(CToken* aToken);
+    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
 
     /**
      *  This method causes all tokens to be dispatched to the given tag handler.
@@ -229,17 +229,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
 
     /**
-     *	Set parser is called to notify the DTD which parser is driving
-	   *  the DTD. This is needed by the DTD later, for various parser 
-	   *  callback methods.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParser pts to the controlling parser
-     *  @return  nada.
-     */
-    virtual void SetParser(nsIParser* aParser);
-
-    /**
      *  Cause the tokenizer to consume the next token, and 
      *  return an error result.
      *  
@@ -247,7 +236,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      *  @param   anError -- ref to error code
      *  @return  new token or null
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken);
+    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser);
 
 
     /**
@@ -265,15 +254,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @return	error code  -- usually kNoError (0)
      */
     NS_IMETHOD WillInterruptParse(void);
-
-
-   /**
-     * Select given content sink into parser for parser output
-     * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
-     */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
 
     /**
      *  This method is called to determine whether or not a tag
@@ -437,28 +417,8 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      */
     virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
 
-    /**
-     * The following set of methods are used to partially construct 
-     * the content model (via the sink) according to the type of token.
-     * @update	gess5/11/98
-     * @param   aToken is the token (of a given type) to be handled
-     * @return  error code representing construction state; usually 0.
-     */
-    nsresult HandleStartToken(CToken* aToken);
-    nsresult HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
-    nsresult HandleEndToken(CToken* aToken);
-    nsresult HandleEntityToken(CToken* aToken);
-    nsresult HandleCommentToken(CToken* aToken);
-    nsresult HandleSkippedContentToken(CToken* aToken);
-    nsresult HandleAttributeToken(CToken* aToken);
-    nsresult HandleScriptToken(nsCParserNode& aNode);
-    nsresult HandleStyleToken(CToken* aToken);
-    nsresult HandleProcessingInstructionToken(CToken* aToken);
 
     virtual  nsITokenRecycler* GetTokenRecycler(void);
-
-
-protected:
 
     /**
      * The following methods are use to create and manage
@@ -469,6 +429,25 @@ protected:
     CITokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
     CITokenHandler* AddTokenHandler(CITokenHandler* aHandler);
     void            DeleteTokenHandlers(void);
+
+
+    /**
+     * The following set of methods are used to partially construct 
+     * the content model (via the sink) according to the type of token.
+     * @update	gess5/11/98
+     * @param   aToken is the token (of a given type) to be handled
+     * @return  error code representing construction state; usually 0.
+     */
+    nsresult    HandleStartToken(CToken* aToken);
+    nsresult    HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
+    nsresult    HandleEndToken(CToken* aToken);
+    nsresult    HandleEntityToken(CToken* aToken);
+    nsresult    HandleCommentToken(CToken* aToken);
+    nsresult    HandleSkippedContentToken(CToken* aToken);
+    nsresult    HandleAttributeToken(CToken* aToken);
+    nsresult    HandleScriptToken(nsCParserNode& aNode);
+    nsresult    HandleStyleToken(CToken* aToken);
+    nsresult    HandleProcessingInstructionToken(CToken* aToken);
 
 
     //*************************************************
@@ -606,7 +585,7 @@ protected:
 		PRInt32			CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     PRInt32     DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag);    
 
-    nsParser*           mParser;
+
     nsIHTMLContentSink* mSink;
 
     CITokenHandler*     mTokenHandlers[eToken_last];
@@ -624,7 +603,7 @@ protected:
     nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
     PRInt32             mLineNumber;
-    eParseMode          mParseMode;
+    nsParser*           mParser;
 };
 
 extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);

@@ -201,7 +201,7 @@ eAutoDetectResult CValidDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
+NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
   return result;
 }
@@ -212,33 +212,10 @@ NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
+NS_IMETHODIMP CValidDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result=NS_OK;
 
   return result;
-}
-
-/**
- * 
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return 
- */
-void CValidDTD::SetParser(nsIParser* aParser) {
-  mParser=(nsParser*)aParser;
-}
-
-/**
- *  This method gets called in order to set the content
- *  sink for this parser to dump nodes to.
- *  
- *  @update  gess 3/25/98
- *  @param   nsIContentSink interface for node receiver
- *  @return  
- */
-nsIContentSink* CValidDTD::SetContentSink(nsIContentSink* aSink) {
-  return 0;
 }
 
 
@@ -260,8 +237,9 @@ nsIContentSink* CValidDTD::SetContentSink(nsIContentSink* aSink) {
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-NS_IMETHODIMP CValidDTD::ConsumeToken(CToken*& aToken){
-  
+NS_IMETHODIMP CValidDTD::ConsumeToken(CToken*& aToken,nsIParser* aParser){
+
+  mParser=(nsParser*)aParser;
   CScanner* theScanner=mParser->GetScanner();
 
   PRUnichar aChar;
@@ -316,8 +294,9 @@ NS_IMETHODIMP CValidDTD::WillInterruptParse(void){
  * @param 
  * @return
  */
-PRBool CValidDTD::Verify(nsString& aURLRef){
+PRBool CValidDTD::Verify(nsString& aURLRef,nsIParser* aParser) {
   PRBool result=PR_TRUE;
+  mParser=(nsParser*)aParser;
   return result;
 }
 
@@ -364,8 +343,9 @@ PRBool CValidDTD::IsContainer(PRInt32 aTag) const{
  *  @param   aToken -- token object to be put into content model
  *  @return  0 if all is well; non-zero is an error
  */
-NS_IMETHODIMP CValidDTD::HandleToken(CToken* aToken) {
+NS_IMETHODIMP CValidDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   nsresult result=NS_OK;
+  mParser=(nsParser*)aParser;
   return result;
 }
 

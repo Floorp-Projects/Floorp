@@ -39,7 +39,6 @@
 
 class nsIParser;
 class CToken;
-class nsIContentSink;
 class nsIDTDDebug;
 class nsIURL;
 class nsString;
@@ -74,23 +73,6 @@ class nsIDTD : public nsISupports {
     virtual nsresult CreateNewInstance(nsIDTD** aInstancePtrResult)=0;
 
     /**
-     *  This method informs the DTD about the parser being used to drive the parse process
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParse -- ptr to parser object
-     *  @return  nada
-     */
-    virtual void SetParser(nsIParser* aParser)=0;
-
-   /**
-     * Select given content sink into DTD for output
-     * @update	gess5/11/98
-     * @param   aSink is the new sink to be used by parser
-     * @return  old sink, or NULL
-     */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink)=0;
-
-    /**
      * This method is called to determine if the given DTD can parse
      * a document in a given source-type. 
      * NOTE: Parsing always assumes that the end result will involve
@@ -118,7 +100,7 @@ class nsIDTD : public nsISupports {
      * @param	aFilename--string that contains name of file being parsed (if applicable)
      * @return  
      */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink)=0;
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser)=0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -126,7 +108,7 @@ class nsIDTD : public nsISupports {
      * @param	anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink)=0;
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser)=0;
     
     /**
      *	Called during model building phase of parse process. Each token created during
@@ -137,7 +119,7 @@ class nsIDTD : public nsISupports {
      *  @param   aToken -- token object to be put into content model
 	 *  @return	 error code (usually 0)
      */
-    NS_IMETHOD HandleToken(CToken* aToken)=0;
+    NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser)=0;
 
     /**
      *  Cause the tokenizer to consume and create the next token, and 
@@ -147,7 +129,7 @@ class nsIDTD : public nsISupports {
   	 *  @param   aToken -- will contain newly created and consumed token
 	   *  @return	 error code (usually 0)
      */
-    NS_IMETHOD ConsumeToken(CToken*& aToken)=0;
+    NS_IMETHOD ConsumeToken(CToken*& aToken,nsIParser* aParser)=0;
 
     /**
      *  This method causes all tokens to be dispatched to the given tag handler.
@@ -211,7 +193,7 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual PRBool Verify(nsString& aURLRef)=0;
+    virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser)=0;
 
     /**
      * Retrieve a ptr to the global token recycler...

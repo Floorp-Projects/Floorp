@@ -67,7 +67,7 @@ public:
 
     void SetVerificationDirectory(char * verify_dir);
     void SetRecordStatistics(PRBool bval);
-    PRBool Verify(nsIDTD * aDTD,  nsParser * aParser, int ContextStackPos, eHTMLTags aContextStack[], nsString& aURLRef);
+    PRBool Verify(nsIDTD * aDTD,  nsIParser * aParser, int ContextStackPos, eHTMLTags aContextStack[], nsString& aURLRef);
     void DumpVectorRecord(void);
 
     // global table for storing vector statistics and the size
@@ -469,11 +469,13 @@ void CDTDDebug::DumpVectorRecord(void)
  * @return  TRUE if we know how to handle it, else false
  */
 
-PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPos, eHTMLTags aContextStack[], nsString& aURLRef) 
+PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsIParser * aParser, int aContextStackPos, eHTMLTags aContextStack[], nsString& aURLRef) 
 {
    PRBool  result=PR_TRUE;
 
     //ok, now see if we understand this vector
+
+   nsParser* theParser=(nsParser*)aParser;
 
    if(0!=mVerificationDir || mRecordingStatistics) {
 
@@ -536,8 +538,8 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPo
                // dump the html source into the newly created file.
                PRofstream ps;
                ps.attach(debugFile);
-               if (aParser)
-                  aParser->DebugDumpSource(ps);
+               if (theParser)
+                  theParser->DebugDumpSource(ps);
                PR_Close(debugFile);
             }
          }
