@@ -143,6 +143,8 @@ Rights Reserved.
 <!ENTITY sortBySizeCmd.accesskey "z">
 <!ENTITY sortByStatusCmd.label "Status">
 <!ENTITY sortByStatusCmd.accesskey "u">
+<!ENTITY sortByLabelCmd.label "Label">
+<!ENTITY sortByLabelCmd.accesskey "l">
 <!ENTITY sortBySubjectCmd.label "Subject">
 <!ENTITY sortBySubjectCmd.accesskey "S">
 <!-- Sender / Recipient lives in messenger.properties, since that item is dynamic -->

@@ -163,6 +163,11 @@ function MsgSortByStatus()
     MsgSortThreadPane(nsMsgViewSortType.byStatus);
 }
 
+function MsgSortByLabel()
+{
+    MsgSortThreadPane(nsMsgViewSortType.byLabel);
+}
+
 function MsgSortBySubject()
 {
     MsgSortThreadPane(nsMsgViewSortType.bySubject);

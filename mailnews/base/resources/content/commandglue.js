@@ -447,6 +447,9 @@ function ConvertColumnIDToSortType(columnID)
     case "threadCol":
       sortKey = nsMsgViewSortType.byThread;
       break;
+    case "labelCol":
+      sortKey = nsMsgViewSortType.byLabel;
+      break;
     default:
       dump("unsupported sort column: " + columnID + "\n");
       sortKey = 0;
@@ -482,6 +485,9 @@ function ConvertSortTypeToColumnID(sortKey)
       break;
     case nsMsgViewSortType.byStatus:
       columnID = "statusCol";
+      break;
+    case nsMsgViewSortType.byLabel:
+      columnID = "labelCol";
       break;
     case nsMsgViewSortType.bySize:
       columnID = "sizeCol";
