@@ -65,6 +65,34 @@ struct nsReadableFragment
       {
         // nothing else to do here
       }
+
+    void*
+    GetID() const
+      {
+        return mFragmentIdentifier;
+      }
+
+    unsigned long
+    GetIDAsInt() const
+      {
+        typedef char* char_ptr;
+        typedef unsigned long ulong;
+        return ulong(char_ptr(mFragmentIdentifier)-char_ptr(0));
+      }
+
+    void
+    SetID( void* id )
+      {
+        mFragmentidentifier = id;
+      }
+
+    void
+    SetID( unsigned long id )
+      {
+        typedef char* char_ptr;
+        typedef void* void_ptr;
+        mFragmentIdentifier = void_ptr(char_ptr(0)+id);
+      }
   };
 
 
