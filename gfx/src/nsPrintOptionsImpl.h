@@ -104,8 +104,6 @@ protected:
   PRBool        mPrintToFile;
   nsString      mToFileName;
 
-  PRBool        mIsExtendedInfo;
-
   static nsFont* sDefaultFont;
 };
 

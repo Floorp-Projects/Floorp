@@ -54,16 +54,5 @@ pref("applications.rlogin_with_user", "create /term /detach \"rlogin %h -l %u\""
 pref("print.print_command", "print");
 pref("print.print_color", false);
 
-// print_headerfooter_gap enables platforms to specify an extra "gap" in twips
-// between the H/F and the edge of the paper,  
-// this is used by both Printing and Print Preview
-pref("print.print_headerfooter_gap", 0); // twips
-
-// print_extra_margin enables platforms to specify an extra gap or margin
-// around the content of the page for Print Preview only
-pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
-
-pref("print.whileInPrintPreview", true);
-
 pref("browser.cache.disk.capacity", 4000);
 

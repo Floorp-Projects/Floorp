@@ -29,8 +29,6 @@ var gOriginalNumCopies = 1;
 
 var paramBlock;
 var gPrintSettings = null;
-var gIsExtended    = false;
-var gExtendedArray = new Array();
 var gPrinterName   = "";
 var gPrintToFile   = false;
 
@@ -105,20 +103,6 @@ function stripTrailingWhitespace(element)
 }
 
 //---------------------------------------------------
-function doEnablePrintToFile(value)
-{
-  if (value) {
-    dialog.fileLabel.removeAttribute("disabled");
-    dialog.fileInput.removeAttribute("disabled");
-    dialog.chooseButton.removeAttribute("disabled");
-  } else {
-    dialog.fileLabel.setAttribute("disabled","true");
-    dialog.fileInput.setAttribute("disabled","true");
-    dialog.chooseButton.setAttribute("disabled","true");
-  }
-}
-
-//---------------------------------------------------
 function listElement(aListElement)
   {
     this.listElement = aListElement;
@@ -134,7 +118,7 @@ listElement.prototype =
         },
 
     appendPrinterNames: 
-      function (aDataObject, isExtended) 
+      function (aDataObject) 
         { 
           var popupNode = document.createElement("menupopup"); 
           var strDefaultPrinterName = "";
@@ -151,13 +135,6 @@ listElement.prototype =
             itemNode.setAttribute("value", printerNameStr);
             itemNode.setAttribute("label", printerNameStr);
             popupNode.appendChild(itemNode);
-            if (isExtended) {
-              itemNode.setAttribute("oncommand", "printerSelected();"); 
-              var infoObj = aDataObject.getNext();
-              infoObj = infoObj.QueryInterface(Components.interfaces.nsISupportsWString);
-              var infoStr = infoObj.toString();
-              gExtendedArray[printerNameStr] = infoStr;
-            }
           }
           if (strDefaultPrinterName != "") {
             this.listElement.removeAttribute("disabled");
@@ -173,7 +150,6 @@ listElement.prototype =
             dialog.printerLabel.setAttribute("disabled","true");
             dialog.propertiesButton.setAttribute("disabled","true");
             dialog.fileRadio.setAttribute("disabled","true");
-            doEnablePrintToFile(false);
             dialog.printButton.setAttribute("disabled","true");
           }
 
@@ -186,61 +162,13 @@ listElement.prototype =
 function getPrinters()
 {
   var printerEnumerator = printService.availablePrinters();
-  gIsExtended = printService.isExtended;
 
   var selectElement = new listElement(dialog.printerList);
   selectElement.clearList();
-  var strDefaultPrinterName = selectElement.appendPrinterNames(printerEnumerator, gIsExtended);
+  var strDefaultPrinterName = selectElement.appendPrinterNames(printerEnumerator);
 
-  var printerObj = gExtendedArray[gPrinterName];
-  if (printerObj) {
-    selectElement.listElement.value = gPrinterName;
-  } else {
-    selectElement.listElement.value = strDefaultPrinterName;  
-  }
-  printerSelected();
-}
-
-//---------------------------------------------------
-function printerSelected()
-{
-  var printerName = dialog.printerList.value
-  var info        = gExtendedArray[printerName];
-  if (info == "FILE") {
-    gPrintToFile = dialog.destGroup.selectedItem == dialog.fileRadio;
-    dialog.destGroup.selectedItem = dialog.fileRadio;
-    doEnablePrintToFile(true);
-    doEnableFileRadios(false);
-
-  } else if (info == "PRINTER") {
-    gPrintToFile = dialog.destGroup.selectedItem == dialog.fileRadio;
-    dialog.destGroup.selectedItem = dialog.printerRadio;
-    doEnablePrintToFile(false);
-    doEnableFileRadios(false);
-
-  } else { // BOTH
-    if (gPrintToFile) {
-      dialog.destGroup.selectedItem = dialog.fileRadio;
-    } else {
-      dialog.destGroup.selectedItem = dialog.printerRadio;
-    }
-    doEnablePrintToFile(gPrintToFile);
-    doEnableFileRadios(true);
-  }
-}
-
-//---------------------------------------------------
-function doEnableFileRadios(enable)
-{
-  if (enable) {
-    dialog.fileRadio.removeAttribute("disabled");
-    dialog.printerRadio.removeAttribute("disabled");
-    dialog.destGroup.removeAttribute("disabled");
-  } else {
-    dialog.fileRadio.setAttribute("disabled","true");
-    dialog.printerRadio.setAttribute("disabled","true");
-    dialog.destGroup.setAttribute("disabled","true");
-  }
+  selectElement.listElement.value = strDefaultPrinterName;
+  dialog.fileRadio.selected = true;
 }
 
 //---------------------------------------------------
@@ -263,9 +191,6 @@ function displayPropertiesDialog()
 //---------------------------------------------------
 function doPrintRange(inx)
 {
-  dialog.fileRadio.setAttribute("disabled","true");
-  dialog.printerRadio.setAttribute("disabled","true");
-
   if (inx == 1) {
     dialog.frompageInput.removeAttribute("disabled");
     dialog.frompageLabel.removeAttribute("disabled");

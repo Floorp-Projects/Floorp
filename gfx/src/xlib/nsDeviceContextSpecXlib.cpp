@@ -466,15 +466,6 @@ nsPrinterEnumeratorXlib::nsPrinterEnumeratorXlib()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorXlib, nsIPrinterEnumerator)
 
-NS_IMETHODIMP nsPrinterEnumeratorXlib::EnumeratePrintersExtended(PRUint32* aCount, PRUnichar*** aResult)
-{
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aCount = 0;
-  *aResult = nsnull;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrinterEnumeratorXlib::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
 {
   NS_ENSURE_ARG(aCount);

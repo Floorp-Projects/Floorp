@@ -224,6 +224,8 @@ pref("print.use_global_printsettings", false);
 // This indeicates whether it should use the native dialog or the XP Dialog50
 pref("print.use_native_print_dialog", false);
 
+pref("print.whileInPrintPreview", true);
+
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
 //pref("capability.policy.default.barprop.visible.set", "UniversalBrowserWrite");

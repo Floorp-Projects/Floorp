@@ -480,15 +480,6 @@ nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorGTK, nsIPrinterEnumerator)
 
-NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrintersExtended(PRUint32* aCount, PRUnichar*** aResult)
-{
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aCount = 0;
-  *aResult = nsnull;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
 {
   NS_ENSURE_ARG(aCount);

@@ -100,6 +100,7 @@ WIN_LIBS=                                       \
          ole32.lib                              \
 !endif
         winspool.lib                           \
+        comctl32.lib                           \
         comdlg32.lib
 
 LLFLAGS = 	$(LLFLAGS)		 
