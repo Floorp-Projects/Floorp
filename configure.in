@@ -13,8 +13,7 @@ dnl The Original Code is this file as it was released upon August 6, 1998.
 dnl
 dnl The Initial Developer of the Original Code is Christopher
 dnl Seawood. Portions created by Christopher Seawood are
-dnl Copyright (C) 1998 Christopher Seawood. All
-dnl Rights Reserved.
+dnl Copyright (C) 1998-2000 Christopher Seawood. All Rights Reserved.
 dnl
 dnl Contributor(s): Jamie Zawinski <jwz@jwz.org>
 dnl                 gettimeofday args check
@@ -2640,6 +2639,20 @@ dnl ========================================================
 
 dnl ========================================================
 dnl =
+dnl = --enable-modules=mod1,mod2
+dnl =
+dnl = Only selectively build modules
+dnl =
+dnl ========================================================
+BUILD_MODULES=all
+MOZ_ARG_ENABLE_STRING(modules,
+[  --enable-modules        Enable build of specific modules],
+  [ BUILD_MODULES=`echo $enableval | sed 's/,/ /g'` ] )
+dnl ========================================================
+
+
+dnl ========================================================
+dnl =
 dnl = --diable-pic-dso-cflags
 dnl =
 dnl = A hack to disable the generation of PIC for shared libs
@@ -3192,6 +3205,7 @@ AC_SUBST(MOZ_TIMER_LIBS)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
+AC_SUBST(BUILD_MODULES)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
