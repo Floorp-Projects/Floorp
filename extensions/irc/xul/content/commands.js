@@ -658,7 +658,7 @@ function dispatchCommand (command, e, flags)
             return null;
         commandList = commandList.split(";");
 
-        var i = 0;
+        i = 0;
         while (i < commandList.length) {
             if (commandList[i].match(/(?:^|[^\\])(?:\\\\)*$/) || 
                 (i == commandList.length - 1)) 
@@ -848,6 +848,7 @@ function cmdChanUserMode(e)
     }
 
     var nicks;
+    var user;
     // Prefer pre-canonicalised list, then a normal list, then finally a
     // sigular item (canon. or otherwise).
     if (e.canonNickList)
@@ -859,7 +860,7 @@ function cmdChanUserMode(e)
         var nickList = new Array();
         for (i = 0; i < e.nicknameList.length; i++)
         {
-            var user = e.channel.getUser(e.nicknameList[i]);
+            user = e.channel.getUser(e.nicknameList[i]);
             if (!user)
             {
                 display(getMsg(MSG_ERR_UNKNOWN_USER, e.nicknameList[i]), MT_ERROR);
@@ -874,7 +875,7 @@ function cmdChanUserMode(e)
         user = e.channel.getUser(e.nickname);
         if (!user)
         {
-            display(getMsg(MSG_ERR_UNKNOWN_USER, e.nicknameList[i]), MT_ERROR);
+            display(getMsg(MSG_ERR_UNKNOWN_USER, e.nickname), MT_ERROR);
             return;
         }
         var str = new String(user.encodedName);

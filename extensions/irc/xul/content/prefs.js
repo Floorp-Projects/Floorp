@@ -258,17 +258,21 @@ function makeLogName(obj, type)
             // Remember to encode these, don't want some dodgy # breaking stuff.
             if (longName in longCodes)
                 return encode(longCodes[longName]);
+
             dd("Unknown long code: " + longName);
-            return match;
         }
         else if (typeof shortName != "undefined" && shortName)
         {
             if (shortName in shortCodes)
                 return encode(shortCodes[shortName]);
+
             dd("Unknown short code: " + shortName);
-            return match;
         }
-        dd("Unknown match: " + match);
+        else
+        {
+            dd("Unknown match: " + match);
+        }
+
         return match;
     };
 
