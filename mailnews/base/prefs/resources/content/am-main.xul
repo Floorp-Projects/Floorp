@@ -6,17 +6,12 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-     onload="parent.onPageLoad(event, 'main');"
+     flex="100%"
      align="vertical"> 
-<html:script>
-function onInit() {
-  dump("am-main being initted!\n");
-}
-</html:script>
-
+    
     <html:div class="pageTitle">&accountTitle.label;</html:div>
-    <box align="vertical" flex="100%">
-    <html:div>&accountSettingsDesc.label;</html:div>
+    <box align="vertical">
+    <html:div class="secDesc">&accountSettingsDesc.label;</html:div>
     <html:div>&accountNameDesc.label;</html:div>
     <box align="horizontal">
       <html:div>&accountName.label;</html:div>
@@ -25,42 +20,41 @@ function onInit() {
     </box>
     </box>
 
-    <html:div class="pageTitle">&identityTitle.label;</html:div>
-    <box align="vertical" flex="100%">
-    <html:div>&identityDesc.label;</html:div>
-    <box align="horizonal">
-      <html:div flex="40%">&name.label;</html:div>
-      <html:input name="identity.fullName" type="text" flex="60%"/>
-    </box>
-    <box align="horizonal">
-      <html:div flex="40%">&email.label;</html:div>
-      <html:input name="identity.email" type="text" flex="60%"/>
-    </box>
-    <box align="horizonal">
-      <html:div flex="40%">&replyTo.label;</html:div>
-      <html:input name="identity.replyTo" type="text" flex="60%"/>
-    </box>
-    <box align="horizonal">
-      <html:div flex="40%">&organization.label;</html:div>
-      <html:input name="identity.organization" type="text" flex="60%"/>
-    </box>
-    <box align="horizontal">
-      <html:div>
-        <html:input name="identity.composeHtml" type="checkbox"/>
-        &useHtml.label;</html:div>
-    </box>
-    <box align="horizontal">
-      <html:div flex="100%">
+    <html:div class="secTitle">&identityTitle.label;</html:div>
+    <box align="vertical">
+    <html:div class="secDesc">&identityDesc.label;</html:div>
+    <html:div style="width: 100%">
+    <html:table width="100%">
+    <html:tr>
+      <html:td>&name.label;</html:td>
+      <html:td align="right"><html:input value="arg" name="identity.fullName" type="text" size="30"/></html:td>
+    </html:tr>
+    <html:tr>
+      <html:td>&email.label;</html:td>
+      <html:td align="right"><html:input name="identity.email" type="text" size="30"/></html:td>
+    </html:tr>
+    <html:tr>
+      <html:td flex="40%">&replyTo.label;</html:td>
+      <html:td align="right"><html:input name="identity.replyTo" type="text" size="30"/></html:td>
+    </html:tr>
+    <html:tr>
+      <html:td flex="40%">&organization.label;</html:td>
+      <html:td align="right"><html:input name="identity.organization" type="text" size="30"/></html:td>
+    </html:tr>
+    <html:tr class="checkboxrow">
+      <html:td colspan="2">
         <html:input name="identity.attachVCard" type="checkbox"/>
-        &attachVCard.label;</html:div>
+        &attachVCard.label;
       <titledbutton value="&editVCard.label;"/>
-    </box>
-    <box align="horizontal">
-      <html:div>
-      <html:input name="identity.attachSignature" type="checkbox"/>
-      &signature.label;</html:div>
-      <html:spacer/>
-      <html:input type="text" flex="100%" name="identity.signature"/>
+      </html:td>
+      </html:tr>    
+      <html:tr class="checkboxrow">
+      <html:td colspan="2">
+        <html:input name="identity.attachSignature" type="checkbox"/>
+        &signature.label;
+        <html:input type="text" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
+      </html:td>
+      </html:tr>
 <!--
       <html:select flex="100%">
          <html:option value="sig1">&sampleSig1.label;</html:option>
@@ -68,8 +62,18 @@ function onInit() {
          <html:option value="sig3">&sampleSig3.label;</html:option>
       </html:select>
       <titledbutton value="&editSignature.label;"/>
+
 -->
+    
+    </html:table>
+    </html:div>
     </box>
-    </box>
+
+    <html:table>
+      <html:tr class="checkboxrow"><html:td>
+        <html:input name="identity.composeHtml" type="checkbox"/>
+        &useHtml.label;
+      </html:td></html:tr>
+    </html:table>
 
 </window>

@@ -243,7 +243,7 @@ function setAccountValue(accountValues, type, slot, value) {
   if (!accountValues[type])
     accountValues[type] = new Array;
 
-  dump("Form->Array: accountValues[" + type + "][" + slot + "] = " + value + "\n");
+  //dump("Form->Array: accountValues[" + type + "][" + slot + "] = " + value + "\n");
   
   accountValues[type][slot] = value;
 }
@@ -280,11 +280,11 @@ function getAccountValue(account, accountValues, type, slot) {
     }
     
     if (source) {
-      accountValues[type][slot] = getStringValueOf(source[slot]);
+      accountValues[type][slot] = source[slot];
     }
   }
   var value = accountValues[type][slot];
-  dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
+  //dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
   return value;
 }
 //
@@ -325,26 +325,28 @@ function getFormElementValue(formElement) {
       return !formElement.checked;
     else
       return formElement.checked;
-  } else
+  }
+
+  else if (formElement.type == "text" &&
+           formElement.getAttribute("datatype") == "nsIFileSpec") {
+    var filespec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
+    filespec.nativePath = formElement.value;
+    return filespec;
+  }
+
+
+  else
     return formElement.value;
 }
 
-function getStringValueOf(obj) {
-
-  var value = obj;
-  if (value && typeof(value) == "object") {
-    try {
-      var filespec = value.QueryInterface(Components.interfaces.nsIFileSpec);
-      realvalue = filespec.nativePath;
-    } catch (ex) {}
-  }
-  return obj;
-}
 //
 // sets the value of a widget
 //
 function setFormElementValue(formElement, value) {
-
+  
+  //formElement.value = formElement.defaultValue;
+  //  formElement.checked = formElement.defaultChecked;
+  
   if (formElement.type == "checkbox") {
     if (value == undefined) {
       formElement.checked = formElement.defaultChecked;
@@ -354,29 +356,31 @@ function setFormElementValue(formElement, value) {
       else
         formElement.checked = value;
     }
-  } else {
+    
+  }
+
+  // handle nsIFileSpec
+  else if (formElement.type == "text" &&
+           formElement.getAttribute("datatype") == "nsIFileSpec") {
+    if (value) {
+      var filespec = value.QueryInterface(Components.interfaces.nsIFileSpec);
+      try {
+      formElement.value = filespec.nativePath;
+      } catch (ex) {
+        dump("Still need to fix uninitialized filespec problem!\n");
+      }
+    } else
+      formElement.value = formElement.defaultValue;
+
+  }
+
+  // let the form figure out what to do with it
+  else {
     if (value == undefined)
       formElement.value = formElement.defaultValue;
     else
       formElement.value = value;
   }
-}
-
-
-function fillAccountValues(accountValues, account, fields) {
-
-  var identity = account.defaultIdentity;
-  var server = account.incomingServer;
-  
-  for (var i=0; i<fields.length; i++) {
-    var fullname = fields.name;
-    var vals = fullname.split(".");
-    var type = vals[0];
-    var slot = fields[1];
-
-  }
-  accountValues[type][slot] = identity[slot];
-
 }
 
 //
