@@ -755,6 +755,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
+  // Stash away a pointer to our channel (we need this for cookies)
+  mChannel = aChannel;
+
   nsCOMPtr<nsIURI> uri;
   rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) {
@@ -858,11 +861,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   PRBool isPostPage = PR_FALSE;
   // check if current doc is from POST command
-  if (mHttpChannel) {
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+  if (httpChannel) {
     nsCAutoString methodStr;
-    rv = mHttpChannel->GetRequestMethod(methodStr);
-    if (NS_SUCCEEDED(rv) && methodStr.Equals(NS_LITERAL_CSTRING("POST")))
-      isPostPage = PR_TRUE;
+    rv = httpChannel->GetRequestMethod(methodStr);
+    isPostPage = (NS_SUCCEEDED(rv) &&
+                  methodStr.Equals(NS_LITERAL_CSTRING("POST")));
   }
 
   if (isPostPage && muCV && kCharsetFromHintPrevDoc > charsetSource) {

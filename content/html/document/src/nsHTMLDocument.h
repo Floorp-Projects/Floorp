@@ -254,7 +254,6 @@ protected:
   nsresult RemoveWyciwygChannel(void);
 
   nsCOMPtr<nsIChannel>     mChannel;
-  nsCOMPtr<nsIHttpChannel> mHttpChannel;
 
   nsCompatibility mCompatMode;
 
