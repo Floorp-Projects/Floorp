@@ -40,7 +40,7 @@
 var protocolinfo = null;
 var gPrefsBundle;
 
-function validate() {
+function loginPageValidate() {
   var username = document.getElementById("username").value;
 
   if (protocolinfo && protocolinfo.requiresUsername && (!username || username == "")) { 
@@ -58,16 +58,19 @@ function validate() {
     window.alert(alertText);
     return false;
   }
+
+  setPageData(pageData, "login", "username", username);
+
   return true;
 }
 
-function onInit() {
+function loginPageInit() {
     gPrefsBundle = document.getElementById("bundle_prefs");
     var loginNameInput = document.getElementById("username");
     
     if (loginNameInput.value == "") {
       // retrieve data from previously entered pages
-      var pageData = parent.wizardManager.WSM.PageData;
+      var pageData = parent.GetPageData();
       var type = parent.getCurrentServerType(pageData);
 
       dump("type = " + type + "\n");

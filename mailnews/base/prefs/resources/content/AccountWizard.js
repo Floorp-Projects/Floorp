@@ -55,23 +55,9 @@ var okCallback = null;
    (server vs. newsserver)
 */
 
-var gWizardMap = {
-    accounttype: { next: "identity" },
-    identity: { previous: "accounttype"}, // don't define next: server/newsserver
-    server:   { next: "login", previous: "identity"},
-    newsserver: { next: "accname", previous: "identity"},
-    login:    { next: "accname", previous: "server"}, 
-    accname:  { next: "done", }, // don't define previous: login/newsserver
-    done:     { previous: "accname", finish: true }
-}
-
-var pagePrefix="chrome://messenger/content/aw-";
-var pagePostfix=".xul";
-
-var currentPageTag;
-
 var contentWindow;
 
+var gPageData;
 var smtpService;
 var am;
 var accountm = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
@@ -102,25 +88,18 @@ var gCurrentAccountData;
 gDefaultSpecialFolderPickerMode = "0";
 
 // event handlers
-function onLoad() {
+function onAccountWizardLoad() {
     gPrefsBundle = document.getElementById("bundle_prefs");
     gMessengerBundle = document.getElementById("bundle_messenger");
 
-    // wizard stuff
-    // instantiate the Wizard Manager
-    wizardManager = new WizardManager( "wizardContents", null, null,
-                                       gWizardMap );
-    wizardManager.URL_PagePrefix = "chrome://messenger/content/aw-";
-    wizardManager.URL_PagePostfix = ".xul"; 
-    wizardManager.SetHandlers(null, null, onFinish, onCancel, null, null);
-	
-	/* We are checking here for the callback argument */
-	if (window.arguments && window.arguments[0])
-		if(window.arguments[0].okCallback ) 
-		{
-//			dump("There is okCallback");
-			top.okCallback = window.arguments[0].okCallback;
-		}
+    /* We are checking here for the callback argument */
+    if (window.arguments && window.arguments[0]) {
+        if(window.arguments[0].okCallback ) 
+        {
+            //dump("There is okCallback");
+            top.okCallback = window.arguments[0].okCallback;
+        }
+    }
 
     // load up the SMTP service for later
     if (!smtpService) {
@@ -129,25 +108,19 @@ function onLoad() {
     }
 
     checkForInvalidAccounts();
-    var pageData = GetPageData();
-    updateMap(pageData, gWizardMap);
 
-    // skip the first page if we have an account
     if (gCurrentAccount) {
-        // skip past first pane
-        gWizardMap.identity.previous = null;
-        wizardManager.LoadPage("identity", false);
+        // Set the page index to identity page.
+        document.documentElement.pageIndex = 1;
     }
-    else
-        wizardManager.LoadPage("accounttype", false);
-    
+
     try {
-      gDefaultAccount = accountm.defaultAccount;
+        gDefaultAccount = accountm.defaultAccount;
     }
     catch (ex) {
-      // no default account, this is expected the first time you launch mail
-      // on a new profile
-      gDefaultAccount = null;
+        // no default account, this is expected the first time you launch mail
+        // on a new profile
+        gDefaultAccount = null;
     }
 }
 
@@ -204,17 +177,8 @@ function onCancel()
   }
 }
 
-function onFinish() {
-    if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
-        return;
-
-	FinishAccount();
-}
-	
 function FinishAccount() {
     var pageData = GetPageData();
-
-    dump(parent.wizardManager.WSM);
 
     var accountData= gCurrentAccountData;
     
@@ -704,7 +668,6 @@ function checkForInvalidAccounts()
 
         gCurrentAccountData = accountData;
         
-        dump(parent.wizardManager.WSM);
     }
 }
 
@@ -741,9 +704,9 @@ function setPageData(pageData, tag, slot, value) {
 
 // value of checkbox on the first page
 function serverIsNntp(pageData) {
-    if (pageData.accounttype.newsaccount)
-        return pageData.accounttype.newsaccount.value;
-    return false;
+  if (pageData.accounttype.newsaccount)
+    return pageData.accounttype.newsaccount.value;
+  return false;
 }
 
 function getUsernameFromEmail(email)
@@ -784,48 +747,12 @@ function getCurrentHostname(pageData) {
         return pageData.server.hostname.value;
 }
 
-function UpdateWizardMap() {
-    updateMap(GetPageData(), gWizardMap);
-}
-
-// updates the map based on various odd states
-// conditions handled right now:
-// - 
-function updateMap(pageData, wizardMap) {
-    dump("Updating wizard map..\n");
-    if (pageData.accounttype) {
-        var ismailaccount = pageData.accounttype.mailaccount;
-        dump("Accounttype is mail: " + (ismailaccount && ismailaccount.value) + "\n");
-        // set up default account stuff
-        wizardMap.identity.next = "server";
-        wizardMap.done.previous = "accname";
-        
-        if (pageData.accounttype.mailaccount &&
-            pageData.accounttype.mailaccount.value) {
-
-            wizardMap.accname.previous = "login";
-            
-            if (gCurrentAccountData && gCurrentAccountData.wizardSkipPanels) {
-                wizardMap.identity.next = "done";
-                wizardMap.done.previous = "identity";
-            }
-        }
-
-        else if (pageData.accounttype.newsaccount &&
-                 pageData.accounttype.newsaccount.value) {
-            wizardMap.identity.next = "newsserver";
-            wizardMap.accname.previous = "newsserver";
-        }
-        else {
-            dump("Handle other types (" + pageData.accounttype + ") here?\n");
-        }
-    }
-
-}
-
 function GetPageData()
 {
-    return parent.wizardManager.WSM.PageData;
+    if (!gPageData)
+      gPageData = new Object;
+
+    return gPageData;
 }
     
 
@@ -837,6 +764,8 @@ function PrefillAccountForIsp(ispName)
     
     var pageData = GetPageData();
 
+    if (!ispData) 
+      return;
 
     // prefill the rest of the wizard
     dump("PrefillAccountForISP: filling with " + ispData + "\n");
@@ -918,4 +847,9 @@ function SetSmtpRequiresUsernameAttribute(accountData)
     if (!(gDefaultAccount && gDefaultAccount.incomingServer.canBeDefaultServer)) { 
         accountData.smtpRequiresUsername = true;
     }
+}
+
+function setNextPage(currentPageId, nextPageId) {
+    var currentPage = document.getElementById(currentPageId);
+    currentPage.next = nextPageId;
 }

@@ -41,7 +41,7 @@
 var gCurrentDomain;
 var gPrefsBundle;
 
-function validate(data)
+function identityPageValidate()
 {
   var name = document.getElementById("fullName").value;
 
@@ -52,8 +52,27 @@ function validate(data)
   }
   if (!validateEmail()) return false;
 
-  parent.UpdateWizardMap();
-  
+  var pageData = parent.GetPageData();
+  setPageData(pageData, "identity", "fullName", name);
+
+  var isMailAccount = pageData.accounttype.mailaccount;
+  if (isMailAccount && isMailAccount.value) {
+    if (gCurrentAccountData && gCurrentAccountData.wizardSkipPanels) {
+      setNextPage("identitypage","done");
+    }
+    else {
+      setNextPage("identitypage","serverpage");
+      setNextPage("serverpage","loginpage");
+      setNextPage("loginpage","accnamepage");
+      setNextPage("accnamepage","done");
+    }
+  } 
+  else {
+    setNextPage("identitypage","newsserver");
+    setNextPage("newsserver","accnamepage");
+    setNextPage("accnamepage","done");
+  }
+
   return true;
 }
 
@@ -96,6 +115,9 @@ function validateEmail()
       return false;
     }
   }
+
+  var pageData = parent.GetPageData();
+  setPageData(pageData, "identity", "email", email);
     
   return true;
 }
@@ -140,14 +162,26 @@ function containsIllegalChar(aString)
   return false;
 } 
 
-function onInit()
+function identityPageInit()
 {
   gPrefsBundle = document.getElementById("bundle_prefs");
+  clearEmailTextItems();
   setEmailDescriptionText();
   checkForDomain();
   checkForFullName(); 
   checkForEmail(); 
   fixPreFilledEmail();
+}
+
+function clearEmailTextItems()
+{
+  var emailDescText = document.getElementById("emailDescText");
+
+  if (emailDescText.firstChild)
+    emailDescText.removeChild(emailDescText.firstChild);
+
+  var postEmailText = document.getElementById("postEmailText");
+  postEmailText.setAttribute("value", "");
 }
 
 // Use email example data that ISP has provided. ISP data, if avaialble
@@ -162,6 +196,9 @@ function setEmailDescriptionText()
     var displayText =  null;
     var emailFieldLabelData =  null;
     var setDefaultEmailDescStrings = true; 
+
+    // Set the default field label
+    emailFieldLabel.setAttribute("value", gPrefsBundle.getString("emailFieldText"));
 
     // Get values for customized data from current account 
     if (currentAccountData)

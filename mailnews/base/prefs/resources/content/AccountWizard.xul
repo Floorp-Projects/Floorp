@@ -21,36 +21,234 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/accountWizard.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/wizardOverlay.xul"?>
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountWizard.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountWizard.dtd" >
+<wizard id="AccountWizard" title="Account Wizard"
+        onwizardcancel="return onCancel();"
+        onwizardfinish="return FinishAccount();"
+        onload="onAccountWizardLoad();"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<window id="account-wizard-dialog"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    title="&windowTitle.label;"
-    height="400" width="500" class="color-dialog"
-    onload="onLoad();">
-
-  <keyset id="dialogKeys"/>
-
-  <!-- XXX: strres.js is included so that WizardManager.js will work -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardHandlerSet.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardManager.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/widgetStateManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/AccountWizard.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/ispUtils.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-accounttype.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-identity.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-server.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-login.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-accname.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/aw-done.js"/>
 
-  <vbox flex="1">
-    <hbox id="contentarea" flex="1">
-      <iframe flex="1" name="wizardContents" scrolling="auto" id="wizardContents"/>
-    </hbox>
-	<!-- if you change "wizardButtons", make sure to change AccountWizardOverlay.xul, too -->
-    <hbox id="wizardButtons"/>
-  </vbox>
+  <!-- Account Type page : Displays choices of mail and news accounts that user can create -->
+  <wizardpage id="accounttype" pageid="accounttype"
+              label="&accountTypeTitle.label;"
+              onpageshow="return acctTypePageInit();"
+              onpageadvanced="return acctTypePageUnload();">
+    <vbox flex="1">
+      <description>&accountTypeDesc.label;</description>
+      <description>&accountTypeDirections.label;</description>
+      <separator/>
+      <radiogroup name="acctyperadio" id="acctyperadio" >
+        <radio id="mailaccount" value="mailaccount"
+               oncommand="setMailAccountTypeData();"
+               wsm_persist="true"
+               label="&accountTypeMail.label;"/>
+  
+        <vbox datasources="rdf:ispdefaults" 
+              containment="http://home.netscape.com/NC-rdf#providers"
+              id="ispBox"
+              ref="NC:ispinfo">
+          <template>
+            <rule nc:wizardShow="true">
+              <radio uri="..." wsm_persist="true"
+                     value="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
+                     label="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
+            </rule>
+         </template>
+        </vbox>
+        <radio id="newsaccount" value="newsaccount"
+               oncommand="setNewsAccountTypeData();"
+               wsm_persist="true"
+               label="&accountTypeNews.label;"/>
+      </radiogroup>
+    </vbox>
+  </wizardpage>
 
-</window>
+  <!-- Identity page : Collects user's full name and email address -->
+  <wizardpage id="identitypage" pageid="identitypage"
+              label="&identityTitle.label;"
+              onpageshow="return identityPageInit();"
+              onpageadvanced="return identityPageValidate();">
+    <vbox flex="1">
+      <description>&identityDesc.label;</description>
+      <separator/>
+      <description>&fullnameDesc.label; &fullnameExample.label;</description>
+      <separator class="thin"/>
+      <hbox align="center">
+        <label class="awIdentityLabel" for="fullName" value="&fullnameLabel.label;"/>
+        <textbox mailtype="identity" wsm_persist="true" name="fullName" id="fullName" flex="1"/>
+      </hbox>
+      <separator/>  
+      <grid>
+        <columns>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <description id="emailDescText"/> 
+          </row>
+          <separator class="thin"/>
+          <row>
+            <hbox align="center">
+              <label class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
+              <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
+              <label id="postEmailText"/>
+            </hbox>
+          </row>
+        </rows>
+      </grid>
+    </vbox>
+  </wizardpage>
+
+  <!-- Server page : User can choose to create mail account of his choice, POP3 or IMAP -->
+  <!-- Collects incoming server name. Outgoing server name is collected if there isn't one already -->
+  <wizardpage id="serverpage" pageid="serverpage" 
+              label="&serverTitle.label;"
+              onpageshow="return serverPageInit();"
+              onpageadvanced="return serverPageValidate();">
+    <vbox flex="1">
+      <groupbox orient="vertical">
+        <caption label="&incomingServerTitle.label;"/>
+        <description>&incomingServerTypeDesc.label;</description>
+        <separator class="thin"/>
+        <hbox align="center">
+          <!-- The initial value for the servertype radiogroup is set in onInit() -->
+          <radiogroup id="servertype" wsm_persist="true" orient="horizontal">
+              <radio group="servertype" value="pop3" id="pop3" label="&popType.label;" wsm_persist="true" oncommand="setServerType();"/>
+              <radio group="servertype" value="imap" id="imap" label="&imapType.label;" wsm_persist="true" oncommand="setServerType();"/>
+          </radiogroup>
+        </hbox>
+        <separator class="thin"/>
+        <description>&incomingServerNameDesc.label;</description>
+        <separator class="thin"/>
+        <hbox align="center">
+          <label class="label" style="width: 8em;" value="&incomingServerLabel.label;" for="incomingServer"/>
+          <textbox wsm_persist="true" id="incomingServer" flex="1"/>
+        </hbox>
+      </groupbox>
+
+      <groupbox orient="vertical" id="noSmtp">
+        <caption label="&smtpServerTitle.label;"/>
+        <description>&smtpServerDesc.label;</description>
+        <separator class="thin"/>
+        <hbox align="center">
+          <label class="label" value="&smtpServerLabel.label;" for="smtphostname" style="width: 8em;"/>
+          <textbox id="smtphostname" wsm_persist="true" flex="1"/>
+        </hbox>
+      </groupbox>
+
+      <groupbox id="haveSmtp" orient="vertical">
+        <description id="smtpStaticText" style="width: 200px;">&haveSmtp1.label;</description>
+      </groupbox>
+    </vbox>
+  </wizardpage>
+
+  <!-- Login page : Login name is prefilled with user id from the email address provided in identity page -->
+  <!-- User can enter a login name here if it is different from the user id of his/her email address -->
+  <wizardpage id="loginpage" pageid="loginpage" 
+              label="&loginTitle.label;"
+              onpageshow="return loginPageInit();"
+              onpageadvanced="return loginPageValidate();">
+    <vbox flex="1">
+      <description>&usernameDesc.label; &usernameExample.label;</description>
+      <separator class="thin"/>
+      <hbox align="center">
+        <label class="label" value="&usernameLabel.label;" for="username" style="width: 8em;"/>
+        <textbox id="username" wsm_persist="true" flex="1"/>
+      </hbox>
+    </vbox>
+  </wizardpage>
+
+  <!-- News Server page : Collects the News groups server name -->
+  <wizardpage id="newsserver" pageid="newsserver"
+              label="&serverTitle.label;"
+              onpageshow="return serverPageInit();"
+              onpageadvanced="return serverPageValidate();">
+    <vbox flex="1">
+      <description>&newsServerNameDesc.label;</description>
+      <separator class="thin"/>
+      <hbox align="center">
+        <label control="hostname" value="&incomingServerLabel.label;" style="width: 8em;"/>
+        <textbox id="newsServer" wsm_persist="true" flex="1"/>
+      </hbox>
+    </vbox>
+  </wizardpage>
+
+  <!-- Account name page : User gets a choice to enter a pretty name for the account -->
+  <!-- Defaults : Mail account -> Email address, Newsgroup account -> Newsgroup server name -->
+  <wizardpage id="accnamepage" pageid="accnamepage" 
+              label="&accnameTitle.label;"
+              onpageshow="return acctNamePageInit();"
+              onpageadvanced="return acctNamePageValidate();">
+    <vbox flex="1">
+      <description>&accnameDesc.label;</description>
+      <separator class="thin"/>
+      <hbox align="center">
+        <label class="label" value="&accnameLabel.label;" for="prettyName" style="width: 8em;"/>
+        <textbox id="prettyName" size="40" wsm_persist="true" flex="1"/>
+      </hbox>
+    </vbox>
+  </wizardpage>
+
+  <!-- Done page : this page summarizes information collected to create a mail/news account -->
+  <wizardpage id="done" pageid="done" 
+              label="&completionTitle.label;"
+              onpageshow="return donePageInit();">
+    <vbox flex="1">
+      <description>&completionText.label;</description>
+      <separator class="thin"/>
+      <grid>
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row autostretch="never" id="account.name">
+            <label class="label" flex="1" id="account.name.label" value="&accountNamePrefix.label;"/>
+            <label class="label" id="account.name.text"/>
+          </row>
+          <row autostretch="never" id="server.username">
+            <label class="label" flex="1" id="server.username.label" value="&userNamePrefix.label;"/>
+            <label class="label" id="server.username.text"/>
+          </row>
+          <row autostretch="never" id="identity.email">
+            <label class="label" flex="1" id="identity.email.label" value="&emailPrefix.label;"/>
+            <label class="label" id="identity.email.text"/>
+          </row>
+          <row autostretch="never" id="server.name">
+            <label class="label" flex="1" id="server.name.label" value="&serverNamePrefix.label;"/>
+            <label class="label" id="server.name.text"/>
+          </row>
+          <row autostretch="never" id="server.type">
+            <label class="label" flex="1" id="server.type.label" value="&serverTypePrefix.label;"/>
+            <label class="label" id="server.type.text"/>
+          </row>
+          <row autostretch="never" id="newsServer.name">
+            <label class="label" flex="1" id="newsServer.name.label" value="&newsServerNamePrefix.label;"/>
+            <label class="label" id="newsServer.name.text"/>
+          </row>
+          <row autostretch="never" id="smtpServer.name">
+            <label class="label" flex="1" id="smtpServer.name.label" value="&smtpServerNamePrefix.label;"/>
+            <label class="label" id="smtpServer.name.text"/>
+          </row>
+        </rows>
+      </grid>
+      <separator/>
+      <description>&clickFinish.label;</description>
+    </vbox>
+  </wizardpage>
+
+</wizard>

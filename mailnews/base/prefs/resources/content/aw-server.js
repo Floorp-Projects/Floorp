@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 var gPrefsBundle;
+var gOnMailServersPage;
+var gOnNewsServerPage;
 
 function hostnameIsIllegal(hostname)
 {
@@ -53,13 +55,16 @@ function hostnameIsIllegal(hostname)
   return false;
 }
 
-function validate() 
+function serverPageValidate() 
 {
-  var servername = document.getElementById("hostname");
   var smtpserver = document.getElementById("smtphostname");
+  var incomingServerName = document.getElementById("incomingServer");
+  var newsServerName = document.getElementById("newsServer");
 
-  if ((servername && hostnameIsIllegal(servername.value)) ||
-      (smtpserver && hostnameIsIllegal(smtpserver.value))) {
+  if ((gOnMailServersPage && 
+      ((hostnameIsIllegal(incomingServerName.value)) || 
+       (hostnameIsIllegal(smtpserver.value)))) ||
+      (gOnNewsServerPage && hostnameIsIllegal(newsServerName.value))) {
     var alertText = gPrefsBundle.getString("enterValidHostname");
     window.alert(alertText);
     return false;
@@ -74,7 +79,11 @@ function validate()
   var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
   if (!protocolinfo.requiresUsername) {
     var userName = parent.getCurrentUserName(pageData);
-    var hostName = servername.value;
+    var hostName;
+    if (gOnMailServersPage)
+      hostName = incomingServerName.value;
+    else if (gOnNewsServerPage)
+      hostName = newsServerName.value;
 
     if (parent.AccountExists(userName,hostName,serverType)) {
       alertText = gPrefsBundle.getString("accountExists");
@@ -83,13 +92,26 @@ function validate()
     }
   }
 
+  setPageData(pageData, "server", "servertype", serverType);
+
+  if (gOnMailServersPage) {
+    setPageData(pageData, "server", "hostname", incomingServerName.value);
+    setPageData(pageData, "server", "smtphostname", smtpserver.value);
+  }
+  else if (gOnNewsServerPage) {
+    setPageData(pageData, "newsserver", "hostname", newsServerName.value);
+  }
+
   return true;
 }
 
-function onInit() {
+function serverPageInit() {
+  gOnMailServersPage = (document.documentElement.currentPage.id == "serverpage");
+  gOnNewsServerPage = (document.documentElement.currentPage.id == "newsserver");
+
   // Server type selection (pop3 or imap) is for mail accounts only
   var isMailAccount = parent.GetPageData().accounttype.mailaccount;
-  if (isMailAccount && isMailAccount.value) {
+  if (isMailAccount && isMailAccount.value){
     var serverTypeRadioGroup = document.getElementById("servertype");
     /* 
      * Check to see if the radiogroup has any value. If there is no
@@ -156,6 +178,11 @@ function hideShowSmtpSettings(smtpServer) {
 
   if (boxToShow)
     boxToShow.removeAttribute("hidden");
+}
 
-
+function setServerType()
+{
+  var pageData = parent.GetPageData();
+  var serverType = (document.getElementById("servertype")).selectedItem.value;
+  setPageData(pageData, "server", "servertype", serverType);
 }

@@ -39,7 +39,7 @@
 
 var gPrefsBundle;
 
-function validate() {
+function acctNamePageValidate() {
   var accountname = document.getElementById("prettyName").value;
 
   if (!accountname || accountname =="") {
@@ -47,10 +47,13 @@ function validate() {
       window.alert(alertText);
       return false;
   }
+  var pageData = parent.GetPageData();
+  setPageData(pageData, "accname", "prettyName", accountname);
   return true;
 }
 
-function onInit() {
+function acctNamePageInit()
+{
     gPrefsBundle = document.getElementById("bundle_prefs");
     var accountNameInput = document.getElementById("prettyName");
     if (accountNameInput.value=="") {

@@ -36,22 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function onInit() {
-    // this is a total hack.
-    // select the first radio button, assuming the wizard hasn't
-    // already selected one for us. The wizard can get in this wierd state
-    var rg = document.getElementById("acctyperadio");
-    var elements = rg.getElementsByTagName("radio");
-    var topItem = elements[0];
-    for (var i=0; i < elements.length; i++)
-        if (elements[i].selected) topItem = elements[i];
+function acctTypePageInit() {
+  // this is a total hack.
+  // select the first radio button, assuming the wizard hasn't
+  // already selected one for us. The wizard can get in this wierd state
+  var rg = document.getElementById("acctyperadio");
+  var elements = rg.getElementsByTagName("radio");
+  var topItem = elements[0];
+  for (var i=0; i < elements.length; i++)
+    if (elements[i].selected) topItem = elements[i];
 
-    rg.selectedItem = topItem;
+  rg.selectedItem = topItem;
+
+  var selectedItemId = topItem.getAttribute('id');
+  if (selectedItemId == "mailaccount")
+    setMailAccountTypeData();
+  else if (selectedItemId == "newsaccount")
+    setNewsAccountTypeData();
 }
 
-function onUnload() {
+function acctTypePageUnload() {
     dump("OnUnload!\n");
-    parent.UpdateWizardMap();
 
     initializeIspData();
     
@@ -75,6 +80,16 @@ function initializeIspData()
     if (!ispName || ispName == "") return;
 
     parent.PrefillAccountForIsp(ispName);
-    parent.UpdateWizardMap();
 }
 
+function setMailAccountTypeData() {
+  var pageData = parent.GetPageData();
+  setPageData(pageData, "accounttype", "mailaccount", true);
+  setPageData(pageData, "accounttype", "newsaccount", false);
+}
+
+function setNewsAccountTypeData() {
+  var pageData = parent.GetPageData();
+  setPageData(pageData, "accounttype", "newsaccount", true);
+  setPageData(pageData, "accounttype", "mailaccount", false);
+}

@@ -20,9 +20,9 @@
 
 var gPrefsBundle;
 
-function onInit() {
+function donePageInit() {
     gPrefsBundle = document.getElementById("bundle_prefs");
-    var pageData = parent.wizardManager.WSM.PageData;
+    var pageData = parent.GetPageData();
     var showMailServerDetails = true; 
 
     var currentAccountData = parent.gCurrentAccountData;
@@ -79,7 +79,7 @@ function onInit() {
     // based on current account data. ISP can set 
     // rdf value of literal showServerDetailsOnWizardSummary
     // to false to hide server details
-    if (showMailServerDetails) {
+    if (showMailServerDetails && !serverIsNntp(pageData)) {
         var incomingServerName="";
         if (pageData.server && pageData.server.hostname) {
             incomingServerName = pageData.server.hostname.value;
