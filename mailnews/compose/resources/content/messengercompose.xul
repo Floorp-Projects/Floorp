@@ -101,6 +101,8 @@ Rights Reserved.
 	<menu id="menu_File">
 	    <menupopup id="menu_FilePopup">
 		<menuitem value="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
+		<menuseparator/>
+		<menuitem id="menu_close"/>
 		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
 		<menuitem value="&saveAsCmd.label;" oncommand="SaveAsDraft()"/>
 		<menuitem value="&saveAsTemplateCmd.label;" oncommand="SaveAsTemplate()"/>
@@ -123,7 +125,6 @@ Rights Reserved.
 		<menuitem value="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
 		<menuitem value="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
 		<menuseparator/>
-		<menuitem id="menu_close"/>
 		</menupopup>
 	</menu>
 	<menu id="menu_Edit">
