@@ -19,31 +19,22 @@
 #
 # Contributor(s): 
 
-DEPTH=.. 
+DEPTH=..\..
 
+include <$(DEPTH)/config/config.mak>
 
+MAKE_OBJ_TYPE	= EXE
+PROG1 = .\$(OBJDIR)\windbgdlg.exe
 
-DIRS=   typelib        \
-        base           \
-        ds             \
-        io             \
-        components     \
-        threads        \
-        reflect        \
-        proxy          \
-        build          \
-        appshell       \
-        tools          \
-!if defined(MOZ_DEBUG)
-        windbgdlg      \
-!endif
-!if !defined(DISABLE_TESTS)
-        sample         \
-        tests          \
-        reflect\xptinfo\tests \
-        reflect\xptcall\tests \
-        proxy\tests \
-!endif
-        $(NULL)
+PROGRAMS = $(PROG1) \
+           $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: $(PROGRAMS)
+	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
+
+clobber::
+	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
+
+$(PROG1): $(OBJDIR) windbgdlg.cpp

@@ -210,13 +210,39 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
 #if defined(_WIN32)
    if(!InDebugger())
       {
-      char msg[1200];
-      PR_snprintf(msg, sizeof(msg),
-                "%s\n\nClick Abort to exit the Application.\n"
-                "Click Retry to Debug the Application..\n"
-                "Click Ignore to continue running the Application.", buf); 
-      int code = ::MessageBox(NULL, msg, "nsDebug::Assertion",
-                     MB_ICONSTOP | MB_ABORTRETRYIGNORE);
+      DWORD code = IDRETRY;
+
+      /* Create the debug dialog out of process to avoid the crashes caused by 
+       * Windows events leaking into our event loop from an in process dialog.
+       * We do this by launching windbgdlg.exe (built in xpcom/windbgdlg).
+       * See http://bugzilla.mozilla.org/show_bug.cgi?id=54792
+       */
+      PROCESS_INFORMATION pi;
+      STARTUPINFO si;
+      char executable[MAX_PATH];
+      char* pName;
+
+      memset(&pi, 0, sizeof(pi));
+
+      memset(&si, 0, sizeof(si));
+      si.cb          = sizeof(si);
+      si.wShowWindow = SW_SHOW;
+
+      if(GetModuleFileName(NULL, executable, MAX_PATH) &&
+         NULL != (pName = strrchr(executable, '\\')) &&
+         NULL != strcpy(pName+1, "windbgdlg.exe") &&
+#ifdef DEBUG_jband
+         (printf("Launching %s\n", executable), PR_TRUE) &&
+#endif         
+         CreateProcess(executable, buf, NULL, NULL, PR_FALSE,
+                       DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
+                       NULL, NULL, &si, &pi) &&
+         WAIT_OBJECT_0 == WaitForSingleObject(pi.hProcess, INFINITE) &&
+         GetExitCodeProcess(pi.hProcess, &code))
+      {
+        CloseHandle(pi.hProcess);
+      }                         
+
       switch(code)
          {
          case IDABORT:
