@@ -1031,6 +1031,40 @@ SECU_FileToItem(SECItem *dst, PRFileDesc *src)
     PRFileInfo info;
     PRInt32 numBytes;
     PRStatus prStatus;
+
+    if (src == PR_STDIN)
+	return secu_StdinToItem(dst);
+
+    prStatus = PR_GetOpenFileInfo(src, &info);
+
+    if (prStatus != PR_SUCCESS) {
+	PORT_SetError(SEC_ERROR_IO);
+	return SECFailure;
+    }
+
+    /* XXX workaround for 3.1, not all utils zero dst before sending */
+    dst->data = 0;
+    if (!SECITEM_AllocItem(NULL, dst, info.size))
+	goto loser;
+
+    numBytes = PR_Read(src, dst->data, info.size);
+    if (numBytes != info.size) {
+	PORT_SetError(SEC_ERROR_IO);
+	goto loser;
+    }
+
+    return SECSuccess;
+loser:
+    SECITEM_FreeItem(dst, PR_FALSE);
+    return SECFailure;
+}
+
+SECStatus
+SECU_TextFileToItem(SECItem *dst, PRFileDesc *src)
+{
+    PRFileInfo info;
+    PRInt32 numBytes;
+    PRStatus prStatus;
     unsigned char *buf;
 
     if (src == PR_STDIN)
@@ -1053,11 +1087,10 @@ SECU_FileToItem(SECItem *dst, PRFileDesc *src)
 	goto loser;
     }
 
-    /* XXX workaround for 3.1, function needs to take a "chop" arg
-    while (buf[numBytes-1] == '\r' || 
-           buf[numBytes-1] == '\n' ||
-           buf[numBytes-1] == '\0') numBytes--;
-    */
+    if (buf[numBytes-1] == '\n') numBytes--;
+#ifdef _WINDOWS
+    if (buf[numBytes-1] == '\r') numBytes--;
+#endif
 
     /* XXX workaround for 3.1, not all utils zero dst before sending */
     dst->data = 0;
