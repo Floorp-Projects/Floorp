@@ -38,9 +38,7 @@
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsFrame.h"
 #include "nsIPresShell.h"
@@ -1212,27 +1210,12 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
     // Resolve url to an absolute url
     nsAutoString absURLSpec;
     if (nsnull != aBaseURL) {
-      nsString empty;
 #ifndef NECKO
+      nsString empty;
       NS_MakeAbsoluteURL(aBaseURL, empty, aURLSpec, absURLSpec);
 #else
-      nsresult rv;
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-      if (NS_FAILED(rv)) return;
-
-      nsIURI *baseUri = nsnull;
-      rv = aBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-      if (NS_FAILED(rv)) return;
-
-      char *absUrl = nsnull;
-      char *uriStr = aURLSpec.ToNewCString();
-      if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
-      rv = service->MakeAbsolute(uriStr, baseUri, &absUrl);
-      nsCRT::free(uriStr);
-      NS_RELEASE(baseUri);
-      if (NS_FAILED(rv)) return;
-      absURLSpec = absUrl;
-      delete [] absUrl;
+      rv = NS_MakeAbsoluteURI(aURLSpec, aBaseURL, absURLSpec);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "XXX make this function return an nsresult, like it should!");
 #endif // NECKO
     }
     else {
