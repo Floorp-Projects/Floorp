@@ -41,8 +41,8 @@
 #include "nsIParserService.h"
 #include "nsEditorParserObserver.h"
 
-NS_IMPL_ADDREF(nsEditorParserObserver);
-NS_IMPL_RELEASE(nsEditorParserObserver);
+NS_IMPL_ADDREF(nsEditorParserObserver)
+NS_IMPL_RELEASE(nsEditorParserObserver)
 
 NS_INTERFACE_MAP_BEGIN(nsEditorParserObserver)
       NS_INTERFACE_MAP_ENTRY(nsIElementObserver)

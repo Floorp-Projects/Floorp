@@ -293,7 +293,7 @@ MimeTypeElementImpl::GetType(nsAString& aType)
 }
 
 // QueryInterface implementation for HelperMimeTypeImpl
-NS_IMPL_ISUPPORTS1(HelperMimeTypeImpl, nsIDOMMimeType);
+NS_IMPL_ISUPPORTS1(HelperMimeTypeImpl, nsIDOMMimeType)
 
 NS_IMETHODIMP
 HelperMimeTypeImpl::GetDescription(nsAString& aDescription)

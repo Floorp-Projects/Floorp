@@ -251,7 +251,7 @@ void CnsIObserServ::EnumerateObserversTest(int displayType)
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(CnsIObserServ,  nsIObserver,  nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS2(CnsIObserServ,  nsIObserver,  nsISupportsWeakReference)
 
 
 NS_IMETHODIMP CnsIObserServ::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)

@@ -104,7 +104,7 @@
 @end
 
 
-NS_IMPL_ISUPPORTS2(CHClickListener, nsIDOMMouseListener, nsIDOMEventListener);
+NS_IMPL_ISUPPORTS2(CHClickListener, nsIDOMMouseListener, nsIDOMEventListener)
 
 CHClickListener::CHClickListener()
 {

@@ -53,7 +53,7 @@ nsComposerCommandsUpdater::~nsComposerCommandsUpdater()
 }
 
 NS_IMPL_ISUPPORTS4(nsComposerCommandsUpdater, nsISelectionListener,
-                   nsIDocumentStateListener, nsITransactionListener, nsITimerCallback);
+                   nsIDocumentStateListener, nsITransactionListener, nsITimerCallback)
 
 #if 0
 #pragma mark -

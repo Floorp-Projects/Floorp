@@ -97,7 +97,7 @@ protected:
 //
 // nsISupports implementation...
 //
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIInputStream);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIInputStream)
 
 
 nsJSThunk::nsJSThunk()

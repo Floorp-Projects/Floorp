@@ -1052,7 +1052,7 @@ nsQABrowserUIGlue::~nsQABrowserUIGlue()
 
 }
 
-NS_IMPL_ISUPPORTS1(nsQABrowserUIGlue, nsIQABrowserUIGlue);
+NS_IMPL_ISUPPORTS1(nsQABrowserUIGlue, nsIQABrowserUIGlue)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIQABrowserUIGlue

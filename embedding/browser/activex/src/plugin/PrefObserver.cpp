@@ -107,8 +107,8 @@ PrefObserver::~PrefObserver()
 {
 }
 
-NS_IMPL_ADDREF(PrefObserver);
-NS_IMPL_RELEASE(PrefObserver);
+NS_IMPL_ADDREF(PrefObserver)
+NS_IMPL_RELEASE(PrefObserver)
 
 NS_INTERFACE_MAP_BEGIN(PrefObserver)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)

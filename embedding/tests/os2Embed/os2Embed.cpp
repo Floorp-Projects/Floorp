@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
 // ProfileChangeObserver
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(ProfileChangeObserver, nsIObserver, nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS2(ProfileChangeObserver, nsIObserver, nsISupportsWeakReference)
 
 ProfileChangeObserver::ProfileChangeObserver()
 {

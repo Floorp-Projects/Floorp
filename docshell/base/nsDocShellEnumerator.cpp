@@ -39,7 +39,7 @@ nsDocShellEnumerator::~nsDocShellEnumerator()
   delete mItemArray;
 }
 
-NS_IMPL_ISUPPORTS1(nsDocShellEnumerator, nsISimpleEnumerator);
+NS_IMPL_ISUPPORTS1(nsDocShellEnumerator, nsISimpleEnumerator)
 
 
 /* nsISupports getNext (); */

@@ -413,11 +413,11 @@ NS_DOMCI_EXTENSION_CONSTRUCTOR_IMP(NS_DOMCI_EXTENSION_NAME(_module))      \
                                                                           \
 NS_DOMCI_EXTENSION_NAME(_module)::NS_DOMCI_EXTENSION_NAME(_module)()      \
 {                                                                         \
-};                                                                        \
+}                                                                         \
                                                                           \
 NS_DOMCI_EXTENSION_NAME(_module)::~NS_DOMCI_EXTENSION_NAME(_module)()     \
 {                                                                         \
-};                                                                        \
+}                                                                         \
                                                                           \
 NS_IMPL_ISUPPORTS1(NS_DOMCI_EXTENSION_NAME(_module), nsIDOMCIExtension)   \
                                                                           \
@@ -459,7 +459,7 @@ NS_DOMCI_EXTENSION_NAME(_module)::RegisterDOMCI(const char* aName,        \
 
 #define NS_DOMCI_EXTENSION_END                                            \
   return NS_ERROR_FAILURE;                                                \
-};
+}
 
 
 #endif /* nsIDOMClassInfo_h___ */

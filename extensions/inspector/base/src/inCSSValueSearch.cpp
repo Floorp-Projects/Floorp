@@ -69,7 +69,7 @@ inCSSValueSearch::~inCSSValueSearch()
   delete mResults;
 }
 
-NS_IMPL_ISUPPORTS2(inCSSValueSearch, inISearchProcess, inICSSValueSearch);
+NS_IMPL_ISUPPORTS2(inCSSValueSearch, inISearchProcess, inICSSValueSearch)
 
 ///////////////////////////////////////////////////////////////////////////////
 // inISearchProcess

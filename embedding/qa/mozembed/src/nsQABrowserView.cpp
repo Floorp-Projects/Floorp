@@ -69,7 +69,7 @@ nsQABrowserView::~nsQABrowserView()
 // nsQABrowserView::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS2(nsQABrowserView, nsIQABrowserView, nsIInterfaceRequestor);
+NS_IMPL_ISUPPORTS2(nsQABrowserView, nsIQABrowserView, nsIInterfaceRequestor)
 
 //*****************************************************************************
 // nsQABrowserView::nsIInterfacerequestor

@@ -65,7 +65,7 @@ inFlasher::~inFlasher()
 {
 }
 
-NS_IMPL_ISUPPORTS1(inFlasher, inIFlasher);
+NS_IMPL_ISUPPORTS1(inFlasher, inIFlasher)
 
 ///////////////////////////////////////////////////////////////////////////////
 // inIFlasher

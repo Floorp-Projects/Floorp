@@ -589,7 +589,7 @@ nsresult CTestEmbedApp::InitializeWindowCreator()
 //  CTestEmbedApp : nsISupports
 // ---------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(CTestEmbedApp, nsIObserver, nsIWindowCreator, nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS3(CTestEmbedApp, nsIObserver, nsIWindowCreator, nsISupportsWeakReference)
 
 // ---------------------------------------------------------------------------
 //  CTestEmbedApp : nsIObserver

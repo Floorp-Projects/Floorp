@@ -49,7 +49,7 @@
  ************************ nsCookiePromptService *****************
  ****************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsCookiePromptService, nsICookiePromptService);
+NS_IMPL_ISUPPORTS1(nsCookiePromptService, nsICookiePromptService)
 
 nsCookiePromptService::nsCookiePromptService() {
 }

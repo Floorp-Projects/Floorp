@@ -67,7 +67,7 @@ static PRBool SessionSave=PR_FALSE;
  */
 
 
-NS_IMPL_ISUPPORTS3(mozPersonalDictionary, mozIPersonalDictionary, nsIObserver, nsSupportsWeakReference);
+NS_IMPL_ISUPPORTS3(mozPersonalDictionary, mozIPersonalDictionary, nsIObserver, nsSupportsWeakReference)
 
 /* AVL node functors */
 

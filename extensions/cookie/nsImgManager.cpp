@@ -75,7 +75,7 @@ NS_IMPL_ISUPPORTS4(nsImgManager,
                    nsIImgManager, 
                    nsIContentPolicy,
                    nsIObserver,
-                   nsSupportsWeakReference);
+                   nsSupportsWeakReference)
 
 nsImgManager::nsImgManager()
 {

@@ -64,7 +64,7 @@ static NS_DEFINE_IID(kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID);
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozXMLTermShell)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(mozXMLTermShell, 
-                              mozIXMLTermShell);
+                              mozIXMLTermShell)
 
 PRBool mozXMLTermShell::mLoggingInitialized = PR_FALSE;
 

@@ -53,7 +53,7 @@
 //  CWindowCreator
 // ---------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS2(CWindowCreator, nsIWindowCreator, nsIWindowCreator2);
+NS_IMPL_ISUPPORTS2(CWindowCreator, nsIWindowCreator, nsIWindowCreator2)
 
 CWindowCreator::CWindowCreator()
 {
