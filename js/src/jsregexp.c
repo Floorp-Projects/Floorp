@@ -2224,12 +2224,14 @@ enum regexp_tinyid {
     REGEXP_MULTILINE    = -5
 };
 
+#define REGEXP_PROP_ATTRS (JSPROP_ENUMERATE|JSPROP_PERMANENT|JSPROP_SHARED)
+
 static JSPropertySpec regexp_props[] = {
-    {"source",     REGEXP_SOURCE,      JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT,0,0},
-    {"global",     REGEXP_GLOBAL,      JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT,0,0},
-    {"ignoreCase", REGEXP_IGNORE_CASE, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT,0,0},
-    {"lastIndex",  REGEXP_LAST_INDEX,  JSPROP_ENUMERATE | JSPROP_PERMANENT,0,0},
-    {"multiline",  REGEXP_MULTILINE,   JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT,0,0},
+    {"source",     REGEXP_SOURCE,      REGEXP_PROP_ATTRS | JSPROP_READONLY,0,0},
+    {"global",     REGEXP_GLOBAL,      REGEXP_PROP_ATTRS | JSPROP_READONLY,0,0},
+    {"ignoreCase", REGEXP_IGNORE_CASE, REGEXP_PROP_ATTRS | JSPROP_READONLY,0,0},
+    {"lastIndex",  REGEXP_LAST_INDEX,  REGEXP_PROP_ATTRS,0,0},
+    {"multiline",  REGEXP_MULTILINE,   REGEXP_PROP_ATTRS | JSPROP_READONLY,0,0},
     {0,0,0,0,0}
 };
 
@@ -2395,42 +2397,48 @@ regexp_static_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 static JSPropertySpec regexp_static_props[] = {
     {"input",
-     REGEXP_STATIC_INPUT,          JSPROP_ENUMERATE,
+     REGEXP_STATIC_INPUT,
+     JSPROP_ENUMERATE|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_setProperty},
     {"multiline",
-     REGEXP_STATIC_MULTILINE,      JSPROP_ENUMERATE,
+     REGEXP_STATIC_MULTILINE,
+     JSPROP_ENUMERATE|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_setProperty},
     {"lastMatch",
-     REGEXP_STATIC_LAST_MATCH,     JSPROP_ENUMERATE|JSPROP_READONLY,
+     REGEXP_STATIC_LAST_MATCH,
+     JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
     {"lastParen",
-     REGEXP_STATIC_LAST_PAREN,     JSPROP_ENUMERATE|JSPROP_READONLY,
+     REGEXP_STATIC_LAST_PAREN,
+     JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
     {"leftContext",
-     REGEXP_STATIC_LEFT_CONTEXT,   JSPROP_ENUMERATE|JSPROP_READONLY,
+     REGEXP_STATIC_LEFT_CONTEXT,
+     JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
     {"rightContext",
-     REGEXP_STATIC_RIGHT_CONTEXT,  JSPROP_ENUMERATE|JSPROP_READONLY,
+     REGEXP_STATIC_RIGHT_CONTEXT,
+     JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
 
     /* XXX should have block scope and local $1, etc. */
-    {"$1", 0, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$1", 0, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
-    {"$2", 1, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$2", 1, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
-    {"$3", 2, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$3", 2, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
-    {"$4", 3, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$4", 3, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
-    {"$5", 4, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$5", 4, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
-    {"$6", 5, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$6", 5, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
-    {"$7", 6, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$7", 6, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
-    {"$8", 7, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$8", 7, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
-    {"$9", 8, JSPROP_ENUMERATE|JSPROP_READONLY,
+    {"$9", 8, JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_SHARED,
      regexp_static_getProperty,    regexp_static_getProperty},
 
     {0,0,0,0,0}

@@ -1558,6 +1558,7 @@ FindConstructor(JSContext *cx, const char *name, jsval *vp)
     }
 
     JS_ASSERT(OBJ_IS_NATIVE(pobj));
+    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop));
     *vp = OBJ_GET_SLOT(cx, pobj, sprop->slot);
     OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
     return JS_TRUE;
@@ -1683,7 +1684,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
     size_t nbytes;
     jsval *newslots;
 
-    OBJ_CHECK_SLOT(obj,slot);
+    OBJ_CHECK_SLOT(obj, slot);
     obj->slots[slot] = JSVAL_VOID;
     map = obj->map;
     if (map->freeslot == slot + 1)
@@ -1821,6 +1822,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
     /* Add the property only if MutateScope didn't find a shared scope. */
     if (!sprop) {
+        if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
+            attrs |= JSPROP_SHARED;
 	sprop = js_NewScopeProperty(cx, scope, id, getter, setter, attrs);
 	if (!sprop)
 	    goto bad;
@@ -1834,7 +1837,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 			    (JSProperty *)sprop);
     }
 
-    LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
+    if (SPROP_HAS_VALID_SLOT(sprop))
+        LOCKED_OBJ_SET_SLOT(obj, sprop->slot, value);
     if (propp) {
 #ifdef JS_THREADSAFE
 	js_HoldScopeProperty(cx, scope, sprop);
@@ -2044,7 +2048,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     JSObject *obj2;
     JSScopeProperty *sprop;
     JSScope *scope;
-    jsint slot;
+    uint32 slot;
 
     if (!js_LookupProperty(cx, obj, id, &obj2, (JSProperty **)&sprop))
         return JS_FALSE;
@@ -2118,7 +2122,9 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     /* Unlock obj2 before calling getter, relock after to avoid deadlock. */
     scope = OBJ_SCOPE(obj2);
     slot = sprop->slot;
-    *vp = LOCKED_OBJ_GET_SLOT(obj2, slot);
+    *vp = (slot != SPROP_INVALID_SLOT)
+          ? LOCKED_OBJ_GET_SLOT(obj2, slot)
+          : JSVAL_VOID;
 #ifndef JS_THREADSAFE
     sprop->nrefs++;
 #endif
@@ -2183,7 +2189,9 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	     * operation destroying the property.
 	     */
 	    sprop = js_FindWatchPoint(rt, obj, js_IdToValue(id));
-	    if (sprop && (slot = sprop->slot) >= scope->map.freeslot) {
+            if (sprop &&
+                (slot = sprop->slot) != SPROP_INVALID_SLOT &&
+                slot >= scope->map.freeslot) {
 		if (slot >= scope->map.nslots) {
 		    nslots = slot + slot / 2;
 		    slots = (jsval *)
@@ -2291,6 +2299,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	    return JS_FALSE;
         }
         if (!sprop) {
+            if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
+                attrs |= JSPROP_SHARED;
             sprop = js_NewScopeProperty(cx, scope, id, getter, setter, attrs);
             if (!sprop) {
                 JS_UNLOCK_OBJ(cx, obj);
@@ -2308,7 +2318,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	}
 
 	/* Initialize new properties to undefined. */
-	LOCKED_OBJ_SET_SLOT(obj, sprop->slot, JSVAL_VOID);
+        if (SPROP_HAS_VALID_SLOT(sprop))
+            LOCKED_OBJ_SET_SLOT(obj, sprop->slot, JSVAL_VOID);
 
 	if (sym) {
 	    /* Null-valued symbol left behind from a delete operation. */
@@ -2325,7 +2336,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	    return JS_FALSE;
 	}
 #if JS_BUG_AUTO_INDEX_PROPS
-	{
+        if (SPROP_HAS_VALID_SLOT(sprop)) {
 	    jsid id2 = (jsid) INT_TO_JSVAL(sprop->slot - JSSLOT_START);
 	    if (!scope->ops->add(cx, scope, id2, sprop)) {
 		scope->ops->remove(cx, scope, id);
@@ -2358,9 +2369,11 @@ unlocked_read_only:
     }
 
     /* Get the current property value from its slot. */
-    JS_ASSERT(sprop->slot < obj->map->freeslot);
     slot = sprop->slot;
-    pval = LOCKED_OBJ_GET_SLOT(obj, slot);
+    if (slot != SPROP_INVALID_SLOT) {
+        JS_ASSERT(slot < obj->map->freeslot);
+        pval = LOCKED_OBJ_GET_SLOT(obj, slot);
+    }
 
     /* Hold sprop across setter callout, and drop after, in case of delete. */
     sprop->nrefs++;
@@ -2378,18 +2391,21 @@ unlocked_read_only:
     JS_LOCK_OBJ(cx, obj);
 
     sprop = js_DropScopeProperty(cx, scope, sprop);
-    if (!sprop || !SPROP_HAS_VALID_SLOT(sprop)) {
-	/* Lost a race with someone who deleted sprop. */
-	JS_UNLOCK_OBJ(cx, obj);
-	return JS_TRUE;
-    }
-    GC_POKE(cx, pval);
-    LOCKED_OBJ_SET_SLOT(obj, slot, *vp);
+
+    /*
+     * Check whether sprop is still around (was not deleted), and whether it
+     * has a slot (it may never have had one, or we may have lost a race with
+     * someone who cleared scope).
+     */
+    if (sprop && SPROP_HAS_VALID_SLOT(sprop)) {
+        GC_POKE(cx, pval);
+        LOCKED_OBJ_SET_SLOT(obj, slot, *vp);
 
 #if JS_BUG_SET_ENUMERATE
-    /* Setting a property makes it enumerable. */
-    sprop->attrs |= JSPROP_ENUMERATE;
+        /* Setting a property makes it enumerable. */
+        sprop->attrs |= JSPROP_ENUMERATE;
 #endif
+    }
     JS_UNLOCK_OBJ(cx, obj);
     return JS_TRUE;
 }
@@ -2505,7 +2521,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 	return JS_FALSE;
     }
 
-    GC_POKE(cx, LOCKED_OBJ_GET_SLOT(obj, sprop->slot));
+    if (SPROP_HAS_VALID_SLOT(sprop))
+        GC_POKE(cx, LOCKED_OBJ_GET_SLOT(obj, sprop->slot));
     scope = OBJ_SCOPE(obj);
 
     /*
@@ -2797,7 +2814,9 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
 	return OBJ_CHECK_ACCESS(cx, pobj, id, mode, vp, attrsp);
     }
     sprop = (JSScopeProperty *)prop;
-    *vp = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+    *vp = (SPROP_HAS_VALID_SLOT(sprop))
+          ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
+          : JSVAL_VOID;
     *attrsp = sprop->attrs;
     clasp = LOCKED_OBJ_GET_CLASS(obj);
     if (clasp->checkAccess) {
