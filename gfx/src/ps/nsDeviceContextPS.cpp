@@ -132,11 +132,9 @@ NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidget
  */
 NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-
+  // WINDOWS CALLS, NEED TO BE THE NATIVE PLATFORMS METRICS
   aWidth = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;
   aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits;
-  aWidth = 0;
-  aHeight = 0;
   return NS_OK;
 
 }

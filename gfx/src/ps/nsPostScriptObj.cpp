@@ -165,7 +165,7 @@ nsPostScriptObj::~nsPostScriptObj()
 }
 
 /** ---------------------------------------------------
- *  Get rid of data structures for the postscript
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -176,7 +176,7 @@ nsPostScriptObj::finalize_translation()
 }
 
 /** ---------------------------------------------------
- *  Set up the postscript
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -200,7 +200,7 @@ nsPostScriptObj::initialize_translation(PrintSetup* pi)
 }
 
 /** ---------------------------------------------------
- *  Open a document
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -258,8 +258,7 @@ nsPostScriptObj::begin_document()
 	  XP_FilePrintf(f, "\n");
       }
     XP_FilePrintf(f, "] /isolatin1encoding exch def\n");
-    XP_FilePrintf(f, "/c { matrix currentmatrix currentpoint translate\n");
-    XP_FilePrintf(f, "     3 1 roll scale newpath 0 0 1 0 360 arc setmatrix } bind def\n");
+    
     for (i = 0; i < N_FONTS; i++)
 	XP_FilePrintf(f, 
 	    "/F%d\n"
@@ -348,7 +347,7 @@ nsPostScriptObj::begin_document()
 }
 
 /** ---------------------------------------------------
- *  Open a page
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -376,7 +375,7 @@ nsPostScriptObj::begin_page()
 }
 
 /** ---------------------------------------------------
- *  Close a page
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -399,7 +398,7 @@ nsPostScriptObj::end_page()
 }
 
 /** ---------------------------------------------------
- *  End a document
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -410,7 +409,7 @@ nsPostScriptObj::end_document()
 
 
 /** ---------------------------------------------------
- *  Reset the cliping path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void
@@ -419,7 +418,7 @@ nsPostScriptObj::annotate_page(char *aTemplate, int y, int delta_dir, int pn)
 }
 
 /** ---------------------------------------------------
- *  Issue a PS show command, which causes image to be rastered
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -449,7 +448,7 @@ nsPostScriptObj::show(char* txt, int len, char *align)
 }
 
 /** ---------------------------------------------------
- *  Output a PS moveto command
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -468,7 +467,7 @@ nsPostScriptObj::moveto(int x, int y)
 }
 
 /** ---------------------------------------------------
- *  Move the PS cursor to a location, see documentation in nsPostScript.h
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -490,7 +489,7 @@ nsPostScriptObj::moveto_loc(int x, int y)
 
 
 /** ---------------------------------------------------
- *  Draw a PS line,see documentation in nsPostScript.h
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -508,19 +507,47 @@ nsPostScriptObj::lineto( int x1, int y1)
 }
 
 /** ---------------------------------------------------
- *  Draw a PS circle,see documentation in nsPostScript.h
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
-nsPostScriptObj::circle( int aW, int aH)
+nsPostScriptObj::ellipse( int aWidth, int aHeight)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g c ", PAGE_TO_POINT_F(aW)/2.0, PAGE_TO_POINT_F(aH)/2.0);
+
+  // Ellipse definition
+  XP_FilePrintf(mPrintContext->prSetup->out,"%g %g ",PAGE_TO_POINT_F(aWidth)/2, PAGE_TO_POINT_F(aHeight)/2);
+  XP_FilePrintf(mPrintContext->prSetup->out, 
+                " matrix currentmatrix currentpoint translate\n");
+  XP_FilePrintf(mPrintContext->prSetup->out, 
+          "     3 1 roll scale newpath 0 0 1 0 360 arc setmatrix  \n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
- *  Draw a PS rectangle,see documentation in nsPostScript.h
+ *  See documentation in nsPostScriptObj.h
+ *	@update 2/1/99 dwc
+ */
+void 
+nsPostScriptObj::arc( int aWidth, int aHeight,float aStartAngle,float aEndAngle)
+{
+
+  XL_SET_NUMERIC_LOCALE();
+  // Arc definition
+  XP_FilePrintf(mPrintContext->prSetup->out,"%g %g ",PAGE_TO_POINT_F(aWidth)/2, PAGE_TO_POINT_F(aHeight)/2);
+  XP_FilePrintf(mPrintContext->prSetup->out, 
+                " matrix currentmatrix currentpoint translate\n");
+  XP_FilePrintf(mPrintContext->prSetup->out, 
+          "     3 1 roll scale newpath 0 0 1 %g %g arc setmatrix  \n",aStartAngle,aEndAngle);
+
+  XL_RESTORE_NUMERIC_LOCALE();
+
+
+  
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -533,8 +560,7 @@ nsPostScriptObj::box( int aW, int aH)
 }
 
 /** ---------------------------------------------------
- *  Create a box, but draw the path in the counterclockwise direction
- *  so it will subtract using the winding run if inside another path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -547,7 +573,7 @@ nsPostScriptObj::box_subtract( int aW, int aH)
 }
 
 /** ---------------------------------------------------
- *  Set the clipping using the last path closed
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -557,7 +583,27 @@ nsPostScriptObj::clip()
 }
 
 /** ---------------------------------------------------
- *  Open a new path
+ *  See documentation in nsPostScriptObj.h
+ *	@update 2/1/99 dwc
+ */
+void 
+nsPostScriptObj::eoclip()
+{
+  XP_FilePrintf(mPrintContext->prSetup->out, " eoclip \n");
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
+ *	@update 2/1/99 dwc
+ */
+void 
+nsPostScriptObj::clippath()
+{
+  XP_FilePrintf(mPrintContext->prSetup->out, " clippath \n");
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -567,7 +613,7 @@ nsPostScriptObj::newpath()
 }
 
 /** ---------------------------------------------------
- *  Close the currently open path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -577,7 +623,7 @@ nsPostScriptObj::closepath()
 }
 
 /** ---------------------------------------------------
- *  Reset the cliping path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -587,7 +633,7 @@ nsPostScriptObj::initclip()
 }
 
 /** ---------------------------------------------------
- *  Reset the cliping path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -612,7 +658,7 @@ nsPostScriptObj::line( int x1, int y1, int x2, int y2, int thick)
 }
 
 /** ---------------------------------------------------
- *  Reset the cliping path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void
@@ -622,7 +668,7 @@ nsPostScriptObj::stroke()
 }
 
 /** ---------------------------------------------------
- *  Reset the cliping path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void
@@ -632,7 +678,7 @@ nsPostScriptObj::fill()
 }
 
 /** ---------------------------------------------------
- *  Reset the cliping path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void
@@ -642,7 +688,7 @@ nsPostScriptObj::graphics_save()
 }
 
 /** ---------------------------------------------------
- *  Reset the cliping path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void
@@ -652,7 +698,7 @@ nsPostScriptObj::graphics_restore()
 }
 
 /** ---------------------------------------------------
- *  translate in PS space
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -670,7 +716,7 @@ nsPostScriptObj::translate(int x, int y)
 }
 
 /** ---------------------------------------------------
- *  output an image in 24 
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void 
@@ -726,7 +772,7 @@ PRUint8 *theBits,*curline;
 }
 
 /** ---------------------------------------------------
- *  Reset the cliping path
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
 void
@@ -738,7 +784,7 @@ nsPostScriptObj::setcolor(nscolor aColor)
 
 
 /** ---------------------------------------------------
- *  See documentation
+ *  See documentation in nsPostScriptObj.h
  *	@update 2/1/98 dwc
  */
 void 
@@ -795,5 +841,17 @@ int postscriptFont = 0;
   // The size of the font, in nscoord units
   nscoord size; 
 #endif
+
+}
+
+/** ---------------------------------------------------
+ *  OSee documentation in nsPostScriptObj.h
+ *	@update 2/1/98 dwc
+ */
+void 
+nsPostScriptObj::comment(char *aTheComment)
+{
+
+  XP_FilePrintf(mPrintContext->prSetup->out,"%%%s\n", aTheComment);
 
 }

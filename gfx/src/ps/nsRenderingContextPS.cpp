@@ -22,9 +22,8 @@
 #include "libimg.h"
 #include "nsDeviceContextPS.h"
 #include "nsIScriptGlobalObject.h"
-//#include "prprf.h"
-//#include "nsPrintManager.h"
-#include "nsPostScriptObj.h"        
+#include "nsPostScriptObj.h"  
+#include "nsIRegion.h"      
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
@@ -220,7 +219,7 @@ nsRenderingContextPS :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP
-nsRenderingContextPS :: GetScreenDrawingSurface(nsDrawingSurface *aSurface)
+nsRenderingContextPS :: GetDrawingSurface(nsDrawingSurface *aSurface)
 {
   *aSurface = nsnull;
   return NS_OK;
@@ -292,6 +291,10 @@ nsRenderingContextPS :: PushState(void)
 
   mTMatrix = &mStates->mMatrix;
 
+  // at startup, the graphics state is not saved yet
+  if(mPSObj)
+    mPSObj->graphics_save();
+
   return NS_OK;
 }
 
@@ -322,6 +325,7 @@ nsRenderingContextPS :: PopState(PRBool &aClipEmpty)
   }
 
   aClipEmpty = retval;
+  mPSObj->graphics_restore();
 
   return NS_OK;
 }
@@ -350,27 +354,26 @@ int     cliptype;
 	mTMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
   mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
 
-  // how we combine the new rect with the previous?
   if (aCombine == nsClipCombine_kIntersect){
-    // push the clipstate onto the postscript stack
-    mPSObj->graphics_save();
+    mPSObj->newpath();
+    mPSObj->moveto( NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
+    mPSObj->box(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
+    mPSObj->closepath();
+    mPSObj->clip();
   } else if (aCombine == nsClipCombine_kUnion){
-    mPSObj->graphics_save();
     mPSObj->newpath();
     mPSObj->moveto( NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
     mPSObj->box(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
     mPSObj->closepath();
     mPSObj->clip();
   }else if (aCombine == nsClipCombine_kSubtract){
-    mPSObj->graphics_save();
     mPSObj->newpath();
+    mPSObj->clippath();   // get the current path
     mPSObj->moveto(NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
     mPSObj->box_subtract(NS_PIXELS_TO_POINTS(trect.width), NS_PIXELS_TO_POINTS(trect.height));
     mPSObj->closepath();
     mPSObj->clip();
   }else if (aCombine == nsClipCombine_kReplace){
-    mPSObj->graphics_save();
-    // set the cliping rectangle to this
     mPSObj->initclip();
     mPSObj->newpath();
     mPSObj->moveto(NS_PIXELS_TO_POINTS(trect.x), NS_PIXELS_TO_POINTS(trect.y));
@@ -396,14 +399,15 @@ int     cliptype;
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
-  if (mStates->mFlags & FLAG_LOCAL_CLIP_VALID){
+  if (mStates->mLocalClip.width !=0){
     aRect = mStates->mLocalClip;
     aClipValid = PR_TRUE;
   }else{
     aClipValid = PR_FALSE;
   }
 
-  return NS_OK;}
+  return NS_OK;
+}
 
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
@@ -412,7 +416,10 @@ nsRenderingContextPS :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
 NS_IMETHODIMP 
 nsRenderingContextPS :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
-
+  nsRect rect;
+  nsIRegion* pRegion = (nsIRegion*)&aRegion;
+  pRegion->GetBoundingBox(&rect.x, &rect.y, &rect.width, &rect.height);
+  SetClipRect(rect, aCombine, aClipEmpty);
 
   return NS_OK; 
 }
@@ -704,17 +711,19 @@ nsRenderingContextPS :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 const nsPoint*  np;
 POINT           pp;
 
-  // First transform nsPoint's into POINT's; perform coordinate space
-  // transformation at the same time
+  mPSObj->newpath();
+
+  // point np to the polypoints
   np = &aPoints[0];
 
+  // do the initial moveto
 	pp.x = np->x;
 	pp.y = np->y;
   mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
   mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
 
-  // we are ignoring the linestyle
+  // add all the points to the path
 	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
 		pp.x = np->x;
 		pp.y = np->y;
@@ -738,17 +747,20 @@ nsRenderingContextPS :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 const nsPoint*  np;
 POINT           pp;
 
-  // First transform nsPoint's into POINT's; perform coordinate space
-  // transformation at the same time
+
+  mPSObj->newpath();
+
+  // point np to the polypoints
   np = &aPoints[0];
 
+  // do the initial moveto
 	pp.x = np->x;
 	pp.y = np->y;
   mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
   mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
 
-  // we are ignoring the linestyle
+  // add all the points to the path
 	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
 		pp.x = np->x;
 		pp.y = np->y;
@@ -782,14 +794,15 @@ nsRenderingContextPS :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
   if (nsLineStyle_kNone == mCurrLineStyle)
     return NS_OK;
 
+  //SetupPen();
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  //SetupPen();
-
-  //HBRUSH oldBrush = (HBRUSH)::SelectObject(mDC, ::GetStockObject(NULL_BRUSH));
-  
-  //::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
-  //::SelectObject(mDC, oldBrush);
+  mPSObj->comment("arc");
+  mPSObj->newpath();
+  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
+  mPSObj->ellipse(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
+  mPSObj->closepath();
+  mPSObj->stroke();
 
   return NS_OK;
 }
@@ -808,10 +821,12 @@ NS_IMETHODIMP nsRenderingContextPS :: FillEllipse(nscoord aX, nscoord aY, nscoor
 {
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  //SetupSolidPen();
-  //SetupSolidBrush();
-  
-  //:Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
+  mPSObj->comment("arc");
+  mPSObj->newpath();
+  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
+  mPSObj->ellipse(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
+  mPSObj->closepath();
+  mPSObj->fill();
 
   return NS_OK;
 }
@@ -835,36 +850,18 @@ NS_IMETHODIMP
 nsRenderingContextPS :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
-  //if (nsLineStyle_kNone == mCurrLineStyle)
-    //return NS_OK;
-
-  PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
-  float   anglerad, distance;
-
-  //mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  if (nsLineStyle_kNone == mCurrLineStyle)
+    return NS_OK;
 
   //SetupPen();
-  //SetupSolidBrush();
+  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  // figure out the the coordinates of the arc from the angle
-  distance = (float)sqrt((float)(aWidth * aWidth + aHeight * aHeight));
-  cx = aX + aWidth / 2;
-  cy = aY + aHeight / 2;
-
-  anglerad = (float)(aStartAngle / (180.0 / 3.14159265358979323846));
-  quad1 = (PRInt32)(aStartAngle / 90.0);
-  sx = (PRInt32)(distance * cos(anglerad) + cx);
-  sy = (PRInt32)(cy - distance * sin(anglerad));
-
-  anglerad = (float)(aEndAngle / (180.0 / 3.14159265358979323846));
-  quad2 = (PRInt32)(aEndAngle / 90.0);
-  ex = (PRInt32)(distance * cos(anglerad) + cx);
-  ey = (PRInt32)(cy - distance * sin(anglerad));
-
-  // this just makes it consitent, on windows 95 arc will always draw CC, nt this sets direction
-  //::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
-
-  //::Arc(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
+  mPSObj->comment("arc");
+  mPSObj->newpath();
+  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
+  mPSObj->arc(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight),aStartAngle,aEndAngle);
+  mPSObj->closepath();
+  mPSObj->stroke();
 
   return NS_OK;
 }
@@ -888,34 +885,18 @@ NS_IMETHODIMP
 nsRenderingContextPS :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
-  PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
-  float   anglerad, distance;
+  if (nsLineStyle_kNone == mCurrLineStyle)
+    return NS_OK;
 
-  //mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  //SetupPen();
+  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  //SetupSolidPen();
-  //SetupSolidBrush();
-
-  // figure out the the coordinates of the arc from the angle
-  distance = (float)sqrt((float)(aWidth * aWidth + aHeight * aHeight));
-  cx = aX + aWidth / 2;
-  cy = aY + aHeight / 2;
-
-  anglerad = (float)(aStartAngle / (180.0 / 3.14159265358979323846));
-  quad1 = (PRInt32)(aStartAngle / 90.0);
-  sx = (PRInt32)(distance * cos(anglerad) + cx);
-  sy = (PRInt32)(cy - distance * sin(anglerad));
-
-  anglerad = (float)(aEndAngle / (180.0 / 3.14159265358979323846));
-  quad2 = (PRInt32)(aEndAngle / 90.0);
-  ex = (PRInt32)(distance * cos(anglerad) + cx);
-  ey = (PRInt32)(cy - distance * sin(anglerad));
-
-  // this just makes it consistent, on windows 95 arc will always draw CC,
-  // on NT this sets direction
-  //::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
-
-  //::Pie(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
+  mPSObj->comment("arc");
+  mPSObj->newpath();
+  mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
+  mPSObj->arc(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight),aStartAngle,aEndAngle);
+  mPSObj->closepath();
+  mPSObj->fill();
 
   return NS_OK;
 }
