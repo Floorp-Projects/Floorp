@@ -40,6 +40,7 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
     orient="vertical"
+    style="width: 43em;"
     id="imagedialog"
     >
   
@@ -58,7 +59,11 @@
     <label value="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
     <grid>
-      <columns><column/><column/><column flex="1"/></columns>
+      <columns>
+        <column/>
+        <column flex="2"/>
+        <column flex="1"/>
+      </columns>
       <rows>
         <row align="center">
           <text class = "label" 
@@ -90,38 +95,41 @@
   </groupbox>
   <spring class="spacer"/>
   <hbox align="center"> 
-    <button 
-      class   = "dialog" 
-      id      = "MoreFewerButton" 
-      oncommand = "onMoreFewer()" 
-      tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
-      persist = "more"/>
+    <vbox pack="end">
+      <!-- From EdDialogOverlay.xul -->
+      <button id="AdvancedEditButton"/>
+      <button 
+        class   = "dialog" 
+        id      = "MoreFewerButton" 
+        oncommand = "onMoreFewer()" 
+        tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
+        persist = "more"/>
+    </vbox>
     <spring class="spacer"/>
-    <groupbox style="padding: 4px">
+    <groupbox style="padding: 4px" flex="1">
+      <label value="&previewBox.label;"/>
       <hbox id="preview-image-box" align="center">
         <spring flex="1"/>
         <html id="preview-image-holder"/>
         <spring flex="1"/>
       </hbox>
-      <vbox id="PreviewSize" collapsed="true">
+      <vbox id="PreviewSize">
         <spring flex="1"/>
         <text class="label" value="&actualSize.label;"/>
+        <data id="PreviewImageData" value="&noImageSelected.label;"/>
         <hbox>
           <text class="label" value="&widthEditField.label;"/>
           <spring flex="1"/>
-          <text id="PreviewWidth" class="label"/>
+          <text id="PreviewWidth" class="label" value="&noImageSelected.label;"/>
         </hbox>
         <hbox>
           <text class="label" value="&heightEditField.label;"/>
           <spring flex="1"/>
-          <text id="PreviewHeight" class="label"/>
+          <text id="PreviewHeight" class="label" value="&noImageSelected.label;"/>
         </hbox>
         <spring flex="1"/>
       </vbox>
     </groupbox>
-    <spring flex="1"/>
-    <!-- From EdDialogOverlay.xul -->
-    <button id="AdvancedEditButton"/>
   </hbox>
   <spring class="spacer"/>
   <!-- Area that shows and hides via MoreFewerButton --> 
@@ -158,7 +166,11 @@
           </hbox>
           <spring class="spacer"/>
           <grid class="big-left-margin">
-            <columns><column/><column/><column flex="1"/></columns>
+            <columns>
+              <column flex="1"/>
+              <column flex="1"/>
+              <column flex="3"/>
+            </columns>
             <rows>
               <!--//////  IMAGE WIDTH  //////-->
               <row align="center">
@@ -242,7 +254,11 @@
         <groupbox flex="1">
           <label id="spacingLabel" value="&spacingBox.label;"/>
           <grid>
-            <columns><column/><column/><column/></columns>
+            <columns>
+              <column flex="1"/>
+              <column flex="1"/>
+              <column flex="4"/>
+            </columns>
             <rows>
               <row align="center">
                 <text 
@@ -290,16 +306,7 @@
         </groupbox>
       </vbox> <!-- Bottom Right region -->
     </hbox> <!-- The horizontal box -->
-  
-    <!-- buttons along bottom -->
-    <spring class="spacer"/>
-    <hbox>
-      <spring flex="1"/>
-      <!-- From EdDialogOverlay -->
-      <button id="AdvancedEditButton2"/>
-    </hbox>
   </vbox> <!-- END OF MORE/FEWER SECTION -->
-  <separator class="groove"/>
   <!-- from global dialogOverlay -->
   <hbox id="okCancelHelpButtonsRight"/> 
 </window>
