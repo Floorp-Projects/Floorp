@@ -19,3 +19,19 @@ extension[install-state="installing"] {
   -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-installing");
 }
 
+extension[toBeDisabled="true"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-tobedisabled");
+}
+
+extension[toBeEnabled="true"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-tobeenabled");
+}
+
+extension[toBeInstalled="true"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-tobeinstalled");
+}
+
+extension[toBeUninstalled="true"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#extension-tobeuninstalled");
+}
+

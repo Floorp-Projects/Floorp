@@ -121,7 +121,8 @@
   <view id="extensionsView" flex="1" style="overflow: auto;"
         datasources="rdf:null" persist="last-selected"
         ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
-        ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);">
+        ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
+        ondblclick="gExtensionsViewController.doCommand('cmd_options');">
     <template>
       <rule>
         <conditions>
@@ -162,6 +163,18 @@
           <binding subject="?extension"
                    predicate="http://www.mozilla.org/2004/em-rdf#locked"
                    object="?locked"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#toBeInstalled"
+                   object="?toBeInstalled"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#toBeUninstalled"
+                   object="?toBeUninstalled"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#toBeEnabled"
+                   object="?toBeEnabled"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#toBeDisabled"
+                   object="?toBeDisabled"/>
         </bindings>            
         <action>
           <extension uri="?extension" context="extensionContextMenu"
@@ -169,7 +182,9 @@
                      description="?description" creator="?creator"
                      disabled="?disabled" locked="?locked" 
                      optionsURL="?options-url" homepageURL="?homepage-url"
-                     aboutURL="?about-url" updateURL="?update-url"/>
+                     aboutURL="?about-url" updateURL="?update-url"
+                     toBeInstalled="?toBeInstalled" toBeUninstalled="?toBeUninstalled"
+                     toBeEnabled="?toBeEnabled" toBeDisabled="?toBeDisabled"/>
         </action>
       </rule>
     </template>

@@ -39,3 +39,7 @@
 <!ENTITY about.tooltip                    "About">
 <!ENTITY homepage.tooltip                 "Home Page">
 
+<!ENTITY extensionItem.toBeDisabled.label     "This item will be disabled after you restart &brandShortName;.">
+<!ENTITY extensionItem.toBeEnabled.label      "This item will be enabled after you restart &brandShortName;.">
+<!ENTITY extensionItem.toBeInstalled.label    "This item will be installed after you restart &brandShortName;.">
+<!ENTITY extensionItem.toBeUninstalled.label  "This item will be uninstalled after you restart &brandShortName;.">
