@@ -30,6 +30,7 @@ EXPORTS = \
 	nsMsgGroupRecord.h \
 	nsMsgRFC822Parser.h \
 	nsNewsSet.h \
+	nsUInt32Array.h \
 	$(NULL)
 
 CPPSRCS = \
