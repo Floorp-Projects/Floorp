@@ -807,6 +807,7 @@ void RNG_SystemInfoForRNG(void)
     size_t bytes;
     int extra;
     char **cp;
+    extern char **environ;
     char *randfile;
  
     GiveSystemInfo();
