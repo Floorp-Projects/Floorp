@@ -135,16 +135,6 @@ nsRenderingContextMac :: ~nsRenderingContextMac()
     mStateCache = nsnull;
   	}
 
-  // Destroy the front buffer and it's GC if one was allocated for it
-  if (nsnull != mFrontBuffer) 
-  	{
-    if (mFrontBuffer != mRenderingSurface) 
-    	{
-      //::XFreeGC(mFrontBuffer->display,mFrontBuffer->gc);
-    	}
-    delete mFrontBuffer;
-  	}
-
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mContext);
