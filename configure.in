@@ -1517,11 +1517,11 @@ dnl
 dnl Try lib pthread
 dnl 
 AC_CHECK_LIB(pthread, pthread_attr_init, 
-             _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
+             USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
     AC_CHECK_LIB(c_r, pthread_attr_init,
-        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
+        USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
         AC_CHECK_LIB(c, pthread_attr_init,
-            _HAVE_PTHREADS=1 )
+            USE_PTHREADS=1 )
         )
     )
 
