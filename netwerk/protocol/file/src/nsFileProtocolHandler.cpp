@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim:ts=4 sw=4 sts=4 et cin:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,6 +44,18 @@
 #include "nsNetCID.h"
 
 #include "nsIServiceManager.h"
+#include "nsIURL.h"
+
+// URL file handling, copied and modified from xpfe/components/bookmarks/src/nsBookmarksService.cpp
+#ifdef XP_WIN
+#include <shlobj.h>
+#include <intshcut.h>
+#include "nsIFileURL.h"
+#include "nsNetUtil.h"
+#ifdef CompareString
+#undef CompareString
+#endif
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -63,6 +76,62 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFileProtocolHandler,
 
 //-----------------------------------------------------------------------------
 // nsIProtocolHandler methods:
+
+NS_IMETHODIMP
+nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
+{
+// IUniformResourceLocator isn't supported by VC5 (bless its little heart)
+#if !defined(XP_WIN) || _MSC_VER < 1200
+    return NS_ERROR_NOT_AVAILABLE;
+#else
+    nsAutoString path;
+    rv = aFile->GetPath(path);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (path.Length() < 4)
+        return NS_ERROR_NOT_AVAILABLE;
+    if (!StringTail(path, 4).LowerCaseEqualsLiteral(".url"))
+        return NS_ERROR_NOT_AVAILABLE;
+
+    HRESULT result;
+
+    rv = NS_ERROR_NOT_AVAILABLE;
+
+    IUniformResourceLocator* urlLink = nsnull;
+    result = ::CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
+                                IID_IUniformResourceLocator, (void**)&urlLink);
+    if (SUCCEEDED(result) && urlLink) {
+        IPersistFile* urlFile = nsnull;
+        result = urlLink->QueryInterface(IID_IPersistFile, (void**)&urlFile);
+        if (SUCCEEDED(result) && urlFile) {
+            result = urlFile->Load(path.get(), STGM_READ);
+            if (SUCCEEDED(result) ) {
+                LPSTR lpTemp = nsnull;
+
+                // The URL this method will give us back seems to be already
+                // escaped. Hence, do not do escaping of our own.
+                result = urlLink->GetURL(&lpTemp);
+                if (SUCCEEDED(result) && lpTemp) {
+                    rv = NS_NewURI(aURI, lpTemp);
+
+                    // free the string that GetURL alloc'd
+                    IMalloc* pMalloc;
+                    result = SHGetMalloc(&pMalloc);
+                    if (SUCCEEDED(result)) {
+                        pMalloc->Free(lpTemp);
+                        pMalloc->Release();
+                    }
+                }
+            }
+            urlFile->Release();
+        }
+        urlLink->Release();
+    }
+    return rv;
+
+#endif
+}
 
 NS_IMETHODIMP
 nsFileProtocolHandler::GetScheme(nsACString &result)
@@ -105,6 +174,22 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
 NS_IMETHODIMP
 nsFileProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 {
+    // This file may be a url file
+    nsCOMPtr<nsIFileURL> url(do_QueryInterface(uri));
+    if (url) {
+        nsCOMPtr<nsIFile> file;
+        nsresult rv = url->GetFile(getter_AddRefs(file));
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIURI> uri;
+            rv = ReadURLFile(file, getter_AddRefs(uri));
+            if (NS_SUCCEEDED(rv)) {
+                rv = NS_NewChannel(result, uri);
+                if (NS_SUCCEEDED(rv))
+                    return rv;
+            }
+        }
+    }
+
     nsFileChannel *chan = new nsFileChannel();
     if (!chan)
         return NS_ERROR_OUT_OF_MEMORY;

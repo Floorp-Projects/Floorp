@@ -40,7 +40,7 @@
 
 interface nsIFile;
 
-[scriptable, uuid(987fb083-d7ff-46dc-9ee3-ab6e52501d53)]
+[scriptable, uuid(255602ea-c31f-4d29-8f35-905ead3f76f4)]
 interface nsIFileProtocolHandler : nsIProtocolHandler
 {
     /**
@@ -66,4 +66,15 @@ interface nsIFileProtocolHandler : nsIProtocolHandler
      * A local file will be created if the URL string begins with file://.
      */
     nsIFile getFileFromURLSpec(in AUTF8String url);
+
+    /**
+     * Takes a local file and tries to interpret it as an internet shortcut
+     * (e.g. .url files on windows).
+     * @param file The local file to read
+     * @return The URI the file refers to
+     *
+     * @throw NS_ERROR_NOT_AVAILABLE if the OS does not support such files.
+     * @throw NS_ERROR_NOT_AVAILABLE if this file is not an internet shortcut.
+     */
+    nsIURI readURLFile(in nsIFile file);
 };
