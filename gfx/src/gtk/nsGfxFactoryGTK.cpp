@@ -77,9 +77,10 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
   // create an nsRegionGtk and get the scriptable region from it
   nsCOMPtr <nsIRegion> rgn;
   NS_NEWXPCOM(rgn, nsRegionGTK);
+  nsCOMPtr<nsIScriptableRegion> scriptableRgn;
   if (rgn != nsnull)
   {
-    nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
+    scriptableRgn = new nsScriptableRegion(rgn);
     inst = scriptableRgn;
   }
   if (!inst)
@@ -88,6 +89,9 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
     return rv;
   }
   NS_ADDREF(inst);
+  // release our variable above now that we have created our owning
+  // reference - we don't want this to go out of scope early!
+  scriptableRgn = nsnull;
   rv = inst->QueryInterface(aIID, aResult);
   NS_RELEASE(inst);
 
