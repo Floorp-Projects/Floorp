@@ -596,12 +596,12 @@ protected:
   StyleContextImpl* mChild;
   StyleContextImpl* mPrevSibling;
   StyleContextImpl* mNextSibling;
+  StyleContextImpl* mEmptyChild;
 
   StyleContextImpl* mPrevLinear;
   StyleContextImpl* mNextLinear;
 
-  PRUint32          mHashValid: 1;
-  PRUint32          mHashValue: 31;
+  PRUint32          mRuleHash;
   nsISupportsArray* mRules;
   PRInt32           mBackstopRuleCount;
   PRInt32           mDataCode;
@@ -628,11 +628,18 @@ static PRInt32 gInstanceCount;
 static PRInt32 gInstrument = 6;
 #endif
 
+PRBool HashStyleRule(nsISupports* aRule, void* aData)
+{
+  *((PRUint32*)aData) ^= PRUint32(aRule);
+  return PR_TRUE;
+}
+
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
                                    nsISupportsArray* aRules, 
                                    nsIPresContext* aPresContext)
   : mParent((StyleContextImpl*)aParent), // weak ref
     mChild(nsnull),
+    mEmptyChild(nsnull),
     mRules(aRules),
     mBackstopRuleCount(0),
     mDataCode(-1),
@@ -657,6 +664,11 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
   mNextLinear = this;
   mPrevLinear = this;
 
+  mRuleHash = 0;
+  if (nsnull != mRules) {
+    mRules->EnumerateForwards(HashStyleRule, &mRuleHash);
+  }
+
   RemapStyle(aPresContext);
 
 #ifdef DEBUG_REFS
@@ -678,6 +690,7 @@ StyleContextImpl::~StyleContextImpl()
     } while (child != mChild);
     mChild = nsnull;
   }
+  NS_IF_RELEASE(mEmptyChild);
 
   NS_IF_RELEASE(mRules);
 
@@ -730,14 +743,20 @@ nsIStyleContext* StyleContextImpl::GetParent(void) const
 
 void StyleContextImpl::AppendChild(StyleContextImpl* aChild)
 {
-  if (nsnull == mChild) {
-    mChild = aChild;
+  if (0 == aChild->mRules->Count()) {
+    NS_ASSERTION(nsnull == mEmptyChild, "shouldn't have two empty children");
+    mEmptyChild = aChild;
   }
   else {
-    aChild->mNextSibling = mChild;
-    aChild->mPrevSibling = mChild->mPrevSibling;
-    mChild->mPrevSibling->mNextSibling = aChild;
-    mChild->mPrevSibling = aChild;
+    if (nsnull == mChild) {
+      mChild = aChild;
+    }
+    else {
+      aChild->mNextSibling = mChild;
+      aChild->mPrevSibling = mChild->mPrevSibling;
+      mChild->mPrevSibling->mNextSibling = aChild;
+      mChild->mPrevSibling = aChild;
+    }
   }
   NS_ADDREF(aChild);
 }
@@ -771,20 +790,29 @@ nsIStyleContext* StyleContextImpl::FindChildWithRules(nsISupportsArray* aRules)
 {
   nsIStyleContext* result = nsnull;
 
-  if (nsnull != mChild) {
+  if ((nsnull != mChild) || (nsnull != mEmptyChild)) {
     StyleContextImpl* child = mChild;
     PRInt32 ruleCount = aRules->Count();
-    do {
-      if ((0 == child->mDataCode) &&  // only look at children with un-twiddled data
-          (child->GetStyleRuleCount() == ruleCount)) {
-        if (child->mRules->Equals(aRules)) {
-          result = child;
-          NS_ADDREF(result);
-          break;
+    if (0 == ruleCount) {
+      result = mEmptyChild;
+      NS_IF_ADDREF(result);
+    }
+    else if (nsnull != mChild) {
+      PRUint32 hash = 0;
+      aRules->EnumerateForwards(HashStyleRule, &hash);
+      do {
+        if ((0 == child->mDataCode) &&  // only look at children with un-twiddled data
+            (child->mRuleHash == hash) &&
+            (child->GetStyleRuleCount() == ruleCount)) {
+          if (child->mRules->Equals(aRules)) {
+            result = child;
+            NS_ADDREF(result);
+            break;
+          }
         }
-      }
-      child = child->mNextSibling;
-    } while (child != mChild);
+        child = child->mNextSibling;
+      } while (child != mChild);
+    }
   }
   return result;
 }
@@ -816,21 +844,7 @@ PRBool StyleContextImpl::Equals(const nsIStyleContext* aOther) const
 
 PRUint32 StyleContextImpl::HashValue(void) const
 {
-  if (0 == mHashValid) {
-    ((StyleContextImpl*)this)->mHashValue = ((nsnull != mParent) ? mParent->HashValue() : 0);
-    if (nsnull != mRules) {
-      PRInt32 index = mRules->Count();
-      while (0 <= --index) {
-        nsIStyleRule* rule = (nsIStyleRule*)mRules->ElementAt(index);
-        PRUint32 hash;
-        rule->HashValue(hash);
-        ((StyleContextImpl*)this)->mHashValue ^= (hash & 0x7FFFFFFF);
-        NS_RELEASE(rule);
-      }
-    }
-    ((StyleContextImpl*)this)->mHashValid = 1;
-  }
-  return mHashValue;
+  return mRuleHash;
 }
 
 
@@ -1036,6 +1050,9 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
       child->List(out, aIndent + 1);
       child = child->mNextSibling;
     } while (mChild != child);
+  }
+  if (nsnull != mEmptyChild) {
+    mEmptyChild->List(out, aIndent + 1);
   }
 }
 
