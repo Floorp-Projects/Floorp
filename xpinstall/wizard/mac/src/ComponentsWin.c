@@ -33,6 +33,9 @@
 			LMSetHiliteMode(hiliteVal);	    \
 			InvertRect(_rectPtr);
 			
+static int rowToComp[kMaxComponents];
+static int numRows = 0;			
+
 void 
 ShowComponentsWin(void)
 {
@@ -40,10 +43,12 @@ ShowComponentsWin(void)
 	Str255		compDescTitle;
 	StringPtr	selCompMsg;
 	Handle		listBoxRect;
-	Rect 		dataBounds, listBoxFrame, viewRect;
+	Rect 		dataBounds, listBoxFrame, viewRect, firstCellRect;
 	short		reserr;
 	int			totalRows = 0, i, instChoice;
 	Point		cSize;
+	Cell		firstCell;
+	UInt8		hiliteVal;
 	Boolean		bCellSelected;
 	GrafPtr		oldPort;
 	GetPort(&oldPort);
@@ -134,18 +139,18 @@ ShowComponentsWin(void)
 	FrameRect(&listBoxFrame);
 	ShowNavButtons( back, next);
 	if (bCellSelected)
-		SetOptInfo();
+		SetOptInfo(NULL);
 	else
 		DrawDiskSpaceMsgs( gControls->opt->vRefNum );
 
+	// default highlight first row
+	InitRowHighlight(0);
+	
 	//if (selCompMsg)
 	//	DisposePtr((Ptr) selCompMsg);
 	
 	SetPort(oldPort);
 }
-
-static int rowToComp[kMaxComponents];
-static int numRows = 0;
 
 Boolean
 PopulateCompInfo(void)
@@ -183,6 +188,7 @@ UpdateCompWin(void)
 {	
 	Rect		r;
 	Cell		c;
+	int			i;
 	GrafPtr		oldPort;
 	GetPort(&oldPort);
 	
@@ -192,8 +198,7 @@ UpdateCompWin(void)
 	HLock(gControls->cfg->selCompMsg);
 	DrawString( CToPascal(*gControls->cfg->selCompMsg));
 	HUnlock(gControls->cfg->selCompMsg);
-	LUpdate( (*gControls->cw->compList)->port->visRgn, 
-				gControls->cw->compList);
+	LUpdate( (*gControls->cw->compList)->port->visRgn, gControls->cw->compList);
 	FrameRect(&gControls->cw->compListBox);	
 	
 	SetPt(&c, 0, 0);
@@ -209,6 +214,15 @@ UpdateCompWin(void)
 	}
 	
 	DrawDiskSpaceMsgs( gControls->opt->vRefNum );
+	
+	for (i = 0; i < numRows; i++)
+	{
+		if (gControls->cfg->comp[rowToComp[i]].highlighted)
+		{
+			InitRowHighlight(i);
+			break;
+		}
+	}
 	
 	SetPort(oldPort);
 }
@@ -243,10 +257,11 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 				SetRect(&checkbox, currCellRect.left+4, currCellRect.top+2, 
 							currCellRect.left+16, currCellRect.top+14);		
 				INVERT_HIGHLIGHT(&checkbox);
+				break;
 			}
 		}
 		
-		SetOptInfo();
+		SetOptInfo(evt);
 	}
 			
 	HLock((Handle)gControls->backB);
@@ -255,7 +270,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 	if (PtInRect( localPt, &r))
 	{
 		/* reset all rows to be not highlighted */
-		for (i=0; i<numRows; i++)
+		for (i=1; i<numRows; i++)
 			gControls->cfg->comp[rowToComp[i]].highlighted = false;
 		
 		part = TrackControl(gControls->backB, evt->where, NULL);
@@ -302,10 +317,6 @@ void
 MouseMovedInComponentsWin(EventRecord *evt)
 {
 	Point 			localPt;
-	Rect			currCellRect, oldCellRect, checkbox;
-	int				i, j;
-	Cell			currCell, oldCell;
-	UInt8			hiliteVal;
 	GrafPtr			oldPort;
 	GetPort(&oldPort);
 	
@@ -318,36 +329,119 @@ MouseMovedInComponentsWin(EventRecord *evt)
 	/* if within list box rect */
 	if (PtInRect( localPt, &((*gControls->cw->compList)->rView) ))
 	{		
-		for (i=0; i<numRows; i++) 
-		{
-			/* note: numComps above includes invisible components */
-			SetPt(&currCell, 0, i);
-			LRect(&currCellRect, currCell, gControls->cw->compList);
+		UpdateRowHighlight(localPt);
+	}
+	
+	SetPort(oldPort);
+}
+
+void 
+InitRowHighlight(int row)
+{
+	Cell hlCell;
+	Rect hlCellRect;
+	UInt8 hiliteVal;
+	int i = 0;
+	
+	/* reset all highlighted markers */
+	for (i=0; i<numRows; i++)
+	{
+		gControls->cfg->comp[rowToComp[i]].highlighted = false;
+	}
+	
+	/* highlight and set marker for row to init */
+	SetPt(&hlCell, 0, row);
+	LRect(&hlCellRect, hlCell, gControls->cw->compList);
+	INVERT_HIGHLIGHT(&hlCellRect);	
+	UpdateLongDesc(row);
+	gControls->cfg->comp[rowToComp[row]].highlighted = true; 
+}
+
+void
+UpdateRowHighlight(Point localPt)
+{
+	int i, j;
+	Rect currCellRect, oldCellRect;
+	Cell currCell, oldCell;
+	UInt8			hiliteVal;
+	
+	for (i=0; i<numRows; i++) 
+	{
+		/* note: numComps above includes invisible components */
+		SetPt(&currCell, 0, i);
+		LRect(&currCellRect, currCell, gControls->cw->compList);
 			
-			/* mouse move landed over this cell */
-			if (PtInRect( localPt, &currCellRect ))
-			{
-				if (!gControls->cfg->comp[rowToComp[i]].highlighted)
-				{	
-		 			/* highlight this cell */
-					INVERT_HIGHLIGHT(&currCellRect);	
-					UpdateLongDesc(i);
+		/* mouse move landed over this cell */
+		if (PtInRect( localPt, &currCellRect ))
+		{
+			if (!gControls->cfg->comp[rowToComp[i]].highlighted)
+			{	
+				/* highlight this cell */
+				INVERT_HIGHLIGHT(&currCellRect);	
+				UpdateLongDesc(i);
 					
-					/* unhighlight old one */
-					for (j=0; j<numRows; j++)
+				/* unhighlight old one */
+				for (j=0; j<numRows; j++)
+				{
+					if (gControls->cfg->comp[rowToComp[j]].highlighted)
 					{
-						if (gControls->cfg->comp[rowToComp[j]].highlighted)
-						{
-							SetPt(&oldCell, 0, j);
-							LRect(&oldCellRect, oldCell, gControls->cw->compList);
+						SetPt(&oldCell, 0, j);
+						LRect(&oldCellRect, oldCell, gControls->cw->compList);
 							
-							INVERT_HIGHLIGHT(&oldCellRect);
-							gControls->cfg->comp[rowToComp[j]].highlighted = false;
-						}
+						INVERT_HIGHLIGHT(&oldCellRect);
+						gControls->cfg->comp[rowToComp[j]].highlighted = false;
+					}
+				}
+					
+				/* mark this row highlighted to prevent incorrect inversion */
+				gControls->cfg->comp[rowToComp[i]].highlighted = true; 
+			}
+		}
+	}
+}
+
+void
+UpdateDependencies(int row, EventRecord* evt)
+{
+	int 	i;
+	short	currRow;
+	Cell	currCell;
+	Rect	currCellRect;
+	Point	currCellPt;
+	GrafPtr	oldPort;
+	
+	GetPort(&oldPort);
+	if (gWPtr)
+		SetPort(gWPtr);
+		
+	// if row is selected
+	if (gControls->cfg->comp[rowToComp[row]].selected)
+	{
+		// loop through all components numComps
+		for (i=0; i<gControls->cfg->numComps; i++)
+		{
+			// if kDependencyOn for curr dep component --> comp[rowToComp[row]].dep[i]
+			if (gControls->cfg->comp[rowToComp[row]].dep[i] == kDependencyOn)
+			{
+				// if curr dep component isn't on
+				if (gControls->cfg->comp[i].selected == kNotSelected)
+				{
+					// set curr dep comp to kSelected
+					gControls->cfg->comp[i].selected = kSelected;
+					
+					// if curr dep comp is in currently displayed comps
+					currRow = GetCompRow(i);
+					if (currRow != kInvalidCompIdx)
+					{
+						// LClick the row to check curr dep comp's checkbox
+						SetPt(&currCell, 0, currRow);
+						LRect(&currCellRect, currCell, gControls->cw->compList);
+						SetPt(&currCellPt, currCellRect.left+1, currCellRect.top+1);
+						LClick(currCellPt, evt->modifiers, gControls->cw->compList);
 					}
 					
-					/* mark this row highlighted to prevent incorrect inversion */
-					gControls->cfg->comp[rowToComp[i]].highlighted = true; 
+					// resolve its dependencies
+					UpdateDependencies(currRow, evt);
 				}
 			}
 		}
@@ -356,26 +450,26 @@ MouseMovedInComponentsWin(EventRecord *evt)
 	SetPort(oldPort);
 }
 
+short
+GetCompRow(int compIdx)
+{
+	short i = kInvalidCompIdx;
+	
+	for (i=0; i<numRows; i++)
+	{
+		if (rowToComp[i] == compIdx)
+			break;
+	}
+	
+	return i;
+}
+
 void
-SetOptInfo(void)
+SetOptInfo(EventRecord* evt)
 {
 	Boolean		isCellSelected;
 	Cell		currCell;
 	int			i;
-	Rect		viewRect;
-	
-	HLock((Handle)gControls->cw->compDescBox);
-	SetRect(&viewRect, (*gControls->cw->compDescBox)->contrlRect.left,
-					   (*gControls->cw->compDescBox)->contrlRect.top,
-					   (*gControls->cw->compDescBox)->contrlRect.right,
-					   (*gControls->cw->compDescBox)->contrlRect.bottom);
-	HUnlock((Handle)gControls->cw->compDescBox);
-	viewRect.top += kInterWidgetPad;
-	SetRect(&viewRect, viewRect.left + kTxtRectPad,
-						viewRect.top + kTxtRectPad,
-						viewRect.right - kTxtRectPad,
-						viewRect.bottom - kTxtRectPad);
-	EraseRect(&viewRect);
 	
 	for(i=0; i<numRows; i++)
 	{
@@ -388,6 +482,9 @@ SetOptInfo(void)
 			{
 				gControls->cfg->comp[rowToComp[i]].selected = true;
 				gControls->opt->numCompSelected++;
+				
+				if (evt)
+					UpdateDependencies(i, evt);
 			}
 			
 			if (!gControls->cw->compDescBox)
@@ -434,9 +531,9 @@ UpdateLongDesc(int row)
 
 void
 EnableComponentsWin(void)
-{
+{	
 	EnableNavButtons();
-
+	
 	// TO DO
 }
 

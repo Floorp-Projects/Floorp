@@ -79,6 +79,8 @@ ParseConfig(void)
 	ERR_CHECK(PopulateTermWinKeys(cfgText));
 	ERR_CHECK(PopulateIDIKeys(cfgText));
 	
+	ERR_CHECK(MapDependencies());
+    
     if (cfgText)
 	    DisposePtr(cfgText);
 }
@@ -126,6 +128,8 @@ ReadConfigFile(char **text)
 
 	return bSuccess;
 }	
+
+#pragma mark -
 
 OSErr
 PopulateLicWinKeys(char *cfgText)
@@ -200,6 +204,7 @@ PopulateCompWinKeys(char *cfgText)
 	Ptr			currSNameBuf, currSName, currKeyBuf, currKey, idxCh;
 	Str255		pSName, pkey, pidx;
 	char		eof[1];
+	char 		*currDepNum;
 	
 	eof[0] = 0;
 	
@@ -280,7 +285,7 @@ PopulateCompWinKeys(char *cfgText)
 		DisposeHandle(sizeH);
 		DisposePtr(currKey);
 		
-		/* attributes (SELECTED|INVISIBLE) */
+		/* attributes (SELECTED|INVISIBLE|LAUNCHAPP) */
 		GetIndString(pkey, rParseKeys, sAttributes);
 		currKey = PascalToC(pkey);
 		Handle attrValH = NewHandleClear(255);
@@ -306,7 +311,16 @@ PopulateCompWinKeys(char *cfgText)
 				gControls->cfg->comp[i].invisible = false;
 			if (attrType)
 				DisposePtr(attrType);
-
+				
+			GetIndString(pkey, rParseKeys, sLAUNCHAPP);
+			attrType = PascalToC(pkey);
+			if (NULL != strstr(*attrValH, attrType))
+				gControls->cfg->comp[i].launchapp = true;
+			else
+				gControls->cfg->comp[i].launchapp = false;
+			if (attrType)
+				DisposePtr(attrType);
+				
 			HUnlock(attrValH);
 		}
 		if (attrValH)
@@ -337,8 +351,42 @@ PopulateCompWinKeys(char *cfgText)
 				break;
 			}
 			gControls->cfg->comp[i].numURLs++;
-			DisposePtr(currKey);
+			if (currKey)
+				DisposePtr(currKey);
+			if (currKeyBuf)
+				DisposePtr(currKeyBuf);
 		}
+		
+		/* dependencies on other components */
+		gControls->cfg->comp[i].numDeps = 0;
+		GetIndString(pkey, rParseKeys, sDependency);
+		currKeyBuf = PascalToC(pkey);
+		for (j=0; j<kMaxComponents; j++)
+		{
+			// currKey = "Dependency<j>"
+			currDepNum = ltoa(j);
+			currKey = NewPtrClear(strlen(currKeyBuf) + strlen(currDepNum));
+			strncpy(currKey, currKeyBuf, strlen(currKeyBuf));
+			strncat(currKey, currDepNum, strlen(currDepNum));
+
+			gControls->cfg->comp[i].depName[j] = NewHandleClear(kValueMaxLen);
+			if (!FillKeyValueUsingName(currSName, currKey, gControls->cfg->comp[i].depName[j], cfgText))
+			{
+				if (currKey)
+					DisposePtr(currKey);
+				if (currDepNum)
+					free(currDepNum);
+				break;
+			}
+			
+			gControls->cfg->comp[i].numDeps++;
+			if (currKey)
+				DisposePtr(currKey);
+			if (currDepNum)
+				free(currDepNum);
+		}
+		if (currKeyBuf)
+			DisposePtr(currKeyBuf);
 	}
 	gControls->cfg->numComps = i;
 	
@@ -503,6 +551,61 @@ PopulateIDIKeys(char *cfgText)
 	
 	return err;
 }
+
+OSErr
+MapDependencies()
+{
+	OSErr	err = noErr;
+	int 	i, j, compIdx;
+	
+	for (i=0; i<gControls->cfg->numComps; i++)
+	{
+		for (j=0; j<kMaxComponents; j++)
+		{
+			gControls->cfg->comp[i].dep[j] = kDependencyOff;
+		}
+		
+		for(j=0; j<gControls->cfg->comp[i].numDeps; j++)
+		{
+			compIdx = GetComponentIndex(gControls->cfg->comp[i].depName[j]);
+			if (compIdx != kInvalidCompIdx)
+			{
+				gControls->cfg->comp[i].dep[compIdx] = kDependencyOn;
+				
+				// turn on dependencies
+				if (gControls->cfg->comp[i].selected == kSelected)
+					gControls->cfg->comp[compIdx].selected = kSelected;
+			}
+		}
+	}
+	
+	return err;
+}
+
+short
+GetComponentIndex(Handle compName)
+{
+	int i;
+	short compIdx = kInvalidCompIdx;
+	
+	HLock(compName);
+	for (i=0; i<gControls->cfg->numComps; i++)
+	{
+		HLock(gControls->cfg->comp[i].shortDesc);
+		if (0==strncmp(*gControls->cfg->comp[i].shortDesc, *compName, strlen(*gControls->cfg->comp[i].shortDesc)))
+		{
+			compIdx = i;			
+			HUnlock(gControls->cfg->comp[i].shortDesc);
+			break;
+		}
+		HUnlock(gControls->cfg->comp[i].shortDesc);
+	}
+	HUnlock(compName);
+	
+	return compIdx;
+}
+
+#pragma mark -
 	
 Boolean
 FillKeyValueUsingResID(short dlgID, short keyID, Handle dest, char *cfgText)
@@ -574,6 +677,8 @@ FillKeyValueUsingName(char *sectionName, char *keyName, Handle dest, char *cfgTe
 	return bFound;
 }
 
+#pragma mark -
+
 Boolean
 FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char *outValue)
 {
@@ -600,7 +705,7 @@ FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char
 			/* find next key   [sectionPtr moved past next key per iteration] */
             while(GetNextKeyVal(sectionPtr, key, outValue))
 			{
-				if (strncmp(key, inKey, strlen(key)) == 0)
+				if (0<strlen(key) && strncmp(key, inKey, strlen(key)) == 0)
 				{
 					if(key) 
                         DisposePtr(key);
@@ -749,9 +854,13 @@ GetNextKeyVal(char **inSection, char *outKey, char *outVal)
 	
 	*inSection = sbuf; /* capture current position in section for future GetNextKeyValue() */
 
+	if (*outKey == NULL)
+		exists = false;
+		
 	return exists;
 }
 
+#pragma mark -
 
 /*
  * Makes a copy of the C string, converts the copy to a Pascal string,

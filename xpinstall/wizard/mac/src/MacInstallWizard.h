@@ -54,7 +54,7 @@ typedef Boolean (*EventProc)(const EventRecord*);
 #define SDINST_IS_DLL 		1	/* if on, load SDInstLib as code fragment */
 #define	MOZILLA				0	/* if on, draws the Mozilla logo, not NS, 
                                           and doesn't use sdinst.dll */
-#define PRE_BETA_HACKERY	1	/* if on, extracts core to selected folder 
+#define PRE_BETA_HACKERY	0	/* if on, extracts core to selected folder 
 										  instead of Temporary Items */
  
 /*-----------------------------------------------------------*
@@ -127,6 +127,9 @@ if (err) 								\
 #define	kSelected		1
 #define kNotInSetupType 0	
 #define kInSetupType	1	
+#define kDependencyOff	0
+#define kDependencyOn	1
+#define kInvalidCompIdx -999
 #define kMaxCoreFiles	256		
 #define kMaxProgUnits	100.0	/* end constants */
 
@@ -252,6 +255,7 @@ if (err) 								\
 #define sInstSize		24
 #define sAttributes		25
 #define	sURL			26
+#define sDependency		31
 
 #define sTermDlg		27
 		
@@ -281,6 +285,12 @@ typedef struct InstComp {
 	/* attributes */
 	Boolean selected;
 	Boolean invisible;
+	Boolean launchapp;
+	
+	/* dependencies */
+	Handle	depName[kMaxComponents];
+	short	dep[kMaxComponents];
+	short	numDeps;
 	
 	/* UI highlighting */
 	Boolean highlighted;
@@ -441,6 +451,8 @@ OSErr		PopulateSetupTypeWinKeys(char *);
 OSErr		PopulateCompWinKeys(char *);
 OSErr		PopulateTermWinKeys(char *);
 OSErr		PopulateIDIKeys(char *);
+OSErr		MapDependencies(void);
+short		GetComponentIndex(Handle);
 Boolean 	FillKeyValueForIDIKey(short, Handle, char *);
 Boolean		FillKeyValueUsingResID(short, short, Handle, char *);
 Boolean		FillKeyValueUsingSLID(short, short, short, Handle, char *);
@@ -515,8 +527,12 @@ Boolean		PopulateCompInfo(void);
 void		UpdateCompWin(void);
 void		InComponentsContent(EventRecord*, WindowPtr);
 void		MouseMovedInComponentsWin(EventRecord *);
-void		SetOptInfo(void);
+short		GetCompRow(int);
+void		SetOptInfo(EventRecord* evt);
+void		InitRowHighlight(int);
+void		UpdateRowHighlight(Point);
 void		UpdateLongDesc(int);
+void		UpdateDependencies(int, EventRecord*);
 void		EnableComponentsWin(void);
 void		DisableComponentsWin(void);
 
@@ -536,6 +552,7 @@ void		DisableTerminalWin(void);
 pascal void *Install(void*);
 Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
+void		LaunchApps(short, long);
 void		InitProgressBar(void);
 Boolean		InitSDLib(void);
 Boolean		LoadSDLib(FSSpec, SDI_NETINSTALL *, EventProc *, CFragConnectionID *);

@@ -58,7 +58,6 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 	Ptr				fullPathStr = 0;
 	PRInt32			rv = 0;
 	void			*hZip = 0, *hFind = 0;
-	
 
 	/* if there's a core file... */
 	HLock(gControls->cfg->coreFile);
@@ -89,14 +88,11 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 	
 	rv = ZIP_OpenArchive( fullPathStr, &hZip );
 	
-	/* dispose mem used so we can reuse the ptr and handle */
 	HUnlock(fullPathH);
-	if (fullPathH)
-		DisposeHandle(fullPathH);
 	if (rv!=ZIP_OK) return rv;
 
 	/* initialize the search */
-	hFind = ZIP_FindInit( hZip, NULL ); /* NULL to match all files in archive */
+	hFind = ZIP_FindInit( hZip, 0 ); /* null to match all files in archive */
 	
 	
 	/* --- i n f l a t e   a l l   f i l e s --- */
@@ -109,8 +105,8 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 	/* --- c l o s e   a r c h i v e --- */
 cleanup:
 
-	if (hFind)
-		rv = ZIP_FindFree( hFind );
+	//if (hFind)
+	//	rv = ZIP_FindFree( hFind );
 #ifdef MIW_DEBUG
 		if (rv!=ZIP_OK) SysBeep(10);
 #endif
@@ -121,6 +117,8 @@ cleanup:
 #endif
 	if (coreFile)
 		DisposePtr((Ptr)coreFile);
+	if (fullPathH)
+		DisposeHandle(fullPathH);
 	if (fullPathStr)
 		DisposePtr(fullPathStr);
 
@@ -233,22 +231,15 @@ OSErr
 AppleSingleDecode(FSSpecPtr fd, FSSpecPtr outfd)
 {
 	OSErr	err = noErr;
-	nsAppleSingleDecoder *decoder;
 	
 	// if file is AppleSingled
 	if (nsAppleSingleDecoder::IsAppleSingleFile(fd))
 	{
 		// decode it
-		decoder = new nsAppleSingleDecoder(fd, outfd);
-		if (!decoder)
-			return memFullErr;
+		nsAppleSingleDecoder decoder(fd, outfd);
 			
-		ERR_CHECK_RET(decoder->Decode(), err);
+		ERR_CHECK_RET(decoder.Decode(), err);
 	}
-	
-	if (decoder)
-		delete decoder;
-			
 	return err;
 }
 
@@ -357,11 +348,12 @@ CleanupExtractedFiles(short tgtVRefNum, long tgtDirID)
 		if (err == noErr)
 		{
 			err = FSpDelete( &coreDirFSp );
-			return err;
 		}
-		else
-			return err;
-	}		
+	
+		HUnlock(gControls->cfg->coreDir);
+		return err;
+	}	
+		
 	HUnlock(gControls->cfg->coreDir);
 	
 	// otherwise iterate through coreFileList deleteing each individually
