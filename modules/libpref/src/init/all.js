@@ -1137,14 +1137,14 @@ pref("font.name.fantasy.x-cyrillic", "XXX.fantasy");
 pref("font.name.serif.x-unicode", "Times");
 pref("font.name.sans-serif.x-unicode", "Helvetica");
 pref("font.name.monospace.x-unicode", "Courier");
-pref("font.name.cursive.x-unicode", "Apple Chancery");
-pref("font.name.fantasy.x-unicode", "Gadget");
+pref("font.name.cursive.x-unicode", "Zapfino");
+pref("font.name.fantasy.x-unicode", "Lucida Grande");
 
 pref("font.name.serif.x-western", "Times");
 pref("font.name.sans-serif.x-western", "Helvetica");
 pref("font.name.monospace.x-western", "Courier");
-pref("font.name.cursive.x-western", "Apple Chancery");
-pref("font.name.fantasy.x-western", "Gadget");
+pref("font.name.cursive.x-western", "Zapfino");
+pref("font.name.fantasy.x-western", "Lucida Grande");
 
 pref("font.name.serif.zh-CN", "Song");
 pref("font.name.sans-serif.zh-CN", "Hei");
