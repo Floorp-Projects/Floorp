@@ -307,8 +307,10 @@ protected:
                                      PRInt64 aDate,
                                      PRInt64 *aOldDate,
                                      PRInt32 *aOldCount);
-  nsresult AddNewPageToDatabase(const char *aURL,
+  nsresult AddNewPageToDatabase(nsIURI* aURI,
                                 PRInt64 aDate,
+                                PRBool aRedirect,
+                                PRBool aTopLevel,
                                 nsIMdbRow **aResult);
   //
   // generic routines for setting/retrieving various datatypes
