@@ -815,17 +815,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   // Compute our final size
   ComputeFinalSize(aReflowState, state, aMetrics);
 
-  if (state.GetFlag(BRS_ISINLINEINCRREFLOW)) {
-    // Mark this block frame as having a dirty child
-    // XXX: we should be able to optimize this so we only call ReflowDirtyChild
-    //      if it's absolutely necessary:  something on the line changed size.
-    if (!IsIncrementalDamageConstrained(state)) {
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
-      ReflowDirtyChild(shell, state.mNextRCFrame); 
-    }
-  }
-
   // see if verifyReflow is enabled, and if so store off the space manager pointer
 #ifdef DEBUG
   PRInt32 verifyReflowFlags = nsIPresShell::GetVerifyReflowFlags();
