@@ -142,6 +142,40 @@ private:
     nsCOMPtr<nsIContent>                mRoot;
     nsCOMPtr<nsIHTMLElementFactory>     mHTMLElementFactory;
 
+    // Allright, this is a descent into blatant hackery. When
+    // mPermitted is set to non-null, OnAssert() and OnUnassert()
+    // check the aTarget of each assertion to see if |aTarget ==
+    // mPermitted|. If not, the change is ignored.
+    //
+    // This is used to stifle the plethora of assertions that flow out
+    // of renumbering an RDF container to insert/remove elements from
+    // the 'middle' of the container. Not only did it kill
+    // performance, but it also causes incorrect behavior in some
+    // cases :-/.
+    //
+    // So this, in cooperation with the |Sentry| class, below,
+    // suppress the unwanted cruft.
+    nsIRDFNode* mPermitted;
+
+    // A stack-based wrapper for dealing with setting and clearing
+    // mPermitted.
+    class Sentry {
+    public:
+        RDFXULBuilderImpl& mBuilder;
+        Sentry(RDFXULBuilderImpl& aBuilder, nsIRDFNode* aNode)
+            : mBuilder(aBuilder)
+        {
+            mBuilder.mPermitted = aNode;
+        }
+
+        ~Sentry()
+        {
+            mBuilder.mPermitted = nsnull;
+        }
+    };
+
+    friend class Sentry;
+
     // These "zombie elements" are a pool of elements that are
     // removed from the content model. When a new element is created
     // via the DOM document.createElement() API, or an element is
@@ -151,7 +185,7 @@ private:
     // re-used, rather than a new element being created.
     nsCOMPtr<nsISupportsArray> mZombiePool;
 
-    // pseudo-constants
+    // pseudo-constants and shared services
     static PRInt32 gRefCnt;
     static nsIRDFService*        gRDFService;
     static nsIRDFContainerUtils* gRDFContainerUtils;
@@ -219,6 +253,11 @@ public:
                          nsIContent* aElement,
                          nsIRDFNode* aValue);
 
+    nsresult InsertChildAt(nsINameSpace* aNameSpace,
+                           nsIContent* aElement,
+                           nsIRDFNode* aValue,
+                           PRInt32 aIndex);
+
     nsresult RemoveChild(nsIContent* aElement,
                          nsIRDFNode* aValue);
 
@@ -273,7 +312,7 @@ public:
     MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFResource** aResult);
 
     nsresult
-    AddNodeToZombiePool(nsIDOMNode* aElement);
+    AddElementToZombiePool(nsIContent* aElement);
 
     nsresult
     GetParentNodeWithHTMLHack(nsIDOMNode* aNode, nsCOMPtr<nsIDOMNode>* aResult);
@@ -336,7 +375,8 @@ NS_NewRDFXULBuilder(nsIRDFContentModelBuilder** result)
 
 
 RDFXULBuilderImpl::RDFXULBuilderImpl(void)
-    : mDocument(nsnull)
+    : mDocument(nsnull),
+      mPermitted(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -866,6 +906,11 @@ RDFXULBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
     }
     if (NS_FAILED(rv)) return rv;
 
+    // Add the element to the zombie pool immediately, so it will be
+    // resurrected when somebody wants to insert it into the document.
+    rv = AddElementToZombiePool(result);
+    if (NS_FAILED(rv)) return rv;
+
     *aResult = result;
     NS_ADDREF(*aResult);
     return NS_OK;
@@ -883,6 +928,9 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
     NS_PRECONDITION(mDocument != nsnull, "not initialized");
     if (! mDocument)
         return NS_ERROR_NOT_INITIALIZED;
+
+    if (mPermitted && mPermitted != aTarget)
+        return NS_OK;
 
     // Stuff that we can ignore outright
     // XXX is this the best place to put it???
@@ -958,12 +1006,11 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
             // generated (via CreateContents()) when somebody asks for
             // them later.
             nsAutoString contentsGenerated;
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
-                                                     kXULContentsGeneratedAtom,
-                                                     contentsGenerated))) {
-                NS_ERROR("severe problem trying to get attribute");
-                return rv;
-            }
+            rv = element->GetAttribute(kNameSpaceID_None,
+                                       kXULContentsGeneratedAtom,
+                                       contentsGenerated);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "severe problem trying to get attribute");
+            if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_NOT_THERE || rv == NS_CONTENT_ATTR_NO_VALUE)
                 continue;
@@ -971,14 +1018,30 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
             if (! contentsGenerated.EqualsIgnoreCase("true"))
                 continue;
 
-            // Okay, it's a "live" element, so go ahead and append the new
-            // child to this node.
+            // Okay, it's a "live" element, so go ahead and insert the
+            // new element under the parent node according to the
+            // ordinal.
+            PRInt32 index;
+            rv = gRDFContainerUtils->OrdinalResourceToIndex(aProperty, &index);
+            if (NS_FAILED(rv)) return rv;
+
             nsCOMPtr<nsINameSpace> containingNameSpace;
             rv = GetContainingNameSpace(element, getter_AddRefs(containingNameSpace));
             if (NS_FAILED(rv)) return rv;
 
-            rv = AppendChild(containingNameSpace, element, aTarget);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "problem appending child to content model");
+            PRInt32 count;
+            rv = element->ChildCount(count);
+            if (NS_FAILED(rv)) return rv;
+
+            if (index < count) {
+                // "index - 1" because RDF containers are 1-indexed.
+                rv = InsertChildAt(containingNameSpace, element, aTarget, index - 1);
+            }
+            else {
+                rv = AppendChild(containingNameSpace, element, aTarget);
+            }
+
+            NS_ASSERTION(NS_SUCCEEDED(rv), "problem inserting child into content model");
             if (NS_FAILED(rv)) return rv;
         }
         else if (aProperty == kRDF_type) {
@@ -1007,6 +1070,9 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSource,
     NS_PRECONDITION(mDocument != nsnull, "not initialized");
     if (! mDocument)
         return NS_ERROR_NOT_INITIALIZED;
+
+    if (mPermitted && mPermitted != aTarget)
+        return NS_OK;
 
     // Stuff that we can ignore outright
     // XXX is this the best place to put it???
@@ -1176,6 +1242,8 @@ RDFXULBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
                 rv = NS_NewRDFContainer(mDB, oldParent, getter_AddRefs(container));
                 if (NS_FAILED(rv)) return rv;
 
+                Sentry s(*this, newChild); // ignore renumbering assertions
+
                 rv = container->RemoveElement(newChild, PR_TRUE);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove newChild from oldParent");
                 if (NS_FAILED(rv)) return rv;
@@ -1199,11 +1267,6 @@ RDFXULBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
             NS_ASSERTION(NS_SUCCEEDED(rv), "ref child doesn't have a resource");
             if (NS_FAILED(rv)) return rv;
 
-            // Recycle the new child, so that the node will be re-used
-            // in the content model.
-            rv = AddNodeToZombiePool(aNewChild);
-            if (NS_FAILED(rv)) return rv;
-
             // Create a container wrapper
             nsCOMPtr<nsIRDFContainer> container;
             rv = NS_NewRDFContainer(mDB, parent, getter_AddRefs(container));
@@ -1213,6 +1276,8 @@ RDFXULBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
             rv = container->IndexOf(refChild, &i);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to determine index of refChild in container");
             if (NS_FAILED(rv)) return rv;
+
+            Sentry s(*this, newChild); // ignore renumbering assertions
 
             // ...and insert the newChild before it.
             rv = container->InsertElementAt(newChild, i, PR_TRUE);
@@ -1283,22 +1348,17 @@ RDFXULBuilderImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get index of old child in container");
             if (NS_FAILED(rv)) return rv;
 
-            // ...then remove the old child from the old collection...
-            rv = container->RemoveElement(oldChild, PR_TRUE);
+            // ...then remove the old child from the old collection.
+            // and add the new child to the collection at the old
+            // child's index. N.B., we set aRenumber to 'false': there
+            // is no need to renumber the container since we're
+            // putting the new child in the exact same place as the
+            // old.
+            rv = container->RemoveElement(oldChild, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove old child from container");
             if (NS_FAILED(rv)) return rv;
 
-            // Recycle the old element
-            rv = AddNodeToZombiePool(aOldChild);
-            if (NS_FAILED(rv)) return rv;
-
-            // ...and the new one, _now_, so that we're sure to get it
-            // when the asserts bubble back up from the graph.
-            rv = AddNodeToZombiePool(aNewChild);
-            if (NS_FAILED(rv)) return rv;
-
-            // ...and add the new child to the collection at the old child's index
-            rv = container->InsertElementAt(newChild, i, PR_TRUE);
+            rv = container->InsertElementAt(newChild, i, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add new child to container");
             if (NS_FAILED(rv)) return rv;
         }
@@ -1350,15 +1410,12 @@ RDFXULBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
             rv = NS_NewRDFContainer(mDB, parent, getter_AddRefs(container));
             if (NS_FAILED(rv)) return rv;
 
+            Sentry s(*this, oldChild); // ignore renumbering assertions
+
             rv = container->RemoveElement(oldChild, PR_TRUE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove element from container");
             if (NS_FAILED(rv)) return rv;
         }
-
-        // Recycle the element, so if it is inserted into the content
-        // model again, we re-use the same object.
-        rv = AddNodeToZombiePool(aOldChild);
-        if (NS_FAILED(rv)) return rv;
     }
 
     return NS_OK;
@@ -1412,6 +1469,8 @@ RDFXULBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
                 rv = NS_NewRDFContainer(mDB, oldParent, getter_AddRefs(container));
                 if (NS_FAILED(rv)) return rv;
 
+                Sentry s(*this, newChild); // ignore renumbering assertions
+
                 rv = container->RemoveElement(newChild, PR_TRUE);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove newChild from oldParent");
                 if (NS_FAILED(rv)) return rv;
@@ -1432,11 +1491,6 @@ RDFXULBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
             // ...then append it to the container
             nsCOMPtr<nsIRDFContainer> container;
             rv = NS_NewRDFContainer(mDB, parent, getter_AddRefs(container));
-            if (NS_FAILED(rv)) return rv;
-
-            // Recycle the new element _now_, so that we're sure to
-            // get it when the asserts bubble back up from the graph.
-            rv = AddNodeToZombiePool(aNewChild);
             if (NS_FAILED(rv)) return rv;
 
             rv = container->AppendElement(newChild);
@@ -1708,11 +1762,9 @@ RDFXULBuilderImpl::AppendChild(nsINameSpace* aNameSpace,
     else if (NS_SUCCEEDED(rv = aValue->QueryInterface(kIRDFLiteralIID,
                                                       (void**) getter_AddRefs(literal)))) {
         // If it's a literal, then add it as a simple text node.
-
-        if (NS_FAILED(rv = nsRDFContentUtils::AttachTextNode(aElement, literal))) {
-            NS_ERROR("unable to add text to content model");
-            return rv;
-        }
+        rv = nsRDFContentUtils::AttachTextNode(aElement, literal);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add text to content model");
+        if (NS_FAILED(rv)) return rv;
     }
     else {
         // This should _never_ happen
@@ -1723,6 +1775,86 @@ RDFXULBuilderImpl::AppendChild(nsINameSpace* aNameSpace,
     return NS_OK;
 }
 
+
+nsresult
+RDFXULBuilderImpl::InsertChildAt(nsINameSpace* aNameSpace,
+                                 nsIContent* aElement,
+                                 nsIRDFNode* aValue,
+                                 PRInt32 aIndex)
+{
+    NS_PRECONDITION(aNameSpace != nsnull, "null ptr");
+    if (! aNameSpace)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aValue != nsnull, "null ptr");
+    if (! aValue)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    // Add the specified node as a child container of this
+    // element. What we do will vary slightly depending on whether
+    // aValue is a resource or a literal.
+    nsCOMPtr<nsIRDFResource> resource;
+    nsCOMPtr<nsIRDFLiteral> literal;
+
+    if (NS_SUCCEEDED(rv = aValue->QueryInterface(kIRDFResourceIID,
+                                                 (void**) getter_AddRefs(resource)))) {
+        
+        // If it's a resource, then add it as a child container.
+        nsCOMPtr<nsIContent> child;
+        rv = CreateOrReuseElement(aNameSpace, resource, getter_AddRefs(child));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new XUL element");
+        if (NS_FAILED(rv)) return rv;
+
+#ifdef PR_LOGGING
+        if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+            nsAutoString parentStr;
+            rv = nsRDFContentUtils::GetElementLogString(aElement, parentStr);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get parent element string");
+
+            nsAutoString childStr;
+            rv = nsRDFContentUtils::GetElementLogString(child, childStr);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child element string");
+
+            char* parentCStr = parentStr.ToNewCString();
+            char* childCStr = childStr.ToNewCString();
+
+            PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder insert-child-at %d", aIndex));
+            PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   parentCStr));
+            PR_LOG(gLog, PR_LOG_DEBUG, ("    %s", childCStr));
+
+            delete[] childCStr;
+            delete[] parentCStr;
+        }
+#endif
+
+        if (NS_FAILED(rv = aElement->InsertChildAt(child, aIndex, PR_TRUE))) {
+            NS_ERROR("unable to add element to content model");
+            return rv;
+        }
+    }
+    else if (NS_SUCCEEDED(rv = aValue->QueryInterface(kIRDFLiteralIID,
+                                                      (void**) getter_AddRefs(literal)))) {
+        // If it's a literal, then add it as a simple text node.
+        //
+        // XXX Appending is wrong wrong wrong.
+        rv = nsRDFContentUtils::AttachTextNode(aElement, literal);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add text to content model");
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        // This should _never_ happen
+        NS_ERROR("node is not a value or a resource");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    return NS_OK;
+}
 
 
 nsresult
@@ -1782,6 +1914,12 @@ RDFXULBuilderImpl::RemoveChild(nsIContent* aElement, nsIRDFNode* aValue)
 #endif
             // okay, found it. now blow it away...
             aElement->RemoveChildAt(count, PR_TRUE);
+
+            // ...and add it to the zombie pool, so we can recycle it
+            // later if we need to.
+            rv = AddElementToZombiePool(child);
+            if (NS_FAILED(rv)) return rv;
+
             return NS_OK;
         }
     }
@@ -1837,7 +1975,7 @@ RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
         rv = mZombiePool->Count(&count);
         if (NS_FAILED(rv)) return rv;
 
-        while (PRInt32(count--) >= 0) {
+        while (PRInt32(--count) >= 0) {
             nsISupports* isupports = mZombiePool->ElementAt(count);
             nsCOMPtr<nsIContent> element = do_QueryInterface( isupports );
             NS_IF_RELEASE(isupports);
@@ -1848,7 +1986,7 @@ RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
 
             nsCOMPtr<nsIRDFResource> resource;
             rv = nsRDFContentUtils::GetElementResource(element, getter_AddRefs(resource));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "an element with out a resource is in the recycle bin");
+            NS_ASSERTION(NS_SUCCEEDED(rv), "an element without a resource is in the zombie pool");
             if (NS_FAILED(rv)) continue;
 
             if (resource.get() != aResource)
@@ -1857,6 +1995,21 @@ RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
             // found it!
             mZombiePool->RemoveElementAt(count);
 
+#ifdef PR_LOGGING
+            if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+                nsAutoString elementStr;
+                rv = nsRDFContentUtils::GetElementLogString(element, elementStr);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
+
+                char* elementCStr = elementStr.ToNewCString();
+
+                PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder create-or-reuse resurrecting zombie"));
+                PR_LOG(gLog, PR_LOG_DEBUG, ("  %s", elementCStr));
+
+                delete[] elementCStr;
+            }
+#endif
+
             *aResult = element;
             NS_ADDREF(*aResult);
             return NS_OK;
@@ -1864,11 +2017,28 @@ RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
     }
 
     if (nameSpaceID == kNameSpaceID_HTML) {
-        return CreateHTMLElement(aContainingNameSpace, aResource, tag, aResult);
+        rv = CreateHTMLElement(aContainingNameSpace, aResource, tag, aResult);
     }
     else {
-        return CreateXULElement(aContainingNameSpace, aResource, nameSpaceID, tag, aResult);
+        rv = CreateXULElement(aContainingNameSpace, aResource, nameSpaceID, tag, aResult);
     }
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsAutoString elementStr;
+        rv = nsRDFContentUtils::GetElementLogString(*aResult, elementStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
+
+        char* elementCStr = elementStr.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder create-or-reuse created new element"));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("  %s", elementCStr));
+
+        delete[] elementCStr;
+    }
+#endif
+
+    return rv;
 }
 
 nsresult
@@ -2773,20 +2943,16 @@ RDFXULBuilderImpl::MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFR
 
 
 nsresult
-RDFXULBuilderImpl::AddNodeToZombiePool(nsIDOMNode* aNode)
+RDFXULBuilderImpl::AddElementToZombiePool(nsIContent* aElement)
 {
     // Place the specified element in the zombie pool so that it
     // may be re-used.
     nsresult rv;
 
-    nsCOMPtr<nsIContent> element = do_QueryInterface(aNode);
-    if (! element)
-        return NS_ERROR_UNEXPECTED;
-
     // See if the element has an ID attribute (and thus, a node in the
     // graph to which it corresponds). If not, we can't re-use it.
     nsAutoString id;
-    rv = element->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+    rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, id);
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
         return NS_OK;
 
@@ -2795,9 +2961,24 @@ RDFXULBuilderImpl::AddNodeToZombiePool(nsIDOMNode* aNode)
         if (NS_FAILED(rv)) return rv;
     }
 
-    NS_ASSERTION(mZombiePool->IndexOf(element) < 0, "Element already in the recycler");
+    NS_ASSERTION(mZombiePool->IndexOf(aElement) < 0, "Element already in the zombie pool");
 
-    mZombiePool->AppendElement(element);
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+        nsAutoString elementStr;
+        rv = nsRDFContentUtils::GetElementLogString(aElement, elementStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element string");
+
+        char* elementCStr = elementStr.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder add-node-to-zombie-pool"));
+        PR_LOG(gLog, PR_LOG_DEBUG, ("  %s", elementCStr));
+
+        delete[] elementCStr;
+    }
+#endif
+
+    mZombiePool->AppendElement(aElement);
     return NS_OK;
 }
 

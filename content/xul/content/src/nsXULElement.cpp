@@ -1616,7 +1616,6 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         if (aNotify && ElementIsInDocument()) {
             mDocument->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
         }
-        oldKid->SetDocument(nsnull, PR_TRUE);
         oldKid->SetParent(nsnull);
     }
     return NS_OK;
@@ -1691,7 +1690,6 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         if (aNotify && removeOk && ElementIsInDocument()) {
             doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
         }
-        oldKid->SetDocument(nsnull, PR_TRUE);
         oldKid->SetParent(nsnull);
     }
 
