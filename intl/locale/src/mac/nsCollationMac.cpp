@@ -23,7 +23,7 @@
 #include "prmem.h"
 #include "prmon.h"
 
-NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,8 +125,20 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
 
   // locale -> script code + charset name
   // TODO: get this via nsILocale
-  mCharset.SetString("ISO-8859-1");
   m_scriptcode = 0; //smRoman
+  mCharset.SetString("ISO-8859-1"); //TODO: should be "MacRoman"
+  if (locale != nsnull) {
+    nsString aLocale;
+    nsString aCategory("NSILOCALE_COLLATE");
+    nsresult res = locale->GetCatagory(&aCategory, &aLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    //TODO: GetPlatformLocale() to get a script code when it's ready.
+    //TODO: Get a charset name from a script code.
+  }
+
+  // Initialize a mapping table for the script code.
   if (mac_sort_tbl_init(m_scriptcode, m_mac_sort_tbl) == -1) {
     return NS_ERROR_FAILURE;
   }

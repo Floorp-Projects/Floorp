@@ -188,7 +188,7 @@ static void AbbrevWeekdayString(DateTimeRec &dateTime, Str255 weekdayString, Int
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatMac, kIDateTimeFormatIID);
 
@@ -212,6 +212,9 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   DateTimeRec macDateTime;
   Str255 timeString, dateString;
   int32 dateTime;	
+  long scriptcode = 0;	//TODO: need to get this from locale
+  nsString aCharset("ISO-8859-1");	//TODO: should be "MacRoman", need to get this from locale
+  nsresult res;
 
   // return, nothing to format
   if (dateFormatSelector == kDateFormatNone && timeFormatSelector == kTimeFormatNone) {
@@ -246,7 +249,19 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
 
   ::DateToSeconds( &macDateTime, (unsigned long *) &dateTime);
   
-  long scriptcode = 0;	//TODO: need to get this from locale
+
+  // Get a script code and a charset name
+  if (locale != nsnull) {
+    nsString aLocale;
+    nsString aCategory("NSILOCALE_TIME");
+    nsresult res = locale->GetCatagory(&aCategory, &aLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    //TODO: GetPlatformLocale() to get a script code when it's ready.
+    //TODO: Get a charset name from a script code.
+  }
+
   Handle itl1Handle = (Handle) GetItl1Resource(scriptcode);
   Handle itl0Handle = (Handle) GetItl0Resource(scriptcode);
   NS_ASSERTION(itl1Handle && itl0Handle, "failed to get itl handle");
@@ -303,8 +318,6 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
 
 
   // convert result to unicode
-  nsresult res;
-  nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
   nsICharsetConverterManager * ccm = nsnull;
 
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
