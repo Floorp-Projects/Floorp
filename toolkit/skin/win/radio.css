@@ -103,6 +103,6 @@ radio[selected="true"] > .radio-check-box1 > .radio-check-box2 {
   list-style-image: url("chrome://global/skin/radio/radio-check.gif");
 }
 
-radio[selected="true"][disabled="true"] > .radio-check-box1 {
+radio[selected="true"][disabled="true"] > .radio-check-box1 > .radio-check-box2 {
   list-style-image: url("chrome://global/skin/radio/radio-check-dis.gif") !important
 }
