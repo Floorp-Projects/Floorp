@@ -769,6 +769,7 @@ loser:
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCMSDecoder, nsICMSDecoder)
 
 nsCMSDecoder::nsCMSDecoder()
+: m_dcx(nsnull)
 {
 }
 
