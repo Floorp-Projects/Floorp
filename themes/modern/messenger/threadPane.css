@@ -148,7 +148,7 @@ outlinerbody:-moz-outliner-image(subjectCol) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail.gif");
 }
 
-outlinerbody:-moz-outliner-image(subjectCol, unread) {
+outlinerbody:-moz-outliner-image(subjectCol, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-new.gif");
 }
 
@@ -164,7 +164,7 @@ outlinerbody:-moz-outliner-image(subjectCol, news) {
   list-style-image: url("chrome://messenger/skin/icons/message-news.gif");
 }
 
-outlinerbody:-moz-outliner-image(subjectCol, news, unread) {
+outlinerbody:-moz-outliner-image(subjectCol, news, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-new.gif");
 }
 

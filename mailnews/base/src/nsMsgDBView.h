@@ -76,6 +76,7 @@ protected:
   // atoms used for styling the view. we're going to have a lot of
   // these so i'm going to make them static.
   static nsIAtom* kUnreadMsgAtom;
+  static nsIAtom* kNewMsgAtom;
   static nsIAtom* kReadMsgAtom;
   static nsIAtom* kOfflineMsgAtom;
   static nsIAtom* kFlaggedMsgAtom;
