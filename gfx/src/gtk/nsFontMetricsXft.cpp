@@ -902,13 +902,6 @@ nsFontMetricsXft::CacheFontMetrics(void)
 nsFontXft *
 nsFontMetricsXft::FindFont(PRUint32 aChar)
 {
-    // If we have an NBSP character, we can treat it as a normal space.
-    // This helps because some fonts don't claim to support NBSP, and we waste
-    // time looking for a font that does.  The only difference is for
-    // line-breaking, and that has already been done for us in layout.
-
-    if (aChar == 0xa0)
-        aChar = ' ';
 
     // If mPattern is null, set up the base bits of it so we can
     // match.  If we need to match later we don't have to set it up
