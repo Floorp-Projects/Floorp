@@ -32,6 +32,7 @@ Boolean 	gSDDlg = false;
 WindowPtr 	gWPtr = NULL;
 short		gCurrWin = 0;
 InstWiz		*gControls = NULL;
+Boolean     gInstallStarted = false;
 
 EventProc 			gSDIEvtHandler;  /* SDI */
 SDI_NETINSTALL 		gInstFunc;

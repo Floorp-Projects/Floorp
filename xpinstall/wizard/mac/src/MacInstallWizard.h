@@ -550,6 +550,7 @@ extern short 		gCurrWin;
 extern InstWiz		*gControls;
 extern Boolean 		gDone;
 extern Boolean		gSDDlg;
+extern Boolean      gInstallStarted;
 
 extern EventProc		 gSDIEvtHandler;
 extern SDI_NETINSTALL 	 gInstFunc;
