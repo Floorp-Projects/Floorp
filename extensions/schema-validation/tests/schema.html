@@ -1,0 +1,476 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title></title>
+  <style>
+    .passed {background-color:lightgreen;}
+    .failed {background-color:red;}
+
+    td {
+      padding:3px;
+    }
+  </style>
+  <script>    
+    var myValidator = null;
+    var counter;
+    var failCounter = 0;
+    var results;
+    var start;
+    var end;
+    
+    function getValidator() {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+      if (!myValidator)
+        myValidator = Components.classes["@mozilla.org/xmlextras/schemas/schemavalidator;1"]
+                                .getService(Components.interfaces.nsISchemaValidator);
+      return myValidator;
+    }
+
+    function validateDOMNode(aNodeValue, aType, aIsValid) {
+      var rv = false;
+
+      var x = dp.parseFromString('<test xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema" xsi:type="' + aType + '">' + aNodeValue + '</test>', "text/xml");
+      rv = getValidator().validate(x.documentElement);
+
+      counter++;
+      results[results.length] = {type: aType, nodevalue: aNodeValue, rv: rv, isvalid: aIsValid};
+    }
+
+    function validateString(aNodeValue, aType, aIsValid) {
+      var rv = getValidator().validateString(aNodeValue, aType, "http://www.mozilla.org/schema/test");
+
+      counter++;
+      results[results.length] = {type: aType, nodevalue: aNodeValue, rv: rv, isvalid: aIsValid};
+    }
+
+    function validate(aNodeValue, aType, aIsValid){
+      validateString(aNodeValue, aType, aIsValid);
+    }
+
+    function validateComplexType(aNodeValue, aType, aIsValid){
+      var rv = false;
+
+      var x = dp.parseFromString(aNodeValue, "text/xml")
+      rv = getValidator().validate(x.documentElement);
+
+      counter++;
+      results[results.length] = {type: aType, nodevalue: aNodeValue, rv: rv, isvalid: aIsValid};
+    }
+    
+    function displayResults(){
+      var tbody = document.createElement("tbody");
+      var tr, td, textNode;
+      for (var run = 0; run < results.length; run++){
+        tr = document.createElement("tr");
+
+        td = document.createElement("td");
+        textNode = document.createTextNode(run + 1);
+        td.appendChild(textNode);
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        textNode = document.createTextNode(results[run].type);
+        td.appendChild(textNode);
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        textNode = document.createTextNode(results[run].nodevalue);
+        td.appendChild(textNode);
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        textNode = document.createTextNode(results[run].rv);
+        td.appendChild(textNode);
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        textNode = document.createTextNode(results[run].isvalid);
+        td.appendChild(textNode);
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        textNode = document.createTextNode((results[run].rv == results[run].isvalid) ? "Passed" : "Failed");
+        td.appendChild(textNode);
+        td.className = (results[run].rv == results[run].isvalid) ? "passed" : "failed";
+        tr.appendChild(td);
+
+        tbody.appendChild(tr);
+
+        if (results[run].rv!=results[run].isvalid)
+          failCounter++;
+      }
+      document.getElementById("resultTable").replaceChild(tbody, document.getElementById("results"));
+    }
+
+    var dp = new DOMParser();
+    var schema;
+
+    function test() {
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+     try{
+        myValidator = Components.classes["@mozilla.org/schemavalidator;1"].getService(Components.interfaces.nsISchemaValidator);
+
+      }catch(e){ alert(e) }
+
+      var schemaLoader = Components.classes["@mozilla.org/xmlextras/schemas/schemaloader;1"]
+                                   .getService(Components.interfaces.nsISchemaLoader);
+      try { 
+        schema = schemaLoader.load("file:///home/doron/mozbuilds/trunk/mozilla/extensions/schema-validation/tests/schema.xsd");
+        myValidator.loadSchema(schema);        
+      } catch(e){alert(e)}
+
+      //schema collection
+      var schemaCollection = schema.collection;
+      
+      document.getElementById("results").innerHTML = "";
+      counter = 0;
+      failCounter = 0;
+      results = new Array();
+
+      start = new Date();
+
+/*    validateComplexType('<balance xsi:type="balance" xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema"><transaction><date/><desc/><withdraw/><amount/></transaction></balance>', "balance", true);
+      validateComplexType('<balance xsi:type="balance" xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema"><transaction><date/><desc2/><withdraw/><amount/></transaction></balance>', "balance", false);
+      validateComplexType('<balance xsi:type="balance" xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema"><transaction><date/><desc/></transaction></balance>', "balance", false);
+      validateComplexType('<balance xsi:type="balance" xmlns="http://www.mozilla.org/schema/test" xmlns:xsi="http://www.w3.org/1999/XMLSchema"><transaction><date/><desc/><withdraw/><amount/><date/></transaction></balance>', "balance", false);
+*/
+
+      if (1){
+        validate("220", "integer-test-1", false);
+        validate("2", "integer-test-1", false);
+        validate("-220", "integer-test-1", false);
+      
+        validate("5", "integer-test-1", false);
+        validate("101", "integer-test-1", false);
+        validate("1013", "integer-test-1", false);
+        validate("56", "integer-test-1", true);
+
+        validate("220", "integer-test-2", false);
+        validate("3", "integer-test-2", false);
+        validate("-56", "integer-test-2", false);
+        validate("-40", "integer-test-2", true);
+        validate("-1", "integer-test-2", true);
+        validate("-34", "integer-test-2", true);
+        validate("002", "integer-test-2", true);
+
+        validate("127", "byte-test-1", true);
+        validate("-128", "byte-test-1", true);
+        validate("-12", "byte-test-1", true);
+        validate("5", "byte-test-1", true);
+        validate("129", "byte-test-1", false);
+        validate("-135", "byte-test-1", false);
+
+        validate("127", "byte-test-2", false);
+        validate("40", "byte-test-2", false);
+        validate("-40", "byte-test-2", false);
+        validate("38", "byte-test-2", true);
+        validate("-1", "byte-test-2", true);
+
+        validate("127", "byte-test-3", false);
+        validate("40", "byte-test-3", true);
+        validate("-40", "byte-test-3", true);
+        validate("38", "byte-test-3", true);
+        validate("-1", "byte-test-3", true);
+
+        validate("-1", "float-test-1", false);
+        validate("1.230", "float-test-1", true);
+        validate("2.23022", "float-test-1", true);
+        validate("3.34", "float-test-1", false);
+        validate("3.340", "float-test-1", false);
+        validate("3.5", "float-test-1", false);
+        validate("0.1", "float-test-1", false);
+        validate("0.98", "float-test-1", false);
+        validate("1.02", "float-test-1", true);
+
+        validate("8.342", "float-test-2", false);
+        validate("-3.46", "float-test-2", false);
+        validate("3.34", "float-test-2", true);
+        validate("2.34", "float-test-2", true);
+        validate("-1.98", "float-test-2", true);
+        validate("-1.99", "float-test-2", false);
+        validate("-5.32", "float-test-2", false);
+
+        validate("220.343434", "decimal-test-1", true);
+        validate("220.3434a34", "decimal-test-1", false);
+        validate("220.343.34", "decimal-test-1", false);
+
+        validate("220.343435", "decimal-test-2", false);
+        validate("220.3434342", "decimal-test-2", true);
+        validate("220.3434502", "decimal-test-2", false);
+        validate("100.32", "decimal-test-2", false);
+        validate("30.34", "decimal-test-2", false);
+        validate("100.34", "decimal-test-2", false);
+        validate("110.34", "decimal-test-2", true);
+        validate("100.345", "decimal-test-2", true);
+
+        validate("220.34345", "decimal-test-3", true);
+        validate("220.3434342", "decimal-test-3", true);
+        validate("220.3434502", "decimal-test-3", false);
+        validate("100.32", "decimal-test-3", false);
+        validate("30.34", "decimal-test-3", false);
+        validate("100.34", "decimal-test-3", true);
+        validate("110.34", "decimal-test-3", true);
+        validate("100.345", "decimal-test-3", true);
+
+        validate("bla", "string-test-1", false);
+        validate("blaadadad", "string-test-1", false);
+        validate("bla22", "string-test-1", true);
+
+        validate("bla", "string-test-2", false);
+        validate("bladftrhhkeptjg,gjklg", "string-test-2", false);
+        validate("testingtesting", "string-test-2", true);
+
+        validate("bla", "boolean-test-1", false);
+        validate("11", "boolean-test-1", false);
+        validate("1", "boolean-test-1", true);
+        validate("0", "boolean-test-1", true);
+        validate("true", "boolean-test-1", true);
+        validate("false", "boolean-test-1", true);
+        validate("TRue", "boolean-test-1", true);
+
+        validate("---30+23:20", "gday-test-1", true);
+        validate("---30+2a:20", "gday-test-1", false);
+        validate("---30+23:a0", "gday-test-1", false);
+        validate("---30", "gday-test-1", true);
+        validate("---30Z", "gday-test-1", true);
+        validate("---3", "gday-test-1", false);
+        validate("----3", "gday-test-1", false);      
+
+        validate("---03", "gday-test-2", false);
+        validate("---14", "gday-test-2", true);
+        validate("---25", "gday-test-2", false);
+        validate("---05", "gday-test-2", false);
+        validate("---21", "gday-test-2", false);
+        validate("---30a23:20", "gday-test-1", false);
+
+        validate("---07", "gday-test-3", true);
+
+        validate("---03", "gday-test-3", false);
+        validate("---25", "gday-test-3", false);
+        validate("---05", "gday-test-3", true);
+        validate("---21", "gday-test-3", true);
+
+        validate("--01--", "gmonth-test-1", true);
+        validate("--05--Z", "gmonth-test-1", true);
+        validate("--05---03:43", "gmonth-test-1", true);
+        validate("--05--a03:43", "gmonth-test-1", false);
+        validate("--12--", "gmonth-test-1", true);
+        validate("--32--", "gmonth-test-1", false);
+        validate("---2--", "gmonth-test-1", false);
+        validate("--543--", "gmonth-test-1", false);
+
+        validate("--01--", "gmonth-test-2", false);
+        validate("--05--", "gmonth-test-2", false);
+        validate("--06--", "gmonth-test-2", true);
+        validate("--10--", "gmonth-test-2", true);
+        validate("--11--", "gmonth-test-2", false);
+        validate("--12--", "gmonth-test-2", false);
+
+        validate("--01--", "gmonth-test-3", false);
+        validate("--05--", "gmonth-test-3", true);
+        validate("--06--", "gmonth-test-3", true);
+        validate("--10--", "gmonth-test-3", true);
+        validate("--11--", "gmonth-test-3", true);
+        validate("--12--", "gmonth-test-3", false);
+
+        validate("1989", "gyear-test-1", true);
+        validate("1234-13:43", "gyear-test-1", true); 
+        validate("0771", "gyear-test-1", true);
+        validate("23331", "gyear-test-1", true);
+        validate("0000Z", "gyear-test-1", false);
+        validate("12a4-13:43", "gyear-test-1", false);
+        validate("1214-1a:43", "gyear-test-1", false);
+
+        validate("1456", "gyear-test-2", false);
+        validate("1900", "gyear-test-2", true);
+        validate("6934", "gyear-test-2", true);
+        validate("10000", "gyear-test-2", true);
+        validate("10344", "gyear-test-2", false);
+
+        validate("1456Z", "gyear-test-3", false);
+        validate("1900", "gyear-test-3", false);
+        validate("6934Z", "gyear-test-3", true);
+        validate("10000", "gyear-test-3", false);
+        validate("10344", "gyear-test-3", false);
+   
+        validate("-10344-11Z", "gyearmonth-test-1", true);
+        validate("-10344-13Z", "gyearmonth-test-1", false);
+        validate("-10344-12+12:34", "gyearmonth-test-1", true);
+        validate("-10344-12T", "gyearmonth-test-1", false);
+        validate("1999-12Z-", "gyearmonth-test-1", false);
+
+        validate("2000-11Z", "gyearmonth-test-2", true);
+        validate("10001-11Z", "gyearmonth-test-2", false);
+        validate("10000-11Z", "gyearmonth-test-2", false);
+        validate("10000-12-23:34", "gyearmonth-test-2", false);
+        validate("1995-11Z", "gyearmonth-test-2", true);
+        validate("1990-02Z", "gyearmonth-test-2", true);
+        validate("1990-01Z", "gyearmonth-test-2", false);
+        validate("1989-12Z", "gyearmonth-test-2", false);
+
+        validate("2000-11Z", "gyearmonth-test-3", true);
+        validate("10001-11Z", "gyearmonth-test-3", false);
+        validate("10001-12Z", "gyearmonth-test-3", false);
+        validate("10000-11Z", "gyearmonth-test-3", true);
+        validate("10000-12-23:34", "gyearmonth-test-3", false);
+        validate("1995-11Z", "gyearmonth-test-3", true);
+        validate("1990-03Z", "gyearmonth-test-3", true);
+        validate("1990-02Z", "gyearmonth-test-3", true);
+        validate("1989-12Z", "gyearmonth-test-3", false);
+
+        validate("--02-21", "gmonthday-test-1", true);
+        validate("--02-21a", "gmonthday-test-1", false);
+        validate("--02-21Z", "gmonthday-test-1", true);
+        validate("--02-21+11:33", "gmonthday-test-1", true);
+        validate("--02-21a11:33", "gmonthday-test-1", false);
+        validate("--02-21444342424242424", "gmonthday-test-1", false);
+
+        validate("--08-11Z", "gmonthday-test-2", false);
+        validate("--08-03Z", "gmonthday-test-2", false);
+        validate("--08-02Z", "gmonthday-test-2", true);
+        validate("--05-11Z", "gmonthday-test-2", true);
+        validate("--02-22Z", "gmonthday-test-2", true);
+        validate("--02-21", "gmonthday-test-2", false);
+        validate("--02-01-12:45", "gmonthday-test-2", false);
+
+        validate("--08-11Z", "gmonthday-test-3", false);
+        validate("--08-03Z", "gmonthday-test-3", true);
+        validate("--08-02Z", "gmonthday-test-3", true);
+        validate("--05-11Z", "gmonthday-test-3", true);
+        validate("--02-22Z", "gmonthday-test-3", true);
+        validate("--02-21", "gmonthday-test-3", true);
+        validate("--02-01-12:45", "gmonthday-test-3", false);
+
+        validate("2004-02-28T24:21:03Z", "datetime-test-1", true);
+        validate("2004-02-28T25:21:03Z", "datetime-test-1", false);
+        validate("2004-02-28T22:61:03Z", "datetime-test-1", false);
+        validate("-2004-02-28T12:21:03.434Z", "datetime-test-1", true);
+        validate("-2004-02-28T12:21:03-04:00", "datetime-test-1", true);
+        validate("-2004-02-30T12:21:03Z", "datetime-test-1", false);
+
+        validate("2004-02-11T12:21:03Z", "datetime-test-2", true);
+        validate("2004-02-18T00:00:00Z", "datetime-test-2", true);
+        validate("2004-02-18T12:21:03Z", "datetime-test-2", false);
+        validate("2004-02-30T12:21:03Z", "datetime-test-2", false);
+        validate("2002-06-29T12:21:03Z", "datetime-test-2", true);
+        validate("2001-02-18T12:21:03Z", "datetime-test-2", false);
+        validate("2001-01-18T12:21:03Z", "datetime-test-2", false);
+        validate("2002-02-30T12:21:03Z", "datetime-test-2", false);
+
+        validate("2004-02-18T12:21:03Z", "datetime-test-3", true);
+        validate("2004-02-18T00:00:00Z", "datetime-test-3", true);
+        validate("2004-02-18T12:22:03Z", "datetime-test-3", false);
+        validate("2004-02-21T12:22:03Z", "datetime-test-3", false);
+        validate("2001-02-18T12:21:03Z", "datetime-test-3", true);
+        validate("2002-02-18T12:21:03Z", "datetime-test-3", true);
+        validate("2001-02-18T12:20:03Z", "datetime-test-3", false);
+        validate("2001-01-18T22:20:03Z", "datetime-test-3", false);
+        validate("2004-02-18T12:21:03-02:00", "datetime-test-3", false);
+        validate("2004-02-18T12:21:03+02:00", "datetime-test-3", true);
+
+        validate("2001-01-18", "date-test-1", true);
+        validate("2001-0a-18", "date-test-1", false);
+        validate("2001-01-36", "date-test-1", false);
+
+        validate("2004-02-17", "date-test-2", true);
+        validate("2004-02-18", "date-test-2", false);
+        validate("2003-02-18", "date-test-2", true);
+        validate("2001-02-18", "date-test-2", false);
+        validate("2001-02-17", "date-test-2", false);
+
+        validate("2004-02-17", "date-test-3", true);
+        validate("2004-02-18", "date-test-3", true);
+        validate("2004-02-19", "date-test-3", false);
+        validate("2003-02-18", "date-test-3", true);
+        validate("2001-02-18", "date-test-3", true);
+        validate("2001-02-17", "date-test-3", false);
+
+        validate("32:03:32", "time-test-1", false);
+        validate("12:03:32.2a3", "time-test-1", false);
+        validate("24:03:32", "time-test-1", true);
+        validate("24:03:32-04:40", "time-test-1", true);
+        validate("24:03:32.34", "time-test-1", true);
+        validate("24:03:32.3a4", "time-test-1", false);
+
+        validate("12:30:46", "time-test-2", true);
+        validate("18:22:00", "time-test-2", true);
+        validate("12:30:45", "time-test-2", false);
+        validate("22:30:45", "time-test-2", false);
+        validate("21:30:45", "time-test-2", true);
+
+        validate("12:30:43", "time-test-3", false);
+        validate("18:22:00", "time-test-3", true);
+        validate("12:30:45", "time-test-3", true);
+        validate("22:34:45", "time-test-3", false);
+        validate("22:30:45", "time-test-3", true);
+        validate("21:30:45", "time-test-3", true);
+
+        validate("http://www.foo.com", "anyuri-test-1", true);
+        validate("bar..com", "anyuri-test-1", false);
+
+        validate("http://www.foo.com", "anyuri-test-2", true);
+        validate("http://www.f.com", "anyuri-test-2", false);
+        validate("http://www.fa.com", "anyuri-test-2", true);
+
+        validate("http://www.f.com", "anyuri-test-3", false);
+        validate("http://www.fa.com", "anyuri-test-3", true);
+
+        validate("VGhpcyBpcyBhIHRlc3Q=", "base64-test-1", true);
+        validate("  VGhpcyBpcyBhIHRlQ=   ", "base64-test-1", false);
+  
+        validate("VGhpcyBpcyBhIHRlc3Q=", "base64-test-2", true);
+        validate("VGhpcyBpcyBhIHRlc3Qh", "base64-test-2", false);
+  
+        validate("VGhpcyBpcyBhIHRlc3Q=", "base64-test-3", true);
+        validate("VGhpcyBpcyBhIHRlc3Qh", "base64-test-3", false);
+        validate("aGk=", "base64-test-3", false);
+        validate("aGkh", "base64-test-3", true);
+        validate("aGkgdGhlcmUh", "base64-test-3", true);
+
+        validate("58758", "better-us-zipcode", true);
+        validate("a758", "better-us-zipcode", false);
+
+        /*validate("P200Y30M", "duration-test-1", true);
+        validate("200Y30M", "duration-test-1", false);
+        validate("P200Y30Ma", "duration-test-1", false);
+        validate("P200Y30MD", "duration-test-1", false);
+        validate("P200Y30MT", "duration-test-1", false);
+        validate("P200Y30M45H", "duration-test-1", false);
+        validate("P200Y30M20S20Y", "duration-test-1", false);
+        validate("P200Y20D30M", "duration-test-1", false);
+        validate("P200Y30MT20S5H", "duration-test-1", false);
+        validate("P200Y30MT21H32.34S", "duration-test-1", true);
+        validate("P200Y30M23DT21H456M3234S", "duration-test-1", true);
+        validate("P200Y30MT21H32.3a4S", "duration-test-1", false);
+        validate("P200Y-20M", "duration-test-1", false);*/
+      }
+
+      end = new Date();
+
+      // final result
+      displayResults();
+      document.getElementById("finalResults").innerHTML = counter + " Tests Completed, with " + failCounter + " Failures" +
+        ".  Seconds: " + ((end-start) / 1000);
+    }
+  </script>
+</head>
+<body>
+
+<button onclick="test()">Do</button>
+
+<div id="finalResults"></div>
+
+<table border=1 cellpadding=0 cellspacing=0 width="100%" id="resultTable" style="font-size:0.8em;">
+  <thead>
+    <td>#</td>
+    <td>Type</td>
+    <td>Value</td>
+    <td>Is Valid?</td>
+    <td>Should be Valid?</td>
+    <td>Result</td>
+  </thead>
+  <tbody id="results" />
+</table>
+</body>
+</html>

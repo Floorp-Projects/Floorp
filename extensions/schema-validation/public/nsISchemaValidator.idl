@@ -1,0 +1,10 @@
+#include "nsISupports.idl"
+#include "nsISchema.idl"
+#include "nsIDOMNode.idl"
+
+[scriptable, uuid(eced2af3-fde9-4575-b5a4-e1c830b24611)]
+interface nsISchemaValidator : nsISupports {
+  void loadSchema(in nsISchema aSchema);
+  boolean validate(in nsIDOMNode aElement);
+  boolean validateString(in AString aValue, in AString aType, in AString aNamespace);
+};

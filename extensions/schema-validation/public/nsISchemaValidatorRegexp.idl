@@ -1,0 +1,17 @@
+#include "nsISupports.idl"
+
+[scriptable, uuid(26d69f7e-f7cf-423d-afb9-43d8a9ebf3ba)]
+interface nsISchemaValidatorRegexp : nsISupports {
+  boolean runRegexp(in DOMString aString, in DOMString aRegexpString, in string aModifierString);
+};
+
+%{ C++
+#define NS_SCHEMAVALIDATORREGEXP_CID                  \
+{ /* 26d69f7e-f7cf-423d-afb9-43d8a9ebf3ba */          \
+ 0x26d69f7e, 0xf7cf, 0x423d,                          \
+{0xaf, 0xb9, 0x43, 0xd8, 0xa9, 0xeb, 0xf3, 0xba}}     
+
+#define NS_SCHEMAVALIDATORREGEXP_CONTRACTID "@mozilla.org/xmlextras/schemas/schemavalidatorregexp;1"
+
+
+%}

@@ -1,0 +1,316 @@
+<?xml version="1.0" ?>
+<schema targetNamespace="http://www.mozilla.org/schema/test"
+        xmlns="http://www.w3.org/2001/XMLSchema" 
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
+
+	<element name="balance">
+		<complexType>
+			<sequence minOccurs="0" maxOccurs="unbounded">
+				<element name="transaction">
+					<complexType>
+						<sequence>
+							<element name="date" type="date"/>
+							<element name="desc" type="string"/>
+							<element name="withdraw" type="boolean"/>
+							<element name="amount" type="decimal"/>
+						</sequence>
+					</complexType>
+				</element>
+			</sequence>
+		</complexType>
+	</element>
+
+  <simpleType name="integer-test-1">
+    <restriction base='integer'>
+      <totalDigits value="3"/>
+      <maxExclusive value="101"/>
+      <minExclusive value="5"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="integer-test-2">
+    <restriction base='integer'>
+      <totalDigits value="3"/>
+      <maxInclusive value="2"/>
+      <minInclusive value="-40"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="test-nonPositiveInteger">
+    <restriction base='nonPositiveInteger'>
+      <totalDigits value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="byte-test-1">
+    <restriction base='byte'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="byte-test-2">
+    <restriction base='byte'>
+      <totalDigits value="2"/>
+      <maxExclusive value="40"/>
+      <minExclusive value="-40"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="byte-test-3">
+    <restriction base='byte'>
+      <maxInclusive value="40"/>
+      <minInclusive value="-40"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="float-test-1">
+    <restriction base='float'>
+      <maxExclusive value="3.34"/>
+      <minExclusive value="0.98"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="float-test-2">
+    <restriction base='float'>
+      <maxInclusive value="3.34"/>
+      <minInclusive value="-1.98"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="decimal-test-1">
+    <restriction base='decimal'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="decimal-test-2">
+    <restriction base='decimal'>
+      <maxExclusive value="220.343435"/>
+      <minExclusive value="100.34"/>
+    </restriction>
+  </simpleType>
+
+
+  <simpleType name="decimal-test-3">
+    <restriction base='decimal'>
+      <maxInclusive value="220.343435"/>
+      <minInclusive value="100.34"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="string-test-1">
+    <restriction base='string'>
+      <length value="5"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="string-test-2">
+    <restriction base='string'>
+      <minLength value="4"/>
+      <maxLength value="17"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="boolean-test-1">
+    <restriction base='boolean'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gday-test-1">
+    <restriction base='gDay'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gday-test-2">
+    <restriction base='gDay'>
+      <maxExclusive value="---21"/>
+      <minExclusive value="---05"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gday-test-3">
+    <restriction base='gDay'>
+      <maxInclusive value="---21Z"/>
+      <minInclusive value="---05"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gmonth-test-1">
+    <restriction base='gMonth'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gmonth-test-2">
+    <restriction base='gMonth'>
+      <maxExclusive value="--11--Z"/>
+      <minExclusive value="--05--"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gmonth-test-3">
+    <restriction base='gMonth'>
+      <maxInclusive value="--11--"/>
+      <minInclusive value="--05--"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gyear-test-1">
+    <restriction base='gYear'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gyear-test-2">
+    <restriction base='gYear'>
+      <maxInclusive value="10000"/>
+      <minInclusive value="1900"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gyear-test-3">
+    <restriction base='gYear'>
+      <maxExclusive value="10000"/>
+      <minExclusive value="1900"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gyearmonth-test-1">
+    <restriction base='gYearMonth'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gyearmonth-test-2">
+    <restriction base='gYearMonth'>
+      <maxExclusive value="10000-11Z"/>
+      <minExclusive value="1990-01Z"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gyearmonth-test-3">
+    <restriction base='gYearMonth'>
+      <maxInclusive value="10000-11Z"/>
+      <minInclusive value="1990-02Z"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gmonthday-test-1">
+    <restriction base='gMonthDay'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gmonthday-test-2">
+    <restriction base='gMonthDay'>
+      <maxExclusive value="--08-03Z"/>
+      <minExclusive value="--02-21Z"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="gmonthday-test-3">
+    <restriction base='gMonthDay'>
+      <maxInclusive value="--08-03Z"/>
+      <minInclusive value="--02-21Z"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="datetime-test-1">
+    <restriction base='dateTime'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="datetime-test-2">
+    <restriction base='dateTime'>
+      <maxExclusive value="2004-02-18T12:21:03Z"/>
+      <minExclusive value="2001-02-18T12:21:03Z"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="datetime-test-3">
+    <restriction base='dateTime'>
+      <maxInclusive value="2004-02-18T12:21:03Z"/>
+      <minInclusive value="2001-02-18T12:21:03Z"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="date-test-1">
+    <restriction base='date'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="date-test-2">
+    <restriction base='date'>
+      <maxExclusive value="2004-02-18"/>
+      <minExclusive value="2001-02-18"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="date-test-3">
+    <restriction base='date'>
+      <maxInclusive value="2004-02-18"/>
+      <minInclusive value="2001-02-18"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="time-test-1">
+    <restriction base='time'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="time-test-2">
+    <restriction base='time'>
+      <minExclusive value="12:30:45"/>
+      <maxExclusive value="22:30:45"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="time-test-3">
+    <restriction base='time'>
+      <minInclusive value="12:30:45"/>
+      <maxInclusive value="22:30:45"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="duration-test-1">
+    <restriction base='duration'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="anyuri-test-1">
+    <restriction base='anyURI'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="anyuri-test-2">
+    <restriction base='anyURI'>
+      <maxLength value="50"/>
+      <minLength value="17"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="anyuri-test-3">
+    <restriction base='anyURI'>
+      <length value="17"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="base64-test-1">
+    <restriction base='base64Binary'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="base64-test-2">
+    <restriction base='base64Binary'>
+      <length value="14"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="base64-test-3">
+    <restriction base='base64Binary'>
+      <maxLength value="14"/>
+      <minLength value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='better-us-zipcode'>
+    <restriction base='string'>
+      <pattern value='[0-9]{5}(-[0-9]{4})?'/>
+    </restriction>
+  </simpleType>
+</schema>

@@ -1472,6 +1472,11 @@ for extension in $MOZ_EXTENSIONS; do
         sql ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_sql"
             ;;
+        schema-validation ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/schema-validation/Makefile
+            extensions/schema-validation/public/Makefile
+            extensions/schema-validation/src/Makefile
+            " ;;
     esac
 done
 
