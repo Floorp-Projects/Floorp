@@ -29,12 +29,12 @@ var UBound = 0;
 var bug = 94506;
 var summary = 'Testing functions employing identifiers named "arguments"';
 var status = '';
-var statusitems = [ ];
+var statusitems = [];
 var actual = '';
-var actualvalues = [ ];
+var actualvalues = [];
 var expect= '';
-var expectedvalues = [ ];
-var cnOBJECT = (new Object).toString();
+var expectedvalues = [];
+var TYPE_OBJECT = (new Object).toString();
 var arguments = 5555;
 
 
@@ -53,7 +53,7 @@ function F2()
 }
 
 
-// same thing in a different order -
+// same thing in a different order. CHANGES THE RESULT!
 function F3()
 {
   return arguments;
@@ -68,10 +68,12 @@ function F4()
 }
 
 
+
 /*
- * In Sections 1-3, expect the local identifier over the arguments object.
- * In Section 4, expect the arguments object over the global identifier.
+ * In Sections 1 and 2, expect the local identifier, not the arguments object.
+ * In Sections 3 and 4, expect the arguments object, not the the identifier.
  */
+
 status = 'Section 1 of test';
 actual = F1(5);
 expect = 5;
@@ -85,14 +87,14 @@ addThis();
 
 
 status = 'Section 3 of test';
-actual = F3();
-expect = 555;
+actual = F3().toString();
+expect = TYPE_OBJECT;
 addThis();
 
 
 status = 'Section 4 of test';
 actual = F4().toString();
-expect = cnOBJECT;
+expect = TYPE_OBJECT;
 addThis();
 
 
