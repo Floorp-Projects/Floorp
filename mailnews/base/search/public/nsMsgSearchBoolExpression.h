@@ -97,8 +97,7 @@ public:
     // fills pre-allocated
     // memory in buffer with 
     // the IMAP/NNTP encoding for the expression
-    // returns # bytes added to the buffer
-	PRInt32 GenerateEncodeStr(nsCString * buffer); 
+	void GenerateEncodeStr(nsCString * buffer); 
 protected:
 	// if we are a leaf node, all we have is a search term
     // and a Evaluation value for that search term

@@ -195,44 +195,42 @@ PRInt32 nsMsgSearchBoolExpression::CalcEncodeStrSize()
 }
 
 
-PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsCString * buffer)
+void nsMsgSearchBoolExpression::GenerateEncodeStr(nsCString * buffer)
 // recurively combine sub expressions to form a single IMAP/NNTP encoded string 
 {
     if ((!m_term && (!m_leftChild || !m_rightChild))) // is expression empty?
-        return 0;
+        return;
     
     if (m_term) // are we a leaf expression?
     {
         *buffer += m_encodingStr;
-        return m_encodingStr.Length();
+        return;
     }
     
     // add encode strings of each sub expression
-    PRInt32 numBytesAdded = 0;
     if (m_boolOp == nsMsgSearchBooleanOp::BooleanOR) 
     {
         *buffer += " (OR";
 
-        numBytesAdded = m_leftChild->GenerateEncodeStr(buffer);  // insert left expression into the buffer
-        numBytesAdded = m_rightChild->GenerateEncodeStr(buffer);  // insert right expression into the buffer
+        m_leftChild->GenerateEncodeStr(buffer);  // insert left expression into the buffer
+        m_rightChild->GenerateEncodeStr(buffer);  // insert right expression into the buffer
         
         // HACK ALERT!!! if last returned character in the buffer is now a ' ' then we need to remove it because we don't want
         // a ' ' to preceded the closing paren in the OR encoding.
-        if (buffer->CharAt(numBytesAdded-1) == ' ')
+        PRUint32 lastCharPos = buffer->Length() - 1;
+        if (buffer->CharAt(lastCharPos) == ' ')
 		{
-            buffer->Truncate(buffer->Length() - 1);
+            buffer->Truncate(lastCharPos);
 		}
         
         *buffer += ')';
     }
-    
-    if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND)
+    else if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND)
     {
-        numBytesAdded = m_leftChild->GenerateEncodeStr(buffer); // insert left expression
-
-        numBytesAdded = m_rightChild->GenerateEncodeStr(buffer);
+        m_leftChild->GenerateEncodeStr(buffer); // insert left expression
+        m_rightChild->GenerateEncodeStr(buffer);
     }
-    return 0;
+    return;
 }
 
 
