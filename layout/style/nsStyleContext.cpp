@@ -131,8 +131,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
 
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Auto:
-      // XXX need to call back to frame to compute
-      NS_NOTYETIMPLEMENTED("auto value");
+      aFrame->GetAutoMarginSize(aSide, result);
       break;
 
     case eStyleUnit_Inherit:
@@ -163,8 +162,23 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
       }
 
     case eStyleUnit_Percent:
-      // XXX call frame to get percent base, do the math
-      NS_NOTYETIMPLEMENTED("percent value");
+      {
+        nscoord baseWidth = 0;
+        PRBool  isBase = PR_FALSE;
+        nsIFrame* frame;
+        aFrame->GetGeometricParent(frame);
+        while (nsnull != frame) {
+          frame->IsPercentageBase(isBase);
+          if (isBase) {
+            nsSize  size;
+            frame->GetSize(size);
+            baseWidth = size.width;
+            break;
+          }
+          frame->GetGeometricParent(frame);
+        }
+        result = (nscoord)((float)baseWidth * aCoord.GetPercentValue());
+      }
       break;
 
     case eStyleUnit_Coord:
@@ -393,7 +407,7 @@ nsStylePosition::nsStylePosition(void) { }
 struct StylePositionImpl: public nsStylePosition {
   StylePositionImpl(void)
   {
-    mPosition = NS_STYLE_POSITION_STATIC;
+    mPosition = NS_STYLE_POSITION_NORMAL;
     mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
     mLeftOffset.SetAutoValue();
     mTopOffset.SetAutoValue();
