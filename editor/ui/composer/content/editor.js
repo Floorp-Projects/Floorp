@@ -101,9 +101,6 @@ function TextEditorOnLoad()
 
 function PageIsEmptyAndUntouched()
 {
-dump("Editorshell="+editorShell+"\n");
-dump("DocumentIsEmpty="+editorShell.documentIsEmpty+"\n");
-dump("docWasModified="+docWasModified+"\n");
   return (editorShell != null) && (editorShell.documentIsEmpty == true) && (docWasModified == false);
 }
 
@@ -119,7 +116,7 @@ var DocumentStateListener =
     
     // udpate menu items now that we have an editor to play with
     //dump("Updating 'create' commands\n");
-    content.focus();
+    window.content.focus();
     window.updateCommands("create");
   },
   
@@ -131,9 +128,11 @@ var DocumentStateListener =
     if (isNowDirty)
       docWasModified = true;
     
-    // hack! Should not need this, but there is some controller bug that this
-    // works around.
+    // hack! Should not need this updateCommands, but there is some controller
+    //  bug that this works around. ??
+    window.content.focus();
     window.updateCommands("create");
+    window.updateCommands("save");
   }
 };
 
