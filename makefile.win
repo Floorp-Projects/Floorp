@@ -116,6 +116,6 @@ include <$(DEPTH)\config\rules.mak>
 #LCFLAGS=-D_USE_PR_DEBUG_MEMORY $(LCFLAGS)
 
 clobber_all::
-    cd $(MOZ_SRC)\ns
+    cd $(DEPTH)
     -rd /s /q dist
 

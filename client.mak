@@ -13,6 +13,16 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+!if !defined(MOZ_SRC)
+#enable builds on any drive if defined.
+MOZ_SRC=y:
+!endif
+
+!if !defined(MOZ_TOP)
+#enable builds from changed top level directories
+MOZ_TOP=ns
+!endif
+
 #//------------------------------------------------------------------------
 #// Figure out how to do the pull.
 #//------------------------------------------------------------------------
@@ -77,7 +87,7 @@ pull_clobber_build_all:: pull_all \
 clobber_build_all:: 	clobber_all \
 			build_all
 
-# In theory, we should use some symbol in ns/config/liteness.mak, 
+# In theory, we should use some symbol in $(MOZ_TOP)/config/liteness.mak, 
 # but we haven't pulled the file yet.  So, refer to MOZ_LITE and
 # MOZ_MEDIUM explicitly .
 !if defined(MOZ_LITE) || defined(MOZ_MEDIUM)
@@ -88,7 +98,7 @@ pull_all:: pull_client
 
 !ifndef NO_SECURITY
 pull_security:
-    -cvs -q co $(CORECONF_BRANCH) ns/coreconf
+    -cvs -q co $(CORECONF_BRANCH) $(MOZ_TOP)/coreconf
     -cvs -q co $(SECURITY_BRANCH) CoreSecurity
 !else
 pull_security:
@@ -97,7 +107,7 @@ pull_security:
 pull_client: pull_security
     @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
     cd $(MOZ_SRC)\.
-    -cvs -q co $(DBM_BRANCH)      ns/dbm
+    -cvs -q co $(DBM_BRANCH)      $(MOZ_TOP)/dbm
     -cvs -q co $(CVS_BRANCH)      Client50Win
     -cvs -q co $(MOZ_JAVAVER)     JavaWin
     -cvs -q co $(NSPR20_BRANCH)   CoreNSPR20
@@ -105,7 +115,7 @@ pull_client: pull_security
 pull_client_source_product:
     @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
     cd $(MOZ_SRC)\.
-    -cvs -q co $(DBM_BRANCH)      ns/dbm
+    -cvs -q co $(DBM_BRANCH)      $(MOZ_TOP)/dbm
     -cvs -q co $(CVS_BRANCH)      ClientSourceProductWin
     -cvs -q co $(MOZ_JAVAVER)     JavaStubWin
 
@@ -115,7 +125,7 @@ build_all:              build_ldap  \
 			build_client
 build_dist:
     @echo +++ client.mak: building dist
-    cd $(MOZ_SRC)\ns
+    cd $(MOZ_SRC)\$(MOZ_TOP)
     $(NMAKE) -f makefile.win
 
 
@@ -124,7 +134,7 @@ build_ldap:
 !else
 build_ldap:
     @echo +++ client.mak: building ldap
-    cd $(MOZ_SRC)\ns\netsite\ldap\libraries\msdos\winsock
+    cd $(MOZ_SRC)\$(MOZ_TOP)\netsite\ldap\libraries\msdos\winsock
     $(NMAKE) -f nsldap.mak DEPEND=1
     $(NMAKE) -f nsldap.mak 
     $(NMAKE) -f nsldap.mak EXPORT=1
@@ -133,7 +143,7 @@ build_ldap:
 
 build_client:
     @echo +++ client.mak: building client
-    cd $(MOZ_SRC)\ns\cmd\winfe\mkfiles32
+    cd $(MOZ_SRC)\$(MOZ_TOP)\cmd\winfe\mkfiles32
 !if "$(MOZ_BITS)" == "16"
     $(NMAKE) -f mozilla.mak exports
 !endif
@@ -145,12 +155,12 @@ build_client:
 # remove all source files from the tree and print a report of what was missed
 #
 clobber_all:
-    cd $(MOZ_SRC)\ns
+    cd $(MOZ_SRC)\$(MOZ_TOP)
     $(NMAKE) -f makefile.win clobber_all
-    cd $(MOZ_SRC)\ns\cmd\winfe\mkfiles32
+    cd $(MOZ_SRC)\$(MOZ_TOP)\cmd\winfe\mkfiles32
     $(NMAKE) -f mozilla.mak clobber_all
 !if !defined(MOZ_MEDIUM)
-    cd $(MOZ_SRC)\ns\netsite\ldap\libraries\msdos\winsock
+    cd $(MOZ_SRC)\$(MOZ_TOP)\netsite\ldap\libraries\msdos\winsock
     $(NMAKE) -f nsldap.mak clobber_all
 !endif
 
@@ -160,8 +170,8 @@ depend:
 
 quick:
     @cd $(MOZ_SRC)\.
-    @cvs -q co ns/quickup
-    @cd $(MOZ_SRC)\ns\quickup
+    @cvs -q co $(MOZ_TOP)/quickup
+    @cd $(MOZ_SRC)\$(MOZ_TOP)\quickup
     @$(MOZ_TOOLS)\perl5\perl doupdate.pl
 
 #//------------------------------------------------------------------------
@@ -181,9 +191,9 @@ quick:
 !if [copy $(MAKEDIR)\client.mak $(MAKEDIR)\xyzzy.tmp > NUL] == 0
 !endif
 
-!if !EXIST( $(MOZ_SRC)\ns\xyzzy.tmp )
+!if !EXIST( $(MOZ_SRC)\$(MOZ_TOP)\xyzzy.tmp )
 ERR_MESSAGE=$(ERR_MESSAGE)^
-MOZ_SRC isn't set correctly: [$(MOZ_SRC)\ns]!=[$(MAKEDIR)]
+MOZ_SRC isn't set correctly: [$(MOZ_SRC)\$(MOZ_TOP)]!=[$(MAKEDIR)]
 !endif
 
 !if [del $(MAKEDIR)\xyzzy.tmp]
@@ -235,7 +245,7 @@ nmake -f client.mak [MOZ_BRANCH=<cvs_branch_name>] ^
 Environment variables:^
 ^
 MOZ_BITS    set to either 32 or 16 ^
-MOZ_SRC     set to the directory above ns or "$(MAKEDIR)\.."^
+MOZ_SRC     set to the directory above $(MOZ_TOP) or "$(MAKEDIR)\.."^
 MOZ_TOOLS   set to the directory containing the java compiler see ^
 		http://warp/tools/nt^
 JAVA_HOME   set to the same thing as MOZ_TOOLS^

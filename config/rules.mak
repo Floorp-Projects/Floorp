@@ -58,13 +58,13 @@ JRI_GEN_DIR=_jri
 MANIFEST_LEVEL=MACROS
 !IF EXIST(manifest.mn) && !defined(IGNORE_MANIFEST)
 !IF "$(WINOS)" == "WIN95"
-!IF [$(MOZ_SRC)\ns\config\mantomak.exe manifest.mn manifest.mnw] == 0 
+!IF [$(DEPTH)\config\mantomak.exe manifest.mn manifest.mnw] == 0 
 !INCLUDE <manifest.mnw>
 !ELSE
 !ERROR ERROR:  Unable to generate manifest.mnw from manifest.mn
 !ENDIF
 !ELSE
-!IF ["$(MOZ_SRC)\ns\config\mantomak.exe manifest.mn manifest.mnw"] == 0 
+!IF ["$(DEPTH)\config\mantomak.exe manifest.mn manifest.mnw"] == 0 
 !INCLUDE <manifest.mnw>
 !ELSE
 !ERROR ERROR:  Unable to generate manifest.mnw from manifest.mn
@@ -115,7 +115,7 @@ TARGETS=$(PROGRAM) $(LIBRARY) $(DLL)
 !endif
 
 !if "$(WINOS)" == "WIN95"
-W95MAKE=$(MOZ_SRC)\ns\config\w95make.exe
+W95MAKE=$(DEPTH)\config\w95make.exe
 W32OBJS = $(OBJS:.obj=.obj, )
 W32LOBJS = $(OBJS: .= +-.)
 !endif
@@ -253,7 +253,7 @@ $(JDIRS)::
     @echo $(JAVAC_PROG) $(JAVAC_FLAGS) > $(TMPDIR)\javac.cfg
     -@$(DEPTH)\config\buildpkg $(TMPDIR)\javac.cfg $@ 
     @$(RM) $(TMPDIR)\javac.cfg
-#    @$(DEPTH)\config\buildpkg $@ $(MOZ_SRC)\ns\dist\classes
+#    @$(DEPTH)\config\buildpkg $@ $(DEPTH)\dist\classes
 
 !else
 
@@ -261,9 +261,9 @@ $(JDIRS)::
 $(JDIRS)::
     @echo +++ make: building package $@
 !if "$(WINOS)" == "WIN95"
-    -@$(MKDIR) $(MOZ_SRC)\ns\dist\classes\$(@:/=\)
+    -@$(MKDIR) $(DEPTH)\dist\classes\$(@:/=\)
 !else
-    -@$(MKDIR) $(MOZ_SRC)\ns\dist\classes\$@ 2> NUL
+    -@$(MKDIR) $(DEPTH)\dist\classes\$@ 2> NUL
 !endif
     $(MOZ_TOOLS)\bin\sj -classpath $(JAVA_DESTPATH);$(JAVA_SOURCEPATH) \
             -d $(JAVA_DESTPATH) $(JAVAC_OPTIMIZER) $@\*.java
@@ -487,7 +487,7 @@ JSRCS_DEPS = $(JAVA_DESTPATH) $(JAVA_DESTPATH)\$(PACKAGE) $(TMPDIR)
 
 export:: $(JSRCS_DEPS)
     @echo +++ make: building package: $(PACKAGE)
-	$(MOZ_TOOLS)\perl5\perl.exe $(MOZ_SRC)\ns\config\outofdate.pl \
+	$(MOZ_TOOLS)\perl5\perl.exe $(DEPTH)\config\outofdate.pl \
 	-d $(JAVA_DESTPATH)\$(PACKAGE) $(JSRCS) >> $(TMPDIR)\javac.cfg
 	-$(JAVAC_PROG) -argfile $(TMPDIR)\javac.cfg
 	@$(RM) $(TMPDIR)\javac.cfg
@@ -498,7 +498,7 @@ export:: $(JSRC_DEPS)
     @echo +++ make: building package: $(PACKAGE)	
 	@echo -d $(JAVA_DESTPATH) $(JAVAC_OPTIMIZER) \
 	   -classpath $(JAVA_DESTPATH);$(JAVA_SOURCEPATH) > $(TMPDIR)\javac.cfg
-	@$(MOZ_TOOLS)\perl5\perl $(MOZ_SRC)\ns\config\sj.pl \
+	@$(MOZ_TOOLS)\perl5\perl $(DEPTH)\config\sj.pl \
 	 $(JAVA_DESTPATH)\$(PACKAGE)\ $(TMPDIR)\javac.cfg <<
 	$(JSRCS)
 <<
