@@ -22,7 +22,7 @@
 
 class nsDialogParamBlock: public nsIDialogParamBlock
 {
- 	enum {kNumInts = 8, kNumStrings =12 };
+ 	enum {kNumInts = 8, kNumStrings =16 };
 public: 	
 		nsDialogParamBlock();
 	virtual ~nsDialogParamBlock();

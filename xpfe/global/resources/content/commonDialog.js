@@ -1,20 +1,56 @@
 function commonDialogOnLoad()
 {
 	dump("commonDialogOnLoad \n");
-	doSetOKCancel( commonDialogOnOK, commonDialogOnCancel );
+	doSetOKCancel( commonDialogOnOK, commonDialogOnCancel, commonDialogOnButton2, commonDialogOnButton3 );
 	
 	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
 	if( !param )
 		dump( " error getting param block interface\n" );
 	
-	var msg = param.GetString( 0 );
+	var messageText = param.GetString( 0 );
 //	dump("message: "+ msg +"\n");
-	SetElementText("info.txt", msg ); 
-	
-	msg = param.GetString( 3 );
+	//SetElementText("info.txt", msg ); 
+	{
+		 var messageFragment;
+
+    	// Let the caller use "\n" to cause breaks
+    	// Translate these into <br> tags
+		 var messageParent = (document.getElementById("info.txt"));
+	   	 done = false;
+	   	 while (!done) {
+	      breakIndex =   messageText.indexOf('\n');
+	      if (breakIndex == 0) {
+	        // Ignore break at the first character
+	        messageText = messageText.slice(1);
+	        dump("Found break at begining\n");
+	        messageFragment = "";
+	      } else if (breakIndex > 0) {
+	        // The fragment up to the break
+	        messageFragment = messageText.slice(0, breakIndex);
+
+	        // Chop off fragment we just found from remaining string
+	        messageText = messageText.slice(breakIndex+1);
+	      } else {
+	        // "\n" not found. We're done
+	        done = true;
+	        messageFragment = messageText;
+	      }
+	      messageNode = document.createTextNode(messageFragment);
+	      if (messageNode)
+	        messageParent.appendChild(messageNode);
+
+	      // This is needed when the default namespace of the document is XUL
+	      breakNode = document.createElementWithNameSpace("BR", "http://www.w3.org/TR/REC-html40");
+	      if (breakNode)
+	        messageParent.appendChild(breakNode);
+	    }
+	}
+	var msg = param.GetString( 3 );
 //	dump("title message: "+ msg +"\n");
 	SetElementText("info.header", msg ); 
 	
+	var windowTitle = param.GetString( 12 );
+	window.title = windowTitle;
 	
 	var iconURL = param.GetString(2 ); 
 	var element = document.getElementById("info.icon");
@@ -44,17 +80,41 @@ function commonDialogOnLoad()
 	var numButtons = param.GetInt( 2 );
 	if ( numButtons == 1 )
 	{
-		var element = document.getElementById("cancel");
-		if ( element )
-		{
-//			dump( "hide button \n" );
-			element.setAttribute("style", "display:none;"  );
-		}
-		else
-		{
-//			dump( "couldn't find button \n");	
-		}
+		
 	}
+	
+	switch ( numButtons )
+	{
+		case 4:
+			{
+				var button = document.getElementById("Button3");
+				button.setAttribute("style", "display:inline;");
+				var buttonText = param.GetString( 11 );
+				button.setAttribute( "value",buttonText);
+			}
+		case 3:
+			{
+				var button = document.getElementById("Button2");
+				button.setAttribute("style", "display:inline;");
+				var buttonText = param.GetString( 10 );
+				button.setAttribute( "value",buttonText);
+			}
+			break;
+		case 1:
+			var element = document.getElementById("cancel");
+			if ( element )
+			{
+	//			dump( "hide button \n" );
+				element.setAttribute("style", "display:none;"  );
+			}
+			else
+			{
+	//			dump( "couldn't find button \n");	
+			}
+			break;	
+	}
+	
+	
 	
 	// Set the Checkbox
 //	dump(" set checkbox \n");
@@ -173,5 +233,17 @@ function commonDialogOnCancel()
 {
 //	dump("commonDialogOnCancel \n");
 	param.SetInt(0, 1 );
+	return true;
+}
+
+function commonDialogOnButton2()
+{
+	param.SetInt(0, 2 );
+	return true;
+}
+
+function commonDialogOnButton3()
+{
+	param.SetInt(0, 3 );
 	return true;
 }
