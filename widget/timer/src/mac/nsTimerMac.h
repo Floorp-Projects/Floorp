@@ -101,9 +101,10 @@ class nsTimerImpl : public nsITimer
     PRUint32            mPriority;
     PRUint32            mType;
     PRUint32            mFireTime;  // Timer should fire when TickCount >= this number
-    nsTimerImpl*          mPrev; 
-    nsTimerImpl*          mNext;  
+    nsTimerImpl*        mPrev; 
+    nsTimerImpl*        mNext;  
 
+    PRPackedBool        mTimerSpent;    // the timer is done, and was released
 #if DEBUG
     UInt32		          mSignature;
 #endif

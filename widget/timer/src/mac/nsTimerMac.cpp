@@ -49,6 +49,7 @@ nsTimerImpl::nsTimerImpl()
 ,  mFireTime(0)
 ,  mPrev(nsnull)
 ,  mNext(nsnull)
+,  mTimerSpent(PR_FALSE)
 #if DEBUG
 ,  mSignature(eGoodTimerSignature)
 #endif
