@@ -31,7 +31,6 @@ var dialog;
 // dialog initialization code
 function Startup()
 {
-  dump("HLine Properties startup...\n");
   if (!InitEditorShell())
     return;
 
@@ -42,7 +41,6 @@ function Startup()
 
   if (!hLineElement) {
     // We should never be here if not editing an existing HLine
-    dump("HLine is not selected! Shouldn't be here!\n");
     window.close();
     return;
   }
@@ -79,23 +77,21 @@ function InitDialog()
   // Just to be confusing, "size" is used instead of height
   var height = globalElement.getAttribute("size");
   if(!height) {
-    dump("NO SIZE FOUND FOR HLINE");
     height = 2; //Default value
   }
 
   // We will use "height" here and in UI
   dialog.heightInput.value = height;
+
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of menulist (adds pixel and percent menuitems elements)
   dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
+
   align = globalElement.getAttribute("align").toLowerCase();
-  if (align == "center") {
-    dialog.centerAlign.checked = true;
-  } else if (align == "right") {
-    dialog.rightAlign.checked = true;
-  } else {
-    dialog.leftAlign.checked = true;
-  }
+
+  dialog.centerAlign.checked = (align == "center" || !align);
+  dialog.rightAlign.checked  = (align == "right");
+  dialog.leftAlign.checked   = (align == "left");
 
   // This is tricky! Since the "noshade" attribute doesn't have a value,
   //  we can't use getAttribute to figure out if it's set!
@@ -104,7 +100,7 @@ function InitDialog()
     dialog.shading.checked = false;
   else
     dialog.shading.checked = true;
-dump("Done with INIT\n");
+
 }
 
 function onSaveDefault()
@@ -114,7 +110,6 @@ function onSaveDefault()
   if (ValidateData()) {
     var prefs = GetPrefs();
     if (prefs) {
-      dump("Setting HLine prefs\n");
 
       var alignInt;
       if (align == "left") {
@@ -175,11 +170,15 @@ function ValidateData()
 
   align = "left";
   if (dialog.centerAlign.checked) {
-    align = "center";
+    // Don't write out default attribute
+    align = "";
   } else if (dialog.rightAlign.checked) {
     align = "right";
   }
-  globalElement.setAttribute("align", align);
+  if (align)
+    globalElement.setAttribute("align", align);
+  else
+    globalElement.removeAttribute("align");
 
   if (dialog.shading.checked) {
     shading = true;
