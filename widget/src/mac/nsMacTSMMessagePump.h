@@ -38,9 +38,9 @@ public:
 	~nsMacTSMMessagePump();
 
 private:
-	static OSErr PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon);
-	static OSErr OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon);
-	static OSErr UpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon);
+	static pascal OSErr PositionToOffsetHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon);
+	static pascal OSErr OffsetToPositionHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon);
+	static pascal OSErr UpdateHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, UInt32 handlerRefcon);
 	static AEEventHandlerUPP mPos2OffsetUPP;
 	static AEEventHandlerUPP mOffset2PosUPP;
 	static AEEventHandlerUPP mUpdateUPP;
