@@ -169,6 +169,9 @@ nsSelectControlFrame::GetVerticalInsidePadding(float aPixToTwip,
 #ifdef XP_UNIX
   return NSIntPixelsToTwips(1, aPixToTwip); // XXX this is probably wrong
 #endif
+#ifdef XP_MAC
+  return (nscoord)NSToIntRound(float(aInnerHeight) * 0.10f);
+#endif
 }
 
 PRInt32 
@@ -188,6 +191,15 @@ nsSelectControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
 #endif
 #ifdef XP_UNIX
   return NSIntPixelsToTwips(7, aPixToTwip); // XXX this is probably wrong
+#endif
+#ifdef XP_MAC
+  nscoord padding = (nscoord)NSToIntRound(float(aCharWidth) * 0.40f);
+  nscoord min = NSIntPixelsToTwips(3, aPixToTwip);
+  if (padding > min) {
+    return padding;
+  } else {
+    return min;
+  }
 #endif
 }
 

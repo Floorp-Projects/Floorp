@@ -151,6 +151,9 @@ nsButtonControlFrame::GetVerticalInsidePadding(float aPixToTwip,
 #ifdef XP_UNIX
   return (nscoord)NSToIntRound((float)aInnerHeight * 0.50f);
 #endif
+#ifdef XP_MAC
+  return (nscoord)NSToIntRound((float)aInnerHeight * 0.50f);
+#endif
 }
 
 nscoord 
@@ -170,6 +173,13 @@ nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   }
 #endif
 #ifdef XP_UNIX
+  if (eCompatibility_NavQuirks == mode) {
+    return (nscoord)NSToIntRound(float(aInnerWidth) * 0.5f);
+  } else {
+    return NSIntPixelsToTwips(20, aPixToTwip);
+  }
+#endif
+#ifdef XP_MAC
   if (eCompatibility_NavQuirks == mode) {
     return (nscoord)NSToIntRound(float(aInnerWidth) * 0.5f);
   } else {
