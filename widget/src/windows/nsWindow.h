@@ -84,12 +84,6 @@ public:
     virtual nsIWidget*      GetParent(void);
     NS_IMETHOD              Show(PRBool bState);
     NS_IMETHOD              IsVisible(PRBool & aState);
-
-
-    NS_IMETHOD              Minimize(void);
-    NS_IMETHOD              Maximize(void);
-    NS_IMETHOD              Restore(void);
-
     HWND                    mBorderlessParent;
 
     NS_IMETHOD              CaptureMouse(PRBool aCapture);
