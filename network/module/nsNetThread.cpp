@@ -790,7 +790,7 @@ NS_IMETHODIMP
 nsStreamListenerProxy::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
                                        PRUint32 aLength)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (PR_GetCurrentThread() == gNetlibThread) {
     OnDataAvailableProxyEvent* ev;
@@ -808,7 +808,7 @@ nsStreamListenerProxy::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream,
       }
     }
   } else {
-    mRealListener->OnDataAvailable(aURL, aIStream, aLength);
+    rv = mRealListener->OnDataAvailable(aURL, aIStream, aLength);
   }
   return rv;
 }
