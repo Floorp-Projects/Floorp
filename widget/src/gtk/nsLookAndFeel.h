@@ -55,11 +55,17 @@ protected:
 
   // Cached colors, we have to create a dummy widget to actually
   // get the style
-  static PRBool sHaveInfoColors;
+  static PRBool sColorsInitialized;
   static nscolor sInfoBackground;
   static nscolor sInfoText;
+  static nscolor sMenuBackground;
+  static nscolor sMenuText;
+  static nscolor sButtonBackground;
+  static nscolor sButtonText;
+  static nscolor sButtonOuterLightBorder;
+  static nscolor sButtonInnerDarkBorder;
 
-  static void GetInfoColors();
+  static void InitColors();
 };
 
 #endif
