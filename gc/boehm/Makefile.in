@@ -81,6 +81,7 @@ CSRCS= allchblk.c \
 		stubborn.c \
 		typd_mlc.c \
 		generic_threads.c \
+		typeinfo.cpp \
 		$(NULL)
 
 LCPPSRCS = gc_cpp.cc
