@@ -203,7 +203,6 @@
                         break;
 
                     case 'stopLookup':
-            						me.privatefunc.closePopupMenu(me);
                         me.autoCompleteSession.onStopLookup();
                         break;
 
@@ -308,7 +307,10 @@
 				}
 
 				if (me.disableAutocomplete == "true" || me.privatefunc.imeInProgress(me))
+				{
+          me.privatefunc.closePopupMenu(me);
 					return;
+				}
 
 				var popup = document.getAnonymousNodes(me)[0].childNodes[1].firstChild;
  				if (popup && me.menuOpen != "true")
@@ -323,6 +325,7 @@
 						return;
 
 					case 13 /*vk_return*/:
+						me.privatefunc.closePopupMenu(me);
 						me.privatefunc.finishAutoComplete(me, event);
 						return;
 
@@ -355,6 +358,7 @@
 						break;
 
 					default:
+						me.privatefunc.closePopupMenu(me);
 						/*We want to autocomplete only if the user is editing at the end of the text*/
 						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
 						if (inputElement.selectionEnd >= inputElement.value.length)
