@@ -23,7 +23,9 @@
 #include "nsVoidArray.h"
 #include "nsFont.h"
 #include "nsCRT.h"
-class nsIImageGroup;
+#include "nsCOMPtr.h"
+#include "nsIImageGroup.h"
+
 
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext {
@@ -99,23 +101,29 @@ protected:
   nsPresContext();
   virtual ~nsPresContext();
 
-  nsIPresShell*         mShell;
-  nsIPref*              mPrefs;
+  // IMPORTANT: The ownership implicit in the following member variables has been 
+  // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
+  // pointers for weak (ie, non owning) references. If you add any members to this
+  // class, please make the ownership explicit (pinkerton, scc).
+  
+  nsIPresShell*         mShell;         // [WEAK]
+  nsCOMPtr<nsIPref>     mPrefs;
   nsRect                mVisibleArea;
-  nsIDeviceContext*     mDeviceContext;
-  nsIImageGroup*        mImageGroup;
-  nsILinkHandler*       mLinkHandler;
-  nsISupports*          mContainer;
+  nsCOMPtr<nsIDeviceContext>  mDeviceContext; // could be weak, but better safe than sorry. Cannot reintroduce cycles
+                                              // since there is no dependency from gfx back to layout.
+  nsCOMPtr<nsIImageGroup> mImageGroup;
+  nsILinkHandler*       mLinkHandler;   // [WEAK]
+  nsISupports*          mContainer;     // [WEAK]
   nsFont                mDefaultFont;
   nsFont                mDefaultFixedFont;
   PRInt32               mFontScaler;
   nscolor               mDefaultColor;
   nscolor               mDefaultBackgroundColor;
   nsVoidArray           mImageLoaders;
-  nsIEventStateManager* mEventManager;
+  nsCOMPtr<nsIEventStateManager> mEventManager;
   nsCompatibility       mCompatibilityMode;
   nsWidgetRendering     mWidgetRenderingMode;
-  nsIURL*               mBaseURL;
+  nsCOMPtr<nsIURL>      mBaseURL;
   PRBool                mStopped;
 
 #ifdef DEBUG

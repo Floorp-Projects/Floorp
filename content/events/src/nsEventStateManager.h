@@ -76,10 +76,9 @@ protected:
   nsIContent* mHoverContent;
   nsIContent* mCurrentFocus;
   PRInt32 mCurrentTabIndex;
-
-  //Not refcnted
-  nsIPresContext* mPresContext;
-  nsIDocument* mDocument;
+ 
+  nsIPresContext* mPresContext;      // Not refcnted
+  nsIDocument* mDocument;            // [OWNER], but doesn't need to be.
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);
