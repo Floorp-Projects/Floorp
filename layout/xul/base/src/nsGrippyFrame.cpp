@@ -90,26 +90,26 @@ nsGrippyFrame::nsGrippyFrame(nsIPresShell* aShell):nsButtonBoxFrame(aShell),mCol
 void
 nsGrippyFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent) 
 {
-    nsButtonBoxFrame::MouseClicked(aPresContext, aEvent);
-
+    // update the splitter first, in case someone's listening on the command event
     nsIFrame* splitter;
     nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::splitter, this, splitter);
-    if (splitter == nsnull)
-       return;
+    if (splitter) {
 
-    // get the splitters content node
-    nsIContent* content = splitter->GetContent();
+        // get the splitters content node
+        nsIContent* content = splitter->GetContent();
  
-    nsString a(NS_LITERAL_STRING("collapsed"));
-    nsString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::state, value))
-    {
-     if (value.Equals(NS_LITERAL_STRING("collapsed")))
-       a.Assign(NS_LITERAL_STRING("open"));
+        nsAutoString newState(NS_LITERAL_STRING("collapsed"));
+        nsAutoString oldState;
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::state, oldState))
+        {
+            if (oldState.Equals(newState))
+                newState.Assign(NS_LITERAL_STRING("open"));
+        }
+
+        content->SetAttr(kNameSpaceID_None, nsXULAtoms::state, newState, PR_TRUE);
     }
 
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::state, a, PR_TRUE);
-
+    nsButtonBoxFrame::MouseClicked(aPresContext, aEvent);
 }
 
 /*
