@@ -43,6 +43,9 @@ package org.mozilla.javascript;
  */
 public class EcmaError extends RhinoException
 {
+    private String errorName;
+    private String errorMessage;
+
     /**
      * Create an exception with the specified detail message.
      *
@@ -93,7 +96,8 @@ public class EcmaError extends RhinoException
      *
      * @return the name of the error.
      */
-    public String getName() {
+    public String getName()
+    {
         return errorName;
     }
 
@@ -104,26 +108,30 @@ public class EcmaError extends RhinoException
      *
      * @return an implemenation-defined string describing the error.
      */
-    public String getErrorMessage() {
+    public String getErrorMessage()
+    {
         return errorMessage;
     }
 
     /**
      * @deprecated Use {@link RhinoException#sourceName()} from the super class.
      */
-    public String getSourceName() {
+    public String getSourceName()
+    {
         return sourceName();
     }
 
     /**
      * @deprecated Use {@link RhinoException#lineNumber()} from the super class.
      */
-    public int getLineNumber() {
+    public int getLineNumber()
+    {
         return lineNumber();
     }
 
     /**
-     * @deprecated Use {@link RhinoException#columnNumber()} from the super class.
+     * @deprecated
+     * Use {@link RhinoException#columnNumber()} from the super class.
      */
     public int getColumnNumber() {
         return columnNumber();
@@ -137,14 +145,11 @@ public class EcmaError extends RhinoException
     }
 
     /**
-     * @deprecated Always returns result of {@link Context#getUndefinedValue()}.
-     *
+     * @deprecated
+     * Always returns <b>null</b>.
      */
     public Scriptable getErrorObject()
     {
-        return Undefined.instance;
+        return null;
     }
-
-    private String errorName;
-    private String errorMessage;
 }
