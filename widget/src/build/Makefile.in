@@ -49,7 +49,6 @@ endif
 # nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
 
 CPPSRCS_motif	:= \
-	Motifdlldeps.cpp \
 	nsMotifWidgetFactory.cpp
 
 CPPSRCS := \
