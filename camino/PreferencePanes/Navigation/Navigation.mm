@@ -349,8 +349,8 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
 
   // add default browser in case it hasn't been already
   NSURL *currSetURL = nil;
-  _LSCopyDefaultSchemeHandlerURL(@"http", &currSetURL);
-  [browsersSet addObject:[OrgMozillaChimeraPreferenceNavigation bundleIDForURL:currSetURL]];
+  if (_LSCopyDefaultSchemeHandlerURL(@"http", &currSetURL) == noErr)
+    [browsersSet addObject:[OrgMozillaChimeraPreferenceNavigation bundleIDForURL:currSetURL]];
   [currSetURL release];
   
   NSMutableArray* browsers = [[browsersSet allObjects] mutableCopy];
