@@ -63,7 +63,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension);
     NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension);
     NS_IMETHOD GetMIMEType(nsACString & aMIMEType);
-    NS_IMETHOD SetMIMEType(const nsACString & aMIMEType);
     NS_IMETHOD GetDescription(nsAString & aDescription);
     NS_IMETHOD SetDescription(const nsAString & aDescription);
     NS_IMETHOD GetMacType(PRUint32 *aMacType);
@@ -84,7 +83,10 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
 
     // nsMIMEInfoBase methods
     nsMIMEInfoBase(const char *aMIMEType = "") NS_HIDDEN;
+    nsMIMEInfoBase(const nsACString& aMIMEType) NS_HIDDEN;
     virtual ~nsMIMEInfoBase();        // must be virtual, as the the base class's Release should call the subclass's destructor
+
+    void SetMIMEType(const nsACString & aMIMEType) { mMIMEType = aMIMEType; }
 
     void SetDefaultDescription(const nsString& aDesc) { mDefaultAppDescription = aDesc; }
 
@@ -143,6 +145,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
 class nsMIMEInfoImpl : public nsMIMEInfoBase {
   public:
     nsMIMEInfoImpl(const char *aMIMEType = "") : nsMIMEInfoBase(aMIMEType) {}
+    nsMIMEInfoImpl(const nsACString& aMIMEType) : nsMIMEInfoBase(aMIMEType) {}
     virtual ~nsMIMEInfoImpl() {}
 
     // nsIMIMEInfo methods

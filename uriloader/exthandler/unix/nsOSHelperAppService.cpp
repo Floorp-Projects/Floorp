@@ -1418,7 +1418,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
   }
 
   nsCAutoString mimeType(asciiMajorType + NS_LITERAL_CSTRING("/") + asciiMinorType);
-  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(mimeType.get());
+  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(mimeType);
   if (!mimeInfo)
     return nsnull;
   NS_ADDREF(mimeInfo);
@@ -1565,7 +1565,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
     return nsnull;
   }
   
-  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(aMIMEType.get());
+  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(aMIMEType);
   if (!mimeInfo)
     return nsnull;
   NS_ADDREF(mimeInfo);
@@ -1621,7 +1621,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
     // If we got nothing, make a new mimeinfo
     if (!retval) {
       *aFound = PR_FALSE;
-      retval = new nsMIMEInfoImpl(PromiseFlatCString(aType).get());
+      retval = new nsMIMEInfoImpl(aType);
       if (retval) {
         NS_ADDREF(retval);
         if (!aFileExt.IsEmpty())

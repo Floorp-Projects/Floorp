@@ -653,7 +653,7 @@ nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIM
   return handler;
 }
 
-nsresult nsExternalHelperAppService::FillTopLevelProperties(const nsCSubstring& aContentType, nsIRDFResource * aContentTypeNodeResource, 
+nsresult nsExternalHelperAppService::FillTopLevelProperties(nsIRDFResource * aContentTypeNodeResource, 
                                                             nsIRDFService * aRDFService, nsIMIMEInfo * aMIMEInfo)
 {
   nsresult rv = NS_OK;
@@ -664,9 +664,6 @@ nsresult nsExternalHelperAppService::FillTopLevelProperties(const nsCSubstring& 
   rv = InitDataSource();
   if (NS_FAILED(rv)) return NS_OK;
 
-  // set the mime type
-  aMIMEInfo->SetMIMEType(aContentType);
-  
   // set the pretty name description, if nonempty
   FillLiteralValueFromTarget(aContentTypeNodeResource,kNC_Description, &stringValue);
   if (stringValue && *stringValue)
@@ -829,7 +826,7 @@ PRBool nsExternalHelperAppService::MIMETypeIsInDataSource(const char * aContentT
     
     // Test that there's a #value arc from the mimetype resource to the mimetype literal string.
     nsCOMPtr<nsIRDFLiteral> mimeLiteral;
-    NS_ConvertUTF8toUCS2 mimeType(contentType);
+    NS_ConvertUTF8toUTF16 mimeType(contentType);
     rv = rdf->GetLiteral( mimeType.get(), getter_AddRefs( mimeLiteral ) );
     if (NS_FAILED(rv)) return PR_FALSE;
     
@@ -870,7 +867,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACStri
   // we need a way to determine if this content type resource is really in the graph or not...
   // ...Test that there's a #value arc from the mimetype resource to the mimetype literal string.
   nsCOMPtr<nsIRDFLiteral> mimeLiteral;
-  NS_ConvertUTF8toUCS2 mimeType(contentType);
+  NS_ConvertUTF8toUTF16 mimeType(contentType);
   rv = rdf->GetLiteral( mimeType.get(), getter_AddRefs( mimeLiteral ) );
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -880,7 +877,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACStri
   if (NS_SUCCEEDED(rv) && exists)
   {
      // fill the mimeinfo in based on the values from the data source
-     rv = FillTopLevelProperties(contentType, contentTypeNodeResource, rdf, aMIMEInfo);
+     rv = FillTopLevelProperties(contentTypeNodeResource, rdf, aMIMEInfo);
      NS_ENSURE_SUCCESS(rv, rv);
      rv = FillContentHandlerProperties(contentType.get(), contentTypeNodeResource, rdf, aMIMEInfo);
 
@@ -895,24 +892,34 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromDS(const nsACStri
 
 nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo)
 {
-  NS_ENSURE_ARG_POINTER(aMIMEInfo);
+  nsCAutoString type;
+  PRBool found = GetTypeFromDS(aFileExtension, type);
+  if (!found)
+    return NS_ERROR_NOT_AVAILABLE;
 
+  return GetMIMEInfoForMimeTypeFromDS(type, aMIMEInfo);
+}
+
+PRBool nsExternalHelperAppService::GetTypeFromDS(const nsACString& aExtension,
+                                                 nsACString& aType)
+{
   nsresult rv = InitDataSource();
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return PR_FALSE;
 
   // Can't do anything without a datasource
   if (!mOverRideDataSource)
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   // Get the RDF service.
   nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-  NS_ConvertUTF8toUCS2 extension(aFileExtension);
+  NS_ConvertUTF8toUTF16 extension(aExtension);
   ToLowerCase(extension);
   nsCOMPtr<nsIRDFLiteral> extensionLiteral;
-  rv = rdf->GetLiteral(extension.get(), getter_AddRefs( extensionLiteral));
-  NS_ENSURE_SUCCESS(rv, rv);
+  rv = rdf->GetLiteral(extension.get(), getter_AddRefs(extensionLiteral));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
   rv = mOverRideDataSource->GetSource(kNC_FileExtensions,
@@ -924,19 +931,12 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const nsACStr
   {
     const PRUnichar* contentType = nsnull;
     rv = FillLiteralValueFromTarget(contentTypeNodeResource, kNC_Value, &contentType);
-    if (contentType)
-      contentTypeStr.AssignWithConversion(contentType);
-    if (NS_SUCCEEDED(rv))
-    {
-      // fill the mimeinfo based on the values from the data source
-      rv = FillTopLevelProperties(contentTypeStr, contentTypeNodeResource, rdf, aMIMEInfo);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = FillContentHandlerProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, aMIMEInfo);
+    if (contentType) {
+      LossyCopyUTF16toASCII(contentType, aType);
+      return PR_TRUE;
     }
   }  // if we have a node in the graph for this extension
-  else if (!contentTypeNodeResource)
-    rv = NS_ERROR_NOT_AVAILABLE;
-  return rv;
+  return PR_FALSE;
 }
 
 nsresult nsExternalHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAppPath,
@@ -2255,22 +2255,27 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
 
   *_retval = nsnull;
 
+  // OK... we need a type. Get one.
+  nsCAutoString typeToUse(aMIMEType);
+  if (typeToUse.IsEmpty()) {
+    nsresult rv = GetTypeFromExtension(aFileExt, typeToUse);
+    if (NS_FAILED(rv))
+      return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // (1) Ask the OS for a mime info
   PRBool found;
-  *_retval = GetMIMEInfoFromOS(aMIMEType, aFileExt, &found).get();
+  *_retval = GetMIMEInfoFromOS(typeToUse, aFileExt, &found).get();
   LOG(("OS gave back 0x%p - found: %i\n", *_retval, found));
   // If we got no mimeinfo, something went wrong. Probably lack of memory.
   if (!*_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // (2) Now, let's see if we can find something in our datasource
-  nsresult rv = NS_ERROR_FAILURE;
-  if (!aMIMEType.IsEmpty()) {
-    // This will not overwrite the OS information that interests us
-    // (i.e. default application, default app. description)
-    rv = GetMIMEInfoForMimeTypeFromDS(aMIMEType, *_retval);
-    found = found || NS_SUCCEEDED(rv);
-  }
+  // This will not overwrite the OS information that interests us
+  // (i.e. default application, default app. description)
+  nsresult rv = GetMIMEInfoForMimeTypeFromDS(typeToUse, *_retval);
+  found = found || NS_SUCCEEDED(rv);
 
   LOG(("Data source: Via type: retval 0x%08x\n", rv));
 
@@ -2280,33 +2285,27 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
       rv = GetMIMEInfoForExtensionFromDS(aFileExt, *_retval);
       LOG(("Data source: Via ext: retval 0x%08x\n", rv));
       found = found || NS_SUCCEEDED(rv);
-      if (NS_SUCCEEDED(rv) && !aMIMEType.IsEmpty())
-        (*_retval)->SetMIMEType(aMIMEType);
     }
   }
 
   // (3) No match yet. Ask extras.
   if (!found) {
     rv = NS_ERROR_FAILURE;
-    if (!aMIMEType.IsEmpty()) {
 #ifdef XP_WIN
-      /* XXX Gross hack to wallpaper over the most common Win32
-       * extension issues caused by the fix for bug 116938.  See bug
-       * 120327, comment 271 for why this is needed.  Not even sure we
-       * want to remove this once we have fixed all this stuff to work
-       * right; any info we get from extras on this type is pretty much
-       * useless....
-       */
-      if (!aMIMEType.Equals(APPLICATION_OCTET_STREAM, nsCaseInsensitiveCStringComparator()))
+    /* XXX Gross hack to wallpaper over the most common Win32
+     * extension issues caused by the fix for bug 116938.  See bug
+     * 120327, comment 271 for why this is needed.  Not even sure we
+     * want to remove this once we have fixed all this stuff to work
+     * right; any info we get from extras on this type is pretty much
+     * useless....
+     */
+    if (!typeToUse.Equals(APPLICATION_OCTET_STREAM, nsCaseInsensitiveCStringComparator()))
 #endif
-        rv = GetMIMEInfoForMimeTypeFromExtras(aMIMEType, *_retval);
-      LOG(("Searched extras (by type), rv 0x%08X\n", rv));
-    }
+      rv = GetMIMEInfoForMimeTypeFromExtras(typeToUse, *_retval);
+    LOG(("Searched extras (by type), rv 0x%08X\n", rv));
     // If that didn't work out, try file extension from extras
     if (NS_FAILED(rv) && !aFileExt.IsEmpty()) {
       rv = GetMIMEInfoForExtensionFromExtras(aFileExt, *_retval);
-      if (NS_SUCCEEDED(rv) && !aMIMEType.IsEmpty())
-        (*_retval)->SetMIMEType(aMIMEType);
       LOG(("Searched extras (by ext), rv 0x%08X\n", rv));
     }
   }
@@ -2321,29 +2320,30 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
       (*_retval)->SetPrimaryExtension(aFileExt);
   }
 
-  // Verify we have a type.
-  nsCAutoString type;
-  (*_retval)->GetMIMEType(type);
-
 #ifdef PR_LOGGING
   if (LOG_ENABLED()) {
+    nsCAutoString type;
+    (*_retval)->GetMIMEType(type);
+
     nsCAutoString ext;
     (*_retval)->GetPrimaryExtension(ext);
     LOG(("MIME Info Summary: Type '%s', Primary Ext '%s'\n", type.get(), ext.get()));
   }
 #endif
 
-  if (type.IsEmpty()) {
-    NS_RELEASE(*_retval);
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   return NS_OK;
-
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString& aFileExt, nsACString& aContentType) 
 {
+  // OK. We want to try the following sources of mimetype information, in this order:
+  // 1. defaultMimeEntries array
+  // 2. User-set preferences (mimeTypes.rdf)
+  // 3. OS-provided information
+  // 4. our "extras" array
+  // 5. Information from plugins
+  // 6. The "ext-to-type-mapping" category
+
   nsresult rv = NS_OK;
   // First of all, check our default entries
   for (size_t i = 0; i < NS_ARRAY_LENGTH(defaultMimeEntries); i++)
@@ -2354,41 +2354,45 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
     }
   }
 
+  // Check RDF DS
+  PRBool found = GetTypeFromDS(aFileExt, aContentType);
+  if (found)
+    return NS_OK;
+
+  // Ask OS.
+  nsCOMPtr<nsIMIMEInfo> mi = GetMIMEInfoFromOS(EmptyCString(), aFileExt, &found);
+  if (mi && found)
+    return mi->GetMIMEType(aContentType);
+
+  // Check extras array.
+  found = GetTypeFromExtras(aFileExt, aContentType);
+  if (found)
+    return NS_OK;
+
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
-  nsCOMPtr<nsIMIMEInfo> info;
-  rv = GetFromTypeAndExtension(EmptyCString(), aFileExt, getter_AddRefs(info));
-  if (NS_FAILED(rv)) {
-    // Try the plugins
-    const char* mimeType;
-    nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(kPluginManagerCID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      if (pluginHost->IsPluginEnabledForExtension(flatExt.get(), mimeType) == NS_OK)
-      {
-        aContentType = mimeType;
-        rv = NS_OK;
-        return rv;
-      }
-      else 
-      {
-        rv = NS_ERROR_NOT_AVAILABLE;
-      }
+  // Try the plugins
+  const char* mimeType;
+  nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(kPluginManagerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(flatExt.get(), mimeType)))
+    {
+      aContentType = mimeType;
+      return NS_OK;
     }
   }
-  if (NS_SUCCEEDED(rv)) {
-    rv = info->GetMIMEType(aContentType);
+  
+  rv = NS_OK;
+  // Let's see if an extension added something
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
+  if (catMan) {
+    nsXPIDLCString type;
+    rv = catMan->GetCategoryEntry("ext-to-type-mapping", flatExt.get(), getter_Copies(type));
+    aContentType = type;
   }
   else {
-    // Let's see if an extension added something
-    nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
-    if (catMan) {
-      nsXPIDLCString type;
-      rv = catMan->GetCategoryEntry("ext-to-type-mapping", flatExt.get(), getter_Copies(type));
-      aContentType = type;
-    }
-    else {
-      rv = NS_ERROR_NOT_AVAILABLE;
-    }
+    rv = NS_ERROR_NOT_AVAILABLE;
   }
+  
   return rv;
 }
 
@@ -2532,10 +2536,17 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const nsAC
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const nsACString& aExtension, nsIMIMEInfo * aMIMEInfo )
+nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const nsACString& aExtension, nsIMIMEInfo * aMIMEInfo)
 {
-  NS_ENSURE_ARG( aMIMEInfo );
+  nsCAutoString type;
+  PRBool found = GetTypeFromExtras(aExtension, type);
+  if (!found)
+    return NS_ERROR_NOT_AVAILABLE;
+  return GetMIMEInfoForMimeTypeFromExtras(type, aMIMEInfo);
+}
 
+PRBool nsExternalHelperAppService::GetTypeFromExtras(const nsACString& aExtension, nsACString& aMIMEType)
+{
   NS_ASSERTION(!aExtension.IsEmpty(), "Empty aExtension parameter!");
 
   // Look for default entry with matching extension.
@@ -2553,14 +2564,8 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const nsA
           if (Substring(start, iter).Equals(aExtension,
                                             nsCaseInsensitiveCStringComparator()))
           {
-              // Set attributes appropriately.
-              aMIMEInfo->SetMIMEType(nsDependentCString(extraMimeEntries[index].mMimeType));
-              aMIMEInfo->SetFileExtensions(nsDependentCString(extraMimeEntries[index].mFileExtensions));
-              aMIMEInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription));
-              aMIMEInfo->SetMacType(extraMimeEntries[index].mMactype);
-              aMIMEInfo->SetMacCreator(extraMimeEntries[index].mMacCreator);
-
-              return NS_OK;
+              aMIMEType = extraMimeEntries[index].mMimeType;
+              return PR_TRUE;
           }
           if (iter != end) {
             ++iter;
@@ -2569,7 +2574,6 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const nsA
       }
   }
 
-  return NS_ERROR_NOT_AVAILABLE;
+  return PR_FALSE;
 }
-
 

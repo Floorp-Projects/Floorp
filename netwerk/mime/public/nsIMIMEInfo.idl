@@ -95,7 +95,7 @@ interface nsIMIMEInfo : nsISupports {
      * 
      * @return String representing the MIME type.
      */
-    attribute ACString MIMEType;
+    readonly attribute ACString MIMEType;
 
     /**
      * A human readable description of the MIME info.

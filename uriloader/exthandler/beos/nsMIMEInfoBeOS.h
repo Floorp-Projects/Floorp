@@ -42,6 +42,7 @@
 class nsMIMEInfoBeOS : public nsMIMEInfoImpl {
   public:
     nsMIMEInfoBeOS(const char* aType = "") : nsMIMEInfoImpl(aType) {}
+    nsMIMEInfoBeOS(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
     virtual ~nsMIMEInfoBeOS();
 
   protected:

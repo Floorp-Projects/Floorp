@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -22,6 +21,7 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -104,12 +104,13 @@ public:
    * @retval errorcode Loading failed
    * @see mOverRideDataSource
    */
-  nsresult InitDataSource();
+  NS_HIDDEN_(nsresult) InitDataSource();
+
   /**
    * Initializes internal state. Will be called automatically when
    * this service is first instantiated.
    */
-  nsresult Init();
+  NS_HIDDEN_(nsresult) Init();
 
   /**
    * Create an external app handler and binds it with a mime info object which
@@ -124,7 +125,8 @@ public:
    *                       set
    * @param aWindowContext Window context, as passed to DoContent
    */
-  nsExternalAppHandler * CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo,
+  NS_HIDDEN_(nsExternalAppHandler *)
+                         CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo,
                                                   const nsCSubstring& aFileExtension,
                                                   const nsAString& aFileName,
                                                   PRBool aIsAttachment,
@@ -136,17 +138,29 @@ public:
    * over ride information is contained in a in memory data source.
    * @param aMIMEInfo The mime info to fill with the information
    */
-  nsresult GetMIMEInfoForMimeTypeFromDS(const nsACString& aContentType,
-                                        nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) GetMIMEInfoForMimeTypeFromDS(const nsACString& aContentType,
+                                                    nsIMIMEInfo * aMIMEInfo);
   
   /**
    * Given an extension, look up the user override information to see if we
    * have a mime info object representing this extension. The user over ride
-   * information is contained in a in memory data source.
+   * information is contained in an in-memory data source.
+   *
+   * Does not change the MIME Type of the MIME Info.
+   *
    * @param aMIMEInfo The mime info to fill with the information
    */
-  nsresult GetMIMEInfoForExtensionFromDS(const nsACString& aFileExtension,
-                                         nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) GetMIMEInfoForExtensionFromDS(const nsACString& aFileExtension,
+                                                     nsIMIMEInfo * aMIMEInfo);
+
+  /**
+   * Looks up the MIME Type for a given extension in the RDF Datasource.
+   * @param aExtension The extension to look for
+   * @param aType [out] The type, if found
+   * @return PR_TRUE if found, PR_FALSE otherwise
+   */
+  NS_HIDDEN_(PRBool) GetTypeFromDS(const nsACString& aFileExtension,
+                                   nsACString& aType);
 
   /**
    * Given a mimetype and an extension, looks up a mime info from the OS.
@@ -187,7 +201,7 @@ public:
    * Helper routine used to test whether a given mime type is in our
    * mimeTypes.rdf data source
    */
-  PRBool MIMETypeIsInDataSource(const char * aContentType);
+  NS_HIDDEN_(PRBool) MIMETypeIsInDataSource(const char * aContentType);
 
 protected:
   /**
@@ -214,27 +228,27 @@ protected:
   /**
    * Helper routines for digesting the data source and filling in a mime info
    * object for a given content type inside that data source.
+   * The content type of the MIME Info will not be changed.
    */
-  nsresult FillTopLevelProperties(const nsCSubstring& aContentType,
-                                  nsIRDFResource * aContentTypeNodeResource, 
-                                  nsIRDFService * aRDFService,
-                                  nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) FillTopLevelProperties(nsIRDFResource * aContentTypeNodeResource, 
+                                              nsIRDFService * aRDFService,
+                                              nsIMIMEInfo * aMIMEInfo);
   /**
    * @see FillTopLevelProperties
    */
-  nsresult FillContentHandlerProperties(const char * aContentType,
-                                        nsIRDFResource * aContentTypeNodeResource,
-                                        nsIRDFService * aRDFService,
-                                        nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) FillContentHandlerProperties(const char * aContentType,
+                                                    nsIRDFResource * aContentTypeNodeResource,
+                                                    nsIRDFService * aRDFService,
+                                                    nsIMIMEInfo * aMIMEInfo);
 
   /**
    * A small helper function which gets the target for a given source and
    * property. QIs to a literal and returns a CONST ptr to the string value
    * of that target
    */
-  nsresult FillLiteralValueFromTarget(nsIRDFResource * aSource,
-                                      nsIRDFResource * aProperty,
-                                      const PRUnichar ** aLiteralValue);
+  NS_HIDDEN_(nsresult) FillLiteralValueFromTarget(nsIRDFResource * aSource,
+                                                  nsIRDFResource * aProperty,
+                                                  const PRUnichar ** aLiteralValue);
 
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
@@ -244,15 +258,27 @@ protected:
    * @param aContentType The type to search for.
    * @param aMIMEInfo    [inout] The mime info, if found
    */
-  nsresult GetMIMEInfoForMimeTypeFromExtras(const nsACString& aContentType,
-                                            nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) GetMIMEInfoForMimeTypeFromExtras(const nsACString& aContentType,
+                                                        nsIMIMEInfo * aMIMEInfo);
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
    * with a specific extension.
+   *
+   * Does not change the MIME Type of the MIME Info.
+   *
    * @see GetMIMEInfoForMimeTypeFromExtras
    */
-  nsresult GetMIMEInfoForExtensionFromExtras(const nsACString& aExtension,
-                                             nsIMIMEInfo * aMIMEInfo);
+  NS_HIDDEN_(nsresult) GetMIMEInfoForExtensionFromExtras(const nsACString& aExtension,
+                                                         nsIMIMEInfo * aMIMEInfo);
+
+  /**
+   * Searches the "extra" array for a MIME type, and gets its extension.
+   * @param aExtension The extension to search for
+   * @param aMIMEType [out] The found MIME type.
+   * @return PR_TRUE if the extension was found, PR_FALSE otherwise.
+   */
+  NS_HIDDEN_(PRBool) GetTypeFromExtras(const nsACString& aExtension,
+                                       nsACString& aMIMEType);
 
   /**
    * Fixes the file permissions to be correct. Base class has a no-op
@@ -277,7 +303,7 @@ protected:
    * Functions related to the tempory file cleanup service provided by
    * nsExternalHelperAppService
    */
-  nsresult ExpungeTemporaryFiles();
+  NS_HIDDEN_(nsresult) ExpungeTemporaryFiles();
   /**
    * Array for the files that should be deleted
    */

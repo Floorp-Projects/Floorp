@@ -231,8 +231,12 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
     if (!aFileExt.IsEmpty() && (!hasDefault || !miByType)) {
       icService->GetMIMEInfoFromExtension(flatExt.get(), getter_AddRefs(miByExt));
-      if (miByExt && !aMIMEType.IsEmpty())
-        miByExt->SetMIMEType(aMIMEType);
+      if (miByExt && !aMIMEType.IsEmpty()) {
+        // XXX see XXX comment below
+        nsIMIMEInfo* pByExt = miByExt.get();
+        nsMIMEInfoBase* byExt = NS_STATIC_CAST(nsMIMEInfoBase*, pByExt);
+        byExt->SetMIMEType(aMIMEType);
+      }
     }
     PR_LOG(mLog, PR_LOG_DEBUG, ("OS gave us: By Type: 0x%p By Ext: 0x%p type has default: %s\n",
                                 miByType.get(), miByExt.get(), hasDefault ? "true" : "false"));
@@ -266,13 +270,11 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   if (!mimeInfo) {
     *aFound = PR_FALSE;
     PR_LOG(mLog, PR_LOG_DEBUG, ("Creating new mimeinfo\n"));
-    mimeInfo = new nsMIMEInfoMac();
+    mimeInfo = new nsMIMEInfoMac(aMIMEType);
     if (!mimeInfo)
       return nsnull;
     NS_ADDREF(mimeInfo);
 
-    if (!aMIMEType.IsEmpty())
-      mimeInfo->SetMIMEType(aMIMEType);
     if (!aFileExt.IsEmpty())
       mimeInfo->AppendExtension(aFileExt);
   }
