@@ -47,12 +47,12 @@ NSGETMODULE(_name) (nsIComponentManager* aCompMgr,             \
 }
 
 // NSGetModule entry points
+DECL_NSGETMODULE(xpcomObsoleteModule)
 DECL_NSGETMODULE(nsI18nModule)
 DECL_NSGETMODULE(nsUConvModule)
 DECL_NSGETMODULE(xpconnect)
 DECL_NSGETMODULE(necko_core_and_primary_protocols)
 DECL_NSGETMODULE(necko_secondary_protocols)
-DECL_NSGETMODULE(nsURILoaderModule)
 DECL_NSGETMODULE(nsPrefModule)
 DECL_NSGETMODULE(nsCJVMManagerModule)
 DECL_NSGETMODULE(nsSecurityManagerModule)
@@ -62,9 +62,7 @@ DECL_NSGETMODULE(nsParserModule)
 DECL_NSGETMODULE(nsGfxMacModule)
 DECL_NSGETMODULE(nsImageLib2Module)
 DECL_NSGETMODULE(nsPluginModule)
-DECL_NSGETMODULE(javascript__protocol)
 DECL_NSGETMODULE(DOM_components)
-DECL_NSGETMODULE(nsViewModule)
 DECL_NSGETMODULE(nsWidgetMacModule)
 DECL_NSGETMODULE(nsLayoutModule)
 DECL_NSGETMODULE(nsMorkModule)
@@ -74,7 +72,6 @@ DECL_NSGETMODULE(Browser_Embedding_Module)
 DECL_NSGETMODULE(nsEditorModule)
 DECL_NSGETMODULE(nsTransactionManagerModule)
 DECL_NSGETMODULE(nsProfileModule)
-DECL_NSGETMODULE(Session_History_Module)
 DECL_NSGETMODULE(application)
 DECL_NSGETMODULE(nsCookieModule)
 DECL_NSGETMODULE(nsXMLExtrasModule)
@@ -88,12 +85,12 @@ DECL_NSGETMODULE(NSS)
  */
 static nsStaticModuleInfo gStaticModuleInfo[] = {
 #define MODULE(_name) { (#_name), NSGETMODULE(_name) }
+MODULE(xpcomObsoleteModule),
 MODULE(nsI18nModule),
 MODULE(nsUConvModule),
 MODULE(xpconnect),
 MODULE(necko_core_and_primary_protocols),
 MODULE(necko_secondary_protocols),
-MODULE(nsURILoaderModule),
 MODULE(nsPrefModule),
 MODULE(nsCJVMManagerModule),
 MODULE(nsSecurityManagerModule),
@@ -103,9 +100,7 @@ MODULE(nsParserModule),
 MODULE(nsGfxMacModule),
 MODULE(nsImageLib2Module),
 MODULE(nsPluginModule),
-MODULE(javascript__protocol),
 MODULE(DOM_components),
-MODULE(nsViewModule),
 MODULE(nsWidgetMacModule),
 MODULE(nsLayoutModule),
 MODULE(nsMorkModule),
@@ -115,7 +110,6 @@ MODULE(Browser_Embedding_Module),
 MODULE(nsEditorModule),
 MODULE(nsTransactionManagerModule),
 MODULE(nsProfileModule),
-MODULE(Session_History_Module),
 MODULE(application),
 MODULE(nsCookieModule),
 MODULE(nsXMLExtrasModule),
