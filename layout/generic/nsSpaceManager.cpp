@@ -44,7 +44,7 @@ NS_RemoveFrameInfoEntries(PLHashEntry* he, PRIntn i, void* arg)
 // BandList
 
 nsSpaceManager::BandList::BandList()
-  : BandRect(-1, -1, -1, -1, (nsIFrame*)nsnull)
+  : nsSpaceManager::BandRect(-1, -1, -1, -1, (nsIFrame*)nsnull)
 {
   PR_INIT_CLIST(this);
   numFrames = 0;
