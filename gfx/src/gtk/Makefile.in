@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 CSRCS		= nsPrintdGTK.c
 
 CPPSRCS		= \
+		nsAntiAliasedGlyph.cpp \
 		nsDeviceContextGTK.cpp \
 		nsDeviceContextSpecFactoryG.cpp \
 		nsDeviceContextSpecG.cpp \
