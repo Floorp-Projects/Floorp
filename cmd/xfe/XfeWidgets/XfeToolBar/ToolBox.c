@@ -603,7 +603,7 @@ _XFE_WIDGET_CLASS_RECORD(toolbox,ToolBox) =
 
 	/* Composite Part */
 	{
-#if 1
+#if 0
 		_XfeLiberalGeometryManager,				/* geometry_manager		*/
 #else
 		XtInheritGeometryManager,				/* geometry_manager		*/
