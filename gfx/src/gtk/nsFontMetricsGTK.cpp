@@ -110,6 +110,11 @@ struct nsFontCharSetInfo
   PRUint32*              mMap;
   nsIUnicodeEncoder*     mConverter;
   nsIAtom*               mLangGroup;
+  PRBool                 mInitedSizeInfo;
+  PRInt32                mOutlineScaleMin;
+  PRInt32                mBitmapScaleMin;
+  double                 mBitmapOversize;
+  double                 mBitmapUndersize;
 };
 
 struct nsFontCharSetMap
@@ -162,6 +167,7 @@ struct nsFontStretch
   PRUint16           mSizesCount;
 
   char*              mScalable;
+  PRBool             mOutlineScaled;
   nsVoidArray        mScaledFonts;
 };
 
@@ -214,6 +220,11 @@ static nsIAtom* gUnicode = nsnull;
 static nsIAtom* gUserDefined = nsnull;
 static nsIAtom* gUsersLocale = nsnull;
 static nsIAtom* gWesternLocale = nsnull;
+
+static PRInt32 gOutlineScaleMinimum = 6;
+static PRInt32 gBitmapScaleMinimum = 10;
+static double  gBitmapOversize = 1.1;
+static double  gBitmapUndersize = 0.9;
 
 static gint SingleByteConvert(nsFontCharSetInfo* aSelf, XFontStruct* aFont,
   const PRUnichar* aSrcBuf, PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen);
@@ -757,6 +768,8 @@ InitGlobals(void)
   }
 #endif
 
+  nsresult res;
+
   nsServiceManager::GetService(kCharSetManagerCID,
     NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
   if (!gCharSetManager) {
@@ -778,6 +791,31 @@ InitGlobals(void)
   // setup the double byte font special chars glyph map
   for (int i=0; gDoubleByteSpecialChars[i]; i++) {
     SET_REPRESENTABLE(gDoubleByteSpecialCharsMap, gDoubleByteSpecialChars[i]);
+  }
+
+  PRInt32 scale_minimum = 0;
+  gPref->GetIntPref("font.scale.outline.min", &scale_minimum);
+  if (NS_SUCCEEDED(res)) {
+    gOutlineScaleMinimum = scale_minimum;
+    SIZE_FONT_PRINTF(("gOutlineScaleMinimum = %d", gOutlineScaleMinimum));
+  }
+  gPref->GetIntPref("font.scale.bitmap.min", &scale_minimum);
+  if (NS_SUCCEEDED(res)) {
+    gBitmapScaleMinimum = scale_minimum;
+    SIZE_FONT_PRINTF(("gBitmapScaleMinimum = %d", gBitmapScaleMinimum));
+  }
+
+  PRInt32 percent = 0;
+  gPref->GetIntPref("font.scale.bitmap.oversize", &percent);
+  if (percent) {
+    gBitmapOversize = percent/100.0;
+    SIZE_FONT_PRINTF(("gBitmapOversize = %g", gBitmapOversize));
+  }
+  percent = 0;
+  gPref->GetIntPref("font.scale.bitmap.undersize", &percent);
+  if (percent) {
+    gBitmapUndersize = percent/100.0;
+    SIZE_FONT_PRINTF(("gBitmapUndersize = %g", gBitmapUndersize));
   }
 
   gNodes = new nsHashtable();
@@ -2336,22 +2374,47 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     // this is the nearest bitmap font
     font = *s;
     bitmap_size = (*s)->mSize;
-  
-    if (aStretch->mScalable) {
-      double ratio = ((*s)->mSize / ((double) mPixelSize));
+  }
 
-      /*
-       * XXX Maybe revisit this. Upper limit deliberately set high (1.8) in
-       * order to avoid scaling Japanese fonts (ugly).
-       */
-      if ((ratio > 1.8) || (ratio < 0.8)) {
-        use_scaled_font = PR_TRUE;
+  // if we do not have the correct size 
+  // check if we can use a scaled font
+  if ((mPixelSize != bitmap_size) && (aStretch->mScalable)) {
+    // if we have an outline font then use that
+    // if it is allowed to be closer than the bitmap
+    if (aStretch->mOutlineScaled) {
+      scale_size = PR_MAX(mPixelSize, aCharSet->mOutlineScaleMin);
+
+      if (ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size)) {
+        use_scaled_font = 1;
+        SIZE_FONT_PRINTF(("outline font:______ %s\n"
+                    "                    desired=%d, scaled=%d, bitmap=%d", 
+                    aStretch->mScalable, mPixelSize, scale_size,
+                    (bitmap_size=NOT_FOUND_FONT_SIZE?0:bitmap_size)));
       }
-
+    }
+    else {
+      // if we do not have any similarly sized font
+      // use a bitmap scaled font (ugh!)
+      scale_size = PR_MAX(mPixelSize, aCharSet->mBitmapScaleMin);
+      double ratio = (bitmap_size / ((double) mPixelSize));
+      if ((ratio < aCharSet->mBitmapUndersize) 
+          || (ratio > aCharSet->mBitmapOversize)) {
+        if ((ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size))) {
+          use_scaled_font = 1;
+          SIZE_FONT_PRINTF(("bitmap scaled font: %s\n"
+                    "                    desired=%d, scaled=%d, bitmap=%d", 
+                    aStretch->mScalable, mPixelSize, scale_size,
+                    (bitmap_size=NOT_FOUND_FONT_SIZE?0:bitmap_size)));
+        }
+      }
     }
   }
-  else {
-    use_scaled_font = PR_TRUE;
+
+  NS_ASSERTION((bitmap_size<NOT_FOUND_FONT_SIZE)||use_scaled_font, "did not find font size");
+  if (!use_scaled_font) {
+    SIZE_FONT_PRINTF(("bitmap font:_______ %s\n" 
+                      "                    desired=%d, scaled=%d, bitmap=%d", 
+                      aName, mPixelSize, scale_size, bitmap_size));
   }
 
   if (use_scaled_font) {
@@ -2364,7 +2427,7 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     nsFontGTK* p;
     for (i = 0; i < n; i++) {
       p = (nsFontGTK*) aStretch->mScaledFonts.ElementAt(i);
-      if (p->mSize == mPixelSize) {
+      if (p->mSize == scale_size) {
         break;
       }
     }
@@ -2768,6 +2831,55 @@ SetFontLangGroupInfo(nsFontCharSetMap* aCharSetMap)
     if (!langGroup)
       langGroup = "";
     fontLangGroup->mFontLangGroupAtom = NS_NewAtom(langGroup);
+
+    // get the font scaling controls
+    nsFontCharSetInfo *charSetInfo = aCharSetMap->mInfo;
+    if (!charSetInfo->mInitedSizeInfo) {
+      charSetInfo->mInitedSizeInfo = PR_TRUE;
+
+      nsCAutoString name;
+      name.Assign("font.scale.outline.min.");
+      name.Append(langGroup);
+      gPref->GetIntPref(name.get(), &charSetInfo->mOutlineScaleMin);
+      if (charSetInfo->mOutlineScaleMin)
+        SIZE_FONT_PRINTF(("%s = %d", name.get(), 
+                                 charSetInfo->mOutlineScaleMin));
+      else
+        charSetInfo->mOutlineScaleMin = gOutlineScaleMinimum;
+
+      name.Assign("font.scale.bitmap.min.");
+      name.Append(langGroup);
+      gPref->GetIntPref(name.get(), &charSetInfo->mBitmapScaleMin);
+      if (charSetInfo->mBitmapScaleMin)
+        SIZE_FONT_PRINTF(("%s = %d", name.get(), 
+                                 charSetInfo->mBitmapScaleMin));
+      else
+        charSetInfo->mBitmapScaleMin = gBitmapScaleMinimum;
+
+      PRInt32 percent = 0;
+      name.Assign("font.scale.bitmap.oversize.");
+      name.Append(langGroup);
+      gPref->GetIntPref(name.get(), &percent);
+      if (percent) {
+        charSetInfo->mBitmapOversize = percent/100.0;
+        SIZE_FONT_PRINTF(("%s = %g", name.get(), 
+                                 charSetInfo->mBitmapOversize));
+      }
+      else
+        charSetInfo->mBitmapOversize = gBitmapOversize;
+
+      percent = 0;
+      name.Assign("font.scale.bitmap.undersize.");
+      name.Append(langGroup);
+      gPref->GetIntPref(name.get(), &percent);
+      if (percent) {
+        charSetInfo->mBitmapUndersize = percent/100.0;
+        SIZE_FONT_PRINTF(("%s = %g", name.get(), 
+                                 charSetInfo->mBitmapUndersize));
+      }
+      else
+        charSetInfo->mBitmapUndersize = gBitmapUndersize;
+    }
   }
 }
 
@@ -2796,8 +2908,12 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     if ((!name) || (name[0] != '-')) {
       continue;
     }
+    char buf[512];
+    PL_strncpyz(buf, name, sizeof(buf));
+    char *fName = buf;
     char* p = name + 1;
     int scalable = 0;
+    PRBool outline_scaled = PR_FALSE;
 
 #ifdef FIND_FIELD
 #undef FIND_FIELD
@@ -2850,6 +2966,37 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     FIND_FIELD(resolutionY);
     if (resolutionY[0] == '0') {
       scalable = 1;
+    }
+    // check if bitmap non-scaled font
+    if ((pixelSize[0] != '0') || (pointSize[0] != '0')) {
+      SCALED_FONT_PRINTF(("bitmap (non-scaled) font: %s", fName));
+    }
+    // check if bitmap scaled font
+    else if ((pixelSize[0] == '0') && (pointSize[0] == '0')
+          && (resolutionX[0] != '0') && (resolutionY[0] != '0')) {
+      SCALED_FONT_PRINTF(("bitmap scaled font: %s", fName));
+    }
+    // check if outline scaled font
+    else if ((pixelSize[0] == '0') && (pointSize[0] == '0')
+          && (resolutionX[0] == '0') && (resolutionY[0] == '0')) {
+      outline_scaled = PR_TRUE;
+      SCALED_FONT_PRINTF(("outline scaled font: %s", fName));
+    }
+    else {
+      SCALED_FONT_PRINTF(("unexpected font values: %s", fName));
+      SCALED_FONT_PRINTF(("      pixelSize[0] = %c", pixelSize[0]));
+      SCALED_FONT_PRINTF(("      pointSize[0] = %c", pointSize[0]));
+      SCALED_FONT_PRINTF(("    resolutionX[0] = %c", resolutionX[0]));
+      SCALED_FONT_PRINTF(("    resolutionY[0] = %c", resolutionY[0]));
+      static PRBool already_complained = PR_FALSE;
+      // only complaing once 
+      if (!already_complained) {
+        already_complained = PR_TRUE;
+        NS_ASSERTION(pixelSize[0] == '0', "font scaler type test failed");
+        NS_ASSERTION(pointSize[0] == '0', "font scaler type test failed");
+        NS_ASSERTION(resolutionX[0] == '0', "font scaler type test failed");
+        NS_ASSERTION(resolutionY[0] == '0', "font scaler type test failed");
+      }
     }
     FIND_FIELD(spacing);
     FIND_FIELD(averageWidth);
@@ -2982,10 +3129,27 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       weight->mStretches[stretchIndex] = stretch;
     }
     if (scalable) {
+      // if we have both an outline scaled font and a bitmap 
+      // scaled font pick the outline scaled font
+      if ((stretch->mScalable) && (!stretch->mOutlineScaled) 
+          && (outline_scaled)) {
+        PR_smprintf_free(stretch->mScalable);
+        stretch->mScalable = nsnull;
+      }
       if (!stretch->mScalable) {
-        stretch->mScalable = PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-*-*-%s-*-%s",
-          name, familyName, weightName, slant, setWidth, addStyle, spacing,
-	  charSetName);
+        stretch->mOutlineScaled = outline_scaled;
+        if (outline_scaled) {
+          stretch->mScalable = 
+              PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-0-0-%s-*-%s", 
+              name, familyName, weightName, slant, setWidth, addStyle, 
+              spacing, charSetName);
+        }
+        else {
+          stretch->mScalable = 
+              PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-*-*-%s-*-%s", 
+              name, familyName, weightName, slant, setWidth, addStyle, 
+              spacing, charSetName);
+        }
       }
       continue;
     }
