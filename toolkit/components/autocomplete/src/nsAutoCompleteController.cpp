@@ -169,8 +169,14 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
   StopSearch();
   // Stop the queued up search on a timer
   ClearSearchTimer();
-  
-  NS_ENSURE_TRUE(mInput, NS_ERROR_NULL_POINTER);
+
+  if (!mInput) {
+    // Note: if now is after blur and IME end composition,
+    // check mInput before calling.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=193544#c31
+    NS_ERROR("Called before attaching to the control or after detaching from the control");
+    return NS_OK;
+  }
 
   PRBool disabled;
   mInput->GetDisableAutoComplete(&disabled);
