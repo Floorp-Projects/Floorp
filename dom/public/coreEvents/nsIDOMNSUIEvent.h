@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMNode;
-class nsIDOMRenderingContext;
 
 #define NS_IDOMNSUIEVENT_IID \
  { 0xa6cf90c4, 0x15b3, 0x11d2, \
@@ -85,8 +84,6 @@ public:
   NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent)=0;
 
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset)=0;
-
-  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc)=0;
 };
 
 
@@ -98,7 +95,6 @@ public:
   NS_IMETHOD    GetWhich(PRUint32* aWhich);  \
   NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent);  \
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset);  \
-  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc);  \
 
 
 
@@ -110,7 +106,6 @@ public:
   NS_IMETHOD    GetWhich(PRUint32* aWhich) { return _to GetWhich(aWhich); } \
   NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent) { return _to GetRangeParent(aRangeParent); } \
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset) { return _to GetRangeOffset(aRangeOffset); } \
-  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc) { return _to GetRc(aRc); } \
 
 
 #endif // nsIDOMNSUIEvent_h__

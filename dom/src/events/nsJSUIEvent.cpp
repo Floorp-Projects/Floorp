@@ -31,7 +31,6 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMUIEvent.h"
-#include "nsIDOMRenderingContext.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -40,12 +39,10 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIUIEventIID, NS_IDOMUIEVENT_IID);
-static NS_DEFINE_IID(kIRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 
 NS_DEF_PTR(nsIDOMNSUIEvent);
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMUIEvent);
-NS_DEF_PTR(nsIDOMRenderingContext);
 
 //
 // UIEvent property ids
@@ -69,8 +66,7 @@ enum UIEvent_slots {
   NSUIEVENT_PAGEY = -16,
   NSUIEVENT_WHICH = -17,
   NSUIEVENT_RANGEPARENT = -18,
-  NSUIEVENT_RANGEOFFSET = -19,
-  NSUIEVENT_RC = -20
+  NSUIEVENT_RANGEOFFSET = -19
 };
 
 /***********************************************************************/
@@ -481,33 +477,6 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case NSUIEVENT_RC:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rc", PR_FALSE, &ok);
-        if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
-        }
-        nsIDOMRenderingContext* prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetRc(&prop))) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
-            NS_RELEASE(b);
-          }
-          else {
-            NS_RELEASE(b);
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Object must be of type NSUIEvent");
-          return JS_FALSE;
-        }
-        break;
-      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -625,7 +594,6 @@ static JSPropertySpec UIEventProperties[] =
   {"which",    NSUIEVENT_WHICH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"rangeParent",    NSUIEVENT_RANGEPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"rangeOffset",    NSUIEVENT_RANGEOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"rc",    NSUIEVENT_RC,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
