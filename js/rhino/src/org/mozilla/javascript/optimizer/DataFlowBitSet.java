@@ -40,12 +40,12 @@ package org.mozilla.javascript.optimizer;
 class DataFlowBitSet {
 
     private int itsBits[];
-    int itsSize;
+    private int itsSize;
 
     DataFlowBitSet(int size)
     {
         itsSize = size;
-        itsBits = new int[(size >> 5) + 1];
+        itsBits = new int[(size + 31) >> 5];
     }
 
     int size()
@@ -55,15 +55,13 @@ class DataFlowBitSet {
 
     void set(int n)
     {
-        if ((n < 0) || (n >= itsSize))
-                  throw new RuntimeException("DataFlowBitSet bad index " + n);
+        if (!(0 <= n && n < itsSize)) badIndex(n);
         itsBits[n >> 5] |= 1 << (n & 31);
     }
 
     boolean test(int n)
     {
-        if ((n < 0) || (n >= itsSize))
-                  throw new RuntimeException("DataFlowBitSet bad index " + n);
+        if (!(0 <= n && n < itsSize)) badIndex(n);
         return ((itsBits[n >> 5] & (1 << (n & 31))) != 0);
     }
 
@@ -76,8 +74,7 @@ class DataFlowBitSet {
 
     void clear(int n)
     {
-        if ((n < 0) || (n >= itsSize))
-                  throw new RuntimeException("DataFlowBitSet bad index " + n);
+        if (!(0 <= n && n < itsSize)) badIndex(n);
         itsBits[n >> 5] &= ~(1 << (n & 31));
     }
 
@@ -97,11 +94,16 @@ class DataFlowBitSet {
 
     public String toString()
     {
-        StringBuffer result = new StringBuffer();
-        result.append("DataFlowBitSet, size = " + itsSize + "\n");
-        for (int i = 0; i < itsBits.length; i++)
-            result.append(Integer.toHexString(itsBits[i]) + " ");
-        return result.toString();
+        StringBuffer sb = new StringBuffer();
+        sb.append("DataFlowBitSet, size = ");
+        sb.append(itsSize);
+        sb.append('\n');
+        int bitsLength = itsBits.length;
+        for (int i = 0; i < bitsLength; i++) {
+            sb.append(Integer.toHexString(itsBits[i]));
+            sb.append(' ');
+        }
+        return sb.toString();
     }
 
     boolean df(DataFlowBitSet in, DataFlowBitSet gen, DataFlowBitSet notKill)
@@ -126,5 +128,10 @@ class DataFlowBitSet {
             changed |= (oldBits != itsBits[i]);
         }
         return changed;
+    }
+
+    private void badIndex(int n)
+    {
+        throw new RuntimeException("DataFlowBitSet bad index " + n);
     }
 }
