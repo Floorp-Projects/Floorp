@@ -185,15 +185,7 @@ nsresult
 nsMemoryCacheTransport::ReadRequestCompleted(nsMemoryCacheReadRequest *aReader)
 {
     // remove the reader from the list of readers
-    PRCList *link = PR_LIST_HEAD(&mReadRequests);
-    while ((link != aReader) && (link != &mReadRequests)) link = PR_NEXT_LINK(link);
-    
-    if (link == aReader)
-        PR_REMOVE_LINK(link);
-    else {
-        //** aReader wasn't in mReadRequests, what should we do?
-    }
-
+    PR_REMOVE_LINK(aReader);
     aReader->SetTransport(nsnull);
     return NS_OK;
 }
