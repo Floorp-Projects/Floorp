@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public find history ucth xfer
+DIRS = public find history related ucth xfer
 
 include $(topsrcdir)/config/config.mk
 
