@@ -1250,7 +1250,7 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
 NS_IMETHODIMP
 oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG_ALL
-    printf( "oeICalImpl::GetEventsInRange()\n" );
+    printf( "oeICalImpl::GetFirstEventsForRange()\n" );
 #endif
     
     nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );

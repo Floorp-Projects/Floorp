@@ -1010,6 +1010,15 @@ NS_IMETHODIMP oeICalEventImpl::AddException( PRTime exdate )
     return NS_OK;
 }
 
+NS_IMETHODIMP oeICalEventImpl::RemoveAllExceptions()
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventImpl::RemoveAllExceptions()\n" );
+#endif
+    m_exceptiondates.clear();
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 oeICalEventImpl::GetExceptions(nsISimpleEnumerator **datelist )
 {
@@ -1021,9 +1030,41 @@ oeICalEventImpl::GetExceptions(nsISimpleEnumerator **datelist )
     if (!dateEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    for( unsigned int i=0; i<m_exceptiondates.size(); i++ ) {
-        dateEnum->AddDate( m_exceptiondates[i] );
-    }
+    int count=0;
+    bool found;
+    PRTime current,lastadded,minimum;
+
+    do {
+        found = false;
+        for( unsigned int i=0; i<m_exceptiondates.size(); i++ ) {
+            current = m_exceptiondates[i];
+            if( !count ) {
+                if( i == 0 ) {
+                    minimum = current;
+                    found = true;
+                } else if ( LL_CMP( current, < , minimum ) ) {
+                    minimum = current;
+                    found = true;
+                }
+            } else if ( LL_CMP( current, >, lastadded ) ) {
+                if( LL_CMP( minimum, ==, lastadded ) ) {
+                    minimum = current;
+                    found = true;
+                }
+                else if( LL_CMP( current, <, minimum ) ) {
+                    minimum = current;
+                    found = true;
+                }
+            }
+        }
+
+        if( found ) {
+            dateEnum->AddDate( minimum );
+            count++;
+            lastadded = minimum;
+        }
+    } while ( found );
+
     // bump ref count
     return dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
 }

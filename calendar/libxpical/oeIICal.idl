@@ -95,6 +95,7 @@ interface oeIICalEvent : nsISupports
     boolean parseIcalString(in string icalstr);
     void addException( in PRTime exdate );
 	nsISimpleEnumerator getExceptions();
+	void removeAllExceptions();
     void setSnoozeTime( in PRTime exdate );
     oeIICalEvent clone();
 };
