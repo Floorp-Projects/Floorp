@@ -42,7 +42,7 @@
 class nsToolboxFrame : public nsHTMLContainerFrame
 {
 public:
-  friend nsresult NS_NewToolboxFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
+  // friend nsresult NS_NewToolboxFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
@@ -57,6 +57,8 @@ public:
 protected:
   nsToolboxFrame();
   virtual ~nsToolboxFrame();
+
+  virtual PRIntn GetSkipSides() const;
 
     // pass-by-value not allowed for a coordinator because it corresponds 1-to-1
     // with an element in the UI.
