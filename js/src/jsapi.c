@@ -2067,7 +2067,8 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
 JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 {
-    *idp = (jsid) obj;
+    JS_ASSERT(((jsid)obj & JSVAL_TAGMASK) == 0);
+    *idp = (jsid) obj | JSVAL_INT;
     return JS_TRUE;
 }
 
