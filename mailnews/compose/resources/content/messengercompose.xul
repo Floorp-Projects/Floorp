@@ -319,8 +319,9 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<box align="vertical" flex="60%">
 				<spring style="height:0.5em"/>
 				<box align="horizontal">
-					<html:div flex="20%">&fromAddr.label;</html:div>
-					<html:select id="msgIdentity" flex="80%"
+					<html:div>&fromAddr.label;</html:div>
+					<spring style="width:0.5em"/>
+					<html:select id="msgIdentity" flex="100%"
 						onkeyup="if (event.which == 9) ShouldITabIntoBody(2);"
 						onfocus="ShouldITabIntoBody(1);"/>
 				</box>
@@ -331,8 +332,9 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				<spring style="height:0.5em"/>
 				
 				<box align="horizontal">
-					<html:div flex="20%">&subject.label;</html:div>
-				    <html:input id="msgSubject" type="text" flex="80%"
+					<html:div>&subject.label;</html:div>
+					<spring style="width:0.5em"/>
+				    <html:input id="msgSubject" type="text" flex="100%"
 						onkeyup="SetComposeWindowTitle(event.which);"
 						onblur="ShouldITabIntoBody(0);"/>
 				</box>
