@@ -142,6 +142,9 @@ protected:
   nsresult DoDeleteFromFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments, nsITransactionManager *txnMgr);
 
+  nsresult DoCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
+						  nsITransactionManager *txnMgr, PRBool isMove);
+
   nsresult DoNewFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments);
 
@@ -168,5 +171,7 @@ protected:
   static nsIRDFResource* kNC_Delete;
   static nsIRDFResource* kNC_NewFolder;
   static nsIRDFResource* kNC_GetNewMessages;
+  static nsIRDFResource* kNC_Copy;
+  static nsIRDFResource* kNC_Move;
 
 };

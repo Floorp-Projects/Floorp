@@ -58,6 +58,8 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_BiffState = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Delete= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NewFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Copy= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Move= nsnull;
 
 
 
@@ -101,6 +103,8 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
   NS_RELEASE2(kNC_Delete, refcnt);
   NS_RELEASE2(kNC_NewFolder, refcnt);
   NS_RELEASE2(kNC_GetNewMessages, refcnt);
+  NS_RELEASE2(kNC_Copy, refcnt);
+  NS_RELEASE2(kNC_Move, refcnt);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
   mRDFService = nsnull;
@@ -138,6 +142,8 @@ nsresult nsMsgFolderDataSource::Init()
 	mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
     mRDFService->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
     mRDFService->GetResource(NC_RDF_GETNEWMESSAGES, &kNC_GetNewMessages);
+    mRDFService->GetResource(NC_RDF_COPY, &kNC_Copy);
+    mRDFService->GetResource(NC_RDF_MOVE, &kNC_Move);
   }
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -435,6 +441,8 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     cmds->AppendElement(kNC_Delete);
     cmds->AppendElement(kNC_NewFolder);
     cmds->AppendElement(kNC_GetNewMessages);
+    cmds->AppendElement(kNC_Copy);
+    cmds->AppendElement(kNC_Move);
   }
 
   if (cmds != nsnull)
@@ -461,6 +469,8 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
       // we don't care about the arguments -- folder commands are always enabled
       if (!(peq(aCommand, kNC_Delete) ||
 		    peq(aCommand, kNC_NewFolder) ||
+		    peq(aCommand, kNC_Copy) ||
+		    peq(aCommand, kNC_Move) ||
 			peq(aCommand, kNC_GetNewMessages))) {
         *aResult = PR_FALSE;
         return NS_OK;
@@ -502,18 +512,26 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     supports  = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {
-      if (peq(aCommand, kNC_Delete))
-	  {
-		rv = DoDeleteFromFolder(folder, aArguments, transactionManager);
-      }
-	  else if(peq(aCommand, kNC_NewFolder)) 
-	  {
-		rv = DoNewFolder(folder, aArguments);
-	  }
-	  else if(peq(aCommand, kNC_GetNewMessages))
-	  {
-		rv = folder->GetNewMessages();
-	  }
+		if (peq(aCommand, kNC_Delete))
+		{
+			rv = DoDeleteFromFolder(folder, aArguments, transactionManager);
+		}
+		else if(peq(aCommand, kNC_NewFolder)) 
+		{
+			rv = DoNewFolder(folder, aArguments);
+		}
+		else if(peq(aCommand, kNC_GetNewMessages))
+		{
+			rv = folder->GetNewMessages();
+		}
+		else if(peq(aCommand, kNC_Copy))
+		{
+			rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_FALSE);
+		}
+		else if(peq(aCommand, kNC_Move))
+		{
+			rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_TRUE);
+		}
 
     }
   }
@@ -849,6 +867,44 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
   return rv == NS_OK ? NS_OK : NS_RDF_NO_VALUE;
 }
 
+nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
+											   nsITransactionManager *txnMgr, PRBool isMove)
+{
+	nsresult rv;
+	PRUint32 itemCount;
+	rv = arguments->Count(&itemCount);
+	if (NS_FAILED(rv)) return rv;
+	
+	//need source folder and at least one item to copy
+	if(itemCount < 2)
+		return NS_ERROR_FAILURE;
+
+
+	nsCOMPtr<nsISupports> srcFolderSupports = getter_AddRefs(arguments->ElementAt(0));
+	nsCOMPtr<nsIRDFResource> srcFolder(do_QueryInterface(srcFolderSupports));
+	if(!srcFolder)
+		return NS_ERROR_FAILURE;
+
+    arguments->RemoveElementAt(0);
+    itemCount--;
+
+	nsCOMPtr<nsISupportsArray> messageArray;
+	NS_NewISupportsArray(getter_AddRefs(messageArray));
+
+	for(PRUint32 i = 0; i < itemCount; i++)
+	{
+
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(i));
+		nsCOMPtr<nsIMessage> message(do_QueryInterface(supports));
+		if (message)
+		{
+			messageArray->AppendElement(message);
+		}
+
+	}
+	//Call copyservice with dstFolder, srcFolder, messages, isMove, and txnManager
+	return NS_OK;
+}
 
 nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
     nsIMsgFolder *folder, nsISupportsArray *arguments, 

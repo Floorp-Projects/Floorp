@@ -138,8 +138,9 @@ function MsgCopyMessage(destFolder)
 		//Get the selected messages to copy
 		var messageList = tree.getElementsByAttribute("selected", "true");
 		//get the current folder
+
 		var srcFolder = GetThreadTreeFolder();
-		messenger.CopyMessages(srcFolder, destFolder, messageList, false);
+		messenger.CopyMessages(tree.database, srcFolder, destFolder, messageList, false);
 	}	
 }
 
@@ -156,7 +157,7 @@ function MsgMoveMessage(destFolder)
 		var messageList = tree.getElementsByAttribute("selected", "true");
 		//get the current folder
 		var srcFolder = GetThreadTreeFolder();
-		messenger.CopyMessages(srcFolder, destFolder, messageList, true);
+		messenger.CopyMessages(tree.database, srcFolder, destFolder, messageList, true);
 	}	
 }
 

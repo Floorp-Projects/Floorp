@@ -107,8 +107,8 @@ public:
   NS_IMETHOD DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
   NS_IMETHOD DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXULElement *parentFolder, nsIDOMXULElement *folder);
 
-  NS_IMETHOD CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *folderElement, nsIDOMNodeList *nodeList,
-						  PRBool isMove);
+  NS_IMETHOD CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement *srcFolderElement,
+						  nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove);
   NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
                                       nsIDOMNodeList *nodeList, nsISupports
                                       **aSupport); 
@@ -547,12 +547,53 @@ NS_IMETHODIMP nsMessenger::DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXU
 }
 
 NS_IMETHODIMP
-nsMessenger::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *dstFolderElement,
-						   nsIDOMNodeList *nodeList, PRBool isMove)
+nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement *srcFolderElement,
+						  nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove)
 {
+#if 0
 	nsresult rv;
 
-	if(!srcFolderElement || !dstFolderElement || !nodeList)
+	if(!srcFolderElement || !dstFolderElement || !messages)
+		return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIRDFResource> srcResource, dstResource;
+	nsCOMPtr<nsIMsgFolder> srcFolder;
+	nsCOMPtr<nsISupportsArray> argumentArray;
+	nsCOMPtr<nsISupportsArray> folderArray;
+
+	rv = dstFolderElement->GetResource(getter_AddRefs(dstResource));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = srcFolderElement->GetResource(getter_AddRefs(srcResource));
+	if(NS_FAILED(rv))
+		return rv;
+
+	srcFolder = do_QueryInterface(srcResource);
+	if(!srcFolder)
+		return NS_ERROR_NO_INTERFACE;
+
+	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(argumentArray));
+	if(NS_FAILED(rv))
+		return rv;
+
+	argumentArray->InsertElementAt(srcFolder, 0);
+
+	rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+	if(NS_FAILED(rv))
+	{
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	folderArray->AppendElement(dstResource);
+	
+	rv = DoCommand(database, isMove ? NC_RDF_MOVE : NC_RDF_COPY, folderArray, argumentArray);
+	return rv;
+
+#else
+	nsresult rv;
+
+	if(!srcFolderElement || !dstFolderElement || !messages)
 		return NS_ERROR_NULL_POINTER;
 
 	nsCOMPtr<nsIRDFResource> srcResource, dstResource;
@@ -576,7 +617,7 @@ nsMessenger::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *
 	if(!srcFolder)
 		return NS_ERROR_NO_INTERFACE;
 
-	rv =ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
+	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(resourceArray));
 	if(NS_FAILED(rv))
 		return rv;
 
@@ -618,6 +659,7 @@ nsMessenger::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *
 	}
 
 	return rv;
+#endif
 }
 
 NS_IMETHODIMP

@@ -52,6 +52,8 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
 #define NC_RDF_NEWFOLDER			"http://home.netscape.com/NC-rdf#NewFolder"
 #define NC_RDF_GETNEWMESSAGES		"http://home.netscape.com/NC-rdf#GetNewMessages"
+#define NC_RDF_COPY					"http://home.netscape.com/NC-rdf#Copy"
+#define NC_RDF_MOVE					"http://home.netscape.com/NC-rdf#Move"
 
 //Message Commands
 #define NC_RDF_MARKREAD				"http://home.netscape.com/NC-rdf#MarkRead"
