@@ -165,7 +165,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 {
 	// what can we do? we can close the stream?
 	m_urlInProgress = PR_FALSE;  
-	m_runningUrl->SetRunningUrlFlag(PR_FALSE);
+	m_runningUrl->SetUrlState(PR_FALSE, aStatus);
 
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
@@ -272,6 +272,19 @@ PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
 	return status;
 }
 
+#if 0
+PRInt32 nsMailboxProtocol::SetupReadMessage()
+{
+	// (1) create a temp file to write the message into. We need to do this because
+	// we don't have pluggable converters yet. We want to let mkfile do the work of 
+	// converting the message from RFC-822 to HTML before displaying it...
+	// (2) Create the file:// url with the appropriate byte range which we want to run
+	// the url. This is the actual url we'll run underneath the protocol....
+
+	m_tempMessageFile = PR_Open(MESSAGE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Begin protocol state machine functions...
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -295,21 +308,41 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL)
 			NS_IF_RELEASE(m_runningUrl);
 			m_runningUrl = mailboxUrl; // we have transferred ref cnt contro to m_runningUrl
 
-			// mscott: right now, the only mailbox url we process is a open mailbox folder url...
-			// eventually we'll port over the rest of the code and have to do more up front url 
-			// testing to figure out the correct next state....
+			// find out from the url what action we are supposed to perform...
 
-			// extract the mailbox parser..
-			NS_IF_RELEASE(m_mailboxParser);
-			rv = m_runningUrl->GetMailboxParser(&m_mailboxParser);
-			m_nextState = MAILBOX_READ_FOLDER;
-			
+			rv = m_runningUrl->GetMailboxAction(&m_mailboxAction);
+
+			if (NS_SUCCEEDED(rv))
+			{
+				switch (m_mailboxAction)
+				{
+				case nsMailboxActionParseMailbox:
+					// extract the mailbox parser..
+					NS_IF_RELEASE(m_mailboxParser);
+					rv = m_runningUrl->GetMailboxParser(&m_mailboxParser);
+					m_nextState = MAILBOX_READ_FOLDER;
+					break;
+
+				case nsMailboxActionDisplayMessage:
+#if 0
+					SetupReadMessage();
+					m_nextState = MAILBOX_READ_MESSAGE;
+#endif
+//					rv = m_runningUrl->GetMessageID(m_messageID); // extract the ID of the message
+					break;
+
+				default:
+					break;
+				}
+			}
+
+	
 			// okay now kick us off to the next state...
 			// our first state is a process state so drive the state machine...
 			PRBool transportOpen = PR_FALSE;
 			m_transport->IsTransportOpen(&transportOpen);
 			m_urlInProgress = PR_TRUE;
-			m_runningUrl->SetRunningUrlFlag(PR_TRUE);
+			m_runningUrl->SetUrlState(PR_TRUE, NS_OK);
 			if (transportOpen == PR_FALSE)
 			{
 				m_transport->Open(m_runningUrl);  // opening the url will cause to get notified when the connection is established
@@ -379,7 +412,7 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 				break;
 			case MAILBOX_DONE:
 				m_urlInProgress = PR_FALSE;
-				m_runningUrl->SetRunningUrlFlag(PR_FALSE);
+				m_runningUrl->SetUrlState(PR_FALSE, NS_OK);
 	            m_nextState = MAILBOX_FREE;
 				break;
         

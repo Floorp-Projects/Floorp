@@ -27,6 +27,9 @@
 #include "nsIOutputStream.h"
 #include "nsIMailboxUrl.h"
 
+#define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
+#define MESSAGE_PATH_URL "C|/temp/tempMessage.eml"
+
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)
@@ -108,6 +111,7 @@ private:
 	PRBool			m_socketIsOpen;
 	PRUint32		m_flags; // used to store flag information
 	nsIMailboxUrl	*m_runningUrl; // the nsIMailboxURL that is currently running
+	nsMailboxAction m_mailboxAction; // current mailbox action associated with this connnection...
 	char			*m_dataBuf;
     PRUint32		m_dataBufSize;
 	PRInt32			m_originalContentLength; /* the content length at the time of calling graph progress */
@@ -126,6 +130,8 @@ private:
 	// after the next response? What was the last response code? etc. 
 	MailboxStatesEnum  m_nextState;
     MailboxStatesEnum  m_initialState;
+
+	PRUint32	m_messageID;
 	
 	PRInt32	  ProcessMailboxState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
 	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
