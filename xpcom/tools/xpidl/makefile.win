@@ -41,7 +41,7 @@ MYDIR=C:\USR\LOCAL
 MYLIBS=                         \
  $(DIST)\lib\libxpt32.lib		\
  $(MOZ_TOOLS)\lib\glib-1.1.lib        \
- $(MOZ_TOOLS)\lib\libidl-0.5.lib     \
+ $(MOZ_TOOLS)\lib\libidl-0.6.lib     \
  $(NULL)
 
 LLIBS= $(MYLIBS)                \

@@ -697,10 +697,16 @@ typelib_const_dcl(TreeState *state)
           gboolean sign = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
           switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
             case IDL_INTEGER_TYPE_SHORT:
-              sign ? cd->value.i16 : cd->value.ui16 = value;
+              if(sign) 
+                  cd->value.i16 = value;
+              else
+                  cd->value.ui16 = value;
               break;
             case IDL_INTEGER_TYPE_LONG:
-              sign ? cd->value.i32 : cd->value.ui32 = value;
+              if(sign) 
+                  cd->value.i32 = value;
+              else
+                  cd->value.ui32 = value;
               break;
             case IDL_INTEGER_TYPE_LONGLONG:
               /* XXXshaver value -> PRInt64 not legal conversion? */
