@@ -221,7 +221,8 @@ public:
 
   // Invalidate part of the frame by asking the view manager to repaint.
   // aDamageRect is in the frame's local coordinate space
-  void        Invalidate(const nsRect& aDamageRect) const;
+  void        Invalidate(const nsRect& aDamageRect,
+                         PRBool aImmediate = PR_FALSE) const;
 
 #ifdef NS_DEBUG
   /**
