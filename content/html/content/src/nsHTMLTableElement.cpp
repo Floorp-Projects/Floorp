@@ -944,6 +944,16 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+  else if (aAttribute == nsHTMLAtoms::hspace) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::vspace) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
 
   return NS_CONTENT_ATTR_NOT_THERE;
 }
@@ -1292,6 +1302,26 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         tableStyle->mRules = value.GetIntValue();
       }
 
+      // hspace is mapped into left and right margin, 
+      // vspace is mapped into top and bottom margins
+      // - *** Quirks Mode only ***
+      if (eCompatibility_NavQuirks == mode) {
+        aAttributes->GetAttribute(nsHTMLAtoms::hspace, value);
+        if (value.GetUnit() == eHTMLUnit_Pixel) {
+          nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), sp2t);
+          nsStyleCoord hspace(twips);
+          spacing->mMargin.SetLeft(hspace);
+          spacing->mMargin.SetRight(hspace);
+        }
+        aAttributes->GetAttribute(nsHTMLAtoms::vspace, value);
+        if (value.GetUnit() == eHTMLUnit_Pixel) {
+          nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), sp2t);
+          nsStyleCoord vspace(twips);
+          spacing->mMargin.SetTop(vspace);
+          spacing->mMargin.SetBottom(vspace);
+        }
+      }
+
       //background: color
       nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
       nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
@@ -1312,7 +1342,9 @@ nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::border) ||
       (aAttribute == nsHTMLAtoms::frame) ||
       (aAttribute == nsHTMLAtoms::width) ||
-      (aAttribute == nsHTMLAtoms::height)) {
+      (aAttribute == nsHTMLAtoms::height) ||
+      (aAttribute == nsHTMLAtoms::hspace) ||
+      (aAttribute == nsHTMLAtoms::vspace)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (aAttribute == nsHTMLAtoms::bordercolor) {
