@@ -174,7 +174,8 @@ PRThread * SSM_CreateAndRegisterThread(PRThreadType type,
 										PRThreadState state,
 										PRUint32 stackSize);
 
-void SSM_KillAllThreads(void);                     
+void SSM_KillAllThreads(void);
+char* SSM_ConvertMacPathToUnix(char* macPath);                 
 #else
 #define SSM_CreateAndRegisterThread PR_CreateThread
 #endif
