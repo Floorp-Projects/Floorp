@@ -50,15 +50,13 @@ Here are the instructions for building the Standalone XPCOM on Unix or Windows:
 <tt>gmake -f client.mk pull_all BUILD_MODULES=xpcom</tt></li>
 </ol>
 
-<ol><b>Step 2 : Build XPCOM Standalone (unix)</b>
+<ol><b>Step 2 : Build XPCOM Standalone</b>
 <li>
-<tt>configure --enable-modules=xpcom</tt></li>
+<tt>configure --enable-standalone-modules=xpcom</tt></li>
 
 <li>
 <tt>gmake</tt></li>
 </ol>
-<i>Thanks to Christopher Seawood &lt;cls@seawood.org> for make this so
-simple.</i>
 <h3>
 3.0&nbsp; Testing Standalone XPCOM</h3>
 <tt>xpcom/sample</tt> contains a sample application and a component. This
@@ -108,7 +106,7 @@ cannot open shared object file: No such file or directory</tt></b></li>
 <b>Link errors when building xpcom standalone</b></li>
 
 <ol>This is mostly due to the fact that probably xpcom is not being built
-standalone. Make sure you did "<tt>configure --enable-modules=xpcom"</tt></ol>
+standalone. Make sure you did "<tt>configure --enable-standalone-modules=xpcom"</tt></ol>
 </ol>
 
 <h3>
