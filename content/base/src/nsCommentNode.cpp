@@ -521,7 +521,7 @@ StripCommentDelimiters(nsString& aCommentString)
   }
 
   offset = aCommentString.RFind(kCommentEnd);
-  if (-1 != offset) {
+  if (offset > 0) {
     // Take up to 1 more '-'
     if (kMinus == aCommentString.CharAt(offset-1)) {
       offset--;
