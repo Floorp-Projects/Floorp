@@ -51,13 +51,13 @@ extern void
 WLLT_ReencryptAll();
 
 extern void
-WLLT_PreEdit(nsAutoString& walletList);
+WLLT_PreEdit(nsString& walletList);
 
 extern void
-WLLT_PostEdit(nsAutoString walletList);
+WLLT_PostEdit(const nsString& walletList);
 
 extern void
-WLLT_PrefillReturn(nsAutoString results);
+WLLT_PrefillReturn(const nsString& results);
 
 extern void
 WLLT_RequestToCapture(nsIPresShell* shell);
@@ -66,16 +66,16 @@ extern nsresult
 WLLT_Prefill(nsIPresShell* shell, PRBool quick);
 
 extern void
-WLLT_GetNopreviewListForViewer (nsAutoString& aNopreviewList);
+WLLT_GetNopreviewListForViewer(nsString& aNopreviewList);
 
 extern void
-WLLT_GetNocaptureListForViewer (nsAutoString& aNocaptureList);
+WLLT_GetNocaptureListForViewer(nsString& aNocaptureList);
 
 extern void
-WLLT_GetPrefillListForViewer (nsAutoString& aPrefillList);
+WLLT_GetPrefillListForViewer(nsString& aPrefillList);
 
 extern void
-WLLT_OnSubmit (nsIContent* formNode);
+WLLT_OnSubmit(nsIContent* formNode);
 
 extern void
 WLLT_FetchFromNetCenter();
@@ -87,10 +87,10 @@ extern void
 WLLT_InitReencryptCallback();
 
 extern nsresult
-Wallet_Encrypt (nsAutoString text, nsAutoString& crypt);
+Wallet_Encrypt(const nsString& text, nsString& crypt);
 
 extern nsresult
-Wallet_Decrypt (nsAutoString crypt, nsAutoString& text);
+Wallet_Decrypt(const nsString& crypt, nsString& text);
 
 extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
 
@@ -103,19 +103,19 @@ extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage);
 extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage);
 
 extern nsresult
-Wallet_Encrypt2 (nsAutoString text, nsAutoString& crypt);
+Wallet_Encrypt2(const nsString& text, nsString& crypt);
 
 extern nsresult
-Wallet_Decrypt2 (nsAutoString crypt, nsAutoString& text);
+Wallet_Decrypt2(const nsString& crypt, nsString& text);
 
 extern void
-Wallet_UTF8Put(nsOutputFileStream strm, PRUnichar c);
+Wallet_UTF8Put(nsOutputFileStream& strm, PRUnichar c);
 
 extern PRUnichar
-Wallet_UTF8Get(nsInputFileStream strm);
+Wallet_UTF8Get(nsInputFileStream& strm);
 
 extern void
-Wallet_SignonViewerReturn (nsAutoString results);
+Wallet_SignonViewerReturn(const nsString& results);
 
 XP_END_PROTOS
 

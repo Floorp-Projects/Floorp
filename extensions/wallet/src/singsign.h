@@ -38,16 +38,16 @@ class nsIPrompt;
 XP_BEGIN_PROTOS
 
 extern void
-SINGSIGN_GetSignonListForViewer (nsAutoString& aSignonList);
+SINGSIGN_GetSignonListForViewer (nsString& aSignonList);
 
 extern void
-SINGSIGN_GetRejectListForViewer (nsAutoString& aRejectList);
+SINGSIGN_GetRejectListForViewer (nsString& aRejectList);
 
 extern void
-SINGSIGN_SignonViewerReturn(nsAutoString results);
+SINGSIGN_SignonViewerReturn(const nsString& results);
 
 extern void
-SINGSIGN_RestoreSignonData(char* passwordRealm, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
+SINGSIGN_RestoreSignonData(const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
 
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
@@ -93,16 +93,16 @@ SI_GetCharPref(const char * prefname, char** aPrefvalue);
 extern void SI_InitSignonFileName();
 
 extern PRBool
-SI_InSequence(nsAutoString sequence, int number);
+SI_InSequence(const nsString& sequence, int number);
 
 extern PRUnichar*
-SI_FindValueInArgs(nsAutoString results, nsAutoString name);
+SI_FindValueInArgs(const nsString& results, const nsString& name);
 
 extern PRBool
 SINGSIGN_ReencryptAll();
 
 extern void
-SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData);
+SINGSIGN_RememberSignonData (const char* URLName, nsVoidArray * signonData);
 
 XP_END_PROTOS
 

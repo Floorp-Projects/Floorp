@@ -356,7 +356,7 @@ si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) 
   return rtnValue;  
 }
 
-nsresult
+static nsresult
 si_CheckGetPassword
   (PRUnichar ** password,
   const PRUnichar * szMessage,
@@ -410,7 +410,7 @@ si_CheckGetPassword
   }
 }
 
-nsresult
+static nsresult
 si_CheckGetData
   (PRUnichar ** data,
   const PRUnichar * szMessage,
@@ -464,7 +464,7 @@ si_CheckGetData
   }
 }
 
-nsresult
+static nsresult
 si_CheckGetUsernamePassword
   (PRUnichar ** username,
   PRUnichar ** password,
@@ -555,7 +555,7 @@ si_StripLF(nsAutoString buffer) {
 
 /* If user-entered password is "********", then generate a random password */
 PRIVATE void
-si_Randomize(nsAutoString& password) {
+si_Randomize(nsString& password) {
   PRIntervalTime randomNumber;
   int i;
   const char * hexDigits = "0123456789AbCdEf";
@@ -576,18 +576,18 @@ si_Randomize(nsAutoString& password) {
 // don't understand why linker doesn't let me call Wallet_Encrypt and Wallet_Decrypt
 // directly but it doesn't.  Need to introduce Wallet_Enctrypt2 and Wallet_Decrypt2 instead.
 
-nsresult
-si_Encrypt (nsAutoString text, nsAutoString& crypt) {
+static nsresult
+si_Encrypt (const nsString& text, nsString& crypt) {
   return Wallet_Encrypt2(text, crypt);
 }
 
-nsresult
-si_Decrypt (nsAutoString crypt, nsAutoString& text) {
+static nsresult
+si_Decrypt (const nsString& crypt, nsString& text) {
   return Wallet_Decrypt2(crypt, text);
 }
 
-PRBool
-si_CompareEncryptedToCleartext(const nsAutoString crypt, const nsAutoString text) {
+static PRBool
+si_CompareEncryptedToCleartext(const nsString& crypt, const nsString& text) {
   nsAutoString decrypted;
   if (NS_FAILED(si_Decrypt(crypt, decrypted))) {
     return PR_FALSE;
@@ -595,8 +595,8 @@ si_CompareEncryptedToCleartext(const nsAutoString crypt, const nsAutoString text
   return (decrypted == text);
 }
 
-PRBool
-si_CompareEncryptedToEncrypted(const nsAutoString crypt1, const nsAutoString crypt2) {
+static PRBool
+si_CompareEncryptedToEncrypted(const nsString& crypt1, const nsString& crypt2) {
   nsAutoString decrypted1;
   nsAutoString decrypted2;
   if (NS_FAILED(si_Decrypt(crypt1, decrypted1))) {
@@ -697,7 +697,7 @@ si_GetURL(const char * passwordRealm) {
 
 /* Remove a user node from a given URL node */
 PRIVATE PRBool
-si_RemoveUser(const char *passwordRealm, nsAutoString userName, PRBool save) {
+si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -772,7 +772,7 @@ SINGSIGN_RemoveUser(const char *passwordRealm, const PRUnichar *userName) {
 
 /* Determine if a specified url/user exists */
 PRIVATE PRBool
-si_CheckForUser(char *passwordRealm, nsAutoString userName) {
+si_CheckForUser(const char *passwordRealm, const nsString& userName) {
   si_SignonURLStruct * url;
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
@@ -817,7 +817,7 @@ si_CheckForUser(char *passwordRealm, nsAutoString userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUser(const char* passwordRealm, PRBool pickFirstUser, nsAutoString userText) {
+si_GetUser(const char* passwordRealm, PRBool pickFirstUser, const nsString& userText) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user = nsnull;
   si_SignonDataStruct* data;
@@ -942,7 +942,7 @@ si_GetUser(const char* passwordRealm, PRBool pickFirstUser, nsAutoString userTex
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetSpecificUser(const char* passwordRealm, nsAutoString userName, nsAutoString userText) {
+si_GetSpecificUser(const char* passwordRealm, const nsString& userName, const nsString& userText) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
@@ -989,7 +989,7 @@ si_GetSpecificUser(const char* passwordRealm, nsAutoString userName, nsAutoStrin
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetURLAndUserForChangeForm(nsAutoString password)
+si_GetURLAndUserForChangeForm(const nsString& password)
 {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user;
@@ -1134,7 +1134,7 @@ si_FreeReject(si_Reject * reject) {
 }
 
 PRIVATE PRBool
-si_CheckForReject(char * passwordRealm, nsAutoString userName) {
+si_CheckForReject(const char * passwordRealm, const nsString& userName) {
   si_Reject * reject;
 
   si_lock_signon_list();
@@ -1155,7 +1155,7 @@ si_CheckForReject(char * passwordRealm, nsAutoString userName) {
 }
 
 PRIVATE void
-si_PutReject(char * passwordRealm, nsAutoString userName, PRBool save) {
+si_PutReject(const char * passwordRealm, const nsString& userName, PRBool save) {
   char * passwordRealm2=NULL;
   nsAutoString userName2;
   si_Reject * reject = new si_Reject;
@@ -1486,10 +1486,15 @@ si_PutData(const char * passwordRealm, nsVoidArray * signonData, PRBool save) {
  * strip carriage returns and line feeds from end of line
  */
 PRIVATE PRInt32
-si_ReadLine
-  (nsInputFileStream strm, nsAutoString& lineBuffer) {
+si_ReadLine(nsInputFileStream& strm, nsString& lineBuffer)
+{
+  const PRUint32 kInitialStringCapacity = 64;
 
-  lineBuffer.SetLength(0);
+  lineBuffer.Truncate(0);
+  
+  PRInt32 stringLen = 0;
+  PRInt32 stringCap = kInitialStringCapacity;
+  lineBuffer.SetCapacity(stringCap);
 
   /* read the line */
   PRUnichar c;
@@ -1505,6 +1510,14 @@ si_ReadLine
       break;
     }
     if (c != '\r') {
+      stringLen ++;
+      // buffer string grows
+      if (stringLen == stringCap)
+      {
+        stringCap += stringCap;   // double buffer len
+        lineBuffer.SetCapacity(stringCap);
+      }
+
       lineBuffer += c;
     }
   }
@@ -1658,12 +1671,12 @@ SI_LoadSignonData() {
  */
 
 PRIVATE void
-si_WriteChar(nsOutputFileStream strm, PRUnichar c) {
+si_WriteChar(nsOutputFileStream& strm, PRUnichar c) {
   Wallet_UTF8Put(strm, c);
 }
 
 PRIVATE void
-si_WriteLine(nsOutputFileStream strm, nsAutoString lineBuffer) {
+si_WriteLine(nsOutputFileStream& strm, const nsString& lineBuffer) {
 
   for (PRUint32 i=0; i<lineBuffer.Length(); i++) {
     Wallet_UTF8Put(strm, lineBuffer.CharAt(i));
@@ -1769,7 +1782,7 @@ si_SaveSignonDataLocked() {
 
 /* Ask user if it is ok to save the signon data */
 PRIVATE PRBool
-si_OkToSave(char *passwordRealm, nsAutoString userName) {
+si_OkToSave(const char *passwordRealm, const nsString& userName) {
 
   /* if url/user already exists, then it is safe to save it again */
   if (si_CheckForUser(passwordRealm, userName)) {
@@ -1813,7 +1826,7 @@ si_OkToSave(char *passwordRealm, nsAutoString userName) {
  * Check for a signon submission and remember the data if so
  */
 PRIVATE void
-si_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
+si_RememberSignonData (const char* passwordRealm, nsVoidArray * signonData)
 {
   int passwordCount = 0;
   int pswd[3];
@@ -1924,7 +1937,7 @@ si_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
 }
 
 PUBLIC void
-SINGSIGN_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
+SINGSIGN_RememberSignonData (const char* passwordRealm, nsVoidArray * signonData)
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
@@ -1945,7 +1958,7 @@ SINGSIGN_RememberSignonData (char* passwordRealm, nsVoidArray * signonData)
 }
 
 PRIVATE void
-si_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+si_RestoreSignonData (const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
   nsAutoString correctedName;
@@ -2048,7 +2061,7 @@ si_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** value, P
 }
 
 PUBLIC void
-SINGSIGN_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+SINGSIGN_RestoreSignonData (const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
   nsresult rv;
   NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
   if (NS_FAILED(rv)) {
@@ -2071,7 +2084,7 @@ SINGSIGN_RestoreSignonData (char* passwordRealm, PRUnichar* name, PRUnichar** va
  * Remember signon data from a browser-generated password dialog
  */
 PRIVATE void
-si_RememberSignonDataFromBrowser(const char* passwordRealm, nsAutoString username, nsAutoString password) {
+si_RememberSignonDataFromBrowser(const char* passwordRealm, const nsString& username, const nsString& password) {
   /* do nothing if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
     return;
@@ -2108,7 +2121,7 @@ si_RememberSignonDataFromBrowser(const char* passwordRealm, nsAutoString usernam
  */
 PRIVATE void
 si_RestoreOldSignonDataFromBrowser
-    (const char* passwordRealm, PRBool pickFirstUser, nsAutoString& username, nsAutoString& password) {
+    (const char* passwordRealm, PRBool pickFirstUser, nsString& username, nsString& password) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
 
@@ -2144,10 +2157,9 @@ si_RestoreOldSignonDataFromBrowser
 }
 
 PUBLIC PRBool
-SINGSIGN_StorePassword(const char *passwordRealm, const PRUnichar *user, const PRUnichar *password) {
-  nsAutoString userName(user);
-
-  si_RememberSignonDataFromBrowser(passwordRealm, userName, nsAutoString(password));
+SINGSIGN_StorePassword(const char *passwordRealm, const PRUnichar *user, const PRUnichar *password)
+{
+  si_RememberSignonDataFromBrowser(passwordRealm, nsAutoString(user), nsAutoString(password));
   return PR_TRUE;
 }
 
@@ -2305,7 +2317,8 @@ SINGSIGN_Prompt
 
 /* return PR_TRUE if "number" is in sequence of comma-separated numbers */
 PUBLIC PRBool
-SI_InSequence(nsAutoString sequence, PRInt32 number) {
+SI_InSequence(const nsString& sequence, PRInt32 number)
+{
   nsAutoString tail = sequence;
   nsAutoString head, temp;
   PRInt32 separator;
@@ -2330,7 +2343,8 @@ SI_InSequence(nsAutoString sequence, PRInt32 number) {
 }
 
 PUBLIC PRUnichar*
-SI_FindValueInArgs(nsAutoString results, nsAutoString name) {
+SI_FindValueInArgs(const nsString& results, const nsString& name)
+{
   /* note: name must start and end with a vertical bar */
   nsAutoString value;
   PRInt32 start, length;
@@ -2346,7 +2360,7 @@ SI_FindValueInArgs(nsAutoString results, nsAutoString name) {
 }
 
 PUBLIC void
-SINGSIGN_SignonViewerReturn (nsAutoString results) {
+SINGSIGN_SignonViewerReturn(const nsString& results) {
   si_SignonURLStruct *url;
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
@@ -2411,7 +2425,7 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
 #define BREAK '\001'
 
 PUBLIC void
-SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
+SINGSIGN_GetSignonListForViewer(nsString& aSignonList)
 {
   /* force loading of the signons file */
   si_RegisterSignonPrefCallbacks();
@@ -2503,7 +2517,7 @@ SINGSIGN_ReencryptAll()
 }
 
 PUBLIC void
-SINGSIGN_GetRejectListForViewer(nsAutoString& aRejectList)
+SINGSIGN_GetRejectListForViewer(nsString& aRejectList)
 {
   nsAutoString buffer;
   int rejectNum = 0;
