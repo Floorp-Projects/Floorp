@@ -68,7 +68,7 @@
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 
 enum eFieldType {
-    nsICollation::kCollationKey,
+    kCollationKey,
     kU32
 };
 
