@@ -62,12 +62,12 @@ find_depth() {
 target_makefile=`pwd`"/${subdir}Makefile"
 
 # Use $(DEPTH) in the Makefile or Makefile.in to determine the depth
-if [ -f Makefile ]
-then
-    depth=`find_depth Makefile`
-elif [ -f Makefile.in ]
+if [ -f Makefile.in ]
 then
     depth=`find_depth Makefile.in`
+elif [ -f Makefile ]
+then
+    depth=`find_depth Makefile`
 elif [ -f ../Makefile ]
 then
     depth="../"`find_depth Makefile`
