@@ -48,8 +48,6 @@ public:
 	void 			SetFocus(nsWindow *aFocusWidget);
 	nsWindow*		GetFocus() {return(mFocusedWidget);}
 	
-	// Event Queue
-	static PLEventQueue*	GetEventQueue(){ return sPLEventQueue; }
 
 	// Appearance Mgr
 	static bool HasAppearanceManager();
@@ -62,7 +60,6 @@ public:
 
 private:
 	static nsWindow*	mFocusedWidget;
-	static PLEventQueue*	sPLEventQueue;
 };
 
 
