@@ -2008,12 +2008,6 @@ si_OkToSave(char *URLName, char *userName) {
     PR_FREEIF(message);
     return PR_FALSE;
   }
-  if (!si_ConfirmYN(message)) {
-    si_PutReject(strippedURLName, userName, PR_TRUE);
-    PR_Free(strippedURLName);
-    PR_FREEIF(message);
-    return PR_FALSE;
-  }
   PR_FREEIF(message);
   PR_Free(strippedURLName);
   return PR_TRUE;
