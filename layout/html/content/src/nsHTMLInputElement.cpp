@@ -496,7 +496,7 @@ nsHTMLInputElement::SetAutocomplete(const nsString& aAutocomplete)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
-  nsString value("0");
+  nsAutoString value("0");
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
     if (nsnull != formControlFrame) {
@@ -510,7 +510,6 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
 
     // Obtain the value property from the presentation state.
     if (presState) {
-      nsAutoString value;
       presState->GetStateProperty("checked", value);
     }
   }
