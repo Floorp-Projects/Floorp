@@ -2927,6 +2927,7 @@ JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto, *ctor;
+    jsval rval;
 
     proto = JS_InitClass(cx, obj, NULL, &js_RegExpClass, RegExp, 1,
 			 regexp_props, regexp_methods,
@@ -2942,6 +2943,10 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
 	!JS_AliasProperty(cx, ctor, "rightContext", "$'")) {
 	goto bad;
     }
+
+    /* Give RegExp.prototype private data so it matches the empty string. */
+    if (!regexp_compile(cx, proto, 0, NULL, &rval))
+        goto bad;
     return proto;
 
 bad:
