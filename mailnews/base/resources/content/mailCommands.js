@@ -310,7 +310,7 @@ function Subscribe(windowTitle, preselectedMsgFolder)
 	}
 
 	window.openDialog("chrome://messenger/content/subscribe.xul",
-					  "subscribe", "chrome,modal",
+					  "subscribe", "chrome,modal,resizable=yes",
 				{preselectedURI:preselectedURI, title:windowTitle,
 				okCallback:SubscribeOKCallback});
 }

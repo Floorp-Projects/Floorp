@@ -19,6 +19,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/subscribe.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -27,10 +28,10 @@ Rights Reserved.
 
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		xmlns:NC="http://home.netscape.com/NC-rdf#"	
+    		xmlns:NC="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
-		class="dialog"
+		    class="dialog"
         onload="SubscribeOnLoad()">
         
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
@@ -39,79 +40,95 @@ Rights Reserved.
 
 	<keyset id="keyset"/>
 
-	<box orient="horizontal" >
-		<text value="&server.label;"/>
-    	<menulist oncommand="onServerClick(event);" id="serverMenu"
-			rdf:datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-			rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
-           	rdf:containment="http://home.netscape.com/NC-rdf#child"
-            ref="msgaccounts:/">
-        	<template>
-				<rule NC:CanSubscribe="true">
-      				<menupopup>
-          				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-      				</menupopup>
-				</rule>
-        	</template>
-    	</menulist>
- 	</box>
-	<box orient="horizontal" >
-		<text id="foldertextlabel" class="label" value="..." for="name"/>
-		<textfield id="namefield" value="" />
-	</box>
-	<box orient="horizontal" >
-		<box orient="vertical" flex="100%">
-<tree class="inset"	
-	flex="100%"
-	width="500px"
-	id="subscribetree"
-	datasources="rdf:subscribe"
-	onclick="SubscribeOnClick(event);"> 
-	<template>
-		<rule>
-			<treechildren>
-				<treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed">
-					<treerow>
-						 <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-						<treecell class="treecell-image subscribedcol" allowevents="true" onclick="return top.ReverseStateFromNode(event.target.parentNode.parentNode.parentNode)" value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
-						<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
-					</treerow>
-				</treeitem>
-			</treechildren>
-		</rule>
-	</template>
+  <grid flex="1" style="width: 40em; height: 25em;">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+  
+    <rows>
+      <row>
+        <grid flex="1">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          
+          <rows>
+            <row>
+              <text class="label" value="&server.label;"/>
+              <menulist oncommand="onServerClick(event);" id="serverMenu"
+                        rdf:datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                        rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
+                        rdf:containment="http://home.netscape.com/NC-rdf#child"
+                        ref="msgaccounts:/" flex="1">
+                <template>
+                  <rule NC:CanSubscribe="true">
+                    <menupopup>
+                      <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                  </rule>
+                </template>
+              </menulist>
+            </row>
+            <row>
+          		<text class="label" id="foldertextlabel" value="..." for="name"/>
+          		<textfield id="namefield" flex="1"/>
+            </row>
+          </rows>
+        </grid>
+        <spring/>
+      </row>
+	    <row flex="1">
+        <tree class="inset"	flex="1"
+              id="subscribetree"
+              datasources="rdf:subscribe"
+              onclick="SubscribeOnClick(event);"> 
+          <template>
+            <rule>    
+              <treechildren>
+                <treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed">
+                  <treerow>
+                    <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    <treecell class="treecell-image subscribedcol" allowevents="true" onclick="return top.ReverseStateFromNode(event.target.parentNode.parentNode.parentNode)" value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
+                    <treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </rule>
+          </template>
+    
+          <treecolgroup id="theSubscribeColumns">
+            <treecol width="7*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+            <treecol width="1*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
+            <treecol width="1*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+          </treecolgroup>
+    
+          <treehead>	
+            <treerow id="headRow">
+              <treecell class="treecell-header outset" id="foldersheaderlabel" value="..." />
+              <treecell class="treecell-header outset" value="&subscribedHeader.label;"/>
+              <treecell class="treecell-header outset" value="&messagesHeader.label;"/>
+            </treerow>
+          </treehead>	
+        </tree>
+      	<box orient="vertical">
+          <button id="subscribe" class="dialog" value="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
+          <button id="unsubscribe" class="dialog" value="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
+          <button id="refresh" class="dialog" value="&refreshButton.label;" oncommand="RefreshList()"/>
+          <button id="stop" class="dialog" value="&stopButton.label;" oncommand="Stop()"/>
+        </box>
+      </row>
+    </rows>
+  </grid>
 
-	<treecolgroup id="theSubscribeColumns">
-		<treecol width="7*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-		<treecol width="2*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
-		<treecol width="2*" id="TotalMessagesColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
-	</treecolgroup>
+  <separator class="groove"/>
+  
+  <box>
+    <progressmeter id="statusbar-icon" mode="normal" value="0" />
+    <text id="statusText" class="status-bar" value="this space for rent"/>
+    <spring flex="1"/>
+    <box id="okCancelButtons"/>
+  </box>	
 
-	<treehead>	
-		<treerow id="headRow">
-			<treecell id="foldersheaderlabel" value="..." />
-			<treecell value="&subscribedHeader.label;"/>
-			<treecell value="&messagesHeader.label;"/>
-		</treerow>
-	</treehead>	
-</tree>
-		</box>
-		<box orient="vertical" flex="20%">
-			<spring flex="100%"/>
-			<button id="subscribe" class="push" value="&subscribeButton.label;" onclick="SetSubscribeState(true)"/>
-			<button id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="SetSubscribeState(false)"/>
-			<button id="refresh" class="push" value="&refreshButton.label;" onclick="RefreshList()"/>
-			<button id="stop" class="push" value="&stopButton.label;" onclick="Stop()"/>
-			<spring flex="100%"/>
-		</box>
-	</box>
-	<box id="okCancelButtons"/>
-	<box id="status-bar">
-		<box align="vertical" style="width:100px">
-			<spring flex="100%"/>
-			<progressmeter id="statusbar-icon" mode="normal" value="0" />
-			<spring flex="100%"/>
-		</box>
-		<text id="statusText" class="status-bar" align="left" flex="100%" value="this space for rent"/>
-	</box>	
 </window>
