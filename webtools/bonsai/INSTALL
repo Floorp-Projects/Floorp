@@ -79,7 +79,7 @@ database.
 
 1.1 Getting and setting up MySQL database
 
-Visit MySQL homepage at http://www.tcx.se and grab the latest
+Visit MySQL homepage at http://www.mysql.com and grab the latest
 stable binary release of the server. Sure, you can get sources and
 compile them yourself, but binaries are the easiest and the fastest
 way to get it up and running. Follow instructions found in
