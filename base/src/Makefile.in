@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES +=-D_IMPL_NS_BASE -I$(topsrcdir)/base/public
+DEFINES +=-D_IMPL_NS_BASE
 
 DIRS = $(MOZ_TOOLKIT)
 
@@ -39,10 +39,11 @@ CPPSRCS =                       \
     nsEscape.cpp                \
     nsFileSpec.cpp              \
     nsFileStream.cpp            \
-    nsIFileStream.cpp            \
+    nsIFileStream.cpp           \
+    nsIStringStream.cpp         \
     nsProperties.cpp            \
     nsRBTree.cpp                \
-    nsSizeOfHandler.cpp		\
+    nsSizeOfHandler.cpp		    \
     nsString.cpp                \
     nsUnicharBuffer.cpp         \
     nsUnicharInputStream.cpp    \
