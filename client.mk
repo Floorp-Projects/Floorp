@@ -84,7 +84,6 @@ endif
 # Load options from myconfig.sh
 #   (See build pages, http://www.mozilla.org/build/unix.html, 
 #    for how to set up myconfig.sh.)
-#   Check out the conversion script if it hasn't been checked out.
 MYCONFIG2DEFS := build/autoconf/myconfig2defs.sh
 run_for_side_effects := \
 	$(shell if test ! -f $(TOPSRCDIR)/$(MYCONFIG2DEFS); then \
@@ -150,11 +149,13 @@ NSPR_BRANCH :=
 
 ifdef MOZ_WITH_NSPR
 NSPR_INSTALL_DIR := $(MOZ_WITH_NSPR)
+NEED_WITH_NSPR   := 1
 else
 ifneq ("$(wildcard /usr/lib/libnspr21*)","")
 NSPR_INSTALL_DIR := /usr
 else
 NSPR_INSTALL_DIR := $(OBJDIR)/nspr
+NEED_WITH_NSPR   := 1
 endif
 endif
 
@@ -179,7 +180,7 @@ NSPR_GMAKE_OPTIONS := \
 
 CONFIG_FLAGS :=
 
-ifeq "$(origin MOZ_WITH_NSPR)" "environment"
+ifdef NEED_WITH_NSPR
 CONFIG_FLAGS += --with-nspr=$(NSPR_INSTALL_DIR)
 endif
 
