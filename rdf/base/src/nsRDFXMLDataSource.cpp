@@ -859,7 +859,8 @@ RDFXMLDataSourceImpl::Flush(void)
     if (!mIsWritable || !mIsDirty)
         return NS_OK;
 
-    NS_PRECONDITION(mOriginalURLSpec != nsnull, "not initialized");
+    // while it is not fatal if mOriginalURLSpec is not set,
+    // indicate failure since we can't flush back to an unknown origin
     if (! mOriginalURLSpec)
         return NS_ERROR_NOT_INITIALIZED;
 
