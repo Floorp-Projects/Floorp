@@ -303,6 +303,8 @@ pref("news.cancel.confirm",true);
 pref("news.cancel.alert_on_success",true);
 pref("mail.SpellCheckBeforeSend",false);
 pref("mail.enable_autocomplete",true);
+pref("mailnews.html_domains","");
+pref("mailnews.plaintext_domains","");
 
 // the ui will eventually use these three prefs:
 pref("mail.biff.play_sound",true);
