@@ -857,7 +857,16 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
 			case NS_KEY_DOWN:
 				return GetKeyCode(aWhich);
 			case NS_KEY_PRESS:
-				return GetCharCode(aWhich);
+        //Special case for 4xp bug 62878.  Try to make value of which
+        //more closely mirror the values that 4.x gave for RETURN and BACKSPACE
+        {
+          PRUint32 keyCode = ((nsKeyEvent*)mEvent)->keyCode;
+          if (keyCode == NS_VK_RETURN || keyCode == NS_VK_BACK) {
+            *aWhich = keyCode;
+            return NS_OK;
+          }
+				  return GetCharCode(aWhich);
+        }
 			default:
 				break;
 		}
