@@ -466,7 +466,8 @@ NS_IMETHODIMP nsSpamSettings::LogJunkHit(nsIMsgDBHdr *aMsgHdr, PRBool aMoveMessa
   rv = aMsgHdr->GetDate(&date);
   PRExplodedTime exploded;
   PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
-  PR_FormatTimeUSEnglish(dateStr, 100, "%m/%d/%Y %I:%M %p", &exploded);
+  // XXX Temporary until logging is fully localized
+  PR_FormatTimeUSEnglish(dateStr, sizeof(dateStr), "%Y-%m-%d %H:%M:%S", &exploded);
   
   aMsgHdr->GetAuthor(getter_Copies(author));
   aMsgHdr->GetSubject(getter_Copies(subject));
