@@ -30,7 +30,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
-#include "nsIMimeConverter.h"
 
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
@@ -2101,23 +2100,23 @@ nsresult nsMsgDatabase::RowCellColumnTonsCString(nsIMdbRow *hdrRow, mdb_token co
 
 nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
 {
-	nsresult err;
+	nsresult err = NS_OK;
 	nsAutoString nakedString;
 	err = RowCellColumnTonsString(row, columnToken, nakedString);
 	if (NS_SUCCEEDED(err) && nakedString.Length() > 0)
 	{
-		// apply mime decode
-		nsIMimeConverter *converter;
-		err = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                            nsIMimeConverter::GetIID(), (void **)&converter);
-
-		if (NS_SUCCEEDED(err) && nsnull != converter) 
+		if (!m_mimeConverter)
+		{
+			// apply mime decode
+			err = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                            nsIMimeConverter::GetIID(), getter_AddRefs(m_mimeConverter));
+		}
+		if (NS_SUCCEEDED(err) && m_mimeConverter) 
 		{
 			nsAutoString charset;
 			nsAutoString decodedStr;
 			m_dbFolderInfo->GetCharacterSet(&charset);
-			err = converter->DecodeMimePartIIStr(nakedString, charset, resultStr);
-			NS_RELEASE(converter);
+			err = m_mimeConverter->DecodeMimePartIIStr(nakedString, charset, resultStr);
 		}
 	}
 	return err;

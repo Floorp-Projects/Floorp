@@ -30,6 +30,7 @@
 #include "nsISupportsArray.h"
 #include "nsDBFolderInfo.h"
 #include "nsICollation.h"
+#include "nsIMimeConverter.h"
 #include "nsCOMPtr.h"
 
 class ListContext;
@@ -286,6 +287,7 @@ protected:
 	static nsVoidArray/*<nsMsgDatabase>*/* m_dbCache;
 
 	nsCOMPtr <nsICollation> m_collationKeyGenerator;
+	nsCOMPtr <nsIMimeConverter> m_mimeConverter;
 	// mdb bookkeeping stuff
 	nsresult			InitExistingDB();
 	nsresult			InitNewDB();
