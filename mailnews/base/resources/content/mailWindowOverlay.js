@@ -278,6 +278,49 @@ function MsgGetMessagesForAllServers(defaultServer)
     }
 }
 
+/** 
+  * Get messages for all those accounts which have the capability
+  * of getting messages and have session password available i.e.,
+  * curretnly logged in accounts. 
+  */  
+function MsgGetMessagesForAllAuthenticatedAccounts()
+{
+    try 
+    {
+        var allServers = accountManager.allServers;
+     
+        for (var i=0;i<allServers.Count();i++) 
+        {
+            var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+            var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + 
+                                 currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
+            if (protocolinfo.canGetMessages && currentServer.password) 
+            {
+                // Get new messages now
+                GetMessagesForInboxOnServer(currentServer);
+            }
+        }
+    }
+    catch(ex) 
+    {
+        dump(ex + "\n");
+    }
+}
+
+/** 
+  * Get messages for the account selected from Menu dropdowns.
+  */  
+function MsgGetMessagesForAccount(aEvent)
+{
+    if (!aEvent)
+        return;
+
+    var uri = aEvent.target.id;
+    var server = GetServer(uri);
+    GetMessagesForInboxOnServer(server);
+    aEvent.preventBubble();
+}
+
 function MsgGetNextNMessages()
 {
     var folder = GetFirstSelectedMsgFolder();

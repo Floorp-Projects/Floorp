@@ -32,6 +32,7 @@
 #include "nsMsgRDFDataSource.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIIncomingServerListener.h"
+#include "nsIMsgProtocolInfo.h"
 #include "nsWeakPtr.h"
 
 /* {3f989ca4-f77a-11d2-969d-006008948010} */
@@ -89,6 +90,7 @@ protected:
   
   PRBool isDefaultServer(nsIMsgIncomingServer *aServer);
   PRBool supportsFilters(nsIMsgIncomingServer *aServer);
+  PRBool canGetMessages(nsIMsgIncomingServer *aServer);
   
   static PRBool isContainment(nsIRDFResource *aProperty);
   nsresult getServerForFolderNode(nsIRDFNode *aResource,
@@ -108,6 +110,7 @@ protected:
   static nsIRDFResource* kNC_PageTag;
   static nsIRDFResource* kNC_IsDefaultServer;
   static nsIRDFResource* kNC_SupportsFilters;
+  static nsIRDFResource* kNC_CanGetMessages;
   
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_AccountRoot;

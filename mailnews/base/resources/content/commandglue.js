@@ -58,6 +58,19 @@ function GetMsgFolderFromURI(folderURI)
 
 }
 
+function GetServer(uri)
+{
+    if (!uri) return null;
+    try {
+        var folder = GetMsgFolderFromUri(uri);
+        return folder.server;
+    }
+    catch (ex) {
+        dump("GetServer("+uri+") failed, ex="+ex+"\n");
+    }
+    return null;
+}
+
 function LoadMessage(messageNode)
 {
 	var uri = messageNode.getAttribute('id');

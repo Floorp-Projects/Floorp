@@ -212,6 +212,7 @@ var DefaultController =
 			case "cmd_setFolderCharset":
 			case "cmd_reload":
 			case "cmd_getNewMessages":
+                        case "cmd_getMsgsForAuthAccounts":
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
@@ -325,7 +326,8 @@ var DefaultController =
 			case "cmd_renameFolder":
 				return IsRenameFolderEnabled();
 			case "cmd_getNewMessages":
-				return IsGetNewMessagesEnabled();
+                        case "cmd_getMsgsForAuthAccounts":
+                                return IsGetNewMessagesEnabled();
 			case "cmd_getNextNMessages":
 				return IsGetNextNMessagesEnabled();
 			case "cmd_emptyTrash":
@@ -349,6 +351,10 @@ var DefaultController =
 			case "cmd_getNewMessages":
 				MsgGetMessage();
 				break;
+                        case "cmd_getMsgsForAuthAccounts":
+                                MsgGetMessage();
+                                MsgGetMessagesForAllAuthenticatedAccounts();
+                                break;
 			case "cmd_getNextNMessages":
 				MsgGetNextNMessages();
 				break;
@@ -556,6 +562,7 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_renameFolder');
 	goUpdateCommand('cmd_setFolderCharset');
 	goUpdateCommand('cmd_getNewMessages');
+        goUpdateCommand('cmd_getMsgsForAuthAccounts');
 	goUpdateCommand('cmd_getNextNMessages');
 	goUpdateCommand('cmd_find');
 	goUpdateCommand('cmd_findAgain');

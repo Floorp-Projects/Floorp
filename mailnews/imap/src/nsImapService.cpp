@@ -3076,6 +3076,14 @@ nsImapService::GetCanDuplicate(PRBool *aCanDuplicate)
 }        
 
 NS_IMETHODIMP
+nsImapService::GetCanGetMessages(PRBool *aCanGetMessages)
+{
+    NS_ENSURE_ARG_POINTER(aCanGetMessages);
+    *aCanGetMessages = PR_TRUE;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP
 nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
 {
     NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);

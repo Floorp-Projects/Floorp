@@ -538,6 +538,14 @@ nsPop3Service::GetCanDuplicate(PRBool *aCanDuplicate)
 }        
 
 NS_IMETHODIMP
+nsPop3Service::GetCanGetMessages(PRBool *aCanGetMessages)
+{
+    NS_ENSURE_ARG_POINTER(aCanGetMessages);
+    *aCanGetMessages = PR_TRUE;
+    return NS_OK;
+}  
+
+NS_IMETHODIMP
 nsPop3Service::GetDefaultServerPort(PRBool isSecure, PRInt32 *aPort)
 {
     return GetDefaultPort(aPort);

@@ -41,6 +41,7 @@ Rights Reserved.
 
 <script src="chrome://messenger/content/mailCommands.js"/>
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
+<script src="chrome://messenger/content/commandglue.js"/>
 
 <stringbundleset id="stringbundleset"/>
 
@@ -126,7 +127,9 @@ Rights Reserved.
 	<broadcaster id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
 	<broadcaster id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
 	<broadcaster id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
-
+        <broadcaster id="cmd_getMsgsForAuthAccounts" 
+                     oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.preventBubble()" 
+                     disabled="true"/>
 </broadcasterset>
 
 <keyset id="keyset">
@@ -160,6 +163,10 @@ Rights Reserved.
 	<key id="key_saveAsFile" key="&saveAsFileCmd.key;"   observes="cmd_saveAsFile" modifiers="accel"/>
 	<key id="key_viewPageSource" key="&pageSourceCmd.key;"   observes="cmd_viewPageSource" modifiers="accel"/>
 	<key id="key_getNewMessages" key="&getNewMsgCmd.key;"   observes="cmd_getNewMessages" modifiers="accel"/>
+        <key id="key_getAllNewMessages" 
+             key="&getAllNewMsgCmd.key;"  
+             observes="cmd_getMsgsForAuthAccounts" 
+             modifiers="accel, shift"/>
 	<key id="key_find" key="&findCmd.key;"   observes="cmd_find" modifiers="accel"/>
 	<key id="key_findAgain" key="&findAgainCmd.key;"   observes="cmd_findAgain" modifiers="accel"/>
 
@@ -663,6 +670,30 @@ Rights Reserved.
 			 accesskey="&getNewMsgCmd.accesskey;"
 			 key="key_getNewMessages"
 			 observes="cmd_getNewMessages"/>
+                        <menu value="&getNewMsgForCmd.label;" 
+                              accesskey="&getNewMsgForCmd.accesskey;"
+                              datasources="rdf:msgaccountmanager"
+                              containment="http://home.netscape.com/NC-rdf#child"
+                              ref="msgaccounts:/"
+                              observes="cmd_getNewMessages">
+                            <menupopup>
+                                <menuitem value="&getAllNewMsgCmd.label;" 
+                                          key="key_getAllNewMessages"
+                                          observes="cmd_getMsgsForAuthAccounts"/>
+                                <menuseparator/>
+                            </menupopup>
+                            <template>
+                                <rule nc:CanGetMessages="true">
+                                    <menupopup>
+                                        <menuitem uri="..." 
+                                                  data="..." 
+                                                  value="rdf:http://home.netscape.com/NC-rdf#Name" 
+                                                  oncommand="MsgGetMessagesForAccount(event)"/>
+                                    </menupopup>
+                                </rule>
+                            </template>
+                            <menupopup/>
+                        </menu>
 			<menuitem id="menu_getnextnmsg" value="&getNextNMsgCmd.label;"
 			 observes="cmd_getNextNMessages"/>
 			<menuitem value="&sendUnsentCmd.label;"
@@ -1027,7 +1058,29 @@ Rights Reserved.
 <toolbox id="mailToolbarToolbox">
 	<toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
-			<button class="button-toolbar-2 top" id="button-getmsg" value="&getMsgButton.label;" tooltip="aTooltip" tooltiptext="&getMsgButton.tooltip;" observes="cmd_getNewMessages"/>
+                        <menubutton class="menubutton-dual toolbar top" id="button-getmsg" 
+                                    value="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
+                                    buttontooltiptext="&getMsgButton.tooltip;" 
+                                    observes="cmd_getNewMessages" datasources="rdf:msgaccountmanager" 
+                                    containment="http://home.netscape.com/NC-rdf#child" 
+                                    ref="msgaccounts:/">
+                            <menupopup>
+                                <menuitem value="&getAllNewMsgCmd.label;" 
+                                          observes="cmd_getMsgsForAuthAccounts"/>
+                                <menuseparator/>
+                            </menupopup>
+                            <template>
+                                <rule nc:CanGetMessages="true">
+                                    <menupopup>
+                                        <menuitem uri="..." 
+                                                  data="..." 
+                                                  value="rdf:http://home.netscape.com/NC-rdf#Name"
+                                                  oncommand="MsgGetMessagesForAccount(event);"/>
+                                    </menupopup>
+                                </rule>
+                            </template>
+                            <menupopup/>
+                        </menubutton>
 			<button class="button-toolbar-2 top" id="button-newmsg" value="&newMsgButton.label;" tooltip="aTooltip" tooltiptext="&newMsgButton.tooltip;" oncommand="MsgNewMessage(event)"/>
 			<toolbarseparator class="toolbarseparator-primary"/>
 			<button class="button-toolbar-2 top" id="button-reply" value="&replyButton.label;" tooltip="aTooltip" tooltiptext="&replyButton.tooltip;" observes="button_reply" oncommand="MsgReplyMessage(event)"/>

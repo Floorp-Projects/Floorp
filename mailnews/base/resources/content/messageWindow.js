@@ -373,6 +373,7 @@ var MessageWindowController =
 			case "cmd_viewPageSource":
 			case "cmd_reload":
 			case "cmd_getNewMessages":
+                        case "cmd_getMsgsForAuthAccounts":
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
@@ -429,6 +430,7 @@ var MessageWindowController =
 				}
 				return ( gCurrentMessageUri != null);
 			case "cmd_getNewMessages":
+                        case "cmd_getMsgsForAuthAccounts":
 				return IsGetNewMessagesEnabled();
 			case "cmd_getNextNMessages":
 				return IsGetNextNMessagesEnabled();
@@ -446,6 +448,9 @@ var MessageWindowController =
 			case "cmd_getNewMessages":
 				MsgGetMessage();
 				break;
+                        case "cmd_getMsgsForAuthAccounts":
+                                MsgGetMessagesForAllAuthenticatedAccounts();
+                                break;
 			case "cmd_getNextNMessages":
 				MsgGetNextNMessages();
 				break;
@@ -552,6 +557,7 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_viewPageSource');
 	goUpdateCommand('cmd_reload');
 	goUpdateCommand('cmd_getNewMessages');
+        goUpdateCommand('cmd_getMsgsForAuthAccounts');
 	goUpdateCommand('cmd_getNextNMessages');
 	goUpdateCommand('cmd_find');
 	goUpdateCommand('cmd_findAgain');

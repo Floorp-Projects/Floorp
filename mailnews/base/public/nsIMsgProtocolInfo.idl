@@ -89,6 +89,12 @@ interface nsIMsgProtocolInfo : nsISupports
     long getDefaultServerPort(in boolean isSecure);
 
     /**
+     * An attribute that tell us whether on not we can 
+     * get messages for the given server type 
+     */
+    readonly attribute boolean canGetMessages;
+
+    /**
      * do biff by default?
      */
     readonly attribute boolean defaultDoBiff;

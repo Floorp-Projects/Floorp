@@ -164,6 +164,14 @@ nsNoneService::GetCanDuplicate(PRBool *aCanDuplicate)
 }  
 
 NS_IMETHODIMP
+nsNoneService::GetCanGetMessages(PRBool *aCanGetMessages)
+{
+    NS_ENSURE_ARG_POINTER(aCanGetMessages);
+    *aCanGetMessages = PR_FALSE;
+    return NS_OK;
+}  
+
+NS_IMETHODIMP
 nsNoneService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
 {
     NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);

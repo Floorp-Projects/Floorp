@@ -598,6 +598,14 @@ nsMovemailService::GetCanDelete(PRBool *aCanDelete)
 }  
 
 NS_IMETHODIMP
+nsMoveMailService::GetCanGetMessages(PRBool *aCanGetMessages)
+{
+    NS_ENSURE_ARG_POINTER(aCanGetMessages);
+    *aCanGetMessages = PR_TRUE;
+    return NS_OK;
+}  
+
+NS_IMETHODIMP
 nsMovemailService::GetCanDuplicate(PRBool *aCanDuplicate)
 {
         NS_ENSURE_ARG_POINTER(aCanDuplicate);

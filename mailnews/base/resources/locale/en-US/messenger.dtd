@@ -46,6 +46,10 @@ Rights Reserved.
 <!ENTITY getNewMsgCmd.label				"Get New Messages">  
 <!ENTITY getNewMsgCmd.accesskey			"g">  
 <!ENTITY getNewMsgCmd.key				"t">  
+<!ENTITY getNewMsgForCmd.label			"Get New Messages for">  
+<!ENTITY getNewMsgForCmd.accesskey		"f">  
+<!ENTITY getAllNewMsgCmd.label			"Get All New Messages">  
+<!ENTITY getAllNewMsgCmd.key			"t">  
 <!ENTITY getNextNMsgCmd.label			"Get Next 500 News Messages">  
 <!ENTITY sendUnsentCmd.label			"Send Unsent Messages">  
 <!ENTITY sendUnsentCmd.accesskey		"d">  
