@@ -372,7 +372,7 @@ NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
     if(! m_pBrowserFrameGlue)
         return NS_ERROR_FAILURE;
 
-    m_pBrowserFrameGlue->ShowBrowserFrame(PR_TRUE);
+    m_pBrowserFrameGlue->ShowBrowserFrame(aVisibility);
 
     return NS_OK;
 }
