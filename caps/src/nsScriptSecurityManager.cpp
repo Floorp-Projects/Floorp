@@ -2141,6 +2141,7 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
 
     PRInt32 buttonPressed = 1; // If the user exits by clicking the close box, assume No (button 1)
     rv = prompter->ConfirmEx(title.get(), message.get(),
+                             (nsIPrompt::BUTTON_POS_1_DEFAULT) +
                              (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                              (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
                              nsnull, nsnull, nsnull, check.get(), checkValue, &buttonPressed);
