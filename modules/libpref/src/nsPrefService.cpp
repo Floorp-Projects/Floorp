@@ -513,11 +513,8 @@ JSBool pref_InitInitialObjects()
   PRBool            hasMoreElements;
         
   static const char* specialFiles[] = {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
       "macprefs.js"
-#if defined (TARGET_CARBON)
-      , "macxprefs.js"
-#endif
 #elif defined(XP_WIN)
       "winpref.js"
 #elif defined(XP_UNIX)

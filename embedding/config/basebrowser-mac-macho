@@ -223,7 +223,6 @@ components/libstrres.dylib
 ; required prefs files
 defaults/pref/all.js
 defaults/pref/macprefs.js
-defaults/pref/macxprefs.js
 
 ; uriloader
 components/liburiloader.dylib
