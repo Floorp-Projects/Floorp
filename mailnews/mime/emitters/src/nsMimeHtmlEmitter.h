@@ -50,7 +50,8 @@ public:
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
 
 protected:
-    PRBool        mFirst;  // Attachment flag...
+    PRBool        mFirst;           // Attachment flag...
+    PRBool        mSkipAttachment;  // attachments we shouldn't show...
 };
 
 /* this function will be used by the factory to generate an class access object....*/

@@ -369,6 +369,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
 		  nsAllocator::Free(spec);
 
     if ( (opt->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
+         (opt->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) || 
          (opt->format_out == nsMimeOutput::nsMimeMessagePrintOutput) )
     {
       mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_DESCRIPTION, tmp->description);

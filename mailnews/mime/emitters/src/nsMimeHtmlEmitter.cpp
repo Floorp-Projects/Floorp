@@ -29,6 +29,7 @@
 #include "nsEmitterUtils.h"
 #include "nsEscape.h"
 #include "nsIMimeStreamConverter.h"
+#include "nsMimeTypes.h"
 
 nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result)
 {
@@ -46,6 +47,7 @@ nsMimeHtmlEmitter::nsMimeHtmlEmitter()
 {
   mFormat = nsMimeOutput::nsMimeMessageBodyQuoting;
   mFirst = PR_TRUE;
+  mSkipAttachment = PR_FALSE;
 }
 
 nsMimeHtmlEmitter::~nsMimeHtmlEmitter(void)
@@ -76,33 +78,47 @@ nsMimeHtmlEmitter::EndHeader()
 nsresult
 nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
+  if (  (contentType) &&
+        ( (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_MIME)) ||
+          (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_SIGNATURE)) ||
+          (!nsCRT::strcmp(contentType, TEXT_VCARD))
+        )
+     )
+  {
+    mSkipAttachment = PR_TRUE;
+    return NS_OK;
+  }
+  else
+    mSkipAttachment = PR_FALSE;
+
   if (mFirst)
     UtilityWrite("<HR WIDTH=\"90%\" SIZE=4>");
 
   mFirst = PR_FALSE;
 
-  UtilityWrite("<CENTER>");
-  UtilityWrite("<TABLE BORDER>");
+  UtilityWrite("<CENTER BORDER=1>");
+  UtilityWrite("<TABLE>");
   UtilityWrite("<tr>");
   UtilityWrite("<TD>");
 
-  UtilityWrite("<CENTER>");
   UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
 
   UtilityWrite(name);
 
   UtilityWrite("</DIV>");
-  UtilityWrite("</CENTER>");
 
   UtilityWrite("</TD>");
   UtilityWrite("<TD>");
-  UtilityWrite("<TABLE BORDER=0>");
+  UtilityWrite("<TABLE BORDER=1>");
   return NS_OK;
 }
 
 nsresult
 nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
 {
+  if (mSkipAttachment)
+    return NS_OK;
+
   // Don't let bad things happen
   if ( (!value) || (!*value) )
     return NS_OK;
@@ -136,6 +152,9 @@ nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
 nsresult
 nsMimeHtmlEmitter::EndAttachment()
 {
+  if (mSkipAttachment)
+    return NS_OK;
+
   UtilityWrite("</TABLE>");
   UtilityWrite("</TD>");
   UtilityWrite("</tr>");
