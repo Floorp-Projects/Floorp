@@ -48,6 +48,16 @@ protected:
 };
 
 //////////////////////////////////////////////////////////////////////////
+class XFE_ColumnData
+{
+public:
+  XFE_ColumnData(void) : token(NULL), token_type(0) {}
+  XFE_ColumnData(void *t, uint32 tt) : token(t), token_type(tt) {}
+
+  void* token;
+  uint32 token_type;
+};
+//////////////////////////////////////////////////////////////////////////
 
 class XFE_RDFTreeView : public XFE_View,
                         public XFE_RDFBase
@@ -81,11 +91,14 @@ public:
 	void doPopup(XEvent *event);
 
 	// Stand alone set/get methods
-	void setStandAloneState(XP_Bool state);
-	XP_Bool getStandAloneState();
+	void setStandAlone(XP_Bool);
+	XP_Bool isStandAlone() { return _isStandAlone; }
 
     // Set HT Properties
     void setHTTreeViewProperties(HT_View); 
+
+    void            setColumnData   (int column, void *token, uint32 tkntype);
+    XFE_ColumnData *getColumnData   (int column);
 
 protected:
     // The XmL tree widget
@@ -101,10 +114,7 @@ private:
 	XFE_RDFPopupMenu *		_popup;
 
 	// Is this a stand alone view ?
-	XP_Bool					_standAloneState;
-
-    // Are the cells editable?
-    XP_Bool                 _isCellEditable;
+	XP_Bool					_isStandAlone;
 
   // icons for use in the bookmark window.
   static fe_icon bookmark;
@@ -130,6 +140,7 @@ private:
   void resize(XtPointer);
   void edit_cell(XtPointer);
   void select_row(int row);
+  void sort_column(int column);
   void deselect_row(int row);
 
   static void expand_row_cb(Widget, XtPointer, XtPointer);

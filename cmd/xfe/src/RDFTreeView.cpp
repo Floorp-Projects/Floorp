@@ -61,46 +61,6 @@ extern "C"
 };
 
 
-struct RDFColumnData
-{
-  RDFColumnData(void) : token(NULL), token_type(0) {}
-  RDFColumnData(void *t, uint32 tt) : token(t), token_type(tt) {}
-
-  void* token;
-  uint32 token_type;
-};
-
-
-void HTFE_MakePrettyDate(char* buffer, time_t lastVisited)
-{
-    buffer[0] = 0;
-    time_t today = XP_TIME();
-    int elapsed = today - lastVisited;
-
-    if (elapsed < SECONDS_PER_DAY) 
-    {
-        int32 hours = (elapsed + 1800L) / 3600L;
-        if (hours < 1) 
-        {
-            XP_STRCPY(buffer, XP_GetString(XP_BKMKS_LESS_THAN_ONE_HOUR_AGO));
-        }
-        sprintf(buffer, XP_GetString(XP_BKMKS_HOURS_AGO), hours);
-    } 
-    else if (elapsed < (SECONDS_PER_DAY * 31)) 
-    {
-        sprintf(buffer, XP_GetString(XP_BKMKS_DAYS_AGO),
-                (elapsed + (SECONDS_PER_DAY / 2)) / SECONDS_PER_DAY);
-    } 
-    else 
-    {
-	  struct tm* tmp;
-	  tmp = localtime(&lastVisited);
-
-	  sprintf(buffer, asctime(tmp));
-    }
-}
-
-
 //
 //  Command Handling
 //
@@ -154,7 +114,9 @@ public:
     };
 };
 
-//    END OF COMMAND DEFINES
+//  End of Commands
+/////////////////////////////////////////////////////////////////////
+//  Start of XFE_RDFTreeView definitions
 
 static XFE_CommandList* my_commands = 0;
 
@@ -165,8 +127,7 @@ XFE_RDFTreeView::XFE_RDFTreeView(XFE_Component *	toplevel,
 	XFE_View(toplevel, parent_view, context),
     XFE_RDFBase(),
 	_popup(NULL),
-	_standAloneState(False),
-    _isCellEditable(False)
+	_isStandAlone(False)
 {
 	if (!my_commands)
 	{
@@ -258,6 +219,33 @@ XFE_RDFTreeView::doAttachments()
 	}
 }
 //////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFTreeView::setColumnData(int column, void * token, uint32 token_type)
+{
+    XFE_ColumnData *column_data = getColumnData(column);
+    if (column_data) {
+        column_data->token        = token;
+        column_data->token_type   = token_type;
+    } else {
+        column_data = new XFE_ColumnData(token, token_type);
+    }
+    XtVaSetValues(_tree,
+                  XmNcolumn, column,
+                  XmNcolumnUserData, column_data,
+                  NULL);
+}
+XFE_ColumnData *
+XFE_RDFTreeView::getColumnData(int column)
+{
+    XFE_ColumnData *  column_data;
+    XmLGridColumn colp = XmLGridGetColumn(_tree, XmCONTENT, column);
+    XtVaGetValues(_tree, 
+                  XmNcolumnPtr, colp,
+                  XmNcolumnUserData, &column_data,
+                  NULL);
+    return column_data;
+}
+/////////////////////////////////////////////////////////////////////
 void
 XFE_RDFTreeView::init_pixmaps(void)
 {
@@ -397,12 +385,8 @@ XFE_RDFTreeView::edit_cell(XtPointer callData)
     {
         XmLGridColumn column = XmLGridGetColumn(_tree, XmCONTENT,
                                                 cbs->column);
-        RDFColumnData *column_data = NULL;
 
-        XtVaGetValues(_tree, 
-                      XmNcolumnPtr, column,
-                      XmNcolumnUserData, &column_data,
-                      NULL);
+        XFE_ColumnData *column_data = getColumnData(cbs->column);
 
         XmLGridRow row = XmLGridGetRow(_tree, XmCONTENT, cbs->row);
         XmString cell_string;
@@ -427,9 +411,45 @@ XFE_RDFTreeView::select_cb(Widget,
 	XFE_RDFTreeView *obj = (XFE_RDFTreeView*)clientData;
     XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
 
-    D(fprintf(stderr,"select_cb(%d)\n",cbs->row););
+    if (cbs->rowType == XmHEADING) {
+        obj->sort_column(cbs->column);
+    } else {
+        obj->select_row(cbs->row);
+    }
+}
 
-	obj->select_row(cbs->row);
+void
+XFE_RDFTreeView::sort_column(int column)
+{
+    int              old_sort_column;
+    unsigned char    old_sort_type;
+
+    XmLGridGetSort(_tree, &old_sort_column, &old_sort_type);
+
+    unsigned char    sort_type = XmSORT_ASCENDING;
+
+    if (old_sort_column == column) {
+        if (old_sort_type == XmSORT_ASCENDING)
+            sort_type = XmSORT_DESCENDING;
+        else if (old_sort_type == XmSORT_DESCENDING)
+            sort_type = XmSORT_NONE;
+    }
+
+    XFE_ColumnData *  column_data = getColumnData(column);
+
+    if (sort_type == XmSORT_NONE) {
+        HT_SetSortColumn(_ht_view, NULL, NULL, PR_FALSE);
+    } else {
+        XP_ASSERT(column_data);
+        if (!column_data) return;
+
+        HT_SetSortColumn(_ht_view, 
+                         column_data->token,
+                         column_data->token_type, 
+                         sort_type == XmSORT_DESCENDING ? PR_TRUE : PR_FALSE);
+    }
+
+    XmLGridSetSort(_tree, column, sort_type);
 }
 
 void
@@ -530,6 +550,7 @@ XFE_RDFTreeView::notify(HT_Resource n, HT_Event whatHappened)
         break;
     }
   case HT_EVENT_VIEW_REFRESH:
+  case HT_EVENT_VIEW_SORTING_CHANGED:
     {
        int row = HT_GetNodeIndex(_ht_view, n);
        PRBool expands = HT_IsContainer(n);
@@ -572,12 +593,6 @@ XFE_RDFTreeView::fill_tree()
   
   int item_count =  HT_GetItemListCount(_ht_view);
   //void * data=NULL;
-
-    /* This s'd eventually be replaced by the HT property useInlineEditing */
-  if (getStandAloneState())
-    _isCellEditable = True;
-  else
-    _isCellEditable = False;
 
   XtVaSetValues(_tree,
                 XmNlayoutFrozen, True,
@@ -701,63 +716,50 @@ XFE_RDFTreeView::add_row
     int column_count;
     // Should only need to do this for visible columns
     XtVaGetValues(_tree, XmNcolumns, &column_count, NULL);
-    RDFColumnData *column_data;
     void *data;
     for (int ii = 0; ii < column_count; ii++) 
     {
-        XmLGridColumn column = XmLGridGetColumn(_tree, XmCONTENT, ii);
-        XtVaGetValues(_tree, 
-                      XmNcolumnPtr, column,
-                      XmNcolumnUserData, &column_data,
-                      NULL);
-/*
-        Boolean is_editable = HT_IsNodeDataEditable(node,
-                                                     column_data->token,
-                                                    column_data->token_type);
-*/
-        Boolean is_editable = _isCellEditable;
-        XtVaSetValues(_tree,
-                      XmNrow,          row,
-                      XmNcolumn,       ii,
-                      XmNcellEditable, is_editable,
-                      NULL);
-
-        if (column_data && HT_GetNodeData (node, column_data->token,
-                                           column_data->token_type, &data)
-            && data) 
-       {
-            time_t dateVal;
-            struct tm* time;
-            char buffer[200];
-            
-            switch (column_data->token_type)
-            {
-			case HT_COLUMN_DATE_STRING:
-				if ((dateVal = (time_t)atol((char *)data)) == 0) break;
-				if ((time = localtime(&dateVal)) == NULL) break;
-				HTFE_MakePrettyDate(buffer, dateVal);
-				break;
-			case HT_COLUMN_DATE_INT:
-				if ((time = localtime((time_t *) &data)) == NULL) break;
-				HTFE_MakePrettyDate(buffer, (time_t)data);
-				break;
-			case HT_COLUMN_INT:
-				sprintf(buffer,"%d",(int)data);
-				break;
-			case HT_COLUMN_STRING:
-				strcpy(buffer, (char*)data);
-				break;
-            }
-            /*D(fprintf(stderr,"Node data (%d, %d) = '%s'\n",row,ii,buffer););*/
-            XmLGridSetStringsPos(_tree, 
-                                 XmCONTENT, row,
-                                 XmCONTENT, ii, 
-                                 buffer);
-        }
-        else
+        XFE_ColumnData *column_data = getColumnData(ii);
+        
+        if (column_data)
         {
-            /*D(fprintf(stderr,"No column data r(%d) c(%d) type(%d)\n",row,ii,
-                      column_data->token_type););*/
+            Boolean is_editable = False;
+            if (isStandAlone())
+            {
+                is_editable = HT_IsNodeDataEditable(node,
+                                                    column_data->token,
+                                                    column_data->token_type);
+            }
+            XtVaSetValues(_tree,
+                          XmNrow,          row,
+                          XmNcolumn,       ii,
+                          XmNcellEditable, is_editable,
+                          NULL);
+
+            if (HT_GetNodeData (node, column_data->token,
+                                column_data->token_type, &data)
+                && data) 
+            {
+                time_t dateVal;
+                struct tm* time;
+                char buffer[200];
+                
+                switch (column_data->token_type)
+                {
+                case HT_COLUMN_DATE_INT:
+                case HT_COLUMN_INT:
+                    sprintf(buffer,"%d",(int)data);
+                    break;
+                case HT_COLUMN_DATE_STRING:
+                case HT_COLUMN_STRING:
+                    strcpy(buffer, (char*)data);
+                    break;
+                }
+                XmLGridSetStringsPos(_tree, 
+                                     XmCONTENT, row,
+                                     XmCONTENT, ii, 
+                                     buffer);
+            }
         }
     }
 }
@@ -781,13 +783,13 @@ XFE_RDFTreeView::add_column(int index, char *name, uint32 width,
       XmLGridAddColumns(_tree, XmCONTENT, index, 1);
   }
 
-  RDFColumnData *column_data = new RDFColumnData(token, token_type);
   XtVaSetValues(_tree,
                 XmNcolumn, index,
                 XmNcolumnSizePolicy, XmCONSTANT,
                 XmNcolumnWidth, width,
-                XmNcolumnUserData, column_data,
                 NULL);
+
+  setColumnData(index, token, token_type);
 
   XmLGridSetStringsPos(_tree, 
                        XmHEADING, 0,
@@ -845,27 +847,20 @@ XFE_RDFTreeView::collapse_row(int row)
 
 void 
 XFE_RDFTreeView::delete_cb(Widget w,
-                       XtPointer /*clientData*/,
+                       XtPointer clientData,
                        XtPointer callData)
 {
+	XFE_RDFTreeView *obj = (XFE_RDFTreeView*)clientData;
     XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
  
-	XmLGridColumn column;
-    RDFColumnData *column_data = NULL;
-
 	cbs = (XmLGridCallbackStruct *)callData;
 
  	if (cbs->reason != XmCR_DELETE_COLUMN)
 		return;
 
-	column = XmLGridGetColumn(w, XmCONTENT, cbs->column);
-
-	XtVaGetValues(w,
-		XmNcolumnPtr, column,
-		XmNcolumnUserData, &column_data,
-		NULL);
-
-    delete column_data;
+    XFE_ColumnData * column_data = obj->getColumnData(cbs->column);
+    if (column_data)
+        delete column_data;
 }
 
 void 
@@ -948,30 +943,24 @@ XFE_RDFPopupMenu::PushButtonActivate(Widget /* w */, XtPointer userData)
 //
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_RDFTreeView::setStandAloneState(XP_Bool state)
+XFE_RDFTreeView::setStandAlone(XP_Bool stand_alone)
 {
 	XP_ASSERT( XfeIsAlive(_tree) );
 
-	_standAloneState = state;
+	_isStandAlone = stand_alone;
 #ifdef UNDEF
     /* 
      * We need to set lot more properties based on standalone state. 
      * We instead call setHTTreeviewProperties to do all that
      */
 
-	int visibleColumns = (_standAloneState ? 0 : 1);
+	int visibleColumns = (_isStandAlone ? 0 : 1);
 
 	XtVaSetValues(_tree,
 				  XmNvisibleColumns,		visibleColumns,
 				  NULL);
 #endif   /* UNDEF */
 
-}
-//////////////////////////////////////////////////////////////////////////
-XP_Bool
-XFE_RDFTreeView::getStandAloneState()
-{
-	return _standAloneState;
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -1100,7 +1089,7 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
     else if ((!XP_STRCASECMP(answer, "No")) || (!XP_STRCASECMP(answer, "0")))
     {  }
 */
-    if (_standAloneState)
+    if (isStandAlone())
     {
          /* Management mode */
          XtSetArg(av[ac], XmNheadingRows, 1);      
