@@ -1639,6 +1639,8 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   {
     // Single click.
   case GDK_BUTTON_PRESS:
+    // Triple click.
+  case GDK_3BUTTON_PRESS:
 
     switch (aGdkButtonEvent->button)  // Which button?
     {
@@ -1683,11 +1685,6 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
       eventType = NS_MOUSE_LEFT_DOUBLECLICK;
       break;
     }
-    break;
-
-    // Triple click.
-  case GDK_3BUTTON_PRESS:
-    // Unhandled triple click.
     break;
 	
   default:
@@ -1935,8 +1932,8 @@ nsWidget::InitMouseEvent(GdkEventButton * aGdkButtonEvent,
       case GDK_2BUTTON_PRESS:
         anEvent.clickCount = 2;
         break;
-      case GDK_3BUTTON_PRESS:  /* Clamp to double-click */
-        anEvent.clickCount = 2;
+      case GDK_3BUTTON_PRESS:
+        anEvent.clickCount = 3;
         break;
       default:
         anEvent.clickCount = 1;
