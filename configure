@@ -11724,6 +11724,8 @@ echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh
 
+echo $MAKEFILES > unallmakefiles
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure

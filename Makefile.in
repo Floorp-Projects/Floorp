@@ -141,8 +141,8 @@ STATIC_MAKEFILES := $(NSPRPUB_DIR)
 
 GARBAGE += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
-   dependencies.beos config/autoconf.mk \
-   $(shell cd $(topsrcdir); . ./allmakefiles.sh; echo $${MAKEFILES})
+   dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
+   $(shell cat unallmakefiles) unallmakefiles
 
 include $(topsrcdir)/config/rules.mk
 
