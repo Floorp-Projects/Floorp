@@ -27,9 +27,6 @@
 
 #define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
 
-// Size of the color cube
-#define COLOR_CUBE_SIZE       216
-
 // Macro for creating a palette relative color if you have a COLORREF instead
 // of the reg, green, and blue values. The color is color-matches to the nearest
 // in the current logical palette. This has no effect on a non-palette device
