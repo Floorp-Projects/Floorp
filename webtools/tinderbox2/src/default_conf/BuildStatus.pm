@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.10 $ 
-# $Date: 2002/04/25 00:36:46 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/04/26 01:57:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -262,5 +262,16 @@ sub status2descriptions {
 
   return @out;
 }
+
+
+sub get_TinderboxPrint_separator{
+
+# How should the TinderboxPrint statements be rendered?
+# obvious choices are <br> or &nbsp;
+
+
+    return "<br>";
+}
+
 
 1;
