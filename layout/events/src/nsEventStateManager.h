@@ -29,6 +29,9 @@ class nsIDocument;
 class nsIScrollableView;
 class nsISelfScrollingFrame;
 
+#undef USE_FOCUS_FOR_MOUSEWHEEL // experimental code to use only the focus
+                                // system to track the mousewheel
+
 /*
  * Event listener manager
  */
@@ -98,9 +101,13 @@ protected:
   nsISelfScrollingFrame* GetParentSelfScrollingFrame(nsIFrame* aFrame);
   PRBool CheckDisabled(nsIContent* aContent);
 
+#ifdef USE_FOCUS_FOR_MOUSEWHEEL
+  nsresult  GetScrollableFrameOrView(nsIScrollableView* &sv, nsISelfScrollingFrame* &sf, nsIView* &focusView);
+#else
   nsIFrame* GetDocumentFrame(nsIPresContext* aPresContext);
   nsresult  GetScrollableFrameOrView(nsIPresContext* aPresContext, nsIFrame* aTargetFrame, nsIView* aView,
                                      nsIScrollableView* &sv, nsISelfScrollingFrame* &sf, nsIView* &focusView);
+#endif
   void ForceViewUpdate(nsIView* aView);
 
   // routines for the d&d gesture tracking state machine

@@ -58,19 +58,13 @@
 
 #include "nsXULAtoms.h"
 
-#undef DEBUG_scroll     // define to see ugly mousewheel messages
+#undef DEBUG_scroll            // define to see ugly mousewheel messages
+#undef GFXSCROLL_IS_PRIMARY    // define this when the code is enabled to make
+                               // nsGfxScrollFrame the primary document frame
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLObjectElementIID, NS_IDOMHTMLOBJECTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
+#ifdef GFXSCROLL_IS_PRIMARY
+#include "nsIScrollableFrame.h"
+#endif
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  
@@ -205,7 +199,7 @@ int mwIntPrefChangedCallback(const char* name, void * closure)
 {
   nsIPref* prefs = nsnull;
   nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-                                              (nsISupports**) &prefs);
+                                             (nsISupports**) &prefs);
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
   NS_ASSERTION(nsnull != prefs,"Prefs service is null.");
 
@@ -224,7 +218,7 @@ int mwBoolPrefChangedCallback(const char* name, void * closure)
 {
   nsIPref* prefs = nsnull;
   nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-                                              (nsISupports**) &prefs);
+                                             (nsISupports**) &prefs);
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
   NS_ASSERTION(nsnull != prefs,"Prefs service is null.");
 
@@ -274,8 +268,8 @@ void mwRegisterPrefCallbacks()
   if (once) {
     once = PR_FALSE;
     nsIPref* prefs = nsnull;
-    nsresult rv = nsServiceManager::GetService(kPrefCID,
-                                 NS_GET_IID(nsIPref), (nsISupports**) &prefs);
+    nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
+                                               (nsISupports**) &prefs);
     NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
     NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
 
@@ -479,7 +473,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       mCurrentTarget->GetContent(&newFocus);
       if (newFocus) {
         nsIFocusableContent *focusChange;
-        if (NS_SUCCEEDED(newFocus->QueryInterface(kIFocusableContentIID,
+        if (NS_SUCCEEDED(newFocus->QueryInterface(NS_GET_IID(nsIFocusableContent),
                                                   (void **)&focusChange))) {
           NS_RELEASE(focusChange);
           NS_RELEASE(newFocus);
@@ -526,7 +520,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       mCurrentTarget->GetContent(&newFocus);
       if (newFocus) {
         nsIFocusableContent *focusChange;
-        if (NS_SUCCEEDED(newFocus->QueryInterface(kIFocusableContentIID,
+        if (NS_SUCCEEDED(newFocus->QueryInterface(NS_GET_IID(nsIFocusableContent),
                                                   (void **)&focusChange))) {
           NS_RELEASE(focusChange);
           NS_RELEASE(newFocus);
@@ -838,8 +832,12 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsIScrollableView* sv = nsnull;
           nsISelfScrollingFrame* sf = nsnull;
           
+#ifdef USE_FOCUS_FOR_MOUSEWHEEL
+          if (NS_SUCCEEDED(GetScrollableFrameOrView(sv, sf, focusView)))
+#else
           if (NS_SUCCEEDED(GetScrollableFrameOrView(aPresContext, aTargetFrame,
                                                     aView, sv, sf, focusView)))
+#endif
             {
               if (sv)
                 {
@@ -858,8 +856,12 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsIScrollableView* sv = nsnull;
           nsISelfScrollingFrame* sf = nsnull;
           
+#ifdef USE_FOCUS_FOR_MOUSEWHEEL
+          if (NS_SUCCEEDED(GetScrollableFrameOrView(sv, sf, focusView)))
+#else
           if (NS_SUCCEEDED(GetScrollableFrameOrView(aPresContext, aTargetFrame,
                                                     aView, sv, sf, focusView)))
+#endif
             {
               if (sv)
                 {
@@ -1030,7 +1032,8 @@ nsIScrollableView*
 nsEventStateManager::GetNearestScrollingView(nsIView* aView)
 {
   nsIScrollableView* sv;
-  if (NS_OK == aView->QueryInterface(kIScrollableViewIID, (void**)&sv)) {
+  if (NS_OK == aView->QueryInterface(NS_GET_IID(nsIScrollableView),
+                                     (void**)&sv)) {
     return sv;
   }
 
@@ -1650,7 +1653,8 @@ nsEventStateManager::ShiftFocus(PRBool forward)
     mPresContext->GetContainer(&container);
     if (nsnull != container) {
       nsIWebShell* webShell;
-      if (NS_OK == container->QueryInterface(kIWebShellIID, (void**)&webShell)) {
+      if (NS_OK == container->QueryInterface(NS_GET_IID(nsIWebShell),
+                                             (void**)&webShell)) {
         nsIWebShellContainer* webShellContainer;
         webShell->GetContainer(webShellContainer);
         if (nsnull != webShellContainer) {
@@ -1719,7 +1723,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       child->GetTag(*getter_AddRefs(tag));
       if (nsHTMLAtoms::input==tag.get()) {
         nsIDOMHTMLInputElement *nextInput;
-        if (NS_OK == child->QueryInterface(kIDOMHTMLInputElementIID,(void **)&nextInput)) {
+        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement),
+                                           (void **)&nextInput)) {
           nextInput->GetDisabled(&disabled);
           nextInput->GetTabIndex(&tabIndex);
 
@@ -1733,7 +1738,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       }
       else if (nsHTMLAtoms::select==tag.get()) {
         nsIDOMHTMLSelectElement *nextSelect;
-        if (NS_OK == child->QueryInterface(kIDOMHTMLSelectElementIID,(void **)&nextSelect)) {
+        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
+                                           (void **)&nextSelect)) {
           nextSelect->GetDisabled(&disabled);
           nextSelect->GetTabIndex(&tabIndex);
           NS_RELEASE(nextSelect);
@@ -1741,7 +1747,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       }
       else if (nsHTMLAtoms::textarea==tag.get()) {
         nsIDOMHTMLTextAreaElement *nextTextArea;
-        if (NS_OK == child->QueryInterface(kIDOMHTMLTextAreaElementIID,(void **)&nextTextArea)) {
+        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLTextAreaElement),(void **)&nextTextArea)) {
           nextTextArea->GetDisabled(&disabled);
           nextTextArea->GetTabIndex(&tabIndex);
           NS_RELEASE(nextTextArea);
@@ -1750,7 +1756,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       }
       else if(nsHTMLAtoms::a==tag.get()) {
         nsIDOMHTMLAnchorElement *nextAnchor;
-        if (NS_OK == child->QueryInterface(kIDOMHTMLAnchorElementIID,(void **)&nextAnchor)) {
+        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLAnchorElement),
+                                           (void **)&nextAnchor)) {
           nextAnchor->GetTabIndex(&tabIndex);
           NS_RELEASE(nextAnchor);
         }
@@ -1758,7 +1765,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       }
       else if(nsHTMLAtoms::button==tag.get()) {
         nsIDOMHTMLButtonElement *nextButton;
-        if (NS_OK == child->QueryInterface(kIDOMHTMLButtonElementIID,(void **)&nextButton)) {
+        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLButtonElement),
+                                           (void **)&nextButton)) {
           nextButton->GetTabIndex(&tabIndex);
           nextButton->GetDisabled(&disabled);
           NS_RELEASE(nextButton);
@@ -1766,7 +1774,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       }
       else if(nsHTMLAtoms::area==tag.get()) {
         nsIDOMHTMLAreaElement *nextArea;
-        if (NS_OK == child->QueryInterface(kIDOMHTMLAreaElementIID,(void **)&nextArea)) {
+        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLAreaElement),
+                                           (void **)&nextArea)) {
           nextArea->GetTabIndex(&tabIndex);
           NS_RELEASE(nextArea);
         }
@@ -1774,7 +1783,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       }
       else if(nsHTMLAtoms::object==tag.get()) {
         nsIDOMHTMLObjectElement *nextObject;
-        if (NS_OK == child->QueryInterface(kIDOMHTMLObjectElementIID,(void **)&nextObject)) {
+        if (NS_OK == child->QueryInterface(NS_GET_IID(nsIDOMHTMLObjectElement),
+                                           (void **)&nextObject)) {
           nextObject->GetTabIndex(&tabIndex);
           NS_RELEASE(nextObject);
         }
@@ -2268,6 +2278,8 @@ nsEventStateManager::SetFocusedContent(nsIContent* aContent)
   return NS_OK;
 }
 
+#ifndef USE_FOCUS_FOR_MOUSEWHEEL
+
 nsIFrame*
 nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
 {
@@ -2290,10 +2302,11 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
 
 #ifdef DEBUG_scroll
   printf("GetDocumentFrame: aDocument = %p, aFrame = %p\n", aDocument, aFrame);
-  printf("GetDocumentFrame: mDocument = %p, gLastFocusedDocument = %p\n",
-         mDocument, gLastFocusedDocument);
-  printf("GetDocumentFrame: aDocument.parent=%p, mDocument.parent=%p, gLFD.parent=%p\n", aDocument->GetParentDocument(), (mDocument ? mDocument->GetParentDocument() : 0), (gLastFocusedDocument ? gLastFocusedDocument->GetParentDocument() : 0));
+  printf("GetDocumentFrame: aDocument.parent=%p\n",
+         aDocument->GetParentDocument());
 #endif
+
+#ifndef GFXSCROLL_IS_PRIMARY
 
   aFrame->GetView(aPresContext, &aView);
 #ifdef DEBUG_scroll
@@ -2306,8 +2319,71 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
 #endif
     aFrame->GetParentWithView(aPresContext, &aFrame);
   }
+
+#endif // !GFXSCROLL_IS_PRIMARY
+
   return aFrame;
 }
+#endif // !USE_FOCUS_FOR_MOUSEWHEEL
+
+#ifdef USE_FOCUS_FOR_MOUSEWHEEL
+// This is some work-in-progress code that uses only the focus
+// to determine what to scroll
+
+nsresult
+nsEventStateManager::GetScrollableFrameOrView(nsIScrollableView* &sv,
+                                              nsISelfScrollingFrame* &sf,
+                                              nsIView* &focusView)
+{
+  NS_ASSERTION(mPresContext, "ESM has a null prescontext");
+#ifdef DEBUG_scroll
+  printf("GetScrollableFrameOrView: gLastFocusedContent = %p\n",
+         gLastFocusedContent);
+#endif
+
+  nsIFrame* focusFrame = nsnull;
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  if (!presShell || !gLastFocusedContent)
+    {
+      sv = nsnull;
+      sf = nsnull;
+      focusView = nsnull;
+      return NS_OK;
+    }
+
+  presShell->GetPrimaryFrameFor(gLastFocusedContent, &focusFrame);
+  if (focusFrame) {
+#ifdef DEBUG_scroll
+    printf("got focusFrame\n");
+#endif
+    focusFrame->GetView(mPresContext, &focusView);
+  }
+
+  if (focusView) {
+#ifdef DEBUG_scroll
+    printf("got focusView\n");
+#endif
+    sv = GetNearestScrollingView(focusView);
+    if (sv) {
+#ifdef DEBUG_scroll
+      printf("got scrollingView\n");
+#endif
+      sf = nsnull;
+      return NS_OK; // success
+    }
+  }
+
+  if (focusFrame)
+    sf = GetParentSelfScrollingFrame(focusFrame);
+#ifdef DEBUG_scroll
+  if (sf)
+    printf("got SSF\n");
+#endif
+  return NS_OK;
+}
+
+#else // USE_FOCUS_FOR_MOUSEWHEEL
 
 // There are three posibilities for what this function returns:
 //  sv and focusView non-null, sf null  (a view should be scrolled)
@@ -2324,12 +2400,13 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
 //   an nsIView corresponding to the main document.
 // Confused yet?
 
-nsresult nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
-                                                       nsIFrame* aTargetFrame,
-                                                       nsIView* aView,
-                                                       nsIScrollableView* &sv,
-                                                       nsISelfScrollingFrame* &sf,
-                                                       nsIView* &focusView)
+nsresult
+nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
+                                              nsIFrame* aTargetFrame,
+                                              nsIView* aView,
+                                              nsIScrollableView* &sv,
+                                              nsISelfScrollingFrame* &sf,
+                                              nsIView* &focusView)
 {
   nsIFrame* focusFrame = nsnull;
 
@@ -2408,7 +2485,8 @@ nsresult nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresCont
          focusFrame, focusView);
 #endif
   
-  sv = GetNearestScrollingView(focusView);
+  if (focusView)
+    sv = GetNearestScrollingView(focusView);
 
   if (sv) {
 #ifdef DEBUG_scroll
@@ -2420,35 +2498,57 @@ nsresult nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresCont
     return NS_OK;
   }
   else {
+#ifdef GFXSCROLL_IS_PRIMARY
+    if (focusFrame) {
+#ifdef DEBUG_scroll
+      printf("Checking if frame is an nsIScrollableFrame\n");
+#endif
+      nsIScrollableFrame* scrollableFrame = nsnull;
+      if (NS_OK == focusFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame),
+                       (void**)&scrollableFrame)) {
+#ifdef DEBUG_scroll
+        printf("Got an nsIScrollableFrame: %p\n", scrollableFrame);
+#endif
+        nsIFrame* scrolledFrame = nsnull;
+        scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
+        if (scrolledFrame) {
+#ifdef DEBUG_scroll
+          printf("Got a scrolled frame\n");
+#endif
+          scrolledFrame->GetView(aPresContext, &focusView);
+          sv = GetNearestScrollingView(focusView);
+          if (sv) {
+           sf = nsnull;
+#ifdef DEBUG_scroll
+           printf("Got a scrolling view via nsGfxScrollFrame\n");
+#endif
+           return NS_OK;
+          }
+        }
+      }
+    }
+#endif // GFXSCROLL_IS_PRIMARY
+           
 #ifdef DEBUG_scroll
     printf("GetScrollableFrameOrView: No scrolling view, looking for a scrolling frame\n");
 #endif
     if (!sf)
       sf = GetParentSelfScrollingFrame(aTargetFrame);
 
-    if (sf) {
 #ifdef DEBUG_scroll
+    if (sf)
       printf("GetScrollableFrameOrView: Found a scrolling frame\n");
 #endif
 
-      sv = nsnull;
-      focusView = nsnull;
-      return NS_OK;
-
-    }
-    else {
-#ifdef DEBUG_scroll
-      printf("GetScrollableFrameOrView: Could not find a scrolling frame\n");
-#endif
-      sf = nsnull;
-      sv = nsnull;
-      focusView = nsnull;
-      return NS_OK;
-    }
+    sv = nsnull;
+    focusView = nsnull;
+    return NS_OK;
   }
 
-  return NS_OK;
+  return NS_OK;  // should not be reached
 }
+
+#endif // USE_FOCUS_FOR_MOUSEWHEEL
 
 void nsEventStateManager::ForceViewUpdate(nsIView* aView)
 {
@@ -2474,6 +2574,7 @@ nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
   if (nsnull == manager) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return manager->QueryInterface(NS_GET_IID(nsIEventStateManager), (void **) aInstancePtrResult);
+  return manager->QueryInterface(NS_GET_IID(nsIEventStateManager),
+                                 (void **) aInstancePtrResult);
 }
 
