@@ -27,6 +27,9 @@
 
 /* XXX we should define device and entry info as well (stats, etc) */
 
+interface nsICacheDeviceInfo;
+interface nsICacheEntryInfo;
+
 [scriptable, uuid(f8c08c4b-d778-49d1-a59b-866fdc500d95)]
 interface nsICacheVisitor : nsISupports
 {
@@ -39,7 +42,8 @@ interface nsICacheVisitor : nsISupports
      * @return true to start visiting all entries for this device.
      * @return false to advance to the next device.
      */
-    boolean visitDevice(in string deviceID, in nsISupports deviceInfo);
+    boolean visitDevice(in string               deviceID,
+                        in nsICacheDeviceInfo   deviceInfo);
 
     /**
      * Called to provide information about a cache entry.
@@ -52,7 +56,86 @@ interface nsICacheVisitor : nsISupports
      *   end of the device has been reached, advance to the next device.
      * @return false to advance to the next device.
      */
-    boolean visitEntry(in string deviceID,
-                       in string clientID,
-                       in nsISupports entryInfo);
+    boolean visitEntry(in string                deviceID,
+                       in string                clientID,
+                       in nsICacheEntryInfo     entryInfo);
+};
+
+[scriptable, uuid(31d1c294-1dd2-11b2-be3a-c79230dca297)]
+interface nsICacheDeviceInfo : nsISupports
+{
+    /**
+     * Get a human readable description of the cache device.
+     */
+    readonly attribute string  description;
+    
+    /**
+     * Get a usage report, statistics, miscellaneous data about
+     * the cache device.
+     */
+    readonly attribute string  usageReport;
+    
+    /**
+     * Get the number of stored cache entries.
+     */
+    readonly attribute unsigned long  entryCount;
+    
+    /**
+     * Get the total size of the stored cache entries.
+     */
+    readonly attribute unsigned long  totalSize;
+
+    /**
+     * Get the upper limit of the size of the data the cache can store.
+     */
+    readonly attribute unsigned long  maximumSize;
+};
+
+[scriptable, uuid(72c64022-1dd2-11b2-b3a5-b8b859e0a1b2)]
+interface nsICacheEntryInfo : nsISupports
+{
+    /**
+     * Get the client id associated with this cache entry.
+     */
+    readonly attribute string  clientID;
+
+    /**
+     * Get the key identifying the cache entry.
+     */
+    readonly attribute string  key;
+    
+    /**
+     * Get the number of times the cache entry has been opened.
+     */
+    readonly attribute long  fetchCount;
+
+    /**
+     * Get the last time the cache entry was opened.
+     */
+    readonly attribute PRTime  lastFetched;
+
+    /**
+     * Get the last time the cache entry was modified.
+     */
+    readonly attribute PRTime  lastModified;
+
+    /**
+     * Get the last time the cache entry was marked valid.
+     */
+    readonly attribute PRTime  lastValidated;
+
+    /**
+     * Get the expiration time of the cache entry.
+     */
+    readonly attribute PRTime  expirationTime;
+
+    /**
+     * Find out whether or not the cache entry is stream based.
+     */
+    readonly attribute boolean  streamBased;
+
+    /**
+     * Get the cache entry data size.
+     */
+    readonly attribute unsigned long  dataSize;
 };
