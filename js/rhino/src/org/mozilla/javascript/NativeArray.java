@@ -927,7 +927,7 @@ public class NativeArray extends IdScriptable {
         long length = getLengthProperty(thisObj);
 
         /* Convert the first argument into a starting index. */
-           long begin = toSliceIndex(ScriptRuntime.toInteger(args[0]), length);
+        long begin = toSliceIndex(ScriptRuntime.toInteger(args[0]), length);
         argc--;
 
         /* Convert the second argument into count */
