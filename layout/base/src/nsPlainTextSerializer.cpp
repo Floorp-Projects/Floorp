@@ -897,8 +897,7 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
   }
   else if (type == eHTMLTag_newline) {
     if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
-        ((mFlags & nsIDocumentEncoder::OutputFormatted)
-         && (mTagStackIndex > 0)
+        ((mTagStackIndex > 0)
          && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
         (mPreFormatted && !mWrapColumn)) {
       EnsureVerticalSpace(mEmptyLines+1);
@@ -1293,6 +1292,7 @@ nsPlainTextSerializer::Write(const nsString& aString)
       }
       
       newline = aString.FindChar('\n',PR_FALSE,bol);
+      // XXX should probably also look for \r even though they shouldn't happen
       
       if(newline < 0) {
         // No new lines.
@@ -1314,10 +1314,13 @@ nsPlainTextSerializer::Write(const nsString& aString)
         bol = totLen;
       } 
       else {
+        // There is a newline
         nsAutoString stringpart;
-        aString.Mid(stringpart, bol, newline-bol+1);
+        aString.Mid(stringpart, bol, newline-bol);
         mInWhitespace = PR_TRUE;
         WriteSimple(stringpart);
+        // and write the newline
+        WriteSimple(mLineBreak);
         mEmptyLines=0;
         mColPos=0;
         bol = newline+1;
