@@ -626,7 +626,7 @@ public:
                 nsILocalFile* logfile, PRBool append);
     ~xptiAutoLog();
 private:
-    WriteTimestamp(PRFileDesc* fd, const char* msg);
+    void WriteTimestamp(PRFileDesc* fd, const char* msg);
 
     xptiInterfaceInfoManager* mMgr;
     PRFileDesc* mOldFileDesc;

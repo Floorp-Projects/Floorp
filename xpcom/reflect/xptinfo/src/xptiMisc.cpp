@@ -99,7 +99,7 @@ xptiAutoLog::~xptiAutoLog()
     }
 }
 
-xptiAutoLog::WriteTimestamp(PRFileDesc* fd, const char* msg)
+void xptiAutoLog::WriteTimestamp(PRFileDesc* fd, const char* msg)
 {
     PRExplodedTime expTime;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &expTime);
