@@ -72,7 +72,8 @@
 #ifndef _FILESTREAM_H_
 #define _FILESTREAM_H_
 
-#include <istream> 
+#include <istream.h>
+ 
 #ifdef XP_MAC
 #include "pprio.h" // To get PR_ImportFile
 #else
@@ -83,6 +84,30 @@
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
+#if defined(__MWERKS__) || defined(XP_PC) 
+#define NS_USING_NAMESPACE
+#endif
+
+#ifdef NS_USING_NAMESPACE
+#define NS_NAMESPACE_PROTOTYPE
+#define NS_NAMESPACE namespace
+#define NS_NAMESPACE_END
+	using std::ios_base;
+	using std::basic_streambuf;
+	using std::codecvt_base;
+	using std::codecvt;
+	using std::streamsize;
+	using std::locale;
+	using std::basic_istream;
+	using std::basic_ostream;
+	using std::basic_iostream;
+	using std::char_traits;
+#else
+#define NS_NAMESPACE_PROTOTYPE static
+#define NS_NAMESPACE struct
+#define NS_NAMESPACE_END ;
+#endif
+
 #ifdef __MWERKS__
 
 #ifdef MSIPL_WCHART
@@ -103,16 +128,16 @@
 #endif //==================== End Compiler-specific macros ===============================
 
 //========================================================================================
-namespace nsFileStreamHelpers
+NS_NAMESPACE nsFileStreamHelpers
 // Prototypes for common (non-template) implementations in the .cpp file which do not
 // need the template args (charT, traits).
 //========================================================================================
 {
-	PRFileDesc* open(
+	NS_NAMESPACE_PROTOTYPE PRFileDesc* open(
 		const nsFilePath& inFile,
-	    std::ios_base::openmode mode,
+	    ios_base::openmode mode,
 	    PRIntn accessMode);
-} // nsFileStreamHelpers
+} NS_NAMESPACE_END // nsFileStreamHelpers
 
 //========================================================================================
 //	Template declarations
@@ -122,9 +147,9 @@ namespace nsFileStreamHelpers
 template<class charT, class traits>
 class nsFileBufferT
 //========================================================================================
-:    public std::basic_streambuf<charT, traits>
+:    public basic_streambuf<charT, traits>
 {
-    typedef std::codecvt_base::result result;
+    typedef codecvt_base::result result;
 
 public:
     typedef charT              char_type;
@@ -135,8 +160,8 @@ public:
     typedef typename traits::state_type state_type;
 
     typedef nsFileBufferT<charT, traits>    filebuf_type;
-    typedef std::codecvt<charT, char, state_type> ofacet_type;
-    typedef std::codecvt<char, charT, state_type> ifacet_type;
+    typedef codecvt<charT, char, state_type> ofacet_type;
+    typedef codecvt<char, charT, state_type> ifacet_type;
 
                                        nsFileBufferT();
                                        nsFileBufferT(PRFileDesc* pfile_arg);
@@ -144,7 +169,7 @@ public:
     bool                               is_open() const;
     filebuf_type*                      open(
                                            const nsFilePath& inFile,
-                                           std::ios_base::openmode mode,
+                                           ios_base::openmode mode,
                                            PRIntn accessMode);
     filebuf_type*                      close();
  
@@ -153,28 +178,28 @@ protected:
     virtual                            int_type pbackfail(int_type c=traits::eof());
     virtual                            int_type underflow();
     virtual                            pos_type seekoff(
-                                            off_type off, std::ios_base::seekdir way, 
-                                          std::ios_base::openmode which=std::ios_base::in|std::ios_base::out);
+                                            off_type off, ios_base::seekdir way, 
+                                          ios_base::openmode which=ios_base::in|ios_base::out);
     virtual                            pos_type seekpos(pos_type sp,
-                                            std::ios_base::openmode which=std::ios_base::in|std::ios_base::out);
-    virtual                            std::basic_streambuf<charT, traits>* setbuf(char_type* s, std::streamsize n);
+                                            ios_base::openmode which=ios_base::in|ios_base::out);
+    virtual                            basic_streambuf<charT, traits>* setbuf(char_type* s, streamsize n);
     virtual                            int sync();
     virtual                            int_type uflow();
-    virtual                            void imbue(const std::locale& loc);
-    virtual                            std::streamsize showmanyc();
-    virtual                            std::streamsize xsgetn(char_type* s, std::streamsize n);
-    virtual                            std::streamsize xsputn(const char_type* s, std::streamsize n);
+    virtual                            void imbue(const locale& loc);
+    virtual                            streamsize showmanyc();
+    virtual                            streamsize xsgetn(char_type* s, streamsize n);
+    virtual                            streamsize xsputn(const char_type* s, streamsize n);
  
 private:
     PRFileDesc*                        mFileDesc;    
-    std::ios_base::openmode            mode_;
+    ios_base::openmode                 mode_;
 }; // class nsFileBufferT
 
 //========================================================================================
 template<class charT, class traits>
 class nsInputFileStreamT
 //========================================================================================
-:    public std::basic_istream<charT, traits>
+:    public basic_istream<charT, traits>
 {
     typedef nsFileBufferT<charT, traits> filebuf_type;
 
@@ -188,7 +213,7 @@ public:
                                       nsInputFileStreamT();
                                       explicit nsInputFileStreamT(
                                           const nsFilePath& inFile,
-                                          std::ios_base::openmode mode=std::ios_base::in,
+                                          ios_base::openmode mode=ios_base::in,
                                           PRIntn accessMode = 0x00400);
 
     virtual                           ~nsInputFileStreamT();
@@ -197,7 +222,7 @@ public:
     inline bool                       is_open();
     inline void                       open(
                                            const nsFilePath& inFile,
-                                           std::ios_base::openmode mode=std::ios_base::in,
+                                           ios_base::openmode mode=ios_base::in,
                                            PRIntn accessMode = 0x00400);
     inline void                       close();
 
@@ -209,7 +234,7 @@ private:
 template<class charT, class traits>
 class nsOutputFileStreamT
 //========================================================================================
-:    public std::basic_ostream<charT, traits>
+:    public basic_ostream<charT, traits>
 {
     typedef nsFileBufferT<charT, traits> filebuf_type;
 
@@ -283,7 +308,7 @@ template<class charT, class traits>
 nsFileBufferT<charT, traits>::filebuf_type* 
 nsFileBufferT<charT, traits>::open(
     const nsFilePath& inFile,
-    std::ios_base::openmode mode,
+    ios_base::openmode mode,
     PRIntn accessMode) 
 //----------------------------------------------------------------------------------------
 {
@@ -319,8 +344,8 @@ nsFileBufferT<charT, traits>:: sync()
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-inline std::basic_streambuf<charT, traits>*
-nsFileBufferT<charT, traits>::setbuf(char_type*, std::streamsize)
+inline basic_streambuf<charT, traits>*
+nsFileBufferT<charT, traits>::setbuf(char_type*, streamsize)
 //----------------------------------------------------------------------------------------
 {
     return (!mFileDesc) ? 0 : this;
@@ -383,7 +408,7 @@ inline nsFileBufferT<charT, traits>::int_type nsFileBufferT<charT, traits>::unde
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-std::streamsize nsFileBufferT<charT, traits>::xsputn(const char_type* s, std::streamsize n)
+streamsize nsFileBufferT<charT, traits>::xsputn(const char_type* s, streamsize n)
 //----------------------------------------------------------------------------------------
 {
 #ifdef NS_EXPLICIT_FUNC_TEMPLATE_ARG
@@ -449,36 +474,36 @@ inline nsFileBufferT<charT, traits>::int_type nsFileBufferT<charT, traits>::uflo
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-inline std::streamsize nsFileBufferT<charT, traits>::xsgetn(char_type* s, std::streamsize n)
+inline streamsize nsFileBufferT<charT, traits>::xsgetn(char_type* s, streamsize n)
 //----------------------------------------------------------------------------------------
 {
-    return mFileDesc ? (std::streamsize)PR_Read(mFileDesc, s, sizeof(char) * size_t(n)) : 0;
+    return mFileDesc ? (streamsize)PR_Read(mFileDesc, s, sizeof(char) * size_t(n)) : 0;
 }
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
-inline void nsFileBufferT<charT, traits>::imbue(const std::locale& loc_arg)
+inline void nsFileBufferT<charT, traits>::imbue(const locale& loc_arg)
 //----------------------------------------------------------------------------------------
 {
     loc = loc_arg;
 }
 
 template<class charT, class traits> 
-inline std::streamsize
+inline streamsize
 nsFileBufferT<charT, traits>::showmanyc()
 {
-    return (std::streamsize)PR_Available(mFileDesc);
+    return (streamsize)PR_Available(mFileDesc);
 }
 
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
 nsFileBufferT<charT, traits>::pos_type nsFileBufferT<charT, traits>::seekoff(
     off_type  off, 
-    std::ios_base::seekdir way,
-    std::ios_base::openmode /* which */)
+    ios_base::seekdir way,
+    ios_base::openmode /* which */)
 //----------------------------------------------------------------------------------------
 {
-    if (!mFileDesc || ((way&std::ios_base::beg) && off<0) || ((way&std::ios_base::end) && off > 0))
+    if (!mFileDesc || ((way&ios_base::beg) && off<0) || ((way&ios_base::end) && off > 0))
         return pos_type(-1);
     PRSeekWhence  poseek = PR_SEEK_CUR;
     switch (way)
@@ -497,7 +522,7 @@ nsFileBufferT<charT, traits>::pos_type nsFileBufferT<charT, traits>::seekoff(
 //----------------------------------------------------------------------------------------
 template<class charT, class traits> 
 nsFileBufferT<charT, traits>::pos_type
-nsFileBufferT<charT, traits>::seekpos(pos_type sp, std::ios_base::openmode)
+nsFileBufferT<charT, traits>::seekpos(pos_type sp, ios_base::openmode)
 //----------------------------------------------------------------------------------------
 {
     if (!mFileDesc || sp==pos_type(-1))
@@ -656,7 +681,7 @@ inline void nsOutputFileStreamT<charT, traits>:: close()
 
 //========================================================================================
 template<class charT, class traits>
-class nsIOFileStreamT : public std::basic_iostream<charT, traits>
+class nsIOFileStreamT : public basic_iostream<charT, traits>
 //========================================================================================
 {
     typedef nsFileBufferT<charT, traits> filebuf_type;
@@ -671,7 +696,7 @@ public:
                                         nsIOFileStreamT();
                                         explicit nsIOFileStreamT(
                                             const nsFilePath& inFile, 
-                                            std::ios_base::openmode mode = std::ios_base::in|std::ios_base::out,
+                                            ios_base::openmode mode = ios_base::in|ios_base::out,
                                             PRIntn accessMode = 0x00600);
 
     virtual                             ~nsIOFileStreamT();
@@ -680,7 +705,7 @@ public:
     inline bool                         is_open();
     inline void                         open(
                                             const nsFilePath& inFile,
-                                            std::ios_base::openmode mode = std::ios_base::in|std::ios_base::out,
+                                            ios_base::openmode mode = ios_base::in|ios_base::out,
                                             PRIntn accessMode = 0x00600);
     inline void                         close();
 
@@ -765,16 +790,16 @@ nsIOFileStreamT<charT, traits>::close()
 //    Specializations of the stream templates
 //========================================================================================
 
-typedef nsFileBufferT<char, std::char_traits<char> > nsFileBuffer;
-typedef nsInputFileStreamT<char, std::char_traits<char> > nsInputFileStream;
-typedef nsOutputFileStreamT<char, std::char_traits<char> > nsOutputFileStream;
-typedef nsIOFileStreamT<char, std::char_traits<char> > nsIOFileStream;
+typedef nsFileBufferT<char, char_traits<char> > nsFileBuffer;
+typedef nsInputFileStreamT<char, char_traits<char> > nsInputFileStream;
+typedef nsOutputFileStreamT<char, char_traits<char> > nsOutputFileStream;
+typedef nsIOFileStreamT<char, char_traits<char> > nsIOFileStream;
 
 #ifdef NS_USING_WIDE_CHAR
-typedef nsFileBufferT<wchar_t, std::char_traits<wchar_t> > nsWideFileBuffer;
-typedef nsInputFileStreamT<wchar_t, std::char_traits<wchar_t> > nsWideInputFileStream;
-typedef nsOutputFileStreamT<wchar_t, std::char_traits<wchar_t> > nsWideOutputFileStream;
-typedef nsIOFileStreamT<wchar_t, std::char_traits<wchar_t> > nsWideIOFileStream;
+typedef nsFileBufferT<wchar_t, char_traits<wchar_t> > nsWideFileBuffer;
+typedef nsInputFileStreamT<wchar_t, char_traits<wchar_t> > nsWideInputFileStream;
+typedef nsOutputFileStreamT<wchar_t, char_traits<wchar_t> > nsWideOutputFileStream;
+typedef nsIOFileStreamT<wchar_t, char_traits<wchar_t> > nsWideIOFileStream;
 #endif // NS_USING_WIDE_CHAR
 
 #endif /* _FILESTREAM_H_ */

@@ -459,7 +459,7 @@ nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 }
 
 //----------------------------------------------------------------------------------------
-nsNativeFileSpec::nsNativeFileSpec(const std::string& inString)
+nsNativeFileSpec::nsNativeFileSpec(const string& inString)
 //----------------------------------------------------------------------------------------
 {
 	mError = MacFileHelpers::FSSpecFromFullUnixPath(inString.c_str(), mSpec, true);
@@ -499,7 +499,7 @@ ostream& operator << (ostream& s, const nsNativeFileSpec& spec)
 #endif // DEBUG
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::operator = (const std::string& inString)
+void nsNativeFileSpec::operator = (const string& inString)
 //----------------------------------------------------------------------------------------
 {
 	mError = MacFileHelpers::FSSpecFromFullUnixPath(inString.c_str(), mSpec, true);
@@ -529,7 +529,7 @@ bool nsNativeFileSpec::Exists() const
 } // nsNativeFileSpec::operator =
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::SetLeafName(const std::string& inLeafName)
+void nsNativeFileSpec::SetLeafName(const string& inLeafName)
 //----------------------------------------------------------------------------------------
 {
 	*mSpec.name = inLeafName.length();
@@ -537,13 +537,13 @@ void nsNativeFileSpec::SetLeafName(const std::string& inLeafName)
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
-std::string nsNativeFileSpec::GetLeafName() const
+string nsNativeFileSpec::GetLeafName() const
 //----------------------------------------------------------------------------------------
 {
 	char leaf[64];
 	memcpy(leaf, &mSpec.name[1], mSpec.name[0]);
 	leaf[mSpec.name[0]] = '\0';
-	return std::string(leaf);
+	return string(leaf);
 } // nsNativeFileSpec::GetLeafName
 
 //========================================================================================

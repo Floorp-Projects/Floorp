@@ -21,13 +21,13 @@
 #include "prtypes.h"
 
 #if DEBUG
-#include <ostream>
+#include <ostream.h>
 #endif
 
-#include <strstream>
+#include <strstream.h>
 
 //========================================================================================
-namespace nsFileSpecHelpers
+NS_NAMESPACE nsFileSpecHelpers
 //========================================================================================
 {
 	enum
@@ -35,33 +35,33 @@ namespace nsFileSpecHelpers
 	,	kMaxAltDigitLength	= 5
 	,	kMaxAltNameLength	= (kMaxFilenameLength - (kMaxAltDigitLength + 1))
 	};
-	void LeafReplace(
-		std::string& ioPath,
+	NS_NAMESPACE_PROTOTYPE void LeafReplace(
+		string& ioPath,
 		char inSeparator,
-		const std::string& inLeafName);
-	std::string GetLeaf(const std::string& inPath, char inSeparator);
-}
+		const string& inLeafName);
+	NS_NAMESPACE_PROTOTYPE string GetLeaf(const string& inPath, char inSeparator);
+} NS_NAMESPACE_END
 
 //----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::LeafReplace(
-	std::string& ioPath,
+	string& ioPath,
 	char inSeparator,
-	const std::string& inLeafName)
+	const string& inLeafName)
 //----------------------------------------------------------------------------------------
 {
 	// Find the existing leaf name
-	std::string::size_type lastSeparator = ioPath.rfind(inSeparator);
-	std::string::size_type myLength = ioPath.length();
+	string::size_type lastSeparator = ioPath.rfind(inSeparator);
+	string::size_type myLength = ioPath.length();
 	if (lastSeparator < myLength)
 		ioPath = ioPath.substr(0, lastSeparator + 1) + inLeafName;
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
-std::string nsFileSpecHelpers::GetLeaf(const std::string& inPath, char inSeparator)
+string nsFileSpecHelpers::GetLeaf(const string& inPath, char inSeparator)
 //----------------------------------------------------------------------------------------
 {
-	std::string::size_type lastSeparator = inPath.rfind(inSeparator);
-	std::string::size_type myLength = inPath.length();
+	string::size_type lastSeparator = inPath.rfind(inSeparator);
+	string::size_type myLength = inPath.length();
 	if (lastSeparator < myLength)
 		return inPath.substr(1 + lastSeparator, myLength - lastSeparator - 1);
 	return inPath;
@@ -76,13 +76,12 @@ std::string nsFileSpecHelpers::GetLeaf(const std::string& inPath, char inSeparat
 #include "nsFileSpecUnix.cpp" // Unix-specific implementations
 #endif
 
-
 //========================================================================================
 //								nsFileURL implementation
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsFileURL::nsFileURL(const std::string& inString)
+nsFileURL::nsFileURL(const string& inString)
 //----------------------------------------------------------------------------------------
 :	mURL(inString)
 #ifdef XP_MAC
@@ -93,7 +92,7 @@ nsFileURL::nsFileURL(const std::string& inString)
 }
 
 //----------------------------------------------------------------------------------------
-void nsFileURL::operator = (const std::string& inString)
+void nsFileURL::operator = (const string& inString)
 //----------------------------------------------------------------------------------------
 {
 	mURL = inString;
@@ -147,7 +146,7 @@ void nsFileURL::operator = (const nsFilePath& inOther)
 nsFileURL::nsFileURL(const nsNativeFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = kFileURLPrefix + (std::string&)nsFilePath(inOther);
+	mURL = kFileURLPrefix + (string&)nsFilePath(inOther);
 #ifdef XP_MAC
 	mNativeFileSpec  = inOther;
 #endif
@@ -156,7 +155,7 @@ nsFileURL::nsFileURL(const nsNativeFileSpec& inOther)
 void nsFileURL::operator = (const nsNativeFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = kFileURLPrefix +  (std::string&)nsFilePath(inOther);
+	mURL = kFileURLPrefix +  (string&)nsFilePath(inOther);
 #ifdef XP_MAC
 	mNativeFileSpec  = inOther;
 #endif
@@ -167,7 +166,7 @@ void nsFileURL::operator = (const nsNativeFileSpec& inOther)
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsFilePath::nsFilePath(const std::string& inString)
+nsFilePath::nsFilePath(const string& inString)
 //----------------------------------------------------------------------------------------
 :	mPath(inString)
 #ifdef XP_MAC
@@ -189,7 +188,7 @@ nsFilePath::nsFilePath(const nsFileURL& inOther)
 }
 
 //----------------------------------------------------------------------------------------
-void nsFilePath::operator = (const std::string& inString)
+void nsFilePath::operator = (const string& inString)
 //----------------------------------------------------------------------------------------
 {
 	mPath = inString;
@@ -223,7 +222,7 @@ nsNativeFileSpec::nsNativeFileSpec()
 #endif
 
 //----------------------------------------------------------------------------------------
-void nsNativeFileSpec::MakeUnique(const std::string& inSuggestedLeafName)
+void nsNativeFileSpec::MakeUnique(const string& inSuggestedLeafName)
 //----------------------------------------------------------------------------------------
 {
 	if (inSuggestedLeafName.length() > 0)
@@ -240,15 +239,15 @@ void nsNativeFileSpec::MakeUnique()
 		return;
 
 	short index = 0;
-	std::string altName = GetLeafName();
-	std::string::size_type lastDot = altName.rfind('.');
-	std::string suffix;
+	string altName = GetLeafName();
+	string::size_type lastDot = altName.rfind('.');
+	string suffix;
 	if (lastDot < altName.length())
 	{
 		suffix = altName.substr(lastDot, altName.length() - lastDot); // include '.'
 		altName = altName.substr(0, lastDot);
 	}
-	const std::string::size_type kMaxRootLength
+	const string::size_type kMaxRootLength
 		= nsFileSpecHelpers::kMaxAltNameLength - suffix.length() - 1;
 	if (altName.length() > kMaxRootLength)
 		altName = altName.substr(0, kMaxRootLength);
