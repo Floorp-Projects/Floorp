@@ -20,7 +20,7 @@
 # Contributor(s): Stephen Lamm <slamm@netscape.com>
 # 
 
-# Version: $Id: cvs.py,v 1.2 2000/01/28 06:13:41 slamm%netscape.com Exp $
+# Version: $Id: cvs.py,v 1.3 2000/01/28 18:26:09 slamm%netscape.com Exp $
 
 # module cvs -- Add multithreading to the cvs client.
 
@@ -106,21 +106,47 @@ class CVS:
         return result
    
     def _get_checkout_groups(self, members):
-        import string
-        ignore = []
+        """Combine ignored files with their parents.
+
+        Remove duplicates.
+        Assumes that `members' is sorted in ascending order.
+        """
+        exclude = []
         checkout_groups = []
+        seen = {}
         for member in members:
             if member[0] == "!":
-                ignore.append(member)
+                seen[member[1:]] = 'excluded'
+                exclude.append(member)
             else:
+                if self._is_covered(seen, member):
+                    continue
+                seen[member] = 'included'
                 group = [member]
-                for file in ignore:
+                for file in exclude:
                     if file[1:len(member)+1] == member:
                         group.append(file)
-                  #ignore.remove(file)
-                group = string.join(group)
+                  #exclude.remove(file)
                 checkout_groups.append(group)
         return checkout_groups
+
+    def _is_covered(self, seen, member):
+        """Check if a directory's parent has been seen.
+
+        If the parent has been seen, do not include this member.
+        Otherwise this directory will be pulled twice.
+        """
+        components = string.split(member,'/')
+        subdir = components[0]
+        subdirs = [subdir]
+        for dir in components[1:]:
+            subdir = string.join((subdir, dir), '/')
+            subdirs.append(subdir)
+        subdirs.reverse()
+        for subdir in subdirs:
+            if seen.has_key(subdir):
+                return seen[subdir] == 'included'
+        return 0
 
 
 class ModuleFileQueue(Queue.Queue):
@@ -154,8 +180,7 @@ class XArgsThread(threading.Thread):
                     next_file_group = self.queue.get_nowait()
                 except Queue.Empty:
                     break
-                next_files = string.split(next_file_group)
-                files.extend(next_files)
+                files.extend(next_file_group)
             if self.error_event and self.error_event.isSet():
                 sys.exit()
             if files:
