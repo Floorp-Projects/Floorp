@@ -52,7 +52,7 @@
 
 // --- image -----
 
-nsHTMLImageAccessible::nsHTMLImageAccessible(nsIDOMNode* aDOMNode, nsIImageFrame *aImageFrame, nsIWeakReference* aShell):
+nsHTMLImageAccessible::nsHTMLImageAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
 nsLinkableAccessible(aDOMNode, aShell)
 { 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aDOMNode));

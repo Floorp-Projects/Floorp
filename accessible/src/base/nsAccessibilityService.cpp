@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -315,6 +315,19 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTableCellAccessible(nsISupports 
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAccessibilityService::CreateXULImageAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsHTMLImageAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
 /* nsIAccessible createHTMLImageAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
 NS_IMETHODIMP nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
@@ -324,15 +337,8 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFr
   nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
-  nsIImageFrame* imageFrame = nsnull;
-  
-  // not using a nsCOMPtr frames don't support them.
-  aFrame->QueryInterface(NS_GET_IID(nsIImageFrame), (void**)&imageFrame);
 
-  if (!imageFrame)
-    return NS_ERROR_FAILURE;
-
-  *_retval = new nsHTMLImageAccessible(node, imageFrame, weakShell);
+  *_retval = new nsHTMLImageAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -400,6 +406,8 @@ NS_IMETHODIMP nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aR
   nsCOMPtr<nsIContent> content;
   (*aRealFrame)->GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+  if (!content || !node)
+    return NS_ERROR_FAILURE;
   *aNode = node;
   NS_IF_ADDREF(*aNode);
 

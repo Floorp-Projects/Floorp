@@ -43,6 +43,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
+  nsIAccessible createXULImageAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
   nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
