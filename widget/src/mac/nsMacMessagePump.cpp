@@ -65,7 +65,7 @@
 
 #define DRAW_ON_RESIZE	1		// if 1, enable live-resize except when the command key is down
 
-const short	kMinWindowWidth = 300;
+const short	kMinWindowWidth = 125;
 const short kMinWindowHeight = 150;
 
 NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWindowlessMenuEventHandler = nsnull;
