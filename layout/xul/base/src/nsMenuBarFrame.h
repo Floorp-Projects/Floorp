@@ -47,7 +47,9 @@ public:
 // Non-interface helpers
   PRBool IsActive() { return mIsActive; };
   void ToggleMenuActiveState();
-  void GetFirstMenuItem(nsIContent** aResult);
+  void GetNextMenuItem(nsIContent* aStart, nsIContent** aResult);
+  void GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult);
+  void KeyboardNavigation(PRUint32 aDirection);
 
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.

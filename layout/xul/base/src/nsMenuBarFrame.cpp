@@ -109,7 +109,7 @@ nsMenuBarFrame::ToggleMenuActiveState()
     // Set the active menu to be the top left item (e.g., the File menu).
     // We use an attribute called "active" to track the current active menu.
     nsCOMPtr<nsIContent> firstMenuItem;
-    GetFirstMenuItem(getter_AddRefs(firstMenuItem));
+    GetNextMenuItem(nsnull, getter_AddRefs(firstMenuItem));
     if (firstMenuItem) {
       // Activate the item.
       firstMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
@@ -120,14 +120,134 @@ nsMenuBarFrame::ToggleMenuActiveState()
   }
 }
 
-void 
-nsMenuBarFrame::GetFirstMenuItem(nsIContent** aMenuItem)
+void
+nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
 {
-  PRInt32 childCount;
-  *aMenuItem = nsnull;
-  mContent->ChildCount(childCount);
-  if (childCount > 0) {
-    // We have at least one menu item. Good. Fetch it.
-    mContent->ChildAt(0, *aMenuItem);
+  if (!mCurrentMenu)
+    return;
+
+  if (aDirection == NS_VK_RIGHT ||
+      aDirection == NS_VK_LEFT) {
+    // Determine the index on the menu bar.
+    PRInt32 index;
+    mContent->IndexOf(mCurrentMenu, index);
+    if (index >= 0) {
+      // Activate the child at the position specified by index.
+      nsCOMPtr<nsIContent> nextItem;
+      
+      if (aDirection == NS_VK_RIGHT)
+        GetNextMenuItem(mCurrentMenu, getter_AddRefs(nextItem));
+      else GetPreviousMenuItem(mCurrentMenu, getter_AddRefs(nextItem));
+
+      if (mCurrentMenu == nextItem.get())
+        return;
+
+      // Unset the current child.
+      mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+      
+      // Set the new child.
+      nextItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+      mCurrentMenu = nextItem;
+    }
   }
 }
+
+void
+nsMenuBarFrame::GetNextMenuItem(nsIContent* aStart, nsIContent** aResult)
+{
+  PRInt32 index = 0;
+  if (aStart) {
+    // Determine the index of start.
+    mContent->IndexOf(aStart, index);
+    index++;
+  }
+
+  PRInt32 count;
+  mContent->ChildCount(count);
+
+  // Begin the search from index.
+  PRInt32 i;
+  for (i = index; i < count; i++) {
+    nsCOMPtr<nsIContent> current;
+    mContent->ChildAt(i, *getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = current;
+      NS_IF_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  // Still don't have anything. Try cycling from the beginning.
+  for (i = 0; i <= index; i++) {
+    nsCOMPtr<nsIContent> current;
+    mContent->ChildAt(i, *getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = current;
+      NS_IF_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  // No luck. Just return our start value.
+  *aResult = aStart;
+  NS_IF_ADDREF(aStart);
+}
+
+void
+nsMenuBarFrame::GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult)
+{
+  PRInt32 count;
+  mContent->ChildCount(count);
+
+  PRInt32 index = count-1;
+  if (aStart) {
+    // Determine the index of start.
+    mContent->IndexOf(aStart, index);
+    index--;
+  }
+
+  
+  // Begin the search from index.
+  PRInt32 i;
+  for (i = index; i >= 0; i--) {
+    nsCOMPtr<nsIContent> current;
+    mContent->ChildAt(i, *getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = current;
+      NS_IF_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  // Still don't have anything. Try cycling from the beginning.
+  for (i = count-1; i >= index; i--) {
+    nsCOMPtr<nsIContent> current;
+    mContent->ChildAt(i, *getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = current;
+      NS_IF_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  // No luck. Just return our start value.
+  *aResult = aStart;
+  NS_IF_ADDREF(aStart);
+}
+

@@ -195,7 +195,7 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
   nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
 	theEvent->GetKeyCode(&theChar);
-  if (theChar == 18 && mAltKeyDown) {
+  if (theChar == NS_VK_ALT && mAltKeyDown) {
     // The ALT key was down and is now up.
     mAltKeyDown = PR_FALSE;
     mMenuBarFrame->ToggleMenuActiveState();
@@ -210,11 +210,18 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
   nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
 	theEvent->GetKeyCode(&theChar);
-  if (theChar == 18) {
+  if (theChar == NS_VK_ALT) {
     // The ALT key just went down. Track this.
     mAltKeyDown = PR_TRUE;
   }
-
+  else if (theChar == NS_VK_LEFT ||
+           theChar == NS_VK_RIGHT ||
+           theChar == NS_VK_UP ||
+           theChar == NS_VK_DOWN) {
+    // The arrow keys were pressed. User is moving around within
+    // the menus.
+    mMenuBarFrame->KeyboardNavigation(theChar);
+  }
   return NS_OK; // means I am NOT consuming event
 }
 
