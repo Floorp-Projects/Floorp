@@ -1,6 +1,5 @@
 browser.jar:
     content/browser/pref/pref-advanced.xul                 (content/pref-advanced.xul)
-    content/browser/pref/pref-appearance.xul               (content/pref-appearance.xul)
     content/browser/pref/pref-applications.xul             (content/pref-applications.xul)
     content/browser/pref/pref-applications.js              (content/pref-applications.js)
     content/browser/pref/pref-applications-edit.xul        (content/pref-applications-edit.xul)
@@ -52,7 +51,6 @@ browser.jar:
 
 en-US.jar:
     locale/en-US/browser/pref/pref-advanced.dtd            (locale/pref-advanced.dtd)
-    locale/en-US/browser/pref/pref-appearance.dtd          (locale/pref-appearance.dtd)
     locale/en-US/browser/pref/pref-applications.dtd        (locale/pref-applications.dtd)
     locale/en-US/browser/pref/pref-applications.properties (locale/pref-applications.properties)
     locale/en-US/browser/pref/pref-applications-edit.dtd   (locale/pref-applications-edit.dtd)

@@ -8,7 +8,6 @@
 <!ENTITY themes.label "Themes">
 <!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
 <!ENTITY navigator.label "Navigator">
-<!ENTITY history.label "History">
 <!ENTITY bidi.label "Bidi Options">
 <!ENTITY languages.label "Languages">
 <!ENTITY applications.label "Helper Applications">
