@@ -283,6 +283,8 @@ private:
 	// initialization function given a new url and transport layer
 	void Initialize(nsIURL * aURL, nsITransport * transportLayer);
 
+    PRInt32 PostMessageInFile(const nsFilePath &filePath);
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
 	////////////////////////////////////////////////////////////////////////////////////////

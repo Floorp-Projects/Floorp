@@ -60,6 +60,9 @@ interface nsINNTPNewsgroupPost : nsISupports {
     /* the message itself */
     attribute string body;
 
+    /* the path to the message */
+    /* attribute nsFilePath postMessageFile; */
+        
     /* control messages */
     void MakeControlCancel(in string messageID);
     /* probably don't need these

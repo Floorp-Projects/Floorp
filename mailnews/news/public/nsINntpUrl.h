@@ -74,11 +74,6 @@ public:
 
     NS_IMETHOD SetMessageToPost (nsINNTPNewsgroupPost *post) = 0;
     NS_IMETHOD GetMessageToPost (nsINNTPNewsgroupPost **post) = 0;
-    
-    // the message can be stored in a file....allow accessors for getting and setting
-	// the file name to post...
-	NS_IMETHOD SetPostMessageFile(const nsFilePath& aFileName) = 0;
-	NS_IMETHOD GetPostMessageFile(const nsFilePath ** aFileName) = 0;
 };
 
 #endif /* nsIHttpURL_h___ */

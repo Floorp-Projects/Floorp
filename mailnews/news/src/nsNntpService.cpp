@@ -283,13 +283,6 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
             if (NS_FAILED(rv)) {
               return rv;
             }
-#ifdef DEBUG_sspitzer
-            printf("set file to post to %s\n",(const char *)pathToFile);
-#endif
-            rv = nntpUrl->SetPostMessageFile(pathToFile);
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
             
 			// okay now create a transport to run the url in...
 #ifdef DEBUG_sspitzer
@@ -330,8 +323,18 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 								post->SetSubject((char *)subject);
 								post->SetFrom((char *)from);
 								post->SetOrganization((char *)org);
+#ifdef DEBUG_sspitzer
+                                printf("set file to post to %s\n",(const char *)pathToFile);
+#endif
+                                rv = post->SetPostMessageFile(pathToFile);
+                                if (NS_FAILED(rv)) {
+                                  return rv;
+                                }
 
-								nntpUrl->SetMessageToPost(post);
+								rv = nntpUrl->SetMessageToPost(post);
+                                if (NS_FAILED(rv)) {
+                                  return rv;
+                                }
 							}
 							
 							PR_FREEIF(fullname);

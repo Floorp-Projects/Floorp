@@ -42,8 +42,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
-nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup):
-    m_fileName("")
+nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
     NS_INIT_REFCNT();
 
@@ -346,30 +345,6 @@ nsresult nsNntpUrl::GetErrorMessage (char ** errorMessage) const
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
-
-// the message can be stored in a file....allow accessors for getting and setting
-// the file name to post...
-nsresult nsNntpUrl::SetPostMessageFile(const nsFilePath& aFileName)
-{
-#ifdef DEBUG_sspitzer
-    printf("SetPostMessageFile(%s)\n",(const char *)aFileName);
-#endif
-	nsresult rv = NS_OK;
-	if (aFileName)
-		m_fileName = aFileName;
-
-	return rv;
-}
-
-nsresult nsNntpUrl::GetPostMessageFile(const nsFilePath ** aFileName)
-{
-	nsresult rv = NS_OK;
-	if (aFileName)
-		*aFileName = &m_fileName;
-	
-	return rv;
-}
-
 
 nsresult 
 nsNntpUrl::GetFilePath(const nsFileSpec ** aFilePath)

@@ -101,12 +101,17 @@ public:
     NS_IMPL_CLASS_GETTER(GetIsControl, PRBool, m_isControl);
 
     NS_IMETHOD GetFullMessage(char **message);
+
+    // the message can be stored in a file....allow accessors for getting and setting
+	// the file name to post...
+	NS_IMETHOD SetPostMessageFile(const nsFilePath& aFileName);
+	NS_IMETHOD GetPostMessageFile(const nsFilePath ** aFileName);
     
     // helper routines
     static char *appendAndAlloc(char *string, const char *newSubstring,
                                 PRBool withComma);
 private:
-    
+    nsFilePath  m_fileName;
     char *m_header[HEADER_LAST+1];
     static const char *m_headerName[HEADER_LAST+1];
     
@@ -141,7 +146,8 @@ const char* nsNNTPNewsgroupPost::m_headerName[HEADER_LAST+1]=
     
 NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost::GetIID());
 
-nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
+nsNNTPNewsgroupPost::nsNNTPNewsgroupPost():
+    m_fileName("")
 {
 	NS_INIT_REFCNT();
 
@@ -298,6 +304,31 @@ nsNNTPNewsgroupPost::GetMessageID(char **messageID)
     return NS_OK;
 }
 
+
+// the message can be stored in a file....allow accessors for getting and setting
+// the file name to post...
+nsresult
+nsNNTPNewsgroupPost::SetPostMessageFile(const nsFilePath& aFileName)
+{
+#ifdef DEBUG_sspitzer
+    printf("SetPostMessageFile(%s)\n",(const char *)aFileName);
+#endif
+	nsresult rv = NS_OK;
+	if (aFileName)
+		m_fileName = aFileName;
+
+	return rv;
+}
+
+nsresult 
+nsNNTPNewsgroupPost::GetPostMessageFile(const nsFilePath ** aFileName)
+{
+	nsresult rv = NS_OK;
+	if (aFileName)
+		*aFileName = &m_fileName;
+	
+	return rv;
+}
 
 NS_BEGIN_EXTERN_C
 
