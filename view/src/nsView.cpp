@@ -274,12 +274,10 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       {
         if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
         {
-          nsRect  crect, brect;
+          nsRect  crect;
 
-          GetBounds(brect);
-
-          crect.x = mClip.mLeft + brect.x;
-          crect.y = mClip.mTop + brect.y;
+          crect.x = mClip.mLeft;
+          crect.y = mClip.mTop;
           crect.width = mClip.mRight - mClip.mLeft;
           crect.height = mClip.mBottom - mClip.mTop;
 
