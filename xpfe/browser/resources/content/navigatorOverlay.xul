@@ -135,16 +135,16 @@
   <command id="Browser:ManageBookmark" oncommand="BrowserEditBookmarks();" />
   
   <!-- Go Menu -->  
-  <command id="Browser:Home" oncommand="BrowserHome();"/>
-  <command id="Browser:Back"    oncommand="BrowserBack();"/>
-  <command id="Browser:Forward" oncommand="BrowserForward();"/>
+  <command id="Browser:Home"    oncommand="BrowserHome();"/>
+  <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
+  <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
   <commandset id="viewZoomCommands"/>
   <commandset id="tasksCommands"/>
 </commandset>
 
 <broadcasterset id="navBroadcasters">
-  <broadcaster id="canGoBack" disabled="true" command="Browser:Back"/>
-  <broadcaster id="canGoForward" disabled="true" command="Browser:Forward"/>
+  <broadcaster id="canGoBack"    disabled="true"/>
+  <broadcaster id="canGoForward" disabled="true"/>
   <broadcaster id="Communicator:WorkMode"/>
   <broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
   <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
@@ -289,8 +289,8 @@
   
   <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
     <menupopup oncreate="updateGoMenu(event);">
-      <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    observes="canGoBack"    key="goBackKb"/>
-      <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="canGoForward" key="goForwardKb"/>
+      <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
+      <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
       <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
       <menuseparator hidden="true"/>
     </menupopup>
