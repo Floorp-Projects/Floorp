@@ -541,6 +541,8 @@ public:
       if (eStyleUnit_Coord == unit) {
         mLetterSpacing = mText->mLetterSpacing.GetCoordValue();
       }
+      mWordSpacing += mLetterSpacing; // bug 1046
+
       mNumSpacesToRender = 0;
       mNumSpacesToMeasure = 0;
       mNumSpacesReceivingExtraJot = 0;
