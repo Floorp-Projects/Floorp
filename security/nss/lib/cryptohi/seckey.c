@@ -514,10 +514,12 @@ seckey_UpdateCertPQGChain(CERTCertificate * subjectCert, int count)
              (tag != SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST) &&
              (tag != SEC_OID_SDN702_DSA_SIGNATURE) &&
              (tag != SEC_OID_ANSIX962_EC_PUBLIC_KEY) ) {            
-            return SECFailure;
+            rv = SECFailure;
+            goto loser;
         }
     } else {
-        return SECFailure;  /* return failure if oid is NULL */  
+        rv = SECFailure;  /* return failure if oid is NULL */  
+        goto loser;
     }
 
 
@@ -526,7 +528,10 @@ seckey_UpdateCertPQGChain(CERTCertificate * subjectCert, int count)
      * pqg parameters with a recursive call to this same function. */
 
     rv = seckey_UpdateCertPQGChain(issuerCert, count);
-    if (rv != SECSuccess) return rv;
+    if (rv != SECSuccess) {
+        rv = SECFailure;
+        goto loser;
+    }
 
     /* ensure issuer has pqg parameters */
 
@@ -544,6 +549,10 @@ seckey_UpdateCertPQGChain(CERTCertificate * subjectCert, int count)
 	   		      &issuerSpki->algorithm.parameters);
     }
 
+loser:
+    if (issuerCert) {
+        CERT_DestroyCertificate(issuerCert);
+    }
     return rv;
 
 }
