@@ -252,9 +252,9 @@ if test -z "$CC"; then
 
     *-aix*)
         if test -z "$USE_NSPR_THREADS"; then
-            CC=xlC_r
+            CC=xlc_r
         else
-            CC=xlC
+            CC=xlc
         fi
     ;;
 
@@ -741,9 +741,6 @@ case "$target" in
         ;;
     esac
     CFLAGS="$CFLAGS -qro -qroconst"
-    if echo "$CC" | grep -c xlC_r; then
-        CFLAGS="$CFLAGS -qarch=com"
-    fi
     AIX_WRAP='$(DIST)/lib/aixwrap.o'
     AIX_TMP='./_aix_tmp.o'
     if test -n "$USE_64"; then
