@@ -37,8 +37,6 @@ typedef enum
   nsHighQual
 } nsBlendQuality;
 
-class IL_ColorSpace;
-
 //----------------------------------------------------------------------
 
 // Blender interface
@@ -122,23 +120,6 @@ protected:
   void Do16Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
                  PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
                  PRInt32 aSLSpan, PRInt32 aDLSpan, nsBlendQuality aBlendQuality);
-
-
- /** --------------------------------------------------------------------------
-  * Blend two 8 bit image arrays using a passed in blend value
-  * @param aNumlines  Number of lines to blend
-  * @param aNumberBytes Number of bytes per line to blend
-  * @param aSImage Pointer to beginning of the source bytes
-  * @param aDImage Pointer to beginning of the destination bytes
-  * @param aMImage Pointer to beginning of the mask bytes
-  * @param aSLSpan number of bytes per line for the source bytes
-  * @param aDLSpan number of bytes per line for the destination bytes
-  * @param aMLSpan number of bytes per line for the Mask bytes
-  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-  */
-  void Do8Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
-                PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
-                PRInt32 aSLSpan, PRInt32 aDLSpan, IL_ColorSpace *aColorMap, nsBlendQuality aBlendQuality);
 
   nsCOMPtr<nsIDeviceContext> mContext;
 };
