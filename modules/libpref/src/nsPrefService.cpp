@@ -47,6 +47,7 @@
 
 #include "nsQuickSort.h"
 #include "prmem.h"
+#include "pldhash.h"
 
 #include "prefapi.h"
 class nsIFileSpec;	// needed for prefapi_private_data.h inclusion
@@ -500,7 +501,7 @@ static nsresult savePrefFile(nsIFile* aFile)
   nsresult              rv;
   nsCOMPtr<nsIFileSpec> fileSpec;
 
-  if (!gHashTable)
+  if (!gHashTable.ops)
     return NS_ERROR_NOT_INITIALIZED;
 
   /* ?! Don't save (blank) user prefs if there was an error reading them */
@@ -512,7 +513,7 @@ static nsresult savePrefFile(nsIFile* aFile)
   if (NS_FAILED(rv))
     return rv;        
 
-  char** valueArray = (char**) PR_Calloc(sizeof(char*), gHashTable->nentries);
+  char** valueArray = (char**) PR_Calloc(sizeof(char*), gHashTable.entryCount);
   if (!valueArray)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -523,12 +524,12 @@ static nsresult savePrefFile(nsIFile* aFile)
   stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
     
   /* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
-  pref_HashTableEnumerateEntries((PLHashEnumerator)pref_savePref, valueArray);
+  pref_HashTableEnumerateEntries(pref_savePref, valueArray);
     
   /* Sort the preferences to make a readable file on disk */
-  NS_QuickSort(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings, NULL);
+  NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char*), pref_CompareStrings, NULL);
   char** walker = valueArray;
-  for (PRUint32 valueIdx = 0; valueIdx < gHashTable->nentries; valueIdx++, walker++) {
+  for (PRUint32 valueIdx = 0; valueIdx < gHashTable.entryCount; valueIdx++, walker++) {
     if (*walker) {
       stream << *walker << nsEndl;
       PR_Free(*walker);

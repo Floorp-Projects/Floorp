@@ -44,10 +44,7 @@
 #include "xp_core.h"
 #include "prtypes.h"
 #include "jsapi.h"
-
-#ifdef XP_WIN
-#include "plhash.h"
-#endif
+#include "pldhash.h"
 
 #define NEW_PREF_ARCH
 
@@ -70,6 +67,21 @@ NSPR_BEGIN_EXTERN_C
 
 typedef int PROFILE_ERROR;
 
+typedef union
+{
+    char*       stringVal;
+    PRInt32     intVal;
+    PRBool      boolVal;
+} PrefValue;
+ 
+
+struct PrefHashEntry : PLDHashEntryHdr
+{
+    const char *key;
+    PrefValue defaultPref;
+    PrefValue userPref;
+    PRUint8   flags;
+};
 
 /* Error numbers between -100 and -999 are reserved for individual stores */
 /* Error numbers less than -1000 are reserved for the profile manager */
