@@ -40,7 +40,6 @@ LIBS		= 		\
 	-L$(DIST)/bin \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxpcom       \
-	-lreg       \
 	-l$(MOZ_LIB_UTIL_PREFIX)util    \
 	$(NSPR_LIBS) 	\
 	$(NULL)
