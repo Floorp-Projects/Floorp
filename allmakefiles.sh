@@ -163,6 +163,7 @@ gfx/src/ps/Makefile
 gfx/src/psshared/Makefile
 gfx/src/photon/Makefile
 gfx/src/mac/Makefile
+gfx/src/qt/Makefile
 gfx/src/xlib/Makefile
 gfx/src/os2/Makefile
 gfx/src/xlibrgb/Makefile
@@ -540,6 +541,7 @@ webshell/tests/viewer/Makefile
 webshell/tests/viewer/public/Makefile
 webshell/tests/viewer/unix/Makefile
 webshell/tests/viewer/unix/gtk/Makefile
+webshell/tests/viewer/unix/qt/Makefile
 webshell/tests/viewer/unix/xlib/Makefile
 "
 
@@ -552,6 +554,7 @@ widget/src/build/Makefile
 widget/src/gtk/Makefile
 widget/src/gtksuperwin/Makefile
 widget/src/gtkxtbin/Makefile
+widget/src/qt/Makefile
 widget/src/photon/Makefile
 widget/src/mac/Makefile
 widget/src/cocoa/Makefile

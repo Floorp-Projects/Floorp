@@ -1,0 +1,16 @@
+Makefile
+moc_nsQApplication.cpp
+moc_nsLabel.cpp
+moc_nsScrollbar.cpp
+moc_nsButton.cpp
+moc_nsCheckButton.cpp
+moc_nsTextWidget.cpp
+moc_nsTabWidget.cpp
+moc_nsQEventHandler.cpp
+moc_nsWindow.cpp
+moc_nsQtEventDispatcher.cpp
+moc_nsQWidget.cpp
+moc_nsMime.cpp
+moc_nsEventQueueWatcher.cpp
+compile
+.deps

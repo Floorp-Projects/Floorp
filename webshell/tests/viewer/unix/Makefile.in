@@ -53,6 +53,9 @@ endif
 ifdef MOZ_ENABLE_XLIB
 DIRS		+= xlib
 endif
+ifdef MOZ_ENABLE_QT
+DIRS		+= qt
+endif
 
 include $(topsrcdir)/config/rules.mk
 

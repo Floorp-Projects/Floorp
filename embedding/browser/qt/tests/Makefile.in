@@ -1,0 +1,87 @@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= qgeckoembed
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  $(NULL)
+
+ifdef NS_TRACE_MALLOC
+REQUIRES	+= tracemalloc
+endif
+
+ifdef MOZ_JPROF
+REQUIRES	+= jprof
+endif
+
+CPPSRCS		= \
+		$(MOCSRCS) \
+		mainwindow.cpp \
+		TestQGeckoEmbed.cpp
+
+MOCSRCS		= \
+		moc_mainwindow.cpp \
+		$(NULL)
+
+CXXFLAGS	+= $(MOZ_QT_CFLAGS)
+PROGRAM = $(CPPSRCS:.cpp=)
+
+ifdef MOZ_ENABLE_QT
+LIBS		+= \
+		-lqgeckoembed \
+		$(XLDFLAGS) \
+		$(XLIBS) \
+		$(NULL)
+endif
+
+include $(topsrcdir)/config/config.mk
+
+# Force applications to be built non-statically
+# when building the mozcomps meta component
+ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
+BUILD_STATIC_LIBS=
+BUILD_SHARED_LIBS=1
+endif
+
+ifdef NS_TRACE_MALLOC
+EXTRA_LIBS	+= -ltracemalloc
+endif
+
+ifdef MOZ_PERF_METRICS
+EXTRA_LIBS	+= -lmozutil_s
+endif
+
+ifdef MOZ_JPROF
+EXTRA_LIBS	+= -ljprof
+endif
+
+EXTRA_LIBS	+= $(MOZ_JS_LIBS)
+EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+= $(MOZ_QT_CFLAGS)
+
+EXTRA_LIBS	+= \
+		$(TK_LIBS) \
+		$(NULL)
+
+ifeq ($(OS_ARCH), SunOS)
+ifndef GNU_CC
+# When using Sun's WorkShop compiler, including
+# /wherever/workshop-5.0/SC5.0/include/CC/std/time.h
+# causes most of these compiles to fail with:
+# line 29: Error: Multiple declaration for std::tm.
+# So, this gets around the problem.
+DEFINES           += -D_TIME_H=1
+endif
+endif
+
+ifeq ($(OS_ARCH), OpenVMS)
+DEFINES		+= -DGENERIC_MOTIF_REDEFINES
+endif

@@ -144,8 +144,8 @@ static void     style_set_cb              (GtkWidget *widget,
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-static GdkFilterReturn plugin_window_filter_func (GdkXEvent *gdk_xevent, 
-                                                  GdkEvent *event, 
+static GdkFilterReturn plugin_window_filter_func (GdkXEvent *gdk_xevent,
+                                                  GdkEvent *event,
                                                   gpointer data);
 static GdkFilterReturn plugin_client_message_filter (GdkXEvent *xevent,
                                                      GdkEvent *event,
@@ -181,7 +181,7 @@ static void    drag_data_received_event_cb(GtkWidget *aWidget,
 
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
-  
+
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
@@ -258,7 +258,7 @@ nsWindow::nsWindow()
         // It's OK if either of these fail, but it may not be one day.
         initialize_prefs();
     }
-    
+
     if (mLastDragMotionWindow == this)
         mLastDragMotionWindow = NULL;
     mDragMotionWidget = 0;
@@ -396,7 +396,7 @@ nsWindow::Destroy(void)
         gtk_widget_destroy(GTK_WIDGET(mContainer));
         mContainer = nsnull;
     }
-    
+
     if (mDrawingarea) {
         g_object_unref(mDrawingarea);
         mDrawingarea = nsnull;
@@ -525,7 +525,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                       nsIWidget                  *aWidget,
                       PRBool                      aActivate)
 {
-    return NS_ERROR_NOT_IMPLEMENTED; 
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -645,11 +645,11 @@ nsWindow::SetFocus(PRBool aRaise)
     IMESetFocus();
 #endif
 
-    LOGFOCUS(("  widget now has focus - dispatching events [%p]\n", 
+    LOGFOCUS(("  widget now has focus - dispatching events [%p]\n",
               (void *)this));
 
     DispatchGotFocusEvent();
-    
+
     // unset the activate flag
     if (owningWindow->mActivatePending) {
         owningWindow->mActivatePending = PR_FALSE;
@@ -951,7 +951,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     if (iconFile) {
         iconFile->GetNativePath(path);
         iconList.AppendCString(path);
-    } 
+    }
 
     // Get the 16px icon path as well
     ResolveIconName(aIconSpec, NS_LITERAL_STRING("16.xpm"),
@@ -1052,7 +1052,7 @@ nsWindow::CaptureMouse(PRBool aCapture)
     if (!mDrawingarea)
         return NS_OK;
 
-    GtkWidget *widget = 
+    GtkWidget *widget =
         get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
 
     if (aCapture) {
@@ -1075,7 +1075,7 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
     if (!mDrawingarea)
         return NS_OK;
 
-    GtkWidget *widget = 
+    GtkWidget *widget =
         get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
 
     LOG(("CaptureRollupEvents %p\n", (void *)this));
@@ -1113,7 +1113,7 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     if (top_window && GTK_WIDGET_VISIBLE(top_window)) {
         gdk_window_show(top_window->window);
     }
-    
+
     return NS_OK;
 }
 
@@ -1624,7 +1624,7 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 #endif
 
     nsEventStatus status;
-    
+
     // unset the repeat flag
     mInKeyRepeat = PR_FALSE;
 
@@ -1722,7 +1722,7 @@ nsWindow::ThemeChanged()
         return;
 
     // Dispatch NS_THEMECHANGED to all child windows
-    GList *children = 
+    GList *children =
         gdk_window_peek_children(mDrawingarea->inner_window);
     while (children) {
         GdkWindow *gdkWin = GDK_WINDOW(children->data);
@@ -1817,7 +1817,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 
     // we're done with the drag motion event.  notify the drag service.
     dragSessionGTK->TargetEndDragMotion(aWidget, aDragContext, aTime);
-    
+
     // and unset our context
     dragSessionGTK->TargetSetLastContext(0, 0, 0);
 
@@ -1867,7 +1867,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
 
     nscoord retx = 0;
     nscoord rety = 0;
-    
+
     GdkWindow *thisWindow = aWidget->window;
     GdkWindow *returnWindow = NULL;
     returnWindow = get_inner_gdk_window(thisWindow, aX, aY, &retx, &rety);
@@ -2000,7 +2000,7 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
     // XXX Do we want to pass this on only if the event's subwindow is null?
 
     LOG(("nsWindow::OnDragEnter(%p)\n", this));
-    
+
     nsMouseEvent event(NS_DRAGDROP_ENTER, this);
 
     event.point.x = aX;
@@ -2064,7 +2064,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     if (parentGdkWindow) {
         // find the mozarea on that window
         gpointer user_data = nsnull;
-        user_data = g_object_get_data(G_OBJECT(parentGdkWindow), 
+        user_data = g_object_get_data(G_OBJECT(parentGdkWindow),
                                       "mozdrawingarea");
         parentArea = MOZ_DRAWINGAREA(user_data);
 
@@ -2131,7 +2131,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         else if (mWindowType == eWindowType_popup) {
             mShell = gtk_window_new(GTK_WINDOW_POPUP);
             if (topLevelParent) {
-                gtk_window_set_transient_for(GTK_WINDOW(mShell), 
+                gtk_window_set_transient_for(GTK_WINDOW(mShell),
                                             topLevelParent);
                 mTransientParent = topLevelParent;
 
@@ -2199,7 +2199,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         break;
     }
     // Disable the double buffer because it will make the caret crazy
-    // For bug#153805 (Gtk2 double buffer makes carets misbehave) 
+    // For bug#153805 (Gtk2 double buffer makes carets misbehave)
     if (mContainer)
         gtk_widget_set_double_buffered (GTK_WIDGET(mContainer),FALSE);
 
@@ -2266,7 +2266,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                          G_CALLBACK(scroll_event_cb), NULL);
         g_signal_connect(G_OBJECT(mContainer), "visibility_notify_event",
                          G_CALLBACK(visibility_notify_event_cb), NULL);
-        
+
         gtk_drag_dest_set((GtkWidget *)mContainer,
                           (GtkDestDefaults)0,
                           NULL,
@@ -2784,7 +2784,7 @@ nsWindow::GetToplevelWidget(GtkWidget **aWidget)
         return;
     }
 
-    if (!mDrawingarea) 
+    if (!mDrawingarea)
         return;
 
     GtkWidget *widget =
@@ -2798,7 +2798,7 @@ nsWindow::GetToplevelWidget(GtkWidget **aWidget)
 void
 nsWindow::GetContainerWindow(nsWindow **aWindow)
 {
-    if (!mDrawingarea) 
+    if (!mDrawingarea)
         return;
 
     GtkWidget *owningWidget =
@@ -2828,7 +2828,7 @@ nsWindow::SetupPluginPort(void)
                   xattrs.your_event_mask |
                   SubstructureNotifyMask);
 
-    gdk_window_add_filter(mDrawingarea->inner_window, 
+    gdk_window_add_filter(mDrawingarea->inner_window,
                           plugin_window_filter_func,
                           this);
 
@@ -2938,9 +2938,9 @@ nsWindow::SetNonXEmbedPluginFocus()
     gdk_error_trap_pop();
     gPluginFocusWindow = this;
     gdk_window_add_filter(NULL, plugin_client_message_filter, this);
-    
+
     LOGFOCUS(("nsWindow::SetNonXEmbedPluginFocus oldfocus=%p new=%p\n",
-                mOldFocusWindow, 
+                mOldFocusWindow,
                 GDK_WINDOW_XWINDOW(mDrawingarea->inner_window)));
 }
 
@@ -2962,11 +2962,11 @@ nsWindow::LoseNonXEmbedPluginFocus()
                    &curFocusWindow,
                    &focusState);
 
-    // we only switch focus between plugin window and focus proxy. If the 
-    // current focused window is not the plugin window, just removing the 
+    // we only switch focus between plugin window and focus proxy. If the
+    // current focused window is not the plugin window, just removing the
     // event filter that blocks the WM_TAKE_FOCUS is enough. WM and gtk2
     // will take care of the focus later.
-    if (!curFocusWindow || 
+    if (!curFocusWindow ||
         curFocusWindow == GDK_WINDOW_XWINDOW(mDrawingarea->inner_window)) {
 
         gdk_error_trap_push();
@@ -3033,9 +3033,9 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
     // confused if we change the window decorations while the window
     // is visible.
 #if GTK_CHECK_VERSION(2,2,0)
-    if (aShouldHide) 
+    if (aShouldHide)
         gdk_window_fullscreen (mShell->window);
-    else 
+    else
         gdk_window_unfullscreen (mShell->window);
 #else
     gdk_window_hide(mShell->window);
@@ -3550,7 +3550,7 @@ plugin_window_filter_func (GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data
 
     nsWindow  *nswindow = (nsWindow*)data;
     GdkFilterReturn return_val;
-      
+
     xevent = (XEvent *)gdk_xevent;
     return_val = GDK_FILTER_CONTINUE;
 
@@ -3602,7 +3602,7 @@ plugin_window_filter_func (GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data
 }
 
 /* static */
-GdkFilterReturn   
+GdkFilterReturn
 plugin_client_message_filter (GdkXEvent *gdk_xevent,
                               GdkEvent *event,
                               gpointer data)
@@ -3624,12 +3624,12 @@ plugin_client_message_filter (GdkXEvent *gdk_xevent,
     Display *dpy ;
     dpy = GDK_WINDOW_XDISPLAY((GdkWindow*)(gPluginFocusWindow->
                 GetNativeData(NS_NATIVE_WINDOW)));
-    if (gdk_x11_get_xatom_by_name("WM_PROTOCOLS") 
+    if (gdk_x11_get_xatom_by_name("WM_PROTOCOLS")
             != xevent->xclient.message_type) {
         return return_val;
     }
-    
-    if ((Atom) xevent->xclient.data.l[0] == 
+
+    if ((Atom) xevent->xclient.data.l[0] ==
             gdk_x11_get_xatom_by_name("WM_TAKE_FOCUS")) {
         // block it from gtk2.0 focus proxy
         return_val = GDK_FILTER_REMOVE;
@@ -3755,11 +3755,11 @@ nsWindow::UpdateDragStatus(nsMouseEvent   &aEvent,
 {
     // default is to do nothing
     int action = nsIDragService::DRAGDROP_ACTION_NONE;
-    
+
     // set the default just in case nothing matches below
     if (aDragContext->actions & GDK_ACTION_DEFAULT)
         action = nsIDragService::DRAGDROP_ACTION_MOVE;
-    
+
     // first check to see if move is set
     if (aDragContext->actions & GDK_ACTION_MOVE)
         action = nsIDragService::DRAGDROP_ACTION_MOVE;
@@ -3767,7 +3767,7 @@ nsWindow::UpdateDragStatus(nsMouseEvent   &aEvent,
     // then fall to the others
     else if (aDragContext->actions & GDK_ACTION_LINK)
         action = nsIDragService::DRAGDROP_ACTION_LINK;
-   
+
     // copy is ctrl
     else if (aDragContext->actions & GDK_ACTION_COPY)
         action = nsIDragService::DRAGDROP_ACTION_COPY;
@@ -3793,7 +3793,7 @@ drag_motion_event_cb(GtkWidget *aWidget,
     nsWindow *window = get_window_for_gtk_widget(aWidget);
     if (!window)
         return FALSE;
-    
+
     return window->OnDragMotionEvent(aWidget,
                                      aDragContext,
                                      aX, aY, aTime, aData);
@@ -3825,7 +3825,7 @@ drag_drop_event_cb(GtkWidget *aWidget,
 
     if (!window)
         return FALSE;
-    
+
     return window->OnDragDropEvent(aWidget,
                                    aDragContext,
                                    aX, aY, aTime, aData);
@@ -3876,7 +3876,7 @@ nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
                                GdkDragContext *aDragContext,
                                gint aX, gint aY, guint aTime)
 {
-  
+
     // We have to be careful about ref ordering here.  if aWidget ==
     // mDraMotionWidget be careful not to let the refcnt drop to zero.
     // Same with the drag context.
@@ -3908,7 +3908,7 @@ nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
     if (!aWidget) {
         return;
     }
-    
+
     // otherwise we create a new timer
     mDragMotionTimerID = gtk_timeout_add(100,
                                          (GtkFunction)DragMotionTimerCallback,
@@ -4063,7 +4063,7 @@ nsWindow::GetRootAccessible(nsIAccessible** aAccessible)
             *aAccessible = docAcc;
             NS_ADDREF(*aAccessible);
             break;
-        } 
+        }
         docAcc->GetParent(getter_AddRefs(parentAcc));
         docAcc = parentAcc;
     }
@@ -4228,7 +4228,7 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
 
     nsEventStatus status;
     DispatchEvent(&textEvent, status);
-  
+
     if (textEvent.rangeArray) {
         delete[] textEvent.rangeArray;
     }
@@ -4276,7 +4276,7 @@ nsWindow::IMECreateContext(void)
 }
 
 PRBool
-nsWindow::IMEFilterEvent(GdkEventKey *aEvent) 
+nsWindow::IMEFilterEvent(GdkEventKey *aEvent)
 {
     GtkIMContext *im = IMEGetContext();
     if (!im)
@@ -4320,11 +4320,11 @@ IM_preedit_changed_cb(GtkIMContext *aContext,
     nsWindow *window = gFocusWindow ? gFocusWindow : gIMEFocusWindow;
     if (!window)
         return;
-  
+
     // Should use cursor_pos ?
     gtk_im_context_get_preedit_string(aContext, &preedit_string,
                                       &feedback_list, &cursor_pos);
-  
+
     LOGIM(("preedit string is: %s   length is: %d\n",
            preedit_string, strlen(preedit_string)));
 
@@ -4443,7 +4443,7 @@ IM_set_text_range(const PRInt32 aLen,
         aTextRangeListResult = NULL;
         return;
     }
-    
+
     PangoAttrIterator * aFeedbackIterator;
     aFeedbackIterator = pango_attr_list_get_iterator((PangoAttrList*)aFeedback);
     //(NS_REINTERPRET_CAST(PangoAttrList*, aFeedback));
@@ -4460,7 +4460,7 @@ IM_set_text_range(const PRInt32 aLen,
     aMaxLenOfTextRange = 2*aLen + 1;
     *aTextRangeListResult = new nsTextRange[aMaxLenOfTextRange];
     NS_ASSERTION(*aTextRangeListResult, "No enough memory.");
-    
+
     // Set caret's postion
     SET_FEEDBACKTYPE(0, NS_TEXTRANGE_CARETPOSITION);
     START_OFFSET(0) = aLen;
@@ -4515,7 +4515,7 @@ IM_set_text_range(const PRInt32 aLen,
         count++;
         START_OFFSET(count) = 0;
         END_OFFSET(count) = 0;
-        
+
         uniStr = NULL;
         if (start > 0) {
             uniStr = g_utf8_to_utf16(aPreeditString, start,
@@ -4525,7 +4525,7 @@ IM_set_text_range(const PRInt32 aLen,
             START_OFFSET(count) = uniStrLen;
             g_free(uniStr);
         }
-        
+
         uniStr = NULL;
         uniStr = g_utf8_to_utf16(aPreeditString + start, end - start,
                                  NULL, &uniStrLen, NULL);
