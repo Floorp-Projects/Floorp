@@ -79,9 +79,6 @@ private:
     // this will be the resolve path which will *NEVER* be return to the user
     nsCString mResolvedPath;
     
-    IPersistFile* mPersistFile; 
-    IShellLink*   mShellLink;
-    
     PRFileInfo64  mFileInfo64;
     
     void MakeDirty();
@@ -96,5 +93,9 @@ private:
     static nsresult ParseURL(const char* inURL, char **outHost, char **outDirectory,
                              char **outFileBaseName, char **outFileExtension);
 };
+
+
+extern nsresult NS_CreateShortcutResolver();
+extern void     NS_DestroyShortcutResolver();
 
 #endif

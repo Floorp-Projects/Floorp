@@ -56,7 +56,8 @@ static NS_DEFINE_CID(kURLParserCID, NS_NOAUTHURLPARSER_CID);
 void NS_StartupLocalFile()
 {
 #ifdef XP_WIN
-  CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
+  nsresult rv = NS_CreateShortcutResolver();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Shortcut resolver could not be created");
 #endif
 }
 
@@ -65,7 +66,7 @@ void NS_ShutdownLocalFile()
   NS_ShutdownLocalFileUnicode();
   
 #ifdef XP_WIN
-  CoUninitialize();
+  NS_DestroyShortcutResolver();
 #endif
 }
 

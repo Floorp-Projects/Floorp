@@ -52,6 +52,120 @@
 #include "prproces.h"
 #include "nsITimelineService.h"
 
+#include "nsAutoLock.h"
+
+
+class ShortcutResolver
+{
+public:
+    ShortcutResolver();
+    virtual ~ShortcutResolver();
+
+    nsresult Init();
+    nsresult Resolve(const unsigned short* in, char* out);
+
+private:
+    PRLock*       mLock;
+    IPersistFile* mPersistFile; 
+    IShellLink*   mShellLink;
+};
+
+
+ShortcutResolver::ShortcutResolver()
+{
+    mLock = nsnull;
+    mPersistFile = nsnull;
+    mShellLink   = nsnull;
+}
+
+
+ShortcutResolver::~ShortcutResolver()
+{
+    if (mLock)
+        PR_DestroyLock(mLock);
+
+    // Release the pointer to the IPersistFile interface. 
+    if (mPersistFile)
+        mPersistFile->Release(); 
+    
+    // Release the pointer to the IShellLink interface. 
+    if(mShellLink)
+        mShellLink->Release();
+
+    CoUninitialize();
+}
+
+nsresult
+ShortcutResolver::Init()
+{
+    CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
+
+    mLock = PR_NewLock();
+    if (!mLock)
+        return NS_ERROR_FAILURE;
+
+    HRESULT hres = CoCreateInstance(CLSID_ShellLink, 
+                                    NULL, 
+                                    CLSCTX_INPROC_SERVER, 
+                                    IID_IShellLink, 
+                                    (void**)&mShellLink); 
+    if (SUCCEEDED(hres)) 
+    {
+        // Get a pointer to the IPersistFile interface. 
+        hres = mShellLink->QueryInterface(IID_IPersistFile, (void**)&mPersistFile); 
+    }
+    
+    if (mPersistFile == nsnull || mShellLink == nsnull)
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+// |out| must be an allocated buffer of size MAX_PATH
+nsresult 
+ShortcutResolver::Resolve(const unsigned short* in, char* out)
+{
+    nsAutoLock lock(mLock);
+    
+    // see if we can Load the path.
+    HRESULT hres = mPersistFile->Load(in, STGM_READ); 
+    
+    if (FAILED(hres)) 
+        return NS_ERROR_FAILURE;
+
+    // Resolve the link. 
+    hres = mShellLink->Resolve(nsnull, SLR_NO_UI ); 
+    
+    if (FAILED(hres)) 
+        return NS_ERROR_FAILURE;
+
+    WIN32_FIND_DATA wfd; 
+    // Get the path to the link target. 
+    hres = mShellLink->GetPath( out, MAX_PATH, &wfd, SLGP_UNCPRIORITY ); 
+    if (FAILED(hres)) 
+        return NS_ERROR_FAILURE;
+    return NS_OK;
+}
+
+static ShortcutResolver * gResolver = nsnull;
+
+nsresult NS_CreateShortcutResolver()
+{
+    gResolver = new ShortcutResolver();
+    if (!gResolver)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return gResolver->Init();
+}
+
+
+void NS_DestroyShortcutResolver()
+{
+    delete gResolver;
+    gResolver = nsnull;
+}
+
+
 // certainly not all the error that can be 
 // encountered, but many of them common ones
 static nsresult ConvertWinError(DWORD winErr)
@@ -245,9 +359,6 @@ NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator);
 nsLocalFile::nsLocalFile()
 {
     NS_INIT_REFCNT();
-        
-    mPersistFile = nsnull;
-    mShellLink   = nsnull;
     mLastResolution = PR_FALSE;
     mFollowSymlinks = PR_FALSE;
     MakeDirty();
@@ -255,13 +366,6 @@ nsLocalFile::nsLocalFile()
 
 nsLocalFile::~nsLocalFile()
 {
-    // Release the pointer to the IPersistFile interface. 
-    if (mPersistFile)
-        mPersistFile->Release(); 
-    
-    // Release the pointer to the IShellLink interface. 
-    if(mShellLink)
-        mShellLink->Release();
 }
 
 /* nsISupports interface implementation. */
@@ -303,34 +407,16 @@ nsLocalFile::MakeDirty()
 nsresult 
 nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath)
 {
-#ifdef DEBUG_dougt
-    printf("localfile - resolving symlink\n");
-#endif
 
     nsresult rv = NS_OK;
     
     if (strstr(workingPath, ".lnk") == nsnull)
         return NS_ERROR_FILE_INVALID_PATH;
 
-    if (mPersistFile == nsnull || mShellLink == nsnull)
-    {
-        HRESULT hres; 
-        // FIX.  This should be in a service.
-        // Get a pointer to the IShellLink interface. 
-        hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&mShellLink); 
-        if (SUCCEEDED(hres)) 
-        { 
-            // Get a pointer to the IPersistFile interface. 
-            hres = mShellLink->QueryInterface(IID_IPersistFile, (void**)&mPersistFile); 
-        }
-        
-        if (mPersistFile == nsnull || mShellLink == nsnull)
-        {
-            return NS_ERROR_FILE_INVALID_PATH;
-        }
-    }
-        
-    
+#ifdef DEBUG_dougt
+    printf("localfile - resolving symlink\n");
+#endif
+
     // Get the native path for |this|
     char* filePath = (char*) nsMemory::Clone( workingPath, strlen(workingPath)+1 );
 
@@ -347,30 +433,27 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
     // Get the first slash.          
     char* slash = strchr(filePath, '\\');
             
-    if (slash == nsnull)
+    if (!slash && filePath[0] != nsnull && filePath[1] == ':' && filePath[2] == '\0')
     {
-        if (filePath[0] != nsnull && filePath[1] == ':' && filePath[2] == '\0')
-        {
-            // we have a drive letter and a colon (eg 'c:'
-            // this is resolve already
-            
-            int filePathLen = strlen(filePath);
-            char* rp = (char*) nsMemory::Alloc( filePathLen + 2 );
-            if (!rp)
-                return NS_ERROR_OUT_OF_MEMORY;
-            memcpy( rp, filePath, filePathLen );
-            rp[filePathLen] = '\\';
-            rp[filePathLen+1] = 0;
-            *resolvedPath = rp;
-
-            nsMemory::Free(filePath);
-            return NS_OK;
-        }
-        else
-        {
-            nsMemory::Free(filePath);
-            return NS_ERROR_FILE_INVALID_PATH;
-        }
+        // we have a drive letter and a colon (eg 'c:'
+        // this is resolve already
+        
+        int filePathLen = strlen(filePath);
+        char* rp = (char*) nsMemory::Alloc( filePathLen + 2 );
+        if (!rp)
+            return NS_ERROR_OUT_OF_MEMORY;
+        memcpy( rp, filePath, filePathLen );
+        rp[filePathLen] = '\\';
+        rp[filePathLen+1] = 0;
+        *resolvedPath = rp;
+        
+        nsMemory::Free(filePath);
+        return NS_OK;
+    }
+    else
+    {
+        nsMemory::Free(filePath);
+        return NS_ERROR_FILE_INVALID_PATH;
     }
         
 
@@ -425,76 +508,57 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
             MultiByteToWideChar(CP_ACP, 0, linkStr, -1, wsz, MAX_PATH); 
         }        
 
-        HRESULT hres; 
-        
-        // see if we can Load the path.
-        hres = mPersistFile->Load(wsz, STGM_READ); 
+        char *temp = (char*) nsMemory::Alloc( MAX_PATH );
+        if (temp == nsnull)
+            return NS_ERROR_NULL_POINTER;
 
-        if (SUCCEEDED(hres)) 
+        if (gResolver)
+            rv = gResolver->Resolve(wsz, temp);
+        else
+            rv = NS_ERROR_FAILURE;
+
+        if (NS_SUCCEEDED(rv))
         {
-            // Resolve the link. 
-            hres = mShellLink->Resolve(nsnull, SLR_NO_UI ); 
-            if (SUCCEEDED(hres)) 
-            { 
-                WIN32_FIND_DATA wfd; 
-                
-                char *temp = (char*) nsMemory::Alloc( MAX_PATH );
-                if (temp == nsnull)
-                    return NS_ERROR_NULL_POINTER;
-                
-                // Get the path to the link target. 
-                hres = mShellLink->GetPath( temp, MAX_PATH, &wfd, SLGP_UNCPRIORITY ); 
-
-                if (SUCCEEDED(hres))
-                {
-                    // found a new path.
-                    
-                    // addend a slash on it since it does not come out of GetPath()
-                    // with one only if it is a directory.  If it is not a directory
-                    // and there is more to append, than we have a problem.
-                    
-                    struct stat st;
-                    int statrv = stat(temp, &st);
-                    
-                    if (0 == statrv && (_S_IFDIR & st.st_mode))
-                    {
-                        strcat(temp, "\\");
-                    }
-                                       
-                    if (slash)
-                    {
-                        // save where we left off.
-                        char *carot= (temp + strlen(temp) -1 );
-
-                        // append all the stuff that we have not done.
-                        strcat(temp, ++slash);
-                        
-                        slash = carot;
-                    }
-
-                    nsMemory::Free(filePath);
-                    filePath = temp;
+            // found a new path.
             
-                }
-                else
-                {
-                    nsMemory::Free(temp);
-                }
-            }
-            else
+            // addend a slash on it since it does not come out of GetPath()
+            // with one only if it is a directory.  If it is not a directory
+            // and there is more to append, than we have a problem.
+            
+            struct stat st;
+            int statrv = stat(temp, &st);
+            
+            if (0 == statrv && (_S_IFDIR & st.st_mode))
+                strcat(temp, "\\");
+            
+            if (slash)
             {
-                // could not resolve shortcut.  Return error;
-                nsMemory::Free(filePath);
-                return NS_ERROR_FILE_INVALID_PATH;
+                // save where we left off.
+                char *carot= (temp + strlen(temp) -1 );
+                
+                // append all the stuff that we have not done.
+                strcat(temp, ++slash);
+                
+                slash = carot;
             }
+
+            nsMemory::Free(filePath);
+            filePath = temp;
+            
         }
-    
-        if (slash)
+
+        else
         {
-            *slash = '\\';
-            ++slash;
-            slash = strchr(slash, '\\');
+            // could not resolve shortcut.  Return error;
+            nsMemory::Free(filePath);
+            return NS_ERROR_FILE_INVALID_PATH;
         }
+    }    
+    if (slash)
+    {
+        *slash = '\\';
+        ++slash;
+        slash = strchr(slash, '\\');
     }
 
     // kill any trailing separator
@@ -695,23 +759,26 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     
    // create nested directories to target
     unsigned char* slash = _mbschr((const unsigned char*) mResolvedPath.get(), '\\');
-    // skip the first '\\'
-    ++slash;
-    slash = _mbschr(slash, '\\');
 
-    while (slash)
+    if (slash)
     {
-        *slash = '\0';
-
-        if (!CreateDirectoryA(mResolvedPath.get(), NULL)) {
-            rv = ConvertWinError(GetLastError());
-            if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
-        }
-        *slash = '\\';
+        // skip the first '\\'
         ++slash;
         slash = _mbschr(slash, '\\');
+    
+        while (slash)
+        {
+            *slash = '\0';
+            
+                if (!CreateDirectoryA(mResolvedPath.get(), NULL)) {
+                    rv = ConvertWinError(GetLastError());
+                    if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
+                }
+                *slash = '\\';
+                ++slash;
+                slash = _mbschr(slash, '\\');
+        }
     }
-
 
     if (type == NORMAL_FILE_TYPE)
     {
