@@ -108,10 +108,11 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
           // allocale an output buffer
           *outCString = (char *) PR_Malloc(dstLength + 1);
           if (nsnull != *outCString) {
+            PRInt32 buffLength = dstLength;
             **outCString = '\0';
             res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
             if (NS_SUCCEEDED(res)) {
-              PRInt32 finLen;
+              PRInt32 finLen = buffLength - dstLength;
               res = encoder->Finish((char *)(*outCString+dstLength), &finLen);
               if (NS_SUCCEEDED(res)) {
                 dstLength += finLen;

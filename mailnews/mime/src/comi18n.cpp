@@ -1415,13 +1415,14 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
         res = NS_ERROR_OUT_OF_MEMORY;
       }
       else {
+        PRInt32 buffLength = dstLength;
         // convert from unicode
         res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
         if (NS_SUCCEEDED(res)) {
           res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
           if (NS_SUCCEEDED(res)) {
-            PRInt32 finLen;
-            res = encoder->Finish((char *)(*dstPtr+dstLength), &finLen);
+            PRInt32 finLen = buffLength - dstLength;
+            res = encoder->Finish((char *)(dstPtr+dstLength), &finLen);
             if (NS_SUCCEEDED(res)) {
               dstLength += finLen;
             }
