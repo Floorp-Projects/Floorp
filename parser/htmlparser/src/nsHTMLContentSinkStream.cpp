@@ -1219,6 +1219,8 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
       {
         if (mCharsetOverride.Length() == 0)
           InitEncoder(value);
+        else
+          InitEncoder(mCharsetOverride);
       }
     }
   }
