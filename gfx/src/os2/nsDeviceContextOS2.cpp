@@ -489,6 +489,9 @@ nsresult GetSysFontInfo(nsSystemFontID aID, nsFont* aFont)
 
   // Do Size
   aFont->size = NSIntPointsToTwips(pointSize);
+
+  aFont->systemFont = PR_TRUE;
+
   return NS_OK;
 }
 
