@@ -22,6 +22,7 @@
  * Contributor(s): 
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  */
 
 /*
@@ -321,12 +322,8 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
     mPopupContent = nsnull;  // release the popup
     
     // clear out the tooltip node on the document
-    nsCOMPtr<nsIDOMEventTarget> eventTarget;
-    nsCOMPtr<nsIDOMNode> eventTargetNode;
-    aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-    if (eventTarget) eventTargetNode = do_QueryInterface(eventTarget);
     nsCOMPtr<nsIDOMXULDocument> doc;
-    FindDocumentForNode ( eventTargetNode, getter_AddRefs(doc) );
+    FindDocumentForNode ( mElement, getter_AddRefs(doc) );
     if ( doc )
       doc->SetTooltipNode(nsnull);
   }
