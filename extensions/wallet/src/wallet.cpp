@@ -1667,7 +1667,7 @@ static nsString&
 Strip(const nsString& text, nsString& stripText) {
   for (PRUint32 i=0; i<text.Length(); i++) {
     PRUnichar c = text.CharAt(i);
-    if (isalpha(c) || isdigit(c) || c>'~') {
+    if (nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c) || c>'~') {
       stripText += c;
     }
   }
@@ -2134,7 +2134,7 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsString& schema) {
 //            }
 //          } else {
 //            /* failed to get the i18n interfaces, so just treat latin characters */
-              if (isalpha(c) || isdigit(c)) {
+              if (nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c)) {
                 charFound = PR_TRUE;
                 break;
 //            }
@@ -2333,7 +2333,7 @@ wallet_GetSchemaFromDisplayableText(nsIDOMNode* elementNode, nsString& schema, P
     nsAutoString temp;
     for (i=0; i<text.Length(); i++) {
       c = text.CharAt(i);
-      if (isalpha(c) || isdigit(c)) {
+      if (nsCRT::IsAsciiAlpha(c) || nsCRT::IsAsciiDigit(c)) {
         temp.Append(c);
       }
     }
