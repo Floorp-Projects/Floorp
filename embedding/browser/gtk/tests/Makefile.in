@@ -24,8 +24,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
- 
-IS_COMPONENT = 1
 
 MODULE		= gtkembedmoz
 REQUIRES	= xpcom \
@@ -69,7 +67,6 @@ EXTRA_LIBS	+= $(EXTRA_DSO_LIBS) $(STATIC_EXTRA_LIBS)
 
 endif
 
-
 EXTRA_LIBS	+= $(MOZ_JS_LIBS)
 EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
 
@@ -84,13 +81,6 @@ endif
 
 EXTRA_LIBS	+= \
 		$(TK_LIBS) \
-		$(NULL)
-DEFINES		+= -DXPCOM_GLUE 
-
-LIBS		+= \
-		$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
-		$(XPCOM_GLUE_LIBS) \
-		$(NSPR_LIBS) \
 		$(NULL)
 
 ifeq ($(OS_ARCH), SunOS)
