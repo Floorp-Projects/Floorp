@@ -24,7 +24,7 @@
 var editorShell;
 var toolbar;
 var documentModified;
-var EditorDisplayStyle = true;
+var EditorDisplayMode = 0;  // Normal Editor mode
 
 var gTagToFormat = {
     "P"          : "Normal",	// these should really be entities. Not sure how to do that from JS
@@ -508,6 +508,8 @@ function EditorRemoveLinks()
 
 function EditorApplyStyleSheet(styleSheetURL)
 {
+  // Second param is true for "override" type of sheet
+  // We don't let users use that option
   editorShell.ApplyStyleSheet(styleSheetURL);
   contentWindow.focus();
 }
@@ -767,24 +769,19 @@ function EditorAlign(align)
   contentWindow.focus();
 }
 
-function EditorToggleDisplayStyle()
+function EditorSetDisplayStyle(mode)
 {
-  if (EditorDisplayStyle) {
-    EditorDisplayStyle = false;
-    styleSheet = "resource:/res/ua.css";
-    buttonText = editorShell.GetString("EditMode");
-  }
-  else {
-    EditorDisplayStyle = true;
-    styleSheet = "chrome://editor/content/EditorContent.css"
-    buttonText = editorShell.GetString("Preview");
-  }
-  //TODO: THIS IS NOT THE RIGHT THING TO DO!
-  EditorApplyStyleSheet(styleSheet);
-  
-  button = document.getElementById("DisplayStyleButton");
-  if (button)
-    button.setAttribute("value",buttonText);
+  EditorDisplayMode = mode;
+  editorShell.SetDisplayMode(mode);
+  editButton = document.getElementById("EditModeButton");
+  browserButton = document.getElementById("BrowserModeButton");
+  var editSelected = 0;
+  var browserSelected = 0;
+  if (mode == 0) editSelected = 1;
+  if (mode == 1) browserSelected = 1;
+  dump(editButton+browserButton+" Display mode: EditSelected="+editSelected+" BrowserSelected="+browserSelected+"\n");
+  editButton.setAttribute("selected",Number(editSelected));
+  browserButton.setAttribute("selected",Number(browserSelected));
 }
 
 function EditorPrintPreview()
@@ -832,14 +829,6 @@ function OnCreateAlignmentPopup()
 }
   
 // --------------------------- Debug stuff ---------------------------
-
-function EditorApplyStyleSheet(url)
-{
-  if (editorShell)
-  {
-    editorShell.ApplyStyleSheet(url);
-  }
-}
 
 function EditorExecuteScript(fileSpec)
 {

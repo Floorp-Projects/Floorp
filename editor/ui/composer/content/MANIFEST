@@ -29,6 +29,7 @@ EditorInitPage.html
 EditorInitPagePlain.html
 EditorStyles1.css
 EditorContent.css
+EditorOverride.css
 editorOverlay.js
 editorOverlay.xul
 sidebar-editor.rdf

@@ -41,3 +41,7 @@
 <!ENTITY helpMenu.label "Help">
 <!ENTITY aboutCmd.label ".About">
 
+<!-- Display Mode Toolbar -->
+<!ENTITY displayMode.label "Display Mode:">
+<!ENTITY editModeButton.label "Normal Editing">
+<!ENTITY browserModeButton.label "Edit in Browser Layout">

@@ -2279,9 +2279,11 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   {
     nsCOMPtr<nsIEnumerator> enumerator;
     res = selection->GetEnumerator(getter_AddRefs(enumerator));
-    // XXX: ERROR_HANDLING  unclear what to do here, should an error just be returned if enumerator is null or res failed?
-    if (NS_SUCCEEDED(res) && enumerator)
+    if (NS_SUCCEEDED(res))
     {
+      if(!enumerator)
+        return NS_ERROR_NULL_POINTER;
+
       enumerator->First(); 
       nsCOMPtr<nsISupports> currentItem;
       res = enumerator->CurrentItem(getter_AddRefs(currentItem));
@@ -2716,18 +2718,29 @@ nsHTMLEditor::RemoveStyleSheet(nsICSSStyleSheet* aSheet)
   return rv;
 }
 
-
-NS_IMETHODIMP nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
+NS_IMETHODIMP 
+nsHTMLEditor::ApplyOverrideStyleSheet(const nsString& aURL)
 {
-  // XXX: Note that this is not an undo-able action yet!
+  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_TRUE);
+}
 
+NS_IMETHODIMP 
+nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
+{
+  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_TRUE);
+}
+
+//Note: Loading a document style sheet is undoable, loading an override sheet is not
+nsresult 
+nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOverride)
+{
   nsresult rv   = NS_OK;
-  nsIURI* uaURL = 0;
+  nsCOMPtr<nsIURI> uaURL;
 
 #ifndef NECKO
-  rv = NS_NewURL(&uaURL, aURL);
+  rv = NS_NewURL(getter_AddRefs(uaURL), aURL);
 #else
-  rv = NS_NewURI(&uaURL, aURL);
+  rv = NS_NewURI(getter_AddRefs(uaURL), aURL);
 #endif // NECKO
 
   if (NS_SUCCEEDED(rv)) {
@@ -2739,56 +2752,76 @@ NS_IMETHODIMP nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
     rv = ps->GetDocument(getter_AddRefs(document));
 
     if (NS_SUCCEEDED(rv)) {
-      if (document) {
-        nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+      if (!document)
+        return NS_ERROR_NULL_POINTER;
 
-        if (container) {
-          nsICSSLoader *cssLoader         = 0;
-          nsICSSStyleSheet *cssStyleSheet = 0;
+      nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+      if (!container)
+        return NS_ERROR_NULL_POINTER;
+        
+      nsCOMPtr<nsICSSLoader> cssLoader;
+      nsCOMPtr<nsICSSStyleSheet> cssStyleSheet;
 
-          rv = container->GetCSSLoader(cssLoader);
+      rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
 
+      if (NS_SUCCEEDED(rv)) {
+        PRBool complete;
+        
+        if (!cssLoader)
+          return NS_ERROR_NULL_POINTER;
+
+        if (aOverride) {
+          // We use null for the callback and data pointer because
+          //  we MUST ONLY load synchronous local files (no @import)
+          rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
+                                         nsnull, nsnull);
+
+          // Synchronous loads should ALWAYS return completed
+          if (!complete || !cssStyleSheet)
+            return NS_ERROR_NULL_POINTER;
+
+          // Don't need to QI (subclass)
+          nsCOMPtr<nsIStyleSheet> styleSheet = cssStyleSheet;
+          nsCOMPtr<nsIStyleSet> styleSet;
+          rv = ps->GetStyleSet(getter_AddRefs(styleSet));
           if (NS_SUCCEEDED(rv)) {
-            if (cssLoader) {
-              PRBool complete;
+            if (!styleSet)
+              return NS_ERROR_NULL_POINTER;
 
-              rv = cssLoader->LoadAgentSheet(uaURL, cssStyleSheet, complete,
-                                             ApplyStyleSheetToPresShellDocument,
-                                             this);
+            // Add the override style sheet
+            // (This checks if already exists
+            //  If yes, it and reads it does)
+            styleSet->AppendOverrideStyleSheet(styleSheet);
 
-              if (NS_SUCCEEDED(rv)) {
-                if (complete) {
-                  if (cssStyleSheet) {
-                    ApplyStyleSheetToPresShellDocument(cssStyleSheet,
-                                                       this);
-                  }
-                  else
-                    rv = NS_ERROR_NULL_POINTER;
-                }
-                    
-                //
-                // If not complete, we will be notified later
-                // with a call to AddStyleSheetToEditorDocument().
-                //
-              }
-            }
-            else
-              rv = NS_ERROR_NULL_POINTER;
+            // This notifies document observers to rebuild all frames
+            // (this doesn't affect style sheet because it is not a doc sheet)
+            document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
           }
         }
-        else
-          rv = NS_ERROR_NULL_POINTER;
+        else {
+          rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
+                                         ApplyStyleSheetToPresShellDocument,
+                                         this);
+
+          if (NS_SUCCEEDED(rv)) {
+            if (complete) {
+              if (cssStyleSheet) {
+                ApplyStyleSheetToPresShellDocument(cssStyleSheet,this);
+              }
+              else
+                rv = NS_ERROR_NULL_POINTER;
+            }
+            //
+            // If not complete, we will be notified later
+            // with a call to ApplyStyleSheetToPresShellDocument().
+            //
+          }
+        }
       }
-      else
-        rv = NS_ERROR_NULL_POINTER;
     }
-
-    NS_RELEASE(uaURL);
   }
-
   return rv;
 }
-
 
 #ifdef XP_MAC
 #pragma mark -
@@ -3526,7 +3559,32 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
 
   return encoder->EncodeToStream(aOutputStream);
 }
+#if 0
+NS_IMETHODIMP
+nsHTMLEditor::GetTextNearNode(nsIDOMNode *aNode, aNode, PRInt32 aMaxChars, nsString& aOutputString)
+{
+  if (!aNode)
+    return NS_ERROR_NULL_POINTER;
 
+  // Create a temporary selection object and 
+  //  based on the suppled
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsCOMPtr<nsIDOMRange> range;
+  nsresult rv = NS_NewRange(getter_AddRsfs(range))
+  if (NS_SUCCEEDED(rv))
+  {
+    if (!range)
+      return NS_ERROR_NULL_POINTER;
+    range.SetStart(aNode,0);
+    range.SetEnd(aNode,      
+  }
+
+  if (NS_SUCCEEDED(rv) && selection)
+    encoder->SetSelection(selection);
+
+  return rv;
+}
+#endif
 
 NS_IMETHODIMP
 nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
@@ -3546,7 +3604,6 @@ nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
-
 
 #ifdef XP_MAC
 #pragma mark -
@@ -3606,7 +3663,6 @@ nsHTMLEditor::ReplaceStyleSheet(nsICSSStyleSheet *aNewSheet)
 }
 
 
-
 /* static callback */
 void nsHTMLEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, void *aData)
 {
@@ -3617,7 +3673,6 @@ void nsHTMLEditor::ApplyStyleSheetToPresShellDocument(nsICSSStyleSheet* aSheet, 
   {
     rv = editor->ReplaceStyleSheet(aSheet);
   }
-  
   // XXX: we lose the return value here. Set a flag in the editor?
 }
 

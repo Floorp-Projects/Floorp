@@ -364,7 +364,6 @@ public:
    * 
    */
   NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue)=0;
-
 };
 
 #endif // nsIHTMLEditor_h__

@@ -616,9 +616,6 @@
     <titledbutton id="linkButton"  src="&linkIcon.url;"  value="&linkToolbarCmd.label;"  onclick="EditorInsertLink()"/>
     <titledbutton id="namedAnchorButton" src="&targetIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
 
-    <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" value="&previewToolbarCmd.label;" onclick="EditorToggleDisplayStyle()"/>
-  
-
     <!-- Formatting toolbar items -->
     <titledbutton style="width:68pt" id="ParagraphPopupButton" value="&paragraphToolbarMenu.label;" class="popup" align="left" popupanchor="bottomleft">
        <observes element="Editor:Paragraph:Format" attribute="format" onbroadcast="onParagraphFormatChange()"/>

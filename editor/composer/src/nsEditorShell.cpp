@@ -25,7 +25,6 @@
 #include "pratom.h"
 #include "prprf.h"
 #include "nsIComponentManager.h"
-//#include "nsAppCores.h"
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 
@@ -36,6 +35,12 @@
 #include "nsIDiskDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
+#include "nsICSSLoader.h"
+#include "nsICSSStyleSheet.h"
+#include "nsIHTMLContentContainer.h"
+#include "nsIStyleSet.h"
+#include "nsIURI.h"
+#include "nsNeckoUtil.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
@@ -63,7 +68,6 @@
 #include "nsIFindComponent.h"
 #include "nsIPrompt.h"
 #include "nsICommonDialogs.h"
-//#include "nsIDialogParamBlock.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -149,6 +153,7 @@ nsEditorShell::nsEditorShell()
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
 ,  mStringBundle(0)
+,  mEditModeStyleSheet(0)
 {
 #ifdef APP_DEBUG
   printf("Created nsEditorShell\n");
@@ -596,11 +601,120 @@ NS_IMETHODIMP nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
   
   nsAutoString  aURL(url);
 
-  nsCOMPtr<nsIEditorStyleSheets>  styleSheetFoobar = do_QueryInterface(mEditor);
-  if (styleSheetFoobar)
-    result = styleSheetFoobar->ApplyStyleSheet(aURL);
+  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
+  if (styleSheets)
+    result = styleSheets->ApplyStyleSheet(aURL);
 
   return result;
+}
+
+// Note: This is not undoable action (on purpose!)
+NS_IMETHODIMP nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
+{
+  // We are already in EditMode
+  if (aDisplayMode == eDisplayModeEdit && mEditModeStyleSheet)
+    return NS_OK;
+
+  if (!mContentAreaWebShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(mContentAreaWebShell));
+  if (!presShell)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDocument> document;
+  nsresult rv = presShell->GetDocument(getter_AddRefs(document));
+  if (NS_SUCCEEDED(rv))
+  {
+    if(!document)
+      return NS_ERROR_NULL_POINTER;
+
+    nsCOMPtr<nsIStyleSet> styleSet;
+    rv = presShell->GetStyleSet(getter_AddRefs(styleSet));
+    if (NS_SUCCEEDED(rv))
+    {
+      if (!styleSet)
+        return NS_ERROR_NULL_POINTER;
+
+      nsCOMPtr<nsIStyleSheet> styleSheet;
+      if (aDisplayMode == 0)
+      {
+        // Create and load the style sheet for editor content
+        nsAutoString styleURL("chrome://editor/content/EditorContent.css");
+
+        nsCOMPtr<nsIURI>uaURL;
+#ifndef NECKO
+        rv = NS_NewURL(getter_AddRefs(uaURL), styleURL);
+#else
+        rv = NS_NewURI(getter_AddRefs(uaURL), styleURL);
+#endif // NECKO
+
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+          if (!container)
+            return NS_ERROR_NULL_POINTER;
+
+          nsCOMPtr<nsICSSLoader> cssLoader;
+          rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
+          if (NS_SUCCEEDED(rv))
+          {
+            if (!cssLoader)
+              return NS_ERROR_NULL_POINTER;
+
+            nsCOMPtr<nsICSSStyleSheet>cssStyleSheet;
+            PRBool complete;
+
+            // We use null for the callback and data pointer because
+            //  we MUST ONLY load synchronous local files (no @import)
+            rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete, nsnull, nsnull);
+            if (NS_SUCCEEDED(rv))
+            {
+              // Synchronous loads should ALWAYS return completed
+              if (!complete || !cssStyleSheet)
+                return NS_ERROR_NULL_POINTER;
+
+              // Don't need to QI (subclass)
+              styleSheet = cssStyleSheet;
+              if (!styleSheet)
+                return NS_ERROR_NULL_POINTER;
+            }
+          }
+        }
+      }
+      else if (aDisplayMode >= 1)
+      {
+        if (!mEditModeStyleSheet)
+        {
+          // The edit mode sheet was not previously loaded
+          return NS_OK;
+        }
+        styleSheet = mEditModeStyleSheet;
+      }
+      
+      if (NS_SUCCEEDED(rv))
+      {
+        switch (aDisplayMode)
+        {
+          case eDisplayModeEdit:
+            styleSet->AppendOverrideStyleSheet(styleSheet);
+            mEditModeStyleSheet = styleSheet;
+            break;
+          case eDisplayModeBrowserPreview:
+            styleSet->RemoveOverrideStyleSheet(mEditModeStyleSheet);
+            mEditModeStyleSheet = 0;
+            break;
+          // Add more modes here, e.g., browser mode with JavaScript turned on?
+          default:
+            break;
+        }
+        // This notifies document observers to rebuild all frames
+        // (this doesn't affect style sheet because it is not a doc sheet)
+        document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
+      }
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
@@ -819,10 +933,17 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
     }
   }
 #endif
-  
-  //TODO: TEMPORARY -- THIS IS NOT THE RIGHT THING TO DO!
-  nsAutoString styleURL("chrome://editor/content/EditorContent.css");
-  ApplyStyleSheet(styleURL.GetUnicode());
+  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
+  if (!styleSheets)
+    return NS_NOINTERFACE;
+
+  // Load style sheet with settings that should never
+  //  change, even in "Browser" mode
+  styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorOverride.css");
+
+  // Load the edit mode override style sheet
+  // This will be remove for "Browser" mode
+  SetDisplayMode(eDisplayModeEdit);
 
   // Force initial focus to the content window -- HOW?
 //  mWebShellWin->SetFocus();
