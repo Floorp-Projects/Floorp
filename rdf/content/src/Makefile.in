@@ -29,12 +29,12 @@ LIBRARY_NAME = rdfcontent_s
 CPPSRCS =				\
 	nsRDFContentUtils.cpp           \
 	nsRDFDOMNodeList.cpp		\
-	nsRDFDocument.cpp               \
 	nsRDFGenericElement.cpp         \
 	nsRDFHTMLBuilder.cpp		\
 	nsRDFResourceElement.cpp	\
 	nsRDFTreeBuilder.cpp		\
 	nsRDFXULBuilder.cpp		\
+	nsXULDocument.cpp               \
 	$(NULL)
 
 EXPORTS = \
@@ -49,6 +49,11 @@ REQUIRES = dom js netlib rdf raptor xpcom
 # XXX This is a dependency on rdfutil.h: it'll go away once that becomes
 # a first-class XPCOM interface.
 INCLUDES += -I$(srcdir)/../../base/src
+
+# XXX This is a dependency on Raptor for constructing HTML
+# content. It'll go away once we move RDF content model construction
+# outside the DOM APIs.
+INCLUDES += -I$(srcdir)/../../../layout/html/base/src
 
 MKSHLIB :=
 

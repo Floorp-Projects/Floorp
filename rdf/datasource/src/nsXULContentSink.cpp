@@ -342,14 +342,13 @@ public:
 
 protected:
     static nsrefcnt             gRefCnt;
-    static nsINameSpaceManager* gNameSpaceManager;
     static nsIRDFService*       gRDFService;
 
     // pseudo-constants
     static nsIRDFResource* kRDF_child; // XXX needs to be NC:child (or something else)
     static nsIRDFResource* kRDF_type;
 
-    static nsresult
+    nsresult
     MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
                                  const nsString& aTag,
                                  nsIRDFResource** aResource);
@@ -369,6 +368,7 @@ protected:
     PRInt32   GetNameSpaceID(nsIAtom* aPrefix);
     void      PopNameSpaces();
 
+    nsINameSpaceManager* mNameSpaceManager;
     nsVoidArray* mNameSpaceStack;
     
     void SplitQualifiedName(const nsString& aQualifiedName,
@@ -398,7 +398,6 @@ protected:
 };
 
 nsrefcnt             XULContentSinkImpl::gRefCnt = 0;
-nsINameSpaceManager* XULContentSinkImpl::gNameSpaceManager = nsnull;
 nsIRDFService*       XULContentSinkImpl::gRDFService = nsnull;
 
 nsIRDFResource*      XULContentSinkImpl::kRDF_child  = nsnull;
@@ -422,13 +421,6 @@ XULContentSinkImpl::XULContentSinkImpl()
     if (gRefCnt++ == 0) {
         nsresult rv;
 
-        rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
-                                          nsnull,
-                                          kINameSpaceManagerIID,
-                                          (void**) &gNameSpaceManager);
-
-        NS_VERIFY(NS_SUCCEEDED(rv), "unable to construct namespace manager");
-
         rv = nsServiceManager::GetService(kRDFServiceCID,
                                           kIRDFServiceIID,
                                           (nsISupports**) &gRDFService);
@@ -446,6 +438,7 @@ XULContentSinkImpl::XULContentSinkImpl()
 
 XULContentSinkImpl::~XULContentSinkImpl()
 {
+    NS_IF_RELEASE(mNameSpaceManager);
     NS_IF_RELEASE(mDocumentURL);
     NS_IF_RELEASE(mDataSource);
 
@@ -481,7 +474,6 @@ XULContentSinkImpl::~XULContentSinkImpl()
 
     if (--gRefCnt == 0) {
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-        NS_IF_RELEASE(gNameSpaceManager);
         NS_IF_RELEASE(kRDF_child);
         NS_IF_RELEASE(kRDF_type);
     }
@@ -522,7 +514,7 @@ XULContentSinkImpl::MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
     nsresult rv;
     nsAutoString uri;
 
-    rv = gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
+    rv = mNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
     NS_VERIFY(NS_SUCCEEDED(rv), "unable to get namespace URI");
 
     // some hacky logic to try to construct an appopriate URI for the
@@ -832,13 +824,16 @@ XULContentSinkImpl::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
     mDocumentURL = aURL;
     NS_ADDREF(aURL);
 
+    mNameSpaceManager = aNameSpaceManager;
+    NS_ADDREF(aNameSpaceManager);
+
 	nsresult rv;
 
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-    rv = gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+    rv = mNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
     
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -1027,7 +1022,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
 
         // Get the URI for the namespace, so we can construct a
         // fully-qualified property name.
-        gNameSpaceManager->GetNameSpaceURI(nameSpaceID, k);
+        mNameSpaceManager->GetNameSpaceURI(nameSpaceID, k);
 
         // Insert a '#' if the namespace doesn't end with one, or the
         // attribute doesn't start with one.
@@ -1201,7 +1196,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
         NS_ADDREF(nameSpace);
     }
     else {
-        gNameSpaceManager->CreateRootNameSpace(nameSpace);
+        mNameSpaceManager->CreateRootNameSpace(nameSpace);
     }
 
     if (nsnull != nameSpace) {

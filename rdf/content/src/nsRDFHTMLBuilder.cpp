@@ -49,12 +49,10 @@ static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID
 
 ////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////
-
 class RDFHTMLBuilderImpl : public nsIRDFContentModelBuilder
 {
 private:
-    nsIRDFDocument* mDocument;
+    nsIRDFDocument*            mDocument;
     nsIRDFCompositeDataSource* mDB;
 
 public:
@@ -66,8 +64,11 @@ public:
 
     // nsIRDFContentModelBuilder interface
     NS_IMETHOD SetDocument(nsIRDFDocument* aDocument);
-    NS_IMETHOD CreateRoot(nsIRDFResource* aResource);
-    NS_IMETHOD CreateContents(nsIRDFContent* aElement);
+    NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase);
+    NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource** aDataBase);
+    NS_IMETHOD CreateRootContent(nsIRDFResource* aResource);
+    NS_IMETHOD SetRootContent(nsIContent* aElement);
+    NS_IMETHOD CreateContents(nsIContent* aElement);
     NS_IMETHOD OnAssert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
     NS_IMETHOD OnUnassert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
 
@@ -79,6 +80,8 @@ public:
     nsresult AddLeafChild(nsIRDFContent* parent,
                           nsIRDFResource* property,
                           nsIRDFLiteral* value);
+
+    PRBool IsTreeProperty(nsIRDFResource* aProperty);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -105,7 +108,7 @@ RDFHTMLBuilderImpl::~RDFHTMLBuilderImpl(void)
     NS_RELEASE2(kIdAtom, refcnt);
 
     NS_IF_RELEASE(mDB);
-    // mDocument is _not_ refcounted
+    // NS_IF_RELEASE(mDocument) not refcounted
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -201,18 +204,48 @@ RDFHTMLBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
 
+    NS_PRECONDITION(mDocument == nsnull, "already initialized");
+    if (mDocument)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
     mDocument = aDocument; // not refcounted
-
-    nsresult rv;
-    if (NS_FAILED(rv = mDocument->GetDataBase(mDB)))
-        return rv;
-
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-RDFHTMLBuilderImpl::CreateRoot(nsIRDFResource* aResource)
+RDFHTMLBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
+{
+    NS_PRECONDITION(aDataBase != nsnull, "null ptr");
+    if (! aDataBase)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(mDB == nsnull, "already initialized");
+    if (mDB)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
+    mDB = aDataBase;
+    NS_ADDREF(mDB);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFHTMLBuilderImpl::GetDataBase(nsIRDFCompositeDataSource** aDataBase)
+{
+    NS_PRECONDITION(aDataBase != nsnull, "null ptr");
+    if (! aDataBase)
+        return NS_ERROR_NULL_POINTER;
+
+    *aDataBase = mDB;
+    NS_ADDREF(mDB);
+    return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+RDFHTMLBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
 {
     NS_PRECONDITION(mDocument != nsnull, "not initialized");
     if (! mDocument)
@@ -259,7 +292,14 @@ done:
 
 
 NS_IMETHODIMP
-RDFHTMLBuilderImpl::CreateContents(nsIRDFContent* aElement)
+RDFHTMLBuilderImpl::SetRootContent(nsIContent* aElement)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RDFHTMLBuilderImpl::CreateContents(nsIContent* aElement)
 {
     NS_NOTYETIMPLEMENTED("Adapt the implementation from RDFTreeBuilderImpl");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -281,9 +321,7 @@ RDFHTMLBuilderImpl::OnAssert(nsIRDFContent* parent,
     if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) &valueResource))) {
         // If it's a tree property or an RDF container, then add it as
         // a tree child and return.
-        PRBool isTreeProperty;
-        if ((NS_SUCCEEDED(rv = mDocument->IsTreeProperty(property, &isTreeProperty)) && isTreeProperty) ||
-            (rdf_IsContainer(mDB, valueResource))) {
+        if (IsTreeProperty(property) || rdf_IsContainer(mDB, valueResource)) {
             rv = AddTreeChild(parent, property, valueResource);
             NS_RELEASE(valueResource);
             return rv;
@@ -313,6 +351,33 @@ RDFHTMLBuilderImpl::OnUnassert(nsIRDFContent* parent,
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+PRBool
+RDFHTMLBuilderImpl::IsTreeProperty(nsIRDFResource* aProperty)
+{
+    // XXX This whole method is a mega-kludge. This should be read off
+    // of the element somehow...
+
+#define TREE_PROPERTY_HACK
+#if defined(TREE_PROPERTY_HACK)
+    const char* p;
+    aProperty->GetValue(&p);
+    nsAutoString s(p);
+    if (s.Equals(NC_NAMESPACE_URI "child") ||
+        s.Equals(NC_NAMESPACE_URI "Folder") ||
+		s.Equals(NC_NAMESPACE_URI "Columns") ||
+		s.Equals(RDF_NAMESPACE_URI "child")) {
+        return PR_TRUE;
+    }
+#endif // defined(TREE_PROPERTY_HACK)
+    if (rdf_IsOrdinalProperty(aProperty)) {
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 

@@ -17,3 +17,5 @@ mozilla/rdf/content/src/nsRDFTreeBuilder.cpp
 mozilla/rdf/content/src/nsRDFXULBuilder.cpp
 mozilla/rdf/datasource/src/nsBookmarkDataSource.cpp
 mozilla/rdf/datasource/src/nsMailDataSource.cpp
+mozilla/rdf/datasource/src/nsXULContentSink.cpp
+mozilla/rdf/datasource/src/nsXULDataSource.cpp

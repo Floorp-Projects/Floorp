@@ -21,6 +21,18 @@
 
   An nsIRDFDocument implementation that builds a XUL content model.
   
+  TO DO
+
+  1) Make sure to hook up the code that keeps track of what content
+     nodes we're spying on. Ugh: one thing I just realized. By putting
+     this stuff in the content model builder, we've made it impossible
+     to cleanly release hidden nodes. We'll need a notification
+     mechanism for that...
+
+  2) Figure out how to drag in new builders to merge data from other
+     sources. I'm thinking something like just spying on the
+     <xul:treeitem> and <xul:treebody> tags for some magical
+     attribute...
 
  */
 
@@ -35,6 +47,7 @@
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsINameSpaceManager.h"
@@ -47,24 +60,29 @@
 #include "rdf.h"
 #include "rdfutil.h"
 
-#if 0 // need to link against layout.dll for this...
-#include "nsIHTMLContent.h"
+// XXX These are needed as scaffolding until we get to a more
+// DOM-based solution.
 #include "nsHTMLParts.h"
-#endif
+#include "nsIHTMLContent.h"
 
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFContentIID,             NS_IRDFCONTENT_IID);
 static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
+static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFObserverIID,            NS_IRDFOBSERVER_IID);
+static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
+static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kRDFCompositeDataSourceCID,  NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFTreeBuilderCID,          NS_RDFTREEBUILDER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // standard vocabulary items
@@ -74,11 +92,13 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child); // XXX bogus: needs to be NC:ch
 
 ////////////////////////////////////////////////////////////////////////
 
-class RDFXULBuilderImpl : public nsIRDFContentModelBuilder
+class RDFXULBuilderImpl : public nsIRDFContentModelBuilder,
+                          public nsIRDFObserver
 {
 private:
     nsIRDFCompositeDataSource* mDB;
     nsIRDFDocument*            mDocument;
+    nsIContent*                mRoot;
 
     // pseudo-constants
     static PRInt32 gRefCnt;
@@ -88,6 +108,9 @@ private:
     static PRInt32  kNameSpaceID_XUL;
 
     static nsIAtom* kContentsGeneratedAtom;
+    static nsIAtom* kDataSourcesAtom;
+    static nsIAtom* kIdAtom;
+    static nsIAtom* kTreeAtom;
 
     static nsIRDFResource* kRDF_type;
     static nsIRDFResource* kRDF_child; // XXX needs to become kNC_child
@@ -101,10 +124,15 @@ public:
 
     // nsIRDFContentModelBuilder interface
     NS_IMETHOD SetDocument(nsIRDFDocument* aDocument);
-    NS_IMETHOD CreateRoot(nsIRDFResource* aResource);
-    NS_IMETHOD CreateContents(nsIRDFContent* aElement);
-    NS_IMETHOD OnAssert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
-    NS_IMETHOD OnUnassert(nsIRDFContent* aElement, nsIRDFResource* aProperty, nsIRDFNode* aValue);
+    NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase);
+    NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource** aDataBase);
+    NS_IMETHOD CreateRootContent(nsIRDFResource* aResource);
+    NS_IMETHOD SetRootContent(nsIContent* aResource);
+    NS_IMETHOD CreateContents(nsIContent* aElement);
+
+    // nsIRDFObserver interface
+    NS_IMETHOD OnAssert(nsIRDFResource* aSubject, nsIRDFResource* aPredicate, nsIRDFNode* aObject);
+    NS_IMETHOD OnUnassert(nsIRDFResource* aSubject, nsIRDFResource* aPredicate, nsIRDFNode* aObjetct);
 
     // Implementation methods
     nsresult AppendChild(nsIContent* aElement,
@@ -128,9 +156,13 @@ public:
     nsresult AddAttribute(nsIContent* aElement,
                           nsIRDFResource* aProperty,
                           nsIRDFNode* aValue);
+
+    nsresult CreateTreeBuilder(nsIContent* aElement,
+                               const nsString& aDataSources);
 };
 
 ////////////////////////////////////////////////////////////////////////
+// Pseudo-constants
 
 PRInt32         RDFXULBuilderImpl::gRefCnt = 0;
 nsIRDFService*  RDFXULBuilderImpl::gRDFService = nsnull;
@@ -139,6 +171,9 @@ PRInt32         RDFXULBuilderImpl::kNameSpaceID_RDF = kNameSpaceID_Unknown;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_XUL = kNameSpaceID_Unknown;
 
 nsIAtom*        RDFXULBuilderImpl::kContentsGeneratedAtom = nsnull;
+nsIAtom*        RDFXULBuilderImpl::kIdAtom                = nsnull;
+nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom       = nsnull;
+nsIAtom*        RDFXULBuilderImpl::kTreeAtom              = nsnull;
 
 nsIRDFResource* RDFXULBuilderImpl::kRDF_type   = nsnull;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_child  = nsnull;
@@ -162,9 +197,10 @@ NS_NewRDFXULBuilder(nsIRDFContentModelBuilder** result)
 }
 
 
-
 RDFXULBuilderImpl::RDFXULBuilderImpl(void)
-    : mDB(nsnull)
+    : mDB(nsnull),
+      mDocument(nsnull),
+      mRoot(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -195,6 +231,11 @@ static const char kRDFNameSpaceURI[]
             NS_ERROR("couldn't create namepsace manager");
         }
 
+        kContentsGeneratedAtom = NS_NewAtom("contentsGenerated");
+        kIdAtom                = NS_NewAtom("ID");
+        kDataSourcesAtom       = NS_NewAtom("datasources");
+        kTreeAtom              = NS_NewAtom("tree");
+
 
         if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                            kIRDFServiceIID,
@@ -207,16 +248,16 @@ static const char kRDFNameSpaceURI[]
                       "unable to get resource");
         }
         else {
-            NS_ERROR("couldnt' get RDF service");
+            NS_ERROR("couldn't get RDF service");
         }
-
-        kContentsGeneratedAtom = NS_NewAtom("contentsGenerated");
     }
 }
 
 RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
 {
+    NS_IF_RELEASE(mRoot);
     NS_IF_RELEASE(mDB);
+    // NS_IF_RELEASE(mDocument) not refcounted
 
     if (--gRefCnt == 0) {
         if (gRDFService)
@@ -224,13 +265,42 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
 
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kRDF_child);
+
         NS_IF_RELEASE(kContentsGeneratedAtom);
+        NS_IF_RELEASE(kIdAtom);
+        NS_IF_RELEASE(kDataSourcesAtom);
+        NS_IF_RELEASE(kTreeAtom);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(RDFXULBuilderImpl, kIRDFContentModelBuilderIID);
+NS_IMPL_ADDREF(RDFXULBuilderImpl);
+NS_IMPL_RELEASE(RDFXULBuilderImpl);
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
+{
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    if (iid.Equals(kIRDFContentModelBuilderIID) ||
+        iid.Equals(kISupportsIID)) {
+        *aResult = NS_STATIC_CAST(nsIRDFContentModelBuilder*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
+    else if (iid.Equals(kIRDFObserverIID)) {
+        *aResult = NS_STATIC_CAST(nsIRDFObserver*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    }
+    else {
+        *aResult = nsnull;
+        return NS_NOINTERFACE;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFContentModelBuilder methods
@@ -242,17 +312,45 @@ RDFXULBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
 
+    NS_PRECONDITION(mDocument == nsnull, "already initialized");
+    if (mDocument)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
     mDocument = aDocument; // not refcounted
-
-    nsresult rv;
-    if (NS_FAILED(rv = mDocument->GetDataBase(mDB)))
-        return rv;
-
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFXULBuilderImpl::CreateRoot(nsIRDFResource* aResource)
+RDFXULBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
+{
+    NS_PRECONDITION(aDataBase != nsnull, "null ptr");
+    if (! aDataBase)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(mDB == nsnull, "already initialized");
+    if (mDB)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
+    mDB = aDataBase;
+    NS_ADDREF(mDB);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::GetDataBase(nsIRDFCompositeDataSource** aDataBase)
+{
+    NS_PRECONDITION(aDataBase != nsnull, "null ptr");
+    if (! aDataBase)
+        return NS_ERROR_NULL_POINTER;
+
+    *aDataBase = mDB;
+    NS_ADDREF(mDB);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
 {
     NS_PRECONDITION(mDocument != nsnull, "not initialized");
     if (! mDocument)
@@ -280,15 +378,30 @@ RDFXULBuilderImpl::CreateRoot(nsIRDFResource* aResource)
 
     doc->SetRootContent(root);
 
+    mRoot = root;
+    NS_ADDREF(mRoot);
+
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-RDFXULBuilderImpl::CreateContents(nsIRDFContent* aElement)
+RDFXULBuilderImpl::SetRootContent(nsIContent* aElement)
+{
+    NS_IF_RELEASE(mRoot);
+    mRoot = aElement;
+    NS_IF_ADDREF(mRoot);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
 {
     nsresult rv;
 
+    // First, mark the elements contents as being generated so that
+    // any re-entrant calls don't trigger an infinite recursion.
     if (NS_FAILED(rv = aElement->SetAttribute(kNameSpaceID_XUL,
                                               kContentsGeneratedAtom,
                                               "true",
@@ -297,12 +410,33 @@ RDFXULBuilderImpl::CreateContents(nsIRDFContent* aElement)
         return rv;
     }
 
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = aElement->GetResource(*getter_AddRefs(resource)))) {
-        NS_ERROR("unable to get resource from element");
+    // Get the treeitem's resource so that we can generate cell
+    // values. We could QI for the nsIRDFResource here, but doing this
+    // via the nsIContent interface allows us to support generic nodes
+    // that might get added in by DOM calls.
+    nsAutoString uri;
+    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_RDF,
+                                              kIdAtom,
+                                              uri))) {
+        NS_ERROR("severe error retrieving attribute");
         return rv;
     }
 
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+        NS_ERROR("tree element has no RDF:ID");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsCOMPtr<nsIRDFResource> resource;
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, getter_AddRefs(resource)))) {
+        NS_ERROR("unable to create resource");
+        return rv;
+    }
+
+    // Iterate through all of the XUL:child arcs, and construct
+    // appropriate children for each arc.
+    //
+    // XXX this is RDF:child for now; we should fix that...
     nsCOMPtr<nsIRDFAssertionCursor> children;
     if (NS_FAILED(rv = mDB->GetTargets(resource, kRDF_child, PR_TRUE, getter_AddRefs(children)))) {
         NS_ERROR("unable to create cursor for children");
@@ -330,52 +464,75 @@ RDFXULBuilderImpl::CreateContents(nsIRDFContent* aElement)
 
 
 NS_IMETHODIMP
-RDFXULBuilderImpl::OnAssert(nsIRDFContent* aElement,
-                            nsIRDFResource* aProperty,
-                            nsIRDFNode* aValue)
+RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSubject,
+                            nsIRDFResource* aPredicate,
+                            nsIRDFNode* aObject)
 {
+    NS_PRECONDITION(mDocument != nsnull, "not initialized");
+    if (! mDocument)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv;
 
-    if (aProperty == kRDF_child) {
-        // It's a child node. If the contents of aElement _haven't_
-        // yet been generated, then just ignore the assertion. We do
-        // this because we know that _eventually_ the contents will be
-        // generated (via CreateContents()) when somebody asks for
-        // them later.
-        nsAutoString contentsGenerated;
-        if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_XUL,
-                                                  kContentsGeneratedAtom,
-                                                  contentsGenerated))) {
-            if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-                return NS_OK;
-            }
-            else {
+    nsCOMPtr<nsISupportsArray> elements;
+    if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(elements)))) {
+        NS_ERROR("unable to create new ISupportsArray");
+        return rv;
+    }
+
+    // Find all the elements in the content model that correspond to
+    // aSubject: for each, we'll try to build XUL children if
+    // appropriate.
+    if (NS_FAILED(rv = mDocument->GetElementsForResource(aSubject, elements))) {
+        NS_ERROR("unable to retrieve elements from resource");
+        return rv;
+    }
+
+    for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
+        nsCOMPtr<nsIContent> element(elements->ElementAt(i));
+        
+        // XXX somehow figure out if building XUL kids on this
+        // particular element makes any sense whatsoever.
+
+        if (aPredicate == kRDF_child) {
+            // It's a child node. If the contents of aElement _haven't_
+            // yet been generated, then just ignore the assertion. We do
+            // this because we know that _eventually_ the contents will be
+            // generated (via CreateContents()) when somebody asks for
+            // them later.
+            nsAutoString contentsGenerated;
+            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_XUL,
+                                                     kContentsGeneratedAtom,
+                                                     contentsGenerated))) {
                 NS_ERROR("severe problem trying to get attribute");
                 return rv;
             }
-        }
 
-        if (! contentsGenerated.EqualsIgnoreCase("true"))
-            return NS_OK;
+            if (rv == NS_CONTENT_ATTR_NOT_THERE || rv == NS_CONTENT_ATTR_NO_VALUE)
+                continue;
 
-        // Okay, it's a "live" element, so go ahead and append the new
-        // child to this node.
-        if (NS_FAILED(AppendChild(aElement, aValue))) {
-            NS_ERROR("problem appending child to content model");
-            return rv;
+            if (! contentsGenerated.EqualsIgnoreCase("true"))
+                continue;
+
+            // Okay, it's a "live" element, so go ahead and append the new
+            // child to this node.
+            if (NS_FAILED(AppendChild(element, aObject))) {
+                NS_ERROR("problem appending child to content model");
+                return rv;
+            }
         }
-    }
-    else if (aProperty == kRDF_type) {
-        // We shouldn't ever see this: if we do, there ain't much we
-        // can do.
-        NS_ERROR("attempt to change tag type after-the-fact");
-        return NS_ERROR_UNEXPECTED;
-    }
-    else {
-        // Add the thing as a vanilla attribute to the element.
-        if (NS_FAILED(rv = AddAttribute(aElement, aProperty, aValue))) {
-            NS_ERROR("unable to add attribute to the element");
-            return rv;
+        else if (aPredicate == kRDF_type) {
+            // We shouldn't ever see this: if we do, there ain't much we
+            // can do.
+            NS_ERROR("attempt to change tag type after-the-fact");
+            return NS_ERROR_UNEXPECTED;
+        }
+        else {
+            // Add the thing as a vanilla attribute to the element.
+            if (NS_FAILED(rv = AddAttribute(element, aPredicate, aObject))) {
+                NS_ERROR("unable to add attribute to the element");
+                return rv;
+            }
         }
     }
     return NS_OK;
@@ -383,9 +540,9 @@ RDFXULBuilderImpl::OnAssert(nsIRDFContent* aElement,
 
 
 NS_IMETHODIMP
-RDFXULBuilderImpl::OnUnassert(nsIRDFContent* aElement,
-                              nsIRDFResource* aProperty,
-                              nsIRDFNode* aValue)
+RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
+                              nsIRDFResource* aPredicate,
+                              nsIRDFNode* aObject)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -467,10 +624,12 @@ RDFXULBuilderImpl::CreateElement(nsIRDFResource* aResource,
         return rv;
     }
 
-    if (nameSpaceID == kNameSpaceID_HTML)
+    if (nameSpaceID == kNameSpaceID_HTML) {
         return CreateHTMLElement(aResource, tag, aResult);
-    else
+    }
+    else {
         return CreateXULElement(aResource, nameSpaceID, tag, aResult);
+    }
 }
 
 nsresult
@@ -478,15 +637,31 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
                                      nsIAtom* aTag,
                                      nsIContent** aResult)
 {
-    NS_NOTYETIMPLEMENTED("need to link against layout.dll for this to work");
-
-#if 0
     nsresult rv;
 
+    // XXX This is where we go out and create the HTML content. It's a
+    // bit of a hack: a bridge until we get to a more DOM-based
+    // solution.
     nsCOMPtr<nsIHTMLContent> element;
     if (NS_FAILED(rv = NS_CreateHTMLElement(getter_AddRefs(element), aTag->GetUnicode()))) {
         NS_ERROR("unable to create HTML element");
         return rv;
+    }
+
+    {
+        // Force the document to be set _here_. Many of the
+        // AppendChildTo() implementations do not recursively ensure
+        // that the child's doc is the same as the parent's.
+        nsCOMPtr<nsIDocument> doc;
+        if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc)))) {
+            NS_ERROR("uh, this isn't a document!");
+            return rv;
+        }
+
+        if (NS_FAILED(rv = element->SetDocument(doc, PR_FALSE))) {
+            NS_ERROR("couldn't set document on the element");
+            return rv;
+        }
     }
 
     // Now iterate through all the properties and add them as
@@ -548,7 +723,6 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
         NS_ERROR("unable to get nsIContent interface");
         return rv;
     }
-#endif
 
     return NS_OK;
 }
@@ -658,6 +832,18 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
         return rv;
     }
 
+    // There are some tags that we need to pay extra-special attention to...
+    if (aTag == kTreeAtom) {
+        nsAutoString dataSources;
+        if (NS_CONTENT_ATTR_HAS_VALUE ==
+            element->GetAttribute(kNameSpaceID_XUL,
+                                  kDataSourcesAtom,
+                                  dataSources)) {
+            rv = CreateTreeBuilder(element, dataSources);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
+        }
+    }
+
     // Finally, assign the newly constructed element to the result
     // pointer and addref it for the trip home.
     *aResult = element;
@@ -708,4 +894,103 @@ RDFXULBuilderImpl::AddAttribute(nsIContent* aElement,
     }
 
     return rv;
+}
+
+
+nsresult
+RDFXULBuilderImpl::CreateTreeBuilder(nsIContent* aElement,
+                                     const nsString& aDataSources)
+{
+    nsresult rv;
+
+    // construct a new builder
+    nsCOMPtr<nsIRDFContentModelBuilder> builder;
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFTreeBuilderCID,
+                                                    nsnull,
+                                                    kIRDFContentModelBuilderIID,
+                                                    (void**) getter_AddRefs(builder)))) {
+        NS_ERROR("unable to create tree content model builder");
+        return rv;
+    }
+
+    if (NS_FAILED(rv = builder->SetRootContent(aElement))) {
+        NS_ERROR("unable to set builder's root content element");
+        return rv;
+    }
+
+    // create a database for the builder
+    nsCOMPtr<nsIRDFCompositeDataSource> db;
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFCompositeDataSourceCID,
+                                                    nsnull,
+                                                    kIRDFCompositeDataSourceIID,
+                                                    (void**) getter_AddRefs(db)))) {
+        NS_ERROR("unable to construct new composite data source");
+        return rv;
+    }
+
+    // Parse datasources: they are assumed to be a whitespace
+    // separated list of URIs; e.g.,
+    //
+    //     rdf:bookmarks rdf:history http://foo.bar.com/blah.cgi?baz=9
+    //
+    PRInt32 first = 0;
+
+    while(1) {
+        while (first < aDataSources.Length() && nsString::IsSpace(aDataSources[first]))
+            ++first;
+
+        if (first >= aDataSources.Length())
+            break;
+
+        PRInt32 last = first;
+        while (last < aDataSources.Length() && !nsString::IsSpace(aDataSources[last]))
+            ++last;
+
+        nsAutoString uri;
+        aDataSources.Mid(uri, first, last - first);
+        first = last + 1;
+
+        nsCOMPtr<nsIRDFDataSource> ds;
+
+        // Some monkey business to convert the nsAutoString to a
+        // C-string safely. Sure'd be nice to have this be automagic.
+        {
+            char buf[256], *p = buf;
+            if (uri.Length() >= sizeof(buf))
+                p = new char[uri.Length() + 1];
+
+            uri.ToCString(p, uri.Length() + 1);
+
+            rv = gRDFService->GetDataSource(p, getter_AddRefs(ds));
+
+            if (p != buf)
+                delete[] p;
+        }
+
+        if (NS_FAILED(rv)) {
+            // This is only a warning because the data source may not
+            // be accessable for any number of reasons, including
+            // security, a bad URL, etc.
+            NS_WARNING("unable to load datasource");
+            continue;
+        }
+
+        if (NS_FAILED(rv = db->AddDataSource(ds))) {
+            NS_ERROR("unable to add datasource to composite data source");
+            return rv;
+        }
+    }
+
+    if (NS_FAILED(rv = builder->SetDataBase(db))) {
+        NS_ERROR("unable to set builder's database");
+        return rv;
+    }
+
+    // add it to the set of builders in use by the document
+    if (NS_FAILED(rv = mDocument->AddContentModelBuilder(builder))) {
+        NS_ERROR("unable to add builder to the document");
+        return rv;
+    }
+
+    return NS_OK;
 }

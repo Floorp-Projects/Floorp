@@ -45,7 +45,8 @@ static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 
-static const char kURINC_BookmarksRoot[] = "NC:BookmarksRoot"; // XXX?
+static const char kURINC_BookmarksRoot[]         = "NC:BookmarksRoot"; // XXX?
+static const char kURINC_PersonalToolbarFolder[] = "NC:PersonalToolbarFolder"; // XXX?
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkAddDate);
@@ -210,10 +211,16 @@ BookmarkParser::NextToken(void)
 
         if (mStack.Count() > 0) {
             // a regular old folder
-            
-            nsAutoString folderURI(kURINC_BookmarksRoot);
-            folderURI.Append('#');
-            folderURI.Append(++mCounter, 10);
+            nsAutoString folderURI;
+
+            if (mLine.Find(kPersonalToolbar) == 0) {
+                folderURI = kURINC_PersonalToolbarFolder;
+            }
+            else {
+                folderURI = kURINC_BookmarksRoot;
+                folderURI.Append('#');
+                folderURI.Append(++mCounter, 10);
+            }
 
             if (NS_FAILED(mRDFService->GetUnicodeResource(folderURI, &folder)))
                 return;
@@ -240,9 +247,6 @@ BookmarkParser::NextToken(void)
 
         if (mState != eBookmarkParserState_InTitle)
             rdf_Assert(mDataSource, mLastItem, kURINC_Name, mLine);
-
-        if (mLine.Find(kPersonalToolbar) == 0)
-            rdf_Assert(mDataSource, mLastItem, kURIRDF_instanceOf, kURINC_PersonalToolbarFolderCategory);
     }
     else if (mState == eBookmarkParserState_InItemTitle) {
         PR_ASSERT(mLastItem);
