@@ -300,7 +300,7 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool aForLineBreak,
         if (CH_NBSP == ch) {
           ch = ' ';
         }
-        else if (IS_DISCARDED(ch)) {
+        else if (IS_DISCARDED(ch) || (ch == 0x0a) || (ch == 0x0d)) {
           // Strip discarded characters from the transformed output
           continue;
         }
