@@ -55,16 +55,20 @@ nsRDFDOMDataSource::nsRDFDOMDataSource():
     mObservers(nsnull)
 {
   NS_INIT_REFCNT();
-  getRDFService()->GetResource(NC_RDF_Child, getter_AddRefs(kNC_Child));
-  getRDFService()->GetResource(NC_RDF_Name, getter_AddRefs(kNC_Name));
-  getRDFService()->GetResource(NC_RDF_Value, getter_AddRefs(kNC_Value));
-  getRDFService()->GetResource(NC_RDF_Type, getter_AddRefs(kNC_Type));
+  getRDFService()->GetResource(NC_RDF_Child, &kNC_Child);
+  getRDFService()->GetResource(NC_RDF_Name, &kNC_Name);
+  getRDFService()->GetResource(NC_RDF_Value, &kNC_Value);
+  getRDFService()->GetResource(NC_RDF_Type, &kNC_Type);
 
 }
 
 nsRDFDOMDataSource::~nsRDFDOMDataSource()
 {
   if (mURI) PL_strfree(mURI);
+  NS_RELEASE(kNC_Child);
+  NS_RELEASE(kNC_Name);
+  NS_RELEASE(kNC_Type);
+  NS_RELEASE(kNC_Value);
   if (mRDFService) nsServiceManager::ReleaseService(kRDFServiceCID,
                                                       mRDFService);
 }
@@ -169,14 +173,11 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
   if (NS_FAILED(rv)) return rv;
 
   if (node) {
-    PRBool isProp;
-    if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Name, &isProp)) && isProp)
+    if (aProperty == kNC_Name)
       node->GetNodeName(str);
-    else if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Value, &isProp)) &&
-             isProp)
+    else if (aProperty == kNC_Value)
       node->GetNodeValue(str);
-    else if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Type, &isProp)) &&
-             isProp) {
+    else if (aProperty == kNC_Type) {
       PRUint16 type;
       node->GetNodeType(&type);
       str.Append((PRInt32)type, 10);
@@ -193,17 +194,14 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
   else if (!PL_strncmp(sourceval, "text://", 7)) {
     
     
-    PRBool isProp;
     /* name - use the tag name */
-    if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Name, &isProp)) && isProp)
+    if (aProperty == kNC_Name)
       str = "#text";
     
     /* value - ID? */
-    else if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Value, &isProp)) &&
-             isProp)
+    else if (aProperty == kNC_Value)
       str = ((const char*)sourceval + 7);
-    else if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Type, &isProp)) &&
-             isProp)
+    else if (aProperty == kNC_Type)
       str.Append(3);
       
     else {
@@ -240,7 +238,6 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
 #endif
   
   nsresult rv;
-  PRBool isProp;
   nsCOMPtr<nsISupportsArray> arcs;
   rv = NS_NewISupportsArray(getter_AddRefs(arcs));
   nsArrayEnumerator* cursor =
@@ -262,8 +259,7 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
   if (!node) return NS_OK;
 
   /* children - get all child nodes */
-  if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Child, &isProp)) &&
-      isProp) {
+  if (aProperty == kNC_Child) {
     
     PRUint32 i;
     PRUint32 length;
@@ -330,14 +326,12 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
 
   }
   /* name - use the tag name */
-  else if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Name, &isProp)) &&
-             isProp) {
+  else if (aProperty == kNC_Name) {
 
     
   }
   /* value - ID? */
-  else if (NS_SUCCEEDED(aProperty->EqualsResource(kNC_Value, &isProp)) &&
-               isProp) {
+  else if (aProperty == kNC_Value) {
 
     
   } else {
@@ -680,5 +674,7 @@ NS_NewRDFDOMDataSource(nsISupports* aOuter,
                        void **result)
 {
   nsRDFDOMDataSource* ds = new nsRDFDOMDataSource();
+  if (!ds) return NS_ERROR_NULL_POINTER;
   return ds->QueryInterface(iid, result);
+
 }
