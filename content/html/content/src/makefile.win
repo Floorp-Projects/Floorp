@@ -161,7 +161,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLTitleElement.obj		\
 	.\$(OBJDIR)\nsHTMLUListElement.obj		\
 	.\$(OBJDIR)\nsHTMLWBRElement.obj		\
-	.\$(OBJDIR)\nsEditorController.obj \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
