@@ -73,6 +73,7 @@
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
+#include "nsXPFEComponentsCID.h"
 
 #ifdef XPCOM_GLUE
 #include "nsStringSupport.h"
@@ -2120,15 +2121,12 @@ nsNativeAppSupportOS2::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
         }
     }
 
-    // OK, now create nsICmdLineService object from argc/argv.
-    static NS_DEFINE_CID( kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID );
-
     nsCOMPtr<nsIComponentManager> compMgr;
     NS_GetComponentManager(getter_AddRefs(compMgr));
-    rv = compMgr->CreateInstance( kCmdLineServiceCID,
-                                  0,
-                                  NS_GET_IID( nsICmdLineService ),
-                                  (void**)aResult );
+    rv = compMgr->CreateInstanceByContractID(
+                    NS_COMMANDLINESERVICE_CONTRACTID,
+                    nsnull, NS_GET_IID(nsICmdLineService),
+                    (void**) aResult);
 
     if ( NS_FAILED( rv ) || NS_FAILED( ( rv = (*aResult)->Initialize( argc, argv ) ) ) ) {
 #if MOZ_DEBUG_DDE
