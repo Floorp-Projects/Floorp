@@ -448,15 +448,17 @@ nsresult nsMsgThread::ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent,
 				curHdr->GetThreadParent(&threadParent);
 				if (threadParent == oldParent)
 				{
-					curHdr->SetThreadParent(newParent);
-					if (announcer)
-					{
-						nsMsgKey curKey;
+					nsMsgKey curKey;
 
-						curHdr->GetMessageKey(&curKey);
+					curHdr->SetThreadParent(newParent);
+					curHdr->GetMessageKey(&curKey);
+					if (announcer)
 						announcer->NotifyParentChangedAll(curKey, oldParent, newParent, nsnull);
-					}
-					// need to send some sort of reparenting notification here.
+
+					// if the old parent was the root of the thread, then only the first child gets 
+					// promoted to root, and other children become children of the new root.
+					if (newParent == nsMsgKey_None)
+						newParent = curKey;
 				}
 			}
 		}
