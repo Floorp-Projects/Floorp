@@ -152,7 +152,7 @@ Wallet_Confirm(PRUnichar * szMessage)
     return retval;
   }
 
-  const nsAutoString message = szMessage;
+  const nsAutoString message(szMessage);
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
   res = dialog->Confirm(nsnull, message.GetUnicode(), &retval);
   return retval;
