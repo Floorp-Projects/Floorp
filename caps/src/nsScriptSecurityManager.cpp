@@ -686,7 +686,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         { "aim",             AllowProtocol  },
         { "data",            AllowProtocol  },
         { "keyword",         DenyProtocol   },
-        { "resource",        DenyProtocol   },
+        { "resource",        ChromeProtocol },
         { "gopher",          AllowProtocol  },
         { "datetime",        DenyProtocol   },
         { "finger",          AllowProtocol  },
@@ -707,8 +707,13 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                 mPrefs->GetBoolPref("security.checkloaduri", &doCheck);
                 return doCheck ? ReportErrorToConsole(aTargetURI) : NS_OK;
             case ChromeProtocol:
-                return (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) ?
-                    NS_OK : ReportErrorToConsole(aTargetURI);
+                if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME)
+                    return NS_OK;
+                // resource: and chrome: are equivalent, securitywise
+                if ((PL_strcmp(sourceScheme, "chrome") == 0) ||
+                    (PL_strcmp(sourceScheme, "resource") == 0))
+                    return NS_OK;
+                return ReportErrorToConsole(aTargetURI);
             case AboutProtocol:
                 // Allow loading about:blank, otherwise deny
                 if(NS_FAILED(targetUri->GetSpec(getter_Copies(targetSpec))))
