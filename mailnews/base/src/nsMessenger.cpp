@@ -893,5 +893,9 @@ nsMessenger::SendUnsentMessages()
 
 NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
 {
-	return NS_OK;
+	// Set a default charset of the webshell. 
+	if (nsnull != mWebShell) {
+		mWebShell->SetDefaultCharacterSet(characterSet);
+	}
+    return NS_OK;
 }
