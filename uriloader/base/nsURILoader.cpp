@@ -183,10 +183,12 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel *aChannel,
     rv =  aChannel->AsyncOpen(this, nsnull);
   }
 
-  if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) {
-      NS_WARNING("js returned no result -- not replacing window contents");
+  // no content from this load - that's OK.
+  if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED ||
+      rv == NS_ERROR_NO_CONTENT) {
       rv = NS_OK;
   }
+
   return rv;
 }
 
