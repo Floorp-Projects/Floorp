@@ -29,7 +29,7 @@ enum TestResult
 	trPartial
 };
 
-typedef void (__cdecl *OutputStringProc)(const TCHAR *szMessage, ...);
+class CBrowseDlg;
 
 class BrowserInfo
 {
@@ -37,35 +37,12 @@ public:
 	CControlSiteInstance *pControlSite;
 	IUnknown *pIUnknown;
 	CLSID clsid;
-	OutputStringProc pfnOutputString;
+	CBrowseDlg *pBrowseDlg;
 	CString szTestURL;
 
-	HRESULT GetWebBrowser(IWebBrowserApp **pWebBrowser)
-	{
-		if (pIUnknown == NULL)
-		{
-			return E_FAIL;
-		}
-		return pIUnknown->QueryInterface(IID_IWebBrowserApp, (void **) pWebBrowser);
-	}
-
-	HRESULT GetDocument(IHTMLDocument2 **pDocument)
-	{
-		CIPtr(IWebBrowserApp) cpWebBrowser;
-		if (FAILED(GetWebBrowser(&cpWebBrowser)))
-		{
-			return E_FAIL;
-		}
-
-		CIPtr(IDispatch) cpDispDocument;
-		cpWebBrowser->get_Document(&cpDispDocument);
-		if (cpDispDocument == NULL)
-		{
-			return E_FAIL;
-		}
-
-		return cpDispDocument->QueryInterface(IID_IHTMLDocument2, (void **) pDocument);
-	}
+	void OutputString(const TCHAR *szMessage, ...);
+	HRESULT GetWebBrowser(IWebBrowserApp **pWebBrowser);
+	HRESULT GetDocument(IHTMLDocument2 **pDocument);
 };
 
 

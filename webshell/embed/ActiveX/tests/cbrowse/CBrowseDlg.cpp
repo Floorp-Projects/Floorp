@@ -27,8 +27,6 @@ void __cdecl fperr(int sig)
 
 TCHAR *aURLs[] =
 {
-	_T("http://whippy"),
-	_T("http://whippy/mozilla/mozilla.htm"),
 	_T("http://www.mozilla.org"),
 	_T("http://www.yahoo.com"),
 	_T("http://www.netscape.com"),
@@ -130,6 +128,7 @@ BOOL CBrowseDlg::OnInitDialog()
 	}
 
 	// Set up some URLs. The first couple are internal
+	m_cmbURLs.AddString(m_szTestURL);
 	for (i = 0; i < sizeof(aURLs) / sizeof(aURLs[0]); i++)
 	{
 		m_cmbURLs.AddString(aURLs[i]);
@@ -228,7 +227,7 @@ void CBrowseDlg::OnGo()
 	if (SUCCEEDED(GetWebBrowser(&pIWebBrowser)))
 	{
 		int nItem = m_cmbURLs.GetCurSel();
-		CString szURL = aURLs[nItem];
+		CString szURL = (nItem == 0) ? m_szTestURL : aURLs[nItem - 1];
 
 		BSTR bstrURL = szURL.AllocSysString();
 		pIWebBrowser->Navigate(bstrURL, NULL, NULL, NULL, NULL);
@@ -280,7 +279,7 @@ TestResult CBrowseDlg::RunTest(Test *pTest)
 
 	CString szMsg;
 	szMsg.Format(_T("Running test \"%s\""), pTest->szName);
-	m_lbMessages.AddString(szMsg);
+	OutputString(szMsg);
 
 	if (pTest && pTest->pfn)
 	{
@@ -289,7 +288,7 @@ TestResult CBrowseDlg::RunTest(Test *pTest)
 		cInfo.clsid = m_clsid;
 		cInfo.pControlSite = m_pControlSite;
 		cInfo.pIUnknown = NULL;
-		cInfo.pfnOutputString = CBrowseDlg::OutputString;
+		cInfo.pBrowseDlg = this;
 		cInfo.szTestURL = m_szTestURL;
 		if (cInfo.pControlSite)
 		{
@@ -306,13 +305,13 @@ TestResult CBrowseDlg::RunTest(Test *pTest)
 	switch (nResult)
 	{
 	case trFailed:
-		m_lbMessages.AddString(_T("Test failed"));
+		OutputString(_T("Test failed"));
 		break;
 	case trPassed:
-		m_lbMessages.AddString(_T("Test passed"));
+		OutputString(_T("Test passed"));
 		break;
 	case trPartial:
-		m_lbMessages.AddString(_T("Test partial"));
+		OutputString(_T("Test partial"));
 		break;
 	default:
 		break;
@@ -321,7 +320,7 @@ TestResult CBrowseDlg::RunTest(Test *pTest)
 	return nResult;
 }
 
-void __cdecl CBrowseDlg::OutputString(const TCHAR *szMessage, ...)
+void CBrowseDlg::OutputString(const TCHAR *szMessage, ...)
 {
 	if (m_pBrowseDlg == NULL)
 	{
@@ -336,9 +335,10 @@ void __cdecl CBrowseDlg::OutputString(const TCHAR *szMessage, ...)
 	va_end(cArgs);
 
 	CString szOutput;
-	szOutput.Format(_T("  Test: %s"), szBuffer);
+	szOutput.Format(_T("%s"), szBuffer);
 
-	m_pBrowseDlg->m_lbMessages.AddString(szOutput);
+	m_lbMessages.AddString(szOutput);
+	m_lbMessages.SetTopIndex(m_lbMessages.GetCount() - 1);
 }
 
 void CBrowseDlg::UpdateTest(HTREEITEM hItem, TestResult nResult)
@@ -437,6 +437,7 @@ void CBrowseDlg::OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult)
 
 	*pResult = 0;
 }
+
 
 void CBrowseDlg::OnDblclkTestlist(NMHDR* pNMHDR, LRESULT* pResult) 
 {

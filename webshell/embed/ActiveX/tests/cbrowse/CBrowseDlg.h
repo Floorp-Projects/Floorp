@@ -21,13 +21,13 @@ public:
 	CBrowseDlg(CWnd* pParent = NULL);	// standard constructor
 
 	static CBrowseDlg *m_pBrowseDlg;
-	static void __cdecl CBrowseDlg::OutputString(const TCHAR *szMessage, ...);
 
 	HRESULT GetWebBrowser(IWebBrowser **pWebBrowser);
 	void RunTestSet(TestSet *pTestSet);
 	TestResult RunTest(Test *pTest);
 	void UpdateTest(HTREEITEM hItem, TestResult nResult);
 	void UpdateTestSet(HTREEITEM hItem);
+	void OutputString(const TCHAR *szMessage, ...);
 
 // Dialog Data
 	//{{AFX_DATA(CBrowseDlg)
