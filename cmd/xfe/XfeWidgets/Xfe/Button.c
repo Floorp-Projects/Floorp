@@ -1046,6 +1046,9 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 			np->armed = False;
 			np->clicking = False;
 			np->raised = False;
+
+			/* Mark pointer outside for proper rendering */
+            _XfePointerInside(nw) = False;
 		}
 		else
 		{
@@ -1070,6 +1073,9 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 			np->armed = False;
 			np->clicking = False;
 			np->raised = False;
+
+			/* Mark pointer outside for proper rendering */
+            _XfePointerInside(nw) = False;
 		}
 		else
 		{
