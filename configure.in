@@ -398,7 +398,7 @@ dnl nglayout only supports building with one toolkit
 dnl so ignore everything after the first,
 dnl nglayout only supports building with one toolkit
 dnl so ignore everything after the first ,
-AM_ARG_ENABLE_STRING(toolkit,
+MOZ_ARG_ENABLE_STRING(toolkit,
 [  --enable-toolkit=\$val	  enable \$val fe (defaults to gtk)],
 dnl [Toolkit must be either "gtk" or "Motif" (except on Rhapsody.)],
 [ 
@@ -425,67 +425,67 @@ CFLAGS="$CFLAGS -DMOZ_DLL_SUFFIX=$DLL_SUFFIX"
 
 OS_TARGET=`uname -s`
 
-AM_ARG_DISABLE_BOOL(shared,
+MOZ_ARG_DISABLE_BOOL(shared,
 [  --disable-shared        disable building of internal shared libs],
   NO_SHARED_LIB=1)
 
-AM_ARG_DISABLE_BOOL(static,
+MOZ_ARG_DISABLE_BOOL(static,
 [  --disable-static        disable building of internal static libs (broken)],
   NO_STATIC_LIB=1)
 
-AM_ARG_ENABLE_BOOL(crypto,
+MOZ_ARG_ENABLE_BOOL(crypto,
 [  --enable-crypto	  enable use of SSL (untested)],
   MOZ_SECURITY=1)
 
-AM_ARG_ENABLE_BOOL(netcast,
+MOZ_ARG_ENABLE_BOOL(netcast,
 [  --enable-netcast          enable use of netcast (untested)],
   MOZ_NETCAST=1)
 
-AM_ARG_ENABLE_BOOL(java,
+MOZ_ARG_ENABLE_BOOL(java,
 [  --enable-java           enable use of java applets (untested)],
 dnl [ Note: setting this will also unset FULL_STATIC_BUILD and NO_SHARED_LIB],
   [MOZ_JAVA=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
 
-AM_ARG_ENABLE_BOOL(oji,
+MOZ_ARG_ENABLE_BOOL(oji,
 [  --enable-oji            enable use of Open JVM Interface],
 dnl [ Note: setting this will also unset FULL_STATIC_BUILD and NO_SHARED_LIB],
   [MOZ_OJI=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
 
-AM_ARG_ENABLE_BOOL_OR_STRING(debug,
+MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 [  --enable-debug	  enable debug symbols],
   [ MOZ_DEBUG=1 OPTIMIZE="-g" ],
   [],
   [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
 
-AM_ARG_ENABLE_BOOL(profile,
+MOZ_ARG_ENABLE_BOOL(profile,
 [  --enable-profile        enable profiling (solaris only)],
   MOZILLA_GPROF=1)
 
-AM_ARG_ENABLE_BOOL(mailnews,
+MOZ_ARG_ENABLE_BOOL(mailnews,
 [  --enable-mailnews       enable Mail & News (broken)],
   MOZ_MAIL_NEWS=1)
 
-AM_ARG_ENABLE_BOOL(ldap,
+MOZ_ARG_ENABLE_BOOL(ldap,
 [  --enable-ldap           enable LDAP directory access],
   MOZ_LDAP=1)
 
-AM_ARG_ENABLE_BOOL(editor,
+MOZ_ARG_ENABLE_BOOL(editor,
 [  --enable-editor         enable editor],
   MOZ_EDITOR=1)
 
-AM_ARG_DISABLE_BOOL(asserts,
+MOZ_ARG_DISABLE_BOOL(asserts,
 [  --disable-asserts       disable asserts during debugging],
   UNIX_SKIP_ASSERTS=1)
 
-AM_ARG_DISABLE_BOOL(async-dns,
+MOZ_ARG_DISABLE_BOOL(async-dns,
 [  --disable-async-dns     disable separate dns thread],
   NO_UNIX_ASYNC_DNS=1)
 
-AM_ARG_ENABLE_BOOL(tests,
+MOZ_ARG_ENABLE_BOOL(tests,
 [  --enable-tests          enable test stubs],
   ENABLE_TESTS=1)
 
-AM_ARG_ENABLE_STRING(homedir,
+MOZ_ARG_ENABLE_STRING(homedir,
 [  --enable-homedir=\$val   set the homedir to \$val],
 dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
   [res=`echo $enableval | grep -c "\/"`
@@ -496,31 +496,31 @@ dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
   fi], 
   MOZ_USER_DIR='\".mozilla\"' )
 
-AM_ARG_ENABLE_BOOL(smart-mail,
+MOZ_ARG_ENABLE_BOOL(smart-mail,
 [  --enable-smart-mail     enable HTML/RDF-based client-side mail (untested)],
   MOZ_SMART_MAIL=1)
 
-AM_ARG_ENABLE_BOOL(mail-compose,
+MOZ_ARG_ENABLE_BOOL(mail-compose,
 [  --enable-mail-compose   enable old Messenger mail composer ],
   [ MOZ_MAIL_COMPOSE=1 MOZ_EDITOR=1 ])
 
-AM_ARG_ENABLE_BOOL(ldap,
+MOZ_ARG_ENABLE_BOOL(ldap,
 [  --enable-ldap           enable ldap ],
   NO_UNIX_LDAP=,
   NO_UNIX_LDAP=1)
 
-AM_ARG_ENABLE_BOOL(idltool,
+MOZ_ARG_ENABLE_BOOL(idltool,
 [  --enable-idltool        build idl tool (default=no) ],
   MOZ_IDL_TOOL=1)
 
-AM_ARG_ENABLE_BOOL(wrap-malloc,
+MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 [  --enable-wrap-malloc    wrap malloc calls (gnu linker only) (default=no) ],
   [ if test "$GNU_CC" = 1; then
       WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
       MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS)'
     fi])
 
-AM_ARG_WITH_STRING(wrap-malloc,
+MOZ_ARG_WITH_STRING(wrap-malloc,
 [  --with-wrap-malloc-=\$dir location of malloc wrapper library],
   WRAP_MALLOC_LIB=$withval)
 
