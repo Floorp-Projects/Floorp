@@ -142,7 +142,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Fuso Hor&#xE1;rio">
 <!ENTITY pref.calendar.timezone.caption "Fuso Hor&#xE1;rio">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "O Fuso Hor&#xE1;rio selecionado &#xE9; (continente ou oceano)/(maior cidade na regi&#xE7;&#xE3;o do fuso).">
 <!ENTITY pref.defaultzone.label     "Fuso Hor&#xE1;rio Padr&#xE3;o:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Africa/Abidjan" >
