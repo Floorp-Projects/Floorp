@@ -46,7 +46,10 @@
 #endif
 
 /* larubbio */
-/* #include "mcom_db.h" */
+#ifndef XP_UNIX
+#include "mcom_db.h"
+#endif
+
 /* #include "jri.h" */
 
 /*
