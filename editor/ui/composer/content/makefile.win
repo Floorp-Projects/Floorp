@@ -28,6 +28,15 @@ install::
 	$(MAKE_INSTALL) editor.properties          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorStyles1.css          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorContent.css          $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) contentframe.xul           $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) sidebar-editor.rdf         $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) sidebar-editor.xul         $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) sb-bookmarks-panel.xul     $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) sb-bookmarks.js            $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) sb-file-contextMenu.js     $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) sb-file-panel.js           $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) sb-file-panel.xul          $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) sb-FileWidgetFileHandler.js $(DIST)\bin\chrome\editor\content\default
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorAppShell.xul
@@ -38,3 +47,12 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\editor.properties
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorStyles1.css
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorContent.css
+  rm -f $(DIST)\bin\chrome\editor\content\default\contentframe.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\sidebar-editor.rdf
+  rm -f $(DIST)\bin\chrome\editor\content\default\sidebar-editor.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\sb-bookmarks-panel.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\sb-bookmarks.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\sb-file-contextMenu.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\sb-file-panel.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\sb-file-panel.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\sb-FileWidgetFileHandler.js  
