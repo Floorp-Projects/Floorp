@@ -217,6 +217,7 @@ void CSSStyleRuleImpl::operator delete(void* ptr)
   }
 }
 
+
 #ifdef DEBUG_REFS
 static PRInt32 gInstanceCount;
 static const PRInt32 kInstrument = 1075;
@@ -651,6 +652,19 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
             // XXX handle percent properly, this isn't it
             spacing->mMargin.bottom = (nscoord)ourMargin->mMargin->mBottom.GetFloatValue();
           }
+        }
+      }
+    }
+
+    nsCSSPosition*  ourPosition;
+    if (NS_OK == mDeclaration->GetData(kCSSPositionSID, (nsCSSStruct**)&ourPosition)) {
+      if (nsnull != ourPosition) {
+        nsStyleMolecule* hack = (nsStyleMolecule*)aContext->GetData(kStyleMoleculeSID);
+
+        if (ourPosition->mPosition.GetUnit() == eCSSUnit_Enumerated) {
+          hack->positionFlags = ourPosition->mPosition.GetIntValue();
+        } else {
+          hack->positionFlags = NS_STYLE_POSITION_STATIC;
         }
       }
     }
