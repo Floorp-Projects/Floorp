@@ -2811,6 +2811,8 @@ nsresult nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCSt
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) return rv;
+  rv = url->SetSpec(aURL);
+  if (NS_FAILED(rv)) return rv;
 
   rv = LoadStyleSheetWithURL(uri, aSheet);
   return rv;
@@ -2864,6 +2866,20 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     // We have to flush the chrome cache!
     rv = FlushCaches();
     if (NS_FAILED(rv)) return rv;
+
+    // XXX this sucks ASS. This is a temporary hack until we get 
+    // around to fixing the skin switching bugs. 
+    // Select and Remove skins based on a pref set in a previous session.
+    nsCOMPtr<nsIPref> pref(do_GetService("@mozilla.org/preferences;1"));
+    if (pref) {
+      nsXPIDLString skinToSelect;
+      rv = pref->CopyUnicharPref("general.skins.selectedSkin", getter_Copies(skinToSelect));
+      if (NS_SUCCEEDED(rv)) {
+        rv = SelectSkin(skinToSelect, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) 
+          pref->DeleteBranch("general.skins.selectedSkin");
+      }
+    }
 
     rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
     // This must always be the last line of profile initialization!
