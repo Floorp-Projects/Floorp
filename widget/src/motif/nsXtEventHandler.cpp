@@ -160,9 +160,11 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
   nsXtWidget_InitNSEvent(anXEv, p, anEvent, aEventType);
 
   if (anXEv != NULL) { // Do Mouse Event specific intialization
-    anEvent.time      = anXEv->xbutton.time;
-    anEvent.isShift   = anXEv->xbutton.state | ShiftMask;
-    anEvent.isControl = anXEv->xbutton.state | ControlMask;
+    anEvent.time       = anXEv->xbutton.time;
+    anEvent.isShift    = anXEv->xbutton.state | ShiftMask;
+    anEvent.isControl  = PR_FALSE; // anXEv->xbutton.state | ControlMask;
+    anEvent.isAlt      = PR_FALSE;
+    anEvent.clickCount = 1; // Fix for double-clicks
     anEvent.eventStructType = NS_MOUSE_EVENT;
   }
 
