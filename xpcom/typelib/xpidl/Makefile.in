@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xpcom
 PROGRAM		= xpidl$(BIN_SUFFIX)
 INTERNAL_TOOLS	= 1
 

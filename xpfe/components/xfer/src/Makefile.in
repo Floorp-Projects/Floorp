@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mozxfer
 LIBRARY_NAME	= mozxfer
 IS_COMPONENT	= 1
+REQUIRES	=  xpcom necko appshell dom js widget pref intl locale layout
 
 CPPSRCS		= \
 		nsStreamTransfer.cpp \

@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= walletviewers
 LIBRARY_NAME	= walleteditor_s
 XPIDL_MODULE	= walleteditor
-
+REQUIRES	= xpcom wallet dom docshell js caps necko uriloader widget layout locale
 
 CPPSRCS		= nsWalletEditor.cpp
 

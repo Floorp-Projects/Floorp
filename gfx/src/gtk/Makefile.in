@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 LIBRARY_NAME	= gfx_gtk
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom img widget view util dom pref js uconv appshell necko unicharutil
 
 CSRCS		= nsPrintdGTK.c
 

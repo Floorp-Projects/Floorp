@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= UnicharSelfTest$(BIN_SUFFIX)
+REQUIRES	= xpcom unicharutil necko uconv
 
 CPPSRCS		= UnicharSelfTest.cpp 
 

@@ -26,7 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= widget
 LIBRARY_NAME	= xpwidgets_s
+REQUIRES	= xpcom layout dom pref js docshell view intl locale necko uriloader htmlparser webshell uconv unicharutil
 
 DEFINES		+= -DUSE_TLS_FOR_TOOLKIT
 

@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+REQUIRES	= xpcom txmgr
+
 PROGRAM		= TestTXMgr$(BIN_SUFFIX)
 
 CPPSRCS		= TestTXMgr.cpp

@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ucvtw2
 LIBRARY_NAME	= ucvtw2
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom uconv
 
 CPPSRCS		= \
 		nsEUCTWToUnicode.cpp \

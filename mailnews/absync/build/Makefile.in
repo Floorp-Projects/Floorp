@@ -30,6 +30,7 @@ MODULE		= absyncsvc
 LIBRARY_NAME	= absyncsvc
 IS_COMPONENT	= 1
 SHORT_LIBNAME	= absync
+REQUIRES	= xpcom mailnews necko docshell uriloader msgbase msgbaseutil intl locale layout widget addrbook dom mork js
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS	= msgbutil

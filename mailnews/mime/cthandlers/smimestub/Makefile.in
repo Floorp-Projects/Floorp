@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= smime
 LIBRARY_NAME	= smime
 IS_COMPONENT	= 1
+REQUIRES	= xpcom mime msgbase msgbaseutil pref necko uconv js
 
 CPPSRCS		= \
 		mimexpcom.cpp \

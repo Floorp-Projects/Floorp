@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= geturl$(BIN_SUFFIX)
+REQUIRES	= xpcom necko pref js uconv mime msgbase msgbaseutil
 
 CPPSRCS		= \
 		geturl.cpp \

@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = import
 LIBRARY_NAME = import
 IS_COMPONENT	= 1
+REQUIRES	= xpcom mailnews addrbook uconv mork msgbase msgbaseutil profile intl locale necko rdf msgdb rdfutil
 
 CPPSRCS		= 	\
 			nsImportFactory.cpp 			\

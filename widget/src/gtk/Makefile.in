@@ -22,9 +22,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= widget
 LIBRARY_NAME	= widget_gtk
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom layout pref js dom appshell timer uconv necko img view util rdf uriloader docshell msgcompose msgbase editor locale
 
 CSRCS		= \
 		keysym2ucs.c

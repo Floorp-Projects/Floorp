@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
 LIBRARY_NAME	= xmlextrasbase_s
+REQUIRES	= xpcom dom js layout widget caps uconv necko docshell xpconnect uriloader locale
 
 CPPSRCS	= 				\
 		nsDOMSerializer.cpp	\

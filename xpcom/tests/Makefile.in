@@ -26,7 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xpcom
 DIRS		= dynamic services
+REQUIRES	= necko
 
 TESTS_NOT_COMPILING = \
 		TestArray.cpp \

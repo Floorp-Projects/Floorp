@@ -30,6 +30,7 @@ MODULE		= mimeemitter
 LIBRARY_NAME	= mimeemitter
 SHORT_LIBNAME	= mimemitr
 IS_COMPONENT	= 1
+REQUIRES	= xpcom mime necko pref js intl locale msgbase msgbaseutil
 
 CPPSRCS		= nsEmitterFactory.cpp
 EXPORTS		= nsMimeEmitterCID.h

@@ -26,8 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= absync
+MODULE		= absyncsvc
 LIBRARY_NAME	= absync_s
+REQUIRES	= xpcom mailnews necko mime cookie docshell locale uriloader pref layout js widget msgbase msgbaseutil dom rdf rdfutil addrbook intl locale appshell mork
 
 CPPSRCS		= \
 		nsAbSyncPostEngine.cpp \

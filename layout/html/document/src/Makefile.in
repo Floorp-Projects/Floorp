@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkhtmldoc_s
-
+REQUIRES	= xpcom widget dom necko htmlparser locale view js intl webshell docshell cookie caps util timer uconv pref uriloader rdf chardet appshell nkcache shistory appcomps
 
 CPPSRCS		= \
 		nsHTMLContentSink.cpp \

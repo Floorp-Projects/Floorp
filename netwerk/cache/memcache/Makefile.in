@@ -24,9 +24,8 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = nkcache
-
 LIBRARY_NAME = nkmemcache_s
-
+REQUIRES = xpcom necko
 
 EXPORTS=nsMemCacheCID.h \
 	nsMemCache.h \

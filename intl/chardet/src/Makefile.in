@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= chardet
 LIBRARY_NAME	= chardet
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom uconv webshell uriloader docshell htmlparser dom necko widget layout locale
 
 CPPSRCS		= \
 		nsCharDetModule.cpp \

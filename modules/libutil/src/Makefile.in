@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= util
 LIBRARY_NAME	= mozutil_s
-
+REQUIRES	= xpcom
 
 CSRCS		= obs.c
 CPPSRCS		= stopwatch.cpp

@@ -30,6 +30,7 @@ MODULE		= xmlextras
 LIBRARY_NAME	= xmlextras
 SHORT_LIBNAME	= xmlextra
 IS_COMPONENT	= 1
+REQUIRES	= xpcom dom js layout widget caps necko docshell xpconnect
 
 CPPSRCS		= nsXMLExtrasModule.cpp
 

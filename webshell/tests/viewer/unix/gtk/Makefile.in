@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= viewer_gtk_s
+REQUIRES	= xpcom webbrwsr widget timer appshell dom layout docshell uriloader locale webshell necko htmlparser view util
 
 CPPSRCS		= \
 		nsGtkMain.cpp \

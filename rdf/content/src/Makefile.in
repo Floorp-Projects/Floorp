@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdf
 LIBRARY_NAME	= rdfcontent_s
-
+REQUIRES	= xpcom layout widget dom js caps locale necko timer lwbrk htmlparser xpconnect uriloader view pref docshell chrome
 
 CPPSRCS		= \
 		nsElementMap.cpp \

@@ -30,6 +30,7 @@ MODULE		= htmlparser
 LIBRARY_NAME	= htmlpars
 IS_COMPONENT	= 1
 SHORT_LIBNAME	= htmlpars
+REQUIRES	= xpcom necko util uconv expat layout dom unicharutil lwbrk pref js
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXTRA_DSO_LIBS	= expat_s xmltok_s 

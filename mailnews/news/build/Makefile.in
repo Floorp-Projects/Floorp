@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgnews
 LIBRARY_NAME	= msgnews
 IS_COMPONENT	= 1
+REQUIRES	= xpcom js mailnews msgbase msgbaseutil msgdb appshell timer mime necko rdf rdfutil pref uriloader nkcache
 
 CPPSRCS		= nsMsgNewsFactory.cpp
 EXPORTS		= nsMsgNewsCID.h

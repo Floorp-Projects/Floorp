@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= pref
 LIBRARY_NAME	= pref
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom js profile xpconnect caps dom intl locale
 
 CSRCS		= prefapi.c
 

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgcompose
 LIBRARY_NAME	= msgcompose_s
+REQUIRES	= xpcom dom editor uriloader msgbase mailnews necko mime pref intl locale layout js msgbaseutil msgdb rdf appshell msgimap msgnews uconv docshell webshell addrbook widget htmlparser view txmgr exthandler mork wallet nkcache
 
 CPPSRCS		= \
 		nsMsgCompFields.cpp \

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= msgcomposetest2$(BIN_SUFFIX)
+REQUIRES	= xpcom mailnews msgbase msgbaseutil pref js necko msgdb msglocal msgcompose editor dom layout widget appshell
 
 CPPSRCS		= test2.cpp
 

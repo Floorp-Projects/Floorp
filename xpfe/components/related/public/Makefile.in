@@ -26,7 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= related
+MODULE		= appcomps
+XPIDL_MODULE	= related
 
 XPIDLSRCS	= nsIRelatedLinksHandler.idl
 

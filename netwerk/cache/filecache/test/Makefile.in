@@ -22,6 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= test_nkcache
 
 CPPSRCS		= \
          diskcache.cpp \

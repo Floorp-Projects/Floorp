@@ -33,6 +33,7 @@ MODULE		= xpinstall
 LIBRARY_NAME	= xpinstall
 SHORT_LIBNAME	= xpinstal
 IS_COMPONENT	= 1
+REQUIRES	= xpcom jar chrome necko intl locale libreg dom js pref appshell widget layout uriloader xpconnect rdf docshell
 
 EXTRA_DSO_LIBS	= jsdom
 

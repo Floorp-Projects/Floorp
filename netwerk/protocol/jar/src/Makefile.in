@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= nkjar_s
-
+REQUIRES	= xpcom jar exthandler mime caps dom js pref xpconnect
 
 CPPSRCS		= \
 		nsJARProtocolHandler.cpp \

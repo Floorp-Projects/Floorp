@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xpcom
 SIMPLE_PROGRAMS	= invoke_test
 
 CPPSRCS		= invoke_test.cpp

@@ -30,7 +30,7 @@ MODULE		= rdf
 LIBRARY_NAME	= rdf
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= jsdom
-
+REQUIRES	= xpcom layout htmlparser
 
 CPPSRCS		= \
 		nsRDFModule.cpp \

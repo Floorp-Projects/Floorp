@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= xpcom
 PROGRAM		= profile_strings
 #PROGRAM		= test_main
 

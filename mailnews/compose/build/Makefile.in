@@ -30,6 +30,7 @@ MODULE		= msgcompose
 LIBRARY_NAME	= msgcompose
 SHORT_LIBNAME	= msgcomp
 IS_COMPONENT	= 1
+REQUIRES	= xpcom msgbase msgbaseutil editor necko dom js uriloader mime addrbook rdf rdfutil intl locale  mailnews widget layout msgdb appshell nkcache
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbutil

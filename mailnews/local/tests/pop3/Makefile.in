@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= pop3Test$(BIN_SUFFIX)
 CPPSRCS		= pop3Test.cpp
+REQUIRES	= xpcom mailnews necko pref js appshell msgbase msgbaseutil msglocal msgdb
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS	= msgbutil

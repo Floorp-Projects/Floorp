@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mime
 LIBRARY_NAME	= mime
 IS_COMPONENT	= 1
+REQUIRES	= xpcom necko msgbase msgbaseutil pref js necko uconv
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbutil

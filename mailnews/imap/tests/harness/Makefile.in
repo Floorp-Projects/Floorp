@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgimaptest
 PROGRAM		= testimap$(BIN_SUFFIX)
+REQUIRES	= xpcom mailnews msgimap necko msgbase msgbaseutil msglocal txmgr msgdb rdf rdfutil intl locale mork mime pref js appshell
 
 CPPSRCS		= imapProtocolTest.cpp
 

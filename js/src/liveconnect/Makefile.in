@@ -40,7 +40,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= java
 LIBRARY_NAME	= jsj
-
+REQUIRES	= js xpcom
 
 CSRCS		= \
 		jsj.c \

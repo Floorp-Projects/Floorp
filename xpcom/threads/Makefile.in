@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom_threads
+MODULE		= xpcom
 LIBRARY_NAME	= xpcomthreads_s
 
 

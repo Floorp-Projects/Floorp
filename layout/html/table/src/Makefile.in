@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkhtmltable_s
-
+REQUIRES	= xpcom js dom caps widget locale webshell view
 
 CPPSRCS		= \
 		BasicTableLayoutStrategy.cpp \

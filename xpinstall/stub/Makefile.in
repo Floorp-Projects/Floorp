@@ -30,6 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpistub
 LIBRARY_NAME	= xpistub
+REQUIRES	= xpcom xpinstall dom js
 
 CPPSRCS		= \
 		nsStubNotifier.cpp \

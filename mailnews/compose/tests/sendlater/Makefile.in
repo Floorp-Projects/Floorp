@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= sendlatertest$(BIN_SUFFIX)
+REQUIRES	= xpcom mailnews pref js msgbase msgbaseutil msgcompose msglocal necko editor dom widget layout msgdb appshell
 
 CPPSRCS		= test.cpp
 

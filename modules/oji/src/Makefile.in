@@ -26,9 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= ojiimpl
+MODULE		= oji
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom java js plugin caps pref js jar layout necko dom widget xpconnect
 
 ifdef MOZ_OJI
 LIBRARY_NAME	= oji

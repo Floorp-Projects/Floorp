@@ -27,7 +27,7 @@ IS_COMPONENT	= 1
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= testdynamic
+MODULE		= xpcom
 SHORT_LIBNAME	= tdynamic
 
 CPPSRCS		= TestDynamic.cpp

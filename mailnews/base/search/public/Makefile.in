@@ -26,7 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= msgsearch
+MODULE		= msgbase
+XPIDL_MODULE	= msgsearch
 
 EXPORTS		= \
 		nsMsgBodyHandler.h \

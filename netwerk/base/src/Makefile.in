@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 LIBRARY_NAME	= neckobase_s
+REQUIRES	= xpcom exthandler mime intl locale nkcache pref js
 
 CPPSRCS		= \
 		nsURLHelper.cpp \

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= sendpage$(BIN_SUFFIX)
+REQUIRES	= xpcom mailnews pref js msgbase msgbaseutil msgcompose necko editor msgdb dom widget layout appshell
 
 CPPSRCS		= Test.cpp
 

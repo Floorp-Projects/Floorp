@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkhtmlstyle_s
-
+REQUIRES	= xpcom dom widget timer caps editor locale js view necko webshell pref rdf htmlparser txmgr docshell uriloader unicharutil uconv
 
 CPPSRCS		= \
 		nsCSSAtoms.cpp \

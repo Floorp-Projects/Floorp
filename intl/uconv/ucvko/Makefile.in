@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ucvko
 LIBRARY_NAME	= ucvko
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom uconv
 
 CPPSRCS		= \
 		nsEUCKRToUnicode.cpp \

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mimeemitter
 LIBRARY_NAME	= emitterutil_s
+REQUIRES	= xpcom mime msgbase msgbaseutil pref js necko intl locale mailnews rdf msgdb addrbook
 
 EXPORTS		= \
 		nsEmitterUtils.h \

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= viewer_xlib_s
+REQUIRES	= xpcom webshell htmlparser webbrwsr necko widget layout dom js uriloader view docshell util locale timer
 
 CPPSRCS		= nsXlibMain.cpp
 

@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= intl
 LIBRARY_NAME	= strres
 IS_COMPONENT	= 1
+REQUIRES	= xpcom necko locale
 
 CPPSRCS		= nsStringBundle.cpp nsAcceptLang.cpp
 

@@ -26,8 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= prefmigr
 LIBRARY_NAME	= nsprefm
 IS_COMPONENT	= 1
+REQUIRES	= xpcom pref appshell intl docshell dom necko rdf js layout locale uriloader widget webbrwsr chardet uconv
 
 CPPSRCS		= \
 		nsPrefMigration.cpp \

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
 LIBRARY_NAME	= xmlextrassoap_s
+REQUIRES	= xpcom caps dom js widget layout xpconnect necko
 
 CPPSRCS	= 				\
 		nsSOAPCall.cpp		\

@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ucvcn
 LIBRARY_NAME	= ucvcn
 IS_COMPONENT	= 1
-
+REQUIRES	= xpcom uconv
 
 CPPSRCS		= \
 		nsGB2312ToUnicodeV2.cpp \

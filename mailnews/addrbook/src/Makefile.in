@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= addrbook
 LIBRARY_NAME	= addrbook_s
+REQUIRES	= xpcom mailnews rdf rdfutil appshell dom js layout widget mork docshell pref necko locale uriloader htmlparser webshell view uconv msgbase msgbaseutil mime msgcompose
 
 CPPSRCS		= \
 		nsAddressBook.cpp \

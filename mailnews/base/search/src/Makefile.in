@@ -26,8 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= msgsearch
+MODULE		= msgbase
 LIBRARY_NAME	= msgsearch_s
+REQUIRES	= xpcom mailnews msgdb msgbaseutil necko mime appshell msgimap rdf msglocal intl locale pref js timer msgnews txmgr
 
 CPPSRCS		= \
 		nsMsgFilterService.cpp \

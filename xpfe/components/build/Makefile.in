@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= appcomps
 LIBRARY_NAME	= appcomps
 IS_COMPONENT	= 1
+REQUIRES	= xpcom layout rdf necko timer intl uriloader mork widget locale dom js pref docshell webshell
 
 CPPSRCS		= nsModule.cpp
 

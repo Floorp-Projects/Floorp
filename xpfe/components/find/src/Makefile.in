@@ -26,9 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= mozfind
+MODULE		= appcomps
 LIBRARY_NAME	= mozfind
 IS_COMPONENT	= 1
+REQUIRES	= xpcom dom js layout widget appshell editor necko txtsvc docshell locale uriloader
 
 CPPSRCS		= nsFindComponent.cpp
 

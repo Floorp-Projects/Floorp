@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+REQUIRES	= xpcom xmlextras necko dom js layout widget
+
 CPPSRCS		= \
 		TestXMLExtras.cpp \
 		$(NULL)

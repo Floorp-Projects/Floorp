@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mime
 LIBRARY_NAME	= mime_s
+REQUIRES	= xpcom msgbase msgbaseutil pref js necko uconv msgcompose editor dom layout widget intl msgimap exthandler rdf rdfutil mailnews locale msgdb chardet mimeemitter caps
 
 CSRCS		= oldi18n.c
 

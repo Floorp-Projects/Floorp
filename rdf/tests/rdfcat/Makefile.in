@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= rdfcat$(BIN_SUFFIX)
 CPPSRCS		= rdfcat.cpp
+REQUIRES	= xpcom rdf necko widget view dom oji java uriloader layout
 
 LIBS		= \
 		$(MOZ_JS_LIBS) \

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
 LIBRARY_NAME	= search_s
+REQUIRES	= xpcom rdf necko timer pref js uconv
 
 CPPSRCS		= \
 		nsInternetSearchService.cpp \

@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgimap
 LIBRARY_NAME	= msgimap_s
+REQUIRES	= xpcom mailnews rdf msgbase msgbaseutil rdfutil necko msgdb uconv mime pref js intl appshell nkcache timer locale txmgr dom docshell msglocal widget layout uriloader
 
 EXPORTS		= \
 		nsImapMessage.h \

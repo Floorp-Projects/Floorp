@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgbasetest
 PROGRAM		= testmailnews$(BIN_SUFFIX)
+REQUIRES	= xpcom msgbase mime
 
 DIRS		= accountmanager
 

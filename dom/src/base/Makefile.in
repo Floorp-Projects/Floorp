@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 LIBRARY_NAME	= jsdombase_s
-
+REQUIRES	= xpcom webbrwsr js widget layout caps docshell xpconnect pref oji necko java locale uriloader sidebar rdf timer cookie webshell view uconv htmlparser shistory plugin
 
 CPPSRCS		= \
 		nsBarProps.cpp \

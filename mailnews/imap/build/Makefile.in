@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgimap
 LIBRARY_NAME	= msgimap
 IS_COMPONENT	= 1
+REQUIRES	= xpcom mailnews msgimap msgbase msgbaseutil rdf rdfutil necko msgdb txmgr mime pref intl uconv js locale msglocal nkcache
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS	= msgbutil

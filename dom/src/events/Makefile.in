@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
 LIBRARY_NAME	= jsdomevents_s
-
+REQUIRES	= xpcom js caps xpconnect widget layout
 
 CPPSRCS		= \
 		nsJSEventListener.cpp \

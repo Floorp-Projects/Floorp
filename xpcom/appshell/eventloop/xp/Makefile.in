@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom_eventloop_xp
+MODULE		= xpcom
 LIBRARY_NAME	= xp_eventloop
 
 

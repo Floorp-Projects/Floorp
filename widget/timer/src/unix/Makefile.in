@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= timer
 EXPORTS		= nsUnixTimerCIID.h
 
 ifdef MOZ_MONOLITHIC_TOOLKIT

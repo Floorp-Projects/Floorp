@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= TestStreamConv
 PROGRAM		= TestStreamConv$(BIN_SUFFIX)
-
+REQUIRES	= necko xpcom
 
 CPPSRCS		= \
 		Converters.cpp \

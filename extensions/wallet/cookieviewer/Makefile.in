@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= walletviewers
 LIBRARY_NAME	= cookieviewer_s
 XPIDL_MODULE	= cookieviewer
-
+REQUIRES	= xpcom wallet dom js layout widget cookie docshell uriloader locale necko
 
 CPPSRCS		= nsCookieViewer.cpp
 
