@@ -1,6 +1,0 @@
-#!nmake
-
-DEPTH=..\..\..
-DIRS=src
-
-include <$(DEPTH)\config\rules.mak>
