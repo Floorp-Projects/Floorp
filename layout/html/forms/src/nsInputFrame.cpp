@@ -248,6 +248,7 @@ nsInputFrame::Reflow(nsIPresContext&      aPresContext,
 	  }
 	  nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
+	  NS_RELEASE(presShell); 
 
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
@@ -272,6 +273,8 @@ nsInputFrame::Reflow(nsIPresContext&      aPresContext,
     if (NS_OK != result) {
 	    NS_ASSERTION(0, "widget initialization failed"); 
       aStatus = NS_FRAME_NOT_COMPLETE;
+      NS_IF_RELEASE(parView);
+      NS_IF_RELEASE(viewMan);  
       return NS_OK;
 	  }
 
@@ -293,7 +296,6 @@ nsInputFrame::Reflow(nsIPresContext&      aPresContext,
 	  
     NS_IF_RELEASE(parView);
 	  NS_IF_RELEASE(viewMan);  
-	  NS_IF_RELEASE(presShell); 
   }
   else {
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
