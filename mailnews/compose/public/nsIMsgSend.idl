@@ -194,5 +194,4 @@ interface nsIMsgSend : nsISupports
     void AddListener(in nsIMsgSendListener aListener);
     void RemoveListener(in nsIMsgSendListener aListener);
     void SetGUINotificationState(in PRBool aEnableFlag);
-    void SetDocShell(in nsIDocShell aDocShell);
 };
