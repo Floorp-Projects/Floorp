@@ -36,12 +36,16 @@
 
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
+#include "nsProcess.h"
+
+static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
 
 MOZ_DECL_CTOR_COUNTER(nsInstallExecute);
 
 nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
                                       const nsString& inJarLocation,
                                       const nsString& inArgs,
+                                      const PRBool inBlocking,
                                       PRInt32 *error)
 
 : nsInstallObject(inInstall)
@@ -57,7 +61,8 @@ nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
     mJarLocation        = inJarLocation;
     mArgs               = inArgs;
     mExecutableFile     = nsnull;
-
+    mBlocking           = inBlocking;
+    mPid                = nsnull;
 }
 
 
@@ -79,35 +84,36 @@ PRInt32 nsInstallExecute::Prepare()
 
 PRInt32 nsInstallExecute::Complete()
 {
-    PRBool flagExists;
     PRInt32 result = NS_OK;
+    PRInt32 rv = nsInstall::SUCCESS;
     char *cArgs[1];
 
     if (mExecutableFile == nsnull)
         return nsInstall::INVALID_ARGUMENTS;
 
-    nsCOMPtr<nsIFile> app = mExecutableFile;
-    
-    app->Exists(&flagExists);
-    if (!flagExists)
-    {
-        return nsInstall::INVALID_ARGUMENTS;
-    }
+    nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
 
-    cArgs[0] = nsnull;
     cArgs[0] = mArgs.ToNewCString();
 
     if(cArgs[0] == nsnull)
       return nsInstall::OUT_OF_MEMORY;
-    
-    app->Spawn((const char **)&cArgs[0], 1);
+
+    result = process->Init(mExecutableFile);
+    if (NS_SUCCEEDED(result))
+    {
+        result = process->Run(mBlocking, (const char**)&cArgs, 1, mPid);
+        if (NS_SUCCEEDED(result))
+            DeleteFileNowOrSchedule( mExecutableFile );
+        else
+            rv = nsInstall::UNEXPECTED_ERROR;
+    }
+    else
+        rv = nsInstall::UNEXPECTED_ERROR;
 
     if(cArgs[0])
-      delete(cArgs[0]);
+        Recycle(cArgs[0]);
     
-    ScheduleFileForDeletion( app );
-    
-    return result;
+    return rv;
 }
 
 void nsInstallExecute::Abort()

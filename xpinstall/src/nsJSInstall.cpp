@@ -868,6 +868,7 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
+  PRBool       blocking = PR_FALSE;
 
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
@@ -876,37 +877,42 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     return JS_TRUE;
   }
 
-  if(argc >= 2)
+  if(argc >= 3)
   {
     //  public int Execute ( String jarSourcePath,
-    //                       String args);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
+    //                       String args,
+    //                       Bool   blocking);
+    
     ConvertJSValToStr(b1, cx, argv[1]);
-
-    if(NS_OK != nativeThis->Execute(b0, b1, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
+    ConvertJSValToBool(&blocking, cx,argv[2]);
   }
-  else if(argc >= 1)
+  else if(argc >= 2)
+  {
+    if(JSVAL_IS_BOOLEAN(argv[1]))
+    {
+      //  public int Execute ( String jarSourcePath,
+      //                       Bool   blocking);
+      ConvertJSValToBool(&blocking, cx, argv[1]);
+    }
+    else
+    {
+      //  public int Execute ( String jarSourcePath,
+      //                       String args);
+      ConvertJSValToStr(b1, cx, argv[1]);
+    }
+  }
+
+  if(argc >= 1)
   {
     //  public int Execute ( String jarSourcePath);
-
     ConvertJSValToStr(b0, cx, argv[0]);
-
-    if(NS_OK != nativeThis->Execute(b0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
+    nativeThis->Execute(b0, b1, blocking, &nativeRet);
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "Function Execute requires 2 parameters");
+    JS_ReportError(cx, "Function Execute requires 1 parameter");
     return JS_FALSE;
   }
 

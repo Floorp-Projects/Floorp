@@ -43,6 +43,7 @@ class nsInstallExecute : public nsInstallObject
         nsInstallExecute( nsInstall* inInstall,
                           const nsString& inJarLocation,
                           const nsString& inArgs,
+                          const PRBool inBlocking,
                           PRInt32 *error);
 
 
@@ -63,7 +64,8 @@ class nsInstallExecute : public nsInstallObject
         nsString mArgs;        // command line arguments
         
         nsCOMPtr<nsIFile> mExecutableFile;    // temporary file location
-        
+        PRBool mBlocking;
+        PRUint32* mPid;
 
         PRInt32 NativeComplete(void);
         void NativeAbort(void);

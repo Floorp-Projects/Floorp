@@ -25,6 +25,7 @@
 #include "nsInstallFileOpEnums.h"
 #include "nsInstallFileOpItem.h"
 #include "ScheduledTasks.h"
+#include "nsProcess.h"
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -40,6 +41,8 @@
 #include "MoreFilesExtras.h"
 #include "nsILocalFileMac.h"
 #endif
+
+static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
 
 /* Public Methods */
 
@@ -122,6 +125,7 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32        aCommand,
                                          nsIFile*       a1,
                                          nsString&      a2,
+                                         PRBool         aBlocking,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
@@ -153,6 +157,7 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
             break;
 
         case NS_FOP_FILE_EXECUTE:
+            mBlocking = aBlocking;
         default:
             mSrc        = nsnull;
             mTarget = a1;
@@ -948,22 +953,28 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
 
   char *cParams[1];
 
+  nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
+
   cParams[0] = nsnull;
   cParams[0] = mParams->ToNewCString();
 
   if(cParams[0] == nsnull)
     return nsInstall::OUT_OF_MEMORY;
 
-  mTarget->Spawn((const char **)&cParams[0], 1);
+  nsresult rv = process->Init(mTarget);
+  if (NS_FAILED(rv))
+  {
+    if(cParams[0])
+      Recycle(cParams[0]);
+    return rv;
+  }
+
+  rv = process->Run(mBlocking, (const char **)&cParams[0], 1, nsnull);
 
   if(cParams[0])
     Recycle(cParams[0]);
 
-  // We don't care if it succeeded or not since we
-  // don't wait for the process to end anyways.
-  // If the file doesn't exist, it was already detected
-  // during the prepare phase.
-  return nsInstall::SUCCESS;
+  return rv;
 }
 
 PRInt32
