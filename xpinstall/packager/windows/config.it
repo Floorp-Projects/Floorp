@@ -233,7 +233,7 @@ C0=Component XPCOM
 C1=Component GRE
 C2=Component Navigator
 C3=Component MailNews
-C4 Component Spellchecker
+C4=Component Spellchecker
 C5=Component Uninstaller
 C6=Component Chatzilla
 C7=Component Venkman
