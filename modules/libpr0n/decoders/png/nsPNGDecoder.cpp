@@ -208,8 +208,10 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   /* (alternatively, could check for SCREEN_GAMMA environment variable) */
   display_exponent = LUT_exponent * CRT_exponent;
 
-  if (png_get_gAMA(png_ptr, info_ptr, &aGamma))
+  if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
+      if (info_ptr->gamma < 0)    aGamma = 0.45455;
       png_set_gamma(png_ptr, display_exponent, aGamma);
+  }
   else
       png_set_gamma(png_ptr, display_exponent, 0.45455);
 
