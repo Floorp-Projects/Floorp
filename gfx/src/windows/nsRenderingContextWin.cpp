@@ -1507,22 +1507,30 @@ nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
 
   SetupFontAndColor();
 
-  INT dxMem[500];
-  INT* dx0;
-  if (nsnull != aSpacing) {
-    dx0 = dxMem;
-    if (aLength > 500) {
-      dx0 = new INT[aLength];
+  if (nsnull != aSpacing)
+  {
+    // XXX Fix path to use a twips transform in the DC and use the
+    // spacing values directly and let windows deal with the sub-pixel
+    // positioning.
+
+    // Slow, but accurate rendering
+    const PRUnichar* end = aString + aLength;
+    while (aString < end)
+    {
+      // XXX can shave some cycles by inlining a version of transform
+      // coord where y is constant and transformed once
+      x = aX;
+      y = aY;
+      mTMatrix->TransformCoord(&x, &y);
+      ::ExtTextOutW(mDC, x, y, 0, NULL, aString, 1, NULL);
+      aX += *aSpacing++;
+      aString++;
     }
-    mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
-
-	mTMatrix->TransformCoord(&x, &y);
-
-  ::ExtTextOutW(mDC, x, y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
-
-  if ((nsnull != aSpacing) && (dx0 != dxMem)) {
-    delete [] dx0;
+  else
+  {
+    mTMatrix->TransformCoord(&x, &y);
+    ::ExtTextOutW(mDC, x, y, 0, NULL, aString, aLength, NULL);
   }
 
   if (nsnull != mFontMetrics)
