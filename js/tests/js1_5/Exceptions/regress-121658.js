@@ -73,11 +73,43 @@ function f()
 
 i=0; 
 f();
-
 status = inSection(1);
 actual = checkThis(i>0);
-expect = TEST_PASSED;
+expect = checkThis(true);
 addThis();
+
+
+// Now try in function scope -
+function g()
+{
+  f();
+}
+
+i=0; 
+g();
+status = inSection(2);
+actual = checkThis(i>0);
+expect = checkThis(true);
+addThis();
+
+
+// Now try in eval scope -
+var sEval = 'function h(){++i; try{h();} catch(e){}}; i=0; h();';
+eval(sEval);
+status = inSection(3);
+actual = checkThis(i>0);
+expect = checkThis(true);
+addThis();
+
+
+// Try in eval scope and mix functions up -
+var sEval = 'function a(){++i; try{h();} catch(e){}}; i=0; a();';
+eval(sEval);
+status = inSection(4);
+actual = checkThis(i>0);
+expect = checkThis(true);
+addThis();
+
 
 
 
