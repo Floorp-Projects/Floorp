@@ -58,26 +58,10 @@
 
 #define PKCS11_USE_THREADS	/* set to true of you are need threads */
 /* 
- *  Attribute Allocation strategy:
- *
- * 1) static allocation (PKCS11_STATIC_ATTRIBUTES set
- *			 PKCS11_REF_COUNT_ATTRIBUTES not set)
+ *  Attribute Allocation strategy is static allocation:
  *   Attributes are pre-allocated as part of the session object and used from
  *   the object array.
- *
- * 2) heap allocation with ref counting (PKCS11_STATIC_ATTRIBUTES not set
- *			 		PKCS11_REF_COUNT_ATTRIBUTES set)
- *   Attributes are allocated from the heap when needed and freed when their
- *   reference count goes to zero.
- *
- * 3) arena allocation (PKCS11_STATIC_ATTRIBUTES  not set
- *			 PKCS11_REF_COUNT_ATTRIBUTE not set)
- *   Attributes are allocated from the arena when needed and freed only when
- *   the object goes away.
  */
-#define PKCS11_STATIC_ATTRIBUTES	
-/*#define   PKCS11_REF_COUNT_ATTRIBUTES		 */
-/* the next two are only active if PKCS11_STATIC_ATTRIBUTES is set */
 #define MAX_OBJS_ATTRS 45	/* number of attributes to preallocate in
 				 * the object (must me the absolute max) */
 #define ATTR_SPACE 50  		/* Maximum size of attribute data before extra
@@ -200,16 +184,10 @@ struct PK11AttributeStr {
     PK11Attribute  	*prev;
     PRBool		freeAttr;
     PRBool		freeData;
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-    int 		refCount;
-    PZLock 		*refLock;
-#endif
     /*must be called handle to make pk11queue_find work */
     CK_ATTRIBUTE_TYPE	handle;
     CK_ATTRIBUTE 	attrib;
-#ifdef PKCS11_STATIC_ATTRIBUTES
     unsigned char space[ATTR_SPACE];
-#endif
 };
 
 
@@ -241,9 +219,6 @@ struct PK11ObjectStr {
     PK11Slot	   	*slot;
     void 		*objectInfo;
     PK11Free 		infoFree;
-#ifndef PKCS11_STATIC_ATTRIBUTES
-    PLArenaPool	*arena;
-#endif
 };
 
 struct PK11TokenObjectStr {
@@ -257,10 +232,8 @@ struct PK11SessionObjectStr {
     PZLock		*attributeLock;
     PK11Session   	*session;
     PRBool		wasDerived;
-#ifdef PKCS11_STATIC_ATTRIBUTES
     int nextAttr;
     PK11Attribute	attrList[MAX_OBJS_ATTRS];
-#endif
     PRBool		optimizeSpace;
     unsigned int	hashSize;
     PK11Attribute 	*head[1];

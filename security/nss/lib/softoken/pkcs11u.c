@@ -61,7 +61,6 @@ pk11_NewAttribute(PK11Object *object,
 {
     PK11Attribute *attribute;
 
-#ifdef PKCS11_STATIC_ATTRIBUTES
     PK11SessionObject *so = pk11_narrowToSessionObject(object);
     int index;
 
@@ -70,7 +69,7 @@ pk11_NewAttribute(PK11Object *object,
 	PORT_Assert(0);
     }
     /* 
-     * PKCS11_STATIC_ATTRIBUTES attempts to keep down contention on Malloc and Arena locks
+     * We attempt to keep down contention on Malloc and Arena locks
      * by limiting the number of these calls on high traversed paths. this
      * is done for attributes by 'allocating' them from a pool already allocated
      * by the parent object.
@@ -101,53 +100,9 @@ pk11_NewAttribute(PK11Object *object,
 	attribute->attrib.pValue = NULL;
 	attribute->attrib.ulValueLen = 0;
     }
-#else
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-    attribute = (PK11Attribute*)PORT_Alloc(sizeof(PK11Attribute));
-    attribute->freeAttr = PR_TRUE;
-#else
-    attribute = (PK11Attribute*)PORT_ArenaAlloc(object->arena,sizeof(PK11Attribute));
-    attribute->freeAttr = PR_FALSE;
-#endif /* PKCS11_REF_COUNT_ATTRIBUTES */
-    if (attribute == NULL) return NULL;
-    attribute->freeData = PR_FALSE;
-
-    if (value) {
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-	attribute->attrib.pValue = PORT_Alloc(len);
-	attribute->freeData = PR_TRUE;
-#else
-	attribute->attrib.pValue = PORT_ArenaAlloc(object->arena,len);
-#endif /* PKCS11_REF_COUNT_ATTRIBUTES */
-	if (attribute->attrib.pValue == NULL) {
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-	    PORT_Free(attribute);
-#endif /* PKCS11_REF_COUNT_ATTRIBUTES */
-	    return NULL;
-	}
-	PORT_Memcpy(attribute->attrib.pValue,value,len);
-	attribute->attrib.ulValueLen = len;
-    } else {
-	attribute->attrib.pValue = NULL;
-	attribute->attrib.ulValueLen = 0;
-    }
-#endif /* PKCS11_STATIC_ATTRIBUTES */
     attribute->attrib.type = type;
     attribute->handle = type;
     attribute->next = attribute->prev = NULL;
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-    attribute->refCount = 1;
-#ifdef PKCS11_USE_THREADS
-    attribute->refLock = PZ_NewLock(nssILockRefLock);
-    if (attribute->refLock == NULL) {
-	if (attribute->attrib.pValue) PORT_Free(attribute->attrib.pValue);
-	PORT_Free(attribute);
-	return NULL;
-    }
-#else
-    attribute->refLock = NULL;
-#endif
-#endif /* PKCS11_REF_COUNT_ATTRIBUTES */
     return attribute;
 }
 
@@ -165,18 +120,6 @@ pk11_NewTokenAttribute(CK_ATTRIBUTE_TYPE type, CK_VOID_PTR value,
     attribute->next = attribute->prev = NULL;
     attribute->freeAttr = PR_TRUE;
     attribute->freeData = PR_FALSE;
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-    attribute->refCount = 1;
-#ifdef PKCS11_USE_THREADS
-    attribute->refLock = PZ_NewLock(nssILockRefLock);
-    if (attribute->refLock == NULL) {
-	PORT_Free(attribute);
-	return NULL;
-    }
-#else
-    attribute->refLock = NULL;
-#endif
-#endif /* PKCS11_REF_COUNT_ATTRIBUTES */
     attribute->attrib.type = type;
     if (!copy) {
 	attribute->attrib.pValue = value;
@@ -185,23 +128,13 @@ pk11_NewTokenAttribute(CK_ATTRIBUTE_TYPE type, CK_VOID_PTR value,
     }
 
     if (value) {
-#ifdef PKCS11_STATIC_ATTRIBUTES
         if (len <= ATTR_SPACE) {
 	    attribute->attrib.pValue = attribute->space;
 	} else {
 	    attribute->attrib.pValue = PORT_Alloc(len);
 	    attribute->freeData = PR_TRUE;
 	}
-#else
-	attribute->attrib.pValue = PORT_Alloc(len);
-	attribute->freeData = PR_TRUE;
-#endif
 	if (attribute->attrib.pValue == NULL) {
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-	    if (attribute->refLock) {
-		PK11_USE_THREADS(PZ_DestroyLock(attribute->refLock);)
-	    }
-#endif
 	    PORT_Free(attribute);
 	    return NULL;
 	}
@@ -233,10 +166,6 @@ pk11_NewTokenAttributeSigned(CK_ATTRIBUTE_TYPE type, CK_VOID_PTR value,
 static void
 pk11_DestroyAttribute(PK11Attribute *attribute)
 {
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-    PORT_Assert(attribute->refCount == 0);
-    PK11_USE_THREADS(PZ_DestroyLock(attribute->refLock);)
-#endif
     if (attribute->freeData) {
 	if (attribute->attrib.pValue) {
 	    /* clear out the data in the attribute value... it may have been
@@ -255,33 +184,14 @@ pk11_DestroyAttribute(PK11Attribute *attribute)
 void
 pk11_FreeAttribute(PK11Attribute *attribute)
 {
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-    PRBool destroy = PR_FALSE;
-#endif
-
     if (attribute->freeAttr) {
 	pk11_DestroyAttribute(attribute);
 	return;
     }
-
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-    PK11_USE_THREADS(PZ_Lock(attribute->refLock);)
-    if (attribute->refCount == 1) destroy = PR_TRUE;
-    attribute->refCount--;
-    PK11_USE_THREADS(PZ_Unlock(attribute->refLock);)
-
-    if (destroy) pk11_DestroyAttribute(attribute);
-#endif
 }
 
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-#define PK11_DEF_ATTRIBUTE(value,len) \
-   { NULL, NULL, PR_FALSE, PR_FALSE, 1, NULL, 0, { 0, value, len } }
-
-#else
 #define PK11_DEF_ATTRIBUTE(value,len) \
    { NULL, NULL, PR_FALSE, PR_FALSE, 0, { 0, value, len } }
-#endif
 
 CK_BBOOL pk11_staticTrueValue = CK_TRUE;
 CK_BBOOL pk11_staticFalseValue = CK_FALSE;
@@ -1325,14 +1235,6 @@ pk11_FindAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type)
 
     PK11_USE_THREADS(PZ_Lock(sessObject->attributeLock);)
     pk11queue_find(attribute,type,sessObject->head, sessObject->hashSize);
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-    if (attribute) {
-	/* atomic increment would be nice here */
-	PK11_USE_THREADS(PZ_Lock(attribute->refLock);)
-	attribute->refCount++;
-	PK11_USE_THREADS(PZ_Unlock(attribute->refLock);)
-    }
-#endif
     PK11_USE_THREADS(PZ_Unlock(sessObject->attributeLock);)
 
     return(attribute);
@@ -1769,21 +1671,12 @@ pk11_forceAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type, void *value,
 
 
     if (value) {
-#ifdef PKCS11_STATIC_ATTRIBUTES
         if (len <= ATTR_SPACE) {
 	    att_val = attribute->space;
 	} else {
 	    att_val = PORT_Alloc(len);
 	    freeData = PR_TRUE;
 	}
-#else
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-	att_val = PORT_Alloc(len);
-	freeData = PR_TRUE;
-#else
-	att_val = PORT_ArenaAlloc(object->arena,len);
-#endif /* PKCS11_REF_COUNT_ATTRIBUTES */
-#endif /* PKCS11_STATIC_ATTRIBUTES */
 	if (att_val == NULL) {
 	    return CKR_HOST_MEMORY;
 	}
@@ -2221,7 +2114,6 @@ pk11_NewObject(PK11Slot *slot)
     hashSize = (slot->optimizeSpace) ? SPACE_ATTRIBUTE_HASH_SIZE :
 				TIME_ATTRIBUTE_HASH_SIZE;
 
-#ifdef PKCS11_STATIC_ATTRIBUTES
     object = pk11_GetObjectFromList(&hasLocks, slot->optimizeSpace,
 				&sessionObjectList,  hashSize, PR_TRUE);
     if (object == NULL) {
@@ -2234,23 +2126,6 @@ pk11_NewObject(PK11Slot *slot)
 	sessObject->attrList[i].attrib.pValue = NULL;
 	sessObject->attrList[i].freeData = PR_FALSE;
     }
-#else
-    PRArenaPool *arena;
-
-    arena = PORT_NewArena(2048);
-    if (arena == NULL) return NULL;
-
-    object = (PK11Object*)PORT_ArenaAlloc(arena,sizeof(PK11SessionObject)
-		+hashSize * sizeof(PK11Attribute *));
-    if (object == NULL) {
-	PORT_FreeArena(arena,PR_FALSE);
-	return NULL;
-    }
-    object->arena = arena;
-
-    sessObject = (PK11SessionObject *)object;
-    sessObject->hashSize = hashSize;
-#endif
     sessObject->optimizeSpace = slot->optimizeSpace;
 
     object->handle = 0;
@@ -2266,21 +2141,13 @@ pk11_NewObject(PK11Slot *slot)
 #ifdef PKCS11_USE_THREADS
     if (!hasLocks) object->refLock = PZ_NewLock(nssILockRefLock);
     if (object->refLock == NULL) {
-#ifdef PKCS11_STATIC_ATTRIBUTES
 	PORT_Free(object);
-#else
-	PORT_FreeArena(arena,PR_FALSE);
-#endif
 	return NULL;
     }
     if (!hasLocks) sessObject->attributeLock = PZ_NewLock(nssILockAttribute);
     if (sessObject->attributeLock == NULL) {
 	PK11_USE_THREADS(PZ_DestroyLock(object->refLock);)
-#ifdef PKCS11_STATIC_ATTRIBUTES
 	PORT_Free(object);
-#else
-	PORT_FreeArena(arena,PR_FALSE);
-#endif
 	return NULL;
     }
 #else
@@ -2298,11 +2165,8 @@ pk11_NewObject(PK11Slot *slot)
 static CK_RV
 pk11_DestroySessionObjectData(PK11SessionObject *so)
 {
-#if defined(PKCS11_STATIC_ATTRIBUTES) || defined(PKCS11_REF_COUNT_ATTRIBUTES)
 	int i;
-#endif
 
-#ifdef PKCS11_STATIC_ATTRIBUTES
 	for (i=0; i < MAX_OBJS_ATTRS; i++) {
 	    unsigned char *value = so->attrList[i].attrib.pValue;
 	    if (value) {
@@ -2314,23 +2178,6 @@ pk11_DestroySessionObjectData(PK11SessionObject *so)
 		so->attrList[i].freeData = PR_FALSE;
 	    }
 	}
-#endif
-
-#ifdef PKCS11_REF_COUNT_ATTRIBUTES
-	/* clean out the attributes */
-	/* since no one is referencing us, it's safe to walk the chain
-	 * without a lock */
-	for (i=0; i < so->hashSize; i++) {
-	    PK11Attribute *ap,*next;
-	    for (ap = so->head[i]; ap != NULL; ap = next) {
-		next = ap->next;
-		/* paranoia */
-		ap->next = ap->prev = NULL;
-		pk11_FreeAttribute(ap);
-	    }
-	    so->head[i] = NULL;
-	}
-#endif
 /*	PK11_USE_THREADS(PZ_DestroyLock(so->attributeLock));*/
 	return CKR_OK;
 }
@@ -2363,19 +2210,11 @@ pk11_DestroyObject(PK11Object *object)
 	object->objectInfo = NULL;
 	object->infoFree = NULL;
     }
-#ifdef PKCS11_STATIC_ATTRIBUTES
     if (so) {
 	pk11_PutObjectToList(object,&sessionObjectList,PR_TRUE);
     } else {
 	pk11_PutObjectToList(object,&tokenObjectList,PR_FALSE);
     }
-#else
-    if (object->refLock) {
-        PK11_USE_THREADS(PZ_DestroyLock(object->refLock);)
-    }
-    arena = object->arena;
-    PORT_FreeArena(arena,PR_FALSE);
-#endif
     return crv;
 }
 
@@ -3000,25 +2839,11 @@ pk11_NewTokenObject(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE handle)
     PRBool hasLocks = PR_FALSE;
     SECStatus rv;
 
-#ifdef PKCS11_STATIC_ATTRIBUTES
     object = pk11_GetObjectFromList(&hasLocks, PR_FALSE, &tokenObjectList,  0,
 							PR_FALSE);
     if (object == NULL) {
 	return NULL;
     }
-#else
-    PRArenaPool *arena;
-
-    arena = PORT_NewArena(2048);
-    if (arena == NULL) return NULL;
-
-    object = (PK11Object*)PORT_ArenaZAlloc(arena,sizeof(PK11TokenObject));
-    if (object == NULL) {
-	PORT_FreeArena(arena,PR_FALSE);
-	return NULL;
-    }
-    object->arena = arena;
-#endif
     tokObject = (PK11TokenObject *) object;
 
     object->objclass = handleToClass(handle);
