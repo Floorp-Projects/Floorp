@@ -37,16 +37,8 @@ var msgHeaderParserProgID		   = "component://netscape/messenger/headerparser";
 var msgPaneData;
 var currentHeaderData;
 var gNumAddressesToShow = 3;
-var msgHeaderParser = Components.classes[msgHeaderParserProgID].getService(Components.interfaces.nsIMsgHeaderParser);
 
-// currentAddressData is an array indexed by dom node which stores all the
-// information about the person such as email address, full name, etc. 
-// This allows us to later use this information when the popup is invoked
-// for adding the address to the address book, running a mailto url, etc.
-// current fields in currentAddressData are:
-// emailAddress --> the email address associated with the node
-// fullAddress --> the full address associated with the node
-var currentAddressData;
+var msgHeaderParser = Components.classes[msgHeaderParserProgID].getService(Components.interfaces.nsIMsgHeaderParser);
 
 function OnLoadMsgHeaderPane()
 {
@@ -196,16 +188,10 @@ function SendMailToNode(emailAddressNode)
 {
   if (emailAddressNode)
   {
-    var addressInfo = currentAddressData[emailAddressNode];
-    if (addressInfo)
-    {
-      // dump("address: " + addressInfo.emailAddress + "\n");
-      var url = "mailto:" + addressInfo.emailAddress;
-      messenger.OpenURL(url);
-    }
+     var emailAddress = emailAddressNode.getAttribute("emailAddress");
+     if (emailAddress)
+        messenger.OpenURL("mailto:" + emailAddress );
   }
-  else
-    messenger.OpenURL("mailto:foo@netscape.com");
 }
 
 function AddSenderToAddressBook() 
@@ -393,12 +379,10 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       
       item.setAttribute("class", "emailDisplayButton");
       item.setAttribute("popup", "emailAddressPopup");
-      item.setAttribute("value", fullAddress);   
-
-      var addressInfo = new Object;
-      addressInfo.emailAddress = emailAddress;
-      addressInfo.fullAddress = fullAddress;
-      currentAddressData[item] = addressInfo;
+      item.setAttribute("value", fullAddress);
+      
+      item.setAttribute("emailAddress", emailAddress);
+      item.setAttribute("fullAddress", fullAddress);  
 
       AddExtraAddressProcessing(emailAddress, item);
 

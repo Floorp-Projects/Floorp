@@ -38,6 +38,4 @@ function AddExtraAddressProcessing(emailAddress, addressButton)
 // message is loaded in message pane, we'll call this function...
 function NotifyClearAddresses()
 {
-  // forget about our old stored address data
-  currentAddressData = new Object();
 }
