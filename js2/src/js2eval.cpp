@@ -853,6 +853,48 @@ namespace MetaData {
 		return Delete(meta, base, mn, NULL, result);
 	}
 
+    bool JS2ArgumentsClass::Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(*base));
+        JS2Object *obj = JS2VAL_TO_OBJECT(*base);
+        ArgumentsInstance *args = checked_cast<ArgumentsInstance *>(obj);
+
+        uint32 index;
+        if ((multiname->nsList->size() == 1) 
+                && (multiname->nsList->back() == meta->publicNamespace) 
+                && isValidIndex(multiname->name, index)
+                && (index < args->mSlots->size())) {
+            *rval = (*args->mSlots)[index];
+            return true;
+        }
+        else
+            return JS2Class::Read(meta, base, multiname, env, phase, rval);
+    }
+
+    bool JS2ArgumentsClass::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(base));
+        JS2Object *obj = JS2VAL_TO_OBJECT(base);
+        ArgumentsInstance *args = checked_cast<ArgumentsInstance *>(obj);
+
+        uint32 index;
+        if ((multiname->nsList->size() == 1) 
+                && (multiname->nsList->back() == meta->publicNamespace) 
+                && isValidIndex(multiname->name, index)
+                && (index < args->mSlots->size())) {
+            (*args->mSlots)[index] = newValue;
+            return true;
+        }
+        else
+            return JS2Class::Write(meta, base, multiname, env, createIfMissing, newValue, false);
+    }    
+
+    bool JS2ArgumentsClass::Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)
+    {
+        return JS2Class::Delete(meta, base, multiname, env, result);
+    }
+
+
     bool JS2Class::Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag)
     {
         InstanceMember *mBase = meta->findBaseInstanceMember(this, multiname, WriteAccess);
@@ -883,7 +925,7 @@ namespace MetaData {
                 DEFINE_ROOTKEEPER(rk, mn);
                 if ( (meta->findBaseInstanceMember(this, mn, ReadAccess) == NULL)
                         && (meta->findCommonMember(&base, mn, ReadAccess, true) == NULL) ) {
-                    meta->createDynamicProperty(baseObj, &qName, newValue, ReadWriteAccess, false, true);
+                    meta->createDynamicProperty(baseObj, mn->name, newValue, ReadWriteAccess, false, true);
                     return true;
                 }
             }

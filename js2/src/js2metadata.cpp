@@ -3106,7 +3106,7 @@ doUnary:
     }
 
     // Clone the pluralFrame bindings into the singularFrame, instantiating new members for each binding
-    void Environment::instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame)
+    void Environment::instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame, bool buildSlots)
     {
         singularFrame->localBindings.clear();
 
@@ -3118,7 +3118,7 @@ doUnary:
             LocalBindingEntry *lbe = *bi2;
             singularFrame->localBindings.insert(lbe->name, lbe->clone());
         }
-        if (pluralFrame->slots) {
+        if (buildSlots && pluralFrame->slots) {
             size_t count = pluralFrame->slots->size();
             singularFrame->slots = new std::vector<js2val>(count);
             for (size_t i = 0; i < count; i++)
@@ -4008,6 +4008,7 @@ static const uint8 urlCharType[256] =
         MAKEBUILTINCLASS(classClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);                
         MAKEBUILTINCLASS(functionClass, objectClass, true, true, engine->Function_StringAtom, JS2VAL_NULL);
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Package"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(argumentsClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Arguments"]), JS2VAL_NULL);
 
         
 
@@ -4581,22 +4582,34 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable) 
     {
-        QualifiedName qName(publicNamespace, &world.identifiers[widenCString(name)]); 
-        return createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
+        return createDynamicProperty(obj, &world.identifiers[widenCString(name)], initVal, access, sealed, enumerable); 
     }
-
+/*
     DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable) 
     {
         DEFINE_ROOTKEEPER(rk, name);
         QualifiedName qName(publicNamespace, name); 
         return createDynamicProperty(obj, &qName, initVal, access, sealed, enumerable); 
     }
+*/
+    void JS2Metadata::addPublicVariableToLocalMap(LocalBindingMap *lMap, const String *name, LocalMember *v, Access access, bool enumerable)
+    {
+        LocalBinding *new_b = new LocalBinding(access, v, enumerable);
+        LocalBindingEntry **lbeP = (*lMap)[*name];
+        LocalBindingEntry *lbe;
+        if (lbeP == NULL) {
+            lbe = new LocalBindingEntry(*name);
+            lMap->insert(*name, lbe);
+        }
+        else
+            lbe = *lbeP;
+        lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, new_b));
+    }
 
     // The caller must make sure that the created property does not already exist and does not conflict with any other property.
-    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable)
+    DynamicVariable *JS2Metadata::createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable)
     {
         DynamicVariable *dv = new DynamicVariable(initVal, sealed);
-        LocalBinding *new_b = new LocalBinding(access, dv, enumerable);
         LocalBindingMap *lMap;
         if (obj->kind == SimpleInstanceKind)
             lMap = &checked_cast<SimpleInstance *>(obj)->localBindings;
@@ -4605,7 +4618,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 lMap = &checked_cast<Package *>(obj)->localBindings;
             else
                 ASSERT(false);
-
+        addPublicVariableToLocalMap(lMap, name, dv, access, enumerable);
+/*
         LocalBindingEntry **lbeP = (*lMap)[*qName->name];
         LocalBindingEntry *lbe;
         if (lbeP == NULL) {
@@ -4615,6 +4629,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         else
             lbe = *lbeP;
         lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(qName->nameSpace, new_b));
+*/
         return dv;
     }
 
@@ -4662,6 +4677,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKOBJECT(syntaxErrorClass);
         GCMARKOBJECT(typeErrorClass);
         GCMARKOBJECT(uriErrorClass);
+        GCMARKOBJECT(argumentsClass);
 
         for (BConListIterator i = bConList.begin(), end = bConList.end(); (i != end); i++)
             (*i)->mark();
@@ -5041,6 +5057,28 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 /************************************************************************************
  *
+ *  ArgumentsInstance
+ *
+ ************************************************************************************/
+
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
+    void ArgumentsInstance::markChildren()
+    {
+        SimpleInstance::markChildren();
+        if (mSlots) {
+            for (uint32 i = 0; i < mSlots->size(); i++)
+                GCMARKVALUE((*mSlots)[i]);
+        }
+    }
+
+    ArgumentsInstance::~ArgumentsInstance()
+    {
+        if (mSlots)
+            delete mSlots;
+    }
+
+/************************************************************************************
+ *
  *  InstanceMethod
  *
  ************************************************************************************/
@@ -5129,7 +5167,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     void ParameterFrame::instantiate(Environment *env)
     {
-        env->instantiateFrame(pluralFrame, this);
+        env->instantiateFrame(pluralFrame, this, !buildArguments);
     }
 
     // Assume that instantiate has been called, the plural frame will contain
@@ -5141,11 +5179,18 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         ASSERT(pluralFrame->kind == ParameterFrameKind);
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         
-        SimpleInstance *argsObj = NULL;
+        ArgumentsInstance *argsObj = NULL;
         DEFINE_ROOTKEEPER(rk2, argsObj);
 
+        uint32 slotCount = (plural->slots) ? plural->slots->size() : 0;
+
         if (plural->buildArguments) {
-            argsObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);
+            // If we're building an arguments object, the slots for the parameter frame are located
+            // there so that the arguments object itself can survive beyond the life of the function.
+            argsObj = new ArgumentsInstance(meta, meta->objectClass->prototype, meta->argumentsClass);
+            if (slotCount)
+                argsObj->mSlots = new std::vector<js2val>(slotCount);
+            slots = argsObj->mSlots;
             // Add the 'arguments' property
             String name(widenCString("arguments"));
             ASSERT(localBindings[name] == NULL);
@@ -5155,22 +5200,16 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             localBindings.insert(name, lbe);
         }
 
-        uint32 slotCount = (plural->slots) ? plural->slots->size() : 0;
-
         uint32 i;
         for (i = 0; (i < argCount); i++) {
             if (i < slotCount) {
                 (*slots)[i] = argBase[i];
             }
-            if (plural->buildArguments) 
-                meta->objectClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->engine->numberToString(i), true, argBase[i]);
         }
         while (i++ < length) {
             if (i < slotCount) {
                 (*slots)[i] = JS2VAL_UNDEFINED;
             }
-            if (plural->buildArguments) 
-                meta->objectClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);
         }
         if (plural->buildArguments) {
             setLength(meta, argsObj, argCount);
@@ -5188,6 +5227,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     ParameterFrame::~ParameterFrame()
     {
+        if (buildArguments) {
+            slots = NULL;      // the slots are in the arguments object, let it do the delete
+        }
     }
 
  /************************************************************************************
@@ -5202,6 +5244,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKOBJECT(type)
     }
 
+
  /************************************************************************************
  *
  *  BlockFrame
@@ -5211,7 +5254,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     void BlockFrame::instantiate(Environment *env)
     {
         if (pluralFrame)
-            env->instantiateFrame(pluralFrame, this);
+            env->instantiateFrame(pluralFrame, this, true);
     }
 
 

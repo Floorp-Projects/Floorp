@@ -57,6 +57,7 @@ class FunctionInstance;
 class ArrayInstance;
 class RegExpInstance;
 class Package;
+class ArgumentsInstance;
 
 typedef void (Invokable)();
 typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
@@ -270,6 +271,7 @@ public:
     ROOTKEEPER_CONSTRUCTOR(SimpleInstance)
     ROOTKEEPER_CONSTRUCTOR(FunctionInstance)
     ROOTKEEPER_CONSTRUCTOR(DateInstance)
+    ROOTKEEPER_CONSTRUCTOR(ArgumentsInstance)
 
 #ifdef DEBUG
     RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), js2val_count(0), p(p)    { init(line, pfile); }
@@ -528,8 +530,6 @@ public:
     virtual void mark();
 };
 
-
-
 // A LOCALBINDING describes the member to which one qualified name is bound in a frame. Multiple 
 // qualified names may be bound to the same member in a frame, but a qualified name may not be 
 // bound to multiple members in a frame (except when one binding is for reading only and 
@@ -752,7 +752,7 @@ public:
     void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
     bool lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase);
 
-    void instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame);
+    void instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame, bool buildSlots);
 
     void markChildren();
 
@@ -853,6 +853,16 @@ public:
     virtual bool BracketWrite(JS2Metadata *meta, js2val base, js2val indexVal, js2val newValue)                                     { return false; }
     virtual bool Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)                       { return false; }
     virtual bool BracketDelete(JS2Metadata *meta, js2val base, js2val indexVal, bool *result)                                       { return false; }
+};
+
+class JS2ArgumentsClass : public JS2Class {
+public:
+    JS2ArgumentsClass(JS2Class *super, js2val proto, Namespace *privateNamespace, bool dynamic, bool final, const String *name)
+        : JS2Class(super, proto, privateNamespace, dynamic, final, name) { }
+    
+    virtual bool Read(JS2Metadata *meta, js2val *base, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
+    virtual bool Write(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
+    virtual bool Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result);
 };
 
 class Package : public NonWithFrame {
@@ -1049,6 +1059,19 @@ public:
     virtual ~RegExpInstance()             { }
 };
 
+class ArgumentsInstance : public SimpleInstance {
+public:
+    ArgumentsInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type), mSlots(NULL) { }
+
+    ValueList *mSlots;
+
+    virtual void markChildren();
+    virtual ~ArgumentsInstance();
+};
+
+
+
+
 // A helper class for 'for..in' statements
 class ForIteratorObject : public JS2Object {
 public:
@@ -1076,6 +1099,7 @@ private:
 
 // Base class for all references (lvalues)
 // References are generated during the eval stage (bytecode generation), but shouldn't live beyond that
+// so they're allocated from an arena carried in the metadata class and cleared after each bytecode gen pass.
 class Reference : public ArenaObject {
 public:
     virtual ~Reference() { }
@@ -1092,7 +1116,7 @@ public:
 
     virtual void emitDeleteBytecode(BytecodeContainer *, size_t)            { ASSERT(false); }   
     
-    // indicate whether building the reference generate any stack deposits
+    // indicate whether building the reference generates any stack deposits
     virtual int hasStackEffect()                                            { ASSERT(false); return 0; }
 
 };
@@ -1329,7 +1353,8 @@ public:
                                     // available because this function hasn't been called yet.
 
     bool prototype;                 // true if this function is not an instance method but defines this anyway
-    bool buildArguments;
+    bool buildArguments;            // true if the 'arguments' variable is referenced, it will be constructed
+                                    // by 'assignArguments' and contain the slots for this frame.
     bool isConstructor;
     bool isInstance;
     bool callsSuperConstructor;
@@ -1489,8 +1514,9 @@ public:
     void invokeInit(JS2Class *c, js2val thisValue, js2val* argv, uint32 argc);
 
     DynamicVariable *createDynamicProperty(JS2Object *obj, const char *name, js2val initVal, Access access, bool sealed, bool enumerable);
-    DynamicVariable *createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
+//    DynamicVariable *createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);
     DynamicVariable *createDynamicProperty(JS2Object *obj, const String *name, js2val initVal, Access access, bool sealed, bool enumerable);
+    void addPublicVariableToLocalMap(LocalBindingMap *lMap, const String *name, LocalMember *v, Access access, bool enumerable);
 
     FunctionInstance *createFunctionInstance(Environment *env, bool prototype, bool unchecked, NativeCode *code, uint32 length, DynamicVariable **lengthProperty);
 
@@ -1582,6 +1608,7 @@ public:
     JS2Class *syntaxErrorClass;
     JS2Class *typeErrorClass;
     JS2Class *uriErrorClass;
+    JS2Class *argumentsClass;
 
     BytecodeContainer *bCon;        // the current output container
 
