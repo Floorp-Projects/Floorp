@@ -536,14 +536,16 @@ cairo:
 ifdef MOZ_TREE_CAIRO
 	$(MAKE) -C gfx/cairo/libpixman install
 	$(MAKE) -C gfx/cairo/cairo install
+ifndef BUILD_STATIC_LIBS
 ifneq ($(OS_ARCH),Darwin)
 	$(INSTALL) $(DIST)/lib/libpixman.so.1 $(DIST)/bin
 	$(INSTALL) $(DIST)/lib/libcairo.so.1 $(DIST)/bin
 else
 	$(INSTALL) $(DIST)/lib/libpixman.1.dylib $(DIST)/bin
 	$(INSTALL) $(DIST)/lib/libcairo.1.dylib $(DIST)/bin
-endif
-endif
+endif # OS_ARCH != Darwin
+endif # BUILD_STATIC_LIBS
+endif # MOZ_TREE_CAIRO
 
 export::
 	@$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include
