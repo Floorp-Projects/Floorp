@@ -728,6 +728,8 @@ map_java_vm_to_jsjava_vm(SystemJavaVM *java_vm)
 {
     JSJavaVM *v;
     for (v = jsjava_vm_list; v; v = v->next) {
+        if (!jsj_ConnectToJavaVM(v))
+            return NULL;
         if (v->java_vm == java_vm)
             return v;
     }
