@@ -135,6 +135,7 @@
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+			<menupopup/>
               </menu>
             </menupopup>
           </rule>
@@ -197,6 +198,7 @@
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+			<menupopup/>
               </menu>
             </menupopup>
           </rule>
@@ -247,6 +249,7 @@
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+			<menupopup/>
               </menu>
             </menupopup>
           </rule>
@@ -297,6 +300,7 @@
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+		<menupopup/>
               </menu>
             </menupopup>
           </rule>
@@ -347,6 +351,7 @@
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+		 <menupopup/>
               </menu>
             </menupopup>
           </rule>
