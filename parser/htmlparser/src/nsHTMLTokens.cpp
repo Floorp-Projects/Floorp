@@ -34,8 +34,6 @@
 
 static const char*  gUserdefined = "userdefined";
 
-const PRInt32 kMAXNAMELEN=10;
-
 
 /**************************************************************
   And now for the token classes...
@@ -1232,6 +1230,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                     else if(kGreaterThan==aChar){      
                       result=aScanner.PutBack(aChar);
                     }
+#if 0
                     else if(kAmpersand==aChar) {
                       mTextValue=aChar;
                       result=aScanner.GetChar(aChar);
@@ -1240,6 +1239,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                         result=CEntityToken::ConsumeEntity(aChar,mTextValue,aScanner);
                       }
                     }
+#endif
                     else {
                       mTextValue=aChar;       //it's an alphanum attribute...
                       result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
