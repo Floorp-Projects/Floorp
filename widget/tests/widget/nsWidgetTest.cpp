@@ -99,11 +99,16 @@ int    gNumRadioBtns = 0;
 
 char * gFailedMsg = NULL;
 
-
 #ifdef XP_PC
+#ifdef XP_OS2
+#define XPCOM_DLL "XPCOM"
+#define WIDGET_DLL "WDGTOS2"
+#define GFX_DLL "GFX_OS2"
+#else
 #define XPCOM_DLL "xpcom32.dll"
 #define WIDGET_DLL "gkwidget.dll"
 #define GFXWIN_DLL "gkgfxwin.dll"
+#endif
 #define TEXT_HEIGHT 25
 #endif
 
