@@ -1975,34 +1975,25 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
 }
 
 static void
-DirtyLineIfWrappedLinesAreDirty(const nsLineList::iterator& aLine,
-                                const nsLineList::iterator& aLineEnd)
+DirtyLinesWithDirtyContinuations(const nsLineList::iterator& aLineStart,
+                                 const nsLineList::iterator& aLineEnd)
 {
-  NS_PRECONDITION(!aLine->IsDirty(), "Must pass in clean line");
-  
-  if (aLine->IsInline() && aLine->IsLineWrapped()) {
-    nsLineList::iterator line(aLine);
-    PRBool hasDirtyContinuation = PR_FALSE;
-    do {
-      ++line;
-      if (line == aLineEnd) {
-        break;
-      }
+  // The line we're looking at right now
+  line_iterator line(aLineEnd);
 
-      NS_ASSERTION(!line->IsBlock(), "didn't expect a block line");
-      if (line->IsDirty()) {
-        // we found a continuing line that is dirty
-        hasDirtyContinuation = PR_TRUE;
-        break;
-      }
-    } while (line->IsLineWrapped());
-    
-    if (hasDirtyContinuation) {
-      // Mark all lines between aLine and line dirty
-      do {
-        --line;
-        line->MarkDirty();
-      } while (line != aLine);
+  // Whether the line following the current one is dirty
+  PRBool nextLineDirty = PR_FALSE;
+  
+  while (line != aLineStart) {
+    --line;
+
+    if (nextLineDirty && line->IsInline() && line->IsLineWrapped()) {
+      line->MarkDirty();
+      // Note that nextLineDirty is already true and |line| will be the "next
+      // line" next time through this loop, and we just marked it dirty, so
+      // just leave nextLineDirty as true.
+    } else {
+      nextLineDirty = line->IsDirty();
     }
   }
 }
@@ -2113,8 +2104,15 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // We save up information about BR-clearance here
   PRUint8 inlineFloatBreakType = NS_STYLE_CLEAR_NONE;
 
-  // Reflow the lines that are already ours
   line_iterator line = begin_lines(), line_end = end_lines();
+
+  // If we're supposed to update our maximum width, then we'll also need to
+  // reflow any line if it's line wrapped and has a dirty continuing line.
+  if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
+    ::DirtyLinesWithDirtyContinuations(line, line_end);
+  }
+
+  // Reflow the lines that are already ours
   for ( ; line != line_end; ++line, aState.AdvanceToNextLine()) {
 #ifdef DEBUG
     if (gNoisyReflow) {
@@ -2130,17 +2128,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       gNoiseIndent++;
     }
 #endif
-
-    // If we're supposed to update our maximum width, then we'll also need to
-    // reflow this line if it's line wrapped and any of the continuing lines
-    // are dirty.
-    if (!line->IsDirty() &&
-        aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
-      // Check whether we need to dirty this line by looking for a dirty
-      // continuation.  If we find one, mark this line and all lines up to that
-      // continuation dirty.
-      ::DirtyLineIfWrappedLinesAreDirty(line, line_end);
-    }
 
     // This really sucks, but we have to look inside any blocks that have clear
     // elements inside them.
