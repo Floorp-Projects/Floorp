@@ -114,7 +114,7 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 #   Find the types of files we are interested in.
 #
 ONEFINDPASS="$MYTMPDIR/onefind.list"
-find $OBJROOT -type f -name "*.obj" -or -name "*.map" | while read FNAME; do
+/usr/bin/find $OBJROOT -type f -name "*.obj" -or -name "*.map" | while read FNAME; do
     cygpath -m $FNAME >> $ONEFINDPASS
 done
 
@@ -137,7 +137,7 @@ xargs -n 1 dumpbin.exe /symbols < $ALLOBJSFILE > $ALLOBJSYMSFILE 2> /dev/null
 #   Produce the symdb for the symbols in all object files.
 #
 SYMDBFILE="$MYTMPDIR/symdb.tsv"
-$OBJROOT/dist/bin/msdump2symdb --input $ALLOBJSYMSFILE | sort > $SYMDBFILE 2> /dev/null
+$OBJROOT/dist/bin/msdump2symdb --input $ALLOBJSYMSFILE | /usr/bin/sort > $SYMDBFILE 2> /dev/null
 
 
 #
@@ -167,7 +167,7 @@ $OBJROOT/dist/bin/msmap2tsv --symdb $SYMDBFILE --batch $RELEVANTARG < $ALLMAPSFI
 #
 #   Sort the TSV output for useful diffing and eyeballing in general.
 #
-sort -r $RAWTSVFILE > $COPYSORTTSV
+/usr/bin/sort -r $RAWTSVFILE > $COPYSORTTSV
 
 
 #
