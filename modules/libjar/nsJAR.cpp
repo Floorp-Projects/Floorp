@@ -228,6 +228,7 @@ nsJAREnumerator::GetNext(nsISupports** aResult)
     nsIJARItem* jarItem = new nsJARItem(mCurr);
     jarItem->AddRef();
     *aResult = jarItem;
+    mIsCurrStale = PR_TRUE; // we just gave this one away
 
     return NS_OK;
 }
@@ -244,6 +245,7 @@ nsJARItem::nsJARItem()
 
 nsJARItem::nsJARItem(nsZipItem* aOther)
 {
+    NS_INIT_ISUPPORTS();
     name = PL_strndup( aOther->name, aOther->namelen );
     namelen = aOther->namelen;
 

@@ -643,6 +643,8 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   z_stream    zs;
   int         zerr;
   PRBool      bInflating = PR_FALSE;
+  PRBool      bRead;
+  PRBool      bWrote;
 
   PR_ASSERT( aItem != 0 && aOutname != 0 );
 
@@ -688,6 +690,9 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   zs.avail_out = ZIP_BUFLEN;
   while ( zerr == Z_OK )
   {
+    bRead  = PR_FALSE;
+    bWrote = PR_FALSE;
+
     if ( zs.avail_in == 0 && zs.total_in < size )
     {
       //-- no data to inflate yet still more in file:
@@ -703,7 +708,8 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
         break;
       }
       zs.next_in  = inbuf;
-      zs.avail_in = ZIP_BUFLEN;
+      zs.avail_in = chunk;
+      bRead       = PR_TRUE;
     }
 
     if ( zs.avail_out == 0 )
@@ -718,10 +724,14 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
       outpos = zs.total_out;
 
       zs.next_out  = outbuf;
-      zs.avail_out = chunk;
+      zs.avail_out = ZIP_BUFLEN;
+      bWrote       = PR_TRUE;
     }
 
-    zerr = inflate( &zs, Z_PARTIAL_FLUSH );
+    if(bRead || bWrote)
+      zerr = inflate( &zs, Z_PARTIAL_FLUSH );
+    else
+      zerr = Z_STREAM_END;
 
   } // while
 
