@@ -3541,6 +3541,7 @@ JSBool
 js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     JSClass *clasp;
+    JSString *str;
 
     clasp = OBJ_GET_CLASS(cx, obj);
     if (clasp->hasInstance)
@@ -3561,8 +3562,14 @@ js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
         }
     }
 #endif
-    *bp = JS_FALSE;
-    return JS_TRUE;
+    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                     OBJECT_TO_JSVAL(obj), NULL);
+    if (str) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BAD_INSTANCEOF_RHS,
+                             JS_GetStringBytes(str));
+    }
+    return JS_FALSE;
 }
 
 JSBool

@@ -3190,11 +3190,11 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             break;
 
           case JSOP_TYPEOF:
-            rval = POP_OPND();
+            rval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             type = JS_TypeOfValue(cx, rval);
             atom = rt->atomState.typeAtoms[type];
-            str  = ATOM_TO_STRING(atom);
-            PUSH_OPND(STRING_TO_JSVAL(str));
+            STORE_OPND(-1, ATOM_KEY(atom));
             break;
 
           case JSOP_VOID:
@@ -4894,7 +4894,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #if JS_HAS_INSTANCEOF
           case JSOP_INSTANCEOF:
             rval = FETCH_OPND(-1);
-            if (JSVAL_IS_PRIMITIVE(rval)) {
+            if (JSVAL_IS_PRIMITIVE(rval) ||
+                !(obj = JSVAL_TO_OBJECT(rval))->map->ops->hasInstance) {
                 SAVE_SP(fp);
                 str = js_DecompileValueGenerator(cx, -1, rval, NULL);
                 if (str) {
@@ -4905,15 +4906,12 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 ok = JS_FALSE;
                 goto out;
             }
-            obj = JSVAL_TO_OBJECT(rval);
             lval = FETCH_OPND(-2);
             cond = JS_FALSE;
-            if (obj->map->ops->hasInstance) {
-                SAVE_SP(fp);
-                ok = obj->map->ops->hasInstance(cx, obj, lval, &cond);
-                if (!ok)
-                    goto out;
-            }
+            SAVE_SP(fp);
+            ok = obj->map->ops->hasInstance(cx, obj, lval, &cond);
+            if (!ok)
+                goto out;
             sp--;
             STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));
             break;
