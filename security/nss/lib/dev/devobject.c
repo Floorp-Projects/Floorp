@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.8 $ $Date: 2002/01/03 20:09:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.9 $ $Date: 2002/01/07 16:45:21 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -421,6 +421,9 @@ nssToken_ImportCertificate
 	return PR_FAILURE;
     }
     nssList_Add(cert->object.instanceList, instance);
+    /* XXX Fix this! */
+    nssListIterator_Destroy(cert->object.instances);
+    cert->object.instances = nssList_CreateIterator(cert->object.instanceList);
     return PR_SUCCESS;
 }
 
@@ -485,6 +488,9 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
 	    return PR_FAILURE;
 	}
 	nssList_Add(cert->object.instanceList, ci);
+	/* XXX Fix this! */
+	nssListIterator_Destroy(cert->object.instances);
+	cert->object.instances = nssList_CreateIterator(cert->object.instanceList);
     }
     nssrv = (*search->callback)(cert, search->cbarg);
     NSSCertificate_Destroy(cert);
@@ -699,6 +705,9 @@ nssToken_FindCertificateByIssuerAndSerialNumber
 	    return NULL;
 	}
 	nssList_Add(rvCert->object.instanceList, instance);
+	/* XXX Fix this! */
+	nssListIterator_Destroy(rvCert->object.instances);
+	rvCert->object.instances = nssList_CreateIterator(rvCert->object.instanceList);
     }
     return rvCert;
 }
@@ -749,6 +758,9 @@ nssToken_FindCertificateByEncodedCertificate
 	    return NULL;
 	}
 	nssList_Add(rvCert->object.instanceList, instance);
+	/* XXX Fix this! */
+	nssListIterator_Destroy(rvCert->object.instances);
+	rvCert->object.instances = nssList_CreateIterator(rvCert->object.instanceList);
     }
     return rvCert;
 }
@@ -823,6 +835,9 @@ nssToken_ImportTrust
 	    return PR_FAILURE;
 	}
 	nssList_Add(trust->object.instanceList, instance);
+	/* XXX Fix this! */
+	nssListIterator_Destroy(trust->object.instances);
+	trust->object.instances = nssList_CreateIterator(trust->object.instanceList);
 	return PR_SUCCESS;
     } 
     return PR_FAILURE;

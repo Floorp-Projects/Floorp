@@ -60,6 +60,9 @@
 #include "pki3hack.h"
 #include "ckhelper.h"
 #include "base.h"
+#include "pkistore.h"
+#include "dev3hack.h"
+#include "dev.h"
 
 PRBool
 SEC_CertNicknameConflict(char *nickname, SECItem *derSubject,
@@ -122,35 +125,41 @@ SECStatus
 __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 		       CERTCertTrust *trust)
 {
+    PRStatus nssrv;
+    PK11SlotInfo *slot;
+    NSSToken *internal;
+    NSSCryptoContext *context;
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
-#ifdef notdef
-    /* might as well keep these */
-    /* actually we shouldn't keep these! rjr */
-    PORT_Assert(cert->istemp);
-    PORT_Assert(!cert->isperm);
-#endif
-    if (SEC_CertNicknameConflict(nickname, &cert->derSubject, cert->dbhandle)){
-	return SECFailure;
+    context = c->object.cryptoContext;
+    if (!context) {
+	return PR_FAILURE; /* wasn't a temp cert */
     }
     if (c->nickname && strcmp(nickname, c->nickname) != 0) {
 	nss_ZFreeIf(c->nickname);
-	c->nickname = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
 	PORT_Free(cert->nickname);
+	c->nickname = NULL;
+    }
+    if (!c->nickname) {
+	c->nickname = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
 	cert->nickname = PORT_Strdup(nickname);
     }
-    return (STAN_ChangeCertTrust(cert, trust ) == PR_SUCCESS) ? 
-							SECSuccess: SECFailure;
-#ifdef notdef
-    /*
-    nssTrustDomain_AddTempCertToPerm(c);
-    if (memcmp(cert->trust, trust, sizeof (*trust)) != 0) {
-    */
-	return STAN_ChangeCertTrust(c, trust);
-	/*
+    /* Delete the temp instance */
+    nssCertificateStore_Remove(context->certStore, c);
+    c->object.cryptoContext = NULL;
+    /* the perm instance will assume the reference */
+    nssList_Clear(c->object.instanceList, NULL);
+    /* Import the perm instance onto the internal token */
+    slot = PK11_GetInternalKeySlot();
+    internal = PK11Slot_GetNSSToken(slot);
+    nssrv = nssToken_ImportCertificate(internal, NULL, c, PR_TRUE);
+    if (nssrv != PR_SUCCESS) {
+	return SECFailure;
     }
-    */
-    return SECFailure;
-#endif
+    /* reset the CERTCertificate fields */
+    cert->nssCertificate = NULL;
+    cert = STAN_GetCERTCertificate(c); /* will return same pointer */
+    return (STAN_ChangeCertTrust(cert, trust) == PR_SUCCESS) ? 
+							SECSuccess: SECFailure;
 }
 
 SECStatus
