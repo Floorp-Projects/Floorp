@@ -251,7 +251,7 @@
     [super mouseDown:theEvent];
     return;
   }
-    
+
   // Record some state information before calling the super implementation,
   // as these might change. E.g. if we are not yet first repsonder, the click
   // might make us first responder.
@@ -271,8 +271,10 @@
     return;
   }
   
-  // Detect if the selection changed (ignoring multi-selections)
-  int newRow = ([self numberOfSelectedRows] == 1) ? [self selectedRow] : -1;
+  // Detect if the selection changed (ignoring multi-selections). We can't rely on
+  // selectedRow because if the user clicks and drags the selection doesn't change. We
+  // instead just find the clicked row ourselves from the mouse location.
+  int newRow = ([self numberOfSelectedRows] == 1) ? [self rowAtPoint:[self convertPoint:[theEvent locationInWindow] fromView:nil]] : -1;
 
   // If the selection did change, we need to cancel any scheduled edit requests.
   if (oldRow != newRow && oldRow != -1)
@@ -321,7 +323,7 @@
     }
   }
 }
- 
+
 -(void)setAllowsEditing:(BOOL)inAllow
 {
   mAllowsEditing = inAllow;
