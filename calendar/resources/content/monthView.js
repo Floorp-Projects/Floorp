@@ -290,7 +290,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
 						calendarEventDisplay.event.parent.server ).subject.split(":")[2];
 
         // set the event box to be of class week-view-event-class and the appropriate calendar-color class
-        eventBox.setAttribute("class", "month-view-event-class " + containerName );
+        eventBox.setAttribute("class", "month-day-event-box-class " + containerName );
 
 		// end calendar color change by CofC
 		     

@@ -317,7 +317,18 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
          eventBox.setAttribute( "id", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "name", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
-         eventBox.setAttribute( "class", "multiweek-day-event-box-class" );
+         //eventBox.setAttribute( "class", "multiweek-day-event-box-class" );
+	 //eventBox.setAttribute( "class", "month-day-event-box-class" );
+          
+               // start calendar color change by CofC
+        var containerName = gCalendarWindow.calendarManager.getCalendarByName(
+                                               calendarEventDisplay.event.parent.server ).subject.split(":")[2];
+
+        // set the event box to be of class week-view-event-class and the appropriate calendar-color class
+        eventBox.setAttribute("class", "multiweek-day-event-box-class " + containerName );
+
+               // end calendar color change by CofC
+                    
          if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
          {
             eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
