@@ -1697,7 +1697,7 @@ public class ScriptRuntime {
     }
 
     public static Object nameIncrDecr(Scriptable scopeChain, String id,
-                                      int type)
+                                      int incrDecrMask)
     {
         Scriptable target;
         Object value;
@@ -1715,11 +1715,12 @@ public class ScriptRuntime {
             } while (scopeChain != null);
             throw notFoundError(scopeChain, id);
         }
-        return doScriptableIncrDecr(target, id, scopeChain, value, type);
+        return doScriptableIncrDecr(target, id, scopeChain, value,
+                                    incrDecrMask);
     }
 
     public static Object propIncrDecr(Object obj, String id,
-                                      Scriptable scope, int type)
+                                      Scriptable scope, int incrDecrMask)
     {
         Scriptable start = toObject(scope, obj);
         Scriptable target = start;
@@ -1734,16 +1735,17 @@ public class ScriptRuntime {
             } while (target != null);
             return Undefined.instance;
         }
-        return doScriptableIncrDecr(target, id, start, value, type);
+        return doScriptableIncrDecr(target, id, start, value,
+                                    incrDecrMask);
     }
 
     private static Object doScriptableIncrDecr(Scriptable target,
                                                String id,
                                                Scriptable protoChainStart,
                                                Object value,
-                                               int type)
+                                               int incrDecrMask)
     {
-        boolean post = (type == Node.POST_INC || type == Node.POST_DEC);
+        boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
             number = ((Number)value).doubleValue();
@@ -1754,7 +1756,7 @@ public class ScriptRuntime {
                 value = new Double(number);
             }
         }
-        if (type == Node.PRE_INC || type == Node.POST_INC) {
+        if ((incrDecrMask & Node.DECR_FLAG) == 0) {
             ++number;
         } else {
             --number;
@@ -1769,12 +1771,12 @@ public class ScriptRuntime {
     }
 
     public static Object elemIncrDecr(Object obj, Object index,
-                                      Scriptable scope, int type)
+                                      Scriptable scope, int incrDecrMask)
     {
         Object value = getElem(obj, index, scope);
         if (value == Undefined.instance)
             return value;
-        boolean post = (type == Node.POST_INC || type == Node.POST_DEC);
+        boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
             number = ((Number)value).doubleValue();
@@ -1785,7 +1787,7 @@ public class ScriptRuntime {
                 value = new Double(number);
             }
         }
-        if (type == Node.PRE_INC || type == Node.POST_INC) {
+        if ((incrDecrMask & Node.DECR_FLAG) == 0) {
             ++number;
         } else {
             --number;
@@ -1799,12 +1801,12 @@ public class ScriptRuntime {
         }
     }
 
-    public static Object referenceIncrDecr(Object obj, int type)
+    public static Object referenceIncrDecr(Object obj, int incrDecrMask)
     {
         Object value = getReference(obj);
         if (value == Undefined.instance)
             return value;
-        boolean post = (type == Node.POST_INC || type == Node.POST_DEC);
+        boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
             number = ((Number)value).doubleValue();
@@ -1815,7 +1817,7 @@ public class ScriptRuntime {
                 value = new Double(number);
             }
         }
-        if (type == Node.PRE_INC || type == Node.POST_INC) {
+        if ((incrDecrMask & Node.DECR_FLAG) == 0) {
             ++number;
         } else {
             --number;

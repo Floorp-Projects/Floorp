@@ -2701,13 +2701,12 @@ class BodyCodegen
 
     private void visitIncDec(Node node, boolean isInc)
     {
-        int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
+        int incrDecrMask = node.getExistingIntProp(Node.INCRDECR_PROP);
         Node child = node.getFirstChild();
         switch (child.getType()) {
           case Token.GETVAR:
             if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-                boolean post = (incrDecrType == Node.POST_INC
-                                || incrDecrType == Node.POST_DEC);
+                boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
                 OptLocalVariable lVar = OptLocalVariable.get(child);
                 short reg = lVar.getJRegister();
                 cfw.addDLoad(reg);
@@ -2715,9 +2714,7 @@ class BodyCodegen
                     cfw.add(ByteCode.DUP2);
                 }
                 cfw.addPush(1.0);
-                if (incrDecrType == Node.PRE_INC
-                    || incrDecrType == Node.POST_INC)
-                {
+                if ((incrDecrMask & Node.DECR_FLAG) == 0) {
                     cfw.add(ByteCode.DADD);
                 } else {
                     cfw.add(ByteCode.DSUB);
@@ -2728,8 +2725,7 @@ class BodyCodegen
                 cfw.addDStore(reg);
                 break;
             } else if (hasVarsInRegs) {
-                boolean post = (incrDecrType == Node.POST_INC
-                                || incrDecrType == Node.POST_DEC);
+                boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
                 OptLocalVariable lVar = OptLocalVariable.get(child);
                 if (lVar == null)
                     lVar = fnCurrent.getVar(child.getString());
@@ -2740,9 +2736,7 @@ class BodyCodegen
                 }
                 addObjectToDouble();
                 cfw.addPush(1.0);
-                if (incrDecrType == Node.PRE_INC
-                    || incrDecrType == Node.POST_INC)
-                {
+                if ((incrDecrMask & Node.DECR_FLAG) == 0) {
                     cfw.add(ByteCode.DADD);
                 } else {
                     cfw.add(ByteCode.DSUB);
@@ -2758,7 +2752,7 @@ class BodyCodegen
           case Token.NAME:
             cfw.addALoad(variableObjectLocal);
             cfw.addPush(child.getString());          // push name
-            cfw.addPush(incrDecrType);
+            cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke("nameIncrDecr",
                 "(Lorg/mozilla/javascript/Scriptable;"
                 +"Ljava/lang/String;"
@@ -2769,7 +2763,7 @@ class BodyCodegen
             generateCodeFromNode(getPropChild, node);
             generateCodeFromNode(getPropChild.getNext(), node);
             cfw.addALoad(variableObjectLocal);
-            cfw.addPush(incrDecrType);
+            cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke("propIncrDecr",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/String;"
@@ -2782,7 +2776,7 @@ class BodyCodegen
             generateCodeFromNode(getElemChild, node);
             generateCodeFromNode(getElemChild.getNext(), node);
             cfw.addALoad(variableObjectLocal);
-            cfw.addPush(incrDecrType);
+            cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke("elemIncrDecr",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
@@ -2793,7 +2787,7 @@ class BodyCodegen
           case Token.GET_REF: {
             Node refChild = child.getFirstChild();
             generateCodeFromNode(refChild, node);
-            cfw.addPush(incrDecrType);
+            cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke(
                 "referenceIncrDecr", "(Ljava/lang/Object;I)Ljava/lang/Object;");
             break;

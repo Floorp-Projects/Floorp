@@ -828,13 +828,14 @@ class IRFactory
             || childType == Token.GET_REF)
         {
             Node n = new Node(nodeType, childNode);
-            int type;
-            if (nodeType == Token.INC) {
-                type = (post) ? Node.POST_INC : Node.PRE_INC;
-            } else {
-                type = (post) ? Node.POST_DEC : Node.PRE_DEC;
+            int incrDecrMask = 0;
+            if (nodeType == Token.DEC) {
+                incrDecrMask |= Node.DECR_FLAG;
             }
-            n.putIntProp(Node.INCRDECR_PROP, type);
+            if (post) {
+                incrDecrMask |= Node.POST_FLAG;
+            }
+            n.putIntProp(Node.INCRDECR_PROP, incrDecrMask);
             return n;
         }
         // TODO: This should be a ReferenceError--but that's a runtime

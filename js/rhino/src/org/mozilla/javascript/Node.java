@@ -94,11 +94,9 @@ public class Node
         SPECIALCALL_EVAL = 1,
         SPECIALCALL_WITH = 2;
 
-    public static final int   // values for INCRDECR_PROP
-        PRE_INC = 0,
-        PRE_DEC = 1,
-        POST_INC = 2,
-        POST_DEC = 3;
+    public static final int   // flags for INCRDECR_PROP
+        DECR_FLAG = 0x1,
+        POST_FLAG = 0x2;
 
     private static class NumberNode extends Node
     {

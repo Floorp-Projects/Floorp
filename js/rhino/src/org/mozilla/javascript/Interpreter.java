@@ -1152,7 +1152,7 @@ public class Interpreter
 
     private int visitIncDec(Node node, Node child, int iCodeTop)
     {
-        int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
+        int incrDecrMask = node.getExistingIntProp(Node.INCRDECR_PROP);
         int childType = child.getType();
         switch (childType) {
           case Token.GETVAR : {
@@ -1161,11 +1161,11 @@ public class Interpreter
                 iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
                 stackChange(1);
                 iCodeTop = addStringOp(Icode_PROP_INC_DEC, name, iCodeTop);
-                iCodeTop = addByte(incrDecrType, iCodeTop);
+                iCodeTop = addByte(incrDecrMask, iCodeTop);
             } else {
                 int i = scriptOrFn.getParamOrVarIndex(name);
                 iCodeTop = addVarOp(Icode_VAR_INC_DEC, i, iCodeTop);
-                iCodeTop = addByte(incrDecrType, iCodeTop);
+                iCodeTop = addByte(incrDecrMask, iCodeTop);
                 stackChange(1);
             }
             break;
@@ -1173,7 +1173,7 @@ public class Interpreter
           case Token.NAME : {
             String name = child.getString();
             iCodeTop = addStringOp(Icode_NAME_INC_DEC, name, iCodeTop);
-            iCodeTop = addByte(incrDecrType, iCodeTop);
+            iCodeTop = addByte(incrDecrMask, iCodeTop);
             stackChange(1);
             break;
           }
@@ -1182,7 +1182,7 @@ public class Interpreter
             iCodeTop = generateICode(object, iCodeTop);
             String property = object.getNext().getString();
             iCodeTop = addStringOp(Icode_PROP_INC_DEC, property, iCodeTop);
-            iCodeTop = addByte(incrDecrType, iCodeTop);
+            iCodeTop = addByte(incrDecrMask, iCodeTop);
             break;
           }
           case Token.GETELEM : {
@@ -1191,7 +1191,7 @@ public class Interpreter
             Node index = object.getNext();
             iCodeTop = generateICode(index, iCodeTop);
             iCodeTop = addIcode(Icode_ELEM_INC_DEC, iCodeTop);
-            iCodeTop = addByte(incrDecrType, iCodeTop);
+            iCodeTop = addByte(incrDecrMask, iCodeTop);
             stackChange(-1);
             break;
           }
@@ -1199,7 +1199,7 @@ public class Interpreter
             Node ref = child.getFirstChild();
             iCodeTop = generateICode(ref, iCodeTop);
             iCodeTop = addIcode(Icode_REF_INC_DEC, iCodeTop);
-            iCodeTop = addByte(incrDecrType, iCodeTop);
+            iCodeTop = addByte(incrDecrMask, iCodeTop);
             break;
           }
           default : {
@@ -2715,7 +2715,7 @@ switch (op) {
     case Icode_VAR_INC_DEC : {
         // indexReg : varindex
         ++stackTop;
-        int type = iCode[pc];
+        int incrDecrMask = iCode[pc];
         if (!useActivationVars) {
             stack[stackTop] = DBL_MRK;
             Object varValue = stack[indexReg];
@@ -2726,14 +2726,14 @@ switch (op) {
                 d = ScriptRuntime.toNumber(varValue);
                 stack[indexReg] = DBL_MRK;
             }
-            double d2 = (type == Node.PRE_INC || type == Node.POST_INC)
+            double d2 = ((incrDecrMask & Node.DECR_FLAG) == 0)
                         ? d + 1.0 : d - 1.0;
             sDbl[indexReg] = d2;
-            sDbl[stackTop] = (type == Node.POST_INC
-                              || type == Node.POST_DEC) ? d : d2;
+            sDbl[stackTop] = ((incrDecrMask & Node.POST_FLAG) == 0) ? d2 : d;
         } else {
             String varName = fnOrScript.argNames[indexReg];
-            stack[stackTop] = ScriptRuntime.nameIncrDecr(scope, varName, type);
+            stack[stackTop] = ScriptRuntime.nameIncrDecr(scope, varName,
+                                                         incrDecrMask);
         }
         ++pc;
         continue Loop;
