@@ -11,11 +11,11 @@
 		<xul:hbox flex="1" id="hbox">
 			<xul:textbox id="textbox" 
 				onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.update(new Date(this.value));"
-				onblur="this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value));"/>
+				onblur="this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value),true);"/>
 			
 			<xul:menu class="datepicker-button">
 				<xul:menupopup popupanchor="bottomright" popupalign="topright" oncreate="this.parentNode.parentNode.parentNode.parentNode.openPopup()">
-					<xul:calendar onchange="this.parentNode.hidePopup(); this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value)); "/>
+					<xul:calendar onchange="this.parentNode.hidePopup(); this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value),true); "/>
 				</xul:menupopup>
 			</xul:menu>
 			
@@ -25,7 +25,7 @@
 	<!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
 		<implementation>
 		<property name="value" 
-			onset="this.update(val)"
+			onset="this.update(val,false)"
 			onget="return this.mValue"/>
          
         <property name="ondatepick" 
@@ -52,13 +52,14 @@
 		
 		<method name="update">
 		<parameter name="aValue"/>
+        <parameter name="refresh"/>
 			<body><![CDATA[
             if (!aValue || aValue.toString() == "Invalid Date") {
 					this.mTextBox.setAttribute("value", this.getPrettyDate(this.mValue));
 				} else {
 					this.mValue = aValue;
                     this.mTextBox.setAttribute("value", this.getPrettyDate(this.mValue));
-                    if( this.callback )
+                    if( this.callback && refresh != false )
                         this.callback();
 				}
                 
