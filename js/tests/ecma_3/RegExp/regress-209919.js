@@ -35,15 +35,15 @@
 *
 *
 * Date:    19 June 2003
-* SUMMARY: Testing regexp
+* SUMMARY: Testing regexp submatches with quantifiers
 *
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=209919
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=209919#c11
 *
 */
 //-----------------------------------------------------------------------------
 var i = 0;
 var bug = 209919;
-var summary = 'Testing regexp';
+var summary = 'Testing regexp submatches with quantifiers';
 var status = '';
 var statusmessages = new Array();
 var pattern = '';
