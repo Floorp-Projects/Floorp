@@ -1113,7 +1113,7 @@ nsLocalFile::Spawn(const char **args, PRUint32 count)
     // pass into PR_CreateProcessDetached
     char **my_argv = NULL;
     
-    my_argv = (char **)malloc(sizeof(char *) * (count + 2) );
+    my_argv = (char **)nsMemory::Alloc(sizeof(char *) * (count + 2) );
     if (!my_argv) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
