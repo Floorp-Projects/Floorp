@@ -37,6 +37,10 @@
 #include "NativeBrowserControl.h"
 #include "EmbedWindow.h"
 
+#include "nsIWebBrowser.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
+
 #include "nsCRT.h"
 
 #if 0 // convenience
@@ -216,6 +220,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
     return urlString;
 }
 
+#endif
+
 JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetDOM
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
@@ -229,10 +235,23 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
         ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellGetDOM");
         return nsnull;
     }
-    if (nsnull == nativeBrowserControl->currentDocument ||
-        nsnull == (documentLong = (jlong) nativeBrowserControl->currentDocument.get())){
+
+    // get the web browser
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nativeBrowserControl->mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    
+    // get the content DOM window for that web browser
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (!domWindow) {
         return nsnull;
     }
+    domWindow->GetDocument(getter_AddRefs(domDocument));
+    if (!domDocument) {
+        return nsnull;
+    }
+    documentLong = (jlong) domDocument.get();
 
     if (nsnull == (clazz = ::util_FindClass(env,
                                             "org/mozilla/dom/DOMAccessor"))) {
@@ -245,15 +264,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
         return nsnull;
     }
 
-    wsGetDOMEvent * actionEvent = new wsGetDOMEvent(env, clazz, mid, documentLong);
-    PLEvent         * event       = (PLEvent*) *actionEvent;
-    result = (jobject) ::util_PostSynchronousEvent(nativeBrowserControl, event);
-
+    result = (jobject) util_CallStaticObjectMethodlongArg(env, clazz, mid, 
+                                                          documentLong);
 
     return result;
 }
 
-
+#if 0 // convenience
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetSource
