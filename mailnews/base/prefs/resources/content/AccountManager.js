@@ -101,7 +101,6 @@ function findFirstTreeItem(tree) {
   for (var i=0;i<children.length; i++) {
     if (children[i].tagName == "treechildren") {
       treechildren = children[i];
-      dump("Found treechildren, item " + i + "\n");
       break;
     }
   }
@@ -109,7 +108,6 @@ function findFirstTreeItem(tree) {
   var children = treechildren.childNodes;
   for (var i=0; i<children.length; i++) {
     if (children[i].tagName == "treeitem")
-      dump("Found treeitem, item " + i + "\n");
       return children[i];
   }
 }
@@ -130,7 +128,7 @@ function onSave() {
 
   // make sure the current visible page is saved
   savePage(lastServerId, lastPageId);
-  
+
   for (var accountid in accountArray) {
     var account = getAccountFromServerId(accountid);
     var accountValues = accountArray[accountid];
@@ -175,38 +173,44 @@ function onDuplicateAccount() {
     }
 }         
 
-function onDeleteAccount() {
+function onSetDefault(event) {
+  if (event.target.getAttribute("disabled") == "true") return;
+
+  var result = getServerIdAndPageIdFromTree(accounttree);
+  if (!result) return;
+  
+  var account = getAccountFromServerId(result.serverId);
+  if (!account) return;
+
+  accountManager.defaultAccount = account;
+}
+
+function onDeleteAccount(event) {
     //dump("onDeleteAccount\n");
 
-    if (deleteButton.getAttribute("disabled") == "true") return;
+    if (event.target.getAttribute("disabled") == "true") return;
 
 	var result = getServerIdAndPageIdFromTree(accounttree);
-	if (result) {
-		var canDelete = true;
-		var account = getAccountFromServerId(result.serverId);
-		if (account) {
-			var server = account.incomingServer;
-			var type = server.type; 
+    if (!result) return;
+    
+    var account = getAccountFromServerId(result.serverId);
+    if (!account) return;
 
-			var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
-            canDelete = protocolinfo.canDelete;
-		}
-		else {
-			canDelete = false;
-		}
+    var server = account.incomingServer;
+    var type = server.type; 
 
-		if (canDelete) {
-			try {
-				accountManager.removeAccount(account);
-				selectFirstAccount();
-			}
-			catch (ex) {
-                dump("failure to delete account: " + ex + "\n");
-				var alertText = Bundle.GetStringFromName("failedDeleteAccount");
-				window.alert(alertText);
-			}
-		}
-	}
+    var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+    if (!protocolinfo.canDelete) return;
+    
+    try {
+      accountManager.removeAccount(account);
+      selectFirstAccount();
+    }
+    catch (ex) {
+      dump("failure to delete account: " + ex + "\n");
+      var alertText = Bundle.GetStringFromName("failedDeleteAccount");
+      window.alert(alertText);
+    }
 }
 
 function saveAccount(accountValues, account)
@@ -218,10 +222,10 @@ function saveAccount(accountValues, account)
     identity = account.defaultIdentity;
     server = account.incomingServer;
   }
-  
+
   for (var type in accountValues) {
     var typeArray = accountValues[type];
-    
+
     for (var slot in typeArray) {
       var dest;
 
@@ -248,7 +252,7 @@ function saveAccount(accountValues, account)
         // don't do anything, just means we don't support that
       }
       if (dest == undefined) continue;
-      
+
       if (dest[slot] != typeArray[slot]) {
         //dump("Array->Account: " + slot + " to " + dest + "\n");
         try {

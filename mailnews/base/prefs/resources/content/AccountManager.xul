@@ -38,8 +38,8 @@
           </rule>
           </template>
          </tree>
-         <titledbutton class="dialog push" value="&newAccountButton.label;" onclick="onNewAccount();" id="newAccountButton"/>
-         <titledbutton class="dialog push" value="&setDefaultButton.label;" disabled="true" id="setDefaultButton"/>
+         <titledbutton class="dialog push" value="&newAccountButton.label;" onclick="onNewAccount(event);" id="newAccountButton"/>
+         <titledbutton class="dialog push" value="&setDefaultButton.label;" onclick="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
          <box align="horizontal">
            <titledbutton class="dialog push" disabled="true" value="&duplicateButton.label;" id="duplicateButton" onclick="onDuplicateAccount();" flex="50%"/>
            <titledbutton class="dialog push" disabled="true" value="&deleteButton.label;" onclick="onDeleteAccount();" id="deleteButton" flex="50%"/>
