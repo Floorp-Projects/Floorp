@@ -560,12 +560,6 @@ public:
   NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const = 0;
   NS_IMETHOD  SetNextInFlow(nsIFrame*) = 0;
 
-  NS_IMETHOD  AppendToFlow(nsIFrame* aAfterFrame) = 0;
-  NS_IMETHOD  PrependToFlow(nsIFrame* aBeforeFrame) = 0;
-  NS_IMETHOD  RemoveFromFlow() = 0;
-  NS_IMETHOD  BreakFromPrevFlow() = 0;
-  NS_IMETHOD  BreakFromNextFlow() = 0;
-
   /**
    * Accessor functions to get/set the associated view object
    */

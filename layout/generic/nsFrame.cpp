@@ -1402,36 +1402,6 @@ NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsFrame::AppendToFlow(nsIFrame* aAfterFrame)
-{
-  NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsFrame::PrependToFlow(nsIFrame* aBeforeFrame)
-{
-  NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsFrame::RemoveFromFlow()
-{
-  NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsFrame::BreakFromPrevFlow()
-{
-  NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsFrame::BreakFromNextFlow()
-{
-  NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // Associated view object
 NS_IMETHODIMP nsFrame::GetView(nsIView** aView) const
 {

@@ -4879,7 +4879,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       nsSplittableType st;
       aDeletedFrame->IsSplittable(st);
       if (NS_FRAME_NOT_SPLITTABLE != st) {
-        aDeletedFrame->RemoveFromFlow();
+        nsSplittableFrame::RemoveFromFlow(aDeletedFrame);
       }
 #ifdef NOISY_REMOVE_FRAME
       printf("DoRemoveFrame: prevLine=%p line=%p frame=",

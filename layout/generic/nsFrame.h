@@ -204,11 +204,6 @@ public:
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
-  NS_IMETHOD  AppendToFlow(nsIFrame* aAfterFrame);
-  NS_IMETHOD  PrependToFlow(nsIFrame* aAfterFrame);
-  NS_IMETHOD  RemoveFromFlow();
-  NS_IMETHOD  BreakFromPrevFlow();
-  NS_IMETHOD  BreakFromNextFlow();
   NS_IMETHOD  GetView(nsIView** aView) const;
   NS_IMETHOD  SetView(nsIView* aView);
   NS_IMETHOD  GetParentWithView(nsIFrame** aParent) const;

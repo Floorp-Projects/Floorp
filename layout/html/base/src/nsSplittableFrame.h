@@ -51,11 +51,12 @@ public:
    */
   nsIFrame*   GetLastInFlow() const;
 
-  NS_IMETHOD  AppendToFlow(nsIFrame* aAfterFrame);
-  NS_IMETHOD  PrependToFlow(nsIFrame* aAfterFrame);
-  NS_IMETHOD  RemoveFromFlow();
-  NS_IMETHOD  BreakFromPrevFlow();
-  NS_IMETHOD  BreakFromNextFlow();
+  // Remove the frame from the flow. Connects the frame's prev-in-flow
+  // and its next-in-flow
+  static void RemoveFromFlow(nsIFrame* aFrame);
+  
+  // Detach from previous frame in flow
+  static void BreakFromPrevFlow(nsIFrame* aFrame);
 
   nsIFrame*   GetPrevInFlow();
   nsIFrame*   GetNextInFlow();

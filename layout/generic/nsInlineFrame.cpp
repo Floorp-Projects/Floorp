@@ -996,7 +996,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
       nsSplittableType st;
       aOldFrame->IsSplittable(st);
       if (NS_FRAME_NOT_SPLITTABLE != st) {
-        aOldFrame->RemoveFromFlow();
+        nsSplittableFrame::RemoveFromFlow(aOldFrame);
       }
       parent->mFrames.DestroyFrame(aPresContext, aOldFrame);
       aOldFrame = oldFrameNextInFlow;
