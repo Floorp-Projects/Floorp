@@ -39,6 +39,7 @@
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
 #include "nsXULAttributes.h"
+#include "nsIXULPopupListener.h"
 #include "nsHashtable.h"
 #include "nsIPresShell.h"
 #include "nsIAtom.h"
@@ -120,6 +121,9 @@ static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_IID(kIDOMEventTargetIID,         NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,     NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,           NS_RDFSERVICE_CID);
+
+static NS_DEFINE_IID(kIXULPopupListenerIID, NS_IXULPOPUPLISTENER_IID);
+static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
 
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
@@ -294,6 +298,10 @@ private:
     static nsIAtom*             kContainerAtom;
     static nsIAtom*             kTreeAtom;
 
+    static nsIAtom*             kPopupAtom;
+    static nsIAtom*             kTooltipAtom;
+    static nsIAtom*             kContextAtom;
+
     nsIDocument*      mDocument;
     void*             mScriptObject;
     nsISupportsArray* mChildren;
@@ -320,6 +328,9 @@ nsIAtom*             RDFElementImpl::kClassAtom;
 nsIAtom*             RDFElementImpl::kStyleAtom;
 nsIAtom*             RDFElementImpl::kContainerAtom;
 nsIAtom*             RDFElementImpl::kTreeAtom;
+nsIAtom*             RDFElementImpl::kPopupAtom;
+nsIAtom*             RDFElementImpl::kTooltipAtom;
+nsIAtom*             RDFElementImpl::kContextAtom;
 PRInt32              RDFElementImpl::kNameSpaceID_RDF;
 PRInt32              RDFElementImpl::kNameSpaceID_XUL;
 
@@ -358,6 +369,9 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kStyleAtom     = NS_NewAtom("style");
         kContainerAtom = NS_NewAtom("container");
         kTreeAtom      = NS_NewAtom("tree");
+        kPopupAtom     = NS_NewAtom("popup");
+        kTooltipAtom   = NS_NewAtom("tooltip");
+        kContextAtom   = NS_NewAtom("context");
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                           nsnull,
@@ -418,6 +432,9 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kStyleAtom);
         NS_IF_RELEASE(kContainerAtom);
         NS_IF_RELEASE(kTreeAtom);
+        NS_IF_RELEASE(kPopupAtom);
+        NS_IF_RELEASE(kContextAtom);
+        NS_IF_RELEASE(kTooltipAtom);
         NS_IF_RELEASE(gNameSpaceManager);
     }
 
@@ -1728,6 +1745,8 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
             return rv;
     }
 
+    // XXX Class and Style attribute setting should be checking for the XUL namespace!
+
     // Check to see if the CLASS attribute is being set.  If so, we need to rebuild our
     // class list.
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kClassAtom) {
@@ -1746,6 +1765,39 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
         mAttributes->UpdateStyleRule(docURL, aValue);
         // XXX Some kind of special document update might need to happen here.
+    }
+
+    // Check to see if the POPUP attribute is being set.  If so, we need to attach
+    // a new instance of our popup handler to the node.
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && 
+        (aName == kPopupAtom || aName == kTooltipAtom || aName == kContextAtom))
+    {
+        // Do a create instance of our popup listener.
+        nsIXULPopupListener* popupListener;
+        rv = nsComponentManager::CreateInstance(kXULPopupListenerCID,
+                                                nsnull,
+                                                kIXULPopupListenerIID,
+                                                (void**) &popupListener);
+        if (NS_FAILED(rv))
+        {
+          NS_ERROR("Unable to create an instance of the popup listener object.");
+          return rv;
+        }
+
+        XULPopupType popupType = eXULPopupType_popup;
+        if (aName == kTooltipAtom)
+          popupType = eXULPopupType_tooltip;
+        else if (aName == kContextAtom)
+          popupType = eXULPopupType_context;
+
+        // Add a weak reference to the node.
+        popupListener->Init(this, popupType);
+
+        // Add the popup as a listener on this element.
+        nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
+        AddEventListener("mousedown", eventListener, PR_FALSE, PR_FALSE);  
+        
+        NS_IF_RELEASE(popupListener);
     }
 
     // XXX need to check if they're changing an event handler: if so, then we need
@@ -2002,6 +2054,8 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
         mAttributes->UpdateStyleRule(docURL, "");
         // XXX Some kind of special document update might need to happen here.
     }
+
+    // XXX Know how to remove POPUP event listeners when an attribute is unset?
 
     nsresult rv = NS_OK;
     PRBool successful = PR_FALSE;
