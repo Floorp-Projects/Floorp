@@ -1190,6 +1190,8 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
         doc->GetBaseURL(*getter_AddRefs(baseURL));
       }
     }
+    if (!baseURL) return NS_ERROR_NULL_POINTER;
+
     nsAutoString absURL;
     rv = NS_MakeAbsoluteURI(absURL, url, baseURL);
     NS_ENSURE_SUCCESS(rv, rv);
