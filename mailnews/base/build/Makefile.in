@@ -30,12 +30,18 @@ MODULE		= msgbase
 LIBRARY_NAME	= mailnews
 IS_COMPONENT	= 1
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbutil
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
+
 CPPSRCS		= nsMsgFactory.cpp
 EXPORTS		= nsMsgBaseCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmsgbase_s.a \
-		$(DIST)/lib/libmsgsearch_s.a \
+		$(DIST)/lib/libmsgbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libmsgsearch_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -43,12 +49,11 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/lib	\
-		$(DIST)/lib/librdfutil_s.a \
+		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
-		$(XPCOM_LIBS) \
-		-lmsgbaseutil \
-		$(NSPR_LIBS) \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -29,6 +29,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= raptor
 LIBRARY_NAME	= gfxps
 IS_COMPONENT	= 1
+EXTRA_DSO_LIBS = img_s mozutil_s
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS += nggfx
+else
+EXTRA_DSO_LIBS += raptorgfx
+endif
 
 CSRCS		= font_metrics.c
 
@@ -50,12 +57,9 @@ EXPORTS		= \
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
-		$(NSPR_LIBS)	\
-		-lxpcom	\
-		-lraptorgfx	\
 		-L$(DIST)/lib \
-		-limg_s \
-		-lmozutil_s \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

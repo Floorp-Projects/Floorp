@@ -28,13 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mimeemitter
 LIBRARY_NAME	= mimeemitter
+SHORT_LIBNAME	= mimemitr
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsEmitterFactory.cpp
 EXPORTS		= nsMimeEmitterCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libemitterutil_s.a \
+		$(DIST)/lib/libemitterutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -42,8 +43,7 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
-		$(NSPR_LIBS)	\
-		$(XPCOM_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

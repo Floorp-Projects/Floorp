@@ -28,12 +28,13 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= uriloader
 LIBRARY_NAME	= uriloader
+SHORT_LIBNAME	= uriloadr
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsURILoaderModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/liburiloaderbase_s.a \
+		$(DIST)/lib/liburiloaderbase_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -42,8 +43,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/lib	\
 		-L$(DIST)/bin \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

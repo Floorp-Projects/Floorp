@@ -30,6 +30,12 @@ MODULE		= vcard
 LIBRARY_NAME	= vcard
 IS_COMPONENT	= 1
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbutil
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
+
 CPPSRCS		= \
 		mimevcrd.cpp \
 		mimexpcom.cpp \
@@ -42,9 +48,8 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		$(XPCOM_LIBS) \
-                -lmsgbaseutil \
-		$(NSPR_LIBS) \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

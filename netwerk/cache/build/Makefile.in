@@ -24,16 +24,17 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= nkcache
 LIBRARY_NAME	= necko_cache
+SHORT_LIBNAME	= nkcache
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsNetDataCacheModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libnkcachemgr_s.a \
-		$(DIST)/lib/libnkfilecache_s.a \
-		$(DIST)/lib/libnkmemcache_s.a \
-		$(DIST)/lib/libmozdbm_s.a     \
-		$(DIST)/lib/libxpcomio_s.a \
+		$(DIST)/lib/libnkcachemgr_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkfilecache_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnkmemcache_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxpcomio_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \

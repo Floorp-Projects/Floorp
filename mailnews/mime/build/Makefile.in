@@ -30,11 +30,17 @@ MODULE		= mime
 LIBRARY_NAME	= mime
 IS_COMPONENT	= 1
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbutil
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
+
 CPPSRCS			= nsMimeModule.cpp
 EXPORTS		= nsMsgMimeCID.h
 
 SHARED_LIBRARY_LIBS = \
-                $(DIST)/lib/libmime_s.a \
+                $(DIST)/lib/libmime_s.$(LIB_SUFFIX) \
                 $(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -43,9 +49,7 @@ EXTRA_DSO_LDOPTS = \
                 $(MKSHLIB_UNFORCE_ALL) \
                 -L$(DIST)/bin \
                 -L$(DIST)/lib \
-                $(XPCOM_LIBS) \
-                -lmsgbaseutil \
-                $(NSPR_LIBS) \
+                $(MOZ_COMPONENT_LIBS) \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk
