@@ -15,6 +15,10 @@
   display: block;
 }
 
+*[collapsed="true"] {
+  visibility: collapsed;
+}
+
 *[hidden="true"] {
   display: none;
 }
@@ -67,22 +71,27 @@ browser, editor, iframe {
 
 toolbox { 
   user-focus: ignore;
+  behavior: url(resource:/chrome/xulBindings.xml#toolbox);
 }
 
 toolbar, menubar {
   user-focus: ignore;
 }
 
+toolbar,menubar {
+  behavior: url(resource:/chrome/xulBindings.xml#toolbar);
+}
+
+toolbargrippy {
+  behavior: url(resource:/chrome/xulBindings.xml#toolbargrippy);
+}
+
 toolbar[collapsed="true"] {
-	display:none;
+  visibility: visible;
 }
 
-toolbar[hidden="true"] {
-	display:none;
-}
-
-toolbarseparator { 
-  display: block;
+box.toolbar-holder[collapsed="true"] {
+  visibility: collapse;
 }
 
 /****** Progress Meter ********/
@@ -91,12 +100,6 @@ toolbarseparator {
 
 /********* XP Menus ***********/
 
-menubar[collapsed="true"] {
-	display:none;
-}
-menubar[hidden="true"] {
-	display:none;
-}
 
 menubar > menu {
   behavior: url("resource:/chrome/xulBindings.xml#menusOnMenuBar");
@@ -104,14 +107,6 @@ menubar > menu {
 
 menu,menuitem {
   behavior: url("resource:/chrome/xulBindings.xml#menus");
-}
-
-menu[hidden="true"] {
-	display:none;
-}
-
-menuitem[hidden="true"] {
-	display:none;
 }
 
 menupopup {
@@ -143,10 +138,6 @@ menupopup[menuactive="true"] {
 
 popup[menuactive="true"] {
   visibility: visible;
-}
-
-menuseparator[hidden="true"] {
-  display: none;
 }
 
 menulist {

@@ -84,16 +84,21 @@ toolbar {
   overflow: hidden;
 } 
 
-:toolbox-normal { 
+toolbargrippy { 
   background-color: #003366; 
   background-image: url("chrome://global/skin/taskbar-tab.gif"); 
-  background-repeat: no-repeat; 
+  background-repeat: no-repeat;
+  width: 10px;
+  height: 10px;
 } 
 
-:toolbox-rollover { 
+toolbar[collapsed="true"] > toolbargrippy {
+  width: 30px;
+}
+
+toolbargrippy:hover { 
   background-color: #99cccc; 
   background-image: url("chrome://global/skin/taskbar-tab-hover.gif"); 
-  background-repeat: no-repeat; 
 } 
 
 toolbar.standard {
@@ -514,10 +519,6 @@ splitter[state="dragging"]
    background-color: gray;
 }
 
-box > *[collapsed="true"] {
-  visibility: collapse;
-}
-
 grippy{
 	margin: 0px;
 	border: 2px solid #003366;
@@ -705,6 +706,10 @@ menubar {
   margin-bottom: 2px;
 }
 
+menubar > toolbargrippy {
+  display: none;
+}
+
 menu {
 	color: black;
 	vertical-align: middle;
@@ -856,20 +861,22 @@ popup > menuitem[menuactive="true"][disabled="true"] {
 
 .menu-right {
   padding: 0px;
-  border: 0px;
   margin-top: 0px;
   margin-bottom: 0px;
   margin-left: 6px;
   margin-right: 0px;
+  width: 8px;
+  text-align: center;
 }
 
 .menu-left {
   color: inherit;
   padding: 0px;
-  border: 0px;
   margin-top: 0px;
   margin-bottom: 0px;
   margin-right: 2px;
+  width: 13px;
+  text-align: center;
 }
 
 .menubar-left {
@@ -888,6 +895,10 @@ popup > menuitem[menuactive="true"][disabled="true"] {
   margin-top: 0px;
   margin-bottom: 0px;
   margin-right: 2px;
+}
+
+.menu-accel {
+  margin-left: 4px;
 }
 
 .menubar-text {
