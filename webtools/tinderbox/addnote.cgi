@@ -18,6 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 use lib "../bonsai";
+use Fcntl;
 
 require "globals.pl";
 require 'lloydcgi.pl';
@@ -35,16 +36,33 @@ $now_str = &print_time($now);
 
 $|=1;
 
+if( -r "$tree/ignorebuilds.pl" ){
+     require "$tree/ignorebuilds.pl";
+ }
+
 print "Content-type: text/html\n\n<HTML>\n";
 
 if( $url = $form{"note"} ){
 
+    $note =~ s/\&/&amp;/gi;
+    $note =~ s/\</&lt;/gi;
+    $note =~ s/\>/&gt;/gi;
     $enc_note = url_encode( $note );
     lock;
     open( NOTES,">>$tree/notes.txt");
-    print NOTES "$buildtime|$buildname|$who|$now|$enc_note\n";
+    flock(NOTES, LOCK_EX);
+    print NOTES "$buildtime|$buildname|$who|$now|$enc_note\n"; 
+
+       &LoadBuildTable;
+
+    foreach $element (keys %form) {
+
+          if(exists ${$build_name_index}{$element}) {
+             print NOTES "${$build_name_index}{$element}|$element|$who|$now|$enc_note\n"; 
+          } #EndIf
+    } #Endforeach
     close(NOTES);
-    
+
     print "<H1>The following comment has been added to the log</h1>\n";
 
     #print "$buildname \n $buildtime \n $errorparser \n $logfile \n  $tree \n $enc_buildname \n";
@@ -54,11 +72,14 @@ if( $url = $form{"note"} ){
 <p><a href=\"showlog.cgi?tree=$tree\&buildname=$enc_buildname\&buildtime=$buildtime\&logfile=$logfile\&errorparser=$errorparser\">
 Go back to the Error Log</a>
 <a href=\"showbuilds.cgi?tree=$tree\">
-<br>Go back to the build Page</a>
-";
-    
-}
-else {
+<br>Go back to the build Page</a>";
+
+} else {
+
+&GetBuildNameIndex;
+
+@names = sort (keys %$build_name_index);
+
     if( $buildname eq '' || $buildtime == 0 ){
         print "<h1>Invalid parameters</h1>\n";
         die "\n";
@@ -72,15 +93,77 @@ else {
 
 <form action='addnote.cgi' METHOD='post'>
 
-<br>Your email address: <INPUT Type='input' name='who' size=10>
-<TEXTAREA NAME=note ROWS=10 COLS=70>
+<br>Your email address: <INPUT Type='input' name='who' size=10><BR>
+<TEXTAREA NAME=note ROWS=10 COLS=30 WRAP=HARD>
 </textarea>
 <INPUT Type='hidden' name='buildname' value='${buildname}'>
 <INPUT Type='hidden' name='buildtime' value='${buildtime}'>
 <INPUT Type='hidden' name='errorparser' value='$errorparser'>
 <INPUT Type='hidden' name='logfile' value='$logfile'>
-<INPUT Type='hidden' name='tree' value='$tree'>
-<INPUT Type='submit' name='submit' value='Add Note To Log'>
-</form>
-";
+<INPUT Type='hidden' name='tree' value='$tree'><BR>
+
+This note will be added to the log selected for <B>$buildname</B>; 
+however, you can add a note to the following platforms on this tree (the
+most current builds) by selecting the builds below. Note that itallicized
+builds are currently 'turned off' on the Tinderbox page for this
+tree.<BR>";
+
+for $i (@names){
+    if( $i ne "" ){
+
+	if ($i eq $buildname) {
+        next;
+	}
+
+
+        print "<INPUT TYPE=checkbox NAME=\"$i\">";
+
+        if (exists ${$ignore_builds}{$i}) {
+           print "<I>$i</I><BR>\n";
+        } else {
+           print "$i<BR>\n";
+        } #EndIf
+    }
+} #Endfor
+
+print "<INPUT Type='submit' name='submit' value='Add Note To Log'><BR>
+</form>\n</body>\n</html>";
 }
+
+sub GetBuildNameIndex {
+local($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname);
+
+open(BUILDLOG, "$tree/build.dat") or die "Couldn't open build.dat: $!\n";
+
+while(<BUILDLOG>) {
+    chomp;
+    ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
+         split( /\|/ );
+
+    $build_name_index->{$buildname} = 0;
+
+} #EndWhile
+close(BUILDLOG);
+
+}
+
+
+sub LoadBuildTable {
+local($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname);
+
+open(BUILDLOG, "$tree/build.dat") or die "Couldn't open build.dat: $!\n";
+
+while(<BUILDLOG>) {
+    chomp;
+    ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
+         split( /\|/ );
+
+    if ($buildtime > $build_name_index->{$buildname} ) {
+    $build_name_index->{$buildname} = $buildtime;
+    }
+
+} #EndWhile
+close(BUILDLOG);
+
+}
+
