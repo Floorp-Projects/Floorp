@@ -35,6 +35,11 @@
 #include "nsAString.h"
 #endif
 
+#ifndef nsAStringGenerator_h___
+#include "nsAStringGenerator.h"
+#endif
+
+
 NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
 NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
 
@@ -216,5 +221,73 @@ NS_COM PRUint32 CountCharInReadable( const nsAString& aStr,
                                      PRUnichar aChar );
 NS_COM PRUint32 CountCharInReadable( const nsACString& aStr,
                                      char aChar );
+
+
+  /*
+    |nsSubstituteC?String|:
+      this is currently a naive implementation leveraging |FindInReadable|.  I have a better
+      algorithm in mind -- Gonnet, Baeza-Yates `Shift-Or' searching which is linear and simple
+      to implement (not quite as simple as re-using |FindInReadable|, though :-).
+   */
+
+class NS_COM nsSubstituteString
+    : public nsAStringGenerator
+  {
+    public:
+      nsSubstituteString( const nsAString& aText, const nsAString& aPattern, const nsAString& aReplacement )
+          : mText(aText),
+            mPattern(aPattern),
+            mReplacement(aReplacement),
+            mNumberOfMatches(-1)  // |-1| means `don't know'
+        {
+          // nothing else to do here
+        }
+
+      virtual PRUnichar* operator()( PRUnichar* aDestBuffer ) const;
+      virtual PRUint32 Length() const;
+      virtual PRUint32 MaxLength() const;
+      virtual PRBool IsDependentOn( const nsAString& ) const;
+
+    private:
+      void CountMatches() const;
+
+    private:
+      const nsAString&  mText;
+      const nsAString&  mPattern;
+      const nsAString&  mReplacement;
+      /* mutable */ PRInt32 mNumberOfMatches;
+  };
+
+class NS_COM nsSubstituteCString
+    : public nsACStringGenerator
+  {
+    public:
+      nsSubstituteCString( const nsACString& aText, const nsACString& aPattern, const nsACString& aReplacement )
+          : mText(aText),
+            mPattern(aPattern),
+            mReplacement(aReplacement),
+            mNumberOfMatches(-1)  // |-1| means `don't know'
+        {
+          // nothing else to do here
+        }
+
+      virtual char* operator()( char* aDestBuffer ) const;
+      virtual PRUint32 Length() const;
+      virtual PRUint32 MaxLength() const;
+      virtual PRBool IsDependentOn( const nsACString& ) const;
+
+    private:
+      void CountMatches() const;
+
+    private:
+      const nsACString&  mText;
+      const nsACString&  mPattern;
+      const nsACString&  mReplacement;
+      /* mutable */ PRInt32 mNumberOfMatches;
+  };
+
+
+
+
 
 #endif // !defined(nsReadableUtils_h___)

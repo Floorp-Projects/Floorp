@@ -51,7 +51,7 @@ class nsACStringGenerator
     public:
       virtual ~nsACStringGenerator() { }
 
-      virtual PRUnichar* operator()( char* aDestBuffer ) const = 0;
+      virtual char* operator()( char* aDestBuffer ) const = 0;
       virtual PRUint32 Length() const = 0;
       virtual PRUint32 MaxLength() const = 0;
       virtual PRBool IsDependentOn( const nsACString& ) const = 0;
