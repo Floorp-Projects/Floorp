@@ -20,16 +20,6 @@
  * Contributor(s): 
  */
 
-/* In some regards this class is a temporary class. As the new web shell
-   re-architecture begins to fall into place, the URILoader will also
-   be the doc loader and this implementation will be grated onto the doc
-   loader. 
-
-   But in the current world, the uri dispatcher will be a stand alone
-   class implementation.
-
-*/
-
 #ifndef nsURILoader_h__
 #define nsURILoader_h__
 
@@ -54,7 +44,8 @@ protected:
   // when they go away.
   nsVoidArray * m_listeners;
 
+  // prepare the load cookie for the window context
+  nsresult SetupLoadCookie(nsISupports * aWindowContext, nsISupports ** aLoadCookie);
 };
 
 #endif /* nsURILoader_h__ */
-

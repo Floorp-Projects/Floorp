@@ -80,4 +80,13 @@ interface nsIURIContentListener : nsISupports
 							in nsURILoadCommand aCommand, 
 							in string aWindowTarget, 
 							out string aDesiredContentType);
+
+  /* Get/Set loadCookie are methods the uri loader calls on the nsIURIContentListener
+     in order to store / associate a load context with this particular content listener...
+   */
+  attribute nsISupports loadCookie;
+  /* if you are part of a chain of content listeners (i.e. if you are a docshell!,
+     return your parent content listener 
+  */
+  attribute nsIURIContentListener parentContentListener;
 };
