@@ -133,15 +133,22 @@ int lterm_init(int messageLevel)
     ltermGlobal.escapeChars[LTERM_XML_ESCAPES] = 0;
 
     /* List of XML character escape sequences (Unicode) */
-    ltermGlobal.escapeSeq[LTERM_AMP_ESCAPE]  = L"&amp;";
-    ltermGlobal.escapeSeq[LTERM_LT_ESCAPE]   = L"&lt;";
-    ltermGlobal.escapeSeq[LTERM_GT_ESCAPE]   = L"&gt;";
-    ltermGlobal.escapeSeq[LTERM_QUOT_ESCAPE] = L"&quot;";
-    ltermGlobal.escapeSeq[LTERM_APOS_ESCAPE] = L"&apos;";
+    ucscopy(ltermGlobal.escapeSeq[LTERM_AMP_ESCAPE],  "&amp;",
+              LTERM_MAXCHAR_ESCAPE+1);
+    ucscopy(ltermGlobal.escapeSeq[LTERM_LT_ESCAPE],   "&lt;",
+              LTERM_MAXCHAR_ESCAPE+1);
+    ucscopy(ltermGlobal.escapeSeq[LTERM_GT_ESCAPE],   "&gt;",
+              LTERM_MAXCHAR_ESCAPE+1);
+    ucscopy(ltermGlobal.escapeSeq[LTERM_QUOT_ESCAPE], "&quot;",
+              LTERM_MAXCHAR_ESCAPE+1);
+    ucscopy(ltermGlobal.escapeSeq[LTERM_APOS_ESCAPE], "&apos;",
+              LTERM_MAXCHAR_ESCAPE+1);
 
     /* Escape sequence lengths (including delimiters) */
-    for (j=0; j<LTERM_XML_ESCAPES; j++)
+    for (j=0; j<LTERM_XML_ESCAPES; j++) {
       ltermGlobal.escapeLen[j] = ucslen(ltermGlobal.escapeSeq[j]);
+      assert(ltermGlobal.escapeLen[j] <= LTERM_MAXCHAR_ESCAPE);
+    }
 
     /* LTERM global initialization flag */
     ltermGlobal.initialized = 1;

@@ -53,9 +53,7 @@
 #define _LTERMPRIVATE_H 1
 
 /* Standard C header files */
-#ifndef _STRING_H
 #include <string.h>
-#endif
 
 /* public declarations */
 #include "lineterm.h"
@@ -69,9 +67,7 @@
 #endif
 
 /* pseudo-TTY stream interface */
-#ifndef _PTYSTREAM_H
 #include "ptystream.h"
-#endif
 
 #define LTERM_ERROR                           TLOG_ERROR
 #define LTERM_WARNING                         TLOG_WARNING
@@ -284,6 +280,9 @@ typedef FILE FILESTREAM;
 
 #define LTERM_XML_ESCAPES   5
 #define LTERM_PLAIN_ESCAPES 3
+
+/* Maximum no. of characters in an XML escape sequence (excluding NUL) */
+#define LTERM_MAXCHAR_ESCAPE 6
 
 /* input buffer pipe header "character" count */
 #define PIPEHEADER  2
@@ -525,7 +524,8 @@ typedef struct {
   MUTEX_DECLARE(listMutex);         /* Thread lock to access to LTERM list */
   UNICHAR metaDelimiter;            /* Meta command delimiter (usually :) */
   char escapeChars[LTERM_XML_ESCAPES+1]; /* String of chars escaped in XML */
-  UNICHAR* escapeSeq[LTERM_XML_ESCAPES]; /* XML character escape sequences */
+  UNICHAR escapeSeq[LTERM_XML_ESCAPES][LTERM_MAXCHAR_ESCAPE+1];
+                                        /* XML character escape sequences */
   int escapeLen[LTERM_XML_ESCAPES];     /* XML char. escape sequence lengths */
 } LtermGlobal;
 

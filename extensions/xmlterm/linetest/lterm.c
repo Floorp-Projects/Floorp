@@ -30,10 +30,12 @@
  * GPL.
  */
 
-/* lterm.c: Test driver for LINETERM using NCURSES
+/* lterm.c: Test driver for LINETERM
  * CPP options:
- *   LINUX:   for Linux2.0/glibc
- *   SOLARIS: for Solaris2.6
+ *   USE_NCURSES:           Enable NCURSES as a screen display option
+ *   NCURSES_MOUSE_VERSION: Enable NCURSES mouse operations
+ *   LINUX:                 for Linux2.0/glibc
+ *   SOLARIS:               for Solaris2.6
  */
 
 #include <stdio.h>
@@ -46,7 +48,9 @@
 
 #include <assert.h>
 
-#include "curses.h"
+#ifdef USE_NCURSES
+#include <ncurses.h>
+#endif
 
 #define _REENTRANT
 #include <pthread.h>
@@ -90,7 +94,7 @@ static int ncursesFlag = 0;
 static int ptyFlag = 1;
 static int debugFlag = 0;
 static int ltermNumber = -1;
-static SCREEN  *termScreen = NULL;
+static char *debugFunction;
 static char *ttyDevice;
 static char *errDevice;
 
@@ -105,6 +109,10 @@ static pthread_t output_handler_thread_ID;
 static void *output_handler(void *arg);
 
 static void input_handler(int *plterm);
+
+#ifdef USE_NCURSES
+static SCREEN  *termScreen = NULL;
+#endif
 
 int main(int argc, char *argv[]) {
   FILE *inFile, *outFile;
@@ -121,6 +129,7 @@ int main(int argc, char *argv[]) {
   ptyFlag = 1;
   debugFlag = 0;
   processType = LTERM_DETERMINE_PROCESS;
+  debugFunction = NULL;
   ttyDevice = NULL;
   errDevice = NULL;
   promptStr = "#$%>?";  /* JUST A LIST OF DELIMITERS AT PRESENT */
@@ -129,7 +138,7 @@ int main(int argc, char *argv[]) {
   while (argNo < argc) {
 
     if ((strcmp(argv[argNo],"-h") == 0)||(strcmp(argv[argNo],"-help") == 0)) {
-      fprintf(stderr, "Usage: %s [-help] [-ncurses] [-nopty] [-debug] [-tcsh / -bash] [-tty /dev/ttyname] [-err /dev/ttyname] [-prompt <prompt>] <command> ...\n", argv[0]);
+      fprintf(stderr, "Usage: %s [-help] [-ncurses] [-nopty] [-debug] [-tcsh / -bash] [-function debug_fun] [-tty /dev/ttyname] [-err /dev/ttyname] [-prompt <prompt>] <command> ...\n", argv[0]);
       exit(0);
 
     } else if (strcmp(argv[argNo],"-ncurses") == 0) {
@@ -152,25 +161,28 @@ int main(int argc, char *argv[]) {
       processType = LTERM_TCSH_PROCESS;
       argNo++;
 
+    } else if (strcmp(argv[argNo],"-function") == 0) {
+      argNo++;
+      if (argNo < argc) {
+        debugFunction = argv[argNo++];
+      }
+
     } else if (strcmp(argv[argNo],"-tty") == 0) {
       argNo++;
       if (argNo < argc) {
-        ttyDevice = argv[argNo];
-        argNo++;
+        ttyDevice = argv[argNo++];
       }
 
     } else if (strcmp(argv[argNo],"-err") == 0) {
       argNo++;
       if (argNo < argc) {
-        errDevice = argv[argNo];
-        argNo++;
+        errDevice = argv[argNo++];
       }
 
     } else if (strcmp(argv[argNo],"-prompt") == 0) {
       argNo++;
       if (argNo < argc) {
-        promptStr = argv[argNo];
-        argNo++;
+        promptStr = argv[argNo++];
       }
 
     } else
@@ -221,6 +233,8 @@ int main(int argc, char *argv[]) {
 
   if (ncursesFlag) {
     /* NCURSES mode */
+
+#ifdef USE_NCURSES
     if (ttyDevice == NULL) {
       /* Initialize screen on controlling TTY */
       initscr();
@@ -247,6 +261,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     clear(); /* Clear screen */
+#endif  /* USE_NCURSES */
 
   } else {
     /* XTERM mode */
@@ -273,13 +288,14 @@ int main(int argc, char *argv[]) {
   }
 
   /* Initialize LTERM operations */
-  lterm_init(messageLevel);
+  lterm_init(0);
 
   if (errDevice != NULL) {
     tlog_message("lterm-00: Testing tlog_message\n");
     tlog_warning("lterm-00: Testing tlog_warning\n");
     fprintf(stderr, "lterm-00: ");
     tlog_unichar(uregexp, ucslen(uregexp));
+    tlog_set_level(LTERM_TLOG_MODULE, messageLevel, debugFunction);
   }
 
   if (errDevice != NULL)
@@ -328,9 +344,11 @@ int main(int argc, char *argv[]) {
 void finish(int sig)
 {
   if (ncursesFlag) {
+#ifdef USE_NCURSES
     endwin(); /* Close window */
     if (termScreen != NULL)
       delscreen(termScreen);
+#endif
   }
 
   if (ltermNumber >= 0) {
@@ -377,7 +395,9 @@ void writeUnicode(int fd, const UNICHAR *buf, int count)
       exit(-1);
     }
   } else {
+#ifdef USE_NCURSES
     addnstr(str, k);
+#endif
   }
 }
 
@@ -430,9 +450,11 @@ void input_handler(int *plterm)
   for (;;) {
     /* Read a character from TTY (raw mode) */
     if (ncursesFlag) {
+#ifdef USE_NCURSES
       ch = getch();
       if (ch == '\r')
         ch = '\n';
+#endif
     } else {
       ch = getchar();
     }
@@ -478,7 +500,9 @@ void *output_handler(void *arg)
   UNISTYLE style[MAXCOL];
   int n_read, opcodes, opvals, buf_row, buf_col, cursor_row, cursor_col;
   int xmax, ymax, x, y, c;
+#ifdef USE_NCURSES
   MEVENT mev;
+#endif
 
   if (errDevice != NULL)
     fprintf(stderr, "output_handler-00: thread ID = %d, LTERM=%d\n",
@@ -486,7 +510,9 @@ void *output_handler(void *arg)
 
   /* Get screen size */
   if (ncursesFlag) {
+#ifdef USE_NCURSES
     getmaxyx(stdscr, ymax, xmax);
+#endif
 
   } else {
     ymax = 24;
@@ -546,6 +572,7 @@ void *output_handler(void *arg)
       if (ncursesFlag) {
         /* NCURSES mode */
 
+#ifdef USE_NCURSES
         if (opcodes & LTERM_CLEAR_CODE) {
           clear();
 
@@ -592,6 +619,7 @@ void *output_handler(void *arg)
         move(ymax-1-cursor_row, cursor_col);
 
         refresh();
+#endif  /* USE_NCURSES */
 
       } else {
         /* XTERM MODE */
@@ -653,6 +681,7 @@ void *output_handler(void *arg)
       if (ncursesFlag) {
         /* NCURSES mode */
 
+#ifdef USE_NCURSES
         /* Move cursor to bottom of screen, clear line and display line */
         move(ymax-1,0);
         clrtoeol();
@@ -667,6 +696,7 @@ void *output_handler(void *arg)
         }
 
         refresh();
+#endif  /* USE_NCURSES */
 
       } else {
         /* Screen mode */

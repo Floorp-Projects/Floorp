@@ -33,8 +33,8 @@
 /* unistring.h: Unicode string operations header
  * (used by lineterm.h)
  * CPP options:
- *   HAVE_WCSWCS: define is function wcswcs is available
- *   HAVE_WCSSTR: define is function wcsstr is available
+ *   USE_WCHAR:   use system wchar implementation, rather than unsigned short
+ *   HAVE_WCSSTR: use wcsstr rather than wcswcs (used for wchar only)
  */
 
 #ifndef _UNISTRING_H
@@ -45,20 +45,19 @@
 extern "C" {
 #endif
 
-#ifndef _WCHAR_H
-#include "wchar.h"
-#endif
-
-#ifndef _STDIO_H
-#include "stdio.h"
-#endif
+/* Standard C header files */
+#include <stdio.h>
 
 /* Unicode character type:
- * Uses the wchar_t implementation for moment.
- * Later we might implement a 16-bit UNICHAR type to save space
+ * Use either the wchar_t implementation or unsigned short
  */
 
+#ifdef USE_WCHAR
+#include <wchar.h>
 typedef wchar_t UNICHAR;
+#else /* !USE_WCHAR */
+typedef unsigned short UNICHAR;
+#endif
 
 /* Unicode string functions:
  * use the wchar_t implementation for moment
@@ -86,6 +85,14 @@ int utf8toucs(const char* s, int ns, UNICHAR* us, int nus,
  */
 void ucsprint(FILE* stream, const UNICHAR* us, int nus);
 
+/** Copy exactly n characters from plain character source string to UNICHAR
+ * destination string, ignoring source characters past a null character and
+ * padding the destination with null characters if necessary.
+ */
+UNICHAR* ucscopy(UNICHAR* dest, const char* srcplain, size_t n);
+
+#ifdef USE_WCHAR
+
 #define ucscpy    wcscpy
 #define ucsncpy   wcsncpy
 
@@ -103,21 +110,74 @@ void ucsprint(FILE* stream, const UNICHAR* us, int nus);
 
 #define ucspbrk   wcspbrk
 
-#ifdef HAVE_WCSWCS
-#define ucsucs    wcswcs
-#else
 #ifdef HAVE_WCSSTR
-#define ucsucs    wcsstr
-#endif
+#define ucsstr    wcsstr
+#else
+#define ucsstr    wcswcs
 #endif
 
 #define ucslen    wcslen
 
 #define ucstok    wcstok
 
+#else /* !USE_WCHAR */
+/** Locates first occurrence of character within string and returns pointer
+ * to it if found, else returning null pointer. (character may be NUL)
+ */
+UNICHAR* ucschr(const UNICHAR* str, const UNICHAR chr);
+
+/** Locates last occurrence of character within string and returns pointer
+ * to it if found, else returning null pointer. (character may be NUL)
+ */
+UNICHAR* ucsrchr(const UNICHAR* str, const UNICHAR chr);
+
+/** Compare all characters between string1 and string2, returning
+ * a zero value if all characters are equal, or returning
+ * character1 - character2 for the first character that is different
+ * between the two strings.
+ * (Characters following a null character are not compared.)
+ */
+int ucscmp(register const UNICHAR* str1, register const UNICHAR* str2);
+
+/** Compare upto n characters between string1 and string2, returning
+ * a zero value if all compared characters are equal, or returning
+ * character1 - character2 for the first character that is different
+ * between the two strings.
+ * (Characters following a null character are not compared.)
+ */
+int ucsncmp(const UNICHAR* str1, const UNICHAR* str2,
+            size_t n);
+
+/** Copy exactly n characters from source to destination, ignoring source
+ * characters past a null character and padding the destination with null
+ * characters if necessary.
+ */
+UNICHAR* ucsncpy(UNICHAR* dest, const UNICHAR* src,
+                 size_t n);
+
+/** Returns string length
+ */
+size_t ucslen(const UNICHAR* str);
+
+/** Locates substring within string and returns pointer to it if found,
+ * else returning null pointer. If substring has zero length, then full
+ * string is returned.
+ */
+UNICHAR* ucsstr(const UNICHAR* str, const UNICHAR* substr);
+
+/** Returns length of longest initial segment of string that contains
+ * only the specified characters.
+ */
+size_t ucsspn(const UNICHAR* str, const UNICHAR* chars);
+    
+/** Returns length of longest initial segment of string that does not
+ * contain any of the specified characters.
+ */
+size_t ucscspn(const UNICHAR* str, const UNICHAR* chars);
+
+#endif  /* !USE_WCHAR */
 
 /* unsigned short constants */
-
 #define U_NUL         0x00U
 
 #define U_CTL_A       0x01U

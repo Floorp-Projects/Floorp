@@ -885,7 +885,7 @@ static int ltermReturnStreamData(struct lterms *lts, struct LtermRead *ltr)
     assert((int)ucslen(lto->decodedOutput) == lto->decodedChars);
 
     /* Search for stream terminator string in decoded output */
-    locTerminator = ucsucs(lto->decodedOutput, lto->streamTerminator);
+    locTerminator = ucsstr(lto->decodedOutput, lto->streamTerminator);
   }
 
   /* Stream termination flag */
@@ -1091,11 +1091,20 @@ static int ltermReturnInputLine(struct lterms *lts, struct LtermRead *ltr,
     /* Prefix with prompt output data */
     ltr->opcodes = LTERM_LINEDATA_CODE;
 
-    if (completionRequested) {
-      outChars = lto->promptChars;
-    } else {
-      /* Hack to handle misidentified prompts */
-      outChars = lto->outputChars;
+    outChars = lto->promptChars;
+
+    if (!completionRequested) {
+      /* Hack to handle misidentified prompts;
+       *  if output characters following the prompt differ from input line,
+       *  display them.
+       */
+      for (j=0; j<lti->inputChars; j++) {
+        if (((j+outChars) < lto->outputChars) && 
+            (lto->outputLine[j+outChars] != lti->inputLine[j])) {
+          outChars = lto->outputChars;
+          break;
+        }
+      }
     }
 
     if (outChars > ltr->max_count)

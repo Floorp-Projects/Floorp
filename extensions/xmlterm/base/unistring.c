@@ -184,3 +184,226 @@ void ucsprint(FILE* stream, const UNICHAR* us, int nus)
     }
   }
 }
+
+
+/** Copy exactly n characters from plain character source string to UNICHAR
+ * destination string, ignoring source characters past a null character and
+ * padding the destination with null characters if necessary.
+ */
+UNICHAR* ucscopy(register UNICHAR* dest, register const char* srcplain,
+                 size_t n)
+{
+  register UNICHAR ch;
+  register const UNICHAR* destmx = dest + n;
+
+  /* Copy characters from source to destination, stopping at NUL */
+  while (dest < destmx) {
+    *dest++ = (ch = *srcplain++);
+    if (ch == U_NUL)
+      break;
+  }
+
+  /* Pad with NULs, if necessary */
+  while (dest < destmx)
+    *dest++ = U_NUL;
+
+  return dest;
+}
+    
+
+#ifndef USE_WCHAR
+/** Locates first occurrence of character within string and returns pointer
+ * to it if found, else returning null pointer. (character may be NUL)
+ */
+UNICHAR* ucschr(register const UNICHAR* str, register const UNICHAR chr)
+{
+  do {
+    if (*str == chr)
+      return (UNICHAR*) str;
+  } while (*str++ != U_NUL);
+
+  return NULL;
+}
+
+
+/** Locates last occurrence of character within string and returns pointer
+ * to it if found, else returning null pointer. (character may be NUL)
+ */
+UNICHAR* ucsrchr(register const UNICHAR* str, register const UNICHAR chr)
+{
+  const UNICHAR* retstr = NULL;
+  do {
+    if (*str == chr)
+      retstr = str;
+  } while (*str++ != U_NUL);
+
+  return (UNICHAR*) retstr;
+}
+
+
+/** Compare all characters between string1 and string2, returning
+ * a zero value if all characters are equal, or returning
+ * character1 - character2 for the first character that is different
+ * between the two strings.
+ * (Characters following a null character are not compared.)
+ */
+int ucscmp(register const UNICHAR* str1, register const UNICHAR* str2)
+{
+  register UNICHAR ch1, ch2;
+
+  do {
+    if ((ch1 = *str1++) != (ch2 = *str2++))
+      return ch1 - ch2;
+
+  } while (ch1 != U_NUL);
+
+  return 0;
+}
+
+    
+/** Compare upto n characters between string1 and string2, returning
+ * a zero value if all compared characters are equal, or returning
+ * character1 - character2 for the first character that is different
+ * between the two strings.
+ * (Characters following a null character are not compared.)
+ */
+int ucsncmp(register const UNICHAR* str1, register const UNICHAR* str2,
+            size_t n)
+{
+  register UNICHAR ch1, ch2;
+  register const UNICHAR* str1mx = str1 + n;
+
+  while (str1 < str1mx) {
+    if ((ch1 = *str1++) != (ch2 = *str2++))
+      return ch1 - ch2;
+
+    if (ch1 == U_NUL)
+      break;
+  }
+
+  return 0;
+}
+
+    
+/** Copy exactly n characters from source to destination, ignoring source
+ * characters past a null character and padding the destination with null
+ * characters if necessary.
+ */
+UNICHAR* ucsncpy(register UNICHAR* dest, register const UNICHAR* src,
+                 size_t n)
+{
+  register UNICHAR ch;
+  register const UNICHAR* destmx = dest + n;
+
+  /* Copy characters from source to destination, stopping at NUL */
+  while (dest < destmx) {
+    *dest++ = (ch = *src++);
+    if (ch == U_NUL)
+      break;
+  }
+
+  /* Pad with NULs, if necessary */
+  while (dest < destmx)
+    *dest++ = U_NUL;
+
+  return dest;
+}
+    
+
+/** Returns string length
+ */
+size_t ucslen(const UNICHAR* str)
+{
+  register const UNICHAR* strcp = str;
+
+  while (*strcp++ != U_NUL);
+
+  return strcp - str - 1;
+}
+
+    
+/** Locates substring within string and returns pointer to it if found,
+ * else returning null pointer. If substring has zero length, then full
+ * string is returned.
+ */
+UNICHAR* ucsstr(register const UNICHAR* str, const UNICHAR* substr)
+{
+  register UNICHAR subch1, ch;
+
+  /* If null substring, return string */
+  if (*substr == U_NUL)
+    return (UNICHAR*) str;
+
+  /* First character of non-null substring */
+  subch1 = *substr;
+
+  if ((ch = *str) == U_NUL)
+    return NULL;
+
+  do {
+
+    if (ch == subch1) {
+      /* First character matches; check if rest of substring matches */
+      register const UNICHAR* strcp = str;
+      register const UNICHAR* substrcp = substr;
+      do {
+        substrcp++;
+        strcp++;
+        if (*substrcp == U_NUL)
+          return (UNICHAR*) str;
+      } while (*substrcp == *strcp);
+    }
+
+  } while ((ch = *(++str)) != U_NUL);
+
+  return NULL;
+}
+    
+
+/** Returns length of longest initial segment of string that contains
+ * only the specified characters.
+ */
+size_t ucsspn(const UNICHAR* str, const UNICHAR* chars)
+{
+  register UNICHAR strch, ch;
+  register const UNICHAR* charscp;
+  register const UNICHAR* strcp = str;
+
+  while ((strch = *strcp++) != U_NUL) {
+    charscp = chars;
+
+    /* Check that it is one of the specified characters */
+    while ((ch = *charscp++) != U_NUL) {
+      if (strch == ch)
+        break;
+    }
+    if (ch == U_NUL)
+      return (size_t) (strcp - str - 1);
+  }
+
+  return (size_t) (strcp - str - 1);
+}
+    
+
+/** Returns length of longest initial segment of string that does not
+ * contain any of the specified characters.
+ */
+size_t ucscspn(const UNICHAR* str, const UNICHAR* chars)
+{
+  register UNICHAR strch, ch;
+  register const UNICHAR* charscp;
+  register const UNICHAR* strcp = str;
+
+  while ((strch = *strcp++) != U_NUL) {
+    charscp = chars;
+
+    /* Check that it is not one of the specified characters */
+    while ((ch = *charscp++) != U_NUL) {
+      if (strch == ch)
+        return (size_t) (strcp - str - 1);
+    }
+  }
+
+  return (size_t) (strcp - str - 1);
+}
+#endif  /* !USE_WCHAR */

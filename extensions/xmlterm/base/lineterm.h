@@ -39,9 +39,7 @@
 
 #define _LINETERM_H   1
 
-#ifndef _UNISTRING_H
 #include "unistring.h"
-#endif
 
 /* Define LTERM read callback function type */
 #ifdef USE_GTK_WIDGETS
