@@ -505,14 +505,7 @@ case "$target" in
 		AC_MSG_ERROR([SUNWspro4.2 is too old.  Use a newer version or gcc.])
 	fi
     ;;
-*-irix6*)
-	USE_N32=1
-    ;;
 esac
-
-MOZ_ARG_DISABLE_BOOL(n32,
-[  --disable-n32           Disable use of N32 ABI (IRIX only)],
-  USE_N32=)
 
 dnl ========================================================
 dnl System overrides of the defaults for target
@@ -608,6 +601,9 @@ case "$target" in
 
 *-irix6*)
     AC_DEFINE(IRIX)
+    dnl the irix specific xptcinvoke code is written against the n32 ABI so we *must* 
+    dnl compile and link using -n32
+    USE_N32=1
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
