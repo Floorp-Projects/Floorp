@@ -536,6 +536,42 @@ nsVoidBTree::EnumerateBackwards(EnumFunc aFunc, void* aData) const
     return running;
 }
 
+
+void
+nsVoidBTree::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+    if (! aResult)
+        return;
+
+    *aResult = sizeof(*this);
+
+    if (IsSingleElement())
+        return;
+
+    Path path;
+    path.Push(NS_REINTERPRET_CAST(Node*, mRoot & kRoot_PointerMask), 0);
+
+    while (path.Length()) {
+        Node* current;
+        PRInt32 index;
+        path.Pop(&current, &index);
+
+        if (current->GetType() == Node::eType_Data) {
+            *aResult += sizeof(Node) + (sizeof(void*) * (kDataCapacity - 1));
+        }
+        else {
+            *aResult += sizeof(Node) + (sizeof(void*) * (kIndexCapacity - 1));
+
+            // If we're in an index node, and there are still kids to
+            // traverse, well, traverse 'em.
+            if (index < current->GetCount()) {
+                path.Push(current, index + 1);
+                path.Push(NS_STATIC_CAST(Node*, current->GetElementAt(index)), 0);
+            }
+        }
+    }
+}
+
 //----------------------------------------------------------------------
 
 nsresult
