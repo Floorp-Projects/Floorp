@@ -26,6 +26,8 @@ MAKE_OBJ_TYPE=DLL
 DLLNAME=necko
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
+LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
+
 CPP_OBJS=                            \
         .\$(OBJDIR)\nsNetModule.obj \
 	$(NULL)
