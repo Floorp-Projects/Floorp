@@ -1734,28 +1734,20 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
        childWidget;
        childWidget = childWidget->GetNextSibling()) {
     nsView* view = nsView::GetViewFor(childWidget);
-    if (nsnull != view) {
-      nsView* vp = view;
+    if (view && view->GetVisibility() == nsViewVisibility_kShow) {
       // Don't mess with views that are in completely different view
       // manager trees
-      if (vp->GetViewManager()->RootViewManager() == RootViewManager()) {
+      if (view->GetViewManager()->RootViewManager() == RootViewManager()) {
         // get the damage region into 'view's coordinate system
         nsRegion damage = intersection;
-        damage.MoveBy(-view->GetOffsetTo(aWidgetView));
+        nsPoint offset = view->GetOffsetTo(aWidgetView);
+        damage.MoveBy(-offset);
         UpdateWidgetArea(view, damage, aIgnoreWidgetView);
+        children.Or(children, view->GetDimensions() + offset);
+        children.SimplifyInward(20);
       }
     }
-
-    nsRect r;
-    childWidget->GetBounds(r);
-    r.ScaleRoundIn(mContext->DevUnitsToAppUnits());
-    children.Or(children, r);
-    children.SimplifyInward(20);
   }
-
-  // children is relative to aWidgetView's widget origin. Need to make
-  // it relative to the origin of aWidgetView
-  children.MoveBy(aWidgetView->GetBounds().TopLeft() - aWidgetView->GetPosition());
 
   nsRegion leftOver;
   leftOver.Sub(intersection, children);
