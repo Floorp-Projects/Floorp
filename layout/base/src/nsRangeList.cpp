@@ -997,7 +997,7 @@ nsDOMSelection::ToString(nsString& aReturn)
   while (iter.IsDone())
   {
     nsCOMPtr<nsIDOMRange> range;
-    res = iter.CurrentItem(getter_AddRefs(range));
+    res = iter.CurrentItem(NS_STATIC_CAST(nsIDOMRange**, getter_AddRefs(range)));
     if (!NS_SUCCEEDED(res))
     {
       aReturn += " OOPS\n";
@@ -1381,7 +1381,7 @@ nsRangeList::DeleteFromDocument()
   nsCOMPtr<nsIDOMRange> range;
   while (iter.IsDone())
   {
-    res = iter.CurrentItem(getter_AddRefs(range));
+    res = iter.CurrentItem(NS_STATIC_CAST(nsIDOMRange**, getter_AddRefs(range)));
     if (!NS_SUCCEEDED(res))
       return res;
     res = range->DeleteContents();
@@ -2361,14 +2361,11 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
 NS_IMETHODIMP
 nsDOMSelection::GetEnumerator(nsIEnumerator **aIterator)
 {
+  nsresult status = NS_ERROR_OUT_OF_MEMORY;
   nsRangeListIterator *iterator =  new nsRangeListIterator(this);
-  if (iterator){
-    *aIterator = (nsIEnumerator *)iterator;
-    return iterator->AddRef();
-  }
-  else 
-    return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
+  if ( iterator && !NS_SUCCEEDED(status = CallQueryInterface(iterator, aIterator)) )
+  	delete iterator;
+  return status;
 }
 
 
