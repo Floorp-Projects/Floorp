@@ -921,6 +921,8 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
       rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
 
+      encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+
       // Estimate out length and allocate the buffer based on a worst-case estimate, then do
       // the conversion.
       PRUnichar *castedData = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
