@@ -896,6 +896,10 @@ nsBoxFrame::RemoveFrame(nsIPresContext& aPresContext,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
 {
+      // need to rebuild all the springs.
+      for (int i=0; i < mSpringCount; i++) 
+             mSprings[i].clear();
+      
       // remove the child frame
       nsresult rv = nsHTMLContainerFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
       mFrames.DeleteFrame(aPresContext, aOldFrame);
@@ -909,6 +913,10 @@ nsBoxFrame::InsertFrames(nsIPresContext& aPresContext,
                             nsIFrame* aPrevFrame,
                             nsIFrame* aFrameList)
 {
+  // need to rebuild all the springs.
+  for (int i=0; i < mSpringCount; i++) 
+         mSprings[i].clear();
+
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   return nsHTMLContainerFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList); 
 }
@@ -919,6 +927,11 @@ nsBoxFrame::AppendFrames(nsIPresContext& aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
+
+  // need to rebuild all the springs.
+  for (int i=0; i < mSpringCount; i++) 
+      mSprings[i].clear();
+
    mFrames.AppendFrames(nsnull, aFrameList); 
    return nsHTMLContainerFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
 }
