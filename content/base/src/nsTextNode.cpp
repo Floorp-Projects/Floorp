@@ -25,6 +25,7 @@
 #include "nsFrame.h"
 #include "nsIDocument.h"
 #include "nsCRT.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
@@ -122,6 +123,14 @@ nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP 
+nsTextNode::GetTag(nsIAtom*& aResult) const
+{
+  aResult = nsLayoutAtoms::textTagName;
+  NS_ADDREF(aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

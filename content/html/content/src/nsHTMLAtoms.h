@@ -93,6 +93,7 @@ public:
   static nsIAtom* cols;
   static nsIAtom* colspan;
   static nsIAtom* columnPseudo;
+  static nsIAtom* commentPseudo;
   static nsIAtom* compact;
   static nsIAtom* content;
   static nsIAtom* coords;

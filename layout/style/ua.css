@@ -581,4 +581,6 @@ NOFRAMES {
   display: block;
 }
 
-
+:MOZ-COMMENT {
+  display: none;
+}

@@ -42,6 +42,8 @@ nsIAtom* nsLayoutAtoms::bulletList;
 nsIAtom* nsLayoutAtoms::colGroupList;
 nsIAtom* nsLayoutAtoms::floaterList;
 
+nsIAtom* nsLayoutAtoms::textTagName;
+nsIAtom* nsLayoutAtoms::commentTagName;
 
 static nsrefcnt gRefCnt;
 
@@ -67,6 +69,9 @@ void nsLayoutAtoms::AddrefAtoms()
     bulletList = NS_NewAtom("Bullet-list");
     colGroupList = NS_NewAtom("ColGroup-list");
     floaterList = NS_NewAtom("Floater-list");
+
+    textTagName = NS_NewAtom("__moz_text");
+    commentTagName = NS_NewAtom("__moz_comment");
   }
   ++gRefCnt;
 }
@@ -94,6 +99,9 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(bulletList);
     NS_RELEASE(colGroupList);
     NS_RELEASE(floaterList);
+
+    NS_RELEASE(textTagName);
+    NS_RELEASE(commentTagName);
   }
 }
 

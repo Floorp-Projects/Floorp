@@ -71,6 +71,7 @@ nsIAtom* nsHTMLAtoms::colgroup;
 nsIAtom* nsHTMLAtoms::cols;
 nsIAtom* nsHTMLAtoms::colspan;
 nsIAtom* nsHTMLAtoms::columnPseudo;
+nsIAtom* nsHTMLAtoms::commentPseudo;
 nsIAtom* nsHTMLAtoms::compact;
 nsIAtom* nsHTMLAtoms::content;
 nsIAtom* nsHTMLAtoms::coords;
@@ -314,6 +315,7 @@ void nsHTMLAtoms::AddrefAtoms()
     cols = NS_NewAtom("COLS");
     colspan = NS_NewAtom("COLSPAN");
     columnPseudo = NS_NewAtom(":BODY-COLUMN");
+    commentPseudo = NS_NewAtom(":MOZ-COMMENT");
     compact = NS_NewAtom("COMPACT");
     content = NS_NewAtom("CONTENT");
     coords = NS_NewAtom("COORDS");
@@ -473,7 +475,7 @@ void nsHTMLAtoms::AddrefAtoms()
     thead = NS_NewAtom("THEAD");
     text = NS_NewAtom("TEXT");
     textarea = NS_NewAtom("TEXTAREA");
-    textPseudo = NS_NewAtom(":TEXT");
+    textPseudo = NS_NewAtom(":MOZ-TEXT");
     th = NS_NewAtom("TH");
     title = NS_NewAtom("TITLE");
     top = NS_NewAtom("TOP");
@@ -553,6 +555,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(cols);
     NS_RELEASE(colspan);
     NS_RELEASE(columnPseudo);
+    NS_RELEASE(commentPseudo);
     NS_RELEASE(compact);
     NS_RELEASE(content);
     NS_RELEASE(coords);

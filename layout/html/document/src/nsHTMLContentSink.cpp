@@ -37,6 +37,7 @@
 #include "nsITextContent.h"
 
 #include "nsIDOMText.h"
+#include "nsIDOMComment.h"
 
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -72,6 +73,7 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLMapElementIID, NS_IDOMHTMLMAPELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
@@ -262,6 +264,7 @@ public:
   nsresult CloseContainer(const nsIParserNode& aNode);
   nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsIHTMLContent* aContent);
+  nsresult AddComment(const nsIParserNode& aNode);
   nsresult End();
 
   nsresult GrowStack();
@@ -1109,6 +1112,43 @@ SinkContext::AddLeaf(nsIHTMLContent* aContent)
 }
 
 nsresult
+SinkContext::AddComment(const nsIParserNode& aNode)
+{
+  nsIContent *comment;
+  nsIDOMComment *domComment;
+  nsresult result = NS_OK;
+
+  FlushText();
+  
+  result = NS_NewCommentNode(&comment);
+  if (NS_OK == result) {
+    result = comment->QueryInterface(kIDOMCommentIID, 
+                                     (void **)&domComment);
+    if (NS_OK == result) {
+      domComment->AppendData(aNode.GetText());
+      NS_RELEASE(domComment);
+      
+      comment->SetDocument(mSink->mDocument, PR_FALSE);
+      
+      nsIHTMLContent* parent;
+      if ((nsnull == mSink->mBody) && (nsnull != mSink->mHead)) {
+        parent = mSink->mHead;
+      }
+      else {
+        parent = mStack[mStackPos - 1].mContent;
+      }
+      parent->AppendChildTo(comment, PR_FALSE);
+      
+      // Mark sink dirty if it can safely reflow something
+      MaybeMarkSinkDirty();
+    }
+    NS_RELEASE(comment);
+  }
+  
+  return result;
+}
+
+nsresult
 SinkContext::End()
 {
   NS_ASSERTION(mStackPos == 1, "insufficient close container calls");
@@ -1877,8 +1917,7 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
  * @return  error code
  */
 nsresult HTMLContentSink::AddComment(const nsIParserNode& aNode) {
-  nsresult result= NS_OK;
-  return result;
+  return mCurrentContext->AddComment(aNode);
 }
 
 /**

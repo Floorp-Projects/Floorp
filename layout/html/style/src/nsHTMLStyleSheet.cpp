@@ -1825,7 +1825,7 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   // Initialize OUT parameter
   aNewFrame = nsnull;
 
-  if (nsnull == aTag) {
+  if (nsLayoutAtoms::textTagName == aTag) {
     rv = NS_NewTextFrame(aNewFrame);
   }
   else {
@@ -2778,7 +2778,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
   nsIStyleContext* parentStyleContext;
 
   aParentFrame->GetStyleContext(parentStyleContext);
-  if (nsnull == tag) {
+  if (nsLayoutAtoms::textTagName == tag) {
     // Use a special pseudo element style context for text
     nsIContent* parentContent = nsnull;
     if (nsnull != aParentFrame) {
@@ -2789,6 +2789,18 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
                                                               parentStyleContext);
     rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
     NS_IF_RELEASE(parentContent);
+  } else if (nsLayoutAtoms::commentTagName == tag) {
+    // Use a special pseudo element style context for comments
+    nsIContent* parentContent = nsnull;
+    if (nsnull != aParentFrame) {
+      aParentFrame->GetContent(parentContent);
+    }
+    styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
+                                                              nsHTMLAtoms::commentPseudo, 
+                                                              parentStyleContext);
+    rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    NS_IF_RELEASE(parentContent);
+    
   } else {
     styleContext = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext);
     rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;

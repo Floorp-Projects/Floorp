@@ -125,10 +125,6 @@ struct nsGenericDOMDataNode {
     aID = kNameSpaceID_None;
     return NS_OK;
   }
-  nsresult GetTag(nsIAtom*& aResult) const {
-    aResult = nsnull;
-    return NS_OK;
-  }
   nsresult ParseAttributeString(const nsString& aStr, 
                                 nsIAtom*& aName,
                                 PRInt32& aNameSpaceID) { 
@@ -393,9 +389,7 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const {                          \
     return _g.GetNameSpaceID(aID);                                         \
   }                                                                        \
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
-    return _g.GetTag(aResult);                                             \
-  }                                                                        \
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;                              \
   NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
