@@ -7104,7 +7104,7 @@ PRBool nsImapProtocol::TryToLogon()
 
       PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
       GetServerStateParser().SetReportingErrors(PR_FALSE);  // turn off errors - we'll put up our own.
-        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
         if (NS_SUCCEEDED(rv) && prefs) 
         prefs->GetBoolPref("mail.auth_login", &prefBool);
 

@@ -349,7 +349,7 @@ int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
     nsJSContext *context = NS_REINTERPRET_CAST(nsJSContext *, data);
     PRUint32 oldDefaultJSOptions = context->mDefaultJSOptions;
@@ -412,7 +412,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
     ::JS_SetOptions(mContext, mDefaultJSOptions);
 
     // Check for the JS strict option, which enables extra error checks
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
       (void) prefs->RegisterCallback(js_options_dot_str,
                                      JSOptionChangedCallback,
@@ -445,7 +445,7 @@ nsJSContext::~nsJSContext()
   ::JS_SetContextPrivate(mContext, nsnull);
 
   // Unregister our "javascript.options.*" pref-changed callback.
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
     prefs->UnregisterCallback(js_options_dot_str, JSOptionChangedCallback,
                               this);
