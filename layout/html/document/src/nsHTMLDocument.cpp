@@ -1205,23 +1205,33 @@ PRBool nsHTMLDocument::SearchBlock(BlockText & aBlockText,
   } else {
     adjustedContent = contentStr;
     size_t adjLen;
+    size_t srchLen = strlen(searchStr);
     if (mAdjustToEnd) {
       adjLen = strlen(adjustedContent);
+      if (srchLen > adjLen) {
+        str = nsnull;
+      } else if (adjLen == srchLen && !strncmp(adjustedContent, searchStr, srchLen)) {
+        str = adjustedContent;
+      } else {
+        str = adjustedContent + adjLen - srchLen;
+        while (strncmp(str, searchStr, srchLen)) {
+          str--;
+          if (str < adjustedContent) {
+            str = nsnull;
+            break;
+          }
+        }
+      }
     } else {
       adjLen = mLastBlockSearchOffset;
-    }
-    size_t srchLen = strlen(searchStr);
-    if (srchLen > adjLen) {
-      str = nsnull;
-    } else if (adjLen == srchLen && !strncmp(adjustedContent, searchStr, srchLen)) {
-      str = adjustedContent;
-    } else {
-      str = adjustedContent + adjLen - srchLen;
-      while (strncmp(str, searchStr, srchLen)) {
-        str--;
-        if (str < adjustedContent) {
-          str = nsnull;
-          break;
+      if (mLastBlockSearchOffset > 0) {
+        str = adjustedContent + adjLen - 1;
+        while (strncmp(str, searchStr, srchLen)) {
+          str--;
+          if (str < adjustedContent) {
+            str = nsnull;
+            break;
+          }
         }
       }
     }
@@ -1458,8 +1468,8 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
     for (j=inx;j<numKids;j++) {
       nsIContent * child;
       aParent->ChildAt(j, child);
-      if (child == stackChild && aStackInx < mStackInx) {
-        if (BuildBlockFromStack(child, aBlockText, aStackInx+1)) {
+      if (child == stackChild && aStackInx > 0) {
+        if (BuildBlockFromStack(child, aBlockText, aStackInx-1)) {
           NS_IF_RELEASE(child);
           return PR_TRUE;
         }
@@ -1480,8 +1490,8 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
     for (j=inx;j>=0;j--) {
       nsIContent * child;
       aParent->ChildAt(j, child);
-      if (child == stackChild && aStackInx < mStackInx) {
-        if (BuildBlockFromStack(child, aBlockText, aStackInx+1)) {
+      if (child == stackChild && aStackInx > 0) {
+        if (BuildBlockFromStack(child, aBlockText, aStackInx-1)) {
           NS_IF_RELEASE(child);
           return PR_TRUE;
         }
@@ -1497,77 +1507,42 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
         }
       }
       NS_RELEASE(child);
-    }
-
-  }
-  return PR_FALSE;
-
-}
-
-//----------------------------------
-// This function moves down through
-// the hiearchy and build the block of text
-//-----------------------------------------
-PRBool nsHTMLDocument::BuildBlock(nsIContent * aParent,
-                                  BlockText  & aBlockText) 
-{
-  nsIContent * stackParent = mParentStack[0];
-  nsIContent * stackChild  = mChildStack[0];
-  PRInt32      inx;
-  PRInt32      j;
-  stackParent->IndexOf(stackChild, inx);
-
-  if (mSearchDirection == kForward) {
-    PRInt32 numKids;
-    stackParent->ChildCount(numKids);
-    for (j=inx;j<numKids;j++) {
-      nsIContent * child;
-      stackParent->ChildAt(j, child);
-      if (child == stackChild && mStackInx > 1) {
-        if (BuildBlockFromStack(child, aBlockText, 1)) {
-          NS_IF_RELEASE(child);
-          return PR_TRUE;
-        }
-      } else {
-        if (BuildBlockTraversing(child, aBlockText)) {
-          NS_IF_RELEASE(child);
-          return PR_TRUE;
-        } else {
-          if (SearchBlock(aBlockText, *mSearchStr)) {
-            NS_IF_RELEASE(child);
-            return PR_TRUE;
-          }
-        }
-      }
-      NS_IF_RELEASE(child);
-    }
-  } else {
-    for (j=inx;j>=0;j--) {
-      BlockText blockText;
-      nsIContent * child;
-      stackParent->ChildAt(j, child);
-      if (child == stackChild && mStackInx > 1) {
-        if (BuildBlockFromStack(child, blockText, 1)) {
-          NS_IF_RELEASE(child);
-          return PR_TRUE;
-        }
-      } else {
-        if (BuildBlockTraversing(child, blockText)) {
-          NS_IF_RELEASE(child);
-          return PR_TRUE;
-        } else {
-          if (SearchBlock(blockText, *mSearchStr)) {
-            NS_IF_RELEASE(child);
-            return PR_TRUE;
-          }
-        }
-      }
       mAdjustToEnd = PR_TRUE;
-      NS_IF_RELEASE(child);
     }
+
   }
   return PR_FALSE;
+
 }
+
+#if 0 // debug
+void printRefs(nsIContent * aContent, PRInt32 aLevel)
+{
+  PRInt32 i;
+  for (i=0;i<aLevel;i++) {
+    printf(" ");
+  }
+  char * cStr = nsnull;
+  nsIAtom * atom    = aContent->GetTag();
+  if (atom != nsnull) {
+    nsString str;
+    atom->ToString(str);
+    cStr = str.ToNewCString();
+    NS_RELEASE(atom);
+  }
+
+  NS_ADDREF(aContent);
+  nsIContent * temp = aContent;
+  PRInt32 count = NS_RELEASE(temp);
+  printf("%s - %d\n", (cStr?cStr:"<?>"), count);
+  for (i=0;i<aContent->ChildCount();i++) {
+    nsIContent * child = aContent->ChildAt(i);
+    printRefs(child, aLevel+2);
+    NS_RELEASE(child);
+  }
+}
+#endif
+
 
 /**
   * Finds text in content
@@ -1671,7 +1646,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
     while (blockContent != nsnull) {
 
       BlockText blockText;
-      if (BuildBlock(blockContent, blockText)) {
+      if (BuildBlockFromStack(blockContent, blockText, mStackInx-1)) {
         aIsFound = PR_TRUE;
         break;
       }
@@ -1679,8 +1654,9 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
       mLastBlockSearchOffset = 0;
       mAdjustToEnd           = PR_TRUE;
 
-      NS_RELEASE(blockContent);
-      blockContent = FindBlockParent(blockContent, PR_TRUE);
+      nsIContent * blockChild = blockContent;
+      blockContent = FindBlockParent(blockChild, PR_TRUE);
+      NS_RELEASE(blockChild);
     }
 
     // Clear up stack and release content nodes on it
@@ -1689,6 +1665,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
       NS_RELEASE(mParentStack[i]);
       NS_RELEASE(mChildStack[i]);
     }
+    mStackInx = 0;
   }
 
   NS_IF_RELEASE(startContent);
