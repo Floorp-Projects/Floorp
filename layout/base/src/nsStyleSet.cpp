@@ -38,6 +38,8 @@
 #include "nsNetUtil.h"
 #include "nsIStyleRuleSupplier.h"
 #include "nslog.h"
+#undef printf
+#undef fprintf
 
 NS_IMPL_LOG(nsStyleSetLog)
 #define PRINTF NS_LOG_PRINTF(nsStyleSetLog)
