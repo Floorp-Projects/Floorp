@@ -627,6 +627,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
         // Create initData to pass in params
         initDataPassedIn = PR_FALSE;
         initData.clipChildren = PR_TRUE; // Clip child window's children
+        initData.clipSiblings = PR_TRUE; // Clip child window's siblings
         aWidgetInitData = &initData;
       }
       aWidgetInitData->mContentType = aContentType;
