@@ -262,27 +262,21 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
         // find the correct font if we are usingDocumentFonts OR we are overriding for XUL
         // MJA: bug 31816
-        if ((chromeOverride || useDocumentFonts)  && 
-            NS_OK == dc->FirstExistingFont(font->mFont, face)) {
-          if (face.EqualsIgnoreCase("-moz-fixed")) {
-            font->mFlags |= NS_STYLE_FONT_USE_FIXED;
-          } else {
-            font->mFlags &= ~NS_STYLE_FONT_USE_FIXED;
-          }
-/* bug 12737
-          else {
-						nsCompatibility mode;
-		        aPresContext->GetCompatibilityMode(&mode);
-		        if (eCompatibility_NavQuirks == mode) {
-            	font->mFixedFont.name = familyList;
-            }
-          }
-*/
+        PRBool fontFaceOK = PR_TRUE;
+        PRBool isMozFixed = font->mFont.name.EqualsIgnoreCase("-moz-fixed");
+        if ((chromeOverride || useDocumentFonts)) {
+          fontFaceOK = (NS_OK == dc->FirstExistingFont(font->mFont, face));
         }
-        else {
+        if (!fontFaceOK || !(chromeOverride || useDocumentFonts)) {
+          // now set to defaults
           font->mFont.name = defaultFont.name;
           font->mFixedFont.name= defaultFixedFont.name;
         }
+        // set to monospace if using moz-fixed
+        if (isMozFixed) {
+          font->mFlags |= NS_STYLE_FONT_USE_FIXED;
+        } else {
+          font->mFlags &= ~NS_STYLE_FONT_USE_FIXED;        }
         font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
       }
     }
