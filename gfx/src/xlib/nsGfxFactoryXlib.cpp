@@ -72,6 +72,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorXlib)
 
 // our custom constructors
 
@@ -177,7 +178,12 @@ static nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     //    "@mozilla.org/gfx/screenmanager/xlib;1",
     "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerXlibConstructor }
+    nsScreenManagerXlibConstructor },
+  { "Xlib Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/xlib;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorXlibConstructor }
 };
 
 PR_STATIC_CALLBACK(void)

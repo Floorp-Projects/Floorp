@@ -3,5 +3,5 @@ en-unix.jar:
     locale/en-US/global-platform/platformGlobalOverlay.dtd
     locale/en-US/global-platform/platformDialogOverlay.dtd
     locale/en-US/global-platform/platformKeys.properties
-    locale/en-US/global-platform/printdialog.dtd
     locale/en-US/global-platform/wizard.properties
+    locale/en-US/global-platform/printjoboptions.dtd

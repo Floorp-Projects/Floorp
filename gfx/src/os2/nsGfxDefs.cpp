@@ -35,7 +35,7 @@
   #define DPRINTF printf
 #endif
 
-#include "libprint.h"
+#include "nsDeviceContextSpecOS2.h"
 
 #include <stdlib.h>
 
@@ -160,53 +160,6 @@ void PMERROR( const char *api)
    USHORT usError = ERRORIDERROR(eid);
    DPRINTF ( "%s failed, error = 0x%X\n", api, usError);
 }
-
-nsGfxModuleData::nsGfxModuleData() : hModResources(0), hpsScreen(0)
-{
-}
-
-
-void nsGfxModuleData::Init()
-{
-   char   buffer[CCHMAXPATH];
-   APIRET rc;
-
-   rc = DosLoadModule( buffer, CCHMAXPATH, "GFXRES", &hModResources);
-
-   if( rc)
-   {
-      DPRINTF ( "Gfx failed to load self.  rc = %d, cause = %s\n", (int)rc, buffer);
-      // rats.  Can't load ourselves.  Oh well.  Try to be harmless...
-      hModResources = 0;
-   }
-   PrnInitialize( hModResources);
-
-   // get screen bit-depth
-   hpsScreen = ::WinGetScreenPS (HWND_DESKTOP);
-}
-
-nsGfxModuleData::~nsGfxModuleData()
-{
-  /* Free any converters that were created */
-  if (gUconvInfoList) {
-    nsUconvInfo* UconvInfoList = gUconvInfoList;
-    nsUconvInfo* tUconvInfoList;
-    do {
-      if (UconvInfoList->mConverter)
-        ::UniFreeUconvObject(UconvInfoList->mConverter);
-      tUconvInfoList = UconvInfoList;
-      UconvInfoList = UconvInfoList->pNext;
-      free(tUconvInfoList);
-    } while (UconvInfoList);
-  } /* endif */
-
-  PrnTerminate();
-  if( hModResources)
-     DosFreeModule( hModResources);
-  ::WinReleasePS( hpsScreen);
-}
-
-nsGfxModuleData gGfxModuleData;
 
 int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
 {

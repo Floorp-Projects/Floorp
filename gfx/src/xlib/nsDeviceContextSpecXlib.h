@@ -41,7 +41,8 @@
 #define nsDeviceContextSpecXlib_h___
 
 #include "nsIDeviceContextSpec.h"
-#include "nsDeviceContextSpecXlib.h"
+#include "nsIPrintOptions.h"
+#include "nsVoidArray.h"
 #include "nsIDeviceContextSpecPS.h"
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
@@ -50,16 +51,10 @@
 
 typedef enum
 {
-  pmAuto = 0, /* default */
+  pmInvalid = 0,
   pmXprint,
   pmPostScript
 } PrintMethod;
-
-/* make Xprint the default print system if user/admin has set the XPSERVERLIST"
- * env var. See Xprt config README (/usr/openwin/server/etc/XpConfig/README) 
- * for details.
- */
-#define NS_DEFAULT_PRINT_METHOD ((PR_GetEnv("XPSERVERLIST")!=nsnull)?(pmXprint):(pmPostScript))
 
 class nsDeviceContextSpecXlib : public nsIDeviceContextSpec,
                                 public nsIDeviceContextSpecPS
@@ -76,6 +71,8 @@ public:
   NS_IMETHOD ClosePrintManager(); 
 
   NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
+  NS_IMETHOD GetPrinter ( char **aPrinter );
+  NS_IMETHOD GetCopies ( int &aCopies );
   NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);     
   NS_IMETHOD GetGrayscale(PRBool &aGrayscale);   
   NS_IMETHOD GetSize(int &aSize); 
@@ -90,9 +87,28 @@ public:
   NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod); 
   virtual ~nsDeviceContextSpecXlib();
+  
+  static nsStringArray *globalPrinterList;
+  static int globalNumPrinters;
+  int InitializeGlobalPrinters();
+  void FreeGlobalPrinters();
 protected:
   UnixPrData mPrData;
 };
 
+//-------------------------------------------------------------------------
+// Printer Enumerator
+//-------------------------------------------------------------------------
+class nsPrinterEnumeratorXlib : public nsIPrinterEnumerator
+{
+public:
+  nsPrinterEnumeratorXlib();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTERENUMERATOR
 
-#endif
+protected:
+};
+
+
+
+#endif /* !nsDeviceContextSpecXlib_h___ */

@@ -73,12 +73,6 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
   mPrintState = nsPrintState_ePreBeginDoc;
 #endif
 
-#ifdef XP_OS2 // OS2TODO - GET RID OF THIS!
-   // Init module if necessary
-   if( !gGfxModuleData.hpsScreen)
-      gGfxModuleData.Init();
-#endif
-
   // The first time in we initialize gIsWarp4 flag
   if (NOT_SETUP == gIsWarp4) {
     unsigned long ulValues[2];
@@ -823,13 +817,21 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
+ 
   ((nsDeviceContextOS2 *)aContext)->mSpec = aDevice;
   NS_ADDREF(aDevice);
+  
+  int numCopies = 0;
+  int toPrinter = 0;
+  char *file = nsnull;
 
   ((nsDeviceContextSpecOS2 *)aDevice)->GetPRTQUEUE(pq);
+  ((nsDeviceContextSpecOS2 *)aDevice)->GetCopies(numCopies);
+  ((nsDeviceContextSpecOS2 *)aDevice)->GetToPrinter(toPrinter);
+  if (!toPrinter) 
+     ((nsDeviceContextSpecOS2 *)aDevice)->GetPath(&file);
 
-  HDC dc = PrnOpenDC(pq, "Mozilla");
+  HDC dc = PrnOpenDC(pq, "Mozilla", numCopies, toPrinter, file);
 
   if (!dc) {
      PMERROR("DevOpenDC");

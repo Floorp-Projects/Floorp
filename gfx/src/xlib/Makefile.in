@@ -81,6 +81,13 @@ ifneq (xlib,$(MOZ_GFX_TOOLKIT))
 INACTIVE_COMPONENT = 1
 endif
 
+ifdef MOZ_ENABLE_XPRINT
+XPU_LCSRCS	 = xprintutil.c
+CSRCS           += $(XPU_LCSRCS)
+endif
+
+GARBAGE                += $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
+
 include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
@@ -105,7 +112,7 @@ DEFINES         += -D_BSD_SOURCE
 endif
 
 ifdef MOZ_ENABLE_XPRINT
-DEFINES         += -DUSE_XPRINT
+DEFINES         += -DUSE_XPRINT -DUSE_MOZILLA_TYPES
 INCLUDES	+= -I$(srcdir)/../xprint
 EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
 endif
@@ -115,3 +122,5 @@ INCLUDES	+= \
 		-I$(srcdir)/.. \
 		$(NULL)
 
+export:: $(addprefix $(srcdir)/../xprint/,$(XPU_LCSRCS))
+	$(INSTALL) $^ .

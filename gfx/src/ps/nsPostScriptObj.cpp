@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *
  * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
  * described herein are Copyright (c) International Business Machines Corporation, 2000.
  * Modifications to Mozilla code or documentation identified per MPL Section 3.3
@@ -46,6 +48,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsCRT.h"
 
+#include "prenv.h"
 
 #ifdef VMS
 #include <stdlib.h>
@@ -232,6 +235,9 @@ nsPostScriptObj::~nsPostScriptObj()
     delete gLangGroups;
     gLangGroups = nsnull;
   }
+#ifdef DEBUG
+  puts("nsPostScriptObj::~nsPostScriptObj(): printing done.");
+#endif /* DEBUG */  
 }
 
 /** ---------------------------------------------------
@@ -271,7 +277,39 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
       aSpec->GetSize( printSize );
       mPrintSetup->paper_size = printSize;
       aSpec->GetToPrinter( isAPrinter );
-      if ( isAPrinter == PR_TRUE ) {
+      if (isAPrinter) {
+        /* Define the destination printer (queue). 
+         * We assume that the print command is set to 
+         * "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}" 
+         * - which means that if the ${MOZ_PRINTER_NAME} env var is not empty
+         * the "-P" option of lpr will be set to the printer name.
+         */
+        char *envvar;
+        /* get printer name */
+        aSpec->GetPrinter(&buf);
+        
+        /* do not set the ${MOZ_PRINTER_NAME} env var if we want the default 
+         * printer */
+        if (buf)
+        {
+          /* strip the leading NS_POSTSCRIPT_DRIVER_NAME string */
+          buf = buf + NS_POSTSCRIPT_DRIVER_NAME_LEN;
+          
+          if (!strcmp(buf, "default"))
+            buf = "";
+        }
+        else 
+          buf = "";
+
+        envvar = (char *)malloc(strlen(buf) + /*strlen("MOZ_PRINTER_NAME=")+1*/18);
+        if (!envvar)
+          return NS_ERROR_OUT_OF_MEMORY;
+        sprintf(envvar, "MOZ_PRINTER_NAME=%s", buf);
+#ifdef DEBUG
+        printf("setting printer name via '%s'\n", envvar);
+#endif /* DEBUG */
+        PR_SetEnv(envvar);
+        free(envvar);
 #ifndef VMS
         aSpec->GetCommand( &buf );
 #if defined(XP_OS2_VACPP) || defined(XP_PC)

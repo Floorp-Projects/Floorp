@@ -37,28 +37,148 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsDeviceContextSpecOS2_h
-#define _nsDeviceContextSpecOS2_h
+#ifndef nsDeviceContextSpecOS2_h___
+#define nsDeviceContextSpecOS2_h___
 
-#include "nsGfxDefs.h"
+#define INCL_PM
+#define INCL_DOS
+#define INCL_DOSERRORS
+#define INCL_SPLDOSPRINT
 
 #include "nsIDeviceContextSpec.h"
-#include "libprint.h"
+#include "nsIPrintOptions.h"
+#include "nsVoidArray.h"
+#ifdef USE_XPRINT
+#include "nsIDeviceContextSpecXPrint.h"
+#endif /* USE_XPRINT */
+#include "nsPrintdOS2.h"
+#include <os2.h>
+
+
+//---------------------------------------------------------------------------
+// OS/2 Printing   - was in libprint
+//---------------------------------------------------------------------------
+// Library init and term; job properties per queue are cached during run.
+BOOL PrnInitialize (HMODULE hmodResources);
+BOOL PrnTerminate (void);
+
+// opaque type to describe a print queue (printer)
+class PRTQUEUE;
+
+#define MAX_PRINT_QUEUES  (128)
+
+class PRINTDLG
+{
+
+public:
+   PRINTDLG ();
+  ~PRINTDLG ();
+   int GetNumPrinters ();
+   int GetDefaultPrinter ();
+   char* GetPrinter (int numPrinter);
+   PRTQUEUE* SetPrinterQueue (int numPrinter);
+   BOOL ShowProperties(int index);
+   PRTQUEUE* SelectPrinter (HWND hwndOwner, BOOL bQuiet);
+
+private:
+  ULONG     mQueueCount;
+  ULONG     mDefaultQueue;
+  PRTQUEUE* mPQBuf [MAX_PRINT_QUEUES];
+
+  int GetIndex( int numPrinter);
+
+};
+
+
+// Release app. resources associated with a printer
+BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue);
+
+// Get a DC for the selected printer.  Must supply the application name.
+HDC PrnOpenDC( PRTQUEUE *pPrintQueue, PSZ pszApplicationName, int copies, int toPrinter, char *file);
+
+// Get the hardcopy caps for the selected form
+BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo);
+
+// Abort the current job started with PrnStartJob().
+BOOL PrnAbortJob( HDC hdc);
+
+
+//---------------------------------------------------------------------
+// nsDeviceContextSpecOS2
+//---------------------------------------------------------------------
 
 class nsDeviceContextSpecOS2 : public nsIDeviceContextSpec
+#ifdef USE_XPRINT
+                             , public nsIDeviceContextSpecXp
+#endif
 {
 public:
+/**
+ * Construct a nsDeviceContextSpecMac, which is an object which contains and manages a mac printrecord
+ * @update  dc 12/02/98
+ */
   nsDeviceContextSpecOS2();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(PRTQUEUE *pq);
+/**
+ * Initialize the nsDeviceContextSpecMac for use.  This will allocate a printrecord for use
+ * @update   dc 2/16/98
+ * @param aQuiet if PR_TRUE, prevent the need for user intervention
+ *        in obtaining device context spec. if nsnull is passed in for
+ *        the aOldSpec, this will typically result in getting a device
+ *        context spec for the default output device (i.e. default
+ *        printer).
+ * @return error status
+ */
+  NS_IMETHOD Init(PRBool	aQuiet);
+  
+  NS_IMETHOD ClosePrintManager();
+
+  NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
+
+  NS_IMETHOD GetPrinter ( char **aPrinter );
+
+  NS_IMETHOD GetCopies ( int &aCopies );
+
+  NS_IMETHOD GetPath ( char **aPath );    
+
+  NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
+
   NS_IMETHOD GetPRTQUEUE(PRTQUEUE *&p);
 
+  static nsStringArray *globalPrinterList;
+  static int globalNumPrinters;
+  static PRINTDLG PrnDlg;
+  int InitializeGlobalPrinters();
+  void FreeGlobalPrinters();
+
 protected:
+/**
+ * Destuct a nsDeviceContextSpecMac, this will release the printrecord
+ * @update  dc 2/16/98
+ */
   virtual ~nsDeviceContextSpecOS2();
 
+protected:
+
+  OS2PrData mPrData;
   PRTQUEUE *mQueue;
 };
 
+//-------------------------------------------------------------------------
+// Printer Enumerator
+//-------------------------------------------------------------------------
+class nsPrinterEnumeratorOS2 : public nsIPrinterEnumerator
+{
+public:
+  nsPrinterEnumeratorOS2();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRINTERENUMERATOR
+
+protected:
+};
+
+
 #endif
+

@@ -19,7 +19,8 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -40,6 +41,11 @@
 #define nsIDeviceContextSpecPS_h___
 
 #include "nsISupports.h"
+
+/* dummy printer name for the gfx/src/ps driver */
+#define NS_POSTSCRIPT_DRIVER_NAME "PostScript/"
+/* strlen(NS_POSTSCRIPT_DRIVER_NAME)*/
+#define NS_POSTSCRIPT_DRIVER_NAME_LEN (11) 
 
 #define NS_IDEVICE_CONTEXT_SPEC_PS_IID { 0xa4ef8910, 0xdd65, 0x11d2, { 0xa8, 0x32, 0x0, 0x10, 0x5a, 0x18, 0x34, 0x19 } }
 
@@ -118,6 +124,14 @@ public:
    * @return 
    **/
    NS_IMETHOD GetCommand (  char **aCommand ) = 0;   
+
+  /*
+   * Printer name e.g., myprinter
+   * @update 
+   * @param aPrinter --
+   * @return 
+   **/
+   NS_IMETHOD GetPrinter ( char **aPrinter ) = 0;   
 
   /*
    * Get width and height based on user page size choice, e.g., 8.5 x 11.0 

@@ -266,7 +266,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   /* get destination printer (we need this when printing to file as
    * the printer DDX in Xprt generates the data...) 
    */
-  aSpec->GetCommand(&buf);
+  aSpec->GetPrinter(&buf);
   
   /* Are we "printing" to a file instead to the print queue ? */
   if (!mIsAPrinter) 
@@ -288,7 +288,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    * shared memory transport is used XCloseDisplay() tries to free() the 
    * shared memory segment - causing heap corruption and/or SEGV.
    */
-  putenv((char *)"XSUNTRANSPORT=xxx");
+  PR_SetEnv("XSUNTRANSPORT=xxx");
      
   /* get printer, either by "name" (foobar) or "name@display" (foobar@gaja:5)
    * ToDo: report error to user (dialog)
