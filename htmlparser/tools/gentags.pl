@@ -142,7 +142,6 @@ $extra_tags[$extra++] = "newline";
 $extra_tags[$extra++] = "comment";
 $extra_tags[$extra++] = "entity";
 $extra_tags[$extra++] = "userdefined";
-$extra_tags[$extra++] = "unknown";
 $extra_tags[$extra++] = "secret_h1style";
 $extra_tags[$extra++] = "secret_h2style";
 $extra_tags[$extra++] = "secret_h3style";
@@ -191,12 +190,16 @@ print HEADER_FILE "#define " . $file_base . "_h___\n";
 print HEADER_FILE "#include \"nshtmlpars.h\"\n";
 
 # Print out enum's for the tag symbols
-print HEADER_FILE "enum nsHTMLTag {\n  ";
+print HEADER_FILE "enum nsHTMLTag {\n";
+print HEADER_FILE "  /* this enum must be first and must be zero */\n";
+print HEADER_FILE "  eHTMLTag_unknown=0,\n\n";
+print HEADER_FILE "  /* begin tag enums */\n  ";
 $width = 2;
+print HEADER_FILE $str;
 for ($j = 0; $j < $i; $j++) {
     $lower = $tags[$j];
     $lower =~ tr/A-Z/a-z/;
-    $str = "eHTMLTag_" . $lower . "=" . $j;
+    $str = "eHTMLTag_" . $lower . "=" . ($j + 1);
     $str = $str . ", ";
     $len = length($str);
     if ($width + $len > 78) {
@@ -213,7 +216,7 @@ $width = 2;
 for ($k = 0; $k < $extra; $k++) {
     $lower = $extra_tags[$k];
     $lower =~ tr/A-Z/a-z/;
-    $str = "eHTMLTag_" . $lower . "=" . ($j + $k);
+    $str = "eHTMLTag_" . $lower . "=" . ($j + $k + 1);
     if ($k < $extra - 1) {
 	$str = $str . ", ";
     }
@@ -230,7 +233,7 @@ print HEADER_FILE "\n};\n#define NS_HTML_TAG_MAX " . $j . "\n\n";
 print HEADER_FILE
     "extern NS_HTMLPARS nsHTMLTag NS_TagToEnum(const char* aTag);\n";
 print HEADER_FILE
-    "extern NS_HTMLPARS const char* NS_EnumToTag(nsHTMLTag aEnum);\n";
+    "extern NS_HTMLPARS const char* NS_EnumToTag(nsHTMLTag aEnum);\n\n";
 print HEADER_FILE "#endif /* " . $file_base . "_h___ */\n";
 close(HEADER_FILE);
 
@@ -272,7 +275,7 @@ nsHTMLTag NS_TagToEnum(const char* aTagName) {
     int middle = (low + high) >> 1;
     int result = strcmp(aTagName, tagTable[middle]);
     if (result == 0)
-      return (nsHTMLTag) middle;
+      return (nsHTMLTag) (middle + 1);
     if (result < 0)
       high = middle - 1; 
     else
@@ -282,11 +285,47 @@ nsHTMLTag NS_TagToEnum(const char* aTagName) {
 }
 
 const char* NS_EnumToTag(nsHTMLTag aTagID) {
-  if ((unsigned int)aTagID > NS_HTML_TAG_MAX) {
+  if ((int(aTagID) <= 0) || (int(aTagID) > NS_HTML_TAG_MAX)) {
     return 0;
   }
-  return tagTable[(int) aTagID];
+  return tagTable[int(aTagID) - 1];
 }
+
+#ifdef NS_DEBUG
+#include <stdio.h>
+
+class nsTestTagTable {
+public:
+   nsTestTagTable() {
+     const char *tag;
+     nsHTMLTag id;
+
+     // Make sure we can find everything we are supposed to
+     for (int i = 0; i < NS_HTML_TAG_MAX; i++) {
+       tag = tagTable[i];
+       id = NS_TagToEnum(tag);
+       NS_ASSERTION(id != eHTMLTag_userdefined, \"can't find tag id\");
+       const char* check = NS_EnumToTag(id);
+       NS_ASSERTION(check == tag, \"can't map id back to tag\");
+     }
+
+     // Make sure we don't find things that aren't there
+     id = NS_TagToEnum(\"@\");
+     NS_ASSERTION(id == eHTMLTag_userdefined, \"found @\");
+     id = NS_TagToEnum(\"zzzzz\");
+     NS_ASSERTION(id == eHTMLTag_userdefined, \"found @\");
+
+     tag = NS_EnumToTag((nsHTMLTag) 0);
+     NS_ASSERTION(0 == tag, \"found enum 0\");
+     tag = NS_EnumToTag((nsHTMLTag) -1);
+     NS_ASSERTION(0 == tag, \"found enum -1\");
+     tag = NS_EnumToTag((nsHTMLTag) (NS_HTML_TAG_MAX + 1));
+     NS_ASSERTION(0 == tag, \"found past max enum\");
+   }
+};
+nsTestTagTable validateTagTable;
+#endif
+
 ";
 
 close(CPP_FILE);
