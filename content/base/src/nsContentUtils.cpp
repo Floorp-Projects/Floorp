@@ -67,39 +67,35 @@ nsContentUtils::Init()
 
 // static 
 nsresult
-nsContentUtils::GetStaticScriptGlobal(JSContext* aContext,
-                                     JSObject* aObj,
+nsContentUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
                                      nsIScriptGlobalObject** aNativeGlobal)
 {
-  nsISupports* supports;
-  JSClass* clazz;
+  if (!sXPConnect) {
+    *aNativeGlobal = nsnull;
+
+    return NS_OK;
+  }
+
   JSObject* parent;
   JSObject* glob = aObj; // starting point for search
 
   if (!glob)
     return NS_ERROR_FAILURE;
 
-  while (nsnull != (parent = JS_GetParent(aContext, glob)))
+  while (nsnull != (parent = JS_GetParent(aContext, glob))) {
     glob = parent;
-
-#ifdef JS_THREADSAFE
-  clazz = JS_GetClass(aContext, glob);
-#else
-  clazz = JS_GetClass(glob);
-#endif
-
-  if (!clazz ||
-      !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
-      !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
-      !(supports = (nsISupports*) JS_GetPrivate(aContext, glob))) {
-    return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(supports));
-  NS_ENSURE_TRUE(wrapper, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native;
+
+  nsresult rv =
+    sXPConnect->GetWrappedNativeOfJSObject(aContext, glob,
+                                           getter_AddRefs(wrapped_native));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupports> native;
-  wrapper->GetNative(getter_AddRefs(native));
+  rv = wrapped_native->GetNative(getter_AddRefs(native));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(native, aNativeGlobal);
 }

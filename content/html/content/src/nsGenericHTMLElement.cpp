@@ -456,6 +456,7 @@ NS_CLASSINFO_MAP_BEGIN_EXPORTED(GenericHTMLElement)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLElement)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
 NS_CLASSINFO_MAP_END
 
 
@@ -516,7 +517,7 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
     inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *,
                           new nsGenericHTMLElementTearoff(this));
     NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
+  } else if (aIID.Equals(NS_GET_IID(nsIDOM3Node))) {
     inst = new nsNode3Tearoff(this);
     NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
   } else {
