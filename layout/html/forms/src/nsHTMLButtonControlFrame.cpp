@@ -119,6 +119,10 @@ public:
 
   void GetDefaultLabel(nsString& aLabel);
 
+       // nsIFormControlFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
@@ -726,5 +730,16 @@ nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContex
 {
   return 0;
 }
+
+NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
+}
+
 
 

@@ -338,3 +338,14 @@ nsRadioControlFrame::Paint(nsIPresContext& aPresContext,
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRadioControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
+}
+

@@ -105,6 +105,9 @@ public:
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
+        // nsIFormControlFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
 protected:
   void GetTranslatedRect(nsRect& aRect); // XXX this implementation is a copy of nsHTMLButtonControlFrame
@@ -386,4 +389,14 @@ nsImageControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                                nscoord aCharWidth) const
 {
   return 0;
+}
+
+NS_IMETHODIMP nsImageControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImageControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
 }

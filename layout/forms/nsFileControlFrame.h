@@ -31,6 +31,10 @@ class nsFileControlFrame : public nsHTMLContainerFrame,
 public:
   nsFileControlFrame();
 
+      // nsIFormControlFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Reflow(nsIPresContext&          aCX,

@@ -123,6 +123,11 @@ public:
 
   NS_IMETHOD Deselect();
 
+      // nsIFormControlFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
+
 #if 0
   virtual void GetStyleSize(nsIPresContext& aContext,
                     const nsHTMLReflowState& aReflowState,

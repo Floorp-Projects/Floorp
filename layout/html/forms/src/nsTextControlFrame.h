@@ -26,6 +26,10 @@ class nsIPresContext;
 
 class nsTextControlFrame : public nsFormControlFrame {
 public:
+       // nsIFormControlFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,

@@ -402,3 +402,13 @@ nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
   
 }
 
+NS_IMETHODIMP nsButtonControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsButtonControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
+}
+
