@@ -120,7 +120,7 @@
               break;
             }
           }
-          this.selectedItem.command();
+          this.selectedItem.doCommand();
         ]]>
         </body>
       </method>
