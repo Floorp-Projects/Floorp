@@ -269,7 +269,7 @@ build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Other targets
 
 # Pass these target onto the real build system
-clean realclean: $(OBJDIR)/Makefile $(OBJDIR)/config.status
+clean realclean:
 	cd $(OBJDIR); $(MAKE) $@
 	rm -fr $(ALL_TRASH)
 
