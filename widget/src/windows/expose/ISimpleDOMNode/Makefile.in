@@ -59,7 +59,7 @@ GARBAGE += $(MIDL_GENERATED_FILES)
 include $(topsrcdir)/config/rules.mk
 
 $(MIDL_GENERATED_FILES):
-	midl ISimpleDOMNode.idl
+	midl $(srcdir)/ISimpleDOMNode.idl
 	cp ISimpleDOMNode.h ../..
 	cp ISimpleDOMNode_i.c ../../ISimpleDOMNode_iid.h
 
