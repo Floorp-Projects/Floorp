@@ -67,7 +67,8 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
+    UpdatePresentationDataFromChildAt(0, mInnerScriptLevelIncrement, mDisplayStyle);
+    InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
 

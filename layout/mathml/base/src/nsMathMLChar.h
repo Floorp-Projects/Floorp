@@ -73,7 +73,7 @@ public:
   {
   }
 
-  ~nsMathMLChar()
+  virtual ~nsMathMLChar()
   {
   }
 

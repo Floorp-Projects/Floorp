@@ -72,6 +72,7 @@ nsMathMLmiFrame::~nsMathMLmiFrame()
 {
 }
 
+
 NS_IMETHODIMP
 nsMathMLmiFrame::Init(nsIPresContext&  aPresContext,
                       nsIContent*      aContent,
@@ -81,19 +82,25 @@ nsMathMLmiFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult rv = NS_OK;
   rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
   return rv;
 }
-  
-// if our content is not a single character, we turn the font style to normal.
-//  XXX TrimWhitespace / CompressWhitespace?
+
+// if our content is a single character, we turn the font to italic
+// if our content is not a single character, we turn the font to normal
+// XXX TrimWhitespace / CompressWhitespace?
+
 NS_IMETHODIMP
-nsMathMLmiFrame::ReResolveStyleContext(nsIPresContext*    aPresContext,
-                                       nsIStyleContext*   aParentContext,
-                                       PRInt32            aParentChange,
-                                       nsStyleChangeList* aChangeList,
-                                       PRInt32*           aLocalChange)
+nsMathMLmiFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
 {
+  nsresult rv;
+
+  // First, let the base class to its work
+  rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+
+
+  // Get the length of the text content that we enclose  
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use to DOM to make sure that we are only looking at text-nodes...
   PRInt32 aLength = 0;
@@ -116,33 +123,39 @@ nsMathMLmiFrame::ReResolveStyleContext(nsIPresContext*    aPresContext,
     }
   }
 
-  // re calculate our own style context
-  PRInt32 ourChange = aParentChange;
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext,
-                                               ourChange, aChangeList, &ourChange);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (aLocalChange) {
-    *aLocalChange = ourChange;
+  // Insert a new pseudo frame between our children and us, i.e., the new frame
+  // becomes our sole child, and our children become children of the new frame.
+
+  // Get a pseudo style context for the appropriate style font
+  // XXX how important is the PseudoStyleContext?
+  nsAutoString fontStyle = (1 == aLength) 
+                         ? ":-moz-math-font-style-italic" 
+                         : ":-moz-math-font-style-normal";
+  nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontStyle)));
+  nsCOMPtr<nsIStyleContext> newStyleContext;
+  aPresContext.ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
+                                            PR_FALSE, getter_AddRefs(newStyleContext));          
+
+  if (nsnull != newStyleContext && mStyleContext != newStyleContext) {
+
+    nsIFrame* newFrame = nsnull;
+    NS_NewMathMLContainerFrame(&newFrame);
+    NS_ASSERTION(newFrame, "Failed to create new frame");
+
+    newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);
+
+    // our children become children of the new frame
+    nsIFrame* childFrame = mFrames.FirstChild();
+    newFrame->SetInitialChildList(aPresContext, nsnull, childFrame);
+    while (nsnull != childFrame) {
+      childFrame->SetParent(newFrame);
+      aPresContext.ReParentStyleContext(childFrame, newStyleContext);
+      childFrame->GetNextSibling(&childFrame);
+    }
+
+    // the new frame becomes our sole child
+    mFrames.SetFrames(newFrame);
   }
 
-  // get a pseudo style context for the normal style font
-  nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(":-moz-math-font-style-normal")));
-  nsIStyleContext* newStyleContext;
-  aPresContext->ResolvePseudoStyleContextFor(mContent, fontAtom, mStyleContext,
-                                             PR_FALSE, &newStyleContext);
-  // re-resolve children
-  PRInt32 childChange;
-  nsIFrame* child = mFrames.FirstChild();
-  while (nsnull != child && NS_SUCCEEDED(rv)) {
-    if (!IsOnlyWhitespace(child)) {
-      rv = child->ReResolveStyleContext(aPresContext, 
-                                        (1 == aLength)? mStyleContext : newStyleContext,
-                                        ourChange, aChangeList, &childChange);
-    }
-    child->GetNextSibling(&child);
-  }
   return rv;
 }
-

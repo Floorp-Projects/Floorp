@@ -34,43 +34,23 @@
  * mrow. By default, this frame uses its Reflow() method to lay its 
  * children horizontally and ensure that their baselines are aligned.
  * 
- * This frame is a *math-aware frame* in the sense that given the 
- * markup <tag>base arguments</tag>, the method ReResolveStyleContext()
+ * This frame is a *math-aware frame* in the sense that given the markup
+ * <tag>base arguments</tag>, the method InsertScriptLevelStyleContext()
  * can be used to render the 'base' in normal-font, and the 'arguments'
  * in small-font. This is a common functionality to tags like msub, msup, 
  * msubsup, mover, munder, munderover, mmultiscripts. All are  derived 
  * from this base class. They use SetInitialChildList() to trigger
- * ReResolveStyleContext() for the very first time as soon as all their
- * children are known. However, each of these tags has its own Reflow()
+ * InsertScriptLevelStyleContext() for the very first time as soon as all
+ * their children are known. However, each of these tags has its own Reflow()
  * method to lay its children as appropriate, thus overriding the default 
  * Reflow() method in this base class.
  * 
  * Other tags like mi that do not have 'arguments' can be derived from
  * this base class as well. The class caters for empty arguments.
- * Notice that mi implements its own ReResolveStyleContext() method 
+ * Notice that mi implements its own SetInitialChildList() method 
  * to switch to a normal-font (rather than italics) if its text content 
  * is not a single character (as per the MathML REC).
  * 
- * In general therefore, to derive other tags from this base class, 
- * ReResolveStyleContext() must be coded to produce the desired stylistic
- * effects. For example, mfrac has its own ReResolveStyleContext() method
- * to set both the numerator and denominator to a small font size, whereas
- * mrow does not have its own implementation of ReResolveStyleContext(), 
- * and instead uses the one in the base class nsHTMLContainerFrame.
- * 
- * The advantage provided by the default ReResolveStyleContext() herein is
- * that MathML tags that need scriptstyle switching can be derived from this
- * base class with minimum footprint. For the few tags that need different
- * style switching or that do not need style switching at all, you *should*
- * override the default ReResolveStyleContext() method provided in this base.
- * Do not use this nsMathMLContainerFrame::ReResolveStyleContext for a
- * <tag>base arguments</tag> not needing 'arguments' in small font size. 
- * Instead, you should use nsHTMLContainerFrame::ReResolveStyleContext or 
- * provide your own.
- *
- * ReResolveStyleContext() implements nsIFrame::ReResolveStyleContext().
- * See the documentation in nsIFrame.h for additional information on the
- * frame API.
  */
 
 class nsMathMLContainerFrame : public nsHTMLContainerFrame, public nsIMathMLFrame {
@@ -114,12 +94,10 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
+  // helper method for altering the style contexts of subscript/superscript elements
+
   NS_IMETHOD
-  ReResolveStyleContext(nsIPresContext*    aPresContext, 
-                        nsIStyleContext*   aParentContext,
-                        PRInt32            aParentChange, 
-                        nsStyleChangeList* aChangeList,
-                        PRInt32*           aLocalChange);
+  InsertScriptLevelStyleContext(nsIPresContext& aPresContext);
 
   // helper methods for processing empty MathML frames (with whitespace only)
 
@@ -131,8 +109,8 @@ public:
 
 protected:
 
-  PRInt32 mScriptLevel;  // Only relevant to nested frames within: msub, msup, msubsup, 
-                         // munder, mover, munderover, mmultiscripts, mfrac, mroot, mtable.
+  PRInt32 mScriptLevel;  // Relevant to nested frames within: msub, msup, msubsup, munder,
+                         // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
 
   PRBool mDisplayStyle;  // displaystyle="false" is intended to slightly alter how the
                          // rendering in done in inline mode.

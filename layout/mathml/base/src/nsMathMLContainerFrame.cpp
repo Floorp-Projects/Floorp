@@ -111,6 +111,8 @@ nsMathMLContainerFrame::IsOnlyWhitespace(nsIFrame* aFrame)
   // by empty frame we mean a leaf frame whose text content is empty...
   nsCOMPtr<nsIContent> aContent;
   aFrame->GetContent(getter_AddRefs(aContent));
+  if (nsnull == aContent) 
+    return PR_TRUE;
   PRInt32 numKids;
   aContent->ChildCount(numKids);
   if (0 == numKids) {
@@ -146,7 +148,7 @@ nsMathMLContainerFrame::ReflowEmptyChild(nsIFrame* aFrame)
  * munderover, mmultiscripts, mfrac, mroot, mtable).
  * =============================================================================
  */
- 
+
 NS_IMETHODIMP
 nsMathMLContainerFrame::Stretch(nsIPresContext&    aPresContext,
                                 nsStretchDirection aStretchDirection,
@@ -198,6 +200,90 @@ nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
   }
   return NS_OK;
 }
+
+// helper method to alter the style context
+// This method is used for switching the font to a subscript/superscript font in
+// mfrac, msub, msup, msubsup, munder, mover, munderover, mmultiscripts 
+
+NS_IMETHODIMP
+nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresContext)
+{
+  nsresult rv = NS_OK;
+  nsIFrame* nextFrame = mFrames.FirstChild();
+  while (nsnull != nextFrame && NS_SUCCEEDED(rv)) { 	
+    nsIFrame* childFrame = nextFrame;
+    rv = nextFrame->GetNextSibling(&nextFrame);
+    if (!IsOnlyWhitespace(childFrame) && NS_SUCCEEDED(rv)) {
+
+      // see if the child frame implements the nsIMathMLFrame interface
+      nsIMathMLFrame* aMathMLFrame;
+      rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+      if (nsnull != aMathMLFrame && NS_SUCCEEDED(rv)) {
+
+        // get the scriptlevel of the child
+        PRInt32 childLevel;
+        PRBool childDisplayStyle;
+        aMathMLFrame->GetPresentationData(&childLevel, &childDisplayStyle);
+
+        // Iteration to set a style context for the script level font.
+        // Wow, here is what is happening: the style system requires that any style context
+        // *must* be uniquely associated to a frame. So we insert as many frames as needed
+        // to scale-down (or scale-up) the fontsize.
+
+        PRInt32 gap = childLevel - mScriptLevel;
+        if (0 != gap) {
+          nsCOMPtr<nsIContent> childContent;
+          childFrame->GetContent(getter_AddRefs(childContent));
+
+          nsIFrame* firstFrame = nsnull;
+          nsIFrame* lastFrame = this;
+          nsIStyleContext* lastStyleContext = mStyleContext;
+          nsCOMPtr<nsIStyleContext> newStyleContext;
+
+          nsAutoString fontSize = (0 < gap)
+                                ? ":-moz-math-font-size-smaller"
+                                : ":-moz-math-font-size-larger";
+          nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontSize)));
+          if (0 > gap) gap = -gap; // absolute value
+          while (0 < gap--) {
+
+            aPresContext.ResolvePseudoStyleContextFor(childContent, fontAtom, lastStyleContext,
+                                                      PR_FALSE, getter_AddRefs(newStyleContext));          
+            if (nsnull == newStyleContext || lastStyleContext == newStyleContext) {
+              break;
+            }
+            else {
+              // create a new frame and append it as sole child of the last created frame
+              nsIFrame* newFrame = nsnull;
+              NS_NewMathMLContainerFrame(&newFrame);
+              NS_ASSERTION(newFrame, "Failed to create new frame");
+
+              newFrame->Init(aPresContext, childContent, lastFrame, newStyleContext, nsnull);
+
+              if (nsnull == firstFrame) {
+                firstFrame = newFrame; 
+              }
+              if (this != lastFrame) {
+                lastFrame->SetInitialChildList(aPresContext, nsnull, newFrame);
+              }
+              lastStyleContext = newStyleContext;
+              lastFrame = newFrame;    
+            }
+          }
+          if (nsnull != firstFrame) { // at least one new frame was created
+            mFrames.ReplaceFrame(this, childFrame, firstFrame);
+            lastFrame->SetInitialChildList(aPresContext, nsnull, childFrame);
+            childFrame->SetParent(lastFrame);
+            childFrame->SetNextSibling(nsnull);
+            aPresContext.ReParentStyleContext(childFrame, lastStyleContext);
+          }
+        }
+      }
+    }
+  }
+  return rv;
+}
+
 
 /* //////////////////
  * Frame construction
@@ -327,7 +413,7 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
   }
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-    
+
   /////////////
   // Place Children now by re-adjusting the origins to align the baselines
 
@@ -349,70 +435,4 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
-}
-
-// This method is an implementation of nsIFrame::ReResolveStyleContext
-// It is used for switching the font to a subscript/superscript font in
-// msub, msup, msubsup, munder, mover, munderover, mmultiscripts 
-
-NS_IMETHODIMP
-nsMathMLContainerFrame::ReResolveStyleContext(nsIPresContext*    aPresContext,
-                                              nsIStyleContext*   aParentContext,
-                                              PRInt32            aParentChange,
-                                              nsStyleChangeList* aChangeList,
-                                              PRInt32*           aLocalChange)
-{
-  // re calculate our own style context
-  PRInt32 ourChange = aParentChange;
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext,
-                                               ourChange, aChangeList, &ourChange);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (aLocalChange) {
-    *aLocalChange = ourChange;
-  }
-
-  // re-resolve children
-
-  nsIFrame* child = mFrames.FirstChild();
-  while (nsnull != child && NS_SUCCEEDED(rv)) {
-  	
-    if (!IsOnlyWhitespace(child)) {
- 
-      // default is to inherit the parent style
-      nsIStyleContext* aStyleContext = mStyleContext;
-      nsIStyleContext* newStyleContext = mStyleContext;
-
-      // see if the child frame implements the nsIMathMLFrame interface
-      nsIMathMLFrame* aMathMLFrame;
-      rv = child->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
-      if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame) {
-
-        // get the scriptlevel of the child
-        PRInt32 childLevel;
-        PRBool childDisplayStyle;
-        aMathMLFrame->GetPresentationData(&childLevel, &childDisplayStyle);
-
-        // iteration to get a pseudo style context for the script level font
-        nsAutoString fontSize;
-        PRInt32 gap = childLevel - mScriptLevel;
-        fontSize = (0 < gap)? ":-moz-math-font-size-smaller" : ":-moz-math-font-size-larger";
-        nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontSize)));
-        if (0 > gap) gap = -gap; // absolute value
-        while (0 < gap) {
-          aPresContext->ResolvePseudoStyleContextFor(mContent, fontAtom, aStyleContext,
-                                                     PR_FALSE, &newStyleContext);
-          aStyleContext = newStyleContext;
-          gap--;
-        }
-      }
- 
-      PRInt32 childChange;
-      rv = child->ReResolveStyleContext(aPresContext, newStyleContext,
-                                        ourChange, aChangeList, &childChange);
-    }
-    child->GetNextSibling(&child);
-  }
-  return rv;
 }

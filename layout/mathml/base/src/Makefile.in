@@ -31,6 +31,7 @@ LIBRARY_NAME = raptormathmlbase_s
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../base/src		\
+	-I$(srcdir)/../../../base/public \
 	-I$(srcdir)/../../../html/style/src \
 	-I$(srcdir)/../../../html/base/src \
         -I$(srcdir)/../../../html/content/src \
