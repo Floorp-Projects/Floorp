@@ -341,14 +341,22 @@ fi
 
 if test -z "$SKIP_PATH_CHECKS"; then
     AC_PATH_PROG(WHOAMI, $WHOAMI whoami, echo not_whoami)
-elif test -z "$WHOAMI"; then
-    WHOAMI=whoami
 fi
 
 if test -n "$MOZ_DEBUG"; then
     AC_DEFINE(DEBUG)
-    AC_DEFINE_UNQUOTED(DEBUG_`$WHOAMI`)
     DEFINES="$DEFINES -UNDEBUG"
+    case "${target_os}" in
+    beos*)
+        DEFINES="$DEFINES -DDEBUG_${USER}"
+        ;;
+    msvc*|mksnt*|cygwin*|mingw*)
+        DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
+        ;;
+    *) 
+        DEFINES="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`$WHOAMI`"
+        ;;
+    esac
 else
     AC_DEFINE(NDEBUG)
     DEFINES="$DEFINES -UDEBUG"
