@@ -308,6 +308,33 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aF
   }
 }
 
+nsresult nsFormFrame::GetRadioInfo(nsIFormControlFrame* aFrame,
+                                   nsString& aName,
+                                   nsRadioControlGroup *& aGroup)
+{
+  aGroup = nsnull;
+  aName.SetLength(0);
+  aFrame->GetName(&aName);
+  PRBool hasName = aName.Length() > 0;
+
+  // radio group processing
+  if (hasName) { 
+    nsRadioControlFrame* radioFrame = (nsRadioControlFrame*)aFrame;
+    int numGroups = mRadioGroups.Count();
+    nsRadioControlGroup* group;
+    for (int j = 0; j < numGroups; j++) {
+      group = (nsRadioControlGroup *) mRadioGroups.ElementAt(j);
+      nsString groupName;
+      group->GetName(groupName);
+      if (groupName.Equals(aName)) {
+        aGroup = group;
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
 void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame)
 {
   mFormControls.AppendElement(&aFrame);
@@ -315,36 +342,25 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
   // determine which radio buttons belong to which radio groups, unnamed radio buttons
   // don't go into any group since they can't be submitted. Determine which controls
   // are capable of form submission.
-
-  nsString name;
-  name.SetLength(0);
-  aFrame.GetName(&name);
-  PRBool hasName = name.Length() > 0;
   PRInt32 type;
   aFrame.GetType(&type);
 
   // a solo text control can be a submitter (if return is hit)
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
     mTextSubmitter = (nsnull == mTextSubmitter) ? &aFrame : nsnull;
+    return;
   }
 
   // radio group processing
-  if (hasName && (NS_FORM_INPUT_RADIO == type)) { 
+  if (NS_FORM_INPUT_RADIO == type) { 
     nsRadioControlFrame* radioFrame = (nsRadioControlFrame*)&aFrame;
-    int numGroups = mRadioGroups.Count();
-    PRBool added = PR_FALSE;
-    nsRadioControlGroup* group;
-    for (int j = 0; j < numGroups; j++) {
-      group = (nsRadioControlGroup *) mRadioGroups.ElementAt(j);
-      nsString groupName;
-      group->GetName(groupName);
-      if (groupName.Equals(name)) {
-        group->AddRadio(radioFrame);
-        added = PR_TRUE;
-        break;
-      }
-    }
-    if (!added) {
+    // gets the name of the radio group and the group
+    nsRadioControlGroup * group;
+    nsAutoString name;
+    nsresult rv = GetRadioInfo(&aFrame, name, group);
+    if (NS_SUCCEEDED(rv) && nsnull != group) {
+      group->AddRadio(radioFrame);
+    } else {
       group = new nsRadioControlGroup(name);
       mRadioGroups.AppendElement(group);
       group->AddRadio(radioFrame);
@@ -356,6 +372,29 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
 	    } else {
 	      radioFrame->SetChecked(aPresContext, PR_FALSE, PR_TRUE);
 	    }
+    }
+  }
+}
+  
+void nsFormFrame::RemoveRadioControlFrame(nsIFormControlFrame * aFrame)
+{
+
+  // determine which radio buttons belong to which radio groups, unnamed radio buttons
+  // don't go into any group since they can't be submitted. Determine which controls
+  // are capable of form submission.
+
+  PRInt32 type;
+  aFrame->GetType(&type);
+
+  // radio group processing
+  if (NS_FORM_INPUT_RADIO == type) { 
+    nsRadioControlFrame* radioFrame = (nsRadioControlFrame*)aFrame;
+    // gets the name of the radio group and the group
+    nsRadioControlGroup * group;
+    nsAutoString name;
+    nsresult rv = GetRadioInfo(aFrame, name, group);
+    if (NS_SUCCEEDED(rv) && nsnull != group) {
+      group->RemoveRadio(radioFrame);
     }
   }
 }
