@@ -136,8 +136,8 @@ interface nsIPromptService : nsISupports
    *                      out: If result is true, a newly allocated
    *                      string. If result is false, in string is not
    *                      touched.
-   * @param checkMsg      if null, will use default title - "Remember Value"
-   * @param checkValue    if null, check box will not be shown       
+   * @param checkMsg      if null, check box will not be shown
+   * @param checkValue       
    * @return true for OK, false for Cancel
    */                        
   boolean prompt(in nsIDOMWindow parent,
@@ -160,8 +160,8 @@ interface nsIPromptService : nsISupports
    *                      out: If result is true, a newly allocated
    *                      string. If result is false, in string is not
    *                      touched.
-   * @param checkMsg      if null, will use default title - "Remember Name and Password"
-   * @param checkValue    if null, check box will not be shown    
+   * @param checkMsg      if null, check box will not be shown
+   * @param checkValue   
    * @return true for OK, false for Cancel
    */                        
   boolean promptUsernameAndPassword(in nsIDOMWindow parent,
@@ -181,8 +181,8 @@ interface nsIPromptService : nsISupports
    *                      out: If result is true, a newly allocated
    *                      string. If result is false, in string is not
    *                      touched.
-   * @param checkMsg      if null, will use default title - "Remember Password"
-   * @param checkValue    if null, check box will not be shown    
+   * @param checkMsg      if null, check box will not be shown
+   * @param checkValue    
    * @return true for OK, false for Cancel
    */                        
   boolean promptPassword(in nsIDOMWindow parent,
