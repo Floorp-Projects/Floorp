@@ -443,50 +443,77 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   nsIRunaround* reflowRunaround;
   ReflowStatus  status;
 
+  // Get the band for this y-offset and see whether there are any floaters
+  // that have changed the left/right edges.
+  //
+  // XXX In order to do this efficiently we should move all this code to
+  // nsBlockFrame since it already has band data, and it's probably the only
+  // one who calls this routine anyway
+  nsBandData  bandData;
+  nsRect      rects[7];
+  nsRect*     availRect = rects;
+  nsSize      availSize = aMaxSize;
+
+  bandData.rects = rects;
+  bandData.size = 7;
+  aSpaceManager->GetBandData(0, aMaxSize, bandData);
+
+  // If there's more than one rect than figure out which one determines the
+  // available reflow area
+  if (bandData.count == 2) {
+    // Either a left or right floater. Use whichever space is larger
+    if (rects[1].width > rects[0].width) {
+      availRect = &rects[1];
+    }
+  } else if (bandData.count == 3) {
+    // Assume there are floaters on the left and right, and use the middle rect
+    availRect = &rects[1];
+  }
+
+  // Does the child frame want to do continuation-based runaround?
+  SplittableType  isSplittable;
+
+  aKidFrame->IsSplittable(isSplittable);
+  if (isSplittable == frSplittableNonRectangular) {
+    // Reduce the max height to the band height.
+    availSize.height = availRect->height;
+  }
+
+  if ((availRect->x > 0) || (availRect->XMost() < aMaxSize.width)) {
+    // There are left/right floaters.
+    availSize.width = availRect->width;
+
+    // XXX We also need to reduce the width by the kid's left/right margin
+    // and border...
+  }
+
+  //
   // Does the child frame support interface nsIRunaround?
   if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
     // Yes, the child frame wants to interact directly with the space manager
-    reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, aMaxSize,
+    if (availRect->x > 0) {
+      // Translate the local coordinate space to the current left edge
+      aSpaceManager->Translate(availRect->x, 0);
+    }
+
+    reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, availSize,
                                   aDesiredRect, aMaxElementSize, status);
+    aDesiredRect.x += availRect->x;
+
+    if (availRect->x > 0) {
+      // Translate back
+      aSpaceManager->Translate(-availRect->x, 0);
+    }
+
   } else {
     // No, use interface nsIFrame instead.
     nsReflowMetrics desiredSize;
-
-    // Get the band for this y-offset and adjust the max size that we pass
-    // to exclude any left/right margins occupied by floaters. We should be
-    // checking whether the frame is splittable and taking that into account
-    // as well...
-    //
-    // XXX In order to do this efficiently we should move all this code to
-    // nsBlockFrame since it already has band data, and it's probably the only
-    // one who calls this routine anyway
-    nsBandData  bandData;
-    nsRect      rects[7];
-    nsRect*     availRect = rects;
-
-    bandData.rects = rects;
-    bandData.size = 7;
-    aSpaceManager->GetBandData(0, aMaxSize, bandData);
-
-    // If there's more than one rect than figure out which one determines the
-    // available reflow area
-    if (bandData.count == 2) {
-      // Either a left or right floater. Use whichever space is larger
-      if (rects[1].width > rects[0].width) {
-        availRect = &rects[1];
-      }
-    } else if (bandData.count == 3) {
-      // Assume there are floaters on the left and right, and use the middle rect
-      availRect = &rects[1];
-    }
-
-    nsSize  availSize(rects->width, aMaxSize.height);
 
     aKidFrame->ResizeReflow(aPresContext, desiredSize, availSize,
                             aMaxElementSize, status);
 
     // Return the desired rect
-    aDesiredRect.x = rects->x;
+    aDesiredRect.x = availRect->x;
     aDesiredRect.y = 0;
     aDesiredRect.width = desiredSize.width;
     aDesiredRect.height = desiredSize.height;
@@ -765,7 +792,7 @@ nsIFrame* nsContainerFrame::PullUpOneChild(nsContainerFrame* aNextInFlow,
   NS_PRECONDITION(nsnull != aNextInFlow, "null ptr");
 #ifdef NS_DEBUG
   if (nsnull != aLastChild) {
-    NS_PRECONDITION(aNextInFlow->IsLastChild(aLastChild), "bad last child");
+    NS_PRECONDITION(IsLastChild(aLastChild), "bad last child");
   }
 #endif
 
