@@ -55,20 +55,20 @@ public:
     // nsISupports
     NS_DECL_ISUPPORTS
 
-    void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY) {};
+    NS_IMETHOD ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY) {};
  
 
 
-    virtual void            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
+    NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
     // nsIWidget interface
-    virtual void            Create(nsIWidget *aParent,
+    NS_IMETHOD            Create(nsIWidget *aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
                                      nsIAppShell *aAppShell = nsnull,
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
-    virtual void            Create(nsNativeWidget aParent,
+    NS_IMETHOD            Create(nsNativeWidget aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
@@ -77,51 +77,51 @@ public:
                                      nsWidgetInitData *aInitData = nsnull);
     NS_IMETHOD              GetClientData(void*& aClientData);
     NS_IMETHOD              SetClientData(void* aClientData);
-    virtual void            Destroy();
+    NS_IMETHOD            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
-    virtual void            AddChild(nsIWidget* aChild);
-    virtual void            RemoveChild(nsIWidget* aChild);
-    virtual void            Show(PRBool bState);
-    virtual void            Move(PRUint32 aX, PRUint32 aY);
-    virtual void            Resize(PRUint32 aWidth,
+    NS_IMETHOD            AddChild(nsIWidget* aChild);
+    NS_IMETHOD            RemoveChild(nsIWidget* aChild);
+    NS_IMETHOD            Show(PRBool bState);
+    NS_IMETHOD            Move(PRUint32 aX, PRUint32 aY);
+    NS_IMETHOD            Resize(PRUint32 aWidth,
                                    PRUint32 aHeight,
                                    PRBool   aRepaint);
-    virtual void            Resize(PRUint32 aX,
+    NS_IMETHOD            Resize(PRUint32 aX,
                                    PRUint32 aY,
                                    PRUint32 aWidth,
                                    PRUint32 aHeight,
                                    PRBool   aRepaint);
-    virtual void            Enable(PRBool bState);
-    virtual void            SetFocus(void);
-    virtual void            GetBounds(nsRect &aRect);
+    NS_IMETHOD            Enable(PRBool bState);
+    NS_IMETHOD            SetFocus(void);
+    NS_IMETHOD            GetBounds(nsRect &aRect);
     virtual nscolor         GetForegroundColor(void);
-    virtual void            SetForegroundColor(const nscolor &aColor);
+    NS_IMETHOD            SetForegroundColor(const nscolor &aColor);
     virtual nscolor         GetBackgroundColor(void);
-    virtual void            SetBackgroundColor(const nscolor &aColor);
+    NS_IMETHOD            SetBackgroundColor(const nscolor &aColor);
     virtual nsIFontMetrics* GetFont(void);
-    virtual void            SetFont(const nsFont &aFont);
+    NS_IMETHOD            SetFont(const nsFont &aFont);
     virtual nsCursor        GetCursor();
-    virtual void            SetCursor(nsCursor aCursor);
-    virtual void            Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD            SetCursor(nsCursor aCursor);
+    NS_IMETHOD            Invalidate(PRBool aIsSynchronous);
     virtual void*           GetNativeData(PRUint32 aDataType);
     virtual nsIRenderingContext* GetRenderingContext();
-    virtual void            SetColorMap(nsColorMap *aColorMap);
+    NS_IMETHOD            SetColorMap(nsColorMap *aColorMap);
     virtual nsIDeviceContext* GetDeviceContext();
     virtual nsIAppShell *   GetAppShell();
-    virtual void            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+    NS_IMETHOD            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
     virtual nsIToolkit*     GetToolkit();  
-    virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
-    virtual void            SetTitle(const nsString& aTitle); 
-    virtual void            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
-    virtual void            RemoveTooltips();
-    virtual void            UpdateTooltips(nsRect* aNewTips[]);
-    virtual void            WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
-    virtual void            ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
-    virtual void            AddMouseListener(nsIMouseListener * aListener);
-    virtual void            AddEventListener(nsIEventListener * aListener);
-    virtual void            BeginResizingChildren(void);
-    virtual void            EndResizingChildren(void);
+    NS_IMETHOD            SetBorderStyle(nsBorderStyle aBorderStyle); 
+    NS_IMETHOD            SetTitle(const nsString& aTitle); 
+    NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
+    NS_IMETHOD            RemoveTooltips();
+    NS_IMETHOD            UpdateTooltips(nsRect* aNewTips[]);
+    NS_IMETHOD            WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
+    NS_IMETHOD            ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
+    NS_IMETHOD            AddMouseListener(nsIMouseListener * aListener);
+    NS_IMETHOD            AddEventListener(nsIEventListener * aListener);
+    NS_IMETHOD            BeginResizingChildren(void);
+    NS_IMETHOD            EndResizingChildren(void);
 
     virtual PRBool IsChild() { return(PR_FALSE); };
 

@@ -40,17 +40,17 @@ public:
     NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
    
     // nsIComboBox interface
-    virtual void    AddItemAt(nsString &aItem, PRInt32 aPosition);
+    NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
     virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);
     virtual PRInt32 GetItemCount();
     virtual PRBool  RemoveItemAt(PRInt32 aPosition);
     virtual PRBool  GetItemAt(nsString& anItem, PRInt32 aPosition);
-    virtual void    GetSelectedItem(nsString& aItem);
+    NS_IMETHOD      GetSelectedItem(nsString& aItem);
     virtual PRInt32 GetSelectedIndex();
-    virtual void    SelectItem(PRInt32 aPosition);
-    virtual void    Deselect() ;
+    NS_IMETHOD      SelectItem(PRInt32 aPosition);
+    NS_IMETHOD      Deselect() ;
 
-    void Create(nsIWidget *aParent,
+    NS_IMETHOD Create(nsIWidget *aParent,
                 const nsRect &aRect,
                 EVENT_CALLBACK aHandleEventFunction,
                 nsIDeviceContext *aContext,
@@ -58,7 +58,7 @@ public:
                 nsIToolkit *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull);
 
-    void Create(nsNativeWidget aParent,
+    NS_IMETHOD Create(nsNativeWidget aParent,
                 const nsRect &aRect, 
                 EVENT_CALLBACK aHandleEventFunction,
                 nsIDeviceContext *aContext,
@@ -66,17 +66,17 @@ public:
                 nsIToolkit *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull);
 
-    virtual void SetForegroundColor(const nscolor &aColor);
-    virtual void SetBackgroundColor(const nscolor &aColor);
+    NS_IMETHOD SetForegroundColor(const nscolor &aColor);
+    NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
 
     virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool OnPaint(nsPaintEvent & aEvent);
     virtual PRBool OnResize(nsSizeEvent &aEvent);
 
     // nsIComboBox interface
-    void      SetMultipleSelection(PRBool aMultipleSelections);
-    PRInt32   GetSelectedCount();
-    void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+    NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
+    PRInt32    GetSelectedCount();
+    NS_IMETHOD GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
 
 protected:
     Widget  mPullDownMenu;

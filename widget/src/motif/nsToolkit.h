@@ -39,7 +39,7 @@ public:
   
   NS_DECL_ISUPPORTS
     
-    virtual void            Init(PRThread *aThread);
+  NS_IMETHOD            Init(PRThread *aThread);
   
 public:
   NS_IMETHOD_(GC) GetSharedGC();

@@ -74,7 +74,7 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsRadioButton Creator
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::Create(nsIWidget *aParent,
+NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -158,6 +158,7 @@ void nsRadioButton::Create(nsIWidget *aParent,
 
 
 
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -165,7 +166,7 @@ void nsRadioButton::Create(nsIWidget *aParent,
 // nsRadioButton Creator
 //
 //-------------------------------------------------------------------------
-void nsRadioButton::Create(nsNativeWidget aParent,
+NS_METHOD nsRadioButton::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -173,6 +174,7 @@ void nsRadioButton::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------

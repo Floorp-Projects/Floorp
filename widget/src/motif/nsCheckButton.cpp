@@ -52,7 +52,7 @@ nsCheckButton::~nsCheckButton()
 // nsCheckButton Creator
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::Create(nsIWidget *aParent,
+NS_METHOD nsCheckButton::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -113,7 +113,7 @@ void nsCheckButton::Create(nsIWidget *aParent,
                 this);
 
 
-
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -121,7 +121,7 @@ void nsCheckButton::Create(nsIWidget *aParent,
 // nsCheckButton Creator
 //
 //-------------------------------------------------------------------------
-void nsCheckButton::Create(nsNativeWidget aParent,
+NS_METHOD nsCheckButton::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -129,6 +129,7 @@ void nsCheckButton::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  return NS_ERROR_FAILURE;
 }
 
 /**

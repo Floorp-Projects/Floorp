@@ -30,9 +30,11 @@ XtAppContext gAppContext;
 NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 
-void nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
   mDispatchListener = aDispatchListener;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -41,12 +43,13 @@ void nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
-void nsAppShell::Create(int* argc, char ** argv)
+NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
   XtSetLanguageProc(NULL, NULL, NULL);
   mTopLevel = XtVaAppInitialize(&mAppContext, "nsAppShell", NULL, 
                                 0, argc, argv, NULL, NULL);
   gAppContext = mAppContext;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -55,7 +58,7 @@ void nsAppShell::Create(int* argc, char ** argv)
 //
 //-------------------------------------------------------------------------
 
-nsresult nsAppShell::Run()
+NS_METHOD nsAppShell::Run()
 {
   XtRealizeWidget(mTopLevel);
 
@@ -77,9 +80,10 @@ nsresult nsAppShell::Run()
 //
 //-------------------------------------------------------------------------
 
-void nsAppShell::Exit()
+NS_METHOD nsAppShell::Exit()
 {
   exit(0);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

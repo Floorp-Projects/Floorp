@@ -54,7 +54,7 @@ nsTextWidget::~nsTextWidget()
 }
 
 //-------------------------------------------------------------------------
-void nsTextWidget::Create(nsIWidget *aParent,
+NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -117,6 +117,7 @@ void nsTextWidget::Create(nsIWidget *aParent,
     data->mPassword = "";
     XtVaSetValues(mWidget, XmNuserData, data, NULL);
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -140,7 +141,7 @@ nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 
 //-------------------------------------------------------------------------
-void nsTextWidget::Create(nsNativeWidget aParent,
+NS_METHOD nsTextWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -148,6 +149,7 @@ void nsTextWidget::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  return NS_ERROR_FAILURE;
 }
 
 
