@@ -35,51 +35,24 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsSampleWordBreaker_h__
-#define nsSampleWordBreaker_h__
+
+#ifndef nsSemanticUnitScanner_h__
+#define nsSemanticUnitScanner_h__
+
+#include "nsSampleWordBreaker.h"
+#include "nsISemanticUnitScanner.h"
 
 
-#include "nsIWordBreaker.h"
-
-typedef enum {
-  kWbClassSpace = 0,
-  kWbClassAlphaLetter,
-  kWbClassPunct,
-  kWbClassHanLetter,
-  kWbClassKatakanaLetter,
-  kWbClassHiraganaLetter,
-  kWbClassHWKatakanaLetter,
-  kWbClassThaiLetter
-} wb_class;
-
-class nsSampleWordBreaker : public nsIWordBreaker
+class nsSemanticUnitScanner : public nsISemanticUnitScanner
+                            , public nsSampleWordBreaker
 {
-  NS_DECL_ISUPPORTS
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISEMANTICUNITSCANNER
 
-  nsSampleWordBreaker() ;
-  virtual ~nsSampleWordBreaker() ;
-
-  NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
-                            const PRUnichar* aText2 , PRUint32 aTextLen2,
-                            PRBool *oCanBreak);
-  NS_IMETHOD FindWord(const PRUnichar* aText1 , PRUint32 aTextLen1,
-                                      PRUint32 aOffset,
-                                      PRUint32 *oWordBegin,
-                                      PRUint32 *oWordEnd);
-
-  NS_IMETHOD Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oNext, PRBool *oNeedMoreText);
-
-  NS_IMETHOD Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oPrev, PRBool *oNeedMoreText);
-
-protected:
-  PRUint8  GetClass(PRUnichar aChar);
-  PRUint32 Next(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
-  PRUint32 Prev(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
-
-
+  nsSemanticUnitScanner();
+  virtual ~nsSemanticUnitScanner();
+  /* additional members */
 };
 
-#endif  /* nsSampleWordBreaker_h__ */
+#endif
