@@ -62,7 +62,6 @@ install::
 	$(MAKE_INSTALL) wizardOverlay.js $(DISTBROWSER)
 	$(MAKE_INSTALL) wizardOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) treePopups.js $(DISTBROWSER)
-	$(MAKE_INSTALL) PSMTaskMenu.xul $(DISTBROWSER)
   
 clobber::
   rm -f $(DIST)\bin\chrome\global\content\default\*.*
