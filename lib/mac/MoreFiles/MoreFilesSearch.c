@@ -144,7 +144,7 @@ static	void	CheckForMatches(CInfoPBPtr cPB,
 #undef	pascal
 #endif
 
-#if TARGET_RT_MAC_CFM
+#if TARGET_RT_MAC_CFM || defined(MACOSX)
 
 static	pascal	void	TimeOutTask(TMTaskPtr tmTaskPtr);
 
@@ -687,7 +687,7 @@ Failed:
 #undef	pascal
 #endif
 
-#if TARGET_RT_MAC_CFM
+#if TARGET_RT_MAC_CFM || defined(MACOSX)
 
 static	pascal	void	TimeOutTask(TMTaskPtr tmTaskPtr)
 {
@@ -745,13 +745,13 @@ static	long	GetDirModDate(short vRefNum,
 
 /*****************************************************************************/
 
+pascal	OSErr	IndexedSearch(CSParamPtr pb,
+							  long dirID)
+{
 #if !TARGET_CARBON
 /* NSCP - pinkerton
  * some of the timer stuff is mismatched for carbon. We don't use it anyway.
  */
-pascal	OSErr	IndexedSearch(CSParamPtr pb,
-							  long dirID)
-{
 	static LevelRecHandle	searchStack = NULL;		/* static handle to LevelRec stack */
 	static Size				searchStackSize = 0;	/* size of static handle */
 	SearchPositionRecPtr	catPosition;
@@ -1024,8 +1024,10 @@ pascal	OSErr	IndexedSearch(CSParamPtr pb,
 	}
 	
 	return ( result );
-}
+#else
+  return paramErr;
 #endif
+}
 
 /*****************************************************************************/
 

@@ -1045,6 +1045,8 @@ pascal	OSErr SetDefault(short newVRefNum,
 
 /*****************************************************************************/
 
+#if CALL_NOT_IN_CARBON
+
 pascal	OSErr RestoreDefault(short oldVRefNum,
 							 long oldDirID)
 {
@@ -1072,6 +1074,8 @@ pascal	OSErr RestoreDefault(short oldVRefNum,
 	
 	return ( error );
 }
+
+#endif
 
 /*****************************************************************************/
 
