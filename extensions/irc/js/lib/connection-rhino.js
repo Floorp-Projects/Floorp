@@ -35,65 +35,66 @@
 
 function CBSConnection ()
 {
-	this._socket = null;
+    this._socket = null;
 }
 
 CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
 {
-	if (typeof tcp_flag == "undefined")
-		tcp_flag = false;
-
-	this.host = host;
-	this.port = port;
-	this.bind = bind;
-	this.tcp_flag = tcp_flag;
-
-	this._socket = new java.net.Socket(host, port);
-	this._inputStream = new java.io.DataInputStream(this._socket.getInputStream());
-	this._outputStream = this._socket.getOutputStream();
-
-	print("connected to " + host);
+    if (typeof tcp_flag == "undefined")
+        tcp_flag = false;
+    
+    this.host = host;
+    this.port = port;
+    this.bind = bind;
+    this.tcp_flag = tcp_flag;
+    
+    this._socket = new java.net.Socket(host, port);
+    this._inputStream =
+        new java.io.DataInputStream(this._socket.getInputStream());
+    this._outputStream = this._socket.getOutputStream();
+    
+    dd("connected to " + host);
 	
-	this.isConnected = true;
+    this.isConnected = true;
 
-	return this.isConnected;
+    return this.isConnected;
 }
 
 CBSConnection.prototype.disconnect = function()
 {
-	if (this.isConnected) {
-	    this.isConnected = false;
+    if (this.isConnected) {
+        this.isConnected = false;
     	this._socket.close();
-		delete this._socket;
-		delete this._inputStream;
-		delete this._outputStream;
-	}
+        delete this._socket;
+        delete this._inputStream;
+        delete this._outputStream;
+    }
 }
 
 CBSConnection.prototype.sendData = function(str)
 {
-	if (!this.isConnected)
-	    throw "Not Connected.";
+    if (!this.isConnected)
+        throw "Not Connected.";
 
-	var rv = false;
+    var rv = false;
 
-	try
-	{
-		this._outputStream.write(str.getBytes());
-		rv = true;
-	}
-	catch (ex)
-	{
-	    if (typeof ex != "undefined")
-	    {
-	        this.isConnected = false;
-	        throw (ex);
-	    }
-	    else
-	        rv = false;
-	}
-
-	return rv;        
+    try
+    {
+        this._outputStream.write(str.getBytes());
+        rv = true;
+    }
+    catch (ex)
+    {
+        if (typeof ex != "undefined")
+        {
+            this.isConnected = false;
+            throw (ex);
+        }
+        else
+            rv = false;
+    }
+    
+    return rv;        
 }
 
 CBSConnection.prototype.readData = function(timeout)
@@ -101,13 +102,20 @@ CBSConnection.prototype.readData = function(timeout)
     if (!this.isConnected)
         throw "Not Connected.";
 
-	var rv;
+    var rv;
 
+    dd ("readData: timeout " + timeout);
+    
     try {
-    	// FIXME: how to do a timeout.
-        rv = this._inputStream.readLine();
+        this._socket.setSoTimeout(Number(timeout));
+        rv = this._inputStream.read();
     } catch (ex) {
-        if (typeof ex != "undefined") {
+        
+        if ((typeof ex != "undefined") &&
+            (ex.indexOf("java.io.InterruptedIOException") != -1))
+        {
+            dd ("throwing " + ex);
+            
             this.isConnected = false;
             throw (ex);
         } else {
@@ -115,5 +123,7 @@ CBSConnection.prototype.readData = function(timeout)
         }
     }
 
+    dd ("readData: rv = '" + rv + "'");
+    
     return rv;
 }

@@ -50,6 +50,7 @@ client.lastListType = "chan-users";
 client.inputHistory = new Array();
 client.lastHistoryReferenced = -1;
 client.incompleteLine = "";
+client.isPermanent = true;
 
 CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
 CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
@@ -110,8 +111,8 @@ function initHost(obj)
     obj.eventPump = new CEventPump (10);
     
     obj.networks["efnet"] =
-	new CIRCNetwork ("efnet", [{name: "irc.freei.net", port: 6667},
-                                   {name: "irc.primenet.com", port: 6667},
+	new CIRCNetwork ("efnet", [{name: "irc.magic.ca", port: 6667},
+                                   {name: "irc.freei.net", port: 6667},
                                    {name: "irc.cs.cmu.edu",   port: 6667}],
                          obj.eventPump);
     obj.networks["moznet"] =
@@ -132,6 +133,7 @@ function initHost(obj)
                                false /* disable */);
 
     obj.munger = new CMunger();
+    obj.munger.enabled = false;
     obj.munger.addRule ("you-talking-to-me?", matchMyNick, "");
     obj.munger.addRule
         ("link", /((http|mailto|ftp)\:\/\/[^\)\s]*|www\.\S+\.\S[^\)\s]*)/,
@@ -140,7 +142,7 @@ function initHost(obj)
         ("face",
          /((^|\s)[\<\>]?[\;\=\:\8]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\](\s|$))/,
          insertSmiley);
-    obj.munger.addRule ("rheet", /(rhe+t\!*)/i, "rheet");
+    obj.munger.addRule ("rheet", /(rhee+t\!*)/i, "rheet");
     obj.munger.addRule ("bold", /(\*.*\*)/, "bold");
     obj.munger.addRule ("italic", /[^sS](\/.*\/)/, "italic");
     obj.munger.addRule ("teletype", /(\|.*\|)/, "teletype");
@@ -186,8 +188,9 @@ function insertLink (matchText, containerTag)
 
 function insertSmiley (emoticon, containerTag)
 {
-    var src = "";
-    
+    dd ("arguments: " + emoticon + ", " + containerTag);
+
+    var src = "";    
     
     if (emoticon.search (/\;[\-\^\v]?[\)\>\]]/) != -1)
         src = "face-wink.gif";
@@ -580,6 +583,39 @@ function getTBForObject (source, create)
 
     return tb;
     
+}
+
+function deleteToolbutton (tb)
+{
+    var i, key = Number(tb.getAttribute("viewKey"));
+    
+    if (!isNaN(key))
+    {
+        if (!client.viewsArray[key].source.isPermanent)
+        {
+            /* re-index higher toolbuttons */
+            for (i = key + 1; i < client.viewsArray.length; i--)
+            {
+                dd ("re-indexing tb " + i);
+                tb.setAttribute ("viewKey", Number(key) - 1);
+            }
+
+            arrayRemoveAt(client.viewsArray, key);
+            document.getElementById("views-tbar").removeChild(tb.parentNode);
+        }
+        else
+        {
+            window.alert ("Current view cannot be deleted.");
+            return false;
+        }
+            
+    }
+    else
+        dd  ("*** INVALID OBJECT passed to deleteToolButton (" + tb + ") " +
+             "no viewKey attribute. (" + key + ")");
+
+    return true;
+
 }
 
 function filterOutput (msg, msgtype)

@@ -38,7 +38,14 @@ function onLoad()
 function onUnload()
 {
 
-    client.quit ("ChatZilla!");
+    client.quit ("ChatZilla! [" + navigator.userAgent + "]");
+    
+}
+
+function onNotImplemented()
+{
+
+    alert ("'We're accepting patches'");
     
 }
 
@@ -74,6 +81,57 @@ function onDoStyleChange (newStyle)
         setCurrentObject(client.currentObject);
     }
     
+}
+
+function onHideCurrentView()
+{
+    var tb = getTBForObject(client.currentObject);
+    
+    if (tb)
+        if (deleteToolbutton (tb))
+            setCurrentObject (client);
+    
+}
+
+function onClearCurrentView()
+{
+
+    if (client.output.firstChild)
+        client.output.removeChild (client.output.firstChild);
+    delete client.currentObject.messages;
+
+    client.currentObject.display ("Messages Cleared.", "INFO");
+
+    client.output.appendChild (client.currentObject.messages);
+    
+}
+
+function onDeleteCurrentView()
+{
+    var tb = getTBForObject(client.currentObject);
+    
+    if (tb)
+    {
+        if (deleteToolbutton (tb))
+        {
+            delete client.currentObject.messages;
+            setCurrentObject (client);
+        }
+        
+    }
+    
+}
+
+function onToggleMunger()
+{
+    client.munger.enabled = !client.munger.enabled;
+
+    if (client.munger.enabled)
+        alert ("The munger may be broken, see " +
+               "http://bugzilla.mozilla.org/show_bug.cgi?id=22048");
+    
+    document.getElementById("menu-munger").setAttribute ("checked",
+                                                         client.munger.enabled);
 }
 
 function onInputKeyUp (e)
@@ -774,6 +832,22 @@ function my_whoisreply (e)
     
 }
 
+CIRCNetwork.prototype.on433 = /* nickname in use */
+function my_433 (e)
+{
+
+    e.server.parent.display ("The nickname '" + e.params[2] +
+                             "' is already in use.", e.code);
+    
+}
+
+CIRCNetwork.prototype.onError =
+function my_netping (e)
+{
+
+    e.server.parent.display (e.meat, "ERROR");
+    
+}
 
 CIRCNetwork.prototype.onPing =
 function my_netping (e)

@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
- *
+ *  Peter Van der Beken, peter.vanderbeken@pandora.be, necko-only version
  *
  * depends on utils.js, XPCOM, and the XPCOM component
  *  component://misc/bs/connection
@@ -33,51 +33,87 @@
  *
  */
 
+function toScriptableInputStream (i)
+{
+    var si = Components.classes["component://netscape/scriptableinputstream"];
+    
+    si = si.createInstance();
+    si = si.QueryInterface(Components.interfaces.nsIScriptableInputStream);
+    si.init(i);
+
+    return si;
+    
+}
+
 function CBSConnection ()
 {
 
-  this._bsc = newObject ("component://misc/bs/connection", "bsIConnection");
-  if (!this._bsc)
-	throw ("Error Creating component://misc/bs/connection");
+    var sockServiceClass =
+        Components.classesByID["{c07e81e0-ef12-11d2-92b6-00105a1b0d64}"];
+    
+    if (!sockServiceClass)
+        throw ("Couldn't get socket service class.");
+    
+    var sockService = sockServiceClass.getService();
+    if (!sockService)
+        throw ("Couldn't get socket service.");
+
+    this._sockService = sockService.QueryInterface
+        (Components.interfaces.nsISocketTransportService);
 
 }
 
-CBSConnection.prototype.connect = 
-function bs_connect (host, port, bind, tcp_flag)
+CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
 {
     if (typeof tcp_flag == "undefined")
-	tcp_flag = false;
+		tcp_flag = false;
     
-    this._bsc.init (host);
     this.host = host;
     this.port = port;
     this.bind = bind;
     this.tcp_flag = tcp_flag;
 
-    this.isConnected = this._bsc.connect (port, bind, tcp_flag);
+    this._channel = this._sockService.createTransport (host, port, host, 0, 0);
+    if (!this._channel)
+        throw ("Error opening channel.");
+
+    this._inputStream =
+        toScriptableInputStream(this._channel.openInputStream (0, 0));
+    if (!this._inputStream)
+        throw ("Error getting input stream.");
+
+    this._outputStream = this._channel.openOutputStream(0);
+    if (!this._outputStream)
+        throw ("Error getting output stream.");
+
+    this.isConnected = true;
 
     return this.isConnected;
   
 }
 
-CBSConnection.prototype.disconnect =
-function bs_disconnect ()
+CBSConnection.prototype.disconnect = function()
 {
     
-    this.isConnected = false;
-    return this._bsc.disconnect();
+    if (this.isConnected) {
+        this.isConnected = false;
+        this._inputStream.Close();
+        this._outputStream.Close();
+    }
 
 }
 
-CBSConnection.prototype.sendData =
-function bs_send (str)
+CBSConnection.prototype.sendData = function(str)
 {
     if (!this.isConnected)
         throw "Not Connected.";
 
+    var rv = false;
+    
     try
     {
-        var rv = this._bsc.sendData (str);
+        this._outputStream.Write(str, str.length);
+        rv = true;
     }
     catch (ex)
     {
@@ -87,35 +123,34 @@ function bs_send (str)
             throw (ex);
         }
         else
-            var rv = false;
+            rv = false;
     }
-
-    return rv;        
-
-}
-
-CBSConnection.prototype.readData =
-function bs_read (timeout)
-{
     
-    if (!this.isConnected)
-        throw "Not Connected.";
-
-    try
-    {
-        var rv = this._bsc.readData(timeout);
-    }
-    catch (ex)
-    {
-        if (typeof ex != "undefined")
-        {
-            this.isConnected = false;
-            throw (ex);
-        }
-        else
-            var rv = "";
-    }
-
     return rv;
+}
 
+CBSConnection.prototype.readData = function(timeout)
+{
+    if (!this.isConnected)
+        throw "Not Connected.";
+
+    var rv, av;
+
+    try {
+        av = this._inputStream.available();
+        if (av)
+            rv = this._inputStream.read (av);
+        else
+            rv = "";
+    } catch (ex) {
+        dd ("*** Caught " + ex + " while reading.")
+        if (typeof ex != "undefined") {
+            this.isConnected = false;
+            throw (ex);
+        } else {
+            rv = "";
+        }
+    }
+    
+    return rv;
 }

@@ -429,8 +429,8 @@ function serv_poll(e)
     }
     catch (ex)
     {
-        dd ("** Caught exception " + ex + " reading from server " +
-            this.connection.name);
+        dd ("*** Caught exception " + ex + " reading from server " +
+            this.connection.host);
         if (typeof ex != "undefined")
         {
              var ev = new CEvent ("server", "disconnect", this,

@@ -6,9 +6,9 @@ function CMungerEntry (name, regex, className, tagName)
 
     if (regex instanceof RegExp)
         this.regex = regex;
-    else 
+    else
         this.lambdaMatch = regex;
-
+    
     if (typeof className == "function")
         this.lambdaReplace = className;
     else 
@@ -22,6 +22,8 @@ function CMunger ()
     this.entries = new Object();
     
 }
+
+CMunger.prototype.enabled = true;
 
 CMunger.prototype.addRule =
 function mng_addrule (name, regex, className)
@@ -47,56 +49,62 @@ function mng_munge (text, containerTag, eventDetails)
     
     if (!containerTag)
         containerTag = document.createElement (tagName);
- 
-    for (entry in this.entries)
+
+    if (this.enabled)
     {
-        if (typeof this.entries[entry].lambdaMatch == "function")
+        for (entry in this.entries)
         {
-            var rval;
-            rval = this.entries[entry].lambdaMatch(text, containerTag,
-                                                   eventDetails,
-                                                   this.entries[entry]);
-            if (rval)
-                ary = [(void 0), rval];
-            else
-                ary = null;
-        }
-        else
-            ary = text.match(this.entries[entry].regex);
-        
-        if (ary != null)
-        {
-            var startPos = text.indexOf(ary[1]);
-            
-            if (typeof this.entries[entry].lambdaReplace == "function")
+            if (typeof this.entries[entry].lambdaMatch == "function")
             {
-                this.munge (text.substr(0,startPos), containerTag,
-                            eventDetails);
-                this.entries[entry].lambdaReplace (ary[1], containerTag,
-                                                   eventDetails,
-                                                   this.entries[entry]);
-                this.munge (text.substr (startPos + ary[1].length, text.length),
-                            containerTag, eventDetails);
+                var rval;
                 
-                return containerTag;
+                rval = this.entries[entry].lambdaMatch(text, containerTag,
+                                                       eventDetails,
+                                                       this.entries[entry]);
+                if (rval)
+                    ary = [(void 0), rval];
+                else
+                    ary = null;
             }
             else
+                ary = text.match(this.entries[entry].regex);
+            
+            if ((ary != null) && (ary[1]))
             {
-                this.munge (text.substr(0,startPos), containerTag, eventDetails);
+                var startPos = text.indexOf(ary[1]);
+                
+                if (typeof this.entries[entry].lambdaReplace == "function")
+                {
+                    this.munge (text.substr(0,startPos), containerTag,
+                                eventDetails);
+                    this.entries[entry].lambdaReplace (ary[1], containerTag,
+                                                       eventDetails,
+                                                       this.entries[entry]);
+                    this.munge (text.substr (startPos + ary[1].length,
+                                             text.length), containerTag,
+                                eventDetails);
+                
+                    return containerTag;
+                }
+                else
+                {
+                    this.munge (text.substr(0,startPos), containerTag,
+                                eventDetails);
+                    
+                    var subTag = document.createElement
+                        (this.entries[entry].tagName);
 
-                var subTag = document.createElement
-                    (this.entries[entry].tagName);
+                    subTag.setAttribute ("class", this.entries[entry].className);
+                    subTag.appendChild (document.createTextNode (ary[1]));
+                    containerTag.appendChild (subTag);
+                    this.munge (text.substr (startPos + ary[1].length,
+                                             text.length), containerTag,
+                                eventDetails);
 
-                subTag.setAttribute ("class", this.entries[entry].className);
-                subTag.appendChild
-                    (document.createTextNode (ary[1]));
-                containerTag.appendChild (subTag);
-                this.munge (text.substr (startPos + ary[1].length, text.length),
-                            containerTag, eventDetails);
-
-                return containerTag;
+                    return containerTag;
+                }
             }
-        }        
+        }
     }
 
     containerTag.appendChild (document.createTextNode (text));

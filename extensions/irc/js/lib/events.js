@@ -178,8 +178,8 @@ function ep_routeevent (e)
                 catch (ex)
                 {
                     dd ("Error routing event: " + ex + " in " + e.destMethod);
-                    
                 }
+
                 if (count++ > this.MAX_EVENT_DEPTH)
                     throw "Too many events in chain";
                 break;
