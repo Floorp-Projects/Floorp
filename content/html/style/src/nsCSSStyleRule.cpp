@@ -2078,14 +2078,15 @@ CSSStyleRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetCssText(nsString& aCssText)
 {
-  // XXX TBI
+  aCssText = mSelectorText;
+  // XXX TBI append declaration too
   return NS_OK;
 }
 
 NS_IMETHODIMP    
 CSSStyleRuleImpl::SetCssText(const nsString& aCssText)
 {
-  // XXX TBI
+  // XXX TBI - need to re-parse rule & declaration
   return NS_OK;
 }
 
