@@ -123,13 +123,13 @@ ReadBuf(char *inFile, SECItem *item)
     int ret;
     PRFileDesc* fd = PR_Open(inFile, PR_RDONLY, 0);
     if (NULL == fd) {
-        SECU_PrintError("Error", "PR_Open failed");
+        SECU_PrintError("symkeyutil", "PR_Open failed");
 	return -1;
     }
 
     len = GetLen(fd);
     if (len < 0) {
-	SECU_PrintError("Error", "PR_GetOpenFileInfo failed");
+	SECU_PrintError("symkeyutil", "PR_GetOpenFileInfo failed");
 	return -1;
     }
     item->data = (unsigned char *)PORT_Alloc(len);
@@ -140,7 +140,7 @@ ReadBuf(char *inFile, SECItem *item)
 
     ret = PR_Read(fd,item->data,item->len);
     if (ret < 0) {
-	SECU_PrintError("Error", "PR_Read failed");
+	SECU_PrintError("symkeyutil", "PR_Read failed");
 	PORT_Free(item->data);
 	item->data = NULL;
 	return -1;
@@ -156,13 +156,13 @@ WriteBuf(char *inFile, SECItem *item)
     int ret;
     PRFileDesc* fd = PR_Open(inFile, PR_WRONLY|PR_CREATE_FILE, 0x200);
     if (NULL == fd) {
-        SECU_PrintError("Error", "PR_Open failed");
+        SECU_PrintError("symkeyutil", "PR_Open failed");
 	return -1;
     }
 
     ret = PR_Write(fd,item->data,item->len);
     if (ret < 0) {
-	SECU_PrintError("Error", "PR_Write failed");
+	SECU_PrintError("symkeyutil", "PR_Write failed");
 	return -1;
     }
     PR_Close(fd);
