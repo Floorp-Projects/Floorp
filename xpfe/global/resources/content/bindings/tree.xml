@@ -88,8 +88,8 @@
                 onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
                        else this.removeAttribute('disableKeyNavigation'); return val;"/>
       
+      <property name="_selectDelay" onget="return 50;"/>
       <field name="_columnsDirty">true</field>
-
       <field name="_handleMouseScroll">
       <![CDATA[
         ({
@@ -267,7 +267,7 @@
            return;
          this.selectionHead = -1;
          this.selectionTail = -1;
-         this.treeBoxObject.selection.timedSelect(c-1, 500);
+         this.treeBoxObject.selection.timedSelect(c-1, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(c-1);
         ]]>
       </handler>
@@ -279,7 +279,7 @@
          } catch (e) {}
          this.selectionHead = -1;
          this.selectionTail = -1;
-         this.treeBoxObject.selection.timedSelect(c+1, 500);
+         this.treeBoxObject.selection.timedSelect(c+1, this._selectDelay);
          this.treeBoxObject.ensureRowIsVisible(c+1);
         ]]>
       </handler>
@@ -373,7 +373,7 @@
              i = c - f;
            this.treeBoxObject.scrollByPages(-1);
          }
-         this.treeBoxObject.selection.timedSelect(i, 500);
+         this.treeBoxObject.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down">
@@ -399,7 +399,7 @@
              i = lastTopRowIndex + c - f + 1;
            this.treeBoxObject.scrollByPages(1);
          }
-         this.treeBoxObject.selection.timedSelect(i, 500);
+         this.treeBoxObject.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="shift">
@@ -526,7 +526,7 @@
            return;
          this.selectionHead = -1;
          this.selectionTail = -1;
-         this.treeBoxObject.selection.timedSelect(0, 500);
+         this.treeBoxObject.selection.select(0);
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
@@ -537,7 +537,7 @@
            return;
          this.selectionHead = -1;
          this.selectionTail = -1;
-         this.treeBoxObject.selection.timedSelect(l, 500);
+         this.treeBoxObject.selection.select(l);
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
@@ -628,7 +628,7 @@
              if (cellText.search(this._incrementalString) == 0) {
                this.selectionHead = -1;
                this.selectionTail = -1;
-               this.treeBoxObject.selection.timedSelect(l, 500);
+               this.treeBoxObject.selection.timedSelect(l, this._selectDelay);
                this.treeBoxObject.ensureRowIsVisible(l);
                break;
              }
