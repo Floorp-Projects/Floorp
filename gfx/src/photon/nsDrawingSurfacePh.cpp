@@ -29,7 +29,9 @@
 #include <errno.h>
 
 /* Should be defined in the Photon headers somewhere */
-extern void PdReleaseDirectContext( PdDirectContext_t *DirectContext );
+extern "C" {
+void PdReleaseDirectContext( PdDirectContext_t *DirectContext );
+}
 
 /* The Transparency Mask of the last image Draw'd in nsRenderingContextPh */
 /* This is needed for locking and unlocking */
