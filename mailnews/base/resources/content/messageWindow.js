@@ -683,3 +683,7 @@ function CommandUpdate_UndoRedo()
 
 }
 
+function GetDBView()
+{
+  return gDBView;
+}
