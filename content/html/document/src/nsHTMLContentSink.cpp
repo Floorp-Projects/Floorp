@@ -676,10 +676,18 @@ void HTMLContentSink::ReduceEntities(nsString& aString) {
               dtd->ConvertEntityToUnicode(theNCRStr, &theNCRValue);
               theEntity=PRUnichar(theNCRValue);
             }
+            else {
+              //what looked like an entity is not really one.
+              //so let's copy the ncrstring back to the output string
+              aString.Mid(theNCRStr,theAmpPos,theSemiPos-theAmpPos+1);
+              theOutString.Append(theNCRStr);
+            }
             break;
         } //switch
-
-        theOutString.Append(theEntity);
+        
+        if(theEntity) {
+          theOutString.Append(theEntity);
+        }
         theAmpPos = aString.FindChar('&',PR_FALSE,theSemiPos+1);
 
       } //while
