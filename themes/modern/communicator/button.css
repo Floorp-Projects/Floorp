@@ -212,6 +212,11 @@
 	  display			  : none;
 	}
 
+  .button-toolbar-2[disabled="true"] > .button-internal-box > .button-text-container > stack > .button-text
+	{
+	  color: #425D84;
+	}
+
 
 /** "Green" buttons, e.g. "Search"
  *  class="button-toolbar-3"
