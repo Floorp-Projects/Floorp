@@ -472,18 +472,6 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
    shellAsWin->SetVisibility(aVisibility);
    mWindow->Show(aVisibility);
 
-  // this may cause problems, focusing the content webshell on every show.
-  // still, this code's previous position, in OnEndDocumentLoad, was
-  // forcing the window visible too early. this made the window flash,
-  // as it was resized, and aggravated a gtk bug in which windows cannot
-  // be resized after they're made visible. yes, that wants fixing.
-  // repercussions were myriad. focusing here, instead.
-   nsCOMPtr<nsIDocShellTreeItem> contentShell;
-   GetPrimaryContentShell(getter_AddRefs(contentShell));
-   nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(contentShell));
-   if(domWindow)
-      domWindow->Focus();
-
    nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
    //XXXTAB Update windowMediator to take a nsIXULWindow instead
    nsCOMPtr<nsIWebShellWindow> 
