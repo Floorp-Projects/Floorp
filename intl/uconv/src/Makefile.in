@@ -33,6 +33,7 @@ CSRCS		=  \
 CPPSRCS		= \
                   nsCharsetConverterManager.cpp \
                   nsUnicodeDecodeUtil.cpp \
+                  nsUNIXCharset.cpp \
                   nsUConvDll.cpp \
 		  $(NULL)
 
