@@ -1,14 +1,17 @@
-      interface Navigator {
+interface Navigator {
 /* IID: { 0xa6cf906e, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-        readonly attribute wstring userAgent;
-        readonly attribute wstring appCodeName;
-        readonly attribute wstring appVersion;
-        readonly attribute wstring appName;
-        readonly attribute wstring language;
-        readonly attribute wstring platform;
-        readonly attribute wstring securityPolicy;
+	readonly attribute DOMString		appCodeName;
+	readonly attribute DOMString		appName;
+	readonly attribute DOMString		appVersion;
+	readonly attribute DOMString		language;
+	readonly attribute MimeTypeArray	mimeTypes;
+	readonly attribute DOMString		platform;
+	readonly attribute PluginArray		plugins;
+	readonly attribute DOMString		securityPolicy;
+	readonly attribute DOMString		userAgent;
 
-        boolean javaEnabled();
-      };
+	boolean								javaEnabled();
+	
+};
