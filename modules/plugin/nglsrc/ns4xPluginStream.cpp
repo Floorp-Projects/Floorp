@@ -226,35 +226,6 @@ NS_IMETHODIMP ns4xPluginStream::AsFile(const char* filename)
 
 NS_IMETHODIMP ns4xPluginStream :: Close(void)
 {
-    const NPPluginFuncs *callbacks;
-    NPP                 npp;
-    void                *notifydata;
-
-    fInstance->GetCallbacks(&callbacks);
-    fInstance->GetNPP(&npp);
-
-    fPeer->GetNotifyData(&notifydata);
-
-    nsPluginReason  reason;
-
-    fPeer->GetReason(&reason);
-
-    if (nsnull != notifydata)
-    {
-      if (callbacks->urlnotify == NULL)
-        return NS_OK;
-
-      const char *url;
-
-      fPeer->GetURL(&url);
-
-      CallNPP_URLNotifyProc(callbacks->urlnotify,
-                            npp,
-                            url, 
-                            (NPReason)reason,
-                            notifydata);
-    }
-
    return NS_OK;
 }
 

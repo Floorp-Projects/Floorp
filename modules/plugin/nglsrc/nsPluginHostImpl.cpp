@@ -544,15 +544,18 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, PRInt32 aSta
 
     if (nsnull != instance)
     {
-      const char  *url;
+      if (nsnull != mNotifyData)
+      {
+        const char  *url;
 
-      if (nsnull != mURL)
-        url = mURL->GetSpec();
-      else
-        url = "";
+        if (nsnull != mURL)
+          url = mURL->GetSpec();
+        else
+          url = "";
 
-      //XXX target is bad. MMP
-      instance->URLNotify(url, "", reason, mNotifyData);
+        //XXX target is bad. MMP
+        instance->URLNotify(url, "", reason, mNotifyData);
+      }
 
       NS_RELEASE(instance);
     }
