@@ -163,8 +163,12 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *fullpath)
 #ifdef DEBUG
     printf("compose: NSRegisterSelf()\n");
 #endif
-    return nsRepository::RegisterFactory(kCComposeAppCoreCID, fullpath,
-                                         PR_TRUE, PR_TRUE);
+    return nsRepository::RegisterComponent(kCComposeAppCoreCID,
+                                           "Netscape Mail Composer",
+                                           "component://netscape/appcores/composer",
+                                           
+                                           fullpath,
+                                           PR_TRUE, PR_TRUE);
 }
     
 nsresult
@@ -173,5 +177,5 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *fullpath)
 #ifdef DEBUG
     printf("compose: NSUnregisterSelf()\n");
 #endif
-    return nsRepository::UnregisterFactory(kCComposeAppCoreCID, fullpath);
+    return nsRepository::UnregisterComponent(kCComposeAppCoreCID, fullpath);
 }
