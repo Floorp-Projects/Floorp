@@ -125,6 +125,7 @@
       border-left         : 1px solid threedshadow;
       border-right        : 1px solid threedhighlight;
       border-bottom       : 1px solid threedhighlight;
+      min-height          : 16px;
     }
   
   statusbarpanel 

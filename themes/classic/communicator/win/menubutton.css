@@ -1,3 +1,102 @@
+
+.menubutton-dual.toolbar.top
+  {
+    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-top");
+  }
+
+.menubutton-dual.toolbar.top > .menubutton-internal-box > .menubutton-dual-button
+  {
+    behavior              : url("chrome://global/skin/classicBindings.xml#toolbarbutton-top");
+    background-color      : none;
+    min-width             : 47px;
+    margin                : 0px;
+    border                : 1px solid transparent;
+    user-focus            : none;
+    padding               : 2px 3px 2px 3px;
+    text-align            : center;
+  }  
+  
+.menubutton-dual.toolbar:hover > .menubutton-internal-box > .menubutton-dual-button,
+.menubutton-dual-button:hover
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+    color                 : #0000FF;
+  }  
+  
+.menubutton-dual-button:hover:active
+  {
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-bottom         : 1px solid threedhighlight;
+    border-right          : 1px solid threedhighlight;
+    padding               : 3px 2px 1px 4px;
+  }  
+  
+.menubutton-dual.toolbar:hover > .menubutton-internal-box > .menubutton-dual-button[disabled="true"],
+.menubutton-dual.toolbar:hover[disabled="true"] > .menubutton-internal-box > .menubutton-dual-dropmarker-box,
+.menubutton-dual.toolbar:hover:active[disabled="true"] > .menubutton-internal-box > .menubutton-dual-dropmarker-box,
+.menubutton-dual.toolbar[open="true"][disabled="true"] > .menubutton-internal-box > .menubutton-dual-dropmarker-box,
+.menubutton-dual-button:hover[disabled="true"] + .menubutton-dual-dropmarker-box,
+.menubutton-dual-button:hover:active[disabled="true"] + .menubutton-dual-dropmarker-box  
+  {
+    border                : 1px solid transparent;
+    color                 : graytext;
+  } 
+  
+.menubutton-dual.toolbar:hover > .menubutton-internal-box > .menubutton-dual-dropmarker-box
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+  }  
+  
+.menubutton-dual.toolbar:hover:active > .menubutton-internal-box > .menubutton-dual-dropmarker-box,
+.menubutton-dual.toolbar[open="true"] > .menubutton-internal-box > .menubutton-dual-dropmarker-box
+  {
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-bottom         : 1px solid threedhighlight;
+    border-right          : 1px solid threedhighlight;
+    padding               : 1px 0px 0px 2px;
+  }  
+
+.menubutton-dual-button:hover + .menubutton-dual-dropmarker-box
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+  }
+  
+.menubutton-dual-button:hover:active + .menubutton-dual-dropmarker-box  
+  {
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-bottom         : 1px solid threedhighlight;
+    border-right          : 1px solid threedhighlight;
+    padding               : 1px 0px 0px 2px;
+  }
+
+.menubutton-dual-dropmarker-box
+  {
+    border                : 1px solid transparent;
+    padding               : 0px 1px 0px 1px;
+  }
+  
+.menubutton-dropmarker
+  {
+    list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif");
+  }
+  
+.menubutton-dropmarker[disabled="true"]
+  {
+    list-style-image      : url("chrome://global/skin/dropmarker-down-disabled.gif");
+  }  
+  
 /** menubuttons on generic grey toolbars
  *  class="button-toolbar"
  **/ 

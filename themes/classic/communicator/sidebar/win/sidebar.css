@@ -69,6 +69,7 @@
     {
       behavior            : url("chrome://communicator/skin/sidebar/sidebarBindings.xml#panelheader");
       background-color    : threedface;
+      cursor              : pointer;
     }
 
   .panelheader-grippy-box

@@ -71,8 +71,8 @@ menuseparator
 
 menubar > menu 
   {
-    padding               : 2px 3px 2px 3px;
-    margin                : 2px 0px 2px 0px;
+    padding               : 2px 1px 2px 3px;
+    margin                : 0px;
     border                : 1px solid transparent;
   }
 
