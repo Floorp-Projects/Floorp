@@ -28,12 +28,8 @@
 
 #include "mkgeturl.h"
 #include "mkstream.h"
-#include "mkgeturl.h"
 #include "mkformat.h"
 #include "net_xp_file.h"
-/* acharya: This file is obsolete and not used in this file.
-#include "il.h" 
-*/
 #include "mime.h"
 #include "cvactive.h"
 #include "gui.h"
