@@ -1674,7 +1674,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     if (!txMgr) return NS_ERROR_NULL_POINTER;
 
     rv = txMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mTextListener));
-    if (NS_FAILED(rv)) rv;
+    if (NS_FAILED(rv)) return rv;
   }  
   
   // Get the default value for the textfield.
