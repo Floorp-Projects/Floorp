@@ -813,12 +813,14 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
               // promote start point up to replacement point
               res = theRange->SetStart(aDestNode, aOffset);
               NS_POSTCONDITION(NS_SUCCEEDED(res), "nsRange::PopRanges() got error from SetStart()");
+              if (NS_FAILED(res)) return res;
             }
             if (theRange->mEndParent == domNode)
             {
               // promote end point up to replacement point
               res = theRange->SetEnd(aDestNode, aOffset);
               NS_POSTCONDITION(NS_SUCCEEDED(res), "nsRange::PopRanges() got error from SetEnd()");
+              if (NS_FAILED(res)) return res;
             }          
           }
           // must refresh theRangeList - it might have gone away!
