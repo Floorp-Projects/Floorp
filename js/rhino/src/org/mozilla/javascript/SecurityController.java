@@ -94,7 +94,7 @@ public abstract class SecurityController {
     /**
      * Call {@link Script#exec(Context cx, Scriptable scope)} of
      * <i>script</i> under restricted security domain where an action is
-     * allowed only if it allowed according to the Java stack on the
+     * allowed only if it is allowed according to the Java stack on the
      * moment of the <i>execWithDomain</i> call and <i>securityDomain</i>.
      * Any call to {@link #getDynamicSecurityDomain(Object)} during
      * execution of {@link Script#exec(Context cx, Scriptable scope)}
