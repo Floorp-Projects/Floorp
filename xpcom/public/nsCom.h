@@ -26,6 +26,8 @@
 #ifdef _IMPL_NS_COM
 #ifdef XP_PC
 #define NS_COM _declspec(dllexport)
+#elif defined(XP_MAC)
+#define NS_COM __declspec(export)
 #else  /* !XP_PC */
 #define NS_COM
 #endif /* !XP_PC */
