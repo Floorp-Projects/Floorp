@@ -74,6 +74,7 @@
 #include "nsIDOMPaintListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
+#include "nsIDOMMenuListener.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
 #include "nsIStyleRule.h"
@@ -128,6 +129,7 @@ static NS_DEFINE_IID(kIDOMFocusListenerIID,       NS_IDOMFOCUSLISTENER_IID);
 static NS_DEFINE_IID(kIDOMFormListenerIID,        NS_IDOMFORMLISTENER_IID);
 static NS_DEFINE_IID(kIDOMLoadListenerIID,        NS_IDOMLOADLISTENER_IID);
 static NS_DEFINE_IID(kIDOMPaintListenerIID,       NS_IDOMPAINTLISTENER_IID);
+static NS_DEFINE_IID(kIDOMMenuListenerIID,        NS_IDOMMENULISTENER_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -363,9 +365,10 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
     { "onunload",      nsnull, &kIDOMLoadListenerIID        },
     { "onabort",       nsnull, &kIDOMLoadListenerIID        },
     { "onerror",       nsnull, &kIDOMLoadListenerIID        },
-    { "oncreate",      nsnull, &kIDOMLoadListenerIID        },
-    { "ondestroy",     nsnull, &kIDOMLoadListenerIID        },
 
+    { "oncreate",      nsnull, &kIDOMMenuListenerIID        },
+    { "ondestroy",     nsnull, &kIDOMMenuListenerIID        },
+    { "onaction",      nsnull, &kIDOMMenuListenerIID        },
 
     { "onfocus",       nsnull, &kIDOMFocusListenerIID       },
     { "onblur",        nsnull, &kIDOMFocusListenerIID       },
