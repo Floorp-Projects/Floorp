@@ -37,6 +37,9 @@ public:
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
+  /** return the index of the column this content object represents.  always >= 0 */
+  virtual int GetColumnIndex ();
+
 protected:
 
   nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame);

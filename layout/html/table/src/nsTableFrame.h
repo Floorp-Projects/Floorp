@@ -25,12 +25,15 @@ class nsCellLayoutData;
 class nsTableCell;
 class nsVoidArray;
 class nsTableCellFrame;
+class nsTableColFrame;
 class CellData;
 class nsITableLayoutStrategy;
 class nsHTMLValue;
+class ColumnInfoCache;
 struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
+enum nsStyleUnit;
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
   * Used as a pseudo-frame within nsTableOuterFrame, 
@@ -58,6 +61,15 @@ public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
                            nsIFrame*   aParent);
+
+  /** helper method for getting the width of the table's containing block */
+  static nscoord GetTableContainerWidth(const nsReflowState& aState);
+
+
+  static PRBool TableIsAutoWidth(nsTableFrame *aTableFrame,
+                                 nsIStyleContext *aTableStyle,
+                                 const nsReflowState& aReflowState,
+                                 nscoord& aSpecifiedTableWidth);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -108,16 +120,29 @@ public:
                                   nsReflowMetrics& aDesiredSize,
                                   nsSize* aMaxElementSize);
   
+  /** return the column frame corresponding to the given column index
+    * there are two ways to do this, depending on whether we have cached
+    * column information yet.
+    */
+  NS_METHOD GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aColFrame);
+
   /** return the column layout data for this inner table frame.
     * if this is a continuing frame, return the first-in-flow's column layout data.
     */
   virtual nsVoidArray *GetColumnLayoutData();
 
   /** Associate aData with the cell at (aRow,aCol)
+    *
+    * @param aPresContext -- used to resolve style when initializing caches
+    * @param aData  -- the info to cache
+    * @param aCell -- the content object for which layout info is being cached
+    *
     * @return PR_TRUE if the data was successfully associated with a Cell
     *         PR_FALSE if there was an error, such as aRow or aCol being invalid
     */
-  virtual PRBool SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aCell);
+  virtual PRBool SetCellLayoutData(nsIPresContext* aPresContext,
+                                   nsCellLayoutData * aData, 
+                                   nsTableCell *aCell);
 
   /** Get the layout data associated with the cell at (aRow,aCol)
     * @return PR_NULL if there was an error, such as aRow or aCol being invalid
@@ -153,6 +178,18 @@ public:
 
   // Get cell margin information
   NS_IMETHOD GetCellMarginData(nsIFrame* aKidFrame, nsMargin& aMargin);
+
+  /** get cached column information for a subset of the columns
+    *
+    * @param aType -- information is returned for the subset of columns with aType style
+    * @param aOutNumColumns -- out param, the number of columns matching aType
+    * @param aOutColumnIndexes -- out param, the indexes of the columns matching aType
+    *                             
+    * TODO : make aOutColumnIndexes safe
+    */
+  void GetColumnsByType(const nsStyleUnit aType, 
+                        PRInt32& aOutNumColumns,
+                        PRInt32 *& aOutColumnIndexes);
 
   // For DEBUGGING Purposes Only
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
@@ -304,6 +341,8 @@ private:
 
   nsVoidArray *mColumnLayoutData;   // array of array of cellLayoutData's
   PRInt32     *mColumnWidths;       // widths of each column
+  //TODO: move all column info into this object
+  ColumnInfoCache *mColCache;       // cached information about the table columns
   PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit
   PRInt32      mPass;               // which Reflow pass are we currently in?
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change

@@ -35,6 +35,12 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
+// hack, remove when hack in nsTableCol constructor is removed
+static PRInt32 HACKcounter=0;
+static nsIAtom *HACKattribute=nsnull;
+#include "prprf.h"  // remove when nsTableCol constructor hack is removed
+// end hack code
+
 
 nsTableColGroup::nsTableColGroup(nsIAtom* aTag, int aSpan)
   : nsTableContent(aTag),
@@ -42,6 +48,17 @@ nsTableColGroup::nsTableColGroup(nsIAtom* aTag, int aSpan)
     mStartColIndex(0),
     mColCount(0)
 {
+  /* begin hack */
+  // temporary hack to get around style sheet optimization that folds all
+  // col style context into one, unless there is a unique HTML attribute set
+  char out[40];
+  PR_snprintf(out, 40, "%d", HACKcounter);
+  const nsString value(out);
+  if (nsnull==HACKattribute)
+    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
+  SetAttribute(HACKattribute, value);
+  HACKcounter++;
+  /* end hack */
 }
 
 nsTableColGroup::nsTableColGroup (PRBool aImplicit)
@@ -51,6 +68,17 @@ nsTableColGroup::nsTableColGroup (PRBool aImplicit)
     mColCount(0)
 {
   mImplicit = aImplicit;
+  /* begin hack */
+  // temporary hack to get around style sheet optimization that folds all
+  // col style context into one, unless there is a unique HTML attribute set
+  char out[40];
+  PR_snprintf(out, 40, "%d", HACKcounter);
+  const nsString value(out);
+  if (nsnull==HACKattribute)
+    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
+  SetAttribute(HACKattribute, value);
+  HACKcounter++;
+  /* end hack */
 }
 
 
@@ -163,7 +191,7 @@ nsTableColGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
     return NS_OK;
   }
 
-  PRBool result = PR_FALSE;
+  nsresult result = NS_ERROR_FAILURE;
   PRBool contentHandled = PR_FALSE;
   // SEC: TODO verify that aContent is table content
   nsTableContent *tableContent = (nsTableContent *)aContent;
@@ -188,9 +216,10 @@ nsTableColGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
   }
   if (PR_FALSE==contentHandled)
     result = nsTableContent::AppendChild (aContent, aNotify);
-  if (result)
+  if (NS_OK==result)
   {
     ((nsTableCol *)aContent)->SetColGroup (this);
+    ((nsTableCol *)aContent)->SetColumnIndex (mStartColIndex + mColCount);
     ResetColumns ();
   }
 
@@ -214,8 +243,8 @@ nsTableColGroup::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
   }
 
   // if so, add the row to this group
-  PRBool result = nsTableContent::InsertChildAt (aContent, aIndex, aNotify);
-  if (result)
+  nsresult result = nsTableContent::InsertChildAt (aContent, aIndex, aNotify);
+  if (NS_OK==result)
   {
     ((nsTableCol *)aContent)->SetColGroup (this);
     ResetColumns ();
@@ -245,8 +274,8 @@ nsTableColGroup::ReplaceChildAt (nsIContent * aContent, PRInt32 aIndex,
 
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild : REFCNT++
   NS_ASSERTION(nsnull!=lastChild, "bad child");
-  PRBool result = nsTableContent::ReplaceChildAt (aContent, aIndex, aNotify);
-  if (result)
+  nsresult result = nsTableContent::ReplaceChildAt (aContent, aIndex, aNotify);
+  if (NS_OK==result)
   {
     ((nsTableCol *)aContent)->SetColGroup (this);
     if (nsnull != lastChild)
@@ -268,8 +297,8 @@ nsTableColGroup::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
   NS_ASSERTION((0<=aIndex && ChildCount()>aIndex), "bad arg");
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++
   NS_ASSERTION(nsnull!=lastChild, "bad child");
-  PRBool result = nsTableContent::RemoveChildAt (aIndex, aNotify);
-  if (result)
+  nsresult result = nsTableContent::RemoveChildAt (aIndex, aNotify);
+  if (NS_OK==result)
   {
     if (nsnull != lastChild)
       ((nsTableCol *)lastChild)->SetColGroup (nsnull);

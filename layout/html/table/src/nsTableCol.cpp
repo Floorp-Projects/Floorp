@@ -36,7 +36,11 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
-
+// hack, remove when hack in nsTableCol constructor is removed
+static PRInt32 HACKcounter=0;
+static nsIAtom *HACKattribute=nsnull;
+#include "prprf.h"  // remove when nsTableCol constructor hack is removed
+// end hack code
 
 nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFrame(aContent, aParentFrame)
@@ -75,6 +79,17 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
   return NS_OK;
 }
 
+PRInt32 nsTableColFrame::GetColumnIndex()
+{ 
+  if (nsnull!=mContent)
+    return ((nsTableCol *)mContent)->GetColumnIndex();
+  else
+    return 0;
+}
+
+
+/* ----- static methods ------ */
+
 nsresult nsTableColFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                    nsIContent* aContent,
                                    nsIFrame*   aParent)
@@ -99,6 +114,7 @@ nsTableCol::nsTableCol(nsIAtom* aTag)
   mColIndex(0),
   mRepeat(0)
 {
+  Init();
 }
 
 nsTableCol::nsTableCol()
@@ -107,6 +123,7 @@ nsTableCol::nsTableCol()
   mColIndex(0),
   mRepeat(0)
 {
+  Init();
 }
 
 nsTableCol::nsTableCol (PRBool aImplicit)
@@ -116,6 +133,22 @@ nsTableCol::nsTableCol (PRBool aImplicit)
   mRepeat(0)
 {
   mImplicit = aImplicit;
+  Init();
+}
+
+void nsTableCol::Init()
+{
+  /* begin hack */
+  // temporary hack to get around style sheet optimization that folds all
+  // col style context into one, unless there is a unique HTML attribute set
+  char out[40];
+  PR_snprintf(out, 40, "%d", HACKcounter);
+  const nsString value(out);
+  if (nsnull==HACKattribute)
+    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
+  SetAttribute(HACKattribute, value);
+  HACKcounter++;
+  /* end hack */
 }
 
 nsTableCol::~nsTableCol()

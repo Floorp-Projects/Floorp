@@ -118,6 +118,7 @@ A:visited IMG { border: 2px solid purple; text-decoration: underline }
 A:active IMG { border: 2px solid lime; text-decoration: underline }
 A:out-of-date IMG { border: 2px solid red; text-decoration: underline }
 
+
 //----------------------------------------------------------------------
 // The real stuff
 

@@ -103,6 +103,7 @@ public:
     *
     */
   virtual PRBool BalanceProportionalColumns(nsIPresContext*  aPresContext,
+                                            const nsReflowState& aReflowState,
                                             PRInt32 aAvailWidth,
                                             PRInt32 aMaxWidth,
                                             PRInt32 aMinTableWidth, 
@@ -132,6 +133,7 @@ public:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
   virtual PRBool BalanceColumnsTableFits(nsIPresContext*  aPresContext, 
+                                         const nsReflowState& aReflowState,
                                          nscoord          aAvailWidth,
                                          nscoord          aMaxWidth,
                                          nscoord          aTableFixedWidth);
@@ -165,10 +167,6 @@ public:
   virtual PRBool IsFixedWidth(nsStylePosition* aStylePosition);
 
   virtual PRBool IsAutoWidth(nsStylePosition* aStylePosition);
-
-  virtual PRBool TableIsAutoWidth(nsIStyleContext *aTableStyle,
-                                  const nsReflowState& aReflowState,
-                                  nscoord& aSpecifiedTableWidth);
 
 protected:
   nsTableFrame * mTableFrame;

@@ -342,19 +342,18 @@ NS_IMETHODIMP
 nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad arg");
-  PRBool result = PR_FALSE;
   PRBool newCells = PR_FALSE;
   PRBool contentHandled = PR_FALSE;
 
   // wait, stop!  need to check to see if this is really tableContent or not!
   nsITableContent *tableContentInterface = nsnull;
+  PRBool result = PR_TRUE;  // to be removed when called methods are COM-ized
   nsresult rv = aContent->QueryInterface(kITableContentIID, 
                                          (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
   if (NS_FAILED(rv))
   { // create an implicit cell and return the result of adding it to the table
-    if (gsDebug==PR_TRUE)
-      printf ("*** bad HTML in table, not yet implemented.\n");
-    return PR_FALSE;
+    NS_ASSERTION(PR_FALSE, "non-table content insertion not implemented");
+    return NS_ERROR_FAILURE;
   }
   else
   {
@@ -394,18 +393,20 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
         nsIAtom * rowGroupTag = NS_NewAtom(kRowGroupBodyTagString); // rowGroupTag: REFCNT++
         group = new nsTableRowGroup (rowGroupTag, PR_TRUE);
         NS_ADDREF(group);                         // group: REFCNT++
-        AppendChild (group, PR_FALSE);
-        group->SetTable(this);
+        rv = AppendChild (group, PR_FALSE);
+        if (NS_OK==rv)
+          group->SetTable(this);
         NS_RELEASE(rowGroupTag);                                  // rowGroupTag: REFCNT--
       }
       // group is guaranteed to be allocated at this point
-      result = group->AppendChild(aContent, PR_FALSE);
-      newCells = result;
+      rv = group->AppendChild(aContent, PR_FALSE);
+      newCells = (PRBool)(NS_OK==rv);
       contentHandled = PR_TRUE;
       NS_RELEASE(group);                          // group: REFCNT--
     }
     else if (contentType == nsITableContent::kTableColType)
     {
+      // TODO: switch Append* to COM interfaces
       result = AppendColumn((nsTableCol *)aContent);
       newCells = result;
       contentHandled = PR_TRUE;
@@ -422,6 +423,8 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
       {
         newCells = PR_TRUE;
       }
+      else
+        rv=NS_ERROR_FAILURE;
       contentHandled = PR_TRUE; // whether we succeeded or not, we've "handled" this request
     }
     else if (contentType == nsITableContent::kTableColGroupType)
@@ -431,6 +434,8 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
       {
         newCells = PR_TRUE;
       }
+      else
+        rv = NS_ERROR_FAILURE;
       contentHandled = PR_TRUE; // whether we succeeded or not, we've "handled" this request
     }
 
@@ -452,7 +457,8 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
       {
         if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChild -- adding an implicit caption.\n");
         caption = new nsTableCaption (PR_TRUE);
-        AppendCaption (caption);
+        result = AppendCaption (caption);
+        // check result
       }
       result = caption->AppendChild (aContent, PR_FALSE);
     }
@@ -625,8 +631,11 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
   NS_RELEASE(tHeadTag);
   NS_RELEASE(tBodyTag);
 
-  nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
-  ((nsTableContent *)aContent)->SetTable (this);
+  nsresult rv = nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
+  if (NS_OK==rv)
+    ((nsTableContent *)aContent)->SetTable (this);
+  else
+    result = PR_FALSE;
 
   return result;
 }
@@ -634,6 +643,7 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
 /** protected method for appending a column group to this table */
 PRBool nsTablePart::AppendColGroup(nsTableColGroup *aContent)
 {
+  PRBool result = PR_TRUE;  // to be removed when I'm COM-ized
   PRInt32 childIndex;
   NS_PRECONDITION(nsnull!=aContent, "null arg.");
   if (gsDebug==PR_TRUE)
@@ -651,27 +661,39 @@ PRBool nsTablePart::AppendColGroup(nsTableColGroup *aContent)
          (tableChildType == nsITableContent::kTableColGroupType)))
       break;
   }
-  nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
-  ((nsTableContent *)aContent)->SetTable (this);
+  nsresult rv = nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
+  if (NS_OK==rv)
+    ((nsTableContent *)aContent)->SetTable (this);
+  else
+    result = PR_FALSE;
 
   // if col group has a SPAN attribute, create implicit columns for
   // the value of SPAN what sucks is if we then get a COL for this
   // COLGROUP, we have to delete all the COLs we created for SPAN, and
   // just contain the explicit COLs.
+  
+  // TODO: move this into the OK clause above
+
   PRInt32 span = 0; // SEC: TODO find a way to really get this
   for (PRInt32 i=0; i<span; i++)
   {
     nsTableCol *col = new nsTableCol(PR_TRUE);
-    aContent->AppendChild (col, PR_FALSE);
+    rv = aContent->AppendChild (col, PR_FALSE);
+    if (NS_OK!=rv)
+    {
+      result = PR_FALSE;
+      break;
+    }
   }
 
-  return PR_TRUE;
+  return result;
 }
 
 /** protected method for appending a column group to this table */
 PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
 {
   NS_PRECONDITION(nsnull!=aContent, "null arg.");
+  nsresult rv = NS_OK;
   if (gsDebug==PR_TRUE)
     printf ("nsTablePart::AppendColumn -- adding a column.\n");
   // find last col group, if ! implicit, make one, append there
@@ -694,17 +716,20 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
     if (gsDebug==PR_TRUE) 
       printf ("nsTablePart::AppendChild -- creating an implicit column group.\n");
     group = new nsTableColGroup (PR_TRUE);
-    AppendChild (group, PR_FALSE);
-    group->SetTable(this);
+    rv = AppendChild (group, PR_FALSE);
+    if (NS_OK==rv)
+      group->SetTable(this);
   }
-  group->AppendChild (aContent, PR_FALSE);
+  if (NS_OK==rv)
+    rv = group->AppendChild (aContent, PR_FALSE);
 
-  return PR_TRUE;
+  return (PRBool)(NS_OK==rv);
 }
 
 /** protected method for appending a column group to this table */
 PRBool nsTablePart::AppendCaption(nsTableCaption *aContent)
 {
+  nsresult rv = NS_OK;
   PRInt32 childIndex;
   NS_PRECONDITION(nsnull!=aContent, "null arg.");
   if (gsDebug==PR_TRUE)
@@ -720,10 +745,11 @@ PRBool nsTablePart::AppendCaption(nsTableCaption *aContent)
     if (tableChildType != nsITableContent::kTableCaptionType)
       break;
   }
-  nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
-  ((nsTableContent *)aContent)->SetTable (this);
+  rv = nsHTMLContainer::InsertChildAt(aContent, childIndex, PR_FALSE);
+  if (NS_OK==rv)
+    ((nsTableContent *)aContent)->SetTable (this);
 
-  return PR_TRUE;
+  return (PRBool)(NS_OK==rv);
 }
 
 /* return the index of the first row group after aStartIndex */

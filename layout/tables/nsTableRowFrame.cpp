@@ -23,9 +23,11 @@
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
 #include "nsTableFrame.h"
+#include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsTableCell.h"
 #include "nsCellLayoutData.h"
+#include "nsColLayoutData.h"
 #include "nsIView.h"
 #include "nsIPtr.h"
 
@@ -360,7 +362,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       status = ReflowChild(kidFrame, aPresContext, desiredSize,
                            kidReflowState);
       nsCellLayoutData kidLayoutData((nsTableCellFrame *)kidFrame, &desiredSize, pKidMaxElementSize);
-      aState.tableFrame->SetCellLayoutData(&kidLayoutData, cell);
+      aState.tableFrame->SetCellLayoutData(aPresContext, &kidLayoutData, cell);
     }
     else
     { // we're in a constrained situation, so get the avail width from the known column widths
@@ -428,13 +430,11 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     case eStyleUnit_Coord:
       specifiedHeight = kidPosition->mHeight.GetCoordValue();
       break;
-    case eStyleUnit_Percent:
-    case eStyleUnit_Proportional:
-      // XXX for now these fall through
 
+    case eStyleUnit_Inherit:
+      // XXX for now, do nothing
     default:
     case eStyleUnit_Auto:
-    case eStyleUnit_Inherit:
       break;
     }
     if (specifiedHeight>cellHeight)
@@ -893,10 +893,9 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       break;
     }
 
-
     nsIFrame* kidFrame;
 
-    // Create a child frame
+    // Create a child frame -- always an nsTableCell frame
     nsIStyleContext* kidStyleContext = aPresContext->ResolveStyleContextFor(cell, this);
     if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel = nsnull;
@@ -908,6 +907,11 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       kidPrevInFlow->CreateContinuingFrame(aPresContext, this,
                                            kidStyleContext, kidFrame);
     }
+    /* since I'm creating the cell frame, this is the first time through reflow
+     * it's a good time to set the column style from the cell's width attribute
+     * if this is the first row
+     */
+    SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)kidFrame, kidStyleContext);
     NS_RELEASE(kidStyleContext);
 
 
@@ -937,7 +941,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
       nsCellLayoutData kidLayoutData((nsTableCellFrame *)kidFrame, &desiredSize, pKidMaxElementSize);
-      aState.tableFrame->SetCellLayoutData(&kidLayoutData, (nsTableCell *)cell);
+      aState.tableFrame->SetCellLayoutData(aPresContext, &kidLayoutData, (nsTableCell *)cell);
     }
     else
     { // we're in a constrained situation, so get the avail width from the known column widths
@@ -1143,6 +1147,54 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
   }
   PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
   aContinuingFrame = cf;
+  return NS_OK;
+}
+
+NS_METHOD
+nsTableRowFrame::SetColumnStyleFromCell(nsIPresContext*   aPresContext,
+                                        nsTableCellFrame* aCellFrame, 
+                                        nsIStyleContext*  aCellSC)
+{
+  // if this cell is in the first row, then the width attribute
+  // also acts as the width attribute for the entire column
+  if ((nsnull!=aCellSC) && (nsnull!=aCellFrame))
+  {
+    PRInt32 rowIndex = ((nsTableRow*)mContent)->GetRowIndex();
+    if (0==rowIndex)
+    {
+      // get the cell style info
+      nsStylePosition* cellPosition = (nsStylePosition*) aCellSC->GetData(eStyleStruct_Position);
+      if ((eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) ||
+           (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) {
+
+        // compute the width per column spanned
+        PRInt32 colSpan = aCellFrame->GetColSpan();
+        // get the appropriate column frame
+        nsTableFrame *tableFrame;
+        mGeometricParent->GetGeometricParent((nsIFrame *&)tableFrame);
+        nsTableColFrame *colFrame;
+        tableFrame->GetColumnFrame(aCellFrame->GetColIndex(), colFrame);
+        // get the column style and set the width attribute
+        nsIStyleContextPtr colSC;
+        colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
+        nsStylePosition* colPosition = (nsStylePosition*) colSC->GetData(eStyleStruct_Position);
+        // set the column width attribute
+        colPosition->mWidth = cellPosition->mWidth;
+        /*
+        if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
+        {
+          nscoord width = cellPosition->mWidth.GetCoordValue();
+          colPosition->mWidth.SetCoordValue(width);
+        }
+        else
+        {
+          float width = cellPosition->mWidth.GetPercentValue();
+          colPosition->mWidth.SetPercentValue(width);
+        }
+        */
+      }
+    }
+  }
   return NS_OK;
 }
 
