@@ -129,7 +129,7 @@ public:
 	nsSmtpTestDriver(nsINetService * pService, PLEventQueue *queue);
 	virtual ~nsSmtpTestDriver();
 
-	NS_DECL_ISUPPORTS;
+	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
 	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
