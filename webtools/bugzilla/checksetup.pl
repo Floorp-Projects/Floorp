@@ -1587,7 +1587,7 @@ $table{bugs} =
     bug_status enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
     creation_ts datetime not null,
     delta_ts timestamp not null,
-    short_desc mediumtext,
+    short_desc mediumtext not null,
     op_sys enum($my_opsys) not null,
     priority enum($my_priorities) not null,
     product_id smallint not null,
@@ -4159,7 +4159,7 @@ if (TableExists('shadowlog')) {
     $dbh->do("DROP TABLE shadowlog");
 }
 
-# 2003-04-XX - bugzilla@chimpychompy.org (GavinS)
+# 2003-04-27 - bugzilla@chimpychompy.org (GavinS)
 #
 # Bug 180086 (http://bugzilla.mozilla.org/show_bug.cgi?id=180086)
 #
@@ -4173,6 +4173,12 @@ if (GetFieldDef('votes', 'count')) {
     $dbh->do("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00'");
 
     RenameField ('votes', 'count', 'vote_count');
+}
+
+# 2004/02/15 - Summaries shouldn't be null - see bug 220232
+if (GetFieldDef('bugs', 'short_desc')->[2]) { # if it allows nulls
+    $dbh->do("UPDATE bugs SET short_desc = '' WHERE short_desc IS NULL");
+    ChangeFieldType('bugs', 'short_desc', 'mediumtext not null');
 }
 
 #
