@@ -43,6 +43,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIMIMEService.h"
 #include "nsIEnumerator.h"
+#include "nsAuthEngine.h"
 
 // Once other kinds of auth are up change TODO
 #include "nsBasicAuth.h" 
@@ -71,17 +72,17 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
                              const char *i_Verb,
                              nsIURI* originalURI,
                              nsHTTPHandler* i_Handler): 
-    mOriginalURI(dont_QueryInterface(originalURI ? originalURI : i_URL)),
-    mURI(dont_QueryInterface(i_URL)),
+    mAuthTriedWithPrehost(PR_FALSE),
     mConnected(PR_FALSE),
     mHandler(dont_QueryInterface(i_Handler)),
-    mState(HS_IDLE),
-    mResponse(nsnull),
-    mResponseDataListener(nsnull),
     mLoadAttributes(LOAD_NORMAL),
-    mResponseContext(nsnull),
     mLoadGroup(nsnull),
-    mAuthTriedWithPrehost(PR_FALSE),
+    mOriginalURI(dont_QueryInterface(originalURI ? originalURI : i_URL)),
+    mResponse(nsnull),
+    mResponseContext(nsnull),
+    mResponseDataListener(nsnull),
+    mState(HS_IDLE),
+    mURI(dont_QueryInterface(i_URL)),
     mUsingProxy(PR_FALSE)
 {
     NS_INIT_REFCNT();
@@ -363,16 +364,8 @@ nsHTTPChannel::SetLoadGroup(nsILoadGroup *aGroup)
     if (mRequest == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mRequest);
-    mRequest->SetConnection(this);
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    PRUnichar * ua = nsnull;
-    rv = service->GetUserAgent(&ua);
-    if (NS_FAILED(rv)) return rv;
-    nsCString uaString(ua);
-    nsCRT::free(ua);
-    mRequest->SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
-    return NS_OK;
+    rv = mRequest->SetConnection(this);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -512,7 +505,6 @@ NS_IMETHODIMP
 nsHTTPChannel::GetEventSink(nsIHTTPEventSink* *o_EventSink) 
 {
     nsresult rv;
-
     if (o_EventSink) {
         *o_EventSink = mEventSink;
         NS_IF_ADDREF(*o_EventSink);
@@ -728,8 +720,10 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
       nsXPIDLCString   baseref;
       nsCOMPtr<nsIURL> baseurl;
 
+
       baseurl = do_QueryInterface(mURI, &rv);
       if (NS_SUCCEEDED(rv)) {
+
         rv = baseurl->GetRef(getter_Copies(baseref));
         if (NS_SUCCEEDED(rv) && baseref) {
           // If the old URL had a reference and the new URL does not,
@@ -908,7 +902,8 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
 
 
 nsresult 
-nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
+nsHTTPChannel::Authenticate(const char *iChallenge, 
+        nsIChannel **oChannel)
 {
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr <nsIChannel> channel;
@@ -931,7 +926,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
     }
 
     // Couldnt get one from prehost or has already been tried so...ask
-    if (!newUserPass || (0==PL_strlen(newUserPass)))
+    if (!newUserPass || !*newUserPass)
     {
         /*
             Throw a modal dialog box asking for 
@@ -941,40 +936,50 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
             Currently this is being thrown from here itself. 
             The correct way to do this is to push this on the 
             HTTPEventSink and let that notify the window that
-            triggered this load to throw the userpass dialog
+            triggered this load to throw the userpass dialog.
+            This is dependent on the completion of the new 
+            design of the webshell. 
         */
-      nsresult rv;
-      NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
+      NS_WITH_SERVICE(nsIAppShellService, appshellservice, 
+              kAppShellServiceCID, &rv);
       if(NS_FAILED(rv))
           return rv;
       nsCOMPtr<nsIWebShellWindow> webshellwindow;
-      appshellservice->GetHiddenWindow(getter_AddRefs( webshellwindow ) );
-      nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( webshellwindow ) );
+      appshellservice->GetHiddenWindow(getter_AddRefs(webshellwindow));
+      nsCOMPtr<nsINetPrompt> prompter( 
+              do_QueryInterface(webshellwindow));
       
-      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+              kProxyObjectManagerCID, &rv);
       if(NS_FAILED(rv))
         return rv;
       nsINetPrompt* proxyprompter = NULL;
-      rv = pIProxyObjectManager->GetProxyObject(nsnull, 
-                                                              nsINetPrompt::GetIID(), 
-                                                              prompter, PROXY_SYNC,
-                                                              (void**)&proxyprompter);
+      rv = pIProxyObjectManager->GetProxyObject(nsnull,
+              nsINetPrompt::GetIID(), 
+              prompter, PROXY_SYNC,
+              (void**)&proxyprompter);
 
-        PRUnichar *user=NULL, *passwd=NULL;
+        PRUnichar *user=nsnull, *passwd=nsnull;
         PRBool retval;
 
-        nsAutoString message = "Enter username for "; //TODO localize it!
-		message += iChallenge; // later on change to only show realm and then host's info. 
-		const PRUnichar* msg = message.GetUnicode();
-		
-		// Get url
-		 nsXPIDLCString urlCString; 
+        //TODO localize it!
+        nsAutoString message = "Enter username for "; 
+         // later on change to only show realm and then host's info. 
+        message += iChallenge;
+        
+        // Get url
+         nsXPIDLCString urlCString; 
         mURI->GetHost(getter_Copies(urlCString));
-		
-		rv = proxyprompter->PromptUsernameAndPassword(urlCString, NULL, 
-            msg, &user, &passwd, &retval);
-            
-   	 	proxyprompter->Release();  // Must be done as not managed for you.
+        
+        rv = proxyprompter->PromptUsernameAndPassword(urlCString, 
+                NULL, 
+                message.GetUnicode(), 
+                &user, 
+                &passwd, 
+                &retval);
+
+        // Must be done as not managed for you.
+        proxyprompter->Release();  
        
         if (retval)
         {
@@ -990,17 +995,18 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
     nsXPIDLCString authString;
     // change this later to include other kinds of authentication. TODO 
     if (NS_FAILED(rv = nsBasicAuth::Authenticate(
-                        mURI, 
-                        NS_STATIC_CAST(const char*, iChallenge), 
-                        NS_STATIC_CAST(const char*, newUserPass),
-                        getter_Copies(authString))))
+                    mURI, 
+                    NS_STATIC_CAST(const char*, iChallenge), 
+                    NS_STATIC_CAST(const char*, newUserPass),
+                    getter_Copies(authString))))
         return rv; // Failed to construct an authentication string.
 
     // Construct a new channel
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // This smells like a clone function... maybe there is a benefit in doing that, think. TODO.
+    // This smells like a clone function... maybe there is a 
+    // benefit in doing that, think. TODO.
     rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, mLoadGroup, mCallbacks, 
                                  mLoadAttributes, mOriginalURI, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv; 
@@ -1011,13 +1017,15 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
         return rv;
 
     // Add the authentication header.
-    httpChannel->SetRequestHeader(nsHTTPAtoms::Authorization, authString);
+    httpChannel->SetRequestHeader(nsHTTPAtoms::Authorization, 
+            authString);
 
     // Let it know that we have already tried prehost stuff...
     httpChannel->SetAuthTriedWithPrehost(PR_TRUE);
 
     // Fire the new request...
-    rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
+    rv = channel->AsyncRead(0, -1, mResponseContext, 
+            mResponseDataListener);
     *oChannel = channel;
     NS_ADDREF(*oChannel);
     return rv;

@@ -59,6 +59,7 @@ CPP_OBJS=		\
 	.\$(OBJDIR)\nsHTTPEncodeStream.obj	\
 	.\$(OBJDIR)\nsBasicAuth.obj		\
 	.\$(OBJDIR)\nsAuth.obj          	\
+    .\$(OBJDIR)\nsAuthEngine.obj    \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	

@@ -45,7 +45,7 @@ CPPSRCS		= \
 		nsHTTPAtoms.cpp \
 		nsBasicAuth.cpp \
 		nsAuth.cpp \
-		$(NULL)
+        nsAuthEngine.cpp \		$(NULL)
 
 EXPORTS		= nsHTTPCID.h
 

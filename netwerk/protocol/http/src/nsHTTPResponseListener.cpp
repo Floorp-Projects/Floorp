@@ -21,6 +21,8 @@
  */
 
 #include "nspr.h"
+#include "nsAuthEngine.h"
+#include "nsHTTPRequest.h"
 #include "nsIStreamListener.h"
 #include "nsHTTPResponseListener.h"
 #include "nsIChannel.h"
@@ -171,8 +173,8 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
                    ("\tOnDataAvailable [this=%x]. Calling consumer "
                     "OnDataAvailable.\tlength:%d\n", this, i_Length));
 
-            rv = mConsumer->OnDataAvailable(mConnection, mResponseContext, i_pStream, 0, 
-                                              i_Length);
+            rv = mConsumer->OnDataAvailable(mConnection, mResponseContext, 
+                    i_pStream, 0, i_Length);
             if (NS_FAILED(rv)) {
               PR_LOG(gHTTPLog, PR_LOG_ERROR, 
                      ("\tOnDataAvailable [this=%x]. Consumer failed!"
@@ -385,6 +387,30 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   if (NS_FAILED(error)) return NS_ERROR_FAILURE;
 
   mResponse->SetStatus(statusCode);
+
+  PRBool authAttempt = PR_FALSE;
+  mConnection->GetAuthTriedWithPrehost(&authAttempt);
+
+  if ( statusCode != 401 && authAttempt) {
+    // we know this auth challenge response wassuccessful. cache any authentication 
+    // now so URLs within this body can use it.
+    nsAuthEngine* pEngine;
+    NS_ASSERTION(mConnection->mHandler, "HTTP handler went away");
+    if (NS_SUCCEEDED(mConnection->mHandler->GetAuthEngine(&pEngine)) )
+    {
+       nsXPIDLCString authString;
+       NS_ASSERTION(mConnection->mRequest, "HTTP request went away");
+       rv = mConnection->mRequest->GetHeader(nsHTTPAtoms::Authorization, 
+               getter_Copies(authString));
+       if (NS_FAILED(rv)) return rv;
+
+       nsCOMPtr<nsIURI> luri;
+       rv = mConnection->GetURI(getter_AddRefs(luri));
+       if (NS_FAILED(rv)) return rv;
+
+       pEngine->SetAuthString(luri, authString);
+    }
+  }
   
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("\tParseStatusLine [this=%x].\tStatus-Code: %d\n",
@@ -692,7 +718,7 @@ nsresult nsHTTPResponseListener::ProcessStatusCode(void)
       break;
 
     //
-    // Server Error: 5xx
+    // Server Error: 5xo
     //
     case 5:
       PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
@@ -729,11 +755,11 @@ nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
 
       rv = mConnection->Redirect(location, getter_AddRefs(channel));
       if (NS_SUCCEEDED(rv)) {
-        //
-        // Disconnect the consumer from this response listener...  This allows
-        // the entity that follows to be discarded without notifying the 
-        // consumer...
-        //
+        /*
+           Disconnect the consumer from this response listener...  
+           This allows the entity that follows to be discarded 
+           without notifying the consumer...
+        */
         NS_RELEASE(mConsumer);
         mResponseContext = nsnull;
       }
@@ -744,7 +770,9 @@ nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
 nsresult
 nsHTTPResponseListener::ProcessAuthentication(PRInt32 aStatusCode)
 {
-    NS_ASSERTION(aStatusCode == 401, "We don't handle other types of errors!"); // thats all we handle for now... 
+    NS_ASSERTION(aStatusCode == 401, // thats all we handle for now... 
+            "We don't handle other types of errors!"); 
+
     if (aStatusCode != 401)
         return NS_OK; // Let life go on...
 
@@ -754,19 +782,24 @@ nsHTTPResponseListener::ProcessAuthentication(PRInt32 aStatusCode)
     if (NS_FAILED(rv = mResponse->GetHeader(
                 nsHTTPAtoms::WWW_Authenticate, 
                 getter_Copies(challenge))))
-        return rv; // We can't send user-password without this challenge.
-
-    if (!challenge || !*challenge) // can we do * on an XPIDLCString? check... todo
+     // We can't send user-password without this challenge.
+        return rv;
+    // TODO Add proxy-authenticate header check too...
+     // can we do * on an XPIDLCString? check... todo
+    if (!challenge || !*challenge)
         return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    if (NS_FAILED(rv = mConnection->Authenticate(challenge, getter_AddRefs(channel))))
+    if (NS_FAILED(rv = mConnection->Authenticate(challenge, 
+                    getter_AddRefs(channel))))
         return rv;
-    //
-    // Disconnect the consumer from this response listener...  This allows
-    // the entity that follows to be discarded without notifying the 
-    // consumer...
-    //
+
+
+    /*
+       Disconnect the consumer from this response listener...  
+       This allows the entity that follows to be discarded 
+       without notifying the consumer...
+    */
     NS_RELEASE(mConsumer);
     mResponseContext = nsnull;
     return rv;

@@ -86,19 +86,20 @@ public:
     // Set if this channel is using proxy to connect
     nsresult            SetUsingProxy(PRBool i_UsingProxy);
 
+    nsHTTPHandler*                      mHandler;
+    nsHTTPRequest*                      mRequest;
+
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
+    nsHTTPResponse*                     mResponse;
     PRBool                              mConnected; 
-    nsHTTPHandler*                      mHandler;
     HTTPState                           mState;
 
     nsCString                           mVerb;
     nsCOMPtr<nsIHTTPEventSink>          mEventSink;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 
-    nsHTTPRequest*                      mRequest;
-    nsHTTPResponse*                     mResponse;
     nsIStreamListener*                  mResponseDataListener;
 
     PRUint32                            mLoadAttributes;

@@ -23,6 +23,7 @@
 #include "nspr.h"
 #include "nsIURL.h"
 #include "nsHTTPRequest.h"
+#include "nsHTTPHandler.h"
 #include "nsHTTPAtoms.h"
 #include "nsHTTPEnums.h"
 #include "nsIPipe.h"
@@ -36,10 +37,15 @@
 #include "nsHTTPResponseListener.h"
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
+#include "nsIIOService.h"
+#include "nsAuthEngine.h"
+#include "nsIServiceManager.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
+
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method, 
     nsIChannel* i_Transport):
@@ -56,17 +62,20 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
 
     mTransport = i_Transport;
 
+    NS_ASSERTION(mURI, "No URI for the request!!");
+    
+    nsXPIDLCString host;
+    mURI->GetHost(getter_Copies(host));
+    PRInt32 port = -1;
+    mURI->GetPort(&port);
+
     // Send Host header by default
     if (HTTP_ZERO_NINE != mVersion)
     {
-        nsXPIDLCString host;
-        NS_ASSERTION(mURI, "No URI for the request!!");
-        mURI->GetHost(getter_Copies(host));
-        PRInt32 port = -1;
-        mURI->GetPort(&port);
         if (-1 != port)
         {
-            char* tempHostPort = PR_smprintf("%s:%d", (const char*)host, port);
+            char* tempHostPort = 
+                PR_smprintf("%s:%d", (const char*)host, port);
             if (tempHostPort)
             {
                 SetHeader(nsHTTPAtoms::Host, tempHostPort);
@@ -78,10 +87,42 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
             SetHeader(nsHTTPAtoms::Host, host);
     }
 
+    // Add the user-agent 
+    nsresult rv;
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) NS_ERROR("Failed to get IOService!");
+    PRUnichar * ua = nsnull;
+    if (NS_SUCCEEDED(service->GetUserAgent(&ua)))
+    {
+        nsCString uaString(ua);
+        nsCRT::free(ua);
+        SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
+    }
+
     // Send */*. We're no longer chopping MIME-types for acceptance.
     // MIME based content negotiation has died.
     SetHeader(nsHTTPAtoms::Accept, "*/*");
-}
+
+    // Check to see if an authentication header is required
+    nsAuthEngine* pAuthEngine = nsnull; 
+    
+    if (NS_SUCCEEDED(nsHTTPHandler::GetInstance()->
+                GetAuthEngine(&pAuthEngine)))
+    {
+        if (pAuthEngine)
+        {
+            // Qvq lbh xabj gung t?? Ebg13f n yvar va IVZ? Jbj. 
+            nsXPIDLCString authStr;
+            //PRUint32 authType = 0;
+            if (NS_SUCCEEDED(pAuthEngine->GetAuthString(mURI, 
+                    getter_Copies(authStr))))
+                    //&authType)) && (authType == 1))
+            {
+                if (authStr && *authStr)
+                    SetHeader(nsHTTPAtoms::Authorization, authStr);
+            }
+        }
+    }}
 
 nsHTTPRequest::~nsHTTPRequest()
 {

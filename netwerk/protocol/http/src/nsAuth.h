@@ -32,21 +32,31 @@
 	-Gagan Saksena  08/17/1999
 */
 
-class nsIURI;
+#include "nsISupports.h"
+#include "nsIURI.h"
+#include "nsCOMPtr.h"
 
-struct nsAuth 
+class nsAuth : public nsISupports
 {
 
+public:
 	// Constructor and Destructor
-	nsAuth(nsIURI* iURI);
+    // TODO add stuff for realm and user/pass as well!!
+	nsAuth(nsIURI* iURI, 
+            const char* authString, 
+            const char* username = 0,
+            const char* password = 0,
+            const char* realm = 0);
 	virtual ~nsAuth();
+
+    NS_DECL_ISUPPORTS
 
 	char* 		encodedString;
 	char* 		password; 
 	char* 		realm; 
 	char* 		username;
 	// When we do proxy authentication this would be a union for the same.
-	nsIURI* 	uri;
+	nsCOMPtr<nsIURI> 	uri;
 };
 
 #endif // _nsAuth_h_

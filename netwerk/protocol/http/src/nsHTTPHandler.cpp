@@ -59,7 +59,6 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 
 #endif /* PR_LOGGING */
 
-
 #define MAX_NUMBER_OF_OPEN_TRANSPORTS 8
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -174,9 +173,10 @@ nsHTTPHandler::~nsHTTPHandler()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPHandler [this=%x].\n", this));
 
+    mConnections->Clear();
+    mIdleTransports->Clear();
     mPendingChannelList->Clear();
     mTransportList->Clear();
-    mIdleTransports->Clear();
 
     // Release the Atoms used by the HTTP protocol...
     nsHTTPAtoms::ReleaseAtoms();
