@@ -40,7 +40,7 @@ static NS_DEFINE_IID(kIRobotSinkIID, NS_IROBOTSINK_IID);
 class RobotSink : public nsIRobotSink {
 public:
   RobotSink();
-  ~RobotSink();
+  virtual ~RobotSink();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
