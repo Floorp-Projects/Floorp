@@ -37,6 +37,7 @@ $EmbedCodesizeTest        = 0;  # mZ, require mozilla/tools/codesigns
 $MailBloatTest            = 0;
 $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
 $LayoutPerformanceTest    = 0;  # Tp
+$DHTMLPerformanceTest     = 0;  # Tdhtml
 $QATest                   = 0;  
 $XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 0;  # Ts
@@ -63,6 +64,7 @@ $XpcomGlueTestTimeout             = 15;
 $CodesizeTestTimeout              = 900;     # seconds
 $CodesizeTestType                 = "auto";  # {"auto"|"base"}
 $LayoutPerformanceTestTimeout     = 1200;  # entire test, seconds
+$DHTMLPerformanceTestTimeout      = 1200;  # entire test, seconds
 $QATestTimeout                    = 1200;   # entire test, seconds
 $LayoutPerformanceTestPageTimeout = 30000; # each page, ms
 $StartupPerformanceTestTimeout    = 60;    # seconds

@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.268 $ ';
+$::UtilsVersion = '$Revision: 1.269 $ ';
 
 package TinderUtils;
 
@@ -1684,6 +1684,7 @@ sub run_all_tests {
     #
     if ($pref_file && $test_result eq 'success') { #XXX lame
         if($Settings::LayoutPerformanceTest  or
+           $Settings::DHTMLPerformanceTest   or
            $Settings::XULWindowOpenTest      or
            $Settings::StartupPerformanceTest or
            $Settings::MailBloatTest          or
@@ -1877,6 +1878,21 @@ sub run_all_tests {
       $test_result = LayoutPerformanceTest("LayoutPerformanceTest",
                                            $build_dir,
                                            @app_args);
+    }
+
+    # DHTML performance test.
+    if ($Settings::DHTMLPerformanceTest and $test_result eq 'success') {
+      my @app_args;
+      if($Settings::BinaryName eq "TestGtkEmbed" ||
+         $Settings::BinaryName =~ /^firefox/) {
+        @app_args = [$binary];        
+      } else {
+        @app_args = [$binary, "-P", $Settings::MozProfileName];
+      }
+
+      $test_result = DHTMLPerformanceTest("DHTMLPerformanceTest",
+                                          $build_dir,
+                                          @app_args);
     }
 
     # QA test: Client-side JS, DOM/HTML/Views, form submission.
@@ -2171,6 +2187,47 @@ sub LayoutPerformanceTest {
     }
 
     return $layout_test_result;
+}
+
+sub DHTMLPerformanceTest {
+    my ($test_name, $build_dir, $args) = @_;
+    my $dhtml_test_result;
+    my $dhtml_time;
+    my $dhtml_time_details;
+    my $binary_log = "$build_dir/$test_name.log";
+    my $url = "http://www.mozilla.org/performance/test-cases/dhtml/runTests.html";
+    
+    # Settle OS.
+    run_system_cmd("sync; sleep 5", 35);
+    
+    $dhtml_time = AliveTestReturnToken($test_name,
+                                       $build_dir,
+                                       [@$args, $url],
+                                       $Settings::LayoutPerformanceTestTimeout,
+                                       "_x_x_mozilla_dhtml",
+                                       ",");
+
+    if($dhtml_time) {
+      $dhtml_test_result = 'success';
+    } else {
+      $dhtml_test_result = 'testfailed';
+    }
+    
+    if($dhtml_test_result eq 'success') {
+      my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+
+      if ($Settings::TestsPhoneHome) {
+        print_log "TinderboxPrint:" .
+          "<a title=\"DHTML time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=dhtml&tbox=" .
+          ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$dhtml_time\">Tdhtml:" . $dhtml_time . "ms</a>\n";
+        send_results_to_server($dhtml_time, "--", "dhtml", ::hostname());
+      } else {
+        print_log "TinderboxPrint:" .
+          "<abbr title=\"DHTML time\">Tdhtml:" . $dhtml_time . "ms</abbr>\n";
+      }      
+    }
+
+    return $dhtml_test_result;
 }
 
 
