@@ -124,7 +124,7 @@ void nsRegionGTK::Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
   grect.width = aWidth;
   grect.height = aHeight;
 
-  GdkRegion *nRegion = ::gdk_regions_union_with_rect(mRegion, &grect);
+  GdkRegion *nRegion = ::gdk_region_union_with_rect(mRegion, &grect);
   ::gdk_region_destroy(mRegion);
   mRegion = nRegion;
 }
