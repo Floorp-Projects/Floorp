@@ -79,7 +79,7 @@
             <row>
               <label value="&generalURL;"/>
               <separator/>
-              <textbox readonly="true" crop="right" id="urltext" class="text-link"/>
+              <textbox readonly="true" crop="right" id="urltext"/>
             </row>
             <row>
               <separator class="thin"/>
