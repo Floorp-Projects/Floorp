@@ -353,16 +353,16 @@ nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen,
     nsScannerString::Buffer* buffer = nsScannerString::AllocBuffer(unicharBufLen + 1);
     NS_ENSURE_TRUE(buffer,NS_ERROR_OUT_OF_MEMORY);
     start = unichars = buffer->DataStart();
-	  
+
     PRInt32 totalChars = 0;
     PRInt32 unicharLength = unicharBufLen;
     do {
       PRInt32 srcLength = aLen;
-		  res = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
+      res = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
 
       totalChars += unicharLength;
       // Continuation of failure case
-		  if(NS_FAILED(res)) {
+      if(NS_FAILED(res)) {
         // if we failed, we consume one byte, replace it with U+FFFD
         // and try the conversion again.
 
@@ -378,7 +378,7 @@ nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen,
         unichars = unichars + unicharLength;
         unicharLength = unicharBufLen - (++totalChars);
 
-			  mUnicodeDecoder->Reset();
+        mUnicodeDecoder->Reset();
 
         if(((PRUint32) (srcLength + 1)) > aLen) {
           srcLength = aLen;
@@ -389,8 +389,8 @@ nsresult nsScanner::Append(const char* aBuffer, PRUint32 aLen,
 
         aBuffer += srcLength;
         aLen -= srcLength;
-		  }
-	  } while (NS_FAILED(res) && (aLen > 0));
+      }
+    } while (NS_FAILED(res) && (aLen > 0));
 
     buffer->SetDataLength(totalChars);
     AppendToBuffer(buffer, aRequest);
