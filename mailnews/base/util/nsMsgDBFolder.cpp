@@ -1819,11 +1819,25 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
   server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
   if (!filterPlugin) // it's not an error not to have the filter plugin.
     return NS_OK;
-
   NS_ENSURE_SUCCESS(rv, rv); 
+
+  nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(filterPlugin);
+
+  if (junkMailPlugin)
+  {
+    PRBool userHasClassified = PR_FALSE;
+    // if the user has not classified any messages yet, then we shouldn't bother
+    // running the junk mail controls. This creates a better first use experience.
+    // See Bug #250084.
+    junkMailPlugin->GetUserHasClassified(&userHasClassified);
+    if (!userHasClassified)
+      return NS_OK;
+  }
+
   spamSettings->GetLevel(&spamLevel);
   if (!spamLevel)
     return NS_OK;
+
   nsCOMPtr<nsIMsgMailSession> mailSession = 
       do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1931,7 +1945,6 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
     // filterMsgs
     //
     *aFiltersRun = PR_TRUE;
-    nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(filterPlugin);
     rv = SpamFilterClassifyMessages((const char **) messageURIs, numMessagesToClassify, aMsgWindow, junkMailPlugin); 
 
     for ( PRUint32 freeIndex=0 ; freeIndex < numMessagesToClassify ; ++freeIndex ) 
