@@ -669,6 +669,9 @@ endif # OS2
 ifdef ENABLE_STRIP
 	$(STRIP) $@
 endif
+ifdef MOZ_POST_PROGRAM_COMMAND
+	$(MOZ_POST_PROGRAM_COMMAND) $@
+endif
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
 	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
@@ -709,6 +712,9 @@ endif
 endif
 ifdef ENABLE_STRIP
 	$(STRIP) $@
+endif
+ifdef MOZ_POST_PROGRAM_COMMAND
+	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 
 $(HOST_SIMPLE_PROGRAMS): host_%$(BIN_SUFFIX): %.ho $(HOST_EXTRA_DEPS) Makefile Makefile.in
@@ -838,6 +844,9 @@ endif # OS2
 	chmod +x $@
 ifdef ENABLE_STRIP
 	$(STRIP) $@
+endif
+ifdef MOZ_POST_DSO_LIB_COMMAND
+	$(MOZ_POST_DSO_LIB_COMMAND) $@
 endif
 
 ifeq ($(OS_ARCH),OS2)
