@@ -149,6 +149,7 @@ NS_NewSyncStreamListener(nsIInputStream **inStream,
     NS_ADDREF(l);
     *listener = l;
     *outStream = l->GetOutputStream();
+    NS_ADDREF(*outStream);
     return NS_OK;
 }
 
