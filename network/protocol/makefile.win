@@ -34,13 +34,15 @@ DIRS= \
 	gopher \
 	http \
 	remote \
+#ifdef SMART_MAIL
+	pop3 \
+#endif
 !ifndef MODULAR_NETLIB
 	dataurl \
 	js \
 	marimba \
 !endif
 !ifdef MOZ_MAIL_NEWS 
-	pop3 \
 	smtp \
 	nntp \
 	mailbox \

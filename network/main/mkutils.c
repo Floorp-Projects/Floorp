@@ -3386,8 +3386,8 @@ NET_InitWAISProtocol(void)
 
     NET_RegisterProtocolImplementation(&wais_proto_impl, WAIS_TYPE_URL);
 }
-
 #ifdef MOZ_MAIL_NEWS    
+
 PUBLIC char *
 NET_Base64Encode (char *src, int32 srclen)
 {
@@ -3418,6 +3418,8 @@ NET_Base64Encode (char *src, int32 srclen)
    */
   return bs.buffer;
 }
+
+
 
 PUBLIC char *
 NET_Base64Decode (char *src, 
