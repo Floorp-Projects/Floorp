@@ -147,6 +147,7 @@ nsFormFrame::nsFormFrame()
   : nsBlockFrame()
 {
   mTextSubmitter = nsnull;
+  mTextSubmitterSet = PR_FALSE;
 }
 
 nsFormFrame::~nsFormFrame()
@@ -363,9 +364,12 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
   aFrame.GetType(&type);
 
   // a solo text control can be a submitter (if return is hit)
-  // XXX pollmann this logic is flawed - three text boxes?
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-    mTextSubmitter = (nsnull == mTextSubmitter) ? &aFrame : nsnull;
+    // Only set if this is the first text input found.  Otherwise, set to null.
+    if (!mTextSubmitterSet) {
+      mTextSubmitter = &aFrame;
+      mTextSubmitterSet = PR_TRUE;
+    } else mTextSubmitter = nsnull;
     return;
   }
 

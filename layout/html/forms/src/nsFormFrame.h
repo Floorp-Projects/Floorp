@@ -109,6 +109,7 @@ protected:
   nsVoidArray          mFormControls;
   nsVoidArray          mRadioGroups;
   nsIFormControlFrame* mTextSubmitter;
+  PRBool               mTextSubmitterSet;
 };
 
 #endif // nsFormFrame_h___
