@@ -405,7 +405,7 @@ function cli_ifbreak(e)
 console.onInputFinish =
 function cli_ifinish (e)
 {
-    console.doCommand.stepOut();
+    console.doCommandStepOut();
 }
 
 console.onInputFrame =
