@@ -440,46 +440,200 @@
 
 
 ;;; ------------------------------------------------------------------------------------------------------
-;;; SETS
+;;; INTSETS
 
-(defstruct (set (:constructor allocate-set (elts-hash)))
-  (elts-hash nil :type hash-table :read-only t))
+;;; An intset is a finite set of integers, represented as an ordered list of ranges.
+;;; Each range is a cons (low . high), both low and high being inclusive.  Ranges must
+;;; be nonoverlapping, and adjacent ranges must be consolidated.
+
+(defconstant *empty-intset* nil)
+
+; Return true if the intset is valid.
+(defun valid-intset? (intset)
+  (and (structured-type? intset '(list (cons integer integer)))
+       (or (null intset)
+           (let ((prev (- (caar intset) 2)))
+             (dolist (range intset t)
+               (let ((low (car range))
+                     (high (cdr range)))
+                 (unless (and (< prev (1- low)) (<= low high))
+                   (return nil))
+                 (setq prev high)))))))
 
 
-; Make and return a new set.
-(defun make-set (&optional (test #'eql))
-  (allocate-set (make-hash-table :test test)))
-
-
-; Add values to the set, modifying the set in place.
-; Return the set.
-(defun set-add (set &rest values)
-  (let ((elements (set-elts-hash set)))
+; Return an intset that is the union of the given intset and the intset
+; containg the given values.
+(defun intset-add-value (intset &rest values)
+  (labels
+    ((add-value (intset value)
+       (if (endp intset)
+         (list (cons value value))
+         (let* ((first-range (first intset))
+                (rest (rest intset))
+                (first-low (car first-range))
+                (first-high (cdr first-range)))
+           (cond
+            ((> value first-high)
+             (cond
+              ((/= value (1+ first-high)) (cons first-range (add-value rest value)))
+              ((or (endp rest) (/= (caar rest) (1+ value))) (acons first-low value rest))
+              (t (acons first-low (cdar rest) (rest rest)))))
+            ((< value first-low)
+             (if (/= value (1- first-low))
+               (acons value value intset)
+               (acons value first-high rest)))
+            (t intset))))))
+    
     (dolist (value values)
-      (setf (gethash value elements) t)))
-  set)
+      (assert-true (integerp value))
+      (add-value intset value))))
 
 
-; Return true if element is a member of the set.
-(defun set-member (set element)
-  (gethash element (set-elts-hash set)))
+; Return an intset that is the union of the given intset and the intset
+; containg all integers between low and high, inclusive.  low <= high+1 is required.
+(defun intset-add-range (intset low high)
+  (labels
+    ((add-range (intset low high)
+       (if (endp intset)
+         (list (cons low high))
+         (let* ((first-range (first intset))
+                (rest (rest intset))
+                (first-low (car first-range))
+                (first-high (cdr first-range)))
+           (cond
+            ((> low (1+ first-high))
+             (cons first-range (add-range rest low high)))
+            ((< high (1- first-low))
+             (acons low high intset))
+            ((<= high first-high)
+             (if (>= low first-low)
+               intset
+               (acons low first-high rest)))
+            (t (add-range rest (min low first-low) high)))))))
+    
+    (assert-true (and (integerp low) (integerp high) (<= low (1+ high))))
+    (if (= low (1+ high))
+      intset
+      (add-range intset low high))))
 
 
-; Return the set as a list.
-(defun set-elements (set)
-  (let ((elements nil))
-    (maphash #'(lambda (key value)
-                 (declare (ignore value))
-                 (push key elements))
-             (set-elts-hash set))
-    elements))
+; Return an intset constructed from a list of ranges.  Each range has two expressions,
+; low and high.  high can be null to indicate a one-element range.
+(defun intset-from-ranges (&rest ranges)
+  (if (endp ranges)
+    *empty-intset*
+    (progn
+      (assert-true (cdr ranges))
+      (intset-add-range (apply #'intset-from-ranges (cddr ranges))
+                        (first ranges)
+                        (or (second ranges) (first ranges))))))
 
 
-; Print the set
-(defmethod print-object ((set set) stream)
-  (if *print-readably*
-    (call-next-method)
-    (format stream "~<{~;~@{~W ~:_~}~;}~:>" (set-elements set))))
+
+; Return true if value is a member of the intset.
+(defun intset-member? (intset value)
+  (if (endp intset)
+    nil
+    (let ((first-range (first intset)))
+      (if (> value (cdr first-range))
+        (intset-member? (rest intset) value)
+        (>= value (car first-range))))))
+
+
+; Return the union of the two intsets.
+(defun intset-union (intset1 intset2)
+  (cond
+   ((endp intset1) intset2)
+   ((endp intset2) intset1)
+   (t (let* ((first-range1 (first intset1))
+             (rest1 (rest intset1))
+             (first-low1 (car first-range1))
+             (first-high1 (cdr first-range1))
+             (first-range2 (first intset2))
+             (rest2 (rest intset2))
+             (first-low2 (car first-range2))
+             (first-high2 (cdr first-range2)))
+        (cond
+         ((< first-high1 (1- first-low2))
+          (cons first-range1 (intset-union rest1 intset2)))
+         ((< first-high2 (1- first-low1))
+          (cons first-range2 (intset-union intset1 rest2)))
+         (t (intset-union (intset-add-range intset1 first-low2 first-high2) rest2)))))))
+
+
+; Return the intersection of the two intsets.
+(defun intset-intersection (intset1 intset2)
+  (if (or (endp intset1) (endp intset2))
+    nil
+    (let* ((first-range1 (first intset1))
+           (rest1 (rest intset1))
+           (first-low1 (car first-range1))
+           (first-high1 (cdr first-range1))
+           (first-range2 (first intset2))
+           (rest2 (rest intset2))
+           (first-low2 (car first-range2))
+           (first-high2 (cdr first-range2))
+           (low (max first-low1 first-low2)))
+      (cond
+       ((< first-high1 first-high2)
+        (if (<= low first-high1)
+          (acons low first-high1 (intset-intersection rest1 intset2))
+          (intset-intersection rest1 intset2)))
+       ((> first-high1 first-high2)
+        (if (<= low first-high2)
+          (acons low first-high2 (intset-intersection intset1 rest2))
+          (intset-intersection intset1 rest2)))
+       (t (acons low first-high1 (intset-intersection rest1 rest2)))))))
+
+
+; Return the the intset containing the elements of intset1 that are not in intset2.
+(defun intset-difference (intset1 intset2)
+  (cond
+   ((endp intset1) nil)
+   ((endp intset2) intset1)
+   (t (let* ((first-range1 (first intset1))
+             (rest1 (rest intset1))
+             (first-low1 (car first-range1))
+             (first-high1 (cdr first-range1))
+             (first-range2 (first intset2))
+             (rest2 (rest intset2))
+             (first-low2 (car first-range2))
+             (first-high2 (cdr first-range2)))
+        (cond
+         ((< first-high1 first-low2)
+          (cons first-range1 (intset-difference rest1 intset2)))
+         ((> first-low1 first-high2)
+          (intset-difference intset1 rest2))
+         ((< first-low1 first-low2)
+          (acons first-low1 (1- first-low2) (intset-difference (acons first-low2 first-high1 rest1) intset2)))
+         ((> first-high1 first-high2)
+          (intset-difference (acons (1+ first-high2) first-high1 rest1) rest2))
+         (t (intset-difference rest1 intset2)))))))
+
+
+; Return true if the two intsets are equal.
+(declaim (inline intset=))
+(defun intset= (intset1 intset2)
+  (equal intset1 intset2))
+
+
+; Return the number of elements in the intset.
+(defun intset-length (intset)
+  (if (endp intset)
+    0
+    (+ 1 (- (cdar intset) (caar intset))
+       (intset-length (rest intset)))))
+
+
+; Return the lowest element of the intset or nil if the intset is empty.
+(declaim (inline intset-min))
+(defun intset-min (intset)
+  (caar intset))
+
+
+; Return the highest element of the intset or nil if the intset is empty.
+(defun intset-max (intset)
+  (cdar (last intset)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -494,13 +648,13 @@
 ;   the same node.  test should be either #'eq, #'eql, or #'equal
 ;   because it is used as a test function in a hash table.
 (defun depth-first-search (test successors start)
-  (let ((visited-nodes (make-set test))
+  (let ((visited-nodes (make-hash-table :test test))
         (dfs-list nil))
     (labels
       ((visit (node)
-         (set-add visited-nodes node)
+         (setf (gethash node visited-nodes) t)
          (dolist (successor (funcall successors node))
-           (unless (set-member visited-nodes successor)
+           (unless (gethash successor visited-nodes)
              (visit successor)))
          (push node dfs-list)))
       (visit start)
