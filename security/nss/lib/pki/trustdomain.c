@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.15 $ $Date: 2001/11/09 16:39:34 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.16 $ $Date: 2001/11/20 18:28:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -418,6 +418,7 @@ find_best_cert_for_template
 	                                                cktemplate, ctsize,
 	                                                get_best_cert, best);
     } else {
+	/* we need to lock the iterator */
 	for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
 	     tok != (NSSToken *)NULL;
 	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
@@ -432,6 +433,18 @@ find_best_cert_for_template
     }
     /* Cache the cert before returning */
     /*nssTrustDomain_AddCertsToCache(td, &best->cert, 1);*/
+    /* rjr handle orphanned certs in cache for now. real fix will be Ian's
+     * crypto object */
+    if (best->cert == NULL) {
+	if (nssList_Count(best->cached) >= 1) {
+	    NSSCertificate * candidate;
+
+	    nssList_GetArray(best->cached,&candidate,1); 
+	    if (candidate) {
+		best->cert = nssCertificate_AddRef(candidate);
+	    }
+	}
+    }
     return best->cert;
 }
 
@@ -477,6 +490,7 @@ find_all_certs_for_template
 	                                                cktemplate, ctsize,
                                                         collect_certs, ca);
     } else {
+	/* we need to lock the iterator */
 	for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
 	     tok != (NSSToken *)NULL;
 	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
@@ -1057,7 +1071,18 @@ NSSTrustDomain_TraverseCertificates
   void *arg
 )
 {
-    return NULL;
+    PRStatus nssrv;
+    NSSToken *tok;
+
+    /* we need to lock the iterator */
+    for (tok  = (NSSToken *)nssListIterator_Start(td->tokens);
+	     tok != (NSSToken *)NULL;
+	     tok  = (NSSToken *)nssListIterator_Next(td->tokens))
+    {
+	nssrv = nssToken_TraverseCertificates(tok, NULL, callback, arg);
+    }
+    nssListIterator_Finish(td->tokens);
+    return NULL; /* should return array of nssrv's ? */
 }
 
 NSS_IMPLEMENT PRStatus
