@@ -40,10 +40,12 @@ CPPSRCS =				\
 	nsStyleSet.cpp			\
 	$(NULL)
 
-EXPORTS = nsSelectionRange.h \
-	$(NULL)
-
 MODULE = raptor
+
+EXPORTS = \
+	nsSelectionRange.h \
+	nsSelectionPoint.h \
+	$(NULL)
 
 REQUIRES = xpcom raptor dom netlib
 

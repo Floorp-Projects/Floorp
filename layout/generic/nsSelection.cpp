@@ -90,3 +90,4 @@ void nsSelection::GetRange(nsSelectionRange * aSelectionRange) {
 char * nsSelection::ToString() {
   return mRange->ToString();;
 }
+

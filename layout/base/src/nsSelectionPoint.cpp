@@ -48,3 +48,4 @@ char * nsSelectionPoint::ToString() {
   sprintf(str, "TextPoint[0x%X, offset=%d, isAnchor=%s]", fContent, fOffset, (fIsAnchor?"PR_TRUE":"PR_FALSE"));
   return str;
 }
+
