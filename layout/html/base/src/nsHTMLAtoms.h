@@ -63,6 +63,7 @@ public:
   static nsIAtom* bordercolor;
   static nsIAtom* bottompadding;
   static nsIAtom* br;
+  static nsIAtom* bulletPseudo;
 
   static nsIAtom* caption;
   static nsIAtom* cellpadding;
