@@ -48,7 +48,8 @@
 #include "nsParserCIID.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLTokens.h"  // for eHTMLTags
-#include "nsISaveAsCharset.h" // Some compilers can't do nsCOMPtr on a forward type
+#include "nsISaveAsCharset.h"
+#include "nsIEntityConverter.h"
 #include "nsIURI.h"
 
 #define NS_IHTMLCONTENTSINKSTREAM_IID  \
@@ -154,10 +155,9 @@ protected:
     void AddIndent();
     void EnsureBufferSize(PRInt32 aNewSize);
 
-    void EncodeToBuffer(const nsString& aString);
-    NS_IMETHOD InitEncoder();
+    NS_IMETHOD InitEncoders();
     
-    void Write(const nsString& aString);
+    PRInt32 Write(const nsString& aString);   // returns # chars written
     void Write(const char* aCharBuffer);
     void Write(char aChar);
 
@@ -170,7 +170,6 @@ protected:
 
 protected:
     nsIOutputStream* mStream;
-    nsString  mStreamBuffer;
     nsString* mString;
 
     int       mTabLevel;
@@ -195,7 +194,8 @@ protected:
 
     PRInt32   mMaxColumn;
 
-    nsCOMPtr<nsISaveAsCharset> mUnicodeEncoder;
+    nsCOMPtr<nsISaveAsCharset> mCharsetEncoder;
+    nsCOMPtr<nsIEntityConverter> mEntityConverter;
     nsCAutoString mCharsetOverride;
 };
 

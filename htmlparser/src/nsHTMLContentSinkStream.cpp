@@ -31,7 +31,6 @@
  * model.
  */
 
-
 #include "nsHTMLContentSinkStream.h"
 #include "nsIParserNode.h"
 #include <ctype.h>
@@ -49,11 +48,8 @@
 
 #include "nsNetUtil.h"           // for NS_MakeAbsoluteURI
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkStreamIID, NS_IHTMLCONTENTSINKSTREAM_IID);
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
+static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
 static char*          gHeaderComment = "<!-- This page was created by the Gecko output system. -->";
 static char*          gDocTypeHeader = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
@@ -87,16 +83,16 @@ nsHTMLContentSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
-  if(aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (nsIContentSink*)(this);
   }
-  else if(aIID.Equals(kIContentSinkIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIContentSink))) {
     *aInstancePtr = (nsIContentSink*)(this);
   }
-  else if(aIID.Equals(kIHTMLContentSinkIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIHTMLContentSink))) {
     *aInstancePtr = (nsIHTMLContentSink*)(this);
   }
-  else if(aIID.Equals(kIHTMLContentSinkStreamIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIHTMLContentSinkStream))) {
     *aInstancePtr = (nsIHTMLContentSinkStream*)(this);
   }
   else {
@@ -207,125 +203,134 @@ nsHTMLContentSinkStream::EndContext(PRInt32 aPosition)
  * Initialize the Unicode encoder with our current mCharsetOverride.
  */
 NS_IMETHODIMP
-nsHTMLContentSinkStream::InitEncoder()
+nsHTMLContentSinkStream::InitEncoders()
 {
-  nsAutoString charsetName = mCharsetOverride;
   nsresult res;
-  nsICharsetAlias* calias = nsnull; 
-  res = nsServiceManager::GetService(kCharsetAliasCID, 
-                                     kICharsetAliasIID, 
-                                     (nsISupports**)&calias); 
- 
-  NS_ASSERTION(nsnull != calias, "cannot find charset alias"); 
-  if(NS_SUCCEEDED(res) && (nsnull != calias)) 
+
+  // Initialize an entity encoder if we're using the string interface:
+  if (mString && (mFlags & nsIDocumentEncoder::OutputEncodeEntities))
+    res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, 
+                                             NS_GET_IID(nsIEntityConverter),
+                                             getter_AddRefs(mEntityConverter));
+
+  // Initialize a charset encoder if we're using the stream interface
+  if (mStream)
   {
-    res = calias->GetPreferred(mCharsetOverride, charsetName);
-    nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
-  }
-  if (NS_FAILED(res))
-  {
-    // failed - unknown alias , fallback to ISO-8859-1
-    charsetName = "ISO-8859-1";
+    nsAutoString charsetName = mCharsetOverride;
+    NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
+    if (NS_SUCCEEDED(res) && calias)
+      res = calias->GetPreferred(mCharsetOverride, charsetName);
+    if (NS_FAILED(res))
+    {
+      // failed - unknown alias , fallback to ISO-8859-1
+      charsetName = "ISO-8859-1";
+    }
+
+    res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, 
+                                             NS_GET_IID(nsISaveAsCharset),
+                                             getter_AddRefs(mCharsetEncoder));
+    if (NS_FAILED(res))
+      return res;
+    // SaveAsCharset requires a const char* in its first argument:
+    nsCAutoString charsetCString (charsetName);
+    // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
+    res = mCharsetEncoder->Init(charsetCString,
+                                charsetName.EqualsIgnoreCase("ISO-8859-1") ?
+                                nsISaveAsCharset::attr_htmlTextDefault :
+                                nsISaveAsCharset::attr_EntityAfterCharsetConv
+                                 + nsISaveAsCharset::attr_FallbackDecimalNCR,
+                                nsIEntityConverter::html40);
   }
 
-  res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, 
-                                           NS_GET_IID(nsISaveAsCharset),
-                                           getter_AddRefs(mUnicodeEncoder));
-  if (NS_FAILED(res))
-    return res;
-  // SaveAsCharset requires a const char* in its first argument:
-  nsCAutoString charsetCString (charsetName);
-  // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
-  res = mUnicodeEncoder->Init(charsetCString,
-                              charsetName.EqualsIgnoreCase("ISO-8859-1") ?
-                                nsISaveAsCharset::attr_htmlTextDefault :
-                                nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR,
-                              nsIEntityConverter::html40);
   return res;
 }
 
-/**
- * Use mUnicodeEncoder to encode to the buffer;
- * this also encodes entities, so it's useful even for the default charset.
- *
- * @param aSrc - the string to be encoded.
- */
-void
-nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
-{
-  char *encodedBuffer = nsnull;
-  nsresult res;
-
-  // Initialize the encoder if we haven't already
-  if (!mUnicodeEncoder)
-    InitEncoder();
-
-  if (mUnicodeEncoder)
-  {
-    // Call the converter to convert to the target charset.
-    // Convert() takes a char* output param even though it's writing unicode.
-    res = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &encodedBuffer);
-    if (!NS_SUCCEEDED(res))
-    {
-#ifdef DEBUG_akkana
-      printf("Unicode convert didn't work!\n");
-#endif
-      encodedBuffer = aSrc.ToNewUTF8String();
-    }
-  }
-  else
-  {
-#ifdef DEBUG_akkana
-      printf("Unicode convert didn't work!\n");
-#endif
-      encodedBuffer = aSrc.ToNewCString();
-  }
-  mBufferLength = 0;
-  if (encodedBuffer)
-  {
-    mBufferLength = nsCRT::strlen(encodedBuffer);
-    EnsureBufferSize(mBufferLength+1);
-    nsCRT::memcpy(mBuffer, encodedBuffer, mBufferLength+1);
-  }
-}
-
-void nsHTMLContentSinkStream::Write(const nsString& aString)
+//
+// Write(nsString) returns the number of characters written.
+// If we do both string and stream output, stream chars will override string.
+//
+PRInt32 nsHTMLContentSinkStream::Write(const nsString& aString)
 {
   if (mBodyOnly && !mInBody)
-    return;
+    return 0;
 
-  // If an encoder is being used then convert first convert the input string
-  // Ideally, we should do this only for the stream case,
-  // and encode entities (using nsIEntityEncoder) but not charsets
-  // in the string case.
-  if (mUnicodeEncoder)
-    EncodeToBuffer(aString);
+  int charsWritten = 0;
 
+  // For the string case, we don't want to do charset conversion,
+  // but we still want to encode entities.
   if (mString)
   {
-    if (mUnicodeEncoder)
-      mString->Append(mBuffer, mBufferLength);
-    else
+    if (!mEntityConverter && (mFlags & nsIDocumentEncoder::OutputEncodeEntities))
+      InitEncoders();
+    if (mEntityConverter && (mFlags & nsIDocumentEncoder::OutputEncodeEntities))
+    {
+      nsresult res;
+      PRUnichar *encodedBuffer = nsnull;
+      res = mEntityConverter->ConvertToEntities(aString.GetUnicode(),
+                                                nsIEntityConverter::html40Latin1,
+                                                &encodedBuffer);
+      if (NS_SUCCEEDED(res) && encodedBuffer)
+      {
+        PRInt32 len = nsCRT::strlen(encodedBuffer);
+        mString->Append(encodedBuffer, len);
+        nsCRT::free(encodedBuffer);
+        charsWritten = len;
+      }
+      else {
+        charsWritten = aString.Length();
+        mString->Append(aString);
+      }
+    }
+    else {
+      charsWritten = aString.Length();
       mString->Append(aString);
+    }
   }
 
   if (!mStream)
-    return;
+    return charsWritten;
 
   // Now handle the stream case:
   nsOutputStream out(mStream);
 
-  // Test again in case there was a problem initializing the unicode encoder:
-  if (mUnicodeEncoder)
+  // If an encoder is being used then convert first convert the input string
+  char *encodedBuffer = nsnull;
+  nsresult res;
+
+  // Initialize the encoder if we haven't already
+  if (!mCharsetEncoder)
+    InitEncoders();
+
+  if (mCharsetEncoder)
   {
-    out.write(mBuffer, mBufferLength);
+    // Call the converter to convert to the target charset.
+    // Convert() takes a char* output param even though it's writing unicode.
+    res = mCharsetEncoder->Convert(aString.GetUnicode(), &encodedBuffer);
+    if (NS_SUCCEEDED(res) && encodedBuffer)
+    {
+      charsWritten = nsCRT::strlen(encodedBuffer);
+      out.write(encodedBuffer, charsWritten);
+      nsCRT::free(encodedBuffer);
+    }
+
+    // If it didn't work, just write the unicode
+    else
+    {
+      const PRUnichar* unicode = aString.GetUnicode();
+      charsWritten = aString.Length();
+      out.write(unicode, charsWritten);
+    }
   }
-  // else just write the unicode
+
+  // If we couldn't get an encoder, just write the unicode
   else
   {
     const PRUnichar* unicode = aString.GetUnicode();
-    out.write(unicode, aString.Length());
+    charsWritten = aString.Length();
+    out.write(unicode, charsWritten);
   }
+
+  return charsWritten;
 }
 
 void nsHTMLContentSinkStream::Write(const char* aData)
@@ -949,13 +954,11 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   }
   else if (type == eHTMLTag_entity)
   {
-    const nsString& entity = aNode.GetText();
-    EncodeToBuffer(entity);
     Write('&');
-    Write(mBuffer);
+    const nsString& entity = aNode.GetText();
+    mColPos += Write(entity) + 1;
     // Don't write the semicolon;
     // rely on the DTD to include it if one is wanted.
-    mColPos += entity.Length() + 2;
   }
   else if (type == eHTMLTag_text)
   {
@@ -1016,7 +1019,7 @@ PRBool nsHTMLContentSinkStream::HasLongLines(const nsString& text)
   {
     PRInt32 eol = text.FindChar('\n', PR_FALSE, start);
     if (eol < 0) eol = text.Length();
-    if (eol - start > longLineLen)
+    if ((PRInt32)(eol - start) > longLineLen)
       return PR_TRUE;
     start = eol+1;
   }
@@ -1165,7 +1168,7 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode)
           const nsString& value=aNode.GetValueAt(i);
           if (mCharsetOverride.IsEmpty())
             mCharsetOverride.Assign(value);
-          InitEncoder();
+          InitEncoders();
         }
         else if (key.Equals("uri"))
         {

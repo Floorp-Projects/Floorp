@@ -37,7 +37,7 @@ function EditorGetHTML()
 {
   if (editorShell) {
     dump("Getting HTML\n");
-    var  outputHTML = editorShell.GetContentsAs("text/html", 0);
+    var  outputHTML = editorShell.GetContentsAs("text/html", 256);
     dump(outputHTML + "\n");
   }
 }
