@@ -23,7 +23,7 @@
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
@@ -95,7 +95,7 @@ NS_IMETHODIMP
 nsMathMLTokenFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
-                         nsIStyleContext* aContext,
+                         nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
   // leading and trailing whitespace doesn't count -- bug 15402

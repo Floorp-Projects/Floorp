@@ -118,7 +118,7 @@
 #include "nsIPrefService.h"
 
 // XXX For temporary paint code
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 
 // For mime types
 #include "nsMimeTypes.h"
@@ -577,7 +577,7 @@ NS_IMETHODIMP
 nsObjectFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsIStyleContext* aContext,
+                    nsStyleContext*  aContext,
                     nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsObjectFrameSuper::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);

@@ -1091,8 +1091,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       mPresContext->GetShell(getter_AddRefs(presShell));
       nsresult result = presShell->GetPrimaryFrameFor(option, &optFrame);
       if (NS_SUCCEEDED(result) && optFrame != nsnull) {
-        nsCOMPtr<nsIStyleContext> optStyle;
-        optFrame->GetStyleContext(getter_AddRefs(optStyle));
+        nsStyleContext* optStyle = optFrame->GetStyleContext();
         if (optStyle) {
           const nsStyleFont* styleFont = (const nsStyleFont*)optStyle->GetStyleData(eStyleStruct_Font);
           nsCOMPtr<nsIDeviceContext> deviceContext;
@@ -1751,7 +1750,7 @@ NS_IMETHODIMP
 nsListControlFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
-                         nsIStyleContext* aContext,
+                         nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
   mPresContext = aPresContext;

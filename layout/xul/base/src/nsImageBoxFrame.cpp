@@ -47,7 +47,7 @@
 #include "nsIFontMetrics.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
 #include "nsIPresContext.h"
@@ -66,7 +66,6 @@
 #include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsImageMap.h"
 #include "nsILinkHandler.h"
@@ -85,7 +84,6 @@
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIStyleSet.h"
-#include "nsIStyleContext.h"
 #include "nsBoxLayoutState.h"
 #include "nsIDOMDocument.h"
 #include "nsIEventQueueService.h"
@@ -324,7 +322,7 @@ NS_IMETHODIMP
 nsImageBoxFrame::Init(nsIPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIFrame*        aParent,
-                          nsIStyleContext* aContext,
+                          nsStyleContext*  aContext,
                           nsIFrame*        aPrevInFlow)
 {
   if (!mListener) {

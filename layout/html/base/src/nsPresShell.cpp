@@ -79,6 +79,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsWeakReference.h"
@@ -1052,8 +1053,6 @@ public:
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const;
 
-  NS_IMETHOD GetStyleContextFor(nsIFrame*         aFrame,
-                                nsIStyleContext** aStyleContext) const;
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
@@ -4619,14 +4618,13 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
     } else {
       // Avoid finding the :after frame unless we need to (it's
       // expensive). Instead probe for the existence of the pseudo-element
-      nsCOMPtr<nsIStyleContext> styleContext;
-      nsCOMPtr<nsIStyleContext> pseudoStyleContext;
+      nsStyleContext *styleContext;
+      nsRefPtr<nsStyleContext> pseudoStyleContext;
       
-      primaryFrame->GetStyleContext(getter_AddRefs(styleContext));
-      mPresContext->ProbePseudoStyleContextFor(aContent,
-                                               nsCSSPseudoElements::after,
-                                               styleContext,
-                                               getter_AddRefs(pseudoStyleContext));
+      styleContext = primaryFrame->GetStyleContext();
+      pseudoStyleContext = mPresContext->ProbePseudoStyleContextFor(aContent,
+                                                                    nsCSSPseudoElements::after,
+                                                                    styleContext);
       if (pseudoStyleContext) {
         nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(primaryFrame,
                                                             mPresContext);
@@ -5556,16 +5554,6 @@ PresShell::GetPrimaryFrameFor(nsIContent* aContent,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP 
-PresShell::GetStyleContextFor(nsIFrame*         aFrame,
-                              nsIStyleContext** aStyleContext) const
-{
-  if (!aFrame || !aStyleContext) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  return (aFrame->GetStyleContext(aStyleContext));
 }
 
 NS_IMETHODIMP

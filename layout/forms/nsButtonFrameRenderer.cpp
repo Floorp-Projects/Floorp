@@ -145,7 +145,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
     GetButtonOuterFocusRect(aRect, rect);
 
     const nsStyleBorder* border;
-    ::GetStyleData(NS_STATIC_CAST(nsIStyleContext*,mOuterFocusStyle), &border);
+    ::GetStyleData(mOuterFocusStyle, &border);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                                 aDirtyRect, rect, *border, mOuterFocusStyle, 0);
   }
@@ -156,7 +156,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
     GetButtonInnerFocusRect(aRect, rect);
 
     const nsStyleBorder* border;
-    ::GetStyleData(NS_STATIC_CAST(nsIStyleContext*,mInnerFocusStyle), &border);
+    ::GetStyleData(mInnerFocusStyle, &border);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                                 aDirtyRect, rect, *border, mInnerFocusStyle, 0);
   }
@@ -174,8 +174,7 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext* aPresContext,
   nsRect buttonRect;
   GetButtonRect(aRect, buttonRect);
 
-  nsCOMPtr<nsIStyleContext> context;
-  mFrame->GetStyleContext(getter_AddRefs(context));
+  nsStyleContext* context = mFrame->GetStyleContext();
 
   const nsStyleBorder* border =
     (const nsStyleBorder*)context->GetStyleData(eStyleStruct_Border);
@@ -247,8 +246,7 @@ nsButtonFrameRenderer::GetButtonOuterFocusBorderAndPadding()
 nsMargin
 nsButtonFrameRenderer::GetButtonBorderAndPadding()
 {
-  nsCOMPtr<nsIStyleContext> context;
-  mFrame->GetStyleContext(getter_AddRefs(context));
+  nsStyleContext* context = mFrame->GetStyleContext();
 
   nsMargin innerFocusBorderAndPadding(0,0,0,0);
   nsStyleBorderPadding  bPad;
@@ -324,52 +322,38 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext* aPresContext)
   // get all the styles
   nsCOMPtr<nsIContent> content;
   mFrame->GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIStyleContext> context;
-  mFrame->GetStyleContext(getter_AddRefs(context));
+  nsStyleContext* context = mFrame->GetStyleContext();
 
 
   // style for the inner such as a dotted line (Windows)
-  aPresContext->ProbePseudoStyleContextFor(content, nsCSSPseudoElements::mozFocusInner, context,
-                                          getter_AddRefs(mInnerFocusStyle));
+  mInnerFocusStyle = aPresContext->ProbePseudoStyleContextFor(content,
+                                                              nsCSSPseudoElements::mozFocusInner,
+                                                              context);
 
   // style for outer focus like a ridged border (MAC).
-  aPresContext->ProbePseudoStyleContextFor(content, nsCSSPseudoElements::mozFocusOuter, context,
-                                          getter_AddRefs(mOuterFocusStyle));
+  mOuterFocusStyle = aPresContext->ProbePseudoStyleContextFor(content,
+                                                              nsCSSPseudoElements::mozFocusOuter,
+                                                              context);
 
 }
 
-nsresult 
-nsButtonFrameRenderer::GetStyleContext(PRInt32 aIndex, nsIStyleContext** aStyleContext) const
+nsStyleContext*
+nsButtonFrameRenderer::GetStyleContext(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aStyleContext = nsnull;
   switch (aIndex) {
-
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
-    *aStyleContext = mInnerFocusStyle;
-    NS_IF_ADDREF(*aStyleContext);
-    break;
+    return mInnerFocusStyle;
   case NS_BUTTON_RENDERER_FOCUS_OUTER_CONTEXT_INDEX:
-    *aStyleContext = mOuterFocusStyle;
-    NS_IF_ADDREF(*aStyleContext);
-    break;
+    return mOuterFocusStyle;
   default:
-    return NS_ERROR_INVALID_ARG;
+    return nsnull;
   }
-  return NS_OK;
 }
 
-nsresult 
-nsButtonFrameRenderer::SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleContext)
+void 
+nsButtonFrameRenderer::SetStyleContext(PRInt32 aIndex, nsStyleContext* aStyleContext)
 {
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
   switch (aIndex) {
- 
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
     mInnerFocusStyle = aStyleContext;
     break;
@@ -377,5 +361,4 @@ nsButtonFrameRenderer::SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleCo
     mOuterFocusStyle = aStyleContext;
     break;
   }
-  return NS_OK;
 }

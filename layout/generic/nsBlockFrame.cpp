@@ -53,7 +53,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsReflowPath.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIView.h"
 #include "nsIFontMetrics.h"
 #include "nsHTMLParts.h"
@@ -75,6 +75,7 @@
 #include "plstr.h"
 #include "nsGUIEvent.h"
 #include "nsLayoutErrors.h"
+#include "nsAutoPtr.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -198,13 +199,11 @@ DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
   fputs(gap, stdout);
   nsFrame::ListTag(stdout, aFrame);
   printf(": ");
-  nsIStyleContext* sc;
-  aFrame->GetStyleContext(&sc);
+  nsStyleContext* sc = aFrame->GetStyleContext();
   while (nsnull != sc) {
-    nsIStyleContext* psc;
+    nsStyleContext* psc;
     printf("%p ", sc);
     psc = sc->GetParent();
-    NS_RELEASE(sc);
     sc = psc;
   }
   printf("\n");
@@ -5554,7 +5553,7 @@ nsBlockFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
   // first check to see if we are visible
   if (aCheckVis) {
     const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
     if (!vis->IsVisible()) {
       *aIsVisible = PR_FALSE;
       return NS_OK;
@@ -6308,7 +6307,7 @@ NS_IMETHODIMP
 nsBlockFrame::Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
+                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
 {
   if (aPrevInFlow) {
@@ -6323,7 +6322,7 @@ nsBlockFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
-nsIStyleContext*
+already_AddRefed<nsStyleContext>
 nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
 {
   // This check is here because nsComboboxControlFrame creates
@@ -6336,11 +6335,9 @@ nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
   if (!mContent->IsContentOfType(nsIContent::eELEMENT))
     return nsnull;
 
-  nsIStyleContext* fls;
-  aPresContext->ProbePseudoStyleContextFor(mContent,
-                                           nsCSSPseudoElements::firstLetter,
-                                           mStyleContext, &fls);
-  return fls;
+  return aPresContext->ProbePseudoStyleContextFor(mContent,
+                                                  nsCSSPseudoElements::firstLetter,
+                                                  mStyleContext);
 }
 
 NS_IMETHODIMP
@@ -6360,14 +6357,13 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
     // Lookup up the two pseudo style contexts
     if (nsnull == mPrevInFlow) {
-      nsIStyleContext* firstLetterStyle = GetFirstLetterStyle(aPresContext);
+      nsRefPtr<nsStyleContext> firstLetterStyle = GetFirstLetterStyle(aPresContext);
       if (nsnull != firstLetterStyle) {
         mState |= NS_BLOCK_HAS_FIRST_LETTER_STYLE;
 #ifdef NOISY_FIRST_LETTER
         ListTag(stdout);
         printf(": first-letter style found\n");
 #endif
-        NS_RELEASE(firstLetterStyle);
       }
     }
 
@@ -6398,9 +6394,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
           pseudoElement = nsCSSPseudoElements::mozListNumber;
           break;
       }
-      nsIStyleContext* kidSC;
-      aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoElement,
-                                                 mStyleContext, &kidSC);
+      nsRefPtr<nsStyleContext> kidSC = aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoElement, mStyleContext);
 
       // Create bullet frame
       nsCOMPtr<nsIPresShell> shell;
@@ -6408,11 +6402,9 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
       mBullet = new (shell.get()) nsBulletFrame;
 
       if (nsnull == mBullet) {
-        NS_RELEASE(kidSC);
         return NS_ERROR_OUT_OF_MEMORY;
       }
       mBullet->Init(aPresContext, mContent, this, kidSC, nsnull);
-      NS_RELEASE(kidSC);
 
       // If the list bullet frame should be positioned inside then add
       // it to the flow now.

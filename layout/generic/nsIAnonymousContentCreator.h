@@ -46,7 +46,6 @@
 class nsIPresContext;
 class nsISupportsArray;
 class nsIAtom;
-class nsIStyleContext;
 class nsIFrame;
 
 

@@ -88,7 +88,7 @@
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
 #include "nsIFrameManager.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 
 #include "nsIXULPrototypeCache.h"
 #include "nsIDOMLoadListener.h"
@@ -173,8 +173,7 @@ public:
         // Check to see if it's in the undisplayed content map.
         nsCOMPtr<nsIFrameManager> frameManager;
         shell->GetFrameManager(getter_AddRefs(frameManager));
-        nsCOMPtr<nsIStyleContext> sc;
-        frameManager->GetUndisplayedContent(mBoundElement, getter_AddRefs(sc));
+        nsStyleContext* sc = frameManager->GetUndisplayedContent(mBoundElement);
         if (!sc) {
           nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
           obs->ContentInserted(doc, parent, mBoundElement, index);

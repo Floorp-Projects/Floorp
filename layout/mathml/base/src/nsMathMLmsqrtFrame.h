@@ -59,18 +59,17 @@ class nsMathMLmsqrtFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD
+  virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 
-                            nsIStyleContext* aStyleContext);
-  NS_IMETHOD
-  GetAdditionalStyleContext(PRInt32           aIndex, 
-                            nsIStyleContext** aStyleContext) const;
+                            nsStyleContext*  aStyleContext);
+  virtual nsStyleContext*
+  GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsIStyleContext* aContext,
+       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD

@@ -48,7 +48,6 @@
 class nsISizeOfHandler;
 
 class nsIStyleSheet;
-class nsIStyleContext;
 class nsIPresContext;
 class nsIContent;
 class nsIStyledContent;

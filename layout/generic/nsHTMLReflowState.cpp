@@ -621,8 +621,7 @@ GetNearestContainingBlock(nsIFrame* aFrame, nsMargin& aContentArea)
     // it's percentage based (for example) then just ignore it
     nsStyleBorderPadding  bPad;
     nsMargin              borderPadding;
-    nsCOMPtr<nsIStyleContext> styleContext;
-    aFrame->GetStyleContext(getter_AddRefs(styleContext));
+    nsStyleContext* styleContext = aFrame->GetStyleContext();
     styleContext->GetBorderPaddingFor(bPad);
     if (bPad.GetBorderPadding(borderPadding)) {
       aContentArea.left += borderPadding.left;
@@ -2317,7 +2316,7 @@ GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
 static nscoord
 ComputeLineHeight(nsIPresContext* aPresContext,
                   nsIRenderingContext* aRenderingContext,
-                  nsIStyleContext* aStyleContext)
+                  nsStyleContext* aStyleContext)
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
 
@@ -2377,8 +2376,7 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
                                   nsIFrame* aFrame)
 {
   nscoord lineHeight = -1;
-  nsCOMPtr<nsIStyleContext> sc;
-  aFrame->GetStyleContext(getter_AddRefs(sc));
+  nsStyleContext* sc = aFrame->GetStyleContext();
   if (sc) {
     lineHeight = ComputeLineHeight(aPresContext, aRenderingContext, sc);
   }
@@ -2427,8 +2425,7 @@ nsHTMLReflowState::ComputeHorizontalValue(nscoord aContainingBlockWidth,
       // pretend its zero...
     }
     else {
-      nsCOMPtr<nsIStyleContext> styleContext;
-      frame->GetStyleContext(getter_AddRefs(styleContext));
+      nsStyleContext* styleContext = frame->GetStyleContext();
       SetFontFromStyle(rendContext, styleContext);
       nscoord fontWidth;
       rendContext->GetWidth('M', fontWidth);

@@ -101,7 +101,7 @@ nsNativeScrollbarFrame::~nsNativeScrollbarFrame ( )
 //
 NS_IMETHODIMP
 nsNativeScrollbarFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
-                               nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
+                               nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 

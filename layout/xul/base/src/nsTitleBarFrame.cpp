@@ -83,7 +83,7 @@ nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell)
 NS_IMETHODIMP  nsTitleBarFrame::Init(nsIPresContext*  aPresContext,
                 nsIContent*      aContent,
                 nsIFrame*        aParent,
-                nsIStyleContext* aContext,
+                nsStyleContext*  aContext,
                 nsIFrame*        asPrevInFlow)
 {
 	nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, asPrevInFlow);

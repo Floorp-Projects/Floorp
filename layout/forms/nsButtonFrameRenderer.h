@@ -44,7 +44,7 @@
 #define nsButtonFrameRenderer_h___
 
 #include "nsCoord.h"
-#include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsFrame.h"
 
 class nsStyleChangeList;
@@ -98,8 +98,8 @@ public:
   virtual nsMargin GetFullButtonBorderAndPadding();
   virtual nsMargin GetAddedButtonBorderAndPadding();
 
-  virtual nsresult GetStyleContext(PRInt32 aIndex, nsIStyleContext** aStyleContext) const;
-  virtual nsresult SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleContext);
+  virtual nsStyleContext* GetStyleContext(PRInt32 aIndex) const;
+  virtual void SetStyleContext(PRInt32 aIndex, nsStyleContext* aStyleContext);
 	virtual void ReResolveStyles(nsIPresContext* aPresContext);
 
   virtual void Redraw(nsIPresContext* aPresContext);
@@ -111,9 +111,9 @@ protected:
 private:
 
 	// cached styles for focus and outline.
-	nsCOMPtr<nsIStyleContext> mBorderStyle;
-	nsCOMPtr<nsIStyleContext> mInnerFocusStyle;
-	nsCOMPtr<nsIStyleContext> mOuterFocusStyle;
+  nsRefPtr<nsStyleContext> mBorderStyle;
+  nsRefPtr<nsStyleContext> mInnerFocusStyle;
+  nsRefPtr<nsStyleContext> mOuterFocusStyle;
 
 	nsFrame* mFrame;
 

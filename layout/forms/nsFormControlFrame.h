@@ -44,7 +44,6 @@
 #include "nsIWidget.h"
 #include "nsLeafFrame.h"
 #include "nsCoord.h"
-#include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 

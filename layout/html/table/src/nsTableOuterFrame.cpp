@@ -38,7 +38,7 @@
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
 #include "nsHTMLReflowCommand.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
@@ -166,7 +166,7 @@ NS_IMETHODIMP
 nsTableOuterFrame::Init(nsIPresContext*  aPresContext,
                    nsIContent*           aContent,
                    nsIFrame*             aParent,
-                   nsIStyleContext*      aContext,
+                   nsStyleContext*       aContext,
                    nsIFrame*             aPrevInFlow)
 {
   nsresult rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, 
@@ -1231,8 +1231,7 @@ nsTableOuterFrame::IsAutoWidth(nsIFrame& aTableOrCaption,
     *aIsPctWidth = PR_FALSE;
   }
 
-  nsCOMPtr<nsIStyleContext> styleContext;
-  aTableOrCaption.GetStyleContext(getter_AddRefs(styleContext)); 
+  nsStyleContext* styleContext = aTableOrCaption.GetStyleContext();
 
   nsStylePosition* position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
 
@@ -1877,8 +1876,7 @@ static PRBool
 IsPctHeight(nsIFrame* aFrame)
 {
   if (aFrame) {
-    nsCOMPtr<nsIStyleContext> styleContext;
-    aFrame->GetStyleContext(getter_AddRefs(styleContext)); 
+    nsStyleContext* styleContext = aFrame->GetStyleContext();
     nsStylePosition* position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
     if (eStyleUnit_Percent == position->mHeight.GetUnit()) {
       float percent = position->mHeight.GetPercentValue();

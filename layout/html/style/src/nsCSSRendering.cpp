@@ -43,7 +43,7 @@
 #include "nsRect.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDrawingSurface.h"
@@ -1562,8 +1562,7 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
             // use this guy's color
             nsIFrame *pFrame = nsnull;
             if (NS_SUCCEEDED(shell->GetPrimaryFrameFor(pContent, &pFrame)) && pFrame) {
-              nsIStyleContext *pContext = nsnull;
-              pFrame->GetStyleContext(&pContext);
+              nsStyleContext *pContext = pFrame->GetStyleContext();
               if (pContext) {
                 const nsStyleBackground* color = (const nsStyleBackground*)pContext->GetStyleData(eStyleStruct_Background);
                 NS_ASSERTION(color,"ColorStyleData should not be null");
@@ -1572,7 +1571,6 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
                   // set the reslt to TRUE to indicate we mapped the color
                   result = PR_TRUE;
                 }
-                NS_RELEASE(pContext);
               }// if context
             }// if frame
           }// if tag == html or body
@@ -1672,7 +1670,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                                  const nsRect& aDirtyRect,
                                  const nsRect& aBorderArea,
                                  const nsStyleBorder& aBorderStyle,
-                                 nsIStyleContext* aStyleContext,
+                                 nsStyleContext* aStyleContext,
                                  PRIntn aSkipSides,
                                  nsRect* aGap,
                                  nscoord aHardBorderSize,
@@ -2070,7 +2068,7 @@ void nsCSSRendering::PaintOutline(nsIPresContext* aPresContext,
                                  const nsRect& aBorderArea,
                                  const nsStyleBorder& aBorderStyle,
                                  const nsStyleOutline& aOutlineStyle,
-                                 nsIStyleContext* aStyleContext,
+                                 nsStyleContext* aStyleContext,
                                  PRIntn aSkipSides,
                                  nsRect* aGap)
 {
@@ -2233,7 +2231,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
                                       const nsRect& aDirtyRect,
                                       const nsRect& aBorderArea,
                                       nsBorderEdges * aBorderEdges,
-                                      nsIStyleContext* aStyleContext,
+                                      nsStyleContext* aStyleContext,
                                       PRIntn aSkipSides,
                                       nsRect* aGap)
 {
@@ -2527,11 +2525,11 @@ GetRootScrollableFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame)
 }
 
 const nsStyleBackground*
-nsCSSRendering::FindNonTransparentBackground(nsIStyleContext* aContext,
+nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
                                              PRBool aStartAtParent /*= PR_FALSE*/)
 {
   const nsStyleBackground* result = nsnull;
-  nsCOMPtr<nsIStyleContext> context;
+  nsStyleContext* context;
   if (aStartAtParent) {
     context = aContext->GetParent();
   } else {
@@ -2543,7 +2541,7 @@ nsCSSRendering::FindNonTransparentBackground(nsIStyleContext* aContext,
     // Have to .get() because some compilers won't match the template
     // otherwise (they don't look for implicit type conversions while doing
     // template matching?).
-    ::GetStyleData(context.get(), &result);
+    ::GetStyleData(context, &result);
     if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
       break;
 
@@ -2609,7 +2607,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
   
     // for printing and print preview.. this should be a pageContentFrame
     nsCOMPtr<nsIAtom> frameType;
-    nsCOMPtr<nsIStyleContext> parentContext;
+    nsStyleContext* parentContext;
 
     firstChild->GetFrameType(getter_AddRefs(frameType));
     if ( (frameType == nsLayoutAtoms::pageContentFrame) ){
@@ -2617,11 +2615,11 @@ FindCanvasBackground(nsIPresContext* aPresContext,
       // pageContentframe does not have content
       while(firstChild){
         for (nsIFrame* kidFrame = firstChild; nsnull != kidFrame; ) {
-          kidFrame->GetStyleContext(getter_AddRefs(parentContext));
+          parentContext = kidFrame->GetStyleContext();
           // Need to .get() because some compilers will not do the
           // implicit .get() to match the template.
           // See also rev 3.188 of this file.
-          ::GetStyleData(parentContext.get(), &result);
+          ::GetStyleData(parentContext, &result);
           if (!result->IsTransparent()) {
             GetStyleData(kidFrame, aBackground);
             return PR_TRUE;
@@ -3504,7 +3502,7 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
                                  const nsRect& aBorderArea,
                                  const nsStyleBorder* aBorderStyle,
                                  const nsStyleOutline* aOutlineStyle,
-                                 nsIStyleContext* aStyleContext,
+                                 nsStyleContext* aStyleContext,
                                  PRIntn aSkipSides,
                                  PRInt16 aBorderRadius[4],
                                  nsRect* aGap,
@@ -3643,7 +3641,7 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
  */
 void 
 nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderingContext,
-                        const nsStyleBorder* aBorderStyle,const nsStyleOutline* aOutlineStyle,nsIStyleContext* aStyleContext,
+                        const nsStyleBorder* aBorderStyle,const nsStyleOutline* aOutlineStyle,nsStyleContext* aStyleContext,
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
                         PRBool aIsOutline)
 {

@@ -39,7 +39,7 @@
 #define nsIRadioControlFrame_h___
 
 #include "nsISupports.h"
-class nsIStyleContext;
+class nsStyleContext;
 
 // IID for the nsIRadioControlFrame class
 // {06450E00-24D9-11d3-966B-00105A1B1B76}
@@ -61,7 +61,7 @@ public:
    * Sets the Pseudo Style Contexts for the Radio button
    */
 
-   NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext) = 0;
+   NS_IMETHOD SetRadioButtonFaceStyleContext(nsStyleContext *aRadioButtonFaceStyleContext) = 0;
 
    /**
     * Called by content when the radio button's state changes

@@ -42,7 +42,6 @@
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h" // for nsLinkState
 
-class nsIStyleContext;
 struct nsStyleBackground;
 
 enum nsFontSizeType {

@@ -48,7 +48,7 @@ class nsIContent;
 class nsIPresContext;
 class nsIPresShell;
 class nsIStyleSet;
-class nsIStyleContext;
+class nsStyleContext;
 class nsILayoutHistoryState;
 class nsStyleChangeList;
 class nsPlaceholderFrame;
@@ -107,8 +107,9 @@ public:
   NS_IMETHOD ClearPlaceholderFrameMap() = 0;
 
   // Mapping undisplayed content
-  NS_IMETHOD GetUndisplayedContent(nsIContent* aContent, nsIStyleContext** aStyleContext)=0;
-  NS_IMETHOD SetUndisplayedContent(nsIContent* aContent, nsIStyleContext* aStyleContext) = 0;
+  virtual nsStyleContext* GetUndisplayedContent(nsIContent* aContent) = 0;
+  virtual void SetUndisplayedContent(nsIContent* aContent,
+                                     nsStyleContext* aStyleContext) = 0;
   NS_IMETHOD ClearUndisplayedContentIn(nsIContent* aContent, nsIContent* aParentContent) = 0;
   NS_IMETHOD ClearAllUndisplayedContentIn(nsIContent* aParentContent) = 0;
   NS_IMETHOD ClearUndisplayedContentMap() = 0;
@@ -149,7 +150,7 @@ public:
   // new given parent style context
   NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext, 
                                   nsIFrame* aFrame, 
-                                  nsIStyleContext* aNewParentContext) = 0;
+                                  nsStyleContext* aNewParentContext) = 0;
 
   // Re-resolve style contexts for frame tree
   NS_IMETHOD ComputeStyleChangeFor(nsIPresContext* aPresContext,

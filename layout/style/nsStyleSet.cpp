@@ -149,24 +149,27 @@ public:
 
   NS_IMETHOD NotifyStyleSheetStateChanged(PRBool aDisabled);
 
-  virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
-                                           nsIContent* aContent,
-                                           nsIStyleContext* aParentContext);
+  virtual already_AddRefed<nsStyleContext>
+  ResolveStyleFor(nsIPresContext* aPresContext,
+                  nsIContent* aContent,
+                  nsStyleContext* aParentContext);
 
-  virtual nsIStyleContext* ResolveStyleForNonElement(
-                                           nsIPresContext* aPresContext,
-                                           nsIStyleContext* aParentContext);
+  virtual already_AddRefed<nsStyleContext>
+  ResolveStyleForNonElement(nsIPresContext* aPresContext,
+                            nsStyleContext* aParentContext);
 
-  virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
-                                                 nsIContent* aParentContent,
-                                                 nsIAtom* aPseudoTag,
-                                                 nsIStyleContext* aParentContext,
-                                                 nsICSSPseudoComparator* aComparator = nsnull);
+  virtual already_AddRefed<nsStyleContext>
+  ResolvePseudoStyleFor(nsIPresContext* aPresContext,
+                        nsIContent* aParentContent,
+                        nsIAtom* aPseudoTag,
+                        nsStyleContext* aParentContext,
+                        nsICSSPseudoComparator* aComparator = nsnull);
 
-  virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
-                                               nsIContent* aParentContent,
-                                               nsIAtom* aPseudoTag,
-                                               nsIStyleContext* aParentContext);
+  virtual already_AddRefed<nsStyleContext>
+  ProbePseudoStyleFor(nsIPresContext* aPresContext,
+                      nsIContent* aParentContent,
+                      nsIAtom* aPseudoTag,
+                      nsStyleContext* aParentContext);
 
   NS_IMETHOD Shutdown();
 
@@ -189,7 +192,7 @@ public:
   
   virtual nsresult AddRuleNodeMapping(nsRuleNode* aRuleNode);
 
-  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsIStyleContext* aContext);
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsStyleContext* aContext);
 
   virtual nsresult GetStyleFrameConstruction(nsIStyleFrameConstruction** aResult) {
     *aResult = mFrameConstructor;
@@ -197,10 +200,10 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext,
-                                  nsIStyleContext* aStyleContext, 
-                                  nsIStyleContext* aNewParentContext,
-                                  nsIStyleContext** aNewStyleContext);
+  virtual already_AddRefed<nsStyleContext>
+  ReParentStyleContext(nsIPresContext* aPresContext,
+                       nsStyleContext* aStyleContext, 
+                       nsStyleContext* aNewParentContext);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
                                     nsIContent*     aContent,
@@ -335,9 +338,9 @@ protected:
   void WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc,
                           RuleProcessorData* aData);
 
-  nsIStyleContext* GetContext(nsIPresContext* aPresContext, 
-                              nsIStyleContext* aParentContext,
-                              nsIAtom* aPseudoTag);
+  already_AddRefed<nsStyleContext> GetContext(nsIPresContext* aPresContext, 
+                                              nsStyleContext* aParentContext,
+                                              nsIAtom* aPseudoTag);
 
 #ifdef DEBUG
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
@@ -999,15 +1002,16 @@ EnumRulesMatching(nsISupports* aProcessor, void* aData)
  * generation.  (It works for cousins of the same generation since
  * |aParentContext| could itself be a shared context.)
  */
-nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, 
-                                          nsIStyleContext* aParentContext, 
-                                          nsIAtom* aPseudoTag)
+already_AddRefed<nsStyleContext>
+StyleSetImpl::GetContext(nsIPresContext* aPresContext, 
+                         nsStyleContext* aParentContext, 
+                         nsIAtom* aPseudoTag)
 {
-  nsIStyleContext* result = nsnull;
+  nsStyleContext* result = nsnull;
   nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
       
   if (aParentContext)
-    aParentContext->FindChildWithRules(aPseudoTag, ruleNode, result);
+    result = aParentContext->FindChildWithRules(aPseudoTag, ruleNode).get();
 
 #ifdef NOISY_DEBUG
   if (result)
@@ -1017,8 +1021,8 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
 #endif
 
   if (!result)
-    NS_NewStyleContext(&result, aParentContext, aPseudoTag, ruleNode,
-                       aPresContext);
+    result = NS_NewStyleContext(aParentContext, aPseudoTag, ruleNode,
+                                aPresContext).get();
 
   return result;
 }
@@ -1150,14 +1154,15 @@ void StyleSetImpl::EnsureRuleWalker(nsIPresContext* aPresContext)
   mRuleWalker = new nsRuleWalker(mRuleTree);
 }
 
-nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
-                                               nsIContent* aContent,
-                                               nsIStyleContext* aParentContext)
+already_AddRefed<nsStyleContext>
+StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
+                              nsIContent* aContent,
+                              nsStyleContext* aParentContext)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
   STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
 
-  nsIStyleContext*  result = nsnull;
+  nsStyleContext*  result = nsnull;
 
   NS_ASSERTION(aContent, "must have content");
   NS_ASSERTION(aPresContext, "must have pres context");
@@ -1175,7 +1180,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
       aPresContext->GetMedium(getter_AddRefs(medium));
       RulesMatchingData data(aPresContext, medium, aContent, mRuleWalker);
       FileRules(EnumRulesMatching, &data);
-      result = GetContext(aPresContext, aParentContext, nsnull);
+      result = GetContext(aPresContext, aParentContext, nsnull).get();
      
       // Now reset the walker back to the root of the tree.
       mRuleWalker->Reset();
@@ -1187,14 +1192,14 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
   return result;
 }
 
-nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
-                                               nsIPresContext* aPresContext,
-                                               nsIStyleContext* aParentContext)
+already_AddRefed<nsStyleContext>
+StyleSetImpl::ResolveStyleForNonElement(nsIPresContext* aPresContext,
+                                        nsStyleContext* aParentContext)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolveStyleForNonElement(), this=%p\n", this));
   STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
 
-  nsIStyleContext* result = nsnull;
+  nsStyleContext* result = nsnull;
 
   NS_ASSERTION(aPresContext, "must have pres context");
 
@@ -1206,7 +1211,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
         mOverrideRuleProcessors) {
       EnsureRuleWalker(aPresContext);
       result = GetContext(aPresContext, aParentContext,
-                          nsCSSAnonBoxes::mozNonElement);
+                          nsCSSAnonBoxes::mozNonElement).get();
       NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     }
   }
@@ -1242,16 +1247,17 @@ EnumPseudoRulesMatching(nsISupports* aProcessor, void* aData)
   return PR_TRUE;
 }
 
-nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContext,
-                                                     nsIContent* aParentContent,
-                                                     nsIAtom* aPseudoTag,
-                                                     nsIStyleContext* aParentContext,
-                                                     nsICSSPseudoComparator* aComparator)
+already_AddRefed<nsStyleContext>
+StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContext,
+                                    nsIContent* aParentContent,
+                                    nsIAtom* aPseudoTag,
+                                    nsStyleContext* aParentContext,
+                                    nsICSSPseudoComparator* aComparator)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
   STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
 
-  nsIStyleContext*  result = nsnull;
+  nsStyleContext*  result = nsnull;
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
   NS_ASSERTION(aPresContext, "must have pres context");
@@ -1272,7 +1278,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                    aPseudoTag, aComparator, mRuleWalker);
       FileRules(EnumPseudoRulesMatching, &data);
 
-      result = GetContext(aPresContext, aParentContext, aPseudoTag);
+      result = GetContext(aPresContext, aParentContext, aPseudoTag).get();
      
       // Now reset the walker back to the root of the tree.
       mRuleWalker->Reset();
@@ -1284,15 +1290,16 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
   return result;
 }
 
-nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
-                                                   nsIContent* aParentContent,
-                                                   nsIAtom* aPseudoTag,
-                                                   nsIStyleContext* aParentContext)
+already_AddRefed<nsStyleContext>
+StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
+                                  nsIContent* aParentContent,
+                                  nsIAtom* aPseudoTag,
+                                  nsStyleContext* aParentContext)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
   STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
 
-  nsIStyleContext*  result = nsnull;
+  nsStyleContext*  result = nsnull;
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
   NS_ASSERTION(aPresContext, "must have pres context");
@@ -1314,7 +1321,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
       FileRules(EnumPseudoRulesMatching, &data);
 
       if (!mRuleWalker->AtRoot())
-        result = GetContext(aPresContext, aParentContext, aPseudoTag);
+        result = GetContext(aPresContext, aParentContext, aPseudoTag).get();
  
       // Now reset the walker back to the root of the tree.
       mRuleWalker->Reset();
@@ -1397,7 +1404,7 @@ StyleSetImpl::ClearCachedDataInRuleTree(nsIStyleRule* aInlineStyleRule)
 }
 
 nsresult
-StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsIStyleContext* aContext)
+StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsStyleContext* aContext)
 {
   // XXXdwh.  If we're willing to *really* optimize this
   // invalidation, we could only invalidate the struct data
@@ -1450,8 +1457,7 @@ StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, 
     nsIFrame* rootFrame;
     shell->GetRootFrame(&rootFrame);
     if (rootFrame) {
-      nsCOMPtr<nsIStyleContext> rootContext;
-      rootFrame->GetStyleContext(getter_AddRefs(rootContext));
+      nsStyleContext* rootContext = rootFrame->GetStyleContext();
       if (rootContext)
         rootContext->ClearStyleData(aPresContext, aRule);
     }
@@ -1460,46 +1466,38 @@ StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, 
   return NS_OK;
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsStyleContext>
 StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aStyleContext, 
-                                   nsIStyleContext* aNewParentContext,
-                                   nsIStyleContext** aNewStyleContext)
+                                   nsStyleContext* aStyleContext, 
+                                   nsStyleContext* aNewParentContext)
 {
   NS_ASSERTION(aPresContext, "must have pres context");
   NS_ASSERTION(aStyleContext, "must have style context");
-  NS_ASSERTION(aNewStyleContext, "must have new style context");
 
-  nsresult result = NS_ERROR_NULL_POINTER;
-
-  if (aPresContext && aStyleContext && aNewStyleContext) {
-    nsCOMPtr<nsIStyleContext> oldParent = aStyleContext->GetParent();
+  if (aPresContext && aStyleContext) {
+    nsStyleContext* oldParent = aStyleContext->GetParent();
 
     if (oldParent == aNewParentContext) {
-      result = NS_OK;
-      NS_ADDREF(aStyleContext);   // for return
-      *aNewStyleContext = aStyleContext;
+      aStyleContext->AddRef();
+      return aStyleContext;
     }
     else {  // really a new parent
-      nsIStyleContext*  newChild = nsnull;
-      nsCOMPtr<nsIAtom>  pseudoTag;
-      aStyleContext->GetPseudoType(*getter_AddRefs(pseudoTag));
+      nsStyleContext*  newChild = nsnull;
+      nsCOMPtr<nsIAtom>  pseudoTag = aStyleContext->GetPseudoType();
 
       nsRuleNode* ruleNode;
       aStyleContext->GetRuleNode(&ruleNode);
-      if (aNewParentContext) {
-        result = aNewParentContext->FindChildWithRules(pseudoTag, ruleNode, newChild);
-      }
-      if (newChild) { // new parent already has one
-        *aNewStyleContext = newChild;
-      }
+      if (aNewParentContext)
+        newChild = aNewParentContext->FindChildWithRules(pseudoTag, ruleNode).get();
+      if (newChild) // new parent already has one
+        return newChild;
       else {  // need to make one in the new parent
-        result = NS_NewStyleContext(aNewStyleContext, aNewParentContext, pseudoTag,
-                                    ruleNode, aPresContext);
+        return NS_NewStyleContext(aNewParentContext, pseudoTag, ruleNode,
+                                  aPresContext);
       }
     }
   }
-  return result;
+  return nsnull;
 }
 
 struct StatefulData : public StateRuleProcessorData {
@@ -1764,8 +1762,7 @@ void StyleSetImpl::List(FILE* out, PRInt32 aIndent)
 
 void StyleSetImpl::ListContexts(nsIFrame* aRootFrame, FILE* out, PRInt32 aIndent)
 {
-  nsCOMPtr<nsIStyleContext> sc;
-  aRootFrame->GetStyleContext(getter_AddRefs(sc));
+  nsStyleContext* sc = aRootFrame->GetStyleContext();
   if (sc)
     sc->List(out, aIndent);
 }

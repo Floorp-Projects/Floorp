@@ -37,7 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsTableColFrame.h"
 #include "nsContainerFrame.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLAtoms.h"
@@ -116,8 +116,7 @@ nsStyleCoord nsTableColFrame::GetStyleWidth() const
       eStyleUnit_Inherit == styleWidth.GetUnit()) {
     nsIFrame* parent;
     GetParent(&parent);
-    nsCOMPtr<nsIStyleContext> styleContext;
-    parent->GetStyleContext(getter_AddRefs(styleContext)); 
+    nsStyleContext* styleContext = parent->GetStyleContext();
     if (styleContext) {
       position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
       styleWidth = position->mWidth;
@@ -269,7 +268,7 @@ NS_IMETHODIMP
 nsTableColFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsIStyleContext* aContext,
+                      nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;

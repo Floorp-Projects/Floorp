@@ -54,7 +54,7 @@ class nsISupportsArray;
 class nsIPresShell;
 class nsIPresContext;
 class nsIContent;
-class nsIStyleContext;
+class nsStyleContext;
 
 nsresult NS_NewNativeScrollbarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
@@ -72,7 +72,7 @@ public:
 #endif
 
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
-                    nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
+                    nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
            
   // nsIFrame overrides
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,

@@ -41,7 +41,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsLeafFrame.h"
 #include "nsCSSRendering.h"
 #include "nsIView.h"
@@ -250,7 +250,7 @@ nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFra
 nsresult  
 nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
                              nsIPresContext*       aPresContext, 
-                             nsIStyleContext *     aStyleContext, 
+                             nsStyleContext *      aStyleContext, 
                              const nsFont*&        aFont)
 {
   const nsStyleFont* styleFont = (const nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font);

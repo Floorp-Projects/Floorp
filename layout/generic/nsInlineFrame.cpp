@@ -39,7 +39,7 @@
 #include "nsBlockFrame.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
@@ -48,6 +48,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsReflowPath.h"
+#include "nsAutoPtr.h"
 #ifdef ACCESSIBILITY
 #include "nsIServiceManager.h"
 #include "nsIAccessibilityService.h"
@@ -943,7 +944,7 @@ NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
 
 static void
 ReParentChildListStyle(nsIPresContext* aPresContext,
-                       nsIStyleContext* aParentStyleContext,
+                       nsStyleContext* aParentStyleContext,
                        nsFrameList& aFrameList)
 {
   nsIFrame* kid = aFrameList.FirstChild();
@@ -1090,26 +1091,22 @@ nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
       // proper parent context.
       nsIFrame* parentFrame;
       first->GetParent(&parentFrame);
-      nsIStyleContext* parentContext;
-      parentFrame->GetStyleContext(&parentContext);
+      nsStyleContext* parentContext = parentFrame->GetStyleContext();
       if (parentContext) {
         // Create a new style context that is a child of the parent
         // style context thus removing the :first-line style. This way
         // we behave as if an anonymous (unstyled) span was the child
         // of the parent frame.
-        nsIStyleContext* newSC;
-        aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                      nsCSSAnonBoxes::mozLineFrame, parentContext, &newSC);
+        nsRefPtr<nsStyleContext> newSC = aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                                                                    nsCSSAnonBoxes::mozLineFrame,
+                                                                                    parentContext);
         if (newSC) {
           // Switch to the new style context.
           SetStyleContext(aPresContext, newSC);
 
           // Re-resolve all children
           ReParentChildListStyle(aPresContext, mStyleContext, mFrames);
-
-          NS_RELEASE(newSC);
         }
-        NS_RELEASE(parentContext);
       }
     }
   }

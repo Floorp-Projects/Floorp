@@ -126,14 +126,13 @@ CreateBidiContinuation(nsIPresContext* aPresContext,
   if (!(*aNewFrame) ) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsCOMPtr<nsIStyleContext> styleContext;
-  aFrame->GetStyleContext(getter_AddRefs(styleContext) );
+  nsStyleContext* styleContext = aFrame->GetStyleContext();
 
-  NS_ASSERTION(presShell, "Frame has no styleContext in nsBidiPresUtils::CreateBidiContinuation");
+  NS_ASSERTION(styleContext, "Frame has no styleContext in nsBidiPresUtils::CreateBidiContinuation");
   
   aFrame->GetParent(&parent);
 
-  NS_ASSERTION(presShell, "Couldn't get frame parent in nsBidiPresUtils::CreateBidiContinuation");
+  NS_ASSERTION(parent, "Couldn't get frame parent in nsBidiPresUtils::CreateBidiContinuation");
 
   (*aNewFrame)->Init(aPresContext, aContent, parent, styleContext, nsnull);
 

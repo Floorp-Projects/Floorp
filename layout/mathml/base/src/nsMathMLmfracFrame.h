@@ -71,12 +71,11 @@ class nsMathMLmfracFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_IMETHOD
+  virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 
-                            nsIStyleContext* aStyleContext);
-  NS_IMETHOD
-  GetAdditionalStyleContext(PRInt32           aIndex, 
-                            nsIStyleContext** aStyleContext) const;
+                            nsStyleContext*  aStyleContext);
+  virtual nsStyleContext*
+  GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
   AttributeChanged(nsIPresContext* aPresContext,
@@ -90,7 +89,7 @@ public:
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsIStyleContext* aContext,
+       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
@@ -132,7 +131,7 @@ public:
   // helper to translate the thickness attribute into a usable form
   static nscoord 
   CalcLineThickness(nsIPresContext*  aPresContext,
-                    nsIStyleContext* aStyleContext,
+                    nsStyleContext*  aStyleContext,
                     nsString&        aThicknessAttribute,
                     nscoord          onePixel,
                     nscoord          aDefaultRuleThickness);

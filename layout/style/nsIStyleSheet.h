@@ -51,7 +51,6 @@ class nsISupportsArray;
 class nsIPresContext;
 class nsIContent;
 class nsIDocument;
-class nsIStyleContext;
 class nsIStyleRuleProcessor;
 
 // IID for the nsIStyleSheet interface {8c4a80a0-ad6a-11d1-8031-006008159b5a}

@@ -112,7 +112,7 @@
 #endif
 
 // handy utilities
-extern void SetFontFromStyle(nsIRenderingContext* aRC, nsIStyleContext* aSC);
+extern void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
 
 //----------------------------------------------------------------------
 
@@ -158,7 +158,7 @@ public:
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
+                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
   NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
@@ -183,10 +183,9 @@ public:
                            nsIFrame*       aNewFrame);
   NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const;
-  NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext** aStyleContext) const;
-  NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext* aStyleContext);
+  virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
+  virtual void SetAdditionalStyleContext(PRInt32 aIndex,
+                                         nsStyleContext* aStyleContext);
   NS_IMETHOD  GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const;
   NS_IMETHOD  FirstChild(nsIPresContext* aPresContext,
                          nsIAtom*        aListName,

@@ -44,7 +44,7 @@
 #include "nsIAtom.h"
 #include "nsIArena.h"
 #include "nsString.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIPresContext.h"
@@ -397,7 +397,7 @@ nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult)
 //end selection service
 
 // a handy utility to set font
-void SetFontFromStyle(nsIRenderingContext* aRC, nsIStyleContext* aSC) 
+void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC) 
 {
   const nsStyleFont *font = (const nsStyleFont*)
     aSC->GetStyleData(eStyleStruct_Font);
@@ -479,7 +479,8 @@ nsFrame::~nsFrame()
   MOZ_COUNT_DTOR(nsFrame);
 
   NS_IF_RELEASE(mContent);
-  NS_IF_RELEASE(mStyleContext);
+  if (mStyleContext)
+    mStyleContext->Release();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -525,7 +526,7 @@ NS_IMETHODIMP
 nsFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsIStyleContext* aContext,
+              nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
   mContent = aContent;
@@ -554,7 +555,8 @@ nsFrame::Init(nsIPresContext*  aPresContext,
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_GENERATED_CONTENT);
   }
-  return SetStyleContext(aPresContext, aContext);
+  SetStyleContext(aPresContext, aContext);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext* aPresContext,
@@ -688,25 +690,18 @@ NS_IMETHODIMP  nsFrame::CalcBorderPadding(nsMargin& aBorderPadding) const {
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
-                                   nsIStyleContext** aStyleContext) const
+nsStyleContext*
+nsFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {
   NS_PRECONDITION(aIndex >= 0, "invalid index number");
-  NS_ASSERTION(aStyleContext, "null ptr");
-  if (! aStyleContext) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aStyleContext = nsnull;
-  return NS_ERROR_INVALID_ARG;
+  return nsnull;
 }
 
-NS_IMETHODIMP
+void
 nsFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
-                                   nsIStyleContext* aStyleContext)
+                                   nsStyleContext* aStyleContext)
 {
   NS_PRECONDITION(aIndex >= 0, "invalid index number");
-  return ((aIndex < 0) ? NS_ERROR_INVALID_ARG : NS_OK);
 }
 
 // Child frame enumeration
@@ -2103,7 +2098,7 @@ nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   if ((aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) &&
       (mRect.Contains(aPoint))) {
     const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
+      (const nsStyleVisibility*)((nsStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
     if (vis->IsVisible()) {
       *aFrame = this;
       return NS_OK;
@@ -2898,7 +2893,7 @@ nsFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
   // first check to see if we are visible
   if (aCheckVis) {
     const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
+      (const nsStyleVisibility*)((nsStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
     if (!vis->IsVisible()) {
       *aIsVisible = PR_FALSE;
       return NS_OK;

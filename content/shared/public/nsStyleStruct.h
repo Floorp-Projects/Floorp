@@ -1219,7 +1219,7 @@ inline nsBorderEdges::nsBorderEdges()
 
 // typesafe mechanisms for accessing style data, global function
 // templates |GetStyleData(nsIFrame*, const T**)| and
-// |GetStyleData(nsIStyleContext*, const T**)|, where T is derived from
-// nsStyleStruct, are located in nsIStyleContext.h and nsIFrame.h
+// |GetStyleData(nsStyleContext*, const T**)|, where T is derived from
+// nsStyleStruct, are located in nsStyleContext.h and nsIFrame.h
 
 #endif /* nsStyleStruct_h___ */

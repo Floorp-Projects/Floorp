@@ -39,7 +39,7 @@
 #include "nsVoidArray.h"
 #include "nsTableFrame.h"
 #include "nsIRenderingContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsCellMap.h"
@@ -76,7 +76,7 @@
 #include "nsIFrameManager.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutErrors.h"
-
+#include "nsAutoPtr.h"
 
 
 /********************************************************************************
@@ -247,7 +247,7 @@ NS_IMETHODIMP
 nsTableFrame::Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
+                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;
@@ -377,8 +377,8 @@ PRBool
 nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
                              nsIFrame* aNextFrame)
 {
-  nsCOMPtr<nsIStyleContext> sourceContext;
-  aSourceFrame.GetStyleContext(getter_AddRefs(sourceContext)); NS_ENSURE_TRUE(sourceContext, PR_FALSE);
+  nsStyleContext* sourceContext = aSourceFrame.GetStyleContext();
+  NS_ENSURE_TRUE(sourceContext, PR_FALSE);
   const nsStyleDisplay* display = (const nsStyleDisplay*)
     sourceContext->GetStyleData(eStyleStruct_Display);         NS_ENSURE_TRUE(display, PR_FALSE); 
   // don't allow a page break after a repeated header
@@ -387,8 +387,8 @@ nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
   }
 
   if (aNextFrame) {
-    nsCOMPtr<nsIStyleContext> nextContext;
-    aNextFrame->GetStyleContext(getter_AddRefs(nextContext));  NS_ENSURE_TRUE(nextContext, PR_FALSE);
+    nsStyleContext* nextContext = aNextFrame->GetStyleContext();
+    NS_ENSURE_TRUE(nextContext, PR_FALSE);
     display = (const nsStyleDisplay*)
       nextContext->GetStyleData(eStyleStruct_Display);         NS_ENSURE_TRUE(display, PR_FALSE); 
     // don't allow a page break before a repeated footer
@@ -860,11 +860,10 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
   nsCOMPtr<nsIContent> colGroupContent;
   GetContent(getter_AddRefs(colGroupContent));
 
-  nsCOMPtr<nsIStyleContext> colGroupStyle;
-  aPresContext.ResolvePseudoStyleContextFor(colGroupContent,
-                                            nsCSSAnonBoxes::tableColGroup,
-                                            mStyleContext,
-                                            getter_AddRefs(colGroupStyle));        
+  nsRefPtr<nsStyleContext> colGroupStyle;
+  colGroupStyle = aPresContext.ResolvePseudoStyleContextFor(colGroupContent,
+                                                            nsCSSAnonBoxes::tableColGroup,
+                                                            mStyleContext);
   // Create a col group frame
   nsIFrame* newFrame;
   nsCOMPtr<nsIPresShell> presShell;
@@ -967,21 +966,22 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
 
   for (PRInt32 childX = startIndex; childX <= lastIndex; childX++) {
     nsCOMPtr<nsIContent> iContent;
-    nsCOMPtr<nsIStyleContext> styleContext;
-    nsCOMPtr<nsIStyleContext> parentStyleContext;
+    nsRefPtr<nsStyleContext> styleContext;
+    nsStyleContext* parentStyleContext;
 
     if ((aColType == eColAnonymousCol) && aPrevFrameIn) {
       // a col due to a span in a previous col uses the style context of the col
-      aPrevFrameIn->GetStyleContext(getter_AddRefs(styleContext)); 
+      styleContext = aPrevFrameIn->GetStyleContext();
       // fix for bugzilla bug 54454: get the content from the prevFrame 
       aPrevFrameIn->GetContent(getter_AddRefs(iContent));
     }
     else {
       // all other anonymous cols use a pseudo style context of the col group
       aColGroupFrame.GetContent(getter_AddRefs(iContent));
-      aColGroupFrame.GetStyleContext(getter_AddRefs(parentStyleContext));
-      aPresContext.ResolvePseudoStyleContextFor(iContent, nsCSSAnonBoxes::tableCol,
-                                                parentStyleContext, getter_AddRefs(styleContext));
+      parentStyleContext = aColGroupFrame.GetStyleContext();
+      styleContext = aPresContext.ResolvePseudoStyleContextFor(iContent,
+                                                               nsCSSAnonBoxes::tableCol,
+                                                               parentStyleContext);
     }
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
@@ -2867,7 +2867,7 @@ nsTableFrame::GetBCBorder(nsIPresContext& aPresContext,
 static
 void GetSeparateModelBorderPadding(nsIPresContext&          aPresContext,
                                    const nsHTMLReflowState* aReflowState,
-                                   nsIStyleContext&         aStyleContext,
+                                   nsStyleContext&          aStyleContext,
                                    nsMargin&                aBorderPadding)
 {
   const nsStyleBorder* border =
@@ -3775,7 +3775,7 @@ UpdateCol(nsTableFrame&           aTableFrame,
 }
 
 PRBool 
-nsTableFrame::IsPctHeight(nsIStyleContext* aStyleContext) 
+nsTableFrame::IsPctHeight(nsStyleContext* aStyleContext) 
 {
   PRBool result = PR_FALSE;
   if (aStyleContext) {
@@ -4164,10 +4164,8 @@ PRBool
 nsTableFrame::IsAutoHeight()
 {
   PRBool isAuto = PR_TRUE;  // the default
-  nsCOMPtr<nsIStyleContext> styleContext;
-  GetStyleContext(getter_AddRefs(styleContext)); 
 
-  nsStylePosition* position = (nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position);
+  nsStylePosition* position = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
 
   switch (position->mHeight.GetUnit()) {
     case eStyleUnit_Auto:         // specified auto width
@@ -5171,8 +5169,8 @@ GetStyleInfo(const nsIFrame&  aFrame,
   PRBool transparent, foreground;
   styleData->GetBorderColor(aSide, aColor, transparent, foreground);
   if (foreground) {
-    nsCOMPtr<nsIStyleContext> styleContext;
-    aFrame.GetStyleContext(getter_AddRefs(styleContext)); if(!styleContext) ABORT0();
+    nsStyleContext* styleContext = aFrame.GetStyleContext();
+    if(!styleContext) ABORT0();
     const nsStyleColor* colorStyle = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
     aColor = colorStyle->mColor;
   }

@@ -66,7 +66,7 @@
 #include "nsHTMLParts.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
 #include "nsIXBLService.h"
@@ -74,7 +74,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsINodeInfo.h"
 #include "nsGUIEvent.h"
-
+#include "nsAutoPtr.h"
 #include "nsContentCID.h"
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
@@ -327,7 +327,7 @@ NS_IMETHODIMP
 nsSplitterFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsIStyleContext* aContext,
+              nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
 /* make it real time drag for now due to problems
@@ -345,7 +345,7 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   if (aParent)
     CallQueryInterface(aParent, &boxParent);
   // |newContext| to Release the reference after the call to nsBoxFrame::Init
-  nsCOMPtr<nsIStyleContext> newContext;
+  nsRefPtr<nsStyleContext> newContext;
   if (boxParent) {
     PRBool isHorizontal;
     boxParent->GetOrientation(isHorizontal);
@@ -355,9 +355,8 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
       if (str.IsEmpty()) {
         aContent->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                           NS_LITERAL_STRING("vertical"), PR_FALSE);
-        nsCOMPtr<nsIStyleContext> parent = aContext->GetParent();
-        aPresContext->ResolveStyleContextFor(aContent, parent,
-                                             getter_AddRefs(newContext));
+        nsStyleContext* parent = aContext->GetParent();
+        newContext = aPresContext->ResolveStyleContextFor(aContent, parent);
         aContext = newContext;
       }
     }

@@ -188,8 +188,8 @@ class nsDerivedSafe : public T
       using T::AddRef;
       using T::Release;
 #else
-      NS_IMETHOD_(nsrefcnt) AddRef(void);
-      NS_IMETHOD_(nsrefcnt) Release(void);
+      nsrefcnt AddRef(void);
+      nsrefcnt Release(void);
 #endif
 
 #if !defined(XP_OS2_VACPP) && !defined(AIX_XLC_364)

@@ -47,7 +47,7 @@
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsStyleStruct.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIContent.h"
 
 /**
@@ -418,7 +418,7 @@ public:
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
+                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow) = 0;
 
   /**
@@ -553,24 +553,21 @@ public:
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end) const = 0;
 
   /**
-   * Get the style context associated with this frame. Note that GetStyleContext()
-   * adds a reference to the style context so the caller must do a release.
+   * Get the style context associated with this frame.
    *
-   * @see nsISupports#Release()
    */
-  nsresult GetStyleContext(nsIStyleContext** aStyleContext) const { 
-    *aStyleContext = mStyleContext; NS_IF_ADDREF(*aStyleContext); return NS_OK;
-  }
-  nsresult SetStyleContext(nsIPresContext*  aPresContext, nsIStyleContext* aContext) { 
+  nsStyleContext* GetStyleContext() const { return mStyleContext; }
+  void SetStyleContext(nsIPresContext* aPresContext, nsStyleContext* aContext)
+  { 
     if (aContext != mStyleContext) {
-      NS_IF_RELEASE(mStyleContext);
-      if (nsnull != aContext) {
-        mStyleContext = aContext;
-        NS_ADDREF(aContext);
+      if (mStyleContext)
+        mStyleContext->Release();
+      mStyleContext = aContext;
+      if (aContext) {
+        aContext->AddRef();
         DidSetStyleContext(aPresContext);
       }
     }
-    return NS_OK;
   }
 
   // Style post processing hook
@@ -596,13 +593,6 @@ public:
   }
 #endif
 
-  // Fill a style struct with data
-  nsresult GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct) const {
-    NS_ASSERTION(mStyleContext, "No style context found!");
-    mStyleContext->GetStyle(aSID, aStruct);
-    return NS_OK;
-  }
-
   // Utility function: more convenient than 2 calls to GetStyleData to get border and padding
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const = 0;
 
@@ -616,10 +606,10 @@ public:
    * The indicies must be consecutive and implementations MUST return an 
    * NS_ERROR_INVALID_ARG if asked for an index that is out of range.
    */
-  NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext** aStyleContext) const = 0;
-  NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
-                                        nsIStyleContext* aStyleContext) = 0;
+  virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const = 0;
+
+  virtual void SetAdditionalStyleContext(PRInt32 aIndex,
+                                         nsStyleContext* aStyleContext) = 0;
 
   /**
    * Accessor functions for geometric parent
@@ -1239,7 +1229,7 @@ protected:
   // Members
   nsRect           mRect;
   nsIContent*      mContent;
-  nsIStyleContext* mStyleContext;
+  nsStyleContext*  mStyleContext;
   nsIFrame*        mParent;
   nsIFrame*        mNextSibling;  // singly-linked list of frames
   nsFrameState     mState;
@@ -1250,7 +1240,7 @@ private:
 };
 
 // typesafe way to access style data.  See comment in nsStyleStruct.h
-// and also overloaded function in nsIStyleContext.h
+// and also overloaded function in nsStyleContext.h
 template <class T>
 inline void
 GetStyleData(nsIFrame* aFrame, const T** aStyleStruct)

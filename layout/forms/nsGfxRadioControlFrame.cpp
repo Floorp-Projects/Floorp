@@ -77,7 +77,8 @@ nsGfxRadioControlFrame::nsGfxRadioControlFrame()
 
 nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 {
-  NS_IF_RELEASE(mRadioButtonFaceStyle);
+  if (mRadioButtonFaceStyle)
+    mRadioButtonFaceStyle->Release();
 }
 
 // Frames are not refcounted, no need to AddRef
@@ -110,50 +111,40 @@ NS_IMETHODIMP nsGfxRadioControlFrame::GetAccessible(nsIAccessible** aAccessible)
 #endif
 
 //--------------------------------------------------------------
-NS_IMETHODIMP
-nsGfxRadioControlFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
-                                                  nsIStyleContext** aStyleContext) const
+nsStyleContext*
+nsGfxRadioControlFrame::GetAdditionalStyleContext(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aStyleContext = nsnull;
   switch (aIndex) {
   case NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX:
-    *aStyleContext = mRadioButtonFaceStyle;
-    NS_IF_ADDREF(*aStyleContext);
+    return mRadioButtonFaceStyle;
     break;
   default:
-    return NS_ERROR_INVALID_ARG;
+    return nsnull;
   }
-  return NS_OK;
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP
+void
 nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
-                                                  nsIStyleContext* aStyleContext)
+                                                  nsStyleContext* aStyleContext)
 {
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
   switch (aIndex) {
   case NS_GFX_RADIO_CONTROL_FRAME_FACE_CONTEXT_INDEX:
-    NS_IF_RELEASE(mRadioButtonFaceStyle);
+    if (mRadioButtonFaceStyle)
+      mRadioButtonFaceStyle->Release();
     mRadioButtonFaceStyle = aStyleContext;
-    NS_IF_ADDREF(aStyleContext);
+    if (aStyleContext)
+      aStyleContext->AddRef();
     break;
   }
-  return NS_OK;
 }
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext)
+nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsStyleContext *aRadioButtonFaceStyleContext)
 {
   mRadioButtonFaceStyle = aRadioButtonFaceStyleContext;
-  NS_ADDREF(mRadioButtonFaceStyle);
+  mRadioButtonFaceStyle->AddRef();
   return NS_OK;
 }
 

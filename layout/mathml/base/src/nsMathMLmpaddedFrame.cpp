@@ -25,7 +25,7 @@
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
@@ -293,7 +293,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
 
 void
 nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
-                                  nsIStyleContext*     aStyleContext,
+                                  nsStyleContext*      aStyleContext,
                                   PRInt32              aSign,
                                   PRInt32              aPseudoUnit,
                                   nsCSSValue&          aCSSValue,

@@ -65,8 +65,8 @@ public:
     MOZ_COUNT_DTOR(nsMathMLChar);
     // there is only one style context owned by the "root" char
     // and it may be used by child chars as well
-    if (!mParent) { // only the "root" need to release it
-      NS_IF_RELEASE(mStyleContext);
+    if (!mParent && mStyleContext) { // only the "root" need to release it
+      mStyleContext->Release();
     }
     if (mSibling) {
       delete mSibling;
@@ -156,11 +156,9 @@ public:
   // They provide an interface to make them acessible to the Style System via
   // the Get/Set AdditionalStyleContext() APIs. Owners of MathMLChars
   // should honor these APIs.
-  nsresult
-  GetStyleContext(nsIStyleContext** aStyleContext) const;
+  nsStyleContext* GetStyleContext() const;
 
-  nsresult
-  SetStyleContext(nsIStyleContext* aStyleContext);
+  void SetStyleContext(nsStyleContext* aStyleContext);
 
 protected:
   friend class nsGlyphTable;
@@ -175,7 +173,7 @@ private:
   PRInt32            mOperator;
   nsStretchDirection mDirection;
   nsBoundingMetrics  mBoundingMetrics;
-  nsIStyleContext*   mStyleContext;
+  nsStyleContext*    mStyleContext;
   nsGlyphTable*      mGlyphTable;
   nsGlyphCode        mGlyph;
 
@@ -192,7 +190,7 @@ private:
   PaintVertically(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   nsFont&              aFont,
-                  nsIStyleContext*     aStyleContext,
+                  nsStyleContext*      aStyleContext,
                   nsGlyphTable*        aGlyphTable,
                   nsMathMLChar*        aChar,
                   nsRect&              aRect);
@@ -201,7 +199,7 @@ private:
   PaintHorizontally(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     nsFont&              aFont,
-                    nsIStyleContext*     aStyleContext,
+                    nsStyleContext*      aStyleContext,
                     nsGlyphTable*        aGlyphTable,
                     nsMathMLChar*        aChar,
                     nsRect&              aRect);

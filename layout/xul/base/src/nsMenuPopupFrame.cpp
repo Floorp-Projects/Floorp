@@ -47,7 +47,7 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 #include "nsIViewManager.h"
@@ -168,7 +168,7 @@ NS_IMETHODIMP
 nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
                        nsIContent*      aContent,
                        nsIFrame*        aParent,
-                       nsIStyleContext* aContext,
+                       nsStyleContext*  aContext,
                        nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);

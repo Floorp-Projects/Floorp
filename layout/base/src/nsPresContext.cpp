@@ -48,7 +48,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsLayoutAtoms.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
@@ -69,6 +69,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
+#include "nsAutoPtr.h"
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
@@ -934,26 +935,18 @@ nsPresContext::GetBaseURL(nsIURI** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsStyleContext>
 nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
-                                      nsIStyleContext* aParentContext,
-                                      nsIStyleContext** aResult)
+                                      nsStyleContext* aParentContext)
 {
-  NS_PRECONDITION(aResult, "null out param");
-
-  nsIStyleContext* result = nsnull;
   nsCOMPtr<nsIStyleSet> set;
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-  if (NS_SUCCEEDED(rv)) {
-    if (set) {
-      result = set->ResolveStyleFor(this, aContent, aParentContext);
-      if (nsnull == result) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
+  if (NS_SUCCEEDED(rv) && set) {
+    // return the addref'd style context
+    return set->ResolveStyleFor(this, aContent, aParentContext);
   }
-  *aResult = result;
-  return rv;
+
+  return nsnull;
 }
 
 NS_IMETHODIMP
@@ -961,92 +954,71 @@ nsPresContext::ResolveStyleContextAndGetStyleData(nsIContent* aContent,
                                                   int aSID,
                                                   const nsStyleStruct*& aStyleStruct)
 {
-  nsCOMPtr<nsIStyleContext> sc;
-  nsresult rv = ResolveStyleContextFor(aContent, nsnull, getter_AddRefs(sc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsStyleContext> sc = ResolveStyleContextFor(aContent, nsnull);
+  if (!sc) return NS_ERROR_FAILURE;
 
   aStyleStruct = sc->GetStyleData((nsStyleStructID) aSID);
   return aStyleStruct ? NS_OK : NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsPresContext::ResolveStyleContextForNonElement(
-                                      nsIStyleContext* aParentContext,
-                                      nsIStyleContext** aResult)
+already_AddRefed<nsStyleContext>
+nsPresContext::ResolveStyleContextForNonElement(nsStyleContext* aParentContext)
 {
-  NS_PRECONDITION(aResult, "null out param");
-
-  nsIStyleContext* result = nsnull;
   nsCOMPtr<nsIStyleSet> set;
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
   if (NS_SUCCEEDED(rv) && set) {
-    result = set->ResolveStyleForNonElement(this, aParentContext);
-    if (!result)
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    // return addrefed style context
+    return set->ResolveStyleForNonElement(this, aParentContext);
   }
-  *aResult = result;
-  return rv;
+
+  return nsnull;
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsStyleContext>
 nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                             nsIAtom* aPseudoTag,
-                                            nsIStyleContext* aParentContext,
-                                            nsIStyleContext** aResult)
+                                            nsStyleContext* aParentContext)
 {
-  return ResolvePseudoStyleWithComparator(aParentContent, aPseudoTag, aParentContext,
-                                          nsnull, aResult);
+  return ResolvePseudoStyleWithComparator(aParentContent, aPseudoTag,
+                                          aParentContext, nsnull);
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsStyleContext>
 nsPresContext::ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
                                                 nsIAtom* aPseudoTag,
-                                                nsIStyleContext* aParentContext,
-                                                nsICSSPseudoComparator* aComparator,
-                                                nsIStyleContext** aResult)
+                                                nsStyleContext* aParentContext,
+                                                nsICSSPseudoComparator* aComparator)
 {
-  NS_PRECONDITION(aResult, "null out param");
-
-  nsIStyleContext* result = nsnull;
   nsCOMPtr<nsIStyleSet> set;
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-  if (NS_SUCCEEDED(rv)) {
-    if (set) {
-      result = set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag,
-                                          aParentContext, aComparator);
-      if (nsnull == result) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
+  if (NS_SUCCEEDED(rv) && set) {
+    // return addrefed style context
+    return set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag,
+                                      aParentContext, aComparator);
   }
-  *aResult = result;
-  return rv;
+
+  return nsnull;
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsStyleContext>
 nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
-                                          nsIStyleContext* aParentContext,
-                                          nsIStyleContext** aResult)
+                                          nsStyleContext* aParentContext)
 {
-  NS_PRECONDITION(aResult, "null out param");
-
-  nsIStyleContext* result = nsnull;
   nsCOMPtr<nsIStyleSet> set;
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-  if (NS_SUCCEEDED(rv)) {
-    if (set) {
-      result = set->ProbePseudoStyleFor(this, aParentContent, aPseudoTag,
-                                        aParentContext);
-    }
+  if (NS_SUCCEEDED(rv) && set) {
+    // return addrefed style context
+    return set->ProbePseudoStyleFor(this, aParentContent, aPseudoTag,
+                                    aParentContext);
   }
-  *aResult = result;
-  return rv;
+
+  return nsnull;
 }
 
 NS_IMETHODIMP
 nsPresContext::ReParentStyleContext(nsIFrame* aFrame, 
-                                    nsIStyleContext* aNewParentContext)
+                                    nsStyleContext* aNewParentContext)
 {
   NS_PRECONDITION(aFrame, "null ptr");
   if (! aFrame) {

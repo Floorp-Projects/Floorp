@@ -40,7 +40,7 @@
 #include "nsIHTMLTableColElement.h"
 #include "nsIDOMHTMLTableColElement.h"
 #include "nsReflowPath.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLContent.h"
@@ -722,7 +722,7 @@ NS_IMETHODIMP
 nsTableColGroupFrame::Init(nsIPresContext*  aPresContext,
                            nsIContent*      aContent,
                            nsIFrame*        aParent,
-                           nsIStyleContext* aContext,
+                           nsStyleContext*  aContext,
                            nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;

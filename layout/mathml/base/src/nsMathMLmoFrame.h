@@ -38,12 +38,11 @@ public:
   NS_IMETHOD
   GetFrameType(nsIAtom** aType) const;
 
-  NS_IMETHOD
+  virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 
-                            nsIStyleContext* aStyleContext);
-  NS_IMETHOD
-  GetAdditionalStyleContext(PRInt32           aIndex, 
-                            nsIStyleContext** aStyleContext) const;
+                            nsStyleContext*  aStyleContext);
+  virtual nsStyleContext*
+  GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,

@@ -26,7 +26,7 @@
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
 #include "nsIMathMLFrame.h"
@@ -162,7 +162,7 @@ public:
   static void
   ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
-                         nsIStyleContext* aParenStyleContext,
+                         nsStyleContext*  aParenStyleContext,
                          nsMathMLChar*    aMathMLChar,
                          PRBool           aIsMutableChar);
 
@@ -216,7 +216,7 @@ public:
 
   static nscoord 
   CalcLength(nsIPresContext*   aPresContext,
-             nsIStyleContext*  aStyleContext,
+             nsStyleContext*   aStyleContext,
              const nsCSSValue& aCSSValue);
 
   static PRBool

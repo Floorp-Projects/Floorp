@@ -37,14 +37,14 @@
 #include "nsSplittableFrame.h"
 #include "nsIContent.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsISizeOfHandler.h"
 
 NS_IMETHODIMP
 nsSplittableFrame::Init(nsIPresContext*  aPresContext,
                         nsIContent*      aContent,
                         nsIFrame*        aParent,
-                        nsIStyleContext* aContext,
+                        nsStyleContext*  aContext,
                         nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;

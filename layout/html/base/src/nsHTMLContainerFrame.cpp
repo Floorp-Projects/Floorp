@@ -38,7 +38,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsLayoutAtoms.h"
@@ -188,10 +188,9 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
     for (nsIFrame *frame = this; frame && decorMask; frame->GetParent(&frame)) {
       // find text-decorations.  "Inherit" from parent *block* frames
 
-      nsCOMPtr<nsIStyleContext> styleContext;
-      frame->GetStyleContext(getter_AddRefs(styleContext));
+      nsStyleContext* styleContext = frame->GetStyleContext();
       const nsStyleDisplay* styleDisplay;
-      ::GetStyleData(styleContext.get(), &styleDisplay);
+      ::GetStyleData(styleContext, &styleDisplay);
       if (!styleDisplay->IsBlockLevel() &&
           styleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
         // If an inline frame is discovered while walking up the tree,
@@ -200,12 +199,12 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
         break;
       }
 
-      ::GetStyleData(styleContext.get(), &styleText);
+      ::GetStyleData(styleContext, &styleText);
       PRUint8 decors = decorMask & styleText->mTextDecoration;
       if (decors) {
         // A *new* text-decoration is found.
         const nsStyleColor* styleColor;
-        ::GetStyleData(styleContext.get(), &styleColor);
+        ::GetStyleData(styleContext, &styleColor);
 
         if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decors) {
           aUnderColor = styleColor->mColor;
@@ -605,7 +604,7 @@ nsHTMLContainerFrame::ReparentFrameViewList(nsIPresContext* aPresContext,
 nsresult
 nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
-                                         nsIStyleContext* aStyleContext,
+                                         nsStyleContext* aStyleContext,
                                          nsIFrame* aContentParentFrame,
                                          PRBool aForce)
 {

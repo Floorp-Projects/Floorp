@@ -43,7 +43,6 @@
 
 class nsString;
 class nsIStyleRule;
-class nsIStyleContext;
 class nsISupportsArray;
 class nsRuleWalker;
 

@@ -57,7 +57,7 @@ public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
+                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
@@ -118,7 +118,7 @@ public:
   // @param aStyleContext can be null, in which case the frame's style context is used
   static void SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
                                            nsIFrame*        aFrame,
-                                           nsIStyleContext* aStyleContext,
+                                           nsStyleContext*  aStyleContext,
                                            nsIView*         aView,
                                            PRUint32         aFlags = 0);
   
@@ -132,13 +132,13 @@ public:
   // @param aStyleContext can be null, in which case the frame's style context is used
   static void SyncFrameViewProperties(nsIPresContext*  aPresContext,
                                       nsIFrame*        aFrame,
-                                      nsIStyleContext* aStyleContext,
+                                      nsStyleContext*  aStyleContext,
                                       nsIView*         aView,
                                       PRUint32         aFlags = 0);
 
   // Returns PR_TRUE if the frame requires a view
   static PRBool FrameNeedsView(nsIPresContext* aPresContext,
-                               nsIFrame* aFrame, nsIStyleContext* aStyleContext);
+                               nsIFrame* aFrame, nsStyleContext* aStyleContext);
   
   /**
    * Invokes the WillReflow() function, positions the frame and its view (if

@@ -39,7 +39,7 @@
 
 #include "nsFont.h"
 
-// XXX fold this into nsIStyleContext and group by nsStyleXXX struct
+// XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
 // Indicies into border/padding/margin arrays
 #define NS_SIDE_TOP     0

@@ -65,7 +65,7 @@ public:
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
+                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow) {
     mPresContext = aPresContext;
     return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);

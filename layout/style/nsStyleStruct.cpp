@@ -78,8 +78,7 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
       nsIFrame* parentFrame;
       aFrame->GetParent(&parentFrame);  // XXX may not be direct parent...
       if (nsnull != parentFrame) {
-        nsIStyleContext* parentContext;
-        parentFrame->GetStyleContext(&parentContext);
+        nsStyleContext* parentContext = parentFrame->GetStyleContext();
         if (nsnull != parentContext) {
           nsMargin  parentSpacing;
           switch (aSpacing) {
@@ -111,7 +110,6 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
             case NS_SIDE_RIGHT:   result = parentSpacing.right;  break;
             case NS_SIDE_BOTTOM:  result = parentSpacing.bottom; break;
           }
-          NS_RELEASE(parentContext);
         }
       }
       break;

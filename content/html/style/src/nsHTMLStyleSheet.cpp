@@ -42,7 +42,7 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsIEventStateManager.h"
@@ -393,7 +393,7 @@ static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleDa
 {
   nsStyleText* text = (nsStyleText*)aStyleStruct;
   if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_DEFAULT) {
-    nsCOMPtr<nsIStyleContext> parentContext = aRuleData->mStyleContext->GetParent();
+    nsStyleContext* parentContext = aRuleData->mStyleContext->GetParent();
 
     if (parentContext) {
       const nsStyleText* parentStyleText = 
@@ -426,7 +426,7 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
 {
   if (!aStyleStruct || !aRuleData || !aRuleData->mPresContext) return;
 
-  nsCOMPtr<nsIStyleContext> tableContext = aRuleData->mStyleContext->GetParent();
+  nsStyleContext* tableContext = aRuleData->mStyleContext->GetParent();
   if (!tableContext)
     return;
   if (!aGroup) {

@@ -2585,13 +2585,10 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
     nsIFrame * frame;
     aPO->mParent->mPresShell->GetPrimaryFrameFor(aPO->mContent, &frame);
     if (frame) {
-      nsCOMPtr<nsIStyleContext> sc;
-      frame->GetStyleContext(getter_AddRefs(sc));
-      if (sc) {
-        const nsStyleVisibility* vis = (const nsStyleVisibility*)sc->GetStyleData(eStyleStruct_Visibility);
-        if (!vis->IsVisible()) {
-          aPO->mDontPrint = PR_TRUE;
-        }
+      const nsStyleVisibility* vis;
+      ::GetStyleData(frame, &vis);
+      if (!vis->IsVisible()) {
+        aPO->mDontPrint = PR_TRUE;
       }
     }
   }

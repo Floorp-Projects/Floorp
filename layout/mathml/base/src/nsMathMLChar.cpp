@@ -24,7 +24,7 @@
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
@@ -1205,30 +1205,28 @@ InitGlobals(nsIPresContext* aPresContext)
 // -----------------------------------------------------------------------------------
 // And now the implementation of nsMathMLChar
 
-nsresult
-nsMathMLChar::GetStyleContext(nsIStyleContext** aStyleContext) const
+nsStyleContext*
+nsMathMLChar::GetStyleContext() const
 {
   NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
-  NS_PRECONDITION(aStyleContext, "null OUT ptr");
   NS_ASSERTION(mStyleContext, "chars shoud always have style context");
-  *aStyleContext = mStyleContext;
-  NS_IF_ADDREF(*aStyleContext);
+  return mStyleContext;
   return NS_OK;
 }
 
-nsresult
-nsMathMLChar::SetStyleContext(nsIStyleContext* aStyleContext)
+void
+nsMathMLChar::SetStyleContext(nsStyleContext* aStyleContext)
 {
   NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
   NS_PRECONDITION(aStyleContext, "null ptr");
   if (aStyleContext != mStyleContext) {
-    NS_IF_RELEASE(mStyleContext);
+    if (mStyleContext)
+      mStyleContext->Release();
     if (aStyleContext) {
       mStyleContext = aStyleContext;
-      NS_ADDREF(aStyleContext);
+      aStyleContext->AddRef();
     }
   }
-  return NS_OK;
 }
 
 void
@@ -1468,7 +1466,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // mStyleContext is a leaf context used only when stretching happens.
   // For the base size, the default font should come from the parent context
   nsAutoString fontName;
-  nsCOMPtr<nsIStyleContext> parentContext(mStyleContext->GetParent());
+  nsStyleContext* parentContext = mStyleContext->GetParent();
   const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
     parentContext->GetStyleData(eStyleStruct_Font));
   nsFont theFont(font->mFont);
@@ -1868,8 +1866,8 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
                     const nsRect*        aSelectedRect)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIStyleContext> parentContext(mStyleContext->GetParent());
-  nsIStyleContext* styleContext = mStyleContext;
+  nsStyleContext* parentContext = mStyleContext->GetParent();
+  nsStyleContext* styleContext = mStyleContext;
 
   if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
     // normal drawing if there is nothing special about this char
@@ -1906,7 +1904,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
       const nsStyleBackground *backg = NS_STATIC_CAST(const nsStyleBackground*,
         styleContext->GetStyleData(eStyleStruct_Background));
       nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
-      if (styleContext != parentContext.get() &&
+      if (styleContext != parentContext &&
           0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
         nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                                               aDirtyRect, rect, *backg, *border, *padding,
@@ -2007,7 +2005,7 @@ nsresult
 nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsFont&              aFont,
-                              nsIStyleContext*     aStyleContext,
+                              nsStyleContext*      aStyleContext,
                               nsGlyphTable*        aGlyphTable,
                               nsMathMLChar*        aChar,
                               nsRect&              aRect)
@@ -2185,7 +2183,7 @@ nsresult
 nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsFont&              aFont,
-                                nsIStyleContext*     aStyleContext,
+                                nsStyleContext*      aStyleContext,
                                 nsGlyphTable*        aGlyphTable,
                                 nsMathMLChar*        aChar,
                                 nsRect&              aRect)

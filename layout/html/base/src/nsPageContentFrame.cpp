@@ -38,7 +38,6 @@
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h"
 #include "nsIRenderingContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"

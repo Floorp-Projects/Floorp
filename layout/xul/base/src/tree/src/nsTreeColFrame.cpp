@@ -41,7 +41,7 @@
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsIContent.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsINameSpaceManager.h" 
 #include "nsIDOMNSDocument.h"
 #include "nsIDocument.h"
@@ -102,7 +102,7 @@ NS_IMETHODIMP
 nsTreeColFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
-                         nsIStyleContext* aContext,
+                         nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);

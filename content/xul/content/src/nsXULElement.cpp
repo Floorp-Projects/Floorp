@@ -148,6 +148,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsReadableUtils.h"
 #include "nsITimelineService.h"
+#include "nsIFrame.h"
 
 class nsIWebShell;
 

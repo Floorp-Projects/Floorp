@@ -24,7 +24,7 @@
 #include "nsAreaFrame.h"
 #include "nsIPresContext.h"
 #include "nsUnitConversion.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRenderingContext.h"
@@ -420,7 +420,7 @@ NS_IMETHODIMP
 nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
                                nsIFrame*        aParent,
-                               nsIStyleContext* aContext,
+                               nsStyleContext*  aContext,
                                nsIFrame*        aPrevInFlow)
 {
   MapAttributesIntoCSS(aPresContext, aContent);
@@ -691,7 +691,7 @@ NS_IMETHODIMP
 nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
                             nsIContent*      aContent,
                             nsIFrame*        aParent,
-                            nsIStyleContext* aContext,
+                            nsStyleContext*  aContext,
                             nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);

@@ -53,7 +53,7 @@
 #include "nsXULAtoms.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsIStyleContext.h"
+#include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsBoxLayoutState.h"
@@ -167,7 +167,7 @@ NS_IMETHODIMP
 nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
-                     nsIStyleContext* aContext,
+                     nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
     nsresult rv = nsTextBoxFrameSuper::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
@@ -352,7 +352,7 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
     nscolor overColor;
     nscolor underColor;
     nscolor strikeColor;
-    nsCOMPtr<nsIStyleContext> context = mStyleContext;
+    nsStyleContext* context = mStyleContext;
   
     PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE; // Begin with no decorations
     PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | NS_STYLE_TEXT_DECORATION_OVERLINE |

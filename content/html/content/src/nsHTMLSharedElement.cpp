@@ -47,6 +47,7 @@
 #include "nsIPresContext.h"
 #include "nsRuleNode.h"
 #include "nsHTMLAttributes.h"
+#include "nsStyleContext.h"
 
 
 class nsHTMLSharedLeafElement : public nsGenericHTMLLeafElement,
