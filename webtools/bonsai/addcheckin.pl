@@ -173,7 +173,8 @@ FILE:
                     $full = "$dir/$f";
 LEGALDIR:
                     foreach $d (sort( grep(!/\*$/, @::LegalDirs))) {
-                         if ($full =~ m!^$d\b!) {
+                         $d =~ s@^[\.]/@@;
+                         if ($d eq "\." || $d eq "/" || $full =~ m!^$d\b/!) {
                               $okdir = 1;
                               last LEGALDIR;
                          }
