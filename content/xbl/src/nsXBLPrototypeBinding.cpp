@@ -517,9 +517,8 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
           aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
           if (!value.IsEmpty()) {
             nsCOMPtr<nsIDOMText> textNode;
-            nsCOMPtr<nsIDocument> doc;
-            aChangedElement->GetDocument(getter_AddRefs(doc));
-            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+            nsCOMPtr<nsIDOMDocument> domDoc(
+                     do_QueryInterface(aChangedElement->GetDocument()));
             domDoc->CreateTextNode(value, getter_AddRefs(textNode));
             nsCOMPtr<nsIDOMNode> dummy;
             nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(realElement));
@@ -771,17 +770,16 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
   if (aTemplChild == aTemplRoot || !aTemplChild)
     return nsnull;
 
-  nsCOMPtr<nsIContent> templParent;
+  nsCOMPtr<nsIContent> templParent = aTemplChild->GetParent();
   nsCOMPtr<nsIContent> copyParent;
   nsCOMPtr<nsIContent> childPoint;
-  aTemplChild->GetParent(getter_AddRefs(templParent));
   
   if (aBoundElement) {
     nsCOMPtr<nsIAtom> tag;
     templParent->GetTag(getter_AddRefs(tag));
     if (tag == nsXBLAtoms::children) {
       childPoint = templParent;
-      childPoint->GetParent(getter_AddRefs(templParent));
+      templParent = childPoint->GetParent();
     }
   }
 
@@ -798,8 +796,7 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
   if (childPoint && aBoundElement) {
     // First we have to locate this insertion point and use its index and its
     // count to detemine our precise position within the template.
-    nsCOMPtr<nsIDocument> doc;
-    aBoundElement->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = aBoundElement->GetDocument();
     nsCOMPtr<nsIBindingManager> bm;
     doc->GetBindingManager(getter_AddRefs(bm));
     nsCOMPtr<nsIXBLBinding> binding;
@@ -912,9 +909,8 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
         if (dst == nsXBLAtoms::xbltext ||
             (tag == nsHTMLAtoms::html) && (dst == nsHTMLAtoms::value) && !value.IsEmpty()) {
           nsCOMPtr<nsIDOMText> textNode;
-          nsCOMPtr<nsIDocument> doc;
-          changeData->mBoundElement->GetDocument(getter_AddRefs(doc));
-          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+          nsCOMPtr<nsIDOMDocument> domDoc(
+                  do_QueryInterface(changeData->mBoundElement->GetDocument()));
           domDoc->CreateTextNode(value, getter_AddRefs(textNode));
           nsCOMPtr<nsIDOMNode> dummy;
           nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(realElement));
@@ -1097,8 +1093,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
     childrenElements->GetElementAt(i, getter_AddRefs(supp));
     nsCOMPtr<nsIContent> child(do_QueryInterface(supp));
     if (child) {
-      nsCOMPtr<nsIContent> parent; 
-      child->GetParent(getter_AddRefs(parent));
+      nsCOMPtr<nsIContent> parent = child->GetParent(); 
 
       // Create an XBL insertion point entry.
       nsXBLInsertionPointEntry* xblIns = nsXBLInsertionPointEntry::Create(parent);

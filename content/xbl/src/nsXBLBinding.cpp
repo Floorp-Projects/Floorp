@@ -312,8 +312,7 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
   // We need to ensure two things.
   // (1) The anonymous content should be fooled into thinking it's in the bound
   // element's document.
-  nsCOMPtr<nsIDocument> doc;
-  aElement->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = aElement->GetDocument();
 
   aAnonParent->SetDocument(doc, PR_TRUE, AllowScripts());
 
@@ -638,8 +637,7 @@ nsXBLBinding::GenerateAnonymousContent()
 #endif
 
   if (hasContent || hasInsertionPoints) {
-    nsCOMPtr<nsIDocument> doc;
-    mBoundElement->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = mBoundElement->GetDocument();
 
     // XXX doc will be null if we're in the midst of paint suppression.
     if (! doc)
@@ -1373,9 +1371,8 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
   rv = DoInitJSClass(cx, global, object, aClassName, aClassObject);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Root mBoundElement so that it doesn't loose it's binding
-  nsCOMPtr<nsIDocument> doc;
-  mBoundElement->GetDocument(getter_AddRefs(doc));
+  // Root mBoundElement so that it doesn't lose it's binding
+  nsIDocument* doc = mBoundElement->GetDocument();
 
   if (doc) {
     nsCOMPtr<nsIXPConnectWrappedNative> native_wrapper =
@@ -1471,8 +1468,7 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName,
   nsCOMPtr<nsIAtom> eventName = do_GetAtom(eventStr);
 
   nsresult rv;
-  nsCOMPtr<nsIDocument> document;
-  aElement->GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDocument> document = aElement->GetDocument();
   if (!document)
     return NS_OK;
 

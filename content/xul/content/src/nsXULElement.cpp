@@ -340,8 +340,7 @@ FinishEventHandlerMap()
 
 static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
 {
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(getter_AddRefs(doc));
+  nsIDocument* doc = aContent->GetDocument();
   if (!doc)
     return PR_FALSE;
 
@@ -361,10 +360,9 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
 
   // We know a mutation listener is registered, but it might not
   // be in our chain.  Check quickly to see.
-  nsCOMPtr<nsIContent> curr = aContent;
   nsCOMPtr<nsIEventListenerManager> manager;
 
-  while (curr) {
+  for (nsIContent* curr = aContent; curr; curr = curr->GetParent()) {
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(curr));
     if (rec) {
       rec->GetListenerManager(getter_AddRefs(manager));
@@ -375,9 +373,6 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
           return PR_TRUE;
       }
     }
-
-    nsCOMPtr<nsIContent> prev = curr;
-    prev->GetParent(getter_AddRefs(curr));
   }
 
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
@@ -966,9 +961,7 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
 
     // First, check to see if the content was already parented
     // somewhere. If so, remove it.
-    nsCOMPtr<nsIContent> oldparent;
-    rv = newcontent->GetParent(getter_AddRefs(oldparent));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIContent> oldparent = newcontent->GetParent();
 
     if (oldparent) {
         PRInt32 oldindex;
@@ -1792,12 +1785,10 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
 // nsIContent interface
 //
 
-NS_IMETHODIMP
-nsXULElement::GetDocument(nsIDocument** aResult) const
+NS_IMETHODIMP_(nsIDocument*)
+nsXULElement::GetDocument() const
 {
-    *aResult = mDocument;
-    NS_IF_ADDREF(*aResult);
-    return NS_OK;
+    return mDocument;
 }
 
 nsresult
@@ -1929,12 +1920,10 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::GetParent(nsIContent** aResult) const
+NS_IMETHODIMP_(nsIContent*)
+nsXULElement::GetParent() const
 {
-    *aResult = mParent;
-    NS_IF_ADDREF(*aResult);
-    return NS_OK;
+    return mParent;
 }
 
 NS_IMETHODIMP
@@ -1942,8 +1931,7 @@ nsXULElement::SetParent(nsIContent* aParent)
 {
     mParent = aParent; // no refcount
     if (aParent) {
-      nsCOMPtr<nsIContent> bindingPar;
-      aParent->GetBindingParent(getter_AddRefs(bindingPar));
+      nsIContent* bindingPar = aParent->GetBindingParent();
       if (bindingPar)
         SetBindingParent(bindingPar);
     }
@@ -3162,19 +3150,16 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
         nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
         if (content)
-            content->GetBindingParent(getter_AddRefs(bindingParent));
+            bindingParent = content->GetBindingParent();
     }
     else
-        GetBindingParent(getter_AddRefs(bindingParent));
+        bindingParent = GetBindingParent();
 
     if (bindingParent) {
         // We're anonymous.  We may potentially need to retarget
         // our event if our parent is in a different scope.
-        if (mParent) {
-            nsCOMPtr<nsIContent> parentScope;
-            mParent->GetBindingParent(getter_AddRefs(parentScope));
-            if (parentScope != bindingParent)
-                retarget = PR_TRUE;
+        if (mParent && mParent->GetBindingParent() != bindingParent) {
+            retarget = PR_TRUE;
         }
     }
 
@@ -3448,8 +3433,7 @@ nsXULElement::EnsureContentsGenerated(void) const
 
         // Walk up our ancestor chain, looking for an element with a
         // XUL content model builder attached to it.
-        nsCOMPtr<nsIContent> element
-            = do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
+        nsIContent* element = unconstThis;
 
         do {
             nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(element);
@@ -3466,10 +3450,7 @@ nsXULElement::EnsureContentsGenerated(void) const
                 }
             }
 
-            nsCOMPtr<nsIContent> parent;
-            element->GetParent(getter_AddRefs(parent));
-
-            element = parent;
+            element = element->GetParent();
         } while (element);
 
         NS_ERROR("lazy state set with no XUL content builder in ancestor chain");
@@ -4146,21 +4127,15 @@ nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 NS_IMETHODIMP
 nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 {
-  nsCOMPtr<nsIContent> current;
-  GetParent(getter_AddRefs(current));
-  while (current) {
+  for (nsIContent* current = mParent; current; current = current->GetParent()) {
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(getter_AddRefs(tag));
     if (tag == nsXULAtoms::listbox) {
-      nsCOMPtr<nsIDOMXULMultiSelectControlElement> element = do_QueryInterface(current);
-      *aTreeElement = element;
-      NS_IF_ADDREF(*aTreeElement);
+      CallQueryInterface(current, aTreeElement);
+      // XXX returning NS_OK because that's what the code used to do;
+      // is that the right thing, though?
       return NS_OK;
     }
-
-    nsCOMPtr<nsIContent> parent;
-    current->GetParent(getter_AddRefs(parent));
-    current = parent;
   }
   return NS_OK;
 }
@@ -4234,8 +4209,7 @@ nsXULElement::Click()
   if (disabled == NS_LITERAL_STRING("true"))
     return NS_OK;
 
-  nsCOMPtr<nsIDocument> doc; // Strong
-  GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = mDocument; // Strong just in case
   if (doc) {
     PRInt32 numShells = doc->GetNumberOfShells();
     nsCOMPtr<nsIPresShell> shell; // Strong
@@ -4281,8 +4255,7 @@ nsXULElement::Click()
 NS_IMETHODIMP
 nsXULElement::DoCommand()
 {
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = mDocument; // strong just in case
   if (doc) {
     PRInt32 numShells = doc->GetNumberOfShells();
     nsCOMPtr<nsIPresShell> shell;
@@ -4329,11 +4302,10 @@ nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::GetBindingParent(nsIContent** aContent) const
+NS_IMETHODIMP_(nsIContent*)
+nsXULElement::GetBindingParent() const
 {
-  NS_IF_ADDREF(*aContent = mBindingParent);
-  return NS_OK;
+  return mBindingParent;
 }
 
 NS_IMETHODIMP

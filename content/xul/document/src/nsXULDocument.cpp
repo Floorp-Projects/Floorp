@@ -2694,21 +2694,17 @@ PRBool
 nsXULDocument::ContextStack::IsInsideXULTemplate()
 {
     if (mDepth) {
-        nsCOMPtr<nsIContent> element = mTop->mElement;
-        while (element) {
+        for (nsIContent* element = mTop->mElement; element;
+             element = element->GetParent()) {
             PRInt32 nameSpaceID;
             element->GetNameSpaceID(&nameSpaceID);
             if (nameSpaceID == kNameSpaceID_XUL) {
                 nsCOMPtr<nsIAtom> tag;
                 element->GetTag(getter_AddRefs(tag));
-                if (tag.get() == nsXULAtoms::Template) {
+                if (tag == nsXULAtoms::Template) {
                     return PR_TRUE;
                 }
             }
-
-            nsCOMPtr<nsIContent> parent;
-            element->GetParent(getter_AddRefs(parent));
-            element = parent;
         }
     }
     return PR_FALSE;
@@ -3665,13 +3661,11 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
 
         if (! bodyContent) {
             // Get the document.
-            nsCOMPtr<nsIDocument> doc;
-            aElement->GetDocument(getter_AddRefs(doc));
-            NS_ASSERTION(doc, "no document");
-            if (! doc)
+            nsCOMPtr<nsIDOMDocument> domdoc =
+                do_QueryInterface(aElement->GetDocument());
+            NS_ASSERTION(domdoc, "no document");
+            if (! domdoc)
                 return NS_ERROR_UNEXPECTED;
-
-            nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc);
             if (domdoc) {
                 nsCOMPtr<nsIDOMElement> bodyElement;
                 domdoc->CreateElement(NS_LITERAL_STRING("treechildren"),
@@ -3864,13 +3858,10 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
         // Element in the overlay has the 'removeelement' attribute set
         // so remove it from the actual document.
-        if (attr.get() == nsXULAtoms::removeelement &&
+        if (attr == nsXULAtoms::removeelement &&
             value.EqualsIgnoreCase("true")) {
-            nsCOMPtr<nsIContent> parent;
-            rv = aTargetNode->GetParent(getter_AddRefs(parent));
-            if (NS_FAILED(rv)) return rv;
 
-            rv = RemoveElement(parent, aTargetNode);
+            rv = RemoveElement(aTargetNode->GetParent(), aTargetNode);
             if (NS_FAILED(rv)) return rv;
 
             return NS_OK;
@@ -3914,11 +3905,8 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 
         nsCOMPtr<nsIDOMElement> nodeInDocument;
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-            nsCOMPtr<nsIDocument> document;
-            rv = aTargetNode->GetDocument(getter_AddRefs(document));
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
+            nsCOMPtr<nsIDOMDocument> domDocument(
+                        do_QueryInterface(aTargetNode->GetDocument()));
             if (!domDocument) return NS_ERROR_FAILURE;
 
             rv = domDocument->GetElementById(id, getter_AddRefs(nodeInDocument));
@@ -4110,9 +4098,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         // 'element' attribute that specifies the ID of the
         // broadcaster element, and an 'attribute' element, which
         // specifies the name of the attribute to observe.
-        nsCOMPtr<nsIContent> parent;
-        rv = aElement->GetParent(getter_AddRefs(parent));
-        if (NS_FAILED(rv)) return rv;
+        nsIContent* parent = aElement->GetParent();
 
         nsCOMPtr<nsIAtom> parentTag;
         rv = parent->GetTag(getter_AddRefs(parentTag));
@@ -4120,7 +4106,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
         // If we're still parented by an 'overlay' tag, then we haven't
         // made it into the real document yet. Defer hookup.
-        if (parentTag.get() == nsXULAtoms::overlay) {
+        if (parentTag == nsXULAtoms::overlay) {
             *aNeedsHookup = PR_TRUE;
             return NS_OK;
         }
@@ -4247,11 +4233,8 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
     }
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        nsCOMPtr<nsIDocument> document;
-        rv = aParent->GetDocument(getter_AddRefs(document));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
+        nsCOMPtr<nsIDOMDocument> domDocument(
+               do_QueryInterface(aParent->GetDocument()));
         nsCOMPtr<nsIDOMElement> domElement;
 
         char* str = ToNewCString(posStr);

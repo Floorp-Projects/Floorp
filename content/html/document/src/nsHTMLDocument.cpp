@@ -2126,15 +2126,13 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 PRInt32
 GetHTMLDocumentNamespace(nsIContent *aContent)
 {
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(getter_AddRefs(doc));
-
-  NS_ASSERTION(doc, "This method should never be called on content nodes "
+  NS_ASSERTION(aContent->GetDocument(),
+               "This method should never be called on content nodes "
                "that are not in a document!");
 
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIHTMLDocument> htmldoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIHTMLDocument> htmldoc(do_QueryInterface(aContent->GetDocument()));
 
     if (!htmldoc) {
       NS_ERROR("Huh, how did this happen? This should only be used with "
@@ -2143,7 +2141,8 @@ GetHTMLDocumentNamespace(nsIContent *aContent)
   }
 #endif
 
-  return doc->IsCaseSensitive() ? kNameSpaceID_XHTML : kNameSpaceID_None;
+  return aContent->GetDocument()->IsCaseSensitive() ?
+    kNameSpaceID_XHTML : kNameSpaceID_None;
 }
 
 PRBool

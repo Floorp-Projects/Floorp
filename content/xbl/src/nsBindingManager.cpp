@@ -394,8 +394,10 @@ protected:
                                      nsIDOMNodeList** aResult,
                                      PRBool* aIsAnonymousContentList);
 
-  void GetEnclosingScope(nsIContent* aContent, nsIContent** aParent);
-  void GetOutermostStyleScope(nsIContent* aContent, nsIContent** aParent);
+  nsIContent* GetEnclosingScope(nsIContent* aContent) {
+    return aContent->GetBindingParent();
+  }
+  nsIContent* GetOutermostStyleScope(nsIContent* aContent);
 
   void WalkRules(nsISupportsArrayEnumFunc aFunc, RuleProcessorData* aData,
                  nsIContent* aParent, nsIContent* aCurrContent);
@@ -1178,8 +1180,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       // We have never made a wrapper for this implementation.
       // Create an XPC wrapper for the script object and hand it back.
 
-      nsCOMPtr<nsIDocument> doc;
-      aContent->GetDocument(getter_AddRefs(doc));
+      nsIDocument* doc = aContent->GetDocument();
       if (!doc)
         return NS_NOINTERFACE;
 
@@ -1240,13 +1241,10 @@ nsBindingManager::InheritsStyle(nsIContent* aContent, PRBool* aResult)
 {
   // Get our enclosing parent.
   *aResult = PR_TRUE;
-  nsCOMPtr<nsIContent> parent;
-  GetEnclosingScope(aContent, getter_AddRefs(parent));
+  nsCOMPtr<nsIContent> parent = GetEnclosingScope(aContent);
   if (parent) {
     // See if the parent is our parent.
-    nsCOMPtr<nsIContent> ourParent;
-    aContent->GetParent(getter_AddRefs(ourParent));
-    if (ourParent == parent) {
+    if (aContent->GetParent() == parent) {
       // Yes. Check the binding and see if it wants to allow us
       // to inherit styles.
       nsCOMPtr<nsIXBLBinding> binding;
@@ -1264,26 +1262,14 @@ nsBindingManager::UseDocumentRules(nsIContent* aContent, PRBool* aResult)
   if (!aContent)
     return NS_OK;
 
-  nsCOMPtr<nsIContent> parent;
-  GetOutermostStyleScope(aContent, getter_AddRefs(parent));
-  *aResult = !parent;
+  *aResult = !GetOutermostStyleScope(aContent);
   return NS_OK;
 }
 
-void
-nsBindingManager::GetEnclosingScope(nsIContent* aContent,
-                                    nsIContent** aParent)
+nsIContent*
+nsBindingManager::GetOutermostStyleScope(nsIContent* aContent)
 {
-  // Look up the enclosing parent.
-  aContent->GetBindingParent(aParent);
-}
-
-void
-nsBindingManager::GetOutermostStyleScope(nsIContent* aContent,
-                                         nsIContent** aParent)
-{
-  nsCOMPtr<nsIContent> parent;
-  GetEnclosingScope(aContent, getter_AddRefs(parent));
+  nsIContent* parent = GetEnclosingScope(aContent);
   while (parent) {
     PRBool inheritsStyle = PR_TRUE;
     nsCOMPtr<nsIXBLBinding> binding;
@@ -1293,14 +1279,13 @@ nsBindingManager::GetOutermostStyleScope(nsIContent* aContent,
     }
     if (!inheritsStyle)
       break;
-    nsCOMPtr<nsIContent> child = parent;
-    GetEnclosingScope(child, getter_AddRefs(parent));
+    nsIContent* child = parent;
+    parent = GetEnclosingScope(child);
     if (parent == child)
       break; // The scrollbar case only is deliberately hacked to return itself
              // (see GetBindingParent in nsXULElement.cpp).
   }
-  *aParent = parent;
-  NS_IF_ADDREF(*aParent);
+  return parent;
 }
 
 void
@@ -1315,8 +1300,7 @@ nsBindingManager::WalkRules(nsISupportsArrayEnumFunc aFunc,
     binding->WalkRules(aFunc, aData);
   }
   if (aParent != aCurrContent) {
-    nsCOMPtr<nsIContent> par;
-    GetEnclosingScope(aCurrContent, getter_AddRefs(par));
+    nsCOMPtr<nsIContent> par = GetEnclosingScope(aCurrContent);
     if (par)
       WalkRules(aFunc, aData, aParent, par);
   }
@@ -1331,8 +1315,7 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
   if (!content)
     return NS_OK;
 
-  nsCOMPtr<nsIContent> parent;
-  GetOutermostStyleScope(content, getter_AddRefs(parent));
+  nsCOMPtr<nsIContent> parent = GetOutermostStyleScope(content);
 
   WalkRules(aFunc, aData, parent, content);
 
@@ -1342,9 +1325,8 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
   if (parent) {
     // We cut ourselves off, but we still need to walk the document's attribute sheet
     // so that inline style continues to work on anonymous content.
-    nsCOMPtr<nsIDocument> document;
-    content->GetDocument(getter_AddRefs(document));
-    nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(document));
+    nsCOMPtr<nsIHTMLContentContainer> container(
+          do_QueryInterface(content->GetDocument()));
     if (container) {
       nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
       container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));  
@@ -1377,9 +1359,7 @@ nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChil
   *aResult = nsnull;
 
   // Check to see if the content is anonymous.
-  nsCOMPtr<nsIContent> bindingParent;
-  aChild->GetBindingParent(getter_AddRefs(bindingParent));
-  if (bindingParent == aParent)
+  if (aChild->GetBindingParent() == aParent)
     return NS_OK; // It is anonymous. Don't use the insertion point, since that's only
                   // for the explicit kids.
 

@@ -488,7 +488,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
               nsCOMPtr<nsIDocument> doc;
               if (gLastFocusedContent) // could have changed in HandleDOMEvent
-                gLastFocusedContent->GetDocument(getter_AddRefs(doc));
+                doc = gLastFocusedContent->GetDocument();
               if (doc) {
                 nsCOMPtr<nsIPresShell> shell;
                 doc->GetShellAt(0, getter_AddRefs(shell));
@@ -617,8 +617,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         // with by looking at gLastFocusedContent.
         nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
         if (gLastFocusedContent) {
-          nsCOMPtr<nsIDocument> doc;
-          gLastFocusedContent->GetDocument(getter_AddRefs(doc));
+          nsIDocument* doc = gLastFocusedContent->GetDocument();
           if (doc)
             doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
           else {
@@ -641,8 +640,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           if (gLastFocusedContent) {
             // Retrieve this content node's pres context. it can be out of sync
             // in the Ender widget case.
-            nsCOMPtr<nsIDocument> doc;
-            gLastFocusedContent->GetDocument(getter_AddRefs(doc));
+            nsCOMPtr<nsIDocument> doc = gLastFocusedContent->GetDocument();
             if (doc) {
               nsCOMPtr<nsIPresShell> shell;
               doc->GetShellAt(0, getter_AddRefs(shell));
@@ -924,9 +922,8 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
             nsAutoString control;
             content->GetAttr(kNameSpaceID_None, nsXULAtoms::control, control);
             if (!control.IsEmpty()) {
-              nsCOMPtr<nsIDocument> document;
-              content->GetDocument(getter_AddRefs(document));
-              nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
+              nsCOMPtr<nsIDOMDocument> domDocument =
+                do_QueryInterface(content->GetDocument());
               if (domDocument)
                 domDocument->GetElementById(control, getter_AddRefs(element));
             }
@@ -1584,16 +1581,15 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   if (!targetContent)
     GetFocusedContent(getter_AddRefs(targetContent));
   if (!targetContent) return NS_OK;
-  nsCOMPtr<nsIDocument> targetDoc;
-  targetContent->GetDocument(getter_AddRefs(targetDoc));
-  if (!targetDoc) return NS_OK;
-  nsCOMPtr<nsIDOMDocumentEvent> targetDOMDoc(do_QueryInterface(targetDoc));
+  nsCOMPtr<nsIDOMDocumentEvent> targetDOMDoc(
+                    do_QueryInterface(targetContent->GetDocument()));
+  if (!targetDOMDoc) return NS_OK;
 
   nsCOMPtr<nsIDOMEvent> event;
   targetDOMDoc->CreateEvent(NS_LITERAL_STRING("MouseScrollEvents"), getter_AddRefs(event));
   if (event) {
     nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(event));
-    nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(targetDoc);
+    nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(targetDOMDoc);
     if (!docView) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIDOMAbstractView> view;
     docView->GetDefaultView(getter_AddRefs(view));
@@ -1907,8 +1903,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           // instead.
           nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(activeContent));
           if (!elt) {
-            nsCOMPtr<nsIContent> par;
-            activeContent->GetParent(getter_AddRefs(par));
+            nsIContent* par = activeContent->GetParent();
             if (par)
               activeContent = par;
           }
@@ -2303,8 +2298,7 @@ nsEventStateManager::GetNearestScrollingView(nsIView* aView)
     return sv;
   }
 
-  nsIView* parent;
-  aView->GetParent(parent);
+  nsIView* parent = aView->GetParent();
 
   if (parent) {
     return GetNearestScrollingView(parent);
@@ -3187,11 +3181,10 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
     // does, we send focus into the subshell.
 
     nsCOMPtr<nsIDocShell> sub_shell;
-
-    nsCOMPtr<nsIDocument> doc, sub_doc;
-    nextFocus->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = nextFocus->GetDocument();
 
     if (doc) {
+      nsCOMPtr<nsIDocument> sub_doc;
       doc->GetSubDocumentFor(nextFocus, getter_AddRefs(sub_doc));
 
       if (sub_doc) {
@@ -3239,9 +3232,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
       // focused content.
 
       if (oldFocus) {
-        nsCOMPtr<nsIDocument> newElementDocument;
-        nextFocus->GetDocument(getter_AddRefs(newElementDocument));
-        if (doc != newElementDocument)
+        if (doc != nextFocus->GetDocument())
           return ShiftFocusInternal(aForward, oldFocus);
       }
 
@@ -3570,8 +3561,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
             nsCOMPtr<nsIDOMHTMLImageElement> nextImage(do_QueryInterface(child));
             nsAutoString usemap;
             if (nextImage) {
-              nsCOMPtr<nsIDocument> doc;
-              child->GetDocument(getter_AddRefs(doc));
+              nsCOMPtr<nsIDocument> doc = child->GetDocument();
               if (doc) {
                 nextImage->GetAttribute(NS_LITERAL_STRING("usemap"), usemap);
                 nsCOMPtr<nsIDOMHTMLMapElement> imageMap;
@@ -3634,8 +3624,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
         else if (nsHTMLAtoms::iframe==tag || nsHTMLAtoms::frame==tag) {
           disabled = PR_TRUE;
           if (child) {
-            nsCOMPtr<nsIDocument> doc;
-            child->GetDocument(getter_AddRefs(doc));
+            nsCOMPtr<nsIDocument> doc = child->GetDocument();
             if (doc) {
               nsCOMPtr<nsIDocument> subDoc;
               doc->GetSubDocumentFor(child, getter_AddRefs(subDoc));
@@ -3857,15 +3846,12 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
   }
   // Hierchical hover:  Check the ancestor chain of mHoverContent to see
   // if we are on it.
-  nsCOMPtr<nsIContent> hoverContent = mHoverContent;
-  while (hoverContent) {
+  for (nsIContent* hoverContent = mHoverContent; hoverContent;
+       hoverContent = hoverContent->GetParent()) {
     if (aContent == hoverContent) {
       aState |= NS_EVENT_STATE_HOVER;
       break;
     }
-    nsCOMPtr<nsIContent> parent;
-    hoverContent->GetParent(getter_AddRefs(parent));
-    hoverContent.swap(parent);
   }
 
   if (aContent == mCurrentFocus) {
@@ -3929,31 +3915,28 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       nsCOMPtr<nsIContent> oldAncestor = mHoverContent;
       for (;;) {
         ++offset;
-        nsCOMPtr<nsIContent> parent;
-        oldAncestor->GetParent(getter_AddRefs(parent));
+        nsIContent* parent = oldAncestor->GetParent();
         if (!parent)
           break;
-        oldAncestor.swap(parent);
+        oldAncestor = parent;
       }
       nsCOMPtr<nsIContent> newAncestor = aContent;
       for (;;) {
         --offset;
-        nsCOMPtr<nsIContent> parent;
-        newAncestor->GetParent(getter_AddRefs(parent));
+        nsIContent* parent = newAncestor->GetParent();
         if (!parent)
           break;
-        newAncestor.swap(parent);
+        newAncestor = parent;
       }
 #ifdef DEBUG
       if (oldAncestor != newAncestor) {
         // This could be a performance problem.
-        nsCOMPtr<nsIDocument> oldDoc;
-        oldAncestor->GetDocument(getter_AddRefs(oldDoc));
-        // The |!oldDoc| case (that the old hover node has been removed
-        // from the document) could be a slight performance problem.
-        // It's rare enough that it shouldn't be an issue, but common
+        
+        // The |!oldAncestor->GetDocument()| case (that the old hover node has
+        // been removed from the document) could be a slight performance
+        // problem.  It's rare enough that it shouldn't be an issue, but common
         // enough that we don't want to assert..
-        NS_ASSERTION(!oldDoc,
+        NS_ASSERTION(!oldAncestor->GetDocument(),
                      "moved hover between nodes in different documents");
         // XXX Why don't we ever hit this code because we're not using
         // |GetBindingParent|?
@@ -3963,23 +3946,16 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
         oldAncestor = mHoverContent;
         newAncestor = aContent;
         while (offset > 0) {
-          nsCOMPtr<nsIContent> parent;
-          oldAncestor->GetParent(getter_AddRefs(parent));
-          oldAncestor.swap(parent);
+          oldAncestor = oldAncestor->GetParent();
           --offset;
         }
         while (offset < 0) {
-          nsCOMPtr<nsIContent> parent;
-          newAncestor->GetParent(getter_AddRefs(parent));
-          newAncestor.swap(parent);
+          newAncestor = newAncestor->GetParent();
           ++offset;
         }
         while (oldAncestor != newAncestor) {
-          nsCOMPtr<nsIContent> parent;
-          oldAncestor->GetParent(getter_AddRefs(parent));
-          oldAncestor.swap(parent);
-          newAncestor->GetParent(getter_AddRefs(parent));
-          newAncestor.swap(parent);
+          oldAncestor = oldAncestor->GetParent();
+          newAncestor = newAncestor->GetParent();
         }
         commonHoverAncestor = oldAncestor;
       }
@@ -4026,11 +4002,9 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 
   // remove notifications for content not in document.
   // we may decide this is possible later but right now it has problems.
-  nsCOMPtr<nsIDocument> doc;
   for  (int i = 0; i < maxNotify; i++) {
     if (notifyContent[i] &&
-        NS_SUCCEEDED(notifyContent[i]->GetDocument(getter_AddRefs(doc))) &&
-        !doc) {
+        !notifyContent[i]->GetDocument()) {
       NS_RELEASE(notifyContent[i]);
     }
   }
@@ -4065,20 +4039,20 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   if (notifyContent[0] || newHover || oldHover) { // have at least one to notify about
     nsCOMPtr<nsIDocument> doc1, doc2;  // this presumes content can't get/lose state if not connected to doc
     if (notifyContent[0]) {
-      notifyContent[0]->GetDocument(getter_AddRefs(doc1));
+      doc1 = notifyContent[0]->GetDocument();
       if (notifyContent[1]) {
         //For :focus this might be a different doc so check
-        notifyContent[1]->GetDocument(getter_AddRefs(doc2));
+        doc2 = notifyContent[1]->GetDocument();
         if (doc1 == doc2) {
           doc2 = nsnull;
         }
       }
     }
     else if (newHover) {
-      newHover->GetDocument(getter_AddRefs(doc1));
+      doc1 = newHover->GetDocument();
     }
     else {
-      oldHover->GetDocument(getter_AddRefs(doc1));
+      doc1 = oldHover->GetDocument();
     }
     if (doc1) {
       doc1->BeginUpdate();
@@ -4086,16 +4060,12 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       // Notify all content from newHover to the commonHoverAncestor
       while (newHover && newHover != commonHoverAncestor) {
         doc1->ContentStatesChanged(newHover, nsnull, NS_EVENT_STATE_HOVER);
-        nsCOMPtr<nsIContent> parent;
-        newHover->GetParent(getter_AddRefs(parent));
-        newHover.swap(parent);
+        newHover = newHover->GetParent();
       }
       // Notify all content from oldHover to the commonHoverAncestor
       while (oldHover && oldHover != commonHoverAncestor) {
         doc1->ContentStatesChanged(oldHover, nsnull, NS_EVENT_STATE_HOVER);
-        nsCOMPtr<nsIContent> parent;
-        oldHover->GetParent(getter_AddRefs(parent));
-        oldHover.swap(parent);
+        oldHover = oldHover->GetParent();
       }
 
       if (notifyContent[0]) {
@@ -4164,8 +4134,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 
       // Retrieve this content node's pres context. it can be out of sync in
       // the Ender widget case.
-      nsCOMPtr<nsIDocument> doc;
-      gLastFocusedContent->GetDocument(getter_AddRefs(doc));
+      nsCOMPtr<nsIDocument> doc = gLastFocusedContent->GetDocument();
       if (doc) {
         // The order of the nsIViewManager and nsIPresShell COM pointers is
         // important below.  We want the pres shell to get released before the
@@ -4390,8 +4359,7 @@ NS_IMETHODIMP
 nsEventStateManager::GetFocusedFrame(nsIFrame** aFrame)
 {
   if (!mCurrentFocusFrame && mCurrentFocus) {
-    nsCOMPtr<nsIDocument> doc;
-    mCurrentFocus->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = mCurrentFocus->GetDocument();
     if (doc) {
       nsCOMPtr<nsIPresShell> shell;
       doc->GetShellAt(0, getter_AddRefs(shell));
@@ -4422,7 +4390,7 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
   if (aContent == mHoverContent) {
     // Since hover is hierarchical, set the current hover to the
     // content's parent node.
-    aContent->GetParent(getter_AddRefs(mHoverContent));
+    mHoverContent = aContent->GetParent();
   }
 
   if (aContent == mActiveContent) {
@@ -4887,9 +4855,7 @@ NS_IMETHODIMP nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc, PRBool 
     }
 
     // Get the parent
-    nsCOMPtr<nsIContent> parent;
-    testContent->GetParent(getter_AddRefs(parent));
-    testContent.swap(parent);
+    testContent = testContent->GetParent();
 
     if (!testContent) {
       // We run this loop again, checking the ancestor chain of the selection's end point
@@ -4989,8 +4955,7 @@ NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
                             getter_AddRefs(endSelectionContent),
                             &selectionFrame, &selectionOffset);
     while (selectionContent) {
-      nsCOMPtr<nsIContent> parentContent;
-      selectionContent->GetParent(getter_AddRefs(parentContent));
+      nsIContent* parentContent = selectionContent->GetParent();
       if (mCurrentFocus == selectionContent && parentContent)
         return NS_OK; // selection is already within focus node that isn't the root content
       selectionContent = parentContent; // Keep checking up chain of parents, focus may be in a link above us

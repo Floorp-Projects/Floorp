@@ -263,16 +263,14 @@ nsXBLResourceLoader::NotifyBoundElements()
     xblService->BindingReady(content, bindingURI, &ready);
 
     if (ready) {
-      nsCOMPtr<nsIDocument> doc;
-      content->GetDocument(getter_AddRefs(doc));
+      nsCOMPtr<nsIDocument> doc = content->GetDocument();
     
       if (doc) {
         // Flush first
         doc->FlushPendingNotifications();
 
         // Notify
-        nsCOMPtr<nsIContent> parent;
-        content->GetParent(getter_AddRefs(parent));
+        nsCOMPtr<nsIContent> parent = content->GetParent();
         PRInt32 index = 0;
         if (parent)
           parent->IndexOf(content, index);

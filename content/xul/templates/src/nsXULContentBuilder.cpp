@@ -87,10 +87,7 @@ IsElementInBuilder(nsIContent *aContent, nsIXULTemplateBuilder *aBuilder)
 {
     // Make sure that the element is contained within the heirarchy
     // that we're supposed to be processing.
-    nsCOMPtr<nsIDocument> doc;
-    aContent->GetDocument(getter_AddRefs(doc));
-
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(aContent->GetDocument());
     if (! xuldoc)
         return PR_FALSE;
 
@@ -106,9 +103,7 @@ IsElementInBuilder(nsIContent *aContent, nsIXULTemplateBuilder *aBuilder)
             break;
         }
 
-        nsCOMPtr<nsIContent> parent;
-        content->GetParent(getter_AddRefs(parent));
-        content = parent;
+        content = content->GetParent();
     } while (content);
 
     return PR_FALSE;
@@ -652,14 +647,10 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // sure that we get added to or removed from the
                 // element map if aNotify is true. If not, we gotta do
                 // it ourselves. Yay.
-                nsCOMPtr<nsIDocument> doc;
-                mRoot->GetDocument(getter_AddRefs(doc));
-
-                if (doc) {
-                    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-                    if (xuldoc)
-                        xuldoc->AddElementForID(id, realKid);
-                }
+                nsCOMPtr<nsIXULDocument> xuldoc =
+                    do_QueryInterface(mRoot->GetDocument());
+                if (xuldoc)
+                    xuldoc->AddElementForID(id, realKid);
             }
 
             // Set up the element's 'container' and 'empty'
@@ -1048,14 +1039,12 @@ nsXULContentBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPare
         // http://bugzilla.mozilla.org/show_bug.cgi?id=61501
 
         // Walk up the generated tree
-        nsIContent *tmp = generated;
-        tmp->GetParent(getter_AddRefs(generated));
+        generated = generated->GetParent();
         if (! generated) 
             return PR_FALSE;
 
         // Walk up the template tree
-        tmp = tmpl;
-        tmp->GetParent(getter_AddRefs(tmpl));
+        tmpl = tmpl->GetParent();
         if (! tmpl)
             return PR_FALSE;
 
@@ -1063,9 +1052,9 @@ nsXULContentBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPare
         // <template> or <rule> element in the simple syntax, or the
         // <action> element in the extended syntax.
         tmpl->GetTag(getter_AddRefs(tag));
-    } while (tag.get() != nsXULAtoms::templateAtom &&
-             tag.get() != nsXULAtoms::rule &&
-             tag.get() != nsXULAtoms::action);
+    } while (tag != nsXULAtoms::templateAtom &&
+             tag != nsXULAtoms::rule &&
+             tag != nsXULAtoms::action);
 
     // Did we find the generated parent?
     return PRBool(generated.get() == aParent);
@@ -1101,9 +1090,7 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContainerElement,
         if (! IsDirectlyContainedBy(child, aContainerElement))
             continue;
 
-        nsCOMPtr<nsIContent> parent;
-        rv = child->GetParent(getter_AddRefs(parent));
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIContent> parent = child->GetParent();
 
         PRInt32 pos;
         rv = parent->IndexOf(child, pos);
@@ -1343,16 +1330,11 @@ nsXULContentBuilder::CreateTemplateContents(nsIContent* aElement,
     // that spawned this template.
     nsCOMPtr<nsIRDFResource> resource;
 
-    nsCOMPtr<nsIContent> element = aElement;
-    while (element) {
+    nsCOMPtr<nsIContent> element;
+    for (element = aElement; element; element = element->GetParent()) {
         nsXULContentUtils::GetElementRefResource(element, getter_AddRefs(resource));
         if (resource)
             break;
-
-        nsCOMPtr<nsIContent> parent;
-        element->GetParent(getter_AddRefs(parent));
-
-        element = parent;
     }
 
     NS_ASSERTION(element != nsnull, "walked off the top of the content tree");
@@ -1540,14 +1522,8 @@ nsXULContentBuilder::GetElementsForResource(nsIRDFResource* aResource, nsISuppor
     const char *uri;
     aResource->GetValueConst(&uri);
 
-    nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(getter_AddRefs(doc));
-    NS_ASSERTION(doc != nsnull, "root element not in document");
-    if (! doc)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-    NS_ASSERTION(xuldoc != nsnull, "expected a XUL document");
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mRoot->GetDocument());
+    NS_ASSERTION(xuldoc, "expected a XUL document");
     if (! xuldoc)
         return NS_ERROR_FAILURE;
 
@@ -1559,8 +1535,7 @@ nsXULContentBuilder::CreateElement(PRInt32 aNameSpaceID,
                                     nsIAtom* aTag,
                                     nsIContent** aResult)
 {
-    nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
     NS_ASSERTION(doc != nsnull, "not initialized");
     if (! doc)
         return NS_ERROR_NOT_INITIALIZED;
@@ -1912,9 +1887,8 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
     if (container && IsLazyWidgetItem(aElement)) {
         // The tree widget is special, and has to be spanked every
         // time we add content to a container.
-        nsCOMPtr<nsIDocument> doc;
-        mRoot->GetDocument(getter_AddRefs(doc));
-        NS_ASSERTION(doc != nsnull, "root element has no document");
+        nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
+        NS_ASSERTION(doc, "root element has no document");
         if (! doc)
             return NS_ERROR_UNEXPECTED;
 
@@ -1957,14 +1931,8 @@ nsXULContentBuilder::InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode)
     //
     //   (root)-->(content ^id ?a)-->(?a ^member ?b)
     //
-    nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(getter_AddRefs(doc));
-    NS_ASSERTION(doc != nsnull, "root element has no document");
-    if (! doc)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-    NS_ASSERTION(xuldoc != nsnull, "expected a XUL Document");
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mRoot->GetDocument());
+    NS_ASSERTION(xuldoc, "expected a XUL Document");
     if (! xuldoc)
         return NS_ERROR_UNEXPECTED;
 
@@ -2011,9 +1979,7 @@ nsXULContentBuilder::RebuildAll()
     if (! mRoot)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsCOMPtr<nsIDocument> doc;
-    nsresult rv = mRoot->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
 
     // Bail out early if we are being torn down.
     if (!doc)
@@ -2035,7 +2001,7 @@ nsXULContentBuilder::RebuildAll()
 
     // If we get here, then we've tried to generate content for this
     // element. Remove it.
-    rv = RemoveGeneratedContent(mRoot);
+    nsresult rv = RemoveGeneratedContent(mRoot);
     if (NS_FAILED(rv)) return rv;
 
     // Nuke the content support map and conflict set completely.
@@ -2061,9 +2027,8 @@ nsXULContentBuilder::RebuildAll()
     CreateTemplateAndContainerContents(mRoot, getter_AddRefs(container), &newIndex);
 
     if (container) {
-        nsCOMPtr<nsIDocument> doc;
-        mRoot->GetDocument(getter_AddRefs(doc));
-        NS_ASSERTION(doc != nsnull, "root element has no document");
+        nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
+        NS_ASSERTION(doc, "root element has no document");
         if (! doc)
             return NS_ERROR_UNEXPECTED;
 
@@ -2144,13 +2109,8 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
         tag = do_GetAtom(tagstr);
     }
 
-    nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(getter_AddRefs(doc));
-    NS_ASSERTION(doc != nsnull, "root element has no document");
-    if (! doc)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mRoot->GetDocument());
+    NS_ASSERTION(xuldoc, "root element has no document");
     if (! xuldoc)
         return NS_ERROR_FAILURE;
 

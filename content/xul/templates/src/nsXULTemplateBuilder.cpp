@@ -705,8 +705,7 @@ nsXULTemplateBuilder::LoadDataSources()
     if (allowneg == NS_LITERAL_STRING("false"))
 		mDB->SetAllowNegativeAssertions(PR_FALSE);
 
-    nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
     NS_ASSERTION(doc, "element has no document");
     if (! doc)
         return NS_ERROR_UNEXPECTED;
@@ -848,9 +847,8 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     // 'database' and 'builder' properties onto aElement.
     nsresult rv;
 
-    nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(getter_AddRefs(doc));
-    NS_ASSERTION(doc != nsnull, "no document");
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
+    NS_ASSERTION(doc, "no document");
     if (! doc)
         return NS_ERROR_UNEXPECTED;
 
@@ -1442,13 +1440,7 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::templateAtom, templateID);
 
     if (!templateID.IsEmpty()) {
-        nsCOMPtr<nsIDocument> doc;
-        mRoot->GetDocument(getter_AddRefs(doc));
-        NS_ASSERTION(doc != nsnull, "root element has no document");
-        if (! doc)
-            return NS_ERROR_FAILURE;
-
-        nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+        nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mRoot->GetDocument());
         NS_ASSERTION(domDoc, "expected a XUL document");
         if (! domDoc)
             return NS_ERROR_FAILURE;
@@ -1481,9 +1473,8 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
 
     // If we couldn't find a real child, look through the anonymous
     // kids, too.
-    nsCOMPtr<nsIDocument> doc;
-    mRoot->GetDocument(getter_AddRefs(doc));
-    NS_ASSERTION(doc != nsnull, "root element has no document");
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
+    NS_ASSERTION(doc, "root element has no document");
     if (! doc)
         return NS_ERROR_FAILURE;
 
