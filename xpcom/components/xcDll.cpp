@@ -30,9 +30,9 @@
 nsDll::nsDll(const char *libFullPath) : m_fullpath(NULL), m_instance(NULL),
 	m_status(DLL_OK)
 {
-	// XXX No initializer for PRTime's
-	// m_lastModTime = 0;
-	LL_I2L(m_size, 0);
+	m_lastModTime = LL_ZERO;
+	m_size = LL_ZERO;
+	
 	if (libFullPath == NULL)
 	{
 		m_status = DLL_INVALID_PARAM;
@@ -67,6 +67,29 @@ nsDll::nsDll(const char *libFullPath) : m_fullpath(NULL), m_instance(NULL),
 			return;
 		}
 	}
+	m_status = DLL_OK;			
+}
+
+
+nsDll::nsDll(const char *libFullPath, PRTime lastModTime, PRUint64 fileSize)
+:  m_fullpath(NULL), m_instance(NULL), m_status(DLL_OK)
+{
+	m_lastModTime = lastModTime;
+	m_size = fileSize;
+	
+	if (libFullPath == NULL)
+	{
+		m_status = DLL_INVALID_PARAM;
+		return;
+	}
+	m_fullpath = PL_strdup(libFullPath);
+	if (m_fullpath == NULL)
+	{
+		// No more memory
+		m_status = DLL_NO_MEM;
+		return;
+	}
+
 	m_status = DLL_OK;			
 }
 
