@@ -19,8 +19,6 @@
 
 #include "pratom.h"
 
-#define NS_IMPL_IDS
-
 #include "nsRepository.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeDecodeUtil.h"
@@ -95,25 +93,11 @@ static PRInt16 *gShiftTables[4] =  {
     g0212ShiftTable
 };
 
-// Mapping Table
-// these three are shared with ISO-2022-JP conversion
-extern "C" PRUint16 g0201Mapping[] = {
-#include "jis0201.ut"
-};
-
-extern "C" PRUint16 g0208Mapping[] = {
-#include "jis0208.ut"
-};
-
-extern "C" PRUint16 g0212Mapping[] = {
-#include "jis0212.ut"
-};
-
 static PRUint16 *gMappingTables[4] = {
-    g0208Mapping,
-    g0201Mapping,
-    g0201Mapping,
-    g0212Mapping
+    g_0208Mapping,
+    g_0201Mapping,
+    g_0201Mapping,
+    g_0212Mapping
 };
 
 static uRange gRanges[] = {
