@@ -125,7 +125,12 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
     {
       GtkWidget *w = (GtkWidget *) aWindow->GetNativeData(NS_NATIVE_WIDGET);
 
-      if (!w) return NS_ERROR_NULL_POINTER;
+      if (!w)
+      {
+          delete mSurface;
+          mSurface = nsnull;
+          return NS_ERROR_NULL_POINTER;
+      }
 
       win = gdk_pixmap_new(nsnull,
                            w->allocation.width,
@@ -139,6 +144,11 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
     mOffscreenSurface = mSurface;
 
     NS_ADDREF(mSurface);
+
+    // aWindow->GetNativeData() ref'd the gc.
+    // only Win32 has a FreeNativeData() method.
+    // so do this manually here.
+    gdk_gc_unref(gc);
   }
   return (CommonInit());
 }
