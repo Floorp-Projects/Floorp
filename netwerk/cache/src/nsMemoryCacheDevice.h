@@ -33,8 +33,6 @@
 class nsMemoryCacheDevice : public nsCacheDevice
 {
 public:
-    enum { kMemoryCacheID = 0x4d656d43 };  // 'MemC'
-
     nsMemoryCacheDevice();
     virtual ~nsMemoryCacheDevice();
 
@@ -42,16 +40,18 @@ public:
 
     static nsresult  Create(nsCacheDevice **result);
 
+
     virtual const char *  GetDeviceID(void);
 
     virtual nsresult ActivateEntryIfFound( nsCacheEntry * entry );
     virtual nsresult DeactivateEntry( nsCacheEntry * entry );
     virtual nsresult BindEntry( nsCacheEntry * entry );
+
     virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
                                            nsITransport **transport );
 
     virtual nsresult OnDataSizeChanged( nsCacheEntry * entry );
-    
+ 
 private:
     nsCacheEntryHashTable   mInactiveEntries;
 
@@ -64,31 +64,49 @@ private:
     //** what other stats do we want to keep?
 };
 
-
-class nsMemoryEvictionElement
+#if 0
+class nsMemoryCacheEntry
 {
-private:
-    friend class nsMemoryCacheDevice;
+public:
 
-    nsMemoryEvictionElement(nsCacheEntry *entry)
-        : entry(entry)
+
+    nsMemoryCacheEntry(nsCacheEntry *entry)
     {
-        PR_INIT_CLIST(&link);
+        PR_INIT_CLIST(&mListLink);
+        entry->GetKey(&mKey);
+        GetFetchCount(&mFetchCount);
+        GetLastFetched(&mLastFetched);
+        GetLastValidated(&mLastValidated);
+        GetExpirationTime(&mExpirationTime);
+        //** flags
+        GetDataSize(&mDataSize);
+        GetMetaDataSize(&mMetaSize);
+        GetData(getter_AddRefs(mData)); //** check about ownership
+        GetMetaData
     }
 
-    ~nsMemoryEvictionElement() {}
+    ~nsMemoryCacheEntry() {}
 
-    PRCList *                        GetListNode(void)         { return &link; }
-    static nsMemoryEvictionElement * GetInstance(PRCList * qp) {
-        return (nsMemoryEvictionElement*)((char*)qp -
-                                          offsetof(nsMemoryEvictionElement, link));
+    PRCList *                        GetListNode(void)         { return &mListLink; }
+    static nsMemoryCacheEntry * GetInstance(PRCList * qp) {
+        return (nsMemoryCacheEntry*)((char*)qp -
+                                     offsetof(nsMemoryCacheEntry, mListLink));
     }
 
-    PRCList        link;
-    nsCacheEntry * entry;
-    //** need backpointers from entry, or more sophisticated structure to optimize
-    //** finding the eviction element quickly.  Otherwise we just walk the list :-(
+
+private:
+    PRCList                mListLink;       // 8
+    nsCString *            mKey;            // 4  //** ask scc about const'ness
+    PRUint32               mFetchCount;     // 4
+    PRTime                 mLastFetched;    // 8
+    PRTime                 mLastValidated;  // 8
+    PRTime                 mExpirationTime; // 8
+    PRUint32               mFlags;          // 4
+    PRUint32               mDataSize;       // 4
+    PRUint32               mMetaSize;       // 4
+    nsCOMPtr<nsISupports>  mData;           // 4 //** issues with updating/replacing
+    nsCacheMetaData *      mMetaData;       // 4
 };
-
+#endif
 
 #endif // _nsMemoryCacheDevice_h_
