@@ -624,8 +624,19 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
     email = fromLine;
   }
 
+  nsCAutoString  newName;
+  char *newNameValue = nsEscapeHTML(name);
+  if (newNameValue) 
+  {
+    newName.SetString(newNameValue);
+    nsCRT::free(newNameValue);
+  }
+  else
+  {
+    newName.SetString(name);
+  }
+
   // Strip off extra quotes...
-  nsCAutoString  newName(name);
   newName.Trim("\"");
 
   UtilityWrite("<titledbutton src=\"chrome://messenger/skin/addcard.gif\" ");

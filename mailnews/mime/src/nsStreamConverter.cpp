@@ -705,7 +705,7 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
   // 
   // Now complete the emitter and do necessary cleanup!
   //
-  if (mEmitter)
+  if (mEmitter)    
   {
     mEmitter->Complete();
   }

@@ -85,8 +85,17 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
  */
 #define      VCARD_CONTENT_TYPE  "text/x-vcard"
 
- /* This is the object definition. Note: we will set the superclass 
-    to NULL and manually set this on the class creation */
+
+/* This is the next generation string retrieval call */
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+char *VCARD_URL = {"chrome://messenger/locale/vcard.properties"};
+
+/* This is the object definition. Note: we will set the superclass 
+   to NULL and manually set this on the class creation */
 MimeDefClass(MimeInlineTextVCard, MimeInlineTextVCardClass,
 			 mimeInlineTextVCardClass, NULL);
 
@@ -124,7 +133,11 @@ MimeInlineTextVCardClassInitialize(MimeInlineTextVCardClass *clazz)
   oclass->parse_line  = MimeInlineTextVCard_parse_line;
   oclass->parse_eof   = MimeInlineTextVCard_parse_eof;
 
-return 0;
+  // RICHIE SHERRY TODO
+  // Need to initialize the String Bundle service for use in the 
+  // vCard handler
+
+  return 0;
 }
 
 static int
@@ -262,46 +275,52 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
 static int
 MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
 {
-    int status = 0;
-	MimeInlineTextVCardClass *clazz = ((MimeInlineTextVCardClass *) obj->clazz);
-
-	VObject *t, *v;
-
-    if (obj->closed_p) return 0;
-
-    /* Run parent method first, to flush out any buffered data. */
-//    status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
-    status = ((MimeObjectClass*)COM_GetmimeInlineTextClass())->parse_eof(obj, abort_p);
-    if (status < 0) return status;
-
-	if (!clazz->vCardString) return 0;
-
-	v = Parse_MIME(clazz->vCardString, nsCRT::strlen(clazz->vCardString));
-
-	if (clazz->vCardString) {
-		PR_Free ((char*) clazz->vCardString);
-		clazz->vCardString = NULL;
-	}
-
-    if (obj->output_p && obj->options && obj->options->write_html_p &&
-		obj->options->headers != MimeHeadersCitation) {
-		/* This is a fine place to write any closing HTML.  In fact, you may
-		   want all the writing to be here, and all of the above would just
-		   collect data into datastructures, though that isn't very
-		   "streaming". */
-		t = v;
-		while (v && status >= 0) {
-			/* write out html */
-			status = WriteOutVCard (obj, v);
-			/* parse next vcard incase they're embedded */
-			v = nextVObjectInList(v);
-		}
-
-	    cleanVObject(t);
+  int status = 0;
+  MimeInlineTextVCardClass *clazz = ((MimeInlineTextVCardClass *) obj->clazz);
+  
+  VObject *t, *v;
+  
+  if (obj->closed_p) return 0;
+  
+  /* Run parent method first, to flush out any buffered data. */
+  //    status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
+  status = ((MimeObjectClass*)COM_GetmimeInlineTextClass())->parse_eof(obj, abort_p);
+  if (status < 0) return status;
+  
+  if (!clazz->vCardString) return 0;
+  
+  v = Parse_MIME(clazz->vCardString, nsCRT::strlen(clazz->vCardString));
+  
+  if (clazz->vCardString) {
+    PR_Free ((char*) clazz->vCardString);
+    clazz->vCardString = NULL;
+  }
+  
+  if (obj->output_p && obj->options && obj->options->write_html_p &&
+    obj->options->headers != MimeHeadersCitation) {
+    /* This is a fine place to write any closing HTML.  In fact, you may
+    want all the writing to be here, and all of the above would just
+    collect data into datastructures, though that isn't very
+    "streaming". */
+    t = v;
+    while (v && status >= 0) {
+      /* write out html */
+      status = WriteOutVCard (obj, v);
+      /* parse next vcard incase they're embedded */
+      v = nextVObjectInList(v);
     }
-	if (status < 0) return status;
-
-    return 0;
+    
+    cleanVObject(t);
+  }
+  
+  // RICHIE SHERRY TODO
+  // Need to free the String Bundle service for use in the 
+  // vCard handler
+  
+  if (status < 0) 
+    return status;
+  
+  return 0;
 }
 
 static int WriteEachLineToStream (MimeObject *obj, const char *line)
@@ -1905,15 +1924,6 @@ vCard_SACat (char **destination, const char *source)
   return *destination;
 }
 
-
-/* This is the next generation string retrieval call */
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-char *VCARD_URL = {"chrome://messenger/locale/vcard.properties"};
-
 extern "C" 
 char *
 VCardGetStringByID(PRInt32 stringID)
@@ -1955,19 +1965,8 @@ VCardGetStringByID(PRInt32 stringID)
   if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
   {
     nsILocale   *locale = nsnull;
-#if 1
     nsIStringBundle* sBundle = nsnull;
     res = sBundleService->CreateBundle(VCARD_URL, locale, &sBundle);
-#else
-   res = pNetService->CreateURL(&url, nsString(VCARD_URL), nsnull, nsnull, nsnull);
-    if (NS_FAILED(res)) 
-    {
-      return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
-    }
-
-    nsIStringBundle* sBundle = nsnull;
-    res = sBundleService->CreateBundle(pURI, locale, &sBundle);
-#endif
 
     if (NS_FAILED(res)) 
     {
@@ -1975,14 +1974,11 @@ VCardGetStringByID(PRInt32 stringID)
     }
 
     nsAutoString v("");
-#if 1
     PRUnichar *ptrv = nsnull;
     res = sBundle->GetStringFromID(stringID, &ptrv);
     v = ptrv;
-#else
-    res = sBundle->GetStringFromID(stringID, v);
-#endif
-	NS_RELEASE(sBundle);
+
+    NS_RELEASE(sBundle);
     if (NS_FAILED(res)) 
     {
       char    buf[128];
@@ -2005,78 +2001,4 @@ VCardGetStringByID(PRInt32 stringID)
   }
 
   return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
-}
-
-extern "C" 
-char *
-VCardGetStringByIDHACK(PRInt32 stringID)
-{
-  if (-1000 == stringID) return nsCRT::strdup("Application is out of memory.");
-  if (1001 == stringID) return nsCRT::strdup("State");
-  if (1002 == stringID) return nsCRT::strdup("Domestic");
-  if (1003 == stringID) return nsCRT::strdup("International");
-  if (1004 == stringID) return nsCRT::strdup("Postal");
-  if (1005 == stringID) return nsCRT::strdup("Parcel");
-  if (1006 == stringID) return nsCRT::strdup("Work");
-  if (1007 == stringID) return nsCRT::strdup("Home");
-  if (1008 == stringID) return nsCRT::strdup("Preferred");
-  if (1009 == stringID) return nsCRT::strdup("Voice");
-  if (1010 == stringID) return nsCRT::strdup("Fax");
-  if (1011 == stringID) return nsCRT::strdup("Message");
-  if (1012 == stringID) return nsCRT::strdup("Cellular");
-  if (1013 == stringID) return nsCRT::strdup("Pager");
-  if (1014 == stringID) return nsCRT::strdup("BBS");
-  if (1015 == stringID) return nsCRT::strdup("Modem");
-  if (1016 == stringID) return nsCRT::strdup("Car");
-  if (1017 == stringID) return nsCRT::strdup("ISDN");
-  if (1018 == stringID) return nsCRT::strdup("Video");
-  if (1019 == stringID) return nsCRT::strdup("AOL");
-  if (1020 == stringID) return nsCRT::strdup("Applelink");
-  if (1021 == stringID) return nsCRT::strdup("AT&T Mail");
-  if (1022 == stringID) return nsCRT::strdup("Compuserve");
-  if (1023 == stringID) return nsCRT::strdup("eWorld");
-  if (1024 == stringID) return nsCRT::strdup("Internet");
-  if (1025 == stringID) return nsCRT::strdup("IBM Mail");
-  if (1026 == stringID) return nsCRT::strdup("MCI Mail");
-  if (1027 == stringID) return nsCRT::strdup("Powershare");
-  if (1028 == stringID) return nsCRT::strdup("Prodigy");
-  if (1029 == stringID) return nsCRT::strdup("Telex");
-  if (1030 == stringID) return nsCRT::strdup("Additional Name");
-  if (1031 == stringID) return nsCRT::strdup("Prefix");
-  if (1032 == stringID) return nsCRT::strdup("Suffix");
-  if (1033 == stringID) return nsCRT::strdup("Time Zone");
-  if (1034 == stringID) return nsCRT::strdup("Geographic Position");
-  if (1035 == stringID) return nsCRT::strdup("Sound");
-  if (1036 == stringID) return nsCRT::strdup("Revision");
-  if (1037 == stringID) return nsCRT::strdup("Version");
-  if (1038 == stringID) return nsCRT::strdup("Public Key");
-  if (1039 == stringID) return nsCRT::strdup("Logo");
-  if (1040 == stringID) return nsCRT::strdup("Birthday");
-  if (1041 == stringID) return nsCRT::strdup("X400");
-  if (1042 == stringID) return nsCRT::strdup("Address");
-  if (1043 == stringID) return nsCRT::strdup("Label");
-  if (1044 == stringID) return nsCRT::strdup("Mailer");
-  if (1045 == stringID) return nsCRT::strdup("Role");
-  if (1046 == stringID) return nsCRT::strdup("Update From");
-  if (1047 == stringID) return nsCRT::strdup("Conference Address");
-  if (1048 == stringID) return nsCRT::strdup("HTML Mail");
-  if (1049 == stringID) return nsCRT::strdup("Add to Personal Address Book");
-  if (1050 == stringID) return nsCRT::strdup("Additional Information:");
-  if (1051 == stringID) return nsCRT::strdup("View Complete Card");
-  if (1052 == stringID) return nsCRT::strdup("View Condensed Card");
-  if (1053 == stringID) return nsCRT::strdup("Conference Address");
-  if (1054 == stringID) return nsCRT::strdup("Default Directory Server");
-  if (1055 == stringID) return nsCRT::strdup("Specific Directory Server");
-  if (1056 == stringID) return nsCRT::strdup("Hostname or IP Address");
-  if (1057 == stringID) return nsCRT::strdup("Phone Number");
-  if (1058 == stringID) return nsCRT::strdup("Photograph");
-  if (1059 == stringID) return nsCRT::strdup("Email");
-  if (1060 == stringID) return nsCRT::strdup("Last Name");
-  if (1061 == stringID) return nsCRT::strdup("First Name");
-  if (1062 == stringID) return nsCRT::strdup("Administrative Assistant");
-
-  char    buf[128];
-  
-  PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
-  return nsCRT::strdup(buf);
 }

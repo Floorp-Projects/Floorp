@@ -60,9 +60,12 @@ nsMimeHtmlEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const c
   {
     if ( (!headerOnly) && (outCharset) && (*outCharset) )
     {
-      UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
-      UtilityWrite(outCharset);
-      UtilityWrite("\">");
+#ifdef NS_DEBUG
+printf("RICHIE: libmime: Not Emitting META Tags!\n");
+#endif
+//      UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
+//      UtilityWrite(outCharset);
+//      UtilityWrite("\">");
     }
     UtilityWrite("<BLOCKQUOTE><table BORDER=0>");
   }  
@@ -180,6 +183,10 @@ nsMimeHtmlEmitter::ProcessContentType(const char *ct)
 }
 
 // Attachment handling routines
+// Ok, we are changing the way we handle these now...It used to be that we output 
+// HTML to make a clickable link, etc... but now, this should just be informational
+// and only show up in quoting
+//
 nsresult
 nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
@@ -195,6 +202,7 @@ nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, co
   UtilityWrite("<tr>");
   UtilityWrite("<td>");
 
+  /** RICHIE Not doing a link anymore... 
   if (mAttachContentType)
   {
     UtilityWrite("<a href=\"");
@@ -203,18 +211,21 @@ nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, co
     UtilityWrite(mAttachContentType);
     UtilityWrite("\" target=new>");
   }
+  ***/
 
   UtilityWrite("<CENTER>");
-  UtilityWrite("<img SRC=\"resource:/chrome/editor/skin/default/images/ED_NewFile.gif\" BORDER=0 ALIGN=ABSCENTER>");
+  UtilityWrite("<B>Attachment: </B>");
   UtilityWrite(name);
   UtilityWrite("</CENTER>");
 
+  /***
   if (mAttachContentType)
     UtilityWrite("</a>");
+  ****/
 
   UtilityWrite("</td>");
   UtilityWrite("<td>");
-  UtilityWrite("<table BORDER=0 BGCOLOR=\"#FFFFCC\">");
+  UtilityWrite("<table BORDER=0>");
   return NS_OK;
 }
 
@@ -303,9 +314,12 @@ nsMimeHtmlEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *out
 
   if ((bodyOnly) && (outCharset) && (*outCharset))
   {
-    UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
-    UtilityWrite(outCharset);
-    UtilityWrite("\">");
+#ifdef NS_DEBUG
+printf("RICHIE: libmime: Not Emitting META Tags!\n");
+#endif
+//    UtilityWrite("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
+//    UtilityWrite(outCharset);
+//    UtilityWrite("\">");
   }
 
   return NS_OK;

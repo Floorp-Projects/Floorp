@@ -52,6 +52,7 @@
 #include "nsStreamConverter.h"
 #include "nsIMsgSend.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsSpecialSystemDirectory.h"
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -272,19 +273,27 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
     mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec);
     mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, spec);
 
-	if (spec)
-		nsAllocator::Free(spec);
-    /* rhp - for now, just leave these here, but they are really
-             not necessary
-    printf("URL for Part      : %s\n", spec);
-    printf("Real Name         : %s\n", tmp->real_name);
-	  printf("Desired Type      : %s\n", tmp->desired_type);
-    printf("Real Type         : %s\n", tmp->real_type);
-	  printf("Real Encoding     : %s\n", tmp->real_encoding); 
-    printf("Description       : %s\n", tmp->description);
-    printf("Mac Type          : %s\n", tmp->x_mac_type);
-    printf("Mac Creator       : %s\n", tmp->x_mac_creator);
-    */
+	  if (spec)
+		  nsAllocator::Free(spec);
+
+    if (opt->format_out == nsMimeOutput::nsMimeMessageQuoting)
+    {
+      mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_DESCRIPTION, tmp->description);
+      mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_TYPE, tmp->real_type);
+      mimeEmitterAddAttachmentField(opt, HEADER_CONTENT_ENCODING,    tmp->real_encoding);
+
+      /* rhp - for now, just leave these here, but they are really
+               not necessary
+      printf("URL for Part      : %s\n", spec);
+      printf("Real Name         : %s\n", tmp->real_name);
+	    printf("Desired Type      : %s\n", tmp->desired_type);
+      printf("Real Type         : %s\n", tmp->real_type);
+	    printf("Real Encoding     : %s\n", tmp->real_encoding); 
+      printf("Description       : %s\n", tmp->description);
+      printf("Mac Type          : %s\n", tmp->x_mac_type);
+      printf("Mac Creator       : %s\n", tmp->x_mac_creator);
+      */
+    }
 
     mimeEmitterEndAttachment(opt);
     ++i;
@@ -292,19 +301,26 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
   }
 }
 
-extern "C" char *
-GetOSTempFile(const char *name)
+//
+// Create a file spec for the a unique temp file
+// on the local machine. Caller must free memory
+// returned
+//
+extern char * 
+GetOSTempFile(const char *tFileName)
 {
-char  *retName; 
+  if ((!tFileName) || (!*tFileName))
+    tFileName = "nsmail.tmp";
 
-  nsFileSpec  *fs = new nsFileSpec();
-  if (!fs)
-    return NULL;
-  
-  fs->MakeUnique(name);
-  retName = (char *)nsCRT::strdup(fs->GetCString());
-  delete fs;
-  return retName;
+  nsFileSpec tmpSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
+  tmpSpec += tFileName;
+  tmpSpec.MakeUnique();
+
+  char *tString = (char *)PL_strdup(tmpSpec.GetNativePathCString());
+  if (!tString)
+    return PL_strdup("mozmail.tmp");  // No need to I18N
+  else
+    return tString;
 }
   
 static char *

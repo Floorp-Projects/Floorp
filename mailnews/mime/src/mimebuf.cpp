@@ -232,7 +232,8 @@ mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 	  status = convert_and_send_buffer(*bufferP, *buffer_fpP,
 										   convert_newlines_p,
 										   per_line_fn, closure);
-	  if (status < 0) return status;
+	  if (status < 0) 
+      return status;
 
 	  net_buffer_size -= (newline - net_buffer);
 	  net_buffer = newline;
