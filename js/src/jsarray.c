@@ -296,7 +296,7 @@ array_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     jsuint length;
 
-    if (cx->version == JSVERSION_1_2) {
+    if (JS_VERSION_IS_1_2(cx)) {
         if (!js_GetLengthProperty(cx, obj, &length))
             return JS_FALSE;
         switch (type) {
@@ -412,7 +412,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
         if (!ok)
             goto done;
 
-        if ((!literalize || cx->version == JSVERSION_1_2) &&
+        if ((!literalize || JS_VERSION_IS_1_2(cx)) &&
             (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))) {
             str = cx->runtime->emptyString;
         } else {
@@ -519,7 +519,7 @@ array_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * JS1.2 arrays convert to array literals, with a comma followed by a space
      * between each element.
      */
-    literalize = (cx->version == JSVERSION_1_2);
+    literalize = JS_VERSION_IS_1_2(cx);
     return array_join_sub(cx, obj, literalize ? &comma_space : &comma,
                           literalize, rval, JS_FALSE);
 }
@@ -959,7 +959,7 @@ array_push(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * return the new array length.
      */
     length += argc;
-    if (cx->version == JSVERSION_1_2) {
+    if (JS_VERSION_IS_1_2(cx)) {
         *rval = argc ? argv[argc-1] : JSVAL_VOID;
     } else {
         if (!IndexToValue(cx, length, rval))
@@ -1138,7 +1138,7 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         argv++;
     }
 
-    if (count == 1 && cx->version == JSVERSION_1_2) {
+    if (count == 1 && JS_VERSION_IS_1_2(cx)) {
         /*
          * JS lacks "list context", whereby in Perl one turns the single
          * scalar that's spliced out into an array just by assigning it to
@@ -1155,7 +1155,7 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!OBJ_GET_PROPERTY(cx, obj, id, rval))
             return JS_FALSE;
     } else {
-        if (cx->version != JSVERSION_1_2 || count > 0) {
+        if (!JS_VERSION_IS_1_2(cx) || count > 0) {
             /*
              * Create a new array value to return.  Our ECMA v2 proposal specs
              * that splice always returns an array value, even when given no
@@ -1398,7 +1398,7 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (argc == 0) {
         length = 0;
         vector = NULL;
-    } else if (cx->version == JSVERSION_1_2) {
+    } else if (JS_VERSION_IS_1_2(cx)) {
         length = (jsuint) argc;
         vector = argv;
     } else if (argc > 1) {

@@ -530,7 +530,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
     size_t i, length;
 
     /* Avoid infinite recursion via js_obj_toSource (see bug 271477). */
-    if (cx->version == JSVERSION_1_2)
+    if (JS_VERSION_IS_1_2(cx))
         return JS_TRUE;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
@@ -707,7 +707,7 @@ str_substring(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             else if (end > length)
                 end = length;
             if (end < begin) {
-                if (cx->version != JSVERSION_1_2) {
+                if (!JS_VERSION_IS_1_2(cx)) {
                     /* XXX emulate old JDK1.0 java.lang.String.substring. */
                     jsdouble tmp = begin;
                     begin = end;
@@ -1277,6 +1277,7 @@ typedef struct ReplaceData {
 static JSSubString *
 interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
 {
+    JSVersion version;
     JSRegExpStatics *res;
     jschar dc, *cp;
     uintN num, tmp;
@@ -1288,7 +1289,8 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
      * Allow a real backslash (literal "\\" before "$1") to escape "$1", e.g.
      * Do this only for versions strictly less than ECMAv3.
      */
-    if (cx->version != JSVERSION_DEFAULT && cx->version <= JSVERSION_1_4) {
+    version = cx->version & JSVERSION_MASK;
+    if (version != JSVERSION_DEFAULT && version <= JSVERSION_1_4) {
         if (dp > JSSTRING_CHARS(rdata->repstr) && dp[-1] == '\\')
             return NULL;
     }
@@ -1297,7 +1299,7 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
     res = &cx->regExpStatics;
     dc = dp[1];
     if (JS7_ISDEC(dc)) {
-        if (cx->version != JSVERSION_DEFAULT && cx->version <= JSVERSION_1_4) {
+        if (version != JSVERSION_DEFAULT && version <= JSVERSION_1_4) {
             if (dc == '0')
                 return NULL;
 
@@ -1343,7 +1345,7 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
       case '+':
         return &res->lastParen;
       case '`':
-        if (cx->version == JSVERSION_1_2) {
+        if (version == JSVERSION_1_2) {
             /*
              * JS1.2 imitated the Perl4 bug where left context at each step
              * in an iterative use of a global regexp started from last match,
@@ -1560,6 +1562,7 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *lambda;
     JSString *repstr, *str;
     ReplaceData rdata;
+    JSVersion version;
     JSBool ok;
     jschar *chars;
     size_t leftlen, rightlen, length;
@@ -1583,7 +1586,8 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * special meanings) UNLESS the first arg is a RegExp object.
      */
     rdata.base.flags = MODE_REPLACE | KEEP_REGEXP;
-    if (cx->version == JSVERSION_DEFAULT || cx->version > JSVERSION_1_4)
+    version = cx->version & JSVERSION_MASK;
+    if (version == JSVERSION_DEFAULT || version > JSVERSION_1_4)
         rdata.base.flags |= FORCE_FLAT;
     rdata.base.optarg = 2;
 
@@ -1698,7 +1702,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      */
     chars = JSSTRING_CHARS(str);
     length = JSSTRING_LENGTH(str);
-    if (cx->version == JSVERSION_1_2 &&
+    if (JS_VERSION_IS_1_2(cx) &&
         !re && *sep->chars == ' ' && sep->chars[1] == 0) {
 
         /* Skip leading whitespace if at front of str. */
@@ -1761,7 +1765,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
                  * sep->length to our return value.
                  */
                 if ((size_t)i == length) {
-                    if (cx->version == JSVERSION_1_2) {
+                    if (JS_VERSION_IS_1_2(cx)) {
                         sep->length = 1;
                         return i;
                     }
@@ -1781,7 +1785,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      * string into a non-empty array (an array of length 1 that contains the
      * empty string).
      */
-    if (!JSVERSION_IS_ECMA(cx->version) && length == 0)
+    if (!JS_VERSION_IS_ECMA(cx) && length == 0)
         return -1;
 
     /*
@@ -1794,7 +1798,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      * to include an additional null string at the end of the substring list.
      */
     if (sep->length == 0) {
-        if (cx->version == JSVERSION_1_2) {
+        if (JS_VERSION_IS_1_2(cx)) {
             if ((size_t)i == length) {
                 sep->length = 1;
                 return i;
@@ -1926,7 +1930,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
 #endif
             i = j + sep->length;
-            if (!JSVERSION_IS_ECMA(cx->version)) {
+            if (!JS_VERSION_IS_ECMA(cx)) {
                 /*
                  * Deviate from ECMA to imitate Perl, which omits a final
                  * split unless a limit argument is given and big enough.

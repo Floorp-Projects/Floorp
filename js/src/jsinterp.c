@@ -1127,7 +1127,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
          * We attempt the conversion under all circumstances for 1.2, but
          * only if there is a call op defined otherwise.
          */
-        if (cx->version == JSVERSION_1_2 ||
+        if (JS_VERSION_IS_1_2(cx) ||
             ((ops == &js_ObjectOps) ? clasp->call : ops->call)) {
             ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
             if (!ok)
@@ -1836,7 +1836,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     /*
      * Optimized Get and SetVersion for proper script language versioning.
      *
-     * If any native method or JSClass/JSObjectOps hook calls JS_SetVersion
+     * If any native method or JSClass/JSObjectOps hook calls js_SetVersion
      * and changes cx->version, the effect will "stick" and we will stop
      * maintaining currentVersion.  This is relied upon by testsuites, for
      * the most part -- web browsers select version before compiling and not
@@ -1845,7 +1845,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     currentVersion = script->version;
     originalVersion = cx->version;
     if (currentVersion != originalVersion)
-        JS_SetVersion(cx, currentVersion);
+        js_SetVersion(cx, currentVersion);
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -2041,7 +2041,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 if (cx->version == currentVersion) {
                     currentVersion = ifp->callerVersion;
                     if (currentVersion != cx->version)
-                        JS_SetVersion(cx, currentVersion);
+                        js_SetVersion(cx, currentVersion);
                 }
 
                 /* Store the return value in the caller's operand frame. */
@@ -2453,7 +2453,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                     rval = STRING_TO_JSVAL(str);
                 }
 #endif
-                else if (cx->version != JSVERSION_1_2) {
+                else if (!JS_VERSION_IS_1_2(cx)) {
                     str = js_NumberToString(cx, (jsdouble) JSID_TO_INT(fid));
                     if (!str) {
                         ok = JS_FALSE;
@@ -3132,7 +3132,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             /* Check the return value and update obj from it. */
             rval = *vp;
             if (JSVAL_IS_PRIMITIVE(rval)) {
-                if (fun || !JSVERSION_IS_ECMA(cx->version)) {
+                if (fun || !JS_VERSION_IS_ECMA(cx)) {
                     *vp = OBJECT_TO_JSVAL(obj);
                     break;
                 }
@@ -3536,7 +3536,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 if (cx->version == currentVersion) {
                     currentVersion = script->version;
                     if (currentVersion != cx->version)
-                        JS_SetVersion(cx, currentVersion);
+                        js_SetVersion(cx, currentVersion);
                 }
 
                 /* Push the frame and set interpreter registers. */
@@ -3829,8 +3829,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * the default case if the discriminant isn't already an int jsval.
              * (This opcode is emitted only for dense jsint-domain switches.)
              */
-            if (cx->version == JSVERSION_DEFAULT ||
-                cx->version >= JSVERSION_1_4) {
+            if ((cx->version & JSVERSION_MASK) == JSVERSION_DEFAULT ||
+                (cx->version & JSVERSION_MASK) >= JSVERSION_1_4) {
                 rval = POP_OPND();
                 if (!JSVAL_IS_INT(rval))
                     break;
@@ -3912,8 +3912,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * the default case if the discriminant isn't already an int jsval.
              * (This opcode is emitted only for dense jsint-domain switches.)
              */
-            if (cx->version == JSVERSION_DEFAULT ||
-                cx->version >= JSVERSION_1_4) {
+            if ((cx->version & JSVERSION_MASK) == JSVERSION_DEFAULT ||
+                (cx->version & JSVERSION_MASK) >= JSVERSION_1_4) {
                 rval = POP_OPND();
                 if (!JSVAL_IS_INT(rval))
                     break;
@@ -5335,7 +5335,7 @@ out2:
     fp->spbase = NULL;
     js_FreeRawStack(cx, mark);
     if (cx->version == currentVersion && currentVersion != originalVersion)
-        JS_SetVersion(cx, originalVersion);
+        js_SetVersion(cx, originalVersion);
     cx->interpLevel--;
     return ok;
 

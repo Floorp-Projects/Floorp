@@ -796,12 +796,15 @@ date_getTime(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 date_getYear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    jsdouble *date;
     jsdouble result;
-    jsdouble *date = date_getProlog(cx, obj, argv);
+    JSVersion version;
+
+    date = date_getProlog(cx, obj, argv);
     if (!date)
         return JS_FALSE;
-    result = *date;
 
+    result = *date;
     if (!JSDOUBLE_IS_FINITE(result))
         return js_NewNumberValue(cx, result, rval);
 
@@ -816,9 +819,10 @@ date_getYear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * the getFullYear method.  But we try to protect existing scripts that
      * have specified a version...
      */
-    if (cx->version == JSVERSION_1_0 ||
-        cx->version == JSVERSION_1_1 ||
-        cx->version == JSVERSION_1_2)
+    version = cx->version & JSVERSION_MASK;
+    if (version == JSVERSION_1_0 ||
+        version == JSVERSION_1_1 ||
+        version == JSVERSION_1_2)
     {
         if (result >= 1900 && result < 2000)
             result -= 1900;

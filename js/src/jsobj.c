@@ -636,7 +636,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * obj_toString for 1.2 calls toSource, and doesn't want the extra parens
      * on the outside.
      */
-    outermost = (cx->version != JSVERSION_1_2 && cx->sharpObjectMap.depth == 0);
+    outermost = !JS_VERSION_IS_1_2(cx) && cx->sharpObjectMap.depth == 0;
     he = js_EnterSharpObject(cx, obj, &ida, &chars);
     if (!he)
         return JS_FALSE;
@@ -960,7 +960,7 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *str;
 
 #if JS_HAS_INITIALIZERS
-    if (cx->version == JSVERSION_1_2)
+    if (JS_VERSION_IS_1_2(cx))
         return js_obj_toSource(cx, obj, argc, argv, rval);
 #endif
 
@@ -1016,7 +1016,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     caller = JS_GetScriptedCaller(cx, fp);
     indirectCall = (caller && caller->pc && *caller->pc != JSOP_EVAL);
 
-    if (JSVERSION_IS_ECMA(cx->version) &&
+    if (JS_VERSION_IS_ECMA(cx) &&
         indirectCall &&
         !JS_ReportErrorFlagsAndNumber(cx,
                                       JSREPORT_WARNING | JSREPORT_STRICT,
@@ -2774,7 +2774,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if ((attrs & JSPROP_READONLY) ||
             (SCOPE_IS_SEALED(scope) && pobj == obj)) {
             JS_UNLOCK_SCOPE(cx, scope);
-            if ((attrs & JSPROP_READONLY) && JSVERSION_IS_ECMA(cx->version))
+            if ((attrs & JSPROP_READONLY) && JS_VERSION_IS_ECMA(cx))
                 return JS_TRUE;
             goto read_only_error;
         }
@@ -2972,7 +2972,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     JSScope *scope;
     JSBool ok;
 
-    *rval = JSVERSION_IS_ECMA(cx->version) ? JSVAL_TRUE : JSVAL_VOID;
+    *rval = JS_VERSION_IS_ECMA(cx) ? JSVAL_TRUE : JSVAL_VOID;
 
     /*
      * Handle old bug that took empty string as zero index.  Also convert
@@ -3012,7 +3012,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     sprop = (JSScopeProperty *)prop;
     if (sprop->attrs & JSPROP_PERMANENT) {
         OBJ_DROP_PROPERTY(cx, obj, prop);
-        if (JSVERSION_IS_ECMA(cx->version)) {
+        if (JS_VERSION_IS_ECMA(cx)) {
             *rval = JSVAL_FALSE;
             return JS_TRUE;
         }
@@ -3078,7 +3078,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
              * object to a string.  ECMA requires an error if both toString
              * and valueOf fail to produce a primitive value.
              */
-            if (!JSVAL_IS_PRIMITIVE(v) && cx->version == JSVERSION_1_2) {
+            if (!JSVAL_IS_PRIMITIVE(v) && JS_VERSION_IS_1_2(cx)) {
                 char *bytes = JS_smprintf("[object %s]",
                                           OBJ_GET_CLASS(cx, obj)->name);
                 if (!bytes)
@@ -3104,7 +3104,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
                 goto out;
             }
             /* Don't convert to string (source object literal) for JS1.2. */
-            if (cx->version == JSVERSION_1_2 && hint == JSTYPE_BOOLEAN)
+            if (JS_VERSION_IS_1_2(cx) && hint == JSTYPE_BOOLEAN)
                 goto out;
             if (!js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0,
                               NULL, &v))

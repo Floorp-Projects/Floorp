@@ -839,7 +839,7 @@ JS_GetScriptLineExtent(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSVersion)
 JS_GetScriptVersion(JSContext *cx, JSScript *script)
 {
-    return script->version;
+    return script->version & JSVERSION_MASK;
 }
 
 /***************************************************************************/
