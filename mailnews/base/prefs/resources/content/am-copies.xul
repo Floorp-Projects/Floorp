@@ -32,9 +32,15 @@
                 prefstring="mail.identity.%identitykey%.stationary_folder"/>
   <text hidden="true" wsm_persist="true" id="identity.email"/>
   
-  <text hidden="true" wsm_persist="true" id="identity.fccFolderPickerMode"/>
-  <text hidden="true" wsm_persist="true" id="identity.draftsFolderPickerMode"/>
-  <text hidden="true" wsm_persist="true" id="identity.tmplFolderPickerMode"/>
+  <text hidden="true" wsm_persist="true" id="identity.fccFolderPickerMode"
+                pref="true" preftype="int" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.fcc_folder_picker_mode"/>
+  <text hidden="true" wsm_persist="true" id="identity.draftsFolderPickerMode"
+                pref="true" preftype="int" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.drafts_folder_picker_mode"/>
+  <text hidden="true" wsm_persist="true" id="identity.tmplFolderPickerMode"
+                pref="true" preftype="int" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.tmpl_folder_picker_mode"/>
 
   <hbox class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   

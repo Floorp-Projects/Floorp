@@ -20,6 +20,7 @@
 
 var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 var gFccRadioElemChoice, gDraftsRadioElemChoice, gTmplRadioElemChoice;
+var gFccRadioElemChoiceLocked, gDraftsRadioElemChoiceLocked, gTmplRadioElemChoiceLocked;
 var gDefaultPickerMode = "1";
 var gMessengerBundle;
 
@@ -41,19 +42,19 @@ function onInit() {
 
     SetGlobalRadioElemChoices();
                      
-    SetFolderDisplay(gFccRadioElemChoice, 
+    SetFolderDisplay(gFccRadioElemChoice, gFccRadioElemChoiceLocked, 
                      "fcc", 
                      fccAccountPickerId, 
                      "identity.fccFolder", 
                      fccFolderPickerId);
 
-    SetFolderDisplay(gDraftsRadioElemChoice, 
+    SetFolderDisplay(gDraftsRadioElemChoice, gDraftsRadioElemChoiceLocked, 
                      "draft", 
                      draftsAccountPickerId, 
                      "identity.draftFolder", 
                      draftsFolderPickerId);
 
-    SetFolderDisplay(gTmplRadioElemChoice, 
+    SetFolderDisplay(gTmplRadioElemChoice, gTmplRadioElemChoiceLocked, 
                      "tmpl", 
                      tmplAccountPickerId, 
                      "identity.stationeryFolder", 
@@ -70,14 +71,17 @@ function SetGlobalRadioElemChoices()
 {
     var pickerModeElement = document.getElementById("identity.fccFolderPickerMode");
     gFccRadioElemChoice = pickerModeElement.getAttribute("value");
+    gFccRadioElemChoiceLocked = pickerModeElement.getAttribute("disabled");
     if (!gFccRadioElemChoice) gFccRadioElemChoice = gDefaultPickerMode;
 
     pickerModeElement = document.getElementById("identity.draftsFolderPickerMode");
     gDraftsRadioElemChoice = pickerModeElement.getAttribute("value");
+    gDraftsRadioElemChoiceLocked = pickerModeElement.getAttribute("disabled");
     if (!gDraftsRadioElemChoice) gDraftsRadioElemChoice = gDefaultPickerMode;
 
     pickerModeElement = document.getElementById("identity.tmplFolderPickerMode");
     gTmplRadioElemChoice = pickerModeElement.getAttribute("value");
+    gTmplRadioElemChoiceLocked = pickerModeElement.getAttribute("disabled");
     if (!gTmplRadioElemChoice) gTmplRadioElemChoice = gDefaultPickerMode;
 }
 
@@ -95,7 +99,7 @@ function GetCurrentServerId()
  * set to 1 i.e., Other picker displaying the folder value read from the 
  * preferences file.
  */
-function SetFolderDisplay(pickerMode, 
+function SetFolderDisplay(pickerMode, disableMode,
                           radioElemPrefix, 
                           accountPickerId, 
                           folderPickedField, 
@@ -128,6 +132,19 @@ function SetFolderDisplay(pickerMode,
         default :
             dump("Error in setting initial folder display on pickers\n");
             break;
+    }
+    if (disableMode) {
+        var radioId = radioElemPrefix + "_selectAccount";
+        var radioElement = document.getElementById(radioId);
+        radioElement.setAttribute("disabled", "true");
+        radioId = radioElemPrefix + "_selectFolder";
+        radioElement = document.getElementById(radioId);
+        radioElement.setAttribute("disabled", "true");
+
+        var picker = document.getElementById(folderPickerId);
+        picker.setAttribute("disabled", "true");
+        picker = document.getElementById(accountPickerId);
+        picker.setAttribute("disabled", "true");
     }
 }
 
@@ -301,12 +318,14 @@ function SetupFccPickerState(pickerMode, accountPickerId, folderPickerId)
 {
     switch (pickerMode) {
         case "0" :
-            SetPickerEnabling(accountPickerId, folderPickerId);
+            if (!gFccRadioElemChoiceLocked)
+              SetPickerEnabling(accountPickerId, folderPickerId);
             SetRadioButtons("fcc_selectAccount", "fcc_selectFolder");
             break;
 	
         case "1" :
-            SetPickerEnabling(folderPickerId, accountPickerId);
+            if (!gFccRadioElemChoiceLocked)
+              SetPickerEnabling(folderPickerId, accountPickerId);
             SetRadioButtons("fcc_selectFolder", "fcc_selectAccount");
             break;
 
