@@ -37,7 +37,7 @@ static char* mEventNames[] = {
   "mouseout", "mousemove", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "unload", "abort", "error",
   "submit", "reset", "change", "paint" ,"text",
-  "construct", "destruct"
+  "create", "destroy"
 };
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {

@@ -340,11 +340,11 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
     aIID = kIDOMPaintListenerIID;
     *aFlags = NS_EVENT_BITS_PAINT_PAINT;
   } // extened this to handle IME related events
-  else if (aType == "construct") {
+  else if (aType == "create") {
     aIID = kIDOMLoadListenerIID;
     *aFlags = NS_EVENT_BITS_LOAD_CONSTRUCT;
   }
-  else if (aType == "destruct") {
+  else if (aType == "destroy") {
     aIID = kIDOMLoadListenerIID;
     *aFlags = NS_EVENT_BITS_LOAD_DESTRUCT;
   }
