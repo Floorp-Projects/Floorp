@@ -186,6 +186,11 @@ void	nsImapMailDatabase::UpdateFolderFlag(nsIMsgDBHdr * /* msgHdr */, PRBool /* 
 {
 }
 
+PRBool nsImapMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags flag)
+{
+  return nsMsgDatabase::SetHdrFlag(msgHdr, bSet, flag);
+}
+
 // override so nsMailDatabase methods that deal with m_folderStream are *not* called
 NS_IMETHODIMP nsImapMailDatabase::StartBatch()
 {
