@@ -53,11 +53,9 @@
       <button id="websites_editButton"
               label="&certmgr.edit.label;"
               disabled="true" oncommand="editCerts();"/>
-<!-- future - import a DER cert?
       <button id="websites_addButton"
-              label="&certmgr.add.label;"
-              oncommand="addCerts();"/>
--->
+              label="&certmgr.restore.label;"
+              oncommand="addWebSiteCert();"/>
       <button id="websites_deleteButton"
               label="&certmgr.delete.label;"
               disabled="true" oncommand="deleteCerts();"/>

@@ -53,11 +53,9 @@
       <button id="ca_editButton"
               label="&certmgr.edit.label;"
               disabled="true" oncommand="editCerts();"/>
-<!-- future - import a DER cert?
       <button id="ca_addButton"
-              label="&certmgr.add.label;"
-              oncommand="addCerts();"/>
--->
+              label="&certmgr.restore.label;"
+              oncommand="addCACerts();"/>
       <button id="ca_deleteButton"
               label="&certmgr.delete.label;"
               disabled="true" oncommand="deleteCerts();"/>

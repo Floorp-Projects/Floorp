@@ -71,11 +71,9 @@
               label="&certmgr.edit.label;"
               disabled="true" oncommand="editCerts();"/>
 -->
-<!-- future - import a DER cert?
       <button id="email_addButton"
-              label="&certmgr.add.label;"
-              oncommand="addCerts();"/>
--->
+              label="&certmgr.restore.label;"
+              oncommand="addEmailCert();"/>
       <button id="email_deleteButton"
               label="&certmgr.delete.label;"
               disabled="true" oncommand="deleteCerts();"/>

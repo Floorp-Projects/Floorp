@@ -161,6 +161,10 @@ interface nsIX509CertDB : nsISupports {
                                      in unsigned long length,
                                      in nsIInterfaceRequestor ctx);
 
+  [noscript] void importServerCertificate(in charPtr data,
+                                          in unsigned long length,
+                                          in nsIInterfaceRequestor ctx);
+
   /*
    * importEmailCertificate2
    *
@@ -213,6 +217,15 @@ interface nsIX509CertDB : nsISupports {
   boolean getCertTrust(in nsIX509Cert cert,
                        in unsigned long certType,
                        in unsigned long trustType);
+
+  /*
+   * importCertsFromFile
+   *
+   * Import certificate(s) from file
+   */
+  void importCertsFromFile(in nsIPK11Token aToken,
+                         in nsILocalFile aFile,
+                         in unsigned long aType);
 
   /*
    * importPKCS12File

@@ -303,9 +303,9 @@ function restoreCerts()
   if (fp.show() == nsIFilePicker.returnOK) {
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     certdb.importPKCS12File(null, fp.file);
+    userTreeView.loadCerts(nsIX509Cert.USER_CERT);
+    userTreeView.selection.clearSelection();
   }
-  userTreeView.loadCerts(nsIX509Cert.USER_CERT);
-  userTreeView.selection.clearSelection();
 }
 
 function deleteCerts()
@@ -406,8 +406,53 @@ function viewCerts()
   }
 }
 
-/* XXX future - import a DER cert from a file? */
-function addCerts()
+function addCACerts()
 {
-  alert("Add cert chosen");
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  fp.init(window,
+          bundle.GetStringFromName("importCACertsPrompt"),
+          nsIFilePicker.modeOpen);
+  fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
+  fp.appendFilters(nsIFilePicker.filterAll);
+  if (fp.show() == nsIFilePicker.returnOK) {
+    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+    certdb.importCertsFromFile(null, fp.file, nsIX509Cert.CA_CERT);
+    caTreeView.loadCerts(nsIX509Cert.CA_CERT);
+    caTreeView.selection.clearSelection();
+  }
+}
+
+function addEmailCert()
+{
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  fp.init(window,
+          bundle.GetStringFromName("importEmailCertPrompt"),
+          nsIFilePicker.modeOpen);
+  fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
+  fp.appendFilters(nsIFilePicker.filterAll);
+  if (fp.show() == nsIFilePicker.returnOK) {
+    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+    certdb.importCertsFromFile(null, fp.file, nsIX509Cert.EMAIL_CERT);
+    emailTreeView.loadCerts(nsIX509Cert.EMAIL_CERT);
+    emailTreeView.selection.clearSelection();
+  }
+}
+
+function addWebSiteCert()
+{
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  var fp = Components.classes[nsFilePicker].createInstance(nsIFilePicker);
+  fp.init(window,
+          bundle.GetStringFromName("importWebSiteCertPrompt"),
+          nsIFilePicker.modeOpen);
+  fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
+  fp.appendFilters(nsIFilePicker.filterAll);
+  if (fp.show() == nsIFilePicker.returnOK) {
+    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+    certdb.importCertsFromFile(null, fp.file, nsIX509Cert.SERVER_CERT);
+    serverTreeView.loadCerts(nsIX509Cert.SERVER_CERT);
+    serverTreeView.selection.clearSelection();
+  }
 }
