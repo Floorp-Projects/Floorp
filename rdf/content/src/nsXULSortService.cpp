@@ -144,6 +144,8 @@ static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
+
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
@@ -165,6 +167,7 @@ typedef	struct	_sortStruct	{
 	PRInt32					colIndex;
 	nsCOMPtr<nsIContent>			parentContainer;
 	PRInt32					kNameSpaceID_XUL;
+	PRInt32					kNameSpaceID_RDF;
 	PRBool					descendingSort;
 	PRBool					naturalOrderSort;
 	PRBool					inbetweenSeparatorSort;
@@ -240,6 +243,7 @@ private:
 	static nsIRDFResource	*kRDF_Seq;
 
 	static PRInt32		kNameSpaceID_XUL;
+	static PRInt32		kNameSpaceID_RDF;
 
 	static nsIRDFService	*gRDFService;
 	static nsIXULContentUtils   *gXULUtils;
@@ -318,6 +322,7 @@ nsIRDFResource		*XULSortServiceImpl::kRDF_instanceOf;
 nsIRDFResource		*XULSortServiceImpl::kRDF_Seq;
 
 PRInt32  XULSortServiceImpl::kNameSpaceID_XUL;
+PRInt32  XULSortServiceImpl::kNameSpaceID_RDF;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -410,10 +415,10 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		                           kINameSpaceManagerIID,
 		                           (void**) &mgr)))
 		{
-			static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
-
 			rv = mgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
 			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
+			rv = mgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kRDFNameSpaceURI), kNameSpaceID_RDF);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
 
 			NS_RELEASE(mgr);
 		}
@@ -1818,7 +1823,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo, PR
 			nsAutoString	type;
 			for (loop=currentElement; loop< currentElement + numElements; loop++)
 			{
-				if (NS_SUCCEEDED(rv = contentSortInfoArray[loop]->content->GetAttribute(kNameSpaceID_None,
+				if (NS_SUCCEEDED(rv = contentSortInfoArray[loop]->content->GetAttribute(kNameSpaceID_RDF,
 				    kRDF_type, type)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 				{
 					if (type.EqualsWithConversion(kURINC_BookmarkSeparator))
