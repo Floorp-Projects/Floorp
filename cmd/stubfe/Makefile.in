@@ -151,7 +151,6 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libhook.a \
 		  $(DIST)/lib/libparse.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)pref.a \
-		  $(DIST)/lib/lib$(LITE_PREFIX)i18n.a \
 		  $(DIST)/lib/libpics.a \
 		  $(DIST)/lib/libpwcac.a \
 		  $(DIST)/lib/libreg.a \
@@ -203,6 +202,7 @@ endif
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libmisc.a \
 		  $(DIST)/lib/libprgrss.a \
+		  $(DIST)/lib/lib$(LITE_PREFIX)i18n.a \
 		  $(NULL)
 
 ifdef MOZ_LDAP
@@ -352,8 +352,12 @@ endif
 
 ifndef NO_MOCHA
 # XXX To a DSO...
-BASIC_LIBS      += $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a 
-BASIC_DSOS      += -ljs -ljsj
+BASIC_LIBS      += $(DIST)/lib/libjs.a
+BASIC_DSOS      += -ljs
+ifdef JAVA_OR_OJI
+BASIC_LIBS	+= $(DIST)/lib/libjsj.a
+BASIC_DSOS	+= -ljsj
+endif
 BASIC_LIBS	+= $(DIST)/lib/libmocha.a
 endif
 
