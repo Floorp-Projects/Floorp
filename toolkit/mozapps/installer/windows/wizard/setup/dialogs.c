@@ -1328,14 +1328,7 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     SetDlgItemText(hDlg, IDC_CONNECTION_SETTINGS, sgInstallGui.szProxyButton);
     SetDlgItemText(hDlg, IDC_INSTALL_FOLDER_LABEL, sgInstallGui.szInstallFolder);
 
-    // This is a bit of a hack for now, not parameterizable as I'd like it to be. 
-    // Unfortunately pressed for time. Revisit. 
-    // -Ben
-#if defined(MOZ_PHOENIX)
     ExtractIconEx("setuprsc.dll", 1, &largeIcon, &smallIcon, 1);
-#elif defined(MOZ_THUNDERBIRD)
-    ExtractIconEx("setuprsc.dll", 2, &largeIcon, &smallIcon, 1);
-#endif
     SendMessage(GetDlgItem(hDlg, IDC_APP_ICON), STM_SETICON, (LPARAM)smallIcon, 0);
 
     break;
