@@ -209,7 +209,7 @@ static nsModuleComponentInfo components[] =
 
   { "OS/2 File Picker",
     NS_FILEPICKER_CID,
-    "@mozilla.org/widget/filepicker/os2;1",
+    "@mozilla.org/filepicker;1",
     nsFilePickerConstructor },
   { "OS/2 File Widget",
     NS_FILEWIDGET_CID,
@@ -233,7 +233,7 @@ static nsModuleComponentInfo components[] =
     nsVertScrollbarConstructor },
   { "OS/2 Sound",
     NS_SOUND_CID,
-    "@mozilla.org/widget/sound;1",
+    "@mozilla.org/sound;1",
     nsSoundConstructor },
   { "OS/2 Toolkit",
     NS_TOOLKIT_CID,
