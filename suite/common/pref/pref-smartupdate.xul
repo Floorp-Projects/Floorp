@@ -3,16 +3,8 @@
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?> 
 
-<!DOCTYPE window
-[
-<!ENTITY title.label "SmartUpdate">
-<!ENTITY header "SmartUpdate">
-<!ENTITY enableSU.label "Enable SmartUpdate">
-<!ENTITY requireConfirmation.label "Require manual confirmation of each install">
-<!ENTITY selectUninstall.label "To uninstall, select from the following list and click the uninstall button">
-<!ENTITY uninstallButton.label "Uninstall">
-]
-> 
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smartupdate.dtd" >
+ 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
