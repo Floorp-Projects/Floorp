@@ -41,7 +41,8 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsDOMError.h"
-#include "GenericElementCollection.h"
+#include "nsContentList.h"
+#include "nsGenericDOMHTMLCollection.h"
 #include "nsIHTMLContent.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
@@ -58,7 +59,6 @@
 #include "nsGenericHTMLElement.h"
 /* end for collections */
 
-class GenericElementCollection;
 class TableRowsCollection;
 
 class nsHTMLTableElement :  public nsGenericHTMLElement,
@@ -95,7 +95,7 @@ public:
 protected:
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection(nsIAtom *aTag);
 
-  GenericElementCollection *mTBodies;
+  nsCOMPtr<nsIContentList> mTBodies;
   TableRowsCollection *mRows;
 };
 
@@ -137,6 +137,23 @@ TableRowsCollection::~TableRowsCollection()
   // reference for us.
 }
 
+static PRUint32
+CountRowsInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup)
+{
+  PRUint32 length = 0;
+  
+  if (aRowGroup) {
+    nsCOMPtr<nsIDOMHTMLCollection> rows;
+    aRowGroup->GetRows(getter_AddRefs(rows));
+    
+    if (rows) {
+      rows->GetLength(&length);
+    }
+  }
+  
+  return length;
+}
+
 // we re-count every call.  A better implementation would be to set
 // ourselves up as an observer of contentAppended, contentInserted,
 // and contentDeleted
@@ -153,29 +170,10 @@ TableRowsCollection::GetLength(PRUint32* aLength)
     nsCOMPtr<nsIDOMHTMLTableSectionElement> rowGroup;
 
     mParent->GetTHead(getter_AddRefs(rowGroup));
-
-    if (rowGroup) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(rowGroup));
-
-      GenericElementCollection head(content, nsHTMLAtoms::tr);
-
-      PRUint32 rows;
-      head.GetLength(&rows);
-
-      *aLength = rows;
-    }
+    *aLength += CountRowsInRowGroup(rowGroup);
 
     mParent->GetTFoot(getter_AddRefs(rowGroup));
-
-    if (rowGroup) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(rowGroup));
-
-      GenericElementCollection foot(content, nsHTMLAtoms::tr);
-
-      PRUint32 rows;
-      foot.GetLength(&rows);
-      *aLength += rows;
-    }
+    *aLength += CountRowsInRowGroup(rowGroup);
 
     nsCOMPtr<nsIDOMHTMLCollection> tbodies;
 
@@ -184,25 +182,15 @@ TableRowsCollection::GetLength(PRUint32* aLength)
     if (tbodies) {
       nsCOMPtr<nsIDOMNode> node;
 
-      rowGroup = nsnull;
-
-      PRUint32 theIndex=0;
+      PRUint32 theIndex = 0;
 
       tbodies->Item(theIndex, getter_AddRefs(node));
 
       while (node) {
-        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-
-        GenericElementCollection body(content, nsHTMLAtoms::tr);
-
-        PRUint32 rows;
-        body.GetLength(&rows);
-
-        *aLength += rows;
-
-        theIndex++;
-
-        tbodies->Item(theIndex, getter_AddRefs(node));
+        rowGroup = do_QueryInterface(node);
+        *aLength += CountRowsInRowGroup(rowGroup);
+        
+        tbodies->Item(++theIndex, getter_AddRefs(node));
       }
     }
   }
@@ -210,13 +198,37 @@ TableRowsCollection::GetLength(PRUint32* aLength)
   return rv;
 }
 
+// Returns the number of items in the row group, only if *aItem ends
+// up null.  Otherwise, returns 0.
+static PRUint32
+GetItemOrCountInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup,
+                         PRUint32 aIndex, nsIDOMNode** aItem)
+{
+  NS_PRECONDITION(aItem, "Null out param");
+
+  *aItem = nsnull;
+  PRUint32 length = 0;
+  
+  if (aRowGroup) {
+    nsCOMPtr<nsIDOMHTMLCollection> rows;
+    aRowGroup->GetRows(getter_AddRefs(rows));
+    
+    if (rows) {
+      rows->Item(aIndex, aItem);
+      if (!*aItem) {
+        rows->GetLength(&length);
+      }
+    }
+  }
+  
+  return length;
+}
 // increments aReturn refcnt by 1
 NS_IMETHODIMP 
 TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   *aReturn = nsnull;
   nsresult rv = NS_OK;
-  PRUint32 count = 0;
  
   if (mParent) {
     nsCOMPtr<nsIDOMHTMLTableSectionElement> rowGroup;
@@ -224,63 +236,43 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     // check the thead
     mParent->GetTHead(getter_AddRefs(rowGroup));
 
-    if (rowGroup) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(rowGroup));
-
-      GenericElementCollection head(content, nsHTMLAtoms::tr);
-
-      PRUint32 rowsInHead;
-      head.GetLength(&rowsInHead);
-
-      count = rowsInHead;
-
-      if (count > aIndex) {
-        head.Item(aIndex, aReturn);
-        return NS_OK; 
-      }
+    PRUint32 count = GetItemOrCountInRowGroup(rowGroup, aIndex, aReturn);
+    if (*aReturn) {
+      return NS_OK; 
     }
 
+    NS_ASSERTION(count <= aIndex, "GetItemOrCountInRowGroup screwed up");
+    aIndex -= count;
+    
     // check the tbodies
     nsCOMPtr<nsIDOMHTMLCollection> tbodies;
 
     mParent->GetTBodies(getter_AddRefs(tbodies));
 
     if (tbodies) {
-      rowGroup = nsnull;
       nsCOMPtr<nsIDOMNode> node;
-      PRUint32 theIndex=0;
+      PRUint32 theIndex = 0;
 
       tbodies->Item(theIndex, getter_AddRefs(node));
 
       while (node) {
-        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-
-        GenericElementCollection body(content, nsHTMLAtoms::tr);
-
-        PRUint32 rows;
-        body.GetLength(&rows);
-
-        if ((count+rows) > aIndex) {
-          body.Item(aIndex-count, aReturn);
-
-          return NS_OK;
+        rowGroup = do_QueryInterface(node);
+        count = GetItemOrCountInRowGroup(rowGroup, aIndex, aReturn);
+        if (*aReturn) {
+          return NS_OK; 
         }
 
-        count += rows;
-        theIndex++;
-        tbodies->Item(theIndex, getter_AddRefs(node));
+        NS_ASSERTION(count <= aIndex, "GetItemOrCountInRowGroup screwed up");
+        aIndex -= count;
+
+        tbodies->Item(++theIndex, getter_AddRefs(node));
       }
     }
 
     // check the tfoot
     mParent->GetTFoot(getter_AddRefs(rowGroup));
 
-    if (rowGroup) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(rowGroup));
-
-      GenericElementCollection foot(content, nsHTMLAtoms::tr);
-      foot.Item(aIndex-count, aReturn);
-    }
+    GetItemOrCountInRowGroup(rowGroup, aIndex, aReturn);
   }
 
   return rv;
@@ -340,15 +332,13 @@ NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLTableElement::nsHTMLTableElement()
 {
-  mTBodies=nsnull;
   mRows=nsnull;
 }
 
 nsHTMLTableElement::~nsHTMLTableElement()
 {
   if (mTBodies) {
-    mTBodies->ParentDestroyed();
-    NS_RELEASE(mTBodies);
+    mTBodies->RootDestroyed();
   }
 
   if (mRows) {
@@ -548,12 +538,14 @@ NS_IMETHODIMP
 nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
 {
   if (!mTBodies) {
-    mTBodies = new GenericElementCollection((nsIContent*)this,
-                                            nsHTMLAtoms::tbody);
+    // Not using NS_GetContentList because this should not be cached
+    mTBodies = new nsContentList(GetDocument(),
+                                 nsHTMLAtoms::tbody,
+                                 mNodeInfo->NamespaceID(),
+                                 this,
+                                 PR_FALSE);
 
     NS_ENSURE_TRUE(mTBodies, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mTBodies); // this table's reference, released in the destructor
   }
 
   return CallQueryInterface(mTBodies, aValue);
@@ -790,36 +782,18 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     // find the first row group and insert there as first child
     nsCOMPtr<nsIDOMNode> rowGroup;
 
-    GenericElementCollection head(this, nsHTMLAtoms::thead);
-
-    PRUint32 length = 0;
-
-    head.GetLength(&length);
-
-    if (0 != length) {
-      head.Item(0, getter_AddRefs(rowGroup));
-    }
-    else
-    {
-      GenericElementCollection body(this, nsHTMLAtoms::tbody);
-      length = 0;
-
-      body.GetLength(&length);
-
-      if (length > 0) {
-        body.Item(0, getter_AddRefs(rowGroup));
-      }
-      else
-      {
-        GenericElementCollection foot(this, nsHTMLAtoms::tfoot);
-
-        length = 0;
-
-        foot.GetLength(&length);
-
-        if (length > 0) {
-          foot.Item(0, getter_AddRefs(rowGroup));
-        }
+    PRInt32 namespaceID = mNodeInfo->NamespaceID();
+    PRUint32 childCount = GetChildCount();
+    for (PRUint32 i = 0; i < childCount; ++i) {
+      nsIContent* child = GetChildAt(i);
+      nsINodeInfo* childInfo = child->GetNodeInfo();
+      if (childInfo &&
+          (childInfo->Equals(nsHTMLAtoms::thead, namespaceID) ||
+           childInfo->Equals(nsHTMLAtoms::tbody, namespaceID) ||
+           childInfo->Equals(nsHTMLAtoms::tfoot, namespaceID))) {
+        rowGroup = do_QueryInterface(child);
+        NS_ASSERTION(rowGroup, "HTML node did not QI to nsIDOMNode");
+        break;
       }
     }
 
@@ -846,16 +820,20 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       mNodeInfo->NameChanged(nsHTMLAtoms::tr, getter_AddRefs(nodeInfo));
 
       rv = NS_NewHTMLTableRowElement(getter_AddRefs(newRow), nodeInfo);
-      nsCOMPtr<nsIContent> rowGroupContent(do_QueryInterface(rowGroup));
-
-      GenericElementCollection rowGroupRows(rowGroupContent, nsHTMLAtoms::tr);
-
-      nsCOMPtr<nsIDOMNode> firstRow;
-
-      // it's ok if this returns nsnull
-      rowGroupRows.Item(0, getter_AddRefs(firstRow));
-
       if (newRow) {
+        nsCOMPtr<nsIDOMNode> firstRow;
+
+        nsCOMPtr<nsIDOMHTMLTableSectionElement> section =
+          do_QueryInterface(rowGroup);
+
+        if (section) {
+          nsCOMPtr<nsIDOMHTMLCollection> rows;
+          section->GetRows(getter_AddRefs(rows));
+          if (rows) {
+            rows->Item(0, getter_AddRefs(firstRow));
+          }
+        }
+        
         nsCOMPtr<nsIDOMNode> retNode, newRowNode(do_QueryInterface(newRow));
 
         rowGroup->InsertBefore(newRowNode, firstRow, getter_AddRefs(retNode));

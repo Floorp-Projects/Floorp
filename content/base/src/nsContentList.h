@@ -161,11 +161,13 @@ public:
   nsContentList(nsIDocument *aDocument, 
                 nsIAtom* aMatchAtom, 
                 PRInt32 aMatchNameSpaceId,
-                nsIContent* aRootContent=nsnull);
+                nsIContent* aRootContent = nsnull,
+                PRBool aDeep = PR_TRUE);
   nsContentList(nsIDocument *aDocument, 
                 nsContentListMatchFunc aFunc,
                 const nsAString& aData,
-                nsIContent* aRootContent=nsnull);
+                nsIContent* aRootContent = nsnull,
+                PRBool aData = PR_TRUE);
   virtual ~nsContentList();
 
   // nsIDOMHTMLCollection
@@ -177,6 +179,7 @@ public:
   virtual nsIContent *Item(PRUint32 aIndex, PRBool aDoFlush);
   virtual nsIContent *NamedItem(const nsAString& aName, PRBool aDoFlush);
   virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
+  virtual void RootDestroyed();
 
   // nsIDocumentObserver
   virtual void ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
@@ -300,6 +303,11 @@ protected:
    * LIST_UP_TO_DATE, LIST_LAZY, LIST_DIRTY
    */
   PRUint8 mState;
+  /**
+   * Whether to actually descend the tree.  If this is false, we won't
+   * consider grandkids of mRootContent.
+   */
+  PRPackedBool mDeep;
 };
 
 /**

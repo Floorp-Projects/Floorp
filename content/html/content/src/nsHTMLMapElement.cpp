@@ -42,7 +42,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "GenericElementCollection.h"
+#include "nsContentList.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsCOMPtr.h"
@@ -74,7 +74,7 @@ public:
                            PRBool aCompileEventHandlers);
 
 protected:
-  GenericElementCollection* mAreas;
+  nsCOMPtr<nsIContentList> mAreas;
 };
 
 
@@ -107,14 +107,12 @@ NS_NewHTMLMapElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLMapElement::nsHTMLMapElement()
 {
-  mAreas = nsnull;
 }
 
 nsHTMLMapElement::~nsHTMLMapElement()
 {
   if (mAreas) {
-    mAreas->ParentDestroyed();
-    NS_RELEASE(mAreas);
+    mAreas->RootDestroyed();
   }
 }
 
@@ -190,18 +188,19 @@ nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
   NS_ENSURE_ARG_POINTER(aAreas);
 
   if (!mAreas) {
-    mAreas = new GenericElementCollection(NS_STATIC_CAST(nsIContent*, this),
-                                          nsHTMLAtoms::area);
+    // Not using NS_GetContentList because this should not be cached
+    mAreas = new nsContentList(GetDocument(),
+                               nsHTMLAtoms::area,
+                               mNodeInfo->NamespaceID(),
+                               this,
+                               PR_FALSE);
 
     if (!mAreas) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    NS_ADDREF(mAreas);
   }
 
-  *aAreas = NS_STATIC_CAST(nsIDOMHTMLCollection*, mAreas);
-  NS_ADDREF(*aAreas);
+  CallQueryInterface(mAreas, aAreas);
 
   return NS_OK;
 }

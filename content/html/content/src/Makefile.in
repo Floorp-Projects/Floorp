@@ -58,7 +58,6 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsGenericHTMLElement.cpp \
 		nsGenericDOMHTMLCollection.cpp \
-		GenericElementCollection.cpp \
 		nsFormSubmission.cpp \
 		nsHTMLAnchorElement.cpp \
 		nsHTMLAppletElement.cpp \
