@@ -2407,6 +2407,10 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
                     ((SHORT1FROMMP(mp1) & KC_VIRTUALKEY) &&    
                      ((SHORT1FROMMP(mp1) & (KC_SHIFT | KC_ALT | KC_CTRL)) == 0) &&
                      (SHORT2FROMMP(mp2) == VK_F10)) ||
+                // Let Mozilla handle standalone F1, not the OS
+                    ((SHORT1FROMMP(mp1) & KC_VIRTUALKEY) &&    
+                     ((SHORT1FROMMP(mp1) & (KC_SHIFT | KC_ALT | KC_CTRL)) == 0) &&
+                     (SHORT2FROMMP(mp2) == VK_F1)) ||
                 // Let Mozilla handle standalone Alt, not the OS
                     ((SHORT1FROMMP(mp1) & KC_KEYUP) && (SHORT1FROMMP(mp1) & KC_LONEKEY) &&
                      (SHORT2FROMMP(mp2) == VK_ALT)) ||
