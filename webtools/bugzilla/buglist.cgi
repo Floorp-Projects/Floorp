@@ -1201,6 +1201,9 @@ for (my $colcount = 0 ; $colcount < @collist ; $colcount++) {
 
 my @weekday= qw( Sun Mon Tue Wed Thu Fri Sat );
 
+# Truncate email to 30 chars per bug #103592
+my $maxemailsize = 30;
+
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
     my $g = shift @row;         # Bug's group set.
@@ -1252,17 +1255,23 @@ while (@row = FetchSQLData()) {
                 }
                 if ($c eq "owner") {
                     $ownerhash{$value} = 1;
-		}elsif( $c eq 'changeddate' or $c eq 'opendate' ) {
-		    my $age= time() - $value;
-		    my ($s,$m,$h,$d,$mo,$y,$wd)= localtime $value;
-		    if( $age < 18*60*60 ) {
-			$value= sprintf "%02d:%02d:%02d", $h,$m,$s;
-		    }elsif( $age < 6*24*60*60 ) {
-			$value= sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
-		    }else {
-			$value= sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
-		    }
-		}
+                }
+                if ( ($c eq "owner" || $c eq "qa_contact" ) &&
+                        length $value > $maxemailsize )  {
+                    my $trunc = substr $value, 0, $maxemailsize;
+                    $value = value_quote($value);
+                    $value = qq|<SPAN TITLE="$value">$trunc...</SPAN>|;
+                } elsif( $c eq 'changeddate' or $c eq 'opendate' ) {
+                    my $age = time() - $value;
+                    my ($s,$m,$h,$d,$mo,$y,$wd)= localtime $value;
+                    if( $age < 18*60*60 ) {
+                        $value = sprintf "%02d:%02d:%02d", $h,$m,$s;
+                    } elsif ( $age < 6*24*60*60 ) {
+                        $value = sprintf "%s %02d:%02d", $weekday[$wd],$h,$m;
+                    } else {
+                        $value = sprintf "%04d-%02d-%02d", 1900+$y,$mo+1,$d;
+                    }
+                }
                 if ($::needquote{$c} || $::needquote{$c} == 5) {
                     $value = html_quote($value);
                 } else {
