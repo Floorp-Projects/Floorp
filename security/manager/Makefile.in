@@ -27,11 +27,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-LOADABLE_ROOT_MODULE = nssckbi$(DLL_SUFFIX)
-else
-LOADABLE_ROOT_MODULE = libnssckbi$(DLL_SUFFIX)
-endif
+LOADABLE_ROOT_MODULE = $(LIB_PREFIX)nssckbi$(DLL_SUFFIX)
 FREEBL_PURE32_MODULE = libfreebl_pure32_3$(DLL_SUFFIX)
 FREEBL_HYBRID_MODULE = libfreebl_hybrid_3$(DLL_SUFFIX)
 
@@ -74,7 +70,7 @@ depend dependclean export::
 
 libs::
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
-	cd $(DIST)/lib; cp -f libmozdbm_s.$(LIB_SUFFIX) libdbm.$(LIB_SUFFIX)
+	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) libdbm.$(LIB_SUFFIX)
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
