@@ -1919,7 +1919,7 @@ $table{products} =
 $table{profiles} =
    'userid mediumint not null auto_increment primary key,
     login_name varchar(255) not null,
-    cryptpassword varchar(34),
+    cryptpassword varchar(128),
     realname varchar(255),
     disabledtext mediumtext not null,
     mybugslink tinyint not null default 1,
@@ -3196,6 +3196,12 @@ if (-d 'shadow') {
 DropField("profiles", "emailnotification");
 DropField("profiles", "newemailtech");
 
+
+# 2003-11-19; chicks@chicks.net; bug 225973: fix field size to accomodate
+# wider algorithms such as Blowfish. Note that this needs to be run
+# before recrypting passwords in the following block.
+ChangeFieldType('profiles', 'cryptpassword', 'varchar(128)');
+
 # 2001-06-12; myk@mozilla.org; bugs 74032, 77473:
 # Recrypt passwords using Perl &crypt instead of the mysql equivalent
 # and delete plaintext passwords from the database.
@@ -3226,10 +3232,8 @@ ENDTEXT
     }
     print "$i... Done.\n";
 
-    # Drop the plaintext password field and resize the cryptpassword field.
+    # Drop the plaintext password field.
     DropField('profiles', 'password');
-    ChangeFieldType('profiles', 'cryptpassword', 'varchar(34)');
-
 }
 
 #
