@@ -251,7 +251,6 @@ nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
     frame->GetNextSibling(frame);
   }
 
-  done:;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsInlineFrame::FindTextRuns rv=%x [%d,%d,%c]",
       rv, mFirstContentOffset, mLastContentOffset,
