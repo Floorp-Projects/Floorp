@@ -2040,7 +2040,7 @@ function LoadIdentity(startup)
             needToCleanUp = true;
             if (prevBcc != "")
               awRemoveRecipients(msgCompFields, "addr_bcc", prevBcc);
-            if (newReplyTo != "")
+            if (newBcc != "")
               awAddRecipients(msgCompFields, "addr_bcc", newBcc);
           }
 
