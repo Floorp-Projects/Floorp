@@ -1358,6 +1358,7 @@ nsString& nsString::Trim(const char* aTrimSet,
 nsString& nsString::CompressWhitespace( PRBool aEliminateLeading,
                                               PRBool aEliminateTrailing)
 {
+  
   Trim(" \r\n\t",aEliminateLeading,aEliminateTrailing);
 
   PRUnichar* from = mStr;
