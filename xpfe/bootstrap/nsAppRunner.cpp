@@ -410,13 +410,27 @@ int main(int argc, char* argv[])
 
 #endif // defined(NS_USING_PROFILES)
     
-    rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
+    rv = cmdLineArgs->GetCmdLineValue("-edit", &cmdResult);
     if (NS_SUCCEEDED(rv))
     {
       if (cmdResult && (strcmp("1",cmdResult)==0)) {
         urlstr = "chrome://editor/content/";
         useArgs = PR_TRUE;
         withArgs = "chrome://editor/content/EditorInitPage.html";
+      }
+    }
+    // Check for -editor -- this may eventually go away
+    if (nsnull == urlstr)
+    {
+      rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
+      if (NS_SUCCEEDED(rv))
+      {
+        printf("WARNING -- -editor is going away, use -edit instead!\n");
+        if (cmdResult && (strcmp("1",cmdResult)==0)) {
+          urlstr = "chrome://editor/content/";
+          useArgs = PR_TRUE;
+          withArgs = "chrome://editor/content/EditorInitPage.html";
+        }
       }
     }
     if (nsnull == urlstr)
