@@ -69,6 +69,11 @@ html_view_size_allocate(GtkWidget *widget,
                         void *data);
 
 static gint
+html_view_draw(GtkWidget *widget,
+               GdkRectangle *area,
+               void *data);
+
+static gint
 html_view_realize_handler(GtkWidget *widget,
 			  void *data)
 {
@@ -105,7 +110,31 @@ html_view_realize_handler(GtkWidget *widget,
   printf("connecting size_realloc to context %x\n", context);
   gtk_signal_connect(GTK_OBJECT(MOZ_VIEW(view)->subview_parent), "size_allocate",
                      GTK_SIGNAL_FUNC(html_view_size_allocate), context);
+  gtk_signal_connect(GTK_OBJECT(MOZ_VIEW(view)->subview_parent), "draw",
+                     GTK_SIGNAL_FUNC(html_view_draw), context);
   return TRUE;
+}
+
+static gint
+html_view_draw(GtkWidget *widget,
+               GdkRectangle *area,
+               void *data)
+{
+  MWContext *context = (MWContext *)data;
+  MozHTMLView *view = NULL;
+
+  if (!data)
+    return FALSE;
+  view = find_html_view(context);
+  if (!view)
+    return FALSE;
+  moz_html_view_refresh_rect(view,
+                             area->x,
+                             area->y,
+                             area->width,
+                             area->height);
+  /* let any other draws work too */
+  return FALSE;
 }
 
 static gint
