@@ -1065,6 +1065,9 @@ static void InitDtoa(void)
 
 void js_FinishDtoa(void)
 {
+    int count;
+    Bigint *temp;
+
 #ifdef JS_THREADSAFE
     if (initialized == JS_TRUE) 
     {
@@ -1073,6 +1076,28 @@ void js_FinishDtoa(void)
         initialized = JS_FALSE;
     }
 #endif
+
+    /* clear down the freelist array and p5s */
+
+    /* static Bigint *freelist[Kmax+1]; */
+    for (count = 0; count <= Kmax; count++)
+    {
+        Bigint **listp = &freelist[count];
+        while ((temp = *listp) != NULL)
+        {
+            *listp = temp->next;
+            free(temp);
+        }
+        freelist[count] = NULL;
+    }
+
+    /* static Bigint *p5s; */
+    while (p5s)
+    {
+        temp = p5s;
+        p5s = p5s->next;
+        free(temp);
+    }
 }
 
 /* nspr2 watcom bug ifdef omitted */
