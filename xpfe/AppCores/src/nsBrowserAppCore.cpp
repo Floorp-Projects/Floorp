@@ -172,6 +172,12 @@ nsBrowserAppCore::Init(const nsString& aId)
 }
 
 NS_IMETHODIMP    
+nsBrowserAppCore::SetDocumentCharset(const nsString& aCharset)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsBrowserAppCore::Back()
 {
   ExecuteScript(mToolbarScriptContext, mDisableScript);

@@ -55,6 +55,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
     NS_IMETHOD    Init(const nsString& aId);
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
+    NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)  { return nsBaseAppCore::SetDocumentCharset(aCharset); } 
 
     NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue);
     NS_IMETHOD    Undo();

@@ -36,18 +36,22 @@ public:
   NS_IMETHOD    GetId(nsString& aId)=0;
 
   NS_IMETHOD    Init(const nsString& aId)=0;
+
+  NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)=0;
 };
 
 
 #define NS_DECL_IDOMBASEAPPCORE   \
   NS_IMETHOD    GetId(nsString& aId);  \
   NS_IMETHOD    Init(const nsString& aId);  \
+  NS_IMETHOD    SetDocumentCharset(const nsString& aCharset);  \
 
 
 
 #define NS_FORWARD_IDOMBASEAPPCORE(_to)  \
   NS_IMETHOD    GetId(nsString& aId) { return _to##GetId(aId); } \
   NS_IMETHOD    Init(const nsString& aId) { return _to##Init(aId); }  \
+  NS_IMETHOD    SetDocumentCharset(const nsString& aCharset) { return _to##SetDocumentCharset(aCharset); }  \
 
 
 extern nsresult NS_InitBaseAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
