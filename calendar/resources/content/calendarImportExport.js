@@ -134,6 +134,7 @@ function addEventsToCalendar( calendarEventArray, silent )
       }
 
       // the start time is in zulu time, need to convert to current time
+      if(calendarEvent.allDay != true)
       convertZuluToLocal( calendarEvent );
 
       // open the event dialog with the event to add
@@ -363,6 +364,7 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
       var calendarEvent = calendarEventArray[ eventArrayIndex ];
 
       // convert time to represent local to produce correct DTSTART and DTEND
+      if(calendarEvent.allDay != true)
       convertLocalToZulu( calendarEvent );
      
       if ( doPatchForExport )
@@ -429,7 +431,7 @@ function eventArrayToHTML( calendarEventArray )
 {
    sHTMLHeader = 
       "<html>\n" + "<head>\n" + "<title>Mozilla Calendar</title>\n" +
-      "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">\n" +
+      "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
       "</head>\n"+ "<body bgcolor=\"#FFFFFF\" text=\"#000000\">\n";
    sHTMLFooter =
       "\n</body>\n</html>\n";
