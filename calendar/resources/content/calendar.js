@@ -724,14 +724,20 @@ function newEvent( startDate, endDate, allDay )
 * Defaults calendarFile to the selected calendar file.
 * Calls editNewToDo.
 */
-function newToDo ( startDate, dueDate ) {
+function newToDo ( startDate, dueDate ) 
+{
     var calendarToDo = createToDo();
    
     // created todo has no start or due date unless user wants one
     if (! startDate ) 
       calendarToDo.start.clear();
+  else
+    calendarToDo.start.setTime( startDate );
+
     if (! dueDate ) 
       calendarToDo.due.clear();
+  else
+    calendarToDo.due.setTime( dueDate );
 
     var server = getSelectedCalendarPathOrNull();
    
