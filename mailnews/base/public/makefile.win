@@ -45,6 +45,7 @@ XPIDLSRCS =								\
 		.\nsIMsgCopyService.idl			\
 		.\nsIMsgCopyServiceListener.idl			\
 		.\nsIUrlListenerManager.idl		\
+		.\nsIMsgStatusFeedback.idl \
 		$(NULL)
 
 ################################################################################

@@ -76,6 +76,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMsgBiffManager.obj		\
 	.\$(OBJDIR)\nsMsgNotificationManager.obj \
 	.\$(OBJDIR)\nsMsgCopyService.obj		\
+	.\$(OBJDIR)\nsMsgStatusFeedback.obj		\
 	$(NULL)
 
 
