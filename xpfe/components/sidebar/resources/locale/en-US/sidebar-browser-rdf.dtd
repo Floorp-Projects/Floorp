@@ -1,6 +1,8 @@
 <!-- extracted from ./sidebar-browser.rdf -->
 
 <!ENTITY sidebar.whats-related.label  "What's Related">
+<!-- LOCALIZATION NOTE  sidebar.flash.label: Do NOT localize the term "Flashes"  -->
 <!ENTITY sidebar.flash.label          "Flashes">
+<!-- LOCALIZATION NOTE  sidebar.tinderbox.label: Do NOT localize the term "Tinderbox"  -->
 <!ENTITY sidebar.tinderbox.label      "Tinderbox">
 <!ENTITY sidebar.bookmarks.label      "Bookmarks">

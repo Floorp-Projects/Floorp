@@ -5,6 +5,7 @@
 <!ENTITY sidebar.panel.horoscopes.label          "Horoscopes">
 <!ENTITY sidebar.panel.localnews.label           "Local News">
 <!ENTITY sidebar.panel.sports.label              "Sports">
+<!-- LOCALIZATION NOTE  sidebar.panel.whiteyellowpages.label: Do NOT localize "&amp"  -->
 <!ENTITY sidebar.panel.whiteyellowpages.label    "White &amp; Yellow Pages">
 <!ENTITY sidebar.panel.travel.label              "Travel">
 <!ENTITY sidebar.panel.search.label              "Search">
