@@ -29,6 +29,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIObserverService.h"
+#include "nsIDocShell.h"
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
@@ -80,9 +81,11 @@ nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aUR
 		nsIDOMWindow *aWindow = mWindow;
 		nsCOMPtr<nsIScriptGlobalObject>
 			globalScript(do_QueryInterface(aWindow));
-		nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+      nsCOMPtr<nsIDocShell> docShell;
 		if (globalScript)
-			globalScript->GetWebShell(getter_AddRefs(webshell));
+			globalScript->GetDocShell(getter_AddRefs(docShell));
+		nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
+      nsCOMPtr<nsIWebShell> rootWebshell;
 		if (webshell)
 			webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
 		if (rootWebshell) 
@@ -117,9 +120,11 @@ nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* c
 		nsIDOMWindow *aWindow = mWindow;
 		nsCOMPtr<nsIScriptGlobalObject>
 			globalScript(do_QueryInterface(aWindow));
-		nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+      nsCOMPtr<nsIDocShell> docShell;
 		if (globalScript)
-			globalScript->GetWebShell(getter_AddRefs(webshell));
+			globalScript->GetDocShell(getter_AddRefs(docShell));
+		nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
+      nsCOMPtr<nsIWebShell> rootWebshell;
 		if (webshell)
 			webshell->GetRootWebShell(*getter_AddRefs(rootWebshell));
 		if (rootWebshell) 
@@ -310,9 +315,11 @@ NS_IMETHODIMP nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow 
 	{
 		nsCOMPtr<nsIScriptGlobalObject>
 			globalScript(do_QueryInterface(aWindow));
-		nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+      nsCOMPtr<nsIDocShell> docShell;
 		if (globalScript)
-			globalScript->GetWebShell(getter_AddRefs(webshell));
+			globalScript->GetDocShell(getter_AddRefs(docShell));
+		nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
+      nsCOMPtr<nsIWebShell> rootWebshell;
 		if (webshell)
 		{
 			webshell->GetRootWebShell(mWebShell);

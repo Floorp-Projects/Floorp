@@ -191,9 +191,11 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
 
 	nsCOMPtr<nsIScriptGlobalObject>
 		globalScript(do_QueryInterface(aWindow));
-	nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+   nsCOMPtr<nsIDocShell> docShell;
 	if (globalScript)
-		globalScript->GetWebShell(getter_AddRefs(webshell));
+		globalScript->GetDocShell(getter_AddRefs(docShell));
+	nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
+   nsCOMPtr<nsIWebShell> rootWebshell;
 	if (webshell)
 	{
 		webshell->GetRootWebShell(mRootWebShell);

@@ -34,81 +34,82 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMBarProp.h"
 
-class nsIBrowserWindow;
+class nsIWebBrowserChrome;
 
 // Script "BarProp" object
 class BarPropImpl : public nsIScriptObjectOwner, public nsIDOMBarProp {
 public:
-  BarPropImpl();
-  virtual ~BarPropImpl();
+   BarPropImpl();
+   virtual ~BarPropImpl();
 
-  NS_DECL_ISUPPORTS
+   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
+   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-  NS_IMETHOD_(void) SetBrowserWindow(nsIBrowserWindow *aBrowser);
+   NS_IMETHOD SetWebBrowserChrome(nsIWebBrowserChrome* aBrowserChrome);
 
-  NS_IMETHOD        GetVisibleByFlag(PRBool *aVisible, PRUint32 aChromeFlag);
-  NS_IMETHOD        SetVisibleByFlag(PRBool aVisible, PRUint32 aChromeFlag);
+   NS_IMETHOD GetVisibleByFlag(PRBool *aVisible, PRUint32 aChromeFlag);
+   NS_IMETHOD SetVisibleByFlag(PRBool aVisible, PRUint32 aChromeFlag);
 
 protected:
-  nsIBrowserWindow* mBrowser;
-  void *mScriptObject;
+   // Weak Reference
+   nsIWebBrowserChrome* mBrowserChrome;
+   void *mScriptObject;
 };
 
 // Script "menubar" object
 class MenubarPropImpl : public BarPropImpl {
 public:
-  MenubarPropImpl();
-  virtual ~MenubarPropImpl();
+   MenubarPropImpl();
+   virtual ~MenubarPropImpl();
 
-  NS_DECL_IDOMBARPROP
+   NS_DECL_IDOMBARPROP
 };
 
 // Script "toolbar" object
 class ToolbarPropImpl : public BarPropImpl {
 public:
-  ToolbarPropImpl();
-  virtual ~ToolbarPropImpl();
+   ToolbarPropImpl();
+   virtual ~ToolbarPropImpl();
 
-  NS_DECL_IDOMBARPROP
+   NS_DECL_IDOMBARPROP
 };
 
 // Script "locationbar" object
 class LocationbarPropImpl : public BarPropImpl {
 public:
-  LocationbarPropImpl();
-  virtual ~LocationbarPropImpl();
+   LocationbarPropImpl();
+   virtual ~LocationbarPropImpl();
 
-  NS_DECL_IDOMBARPROP
+   NS_DECL_IDOMBARPROP
 };
 
 // Script "personalbar" object
 class PersonalbarPropImpl : public BarPropImpl {
 public:
-  PersonalbarPropImpl();
-  virtual ~PersonalbarPropImpl();
+   PersonalbarPropImpl();
+   virtual ~PersonalbarPropImpl();
 
-  NS_DECL_IDOMBARPROP
+   NS_DECL_IDOMBARPROP
 };
 
 // Script "statusbar" object
 class StatusbarPropImpl : public BarPropImpl {
 public:
-  StatusbarPropImpl();
-  virtual ~StatusbarPropImpl();
+   StatusbarPropImpl();
+   virtual ~StatusbarPropImpl();
 
-  NS_DECL_IDOMBARPROP
+   NS_DECL_IDOMBARPROP
 };
 
 // Script "scrollbars" object
 class ScrollbarsPropImpl : public BarPropImpl {
 public:
-  ScrollbarsPropImpl();
-  virtual ~ScrollbarsPropImpl();
+   ScrollbarsPropImpl();
+   virtual ~ScrollbarsPropImpl();
 
-  NS_DECL_IDOMBARPROP
+   NS_DECL_IDOMBARPROP
 };
 
 #endif /* nsBarProps_h___ */

@@ -53,6 +53,7 @@
 #include "nsIDOMNode.h"
 #include "nsEscape.h"
 #include "plstr.h"
+#include "nsIDocShell.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
@@ -401,8 +402,9 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 		if (!globalObj)
 			return NS_ERROR_FAILURE;
 		
-		nsCOMPtr<nsIWebShell> webShell;
-		globalObj->GetWebShell(getter_AddRefs(webShell));
+      nsCOMPtr<nsIDocShell> docShell;
+		globalObj->GetDocShell(getter_AddRefs(docShell));
+		nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
 		if (!webShell)
 			return NS_ERROR_NOT_INITIALIZED;
 		m_webShell = webShell;

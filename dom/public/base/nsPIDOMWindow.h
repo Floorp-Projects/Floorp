@@ -29,7 +29,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMLocation.h"
 
-class nsIWebShell;
+class nsIDocShell;
 
 #define NS_PIDOMWINDOW_IID \
 { 0x3aa80781, 0x7e6a, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
@@ -42,7 +42,7 @@ public:
   NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult)=0;
 
   NS_IMETHOD GetLocation(nsIDOMLocation** aLocation) = 0;
-  NS_IMETHOD GetWebShell(nsIWebShell **aWebShell) =0;// XXX This may be temporary - rods
+  NS_IMETHOD GetDocShell(nsIDocShell **aDocShell) =0;// XXX This may be temporary - rods
   
   // This is private because activate/deactivate events are not part of the DOM spec.
   NS_IMETHOD Activate() = 0;

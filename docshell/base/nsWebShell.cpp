@@ -84,6 +84,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsCURILoader.h"
+#include "nsIDOMWindow.h"
 
 #include "nsIHTTPChannel.h" // add this to the ick include list...we need it to QI for post data interface
 #include "nsHTTPEnums.h"
@@ -631,7 +632,7 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mContainer);
 
   if (nsnull != mScriptGlobal) {
-    mScriptGlobal->SetWebShell(nsnull);
+    mScriptGlobal->SetDocShell(nsnull);
     NS_RELEASE(mScriptGlobal);
   }
   if (nsnull != mScriptContext) {
@@ -765,6 +766,13 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       NS_ENSURE_SUCCESS(CreateScriptEnvironment(), NS_ERROR_FAILURE);
       *aInstancePtr = mScriptGlobal;
       NS_ADDREF((nsISupports*)*aInstancePtr);
+      return NS_OK;
+      }
+   else if(aIID.Equals(NS_GET_IID(nsIDOMWindow)))
+      {
+      NS_ENSURE_SUCCESS(CreateScriptEnvironment(), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(mScriptGlobal->QueryInterface(NS_GET_IID(nsIDOMWindow),
+         aInstancePtr), NS_ERROR_FAILURE);
       return NS_OK;
       }
    else if(mPluginManager) //XXX this seems a little wrong. MMP
@@ -3040,7 +3048,7 @@ nsWebShell::CreateScriptEnvironment()
     if (NS_FAILED(res)) {
       return res;
     }
-    mScriptGlobal->SetWebShell(this);
+    mScriptGlobal->SetDocShell(this);
     mScriptGlobal->SetGlobalObjectOwner(
       NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, this));
   }
@@ -3964,10 +3972,14 @@ NS_IMETHODIMP nsWebShell::GetPositionAndSize(PRInt32* aX, PRInt32* aY,
    else
       result = mBounds;
 
-   *aX = result.x;
-   *aY = result.y;
-   *aCX = result.width;
-   *aCY = result.height;
+   if(aX)
+      *aX = result.x;
+   if(aY)
+      *aY = result.y;
+   if(aCX)
+      *aCX = result.width;
+   if(aCY)
+      *aCY = result.height;
 
    return NS_OK;
 }

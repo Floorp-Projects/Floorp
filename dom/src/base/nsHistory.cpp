@@ -17,27 +17,25 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *    Travis Bogard <travis@netscape.com> 
  */
 
+#include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsHistory.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
-
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kIDOMHistoryIID, NS_IDOMHISTORY_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+#include "nsIDocShell.h"
 
 //
 //  History class implementation 
 //
-HistoryImpl::HistoryImpl()
+HistoryImpl::HistoryImpl(nsIDocShell* aDocShell) : mScriptObject(nsnull), 
+   mDocShell(aDocShell) 
 {
   NS_INIT_REFCNT();
-  mWebShell = nsnull;
-  mScriptObject = nsnull;
 }
 
 HistoryImpl::~HistoryImpl()
@@ -47,31 +45,11 @@ HistoryImpl::~HistoryImpl()
 NS_IMPL_ADDREF(HistoryImpl)
 NS_IMPL_RELEASE(HistoryImpl)
 
-nsresult 
-HistoryImpl::QueryInterface(const nsIID& aIID,
-                              void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMHistoryIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMHistory*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(HistoryImpl)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptObjectOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMHistory)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 HistoryImpl::SetScriptObject(void *aScriptObject)
@@ -96,18 +74,17 @@ HistoryImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 }
 
 NS_IMETHODIMP_(void)       
-HistoryImpl::SetWebShell(nsIWebShell *aWebShell)
+HistoryImpl::SetDocShell(nsIDocShell *aDocShell)
 {
-  //mWebShell isn't refcnt'd here.  GlobalWindow calls SetWebShell(nsnull) 
-  //when it's told that the WebShell is going to be deleted.
-  mWebShell = aWebShell;
+  mDocShell = aDocShell; // Weak Reference
 }
 
 NS_IMETHODIMP
 HistoryImpl::GetLength(PRInt32* aLength)
 {
-  if (nsnull != mWebShell) {
-    mWebShell->GetHistoryLength(*aLength);
+  if (mDocShell) {
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+    webShell->GetHistoryLength(*aLength);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -119,8 +96,9 @@ HistoryImpl::GetCurrent(nsString& aCurrent)
   PRInt32 curIndex;
   const PRUnichar* curURL = nsnull;
 
-  if (nsnull != mWebShell && NS_OK == mWebShell->GetHistoryIndex(curIndex)) {
-    mWebShell->GetURL(curIndex, &curURL);
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (webShell && NS_OK == webShell->GetHistoryIndex(curIndex)) {
+    webShell->GetURL(curIndex, &curURL);
   }
   aCurrent.SetString(curURL);
 
@@ -133,8 +111,9 @@ HistoryImpl::GetPrevious(nsString& aPrevious)
   PRInt32 curIndex;
   const PRUnichar* prevURL = nsnull;
 
-  if (nsnull != mWebShell && NS_OK == mWebShell->GetHistoryIndex(curIndex)) {
-    mWebShell->GetURL(curIndex-1, &prevURL);
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (webShell && NS_OK == webShell->GetHistoryIndex(curIndex)) {
+    webShell->GetURL(curIndex-1, &prevURL);
   }
   aPrevious.SetString(prevURL);
 
@@ -147,8 +126,9 @@ HistoryImpl::GetNext(nsString& aNext)
   PRInt32 curIndex;
   const PRUnichar* nextURL = nsnull;
 
-  if (nsnull != mWebShell && NS_OK == mWebShell->GetHistoryIndex(curIndex)) {
-    mWebShell->GetURL(curIndex+1, &nextURL);
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (webShell && NS_OK == webShell->GetHistoryIndex(curIndex)) {
+    webShell->GetURL(curIndex+1, &nextURL);
   }
   aNext.SetString(nextURL);
 
@@ -158,8 +138,9 @@ HistoryImpl::GetNext(nsString& aNext)
 NS_IMETHODIMP
 HistoryImpl::Back()
 {
-  if (nsnull != mWebShell && NS_OK == mWebShell->CanBack()) {
-    mWebShell->Back();
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (webShell && NS_OK == webShell->CanBack()) {
+    webShell->Back();
   }
   
   return NS_OK;
@@ -168,8 +149,9 @@ HistoryImpl::Back()
 NS_IMETHODIMP
 HistoryImpl::Forward()
 {
-  if (nsnull != mWebShell && NS_OK == mWebShell->CanForward()) {
-    mWebShell->Forward();
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (webShell && NS_OK == webShell->CanForward()) {
+    webShell->Forward();
   }
 
   return NS_OK;
@@ -179,14 +161,15 @@ NS_IMETHODIMP
 HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
 {
   nsresult result = NS_OK;
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
   if (argc > 0) {
     if (JSVAL_IS_INT(argv[0])) {
       PRInt32 delta = JSVAL_TO_INT(argv[0]);
       PRInt32 curIndex;
 
-      result = mWebShell->GetHistoryIndex(curIndex);
+      result = webShell->GetHistoryIndex(curIndex);
       if (NS_SUCCEEDED(result)) {
-        result = mWebShell->GoTo(curIndex + delta);
+        result = webShell->GoTo(curIndex + delta);
       }
     }
     else {
@@ -196,18 +179,18 @@ HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
       if (nsnull != jsstr) {
         nsAutoString substr(JS_GetStringBytes(jsstr));
 
-        result = mWebShell->GetHistoryLength(count);
+        result = webShell->GetHistoryLength(count);
         for (i = 0; (i < count) && NS_SUCCEEDED(result); i++) {
           const PRUnichar* urlstr;
           nsAutoString url;
           // XXX Ownership rules for the string passed back for this
           // method are not XPCOM compliant. If they were correct, 
           // we'd be deallocating the string passed back.
-          result = mWebShell->GetURL(i, &urlstr);
+          result = webShell->GetURL(i, &urlstr);
           url.SetString(urlstr);
 
           if (-1 != url.Find(substr)) {
-            result = mWebShell->GoTo(i);
+            result = webShell->GoTo(i);
             break;
           }
         }

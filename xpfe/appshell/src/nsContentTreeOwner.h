@@ -23,14 +23,21 @@
 #ifndef nsContentTreeOwner_h__
 #define nsContentTreeOwner_h__
 
+// Helper Classes
 #include "nsCOMPtr.h"
-#include "nsIDocShellTreeOwner.h"
+
+// Interfaces Needed
 #include "nsIBaseWindow.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIWebBrowserChrome.h"
 
 class nsXULWindow;
 
 class nsContentTreeOwner : public nsIDocShellTreeOwner,
-                                  public nsIBaseWindow
+                                  public nsIBaseWindow,
+                                  public nsIInterfaceRequestor,
+                                  public nsIWebBrowserChrome
 {
 friend class nsXULWindow;
 
@@ -39,6 +46,8 @@ public:
 
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIDOCSHELLTREEOWNER
+   NS_DECL_NSIINTERFACEREQUESTOR
+   NS_DECL_NSIWEBBROWSERCHROME
 
 protected:
    nsContentTreeOwner(PRBool fPrimary);
@@ -47,9 +56,12 @@ protected:
    void XULWindow(nsXULWindow* aXULWindow);
    nsXULWindow* XULWindow();
 
+   NS_IMETHOD ApplyChromeMask();
+
 protected:
    nsXULWindow*      mXULWindow;
    PRBool            mPrimary;
+   PRUint32          mChromeMask;
 };
 
 #endif /* nsContentTreeOwner_h__ */

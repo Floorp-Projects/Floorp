@@ -80,6 +80,7 @@
 #include "nsIEditorController.h"
 #include "nsEditorController.h"
 #include "nsIControllers.h"
+#include "nsIDocShell.h"
 
 
 ///////////////////////////////////////
@@ -453,8 +454,9 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
   if (NS_FAILED(rv) || !globalObj)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIWebShell> webShell;
-  globalObj->GetWebShell(getter_AddRefs(webShell));
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
   if (!webShell)
     return NS_ERROR_FAILURE;
     
@@ -477,8 +479,9 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
 
   nsresult  rv = NS_OK;
   
-  nsCOMPtr<nsIWebShell> webShell;
-  globalObj->GetWebShell(getter_AddRefs(webShell));
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
   if (!webShell)
     return NS_ERROR_NOT_INITIALIZED;
 

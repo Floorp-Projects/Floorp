@@ -46,8 +46,9 @@ public:
 
    NS_DECL_NSIWEBBROWSERCHROME
    
+   NS_DECL_NSIDOCSHELLTREEOWNER
    // nsIDocShellTreeOwner
-   NS_IMETHOD FindItemWithName(const PRUnichar* aName,
+/*   NS_IMETHOD FindItemWithName(const PRUnichar* aName,
          nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem);
    NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
          PRBool aPrimary, const PRUnichar* aID);
@@ -56,7 +57,7 @@ public:
    NS_IMETHOD ShowModal();
 
    NS_IMETHOD GetNewBrowserChrome(PRInt32 aChromeFlags,
-         nsIWebBrowserChrome** aWebBrowserChrome);
+         nsIWebBrowserChrome** aWebBrowserChrome); */
 
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIINTERFACEREQUESTOR

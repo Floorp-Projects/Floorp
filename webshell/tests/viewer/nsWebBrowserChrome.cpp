@@ -167,8 +167,8 @@ NS_IMETHODIMP nsWebBrowserChrome::ShowModal()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::GetNewBrowserChrome(PRInt32 aChromeFlags,
-   nsIWebBrowserChrome** aWebBrowserChrome)
+NS_IMETHODIMP nsWebBrowserChrome::GetNewWindow(PRInt32 aChromeFlags, 
+   nsIDocShellTreeItem** aDocShellTreeItem)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;

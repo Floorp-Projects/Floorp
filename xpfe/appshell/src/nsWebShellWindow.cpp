@@ -213,12 +213,9 @@ nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
   mWebShell = nsnull;
   mWindow   = nsnull;
   mCallbacks = nsnull;
-  mContinueModalLoop = PR_FALSE;
-  mChromeInitialized = PR_FALSE;
   mLockedUntilChromeLoad = PR_FALSE;
   mChromeMask = NS_CHROME_ALL_CHROME;
   mIntrinsicallySized = PR_FALSE;
-  mCreatedVisible = PR_TRUE;
   mDebuting = PR_FALSE;
   mLoadDefaultPage = PR_TRUE;
 }
@@ -250,6 +247,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIXULWindow)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
 
 nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
@@ -263,7 +261,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   nsresult rv;
   nsCOMPtr<nsIWidget> parentWidget;
 
-  mCreatedVisible = aCreatedVisible;
+  mShowAfterLoad = aCreatedVisible;
   mLoadDefaultPage = aLoadDefaultPage;
   
   // XXX: need to get the default window size from prefs...
@@ -372,43 +370,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 NS_METHOD
 nsWebShellWindow::Close()
 {
-  #ifdef XP_MAC // Anyone still using native menus should add themselves here.
-  // unregister as document listener
-  // this is needed for menus
-  nsCOMPtr<nsIContentViewer> cv;
-  if ( mWebShell )
- 	 mWebShell->GetContentViewer(getter_AddRefs(cv));
-  if (cv) {
-   
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-    if (!docv)
-      return NS_OK;
-
-    nsCOMPtr<nsIDocument> doc;
-    docv->GetDocument(*getter_AddRefs(doc));
-    if (!doc)
-      return NS_OK;
-
-    doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
-  }
-#endif
-  nsresult rv;
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv)
-  if (NS_SUCCEEDED(rv))
-   appShell->UnregisterTopLevelWindow(this);
-   
-  // let's make sure the window doesn't get deleted out from under us
-  // while we are trying to close....this can happen if the webshell
-  // we close ends up being the last owning reference to this webshell
-  // window.
-
-  nsCOMPtr<nsIWebShellWindow> placeHolder = this;
-
-  ExitModalLoop();
-
-  nsXULWindow::Destroy();
-
-  return rv;
+  return nsXULWindow::Destroy();
 }
 
 
@@ -577,7 +539,7 @@ nsWebShellWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
   // If loading a new root .xul document, then redo chrome.
   if (aShell == mWebShell) {
-      mChromeInitialized = PR_FALSE;
+      mChromeLoaded = PR_FALSE;
   }
   return NS_OK;
 }
@@ -596,38 +558,6 @@ nsWebShellWindow::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
   return NS_OK;
 }
 
-
-
-//----------------------------------------
-nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName) 
-{
-  nsCOMPtr<nsIDOMNode> node; // result.
-  nsCOMPtr<nsIDOMElement> element;
-  aDomDoc->GetDocumentElement(getter_AddRefs(element));
-  if (!element)
-    return node;
-
-  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(element));
-  if (!parent)
-    return node;
-
-  parent->GetFirstChild(getter_AddRefs(node));
-  while (node) {
-    nsString name;
-    node->GetNodeName(name);
-
-#ifdef DEBUG_rods
-    printf("Looking for [%s] [%s]\n", aName.ToNewCString(), name.ToNewCString()); // this leaks
-#endif
-
-    if (name.Equals(aName))
-      return node;
-    nsCOMPtr<nsIDOMNode> oldNode(node);
-    oldNode->GetNextSibling(getter_AddRefs(node));
-  }
-  node = do_QueryInterface(nsnull);
-  return node;
-}
 
 
 //----------------------------------------
@@ -1213,7 +1143,10 @@ NS_IMETHODIMP
 nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
                               nsIWebShell *&aNewWebShell)
 {
-  nsresult rv;
+   NS_ERROR("Can't use this anymore");
+   return NS_ERROR_FAILURE;
+
+ /* nsresult rv;
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv))
     return rv;
@@ -1327,7 +1260,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
     }
   }
 
-  return rv;
+  return rv; */
 }
 
 
@@ -1369,46 +1302,7 @@ nsWebShellWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTa
 NS_IMETHODIMP
 nsWebShellWindow::Show(PRBool aShow)
 {
-  if (mDebuting)
-    return NS_OK;
-  mDebuting = PR_TRUE; // (Show/Focus is recursive)
-  nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mWebShell));
-  shellAsWin->SetVisibility(aShow);
-  mWindow->Show(aShow);
-  
-  // this may cause problems, focusing the content webshell on every show.
-  // still, this code's previous position, in OnEndDocumentLoad, was
-  // forcing the window visible too early. this made the window flash,
-  // as it was resized, and aggravated a gtk bug in which windows cannot
-  // be resized after they're made visible. yes, that wants fixing.
-  // repercussions were myriad. focusing here, instead.
-  nsCOMPtr<nsIWebShell> contentShell;
-  GetContentWebShell(getter_AddRefs(contentShell));
-  if (contentShell) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    if (NS_SUCCEEDED(ConvertWebShellToDOMWindow(contentShell, 
-                                                getter_AddRefs(domWindow)))) {
-      domWindow->Focus();
-    }
-  }
-
-  nsresult rv;
-  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
-  if ( NS_SUCCEEDED(rv) )
-  {
-   	windowMediator->UpdateWindowTimeStamp( this ); 
-  } 
-  // Hide splash screen (if there is one).
-  static PRBool splashScreenGone = PR_FALSE;
-  if ( !splashScreenGone ) {
-      NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv);
-      if ( NS_SUCCEEDED(rv) && appShellService ) {
-          appShellService->HideSplashScreen();
-      } 
-      splashScreenGone = PR_TRUE;
-  }
-  mDebuting = PR_FALSE;
-  return NS_OK;
+   return nsXULWindow::SetVisibility(aShow);
 }
 
 NS_IMETHODIMP
@@ -1423,51 +1317,7 @@ nsWebShellWindow::ShowModal()
 NS_IMETHODIMP
 nsWebShellWindow::ShowModalInternal()
 {
-  nsresult    rv;
-  nsIAppShell *subshell;
-
-  // spin up a new application shell: event loops live there
-  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, NS_GET_IID(nsIAppShell), (void**)&subshell);
-  if (NS_FAILED(rv))
-    return rv;
-
-  subshell->Create(0, nsnull);
-  subshell->Spinup();
-
-  nsIWidget *window = GetWidget();
-  window->SetModal(PR_TRUE);
-  NS_ADDREF(window);
-  mContinueModalLoop = PR_TRUE;
-
-  // Push nsnull onto the JSContext stack before we dispatch a native event.
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
-                  &rv);
-  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(stack->Push(nsnull))) {
-
-    while (NS_SUCCEEDED(rv) && mContinueModalLoop) {
-      void      *data;
-      PRBool    isRealEvent,
-                processEvent;
-
-      rv = subshell->GetNativeEvent(isRealEvent, data);
-      if (NS_SUCCEEDED(rv)) {
-        window->ModalEventFilter(isRealEvent, data, &processEvent);
-        if (processEvent)
-          subshell->DispatchNativeEvent(isRealEvent, data);
-      }
-    }
-
-    JSContext *cx;
-    stack->Pop(&cx);
-    NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
-  }
-
-  window->SetModal(PR_FALSE);
-  subshell->Spindown();
-  NS_RELEASE(window);
-  NS_RELEASE(subshell);
-
-  return rv;
+   return nsXULWindow::ShowModal();
 }
 
 
@@ -1589,10 +1439,10 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
    * the mChrome Initialized  member to check whether chrome should be 
    * initialized or not - Radha
    */
-  if (mChromeInitialized)
+  if (mChromeLoaded)
     return NS_OK;
 
-  mChromeInitialized = PR_TRUE;
+  mChromeLoaded = PR_TRUE;
 
   mLockedUntilChromeLoad = PR_FALSE;
 
@@ -1650,8 +1500,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     mWebShell->SizeToContent();
 
   // Here's where we service the "show" request initially given in Initialize()
-  if (mCreatedVisible)
-    Show(PR_TRUE);
+  OnChromeLoaded();
 
   return NS_OK;
 }
@@ -1727,22 +1576,6 @@ nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, n
   return node;
 
 } // nsWebShellWindow::FindNamedDOMNode
-
-//----------------------------------------
-nsCOMPtr<nsIDOMNode> nsWebShellWindow::GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc)
-{
-  nsCOMPtr<nsIDOMNode> node; // null
-
-  if (nsnull == aDOMDoc) {
-    return node;
-  }
-
-  nsCOMPtr<nsIDOMElement> element;
-  aDOMDoc->GetDocumentElement(getter_AddRefs(element));
-  if (element)
-    return nsCOMPtr<nsIDOMNode>(do_QueryInterface(element));
-  return node;
-} // nsWebShellWindow::GetParentNodeFromDOMDoc
 
 //----------------------------------------
 nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebShellName)

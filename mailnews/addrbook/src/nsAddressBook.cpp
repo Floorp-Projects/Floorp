@@ -48,6 +48,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerFile.h"
+#include "nsIDocShell.h"
 #include "nsXPIDLString.h"
 #include "nsICategoryManager.h"
 
@@ -322,8 +323,9 @@ NS_IMETHODIMP nsAddressBook::SetWebShellWindow(nsIDOMWindow *aWin)
      return NS_ERROR_FAILURE;
    }
  
-   nsCOMPtr<nsIWebShell> webShell;
-   globalObj->GetWebShell(getter_AddRefs(webShell));
+   nsCOMPtr<nsIDocShell> docShell;
+   globalObj->GetDocShell(getter_AddRefs(docShell));
+   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
    if (!webShell)
      return NS_ERROR_NOT_INITIALIZED;
  

@@ -32,6 +32,7 @@
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsWalletPreview.h"
+#include "nsIDocShell.h"
 
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
@@ -74,10 +75,12 @@ static void DOMWindowToWebShellWindow(
     return; // with webWindow unchanged -- its constructor gives it a null ptr
   }
   nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
-  nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+  nsCOMPtr<nsIDocShell> docShell;
   if (globalScript) {
-    globalScript->GetWebShell(getter_AddRefs(webshell));
+    globalScript->GetDocShell(getter_AddRefs(docShell));
   }
+  nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
+  nsCOMPtr<nsIWebShell> rootWebshell;
   if(!webshell)
    return;
   nsCOMPtr<nsIWebShellContainer> topLevelWindow;

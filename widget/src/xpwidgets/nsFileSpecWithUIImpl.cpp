@@ -28,6 +28,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
@@ -51,29 +52,22 @@ static nsIWidget *parentWidget( nsIDOMWindow *window ) {
   if ( window ) {
     nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( window );
     if ( sgo ) {
-      nsCOMPtr<nsIWebShell> webShell;
-      sgo->GetWebShell( getter_AddRefs( webShell ) );
-      if ( webShell ) {
-        nsCOMPtr<nsIContentViewer> contentViewer;
-        webShell->GetContentViewer( getter_AddRefs( contentViewer ) );
-        if ( contentViewer ) {
-          nsCOMPtr<nsIDocumentViewer> documentViewer = do_QueryInterface( contentViewer );
-          if ( documentViewer ) {
-            nsCOMPtr<nsIPresShell> presShell;
-            documentViewer->GetPresShell( *getter_AddRefs( presShell ) );
-            if ( presShell ) {
-              nsCOMPtr<nsIViewManager> viewManager;
-              presShell->GetViewManager( getter_AddRefs( viewManager ) );
-              if ( viewManager ) {
-                nsIView *view; // GetRootView doesn't AddRef!
-                viewManager->GetRootView( view );
-                if ( view ) {
-                  nsCOMPtr<nsIWidget> widget;
-                  view->GetWidget( *getter_AddRefs( widget ) );
-                  if ( widget ) {
-                      result = widget.get();
-                  }
-                }
+      nsCOMPtr<nsIDocShell> docShell;
+      sgo->GetDocShell( getter_AddRefs( docShell ) );
+      if ( docShell ) {
+        nsCOMPtr<nsIPresShell> presShell;
+        docShell->GetPresShell( getter_AddRefs( presShell ) );
+        if ( presShell ) {
+          nsCOMPtr<nsIViewManager> viewManager;
+          presShell->GetViewManager( getter_AddRefs( viewManager ) );
+          if ( viewManager ) {
+            nsIView *view; // GetRootView doesn't AddRef!
+            viewManager->GetRootView( view );
+            if ( view ) {
+              nsCOMPtr<nsIWidget> widget;
+              view->GetWidget( *getter_AddRefs( widget ) );
+              if ( widget ) {
+                  result = widget.get();
               }
             }
           }

@@ -82,8 +82,8 @@ public:
     NS_IMETHOD SetContext(nsIScriptContext *aContext);
     NS_IMETHOD GetContext(nsIScriptContext **aContext);
     NS_IMETHOD SetNewDocument(nsIDOMDocument *aDocument);
-    NS_IMETHOD SetWebShell(nsIWebShell *aWebShell);
-    NS_IMETHOD GetWebShell(nsIWebShell **aWebShell);
+    NS_IMETHOD SetDocShell(nsIDocShell *aDocShell);
+    NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
     NS_IMETHOD SetOpenerWindow(nsIDOMWindow *aOpener);
     NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
     NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner);
@@ -418,7 +418,7 @@ nsXULPrototypeDocument::SetNewDocument(nsIDOMDocument *aDocument)
 
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::SetWebShell(nsIWebShell *aWebShell)
+nsXULPrototypeDocument::SetDocShell(nsIDocShell *aDocShell)
 {
     NS_NOTREACHED("waaah!");
     return NS_ERROR_UNEXPECTED;
@@ -426,7 +426,7 @@ nsXULPrototypeDocument::SetWebShell(nsIWebShell *aWebShell)
 
 
 NS_IMETHODIMP
-nsXULPrototypeDocument::GetWebShell(nsIWebShell **aWebShell)
+nsXULPrototypeDocument::GetDocShell(nsIDocShell **aDocShell)
 {
     NS_NOTREACHED("waaah!");
     return NS_ERROR_UNEXPECTED;

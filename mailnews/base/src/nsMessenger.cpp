@@ -57,6 +57,7 @@
 #include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"
 
 
 // mail
@@ -203,14 +204,14 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
 
-  nsIWebShell *webShell = nsnull;
-  nsCOMPtr<nsIWebShell> rootWebShell;
-
-  globalObj->GetWebShell(&webShell);
-  if (nsnull == webShell) 
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+  if (!webShell) 
   {
     return NS_ERROR_FAILURE;
   }
+  nsCOMPtr<nsIWebShell> rootWebShell;
 
   webShell->GetRootWebShell(*getter_AddRefs(rootWebShell));
   if (nsnull != rootWebShell) 
@@ -235,7 +236,6 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
     }
   }
 
-  NS_RELEASE(webShell);
 
   return NS_OK;
 }

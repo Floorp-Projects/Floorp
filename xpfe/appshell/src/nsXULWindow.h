@@ -33,15 +33,18 @@
 #include "nsString.h"
 
 // Interfaces needed
-#include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
-#include "nsIWidget.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIEventQueueService.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIWidget.h"
+#include "nsIXULWindow.h"
 
 // nsXULWindow
 
-class nsXULWindow : public nsIXULWindow, public nsIBaseWindow
+class nsXULWindow : public nsIXULWindow, public nsIBaseWindow, 
+   public nsIInterfaceRequestor
 {
 friend class nsChromeTreeOwner;
 friend class nsContentTreeOwner;
@@ -49,6 +52,7 @@ friend class nsContentTreeOwner;
 public:
    NS_DECL_ISUPPORTS
 
+   NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSIXULWINDOW
    NS_DECL_NSIBASEWINDOW
 
@@ -59,6 +63,8 @@ protected:
    NS_IMETHOD EnsureChromeTreeOwner();
    NS_IMETHOD EnsureContentTreeOwner();
    NS_IMETHOD EnsurePrimaryContentTreeOwner();
+   void OnChromeLoaded();
+
 
    NS_IMETHOD GetDOMElementFromDocShell(nsIDocShell* aDocShell, 
       nsIDOMElement** aDOMElement);
@@ -68,8 +74,13 @@ protected:
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 
       PRInt32 aCY);
    NS_IMETHOD ShowModal();
-   NS_IMETHOD GetNewBrowserChrome(PRInt32 aChromeFlags, 
-      nsIWebBrowserChrome** aWebBrowserChrome);
+   NS_IMETHOD ExitModalLoop();
+   NS_IMETHOD GetNewWindow(PRInt32 aChromeFlags, 
+      nsIDocShellTreeItem** aDocShellTreeItem);
+   NS_IMETHOD CreateNewChromeWindow(PRInt32 aChromeFlags,
+      nsIDocShellTreeItem** aDocShellTreeItem);
+   NS_IMETHOD CreateNewContentWindow(PRInt32 aChromeFlags,
+      nsIDocShellTreeItem** aDocShellTreeItem);
 
 protected:
    nsChromeTreeOwner*      mChromeTreeOwner;
@@ -78,6 +89,10 @@ protected:
    nsCOMPtr<nsIWidget>     mWindow;
    nsCOMPtr<nsIDocShell>   mDocShell;
    nsVoidArray             mContentShells;
+   PRBool                  mContinueModalLoop;
+   PRBool                  mDebuting;       // being made visible right now
+   PRBool                  mChromeLoaded; // True when chrome has loaded
+   PRBool                  mShowAfterLoad;  
 };
 
 // nsContentShellInfo
@@ -92,6 +107,22 @@ public:
    nsAutoString                  id;   // The identifier of the content shell
    PRBool                        primary; // Signals the fact that the shell is primary
    nsCOMPtr<nsIDocShellTreeItem> child; // content shell
+};
+
+// nsEventQueueStack
+// a little utility object to push an event queue and pop it when it
+// goes out of scope. should probably be in a file of utility functions.
+class nsEventQueueStack
+{
+public:
+   nsEventQueueStack();
+   ~nsEventQueueStack();
+
+   nsresult Success();
+
+protected:
+   nsCOMPtr<nsIEventQueueService>   mService;
+   nsIEventQueue                    *mQueue;
 };
 
 #endif /* nsXULWindow_h__ */
