@@ -190,7 +190,11 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
 
   nscoord ruleThickness, leading;
   GetRuleThickness(renderingContext, fm, ruleThickness);
-  fm->GetLeading(leading);
+
+  // get the leading to be left at the top of the resulting frame
+  // this seems more reliable than using fm->GetLeading() on suspicious fonts               
+  float em = float(font.mFont.size);                                            
+  leading = nscoord(0.2f * em); 
 
   // Rule 11, App. G, TeXbook
   // psi = clearance between rule and content
