@@ -172,7 +172,7 @@ nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
       {
         CharT* string_storage = mDataStart;
         if ( mFlags & kIsStorageDefinedSeparately )
-          string_storage = NS_REINTERPRET_CAST(typename nsXXXBufferHandle<CharT>*, this)->StorageStart();
+          string_storage = NS_REINTERPRET_CAST(nsXXXBufferHandle<CharT>*, this)->StorageStart();
         nsMemory::Free(string_storage);
       }
   }
