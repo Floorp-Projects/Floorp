@@ -502,7 +502,7 @@ nsHTTPRequest::SetTransport(nsIChannel* i_Transport, PRBool i_UsingProxy)
     if (mUsingProxy)
     {
         // Additional headers for proxy usage
-        SetHeader(nsHTTPAtoms::Pragma, "no-cache");
+        //SetHeader(nsHTTPAtoms::Pragma, "no-cache");
         // When Keep-Alive gets ready TODO
         //SetHeader(nsHTTPAtoms::Proxy-Connection, "Keep-Alive");
     }
