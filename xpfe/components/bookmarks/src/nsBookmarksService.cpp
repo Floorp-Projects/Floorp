@@ -2223,6 +2223,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 				nsCOMPtr<nsIChannel>	channel;
 				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))
 				{
+					channel->SetLoadAttributes(nsIChannel::FORCE_VALIDATION | nsIChannel::VALIDATE_ALWAYS);
 					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 					if (httpChannel)
 					{
