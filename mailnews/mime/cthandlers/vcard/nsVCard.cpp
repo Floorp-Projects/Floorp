@@ -498,24 +498,24 @@ static void enterProps(const char *s)
     }
 
 static void enterAttr(const char *s1, const char *s2)
-    {
-    const char *p1, *p2;
-    p1 = lookupProp_(s1);
-    if (s2) {
-	VObject *a;
-	p2 = lookupProp_(s2);
-	a = addProp(curProp,p1);
-	setVObjectStringZValue(a,p2);
+{
+  const char *p1, *p2 = nsnull;
+  p1 = lookupProp_(s1);
+  if (s2) {
+	  VObject *a;
+	  p2 = lookupProp_(s2);
+	  a = addProp(curProp,p1);
+	  setVObjectStringZValue(a,p2);
 	}
-    else
-	addProp(curProp,p1);
-    if (PL_strcasecmp(p1,VCBase64Prop) == 0 || (s2 && PL_strcasecmp(p2,VCBase64Prop)==0))
-	lexPushMode(L_BASE64);
-    else if (PL_strcasecmp(p1,VCQuotedPrintableProp) == 0
+  else
+	  addProp(curProp,p1);
+  if (PL_strcasecmp(p1,VCBase64Prop) == 0 || (s2 && PL_strcasecmp(p2,VCBase64Prop)==0))
+	  lexPushMode(L_BASE64);
+  else if (PL_strcasecmp(p1,VCQuotedPrintableProp) == 0
 	    || (s2 && PL_strcasecmp(p2,VCQuotedPrintableProp)==0))
-	lexPushMode(L_QUOTED_PRINTABLE);
-    deleteString((char *)s1); deleteString((char *)s2);
-    }
+    lexPushMode(L_QUOTED_PRINTABLE);
+  deleteString((char *)s1); deleteString((char *)s2);
+}
 
 
 #define PR_MAX_LEX_LOOKAHEAD_0 32
@@ -1306,7 +1306,7 @@ yyparse()
     *yyssp = yystate = 0;
 
 yyloop:
-    if (yyn = yydefred[yystate]) goto yyreduce;
+    if ((yyn = yydefred[yystate])) goto yyreduce;
     if (yychar < 0)
     {
         if ((yychar = yylex()) < 0) yychar = 0;

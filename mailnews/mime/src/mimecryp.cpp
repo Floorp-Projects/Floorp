@@ -256,8 +256,6 @@ MimeEncrypted_parse_eof (MimeObject *obj, PRBool abort_p)
 static int
 MimeEncrypted_parse_end (MimeObject *obj, PRBool abort_p)
 {
-  MimeEncrypted *enc = (MimeEncrypted *) obj;
-
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_end (obj, abort_p);
 }
 
@@ -458,10 +456,10 @@ MimeEncrypted_emit_buffered_child(MimeObject *obj)
 		  obj->options->generate_post_header_html_fn &&
 		  !obj->options->state->post_header_html_run_p)
 		{
-		  MimeHeaders *outer_headers;
+		  MimeHeaders *outer_headers = nsnull;
 		  MimeObject *p;
 		  for (p = obj; p->parent; p = p->parent)
-			outer_headers = p->headers;
+			  outer_headers = p->headers;
 		  PR_ASSERT(obj->options->state->first_data_written_p);
 		  html = obj->options->generate_post_header_html_fn(NULL,
 													obj->options->html_closure,
