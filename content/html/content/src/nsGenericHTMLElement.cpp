@@ -3535,6 +3535,11 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
     return;
 
   if (aDoFocus) {
+    if (IsInDoc()) {
+      // Make sure that our frames are up to date so we focus the right thing.
+      GetCurrentDoc()->FlushPendingNotifications(Flush_Frames);
+    }
+
     SetFocus(presContext);
 
     presContext->EventStateManager()->MoveCaretToFocus();
