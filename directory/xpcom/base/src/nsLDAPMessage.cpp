@@ -31,6 +31,7 @@
  * GPL.
  */
 
+#include "nsLDAP.h"
 #include "nsLDAPMessage.h"
 #include "nspr.h"
 
@@ -73,18 +74,15 @@ nsLDAPMessage::~nsLDAPMessage(void)
 	    break;
 	case LDAP_SUCCESS:
 	    // timed out (dunno why LDAP_SUCCESS is used to indicate this) 
-#ifdef DEBUG
-	    PR_fprintf(PR_STDERR,
-		"nsLDAPMessage::~nsLDAPMessage: ldap_msgfree() timed out.\n");
-#endif
+	    PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+		   ("nsLDAPMessage::~nsLDAPMessage: ldap_msgfree() "
+		    "timed out\n"));
 	    break;
 	default:
 	    // other failure
-	    // XXX - might errno conceivably be useful here?
-#ifdef DEBUG
-	    PR_fprintf(PR_STDERR,"nsLDAPMessage::~nsLDAPMessage: "
-		       "ldap_msgfree: %s\n", ldap_err2string(rc));
-#endif
+	    PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+		   ("nsLDAPMessage::~nsLDAPMessage: ldap_msgfree() "
+		    "failed: %s\n", ldap_err2string(rc)));
 	    break;
 	}
     }
@@ -113,7 +111,8 @@ nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
     // cache the connection handle associated with this operation
     //
     rv = mConnection->GetConnectionHandle(&mConnectionHandle);
-    NS_ENSURE_SUCCESS(rv,rv);
+    if (NS_FAILED(rv))
+	return NS_ERROR_FAILURE;
 
     return NS_OK;
 }

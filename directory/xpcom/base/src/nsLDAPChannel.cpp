@@ -71,11 +71,11 @@ nsLDAPChannel::Init(nsIURI *uri)
 {
     nsresult rv;
 
-    mURI = uri;
     mStatus = NS_OK;
+    mURI = uri;
+    mLoadAttributes = LOAD_NORMAL;
     mReadPipeOffset = 0;
     mReadPipeClosed = PR_FALSE;
-    mLoadAttributes = LOAD_NORMAL;
 
     // create an LDAP connection
     //

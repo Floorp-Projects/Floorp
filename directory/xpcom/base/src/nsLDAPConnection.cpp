@@ -59,10 +59,9 @@ nsLDAPConnection::~nsLDAPConnection()
 
   rc = ldap_unbind_s(this->mConnectionHandle);
   if (rc != LDAP_SUCCESS) {
-#ifdef DEBUG
-    PR_fprintf(PR_STDERR, "nsLDAPConnection::~nsLDAPConnection: %s\n", 
-	    ldap_err2string(rc));
-#endif
+      PR_LOG(gLDAPLogModule, PR_LOG_WARNING, 
+	     ("nsLDAPConnection::~nsLDAPConnection: %s\n", 
+	      ldap_err2string(rc)));
   }
 
   PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, ("unbound\n"));
@@ -72,7 +71,6 @@ nsLDAPConnection::~nsLDAPConnection()
   }
 
   if (mPendingOperations) {
-      // XXXdmose  remove all items from the array first!
       delete mPendingOperations;
   }
 
@@ -135,7 +133,10 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     // be threadsafe
     //
     mPendingOperations = new nsSupportsHashtable(10, PR_TRUE);
-    NS_ENSURE_TRUE(mPendingOperations, NS_ERROR_FAILURE);
+    if ( !mPendingOperations) {
+	NS_ERROR("failure initializing mPendingOperations hashtable");
+	return NS_ERROR_FAILURE;
+    }
 
 #ifdef DEBUG_dmose
     const int lDebug = 0;
@@ -149,7 +150,7 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     // 
     rv = NS_NewThread(getter_AddRefs(mThread), this, 0, PR_UNJOINABLE_THREAD);
     if (NS_FAILED(rv)) {
-	return rv;
+	return NS_ERROR_NOT_AVAILABLE;
     }
 
     return NS_OK;

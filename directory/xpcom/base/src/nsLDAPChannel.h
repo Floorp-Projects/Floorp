@@ -99,7 +99,6 @@ protected:
   nsCOMPtr<nsIStreamListener> mUnproxiedListener; // for calls on main thread
   nsCOMPtr<nsILoadGroup> mLoadGroup; // possibly an nsISupports proxy
   nsCOMPtr<nsILDAPConnection> mConnection; // LDAP connection for this channel
-  nsCOMPtr<nsIThread> mThread; // worker thread for this channel
   nsCOMPtr<nsIStreamListener> mListener; // for calls on LDAP callback thread
                                          // which _might_ be the main thread
   nsCOMPtr<nsISupports> mResponseContext; 

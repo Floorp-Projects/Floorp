@@ -77,7 +77,7 @@ nsLDAPOperation::Init(nsILDAPConnection *aConnection,
     //	
     nsresult rv = mConnection->GetConnectionHandle(&mConnectionHandle);
     if (NS_FAILED(rv)) 
-	return rv;
+	return NS_ERROR_FAILURE;
 
     return NS_OK;
 }
