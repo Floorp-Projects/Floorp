@@ -214,10 +214,6 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     if (aParent) {
       aParent->AddChild(this);
     }
-
-    // Force cursor to default setting
-    mCursor = eCursor_select;
-    SetCursor(eCursor_standard);
 }
 
 //-------------------------------------------------------------------------
