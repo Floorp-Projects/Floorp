@@ -613,7 +613,7 @@ makefiles: $(SUBMAKEFILES)
 ifdef DIRS
 	@for d in $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do\
 		$(UPDATE_TITLE) 				\
-		$(MAKE) -C $$d $@				\
+		$(MAKE) -C $$d $@;				\
 	done
 endif
 
