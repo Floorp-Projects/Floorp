@@ -136,6 +136,9 @@ fi
 # Check whether we have 'eu-readelf' or 'readelf' available.
 # If we do, it will give more accurate symbol sizes than nm.
 
+if [ $OSTYPE == "Darwin" ]; then
+  USE_READELF=
+else
 READELF_PROG=`which eu-readelf 2>/dev/null`
 if test "$READELF_PROG"; then
   USE_READELF=1
@@ -152,6 +155,7 @@ else
   else
     USE_READELF=
   fi
+fi
 fi
 
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
