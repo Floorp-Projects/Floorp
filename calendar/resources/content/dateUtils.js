@@ -224,6 +224,20 @@ function DateFormater( )
     if (! this.probeSucceeded)
       dump("\nOperating system short date format is not recognized: "+probeString+"\n");
   }
+
+  // If LONG FORMATTED DATE is same as short formatted date,
+  // then OS has poor extended/long date config, so use workaround.
+  this.useLongDateService = true;
+  try { 
+    var longProbeString = this.getLongFormatedDate(probeDate);
+    // On Unix extended/long date format may be created using %Ex instead of %x.
+    // Some systems may not support it and return "Ex" or same as short string.
+    // In that case, don't use long date service, use workaround hack instead.
+    if (longProbeString == null || longProbeString.length < 4 || longProbeString == probeString)
+      this.useLongDateService = false;
+  } catch (error) {
+    this.useLongDateService = false;
+  }
 }
 
 
@@ -235,10 +249,7 @@ DateFormater.prototype.getFormatedTime = function( date )
 
 DateFormater.prototype.getFormatedDate = function( date )
 {
-   // Format the date using a hardcoded format for now, since everything
-   // that displays the date uses this function we will be able to 
-   // make a user settable date format and use it here.
-
+   // Format the date using user's format preference (long or short)
    try
    {     
       if( getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "date.format", 0 ) == 0 )
@@ -254,20 +265,22 @@ DateFormater.prototype.getFormatedDate = function( date )
 
 DateFormater.prototype.getLongFormatedDate = function( date )
 {
-   if( (navigator.platform.indexOf("Win") == 0) || (navigator.platform.indexOf("Mac") != -1) )
-   {
-      return( dateService.FormatDate( "", dateService.dateFormatLong, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
-   }
-   else
-   {
-      // HACK We are probably on Linux and want a string in long format.
-      // dateService.dateFormatLong on Linux returns a short string, so build our own
-      // this should move into Mozilla or libxpical
-      var oneBasedMonthNum = date.getMonth() + 1;
-      var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
-      var dateString =  monthString + " " + date.getDate()+", "+date.getFullYear();
-      return dateString;
-   }
+  if (this.useLongDateService)
+  {
+    return( dateService.FormatDate( "", dateService.dateFormatLong, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
+  }
+  else
+  {
+    // HACK We are probably on Linux and want a string in long format.
+    // dateService.dateFormatLong on Linux may return a short string, so build our own
+    // this should move into Mozilla or libxpical
+    var oneBasedMonthNum = date.getMonth() + 1;
+    var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
+    var oneBasedWeekDayNum = date.getDay() + 1;
+    var weekDayString = this.dateStringBundle.GetStringFromName("day."+ oneBasedWeekDayNum + ".Mmm" );
+    var dateString =  weekDayString+" "+date.getDate()+" "+monthString+" "+date.getFullYear();
+    return dateString;
+  }
 }
 
 
