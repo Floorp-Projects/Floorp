@@ -78,7 +78,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-mailnews      Disable building of mail & news components"
 ac_help="$ac_help
-  --enable-ender-lite      Enable new lightweight text control frames"
+  --disable-ender-lite      Disable new lightweight text control frames"
 ac_help="$ac_help
   --enable-trace-malloc    Enable malloc tracing"
 ac_help="$ac_help
@@ -9863,13 +9863,13 @@ EOF
 fi
 
 
-MOZ_ENDER_LITE=
+MOZ_ENDER_LITE=1
 # Check whether --enable-ender-lite or --disable-ender-lite was given.
 if test "${enable_ender_lite+set}" = set; then
   enableval="$enable_ender_lite"
-  if test "$enableval" = "yes"; then
-    MOZ_ENDER_LITE=1 
-  elif test "$enableval" = "no"; then
+  if test "$enableval" = "no"; then
+    MOZ_ENDER_LITE= 
+  elif test "$enableval" = "yes"; then
     :
   else
     { echo "configure: error: Option, ender-lite, does not take an argument ($enableval)." 1>&2; exit 1; }
