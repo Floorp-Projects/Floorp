@@ -18,6 +18,7 @@
 # Rights Reserved.
 # 
 # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#                 Joel Peshkin <bugreport@peshkin.net>
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -34,34 +35,55 @@
 
 package Support::Files;
 
+# exclude_deps is a hash of arrays listing the files to be excluded
+# if a module is not available
+#
 @additional_files = ('syncshadowdb','processmail');
-@exclude_files    = ('importxml.pl');
+%exclude_deps = (
+    'XML::Parser' => ['importxml.pl'],
+);
+
 
 # XXX - this file should be rewritten to use File::Find or similar
 $file = '*';
 @files = (glob($file), glob('Bugzilla/*.pm'));
 
-sub isTestingFile {
-  my ($file) = @_;
-  my $exclude;
-  foreach $exclude (@exclude_files) {
-        if ($file eq $exclude) { return undef; } # get rid of excluded files.
-  }
+sub have_pkg {
+    my ($pkg) = @_;
+    my ($msg, $vnum, $vstr);
+    no strict 'refs';
+    eval { my $p; ($p = $pkg . ".pm") =~ s!::!/!g; require $p; };
+    return !($@);
+}
 
-  if ($file =~ /\.cgi$|\.pl$|\.pm$/) {
-    return 1;
-  }
-  my $additional;
-  foreach $additional (@additional_files) {
-    if ($file eq $additional) { return 1; }
-  }
-  return undef;
+@exclude_files    = ();
+foreach $dep (keys(%exclude_deps)) {
+    if (!have_pkg($dep)) {
+        push @exclude_files, @{$exclude_deps{$dep}};
+    }
+}
+
+sub isTestingFile {
+    my ($file) = @_;
+    my $exclude;
+    foreach $exclude (@exclude_files) {
+        if ($file eq $exclude) { return undef; } # get rid of excluded files.
+    }
+
+    if ($file =~ /\.cgi$|\.pl$|\.pm$/) {
+        return 1;
+    }
+    my $additional;
+    foreach $additional (@additional_files) {
+        if ($file eq $additional) { return 1; }
+    }
+    return undef;
 }
 
 foreach $currentfile (@files) {
-        if (isTestingFile($currentfile)) {
-                push(@testitems,$currentfile);
-        }
+    if (isTestingFile($currentfile)) {
+        push(@testitems,$currentfile);
+    }
 }
 
 
