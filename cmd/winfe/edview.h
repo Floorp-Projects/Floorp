@@ -539,6 +539,7 @@ protected:
 
     DECLARE_MESSAGE_MAP()
     void OnDocProperties(int iStartPage = -1);
+    BOOL ShouldParentHandle(UINT nID, int nCode);
 };
 
 #ifdef FEATURE_WAIT_CURSOR

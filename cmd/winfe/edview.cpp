@@ -68,6 +68,7 @@ extern "C" {
 char * g_buffers[1000];
 int g_numbuffers=0;
 
+
 void
 addToBuffer(const char *p_str)
 {
@@ -147,6 +148,13 @@ UINT CNetscapeEditView::m_converrmsg[NUM_CONVERR]={
     IDS_CONVERR14,//"Unknown Error"
 };
 
+#define NUM_MSG_NOT_ENDER 3
+
+LPARAM MSG_NOT_ENDER[NUM_MSG_NOT_ENDER]={
+    ID_NAVIGATE_RELOAD,
+    ID_NAVIGATE_FORWARD,
+    ID_NAVIGATE_BACK
+};
 
 #ifdef ENDER
 CControlBarInfo CNetscapeEditView::s_Info;
@@ -334,6 +342,7 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     // Put update commands here so we can remove them temporarily for overhead assesments
 	ON_UPDATE_COMMAND_UI(ID_FORMAT_INCREASE_FONTSIZE, OnCanInteractInText)
 	ON_UPDATE_COMMAND_UI(ID_FORMAT_DECREASE_FONTSIZE, OnCanInteractInText)
+    ON_UPDATE_COMMAND_UI(ID_COMBO_PARA, OnCanInteract)
     ON_UPDATE_COMMAND_UI(ID_COMBO_PARA, OnUpdateParagraphComboBox)
     ON_UPDATE_COMMAND_UI(ID_COMBO_FONTFACE, OnUpdateFontFaceComboBox)
 	ON_UPDATE_COMMAND_UI(ID_COMBO_FONTSIZE, OnUpdateFontSizeComboBox)
@@ -515,7 +524,6 @@ CNetscapeEditView::CNetscapeEditView()
     m_imeoldcursorpos= (DWORD)-1;
 #endif
     m_pTempFilename = NULL;
-
     SetEditChanged();
 }
 
@@ -1024,6 +1032,22 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
     CNetscapeView::OnKillFocus(pOldWin); 
 }
 
+
+
+BOOL CNetscapeEditView::ShouldParentHandle(UINT nID, int nCode)
+{
+    LPARAM t_param(0);
+    t_param = LOWORD(nID) + HIWORD(nCode);
+    for (int i=0;i<NUM_MSG_NOT_ENDER;i++)
+    {
+        if (t_param == MSG_NOT_ENDER[i])
+            return TRUE;
+    }
+    return FALSE;
+}
+
+
+
 BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
 {
     // was this a windows menu selection ?
@@ -1107,6 +1131,11 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
             DoPasteItem(NULL, NULL, FALSE, iType );
             return TRUE;
         }
+        else if (ShouldParentHandle(nID,nCode))
+        {
+          if (GetParent())
+            return GetParent()->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
+        }
         break;
 
     case CN_UPDATE_COMMAND_UI:
@@ -1174,6 +1203,11 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
             //  the parent submenu item not inside a table
             pCmdUI->Enable(TRUE);
             return TRUE;
+        }
+        else if (ShouldParentHandle(nID,nCode))
+        {
+          if (GetParent())
+            return GetParent()->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
         }
         break;
     }
@@ -2101,14 +2135,14 @@ void CNetscapeEditView::OnUpdateCopyStyle(CCmdUI* pCmdUI)
 // Use this for any commands that are enabled most of the time
 void CNetscapeEditView::OnCanInteract(CCmdUI* pCmdUI)
 {
-    pCmdUI->Enable(CAN_INTERACT);
+    pCmdUI->Enable(CAN_INTERACT && !m_imebool);
 }
 
 // XP call checks same things as CAN_INTERACT, and we must be
 //  in some text (or mixed selection) as well
 void CNetscapeEditView::OnCanInteractInText(CCmdUI* pCmdUI)
 {
-    pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
+    pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) && !m_imebool);
 }
 
 // Gets data from bookmark item - returns TRUE if found
