@@ -58,6 +58,8 @@ jsConsoleHandler.prototype = {
 /* jsConsoleHandler Module (for XPCOM registration) */
 var jsConsoleHandlerModule = {
     registerSelf: function(compMgr, fileSpec, location, type) {
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
+
         compMgr.registerComponentWithType(JSCONSOLEHANDLER_CID, 
             'JS Console Commandline Handler component',
             JSCONSOLEHANDLER_CONTRACTID, fileSpec,
@@ -70,6 +72,7 @@ var jsConsoleHandlerModule = {
     },
 
     unregisterSelf: function(compMgr, fileSpec, location) {
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentManagerObsolete);
         compMgr.unregisterComponentSpec(JSCONSOLEHANDLER_CID, fileSpec);
         var catman = Components.classes["@mozilla.org/categorymanager;1"]
             .getService(Components.interfaces.nsICategoryManager);

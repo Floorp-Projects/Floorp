@@ -43,6 +43,7 @@
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentManagerObsolete.h"
 #include "nsIServiceManager.h"
 #include "nsIFactory.h"
 #include "nsRegistry.h"
@@ -79,19 +80,32 @@ extern const char XPCOM_LIB_PREFIX[];
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 class nsComponentManagerImpl
     : public nsIComponentManager,
       public nsIServiceManager,
       public nsSupportsWeakReference,
       public nsIInterfaceRequestor,
-      public nsIServiceManagerObsolete
+      public nsIServiceManagerObsolete,
+      public nsIComponentManagerObsolete
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSICOMPONENTMANAGER
-    NS_DECL_NSISERVICEMANAGER
 
+    // Since the nsIComponentManagerObsolete and nsIComponentManager share some of the 
+    // same interface function name, we have to manually define the functions here.
+    // The only function that is in nsIComponentManagerObsolete and is in nsIComponentManager
+    // is GetClassObjectContractID.  
+    //
+    // nsIComponentManager function not in nsIComponentManagerObsolete:
+    NS_IMETHOD GetClassObjectByContractID(const char *aContractID,
+                                          const nsIID &aIID,
+                                          void **_retval);
+
+    NS_DECL_NSICOMPONENTMANAGEROBSOLETE
+    NS_DECL_NSISERVICEMANAGER
+    
     // nsIServiceManagerObsolete
    NS_IMETHOD
     RegisterService(const nsCID& aClass, nsISupports* aService);
@@ -196,6 +210,7 @@ protected:
     PLDHashTable        mFactories;
     PLDHashTable        mContractIDs;
     PRMonitor*          mMon;
+
     nsIRegistry*        mRegistry;
     nsRegistryKey       mXPCOMKey;
     nsRegistryKey       mClassesKey;

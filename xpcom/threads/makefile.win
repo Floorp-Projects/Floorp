@@ -32,7 +32,7 @@ REQUIRES	= string \
 EXPORTS =                      \
         nsAutoLock.h           \
         plevent.h              \
-        nsProcess.h              \
+        nsProcess.h            \
         nsITimer.h             \
         nsITimerCallback.h     \
         $(NULL)			

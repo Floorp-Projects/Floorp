@@ -216,7 +216,7 @@ main(void)
     if (NS_FAILED(rv)) return rv;
     
     // Register components
-    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
 
 
     // Get default directory

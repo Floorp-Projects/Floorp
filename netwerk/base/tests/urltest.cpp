@@ -252,7 +252,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, "./components");
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, "./components");
 
     testURL(argv[1]);
     return 0;

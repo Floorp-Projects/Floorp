@@ -155,10 +155,10 @@ PR_PUBLIC_API(nsresult) XPI_Init(
         return rv;
 
 #if defined(XP_UNIX) || defined(XP_MAC)
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 
+    rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, 
                                           compDir);
 #else
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 
+    rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, 
                                           nsnull);
 #endif
     if (NS_FAILED(rv))

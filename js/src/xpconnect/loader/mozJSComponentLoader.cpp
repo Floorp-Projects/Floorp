@@ -815,9 +815,13 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
     nsXPIDLCString registryLocation;
     nsresult rv;
     nsIModule *module;
-
-    rv = mCompMgr->RegistryLocationForSpec(component, 
-                                           getter_Copies(registryLocation));
+    
+    // what I want to do here is QI for a Component Registration Manager.  Since this 
+    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+    nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
+    if (obsoleteManager)
+        rv = obsoleteManager->RegistryLocationForSpec(component, 
+                                                      getter_Copies(registryLocation));
     if (NS_FAILED(rv))
         return rv;
     
@@ -886,9 +890,13 @@ mozJSComponentLoader::UnregisterComponent(nsIFile *component)
     nsXPIDLCString registryLocation;
     nsresult rv;
     nsIModule *module;
-
-    rv = mCompMgr->RegistryLocationForSpec(component, 
-                                           getter_Copies(registryLocation));
+    
+    // what I want to do here is QI for a Component Registration Manager.  Since this 
+    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+    nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
+    if (obsoleteManager)
+        rv = obsoleteManager->RegistryLocationForSpec(component, 
+                                                      getter_Copies(registryLocation));
     if (NS_FAILED(rv))
         return rv;
     
@@ -1130,8 +1138,13 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     }
 
     if (!component) {
-        if (NS_FAILED(mCompMgr->SpecForRegistryLocation(aLocation,
-                                                        &component)))
+        // what I want to do here is QI for a Component Registration Manager.  Since this 
+        // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+        nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
+        if (obsoleteManager)
+            return nsnull;
+
+        if (NS_FAILED(obsoleteManager->SpecForRegistryLocation(aLocation, &component)))
             return nsnull;
         needRelease = PR_TRUE;
     }

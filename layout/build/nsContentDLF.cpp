@@ -593,9 +593,16 @@ RegisterTypes(nsIComponentManager* aCompMgr,
 #ifdef NOISY_REGISTRY
     printf("Register %s => %s\n", contractid, aPath);
 #endif
-    rv = aCompMgr->RegisterComponentWithType(kDocumentFactoryImplCID, "Layout",
-                                         contractid, aPath, aLocation,
-                                         PR_TRUE, PR_TRUE, aType);
+
+    // what I want to do here is QI for a Component Registration Manager.  Since this 
+    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+    nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(aCompMgr, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = obsoleteManager->RegisterComponentWithType(kDocumentFactoryImplCID, "Layout",
+                                                    contractid, aPath, aLocation,
+                                                    PR_TRUE, PR_TRUE, aType);
     if (NS_FAILED(rv)) break;
 
     // add the MIME types layotu can handle to the handlers category.
@@ -663,5 +670,13 @@ nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
                                           const nsModuleComponentInfo* aInfo)
 {
   // XXXwaterson seems like this leaves the registry pretty dirty.
-  return aCompMgr->UnregisterComponentSpec(kDocumentFactoryImplCID, aPath);
+
+  // what I want to do here is QI for a Component Registration Manager.  Since this 
+  // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+  nsresult rv;
+  nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(aCompMgr, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return obsoleteManager->UnregisterComponentSpec(kDocumentFactoryImplCID, aPath);
 }

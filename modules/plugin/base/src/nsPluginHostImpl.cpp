@@ -85,6 +85,7 @@
 #include "nsICachingChannel.h"
 #include "nsHashtable.h"
 #include "nsIProxyInfo.h"
+#include "nsObsoleteModuleLoading.h"
 
 #include "nsPluginLogging.h"
 #include "nsDirectoryServiceDefs.h"
@@ -2644,7 +2645,7 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   mPluginsLoaded = PR_FALSE;
 
   //refresh the component registry first
-  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
 
   // load them again
   nsresult rv = LoadPlugins();
@@ -3547,6 +3548,11 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
   pluginTag->mFileName));
 
   nsresult rv = NS_OK;
+  // what I want to do here is QI for a Component Registration Manager.  Since this 
+  // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+  nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(compManager, &rv);
+  if (!obsoleteManager)
+    return rv;
 
   for(int i = 0; i < pluginTag->mVariants; i++)
   {
@@ -3555,12 +3561,13 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
     nsCAutoString contractid(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=");
     contractid += pluginTag->mMimeTypeArray[i];
 
-    rv = compManager->RegisterComponentSpec(kPluginDocLoaderFactoryCID,
-                                            "Plugin Loader Stub",
-                                            contractid.get(),
-                                            path,
-                                            PR_TRUE,
-                                            PR_FALSE);
+
+    rv = obsoleteManager->RegisterComponentSpec(kPluginDocLoaderFactoryCID,
+                                                "Plugin Loader Stub",
+                                                contractid.get(),
+                                                path,
+                                                PR_TRUE,
+                                                PR_FALSE);
 
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
     ("nsPluginHostImpl::RegisterPluginMimeTypesWithLayout mime=%s, plugin=%s\n",
@@ -4630,10 +4637,15 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   // retrieve a path for layout module. Needed for plugin mime types registration
   nsCOMPtr<nsIFile> layoutPath;
   nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
-  if (NS_SUCCEEDED(rv) && compManager) 
+
+  // what I want to do here is QI for a Component Registration Manager.  Since this 
+  // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+  nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(compManager); 
+  
+  if (NS_SUCCEEDED(rv) && compManager && obsoleteManager) 
   {
     PRBool gotLayoutPath;
-    if (NS_SUCCEEDED(compManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(layoutPath))))
+    if (NS_SUCCEEDED(obsoleteManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(layoutPath))))
       gotLayoutPath = PR_TRUE;
     else
       gotLayoutPath = PR_FALSE;
@@ -4739,7 +4751,11 @@ cidToDllname(nsIComponentManager* aComponentManager, nsIRegistry* aRegistry,
     rv = aRegistry->GetBytesUTF8(cidKey, "InprocServer", &count, &library);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIFile> file;
-      rv = aComponentManager->SpecForRegistryLocation(NS_REINTERPRET_CAST(const char*, library),
+      // what I want to do here is QI for a Component Registration Manager.  Since this 
+      // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
+      nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(aComponentManager, &rv);
+      if (obsoleteManager)
+        rv = obsoleteManager->SpecForRegistryLocation(NS_REINTERPRET_CAST(const char*, library),
                                                       getter_AddRefs(file));
 
       if (NS_SUCCEEDED(rv)) {

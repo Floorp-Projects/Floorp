@@ -227,7 +227,7 @@ main(int argc, char **argv)
         return -1;
     }
 
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL);
+    rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL);
     if (NS_FAILED(rv)) return -1;
 
     // cache the io service

@@ -151,7 +151,7 @@ main(int argc, char* argv[])
 
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+    rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICategoryManager> catman =

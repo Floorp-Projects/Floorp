@@ -395,7 +395,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
 
 nsresult NS_AutoregisterComponents()
 {
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
   return rv;
 }
 

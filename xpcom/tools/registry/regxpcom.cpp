@@ -68,7 +68,7 @@ nsresult Register(const char *path)
 
   rv = spec->InitWithPath(path);
   if (NS_FAILED(rv)) return rv;
-  rv = nsComponentManager::AutoRegisterComponent(nsIComponentManager::NS_Startup, spec);
+  rv = nsComponentManager::AutoRegisterComponent(nsIComponentManagerObsolete::NS_Startup, spec);
   return rv;
 }
 
@@ -88,7 +88,7 @@ nsresult Unregister(const char *path)
 
   rv = spec->InitWithPath(path);
   if (NS_FAILED(rv)) return rv;
-  rv = nsComponentManager::AutoUnregisterComponent(nsIComponentManager::NS_Startup, spec);
+  rv = nsComponentManager::AutoUnregisterComponent(nsIComponentManagerObsolete::NS_Startup, spec);
   return rv;
 }
 
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
     if (argc <= 1)
     {
         nsresult rv = nsComponentManager::AutoRegister(
-                                                       nsIComponentManager::NS_Startup,
+                                                       nsIComponentManagerObsolete::NS_Startup,
                                                        NULL /* default location */);
         ret = (NS_FAILED(rv)) ? -1 : 0;
     }

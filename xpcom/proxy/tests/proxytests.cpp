@@ -58,7 +58,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 extern "C" void
 NS_SetupRegistry()
 {
-    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
 }
 
 

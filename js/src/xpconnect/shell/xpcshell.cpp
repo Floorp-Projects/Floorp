@@ -80,7 +80,7 @@
 
 static void SetupRegistry()
 {
-    nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, nsnull);
 }
 
 /***************************************************************************/
