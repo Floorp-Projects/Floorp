@@ -2,3 +2,5 @@
 cd /home/jkeiser/tbox3/scripts
 ./tbox_bonsai_update.pl
 ./tbox_build_static_pages.pl
+./tbox_recompress_logs.pl
+../client/tbox_build_quota.pl --url="http://127.0.0.1/~jkeiser/cgi-bin/tbox3/scripts" --quota=1024 --start=0 --end=0 ../client/quota_dirs.txt
