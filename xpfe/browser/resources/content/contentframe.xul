@@ -1,0 +1,22 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/contentframe.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window style="height:100%;width:100%"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+
+<html:script src="contentframe.js" />
+
+<box id="container" align="horizontal" style="height: 100%; width: 100%">
+  <html:iframe id="sidebarframe" class="sidebarframe" 
+               src="about:blank" />
+  <box align="vertical" style="height: 100%;">
+    <titledbutton id="grippy" class="grippy" onclick="toggleOpenClose();"
+                  flex="100%" />
+  </box>
+  <html:iframe type="content" id="content" src="about:blank" flex="100%" />
+</box>
+</window>
