@@ -1359,7 +1359,25 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIChannel* channel,
   
   mSetUpListener = PR_TRUE;
   mPluginStreamInfo->SetSeekable(PR_FALSE);
-  //mPluginStreamInfo->SetModified(??);
+  
+  // get Last-Modified header for plugin info
+  nsCOMPtr<nsIHTTPChannel>	theHTTPChannel = do_QueryInterface(channel);
+  if (theHTTPChannel) {
+     char * lastModified;
+     nsCOMPtr<nsIAtom> header = NS_NewAtom("last-modified");
+
+     theHTTPChannel->GetResponseHeader(header, &lastModified);
+     if (lastModified) {
+       PRTime time64;
+       PR_ParseTimeString(lastModified, PR_TRUE, &time64);  //convert string time to interger time
+ 
+       // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
+       double fpTime;
+       LL_L2D(fpTime, time64);
+       mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
+       nsCRT::free(lastModified);
+     }
+  } 
 
   char* urlString;
   aURL->GetSpec(&urlString);
