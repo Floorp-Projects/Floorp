@@ -90,7 +90,7 @@ endif
 
 ifeq ($(OS_ARCH), HP-UX)
     ifeq ($(USE_64),1)
-        XLDOPTS += +DA2.0W
+        XLDOPTS += +DD32
     endif
 endif
 
