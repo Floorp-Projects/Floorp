@@ -72,19 +72,25 @@ if ($build{all})
 chdir("::::");
 $MOZ_SRC = cwd();
 
-#Use timestamped names so that you don't clobber your previous log file!
-my $now = localtime();
-while ($now =~ s@:@.@) {} # replace all colons by periods
-my $logdir = ":Build Logs:";
-if (!stat($logdir))
+$USE_TIMESTAMPED_LOGS = 0;
+if ($USE_TIMESTAMPED_LOGS)
 {
-        print "Creating directory $logdir\n";
-        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+	#Use timestamped names so that you don't clobber your previous log file!
+	my $now = localtime();
+	while ($now =~ s@:@.@) {} # replace all colons by periods
+	my $logdir = ":Build Logs:";
+	if (!stat($logdir))
+	{
+	        print "Creating directory $logdir\n";
+	        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+	}
+	OpenErrorLog("$logdir$now");
 }
-
-OpenErrorLog("$logdir$now");
-#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
-
+else
+{
+	OpenErrorLog("NGLayoutBuildLog");		# Release build requires that name
+	#OpenErrorLog("Mozilla.BuildLog");		# Tinderbox requires that name
+}
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
