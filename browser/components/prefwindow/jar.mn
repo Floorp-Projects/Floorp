@@ -28,7 +28,7 @@ en-US.jar:
     locale/en-US/browser/pref/pref-extensions.dtd          (locale/pref-extensions.dtd)
     locale/en-US/browser/pref/pref-features.dtd            (locale/pref-features.dtd)
     locale/en-US/browser/pref/pref-fonts.dtd               (locale/pref-fonts.dtd)
-    locale/en-US/browser/pref/pref-navigator.dtd           (locale/pref-navigator.dtd)
+*   locale/en-US/browser/pref/pref-navigator.dtd           (locale/pref-navigator.dtd)
     locale/en-US/browser/pref/pref-privacy.dtd             (locale/pref-privacy.dtd)
     locale/en-US/browser/pref/pref-themes.dtd              (locale/pref-themes.dtd)
     locale/en-US/browser/pref/prefutilities.properties     (locale/prefutilities.properties)
