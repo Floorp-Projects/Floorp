@@ -43,8 +43,6 @@
 
 #include "nsDiskCacheRecord.h"
 #include "netCore.h"
-#include "nsFileLocations.h"
-#include "nsIFileLocator.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIFileSpec.h" // Remove Me later
@@ -142,7 +140,7 @@ nsNetDiskCache::~nsNetDiskCache()
 
   NS_IF_RELEASE(mDB) ;
   
-  nsresult rv;
+  nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
 	if ( NS_SUCCEEDED (rv ) )
 	{
@@ -164,8 +162,8 @@ nsNetDiskCache::~nsNetDiskCache()
   if(mDBCorrupted) {
     
     nsCOMPtr<nsISimpleEnumerator> directoryEnumerator;
-    nsresult res = mDiskCacheFolder->GetDirectoryEntries( getter_AddRefs( directoryEnumerator) ) ;
-    if ( NS_FAILED ( res ) )
+    rv = mDiskCacheFolder->GetDirectoryEntries( getter_AddRefs( directoryEnumerator) ) ;
+    if ( NS_FAILED ( rv ) )
     	return;
 
     nsCString trash("trash") ;
@@ -174,7 +172,7 @@ nsNetDiskCache::~nsNetDiskCache()
 	  PRBool hasMore;
     while( NS_SUCCEEDED(directoryEnumerator->HasMoreElements( &hasMore ) ) && hasMore)
     {
-    	nsresult rv = directoryEnumerator->GetNext( getter_AddRefs(file) );
+    	rv = directoryEnumerator->GetNext( getter_AddRefs(file) );
     	if ( NS_FAILED( rv ) )
     		return ;
     		
