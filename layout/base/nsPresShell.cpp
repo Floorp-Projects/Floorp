@@ -294,6 +294,7 @@ protected:
   PRBool mIsDestroying;
   nsIFrame* mCurrentEventFrame;
   nsIContent* mCurrentEventContent;
+  nsVoidArray mCurrentEventFrameStack;
   
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
@@ -306,7 +307,11 @@ private:
   void DisableScrolling(){mScrollingEnabled = PR_FALSE;}
   void EnableScrolling(){mScrollingEnabled = PR_TRUE;}
   PRBool IsScrollingEnabled(){return mScrollingEnabled;}
+
+  //helper funcs for event handling
   nsIFrame* GetCurrentEventFrame();
+  void PushCurrentEventFrame();
+  void PopCurrentEventFrame();
 };
 
 #ifdef NS_DEBUG
@@ -369,11 +374,11 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 
 PresShell::PresShell()
 {
-  //XXX joki 11/17 - temporary event hack.
   mIsDestroying = PR_FALSE;
   mCaretEnabled = PR_FALSE;
   mDisplayNonTextSelection = PR_FALSE;
   mCurrentEventContent = nsnull;
+  mCurrentEventFrame = nsnull;
   EnableScrolling();
 }
 
@@ -1281,6 +1286,13 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
     mCurrentEventFrame->GetContent(&mCurrentEventContent);
     mCurrentEventFrame = nsnull;
   }
+
+  for (int i=0; i<mCurrentEventFrameStack.Count(); i++) {
+    if (aFrame == (nsIFrame*)mCurrentEventFrameStack.ElementAt(i)) {
+      mCurrentEventFrameStack.ReplaceElementAt(nsnull, i);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1890,6 +1902,25 @@ PresShell::GetCurrentEventFrame()
   return mCurrentEventFrame;
 }
 
+void
+PresShell::PushCurrentEventFrame()
+{
+  if (mCurrentEventFrame) {
+    mCurrentEventFrameStack.InsertElementAt((void*)mCurrentEventFrame, 0);
+  }
+}
+
+void
+PresShell::PopCurrentEventFrame()
+{
+  mCurrentEventFrame = nsnull;
+
+  if (0 != mCurrentEventFrameStack.Count) {
+    mCurrentEventFrame = (nsIFrame*)mCurrentEventFrameStack.ElementAt(0);
+    mCurrentEventFrameStack.RemoveElementAt(0);
+  }
+}
+
 NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
@@ -1909,6 +1940,7 @@ PresShell::HandleEvent(nsIView         *aView,
   frame = (nsIFrame *)clientData;
 
   if (nsnull != frame) {
+    PushCurrentEventFrame();
 
     nsIWebShell* webShell = nsnull;
     nsISupports* container;
@@ -1937,7 +1969,9 @@ PresShell::HandleEvent(nsIView         *aView,
           GetPrimaryFrameFor(focusContent, &mCurrentEventFrame);
         else frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
       }
-      else frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
+      else {
+        frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
+      }
       NS_IF_RELEASE(mCurrentEventContent);
       if (GetCurrentEventFrame() || focusContent) {
       //Once we have the targetFrame, handle the event in this order
@@ -1953,12 +1987,8 @@ PresShell::HandleEvent(nsIView         *aView,
           else {
             nsIContent* targetContent;
             if (NS_OK == mCurrentEventFrame->GetContent(&targetContent) && nsnull != targetContent) {
-              // XXX Temporary fix for re-entracy isses
-              // temporarily cache the current frame
-              nsIFrame * currentEventFrame = mCurrentEventFrame;
               rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
                                                  NS_EVENT_FLAG_INIT, aEventStatus);
-              mCurrentEventFrame = currentEventFrame;  // other part of re-entracy fix
               NS_RELEASE(targetContent);
             }
           }
@@ -1979,6 +2009,7 @@ PresShell::HandleEvent(nsIView         *aView,
       NS_RELEASE(manager);
       NS_IF_RELEASE(focusContent);
     }
+    PopCurrentEventFrame();
     NS_IF_RELEASE(webShell);
   }
   else {
