@@ -504,15 +504,19 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
         ConstructProperty(aAtts);
       }
       else if (aTagName == nsXBLAtoms::getter) {
-        if (mSecondaryState == eXBL_InProperty && mProperty) {
-          mProperty->SetGetterLineNumber(aLineNumber);
-        }        
+        if (mSecondaryState != eXBL_InProperty || !mProperty) {
+          ReportUnexpectedElement(aTagName, aLineNumber);
+          return PR_TRUE;
+        }
+        mProperty->SetGetterLineNumber(aLineNumber);
         mSecondaryState = eXBL_InGetter;
       }
       else if (aTagName == nsXBLAtoms::setter) {
-        if (mSecondaryState == eXBL_InProperty && mProperty) {
-          mProperty->SetSetterLineNumber(aLineNumber);
+        if (mSecondaryState != eXBL_InProperty || !mProperty) {
+          ReportUnexpectedElement(aTagName, aLineNumber);
+          return PR_TRUE;
         }
+        mProperty->SetSetterLineNumber(aLineNumber);
         mSecondaryState = eXBL_InSetter;
       }
       else if (aTagName == nsXBLAtoms::method) {
