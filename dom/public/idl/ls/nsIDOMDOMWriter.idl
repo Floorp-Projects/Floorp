@@ -43,7 +43,7 @@
  *
  * For more information on this interface please see
  * XXX this will change
- * http://www.w3.org/TR/2002/WD-DOM-Level-3-ASLS-20020409/load-save.html
+ * http://www.w3.org/TR/2002/WD-DOM-Level-3-LS-20020725/load-save.html
  */
 
 [scriptable, uuid(caeaa813-814c-4c77-b30d-d334557293d6)]
@@ -60,7 +60,8 @@ interface nsIDOMDOMWriter : nsISupports
   attribute    DOMString             newLine;
   attribute    nsIDOMDOMWriterFilter filter;
   attribute    nsIDOMDOMErrorHandler errorHandler;
-  boolean      writeNode(in nsIDOMDOMOutputStream destination, 
+  // XXX Should |destination| be an nsIOutputStream perhaps?
+  boolean      writeNode(in nsISupports destination, 
                          in nsIDOMNode wnode)
                                   raises(DOMException);
   DOMString    writeToString(in nsIDOMNode wnode)

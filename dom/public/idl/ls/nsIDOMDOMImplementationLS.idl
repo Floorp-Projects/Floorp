@@ -45,7 +45,7 @@
  *
  * For more information on this interface please see
  * XXX this will change
- * http://www.w3.org/TR/2002/WD-DOM-Level-3-ASLS-20020409/load-save.html
+ * http://www.w3.org/TR/2002/WD-DOM-Level-3-LS-20020725/load-save.html
  */
 
 [scriptable, uuid(9eb59471-eac7-41ff-9b81-a60b0c6c0f74)]
@@ -56,7 +56,7 @@ interface nsIDOMDOMImplementationLS : nsISupports
   const unsigned short MODE_ASYNCHRONOUS = 2;
 
   nsIDOMDOMBuilder     createDOMBuilder(in unsigned short mode, 
-                                         in DOMString schemaType)
+                                        in DOMString schemaType)
                              raises(DOMException);
   nsIDOMDOMWriter      createDOMWriter();
   nsIDOMDOMInputSource createDOMInputSource();

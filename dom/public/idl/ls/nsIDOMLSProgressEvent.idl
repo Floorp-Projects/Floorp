@@ -45,7 +45,7 @@
  *
  * For more information on this interface please see
  * XXX this will change
- * http://www.w3.org/TR/2002/WD-DOM-Level-3-ASLS-20020409/load-save.html
+ * http://www.w3.org/TR/2002/WD-DOM-Level-3-LS-20020725/load-save.html
  */
 
 [scriptable, uuid(c7a6e5de-63fe-466c-b554-36eaecaa89bc)]
