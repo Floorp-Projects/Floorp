@@ -92,7 +92,7 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DJSFILE -DJS_THREADSAFE 
 
-ifdef MOZ_XPC_TOOLS_SUPPORT
+ifdef MOZ_XPCTOOLS
 DEFINES         +=  -DXPC_TOOLS_SUPPORT
 endif
 
