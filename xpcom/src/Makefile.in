@@ -33,27 +33,10 @@ CPPSRCS		= nsDebug.cpp \
 		  nsTraceRefcnt.cpp \
 		  $(NULL)
 
-EXPORTS		= nsCom.h \
-		  nsAgg.h \
-		  nsDebug.h \
-		  nsError.h \
-		  nsHashtable.h \
-		  nsID.h \
-		  nsIFactory.h \
-		  nsISupports.h \
-		  nsIPtr.h \
-		  nsIServiceManager.h \
-		  nsISupportsArray.h \
-		  nsRepository.h \
-		  nsIEnumerator.h \
-		  nsTraceRefcnt.h \
-		  nsVector.h \
-		  $(NULL)
-
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 LCFLAGS		= -D_IMPL_NS_COM -DUSE_NSREG
 
-REQUIRES	= libreg
+REQUIRES	= $(MODULE) libreg
 
 include $(topsrcdir)/config/rules.mk
