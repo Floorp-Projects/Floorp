@@ -139,12 +139,9 @@ nsImageFrame::GetImageLoad(imgIRequest *aRequest)
     return 0;
   else if (aRequest == mLoads[1].mRequest)
     return 1;
-  else if (aRequest == mLoads[2].mRequest)
-    return 2;
 
   NS_ASSERTION((aRequest == mLoads[0].mRequest &&
-               aRequest == mLoads[1].mRequest &&
-               aRequest == mLoads[2].mRequest), "Failure to figure out which imgIRequest this is!");
+               aRequest == mLoads[1].mRequest), "Failure to figure out which imgIRequest this is!");
 
   return -1;
 }
@@ -226,7 +223,7 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
     NS_RELEASE(mImageMap);
   }
 
-  for (int i=0; i != 3; ++i) {
+  for (int i=0; i != 2; ++i) {
     if (mLoads[i].mRequest) {
       mLoads[i].mRequest->Cancel(NS_ERROR_FAILURE);
       mLoads[i].mRequest = nsnull;
@@ -268,16 +265,6 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
       mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, src);
   
     NS_IF_RELEASE(tag);
-  }
-
-  nsAutoString lowSrc;
-  nsresult lowSrcResult;
-  lowSrcResult = mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::lowsrc, lowSrc);
-
-  // Set the image loader's source URL and base URL
-  if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && !lowSrc.IsEmpty()) {
-    mLoads[1].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
-    LoadImage(lowSrc, aPresContext, mLoads[1].mRequest);
   }
 
   mInitialLoadCompleted = PR_FALSE;
@@ -557,13 +544,13 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
         mLoads[0].mRequest->Cancel(NS_ERROR_FAILURE);
       }
 
-      mLoads[0].mRequest = mLoads[2].mRequest;
-      mLoads[0].mIntrinsicSize = mLoads[2].mIntrinsicSize;
+      mLoads[0].mRequest = mLoads[1].mRequest;
+      mLoads[0].mIntrinsicSize = mLoads[1].mIntrinsicSize;
       // XXX i don't think we always want to set this.
-      mLoads[0].mTransform = mLoads[2].mTransform;
+      mLoads[0].mTransform = mLoads[1].mTransform;
       struct ImageLoad *load= &mLoads[0];
 
-      mLoads[2].mRequest = nsnull;
+      mLoads[1].mRequest = nsnull;
 
       if (!mSizeConstrained && (mLoads[0].mIntrinsicSize != mIntrinsicSize)) {
         nsCOMPtr<nsIPresShell> presShell;
@@ -582,28 +569,18 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
       }
 
     } else {
-      mLoads[2].mRequest = nsnull;
+      mLoads[1].mRequest = nsnull;
     }
 
   } else if (NS_FAILED(aStatus)) {
-    PRBool lowFailed = PR_FALSE;
-    PRBool imageFailed = PR_FALSE;
 
-    // One of the two images didn't load, which one?
     if (whichLoad == 0 || !mLoads[0].mRequest) {
-      imageFailed = PR_TRUE;
-    }
-
-    if (whichLoad == 1 || !mLoads[1].mRequest) {
-      lowFailed = PR_TRUE;
-    }
-
-    if (imageFailed && lowFailed)
       imageFailedToLoad = PR_TRUE;
+    }
+
   }
 
-  // if src failed and there is no lowsrc
-  // or both failed to load, then notify the PresShell
+  // if src failed then notify the PresShell
   if (imageFailedToLoad && presShell) {
     if (mFailureReplace) {
       nsAutoString usemap;
@@ -1071,11 +1048,8 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
       mLoads[0].mRequest->GetImage(getter_AddRefs(imgCon));
       mLoads[0].mRequest->GetImageStatus(&loadStatus);
     }
-    if (mLoads[1].mRequest) {
-      mLoads[1].mRequest->GetImage(getter_AddRefs(lowImgCon));
-    }
 
-    if (loadStatus & imgIRequest::STATUS_ERROR || !(imgCon || lowImgCon)) {
+    if (loadStatus & imgIRequest::STATUS_ERROR || !imgCon) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
@@ -1509,12 +1483,19 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       mCanSendLoadEvent = PR_TRUE;
     }
 
-    if (mLoads[2].mRequest) {
-      mLoads[2].mRequest->Cancel(NS_ERROR_FAILURE);
-      mLoads[2].mRequest = nsnull;
+    if (mLoads[1].mRequest) {
+      mLoads[1].mRequest->Cancel(NS_ERROR_FAILURE);
+      mLoads[1].mRequest = nsnull;
     }
-    mLoads[2].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
-    LoadImage(newSRC, aPresContext, mLoads[2].mRequest);
+    
+    nsCOMPtr<imgIRequest> req(do_CreateInstance("@mozilla.org/image/request;1"));
+    if (!mLoads[0].mRequest) {
+      mLoads[0].mRequest = req;
+    } else {
+      mLoads[1].mRequest = req;
+    }
+
+    LoadImage(newSRC, aPresContext, req);
   }
   else if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute)
   { // XXX: could check for new width == old width, and make that a no-op

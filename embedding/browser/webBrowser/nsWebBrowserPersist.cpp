@@ -1024,7 +1024,6 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
     if (nodeAsImage)
     {
         StoreURIAttribute(aNode, "src");
-        StoreURIAttribute(aNode, "lowsrc");
         return NS_OK;
     }
 
@@ -1134,7 +1133,6 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         aNodeIn->CloneNode(PR_FALSE, aNodeOut);
         FixupAnchor(*aNodeOut);
         FixupNodeAttribute(*aNodeOut, "src");
-        FixupNodeAttribute(*aNodeOut, "lowsrc");
         return NS_OK;
     }
     
