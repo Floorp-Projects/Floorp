@@ -168,6 +168,7 @@ nsInstallProgressDialog::Open(nsIDialogParamBlock* ioParamBlock)
       rv = wwatch->OpenWindow(0, "chrome://communicator/content/xpinstall/xpistatus.xul",
                      "_blank", "chrome,centerscreen,titlebar,resizable",
                      params, getter_AddRefs(newWindow));
+      mWindow = do_QueryInterface(newWindow);
     }
   }
 
