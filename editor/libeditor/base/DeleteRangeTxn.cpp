@@ -20,6 +20,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMSelection.h"
 #include "DeleteTextTxn.h"
 #include "DeleteElementTxn.h"
 #include "TransactionFactory.h"
@@ -44,10 +45,11 @@ DeleteRangeTxn::DeleteRangeTxn()
 {
 }
 
-nsresult DeleteRangeTxn::Init(nsIDOMRange *aRange)
+nsresult DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
 {
-  if (nsnull!=aRange)
+  if (aEditor && aRange)
   {
+    mEditor = aEditor;
     nsresult result = aRange->GetStartParent(getter_AddRefs(mStartParent));
     NS_ASSERTION((NS_SUCCEEDED(result)), "GetStartParent failed.");
     result = aRange->GetEndParent(getter_AddRefs(mEndParent));
@@ -60,6 +62,7 @@ nsresult DeleteRangeTxn::Init(nsIDOMRange *aRange)
     NS_ASSERTION((NS_SUCCEEDED(result)), "GetCommonParent failed.");
 
 #ifdef NS_DEBUG
+  {
     PRUint32 count;
     nsCOMPtr<nsIDOMCharacterData> textNode;
     textNode = do_QueryInterface(mStartParent, &result);
@@ -88,6 +91,7 @@ nsresult DeleteRangeTxn::Init(nsIDOMRange *aRange)
     if (gNoisy)
       printf ("DeleteRange: %d of %p to %d of %p\n", 
                mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
+  }
 #endif
     return result;
   }
@@ -129,8 +133,18 @@ nsresult DeleteRangeTxn::Do(void)
   }
 
   // if we've successfully built this aggregate transaction, then do it.
-  if (NS_SUCCEEDED(result))
+  if (NS_SUCCEEDED(result)) {
     result = EditAggregateTxn::Do();
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    // set the resulting selection
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result)) {
+      result = selection->Collapse(mStartParent, mStartOffset);
+    }
+  }
 
   return result;
 }
@@ -141,6 +155,16 @@ nsresult DeleteRangeTxn::Undo(void)
     return NS_ERROR_NULL_POINTER;
 
   nsresult result = EditAggregateTxn::Undo();
+
+  if (NS_SUCCEEDED(result)) {
+    // set the resulting selection
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result)) {
+      result = selection->Collapse(mStartParent, mStartOffset);
+    }
+  }
+
   return result;
 }
 
@@ -150,6 +174,16 @@ nsresult DeleteRangeTxn::Redo(void)
     return NS_ERROR_NULL_POINTER;
 
   nsresult result = EditAggregateTxn::Redo();
+
+  if (NS_SUCCEEDED(result)) {
+    // set the resulting selection
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result)) {
+      result = selection->Collapse(mStartParent, mStartOffset);
+    }
+  }
+
   return result;
 }
 

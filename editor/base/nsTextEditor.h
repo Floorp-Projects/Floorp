@@ -77,6 +77,11 @@ public:
   virtual nsresult OutputText(nsIOutputStream *aOutputStream);
   virtual nsresult OutputHTML(nsIOutputStream *aOutputStream);
 
+// Utility methods
+protected:
+  virtual nsresult GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset);
+
+// Data members
 protected:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;

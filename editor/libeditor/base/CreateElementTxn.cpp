@@ -37,6 +37,13 @@ nsresult CreateElementTxn::Init(nsIDOMDocument *aDoc,
     mOffsetInParent = aOffsetInParent;
     mNewNode = nsnull;
     mRefNode = nsnull;
+#ifdef NS_DEBUG
+    {
+      nsCOMPtr<nsIDOMNodeList> testChildNodes;
+      nsresult testResult = mParent->GetChildNodes(getter_AddRefs(testChildNodes));
+      NS_ASSERTION(testChildNodes, "bad parent type, can't have children.");
+    }
+#endif
     return NS_OK;
   }
   else

@@ -44,6 +44,7 @@ Editor interface to outside world
 { 0x8f, 0x4c, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc } }
 
 class nsIDOMDocument;
+class nsIDOMSelection;
 class nsIPresShell;
 class nsString;
 
@@ -78,6 +79,13 @@ public:
    * @param aDoc [OUT] the dom interface being observed, refcounted
    */
   virtual nsresult GetDocument(nsIDOMDocument **aDoc)=0;
+
+  /** 
+   * return the DOM Selection for the presentation shell that has focus
+   * (or most recently had focus.)
+   * @param aSelection [OUT] the dom interface for the selection
+   */
+  virtual nsresult GetSelection(nsIDOMSelection **aSelection)=0;
 
   /**
    * SetAttribute() sets the attribute of aElement.
@@ -168,12 +176,9 @@ public:
    * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
    * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
    * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
-   * @param aParent              the parent of aExistingRightNode
    */
   virtual nsresult SplitNode(nsIDOMNode * aExistingRightNode,
-                             PRInt32      aOffset,
-                             nsIDOMNode * aNewLeftNode,
-                             nsIDOMNode * aParent)=0;
+                             PRInt32      aOffset)=0;
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.

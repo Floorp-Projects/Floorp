@@ -22,7 +22,11 @@
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMSelection.h"
+#include "nsIDOMNodeList.h"
 #include "nsEditorCID.h"
+
+#include "CreateElementTxn.h"
 
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
@@ -171,7 +175,42 @@ nsresult nsTextEditor::InsertBreak(PRBool aCtrlKey)
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
   {
-    result = NS_ERROR_NOT_IMPLEMENTED;
+    PRBool beganTransaction = PR_FALSE;
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if ((NS_SUCCEEDED(result)) && selection)
+    {
+      beganTransaction = PR_TRUE;
+      result = mEditor->BeginTransaction();
+      PRBool collapsed;
+      result = selection->IsCollapsed(&collapsed);
+      if (NS_SUCCEEDED(result) && !collapsed) 
+      {
+        result = mEditor->DeleteSelection(nsIEditor::eLTR);
+        // get the new selection
+        result = mEditor->GetSelection(getter_AddRefs(selection));
+#ifdef NS_DEBUG
+        PRBool testCollapsed;
+        result = selection->IsCollapsed(&testCollapsed);
+        NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");
+#endif
+      }
+      // split the text node
+      nsCOMPtr<nsIDOMNode> node;
+      PRInt32 offset;
+      result = selection->GetAnchorNodeAndOffset(getter_AddRefs(node), &offset);
+      nsCOMPtr<nsIDOMNode> parentNode;
+      result = node->GetParentNode(getter_AddRefs(parentNode));
+      result = mEditor->SplitNode(node, offset);
+      // now get the node's offset in it's parent, and insert the new BR there
+      result = GetChildOffset(node, parentNode, offset);
+      nsAutoString tag("BR");
+      result = mEditor->CreateNode(tag, parentNode, offset);
+      selection->Collapse(parentNode, offset);
+    }
+    if (PR_TRUE==beganTransaction) {
+      result = mEditor->EndTransaction();
+    }
   }
   return result;
 }
@@ -388,4 +427,40 @@ nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   return NS_NOINTERFACE;
+}
+
+
+// utility methods
+
+nsresult nsTextEditor::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
+{
+  NS_ASSERTION((aChild && aParent), "bad args");
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (aChild && aParent)
+  {
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    result = aParent->GetChildNodes(getter_AddRefs(childNodes));
+    if ((NS_SUCCEEDED(result)) && (childNodes))
+    {
+      PRInt32 i=0;
+      for ( ; NS_SUCCEEDED(result); i++)
+      {
+        nsCOMPtr<nsIDOMNode> childNode;
+        result = childNodes->Item(i, getter_AddRefs(childNode));
+        if ((NS_SUCCEEDED(result)) && (childNode))
+        {
+          if (childNode==aChild)
+          {
+            aOffset = i;
+            break;
+          }
+        }
+        else if (!childNode)
+          result = NS_ERROR_NULL_POINTER;
+      }
+    }
+    else if (!childNodes)
+      result = NS_ERROR_NULL_POINTER;
+  }
+  return result;
 }
