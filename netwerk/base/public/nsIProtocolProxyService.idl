@@ -39,6 +39,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIProtocolProxyCallback;
+interface nsIProtocolProxyFilter;
 interface nsIProxyInfo;
 interface nsIChannel;
 interface nsIURI;
@@ -46,38 +48,85 @@ interface nsIURI;
 /**
  * nsIProtocolProxyService provides methods to access information about
  * various network proxies.
+ *
+ * @status UNDER_REVIEW
  */
-[scriptable, uuid(ec2da5ae-eb2e-11d8-9782-0004e22243f8)]
+[scriptable, uuid(faea2185-8e5b-44a8-ae8f-5fd3f20972af)]
 interface nsIProtocolProxyService : nsISupports
 {
     /**
-     * This attribute indicates whether or not support for proxies is enabled.
+     * This flag may be passed to the resolve method to request that it fail
+     * instead of block the calling thread.  Proxy Auto Config (PAC) may
+     * perform a synchronous DNS query, which may not return immediately.  So,
+     * calling resolve without this flag may result in locking up the calling
+     * thread for a lengthy period of time.
+     *
+     * By passing this flag to resolve, one can failover to asyncResolve to
+     * avoid locking up the calling thread if a PAC query is required.
+     *
+     * When this flag is passed to resolve, resolve may throw the exception
+     * NS_BASE_STREAM_WOULD_BLOCK to indicate that it failed due to this flag
+     * being present.
      */
-    readonly attribute PRBool proxyEnabled;
-
+    const unsigned long RESOLVE_NON_BLOCKING = 1;
+    
     /**
      * This method returns a nsIProxyInfo instance that identifies a proxy to
-     * be used for loading the given URL.  Otherwise, this method returns null
+     * be used for loading the given URI.  Otherwise, this method returns null
      * indicating that a direct connection should be used.
      *
      * @param aURI
      *        The URI to test.
+     * @param aFlags
+     *        A bit-wise OR of the RESOLVE_ flags defined above.  Pass 0 to
+     *        specify the default behavior.
      *
      * NOTE: If this proxy is unavailable, getFailoverForProxy may be called
      * to determine the correct secondary proxy to be used.
      *
      * NOTE: If the protocol handler for the given URI supports
-     * nsIProxiedProtocolHandler, then the nsIProxyInfo instance returned
-     * from examineForProxy may be passed to the newProxiedChannel method
-     * to create a nsIChannel to the given URI that uses the specified proxy.
+     * nsIProxiedProtocolHandler, then the nsIProxyInfo instance returned from
+     * resolve may be passed to the newProxiedChannel method to create a
+     * nsIChannel to the given URI that uses the specified proxy.
      *
-     * NOTE: However, if the nsIProxyInfo type is "HTTP", then it means that
+     * NOTE: However, if the nsIProxyInfo type is "http", then it means that
      * the given URI should be loaded using the HTTP protocol handler, which
      * also supports nsIProxiedProtocolHandler.
      *
      * @see nsIProxiedProtocolHandler::newProxiedChannel 
      */
-    nsIProxyInfo examineForProxy(in nsIURI aURI);
+    nsIProxyInfo resolve(in nsIURI aURI, in unsigned long aFlags);
+
+    /**
+     * This method is an asychronous version of the resolve method.  Unlike
+     * resolve, this method is guaranteed not to block the calling thread
+     * waiting for DNS queries to complete.  This method is intended as a
+     * substitute for resolve when the result is not needed immediately.
+     *
+     * @param aURI
+     *        The URI to test.
+     * @param aFlags
+     *        A bit-wise OR of the RESOLVE_ flags defined above.  Pass 0 to
+     *        specify the default behavior.
+     * @param aCallback
+     *        The object to be notified when the result is available.
+     *
+     * @return a context for the operation that can be used to cancel the 
+     * asychronous operation.  See for example cancelAsyncResolve.
+     */
+    nsISupports asyncResolve(in nsIURI aURI,
+                             in unsigned long aFlags,
+                             in nsIProtocolProxyCallback aCallback);
+
+    /**
+     * This method may be used to cancel a pending asyncResolve callback.  When
+     * this is called, the callback object passed to asyncResolve will be
+     * notified with an error condition of NS_ERROR_ABORT.
+     *
+     * @param aContext
+     *        The return value from asyncResolve.
+     */
+    void cancelAsyncResolve(in nsISupports aContext);
 
     /**
      * This method may be called to construct a nsIProxyInfo instance from
@@ -88,10 +137,11 @@ interface nsIProtocolProxyService : nsISupports
      * @param aType
      *        The proxy type.  This is a string value that identifies the proxy
      *        type.  Standard values include:
-     *          "HTTP"   - specifies a HTTP proxy
-     *          "SOCKS"  - specifies a SOCKS version 5 proxy
-     *          "SOCKS4" - specifies a SOCKS version 4 proxy
-     *        The type name is case insensitive.  Other string values may be
+     *          "http"   - specifies a HTTP proxy
+     *          "socks"  - specifies a SOCKS version 5 proxy
+     *          "socks4" - specifies a SOCKS version 4 proxy
+     *          "direct" - specifies a direct connection (useful for failover)
+     *        The type name is case-insensitive.  Other string values may be
      *        possible.
      * @param aHost
      *        The proxy hostname or IP address.
@@ -100,31 +150,30 @@ interface nsIProtocolProxyService : nsISupports
      * @param aFlags
      *        Flags associated with this connection.  See nsIProxyInfo.idl
      *        for currently defined flags.
+     * @param aFailoverTimeout
+     *        Specifies the length of time (in seconds) to ignore this proxy if
+     *        this proxy fails.  Pass PR_UINT32_MAX to specify the default
+     *        timeout value, causing nsIProxyInfo::failoverTimeout to be
+     *        assigned the default value.
+     * @param aFailoverProxy
+     *        Specifies the next proxy to try if this proxy fails.  This
+     *        parameter may be null.
      */
     nsIProxyInfo newProxyInfo(in ACString aType, in AUTF8String aHost,
-                              in long aPort, in unsigned long aFlags);
-
-    /**
-     * This method may be called to re-configure proxy settings given a URI
-     * to a new proxy auto config file.  This method may return before the
-     * configuration actually takes affect (i.e., the URI may be loaded
-     * asynchronously).
-     *
-     * @param aURI
-     *        The location of the PAC file to load.
-     */
-    void configureFromPAC(in AUTF8String aURI);
+                              in long aPort, in unsigned long aFlags,
+                              in unsigned long aFailoverTimeout,
+                              in nsIProxyInfo aFailoverProxy);
 
     /**
      * If the proxy identified by aProxyInfo is unavailable for some reason,
      * this method may be called to access an alternate proxy that may be used
-     * instead.  As a side-effect, this method may affect future return values
-     * from examineForProxy as well as from getFailoverProxy.
+     * instead.  As a side-effect, this method may affect future result values
+     * from resolve/asyncResolve as well as from getFailoverForProxy.
      *
      * @param aProxyInfo
      *        The proxy that was unavailable.
      * @param aURI
-     *        The URI that was originally passed to ExamineForProxy.
+     *        The URI that was originally passed to resolve/asyncResolve.
      * @param aReason
      *        The error code corresponding to the proxy failure.  This value
      *        may be used to tune the delay before this proxy is used again.
@@ -134,4 +183,49 @@ interface nsIProtocolProxyService : nsISupports
     nsIProxyInfo getFailoverForProxy(in nsIProxyInfo aProxyInfo,
                                      in nsIURI       aURI,
                                      in nsresult     aReason);
+
+    /**
+     * This method may be used to register a proxy filter instance.  Each proxy
+     * filter is registered with an associated position that determines the
+     * order in which the filters are applied (starting from position 0).  When
+     * resolve/asyncResolve is called, it generates a list of proxies for the
+     * given URI, and then it applies the proxy filters.  The filters have the
+     * opportunity to modify the list of proxies.
+     *
+     * If two filters register for the same position, then the filters will be
+     * visited in the order in which they were registered.
+     *
+     * If the filter is already registered, then its position will be updated.
+     *
+     * After filters have been run, any disabled or disallowed proxies will be
+     * removed from the list.  A proxy is disabled if it had previously failed-
+     * over to another proxy (see getFailoverForProxy).  A proxy is disallowed,
+     * for example, if it is a HTTP proxy and the nsIProtocolHandler for the
+     * queried URI does not permit proxying via HTTP.
+     *
+     * If a nsIProtocolHandler disallows all proxying, then filters will never
+     * have a chance to intercept proxy requests for such URLs.
+     *
+     * @param aFilter
+     *        The nsIProtocolProxyFilter instance to be registered.
+     * @param aPosition
+     *        The position of the filter.
+     *
+     * NOTE: It is possible to construct filters that compete with one another
+     * in undesirable ways.  This API does not attempt to protect against such
+     * problems.  It is recommended that any extensions that choose to call
+     * this method make their position value configurable at runtime (perhaps
+     * via the preferences service).
+     */
+    void registerFilter(in nsIProtocolProxyFilter aFilter,
+                        in unsigned long aPosition);
+
+    /**
+     * This method may be used to unregister a proxy filter instance.  All
+     * filters will be automatically unregistered at XPCOM shutdown.
+     *
+     * @param aFilter
+     *        The nsIProtocolProxyFilter instance to be unregistered.
+     */
+    void unregisterFilter(in nsIProtocolProxyFilter aFilter);
 };

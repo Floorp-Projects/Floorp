@@ -597,7 +597,8 @@ NS_NewProxyInfo(const nsACString &type,
     static NS_DEFINE_CID(kPPSServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
     nsCOMPtr<nsIProtocolProxyService> pps = do_GetService(kPPSServiceCID, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = pps->NewProxyInfo(type, host, port, flags, result);
+        rv = pps->NewProxyInfo(type, host, port, flags, PR_UINT32_MAX, nsnull,
+                               result);
     return rv; 
 }
 
@@ -669,7 +670,7 @@ NS_ExamineForProxy(const char    *scheme,
         if (NS_SUCCEEDED(rv)) {
             rv = uri->SetSpec(spec);
             if (NS_SUCCEEDED(rv))
-                rv = pps->ExamineForProxy(uri, proxyInfo);
+                rv = pps->Resolve(uri, 0, proxyInfo);
         }
     }
     return rv;

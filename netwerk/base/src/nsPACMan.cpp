@@ -1,0 +1,405 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Darin Fisher <darin@meer.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsPACMan.h"
+#include "nsIDNSService.h"
+#include "nsIDNSListener.h"
+#include "nsEventQueueUtils.h"
+#include "nsNetUtil.h"
+#include "nsAutoLock.h"
+#include "nsAutoPtr.h"
+#include "nsIAuthPrompt.h"
+#include "nsCRT.h"
+#include "prmon.h"
+
+//-----------------------------------------------------------------------------
+
+// These objects are stored in nsPACMan::mPendingQ
+
+class PendingPACQuery : public PRCList, public nsIDNSListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDNSLISTENER
+
+  PendingPACQuery(nsPACMan *pacMan, nsIURI *uri, nsPACManCallback *callback)
+    : mPACMan(pacMan)
+    , mURI(uri)
+    , mCallback(callback)
+  {
+    PR_INIT_CLIST(this);
+  }
+
+  nsresult Start();
+  void     Complete(nsresult status, const nsCString &pacString);
+
+private:
+  nsPACMan                  *mPACMan;  // weak reference
+  nsCOMPtr<nsIURI>           mURI;
+  nsRefPtr<nsPACManCallback> mCallback;
+  nsCOMPtr<nsIDNSRequest>    mDNSRequest;
+};
+
+// This is threadsafe because we implement nsIDNSListener
+NS_IMPL_THREADSAFE_ISUPPORTS1(PendingPACQuery, nsIDNSListener)
+
+nsresult
+PendingPACQuery::Start()
+{
+  if (mDNSRequest)
+    return NS_OK;  // already started
+
+  nsresult rv;
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("unable to get the DNS service");
+    return rv;
+  }
+
+  nsCAutoString host;
+  rv = mURI->GetAsciiHost(host);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIEventQueue> eventQ;
+  rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = dns->AsyncResolve(host, 0, this, eventQ, getter_AddRefs(mDNSRequest));
+  if (NS_FAILED(rv))
+    NS_WARNING("DNS AsyncResolve failed");
+
+  return rv;
+}
+
+// This may be called before or after OnLookupComplete
+void
+PendingPACQuery::Complete(nsresult status, const nsCString &pacString)
+{
+  if (!mCallback)
+    return;
+
+  mCallback->OnQueryComplete(status, pacString);
+  mCallback = nsnull;
+
+  if (mDNSRequest) {
+    mDNSRequest->Cancel();
+    mDNSRequest = nsnull;
+  }
+}
+
+NS_IMETHODIMP
+PendingPACQuery::OnLookupComplete(nsIDNSRequest *request,
+                                  nsIDNSRecord *record,
+                                  nsresult status)
+{
+  // NOTE: we don't care about the results of this DNS query.  We issued
+  //       this DNS query just to pre-populate our DNS cache.
+ 
+  mDNSRequest = nsnull;  // break reference cycle
+
+  // If we've already completed this query then do nothing.
+  if (!mCallback)
+    return NS_OK;
+
+  // We're no longer pending, so we can remove ourselves.
+  PR_REMOVE_LINK(this);
+  NS_RELEASE_THIS();
+
+  nsCAutoString pacString;
+  status = mPACMan->GetProxyForURI(mURI, pacString);
+  Complete(status, pacString);
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+
+nsPACMan::nsPACMan()
+  : mLoadEvent(nsnull)
+  , mShutdown(PR_FALSE)
+{
+  PR_INIT_CLIST(&mPendingQ);
+}
+
+nsPACMan::~nsPACMan()
+{
+  NS_ASSERTION(mLoader == nsnull, "pac man not shutdown properly");
+  NS_ASSERTION(mPAC == nsnull, "pac man not shutdown properly");
+  NS_ASSERTION(PR_CLIST_IS_EMPTY(&mPendingQ), "pac man not shutdown properly");
+}
+
+void
+nsPACMan::Shutdown()
+{
+  CancelExistingLoad();
+  ProcessPendingQ(NS_ERROR_ABORT);
+
+  mPAC = nsnull;
+  mShutdown = PR_TRUE;
+}
+
+nsresult
+nsPACMan::GetProxyForURI(nsIURI *uri, nsACString &result)
+{
+  NS_ENSURE_STATE(!mShutdown);
+
+  if (!mPAC || IsLoading())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  nsCAutoString spec, host;
+  uri->GetAsciiSpec(spec);
+  uri->GetAsciiHost(host);
+
+  return mPAC->GetProxyForURI(spec, host, result);
+}
+
+nsresult
+nsPACMan::AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback)
+{
+  NS_ENSURE_STATE(!mShutdown);
+
+  PendingPACQuery *query = new PendingPACQuery(this, uri, callback);
+  if (!query)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(query);
+  PR_APPEND_LINK(query, &mPendingQ);
+
+  // If we're waiting for the PAC file to load, then delay starting the query.
+  // See OnStreamComplete.
+  if (IsLoading())
+    return NS_OK;
+
+  nsresult rv = query->Start();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to start PAC query");
+    PR_REMOVE_LINK(query);
+    NS_RELEASE(query);
+  }
+
+  return rv;
+}
+
+void *PR_CALLBACK
+nsPACMan::LoadEvent_Handle(PLEvent *ev)
+{
+  NS_REINTERPRET_CAST(nsPACMan *, PL_GetEventOwner(ev))->StartLoading();
+  return nsnull;
+}
+
+void PR_CALLBACK
+nsPACMan::LoadEvent_Destroy(PLEvent *ev)
+{
+  nsPACMan *self = NS_REINTERPRET_CAST(nsPACMan *, PL_GetEventOwner(ev));
+  self->mLoadEvent = nsnull;
+  self->Release();
+  delete ev;
+}
+
+nsresult
+nsPACMan::LoadPACFromURI(const nsACString &uriSpec)
+{
+  NS_ENSURE_STATE(!mShutdown);
+
+  nsCOMPtr<nsIStreamLoader> loader =
+      do_CreateInstance(NS_STREAMLOADER_CONTRACTID);
+  NS_ENSURE_STATE(loader);
+
+  // Since we might get called from nsProtocolProxyService::Init, we need to
+  // post an event back to the main thread before we try to use the IO service.
+  //
+  // But, we need to flag ourselves as loading, so that we queue up any PAC
+  // queries the enter between now and when we actually load the PAC file.
+
+  if (!mLoadEvent) {
+    mLoadEvent = new PLEvent;
+    if (!mLoadEvent)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF_THIS();
+    PL_InitEvent(mLoadEvent, this, LoadEvent_Handle, LoadEvent_Destroy);
+
+    nsCOMPtr<nsIEventQueue> eventQ;
+    nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+    if (NS_FAILED(rv) || NS_FAILED(rv = eventQ->PostEvent(mLoadEvent))) {
+      PL_DestroyEvent(mLoadEvent);
+      return rv;
+    }
+  }
+
+  CancelExistingLoad();
+
+  mLoader = loader;
+  mPACSpec = uriSpec;
+  mPAC = nsnull;
+  return NS_OK;
+}
+
+nsresult
+nsPACMan::StartLoading()
+{
+  // CancelExistingLoad was called...
+  if (!mLoader) {
+    ProcessPendingQ(NS_ERROR_ABORT);
+    return NS_OK;
+  }
+
+  // Always hit the origin server when loading PAC.
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  if (ios) {
+    nsCOMPtr<nsIChannel> channel;
+    ios->NewChannel(mPACSpec, nsnull, nsnull, getter_AddRefs(channel));
+    if (channel) {
+      channel->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE);
+      channel->SetNotificationCallbacks(this);
+      if (NS_SUCCEEDED(mLoader->Init(channel, this, nsnull)))
+        return NS_OK;
+    }
+  }
+
+  CancelExistingLoad();
+  ProcessPendingQ(NS_ERROR_UNEXPECTED);
+  return NS_OK;
+}
+
+void
+nsPACMan::CancelExistingLoad()
+{
+  if (mLoader) {
+    nsCOMPtr<nsIRequest> request;
+    mLoader->GetRequest(getter_AddRefs(request));
+    if (request)
+      request->Cancel(NS_ERROR_ABORT);
+    mLoader = nsnull;
+  }
+}
+
+void
+nsPACMan::ProcessPendingQ(nsresult status)
+{
+  // Now, start any pending queries
+  PRCList *node = PR_LIST_HEAD(&mPendingQ);
+  while (node != &mPendingQ) {
+    PendingPACQuery *query = NS_STATIC_CAST(PendingPACQuery *, node);
+    node = PR_NEXT_LINK(node);
+    if (NS_SUCCEEDED(status)) {
+      // keep the query in the list (so we can complete it from Shutdown if
+      // necessary).
+      status = query->Start();
+    }
+    if (NS_FAILED(status)) {
+      // remove the query from the list
+      PR_REMOVE_LINK(query);
+      query->Complete(status, EmptyCString());
+      NS_RELEASE(query);
+    }
+  }
+}
+
+NS_IMPL_ISUPPORTS2(nsPACMan, nsIStreamLoaderObserver, nsIInterfaceRequestor)
+
+NS_IMETHODIMP
+nsPACMan::OnStreamComplete(nsIStreamLoader *loader,
+                           nsISupports *context,
+                           nsresult status,
+                           PRUint32 dataLen,
+                           const PRUint8 *data)
+{
+  if (mLoader != loader) {
+    // If this happens, then it means that LoadPACFromURI was called more
+    // than once before the initial call completed.  In this case, status
+    // should be NS_ERROR_ABORT, and if so, then we know that we can and
+    // should delay any processing.
+    if (status == NS_ERROR_ABORT)
+      return NS_OK;
+  }
+
+  mLoader = nsnull;
+
+  if (NS_SUCCEEDED(status)) {
+    // Get the URI spec used to load this PAC script.
+    nsCAutoString pacURI;
+    {
+      nsCOMPtr<nsIRequest> request;
+      loader->GetRequest(getter_AddRefs(request));
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+      if (channel) {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        if (uri)
+          uri->GetAsciiSpec(pacURI);
+      }
+    }
+
+    if (!mPAC) {
+      mPAC = do_CreateInstance(NS_PROXYAUTOCONFIG_CONTRACTID, &status);
+      if (!mPAC)
+        NS_WARNING("failed to instantiate PAC component");
+    }
+    if (NS_SUCCEEDED(status)) {
+      // We assume that the PAC text is ASCII.  We've had this assumption
+      // forever, so no reason to change this now.
+      const char *text = (const char *) data;
+      if (!nsCRT::IsAscii(text, dataLen)) {
+        NS_WARNING("PAC text is not ASCII");
+        status = NS_ERROR_UNEXPECTED;
+      }
+      else {
+        status = mPAC->Init(pacURI, NS_ConvertASCIItoUTF16(text, dataLen));
+      }
+    }
+  }
+
+  // Reset mPAC if necessary
+  if (mPAC && NS_FAILED(status))
+    mPAC = nsnull;
+
+  ProcessPendingQ(status);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPACMan::GetInterface(const nsIID &iid, void **result)
+{
+  // In case loading the PAC file requires authentication.
+  if (iid.Equals(NS_GET_IID(nsIAuthPrompt)))
+    return CallCreateInstance(NS_DEFAULTAUTHPROMPT_CONTRACTID,
+                              nsnull, iid, result);
+
+  return NS_ERROR_NO_INTERFACE;
+}

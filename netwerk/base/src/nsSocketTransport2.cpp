@@ -46,6 +46,7 @@
 #include "nsStreamUtils.h"
 #include "nsNetSegmentUtils.h"
 #include "nsTransportUtils.h"
+#include "nsProxyInfo.h"
 #include "nsNetCID.h"
 #include "nsAutoLock.h"
 #include "nsCOMPtr.h"
@@ -63,7 +64,6 @@
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsISSLSocketControl.h"
-#include "nsIProxyInfo.h"
 #include "nsIPipe.h"
 
 #if defined(XP_WIN) && !defined (WINCE)
@@ -722,8 +722,14 @@ nsSocketTransport::~nsSocketTransport()
 nsresult
 nsSocketTransport::Init(const char **types, PRUint32 typeCount,
                         const nsACString &host, PRUint16 port,
-                        nsIProxyInfo *proxyInfo)
+                        nsIProxyInfo *givenProxyInfo)
 {
+    nsCOMPtr<nsProxyInfo> proxyInfo;
+    if (givenProxyInfo) {
+        proxyInfo = do_QueryInterface(givenProxyInfo);
+        NS_ENSURE_ARG(proxyInfo);
+    }
+
     // init socket type info
 
     mPort = port;

@@ -1385,13 +1385,19 @@ nsHttpHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 
 NS_IMETHODIMP
 nsHttpHandler::NewProxiedChannel(nsIURI *uri,
-                                 nsIProxyInfo* proxyInfo,
+                                 nsIProxyInfo* givenProxyInfo,
                                  nsIChannel **result)
 {
     nsHttpChannel *httpChannel = nsnull;
 
     LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n",
-        proxyInfo));
+        givenProxyInfo));
+    
+    nsCOMPtr<nsProxyInfo> proxyInfo;
+    if (givenProxyInfo) {
+        proxyInfo = do_QueryInterface(givenProxyInfo);
+        NS_ENSURE_ARG(proxyInfo);
+    }
 
     PRBool https;
     nsresult rv = uri->SchemeIs("https", &https);
