@@ -2126,6 +2126,7 @@ nsBrowserWindow::SetCompatibilityMode(PRBool aIsStandard)
   if (nsnull != mPrefs) { 
     int32 prefInt = (aIsStandard) ? eCompatibility_Standard : eCompatibility_NavQuirks;
     mPrefs->SetIntPref("nglayout.compatibility.mode", prefInt);
+    mPrefs->SavePrefFile();
   }
 }
 
