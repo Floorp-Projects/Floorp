@@ -223,17 +223,17 @@ ifeq ($(OS_ARCH), AIX)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-    ifeq ($(CPU_ARCH),x86)
-	ASFILES = os_$(OS_ARCH)_x86.s
-    else
-	ifneq ($(OS_RELEASE),4.1.3_U1)
-	ifneq ($(LOCAL_THREADS_ONLY),1)
-		ASFILES = os_$(OS_ARCH).s
-		ifneq ($(USE_64),1)
-		ASFILES += os_$(OS_ARCH)_32.s
-		endif
-	endif
-	endif
+    ifneq ($(OS_RELEASE),4.1.3_U1)
+    ifneq ($(LOCAL_THREADS_ONLY),1)
+        ifeq ($(CPU_ARCH),x86)
+            ASFILES = os_$(OS_ARCH)_x86.s
+        else
+            ASFILES = os_$(OS_ARCH).s
+            ifneq ($(USE_64),1)
+            ASFILES += os_$(OS_ARCH)_32.s
+            endif
+        endif
+    endif
     endif
 endif
 
