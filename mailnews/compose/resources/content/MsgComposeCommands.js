@@ -183,6 +183,7 @@ function enableEditableFields()
 var gComposeRecyclingListener = {
   onClose: function() {
     //Reset recipients and attachments
+    ReleaseAutoCompleteState();
     awResetAllRows();
     RemoveAllAttachments();
 
@@ -2085,6 +2086,16 @@ function SetContentAndBodyAsUnmodified()
 {
   gMsgCompose.bodyModified = false; 
   gContentChanged = false;
+}
+
+function ReleaseAutoCompleteState()
+{
+  for (i=1; i <= awGetMaxRecipients(); i++) 
+    document.getElementById("addressCol2#" + i).removeSession(gLDAPSession);
+
+  gSessionAdded = false;
+  gLDAPSession = null;  
+  gAutocompleteSession = null;
 }
 
 function MsgComposeCloseWindow(recycleIt)
