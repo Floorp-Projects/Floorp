@@ -511,7 +511,7 @@ NS_IMETHODIMP
 nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
-  if (nsnull != mContentStyleRule) {
+  if (aDocument != mDocument && mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
     mContentStyleRule->mSheet = nsnull;
 

@@ -311,16 +311,19 @@ NS_IMETHODIMP
 nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
+  PRBool documentChanging = (aDocument != mDocument);
+
   // Unregister the access key for the old document.
-  if (mDocument) {
+  if (documentChanging && mDocument) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsresult rv = nsGenericHTMLContainerFormElement::SetDocument(aDocument,
-                                                 aDeep, aCompileEventHandlers);
+  nsresult rv =
+    nsGenericHTMLContainerFormElement::SetDocument(aDocument, aDeep,
+                                                   aCompileEventHandlers);
 
   // Register the access key for the new document.
-  if (mDocument) {
+  if (documentChanging && mDocument) {
     RegUnRegAccessKey(PR_TRUE);
   }
 
