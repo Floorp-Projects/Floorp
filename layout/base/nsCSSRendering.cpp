@@ -1820,27 +1820,35 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
     // Border leaks out of the dirty rectangle - lets clip it but with care
     if (innerRect.y < aDirtyRect.y) {
       aSkipSides |= (1 << NS_SIDE_TOP);
-      innerRect.height -= aDirtyRect.y - innerRect.y;
-      innerRect.y = aDirtyRect.y;
-      outerRect.height -= innerRect.y - outerRect.y;
-      outerRect.y = innerRect.y;
+      PRUint32 shortenBy =
+        PR_MIN(innerRect.height, aDirtyRect.y - innerRect.y);
+      innerRect.y += shortenBy;
+      innerRect.height -= shortenBy;
+      outerRect.y += shortenBy;
+      outerRect.height -= shortenBy;
     }
-    if (innerRect.YMost() > aDirtyRect.YMost()) {
+    if (aDirtyRect.YMost() < innerRect.YMost()) {
       aSkipSides |= (1 << NS_SIDE_BOTTOM);
-      innerRect.height = aDirtyRect.YMost() - innerRect.y;
-      outerRect.height = aDirtyRect.YMost() - outerRect.y;
+      PRUint32 shortenBy =
+        PR_MIN(innerRect.height, innerRect.YMost() - aDirtyRect.YMost());
+      innerRect.height -= shortenBy;
+      outerRect.height -= shortenBy;
     }
     if (innerRect.x < aDirtyRect.x) {
       aSkipSides |= (1 << NS_SIDE_LEFT);
-      innerRect.width -= aDirtyRect.x - innerRect.x;
-      innerRect.x = aDirtyRect.x;
-      outerRect.width -= innerRect.x - outerRect.x;
-      outerRect.x = innerRect.x;
+      PRUint32 shortenBy =
+        PR_MIN(innerRect.width, aDirtyRect.x - innerRect.x);
+      innerRect.x += shortenBy;
+      innerRect.width -= shortenBy;
+      outerRect.x += shortenBy;
+      outerRect.width -= shortenBy;
     }
-    if (innerRect.XMost() > aDirtyRect.XMost()) {
+    if (aDirtyRect.XMost() < innerRect.XMost()) {
       aSkipSides |= (1 << NS_SIDE_RIGHT);
-      innerRect.width = aDirtyRect.XMost() - innerRect.x;
-      outerRect.width = aDirtyRect.XMost() - outerRect.x;
+      PRUint32 shortenBy =
+        PR_MIN(innerRect.width, innerRect.XMost() - aDirtyRect.XMost());
+      innerRect.width -= shortenBy;
+      outerRect.width -= shortenBy;
     }
   }
   /* Get our conversion values */
