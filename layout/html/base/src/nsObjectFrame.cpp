@@ -1832,8 +1832,8 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 
 NS_IMETHODIMP
 nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
-                          nsGUIEvent*     anEvent,
-                          nsEventStatus*  anEventStatus)
+                           nsGUIEvent*     anEvent,
+                           nsEventStatus*  anEventStatus)
 {
   NS_ENSURE_ARG_POINTER(anEventStatus);
   nsresult rv = NS_OK;
@@ -2243,8 +2243,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
 
     return NS_OK;
   }
-  else
-    return NS_ERROR_FAILURE;
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
@@ -3198,9 +3198,10 @@ nsresult nsPluginInstanceOwner::Blur(nsIDOMEvent * aFocusEvent)
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
-  if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
-    return NS_ERROR_FAILURE; // means consume event
-                             // continue only for cases without child window
+  if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type) {
+    // continue only for cases without child window
+    return aFocusEvent->PreventDefault(); // consume event
+  }
 #endif
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aFocusEvent));
@@ -3218,8 +3219,6 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
         if (nsevent) {
           nsevent->PreventBubble();
         }
-
-        return NS_ERROR_FAILURE; // means consume event
       }
     }
     else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchFocusToPlugin failed, focusEvent null");   
@@ -3241,7 +3240,6 @@ nsresult nsPluginInstanceOwner::DragEnter(nsIDOMEvent* aMouseEvent)
     if (nsevent) {
       nsevent->PreventBubble();
     }
-    return NS_ERROR_FAILURE; // means consume event                             
   }
 #endif
   return NS_OK;
@@ -3258,7 +3256,6 @@ nsresult nsPluginInstanceOwner::DragOver(nsIDOMEvent* aMouseEvent)
     if (nsevent) {
       nsevent->PreventBubble();
     }
-    return NS_ERROR_FAILURE; // means consume event                             
   }
 #endif
   return NS_OK;
@@ -3275,7 +3272,6 @@ nsresult nsPluginInstanceOwner::DragExit(nsIDOMEvent* aMouseEvent)
     if (nsevent) {
       nsevent->PreventBubble();
     }
-    return NS_ERROR_FAILURE; // means consume event                             
   }
 #endif
   return NS_OK;
@@ -3292,7 +3288,6 @@ nsresult nsPluginInstanceOwner::DragDrop(nsIDOMEvent* aMouseEvent)
     if (nsevent) {
       nsevent->PreventBubble();
     }
-    return NS_ERROR_FAILURE; // means consume event                             
   }
 #endif
   return NS_OK;
@@ -3309,7 +3304,6 @@ nsresult nsPluginInstanceOwner::DragGesture(nsIDOMEvent* aMouseEvent)
     if (nsevent) {
       nsevent->PreventBubble();
     }
-    return NS_ERROR_FAILURE; // means consume event                             
   }
 #endif
   return NS_OK;
@@ -3345,7 +3339,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
         guiEvent->message == NS_KEY_PRESS &&
         ev &&
         ev->what == keyDown)
-      return NS_ERROR_FAILURE;
+      return aKeyEvent->PreventDefault(); // consume event
   }
 
   // Nasty hack to avoid recursive event dispatching with Java. Java can
@@ -3355,7 +3349,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
   static PRBool sInKeyDispatch = PR_FALSE;
   
   if (sInKeyDispatch)
-    return NS_ERROR_FAILURE; // means consume event
+    return aKeyEvent->PreventDefault(); // consume event
 
   sInKeyDispatch = PR_TRUE;
   nsresult rv =  DispatchKeyToPlugin(aKeyEvent);
@@ -3370,7 +3364,6 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
     if (nsevent) {
       nsevent->PreventBubble();
     }
-    return NS_ERROR_FAILURE; // means consume event                             
   }
   return NS_OK;
 #endif
@@ -3380,7 +3373,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 {
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
-    return NS_ERROR_FAILURE; // means consume event
+    return aKeyEvent->PreventDefault(); // consume event
   // continue only for cases without child window
 #endif
 
@@ -3399,8 +3392,6 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
           if (nsevent) {
             nsevent->PreventBubble();
           }
-
-          return NS_ERROR_FAILURE; // means consume event
         }
       }
       else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchKeyToPlugin failed, keyEvent null");   
@@ -3418,7 +3409,7 @@ nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)
 {
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
-    return NS_ERROR_FAILURE; // means consume event
+    return aMouseEvent->PreventDefault(); // consume event
   // continue only for cases without child window
 #endif
 
@@ -3433,7 +3424,7 @@ nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)
     if (mouseEvent) {
       nsEventStatus rv = ProcessEvent(*mouseEvent);
       if (nsEventStatus_eConsumeNoDefault == rv) {
-        return NS_ERROR_FAILURE; // means consume event
+        return aMouseEvent->PreventDefault(); // consume event
       }
     }
     else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::MouseMove failed, mouseEvent null");   
@@ -3450,7 +3441,7 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 {
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
-    return NS_ERROR_FAILURE; // means consume event
+    return aMouseEvent->PreventDefault(); // consume event
   // continue only for cases without child window
 #endif
 
@@ -3469,7 +3460,7 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
     if (mouseEvent) {
       nsEventStatus rv = ProcessEvent(*mouseEvent);
       if (nsEventStatus_eConsumeNoDefault == rv) {
-        return NS_ERROR_FAILURE; // means consume event
+        return aMouseEvent->PreventDefault(); // consume event
       }
     }
     else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::MouseDown failed, mouseEvent null");   
@@ -3513,7 +3504,7 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 {
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
-    return NS_ERROR_FAILURE; // means consume event
+    return aMouseEvent->PreventDefault(); // consume event
   // continue only for cases without child window
 #endif
 
@@ -3535,8 +3526,6 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
         if (nsevent) {
           nsevent->PreventBubble();
         }
-
-        return NS_ERROR_FAILURE; // means consume event
       }
     }
     else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchMouseToPlugin failed, mouseEvent null");   
