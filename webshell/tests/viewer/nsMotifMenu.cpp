@@ -182,6 +182,7 @@ void CreateViewerMenus(Widget aParent, MenuCallbackProc aCallback)
   CreateMenuItem(menu, "demo #7", VIEWER_DEMO7, aCallback);
   CreateMenuItem(menu, "demo #8", VIEWER_DEMO8, aCallback);
   CreateMenuItem(menu, "demo #9", VIEWER_DEMO9, aCallback);
+  CreateMenuItem(menu, "demo #10", VIEWER_DEMO10, aCallback);
 
   CreateMenuItem(fileMenu, "Top 100 Sites", VIEWER_TOP100, aCallback);
 

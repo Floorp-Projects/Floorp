@@ -20,24 +20,24 @@ DEPTH=../../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-	nsBrowserWindow.cpp	\
-	nsEditorMode.cpp	\
-	nsEditorInterfaces.cpp	\
-	nsMotifMenu.cpp		\
-	nsSetupRegistry.cpp	\
-	nsUnixMain.cpp		\
-	nsViewerApp.cpp		\
-	nsWebCrawler.cpp	\
-        nsStubs.cpp  		\
+	nsBrowserWindow.cpp     \
+	nsEditorMode.cpp        \
+	nsEditorInterfaces.cpp  \
+	nsMotifMenu.cpp         \
+	nsSetupRegistry.cpp     \
+	nsUnixMain.cpp          \
+	nsViewerApp.cpp         \
+	nsWebCrawler.cpp        \
+	nsStubs.cpp             \
 	$(NULL)
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom \
 	-I$(PUBLIC)/netlib -I$(PUBLIC)/js -I$(PUBLIC)/pref -I$(PUBLIC)/network -I$(PUBLIC)/xp
 
-OBJS	= $(CPPSRCS:.cpp=.o)
+OBJS    = $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
-	$(DIST)/bin/libraptorbase.so	\
+	$(DIST)/bin/libraptorbase.so    \
 	$(DIST)/bin/libpng.so \
 	$(DIST)/bin/libpref.so \
 	$(DIST)/bin/libraptorbase.so \
@@ -84,7 +84,7 @@ EX_LIBS = \
 	$(DIST)/bin/libxpcom.so \
 	$(DIST)/bin/libzlib.so \
 	$(DIST)/bin/libraptorplugin.so \
-        $(NULL)
+	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
 EX_LIBS += \
@@ -142,6 +142,7 @@ install:: $(TARGETS)
 	$(INSTALL) samples/gear1.gif $(DIST)/bin/res/samples
 	$(INSTALL) samples/rock_gra.gif $(DIST)/bin/res/samples
 	$(INSTALL) samples/bg.jpg $(DIST)/bin/res/samples
+	$(INSTALL) samples/test10.html $(DIST)/bin/res/samples
 	$(INSTALL) throbber/anims00.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims01.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims02.gif $(DIST)/bin/res/throbber
@@ -179,6 +180,7 @@ clobber::
 	rm -f $(DIST)/bin/res/samples/gear1.gif
 	rm -f $(DIST)/bin/res/samples/rock_gra.gif
 	rm -f $(DIST)/bin/res/samples/bg.jpg
+	rm -f $(DIST)/bin/res/samples/test10.html
 	rm -f $(DIST)/bin/res/throbber/anims00.gif
 	rm -f $(DIST)/bin/res/throbber/anims01.gif
 	rm -f $(DIST)/bin/res/throbber/anims02.gif
