@@ -85,6 +85,7 @@ function constructResults()
   var newvalue = value.toString();
   var numActions = getNumActions();
   var actionName = getActionName();
+  var keyboardShortcut = getAccKeyboardShortcut();
 
   var expectedName          = "External Link";
   var expectedRole          = "42";
@@ -93,6 +94,7 @@ function constructResults()
   var expectednodeFocus     = "Focused";
   var expectednumActions    = "1";
   var expectedactionName    = "Jump";
+  var expectedkeyboardShortcut = "Alt+a";
 
   var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
   var row1 = new Array("Name->", expectedName, name);
@@ -102,8 +104,9 @@ function constructResults()
   var row5 = new Array("accTakeFocus()->", expectednodeFocus, nodeFocus);
   var row6 = new Array("accNumActions->", expectednumActions, numActions);
   var row7 = new Array("getAccActionName()->", expectedactionName, actionName);
+  var row8 = new Array("accKeyboardShortcut->", expectedkeyboardShortcut, keyboardShortcut);
 
-  row = new Array(row0, row1, row2, row3, row4, row5, row6, row7);
+  row = new Array(row0, row1, row2, row3, row4, row5, row6, row7, row8);
 
   if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
   if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
@@ -112,6 +115,8 @@ function constructResults()
   if (nodeFocus == expectednodeFocus)       row5[3] = "PASS"; else row5[3] = "FAIL";
   if (numActions == expectednumActions)     row6[3] = "PASS"; else row6[3] = "FAIL";
   if (actionName == expectedactionName)     row7[3] = "PASS"; else row7[3] = "FAIL";
+  if (keyboardShortcut == expectedkeyboardShortcut)
+                                            row8[3] = "PASS"; else row8[3] = "FAIL";
 
   appendTableRes();
   if(!isRunningStandalone())
@@ -138,7 +143,7 @@ if(readCookie(cookieName) == null)
   <!-- Test Anchor -->
   <!-- Anchor linking to external file -->
   document.write('Testing Link' + '<br>');
-  document.write('<a href="http://home.netscape.com">External Link</a>');
+  document.write('<a href="http://home.netscape.com" accesskey="a">External Link</a>');
 
   setTimeout("executeTestCase();", 2000);
 }
