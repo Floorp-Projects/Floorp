@@ -1707,7 +1707,7 @@ NS_IMETHODIMP StyleSetImpl::ContentInserted(nsIPresContext* aPresContext,
                                             nsIContent*     aChild,
                                             PRInt32         aIndexInContainer)
 {
-  return mFrameConstructor->ContentInserted(aPresContext, aContainer,
+  return mFrameConstructor->ContentInserted(aPresContext, aContainer, nsnull,
                                             aChild, aIndexInContainer, 
                                             nsnull, PR_FALSE);
 }

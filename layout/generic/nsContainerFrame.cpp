@@ -110,9 +110,7 @@ nsContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (!mFrames.IsEmpty()) {
     // We already have child frames which means we've already been
     // initialized
-#ifdef DEBUG_dbaron_off // XXX Fix asserts and remove this ifdef.
     NS_NOTREACHED("unexpected second call to SetInitialChildList");
-#endif
     result = NS_ERROR_UNEXPECTED;
   } else if (aListName) {
     // All we know about is the unnamed principal child list
@@ -444,6 +442,10 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
     // the frame tree of some enclosing document. We do nothing in that case,
     // but we have to check that containingView is nonnull or we will crash.
     if (nsnull != containingView && containingView != parentView) {
+      NS_ERROR("This hack should not be needed now!!! See bug 126263.");
+
+      // XXX roc this is no longer needed; remove it!!
+
       // it is possible for parent view not to have a frame attached to it
       // kind of an anonymous view. This happens with native scrollbars and
       // the clip view. To fix this we need to go up and parentView chain

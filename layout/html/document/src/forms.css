@@ -171,11 +171,8 @@ select > input[type="button"]:active {
   background-image: url("arrowd.gif") !important;
 }
 
-select[size], :-moz-select-scrolled-content {
-  overflow: -moz-scrollbars-vertical;
-}
-
 select[size] {
+  overflow: -moz-scrollbars-vertical;
    -moz-appearance: listbox;
 }
 
@@ -239,7 +236,7 @@ optgroup:before {
   background-color: inherit;
   -moz-user-select: none;
 
-  border: 1px outset black !important; 
+  border: 1px outset black !important;
 } 
 
 input[disabled],

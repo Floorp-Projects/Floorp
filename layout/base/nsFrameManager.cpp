@@ -2389,9 +2389,17 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
 
       // Hash by index of control in doc (we are not in a form)
       // These are important as they are unique, and type/name may not be.
+
+      // We don't refresh the form control list here (passing PR_TRUE
+      // for aFlush), although we really should. Forcing a flush
+      // causes a signficant pageload performance hit. See bug
+      // 166636. Doing this wrong means you will see the assertion
+      // below being hit.
       mHTMLFormControls->IndexOf(aContent, index, PR_FALSE);
       NS_ASSERTION(index > -1,
-                   "nsFrameManager::GenerateStateKey didn't find content by type!");
+                   "nsFrameManager::GenerateStateKey didn't find content "
+                   "by type! See bug 139568");
+
       if (index > -1) {
         KeyAppendInt(index, aKey);
         generatedUniqueKey = PR_TRUE;

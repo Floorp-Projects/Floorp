@@ -894,6 +894,8 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
     return NS_ERROR_FAILURE;
 
+  // This is EVIL, we shouldn't be messing with GetFrameForPoint just to get
+  // thumb mouse drag events to arrive at the slider!
   if (isDraggingThumb(aPresContext))
   {
     // XXX I assume it's better not to test for visibility here.

@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsIViewManager.h"
+#include "nsIScrollableViewProvider.h"
 
 class nsIFrame;
 class nsIBox;
@@ -51,7 +52,7 @@ class nsIPresContext;
 { 0xc95f1831, 0xc372, 0x11d1, \
 { 0xb7, 0x21, 0x0, 0x64, 0x9, 0x92, 0xd8, 0xc9 } }
 
-class nsIScrollableFrame : public nsISupports {
+class nsIScrollableFrame : public nsIScrollableViewProvider {
 public:
 
   enum nsScrollPref {

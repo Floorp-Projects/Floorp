@@ -3158,7 +3158,8 @@ nsTextControlFrame::GetWidthInCharacters() const
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::GetScrollableView(nsIScrollableView** aView)
+nsTextControlFrame::GetScrollableView(nsIPresContext* aPresContext,
+                                      nsIScrollableView** aView)
 {
   nsresult rv = NS_OK;
   *aView = mScrollableView;

@@ -212,7 +212,7 @@ public:
     { mFrameConstructor = aConstructor; return NS_OK;} // not owner - do not addref!
 
   // nsIScrollableViewProvider
-  NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
+  NS_IMETHOD GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView** aView);
 
   //nsIStatefulFrame
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);

@@ -2135,7 +2135,7 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::GetScrollableView(nsIScrollableView** aView)
+nsMenuFrame::GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView** aView)
 {
   *aView = nsnull;
   if (!mPopupFrames.FirstChild())

@@ -756,7 +756,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext,
       // move the dropdown list up
       dropdownYOffset = - (dropdownRect.height);
     }
-  } 
+  }
  
   dropdownRect.x = 0;
   dropdownRect.y = dropdownYOffset; 
@@ -764,10 +764,6 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext,
   mDropdownFrame->GetRect(currentRect);
 
   mDropdownFrame->SetRect(aPresContext, dropdownRect);
-#ifdef DEBUG_rodsXXXXXX
-  printf("%d Position Dropdown at: %d %d %d %d\n", counter++, dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height);
-#endif
-
   return rv;
 }
 
@@ -1594,8 +1590,15 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     REFLOW_DEBUG_MSG("Unconstrained.....\n");
     REFLOW_DEBUG_MSG4("*B mItemDisplayWidth %d  dropdownRect.width:%d dropdownRect.w+h %d\n", PX(mItemDisplayWidth), PX(dropdownRect.width), PX((dropBorderPadding.left + dropBorderPadding.right)));
 
-    // Start with the dropdown rect's width
-    mItemDisplayWidth = dropdownRect.width;
+    // Start with the dropdown rect's width (at this stage, it's the
+    // natural width of the content in the list, i.e., the width of
+    // the widest content, i.e. the preferred width for the display
+    // frame) and add room for the button, which is assumed to match
+    // the width of the scrollbar (note that the scrollbarWidth is
+    // passed as aBtnWidth to ReflowCombobox).  (When the dropdown was
+    // an nsScrollFrame the scrollbar width seems to have already been
+    // added to its unconstrained width.)
+    mItemDisplayWidth = dropdownRect.width + scrollbarWidth;
 
     REFLOW_DEBUG_MSG2("*  mItemDisplayWidth %d\n", PX(mItemDisplayWidth));
 
@@ -2584,18 +2587,20 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
   //nsIScrollableViewProvider
 //----------------------------------------------------------------------
 NS_METHOD
-nsComboboxControlFrame::GetScrollableView(nsIScrollableView** aView)
+nsComboboxControlFrame::GetScrollableView(nsIPresContext* aPresContext,
+                                          nsIScrollableView** aView)
 {
   *aView = nsnull;
-  nsIView* view = nsnull;
-  mDropdownFrame->GetView(mPresContext, &view);
-  if (view) {
-    nsIScrollableView* sv = nsnull;
-    nsresult rv = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &sv);
-    if (NS_SUCCEEDED(rv) && sv)
-      *aView = sv;
-  }
-  return NS_OK;
+
+  if (!mDropdownFrame)
+    return NS_ERROR_FAILURE;
+
+  nsIScrollableFrame* scrollable = nsnull;
+  nsresult rv = CallQueryInterface(mDropdownFrame, &scrollable);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return scrollable->GetScrollableView(aPresContext, aView);
 }
 
 //---------------------------------------------------------

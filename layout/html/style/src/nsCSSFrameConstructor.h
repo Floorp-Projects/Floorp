@@ -107,6 +107,7 @@ public:
 
   NS_IMETHOD ContentInserted(nsIPresContext*        aPresContext,
                              nsIContent*            aContainer,
+                             nsIFrame*              aContainerFrame,
                              nsIContent*            aChild,
                              PRInt32                aIndexInContainer,
                              nsILayoutHistoryState* aFrameState,
@@ -574,22 +575,24 @@ protected:
                                    nsFrameItems&            aFrameItems,
                                    PRBool                   aXBLBaseTag);
 
-  nsresult CreateAnonymousFrames(nsIPresShell*                        aPresShell, 
-                                 nsIPresContext*                      aPresContext,
-                                             nsIAtom*                 aTag,
-                                             nsFrameConstructorState& aState,
-                                             nsIContent*              aParent,
-                                             nsIFrame*                aNewFrame,
-                                             nsFrameItems&            aChildItems,
-                                             PRBool                   aIsRoot = PR_FALSE);
+  nsresult CreateAnonymousFrames(nsIPresShell*            aPresShell, 
+                                 nsIPresContext*          aPresContext,
+                                 nsIAtom*                 aTag,
+                                 nsFrameConstructorState& aState,
+                                 nsIContent*              aParent,
+                                 nsIFrame*                aNewFrame,
+                                 PRBool                   aAppendToExisting,
+                                 nsFrameItems&            aChildItems,
+                                 PRBool                   aIsRoot = PR_FALSE);
 
-  nsresult CreateAnonymousFrames(nsIPresShell*                        aPresShell, 
-                                             nsIPresContext*          aPresContext,
-                                             nsFrameConstructorState& aState,
-                                             nsIContent*              aParent,
-                                             nsIDocument*             aDocument,
-                                             nsIFrame*                aNewFrame,
-                                             nsFrameItems&            aChildItems);
+  nsresult CreateAnonymousFrames(nsIPresShell*            aPresShell, 
+                                 nsIPresContext*          aPresContext,
+                                 nsFrameConstructorState& aState,
+                                 nsIContent*              aParent,
+                                 nsIDocument*             aDocument,
+                                 nsIFrame*                aNewFrame,
+                                 PRBool                   aAppendToExisting,
+                                 nsFrameItems&            aChildItems);
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
@@ -737,18 +740,18 @@ protected:
   // Creates a new GfxScrollFrame, Initializes it, and creates a scroll port for it
   //
   nsresult
-  BuildGfxScrollFrame(nsIPresShell*            aPresShell, 
-                      nsIPresContext*          aPresContext,
-                      nsFrameConstructorState& aState,
-                      nsIContent*              aContent,
-                      nsIDocument*             aDocument,
-                      nsIFrame*                aParentFrame,
-                      nsIFrame*                aContentParentFrame,
-                      nsStyleContext*          aStyleContext,
-                      PRBool                   aIsRoot,
-                      nsIFrame*&               aNewFrame,
-                      nsFrameItems&            aAnonymousFrames,
-                      nsIFrame*                aScrollPort = nsnull);
+  InitGfxScrollFrame(nsIPresShell*            aPresShell, 
+                     nsIPresContext*          aPresContext,
+                     nsFrameConstructorState& aState,
+                     nsIContent*              aContent,
+                     nsIDocument*             aDocument,
+                     nsIFrame*                aParentFrame,
+                     nsIFrame*                aContentParentFrame,
+                     nsStyleContext*          aStyleContext,
+                     PRBool                   aIsRoot,
+                     nsIFrame*&               aNewFrame,
+                     nsFrameItems&            aAnonymousFrames,
+                     nsIFrame*                aScrollPort = nsnull);
 
 
   nsresult

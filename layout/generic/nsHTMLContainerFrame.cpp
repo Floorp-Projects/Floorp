@@ -378,29 +378,23 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
     // XXX Pretend this view is last of the parent's views in document order
     aViewManager->InsertChild(aNewParentView, view, nsnull, PR_TRUE);
   } else {
-    // Iterate the child frames, and check each child frame to see if it has
-    // a view
-    nsIFrame* childFrame;
-    aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-    while (childFrame) {
-      ReparentFrameViewTo(aPresContext, childFrame, aViewManager, aNewParentView, aOldParentView);
-      childFrame->GetNextSibling(&childFrame);
-    }
+    PRInt32 listIndex = 0;
+    nsCOMPtr<nsIAtom> listName;
+    // This loop iterates through every child list name, and also
+    // executes once with listName == nsnull.
+    do {
+      aFrame->GetAdditionalChildListName(listIndex, getter_AddRefs(listName));
+      listIndex++;
 
-    // Also check the overflow-list
-    aFrame->FirstChild(aPresContext, nsLayoutAtoms::overflowList, &childFrame);
-    while (childFrame) {
-      ReparentFrameViewTo(aPresContext, childFrame, aViewManager, aNewParentView, aOldParentView);
-      childFrame->GetNextSibling(&childFrame);
-    }
-
-      // Also check the floater-list
-    aFrame->FirstChild(aPresContext, nsLayoutAtoms::floaterList, &childFrame);
-    while (childFrame) {
-      ReparentFrameViewTo(aPresContext, childFrame, aViewManager, aNewParentView, aOldParentView);
-      childFrame->GetNextSibling(&childFrame);
-    }
-
+      // Iterate the child frames, and check each child frame to see if it has
+      // a view
+      nsIFrame* childFrame;
+      aFrame->FirstChild(aPresContext, listName, &childFrame);
+      for (; childFrame; childFrame->GetNextSibling(&childFrame)) {
+        ReparentFrameViewTo(aPresContext, childFrame, aViewManager,
+                            aNewParentView, aOldParentView);
+      }
+    } while (listName);
   }
 
   return NS_OK;

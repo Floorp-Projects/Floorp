@@ -723,6 +723,11 @@ scrollbar {
   direction: ltr;
 }
 
+scrollbar[collapsed="true"],
+scrollbar[moz-collapsed="true"] {
+  -moz-binding: none;
+}
+
 thumb 
 {
   -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#thumb);
