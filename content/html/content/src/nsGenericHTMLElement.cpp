@@ -1968,36 +1968,14 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
 {
   nsresult  result = NS_OK;
 
-  PRBool haveListeners =
-    mDocument &&
-    nsGenericElement::HasMutationListeners(this,
-                                           NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
-  
-  // If we have no listeners and aNotify is false, we are almost certainly
-  // coming from the content sink and will almost certainly have no previous
-  // value.  Even if we do, setting the value is cheap when we have no
-  // listeners and don't plan to notify.  The check for aNotify here is an
-  // optimization; the check for haveListeners is a correctness issue.
-  if (haveListeners || aNotify) {
-    // Do nothing if there is no change.  Note that operator== on nsHTMLValue
-    // assumes that two nsHTMLValues are the same if they have the same unit
-    // and value.  For nsHTMLValues whose value is an nsISupports, this means
-    // that a new nsISupports pointer _must_ be created in order for attribute
-    // changes to take proper effect. Currently, this only applies to inline
-    // style, which satisfies this constraint because style rules are
-    // immutable.
-    nsHTMLValue oldValue;
-    result = GetHTMLAttribute(aAttribute, oldValue);
-    if (result != NS_CONTENT_ATTR_NOT_THERE && oldValue == aValue) {
-      return NS_OK;
-    }
-  }
-  
   nsChangeHint impact = NS_STYLE_HINT_NONE;
   GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION,
                            impact);
   nsCOMPtr<nsIHTMLStyleSheet> sheet;
   if (mDocument) {
+    PRBool haveListeners =
+      nsGenericElement::HasMutationListeners(this,
+                                             NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
     PRBool modification = PR_TRUE;
     nsAutoString oldValueStr;
     if (haveListeners) {
