@@ -45,8 +45,6 @@
 #include "nsILineBreakerFactory.h"
 #include "nsLWBrkCIID.h"
 
-static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
-
 /*
  * Rewrap the given section of string, putting the result in aOutString.
  */
@@ -62,18 +60,18 @@ nsWrapUtils::Rewrap(const nsAString& aInString,
   nsCOMPtr<nsILineBreaker> lineBreaker;
 
   nsILineBreakerFactory *lf;
-  nsresult rv = NS_OK;
-  rv = nsServiceManager::GetService(kLWBrkCID,
+  nsresult rv;
+  rv = nsServiceManager::GetService(NS_LWBRK_CONTRACTID,
                                     NS_GET_IID(nsILineBreakerFactory),
                                     (nsISupports **)&lf);
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString lbarg;
     rv = lf->GetBreaker(lbarg, getter_AddRefs(lineBreaker));
-    nsServiceManager::ReleaseService(kLWBrkCID, lf);
+    nsServiceManager::ReleaseService(NS_LWBRK_CONTRACTID, lf);
   }
 
-  aOutString.SetLength(0);
+  aOutString.Truncate();
 
   // Now we either have a line breaker, or we don't.
   PRInt32 length = aInString.Length();

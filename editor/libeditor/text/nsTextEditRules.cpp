@@ -55,7 +55,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIEnumerator.h"
-#include "nsLayoutCID.h"
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
 #include "nsIPrefBranch.h"
@@ -66,9 +65,6 @@
 // for IBMBIDI
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-
-static NS_DEFINE_CID(kContentIteratorCID,   NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if ((mFlags & nsIPlaintextEditor::eEditorReadonlyMask) || (mFlags & nsIPlaintextEditor::eEditorDisabledMask)) \
@@ -155,7 +151,7 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
   }
   
   // create a range that is the entire body contents
-  nsCOMPtr<nsIDOMRange> wholeDoc = do_CreateInstance(kRangeCID);
+  nsCOMPtr<nsIDOMRange> wholeDoc = do_CreateInstance("@mozilla.org/content/range;1");
   if (!wholeDoc) return NS_ERROR_NULL_POINTER;
   wholeDoc->SetStart(mBody,0);
   nsCOMPtr<nsIDOMNodeList> list;
@@ -1126,19 +1122,17 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
   // into normal breaks.  this is because layout wont give us a place 
   // to put the cursor on empty lines otherwise.
 
-  nsCOMPtr<nsIContentIterator> iter;
+  nsresult res;
+  nsCOMPtr<nsIContentIterator> iter =
+       do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
+  if (NS_FAILED(res)) return res;
+
+  res = iter->Init(aRange);
+  if (NS_FAILED(res)) return res;
+  
   nsCOMPtr<nsISupports> isupports;
   PRInt32 nodeCount,j;
   nsCOMArray<nsIDOMCharacterData> arrayOfNodes;
-  
-  // need an iterator
-  nsresult res = nsComponentManager::CreateInstance(kContentIteratorCID,
-                                                    nsnull,
-                                                    NS_GET_IID(nsIContentIterator), 
-                                                    getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
-  res = iter->Init(aRange);
-  if (NS_FAILED(res)) return res;
   
   // gather up a list of editable preformatted text nodes
   while (NS_ENUMERATOR_FALSE == iter->IsDone())
