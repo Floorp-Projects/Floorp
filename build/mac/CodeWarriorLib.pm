@@ -258,6 +258,23 @@ sub activate () {
         }
 }
 
+=pod
+
+=item quit()
+
+Quits CodeWarrior.
+
+=cut
+
+sub quit() {
+
+	$last_project_built = "";
+	$last_project_was_closed = 0;
+
+	my($evt) = do_event(qw/aevt quit/, $app);
+}
+
+
 sub _build ($;$) {
 	my($evt);
 	if ($_[1]) {

@@ -1121,9 +1121,16 @@ sub BuildIDLProjects()
 		BuildProject(":mozilla:xpcom:typelib:xpidl:macbuild:xpidl.mcp", "build all");
 
 		#// was the compiler/linker rebuilt? if so, then clobber IDL projects as we go.
-		if (getModificationDate($compiler_path) > $compiler_modtime || getModificationDate($linker_path) > $linker_modtime) {
+		if (getModificationDate($compiler_path) > $compiler_modtime || getModificationDate($linker_path) > $linker_modtime)
+		{
 			$main::CLOBBER_IDL_PROJECTS = 1;
 			print("XPIDL tools have been updated, will clobber all IDL data folders.\n");
+			
+			# in this situation, we need to quit and restart the IDE to pick up the new plugin
+			CodeWarriorLib::quit();
+			WaitNextEvent();
+			CodeWarriorLib::activate();
+			WaitNextEvent();
 		}
 	}
 	
