@@ -23,7 +23,7 @@
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
-#include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIWidget.h"
 #include "nsILinkHandler.h"
 #include "nsHTMLValue.h"
@@ -298,7 +298,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
     if (!aForce) {
       nsIAtom*  pseudoTag;
       aStyleContext->GetPseudoType(pseudoTag);
-      if (pseudoTag == nsHTMLAtoms::scrolledContentPseudo) {
+      if (pseudoTag == nsLayoutAtoms::scrolledContentPseudo) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsHTMLContainerFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
         aForce = PR_TRUE;
