@@ -26,9 +26,37 @@ var MAX_RECIPIENTS = 0;
 function GetArgs()
 {
 	var args = new Object();
-	var data = document.getElementById("args").getAttribute("value");
-	var pairs = data.split(",");
-	//dump("Compose: argument: {" + data + "}\n");
+	var originalData = document.getElementById("args").getAttribute("value");
+	var data = "";
+	var separator = String.fromCharCode(1);
+
+	var quoteChar = "";
+	for (var i = 0; i < originalData.length; i ++)
+	{
+		var aChar = originalData.charAt(i)
+		var aCharCode = originalData.charCodeAt(i)
+		if (aChar == quoteChar)
+		{
+			quoteChar = "";
+		}
+		else if (aCharCode == 39 || aCharCode == 34) //quote or double quote
+		{
+			if (quoteChar == "")
+				quoteChar = aChar;
+		}
+		else if (aChar == ",")
+		{
+			if (quoteChar == "")
+				data += separator;
+			else
+				data += aChar 
+		}
+		else
+			data += aChar 
+	}
+	
+	var pairs = data.split(separator);
+//	dump("Compose: argument: {" + data + "}\n");
 
 	for (var i = pairs.length - 1; i >= 0; i--)
 	{
@@ -41,6 +69,7 @@ function GetArgs()
 			args[argname] = argvalue.substring(1, argvalue.length - 1);
 		else
 			args[argname] = unescape(argvalue);
+//		dump("GETARGS: " + argname + "=[" + args[argname] + "]\n");
 	}
 	return args;
 }
