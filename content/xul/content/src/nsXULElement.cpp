@@ -4360,7 +4360,8 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
         nsICSSParser* parser = GetCSSParser();
         NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
-        parser->ParseStyleAttribute(aValue, aDocumentURI,
+        // XXX Get correct Base URI (need GetBaseURI on *prototype* element)
+        parser->ParseStyleAttribute(aValue, aDocumentURI, aDocumentURI,
                                     getter_AddRefs(rule));
         if (rule) {
             mAttributes[aPos].mValue.SetTo(rule);

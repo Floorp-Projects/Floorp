@@ -735,6 +735,7 @@ nsSVGElement::UpdateContentStyleRule()
   }
   
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+  nsIURI *docURI = GetOwnerDoc()->GetDocumentURI();
   nsCOMPtr<nsICSSParser> parser;
   NS_NewCSSParser(getter_AddRefs(parser));
   if (!parser)
@@ -763,7 +764,8 @@ nsSVGElement::UpdateContentStyleRule()
     mAttrsAndChildren.AttrAt(i)->ToString(value);
 
     PRBool changed;
-    parser->ParseProperty(nsCSSProps::LookupProperty(name), value, baseURI,
+    parser->ParseProperty(nsCSSProps::LookupProperty(name), value,
+                          docURI, baseURI,
                           declaration, &changed);
   }
   

@@ -2411,7 +2411,8 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
   nsCOMPtr<nsISupportsArray> rules;
-  result = css->ParseRule(aRule, mInner->mBaseURI, getter_AddRefs(rules));
+  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                          getter_AddRefs(rules));
   if (NS_FAILED(result))
     return result;
   
@@ -2655,7 +2656,8 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* a
   NS_ENSURE_SUCCESS(result, result);
 
   nsCOMPtr<nsISupportsArray> rules;
-  result = css->ParseRule(aRule, mInner->mBaseURI, getter_AddRefs(rules));
+  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                          getter_AddRefs(rules));
   NS_ENSURE_SUCCESS(result, result);
 
   PRUint32 rulecount = 0;
