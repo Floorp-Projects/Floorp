@@ -83,41 +83,78 @@ static bool promptLine(LineReader &inReader, string &s,
 JavaScript::World world;
 JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
                                 JavaScript::stdOut);
+
 const bool showTokens = false;
 
 static Register genExpr(ICodeGenerator &icg, ExprNode *p)
 {
-    Register ret;
+    Register ret = NotARegister;
     switch (p->getKind()) {
-            case ExprNode::identifier : {
-                Register r1 = icg.allocateVariable((static_cast<IdentifierExprNode *>(p))->name);
-                ASSERT(r1 == icg.findVariable((static_cast<IdentifierExprNode *>(p))->name));
-
-                icg.saveName((static_cast<IdentifierExprNode *>(p))->name, icg.loadImmediate(0.0));
-                ret = icg.loadName((static_cast<IdentifierExprNode *>(p))->name);
+    case ExprNode::call : 
+        {
+            InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
+            Register fn = genExpr(icg, i->op);
+            RegisterList args;
+            ExprPairList *p = i->pairs;
+            while (p) {
+                args.push_back(genExpr(icg, p->value));
+                p = p->next;
             }
-            break;
-        case ExprNode::number :
-            ret = icg.loadImmediate((static_cast<NumberExprNode *>(p))->value);
-            break;
-        case ExprNode::string :
-            ret = icg.loadString(world.identifiers[(static_cast<StringExprNode *>(p))->str]);
-            break;
-        case ExprNode::add: {
-                BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-                Register r1 = genExpr(icg, b->op1);
-                Register r2 = genExpr(icg, b->op2);
-                ret = icg.op(ADD, r1, r2);
-            }
-            break;
+            ret = icg.call(fn, args);
+        }
+        break;
+    case ExprNode::dot :
+        {
+            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            Register base = genExpr(icg, b->op1);            
+            ret = icg.getProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name);
+        }
+        break;
+    case ExprNode::identifier :
+        {
+//            Register r1 = icg.allocateVariable((static_cast<IdentifierExprNode *>(p))->name);
+//            ASSERT(r1 == icg.findVariable((static_cast<IdentifierExprNode *>(p))->name));
+//            icg.saveName((static_cast<IdentifierExprNode *>(p))->name, icg.loadImmediate(0.0));
+            ret = icg.loadName((static_cast<IdentifierExprNode *>(p))->name);
+        }
+        break;
+    case ExprNode::number :
+        ret = icg.loadImmediate((static_cast<NumberExprNode *>(p))->value);
+        break;
+    case ExprNode::string :
+        ret = icg.loadString(world.identifiers[(static_cast<StringExprNode *>(p))->str]);
+        break;
+    case ExprNode::add:
+        {
+            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            Register r1 = genExpr(icg, b->op1);
+            Register r2 = genExpr(icg, b->op2);
+            ret = icg.op(ADD, r1, r2);
+        }
+        break;
     }
     return ret;
 }
+
+static JSValue print(const JSValues &argv)
+{
+    size_t n = argv.size();
+    if (n > 0) {
+        stdOut << argv[0];
+        for (size_t i = 1; i < n; ++i)
+            stdOut << ' ' << argv[i];
+    }
+    stdOut << "\n";
+    return kUndefinedValue;
+}
+
 
 static void genCode(ExprNode *p)
 {
     JSScope glob;
     Context cx(world, &glob);
+    StringAtom& printName = world.identifiers[widenCString("print")];
+    glob.defineNativeFunction(printName, print);
 
     ICodeGenerator icg;
     
@@ -382,18 +419,6 @@ static float64 testFunctionCall(World &world, float64 n)
     stdOut << "sum(" << n << ") = " << result.f64 << "\n";
         
     return result.f64;    
-}
-
-static JSValue print(const JSValues &argv)
-{
-    size_t n = argv.size();
-    if (n > 0) {
-        stdOut << argv[0];
-        for (size_t i = 1; i < n; ++i)
-            stdOut << ' ' << argv[i];
-    }
-    stdOut << "\n";
-    return kUndefinedValue;
 }
 
 static void testPrint(World &world)
