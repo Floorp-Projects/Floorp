@@ -114,10 +114,10 @@ sub ParseUrlString {
         my $name;
         my $value;
         if ($item =~ /^([^=]*)=(.*)$/) {
-            $name = $1;
+            $name = url_decode($1);
             $value = url_decode($2);
         } else {
-            $name = $item;
+            $name = url_decode($item);
             $value = "";
         }
 
