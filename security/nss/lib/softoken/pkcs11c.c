@@ -3655,6 +3655,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
     NSSLOWKEYPrivateKeyInfo *pki = NULL;
     SECItem *ck_id = NULL;
     CK_RV crv = CKR_KEY_TYPE_INCONSISTENT;
+    SECItem newBpki;
 
     arena = PORT_NewArena(2048);
     if(!arena) {
@@ -3668,7 +3669,15 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	return SECFailure;
     }
 
-    if(SEC_QuickDERDecodeItem(arena, pki, nsslowkey_PrivateKeyInfoTemplate, bpki) 
+    /* copy the DER into the arena, since Quick DER returns data that points
+       into the DER input, which may get freed by the caller */
+    rv = SECITEM_CopyItem(arena, &newBpki, bpki);
+    if ( rv != SECSuccess ) {
+        PORT_FreeArena (arena, PR_FALSE);
+        return SECFailure;
+    }
+
+    if(SEC_QuickDERDecodeItem(arena, pki, nsslowkey_PrivateKeyInfoTemplate, &newBpki) 
 				!= SECSuccess) {
 	PORT_FreeArena(arena, PR_FALSE);
 	return SECFailure;
