@@ -28,9 +28,11 @@ DIRS=            \
 	file     \
 	resource \
 	ftp      \
-    data     \
+        data     \
         http     \
-        keyword \
+        keyword  \
+        jar      \
+        res      \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
