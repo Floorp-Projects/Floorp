@@ -57,7 +57,8 @@ nsBaseClipboard::nsBaseClipboard()
 //-------------------------------------------------------------------------
 nsBaseClipboard::~nsBaseClipboard()
 {
-  EmptyClipboard();
+  EmptyClipboard(kSelectionClipboard);
+  EmptyClipboard(kGlobalClipboard);
 }
 
 
@@ -65,13 +66,14 @@ nsBaseClipboard::~nsBaseClipboard()
   * Sets the transferable object
   *
   */
-NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner)
+NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner,
+                                        PRInt32 aWhichClipboard)
 {
   if (aTransferable == mTransferable && anOwner == mClipboardOwner) {
     return NS_OK;
   }
 
-  EmptyClipboard();
+  EmptyClipboard(aWhichClipboard);
 
   mClipboardOwner = anOwner;
   if (nsnull != anOwner) {
@@ -84,7 +86,7 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
 
   if (nsnull != mTransferable) {
     NS_ADDREF(mTransferable);
-    rv = SetNativeClipboardData();
+    rv = SetNativeClipboardData(aWhichClipboard);
   } else {
     printf("  nsBaseClipboard::SetData(), aTransferable is NULL.\n");
   }
@@ -96,10 +98,10 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable * aTransferable, nsIClipb
   * Gets the transferable object
   *
   */
-NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable)
+NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, PRInt32 aWhichClipboard)
 {
   if (nsnull != aTransferable) {
-    return GetNativeClipboardData(aTransferable);
+    return GetNativeClipboardData(aTransferable, aWhichClipboard);
   } else {
     printf("  nsBaseClipboard::GetData(), aTransferable is NULL.\n");
   }
@@ -112,7 +114,7 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable)
   * 
   *
   */
-NS_IMETHODIMP nsBaseClipboard::EmptyClipboard()
+NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 {
   if (mIgnoreEmptyNotification) {
     return NS_OK;
@@ -135,15 +137,23 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard()
   * 
   *
   */
-NS_IMETHODIMP nsBaseClipboard::ForceDataToClipboard()
+NS_IMETHODIMP nsBaseClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsBaseClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * outResult ) 
+nsBaseClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 aWhichClipboard, PRBool * outResult ) 
 {
   *outResult = PR_TRUE;  // say we always do.
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBaseClipboard :: SupportsSelectionClipboard ( PRBool *_retval )
+{
+  *_retval = PR_FALSE;   // we don't suport the selection clipboard by default.
   return NS_OK;
 }

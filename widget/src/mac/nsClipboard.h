@@ -47,13 +47,13 @@ public:
 
   // nsIClipboard  
   //NS_IMETHOD ForceDataToClipboard();
-  NS_IMETHOD  HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRBool *_retval); 
+  NS_IMETHOD  HasDataMatchingFlavors(nsISupportsArray *aFlavorList, PRInt32 aWhichClipboard, PRBool *_retval); 
 
 protected:
 
   // impelement the native clipboard behavior
-  NS_IMETHOD SetNativeClipboardData();
-  NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
+  NS_IMETHOD SetNativeClipboardData ( PRInt32 aWhichClipboard );
+  NS_IMETHOD GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32 aWhichClipboard );
 
   // helper to get the data off the clipboard. Caller responsible for deleting
   // |outData| with delete[].

@@ -900,7 +900,7 @@ int main(int argc, char* argv[])
   // scoping this in a block to force release
   NS_WITH_SERVICE(nsIClipboard, clipService, "component://netscape/widget/clipboard", &rv);
   if ( clipService )
-    clipService->ForceDataToClipboard();
+    clipService->ForceDataToClipboard(nsIClipboard::kGlobalClipboard);
   }
 
   rv = NS_ShutdownXPCOM( NULL );

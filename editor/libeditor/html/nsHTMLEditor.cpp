@@ -4251,7 +4251,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
       trans->AddDataFlavor(kUnicodeMime);
 
       // Get the Data from the clipboard
-      if (NS_SUCCEEDED(clipboard->GetData(trans)))
+      if (NS_SUCCEEDED(clipboard->GetData(trans, nsIClipboard::kGlobalClipboard)))
       {
         char* bestFlavor = nsnull;
         nsCOMPtr<nsISupports> genericDataObj;
@@ -4362,7 +4362,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRBool &aCanPaste)
   }
   
   PRBool haveFlavors;
-  rv = clipboard->HasDataMatchingFlavors(flavorsList, &haveFlavors);
+  rv = clipboard->HasDataMatchingFlavors(flavorsList, nsIClipboard::kGlobalClipboard, &haveFlavors);
   if (NS_FAILED(rv)) return rv;
   
   aCanPaste = haveFlavors;
@@ -4452,7 +4452,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation()
     trans->AddDataFlavor(kUnicodeMime);
 
     // Get the Data from the clipboard
-    clipboard->GetData(trans);
+    clipboard->GetData(trans, nsIClipboard::kGlobalClipboard);
 
     // Now we ask the transferable for the data
     // it still owns the data, we just have a pointer to it.
