@@ -24,19 +24,19 @@
 // ===========================================================================
 
 
-class	LMenuSharingAttachment : public LAttachment 
-{
-
+class LMenuSharingAttachment : public LAttachment {
 public:
-		LMenuSharingAttachment(MessageT inMessage,
+	LMenuSharingAttachment(MessageT inMessage,
 							Boolean inExecuteHost,
 							Int16	resIDofLastMenu);
 				// resIDofLastMenu is the id of the menu that shared menus will
 				// will be inserted after.
+
+	static Int16 	AllocatePluginMenuID(Boolean isSubmenu);
+
 protected:
-virtual void	ExecuteSelf(MessageT inMessage, void *ioParam);
-Boolean			mCanMenuShare;
-Int16			mInsertAfterMenuID;
+	virtual void	ExecuteSelf(MessageT inMessage, void *ioParam);
+	Boolean			mCanMenuShare;
+	static Int16	sInsertAfterMenuID;
+	static Int16	sNextPluginMenuID;
 };
-
-

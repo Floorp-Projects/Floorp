@@ -43,17 +43,32 @@ static pascal void EventFilter (EventRecord *ev)
 // ===========================================================================
 // LMenuSharing.cp										 
 // ===========================================================================
-//	MenuShring class. Based upon Frontier and draper@usis.com code
-	
+//	MenuSharing class. Based upon Frontier and draper@usis.com code
+
+Int16 LMenuSharingAttachment::sInsertAfterMenuID = 0;
+Int16 LMenuSharingAttachment::sNextPluginMenuID = 20000;
+
 LMenuSharingAttachment::LMenuSharingAttachment(
 	MessageT	inMessage,
 	Boolean		inExecuteHost,Int16	resIDofLastMenu)
 		: LAttachment(inMessage, inExecuteHost)
 {
 	mCanMenuShare = ::InitSharedMenus (ErrorDialog, EventFilter);	
-	mInsertAfterMenuID = resIDofLastMenu + 1;
+	sInsertAfterMenuID = resIDofLastMenu + 1;
 }
 
+Int16 LMenuSharingAttachment::AllocatePluginMenuID(Boolean isSubmenu)
+{
+	// force the menus to be recreated.
+	DisposeSharedMenus();
+	if (isSubmenu) {
+		// this needs to take a menu ID out of the space used by MenuSharing.
+		return sInsertAfterMenuID++;
+	} else {
+		// these can come out of a different range, because they aren't hierarchical.
+		return sNextPluginMenuID++;
+	}
+}
 
 void LMenuSharingAttachment::ExecuteSelf( MessageT inMessage, void* ioParam)
 {
@@ -74,8 +89,7 @@ void LMenuSharingAttachment::ExecuteSelf( MessageT inMessage, void* ioParam)
 		Int16			part;
 		LCommander*		commander;
 		
-		
-		CheckSharedMenus(mInsertAfterMenuID);
+		CheckSharedMenus(sInsertAfterMenuID);
 		
 		if (ev->what== mouseDown)
 		{
@@ -96,7 +110,7 @@ void LMenuSharingAttachment::ExecuteSelf( MessageT inMessage, void* ioParam)
 				mExecuteHost = false;
 				if (command != cmd_Nothing)
 				{
-					if (LCommander::IsSyntheticCommand(command,menuId, menuItem))
+					if (LCommander::IsSyntheticCommand(command, menuId, menuItem))
 					{
 						if (SharedMenuHit (menuId, menuItem))
 						{
