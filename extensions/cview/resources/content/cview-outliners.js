@@ -261,7 +261,8 @@ MethodRecord.prototype.getText =
 function mr_text ()
 {
     return (this.parentRecord.getText() +
-            "Methods        - " + keys(this.parentRecord.instance));
+            "Methods        - " + 
+            keys(this.parentRecord.instance).join("\n                 "));
 }
 
 MethodRecord.prototype.getProperties =

@@ -163,7 +163,11 @@
 
   </hbox> <!-- inner-box -->
 
-    <textbox multiline="true" readonly="true" id="output-text" flex="1"/>
+  <splitter id="textbox-splitter" orient="horizontal" collapse="after">
+    <grippy/>
+  </splitter>
+
+  <textbox multiline="true" readonly="true" id="output-text" flex="1"/>
 
   </vbox> <!-- outer-box -->
 </window>
