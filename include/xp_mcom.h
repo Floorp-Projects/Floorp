@@ -55,10 +55,6 @@
 
 /* platform-specific types */
 
-/* include header files needed for prototypes/etc */
-
-#include "xp_file.h"
-
 XP_BEGIN_PROTOS
 
 /* XXX where should this kind of junk go? */
