@@ -58,7 +58,6 @@
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
 
-#include "nsIRegistry.h"
 #include "nsIEnumerator.h"
 #include "nsICmdLineService.h"
 #include "nsCRT.h"

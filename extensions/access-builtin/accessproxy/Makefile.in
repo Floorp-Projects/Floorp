@@ -38,7 +38,7 @@ LIBRARY_NAME = accessproxy
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME = accproxy
 endif
-REQUIRES	= xpcom_obsolete \
+REQUIRES	= \
 		  xpcom \
 		  string \
 		  docshell \

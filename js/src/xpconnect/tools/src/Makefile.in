@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  js \
 		  string \
-		  xpcom_obsolete \
 		  $(NULL)
 MODULE_NAME	= xpctools
 IS_COMPONENT	= 1

@@ -44,8 +44,6 @@
 // Mozilla
 #include "nsDebug.h"
 #include "nsILocalFileMac.h"
-#include "nsFileSpec.h"
-#include "nsFileStream.h"
 #include "nsDebug.h"
 #include "nsNetUtil.h"
 #include "nsIAppShellService.h"

@@ -57,7 +57,7 @@
 #include "jsdbgapi.h"
 
 #include "nsILocalFile.h"
-#include "nsSpecialSystemDirectory.h" /* for binDir hack */
+#include "nsCRT.h"
 
 #include "nsIJSRuntimeService.h"
 #include "nsHashtable.h"
