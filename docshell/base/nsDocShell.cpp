@@ -81,6 +81,7 @@
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"
 #include "nsISeekableStream.h"
+#include "nsAutoPtr.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -1534,7 +1535,7 @@ nsDocShell::GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimp
     NS_ENSURE_ARG_POINTER(outEnum);
     *outEnum = nsnull;
     
-    nsDocShellEnumerator*   docShellEnum;
+    nsRefPtr<nsDocShellEnumerator> docShellEnum;
     if (aDirection == ENUMERATE_FORWARDS)
         docShellEnum = new nsDocShellForwardsEnumerator;
     else
@@ -1551,9 +1552,8 @@ nsDocShell::GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimp
     rv = docShellEnum->First();
     if (NS_FAILED(rv)) return rv;
 
-    NS_ADDREF(docShellEnum);    // ensure we don't lose the last ref inside the QueryInterface
     rv = docShellEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)outEnum);
-    NS_RELEASE(docShellEnum);
+
     return rv;
 }
 
