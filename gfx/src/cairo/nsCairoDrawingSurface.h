@@ -39,7 +39,10 @@
 #ifndef NSCAIRODRAWINGSURFACE__H__
 #define NSCAIRODRAWINGSURFACE__H__
 
+#include "nsCOMPtr.h"
+
 #include "nsIDrawingSurface.h"
+#include "nsIRegion.h"
 
 #include <cairo.h>
 
@@ -50,6 +53,11 @@
 
 class nsIWidget;
 class nsCairoDeviceContext;
+
+#ifdef MOZ_ENABLE_XFT
+typedef struct _XftDraw XftDraw;
+#endif
+
 
 class nsCairoDrawingSurface : public nsIDrawingSurface
 {
@@ -80,14 +88,27 @@ public:
 
     /* utility functions */
     cairo_surface_t *GetCairoSurface(void) { return mSurface; }
-    PRInt32 GetDepth() { /* XXX */ return 32; }
+    PRInt32 GetDepth() { /* XXX */ return 24; }
+
+#ifdef MOZ_ENABLE_XFT
+    XftDraw *GetXftDraw(void);
+    void     GetLastXftClip(nsIRegion **aLastRegion);
+    void     SetLastXftClip(nsIRegion  *aLastRegion);
+#endif /* MOZ_ENABLE_XFT */
+
 private:
     cairo_surface_t *mSurface, *mImageSurface;
 
 #if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
     Display *mXDisplay;
+    Drawable mDrawable;
     Pixmap mPixmap;
     XShmSegmentInfo mShmInfo;
+#endif
+
+#ifdef MOZ_ENABLE_XFT
+  XftDraw             *mXftDraw;
+  nsCOMPtr<nsIRegion>  mLastXftClip;
 #endif
 
     PRUint32 mLockFlags;

@@ -43,6 +43,10 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #endif
+#ifdef MOZ_ENABLE_XFT
+#include <X11/Xft/Xft.h>
+#endif
+
 
 #include "nsMemory.h"
 
@@ -119,6 +123,9 @@ nsCairoDrawingSurface::Init(nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32
         }
 #endif
 
+        mDrawable = (Drawable)mPixmap;
+
+
         // clear the pixmap
         XGCValues gcv;
         gcv.foreground = WhitePixel(mXDisplay,DefaultScreen(mXDisplay));
@@ -149,10 +156,10 @@ nsresult
 nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
 {
     nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
-
     fprintf (stderr, "++++ [%p] Creating DRAWABLE (0x%08x) surface\n", this, nativeWidget);
 
 #ifdef MOZ_ENABLE_GTK2
+    mDrawable = GDK_DRAWABLE_XID(GDK_DRAWABLE(nativeWidget));
     NS_ASSERTION (GDK_IS_WINDOW(nativeWidget), "unsupported native widget type!");
     mSurface = cairo_xlib_surface_create
         (GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(nativeWidget)),
@@ -300,3 +307,30 @@ nsCairoDrawingSurface::GetPixelFormat(nsPixelFormat *aFormat)
     return NS_OK;
 }
 
+#ifdef MOZ_ENABLE_XFT
+XftDraw *
+nsCairoDrawingSurface::GetXftDraw(void)
+{
+  if (!mXftDraw) {
+    mXftDraw = XftDrawCreate(GDK_DISPLAY(), mDrawable,
+                             GDK_VISUAL_XVISUAL(::gdk_rgb_get_visual()),
+                             GDK_COLORMAP_XCOLORMAP(::gdk_rgb_get_cmap()));
+  }
+
+  return mXftDraw;
+}
+
+void
+nsCairoDrawingSurface::GetLastXftClip(nsIRegion **aLastRegion)
+{
+  *aLastRegion = mLastXftClip.get();
+  NS_IF_ADDREF(*aLastRegion);
+}
+
+void
+nsCairoDrawingSurface::SetLastXftClip(nsIRegion  *aLastRegion)
+{
+  mLastXftClip = aLastRegion;
+}
+
+#endif /* MOZ_ENABLE_XFT */
