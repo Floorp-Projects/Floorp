@@ -30,6 +30,7 @@
 // #include "nsParser.h"
 #include "nsIParser.h"
 #include "prlog.h"
+#include <string.h>
 
 
  /************************************************************************
@@ -154,22 +155,69 @@ nsExpatTokenizer::~nsExpatTokenizer(){
   Here begins the real working methods for the tokenizer.
  *******************************************************************/
 
-/* Called immediately after an error has occurred in expat.  Creates
-   an error token and pushes it onto the token queue.
-*/
-void nsExpatTokenizer::PushXMLErrorToken(void)
+
+static void SetErrorContextInfo(nsParserError* aError, PRUint32 aByteIndex, 
+                                const char* aSourceBuffer, PRUint32 aLength)
+{
+  /* Figure out the substring inside aSourceBuffer that contains the line on which the error
+     occurred.  Copy the line into error->sourceLine */
+  PR_ASSERT(aByteIndex > 0 && aByteIndex < aLength);
+  char* start = (char* ) &aSourceBuffer[aByteIndex];  /* Will try to find the start of the line */
+  char* end = (char* ) &aSourceBuffer[aByteIndex];    /* Will try to find the end of the line */
+  PRUint32 startIndex = aByteIndex;          /* Track the position of the 'start' pointer into the buffer */
+  PRUint32 endIndex = aByteIndex;          /* Track the position of the 'end' pointer into the buffer */
+  PRBool reachedStart;
+  PRBool reachedEnd;
+
+  /* Use start to find the first new line before the error position and
+     end to find the first new line after the error position */
+  reachedStart = ('\n' == *start || '\r' == *start || startIndex <= 0);
+  reachedEnd = ('\n' == *end || '\r' == *end || endIndex >= aLength);
+  while (!reachedStart || !reachedEnd) {
+    if (!reachedStart) {
+      start--;
+      startIndex--;
+    }
+    if (!reachedEnd) {
+      end++;
+      endIndex++;
+    }
+    reachedStart = ('\n' == *start || '\r' == *start || startIndex <= 0);
+    reachedEnd = ('\n' == *end || '\r' == *end || endIndex >= aLength);
+  }
+
+  if (startIndex == endIndex) {
+    /* Special case if the error is on a line where the only character is a newline */
+    aError->sourceLine.Append("");
+  }
+  else {
+    PR_ASSERT(endIndex - startIndex >= 2);
+    
+    /* At this point, the substring starting at (startIndex + 1) and ending at (endIndex - 1),
+       is the line on which the error occurred. Copy that substring into the error structure. */
+    char* tempLine = new char[endIndex - startIndex];
+    strncpy(tempLine, &aSourceBuffer[startIndex + 1], (endIndex - 1) - startIndex);
+    tempLine[endIndex - startIndex - 1] = '\0';
+    aError->sourceLine.Append(tempLine);
+    delete [] tempLine;
+  }
+}
+
+/* 
+ * Called immediately after an error has occurred in expat.  Creates
+ * an error token and pushes it onto the token queue.
+ *
+ */
+void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
 {
   CErrorToken* token= (CErrorToken *) gTokenRecycler->CreateTokenOfType(eToken_error, eHTMLTag_unknown);
   nsParserError *error = new nsParserError;
   
   error->code = XML_GetErrorCode(mExpatParser);
   error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
-  error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);
-  // XXX Does the copy constructor of nsString free the passed in char *?
-  error->description = XML_ErrorString(error->code);
-  // XXX Not setting a source buffer and error offset for now
-  error->offset = 0;
-  error->sourceBuffer = "";
+  error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
+  error->description = XML_ErrorString(error->code);  
+  SetErrorContextInfo(error, (PRUint32) XML_GetCurrentByteIndex(mExpatParser), aBuffer, aLength);  
 
   token->SetError(error);
 
@@ -182,7 +230,7 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char *aBuffer, PRUint32 aLength)
   if (mExpatParser) {
     PR_ASSERT(aLength == strlen(aBuffer));
     if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {      
-      PushXMLErrorToken();      
+      PushXMLErrorToken(aBuffer, aLength);      
     }
   }
   else {
