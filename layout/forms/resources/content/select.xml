@@ -571,8 +571,8 @@
 
   <binding id="select-option" extends="xul:menuitem">
     <content>
-       <xul:label inherits="value=label">
-         <children/>
+      <xul:label inherits="value=label">
+        <children/>
       </xul:label>
     </content>
   </binding>
