@@ -18,7 +18,7 @@
 #include "nsIRobotSink.h"
 #include "nsIRobotSinkObserver.h"
 #include "nsIParserNode.h"
-#include "nsParserTypes.h"
+#include "nsIParser.h"
 #include "nsString.h"
 #include "nsIURL.h"
 #include "nsCRT.h"
