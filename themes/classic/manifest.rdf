@@ -14,7 +14,7 @@
         chrome:author="mozilla.org"
         chrome:description="A theme for all Communicator components that simulates a traditional native look and feel. This is the default theme for Mozilla."
         chrome:name="classic/1.0"
-        chrome:image="jar:resource:///chrome/skins/classic.jar!/preview.png">
+        chrome:image="jar:resource:///chrome/skins/classic.jar!/preview.gif">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:skin:classic/1.0:packages">
         <RDF:li resource="urn:mozilla:skin:classic/1.0:communicator"/>

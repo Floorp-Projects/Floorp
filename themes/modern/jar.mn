@@ -1,6 +1,6 @@
 skins/modern.jar:
     manifest.rdf                                               
-    preview.png
+    preview.gif
     communicator/skin/box.css                                  (communicator/box.css)
     communicator/skin/brand.css                                (communicator/brand.css)
     communicator/skin/broken.gif                               (communicator/broken.gif)

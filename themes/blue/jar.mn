@@ -1,6 +1,6 @@
 skins/blue.jar:
     manifest.rdf                                               
-    preview.png                                               
+    preview.gif                                               
     communicator/skin/box.css                                  (communicator/box.css)
     communicator/skin/securityOverlay.css                      (communicator/securityOverlay.css)
     communicator/skin/menubuttonBindings.xml                   (communicator/menubuttonBindings.xml)

@@ -19,21 +19,11 @@
 #
 # Contributor(s):
 
-DEPTH=..\..
-THEME_ROOT_DEPTH = .
+DEPTH=..\..\..\..
+THEME_ROOT_DEPTH = ..\..
 
-include <$(DEPTH)\config\config.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-CHROME_TYPE = skin
-CHROME_DIR = skins\$(THEME)
-
-DIRS =  communicator\search\win  \
-        communicator\sidebar\win \
-        communicator\win         \
-        global\win               \
-        messenger\win            \
-        preview\win              \
-        navigator\win
 
 include <$(DEPTH)\config\rules.mak>
+
