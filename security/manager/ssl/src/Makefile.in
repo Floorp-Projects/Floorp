@@ -67,7 +67,7 @@ CPPSRCS = 				\
         nsPKCS11Slot.cpp                \
 	$(NULL)
 
-REQUIRES = nspr security xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js docshell widget layout gfx2 pippki
+REQUIRES = nspr security xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js docshell widget layout gfx2 pippki xpconnect jar
 
 include $(topsrcdir)/config/rules.mk
 
