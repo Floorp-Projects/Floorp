@@ -741,8 +741,9 @@ CIRCChannel.prototype.onChanMode =
 function my_cmode (e)
 {
 
-    this.display ("Mode " + e.params.slice(1).join(" ") + " by " +
-                  e.user.nick, "MODE");
+    if (e.user)
+        this.display ("Mode " + e.params.slice(1).join(" ") + " by " +
+                      e.user.nick, "MODE");
 
     for (var u in e.usersAffected)
         e.usersAffected[u].updateDecoratedNick();
