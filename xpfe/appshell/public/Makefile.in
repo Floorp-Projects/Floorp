@@ -27,13 +27,13 @@ XPIDL_MODULE=appshell
 
 XPIDLSRCS =                       \
 	nsIFileLocator.idl        \
-	nsIWindowMediator.idl           \
+	nsIAppShellService.idl    \
+	nsIWindowMediator.idl     \
 	$(NULL)
 
 EXPORTS = \
 	nsIWebShellWindow.h	          \
 	nsAppShellCIDs.h              \
-	nsIAppShellService.h          \
 	nsICmdLineService.h	          \
 	nsIWidgetController.h         \
 	nsIXULWindowCallbacks.h       \
