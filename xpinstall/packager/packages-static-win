@@ -155,6 +155,7 @@ bin\components\regviewer.xpt
 bin\components\shistory.xpt
 bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
+bin\components\txtsvc.xpt
 bin\components\txmgr.xpt
 bin\components\uconv.xpt
 bin\components\unicharutil.xpt
