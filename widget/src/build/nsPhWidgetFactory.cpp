@@ -36,7 +36,6 @@
 #include "nsWindow.h"
 #include "nsAppShell.h"
 #include "nsLookAndFeel.h"
-#include "nsDialog.h"
 #include "nsButton.h"
 #include "nsCheckButton.h"
 #include "nsRadioButton.h"
@@ -73,7 +72,6 @@ static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kCDialog,        NS_DIALOG_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
 static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
@@ -242,10 +240,6 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance\n"));
     else if (mClassID.Equals(kCLookAndFeel)) {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLookAndFeel\n" ));
         inst = (nsISupports*)new nsLookAndFeel();
-    }
-    else if (mClassID.Equals(kCDialog)) {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsDialog\n" ));
-        inst = (nsISupports*)(nsWindow *)new nsDialog();
     }
     else if (mClassID.Equals(kCMenuBar)) {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsMenuBar\n" ));
