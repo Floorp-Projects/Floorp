@@ -77,8 +77,6 @@ $toplevel = Param('toplevel');
 $output = "<DIV ALIGN=LEFT>";
 $output .= "<A HREF='toplevel.cgi" . BatchIdPart('?') . "'>$toplevel</a>/ ";
 
-$dir = $module unless ($dir);
-
 ($dir_head, $dir_tail) = $dir =~ m@(.*/)?(.+)@;
 foreach $path (split('/',$dir_head)) {
     $link_path .= $path;
