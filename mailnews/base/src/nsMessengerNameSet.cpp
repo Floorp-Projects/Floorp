@@ -36,7 +36,8 @@ static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 
 
 
-nsMessengerNameSet::nsMessengerNameSet()
+nsMessengerNameSet::nsMessengerNameSet():
+    mRefCnt(0)
 {
   NS_INIT_REFCNT();
 }
@@ -52,8 +53,6 @@ NS_IMETHODIMP
 nsMessengerNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
 {
   nsresult rv = NS_OK;
-  JSContext *cx = (JSContext*)aScriptContext->GetNativeContext();
-  
 
   /* initialize the AppCore */
   NS_InitMsgAppCoreClass(aScriptContext, nsnull);
