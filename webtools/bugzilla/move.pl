@@ -28,7 +28,7 @@ use lib qw(.);
 
 require "CGI.pl";
 
-use vars qw($template $userid %COOKIE);
+use vars qw($template $userid);
 
 use Bugzilla;
 use Bugzilla::Constants;
@@ -79,7 +79,7 @@ sub Unlock {
     }
 }
 
-if ( !defined $::FORM{'buglist'} ) {
+if (!defined $cgi->param('buglist')) {
   print $cgi->header();
   PutHeader("Move Bugs");
   print "Move bugs either from the bug display page or perform a ";
@@ -90,7 +90,7 @@ if ( !defined $::FORM{'buglist'} ) {
   exit;
 }
 
-my $exporter = $::COOKIE{"Bugzilla_login"};
+my $exporter = Bugzilla->user->login;
 my $movers = Param("movers");
 $movers =~ s/\s?,\s?/|/g;
 $movers =~ s/@/\@/g;
@@ -105,7 +105,7 @@ unless ($exporter =~ /($movers)/) {
 my @bugs;
 
 print "<P>\n";
-foreach my $id (split(/:/, $::FORM{'buglist'})) {
+foreach my $id (split(/:/, scalar($cgi->param('buglist')))) {
   my $bug = new Bugzilla::Bug($id, $::userid);
   push @bugs, $bug;
   if (!$bug->error) {
@@ -126,8 +126,8 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
     SendSQL("UPDATE bugs SET resolution =\"MOVED\" where bug_id=\"$id\"");
 
     my $comment = "";
-    if (defined $::FORM{'comment'} && $::FORM{'comment'} !~ /^\s*$/) {
-        $comment .= $::FORM{'comment'} . "\n\n";
+    if (defined $cgi->param('comment') && $cgi->param('comment') !~ /^\s*$/) {
+        $comment .= $cgi->param('comment') . "\n\n";
     }
     $comment .= "Bug moved to " . Param("move-to-url") . ".\n\n";
     $comment .= "If the move succeeded, $exporter will receive a mail\n";
@@ -143,7 +143,7 @@ foreach my $id (split(/:/, $::FORM{'buglist'})) {
 }
 print "<P>\n";
 
-my $buglist = $::FORM{'buglist'};
+my $buglist = $cgi->param('buglist');
 $buglist =~ s/:/,/g;
 my $host = Param("urlbase");
 $host =~ s#http://([^/]+)/.*#$1#;
