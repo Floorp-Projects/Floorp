@@ -29,7 +29,7 @@
 
   <!-- javascript toggle for mail/news -->
   <titledbox id="advancedSettings">
-    <checkbox id="javascriptAllowMailNews" position="5"
+    <checkbox id="javascriptAllowMailNews" position="3"
               value="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
               pref="true" preftype="bool" prefstring="javascript.allow.mailnews"
               prefattribute="checked"/>
