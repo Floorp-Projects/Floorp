@@ -23,6 +23,7 @@
 #include "nsIContent.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsINameSpaceManager.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
@@ -264,7 +265,11 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
   nsresult result = NS_OK;
   nsIDOMAttr* attribute;
 
-  if ((nsnull != mContent) && (nsnull != aNode)) {
+  if (nsnull == aNode) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (nsnull != mContent) {
     result = aNode->QueryInterface(kIDOMAttrIID, (void**)&attribute);
     if (NS_OK == result) {
       PLHashTable* attrHash;
@@ -321,25 +326,38 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
         attribute->GetValue(value);
 
         // Associate the new attribute with the content
-        // XXX Need to fail if it's already associated with other
-        // content
         key = name.ToNewCString();
         result = attribute->QueryInterface(kIDOMAttributePrivateIID,
                                            (void **)&attrPrivate);
-        if (NS_OK == result) {
-          attrPrivate->SetContent(mContent);
-          attrPrivate->SetName(name);
+        if (NS_SUCCEEDED(result)) {
+          nsIContent* owner;
+
+          attrPrivate->GetContent(&owner);
+          if (owner) {
+            // The old attribute is already associated with another
+            // piece of content.
+            result = NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR;
+            NS_RELEASE(owner);
+          }
+          else {
+            attrPrivate->SetContent(mContent);
+            attrPrivate->SetName(name);
+            NS_RELEASE(attrPrivate);
+
+            // Add the new attribute node to the hash table (maintaining
+            // a reference to it)
+            PL_HashTableAdd(attrHash, key, attribute);
+
+            // Set the attribute on the content
+            result = mContent->SetAttribute(nameSpaceID, nameAtom, value, PR_TRUE);
+            NS_IF_RELEASE(nameAtom);
+          }
           NS_RELEASE(attrPrivate);
         }
-
-        // Add the new attribute node to the hash table (maintaining
-        // a reference to it)
-        PL_HashTableAdd(attrHash, key, attribute);
-
-        // Set the attribute on the content
-        result = mContent->SetAttribute(nameSpaceID, nameAtom, value, PR_TRUE);
-        NS_IF_RELEASE(nameAtom);
       }
+    }
+    else {
+      result = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   }
   else {
@@ -400,6 +418,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
         NS_RELEASE(attribute);
       }
       else {
+        result = NS_ERROR_DOM_NOT_FOUND_ERR;
         *aReturn = nsnull;
       }
 

@@ -35,9 +35,10 @@ class nsDOMAttribute;
 
 class nsIDOMAttributePrivate : public nsISupports {
 public:
-  virtual void DropReference() = 0;
-  virtual void SetContent(nsIContent* aContent) = 0;
-  virtual void SetName(const nsString& aName) = 0;
+  NS_IMETHOD DropReference() = 0;
+  NS_IMETHOD SetContent(nsIContent* aContent) = 0;
+  NS_IMETHOD GetContent(nsIContent** aContent) = 0;
+  NS_IMETHOD SetName(const nsString& aName) = 0;
 };
 
 // bogus child list for an attribute
@@ -104,9 +105,10 @@ public:
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
 
   // nsIDOMAttributePrivate interface
-  virtual void DropReference();
-  virtual void SetContent(nsIContent* aContent);
-  virtual void SetName(const nsString& aName);
+  NS_IMETHOD DropReference();
+  NS_IMETHOD SetContent(nsIContent* aContent);
+  NS_IMETHOD GetContent(nsIContent** aContent);
+  NS_IMETHOD SetName(const nsString& aName);
 
 private:
   nsIContent* mContent;

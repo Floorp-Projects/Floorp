@@ -58,6 +58,7 @@
 #include "nsContentList.h"
 #include "prprf.h"
 #include "prmem.h"
+#include "nsDOMError.h"
 
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
@@ -244,7 +245,8 @@ nsGenericElement::GetNodeValue(nsString& aNodeValue)
 nsresult
 nsGenericElement::SetNodeValue(const nsString& aNodeValue)
 {
-  return NS_OK;
+  // The node value can't be modified
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 nsresult
@@ -1490,7 +1492,7 @@ nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,
 
   *aReturn = nsnull;
   if (nsnull == aNewChild) {
-    return NS_OK;/* XXX wrong error value */
+    return NS_ERROR_NULL_POINTER;
   }
 
   // Check if this is a document fragment. If it is, we need
@@ -1560,6 +1562,9 @@ nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,
       }
       NS_IF_RELEASE(refContent);
     }
+    else {
+      res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
     NS_RELEASE(docFrag);
   }
   else {
@@ -1598,7 +1603,13 @@ nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,
               SetDocumentInChildrenOf(newContent, mDocument);
               res = InsertChildAt(newContent, pos, PR_TRUE);
             }
+            else {
+              res = NS_ERROR_DOM_NOT_FOUND_ERR;
+            }
             NS_RELEASE(refContent);
+          }
+          else {
+            res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
           }
         }
       }
@@ -1606,6 +1617,9 @@ nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,
 
       *aReturn = aNewChild;
       NS_ADDREF(aNewChild);
+    }
+    else {
+      res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   }
 
@@ -1619,7 +1633,10 @@ nsGenericContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
 {
   *aReturn = nsnull;
   if (nsnull == aOldChild) {
-    return NS_OK;
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (nsnull == aNewChild) {
+    return NS_ERROR_NULL_POINTER;
   }
   nsIContent* content = nsnull;
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
@@ -1679,6 +1696,9 @@ nsGenericContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
             }
             NS_RELEASE(docFragContent);
           }
+          else {
+            res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+          }
           NS_RELEASE(docFrag);
         }
         else {
@@ -1701,12 +1721,21 @@ nsGenericContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
         }
         NS_RELEASE(newContent);
       }
+      else {
+        res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
       *aReturn = aOldChild;
       NS_ADDREF(aOldChild);
     }
+    else {
+      res = NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
     NS_RELEASE(content);
   }
-  
+  else {
+    res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
   return res;
 }
 
@@ -1716,6 +1745,10 @@ nsGenericContainerElement::RemoveChild(nsIDOMNode* aOldChild,
 {
   nsIContent* content = nsnull;
   *aReturn = nsnull;
+
+  if (nsnull == aOldChild) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
@@ -1726,7 +1759,13 @@ nsGenericContainerElement::RemoveChild(nsIDOMNode* aOldChild,
       *aReturn = aOldChild;
       NS_ADDREF(aOldChild);
     }
+    else {
+      res = NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
     NS_RELEASE(content);
+  }
+  else {
+    res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   return res;

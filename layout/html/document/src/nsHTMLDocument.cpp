@@ -57,6 +57,7 @@
 #include "CNavDTD.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsContentList.h"
+#include "nsDOMError.h"
 
 #ifndef NECKO
 #include "nsINetService.h"
@@ -1010,7 +1011,7 @@ nsHTMLDocument::CreateProcessingInstruction(const nsString& aTarget,
   // There are no PIs for HTML
   *aReturn = nsnull;
   
-  return NS_OK;
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP    
@@ -1020,7 +1021,7 @@ nsHTMLDocument::CreateCDATASection(const nsString& aData,
   // There are no CDATASections in HTML
   *aReturn = nsnull;
 
-  return NS_OK;
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
  
 NS_IMETHODIMP    
@@ -1030,7 +1031,7 @@ nsHTMLDocument::CreateEntityReference(const nsString& aName,
   // There are no EntityReferences in HTML
   *aReturn = nsnull;
 
-  return NS_OK;
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 

@@ -25,6 +25,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsDOMError.h"
 
 
 static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
@@ -295,7 +296,8 @@ nsDocumentFragment::GetNodeValue(nsString& aNodeValue)
 NS_IMETHODIMP    
 nsDocumentFragment::SetNodeValue(const nsString& aNodeValue)
 {
-  return NS_OK;
+  // The node value can't be modified
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 NS_IMETHODIMP    

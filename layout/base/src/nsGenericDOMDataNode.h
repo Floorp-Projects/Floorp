@@ -27,6 +27,7 @@
 #include "nsVoidArray.h"
 #include "nsINameSpaceManager.h"
 #include "nsITextContent.h"
+#include "nsDOMError.h"
 
 extern const nsIID kIDOMCharacterDataIID;
 extern const nsIID kIDOMNodeIID;
@@ -77,17 +78,17 @@ struct nsGenericDOMDataNode {
   }
   nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                            nsIDOMNode** aReturn) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
   nsresult    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                            nsIDOMNode** aReturn) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
   nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
   nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
   nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
 
