@@ -42,6 +42,7 @@
 
 class nsICSSStyleSheet;
 class nsICSSGroupRule;
+class nsAString;
 
 // IID for the nsICSSRule interface {b9791e20-1a04-11d3-805a-006008159b5a}
 #define NS_ICSS_RULE_IID     \
@@ -69,5 +70,10 @@ public:
 
   NS_IMETHOD Clone(nsICSSRule*& aClone) const = 0;
 };
+
+/* Define global NS_New* functions for rules that don't need their own
+   interfaces here */
+extern NS_EXPORT nsresult
+  NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding);
 
 #endif /* nsICSSRule_h___ */

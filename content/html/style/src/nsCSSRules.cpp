@@ -36,7 +36,6 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsICSSCharsetRule.h"
 #include "nsICSSImportRule.h"
 #include "nsICSSMediaRule.h"
 #include "nsICSSNameSpaceRule.h"
@@ -57,6 +56,7 @@
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
+#include "nsIDOMCSSCharsetRule.h"
 #include "nsIMediaList.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMCSSRuleList.h"
@@ -166,20 +166,18 @@ CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
 }
 
 // -------------------------------------------
-// nsICSSCharsetRule
+// CharsetRule
 //
 class CSSCharsetRuleImpl : public nsCSSRule,
-                           public nsICSSCharsetRule,
-                           public nsIDOMCSSRule
+                           public nsICSSRule,
+                           public nsIDOMCSSCharsetRule
 {
 public:
-  CSSCharsetRuleImpl(void);
+  CSSCharsetRuleImpl(const nsAString& aEncoding);
   CSSCharsetRuleImpl(const CSSCharsetRuleImpl& aCopy);
   virtual ~CSSCharsetRuleImpl(void);
 
   NS_DECL_ISUPPORTS_INHERITED
-
-  NS_IMETHOD  Init(const nsString& aEncoding);
 
   DECL_STYLE_RULE_INHERIT
 
@@ -194,19 +192,20 @@ public:
   NS_IMETHOD GetType(PRInt32& aType) const;
   NS_IMETHOD Clone(nsICSSRule*& aClone) const;
 
-  // nsICSSCharsetRule methods
-  NS_IMETHOD  GetEncoding(nsString& aEncoding) const;
-
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
   
+  // nsIDOMCSSCharsetRule methods
+  NS_IMETHOD GetEncoding(nsAString& aEncoding);
+  NS_IMETHOD SetEncoding(const nsAString& aEncoding);
+
 protected:
   nsString  mEncoding;
 };
 
-CSSCharsetRuleImpl::CSSCharsetRuleImpl(void)
+CSSCharsetRuleImpl::CSSCharsetRuleImpl(const nsAString& aEncoding)
   : nsCSSRule(),
-    mEncoding()
+    mEncoding(aEncoding)
 {
 }
 
@@ -225,20 +224,13 @@ NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, nsCSSRule);
 
 // QueryInterface implementation for CSSCharsetRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
-  NS_INTERFACE_MAP_ENTRY(nsICSSCharsetRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSCharsetRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSCharsetRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSCharsetRule)
 NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP
-CSSCharsetRuleImpl::Init(const nsString& aEncoding)
-{
-  mEncoding = aEncoding;
-  return NS_OK;
-}
 
 IMPL_STYLE_RULE_INHERIT(CSSCharsetRuleImpl, nsCSSRule);
 
@@ -313,28 +305,34 @@ CSSCharsetRuleImpl::Clone(nsICSSRule*& aClone) const
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::GetEncoding(nsString& aEncoding) const
+CSSCharsetRuleImpl::GetEncoding(nsAString& aEncoding)
 {
   aEncoding = mEncoding;
   return NS_OK;
 }
 
+NS_IMETHODIMP
+CSSCharsetRuleImpl::SetEncoding(const nsAString& aEncoding)
+{
+  mEncoding = aEncoding;
+  return NS_OK;
+}
+
 
 NS_EXPORT nsresult
-NS_NewCSSCharsetRule(nsICSSCharsetRule** aInstancePtrResult, const nsString& aEncoding)
+NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding)
 {
   if (! aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  CSSCharsetRuleImpl* it = new CSSCharsetRuleImpl();
+  CSSCharsetRuleImpl* it = new CSSCharsetRuleImpl(aEncoding);
 
   if (! it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  it->Init(aEncoding);
-  return it->QueryInterface(NS_GET_IID(nsICSSCharsetRule), (void **) aInstancePtrResult);
+  return CallQueryInterface(it, aInstancePtrResult);
 }
 
 NS_IMETHODIMP
@@ -628,7 +626,7 @@ NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult,
 
   it->SetURLSpec(aURLSpec);
   it->SetMedia(aMedia);
-  return it->QueryInterface(NS_GET_IID(nsICSSImportRule), (void **) aInstancePtrResult);
+  return CallQueryInterface(it, aInstancePtrResult);
 }
 
 NS_IMETHODIMP
@@ -1114,7 +1112,7 @@ NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(NS_GET_IID(nsICSSMediaRule), (void **) aInstancePtrResult);
+  return CallQueryInterface(it, aInstancePtrResult);
 }
 
 // nsIDOMCSSRule methods
@@ -1466,7 +1464,7 @@ NS_NewCSSNameSpaceRule(nsICSSNameSpaceRule** aInstancePtrResult,
 
   it->SetPrefix(aPrefix);
   it->SetURLSpec(aURLSpec);
-  return it->QueryInterface(NS_GET_IID(nsICSSNameSpaceRule), (void **) aInstancePtrResult);
+  return CallQueryInterface(it, aInstancePtrResult);
 }
 
 NS_IMETHODIMP

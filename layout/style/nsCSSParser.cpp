@@ -46,7 +46,6 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSImportRule.h"
 #include "nsICSSMediaRule.h"
-#include "nsICSSCharsetRule.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIStyleSet.h"
@@ -1025,8 +1024,31 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFun
 PRBool CSSParserImpl::ParseCharsetRule(PRInt32& aErrorCode, RuleAppendFunc aAppendFunc,
                                        void* aData)
 {
-  // XXX not yet implemented
-  return PR_FALSE;
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("charset string in @charset rule"));
+    return PR_FALSE;
+  }
+
+  if (eCSSToken_String != mToken.mType) {
+    REPORT_UNEXPECTED_TOKEN(
+                     NS_LITERAL_STRING("Expected charset string but found"));
+    return PR_FALSE;
+  }
+
+  nsAutoString charset = mToken.mIdent;
+  
+  if (!ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsICSSRule> rule;
+  NS_NewCSSCharsetRule(getter_AddRefs(rule), charset);
+
+  if (rule) {
+    (*aAppendFunc)(rule, aData);
+  }
+
+  return PR_TRUE;
 }
 
 PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia, 
