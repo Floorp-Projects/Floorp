@@ -1186,7 +1186,6 @@ Rights Reserved.
           </menu>
           <menuseparator/>
           <menuitem id="stopMenuitem" label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" key="key_stop" disabled="true" command="cmd_stop"/>
-          <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
           <menuseparator/>
           <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
                     command="cmd_textZoomEnlarge"/>
