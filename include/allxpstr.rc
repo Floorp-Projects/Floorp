@@ -7905,6 +7905,10 @@ ResDef(MK_LDAP_AUTHDN_LOOKUP_FAILED, XP_MSG_BASE + 1469, "Mail id invalid or not
 
 
 /* Cookies & Signons XP Strings */
+ResDef(MK_ACCESS_COOKIES_WISHES_MODIFY, (XP_MSG_BASE + 1476),
+"The server %1$s \nwishes to modify an existing cookie.\n\n\
+Do you wish to allow the cookie to be modified?")
+
 ResDef(MK_ACCESS_SITE_COOKIES_ACCEPTED, (XP_MSG_BASE + 1477),
 "Cookies that current site stored on your system")
 
