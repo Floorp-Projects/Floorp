@@ -74,6 +74,9 @@ char iniFilePath[MAX_SIZE];
 char imagesPath[MAX_SIZE];
 char rootPath[MAX_SIZE];
 char customizationPath[MAX_SIZE];
+char asePath[MAX_SIZE];
+char nciPath[MAX_SIZE];
+char tmpPath[MAX_SIZE];
 
 CString CacheFile;
 CString CachePath;
@@ -188,7 +191,16 @@ BOOL CWizardMachineApp::InitInstance()
 			len--;
 		}
 
+		strcpy(asePath,imagesPath);
+
+		strcat(asePath,"ase\\");
+
+		strcpy(nciPath,asePath);
+
+		strcat(nciPath,"NCIFiles\\");
+
 		strcat(imagesPath, "bitmaps\\");
+
 	}
 	else
 	{
@@ -202,7 +214,6 @@ BOOL CWizardMachineApp::InitInstance()
 
 	strcpy(customizationPath, currDirPath);
 	strcat(customizationPath, "customizations\\");
-
 
 	CString cacheExt = ".che";
 	CacheFile = CString(iniFile); 
@@ -417,6 +428,8 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 	NewNode->navControls = new CONTROLS;
 	GetPrivateProfileString(navCtrlSection, "OnNext", "", buffer, MAX_SIZE, iniFile);
 	NewNode->navControls->onNextAction = buffer;
+	GetPrivateProfileString(navCtrlSection, "onEnter", "", buffer, MAX_SIZE, iniFile);
+	NewNode->navControls->onEnter = buffer;
 	GetPrivateProfileString(navCtrlSection, "Help", "", buffer, MAX_SIZE, iniFile);
 	NewNode->navControls->helpFile = buffer;
 	  
@@ -743,6 +756,7 @@ CString CWizardMachineApp::replaceVars(char *str)
 {
 	char buf[MIN_SIZE];
 	char *b = buf;
+
 	while (*str)
 	{
 		if (*str == '%')
@@ -753,6 +767,7 @@ CString CWizardMachineApp::replaceVars(char *str)
 			if (*str == '%')
 			{
 				*str = '\0';
+
 				WIDGET *w = findWidget(n);
 				strcpy(b, w->value);
 				b += strlen(w->value);
@@ -801,14 +816,17 @@ BOOL CWizardMachineApp::interpret(CString cmd)
 				char *parms = strtok(NULL, ")");
 				// VerifySet checks to see if the first parameter has any value
 				//   If (p1) then continue else show error dialog and return FALSE
+
 				if (strcmp(pcmd, "VerifySet") == 0)
 				{
 					char *p2 = strchr(parms, ',');
+
 					if (p2)
 						*p2++ = '\0';
 					else
 						p2 = "A message belongs here.";
 					CString value = replaceVars(parms);
+
 					if (!value || value.IsEmpty())
 					{
 						CWnd myWnd;
@@ -823,15 +841,38 @@ BOOL CWizardMachineApp::interpret(CString cmd)
 					CachePath = Path + newDir + "\\" + CacheFile;
 					FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
 				}
+				else if (strcmp(pcmd, "VerifyVal") == 0)
+				{
+					CString Getval = replaceVars(parms);
+					if (Getval == "0")
+						return FALSE;
+				}
+				else if (strcmp(pcmd, "VerifyDir") == 0)
+				{
+					CFileFind tmpDir;
+					BOOL dirFound = tmpDir.FindFile(CString(nciPath)+"*.*");
+					if (!dirFound)
+					{
+						strcpy(tmpPath,asePath);
+						strcat(tmpPath,"NCIFiles");
+						_mkdir (tmpPath);
+					}
+					else 
+					{
+						CWnd dirwnd;
+						dirwnd.MessageBox(CString(nciPath),"found",MB_OK);
+					}
+				}
+			
 			}
-			// Don't free this!
+			// This is an extra free...
 			//free(pcmd);
 		}
 
 	return TRUE;
 }
 
-void CWizardMachineApp::GoToNextNode()
+BOOL CWizardMachineApp::GoToNextNode()
 {
 	//check if it is a container node
 		//for now check existence of display information
@@ -842,7 +883,7 @@ void CWizardMachineApp::GoToNextNode()
 	//----------------------------------------------------------------------------------------------
 	if (CurrentNode->navControls->onNextAction)
 		if (!interpret(CurrentNode->navControls->onNextAction))
-			return;
+			return TRUE;
 
 	//----------------------------------------------------------------------------------------------
 	NODE* tmpParentNode;
@@ -863,15 +904,18 @@ void CWizardMachineApp::GoToNextNode()
 			if (siblingNode)
 			{
 				CurrentNode = siblingNode;
-				//CurrentNode = tmpParentNode->childNodes[tmpParentNode->currNodeIndex];
 			}
 			else
 			{
-				CurrentNode = CreateNode(tmpParentNode, tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex) + ".ini");
-				//tmpParentNode->childNodes[tmpParentNode->currNodeIndex] = CreateNode(tmpParentNode, tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex) + ".ini");
+				CurrentNode = CreateNode(tmpParentNode, 
+				  tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex) + ".ini");
 			}
 			
+			if (!CurrentNode)
+				; /* ??? */
 
+			if (!interpret(CurrentNode->navControls->onEnter))
+					return FALSE;
 
 			BOOL isAContainerNode;	
 			BOOL haveChildNodes = TRUE;
@@ -885,7 +929,8 @@ void CWizardMachineApp::GoToNextNode()
 					CurrentNode = containerNode->childNodes[0];
 					if (!CurrentNode)
 					{
-						CurrentNode = CreateNode(containerNode, containerNode->subPages->pages.GetAt(0) + ".ini");
+						CurrentNode = CreateNode(containerNode, 
+							containerNode->subPages->pages.GetAt(0) + ".ini");
 					}
 					isAContainerNode = (CurrentNode->numWidgets == 0);
 					PrintNodeInfo(containerNode);
@@ -914,10 +959,11 @@ void CWizardMachineApp::GoToNextNode()
 		fprintf(out, "------------** TERMINATED - Can't go past the last page **----------------\n");
 		exit(10);
 	}
+	return TRUE;
 }
 
 
-void CWizardMachineApp::GoToPrevNode()
+BOOL CWizardMachineApp::GoToPrevNode()
 {
 
 	//check if it is a container node
@@ -943,13 +989,18 @@ void CWizardMachineApp::GoToPrevNode()
 			if (siblingNode)
 			{
 				CurrentNode = siblingNode;
-				//CurrentNode = tmpParentNode->childNodes[tmpParentNode->currNodeIndex];
 			}
 			else
 			{
-				CurrentNode = CreateNode(tmpParentNode, tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex) + ".ini");
-				//tmpParentNode->childNodes[tmpParentNode->currNodeIndex] = CreateNode(tmpParentNode, tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex) + ".ini");
+				CurrentNode = CreateNode(tmpParentNode, 
+				   tmpParentNode->subPages->pages.GetAt(tmpParentNode->currNodeIndex) + ".ini");
 			}
+			
+			if (!CurrentNode)
+				;/*then what*/
+
+			if (!interpret(CurrentNode->navControls->onEnter))
+				return FALSE;
 			
 			BOOL isAContainerNode;	
 			BOOL haveChildNodes = TRUE;
@@ -965,7 +1016,8 @@ void CWizardMachineApp::GoToPrevNode()
 					CurrentNode = containerNode->childNodes[index];
 					if (!CurrentNode)
 					{
-						CurrentNode = CreateNode(containerNode, containerNode->subPages->pages.GetAt(index) + ".ini");
+						CurrentNode = CreateNode(containerNode,
+						    containerNode->subPages->pages.GetAt(index) + ".ini");
 					}
 					isAContainerNode = (CurrentNode->numWidgets == 0);
 					PrintNodeInfo(containerNode);
@@ -994,6 +1046,7 @@ void CWizardMachineApp::GoToPrevNode()
 		fprintf(out, "------------** TERMINATED - Can't go back from first page **----------------\n");
 		exit(9);
 	}
+	return TRUE;
 
 }
 
@@ -1210,12 +1263,10 @@ CString CWizardMachineApp::GetModulePath()
 
 CString CWizardMachineApp::GetGlobal(CString theName)
 {
-	for (int i = 0; i <= GlobalArrayIndex; i++)
-	{
-		if (GlobalWidgetArray[i].name == theName) {
-			return GlobalWidgetArray[i].value;
-		}
-	}
+	WIDGET *w = findWidget((char *) (LPCSTR) theName);
+
+	if (w)
+		return w->value;
 
 	return "";
 }
