@@ -122,6 +122,13 @@ public:
     **/
     void addTemplate(Element* aXslTemplate, ImportFrame* aImportFrame);
 
+    /*
+     * Adds the given LRE Stylesheet to the list of templates to process
+     * @param aStylesheet  The Stylesheet to add as a template
+     * @param importFrame  ImportFrame to add the template to
+     */
+    void addLREStylesheet(Document* aStylesheet, ImportFrame* aImportFrame);
+
     /**
      *  Adds the given Node to the Result Tree
      *
@@ -224,7 +231,7 @@ public:
      * Finds a template for the given Node. Only templates with
      * a mode attribute equal to the given mode will be searched.
      */
-    Element* findTemplate(Node* aNode, Node* aContext, const String& aMode);
+    Node* findTemplate(Node* aNode, Node* aContext, const String& aMode);
 
     /**
      * Determines if the given XSL node allows Whitespace stripping
@@ -389,7 +396,7 @@ private:
     };
     
     struct MatchableTemplate {
-        Element* mTemplate;
+        Node* mTemplate;
         Pattern* mMatch;
     };
 

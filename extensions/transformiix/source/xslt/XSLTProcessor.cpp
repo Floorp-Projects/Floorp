@@ -394,19 +394,34 @@ Document* XSLTProcessor::process(istream& xmlInput, String& xmlFilename) {
 /**
  * Processes the Top level elements for an XSL stylesheet
 **/
-void XSLTProcessor::processTopLevel(Document* aSource,
-                                    Document* aStylesheet,
-                                    ListIterator* importFrame,
-                                    ProcessorState* aPs)
+void XSLTProcessor::processStylesheet(Document* aSource,
+                                      Document* aStylesheet,
+                                      ListIterator* aImportFrame,
+                                      ProcessorState* aPs)
 {
     NS_ASSERTION(aStylesheet, "processTopLevel called without stylesheet");
-    if (!aStylesheet)
+    if (!aStylesheet || !aStylesheet->getDocumentElement())
         return;
 
-    processTopLevel(aSource,
-                    aStylesheet->getDocumentElement(),
-                    importFrame,
-                    aPs);
+    Element* elem = aStylesheet->getDocumentElement();
+
+    // This should be rewritten once ns-dom lands
+    String prefix, localName, namespaceURI;
+    XMLUtils::getNameSpace(elem->getNodeName(), prefix);
+    XMLUtils::getLocalPart(elem->getNodeName(), localName);
+    XMLDOMUtils::getNameSpace(prefix, elem, namespaceURI);
+
+    if ((localName.isEqual(STYLESHEET) || localName.isEqual(TRANSFORM)) &&
+        namespaceURI.isEqual(XSLT_NS)) {
+        processTopLevel(aSource, elem, aImportFrame, aPs);
+    }
+    else {
+        NS_ASSERTION(aImportFrame->current(), "no current importframe");
+        if (!aImportFrame->current())
+            return;
+        aPs->addLREStylesheet(aStylesheet,
+            (ProcessorState::ImportFrame*)aImportFrame->current());
+    }
 }
 
 /**
@@ -657,7 +672,10 @@ void XSLTProcessor::processInclude(String& aHref,
 
     switch(stylesheet->getNodeType()) {
         case Node::DOCUMENT_NODE :
-            processTopLevel(aSource, (Document*)stylesheet, aImportFrame, aPs);
+            processStylesheet(aSource,
+                              (Document*)stylesheet,
+                              aImportFrame,
+                              aPs);
             break;
         case Node::ELEMENT_NODE :
             processTopLevel(aSource, (Element*)stylesheet, aImportFrame, aPs);
@@ -705,7 +723,7 @@ Document* XSLTProcessor::process
     ListIterator importFrame(ps.getImportFrames());
     importFrame.addAfter(new ProcessorState::ImportFrame);
     importFrame.next();
-    processTopLevel(&xmlDocument, &xslDocument, &importFrame, &ps);
+    processStylesheet(&xmlDocument, &xslDocument, &importFrame, &ps);
 
       //----------------------------------------/
      //- Process root of XML source document -/
@@ -751,7 +769,7 @@ void XSLTProcessor::process
     ListIterator importFrame(ps.getImportFrames());
     importFrame.addAfter(new ProcessorState::ImportFrame);
     importFrame.next();
-    processTopLevel(&xmlDocument, &xslDocument, &importFrame, &ps);
+    processStylesheet(&xmlDocument, &xslDocument, &importFrame, &ps);
 
       //----------------------------------------/
      //- Process root of XML source document -/
@@ -976,7 +994,7 @@ void XSLTProcessor::process(Node* node,
     if (!node)
         return;
 
-    Element* xslTemplate = ps->findTemplate(node, context, mode);
+    Node* xslTemplate = ps->findTemplate(node, context, mode);
     if (xslTemplate)
         processTemplate(node, xslTemplate, ps);
     else
@@ -1078,7 +1096,8 @@ void XSLTProcessor::processAction
 
                     for (int i = 0; i < nodeSet->size(); i++) {
                         Node* currNode = nodeSet->get(i);
-                        Element* xslTemplate = ps->findTemplate(currNode, node, mode);
+                        Node* xslTemplate;
+                        xslTemplate = ps->findTemplate(currNode, node, mode);
                         if (xslTemplate) {
                             ps->pushCurrentNode(currNode);
                             processTemplate(currNode, xslTemplate, ps, actualParams);
@@ -1793,7 +1812,7 @@ void XSLTProcessor::processDefaultTemplate(Node* node,
             ps->getNodeSetStack()->push(nodeSet);
             for (int i = 0; i < nodeSet->size(); i++) {
                 Node* currNode = nodeSet->get(i);
-                Element* xslTemplate = ps->findTemplate(currNode, node, mode);
+                Node* xslTemplate = ps->findTemplate(currNode, node, mode);
                 if (xslTemplate) {
                     ps->pushCurrentNode(currNode);
                     processTemplate(currNode, xslTemplate, ps, NULL);
@@ -2082,7 +2101,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     ListIterator importFrame(ps->getImportFrames());
     importFrame.addAfter(new ProcessorState::ImportFrame);
     importFrame.next();
-    processTopLevel(sourceDocument, xslDocument, &importFrame, ps);
+    processStylesheet(sourceDocument, xslDocument, &importFrame, ps);
 
       //---------------------------------------/
      //- Process root of XML source document -/

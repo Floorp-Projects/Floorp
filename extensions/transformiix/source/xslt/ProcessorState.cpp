@@ -211,12 +211,51 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
             return;
         }
         templ->mTemplate = aXslTemplate;
-        templ->mMatch = exprParser.createExpr(match);
+        templ->mMatch = exprParser.createPatternExpr(match);
         if (templ->mMatch)
             templates->add(templ);
         else
             delete templ;
     }
+}
+
+/*
+ * Adds the given LRE Stylesheet to the list of templates to process
+ * @param aStylesheet  The Stylesheet to add as a template
+ * @param importFrame  ImportFrame to add the template to
+ */
+void ProcessorState::addLREStylesheet(Document* aStylesheet,
+                                      ImportFrame* aImportFrame)
+{
+    NS_ASSERTION(aStylesheet, "missing stylesheet");
+    
+    // get the txList for null mode
+    txList* templates =
+        (txList*)aImportFrame->mMatchableTemplates.get(NULL_STRING);
+
+    if (!templates) {
+        templates = new txList;
+        if (!templates) {
+            // XXX ErrorReport: out of memory
+            return;
+        }
+        aImportFrame->mMatchableTemplates.put(NULL_STRING, templates);
+    }
+
+    // Add the template to the list of templates
+    MatchableTemplate* templ = new MatchableTemplate;
+    if (!templ) {
+        // XXX ErrorReport: out of memory
+        return;
+    }
+
+    templ->mTemplate = aStylesheet;
+    String match("/");
+    templ->mMatch = exprParser.createPatternExpr(match);
+    if (templ->mMatch)
+        templates->add(templ);
+    else
+        delete templ;
 }
 
 /**
@@ -400,14 +439,14 @@ List* ProcessorState::getImportFrames()
  * Finds a template for the given Node. Only templates with
  * a mode attribute equal to the given mode will be searched.
  */
-Element* ProcessorState::findTemplate(Node* aNode,
-                                      Node* aContext,
-                                      const String& aMode)
+Node* ProcessorState::findTemplate(Node* aNode,
+                                   Node* aContext,
+                                   const String& aMode)
 {
     if (!aNode)
         return 0;
 
-    Element* matchTemplate = 0;
+    Node* matchTemplate = 0;
     double currentPriority = Double::NEGATIVE_INFINITY;
     ImportFrame* frame;
     txListIterator frameIter(&mImportFrames);
@@ -422,8 +461,12 @@ Element* ProcessorState::findTemplate(Node* aNode,
 
             MatchableTemplate* templ;
             while ((templ = (MatchableTemplate*)templateIter.next())) {
-                String priorityAttr =
-                    templ->mTemplate->getAttribute(PRIORITY_ATTR);
+                String priorityAttr;
+
+                if (templ->mTemplate->getNodeType() == Node::ELEMENT_NODE) {
+                    Element* elem = (Element*)templ->mTemplate;
+                    priorityAttr = elem->getAttribute(PRIORITY_ATTR);
+                }
 
                 double tmpPriority;
                 if (!priorityAttr.isEmpty()) {
