@@ -401,8 +401,17 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
         float t2p = aPresContext.GetTwipsToPixels();
         ((nsInput*)mContent)->SetClickPoint(NSTwipsToIntPixels(aEvent->point.x, t2p),
                                             NSTwipsToIntPixels(aEvent->point.y, t2p));   
- 		    MouseClicked(&aPresContext);
-		    //return PR_FALSE;
+
+        nsEventStatus mStatus;
+        nsMouseEvent mEvent;
+        mEvent.eventStructType = NS_MOUSE_EVENT;
+        mEvent.message = NS_MOUSE_LEFT_CLICK;
+        mContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+        
+        if (nsEventStatus_eConsumeNoDefault != mStatus) {
+          MouseClicked(&aPresContext);
+		      //return PR_FALSE;
+        }
 	    } 
 	    mLastMouseState = eMouseEnter;
 	    break;
