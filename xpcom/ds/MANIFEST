@@ -24,7 +24,6 @@ nsValueArray.h
 nsVariant.h
 nsVector.h
 nsVoidArray.h
-nsVoidBTree.h
 pldhash.h
 plvector.h
 nsTextFormatter.h

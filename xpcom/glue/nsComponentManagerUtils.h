@@ -78,7 +78,7 @@ private:
     nsresult*	  mErrorPtr;
 };
 
-class NS_COM nsCreateInstanceFromCategory : public nsCOMPtr_helper
+class nsCreateInstanceFromCategory : public nsCOMPtr_helper
 {
 public:
     nsCreateInstanceFromCategory(const char *aCategory, const char *aEntry,

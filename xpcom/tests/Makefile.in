@@ -54,7 +54,6 @@ CPPSRCS		= \
 		TestPipes.cpp \
 		TestServMgr.cpp \
 		TestThreads.cpp \
-		TestVoidBTree.cpp \
 		TestXPIDLString.cpp \
 		$(NULL)
 

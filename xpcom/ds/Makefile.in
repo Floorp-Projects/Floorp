@@ -68,7 +68,6 @@ CPPSRCS		= \
 		nsUnicharBuffer.cpp \
 		nsVariant.cpp \
 		nsVoidArray.cpp \
-		nsVoidBTree.cpp \
 		nsTextFormatter.cpp \
 		nsTimelineService.cpp \
 		nsValueArray.cpp \
@@ -101,7 +100,6 @@ EXPORTS		= \
 		nsVariant.h \
 		nsVector.h \
 		nsVoidArray.h \
-		nsVoidBTree.h \
 		pldhash.h \
 		plvector.h \
 		nsTextFormatter.h \

@@ -46,7 +46,7 @@
 class nsFastLoadFileReader;
 class nsFastLoadFileWriter;
 
-class NS_COM nsFastLoadService : public nsIFastLoadService
+class nsFastLoadService : public nsIFastLoadService
 {
   public:
     nsFastLoadService();
