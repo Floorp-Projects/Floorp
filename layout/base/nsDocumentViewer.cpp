@@ -734,6 +734,7 @@ nsIContentViewer  *viewer;
  *  See documentation above in the DocumentViewerImpl class definition
  *	@update 07/09/99 dwc
  */
+#ifndef NECKO
 NS_IMETHODIMP 
 DocumentViewerImpl::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType,nsIContentViewer* aViewer)
 {
@@ -774,6 +775,7 @@ nsresult                  rv;
 
   return NS_OK;
 }
+#endif // NECKO
 
 
 NS_IMETHODIMP
