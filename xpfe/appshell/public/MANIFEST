@@ -8,5 +8,5 @@ nsICmdLineService.h
 nsIWebShellWindow.h
 nsIWidgetController.h
 nsFileLocations.h
-nsXULWindowCallbacks.h
+nsIXULWindowCallbacks.h
 nsIDOMXPConnectFactory.h
