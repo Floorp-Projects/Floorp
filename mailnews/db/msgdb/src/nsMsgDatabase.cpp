@@ -1371,6 +1371,8 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
 
     PRUint32 flags;
     rv = msgHdr->GetFlags(&flags);
+    flags &= ~MSG_FLAG_NEW;
+
     if (NS_FAILED(rv)) return rv;
     
 	return NotifyKeyChangeAll(key, oldFlags, flags, instigator);

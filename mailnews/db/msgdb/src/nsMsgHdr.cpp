@@ -114,6 +114,7 @@ nsresult nsMsgHdr::InitFlags()
 	if(!(m_initedValues & FLAGS_INITED))
 	{
 		err = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
+    m_flags &= ~MSG_FLAG_NEW; // don't get new flag from MDB
 
 		if(NS_SUCCEEDED(err))
 			m_initedValues |= FLAGS_INITED;
@@ -198,7 +199,8 @@ NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
 NS_IMETHODIMP nsMsgHdr::SetFlags(PRUint32 flags)
 {
 	m_flags = flags;
-	SetUInt32Column(m_flags, m_mdb->m_flagsColumnToken);
+  // don't write out MSG_FLAG_NEW to MDB.
+	SetUInt32Column(m_flags & ~MSG_FLAG_NEW, m_mdb->m_flagsColumnToken);
     return NS_OK;
 }
 
