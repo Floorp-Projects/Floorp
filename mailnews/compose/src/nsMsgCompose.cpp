@@ -413,7 +413,6 @@ nsresult nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *a
 	return NS_OK;
 }
 
-
 nsresult nsMsgCompose::CloseWindow()
 {
 	if (m_webShellWin)
@@ -677,6 +676,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   //
   // For now, you need to set a pref to do the old quoting
   //
+/*
   PRBool  oldQuoting = PR_FALSE;
 
   nsString    tmpURI(originalMsgURI);
@@ -689,14 +689,17 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
       oldQuoting = PR_TRUE;
     }
   }
-
   PR_FREEIF(compString);
+ */
+
+  PRBool  oldQuoting = PR_TRUE;
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
     rv = prefs->GetBoolPref("mail.old_quoting", &oldQuoting);
   }
+
 
   if (oldQuoting)
   {
