@@ -86,9 +86,21 @@
     <textbox id="search-box" flex="1"
              type="timed" timeout="500"
              callback="searchHistory(gSearchBox.value);"/>
+    <toolbarbutton id="viewButton" type="menu" label="&view.label;" selectedsort="day" persist="selectedsort">
+      <menupopup>
+        <menuitem id="byday" label="&byDate.label;" accesskey="&byDate.accesskey;" type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'day'); GroupBy('day');"/>
+        <menuitem id="bysite" label="&bySite.label;" accesskey="&bySite.accesskey;" type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'site'); GroupBy('none'); SortBy('name');"/>
+        <menuitem id="byvisited" label="&byMostVisited.label;" accesskey="&byMostVisited.accesskey;"
+                  type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'visited');
+                             GroupBy('none'); SortBy('visited');"/>
+      </menupopup>
+    </toolbarbutton>
   </hbox>
   <tree id="historyTree" flex="1" class="plain"
-            context="historyMenu"
+            context="historyMenu" persist="ref"
             datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
             onkeypress="if (event.keyCode == 13) OpenURL(event.ctrlKey || event.metaKey);" 
             onselect="this.treeBoxObject.view.selectionChanged();
@@ -102,14 +114,20 @@
           <treeitem uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#VisitCount" hidden="true"/>
             </treerow>
           </treeitem>
         </treechildren>
       </rule>
     </template>
     <treecols id="historyTreeCols">
-      <treecol flex="1" id="Name" persist="hidden width ordinal" 
-               hideheader="true" primary="true"/>
+      <treecol flex="1" id="Name" persist="sortActive sortDirection" 
+               hideheader="true" primary="true"
+               sort="rdf:http://home.netscape.com/NC-rdf#Name"
+               sortActive="true"/>
+      <treecol flex="1" id="VisitCount" hidden="true" hideheader="true"
+               persist="sortActive sortDirection"
+               sort="rdf:http://home.netscape.com/NC-rdf#VisitCount"/>
     </treecols>
   </tree>
 </page>

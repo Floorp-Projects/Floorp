@@ -41,7 +41,6 @@ var gHistoryTree;
 var gLastHostname;
 var gLastDomain;
 var gGlobalHistory;
-var gPrefService;
 var gDeleteByHostname;
 var gDeleteByDomain;
 var gHistoryBundle;
@@ -49,13 +48,6 @@ var gHistoryStatus;
 var gSearchBox;
 var gHistoryGrouping = "";
 var gWindowManager = null;
-
-function HistoryWindowInit()
-{
-    gHistoryStatus =    document.getElementById("statusbar-display");
-    HistoryCommonInit();
-    gHistoryTree.focus();
-}
 
 function HistoryCommonInit()
 {
@@ -66,49 +58,14 @@ function HistoryCommonInit()
     gSearchBox = document.getElementById("search-box");
 
     var treeController = new nsTreeController(gHistoryTree);
-
-    if ("arguments" in window && window.arguments[0] && window.arguments.length >= 1) {
-        // We have been supplied a resource URI to root the tree on
-        var uri = window.arguments[0];
-        gHistoryTree.setAttribute("ref", uri);
-        if (uri.substring(0,5) == "find:" &&
-            !(window.arguments.length > 1 && window.arguments[1] == "newWindow")) {
-            // Update the windowtype so that future searches are directed 
-            // there and the window is not re-used for bookmarks. 
-            var windowNode = document.getElementById("history-window");
-            windowNode.setAttribute("windowtype", "history:searchresults");
-            windowNode.setAttribute("title", gHistoryBundle.getString("search_results_title"));
-
-        }
-        document.getElementById("groupingMenu").setAttribute("hidden", "true");
-    }
-    else {
-        gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                 .getService(Components.interfaces.nsIPrefBranch);
-        try {
-            gHistoryGrouping = gPrefService.getCharPref("browser.history.grouping");
-        }
-        catch(e) {
-            gHistoryGrouping = "day";
-        }
-        GroupBy(gHistoryGrouping);
-        if (gHistoryStatus) {  // must be the window
-            switch(gHistoryGrouping) {
-            case "none":
-                document.getElementById("groupByNone").setAttribute("checked", "true");
-                break;
-            case "day":
-            default:
-                document.getElementById("groupByDay").setAttribute("checked", "true");
-            }        
-        }
-        else {  // must be the sidebar panel
-            var pb = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-            var pbi = pb.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-            pbi.addObserver("browser.history.grouping", groupObserver, false);
-        }
-    } 
-
+    var mode = document.getElementById("viewButton").getAttribute("selectedsort");
+    if (mode == "site")
+      document.getElementById("bysite").setAttribute("checked", "true");
+    else if (mode == "visited")
+      document.getElementById("byvisited").setAttribute("checked", "true");
+    else
+      document.getElementById("byday").setAttribute("checked", "true");
+    gHistoryTree.focus();
     gHistoryTree.treeBoxObject.view.selection.select(0);
 }
 
@@ -270,6 +227,30 @@ function OpenURL(aInNewWindow)
     return true;
 }
 
+function SortBy(sortKey)
+{
+  // Welcome to the end of the world of Lame.
+  // You can go no further. You are standing on the edge -- teetering, even.
+  // Look on the bright side: you can rest assured that no code you see in the future
+  // will even come close to the lameness of the code below.
+
+  switch(sortKey) {
+    case "visited":
+      sortKey = "VisitCount";    
+      sortDirection = "ascending";
+      break;
+    case "name":
+      sortKey = "Name";
+      sortDirection = "natural";
+      break;
+    default:
+      return;    
+  }
+  var col = document.getElementById(sortKey);
+  col.setAttribute("sortDirection", sortDirection);
+  gHistoryTree.treeBoxObject.view.cycleHeader(sortKey, col);
+}
+
 function GroupBy(groupingType)
 {
     gHistoryGrouping = groupingType;
@@ -286,7 +267,6 @@ function GroupBy(groupingType)
         gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
         break;
     }
-    gPrefService.setCharPref("browser.history.grouping", groupingType);
 }
 
 var groupObserver = {
@@ -420,8 +400,3 @@ function searchHistory(aInput)
      gHistoryTree.setAttribute("ref",
                                "find:datasource=history&match=Name&method=contains&text=" + escape(aInput));
  }
-
-function openAboutDialog()
-{
-  window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
-}
