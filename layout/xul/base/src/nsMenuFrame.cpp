@@ -918,6 +918,12 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 void
 nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 {
+  if (!mContent)
+  {
+    *aResult = nsnull;
+    return;
+  }
+  
   nsresult rv;
   nsCOMPtr<nsIXBLService> xblService = 
            do_GetService("@mozilla.org/xbl;1", &rv);
