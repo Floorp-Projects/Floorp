@@ -123,11 +123,11 @@ class VariableOrConstant
 	bool hasKind(ValueKind kind) const;
 	ValueKind getKind() const;
 
-	bool isConstant() const;
-	bool isVariable() const;
+	inline bool isConstant() const;
+	inline bool isVariable() const;
 	DataNode &getVariable() const;
-	const Value &getConstant() const;
-	Value &getConstant();
+	inline const Value &getConstant() const;
+    inline Value &getConstant();
 	bool isAlwaysNonzero() const;
 	Type *getDynamicType() const;
 
@@ -178,7 +178,7 @@ class DataConsumer: public VariableOrConstant
 	void setConstant(ValueKind kind, const Value &v);
   #endif
 	void setVariable(DataNode &producer);
-	void clearVariable();
+    inline void clearVariable();
 	void clear() {if (isVariable()) clearVariable();}
 
 	// DoublyLinkedNode administration
