@@ -22,8 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= raptorhtmldoc_s
 MODULE		= layout
+LIBRARY_NAME	= raptorhtmldoc_s
 
 REQUIRES	= xpcom raptor dom netlib js pref
 

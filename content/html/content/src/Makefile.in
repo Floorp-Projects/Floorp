@@ -28,71 +28,71 @@ LIBRARY_NAME	= nglhtmlcon_s
 REQUIRES	= xpcom raptor dom js netlib
 
 CPPSRCS		= \
-nsAttributeContent.cpp \
-nsGenericHTMLElement.cpp \
-nsGenericDOMHTMLCollection.cpp \
-GenericElementCollection.cpp \
-nsHTMLAnchorElement.cpp \
-nsHTMLAppletElement.cpp \
-nsHTMLAreaElement.cpp \
-nsHTMLBRElement.cpp \
-nsHTMLBaseElement.cpp \
-nsHTMLBaseFontElement.cpp \
-nsHTMLBodyElement.cpp \
-nsHTMLButtonElement.cpp \
-nsHTMLDListElement.cpp \
-nsHTMLDelElement.cpp \
-nsHTMLDirectoryElement.cpp \
-nsHTMLDivElement.cpp \
-nsHTMLEmbedElement.cpp \
-nsHTMLFieldSetElement.cpp \
-nsHTMLFontElement.cpp \
-nsHTMLFormElement.cpp \
-nsHTMLFrameElement.cpp \
-nsHTMLFrameSetElement.cpp \
-nsHTMLHRElement.cpp \
-nsHTMLHeadElement.cpp \
-nsHTMLHeadingElement.cpp \
-nsHTMLHtmlElement.cpp \
-nsHTMLIFrameElement.cpp \
-nsHTMLImageElement.cpp \
-nsHTMLInputElement.cpp \
-nsHTMLInsElement.cpp \
-nsHTMLIsIndexElement.cpp \
-nsHTMLLIElement.cpp \
-nsHTMLLabelElement.cpp \
-nsHTMLLayerElement.cpp \
-nsHTMLLegendElement.cpp \
-nsHTMLLinkElement.cpp \
-nsHTMLMapElement.cpp \
-nsHTMLMenuElement.cpp \
-nsHTMLMetaElement.cpp \
-nsHTMLModElement.cpp \
-nsHTMLOListElement.cpp \
-nsHTMLObjectElement.cpp \
-nsHTMLOptionElement.cpp \
-nsHTMLOptGroupElement.cpp \
-nsHTMLParagraphElement.cpp \
-nsHTMLParamElement.cpp \
-nsHTMLPreElement.cpp \
-nsHTMLQuoteElement.cpp \
-nsHTMLScriptElement.cpp \
-nsHTMLSelectElement.cpp \
-nsHTMLSpacerElement.cpp \
-nsHTMLSpanElement.cpp \
-nsHTMLStyleElement.cpp \
-nsHTMLTableElement.cpp \
-nsHTMLTableCaptionElement.cpp \
-nsHTMLTableCellElement.cpp \
-nsHTMLTableColElement.cpp \
-nsHTMLTableColGroupElement.cpp \
-nsHTMLTableRowElement.cpp \
-nsHTMLTableSectionElement.cpp \
-nsHTMLTextAreaElement.cpp \
-nsHTMLTitleElement.cpp \
-nsHTMLUListElement.cpp \
-nsHTMLWBRElement.cpp \
-$(NULL)
+		nsAttributeContent.cpp \
+		nsGenericHTMLElement.cpp \
+		nsGenericDOMHTMLCollection.cpp \
+		GenericElementCollection.cpp \
+		nsHTMLAnchorElement.cpp \
+		nsHTMLAppletElement.cpp \
+		nsHTMLAreaElement.cpp \
+		nsHTMLBRElement.cpp \
+		nsHTMLBaseElement.cpp \
+		nsHTMLBaseFontElement.cpp \
+		nsHTMLBodyElement.cpp \
+		nsHTMLButtonElement.cpp \
+		nsHTMLDListElement.cpp \
+		nsHTMLDelElement.cpp \
+		nsHTMLDirectoryElement.cpp \
+		nsHTMLDivElement.cpp \
+		nsHTMLEmbedElement.cpp \
+		nsHTMLFieldSetElement.cpp \
+		nsHTMLFontElement.cpp \
+		nsHTMLFormElement.cpp \
+		nsHTMLFrameElement.cpp \
+		nsHTMLFrameSetElement.cpp \
+		nsHTMLHRElement.cpp \
+		nsHTMLHeadElement.cpp \
+		nsHTMLHeadingElement.cpp \
+		nsHTMLHtmlElement.cpp \
+		nsHTMLIFrameElement.cpp \
+		nsHTMLImageElement.cpp \
+		nsHTMLInputElement.cpp \
+		nsHTMLInsElement.cpp \
+		nsHTMLIsIndexElement.cpp \
+		nsHTMLLIElement.cpp \
+		nsHTMLLabelElement.cpp \
+		nsHTMLLayerElement.cpp \
+		nsHTMLLegendElement.cpp \
+		nsHTMLLinkElement.cpp \
+		nsHTMLMapElement.cpp \
+		nsHTMLMenuElement.cpp \
+		nsHTMLMetaElement.cpp \
+		nsHTMLModElement.cpp \
+		nsHTMLOListElement.cpp \
+		nsHTMLObjectElement.cpp \
+		nsHTMLOptionElement.cpp \
+		nsHTMLOptGroupElement.cpp \
+		nsHTMLParagraphElement.cpp \
+		nsHTMLParamElement.cpp \
+		nsHTMLPreElement.cpp \
+		nsHTMLQuoteElement.cpp \
+		nsHTMLScriptElement.cpp \
+		nsHTMLSelectElement.cpp \
+		nsHTMLSpacerElement.cpp \
+		nsHTMLSpanElement.cpp \
+		nsHTMLStyleElement.cpp \
+		nsHTMLTableElement.cpp \
+		nsHTMLTableCaptionElement.cpp \
+		nsHTMLTableCellElement.cpp \
+		nsHTMLTableColElement.cpp \
+		nsHTMLTableColGroupElement.cpp \
+		nsHTMLTableRowElement.cpp \
+		nsHTMLTableSectionElement.cpp \
+		nsHTMLTextAreaElement.cpp \
+		nsHTMLTitleElement.cpp \
+		nsHTMLUListElement.cpp \
+		nsHTMLWBRElement.cpp \
+		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
