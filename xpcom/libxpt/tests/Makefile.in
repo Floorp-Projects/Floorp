@@ -21,21 +21,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= libxpt
+PROGRAM		= PrimitiveTest
 
 CSRCS		= PrimitiveTest.c
 
+LIBS = \
+	-lxpt \
+	$(NSPR_LIBS) \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
-LDFLAGS		+= -L $(DIST)/bin -lxpt
 
-PROGS		= $(addprefix $(OBJDIR)/, $(CSRCS:.c=))
 
-TARGETS		= $(PROGS)
-
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
-
-install:: $(PROGS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
