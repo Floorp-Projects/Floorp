@@ -67,7 +67,6 @@ nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
 {
     NS_ASSERTION(owner, "No nsProxyObject!");
     NS_ASSERTION(methodInfo, "No nsXPTMethodInfo!");
-    NS_ASSERTION(parameterList, "No parameterList!");
     NS_ASSERTION(event, "No PLEvent!");
     
     mCompleted        = 0;
@@ -343,20 +342,22 @@ nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
         
         
 nsresult
-nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, nsXPTCVariant **fullParam, uint8 *paramCount)
+nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, nsXPTCVariant **fullParam, uint8 *outParamCount)
 {
-    uint8 pCount = methodInfo->GetParamCount();
+    uint8 paramCount = methodInfo->GetParamCount();
+    *outParamCount = paramCount;
+    *fullParam = nsnull;
 
-    *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * pCount);
+    if (!paramCount) return NS_OK;
+        
+    *fullParam = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * paramCount);
     
     if (*fullParam == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    for (int i = 0; i < pCount; i++)
+    
+    for (int i = 0; i < paramCount; i++)
         (*fullParam)[i].Init(params[i], methodInfo->GetParam(i).GetType());
     
-    *paramCount = pCount;
-
     return NS_OK;
 }
         
@@ -407,7 +408,8 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     if (proxyInfo == nsnull)
     {
         delete event;
-        free(fullParam);  // allocated with malloc
+        if (fullParam)
+            free(fullParam);  // allocated with malloc
         return NS_ERROR_OUT_OF_MEMORY;  
     }
 
