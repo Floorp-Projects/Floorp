@@ -88,7 +88,7 @@ nsProgressDialog.prototype = {
 
     // getters/setters
     get saving()            { return this.MIMEInfo == null ||
-                              this.MIMEInfo.preferredAction == Components.interfaces.nsIMIMEInfo.saveToDisk; },
+			      this.MIMEInfo.preferredAction == Components.interfaces.nsIMIMEInfo.saveToDisk; },
     get parent()            { return this.mParent; },
     set parent(newval)      { return this.mParent = newval; },
     get operation()         { return this.mOperation; },
@@ -370,7 +370,7 @@ nsProgressDialog.prototype = {
             this.setValue( "sourceLabel", this.getString( "openingSource" ) );
 
             // Target is the "preferred" application.  Hide if empty.
-            if ( this.MIMEInfo && this.MIMEInfo.preferredApplicationHandler ) {
+	    if ( this.MIMEInfo && this.MIMEInfo.preferredApplicationHandler ) {
                 var appName = this.MIMEInfo.preferredApplicationHandler.leafName;
                 if ( appName == null || appName.length == 0 ) {
                     this.hide( "targetRow" );
@@ -486,15 +486,15 @@ nsProgressDialog.prototype = {
                return;
              }
              var title = this.getProperty( "openingAlertTitle",
-                                           [ this.fileName() ],
-                                           1 );
+					   [ this.fileName() ],
+					   1 );
              var msg = this.getProperty( "securityAlertMsg",
-                                         [ this.fileName() ],
-                                         1 );
+					 [ this.fileName() ],
+					 1 );
              var dontaskmsg = this.getProperty( "dontAskAgain",
-                                                [ ], 0 );
+						[ ], 0 );
              var checkbox = {value:0};
-             var okToProceed = promptService.confirmCheck(window, title, msg, dontaskmsg, checkbox);
+             var okToProceed = promptService.confirmCheck(this.dialog, title, msg, dontaskmsg, checkbox);
              try {
                if (checkbox.value != dontAskAgain)
                  pref.setBoolPref(kDontAskAgainPref, checkbox.value);
@@ -502,9 +502,9 @@ nsProgressDialog.prototype = {
 
              if ( !okToProceed )
                return;
-           }
-           this.target.launch();
-           this.dialog.close();
+             }
+             this.target.launch();
+             this.dialog.close();
          } catch ( exception ) {
              // XXX Need code here to tell user the launch failed!
              dump( "nsProgressDialog::onLaunch failed: " + exception + "\n" );

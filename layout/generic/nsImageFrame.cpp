@@ -320,8 +320,8 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
 
     PRBool loadBlocked = PR_FALSE;
     imageLoader->GetImageBlocked(&loadBlocked);
-    HandleLoadError(loadBlocked ? NS_ERROR_IMAGE_BLOCKED : NS_ERROR_FAILURE,
-                    presShell);
+    rv = loadBlocked ? NS_ERROR_IMAGE_BLOCKED : NS_ERROR_FAILURE;
+    HandleLoadError(rv, presShell);
   }
   
   return rv;
@@ -1902,7 +1902,7 @@ nsresult nsImageFrame::LoadIcons(nsIPresContext *aPresContext)
 #ifdef NOISY_ICON_LOADING
       printf( "Allocating IconLoad (%p)\n", this);
 #endif
-    mIconLoad = new IconLoad(aPresContext, mListener);
+    mIconLoad = new IconLoad(aPresContext);
     if (!mIconLoad) 
       return NS_ERROR_OUT_OF_MEMORY;
     doLoad = PR_TRUE;

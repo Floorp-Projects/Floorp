@@ -277,9 +277,8 @@ private:
     // private class that wraps the data and logic needed for 
     // broken image and loading image icons
   public:
-    IconLoad(nsIPresContext *aPresContext, imgIDecoderObserver* aObserver)
+    IconLoad(nsIPresContext *aPresContext)
       : mRefCount(0),
-        mLoadObserver(aObserver),
         mIconsLoaded(PR_FALSE)
     {
       GetPrefs(aPresContext);
@@ -307,7 +306,6 @@ private:
 #define NS_ICON_BROKEN_IMAGE  (1)
   public:
     struct SingleIconLoad mIconLoads[2];
-    nsCOMPtr<imgIDecoderObserver> mLoadObserver; // keeps the observer alive
     PRPackedBool     mIconsLoaded;
     PRPackedBool     mPrefForceInlineAltText;
     PRPackedBool     mPrefAllImagesBlocked;
