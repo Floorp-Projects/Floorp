@@ -930,21 +930,44 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
                                            nsReflowReason       aReason)
 {
   nsresult rv = NS_OK;
+
+  mRowCount = 0;
+  ComputeTotalRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
+  // Our page size is the # of rows instantiated.
+  PRInt32 pageRowCount;
+  GetRowCount(pageRowCount);
+
   if (mScrollbar) {
+    PRBool nukeScrollbar=PR_FALSE;
+    nsAutoString value;
+    
     nsCOMPtr<nsIContent> scrollbarContent;
     mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
-    nsString value;
-    scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value);
-    if (value == "0" && !mIsFull) {
+    
+    if (mRowCount <= pageRowCount) {
+      // first set the position to 0 so that all visible content
+      // scrolls into view
+      value.Append(0);
+      scrollbarContent->SetAttribute(kNameSpaceID_None,
+                                     nsXULAtoms::curpos,
+                                     value, PR_TRUE);
+      // now force nuking the scrollbar
+      // (otherwise it takes a bunch of reflows to actually make it go away)
+      nukeScrollbar=PR_TRUE;
+    }
+
+    else {
+      scrollbarContent->GetAttribute(kNameSpaceID_None,
+                                     nsXULAtoms::curpos, value);
+    }
+   
+    if (nukeScrollbar || (value == "0" && !mIsFull)) {
       // Nuke the scrollbar.
       mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
       mScrollbarList.DestroyFrames(aPresContext);
       mScrollbar = nsnull;
     }
   }
-
-  mRowCount = 0;
-  ComputeTotalRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
 
   if (mShouldHaveScrollbar && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
       (mIsFull || mScrollbar)) {
@@ -967,9 +990,6 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
       scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, maxpos);
     }
     else {
-      // Our page size is the # of rows instantiated.
-      PRInt32 pageRowCount;
-      GetRowCount(pageRowCount);
 
       if (pageRowCount < 2)
         pageRowCount = 2;
@@ -1847,4 +1867,3 @@ nsTreeRowGroupFrame :: Paint ( nsIPresContext& aPresContext, nsIRenderingContext
   return res;
   
 } // Paint
-
