@@ -308,7 +308,18 @@ protected:
 public:
   virtual void IMECommitEvent(GdkEventKey *aEvent);
 
+  // This MUST be called after you change the widget bounds
+  // or after the parent's size changes
+  // or when you show the widget
+  // We will decide whether to really show the widget or not
+  // We will hide the widget if it doesn't overlap the parent bounds
+  // This reduces problems with 16-bit coordinates wrapping.
+  virtual void ResetInternalVisibility();
+
 protected:
+  // override this method to do whatever you have to do to make this widget
+  // visible or invisibile --- i.e., the real work of Show()
+  virtual void SetInternalVisibility(PRBool aVisible);
 
   //////////////////////////////////////////////////////////////////
   //
@@ -376,10 +387,10 @@ protected:
   // Invalidate)
   nsCOMPtr<nsIRegion> mUpdateArea;
 
-  PRBool mShown;
-
   PRUint32 mPreferredWidth, mPreferredHeight;
-  PRBool       mListenForResizes;
+  PRPackedBool mListenForResizes;
+  PRPackedBool mShown;
+  PRPackedBool mInternalShown;
 
   // this is the rollup listener variables
   static nsCOMPtr<nsIRollupListener> gRollupListener;

@@ -224,6 +224,7 @@ nsWidget::nsWidget()
   mPreferredWidth  = 0;
   mPreferredHeight = 0;
   mShown = PR_FALSE;
+  mInternalShown = PR_FALSE;
   mBounds.x = 0;
   mBounds.y = 0;
   mBounds.width = 0;
@@ -438,20 +439,52 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
   if (!mWidget)
     return NS_OK; // Will be null durring printing
 
-  if (bState) {
-    gtk_widget_show(mWidget);
-    gtk_widget_show(mMozBox);
-  }
-  else {
-    gtk_widget_hide(mMozBox);
-    gtk_widget_hide(mWidget);
-  }
-
   mShown = bState;
+
+  ResetInternalVisibility();
 
   return NS_OK;
 }
 
+void nsWidget::ResetInternalVisibility()
+{
+  PRBool show = mShown;
+  if (show) {
+    if (mParent != nsnull) {
+      nsRect parentBounds;
+      mParent->GetClientBounds(parentBounds);
+      parentBounds.x = parentBounds.y = 0;
+      nsRect myBounds;
+      GetBounds(myBounds);
+      if (!myBounds.Intersects(parentBounds)) {
+        show = PR_FALSE;
+      }
+    }
+  }
+
+  if (show == mInternalShown) {
+    return;
+  }
+
+  SetInternalVisibility(show);
+}
+
+void nsWidget::SetInternalVisibility(PRBool aVisible)
+{
+  mInternalShown = aVisible;
+
+  if (aVisible) {
+    if (mWidget)
+      gtk_widget_show(mWidget);
+    if (mMozBox)
+      gtk_widget_show(mMozBox);
+  } else {
+    if (mWidget)
+      gtk_widget_hide(mWidget);
+    if (mMozBox)
+      gtk_widget_hide(mMozBox);
+  }
+}
 
 NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
@@ -548,11 +581,12 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
   mBounds.x = aX;
   mBounds.y = aY;
 
-
   if (mMozBox) 
   {
     gtk_mozbox_set_position(GTK_MOZBOX(mMozBox), aX, aY);
   }
+
+  ResetInternalVisibility();
 
   return NS_OK;
 }
@@ -570,6 +604,17 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
   if (mWidget)
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
+
+  ResetInternalVisibility();
+  PRUint32 childCount, index;
+  if (NS_SUCCEEDED(mChildren->Count(&childCount))) {
+    for (index = 0; index < childCount; index++) {
+      nsCOMPtr<nsIWidget> childWidget;
+      if (NS_SUCCEEDED(mChildren->QueryElementAt(index, NS_GET_IID(nsIWidget), (void**)getter_AddRefs(childWidget)))) {
+        NS_STATIC_CAST(nsWidget*, NS_STATIC_CAST(nsIWidget*, childWidget.get()))->ResetInternalVisibility();
+      }
+    }
+  }
 
   return NS_OK;
 }
@@ -615,6 +660,8 @@ PRBool nsWidget::OnResize(nsRect &aRect)
   mBounds.width = aRect.width;
   mBounds.height = aRect.height;
 
+  ResetInternalVisibility();
+
   NS_ADDREF_THIS();
   PRBool result = OnResize(&event);
   NS_RELEASE_THIS();
@@ -635,6 +682,8 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 #endif
     mBounds.x = aX;
     mBounds.y = aY;
+
+    ResetInternalVisibility();
 
     nsGUIEvent event;
     InitEvent(event, NS_MOVE);
