@@ -16,7 +16,6 @@ a.venkman-link:hover {
 
 
 #output-table {
-    margin-top: 100%;
     width: 100%;
 }
 
@@ -29,7 +28,8 @@ a.venkman-link:hover {
 
 .msg-data:before {
     content: "-";
-    color: magenta;
+    font-weight: bold;
+    color: yellow;
     margin-right: 5px;
 }
 
@@ -52,11 +52,23 @@ a.venkman-link:hover {
 }
 
 .msg-data[msg-type="EVAL-IN"]:before {
-    color: yellow;
+    font-weight: normal;
     content: "<";
 }
 
 .msg-data[msg-type="EVAL-OUT"]:before {
-    color: yellow;
+    font-weight: normal;
+    content: ">";
+}
+
+.msg-data[msg-type="FEVAL-IN"]:before {
+    font-weight: normal;
+    color: orange;
+    content: "<";
+}
+
+.msg-data[msg-type="FEVAL-OUT"]:before {
+    font-weight: normal;
+    color: orange;
     content: ">";
 }
