@@ -64,10 +64,10 @@ private:
   nsresult NotifyObservers();
   void     DeInitialize();
 
-  PRBool                         mAllowPopupsPref;
+  PRUint32                       mPopupPerm;
   nsCOMPtr<nsIObserverService>   mOS;
   nsCOMPtr<nsIPermissionManager> mPermManager;
-  nsCOMPtr<nsIPrefBranch>        mDomPrefBranch;
+  nsCOMPtr<nsIPrefBranch>        mPopupPrefBranch;
 };
 
 // {4275d3f4-752a-427a-b432-14d5dda1c20b}

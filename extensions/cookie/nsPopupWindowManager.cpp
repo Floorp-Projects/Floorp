@@ -53,19 +53,20 @@
  The Popup Window Manager maintains popup window permissions by website.
  */
 
-static const char *sPopupPrefRoot = "dom.";
-static const char *sPopupPrefLeaf = "disable_open_during_load";
+#define POLICYSTRING "policy"
+
+static const char *sPopupPrefRoot = "privacy.popups.";
+static const char *sPopupPrefLeaf = POLICYSTRING;
 static const char *sPermissionChangeNotification = PPM_CHANGE_NOTIFICATION;
 static const char *sXPCOMShutdownTopic = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
 static const char *sPrefChangedTopic = NS_PREFBRANCH_PREFCHANGE_TOPIC_ID;
-
 
 //*****************************************************************************
 //*** nsPopupWindowManager object management and nsISupports
 //*****************************************************************************
 
 nsPopupWindowManager::nsPopupWindowManager() :
-  mAllowPopupsPref(PR_TRUE)
+  mPopupPerm(eAllow)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -86,11 +87,12 @@ nsPopupWindowManager::Init()
   mPermManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs)
-    prefs->GetBranch(sPopupPrefRoot, getter_AddRefs(mDomPrefBranch));
+    prefs->GetBranch(sPopupPrefRoot, getter_AddRefs(mPopupPrefBranch));
 
-  if (mOS && mPermManager && mDomPrefBranch) {
+  if (mOS && mPermManager && mPopupPrefBranch) {
+     // initialize our local copy of the pref
     Observe(NS_STATIC_CAST(nsIPopupWindowManager *, this),
-            sPrefChangedTopic, 0); // initialize our local copy of the pref
+            sPrefChangedTopic, NS_LITERAL_STRING(POLICYSTRING).get());
     return ObserveThings();
   }
   return NS_ERROR_FAILURE;
@@ -171,10 +173,9 @@ nsPopupWindowManager::TestPermission(nsIURI *aURI, PRUint32 *_retval)
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  *_retval = eAllow;
+  *_retval = mPopupPerm;
 
-  if (!mAllowPopupsPref) {
-    *_retval = eDisallow;
+  if (mPopupPerm == eAllowConditionally) {
     if (mPermManager) {
       /* Because of a bug/quirk/something in the PermissionManager
          the value of blockDomain will be left unchanged if the URI
@@ -187,8 +188,8 @@ nsPopupWindowManager::TestPermission(nsIURI *aURI, PRUint32 *_retval)
       nsCAutoString uri;
       aURI->GetPrePath(uri);
       mPermManager->TestForBlocking(uri, WINDOWPERMISSION, &blockDomain);
-      if (!blockDomain)
-        *_retval = eAllowConditionally;
+      if (blockDomain)
+        *_retval = eDisallow;
     }
   }
   return NS_OK;
@@ -226,14 +227,16 @@ NS_IMETHODIMP
 nsPopupWindowManager::Observe(nsISupports *aSubject, const char *aTopic,
                               const PRUnichar *aData)
 {
-  if (nsCRT::strcmp(aTopic, sPrefChangedTopic) == 0) {
+  if (nsCRT::strcmp(aTopic, sPrefChangedTopic) == 0 &&
+      NS_LITERAL_STRING(POLICYSTRING).Equals(aData)) {
     // refresh our local copy of the "allow popups" pref
-    mAllowPopupsPref = PR_TRUE;
+    mPopupPerm = eAllow;
 
-    if (mDomPrefBranch) {
-      PRBool disallowPopups = PR_FALSE;
-      mDomPrefBranch->GetBoolPref(sPopupPrefLeaf, &disallowPopups);
-      mAllowPopupsPref = !disallowPopups;
+    if (mPopupPrefBranch) {
+      PRInt32 perm = eAllow;
+      mPopupPrefBranch->GetIntPref(sPopupPrefLeaf, &perm);
+      NS_ASSERTION(perm >= 0, "popup pref value out of range");
+      mPopupPerm = NS_STATIC_CAST(PRUint32, perm);
     }
   } else if (nsCRT::strcmp(aTopic, sXPCOMShutdownTopic) == 0) {
     // unhook cyclical references
@@ -258,7 +261,7 @@ nsPopupWindowManager::ObserveThings()
     rv = mOS->AddObserver(this, sXPCOMShutdownTopic, PR_FALSE);
 
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPrefBranchInternal> ibranch(do_QueryInterface(mDomPrefBranch));
+    nsCOMPtr<nsIPrefBranchInternal> ibranch(do_QueryInterface(mPopupPrefBranch));
     if (ibranch)
       rv = ibranch->AddObserver(sPopupPrefLeaf, this, PR_FALSE);
   }
@@ -270,7 +273,7 @@ nsPopupWindowManager::ObserveThings()
 nsresult
 nsPopupWindowManager::StopObservingThings()
 {
-  nsCOMPtr<nsIPrefBranchInternal> ibranch(do_QueryInterface(mDomPrefBranch));
+  nsCOMPtr<nsIPrefBranchInternal> ibranch(do_QueryInterface(mPopupPrefBranch));
   if (ibranch)
     ibranch->RemoveObserver(sPopupPrefLeaf, this);
 
@@ -296,6 +299,6 @@ nsPopupWindowManager::DeInitialize()
 {
   mOS = 0;
   mPermManager = 0;
-  mDomPrefBranch = 0;
+  mPopupPrefBranch = 0;
 }
 
