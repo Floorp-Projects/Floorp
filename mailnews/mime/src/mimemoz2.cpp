@@ -70,9 +70,9 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
    MIME_MessageConverter()
  */
 static MimeHeadersState MIME_HeaderType;
-static XP_Bool MIME_NoInlineAttachments;
-static XP_Bool MIME_WrapLongLines;
-static XP_Bool MIME_VariableWidthPlaintext;
+static PRBool MIME_NoInlineAttachments;
+static PRBool MIME_WrapLongLines;
+static PRBool MIME_VariableWidthPlaintext;
 
 static char *
 mime_reformat_date(const char *date, void *stream_closure)
@@ -428,7 +428,7 @@ mime_insert_html_complete(nsMIMESession *stream)
   EDT_PasteQuote(msd->context, "</BLOCKQUOTE>");
 #endif
   if (msd->format_out == FO_QUOTE_HTML_MESSAGE) {
-      XP_Bool eReplyOnTop = PR_TRUE, nReplyWithExtraLines = PR_FALSE;
+      PRBool eReplyOnTop = PR_TRUE, nReplyWithExtraLines = PR_FALSE;
       if (msd->prefs)
       {
         msd->prefs->GetBoolPref("mailnews.reply_on_top", &eReplyOnTop);

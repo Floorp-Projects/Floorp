@@ -625,7 +625,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   char *content_disposition = 0;
   MimeObject *obj = 0;
   char *override_content_type = 0;
-  static XP_Bool reverse_lookup = PR_FALSE, got_lookup_pref = PR_FALSE;
+  static PRBool reverse_lookup = PR_FALSE, got_lookup_pref = PR_FALSE;
 
   if (!got_lookup_pref)
   {

@@ -2185,7 +2185,7 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   if (status < 0) return status;
 
   if (opt->nice_html_only_p) {
-	XP_Bool nReplyWithExtraLines = 0, eReplyOnTop = 0;
+	PRBool nReplyWithExtraLines = PR_FALSE, eReplyOnTop = PR_FALSE;
 	if (pref)
   {
     pref->GetBoolPref("mailnews.reply_with_extra_lines", &nReplyWithExtraLines);

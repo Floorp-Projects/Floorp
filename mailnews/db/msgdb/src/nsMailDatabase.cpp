@@ -305,14 +305,14 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 					printf("Didn't find %s where expected at position %ld\n"
 						  "instead, found %s.\n",
 						  X_MOZILLA_STATUS, (long) position, buf);
-					SetReparse(TRUE);
+					SetReparse(PR_TRUE);
 				}			
 			} 
 			else 
 			{
 				printf("Couldn't read old status line at all at position %ld\n",
 						(long) position);
-				SetReparse(TRUE);
+				SetReparse(PR_TRUE);
 			}
 #ifdef XP_MAC
 /* ducarroz: Do we still need this ??
@@ -456,7 +456,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec &folderName, int num, int
 	{
 		pMessageDB = new nsMailDatabase(summaryPath);
 		// ### this does later stuff (marks latered messages unread), which may be a problem
-		err = pMessageDB->OpenMDB(summaryPath, FALSE);
+		err = pMessageDB->OpenMDB(summaryPath, PR_FALSE);
 		if (err != NS_OK)
 		{
 			delete pMessageDB;
@@ -493,8 +493,8 @@ void nsMailDatabase::SetReparse(PRBool reparse)
 }
 
 
-static PRBool gGotThreadingPrefs = FALSE;
-static PRBool gThreadWithoutRe = FALSE;
+static PRBool gGotThreadingPrefs = PR_FALSE;
+static PRBool gThreadWithoutRe = PR_FALSE;
 
 
 // should we thread messages with common subjects that don't start with Re: together?
@@ -504,7 +504,7 @@ PRBool	nsMailDatabase::ThreadBySubjectWithoutRe()
 	if (!gGotThreadingPrefs)
 	{
 		GetBoolPref("mail.thread_without_re", &gThreadWithoutRe);
-		gGotThreadingPrefs = TRUE;
+		gGotThreadingPrefs = PR_TRUE;
 	}
 
 	return gThreadWithoutRe;
@@ -530,7 +530,7 @@ nsresult nsMailDatabase::PrePopulate()
 	newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
 	newHdr->SetSubject("Why the Lakers suck");
 	newHdr->SetDate(resDate);
-	newHdr->SetRecipients("riley@heat.com (Pat Riley)", FALSE);
+	newHdr->SetRecipients("riley@heat.com (Pat Riley)", PR_FALSE);
 	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 
