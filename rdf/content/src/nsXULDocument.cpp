@@ -4027,6 +4027,22 @@ XULDocumentImpl::StartLayout(void)
 
       cx->SetVisibleArea(r);
       
+      // XXX Copy of the code below. See XXX below for details...
+      // Now trigger a refresh
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
+      if (vm) {
+        nsCOMPtr<nsIContentViewer> contentViewer;
+        nsresult rv = webShell->GetContentViewer(getter_AddRefs(contentViewer));
+        if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+          PRBool enabled;
+          contentViewer->GetEnableRendering(&enabled);
+          if (enabled) {
+            vm->EnableRefresh();
+          }
+        }
+      }
+
       shell->InitialReflow(r.width, r.height);
 
       if (browser) {
@@ -4052,6 +4068,11 @@ XULDocumentImpl::StartLayout(void)
                               windowBounds.height + heightDelta);
       }
       
+      // XXX Moving this call up before the call to InitialReflow(), because
+      // the view manager's UpdateView() function is dropping dirty rects if
+      // refresh is disabled rather than accumulating them until refresh is
+      // enabled and then triggering a repaint...
+#if 0
       // Now trigger a refresh
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
@@ -4066,6 +4087,7 @@ XULDocumentImpl::StartLayout(void)
           }
         }
       }
+#endif
  
       // Start observing the document _after_ we do the initial
       // reflow. Otherwise, we'll get into an trouble trying to
