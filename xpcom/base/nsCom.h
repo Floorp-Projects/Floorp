@@ -23,8 +23,20 @@
 #ifndef nsCom_h__
 #define nsCom_h__
 
-#if defined(_WIN32) && !defined(XP_WIN)
-#error Must define XP_WIN to build on Win32 - add XP_WIN to your project defines.
+/* Core XPCOM declarations. */
+
+/*
+ * People who create their own Win32 MSDev projects to compile against mozilla
+ * code *often* neglect to define XP_WIN and XP_WIN32. Rather than force
+ * those definitions here - and risk having some code get compiled incorrectly
+ * before this code is reached - we #error here to let the programmers know
+ * that they must modify their build projects.
+ * We would *like* to reduce the usage of these roughly synonymous defines.
+ * But it is a big modular project with a lot of brainprint issues...
+ * See bug: http://bugzilla.mozilla.org/show_bug.cgi?id=65727
+ */
+#if defined(_WIN32) && (!defined(XP_WIN) || !defined(XP_WIN32))
+#error Add defines for XP_WIN and XP_WIN32 to your Win32 build project.
 #endif
 
 /*
