@@ -1863,6 +1863,7 @@ void nsCString::DebugDump(void) const {
        
 //----------------------------------------------------------------------
 
+void
 NS_ConvertUCS2toUTF8::Init( const PRUnichar* aString, PRUint32 aLength )
   {
     // Caculate how many bytes we need
@@ -1882,7 +1883,7 @@ NS_ConvertUCS2toUTF8::Init( const PRUnichar* aString, PRUint32 aLength )
 
     // Make sure our buffer's big enough, so we don't need to do
     // multiple allocations.
-    if((utf8len+1) > sizeof(mBuffer))
+    if(PRUint32(utf8len+1) > sizeof(mBuffer))
       SetCapacity(utf8len+1); 
 
     char* out = mStr;
