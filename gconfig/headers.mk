@@ -29,10 +29,7 @@ INCLUDES  += -I$(SOURCE_XPHEADERS_DIR)
 endif
 
 #
-#  Only append source-side private cross-platform include paths for
-#  sectools
+#  Only append private for this module
 #
 
-ifeq ($(MODULE), sectools)
-	INCLUDES += -I$(SOURCE_XPPRIVATE_DIR)
-endif
+INCLUDES += -I$(SOURCE_XPPRIVATE_DIR)

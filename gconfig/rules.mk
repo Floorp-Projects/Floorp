@@ -23,7 +23,7 @@
 # Double-Colon rules for utilizing the binary release model.          #
 #######################################################################
 
-all:: export libs program install
+all:: export private_export libs program install
 
 ifeq ($(AUTOCLEAN),1)
 autobuild:: clean export private_export libs program install

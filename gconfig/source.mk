@@ -35,9 +35,7 @@ SOURCE_XP_DIR        = $(SOURCE_PREFIX)
 
 SOURCE_CLASSES_DIR   = $(SOURCE_XP_DIR)/classes
 SOURCE_XPHEADERS_DIR = $(SOURCE_XP_DIR)/public/$(MODULE)
-ifeq ($(MODULE), sectools)
-	SOURCE_XPPRIVATE_DIR = $(SOURCE_XP_DIR)/private/$(MODULE)
-endif
+SOURCE_XPPRIVATE_DIR = $(SOURCE_XP_DIR)/private/$(MODULE)
 
 #
 # <user_source_tree> machine-dependent (md) master import/export directory
