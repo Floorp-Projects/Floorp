@@ -54,6 +54,13 @@ treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treecell 
  list-style-image: url("resource:/res/rdf/bookmark-folder-open.gif");
 }
 
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/personal-toolbar-folder-closed.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/personal-toolbar-folder-open.gif");
+}
 treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
 }
