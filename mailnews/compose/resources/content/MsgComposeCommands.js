@@ -2184,7 +2184,6 @@ function ComposeCanClose()
     }
   }
 
-  dump("XXX changed? " + gContentChanged + "," + gMsgCompose.bodyModified + "\n");
   // Returns FALSE only if user cancels save action
   if (gContentChanged || gMsgCompose.bodyModified)
   {
