@@ -129,12 +129,7 @@ Components:cache.xpt
 ; imagelib
 Components:libimg2.shlb
 Components:libimg2.xpt
-Components:gifdecoder2.shlb
-Components:jpegdecoder2.shlb
-Components:pngdecoder2.shlb
 Components:mngdecoder.shlb
-Components:gfx2.shlb
-Components:gfx2.xpt
 
 ; jar
 Components:libjar.shlb

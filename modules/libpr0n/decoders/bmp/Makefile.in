@@ -28,14 +28,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imgbmp
-LIBRARY_NAME	= imgbmp
+LIBRARY_NAME	= imgbmp_s
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
+FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsBMPModule
-
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LIBS	= gkgfx
-endif
 
 REQUIRES	= xpcom \
 		  gfx \
@@ -44,12 +40,6 @@ REQUIRES	= xpcom \
 		  string \
 		  $(NULL)
 
-CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp nsBMPModule.cpp
-
-EXTRA_DSO_LDOPTS = \
-		   $(LIBS_DIR) \
-		   $(EXTRA_DSO_LIBS) \
-		   $(MOZ_COMPONENT_LIBS) \
-                   $(NULL)
+CPPSRCS        = nsBMPDecoder.cpp nsICODecoder.cpp
 
 include $(topsrcdir)/config/rules.mk

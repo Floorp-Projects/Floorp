@@ -27,9 +27,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imgpng
-LIBRARY_NAME	= imgpng
+LIBRARY_NAME	= imgpng_s
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
+FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsPNGDecoderModule
 
 EXTRA_DSO_LIBS	= gkgfx
@@ -42,14 +42,7 @@ REQUIRES	= xpcom \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
-CPPSRCS		= nsPNGDecoder.cpp nsPNGFactory.cpp
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(PNG_LIBS) $(ZLIB_LIBS) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+CPPSRCS		= nsPNGDecoder.cpp
 
 include $(topsrcdir)/config/rules.mk
 

@@ -27,14 +27,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imggif
-LIBRARY_NAME	= imggif
+LIBRARY_NAME	= imggif_s
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
+FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsGIFModule2
-
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LIBS	= gkgfx
-endif
 
 REQUIRES	= xpcom \
 		  gfx \
@@ -42,14 +38,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  $(NULL)
 
-CPPSRCS		= GIF2.cpp nsGIFDecoder2.cpp nsGIFModule.cpp
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(GIF_LIBS) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+CPPSRCS		= GIF2.cpp nsGIFDecoder2.cpp
 
 include $(topsrcdir)/config/rules.mk
 

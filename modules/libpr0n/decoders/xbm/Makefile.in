@@ -28,14 +28,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = imgxbm
-LIBRARY_NAME    = imgxbm
+LIBRARY_NAME    = imgxbm_s
 EXPORT_LIBRARY  = 1
-IS_COMPONENT    = 1
+FORCE_STATIC_LIB = 1
 MODULE_NAME     = nsXBMModule
-
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LIBS	= gkgfx
-endif
 
 REQUIRES	= xpcom \
 		  gfx \
@@ -44,11 +40,6 @@ REQUIRES	= xpcom \
 		  string \
 		  $(NULL)
 
-CPPSRCS        = nsXBMDecoder.cpp nsXBMModule.cpp
-
-EXTRA_DSO_LDOPTS = \
-                   $(EXTRA_DSO_LIBS) \
-                   $(MOZ_COMPONENT_LIBS) \
-                   $(NULL)
+CPPSRCS        = nsXBMDecoder.cpp
 
 include $(topsrcdir)/config/rules.mk

@@ -78,17 +78,8 @@ components\content_base.xpt
 ; 
 ; Imaging:
 ; 
-img3250.dll
-jpeg3250.dll
 zlib.dll
-components\nspng.dll
-components\nsgif.dll                    
-components\nsjpg.dll                    
 components\imglib2.dll
-components\imggif.dll
-components\imgjpeg.dll
-components\imgpng.dll
-components\imgppm.dll
 
 ; 
 ; Components: (need to trim fat)

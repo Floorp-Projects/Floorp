@@ -139,10 +139,6 @@ components/necko_strconv.xpt
 libmozjpeg.dylib
 components/libimglib2.dylib
 components/imglib2.xpt
-components/libimggif.dylib
-components/libimgjpeg.dylib
-components/libimgpng.dylib
-components/libimgppm.dylib
 
 ; prefs
 components/pref.xpt                     

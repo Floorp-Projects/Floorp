@@ -214,14 +214,9 @@ viewer:Components:transformiix.shlb
 viewer:Components:nsCloseAllWindows.js
 
 viewer:Components:libimg2.shlb
-viewer:Components:pngdecoder2.shlb
-viewer:Components:gifdecoder2.shlb
-viewer:Components:jpegdecoder2.shlb
 viewer:Components:icondecoder.shlb
 viewer:Components:icondecoder.xpt
-viewer:Components:bmpdecoder.shlb
 viewer:Components:mngdecoder.shlb
-viewer:Components:xbmdecoder.shlb
 
 viewer:Components:Necko.shlb 
 viewer:Components:Necko2.shlb

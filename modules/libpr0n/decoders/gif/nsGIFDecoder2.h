@@ -71,4 +71,6 @@ public:
   PRUint8 mLastFlushedPass;
 };
 
+void nsGifShutdown();
+
 #endif

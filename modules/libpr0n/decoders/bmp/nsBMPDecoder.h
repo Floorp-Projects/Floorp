@@ -106,13 +106,6 @@ struct bitFields {
 #define BI_RLE4 2
 #define BI_BITFIELDS 3
 
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-#define GFXFORMAT gfxIFormats::BGR
-#else
-#define USE_RGB
-#define GFXFORMAT gfxIFormats::RGB
-#endif
-
 class nsBMPDecoder : public imgIDecoder
 {
 public:

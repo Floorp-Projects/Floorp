@@ -53,6 +53,13 @@
 
 #include "imgILoad.h"
 
+#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#define GFXFORMAT gfxIFormats::BGR_A1
+#else
+#define USE_RGB
+#define GFXFORMAT gfxIFormats::RGB_A1
+#endif
+
 NS_IMPL_ISUPPORTS1(nsXBMDecoder, imgIDecoder)
 
 nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mRow(nsnull), mAlphaRow(nsnull)

@@ -27,14 +27,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imgppm
-LIBRARY_NAME	= imgppm
+LIBRARY_NAME	= imgppm_s
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
+FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsPPMDecoderModule
 
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LIBS	= gkgfx
-endif
 
 REQUIRES	= xpcom \
 		  gfx \
@@ -42,12 +39,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  $(NULL)
 
-CPPSRCS		= nsPPMDecoder.cpp nsPPMFactory.cpp
-
-EXTRA_DSO_LDOPTS = \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+CPPSRCS		= nsPPMDecoder.cpp
 
 include $(topsrcdir)/config/rules.mk
 
