@@ -144,10 +144,6 @@ FE_IsAltMailUsed(MWContext* context)
 {
 }
 
-int
-FE_PromptIMAPSubscriptionUpgrade(MWContext* context)
-{
-}
 
 XP_Bool
 FE_CreateSubscribePaneOnHost(MSG_Master* master,
