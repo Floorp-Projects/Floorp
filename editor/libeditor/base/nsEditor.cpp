@@ -2231,7 +2231,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
         {
           // and adjust the selection if needed
           // HACK: this is overly simplified - multi-range selections need more work than this
-          if (selStartNode == aExistingRightNode)
+          if (selStartNode.get() == aExistingRightNode)
           {
             if (selStartOffset < aOffset)
             {
@@ -2242,7 +2242,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
               selStartOffset -= aOffset;
             }
           }
-          if (selEndNode == aExistingRightNode)
+          if (selEndNode.get() == aExistingRightNode)
           {
             if (selEndOffset < aOffset)
             {
@@ -2371,7 +2371,7 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
       {
         // and adjust the selection if needed
         // HACK: this is overly simplified - multi-range selections need more work than this
-        if (selStartNode == aNodeToJoin)
+        if (selStartNode.get() == aNodeToJoin)
         {
           selStartNode = aNodeToKeep;
           if (aNodeToKeepIsFirst)
@@ -2379,7 +2379,7 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
             selStartOffset += firstNodeLength;
           }
         }
-        if (selEndNode == aNodeToJoin)
+        if (selEndNode.get() == aNodeToJoin)
         {
           selEndNode = aNodeToKeep;
           if (aNodeToKeepIsFirst)
