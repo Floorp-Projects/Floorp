@@ -443,7 +443,7 @@ public class LDAPSchema {
         /* Get the schema definitions for attributes */
         String entryName = getSchemaDN( ld, "" );
         String[] attrs = { "attributetypes" };
-        LDAPEntry entry = readSchema( ld, entryName, attrs );
+        LDAPEntry entry = ld.read( entryName, attrs );
         /* Get all attribute definitions, and check the first one */
         LDAPAttribute attr = entry.getAttribute( "attributetypes" );
         if ( attr != null ) {
@@ -499,7 +499,7 @@ public class LDAPSchema {
             throw new LDAPException( "No connection", LDAPException.OTHER );
         }
         String[] attrs = { "subschemasubentry" };
-        LDAPEntry entry = readSchema( ld, dn, attrs );
+        LDAPEntry entry = ld.read( dn, attrs );
         if ( entry == null ) {
             throw new LDAPException( "", LDAPException.NO_SUCH_OBJECT );
         }

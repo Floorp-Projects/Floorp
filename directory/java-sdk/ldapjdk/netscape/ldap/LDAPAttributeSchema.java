@@ -139,11 +139,10 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
      */
     public LDAPAttributeSchema( String name, String oid, String description,
                             int syntax, boolean single ) {
-        super( name, oid, description );
-        attrName = "attributetypes";
+        this( name, oid, description, cisString, single );
         this.syntax = syntax;
         this.syntaxString = internalSyntaxToString();
-        this.single = single;
+        setQualifier( SYNTAX, this.syntaxString );
     }
 
     /**
@@ -161,9 +160,13 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
                             String syntaxString, boolean single ) {
         super( name, oid, description );
         attrName = "attributetypes";
-        this.syntaxString = syntaxString;
         this.syntax = syntaxCheck( syntaxString );
+        this.syntaxString = syntaxString;
+        setQualifier( SYNTAX, this.syntaxString );
         this.single = single;
+        if ( single ) {
+            setQualifier( SINGLE, "" );
+        }
     }
 
     /**

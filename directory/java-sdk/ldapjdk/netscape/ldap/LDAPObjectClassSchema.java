@@ -120,6 +120,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
         super( name, oid, description );
         attrName = "objectclasses";
         this.superiors = new String[] { superior };
+        setQualifier( SUPERIOR, superior );
         for( int i = 0; i < required.length; i++ ) {
             must.addElement( required[i] );
         }
@@ -150,6 +151,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
                                   int type ) {
         this( name, oid, superiors[0], description, required, optional );
         this.superiors = superiors;
+        setQualifier( SUPERIOR, this.superiors );
         this.type = type;
     }
 
@@ -185,13 +187,21 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
             type = STRUCTURAL;
         }
         obsolete = properties.containsKey( OBSOLETE );
-        Vector v = (Vector)properties.get( "MAY" );
-        if ( v != null ) {
-            may = v;
+        Object o = properties.get( "MAY" );
+        if ( o != null ) {
+            if ( o instanceof Vector ) {
+                may = (Vector)o;
+            } else {
+                may.addElement( o );
+            }
         }
-        v = (Vector)properties.get( "MUST" );
-        if ( v != null ) {
-            must = v;
+        o = properties.get( "MUST" );
+        if ( o != null ) {
+            if ( o instanceof Vector ) {
+                must = (Vector)o;
+            } else {
+                must.addElement( o );
+            }
         }
     }
 
@@ -258,9 +268,9 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
         if ( val.length() > 0 ) {
             s += val + ' ';
         }
-        s += getValue( "MUST", false );
+        s += "MUST " + vectorToList( must );
         s += ' ';
-        s += getValue( "MAY", false );
+        s += "MAY " + vectorToList( may );
         s += ' ';
         val = getCustomValues();
         if ( val.length() > 0 ) {
@@ -318,6 +328,24 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
         }
         s += getQualifierString( IGNOREVALS );
         return s;
+    }
+
+    /**
+     * Create a list within parentheses, with $ as delimiter
+     *
+     * @param vals Values for list
+     * @return A String with a list of values
+     */
+    protected String vectorToList( Vector vals ) {
+        String val = "( ";
+        for( int i = 0; i < vals.size(); i++ ) {
+            val += (String)vals.elementAt(i) + ' ';
+            if ( i < (vals.size() - 1) ) {
+                val += "$ ";
+            }
+        }
+        val += ')';
+        return val;
     }
 
     public static final int STRUCTURAL = 0;
