@@ -153,6 +153,7 @@ static const char *uidString = "UID";
 /* will set the 'SEEN' flag */
 NS_IMETHODIMP nsImapService::FetchMessage(PLEventQueue * aClientEventQueue, 
 												nsIImapMailFolderSink * aImapMailFolder, 
+												nsIImapMessageSink * aImapMessage,
 												nsIUrlListener * aUrlListener, nsIURL ** aURL,
 												const char *messageIdentifierList,
 												PRBool messageIdsAreUID)
@@ -174,6 +175,7 @@ NS_IMETHODIMP nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
 
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
 		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+		rv = imapUrl->SetImapMessageSink(aImapMessage);
 		if (NS_SUCCEEDED(rv))
 		{
 			nsString2 urlSpec(eOneByte);

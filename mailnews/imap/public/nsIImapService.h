@@ -45,6 +45,7 @@
 
 class nsIImapProtocol;
 class nsIImapMailFolderSink;
+class nsIImapMessageSink;
 class nsIUrlListener;
 class nsIURL;
 struct PLEventQueue;
@@ -74,6 +75,7 @@ public:
 
 	NS_IMETHOD FetchMessage(PLEventQueue * aClientEventQueue, 
 												nsIImapMailFolderSink * aImapMailFolder, 
+												nsIImapMessageSink * aImapMessage,
 												nsIUrlListener * aUrlListener, nsIURL ** aURL,
 												const char *messageIdentifierList,
 												PRBool messageIdsAreUID) = 0;

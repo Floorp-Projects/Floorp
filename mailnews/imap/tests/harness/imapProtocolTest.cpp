@@ -75,6 +75,19 @@
 #endif
 #endif
 
+// this is only needed as long as our libmime hack is in place
+#include "prio.h"
+
+#ifdef XP_UNIX
+#define ARTICLE_PATH "/usr/tmp/tempArticle.eml"
+#define ARTICLE_PATH_URL ARTICLE_PATH
+#endif
+
+#ifdef XP_PC
+#define ARTICLE_PATH  "c:\\temp\\tempArticle.eml"
+#define ARTICLE_PATH_URL "C|/temp/tempArticle.eml"
+#endif
+
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
@@ -275,6 +288,11 @@ protected:
 	nsIMsgDatabase * m_mailDB ;
 	PRBool	    m_runTestHarness;
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false when the url finishes...
+
+	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
+	// converter interface...
+	PRFileDesc* m_tempArticleFile;
+
 
 	nsresult InitializeProtocol(const char * urlSpec);
 	PRBool m_protocolInitialized; 
@@ -858,6 +876,9 @@ nsIMAP4TestDriver::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
                                    StreamInfo* aStreamInfo)
 {
     printf("**** nsIMAP4TestDriver::SetupMsgWriteStream\r\n");
+  // we are about to display an article so open up a temp file on the article...
+  PR_Delete(ARTICLE_PATH);
+  m_tempArticleFile = PR_Open(ARTICLE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
     return NS_OK;
 }
 
@@ -867,6 +888,8 @@ nsIMAP4TestDriver::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
                                    msg_line_info* aMsgLineInfo)
 {
     printf("**** nsIMAP4TestDriver::ParseAdoptedMsgLine\r\n");
+	if (m_tempArticleFile)
+		PR_Write(m_tempArticleFile,(void *) aMsgLineInfo->adoptedMessageLine, PL_strlen(aMsgLineInfo->adoptedMessageLine));
     return NS_OK;
 }
 
@@ -875,6 +898,8 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
 {
     printf("**** nsIMAP4TestDriver::NormalEndMsgWriteStream\r\n");
+	if (m_tempArticleFile)
+		PR_Close(m_tempArticleFile);
     return NS_OK;
 }
 
@@ -1416,7 +1441,7 @@ nsresult nsIMAP4TestDriver::OnFetchMessage()
 
 	if (NS_SUCCEEDED(rv) && imapService)
 	{
-		rv = imapService->FetchMessage(m_eventQueue, this /* imap folder sink */, this /* url listener */, nsnull,
+		rv = imapService->FetchMessage(m_eventQueue, this /* imap folder sink */, this, /* imap message sink */ this /* url listener */, nsnull,
 			uidString, PR_TRUE);
 		nsServiceManager::ReleaseService(kCImapService, imapService);
 		m_runningURL = PR_TRUE; // we are now running a url...

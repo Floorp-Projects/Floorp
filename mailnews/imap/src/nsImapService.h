@@ -45,6 +45,7 @@ public:
 											  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 	NS_IMETHOD FetchMessage(PLEventQueue * aClientEventQueue, 
 												nsIImapMailFolderSink * aImapMailFolder, 
+												nsIImapMessageSink * aImapMessage,
 												nsIUrlListener * aUrlListener, nsIURL ** aURL,
 												const char *messageIdentifierList,
 												PRBool messageIdsAreUID);

@@ -60,6 +60,7 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
 	fSettablePermanentFlags = 0;
 	fCapabilityFlag = kCapabilityUndefined; 
 	fLastAlert = nsnull;
+	fDownloadingHeaders = PR_FALSE;
 }
 
 nsImapServerResponseParser::~nsImapServerResponseParser()
