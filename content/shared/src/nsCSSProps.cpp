@@ -290,6 +290,7 @@ const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
   eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET,
   eCSSKeyword__moz_bg_inset,  NS_STYLE_BORDER_STYLE_BG_INSET,
   eCSSKeyword__moz_bg_outset, NS_STYLE_BORDER_STYLE_BG_OUTSET,
+  eCSSKeyword__moz_bg_solid,  NS_STYLE_BORDER_STYLE_BG_SOLID,
   -1,-1
 };
 

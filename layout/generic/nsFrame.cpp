@@ -5213,7 +5213,6 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsLayoutAtoms::brFrame,               "br",        "br");
   AddFrameTypeInfo(nsLayoutAtoms::bulletFrame,           "bullet",    "bullet");
   AddFrameTypeInfo(nsLayoutAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
-  AddFrameTypeInfo(nsLayoutAtoms::hrFrame,               "hr",        "hr");
   AddFrameTypeInfo(nsLayoutAtoms::htmlFrameInnerFrame,   "frameI",    "htmlFrameInner");
   AddFrameTypeInfo(nsLayoutAtoms::htmlFrameOuterFrame,   "frameO",    "htmlFrameOuter");
   AddFrameTypeInfo(nsLayoutAtoms::imageFrame,            "img",       "image");

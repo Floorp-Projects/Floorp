@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLHRElement.h"
+#include "nsIDOMNSHTMLHRElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -46,7 +47,8 @@
 #include "nsRuleNode.h"
 
 class nsHTMLHRElement : public nsGenericHTMLLeafElement,
-                        public nsIDOMHTMLHRElement
+                        public nsIDOMHTMLHRElement,
+                        public nsIDOMNSHTMLHRElement
 {
 public:
   nsHTMLHRElement();
@@ -67,15 +69,15 @@ public:
   // nsIDOMHTMLHRElement
   NS_DECL_NSIDOMHTMLHRELEMENT
 
+  // nsIDOMNSHTMLHRElement
+  NS_DECL_NSIDOMNSHTMLHRELEMENT
+
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
   NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
@@ -124,6 +126,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLHRElement, nsGenericElement)
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLHRElement,
                                     nsGenericHTMLLeafElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLHRElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLHRElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLHRElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -161,6 +164,7 @@ NS_IMPL_STRING_ATTR(nsHTMLHRElement, Align, align)
 NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width)
+NS_IMPL_STRING_ATTR(nsHTMLHRElement, Color, color)
 
 static const nsHTMLValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
@@ -193,6 +197,12 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+  else if (aAttribute == nsHTMLAtoms::color) {
+    if (aResult.ParseColor(aValue,
+                           nsGenericHTMLLeafElement::GetOwnerDocument())) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
 
   return NS_CONTENT_ATTR_NOT_THERE;
 }
@@ -220,13 +230,31 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   if (!aAttributes || !aData)
     return;
 
+  nsHTMLValue value;
+  PRBool noshade = PR_FALSE;
+
+  nsHTMLValue color;
+  aAttributes->GetAttribute(nsHTMLAtoms::color, color);
+
+  PRBool colorIsSet = color.GetUnit() == eHTMLUnit_Color ||
+                      color.GetUnit() == eHTMLUnit_ColorName;
+
+  if (aData->mSID == eStyleStruct_Position ||
+      aData->mSID == eStyleStruct_Border) {
+    if (colorIsSet) {
+      noshade = PR_TRUE;
+    } else {
+      aAttributes->GetAttribute(nsHTMLAtoms::noshade, value);
+      noshade = value.GetUnit() != eHTMLUnit_Null;
+    }
+  }
+
   if (aData->mSID == eStyleStruct_Margin) {
-    nsCSSRect& margin = aData->mMarginData->mMargin;
-    nsHTMLValue value;
     // align: enum
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (eHTMLUnit_Enumerated == value.GetUnit()) {
       // Map align attribute into auto side margins
+      nsCSSRect& margin = aData->mMarginData->mMargin;
       switch (value.GetIntValue()) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         if (margin.mLeft.GetUnit() == eCSSUnit_Null)
@@ -250,39 +278,115 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     }
   }
   else if (aData->mSID == eStyleStruct_Position) {
-    nsHTMLValue value;
     // width: pixel, percent
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
       aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel)
+      if (value.GetUnit() == eHTMLUnit_Pixel) {
         aData->mPositionData->mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
-      else if (value.GetUnit() == eHTMLUnit_Percent)
+      } else if (value.GetUnit() == eHTMLUnit_Percent) {
         aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
+      }
     }
 
-    // size: pixel
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel)
-        aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+      // size: pixel
+      if (noshade) {
+        // noshade case: size is set using the border
+        aData->mPositionData->mHeight.SetAutoValue();
+      } else {
+        // normal case
+        // the height includes the top and bottom borders that are initially 1px.
+        // for size=1, html.css has a special case rule that makes this work by
+        // removing all but the top border.
+        aAttributes->GetAttribute(nsHTMLAtoms::size, value);
+        if (value.GetUnit() == eHTMLUnit_Pixel) {
+          aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+        } // else use default value from html.css
+      }
+    }
+  }
+  else if (aData->mSID == eStyleStruct_Border && noshade) { // if not noshade, border styles are dealt with by html.css
+    // size: pixel
+    // if a size is set, use half of it per side, otherwise, use 1px per side
+    float sizePerSide;
+    PRBool allSides = PR_TRUE;
+    aAttributes->GetAttribute(nsHTMLAtoms::size, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      sizePerSide = (float)value.GetPixelValue() / 2.0f;
+      if (sizePerSide < 1.0f) {
+        // XXX When the pixel bug is fixed, all the special casing for
+        // subpixel borders should be removed.
+        // In the meantime, this makes http://www.microsoft.com/ look right.
+        sizePerSide = 1.0f;
+        allSides = PR_FALSE;
+      }
+    } else {
+      sizePerSide = 1.0f; // default to a 2px high line
+    }
+    nsCSSRect& borderWidth = aData->mMarginData->mBorderWidth;
+    if (borderWidth.mTop.GetUnit() == eCSSUnit_Null) {
+      borderWidth.mTop.SetFloatValue(sizePerSide, eCSSUnit_Pixel);
+    }
+    if (allSides) {
+      if (borderWidth.mRight.GetUnit() == eCSSUnit_Null) {
+        borderWidth.mRight.SetFloatValue(sizePerSide, eCSSUnit_Pixel);
+      }
+      if (borderWidth.mBottom.GetUnit() == eCSSUnit_Null) {
+        borderWidth.mBottom.SetFloatValue(sizePerSide, eCSSUnit_Pixel);
+      }
+      if (borderWidth.mLeft.GetUnit() == eCSSUnit_Null) {
+        borderWidth.mLeft.SetFloatValue(sizePerSide, eCSSUnit_Pixel);
+      }
+    }
+
+    // if a color is set, set the border-style to 'solid' so that the
+    // 'color' property takes effect, otherwise, use '-moz-bg-solid'.
+    // (we got the color attribute earlier)
+    PRInt32 style = colorIsSet ? NS_STYLE_BORDER_STYLE_SOLID :
+                                 NS_STYLE_BORDER_STYLE_BG_SOLID;
+
+    nsCSSRect& borderStyle = aData->mMarginData->mBorderStyle;
+    if (borderStyle.mTop.GetUnit() == eCSSUnit_Null) {
+      borderStyle.mTop.SetIntValue(style, eCSSUnit_Enumerated);
+    }
+    if (allSides) {
+      if (borderStyle.mRight.GetUnit() == eCSSUnit_Null) {
+        borderStyle.mRight.SetIntValue(style, eCSSUnit_Enumerated);
+      }
+      if (borderStyle.mBottom.GetUnit() == eCSSUnit_Null) {
+        borderStyle.mBottom.SetIntValue(style, eCSSUnit_Enumerated);
+      }
+      if (borderStyle.mLeft.GetUnit() == eCSSUnit_Null) {
+        borderStyle.mLeft.SetIntValue(style, eCSSUnit_Enumerated);
+      }
+
+      // If it would be noticeable, set the border radius to
+      // 100% on all corners
+      nsCSSRect& borderRadius = aData->mMarginData->mBorderRadius;
+      if (borderRadius.mTop.GetUnit() == eCSSUnit_Null) {
+        borderRadius.mTop.SetPercentValue(1.0f);
+      }
+      if (borderRadius.mRight.GetUnit() == eCSSUnit_Null) {
+        borderRadius.mRight.SetPercentValue(1.0f);
+      }
+      if (borderRadius.mBottom.GetUnit() == eCSSUnit_Null) {
+        borderRadius.mBottom.SetPercentValue(1.0f);
+      }
+      if (borderRadius.mLeft.GetUnit() == eCSSUnit_Null) {
+        borderRadius.mLeft.SetPercentValue(1.0f);
+      }
+    }
+  }
+  else if (aData->mSID == eStyleStruct_Color) {
+    // color: a color
+    // (we got the color attribute earlier)
+    if (colorIsSet &&
+        aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
+      aData->mColorData->mColor.SetColorValue(color.GetColorValue());
     }
   }
 
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-}
-
-NS_IMETHODIMP
-nsHTMLHRElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                        PRInt32 aModType,
-                                        nsChangeHint& aHint) const
-{
-  nsresult rv =
-    nsGenericHTMLLeafElement::GetAttributeChangeHint(aAttribute,
-                                                     aModType, aHint);
-  if (aAttribute == nsHTMLAtoms::noshade) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_VISUAL);
-  }
-  return rv;
 }
 
 NS_IMETHODIMP_(PRBool)
@@ -292,6 +396,8 @@ nsHTMLHRElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
     { &nsHTMLAtoms::align },
     { &nsHTMLAtoms::width },
     { &nsHTMLAtoms::size },
+    { &nsHTMLAtoms::color },
+    { &nsHTMLAtoms::noshade },
     { nsnull },
   };
   
