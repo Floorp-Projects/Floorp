@@ -26,6 +26,8 @@
   // Add trees here.
   var $tree1 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey&express=1";
   var $tree2 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey-Embed&express=1";
+  var $tree3 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey-Ports&express=1";
+
 
   // Print out using layers for 4.x
   function printLayer(tree) {
@@ -47,12 +49,16 @@
       printLayer($tree1);
       document.write("<hr>");
       printLayer($tree2);
+      document.write("<hr>");
+      printLayer($tree3);
 
   } else {
       // Mozilla or IE
       printIFrame($tree1);
       document.write("<hr>");
       printIFrame($tree2);
+      document.write("<hr>");
+      printIFrame($tree3);
 
   }
 	  
