@@ -1,10 +1,9 @@
 <!-- extracted from charsetOverlay.xul -->
 <!ENTITY charsetMenu.label				"Character Coding">
 <!ENTITY charsetMenuMore.label				"More">
-<!ENTITY charsetMenuMore1.label				"ISO">
-<!ENTITY charsetMenuMore2.label				"Multibyte">
-<!ENTITY charsetMenuMore3.label				"Cyrillic">
-<!ENTITY charsetMenuMore4.label				"SE Asian/Armenian">
-<!ENTITY charsetMenuMore5.label				"Macintosh">
-<!ENTITY charsetMenuMore6.label				"Windows">
+<!ENTITY charsetMenuMore1.label				"West European">
+<!ENTITY charsetMenuMore2.label				"East European">
+<!ENTITY charsetMenuMore3.label				"East Asian">
+<!ENTITY charsetMenuMore4.label				"SE &amp; SW Asian">
+<!ENTITY charsetMenuMore5.label				"Middle Eastern">
 <!ENTITY charsetCustomize.label				"Customize...">
