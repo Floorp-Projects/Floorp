@@ -1,25 +1,32 @@
- #
- # -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- #
- # The contents of this file are subject to the Netscape Public
- # License Version 1.1 (the "License"); you may not use this file
- # except in compliance with the License. You may obtain a copy of
- # the License at http://www.mozilla.org/NPL/
- #
- # Software distributed under the License is distributed on an "AS
- # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- # implied. See the License for the specific language governing
- # rights and limitations under the License.
- #
- # The Original Code is mozilla.org code.
- #
- # The Initial Developer of the Original Code is Netscape
- # Communications Corporation.  Portions created by Netscape are
- # Copyright (C) 1999 Netscape Communications Corporation. All
- # Rights Reserved.
- #
- # Contributor(s): 
- #
+#
+# -*- Mode: Asm -*-
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1999 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s):
+#  Patrick C. Beard <beard@netscape.com>
+#
+
+# 
+# ** Assumed vtable layout (obtained by disassembling with gdb):
+# ** 4 bytes per vtable entry, skip 0th entry, so the mapping
+# ** from index to entry is (4 * index) + 8.
+#
 
 .data
 	.align 2
@@ -40,7 +47,7 @@ __XPTC_InvokeByIndex:
 	stw	r5,32(r1)
 	stw	r6,36(r1)
 	stw	r0,8(r1)
-	stwu	r1,-136(r1)
+	stwu	r1,-144(r1)              ; keep 16-byte aligned
 
 # set up for and call 'invoke_count_words' to get new stack size
 #	
@@ -54,13 +61,14 @@ __XPTC_InvokeByIndex:
 
 # prepare args for 'invoke_copy_to_stack' call
 #		
-	lwz	r4,168(r1)
-	lwz	r5,172(r1)
+	lwz	r4,176(r1)
+	lwz	r5,180(r1)
 	mr	r6,r1
 	slwi	r3,r3,2
 	addi	r3,r3,28
 	mr	r31,r1
 	sub	r1,r1,r3
+	clrrwi r1,r1,4                  ; keep 16-byte aligned
 	lwz	r3,0(r31)
 	stw	r3,0(r1)
 	addi	r3,r1,28
@@ -89,11 +97,11 @@ __XPTC_InvokeByIndex:
 	lfd	f12,88(r31)				
 	lfd	f13,96(r31)				
 	
-	lwz	r3,160(r31)
+	lwz	r3,168(r31)
 	lwz	r4,0(r3)
-	lwz	r5,164(r31)
-	slwi	r5,r5,3
-	addi	r5,r5,8
+	lwz	r5,172(r31)
+	slwi	r5,r5,2		; entry_offset = (index * 4) + 4
+	addi	r5,r5,4
 	add	r12,r5,r4
 	lwz	r12,4(r12)
 
@@ -112,8 +120,8 @@ __XPTC_InvokeByIndex:
 	blrl
 	
 	mr      r1,r31
-	lwz	r0,144(r1)
-	addi    r1,r1,136
+	lwz	r0,152(r1)
+	addi    r1,r1,144
 	mtlr    r0
 	lwz     r31,-4(r1)
 

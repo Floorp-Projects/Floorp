@@ -51,7 +51,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
 #define PARAM_BUFFER_COUNT     16
 #define PARAM_GPR_COUNT			7
 
-  fprintf(stderr, "PrepareAndDispatch %p, %d, %p, %p, %p\n", self, methodIndex, args, gprData, fprData);
+  // fprintf(stderr, "PrepareAndDispatch %p, %d, %p, %p, %p\n", self, methodIndex, args, gprData, fprData);
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = NULL;
