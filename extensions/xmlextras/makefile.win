@@ -23,13 +23,11 @@ DEPTH=..\..
 
 DIRS= \
 	base \
-!if defined(MOZ_SOAP)
 	schema \
 	soap \
 !if defined(MOZ_WSP)
 	wsdl \
 	proxy \
-!endif
 !endif
 	build \
 !if !defined(DISABLE_TESTS)

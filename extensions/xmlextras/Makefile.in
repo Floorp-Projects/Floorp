@@ -28,11 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS            = base 
 
-ifdef MOZ_SOAP
 DIRS += schema soap
 ifdef MOZ_WSP
 DIRS += wsdl proxy
-endif
 endif
 
 DIRS += build

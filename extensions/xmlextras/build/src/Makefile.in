@@ -54,12 +54,10 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 
-ifdef MOZ_SOAP
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrasschema_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrassoap_s.$(LIB_SUFFIX) \
 	$(NULL)
-DEFINES += -DMOZ_SOAP
 ifdef MOZ_WSP
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextraswsdl_s.$(LIB_SUFFIX) \
@@ -67,14 +65,12 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 DEFINES += -DMOZ_WSP
 endif
-endif
 
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
 		$(NULL)
 
-ifdef MOZ_SOAP
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../../soap/src \
 		-I$(srcdir)/../../schema/src \
@@ -84,7 +80,6 @@ LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../../wsdl/src \
 		-I$(srcdir)/../../proxy/src \
 		$(NULL)
-endif
 endif
 
 

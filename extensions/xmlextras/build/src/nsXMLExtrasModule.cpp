@@ -50,7 +50,6 @@
 #include "nsDOMCID.h"
 #include "prprf.h"
 
-#ifdef MOZ_SOAP
 #include "nsSOAPHeaderBlock.h"
 #include "nsSOAPParameter.h"
 #include "nsSOAPCall.h"
@@ -68,7 +67,6 @@
 #include "nsWSDLPrivate.h"
 #include "wspprivate.h"
 #endif // MOZ_WSP
-#endif // MOZ_SOAP
 
 #include "nsString.h"
 #include "prprf.h"
@@ -83,7 +81,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
-#ifdef MOZ_SOAP
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPResponse)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPEncoding)
@@ -150,7 +147,6 @@ NS_DECL_CLASSINFO(WSPComplexTypeWrapper)
 NS_DECL_CLASSINFO(WSPCallContext)
 NS_DECL_CLASSINFO(WSPException)
 #endif // MOZ_WSP
-#endif // MOZ_SOAP
 
 class nsXMLExtrasNameset : public nsISupports
 {
@@ -249,7 +245,6 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_SOAP
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "SOAPCall",
                                 NS_SOAPCALL_CONTRACTID,
@@ -304,7 +299,6 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 #endif // MOZ_WSP
-#endif // MOZ_SOAP
 
   return rv;
 }
@@ -323,7 +317,6 @@ static const nsModuleComponentInfo components[] = {
     nsXMLHttpRequestConstructor },
   { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_CONTRACTID,
     nsDOMParserConstructor },
-#ifdef MOZ_SOAP
   { "SOAP Call", NS_SOAPCALL_CID, NS_SOAPCALL_CONTRACTID,
     nsSOAPCallConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPCall), 
@@ -560,18 +553,15 @@ static const nsModuleComponentInfo components[] = {
     NS_CI_INTERFACE_GETTER_NAME(WSPException), nsnull, 
     &NS_CLASSINFO_NAME(WSPException), nsIClassInfo::DOM_OBJECT },
 #endif // MOZ_WSP
-#endif // MOZ_SOAP
 };
 
 void PR_CALLBACK
 XMLExtrasModuleDestructor(nsIModule* self)
 {
-#ifdef MOZ_SOAP
   nsSchemaAtoms::DestroySchemaAtoms();
 #ifdef MOZ_WSP
   nsWSDLAtoms::DestroyWSDLAtoms();
 #endif // MOZ_WSP
-#endif // MOZ_SOAP   
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsXMLExtrasModule, components, 
