@@ -36,6 +36,9 @@
 #include <utime.h>
 #include <dirent.h>
 #include <ctype.h>
+#ifdef XP_BEOS
+#include <Path.h>
+#endif
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -410,7 +413,16 @@ nsLocalFile::Normalize()
     char  resolved_path[PATH_MAX];
     char *resolved_path_ptr = NULL;
     CHECK_mPath();
+#ifdef XP_BEOS
+    BEntry be_e((const char*)mPath, true);
+    BPath be_p;
+    status_t err;
+    if ((err = be_e.GetPath(&be_p)) == B_OK) {
+        resolved_path_ptr = be_p.Path();
+    };
+#else
     resolved_path_ptr = realpath(mPath, resolved_path);
+#endif
     // if there is an error, the return is null.
     if (resolved_path_ptr == NULL) {
         return NSRESULT_FOR_ERRNO();
