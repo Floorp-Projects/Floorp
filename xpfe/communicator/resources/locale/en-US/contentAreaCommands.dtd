@@ -1,6 +1,6 @@
 <!-- Context Menu -->
 <!ENTITY openLinkCmd.label            "Open in New Window">
-<!ENTITY openLinkCmd.accesskey        "o">
+<!ENTITY openLinkCmd.accesskey        "O">
 <!ENTITY openLinkCmdInTab.label       "Open in New Tab">
 <!ENTITY openLinkCmdInTab.accesskey   "t">
 <!ENTITY openLinkInWindowCmd.label    "Open">
@@ -27,7 +27,7 @@
 <!ENTITY viewFrameSourceCmd.label     "View Frame Source">
 <!ENTITY viewFrameSourceCmd.accesskey "v">
 <!ENTITY viewPageInfoCmd.label        "View Page Info">
-<!ENTITY viewPageInfoCmd.accesskey    "i">
+<!ENTITY viewPageInfoCmd.accesskey    "I">
 <!ENTITY viewFrameInfoCmd.label       "View Frame Info">
 <!ENTITY viewFrameInfoCmd.accesskey   "i">
 <!ENTITY viewImageCmd.label           "View Image">
@@ -39,7 +39,7 @@
 <!ENTITY bookmarkLinkCmd.label        "File Bookmark for Link...">
 <!ENTITY bookmarkLinkCmd.accesskey    "b">
 <!ENTITY savePageCmd.label            "Save Page As...">
-<!ENTITY savePageCmd.accesskey        "a">
+<!ENTITY savePageCmd.accesskey        "A">
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
 <!ENTITY saveFrameCmd.accesskey       "f">
@@ -57,7 +57,7 @@
 <!ENTITY metadataCmd.label            "Properties">
 <!ENTITY metadataCmd.accesskey        "">
 <!ENTITY copyEmailCmd.label           "Copy Email Address">
-<!ENTITY copyEmailCmd.accesskey       "e">
+<!ENTITY copyEmailCmd.accesskey       "E">
 <!ENTITY pasteCmd.label               "Paste">
 <!ENTITY pasteCmd.accesskey           "p">
 <!ENTITY cutCmd.label                 "Cut">

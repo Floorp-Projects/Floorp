@@ -29,7 +29,7 @@ Rights Reserved.
 <!ENTITY newCard.accesskey                              "n">  
 <!ENTITY newListCmd.label                               "Mailing List...">
 <!-- LOCALIZATION NOTE (newListCmd.accesskey) : DONT_TRANSLATE -->  
-<!ENTITY newListCmd.accesskey                           "l">  
+<!ENTITY newListCmd.accesskey                           "L">  
 <!ENTITY newAddressBookCmd.label                        "Address Book..."> 
 <!-- LOCALIZATION NOTE (newAddressBookCmd.accesskey) : DONT_TRANSLATE --> 
 <!ENTITY newAddressBookCmd.accesskey                    "b">  
@@ -77,7 +77,7 @@ Rights Reserved.
 <!ENTITY sortByWorkPhoneCmd.label			"Work Phone">  
 <!ENTITY SortByWorkPhone.accesskey			"w">  
 <!ENTITY sortByOrganizationCmd.label                    "Organization">  
-<!ENTITY SortByOrganization.accesskey                   "o">  
+<!ENTITY SortByOrganization.accesskey                   "O">  
 <!ENTITY stopSearchingCmd.label                         ".Stop Searching"> 
 
 <!-- Toolbar items -->  

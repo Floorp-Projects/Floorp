@@ -23,11 +23,11 @@
 <!ENTITY walletExpirePasswordCmd.label "Log Out">
 <!ENTITY walletExpirePasswordCmd.accesskey "l">
 <!ENTITY walletEncryptCmd.label "Encrypt Sensitive Information">
-<!ENTITY walletEncryptCmd.accesskey "e">
+<!ENTITY walletEncryptCmd.accesskey "E">
 <!ENTITY walletObscureCmd.label "Obscure Sensitive Information">
-<!ENTITY walletObscureCmd.accesskey "o">
+<!ENTITY walletObscureCmd.accesskey "O">
 <!ENTITY walletClearCmd.label "Reset Master Password">
-<!ENTITY walletClearCmd.accesskey "r">
+<!ENTITY walletClearCmd.accesskey "R">
 
 <!ENTITY PasswordNotChanged "Unable to change your master password.">
 <!ENTITY PasswordExpired "You are now logged out.">

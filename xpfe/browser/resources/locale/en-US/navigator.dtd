@@ -14,7 +14,7 @@
 <!ENTITY nothingAvailable.label "(Nothing Available)">
 
 <!ENTITY browserCmd.label	"New Navigator Window">
-<!ENTITY browserCmd.accesskey	"n">
+<!ENTITY browserCmd.accesskey	"N">
 <!ENTITY tabCmd.label "Navigator Tab">
 <!ENTITY tabCmd.accesskey "t">
 <!ENTITY tabCmd.commandkey "t">
@@ -46,11 +46,11 @@
 <!ENTITY toolbarsCmd.label "Show/Hide">
 <!ENTITY toolbarsCmd.accesskey "w">
 <!ENTITY navbarCmd.label "Navigation Toolbar">
-<!ENTITY navbarCmd.accesskey "n">
+<!ENTITY navbarCmd.accesskey "N">
 <!ENTITY personalbarCmd.label "Personal Toolbar">
 <!ENTITY personalbarCmd.accesskey "p">
 <!ENTITY taskbarCmd.label "Status Bar">
-<!ENTITY taskbarCmd.accesskey "s">
+<!ENTITY taskbarCmd.accesskey "S">
 <!ENTITY componentbarCmd.label "Component Bar">
 <!ENTITY componentbarCmd.accesskey "C">
 
@@ -68,7 +68,7 @@
 <!ENTITY pageInfoCmd.accesskey "i">
 <!ENTITY pageInfoCmd.commandkey "i">
 <!ENTITY translateMenu.label "Translate">
-<!ENTITY translateMenu.accesskey "t">
+<!ENTITY translateMenu.accesskey "T">
 <!ENTITY translate.commandKey "t">
 
 <!ENTITY closeWindow.label "Close Window">
@@ -102,7 +102,7 @@
 <!ENTITY webContentMenu.label "Languages and Web Content">
 <!ENTITY webContentMenu.accesskey "l">
 <!ENTITY downloadMore.label "Download More">
-<!ENTITY downloadMore.accesskey "d">
+<!ENTITY downloadMore.accesskey "D">
 <!ENTITY applyTheme.label	"Apply Theme"> 
 <!ENTITY applyTheme.accesskey	"A"> 
 <!ENTITY themePreferencesCmd.label "Theme Preferences..."> 
@@ -155,7 +155,7 @@
 <!ENTITY addCurPageAsCmd.label "File Bookmark...">
 <!ENTITY addCurPageAsCmd.accesskey "f">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
-<!ENTITY manBookmarksCmd.accesskey "m">
+<!ENTITY manBookmarksCmd.accesskey "M">
 <!ENTITY manBookmarksCmd.commandkey "b">
 <!ENTITY emptyItem.label "(Empty)">
 

@@ -12,4 +12,4 @@
 <!ENTITY prefillCmd.label             "Prefill Form">
 <!ENTITY prefillCmd.accesskey         "m"> 
 <!ENTITY formshowCmd.label             "View Saved Data">
-<!ENTITY formshowCmd.accesskey         "v"> 
+<!ENTITY formshowCmd.accesskey         "V"> 

@@ -1,6 +1,6 @@
 <!-- extracted from charsetOverlay.xul -->
 <!ENTITY charsetMenu.label				"Character Coding">
-<!ENTITY charsetMenu.accesskey				"c">
+<!ENTITY charsetMenu.accesskey				"C">
 <!ENTITY charsetMenuAutodet.label			"Auto-Detect">
 <!ENTITY charsetMenuAutodet.accesskey			"a">
 <!ENTITY charsetMenuMore.label				"More">
@@ -8,11 +8,11 @@
 <!ENTITY charsetMenuMore1.label				"West European">
 <!ENTITY charsetMenuMore1.accesskey				"w">
 <!ENTITY charsetMenuMore2.label				"East European">
-<!ENTITY charsetMenuMore2.accesskey				"e">
+<!ENTITY charsetMenuMore2.accesskey				"E">
 <!ENTITY charsetMenuMore3.label				"East Asian">
 <!ENTITY charsetMenuMore3.accesskey				"a">
 <!ENTITY charsetMenuMore4.label				"SE &amp; SW Asian">
-<!ENTITY charsetMenuMore4.accesskey				"s">
+<!ENTITY charsetMenuMore4.accesskey				"S">
 <!ENTITY charsetMenuMore5.label				"Middle Eastern">
 <!ENTITY charsetMenuMore5.accesskey				"m">
 <!ENTITY charsetCustomize.label				"Customize...">
