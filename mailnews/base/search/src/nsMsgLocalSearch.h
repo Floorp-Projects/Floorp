@@ -81,9 +81,7 @@ public:
                                       nsIMsgSearchScopeTerm *scope,
                                       nsIMsgDatabase *db, PRBool *pResult);
 
-	virtual nsresult BuildSummaryFile ();
 	virtual nsresult OpenSummaryFile ();
-	nsresult SummaryFileError();
 
 protected:
 	static nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,
@@ -121,16 +119,6 @@ protected:
 	nsCOMPtr<nsISimpleEnumerator> m_listContext;
 	void CleanUpScope();
 };
-
-class nsMsgSearchIMAPOfflineMail : public nsMsgSearchOfflineMail
-{
-public:
-	nsMsgSearchIMAPOfflineMail (nsIMsgSearchScopeTerm*, nsISupportsArray *);
-	virtual ~nsMsgSearchIMAPOfflineMail ();
-
-	NS_IMETHOD ValidateTerms ();
-};
-
 
 
 class nsMsgSearchOfflineNews : public nsMsgSearchOfflineMail
