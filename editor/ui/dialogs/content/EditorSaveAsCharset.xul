@@ -56,7 +56,7 @@
     <groupbox flex="1"><caption label="&documentCharsetTitle.label;"/>
         <label value="&documentCharsetDesc.label;"/>
         <tree id="CharsetTree" height="148" hidecolumnpicker="true" onselect="SelectCharset();"
-              datasources="rdf:charset-menu" ref="NC:DecodersRoot" flags="dont-build-content">
+              datasources="rdf:charset-menu" ref="NC:EncodersRoot" flags="dont-build-content">
             <treecols>
                 <treecol id="CharsetCol" flex="1" hideheader="true"/>
             </treecols>

@@ -88,6 +88,7 @@ static const char kURINC_MaileditCharsetMenuRoot[] = "NC:MaileditCharsetMenuRoot
 static const char kURINC_MailviewCharsetMenuRoot[] = "NC:MailviewCharsetMenuRoot";
 static const char kURINC_ComposerCharsetMenuRoot[] = "NC:ComposerCharsetMenuRoot";
 static const char kURINC_DecodersRoot[] = "NC:DecodersRoot";
+static const char kURINC_EncodersRoot[] = "NC:EncodersRoot";
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Checked);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
@@ -162,6 +163,7 @@ private:
   static nsIRDFResource * kNC_MailviewCharsetMenuRoot;
   static nsIRDFResource * kNC_ComposerCharsetMenuRoot;
   static nsIRDFResource * kNC_DecodersRoot;
+  static nsIRDFResource * kNC_EncodersRoot;
   static nsIRDFResource * kNC_Name;
   static nsIRDFResource * kNC_Checked;
   static nsIRDFResource * kNC_CharsetDetector;
@@ -428,6 +430,7 @@ nsIRDFResource * nsCharsetMenu::kNC_MaileditCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_MailviewCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_ComposerCharsetMenuRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_DecodersRoot = NULL;
+nsIRDFResource * nsCharsetMenu::kNC_EncodersRoot = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_Name = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_Checked = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_CharsetDetector = NULL;
@@ -658,6 +661,8 @@ nsresult nsCharsetMenu::Init()
                              &kNC_ComposerCharsetMenuRoot);
     mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_DecodersRoot),
                              &kNC_DecodersRoot);
+    mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_EncodersRoot),
+                             &kNC_EncodersRoot);
     mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_Name),
                              &kNC_Name);
     mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_Checked),
@@ -697,6 +702,8 @@ nsresult nsCharsetMenu::Init()
     if (NS_FAILED(res)) goto done;
     res = rdfUtil->MakeSeq(mInner, kNC_DecodersRoot, NULL);
     if (NS_FAILED(res)) goto done;
+    res = rdfUtil->MakeSeq(mInner, kNC_EncodersRoot, NULL);
+    if (NS_FAILED(res)) goto done;
 
   done:
     if (rdfUtil != NULL) nsServiceManager::ReleaseService(kRDFContainerUtilsCID,rdfUtil);
@@ -723,6 +730,7 @@ nsresult nsCharsetMenu::Done()
   NS_IF_RELEASE(kNC_MailviewCharsetMenuRoot);
   NS_IF_RELEASE(kNC_ComposerCharsetMenuRoot);
   NS_IF_RELEASE(kNC_DecodersRoot);
+  NS_IF_RELEASE(kNC_EncodersRoot);
   NS_IF_RELEASE(kNC_Name);
   NS_IF_RELEASE(kNC_Checked);
   NS_IF_RELEASE(kNC_CharsetDetector);
@@ -843,6 +851,10 @@ nsresult nsCharsetMenu::InitMaileditMenu()
     if (NS_FAILED(res)) return res;
 
     //enumerate encoders
+    // this would bring in a whole bunch of 'font encoders' as well as genuine 
+    // charset encoders, but it's safe because we rely on prefs to filter
+    // them out. Moreover, 'customize' menu lists only genuine charset 
+    // encoders further guarding  against  'font encoders' sneaking in. 
     nsCOMPtr<nsISupportsArray> maileditEncoderList;
     res = mCCManager->GetEncoderList(getter_AddRefs(maileditEncoderList));
     if (NS_FAILED(res))  return res;
@@ -964,6 +976,16 @@ nsresult nsCharsetMenu::InitOthers()
     if (NS_FAILED(res))  return res;
 
     res = InitMoreMenu(othersDecoderList, kNC_DecodersRoot, ".notForBrowser");                 
+    if (NS_FAILED(res))  return res;
+
+    // Using mDecoderList instead of GetEncoderList(), we can avoid having to
+    // tag a whole bunch of 'font encoders' with '.notForOutgoing' in 
+    // charsetData.properties file. 
+    nsCOMPtr<nsISupportsArray> othersEncoderList;
+    res = mDecoderList->Clone(getter_AddRefs(othersEncoderList));
+    if (NS_FAILED(res))  return res;
+
+    res = InitMoreMenu(othersEncoderList, kNC_EncodersRoot, ".notForOutgoing");                 
     if (NS_FAILED(res)) return res;
   }
 
