@@ -956,7 +956,7 @@ public final class Context {
     /**
      * Create a new JavaScript object by executing the named constructor.
      *
-     * The call <code>newObject("Foo")</code> is equivalent to
+     * The call <code>newObject(scope, "Foo")</code> is equivalent to
      * evaluating "new Foo()".
      *
      * @param scope the scope to search for the constructor and to evaluate against
