@@ -46,16 +46,13 @@
 class nsLegacyCheck
 {
 public:
-    nsLegacyCheck();
+    nsLegacyCheck(char *aFilename, char *aMessage);
     ~nsLegacyCheck();
 
-    int             SetFilename(char *aFilename);
     char            *GetFilename();
-    int             SetMessage(char *aMessage);
     char            *GetMessage();
     int             SetNext(nsLegacyCheck *aNext);
     nsLegacyCheck   *GetNext();
-    int             InitNext();
 
 private:
     char            *mFilename;
