@@ -372,6 +372,7 @@ NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
     // but we haven't read any bytes, that's spells trouble.
     // it means that the server has dropped us before we could read anything
     // for example, see bug #158059
+    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP connection closed, but no data read, so report error"));
     nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, NS_ERROR_CONNECTION_REFUSED);
   }
 	else
