@@ -352,13 +352,13 @@ BOOL CMfcEmbedApp::InitInstance()
 	Enable3dControls();
 
 	//
-	// 1. Determine the name of the dir from which the MRE based app is being run
-	// from [It's OK to do this even if you're not running in an MRE env]
+	// 1. Determine the name of the dir from which the GRE based app is being run
+	// from [It's OK to do this even if you're not running in an GRE env]
 	//
 	// 2. Create an nsILocalFile out of it which will passed in to NS_InitEmbedding()
 	//
 	// Please see http://www.mozilla.org/projects/embedding/MRE.html
-	// for more info. on MRE
+	// for more info. on GRE
 
 	char curDir[_MAX_PATH+1];
 	::GetCurrentDirectory(_MAX_PATH, curDir);

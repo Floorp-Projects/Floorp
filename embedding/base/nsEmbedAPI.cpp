@@ -109,24 +109,24 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
             return rv;
         }
 
-        // If the application is using an MRE, then, 
-        // auto register components in the MRE directory as well.
+        // If the application is using an GRE, then, 
+        // auto register components in the GRE directory as well.
         //
-        // The application indicates that it's using an MRE by
+        // The application indicates that it's using an GRE by
         // returning a valid nsIFile when queried (via appFileLocProvider)
-        // for the NS_MRE_DIR atom as shown below
+        // for the NS_GRE_DIR atom as shown below
         //
         if (appFileLocProvider)
         {
-            nsCOMPtr<nsIFile> mreDir;
+            nsCOMPtr<nsIFile> greDir;
             PRBool persistent = PR_TRUE;
 
-            appFileLocProvider->GetFile(NS_MRE_DIR, &persistent, getter_AddRefs(mreDir));
+            appFileLocProvider->GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(greDir));
 
-            if (mreDir)
+            if (greDir)
             {
-                rv = registrar->AutoRegister(mreDir);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "Could not AutoRegister MRE components");
+                rv = registrar->AutoRegister(greDir);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "Could not AutoRegister GRE components");
             }
         }
 #endif
