@@ -33,6 +33,7 @@ CPPSRCS =				\
 	nsCSSAtoms.cpp		\
 	nsCSSKeywords.cpp		\
 	nsCSSDeclaration.cpp		\
+	nsCSSFrameConstructor.cpp		\
 	nsCSSParser.cpp			\
 	nsCSSProps.cpp			\
 	nsCSSProps2.cpp			\
