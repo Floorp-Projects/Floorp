@@ -994,12 +994,13 @@ FE_UnloadPlugin(void *pdesc, struct _np_handle* handle)
     NPError (*f)(void);
     NPError err;
 
-    if (plugin->handle->userPlugin) {
-	NPIPlugin* userPlugin = (NPIPlugin*)plugin->handle->userPlugin;
-	XP_VERIFY(userPlugin->Release() == 0);
-	plugin->handle = NULL;
-    }
-    else {
+    if (plugin->handle) {
+	if (plugin->handle->userPlugin) {
+	    NPIPlugin* userPlugin = (NPIPlugin*)plugin->handle->userPlugin;
+	    XP_VERIFY(userPlugin->Release() == 0);
+	    plugin->handle = NULL;
+	}
+    } else {
 	f = plugin->shutdown;
 	if (f) {
 	    err = (*f)();
