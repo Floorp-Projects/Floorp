@@ -32,7 +32,7 @@ REQUIRES	= string \
 		  docshell \
 		  layout \
 		  content \
-		  content_xul \
+		  xuldoc \
 		  commandhandler \
 		  $(NULL)
 
