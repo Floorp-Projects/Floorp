@@ -64,7 +64,7 @@ struct nsReadableFragment
   {
     const CharT*  mStart;
     const CharT*  mEnd;
-    void*         mFragmentIdentifier;
+    const void*   mFragmentIdentifier;
 
     nsReadableFragment()
         : mStart(0), mEnd(0), mFragmentIdentifier(0)
