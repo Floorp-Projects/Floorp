@@ -1319,15 +1319,24 @@ nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 
   if (aPathName && *aPathName) {
     // Get file extension and mimetype from that.g936
-    char* fileExt = &aPathName[nsCRT::strlen(aPathName)-1];
-    while (fileExt && (*fileExt != '.')) {
-      fileExt--;
+    char* fileExt = aPathName + nsCRT::strlen(aPathName);
+    while (fileExt > aPathName) {
+      if (*(--fileExt) == '.') {
+        break;
+      }
     }
-    if (fileExt) {
-      nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-      if (NS_FAILED(rv)) return rv;
-      if (NS_SUCCEEDED(MIMEService->GetTypeFromExtension(++fileExt, aContentType)))
-          return NS_OK;
+
+    if (*fileExt == '.' && *(fileExt + 1)) {
+      nsCOMPtr<nsIMIMEService> MIMEService =
+        do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+      if (NS_FAILED(rv))
+        return rv;
+
+      rv = MIMEService->GetTypeFromExtension(fileExt + 1, aContentType);
+
+      if (NS_SUCCEEDED(rv)) {
+        return NS_OK;
+      }
     }
   }
   *aContentType = nsCRT::strdup("application/octet-stream");
