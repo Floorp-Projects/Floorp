@@ -35,10 +35,17 @@ XPIDLSRCS	= \
 			.\nsPIImageContainerWin.idl \
 			$(NULL)
 OBJS	= \
+		.\$(OBJDIR)\gfxImageContainer.obj \
 		.\$(OBJDIR)\nsImageContainer.obj \
 		.\$(OBJDIR)\nsImageFrame.obj \
 		.\$(OBJDIR)\nsGfxFactory.obj \
 		$(NULL)
+
+LINCS	= \
+		$(LINCS) \
+		-I..\
+		$(NULL)
+
 
 LLIBS	= \
  	$(DIST)\lib\xpcom.lib \

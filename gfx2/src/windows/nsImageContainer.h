@@ -21,20 +21,9 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "gfxIImageContainer.h"
+#include "gfxImageContainer.h"
+
 #include "nsPIImageContainerWin.h"
-#include "nsITimerCallback.h"
-
-#include "nsSize.h"
-
-#include "nsSupportsArray.h"
-
-#include "gfxIImageContainerObserver.h"
-#include "nsITimer.h"
-
-
-#include "nsCOMPtr.h"
-
 
 #define NS_IMAGECONTAINER_CID \
 { /* aa699204-1dd1-11b2-84a9-a280c268e4fb */         \
@@ -44,32 +33,19 @@
     {0x84, 0xa9, 0xa2, 0x80, 0xc2, 0x68, 0xe4, 0xfb} \
 }
 
-class nsImageContainer : public gfxIImageContainer,
-                         public nsPIImageContainerWin,
-                         public nsITimerCallback
+class nsImageContainer : public gfxImageContainer,
+                         public nsPIImageContainerWin
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_GFXIIMAGECONTAINER
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSPIIMAGECONTAINERWIN
 
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_IMETHOD GetPreferredAlphaChannelFormat(gfx_format *aFormat);
 
   nsImageContainer();
   virtual ~nsImageContainer();
 
 private:
   /* additional members */
-  nsSupportsArray mFrames;
-  nsSize mSize;
-  PRUint32 mCurrentFrame;
-
-  PRPackedBool mCurrentFrameIsFinishedDecoding;
-  PRPackedBool mDoneDecoding;
-
-  nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<gfxIImageContainerObserver> mObserver;
-
-
 };
 

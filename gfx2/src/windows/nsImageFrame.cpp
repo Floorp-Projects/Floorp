@@ -396,9 +396,6 @@ NS_IMETHODIMP nsImageFrame::SetAlphaData(const PRUint8 *data, PRUint32 length, P
 
 nsresult nsImageFrame::DrawImage(HDC aDestDC, const nsRect * aSrcRect, const nsPoint * aDestPoint)
 {
-  printf("%i, %i, %i, %i    %i, %i\n", aSrcRect->x, aSrcRect->y, aSrcRect->width, aSrcRect->height,
-    aDestPoint->x, aDestPoint->y);
-
   // Translate to bottom-up coordinates for the source bitmap
   nscoord srcY = mRect.height - (aSrcRect->y + aSrcRect->height);
 
