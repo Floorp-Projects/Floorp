@@ -685,6 +685,11 @@ NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
 }
 
 
+NS_IMETHODIMP nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+	return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Move this component

@@ -105,6 +105,7 @@ public:
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
   NS_IMETHOD IsVisible(PRBool &aState);
 
+  NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
   NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,

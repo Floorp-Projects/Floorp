@@ -73,6 +73,8 @@ extern "C" int usleep(unsigned int);
 #define WANT_PAINT_FLASHING \
 (CAPS_LOCK_IS_ON && debug_WantPaintFlashing())
 
+#define kWindowPositionSlop 10
+
 gint handle_toplevel_focus_in (
     GtkWidget *      aWidget, 
     GdkEventFocus *  aGdkFocusEvent, 
@@ -2568,6 +2570,24 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+  if (mIsToplevel && mShell)
+  {
+    PRInt32 screenWidth = gdk_screen_width();
+    PRInt32 screenHeight = gdk_screen_height();
+    if (*aX < kWindowPositionSlop - mBounds.width)
+      *aX = kWindowPositionSlop - mBounds.width;
+    if (*aX > screenWidth - kWindowPositionSlop)
+      *aX = screenWidth - kWindowPositionSlop;
+    if (*aY < kWindowPositionSlop - mBounds.height)
+      *aY = kWindowPositionSlop - mBounds.height;
+    if (*aY > screenHeight - kWindowPositionSlop)
+      *aY = screenHeight - kWindowPositionSlop;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   mBounds.x = aX;
@@ -2575,15 +2595,15 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
   if (mIsToplevel && mShell)
   {
+#ifdef DEBUG
+    // complain if a window is moved offscreen (legal, but potentially worrisome)
     PRInt32 screenWidth = gdk_screen_width();
     PRInt32 screenHeight = gdk_screen_height();
-    
-    if(aX >= screenWidth)
-      aX = screenWidth - mBounds.width;
-    
-    if(aY >= screenHeight)
-      aY = screenHeight - mBounds.height;
-  
+    // no annoying assertions. just mention the issue.
+    if (aX < 0 || aX >= screenWidth || aY < 0 || aY >= screenHeight)
+      printf("window moved to offscreen position\n");
+#endif
+
     // do it the way it should be done period.
     if (mParent && mWindowType == eWindowType_popup) {
       // *VERY* stupid hack to make gfx combo boxes work

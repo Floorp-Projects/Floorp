@@ -554,6 +554,17 @@ NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 //
 //-------------------------------------------------------------------------
 
+NS_IMETHODIMP nsWidget::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Move this component
+//
+//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   if (mMozBox) 
