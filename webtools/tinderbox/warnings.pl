@@ -312,7 +312,7 @@ __END_HEADER
       $total_unblamed_warnings++;
     }
   }
-  print "<h2>"
+  print "<h2>";
   print "Unblamed ($total_unblamed_warnings warnings)";
   print "</h2>";
   print "<ul>";
