@@ -10,15 +10,16 @@
 <html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
 	<!-- File Menu (Exit) -->
-	<menu id="fileMenu">
+	<menupopup id="fileMenuPopup">
 		<menuitem value="&quitApplicationCmd.label;" onaction="goQuitApplication()"/>
-	</menu>
+	</menupopup>
 	
 	<!-- Page Setup menu item -->
 	<menuitem id="pageSetup" value="&pageSetupCmd.label;" onaction="goPageSetup()"/>
 
 	<!-- Help Menu -->
 	<menu id="helpMenu" value="&helpMenu.label;">
+	  <menupopup>
 		<menuitem value="&helpContentCmd.label;" onaction="goHelp()"/>
 		<menuitem value="&referenceLibraryCmd.label;" onaction="goHelp()"/>
 		<menuitem value="&releaseNotesCmd.label;" onaction="goHelp()"/>
@@ -35,6 +36,7 @@
 		<menuitem value="&aboutPluginsCmd.label;" onaction="goHelp()"/>
 		<menuitem value="&aboutFontCmd.label;" onaction="goHelp()"/>
 		<menuitem value="&aboutCmd.label;" onaction="goHelp()"/>
+	  </menupopup>
 	</menu>
 	
 </overlay>		
