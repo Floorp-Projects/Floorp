@@ -306,8 +306,11 @@ MimeMultipart_create_child(MimeObject *obj)
 		   !mime_typep(obj,(MimeObjectClass*)&mimeMultipartSignedClass) &&
 		   !mime_typep(body, (MimeObjectClass*)&mimeMultipartRelatedClass) &&
 		   !mime_typep(body, (MimeObjectClass*)&mimeMultipartAlternativeClass) &&
-		   !mime_typep(body,(MimeObjectClass*)&mimeMultipartSignedClass) &&
-		   !mime_typep(body, (MimeObjectClass*)&mimeInlineTextVCardClass))
+		   !mime_typep(body,(MimeObjectClass*)&mimeMultipartSignedClass) 
+#ifdef RICHIE_VCARD
+       && !mime_typep(body, (MimeObjectClass*)&mimeInlineTextVCardClass)
+#endif
+       )
 	  {
 		status = obj->options->decompose_file_init_fn ( obj->options->stream_closure, mult->hdrs );
 		if (status < 0) return status;
@@ -363,6 +366,8 @@ MimeMultipart_create_child(MimeObject *obj)
 			  showIcon = PR_FALSE;
 		  else if (PL_strstr(body->content_type, "application/x-pkcs7-signature"))
 			  showIcon = PR_FALSE;
+      else if (XP_STRSTR(body->content_type, "application/pkcs7-signature"))
+        showIcon = PR_FALSE;			  
 		  else if (PL_strstr(body->content_type, "multipart/mixed"))
 			  showIcon = PR_FALSE;
 
@@ -449,8 +454,11 @@ MimeMultipart_close_child(MimeObject *object)
 				   !mime_typep(kid,(MimeObjectClass*)&mimeMultipartRelatedClass) &&
 				   !mime_typep(kid,(MimeObjectClass*)&mimeMultipartAlternativeClass) &&
 				   !mime_typep(object,(MimeObjectClass*)&mimeMultipartSignedClass) &&
-				   !mime_typep(kid,(MimeObjectClass*)&mimeMultipartSignedClass) &&
-				   !mime_typep(kid, (MimeObjectClass*)&mimeInlineTextVCardClass))
+				   !mime_typep(kid,(MimeObjectClass*)&mimeMultipartSignedClass) 
+#ifdef RICHIE_VCARD
+           && !mime_typep(kid, (MimeObjectClass*)&mimeInlineTextVCardClass)
+#endif
+           )
 				{
 					status = object->options->decompose_file_close_fn ( object->options->stream_closure );
 					if (status < 0) return status;
@@ -491,8 +499,11 @@ MimeMultipart_parse_child_line (MimeObject *obj, char *line, PRInt32 length,
 		!mime_typep(obj,(MimeObjectClass*)&mimeMultipartSignedClass) &&
 		!mime_typep(kid,(MimeObjectClass*)&mimeMultipartAlternativeClass) &&
 		!mime_typep(kid,(MimeObjectClass*)&mimeMultipartRelatedClass) &&
-		!mime_typep(kid,(MimeObjectClass*)&mimeMultipartSignedClass) &&
-		!mime_typep(kid, (MimeObjectClass*)&mimeInlineTextVCardClass))
+		!mime_typep(kid,(MimeObjectClass*)&mimeMultipartSignedClass) 
+#ifdef RICHIE_VCARD
+    && !mime_typep(kid, (MimeObjectClass*)&mimeInlineTextVCardClass)
+#endif
+    )
 		return obj->options->decompose_file_output_fn (line, length, obj->options->stream_closure);
   }
 #endif /* MIME_DRAFTS */

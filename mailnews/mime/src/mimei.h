@@ -79,10 +79,10 @@
       |     |     |--- MimeInlineTextRichtext
       |     |     |     |
       |     |     |     |--- MimeInlineTextEnriched
-      |     |	  |
-      |     |	  |--- MimeInlineTextVCard
-      |     |	  |
-      |     |	  |--- MimeInlineTextCalendar
+      |     |	    |
+      |     |	    |--- MimeInlineTextVCard
+      |     |	    |
+      |     |	    |--- MimeInlineTextCalendar
       |     |
       |     |--- MimeInlineImage
       |     |
@@ -376,12 +376,6 @@ extern PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 											PRBool *isAlterOrRelated);
 
 #endif /* MOZILLA_30 */
-
-/* Sends some mail, without user interaction. */
-extern int
-MimeSendMessage(MimeDisplayOptions* options, char* to, char* subject,
-				char* otherheaders, char* body);
-
 
 /* #### These ought to be in libxp or nspr, not libmsg...*/
 #if 0

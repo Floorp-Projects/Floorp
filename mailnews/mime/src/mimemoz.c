@@ -36,20 +36,18 @@
 #include "mimetric.h"   /* for MIME_RichtextConverter */
 #include "mimethtm.h"
 #include "mimemsig.h"
-#ifndef MOZILLA_30
 #include "mimemrel.h"
 #include "mimemalt.h"
-# include "xpgetstr.h"
+#include "xpgetstr.h"
+
+#ifdef RICHIE_VCARD
 # include "mimevcrd.h"  /* for MIME_VCardConverter */
-#ifdef RICHIE_CAL
-# include "mimecal.h"   /* for MIME_JulianConverter */
-#endif
+#endif RICHIE_VCARD
+
 # include "edt.h"
-  extern int XP_FORWARDED_MESSAGE_ATTACHMENT;
-#endif /* !MOZILLA_30 */
+extern int XP_FORWARDED_MESSAGE_ATTACHMENT;
 
 #include "mimerosetta.h"
-
 #ifdef MOZ_SECURITY
 #include HG01944
 #include HG04488
@@ -63,23 +61,8 @@
 #include "prprf.h"
 #include "intl_csi.h"
 
-#ifdef RICHIE
-#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_MAC)
-#if !defined(MOZ_LITE)
-    #define JULIAN_EXISTS 1		/* Julian isn't working on mac yet */
-#endif
-#endif
-#endif /* RICHIE */
-
-
-#ifdef JULIAN_EXISTS
-#include "julianform.h"
-#include "prefapi.h"
-#include "fe_proto.h"
-#endif
-
 #ifdef HAVE_MIME_DATA_SLOT
-# define LOCK_LAST_CACHED_MESSAGE
+#define LOCK_LAST_CACHED_MESSAGE
 #endif
 
 #include "mimei.h"      /* for moved MimeDisplayData struct */
@@ -2285,6 +2268,7 @@ MIME_DisplayAttachmentPane(MWContext* context)
 }
 
 
+#ifdef RICHIE_VCARD
 /* This struct is the state we used in MIME_VCardConverter() */
 struct mime_vcard_data {
     URL_Struct *url;                         /* original url */
@@ -2376,12 +2360,15 @@ mime_vcard_abort (void *stream, int status )
   PR_Free (vcd);
 }
 
+#endif /* RICHIE_VCARD */
+
 extern int MIME_HasAttachments(MWContext *context)
 {
 	return (context->mime_data && context->mime_data->last_parsed_object->showAttachmentIcon);
 }
 
 
+#ifdef RICHIE_VCARD
 
 extern NET_StreamClass *
 MIME_VCardConverter2 ( int format_out,
@@ -2493,263 +2480,6 @@ MIME_VCardConverter2 ( int format_out,
     return stream;
 }
 
+#endif /* RICHIE_VCARD */
+
 #endif /* !MOZILLA_30 */
-
-
-
-int
-MimeSendMessage(MimeDisplayOptions* options, char* to, char* subject,
-				char* otherheaders, char* body)
-{
-	struct mime_stream_data* msd =
-		(struct mime_stream_data*) options->stream_closure;
-
-return 0;
-#ifdef RICHIE
-	return NET_SendMessageUnattended(msd->context, to, subject,
-									 otherheaders, body);
-#endif
-}
-
-
-int
-mime_TranslateCalendar(char* caldata, char** html) 
-{
-#ifdef JULIAN_EXISTS
-    static PRBool initialized = PR_FALSE;
-    static PRBool bFoundNLSDataDirectory = PR_FALSE;
-    void* closure;
-    if (!initialized) {
-	Julian_Form_Callback_Struct jcbs;
-
-		jcbs.my_context = (MWContext *)XP_FindSomeContext;
-		jcbs.callbackurl = NET_CallbackURLCreate;
-		jcbs.callbackurlfree = NET_CallbackURLFree;
-		jcbs.ParseURL = NET_ParseURL;
-		jcbs.MakeNewWindow = FE_MakeNewWindow;
-		jcbs.CreateURLStruct = NET_CreateURLStruct;
-		jcbs.BeginParseMDL = PA_BeginParseMDL;
-		jcbs.ProcessTag = LO_ProcessTag;
-		jcbs.SACopy = NET_SACopy;
-		jcbs.RaiseWindow = FE_RaiseWindow;
-		jcbs.FindSomeContext = XP_FindSomeContext;
-		jcbs.FindNamedContextInList = XP_FindNamedContextInList;
-		jcbs.CopyCharPref = PREF_CopyCharPref;
-		jcbs.BoolPref = PREF_GetBoolPref;
-		jcbs.IntPref = PREF_GetIntPref;
-		jcbs.UnEscape = NET_UnEscape;
-		jcbs.PlusToSpace = NET_PlusToSpace;
-        jcbs.SetCharPref = PREF_SetCharPref;
- 
-        /* John Sun added 4-22-98 */
-        jcbs.SendMessageUnattended = NET_SendMessageUnattended;
-        jcbs.DestroyWindow = FE_DestroyWindow;
-
-        jcbs.GetJulianPath = FEU_GetJulianPath;
-        jcbs.GetString = XP_GetString;
-                
-		bFoundNLSDataDirectory = jf_Initialize(&jcbs);
-		initialized = PR_TRUE;
-    }
-    closure = jf_New(caldata, (PRBool) bFoundNLSDataDirectory);
-    *html = jf_getForm(closure);
-    jf_Destroy(closure);
-    return 0;
-#else
-    *html = PL_strdup("<b>Can't handle calendar data on this platform yet</b>");
-    return 0;
-#endif /* JULIAN_EXISTS */
-}
-
-
-
-/*
- *
- * MIME_JulianConverter Stream handler stuff
- *
- */
-
-struct mime_calendar_data {
-    URL_Struct *url;                         /* original url */
-    int format_out;                          /* intended output format; should be TEXT-CALENDAR */
-    MWContext *context;
-    NET_StreamClass *stream;                 /* not used for now */
-    MimeDisplayOptions *options;             /* data for communicating with libmime.a */
-    MimeObject *obj;                         /* The root */
-};
-
-
-static int mime_calendar_write (void *stream, const char *buf, PRInt32 size )
-{
-  struct mime_calendar_data *cald = (struct mime_calendar_data *) stream;  
-  PR_ASSERT ( cald );
-
-  if ( !cald || !cald->obj ) return -1;
-
-  return cald->obj->class->parse_line ((char *) buf, size, cald->obj);
-}
-
-static unsigned int mime_calendar_write_ready (void *stream)
-{
-  struct mime_calendar_data *cald = (struct mime_calendar_data *) stream;  
-  PR_ASSERT (cald);
-
-  if (!cald) return MAX_WRITE_READY;
-  if (cald->stream)
-    return cald->stream->is_write_ready ( cald->stream );
-  else
-    return MAX_WRITE_READY;
-}
-
-static void mime_calendar_complete (void *stream)
-{
-  struct mime_calendar_data *cald = (struct mime_calendar_data *) stream;  
-  
-  PR_ASSERT (cald);
-
-  if (!cald) return;
-  
-  if (cald->obj) {
-    int status;
-
-    status = cald->obj->class->parse_eof ( cald->obj, PR_FALSE );
-    cald->obj->class->parse_end( cald->obj, status < 0 ? PR_TRUE : PR_FALSE );
-    
-    mime_free (cald->obj);
-    cald->obj = 0;
-
-    if (cald->stream) {
-      cald->stream->complete (cald->stream);
-      PR_Free( cald->stream );
-      cald->stream = 0;
-    }
-  }
-}
-
-static void mime_calendar_abort (void *stream, int status )
-{
-  struct mime_calendar_data *cald = (struct mime_calendar_data *) stream;
-  
-  PR_ASSERT (cald);
-  if (!cald) return;
-  
-  if (cald->obj) {
-      int status;
-      
-      if ( !cald->obj->closed_p )
-          status = cald->obj->class->parse_eof ( cald->obj, PR_TRUE );
-      if ( !cald->obj->parsed_p )
-          cald->obj->class->parse_end( cald->obj, PR_TRUE );
-      
-      mime_free (cald->obj);
-      cald->obj = 0;
-   
-      if (cald->stream) {
-          cald->stream->abort (cald->stream, status);
-          PR_Free( cald->stream );
-          cald->stream = 0;
-      }
-  }
-  PR_Free (cald);
-}
-
-extern NET_StreamClass * MIME_JulianConverter (int format_out, void *closure, URL_Struct *url, MWContext *context )
-{
-    int status = 0;
-    NET_StreamClass * stream = NULL;
-    NET_StreamClass * next_stream = NULL;
-    struct mime_calendar_data *cald = NULL;
-    MimeObject *obj;
-
-    PR_ASSERT (url && context);
-    if ( !url || !context ) return NULL;
-
-    next_stream = mime_make_output_stream (TEXT_HTML, 0, 0, 0, 0,
-                format_out, url, context, NULL);
-
-    if (!next_stream) return 0;
-    
-    cald = PR_NEWZAP (struct mime_calendar_data);
-    if (!cald) {
-        PR_Free (next_stream);
-        return 0;
-    }
-
-    cald->url = url;
-    cald->context = context;
-    cald->format_out = format_out;
-    cald->stream = next_stream;
-
-    cald->options = PR_NEWZAP ( MimeDisplayOptions );
-
-    if ( !cald->options ) {
-        PR_Free (next_stream);
-        PR_Free ( cald );
-        return 0;
-    }
-
-    cald->options->write_html_p        = PR_TRUE;
-    cald->options->output_fn           = mime_output_fn;
-    if (format_out == FO_NGLAYOUT ||
-        format_out == FO_CACHE_AND_NGLAYOUT)
-    cald->options->output_vcard_buttons_p = PR_FALSE;
-
-#ifdef MIME_DRAFTS
-    cald->options->decompose_file_p = PR_FALSE; /* new field in MimeDisplayOptions */
-#endif /* MIME_DRAFTS */
-
-    cald->options->url = url->address;
-    cald->options->stream_closure = cald;
-    cald->options->html_closure = cald;
-
-#ifdef RICHIE_CAL
-    obj = mime_new ( (MimeObjectClass *) &mimeInlineTextCalendarClass,
-        (MimeHeaders *) NULL,
-        TEXT_CALENDAR );
-#endif
-
-    if ( !obj ) {
-        PR_FREEIF( cald->options->part_to_load );
-        PR_Free ( next_stream );
-        PR_Free ( cald->options );
-        PR_Free ( cald );
-        return 0;
-    }
-  
-    obj->options = cald->options;
-    cald->obj = obj;
-
-    stream = PR_NEWZAP ( NET_StreamClass );
-    if ( !stream ) {
-        PR_FREEIF ( cald->options->part_to_load );
-        PR_Free ( next_stream );
-        PR_Free ( cald->options );
-        PR_Free ( cald );
-        PR_Free ( obj );
-        return 0;
-    }
-
-    stream->name = "MIME To Calendar Converter Stream";
-    stream->complete = mime_calendar_complete;
-    stream->abort = mime_calendar_abort;
-    stream->put_block = mime_calendar_write;
-    stream->is_write_ready = mime_calendar_write_ready;
-    stream->data_object = cald;
-    stream->window_id = context;
-
-    status = obj->class->initialize ( obj );
-    if ( status >= 0 )
-        status = obj->class->parse_begin ( obj );
-    if ( status < 0 ) {
-        PR_Free ( stream );
-        PR_FREEIF( cald->options->part_to_load );
-        PR_Free ( next_stream );
-        PR_Free ( cald->options );
-        PR_Free ( cald );
-        PR_Free ( obj );
-        return 0;
-    }
-
-    return stream;
-}
-

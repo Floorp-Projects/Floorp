@@ -17,3 +17,10 @@ LIBRARY mime.dll
 
 EXPORTS
 	MIME_MessageConverter
+	MIME_MimeObject_write
+	MIME_GetmimeObjectClass
+	MIME_GetmimeContainerClass
+	MIME_GetmimeLeafClass
+	MIME_GetmimeInlineTextClass
+	MIME_GetmimeMultipartClass
+	MIME_GetmimeMultipartSignedClass

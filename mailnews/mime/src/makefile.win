@@ -90,16 +90,17 @@ OBJS=							\
 			.\$(OBJDIR)\mimetric.obj	\
 			.\$(OBJDIR)\mimeunty.obj	\
 			.\$(OBJDIR)\mimemoz.obj		\
+			.\$(OBJDIR)\mimecth.obj		\
+# VCARD REMOVAL EFFORT
 			.\$(OBJDIR)\mimevcrd.obj	\
+			.\$(OBJDIR)\oldvcc.obj		\
+			.\$(OBJDIR)\oldvobj.obj		\
+#
 # THIS WILL NEED WORK AFTER WE GET A LIBMSG MORE XP-COM-afied
 #			.\$(OBJDIR)\mimedrft.obj	\
 # XP-COM BRIDGES
 			.\$(OBJDIR)\comi18n.obj		\
 			.\$(OBJDIR)\commsg.obj		\
-# SHOULD HAVE XP-COM INTERFACES FOR THIS STUFF AND SHOULD NOT BE
-# A PART OF LIBMIME
-			.\$(OBJDIR)\oldvcc.obj		\
-			.\$(OBJDIR)\oldvobj.obj		\
 # EXTERNAL (OLD) DEPENDENCIES - SHOULD EVENTUALLY BE REMOVED 
 # WHEN NEW WORLD FUNCTIONS ARE FOUND 
 			.\$(OBJDIR)\oldnet.obj		\
@@ -118,11 +119,11 @@ OBJS=							\
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=mime.dll
-LIBNAME=mime.lib
-PDBFILE=mime.pdb
-MAPFILE=mime.map
-DEFFILE=mime.def
+DLLNAME=$(MODULE).dll
+LIBNAME=$(MODULE).lib
+PDBFILE=$(MODULE).pdb
+MAPFILE=$(MODULE).map
+DEFFILE=$(MODULE).def
 
 #//------------------------------------------------------------------------
 #//
@@ -165,6 +166,7 @@ LINCS=$(LINCS)  -I.                         		\
 			   -I$(PUBLIC)\netlib		\
 			   -I$(PUBLIC)\xpcom		\
 			   -I$(PUBLIC)\raptor		\
+			   -I..\..\base\public 		\
 			   $(NULL)
 
 #//------------------------------------------------------------------------

@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "mimerosetta.h"
 
 #ifdef MOZ_SECURITY
@@ -49,27 +48,234 @@
 #include "mimethtm.h"	/*   |     |     |--- MimeInlineTextHTML			*/
 #include "mimetric.h"	/*   |     |     |--- MimeInlineTextRichtext		*/
 #include "mimetenr.h"	/*   |     |     |     |--- MimeInlineTextEnriched	*/
-#ifndef MOZILLA_30
-#include "mimevcrd.h"   /*   |     |     |--------- MimeInlineTextVCard		*/
-#ifdef RICHIE_CAL
-#include "mimecal.h"    /*   |     |     |--------- MimeInlineTextCalendar  */
+/* SUPPORTED VIA PLUGIN    |     |     |--------- MimeInlineTextCalendar  */
+
+#define RICHIE_VCARD 1
+#ifdef RICHIE_VCARD
+#include "mimevcrd.h" /*   |     |     |--------- MimeInlineTextVCard		*/
 #endif
+
 #include "prefapi.h"
-#endif /* !MOZILLA_30 */
 #include "mimeiimg.h"	/*   |     |--- MimeInlineImage						*/
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
 #include "mimeebod.h"	/*   |--- MimeExternalBody							*/
-
-
 #include "prmem.h"
 #include "plstr.h"
+#include "mimecth.h"
 
 /* ==========================================================================
    Allocation and destruction
    ==========================================================================
  */
-
 static int mime_classinit(MimeObjectClass *class);
+
+/* 
+ * These are the necessary defines/variables for doing
+ * content type handlers in external plugins.
+ */
+typedef struct {
+  char        *content_type;
+  char        *file_name;
+#ifdef XP_PC
+  HINSTANCE   ct_handler;
+#endif
+} cthandler_struct;
+
+cthandler_struct    *cthandler_list = NULL;
+PRInt32             plugin_count = -1;
+
+/* 
+ * This will find the directory for content type handler plugins.
+ */
+PRBool
+find_plugin_directory(char *path, PRInt32 size)
+{
+#ifdef XP_PC
+  char  *ptr;
+
+  if (!GetModuleFileName(NULL, path, size))
+    return FALSE;
+  ptr = PL_strrchr(path, '\\');
+  if (ptr)
+    *ptr = '\0';
+  PL_strcat(path, "\\");
+  PL_strcat(path, MIME_PLUGIN_DIR);
+#else
+  printf("Don't know how to locate plugins directory on Unix/Mac yet...\n");
+  return FALSE;
+#endif
+
+  return TRUE;
+}
+
+/* 
+ * This will locate the number of content type handler plugins.
+ */
+PRInt32 
+get_plugin_count(void)
+{
+  PRDirEntry        *dirEntry;
+  PRInt32           count = 0;
+  PRDir             *dir;
+  char              path[1024];
+
+  if (!find_plugin_directory(path, sizeof(path)))
+    return 0;
+
+  dir = PR_OpenDir(path);
+  if (!dir)
+    return count;
+
+  do
+  {
+    dirEntry = PR_ReadDir(dir, PR_SKIP_BOTH | PR_SKIP_HIDDEN);
+    if (!dirEntry)
+      break;
+
+    if (PL_strncasecmp(MIME_PLUGIN_PREFIX, dirEntry->name, PL_strlen(MIME_PLUGIN_PREFIX)) == 0)
+      ++count;
+  } while (dirEntry != NULL);
+
+  PR_CloseDir(dir);
+  return count;
+}
+
+char *
+get_content_type(cthandler_struct *ct)
+{
+#ifdef XP_PC
+  char * (FAR PASCAL *lpfnMIME_GetContentType) (void);
+
+  (FARPROC)lpfnMIME_GetContentType = GetProcAddress(ct->ct_handler, "MIME_GetContentType"); 
+  if (!lpfnMIME_GetContentType)
+    return NULL;
+
+  return ( (*lpfnMIME_GetContentType) () );
+#else /* Unix and Mac */
+  return NULL;
+#endif
+}
+
+MimeObjectClass * 
+create_content_type_handler_class(cthandler_struct *ct)
+{
+#ifdef XP_PC
+  MimeObjectClass * (FAR PASCAL *lpfnMIME_CreateContentTypeHandlerClass) (const char *);
+
+  (FARPROC)lpfnMIME_CreateContentTypeHandlerClass = GetProcAddress(ct->ct_handler, "MIME_CreateContentTypeHandlerClass"); 
+  if (lpfnMIME_CreateContentTypeHandlerClass)
+    return (lpfnMIME_CreateContentTypeHandlerClass)(ct->content_type);
+  else
+    return NULL;
+#else /* Unix and Mac */
+  return NULL;
+#endif
+}
+
+/*
+ * We need to initialize a table of external modules and
+ * the content type that it will process. What we will do is check
+ * the directory "mimeplugins" under the location where this DLL is
+ * running. Any DLL in that directory will have the naming convention:
+ * 
+ * mimect-mycontenttype.dll - where mycontenttype is the content type being
+ *                            processed.
+ *
+ * This DLL will have specifically defined entry points to be used by
+ * libmime for processing the data stream.
+ */
+PRInt32 
+do_plugin_discovery(void)
+{
+  PRDirEntry        *dirEntry;
+  PRInt32           count = 0;
+  PRDir             *dir;
+  char              path[1024];
+  char              full_name[1024];
+
+  if (!find_plugin_directory(path, sizeof(path)))
+    return 0;
+
+  count = get_plugin_count();
+  if (count <= 0)
+    return 0;
+
+  cthandler_list = PR_MALLOC(count * sizeof(cthandler_struct));
+  if (!cthandler_list)
+    return 0;
+
+  dir = PR_OpenDir(path);
+  if (!dir)
+    return 0;
+
+  count = 0;
+  do
+  {
+    dirEntry = PR_ReadDir(dir, PR_SKIP_BOTH | PR_SKIP_HIDDEN);
+    if (!dirEntry)
+      break;
+
+    if (PL_strncasecmp(MIME_PLUGIN_PREFIX, dirEntry->name, PL_strlen(MIME_PLUGIN_PREFIX)) == 0)
+    {
+#ifdef XP_PC
+      PL_strcpy(full_name, path);
+      PL_strcat(full_name, "\\");
+      PL_strcat(full_name, dirEntry->name);
+      cthandler_list[count].ct_handler = LoadLibrary(full_name);
+      if (!cthandler_list[count].ct_handler)
+        continue;
+
+      cthandler_list[count].file_name = PL_strdup(full_name);
+      if (!cthandler_list[count].file_name)
+      {
+        FreeLibrary(cthandler_list[count].ct_handler);
+        continue;
+      }
+
+      cthandler_list[count].content_type = PL_strdup(get_content_type(&(cthandler_list[count])));
+      if (!cthandler_list[count].content_type)
+      {
+        FreeLibrary(cthandler_list[count].ct_handler);
+        PR_FREEIF(cthandler_list[count].file_name);
+        continue;
+      }
+
+      ++count;
+#endif
+    }
+  } while (dirEntry != NULL);
+
+  PR_CloseDir(dir);
+  return count;
+}
+
+/* 
+ * This routine will find all content type handler for a specifc content
+ * type (if it exists)
+ */
+MimeObjectClass *
+mime_locate_external_content_handler(const char *content_type)
+{
+  PRInt32           i;
+
+  if (plugin_count < 0)
+    plugin_count = do_plugin_discovery();
+
+  for (i=0; i<plugin_count; i++)
+  {
+    if (PL_strcasecmp(content_type, cthandler_list[i].content_type) == 0)
+      return( create_content_type_handler_class((&cthandler_list[i])) );
+  }
+
+  return NULL;
+}
+
+/* This is necessary to expose the MimeObject method outside of this DLL */
+int
+MIME_MimeObject_write(MimeObject *obj, char *output, PRInt32 length, PRBool user_visible_p)
+{
+  return MimeObject_write(obj, output, length, user_visible_p);
+}
 
 MimeObject *
 mime_new (MimeObjectClass *class, MimeHeaders *hdrs,
@@ -143,136 +349,141 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 				 MimeDisplayOptions *opts, PRBool exact_match_p)
 {
   MimeObjectClass *class = 0;
+  MimeObjectClass *tempClass = 0;
 
-  if (!content_type || !*content_type ||
-	  !PL_strcasecmp(content_type, "text"))  /* with no / in the type */
-	class = (MimeObjectClass *)&mimeUntypedTextClass;
-
-  /* Subtypes of text...
-   */
-  else if (!PL_strncasecmp(content_type,			"text/", 5))
-	{
-	  if      (!PL_strcasecmp(content_type+5,		"html"))
-		class = (MimeObjectClass *)&mimeInlineTextHTMLClass;
-	  else if (!PL_strcasecmp(content_type+5,		"enriched"))
-		class = (MimeObjectClass *)&mimeInlineTextEnrichedClass;
-	  else if (!PL_strcasecmp(content_type+5,		"richtext"))
-		class = (MimeObjectClass *)&mimeInlineTextRichtextClass;
-	  else if (!PL_strcasecmp(content_type+5,		"plain"))
-		class = (MimeObjectClass *)&mimeInlineTextPlainClass;
-#ifndef MOZILLA_30
-	  else if (!PL_strcasecmp(content_type+5,		"x-vcard"))
-		class = (MimeObjectClass *)&mimeInlineTextVCardClass;
-#ifdef RICHIE_CAL
-	  else if (!PL_strcasecmp(content_type+5,		"calendar"))
-		class = (MimeObjectClass *)&mimeInlineTextCalendarClass;
+  /* 
+  * What we do first is check for an external content handler plugin. 
+  * This will actually extend the mime handling by calling a routine 
+  * which will allow us to load an external content type handler
+  * for specific content types. If one is not found, we will drop back
+  * to the default handler.
+  */
+  if ((tempClass = mime_locate_external_content_handler(content_type)) != NULL)
+  {
+    class = (MimeObjectClass *)tempClass;
+  }
+  else
+  {
+    if (!content_type || !*content_type ||
+      !PL_strcasecmp(content_type, "text"))  /* with no / in the type */
+      class = (MimeObjectClass *)&mimeUntypedTextClass;
+    
+      /* Subtypes of text...
+    */
+    else if (!PL_strncasecmp(content_type,			"text/", 5))
+    {
+      if      (!PL_strcasecmp(content_type+5,		"html"))
+        class = (MimeObjectClass *)&mimeInlineTextHTMLClass;
+      else if (!PL_strcasecmp(content_type+5,		"enriched"))
+        class = (MimeObjectClass *)&mimeInlineTextEnrichedClass;
+      else if (!PL_strcasecmp(content_type+5,		"richtext"))
+        class = (MimeObjectClass *)&mimeInlineTextRichtextClass;
+      else if (!PL_strcasecmp(content_type+5,		"plain"))
+        class = (MimeObjectClass *)&mimeInlineTextPlainClass;
+      
+#ifdef RICHIE_VCARD
+      else if (!PL_strcasecmp(content_type+5,		"x-vcard"))
+        class = (MimeObjectClass *)&mimeInlineTextVCardClass;
 #endif
-#endif /* !MOZILLA_30 */
-	  else if (!exact_match_p)
-		class = (MimeObjectClass *)&mimeInlineTextPlainClass;
-	}
-
-  /* Subtypes of multipart...
-   */
-  else if (!PL_strncasecmp(content_type,			"multipart/", 10))
-	{
-	  if      (!PL_strcasecmp(content_type+10,	"alternative"))
-		class = (MimeObjectClass *)&mimeMultipartAlternativeClass;
-	  else if (!PL_strcasecmp(content_type+10,	"related"))
-		class = (MimeObjectClass *)&mimeMultipartRelatedClass;
-	  else if (!PL_strcasecmp(content_type+10,	"digest"))
-		class = (MimeObjectClass *)&mimeMultipartDigestClass;
-	  else if (!PL_strcasecmp(content_type+10,	"appledouble") ||
-			   !PL_strcasecmp(content_type+10,	"header-set"))
-		class = (MimeObjectClass *)&mimeMultipartAppleDoubleClass;
-	  else if (!PL_strcasecmp(content_type+10,	"parallel"))
-		class = (MimeObjectClass *)&mimeMultipartParallelClass;
-	  else if (!PL_strcasecmp(content_type+10,	"mixed"))
-		class = (MimeObjectClass *)&mimeMultipartMixedClass;
-
-	  else if (!PL_strcasecmp(content_type+10,	"signed"))
-		{
-		  /* Check that the "protocol" and "micalg" parameters are ones we
-			 know about. */
-		  char *ct = (hdrs
-					  ? MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE,
+      
+      else if (!exact_match_p)
+        class = (MimeObjectClass *)&mimeInlineTextPlainClass;
+    }
+    
+    /* Subtypes of multipart...
+    */
+    else if (!PL_strncasecmp(content_type,			"multipart/", 10))
+    {
+      if      (!PL_strcasecmp(content_type+10,	"alternative"))
+        class = (MimeObjectClass *)&mimeMultipartAlternativeClass;
+      else if (!PL_strcasecmp(content_type+10,	"related"))
+        class = (MimeObjectClass *)&mimeMultipartRelatedClass;
+      else if (!PL_strcasecmp(content_type+10,	"digest"))
+        class = (MimeObjectClass *)&mimeMultipartDigestClass;
+      else if (!PL_strcasecmp(content_type+10,	"appledouble") ||
+        !PL_strcasecmp(content_type+10,	"header-set"))
+        class = (MimeObjectClass *)&mimeMultipartAppleDoubleClass;
+      else if (!PL_strcasecmp(content_type+10,	"parallel"))
+        class = (MimeObjectClass *)&mimeMultipartParallelClass;
+      else if (!PL_strcasecmp(content_type+10,	"mixed"))
+        class = (MimeObjectClass *)&mimeMultipartMixedClass;
+      
+      else if (!PL_strcasecmp(content_type+10,	"signed"))
+      {
+      /* Check that the "protocol" and "micalg" parameters are ones we
+        know about. */
+        char *ct = (hdrs
+          ? MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE,
 										PR_FALSE, PR_FALSE)
-					  : 0);
-		  char *proto = (ct
-						 ? MimeHeaders_get_parameter(ct, PARAM_PROTOCOL, NULL, NULL)
-						 : 0);
-		  char *micalg = (ct
-						  ? MimeHeaders_get_parameter(ct, PARAM_MICALG, NULL, NULL)
-						 : 0);
-
+                    : 0);
+        char *proto = (ct
+          ? MimeHeaders_get_parameter(ct, PARAM_PROTOCOL, NULL, NULL)
+          : 0);
+        char *micalg = (ct
+          ? MimeHeaders_get_parameter(ct, PARAM_MICALG, NULL, NULL)
+          : 0);
+        
 #ifdef MOZ_SECURITY
-      HG01444
+        HG01444
 #endif
-
-		  PR_FREEIF(proto);
-		  PR_FREEIF(micalg);
-		  PR_FREEIF(ct);
-		}
-
-	  if (!class && !exact_match_p)
-		/* Treat all unknown multipart subtypes as "multipart/mixed" */
-		class = (MimeObjectClass *)&mimeMultipartMixedClass;
-	}
-
-  /* Subtypes of message...
-   */
-  else if (!PL_strncasecmp(content_type,			"message/", 8))
-	{
-	  if      (!PL_strcasecmp(content_type+8,		"rfc822") ||
-			   !PL_strcasecmp(content_type+8,		"news"))
-		class = (MimeObjectClass *)&mimeMessageClass;
-	  else if (!PL_strcasecmp(content_type+8,		"external-body"))
-		class = (MimeObjectClass *)&mimeExternalBodyClass;
-	  else if (!PL_strcasecmp(content_type+8,		"partial"))
-		/* I guess these are most useful as externals, for now... */
-		class = (MimeObjectClass *)&mimeExternalObjectClass;
-	  else if (!exact_match_p)
-		/* Treat all unknown message subtypes as "text/plain" */
-		class = (MimeObjectClass *)&mimeInlineTextPlainClass;
-	}
-
-  /* The magic image types which we are able to display internally...
-   */
-  else if (!PL_strcasecmp(content_type,			IMAGE_GIF)  ||
-		   !PL_strcasecmp(content_type,			IMAGE_JPG) ||
-		   !PL_strcasecmp(content_type,			IMAGE_PJPG) ||
-           	   !PL_strcasecmp(content_type,			IMAGE_PNG) ||
-		   !PL_strcasecmp(content_type,			IMAGE_XBM)  ||
-		   !PL_strcasecmp(content_type,			IMAGE_XBM2) ||
-		   !PL_strcasecmp(content_type,			IMAGE_XBM3))
-	class = (MimeObjectClass *)&mimeInlineImageClass;
-
+          
+          PR_FREEIF(proto);
+        PR_FREEIF(micalg);
+        PR_FREEIF(ct);
+      }
+      
+      if (!class && !exact_match_p)
+        /* Treat all unknown multipart subtypes as "multipart/mixed" */
+        class = (MimeObjectClass *)&mimeMultipartMixedClass;
+    }
+    
+    /* Subtypes of message...
+    */
+    else if (!PL_strncasecmp(content_type,			"message/", 8))
+    {
+      if      (!PL_strcasecmp(content_type+8,		"rfc822") ||
+        !PL_strcasecmp(content_type+8,		"news"))
+        class = (MimeObjectClass *)&mimeMessageClass;
+      else if (!PL_strcasecmp(content_type+8,		"external-body"))
+        class = (MimeObjectClass *)&mimeExternalBodyClass;
+      else if (!PL_strcasecmp(content_type+8,		"partial"))
+        /* I guess these are most useful as externals, for now... */
+        class = (MimeObjectClass *)&mimeExternalObjectClass;
+      else if (!exact_match_p)
+        /* Treat all unknown message subtypes as "text/plain" */
+        class = (MimeObjectClass *)&mimeInlineTextPlainClass;
+    }
+    
+    /* The magic image types which we are able to display internally...
+    */
+    else if (!PL_strcasecmp(content_type,			IMAGE_GIF)  ||
+      !PL_strcasecmp(content_type,			IMAGE_JPG) ||
+      !PL_strcasecmp(content_type,			IMAGE_PJPG) ||
+      !PL_strcasecmp(content_type,			IMAGE_PNG) ||
+      !PL_strcasecmp(content_type,			IMAGE_XBM)  ||
+      !PL_strcasecmp(content_type,			IMAGE_XBM2) ||
+      !PL_strcasecmp(content_type,			IMAGE_XBM3))
+      class = (MimeObjectClass *)&mimeInlineImageClass;
+    
 #ifdef MOZ_SECURITY
-  HG01555
+    HG01555
 #endif
-
-  /* A few types which occur in the real world and which we would otherwise
-	 treat as non-text types (which would be bad) without this special-case...
-   */
-  else if (!PL_strcasecmp(content_type,			APPLICATION_PGP) ||
-		   !PL_strcasecmp(content_type,			APPLICATION_PGP2))
-	class = (MimeObjectClass *)&mimeInlineTextPlainClass;
-
-  else if (!PL_strcasecmp(content_type,			SUN_ATTACHMENT))
-	class = (MimeObjectClass *)&mimeSunAttachmentClass;
-
-  /*
-   * RICHIECT
-   * This is where we will actually extend the mime handling for libmime
-   * with a call to a MIME External Content Type Handler. 
-  else if (content_type lives in our list somewhere!)
-  class = (MimeObjectClass *)&mimeExternalContentTypeHandler;
-   */
-
-  /* Everything else gets represented as a clickable link.
-   */
-  else if (!exact_match_p)
-	class = (MimeObjectClass *)&mimeExternalObjectClass;
+      
+    /* A few types which occur in the real world and which we would otherwise
+    treat as non-text types (which would be bad) without this special-case...
+    */
+    else if (!PL_strcasecmp(content_type,			APPLICATION_PGP) ||
+    !PL_strcasecmp(content_type,			APPLICATION_PGP2))
+    class = (MimeObjectClass *)&mimeInlineTextPlainClass;
+    
+    else if (!PL_strcasecmp(content_type,			SUN_ATTACHMENT))
+      class = (MimeObjectClass *)&mimeSunAttachmentClass;
+    
+      /* Everything else gets represented as a clickable link.
+    */
+    else if (!exact_match_p)
+      class = (MimeObjectClass *)&mimeExternalObjectClass;  
+  }
 
  if (!exact_match_p)
    PR_ASSERT(class);
@@ -367,9 +578,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 
   if (!got_lookup_pref)
   {
-#ifndef MOZILLA_30
 	  PREF_GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
-#endif
 	  got_lookup_pref = PR_TRUE;
   }
 
@@ -434,11 +643,16 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   {
 	/* change content-Disposition for vcards to be inline so */
 	/* we can see a nice html display */
-#ifndef MOZILLA_30
-	if (mime_subclass_p(class,(MimeObjectClass *)&mimeInlineTextVCardClass))
-		StrAllocCopy(content_disposition, "inline");
-	else
-#endif /* !MOZILLA_30 */
+#ifdef RICHIE_VCARD
+    if (mime_subclass_p(class,(MimeObjectClass *)&mimeInlineTextVCardClass))
+  		StrAllocCopy(content_disposition, "inline");
+	  else
+#else
+    if (!PL_strcasecmp(content_type+5,		"x-vcard"))
+  		StrAllocCopy(content_disposition, "inline");
+    else
+#endif
+
 		content_disposition = (hdrs
 							   ? MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION,
 												 PR_TRUE, PR_FALSE)

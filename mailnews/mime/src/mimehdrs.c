@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nsMsgMessageFlags.h"
 #include "mimerosetta.h"
 #include "mimei.h"
 #include "xpgetstr.h"

@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "mimevcrd.h"
 #include "xpgetstr.h"
 #include "xp_core.h"
