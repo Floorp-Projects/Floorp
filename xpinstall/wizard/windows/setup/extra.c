@@ -271,6 +271,7 @@ HRESULT Initialize(HINSTANCE hInstance)
   bCreateDestinationDir = FALSE;
   bReboot               = FALSE;
   gdwUpgradeValue       = UG_NONE;
+  gbILUseTemp           = TRUE;
 
   if((szSetupDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -330,6 +331,7 @@ HRESULT Initialize(HINSTANCE hInstance)
   DeleteIdiGetConfigIni();
   bIdiArchivesExists = DeleteIdiGetArchives();
   DeleteIdiGetRedirect();
+  DeleteInstallLogFile();
   return(0);
 }
 
@@ -5448,6 +5450,24 @@ BOOL DeleteIdiGetConfigIni()
   return(bFileExists);
 }
 
+BOOL DeleteInstallLogFile()
+{
+  char  szInstallLogFile[MAX_BUF];
+  BOOL  bFileExists = FALSE;
+
+  lstrcpy(szInstallLogFile, szTempDir);
+  AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+  lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
+
+  if(FileExists(szInstallLogFile))
+  {
+    bFileExists = TRUE;
+    DeleteFile(szInstallLogFile);
+  }
+
+  return(bFileExists);
+}
+
 BOOL DeleteIniRedirect()
 {
   char  szFileIniRedirect[MAX_BUF];
@@ -5562,6 +5582,7 @@ void CleanTempFiles()
   */
   DeleteIdiFileIniConfig();
   DeleteArchives();
+  DeleteInstallLogFile();
 }
 
 void DeInitialize()
@@ -5583,6 +5604,7 @@ void DeInitialize()
     DeleteObject(hbmpBoxUnChecked);
 
   CleanTempFiles();
+  DirectoryRemove(szTempDir, FALSE);
 
   DeInitSiComponents();
   DeInitSXpcomFile();

@@ -72,6 +72,7 @@ BOOL            bSDUserCanceled;
 BOOL            bIdiArchivesExists;
 BOOL            bCreateDestinationDir;
 BOOL            bReboot;
+BOOL            gbILUseTemp;
 
 setupGen        sgProduct;
 diS             diSetup;

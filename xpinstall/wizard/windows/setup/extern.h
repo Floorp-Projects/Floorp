@@ -72,6 +72,7 @@ extern BOOL             bSDUserCanceled;
 extern BOOL             bIdiArchivesExists;
 extern BOOL             bCreateDestinationDir;
 extern BOOL             bReboot;
+extern BOOL             gbILUseTemp;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;
