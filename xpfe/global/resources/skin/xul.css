@@ -566,43 +566,39 @@ toolbar titledbutton[disabled="true"]:active {
 	padding: 2px;
 }
 
-xpmenubar button {
+xpmenubar xpmenu {
   border: 1px solid transparent;
 }
 
-xpmenubar button:hover {
-  border: 1px solid transparent;
-  color: inherit;
-  text-decoration: none;
-}
-
-xpmenu[menuactive="true"] button {
+xpmenu[menuactive="true"] {
   border: 1px outset white;
   color:#333366;
   text-decoration: none;
 }
 
-xpmenubar button:active {
+/*
+xpmenubar xpmenu:active {
   text-decoration:none;
   border: 1px inset;
 }
 
-xpmenubar button:active:-moz-outline {
+xpmenubar xpmenu:active:-moz-outline {
    border : 1px solid black;
 }
  
-xpmenubar button[disabled] {
+xpmenubar xpmenu[disabled] {
 	border: 1px solid transparent;
 }
 
-xpmenubar button[disabled]:hover {
+xpmenubar xpmenu[disabled]:hover {
 	border: 1px solid transparent;
 }
 
-xpmenubar button[disabled]:active {
+xpmenubar xpmenu[disabled]:active {
 	border: 1px solid transparent;
 	padding: 2px;
 }
+*/
 
 /* tree related stuff */
 
