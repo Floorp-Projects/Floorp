@@ -54,33 +54,6 @@ menulist {
   margin: 1px 3px !important;
 }
 
-/* ..... dropmarker ..... */
-
-.menulist-dropmarker {
-  -moz-appearance: menulist-button;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  border: 3px solid;
-  -moz-border-top-colors: #000000 #CCCCCC #FFFFFF;
-  -moz-border-right-colors: #000000 #777777 #AAAAAA;
-  -moz-border-bottom-colors: #000000 #777777 #AAAAAA;
-  -moz-border-left-colors: #CCCCCC #FFFFFF #CCCCCC;
-  -moz-border-radius-topright: 2px;
-  -moz-border-radius-bottomright: 2px;
-  padding: 2px 4px;
-  background-color: #CCCCCC;
-  list-style-image: url("chrome://global/skin/menulist/menulist-arrow.gif");
-}
-
-menulist[open="true"] > .menulist-dropmarker {
-  -moz-border-top-colors: #000000 #454545 #555555;
-  -moz-border-right-colors: #000000 #777777 #888888;
-  -moz-border-bottom-colors: #000000 #777777 #888888;
-  -moz-border-left-colors: #454545 #555555 #666666;
-  background-color: #666666;
-  list-style-image: url("chrome://global/skin/menulist/menulist-arrow-act.gif");
-}
-
 /* ..... disabled state ..... */
 
 menulist[disabled="true"] {
@@ -94,28 +67,10 @@ menulist[disabled="true"] > .menulist-label-box {
   -moz-border-left-colors: #777777 #CCCCCC #CCCCCC !important;
 }
 
-menulist[disabled="true"] > .menulist-dropmarker {
-  border-left: none !important;
-  -moz-border-top-colors: #777777 #CCCCCC #CCCCCC !important;
-  -moz-border-right-colors: #777777 #CCCCCC #CCCCCC !important;
-  -moz-border-bottom-colors: #777777 #CCCCCC #CCCCCC !important;
-  padding-left: 7px !important;
-  list-style-image: url("chrome://global/skin/menulist/menulist-arrow-dis.gif") !important;
-}
-
 /* ::::: editable menulists ::::: */
 
 menulist[editable="true"] {
   -moz-user-focus: normal;
-}
-
-menulist[editable="true"] > .menulist-dropmarker {
-  -moz-border-left-colors: #000000 #CCCCCC #FFFFFF;
-  -moz-border-radius: 2px;
-}
-
-menulist[editable="true"][open="true"] > .menulist-dropmarker {
-  -moz-border-left-colors: #000000 #454545 #555555;
 }
 
 .menulist-editable-box {
@@ -166,13 +121,6 @@ html|*.menulist-editable-input {
   margin: 0 3px !important;
   text-align: right;
 }  
-
-.menulist-compact > .menulist-dropmarker {
-  margin-left: 2px;
-  border: none;
-  padding: 0 !important;
-  background: transparent;
-}
 
 .menulist-compact[open="true"] {
   -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
