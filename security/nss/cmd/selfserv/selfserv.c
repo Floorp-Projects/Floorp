@@ -804,10 +804,14 @@ handle_fdx_connection(
     FLUSH;
 
 cleanup:
-    if (ssl_sock)
+    if (ssl_sock) {
 	PR_Close(ssl_sock);
-    else
-	PR_Close(tcp_sock);
+    } else
+    {
+        if (tcp_sock) {
+	    PR_Close(tcp_sock);
+        }
+    }
 
     VLOG(("selfserv: handle_fdx_connection: exiting"));
     return SECSuccess;
@@ -873,7 +877,9 @@ handle_connection(
 	status = PR_SetSocketOption(ssl_sock, &opt);
 	if (status != PR_SUCCESS) {
 	    errWarn("PR_SetSocketOption(PR_SockOpt_NoDelay, PR_TRUE)");
-	    PR_Close(ssl_sock);
+            if (ssl_sock) {
+	        PR_Close(ssl_sock);
+            }
 	    return SECFailure;
 	}
     }
@@ -1067,7 +1073,9 @@ handle_connection(
     } while (0);
 
 cleanup:
-    PR_Close(ssl_sock);
+    if (ssl_sock) {
+        PR_Close(ssl_sock);
+    }
     if (local_file_fd)
 	PR_Close(local_file_fd);
     VLOG(("selfserv: handle_connection: exiting\n"));
@@ -1130,7 +1138,9 @@ do_accepts(
 	}
 	if (stopping) {
 	    PZ_Unlock(qLock);
-	    PR_Close(tcp_sock);
+            if (tcp_sock) {
+	        PR_Close(tcp_sock);
+            }
 	    break;
 	}
 	myLink = PR_LIST_HEAD(&freeJobs);
@@ -1152,7 +1162,9 @@ do_accepts(
 
     FPRINTF(stderr, "selfserv: Closing listen socket.\n");
     VLOG(("selfserv: do_accepts: exiting"));
-    PR_Close(listen_sock);
+    if (listen_sock) {
+        PR_Close(listen_sock);
+    }
     return SECSuccess;
 }
 
@@ -1323,7 +1335,9 @@ server_main(
     terminateWorkerThreads();
 
     if (useModelSocket && model_sock) {
-    	PR_Close(model_sock);
+        if (model_sock) {
+            PR_Close(model_sock);
+        }
     }
 
 }
@@ -1362,7 +1376,9 @@ readBigFile(const char * fileName)
 	}
 	rv = SECSuccess;
 done:
-	PR_Close(local_file_fd);
+        if (local_file_fd) {
+            PR_Close(local_file_fd);
+        }
     }
     return rv;
 }
@@ -1605,7 +1621,9 @@ main(int argc, char **argv)
 	if (!listen_sock) {
 	    exit(1);
 	}
-	PR_Close(listen_sock);
+        if (listen_sock) {
+            PR_Close(listen_sock);
+        }
 	exit(0);
     }
 
@@ -1822,3 +1840,4 @@ main(int argc, char **argv)
     printf("selfserv: normal termination\n");
     return 0;
 }
+
