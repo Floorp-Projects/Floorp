@@ -46,6 +46,7 @@ Rights Reserved.
     <html:input type="radio" name="acctyperadio" id="newsaccount" value="news"/>
     &accountTypeNews.label;
   </html:div>
+<!-- no webmail yet...
   <html:div>
     <html:input type="radio" name="acctyperadio" id="webmailaccount" value="webmail"/>
     &accountTypeWebMail.label;
@@ -60,6 +61,7 @@ Rights Reserved.
       &webMailExisting.label;
     </html:div>
   </html:div>
+-->
     
 </box>
 </box>
