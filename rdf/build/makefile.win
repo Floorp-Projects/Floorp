@@ -29,7 +29,7 @@ EXPORTS=\
         $(NULL)
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsRDFFactory.obj    \
+        .\$(OBJDIR)\nsRDFModule.obj    \
 	$(NULL)
 
 LLIBS=\
