@@ -431,16 +431,9 @@ nsSocket::Close()
     if (wsaErr != 0)
         rv = wsaErr;
 #else /* unix or mac */
-#if defined(macintosh) 
-    close(mFd);
-    if (mListenFd > 0) {
-        close(mListenFd);
-    }
-#else
     rv1 = close(mFd);
     if (mListenFd > 0)
         rv2 = close(mListenFd);
-#endif
     if (rv1 != 0 || rv2 != 0)
         rv = E_SOCK_CLOSE; 
 #endif

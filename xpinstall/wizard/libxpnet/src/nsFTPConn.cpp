@@ -199,7 +199,7 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
     sprintf(cmd, "SIZE %s\r\n", aSrvPath);
     err = IssueCmd(cmd, resp, kRespBufSize, mCntlSock); /* non-fatal */
     if (err == OK && (resp[0] == '2'))
-        fileSize = atoi(&resp[4]);
+        fileSize = atoi(&resp[4]);   // else ???
 
     if (aResumePos > 0)
     {
@@ -264,6 +264,12 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
         err = OK;
 
 BAIL:
+	if ( err != OK && err != E_USER_CANCEL ) {
+		sprintf(cmd, "QUIT\r\n");
+		IssueCmd(cmd, resp, kRespBufSize, mCntlSock);
+    	FlushCntlSock(mCntlSock);
+    }
+    
     /* close locl file if open */
     if (loclfd)
         fclose(loclfd);
