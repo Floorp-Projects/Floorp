@@ -24,12 +24,13 @@
 
 #include "nsCoord.h"
 #include "nsIDOMSelectionListener.h"
+#include "nsIRenderingContext.h"
+#include "nsITimer.h"
 #include "nsICaret.h"
 #include "nsWeakPtr.h"
 
-class nsITimer;
 class nsIView;
-class nsIRenderingContext;
+
 class nsISelectionController;
 
 // {E14B66F6-BFC5-11d2-B57E-00105AA83B2F}
@@ -83,30 +84,28 @@ class nsCaret : public nsICaret,
     void          GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView* &outView);
     PRBool        SetupDrawingFrameAndOffset();
     PRBool        MustDrawCaret();
-    void          RefreshDrawCaret(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect);
-    void          DrawCaretWithContext(nsIRenderingContext* inRendContext);
-
     void          DrawCaret();
     void          ToggleDrawnStatus() {   mDrawn = !mDrawn; }
 
-    nsCOMPtr<nsIWeakReference> mPresShell;
+protected:
 
-    nsCOMPtr<nsITimer> mBlinkTimer;
+    nsWeakPtr             mPresShell;
+    nsWeakPtr             mDomSelectionWeak;
 
-    PRUint32      mBlinkRate;         // time for one cyle (off then on), in milliseconds
-    nscoord       mCaretTwipsWidth;   // caret width in twips
-    nscoord       mCaretPixelsWidth;  // caret width in pixels
+    nsCOMPtr<nsITimer>              mBlinkTimer;
+    nsCOMPtr<nsIRenderingContext>   mRendContext;
+
+    PRUint32              mBlinkRate;         // time for one cyle (off then on), in milliseconds
+    nscoord               mCaretTwipsWidth;   // caret width in twips
+    nscoord               mCaretPixelsWidth;  // caret width in pixels
     
-    PRBool        mVisible;           // is the caret blinking
-    PRBool        mReadOnly;          // it the caret in readonly state (draws differently)
-    
-  private:
-  
-    PRBool                mDrawn;             // this should be mutable
+    PRPackedBool          mVisible;           // is the caret blinking
+    PRPackedBool          mDrawn;             // this should be mutable
+    PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
     
     nsRect                mCaretRect;         // the last caret rect
     nsIFrame*             mLastCaretFrame;    // store the frame the caret was last drawn in.
+    nsIView*              mLastCaretView;     // last view that we used for drawing. Cached so we can tell when we need to make a new RC
     PRInt32               mLastContentOffset;
-    nsWeakPtr mDomSelectionWeak;
 };
 
