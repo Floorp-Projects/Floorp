@@ -63,8 +63,8 @@ vxVFDTransactionManager.prototype =
       
       // likewise with the RDF Seq.
       var seqCount = this.mTxnSeq.GetCount();
-      for (i = this.mTxnStack.index; i < seqCount; i++)
-        this.mTxnSeq.RemoveElementAt(i);
+      for (i = seqCount-1; i >= this.mTxnStack.index; i--)
+        this.mTxnSeq.RemoveElementAt(i, true);
     }
     
     // append the transaction to our list
@@ -76,7 +76,6 @@ vxVFDTransactionManager.prototype =
     for (i = 0; i < this.mTransactionListeners.length; i++) {
       interruptRequest = {};
       if ("didDo" in this.mTransactionListeners[i]) {
-        _ddf("transaction listener " + i, this.mTransactionListeners[i].commandString);
         this.mTransactionListeners[i].didDo(this, aTransaction, interruptRequest);
         // do something with irq here once we figure out what it does.
       }
@@ -98,7 +97,6 @@ vxVFDTransactionManager.prototype =
 
     // undo the transaction
     if (txn) {
-      _ddf("going to undo the txn at", this.mTxnStack.index-1);
       txn.undoTransaction();
       this.mTxnStack.index--;
     }
@@ -232,6 +230,12 @@ var vxVFDTransactionDS =
     return null;
   },
   
+  GetTargets: function (aSource, aProperty, aTruthValue)
+  {
+    var targets = [].concat(this.GetTarget(aSource, aProperty, aTruthValue));
+    return new ArrayEnumerator(targets);
+  },
+  
   mObservers: [],
   AddObserver: function (aObserver) 
   {
@@ -282,7 +286,6 @@ vxVFDTransactionStack.prototype =
   
   set index (aValue)
   {
-    _ddf("setting index to", aValue);
     this.mIndex = aValue;
     return this.mIndex;
   },

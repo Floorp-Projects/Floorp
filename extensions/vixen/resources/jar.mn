@@ -18,6 +18,7 @@ vixen.jar:
        content/vixen/vfd/vxVFDSelectionManager.js    (content/vfd/vxVFDSelectionManager.js)
        content/vixen/vfd/vxVFDTransactionManager.js  (content/vfd/vxVFDTransactionManager.js)
        content/vixen/vfd/vxAggregateTxn.js           (content/vfd/vxAggregateTxn.js)
+       content/vixen/vfd/vxBaseTxn.js                (content/vfd/vxBaseTxn.js)
        skin/modern/vixen/contents.rdf                (skin/contents.rdf)
        skin/modern/vixen/vfdScratch.css              (skin/vfdScratch.css)
        locale/en-US/vixen/contents.rdf               (locale/en-US/contents.rdf)

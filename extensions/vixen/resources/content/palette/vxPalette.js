@@ -81,11 +81,11 @@ var vxPalette =
     var txns = [radiogroupTxn, radiogroupAttrTxn, radioTxn, radioAttrTxn];
     var aggregateTxn = new vxAggregateTxn(txns);
     aggregateTxn.init();
-
+    
     var txmgr = focusedWindow.vxVFD.mTxMgrShell;
-    txmgr.addListener([radioAttrTxn, radioTxn, radioAttrTxn]);
+    aggregateTxn.addListener([radiogroupAttrTxn, radioTxn, radioAttrTxn]);
     txmgr.doTransaction(aggregateTxn);
-    txmgr.removeListener([radioAttrTxn, radioTxn, radioAttrTxn]);
+    aggregateTxn.removeListener([radiogroupAttrTxn, radioTxn, radioAttrTxn]);
   },
   
   incrementElementCount: function (aNodeName)
@@ -104,9 +104,8 @@ var vxPalette =
     // need to check to see if the focused window is a vfd
 
     var insertionPoint = focusedWindow.vxVFD.getInsertionPoint();
-    
     var vfdDocument = focusedWindow.vxVFD.getContent(true).document;
-   
+
     var elementTxn = new vxCreateElementTxn(vfdDocument, aNodeName, insertionPoint.parent, insertionPoint.index);
     elementTxn.init();
     var elementAttrTxn = new vxChangeAttributeTxn(elementTxn.mID, aAttributes, aValues, false);
@@ -120,6 +119,16 @@ var vxPalette =
     txmgr.addListener(elementAttrTxn);
     txmgr.doTransaction(aggregateTxn);
     txmgr.removeListener(elementAttrTxn);
+  },
+
+  /** 
+   * Implements nsITransactionListener
+   */
+  didUndo: function (aTransactionManager, aTransaction, aInterrupt)
+  {
+    // Register the palette as a transaction listener so that the instance
+    // count for each type of widget can be decremented when a transaction
+    // is done. 
   }
 };
 

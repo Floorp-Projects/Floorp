@@ -45,17 +45,12 @@ function vxCreateElementTxn(aDocument, aLocalName, aParentNode, aChildOffset)
 } 
  
 vxCreateElementTxn.prototype = {
-  init: function () 
-  {
-    this.mID += generateID();
-  },
+  __proto__: vxBaseTxn.prototype,
 
   doTransaction: function ()
   {
-    _ddf("creating element", this.mLocalName);
     if (!this.mElementCreated) {
-      _dd("aParentNode is an id, bailing early");
-      _ddf("localname is", this.mLocalName);
+      _dd("element we rely on does not yet exist, so bail for now");
       return;
     }
       
@@ -96,9 +91,14 @@ vxCreateElementTxn.prototype = {
    */
   didDo: function (aTransactionManager, aTransaction, aInterrupt) 
   {
-    var createElementTxn = aTransaction.mTransactionList[this.mElementTxnID];
-    if (createElementTxn.commandString.indexOf("create-element") >= 0) {
-      this.mElement = createElementTxn.mElement;
+    var prevTxn = null;
+    if (aTransaction.commandString.indexOf("aggregate-txn") >= 0) 
+      prevTxn = aTransaction.mTransactionList[this.mElementTxnID];
+    else
+      prevTxn = aTransaction;
+  
+    if (prevTxn.commandString.indexOf("create-element") >= 0) {
+      this.mParentNode = prevTxn.mElement;
       this.mElementCreated = true;
       this.doTransaction();
     }
