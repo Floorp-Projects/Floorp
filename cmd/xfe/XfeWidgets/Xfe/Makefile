@@ -77,6 +77,7 @@ CSRCS			= \
 				CallProcs.c \
 				Cascade.c \
 				ChildrenUtil.c \
+				ClientData.c \
 				Converters.c \
 				Cursor.c \
 				Debug.c \
@@ -125,6 +126,7 @@ EXPORTS			= \
 				Cascade.h \
 				CascadeP.h \
 				ChildrenUtil.h \
+				ClientData.h \
 				Converters.h \
 				Debug.h \
 				Defaults.h \
