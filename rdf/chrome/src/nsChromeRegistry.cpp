@@ -252,8 +252,28 @@ nsChromeRegistry::nsChromeRegistry()
   }
 }
 
+
+static PRBool DatasourceEnumerator(nsHashKey *aKey, void *aData, void* closure)
+{
+    if (!closure || !aData)
+        return PR_FALSE;
+
+    nsIRDFCompositeDataSource* compositeDS = (nsIRDFCompositeDataSource*) closure;
+    
+    nsCOMPtr<nsISupports> supports = (nsISupports*)aData;
+    
+    nsCOMPtr<nsIRDFDataSource> dataSource = do_QueryInterface(supports);
+    if (!dataSource)
+        return PR_FALSE;
+    
+    compositeDS->RemoveDataSource(dataSource);
+    return PR_TRUE;
+}
+
+
 nsChromeRegistry::~nsChromeRegistry()
 {
+  mDataSourceTable->Enumerate(DatasourceEnumerator, mChromeDataSource);
   delete mDataSourceTable;
    
   if (mRDFService) {
