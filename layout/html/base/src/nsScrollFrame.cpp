@@ -172,7 +172,8 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
     }
 
     // Initialize the scrolling view
-    view->Init(viewManager, mRect, parentView);
+    view->Init(viewManager, mRect, parentView, nsnull, display->mVisible ?
+               nsViewVisibility_kShow : nsViewVisibility_kHide);
 
     // Insert the view into the view hierarchy
     viewManager->InsertChild(parentView, view, zIndex);
