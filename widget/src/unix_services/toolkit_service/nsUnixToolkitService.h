@@ -30,40 +30,40 @@ class nsUnixToolkitService : public nsIUnixToolkitService
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD SetToolkitName(const nsString & aToolkitName);
-  NS_IMETHOD SetWidgetToolkitName(const nsString & aToolkitName);
-  NS_IMETHOD SetGfxToolkitName(const nsString & aToolkitName);
+  NS_IMETHOD SetToolkitName(const nsCString & aToolkitName);
+  NS_IMETHOD SetWidgetToolkitName(const nsCString & aToolkitName);
+  NS_IMETHOD SetGfxToolkitName(const nsCString & aToolkitName);
 
-  NS_IMETHOD IsValidToolkit(const nsString & aToolkitName,
+  NS_IMETHOD IsValidToolkit(const nsCString & aToolkitName,
                             PRBool * aResultOut);
-  NS_IMETHOD IsValidWidgetToolkit(const nsString & aToolkitName,
+  NS_IMETHOD IsValidWidgetToolkit(const nsCString & aToolkitName,
                                   PRBool * aResultOut);
-  NS_IMETHOD IsValidGfxToolkit(const nsString & aToolkitName,
+  NS_IMETHOD IsValidGfxToolkit(const nsCString & aToolkitName,
                                PRBool * aResultOut);
 
-  NS_IMETHOD GetToolkitName(nsString & aToolkitNameOut);
-  NS_IMETHOD GetWidgetToolkitName(nsString & aToolkitNameOut);
-  NS_IMETHOD GetGfxToolkitName(nsString & aToolkitNameOut);
+  NS_IMETHOD GetToolkitName(nsCString & aToolkitNameOut);
+  NS_IMETHOD GetWidgetToolkitName(nsCString & aToolkitNameOut);
+  NS_IMETHOD GetGfxToolkitName(nsCString & aToolkitNameOut);
 
-  NS_IMETHOD GetWidgetDllName(nsString & aWidgetDllNameOut);
-  NS_IMETHOD GetGfxDllName(nsString & aGfxDllNameOut);
+  NS_IMETHOD GetWidgetDllName(nsCString & aWidgetDllNameOut);
+  NS_IMETHOD GetGfxDllName(nsCString & aGfxDllNameOut);
 
   NS_IMETHOD GetTimerCID(nsCID ** aTimerCIDOut);
 
 private:
 
-  static nsresult GlobalGetWidgetToolkitName(nsString & aStringOut);
-  static nsresult GlobalGetGfxToolkitName(nsString & aStringOut);
+  static nsresult GlobalGetWidgetToolkitName(nsCString & aStringOut);
+  static nsresult GlobalGetGfxToolkitName(nsCString & aStringOut);
 
   static nsresult EnsureWidgetToolkitName();
   static nsresult EnsureGfxToolkitName();
 
   static nsresult Cleanup();
 
-  static nsString *     sWidgetToolkitName;
-  static nsString *     sGfxToolkitName;
-  static nsString *     sWidgetDllName;
-  static nsString *     sGfxDllName;
+  static nsCString *     sWidgetToolkitName;
+  static nsCString *     sGfxToolkitName;
+  static nsCString *     sWidgetDllName;
+  static nsCString *     sGfxDllName;
   static const nsCID *  sTimerCID;
 
   static const char * ksDefaultToolkit;

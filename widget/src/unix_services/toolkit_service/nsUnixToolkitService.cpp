@@ -28,12 +28,12 @@
 #include "nsITimer.h"             // For nsITimer
 #include "nsCRT.h"                // For strcasecmp()
 #include "prenv.h"                // For PR_GetEnv()
-#include "nsFileSpec.h"           // For nsAutoCString
+#include "nsFileSpec.h"           // For nsCAutoString
 
-/* static */ nsString * nsUnixToolkitService::sWidgetToolkitName = nsnull;
-/* static */ nsString * nsUnixToolkitService::sGfxToolkitName = nsnull;
-/* static */ nsString * nsUnixToolkitService::sWidgetDllName = nsnull;
-/* static */ nsString * nsUnixToolkitService::sGfxDllName = nsnull;
+/* static */ nsCString * nsUnixToolkitService::sWidgetToolkitName = nsnull;
+/* static */ nsCString * nsUnixToolkitService::sGfxToolkitName = nsnull;
+/* static */ nsCString * nsUnixToolkitService::sWidgetDllName = nsnull;
+/* static */ nsCString * nsUnixToolkitService::sGfxDllName = nsnull;
 
 /* static */ const nsCID * nsUnixToolkitService::sTimerCID = nsnull;
 
@@ -69,7 +69,7 @@ NS_IMPL_QUERY_INTERFACE(nsUnixToolkitService, NS_GET_IID(nsIUnixToolkitService))
 
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::SetToolkitName(const nsString & aToolkitName)
+nsUnixToolkitService::SetToolkitName(const nsCString & aToolkitName)
 {
   PRBool isValid;
   nsresult rv = NS_OK;
@@ -94,7 +94,7 @@ nsUnixToolkitService::SetToolkitName(const nsString & aToolkitName)
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::SetWidgetToolkitName(const nsString & aToolkitName)
+nsUnixToolkitService::SetWidgetToolkitName(const nsCString & aToolkitName)
 {
   PRBool isValid;
 
@@ -106,15 +106,15 @@ nsUnixToolkitService::SetWidgetToolkitName(const nsString & aToolkitName)
   {
     Cleanup();
 
-    sWidgetToolkitName = new nsString(aToolkitName);
-    sGfxToolkitName = new nsString(aToolkitName);
+    sWidgetToolkitName = new nsCString(aToolkitName);
+    sGfxToolkitName = new nsCString(aToolkitName);
   }
 
   return NS_OK;
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::SetGfxToolkitName(const nsString & aToolkitName)
+nsUnixToolkitService::SetGfxToolkitName(const nsCString & aToolkitName)
 {
   PRBool isValid;
 
@@ -126,15 +126,15 @@ nsUnixToolkitService::SetGfxToolkitName(const nsString & aToolkitName)
   {
     Cleanup();
 
-    sWidgetToolkitName = new nsString(aToolkitName);
-    sGfxToolkitName = new nsString(aToolkitName);
+    sWidgetToolkitName = new nsCString(aToolkitName);
+    sGfxToolkitName = new nsCString(aToolkitName);
   }
 
   return NS_OK;
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::IsValidToolkit(const nsString & aToolkitName,
+nsUnixToolkitService::IsValidToolkit(const nsCString & aToolkitName,
                                      PRBool *         aResultOut)
 {
   NS_ASSERTION(nsnull != aResultOut,"null out param.");
@@ -153,21 +153,21 @@ nsUnixToolkitService::IsValidToolkit(const nsString & aToolkitName,
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::IsValidWidgetToolkit(const nsString & aToolkitName,
+nsUnixToolkitService::IsValidWidgetToolkit(const nsCString & aToolkitName,
                                            PRBool *         aResultOut)
 {
   return IsValidToolkit(aToolkitName, aResultOut);
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::IsValidGfxToolkit(const nsString & aToolkitName,
+nsUnixToolkitService::IsValidGfxToolkit(const nsCString & aToolkitName,
                                         PRBool *         aResultOut)
 {
   return IsValidToolkit(aToolkitName, aResultOut);
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::GetToolkitName(nsString & aToolkitNameOut)
+nsUnixToolkitService::GetToolkitName(nsCString & aToolkitNameOut)
 {
   aToolkitNameOut = "";
 
@@ -175,7 +175,7 @@ nsUnixToolkitService::GetToolkitName(nsString & aToolkitNameOut)
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::GetWidgetToolkitName(nsString & aToolkitNameOut)
+nsUnixToolkitService::GetWidgetToolkitName(nsCString & aToolkitNameOut)
 {
   aToolkitNameOut = "";
 
@@ -185,7 +185,7 @@ nsUnixToolkitService::GetWidgetToolkitName(nsString & aToolkitNameOut)
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::GetGfxToolkitName(nsString & aToolkitNameOut)
+nsUnixToolkitService::GetGfxToolkitName(nsCString & aToolkitNameOut)
 {
   aToolkitNameOut = "";
 
@@ -195,15 +195,15 @@ nsUnixToolkitService::GetGfxToolkitName(nsString & aToolkitNameOut)
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::GetWidgetDllName(nsString & aWidgetDllNameOut)
+nsUnixToolkitService::GetWidgetDllName(nsCString & aWidgetDllNameOut)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
   // Set sWidgetDllName only once
   if (nsnull == sWidgetDllName)
   {
-    nsAutoString  name;
-    nsAutoString  toolkit;
+    nsCAutoString  name;
+    nsCAutoString  toolkit;
     
     nsresult rv2 = GlobalGetWidgetToolkitName(toolkit);
 
@@ -226,7 +226,7 @@ nsUnixToolkitService::GetWidgetDllName(nsString & aWidgetDllNameOut)
       name = "error";
     }
 
-    sWidgetDllName = new nsString(name);
+    sWidgetDllName = new nsCString(name);
 
     if (!sWidgetDllName)
     {
@@ -242,15 +242,15 @@ nsUnixToolkitService::GetWidgetDllName(nsString & aWidgetDllNameOut)
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsUnixToolkitService::GetGfxDllName(nsString & aGfxDllNameOut)
+nsUnixToolkitService::GetGfxDllName(nsCString & aGfxDllNameOut)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
   // Set sGfxDllName only once
   if (nsnull == sGfxDllName)
   {
-    nsAutoString  name;
-    nsAutoString  toolkit;
+    nsCAutoString  name;
+    nsCAutoString  toolkit;
     
     nsresult rv2 = GlobalGetGfxToolkitName(toolkit);
 
@@ -274,7 +274,7 @@ nsUnixToolkitService::GetGfxDllName(nsString & aGfxDllNameOut)
       name = "error";
     }
 
-    sGfxDllName = new nsString(name);
+    sGfxDllName = new nsCString(name);
 
     if (!sGfxDllName)
     {
@@ -307,7 +307,7 @@ nsUnixToolkitService::GetTimerCID(nsCID ** aTimerCIDOut)
 
   if (nsnull == sTimerCID)
   {
-    nsAutoString unixToolkitName;
+    nsCAutoString unixToolkitName;
     
     GlobalGetWidgetToolkitName(unixToolkitName);
     
@@ -348,7 +348,7 @@ nsUnixToolkitService::GetTimerCID(nsCID ** aTimerCIDOut)
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ nsresult
-nsUnixToolkitService::GlobalGetWidgetToolkitName(nsString & aStringOut)
+nsUnixToolkitService::GlobalGetWidgetToolkitName(nsCString & aStringOut)
 {
   nsresult rv = EnsureWidgetToolkitName();
 
@@ -366,7 +366,7 @@ nsUnixToolkitService::GlobalGetWidgetToolkitName(nsString & aStringOut)
 
 //////////////////////////////////////////////////////////////////////////
 /* static */ nsresult
-nsUnixToolkitService::GlobalGetGfxToolkitName(nsString & aStringOut)
+nsUnixToolkitService::GlobalGetGfxToolkitName(nsCString & aStringOut)
 {
   nsresult rv = EnsureGfxToolkitName();
 
@@ -390,7 +390,7 @@ nsUnixToolkitService::EnsureWidgetToolkitName()
   if (nsnull != sWidgetToolkitName)
     return NS_OK;
 
-  sWidgetToolkitName = new nsString("unknown");
+  sWidgetToolkitName = new nsCString("unknown");
 
   if (!sWidgetToolkitName)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -448,7 +448,7 @@ nsUnixToolkitService::EnsureWidgetToolkitName()
   
 #ifdef NS_DEBUG
   printf("nsUnixToolkitService: Using '%s' for the Widget Toolkit.\n",
-         (const char *) nsAutoCString(*sWidgetToolkitName));
+         (const char *) nsCAutoString(*sWidgetToolkitName));
 #endif
   
   return NS_OK;
@@ -462,7 +462,7 @@ nsUnixToolkitService::EnsureGfxToolkitName()
   if (nsnull != sGfxToolkitName)
     return NS_OK;
 
-  sGfxToolkitName = new nsString("unknown");
+  sGfxToolkitName = new nsCString("unknown");
 
   if (!sGfxToolkitName)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -520,7 +520,7 @@ nsUnixToolkitService::EnsureGfxToolkitName()
   
 #ifdef NS_DEBUG
   printf("nsUnixToolkitService: Using '%s' for the Gfx Toolkit.\n",
-         (const char *) nsAutoCString(*sGfxToolkitName));
+         (const char *) nsCAutoString(*sGfxToolkitName));
 #endif
   
   return NS_OK;
