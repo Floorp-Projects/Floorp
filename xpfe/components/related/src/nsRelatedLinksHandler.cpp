@@ -471,7 +471,7 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 		if (child.Length() > 0)
 		{
 
-#ifdef	DEBUG
+#if 0
 			printf("RL: '%s'  -  '%s'\n", title.ToNewCString(), child.ToNewCString());
 #endif
 			const PRUnichar	*url = child.GetUnicode();
@@ -480,7 +480,8 @@ RelatedLinksStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports *ct
 				nsCOMPtr<nsIRDFResource>	relatedLinksChild;
 				rv = gRDFService->GetAnonymousResource(getter_AddRefs(relatedLinksChild));
 				if (NS_SUCCEEDED(rv))
-				{					
+				{
+					title.Trim(" ");
 					if (title.Length() > 0)
 					{
 						const PRUnichar	*name = title.GetUnicode();

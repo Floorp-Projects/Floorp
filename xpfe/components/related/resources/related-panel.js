@@ -51,14 +51,29 @@ var Observer = {
 
 function refetchRelatedLinks(Handler, data)
 {
-	// we can only get related links data on HTTP URLs
 	var newSite = "" + data;
+
+	// if we're looking at a translated page, get RL data for the true site
+	if (newSite.indexOf("http://levis.alis.com:8080/") == 0)
+	{
+		var matchStr = "AlisTargetURI=";	// this is expected to be the last argument
+		var targetOffset = data.indexOf(matchStr);
+		if (targetOffset > 0)
+		{
+			targetOffset += matchStr.length;
+			newSite = newSite.substr(targetOffset);
+			data = newSite;
+		}
+	}
+
+	// we can only get related links data on HTTP URLs
 	if (newSite.indexOf("http://") != 0)
 	{
 		dump("Unable to fetch related links data on non-HTTP URL.\n");
 		return(false);
 	}
 	newSite = newSite.substr(7);			// strip off "http://" prefix
+
 	var portOffset = newSite.indexOf(":");
 	var slashOffset = newSite.indexOf("/");
 	var theOffset = ((portOffset >=0) && (portOffset <= slashOffset)) ? portOffset : slashOffset;
@@ -79,7 +94,15 @@ function refetchRelatedLinks(Handler, data)
 	// only request new related links data if we've got a new web site (hostname change)
 	if (currentSite != newSite)
 	{
-		Handler.URL = data;
+		// privacy: don't send anything after a '?'
+		var theSite = "" + data;
+		var questionOffset = theSite.indexOf("?");
+		if (questionOffset > 0)
+		{
+			theSite = theSite.substr(0, questionOffset);
+		}
+
+		Handler.URL = theSite;
 	}
 }
 
@@ -109,7 +132,7 @@ function openURL(treeitem, root)
     // First, see if they're opening the related links node. If so,
     // we'll need to go out and fetch related links _now_.
     if (treeitem.getAttribute('id') == 'NC:RelatedLinks' &&
-        treeitem.getAttribute('open') != 'true') {
+        treeitem.getAttribute('open') == 'true') {
 	refetchRelatedLinks(Handler, ContentWindow.location);
         return;
     }
