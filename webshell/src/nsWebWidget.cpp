@@ -71,7 +71,16 @@ public:
     return rv;
   }
 
+  // nsISupports
   NS_DECL_ISUPPORTS
+
+  // nsIWebWidget
+  NS_IMETHOD LoadURL(const nsString& aURLSpec, nsIStreamObserver* aObserver,
+                     nsIPostData* aPostData);
+  NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult);
+
+  //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  // XXX from here on down is a mess
 
   NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
 
@@ -116,18 +125,8 @@ public:
 
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
 
-  NS_IMETHOD LoadURL(const nsString& aURLSpec, nsIStreamObserver* aObserver,
-                     nsIPostData* aPostData);
-
   virtual nsIDocument* GetDocument();
 
-  virtual void DumpContent(FILE* out);
-  virtual void DumpFrames(FILE* out);
-  virtual void DumpStyleSheets(FILE* out = nsnull);
-  virtual void DumpStyleContexts(FILE* out = nsnull);
-  virtual void DumpViews(FILE* out);
-  virtual void ShowFrameBorders(PRBool aEnable);
-  virtual PRBool GetShowFrameBorders();
   virtual nsIWidget* GetWWWindow();
   NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument);
 
@@ -624,7 +623,6 @@ nsresult WebWidgetImpl::ProvideDefaultHandlers()
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 WebWidgetImpl::BindToDocument(nsISupports* aDoc, const char* aCommand)
 {
@@ -641,6 +639,8 @@ WebWidgetImpl::BindToDocument(nsISupports* aDoc, const char* aCommand)
 
   return rv;
 }
+
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 NS_IMETHODIMP
 WebWidgetImpl::Embed(nsIContentViewer* aDocViewer, 
@@ -669,13 +669,6 @@ WebWidgetImpl::Embed(nsIContentViewer* aDocViewer,
                               bounds);
   }
 
-
-///  nsIURL* aURL = aDoc->GetDocumentURL();
-///  if (aURL) {
-///    mURL = aURL->GetSpec();
-///  }
-///  NS_IF_RELEASE(aURL);
-
   if (NS_OK == rv) {
     mContentViewer->Show();
   }
@@ -701,6 +694,14 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
     return rv;
 }
 
+
+NS_IMETHODIMP
+WebWidgetImpl::GetContentViewer(nsIContentViewer*& aResult)
+{
+  NS_IF_ADDREF(mContentViewer);
+  aResult = mContentViewer;
+  return NS_OK;
+}
 
 nsIDocument* WebWidgetImpl::GetDocument()
 {
@@ -837,119 +838,6 @@ nsEventStatus PR_CALLBACK WebWidgetImpl::HandleEvent(nsGUIEvent *aEvent)
 
 //----------------------------------------------------------------------
 // Debugging methods
-
-void WebWidgetImpl::DumpContent(FILE* out)
-{
-  if (nsnull == out) {
-    out = stdout;
-  }
-  if (nsnull != mPresShell) {
-    nsIDocument* doc = mPresShell->GetDocument();
-    if (nsnull != doc) {
-      nsIContent* root = doc->GetRootContent();
-      if (nsnull == root) {
-        fputs("null root content\n", out);
-      } else {
-        root->List(out);
-        NS_RELEASE(root);
-      }
-      NS_RELEASE(doc);
-    } else {
-      fputs("null document\n", out);
-    }
-  } else {
-    fputs("null pres shell\n", out);
-  }
-}
-
-void WebWidgetImpl::DumpFrames(FILE* out)
-{
-  if (nsnull == out) {
-    out = stdout;
-  }
-  if (nsnull != mPresShell) {
-    nsIFrame* root = mPresShell->GetRootFrame();
-    if (nsnull == root) {
-      fputs("null root frame\n", out);
-    } else {
-      root->List(out);
-    }
-  } else {
-    fputs("null pres shell\n", out);
-  }
-}
-
-void WebWidgetImpl::DumpStyleSheets(FILE* out)
-{
-  if (nsnull == out) {
-    out = stdout;
-  }
-  if (nsnull != mPresShell) {
-    nsIStyleSet* styleSet = mPresShell->GetStyleSet();
-    if (nsnull == styleSet) {
-      fputs("null style set\n", out);
-    } else {
-      styleSet->List(out);
-      NS_RELEASE(styleSet);
-    }
-  } else {
-    fputs("null pres shell\n", out);
-  }
-}
-
-void WebWidgetImpl::DumpStyleContexts(FILE* out)
-{
-  if (nsnull == out) {
-    out = stdout;
-  }
-  if (nsnull != mPresShell) {
-    nsIStyleSet* styleSet = mPresShell->GetStyleSet();
-    if (nsnull == styleSet) {
-      fputs("null style set\n", out);
-    } else {
-      nsIFrame* root = mPresShell->GetRootFrame();
-      if (nsnull == root) {
-        fputs("null root frame\n", out);
-      } else {
-        nsIStyleContext* rootContext;
-        root->GetStyleContext(mPresContext, rootContext);
-        if (nsnull != rootContext) {
-          styleSet->ListContexts(rootContext, out);
-          NS_RELEASE(rootContext);
-        }
-        else {
-          fputs("null root context", out);
-        }
-      }
-      NS_RELEASE(styleSet);
-    }
-  } else {
-    fputs("null pres shell\n", out);
-  }
-}
-
-void WebWidgetImpl::DumpViews(FILE* out)
-{
-  if (nsnull == out) {
-    out = stdout;
-  }
-  if (nsnull != mView) {
-    mView->List(out);
-  } else {
-    fputs("null view\n", out);
-  }
-}
-
-void WebWidgetImpl::ShowFrameBorders(PRBool aEnable)
-{
-  nsIFrame::ShowFrameBorders(aEnable);
-  ForceRefresh();
-}
-
-PRBool WebWidgetImpl::GetShowFrameBorders()
-{
-  return nsIFrame::GetShowFrameBorders();
-}
 
 void WebWidgetImpl::ForceRefresh()
 {
