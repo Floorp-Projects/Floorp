@@ -893,6 +893,10 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
 			rv = SetProfileDir(profileName, aProfileDir);
             if (NS_FAILED(rv)) return rv;
 
+            // update the registry
+            gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+            gProfileDataAccess->UpdateRegistry(nsnull);
+
             // Copy contents from defaults folder.
             rv = profDefaultsDir->Exists(&exists);
             if (NS_SUCCEEDED(rv) && exists)
@@ -1058,12 +1062,12 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   // and salt rand with that.
   double fpTime;
   LL_L2D(fpTime, PR_Now());
-  srand((uint)(fpTime * 1e-3 + 0.5));
+  srand((uint)(fpTime * 1e-6 + 0.5));	// use 1e-6, granularity of PR_Now() on the mac is seconds
 
   nsCAutoString saltStr;
   PRInt32 i;
   for (i=0;i<SALT_SIZE;i++) {
-  	saltStr.Append(table[(rand()%TABLE_SIZE)]);
+  	saltStr.Append(table[rand()%TABLE_SIZE]);
   }
   saltStr.Append(SALT_EXTENSION);
 #ifdef DEBUG_profile_verbose
@@ -2291,8 +2295,8 @@ nsresult nsProfile::PopulateIfEmptyDir(const PRUnichar *profileName, nsILocalFil
         nsCOMPtr<nsIFile> profDefaultsDir;
         rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profDefaultsDir));
         if (NS_FAILED(rv)) return rv;
-        
-	    // Add the indirection
+ 
+        // Add the indirection
         rv = AddLevelOfIndirection(aProfileDir);
         if (NS_FAILED(rv)) return rv;
 
@@ -2302,6 +2306,11 @@ nsresult nsProfile::PopulateIfEmptyDir(const PRUnichar *profileName, nsILocalFil
         rv = SetProfileDir(profileName, aProfileDir);
         if (NS_FAILED(rv)) return rv;
 
+        // we need to update the registry to remember the indirection
+        // otherwise, the next time we start we won't be pointing at the salt directory
+        gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+        gProfileDataAccess->UpdateRegistry(nsnull);
+        
         // Copy contents from defaults folder.
         rv = profDefaultsDir->Exists(&exists);
         if (NS_SUCCEEDED(rv) && exists) {
