@@ -216,10 +216,10 @@ $::bug{'long_desc'}
 
 
 my $didexclude = 0;
+my %seen;
 sub fixaddresses {
     my ($field, $list) = (@_);
     my @result;
-    my %seen;
     foreach my $i (@$list) {
         if ($i eq "") {
             next;
@@ -320,6 +320,7 @@ sub ProcessOneBug {
     if ($regenerate) {
         print "$i ";
     }
+    %seen = ();
 }
 
 # Code starts here
