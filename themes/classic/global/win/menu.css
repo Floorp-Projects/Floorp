@@ -1,12 +1,7 @@
  
 menubar 
   {
-    background-color      : white;
-  }
-
-menubar > toolbargrippy 
-  {
-    display               : none;
+    background-color      : threedface;
   }
 
 menu, menuitem  

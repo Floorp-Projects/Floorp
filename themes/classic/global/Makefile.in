@@ -128,6 +128,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	toolbar-menu-arrow-disabled.gif \
 	toolbar-menu-arrow-hover.gif \
 	toolbar-menu-arrow.gif \
+	toolbargrippy-twisty.gif \
+	toolbargrippy-texture.gif \
 	loading.gif \
 	$(NULL)
 

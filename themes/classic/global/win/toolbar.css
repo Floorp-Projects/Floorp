@@ -2,25 +2,53 @@
 toolbox
   {
     background-color      : appworkspace;
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-right          : 1px solid threedhighlight;
+    border-bottom         : 1px solid threedhighlight;
   }
   
 toolbar
   {
     background-color      : threedface;
+  }
+  
+.toolbar-holder
+  {
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;
     border-right          : 1px solid threedshadow;
     border-bottom         : 1px solid threedshadow;
-  }
+  }  
 
 toolbargrippy
   {
+    behavior              : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
     background-color      : threedface;
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;
     border-right          : 1px solid threedshadow;
     border-bottom         : 1px solid threedshadow;
-    list-style-image      : url("chrome://global/skin/toolbar/toolbar-grippy.gif");
+    width                 : 12px;
+  }
+
+.toolbargrippy-twisty
+  {
+    list-style-image      : url("chrome://global/skin/toolbargrippy-twisty.gif");
+    margin-top            : 2px;
+  }
+
+.toolbargrippy-texture
+  {
+    margin                : 5px 3px 1px 2px;
+    background-image      : url("chrome://global/skin/toolbargrippy-texture.gif");
+    background-position   : 50% 0%;
+    background-repeat     : repeat-y;
+  } 
+
+toolbargrippy:hover
+  {
+    background-color      : #CCCCFF;
   }
   
 toolbar[collapsed="true"] > toolbargrippy
@@ -31,5 +59,4 @@ toolbar[collapsed="true"] > toolbargrippy
 toolbarseparator 
   { 
     width                 : 2em; 
-  }
-  
+  } 

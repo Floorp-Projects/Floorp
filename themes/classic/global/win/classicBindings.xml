@@ -13,4 +13,13 @@
     </content>
   </binding>
 
+  <binding id="toolbargrippy" extends="xul:box">
+    <content orient="vertical">
+      <xul:box autostretch="never" halign="center">
+        <xul:image class="toolbargrippy-twisty"/>
+      </xul:box>
+      <xul:spring class="toolbargrippy-texture" flex="1"/>
+    </content>
+  </binding>
+  
 </bindings>
