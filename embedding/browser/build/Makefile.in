@@ -31,7 +31,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= webbrwsr
 EXTRA_DSO_LIBS	= jsdom
-REQUIRES	= xpcom string docshell dom widget layout locale necko uriloader shistory timer gfx2
+REQUIRES	= xpcom string docshell dom widget layout locale necko uriloader shistory timer gfx2 windowwatcher
 
 CPPSRCS		= \
 		nsWebBrowserModule.cpp		\
