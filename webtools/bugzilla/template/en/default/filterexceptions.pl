@@ -252,6 +252,10 @@
   'VERSION', 
 ],
 
+'global/choose-classification.html.tmpl' => [
+  'classdesc.$p', 
+],
+
 'global/choose-product.html.tmpl' => [
   'target',
   'proddesc.$p', 
@@ -493,6 +497,22 @@
 'admin/table.html.tmpl' => [
   'link_uri',
   'c.content'
+],
+
+'admin/classifications/del.html.tmpl' => [
+  'description', 
+],
+
+'admin/classifications/edit.html.tmpl' => [
+  'description', 
+],
+
+'admin/classifications/reclassify.html.tmpl' => [
+  'description', 
+],
+
+'admin/classifications/select.html.tmpl' => [
+  'cl.description', 
 ],
 
 'admin/products/groupcontrol/confirm-edit.html.tmpl' => [
