@@ -65,7 +65,6 @@
 #include "nsIPref.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-
 #include "nsIMsgAttachment.h"
 #include "nsIMsgCompFields.h"
 #include "nsIMsgComposeParams.h"
@@ -78,7 +77,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIDirectoryService.h"
 #include "nsMsgI18N.h"
-
 #include "msgMapi.h"
 #include "msgMapiHook.h"
 #include "msgMapiSupport.h"
@@ -108,7 +106,10 @@ public:
     /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
     NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                            nsIFileSpec *returnFileSpec) {
+        PR_CEnterMonitor(this);
+        PR_CNotifyAll(this);
         m_done = PR_TRUE;
+        PR_CExitMonitor(this);
         return NS_OK ;
     }
 
@@ -346,15 +347,13 @@ nsresult nsMapiHook::BlindSendMail (unsigned long aSession, nsIMsgCompFields * a
 
     /** create nsIMsgComposeParams obj and other fields to populate it **/    
 
+    nsCOMPtr<nsIDOMWindowInternal>  hiddenWindow;
     // get parent window
     nsCOMPtr<nsIAppShellService> appService = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
     if (NS_FAILED(rv)|| (!appService) ) return rv ;
 
-    nsCOMPtr<nsIDOMWindowInternal>  hiddenWindow;
     rv = appService->GetHiddenDOMWindow(getter_AddRefs(hiddenWindow));
-
     if ( NS_FAILED(rv) ) return rv ;
-
     // smtp password and Logged in used IdKey from MapiConfig (session obj)
     nsMAPIConfiguration * pMapiConfig = nsMAPIConfiguration::GetMAPIConfiguration() ;
     if (!pMapiConfig) return NS_ERROR_FAILURE ;  // get the singelton obj
@@ -399,7 +398,7 @@ nsresult nsMapiHook::BlindSendMail (unsigned long aSession, nsIMsgCompFields * a
     rv = pMsgCompose->Initialize(hiddenWindow, pMsgComposeParams) ;
     if (NS_FAILED(rv)) return rv ;
 
-    pMsgCompose->SendMsg(nsIMsgSend::nsMsgDeliverNow, pMsgId, nsnull, nsnull, nsnull) ;
+    return pMsgCompose->SendMsg(nsIMsgSend::nsMsgDeliverNow, pMsgId, nsnull, nsnull, nsnull) ;
     if (NS_FAILED(rv)) return rv ;
 
     // assign to interface pointer from nsCOMPtr to facilitate typecast below
@@ -411,7 +410,12 @@ nsresult nsMapiHook::BlindSendMail (unsigned long aSession, nsIMsgCompFields * a
     nsCOMPtr<nsIEventQueue> eventQueue;
     pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,getter_AddRefs(eventQueue));
     while ( !((nsMAPISendListener *) pSendListener)->IsDone() )
+    {
+        PR_CEnterMonitor(pSendListener);
+        PR_CWait(pSendListener, PR_MicrosecondsToInterval(1000UL));
+        PR_CExitMonitor(pSendListener);
         eventQueue->ProcessPendingEvents();
+    }
 
     return rv ;
 }
@@ -488,6 +492,8 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
     {
         nsString Body;
         Body.AssignWithConversion(aMessage->lpszNoteText);
+        if (Body.Last() != nsCRT::LF)
+          Body.Append(NS_LITERAL_STRING(CRLF));
         rv = aCompFields->SetBody(Body) ;
     }
 
@@ -722,6 +728,8 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
             platformCharSet.Assign(nsMsgI18NFileSystemCharset());
         rv = ConvertToUnicode(platformCharSet.get(), (char *) aMessage->lpszNoteText, Body);
         if (NS_FAILED(rv)) return rv ;
+        if (Body.Last() != nsCRT::LF)
+          Body.Append(NS_LITERAL_STRING(CRLF));
         rv = aCompFields->SetBody(Body) ;
     }
 

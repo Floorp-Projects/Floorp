@@ -238,8 +238,7 @@ STDMETHODIMP CMapiImp::SendMail( unsigned long aSession, lpnsMapiMessage aMessag
 
     // Assign the pointers in the aMessage struct to the array of Recips and Files
     // recieved here from MS COM. These are used in BlindSendMail and ShowCompWin fns 
-    memcpy(aMessage->lpRecips, aRecips, aRecipCount * sizeof (nsMapiRecipDesc));
-//    aMessage->lpRecips = aRecips ;
+    aMessage->lpRecips = aRecips ;
     aMessage->lpFiles = aFiles ;
 
     /** create nsIMsgCompFields obj and populate it **/
