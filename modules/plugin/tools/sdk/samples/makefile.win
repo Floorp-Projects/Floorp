@@ -21,6 +21,6 @@
 
 DEPTH=..\..\..\..\..\
 
-DIRS= basic\windows scriptable\windows simple
+DIRS= common basic\windows scriptable\windows simple
 
 include <$(DEPTH)\config\rules.mak>

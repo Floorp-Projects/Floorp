@@ -26,9 +26,9 @@ DIRS = samples
 include <$(DEPTH)\config\rules.mak>
 
 export::
-  if not exist "bin" mkdir "bin"
-  if not exist "idl" mkdir "idl"
-  if not exist "include" mkdir "include"
+  if not exist "bin" MKDIR "bin"
+  if not exist "idl" MKDIR "idl"
+  if not exist "include" MKDIR "include"
 
   $(MAKE_INSTALL) $(XPDIST)\idl\nsISupports.idl .\idl
   $(MAKE_INSTALL) $(XPDIST)\idl\nsrootidl.idl .\idl
