@@ -94,7 +94,7 @@ char * gFailedMsg = NULL;
 
 #ifdef XP_MAC
 #define WIDGET_DLL "WIDGET_DLL"
-#define GFX_DLL "libgfxunix.so"
+#define GFX_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
 #endif
 
@@ -821,6 +821,7 @@ void DumpRects()
 nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
 	  printf("aEvent->message %d\n", aEvent->message);
+	  NS_ERROR("This is a test");
     nsEventStatus result = nsEventStatus_eIgnore;
     switch(aEvent->message) {
 
@@ -1155,6 +1156,18 @@ nsresult WidgetTest(int *argc, char **argv)
     NSRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
 #endif
 
+
+    //static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
+    static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID); 
+    //static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID); 
+    //static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID); 
+
+
+    //NSRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    NSRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    //NSRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+    //NSRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
+
       // Create a application shell
     nsIAppShell *appShell;
     NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
@@ -1184,6 +1197,17 @@ nsresult WidgetTest(int *argc, char **argv)
     window->SetTitle("TOP-LEVEL window");
     window->Show(PR_TRUE);
     window->SetBackgroundColor(NS_RGB(196, 196, 196));
+
+    //
+    // Create Device Context based on main window
+    //
+    res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&deviceContext);
+
+    if (NS_OK == res)
+    	{
+      deviceContext->Init(window->GetNativeData(NS_NATIVE_WIDGET));
+      NS_ADDREF(deviceContext);
+    	}
 
 
     int x = 5;
@@ -1215,16 +1239,6 @@ nsresult WidgetTest(int *argc, char **argv)
 
 #ifdef NOTNOW
 
-    //
-    // Create Device Context based on main window
-    //
-    res = NSRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&deviceContext);
-
-    if (NS_OK == res)
-    {
-      deviceContext->Init(window->GetNativeData(NS_NATIVE_WIDGET));
-      NS_ADDREF(deviceContext);
-    }
 
 #ifdef XP_PC
     tooltipWindow = createTooltipWindow(window, "INSERT <tooltip> here", 0, 0, 150, 0);
