@@ -43,6 +43,7 @@
 #include "nsSyncStreamListener.h"
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
+#include "nsProtocolProxyService.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
@@ -131,7 +132,11 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_BUFFEREDOUTPUTSTREAM_CLASSNAME, 
       NS_BUFFEREDOUTPUTSTREAM_CID,
       NS_BUFFEREDOUTPUTSTREAM_PROGID,
-      nsBufferedOutputStream::Create }
+      nsBufferedOutputStream::Create },
+    { "Protocol Proxy Service",
+      NS_PROTOCOLPROXYSERVICE_CID,
+      "component::/netscape/network/protocol-proxy-service",
+      nsProtocolProxyService::Create }
 };
 
 NS_IMPL_NSGETMODULE("net", gNetModuleInfo)
