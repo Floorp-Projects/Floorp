@@ -66,14 +66,15 @@
 #include <Message.h>
 #include <Window.h>
 #include <String.h>
+class BButton;
 
 class nsFilePicker : public nsBaseFilePicker
 {
 public:
+  NS_DECL_ISUPPORTS
+
   nsFilePicker();
   virtual ~nsFilePicker();
-
-  NS_DECL_ISUPPORTS
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
   NS_IMETHOD GetDefaultString(nsAString& aDefaultString);
@@ -126,6 +127,8 @@ public:
   virtual void MessageReceived(BMessage *message);
   virtual void WaitForSelection();
 
+  virtual void SelectionChanged();
+
   virtual bool IsOpenSelected() {
     return (SelectedActivity() == OPEN_SELECTED);
   }
@@ -149,7 +152,7 @@ public:
   };
 
 protected:
-
+  BButton *mDirectoryButton;
   sem_id wait_sem ;
   uint32 mSelectedActivity;
   bool mIsSelected;

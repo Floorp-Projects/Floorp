@@ -54,6 +54,7 @@
 #include "nsString.h"
 #include <Window.h>
 #include <View.h>
+#include <Button.h>
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -177,7 +178,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 		result = PR_FALSE;
 	}
 
-	if ((mMode == modeOpen || mMode == modeOpenMultiple) && ppanel->IsOpenSelected()) {
+	if ((mMode == modeOpen || mMode == modeOpenMultiple || mMode == modeGetFolder) && ppanel->IsOpenSelected()) {
 		BList *list = ppanel->OpenRefs();
 		uint32 numfiles = list->CountItems();
 		if ((list) && numfiles >= 1) {
@@ -394,6 +395,9 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 //
 //-------------------------------------------------------------------------
 
+// Internal message for when the 'Select <dir>' button is used
+const uint32 MSG_DIRECTORY = 'mDIR';
+
 nsFilePanelBeOS::nsFilePanelBeOS(file_panel_mode mode,
                                  uint32 node_flavors,
                                  bool allow_multiple_selection,
@@ -418,6 +422,35 @@ nsFilePanelBeOS::nsFilePanelBeOS(file_panel_mode mode,
 	if (wait_sem > 0) acquire_sem(wait_sem);
 
 	SetTarget(BMessenger(this));
+	
+	if ( mode == B_OPEN_PANEL && node_flavors == B_DIRECTORY_NODE ) 
+	{
+		// Add a 'Select <dirname>' button to the open dialog
+		Window()->Lock();
+		
+		BView *background = Window()->ChildAt(0); 
+		entry_ref ref;
+		char label[10+B_FILE_NAME_LENGTH];
+		GetPanelDirectory(&ref);
+		sprintf(label, "Select '%s'", ref.name);
+		mDirectoryButton = new BButton(
+			BRect(113, background->Bounds().bottom-35, 269, background->Bounds().bottom-10),
+			"directoryButton", label, new BMessage(MSG_DIRECTORY), B_FOLLOW_LEFT | B_FOLLOW_BOTTOM);
+		
+		if(mDirectoryButton)
+		{
+			background->AddChild(mDirectoryButton);
+			mDirectoryButton->SetTarget(Messenger());
+		}
+		else
+			NS_ASSERTION(false, "Out of memory: failed to create mDirectoryButton");
+		
+		SetButtonLabel(B_DEFAULT_BUTTON, "Select");
+		
+		Window()->Unlock();
+	}
+	else 
+		mDirectoryButton = nsnull;
 
 	this->Run();
 }
@@ -428,6 +461,7 @@ nsFilePanelBeOS::~nsFilePanelBeOS()
 	for (int i=0 ; i<count ; i++) {
 		delete mOpenRefs.ItemAt(i);
 	}
+	
 	if (wait_sem > 0) {
 		delete_sem(wait_sem);
 	}
@@ -457,6 +491,18 @@ void nsFilePanelBeOS::MessageReceived(BMessage *msg)
 		mIsSelected = true;
 		release_sem(wait_sem);
 		break;
+	
+	case MSG_DIRECTORY: // Directory selected
+	{
+		entry_ref ref;
+		GetPanelDirectory(&ref);
+		BPath *path = new BPath(&ref);
+		mOpenRefs.AddItem((void *) path);
+		mSelectedActivity = OPEN_SELECTED;
+		mIsSelected = true;
+		release_sem(wait_sem);
+		break;
+	}
 
 	case B_SAVE_REQUESTED: // save
 		msg->FindString("name", &mSaveFileName);
@@ -492,3 +538,20 @@ uint32 nsFilePanelBeOS::SelectedActivity()
 
 	return result;
 }
+
+void nsFilePanelBeOS::SelectionChanged(void)
+{
+	if(mDirectoryButton)
+	{
+		//Update the 'Select <dir>' button
+		entry_ref ref;
+		char label[50];
+		GetPanelDirectory(&ref);
+		Window()->Lock();
+		sprintf(label, "Select '%s'", ref.name);
+		mDirectoryButton->SetLabel(label);
+		Window()->Unlock();
+	}
+	BFilePanel::SelectionChanged();
+}
+
