@@ -393,6 +393,23 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   nscoord dxNum = (width - sizeNum.width)/2;
   nscoord dxDen = (width - sizeDen.width)/2;
 
+  // see if the numalign attribute is there 
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle, 
+                   nsMathMLAtoms::numalign_, value)) {
+    if (value.EqualsWithConversion("left"))
+      dxNum = onePixel;
+    else if (value.EqualsWithConversion("right"))
+      dxNum = width - onePixel - sizeNum.width;
+  }
+  // see if the denomalign attribute is there 
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle, 
+                   nsMathMLAtoms::denomalign_, value)) {
+    if (value.EqualsWithConversion("left"))
+      dxDen = onePixel;
+    else if (value.EqualsWithConversion("right"))
+      dxDen = width - onePixel - sizeDen.width;
+  }
+
   mBoundingMetrics.rightBearing =
     PR_MAX(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
   if (mBoundingMetrics.rightBearing < width - onePixel)
