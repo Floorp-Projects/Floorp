@@ -127,25 +127,20 @@ nsresult nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI,
                                          nsIURI** aURI)
 {
     nsAutoString uriSpecIn(aStringURI);
-    nsAutoString uriSpecOut(aStringURI);
+    nsCAutoString uriSpecOut;
 
     nsresult rv = ConvertFileToStringURI(uriSpecIn, uriSpecOut);
     if (NS_SUCCEEDED(rv))
     {
-        // if this is file url, we need to  convert the URI
-        // from Unicode to the FS charset
-        nsCAutoString inFSCharset;
-        NS_ENSURE_SUCCESS(ConvertStringURIToFileCharset(uriSpecOut, inFSCharset),
-        NS_ERROR_FAILURE);
-
-        if(NS_SUCCEEDED(NS_NewURI(aURI, inFSCharset.get(), nsnull)))
+        // if this is file url, uriSpecOut is already in FS charset
+        if(NS_SUCCEEDED(NS_NewURI(aURI, uriSpecOut.get(), nsnull)))
             return NS_OK;
     } 
     return NS_ERROR_FAILURE;
 }
 
 nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
-                                                   nsString& aOut)
+                                                   nsCString& aOut)
 {
     PRBool attemptFixup = PR_FALSE;
 
@@ -176,13 +171,42 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
         //       platform.
 
         nsCOMPtr<nsILocalFile> filePath;
-        nsCAutoString file; file.AssignWithConversion(aIn);
+        nsCAutoString file; 
+
+        // this is not the real fix but a temporary fix
+        // in order to really fix the problem, we need to change the 
+        // nsICmdLineService interface to use wstring to pass paramenters 
+        // instead of string since path name and other argument could be
+        // in non ascii.(see bug 87127) Since it is too risky to make interface change right
+        // now, we decide not to do so now.
+        // Therefore, the aIn we receive here maybe already in damage form
+        // (e.g. treat every bytes as ISO-8859-1 and cast up to PRUnichar
+        //  while the real data could be in file system charset )
+        // we choice the following logic which will work for most of the case.
+        // Case will still failed only if it meet ALL the following condiction:
+        //    1. running on CJK, Russian, or Greek system, and 
+        //    2. user type it from URL bar
+        //    3. the file name contains character in the range of 
+        //       U+00A1-U+00FF but encode as different code point in file
+        //       system charset (e.g. ACP on window)- this is very rare case
+        // We should remove this logic and convert to File system charset here
+        // once we change nsICmdLineService to use wstring and ensure
+        // all the Unicode data come in is correctly converted. 
+        if (PossiblyByteExpandedFileName(aIn)) {
+          // removes high byte
+          file.AssignWithConversion(aIn);
+        }
+        else {
+          // converts from Unicode to FS Charset
+          ConvertStringURIToFileCharset(aIn, file);
+        }
+
         nsresult rv = NS_NewLocalFile(file, PR_FALSE, getter_AddRefs(filePath));
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLCString fileurl;
             filePath->GetURL(getter_Copies(fileurl));
-            aOut.AssignWithConversion(fileurl);
+            aOut.Assign(fileurl);
             return NS_OK;
         }
     }
@@ -190,6 +214,21 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
     return NS_ERROR_FAILURE;
 }
 
+PRBool nsDefaultURIFixup::PossiblyByteExpandedFileName(nsString& aIn)
+{
+  // XXXXX HACK XXXXX : please don't copy this code.
+  // There are cases where aIn contains the locale byte chars padded to short
+  // (thus the name "ByteExpanded"); whereas other cases 
+  // have proper Unicode code points.
+  // This is a temporary fix.  Please refer to 58866, 86948
+  const PRUnichar* uniChar = aIn.get();
+  for (PRUint32 i = 0; i < aIn.Length(); i++)  {
+    if ((uniChar[i] >= 0x0080) && (uniChar[i] <= 0x00FF))  {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
 
 nsresult nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn, 
                                                           nsCString& aOut)
