@@ -59,6 +59,7 @@
 
     var _elementIDs = [ // privacy settings
                        "javascriptAllowMailNews", "networkImageDisableImagesInMailNews", "useWhiteList", "whiteListAbURI",
+                       "enablePhishingDetector",
                        
                        // return receipts
                        "alwaysRequest", "receiptFolder", "receiptSend", "notInToCcPref", "outsideDomainPref", "otherCasesPref",
@@ -109,8 +110,11 @@
               </menupopup>
             </menulist>  
           </hbox>
-
         
+        <checkbox id="enablePhishingDetector"
+                 label="&enablePhishingDetector.label;" accesskey="&enablePhishingDetector.accesskey;"
+                 prefstring="mail.phishing.detection.enabled"/>
+                                           
         <checkbox id="javascriptAllowMailNews"
                   label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
                   prefstring="javascript.allow.mailnews"/>

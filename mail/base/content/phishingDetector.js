@@ -53,7 +53,7 @@ const kPhishingWithMismatchedHosts = 2;
 function isMsgEmailScam(aUrl)
 {
   var isEmailScam = false; 
-  if (!aUrl)
+  if (!aUrl || !gPrefBranch.getBoolPref("mail.phishing.detection.enabled"))
     return isEmailScam;
  
   // Ignore nntp and RSS messages

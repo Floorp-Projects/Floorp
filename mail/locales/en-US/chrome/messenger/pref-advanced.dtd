@@ -6,6 +6,8 @@
 <!ENTITY disableImageInMailNews.accesskey "B">
 <!ENTITY allowRemoteImagesForFriends.label  "Allow remote images if the sender is in my:">
 <!ENTITY allowRemoteImagesForFriends.accesskey "A">
+<!ENTITY enablePhishingDetector.label      "Check mail messages for email scams">
+<!ENTITY enablePhishingDetector.accesskey  "l">
 <!ENTITY enbJsCheckMailNews.label      "Enable JavaScript in mail messages.">
 <!ENTITY enbJsCheckMailNews.accesskey  "J">
 
