@@ -45,9 +45,6 @@ content/communicator/contentAreaContextOverlay.xul,   comm/content/communicator/
 content/communicator/nsContextMenu.js,                comm/content/communicator/nsContextMenu.js
 content/communicator/printing.js,                     comm/content/communicator/printing.js
 
-# from xpfe\components jar.mn
-content/communicator/alerts,                          comm/content/communicator/alerts
-
 # dummy contextHelp.js file so we don't get a bunch of errors about this file not being found
 content/help/contextHelp.js,                          comm/content/help/contextHelp.js
 content/help/contents.rdf,                            comm/content/help/contents.rdf
@@ -129,6 +126,7 @@ content/global/editMenuOverlay.js,                    toolkit/content/global/edi
 content/global/XPCNativeWrapper.js,                   toolkit/content/global/XPCNativeWrapper.js
 content/global/fontpackage.xul,                       toolkit/content/global/fontpackage.xul
 content/global/fontpackage.js,                        toolkit/content/global/fontpackage.js
+content/global/alerts,                                toolkit/content/global/alerts
 
 #from mozapps
 content/mozapps/downloads,                            toolkit/content/mozapps/downloads
