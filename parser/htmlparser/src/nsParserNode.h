@@ -65,7 +65,7 @@ class nsCParserNode :  public nsIParserNode {
     virtual void                SetSkippedContent(CHTMLToken* aToken);
 
               // misc
-    virtual PRInt32             TranslateToUnicode() const;
+    virtual PRInt32             TranslateToUnicodeStr(nsString& aString) const;
 
   protected:
                   PRInt32       mAttributeCount;    

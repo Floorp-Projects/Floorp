@@ -301,6 +301,7 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL){
     mTokenizer=new CTokenizer(aURL, delegate);
     mTokenizer->Tokenize();
 
+#define VERBOSE_DEBUG
 #ifdef VERBOSE_DEBUG
     mTokenizer->DebugDumpTokens(cout);
 #endif

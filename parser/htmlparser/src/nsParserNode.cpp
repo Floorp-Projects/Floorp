@@ -194,10 +194,10 @@ const nsString& nsCParserNode::GetValueAt(PRInt32 anIndex) const {
 }
 
 
-PRInt32 nsCParserNode::TranslateToUnicode() const
+PRInt32 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
 {
   if (eToken_entity == mToken->GetTokenType()) {
-    return ((CEntityToken*)mToken)->TranslateToUnicode();
+    return ((CEntityToken*)mToken)->TranslateToUnicodeStr(aString);
   }
   return -1;
 }

@@ -67,7 +67,7 @@ class nsIParserNode {
 
   // When the node is an entity, this will translate the entity to
   // it's unicode value.
-  virtual PRInt32 TranslateToUnicode() const = 0;
+  virtual PRInt32 TranslateToUnicodeStr(nsString& aString) const = 0;
 };
 
 #endif
