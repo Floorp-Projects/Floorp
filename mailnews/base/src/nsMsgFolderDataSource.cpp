@@ -486,7 +486,8 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
     }
   }
-  return rv;
+  //for the moment return NS_OK, because failure stops entire DoCommand process.
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
