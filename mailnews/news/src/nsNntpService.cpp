@@ -161,7 +161,7 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
     if (NS_SUCCEEDED(rv) && webshell)
 	    rv = webshell->LoadURI(myuri, "view", nsnull, PR_TRUE);
     else
-      RunNewsUrl(myuri, aDisplayConsumer);
+      rv = RunNewsUrl(myuri, aDisplayConsumer);
   }
 
   if (aURL)
