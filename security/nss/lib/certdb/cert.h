@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.27 2002/10/23 20:50:51 nelsonb%netscape.com Exp $
+ * $Id: cert.h,v 1.28 2002/10/25 03:21:19 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -568,6 +568,13 @@ extern SECStatus
 CERT_VerifySignedDataWithPubKeyInfo(CERTSignedData *sd,
                                     CERTSubjectPublicKeyInfo *pubKeyInfo,
                                     void *wincx);
+
+/*
+** verify the signature of a signed data object with a SECKEYPublicKey.
+*/
+extern SECStatus
+CERT_VerifySignedDataWithPublicKey(CERTSignedData *sd,
+                                   SECKEYPublicKey *pubKey, void *wincx);
 
 /*
 ** NEW FUNCTIONS with new bit-field-FIELD SECCertificateUsage - please use
