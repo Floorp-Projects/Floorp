@@ -152,12 +152,12 @@ function constructResults()
 nodeFocus = "Not Focused";
 nodeClick = "Radio Button Unchecked";
 cookieName = "nsIAccessibleTestRadioButtonNode";
-var res = "<b><u> Results for HTML Radio Button Checked Node:</u></b><br><br>";
+var res = "<b><u> Results for HTML Radio Button Unchecked Node:</u></b><br><br>";
 
 if(readCookie(cookieName) == null)
 {
   <!-- Test Form -->
-  document.write('<br><br><b> Testing Radio Button Checked </b><br><br>');
+  document.write('<br><br><b> Testing Radio Button Unchecked </b><br><br>');
   document.write('<form>');
   document.write('  Which is your favorite food');
   document.write('  <input type="radio" name="favorite" value="mexican"> Mexican');
