@@ -35,6 +35,7 @@ LRESULT CALLBACK  DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, 
 LRESULT CALLBACK  DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+LRESULT CALLBACK  DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSiteSelector(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);

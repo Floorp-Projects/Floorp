@@ -1724,7 +1724,7 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          dwWizardState = DLG_ADVANCED_SETTINGS;
+          dwWizardState = DLG_QUICK_LAUNCH;
 
           /* get the proxy server and port information */
           GetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer, MAX_BUF);
@@ -2153,7 +2153,7 @@ LPSTR GetStartInstallMessage()
 
 #define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
 
-LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   RECT  rDlg;
   LPSTR szMessage = NULL;
@@ -2165,10 +2165,114 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
   {
     case WM_INITDIALOG:
       DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diStartInstall.szTitle);
+      SetWindowText(hDlg, diQuickLaunch.szTitle);
 
       GetPrivateProfileString("Strings", "IDC Turbo Mode", "", szBuf, sizeof(szBuf), szFileIniConfig);
       SetDlgItemText(hDlg, IDC_CHECK_TURBO_MODE, szBuf);
+      SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
+      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
+      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hDlg, IDC_MESSAGE2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hDlg, IDC_CHECK_TURBO_MODE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg,
+                     HWND_TOP,
+                     (gSystemInfo.dwScreenX/2)-(rDlg.right/2),
+                     (gSystemInfo.dwScreenY/2)-(rDlg.bottom/2),
+                     0,
+                     0,
+                     SWP_NOSIZE);
+
+      {
+        SetDlgItemText(hDlg, IDC_MESSAGE0, diQuickLaunch.szMessage0);
+        SetDlgItemText(hDlg, IDC_MESSAGE1, diQuickLaunch.szMessage1);
+        SetDlgItemText(hDlg, IDC_MESSAGE2, diQuickLaunch.szMessage2);
+      }
+
+      if(diQuickLaunch.bTurboModeEnabled)
+        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_TURBO_MODE),  SW_SHOW);
+      else
+      {
+        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_TURBO_MODE),  SW_HIDE);
+        diQuickLaunch.bTurboMode = FALSE;
+      }
+
+      if(diQuickLaunch.bTurboMode)
+        CheckDlgButton(hDlg, IDC_CHECK_TURBO_MODE, BST_CHECKED);
+      else
+        CheckDlgButton(hDlg, IDC_CHECK_TURBO_MODE, BST_UNCHECKED);
+
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        case IDWIZNEXT:
+          wsprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductName,
+            sgProduct.szUserAgent);
+           
+          if(diQuickLaunch.bTurboModeEnabled)
+          {
+            if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED) {
+              strcpy( szData, "turbo=yes" );
+              diQuickLaunch.bTurboMode = TRUE;
+            }
+            else {
+              strcpy( szData, "turbo=no" );
+              diQuickLaunch.bTurboMode = FALSE;
+            }
+            AppendWinReg(HKEY_CURRENT_USER, szKey, "browserargs", REG_SZ, szData, 0, strlen( szData ) + 1, FALSE, FALSE );
+          }
+ 
+          DestroyWindow(hDlg);
+          DlgSequenceNext();
+          break;
+
+        case IDWIZBACK:
+          /* remember the last state of the TurboMode checkbox */
+          if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED) {
+            diQuickLaunch.bTurboMode = TRUE;
+          }
+          else {
+            diQuickLaunch.bTurboMode = FALSE;
+          }
+          DestroyWindow(hDlg);
+          DlgSequencePrev();
+          break;
+
+        case IDCANCEL:
+          AskCancelDlg(hDlg);
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
+  return(0);
+}
+
+LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  RECT  rDlg;
+  LPSTR szMessage = NULL;
+  char  szKey[MAX_BUF];
+  char  szData[MAX_BUF];
+
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
+      SetWindowText(hDlg, diStartInstall.szTitle);
+
       SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
       SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szInstall_);
@@ -2179,8 +2283,7 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_CURRENT_SETTINGS, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK_TURBO_MODE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-
+ 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg,
                      HWND_TOP,
@@ -2207,19 +2310,6 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
         FreeMemory(&szMessage);
       }
 
-      if(diStartInstall.bTurboModeEnabled)
-        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_TURBO_MODE),  SW_SHOW);
-      else
-      {
-        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_TURBO_MODE),  SW_HIDE);
-        diStartInstall.bTurboMode = FALSE;
-      }
-
-      if(diStartInstall.bTurboMode)
-        CheckDlgButton(hDlg, IDC_CHECK_TURBO_MODE, BST_CHECKED);
-      else
-        CheckDlgButton(hDlg, IDC_CHECK_TURBO_MODE, BST_UNCHECKED);
-
       break;
 
     case WM_COMMAND:
@@ -2229,15 +2319,15 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
           wsprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductName,
             sgProduct.szUserAgent);
            
-          if(diStartInstall.bTurboModeEnabled)
+          if(diQuickLaunch.bTurboModeEnabled)
           {
-            if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED) {
+            if(diQuickLaunch.bTurboMode == TRUE) {
               strcpy( szData, "turbo=yes" );
-              diStartInstall.bTurboMode = TRUE;
+              diQuickLaunch.bTurboMode = TRUE;
             }
             else {
               strcpy( szData, "turbo=no" );
-              diStartInstall.bTurboMode = FALSE;
+              diQuickLaunch.bTurboMode = FALSE;
             }
             AppendWinReg(HKEY_CURRENT_USER, szKey, "browserargs", REG_SZ, szData, 0, strlen( szData ) + 1, FALSE, FALSE );
           }
@@ -2248,13 +2338,6 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
 
         case IDWIZBACK:
           dwWizardState = DLG_ADVANCED_SETTINGS;
-          /* remember the last state of the TurboMode checkbox */
-          if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED) {
-            diStartInstall.bTurboMode = TRUE;
-          }
-          else {
-            diStartInstall.bTurboMode = FALSE;
-          }
           DestroyWindow(hDlg);
           DlgSequencePrev();
           break;
@@ -2605,11 +2688,22 @@ void DlgSequenceNext()
         }
         else
         {
-          dwWizardState = DLG_ADVANCED_SETTINGS;
+          dwWizardState = DLG_QUICK_LAUNCH;
         }
         break;
 
       case DLG_ADVANCED_SETTINGS:
+        dwWizardState = DLG_QUICK_LAUNCH;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diQuickLaunch.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diQuickLaunch.szTitle, DlgProcQuickLaunch);
+          bDone = TRUE;
+        }
+        break;
+
+ 
+     case DLG_QUICK_LAUNCH:
         dwWizardState = DLG_DOWNLOAD_OPTIONS;
         gbProcessingXpnstallFiles = FALSE;
 
@@ -2709,10 +2803,10 @@ void DlgSequenceNext()
         ProcessFileOps(T_PRE_DOWNLOAD, NULL);
 
         /* log if the user selected the turbo mode or not */
-        if(diStartInstall.bTurboModeEnabled)
+        if(diQuickLaunch.bTurboModeEnabled)
         {
-          LogISTurboMode(diStartInstall.bTurboMode);
-          LogMSTurboMode(diStartInstall.bTurboMode);
+          LogISTurboMode(diQuickLaunch.bTurboMode);
+          LogMSTurboMode(diQuickLaunch.bTurboMode);
         }
 
         if(RetrieveArchives() == WIZ_OK)
@@ -2842,6 +2936,16 @@ void DlgSequencePrev()
         break;
 
       case DLG_DOWNLOAD_OPTIONS:
+        dwWizardState = DLG_QUICK_LAUNCH;
+        gbProcessingXpnstallFiles = FALSE;
+        if(diQuickLaunch.bShowDialog)
+        {
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diQuickLaunch.szTitle, DlgProcQuickLaunch);
+          bDone = TRUE;
+        }
+        break;
+
+      case DLG_QUICK_LAUNCH:
         dwWizardState = DLG_PROGRAM_FOLDER;
         gbProcessingXpnstallFiles = FALSE;
         if(CheckWizardStateCustom(DLG_SELECT_COMPONENTS))

@@ -2203,6 +2203,31 @@ void DeInitDlgLicense(diL *diDialog)
   FreeMemory(&(diDialog->szMessage1));
 }
 
+HRESULT InitDlgQuickLaunch(diQL *diDialog)
+{
+  diDialog->bTurboMode         = FALSE;
+  diDialog->bTurboModeEnabled  = FALSE;
+  diDialog->bShowDialog = FALSE;
+  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage2 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  return(0);
+}
+
+void DeInitDlgQuickLaunch(diQL *diDialog)
+{
+  FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szMessage0));
+  FreeMemory(&(diDialog->szMessage1));
+  FreeMemory(&(diDialog->szMessage2));
+}
+
 HRESULT InitDlgSetupType(diST *diDialog)
 {
   diDialog->bShowDialog = FALSE;
@@ -2410,8 +2435,6 @@ void DeInitDlgAdvancedSettings(diAS *diDialog)
 HRESULT InitDlgStartInstall(diSI *diDialog)
 {
   diDialog->bShowDialog        = FALSE;
-  diDialog->bTurboMode         = FALSE;
-  diDialog->bTurboModeEnabled  = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessageInstall = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -5351,6 +5374,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgAdvancedSettings(&diAdvancedSettings))
     return(1);
+  if(InitDlgQuickLaunch(&diQuickLaunch))
+    return(1);
   if(InitDlgStartInstall(&diStartInstall))
     return(1);
   if(InitDlgDownload(&diDownload))
@@ -5629,6 +5654,24 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   else
     diDownloadOptions.bShowProtocols = TRUE;
 
+   /* Program Folder dialog */
+  GetPrivateProfileString("Dialog Quick Launch",      "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
+  GetPrivateProfileString("Dialog Quick Launch",      "Title",        "", diQuickLaunch.szTitle,         MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Quick Launch",      "Message0",     "", diQuickLaunch.szMessage0,      MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Quick Launch",      "Message1",     "", diQuickLaunch.szMessage1,      MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Quick Launch",      "Message2",     "", diQuickLaunch.szMessage2,      MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diQuickLaunch.bShowDialog = TRUE;
+  GetPrivateProfileString("Dialog Quick Launch",       "Turbo Mode",         "", szBuf,                          sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diQuickLaunch.bTurboMode = TRUE;   
+  GetPrivateProfileString("Dialog Quick Launch",       "Turbo Mode Enabled","", szBuf,                          sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diQuickLaunch.bTurboModeEnabled = TRUE;
+  else
+    /* since turbo mode is disabled, make sure bTurboMode is FALSE */
+    diQuickLaunch.bTurboMode = FALSE;
+
   /* Start Install dialog */
   GetPrivateProfileString("Dialog Start Install",       "Show Dialog",      "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Start Install",       "Title",            "", diStartInstall.szTitle,           MAX_BUF, szFileIniConfig);
@@ -5636,16 +5679,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Start Install",       "Message Download", "", diStartInstall.szMessageDownload, MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diStartInstall.bShowDialog = TRUE;
-  GetPrivateProfileString("Dialog Start Install",       "Turbo Mode",         "", szBuf,                          sizeof(szBuf), szFileIniConfig);
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diStartInstall.bTurboMode = TRUE;
-  GetPrivateProfileString("Dialog Start Install",       "Turbo Mode Enabled", "", szBuf,                          sizeof(szBuf), szFileIniConfig);
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diStartInstall.bTurboModeEnabled = TRUE;
-  else
-    /* sinde turbo mode is disabled, make sure bTurboMode is FALSE */
-    diStartInstall.bTurboMode = FALSE;
-
+ 
   /* Download dialog */
   GetPrivateProfileString("Dialog Download",       "Show Dialog",        "", szShowDialog,                   sizeof(szShowDialog),        szFileIniConfig);
   GetPrivateProfileString("Dialog Download",       "Title",              "", diDownload.szTitle,             MAX_BUF_TINY,   szFileIniConfig);
@@ -6980,8 +7014,9 @@ void DeInitialize()
   DeInitDlgSelectComponents(&diSelectAdditionalComponents);
   DeInitDlgSelectComponents(&diSelectComponents);
   DeInitDlgSetupType(&diSetupType);
-  DeInitDlgLicense(&diLicense);
   DeInitDlgWelcome(&diWelcome);
+  DeInitDlgLicense(&diLicense);
+  DeInitDlgQuickLaunch(&diQuickLaunch);
   DeInitSetupGeneral();
   DeInitDSNode(&gdsnComponentDSRequirement);
   DeInitErrorMessageStream();

@@ -250,6 +250,18 @@ typedef struct dlgLicense
   LPSTR szMessage1;
 } diL;
 
+typedef struct dlgQuickLaunch
+{
+  BOOL  bShowDialog;
+  LPSTR szTitle;
+  LPSTR szMessage0;
+  LPSTR szMessage1;
+  LPSTR szMessage2;
+  BOOL  bTurboMode;
+  BOOL  bTurboModeEnabled;
+} diQL;
+
+
 typedef struct stStruct
 {
   BOOL  bVisible;
@@ -336,8 +348,6 @@ typedef struct dlgStartInstall
   LPSTR szTitle;
   LPSTR szMessageInstall;
   LPSTR szMessageDownload;
-  BOOL  bTurboMode;
-  BOOL  bTurboModeEnabled;
 } diSI;
 
 typedef struct dlgDownload
