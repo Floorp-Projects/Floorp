@@ -29,7 +29,7 @@ DOLIBALIASES
 :ns:lib:mac:NSStdLib:NSStdLib.mcp               "PPC Shared Library"
 :ns:modules:security:freenav:macbuild:NoSecurity.mcp "PPC Shared Library"
 :ns:xpcom:macbuild:xpcomPPC.mcp
-:ns:lib:mac:MW:PP_VText:build:PowerPlantPPC.prj
+:ns:lib:mac:PowerPlant:PowerPlant.mcp
 :ns:modules:zlib:macbuild:zlib.mcp              "PPC Shared Library"
 :ns:jpeg:macbuild:JPEG.mcp                      "PPC Shared Library"
 :ns:sun-java:stubs:macbuild:JavaStubs.mcp       "PPC Shared Library"
