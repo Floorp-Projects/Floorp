@@ -361,7 +361,7 @@
          </vbox>
     
          <splitter id="calendar-splitter" collapse="before" persist="state"
-          class="chromeclass-extrachrome sidebar-splitter" onmouseup="persist_width()" orient="horizontal">
+          class="chromeclass-extrachrome sidebar-splitter" orient="horizontal">
             <grippy class="sidebar-splitter-grippy"/>
          </splitter>
          
@@ -407,7 +407,7 @@
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>
        
-                  <treechildren onmousemove="changeToolTipTextForToDo( event )" 
+                  <treechildren onmousemove="changeToolTipTextForEvent( event )" 
                     onclick="unifinderClickEvent( event )"
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
