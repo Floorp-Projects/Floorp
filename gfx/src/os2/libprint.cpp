@@ -21,11 +21,6 @@
 
 /* Simple printing API.  I've not done this before, so bear with me... */
 
-#define INCL_PM
-#define INCL_DOS
-#define INCL_DOSERRORS
-#define INCL_SPLDOSPRINT
-#include <os2.h>
 #include <stdio.h> // DJ - only for debug
 #include <stdlib.h>
 #include <string.h>
@@ -34,32 +29,43 @@
 #include "libprres.h"
 
 
+static HMODULE hmodRes;
+static BOOL prnEscape (HDC hdc, long lEscape);
+MRESULT EXPENTRY prnDlgProc (HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
 
-/* print-queue structure, opaque so I can change it. */
+
+
 class PRTQUEUE
 {
 public:
-    PRTQUEUE (PPRQINFO3 pInfo);
-   ~PRTQUEUE (void) { delete [] pQI3; }
-   PRQINFO3& PQI3 () const { return *(PRQINFO3*)pQI3; }
+   PRTQUEUE (const PRQINFO3* pPQI3)  { InitWithPQI3 (pPQI3); }
+   PRTQUEUE (const PRTQUEUE& PQInfo) { InitWithPQI3 (&PQInfo.PQI3 ()); }
+  ~PRTQUEUE (void) { free (mpPQI3); }
+
+   PRQINFO3& PQI3 () const { return *mpPQI3; }
    const char* DriverName () const { return mDriverName; }
    const char* DeviceName () const { return mDeviceName; }
    const char* PrinterName() const { return mPrinterName; }
+   const char* QueueName  () const { return mpPQI3->pszComment; }
    
 private:
-   PBYTE pQI3;
+   PRTQUEUE& operator = (const PRTQUEUE& z);         // prevent copying
+   void InitWithPQI3 (const PRQINFO3* pInfo);
+
+   PRQINFO3* mpPQI3;
    CHAR  mDriverName  [DRIV_NAME_SIZE + 1];          // Driver name
    CHAR  mDeviceName  [DRIV_DEVICENAME_SIZE + 1];    // Device name
    CHAR  mPrinterName [PRINTERNAME_SIZE + 1];        // Printer name
 };
 
-PRTQUEUE::PRTQUEUE (PPRQINFO3 pInfo)
+
+void PRTQUEUE::InitWithPQI3 (const PRQINFO3* pInfo)
 {
    // Make local copy of PPRQINFO3 object
    ULONG SizeNeeded;
    ::SplQueryQueue (NULL, pInfo->pszName, 3, NULL, 0, &SizeNeeded);
-   pQI3 = new BYTE [SizeNeeded];
-   ::SplQueryQueue (NULL, pInfo->pszName, 3, pQI3, SizeNeeded, &SizeNeeded);
+   mpPQI3 = (PRQINFO3*)malloc (SizeNeeded);
+   ::SplQueryQueue (NULL, pInfo->pszName, 3, mpPQI3, SizeNeeded, &SizeNeeded);
 
 
    PCHAR sep = strchr (pInfo->pszDriverName, '.');
@@ -90,18 +96,76 @@ PRTQUEUE::PRTQUEUE (PPRQINFO3 pInfo)
    }
 }
 
-/* local functions */
-static PRTQUEUE *prnGetDefaultPrinter( void);
-static PRQINFO3 *prnGetAllQueues( PULONG pNumQueues);
-static BOOL prnEscape( HDC hdc, long lEscape);
 
-MRESULT EXPENTRY prnDlgProc( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
+//===========================================================================
+
+PRINTDLG::PRINTDLG ()
+{
+  mbSelected = FALSE;
+  mDefaultQueue = 0;
+  mSelectedQueue = 0;
+  mQueueCount = 0;
+
+  ULONG TotalQueues = 0;
+  ULONG MemNeeded = 0;
+  SPLERR rc;
+  
+  rc = ::SplEnumQueue (NULL, 3, NULL, 0, &mQueueCount, &TotalQueues, &MemNeeded, NULL);
+  PRQINFO3* pPQI3Buf = (PRQINFO3*) malloc (MemNeeded);
+  rc = ::SplEnumQueue (NULL, 3, pPQI3Buf, MemNeeded, &mQueueCount, &TotalQueues, &MemNeeded, NULL);
+
+  if (mQueueCount > MAX_PRINT_QUEUES)
+    mQueueCount = MAX_PRINT_QUEUES;
+
+  for (ULONG cnt = 0 ; cnt < mQueueCount ; cnt++)
+  {
+    if (pPQI3Buf [cnt].fsType & PRQ3_TYPE_APPDEFAULT)
+      mDefaultQueue = cnt;
+
+    mPQBuf [cnt] = new PRTQUEUE (&pPQI3Buf [cnt]);
+  }
+
+  free (pPQI3Buf);
+}
+
+PRINTDLG::~PRINTDLG ()
+{
+  for (int cnt = 0 ; cnt < mQueueCount ; cnt++)
+    delete mPQBuf [cnt];
+}
+
+PRTQUEUE* PRINTDLG::SelectPrinter (HWND hwndOwner, BOOL bQuiet)
+{
+  mbSelected = FALSE;
+  PRTQUEUE* pPQ = NULL;
+
+  if (mQueueCount == 0)
+    return NULL;
+
+
+  if (bQuiet)
+  {
+    pPQ = mPQBuf [mDefaultQueue];
+  } else
+  {
+    ::WinDlgBox (HWND_DESKTOP, hwndOwner, prnDlgProc, hmodRes, IDD_PICKPRINTER, this);
+
+    if (mbSelected)	// dialog procedure updated this
+      pPQ = mPQBuf [mSelectedQueue];
+    else
+      return NULL;
+  }
+
+  mbSelected = TRUE;
+
+  return new PRTQUEUE (*pPQ);
+}
+
+
 
 /****************************************************************************/
 /*  Library-level data and functions                                        */
 /****************************************************************************/
-
-static HMODULE hmodRes;
 
 BOOL PrnInitialize( HMODULE hmodResources)
 {
@@ -113,30 +177,6 @@ BOOL PrnTerminate()
 {
    /* nop for now, may do something eventually */
    return TRUE;
-}
-
-/****************************************************************************/
-/*  Printer Selection                                                       */
-/****************************************************************************/
-
-/* Main work function - run a dialog to pick a printer */
-PRTQUEUE *PrnSelectPrinter( HWND hwndOwner, BOOL bQuiet)
-{
-   PRTQUEUE *pQueue = 0;
-
-   if( bQuiet)
-      pQueue = prnGetDefaultPrinter();
-   else
-   {
-      ULONG rc = WinDlgBox( HWND_DESKTOP, hwndOwner,
-                            prnDlgProc,
-                            hmodRes, IDD_PICKPRINTER,
-                            &pQueue);
-      if( rc == DID_CANCEL)
-         pQueue = 0;
-   }
-
-   return pQueue;
 }
 
 BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue)
@@ -152,53 +192,6 @@ BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue)
    return rc;
 }
 
-PRTQUEUE *prnGetDefaultPrinter()
-{
-   ULONG     ulQueues = 0;
-   PRQINFO3 *pInfo = prnGetAllQueues( &ulQueues);
-   PRTQUEUE *pq = 0;
-
-   if( ulQueues > 0)
-   {
-      /* find the default one */
-      ULONG i;
-      for( i = 0; i < ulQueues; i++)
-         if( pInfo[ i].fsType & PRQ3_TYPE_APPDEFAULT)
-            break;
-
-      /* must have a default printer... */
-      if( i == ulQueues)
-         i = 0;
-
-      pq = new PRTQUEUE (pInfo + i);
-
-      free( pInfo);
-   }
-
-   return pq;
-}
-
-
-PRQINFO3 *prnGetAllQueues( PULONG pNumQueues)
-{
-   ULONG  ulReturned = 0, ulNeeded = 0, ulTotal = 0;
-   PBYTE  pBuffer = NULL;
-   SPLERR rc = 0;
-
-   /* first work out how much space we need */
-   rc = ::SplEnumQueue( NULL, 3, pBuffer, 0, &ulReturned,
-                        &ulTotal, &ulNeeded, NULL);
-
-   pBuffer = (PBYTE) malloc( ulNeeded);
-
-   /* now get the queue-infos */
-   rc = ::SplEnumQueue( NULL, 3, pBuffer, ulNeeded, &ulReturned,
-                        &ulTotal, &ulNeeded, NULL);
-
-   *pNumQueues = ulReturned;
-
-   return (PRQINFO3 *) pBuffer;
-}
 
 BOOL PrnDoJobProperties( PRTQUEUE *pInfo)
 {
@@ -349,61 +342,44 @@ BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo)
 /*  Print dialog stuff                                                      */
 /****************************************************************************/
 
-typedef struct _PRNDLG
-{
-   HWND       hwndLbox;
-   PRQINFO3  *pQueues;
-   ULONG      ulQueues;
-   HPOINTER   hPointer;
-   PRTQUEUE **ppQueue;
-} PRNDLG, *PPRNDLG;
-
-#define PRM_QUERYQUEUE     (WM_USER)  /* returns PRQINFO3* */
 #define PRM_JOBPROPERTIES  (WM_USER + 1)
 
 MRESULT EXPENTRY prnDlgProc( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-   PPRNDLG pData = (PPRNDLG) WinQueryWindowPtr( hwnd, 0);
+   PRINTDLG* pPrintDlg = (PRINTDLG*)::WinQueryWindowPtr (hwnd, 0);
 
-   switch( msg)
+   switch (msg)
    {
       case WM_INITDLG:
-         /* set up our data structure */
-         pData = (PPRNDLG) malloc( sizeof( PRNDLG));
-         pData->pQueues = prnGetAllQueues( &pData->ulQueues);
-         pData->hwndLbox = WinWindowFromID( hwnd, IDLB_QUEUES);
-         pData->hPointer = WinLoadPointer( HWND_DESKTOP, hmodRes, IDICO_PRINTER);
-         pData->ppQueue = (PRTQUEUE**) mp2;
-         WinSetWindowPtr( hwnd, 0, pData);
+         pPrintDlg = (PRINTDLG*)mp2;  // Get pointer to class. We passed it as parameter to WinDlgBox
+         pPrintDlg->mHwndListbox = ::WinWindowFromID (hwnd, IDLB_QUEUES);
+         pPrintDlg->mHPointer = ::WinLoadPointer (HWND_DESKTOP, hmodRes, IDICO_PRINTER);
+         ::WinSetWindowPtr (hwnd, 0, pPrintDlg);
    
          /* set up the dialog */
-//         WinSetPresParam( hwnd, PP_FONTNAMESIZE, 7, "8.Helv");
-//         WinEnableWindow( WinWindowFromID( hwnd, IDB_HELP), FALSE);
-         WinShowWindow( WinWindowFromID( hwnd, IDB_HELP), FALSE);
-         WinSendMsg( hwnd, WM_SETICON, MPFROMLONG(pData->hPointer), 0);
+//         ::WinSetPresParam (hwnd, PP_FONTNAMESIZE, 7, "8.Helv");
+//         ::WinEnableWindow (::WinWindowFromID (hwnd, IDB_HELP), FALSE);
+         ::WinShowWindow (::WinWindowFromID (hwnd, IDB_HELP), FALSE);
+         ::WinSendMsg (hwnd, WM_SETICON, MPFROMLONG (pPrintDlg->mHPointer), 0);
 
          /* populate listbox */
-         if( pData->ulQueues == 0)
+         if (pPrintDlg->mQueueCount == 0)
          {
-            WinEnableWindow( WinWindowFromID( hwnd, DID_OK), FALSE);
-            WinSendMsg( pData->hwndLbox, LM_INSERTITEM, MPFROMSHORT(0),
-                        MPFROMP("(no printers available)"));
-            WinEnableWindow( pData->hwndLbox, FALSE);
-            WinEnableWindow( WinWindowFromID( hwnd, IDB_JOBPROPERTIES), FALSE);
+            ::WinEnableWindow (::WinWindowFromID (hwnd, DID_OK), FALSE);
+            ::WinSendMsg (pPrintDlg->mHwndListbox, LM_INSERTITEM, MPFROMSHORT (0),
+                          MPFROMP("(no printers available)"));
+            ::WinEnableWindow (pPrintDlg->mHwndListbox, FALSE);
+            ::WinEnableWindow (::WinWindowFromID (hwnd, IDB_JOBPROPERTIES), FALSE);
          }
          else
          {
-            ULONG i;
-   
-            for( i = 0; i < pData->ulQueues; i++)
+            for (ULONG i = 0 ; i < pPrintDlg->mQueueCount ; i++)
             {
-               WinSendMsg( pData->hwndLbox, LM_INSERTITEM, MPFROMSHORT(i),
-                           MPFROMP( pData->pQueues[i].pszComment));
-               WinSendMsg( pData->hwndLbox, LM_SETITEMHANDLE, MPFROMSHORT(i),
-                           MPFROMP( pData->pQueues + i));
-               if( pData->pQueues[i].fsType & PRQ3_TYPE_APPDEFAULT)
-                  WinSendMsg( pData->hwndLbox, LM_SELECTITEM,
-                              MPFROMSHORT(i), MPFROMSHORT(TRUE));
+               ::WinSendMsg (pPrintDlg->mHwndListbox, LM_INSERTITEM, MPFROMSHORT (i),
+                             MPFROMP (pPrintDlg->mPQBuf [i]->QueueName ()));
+
+               if (i == pPrintDlg->mDefaultQueue)
+                 ::WinSendMsg (pPrintDlg->mHwndListbox, LM_SELECTITEM, MPFROMSHORT (i), MPFROMSHORT (TRUE));
             }
          }
          // Center over owner
@@ -411,62 +387,51 @@ MRESULT EXPENTRY prnDlgProc( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
             RECTL rclMe, rclOwner;
             LONG lX, lY;
             BOOL rc;
-            WinQueryWindowRect( WinQueryWindow( hwnd, QW_PARENT), &rclOwner);
-            WinQueryWindowRect( hwnd, &rclMe);
+            ::WinQueryWindowRect (::WinQueryWindow (hwnd, QW_PARENT), &rclOwner);
+            ::WinQueryWindowRect (hwnd, &rclMe);
             lX = (rclOwner.xRight - rclMe.xRight) / 2;
             lY = (rclOwner.yTop - rclMe.yTop) / 2;
-            rc = WinSetWindowPos( hwnd, 0, lX, lY, 0, 0, SWP_MOVE);
+            rc = ::WinSetWindowPos (hwnd, 0, lX, lY, 0, 0, SWP_MOVE);
          }
          break;
-
-      case PRM_QUERYQUEUE:
-      {
-         /* find which lbox item is selected & return its handle */
-         MRESULT sel;
-         sel = WinSendMsg( pData->hwndLbox, LM_QUERYSELECTION, 0, 0);
-         return WinSendMsg( pData->hwndLbox, LM_QUERYITEMHANDLE, sel, 0);
-      }
 
       case PRM_JOBPROPERTIES:
       {
          /* do job properties dialog for selected printer */
-         PPRQINFO3 pInfo;
-         pInfo = (PPRQINFO3) WinSendMsg( hwnd, PRM_QUERYQUEUE, 0, 0);
-         PrnDoJobProperties( (PRTQUEUE*) pInfo); /* !! */
+         pPrintDlg->mSelectedQueue = (ULONG)::WinSendMsg (pPrintDlg->mHwndListbox, LM_QUERYSELECTION, 0, 0);
+         PrnDoJobProperties (pPrintDlg->mPQBuf [pPrintDlg->mSelectedQueue]);
          return 0;
       }
 
       case WM_CONTROL:
-         if( SHORT2FROMMP(mp1) == LN_ENTER)
-            return WinSendMsg( hwnd, PRM_JOBPROPERTIES, 0, 0);
+         if (SHORT2FROMMP (mp1) == LN_ENTER)
+            return ::WinSendMsg (hwnd, PRM_JOBPROPERTIES, 0, 0);
          break;
 
       case WM_COMMAND:
-         switch( SHORT1FROMMP(mp1))
+         switch (SHORT1FROMMP (mp1))
          {
             case IDB_JOBPROPERTIES:
-               WinSendMsg( hwnd, PRM_JOBPROPERTIES, 0, 0);
+               ::WinSendMsg (hwnd, PRM_JOBPROPERTIES, 0, 0);
                return 0;
 
             case DID_OK:
             {
-               /* set return value */
-               PPRQINFO3 pInfo;
-               pInfo = (PPRQINFO3) WinSendMsg( hwnd, PRM_QUERYQUEUE, 0, 0);
-               *(pData->ppQueue) = new PRTQUEUE (pInfo);
-               break; /* dismiss dialog normally */
+               pPrintDlg->mbSelected = TRUE;
+               pPrintDlg->mSelectedQueue = (ULONG)::WinSendMsg (pPrintDlg->mHwndListbox, LM_QUERYSELECTION, 0, 0);
+               break;
             }
+
+            case DID_CANCEL:
+            {
+               pPrintDlg->mbSelected = FALSE;
+               break;
+            }
+
          }
          break;
 
-      case WM_DESTROY:
-      {
-         if( pData->pQueues)
-            free( pData->pQueues);
-         free( pData);
-         break;
-      }
    }
 
-   return WinDefDlgProc( hwnd, msg, mp1, mp2);
+   return ::WinDefDlgProc (hwnd, msg, mp1, mp2);
 }

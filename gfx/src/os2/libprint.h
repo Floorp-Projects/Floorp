@@ -24,7 +24,8 @@
 /****************************************************************************/
 /* Example usage:                                                           */
 /*                                                                          */
-/* PRTQUEUE *pq = PrnSelectPrinter(...)                                     */
+/* PRINTDLG pdlg;                                                           */
+/* PRTQUEUE *pq = pdlg.SelectPrinter(...)                                   */
 /* HDC       dcPrint = PrnOpenDC( pq, ...)                                  */
 /*                                                                          */
 /* GpiAssociate( hps, dcPrint)                                              */
@@ -46,53 +47,74 @@
 #ifndef _libprint_h
 #define _libprint_h
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define INCL_PM
+#define INCL_DOS
+#define INCL_DOSERRORS
+#define INCL_SPLDOSPRINT
 
-/* Library init and term; job properties per queue are cached during run.   */
-BOOL PrnInitialize( HMODULE hmodResources);
-BOOL PrnTerminate( void);
+#include <os2.h>
 
-/* opaque type to describe a print queue (printer)                          */
+
+// Library init and term; job properties per queue are cached during run.
+BOOL PrnInitialize (HMODULE hmodResources);
+BOOL PrnTerminate (void);
+
+
+// opaque type to describe a print queue (printer)
 class PRTQUEUE;
 
-/* Select a printer.  If bQuiet is set, the default one is used; otherwise, */
-/* a dialog is popped up to allow the user to choose.  Job properties       */
-/* configuration can be done at this stage, from the dialog.                */
-/* Returns null if use cancels.                                             */
-PRTQUEUE *PrnSelectPrinter( HWND hwndOwner, BOOL bQuiet);
+#define MAX_PRINT_QUEUES  (128)
 
-/* Release app. resources associated with a printer                         */
+
+class PRINTDLG
+{
+  friend MRESULT EXPENTRY prnDlgProc (HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2);
+
+public:
+   PRINTDLG ();
+  ~PRINTDLG ();
+   PRTQUEUE* SelectPrinter (HWND hwndOwner, BOOL bQuiet);
+
+private:
+  HWND      mHwndListbox;
+  HPOINTER  mHPointer;
+
+  BOOL      mbSelected;
+  ULONG     mDefaultQueue;
+  ULONG     mSelectedQueue;
+  ULONG     mQueueCount;
+  PRTQUEUE* mPQBuf [MAX_PRINT_QUEUES];
+};
+
+
+
+// Release app. resources associated with a printer
 BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue);
 
-/* Display job-properties dialog.  Returns success.                         */
+// Display job-properties dialog.  Returns success.
 BOOL PrnDoJobProperties( PRTQUEUE *pPrintQueue);
 
-/* Get a DC for the selected printer.  Must supply the application name.    */
+// Get a DC for the selected printer.  Must supply the application name.
 HDC PrnOpenDC( PRTQUEUE *pPrintQueue, PSZ pszApplicationName);
 
-/* Close the print DC; your PS should have been disassociated.              */
+// Close the print DC; your PS should have been disassociated.
 BOOL PrnCloseDC( HDC hdc);
 
-/* Get the hardcopy caps for the selected form                              */
+// Get the hardcopy caps for the selected form
 BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo);
 
-/* Begin a print job.  A PS should have been associated with the dc         */
-/* (returned from PrnOpenDC()), a job name is required.                     */
+// Begin a print job.  A PS should have been associated with the dc
+// (returned from PrnOpenDC()), a job name is required.
 BOOL PrnStartJob( HDC hdc, PSZ pszJobName);
 
-/* End a print job previously started with PrnStartJob().                   */
+// End a print job previously started with PrnStartJob().
 BOOL PrnEndJob( HDC hdc);
 
-/* Abort the current job started with PrnStartJob().                        */
+// Abort the current job started with PrnStartJob().
 BOOL PrnAbortJob( HDC hdc);
 
-/* Make a page-break.                                                       */
+// Make a page-break.
 BOOL PrnNewPage( HDC hdc);
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif
