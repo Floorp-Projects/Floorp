@@ -1,0 +1,23 @@
+var gVersion = "0.1";
+
+var err = initInstall("Type Ahead Find", "typeaheadfind", gVersion);
+logComment("initInstall: " + err);
+
+var fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+err = addDirectory("", gVersion, "bin", fProgram, "");
+logComment("addDirectory: " + err);
+
+// Register chrome
+if (err == SUCCESS) {
+  err = registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","typeaheadfind.jar"), "locale/en-US/typeaheadfind/");
+}
+
+if (err == SUCCESS) {
+  err = performInstall(); 
+  logComment("performInstall: " + err);
+} else {
+  cancelInstall(err);
+}
+
