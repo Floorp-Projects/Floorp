@@ -48,7 +48,7 @@ namespace ICodeASM {
     {
         string::const_iterator p1 = s1.begin();
         string::const_iterator p2 = s2_begin;
-        uint s2_size = s2_end - s2_begin;
+        uint s2_size = s2_end - s2_begin - 1;
 
         while (p1 != s1.end() && p2 != s2_end) {
             if (toupper(*p1) != toupper(*p2))
@@ -63,17 +63,23 @@ namespace ICodeASM {
     ICodeParser::ParseSourceFromString (const string &source)
     {
         uint statementNo = 0;
-        
-        try
+        iter begin = source.begin();
+        iter end = source.end();
+
+        while (begin != end)
         {
-            ++statementNo;
-            ParseStatement (source.begin(), source.end());
-        }
-        catch (ICodeParseException e)
-        {
-            fprintf (stderr, "Parse Error: %s at statement %u\n", e.msg.c_str(),
-                     statementNo);
-            return;
+            try
+            {
+                ++statementNo;
+                begin = ParseStatement (begin, end);
+            }
+            catch (ICodeParseException *e)
+            {
+                fprintf (stderr, "Parse Error: %s at statement %u\n",
+                         e->msg.c_str(), statementNo);
+                delete e;
+                return;
+            }
         }
     }
 
@@ -129,6 +135,21 @@ namespace ICodeASM {
 
                 case '<':
                     tl.estimate = teNotARegister;
+                    tl.begin = curpos;
+                    return tl;
+
+                case '(':
+                    tl.estimate = teOpenParen;
+                    tl.begin = curpos;
+                    return tl;
+
+                case ')':
+                    tl.estimate = teCloseParen;
+                    tl.begin = curpos;
+                    return tl;
+
+                case ':':
+                    tl.estimate = teColon;
                     tl.begin = curpos;
                     return tl;
 
@@ -198,7 +219,7 @@ namespace ICodeASM {
                         }
         }
 
-        throw new ICodeParseException ("Expected boolean value.");
+        throw new ICodeParseException ("Expected boolean value");
     }
     
     iter
@@ -278,23 +299,23 @@ namespace ICodeASM {
                     return ParseUInt32 (++begin, end, 
                                         static_cast<uint32 *>(rval));
                 }
-                catch (ICodeParseException ex)
+                catch (ICodeParseException *e)
                 {
                     /* rethrow as an "expected register" in fall through case */
+                    delete e;
                 }
             }
-        } else if (*begin != '<') {
+        } else if (*begin == '<') {
             if ((++begin != end) && (*begin == 'N' || *begin == 'n'))
                 if ((++begin != end) && (*begin == 'A' || *begin == 'a'))
                     if ((++begin != end) && (*begin == 'R' || *begin == 'r'))
-                        if ((++begin != end) &&
-                            (*begin == '>' || *begin == '>')) {
+                        if ((++begin != end) && *begin == '>') {
                             *rval = VM::NotARegister;
                             return ++begin;
                         }
         }
 
-        throw new ICodeParseException ("Expected int32 value");
+        throw new ICodeParseException ("Expected Register value");
     }
 
     iter
@@ -307,7 +328,7 @@ namespace ICodeASM {
         *rval = 0;
         
         if (delim != '\'' && delim != '"') {
-            ASSERT ("|begin| does not point at a string");
+            NOT_REACHED ("|begin| does not point at a string");
             delete str;
             return 0;
         }
@@ -387,7 +408,7 @@ namespace ICodeASM {
         if (!isTerminated)
         {
             delete str;
-            throw new ICodeParseException ("Unterminated string literal.");
+            throw new ICodeParseException ("Unterminated string literal");
         }
 
         *rval = str;
@@ -427,12 +448,57 @@ namespace ICodeASM {
      */
 
     iter
-    ICodeParser::ParseArgumentListOperand (iter begin, iter /*end*/,
-                                           VM::ArgumentList **/*o*/)
+    ICodeParser::ParseArgumentListOperand (iter begin, iter end,
+                                           VM::ArgumentList **rval)
     {
-        /* XXX this is hard, lets go shopping */
-        ASSERT ("Not Implemented.");
-        return begin;
+        /* parse argument list on the format "('argname': register[, ...])" */
+        TokenLocation tl = SeekTokenStart (begin, end);
+        VM::ArgumentList *al = new VM::ArgumentList();
+        
+        if (tl.estimate != teOpenParen)
+            throw new ICodeParseException ("Expected Argument List");
+        
+        tl = SeekTokenStart (tl.begin + 1, end);
+        while (tl.estimate == teString) {
+            /* look for the argname in quotes */
+            string *argName;
+            begin = ParseString (tl.begin, end, &argName);
+
+            /* look for the : */
+            tl = SeekTokenStart (begin, end);
+            if (tl.estimate != teColon)
+                throw new ICodeParseException ("Expected colon");
+
+            /* and now the register */
+            tl = SeekTokenStart (tl.begin + 1, end);
+            if (tl.estimate != teAlpha)
+                throw new ICodeParseException ("Expected Register value");
+
+            JSTypes::Register r;
+            begin = ParseRegister (tl.begin, end, &r);
+            /* pass 0 (null) as the "type" because it is
+             * not actually used by the interpreter, only in (the current)
+             * codegen (acording to rogerl.)
+             */
+            VM::TypedRegister tr = VM::TypedRegister(r, 0);
+            VM::Argument arg = VM::Argument (tr, 0 /* XXX convert argName to a stringatom somehow */);
+            
+            al->push_back(arg);
+
+            tl = SeekTokenStart (begin, end);
+            /* if the next token is a comma,
+             * seek to the next one and go again */
+            if (tl.estimate == teComma) {
+                tl = SeekTokenStart (tl.begin, end);
+            }
+        }
+
+        if (tl.estimate != teCloseParen)
+            throw new ICodeParseException ("Expected close paren");
+
+        *rval = al;
+
+        return tl.begin + 1;
     }
 
     iter
@@ -442,7 +508,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teAlpha)
-            throw new ICodeParseException ("Expected BinaryOp.");
+            throw new ICodeParseException ("Expected BinaryOp");
         string *str;
         end = ParseAlpha (tl.begin, end, &str);
 
@@ -455,7 +521,7 @@ namespace ICodeASM {
             }
         
         delete str;
-        throw new ICodeParseException ("Unknown BinaryOp.");
+        throw new ICodeParseException ("Unknown BinaryOp");
     }
 
     iter
@@ -464,7 +530,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teAlpha)
-            throw new ICodeParseException ("Expected boolean value.");
+            throw new ICodeParseException ("Expected boolean value");
 
         return ParseBool (tl.begin, end, rval);
     }
@@ -476,7 +542,7 @@ namespace ICodeASM {
 
         if ((tl.estimate != teNumeric) && (tl.estimate != teMinus) &&
             (tl.estimate != tePlus))
-            throw new ICodeParseException ("Expected double value.");
+            throw new ICodeParseException ("Expected double value");
 
         return ParseDouble (tl.begin, end, rval);
     }
@@ -487,7 +553,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
-            throw new ICodeParseException ("Expected ICode Module as a quoted string.");
+            throw new ICodeParseException ("Expected ICode Module as a quoted string");
         return ParseString (tl.begin, end, rval);
     }
     
@@ -497,7 +563,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
-            throw new ICodeParseException ("Expected JSClass as a quoted string.");
+            throw new ICodeParseException ("Expected JSClass as a quoted string");
         return ParseString (tl.begin, end, rval);
     }
 
@@ -507,7 +573,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
-            throw new ICodeParseException ("Expected JSString as a quoted string.");
+            throw new ICodeParseException ("Expected JSString as a quoted string");
         return ParseString (tl.begin, end, rval);
     }
     
@@ -517,7 +583,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
-            throw new ICodeParseException ("Expected JSFunction as a quoted string.");
+            throw new ICodeParseException ("Expected JSFunction as a quoted string");
         return ParseString (tl.begin, end, rval);
     }
 
@@ -527,7 +593,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
-            throw new ICodeParseException ("Expected JSType as a quoted string.");
+            throw new ICodeParseException ("Expected JSType as a quoted string");
         return ParseString (tl.begin, end, rval);
     }
 
@@ -537,7 +603,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teAlpha)
-            throw new ICodeParseException ("Expected Label Identifier or Offset keyword.");
+            throw new ICodeParseException ("Expected Label Identifier or Offset keyword");
 
         string *str;
         begin = ParseAlpha (tl.begin, end, &str);
@@ -550,7 +616,7 @@ namespace ICodeASM {
 
             if ((tl.estimate != teNumeric) && (tl.estimate != teMinus) &&
                 (tl.estimate != tePlus)) 
-                throw new ICodeParseException ("Expected numeric value after Offset keyword.");
+                throw new ICodeParseException ("Expected numeric value after Offset keyword");
             int32 ofs;
             begin = ParseInt32 (tl.begin, end, &ofs);
             VM::Label *new_label = new VM::Label(0);
@@ -582,7 +648,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teNumeric)
-            throw new ICodeParseException ("Expected UInt32 value.");
+            throw new ICodeParseException ("Expected UInt32 value");
 
         return ParseUInt32 (tl.begin, end, rval);
     }
@@ -602,7 +668,7 @@ namespace ICodeASM {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
-            throw new ICodeParseException ("Expected StringAtom as a quoted string.");
+            throw new ICodeParseException ("Expected StringAtom as a quoted string");
         return ParseString (tl.begin, end, rval);
     }
 
@@ -614,6 +680,8 @@ namespace ICodeASM {
         node->begin = begin;
         node->icodeID = icodeID;
 
+        fprintf (stderr, "parsing instruction %s\n", icodemap[icodeID].name);
+        
         /* add the node now, so the parse*operand functions can see it */
         mStatementNodes.push_back (node);
 
@@ -621,6 +689,8 @@ namespace ICodeASM {
            case ot##T:                                                     \
            {                                                               \
               C rval;                                                      \
+              fprintf (stderr, "parsing operand type %u\n",                \
+                       static_cast<uint32>(ot##T));                        \
               node->operand[i].type = ot##T;                               \
               curpos = Parse##T##Operand (curpos, end, &rval);             \
               node->operand[i].data = CTYPE<int64>(rval);                  \
@@ -648,6 +718,13 @@ namespace ICodeASM {
                 default:
                     break;                    
             }
+            if (i != 3 && icodemap[icodeID].otype[i + 1] != otNone) {
+                TokenLocation tl = SeekTokenStart (curpos, end);
+                if (tl.estimate != teComma)
+                    throw new ICodeParseException ("Expected comma");
+                tl = SeekTokenStart (tl.begin + 1, end);
+                curpos = tl.begin;
+            }   
         }
 
 #       undef CASE_TYPE
@@ -716,7 +793,7 @@ namespace ICodeASM {
             for (uint i = 0; i < icodemap_size; ++i)
                 if (cmp_nocase(icode_str, &icodemap[i].name[0],
                                &icodemap[i].name[0] +
-                               strlen(icodemap[i].name) + 1))
+                               strlen(icodemap[i].name) + 1) == 0)
                     /* if match found, parse it's operands */
                     return ParseInstruction (i, firstTokenEnd, end);
             /* otherwise, choke on it */

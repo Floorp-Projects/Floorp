@@ -33,25 +33,16 @@
 
 /* most of this file will get auto-generated from the icode metadata */
 
-#include "systemtypes.h"
+#ifndef __icodemap_h
 
-enum OperandType {
-    otNone = 0,
-    otArgumentList,
-    otBinaryOp,
-    otBool,
-    otDouble,
-    otICodeModule,
-    otJSClass,
-    otJSString,
-    otJSFunction,
-    otJSType,
-    otLabel,
-    otUInt32,
-    otRegister,
-    otStringAtom
-};
-        
+#define __icodemap_h
+
+#include "systemtypes.h"
+#include "icodeasm.h"
+
+namespace JavaScript {
+namespace ICodeASM {
+
 static uint icodemap_size = 5;
 
 static struct {
@@ -60,8 +51,14 @@ static struct {
 } icodemap [] =
 {
     {"LOAD_STRING", {otRegister, otStringAtom}},
+    {"LOAD_NAME", {otRegister, otStringAtom}},
     {"CAST", {otRegister, otRegister, otJSType}},
     {"SAVE_NAME", {otJSString, otRegister}},
     {"CALL", {otRegister, otRegister, otRegister, otArgumentList}},
     {"RETURN", {otRegister}}
 };
+ 
+}
+}
+
+#endif /* #ifdef __icodemap_h */
