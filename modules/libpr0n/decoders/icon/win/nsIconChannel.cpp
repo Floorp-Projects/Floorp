@@ -233,53 +233,51 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
       BITMAPINFO maskInfo = {{sizeof(BITMAPINFOHEADER)}};
       if (GetDIBits(hDC, iconInfo.hbmMask, 0, 0, NULL, &maskInfo, DIB_RGB_COLORS) &&
           maskInfo.bmiHeader.biSizeImage > 0) {
-        BITMAPINFO colorInfo = {{sizeof(BITMAPINFOHEADER)}};
-        if (GetDIBits(hDC, iconInfo.hbmColor, 0, 0, NULL, &colorInfo, DIB_RGB_COLORS) &&
-            colorInfo.bmiHeader.biSizeImage > 0) {
-          // calculate the palette size and overall size
-          if (colorInfo.bmiHeader.biClrUsed > 256)
-            colorInfo.bmiHeader.biClrUsed = 0;
-          PRUint32 colorInfoSize = sizeof(BITMAPINFOHEADER) + colorInfo.bmiHeader.biClrUsed * sizeof(RGBQUAD);
-          PRUint32 iconSize = sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + colorInfoSize + colorInfo.bmiHeader.biSizeImage + maskInfo.bmiHeader.biSizeImage;
-          char *buffer = new char[iconSize];
-          if (!buffer)
-            rv = NS_ERROR_OUT_OF_MEMORY;
-          else {
-            // the data starts with an icon file header
-            ICONFILEHEADER *iconHeader = (ICONFILEHEADER *)buffer;
-            iconHeader->ifhReserved = 0;
-            iconHeader->ifhType = 1;
-            iconHeader->ifhCount = 1;
-            // followed by the single icon entry
-            ICONENTRY *iconEntry = (ICONENTRY *)(buffer + sizeof(ICONFILEHEADER));
-            iconEntry->ieWidth = colorInfo.bmiHeader.biWidth;
-            iconEntry->ieHeight = colorInfo.bmiHeader.biHeight;
-            iconEntry->ieColors = colorInfo.bmiHeader.biClrUsed;
-            iconEntry->ieReserved = 0;
-            iconEntry->iePlanes = colorInfo.bmiHeader.biPlanes;
-            iconEntry->ieBitCount = colorInfo.bmiHeader.biBitCount;
-            iconEntry->ieSizeImage = colorInfo.bmiHeader.biSizeImage;
-            iconEntry->ieFileOffset = sizeof(ICONFILEHEADER) + sizeof(ICONENTRY);
-            // followed by the bitmap info header and the bits
-            LPBITMAPINFO lpBitmapInfo = (LPBITMAPINFO)(buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY));
-            memcpy(lpBitmapInfo, &maskInfo.bmiHeader, sizeof(BITMAPINFOHEADER));
-            if (GetDIBits(hDC, iconInfo.hbmMask, 0, maskInfo.bmiHeader.biHeight, buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + colorInfoSize + colorInfo.bmiHeader.biSizeImage, lpBitmapInfo, DIB_RGB_COLORS)) {
-              memcpy(lpBitmapInfo, &colorInfo.bmiHeader, sizeof(BITMAPINFOHEADER));
-              if (GetDIBits(hDC, iconInfo.hbmColor, 0, colorInfo.bmiHeader.biHeight, buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + colorInfoSize, lpBitmapInfo, DIB_RGB_COLORS)) {
-                aListener->OnStartRequest(this, ctxt);
+        PRUint32 colorSize = (((maskInfo.bmiHeader.biWidth + 1) * 3) & ~3) * maskInfo.bmiHeader.biHeight;
+        PRUint32 iconSize = sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + sizeof(BITMAPINFOHEADER) + colorSize + maskInfo.bmiHeader.biSizeImage;
+        char *buffer = new char[iconSize];
+        if (!buffer)
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        else {
+          // the data starts with an icon file header
+          ICONFILEHEADER *iconHeader = (ICONFILEHEADER *)buffer;
+          iconHeader->ifhReserved = 0;
+          iconHeader->ifhType = 1;
+          iconHeader->ifhCount = 1;
+          // followed by the single icon entry
+          ICONENTRY *iconEntry = (ICONENTRY *)(buffer + sizeof(ICONFILEHEADER));
+          iconEntry->ieWidth = maskInfo.bmiHeader.biWidth;
+          iconEntry->ieHeight = maskInfo.bmiHeader.biHeight;
+          iconEntry->ieColors = 0;
+          iconEntry->ieReserved = 0;
+          iconEntry->iePlanes = 1;
+          iconEntry->ieBitCount = 24;
+          iconEntry->ieSizeImage = sizeof(BITMAPINFOHEADER) + colorSize + maskInfo.bmiHeader.biSizeImage;
+          iconEntry->ieFileOffset = sizeof(ICONFILEHEADER) + sizeof(ICONENTRY);
+          // followed by the bitmap info header and the bits
+          LPBITMAPINFO lpBitmapInfo = (LPBITMAPINFO)(buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY));
+          memcpy(lpBitmapInfo, &maskInfo.bmiHeader, sizeof(BITMAPINFOHEADER));
+          if (GetDIBits(hDC, iconInfo.hbmMask, 0, maskInfo.bmiHeader.biHeight, buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + sizeof(BITMAPINFOHEADER) + colorSize, lpBitmapInfo, DIB_RGB_COLORS)) {
+            lpBitmapInfo->bmiHeader.biBitCount = 24;
+            lpBitmapInfo->bmiHeader.biSizeImage = colorSize;
+            lpBitmapInfo->bmiHeader.biClrUsed = 0;
+            lpBitmapInfo->bmiHeader.biClrImportant = 0;
+            if (GetDIBits(hDC, iconInfo.hbmColor, 0, maskInfo.bmiHeader.biHeight, buffer + sizeof(ICONFILEHEADER) + sizeof(ICONENTRY) + sizeof(BITMAPINFOHEADER), lpBitmapInfo, DIB_RGB_COLORS)) {
+              // doubling the height because icons have two bitmaps
+              lpBitmapInfo->bmiHeader.biHeight *= 2;
+              aListener->OnStartRequest(this, ctxt);
 
-                // turn our buffer into a stream...and make the appropriate calls on our consumer
-                nsCOMPtr<nsIInputStream> inputStr;
-                rv = NS_NewByteInputStream(getter_AddRefs(inputStr), buffer, iconSize);
-                if (NS_SUCCEEDED(rv))
-                  aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconSize);
-                aListener->OnStopRequest(this, ctxt, rv);
-              } // if we got mask bits
+              // turn our buffer into a stream...and make the appropriate calls on our consumer
+              nsCOMPtr<nsIInputStream> inputStr;
+              rv = NS_NewByteInputStream(getter_AddRefs(inputStr), buffer, iconSize);
+              if (NS_SUCCEEDED(rv))
+                aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconSize);
+              aListener->OnStopRequest(this, ctxt, rv);
             } // if we got bitmap bits
-            delete [] buffer;
-          } // if we allocated the buffer
-        } // if we got mask size
-      } // if we got bitmap size
+          } // if we got mask bits
+          delete [] buffer;
+        } // if we allocated the buffer
+      } // if we got mask size
 
       DeleteDC(hDC);
       DeleteObject(iconInfo.hbmColor);
