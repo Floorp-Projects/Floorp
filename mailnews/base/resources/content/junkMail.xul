@@ -19,10 +19,10 @@
         ondialoghelp="return doHelpButton();"
         persist="screenX screenY width height">
 
-<script src="chrome://messenger/content/junkMail.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/junkMail.js"/>
 
 <vbox>
-  <hbox>
+  <hbox align="center">
     <label value="&account.label;" accesskey="&account.accesskey;"/>
     <menulist/>
     <spacer flex="1"/>
@@ -30,19 +30,21 @@
   </hbox>
 
   <separator/>
-  <description value="&info1.label;"/>
+  <description>&info1.label;</description>
   <separator/>
-  <description value="&info2.label;"/>
+  <description>&info2.label;</description>
   <separator/>
 
-  <radiogroup id="level" orient="horizontal>
-    <radio id="off" value="0" label="&off.label;"/>
-    <radio id="lowest" value="20" label="&lowest.label;"/>
-    <radio id="low" value="40" label="&low.label;"/>
-    <radio id="medium" value="60" label="&medium.label;"/>
-    <radio id="high" value="80" label="&high.label;"/>
-    <radio id="highest" value="100" label="&highest.label;"/>
-  </radiogroup>
+  <hbox>
+    <radiogroup flex="1" id="level" orient="horizontal">
+      <radio flex="1" id="off" value="0" label="&off.label;"/>
+      <radio flex="1" id="lowest" value="20" label="&lowest.label;"/>
+      <radio flex="1" id="low" value="40" label="&low.label;"/>
+      <radio flex="1" id="medium" value="60" label="&medium.label;"/>
+      <radio flex="1" id="high" value="80" label="&high.label;"/>
+      <radio flex="1" id="highest" value="100" label="&highest.label;"/>
+    </radiogroup>
+  </hbox>
 
   <separator/>
 
@@ -61,7 +63,6 @@
     <checkbox label="&whitelist.label;"/>
     <menulist/>
   </hbox>
-
 </vbox>
 
 </dialog>
