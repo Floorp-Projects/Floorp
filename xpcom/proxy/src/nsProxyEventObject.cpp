@@ -90,6 +90,9 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
             {
             	nsVoidKey aKey(root);	
                 realToProxyMap->Put(&aKey, root);
+                
+                NS_ADDREF(proxy);  // since we are double duty, we need to make sure that our refCnt 
+                                   // reflects this.
             }
             goto return_wrapper;
         }
@@ -223,22 +226,16 @@ nsrefcnt
 nsProxyEventObject::Release(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
-
     --mRefCnt;
     NS_LOG_RELEASE(this, mRefCnt, "nsProxyEventObject");
-    if (mRefCnt == 0)
+
+    if(0 == mRefCnt)
     {
-        if(mRoot == this)
-        {
-            NS_DELETEXPCOM(this);   // cascaded delete
-        }
-        else
-        {
-            mRoot->Release();
-        }
+        NS_DELETEXPCOM(this);
         return 0;
     }
+    else if(1 == mRefCnt)
+        mRoot->Release();    // do NOT zero out the ptr (weak ref)
     return mRefCnt;
 }
 

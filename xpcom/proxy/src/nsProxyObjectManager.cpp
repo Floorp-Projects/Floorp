@@ -179,6 +179,8 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
             return aObj->QueryInterface(aIID, aProxyObject);
         }
     }
+    
+    NS_ADDREF(aObj);
 
     // check to see if proxy is there or not.
     *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(postQ, proxyType, aObj, aIID);
@@ -187,6 +189,8 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
         return NS_OK;
     }
     
+    NS_RELEASE(aObj);
+
     return NS_ERROR_NO_INTERFACE; //fix error code?
 }   
 

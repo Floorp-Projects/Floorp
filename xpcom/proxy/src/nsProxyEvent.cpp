@@ -87,9 +87,6 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISup
     mRealObject      = realObject;
     mProxyType       = proxyType;
     mDestQueue       = destQueue;
-
-    NS_ADDREF(mRealObject);
-    NS_ADDREF(mDestQueue);
 }
 
 
@@ -98,7 +95,6 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-
     nsComponentManager::CreateInstance(aClass, 
                                        aDelegate,
                                        aIID,
@@ -106,8 +102,6 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
 
     mProxyType       = proxyType;
     mDestQueue       = destQueue;
-
-    NS_ADDREF(mDestQueue);
 }
 
 nsProxyObject::~nsProxyObject()
@@ -402,7 +396,7 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                         {
                             NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
                             if ( NS_FAILED( rv ) )  
-                                return rv
+                                return rv;
 
                             rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
                             if ( NS_FAILED( rv ) )
