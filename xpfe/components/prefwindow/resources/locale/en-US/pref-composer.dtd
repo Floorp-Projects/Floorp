@@ -29,3 +29,6 @@
 <!ENTITY  htmlSource                "HTML Source:">
 <!ENTITY  imageeditor               "Images:">
 <!ENTITY  chooseButton.label        "Choose">
+
+<!ENTITY  recentFiles.title         "Recently Edited Files Menu">
+<!ENTITY  documentsInMenu           "documents listed in Recent Files menu">
