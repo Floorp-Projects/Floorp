@@ -1120,14 +1120,15 @@ PRBool nsWindow::PointInWidget(Point aThePoint)
 //-------------------------------------------------------------------------
 nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 {
-	if (! PointInWidget(aThePoint))
+	if (!mVisible || !PointInWidget(aThePoint))
 		return nsnull;
 
 	nsWindow* widgetHit = this;
 	nsIEnumerator* children = GetChildren();
 	if (children)
 	{
-		children->First();
+		// traverse through all the nsWindows to find out who got hit, lowest level of course
+		children->Last();
 		do
 		{
 			nsISupports* child;
@@ -1143,7 +1144,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 			  NS_RELEASE(child);
       }
 		}
-    while (NS_SUCCEEDED(children->Next()));
+    while (NS_SUCCEEDED(children->Prev()));
 		NS_RELEASE(children);
 	}
 
