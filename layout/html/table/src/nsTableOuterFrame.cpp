@@ -29,6 +29,8 @@
 #include "prinrval.h"
 #include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
+#include "nsHTMLParts.h"
+#include "nsIPresShell.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -212,6 +214,101 @@ NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContex
       }
       result = child->GetNextSibling(&child);
     }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::AppendFrames(nsIPresContext& aPresContext,
+                                nsIPresShell&   aPresShell,
+                                nsIAtom*        aListName,
+                                nsIFrame*       aFrameList)
+{
+  const nsStyleDisplay* display;
+  nsresult              rv;
+
+  // We only have two child frames: the inner table and one caption frame.
+  // The inner frame is provided when we're initialized, and it cannot change
+  aFrameList->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  if (NS_STYLE_DISPLAY_TABLE_CAPTION == display->mDisplay) {
+    NS_PRECONDITION(!mCaptionFrame, "already have a caption frame");
+    // We only support having a single caption frame
+    if (mCaptionFrame || (LengthOf(aFrameList) > 1)) {
+      rv = NS_ERROR_UNEXPECTED;
+
+    } else {
+      // Insert the caption frame into the child list
+      mCaptionFrame = aFrameList;
+      mInnerTableFrame->SetNextSibling(aFrameList);
+
+      // Reflow the new caption frame. It's already marked dirty, so generate a reflow
+      // command that tells us to reflow our dirty child frames
+      nsIReflowCommand* reflowCmd;
+  
+      rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+      if (NS_SUCCEEDED(rv)) {
+        aPresShell.AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
+    }
+  }
+  else {
+    NS_PRECONDITION(PR_FALSE, "unexpected child frame type");
+    rv = NS_ERROR_UNEXPECTED;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::InsertFrames(nsIPresContext& aPresContext,
+                                nsIPresShell&   aPresShell,
+                                nsIAtom*        aListName,
+                                nsIFrame*       aPrevFrame,
+                                nsIFrame*       aFrameList)
+{
+  NS_PRECONDITION(!aPrevFrame, "invalid previous frame");
+  return AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::RemoveFrame(nsIPresContext& aPresContext,
+                               nsIPresShell&   aPresShell,
+                               nsIAtom*        aListName,
+                               nsIFrame*       aOldFrame)
+{
+  const nsStyleDisplay* display;
+  nsresult              rv;
+
+  // We only have two child frames: the inner table and one caption frame.
+  // The inner frame can't be removed so this should be the caption
+  aOldFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  NS_PRECONDITION(NS_STYLE_DISPLAY_TABLE_CAPTION == display->mDisplay,
+                  "can't remove inner frame");
+
+  // See if the caption's minimum width impacted the inner table
+  if (mMinCaptionWidth > mRect.width) {
+    // The old caption width had an effect on the inner table width so
+    // we're going to need to reflow it. Mark it dirty
+    nsFrameState  frameState;
+    mInnerTableFrame->GetFrameState(&frameState);
+    frameState |= NS_FRAME_IS_DIRTY;
+    mInnerTableFrame->SetFrameState(frameState);
+  }
+
+  // Remove the caption frame from the child list and destroy it
+  mFrames.DestroyFrame(aPresContext, aOldFrame);
+  mCaptionFrame = nsnull;
+  mMinCaptionWidth = 0;
+
+  // Generate a reflow command so we get reflowed
+  nsIReflowCommand* reflowCmd;
+
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
   }
 
   return NS_OK;
@@ -468,24 +565,33 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   return rv;
 }
 
-// IR_TargetIsMe is free to foward the request to the inner table frame 
-nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
-                                          nsHTMLReflowMetrics&   aDesiredSize,
-                                          OuterTableReflowState& aReflowState,
-                                          nsReflowStatus&        aStatus)
+nsresult
+nsTableOuterFrame::IR_ReflowDirty(nsIPresContext&        aPresContext,
+                                  nsHTMLReflowMetrics&   aDesiredSize,
+                                  OuterTableReflowState& aReflowState,
+                                  nsReflowStatus&        aStatus)
 {
-  nsresult rv = NS_OK;
-  nsIReflowCommand::ReflowType type;
-  aReflowState.reflowState.reflowCommand->GetType(type);
-  nsIFrame* objectFrame;
-  aReflowState.reflowState.reflowCommand->GetChildFrame(objectFrame); 
-  TDBG_SD(gsDebugIR,"TOF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
-  switch (type) {
-  case nsIReflowCommand::ReflowDirty:
-  {
+  nsFrameState  frameState;
+  nsresult      rv;
+
+  // See if the caption frame is dirty. This would be because of a newly
+  // inserted caption
+  if (mCaptionFrame) {
+    mCaptionFrame->GetFrameState(&frameState);
+    if (frameState & NS_FRAME_IS_DIRTY) {
+      rv = IR_CaptionInserted(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+      // Repaint our entire bounds
+      // XXX Improve this...
+      Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+    }
+  }
+
+  // See if the inner table frame is dirty
+  mInnerTableFrame->GetFrameState(&frameState);
+  if (frameState & NS_FRAME_IS_DIRTY) {
     // Inner table is dirty so reflow it. Change the reflow state and set the
     // reason to resize reflow.
-    // XXX It could also be the caption that is dirty...
     ((nsHTMLReflowState&)aReflowState.reflowState).reason = eReflowReason_Resize;
     ((nsHTMLReflowState&)aReflowState.reflowState).reflowCommand = nsnull;
 
@@ -500,57 +606,43 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     // Repaint the inner table frame's entire visible area
     dirtyRect.x = dirtyRect.y = 0;
     Invalidate(dirtyRect);
-    break;
+
+  } else if (!mCaptionFrame) {
+    // The inner table isn't dirty so we don't need to reflow it, but make
+    // sure it's placed correctly. It could be that we're dirty because the
+    // caption was removed
+    mInnerTableFrame->MoveTo(0,0);
+
+    // Update our state so we calculate our desired size correctly
+    nsRect  innerRect;
+    mInnerTableFrame->GetRect(innerRect);
+    aReflowState.innerTableMaxSize.width = innerRect.width;
+    aReflowState.y = innerRect.height;
+    
+    // Repaint our entire bounds
+    // XXX Improve this...
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
   }
 
-  case nsIReflowCommand::FrameAppended :
-  case nsIReflowCommand::FrameInserted :
-  {
-    const nsStyleDisplay* childDisplay;
-    objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_CAPTION == childDisplay->mDisplay) {
-      rv = IR_CaptionInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                              objectFrame, PR_FALSE);
-    }
-    else {
-      TDBG_S(gsDebugIR,"TOF IR: calling inner table reflow.\n");
-      rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-    }
-    break;
-  }
+  return rv;
+}
 
-  /*
-  case nsIReflowCommand::FrameReplaced :
-    // if the frame to be replaced is mCaptionFrame
-    if (mCaptionFrame==objectFrame)
-    {
-      // verify that the new frame is a caption frame
-      const nsStyleDisplay *newFrameDisplay;
-      newFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)newFrameDisplay));
-      NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_CAPTION == childDisplay->mDisplay, "bad new frame");
-      if (NS_STYLE_DISPLAY_TABLE_CAPTION == childDisplay->mDisplay)
-      {
-        rv = IR_CaptionInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                             objectFrame, PR_TRUE);
-      }
-      else
-        rv = NS_ERROR_ILLEGAL_VALUE;
-    }
-    else
-    {
-      if (PR_TRUE==gsDebugIR) printf("TOF IR: calling inner table reflow.\n");
-      rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-    }
-  */
-
-  case nsIReflowCommand::FrameRemoved :
-    if (mCaptionFrame==objectFrame) {
-      rv = IR_CaptionRemoved(aPresContext, aDesiredSize, aReflowState, aStatus);
-    }
-    else {
-      TDBG_S(gsDebugIR,"TOF IR: calling inner table reflow.\n");
-      rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-    }
+// IR_TargetIsMe is free to foward the request to the inner table frame 
+nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
+                                          nsHTMLReflowMetrics&   aDesiredSize,
+                                          OuterTableReflowState& aReflowState,
+                                          nsReflowStatus&        aStatus)
+{
+  nsresult rv = NS_OK;
+  nsIReflowCommand::ReflowType type;
+  aReflowState.reflowState.reflowCommand->GetType(type);
+  nsIFrame* objectFrame;
+  aReflowState.reflowState.reflowCommand->GetChildFrame(objectFrame); 
+  TDBG_SD(gsDebugIR,"TOF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
+  switch (type) {
+  case nsIReflowCommand::ReflowDirty:
+    TDBG_S(gsDebugIR,"TOF IR: reflowing dirty child frames.\n");
+    rv = IR_ReflowDirty(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
   case nsIReflowCommand::StyleChanged :
@@ -563,14 +655,10 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     rv = NS_ERROR_ILLEGAL_VALUE;
     break;
   
-  case nsIReflowCommand::PullupReflow:
-  case nsIReflowCommand::PushReflow:
-  case nsIReflowCommand::CheckPullupReflow :
-  case nsIReflowCommand::UserDefined :
   default:
-    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
+    NS_NOTYETIMPLEMENTED("unexpected reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
-    TDBG_S(gsDebugIR,"TOF IR: reflow command not implemented.\n");
+    TDBG_S(gsDebugIR,"TOF IR: unexpected reflow command not implemented.\n");
     break;
   }
 
@@ -706,20 +794,10 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
 nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresContext,
                                                nsHTMLReflowMetrics&   aDesiredSize,
                                                OuterTableReflowState& aReflowState,
-                                               nsReflowStatus&        aStatus,
-                                               nsIFrame*              aCaptionFrame,
-                                               PRBool                 aReplace)
+                                               nsReflowStatus&        aStatus)
 {
   TDBG_S(gsDebugIR,"TOF IR: CaptionInserted\n");
   nsresult rv = NS_OK;
-  nscoord oldCaptionMES = 0;
-  NS_PRECONDITION(nsnull != aCaptionFrame, "null arg: aCaptionFrame");
-  if (PR_TRUE == aReplace && nsnull != mCaptionFrame) {
-    oldCaptionMES = mMinCaptionWidth;
-  }
-  // make aCaptionFrame this table's caption
-  mCaptionFrame = aCaptionFrame;
-  mInnerTableFrame->SetNextSibling(mCaptionFrame);
 
   // reflow the caption frame, getting it's MES
   TDBG_S(gsDebugIR,"TOF IR: initial-reflowing caption\n");
@@ -753,7 +831,7 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
       // XXX: caption align = left|right ignored here!
       // if the caption's MES > table width, reflow the inner table
       nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
-      if ((oldCaptionMES != mMinCaptionWidth) && (mMinCaptionWidth > mRect.width)) {
+      if (mMinCaptionWidth > mRect.width) {
         TDBG_S(gsDebugIR,"TOF IR: resize-reflowing inner table\n");
         nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
                                              nsSize(mMinCaptionWidth, aReflowState.reflowState.availableHeight),
@@ -780,59 +858,6 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
                                 aReflowState);
     }
   }
-  return rv;
-}
-
-nsresult nsTableOuterFrame::IR_CaptionRemoved(nsIPresContext&        aPresContext,
-                                              nsHTMLReflowMetrics&   aDesiredSize,
-                                              OuterTableReflowState& aReflowState,
-                                              nsReflowStatus&        aStatus)
-{
-  TDBG_S(gsDebugIR,"TOF IR: CaptionRemoved\n");
-  nsresult rv = NS_OK;
-  if (nsnull != mCaptionFrame) {
-    // get the caption's alignment
-    const nsStyleText* captionTextStyle;
-    mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)captionTextStyle));
-    // if the caption's MES > table width, reflow the inner table minus the MES
-    nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
-    nscoord oldMinCaptionWidth = mMinCaptionWidth;
-    // set the cached min caption width to 0 here, so it can't effect inner table reflow
-    mMinCaptionWidth = 0;
-    mCaptionFrame = nsnull;
-    mInnerTableFrame->SetNextSibling(nsnull);
-    if (oldMinCaptionWidth > mRect.width) { 
-      // the old caption width had an effect on the inner table width, so reflow the inner table
-      TDBG_S(gsDebugIR,"TOF IR: reflowing inner table\n");
-      nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
-                                         nsSize(aReflowState.reflowState.availableWidth, 
-                                                aReflowState.reflowState.availableHeight));
-      // ReflowChild sets MES
-      rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-      // set the output state
-      aReflowState.innerTableMaxSize.width = innerSize.width;
-      aReflowState.y = innerSize.height;
-    }
-    else {
-      TDBG_S(gsDebugIR, "TOF IR: skipping reflow of inner table\n");
-      nsRect innerRect;
-      mInnerTableFrame->GetRect(innerRect);
-      aReflowState.innerTableMaxSize.width = innerRect.width;
-      aReflowState.y = innerRect.height;
-    }
-    // if the caption was a top caption, move the inner table to the correct offset
-    if ((captionTextStyle->mVerticalAlign.GetUnit()==eStyleUnit_Enumerated) && 
-        (captionTextStyle->mVerticalAlign.GetIntValue()==NS_STYLE_VERTICAL_ALIGN_BOTTOM)) {
-      mInnerTableFrame->MoveTo(0,0);
-    }
-  }
-  else {
-    rv = NS_ERROR_ILLEGAL_VALUE;
-  }
-
   return rv;
 }
 
