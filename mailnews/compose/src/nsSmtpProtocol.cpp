@@ -429,7 +429,7 @@ void nsSmtpProtocol::UpdateStatusWithString(const PRUnichar * aStatusString)
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * gets the response code from the nntp server and the
+ * gets the response code from the SMTP server and the
  * response line
  *
  * returns the TCP return code from the read
