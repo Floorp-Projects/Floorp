@@ -88,20 +88,6 @@
 #define _PR_HAVE_ATOMIC_OPS
 #endif
 
-#if defined(_PR_GLOBAL_THREADS_ONLY) || defined(_PR_PTHREADS)
-/*
- * We have assembly language implementation of atomic
- * stacks for the 32-bit sparc and x86 architectures only.
- *
- * Note: We ran into thread starvation problem with the
- * 32-bit sparc assembly language implementation of atomic
- * stacks, so we do not use it now. (Bugzilla bug 113740)
- */
-#if !defined(sparc) && !defined(__x86_64)
-#define _PR_HAVE_ATOMIC_CAS
-#endif
-#endif
-
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
 #define _PR_STAT_HAS_ST_ATIM
