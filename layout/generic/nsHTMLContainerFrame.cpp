@@ -144,45 +144,6 @@ nsHTMLContainerFrame::CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContex
   return placeholder;
 }
 
-PRBool
-nsHTMLContainerFrame::CreateWrapperFrame(nsIPresContext& aPresContext,
-                                         nsIFrame*       aFrame,
-                                         nsIFrame*&      aWrapperFrame)
-{
-  // If the frame can contain children then wrap it in a BODY frame
-  nsIContent* content;
-  PRBool      isContainer;
-
-  aFrame->GetContent(content);
-  content->CanContainChildren(isContainer);
-  if (isContainer) {
-    // Wrap the frame in a BODY frame. The body wrapper frame gets the
-    // original style context
-    nsIStyleContext*  kidStyle;
-    aFrame->GetStyleContext(kidStyle);
-
-    NS_NewBodyFrame(aWrapperFrame, NS_BODY_SHRINK_WRAP);  // XXX auto margins?
-    aWrapperFrame->Init(aPresContext, content, this, kidStyle);
-
-    // The wrapped frame gets a pseudo style context
-    nsIStyleContext*  pseudoStyle;
-    pseudoStyle = aPresContext.ResolvePseudoStyleContextFor(content, 
-                                                            nsHTMLAtoms::columnPseudo,
-                                                            kidStyle);
-    NS_RELEASE(kidStyle);
-    aFrame->SetStyleContext(&aPresContext, pseudoStyle);
-    NS_RELEASE(pseudoStyle);
-
-    // Init the body frame
-    aFrame->SetGeometricParent(aWrapperFrame);
-    aFrame->SetContentParent(aWrapperFrame);
-    aWrapperFrame->SetInitialChildList(aPresContext, nsnull, aFrame);
-  }
-
-  NS_RELEASE(content);
-  return isContainer;
-}
-
 // XXX pass in aFrame's style context instead
 PRBool
 nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
@@ -214,14 +175,6 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
       nsPlaceholderFrame* placeholder =
         CreatePlaceholderFrame(aPresContext, aFrame);
   
-      // See if we need to wrap the frame in a BODY frame
-      nsIFrame*  wrapperFrame;
-      if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
-        // Bind the wrapper frame to the placeholder
-        placeholder->SetAnchoredItem(wrapperFrame);
-        frameToWrapWithAView = wrapperFrame;
-      }
-  
       aPlaceholderFrame = placeholder;
 
     } else {
@@ -229,25 +182,7 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
       nsAbsoluteFrame* placeholder =
         CreateAbsolutePlaceholderFrame(aPresContext, aFrame);
   
-      // See if we need to wrap the frame in a BODY frame
-      nsIFrame*  wrapperFrame;
-      if (CreateWrapperFrame(aPresContext, aFrame, wrapperFrame)) {
-        // Bind the wrapper frame to the placeholder
-        placeholder->SetAbsoluteFrame(wrapperFrame);
-        frameToWrapWithAView = wrapperFrame;
-      }
-  
       aPlaceholderFrame = placeholder;
-    }
-
-    // Wrap the frame in a view if necessary
-    nsIStyleContext* kidSC;
-    aFrame->GetStyleContext(kidSC);
-    nsresult rv = CreateViewForFrame(aPresContext, frameToWrapWithAView,
-                                     kidSC, PR_FALSE);
-    NS_RELEASE(kidSC);
-    if (NS_OK != rv) {
-      return rv;
     }
 
     // Set the placeholder's next sibling to what aFrame's next sibling was
@@ -375,30 +310,74 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
 {
   nsIView* view;
   aFrame->GetView(view);
-  // If we don't yet have a view; see if we need a view
+  // If we don't yet have a view, see if we need a view
   if (nsnull == view) {
-    // We don't yet have a view; see if we need a view
+    PRInt32 zIndex = 0;
 
-    // Get my nsStyleColor
-    const nsStyleColor* myColor = (const nsStyleColor*)
+    // Get nsStyleColor and nsStyleDisplay
+    const nsStyleColor* color = (const nsStyleColor*)
       aStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
 
-    if (myColor->mOpacity != 1.0f) {
+    if (color->mOpacity != 1.0f) {
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
         ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p opacity=%g",
-         aFrame, myColor->mOpacity));
+         aFrame, color->mOpacity));
       aForce = PR_TRUE;
     }
 
-    // See if the frame is being relatively positioned
+    // See if the frame is being relatively positioned or absolutely
+    // positioned
     if (!aForce) {
       const nsStylePosition* position = (const nsStylePosition*)
         aStyleContext->GetStyleData(eStyleStruct_Position);
+
       if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
            aFrame));
         aForce = PR_TRUE;
+      
+      } else if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+          ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p relatively positioned",
+           aFrame));
+        aForce = PR_TRUE;
+
+        // Get the z-index to use. This only applies to positioned elements
+        if (position->mZIndex.GetUnit() == eStyleUnit_Integer) {
+          zIndex = position->mZIndex.GetIntValue();
+        }
+
+        // XXX CSS2 says clip applies to block-level and replaced elements with
+        // overflow set to other than 'visible'. Where should this go?
+#if 0
+        // Is there a clip rect specified?
+        nsViewClip    clip = {0, 0, 0, 0};
+        PRUint8       clipType = (display->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
+        nsViewClip*   pClip = nsnull;
+
+        if (NS_STYLE_CLIP_RECT == clipType) {
+          if ((NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags) == 0) {
+            clip.mLeft = display->mClip.left;
+          }
+          if ((NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags) == 0) {
+            clip.mRight = display->mClip.right;
+          }
+          if ((NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags) == 0) {
+            clip.mTop = display->mClip.top;
+          }
+          if ((NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags) == 0) {
+            clip.mBottom = display->mClip.bottom;
+          }
+          pClip = &clip;
+        }
+        else if (NS_STYLE_CLIP_INHERIT == clipType) {
+          // XXX need to handle clip inherit (get from parent style context)
+          NS_NOTYETIMPLEMENTED("clip inherit");
+        }
+#endif
       }
     }
 
@@ -407,6 +386,8 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       nsIAtom*  pseudoTag;
       aStyleContext->GetPseudoType(pseudoTag);
       if (pseudoTag == nsHTMLAtoms::scrolledContentPseudo) {
+        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+          ("nsHTMLContainerFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
         aForce = PR_TRUE;
       }
       NS_IF_RELEASE(pseudoTag);
@@ -443,18 +424,18 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         nsRect bounds;
         aFrame->GetRect(bounds);
         view->Init(viewManager, bounds, rootView);
-        viewManager->InsertChild(rootView, view, 0);
-        // If the background color is transparent then mark the view as having
-        // transparent content.
+        viewManager->InsertChild(rootView, view, zIndex);
+        // If the background color is transparent or the visibility is hidden
+        // then mark the view as having transparent content.
         // XXX We could try and be smarter about this and check whether there's
         // a background image. If there is a background image and the image is
         // fully opaque then we don't need to mark the view as having transparent
         // content...
-        if (NS_STYLE_BG_COLOR_TRANSPARENT & myColor->mBackgroundFlags) {
+        if ((NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) ||
+            !display->mVisible) {
           viewManager->SetViewContentTransparency(view, PR_TRUE);
         }
-        viewManager->SetViewOpacity(view, myColor->mOpacity);
-
+        viewManager->SetViewOpacity(view, color->mOpacity);
         NS_RELEASE(viewManager);
       }
 

@@ -197,16 +197,6 @@ nsInlineFrame::AppendNewFrames(nsIPresContext& aPresContext,
       }
       frame = placeholder;
     }
-    else {
-      // Wrap the frame in a view if necessary
-      nsIStyleContext* kidSC;
-      frame->GetStyleContext(kidSC);
-      nsresult rv = CreateViewForFrame(aPresContext, frame, kidSC, PR_FALSE);
-      NS_RELEASE(kidSC);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
 
     prevFrame = frame;
   }
@@ -467,16 +457,6 @@ nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
   if (MoveFrameOutOfFlow(aPresContext, aNewFrame, kidDisplay, kidPosition, placeholder)) {
     // Add the placeholder frame to the flow
     aNewFrame = placeholder;
-  }
-  else {
-    // Wrap the frame in a view if necessary
-    nsIStyleContext* kidSC;
-    aNewFrame->GetStyleContext(kidSC);
-    nsresult rv = CreateViewForFrame(aPresContext, aNewFrame, kidSC, PR_FALSE);
-    NS_RELEASE(kidSC);
-    if (NS_OK != rv) {
-      return rv;
-    }
   }
 
   // Add the new frame to the child list

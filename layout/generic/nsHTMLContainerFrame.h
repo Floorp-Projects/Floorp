@@ -36,9 +36,6 @@ public:
                                              nsIFrame*       aFloatedFrame);
   nsAbsoluteFrame* CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContext,
                                                   nsIFrame*       aAbsoluteFrame);
-  PRBool CreateWrapperFrame(nsIPresContext& aPresContext,
-                            nsIFrame*       aFrame,
-                            nsIFrame*&      aWrapperFrame);
 
   // If the frame should be floated or absolutely positioned creates a placeholder
   // frame and returns PR_TRUE. The sibling list is modified so aFrame's next
