@@ -107,6 +107,8 @@ public:
 
   // Add an XATOM property to this window.
   void                 StoreProperty(char *property, unsigned char *data);
+  void                 InvalidateWindowPos(void);
+
 
   virtual PRBool IsChild() const;
 
@@ -192,6 +194,9 @@ protected:
   GdkSuperWin *mSuperWin;
   GtkWidget   *mMozArea;
   GtkWidget   *mMozAreaClosestParent;
+
+  PRBool      GetWindowPos(nscoord &x, nscoord &y);
+  nscoord     mCachedX, mCachedY; 
 
   // are we doing a grab?
   static PRBool      sIsGrabbing;

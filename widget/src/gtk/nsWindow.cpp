@@ -150,6 +150,8 @@ nsWindow::nsWindow()
   mSuperWin = 0;
   mMozArea = 0;
   mMozAreaClosestParent = 0;
+  mCachedX = mCachedY = -1;
+
   mIsTooSmall = PR_FALSE;
   mIsUpdating = PR_FALSE;
   // init the hash table if it hasn't happened already
@@ -225,46 +227,69 @@ PRBool nsWindow::IsChild() const
   return PR_FALSE;
 }
 
+void nsWindow::InvalidateWindowPos(void)
+{
+  mCachedX = mCachedY = -1;
+}
+
+gboolean
+handle_invalidate_pos(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
+{
+  nsWindow *widget = (nsWindow *)p;
+  widget->InvalidateWindowPos();
+
+  return PR_FALSE;
+}
+
+PRBool nsWindow::GetWindowPos(nscoord &x, nscoord &y)
+{
+  if ((mCachedX==-1) && (mCachedY==-1)) { /* Not cached */
+    gint xpos, ypos;
+    if (mMozArea)
+      {
+        if (mMozArea->window)
+          {
+            if (!GTK_WIDGET_MAPPED(mMozArea) || !GTK_WIDGET_REALIZED(mMozArea)) {
+              // get_root_origin will do Bad Things
+              return PR_FALSE;
+            }
+            gdk_window_get_root_origin(mMozArea->window, &xpos, &ypos);
+          }
+        else
+          return PR_FALSE;
+      }
+    else if (mSuperWin)
+      {
+        if (mSuperWin->bin_window)
+          {
+            gdk_window_get_origin(mSuperWin->bin_window, &xpos, &ypos);
+          }
+        else
+          return FALSE;
+      }
+    mCachedX = xpos;
+    mCachedY = ypos;
+  }
+
+  x = mCachedX;
+  y = mCachedY;
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
-  gint x;
-  gint y;
+  nscoord x;
+  nscoord y;
 
   aNewRect.width = aOldRect.width;
   aNewRect.height = aOldRect.height;
-  if (mMozArea)
-  {
-    if (mMozArea->window)
-    {
-      if (!GTK_WIDGET_MAPPED(mMozArea) || !GTK_WIDGET_REALIZED(mMozArea)) {
-        // get_root_origin will do Bad Things
-        return NS_ERROR_FAILURE;
-      }
-      gdk_window_get_root_origin(mMozArea->window, &x, &y);
-#ifdef DEBUG_MOVE
-      printf("Got root origin = (%d,%d)\n", x, y);
-#endif
-      aNewRect.x = x + aOldRect.x;
-      aNewRect.y = y + aOldRect.y;
-#ifdef DEBUG_MOVE
-      printf("result = (%d,%d)\n", aNewRect.x, aNewRect.y);
-#endif
-    }
-    else
-      return NS_ERROR_FAILURE;
-  }
-  else if (mSuperWin)
-  {
-    if (mSuperWin->bin_window)
-    {
-      gdk_window_get_origin(mSuperWin->bin_window, &x, &y);
-      aNewRect.x = x + aOldRect.x;
-      aNewRect.y = y + aOldRect.y;
-    }
 
-    else
-      return NS_ERROR_FAILURE;
-  }
+  if (!GetWindowPos(x, y))
+    return NS_ERROR_FAILURE;
+ 
+  aNewRect.x = x + aOldRect.x;
+  aNewRect.y = y + aOldRect.y;
 
   return NS_OK;
 }
@@ -278,6 +303,12 @@ nsWindow::DestroyNative(void)
 #ifdef USE_XIM
   IMEDestroyIC();
 #endif // USE_XIM 
+
+  GtkWidget *top_mozarea = GetMozArea();
+  if (top_mozarea) {
+    GtkWidget *top_window = gtk_widget_get_toplevel(top_mozarea);
+    gtk_signal_disconnect_by_data(GTK_OBJECT(top_window), this);
+  }
 
   // destroy all of the children that are nsWindow() classes
   // preempting the gdk destroy system.
@@ -1696,7 +1727,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   // set up all the focus handling
 
   if (mShell) {
-    GdkEventMask shellMask;
     // Track focus in event for the shell.  We only need the focus in
     // event so that we can dispatch it to the mMozArea
     gtk_signal_connect(GTK_OBJECT(mShell),
@@ -1711,9 +1741,11 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                        "property_notify_event",
                        GTK_SIGNAL_FUNC(handle_toplevel_property_change),
                        this);
-    shellMask = gdk_window_get_events(mShell->window);
-    shellMask = (GdkEventMask)(shellMask | GDK_PROPERTY_CHANGE_MASK);
-    gdk_window_set_events(mShell->window, shellMask);
+    mask = (GdkEventMask) (GDK_PROPERTY_CHANGE_MASK |
+                           GDK_FOCUS_CHANGE_MASK );
+    gdk_window_set_events(mShell->window, 
+                          mask);
+
     // set up the version information
     nsGtkMozRemoteHelper::SetupVersion(mShell->window);
   }
@@ -1808,7 +1840,15 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 
     // add our key event masks so that we can pass events to the inner
     // windows.
-    AddToEventMask(mMozArea, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
+    mask = (GdkEventMask) ( GDK_EXPOSURE_MASK |
+                           GDK_KEY_PRESS_MASK |
+                           GDK_KEY_RELEASE_MASK |
+                           GDK_ENTER_NOTIFY_MASK |
+                           GDK_LEAVE_NOTIFY_MASK |
+                           GDK_STRUCTURE_MASK | 
+                           GDK_FOCUS_CHANGE_MASK );
+    gdk_window_set_events(mShell->window, 
+                          mask);
     gtk_signal_connect(GTK_OBJECT(mMozArea),
                        "key_press_event",
                        GTK_SIGNAL_FUNC(handle_key_press_event),
@@ -1826,6 +1866,14 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     g_hash_table_insert(mWindowLookupTable, mSuperWin->shell_window, this);
   }
 
+  GtkWidget *top_mozarea = GetMozArea();
+  if (top_mozarea) {
+    GtkWidget *top_window = gtk_widget_get_toplevel(top_mozarea);
+    gtk_signal_connect_after(GTK_OBJECT(top_window),
+                             "configure_event",
+                             GTK_SIGNAL_FUNC(handle_invalidate_pos),
+                             this);
+  }
   return NS_OK;
 }
 
