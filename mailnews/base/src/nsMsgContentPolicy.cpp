@@ -189,7 +189,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         NS_ENSURE_SUCCESS(rv, rv);
         
         nsCOMPtr<nsIMsgDBHdr> msgHdr;
-        msgService->MessageURIToMsgHdr(resourceURI, getter_AddRefs(msgHdr));
+        rv = msgService->MessageURIToMsgHdr(resourceURI, getter_AddRefs(msgHdr));
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aRequestingLocation, &rv);
