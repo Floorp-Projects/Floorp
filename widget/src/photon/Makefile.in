@@ -64,9 +64,9 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
-EXTRA_DSO_LDOPTS = \
-		$(TOOLKIT_DSO_LDOPTS) \
+EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS) \
 		$(TK_LIBS) \
+		-lgkgfx \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
