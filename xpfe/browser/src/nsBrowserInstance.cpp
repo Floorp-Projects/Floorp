@@ -1381,11 +1381,10 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
     }
   }
 
-  if (NS_SUCCEEDED(aStatus)) {    
-    /* If this is a frame, don't do any of the Global History
-     * & observer thingy 
-     */
-    if (!isFrame) {
+  /* If this is a frame, don't do any of the Global History
+   * & observer thingy 
+   */
+  if (!isFrame) {
       nsAutoString urlStr(url);
       nsAutoString kEndDocumentLoad("EndDocumentLoad");
       nsAutoString kFailDocumentLoad("FailDocumentLoad");
@@ -1408,9 +1407,10 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 	   * blank menu items in the 'go' menu. So, I'm taking sub-frames
 	   * totally off the go menu. This is how 4.x behaves.
 	   */ 
+      if (NS_SUCCEEDED(aStatus))
+	    UpdateGoMenu();
 
-	  UpdateGoMenu();
-	    /* To satisfy a request from the QA group */
+      /* To satisfy a request from the QA group */
       if (aStatus == NS_OK) {
         fprintf(stdout, "Document %s loaded successfully\n", (const char*)url);
         fflush(stdout);
@@ -1419,9 +1419,10 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
         fprintf(stdout, "Error loading URL %s \n", (const char*)url);
         fflush(stdout);
 	  }
+  } //if (!isFrame)
+  
 
-    }
-  }
+
 
 #ifdef DEBUG_warren
   char* urls;
@@ -1490,9 +1491,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
       }
 
     NS_RELEASE(chrome);
-  }
-	//Update the go menu with history entries. Not ready yet
-	UpdateGoMenu();
+  } 
 
   return NS_OK;
 }
@@ -1650,7 +1649,6 @@ nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsURLReloadType aType)
 nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 #endif // NECKO
 {
-
 	if (mSHistory)
 		mSHistory->Reload(aPrev, aType);
 	return NS_OK;
