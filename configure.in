@@ -1007,7 +1007,7 @@ dnl the qsort routine under solaris is faulty
     if test -z "$GNU_CC"; then
        NS_USE_NATIVE=1
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-       LDFLAGS='-xildoff'
+       LDFLAGS="-xildoff $LDFLAGS"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
        MKSHLIB_FORCE_ALL='-Qoption ld -z,allextract'
@@ -2185,9 +2185,6 @@ AC_CHECK_LIB(dl, dlopen)
 if test ! "$GNU_CXX"; then
 
     case $target in
-    *-solaris*)
-	LIBS="-lCrun $LIBS"
-	;;
     *-aix*)
 	AC_CHECK_LIB(C_r, demangle)
 	;;
@@ -4107,8 +4104,10 @@ AC_ARG_WITH(jpeg,
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
-CFLAGS="-I${JPEG_DIR}/include $CFLAGS"
-LDFLAGS="-L${JPEG_DIR}/lib $LDFLAGS"
+if test -n "${JPEG_DIR}"; then
+    CFLAGS="-I${JPEG_DIR}/include $CFLAGS"
+    LDFLAGS="-L${JPEG_DIR}/lib $LDFLAGS"
+fi
 if test "$JPEG_DIR" = no; then
     SYSTEM_JPEG=
 else
@@ -4148,8 +4147,10 @@ AC_ARG_WITH(zlib,
 
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
-CFLAGS="-I${ZLIB_DIR}/include $CFLAGS"
-LDFLAGS="-L${ZLIB_DIR}/lib $LDFLAGS"
+if test -n "${ZLIB_DIR}"; then
+    CFLAGS="-I${ZLIB_DIR}/include $CFLAGS"
+    LDFLAGS="-L${ZLIB_DIR}/lib $LDFLAGS"
+fi
 if test "$ZLIB_DIR" = no; then
     SYSTEM_ZLIB=
 else
@@ -4180,8 +4181,12 @@ AC_ARG_WITH(png,
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
-CFLAGS="-I${PNG_DIR}/include $ZLIB_CFLAGS $CFLAGS"
-LDFLAGS="-L${PNG_DIR}/lib $ZLIB_LIBS -lz $LDFLAGS"
+CFLAGS="$ZLIB_CFLAGS $CFLAGS"
+LDFLAGS="$ZLIB_LIBS -lz $LDFLAGS"
+if test -n "${PNG_DIR}"; then
+    CFLAGS="-I${PNG_DIR}/include $CFLAGS"
+    LDFLAGS="-L${PNG_DIR}/lib $LDFLAGS"
+fi
 if test "$PNG_DIR" = no; then
     SYSTEM_PNG=
 else
@@ -4222,8 +4227,12 @@ AC_ARG_WITH(mng,
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
-CFLAGS="-I${MNG_DIR}/include $ZLIB_CFLAGS $CFLAGS"
-LDFLAGS="-L${MNG_DIR}/lib $ZLIB_LIBS -lz $LDFLAGS"
+CFLAGS="$ZLIB_CFLAGS $CFLAGS"
+LDFLAGS="$ZLIB_LIBS -lz $LDFLAGS"
+if test -n "${MNG_DIR}"; then
+    CFLAGS="-I${MNG_DIR}/include $CFLAGS"
+    LDFLAGS="-L${MNG_DIR}/lib $LDFLAGS"
+fi
 if test "$MNG_DIR" = no; then
     SYSTEM_MNG=
 else
