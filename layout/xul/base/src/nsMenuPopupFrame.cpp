@@ -1444,6 +1444,8 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 NS_IMETHODIMP
 nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
 {
+  mIncrementalString = NS_LITERAL_STRING("");
+
   if (!mCurrentMenu)
     return NS_OK;
 
@@ -1466,6 +1468,8 @@ nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
 NS_IMETHODIMP
 nsMenuPopupFrame::Enter()
 {
+  mIncrementalString = NS_LITERAL_STRING("");
+
   // Give it to the child.
   if (mCurrentMenu)
     mCurrentMenu->Enter();
@@ -1474,8 +1478,13 @@ nsMenuPopupFrame::Enter()
 }
 
 nsIMenuFrame*
-nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
+nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doAction)
 {
+  PRUint32 charCode, keyCode;
+  aKeyEvent->GetCharCode(&charCode);
+  aKeyEvent->GetKeyCode(&keyCode);
+
+  doAction = PR_FALSE;
 
   // Enumerate over our list of frames.
   nsIFrame* immediateParent = nsnull;
@@ -1485,6 +1494,61 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
   if (!immediateParent)
     immediateParent = this;
 
+  PRUint32 matchCount = 0, matchShortcutCount = 0;
+  PRBool foundActive = PR_FALSE;
+  PRBool isMenu = PR_FALSE;
+  PRBool isShortcut;
+  nsIMenuFrame* frameBefore = nsnull;
+  nsIMenuFrame* frameAfter = nsnull;
+  nsIMenuFrame* frameShortcut = nsnull;
+
+  nsCOMPtr<nsIContent> parentContent;
+  mContent->GetParent(*getter_AddRefs(parentContent));
+  if (parentContent) {
+    nsCOMPtr<nsIAtom> tag;
+    parentContent->GetTag(*getter_AddRefs(tag));
+    // toolbarbutton is for the "Bookmarks" button on the toolbar
+    if (tag == nsXULAtoms::menu || tag == nsXULAtoms::toolbarbutton) 
+      isMenu = PR_TRUE;
+  }
+
+  static DOMTimeStamp lastKeyTime = 0;
+  DOMTimeStamp keyTime;
+  aKeyEvent->GetTimeStamp(&keyTime);
+
+  if (charCode == 0) {
+    if (keyCode == NS_VK_BACK) {
+      if (!isMenu && !mIncrementalString.IsEmpty()) {
+        mIncrementalString.SetLength(mIncrementalString.Length() - 1);
+        return nsnull;
+      }
+      else {
+#ifdef XP_WIN
+        nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
+        if (soundInterface)
+          soundInterface->Beep();
+#endif  // #ifdef XP_WIN
+      }
+    }
+    return nsnull;
+  }
+  else {
+    nsAutoString pressKey(NS_STATIC_CAST(PRUnichar, charCode));
+    // UpperCase to compare-no-case
+    ToUpperCase(pressKey);
+    if (isMenu || // Menu supports only first-letter navigation
+        keyTime - lastKeyTime > INC_TYP_INTERVAL) // Interval too long, treat as new typing
+      mIncrementalString = pressKey;
+    else {
+      if (mIncrementalString.Length() != 1 ||
+          GetCharAt(mIncrementalString, 0) != GetCharAt(pressKey, 0))
+          // If user typed the same key more than once, we should do a cycled one-key navigation
+      mIncrementalString.do_AppendFromElement(GetCharAt(pressKey, 0));
+    }
+  }
+
+  lastKeyTime = keyTime;
+
   nsIFrame* currFrame;
   // NOTE: If you crashed here due to a bogus |immediateParent| it is 
   //       possible that the menu whose shortcut is being looked up has 
@@ -1493,73 +1557,119 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
   //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
   immediateParent->FirstChild(mPresContext, nsnull, &currFrame);
 
+  // We start searching from first child. This process is divided into two parts
+  //   -- before current and after current -- by the current item
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
     if (IsValidItem(current)) {
+      nsAutoString activeKey, textKey;
       // Get the shortcut attribute.
-      nsAutoString shortcutKey;
-      current->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
-      if (shortcutKey.Length() > 0) {
-        // We've got something.
-        char tempChar[2];
-        tempChar[0] = aLetter;
-        tempChar[1] = 0;
-  
-        if (shortcutKey.EqualsIgnoreCase(tempChar)) {
-          // We match!
-          nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
-          if (menuFrame)
-            return menuFrame.get();
+      current->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, textKey);
+      if (textKey.IsEmpty()) { // No shortcut, try first letter
+        isShortcut = PR_FALSE;
+        current->GetAttr(kNameSpaceID_None, nsXULAtoms::label, textKey);
+        if (textKey.IsEmpty()) // No label, try another attribute (value)
+          current->GetAttr(kNameSpaceID_None, nsXULAtoms::value, textKey);
+      }
+      else
+        isShortcut = PR_TRUE;
+
+      ToUpperCase(textKey);
+      if (Substring(textKey, 0, mIncrementalString.Length()) == mIncrementalString) {
+        // mIncrementalString is a prefix of textKey
+        nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
+        if (menuFrame) {
+          // There is one match
+          matchCount++;
+          if (isShortcut) {
+            // There is one shortcut-key match
+            matchShortcutCount++;
+            // Record the matched item. If there is only one matched shortcut item, do it
+            frameShortcut = menuFrame.get();
+          }
+          if (!foundActive) {
+            // It's a first candidate item located before/on the current item
+            if (!frameBefore)
+              frameBefore = menuFrame.get();
+          }
+          else {
+            // It's a first candidate item located after the current item
+            if (!frameAfter)
+              frameAfter = menuFrame.get();
+          }
+        }
+        else
           return nsnull;
+      }
+
+      // Get the active status
+      current->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, activeKey);
+      if (activeKey == NS_LITERAL_STRING("true")) {
+        foundActive = PR_TRUE;
+        if (mIncrementalString.Length() > 1) {
+          // If there is more than one char typed, the current item has highest priority,
+          //   otherwise the item next to current has highest priority
+          nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
+          if (menuFrame && menuFrame.get() == frameBefore) {
+            return frameBefore;
+          }
         }
       }
     }
     currFrame->GetNextSibling(&currFrame);
   }
 
+  doAction = (isMenu && (matchCount == 1 || matchShortcutCount == 1));
+
+  if (matchShortcutCount == 1) // We have one matched shortcut item
+    return frameShortcut;
+  if (frameAfter) // If we have matched item after the current, use it
+    return frameAfter;
+  else if (frameBefore) // If we haven't, use the item before the current
+    return frameBefore;
+
+  // If we don't match anything, rollback the last typing
+  mIncrementalString.SetLength(mIncrementalString.Length() - 1);
+
   // didn't find a matching menu item
 #ifdef XP_WIN
-   // behavior on Windows - this item is in a menu popup off of the
-   // menu bar, so beep and do nothing else
-   nsCOMPtr<nsIContent> parentContent;
-   mContent->GetParent(*getter_AddRefs(parentContent));
-   if (parentContent) {
-     nsCOMPtr<nsIAtom> tag;
-     parentContent->GetTag(*getter_AddRefs(tag));
-     if (tag == nsXULAtoms::menu) {
-       nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
-       if (soundInterface)
-         soundInterface->Beep();
-     }
-   }
+  // behavior on Windows - this item is in a menu popup off of the
+  // menu bar, so beep and do nothing else
+  if (isMenu) {
+    nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
+    if (soundInterface)
+      soundInterface->Beep();
+  }
 #endif  // #ifdef XP_WIN
 
   return nsnull;
 }
 
 NS_IMETHODIMP 
-nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
+nsMenuPopupFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag)
 {
   if (mCurrentMenu) {
     PRBool isOpen = PR_FALSE;
     mCurrentMenu->MenuIsOpen(isOpen);
     if (isOpen) {
       // No way this applies to us. Give it to our child.
-      mCurrentMenu->ShortcutNavigation(aLetter, aHandledFlag);
+      mCurrentMenu->ShortcutNavigation(aKeyEvent, aHandledFlag);
       return NS_OK;
     }
   }
 
   // This applies to us. Let's see if one of the shortcuts applies
-  nsIMenuFrame* result = FindMenuWithShortcut(aLetter);
+  PRBool action;
+  nsIMenuFrame* result = FindMenuWithShortcut(aKeyEvent, action);
   if (result) {
     // We got one!
     aHandledFlag = PR_TRUE;
     SetCurrentMenuItem(result);
-    result->Enter();
+    if (action)
+      result->Enter();
   }
 
   return NS_OK;
@@ -1568,6 +1678,8 @@ nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 NS_IMETHODIMP
 nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 {
+  mIncrementalString = NS_LITERAL_STRING("");
+
   // This method only gets called if we're open.
   if (!mCurrentMenu && (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT)) {
     // We've been opened, but we haven't had anything selected.

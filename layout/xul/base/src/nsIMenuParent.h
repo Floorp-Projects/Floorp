@@ -45,6 +45,7 @@
 { 0xd407bf61, 0x3efa, 0x11d3, { 0x97, 0xfa, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
 
 class nsIMenuFrame;
+class nsIDOMKeyEvent;
 
 class nsIMenuParent : public nsISupports {
 
@@ -73,7 +74,7 @@ public:
 
   // Used to move up, down, left, and right in menus.
   NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag) = 0;
-  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag) = 0;
+  NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag) = 0;
   // Called when the ESC key is held down to close levels of menus.
   NS_IMETHOD Escape(PRBool& aHandledFlag) = 0;
   // Called to execute a menu item.

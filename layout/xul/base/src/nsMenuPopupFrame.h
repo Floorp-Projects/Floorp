@@ -58,6 +58,9 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
+#define INC_TYP_INTERVAL  2500  // 2.5s. If the interval of two typings is shorter than this, 
+                                //   treat as a continue typing
+
 nsresult NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 class nsIViewManager;
@@ -143,12 +146,12 @@ public:
                              nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
 
   NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
-  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
+  NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag);
   
   NS_IMETHOD Escape(PRBool& aHandledFlag);
   NS_IMETHOD Enter();
 
-  nsIMenuFrame* FindMenuWithShortcut(PRUint32 aLetter);
+  nsIMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doAction);
 
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
@@ -217,6 +220,8 @@ protected:
 
   PRPackedBool mShouldAutoPosition; // Should SyncViewWithFrame be allowed to auto position popup?
   PRPackedBool mShouldRollup; // Should this menupopup be allowed to dismiss automatically?
+
+  nsString     mIncrementalString;  // for incremental typing navigation
 
 }; // class nsMenuPopupFrame
 

@@ -44,6 +44,7 @@
 
 class nsIMenuParent;
 class nsIDOMElement;
+class nsIDOMKeyEvent;
 
 enum nsMenuType {
   eMenuType_Normal = 0,
@@ -69,7 +70,7 @@ public:
 
   NS_IMETHOD Escape(PRBool& aHandledFlag) = 0;
   NS_IMETHOD Enter() = 0;
-  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag) = 0;
+  NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag) = 0;
   NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag) = 0;
 
   NS_IMETHOD GetMenuParent(nsIMenuParent** aMenuParent) = 0;

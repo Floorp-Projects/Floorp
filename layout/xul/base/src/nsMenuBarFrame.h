@@ -112,14 +112,14 @@ public:
   
   // Used to move up, down, left, and right in menus.
   NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
-  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
+  NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag);
   // Called when the ESC key is held down to close levels of menus.
   NS_IMETHOD Escape(PRBool& aHandledFlag);
   // Called to execute a menu item.
   NS_IMETHOD Enter();
 
   // Used to handle ALT+key combos
-  nsIMenuFrame* FindMenuWithShortcut(PRUint32 aLetter);
+  nsIMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent);
 
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);

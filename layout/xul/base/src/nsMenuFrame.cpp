@@ -1220,12 +1220,12 @@ nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
+nsMenuFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag)
 {
   nsIFrame* frame = mPopupFrames.FirstChild();
   if (frame) {
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
-    popup->ShortcutNavigation(aLetter, aHandledFlag);
+    popup->ShortcutNavigation(aKeyEvent, aHandledFlag);
   } 
 
   return NS_OK;

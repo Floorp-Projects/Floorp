@@ -246,8 +246,11 @@ static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* 
 }
 
 nsIMenuFrame*
-nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
+nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
 {
+  PRUint32 charCode;
+  aKeyEvent->GetCharCode(&charCode);
+
   // Enumerate over our list of frames.
   nsIFrame* immediateParent = nsnull;
   nsCOMPtr<nsIPresShell> shell;
@@ -270,7 +273,7 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
       current->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
       if (!shortcutKey.IsEmpty()) {
         // We've got something.
-        PRUnichar letter = PRUnichar(aLetter); // throw away the high-zero-fill
+        PRUnichar letter = PRUnichar(charCode); // throw away the high-zero-fill
         if ( shortcutKey.Equals(Substring(&letter, &letter+1),
                                 nsCaseInsensitiveStringComparator()) )  {
           // We match!
@@ -300,20 +303,20 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
 }
 
 NS_IMETHODIMP 
-nsMenuBarFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
+nsMenuBarFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag)
 {
   if (mCurrentMenu) {
     PRBool isOpen = PR_FALSE;
     mCurrentMenu->MenuIsOpen(isOpen);
     if (isOpen) {
       // No way this applies to us. Give it to our child.
-      mCurrentMenu->ShortcutNavigation(aLetter, aHandledFlag);
+      mCurrentMenu->ShortcutNavigation(aKeyEvent, aHandledFlag);
       return NS_OK;
     }
   }
 
   // This applies to us. Let's see if one of the shortcuts applies
-  nsIMenuFrame* result = FindMenuWithShortcut(aLetter);
+  nsIMenuFrame* result = FindMenuWithShortcut(aKeyEvent);
   if (result) {
     // We got one!
     aHandledFlag = PR_TRUE;
