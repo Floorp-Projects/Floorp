@@ -23,6 +23,8 @@
 #include "msgCore.h"
 #include "nsMsgDBView.h"
 #include "nsISupports.h"
+#include "nsIMsgHdr.h"
+
 /* Implementation file */
 
 NS_IMPL_ISUPPORTS1(nsMsgDBView, nsIMsgDBView)
@@ -30,6 +32,7 @@ NS_IMPL_ISUPPORTS1(nsMsgDBView, nsIMsgDBView)
 nsMsgDBView::nsMsgDBView()
 {
   NS_INIT_ISUPPORTS();
+  m_viewType = nsMsgDBViewType::anyView;
   /* member initializers and constructor code */
   m_sortValid = PR_TRUE;
   m_sortOrder = nsMsgViewSortOrder::none;
@@ -41,7 +44,8 @@ nsMsgDBView::~nsMsgDBView()
   /* destructor code */
 }
 
-NS_IMETHODIMP nsMsgDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType, PRInt32 *count)
+/* void open (in nsIMsgDatabase msgDB, in nsMsgViewSortType viewType); */
+NS_IMETHODIMP nsMsgDBView::Open(nsIMsgDatabase *msgDB, nsMsgViewSortType *viewType, PRInt32 *pCount)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -66,3 +70,115 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortType *sortType, nsMsgViewSortOrder 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult nsMsgDBView::ExpandAll()
+{
+	for (PRInt32 i = GetSize() - 1; i >= 0; i--) 
+	{
+		PRUint32 numExpanded;
+		PRUint32 flags = m_flags[i];
+		if (flags & MSG_FLAG_ELIDED)
+			ExpandByIndex(i, &numExpanded);
+	}
+	return NS_OK;
+}
+
+nsresult nsMsgDBView::ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded)
+{
+	int				numListed;
+	char			flags = m_flags[index];
+	nsMsgKey		firstIdInThread, startMsg = nsMsgKey_None;
+	nsresult			rv;
+	nsMsgViewIndex	firstInsertIndex = index + 1;
+	nsMsgViewIndex	insertIndex = firstInsertIndex;
+	uint32			numExpanded = 0;
+	nsMsgKeyArray			tempIDArray;
+	nsByteArray		tempFlagArray;
+	nsByteArray		tempLevelArray;
+	nsByteArray		unreadLevelArray;
+
+	NS_ASSERTION(flags & MSG_FLAG_ELIDED, "can't expand an already expanded thread");
+	flags &= ~MSG_FLAG_ELIDED;
+
+	if ((int) index > m_keys.GetSize())
+		return NS_MSG_MESSAGE_NOT_FOUND;
+
+	firstIdInThread = m_keys[index];
+	nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  m_db->GetMsgHdrForKey(firstIdInThread, getter_AddRefs(msgHdr));
+	if (msgHdr == nsnull)
+	{
+		NS_ASSERTION(PR_FALSE, "couldn't find message to expand");
+		return NS_MSG_MESSAGE_NOT_FOUND;
+	}
+	m_flags[index] = flags;
+  NoteChange(index, 1, nsMsgViewNotificationCode::changed);
+	do
+	{
+		const int listChunk = 200;
+		nsMsgKey	listIDs[listChunk];
+		char		listFlags[listChunk];
+		char		listLevels[listChunk];
+
+#ifdef ON_BRANCH_YET
+		if (m_viewFlags & kUnreadOnly)
+		{
+			if (flags & MSG_FLAG_READ)
+				unreadLevelArray.Add(0);	// keep top level hdr in thread, even though read.
+      nsMsgKey threadId;
+      msgHdr->GetThreadId(&threadId);
+			rv = m_db->ListUnreadIdsInThread(threadId,  &startMsg, unreadLevelArray, 
+											listChunk, listIDs, listFlags, listLevels, &numListed);
+		}
+		else
+			rv = m_db->ListIdsInThread(msgHdr,  &startMsg, listChunk, 
+											listIDs, listFlags, listLevels, &numListed);
+		// Don't add thread to view, it's already in.
+		for (int i = 0; i < numListed; i++)
+		{
+			if (listIDs[i] != firstIdInThread)
+			{
+				tempIDArray.Add(listIDs[i]);
+				tempFlagArray.Add(listFlags[i]);
+				tempLevelArray.Add(listLevels[i]);
+				insertIndex++;
+			}
+		}
+#endif
+		if (numListed < listChunk || startMsg == nsMsgKey_None)
+			break;
+	}
+	while (NS_SUCCEEDED(rv));
+	numExpanded = (insertIndex - firstInsertIndex);
+
+	NoteStartChange(firstInsertIndex, numExpanded, nsMsgViewNotificationCode::insertOrDelete);
+
+	m_keys.InsertAt(firstInsertIndex, &tempIDArray);
+#ifdef ON_BRANCH_YET
+	m_flags.InsertAt(firstInsertIndex, &tempFlagArray);
+  m_levels.InsertAt(firstInsertIndex, &tempLevelArray);
+#endif
+	NoteEndChange(firstInsertIndex, numExpanded, nsMsgViewNotificationCode::insertOrDelete);
+	if (pNumExpanded != nsnull)
+		*pNumExpanded = numExpanded;
+	return rv;
+}
+
+void	nsMsgDBView::EnableChangeUpdates()
+{
+}
+void	nsMsgDBView::DisableChangeUpdates()
+{
+}
+void	nsMsgDBView::NoteChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
+							 nsMsgViewNotificationCodeValue changeType)
+{
+}
+
+void	nsMsgDBView::NoteStartChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
+							 nsMsgViewNotificationCodeValue changeType)
+{
+}
+void	nsMsgDBView::NoteEndChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
+							 nsMsgViewNotificationCodeValue changeType)
+{
+}

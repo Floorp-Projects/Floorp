@@ -41,13 +41,31 @@ public:
   NS_DECL_NSIMSGDBVIEW
 
 protected:
+  nsresult ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded);
+  nsresult ExpandAll();
+
+	PRInt32	  GetSize(void) {return(m_keys.GetSize());}
+
+  // notification api's
+	void	EnableChangeUpdates();
+	void	DisableChangeUpdates();
+	void	NoteChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
+							   nsMsgViewNotificationCodeValue changeType);
+	void	NoteStartChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
+							   nsMsgViewNotificationCodeValue changeType);
+	void	NoteEndChange(nsMsgViewIndex firstlineChanged, PRInt32 numChanged, 
+							   nsMsgViewNotificationCodeValue changeType);
+
+  
   nsMsgKeyArray m_keys;
   nsUInt32Array m_flags;
   nsByteArray   m_levels;
 
   nsCOMPtr <nsIMsgDatabase> m_db;
   PRBool		m_sortValid;
+	nsMsgViewSortTypeValue	m_sortType;
   nsMsgViewSortOrderValue m_sortOrder;
+  nsMsgDBViewTypeValue m_viewType;
 };
 
 #endif

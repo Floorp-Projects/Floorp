@@ -28,6 +28,7 @@ interface nsIMsgDatabase;
 typedef long nsMsgViewSortOrderValue;
 typedef long nsMsgViewSortTypeValue;
 typedef long nsMsgDBViewTypeValue;
+typedef long nsMsgViewNotificationCodeValue;
 
 [scriptable, uuid(682a18be-fd18-11d4-a5be-0060b0fc04b7)]
 interface nsMsgViewSortOrder
@@ -51,6 +52,60 @@ interface nsMsgViewSortType
 	const nsMsgViewSortTypeValue byFlagged = 0x1a;
 	const nsMsgViewSortTypeValue byUnread = 0x1b;
 	const nsMsgViewSortTypeValue byRecipient = 0x1c;
+};
+
+[scriptable, uuid(255d1c1e-fde7-11d4-a5be-0060b0fc04b7)]
+interface nsMsgViewNotificationCode
+{
+  const nsMsgViewNotificationCodeValue none = 0;				
+                  /* No change; this call is just being used
+								   to potentially nest other sets of calls
+								   inside it.  The "where" and "num" parameters
+								   are unused. */
+  const nsMsgViewNotificationCodeValue insertOrDelete = 1;		
+                  /* Some lines have been inserted or deleted.
+								   The "where" parameter will indicate
+								   the first line that has been added or
+								   removed; the "num" parameter will indicate
+								   how many lines, and will be positive on
+								   an insertion and negative on a deletion. */
+  const nsMsgViewNotificationCodeValue changed = 2;			
+                  /* Some lines have had their contents changed
+								   (e.g., messages have been marked read
+								   or something.)  "where" indicates the
+								   first line with a change; "num" indicates
+								   how many chaged. */
+ const nsMsgViewNotificationCodeValue  scramble = 3;	
+            		/* Everything changed.  Probably means we
+								   resorted the folder.  We are still working
+								   with the same set of items, or at least
+								   have some overlap, but all the indices are
+								   invalid.  The "where" and "num" parameters
+								   are unused. */
+  const nsMsgViewNotificationCodeValue all = 4;				/* Everything changed.  We're now not
+								   displaying anything like what we were; we
+								   probably opened a new folder or something.
+								   The FE needs to forget anything it ever knew
+								   about what was being displayed, and start
+								   over.  The "where" and "num" parameters are
+								   unused.  */
+  const nsMsgViewNotificationCodeValue totalContentChanged = 5;
+							    /* Introduced for the address book to support
+								   virtual list views.  The total number of
+								   entries on the LDAP directory has changed
+								   and the FE must update its scrollbar.  The
+								   "num" parameter contains the total number of
+								   entries on the LDAP server. */
+  const nsMsgViewNotificationCodeValue newTopIndex = 6;        
+                    /* Introduced for the address book to support
+								   virtual list views.  The virtual list view
+								   cache data has changed and the FE view may
+								   be out of date.  The view should be updated
+								   so that the first/top index in the view is
+								   the index in the "where" parameter.  The
+								   scrollbar should be updated to match the new
+								   position. */
+
 };
 
 [scriptable, uuid(4063bcf8-fd19-11d4-a5be-0060b0fc04b7)]
