@@ -306,15 +306,9 @@ NS_METHOD nsScrollbar::GetLineIncrement(PRUint32& aLineIncrement)
     return(NS_OK);
 }
 
-
 /**-------------------------------------------------------------------------------
- *	Set all the scrollbar parameters
- *  @update  dc 09/16/98
- *  @param aMaxRange -- max range of the scrollbar in relative units
- *  @param aThumbSize -- thumb size, in relative units
- *  @param aPosition -- the thumb position in relative units
- *  @param aLineIncrement -- the increment levelof the scrollbar
- *  @return NS_OK if the position is valid
+ *	See documentation in nsScrollbar.h
+ *  @update  dc 012/10/98
  */
 NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
@@ -325,9 +319,11 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 	SetPosition(aPosition);
 	SetThumbSize(aThumbSize);
 	
-	StartDraw();
-	::SetControlMaximum(mControl, mMaxRange);
-	EndDraw();
+	if (mControl){
+		StartDraw();
+		::SetControlMaximum(mControl, mMaxRange);
+		EndDraw();
+	}
 
 	return(NS_OK);
 }

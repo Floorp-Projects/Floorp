@@ -61,6 +61,17 @@ public:
   NS_IMETHOD  		GetThumbSize(PRUint32& aSize);
   NS_IMETHOD      SetLineIncrement(PRUint32 aSize);
   NS_IMETHOD  		GetLineIncrement(PRUint32& aSize);
+  
+  
+	/**-------------------------------------------------------------------------------
+	 *	Set all the scrollbar parameters
+	 *  @update  dc 09/16/98
+	 *  @param aMaxRange -- max range of the scrollbar in relative units
+	 *  @param aThumbSize -- thumb size, in relative units
+	 *  @param aPosition -- the thumb position in relative units
+	 *  @param aLineIncrement -- the increment levelof the scrollbar
+	 *  @return NS_OK if the position is valid
+	 */
   NS_IMETHOD     	SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                   PRUint32 aPosition, PRUint32 aLineIncrement);
 
