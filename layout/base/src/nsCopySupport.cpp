@@ -107,18 +107,16 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
           context->GetBidi(&bidiOptions);
           context->IsVisualMode(isVisual);
           context->GetIsBidiSystem(isBidiSystem);
-          if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_LOGICAL)&&(isVisual)//&&(isBidiSystem)
+          if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_LOGICAL)&&(isVisual)
              ) {
             nsAutoString newBuffer;
-            if (isBidiSystem) {
-#if 0 // Until we finalize the conversion routine
-              if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_LTR) {
-                bidiUtils->Conv_FE_06_WithReverse(buffer, newBuffer);
-              } 
+            if (isBidiSystem) { 
               if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL) {
-                bidiUtils->Conv_FE_06 (buffer, newBuffer);
+                bidiUtils->Conv_FE_06(buffer, newBuffer);
               }
-#endif
+              else {
+                bidiUtils->Conv_FE_06_WithReverse(buffer, newBuffer);
+              }
             }
             else { //nonbidisystem
               bidiUtils->HandleNumbers(buffer, newBuffer);//ahmed
@@ -127,7 +125,6 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
           }
           //Mohamed
           else {
-#if 0 // Until we finalize the conversion routine
             nsAutoString bidiCharset;
             context->GetBidiCharset(bidiCharset);
             if (bidiCharset.EqualsIgnoreCase("UTF-8") || (!isVisual)) {
@@ -137,7 +134,6 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
                 bidiUtils->HandleNumbers(newBuffer, buffer);
               }
             }
-#endif
           }
         }
       }
