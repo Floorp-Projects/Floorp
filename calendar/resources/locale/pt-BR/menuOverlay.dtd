@@ -160,25 +160,25 @@
 <!ENTITY walletPasswordManager.accesskey        "p">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label                         "File">
+<!ENTITY fileMenu.label                         "Arquivo">
 <!ENTITY fileMenu.accesskey                     "F">
 
-<!ENTITY editMenu.label                         "Edit">
+<!ENTITY editMenu.label                         "Editar">
 <!ENTITY editMenu.accesskey                     "E">
-<!ENTITY preferencesCmd.label                   "Options...">
+<!ENTITY preferencesCmd.label                   "Op&#xE7;&#xF5;es...">
 <!ENTITY preferencesCmd.accesskey               "O">
 
-<!ENTITY viewMenu.label                         "View">
+<!ENTITY viewMenu.label                         "Ver">
 <!ENTITY viewMenu.accesskey                     "V">
 
-<!ENTITY releaseCmd.label                       "Release Notes">
+<!ENTITY releaseCmd.label                       "Notas da Vers&#xE3;o">
 <!ENTITY releaseCmd.accesskey                   "R">
-<!ENTITY aboutCmd.label                         "About &brandFullName;">
+<!ENTITY aboutCmd.label                         "Sobre &brandFullName;">
 <!ENTITY aboutCmd.accesskey                     "A">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY windowMenu.label                       "Janela">
+<!ENTITY minimizeWindow.label                   "Minimizar">
 <!ENTITY zoomWindow.label                       "Zoom">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Trazer Todas para Frente">
