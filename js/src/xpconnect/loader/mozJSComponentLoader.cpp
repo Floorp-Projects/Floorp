@@ -189,10 +189,11 @@ mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     if (NS_FAILED(rv))
         return rv;
     
-    if (NS_FAILED(rv = rtsvc->GetRuntime(&mRuntime)))
+    if (NS_FAILED(rv = rtsvc->GetRuntime(&mRuntime))) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "mJCL: runtime initialized!\n");
 #endif
+    }
     
     mContext = JS_NewContext(mRuntime, 8192 /* pref? */);
     if (!mContext)
