@@ -1819,7 +1819,7 @@ struct ReflowEvent : public PLEvent {
     if (presShell) {
 #ifdef DEBUG
       if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-         printf("\n*** Handling reflow event: PresShell=%p, event=%p\n", presShell, this);
+         printf("\n*** Handling reflow event: PresShell=%p, event=%p\n", presShell.get(), this);
       }
 #endif
       presShell->SetReflowEventStatus(PR_FALSE);
