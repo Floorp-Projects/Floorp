@@ -2514,10 +2514,10 @@ printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\
           range->GetStartOffset(&offset);
           // Be sure previous selection is a table cell
           nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parent);
-          nsCOMPtr<nsIContent> childContent;
-          result = parentContent->ChildAt(offset, *getter_AddRefs(childContent));
+          nsCOMPtr<nsIContent> child;
+          result = parentContent->ChildAt(offset, *getter_AddRefs(child));
           if (NS_FAILED(result)) return result;
-          if (childContent && IsCell(childContent))
+          if (child && IsCell(child))
             previousCellParent = parent;
 
           // We're done if we didn't find parent of a previously-selected cell
