@@ -2087,7 +2087,6 @@ static void HPUX9_ClockInterruptHandler(
 
 void _MD_StartInterrupts()
 {
-    struct itimerval itval;
     char *eval;
 #ifdef HPUX9
     struct sigvec vec;
@@ -2114,10 +2113,7 @@ void _MD_StartInterrupts()
 
 #ifndef _PR_NO_CLOCK_TIMER
     if (!_nspr_noclock) {
-        itval.it_interval.tv_sec = 0;
-        itval.it_interval.tv_usec = MSEC_PER_TICK * PR_USEC_PER_MSEC;
-        itval.it_value = itval.it_interval;
-        setitimer(ITIMER_REAL, &itval, 0);
+        _MD_EnableClockInterrupts();
     }
 #endif
 }
