@@ -57,7 +57,7 @@ static void PR_CALLBACK CompletedDestroyHandler(PLEvent *self) ;
 static void* PR_CALLBACK ProxyDestructorEventHandler(PLEvent *self);
 static void PR_CALLBACK ProxyDestructorDestroyHandler(PLEvent *self) ;
 
-NS_EXPORT nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
+nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
                                               nsXPTMethodInfo *methodInfo,
                                               PRUint32 methodIndex, 
                                               nsXPTCVariant* parameterList, 
@@ -84,7 +84,7 @@ NS_EXPORT nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
 }
 
 
-NS_EXPORT nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
+nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
 {
     RefCountInInterfacePointers(PR_FALSE);
     if (mOwner->GetProxyType() & PROXY_ASYNC)
@@ -167,19 +167,19 @@ nsProxyObjectCallInfo::CopyStrings(PRBool copy)
     }
 }
 
-NS_EXPORT PRBool                
+PRBool                
 nsProxyObjectCallInfo::GetCompleted()
 {
     return (PRBool)mCompleted;
 }
 
-NS_EXPORT void
+void
 nsProxyObjectCallInfo::SetCompleted()
 {
     PR_AtomicSet(&mCompleted, 1);
 }
 
-NS_EXPORT void                
+void                
 nsProxyObjectCallInfo::PostCompleted()
 {
     if (mCallersEventQ)
@@ -201,12 +201,12 @@ nsProxyObjectCallInfo::PostCompleted()
     }
 }
   
-NS_EXPORT nsIEventQueue*      
+nsIEventQueue*      
 nsProxyObjectCallInfo::GetCallersQueue() 
 { 
     return mCallersEventQ;
 }   
-NS_EXPORT void
+void
 nsProxyObjectCallInfo::SetCallersQueue(nsIEventQueue* queue)
 {
     mCallersEventQ = queue;

@@ -111,7 +111,7 @@ SupportsStats::~SupportsStats()
 SupportsStats gSupportsStats;
 #endif
 
-nsresult NS_EXPORT
+nsresult
 nsQueryElementAt::operator()( const nsIID& aIID, void** aResult ) const
   {
     nsresult status = mCollection

@@ -63,10 +63,9 @@ interface nsICollection : nsISerializable
 #include "nsCOMPtr.h"
 #endif
 
-class nsQueryElementAt : public nsCOMPtr_helper
+class NS_EXPORT nsQueryElementAt : public nsCOMPtr_helper
   {
     public:
-      inline
       nsQueryElementAt( nsICollection* aCollection, PRUint32 aIndex, nsresult* aErrorPtr )
           : mCollection(aCollection),
             mIndex(aIndex),
@@ -75,7 +74,7 @@ class nsQueryElementAt : public nsCOMPtr_helper
           // nothing else to do here
         }
 
-      virtual nsresult NS_EXPORT operator()( const nsIID& aIID, void** ) const;
+      virtual nsresult operator()( const nsIID& aIID, void** ) const;
 
     private:
       nsICollection*  mCollection;
