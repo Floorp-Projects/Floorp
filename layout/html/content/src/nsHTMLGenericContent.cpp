@@ -27,6 +27,8 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIEventListenerManager.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIHTMLStyleSheet.h"
+#include "nsIHTMLDocument.h"
 #include "nsIHTMLContent.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptContextOwner.h"
@@ -67,6 +69,7 @@ static NS_DEFINE_IID(kIDOMAttributeIID, NS_IDOMATTRIBUTE_IID);
 static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
+static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 static nsIContentDelegate* gContentDelegate;
 
@@ -572,6 +575,42 @@ DOMAttributeMap::GetLength(PRUint32 *aLength)
 
 //----------------------------------------------------------------------
 
+static nsresult EnsureWritableAttributes(nsIHTMLAttributes*& aAttributes, PRBool aCreate)
+{
+  nsresult  result = NS_OK;
+
+  if (nsnull == aAttributes) {
+    if (PR_TRUE == aCreate) {
+      result = NS_NewHTMLAttributes(&aAttributes);
+      if (NS_OK == result) {
+        aAttributes->AddContentRef();
+      }
+    }
+  }
+  else {
+    PRInt32 contentRefCount;
+    aAttributes->GetContentRefCount(contentRefCount);
+    if (1 < contentRefCount) {
+      nsIHTMLAttributes*  attrs;
+      result = aAttributes->Clone(&attrs);
+      if (NS_OK == result) {
+        aAttributes->ReleaseContentRef();
+        NS_RELEASE(aAttributes);
+        aAttributes = attrs;
+        aAttributes->AddContentRef();
+      }
+    }
+  }
+  return result;
+}
+
+static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
+{
+  aAttributes->ReleaseContentRef();
+  NS_RELEASE(aAttributes);
+}
+
+
 nsHTMLGenericContent::nsHTMLGenericContent()
 {
   mDocument = nsnull;
@@ -594,7 +633,9 @@ nsHTMLGenericContent::nsHTMLGenericContent()
 
 nsHTMLGenericContent::~nsHTMLGenericContent()
 {
-  NS_IF_RELEASE(mAttributes);
+  if (nsnull != mAttributes) {
+    ReleaseAttributes(mAttributes);
+  }
   NS_IF_RELEASE(mTag);
   NS_IF_RELEASE(mListenerManager);
   // XXX what about mScriptObject? it's now safe to GC it...
@@ -899,6 +940,20 @@ nsHTMLGenericContent::GetDocument(nsIDocument*& aResult) const
   return NS_OK;
 }
 
+static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
+{
+  nsIHTMLStyleSheet*  sheet = nsnull;
+  nsIHTMLDocument*  htmlDoc;
+
+  if (nsnull != aDocument) {
+    if (NS_OK == aDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc)) {
+      htmlDoc->GetAttributeStyleSheet(&sheet);
+    }
+  }
+  NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
+  return sheet;
+}
+
 nsresult
 nsHTMLGenericContent::SetDocument(nsIDocument* aDocument)
 {
@@ -941,6 +996,9 @@ nsHTMLGenericContent::SetDocument(nsIDocument* aDocument)
       AddScriptEventListener(nsHTMLAtoms::onfocus, val, kIDOMFocusListenerIID);
     if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onblur, val))
       AddScriptEventListener(nsHTMLAtoms::onblur, val, kIDOMFocusListenerIID);
+
+    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    sheet->SetAttributesFor(mTag, mAttributes); // sync attributes with sheet
   }
 
   return NS_OK;
@@ -1058,42 +1116,41 @@ nsHTMLGenericContent::SetAttribute(nsIAtom* aAttribute,
                                    const nsString& aValue,
                                    PRBool aNotify)
 {
-  nsresult rv = NS_OK;
-  if (nsnull == mAttributes) {
-    rv = NS_NewHTMLAttributes(&mAttributes, mContent);
-    if (NS_OK != rv) {
-      return rv;
+  nsresult  result = NS_OK;
+  if (nsHTMLAtoms::style == aAttribute) {
+    // XXX the style sheet language is a document property that
+    // should be used to lookup the style sheet parser to parse the
+    // attribute.
+    nsICSSParser* css;
+    result = NS_NewCSSParser(&css);
+    if (NS_OK != result) {
+      return result;
+    }
+    nsIStyleRule* rule;
+    result = css->ParseDeclarations(aValue, nsnull, rule);
+    if ((NS_OK == result) && (nsnull != rule)) {
+      result = SetAttribute(aAttribute, nsHTMLValue(rule), aNotify);
+      NS_RELEASE(rule);
+    }
+    NS_RELEASE(css);
+  }
+  else {
+    if (nsnull != mDocument) {  // set attr via style sheet
+      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+      result = sheet->SetAttributeFor(aAttribute, aValue, mTag, mAttributes);
+    }
+    else {  // manage this ourselves and re-sync when we connect to doc
+      result = EnsureWritableAttributes(mAttributes, PR_TRUE);
+      if (nsnull != mAttributes) {
+        PRInt32   count;
+        result = mAttributes->SetAttribute(aAttribute, aValue, count);
+        if (0 == count) {
+          ReleaseAttributes(mAttributes);
+        }
+      }
     }
   }
-  if (nsnull != mAttributes) {
-    PRInt32 na;
-    nsHTMLValue hval;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        mContent->StringToAttribute(aAttribute, aValue, hval)) {
-      rv = mAttributes->SetAttribute(aAttribute, hval, na);
-    }
-    else if (nsHTMLAtoms::style == aAttribute) {
-      // XXX the style sheet language is a document property that
-      // should be used to lookup the style sheet parser to parse the
-      // attribute.
-      nsICSSParser* css;
-      rv = NS_NewCSSParser(&css);
-      if (NS_OK != rv) {
-        return rv;
-      }
-      nsIStyleRule* rule;
-      rv = css->ParseDeclarations(aValue, nsnull, rule);
-      if ((NS_OK == rv) && (nsnull != rule)) {
-        rv = mAttributes->SetAttribute(aAttribute, nsHTMLValue(rule), na);
-        NS_RELEASE(rule);
-      }
-      NS_RELEASE(css);
-    }
-    else {
-      rv = mAttributes->SetAttribute(aAttribute, aValue, na);
-    }
-  }
-  return rv;
+  return result;
 }
 
 nsresult
@@ -1101,15 +1158,22 @@ nsHTMLGenericContent::SetAttribute(nsIAtom* aAttribute,
                                    const nsHTMLValue& aValue,
                                    PRBool aNotify)
 {
-  nsresult rv = NS_OK;
-  if (nsnull == mAttributes) {
-    rv = NS_NewHTMLAttributes(&mAttributes, mContent);
+  nsresult  result = NS_OK;
+  if (nsnull != mDocument) {  // set attr via style sheet
+    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    result = sheet->SetAttributeFor(aAttribute, aValue, mTag, mAttributes);
   }
-  if (nsnull != mAttributes) {
-    PRInt32 na;
-    rv = mAttributes->SetAttribute(aAttribute, aValue, na);
+  else {  // manage this ourselves and re-sync when we connect to doc
+    result = EnsureWritableAttributes(mAttributes, PR_TRUE);
+    if (nsnull != mAttributes) {
+      PRInt32   count;
+      result = mAttributes->SetAttribute(aAttribute, aValue, count);
+      if (0 == count) {
+        ReleaseAttributes(mAttributes);
+      }
+    }
   }
-  return rv;
+  return result;
 }
 
 nsresult
@@ -1133,14 +1197,22 @@ nsHTMLGenericContent::SetAttr(nsIAtom* aAttribute,
 nsresult
 nsHTMLGenericContent::UnsetAttribute(nsIAtom* aAttribute)
 {
-  if (nsnull != mAttributes) {
-    PRInt32 count;
-    mAttributes->UnsetAttribute(aAttribute, count);
-    if (0 == count) {
-      NS_RELEASE(mAttributes);
+  nsresult result = NS_OK;
+  if (nsnull != mDocument) {  // set attr via style sheet
+    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    result = sheet->UnsetAttributeFor(aAttribute, mTag, mAttributes);
+  }
+  else {  // manage this ourselves and re-sync when we connect to doc
+    result = EnsureWritableAttributes(mAttributes, PR_FALSE);
+    if (nsnull != mAttributes) {
+      PRInt32 count;
+      result = mAttributes->UnsetAttribute(aAttribute, count);
+      if (0 == count) {
+        ReleaseAttributes(mAttributes);
+      }
     }
   }
-  return NS_OK;
+  return result;
 }
 
 nsresult
@@ -1251,29 +1323,22 @@ nsHTMLGenericContent::GetAttributeCount(PRInt32& aCount) const
 nsresult
 nsHTMLGenericContent::SetID(nsIAtom* aID)
 {
-  nsresult rv = NS_OK;
-  if (nsnull != aID) {
-    if (nsnull == mAttributes) {
-      rv = NS_NewHTMLAttributes(&mAttributes, mContent);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
-    if (nsnull != mAttributes) {
-      PRInt32 na;
-      rv = mAttributes->SetID(aID, na);
-    }
+  nsresult result = NS_OK;
+  if (nsnull != mDocument) {  // set attr via style sheet
+    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    result = sheet->SetIDFor(aID, mTag, mAttributes);
   }
-  else {
+  else {  // manage this ourselves and re-sync when we connect to doc
+    EnsureWritableAttributes(mAttributes, PRBool(nsnull != aID));
     if (nsnull != mAttributes) {
       PRInt32 count;
-      rv = mAttributes->SetID(nsnull, count);
+      result = mAttributes->SetID(aID, count);
       if (0 == count) {
-        NS_RELEASE(mAttributes);
+        ReleaseAttributes(mAttributes);
       }
     }
   }
-  return rv;
+  return result;
 }
 
 nsresult
@@ -1289,29 +1354,22 @@ nsHTMLGenericContent::GetID(nsIAtom*& aResult) const
 nsresult
 nsHTMLGenericContent::SetClass(nsIAtom* aClass)
 {
-  nsresult rv = NS_OK;
-  if (nsnull != aClass) {
-    if (nsnull == mAttributes) {
-      rv = NS_NewHTMLAttributes(&mAttributes, mContent);
-      if (NS_OK != rv) {
-        return rv;
-      }
-    }
-    if (nsnull != mAttributes) {
-      PRInt32 na;
-      rv = mAttributes->SetClass(aClass, na);
-    }
+  nsresult result = NS_OK;
+  if (nsnull != mDocument) {  // set attr via style sheet
+    nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+    result = sheet->SetClassFor(aClass, mTag, mAttributes);
   }
-  else {
+  else {  // manage this ourselves and re-sync when we connect to doc
+    EnsureWritableAttributes(mAttributes, PRBool(nsnull != aClass));
     if (nsnull != mAttributes) {
       PRInt32 count;
-      rv = mAttributes->SetClass(nsnull, count);
+      result = mAttributes->SetClass(aClass, count);
       if (0 == count) {
-        NS_RELEASE(mAttributes);
+        ReleaseAttributes(mAttributes);
       }
     }
   }
-  return rv;
+  return result;
 }
 
 nsresult
