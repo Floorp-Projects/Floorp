@@ -35,10 +35,11 @@
 
 #define DEFAULT_NUMBER_VIEWABLE_DAYS 5
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalMultiDayViewCanvasCID, NS_CAL_MULTIDAYVIEWCANVAS_CID);
-static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
-static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
+static NS_DEFINE_IID(kIXPFCCanvasIID,           NS_IXPFC_CANVAS_IID);
+static NS_DEFINE_IID(kCalTimebarCanvasCID,      NS_CAL_TIMEBARCANVAS_CID);
+static NS_DEFINE_IID(kCCalDayViewCID,           NS_CAL_DAYVIEWCANVAS_CID);
 
 nsCalMultiDayViewCanvas :: nsCalMultiDayViewCanvas(nsISupports* outer) : nsCalMultiViewCanvas(outer)
 {
@@ -151,7 +152,6 @@ PRUint32 nsCalMultiDayViewCanvas :: GetNumberViewableDays()
 
 nsIXPFCCanvas * nsCalMultiDayViewCanvas :: AddDayViewCanvas()
 {
-  static NS_DEFINE_IID(kCCalDayViewCID,   NS_CAL_DAYVIEWCANVAS_CID);
   static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
 
   nsCalDayViewCanvas * canvas;
@@ -493,7 +493,77 @@ nsresult nsCalMultiDayViewCanvas :: SetParameter(nsString& aKey, nsString& aValu
 
 nsresult nsCalMultiDayViewCanvas :: SetMultiDayLayout(nsLayoutAlignment aLayoutAlignment)
 {
-  return NS_OK;
+  nsresult res = NS_OK;
+  nsIXPFCCanvas * canvas;
+  nsIIterator * iterator ;
+
+  /*
+   * Enumarate the child canvas
+   */
+  
+  nsLayoutAlignment la = ((nsBoxLayout *)(GetLayout()))->GetLayoutAlignment();
+
+  if (eLayoutAlignment_horizontal == la)
+    la = eLayoutAlignment_vertical;
+  else
+    la = eLayoutAlignment_horizontal;
+
+  res = CreateIterator(&iterator);
+
+  if (NS_OK != res)
+    return res;
+
+  iterator->Init();
+
+  while(!(iterator->IsDone()))
+  {
+    canvas = (nsIXPFCCanvas *) iterator->CurrentItem();
+
+    ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(la);
+
+      /*
+       * Enumarate children looking for DayView and set its alignment
+       */
+
+    nsresult res2 = NS_OK;
+    nsIIterator * iterator2 ;
+    nsIXPFCCanvas * canvas2 ;
+
+    res2 = canvas->CreateIterator(&iterator2);
+
+    if (NS_OK == res2)
+    {
+
+      iterator2->Init();
+
+      while(!(iterator2->IsDone()))
+      {
+
+        canvas2 = (nsIXPFCCanvas *) iterator2->CurrentItem();
+
+        nsCalDayViewCanvas * canvas_iface = nsnull;;
+
+        canvas2->QueryInterface(kCCalDayViewCID, (void**) &canvas_iface);
+
+        if (canvas_iface) 
+        {
+        
+          ((nsBoxLayout *)(canvas_iface->GetLayout()))->SetLayoutAlignment(la);          
+
+          NS_RELEASE(canvas_iface);
+        }
+
+        iterator2->Next();
+
+      }
+    }
+
+
+
+    iterator->Next();
+  }
+
+  return res;
 }
 
 /*

@@ -31,10 +31,11 @@
 #include "nsCalNewModelCommand.h"
 
 
-static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCalMultiViewCanvasCID,  NS_CAL_MULTIVIEWCANVAS_CID);
-static NS_DEFINE_IID(kIXPFCCanvasIID,         NS_IXPFC_CANVAS_IID);
-static NS_DEFINE_IID(kCalTimebarCanvasCID,    NS_CAL_TIMEBARCANVAS_CID);
+static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kCalMultiViewCanvasCID,      NS_CAL_MULTIVIEWCANVAS_CID);
+static NS_DEFINE_IID(kIXPFCCanvasIID,             NS_IXPFC_CANVAS_IID);
+static NS_DEFINE_IID(kCalTimebarCanvasCID,        NS_CAL_TIMEBARCANVAS_CID);
+static NS_DEFINE_IID(kCalMultiDayViewCanvasCID,   NS_CAL_MULTIDAYVIEWCANVAS_CID);
 
 nsCalMultiUserViewCanvas :: nsCalMultiUserViewCanvas(nsISupports* outer) : nsCalMultiViewCanvas(outer)
 {
@@ -97,7 +98,6 @@ nsresult nsCalMultiUserViewCanvas :: Init()
 
 nsresult nsCalMultiUserViewCanvas :: AddMultiDayView(nsIModel * aModel)
 {
-  static NS_DEFINE_IID(kCalMultiDayViewCanvasCID, NS_CAL_MULTIDAYVIEWCANVAS_CID);
   static NS_DEFINE_IID(kIXPFCCanvasIID,           NS_IXPFC_CANVAS_IID);
 
   nsCalMultiDayViewCanvas * multi;
@@ -182,34 +182,16 @@ nsresult nsCalMultiUserViewCanvas :: SetMultiUserLayout(nsLayoutAlignment aLayou
     {
       canvas = (nsIXPFCCanvas *) iterator->CurrentItem();
 
-      ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(la);
+      nsCalMultiDayViewCanvas * md = nsnull;
 
-      /*
-       * Now, iterate thru its children and set the layout alignment
-       */
+      res = canvas->QueryInterface(kCalMultiDayViewCanvasCID, (void**)&md);
 
-       {
-          nsIIterator * iterator2 ;
-
-          res = canvas->CreateIterator(&iterator2);
-
-          if (NS_OK == res)
-          {
-
-            iterator2->Init();
-
-
-            while(!(iterator2->IsDone()))
-            {
-              canvas = (nsIXPFCCanvas *) iterator2->CurrentItem();
-              ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(la);
-              iterator2->Next();
-            }
-
-            NS_RELEASE(iterator2);
-          }
-
-       }
+      if (NS_OK == res)
+      {
+        ((nsBoxLayout *)(canvas->GetLayout()))->SetLayoutAlignment(la);
+        md->SetMultiDayLayout(la);
+        NS_RELEASE(md);
+      }
 
       iterator->Next();
     }
