@@ -2650,7 +2650,7 @@ JS_dtobasestr(int base, double d)
 
     JS_ASSERT(base >= 2 && base <= 36);
 
-    buffer = malloc(DTOBASESTR_BUFFER_SIZE);
+    buffer = (char*) malloc(DTOBASESTR_BUFFER_SIZE);
     if (buffer) {
         p = buffer;
         if (d < 0.0

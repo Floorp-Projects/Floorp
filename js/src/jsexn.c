@@ -193,12 +193,12 @@ static void
 exn_finalize(JSContext *cx, JSObject *obj)
 {
     JSExnPrivate *privateData;
-    jsval private;
+    jsval privateValue;
 
-    private = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    privateValue = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
 
-    if (private != JSVAL_NULL) {
-        privateData = JSVAL_TO_PRIVATE(private);
+    if (privateValue != JSVAL_NULL) {
+        privateData = (JSExnPrivate*) JSVAL_TO_PRIVATE(privateValue);
         if (privateData)
             exn_destroyPrivate(cx, privateData);
     }
@@ -209,17 +209,17 @@ js_ErrorFromException(JSContext *cx, jsval exn)
 {
     JSObject *obj;
     JSExnPrivate *privateData;
-    jsval private;
+    jsval privateValue;
 
     if (JSVAL_IS_PRIMITIVE(exn))
         return NULL;
     obj = JSVAL_TO_OBJECT(exn);
     if (OBJ_GET_CLASS(cx, obj) != &js_ErrorClass)
         return NULL;
-    private = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    if (private == JSVAL_NULL)
+    privateValue = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    if (privateValue == JSVAL_NULL)
         return NULL;
-    privateData = JSVAL_TO_PRIVATE(private);
+    privateData = (JSExnPrivate*) JSVAL_TO_PRIVATE(privateValue);
     if (!privateData)
         return NULL;
     
@@ -347,7 +347,7 @@ exn_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (message->length > 0) {
         length = name->length + message->length + 2;
-        cp = chars = JS_malloc(cx, (length + 1) * sizeof(jschar));
+        cp = chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
         
@@ -395,7 +395,7 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     length = (message->length > 0) ? name->length + message->length + 10
         : name->length + 8;
 
-    cp = chars = JS_malloc(cx, (length + 1) * sizeof(jschar));
+    cp = chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
 
@@ -548,7 +548,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     JS_ASSERT(reportp);
     if (JSREPORT_IS_WARNING(reportp->flags))
         return JS_FALSE;
-    errorNumber = reportp->errorNumber;
+    errorNumber = (JSErrNum) reportp->errorNumber;
     exn = errorToExceptionNum[errorNumber];
     JS_ASSERT(exn < JSEXN_LIMIT);
 

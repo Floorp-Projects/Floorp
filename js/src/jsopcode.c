@@ -441,7 +441,7 @@ js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
     JSObject *obj;
     JSObjectMap *map;
 
-    jp = JS_malloc(cx, sizeof(JSPrinter));
+    jp = (JSPrinter*) JS_malloc(cx, sizeof(JSPrinter));
     if (!jp)
 	return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
@@ -631,7 +631,7 @@ typedef struct TableEntry {
 static int
 CompareOffsets(const void *v1, const void *v2, void *arg)
 {
-    const TableEntry *te1 = v1, *te2 = v2;
+    const TableEntry *te1 = (const TableEntry*) v1, *te2 = (const TableEntry*) v2;
 
     return te1->offset - te2->offset;
 }
@@ -1003,7 +1003,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    JS_ASSERT(ATOM_IS_OBJECT(atom));
                   do_function:
 		    obj = ATOM_TO_OBJECT(atom);
-		    fun = JS_GetPrivate(cx, obj);
+		    fun = (JSFunction*) JS_GetPrivate(cx, obj);
 		    jp2 = js_NewPrinter(cx, JS_GetFunctionName(fun),
 					jp->indent, jp->pretty);
 		    if (!jp2)
@@ -1441,7 +1441,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		saveop = op;
 		op = JSOP_NOP;           /* turn off parens */
 		argc = GET_ARGC(pc);
-		argv = JS_malloc(cx, (size_t)(argc + 1) * sizeof *argv);
+		argv = (char**) JS_malloc(cx, (size_t)(argc + 1) * sizeof *argv);
 		if (!argv)
 		    return JS_FALSE;
 
@@ -1736,7 +1736,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		high = GET_JUMP_OFFSET(pc2);
 
 		n = high - low + 1;
-		table = JS_malloc(cx, (size_t)n * sizeof *table);
+		table = (TableEntry*) JS_malloc(cx, (size_t)n * sizeof *table);
 		if (!table)
 		    return JS_FALSE;
 		if (pc2 + JUMP_OFFSET_LEN + 1 >= end) {
@@ -1778,7 +1778,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		npairs = (jsint) GET_ATOM_INDEX(pc2);
 		pc2 += ATOM_INDEX_LEN;
 
-		table = JS_malloc(cx, (size_t)npairs * sizeof *table);
+		table = (TableEntry*) JS_malloc(cx, (size_t)npairs * sizeof *table);
 		if (!table)
 		    return JS_FALSE;
 		for (i = 0; i < npairs; i++) {
@@ -1835,7 +1835,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		 * stashing each case's delta from switch top in table[i].key,
 		 * and the distance to its statements in table[i].offset.
 		 */
-		table = JS_malloc(cx, (size_t)ncases * sizeof *table);
+		table = (TableEntry*) JS_malloc(cx, (size_t)ncases * sizeof *table);
 		if (!table)
 		    return JS_FALSE;
 		pc2 = pc;
@@ -2321,7 +2321,7 @@ js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
 	if (!pc)
 	    goto do_fallback;
     }
-    op = *pc;
+    op = (JSOp) *pc;
     if (op == JSOP_TRAP)
 	op = JS_GetTrapOpcode(cx, script, pc);
     cs = &js_CodeSpec[op];
@@ -2341,7 +2341,7 @@ js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
     len = PTRDIFF(end, begin, jsbytecode);
 
     if (format & (JOF_SET | JOF_DEL | JOF_INCDEC | JOF_IMPORT)) {
-	tmp = JS_malloc(cx, len * sizeof(jsbytecode));
+	tmp = (jsbytecode *) JS_malloc(cx, len * sizeof(jsbytecode));
 	if (!tmp)
 	    return NULL;
 	memcpy(tmp, begin, len * sizeof(jsbytecode));

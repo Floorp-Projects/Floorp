@@ -459,7 +459,7 @@ js_NewDouble(JSContext *cx, jsdouble d)
 {
     jsdouble *dp;
 
-    dp = js_AllocGCThing(cx, GCX_DOUBLE);
+    dp = (jsdouble*) js_AllocGCThing(cx, GCX_DOUBLE);
     if (!dp)
 	return NULL;
     *dp = d;
@@ -725,7 +725,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
     const jschar *s1 = js_SkipWhiteSpace(s);
     size_t length = js_strlen(s1);
 
-    cstr = malloc(length + 1);
+    cstr = (char*) malloc(length + 1);
     if (!cstr)
 	return JS_FALSE;
     for (i = 0; i <= length; i++) {
@@ -859,7 +859,7 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	     */
 	    size_t i;
 	    size_t length = s1 - start;
-	    char *cstr = malloc(length + 1);
+	    char *cstr = (char*) malloc(length + 1);
 	    char *estr;
 
 	    if (!cstr)

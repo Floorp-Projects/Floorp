@@ -422,7 +422,7 @@ str_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     s = str->chars;
     k = str->length;
     n = j + k + 2;
-    t = JS_malloc(cx, (n + 1) * sizeof(jschar));
+    t = (jschar*) JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!t)
 	return JS_FALSE;
     for (i = 0; i < j; i++)
@@ -535,7 +535,7 @@ str_toLowerCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!str)
 	return JS_FALSE;
     n = str->length;
-    news = JS_malloc(cx, (n + 1) * sizeof(jschar));
+    news = (jschar*) JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!news)
 	return JS_FALSE;
     s = str->chars;
@@ -563,7 +563,7 @@ str_toUpperCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!str)
 	return JS_FALSE;
     n = str->length;
-    news = JS_malloc(cx, (n + 1) * sizeof(jschar));
+    news = (jschar*) JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!news)
 	return JS_FALSE;
     s = str->chars;
@@ -844,7 +844,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (JSVAL_IS_REGEXP(cx, argv[0])) {
 	reobj = JSVAL_TO_OBJECT(argv[0]);
-	re = JS_GetPrivate(cx, reobj);
+	re = (JSRegExp*) JS_GetPrivate(cx, reobj);
     } else {
         if (JSVAL_IS_VOID(argv[0]))
             re = js_NewRegExp(cx, cx->runtime->emptyString, 0, JS_FALSE);
@@ -1238,10 +1238,10 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     if (!find_replen(cx, rdata, &replen))
 	return JS_FALSE;
     growth = leftlen + replen;
-    chars = rdata->chars
+    chars = (jschar*) (rdata->chars
 	    ? JS_realloc(cx, rdata->chars, (rdata->length + growth + 1)
 					   * sizeof(jschar))
-	    : JS_malloc(cx, (growth + 1) * sizeof(jschar));
+	    : JS_malloc(cx, (growth + 1) * sizeof(jschar)));
     if (!chars) {
 	JS_free(cx, rdata->chars);
 	rdata->chars = NULL;
@@ -1308,7 +1308,7 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	if (!find_replen(cx, &rdata, &length))
 	    return JS_FALSE;
 	length += leftlen;
-	chars = JS_malloc(cx, (length + 1) * sizeof(jschar));
+	chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
 	if (!chars)
 	    return JS_FALSE;
 	js_strncpy(chars, cx->regExpStatics.leftContext.chars, leftlen);
@@ -1319,7 +1319,7 @@ str_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     rightlen = cx->regExpStatics.rightContext.length;
     length = rdata.length + rightlen;
-    chars = JS_realloc(cx, rdata.chars, (length + 1) * sizeof(jschar));
+    chars = (jschar*) JS_realloc(cx, rdata.chars, (length + 1) * sizeof(jschar));
     if (!chars) {
 	JS_free(cx, rdata.chars);
 	return JS_FALSE;
@@ -1532,7 +1532,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #if JS_HAS_REGEXPS
 	if (JSVAL_IS_REGEXP(cx, argv[0])) {
 	    reobj = JSVAL_TO_OBJECT(argv[0]);
-	    re = JS_GetPrivate(cx, reobj);
+	    re = (JSRegExp*) JS_GetPrivate(cx, reobj);
 	    sep = &tmp;
 
 	    /* Set a magic value so we can detect a successful re match. */
@@ -1750,7 +1750,7 @@ str_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     argv[-1] = STRING_TO_JSVAL(str);
 
     length = str->length;
-    chars = JS_malloc(cx, (length + 1) * sizeof(jschar));
+    chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
     if (!chars)
 	return JS_FALSE;
     js_strncpy(chars, str->chars, length);
@@ -1764,7 +1764,8 @@ str_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	}
 	length2 = str2->length;
 	newlength = length + length2;
-	newchars = JS_realloc(cx, chars, (newlength + 1) * sizeof(jschar));
+	newchars = (jschar*) JS_realloc(cx, chars,
+                                        (newlength + 1) * sizeof(jschar));
 	if (!newchars) {
 	    ok = JS_FALSE;
 	    goto out;
@@ -1869,7 +1870,7 @@ tagify(JSContext *cx, JSObject *obj, jsval *argv,
     endlen = strlen(end);
     taglen += str->length + 2 + endlen + 1;	/* 'str</end>' */
 
-    tagbuf = JS_malloc(cx, (taglen + 1) * sizeof(jschar));
+    tagbuf = (jschar*) JS_malloc(cx, (taglen + 1) * sizeof(jschar));
     if (!tagbuf)
 	return JS_FALSE;
 
@@ -2075,7 +2076,7 @@ str_fromCharCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uint16 code;
     JSString *str;
 
-    chars = JS_malloc(cx, (argc + 1) * sizeof(jschar));
+    chars = (jschar*) JS_malloc(cx, (argc + 1) * sizeof(jschar));
     if (!chars)
 	return JS_FALSE;
     for (i = 0; i < argc; i++) {
@@ -2170,7 +2171,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag)
 {
     JSString *str;
 
-    str = js_AllocGCThing(cx, gcflag | GCX_STRING);
+    str = (JSString*) js_AllocGCThing(cx, gcflag | GCX_STRING);
     if (!str)
 	return NULL;
     str->length = length;
@@ -2204,7 +2205,7 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s, uintN gcflag)
 
     n = js_strlen(s);
     m = (n + 1) * sizeof(jschar);
-    news = JS_malloc(cx, m);
+    news = (jschar*) JS_malloc(cx, m);
     if (!news)
 	return NULL;
     memcpy(news, s, m);
@@ -2384,7 +2385,7 @@ js_InflateString(JSContext *cx, const char *bytes, size_t length)
     jschar *chars;
     size_t i;
 
-    chars = JS_malloc(cx, (length + 1) * sizeof(jschar));
+    chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
     if (!chars)
 	return NULL;
     for (i = 0; i < length; i++)
@@ -2403,7 +2404,7 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
     char *bytes;
 
     size = (length + 1) * sizeof(char);
-    bytes = cx ? JS_malloc(cx, size) : malloc(size);
+    bytes = (char*) (cx ? JS_malloc(cx, size) : malloc(size));
     if (!bytes)
 	return NULL;
     for (i = 0; i < length; i++)
@@ -2471,7 +2472,7 @@ js_GetStringBytes(JSString *str)
 	hep = JS_HashTableRawLookup(cache, hash, str);
 	he = *hep;
 	if (he) {
-	    bytes = he->value;
+	    bytes = (char*) he->value;
 	} else {
 	    bytes = js_DeflateString(NULL, str->chars, str->length);
 	    if (bytes) {

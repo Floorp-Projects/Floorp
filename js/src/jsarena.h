@@ -113,7 +113,7 @@ struct JSArenaPool {
 	    _p = (jsuword)JS_ArenaAllocate(pool, _nb);                        \
 	else                                                                  \
 	    _a->avail = _q;                                                   \
-	p = (void *)_p;                                                       \
+	*(void**)&p = (void *)_p;                                             \
 	JS_ArenaCountAllocation(pool, nb);                                    \
     JS_END_MACRO
 
@@ -128,7 +128,7 @@ struct JSArenaPool {
 	    _a->avail = _q;                                                   \
 	    JS_ArenaCountInplaceGrowth(pool, size, incr);                     \
 	} else {                                                              \
-	    p = JS_ArenaGrow(pool, p, size, incr);                            \
+	    *(void**)&p = JS_ArenaGrow(pool, p, size, incr);                  \
 	}                                                                     \
 	JS_ArenaCountGrowth(pool, size, incr);                                \
     JS_END_MACRO

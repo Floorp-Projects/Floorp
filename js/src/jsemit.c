@@ -2565,7 +2565,7 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg)
 
     count = cg->noteCount;
     tmp   = cg->notes;
-    final = JS_malloc(cx, (count + 1) * sizeof(jssrcnote));
+    final = (jssrcnote*) JS_malloc(cx, (count + 1) * sizeof(jssrcnote));
     if (!final)
         return NULL;
     memcpy(final, tmp, count * sizeof(jssrcnote));
@@ -2637,7 +2637,7 @@ js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote **tryp)
     }
 
     tmp = cg->tryBase;
-    final = JS_malloc(cx, (count + 1) * sizeof(JSTryNote));
+    final = (JSTryNote*) JS_malloc(cx, (count + 1) * sizeof(JSTryNote));
     if (!final) {
         *tryp = NULL;
         return JS_FALSE;

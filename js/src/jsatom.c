@@ -166,10 +166,10 @@ js_free_atom_space(void *priv, void *item)
 JS_STATIC_DLL_CALLBACK(JSHashEntry *)
 js_alloc_atom(void *priv, const void *key)
 {
-    JSAtomState *state = priv;
+    JSAtomState *state = (JSAtomState*) priv;
     JSAtom *atom;
 
-    atom = malloc(sizeof(JSAtom));
+    atom = (JSAtom*) malloc(sizeof(JSAtom));
     if (!atom)
 	return NULL;
 #ifdef JS_THREADSAFE
@@ -297,7 +297,7 @@ js_atom_marker(JSHashEntry *he, intN i, void *arg)
 	atom->flags |= ATOM_MARK;
 	key = ATOM_KEY(atom);
 	if (JSVAL_IS_GCTHING(key)) {
-	    args = arg;
+	    args = (MarkArgs*) arg;
 	    args->mark(args->runtime, JSVAL_TO_GCTHING(key));
 	}
     }
@@ -747,7 +747,7 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 			     JSMSG_TOO_MANY_LITERALS);
 	return JS_FALSE;
     }
-    vector = JS_malloc(cx, (size_t) count * sizeof *vector);
+    vector = (JSAtom**) JS_malloc(cx, (size_t) count * sizeof *vector);
     if (!vector)
 	return JS_FALSE;
 

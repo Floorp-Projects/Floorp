@@ -57,6 +57,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsopcode.h"
 
 #if JS_HAS_OBJ_WATCHPOINT
 #include "jsdbgapi.h"
@@ -477,7 +478,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* Allocate 4 + 1 for "({})" and the terminator. */
     if (!chars) {
-	chars = malloc((4 + 1) * sizeof(jschar));
+	chars = (jschar*) malloc((4 + 1) * sizeof(jschar));
 	nchars = 0;
 	if (!chars)
 	    goto error;
@@ -485,7 +486,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	JS_ASSERT(!outermost);
 	MAKE_SHARP(he);
 	nchars = js_strlen(chars);
-	chars = realloc((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
+	chars = (jschar*) realloc((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
 	if (!chars) {
 	    free(ochars);
 	    goto error;
@@ -595,7 +596,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 #endif
 
             /* Allocate 1 + 1 at end for closing brace and terminating 0. */
-            chars = realloc((ochars = chars),
+            chars = (jschar*) realloc((ochars = chars),
                             (nchars + (comma ? 2 : 0) +
                              idstr->length + 1 +
 #if JS_HAS_GETTER_SETTER
@@ -684,7 +685,7 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     clazz = OBJ_GET_CLASS(cx, obj)->name;
     nchars = 9 + strlen(clazz);		/* 9 for "[object ]" */
-    chars = JS_malloc(cx, (nchars + 1) * sizeof(jschar));
+    chars = (jschar*) JS_malloc(cx, (nchars + 1) * sizeof(jschar));
     if (!chars)
 	return JS_FALSE;
 
@@ -828,7 +829,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
     JSObject *funobj;
     jsval argv[3];
 
-    funobj = closure;
+    funobj = (JSObject*) closure;
     argv[0] = id;
     argv[1] = old;
     argv[2] = *nvp;
@@ -1218,7 +1219,7 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     uint32 i;
 
     /* Allocate an object from the GC heap and zero it. */
-    obj = js_AllocGCThing(cx, GCX_OBJECT);
+    obj = (JSObject*) js_AllocGCThing(cx, GCX_OBJECT);
     if (!obj)
 	return NULL;
 
@@ -1260,7 +1261,7 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     }
 
     /* Set the proto, parent, and class properties. */
-    obj->slots = JS_malloc(cx, JS_INITIAL_NSLOTS * sizeof(jsval));
+    obj->slots = (jsval*) JS_malloc(cx, JS_INITIAL_NSLOTS * sizeof(jsval));
     if (!obj->slots)
 	goto bad;
     obj->slots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
@@ -1413,10 +1414,10 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
 #endif
 
 	if (obj->slots) {
-	    newslots = JS_realloc(cx, obj->slots, nbytes);
+	    newslots = (jsval*) JS_realloc(cx, obj->slots, nbytes);
 	} else {
 	    /* obj must be newborn and unshared at this point. */
-	    newslots = JS_malloc(cx, nbytes);
+	    newslots = (jsval*) JS_malloc(cx, nbytes);
 	}
 	if (!newslots)
 	    return JS_FALSE;
@@ -1448,7 +1449,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 	nslots = map->freeslot;
 	nslots += nslots / 2;
 	nbytes = (size_t)nslots * sizeof(jsval);
-	newslots = JS_realloc(cx, obj->slots, nbytes);
+	newslots = (jsval*) JS_realloc(cx, obj->slots, nbytes);
 	if (!newslots)
 	    return;
 	obj->slots = newslots;
@@ -1808,7 +1809,9 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp)
 	withobj = obj;
     }
 
-    fun = (clasp == &js_FunctionClass) ? JS_GetPrivate(cx, obj) : NULL;
+    fun = (JSFunction*) ((clasp == &js_FunctionClass)
+                         ? JS_GetPrivate(cx, obj)
+                         : NULL);
 #if JS_HAS_CALL_OBJECT
     if (fun && fun->script) {
 	for (; fp && fp->fun != fun; fp = fp->down)
@@ -1929,7 +1932,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	    if (sprop && (slot = sprop->slot) >= scope->map.freeslot) {
 		if (slot >= scope->map.nslots) {
 		    nslots = slot + slot / 2;
-		    slots = JS_realloc(cx, obj->slots, nslots * sizeof(jsval));
+		    slots = (jsval*) JS_realloc(cx, obj->slots, nslots * sizeof(jsval));
 		    if (!slots) {
 			JS_UNLOCK_OBJ(cx, obj);
 			return JS_FALSE;
@@ -2354,7 +2357,7 @@ js_NewIdArray(JSContext *cx, jsint length)
 {
     JSIdArray *ida;
 
-    ida = JS_malloc(cx, sizeof(JSIdArray) + (length - 1) * sizeof(jsval));
+    ida = (JSIdArray*) JS_malloc(cx, sizeof(JSIdArray) + (length - 1) * sizeof(jsval));
     if (ida)
 	ida->length = length;
     return ida;
@@ -2363,7 +2366,7 @@ js_NewIdArray(JSContext *cx, jsint length)
 extern JSIdArray *
 js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length)
 {
-    ida = JS_realloc(cx, ida, sizeof(JSIdArray) + (length - 1) * sizeof(jsval));
+    ida = (JSIdArray*) JS_realloc(cx, ida, sizeof(JSIdArray) + (length - 1) * sizeof(jsval));
     if (ida)
 	ida->length = length;
     return ida;
@@ -2446,7 +2449,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 	}
 	JS_UNLOCK_OBJ(cx, obj);
 
-	state = JS_malloc(cx, sizeof(JSNativeIteratorState));
+	state = (JSNativeIteratorState*) JS_malloc(cx, sizeof(JSNativeIteratorState));
 	if (!state) {
 	    JS_DestroyIdArray(cx, ida);
 	    goto init_error;
@@ -2459,7 +2462,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 	return JS_TRUE;
 
     case JSENUMERATE_NEXT:
-	state = JSVAL_TO_PRIVATE(*statep);
+	state = (JSNativeIteratorState*) JSVAL_TO_PRIVATE(*statep);
 	ida = state->ida;
 	length = ida->length;
 	if (state->next_index != length) {
@@ -2470,7 +2473,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 	/* Fall through ... */
 
     case JSENUMERATE_DESTROY:
-	state = JSVAL_TO_PRIVATE(*statep);
+	state = (JSNativeIteratorState*) JSVAL_TO_PRIVATE(*statep);
 	JS_DestroyIdArray(cx, state->ida);
 	JS_free(cx, state);
 	*statep = JSVAL_NULL;
