@@ -59,11 +59,12 @@ gint handle_toplevel_focus_out(
     GdkEventFocus *  aGdkFocusEvent, 
     gpointer         aData);
 
-// this is the nsWindow with the focus
-nsWindow  *nsWindow::focusWindow = NULL;
 // are we grabbing?
-PRBool     nsWindow::mIsGrabbing = PR_FALSE;
-nsWindow  *nsWindow::mGrabWindow = NULL;
+PRBool      nsWindow::mIsGrabbing = PR_FALSE;
+nsWindow   *nsWindow::mGrabWindow = NULL;
+// this is a hash table that contains a list of the
+// shell_window -> nsWindow * lookups
+GHashTable *nsWindow::mWindowLookupTable = NULL;
 
 //-------------------------------------------------------------------------
 //
@@ -81,16 +82,17 @@ nsWindow::nsWindow()
   mLowerLeft = PR_FALSE;
   mWindowType = eWindowType_child;
   mBorderStyle = eBorderStyle_default;
-  mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
   mSuperWin = 0;
   mMozArea = 0;
   mMozAreaClosestParent = 0;
   mScrollExposeCounter = 0;
-  mMenuBar = nsnull;
   mIsTooSmall = PR_FALSE;
   mIsUpdating = PR_FALSE;
   mBlockFocusEvents = PR_FALSE;
+  if (mWindowLookupTable == NULL) {
+    mWindowLookupTable = g_hash_table_new(g_int_hash, g_int_equal);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -100,27 +102,26 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-#ifdef NOISY_DESTROY
-  IndentByDepth(stdout);
-  printf("nsWindow::~nsWindow:%p\n", this);
-#endif
+
   // make sure that we release the grab indicator here
   if (mGrabWindow == this) {
     mIsGrabbing = PR_FALSE;
     mGrabWindow = NULL;
   }
   // make sure to release our focus window
-  if (this == focusWindow) {
+  if (mHasFocus == PR_TRUE) {
     focusWindow = NULL;
   }
-  if (nsnull != mShell || nsnull != mSuperWin) {
-    Destroy();
-  }
+
+  // always call destroy.  if it's already been called, there's no harm
+  // since it keeps track of when it's already been called.
+
+  Destroy();
+
 #ifdef USE_SUPERWIN
   if (mIsUpdating)
     UnqueueDraw();
 #endif
-  NS_IF_RELEASE(mMenuBar);
 }
 
 PRBool nsWindow::IsChild() const
@@ -182,44 +183,71 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWindow::Destroy()
+// this is the function that will destroy the native windows for this widget.
+ 
+/* virtual */
+void
+nsWindow::DestroyNative(void)
 {
-#ifdef NOISY_DESTROY
-  IndentByDepth(stdout);
-  printf("nsWindow::Destroy:%p: widget=%p shell=%p parent=%p\n",
-         this, mWidget, mShell, mParent);
-#endif
-  NS_IF_RELEASE(mMenuBar);
+  // destroy all of the children that are nsWindow() classes
+  // preempting the gdk destroy system.
+  DestroyNativeChildren();
 
-  // Call base class first... we need to ensure that upper management
-  // knows about the close so that if this is the main application
-  // window, for example, the application will exit as it should.
-
-  NS_IF_RELEASE(mParent);
-  nsBaseWidget::Destroy();
-  if (PR_FALSE == mOnDestroyCalled) {
-    nsWidget::OnDestroy();
-  }
-
-  if (mMozArea) {
-    /* destroy the moz area.  the superwin will be destroyed by that mozarea */
-    gtk_widget_destroy(mMozArea);
+  if (mShell) {
+    gtk_widget_destroy(mShell);
+    mShell = nsnull;
+    // the moz area and superwin will have been destroyed when we destroyed the shell
     mMozArea = nsnull;
     mSuperWin = nsnull;
   }
-  else if (mSuperWin) {
-    /* destroy our superwin if we are a child window*/
+  else if(mSuperWin) {
+    // remove the key from the hash table for the shell_window
+    g_hash_table_remove(mWindowLookupTable, mSuperWin->shell_window);
     gdk_superwin_destroy(mSuperWin);
-    mSuperWin = nsnull;
+    mSuperWin = NULL;
   }
-  
-  if (mShell) {
-    if (GTK_IS_WIDGET(mShell))
-      gtk_widget_destroy(mShell);
-    mShell = nsnull;
+}
+
+// this function will find all of the children of the bin_window and
+// will try to destroy them if they are superwindows, calling Destroy()
+// on them.  this is so that we can keep track of which widgets
+// have been destroyed. 
+
+void
+nsWindow::DestroyNativeChildren(void)
+{
+  if (mSuperWin) {
+    GList *children;
+    children = gdk_window_get_children(mSuperWin->bin_window);
+    if (children) {
+      GList *tmp_list = children;
+      while (tmp_list) {
+        GdkWindow *this_window = (GdkWindow *)tmp_list->data;
+        void *user_data = NULL;
+        // get the user data.  this will be set on a widget.
+        gdk_window_get_user_data(this_window, (gpointer *)&user_data);
+        if (user_data) {
+          if (GTK_IS_WIDGET(user_data)) {
+            GtkWidget *this_widget = (GtkWidget *)user_data;
+            gtk_widget_destroy(this_widget);
+          }
+        }
+        else {
+          // ok, this is probably a superwin->shell_window.
+          // check to see if we can get it.
+          nsWindow *thisWindow = (nsWindow *)g_hash_table_lookup(mWindowLookupTable, this_window);
+          if (thisWindow) {
+            thisWindow->Destroy();
+          }
+        }
+        
+        // move to the next element, please.
+        // thank you.  come again.
+        tmp_list = tmp_list->next;
+      }
+      g_list_free(children);
+    }
   }
-  
-  return NS_OK;
 }
 
 #ifdef USE_SUPERWIN
@@ -306,7 +334,7 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
   {
     nsPaintEvent event;
     nsRect rect(aX, aY, aWidth, aHeight);
-
+ 
     event.message = NS_PAINT;
     event.widget = (nsWidget *)this;
     event.eventStructType = NS_PAINT_EVENT;
@@ -347,7 +375,6 @@ NS_IMETHODIMP nsWindow::Update(void)
     UnqueueDraw();
 
   if (!mUpdateArea->IsEmpty()) {
-    
     nsRegionRectSet *regionRectSet = nsnull;
 
     if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
@@ -589,37 +616,18 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
 NS_IMETHODIMP
 nsWindow::SetFocus(void)
 {
-  GtkWidget *top_mozarea = GetMozArea();
 
+  GtkWidget *top_mozarea = GetMozArea();
+  
   if (top_mozarea)
   {
     if (!GTK_WIDGET_HAS_FOCUS(top_mozarea))
       gtk_widget_grab_focus(top_mozarea);
   }
-
-
+  
   // check to see if we need to send a focus out event for the old window
   if (focusWindow)
   {
-    nsGUIEvent event;
-    
-    event.message = NS_LOSTFOCUS;
-    event.widget  = focusWindow;
-    
-    event.eventStructType = NS_GUI_EVENT;
-    
-    //  event.time = aGdkFocusEvent->time;;
-    //  event.time = PR_Now();
-    event.time = 0;
-    event.point.x = 0;
-    event.point.y = 0;
-    
-    focusWindow->AddRef();
-    
-    focusWindow->DispatchFocus(event);
-    
-    focusWindow->Release();
-    
     if(mIMEEnable == PR_FALSE)
     {
 #ifdef NOISY_XIM
@@ -646,9 +654,15 @@ nsWindow::SetFocus(void)
       printf("mIC isn't created yet\n");
 #endif
     }
+
+    // let the current window loose its focus
+    focusWindow->LooseFocus();
   }
 
+  // set the focus window to this window
+
   focusWindow = this;
+  mHasFocus = PR_TRUE;
 
   // don't recurse
   if (mBlockFocusEvents)
@@ -1028,6 +1042,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
       mSuperWin = gdk_superwin_new(superwin->bin_window,
                                    mBounds.x, mBounds.y,
                                    mBounds.width, mBounds.height);
+      // add the shell_window for this window to the table lookup
+      // this is so that as part of destruction we can find the superwin
+      // associated with the window.
+      g_hash_table_insert(mWindowLookupTable, mSuperWin->shell_window, this);
     }
     else
       g_print("warning: attempted to CreateNative() without a superwin parent\n");
@@ -1051,22 +1069,15 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   gdk_window_set_events(mSuperWin->bin_window, 
                         mask);
 
+  // set our object data so that we can find the class for this window
   gtk_object_set_data (GTK_OBJECT (mSuperWin), "nsWindow", this);
+  // set user data on the bin_window so we can find the superwin for it.
   gdk_window_set_user_data (mSuperWin->bin_window, (gpointer)mSuperWin);
 
   // set our background color to make people happy.
 
   SetBackgroundColor(NS_RGB(192,192,192));
   //gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
-
-
-  // track focus changes if we have a mozarea
-  if (mMozArea) {
-    GTK_WIDGET_SET_FLAGS(mMozArea, GTK_CAN_FOCUS);
-    InstallFocusInSignal(mMozArea);
-    InstallFocusOutSignal(mMozArea);
-
-  }
 
   // track focus in and focus out events for the shell
   if (mShell) {
@@ -1601,7 +1612,6 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     //    printf("mScrollExposeCounter   = 0\n");
     mScrollExposeCounter = 0;
 
-
     //    printf("\n\n");
     PRInt32 x, y, w, h;
     mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
@@ -1617,7 +1627,6 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
       //      printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
       return NS_OK;
     }
-
 
     // print out stuff here incase the event got dropped on the floor above
 #ifdef NS_DEBUG
@@ -1800,16 +1809,21 @@ NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 
 PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
 {
+  PRBool releaseWidget = PR_FALSE;
+
+  // rewrite the key event to the window with 'de focus
   if (focusWindow) {
-    focusWindow->AddRef();
     aEvent.widget = focusWindow;
+    NS_ADDREF(aEvent.widget);
+    releaseWidget = PR_TRUE;
   }
   if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);
   }
-  if (focusWindow) {
-    focusWindow->Release();
-  }
+
+  if (releaseWidget)
+    NS_RELEASE(aEvent.widget);
+
   return PR_FALSE;
 }
 

@@ -72,7 +72,6 @@ public:
 
   NS_IMETHOD           BeginResizingChildren(void);
   NS_IMETHOD           EndResizingChildren(void);
-  NS_IMETHOD           Destroy(void);
 
 #ifdef USE_SUPERWIN
   NS_IMETHOD           GetAbsoluteBounds(nsRect &aRect);
@@ -85,6 +84,7 @@ public:
   NS_IMETHOD           SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD           SetCursor(nsCursor aCursor);
   NS_IMETHOD           SetFocus(void);
+
   void                 QueueDraw();
   void                 UnqueueDraw();
   void                 DoPaint(PRInt32 x, PRInt32 y, PRInt32 width, PRInt32 height,
@@ -129,6 +129,10 @@ public:
 
   // Return the Gdk window used for rendering
   virtual GdkWindow * GetRenderWindow(GtkObject * aGtkWidget);
+
+  // this is the "native" destroy code that will destroy any
+  // native windows / widgets for this logical widget
+  virtual void DestroyNative(void);
 
   // grab in progress
   PRBool GrabInProgress(void);
@@ -184,19 +188,19 @@ protected:
 
   nsIMenuBar *mMenuBar;
   // are we doing a grab?
-  static PRBool    mIsGrabbing;
-  static nsWindow *mGrabWindow;
+  static PRBool      mIsGrabbing;
+  static nsWindow   *mGrabWindow;
+  static GHashTable *mWindowLookupTable;
 private:
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
   nsresult     SetIcon();
   PRBool       mIsUpdating;
-  // this is the current GdkSuperWin with the focus
-  static nsWindow  *focusWindow;
   // when this is PR_TRUE we will block focus
   // events to prevent recursion
   PRBool       mBlockFocusEvents;
   PRInt32      mScrollExposeCounter;
+  void DestroyNativeChildren(void);
 };
 
 //
