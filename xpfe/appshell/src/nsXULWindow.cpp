@@ -417,40 +417,37 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    mWindow->Show(PR_FALSE);
 
    mDOMWindow = nsnull;
-   if(mDocShell)
-      {
+   if(mDocShell) {
       nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mDocShell));
       shellAsWin->Destroy();
-      mDocShell = nsnull;
-      }
+      mDocShell = nsnull; // this can cause reentrancy of this function
+   }
 
    // Remove our ref on the content shells
    PRInt32 count;
    count = mContentShells.Count();
-   for(PRInt32 i = 0; i < count; i++)
-      {
+   for(PRInt32 i = 0; i < count; i++) {
       nsContentShellInfo* shellInfo = (nsContentShellInfo*)(mContentShells.ElementAt(i));
       delete shellInfo;
-      }
+   }
    mContentShells.Clear();
 
-   if(mContentTreeOwner)   
-      {
+   if(mContentTreeOwner) {
       mContentTreeOwner->XULWindow(nsnull);
       NS_RELEASE(mContentTreeOwner);
-      }
-   if(mPrimaryContentTreeOwner)
-      {
+   }
+   if(mPrimaryContentTreeOwner) {
       mPrimaryContentTreeOwner->XULWindow(nsnull);
       NS_RELEASE(mPrimaryContentTreeOwner);
-      }
-   if(mChromeTreeOwner)
-      {
+   }
+   if(mChromeTreeOwner) {
       mChromeTreeOwner->XULWindow(nsnull);
       NS_RELEASE(mChromeTreeOwner);
-      }
-   mWindow->SetClientData(0); // nsWebShellWindow hackery
-   mWindow = nsnull;
+   }
+   if(mWindow) {
+      mWindow->SetClientData(0); // nsWebShellWindow hackery
+      mWindow = nsnull;
+   }
 
    return NS_OK;
 }
