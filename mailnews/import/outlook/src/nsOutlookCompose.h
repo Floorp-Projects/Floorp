@@ -24,6 +24,7 @@
 #include "nsIFileSpec.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
+#include "nsIImportService.h"
 
 class nsIMsgSend;
 class nsIMsgCompFields;
@@ -140,6 +141,7 @@ private:
 	PRInt32		IsSpecialHeader( const char *pHeader);
 	nsresult	WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopiedTwice& newHeaders);
 	PRBool		IsReplaceHeader( const char *pHeader);
+  void      ConvertSystemStringToUnicode( const char *pSysStr, nsString& uniStr);
 
 
 private:
@@ -155,6 +157,7 @@ private:
 	PRInt32					m_bodyLen;
 	const char *			m_pBody;
 	SimpleBufferTonyRCopiedTwice			m_readHeaders;
+  nsCOMPtr<nsIImportService>	m_pImportService;
 };
 
 

@@ -30,6 +30,7 @@
 #include "nsIURI.h"
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
+#include "nsMsgI18N.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
@@ -47,6 +48,7 @@
 #include "OutlookDebugLog.h"
 
 #include "nsMimeTypes.h"
+#include "nsIPref.h"
 #include "nsMsgUtils.h"
 
 static NS_DEFINE_CID( kMsgSendCID, NS_MSGSEND_CID);
@@ -571,6 +573,17 @@ nsMsgAttachedFile * nsOutlookCompose::GetLocalAttachments( void)
 	return( a);
 }
 
+void nsOutlookCompose::ConvertSystemStringToUnicode( const char *pStr, nsString& uniStr)
+{
+  if (!m_pImportService)
+    m_pImportService = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
+  NS_ASSERTION(m_pImportService, "no import service, can't convert");
+
+  if (m_pImportService)
+    m_pImportService->SystemStringToUnicode( pStr, uniStr);
+  else
+    uniStr.AssignWithConversion( pStr);
+}
 
 // Test a message send????
 nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode mode)
@@ -601,11 +614,23 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 	bodyType = headerVal;
 	ExtractType( bodyType);
 	ExtractCharset( headerVal);
-	charSet = headerVal;
-	if (headerVal.Length()) {
-        asciiHeaderVal.AssignWithConversion(headerVal);
-		m_pMsgFields->SetCharacterSet(asciiHeaderVal.get());
+  // Use platform charset as default if the msg doesn't specify one
+  // (ie, no 'charset' param in the Content-Type: header). As the last
+  // resort we'll use the mail defaul charset.
+  if (headerVal.IsEmpty())
+  {
+    headerVal.AssignWithConversion(nsMsgI18NFileSystemCharset());
+    if (headerVal.IsEmpty())
+    { // last resort
+      nsXPIDLString defaultCharset;
+      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv))
+        rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", getter_Copies(defaultCharset));
+      headerVal.Assign(defaultCharset.IsEmpty() ? NS_LITERAL_STRING("ISO-8859-1").get() : defaultCharset.get());
     }
+  }
+  m_pMsgFields->SetCharacterSet( NS_LossyConvertUCS2toASCII(headerVal).get() );
+  charSet = headerVal;
 	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
 	if (headerVal.Length())
 		m_pMsgFields->SetCc( headerVal.get());
@@ -626,6 +651,16 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 	// IMPORT_LOG0( "Outlook compose calling CreateAndSendMessage\n");
 	nsMsgAttachedFile *pAttach = GetLocalAttachments();
 
+  // Do body conversion here
+  nsString	uniBody;
+  ConvertSystemStringToUnicode( m_pBody, uniBody);
+
+  nsCString	body, theCharset;
+  theCharset.AssignWithConversion(charSet);
+
+  rv = nsMsgI18NConvertFromUnicode( theCharset, uniBody, body);
+  uniBody.Truncate();
+
 	rv = m_pSendProxy->CreateAndSendMessage(
                     nsnull,			                  // no editor shell
 										m_pIdentity,	                // dummy identity
@@ -635,8 +670,8 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 										mode,	                        // mode
 										nsnull,			                  // no message to replace
 										pMimeType,		                // body type
-										m_pBody,		                  // body pointer
-										m_bodyLen,		                // body length
+                    NS_FAILED(rv) ? m_pBody : body.get(),	// body pointer
+                    NS_FAILED(rv) ? m_bodyLen : body.Length(),	// body length
 										nsnull,			                  // remote attachment data
 										pAttach,		                  // local attachments
 										nsnull,			                  // related part
