@@ -118,6 +118,14 @@ AC_ARG_ENABLE(random-options,
 	fi
      fi])
 
+AC_ARG_ENABLE(cross-compile,
+[  --enable-cross-compile  Turn on autodetection of cross-compile tools],
+    [if test "$enableval" = "yes"; then
+	CROSS_COMPILE=1
+     else
+	CROSS_COMPILE=
+     fi], CROSS_COMPILE=)
+
 dnl Set this define to make fixes w/o breaking anything else.
 AC_DEFINE(USE_AUTOCONF)
 
@@ -218,7 +226,7 @@ MOZ_BUILD_ROOT=`pwd`
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
-if test "$target" != "$host"; then
+if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
     cross_compiling=yes
 
@@ -254,6 +262,9 @@ if test "$target" != "$host"; then
     fi
     if test -z "$HOST_RANLIB"; then
 	AC_CHECK_PROG(HOST_RANLIB, ranlib, ranlib, :)
+    fi
+    if test -z "$HOST_AR"; then
+	AC_CHECK_PROG(HOST_AR, ar, ar, :)
     fi
     CC="$HOST_CC"
     CFLAGS="$HOST_CFLAGS"
@@ -304,6 +315,7 @@ if test "$target" != "$host"; then
     if test -z "$WINDRES"; then
 	AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
     fi
+    AC_DEFINE(CROSS_COMPILE)
 else
     AC_PROG_CC
     AC_PROG_CXX
@@ -329,6 +341,9 @@ else
     fi
     if test -z "$HOST_RANLIB"; then
 	HOST_RANLIB="$RANLIB"
+    fi
+    if test -z "$HOST_AR"; then
+	HOST_AR="$AR"
     fi
 fi
 
@@ -409,7 +424,6 @@ LIB_SUFFIX=a
 TARGET_MD_ARCH=unix
 
 OS_TARGET=`uname -s`
-CROSS_COMPILE=
 _COMPILER_PREFIX=
 
 dnl ========================================================
@@ -713,7 +727,7 @@ case "$target" in
 *-openvms*) 
     if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
 	dnl Hack...
-	CROSS_COMPILE=1
+	_OPENVMS_CROSS_COMPILE=1
 	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION"
     fi
     ;;
@@ -1623,7 +1637,7 @@ AC_ARG_WITH(nsprlib,
 	NSPR_LIBDIR=$withval)
 
 dnl Skip this if cross-compiling, since the checks will fail.
-if test "$CROSS_COMPILE"x = x; then
+if test "$_OPENVMS_CROSS_COMPILE"x = x; then
 
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
@@ -2890,12 +2904,14 @@ AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
+AC_SUBST(CROSS_COMPILE)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)
 AC_SUBST(HOST_CFLAGS)
 AC_SUBST(HOST_CXXFLAGS)
 
+AC_SUBST(HOST_AR)
 AC_SUBST(HOST_RANLIB)
 AC_SUBST(HOST_NSPR_MDCPUCFG)
 
