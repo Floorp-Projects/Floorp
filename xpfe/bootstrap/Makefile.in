@@ -30,6 +30,8 @@ include $(topsrcdir)/config/config.mk
 
 MODULE		= apprunner
 REQUIRES	= xpcom string webbrwsr widget dom necko pref appshell wallet layout chrome rdf profile xpinstall uriloader editor view windowwatcher embed_base embedcomponents mpfilelocprovider browser mozcomps docshell
+# for jprof
+REQUIRES	+= jprof
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
