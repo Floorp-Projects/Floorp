@@ -826,7 +826,7 @@ static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag*
             return rc;
           nsCOMPtr<nsIVariant> value;
           rc = aPropertyBag->GetProperty(name, getter_AddRefs(value));
-          if (!NS_FAILED(rc)) {
+          if (NS_SUCCEEDED(rc)) {
             nsCOMPtr<nsIDOMElement> dummy;
             rc = aEncoding->Encode(value, gSOAPStrings->kEmpty, name, type, aAttachments, aDestination, getter_AddRefs(dummy));
             if (NS_FAILED(rc))
@@ -859,7 +859,7 @@ static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag*
             return rc;
           rc = EncodeStructParticle(aEncoding, aPropertyBag, child, aAttachments, aDestination);
           if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
-            if (!NS_FAILED(rc)) {
+            if (NS_SUCCEEDED(rc)) {
               return NS_OK;
             }
             if (rc == NS_ERROR_NOT_AVAILABLE) {  //  In a choice, recoverable model failures are OK.
@@ -2121,7 +2121,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
           if (!ename.Equals(name))
             rc = NS_ERROR_NOT_AVAILABLE; //  The element must be a declaration of the next element
         }
-        if (!NS_FAILED(rc)) {
+        if (NS_SUCCEEDED(rc)) {
           nsCOMPtr<nsISchemaType> type;
           rc = element->GetType(getter_AddRefs(type));
           if (NS_FAILED(rc))
@@ -2180,7 +2180,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
                     (nsISchemaParticle*, all->ElementAt(i)));
               nsCOMPtr<nsIDOMElement> after;
               rc = DecodeStructParticle(aEncoding, next, child, aAttachments, aDestination, getter_AddRefs(after));
-              if (!NS_FAILED(rc)) {
+              if (NS_SUCCEEDED(rc)) {
                 next = after;
                 mangled = PR_TRUE;
                 rc = all->RemoveElementAt(i);
@@ -2200,7 +2200,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
             if (NS_FAILED(rc))
               break;
           }
-          if (!NS_FAILED(rc)) {
+          if (NS_SUCCEEDED(rc)) {
             *_retElement = next;
             NS_IF_ADDREF(*_retElement);
           }
@@ -2219,7 +2219,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
               return rc;
             nsCOMPtr<nsIDOMElement> after;
             rc = DecodeStructParticle(aEncoding, next, child, aAttachments, aDestination, getter_AddRefs(after));
-            if (!NS_FAILED(rc)) {
+            if (NS_SUCCEEDED(rc)) {
                next = after;
             }
             if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE) {
@@ -2227,7 +2227,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
                 rc = NS_OK;
               }
               else {
-                if (!NS_FAILED(rc)) {
+                if (NS_SUCCEEDED(rc)) {
                   *_retElement = next;
                   NS_IF_ADDREF(*_retElement);
                 }
@@ -2243,7 +2243,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
           }
           if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE)
             rc = NS_ERROR_NOT_AVAILABLE;
-          if (!NS_FAILED(rc)) {
+          if (NS_SUCCEEDED(rc)) {
             *_retElement = next;
             NS_IF_ADDREF(*_retElement);
           }
@@ -2319,7 +2319,7 @@ NS_IMETHODIMP
   nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
   nsCOMPtr<nsIDOMElement> result;
   rc =  DecodeStructParticle(aEncoding, child, modelGroup, aAttachments, mutator, getter_AddRefs(result));
-  if (!NS_FAILED(rc)  //  If there were elements left over, then we failed to decode everything.
+  if (NS_SUCCEEDED(rc)  //  If there were elements left over, then we failed to decode everything.
       && result)
     rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_LEFTOVERS","Decoded struct contained extra items not mentioned in the content model.");
   if (NS_FAILED(rc))
@@ -2543,7 +2543,7 @@ static nsresult CreateArray(nsIWritableVariant* aResult, PRUint16 aType, const n
       NS_ADDREF(a[i]);                       //  Addref for array reference
       aArray += size;
     }
-    if (!NS_FAILED(rc)) {
+    if (NS_SUCCEEDED(rc)) {
       rc = aResult->SetAsArray(nsIDataType::VTYPE_INTERFACE_IS,&NS_GET_IID(nsIVariant),count,a);
     }
     for (i = 0; i < count; i++) {            //  Release variants for array
@@ -2833,7 +2833,7 @@ NS_IMETHODIMP
         nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(next));\
         child = next;\
       }\
-      if (!NS_FAILED(rc)) {\
+      if (NS_SUCCEEDED(rc)) {\
         rc = CreateArray(result, nsIDataType::VTYPE_##VTYPE,iid,dimensionCount,dimensionSizes,sizeof(a[0])*size,(PRUint8*)a);\
       }\
       Free\
