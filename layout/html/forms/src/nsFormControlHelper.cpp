@@ -62,7 +62,6 @@
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 #include "nsStyleUtil.h"
-#include "nsFormFrame.h"
 #include "nsIContent.h"
 #include "nsStyleUtil.h"
 #include "nsINameSpaceManager.h"
@@ -714,44 +713,6 @@ nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
 }
 
 
-nsresult
-nsFormControlHelper::GetValue(nsIContent* aContent, nsAString* aResult)
-{
-  nsresult result = NS_FORM_NOTOK;
-
-  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(aContent));
-
-  if (formControl) {
-    nsHTMLValue value;
-    result = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
-    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-      if (eHTMLUnit_String == value.GetUnit()) {
-        value.GetStringValue(*aResult);
-      }
-    }
-  }
-  return result;
-}
-
-nsresult
-nsFormControlHelper::GetInputElementValue(nsIContent* aContent, nsString* aText, PRBool aInitialValue)
-{
-  nsresult result = NS_OK;
-  nsIDOMHTMLInputElement* inputElem = nsnull;
-  result = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLInputElement), (void**)&inputElem);
-  if ((NS_OK == result) && inputElem) {
-    if (PR_TRUE == aInitialValue) {
-      result = inputElem->GetDefaultValue(*aText);
-    }
-    else {
-      result = inputElem->GetValue(*aText);
-    }
-
-    NS_RELEASE(inputElem);
-  }
-  return result;
-}
-
 //----------------------------------------------------------------------------------
 // Return localised string for resource string (e.g. "Submit" -> "Submit Query")
 // This code is derived from nsBookmarksService::Init() and cookie_Localize()
@@ -783,91 +744,6 @@ nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const PRUnic
   return rv;
 }
 
-// Return value of disabled attribute or PR_FALSE if none set
-nsresult
-nsFormControlHelper::GetDisabled(nsIContent* aContent, PRBool* oIsDisabled)
-{
-  nsCOMPtr<nsIHTMLContent> formControl = do_QueryInterface(aContent);
-  nsHTMLValue value;
-  nsresult result = formControl->GetHTMLAttribute(nsHTMLAtoms::disabled, value);
-  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-    if (eHTMLUnit_Empty == value.GetUnit()) {
-      *oIsDisabled = PR_TRUE;
-    } else {
-      *oIsDisabled = PR_FALSE;
-    }
-  } else {
-    *oIsDisabled = PR_FALSE;
-  }
-  return NS_OK;
-}
-
-// manual submission helper method
-// aPresShell        - If the PresShell is null then the PresContext will 
-//                     get its own and use itstatic nsresult
-// aFormFrame        - The HTML Form's frame
-// aFormControlFrame - The form controls frame that is calling this
-//                     it can be null
-// aDoSubmit         - Submit = TRUE, Reset = FALSE
-// Indicates whether to do DOM Processing of the event or to do regular frame processing
-nsresult
-nsFormControlHelper::DoManualSubmitOrReset(nsIPresContext* aPresContext,
-                                           nsIPresShell*   aPresShell,
-                                           nsIFrame*       aFormFrame, 
-                                           nsIFrame*       aFormControlFrame,
-                                           PRBool          aDoSubmit,
-                                           PRBool          aDoDOMEvent) 
-{
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_ARG_POINTER(aFormFrame);
-
-  nsresult result = NS_OK;
-
-  nsCOMPtr<nsIContent> formContent;
-  aFormFrame->GetContent(getter_AddRefs(formContent));
-
-  // Here we save a pointer to the form control content
-  // so we can get its frame again after the Shell has processed the event.
-  //
-  // Control's Frame may get destroyed during the processing of the event (by the Shell)
-  // meaning: aFormControlFrame becomes invalid, so instead of using aFormControlFrame
-  // we use the saved content and the shell to go back and get the frame and 
-  // use it only if it isn't null
-  nsCOMPtr<nsIContent> controlContent;
-  if (aDoSubmit && aFormControlFrame != nsnull) {
-    aFormControlFrame->GetContent(getter_AddRefs(controlContent));
-  }
-
-  if (formContent) {
-    //Either use the PresShell passed in or go get it from the PresContext
-    nsCOMPtr<nsIPresShell> shell; // this will do our clean up
-    if (aPresShell == nsnull) {
-      result = aPresContext->GetShell(getter_AddRefs(shell));
-      aPresShell = shell.get(); // not AddRefing because shell will clean up
-    }
-
-    // With a valid PreShell handle the event
-    if (NS_SUCCEEDED(result) && nsnull != aPresShell) {
-
-      // Get originator for event (failure is non-fatal)
-      nsCOMPtr<nsIContent> formControl;
-      aFormControlFrame->GetContent(getter_AddRefs(formControl));
-
-      nsFormEvent event;
-      event.eventStructType = NS_FORM_EVENT;
-      event.message         = aDoSubmit?NS_FORM_SUBMIT:NS_FORM_RESET;
-      event.originator      = formControl;
-      nsEventStatus status  = nsEventStatus_eIgnore;
-      if (aDoDOMEvent) {
-        aPresShell->HandleDOMEventWithTarget(formContent, &event, &status);
-      } else {
-        aPresShell->HandleEventWithTarget(&event, nsnull, formContent, NS_EVENT_FLAG_INIT, &status);
-      }
-    }
-  }
-  return result;
-}
-
 nsresult
 nsFormControlHelper::Reset(nsIFrame* aFrame, nsIPresContext* aPresContext)
 {
@@ -882,4 +758,20 @@ nsFormControlHelper::Reset(nsIFrame* aFrame, nsIPresContext* aPresContext)
 
   return NS_ERROR_FAILURE;
 }
+
+void
+nsFormControlHelper::StyleChangeReflow(nsIPresContext* aPresContext,
+                                       nsIFrame* aFrame)
+{
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
+  nsHTMLReflowCommand* reflowCmd;
+  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+                                        eReflowType_StyleChanged);
+  if (NS_SUCCEEDED(rv)) {
+    shell->AppendReflowCommand(reflowCmd);
+  }
+}
+
 

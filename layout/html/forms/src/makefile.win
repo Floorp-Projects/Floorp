@@ -55,7 +55,6 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsFormControlHelper.obj \
   .\$(OBJDIR)\nsComboboxControlFrame.obj \
   .\$(OBJDIR)\nsListControlFrame.obj \
-  .\$(OBJDIR)\nsFormFrame.obj \
   .\$(OBJDIR)\nsFormControlFrame.obj \
   .\$(OBJDIR)\nsFileControlFrame.obj \
   .\$(OBJDIR)\nsGfxTextControlFrame2.obj \

@@ -58,7 +58,6 @@
 #include "nsIEditorController.h"
 #include "nsIElementFactory.h"
 #include "nsIHTMLContent.h"
-#include "nsFormFrame.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIEditorObserver.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -228,7 +227,6 @@ protected:
 protected:
 
   nsGfxTextControlFrame2* mFrame;  // weak reference
-  nsString mFocusedValue;
   
   PRPackedBool    mSelectionWasCollapsed;
   PRPackedBool    mKnowSelectionCollapsed;
@@ -317,33 +315,6 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
   mFrame->SetValueChanged(PR_TRUE);
 
-  if (mFrame && mFrame->IsSingleLineTextControl())
-  {
-    PRUint32     keyCode;
-    keyEvent->GetKeyCode(&keyCode);
-
-    if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode ||
-        nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
-    {
-      nsAutoString curValue;
-      mFrame->GetText(&curValue);
-
-      // If the text control's contents have changed, fire
-      // off an onChange().
-
-      if (!mFocusedValue.Equals(curValue))
-      {
-        mFocusedValue = curValue;
-        mFrame->CallOnChange();
-      }
-
-      // Now try to submit the form. Be sure to check mFrame again
-      // since CallOnChange() may have caused the deletion of mFrame.
-
-      if (mFrame)
-        mFrame->SubmitAttempt();
-    }
-  }
   return NS_OK;
 }
 
@@ -427,38 +398,26 @@ nsTextInputListener::Focus(nsIDOMEvent* aEvent)
   if (!mFrame) return NS_OK;
   nsCOMPtr<nsIEditor> editor;
   mFrame->GetEditor(getter_AddRefs(editor));
-  if (editor)
-  {
+  if (editor) {
     editor->AddEditorObserver(this);
   }
   
-  nsresult rv = mFrame->GetText(&mFocusedValue);
-  if (NS_FAILED(rv)) return rv;
-  
-  return NS_OK;
+  return mFrame->InitFocusedValue();
 }
 
 nsresult
-nsTextInputListener::Blur (nsIDOMEvent* aEvent)
+nsTextInputListener::Blur(nsIDOMEvent* aEvent)
 {
   if (!mFrame)
     return NS_OK;
     
-  nsAutoString blurValue;
   nsCOMPtr<nsIEditor> editor;
   mFrame->GetEditor(getter_AddRefs(editor));
-  if (editor)
-  {
+  if (editor) {
     editor->RemoveEditorObserver(this);
-
-  }  
-  mFrame->GetText(&blurValue);
-  if (!mFocusedValue.Equals(blurValue))//different fire onchange
-  {
-    mFocusedValue = blurValue;
-    mFrame->CallOnChange();
   }
-  return NS_OK;
+
+  return mFrame->CheckFireOnChange();
 }
 //END focuslistener
 
@@ -1357,7 +1316,6 @@ nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFram
   mUseEditor = PR_FALSE;
   mIsProcessing = PR_FALSE;
   mNotifyOnInput = PR_FALSE;
-  mFormFrame = nsnull;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
   mScrollableView = nsnull;
@@ -1475,12 +1433,6 @@ nsGfxTextControlFrame2::PreDestroy(nsIPresContext* aPresContext)
 //unregister self from content
   mTextListener->SetFrame(nsnull);
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  if (mFormFrame)
-  {
-    mFormFrame->RemoveFormControlFrame(*this);
-    mFormFrame = nsnull;
-    mTextListener->SetFrame(nsnull);
-  }
   if (mTextListener)
   {
     nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mContent);
@@ -1804,7 +1756,7 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
 }
 
 nsresult
-nsGfxTextControlFrame2::SetInitialValue()
+nsGfxTextControlFrame2::InitEditor()
 {
   // This method must be called during/after the text
   // control frame's initial reflow to avoid any unintened
@@ -2241,12 +2193,11 @@ nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsGfxTextControlFrame2", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  SetInitialValue();
+  InitEditor();
 
   // make sure the the form registers itself on the initial/first reflow
   if (mState & NS_FRAME_FIRST_REFLOW) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
   }
 
@@ -2341,7 +2292,7 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (!aReflowState)
     return NS_OK;
 
-  SetInitialValue();
+  InitEditor();
 
   if (mState & NS_FRAME_FIRST_REFLOW)
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
@@ -2408,12 +2359,6 @@ nsGfxTextControlFrame2::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
   nsresult rv = GetPrefSize(aState, size);
   aAscent = size.height;
   return rv;
-}
-
-PRIntn
-nsGfxTextControlFrame2::GetSkipSides() const
-{
-  return 0;
 }
 
 //IMPLEMENTING NS_IFORMCONTROLFRAME
@@ -2519,13 +2464,6 @@ nsGfxTextControlFrame2::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                nscoord aCharWidth) const
 {
   return GetVerticalInsidePadding(aPresContext, aPixToTwip, aInnerWidth);
-}
-
-
-void 
-nsGfxTextControlFrame2::SetFormFrame(nsFormFrame* aFormFrame) 
-{ 
-  mFormFrame = aFormFrame; 
 }
 
 
@@ -2961,7 +2899,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     // XXX If this should happen when value= attribute is set, shouldn't it
     // happen when .value is set too?
     if (aHint != NS_STYLE_HINT_REFLOW)
-      nsFormFrame::StyleChangeReflow(aPresContext, this);
+      nsFormControlHelper::StyleChangeReflow(aPresContext, this);
   } 
   else if (nsHTMLAtoms::maxlength == aAttribute) 
   {
@@ -3041,7 +2979,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     // but it appears there are some problems when you hold down the return key
     mPrefSize.width  = -1;
     mPrefSize.height = -1;
-    nsFormFrame::StyleChangeReflow(aPresContext, this);
+    nsFormControlHelper::StyleChangeReflow(aPresContext, this);
   }
   // Allow the base class to handle common attributes supported
   // by all form elements... 
@@ -3090,7 +3028,7 @@ void nsGfxTextControlFrame2::RemoveNewlines(nsString &aString)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsGfxTextControlFrame2::GetMaxLength(PRInt32* aSize)
 {
   *aSize = -1;
@@ -3108,7 +3046,7 @@ nsGfxTextControlFrame2::GetMaxLength(PRInt32* aSize)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGfxTextControlFrame2::DoesAttributeExist(nsIAtom *aAtt)
 {
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
@@ -3120,57 +3058,6 @@ nsGfxTextControlFrame2::DoesAttributeExist(nsIAtom *aAtt)
     rv = content->GetHTMLAttribute(aAtt, value);
   }
   return rv;
-}
-
-void
-nsGfxTextControlFrame2::SubmitAttempt()
-{
-  // Submit the form
-  PRInt32 type;
-  GetType(&type);
-  if (mFormFrame && mTextSelImpl && NS_FORM_TEXTAREA != type) {
-    nsWeakPtr &shell = mTextSelImpl->GetPresShell();
-    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
-    if (!presShell) return;
-    {
-      nsCOMPtr<nsIPresContext> context;
-      if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
-      {
-        /*
-         * We got here because somebody pressed <return> in a text
-         * input.
-         *
-         * Bug 99920 and bug 109463 -- Find the first submit button
-         * and how many text inputs there are. If there is only one
-         * text input, submit the form but do _not_ send the submit
-         * button value (if any).  If there are multiple text inputs,
-         * we must have a submit button to submit and we want to
-         * trigger a click event on the submit button.  Triggering
-         * this click eevent will fire the button's onclick handler
-         * and submit the form.
-         */
-        PRInt32 inputTxtCnt;
-        nsIFrame* submitBtn = mFormFrame->GetFirstSubmitButtonAndTxtCnt(inputTxtCnt);
-        if (submitBtn && inputTxtCnt > 1) {
-          // IE actually fires the button's onclick handler.  Dispatch
-          // the click event and let the button handle submitting the
-          // form.
-          nsCOMPtr<nsIContent> buttonContent;
-          submitBtn->GetContent(getter_AddRefs(buttonContent));
-          nsGUIEvent event;
-          event.eventStructType = NS_MOUSE_EVENT;
-          event.message = NS_MOUSE_LEFT_CLICK;
-          event.widget = nsnull;
-          nsEventStatus status = nsEventStatus_eIgnore;
-          presShell->HandleDOMEventWithTarget(buttonContent, &event, &status);
-        } else if (inputTxtCnt == 1) {
-          // do Submit & Frame processing of event
-          nsFormControlHelper::DoManualSubmitOrReset(context, presShell, mFormFrame, 
-                                                     this, PR_TRUE, PR_FALSE);
-        }
-      }
-    }
-  }
 }
 
 // this is where we propagate a content changed event
@@ -3204,9 +3091,27 @@ nsGfxTextControlFrame2::InternalContentChanged()
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsGfxTextControlFrame2::InitFocusedValue()
+{
+  return GetText(&mFocusedValue);
+}
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::CallOnChange()
+nsGfxTextControlFrame2::CheckFireOnChange()
+{
+  nsString value;
+  GetText(&value);
+  if (!mFocusedValue.Equals(value))//different fire onchange
+  {
+    mFocusedValue = value;
+    FireOnChange();
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGfxTextControlFrame2::FireOnChange()
 {
   // Dispatch th1e change event
   nsCOMPtr<nsIContent> content;
@@ -3226,8 +3131,7 @@ nsGfxTextControlFrame2::CallOnChange()
     // Have the content handle the event.
     nsWeakPtr &shell = mTextSelImpl->GetPresShell();
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
-    if (!presShell)
-      return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
     nsCOMPtr<nsIPresContext> context;
     if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
       return presShell->HandleEventWithTarget(&event, nsnull, mContent, NS_EVENT_FLAG_INIT, &status); 

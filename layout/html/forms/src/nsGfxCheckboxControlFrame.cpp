@@ -39,7 +39,6 @@
 #include "nsICheckButton.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
-#include "nsFormFrame.h"
 #include "nsIFormControl.h"
 #include "nsIContent.h"
 #include "nsIComponentManager.h"
@@ -54,6 +53,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMHTMLInputElement.h"
 
 
 //------------------------------------------------------------

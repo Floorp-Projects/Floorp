@@ -43,7 +43,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
-#include "nsFormFrame.h"
 
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
@@ -68,6 +67,8 @@
 #include "nsFormControlFrame.h"
 #include "nsIFrameManager.h"
 #include "nsINameSpaceManager.h"
+#include "nsReflowPath.h"
+#include "nsIServiceManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -114,10 +115,6 @@ NS_IMETHODIMP
 nsHTMLButtonControlFrame::Destroy(nsIPresContext *aPresContext)
 {
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  if (mFormFrame) {
-    mFormFrame->RemoveFormControlFrame(*this);
-    mFormFrame = nsnull;
-  }
   return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
@@ -373,9 +370,6 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList)
 {
-  // add ourself as an nsIFormControlFrame
-  nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
-
   // get the frame manager and the style context of the new parent frame
   // this is used whent he children are reparented below
   // NOTE: the whole reparenting should not need to happen: see bugzilla bug 51767
@@ -500,9 +494,8 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsHTMLButtonControlFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+  if (eReflowReason_Initial == aReflowState.reason) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
 #if 0
@@ -604,8 +597,10 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
               0, aStatus);
 
   // calculate the min internal size so the contents gets centered correctly
-  nscoord minInternalWidth  = aReflowState.mComputedMinWidth  == 0?0:aReflowState.mComputedMinWidth - 
-    (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+  // minInternalWidth is not being used at all and causes a warning--commenting
+  // out until someone wants it.
+  //  nscoord minInternalWidth  = aReflowState.mComputedMinWidth  == 0?0:aReflowState.mComputedMinWidth - 
+  //    (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
   nscoord minInternalHeight = aReflowState.mComputedMinHeight == 0?0:aReflowState.mComputedMinHeight - 
     (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
 

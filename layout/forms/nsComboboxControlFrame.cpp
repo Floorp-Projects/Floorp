@@ -40,7 +40,6 @@
 #include "nsComboboxControlFrame.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIFrameManager.h"
-#include "nsFormFrame.h"
 #include "nsFormControlFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
@@ -284,7 +283,6 @@ nsComboboxControlFrame::nsComboboxControlFrame()
   : nsAreaFrame() 
 {
   mPresContext                 = nsnull;
-  mFormFrame                   = nsnull;       
   mListControlFrame            = nsnull;
   mDroppedDown                 = PR_FALSE;
   mDisplayFrame                = nsnull;
@@ -318,11 +316,6 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 nsComboboxControlFrame::~nsComboboxControlFrame()
 {
   REFLOW_COUNTER_DUMP("nsCCF");
-
-  if (mFormFrame) {
-    mFormFrame->RemoveFormControlFrame(*this);
-    mFormFrame = nsnull;
-  }
 
   NS_IF_RELEASE(mPresContext);
 }
@@ -1262,9 +1255,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     return NS_OK;
   }
 
-  // add ourself to the form control
-  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*,this));
+  if (eReflowReason_Initial == aReflowState.reason) {
     if (NS_FAILED(CreateDisplayFrame(aPresContext))) {
       return NS_ERROR_FAILURE;
     }
@@ -1816,7 +1807,7 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 NS_IMETHODIMP
 nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
 { 
-  if (nsFormFrame::GetDisabled(this)) {
+  if (nsFormControlHelper::GetDisabled(mContent)) {
     return NS_OK;
   }
 
@@ -2103,7 +2094,7 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
-  if (nsFormFrame::GetDisabled(this)) { 
+  if (nsFormControlHelper::GetDisabled(mContent)) {
     return NS_OK;
   }
 
@@ -2565,7 +2556,7 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
         nsCOMPtr<nsIEventStateManager> stateManager;
         nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
         if (NS_SUCCEEDED(rv)) {
-          if (NS_SUCCEEDED(rv) && !nsFormFrame::GetDisabled(this) && mFocused == this) {
+          if (!nsFormControlHelper::GetDisabled(mContent) && mFocused == this) {
             aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
             aRenderingContext.SetColor(0);
           } else {

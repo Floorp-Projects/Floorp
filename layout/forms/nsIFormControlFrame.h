@@ -40,7 +40,6 @@
 
 #include "nsISupports.h"
 #include "nsFont.h"
-class nsFormFrame;
 class nsIPresContext;
 class nsAString;
 class nsIContent;
@@ -70,8 +69,6 @@ public:
   virtual void ScrollIntoView(nsIPresContext* aPresContext) = 0;  
 
   virtual void MouseClicked(nsIPresContext* aPresContext) = 0;
-
-  virtual void SetFormFrame(nsFormFrame* aFrame) = 0;
 
   /**
    * Set the suggested size for the form element. 

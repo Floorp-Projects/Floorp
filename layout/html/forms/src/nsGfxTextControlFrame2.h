@@ -52,7 +52,6 @@
 #include "nsIScrollableViewProvider.h"
 
 class nsIPresState;
-class nsFormFrame;
 class nsISupportsArray;
 class nsIHTMLContent;
 class nsIEditor;
@@ -132,7 +131,6 @@ public:
   virtual void SetFocus(PRBool aOn , PRBool aRepaint); 
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void SetFormFrame(nsFormFrame* aFrame);
   virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
@@ -158,6 +156,7 @@ public:
   NS_IMETHOD    OwnsValue(PRBool* aOwnsValue);
   NS_IMETHOD    GetValue(nsAString& aValue, PRBool aIgnoreWrap);
   NS_IMETHOD    GetTextLength(PRInt32* aTextLength);
+  NS_IMETHOD    CheckFireOnChange();
   NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart);
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
@@ -182,23 +181,66 @@ public:
 
 public: //for methods who access nsGfxTextControlFrame2 directly
 
-  void SubmitAttempt();
   NS_IMETHOD InternalContentChanged();//notify that we have some kind of change.
-  NS_IMETHOD CallOnChange();
+  /**
+   * Find out whether this is a single line text control.  (text or password)
+   * @return whether this is a single line text control
+   */
   virtual PRBool IsSingleLineTextControl() const;
+  /**
+   * Find out whether this control edits plain text.  (Currently always true.)
+   * @return whether this is a plain text control
+   */
   virtual PRBool IsPlainTextControl() const;
+  /**
+   * Find out whether this is a password control (input type=password)
+   * @return whether this is a password ontrol
+   */
   virtual PRBool IsPasswordTextControl() const;
   void SetValueChanged(PRBool aValueChanged);
+  /** Called when the frame is focused, to remember the value for onChange. */
+  nsresult InitFocusedValue();
 
 protected:
 
+  /**
+   * Find out whether this control is scrollable (i.e. if it is not a single
+   * line text control)
+   * @return whether this control is scrollable
+   */
   PRBool IsScrollable() const;
-  nsresult SetInitialValue();
-  virtual PRIntn GetSkipSides() const;
+  /**
+   * Initialize mEditor with the proper flags and the default value.
+   * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
+   * @throws various and sundry other things
+   */
+  nsresult InitEditor();
+  /**
+   * Strip all \n, \r and nulls from the given string
+   * @param aString the string to remove newlines from [in/out]
+   */
   void RemoveNewlines(nsString &aString);
-  NS_IMETHOD GetMaxLength(PRInt32* aSize);
-  NS_IMETHOD DoesAttributeExist(nsIAtom *aAtt);
-  void PreDestroy(nsIPresContext* aPresContext); // remove yourself as a form control
+  /**
+   * Get the maxlength attribute
+   * @param aMaxLength the value of the max length attr
+   * @throws NS_CONTENT_ATTR_NOT_THERE if attr not defined
+   */
+  nsresult GetMaxLength(PRInt32* aMaxLength);
+  /**
+   * Find out whether an attribute exists on the content or not.
+   * @param aAtt the attribute to determine the existence of
+   * @throws NS_CONTENT_ATTR_NOT_THERE if it does not exist
+   */
+  nsresult DoesAttributeExist(nsIAtom *aAtt);
+  /**
+   * We call this when we are being destroyed or removed from the PFM.
+   * @param aPresContext the current pres context
+   */
+  void PreDestroy(nsIPresContext* aPresContext);
+  /**
+   * Fire the onChange event.
+   */
+  nsresult FireOnChange();
 
 //helper methods
   nsresult GetSizeFromContent(PRInt32* aSize) const;
@@ -265,10 +307,10 @@ private:
   PRPackedBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
   PRPackedBool mDidPreDestroy; // has PreDestroy been called        
 
-  nsFormFrame *mFormFrame;
   nsTextInputSelectionImpl *mTextSelImpl;
   nsTextInputListener *mTextListener;
   nsIScrollableView *mScrollableView;
+  nsString mFocusedValue;
 };
 
 #endif

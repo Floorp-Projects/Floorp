@@ -39,20 +39,18 @@
 #define nsFormControlHelper_h___
 
 #include "nsIFormControlFrame.h"
-#include "nsIFormManager.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
 #include "nsLeafFrame.h"
 #include "nsCoord.h"
-#include "nsIStyleContext.h"
-#include "nsIPresContext.h"
+#include "nsHTMLAtoms.h"
+#include "nsINameSpaceManager.h"
 
 class nsIView;
-//class nsIPresContext;
+class nsIPresContext;
 class nsStyleCoord;
-class nsFormFrame;
 class nsIPresState;
-//class nsIStyleContext;
+class nsIStyleContext;
 
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
@@ -156,27 +154,43 @@ public:
   // Map platform line endings (CR, CRLF, LF) to DOM line endings (LF)
   static void PlatformToDOMLineBreaks(nsString &aString);
 
-  static nsresult GetValue(nsIContent* aContent, nsAString* aResult);
+  /**
+   * Get whether a form control is disabled
+   * @param aContent the content of the form control in question
+   * @return whether the form control is disabled
+   */
+  static PRBool GetDisabled(nsIContent* aContent) {
+    return aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled);
+  };
+  /**
+   * Get the name of the form control
+   * @param aContent the content to get the name of
+   * @param aResult the returned name of the form control [OUT]
+   * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
+   * @return NS_CONTENT_ATTR_NOT_THERE if the name attribute is undefined
+   * @return NS_FORM_NOTOK if aContent is null or is not HTML content
+   */
   static nsresult GetName(nsIContent* aContent, nsAString* aResult);
-  static nsresult GetInputElementValue(nsIContent* aContent, nsString* aText, PRBool aInitialValue);
+  /**
+   * Cause the form control to reset its value
+   * @param aFrame the frame who owns the form control
+   * @param aPresContext the pres context
+   */
   static nsresult Reset(nsIFrame* aFrame, nsIPresContext* aPresContext);
 
- /** 
-  * Utility to convert a string to a PRBool
-  * @param aValue string to convert to a PRBool
-  * @returns PR_TRUE if aValue = "1", PR_FALSE otherwise
-  */
-
+  /** 
+   * Utility to convert a string to a PRBool
+   * @param aValue string to convert to a PRBool
+   * @returns PR_TRUE if aValue = "1", PR_FALSE otherwise
+   */
   static PRBool GetBool(const nsAString& aValue);
 
- /** 
-  * Utility to convert a PRBool to a string
-  * @param aValue Boolean value to convert to string.
-  * @param aResult string to hold the boolean value. It is set to "1" 
-  *        if aValue equals PR_TRUE, "0" if aValue equals PR_FALSE.
-
-  */
-
+  /** 
+   * Utility to convert a PRBool to a string
+   * @param aValue Boolean value to convert to string.
+   * @param aResult string to hold the boolean value. It is set to "1" 
+   *        if aValue equals PR_TRUE, "0" if aValue equals PR_FALSE.
+   */
   static void  GetBoolString(const PRBool aValue, nsAString& aResult);
 
   static void GetRepChars(char& char1, char& char2) {
@@ -201,16 +215,6 @@ public:
   // Localization Helper
   static nsresult GetLocalizedString(const char * aPropFileName, const PRUnichar* aKey, nsString& oVal);
   static const char * GetHTMLPropertiesFileName() { return FORM_PROPERTIES; }
-
-  static nsresult GetDisabled(nsIContent* aContent, PRBool* oIsDisabled);
-
-  // If the PresShell is null then the PresContext will get its own and use it
-  static nsresult DoManualSubmitOrReset(nsIPresContext* aPresContext,
-                                        nsIPresShell*   aPresShell,
-                                        nsIFrame*       aFormFrame,
-                                        nsIFrame*       aFormControlFrame,
-                                        PRBool          aDoSubmit,     // Submit = TRUE, Reset = FALSE
-                                        PRBool          aDoDOMEvent);
 
 //
 //-------------------------------------------------------------------------------------
@@ -354,6 +358,9 @@ public:
 							              nsIStyleContext* aFocusStyle,
                             nsIStyleContext* aStyleContext, nsString& aLabel, 
                             nsIFrame* aForFrame);
+
+  static void StyleChangeReflow(nsIPresContext* aPresContext,
+                                nsIFrame* aFrame);
 
 protected:
   nsFormControlHelper();

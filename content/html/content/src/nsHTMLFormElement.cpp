@@ -38,7 +38,6 @@
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
-#include "nsIFormManager.h"
 #include "nsIFormSubmission.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
@@ -228,11 +227,14 @@ protected:
   nsCOMPtr<nsIRequest> mSubmittingRequest;
 
 protected:
-  // Detection of first form to notify observers
+  /** Detection of first form to notify observers */
   static PRBool gFirstFormSubmitted;
+  /** Detection of first password input to initialize the password manager */
+  static PRBool gPasswordManagerInitialized;
 };
 
 PRBool nsHTMLFormElement::gFirstFormSubmitted = PR_FALSE;
+PRBool nsHTMLFormElement::gPasswordManagerInitialized = PR_FALSE;
 
 
 // nsFormControlList
@@ -500,17 +502,16 @@ nsHTMLFormElement::Submit()
       // original code added in bug 76694)
       rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_SUBMIT);
     } else {
-      nsCOMPtr<nsIPresShell> presShell;
-      presContext->GetShell(getter_AddRefs(presShell));
-      if (presShell) {
-        nsFormEvent event;
-        event.eventStructType = NS_FORM_EVENT;
-        event.message         = NS_FORM_SUBMIT;
-        event.originator      = nsnull;
-        nsEventStatus status  = nsEventStatus_eIgnore;
-        presShell->HandleEventWithTarget(&event, nsnull, this,
-                                         NS_EVENT_FLAG_INIT, &status);
-      }
+      // Calling HandleDOMEvent() directly so that submit() will work even if
+      // the frame does not exist.  This does not have an effect right now, but
+      // If PresShell::HandleEventWithTarget() ever starts to work for elements
+      // without frames, that should be called instead.
+      nsFormEvent event;
+      event.eventStructType = NS_FORM_EVENT;
+      event.message         = NS_FORM_SUBMIT;
+      event.originator      = nsnull;
+      nsEventStatus status  = nsEventStatus_eIgnore;
+      HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
   }
   return rv;
@@ -524,17 +525,16 @@ nsHTMLFormElement::Reset()
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
   if (presContext) {
-    nsCOMPtr<nsIPresShell> presShell;
-    presContext->GetShell(getter_AddRefs(presShell));
-    if (presShell) {
-      nsFormEvent event;
-      event.eventStructType = NS_FORM_EVENT;
-      event.message         = NS_FORM_RESET;
-      event.originator      = nsnull;
-      nsEventStatus status  = nsEventStatus_eIgnore;
-      presShell->HandleEventWithTarget(&event, nsnull, this,
-                                       NS_EVENT_FLAG_INIT, &status);
-    }
+    // Calling HandleDOMEvent() directly so that reset() will work even if
+    // the frame does not exist.  This does not have an effect right now, but
+    // If PresShell::HandleEventWithTarget() ever starts to work for elements
+    // without frames, that should be called instead.
+    nsFormEvent event;
+    event.eventStructType = NS_FORM_EVENT;
+    event.message         = NS_FORM_RESET;
+    event.originator      = nsnull;
+    nsEventStatus status  = nsEventStatus_eIgnore;
+    HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
   return rv;
 }
@@ -1120,6 +1120,18 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild)
     nsCOMPtr<nsIRadioControlElement> radio = do_QueryInterface(aChild);
     nsresult rv = radio->AddedToRadioGroup();
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  //
+  // If it is a password control, and the password manager has not yet been
+  // initialized, initialize the password manager
+  //
+  if (!gPasswordManagerInitialized && type == NS_FORM_INPUT_PASSWORD) {
+    // Initialize the password manager category
+    gPasswordManagerInitialized = PR_TRUE;
+    NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
+                                  nsnull,
+                                  NS_PASSWORDMANAGER_CATEGORY);
   }
 
   return NS_OK;

@@ -54,7 +54,6 @@
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsIComboboxControlFrame.h"
 #include "nsIViewManager.h"
-#include "nsFormFrame.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsWidgetsCID.h"
@@ -77,6 +76,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
+#include "nsIServiceManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -84,6 +84,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsCSSRendering.h"
 #include "nsILookAndFeel.h"
+#include "nsReflowPath.h"
 
 // Timer Includes
 #include "nsITimer.h"
@@ -393,7 +394,6 @@ nsListControlFrame::nsListControlFrame()
   : mWeakReferent(this)
 {
   mComboboxFrame      = nsnull;
-  mFormFrame          = nsnull;
   mButtonDown         = PR_FALSE;
   mMaxWidth           = 0;
   mMaxHeight          = 0;
@@ -433,10 +433,6 @@ nsListControlFrame::~nsListControlFrame()
   }
 
   mComboboxFrame = nsnull;
-  if (mFormFrame) {
-    mFormFrame->RemoveFormControlFrame(*this);
-    mFormFrame = nsnull;
-  }
   NS_IF_RELEASE(mPresContext);
 }
 
@@ -920,9 +916,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Add the list frame as a child of the form
   if (eReflowReason_Initial == aReflowState.reason) {
-    if (IsInDropDownMode() == PR_FALSE && !mFormFrame) {
+    if (!IsInDropDownMode()) {
       nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-      nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
     }
   }
 
@@ -1604,7 +1599,7 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
-  if (nsFormFrame::GetDisabled(this))
+  if (nsFormControlHelper::GetDisabled(mContent))
     return NS_OK;
 
   switch (aEvent->message) {
@@ -1927,13 +1922,6 @@ nsListControlFrame::GetType(PRInt32* aType) const
 {
   *aType = NS_FORM_SELECT;
   return NS_OK;
-}
-
-//---------------------------------------------------------
-void 
-nsListControlFrame::SetFormFrame(nsFormFrame* aFormFrame) 
-{ 
-  mFormFrame = aFormFrame; 
 }
 
 
@@ -2742,7 +2730,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
   mButtonDown = PR_FALSE;
 
-  if (nsFormFrame::GetDisabled(this)) { 
+  if (nsFormControlHelper::GetDisabled(mContent)) {
     return NS_OK;
   }
 
@@ -2927,7 +2915,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   mButtonDown = PR_TRUE;
 
-  if (nsFormFrame::GetDisabled(this)) { 
+  if (nsFormControlHelper::GetDisabled(mContent)) {
     return NS_OK;
   }
 
@@ -3250,7 +3238,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   NS_ASSERTION(aKeyEvent != nsnull, "keyEvent is null.");
 
-  if (nsFormFrame::GetDisabled(this))
+  if (nsFormControlHelper::GetDisabled(mContent))
     return NS_OK;
 
   nsresult rv         = NS_ERROR_FAILURE; 

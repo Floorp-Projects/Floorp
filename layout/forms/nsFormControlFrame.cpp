@@ -62,7 +62,6 @@
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 #include "nsStyleUtil.h"
-#include "nsFormFrame.h"
 #include "nsIContent.h"
 #include "nsStyleUtil.h"
 #include "nsINameSpaceManager.h"
@@ -112,7 +111,6 @@ nsFormControlFrame::nsFormControlFrame()
   : nsLeafFrame()
 {
   mDidInit        = PR_FALSE;
-  mFormFrame      = nsnull;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
   mPresContext    = nsnull;
@@ -126,10 +124,6 @@ nsFormControlFrame::nsFormControlFrame()
 
 nsFormControlFrame::~nsFormControlFrame()
 {
-  if (mFormFrame) {
-    mFormFrame->RemoveFormControlFrame(*this);
-    mFormFrame = nsnull;
-  }
 }
 
 NS_IMETHODIMP
@@ -548,11 +542,6 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
     mPresContext = aPresContext;
     InitializeControl(aPresContext);
     mDidInit = PR_TRUE;
-  }
-
-  // add ourself as an nsIFormControlFrame
-  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
 #if 0

@@ -65,7 +65,6 @@
 #include "nsIScrollableViewProvider.h"
 #include "nsIStatefulFrame.h"
 
-class nsFormFrame;
 class nsIView;
 class nsStyleContext;
 class nsIHTMLContent;
@@ -152,7 +151,6 @@ public:
   void       SetFocus(PRBool aOn, PRBool aRepaint);
   void       ScrollIntoView(nsIPresContext* aPresContext);
   virtual void InitializeControl(nsIPresContext* aPresContext);
-  virtual void   SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
   NS_IMETHOD OnContentReset();
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
@@ -271,7 +269,6 @@ protected:
 
   nsFrameList              mPopupFrames;             // additional named child list
   nsIPresContext*          mPresContext;             // XXX: Remove the need to cache the pres context.
-  nsFormFrame*             mFormFrame;               // Parent Form Frame
   nsCOMPtr<nsITextContent> mDisplayContent;          // Anonymous content used to display the current selection
   nsIFrame*                mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame

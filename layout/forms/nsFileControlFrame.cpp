@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsFileControlFrame.h"
-#include "nsFormFrame.h"
 
 
 #include "nsIElementFactory.h"
@@ -70,6 +69,7 @@
 #include "nsINodeInfo.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsILocalFile.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -91,7 +91,6 @@ NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsFileControlFrame::nsFileControlFrame():
   mTextFrame(nsnull), 
-  mFormFrame(nsnull),
   mTextContent(nsnull),
   mCachedState(nsnull)
 {
@@ -112,10 +111,6 @@ nsFileControlFrame::~nsFileControlFrame()
   if (mCachedState) {
     delete mCachedState;
     mCachedState = nsnull;
-  }
-  if (mFormFrame) {
-    mFormFrame->RemoveFormControlFrame(*this);
-    mFormFrame = nsnull;
   }
 }
 
@@ -149,7 +144,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
     nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
     if (textControl) {
-      textControl->SetDisabled(nsFormFrame::GetDisabled(this));
+      textControl->SetDisabled(nsFormControlHelper::GetDisabled(mContent));
       // Initialize value when we create the content in case the value was set
       // before we got here
       nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
@@ -356,9 +351,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-  if (mFormFrame == nsnull && eReflowReason_Initial == aReflowState.reason) {
-    // add ourself as an nsIFormControlFrame
-    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+  if (eReflowReason_Initial == aReflowState.reason) {
     mTextFrame = GetTextControlFrame(aPresContext, this);
     if (!mTextFrame) return NS_ERROR_UNEXPECTED;
     if (mCachedState) {
@@ -537,14 +530,14 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
     if (textControl)
     {
-      textControl->SetDisabled(nsFormFrame::GetDisabled(this));
+      textControl->SetDisabled(nsFormControlHelper::GetDisabled(mContent));
     }
   } else if (nsHTMLAtoms::size == aAttribute) {
     nsString value;
     if (nsnull != mTextContent && NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
       mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_TRUE);
       if (aHint != NS_STYLE_HINT_REFLOW) {
-        nsFormFrame::StyleChangeReflow(aPresContext, this);
+        nsFormControlHelper::StyleChangeReflow(aPresContext, this);
       }
     }
   }
@@ -559,7 +552,7 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      nsIFrame** aFrame)
 {
 #ifndef DEBUG_NEWFRAME
-  if ( nsFormFrame::GetDisabled(this) && mRect.Contains(aPoint) ) {
+  if ( nsFormControlHelper::GetDisabled(mContent) && mRect.Contains(aPoint) ) {
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       

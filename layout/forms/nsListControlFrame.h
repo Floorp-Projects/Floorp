@@ -242,7 +242,6 @@ public:
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void SetFormFrame(nsFormFrame* aFrame);
   virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
@@ -381,8 +380,6 @@ protected:
   void     ItemsHaveBeenRemoved(nsIPresContext * aPresContext);
 
   // Data Members
-  nsFormFrame* mFormFrame;
-
   PRInt32      mStartSelectionIndex;
   PRInt32      mEndSelectionIndex;
   PRPackedBool mChangesSinceDragStart;

@@ -82,7 +82,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsICheckboxControlFrame.h"
-#include "nsIFormManager.h"
 #include "nsIImageControlFrame.h"
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 #include "nsReadableUtils.h"
@@ -1517,7 +1516,85 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             } // case
           } // switch
         }
-      } break;// NS_KEY_PRESS || NS_KEY_UP
+
+        /*
+         * If this is input type=text, and the user hit enter, fire onChange and
+         * submit the form (if we are in one)
+         *
+         * Bug 99920 and bug 109463:
+         * (a) if there is only one text input in the form, submit using JS
+         *     form.submit()
+         * (b) if there is more than one text input, submit by sending a click
+         *     to the first submit button in the form.
+         * (c) if there is more than one text input and no submit buttons, do
+         *     not submit, period.
+         */
+
+        if (aEvent->message == NS_KEY_PRESS &&
+            (keyEvent->keyCode == NS_VK_RETURN ||
+             keyEvent->keyCode == NS_VK_ENTER) &&
+            (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD)) {
+
+          if (mForm) {
+            nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
+            if (primaryFrame) {
+              nsIGfxTextControlFrame2* textFrame = nsnull;
+              CallQueryInterface(primaryFrame, &textFrame);
+
+              // Fire onChange (if necessary)
+              if (textFrame) {
+                textFrame->CheckFireOnChange();
+              }
+            }
+
+            // Find the nearest submit control in elements[]
+            // and also check how many text controls we have in the form
+            nsCOMPtr<nsIContent> submitControl;
+            PRInt32 numTextControlsFound = 0;
+
+            nsCOMPtr<nsIFormControl> currentControl;
+            PRUint32 count = 0;
+            mForm->GetElementCount(&count);
+            for (PRUint32 i=0; i < count; i++) {
+              mForm->GetElementAt(i, getter_AddRefs(currentControl));
+              if (currentControl) {
+                PRInt32 type;
+                currentControl->GetType(&type);
+                if (!submitControl &&
+                    (type == NS_FORM_INPUT_SUBMIT ||
+                     type == NS_FORM_BUTTON_SUBMIT ||
+                     type == NS_FORM_INPUT_IMAGE)) {
+                  submitControl = do_QueryInterface(currentControl);
+                } else if (type == NS_FORM_INPUT_TEXT ||
+                           type == NS_FORM_INPUT_PASSWORD) {
+                  numTextControlsFound++;
+                }
+              }
+            }
+
+            if (submitControl && numTextControlsFound > 1) {
+              // IE actually fires the button's onclick handler.  Dispatch
+              // the click event and let the button handle submitting the
+              // form.
+              nsCOMPtr<nsIPresShell> shell;
+              aPresContext->GetShell(getter_AddRefs(shell));
+              if (shell) {
+                nsGUIEvent event;
+                event.eventStructType = NS_MOUSE_EVENT;
+                event.message = NS_MOUSE_LEFT_CLICK;
+                event.widget = nsnull;
+                nsEventStatus status = nsEventStatus_eIgnore;
+                shell->HandleDOMEventWithTarget(submitControl, &event, &status);
+              }
+            } else if (numTextControlsFound == 1) {
+              // If there's only one text control, just call submit()
+              nsCOMPtr<nsIDOMHTMLFormElement> form = do_QueryInterface(mForm);
+              form->Submit();
+            }
+          }
+        }
+
+      } break; // NS_KEY_PRESS || NS_KEY_UP
 
       // cancel all of these events for buttons
       case NS_MOUSE_MIDDLE_BUTTON_DOWN:
