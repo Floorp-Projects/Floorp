@@ -883,7 +883,6 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     static const char kStyleSheetPI[] = "<?xml-stylesheet";
     static const char kOverlayPI[] = "<?xul-overlay";
 
-    nsresult rv;
     FlushText();
 
     // XXX For now, we don't add the PI to the content model.
@@ -893,19 +892,21 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     if (text.Find(kOverlayPI) == 0) {
         // Load a XUL overlay.
         nsAutoString href;
-        rv = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
-        if (NS_FAILED(rv)) return rv;
+        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
 
-        // If there was an error or there's no href, we can't do
+        // If there was no href, we can't do
         // anything with this PI
         if (0 == href.Length())
             return NS_OK;
 
         // Add the overlay to our list of overlays that need to be processed.
         nsCOMPtr<nsIURI> url;
-        rv = NS_NewURI(getter_AddRefs(url), href, mDocumentURL);
+        nsresult rv = NS_NewURI(getter_AddRefs(url), href, mDocumentURL);
         if (NS_FAILED(rv)) {
-            return NS_OK; // The URL is bad, move along. Don't propogate for now.
+            // XXX This is wrong, the error message could be out of memory
+            //     or something else equally bad, which we should propagate. 
+            //     Bad URL should probably be "success with info" value.
+            return NS_OK; // The URL is bad, move along. Don't propagate for now.
         }
 
         rv = mPrototype->AddOverlayReference(url);
@@ -914,10 +915,9 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     // If it's a stylesheet PI...
     else if (text.Find(kStyleSheetPI) == 0) {
         nsAutoString href;
-        rv = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
-        if (NS_FAILED(rv)) return rv;
+        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
 
-        // If there was an error or there's no href, we can't do
+        // If there was no href, we can't do
         // anything with this PI
         if (0 == href.Length())
             return NS_OK;
