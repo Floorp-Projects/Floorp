@@ -242,7 +242,7 @@ PRIVATE StateToken_t SingleLabel_stateTokens[] = {
      {"label extension", SubState_A, Punct_LPAREN,     0, "extension", 0,  0,   &Extension_targetObject, SubState_N, Command_NONE, 0},
      {   "label option", SubState_A,  Punct_WHITE, &getOption,      0, 0,  0, &SingleLabel_targetObject, SubState_B, Command_NONE, 0},
      {     "ratingword", SubState_A, Punct_LPAREN,     0, "r", "ratings",  0, &LabelRating_targetObject, SubState_N, Command_NONE, 0},
-     {   "option value", SubState_B,  Punct_WHITE, &getOptionValue, 0, 0,  0, &SingleLabel_targetObject, SubState_A, Command_CLOSE, 0}
+     {   "option value", SubState_B,  Punct_WHITE, &getOptionValue, 0, 0,  0, &SingleLabel_targetObject, SubState_A, Command_NONE, 0}
     };
 
 PRIVATE StateToken_t LabelRating_stateTokens[] = {
