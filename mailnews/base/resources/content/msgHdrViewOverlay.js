@@ -866,7 +866,7 @@ function addAttachmentToPopup(popup, attachment)
       item.setAttribute('class', 'menu-iconic');
       setApplicationIconForAttachment(attachment,item);
       var numItemsInPopup = popup.childNodes.length;
-      item = popup.insertBefore(item, popup.childNodes[length-2]);
+      item = popup.insertBefore(item, popup.childNodes[numItemsInPopup-2]);
       item.setAttribute('label', attachment.displayName); 
       var oncommandPrefix = generateCommandSuffixForAttachment(attachment);
 
