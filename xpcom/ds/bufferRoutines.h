@@ -31,8 +31,6 @@
 
 #include "nsCRT.h"
 
-static const PRInt32 kNotFound=-1;
-
 inline PRUnichar GetUnicharAt(const char* aString,PRUint32 anIndex) {
   return ((PRUnichar*)aString)[anIndex];
 }

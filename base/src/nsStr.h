@@ -52,6 +52,7 @@
 enum  eCharSize {eOneByte=0,eTwoByte=1};
 #define kDefaultCharSize eTwoByte
 
+static const PRInt32 kNotFound = -1;
 
 union UStrPtr { 
   char*       mCharBuf;

@@ -40,6 +40,7 @@
 #include <iostream.h>
 #include <stdio.h>
 class nsISizeOfHandler;
+#include "nsStr.h"
 
 class NS_BASE nsString {
   public: 
