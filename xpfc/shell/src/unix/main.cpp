@@ -32,6 +32,11 @@
 
 #define XPFC_DLL "libxpfc10.so"
 
+extern "C" char *fe_GetConfigDir(void) {
+  printf("XXX: return /tmp for fe_GetConfigDir\n");
+  return strdup("/tmp");
+}
+
 extern nsIID kIXPCOMApplicationShellCID ;
 
 static NS_DEFINE_IID(kIApplicationShellIID, NS_IAPPLICATIONSHELL_IID);
