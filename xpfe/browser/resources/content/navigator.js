@@ -987,10 +987,16 @@ function LeakDetector(verbose)
   this.verbose = verbose;
 }
 
-try {
-  LeakDetector.prototype = Components.classes["@mozilla.org/xpcom/leakdetector;1"]
-                           .createInstance(Components.interfaces.nsILeakDetector);
-} catch (err) {
+const NS_LEAKDETECTOR_CONTRACTID = "@mozilla.org/xpcom/leakdetector;1";
+
+if (NS_LEAKDETECTOR_CONTRACTID in Components.classes) {
+  try {
+    LeakDetector.prototype = Components.classes[NS_LEAKDETECTOR_CONTRACTID]
+                                       .createInstance(Components.interfaces.nsILeakDetector);
+  } catch (err) {
+    LeakDetector.prototype = Object.prototype;
+  }
+} else {
   LeakDetector.prototype = Object.prototype;
 }
 
@@ -1085,11 +1091,11 @@ function clearErrorNotification()
   consoleListener.isShowingError = false;
 }
 
+const NS_URLWIDGET_CONTRACTID = "@mozilla.org/urlwidget;1";
 var urlWidgetService = null;
-try {
-  urlWidgetService = Components.classes["@mozilla.org/urlwidget;1"]
+if (NS_URLWIDGET_CONTRACTID in Components.classes) {
+  urlWidgetService = Components.classes[NS_URLWIDGET_CONTRACTID]
                                .getService(Components.interfaces.nsIUrlWidget);
-} catch (ex) {
 }
 
 //Posts the currently displayed url to a native widget so third-party apps can observe it.
@@ -1322,11 +1328,14 @@ function URLBarKeyupHandler(aEvent)
 // This will do nothing on platforms other than Windows.
 function checkForDefaultBrowser()
 {
-  try {
-    Components.classes["@mozilla.org/winhooks;1"]
-              .getService(Components.interfaces.nsIWindowsHooks)
-              .checkSettings(window);
-  } catch(e) {
+  const NS_WINHOOKS_CONTRACTID = "@mozilla.org/winhooks;1";
+  if (NS_WINHOOKS_CONTRACTID in Components.classes) {
+    try {
+      Components.classes[NS_WINHOOKS_CONTRACTID]
+                .getService(Components.interfaces.nsIWindowsHooks)
+                .checkSettings(window);
+    } catch(e) {
+    }
   }
 }
 
