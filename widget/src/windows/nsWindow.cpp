@@ -1420,7 +1420,7 @@ nsIMenu * nsWindow::FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth
     return aMenu;
   }
 
-  aDepth++;
+  //aDepth++;
   PRUint32 i, count;
   aMenu->GetItemCount(count);
   for (i=0;i<count;i++) {
@@ -1430,12 +1430,14 @@ nsIMenu * nsWindow::FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth
     if (NS_OK == item->QueryInterface(kIMenuIID, (void **)&menu)) {
       HMENU nativeMenu = ((nsMenu *)menu)->GetNativeMenu();
       if (nativeMenu == aNativeMenu) {
+		aDepth++;
         return menu;
       } else {
         nsIMenu * fndMenu = FindMenu(menu, aNativeMenu, aDepth);
         if (fndMenu) {
           NS_RELEASE(item);
           NS_RELEASE(menu);
+		  aDepth++;
           return fndMenu;
         }
       }
