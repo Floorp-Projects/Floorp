@@ -109,6 +109,12 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool a
 
   for (PRUint32 i = 0; i < numAddresses; i++)
   {
+    nsXPIDLCString unquotedName;
+    rv = pHeader->UnquotePhraseOrAddr(curName, PR_FALSE, getter_Copies(unquotedName));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to unquote name");
+    if (NS_FAILED(rv))
+      continue;
+
     nsCOMPtr <nsIAbCard> existingCard;
     nsCOMPtr <nsIAbCard> cardInstance;
 
@@ -121,10 +127,8 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool a
       if (NS_SUCCEEDED(rv) && senderCard)
       {
         PRBool modifiedCard;
-        if (curName && *curName) {
-          rv = SetNamesForCard(senderCard, curName, &modifiedCard);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
-        }
+        rv = SetNamesForCard(senderCard, unquotedName.get(), &modifiedCard);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
 
         rv = AutoCollectScreenName(senderCard, curAddress, &modifiedCard);
         NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set screenname");
@@ -139,7 +143,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool a
     else if (existingCard) { 
       // address is already in the AB, so update the names
       PRBool setNames;
-      rv = SetNamesForCard(existingCard, curName, &setNames);
+      rv = SetNamesForCard(existingCard, unquotedName.get(), &setNames);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
 
       PRBool setScreenName;
