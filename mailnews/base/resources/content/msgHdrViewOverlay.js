@@ -170,6 +170,13 @@ function initializeHeaderViewTables()
     var headerName = gExpandedHeaderList[index].name;
     gExpandedHeaderView[headerName] = new createHeaderEntry('expanded', gExpandedHeaderList[index]);
   }
+
+  if (gShowUserAgent)
+  {
+    var userAgentEntry = {name:"user-agent", outputFunction:updateHeaderValueInTextNode};
+    gExpandedHeaderView[userAgentEntry.name] = new createHeaderEntry('expanded', userAgentEntry);
+  }
+
 }
 
 function OnLoadMsgHeaderPane()
@@ -178,15 +185,14 @@ function OnLoadMsgHeaderPane()
   // otherwise we have problems.
 
   document.loadBindingDocument('chrome://messenger/content/mailWidgets.xml');
-
-  initializeHeaderViewTables();
-
+  
   // load any preferences that at are global with regards to 
   // displaying a message...
   gNumAddressesToShow = pref.GetIntPref("mailnews.max_header_display_length");
-  gShowUserAgent = pref.GetBoolPref("mailnews.headers.showUserAgent");
   gCollectIncoming = pref.GetBoolPref("mail.collect_email_address_incoming");
   gCollectNewsgroup = pref.GetBoolPref("mail.collect_email_address_newsgroup");
+  gShowUserAgent = pref.GetBoolPref("mailnews.headers.showUserAgent");
+  initializeHeaderViewTables();
 }
 
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
@@ -241,7 +247,16 @@ var messageHeaderSink = {
       var foo = new Object;
       foo.headerValue = headerValue;
       foo.headerName = headerName;
-      currentHeaderData[lowerCaseHeaderName] = foo;
+
+      // some times, you can have multiple To or cc lines....in this case, we want to APPEND 
+      // these headers into one. 
+      if ( (lowerCaseHeaderName == 'to' || lowerCaseHeaderName == 'cc') && ( lowerCaseHeaderName in currentHeaderData))
+      {
+        currentHeaderData[lowerCaseHeaderName].headerValue = currentHeaderData[lowerCaseHeaderName].headerValue + ',' + foo.headerValue;
+      }
+      else
+       currentHeaderData[lowerCaseHeaderName] = foo;
+
       if (lowerCaseHeaderName == "from")
       {
         if (headerValue && abAddressCollector && 
@@ -440,6 +455,7 @@ function ShowMessageHeaderPane()
   if (messagePaneBox && gFolderJustSwitched) 
   {
     messagePaneBox.setAttribute("collapsed", "false");
+    messagePaneBox.removeAttribute("collapsed");
 	  gFolderJustSwitched = false;
   }
 }

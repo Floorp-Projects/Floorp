@@ -131,6 +131,13 @@ Rights Reserved.
        </hbox>          
        <html id="expandedfollowup-toValue" class="headerValue" flex="1">*</html> 
      </hbox>
+
+     <hbox id="expandeduser-agentBox" class="headerBox" collapsed="true">
+       <hbox class="headerValueBox">  
+        <text class="headerdisplayname" value="&userAgentField.label;"/>
+       </hbox>       
+       <text id="expandeduser-agentValue" class="collapsedHeaderValue" flex="1"/>
+		</hbox>
    
    </vbox>
 
