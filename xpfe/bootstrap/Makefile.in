@@ -408,10 +408,11 @@ APP_NAME = Mozilla
 endif
 
 libs:: $(PROGRAM)
-	mkdir -p $(DIST)/$(APP_NAME).app
-	cp -R $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a -L $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rsync -a $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
+	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
 	echo -n APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 clean clobber::
