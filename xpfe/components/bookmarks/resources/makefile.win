@@ -24,6 +24,7 @@ FILES=\
         bookmark-folder-closed.gif      \
         bookmark-folder-open.gif        \
         bookmark-item.gif               \
+        bookmark-popup.js               \
         bookmarks.css                   \
         bookmarks.html                  \
         bookmarks.js                    \
