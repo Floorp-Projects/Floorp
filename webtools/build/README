@@ -34,15 +34,15 @@ Related files
           ac_add_options --enable-debug --with-pthreads --enable-editor
           ac_add_options --with-nspr=/tools/contrib/nsprpub
 
-   $TOPSRCDIR/mozconfig - Alternate location for the script.
+   $TOPSRCDIR/.mozconfig - Alternate location for the script.
 
-   mozilla/client.mk - Read mozconfig by converting it to .client-defs.mk
+   mozilla/client.mk - Read .mozconfig by converting it to .client-defs.mk
      (generates mozilla/.client-defs.mk via mozconfig2defs.sh)
    mozilla/configure.in - Uses macros in altoptions.m4 to define options.
    mozilla/build/autoconf/altoptions.m4 - Set of option macros.
    mozilla/build/autoconf/load-mozconfig.sh - Used by configure to push
-     mozconfig options onto the command line.
-   mozilla/build/autoconf/mozconfig2defs.sh - Convert mozconfig to
+     .mozconfig options onto the command line.
+   mozilla/build/autoconf/mozconfig2defs.sh - Convert .mozconfig to
      a makefile format.
 
 
