@@ -161,4 +161,7 @@ outlinerbody:-moz-outliner-twisty {
 }
 
 outlinerbody:-moz-outliner-twisty(open) {
+  width: 10px; /* The image's width is 10 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
+}
+
