@@ -472,7 +472,7 @@ function parsePlugin(e, name)
 
     }
 
-    e.unparsedData = (4 in ary) ? ary[4] : "";
+    e.unparsedData = arrayHasElementAt(ary, 4) ? ary[4] : "";
     e[name] = plugin;
     return true;
 }
@@ -809,7 +809,7 @@ function cmdHelp (e)
     }
 
     for (var i in ary)
-    {        
+    {
         display (getMsg(MSG_FMT_USAGE, [ary[i].name, ary[i].usage]), MT_USAGE);
         display (ary[i].help, MT_HELP);
     }

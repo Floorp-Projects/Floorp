@@ -34,7 +34,7 @@
  *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
-const __cz_version   = "0.9.44";
+const __cz_version   = "0.9.45";
 const __cz_condition = "green";
 
 var warn;
@@ -1168,7 +1168,7 @@ function parseIRCURL (url)
         return null;
     }
     var host = ary[1];
-    var rest = (2 in ary) ? ary[2] : "";
+    var rest = arrayHasElementAt(ary, 2) ? ary[2] : "";
 
     /* split <host> into server (or network) / port */
     ary = host.match (/^([^\s\:]+)?(\:\d+)?$/);
@@ -1178,9 +1178,9 @@ function parseIRCURL (url)
         return null;
     }
     
-    if (2 in ary)
+    if (arrayHasElementAt(ary, 2))
     {
-        if (!(1 in ary))
+        if (!arrayHasElementAt(ary, 2))
         {
             dd ("parseIRCURL: port with no host");
             return null;
@@ -1189,7 +1189,7 @@ function parseIRCURL (url)
         rv.isserver = true;
         rv.port = parseInt(ary[2].substr(1));
     }
-    else if (1 in ary)
+    else if (arrayHasElementAt(ary, 1))
     {
         specifiedHost = rv.host = ary[1].toLowerCase();
         if (specifiedHost.indexOf(".") != -1)
@@ -1205,13 +1205,13 @@ function parseIRCURL (url)
             return null;
         }
         
-        rv.target = (1 in ary) ? 
-            unescape(ary[1]).replace("\n", "\\n") : "";
+        rv.target = arrayHasElementAt(ary, 1) ? 
+            ecmaUnescape(ary[1]).replace("\n", "\\n") : "";
         var i = rv.target.indexOf(" ");
         if (i != -1)
             rv.target = rv.target.substr(0, i);
-        var params = (2 in ary) ? ary[2].toLowerCase() : "";
-        var query = (3 in ary) ? ary[3] : "";
+        var params = arrayHasElementAt(ary, 2) ? ary[2].toLowerCase() : "";
+        var query = arrayHasElementAt(ary, 3) ? ary[3] : "";
 
         if (params)
         {

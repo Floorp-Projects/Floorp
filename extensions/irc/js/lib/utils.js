@@ -599,6 +599,11 @@ function formatDateOffset (offset, format)
     return format;
 }
 
+function arrayHasElementAt(ary, i)
+{
+    return typeof ary[i] != "undefined";
+}
+
 function arrayContains (ary, elem)
 {
     return (arrayIndexOf (ary, elem) != -1);
@@ -615,38 +620,12 @@ function arrayIndexOf (ary, elem)
     
 function arrayInsertAt (ary, i, o)
 {
-
     ary.splice (i, 0, o);
-
-    /* doh, forgot about that 'splice' thing
-    if (ary.length < i)
-    {
-        this[i] = o;
-        return;
-    }
-
-    for (var j = ary.length; j > i; j--)
-        ary[j] = ary[j - 1];
-
-    ary[i] = o;
-    */
 }
 
 function arrayRemoveAt (ary, i)
 {
-
     ary.splice (i, 1);
-
-    /* doh, forgot about that 'splice' thing
-    if (ary.length < i)
-        return false;
-
-    for (var j = i; j < ary.length; j++)
-        ary[j] = ary[j + 1];
-
-    ary.length--;
-    */
-
 }
 
 /* length should be an even number >= 6 */

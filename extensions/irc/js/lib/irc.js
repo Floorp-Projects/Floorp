@@ -409,11 +409,20 @@ function serv_login(nick, name, desc)
     nick = nick.replace(" ", "_");
     name = name.replace(" ", "_");
 
+    if (!nick)
+        nick = "nick";
+    
+    if (!name)
+        name = nick;
+    
+    if (!desc)
+        desc = nick;
+    
     this.me = new CIRCUser(this, nick, name);
     if (this.password)
        this.sendData("PASS " + this.password + "\n");
     this.sendData("NICK " + nick + "\n");
-    this.sendData("USER " + name + " foo bar :" +
+    this.sendData("USER " + name + " * * :" +
                   fromUnicode(desc, this) + "\n");
 }
 

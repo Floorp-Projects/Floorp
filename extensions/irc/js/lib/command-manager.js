@@ -722,7 +722,7 @@ function parse_int (e, name)
     if (!ary)
         return false;
     e[name] = Number(ary[1]);
-    e.unparsedData = (2 in ary) ? ary[2] : "";
+    e.unparsedData = arrayHasElementAt(ary, 2) ? ary[2] : "";
     return true;
 }
 
@@ -740,7 +740,7 @@ function parse_word (e, name)
     if (!ary)
         return false;
     e[name] = ary[1];
-    e.unparsedData = (2 in ary) ? ary[2] : "";
+    e.unparsedData = arrayHasElementAt(ary, 2) ? ary[2] : "";
     return true;
 }
 
@@ -763,7 +763,7 @@ function parse_state (e, name)
         e[name] = true;
     else
         e[name] = false;
-    e.unparsedData = (2 in ary) ? ary[2] : "";
+    e.unparsedData = arrayHasElementAt(ary, 2) ? ary[2] : "";
     return true;
 }
 
@@ -790,7 +790,7 @@ function parse_toggle (e, name)
         e[name] = true;
     else
         e[name] = false;
-    e.unparsedData = (2 in ary) ? ary[2] : "";
+    e.unparsedData = arrayHasElementAt(ary, 2) ? ary[2] : "";
     return true;
 }
 
