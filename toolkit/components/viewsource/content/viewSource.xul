@@ -64,7 +64,7 @@
   <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
 
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
-  <stringbundle id="viewSourceBundle" src="chrome://navigator/locale/viewSource.properties"/>
+  <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
   <commandset id="editMenuCommands"/>
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
