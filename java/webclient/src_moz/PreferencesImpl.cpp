@@ -34,7 +34,7 @@
 #include "ns_util.h"
 
 typedef struct _peStruct {
-    WebclientContext *cx;
+    NativeWrapperFactory *cx;
     jobject obj;
     jobject callback;
 } peStruct;
@@ -53,7 +53,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Preferenc
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("PreferencesImpl_nativeStartup: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     
@@ -78,7 +78,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Preferenc
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("PreferencesImpl_nativeShutdown: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
 
     PR_ASSERT(wcContext);
 
@@ -102,7 +102,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeSetUnichar
            ("PreferencesImpl_nativeSetUnicharPref: entering\n"));
     
     nsresult rv = NS_ERROR_FAILURE;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     nsCOMPtr<nsIPref> prefs = nsnull;
     PR_ASSERT(wcContext);
     
@@ -159,7 +159,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeSetIntPref
            ("PreferencesImpl_nativeSetIntPref: entering\n"));
     
     nsresult rv = NS_ERROR_FAILURE;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     nsCOMPtr<nsIPref> prefs = nsnull;
     PR_ASSERT(wcContext);
     
@@ -197,7 +197,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeSetBoolPre
            ("PreferencesImpl_nativeSetIntPref: entering\n"));
     
     nsresult rv = NS_ERROR_FAILURE;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     nsCOMPtr<nsIPref> prefs = nsnull;
     PR_ASSERT(wcContext);
     
@@ -236,7 +236,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeGetPrefs
     
     nsresult rv = NS_ERROR_FAILURE;
     jobject newProps = nsnull;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     nsCOMPtr<nsIPref> prefs = nsnull;
     PR_ASSERT(wcContext);
     
@@ -292,7 +292,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeRegisterPr
            ("PreferencesImpl_nativeRegisterPrefChangedCallback: entering\n"));
     
     nsresult rv = NS_ERROR_FAILURE;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     const char *prefNameChars = nsnull;
     nsCOMPtr<nsIPref> prefs = nsnull;
     PR_ASSERT(wcContext);
@@ -334,7 +334,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Preferenc
            ("PreferencesImpl_nativeRegisterPrefChangedCallback: entering\n"));
     
     nsresult rv = NS_ERROR_FAILURE;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     const char *prefNameChars = nsnull;
     nsCOMPtr<nsIPref> prefs = nsnull;
     PR_ASSERT(wcContext);
@@ -385,7 +385,7 @@ void prefEnumerator(const char *name, void *closure)
         return;
     }
     peStruct *pes = (peStruct *) closure;
-    WebclientContext *wcContext =  pes->cx;
+    NativeWrapperFactory *wcContext =  pes->cx;
     jobject props = pes->obj;
     PRInt32 prefType, intVal;
     PRBool boolVal;

@@ -64,9 +64,6 @@ private String platformCanvasClassName = null;
 
 protected WrapperFactory wrapperFactory = null;
 
-protected int browserControlCount = 0;
-
-
 //
 // Instance Variables
 //
@@ -137,20 +134,13 @@ public void setAppData(String absolutePathToNativeBrowserBinDir) throws FileNotF
 
 public void appTerminate() throws Exception
 {
-    if (0 == browserControlCount) {
-        getWrapperFactory().terminate();
-    }
+    getWrapperFactory().terminate();
 }
 
 public BrowserControl newBrowserControl() throws InstantiationException, IllegalAccessException, IllegalStateException
 {
     getWrapperFactory().verifyInitialized();
-    browserControlCount++;
-
-    BrowserControl result = null; 
-    result = new BrowserControlImpl(getWrapperFactory());
-
-    return result;
+    return getWrapperFactory().newBrowserControl();
 }
 
 /**
@@ -169,8 +159,8 @@ public BrowserControl newBrowserControl() throws InstantiationException, Illegal
 public void deleteBrowserControl(BrowserControl toDelete)
 {
     ParameterCheck.nonNull(toDelete);
+    getWrapperFactory().deleteBrowserControl(toDelete);
     ((BrowserControlImpl)toDelete).delete();
-    browserControlCount--;
 }
 
 //

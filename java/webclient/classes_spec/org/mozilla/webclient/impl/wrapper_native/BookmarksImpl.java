@@ -77,11 +77,11 @@ public BookmarksImpl(WrapperFactory yourFactory)
 }
 
 public void startup() {
-    nativeStartup(getWrapperFactory().getNativeContext());
+    nativeStartup(getWrapperFactory().getNativeWrapperFactory());
 }
 
 public void shutdown() {
-    nativeShutdown(getWrapperFactory().getNativeContext());
+    nativeShutdown(getWrapperFactory().getNativeWrapperFactory());
 }
 
 /**
@@ -156,11 +156,11 @@ public TreeModel getBookmarks() throws IllegalStateException
         TreeNode root;
         if (-1 == 
             (nativeBookmarks = 
-             nativeGetBookmarks(getWrapperFactory().getNativeContext()))) {
+             nativeGetBookmarks(getWrapperFactory().getNativeWrapperFactory()))) {
             throw new IllegalStateException("BookmarksImpl.getBookmarks(): Can't get bookmarks from native browser.");
         }
         // if we can't create a root, or we can't create a tree
-        if ((null == (root = new BookmarkEntryImpl(getWrapperFactory().getNativeContext(), 
+        if ((null == (root = new BookmarkEntryImpl(getWrapperFactory().getNativeWrapperFactory(), 
                                                    nativeBookmarks, null))) || 
             (null == (bookmarksTree = new DefaultTreeModel(root)))) {
             throw new IllegalStateException("BookmarksImpl.getBookmarks(): Can't create RDFTreeModel.");

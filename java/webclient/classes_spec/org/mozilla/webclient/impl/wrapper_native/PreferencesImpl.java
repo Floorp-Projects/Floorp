@@ -67,11 +67,11 @@ public PreferencesImpl(WrapperFactory yourFactory)
 }
 
 public void startup() {
-    nativeStartup(getWrapperFactory().getNativeContext());
+    nativeStartup(getWrapperFactory().getNativeWrapperFactory());
 }
 
 public void shutdown() {
-    nativeShutdown(getWrapperFactory().getNativeContext());
+    nativeShutdown(getWrapperFactory().getNativeWrapperFactory());
 }
 
 /**
@@ -109,26 +109,26 @@ public void setPref(String prefName, String prefValue)
     // determine the type of pref value: String, boolean, integer
     try {
         Integer intVal = Integer.valueOf(prefValue);
-        nativeSetIntPref(getWrapperFactory().getNativeContext(), prefName, intVal.intValue());
+        nativeSetIntPref(getWrapperFactory().getNativeWrapperFactory(), prefName, intVal.intValue());
     }
     catch (NumberFormatException e) {
         // it's not an integer
         if (null != prefValue &&
             (prefValue.equals("true") || prefValue.equals("false"))) {
             Boolean boolVal = Boolean.valueOf(prefValue);
-            nativeSetBoolPref(getWrapperFactory().getNativeContext(), prefName, 
+            nativeSetBoolPref(getWrapperFactory().getNativeWrapperFactory(), prefName, 
                               boolVal.booleanValue());
         }
         else {
             // it must be a string
-            nativeSetUnicharPref(getWrapperFactory().getNativeContext(), prefName, prefValue);
+            nativeSetUnicharPref(getWrapperFactory().getNativeWrapperFactory(), prefName, prefValue);
         }
     }
 }
  
 public Properties getPrefs()
 {
-    props = nativeGetPrefs(getWrapperFactory().getNativeContext(), props);
+    props = nativeGetPrefs(getWrapperFactory().getNativeWrapperFactory(), props);
     //Properties result = new Properties();
     //	result.put("webclientpref", "webclient_value");
     
@@ -141,7 +141,7 @@ public void registerPrefChangedCallback(PrefChangedCallback cb,
     ParameterCheck.nonNull(cb);
     ParameterCheck.nonNull(prefName);
     
-    nativeRegisterPrefChangedCallback(getWrapperFactory().getNativeContext(), cb, prefName, closure);
+    nativeRegisterPrefChangedCallback(getWrapperFactory().getNativeWrapperFactory(), cb, prefName, closure);
 }
 
 public void unregisterPrefChangedCallback(PrefChangedCallback cb,
@@ -150,7 +150,7 @@ public void unregisterPrefChangedCallback(PrefChangedCallback cb,
     ParameterCheck.nonNull(cb);
     ParameterCheck.nonNull(prefName);
     
-    nativeUnregisterPrefChangedCallback(getWrapperFactory().getNativeContext(), cb, prefName, closure);
+    nativeUnregisterPrefChangedCallback(getWrapperFactory().getNativeWrapperFactory(), cb, prefName, closure);
 }
 
 

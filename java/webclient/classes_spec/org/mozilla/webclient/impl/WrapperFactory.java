@@ -28,9 +28,22 @@ package org.mozilla.webclient.impl;
 
 import org.mozilla.webclient.BrowserControl;
 
+/**
+ * <p>Defines the interface for the real implementation of the Webclient
+ * API.  The implementation of this interface must be a singleton and
+ * must have the same lifetime as {@link WebclientFactory}.</p>
+ *
+ * <p>This interface is intended to be the anchor for all
+ * per-application state.</p>
+ *
+ */
+
 public interface WrapperFactory {
     
     public static String IMPL_NAME = "WrapperFactoryImpl";
+
+    public BrowserControl newBrowserControl() throws InstantiationException, IllegalAccessException, IllegalStateException;
+    public void deleteBrowserControl(BrowserControl toDelete);
     
     public Object newImpl(String interfaceName, 
                           BrowserControl browserControl) throws ClassNotFoundException;
@@ -52,9 +65,9 @@ public interface WrapperFactory {
     public void verifyInitialized() throws IllegalStateException;
     
     public void terminate() throws Exception;
-    
-    public int getNativeContext();
 
+    public int getNativeWrapperFactory();
+    
     /**
      * <p>I would like this method to be on BrowserControl itself, but
      * that would mean exposing native elements on the public java API.
@@ -65,20 +78,5 @@ public interface WrapperFactory {
     
     public int getNativeBrowserControl(BrowserControl bc);
 
-    /**
-     * <p>I would like this method to be on BrowserControl itself, but
-     * that would mean exposing implementation specific elements on the
-     * public java API.  Therefore, the WrapperFactory needs to be able
-     * to return the NativeEventThread given a java BrowserControl.</p>
-     *
-     */
-    public Object getNativeEventThread(BrowserControl bc);
-
-    /***
-     * <p>Also destroys the NativeEventThread.</p>
-     *
-     */ 
-
-    public void destroyNativeBrowserControl(BrowserControl bc);
-    
+    public Object getNativeEventThread();
 } 

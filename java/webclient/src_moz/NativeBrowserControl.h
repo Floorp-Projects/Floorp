@@ -59,28 +59,13 @@ public:
     // public API
     // 
     
-    nsresult    Init            (JNIEnv *env, jobject nativeEventThread);
+    nsresult    Init            ();
     nsresult    Realize         (void* parentWinPtr, PRBool *aAlreadyRealized);
     void        Unrealize       (void);
     void        Show            (void);
     void        Hide            (void);
     void        Resize          (PRUint32 aWidth, PRUint32 aHeight);
     void        Destroy         (void);
-
-/**
-
- * This function processes methods inserted into NativeBrowserControl's
- * actionQueue.  It is called once during the initialization of the
- * NativeEventThread java thread, and infinitely in
- * NativeEventThread.run()'s event loop.  The call to PL_HandleEvent
- * below, ends up calling the nsActionEvent subclass's handleEvent()
- * method.  After which it calls nsActionEvent::destroyEvent().
-
- */
-
-    PRUint32    ProcessEventLoop(void);
-    nsresult    GetFailureCode  (void);
-    static PRBool IsInitialized (void);
 
     //
     // Relationship ivars
@@ -97,8 +82,6 @@ public:
 
     EmbedWindow *                  mWindow;
     nsCOMPtr<nsISupports>          mWindowGuard;
-    JNIEnv *                       mEnv;
-    jobject                        mNativeEventThread;
     ShareInitContext               mShareContext;
 
     // chrome mask
@@ -109,16 +92,6 @@ public:
     PRBool                         mChromeLoaded;
     // has someone called Destroy() on us?
     PRBool                         mIsDestroyed;
-
-    //
-    // Class vars
-    // 
-    static PLEventQueue	*	   sActionQueue; 
-    static PRThread *              sEmbeddedThread; 
-
-private:
-    nsresult                       mFailureCode;
-    static PRBool                  sInitComplete;
 
 };
 

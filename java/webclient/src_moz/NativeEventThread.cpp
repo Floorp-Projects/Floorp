@@ -113,75 +113,23 @@ static PRBool	gFirstTime = PR_TRUE;
 nsISHistory *gHistory = nsnull;
 WindowCreator   *   gCreatorCallback = nsnull;
 
-char * errorMessages[] = {
-	"No Error",
-	"Could not obtain the event queue service.",
-	"Unable to create the WebShell instance.",
-	"Unable to initialize the WebShell instance.",
-	"Unable to show the WebShell."
-};
-
 //
 // JNI methods
 //
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeStartup
-(JNIEnv *env, jobject obj, jint nativeBCPtr)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    NativeBrowserControl * nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-
-    if (!nativeBrowserControl) {
-	    ::util_ThrowExceptionToJava(env, 
-                                    "NULL nativeBCPtr passed to nativeStartup.");
-        return;
-    }
-    rv = nativeBrowserControl->Init(env, obj);
-    if (NS_FAILED(rv)) {
-	    ::util_ThrowExceptionToJava(env, 
-                                    errorMessages[3]);
-        return;
-    }
-    nativeBrowserControl->ProcessEventLoop();
-
-    while (!nativeBrowserControl->IsInitialized()) {
-        
-        ::PR_Sleep(PR_INTERVAL_NO_WAIT);
-        
-        if (NS_FAILED(nativeBrowserControl->GetFailureCode())) {
-            ::util_ThrowExceptionToJava(env, errorMessages[3]);
-            return;
-        }
-    }
-}
-
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeShutdown
-(JNIEnv *env, jobject obj, jint nativeBCPtr)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    NativeBrowserControl * nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-    
-    if (!nativeBrowserControl) {
-	    ::util_ThrowExceptionToJava(env, 
-                                    "NULL nativeBCPtr passed to nativeStartup.");
-        return;
-    }
-    nativeBrowserControl->Destroy(); 
-}
-
-
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NativeEventThread_nativeProcessEvents
-(JNIEnv *env, jobject obj, jint nativeBCPtr)
+(JNIEnv *env, jobject obj, jint nativePtr)
 {
-    NativeBrowserControl * nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    NativeWrapperFactory * nativeWrapperFactory = 
+        (NativeWrapperFactory *) nativePtr;
     
-    if (nsnull == nativeBrowserControl) {
+    if (nsnull == nativePtr) {
 	    ::util_ThrowExceptionToJava(env, 
-                                    "NULL nativeBCPtr passed to nativeProcessEvents.");
+                                    "NULL nativePtr passed to nativeProcessEvents.");
         return;
     }
-
-    nativeBrowserControl->ProcessEventLoop();
+    
+    nativeWrapperFactory->ProcessEventLoop();
 }
 
 /**

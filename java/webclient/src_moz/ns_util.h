@@ -51,6 +51,8 @@
 
 #include "wcIBrowserContainer.h" // our BrowserContainer
 
+#include "NativeWrapperFactory.h"
+
 #include "ns_globals.h"
 
 // Ashu
@@ -71,20 +73,6 @@
 // local classes
 //
 
-
-class nsIProfile;
-class nsIProfileInternal;
-class nsIPref;
-class nsIAppShell;
-class NativeBrowserControl;
-
-struct WebclientContext {
-    nsIProfile *sProfile;
-    nsIProfileInternal *sProfileInternal;
-    nsIPref *sPrefs;
-    nsIAppShell *sAppShell;
-    ShareInitContext   shareContext;
-};
 
 enum {
 	kEventQueueError = 1,

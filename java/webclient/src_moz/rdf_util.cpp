@@ -35,7 +35,7 @@ static PRBool rdf_inited = PR_FALSE;
 
 nsCOMPtr<nsIRDFContainerUtils> gRDFCU = nsnull;
 nsCOMPtr<nsIRDFService> gRDF = nsnull;
-nsCOMPtr<nsIBookmarksService> gBookmarks = nsnull; // PENDING(edburns): this should be in WebclientContext
+nsCOMPtr<nsIBookmarksService> gBookmarks = nsnull; // PENDING(edburns): this should be in NativeWrapperFactory
 nsCOMPtr<nsIRDFDataSource> gBookmarksDataSource = nsnull;
 
 nsCOMPtr<nsIRDFResource> kNC_BookmarksRoot = nsnull;

@@ -104,7 +104,9 @@ EmbedWindow::ReleaseChildren(void)
 {
   ExitModalEventLoop(PR_FALSE);
 
-  mBaseWindow->Destroy();
+  if (mBaseWindow) { 
+      mBaseWindow->Destroy();
+  }
   mBaseWindow = 0;
   mWebBrowser = 0;
 }

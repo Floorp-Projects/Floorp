@@ -59,23 +59,23 @@ const char *gSupportedListenerInterfaces[] = {
 
 void util_PostEvent(NativeBrowserControl * initContext, PLEvent * event)
 {
-    PL_ENTER_EVENT_QUEUE_MONITOR(NativeBrowserControl::sActionQueue);
+    PL_ENTER_EVENT_QUEUE_MONITOR(NativeWrapperFactory::sActionQueue);
   
-    ::PL_PostEvent(NativeBrowserControl::sActionQueue, event);
+    ::PL_PostEvent(NativeWrapperFactory::sActionQueue, event);
     
-    PL_EXIT_EVENT_QUEUE_MONITOR(NativeBrowserControl::sActionQueue);
+    PL_EXIT_EVENT_QUEUE_MONITOR(NativeWrapperFactory::sActionQueue);
 } // PostEvent()
 
 
-void *util_PostSynchronousEvent(NativeBrowserControl * initContext, PLEvent * event)
+void *util_PostSynchronousEvent(NativeWrapperFactory * initContext, PLEvent * event)
 {
     void    *       voidResult = nsnull;
 
-    PL_ENTER_EVENT_QUEUE_MONITOR(NativeBrowserControl::sActionQueue);
+    PL_ENTER_EVENT_QUEUE_MONITOR(NativeWrapperFactory::sActionQueue);
     
-    voidResult = ::PL_PostSynchronousEvent(NativeBrowserControl::sActionQueue, event);
+    voidResult = ::PL_PostSynchronousEvent(NativeWrapperFactory::sActionQueue, event);
     
-    PL_EXIT_EVENT_QUEUE_MONITOR(NativeBrowserControl::sActionQueue);
+    PL_EXIT_EVENT_QUEUE_MONITOR(NativeWrapperFactory::sActionQueue);
     
     return voidResult;
 } // PostSynchronousEvent()          

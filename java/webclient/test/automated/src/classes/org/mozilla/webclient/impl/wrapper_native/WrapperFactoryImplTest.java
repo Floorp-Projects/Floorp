@@ -1,5 +1,5 @@
 /*
- * $Id: WrapperFactoryImplTest.java,v 1.2 2004/04/10 21:50:39 edburns%acm.org Exp $
+ * $Id: WrapperFactoryImplTest.java,v 1.3 2004/04/15 22:58:08 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -68,11 +68,15 @@ public class WrapperFactoryImplTest extends WebclientTestCase {
     }
 
     public void testGetNativeBrowserControl() throws Exception {
+	assertTrue(false);
+	/**
 	WrapperFactoryImpl wrapper = new WrapperFactoryImpl();
 	wrapper.initialize(getBrowserBinDir());
 	BrowserControl bc = new BrowserControlImpl(wrapper);
+
 	assertTrue(-1 != wrapper.getNativeBrowserControl(bc));
 	BrowserControlFactory.deleteBrowserControl(bc);
+	**/
     }
 
 }

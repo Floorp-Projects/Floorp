@@ -92,16 +92,13 @@ private static ProfileManager profileManager = null;
 // Constructors and Initializers    
 //
 
-public BrowserControlImpl(WrapperFactory yourWrapper)
-{
+public BrowserControlImpl(WrapperFactory yourWrapper) {
     super();
     ParameterCheck.nonNull(yourWrapper);
-
+    
     wrapperFactory = yourWrapper;
-    Assert.assert_it(-1 != wrapperFactory.getNativeContext());
 }
-
-
+    
 /**
 
  * Called from BrowserControlFactory.deleteBrowserControl() <P>
@@ -114,8 +111,6 @@ public BrowserControlImpl(WrapperFactory yourWrapper)
 
 void delete()
 {
-
-    wrapperFactory.destroyNativeBrowserControl(this);
 
     if (null != myCanvas) {
     // Make sure we're not showing.

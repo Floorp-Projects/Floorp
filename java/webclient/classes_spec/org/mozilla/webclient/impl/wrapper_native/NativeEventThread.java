@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -32,7 +31,8 @@ import org.mozilla.util.ParameterCheck;
 import java.util.Vector;
 import java.util.Enumeration;
 
-import org.mozilla.webclient.BrowserControl;
+import java.util.Stack;
+
 import org.mozilla.webclient.BrowserControlCanvas;
 import org.mozilla.webclient.DocumentLoadEvent;
 import org.mozilla.webclient.DocumentLoadListener;
@@ -43,124 +43,102 @@ import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WebclientEventListener;
 import org.mozilla.webclient.UnimplementedException;
 
-public class NativeEventThread extends Thread
-{
+import org.mozilla.webclient.impl.WrapperFactory;
 
-//
-// Class variables
-//
+public class NativeEventThread extends Thread {
 
-private static Object firstThread = null;
+    //
+    // Class variables
+    //
+    
+    //
+    // Attribute ivars
+    //
 
+    /**
+     * store the exception property, set when running a Runnable causes
+     * an exception.
+     */
 
-//
-// Attribute ivars
-//
-
-//
-// Relationship ivars
-//
-
-/**
-
- * Vector of listener objects to add.
-
- */
-
-private Vector listenersToAdd;
-
-/**
-
- * Vector of listener objects to remove.
-
- */
-
-private Vector listenersToRemove;
-
-/**
-
- * a handle to the actual mozilla webShell, obtained in constructor
-
- */
-
-private int nativeBrowserControl = -1;
-
-private BrowserControl browserControl;
-
-private BrowserControlCanvas browserControlCanvas;
-
-
-/**
-
- * Used in run()
-
- */
-
-private Enumeration tempEnum;
-
-//
-// Attribute ivars
-//
-
-//
-// Constructors
-//
-
-public NativeEventThread(String threadName, int yourNativeWebShell, 
-                         BrowserControl yourBrowserControl)
-{
-    super(threadName);
-    ParameterCheck.nonNull(yourBrowserControl);
-
-    if (null == firstThread) {
-        firstThread = this;
+    private Exception exception;
+    
+    //
+    // Relationship ivars
+    //
+    
+    private WrapperFactory wrapperFactory;
+    private int nativeWrapperFactory;
+    
+    private BrowserControlCanvas browserControlCanvas;
+    
+    private Stack runnablesWithNotify;
+    private Stack runnables;
+    
+    
+    //
+    // Attribute ivars
+    //
+    
+    //
+    // Constructors
+    //
+    
+    public NativeEventThread(String threadName, 
+			     WrapperFactory yourFactory,
+			     int yourNativeWrapperFactory) {
+	super(threadName);
+	ParameterCheck.nonNull(yourFactory);
+	
+	wrapperFactory = yourFactory;
+	nativeWrapperFactory = yourNativeWrapperFactory;
+	
+	runnablesWithNotify = new Stack();
+	runnables = new Stack();
+    }
+    
+    /**
+     *
+     * This is a very delicate method, and possibly subject to race
+     * condition problems.  To combat this, our first step is to set our
+     * wrapperFactory to null, within a synchronized block which
+     * synchronizes on the same object used in the run() method's event
+     * loop.  By setting the wrapperFactory ivar to null, we cause
+     * the run method to return.
+     */
+    
+    public void delete() {
+	synchronized(this) {
+	    // this has to be inside the synchronized block!
+	    wrapperFactory = null;
+	    try {
+		wait();
+	    }
+	    catch (Exception e) {
+		System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notify() after destruction of initContext: " + e +
+				   " " + e.getMessage());
+	    }
+	}
+	wrapperFactory = null;
     }
 
-    browserControl = yourBrowserControl;
-
-    nativeBrowserControl = yourNativeWebShell;
-}
-
-/**
-
- * This is a very delicate method, and possibly subject to race
- * condition problems.  To combat this, our first step is to set our
- * browserControl to null, within a synchronized block which
- * synchronizes on the same object used in the run() method's event
- * loop.  By setting the browserControlCanvas ivar to null, we cause the
- * run method to return.
-
- */
-
-public void delete()
-{
-    // setting this to null causes the run thread to exit
-    synchronized(this) {
-        // this has to be inside the synchronized block!
-        browserControl = null;
-        synchronized (this) {
-            try {
-                wait();
-            }
-            catch (Exception e) {
-                System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notify() after destruction of initContext: " + e +
-                                   " " + e.getMessage());
-            }
-        }
+    public Exception getAndClearException() {
+	synchronized (this) {
+	    Exception result = exception;
+	    exception = null;
+	}
+	return exception;
     }
-    // PENDING(ashuk): do any necessary cleanup.
-    listenersToAdd = null;
-    doRemoveListeners();
-    listenersToRemove = null;
-    nativeBrowserControl = -1;
-    browserControl = null;
-    tempEnum = null;
-}
 
-//
-// Methods from Thread
-//
-
+    public void setException(Exception e) {
+	synchronized (this) {
+	    exception = e;
+	}
+    }
+    
+    //
+    // Methods from Thread
+    //
+    
 /**
 
  * This method is the heart of webclient.  It is called from
@@ -171,8 +149,6 @@ public void delete()
  * checks to see if there are any listeners to add, and adds them if
  * necessary.
 
- * @see nativeStartup
-
  * @see nativeProcessEvents
 
  * @see nativeAddListener
@@ -181,22 +157,13 @@ public void delete()
 
 public void run()
 {
-    //   this.setPriority(Thread.MIN_PRIORITY);
-    Assert.assert_it(-1 != nativeBrowserControl);
+    // our owner must have put an event in the queue 
+    Assert.assert_it(!runnablesWithNotify.empty());
 
-    nativeStartup(nativeBrowserControl);
-
-    // IMPORTANT: tell the browserControl, who is waiting for this
-    // message, that we have initialized successfully.
-    synchronized(browserControl) {
-        try {
-            browserControl.notify();
-        }
-        catch (Exception e) {
-            System.out.println("NativeEventThread.run: Exception: trying to send notify() to browserControl: " + e + " " + e.getMessage());
-        }
-    }
-
+    //
+    // Execute the event-loop.
+    // 
+    
     while (true) {
         try {
             Thread.sleep(1);
@@ -206,11 +173,9 @@ public void run()
                                " while sleeping: " + e.getMessage());
         }
         synchronized (this) {
-
-            // this has to be inside the synchronized block!
-            if (null == this.browserControl) {
+	    // if we are have been told to delete ourselves
+            if (null == this.wrapperFactory) {
                 try {
-                    nativeShutdown(nativeBrowserControl);
                     notify();
                 }
                 catch (Exception e) {
@@ -218,26 +183,22 @@ public void run()
                 }
                 return;
             }
-
-            if (this == firstThread) {
-                nativeProcessEvents(nativeBrowserControl);
-            }
-
-            if (null != listenersToAdd && !listenersToAdd.isEmpty()) {
-                tempEnum = listenersToAdd.elements();
-
-                while (tempEnum.hasMoreElements()) {
-                    WCEventListenerWrapper tempListener =
-                        (WCEventListenerWrapper) tempEnum.nextElement();
-                    nativeAddListener(nativeBrowserControl,tempListener.listener,
-                                      tempListener.listenerClassName);
-                }
-                // use removeAllElements instead of clear for jdk1.1.x
-                // compatibility.
-                listenersToAdd.removeAllElements();
-            }
-            doRemoveListeners();
-
+	    
+	    if (!runnables.empty()) {
+		((Runnable)runnables.pop()).run();
+	    }
+	    if (!runnablesWithNotify.empty()) {
+		((Runnable)runnablesWithNotify.pop()).run();
+		synchronized(wrapperFactory) {
+		    try {
+			wrapperFactory.notify();
+		    }
+		    catch (Exception e) {
+			System.out.println("NativeEventThread.run: Exception: trying to send notify() to wrapperFactory: " + e + " " + e.getMessage());
+		    }
+		}
+	    }
+	    nativeProcessEvents(nativeWrapperFactory);
         }
     }
 }
@@ -246,112 +207,21 @@ public void run()
 // private methods
 //
 
-/**
-
- *  this was broken out into a separate method due to the complexity of
- *  handling the case where we are to remove all listeners.
-
- */
-
-private void doRemoveListeners()
-{
-    if (null != listenersToRemove && !listenersToRemove.isEmpty()) {
-        tempEnum = listenersToRemove.elements();
-        while (tempEnum.hasMoreElements()) {
-            Object listenerObj = tempEnum.nextElement();
-            String listenerString;
-            if (listenerObj instanceof String) {
-                listenerString = (String) listenerObj;
-                if (listenerString.equals("all")) {
-                    nativeRemoveAllListeners(nativeBrowserControl);
-                    return;
-                }
-                else {
-                    throw new UnimplementedException("Webclient doesn't understand how to remove " + ((String)listenerObj) + ".");
-                }
-            }
-            else {
-                WCEventListenerWrapper tempListener =
-                    (WCEventListenerWrapper) listenerObj;
-                nativeRemoveListener(nativeBrowserControl,
-                                     tempListener.listener,
-                                     tempListener.listenerClassName);
-
-            }
-        }
-        // use removeAllElements instead of clear for jdk1.1.x
-        // compatibility.
-        listenersToRemove.removeAllElements();
-    }
-}
-
 //
 // Package methods
 //
 
-int getNativeBrowserControl() {
-    return nativeBrowserControl;
-}
-
-/**
-
- * Takes the abstract WebclientEventListener instance and adds it to a
- * Vector of listeners to be added.  This vector is scanned each time
- * around the event loop in run(). <P>
-
- * The vector is a vector of WCEventListenerWrapper instances.  In run()
- * these are unpacked and sent to nativeAddListener like this:
- * nativeAddListener(nativeBrowserControl,tempListener.listener,
- * tempListener.listenerClassName); <P>
-
- * @see run
-
- */
-
-void addListener(WCEventListenerWrapper newListener)
-{
-    Assert.assert_it(-1 != nativeBrowserControl);
-
-    synchronized (this) {
-        if (null == listenersToAdd) {
-            listenersToAdd = new Vector();
-        }
-        // use addElement instead of add for jdk1.1.x
-        // compatibility.
-        listenersToAdd.addElement(newListener);
+    void pushRunnable(Runnable toInvoke) {
+	synchronized (this) {
+	    runnables.push(toInvoke);
+	}
     }
-}
-
-/**
-
- * remove a listener
-
- * @param newListener if null, removes all listeners
-
- */
-
-void removeListener(WCEventListenerWrapper newListener)
-{
-    Assert.assert_it(-1 != nativeBrowserControl);
-
-    synchronized (this) {
-        if (null == listenersToRemove) {
-            listenersToRemove = new Vector();
-        }
-        if (null == newListener) {
-            String all = "all";
-            // use addElement instead of add for jdk1.1.x
-            // compatibility.
-            listenersToRemove.addElement(all);
-        }
-        else {
-            // use addElement instead of add for jdk1.1.x
-            // compatibility.
-            listenersToRemove.addElement(newListener);
-        }
+    
+    void pushNotifyRunnable(Runnable toInvoke) {
+	synchronized (this) {
+	    runnablesWithNotify.push(toInvoke);
+	}
     }
-
-}
 
 /**
 
@@ -369,7 +239,7 @@ void nativeEventOccurred(WebclientEventListener target,
     ParameterCheck.nonNull(target);
     ParameterCheck.nonNull(targetClassName);
 
-    Assert.assert_it(-1 != nativeBrowserControl);
+    Assert.assert_it(-1 != nativeWrapperFactory);
 
     WebclientEvent event = null;
 
@@ -399,41 +269,8 @@ void nativeEventOccurred(WebclientEventListener target,
 }
 
 //
-// local methods
-//
-
-
-
-
-//
 // Native methods
 //
-
-/**
-
- * Takes the int from ImplObjectNative.getNativeBrowserControl, the
- * meaning of which is left up to the implementation, and does any
- * per-window creation and initialization tasks. <P>
-
- * For mozilla, this means creating the nsIWebShell instance, attaching
- * to the native event queue, creating the nsISessionHistory instance, etc.
-
- */
-
-public native void nativeStartup(int webShellPtr);
-
-/**
-
- * Takes the int from ImplObjectNative.getNativeBrowserControl, the
- * meaning of which is left up to the implementation, and does any
- * per-window creation and initialization tasks. <P>
-
- * For mozilla, this means creating the nsIWebShell instance, attaching
- * to the native event queue, creating the nsISessionHistory instance, etc.
-
- */
-
-public native void nativeShutdown(int webShellPtr);
 
 
 /**
@@ -445,41 +282,5 @@ public native void nativeShutdown(int webShellPtr);
  */
 
 public native void nativeProcessEvents(int webShellPtr);
-
-/**
-
- * Called from Java to allow the native code to add a "listener" to the
- * underlying browser implementation.  The native code should do what's
- * necessary to add the appropriate listener type.  When a listener
- * event occurrs, the native code should call the nativeEventOccurred
- * method of this instance, passing the typedListener argument received
- * from nativeAddListener.  See the comments in the native
- * implementation.
-
- * @see nativeEventOccurred
-
- */
-
-public native void nativeAddListener(int webShellPtr,
-                                     WebclientEventListener typedListener,
-                                     String listenerName);
-
-/**
-
- * Called from Java to allow the native code to remove a listener.
-
- */
-
-public native void nativeRemoveListener(int webShellPtr,
-                                        WebclientEventListener typedListener,
-                                        String listenerName);
-
-/**
-
- * Called from Java to allow the native code to remove all listeners.
-
- */
-
-public native void nativeRemoveAllListeners(int webShellPrt);
 
 } // end of class NativeEventThread

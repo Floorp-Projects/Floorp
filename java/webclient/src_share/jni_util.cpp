@@ -310,7 +310,7 @@ void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
     if (env->ExceptionOccurred()) {
       env->ExceptionClear();
     }
-    jclass excCls = env->FindClass("java/lang/Exception");
+    jclass excCls = env->FindClass("java/lang/RuntimeException");
     
     if (excCls == 0) { // Unable to find the exception class, give up.
 	if (env->ExceptionOccurred())

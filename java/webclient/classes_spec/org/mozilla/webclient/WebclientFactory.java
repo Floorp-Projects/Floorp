@@ -34,7 +34,9 @@ import java.io.FileNotFoundException;
  * the factory for per-window {@link BrowserControl} instances.  This
  * interface allows a pluggable webclient API implementation.  The
  * static methods in {@link BrowserControlFactory} call through to
- * methods on this interface.</p>
+ * methods on this interface.  The implementation of this interface must
+ * be a singleton and its the lifetime must be the same as the
+ * application.</p>
  */
 
 public interface WebclientFactory {

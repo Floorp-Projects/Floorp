@@ -95,7 +95,6 @@ REQUIRES	= xpcom \
 #	HistoryActionEvents.cpp \
 #	ISupportsPeer.cpp \
 #	NativeEventThreadActionEvents.cpp \
-#	NavigationImpl.cpp \
 #	NavigationActionEvents.cpp \
 #	InputStreamShim.cpp \
 #	WindowControlImpl.cpp \
@@ -104,8 +103,10 @@ REQUIRES	= xpcom \
 
 CPPSRCS = \
 	NativeBrowserControl.cpp \
+	NativeWrapperFactory.cpp \
 	EmbedWindow.cpp \
 	NativeEventThread.cpp \
+	NavigationImpl.cpp \
 	ns_util.cpp \
 	ns_util_export.cpp \
 	dom_util.cpp \

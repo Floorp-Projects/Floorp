@@ -57,7 +57,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFEnumeration_nativeHasMoreElem
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFEnumeration_nativeHasMoreElements: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     PR_ASSERT(nativeRDFNode);
@@ -92,7 +92,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFEnumeration_nativeNextElement
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFEnumeration_nativeNextElement: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     PR_ASSERT(nativeRDFNode);
@@ -156,7 +156,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFEnumeration_nativeFinalize
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFEnumeration_nativeFinalize: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     jint nativeEnum, nativeContainer;

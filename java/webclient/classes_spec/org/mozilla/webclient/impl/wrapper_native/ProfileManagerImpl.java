@@ -46,29 +46,29 @@ public ProfileManagerImpl(WrapperFactory yourFactory)
 }
 
 public void startup() {
-    nativeStartup(getWrapperFactory().getNativeContext(), null, null);
+    nativeStartup(getWrapperFactory().getNativeWrapperFactory(), null, null);
 }
 
 public void shutdown() {
-    nativeShutdown(getWrapperFactory().getNativeContext());
+    nativeShutdown(getWrapperFactory().getNativeWrapperFactory());
 }
 
 public int getProfileCount()
 {
-    return nativeGetProfileCount(getWrapperFactory().getNativeContext());
+    return nativeGetProfileCount(getWrapperFactory().getNativeWrapperFactory());
 }
 
 public String [] getProfileList()
 {
     String [] list = null;
-    list = nativeGetProfileList(getWrapperFactory().getNativeContext());
+    list = nativeGetProfileList(getWrapperFactory().getNativeWrapperFactory());
     return list;
 }
 
 public boolean profileExists(String profileName)
 {
     boolean exists = false;
-    exists = nativeProfileExists(getWrapperFactory().getNativeContext(),
+    exists = nativeProfileExists(getWrapperFactory().getNativeWrapperFactory(),
                                  profileName);
     return exists;
 }
@@ -77,13 +77,13 @@ public String getCurrentProfile()
 {
     String currProfile = null;
     currProfile = 
-        nativeGetCurrentProfile(getWrapperFactory().getNativeContext());
+        nativeGetCurrentProfile(getWrapperFactory().getNativeWrapperFactory());
     return currProfile;
 }
 
 public void setCurrentProfile(String profileName)
 {
-    nativeSetCurrentProfile(getWrapperFactory().getNativeContext(),
+    nativeSetCurrentProfile(getWrapperFactory().getNativeWrapperFactory(),
                             profileName);
 }
 
@@ -92,20 +92,20 @@ public void createNewProfile(String profileName,
                              String langcode, 
                              boolean useExistingDir)
 {
-    nativeCreateNewProfile(getWrapperFactory().getNativeContext(),
+    nativeCreateNewProfile(getWrapperFactory().getNativeWrapperFactory(),
                            profileName, nativeProfileDir, langcode, 
                            useExistingDir);
 }
 
 public void renameProfile(String currName, String newName)
 {
-    nativeRenameProfile(getWrapperFactory().getNativeContext(),
+    nativeRenameProfile(getWrapperFactory().getNativeWrapperFactory(),
                         currName, newName);
 }
 
 public void deleteProfile(String profileName, boolean canDeleteFiles)
 {
-    nativeDeleteProfile(getWrapperFactory().getNativeContext(),
+    nativeDeleteProfile(getWrapperFactory().getNativeWrapperFactory(),
                         profileName, canDeleteFiles);
 }
 

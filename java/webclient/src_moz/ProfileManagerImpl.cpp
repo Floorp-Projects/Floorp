@@ -55,7 +55,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeStartup: entering\n"));
     nsresult rv;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     
@@ -146,7 +146,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeShutdown: entering\n"));
 
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
 
     PR_ASSERT(wcContext);
 
@@ -175,7 +175,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     nsresult rv;
     jint result = -1;
     PRInt32 count = 0;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     nsCOMPtr<nsIProfile> profile = nsnull;
     PR_ASSERT(wcContext);
 
@@ -199,7 +199,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Profi
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeProfileExists: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     PR_ASSERT(wcContext);
     nsCOMPtr<nsIProfile> profile = wcContext->sProfile;
     PR_ASSERT(profile);
@@ -229,7 +229,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeSetCurrentProfile: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     PR_ASSERT(wcContext);
     nsCOMPtr<nsIProfile> profile = wcContext->sProfile;
     PR_ASSERT(profile);
@@ -255,7 +255,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Profil
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeGetCurrentProfile: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     PR_ASSERT(wcContext);
     nsCOMPtr<nsIProfile> profile = wcContext->sProfile;
     PR_ASSERT(profile);
@@ -281,7 +281,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_P
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeGetProfileList: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     PR_ASSERT(wcContext);
     nsCOMPtr<nsIProfile> profile = wcContext->sProfile;
     PR_ASSERT(profile);
@@ -325,7 +325,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeCreateNewProfile: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     PR_ASSERT(wcContext);
     nsCOMPtr<nsIProfile> profile = wcContext->sProfile;
     PR_ASSERT(profile);
@@ -365,7 +365,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeRenameProfile: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     PR_ASSERT(wcContext);
     nsCOMPtr<nsIProfile> profile = wcContext->sProfile;
     PR_ASSERT(profile);
@@ -397,7 +397,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeDeleteProfile: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     PR_ASSERT(wcContext);
     nsCOMPtr<nsIProfile> profile = wcContext->sProfile;
     PR_ASSERT(profile);

@@ -30,16 +30,18 @@
 
 #include "org_mozilla_webclient_impl_wrapper_0005fnative_NavigationImpl.h"
 
-#include "NavigationActionEvents.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
+#include "nsString.h"
+#include "nsIWebNavigation.h"
 #include "nsNetCID.h"
 
+#include "NativeBrowserControl.h"
 #include "ns_util.h"
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeLoadURL
-(JNIEnv *env, jobject obj, jint webShellPtr, jstring urlString)
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jstring urlString)
 {
     jobject			jobj = obj;
 
@@ -55,39 +57,40 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     
     PRUnichar	*	urlStringChars = (PRUnichar *) ::util_GetStringChars(env,
                                                                          urlString);
-    PRInt32         urlLength = (PRInt32) ::util_GetStringLength(env, urlString);
-    
+
     if (::util_ExceptionOccurred(env)) {
-	::util_ThrowExceptionToJava(env, "raptorWebShellLoadURL Exception: unable to extract Java string");
-	if (urlStringChars != nsnull)
-	  ::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
-	return;
-      }
+        ::util_ThrowExceptionToJava(env, "raptorWebShellLoadURL Exception: unable to extract Java string");
+        if (urlStringChars != nsnull)
+            ::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
+        return;
+    }
     
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
     
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellLoadURL");
+    if (nativeBrowserControl == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null passed to nativeLoadURL");
       if (urlStringChars != nsnull)
-	::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
+          ::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
       return;
     }
     
-    if (initContext->initComplete) {
-      wsLoadURLEvent	* actionEvent = new wsLoadURLEvent(initContext->webNavigation, urlStringChars, urlLength);
-      PLEvent			* event       = (PLEvent*) *actionEvent;
-      
-      ::util_PostEvent(initContext, event);
+    nsresult rv = 
+        nativeBrowserControl->mNavigation->LoadURI(urlStringChars,
+                                                   nsIWebNavigation::LOAD_FLAGS_NONE,
+                                                   nsnull, nsnull, nsnull);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't load URL");
     }
-    
     ::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
 }
 
+    /**********************
+
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeLoadFromStream
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject stream, jstring uri, 
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jobject stream, jstring uri, 
  jstring contentType, jint contentLength, jobject loadProperties)
 {
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
     PRUnichar *uriStringUniChars = nsnull;
     PRInt32 uriStringUniCharsLength = -1;
     const char *contentTypeChars = nsnull;
@@ -96,8 +99,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     nsString *uriNsString = nsnull;
     wsLoadFromStreamEvent *actionEvent = nsnull;
     
-    if (initContext == nsnull || !initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeLoadFromStream");
+    if (nativeBrowserControl == nsnull || !nativeBrowserControl->initComplete) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeLoadFromStream");
         return;
     }
     uriStringUniChars = (PRUnichar *) ::util_GetStringChars(env, uri);
@@ -129,7 +132,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         }
     }
 
-    if (!(actionEvent = new wsLoadFromStreamEvent(initContext,
+    if (!(actionEvent = new wsLoadFromStreamEvent(nativeBrowserControl,
                                                   (void *) globalStream,
                                                   *uriNsString,
                                                   contentTypeChars,
@@ -139,7 +142,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         ::util_ThrowExceptionToJava(env, "Exception: nativeLoadFromStream: can't create wsLoadFromStreamEvent");
         goto NLFS_CLEANUP;
     }
-    ::util_PostSynchronousEvent(initContext, (PLEvent *) *actionEvent);
+    ::util_PostSynchronousEvent(nativeBrowserControl, (PLEvent *) *actionEvent);
 
  NLFS_CLEANUP:
     ::util_ReleaseStringChars(env, uri, (const jchar *) uriStringUniChars);
@@ -151,10 +154,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativePost
-(JNIEnv *env, jobject obj, jint webShellPtr, jstring absoluteURL, jstring target, jint postDataLength,
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jstring absoluteURL, jstring target, jint postDataLength,
  jstring postData, jint postHeadersLength, jstring postHeaders)
 {
-    NativeBrowserControl *initContext      = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl *nativeBrowserControl      = (NativeBrowserControl *) nativeBCPtr;
     const PRUnichar     *urlChars         = nsnull;
     PRInt32             urlLen;
     const PRUnichar     *targetChars      = nsnull;
@@ -173,8 +176,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         return;
     }
 
-    if (initContext == nsnull || !initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativePost");
+    if (nativeBrowserControl == nsnull || !nativeBrowserControl->initComplete) {
+        ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativePost");
         return;
     }
 
@@ -239,7 +242,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     }
 
 
-    if (!(actionEvent = new wsPostEvent(initContext,
+    if (!(actionEvent = new wsPostEvent(nativeBrowserControl,
                                         uri,
                                         targetChars,
                                         targetLen, 
@@ -252,7 +255,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         goto NPFS_CLEANUP;
     }
 
-    ::util_PostSynchronousEvent(initContext, (PLEvent *) *actionEvent);
+    ::util_PostSynchronousEvent(nativeBrowserControl, (PLEvent *) *actionEvent);
 
  NPFS_CLEANUP:
     if (urlChars != nsnull)
@@ -269,23 +272,23 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeRefresh
-(JNIEnv *env, jobject obj, jint webShellPtr, jlong loadFlags)
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jlong loadFlags)
 {
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
 
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellRefresh");
+	if (nativeBrowserControl == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellRefresh");
 		return;
 	}
 
-	if (initContext->initComplete) {
-		wsRefreshEvent	* actionEvent = new wsRefreshEvent(initContext->webNavigation, (PRInt32) loadFlags);
+	if (nativeBrowserControl->initComplete) {
+		wsRefreshEvent	* actionEvent = new wsRefreshEvent(nativeBrowserControl->webNavigation, (PRInt32) loadFlags);
         PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
-        ::util_PostEvent(initContext, event);
+        ::util_PostEvent(nativeBrowserControl, event);
 
 		return;
 	}
@@ -294,37 +297,37 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeStop
-(JNIEnv *env, jobject obj, jint webShellPtr)
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
 	
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellStop");
+	if (nativeBrowserControl == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellStop");
 		return;
 	}
 
-	if (initContext->initComplete) {
-		wsStopEvent		* actionEvent = new wsStopEvent(initContext->webNavigation);
+	if (nativeBrowserControl->initComplete) {
+		wsStopEvent		* actionEvent = new wsStopEvent(nativeBrowserControl->webNavigation);
         PLEvent			* event       = (PLEvent*) *actionEvent;
 
-        ::util_PostEvent(initContext, event);
+        ::util_PostEvent(nativeBrowserControl, event);
 	}
 }
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeSetPrompt
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject userPrompt)
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jobject userPrompt)
 {
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
 	
-    NativeBrowserControl* initContext = (NativeBrowserControl *) webShellPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeSetPrompt");
+	if (nativeBrowserControl == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeSetPrompt");
 		return;
 	}
 
@@ -333,18 +336,19 @@ Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeSetPrompt
 		return;
 	}
 
-	if (!initContext->initComplete) {
+	if (!nativeBrowserControl->initComplete) {
         return;
     }
     
     // IMPORTANT: do the DeleteGlobalRef when we set a new prompt!
     
-    PR_ASSERT(initContext->browserContainer);
+    PR_ASSERT(nativeBrowserControl->browserContainer);
     
 
-    wsSetPromptEvent		* actionEvent = new wsSetPromptEvent(initContext->browserContainer, userPrompt);
+    wsSetPromptEvent		* actionEvent = new wsSetPromptEvent(nativeBrowserControl->browserContainer, userPrompt);
     PLEvent			* event       = (PLEvent*) *actionEvent;
-    ::util_PostSynchronousEvent(initContext, event);
+    ::util_PostSynchronousEvent(nativeBrowserControl, event);
 
 }
 
+********************/

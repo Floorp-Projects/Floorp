@@ -34,7 +34,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Bookmarks
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("BookmarksImpl_nativeStartup: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     nsresult rv;
@@ -55,7 +55,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Bookmarks
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("BookmarksImpl_nativeShutdown: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     nsresult rv;
@@ -86,7 +86,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Bookmarks
 
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("BookmarksImpl_nativeGetBookmarks: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     PR_ASSERT(kNC_BookmarksRoot);
@@ -106,7 +106,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_BookmarksImpl_nativeNewRDFNode
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("BookmarksImpl_nativeNewRDFNode: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     jint result = -1;

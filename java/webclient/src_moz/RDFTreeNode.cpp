@@ -50,7 +50,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_RDFTr
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFTreeNode_nativeIsLeaf: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     jboolean result = JNI_FALSE;
@@ -77,7 +77,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_RDFTr
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFTreeNode_nativeIsContainer: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     nsCOMPtr<nsIRDFNode> node = (nsIRDFNode *) nativeRDFNode;
@@ -110,7 +110,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeGetChildAt
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFTreeNode_nativeGetChildAt: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     
@@ -138,7 +138,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeGetChildCount
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFTreeNode_nativeGetChildCount: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     jint result = -1;
@@ -167,7 +167,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeGetIndex
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFTreeNode_nativeGetIndex: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     jint result = -1;
@@ -191,7 +191,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeToString
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFTreeNode_nativeToString: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     
@@ -298,7 +298,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeInsertElementA
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFTreeNode_nativeInsertElementAt: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
     PR_ASSERT(childProps); // PENDING(edburns): do we need to NewGlobalRef this?
@@ -427,7 +427,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeNewFolder
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("RDFTreeNode_nativeNewFolder: entering\n"));
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
 

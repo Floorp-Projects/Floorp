@@ -101,7 +101,7 @@ protected int getNativeBrowserControl() {
 
 protected NativeEventThread getNativeEventThread() {
     return (NativeEventThread) 
-        getWrapperFactory().getNativeEventThread(getBrowserControl());
+        getWrapperFactory().getNativeEventThread();
 }
 
 } // end of class ImplObject

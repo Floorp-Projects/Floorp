@@ -71,6 +71,15 @@ const char *gImplementedInterfaces[] = {
         nsnull
         };
 
+char * errorMessages[] = {
+	"No Error",
+	"Could not obtain the event queue service.",
+	"Unable to create the WebShell instance.",
+	"Unable to initialize the WebShell instance.",
+	"Unable to show the WebShell."
+};
+
+
 //
 // Local Functions
 //
@@ -80,15 +89,25 @@ const char *gImplementedInterfaces[] = {
 // 
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppInitialize(
-										JNIEnv *env, jobject obj, jstring verifiedBinDirAbsolutePath)
+Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeCreateNativeWrapperFactory(
+										JNIEnv *env, jobject obj)
 {
     prLogModuleInfo = PR_NewLogModule("webclient");
+    NativeWrapperFactory *result = new NativeWrapperFactory();
+    return (jint) result;
+}
+
+
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppInitialize(
+										JNIEnv *env, jobject obj, jstring verifiedBinDirAbsolutePath, jint nativeWF, jobject nativeEventThread)
+{
     const char *nativePath = nsnull;
-    WebclientContext *result = new WebclientContext();
+    NativeWrapperFactory *nativeWrapperFactory = (NativeWrapperFactory *) nativeWF;
     nsresult rv;
     nsCOMPtr<nsILocalFile> binDir;
-
+    
     // PENDING(edburns): We need this for rdf_getChildCount
     PR_SetEnv("XPCOM_CHECK_THREADSAFE=0");
 
@@ -115,7 +134,6 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppInit
         if (NS_FAILED(rv)) {
             ::util_ThrowExceptionToJava(env, 
                                   "Can't get nsILocalFile from bin directory");
-            return (jint) rv;
         }
     }
     ::util_ReleaseStringUTFChars(env, verifiedBinDirAbsolutePath, nativePath);
@@ -131,7 +149,6 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppInit
 
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "NS_InitEmbedding() failed.");
-        return (jint) rv;
     }
 
     // the rest of the startup tasks are coordinated from the java side.
@@ -158,9 +175,12 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppInit
         ::util_GetJavaVM(env, &gVm);  // save this vm reference
     }
 
-    util_InitializeShareInitContext(env, &(result->shareContext));
-
-    return (jint) result;
+    util_InitializeShareInitContext(env, &(nativeWrapperFactory->shareContext));
+    rv = nativeWrapperFactory->Init(env, nativeEventThread);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, 
+                                    "Failed to init NativeWrapperFactory");
+    }
 }
 
 JNIEXPORT void JNICALL 
@@ -170,7 +190,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppSetu
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("WrapperFactoryImpl_nativeAppSetup: entering\n"));
     nsresult rv;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
 
@@ -230,7 +250,7 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeTermina
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("WrapperFactoryImpl_nativeTerminate: entering\n"));
     nsresult rv;
-    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
     PR_ASSERT(wcContext);
 
@@ -247,6 +267,8 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeTermina
     PR_ASSERT(nsnull == wcContext->sProfileInternal);
 
     util_DeallocateShareInitContext(env, &(wcContext->shareContext));
+    
+    wcContext->Destroy();
 
     delete wcContext;
 
@@ -294,17 +316,54 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeDoesImp
 }
 
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeCreateBrowserControl
-(JNIEnv *env, jobject obj, jint nativeContext) {
+(JNIEnv *env, jobject obj) {
     NativeBrowserControl* initContext = new NativeBrowserControl();
 
     return (jint) initContext;
 }
 
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeInitBrowserControl
+(JNIEnv *env, jobject obj, jint nativeWFPtr, jint nativeBCPtr) {
+    nsresult rv = NS_ERROR_FAILURE;
+    NativeWrapperFactory * nativeWrapperFactory = (NativeWrapperFactory *) nativeWFPtr;
+    NativeBrowserControl * nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    
+    if (!nativeBrowserControl || !nativeWFPtr) {
+	    ::util_ThrowExceptionToJava(env, 
+                                    "NULL nativeBCPtr passed to nativeInitBrowserControl.");
+        return;
+    }
+    rv = nativeBrowserControl->Init();
+    if (NS_FAILED(rv)) {
+	    ::util_ThrowExceptionToJava(env, 
+                                    errorMessages[3]);
+        return;
+    }
+    nativeWrapperFactory->ProcessEventLoop();
+    
+    while (!nativeWrapperFactory->IsInitialized()) {
+        
+        ::PR_Sleep(PR_INTERVAL_NO_WAIT);
+        
+        if (NS_FAILED(nativeWrapperFactory->GetFailureCode())) {
+            ::util_ThrowExceptionToJava(env, errorMessages[3]);
+            return;
+        }
+    }
+}
+
+
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeDestroyBrowserControl
-(JNIEnv *env, jobject obj, jint nativeContext, jint nativeBrowserControl) {
-    NativeBrowserControl* initContext = 
-        (NativeBrowserControl *)nativeBrowserControl;
-    delete initContext;
+(JNIEnv *env, jobject obj, jint nativeBC) {
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *)nativeBC;
+    if (!nativeBrowserControl) {
+	    ::util_ThrowExceptionToJava(env, 
+                                    "NULL nativeBCPtr passed to nativeDestroyBrowserControl.");
+        return -1;
+    }
+    nativeBrowserControl->Destroy(); 
+
+    delete nativeBrowserControl;
     return 0;
 }
 

@@ -82,11 +82,16 @@ public void loadURL(String absoluteURL)
 {
     ParameterCheck.nonNull(absoluteURL);
     getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    
-    synchronized(getBrowserControl()) {
-        nativeLoadURL(getNativeBrowserControl(), absoluteURL);
-    }
+    final int bc = getNativeBrowserControl();
+    final String url = new String(absoluteURL);
+    Assert.assert_it(-1 != bc);
+
+    Runnable loadURL = new Runnable() {
+      public void run() {
+          NavigationImpl.this.nativeLoadURL(bc, url);
+      }
+    };
+    getNativeEventThread().pushRunnable(loadURL);
 }
 
 public void loadFromStream(InputStream stream, String uri,
@@ -223,7 +228,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.3 2004/04/10 21:50:38 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.4 2004/04/15 22:58:06 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
