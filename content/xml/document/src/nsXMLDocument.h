@@ -45,7 +45,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIScriptContext.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIEventQueueService.h"
 

@@ -45,7 +45,7 @@
 
 class nsIContent;
 class nsMappedAttributes;
-class nsIHTMLStyleSheet;
+class nsHTMLStyleSheet;
 class nsRuleWalker;
 class nsIHTMLContent;
 
@@ -104,8 +104,8 @@ public:
   PRInt32 IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
 
   nsresult SetAndTakeMappedAttr(nsIAtom* aLocalName, nsAttrValue& aValue,
-                                nsIHTMLContent* aContent, nsIHTMLStyleSheet* aSheet);
-  nsresult SetMappedAttrStyleSheet(nsIHTMLStyleSheet* aSheet);
+                                nsIHTMLContent* aContent, nsHTMLStyleSheet* aSheet);
+  nsresult SetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet);
   void WalkMappedAttributeStyleRules(nsRuleWalker* aRuleWalker);
 
   void Compact();
@@ -120,7 +120,7 @@ private:
   PRUint32 MappedAttrCount() const;
 
   nsresult GetModifiableMapped(nsIHTMLContent* aContent,
-                               nsIHTMLStyleSheet* aSheet,
+                               nsHTMLStyleSheet* aSheet,
                                PRBool aWillAddAttr,
                                nsMappedAttributes** aModifiable);
   nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);

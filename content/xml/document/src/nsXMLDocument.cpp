@@ -52,7 +52,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocumentLoader.h"
 #include "nsHTMLParts.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMComment.h"

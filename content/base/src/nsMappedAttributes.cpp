@@ -37,11 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMappedAttributes.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsRuleWalker.h"
 #include "prmem.h"
 
-nsMappedAttributes::nsMappedAttributes(nsIHTMLStyleSheet* aSheet,
+nsMappedAttributes::nsMappedAttributes(nsHTMLStyleSheet* aSheet,
                                        nsMapRuleToAttributesFunc aMapRuleFunc)
   : mAttrCount(0),
     mSheet(aSheet),
@@ -209,7 +209,7 @@ nsMappedAttributes::GetStyleSheet(nsIStyleSheet*& aSheet) const
 }
 
 void
-nsMappedAttributes::SetStyleSheet(nsIHTMLStyleSheet* aSheet)
+nsMappedAttributes::SetStyleSheet(nsHTMLStyleSheet* aSheet)
 {
   if (mSheet) {
     mSheet->DropMappedAttributes(this);

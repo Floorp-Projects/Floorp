@@ -48,7 +48,7 @@
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsICSSStyleRule.h"
 #include "nsIContentViewer.h"
@@ -69,7 +69,7 @@ class nsHTMLBodyElement;
 
 class BodyRule: public nsIStyleRule {
 public:
-  BodyRule(nsHTMLBodyElement* aPart, nsIHTMLStyleSheet* aSheet);
+  BodyRule(nsHTMLBodyElement* aPart, nsHTMLStyleSheet* aSheet);
   virtual ~BodyRule();
 
   NS_DECL_ISUPPORTS
@@ -84,7 +84,7 @@ public:
 #endif
 
   nsHTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
-  nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
+  nsHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
 };
 
 //----------------------------------------------------------------------
@@ -126,7 +126,7 @@ protected:
 
 //----------------------------------------------------------------------
 
-BodyRule::BodyRule(nsHTMLBodyElement* aPart, nsIHTMLStyleSheet* aSheet)
+BodyRule::BodyRule(nsHTMLBodyElement* aPart, nsHTMLStyleSheet* aSheet)
 {
   mPart = aPart;
   mSheet = aSheet;
@@ -512,7 +512,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        nsIHTMLStyleSheet* styleSheet = doc->GetAttributeStyleSheet();
+        nsHTMLStyleSheet* styleSheet = doc->GetAttributeStyleSheet();
         if (styleSheet) {
           nscolor color;
           if (aAttributes->GetAttribute(nsHTMLAtoms::link, value) !=

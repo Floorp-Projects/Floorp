@@ -47,7 +47,7 @@ class nsIDOMNodeList;
 class nsIDOMHTMLCollection;
 class nsIDOMHTMLFormElement;
 class nsIDOMHTMLMapElement;
-class nsIHTMLStyleSheet;
+class nsHTMLStyleSheet;
 class nsIStyleSheet;
 class nsICSSLoader;
 class nsIContent;

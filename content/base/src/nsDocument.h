@@ -81,7 +81,7 @@
 #include "nsIScriptEventManager.h"
 
 // Put these here so all document impls get them automatically
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 
 #include "pldhash.h"
@@ -323,7 +323,7 @@ public:
    * Get this document's attribute stylesheet.  May return null if
    * there isn't one.
    */
-  nsIHTMLStyleSheet* GetAttributeStyleSheet() const {
+  nsHTMLStyleSheet* GetAttributeStyleSheet() const {
     return mAttrStyleSheet;
   }
 
@@ -564,7 +564,7 @@ protected:
   nsSupportsHashtable mContentWrapperHash;
 
   nsCOMPtr<nsICSSLoader> mCSSLoader;
-  nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
+  nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
   nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   nsCOMPtr<nsIScriptEventManager> mScriptEventManager;

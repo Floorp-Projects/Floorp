@@ -41,7 +41,7 @@
 #include "prmem.h"
 #include "prbit.h"
 #include "nsString.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsRuleWalker.h"
 #include "nsMappedAttributes.h"
 #include "nsUnicharUtils.h"
@@ -434,7 +434,7 @@ nsresult
 nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
                                           nsAttrValue& aValue,
                                           nsIHTMLContent* aContent,
-                                          nsIHTMLStyleSheet* aSheet)
+                                          nsHTMLStyleSheet* aSheet)
 {
   nsRefPtr<nsMappedAttributes> mapped;
   nsresult rv = GetModifiableMapped(aContent, aSheet, PR_TRUE,
@@ -448,7 +448,7 @@ nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
 }
 
 nsresult
-nsAttrAndChildArray::SetMappedAttrStyleSheet(nsIHTMLStyleSheet* aSheet)
+nsAttrAndChildArray::SetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
 {
   if (!mImpl || !mImpl->mMappedAttrs ||
       aSheet == mImpl->mMappedAttrs->GetStyleSheet()) {
@@ -555,7 +555,7 @@ nsAttrAndChildArray::MappedAttrCount() const
 
 nsresult
 nsAttrAndChildArray::GetModifiableMapped(nsIHTMLContent* aContent,
-                                         nsIHTMLStyleSheet* aSheet,
+                                         nsHTMLStyleSheet* aSheet,
                                          PRBool aWillAddAttr,
                                          nsMappedAttributes** aModifiable)
 {
@@ -600,10 +600,9 @@ nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
     return NS_OK;
   }
 
-  nsRefPtr<nsMappedAttributes> mapped;
-  nsresult rv = aAttributes->GetStyleSheet()->
-    UniqueMappedAttributes(aAttributes, *getter_AddRefs(mapped));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsMappedAttributes> mapped =
+    aAttributes->GetStyleSheet()->UniqueMappedAttributes(aAttributes);
+  NS_ENSURE_TRUE(mapped, NS_ERROR_OUT_OF_MEMORY);
 
   if (mapped != aAttributes) {
     // Reset the stylesheet of aAttributes so that it doesn't spend time

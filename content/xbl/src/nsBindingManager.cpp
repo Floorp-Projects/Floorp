@@ -71,7 +71,7 @@
 #include "nsXBLInsertionPoint.h"
 
 #include "nsIStyleSheet.h"
-#include "nsIHTMLStyleSheet.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 
 #include "nsIStyleRuleProcessor.h"
