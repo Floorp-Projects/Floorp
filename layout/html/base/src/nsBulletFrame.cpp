@@ -46,17 +46,17 @@ nsBulletFrame::~nsBulletFrame()
 }
 
 NS_IMETHODIMP
-nsBulletFrame::Destroy(nsIPresContext& aPresContext)
+nsBulletFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Stop image loading first
-  mImageLoader.StopAllLoadImages(&aPresContext);
+  mImageLoader.StopAllLoadImages(aPresContext);
 
   // Let base class do the rest
   return nsFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-nsBulletFrame::Init(nsIPresContext&  aPresContext,
+nsBulletFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIStyleContext* aContext,
@@ -107,7 +107,7 @@ nsBulletFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-nsBulletFrame::Paint(nsIPresContext&      aCX,
+nsBulletFrame::Paint(nsIPresContext*      aCX,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer)
@@ -190,7 +190,7 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
     case NS_STYLE_LIST_STYLE_KATAKANA:
     case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
     case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-      aCX.GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
+      aCX->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       GetListItemText(aCX, *myList, text);
       aRenderingContext.SetFont(fm);
       aRenderingContext.DrawString(text, mPadding.left, mPadding.top);
@@ -668,7 +668,7 @@ static void GeorgianToText(PRInt32 ordinal, nsString& result)
 }
 
 void
-nsBulletFrame::GetListItemText(nsIPresContext& aCX,
+nsBulletFrame::GetListItemText(nsIPresContext* aCX,
                                const nsStyleList& aListStyle,
                                nsString& result)
 {
@@ -788,7 +788,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   if (myList->mListStyleImage.Length() > 0) {
     mImageLoader.GetDesiredSize(aCX, &aReflowState, aMetrics);
     if (!mImageLoader.GetLoadImageFailed()) {
-      nsHTMLContainerFrame::CreateViewForFrame(*aCX, this, mStyleContext,
+      nsHTMLContainerFrame::CreateViewForFrame(aCX, this, mStyleContext,
                                                PR_FALSE);
       aMetrics.ascent = aMetrics.height;
       aMetrics.descent = 0;
@@ -854,7 +854,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_ARMENIAN: 
     case NS_STYLE_LIST_STYLE_GEORGIAN: 
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
-      GetListItemText(*aCX, *myList, text);
+      GetListItemText(aCX, *myList, text);
       fm->GetHeight(aMetrics.height);
       aReflowState.rendContext->SetFont(fm);
       aReflowState.rendContext->GetWidth(text, aMetrics.width);
@@ -866,7 +866,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 }
 
 NS_IMETHODIMP
-nsBulletFrame::Reflow(nsIPresContext& aPresContext,
+nsBulletFrame::Reflow(nsIPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus)
@@ -881,13 +881,13 @@ nsBulletFrame::Reflow(nsIPresContext& aPresContext,
       const nsStyleList* myList = (const nsStyleList*)
         mStyleContext->GetStyleData(eStyleStruct_List);
       if (myList->mListStyleImage != oldImageURL) {
-        mImageLoader.UpdateURLSpec(&aPresContext, myList->mListStyleImage);
+        mImageLoader.UpdateURLSpec(aPresContext, myList->mListStyleImage);
       }
     }
   }
 
   // Get the base size
-  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  GetDesiredSize(aPresContext, aReflowState, aMetrics);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice

@@ -244,7 +244,7 @@ nsProgressMeterFrame :: ~nsProgressMeterFrame ( )
 }
 
 NS_IMETHODIMP
-nsProgressMeterFrame::Init(nsIPresContext&  aPresContext,
+nsProgressMeterFrame::Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -274,7 +274,7 @@ nsProgressMeterFrame::Init(nsIPresContext&  aPresContext,
 
   nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":progressmeter-stripe")) );
   nsIStyleContext* barStyle = nsnull;
-  aPresContext.ProbePseudoStyleContextFor(aContent, barPseudo, aContext, 
+  aPresContext->ProbePseudoStyleContextFor(aContent, barPseudo, aContext, 
                                           PR_FALSE, &barStyle);
   mBarStyle = barStyle;
 
@@ -361,7 +361,7 @@ nsProgressMeterFrame::setMode(nsAutoString mode)
 // children, draw our grippies for each toolbar.
 //
 NS_IMETHODIMP
-nsProgressMeterFrame :: Paint ( nsIPresContext& aPresContext,
+nsProgressMeterFrame :: Paint ( nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
@@ -390,7 +390,7 @@ nsProgressMeterFrame :: Paint ( nsIPresContext& aPresContext,
 		
 	// figure our twips convertion ratio
     //	float p2t;
-    //	aPresContext.GetScaledPixelsToTwips(p2t);
+    //	aPresContext->GetScaledPixelsToTwips(p2t);
     //	nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
 	// figure out our rectangle
@@ -415,7 +415,7 @@ nsProgressMeterFrame :: Paint ( nsIPresContext& aPresContext,
 } // Paint
 
 void
-nsProgressMeterFrame :: PaintBar ( nsIPresContext& aPresContext,
+nsProgressMeterFrame :: PaintBar ( nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& rect,
 							float progress,
@@ -497,13 +497,13 @@ nsProgressMeterFrame::GetBrightness(nscolor c)
 }
 
 void 
-nsProgressMeterFrame::PaintBarSolid(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, 
+nsProgressMeterFrame::PaintBarSolid(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, 
                                     const nsRect& rect, nscolor color, float skew)
 {
 
 	    // figure out a pixel size
 		float p2t;
-		aPresContext.GetScaledPixelsToTwips(&p2t);
+		aPresContext->GetScaledPixelsToTwips(&p2t);
 		nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
 		// how many pixel lines will fit?
@@ -562,7 +562,7 @@ nsProgressMeterFrame::PaintBarSolid(nsIPresContext& aPresContext, nsIRenderingCo
 
 
 void 
-nsProgressMeterFrame::PaintBarStripped(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, 
+nsProgressMeterFrame::PaintBarStripped(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, 
                                        const nsRect& r, nscolor color)
 {
 	// get stripe color from the style system
@@ -593,7 +593,7 @@ nsProgressMeterFrame::PaintBarStripped(nsIPresContext& aPresContext, nsIRenderin
  
  
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   // nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   int stripeWidthInTwips = (int)(stripeWidth * p2t);
@@ -644,7 +644,7 @@ nsProgressMeterFrame::animate()
 // Handle moving children around.
 //
 NS_IMETHODIMP
-nsProgressMeterFrame :: Reflow ( nsIPresContext&          aPresContext,
+nsProgressMeterFrame :: Reflow ( nsIPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
@@ -656,12 +656,12 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext&          aPresContext,
     // See if it's targeted at us
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     }
   }
 
   if (mUndetermined)
-     gStripeAnimator->AddFrame(&aPresContext, this);
+     gStripeAnimator->AddFrame(aPresContext, this);
   else 
 	 gStripeAnimator->RemoveFrame(this);
 
@@ -675,7 +675,7 @@ nsProgressMeterFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
 
-  CalcSize(*aPresContext,aDesiredSize.width,aDesiredSize.height);
+  CalcSize(aPresContext,aDesiredSize.width,aDesiredSize.height);
 
    // if the width is set use it
 	if (NS_INTRINSICSIZE != aReflowState.mComputedWidth) 
@@ -688,11 +688,11 @@ nsProgressMeterFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 
 void
-nsProgressMeterFrame::CalcSize(nsIPresContext& aPresContext, int& width, int& height)
+nsProgressMeterFrame::CalcSize(nsIPresContext* aPresContext, int& width, int& height)
 {
 	// make sure we convert to twips.
 	float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
 
 	if (mHorizontal) {
 		width = (int)(100 * p2t);

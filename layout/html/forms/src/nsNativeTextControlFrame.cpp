@@ -87,7 +87,7 @@ nsNativeTextControlFrame::~nsNativeTextControlFrame()
 }
 
 void
-nsNativeTextControlFrame::EnterPressed(nsIPresContext& aPresContext) 
+nsNativeTextControlFrame::EnterPressed(nsIPresContext* aPresContext) 
 {
   if (mFormFrame && mFormFrame->CanSubmit(*this)) {
     nsIContent *formContent = nsnull;
@@ -99,16 +99,16 @@ nsNativeTextControlFrame::EnterPressed(nsIPresContext& aPresContext)
 
       event.eventStructType = NS_EVENT;
       event.message = NS_FORM_SUBMIT;
-      formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+      formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       NS_RELEASE(formContent);
     }
 
-    mFormFrame->OnSubmit(&aPresContext, this);
+    mFormFrame->OnSubmit(aPresContext, this);
   }
 }
 
 nsWidgetInitData*
-nsNativeTextControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
+nsNativeTextControlFrame::GetWidgetInitData(nsIPresContext* aPresContext)
 {
   PRInt32 type;
   GetType(&type);
@@ -252,7 +252,7 @@ nsNativeTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
   GetFont(aPresContext, font);
   mWidget->SetFont(font);
-  SetColors(*aPresContext);
+  SetColors(aPresContext);
 
   PRUint32 ignore;
   nsAutoString value;
@@ -355,7 +355,7 @@ nsNativeTextControlFrame::Reset(nsIPresContext* aPresContext)
 }  
 
 void
-nsNativeTextControlFrame::PaintTextControlBackground(nsIPresContext& aPresContext,
+nsNativeTextControlFrame::PaintTextControlBackground(nsIPresContext* aPresContext,
                                                      nsIRenderingContext& aRenderingContext,
                                                      const nsRect& aDirtyRect,
                                                      nsFramePaintLayer aWhichLayer) {
@@ -363,7 +363,7 @@ nsNativeTextControlFrame::PaintTextControlBackground(nsIPresContext& aPresContex
 }
 
 void
-nsNativeTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
+nsNativeTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect,
                                      nsString& aText,
@@ -377,7 +377,7 @@ nsNativeTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
     spacing->CalcBorderFor(this, border);
 
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
     nsRect outside(aRect.x, aRect.y, aRect.width, aRect.height);
@@ -406,8 +406,8 @@ nsNativeTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 
     aRenderingContext.SetColor(NS_RGB(0,0,0));
 
-    nsFont font(aPresContext.GetDefaultFixedFontDeprecated()); 
-    GetFont(&aPresContext, font);
+    nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
+    GetFont(aPresContext, font);
 
     aRenderingContext.SetFont(font);
 
@@ -483,12 +483,12 @@ nsNativeTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
       // Scrollbars
       nsIAtom * sbAtom = NS_NewAtom(":scrollbar-look");
       nsIStyleContext* scrollbarStyle;
-      aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, PR_FALSE, &scrollbarStyle);
+      aPresContext->ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, PR_FALSE, &scrollbarStyle);
       NS_RELEASE(sbAtom);
 
       sbAtom = NS_NewAtom(":scrollbar-arrow-look");
       nsIStyleContext* arrowStyle;
-      aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, PR_FALSE, &arrowStyle);
+      aPresContext->ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, PR_FALSE, &arrowStyle);
       NS_RELEASE(sbAtom);
 
       nsRect srect(aRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, aRect.height-(onePixel*4)-scrollbarScaledWidth);
@@ -515,7 +515,7 @@ nsNativeTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 }
 
 NS_METHOD 
-nsNativeTextControlFrame::Paint(nsIPresContext& aPresContext,
+nsNativeTextControlFrame::Paint(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)

@@ -750,11 +750,11 @@ nsGenericElement::GetTag(nsIAtom*& aResult) const
 
 
 nsresult
-nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIDOMEvent** aDOMEvent,
                                  PRUint32 aFlags,
-                                 nsEventStatus& aEventStatus)
+                                 nsEventStatus* aEventStatus)
 {
   nsresult ret = NS_OK;
   
@@ -1243,7 +1243,7 @@ nsGenericElement::Release()
 //----------------------------------------------------------------------
 
 void
-nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
+nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               nsLinkVerb aVerb,
                               nsIURI* aBaseURL,
                               const nsString& aURLSpec,
@@ -1251,7 +1251,7 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
                               PRBool aClick)
 {
   nsILinkHandler* handler;
-  nsresult rv = aPresContext.GetLinkHandler(&handler);
+  nsresult rv = aPresContext->GetLinkHandler(&handler);
   if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
     // Resolve url to an absolute url
     nsAutoString absURLSpec;

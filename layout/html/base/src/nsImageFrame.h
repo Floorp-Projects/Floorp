@@ -39,24 +39,24 @@ struct nsSize;
 
 class nsImageFrame : public ImageFrameSuper {
 public:
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_METHOD HandleEvent(nsIPresContext& aPresContext,
+  NS_METHOD HandleEvent(nsIPresContext* aPresContext,
                         nsGUIEvent* aEvent,
-                        nsEventStatus& aEventStatus);
-  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                        nsEventStatus* aEventStatus);
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                        nsPoint& aPoint,
                        PRInt32& aCursor);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
@@ -80,14 +80,14 @@ protected:
 
   nsImageMap* GetImageMap();
 
-  void TriggerLink(nsIPresContext& aPresContext,
+  void TriggerLink(nsIPresContext* aPresContext,
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec,
                    PRBool aClick);
 
   PRBool IsServerImageMap();
 
-  void TranslateEventCoords(nsIPresContext& aPresContext,
+  void TranslateEventCoords(nsIPresContext* aPresContext,
                             const nsPoint& aPoint,
                             nsPoint& aResult);
 
@@ -101,12 +101,12 @@ protected:
                      PRUint32&            aMaxFit,
                      nsIRenderingContext& aContext);
 
-  void DisplayAltText(nsIPresContext&      aPresContext,
+  void DisplayAltText(nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsString&      aAltText,
                       const nsRect&        aRect);
 
-  void DisplayAltFeedback(nsIPresContext&      aPresContext,
+  void DisplayAltFeedback(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRInt32              aIconId);
 

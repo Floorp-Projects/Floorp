@@ -59,22 +59,22 @@ public:
   friend nsresult NS_NewToolboxFrame(nsIFrame** aNewFrame);
 
     // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
 
-  NS_IMETHOD  Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
-  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
-                          nsEventStatus&  aEventStatus);
+                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
@@ -125,8 +125,8 @@ protected:
   virtual PRBool GetInitialAlignment();
 
   virtual void UpdateStyles(nsIPresContext* aPresContext);
-  virtual void CalculateGrippies(nsIPresContext& aPresContext);
-  virtual nsresult ReflowGrippies(nsIPresContext&          aPresContext,
+  virtual void CalculateGrippies(nsIPresContext* aPresContext);
+  virtual nsresult ReflowGrippies(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -138,8 +138,8 @@ protected:
                             nsIContent *      aContent,
                             nsIStyleContext*  aParentStyle) ;
 
-  void DrawGrippies ( nsIPresContext& aPresContext, nsIRenderingContext & aContext ) const ;
-  void DrawGrippy ( nsIPresContext& aPresContext, nsIRenderingContext & aContext, 
+  void DrawGrippies ( nsIPresContext* aPresContext, nsIRenderingContext & aContext ) const ;
+  void DrawGrippy ( nsIPresContext* aPresContext, nsIRenderingContext & aContext, 
                       const nsRect & aBoundingRect, PRBool aDrawHilighted ) const ;
   void CollapseToolbar ( TabInfo & inTab ) ; 
   void ExpandToolbar ( TabInfo & inTab ) ; 

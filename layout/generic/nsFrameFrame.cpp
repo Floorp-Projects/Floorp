@@ -99,18 +99,18 @@ public:
 
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -151,7 +151,7 @@ public:
   /**
     * @see nsIFrame::Paint
     */
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
@@ -159,12 +159,12 @@ public:
   /**
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext&          aCX,
+  NS_IMETHOD Reflow(nsIPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                        nsDidReflowStatus aStatus);
 
   NS_IMETHOD GetParentContent(nsIContent*& aContent);
@@ -178,7 +178,7 @@ public:
   nsresult ReloadURL();
 
 protected:
-  nsresult CreateWebShell(nsIPresContext& aPresContext, const nsSize& aSize);
+  nsresult CreateWebShell(nsIPresContext* aPresContext, const nsSize& aSize);
 
   virtual ~nsHTMLFrameInnerFrame();
 
@@ -206,7 +206,7 @@ nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::Init(nsIPresContext&  aPresContext,
+nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
                             nsIContent*      aContent,
                             nsIFrame*        aParent,
                             nsIStyleContext* aContext,
@@ -276,7 +276,7 @@ PRBool nsHTMLFrameOuterFrame::IsInline()
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
+nsHTMLFrameOuterFrame::Paint(nsIPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer)
@@ -312,7 +312,7 @@ nsHTMLFrameOuterFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
+nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
@@ -323,7 +323,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
       aReflowState.availableWidth, aReflowState.availableHeight, aReflowState.reason));
 
   if (IsInline()) {
-    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
+    GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
   } else {
     aDesiredSize.width  = aReflowState.availableWidth;
     aDesiredSize.height = aReflowState.availableHeight;
@@ -594,7 +594,7 @@ nsHTMLFrameInnerFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::Paint(nsIPresContext&      aPresContext,
+nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer)
@@ -648,7 +648,7 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 }
 
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::DidReflow(nsIPresContext& aPresContext,
+nsHTMLFrameInnerFrame::DidReflow(nsIPresContext* aPresContext,
                         nsDidReflowStatus aStatus)
 {
   nsresult rv = nsLeafFrame::DidReflow(aPresContext, aStatus);
@@ -658,7 +658,7 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext& aPresContext,
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
-    GetView(&aPresContext, &view);
+    GetView(aPresContext, &view);
     if (view) {
       const nsStyleDisplay* display;
       GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
@@ -675,7 +675,7 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
+nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
                                       const nsSize& aSize)
 {
   nsresult rv;
@@ -690,10 +690,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   }
   
   // pass along marginwidth, marginheight, scrolling so sub document can use it
-  mWebShell->SetMarginWidth(GetMarginWidth(&aPresContext, content));
-  mWebShell->SetMarginHeight(GetMarginHeight(&aPresContext, content));
+  mWebShell->SetMarginWidth(GetMarginWidth(aPresContext, content));
+  mWebShell->SetMarginHeight(GetMarginHeight(aPresContext, content));
   nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(&mode);
+  aPresContext->GetCompatibilityMode(&mode);
   mWebShell->SetScrolling(GetScrolling(content, mode));
   nsString frameName;
   if (GetName(content, frameName)) {
@@ -704,7 +704,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   // child. If it's not a web-shell then some things will not operate
   // properly.
   nsISupports* container;
-  aPresContext.GetContainer(&container);
+  aPresContext->GetContainer(&container);
   if (nsnull != container) {
     nsIWebShell* outerShell = nsnull;
     container->QueryInterface(kIWebShellIID, (void**) &outerShell);
@@ -785,9 +785,9 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   }
 
   float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
   nsCOMPtr<nsIPresShell> presShell;
-  aPresContext.GetShell(getter_AddRefs(presShell));     
+  aPresContext->GetShell(getter_AddRefs(presShell));     
 
   // create, init, set the parent of the view
   nsIView* view;
@@ -800,7 +800,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   nsIView* parView;
   nsPoint origin;
-  GetOffsetFromView(&aPresContext, origin, &parView);  
+  GetOffsetFromView(aPresContext, origin, &parView);  
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
   nsCOMPtr<nsIViewManager> viewMan;
@@ -808,7 +808,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   rv = view->Init(viewMan, viewBounds, parView);
   viewMan->InsertChild(parView, view, 0);
   rv = view->CreateWidget(kCChildCID);
-  SetView(&aPresContext, view);
+  SetView(aPresContext, view);
 
   // if the visibility is hidden, reflect that in the view
   const nsStyleDisplay* display;
@@ -836,7 +836,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
+nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
@@ -910,7 +910,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
   // resize the sub document
   if (mWebShell) {
     float t2p;
-    aPresContext.GetTwipsToPixels(&t2p);
+    aPresContext->GetTwipsToPixels(&t2p);
     nsRect subBounds;
 
     mWebShell->GetBounds(subBounds.x, subBounds.y,

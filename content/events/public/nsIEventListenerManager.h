@@ -102,18 +102,18 @@ public:
   * @param an event listener
   */
 
-  virtual nsresult HandleEvent(nsIPresContext& aPresContext,
+  virtual nsresult HandleEvent(nsIPresContext* aPresContext,
                                nsEvent* aEvent,
                                nsIDOMEvent** aDOMEvent,
                                PRUint32 aFlags,
-                               nsEventStatus& aEventStatus) = 0;
+                               nsEventStatus* aEventStatus) = 0;
 
   /**
   * Creates a DOM event that can subsequently be passed into HandleEvent.
   * (used rarely in the situation where methods on the event need to be
   * invoked prior to the processing of the event).
   */
-  virtual nsresult CreateEvent(nsIPresContext& aPresContext,
+  virtual nsresult CreateEvent(nsIPresContext* aPresContext,
                                nsEvent* aEvent,
                                nsIDOMEvent** aDOMEvent) = 0;
 

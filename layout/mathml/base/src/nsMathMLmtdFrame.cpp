@@ -70,7 +70,7 @@ nsMathMLmtdFrame::~nsMathMLmtdFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtdFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmtdFrame::Reflow(nsIPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)

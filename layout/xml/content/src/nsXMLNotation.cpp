@@ -276,11 +276,11 @@ nsXMLNotation::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
-nsXMLNotation::HandleDOMEvent(nsIPresContext& aPresContext,
+nsXMLNotation::HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
-                              nsEventStatus& aEventStatus)
+                              nsEventStatus* aEventStatus)
 {
   // We should never be getting events
   NS_ASSERTION(0, "event handler called for notation");

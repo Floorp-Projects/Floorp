@@ -185,11 +185,12 @@ nsRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButto
 
 
 NS_METHOD 
-nsRadioControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsRadioControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                  nsGUIEvent* aEvent,
-                                 nsEventStatus& aEventStatus)
+                                 nsEventStatus* aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
 
@@ -202,12 +203,12 @@ nsRadioControlFrame::HandleEvent(nsIPresContext& aPresContext,
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
-          MouseClicked(&aPresContext);
+          MouseClicked(aPresContext);
         }
       }
       break;
     case NS_MOUSE_LEFT_BUTTON_UP:
-       MouseUp(&aPresContext);
+       MouseUp(aPresContext);
      break;
 
     

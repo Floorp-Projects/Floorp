@@ -97,7 +97,7 @@ nsTextRun::List(FILE* out, PRInt32 aIndent)
 
 MOZ_DECL_CTOR_COUNTER(nsLineLayout);
 
-nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
+nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
                            nsISpaceManager* aSpaceManager,
                            const nsHTMLReflowState* aOuterReflowState,
                            PRBool aComputeMaxElementSize)
@@ -147,7 +147,7 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mKnowStrictMode = PR_FALSE;
 }
 
-nsLineLayout::nsLineLayout(nsIPresContext& aPresContext)
+nsLineLayout::nsLineLayout(nsIPresContext* aPresContext)
   : mPresContext(aPresContext)
 {
   MOZ_COUNT_CTOR(nsLineLayout);
@@ -1077,9 +1077,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 
   // Size the frame and size its view (if it has one)
-  aFrame->SizeTo(&mPresContext, metrics.width, metrics.height);
+  aFrame->SizeTo(mPresContext, metrics.width, metrics.height);
   nsIView*  view;
-  aFrame->GetView(&mPresContext, &view);
+  aFrame->GetView(mPresContext, &view);
   if (view) {
     nsIViewManager  *vm;
 
@@ -1651,7 +1651,7 @@ nsLineLayout::VerticalAlignFrames(nsRect& aLineBoxResult,
         pfd->mBounds.y += baselineY;
         break;
     }
-    pfd->mFrame->SetRect(&mPresContext, pfd->mBounds);
+    pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  ");
     nsFrame::ListTag(stdout, pfd->mFrame);
@@ -1697,7 +1697,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         else {
           pfd->mBounds.y = -aDistanceFromTop + pfd->mMargin.top;
         }
-        pfd->mFrame->SetRect(&mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
         printf("    ");
         nsFrame::ListTag(stdout, pfd->mFrame);
@@ -1718,7 +1718,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
           pfd->mBounds.y = -aDistanceFromTop + aLineHeight -
             pfd->mMargin.bottom - pfd->mBounds.height;
         }
-        pfd->mFrame->SetRect(&mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
         printf("    ");
         nsFrame::ListTag(stdout, pfd->mFrame);
@@ -2156,7 +2156,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 #endif
       }
       if (psd != mRootSpan) {
-        frame->SetRect(&mPresContext, pfd->mBounds);
+        frame->SetRect(mPresContext, pfd->mBounds);
       }
     }
     pfd = pfd->mNext;
@@ -2267,7 +2267,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
             nsIFrame* f = pfd->mFrame;
             f->GetRect(r);
             r.width -= deltaWidth;
-            f->SetRect(&mPresContext, r);
+            f->SetRect(mPresContext, r);
           }
 
           // Adjust the right edge of the span that contains the child span
@@ -2293,7 +2293,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
     }
     else if (pfd->mIsNonEmptyTextFrame) {
       nscoord deltaWidth = 0;
-      pfd->mFrame->TrimTrailingWhiteSpace(&mPresContext,
+      pfd->mFrame->TrimTrailingWhiteSpace(mPresContext,
                                           *mBlockReflowState->rendContext,
                                           deltaWidth);
 #ifdef NOISY_TRIM
@@ -2316,7 +2316,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         if (psd != mRootSpan) {
           // The frame was already placed during psd's
           // reflow. Update the frames rectangle now.
-          pfd->mFrame->SetRect(&mPresContext, pfd->mBounds);
+          pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
         }
 
         // Adjust containing span's right edge
@@ -2413,7 +2413,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
       PerFrameData* pfd = psd->mFirstFrame;
       while (nsnull != pfd) {
         pfd->mBounds.x += dx;
-        pfd->mFrame->SetRect(&mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
         pfd = pfd->mNext;
       }
       aLineBounds.width += dx;
@@ -2428,7 +2428,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
       PRUint32 maxX = psd->mRightEdge;
       while (nsnull != pfd) {
         pfd->mBounds.x = maxX - pfd->mBounds.width;
-        pfd->mFrame->SetRect(&mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
         maxX = pfd->mBounds.x;
         pfd = pfd->mNext;
       }
@@ -2483,7 +2483,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       // XXX what about right and bottom?
       nscoord dx = pfd->mOffsets.left;
       nscoord dy = pfd->mOffsets.top;
-      frame->MoveTo(&mPresContext, origin.x + dx, origin.y + dy);
+      frame->MoveTo(mPresContext, origin.x + dx, origin.y + dy);
       x += dx;
       y += dy;
     }

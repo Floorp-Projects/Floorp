@@ -35,15 +35,15 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  void SetSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
-  void ToggleSelection(nsIPresContext& presContext, nsTreeCellFrame* pFrame);
-  void RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame);
+  void SetSelection(nsIPresContext* presContext, nsTreeCellFrame* pFrame);
+  void ToggleSelection(nsIPresContext* presContext, nsTreeCellFrame* pFrame);
+  void RangedSelection(nsIPresContext* aPresContext, nsTreeCellFrame* pEndFrame);
   
-  void MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
-  void MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
-  void MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
-  void MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
-  void MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col);
+  void MoveUp(nsIPresContext* aPresContext, nsTreeCellFrame* pFrame);
+  void MoveDown(nsIPresContext* aPresContext, nsTreeCellFrame* pFrame);
+  void MoveLeft(nsIPresContext* aPresContext, nsTreeCellFrame* pFrame);
+  void MoveRight(nsIPresContext* aPresContext, nsTreeCellFrame* pFrame);
+  void MoveToRowCol(nsIPresContext* aPresContext, PRInt32 row, PRInt32 col);
     
   PRBool IsSlatedForReflow() { return mSlatedForReflow; };
   void SlateForReflow() { mSlatedForReflow = PR_TRUE; };
@@ -51,24 +51,24 @@ public:
   void GetTreeBody(nsTreeRowGroupFrame** aResult);
 
   // Overridden methods
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
   PRBool RowGroupsShouldBeConstrained() { return PR_TRUE; }
   
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
 							         nsHTMLReflowMetrics&     aMetrics,
 							         const nsHTMLReflowState& aReflowState,
 							         nsReflowStatus&          aStatus);
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus);
+                             nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
+  NS_IMETHOD  DidReflow(nsIPresContext*   aPresContext,
                         nsDidReflowStatus aStatus);
 
   PRInt32 GetCurrentGeneration() { return mGeneration; };
@@ -79,7 +79,7 @@ public:
 
   PRBool ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex, nsTableColFrame** aResult);
 
-  NS_IMETHOD MarkForDirtyReflow(nsIPresContext& aPresContext);
+  NS_IMETHOD MarkForDirtyReflow(nsIPresContext* aPresContext);
 
   void SuppressReflow() { mSuppressReflow = PR_TRUE; };
   void UnsuppressReflow() { mSuppressReflow = PR_FALSE; };
@@ -87,7 +87,7 @@ public:
   PRInt32 GetInsertionIndex(nsIFrame *aFrame);
 
   // nsISelfScrollingFrame interface
-  NS_IMETHOD ScrollByLines(nsIPresContext& aPresContext, PRInt32 lines);
+  NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
 
 protected:
   nsTreeFrame();

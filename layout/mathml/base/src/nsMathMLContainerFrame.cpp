@@ -123,7 +123,7 @@ nsMathMLContainerFrame::IsOnlyWhitespace(nsIFrame* aFrame)
 }
 
 void
-nsMathMLContainerFrame::ReflowEmptyChild(nsIPresContext& aPresContext,
+nsMathMLContainerFrame::ReflowEmptyChild(nsIPresContext* aPresContext,
                                          nsIFrame*       aFrame)
 {
 //  nsHTMLReflowMetrics emptySize(nsnull);
@@ -131,11 +131,11 @@ nsMathMLContainerFrame::ReflowEmptyChild(nsIPresContext& aPresContext,
 //  nsresult rv = ReflowChild(aFrame, aPresContext, emptySize, emptyReflowState, aStatus);
  
   // 0-size the frame
-  aFrame->SetRect(&aPresContext, nsRect(0,0,0,0));
+  aFrame->SetRect(aPresContext, nsRect(0,0,0,0));
 
   // 0-size the view, if any
   nsIView* view = nsnull;
-  aFrame->GetView(&aPresContext, &view);
+  aFrame->GetView(aPresContext, &view);
   if (view) {
     nsCOMPtr<nsIViewManager> vm;
     view->GetViewManager(*getter_AddRefs(vm));
@@ -151,7 +151,7 @@ nsMathMLContainerFrame::ReflowEmptyChild(nsIPresContext& aPresContext,
  */
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::Stretch(nsIPresContext&      aPresContext,
+nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsStretchDirection   aStretchDirection,
                                 nsCharMetrics&       aContainerSize,
@@ -208,7 +208,7 @@ nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
 // mfrac, msub, msup, msubsup, munder, mover, munderover, mmultiscripts 
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresContext)
+nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresContext)
 {
   nsresult rv = NS_OK;
   nsIFrame* nextFrame = mFrames.FirstChild();
@@ -249,7 +249,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresConte
           if (0 > gap) gap = -gap; // absolute value
           while (0 < gap--) {
 
-            aPresContext.ResolvePseudoStyleContextFor(childContent, fontAtom, lastStyleContext,
+            aPresContext->ResolvePseudoStyleContextFor(childContent, fontAtom, lastStyleContext,
                                                       PR_FALSE, getter_AddRefs(newStyleContext));          
             if (newStyleContext && newStyleContext.get() != lastStyleContext) {
               // create a new frame and append it as sole child of the last created frame
@@ -276,7 +276,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresConte
             mFrames.ReplaceFrame(this, childFrame, firstFrame);
             childFrame->SetParent(lastFrame);
             childFrame->SetNextSibling(nsnull);
-            aPresContext.ReParentStyleContext(childFrame, lastStyleContext);
+            aPresContext->ReParentStyleContext(childFrame, lastStyleContext);
             lastFrame->SetInitialChildList(aPresContext, nsnull, childFrame);
           }
         }
@@ -293,7 +293,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresConte
  */
  
 NS_IMETHODIMP
-nsMathMLContainerFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
                              nsIContent*      aContent,
                              nsIFrame*        aParent,
                              nsIStyleContext* aContext,
@@ -322,7 +322,7 @@ nsMathMLContainerFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                             nsIAtom*        aListName,
                                             nsIFrame*       aChildList)
 {
@@ -360,7 +360,7 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
         if (NS_FAILED(rv))
           return rv;    
         nsCOMPtr<nsIStyleContext> newStyleContext;
-        aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::mozAnonymousBlock, 
+        aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::mozAnonymousBlock, 
                                                   mStyleContext, PR_FALSE, 
                                                   getter_AddRefs(newStyleContext));
         rv = anonymous->Init(aPresContext, mContent, this, newStyleContext, nsnull);
@@ -372,7 +372,7 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
         mFrames.ReplaceFrame(this, child, anonymous);
         child->SetParent(anonymous);
         child->SetNextSibling(nsnull);
-        aPresContext.ReParentStyleContext(child, newStyleContext);
+        aPresContext->ReParentStyleContext(child, newStyleContext);
         anonymous->SetInitialChildList(aPresContext, nsnull, child);
       }
     }
@@ -382,7 +382,7 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLContainerFrame::Reflow(nsIPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
@@ -419,7 +419,7 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
       // At this stage, the origin points of the children have no use, so we will use the
       // origins as placeholders to store the child's ascent and descent. Before return,
       // we should set the origins so as to overwrite what we are storing there now.
-      childFrame->SetRect(&aPresContext,
+      childFrame->SetRect(aPresContext,
                           nsRect(childDesiredSize.descent, childDesiredSize.ascent,
                           childDesiredSize.width, childDesiredSize.height));
 
@@ -460,7 +460,7 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
       aMathMLFrame->Stretch(aPresContext, renderingContext, 
                             stretchDir, parentSize, childSize);
       // store the updated metrics
-      childFrame->SetRect(&aPresContext,
+      childFrame->SetRect(aPresContext,
                           nsRect(childSize.descent, childSize.ascent,
                                  childSize.width, childSize.height));
     }
@@ -485,7 +485,7 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
   while (nsnull != childFrame) {
     childFrame->GetRect(rect);
     offset.y = aDesiredSize.ascent - rect.y;
-    childFrame->MoveTo(&aPresContext, offset.x,offset.y);
+    childFrame->MoveTo(aPresContext, offset.x,offset.y);
     offset.x += rect.width;
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
@@ -526,7 +526,7 @@ nsMathMLWrapperFrame::~nsMathMLWrapperFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLWrapperFrame::Stretch(nsIPresContext&      aPresContext,
+nsMathMLWrapperFrame::Stretch(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsStretchDirection   aStretchDirection,
                                 nsCharMetrics&       aContainerSize,
@@ -539,14 +539,14 @@ nsMathMLWrapperFrame::Stretch(nsIPresContext&      aPresContext,
     if (NS_SUCCEEDED(rv) && aMathMLFrame) {
       aMathMLFrame->Stretch(aPresContext, aRenderingContext, aStretchDirection, 
                             aContainerSize, aDesiredStretchSize);
-      childFrame->SetRect(&aPresContext, nsRect(0,0,aDesiredStretchSize.width,aDesiredStretchSize.height));
+      childFrame->SetRect(aPresContext, nsRect(0,0,aDesiredStretchSize.width,aDesiredStretchSize.height));
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMathMLWrapperFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLWrapperFrame::Reflow(nsIPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
@@ -561,7 +561,7 @@ nsMathMLWrapperFrame::Reflow(nsIPresContext&          aPresContext,
     nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
     nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame, availSize);
     rv = ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowState, childStatus);
-    childFrame->SetRect(&aPresContext, nsRect(0,0,childDesiredSize.width,childDesiredSize.height));
+    childFrame->SetRect(aPresContext, nsRect(0,0,childDesiredSize.width,childDesiredSize.height));
     aDesiredSize = childDesiredSize;
     aStatus = childStatus;
   }

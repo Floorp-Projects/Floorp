@@ -90,7 +90,7 @@ NS_IMETHODIMP nsTreeFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return nsTableFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
+void nsTreeFrame::SetSelection(nsIPresContext* aPresContext, nsTreeCellFrame* aFrame)
 {
   nsCOMPtr<nsIContent> cellContent;
   aFrame->GetContent(getter_AddRefs(cellContent));
@@ -114,7 +114,7 @@ void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aF
   treeElement->SelectCell(cellElement);
 }
 
-void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
+void nsTreeFrame::ToggleSelection(nsIPresContext* aPresContext, nsTreeCellFrame* aFrame)
 {
 	nsCOMPtr<nsIContent> cellContent;
   aFrame->GetContent(getter_AddRefs(cellContent));
@@ -136,7 +136,7 @@ void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
   treeElement->ToggleCellSelection(cellElement);
 }
 
-void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame)
+void nsTreeFrame::RangedSelection(nsIPresContext* aPresContext, nsTreeCellFrame* pEndFrame)
 {
  // XXX Re-implement!
 }
@@ -164,11 +164,12 @@ nsTreeFrame::GetTreeBody(nsTreeRowGroupFrame** aResult)
 }
 
 NS_IMETHODIMP 
-nsTreeFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsTreeFrame::HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus)
+                             nsEventStatus*  aEventStatus)
 {
-  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
   if (aEvent->message == NS_KEY_DOWN) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
     PRUint32 keyCode = keyEvent->keyCode;
@@ -259,7 +260,7 @@ nsTreeFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
   
-void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+void nsTreeFrame::MoveUp(nsIPresContext* aPresContext, nsTreeCellFrame* pFrame)
 {
 	PRInt32 rowIndex;
   pFrame->GetRowIndex(rowIndex);
@@ -271,7 +272,7 @@ void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
 	}
 }
 
-void nsTreeFrame::MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+void nsTreeFrame::MoveDown(nsIPresContext* aPresContext, nsTreeCellFrame* pFrame)
 {
 	PRInt32 rowIndex;
   pFrame->GetRowIndex(rowIndex);
@@ -285,7 +286,7 @@ void nsTreeFrame::MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame
 	}
 }
 
-void nsTreeFrame::MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+void nsTreeFrame::MoveLeft(nsIPresContext* aPresContext, nsTreeCellFrame* pFrame)
 {
 	PRInt32 rowIndex;
   pFrame->GetRowIndex(rowIndex);
@@ -297,7 +298,7 @@ void nsTreeFrame::MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame
 	}
 }
 
-void nsTreeFrame::MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
+void nsTreeFrame::MoveRight(nsIPresContext* aPresContext, nsTreeCellFrame* aFrame)
 {
 	PRInt32 rowIndex;
   aFrame->GetRowIndex(rowIndex);
@@ -311,7 +312,7 @@ void nsTreeFrame::MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* aFram
 	}
 }
 
-void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 aRow, PRInt32 aCol)
+void nsTreeFrame::MoveToRowCol(nsIPresContext* aPresContext, PRInt32 aRow, PRInt32 aCol)
 {
 	nsTableCellFrame* cellFrame = mCellMap->GetCellInfoAt(aRow, aCol);
 
@@ -321,7 +322,7 @@ void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 aRow, PRInt
 }
 
 NS_IMETHODIMP 
-nsTreeFrame::Destroy(nsIPresContext& aPresContext)
+nsTreeFrame::Destroy(nsIPresContext* aPresContext)
 {
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
   target->RemoveEventListener("mousedown", mTwistyListener, PR_TRUE); 
@@ -330,7 +331,7 @@ nsTreeFrame::Destroy(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
+nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
 							      nsHTMLReflowMetrics&     aDesiredSize,
 							      const nsHTMLReflowState& aReflowState,
 							      nsReflowStatus&          aStatus)
@@ -376,7 +377,7 @@ nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeFrame::DidReflow(nsIPresContext&   aPresContext,
+nsTreeFrame::DidReflow(nsIPresContext*   aPresContext,
                         nsDidReflowStatus aStatus)
 {
   nsresult rv = nsTableFrame::DidReflow(aPresContext, aStatus);
@@ -384,14 +385,14 @@ nsTreeFrame::DidReflow(nsIPresContext&   aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeFrame::MarkForDirtyReflow(nsIPresContext& aPresContext)
+nsTreeFrame::MarkForDirtyReflow(nsIPresContext* aPresContext)
 {
   mSuppressReflow = PR_FALSE;
   InvalidateCellMap();
   InvalidateColumnCache();
   InvalidateFirstPassCache();
   nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
+  aPresContext->GetShell(getter_AddRefs(shell));
   nsFrameState      frameState;
   nsIFrame*         tableParentFrame;
   nsIReflowCommand* reflowCmd;
@@ -414,7 +415,7 @@ nsTreeFrame::MarkForDirtyReflow(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsTreeFrame::Init(nsIPresContext&  aPresContext,
+nsTreeFrame::Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
@@ -482,7 +483,7 @@ nsTreeFrame::GetInsertionIndex(nsIFrame *aFrame)
 
 
 NS_IMETHODIMP
-nsTreeFrame::ScrollByLines(nsIPresContext& aPresContext, PRInt32 lines)
+nsTreeFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
 {
   // Get our treechildren child frame.
   nsTreeRowGroupFrame* treeRowGroup = nsnull;

@@ -61,18 +61,18 @@ class nsProgressMeterFrame : public nsLeafFrame
 public:
   friend nsresult NS_NewProgressMeterFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
   
     // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD  Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
@@ -102,19 +102,19 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
-  virtual void CalcSize(nsIPresContext& aPresContext, int& width, int& height);
+  virtual void CalcSize(nsIPresContext* aPresContext, int& width, int& height);
 
-  virtual void  PaintBar ( nsIPresContext& aPresContext,
+  virtual void  PaintBar ( nsIPresContext* aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect& rect, 
 							float progress,
 							nscolor color);
 
 
-  virtual void PaintBarStripped(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, 
+  virtual void PaintBarStripped(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, 
                                            const nsRect& rect, nscolor color);
 
-  virtual void PaintBarSolid(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, 
+  virtual void PaintBarSolid(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, 
                                            const nsRect& rect, nscolor color, float skew);
 
 

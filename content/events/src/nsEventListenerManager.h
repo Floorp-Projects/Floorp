@@ -81,13 +81,13 @@ public:
   virtual nsresult CaptureEvent(nsIDOMEventListener *aListener);
   virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener);
 
-  virtual nsresult HandleEvent(nsIPresContext& aPresContext, 
+  virtual nsresult HandleEvent(nsIPresContext* aPresContext, 
                                nsEvent* aEvent, 
                                nsIDOMEvent** aDOMEvent,
                                PRUint32 aFlags,
-                               nsEventStatus& aEventStatus);
+                               nsEventStatus* aEventStatus);
 
-  virtual nsresult CreateEvent(nsIPresContext& aPresContext, 
+  virtual nsresult CreateEvent(nsIPresContext* aPresContext, 
                                nsEvent* aEvent, 
                                nsIDOMEvent** aDOMEvent);
 

@@ -107,7 +107,7 @@ void nsHTMLReflowCommand::BuildPath()
   }
 }
 
-NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
+NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext*      aPresContext,
                                             nsHTMLReflowMetrics& aDesiredSize,
                                             const nsSize&        aMaxSize,
                                             nsIRenderingContext& aRendContext)
@@ -120,7 +120,7 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
 
 #ifdef NS_DEBUG
   nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
+  aPresContext->GetShell(getter_AddRefs(shell));
   if (shell) {
     nsIFrame* rootFrame;
     shell->GetRootFrame(&rootFrame);
@@ -137,14 +137,14 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
     nsIView*          view;
 
     root->WillReflow(aPresContext);
-    root->GetView(&aPresContext, &view);
+    root->GetView(aPresContext, &view);
     if (view) {
-      nsContainerFrame::PositionFrameView(&aPresContext, root, view);
+      nsContainerFrame::PositionFrameView(aPresContext, root, view);
     }
     root->Reflow(aPresContext, aDesiredSize, reflowState, status);
-    root->SizeTo(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+    root->SizeTo(aPresContext, aDesiredSize.width, aDesiredSize.height);
     if (view) {
-      nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, root, view,
+      nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, root, view,
                                                  nsnull);
     }
     root->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);

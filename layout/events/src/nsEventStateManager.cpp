@@ -119,12 +119,14 @@ NS_IMPL_ISUPPORTS1(nsEventStateManager, nsIEventStateManager)
 static nsCOMPtr<nsIContent> mLastFocusedContent;
 
 NS_IMETHODIMP
-nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext, 
+nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext, 
                                  nsGUIEvent *aEvent,
                                  nsIFrame* aTargetFrame,
-                                 nsEventStatus& aStatus,
+                                 nsEventStatus* aStatus,
                                  nsIView* aView)
 {
+  NS_ENSURE_ARG_POINTER(aStatus);
+  NS_ENSURE_ARG(aPresContext);
   // This is an experiement and may be temporary
   // this consumes the very next focus event
   if (mConsumeFocusEvents && aEvent->message == NS_GOTFOCUS) {
@@ -144,7 +146,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   state |= NS_FRAME_EXTERNAL_REFERENCE;
   mCurrentTarget->SetFrameState(state);
 
-  aStatus = nsEventStatus_eIgnore;
+  *aStatus = nsEventStatus_eIgnore;
   
   NS_ASSERTION(aEvent, "aEvent is null.  this should never happen");
   if (!aEvent) return NS_ERROR_NULL_POINTER;
@@ -219,7 +221,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
 
                       if (!mDocument) {
                         nsCOMPtr<nsIPresShell> presShell;
-                        aPresContext.GetShell(getter_AddRefs(presShell));
+                        aPresContext->GetShell(getter_AddRefs(presShell));
                         if (presShell) {
                           presShell->GetDocument(&mDocument);
                         }
@@ -235,8 +237,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
                         contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
                         if(!globalObject) break;
                     
-                        globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-						mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+                        globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+						mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
                       }   
                   }
                 }
@@ -253,7 +255,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
 
               if (!mDocument) {
                 nsCOMPtr<nsIPresShell> presShell;
-                aPresContext.GetShell(getter_AddRefs(presShell));
+                aPresContext->GetShell(getter_AddRefs(presShell));
                 if (presShell) {
                   presShell->GetDocument(&mDocument);
                 }
@@ -273,8 +275,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
                 contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
                 if(!globalObject) break;
                      
-                globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, status); 
-				mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, status);
+                globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
+				mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
               }
       }
     }
@@ -311,7 +313,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
 
       if (!mDocument) {
         nsCOMPtr<nsIPresShell> presShell;
-        aPresContext.GetShell(getter_AddRefs(presShell));
+        aPresContext->GetShell(getter_AddRefs(presShell));
         if (presShell) {
           presShell->GetDocument(&mDocument);
         }
@@ -330,7 +332,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
         contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
         if(!globalObject) break;
                      
-        globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, status); 
+        globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
           
     }
@@ -359,7 +361,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
 
               if (!mDocument) {
                 nsCOMPtr<nsIPresShell> presShell;
-                aPresContext.GetShell(getter_AddRefs(presShell));
+                aPresContext->GetShell(getter_AddRefs(presShell));
                 if (presShell) {
                   presShell->GetDocument(&mDocument);
                 }
@@ -376,7 +378,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
                 contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
                 if(!globalObject) break;
                      
-                globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+                globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
               }
                           
     } 
@@ -443,8 +445,9 @@ nsEventStateManager :: StopTrackingDragGesture ( )
 // Do we need to do anything about this? Let's wait and see.
 //
 void
-nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUIEvent *aEvent )
+nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUIEvent *aEvent )
 {
+  NS_WARN_IF_FALSE(aPresContext, "This shouldn't happen.");
   if ( IsTrackingDragGesture() ) {
     // figure out the delta in twips, since that is how it is in the event.
     // Do we need to do this conversion every time? Will the pres context really change on
@@ -452,7 +455,7 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUI
     long twipDeltaToStartDrag = 0;
     const long pixelDeltaToStartDrag = 5;
     nsCOMPtr<nsIDeviceContext> devContext;
-    aPresContext.GetDeviceContext ( getter_AddRefs(devContext) );
+    aPresContext->GetDeviceContext ( getter_AddRefs(devContext) );
     if ( devContext ) {
       float pixelsToTwips = 0.0;
       devContext->GetDevUnitsToTwips(pixelsToTwips);
@@ -476,12 +479,12 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUI
       if ( mGestureDownFrame ) {
         mGestureDownFrame->GetContent(getter_AddRefs(lastContent));
         if ( lastContent )
-          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
       
       // dispatch to the frame
       if ( mGestureDownFrame )
-        mGestureDownFrame->HandleEvent(aPresContext, &event, status);   
+        mGestureDownFrame->HandleEvent(aPresContext, &event, &status);   
 
       StopTrackingDragGesture();              
     }
@@ -490,12 +493,14 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUI
 
 
 NS_IMETHODIMP
-nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext, 
+nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext, 
                                      nsGUIEvent *aEvent,
                                      nsIFrame* aTargetFrame,
-                                     nsEventStatus& aStatus,
+                                     nsEventStatus* aStatus,
                                      nsIView* aView)
 {
+  NS_ENSURE_ARG(aPresContext);
+  NS_ENSURE_ARG_POINTER(aStatus);
   mCurrentTarget = aTargetFrame;
   NS_IF_RELEASE(mCurrentTargetContent);  
   nsresult ret = NS_OK;
@@ -510,7 +515,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
-      if (nsEventStatus_eConsumeNoDefault != aStatus) {
+      if (nsEventStatus_eConsumeNoDefault != *aStatus) {
         nsCOMPtr<nsIContent> newFocus;
         mCurrentTarget->GetContent(getter_AddRefs(newFocus));
         nsCOMPtr<nsIFocusableContent> focusable;
@@ -625,7 +630,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
 
       SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
       nsCOMPtr<nsIPresShell> shell;
-      nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+      nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
         nsCOMPtr<nsIFrameSelection> frameSel;
         rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
@@ -636,13 +641,13 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
     }
     break;
   case NS_MOUSE_SCROLL:
-    if (nsEventStatus_eConsumeNoDefault != aStatus) {
+    if (nsEventStatus_eConsumeNoDefault != *aStatus) {
 
       nsIFrame* focusFrame = nsnull;
       nsIView* focusView = nsnull;
       nsCOMPtr<nsIPresShell> presShell;
 
-      aPresContext.GetShell(getter_AddRefs(presShell));
+      aPresContext->GetShell(getter_AddRefs(presShell));
       if(!presShell)    // this is bad
         break;
 
@@ -660,7 +665,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
         
         presShell->GetPrimaryFrameFor(mCurrentFocus, &focusFrame);
         if (focusFrame)
-          focusFrame->GetView(&aPresContext, &focusView);
+          focusFrame->GetView(aPresContext, &focusView);
 
       }
 
@@ -701,7 +706,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
           focusView = aView;
         } else {
           focusFrame = GetDocumentFrame(aPresContext);
-          focusFrame->GetView(&aPresContext, &focusView);
+          focusFrame->GetView(aPresContext, &focusView);
 
 #ifdef DEBUG_scroll
           if (focusView)
@@ -770,7 +775,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
     GenerateDragDropEnterExit(aPresContext, aEvent);
     break;
   case NS_KEY_PRESS:
-    if (nsEventStatus_eConsumeNoDefault != aStatus) {
+    if (nsEventStatus_eConsumeNoDefault != *aStatus) {
       nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
       //This is to prevent keyboard scrolling while alt modifier in use.
       if (!keyEvent->isAlt) {
@@ -778,7 +783,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
           case NS_VK_TAB:
             //Shift focus forward or back depending on shift key
             ShiftFocus(!((nsInputEvent*)aEvent)->isShift);
-            aStatus = nsEventStatus_eConsumeNoDefault;
+            *aStatus = nsEventStatus_eConsumeNoDefault;
             break;
           case NS_VK_PAGE_DOWN: 
           case NS_VK_PAGE_UP:
@@ -915,8 +920,8 @@ nsEventStateManager::GetNearestSelfScrollingFrame(nsIFrame* aFrame)
 }
 
 void
-nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, 
-                                  nsEventStatus& aStatus)
+nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, 
+                                  nsEventStatus* aStatus)
 {
   PRInt32 cursor;
   nsCursor c;
@@ -965,16 +970,16 @@ nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint,
   }
 
   if (NS_STYLE_CURSOR_AUTO != cursor) {
-    aStatus = nsEventStatus_eConsumeDoDefault;
+    *aStatus = nsEventStatus_eConsumeDoDefault;
   }
 
   nsCOMPtr<nsIWidget> window;
-  aTargetFrame->GetWindow(&aPresContext, getter_AddRefs(window));
+  aTargetFrame->GetWindow(aPresContext, getter_AddRefs(window));
   window->SetCursor(c);
 }
 
 void
-nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
+nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 {
   //Hold onto old target content through the event and reset after.
   nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
@@ -1012,14 +1017,14 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           if (lastContent != targetContent) {
             //XXX This event should still go somewhere!!
             if (nsnull != lastContent) {
-              lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+              lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
             }
           }
 
           //Now dispatch to the frame
           if (mLastMouseOverFrame) {
             //XXX Get the new frame
-            mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+            mLastMouseOverFrame->HandleEvent(aPresContext, &event, &status);   
           }
 
           NS_IF_RELEASE(mCurrentTargetContent);
@@ -1045,7 +1050,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         if (lastContent != targetContent) {
           //XXX This event should still go somewhere!!
           if (targetContent) {
-            targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+            targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
           }
 
           if (nsEventStatus_eConsumeNoDefault != status) {
@@ -1056,7 +1061,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         //Now dispatch to the frame
         if (mCurrentTarget) {
           //XXX Get the new frame
-          mCurrentTarget->HandleEvent(aPresContext, &event, status);
+          mCurrentTarget->HandleEvent(aPresContext, &event, &status);
         }
 
         NS_IF_RELEASE(mCurrentTargetContent);
@@ -1087,7 +1092,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         mCurrentRelatedContent = nsnull;
 
         if (lastContent) {
-          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
 
           if (nsEventStatus_eConsumeNoDefault != status) {
             SetContentState(nsnull, NS_EVENT_STATE_HOVER);
@@ -1098,7 +1103,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         //Now dispatch to the frame
         if (nsnull != mLastMouseOverFrame) {
           //XXX Get the new frame
-          mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+          mLastMouseOverFrame->HandleEvent(aPresContext, &event, &status);   
           mLastMouseOverFrame = nsnull;
         }
 
@@ -1113,7 +1118,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
 }
 
 void
-nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
+nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 {
   //Hold onto old target content through the event and reset after.
   nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
@@ -1149,7 +1154,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
           if ( lastContent != targetContent ) {
             //XXX This event should still go somewhere!!
             if (lastContent)
-              lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+              lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
 
             // clear the drag hover
             if (status != nsEventStatus_eConsumeNoDefault )
@@ -1158,7 +1163,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
 
           // Finally dispatch exit to the frame
           if ( mLastDragOverFrame ) {
-            mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
+            mLastDragOverFrame->HandleEvent(aPresContext, &event, &status);   
 
           NS_IF_RELEASE(mCurrentTargetContent);
           NS_IF_RELEASE(mCurrentRelatedContent);
@@ -1185,7 +1190,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         if ( lastContent != targetContent ) {
           //XXX This event should still go somewhere!!
           if ( targetContent ) 
-            targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+            targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
 
           // set drag hover on this frame
           if ( status != nsEventStatus_eConsumeNoDefault )
@@ -1195,7 +1200,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         // Finally dispatch to the frame
         if (mCurrentTarget) {
           //XXX Get the new frame
-          mCurrentTarget->HandleEvent(aPresContext, &event, status);
+          mCurrentTarget->HandleEvent(aPresContext, &event, &status);
         }
 
         NS_IF_RELEASE(mCurrentTargetContent);
@@ -1230,7 +1235,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         mCurrentRelatedContent = nsnull;
 
         if ( lastContent ) {
-          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
           if ( status != nsEventStatus_eConsumeNoDefault )
             SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
         }
@@ -1238,7 +1243,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         // Finally dispatch to the frame
         if ( mLastDragOverFrame ) {
           //XXX Get the new frame
-          mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
+          mLastDragOverFrame->HandleEvent(aPresContext, &event, &status);   
           mLastDragOverFrame = nsnull;
         }
 
@@ -1253,9 +1258,9 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
 }
 
 NS_IMETHODIMP
-nsEventStateManager::SetClickCount(nsIPresContext& aPresContext, 
+nsEventStateManager::SetClickCount(nsIPresContext* aPresContext, 
                                    nsMouseEvent *aEvent,
-                                   nsEventStatus& aStatus)
+                                   nsEventStatus* aStatus)
 {
   nsresult ret = NS_OK;
   nsCOMPtr<nsIContent> mouseContent;
@@ -1319,9 +1324,9 @@ nsEventStateManager::SetClickCount(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext, 
+nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext, 
                                               nsMouseEvent *aEvent,
-                                              nsEventStatus& aStatus)
+                                              nsEventStatus* aStatus)
 {
   nsresult ret = NS_OK;
   nsMouseEvent event;
@@ -1366,9 +1371,9 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsEventStateManager::DispatchKeyPressEvent(nsIPresContext& aPresContext, 
+nsEventStateManager::DispatchKeyPressEvent(nsIPresContext* aPresContext, 
                                            nsKeyEvent *aEvent,
-                                           nsEventStatus& aStatus)
+                                           nsEventStatus* aStatus)
 {
   nsresult ret = NS_OK;
 
@@ -1914,7 +1919,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       NS_ADDREF(mCurrentTargetContent);
       
       if (nsnull != mPresContext) {
-        mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+        mCurrentFocus->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
       
       NS_IF_RELEASE(mCurrentTargetContent);
@@ -1932,7 +1937,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     NS_ADDREF(mCurrentTargetContent);
 
     if (nsnull != mPresContext) {
-      aContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+      aContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
 
     NS_IF_RELEASE(mCurrentTargetContent);
@@ -2023,14 +2028,14 @@ nsEventStateManager::GetFocusedContent(nsIContent** aContent)
 }
 
 nsIFrame*
-nsEventStateManager::GetDocumentFrame(nsIPresContext& aPresContext)
+nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
 {
   nsCOMPtr<nsIPresShell> presShell;
   nsIDocument* aDocument;
   nsIFrame* aFrame;
   nsIView* aView;
 
-  aPresContext.GetShell(getter_AddRefs(presShell));
+  aPresContext->GetShell(getter_AddRefs(presShell));
   if (nsnull == presShell) {
 #ifdef DEBUG_scroll
     printf("Got a null PresShell\n");
@@ -2040,12 +2045,12 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext& aPresContext)
   presShell->GetDocument(&aDocument);
   presShell->GetPrimaryFrameFor(aDocument->GetRootContent(), &aFrame);
 
-  aFrame->GetView(&aPresContext, &aView);
+  aFrame->GetView(aPresContext, &aView);
   if (!aView) {
 #ifdef DEBUG_scroll
     printf("looking for a parent with a view\n");
 #endif
-    aFrame->GetParentWithView(&aPresContext, &aFrame);
+    aFrame->GetParentWithView(aPresContext, &aFrame);
   }
   return aFrame;
 }

@@ -651,7 +651,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mIsBottomMarginRoot = PR_TRUE;
   }
 
-  mMinLineHeight = nsHTMLReflowState::CalcLineHeight(*mPresContext,
+  mMinLineHeight = nsHTMLReflowState::CalcLineHeight(mPresContext,
                                                      aReflowState.rendContext,
                                                      aReflowState.frame);
 }
@@ -882,7 +882,7 @@ nsBlockReflowState::RecoverVerticalMargins(nsLineBox* aLine,
     frame->IsSplittable(splitType);
     ComputeBlockAvailSpace(frame, splitType, display, availSpaceRect);
     nsSize availSpace(availSpaceRect.width, availSpaceRect.height);
-    nsHTMLReflowState reflowState(*mPresContext, mReflowState,
+    nsHTMLReflowState reflowState(mPresContext, mReflowState,
                                   frame, availSpace);
 
     // Compute collapsed top margin
@@ -1108,7 +1108,7 @@ nsBlockFrame::~nsBlockFrame()
 }
 
 NS_IMETHODIMP
-nsBlockFrame::Destroy(nsIPresContext& aPresContext)
+nsBlockFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Outside bullets are not in our child-list so check for them here
   // and delete them when present.
@@ -1119,7 +1119,7 @@ nsBlockFrame::Destroy(nsIPresContext& aPresContext)
 
   mFloaters.DestroyFrames(aPresContext);
 
-  nsLineBox::DeleteLineList(&aPresContext, mLines);
+  nsLineBox::DeleteLineList(aPresContext, mLines);
 
   return nsBlockFrameSuper::Destroy(aPresContext);
 }
@@ -1353,7 +1353,7 @@ nsBlockFrame::IsPercentageBase(PRBool& aBase) const
 // Reflow methods
 
 NS_IMETHODIMP
-nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
+nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -1407,7 +1407,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     reflowState.mSpaceManager = spaceManager.get();
   }
 
-  nsBlockReflowState state(aReflowState, &aPresContext, this, aMetrics);
+  nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics);
   if (NS_BLOCK_MARGIN_ROOT & mState) {
     state.mIsTopMarginRoot = PR_TRUE;
     state.mIsBottomMarginRoot = PR_TRUE;
@@ -1418,7 +1418,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 
   if (eReflowReason_Resize != aReflowState.reason) {
     RenumberLists();
-    ComputeTextRuns(&aPresContext);
+    ComputeTextRuns(aPresContext);
   }
 
   nsresult rv = NS_OK;
@@ -1430,7 +1430,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     ListTag(stdout);
     printf(": reflow=initial\n");
 #endif
-    DrainOverflowLines(&aPresContext);
+    DrainOverflowLines(aPresContext);
     rv = PrepareInitialReflow(state);
     mState &= ~NS_FRAME_FIRST_REFLOW;
     break;
@@ -1481,7 +1481,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     ListTag(stdout);
     printf(": reflow=resize (%d)\n", aReflowState.reason);
 #endif
-    DrainOverflowLines(&aPresContext);
+    DrainOverflowLines(aPresContext);
     rv = PrepareResizeReflow(state);
     break;
   }
@@ -1555,7 +1555,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     if (isStyleChange) {
       // Lots of things could have changed so damage our entire
       // bounds
-      Invalidate(&aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+      Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
 
     } else {
       nsMargin  border = aReflowState.mComputedBorderPadding -
@@ -1581,7 +1581,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
           damageRect.y = 0;
           damageRect.height = mRect.height;
         }
-        Invalidate(&aPresContext, damageRect);
+        Invalidate(aPresContext, damageRect);
       }
   
       // See if our height changed
@@ -1604,7 +1604,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
           damageRect.y = mRect.height - border.bottom;
           damageRect.height = border.bottom;
         }
-        Invalidate(&aPresContext, damageRect);
+        Invalidate(aPresContext, damageRect);
       }
     }
   }
@@ -3210,7 +3210,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     // out if this setup is the margin-top value which doesn't depend
     // on the childs available space.
     nsSize availSpace(aState.mContentArea.width, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState reflowState(*aState.mPresContext, aState.mReflowState,
+    nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
                                   frame, availSpace);
 
     // Now compute the collapsed margin-top value
@@ -3488,7 +3488,7 @@ nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
                                          PRBool* aKeepReflowGoing,
                                          PRUint8* aLineReflowStatus)
 {
-  nsLineLayout* ll = new nsLineLayout(*aState.mPresContext,
+  nsLineLayout* ll = new nsLineLayout(aState.mPresContext,
                                       aState.mReflowState.mSpaceManager,
                                       &aState.mReflowState,
                                       aState.mComputeMaxElementSize);
@@ -3510,7 +3510,7 @@ nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
                                        PRBool* aKeepReflowGoing,
                                        PRUint8* aLineReflowStatus)
 {
-  nsLineLayout lineLayout(*aState.mPresContext,
+  nsLineLayout lineLayout(aState.mPresContext,
                           aState.mReflowState.mSpaceManager,
                           &aState.mReflowState,
                           aState.mComputeMaxElementSize);
@@ -3823,7 +3823,7 @@ nsBlockFrame::CreateContinuationFor(nsBlockReflowState& aState,
   aMadeNewFrame = PR_FALSE;
   nsresult rv;
   nsIFrame* nextInFlow;
-  rv = CreateNextInFlow(*aState.mPresContext, this, aFrame, nextInFlow);
+  rv = CreateNextInFlow(aState.mPresContext, this, aFrame, nextInFlow);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -4385,7 +4385,7 @@ nsBlockFrame::LastChild()
 }
 
 NS_IMETHODIMP
-nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
+nsBlockFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
@@ -4421,7 +4421,7 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
   }
   printf("\n");
 #endif
-  nsresult rv = AddFrames(&aPresContext, aFrameList, lastKid);
+  nsresult rv = AddFrames(aPresContext, aFrameList, lastKid);
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
@@ -4440,7 +4440,7 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::InsertFrames(nsIPresContext& aPresContext,
+nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
@@ -4466,7 +4466,7 @@ nsBlockFrame::InsertFrames(nsIPresContext& aPresContext,
   }
   printf("\n");
 #endif
-  nsresult rv = AddFrames(&aPresContext, aFrameList, aPrevFrame);
+  nsresult rv = AddFrames(aPresContext, aFrameList, aPrevFrame);
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
@@ -4599,7 +4599,7 @@ nsBlockFrame::FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame)
 }
 
 NS_IMETHODIMP
-nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame)
@@ -4638,7 +4638,7 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
     rv = NS_ERROR_INVALID_ARG;
   }
   else {
-    rv = DoRemoveFrame(&aPresContext, aOldFrame);
+    rv = DoRemoveFrame(aPresContext, aOldFrame);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -4746,7 +4746,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       nsFrame::ListTag(stdout, aDeletedFrame);
       printf(" prevSibling=%p nextInFlow=%p\n", prevSibling, nextInFlow);
 #endif
-      aDeletedFrame->Destroy(*aPresContext);
+      aDeletedFrame->Destroy(aPresContext);
       aDeletedFrame = nextInFlow;
 
       // If line is empty, remove it now
@@ -4814,10 +4814,10 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
 }
 
 void
-nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
+nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
                                      nsIFrame* aChild)
 {
-  NS_PRECONDITION(IsChild(&aPresContext, aChild), "bad geometric parent");
+  NS_PRECONDITION(IsChild(aPresContext, aChild), "bad geometric parent");
   nsIFrame* nextInFlow;
   aChild->GetNextInFlow(&nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
@@ -4826,7 +4826,7 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   NS_PRECONDITION(nsnull != parent, "next-in-flow with no parent");
   NS_PRECONDITION(nsnull != parent->mLines, "next-in-flow with weird parent");
 //  NS_PRECONDITION(nsnull == parent->mOverflowLines, "parent with overflow");
-  parent->DoRemoveFrame(&aPresContext, nextInFlow);
+  parent->DoRemoveFrame(aPresContext, nextInFlow);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -5369,7 +5369,7 @@ static void ComputeCombinedArea(nsLineBox* aLine,
 #endif
 
 NS_IMETHODIMP
-nsBlockFrame::Paint(nsIPresContext&      aPresContext,
+nsBlockFrame::Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer)
@@ -5484,7 +5484,7 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 void
-nsBlockFrame::PaintFloaters(nsIPresContext& aPresContext,
+nsBlockFrame::PaintFloaters(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect)
 {
@@ -5507,7 +5507,7 @@ nsBlockFrame::PaintFloaters(nsIPresContext& aPresContext,
 }
 
 void
-nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
+nsBlockFrame::PaintChildren(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
@@ -5605,13 +5605,13 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsBlockFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsBlockFrame::HandleEvent(nsIPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
-                          nsEventStatus&  aEventStatus)
+                          nsEventStatus*  aEventStatus)
 {
   if (aEvent->message == NS_MOUSE_MOVE) {
     nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv)){
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
@@ -5630,7 +5630,7 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
     nsCOMPtr<nsILineIterator> it; 
     nsIFrame *mainframe = this;
     nsCOMPtr<nsIPresShell> shell;
-    aPresContext.GetShell(getter_AddRefs(shell));
+    aPresContext->GetShell(getter_AddRefs(shell));
     if (!shell)
       return NS_OK;
     nsCOMPtr<nsIFocusTracker> tracker;
@@ -5642,7 +5642,7 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
 
     while(NS_SUCCEEDED(result))
     { //we are starting aloop to allow us to "drill down to the one we want" 
-      mainframe->GetOffsetFromView(&aPresContext, origin, &parentWithView);
+      mainframe->GetOffsetFromView(aPresContext, origin, &parentWithView);
 
       if (NS_FAILED(result))
         return NS_OK;//do not handle
@@ -5689,7 +5689,7 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
       pos.mDirection = eDirNext;
       pos.mDesiredX = aEvent->point.x;
       
-      result = nsFrame::GetNextPrevLineFromeBlockFrame(&aPresContext,
+      result = nsFrame::GetNextPrevLineFromeBlockFrame(aPresContext,
                                           &pos,
                                           mainframe, 
                                           closestLine-1, 
@@ -5837,7 +5837,7 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsBlockFrame::Init(nsIPresContext&  aPresContext,
+nsBlockFrame::Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -5869,7 +5869,7 @@ nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
@@ -5882,7 +5882,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
     // Lookup up the two pseudo style contexts
     if (nsnull == mPrevInFlow) {
-      nsIStyleContext* firstLetterStyle = GetFirstLetterStyle(&aPresContext);
+      nsIStyleContext* firstLetterStyle = GetFirstLetterStyle(aPresContext);
       if (nsnull != firstLetterStyle) {
         mState |= NS_BLOCK_HAS_FIRST_LETTER_STYLE;
 #ifdef NOISY_FIRST_LETTER
@@ -5893,7 +5893,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
       }
     }
 
-    rv = AddFrames(&aPresContext, aChildList, nsnull);
+    rv = AddFrames(aPresContext, aChildList, nsnull);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -5908,7 +5908,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
         (nsnull == mBullet)) {
       // Resolve style for the bullet frame
       nsIStyleContext* kidSC;
-      aPresContext.ResolvePseudoStyleContextFor(mContent, 
+      aPresContext->ResolvePseudoStyleContextFor(mContent, 
                                              nsHTMLAtoms::mozListBulletPseudo,
                                              mStyleContext, PR_FALSE, &kidSC);
 
@@ -5927,7 +5927,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
       GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
       if (NS_STYLE_LIST_STYLE_POSITION_INSIDE ==
           styleList->mListStylePosition) {
-        AddFrames(&aPresContext, mBullet, nsnull);
+        AddFrames(aPresContext, mBullet, nsnull);
         mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
       }
       else {
@@ -6114,11 +6114,11 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   nsSize availSize;
   availSize.width = NS_UNCONSTRAINEDSIZE;
   availSize.height = NS_UNCONSTRAINEDSIZE;
-  nsHTMLReflowState reflowState(*aState.mPresContext, aState.mReflowState,
+  nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
                                 mBullet, availSize);
   nsReflowStatus  status;
-  mBullet->WillReflow(*aState.mPresContext);
-  mBullet->Reflow(*aState.mPresContext, aMetrics, reflowState, status);
+  mBullet->WillReflow(aState.mPresContext);
+  mBullet->Reflow(aState.mPresContext, aMetrics, reflowState, status);
 
   // Place the bullet now; use its right margin to distance it
   // from the rest of the frames in the line
@@ -6129,7 +6129,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   const nsMargin& bp = aState.BorderPadding();
   nscoord y = bp.top;
   mBullet->SetRect(aState.mPresContext, nsRect(x, y, aMetrics.width, aMetrics.height));
-  mBullet->DidReflow(*aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
+  mBullet->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
 }
 
 //XXX get rid of this -- its slow
@@ -6175,7 +6175,7 @@ nsBlockFrame::ComputeTextRuns(nsIPresContext* aPresContext)
   nsTextRun::DeleteTextRuns(mTextRuns);
   mTextRuns = nsnull;
 
-  nsLineLayout textRunThingy(*aPresContext);
+  nsLineLayout textRunThingy(aPresContext);
 
   // Ask each child to find its text runs
   nsLineBox* line = mLines;

@@ -107,7 +107,7 @@ nsMathMLmoFrame::~nsMathMLmoFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::Paint(nsIPresContext&      aPresContext,
+nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer)
@@ -130,7 +130,7 @@ nsMathMLmoFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmoFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIStyleContext* aContext,
@@ -301,7 +301,7 @@ nsMathMLmoFrame::InitData()
 //       On input  - it contains our current size
 //       On output - the same size or the new size that we want
 NS_IMETHODIMP
-nsMathMLmoFrame::Stretch(nsIPresContext&      aPresContext,
+nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          nsStretchDirection   aStretchDirection,
                          nsCharMetrics&       aContainerSize,
@@ -351,7 +351,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext&      aPresContext,
     while (nsnull != childFrame) {
       if (!IsOnlyWhitespace(childFrame)) {
         childFrame->GetRect(rect);
-        childFrame->MoveTo(&aPresContext, rect.x + dx, rect.y + dy);
+        childFrame->MoveTo(aPresContext, rect.x + dx, rect.y + dy);
         dx += rect.width; 
       }
       childFrame->GetNextSibling(&childFrame);

@@ -87,7 +87,7 @@ nsGfxAutoTextControlFrame::~nsGfxAutoTextControlFrame()
 }
 
 
-nsresult nsGfxAutoTextControlFrame::Init(nsIPresContext&  aPresContext,
+nsresult nsGfxAutoTextControlFrame::Init(nsIPresContext*  aPresContext,
 				nsIContent*      aContent,
 				nsIFrame*        aParent,
 				nsIStyleContext* aContext,
@@ -97,11 +97,12 @@ nsresult nsGfxAutoTextControlFrame::Init(nsIPresContext&  aPresContext,
 	return(Inherited::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow));
 }
 
-nsresult nsGfxAutoTextControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsresult nsGfxAutoTextControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                               nsGUIEvent* aEvent,
-                                              nsEventStatus& aEventStatus)
+                                              nsEventStatus* aEventStatus)
 {
-	if (nsEventStatus_eConsumeNoDefault == aEventStatus)
+   NS_ENSURE_ARG_POINTER(aEventStatus);
+	if (nsEventStatus_eConsumeNoDefault == *aEventStatus)
 		return NS_OK;
 
 	switch(aEvent->message)

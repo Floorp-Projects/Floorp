@@ -71,27 +71,27 @@ public:
   NS_IMETHOD CreateDismissalListener();
 
   // Overridden methods
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                        nsIContent*      aContent,
                        nsIFrame*        aParent,
                        nsIStyleContext* aContext,
                        nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                        nsDidReflowStatus aStatus);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
   void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   static void GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult);
 
-  nsresult SyncViewWithFrame(nsIPresContext& aPresContext, PRBool aOnMenuBar, 
+  nsresult SyncViewWithFrame(nsIPresContext* aPresContext, PRBool aOnMenuBar, 
                              nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
 
   NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);

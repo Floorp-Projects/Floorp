@@ -36,13 +36,13 @@ public:
   virtual ~nsBulletFrame();
 
   // nsIFrame
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
-  NS_IMETHOD Paint(nsIPresContext &aCX,
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Paint(nsIPresContext* aCX,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
@@ -52,7 +52,7 @@ public:
 #endif
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -65,7 +65,7 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aMetrics);
 
-  void GetListItemText(nsIPresContext& aCX,
+  void GetListItemText(nsIPresContext* aCX,
                        const nsStyleList& aStyleList,
                        nsString& aResult);
 

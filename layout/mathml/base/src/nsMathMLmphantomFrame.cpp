@@ -67,7 +67,7 @@ nsMathMLmphantomFrame::~nsMathMLmphantomFrame()
 }
 
 NS_METHOD
-nsMathMLmphantomFrame::Paint(nsIPresContext&      aPresContext,
+nsMathMLmphantomFrame::Paint(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer)

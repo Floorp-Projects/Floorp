@@ -36,19 +36,19 @@ class nsFirstLetterFrame : public nsFirstLetterFrameSuper {
 public:
   nsFirstLetterFrame();
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -106,7 +106,7 @@ nsFirstLetterFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::Init(nsIPresContext&  aPresContext,
+nsFirstLetterFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIStyleContext* aContext,
@@ -122,7 +122,7 @@ nsFirstLetterFrame::Init(nsIPresContext&  aPresContext,
       nsIAtom* atom = aPrevInFlow
         ? nsHTMLAtoms::mozLetterFrame
         : nsHTMLAtoms::firstLetterPseudo;
-      rv = aPresContext.ResolvePseudoStyleContextFor(aContent, atom,
+      rv = aPresContext->ResolvePseudoStyleContextFor(aContent, atom,
                                                      parentStyleContext,
                                                      PR_FALSE, &newSC);
       NS_RELEASE(parentStyleContext);
@@ -147,13 +147,13 @@ nsFirstLetterFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsFirstLetterFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
   mFrames.SetFrames(aChildList);
   if (aChildList) {
-    aPresContext.ReParentStyleContext(aChildList, mStyleContext);
+    aPresContext->ReParentStyleContext(aChildList, mStyleContext);
   }
   return NS_OK;
 }
@@ -185,7 +185,7 @@ nsFirstLetterFrame::FindTextRuns(nsLineLayout& aLineLayout)
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
+nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aMetrics,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aReflowStatus)
@@ -193,7 +193,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
   nsresult rv = NS_OK;
 
   // Grab overflow list
-  DrainOverflowFrames(&aPresContext);
+  DrainOverflowFrames(aPresContext);
 
   nsIFrame* kid = mFrames.FirstChild();
   nsIFrame* nextRCFrame = nsnull;
@@ -245,8 +245,8 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   // Place and size the child and update the output metrics
-  kid->MoveTo(&aPresContext, bp.left, bp.top);
-  kid->SizeTo(&aPresContext, aMetrics.width, aMetrics.height);
+  kid->MoveTo(aPresContext, bp.left, bp.top);
+  kid->SizeTo(aPresContext, aMetrics.width, aMetrics.height);
   kid->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   aMetrics.width += lr;
   aMetrics.height += tb;
@@ -279,14 +279,14 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
     // And then push it to our overflow list
     if (nextInFlow) {
       kid->SetNextSibling(nsnull);
-      SetOverflowFrames(&aPresContext, nextInFlow);
+      SetOverflowFrames(aPresContext, nextInFlow);
     }
     else {
       nsIFrame* nextSib;
       kid->GetNextSibling(&nextSib);
       if (nextSib) {
         kid->SetNextSibling(nsnull);
-        SetOverflowFrames(&aPresContext, nextSib);
+        SetOverflowFrames(aPresContext, nextSib);
       }
     }
   }

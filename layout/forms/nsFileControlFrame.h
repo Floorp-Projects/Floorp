@@ -47,12 +47,12 @@ public:
   virtual ~nsFileControlFrame();
 
   // XXX Hack so we can squirrel away the pres context pointer
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow) {
-    mPresContext = &aPresContext;
+    mPresContext = aPresContext;
     return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   }
 
@@ -60,7 +60,7 @@ public:
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
   virtual nsFormFrame* GetFromFrame() { return mFormFrame; }
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
@@ -70,7 +70,7 @@ public:
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aCX,
+  NS_IMETHOD Reflow(nsIPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -102,10 +102,10 @@ public:
                     nsFont&         aFont);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;

@@ -95,7 +95,7 @@ nsNativeCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nsc
 	Inherited::PostCreateWidget(aPresContext, aWidth, aHeight);
 
   if (mWidget != nsnull) {
-    SetColors(*aPresContext);
+    SetColors(aPresContext);
     mWidget->Enable(!nsFormFrame::GetDisabled(this));
   }              
 }

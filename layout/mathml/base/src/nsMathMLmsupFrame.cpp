@@ -67,7 +67,7 @@ nsMathMLmsupFrame::~nsMathMLmsupFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsupFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmsupFrame::Reflow(nsIPresContext*          aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
                           nsReflowStatus&          aStatus)
@@ -124,7 +124,7 @@ nsMathMLmsupFrame::Reflow(nsIPresContext&          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   const nsStyleFont* aFont =
     (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext.GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
   fm->GetSuperscriptOffset(superscriptOffset);
   fm->GetLeading(leading);
 
@@ -138,8 +138,8 @@ nsMathMLmsupFrame::Reflow(nsIPresContext&          aPresContext,
   rect[0].y = aDesiredSize.height - rect[0].height;  
   aDesiredSize.ascent = aDesiredSize.height - aDesiredSize.descent;
   
-  child[0]->SetRect(&aPresContext, rect[0]);
-  child[1]->SetRect(&aPresContext, rect[1]);
+  child[0]->SetRect(aPresContext, rect[0]);
+  child[1]->SetRect(aPresContext, rect[1]);
  
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;

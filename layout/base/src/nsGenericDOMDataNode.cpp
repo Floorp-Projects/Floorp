@@ -765,11 +765,11 @@ nsGenericDOMDataNode::SetParent(nsIContent* aParent)
 }
 
 nsresult
-nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext& aPresContext,
+nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
                                      nsEvent* aEvent,
                                      nsIDOMEvent** aDOMEvent,
                                      PRUint32 aFlags,
-                                     nsEventStatus& aEventStatus)
+                                     nsEventStatus* aEventStatus)
 {
   nsresult ret = NS_OK;
   nsIDOMEvent* domEvent = nsnull;

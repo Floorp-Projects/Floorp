@@ -70,7 +70,7 @@ nsTreeCellFrame::~nsTreeCellFrame()
 }
 
 NS_IMETHODIMP
-nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
+nsTreeCellFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIStyleContext* aContext,
@@ -142,7 +142,7 @@ nsTableFrame* nsTreeCellFrame::GetTreeFrame()
 	return mTreeFrame;
 }
 
-NS_METHOD nsTreeCellFrame::Reflow(nsIPresContext& aPresContext,
+NS_METHOD nsTreeCellFrame::Reflow(nsIPresContext* aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus& aStatus)
@@ -181,11 +181,12 @@ nsTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsTreeCellFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsTreeCellFrame::HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus)
+                             nsEventStatus*  aEventStatus)
 {
-  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     if (((nsMouseEvent*)aEvent)->clickCount == 2)
 		  HandleDoubleClickEvent(aPresContext, aEvent, aEventStatus);
@@ -203,9 +204,9 @@ nsTreeCellFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext, 
+nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext* aPresContext, 
 									                    nsGUIEvent*     aEvent,
-									                    nsEventStatus&  aEventStatus)
+									                    nsEventStatus*  aEventStatus)
 {
   if (mIsHeader) {
     nsTableColFrame* leftFlex = nsnull;
@@ -216,7 +217,7 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
       nsIFrame* frame;
       GetParent(&frame);
       nsTreeRowFrame* treeRow = (nsTreeRowFrame*)frame;
-      treeRow->HeaderDrag(&aPresContext, PR_TRUE);
+      treeRow->HeaderDrag(aPresContext, PR_TRUE);
 
       // Inform the tree row of the flexing column
       treeRow->SetFlexingColumn(leftFlex);
@@ -243,9 +244,9 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsTreeCellFrame::HandleMouseEnterEvent(nsIPresContext& aPresContext, 
+nsTreeCellFrame::HandleMouseEnterEvent(nsIPresContext* aPresContext, 
 									                    nsGUIEvent*     aEvent,
-									                    nsEventStatus&  aEventStatus)
+									                    nsEventStatus*  aEventStatus)
 {
   if (mIsHeader)
   {
@@ -260,9 +261,9 @@ nsTreeCellFrame::HandleMouseEnterEvent(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsTreeCellFrame::HandleMouseExitEvent(nsIPresContext& aPresContext, 
+nsTreeCellFrame::HandleMouseExitEvent(nsIPresContext* aPresContext, 
 									                    nsGUIEvent*     aEvent,
-									                    nsEventStatus&  aEventStatus)
+									                    nsEventStatus*  aEventStatus)
 {
   if (mIsHeader)
   {
@@ -309,7 +310,7 @@ nsTreeCellFrame::CanResize(nsPoint& aPoint, nsTableColFrame** aResult) {
 }
 
 NS_IMETHODIMP
-nsTreeCellFrame::GetCursor(nsIPresContext& aPresContext,
+nsTreeCellFrame::GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)
 {
@@ -421,15 +422,15 @@ nsTreeCellFrame::Close()
 }
 
 nsresult
-nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext, 
+nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext* aPresContext, 
 									    nsGUIEvent*     aEvent,
-									    nsEventStatus&  aEventStatus)
+									    nsEventStatus*  aEventStatus)
 {
   ToggleOpenClose();
   return NS_OK;
 }
 
-void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool notifyForReflow)
+void nsTreeCellFrame::Hover(nsIPresContext* aPresContext, PRBool isHover, PRBool notifyForReflow)
 {
 	nsCOMPtr<nsIAtom> kHoverAtom(dont_AddRef(NS_NewAtom("hover")));
 
@@ -455,7 +456,7 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
 }
 
 NS_IMETHODIMP
-nsTreeCellFrame::Destroy(nsIPresContext& aPresContext)
+nsTreeCellFrame::Destroy(nsIPresContext* aPresContext)
 {
   return nsTableCellFrame::Destroy(aPresContext);
 }

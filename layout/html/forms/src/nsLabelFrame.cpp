@@ -76,29 +76,29 @@ class nsLabelFrame : public nsHTMLContainerFrame
 public:
   nsLabelFrame();
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
@@ -167,10 +167,11 @@ nsLabelFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect)
 
             
 NS_METHOD 
-nsLabelFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsLabelFrame::HandleEvent(nsIPresContext* aPresContext, 
                           nsGUIEvent* aEvent,
-                          nsEventStatus& aEventStatus)
+                          nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   // if we don't have a control to send the event to
   // then what is the point?
   if (!mControlFrame) {
@@ -179,7 +180,7 @@ nsLabelFrame::HandleEvent(nsIPresContext& aPresContext,
 
   // check to see if the label is disabled and if not, 
   // then check to see if the control in the label is disabled
-  if (nsEventStatus_eConsumeNoDefault != aEventStatus) { 
+  if (nsEventStatus_eConsumeNoDefault != *aEventStatus) { 
     if ( nsFormFrame::GetDisabled(this) ) {
       return NS_OK;
     } else {
@@ -197,21 +198,21 @@ nsLabelFrame::HandleEvent(nsIPresContext& aPresContext,
   }
 
   // send the mouse click events down into the control
-  aEventStatus = nsEventStatus_eIgnore;
+  *aEventStatus = nsEventStatus_eIgnore;
   switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       mControlFrame->SetFocus(PR_TRUE);
  	    mLastMouseState = eMouseDown;
-      aEventStatus = nsEventStatus_eConsumeNoDefault;
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
 	    break;
     case NS_MOUSE_LEFT_BUTTON_UP:
 	    if (eMouseDown == mLastMouseState) {
-        if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-          mControlFrame->MouseClicked(&aPresContext);
+        if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
+          mControlFrame->MouseClicked(aPresContext);
         }
 	    } 
 	    mLastMouseState = eMouseUp;
-      aEventStatus = nsEventStatus_eConsumeNoDefault;
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       break;
   }
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
@@ -360,7 +361,7 @@ nsLabelFrame::FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aRe
 
 
 NS_IMETHODIMP
-nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsLabelFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
@@ -376,7 +377,7 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
-  aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::labelContentPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::labelContentPseudo,
                                             mStyleContext, PR_FALSE,
                                             &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
@@ -392,7 +393,7 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsLabelFrame::Paint(nsIPresContext& aPresContext,
+nsLabelFrame::Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer)
@@ -428,7 +429,7 @@ void LabelHack(nsHTMLReflowState& aReflowState, char* aMessage)
 }
 
 NS_IMETHODIMP
-nsLabelFrame::Init(nsIPresContext&  aPresContext,
+nsLabelFrame::Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -440,32 +441,32 @@ nsLabelFrame::Init(nsIPresContext&  aPresContext,
 
   // create our view, we need a view to grab the mouse 
   nsIView* view;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
   if (!view) {
     nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
                                                   (void **)&view);
     nsCOMPtr<nsIPresShell> presShell;
-    aPresContext.GetShell(getter_AddRefs(presShell));
+    aPresContext->GetShell(getter_AddRefs(presShell));
     nsCOMPtr<nsIViewManager> viewMan;
     presShell->GetViewManager(getter_AddRefs(viewMan));
 
     nsIFrame* parWithView;
     nsIView *parView;
-    GetParentWithView(&aPresContext, &parWithView);
-    parWithView->GetView(&aPresContext, &parView);
+    GetParentWithView(aPresContext, &parWithView);
+    parWithView->GetView(aPresContext, &parView);
     // the view's size is not know yet, but its size will be kept in synch with our frame.
     nsRect boundBox(0, 0, 0, 0); 
     result = view->Init(viewMan, boundBox, parView, nsnull);
     view->SetContentTransparency(PR_TRUE);
     viewMan->InsertChild(parView, view, 0);
-    SetView(&aPresContext, view);
+    SetView(aPresContext, view);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP 
-nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
+nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)

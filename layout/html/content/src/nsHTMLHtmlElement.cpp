@@ -180,17 +180,18 @@ nsHTMLHtmlElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFun
 }
 
 NS_IMETHODIMP
-nsHTMLHtmlElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLHtmlElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   nsEvent* aEvent,
                                   nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
-                                  nsEventStatus& aEventStatus)
+                                  nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsnull != mInner.mDocument) {
     return mInner.mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                             aFlags, aEventStatus);
   }
-  aEventStatus = nsEventStatus_eIgnore;
+  *aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
 }
 

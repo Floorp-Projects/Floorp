@@ -51,7 +51,7 @@ nsPageFrame::nsPageFrame()
 {
 }
 
-NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
+NS_METHOD nsPageFrame::Reflow(nsIPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
@@ -104,10 +104,10 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
       nsIStyleSet*  styleSet;
       nsIFrame*     newFrame;
 
-      aPresContext.GetShell(&presShell);
+      aPresContext->GetShell(&presShell);
       presShell->GetStyleSet(&styleSet);
       NS_RELEASE(presShell);
-      styleSet->CreateContinuingFrame(&aPresContext, prevLastChild, this, &newFrame);
+      styleSet->CreateContinuingFrame(aPresContext, prevLastChild, this, &newFrame);
       NS_RELEASE(styleSet);
       mFrames.SetFrames(newFrame);
     }

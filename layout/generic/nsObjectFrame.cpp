@@ -174,28 +174,28 @@ private:
 
 class nsObjectFrame : public nsObjectFrameSuper {
 public:
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                        nsDidReflowStatus aStatus);
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext,
                           nsGUIEvent*     aEvent,
-                          nsEventStatus&  aEventStatus);
+                          nsEventStatus*  aEventStatus);
 
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
@@ -229,23 +229,23 @@ protected:
 
   nsresult SetFullURL(nsIURI* aURL);
 
-  nsresult InstantiateWidget(nsIPresContext&          aPresContext,
+  nsresult InstantiateWidget(nsIPresContext*          aPresContext,
 							nsHTMLReflowMetrics&     aMetrics,
 							const nsHTMLReflowState& aReflowState,
 							nsCID aWidgetCID);
 
-  nsresult InstantiatePlugin(nsIPresContext&          aPresContext,
+  nsresult InstantiatePlugin(nsIPresContext*          aPresContext,
 							nsHTMLReflowMetrics&     aMetrics,
 							const nsHTMLReflowState& aReflowState,
 							nsIPluginHost* aPluginHost, 
 							const char* aMimetype,
 							nsIURI* aURL);
   //~~~
-  nsresult ReinstantiatePlugin(nsIPresContext& aPresContext, 
+  nsresult ReinstantiatePlugin(nsIPresContext* aPresContext, 
                                nsHTMLReflowMetrics& aMetrics, 
                                const nsHTMLReflowState& aReflowState);
 
-  nsresult HandleImage(nsIPresContext&          aPresContext,
+  nsresult HandleImage(nsIPresContext*          aPresContext,
 					   nsHTMLReflowMetrics&     aMetrics,
 					   const nsHTMLReflowState& aReflowState,
 					   nsReflowStatus&          aStatus,
@@ -345,7 +345,7 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   }
 }
 
-NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext& aPresContext,
+NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                                  nsIAtom*        aListName,
                                                  nsIFrame*       aChildList)
 {
@@ -357,7 +357,7 @@ NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP 
-nsObjectFrame::Init(nsIPresContext&  aPresContext,
+nsObjectFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIStyleContext* aContext,
@@ -439,7 +439,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
 
   if (NS_OK == parView->GetViewManager(viewMan))
   {
-  //  nsWidgetInitData* initData = GetWidgetInitData(*aPresContext); // needs to be deleted
+  //  nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
     // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView, nsnull,
                         nsViewVisibility_kHide);
@@ -569,7 +569,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 #define JAVA_CLASS_ID "8AD9C840-044E-11D1-B3E9-00805F499D93"
 
 NS_IMETHODIMP
-nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
+nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
@@ -579,7 +579,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
   PRUint32 buflen;
 
   // Get our desired size
-  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  GetDesiredSize(aPresContext, aReflowState, aMetrics);
 
   // could be an image
   nsIFrame * child = mFrames.FirstChild();
@@ -595,7 +595,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	    return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(mInstanceOwner);
-    mInstanceOwner->Init(&aPresContext, this);
+    mInstanceOwner->Init(aPresContext, this);
 
     nsCOMPtr<nsISupports>     container;
     nsCOMPtr<nsIPluginHost>   pluginHost;
@@ -659,7 +659,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         }
 
         // get the nsIPluginHost interface
-        NS_ENSURE_SUCCESS(aPresContext.GetContainer(getter_AddRefs(container)), 
+        NS_ENSURE_SUCCESS(aPresContext->GetContainer(getter_AddRefs(container)), 
          NS_ERROR_FAILURE);
 
         nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
@@ -704,7 +704,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	      }
 
           // get the nsIPluginHost interface
-          NS_ENSURE_SUCCESS(aPresContext.GetContainer(getter_AddRefs(container)), 
+          NS_ENSURE_SUCCESS(aPresContext->GetContainer(getter_AddRefs(container)), 
            NS_ERROR_FAILURE);
 
           nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
@@ -735,8 +735,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
       // if we got an error, we'll check for alternative content with CantRenderReplacedElement()
       nsIPresShell* presShell;
-      aPresContext.GetShell(&presShell);
-      presShell->CantRenderReplacedElement(&aPresContext, this);
+      aPresContext->GetShell(&presShell);
+      presShell->CantRenderReplacedElement(aPresContext, this);
       NS_RELEASE(presShell);
       aStatus = NS_FRAME_COMPLETE;
       return NS_OK;
@@ -751,7 +751,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 		  return rv;
 
     // get the nsIPluginHost interface
-    NS_ENSURE_SUCCESS(aPresContext.GetContainer(getter_AddRefs(container)), 
+    NS_ENSURE_SUCCESS(aPresContext->GetContainer(getter_AddRefs(container)), 
      NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
@@ -852,29 +852,29 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
   // if we got an error, we'll check for alternative content with CantRenderReplacedElement()
   nsIPresShell* presShell;
-  aPresContext.GetShell(&presShell);
-  presShell->CantRenderReplacedElement(&aPresContext, this);
+  aPresContext->GetShell(&presShell);
+  presShell->CantRenderReplacedElement(aPresContext, this);
   NS_RELEASE(presShell);
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
 nsresult
-nsObjectFrame::InstantiateWidget(nsIPresContext&          aPresContext,
+nsObjectFrame::InstantiateWidget(nsIPresContext*          aPresContext,
 							nsHTMLReflowMetrics&     aMetrics,
 							const nsHTMLReflowState& aReflowState,
 							nsCID aWidgetCID)
 {
   nsresult rv;
 
-  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  GetDesiredSize(aPresContext, aReflowState, aMetrics);
   nsIView *parentWithView;
   nsPoint origin;
-  GetOffsetFromView(&aPresContext, origin, &parentWithView);
+  GetOffsetFromView(aPresContext, origin, &parentWithView);
   // Just make the frigging widget
 
   float           t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
   PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
   PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
   PRInt32 width = NSTwipsToIntPixels(aMetrics.width, t2p);
@@ -894,7 +894,7 @@ nsObjectFrame::InstantiateWidget(nsIPresContext&          aPresContext,
 }
 
 nsresult
-nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
+nsObjectFrame::InstantiatePlugin(nsIPresContext*          aPresContext,
 							nsHTMLReflowMetrics&     aMetrics,
 							const nsHTMLReflowState& aReflowState,
 							nsIPluginHost* aPluginHost, 
@@ -905,13 +905,13 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
   nsPoint origin;
   nsPluginWindow  *window;
   float           t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
 
   SetFullURL(aURL);
 
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
-  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  GetDesiredSize(aPresContext, aReflowState, aMetrics);
   if (nsnull != aMetrics.maxElementSize) 
   {
     //XXX              AddBorderPaddingToMaxElementSize(borderPadding);
@@ -921,7 +921,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
 
   mInstanceOwner->GetWindow(window);
 
-  GetOffsetFromView(&aPresContext, origin, &parentWithView);
+  GetOffsetFromView(aPresContext, origin, &parentWithView);
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
   window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
@@ -941,17 +941,17 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
 // This is called when the page containing plugin is resized, and plugin has its dimensions
 // specified in percentage, so it needs to follow the page on the fly.
 nsresult
-nsObjectFrame::ReinstantiatePlugin(nsIPresContext& aPresContext, nsHTMLReflowMetrics& aMetrics, const nsHTMLReflowState& aReflowState)
+nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMetrics& aMetrics, const nsHTMLReflowState& aReflowState)
 {
   nsIView *parentWithView;
   nsPoint origin;
   nsPluginWindow  *window;
   float           t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
 
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
-  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  GetDesiredSize(aPresContext, aReflowState, aMetrics);
   if (nsnull != aMetrics.maxElementSize) 
   {
     //XXX              AddBorderPaddingToMaxElementSize(borderPadding);
@@ -961,7 +961,7 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext& aPresContext, nsHTMLReflowMet
 
   mInstanceOwner->GetWindow(window);
 
-  GetOffsetFromView(&aPresContext, origin, &parentWithView);
+  GetOffsetFromView(aPresContext, origin, &parentWithView);
 
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
@@ -981,7 +981,7 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext& aPresContext, nsHTMLReflowMet
 }
 
 nsresult
-nsObjectFrame::HandleImage(nsIPresContext&          aPresContext,
+nsObjectFrame::HandleImage(nsIPresContext*          aPresContext,
 						   nsHTMLReflowMetrics&     aMetrics,
 						   const nsHTMLReflowState& aReflowState,
 						   nsReflowStatus&          aStatus,
@@ -1016,7 +1016,7 @@ nsObjectFrame::HandleImage(nsIPresContext&          aPresContext,
   if(hc != nsnull)
   {
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
 
     nsHTMLValue val;
     if(NS_CONTENT_ATTR_HAS_VALUE == hc->GetHTMLAttribute(nsHTMLAtoms::width, val))
@@ -1094,7 +1094,7 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
+nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
                          nsDidReflowStatus aStatus)
 {
   nsresult rv = nsObjectFrameSuper::DidReflow(aPresContext, aStatus);
@@ -1103,7 +1103,7 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
-    GetView(&aPresContext, &view);
+    GetView(aPresContext, &view);
     if (nsnull != view) {
       view->SetVisibility(nsViewVisibility_kShow);
     }
@@ -1116,10 +1116,10 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
         nsPoint           origin;
         nsIPluginInstance *inst;
         float             t2p;
-        aPresContext.GetTwipsToPixels(&t2p);
+        aPresContext->GetTwipsToPixels(&t2p);
         nscoord           offx, offy;
 
-        GetOffsetFromView(&aPresContext, origin, &parentWithView);
+        GetOffsetFromView(aPresContext, origin, &parentWithView);
 
 #if 0
         // beard:  how do we get this?
@@ -1174,7 +1174,7 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::Paint(nsIPresContext& aPresContext,
+nsObjectFrame::Paint(nsIPresContext* aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect,
                      nsFramePaintLayer aWhichLayer)
@@ -1226,7 +1226,7 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
     float p2t;
-    aPresContext.GetPixelsToTwips(&p2t);
+    aPresContext->GetPixelsToTwips(&p2t);
     nscoord px3 = NSIntPixelsToTwips(3, p2t);
     nsAutoString tmp;
     nsIAtom* atom;
@@ -1247,10 +1247,11 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
+nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
                           nsGUIEvent*     anEvent,
-                          nsEventStatus&  anEventStatus)
+                          nsEventStatus*  anEventStatus)
 {
+   NS_ENSURE_ARG_POINTER(anEventStatus);
 	nsresult rv = NS_OK;
 
 //~~~
@@ -1279,7 +1280,7 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
       case NS_GOTFOCUS:
       case NS_LOSTFOCUS:
       //case set cursor should be here too:
-        anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
+        *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
         return rv;
       default:
         break;
@@ -1301,7 +1302,7 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
 	case NS_MOUSE_ENTER:
 	case NS_MOUSE_LEFT_BUTTON_UP:
 	case NS_MOUSE_LEFT_BUTTON_DOWN:
-		anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
+		*anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
 		break;
 		
 	default:

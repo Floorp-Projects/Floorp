@@ -63,9 +63,9 @@ public:
 #endif
 
   // nsIFrame overrides
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
@@ -78,7 +78,7 @@ public:
 
     virtual nsresult CurrentPositionChanged(nsIPresContext* aPresContext);
 
-     NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+     NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -86,36 +86,36 @@ public:
 
        NS_IMETHOD  CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
 
-   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-     NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+     NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
 
-   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
     NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                                 const nsPoint& aPoint, nsIFrame** aFrame);
 
-    NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+    NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
@@ -179,27 +179,27 @@ public:
   void SetScrollbarListener(nsIScrollbarListener* aListener);
 
 
-  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus)  { return NS_OK; }
+                         nsEventStatus*  aEventStatus)  { return NS_OK; }
 
-  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus&  aEventStatus)  { return NS_OK; }
+                        nsEventStatus*  aEventStatus)  { return NS_OK; }
 
-  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus&  aEventStatus);
+                           nsEventStatus*  aEventStatus);
 
   virtual void Notify(nsITimer *timer);
 
 protected:
 
-  virtual nsresult ReflowThumb(nsIPresContext&   aPresContext,
+  virtual nsresult ReflowThumb(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,

@@ -70,20 +70,20 @@ public:
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
@@ -91,7 +91,7 @@ public:
   }
 #endif
 
-  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                        nsPoint&        aPoint,
                        PRInt32&        aCursor);
 
@@ -118,10 +118,10 @@ public:
                     nsFont&         aFont);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
@@ -209,7 +209,7 @@ nsrefcnt nsImageControlFrame::Release(void)
 }
 
 NS_IMETHODIMP
-nsImageControlFrame::Init(nsIPresContext&  aPresContext,
+nsImageControlFrame::Init(nsIPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsIStyleContext* aContext,
@@ -221,24 +221,24 @@ nsImageControlFrame::Init(nsIPresContext&  aPresContext,
   
   // create our view, we need a view to grab the mouse 
   nsIView* view;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
   if (!view) {
     nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
     nsCOMPtr<nsIPresShell> presShell;
-    aPresContext.GetShell(getter_AddRefs(presShell));
+    aPresContext->GetShell(getter_AddRefs(presShell));
     nsCOMPtr<nsIViewManager> viewMan;
     presShell->GetViewManager(getter_AddRefs(viewMan));
 
     nsIFrame* parWithView;
     nsIView *parView;
-    GetParentWithView(&aPresContext, &parWithView);
-    parWithView->GetView(&aPresContext, &parView);
+    GetParentWithView(aPresContext, &parWithView);
+    parWithView->GetView(aPresContext, &parView);
     // the view's size is not know yet, but its size will be kept in synch with our frame.
     nsRect boundBox(0, 0, 0, 0); 
     result = view->Init(viewMan, boundBox, parView, nsnull);
     view->SetContentTransparency(PR_TRUE);
     viewMan->InsertChild(parView, view, 0);
-    SetView(&aPresContext, view);
+    SetView(aPresContext, view);
 
     const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
     // set the opacity
@@ -249,53 +249,54 @@ nsImageControlFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_METHOD
-nsImageControlFrame::Reflow(nsIPresContext&         aPresContext,
+nsImageControlFrame::Reflow(nsIPresContext*         aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
     // add ourself as an nsIFormControlFrame
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
   return nsImageControlFrameSuper::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
 NS_METHOD 
-nsImageControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                  nsGUIEvent* aEvent,
-                                 nsEventStatus& aEventStatus)
+                                 nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsFormFrame::GetDisabled(this)) { // XXX cache disabled
     return NS_OK;
   }
 
-  aEventStatus = nsEventStatus_eIgnore;
+  *aEventStatus = nsEventStatus_eIgnore;
 
   switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
     {
       // Store click point for GetNamesValues
       float t2p;
-      aPresContext.GetTwipsToPixels(&t2p);
+      aPresContext->GetTwipsToPixels(&t2p);
       mLastClickPoint.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
       mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
 
       mLastMouseState = eMouseDown;
       mGotFocus = PR_TRUE;
-      aEventStatus = nsEventStatus_eConsumeNoDefault;
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       return NS_OK;
       break;
     }
     case NS_MOUSE_LEFT_BUTTON_UP: 
     {
       if (eMouseDown == mLastMouseState) {
-        if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-          MouseClicked(&aPresContext);
+        if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
+          MouseClicked(aPresContext);
         }
       } 
       mLastMouseState = eMouseUp;
-      aEventStatus = nsEventStatus_eConsumeNoDefault;
+      *aEventStatus = nsEventStatus_eConsumeNoDefault;
       return NS_OK;
       break;
     }
@@ -408,7 +409,7 @@ nsImageControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 }
 
 NS_IMETHODIMP
-nsImageControlFrame::GetCursor(nsIPresContext& aPresContext,
+nsImageControlFrame::GetCursor(nsIPresContext* aPresContext,
                                nsPoint&        aPoint,
                                PRInt32&        aCursor)
 {
@@ -444,7 +445,7 @@ nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext)
     event.eventStructType = NS_EVENT;
     event.message = NS_FORM_SUBMIT;
     if (nsnull != formContent) {
-      formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       NS_RELEASE(formContent);
     }
     if (nsEventStatus_eConsumeNoDefault != status) {
@@ -473,7 +474,7 @@ nsImageControlFrame::GetFormContent(nsIContent*& aContent) const
 }
 
 nscoord 
-nsImageControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsImageControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                               float aPixToTwip, 
                                               nscoord aInnerHeight) const
 {
@@ -481,7 +482,7 @@ nsImageControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
 }
 
 nscoord 
-nsImageControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsImageControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const

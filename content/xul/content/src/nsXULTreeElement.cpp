@@ -376,7 +376,7 @@ nsXULTreeElement::FireOnSelectHandler()
     event.eventStructType = NS_EVENT;
     event.message = NS_FORM_SELECTED;
 
-    content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
 
   return NS_OK;

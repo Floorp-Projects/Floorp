@@ -77,9 +77,9 @@ public:
   // Expect this code to repackaged and moved to a new location in the future.
   //
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
   ///XXX: End o the temporary methods
 

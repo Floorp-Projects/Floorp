@@ -53,7 +53,7 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
 NS_IMETHODIMP
-nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
+nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
@@ -95,7 +95,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
  * created; otherwise nsnull is returned in aNextInFlowResult.
  */
 nsresult
-nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
+nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext* aPresContext,
                                        nsIFrame* aOuterFrame,
                                        nsIFrame* aFrame,
                                        nsIFrame*& aNextInFlowResult)
@@ -112,10 +112,10 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
 
     nsIPresShell* presShell;
     nsIStyleSet*  styleSet;
-    aPresContext.GetShell(&presShell);
+    aPresContext->GetShell(&presShell);
     presShell->GetStyleSet(&styleSet);
     NS_RELEASE(presShell);
-    styleSet->CreateContinuingFrame(&aPresContext, aFrame, aOuterFrame, &nextInFlow);
+    styleSet->CreateContinuingFrame(aPresContext, aFrame, aOuterFrame, &nextInFlow);
     NS_RELEASE(styleSet);
 
     if (nsnull == nextInFlow) {
@@ -290,13 +290,13 @@ nsHTMLContainerFrame::ReparentFrameView(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
+nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          nsIStyleContext* aStyleContext,
                                          PRBool aForce)
 {
   nsIView* view;
-  aFrame->GetView(&aPresContext, &view);
+  aFrame->GetView(aPresContext, &view);
   // If we don't yet have a view, see if we need a view
   if (nsnull == view) {
     PRInt32 zIndex = 0;
@@ -367,11 +367,11 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       // Create a view
       nsIFrame* parent;
 
-      aFrame->GetParentWithView(&aPresContext, &parent);
+      aFrame->GetParentWithView(aPresContext, &parent);
       NS_ASSERTION(parent, "GetParentWithView failed");
       nsIView* parentView;
    
-      parent->GetView(&aPresContext, &parentView);
+      parent->GetView(aPresContext, &parentView);
       NS_ASSERTION(parentView, "no parent with view");
 
       // Create a view
@@ -476,7 +476,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       }
 
       // Remember our view
-      aFrame->SetView(&aPresContext, view);
+      aFrame->SetView(aPresContext, view);
 
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
         ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p view=%p",

@@ -72,7 +72,7 @@ nsSimplePageSequenceFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
 
 // Creates a continuing page frame
 nsresult
-nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext& aPresContext,
+nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext* aPresContext,
                                                      nsIFrame*       aPageFrame,
                                                      nsIFrame**      aContinuingPage)
 {
@@ -81,17 +81,17 @@ nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext& aPresContex
   nsresult      rv;
 
   // Create the continuing frame
-  aPresContext.GetShell(&presShell);
+  aPresContext->GetShell(&presShell);
   presShell->GetStyleSet(&styleSet);
   NS_RELEASE(presShell);
-  rv = styleSet->CreateContinuingFrame(&aPresContext, aPageFrame, this, aContinuingPage);
+  rv = styleSet->CreateContinuingFrame(aPresContext, aPageFrame, this, aContinuingPage);
   NS_RELEASE(styleSet);
   return rv;
 }
 
 // Handles incremental reflow
 nsresult
-nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext&          aPresContext,
+nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext*          aPresContext,
                                              const nsHTMLReflowState& aReflowState,
                                              nsSize&                  aPageSize,
                                              nscoord                  aX,
@@ -201,7 +201,7 @@ nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext&          aPresConte
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
+nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -213,8 +213,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
   // Compute the size of each page and the x coordinate that each page will
   // be placed at
   nsSize  pageSize;
-  aPresContext.GetPageWidth(&pageSize.width);
-  aPresContext.GetPageHeight(&pageSize.height);
+  aPresContext->GetPageWidth(&pageSize.width);
+  aPresContext->GetPageHeight(&pageSize.height);
   PRInt32 extra = aReflowState.availableWidth - 2 * PAGE_SPACING_TWIPS - pageSize.width;
 
   nscoord x = PAGE_SPACING_TWIPS;
@@ -293,7 +293,7 @@ nsSimplePageSequenceFrame::GetFrameName(nsString& aResult) const
 #endif
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::Paint(nsIPresContext&      aPresContext,
+nsSimplePageSequenceFrame::Paint(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsRect&        aDirtyRect,
                                  nsFramePaintLayer    aWhichLayer)
@@ -310,7 +310,7 @@ nsSimplePageSequenceFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 void
-nsSimplePageSequenceFrame::PaintChild(nsIPresContext&      aPresContext,
+nsSimplePageSequenceFrame::PaintChild(nsIPresContext*      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect,
                                       nsIFrame*            aFrame,
@@ -325,7 +325,7 @@ nsSimplePageSequenceFrame::PaintChild(nsIPresContext&      aPresContext,
     // each page begins and ends when we're in print preview mode
     nsRect  pageBounds;
     float   p2t;
-    aPresContext.GetPixelsToTwips(&p2t);
+    aPresContext->GetPixelsToTwips(&p2t);
 
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aFrame->GetRect(pageBounds);
@@ -359,7 +359,7 @@ SendStatusNotification(nsIPrintStatusCallback* aStatusCallback,
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
+nsSimplePageSequenceFrame::Print(nsIPresContext*         aPresContext,
                                  const nsPrintOptions&   aPrintOptions,
                                  nsIPrintStatusCallback* aStatusCallback)
 {
@@ -375,9 +375,9 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
 
   // Begin printing of the document
   nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext.GetDeviceContext(getter_AddRefs(dc));
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
   nsCOMPtr<nsIPresShell>     presShell;
-  aPresContext.GetShell(getter_AddRefs(presShell));
+  aPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIViewManager>   vm;
   presShell->GetViewManager(getter_AddRefs(vm));
   nsresult          rv = NS_OK;
@@ -426,7 +426,7 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
   
       // Print the page
       nsIView*  view;
-      page->GetView(&aPresContext, &view);
+      page->GetView(aPresContext, &view);
       NS_ASSERTION(nsnull != view, "no page view");
       vm->Display(view);
 

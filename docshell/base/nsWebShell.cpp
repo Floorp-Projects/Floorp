@@ -1128,7 +1128,7 @@ nsWebShell::Destroy()
         nsMouseEvent event;
         event.eventStructType = NS_EVENT;
         event.message = NS_PAGE_UNLOAD;
-        rv = mScriptGlobal->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+        rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
         NS_RELEASE(presContext);
       }
@@ -3534,7 +3534,7 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
         nsMouseEvent event;
         event.eventStructType = NS_EVENT;
         event.message = NS_PAGE_UNLOAD;
-        rv = mScriptGlobal->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+        rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
         NS_RELEASE(presContext);
       }
@@ -3609,7 +3609,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
           nsMouseEvent event;
           event.eventStructType = NS_EVENT;
           event.message = NS_PAGE_LOAD;
-          rv = mScriptGlobal->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+          rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
           NS_RELEASE(presContext);
         }

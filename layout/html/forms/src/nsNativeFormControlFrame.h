@@ -41,7 +41,7 @@ public:
     * Respond to the request to resize and/or reflow
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext&      aCX,
+  NS_IMETHOD Reflow(nsIPresContext*      aCX,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -56,9 +56,9 @@ public:
     * Respond to a gui event
     * @see nsIFrame::HandleEvent
     */
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
   /**
     * Get the widget associated with this frame
@@ -75,7 +75,7 @@ public:
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
 
-  void SetColors(nsIPresContext& aPresContext);
+  void SetColors(nsIPresContext* aPresContext);
 
 protected:
 

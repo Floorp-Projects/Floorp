@@ -322,11 +322,11 @@ public:
     NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
     NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const;
     NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-    NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+    NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
-                              nsEventStatus& aEventStatus);
+                              nsEventStatus* aEventStatus);
 
     NS_IMETHOD GetContentID(PRUint32* aID);
     NS_IMETHOD SetContentID(PRUint32 aID);

@@ -146,13 +146,13 @@ nsGfxTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::Init(nsIPresContext&  aPresContext,
+nsGfxTextControlFrame::Init(nsIPresContext*  aPresContext,
                             nsIContent*      aContent,
                             nsIFrame*        aParent,
                             nsIStyleContext* aContext,
                             nsIFrame*        aPrevInFlow)
 {
-  mFramePresContext = &aPresContext;
+  mFramePresContext = aPresContext;
   return (nsTextControlFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow));
 }
 
@@ -233,7 +233,7 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
 {
   nsresult result;
   if (mDisplayFrame) {
-    mDisplayFrame->Destroy(*mFramePresContext);
+    mDisplayFrame->Destroy(mFramePresContext);
   }
   if (mTempObserver)
   {
@@ -322,19 +322,20 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
   }
 }
 
-NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                              nsGUIEvent* aEvent,
-                                             nsEventStatus& aEventStatus)
+                                             nsEventStatus* aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
 
-  aEventStatus = nsEventStatus_eConsumeDoDefault;   // this is the default
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;   // this is the default
   
   switch (aEvent->message) {
      case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(&aPresContext);
+        MouseClicked(aPresContext);
      break;
 
 	   case NS_KEY_PRESS:
@@ -343,11 +344,11 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	      if (NS_VK_RETURN == keyEvent->keyCode) 
         {
 	        EnterPressed(aPresContext);
-          aEventStatus = nsEventStatus_eConsumeNoDefault;
+          *aEventStatus = nsEventStatus_eConsumeNoDefault;
 	      }
 	      else if (NS_VK_SPACE == keyEvent->keyCode) 
         {
-	        MouseClicked(&aPresContext);
+	        MouseClicked(aPresContext);
 	      }
 	    }
 	    break;
@@ -357,7 +358,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
 
 void
-nsGfxTextControlFrame::EnterPressed(nsIPresContext& aPresContext) 
+nsGfxTextControlFrame::EnterPressed(nsIPresContext* aPresContext) 
 {
   if (mFormFrame && mFormFrame->CanSubmit(*this)) {
     nsIContent *formContent = nsnull;
@@ -369,18 +370,18 @@ nsGfxTextControlFrame::EnterPressed(nsIPresContext& aPresContext)
       nsEvent event;
       event.eventStructType = NS_EVENT;
       event.message = NS_FORM_SUBMIT;
-      formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+      formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       NS_RELEASE(formContent);
     }
 
     if (nsEventStatus_eConsumeNoDefault != status) {
-      mFormFrame->OnSubmit(&aPresContext, this);
+      mFormFrame->OnSubmit(aPresContext, this);
     }
   }
 }
 
 nsWidgetInitData*
-nsGfxTextControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
+nsGfxTextControlFrame::GetWidgetInitData(nsIPresContext* aPresContext)
 {
   return nsnull;
 }
@@ -606,7 +607,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
         subBounds.height = NSToCoordRound(subBounds.height * t2p);
       }
 
-      rv = CreateWebShell(*mFramePresContext, size);
+      rv = CreateWebShell(mFramePresContext, size);
       if (NS_FAILED(rv)) { return rv; }
       NS_ASSERTION(mWebShell, "null web shell after attempt to create.");
       if (!mWebShell) return NS_ERROR_NULL_POINTER;
@@ -731,7 +732,7 @@ nsGfxTextControlFrame::Reset(nsIPresContext* aPresContext)
 }  
 
 NS_METHOD 
-nsGfxTextControlFrame::Paint(nsIPresContext& aPresContext,
+nsGfxTextControlFrame::Paint(nsIPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer)
@@ -747,7 +748,7 @@ nsGfxTextControlFrame::Paint(nsIPresContext& aPresContext,
 }
 
 void 
-nsGfxTextControlFrame::PaintTextControlBackground(nsIPresContext& aPresContext,
+nsGfxTextControlFrame::PaintTextControlBackground(nsIPresContext* aPresContext,
                                                   nsIRenderingContext& aRenderingContext,
                                                   const nsRect& aDirtyRect,
                                                   nsFramePaintLayer aWhichLayer)
@@ -764,14 +765,14 @@ nsGfxTextControlFrame::PaintTextControlBackground(nsIPresContext& aPresContext,
 
 // stolen directly from nsContainerFrame
 void
-nsGfxTextControlFrame::PaintChild(nsIPresContext&      aPresContext,
+nsGfxTextControlFrame::PaintChild(nsIPresContext*      aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect&        aDirtyRect,
                                   nsIFrame*            aFrame,
                                   nsFramePaintLayer    aWhichLayer)
 {
   nsIView *pView;
-  aFrame->GetView(&aPresContext, &pView);
+  aFrame->GetView(aPresContext, &pView);
   if (nsnull == pView) {
     nsRect kidRect;
     aFrame->GetRect(kidRect);
@@ -829,7 +830,7 @@ nsGfxTextControlFrame::PaintChild(nsIPresContext&      aPresContext,
 }
 
 void 
-nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
+nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
                                         nsIRenderingContext& aRenderingContext,
                                         const nsRect& aDirtyRect, 
                                         nsString& aText,
@@ -841,7 +842,7 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
   if (disp->mVisible) 
   {
     nsCompatibility mode;
-    aPresContext.GetCompatibilityMode(&mode);
+    aPresContext->GetCompatibilityMode(&mode);
     const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
     PRIntn skipSides = 0;
     nsRect rect(0, 0, mRect.width, mRect.height);
@@ -1106,7 +1107,7 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 
 
 nsresult
-nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
+nsGfxTextControlFrame::CreateWebShell(nsIPresContext* aPresContext,
                                       const nsSize& aSize)
 {
   nsresult rv;
@@ -1126,7 +1127,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   
   /* our parent must be a webshell.  we need to get our prefs from our parent */
   nsCOMPtr<nsISupports> container;
-  aPresContext.GetContainer(getter_AddRefs(container));
+  aPresContext->GetContainer(getter_AddRefs(container));
   NS_ASSERTION(container, "bad container");
   if (!container) return NS_ERROR_UNEXPECTED;
 
@@ -1143,9 +1144,9 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   NS_RELEASE(outerPrefs);
 
   float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
   nsCOMPtr<nsIPresShell> presShell;
-  aPresContext.GetShell(getter_AddRefs(presShell));     
+  aPresContext->GetShell(getter_AddRefs(presShell));     
 
   // create, init, set the parent of the view
   nsIView* view;
@@ -1158,7 +1159,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   nsIView* parView;
   nsPoint origin;
-  GetOffsetFromView(&aPresContext, origin, &parView);  
+  GetOffsetFromView(aPresContext, origin, &parView);  
 
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
   if (gNoisy) { printf("%p view bounds: x=%d, y=%d, w=%d, h=%d\n", view, origin.x, origin.y, aSize.width, aSize.height); }
@@ -1168,7 +1169,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   rv = view->Init(viewMan, viewBounds, parView);
   viewMan->InsertChild(parView, view, 0);
   rv = view->CreateWidget(kCChildCID);
-  SetView(&aPresContext, view);
+  SetView(aPresContext, view);
 
   // if the visibility is hidden, reflect that in the view
   const nsStyleDisplay* display;
@@ -1246,7 +1247,7 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
   // Get the Font Metrics for the Control
   // without it we can't calculate  the size
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsFormControlHelper::GetFrameFontFM(*aPresContext, aFrame, getter_AddRefs(fontMet));
+  nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
   if (fontMet) {
     aRendContext->SetFont(fontMet);
 
@@ -1257,7 +1258,7 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
       col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
       aSpec.mColDefaultSize = col;
     }
-    charWidth = nsFormControlHelper::CalcNavQuirkSizing(*aPresContext, 
+    charWidth = nsFormControlHelper::CalcNavQuirkSizing(aPresContext, 
                                                         aRendContext, fontMet, 
                                                         aFrame, aSpec, aDesiredSize);
     aMinSize.width = aDesiredSize.width;
@@ -1301,7 +1302,7 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
 
 //------------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext&           aPresContext,
+nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext*           aPresContext,
                                         nsHTMLReflowMetrics&     aDesiredSize,
                                         const nsHTMLReflowState& aReflowState,
                                         nsReflowStatus&          aStatus,
@@ -1334,14 +1335,14 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext&           aPresContext,
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, 
                                   PR_FALSE, nsnull, 1);
-    CalculateSizeNavQuirks(&aPresContext, aReflowState.rendContext, this, styleSize, 
+    CalculateSizeNavQuirks(aPresContext, aReflowState.rendContext, this, styleSize, 
                            textSpec, desiredSize, minSize, widthExplicit, 
                            heightExplicit, ignore, aBorder, aPadding);
   } else {
     nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
                                   nsnull, GetDefaultColumnWidth(), 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
-    CalculateSizeNavQuirks(&aPresContext, aReflowState.rendContext, this, styleSize, 
+    CalculateSizeNavQuirks(aPresContext, aReflowState.rendContext, this, styleSize, 
                            areaSpec, desiredSize, minSize, widthExplicit, 
                            heightExplicit, ignore, aBorder, aPadding);
   }
@@ -1471,10 +1472,10 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
   if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
     PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
     col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-    charWidth = nsFormControlHelper::GetTextSize(*aPresContext, aFrame, col, aDesiredSize, aRendContext);
+    charWidth = nsFormControlHelper::GetTextSize(aPresContext, aFrame, col, aDesiredSize, aRendContext);
     aMinSize.width = aDesiredSize.width;
   } else {
-    charWidth = nsFormControlHelper::GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
+    charWidth = nsFormControlHelper::GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
     aMinSize.width = aDesiredSize.width;
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
       NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
@@ -1489,7 +1490,7 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
   //nscoord fontLeading = 0;
   // get leading
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsFormControlHelper::GetFrameFontFM(*aPresContext, aFrame, getter_AddRefs(fontMet));
+  nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
   if (fontMet) {
     aRendContext->SetFont(fontMet);
     fontMet->GetHeight(fontHeight);
@@ -1530,7 +1531,7 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::ReflowStandard(nsIPresContext&          aPresContext,
+nsGfxTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
                                       nsHTMLReflowMetrics&     aDesiredSize,
                                       const nsHTMLReflowState& aReflowState,
                                       nsReflowStatus&          aStatus,
@@ -1556,14 +1557,14 @@ nsGfxTextControlFrame::ReflowStandard(nsIPresContext&          aPresContext,
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, 
                                   PR_FALSE, nsnull, 1);
-    CalculateSizeStandard(&aPresContext, aReflowState.rendContext, this, styleSize, 
+    CalculateSizeStandard(aPresContext, aReflowState.rendContext, this, styleSize, 
                            textSpec, desiredSize, minSize, widthExplicit, 
                            heightExplicit, ignore, aBorder, aPadding);
   } else {
     nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
                                   nsnull, GetDefaultColumnWidth(), 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
-    CalculateSizeStandard(&aPresContext, aReflowState.rendContext, this, styleSize, 
+    CalculateSizeStandard(aPresContext, aReflowState.rendContext, this, styleSize, 
                            areaSpec, desiredSize, minSize, widthExplicit, 
                            heightExplicit, ignore, aBorder, aPadding);
   }
@@ -1574,13 +1575,13 @@ nsGfxTextControlFrame::ReflowStandard(nsIPresContext&          aPresContext,
   // its overall size and do not need to be added here.
   if (NS_FORM_TEXTAREA == type) {
     float   p2t;
-    aPresContext.GetPixelsToTwips(&p2t);
+    aPresContext->GetPixelsToTwips(&p2t);
 
     nscoord scrollbarWidth  = 0;
     nscoord scrollbarHeight = 0;
     float   scale;
     nsCOMPtr<nsIDeviceContext> dx;
-    aPresContext.GetDeviceContext(getter_AddRefs(dx));
+    aPresContext->GetDeviceContext(getter_AddRefs(dx));
     if (dx) { 
       float sbWidth;
       float sbHeight;
@@ -1620,7 +1621,7 @@ nsGfxTextControlFrame::ReflowStandard(nsIPresContext&          aPresContext,
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
+nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
                               nsHTMLReflowMetrics& aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus& aStatus)
@@ -1633,12 +1634,12 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
   // add ourself as an nsIFormControlFrame
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
   // Figure out if we are doing Quirks or Standard
   nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(&mode);
+  aPresContext->GetCompatibilityMode(&mode);
 
   nsMargin border;
   border.SizeTo(0, 0, 0, 0);
@@ -1785,7 +1786,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
         
           // create the style context for the anonymous frame
           nsCOMPtr<nsIStyleContext> styleContext;
-          rv = aPresContext.ResolvePseudoStyleContextFor(content, 
+          rv = aPresContext->ResolvePseudoStyleContextFor(content, 
                                                          nsHTMLAtoms::mozSingleLineTextControlFrame,
                                                          mStyleContext,
                                                          PR_FALSE,
@@ -1799,7 +1800,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
           if (NS_FAILED(rv)) { return rv; }
           if (!textFrame) { return NS_ERROR_NULL_POINTER; }
           nsCOMPtr<nsIStyleContext> textStyleContext;
-          rv = aPresContext.ResolvePseudoStyleContextFor(content, 
+          rv = aPresContext->ResolvePseudoStyleContextFor(content, 
                                                          nsHTMLAtoms::mozSingleLineTextControlFrame,
                                                          styleContext,
                                                          PR_FALSE,
@@ -1809,7 +1810,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
           textFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
           textFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
           nsCOMPtr<nsIPresShell> presShell;
-          rv = aPresContext.GetShell(getter_AddRefs(presShell));
+          rv = aPresContext->GetShell(getter_AddRefs(presShell));
           if (NS_FAILED(rv)) { return rv; }
           if (!presShell) { return NS_ERROR_NULL_POINTER; }
           nsCOMPtr<nsIFrameManager> frameManager;
@@ -1829,7 +1830,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     {
       if (mDisplayFrame) 
       {
-        mDisplayFrame->Destroy(*mFramePresContext);
+        mDisplayFrame->Destroy(mFramePresContext);
         mDisplayFrame = nsnull;
       }
       if (gNoisy) { printf("%p webshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height); }
@@ -1863,17 +1864,17 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
         // Send the WillReflow notification, and reflow the child frame
         mDisplayFrame->WillReflow(aPresContext);
-        mDisplayFrame->MoveTo(&aPresContext, subBounds.x, subBounds.y);
+        mDisplayFrame->MoveTo(aPresContext, subBounds.x, subBounds.y);
         nsIView*  view;
-        mDisplayFrame->GetView(&aPresContext, &view);
+        mDisplayFrame->GetView(aPresContext, &view);
         if (view) {
-          nsContainerFrame::PositionFrameView(&aPresContext, mDisplayFrame, view);
+          nsContainerFrame::PositionFrameView(aPresContext, mDisplayFrame, view);
         }
         nsReflowStatus status;
         rv = mDisplayFrame->Reflow(aPresContext, kidSize, kidReflowState, status);
         // notice how status is ignored here
         if (gNoisy) { printf("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBounds.x, subBounds.y, subBounds.width, subBounds.height); }
-        mDisplayFrame->SetRect(&aPresContext, subBounds);
+        mDisplayFrame->SetRect(aPresContext, subBounds);
       }
     }
   }
@@ -1888,24 +1889,24 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 #ifdef DEBUG_rods
 //#ifdef NS_DEBUG
   {
-    nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
-    GetFont(&aPresContext, font);
+    nsFont font(aPresContext->GetDefaultFixedFontDeprecated());
+    GetFont(aPresContext, font);
     nsCOMPtr<nsIDeviceContext> deviceContext;
-    aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
+    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
 
     nsIFontMetrics* fontMet;
     deviceContext->GetMetricsFor(font, fontMet);
 
-    const nsFont& normal = aPresContext.GetDefaultFixedFontDeprecated();
+    const nsFont& normal = aPresContext->GetDefaultFixedFontDeprecated();
     PRInt32 scaler;
-    aPresContext.GetFontScaler(&scaler);
+    aPresContext->GetFontScaler(&scaler);
     float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
     PRInt32 fontSize = nsStyleUtil::FindNextSmallerFontSize(font.size, (PRInt32)normal.size, 
                                                             scaleFactor)+1;
     PRBool doMeasure = PR_FALSE;
     nsILookAndFeel::nsMetricNavFontID fontId;
 
-    nsFont defFont(aPresContext.GetDefaultFixedFontDeprecated());
+    nsFont defFont(aPresContext->GetDefaultFixedFontDeprecated());
     if (font.name == defFont.name) {
       fontId    = nsILookAndFeel::eMetricSize_Courier;
       doMeasure = PR_TRUE;
@@ -1920,7 +1921,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
     if (doMeasure) {
       nsCOMPtr<nsILookAndFeel> lf;
-      aPresContext.GetLookAndFeel(getter_AddRefs(lf));
+      aPresContext->GetLookAndFeel(getter_AddRefs(lf));
 
       PRInt32 type;
       GetType(&type);
@@ -2478,7 +2479,7 @@ nsGfxTextControlFrame::InternalContentChanged()
   event.flags = NS_EVENT_FLAG_INIT;
 
   // Have the content handle the event, propogating it according to normal DOM rules.
-  nsresult result = mContent->HandleDOMEvent(*mFramePresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+  nsresult result = mContent->HandleDOMEvent(mFramePresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
   return result;
 }
 
@@ -2905,11 +2906,11 @@ nsEnderEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
     if (NS_SUCCEEDED(result) && manager) 
     {
       //1. Give event to event manager for pre event state changes and generation of synthetic events.
-      result = manager->PreHandleEvent(*mContext, &event, gfxFrame, status, mView);
+      result = manager->PreHandleEvent(mContext, &event, gfxFrame, &status, mView);
 
       //2. Give event to the DOM for third party and JS use.
       if (NS_SUCCEEDED(result)) {
-        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+        result = mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
     
       //3. In this case, the frame does no processing of the event
@@ -2917,7 +2918,7 @@ nsEnderEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
       //4. Give event to event manager for post event state changes and generation of synthetic events.
       gfxFrame = mFrame.Reference(); // check for deletion
       if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = manager->PostHandleEvent(*mContext, &event, gfxFrame, status, mView);
+        result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
       }
       NS_RELEASE(manager);
     }
@@ -2957,11 +2958,11 @@ nsEnderEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
     if (NS_SUCCEEDED(result) && manager) 
     {
       //1. Give event to event manager for pre event state changes and generation of synthetic events.
-      result = manager->PreHandleEvent(*mContext, &event, gfxFrame, status, mView);
+      result = manager->PreHandleEvent(mContext, &event, gfxFrame, &status, mView);
 
       //2. Give event to the DOM for third party and JS use.
       if (NS_SUCCEEDED(result)) {
-        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+        result = mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
     
       //3. In this case, the frame does no processing of the event
@@ -2969,7 +2970,7 @@ nsEnderEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
       //4. Give event to event manager for post event state changes and generation of synthetic events.
       gfxFrame = mFrame.Reference(); // check for deletion
       if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = manager->PostHandleEvent(*mContext, &event, gfxFrame, status, mView);
+        result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
       }
       NS_RELEASE(manager);
     }
@@ -3009,23 +3010,23 @@ nsEnderEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
     if (NS_SUCCEEDED(result) && manager) 
     {
       //1. Give event to event manager for pre event state changes and generation of synthetic events.
-      result = manager->PreHandleEvent(*mContext, &event, gfxFrame, status, mView);
+      result = manager->PreHandleEvent(mContext, &event, gfxFrame, &status, mView);
 
       //2. Give event to the DOM for third party and JS use.
       if (NS_SUCCEEDED(result)) {
-        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+        result = mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
     
       //3. Give event to the frame for browser default processing
       gfxFrame = mFrame.Reference(); // check for deletion
       if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = gfxFrame->HandleEvent(*mContext, &event, status);
+        result = gfxFrame->HandleEvent(mContext, &event, &status);
       }
 
       //4. Give event to event manager for post event state changes and generation of synthetic events.
       gfxFrame = mFrame.Reference(); // check for deletion
       if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = manager->PostHandleEvent(*mContext, &event, gfxFrame, status, mView);
+        result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
       }
       NS_RELEASE(manager);
     }
@@ -3084,22 +3085,22 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
       if (NS_SUCCEEDED(result) && manager) 
       {
         //1. Give event to event manager for pre event state changes and generation of synthetic events.
-        result = manager->PreHandleEvent(*mContext, &event, gfxFrame, status, mView);
+        result = manager->PreHandleEvent(mContext, &event, gfxFrame, &status, mView);
 
         //2. Give event to the DOM for third party and JS use.
         if (NS_SUCCEEDED(result)) {
-          result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+          result = mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
         }
     
         //3. Give event to the frame for browser default processing
         if (NS_SUCCEEDED(result)) {
-          result = gfxFrame->HandleEvent(*mContext, &event, status);
+          result = gfxFrame->HandleEvent(mContext, &event, &status);
         }
 
         //4. Give event to event manager for post event state changes and generation of synthetic events.
         gfxFrame = mFrame.Reference(); // check for deletion
         if (gfxFrame && NS_SUCCEEDED(result)) {
-          result = manager->PostHandleEvent(*mContext, &event, gfxFrame, status, mView);
+          result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
         }
         NS_IF_RELEASE(manager);
       }
@@ -3352,11 +3353,11 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
     if (NS_SUCCEEDED(result) && manager) 
     {
       //1. Give event to event manager for pre event state changes and generation of synthetic events.
-      result = manager->PreHandleEvent(*mContext, &event, gfxFrame, status, mView);
+      result = manager->PreHandleEvent(mContext, &event, gfxFrame, &status, mView);
 
       //2. Give event to the DOM for third party and JS use.
       if (NS_SUCCEEDED(result)) {
-        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+        result = mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
     
       //3. In this case, the frame does no processing of the event
@@ -3364,7 +3365,7 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
       //4. Give event to event manager for post event state changes and generation of synthetic events.
       gfxFrame = mFrame.Reference(); // check for deletion
       if (gfxFrame && NS_SUCCEEDED(result)) {
-        result = manager->PostHandleEvent(*mContext, &event, gfxFrame, status, mView);
+        result = manager->PostHandleEvent(mContext, &event, gfxFrame, &status, mView);
       }
       NS_RELEASE(manager);
     }
@@ -3402,7 +3403,7 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
       event.flags = NS_EVENT_FLAG_INIT;
 
       // Have the content handle the event.
-      mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
     }
 
     // XXX No longer dispatching event
@@ -3431,10 +3432,10 @@ nsEnderEventListener::NotifySelectionChanged()
     event.flags = NS_EVENT_FLAG_INIT;
 
     // Have the content handle the event.
-    mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+    mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
     
     // Now have the frame handle the event
-    gfxFrame->HandleEvent(*mContext, &event, status);
+    gfxFrame->HandleEvent(mContext, &event, &status);
   }
   return NS_OK;
 }

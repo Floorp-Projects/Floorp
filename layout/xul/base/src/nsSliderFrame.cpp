@@ -129,7 +129,7 @@ nsSliderFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 
 
 NS_IMETHODIMP
-nsSliderFrame::Init(nsIPresContext&  aPresContext,
+nsSliderFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -138,10 +138,10 @@ nsSliderFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
   view->SetContentTransparency(PR_TRUE);
   // XXX Hack
-  mPresContext = &aPresContext;
+  mPresContext = aPresContext;
   return rv;
 }
 
@@ -241,7 +241,7 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Paint(nsIPresContext& aPresContext,
+nsSliderFrame::Paint(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
@@ -276,7 +276,7 @@ nsSliderFrame::Paint(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsSliderFrame::ReflowThumb(nsIPresContext&   aPresContext,
+nsSliderFrame::ReflowThumb(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
@@ -339,7 +339,7 @@ nsSliderFrame::IsHorizontal(nsIContent* scrollbar)
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
+nsSliderFrame::Reflow(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -370,7 +370,7 @@ nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
 
   // if the computed height we are given is intrinsic then set it to some default height
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) 
@@ -445,10 +445,10 @@ nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
     thumbRect.y += pos;
 
   nsIView*  view;
-  thumbFrame->SetRect(&aPresContext, thumbRect);
-  thumbFrame->GetView(&aPresContext, &view);
+  thumbFrame->SetRect(aPresContext, thumbRect);
+  thumbFrame->GetView(aPresContext, &view);
   if (view) {
-    nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, thumbFrame,
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, thumbFrame,
                                                view, nsnull);
   }
 
@@ -470,15 +470,15 @@ nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
 
 
 NS_IMETHODIMP
-nsSliderFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsSliderFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
-                                      nsEventStatus& aEventStatus)
+                                      nsEventStatus* aEventStatus)
 {
   nsIContent* scrollbar = GetScrollBar();
 
   PRBool isHorizontal = IsHorizontal(scrollbar);
 
-  if (isDraggingThumb(&aPresContext))
+  if (isDraggingThumb(aPresContext))
   {
     switch (aEvent->message) {
     case NS_MOUSE_MOVE: {
@@ -492,7 +492,7 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
        nscoord startpx = mDragStartPx;
               
        float p2t;
-       aPresContext.GetScaledPixelsToTwips(&p2t);
+       aPresContext->GetScaledPixelsToTwips(&p2t);
        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
        nscoord start = startpx*onePixel;
 
@@ -507,7 +507,7 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
           // how much we are scrolled.
           nsIScrollableView* scrollingView;
           nsIView*           view;
-          parent->GetView(&aPresContext, &view);
+          parent->GetView(aPresContext, &view);
           if (view) {
             nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
             if (NS_SUCCEEDED(result)) {
@@ -548,7 +548,7 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
        // stop capturing
       //printf("stop capturing\n");
       AddListener();
-      DragThumb(&aPresContext, PR_FALSE);
+      DragThumb(aPresContext, PR_FALSE);
     }
     //return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     return NS_OK;
@@ -662,7 +662,7 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     Invalidate(aPresContext, changeRect, PR_TRUE);
 
     if (mScrollbarListener)
-      mScrollbarListener->PositionChanged(*aPresContext, mCurPos, curpos);
+      mScrollbarListener->PositionChanged(aPresContext, mCurPos, curpos);
     
     mCurPos = curpos;
 
@@ -723,7 +723,7 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 static NS_DEFINE_IID(kIDOMMouseListenerIID,     NS_IDOMMOUSELISTENER_IID);
 
 NS_IMETHODIMP
-nsSliderFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsSliderFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList)
 {
@@ -736,7 +736,7 @@ nsSliderFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsSliderFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsSliderFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIPresShell& aPresShell,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
@@ -748,7 +748,7 @@ nsSliderFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::InsertFrames(nsIPresContext& aPresContext,
+nsSliderFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aPrevFrame,
@@ -759,7 +759,7 @@ nsSliderFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::AppendFrames(nsIPresContext& aPresContext,
+nsSliderFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
@@ -921,9 +921,9 @@ nsSliderFrame::Release(void)
 }
 
 NS_IMETHODIMP
-nsSliderFrame::HandlePress(nsIPresContext& aPresContext, 
+nsSliderFrame::HandlePress(nsIPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
-                     nsEventStatus&  aEventStatus)
+                     nsEventStatus*  aEventStatus)
 {
   nsIContent* scrollbar = GetScrollBar();
   PRBool isHorizontal = IsHorizontal(scrollbar);
@@ -945,9 +945,9 @@ nsSliderFrame::HandlePress(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP 
-nsSliderFrame::HandleRelease(nsIPresContext& aPresContext, 
+nsSliderFrame::HandleRelease(nsIPresContext* aPresContext, 
                                  nsGUIEvent*     aEvent,
-                                 nsEventStatus&  aEventStatus)
+                                 nsEventStatus*  aEventStatus)
 {
   nsRepeatService::GetInstance()->Stop();
 
@@ -955,7 +955,7 @@ nsSliderFrame::HandleRelease(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Destroy(nsIPresContext& aPresContext)
+nsSliderFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.
@@ -983,21 +983,21 @@ public:
 
   friend nsresult NS_NewThumbFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus) { return NS_OK; }
+                         nsEventStatus*  aEventStatus) { return NS_OK; }
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus)  { return NS_OK; }
+                         nsEventStatus*  aEventStatus)  { return NS_OK; }
 
-  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus&  aEventStatus)  { return NS_OK; }
+                        nsEventStatus*  aEventStatus)  { return NS_OK; }
 
-  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus&  aEventStatus)  { return NS_OK; }
+                           nsEventStatus*  aEventStatus)  { return NS_OK; }
 
 };
 

@@ -132,7 +132,7 @@ public:
    *          NS_ERROR_FAILURE if there is an error
    * @see     nsIPrintStatusCallback#OnProgress()
    */
-  NS_IMETHOD Print(nsIPresContext&         aPresContext,
+  NS_IMETHOD Print(nsIPresContext*         aPresContext,
                    const nsPrintOptions&   aPrintOptions,
                    nsIPrintStatusCallback* aStatusCallback) = 0;
 

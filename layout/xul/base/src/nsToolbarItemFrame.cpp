@@ -71,7 +71,7 @@ nsToolbarItemFrame::~nsToolbarItemFrame()
 // Ummm, just forwards for now.
 //
 NS_IMETHODIMP
-nsToolbarItemFrame::Init(nsIPresContext&  aPresContext,
+nsToolbarItemFrame::Init(nsIPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsIStyleContext* aContext,
@@ -92,9 +92,9 @@ nsToolbarItemFrame::Init(nsIPresContext&  aPresContext,
 // еее remove all this.
 //
 NS_IMETHODIMP
-nsToolbarItemFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsToolbarItemFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
-                                      nsEventStatus& aEventStatus)
+                                      nsEventStatus* aEventStatus)
 {
   // if disabled do nothing
   /*if (PR_TRUE == mRenderer.isDisabled()) {

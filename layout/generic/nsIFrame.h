@@ -389,7 +389,7 @@ public:
    * @param   aPrevInFlow the prev-in-flow frame
    * @see #AppendToFlow()
    */
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -399,7 +399,7 @@ public:
    * Destroys this frame and each of its child frames (recursively calls
    * Destroy() for each child)
    */
-  NS_IMETHOD  Destroy(nsIPresContext& aPresContext) = 0;
+  NS_IMETHOD  Destroy(nsIPresContext* aPresContext) = 0;
 
   /**
    * Called to set the initial list of frames. This happens after the frame
@@ -419,7 +419,7 @@ public:
    *          NS_OK otherwise
    * @see     #Init()
    */
-  NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList) = 0;
 
@@ -437,7 +437,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList) = 0;
@@ -457,7 +457,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
@@ -479,7 +479,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame) = 0;
@@ -501,7 +501,7 @@ public:
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
-  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
@@ -612,7 +612,7 @@ public:
    * argument indicates which layer of painting should be done during
    * the call.
    */
-  NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer) = 0;
@@ -632,11 +632,11 @@ public:
    * @see     nsGUIEvent
    * @see     nsEventStatus
    */
-  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext,
                           nsGUIEvent*     aEvent,
-                          nsEventStatus&  aEventStatus) = 0;
+                          nsEventStatus*  aEventStatus) = 0;
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
@@ -647,7 +647,7 @@ public:
   /**
    * Get the cursor for a given frame.
    */
-  NS_IMETHOD  GetCursor(nsIPresContext& aPresContext,
+  NS_IMETHOD  GetCursor(nsIPresContext* aPresContext,
                         nsPoint&        aPoint,
                         PRInt32&        aCursor) = 0;
 
@@ -755,7 +755,7 @@ public:
    * XXX Is this really the semantics we want? Because we have the NS_FRAME_IN_REFLOW
    * bit we can ensure we don't call it more than once...
    */
-  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext) = 0;
+  NS_IMETHOD  WillReflow(nsIPresContext* aPresContext) = 0;
 
   /**
    * The frame is given a maximum size and asked for its desired size.
@@ -797,7 +797,7 @@ public:
    * @param aStatus a return value indicating whether the frame is complete
    *          and whether the next-in-flow is dirty and needs to be reflowed
    */
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aReflowMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus) = 0;
@@ -817,7 +817,7 @@ public:
    * XXX Don't we want the semantics to dictate that we only call this once for
    * a given reflow?
    */
-  NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
+  NS_IMETHOD  DidReflow(nsIPresContext*   aPresContext,
                         nsDidReflowStatus aStatus) = 0;
 
   // XXX Maybe these three should be a separate interface?

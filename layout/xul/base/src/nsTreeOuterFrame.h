@@ -27,9 +27,9 @@ class nsTreeOuterFrame : public nsTableOuterFrame
 public:
   friend nsresult NS_NewTreeOuterFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus);
+                             nsEventStatus*  aEventStatus);
 
 protected:
   nsTreeOuterFrame();

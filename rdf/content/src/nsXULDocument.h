@@ -260,11 +260,11 @@ public:
 
     virtual PRBool GetDisplaySelection() const;
 
-    NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+    NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
-                              nsEventStatus& aEventStatus);
+                              nsEventStatus* aEventStatus);
 
 
     // nsIXMLDocument interface

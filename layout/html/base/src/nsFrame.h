@@ -118,33 +118,33 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
-  NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
-  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  ReplaceFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD  ReplaceFrame(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
-  NS_IMETHOD  Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD  GetContent(nsIContent** aContent) const;
   NS_IMETHOD  GetStyleContext(nsIStyleContext** aStyleContext) const;
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
@@ -165,14 +165,14 @@ public:
   NS_IMETHOD  SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD  GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const;
   NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
-  NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer);
-  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext, 
                           nsGUIEvent*     aEvent,
-                          nsEventStatus&  aEventStatus);
-  NS_IMETHOD  GetCursor(nsIPresContext& aPresContext,
+                          nsEventStatus*  aEventStatus);
+  NS_IMETHOD  GetCursor(nsIPresContext* aPresContext,
                         nsPoint&        aPoint,
                         PRInt32&        aCursor);
   NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
@@ -239,12 +239,12 @@ public:
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
 
   // nsIHTMLReflow
-  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
-  NS_IMETHOD  Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD  WillReflow(nsIPresContext* aPresContext);
+  NS_IMETHOD  Reflow(nsIPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus);
-  NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
+  NS_IMETHOD  DidReflow(nsIPresContext* aPresContext,
                         nsDidReflowStatus aStatus);
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
@@ -256,23 +256,23 @@ public:
   // XXX Doc me... (in nsIFrame.h puhleeze)
   // XXX If these are selection specific, then the name should imply selection
   // rather than generic event processing, e.g., SelectionHandlePress...
-  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus&  aEventStatus);
+                        nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus&  aEventStatus);
+                           nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                            const nsPoint& aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
@@ -358,7 +358,7 @@ protected:
   nsFrame();
   virtual ~nsFrame();
 
-  PRBool DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn = PR_FALSE);
+  PRBool DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
 
   //this will modify aPos and return the next frame ect.
   NS_IMETHOD GetFrameFromDirection(nsPeekOffsetStruct *aPos);

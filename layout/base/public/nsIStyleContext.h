@@ -50,7 +50,7 @@ struct nsStyleFont : public nsStyleStruct {
 
 protected:
   nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont);
-  nsStyleFont(nsIPresContext& aPresContext);
+  nsStyleFont(nsIPresContext* aPresContext);
 };
 
 struct nsStyleColor : public nsStyleStruct {

@@ -35,19 +35,19 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrameReflow
-  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
+  NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
   // nsIFrame
-  NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,
                     nsFramePaintLayer    aWhichLayer);
 
   // nsIPageSequenceFrame
-  NS_IMETHOD  Print(nsIPresContext&         aPresContext,
+  NS_IMETHOD  Print(nsIPresContext*         aPresContext,
                     const nsPrintOptions&   aPrintOptions,
                     nsIPrintStatusCallback* aStatusCallback);
 
@@ -58,19 +58,19 @@ public:
 
 protected:
   nsSimplePageSequenceFrame();
-  virtual void PaintChild(nsIPresContext&      aPresContext,
+  virtual void PaintChild(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsIFrame*            aFrame,
                           nsFramePaintLayer    aWhichLayer);
 
-  nsresult IncrementalReflow(nsIPresContext&          aPresContext,
+  nsresult IncrementalReflow(nsIPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsSize&                  aPageSize,
                              nscoord                  aX,
                              nscoord&                 aY);
 
-  nsresult CreateContinuingPageFrame(nsIPresContext& aPresContext,
+  nsresult CreateContinuingPageFrame(nsIPresContext* aPresContext,
                                      nsIFrame*       aPageFrame,
                                      nsIFrame**      aContinuingFrame);
   

@@ -188,11 +188,11 @@ nsHTMLIsIndexElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMap
 
 
 NS_IMETHODIMP
-nsHTMLIsIndexElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLIsIndexElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                      nsEvent* aEvent,
                                      nsIDOMEvent** aDOMEvent,
                                      PRUint32 aFlags,
-                                     nsEventStatus& aEventStatus)
+                                     nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

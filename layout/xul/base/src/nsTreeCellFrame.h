@@ -39,28 +39,28 @@ public:
                               const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
                         nsGUIEvent* aEvent,
-                        nsEventStatus& aEventStatus);
+                        nsEventStatus* aEventStatus);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow); // Overridden to set whether we're a column header 
 
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
-  void Hover(nsIPresContext& presContext, PRBool isHover, PRBool notifyForReflow = PR_TRUE);
+  void Hover(nsIPresContext* presContext, PRBool isHover, PRBool notifyForReflow = PR_TRUE);
 
   nsTableFrame* GetTreeFrame();
 
@@ -74,21 +74,21 @@ protected:
   nsTreeCellFrame();
   virtual ~nsTreeCellFrame();
 
-  nsresult HandleMouseDownEvent(nsIPresContext& aPresContext, 
+  nsresult HandleMouseDownEvent(nsIPresContext* aPresContext, 
 								                nsGUIEvent*     aEvent,
-							                  nsEventStatus&  aEventStatus);
+							                  nsEventStatus*  aEventStatus);
   
-  nsresult HandleMouseEnterEvent(nsIPresContext& aPresContext, 
+  nsresult HandleMouseEnterEvent(nsIPresContext* aPresContext, 
 								                nsGUIEvent*     aEvent,
-							                  nsEventStatus&  aEventStatus);
+							                  nsEventStatus*  aEventStatus);
   
-  nsresult HandleMouseExitEvent(nsIPresContext& aPresContext, 
+  nsresult HandleMouseExitEvent(nsIPresContext* aPresContext, 
 								                nsGUIEvent*     aEvent,
-							                  nsEventStatus&  aEventStatus);
+							                  nsEventStatus*  aEventStatus);
 
-  nsresult HandleDoubleClickEvent(nsIPresContext& aPresContext, 
+  nsresult HandleDoubleClickEvent(nsIPresContext* aPresContext, 
 								                  nsGUIEvent*     aEvent,
-							                    nsEventStatus&  aEventStatus);
+							                    nsEventStatus*  aEventStatus);
 
   PRBool CanResize(nsPoint& aPoint, nsTableColFrame** aResult);
 

@@ -47,26 +47,26 @@ public:
       virtual ~nsButtonFrameRenderer();
 
 
-	 virtual void PaintButton(nsIPresContext& aPresContext,
+	 virtual void PaintButton(nsIPresContext* aPresContext,
 							  nsIRenderingContext& aRenderingContext,
 							  const nsRect& aDirtyRect,
 							  nsFramePaintLayer aWhichLayer,
 							  const nsRect& aRect);
 
-	 virtual void PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
+	 virtual void PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
 						  nsIRenderingContext& aRenderingContext,
 						  const nsRect& aDirtyRect,
 						  nsFramePaintLayer aWhichLayer,
 						  const nsRect& aRect);
 
-	 virtual void PaintBorderAndBackground(nsIPresContext& aPresContext,
+	 virtual void PaintBorderAndBackground(nsIPresContext* aPresContext,
 						  nsIRenderingContext& aRenderingContext,
 						  const nsRect& aDirtyRect,
 						  nsFramePaintLayer aWhichLayer,
 						  const nsRect& aRect);
 
 	virtual void SetNameSpace(PRInt32 aNameSpace);
-	virtual void SetFrame(nsFrame* aFrame, nsIPresContext& aPresContext);
+	virtual void SetFrame(nsFrame* aFrame, nsIPresContext* aPresContext);
  
 	virtual void SetDisabled(PRBool aDisabled, PRBool notify);
 
@@ -88,7 +88,7 @@ public:
 
   virtual nsresult GetStyleContext(PRInt32 aIndex, nsIStyleContext** aStyleContext) const;
   virtual nsresult SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleContext);
-	virtual void ReResolveStyles(nsIPresContext& aPresContext);
+	virtual void ReResolveStyles(nsIPresContext* aPresContext);
 
   virtual void Redraw(nsIPresContext* aPresContext);
 

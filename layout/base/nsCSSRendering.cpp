@@ -1358,7 +1358,7 @@ PRIntn  whichSide=0;
 }
 
 // XXX improve this to constrain rendering to the damaged area
-void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
+void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
@@ -1448,7 +1448,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   /* Get our conversion values */
   nscoord twipsPerPixel;
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   twipsPerPixel = NSIntPixelsToTwips(1,p2t);
 
 
@@ -1492,7 +1492,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
 }
 
 // XXX improve this to constrain rendering to the damaged area
-void nsCSSRendering::PaintOutline(nsIPresContext& aPresContext,
+void nsCSSRendering::PaintOutline(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
@@ -1538,7 +1538,7 @@ void nsCSSRendering::PaintOutline(nsIPresContext& aPresContext,
   /* XXX something is misnamed here!!!! */
   nscoord twipsPerPixel;/* XXX */
   float p2t;/* XXX */
-  aPresContext.GetPixelsToTwips(&p2t);/* XXX */
+  aPresContext->GetPixelsToTwips(&p2t);/* XXX */
   twipsPerPixel = (nscoord) p2t;/* XXX */
 
   nscolor outlineColor;
@@ -1582,7 +1582,7 @@ void nsCSSRendering::PaintOutline(nsIPresContext& aPresContext,
 // XXX: doesn't do corners or junctions well at all.  Just uses logic stolen 
 //      from PaintBorder which is insufficient
 
-void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
+void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       nsIFrame* aForFrame,
                                       const nsRect& aDirtyRect,
@@ -1614,7 +1614,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
   // Draw all the other sides
   nscoord twipsPerPixel;
   float p2t;
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   twipsPerPixel = (nscoord) p2t;/* XXX huh!*/
 
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
@@ -1854,7 +1854,7 @@ GetNearestScrollFrame(nsIFrame* aFrame)
 }
 
 void
-nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
+nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
@@ -1874,7 +1874,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     nsSize imageSize;
     nsIImage* image = nsnull;
     nsIFrameImageLoader* loader = nsnull;
-    nsresult rv = aPresContext.StartLoadImage(aColor.mBackgroundImage,
+    nsresult rv = aPresContext->StartLoadImage(aColor.mBackgroundImage,
                                               transparentBG
                                               ? nsnull
                                               : &aColor.mBackgroundColor,
@@ -1969,7 +1969,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       scrollFrame = GetNearestScrollFrame(aForFrame);
       
       // Get the viewport size
-      clipView = GetClipView(&aPresContext, scrollFrame);
+      clipView = GetClipView(aPresContext, scrollFrame);
       clipView->GetDimensions(&viewportArea.width, &viewportArea.height);
     }
 
@@ -1988,10 +1988,10 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
       nsIView*  view;
 
-      aForFrame->GetView(&aPresContext, &view);
+      aForFrame->GetView(aPresContext, &view);
       if (!view) {
         nsPoint offset;
-        aForFrame->GetOffsetFromView(&aPresContext, offset, &view);
+        aForFrame->GetOffsetFromView(aPresContext, offset, &view);
         anchor -= offset;
       }
       NS_ASSERTION(view, "expected a view");
@@ -2101,9 +2101,9 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 
 
     aRenderingContext.GetDrawingSurface((void**)&theSurface);
-    aPresContext.GetVisibleArea(srcRect);
+    aPresContext->GetVisibleArea(srcRect);
     tvrect.SetRect(0,0,x1-x0,y1-y0);
-    aPresContext.GetTwipsToPixels(&t2p);
+    aPresContext->GetTwipsToPixels(&t2p);
 
     if ((tileWidth<(tvrect.width/16)) || (tileHeight<(tvrect.height/16))) {
       //tvrect.width /=4;
@@ -2257,7 +2257,7 @@ static void  AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoint
  *	@update 3/26/99 dwc
  */
 void
-nsCSSRendering::PaintRoundedBackground(nsIPresContext& aPresContext,
+nsCSSRendering::PaintRoundedBackground(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
@@ -2279,7 +2279,7 @@ nscoord       twipsPerPixel;
 float         p2t;
 
   // needed for our border thickness
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   twipsPerPixel = NSToCoordRound(p2t);
 
   aRenderingContext.SetColor(aColor.mBackgroundColor);
@@ -2347,7 +2347,7 @@ float         p2t;
  *	@update 3/26/99 dwc
  */
 void 
-nsCSSRendering::PaintRoundedBorder(nsIPresContext& aPresContext,
+nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
@@ -2377,7 +2377,7 @@ float         p2t;
   }
 
   // needed for our border thickness
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   twipsPerPixel = NSToCoordRound(p2t);
 
   // Base our thickness check on the segment being less than a pixel and 1/2

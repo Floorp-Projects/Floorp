@@ -113,33 +113,35 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMETHODIMP 
-nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 			     nsEvent* aEvent,
 			     nsIDOMEvent** aDOMEvent,
 			     PRUint32 aFlags,
-			     nsEventStatus& aEventStatus)
+			     nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  NS_ENSURE_ARG(aPresContext);
   // Try script event handlers first
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                        aFlags, aEventStatus);
 
-  if (mIsLink && (NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus) &&
+  if (mIsLink && (NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       {
         nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
           NS_RELEASE(stateManager);
         }
-        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
 
     case NS_MOUSE_LEFT_CLICK:
       {
-        if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
+        if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
           nsAutoString show, href, target;
           nsIURI* baseURL = nsnull;
 	        nsLinkVerb verb = eLinkVerb_Replace;
@@ -159,7 +161,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
           }
           mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
           NS_IF_RELEASE(baseURL);
-          aEventStatus = nsEventStatus_eConsumeDoDefault; 
+          *aEventStatus = nsEventStatus_eConsumeDoDefault; 
         }
       }
       break;
@@ -180,7 +182,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
         
         NS_IF_RELEASE(baseURL);
-        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
 
@@ -189,7 +191,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         nsAutoString empty;
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
 

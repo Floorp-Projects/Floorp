@@ -167,11 +167,11 @@ struct nsGenericDOMDataNode {
     return NS_OK;
   }
   nsresult List(FILE* out, PRInt32 aIndent) const;
-  nsresult HandleDOMEvent(nsIPresContext& aPresContext,
+  nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
-                          nsEventStatus& aEventStatus);
+                          nsEventStatus* aEventStatus);
   nsresult RangeAdd(nsIDOMRange& aRange);
   nsresult RangeRemove(nsIDOMRange& aRange);
   nsresult GetRangeList(nsVoidArray*& aResult) const;
@@ -465,11 +465,11 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
-                            nsEventStatus& aEventStatus);                  \
+                            nsEventStatus* aEventStatus);                  \
   NS_IMETHOD GetContentID(PRUint32* aID);                                  \
   NS_IMETHOD SetContentID(PRUint32 aID);                                   \
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange){                                \

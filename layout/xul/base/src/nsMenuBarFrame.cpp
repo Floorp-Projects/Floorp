@@ -102,7 +102,7 @@ nsMenuBarFrame::~nsMenuBarFrame()
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
+nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsIStyleContext* aContext,
@@ -111,7 +111,7 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsToolbarFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // XXX hack
-  mPresContext = &aPresContext;
+  mPresContext = aPresContext;
 
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);
@@ -530,7 +530,7 @@ nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::Destroy(nsIPresContext& aPresContext)
+nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
 {
   mTarget->RemoveEventListener("keypress", mMenuBarListener, PR_TRUE); 
 	mTarget->RemoveEventListener("keydown", mMenuBarListener, PR_TRUE);  

@@ -174,11 +174,11 @@ nsHTMLWBRElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc
 
 
 NS_IMETHODIMP
-nsHTMLWBRElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLWBRElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIDOMEvent** aDOMEvent,
                                  PRUint32 aFlags,
-                                 nsEventStatus& aEventStatus)
+                                 nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

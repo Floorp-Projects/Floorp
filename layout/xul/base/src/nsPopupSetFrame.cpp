@@ -113,13 +113,13 @@ nsPopupSetFrame::GetActiveChild()
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::Init(nsIPresContext&  aPresContext,
+nsPopupSetFrame::Init(nsIPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsIStyleContext* aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  mPresContext = &aPresContext; // Don't addref it.  Our lifetime is shorter.
+  mPresContext = aPresContext; // Don't addref it.  Our lifetime is shorter.
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   return rv;
 }
@@ -139,7 +139,7 @@ nsPopupSetFrame::FirstChild(nsIAtom*   aListName,
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsPopupSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
@@ -195,7 +195,7 @@ nsPopupSetFrame::GetAdditionalChildListName(PRInt32   aIndex,
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::Destroy(nsIPresContext& aPresContext)
+nsPopupSetFrame::Destroy(nsIPresContext* aPresContext)
 {
    // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames(aPresContext);
@@ -203,7 +203,7 @@ nsPopupSetFrame::Destroy(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::Reflow(nsIPresContext&   aPresContext,
+nsPopupSetFrame::Reflow(nsIPresContext*   aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
@@ -242,7 +242,7 @@ nsPopupSetFrame::Reflow(nsIPresContext&   aPresContext,
 
 
 NS_IMETHODIMP
-nsPopupSetFrame::DidReflow(nsIPresContext& aPresContext,
+nsPopupSetFrame::DidReflow(nsIPresContext* aPresContext,
                             nsDidReflowStatus aStatus)
 {
   // Sync up the view.
@@ -256,7 +256,7 @@ nsPopupSetFrame::DidReflow(nsIPresContext& aPresContext,
 
 // Overridden Box method.
 NS_IMETHODIMP
-nsPopupSetFrame::Dirty(nsIPresContext& aPresContext,  const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsPopupSetFrame::Dirty(nsIPresContext* aPresContext,  const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
   incrementalChild = nsnull;
   nsresult rv = NS_OK;
@@ -294,7 +294,7 @@ nsPopupSetFrame::Dirty(nsIPresContext& aPresContext,  const nsHTMLReflowState& a
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsPopupSetFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIPresShell& aPresShell,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
@@ -313,7 +313,7 @@ nsPopupSetFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::InsertFrames(nsIPresContext& aPresContext,
+nsPopupSetFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aPrevFrame,
@@ -336,7 +336,7 @@ nsPopupSetFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::AppendFrames(nsIPresContext& aPresContext,
+nsPopupSetFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
@@ -484,7 +484,7 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
   event.message = NS_MENU_CREATE;
 
   if (aPopupContent) {
-    nsresult rv = aPopupContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    nsresult rv = aPopupContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
       return PR_FALSE;
   }
@@ -504,7 +504,7 @@ nsPopupSetFrame::OnDestroy()
   GetActiveChildElement(getter_AddRefs(content));
   
   if (content) {
-    nsresult rv = content->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    nsresult rv = content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
       return PR_FALSE;
   }

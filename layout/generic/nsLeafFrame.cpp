@@ -34,7 +34,7 @@ nsLeafFrame::~nsLeafFrame()
 }
 
 NS_IMETHODIMP
-nsLeafFrame::Paint(nsIPresContext& aPresContext,
+nsLeafFrame::Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer)
@@ -62,7 +62,7 @@ nsLeafFrame::Paint(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsLeafFrame::Reflow(nsIPresContext& aPresContext,
+nsLeafFrame::Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus)
@@ -77,9 +77,9 @@ nsLeafFrame::Reflow(nsIPresContext& aPresContext,
   // and if set use them instead of calling GetDesiredSize.
 
 
-  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  GetDesiredSize(aPresContext, aReflowState, aMetrics);
   nsMargin borderPadding;
-  AddBordersAndPadding(&aPresContext, aReflowState, aMetrics, borderPadding);
+  AddBordersAndPadding(aPresContext, aReflowState, aMetrics, borderPadding);
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.AddBorderPaddingToMaxElementSize(borderPadding);
     aMetrics.maxElementSize->width = aMetrics.width;

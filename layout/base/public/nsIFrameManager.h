@@ -100,23 +100,23 @@ public:
   NS_IMETHOD ClearUndisplayedContentMap() = 0;
 
   // Functions for manipulating the frame model
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList) = 0;
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList) = 0;
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIFrame*       aParentFrame,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame) = 0;
-  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
@@ -133,12 +133,12 @@ public:
 
   // reparent the style contexts of this frame sub tree to live under the
   // new given parent style context
-  NS_IMETHOD ReParentStyleContext(nsIPresContext& aPresContext, 
+  NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext, 
                                   nsIFrame* aFrame, 
                                   nsIStyleContext* aNewParentContext) = 0;
 
   // Re-resolve style contexts for frame tree
-  NS_IMETHOD ComputeStyleChangeFor(nsIPresContext& aPresContext,
+  NS_IMETHOD ComputeStyleChangeFor(nsIPresContext* aPresContext,
                                    nsIFrame* aFrame, 
                                    PRInt32 aAttrNameSpaceID,
                                    nsIAtom* aAttribute,

@@ -47,7 +47,7 @@ class nsFormFrame;
 #define COMPARE_QUIRK_SIZE(__class, __navWidth, __navHeight) \
 { \
   float t2p;                                            \
-  aPresContext.GetTwipsToPixels(&t2p);                  \
+  aPresContext->GetTwipsToPixels(&t2p);                  \
   printf ("%-25s::Size=%4d,%4d %3d,%3d Nav:%3d,%3d Diffs: %3d,%3d\n",  \
            (__class),                                   \
            aDesiredSize.width, aDesiredSize.height,     \
@@ -86,31 +86,31 @@ public:
     * Respond to a gui event
     * @see nsIFrame::HandleEvent
     */
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
    /**
     * Draw this frame within the context of a presentation context and rendering context
     * @see nsIFrame::Paint
     */
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                        nsDidReflowStatus aStatus);
 
   /**
     * Respond to the request to resize and/or reflow
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsIPresContext&      aCX,
+  NS_IMETHOD Reflow(nsIPresContext*      aCX,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -139,7 +139,7 @@ public:
   /**
     * Respond to a enter key being pressed
     */
-  virtual void EnterPressed(nsIPresContext& aPresContext) {} 
+  virtual void EnterPressed(nsIPresContext* aPresContext) {} 
 
   /**
     * Respond to a mouse click (e.g. mouse enter, mouse down, mouse up)
@@ -167,7 +167,7 @@ public:
     * Perform opertations before the widget associated with this frame has been
     * created.
     */
-  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);  
+  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext);  
 
   void GetWidgetSize(nsSize& aSize) const { aSize.width  = mWidgetSize.width; 
                                             aSize.height = mWidgetSize.height; }
@@ -177,10 +177,10 @@ public:
   static  nscoord GetScrollbarWidth(float aPixToTwip);
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
@@ -202,7 +202,7 @@ public:
     * @param aSize the size that this frame wants, set by this method. values of -1 
     * for aSize.width or aSize.height indicate unset values.
     */
-  static void GetStyleSize(nsIPresContext& aContext,
+  static void GetStyleSize(nsIPresContext* aContext,
                             const nsHTMLReflowState& aReflowState,
                             nsSize& aSize);
 

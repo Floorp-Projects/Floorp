@@ -237,11 +237,11 @@ nsHTMLSpacerElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
 
 
 NS_IMETHODIMP
-nsHTMLSpacerElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLSpacerElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
-                                    nsEventStatus& aEventStatus)
+                                    nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

@@ -67,7 +67,7 @@ nsMathMLmsubsupFrame::~nsMathMLmsubsupFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsubsupFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmsubsupFrame::Reflow(nsIPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
@@ -125,7 +125,7 @@ nsMathMLmsubsupFrame::Reflow(nsIPresContext&          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   const nsStyleFont* aFont =
     (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext.GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
   fm->GetSubscriptOffset(subscriptOffset);
   fm->GetSuperscriptOffset(superscriptOffset);
   fm->GetLeading(leading);
@@ -159,9 +159,9 @@ subscriptOffset = PR_MAX(subscriptOffset,fmAscent-(xHeight*4)/5);
   rect[1].y = aDesiredSize.height - rect[1].height;  
   rect[0].y = aDesiredSize.height - subHeight;  
  
-  child[0]->SetRect(&aPresContext, rect[0]);
-  child[1]->SetRect(&aPresContext, rect[1]);
-  child[2]->SetRect(&aPresContext, rect[2]);
+  child[0]->SetRect(aPresContext, rect[0]);
+  child[1]->SetRect(aPresContext, rect[1]);
+  child[2]->SetRect(aPresContext, rect[2]);
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;

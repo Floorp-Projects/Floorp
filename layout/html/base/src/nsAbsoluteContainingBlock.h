@@ -48,22 +48,22 @@ public:
                       nsIFrame**      aFirstChild) const;
   
   nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
-                               nsIPresContext& aPresContext,
+                               nsIPresContext* aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList);
   nsresult AppendFrames(nsIFrame*       aDelegatingFrame,
-                        nsIPresContext& aPresContext,
+                        nsIPresContext* aPresContext,
                         nsIPresShell&   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aFrameList);
   nsresult InsertFrames(nsIFrame*       aDelegatingFrame,
-                        nsIPresContext& aPresContext,
+                        nsIPresContext* aPresContext,
                         nsIPresShell&   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aPrevFrame,
                         nsIFrame*       aFrameList);
   nsresult RemoveFrame(nsIFrame*       aDelegatingFrame,
-                       nsIPresContext& aPresContext,
+                       nsIPresContext* aPresContext,
                        nsIPresShell&   aPresShell,
                        nsIAtom*        aListName,
                        nsIFrame*       aOldFrame);
@@ -73,7 +73,7 @@ public:
   // be reflowed, e.g., because the absolutely positioned child frame has
   // 'auto' for an offset, or a percentage based width or height
   nsresult Reflow(nsIFrame*                aDelegatingFrame,
-                  nsIPresContext&          aPresContext,
+                  nsIPresContext*          aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nscoord                  aContainingBlockWidth,
                   nscoord                  aContainingBlockHeight);
@@ -83,14 +83,14 @@ public:
   // handled (i.e., the reflow command involved an absolutely positioned
   // child element), or whether the caller should handle it
   nsresult IncrementalReflow(nsIFrame*                aDelegatingFrame,
-                             nsIPresContext&          aPresContext,
+                             nsIPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nscoord                  aContainingBlockWidth,
                              nscoord                  aContainingBlockHeight,
                              PRBool&                  aWasHandled);
 
   void DestroyFrames(nsIFrame*       aDelegatingFrame,
-                     nsIPresContext& aPresContext);
+                     nsIPresContext* aPresContext);
 
   nsresult GetPositionedInfo(const nsIFrame* aDelegatingFrame,
                              nscoord&        aXMost,
@@ -98,7 +98,7 @@ public:
 
 protected:
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
-                               nsIPresContext&          aPresContext,
+                               nsIPresContext*          aPresContext,
                                const nsHTMLReflowState& aReflowState,
                                nscoord                  aContainingBlockWidth,
                                nscoord                  aContainingBlockHeight,

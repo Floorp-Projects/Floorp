@@ -41,33 +41,33 @@ class nsScrollbarButtonFrame : public nsTitledButtonFrame,
 public:
 
   // Overrides
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   friend nsresult NS_NewScrollBarButtonFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
 
   static nsresult GetChildWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
   static nsresult GetParentWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
 
-   NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+   NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus)  { return NS_OK; }
+                         nsEventStatus*  aEventStatus)  { return NS_OK; }
 
-  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus&  aEventStatus) { return NS_OK; }
+                        nsEventStatus*  aEventStatus) { return NS_OK; }
 
-  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus&  aEventStatus);
+                           nsEventStatus*  aEventStatus);
 
   virtual void Notify(nsITimer *timer);
 
@@ -77,7 +77,7 @@ public:
 
 
 protected:
-  virtual void MouseClicked(nsIPresContext& aPresContext);
+  virtual void MouseClicked(nsIPresContext* aPresContext);
   virtual void MouseClicked();
 
   

@@ -63,11 +63,12 @@ nsTreeOuterFrame::~nsTreeOuterFrame()
 }
 
 NS_IMETHODIMP 
-nsTreeOuterFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsTreeOuterFrame::HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus)
+                             nsEventStatus*  aEventStatus)
 {
-  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
   if (aEvent->message == NS_KEY_DOWN) {
     // Retrieve the tree frame.
     nsIFrame* curr = mFrames.FirstChild();

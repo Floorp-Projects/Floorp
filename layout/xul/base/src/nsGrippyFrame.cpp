@@ -76,7 +76,7 @@ nsGrippyFrame::nsGrippyFrame():mCollapsed(PR_FALSE)
 }
 
 void
-nsGrippyFrame::MouseClicked(nsIPresContext& aPresContext) 
+nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
     nsIFrame* splitter;
     nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::splitter, this, splitter);
@@ -100,7 +100,7 @@ nsGrippyFrame::MouseClicked(nsIPresContext& aPresContext)
 
 /*
 void
-nsGrippyFrame::MouseClicked(nsIPresContext& aPresContext) 
+nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
 
   nsString style;

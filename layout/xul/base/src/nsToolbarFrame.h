@@ -61,14 +61,14 @@ class nsToolbarFrame : public nsBoxFrame
 public:
   friend nsresult NS_NewToolbarFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
 
     // nsIHTMLReflow overrides
-  NS_IMETHOD  Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
@@ -83,13 +83,13 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aHint) ;
                                
-  NS_IMETHOD HandleEvent ( nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent ( nsIPresContext* aPresContext, 
                            nsGUIEvent*     aEvent, 
-                           nsEventStatus&  aEventStatus);
+                           nsEventStatus*  aEventStatus);
 
 #if WTF_IS_THIS
     //еее not sure at all where this comes from. I asked rods, no reply yet.
-  virtual void ReResolveStyles(nsIPresContext& aPresContext,
+  virtual void ReResolveStyles(nsIPresContext* aPresContext,
                                PRInt32 aParentChange,
                                nsStyleChangeList* aChangeList,
                                PRInt32* aLocalChange);

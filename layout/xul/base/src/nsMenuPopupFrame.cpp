@@ -107,7 +107,7 @@ nsMenuPopupFrame::nsMenuPopupFrame()
 } // cntr
 
 NS_IMETHODIMP
-nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
+nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
                        nsIContent*      aContent,
                        nsIFrame*        aParent,
                        nsIStyleContext* aContext,
@@ -116,7 +116,7 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
   nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // XXX Hack
-  mPresContext = &aPresContext;
+  mPresContext = aPresContext;
 
   CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
 
@@ -124,12 +124,12 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
   // position in the view hierarchy (as the root view).  We do this so that we
   // can draw the menus outside the confines of the window.
   nsIView* ourView;
-  GetView(&aPresContext, &ourView);
+  GetView(aPresContext, &ourView);
 
   nsIFrame* parent;
-  aParent->GetParentWithView(&aPresContext, &parent);
+  aParent->GetParentWithView(aPresContext, &parent);
   nsIView* parentView;
-  parent->GetView(&aPresContext, &parentView);
+  parent->GetView(aPresContext, &parentView);
 
   nsCOMPtr<nsIViewManager> viewManager;
   parentView->GetViewManager(*getter_AddRefs(viewManager));
@@ -213,28 +213,29 @@ nsMenuPopupFrame::GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame
 }
 
 nsresult 
-nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
+nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
                                     PRBool aOnMenuBar, 
                                     nsIFrame* aFrame, 
                                     PRInt32 aXPos, PRInt32 aYPos)
 {
+  NS_ENSURE_ARG(aPresContext);
   nsPoint parentPos;
   nsCOMPtr<nsIViewManager> viewManager;
 
   //Get the nearest enclosing parent view to aFrame.
   nsIView* parentView = nsnull;
-  GetNearestEnclosingView(&aPresContext, aFrame, &parentView);
+  GetNearestEnclosingView(aPresContext, aFrame, &parentView);
   if (!parentView)
     return NS_OK;
 
   parentView->GetViewManager(*getter_AddRefs(viewManager));
   GetViewOffset(viewManager, parentView, parentPos);
   nsIView* view = nsnull;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
 
   nsIView* containingView = nsnull;
   nsPoint offset;
-  aFrame->GetOffsetFromView(&aPresContext, offset, &containingView);
+  aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
   
   nsRect parentRect;
   aFrame->GetRect(parentRect);
@@ -251,7 +252,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
   }
 
   float p2t, t2p;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
 
   nsCOMPtr<nsIDeviceContext> dx;
   viewManager->GetDeviceContext(*getter_AddRefs(dx));
@@ -277,7 +278,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
 
   // Check if we fit on the screen, if not, resize and/or move so we do
   nsCOMPtr<nsIPresShell> presShell;
-  aPresContext.GetShell(getter_AddRefs(presShell));
+  aPresContext->GetShell(getter_AddRefs(presShell));
   
   nsCOMPtr<nsIDocument> document;
   presShell->GetDocument(getter_AddRefs(document));
@@ -370,7 +371,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
+nsMenuPopupFrame::DidReflow(nsIPresContext* aPresContext,
                             nsDidReflowStatus aStatus)
 {
   // Copied from nsContainerFrame reflow WITHOUT the call
@@ -844,15 +845,15 @@ nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 }
 
 NS_IMETHODIMP 
-nsMenuPopupFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsMenuPopupFrame::HandleEvent(nsIPresContext* aPresContext, 
                               nsGUIEvent*     aEvent,
-                              nsEventStatus&  aEventStatus)
+                              nsEventStatus*  aEventStatus)
 {
   return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::Destroy(nsIPresContext& aPresContext)
+nsMenuPopupFrame::Destroy(nsIPresContext* aPresContext)
 {
   //nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
   //target->RemoveEventListener("mousemove", mMenuPopupEntryListener, PR_TRUE);

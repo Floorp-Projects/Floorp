@@ -363,11 +363,11 @@ nsHTMLTableSectionElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFo
 
 
 NS_IMETHODIMP
-nsHTMLTableSectionElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLTableSectionElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
-                                   nsEventStatus& aEventStatus)
+                                   nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

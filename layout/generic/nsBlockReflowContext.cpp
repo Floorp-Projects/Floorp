@@ -95,7 +95,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
         // it. For its margins to be computed we need to have a reflow
         // state for it.
         nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
-        nsHTMLReflowState reflowState(*aPresContext, aRS, childFrame,
+        nsHTMLReflowState reflowState(aPresContext, aRS, childFrame,
                                       availSpace);
         generationalTopMargin =
           ComputeCollapsedTopMargin(aPresContext, reflowState);
@@ -172,7 +172,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // Setup reflow state for reflowing the frame
   // XXX subtract out vertical margin?
   nsSize availSpace(aSpace.width, aSpace.height);
-  nsHTMLReflowState reflowState(*mPresContext, mOuterReflowState, aFrame,
+  nsHTMLReflowState reflowState(mPresContext, mOuterReflowState, aFrame,
                                 availSpace, reason);
   aComputedOffsets = reflowState.mComputedOffsets;
   reflowState.mLineLayout = nsnull;
@@ -224,7 +224,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   mY = y;
 
   // Let frame know that we are reflowing it
-  aFrame->WillReflow(*mPresContext);
+  aFrame->WillReflow(mPresContext);
 
   // Position it and its view (if it has one)
   aFrame->MoveTo(mPresContext, mX, mY);
@@ -255,7 +255,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
   nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
   mOuterReflowState.mSpaceManager->Translate(tx, ty);
-  rv = aFrame->Reflow(*mPresContext, mMetrics, reflowState,
+  rv = aFrame->Reflow(mPresContext, mMetrics, reflowState,
                       aFrameReflowStatus);
   mOuterReflowState.mSpaceManager->Translate(-tx, -ty);
 
@@ -346,7 +346,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
         nsHTMLContainerFrame* parent;
         aFrame->GetParent((nsIFrame**)&parent);
-        parent->DeleteChildsNextInFlow(*mPresContext, aFrame);
+        parent->DeleteChildsNextInFlow(mPresContext, aFrame);
       }
     }
   }
@@ -427,7 +427,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     nsRect r(x, y, mMetrics.width, 0);
 
     // Now place the frame and complete the reflow process
-    nsContainerFrame::FinishReflowChild(mFrame, *mPresContext, mMetrics, x, y, 0);
+    nsContainerFrame::FinishReflowChild(mFrame, mPresContext, mMetrics, x, y, 0);
     aInFlowBounds = r;
 
     // Retain combined area information in case we contain a floater
@@ -555,7 +555,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       aCombinedRect.height = mMetrics.mCombinedArea.height;
 
       // Now place the frame and complete the reflow process
-      nsContainerFrame::FinishReflowChild(mFrame, *mPresContext, mMetrics, x, y, 0);
+      nsContainerFrame::FinishReflowChild(mFrame, mPresContext, mMetrics, x, y, 0);
 
 // XXX obsolete, i believe...
 #if 0
@@ -603,7 +603,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     else {
       // Send the DidReflow() notification, but don't bother placing
       // the frame
-      mFrame->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
+      mFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
       fits = PR_FALSE;
     }
   }

@@ -277,7 +277,7 @@ void nsFormFrame::RemoveRadioGroups()
   mRadioGroups.Clear();
 }
 
-void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aFrame)
+void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aFrame)
 {
   // Make sure we have a form control
   nsIFormControlFrame* fcFrame = nsnull;
@@ -297,7 +297,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aF
       result = formControl->GetForm(getter_AddRefs(formElem));
       if (NS_SUCCEEDED(result) && formElem) {
         nsCOMPtr<nsIPresShell> presShell;
-        result = aPresContext.GetShell(getter_AddRefs(presShell));
+        result = aPresContext->GetShell(getter_AddRefs(presShell));
         if (NS_SUCCEEDED(result) && presShell) {
           nsIContent* formContent;
           result = formElem->QueryInterface(kIContentIID, (void**)&formContent);
@@ -305,7 +305,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aF
             nsFormFrame* formFrame = nsnull;
             result = presShell->GetPrimaryFrameFor(formContent, (nsIFrame**)&formFrame);
             if (NS_SUCCEEDED(result) && formFrame) {
-              formFrame->AddFormControlFrame(&aPresContext, *fcFrame);
+              formFrame->AddFormControlFrame(aPresContext, *fcFrame);
               fcFrame->SetFormFrame(formFrame);
             }
             NS_RELEASE(formContent);

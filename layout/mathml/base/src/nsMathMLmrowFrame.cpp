@@ -67,7 +67,7 @@ nsMathMLmrowFrame::~nsMathMLmrowFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmrowFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmrowFrame::Init(nsIPresContext*  aPresContext,
                         nsIContent*      aContent,
                         nsIFrame*        aParent,
                         nsIStyleContext* aContext,

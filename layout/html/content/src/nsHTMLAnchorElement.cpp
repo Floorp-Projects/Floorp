@@ -328,17 +328,19 @@ nsHTMLAnchorElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
 
 // XXX support suppress in here
 NS_IMETHODIMP
-nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
-                                    nsEventStatus& aEventStatus)
+                                    nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG(aPresContext);
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   // Try script event handlers first
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                        aFlags, aEventStatus);
 
-  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus) &&
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     // If this anchor element has an HREF then it is sensitive to
     // mouse events (otherwise ignore them).
@@ -350,15 +352,15 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
         {
           // don't make the link grab the focus if there is no link handler
           nsILinkHandler* handler;
-          nsresult rv = aPresContext.GetLinkHandler(&handler);
+          nsresult rv = aPresContext->GetLinkHandler(&handler);
           if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
             nsIEventStateManager *stateManager;
-            if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+            if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
               stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
               NS_RELEASE(stateManager);
             }
             NS_RELEASE(handler);
-            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+            *aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
         }
         break;
@@ -366,7 +368,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       case NS_MOUSE_LEFT_CLICK:
       case NS_KEY_PRESS:
       {
-        if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
+        if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
 
           nsKeyEvent * keyEvent;
           if (aEvent->eventStructType == NS_KEY_EVENT) {
@@ -386,7 +388,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
             mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
                                baseURL, href, target, PR_TRUE);
             NS_IF_RELEASE(baseURL);
-            aEventStatus = nsEventStatus_eConsumeDoDefault;
+            *aEventStatus = nsEventStatus_eConsumeDoDefault;
           }
         }
       }
@@ -399,7 +401,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       case NS_MOUSE_ENTER:
       {
         nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(this, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
@@ -414,21 +416,21 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
                            baseURL, href, target, PR_FALSE);
         NS_IF_RELEASE(baseURL);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 
       case NS_MOUSE_EXIT:
       {
         nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
 
         nsAutoString empty;
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 

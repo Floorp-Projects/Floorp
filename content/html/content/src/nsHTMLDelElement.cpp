@@ -181,11 +181,11 @@ nsHTMLDelElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc
 
 
 NS_IMETHODIMP
-nsHTMLDelElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLDelElement::HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
-                          nsEventStatus& aEventStatus)
+                          nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

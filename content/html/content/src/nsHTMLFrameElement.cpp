@@ -246,11 +246,11 @@ nsHTMLFrameElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFu
 }
 
 NS_IMETHODIMP
-nsHTMLFrameElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLFrameElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
-                                   nsEventStatus& aEventStatus)
+                                   nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
@@ -271,7 +271,5 @@ NS_IMETHODIMP nsHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext
    nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
    nsEventStatus* aEventStatus)
 {
-   NS_ENSURE_ARG(aPresContext);
-   NS_ENSURE_ARG_POINTER(aEventStatus);
-   return HandleDOMEvent(*aPresContext, aEvent, aDOMEvent, aFlags,*aEventStatus);
+   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
 }

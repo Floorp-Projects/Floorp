@@ -41,16 +41,16 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD PreHandleEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD PreHandleEvent(nsIPresContext* aPresContext,
                          nsGUIEvent *aEvent,
                          nsIFrame* aTargetFrame,
-                         nsEventStatus& aStatus,
+                         nsEventStatus* aStatus,
                          nsIView* aView);
 
-  NS_IMETHOD PostHandleEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD PostHandleEvent(nsIPresContext* aPresContext,
                          nsGUIEvent *aEvent,
                          nsIFrame* aTargetFrame,
-                         nsEventStatus& aStatus,
+                         nsEventStatus* aStatus,
                          nsIView* aView);
 
   NS_IMETHOD SetPresContext(nsIPresContext* aPresContext);
@@ -68,12 +68,12 @@ public:
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) { mConsumeFocusEvents = aDoConsume; return NS_OK; }
 
 protected:
-  void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus& aStatus);
-  void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
-  void GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
-  NS_IMETHOD DispatchKeyPressEvent(nsIPresContext& aPresContext, nsKeyEvent *aEvent, nsEventStatus& aStatus);  
-  NS_IMETHOD SetClickCount(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
-  NS_IMETHOD CheckForAndDispatchClick(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
+  void UpdateCursor(nsIPresContext* aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
+  void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
+  void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
+  NS_IMETHOD DispatchKeyPressEvent(nsIPresContext* aPresContext, nsKeyEvent *aEvent, nsEventStatus* aStatus);  
+  NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);  
+  NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);  
   PRBool ChangeFocus(nsIContent* aFocus, nsIFrame* aFocusFrame, PRBool aSetFocus);
   void ShiftFocus(PRBool foward);
   nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool foward);
@@ -82,12 +82,12 @@ protected:
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
   nsISelfScrollingFrame* GetNearestSelfScrollingFrame(nsIFrame* aFrame);
 
-  nsIFrame* GetDocumentFrame(nsIPresContext& aPresContext);
+  nsIFrame* GetDocumentFrame(nsIPresContext* aPresContext);
 
   // routines for the d&d gesture tracking state machine
   void BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
   void StopTrackingDragGesture ( ) ;
-  void GenerateDragGesture ( nsIPresContext& aPresContext, nsGUIEvent *aEvent ) ;
+  void GenerateDragGesture ( nsIPresContext* aPresContext, nsGUIEvent *aEvent ) ;
   PRBool IsTrackingDragGesture ( ) const { return mIsTrackingDragGesture; }
 
   //Any frames here must be checked for validity in ClearFrameRefs

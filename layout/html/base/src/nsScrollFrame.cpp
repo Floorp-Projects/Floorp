@@ -74,7 +74,7 @@ nsScrollFrame::nsScrollFrame()
 }
 
 NS_IMETHODIMP
-nsScrollFrame::Init(nsIPresContext&  aPresContext,
+nsScrollFrame::Init(nsIPresContext*  aPresContext,
                     nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIStyleContext* aStyleContext,
@@ -90,7 +90,7 @@ nsScrollFrame::Init(nsIPresContext&  aPresContext,
 }
   
 NS_IMETHODIMP
-nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsScrollFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aChildList)
 {
@@ -108,7 +108,7 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
 #ifdef NS_DEBUG
   // Verify that the scrolled frame has a view
   nsIView*  scrolledView;
-  frame->GetView(&aPresContext, &scrolledView);
+  frame->GetView(aPresContext, &scrolledView);
   NS_ASSERTION(nsnull != scrolledView, "no view");
 #endif
 
@@ -123,7 +123,7 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollFrame::AppendFrames(nsIPresContext& aPresContext,
+nsScrollFrame::AppendFrames(nsIPresContext* aPresContext,
                             nsIPresShell&   aPresShell,
                             nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
@@ -133,7 +133,7 @@ nsScrollFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollFrame::InsertFrames(nsIPresContext& aPresContext,
+nsScrollFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIPresShell&   aPresShell,
                             nsIAtom*        aListName,
                             nsIFrame*       aPrevFrame,
@@ -144,7 +144,7 @@ nsScrollFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsScrollFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame)
@@ -154,7 +154,7 @@ nsScrollFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
+nsScrollFrame::DidReflow(nsIPresContext*   aPresContext,
                          nsDidReflowStatus aStatus)
 {
   nsresult  rv = NS_OK;
@@ -177,7 +177,7 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     nsIView*        scrolledView;
 
     frame->GetSize(size);
-    frame->GetView(&aPresContext, &scrolledView);
+    frame->GetView(aPresContext, &scrolledView);
     scrolledView->GetViewManager(vm);
     vm->ResizeView(scrolledView, size.width, size.height);
     NS_RELEASE(vm);
@@ -186,7 +186,7 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     // Have the scrolling view layout
     nsIScrollableView* scrollingView;
     nsIView*           view;
-    GetView(&aPresContext, &view);
+    GetView(aPresContext, &view);
     if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
       scrollingView->ComputeScrollOffsets(PR_TRUE);
     }
@@ -218,18 +218,18 @@ nsScrollFrame::GetScrollingParentView(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
+nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
 {
   nsIView*  view;
 
    //Get parent frame
   nsIFrame* parent;
-  GetParentWithView(&aPresContext, &parent);
+  GetParentWithView(aPresContext, &parent);
   NS_ASSERTION(parent, "GetParentWithView failed");
 
   // Get parent view
   nsIView* parentView = nsnull;
-  GetScrollingParentView(&aPresContext, parent, &parentView);
+  GetScrollingParentView(aPresContext, parent, &parentView);
  
   // Get the view manager
   nsIViewManager* viewManager;
@@ -297,7 +297,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
     parent->GetFrameType(&frameType);
     if (nsLayoutAtoms::viewportFrame == frameType) {
       nsCOMPtr<nsISupports> container;
-      rv = aPresContext.GetContainer(getter_AddRefs(container));
+      rv = aPresContext->GetContainer(getter_AddRefs(container));
       if (NS_SUCCEEDED(rv) && container) {
         nsCOMPtr<nsIWebShell> webShell;
         rv = container->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
@@ -326,7 +326,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
     scrollingView->SetControlInsets(border);
 
     // Remember our view
-    SetView(&aPresContext, view);
+    SetView(aPresContext, view);
   }
 
   NS_RELEASE(viewManager);
@@ -336,13 +336,13 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
 // Returns the width of the vertical scrollbar and the height of
 // the horizontal scrollbar in twips
 static inline void
-GetScrollbarDimensions(nsIPresContext& aPresContext,
+GetScrollbarDimensions(nsIPresContext* aPresContext,
                        nscoord&        aWidth,
                        nscoord&        aHeight)
 {
   float             sbWidth, sbHeight;
   nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext.GetDeviceContext(getter_AddRefs(dc));
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
 
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
   aWidth = NSToCoordRound(sbWidth);
@@ -353,7 +353,7 @@ GetScrollbarDimensions(nsIPresContext& aPresContext,
 // border edge and inside of any vertical and horizontal scrollbar
 // Also returns whether space was reserved for the vertical scrollbar.
 nsresult
-nsScrollFrame::CalculateScrollAreaSize(nsIPresContext&          aPresContext,
+nsScrollFrame::CalculateScrollAreaSize(nsIPresContext*          aPresContext,
                                        const nsHTMLReflowState& aReflowState,
                                        nsMargin&                aBorder,
                                        nscoord                  aSBWidth,
@@ -419,7 +419,7 @@ nsScrollFrame::CalculateScrollAreaSize(nsIPresContext&          aPresContext,
         // but also
         nsIScrollableView* scrollingView;
         nsIView*           view;
-        GetView(&aPresContext, &view);
+        GetView(aPresContext, &view);
         if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
           PRBool  unused;
           scrollingView->GetScrollbarVisibility(aRoomForVerticalScrollbar, &unused);
@@ -479,7 +479,7 @@ nsScrollFrame::CalculateChildTotalSize(nsIFrame*            aKidFrame,
 }
 
 NS_IMETHODIMP
-nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
+nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
@@ -564,7 +564,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   //
   nsIView   *view = 0;
 
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
 
   if (view) {
     nsresult rv = NS_OK;
@@ -680,7 +680,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
         nsRect  kidRect;
 
         kidFrame->GetRect(kidRect);
-        Invalidate(&aPresContext, kidRect, PR_FALSE);
+        Invalidate(aPresContext, kidRect, PR_FALSE);
       }
 
       // Reflow the child frame with a reflow reason of reflow
@@ -758,7 +758,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 }
 
 NS_IMETHODIMP
-nsScrollFrame::Paint(nsIPresContext&      aPresContext,
+nsScrollFrame::Paint(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer)

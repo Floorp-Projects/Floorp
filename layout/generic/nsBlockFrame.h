@@ -64,34 +64,34 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const;
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
@@ -103,12 +103,12 @@ public:
   NS_IMETHOD VerifyTree() const;
 #endif
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -120,13 +120,13 @@ public:
                               PRInt32         aHint);
 
 #ifdef DO_SELECTION
-  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD  HandleEvent(nsIPresContext* aPresContext,
                           nsGUIEvent* aEvent,
-                          nsEventStatus& aEventStatus);
+                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD  HandleDrag(nsIPresContext& aPresContext, 
+  NS_IMETHOD  HandleDrag(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
   nsIFrame * FindHitFrame(nsBlockFrame * aBlockFrame, 
                           const nscoord aX, const nscoord aY,
@@ -134,7 +134,7 @@ public:
 
 #endif
 
-  virtual void DeleteChildsNextInFlow(nsIPresContext& aPresContext,
+  virtual void DeleteChildsNextInFlow(nsIPresContext* aPresContext,
                                       nsIFrame* aNextInFlow);
 
   nsIFrame* GetTopBlockChild();
@@ -293,12 +293,12 @@ protected:
 
   //----------------------------------------
   //XXX
-  virtual void PaintChildren(nsIPresContext& aPresContext,
+  virtual void PaintChildren(nsIPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer);
 
-  void PaintFloaters(nsIPresContext& aPresContext,
+  void PaintFloaters(nsIPresContext* aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect);
 

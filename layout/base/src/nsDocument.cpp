@@ -2348,11 +2348,11 @@ nsresult nsDocument::GetNewListenerManager(nsIEventListenerManager **aInstancePt
   return NS_NewEventListenerManager(aInstancePtrResult);
 } 
 
-nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext, 
+nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext, 
                                     nsEvent* aEvent, 
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
-                                    nsEventStatus& aEventStatus)
+                                    nsEventStatus* aEventStatus)
 {
   nsresult mRet = NS_OK;
   nsIDOMEvent* mDOMEvent = nsnull;
@@ -2379,10 +2379,9 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
 
   //Bubbling stage
   if (NS_EVENT_FLAG_CAPTURE != aFlags && nsnull != mScriptContextOwner) {
-    nsIScriptGlobalObject* mGlobal;
-    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&mGlobal)) {
-      mGlobal->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
-      NS_RELEASE(mGlobal);
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(getter_AddRefs(global))) {
+      global->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
     }
   }
 

@@ -39,19 +39,19 @@ class nsContainerFrame : public nsSplittableFrame
 {
 public:
   // nsIFrame overrides
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsIFrame**     aFrame);
-  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
@@ -62,11 +62,11 @@ public:
 #endif
 
   // nsIHTMLReflow overrides
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                        nsDidReflowStatus aStatus);
 
   // nsContainerFrame methods
-  virtual void DeleteChildsNextInFlow(nsIPresContext& aPresContext,
+  virtual void DeleteChildsNextInFlow(nsIPresContext* aPresContext,
                                       nsIFrame* aChild);
 
   static PRInt32 LengthOf(nsIFrame* aFrameList) {
@@ -111,7 +111,7 @@ public:
    *    case. Also implies NS_FRAME_NO_MOVE_VIEW
    */
   nsresult ReflowChild(nsIFrame*                aKidFrame,
-                       nsIPresContext&          aPresContext,
+                       nsIPresContext*          aPresContext,
                        nsHTMLReflowMetrics&     aDesiredSize,
                        const nsHTMLReflowState& aReflowState,
                        nscoord                  aX,
@@ -141,7 +141,7 @@ public:
    *    views to be out of sync
    */
   static nsresult FinishReflowChild(nsIFrame*            aKidFrame,
-                                    nsIPresContext&      aPresContext,
+                                    nsIPresContext*      aPresContext,
                                     nsHTMLReflowMetrics& aDesiredSize,
                                     nscoord              aX,
                                     nscoord              aY,
@@ -159,12 +159,12 @@ protected:
                                  nsIAtom*       aList,
                                  nsIFrame**     aFrame);
 
-  virtual void PaintChildren(nsIPresContext&      aPresContext,
+  virtual void PaintChildren(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer);
 
-  virtual void PaintChild(nsIPresContext&      aPresContext,
+  virtual void PaintChild(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsIFrame*            aFrame,

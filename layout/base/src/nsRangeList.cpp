@@ -1339,7 +1339,7 @@ nsRangeList::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
   PRBool  beginOfContent;
   nsCOMPtr<nsIContent> newContent;
 
-  result = newFrame->GetContentAndOffsetsFromPoint(*aPresContext, newPoint,
+  result = newFrame->GetContentAndOffsetsFromPoint(aPresContext, newPoint,
                                                    getter_AddRefs(newContent), 
                                                    startPos, contentOffsetEnd,beginOfContent);
 

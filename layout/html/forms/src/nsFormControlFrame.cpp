@@ -117,7 +117,7 @@ nsFormControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 }
 
 nscoord 
-nsFormControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsFormControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -125,7 +125,7 @@ nsFormControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
 }
 
 nscoord 
-nsFormControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsFormControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -157,7 +157,7 @@ nsFormControlFrame::SetClickPoint(nscoord aX, nscoord aY)
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
 NS_METHOD
-nsFormControlFrame::Paint(nsIPresContext& aPresContext,
+nsFormControlFrame::Paint(nsIPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
@@ -174,7 +174,7 @@ nsFormControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
 {
   // get the css size and let the frame use or override it
   nsSize styleSize;
-  GetStyleSize(*aPresContext, aReflowState, styleSize);
+  GetStyleSize(aPresContext, aReflowState, styleSize);
 
   // subclasses should always override this method, but if not and no css, make it small
   aDesiredLayoutSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 144;
@@ -199,7 +199,7 @@ nsFormControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
+nsFormControlFrame::DidReflow(nsIPresContext* aPresContext,
                         nsDidReflowStatus aStatus)
 {
   nsresult rv = nsLeafFrame::DidReflow(aPresContext, aStatus);
@@ -209,7 +209,7 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
-    GetView(&aPresContext, &view);
+    GetView(aPresContext, &view);
     if (view) {
       const nsStyleDisplay* display;
       GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
@@ -226,7 +226,7 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsFormControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
@@ -234,23 +234,23 @@ nsFormControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_METHOD
-nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
+nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
   // add ourself as an nsIFormControlFrame
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
   nsWidgetRendering mode;
-  aPresContext.GetWidgetRenderingMode(&mode);
+  aPresContext->GetWidgetRenderingMode(&mode);
   if (eWidgetRendering_Native == mode) {
-    GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+    GetDesiredSize(aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
     if (!mDidInit) {
-      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+      PostCreateWidget(aPresContext, aDesiredSize.width, aDesiredSize.height);
       mDidInit = PR_TRUE;
     }
     aDesiredSize.ascent = aDesiredSize.height;
@@ -259,8 +259,8 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
   } else {
     nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
     if (!mDidInit) {
-      //GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
-      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+      //GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+      PostCreateWidget(aPresContext, aDesiredSize.width, aDesiredSize.height);
       mDidInit = PR_TRUE;
     }
     return rv;
@@ -272,7 +272,7 @@ nsFormControlFrame::Reflow(nsIPresContext&          aPresContext,
 
 
 nsWidgetInitData* 
-nsFormControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
+nsFormControlFrame::GetWidgetInitData(nsIPresContext* aPresContext)
 {
   return nsnull;
 }
@@ -419,11 +419,12 @@ nsFormControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 }
 
 NS_METHOD
-nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsFormControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                           nsGUIEvent* aEvent,
-                                          nsEventStatus& aEventStatus)
+                                          nsEventStatus* aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
 
@@ -432,7 +433,7 @@ nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
   // so use the old code for native stuff. -EDV
   switch (aEvent->message) {
      case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(&aPresContext);
+        MouseClicked(aPresContext);
      break;
 
 	   case NS_KEY_DOWN:
@@ -442,18 +443,18 @@ nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	        EnterPressed(aPresContext);
 	      }
 	      //else if (NS_VK_SPACE == keyEvent->keyCode) {
-	      //  MouseClicked(&aPresContext);
+	      //  MouseClicked(aPresContext);
 	      //}
 	    }
 	    break;
   }
 
-  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
   return NS_OK;
 }
 
 void 
-nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
+nsFormControlFrame::GetStyleSize(nsIPresContext* aPresContext,
                                  const nsHTMLReflowState& aReflowState,
                                  nsSize& aSize)
 {

@@ -83,9 +83,9 @@ nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsScrollbarButtonFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsScrollbarButtonFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
-                                      nsEventStatus& aEventStatus)
+                                      nsEventStatus* aEventStatus)
 {  
   // XXX hack until handle release is actually called in nsframe.
   if (aEvent->message == NS_MOUSE_EXIT|| aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
@@ -96,18 +96,18 @@ nsScrollbarButtonFrame::HandleEvent(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsScrollbarButtonFrame::HandlePress(nsIPresContext& aPresContext, 
+nsScrollbarButtonFrame::HandlePress(nsIPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
-                     nsEventStatus&  aEventStatus)
+                     nsEventStatus*  aEventStatus)
 {
   nsRepeatService::GetInstance()->Start(this);
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsScrollbarButtonFrame::HandleRelease(nsIPresContext& aPresContext, 
+nsScrollbarButtonFrame::HandleRelease(nsIPresContext* aPresContext, 
                                  nsGUIEvent*     aEvent,
-                                 nsEventStatus&  aEventStatus)
+                                 nsEventStatus*  aEventStatus)
 {
   nsRepeatService::GetInstance()->Stop();
   return NS_OK;
@@ -120,7 +120,7 @@ void nsScrollbarButtonFrame::Notify(nsITimer *timer)
 }
 
 void
-nsScrollbarButtonFrame::MouseClicked(nsIPresContext& aPresContext) 
+nsScrollbarButtonFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
   MouseClicked();
 }
@@ -238,7 +238,7 @@ nsScrollbarButtonFrame::GetParentWithTag(nsIAtom* toFind, nsIFrame* start, nsIFr
 }
 
 NS_IMETHODIMP
-nsScrollbarButtonFrame::Destroy(nsIPresContext& aPresContext)
+nsScrollbarButtonFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.

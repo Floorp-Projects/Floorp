@@ -353,7 +353,7 @@ public:
   /** nsIFrame override of Init.
     * all we do here is cache the pres context for later use
     */
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -373,7 +373,7 @@ public:
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
+  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext);
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight) {};
@@ -399,36 +399,36 @@ public:
     * Respond to a gui event
     * @see nsNativeFormControlFrame::HandleEvent
     */
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
-  virtual void EnterPressed(nsIPresContext& aPresContext) ;
+  virtual void EnterPressed(nsIPresContext* aPresContext) ;
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
   virtual void Reset(nsIPresContext* aPresContext);
 
   // override to interact with webshell
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD ReflowNavQuirks(nsIPresContext&          aPresContext,
+  NS_IMETHOD ReflowNavQuirks(nsIPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus,
                               nsMargin&                aBorder,
                               nsMargin&                aPadding);
-  NS_IMETHOD ReflowStandard(nsIPresContext&          aPresContext,
+  NS_IMETHOD ReflowStandard(nsIPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus,
                             nsMargin&                aBorder,
                             nsMargin&                aPadding);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
@@ -503,7 +503,7 @@ protected:
                              nsHTMLValue & aRowSize,
                              nsresult &    aRowStatus);
  
-  NS_IMETHOD CreateWebShell(nsIPresContext& aPresContext,
+  NS_IMETHOD CreateWebShell(nsIPresContext* aPresContext,
                             const nsSize& aSize);
 
   NS_IMETHOD InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDocument *aDoc);
@@ -529,18 +529,18 @@ protected:
   virtual PRInt32 GetWidthInCharacters() const;
 
 
-  virtual void PaintTextControlBackground(nsIPresContext& aPresContext,
+  virtual void PaintTextControlBackground(nsIPresContext* aPresContext,
                                           nsIRenderingContext& aRenderingContext,
                                           const nsRect& aDirtyRect,
                                           nsFramePaintLayer aWhichLayer);
 
-  virtual void PaintTextControl(nsIPresContext& aPresContext,
+  virtual void PaintTextControl(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect, nsString& aText,
                                 nsIStyleContext* aStyleContext,
                                 nsRect& aRect);
 
-  virtual void PaintChild(nsIPresContext&      aPresContext,
+  virtual void PaintChild(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsIFrame*            aFrame,

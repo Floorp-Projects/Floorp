@@ -26,7 +26,7 @@
 #include "nsISizeOfHandler.h"
 
 NS_IMETHODIMP
-nsSplittableFrame::Init(nsIPresContext&  aPresContext,
+nsSplittableFrame::Init(nsIPresContext*  aPresContext,
                         nsIContent*      aContent,
                         nsIFrame*        aParent,
                         nsIStyleContext* aContext,

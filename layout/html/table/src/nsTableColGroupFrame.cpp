@@ -42,7 +42,7 @@ NS_DEF_PTR(nsIContent);
 static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
 
 NS_IMETHODIMP
-nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsTableColGroupFrame::InitNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList)
 {
   nsresult rv=NS_OK;
   nsTableFrame* tableFrame=nsnull;
@@ -88,7 +88,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 
         // Set its style context
         nsCOMPtr<nsIStyleContext> colStyleContext;
-        aPresContext.ResolveStyleContextFor(col, mStyleContext,
+        aPresContext->ResolveStyleContextFor(col, mStyleContext,
                                             PR_TRUE,
                                             getter_AddRefs(colStyleContext));
         colFrame->Init(aPresContext, col, this, colStyleContext, nsnull);
@@ -117,7 +117,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
+nsTableColGroupFrame::AppendNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList)
 {
   if (nsnull!=aChildList)
     mFrames.AppendFrames(nsnull, aChildList);
@@ -125,7 +125,7 @@ nsTableColGroupFrame::AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aC
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsTableColGroupFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
@@ -138,7 +138,7 @@ nsTableColGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
 // Helper function. It marks the table frame as dirty and generates
 // a reflow command
 nsresult
-nsTableColGroupFrame::AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
+nsTableColGroupFrame::AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
                                                  nsIPresShell&   aPresShell,
                                                  nsIFrame*       aTableFrame)
 {
@@ -166,7 +166,7 @@ nsTableColGroupFrame::AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::AppendFrames(nsIPresContext& aPresContext,
+nsTableColGroupFrame::AppendFrames(nsIPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
@@ -204,7 +204,7 @@ nsTableColGroupFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::InsertFrames(nsIPresContext& aPresContext,
+nsTableColGroupFrame::InsertFrames(nsIPresContext* aPresContext,
                                    nsIPresShell&   aPresShell,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aPrevFrame,
@@ -243,7 +243,7 @@ nsTableColGroupFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsTableColGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
                                   nsIPresShell&   aPresShell,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
@@ -280,14 +280,14 @@ nsTableColGroupFrame::RemoveFrame(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext&      aPresContext,
+NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext*      aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect,
                                       nsFramePaintLayer    aWhichLayer)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nsCompatibility mode;
-    aPresContext.GetCompatibilityMode(&mode);
+    aPresContext->GetCompatibilityMode(&mode);
     if (eCompatibility_Standard == mode) {
       const nsStyleDisplay* disp =
         (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -319,7 +319,7 @@ nsTableColGroupFrame::GetSkipSides() const
   return skip;
 }
 
-NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
+NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,
                                        nsHTMLReflowMetrics&     aDesiredSize,
                                        const nsHTMLReflowState& aReflowState,
                                        nsReflowStatus&          aStatus)
@@ -360,7 +360,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsIPresContext&          aPresContext,
+NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsIPresContext*          aPresContext,
                                                   nsHTMLReflowMetrics&     aDesiredSize,
                                                   const nsHTMLReflowState& aReflowState,
                                                   nsReflowStatus&          aStatus)
@@ -385,7 +385,7 @@ NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsIPresContext&          aPres
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresContext,
+NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext*          aPresContext,
                                               nsHTMLReflowMetrics&     aDesiredSize,
                                               const nsHTMLReflowState& aReflowState,
                                               nsReflowStatus&          aStatus)
@@ -419,7 +419,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext&          aPresContext,
+NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext*          aPresContext,
                                                 nsHTMLReflowMetrics&     aDesiredSize,
                                                 const nsHTMLReflowState& aReflowState,
                                                 nsReflowStatus&          aStatus)
@@ -437,7 +437,7 @@ NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext&          aPresCo
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext&          aPresContext,
+NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
                                                  nsHTMLReflowMetrics&     aDesiredSize,
                                                  const nsHTMLReflowState& aReflowState,
                                                  nsReflowStatus&          aStatus,
@@ -475,7 +475,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsIPresContext&          aPresC
 }
 
 // Subclass hook for style post processing
-NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPresContext)
+NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPresContext)
 {
   // get the table frame
   nsTableFrame* tableFrame=nsnull;
@@ -518,7 +518,7 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
           {
             colPosition->mWidth.SetCoordValue(0);
           }
-          colStyleContext->RecalcAutomaticData(&aPresContext);
+          colStyleContext->RecalcAutomaticData(aPresContext);
           colIndex++;
         }
         colFrame->GetNextSibling(&colFrame);
@@ -548,14 +548,14 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
               colFrame->GetStyleContext(getter_AddRefs(colStyleContext));
               nsStylePosition * mutableColPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
               mutableColPosition->mWidth = position->mWidth;
-              colStyleContext->RecalcAutomaticData(&aPresContext);
+              colStyleContext->RecalcAutomaticData(aPresContext);
             }
           }
           colFrame->GetNextSibling(&colFrame);
         }
       }
     }
-    //mStyleContext->RecalcAutomaticData(&aPresContext);
+    //mStyleContext->RecalcAutomaticData(aPresContext);
   }
   return rv;
 }
@@ -678,7 +678,7 @@ PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
   return result;
 }
 
-void nsTableColGroupFrame::DeleteColFrame(nsIPresContext& aPresContext, nsTableColFrame* aColFrame)
+void nsTableColGroupFrame::DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame)
 {
   mFrames.DestroyFrame(aPresContext, aColFrame);
 }

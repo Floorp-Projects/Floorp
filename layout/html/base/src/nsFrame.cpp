@@ -85,7 +85,7 @@ static NS_DEFINE_IID(kCTransferableCID,  NS_TRANSFERABLE_CID);
 void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame);
 //non Hack prototypes
 #if 0
-static void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
+static void RefreshContentFrames(nsIPresContext* aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 #endif
 
 
@@ -249,7 +249,7 @@ nsrefcnt nsFrame::Release(void)
 // nsIFrame
 
 NS_IMETHODIMP
-nsFrame::Init(nsIPresContext&  aPresContext,
+nsFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -274,10 +274,10 @@ nsFrame::Init(nsIPresContext&  aPresContext,
     }
   }
 
-  return SetStyleContext(&aPresContext, aContext);
+  return SetStyleContext(aPresContext, aContext);
 }
 
-NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext& aPresContext,
+NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                            nsIAtom*        aListName,
                                            nsIFrame*       aChildList)
 {
@@ -293,7 +293,7 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::AppendFrames(nsIPresContext& aPresContext,
+nsFrame::AppendFrames(nsIPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aFrameList)
@@ -303,7 +303,7 @@ nsFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::InsertFrames(nsIPresContext& aPresContext,
+nsFrame::InsertFrames(nsIPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aPrevFrame,
@@ -314,7 +314,7 @@ nsFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsFrame::RemoveFrame(nsIPresContext* aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
                      nsIFrame*       aOldFrame)
@@ -324,7 +324,7 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::ReplaceFrame(nsIPresContext& aPresContext,
+nsFrame::ReplaceFrame(nsIPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aOldFrame,
@@ -335,15 +335,15 @@ nsFrame::ReplaceFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::Destroy(nsIPresContext& aPresContext)
+nsFrame::Destroy(nsIPresContext* aPresContext)
 {
   nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
+  aPresContext->GetShell(getter_AddRefs(shell));
 
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
   nsIView*  view;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
   
   // XXX Rather than always doing this it would be better if it was part of
   // a frame observer mechanism and the pres shell could register as an
@@ -361,7 +361,7 @@ nsFrame::Destroy(nsIPresContext& aPresContext)
 
   //XXX Why is this done in nsFrame instead of some frame class
   // that actually loads images?
-  aPresContext.StopAllLoadImagesFor(this);
+  aPresContext->StopAllLoadImagesFor(this);
 
   if (view) {
     // Break association between view and frame
@@ -579,12 +579,12 @@ NS_IMETHODIMP nsFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) co
 }
 
 PRBool
-nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
+nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 {
   PRBool result = PR_FALSE;
 
   nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIDocument> doc;
     rv = shell->GetDocument(getter_AddRefs(doc));
@@ -648,7 +648,7 @@ nsFrame::SetClipRect(nsIRenderingContext& aRenderingContext)
 }
 
 NS_IMETHODIMP
-nsFrame::Paint(nsIPresContext&      aPresContext,
+nsFrame::Paint(nsIPresContext*      aPresContext,
                nsIRenderingContext& aRenderingContext,
                const nsRect&        aDirtyRect,
                nsFramePaintLayer    aWhichLayer)
@@ -659,7 +659,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
     nsCOMPtr<nsIDocument> doc;
     nsresult result; 
     nsCOMPtr<nsIPresShell> shell;
-    result = aPresContext.GetShell(getter_AddRefs(shell));
+    result = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_FAILED(result))
       return result;
 
@@ -740,11 +740,12 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
   *
  */
 NS_IMETHODIMP
-nsFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsFrame::HandleEvent(nsIPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
-                     nsEventStatus&  aEventStatus)
+                     nsEventStatus*  aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
 
@@ -756,7 +757,7 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
   }
 */
   nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   switch (aEvent->message)
   {
   case NS_MOUSE_MOVE:
@@ -830,9 +831,9 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
   * Handles the Mouse Press Event for the frame
  */
 NS_IMETHODIMP
-nsFrame::HandlePress(nsIPresContext& aPresContext, 
+nsFrame::HandlePress(nsIPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
-                     nsEventStatus&  aEventStatus)
+                     nsEventStatus*  aEventStatus)
 {
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
@@ -842,7 +843,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
     return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
 
   nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
     nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
     PRInt32 startPos = 0;
@@ -869,9 +870,9 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
   * Handles the Multiple Mouse Press Event for the frame
  */
 NS_IMETHODIMP
-nsFrame::HandleMultiplePress(nsIPresContext& aPresContext, 
+nsFrame::HandleMultiplePress(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus)
+                             nsEventStatus*  aEventStatus)
 {
    if (!DisplaySelection(aPresContext)) {
     return NS_OK;
@@ -880,7 +881,7 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
   if (me->clickCount <3 )
     return NS_OK;
   nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
    
 
   if (NS_SUCCEEDED(rv) && shell) {
@@ -914,7 +915,7 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         PR_FALSE,
                         PR_TRUE,
                         PR_TRUE);
-        rv = PeekOffset(&aPresContext, &startpos);
+        rv = PeekOffset(aPresContext, &startpos);
         if (NS_FAILED(rv))
           return rv;
         nsPeekOffsetStruct endpos;
@@ -926,7 +927,7 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         PR_FALSE,
                         PR_FALSE,
                         PR_TRUE);
-        rv = PeekOffset(&aPresContext, &endpos);
+        rv = PeekOffset(aPresContext, &endpos);
         if (NS_FAILED(rv))
           return rv;
 
@@ -953,9 +954,9 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext, 
+NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext, 
                                   nsGUIEvent*     aEvent,
-                                  nsEventStatus&  aEventStatus)
+                                  nsEventStatus*  aEventStatus)
 {
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
@@ -964,7 +965,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
   nsCOMPtr<nsIPresShell> presShell;
 
-  result = aPresContext.GetShell(getter_AddRefs(presShell));
+  result = aPresContext->GetShell(getter_AddRefs(presShell));
 
   if (NS_FAILED(result))
     return result;
@@ -976,16 +977,16 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
   if (NS_SUCCEEDED(result) && frameselection)
   {
     frameselection->StopAutoScrollTimer();
-    frameselection->HandleDrag(&aPresContext, this, aEvent->point);
-    frameselection->StartAutoScrollTimer(&aPresContext, this, aEvent->point, 30);
+    frameselection->HandleDrag(aPresContext, this, aEvent->point);
+    frameselection->StartAutoScrollTimer(aPresContext, this, aEvent->point, 30);
   }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext, 
+NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext, 
                                      nsGUIEvent*     aEvent,
-                                     nsEventStatus&  aEventStatus)
+                                     nsEventStatus*  aEventStatus)
 {
   if (!DisplaySelection(aPresContext))
     return NS_OK;
@@ -994,7 +995,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext,
 
   nsCOMPtr<nsIPresShell> presShell;
 
-  result = aPresContext.GetShell(getter_AddRefs(presShell));
+  result = aPresContext->GetShell(getter_AddRefs(presShell));
 
   if (NS_SUCCEEDED(result))
   {
@@ -1010,7 +1011,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext,
 }
 
 
-nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                                 const nsPoint&  aPoint,
                                                 nsIContent **   aNewContent,
                                                 PRInt32&        aContentOffset,
@@ -1029,7 +1030,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
   nsIFrame *kid          = nsnull;
   nsIFrame *closestFrame = nsnull;
 
-  result = GetClosestViewForFrame(&aCX, this, &view);
+  result = GetClosestViewForFrame(aCX, this, &view);
 
   if (NS_FAILED(result))
     return result;
@@ -1107,7 +1108,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
       nsIView * kidView = nsnull;
 
       kid->GetRect(rect);
-      kid->GetOffsetFromView(&aCX, offsetPoint, &kidView);
+      kid->GetOffsetFromView(aCX, offsetPoint, &kidView);
 
       rect.x = offsetPoint.x;
       rect.y = offsetPoint.y;
@@ -1154,7 +1155,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
       nsPoint newPoint     = aPoint;
       nsIView *closestView = nsnull;
 
-      result = GetClosestViewForFrame(&aCX, closestFrame, &closestView);
+      result = GetClosestViewForFrame(aCX, closestFrame, &closestView);
 
       if (NS_FAILED(result))
         return result;
@@ -1185,7 +1186,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
   if (NS_FAILED(result))
     return result;
   nsPoint offsetPoint;
-  GetOffsetFromView(&aCX, offsetPoint, &view);
+  GetOffsetFromView(aCX, offsetPoint, &view);
   thisRect.x = offsetPoint.x;
   thisRect.y = offsetPoint.y;
 
@@ -1215,7 +1216,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
 
 
 NS_IMETHODIMP
-nsFrame::GetCursor(nsIPresContext& aPresContext,
+nsFrame::GetCursor(nsIPresContext* aPresContext,
                    nsPoint& aPoint,
                    PRInt32& aCursor)
 {
@@ -1258,7 +1259,7 @@ nsFrame::SetFrameState(nsFrameState aNewState)
 // nsIHTMLReflow member functions
 
 NS_IMETHODIMP
-nsFrame::WillReflow(nsIPresContext& aPresContext)
+nsFrame::WillReflow(nsIPresContext* aPresContext)
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("WillReflow: oldState=%x", mState));
@@ -1267,7 +1268,7 @@ nsFrame::WillReflow(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsFrame::DidReflow(nsIPresContext& aPresContext,
+nsFrame::DidReflow(nsIPresContext* aPresContext,
                    nsDidReflowStatus aStatus)
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
@@ -1280,7 +1281,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
     // Make sure the view is sized and positioned correctly and it's
     // visibility, opacity, content transparency, and clip are correct
     nsIView*  view;
-    GetView(&aPresContext, &view);
+    GetView(aPresContext, &view);
     if (view) {
       nsIViewManager  *vm;
       view->GetViewManager(vm);
@@ -1290,7 +1291,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
         // parent frame (our parent frame may not have a view).
         nsIView* parentWithView;
         nsPoint origin;
-        GetOffsetFromView(&aPresContext, origin, &parentWithView);
+        GetOffsetFromView(aPresContext, origin, &parentWithView);
         vm->ResizeView(view, mRect.width, mRect.height);
         vm->MoveViewTo(view, origin.x, origin.y);
       }
@@ -1407,7 +1408,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::Reflow(nsIPresContext&          aPresContext,
+nsFrame::Reflow(nsIPresContext*          aPresContext,
                 nsHTMLReflowMetrics&     aDesiredSize,
                 const nsHTMLReflowState& aReflowState,
                 nsReflowStatus&          aStatus)
@@ -2209,7 +2210,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
         nsPoint point;
         point.x = aPos->mDesiredX;
         point.y = 0;
-        result = resultFrame->GetContentAndOffsetsFromPoint(*(context.get()),point,
+        result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
                                           getter_AddRefs(aPos->mResultContent),
                                           aPos->mContentOffset,
                                           aPos->mContentOffsetEnd,
@@ -2248,7 +2249,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
         point.x = aPos->mDesiredX;
         point.y = 0;
 
-        result = resultFrame->GetContentAndOffsetsFromPoint(*(context.get()),point,
+        result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
                                           getter_AddRefs(aPos->mResultContent), aPos->mContentOffset,
                                           aPos->mContentOffsetEnd, aPos->mPreferLeft);
         if (NS_SUCCEEDED(result))
@@ -2346,7 +2347,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
       if (NS_FAILED(result) || !context)
         return result;
-      result = GetContentAndOffsetsFromPoint(*(context.get()),point,
+      result = GetContentAndOffsetsFromPoint(context,point,
                              getter_AddRefs(aPos->mResultContent),
                              aPos->mContentOffset,
                              endoffset,
@@ -2467,7 +2468,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           firstFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
 
           offsetPoint.x = 0;//all the way to the left
-          result = firstFrame->GetContentAndOffsetsFromPoint(*(context.get()),
+          result = firstFrame->GetContentAndOffsetsFromPoint(context,
                                                              offsetPoint,
                                            getter_AddRefs(aPos->mResultContent),
                                            aPos->mContentOffset,
@@ -2492,7 +2493,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
             offsetPoint.x = 2* usedRect.width; //2* just to be sure we are off the edge
 
-            result = nextFrame->GetContentAndOffsetsFromPoint(*(context.get()),
+            result = nextFrame->GetContentAndOffsetsFromPoint(context,
                                             offsetPoint,
                                             getter_AddRefs(aPos->mResultContent),
                                             aPos->mContentOffset,

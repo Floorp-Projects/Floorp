@@ -49,16 +49,16 @@ public:
   
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
   virtual PRInt32 GetMaxNumValues();
 
-  NS_IMETHOD GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRInt32& aCursor);
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext, nsPoint& aPoint, PRInt32& aCursor);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
   //nsIStatefulFrame
@@ -90,7 +90,7 @@ public:
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)=0;
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue)=0; 
 
-  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext)=0;
+  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext)=0;
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
@@ -104,23 +104,23 @@ public:
 
   NS_IMETHOD GetText(nsString* aValue, PRBool aInitialValue)=0;
 
-  virtual void EnterPressed(nsIPresContext& aPresContext)=0;
+  virtual void EnterPressed(nsIPresContext* aPresContext)=0;
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames)=0;
   virtual void Reset(nsIPresContext* aPresContext)=0;
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer)=0;
 
-  virtual void PaintTextControlBackground(nsIPresContext& aPresContext,
+  virtual void PaintTextControlBackground(nsIPresContext* aPresContext,
                                           nsIRenderingContext& aRenderingContext,
                                           const nsRect& aDirtyRect,
                                           nsFramePaintLayer aWhichLayer)=0;
 
-  virtual void PaintTextControl(nsIPresContext& aPresContext,
+  virtual void PaintTextControl(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect, nsString& aText,
                                 nsIStyleContext* aStyleContext,

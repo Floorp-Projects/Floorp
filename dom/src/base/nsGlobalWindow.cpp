@@ -2938,11 +2938,11 @@ GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **aInstancePtrRe
 }
 
 nsresult 
-GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext, 
+GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext, 
                                  nsEvent* aEvent, 
                                  nsIDOMEvent** aDOMEvent,
                                  PRUint32 aFlags,
-                                 nsEventStatus& aEventStatus)
+                                 nsEventStatus* aEventStatus)
 {
   nsresult mRet = NS_OK;
   nsIDOMEvent* mDOMEvent = nsnull;
@@ -2955,7 +2955,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   //Capturing stage
   if (NS_EVENT_FLAG_BUBBLE != aFlags && mChromeEventHandler) {
     // Check chrome document capture here.
-    mChromeEventHandler->HandleChromeEvent(&aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, &aEventStatus);
+    mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
   }
 
   //Local handling stage
@@ -2971,7 +2971,7 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     // For now filter out load and unload, since they cause problems.
     if (aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_PAGE_UNLOAD && aEvent->message != NS_FOCUS_CONTENT
                 && aEvent->message != NS_BLUR_CONTENT) {
-      mChromeEventHandler->HandleChromeEvent(&aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, &aEventStatus);
+      mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
     }
   }
 
