@@ -38,7 +38,8 @@ EXPORTS	=			  \
 	nsISymantecDebugger.h  \
 	nsISecureEnv.h \
 	ProxyJNI.h \
-	nsIThreadManager.h
+	nsIThreadManager.h \
+	nsILiveConnectManager.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
