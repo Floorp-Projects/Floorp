@@ -2660,11 +2660,32 @@ MOZ_ARG_ENABLE_BOOL(jprof,
   MOZ_JPROF=1
   AC_DEFINE(MOZ_JPROF))
 
-dnl Detect webshell leaks
-MOZ_ARG_ENABLE_BOOL(detect-webshell-leaks,
-[  --enable-detect-webshell-leaks   Enable detection of webshell leaks],
+dnl Detect webshell leaks, on debug builds
+if test "$MOZ_DEBUG"
+then
   DETECT_WEBSHELL_LEAKS=1
-  AC_DEFINE(DETECT_WEBSHELL_LEAKS))
+fi
+
+AC_ARG_ENABLE(detect-webshell-leaks,
+[  --enable-detect-webshell-leaks
+                          Enable detection of webshell leaks 
+                          (default=yes, unless --disable-debug is used)],
+    [ if test "$enableval" = "yes"; then
+        DETECT_WEBSHELL_LEAKS=1
+      else
+        if test "$enableval" = "no"; then
+          echo "*** Disabling detect webshell leaks code."
+          DETECT_WEBSHELL_LEAKS=""
+        fi
+      fi
+     ]
+)
+
+if test "$DETECT_WEBSHELL_LEAKS"
+then
+  echo "*** Enabling detect webshell leaks code."
+  AC_DEFINE(DETECT_WEBSHELL_LEAKS)
+fi
 
 MOZ_ARG_DISABLE_BOOL(double-buffer,
 [  --disable-double-buffer Disable double buffering],
