@@ -732,7 +732,7 @@ Contributor(s): ______________________________________. -->
                      oncommand="BrowserPrint();"
                      tooltiptext="&printButton.tooltip;"/>
       <spacer flex="1"/>
-      <hbox id="throbber-box" align="center">
+      <hbox align="center">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
                 tooltiptext="&throbber.tooltip;"/>
       </hbox>
@@ -778,7 +778,7 @@ Contributor(s): ______________________________________. -->
                    tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
 
-          <menupopup id="ubhist-popup" class="autocomplete-history-popup"
+          <menupopup class="autocomplete-history-popup"
                      popupalign="topleft" popupanchor="bottomleft"
                      onpopupshowing="createUBHistoryMenu(event.target);" 
                      oncommand="executeUrlBarHistoryCommand(event.target);"/>
@@ -931,14 +931,10 @@ Contributor(s): ______________________________________. -->
         taken care of by the builtin behavior inside the tabbrowser -->
   <vbox id="appcontent" flex="1"
        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-
-    <!-- this box is temporary, pending XBLified <browser> -->
-    <hbox id="browser" flex="1">
-      <tabbrowser id="content"
-               flex="1" contenttooltip="aHTMLTooltip"
-               contentcontextmenu="contentAreaContextMenu"
-               onclick="return contentAreaClick(event);"/>
-    </hbox>
+    <tabbrowser id="content"
+                flex="1" contenttooltip="aHTMLTooltip"
+                contentcontextmenu="contentAreaContextMenu"
+                onclick="return contentAreaClick(event);"/>
   </vbox>  
 
   <statusbar id="status-bar" class="chromeclass-status"
