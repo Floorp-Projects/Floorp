@@ -97,6 +97,8 @@ public:
   NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
+  NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
+  NS_IMETHOD GetObserver(nsIStreamObserver*& aResult);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
@@ -107,12 +109,11 @@ public:
   NS_IMETHOD SetName(const nsString& aName);
   NS_IMETHOD FindChildWithName(const nsString& aName,
                                nsIWebShell*& aResult);
-  NS_IMETHOD Back(nsIStreamObserver* aObserver);
-  NS_IMETHOD Forward(nsIStreamObserver* aObserver);
+  NS_IMETHOD Back(void);
+  NS_IMETHOD Forward(void);
   NS_IMETHOD LoadURL(const nsString& aURLSpec,
-                     nsIStreamObserver* aObserver,
                      nsIPostData* aPostData=nsnull);
-  NS_IMETHOD GoTo(PRInt32 aHistoryIndex, nsIStreamObserver* aObserver);
+  NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
   NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD GetTitle(nsString& aResult);
@@ -157,6 +158,7 @@ protected:
   nsIWidget* mWindow;
   nsISupports* mInnerWindow;
   nsIDocumentLoader* mDocLoader;
+  nsIStreamObserver* mObserver;
 
   nsIWebShell* mParent;
   nsVoidArray mChildren;
@@ -211,6 +213,7 @@ nsWebShell::~nsWebShell()
 
   NS_IF_RELEASE(mContentViewer);
   NS_IF_RELEASE(mContainer);
+  NS_IF_RELEASE(mObserver);
 
   // Release references on our children
   ReleaseChildren();
@@ -480,6 +483,25 @@ nsWebShell::HandleEvent(nsGUIEvent *aEvent)
   return nsEventStatus_eIgnore;
 }
 
+NS_IMETHODIMP
+nsWebShell::SetObserver(nsIStreamObserver* anObserver)
+{
+  NS_IF_RELEASE(mObserver);
+  mObserver = anObserver;
+  NS_IF_ADDREF(mObserver);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsWebShell::GetObserver(nsIStreamObserver*& aResult)
+{
+  aResult = mObserver;
+  NS_IF_ADDREF(mObserver);
+  return NS_OK;
+}
+
+
 nsresult
 nsWebShell::GetRootWebShell(nsIWebShell*& aResult)
 {
@@ -597,20 +619,19 @@ nsWebShell::FindChildWithName(const nsString& aName,
 // History methods
 
 NS_IMETHODIMP
-nsWebShell::Back(nsIStreamObserver* aObserver)
+nsWebShell::Back(void)
 {
-  return GoTo(mHistoryIndex - 1, aObserver);
+  return GoTo(mHistoryIndex - 1);
 }
 
 NS_IMETHODIMP
-nsWebShell::Forward(nsIStreamObserver* aObserver)
+nsWebShell::Forward(void)
 {
-  return GoTo(mHistoryIndex + 1, aObserver);
+  return GoTo(mHistoryIndex + 1);
 }
 
 NS_IMETHODIMP
 nsWebShell::LoadURL(const nsString& aURLSpec,
-                    nsIStreamObserver* aObserver,
                     nsIPostData* aPostData)
 {
   nsresult rv;
@@ -646,17 +667,21 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
       return rv;
     }
   }
+
+  // Stop any documents that are currently being loaded...
+  mDocLoader->Stop();
+
   rv = mDocLoader->LoadURL(urlSpec,       // URL string
                            nsnull,         // Command
                            this,           // Container
                            aPostData,      // Post Data
                            nsnull,         // Extra Info...
-                           aObserver);     // Observer
+                           mObserver);     // Observer
   return rv;
 }
 
 NS_IMETHODIMP
-nsWebShell::GoTo(PRInt32 aHistoryIndex, nsIStreamObserver* aObserver)
+nsWebShell::GoTo(PRInt32 aHistoryIndex)
 {
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
   if ((aHistoryIndex >= 0) &&
@@ -683,12 +708,16 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex, nsIStreamObserver* aObserver)
         return rv;
       }
     }
+
+    // Stop any documents that are currently being loaded...
+    mDocLoader->Stop();
+
     rv = mDocLoader->LoadURL(urlSpec,        // URL string
                              nsnull,         // Command
                              this,           // Container
                              nsnull,         // Post Data
                              nsnull,         // Extra Info...
-                             aObserver);     // Observer
+                             mObserver);     // Observer
   }
   return rv;
 }
@@ -904,7 +933,7 @@ nsWebShell::HandleLinkClickEvent(const nsString& aURLSpec,
 {
   nsIWebShell* shell = GetTarget(aTargetSpec);
   if (nsnull != shell) {
-    shell->LoadURL(aURLSpec, nsnull, aPostData);
+    shell->LoadURL(aURLSpec, aPostData);
   }
 }
 
