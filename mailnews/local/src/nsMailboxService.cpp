@@ -153,9 +153,9 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
 		nsCOMPtr<nsIWebShell> webshell = do_QueryInterface(aDisplayConsumer, &rv);
     // if we were given a webshell, run the url in the webshell..otherwise just run it normally.
     if (NS_SUCCEEDED(rv) && webshell)
-		  rv = webshell->LoadURI(url, "view", nsnull, PR_TRUE);
+	  rv = webshell->LoadURI(url, "view", nsnull, PR_TRUE);
     else
-      RunMailboxUrl(url, aDisplayConsumer); 
+      rv = RunMailboxUrl(url, aDisplayConsumer); 
 	}
 
 	if (aURL)
