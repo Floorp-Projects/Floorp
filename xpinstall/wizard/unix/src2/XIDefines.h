@@ -51,12 +51,14 @@
 #define FATAL_ERROR "Fatal error [%d]: %s\n"
 #define WARNING "Warning [%d]: %s\n"
 #define DESCRIPTION "Description"
-#define DOWNLOADING "Downloading %s..."
+#define DOWNLOADING "Downloading %s [%d/%d]"
+#define DLRATE " at %d K/sec..."
 #define PREPARING "Preparing %s..."
 #define EXTRACTING "Extracting %s..."
 #define INSTALLING_XPI "Installing %s..."
 #define PROCESSING_FILE "Processing file %d of %d..."
 #define EXTRACTING_FILES "Extracting files..."
+#define COMPLETED "Installation has completed."
 
 
 /*--------------------------------------------------------------------*

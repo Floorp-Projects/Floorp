@@ -24,7 +24,7 @@
 
 #include "nsXIEngine.h"
 
-#define CORE_LIB_COUNT 10
+#define CORE_LIB_COUNT 11
 
 nsXIEngine::nsXIEngine() :
     mTmp(NULL),
@@ -54,8 +54,10 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 
     int err = OK;
     nsComponent *currComp = aComps->GetHead();
+    nsFTPConn *conn = NULL;
     char *currURL = NULL;
     char *currHost = NULL;
+    char *lastHost = NULL;
     char *currDir = NULL;
     int i;
     
@@ -83,11 +85,37 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                 err = ParseURL(currURL, &currHost, &currDir);
                 if (err == OK)
                 {
-                    // update UI
-                    nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
-                        currCompNum, mTotalComps, nsInstallDlg::ACT_DOWNLOAD);
+                    nsInstallDlg::SetDownloadComp(currComp->GetDescShort(),
+                        currCompNum, mTotalComps);
             
-                    err = FTPAnonGet(currHost, currDir, currComp->GetArchive());
+                    if ( (lastHost && currHost && 
+                          (strcmp(lastHost, currHost) != 0)) || !conn)
+                    {
+                        if (lastHost && conn) 
+                        {
+                            conn->Close();
+                            XI_IF_DELETE(conn);
+                        }
+                        conn = new nsFTPConn(currHost);
+                        err = conn->Open();
+                        if (err != nsFTPConn::OK)
+                        {
+                            /* open failed: failover to next URL */
+                            XI_IF_DELETE(conn);
+                            XI_IF_FREE(currHost);
+                            XI_IF_FREE(currDir);
+                            lastHost = NULL;
+                            continue;
+                        }
+                    }
+
+                    err = FTPAnonGet(conn, currDir, currComp->GetArchive());
+                    nsInstallDlg::ClearRateLabel(); // clean after ourselves
+
+                    XI_IF_FREE(lastHost);
+                    XI_IF_FREE(currDir);
+                    lastHost = currHost; /* helps determine open conn reuse */
+
                     if (err == OK) 
                     {
                         currCompNum++;
@@ -100,6 +128,10 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
         currComp = currComp->GetNext();
     }
     
+    XI_IF_FREE(currHost);
+    if (conn) 
+        conn->Close();
+    XI_IF_DELETE(conn);
     return OK;
 }
 
@@ -247,33 +279,25 @@ nsXIEngine::ParseURL(char *aURL, char **aHost, char **aDir)
 }
 
 int
-nsXIEngine::FTPAnonGet(char *aHost, char *aDir, char *aArchive)
+nsXIEngine::FTPAnonGet(nsFTPConn *aConn, char *aDir, char *aArchive)
 {
     int err = OK;
-    char qualifiedPath[MAXPATHLEN];
-    char basename[256];
-    char ftpcmds[1024];
+    char srvrPath[MAXPATHLEN];
+    char loclPath[MAXPATHLEN];
     struct stat dummy;
 
-    if (!aHost || !aDir || !aArchive)
+    if (!aConn || !aDir || !aArchive)
         return E_PARAM;
 
-    sprintf(qualifiedPath, "%s%s", aDir, aArchive);
-    sprintf(basename, "%s/%s", mTmp, aArchive);
-    sprintf(ftpcmds, "\
-\
-ftp -n %s > /dev/null 2>&1 <<EndFTP\n\
-user anonymous dev@null.edu\n\
-binary\n\
-passive\n\
-get %s %s\n\
-EndFTP\n\
-\
-", aHost, qualifiedPath, basename);
+    sprintf(srvrPath, "%s%s", aDir, aArchive);
+    sprintf(loclPath, "%s/%s", mTmp, aArchive);
 
-    system(ftpcmds);
-
-    if (-1 == stat(basename, &dummy))
+    err = aConn->Get(srvrPath, loclPath, nsFTPConn::BINARY, TRUE, 
+                     nsInstallDlg::DownloadCB);
+    if (err != nsFTPConn::OK)
+        return E_NO_DOWNLOAD;
+    
+    if (-1 == stat(loclPath, &dummy))
         err = E_NO_DOWNLOAD;
 
     return err;

@@ -31,6 +31,7 @@
 #include "nsComponentList.h"
 #include "nsInstallDlg.h"
 #include "nsZipExtractor.h"
+#include "nsFTPConn.h"
 
 #include "xpistub.h"
 
@@ -81,7 +82,7 @@ public:
 private:
     int     MakeUniqueTmpDir();
     int     ParseURL(char *aURL, char **aHost, char **aDir);
-    int     FTPAnonGet(char *aHost, char *aDir, char *aAcrhive);
+    int     FTPAnonGet(nsFTPConn *aConn, char *aDir, char *aAcrhive);
     int     LoadXPIStub(xpistub_t *aStub, char *aDestionation);
     int     InstallXPI(nsComponent *aComp, xpistub_t *aStub);
     int     UnloadXPIStub(xpistub_t *aStub);

@@ -31,7 +31,8 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= mozilla-installer-bin
 
 CPPSRCS		= \
-		XIErrors.cpp \
+        XIErrors.cpp \
+        nsFTPConn.cpp \
         nsXInstallerDlg.cpp \
         nsComponent.cpp \
         nsSetupType.cpp \
