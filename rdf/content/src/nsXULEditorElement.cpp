@@ -34,8 +34,8 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 
-NS_IMPL_ADDREF_INHERITED(nsXULEditorElement, nsXULElement);
-NS_IMPL_RELEASE_INHERITED(nsXULEditorElement, nsXULElement);
+NS_IMPL_ADDREF_INHERITED(nsXULEditorElement, nsXULAggregateElement);
+NS_IMPL_RELEASE_INHERITED(nsXULEditorElement, nsXULAggregateElement);
 
 nsresult
 nsXULEditorElement::QueryInterface(REFNSIID aIID, void** aResult)
@@ -48,7 +48,7 @@ nsXULEditorElement::QueryInterface(REFNSIID aIID, void** aResult)
         *aResult = NS_STATIC_CAST(nsIDOMXULEditorElement*, this);
     }
     else {
-        return nsXULElement::QueryInterface(aIID, aResult);
+        return nsXULAggregateElement::QueryInterface(aIID, aResult);
     }
 
     NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*, *aResult));
@@ -58,7 +58,7 @@ nsXULEditorElement::QueryInterface(REFNSIID aIID, void** aResult)
 MOZ_DECL_CTOR_COUNTER(RDF_nsXULEditorElement);
 
 nsXULEditorElement::nsXULEditorElement(nsIDOMXULElement* aOuter)
-:nsXULElement(aOuter)
+  : nsXULAggregateElement(aOuter)
 {
 }
 

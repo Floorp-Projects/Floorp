@@ -31,7 +31,7 @@
 #include "nsIXULTreeContent.h"
 #include "nsRDFDOMNodeList.h"
 
-class nsXULTreeElement : public nsXULElement,
+class nsXULTreeElement : public nsXULAggregateElement,
                          public nsIDOMXULTreeElement,
                          public nsIXULTreeContent
 {

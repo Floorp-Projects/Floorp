@@ -232,7 +232,7 @@ struct XULBroadcastListener
 
 ////////////////////////////////////////////////////////////////////////
 
-class RDFElementImpl : public nsIDOMXULElement,
+class nsXULElement : public nsIDOMXULElement,
                        public nsIDOMEventReceiver,
                        public nsIScriptObjectOwner,
                        public nsIJSScriptObject,
@@ -243,9 +243,9 @@ class RDFElementImpl : public nsIDOMXULElement,
                        public nsIStyleRule
 {
 public:
-    RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag);
+    nsXULElement(PRInt32 aNameSpaceID, nsIAtom* aTag);
 
-    virtual ~RDFElementImpl(void);
+    virtual ~nsXULElement(void);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -461,7 +461,7 @@ private:
 
     // An unreferenced bare pointer to an aggregate that can implement
     // element-specific APIs.
-    nsXULElement*          mInnerXULElement;
+    nsXULAggregateElement* mInnerXULElement;
 
     // The state of our sloth; see nsIXULContent.
     PRInt32                mLazyState;
@@ -491,30 +491,30 @@ private:
 };
 
 
-nsrefcnt             RDFElementImpl::gRefCnt;
-nsIRDFService*       RDFElementImpl::gRDFService;
-nsINameSpaceManager* RDFElementImpl::gNameSpaceManager;
-nsIXULContentUtils*  RDFElementImpl::gXULUtils;
-PRInt32              RDFElementImpl::kNameSpaceID_RDF;
-PRInt32              RDFElementImpl::kNameSpaceID_XUL;
+nsrefcnt             nsXULElement::gRefCnt;
+nsIRDFService*       nsXULElement::gRDFService;
+nsINameSpaceManager* nsXULElement::gNameSpaceManager;
+nsIXULContentUtils*  nsXULElement::gXULUtils;
+PRInt32              nsXULElement::kNameSpaceID_RDF;
+PRInt32              nsXULElement::kNameSpaceID_XUL;
 
-nsIAtom*             RDFElementImpl::kClassAtom;
-nsIAtom*             RDFElementImpl::kContextAtom;
-nsIAtom*             RDFElementImpl::kIdAtom;
-nsIAtom*             RDFElementImpl::kObservesAtom;
-nsIAtom*             RDFElementImpl::kPopupAtom;
-nsIAtom*             RDFElementImpl::kRefAtom;
-nsIAtom*             RDFElementImpl::kSelectedAtom;
-nsIAtom*             RDFElementImpl::kStyleAtom;
-nsIAtom*             RDFElementImpl::kTitledButtonAtom;
-nsIAtom*             RDFElementImpl::kTooltipAtom;
-nsIAtom*             RDFElementImpl::kTreeAtom;
-nsIAtom*             RDFElementImpl::kTreeCellAtom;
-nsIAtom*             RDFElementImpl::kTreeChildrenAtom;
-nsIAtom*             RDFElementImpl::kTreeColAtom;
-nsIAtom*             RDFElementImpl::kTreeItemAtom;
-nsIAtom*             RDFElementImpl::kTreeRowAtom;
-nsIAtom*             RDFElementImpl::kEditorAtom;
+nsIAtom*             nsXULElement::kClassAtom;
+nsIAtom*             nsXULElement::kContextAtom;
+nsIAtom*             nsXULElement::kIdAtom;
+nsIAtom*             nsXULElement::kObservesAtom;
+nsIAtom*             nsXULElement::kPopupAtom;
+nsIAtom*             nsXULElement::kRefAtom;
+nsIAtom*             nsXULElement::kSelectedAtom;
+nsIAtom*             nsXULElement::kStyleAtom;
+nsIAtom*             nsXULElement::kTitledButtonAtom;
+nsIAtom*             nsXULElement::kTooltipAtom;
+nsIAtom*             nsXULElement::kTreeAtom;
+nsIAtom*             nsXULElement::kTreeCellAtom;
+nsIAtom*             nsXULElement::kTreeChildrenAtom;
+nsIAtom*             nsXULElement::kTreeColAtom;
+nsIAtom*             nsXULElement::kTreeItemAtom;
+nsIAtom*             nsXULElement::kTreeRowAtom;
+nsIAtom*             nsXULElement::kEditorAtom;
 
 // This is a simple datastructure that maps an event handler attribute
 // name to an appropriate IID. Atoms are computed to improve
@@ -575,7 +575,7 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
 ////////////////////////////////////////////////////////////////////////
 
 nsForwardReference::Result
-RDFElementImpl::ObserverForwardReference::Resolve()
+nsXULElement::ObserverForwardReference::Resolve()
 {
     nsresult rv;
 
@@ -610,10 +610,10 @@ RDFElementImpl::ObserverForwardReference::Resolve()
 
 
 ////////////////////////////////////////////////////////////////////////
-// RDFElementImpl
+// nsXULElement
 
 
-RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
+nsXULElement::nsXULElement(PRInt32 aNameSpaceID, nsIAtom* aTag)
     : mDocument(nsnull),
       mScriptObject(nsnull),
       mChildren(nsnull),
@@ -682,11 +682,11 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
     }
 }
 
-RDFElementImpl::~RDFElementImpl()
+nsXULElement::~nsXULElement()
 {
 #ifdef DEBUG_REFS
   --gInstanceCount;
-  fprintf(stdout, "%d - RDF: RDFElementImpl\n", gInstanceCount);
+  fprintf(stdout, "%d - RDF: nsXULElement\n", gInstanceCount);
 #endif
 
     NS_IF_RELEASE(mAttributes);
@@ -773,8 +773,8 @@ NS_NewRDFElement(PRInt32 aNameSpaceId,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    RDFElementImpl* element =
-        new RDFElementImpl(aNameSpaceId, aTag);
+    nsXULElement* element =
+        new nsXULElement(aNameSpaceId, aTag);
 
     if (! element)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -787,11 +787,11 @@ NS_NewRDFElement(PRInt32 aNameSpaceId,
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ADDREF(RDFElementImpl);
-NS_IMPL_RELEASE(RDFElementImpl);
+NS_IMPL_ADDREF(nsXULElement);
+NS_IMPL_RELEASE(nsXULElement);
 
 NS_IMETHODIMP 
-RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
+nsXULElement::QueryInterface(REFNSIID iid, void** result)
 {
     if (! result)
         return NS_ERROR_NULL_POINTER;
@@ -869,7 +869,7 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
 // nsIDOMNode interface
 
 NS_IMETHODIMP
-RDFElementImpl::GetNodeName(nsString& aNodeName)
+nsXULElement::GetNodeName(nsString& aNodeName)
 {
     mTag->ToString(aNodeName);
     return NS_OK;
@@ -877,21 +877,21 @@ RDFElementImpl::GetNodeName(nsString& aNodeName)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetNodeValue(nsString& aNodeValue)
+nsXULElement::GetNodeValue(nsString& aNodeValue)
 {
     aNodeValue.Truncate();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::SetNodeValue(const nsString& aNodeValue)
+nsXULElement::SetNodeValue(const nsString& aNodeValue)
 {
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetNodeType(PRUint16* aNodeType)
+nsXULElement::GetNodeType(PRUint16* aNodeType)
 {
   *aNodeType = (PRUint16)nsIDOMNode::ELEMENT_NODE;
   return NS_OK;
@@ -899,7 +899,7 @@ RDFElementImpl::GetNodeType(PRUint16* aNodeType)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetParentNode(nsIDOMNode** aParentNode)
+nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
 {
     if (mParent) {
         return mParent->QueryInterface(kIDOMNodeIID, (void**) aParentNode);
@@ -925,7 +925,7 @@ RDFElementImpl::GetParentNode(nsIDOMNode** aParentNode)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
+nsXULElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
     nsresult rv;
 
@@ -966,7 +966,7 @@ RDFElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetFirstChild(nsIDOMNode** aFirstChild)
+nsXULElement::GetFirstChild(nsIDOMNode** aFirstChild)
 {
     nsresult rv;
     nsCOMPtr<nsIContent> child;
@@ -984,7 +984,7 @@ RDFElementImpl::GetFirstChild(nsIDOMNode** aFirstChild)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetLastChild(nsIDOMNode** aLastChild)
+nsXULElement::GetLastChild(nsIDOMNode** aLastChild)
 {
     nsresult rv;
     PRInt32 count;
@@ -1010,7 +1010,7 @@ RDFElementImpl::GetLastChild(nsIDOMNode** aLastChild)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
+nsXULElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
     if (nsnull != mParent) {
         PRInt32 pos;
@@ -1034,7 +1034,7 @@ RDFElementImpl::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
+nsXULElement::GetNextSibling(nsIDOMNode** aNextSibling)
 {
     if (nsnull != mParent) {
         PRInt32 pos;
@@ -1058,7 +1058,7 @@ RDFElementImpl::GetNextSibling(nsIDOMNode** aNextSibling)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+nsXULElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
     nsresult rv;
     if (! mAttributes) {
@@ -1074,7 +1074,7 @@ RDFElementImpl::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
+nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
     if (mDocument) {
         return mDocument->QueryInterface(nsIDOMDocument::GetIID(), (void**) aOwnerDocument);
@@ -1087,7 +1087,7 @@ RDFElementImpl::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 
 
 NS_IMETHODIMP
-RDFElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
+nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
     NS_PRECONDITION(aNewChild != nsnull, "null ptr");
     if (! aNewChild)
@@ -1158,7 +1158,7 @@ RDFElementImpl::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDO
 
 
 NS_IMETHODIMP
-RDFElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+nsXULElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
     NS_PRECONDITION(aNewChild != nsnull, "null ptr");
     if (! aNewChild)
@@ -1196,7 +1196,7 @@ RDFElementImpl::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDO
 
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+nsXULElement::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
     NS_PRECONDITION(aOldChild != nsnull, "null ptr");
     if (! aOldChild)
@@ -1225,14 +1225,14 @@ RDFElementImpl::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 
 
 NS_IMETHODIMP
-RDFElementImpl::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+nsXULElement::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
     return InsertBefore(aNewChild, nsnull, aReturn);
 }
 
 
 NS_IMETHODIMP
-RDFElementImpl::HasChildNodes(PRBool* aReturn)
+nsXULElement::HasChildNodes(PRBool* aReturn)
 {
     nsresult rv;
     PRInt32 count;
@@ -1246,7 +1246,7 @@ RDFElementImpl::HasChildNodes(PRBool* aReturn)
 
 
 NS_IMETHODIMP
-RDFElementImpl::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1257,7 +1257,7 @@ RDFElementImpl::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 // nsIDOMElement interface
 
 NS_IMETHODIMP
-RDFElementImpl::GetTagName(nsString& aTagName)
+nsXULElement::GetTagName(nsString& aTagName)
 {
     mTag->ToString(aTagName);
     return NS_OK;
@@ -1265,7 +1265,7 @@ RDFElementImpl::GetTagName(nsString& aTagName)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
+nsXULElement::GetAttribute(const nsString& aName, nsString& aReturn)
 {
     nsresult rv;
     PRInt32 nameSpaceID;
@@ -1286,7 +1286,7 @@ RDFElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 
 
 NS_IMETHODIMP
-RDFElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
+nsXULElement::SetAttribute(const nsString& aName, const nsString& aValue)
 {
     nsresult rv;
 
@@ -1306,7 +1306,7 @@ RDFElementImpl::SetAttribute(const nsString& aName, const nsString& aValue)
 
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveAttribute(const nsString& aName)
+nsXULElement::RemoveAttribute(const nsString& aName)
 {
     nsresult rv;
 
@@ -1326,7 +1326,7 @@ RDFElementImpl::RemoveAttribute(const nsString& aName)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn)
+nsXULElement::GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn)
 {
     NS_PRECONDITION(aReturn != nsnull, "null ptr");
     if (! aReturn)
@@ -1350,7 +1350,7 @@ RDFElementImpl::GetAttributeNode(const nsString& aName, nsIDOMAttr** aReturn)
 
 
 NS_IMETHODIMP
-RDFElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)
+nsXULElement::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)
 {
     NS_PRECONDITION(aNewAttr != nsnull, "null ptr");
     if (! aNewAttr)
@@ -1365,7 +1365,7 @@ RDFElementImpl::SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)
 
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
+nsXULElement::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 {
     NS_PRECONDITION(aOldAttr != nsnull, "null ptr");
     if (! aOldAttr)
@@ -1380,7 +1380,7 @@ RDFElementImpl::RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn)
+nsXULElement::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn)
 {
     nsresult rv;
     nsRDFDOMNodeList* elements;
@@ -1400,7 +1400,7 @@ RDFElementImpl::GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aRe
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetElementsByAttribute(const nsString& aAttribute,
+nsXULElement::GetElementsByAttribute(const nsString& aAttribute,
                                        const nsString& aValue,
                                        nsIDOMNodeList** aReturn)
 {
@@ -1423,7 +1423,7 @@ RDFElementImpl::GetElementsByAttribute(const nsString& aAttribute,
 
 
 NS_IMETHODIMP
-RDFElementImpl::Normalize()
+nsXULElement::Normalize()
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1434,14 +1434,14 @@ RDFElementImpl::Normalize()
 // nsIXMLContent interface
 
 NS_IMETHODIMP
-RDFElementImpl::SetContainingNameSpace(nsINameSpace* aNameSpace)
+nsXULElement::SetContainingNameSpace(nsINameSpace* aNameSpace)
 {
     mNameSpace = dont_QueryInterface(aNameSpace);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
+nsXULElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
 {
     nsresult rv;
 
@@ -1485,14 +1485,14 @@ RDFElementImpl::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
+nsXULElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
 {
     mNameSpacePrefix = aNameSpacePrefix;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
+nsXULElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
 {
     aNameSpacePrefix = mNameSpacePrefix;
     NS_IF_ADDREF(aNameSpacePrefix);
@@ -1500,7 +1500,7 @@ RDFElementImpl::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::SetNameSpaceID(PRInt32 aNameSpaceID)
+nsXULElement::SetNameSpaceID(PRInt32 aNameSpaceID)
 {
     mNameSpaceID = aNameSpaceID;
     return NS_OK;
@@ -1511,7 +1511,7 @@ RDFElementImpl::SetNameSpaceID(PRInt32 aNameSpaceID)
 // nsIXULContent interface
 
 NS_IMETHODIMP
-RDFElementImpl::PeekChildCount(PRInt32& aCount) const
+nsXULElement::PeekChildCount(PRInt32& aCount) const
 {
     if (mChildren) {
         PRUint32 cnt;
@@ -1531,21 +1531,21 @@ RDFElementImpl::PeekChildCount(PRInt32& aCount) const
 
 
 NS_IMETHODIMP
-RDFElementImpl::SetLazyState(PRInt32 aFlags)
+nsXULElement::SetLazyState(PRInt32 aFlags)
 {
     mLazyState |= aFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::ClearLazyState(PRInt32 aFlags)
+nsXULElement::ClearLazyState(PRInt32 aFlags)
 {
     mLazyState &= ~aFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetLazyState(PRInt32 aFlag, PRBool& aResult)
+nsXULElement::GetLazyState(PRInt32 aFlag, PRBool& aResult)
 {
     aResult = (mLazyState & aFlag) ? PR_TRUE : PR_FALSE;
     return NS_OK;
@@ -1553,7 +1553,7 @@ RDFElementImpl::GetLazyState(PRInt32 aFlag, PRBool& aResult)
 
 
 NS_IMETHODIMP
-RDFElementImpl::ForceElementToOwnResource(PRBool aForce)
+nsXULElement::ForceElementToOwnResource(PRBool aForce)
 {
     nsresult rv;
 
@@ -1573,7 +1573,7 @@ RDFElementImpl::ForceElementToOwnResource(PRBool aForce)
 // nsIDOMEventReceiver interface
 
 NS_IMETHODIMP
-RDFElementImpl::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
+nsXULElement::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
     nsIEventListenerManager *manager;
 
@@ -1586,7 +1586,7 @@ RDFElementImpl::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsII
 }
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
+nsXULElement::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
     if (nsnull != mListenerManager) {
         mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
@@ -1596,7 +1596,7 @@ RDFElementImpl::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const n
 }
 
 NS_IMETHODIMP
-RDFElementImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+nsXULElement::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
                                  PRBool aUseCapture)
 {
   nsIEventListenerManager *manager;
@@ -1612,7 +1612,7 @@ RDFElementImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aLi
 }
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+nsXULElement::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
                                     PRBool aUseCapture)
 {
   if (nsnull != mListenerManager) {
@@ -1625,7 +1625,7 @@ RDFElementImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener* 
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetListenerManager(nsIEventListenerManager** aResult)
+nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
     if (nsnull != mListenerManager) {
         NS_ADDREF(mListenerManager);
@@ -1644,7 +1644,7 @@ RDFElementImpl::GetListenerManager(nsIEventListenerManager** aResult)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
+nsXULElement::GetNewListenerManager(nsIEventListenerManager **aResult)
 {
     return nsComponentManager::CreateInstance(kEventListenerManagerCID,
                                         nsnull,
@@ -1658,7 +1658,7 @@ RDFElementImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
 // nsIScriptObjectOwner interface
 
 NS_IMETHODIMP 
-RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
+nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 {
     nsresult rv = NS_OK;
 
@@ -1703,7 +1703,7 @@ RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
 }
 
 NS_IMETHODIMP 
-RDFElementImpl::SetScriptObject(void *aScriptObject)
+nsXULElement::SetScriptObject(void *aScriptObject)
 {
     mScriptObject = aScriptObject;
     return NS_OK;
@@ -1714,34 +1714,34 @@ RDFElementImpl::SetScriptObject(void *aScriptObject)
 // nsIJSScriptObject interface
 
 PRBool
-RDFElementImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
-RDFElementImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
-RDFElementImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
     return PR_TRUE;
 }
 
 PRBool
-RDFElementImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+nsXULElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
 }
 
 PRBool
-RDFElementImpl::EnumerateProperty(JSContext *aContext)
+nsXULElement::EnumerateProperty(JSContext *aContext)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
@@ -1749,14 +1749,14 @@ RDFElementImpl::EnumerateProperty(JSContext *aContext)
 
 
 PRBool
-RDFElementImpl::Resolve(JSContext *aContext, jsval aID)
+nsXULElement::Resolve(JSContext *aContext, jsval aID)
 {
     return PR_TRUE;
 }
 
 
 PRBool
-RDFElementImpl::Convert(JSContext *aContext, jsval aID)
+nsXULElement::Convert(JSContext *aContext, jsval aID)
 {
     NS_NOTYETIMPLEMENTED("write me");
     return PR_FALSE;
@@ -1764,7 +1764,7 @@ RDFElementImpl::Convert(JSContext *aContext, jsval aID)
 
 
 void
-RDFElementImpl::Finalize(JSContext *aContext)
+nsXULElement::Finalize(JSContext *aContext)
 {
     NS_NOTYETIMPLEMENTED("write me");
 }
@@ -1783,7 +1783,7 @@ RDFElementImpl::Finalize(JSContext *aContext)
 //
 
 NS_IMETHODIMP
-RDFElementImpl::GetDocument(nsIDocument*& aResult) const
+nsXULElement::GetDocument(nsIDocument*& aResult) const
 {
     aResult = mDocument;
     NS_IF_ADDREF(aResult);
@@ -1791,7 +1791,7 @@ RDFElementImpl::GetDocument(nsIDocument*& aResult) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
     if (aDocument == mDocument)
         return NS_OK;
@@ -1871,7 +1871,7 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetParent(nsIContent*& aResult) const
+nsXULElement::GetParent(nsIContent*& aResult) const
 {
     aResult = mParent;
     NS_IF_ADDREF(mParent);
@@ -1879,7 +1879,7 @@ RDFElementImpl::GetParent(nsIContent*& aResult) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::SetParent(nsIContent* aParent)
+nsXULElement::SetParent(nsIContent* aParent)
 {
     nsCOMPtr<nsIAtom> tagName;
     GetTag(*getter_AddRefs(tagName));
@@ -1940,7 +1940,7 @@ RDFElementImpl::SetParent(nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::CanContainChildren(PRBool& aResult) const
+nsXULElement::CanContainChildren(PRBool& aResult) const
 {
     // XXX Hmm -- not sure if this is unilaterally true...
     aResult = PR_TRUE;
@@ -1948,7 +1948,7 @@ RDFElementImpl::CanContainChildren(PRBool& aResult) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::ChildCount(PRInt32& aResult) const
+nsXULElement::ChildCount(PRInt32& aResult) const
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -1958,7 +1958,7 @@ RDFElementImpl::ChildCount(PRInt32& aResult) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
+nsXULElement::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -1981,7 +1981,7 @@ RDFElementImpl::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
+nsXULElement::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -1992,7 +1992,7 @@ RDFElementImpl::IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
+nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -2026,7 +2026,7 @@ RDFElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
+nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -2066,7 +2066,7 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
+nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -2096,7 +2096,7 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 {
     nsresult rv;
     if (NS_FAILED(rv = EnsureContentsGenerated()))
@@ -2195,21 +2195,21 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::IsSynthetic(PRBool& aResult)
+nsXULElement::IsSynthetic(PRBool& aResult)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
-RDFElementImpl::GetNameSpaceID(PRInt32& aNameSpaceID) const
+nsXULElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 {
     aNameSpaceID = mNameSpaceID;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetTag(nsIAtom*& aResult) const
+nsXULElement::GetTag(nsIAtom*& aResult) const
 {
     aResult = mTag;
     NS_ADDREF(aResult);
@@ -2217,7 +2217,7 @@ RDFElementImpl::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP 
-RDFElementImpl::ParseAttributeString(const nsString& aStr, 
+nsXULElement::ParseAttributeString(const nsString& aStr, 
                                      nsIAtom*& aName, 
                                      PRInt32& aNameSpaceID)
 {
@@ -2255,7 +2255,7 @@ static char kNameSpaceSeparator = ':';
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, 
+nsXULElement::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, 
                                          nsIAtom*& aPrefix)
 {
     nsresult rv;
@@ -2278,7 +2278,7 @@ RDFElementImpl::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
 // this class could probably just use nsGenericContainerElement
 // needed to maintain attribute namespace ID as well as ordering
 NS_IMETHODIMP 
-RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
+nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
                              nsIAtom* aName, 
                              const nsString& aValue,
                              PRBool aNotify)
@@ -2482,7 +2482,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 }
 
 nsresult
-RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
+nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
 {
     if (! mDocument)
         return NS_OK; // XXX
@@ -2540,7 +2540,7 @@ RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, R
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
+nsXULElement::GetAttribute(PRInt32 aNameSpaceID,
                              nsIAtom* aName,
                              nsString& aResult) const
 {
@@ -2575,7 +2575,7 @@ RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
 }
 
 NS_IMETHODIMP
-RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
+nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 {
     NS_ASSERTION(nsnull != aName, "must have attribute name");
     if (nsnull == aName) {
@@ -2707,7 +2707,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetAttributeNameAt(PRInt32 aIndex,
+nsXULElement::GetAttributeNameAt(PRInt32 aIndex,
                                    PRInt32& aNameSpaceID,
                                    nsIAtom*& aName) const
 {
@@ -2726,7 +2726,7 @@ RDFElementImpl::GetAttributeNameAt(PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetAttributeCount(PRInt32& aResult) const
+nsXULElement::GetAttributeCount(PRInt32& aResult) const
 {
     nsresult rv = NS_OK;
     if (nsnull != mAttributes) {
@@ -2747,7 +2747,7 @@ rdf_Indent(FILE* out, PRInt32 aIndent)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::List(FILE* out, PRInt32 aIndent) const
+nsXULElement::List(FILE* out, PRInt32 aIndent) const
 {
     NS_PRECONDITION(mDocument != nsnull, "bad content");
 
@@ -2817,28 +2817,28 @@ RDFElementImpl::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsXULElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsXULElement::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsXULElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+nsXULElement::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
     if (!aResult) {
         return NS_ERROR_NULL_POINTER;
@@ -2854,7 +2854,7 @@ RDFElementImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 
 
 NS_IMETHODIMP 
-RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
+nsXULElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                        nsEvent* aEvent,
                                        nsIDOMEvent** aDOMEvent,
                                        PRUint32 aFlags,
@@ -2959,7 +2959,7 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP 
-RDFElementImpl::RangeAdd(nsIDOMRange& aRange) 
+nsXULElement::RangeAdd(nsIDOMRange& aRange) 
 {  
     // rdf content does not yet support DOM ranges
     return NS_OK;
@@ -2967,7 +2967,7 @@ RDFElementImpl::RangeAdd(nsIDOMRange& aRange)
 
  
 NS_IMETHODIMP 
-RDFElementImpl::RangeRemove(nsIDOMRange& aRange) 
+nsXULElement::RangeRemove(nsIDOMRange& aRange) 
 {
     // rdf content does not yet support DOM ranges
     return NS_OK;
@@ -2975,7 +2975,7 @@ RDFElementImpl::RangeRemove(nsIDOMRange& aRange)
 
 
 NS_IMETHODIMP 
-RDFElementImpl::GetRangeList(nsVoidArray*& aResult) const
+nsXULElement::GetRangeList(nsVoidArray*& aResult) const
 {
     // rdf content does not yet support DOM ranges
     return NS_OK;
@@ -2986,13 +2986,13 @@ RDFElementImpl::GetRangeList(nsVoidArray*& aResult) const
 // nsIDOMXULElement interface
 
 NS_IMETHODIMP
-RDFElementImpl::DoCommand()
+nsXULElement::DoCommand()
 {
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
+nsXULElement::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
 { 
 	// Add ourselves to the array.
 	if (mBroadcastListeners == nsnull)
@@ -3048,7 +3048,7 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElem
 	
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
+nsXULElement::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
 { 
   if (mBroadcastListeners == nsnull)
     return NS_OK;
@@ -3083,7 +3083,7 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anE
 
 // XXX This _should_ be an implementation method, _not_ publicly exposed :-(
 NS_IMETHODIMP
-RDFElementImpl::GetResource(nsIRDFResource** aResource)
+nsXULElement::GetResource(nsIRDFResource** aResource)
 {
 	nsresult rv;
 
@@ -3109,7 +3109,7 @@ RDFElementImpl::GetResource(nsIRDFResource** aResource)
 
 
 NS_IMETHODIMP
-RDFElementImpl::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
+nsXULElement::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
 {
     NS_PRECONDITION(aDatabase != nsnull, "null ptr");
     if (! aDatabase)
@@ -3122,7 +3122,7 @@ RDFElementImpl::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
 
 
 NS_IMETHODIMP
-RDFElementImpl::SetDatabase(nsIRDFCompositeDataSource* aDatabase)
+nsXULElement::SetDatabase(nsIRDFCompositeDataSource* aDatabase)
 {
     // XXX maybe someday you'll be allowed to change it.
     NS_PRECONDITION(mDatabase == nsnull, "already initialized");
@@ -3141,7 +3141,7 @@ RDFElementImpl::SetDatabase(nsIRDFCompositeDataSource* aDatabase)
 // Implementation methods
 
 nsresult
-RDFElementImpl::EnsureContentsGenerated(void) const
+nsXULElement::EnsureContentsGenerated(void) const
 {
     if (mLazyState & nsIXULContent::eChildrenMustBeRebuilt) {
         nsresult rv;
@@ -3154,7 +3154,7 @@ RDFElementImpl::EnsureContentsGenerated(void) const
             return NS_ERROR_NOT_INITIALIZED;
 
         // XXX hack because we can't use "mutable"
-        RDFElementImpl* unconstThis = NS_CONST_CAST(RDFElementImpl*, this);
+        nsXULElement* unconstThis = NS_CONST_CAST(nsXULElement*, this);
 
         if (! unconstThis->mChildren) {
             if (NS_FAILED(rv = NS_NewISupportsArray(&unconstThis->mChildren)))
@@ -3178,7 +3178,7 @@ RDFElementImpl::EnsureContentsGenerated(void) const
 
     
 nsresult
-RDFElementImpl::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsString& attrName)
+nsXULElement::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsString& attrName)
 {
     // Now we execute the onchange handler in the context of the
     // observer. We need to find the observer in order to
@@ -3224,7 +3224,7 @@ RDFElementImpl::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsStri
 
 
 PRBool
-RDFElementImpl::ElementIsInDocument()
+nsXULElement::ElementIsInDocument()
 {
     // Check to see if the element is really _in_ the document; that
     // is, that it actually is in the tree rooted at the document's
@@ -3255,7 +3255,7 @@ RDFElementImpl::ElementIsInDocument()
 }
 
 nsresult
-RDFElementImpl::ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent)
+nsXULElement::ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent)
 { 
     // This code executes in every presentation context in which this
     // document is appearing.
@@ -3293,7 +3293,7 @@ RDFElementImpl::ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent)
 
 
 nsresult
-RDFElementImpl::GetElementsByTagName(nsIDOMNode* aNode,
+nsXULElement::GetElementsByTagName(nsIDOMNode* aNode,
                                      const nsString& aTagName,
                                      nsRDFDOMNodeList* aElements)
 {
@@ -3359,7 +3359,7 @@ RDFElementImpl::GetElementsByTagName(nsIDOMNode* aNode,
 }
 
 nsresult
-RDFElementImpl::GetElementsByAttribute(nsIDOMNode* aNode,
+nsXULElement::GetElementsByAttribute(nsIDOMNode* aNode,
                                        const nsString& aAttribute,
                                        const nsString& aValue,
                                        nsRDFDOMNodeList* aElements)
@@ -3419,7 +3419,7 @@ RDFElementImpl::GetElementsByAttribute(nsIDOMNode* aNode,
 
 // nsIStyledContent Implementation
 NS_IMETHODIMP
-RDFElementImpl::GetID(nsIAtom*& aResult) const
+nsXULElement::GetID(nsIAtom*& aResult) const
 {
   nsAutoString value;
   GetAttribute(kNameSpaceID_None, kIdAtom, value);
@@ -3429,7 +3429,7 @@ RDFElementImpl::GetID(nsIAtom*& aResult) const
 }
     
 NS_IMETHODIMP
-RDFElementImpl::GetClasses(nsVoidArray& aArray) const
+nsXULElement::GetClasses(nsVoidArray& aArray) const
 {
 	nsresult rv = NS_ERROR_NULL_POINTER;
   if (mAttributes != nsnull)
@@ -3438,7 +3438,7 @@ RDFElementImpl::GetClasses(nsVoidArray& aArray) const
 }
 
 NS_IMETHODIMP 
-RDFElementImpl::HasClass(nsIAtom* aClass) const
+nsXULElement::HasClass(nsIAtom* aClass) const
 {
 	nsresult rv = NS_ERROR_NULL_POINTER;
 	if (mAttributes != nsnull)
@@ -3447,7 +3447,7 @@ RDFElementImpl::HasClass(nsIAtom* aClass) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetContentStyleRules(nsISupportsArray* aRules)
+nsXULElement::GetContentStyleRules(nsISupportsArray* aRules)
 {
   // For treecols, we support proportional widths using the WIDTH attribute.
 	if (mTag == kTreeColAtom) {
@@ -3469,7 +3469,7 @@ RDFElementImpl::GetContentStyleRules(nsISupportsArray* aRules)
 }
     
 NS_IMETHODIMP
-RDFElementImpl::GetInlineStyleRules(nsISupportsArray* aRules)
+nsXULElement::GetInlineStyleRules(nsISupportsArray* aRules)
 {
   // Fetch the cached style rule from the attributes.
   nsresult result = NS_ERROR_NULL_POINTER;
@@ -3484,7 +3484,7 @@ RDFElementImpl::GetInlineStyleRules(nsISupportsArray* aRules)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetMappedAttributeImpact(const nsIAtom* aAttribute, 
+nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, 
                                          PRInt32& aHint) const
 {
   aHint = NS_STYLE_HINT_CONTENT;  // we never map attributes to style
@@ -3500,7 +3500,7 @@ RDFElementImpl::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
 // Controllers Methods
 NS_IMETHODIMP
-RDFElementImpl::GetControllers(nsIControllers** aResult)
+nsXULElement::GetControllers(nsIControllers** aResult)
 {
   if(!mControllers){
     nsresult rv = nsComponentManager::CreateInstance(kXULControllersCID,
@@ -3517,42 +3517,42 @@ RDFElementImpl::GetControllers(nsIControllers** aResult)
 
 // Methods for setting/getting attributes from nsIDOMXULElement
 nsresult
-RDFElementImpl::GetId(nsString& aId)
+nsXULElement::GetId(nsString& aId)
 {
   GetAttribute("id", aId);
   return NS_OK;
 }
 
 nsresult
-RDFElementImpl::SetId(const nsString& aId)
+nsXULElement::SetId(const nsString& aId)
 {
   SetAttribute("id", aId);
   return NS_OK;
 }
 
 nsresult
-RDFElementImpl::GetClassName(nsString& aClassName)
+nsXULElement::GetClassName(nsString& aClassName)
 {
   GetAttribute("class", aClassName);
   return NS_OK;
 }
 
 nsresult
-RDFElementImpl::SetClassName(const nsString& aClassName)
+nsXULElement::SetClassName(const nsString& aClassName)
 {
   SetAttribute("class", aClassName);
   return NS_OK;
 }
 
 nsresult    
-RDFElementImpl::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
+nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetParentTree(nsIDOMXULTreeElement** aTreeElement)
+nsXULElement::GetParentTree(nsIDOMXULTreeElement** aTreeElement)
 {
   nsCOMPtr<nsIContent> current;
   GetParent(*getter_AddRefs(current));
@@ -3574,7 +3574,7 @@ RDFElementImpl::GetParentTree(nsIDOMXULTreeElement** aTreeElement)
 }
 
 PRBool 
-RDFElementImpl::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
+nsXULElement::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
 {
   nsCOMPtr<nsIDOMNode> parent = dont_QueryInterface(aChildNode);
   while (parent && (parent.get() != aParentNode)) {
@@ -3590,7 +3590,7 @@ RDFElementImpl::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
 
 // nsIFocusableContent interface and helpers
 NS_IMETHODIMP
-RDFElementImpl::SetFocus(nsIPresContext* aPresContext)
+nsXULElement::SetFocus(nsIPresContext* aPresContext)
 {
   nsAutoString disabled;
   GetAttribute("disabled", disabled);
@@ -3608,13 +3608,13 @@ RDFElementImpl::SetFocus(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveFocus(nsIPresContext* aPresContext)
+nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 PRBool
-RDFElementImpl::IsFocusableContent()
+nsXULElement::IsFocusableContent()
 {
   return (mTag == kTitledButtonAtom) ||
          (mTag == kTreeAtom);
@@ -3622,7 +3622,7 @@ RDFElementImpl::IsFocusableContent()
 
 // nsIStyleRule interface
 NS_IMETHODIMP 
-RDFElementImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
+nsXULElement::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   nsresult rv = NS_OK;
   aSheet = nsnull;
@@ -3642,19 +3642,19 @@ RDFElementImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
 }
 
 NS_IMETHODIMP 
-RDFElementImpl::GetStrength(PRInt32& aStrength) const
+nsXULElement::GetStrength(PRInt32& aStrength) const
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFElementImpl::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+nsXULElement::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-RDFElementImpl::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+nsXULElement::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (mTag == kTreeColAtom) {
     // Should only get called if we had a width attribute set. Retrieve it.
@@ -3696,7 +3696,7 @@ RDFElementImpl::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* a
 }
 
 PRBool
-RDFElementImpl::ParseNumericValue(const nsString& aString,
+nsXULElement::ParseNumericValue(const nsString& aString,
                                   PRInt32& aIntValue,
                                   float& aFloatValue,
                                   nsHTMLUnit& aValueUnit)

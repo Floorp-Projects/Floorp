@@ -28,14 +28,14 @@
 #define nsXULElement_h__
 
 #include "nsIDOMXULElement.h"
-class nsXULElement : public nsISupports
+class nsXULAggregateElement : public nsISupports
 {
 protected:
     nsIDOMXULElement* mOuter;
-    nsXULElement(nsIDOMXULElement* aOuter) : mOuter(aOuter) {}
+    nsXULAggregateElement(nsIDOMXULElement* aOuter) : mOuter(aOuter) {}
     
 public:
-    virtual ~nsXULElement() {};
+    virtual ~nsXULAggregateElement() {};
 
     // nsISupports interface. Subclasses should use the
     // NS_DECL/IMPL_ISUPPORTS_INHERITED macros to implement the
