@@ -95,7 +95,7 @@ libs::
 ifeq ($(OS_ARCH),WINNT)
 	cd $(DIST)/lib; cp -f $(LIB_PREFIX)dbm$(MOZ_BITS).$(LIB_SUFFIX) $(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX)
 else
-	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX)
+	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX); $(RANLIB) $(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX)
 endif
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
