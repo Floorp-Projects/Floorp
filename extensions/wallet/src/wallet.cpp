@@ -1207,8 +1207,8 @@ Wallet_RandomName(char* suffix)
   /* pick the current time as the random number */
   time_t curTime = time(NULL);
 
-  /* take 8 least-significant digits as the file name */
-  char name[9];
+  /* take 8 least-significant digits + three-digit suffix as the file name */
+  char name[13];
   PR_snprintf(name, 13, "%lu.%s", (curTime%100000000), suffix);
   return PL_strdup(name);
 }
