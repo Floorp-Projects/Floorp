@@ -42,8 +42,8 @@
   <vbox flex="1">
     <html id="certmsg"/>
     <separator />
-    <html>&certmgr.editcert.edittrust;</html>
-    <vbox>
+    <html flex="100%">&certmgr.editcert.edittrust;</html>
+    <vbox flex="100%">
       <checkbox label="&certmgr.editcert.trustssl;" checked="false" 
                 id="trustSSL"/>
       <checkbox label="&certmgr.editcert.trustemail;" checked="false" 
@@ -58,7 +58,7 @@
       <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close();"/>
     </keyset>
 
-    <hbox align="center">
+    <hbox>
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
               oncommand="doOK();"/> 
       <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"

@@ -261,11 +261,11 @@ function editCerts()
     var certkey = cert.dbKey;
     var ca_tab = document.getElementById("ca_tab");
     if (ca_tab.selected) {
-      window.open('chrome://pippki/content/editcacert.xul', certkey,
-                  'chrome,width=500,height=400,resizable=1');
+      window.openDialog('chrome://pippki/content/editcacert.xul', certkey,
+                  'chrome,width=100,resizable=1,modal');
     } else {
-      window.open('chrome://pippki/content/editsslcert.xul', certkey,
-                  'chrome,width=500,height=400,resizable=1');
+      window.openDialog('chrome://pippki/content/editsslcert.xul', certkey,
+                  'chrome,width=100,resizable=1,modal');
     }
   }
 }

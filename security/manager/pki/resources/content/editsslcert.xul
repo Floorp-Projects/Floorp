@@ -42,6 +42,8 @@
     <html id="certmsg"/>
     <html id="issuer"/>
     <separator/>
+    <html id="explainations"/>
+    <separator />
     <html>&certmgr.editsslcert.edittrust;</html>
     <vbox>
       <radiogroup id="sslTrustGroup" orient="vertical" flex="1">
@@ -51,7 +53,12 @@
                id="dontTrustSSLCert" group="sslTrustGroup"/>
       </radiogroup>
     </vbox>
-    <hbox align="center">
+    <hbox>
+      <button id="editca-button" class="dialog" label="&certmgr.editca.label;"
+            oncommand="editCaTrust();"/> 
+    </hbox>
+
+    <hbox> 
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
               oncommand="doSSLOK();"/> 
       <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"

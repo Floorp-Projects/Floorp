@@ -74,11 +74,12 @@
 <!ENTITY certmgr.expires "Expires On">
 
 <!ENTITY certmgr.help.label "Help">
-<!ENTITY certmgr.ok.label "Ok">
+<!ENTITY certmgr.ok.label "OK">
 <!ENTITY certmgr.close.label "Close">
 <!ENTITY certmgr.cancel.label "Cancel">
 <!ENTITY certmgr.view.label "View">
 <!ENTITY certmgr.edit.label "Edit">
+<!ENTITY certmgr.editca.label "Edit CA Trust">
 <!ENTITY certmgr.add.label "Add">
 <!ENTITY certmgr.delete.label "Delete">
 <!ENTITY certmgr.backup.label "Backup">
