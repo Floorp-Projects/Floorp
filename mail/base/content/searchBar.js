@@ -692,6 +692,17 @@ function CreateView(newName, origFolderURI)
   CreateVirtualFolder(newName, folderToSearch.parent, origFolderURI, gSearchSession.searchTerms);
 }
 
+function InitQuickSearchPopup()
+{
+  // disable the create virtual folder menu item if the current radio
+  // value is set to Find in message since you can't really  create a VF from find
+  // in message
+
+  if (gSearchInput.searchMode == 4 /* find in page */)
+    document.getElementById('quickSearchSaveAsVirtualFolder').setAttribute('disabled', 'true');
+  else
+    document.getElementById('quickSearchSaveAsVirtualFolder').removeAttribute('disabled');
+}
 
 // Methods to support highlighting. Most of this was shamelessly copied from the mozdev google toolbar project
 function highlightMessage(removeExistingHighlighting)

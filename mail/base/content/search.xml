@@ -93,6 +93,32 @@
           else 
             this.clearButtonHidden = false;
         ]]></handler>
+
+      <handler event="keypress" keycode="vk_up" modifiers="control" phase="capturing">
+        <![CDATA[
+          var  menuPopup = document.getElementById('quick-search-menupopup');
+          var menuPopupValue = menuPopup.getAttribute('value');
+          if (menuPopupValue > 0)
+          {
+            menuPopup.getElementsByAttribute('value', this.searchMode)[0].removeAttribute('checked');
+            this.searchMode = --menuPopupValue;
+            menuPopup.getElementsByAttribute('value', this.searchMode)[0].setAttribute('checked', 'true');
+            menuPopup.setAttribute('value', this.searchMode);
+          }
+        ]]></handler>
+
+      <handler event="keypress" keycode="vk_down" modifiers="control" phase="capturing">
+        <![CDATA[
+          var  menuPopup = document.getElementById('quick-search-menupopup');
+          var menuPopupValue = menuPopup.getAttribute('value');
+          if (menuPopupValue < 4) // Keep this value in synch with mailWindowOverlay.xul
+          {
+            menuPopup.getElementsByAttribute('value', this.searchMode)[0].removeAttribute('checked');
+            this.searchMode = ++menuPopupValue;
+            menuPopup.getElementsByAttribute('value', this.searchMode)[0].setAttribute('checked', 'true');
+            menuPopup.setAttribute('value', this.searchMode);
+          }
+        ]]></handler>
     </handlers>
   </binding>
   

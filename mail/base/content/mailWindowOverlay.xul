@@ -1858,7 +1858,7 @@
 
   <textbox id="searchInput" flex="1" onfocus="onSearchInputFocus(event);" onblur="onSearchInputBlur(event);" onclick="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);">
     <button id="quick-search-button" type="menu">
-      <menupopup id="quick-search-menupopup" value="2" persist="value" popupalign="topleft" popupanchor="bottomleft">
+      <menupopup id="quick-search-menupopup" value="2" persist="value" onpopupshowing="InitQuickSearchPopup();" popupalign="topleft" popupanchor="bottomleft">
         <menuitem value="0" label="&searchSubjectMenu.label;" type="radio"  
                   oncommand="changeQuickSearchMode(this)"/>
         <menuitem value="1" label="&searchSenderMenu.label;" type="radio" 
@@ -1870,7 +1870,10 @@
         <menuitem value="4" label="&findInMessageMenu.label;" type="radio" 
                   oncommand="changeQuickSearchMode(this)"/>
         <menuseparator/>
-        <menuitem value="5" label="&saveAsVirtualFolderMenu.label;" 
+        <!-- if the value for the save as virtual folder menu changes, please update the 
+             vk_down key handler in searchbar.xml
+        -->
+        <menuitem value="5" id="quickSearchSaveAsVirtualFolder" label="&saveAsVirtualFolderMenu.label;" 
                   oncommand="saveViewAsVirtualFolder()"/>
       </menupopup>
     </button>
