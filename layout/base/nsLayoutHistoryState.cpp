@@ -25,8 +25,8 @@ class HistoryKey: public nsHashKey {
    PRUint32 itsHash;
    
  public:
-   HistoryKey(PRUint32 aContentID, StateType aStateType) {
-     itsHash = aContentID*eNumStateTypes + aStateType;
+   HistoryKey(PRUint32 aContentID, nsIStatefulFrame::StateType aStateType) {
+     itsHash = aContentID * nsIStatefulFrame::eNumStateTypes + aStateType;
    }
 
    HistoryKey(PRUint32 aKey) {
@@ -57,10 +57,10 @@ public:
   // nsILayoutHistoryState
   NS_IMETHOD AddState(PRUint32 aContentID,
     nsISupports* aState,
-    StateType aStateType = eNoType);
+    nsIStatefulFrame::StateType aStateType = nsIStatefulFrame::eNoType);
   NS_IMETHOD GetState(PRUint32 aContentID,
     nsISupports** aState,
-    StateType aStateType = eNoType);
+    nsIStatefulFrame::StateType aStateType = nsIStatefulFrame::eNoType);
 
 private:
   nsSupportsHashtable mStates;
@@ -99,41 +99,41 @@ NS_IMPL_ISUPPORTS(nsLayoutHistoryState,
 NS_IMETHODIMP
 nsLayoutHistoryState::AddState(PRUint32 aContentID,                                
                                nsISupports* aState, 
-                               StateType aStateType)
+                               nsIStatefulFrame::StateType aStateType)
 {
-	HistoryKey key(aContentID, aStateType);
-	void * res = mStates.Put(&key, (void *) aState);
-	/* nsHashTable seems to return null when it actually added
-	 * the element in to the table. If another element was already
-	 * present in the table for the key, it seems to return the 
-	 * element that was already present. Not sure if that was
-	 * the intended behavior
-	 */
-	if (!res) 
-		printf("nsLayoutHistoryState::AddState State successfully added to the hash table\n");
-	else
-		printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+  nsresult rv = NS_OK;
+  HistoryKey key(aContentID, aStateType);
+  void * res = mStates.Put(&key, (void *) aState);
+  /* nsHashTable seems to return null when it actually added
+   * the element in to the table. If another element was already
+   * present in the table for the key, it seems to return the 
+   * element that was already present. Not sure if that was
+   * the intended behavior
+   */
+  if (res)  {
+    printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+    rv = NS_ERROR_UNEXPECTED;
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsLayoutHistoryState::GetState(PRUint32 aContentID,                                
                                nsISupports** aState,
-                               StateType aStateType)
+                               nsIStatefulFrame::StateType aStateType)
 {
-    nsresult rv = NS_OK;
-    HistoryKey key(aContentID, aStateType);
-    void * state = nsnull;
-    state = mStates.Get(&key);
-	if (state) {
-		printf("nsLayoutHistoryState::GetState, Got the History state for the key\n");
-       *aState = (nsISupports *)state;
-	}
-	else {
-        printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
-		*aState = nsnull;
-		rv = NS_ERROR_NULL_POINTER;
-	}
+  nsresult rv = NS_OK;
+  HistoryKey key(aContentID, aStateType);
+  void * state = nsnull;
+  state = mStates.Get(&key);
+  if (state) {
+    *aState = (nsISupports *)state;
+  }
+  else {
+    printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
+    *aState = nsnull;
+    rv = NS_ERROR_NULL_POINTER;
+  }
   return rv;
 }

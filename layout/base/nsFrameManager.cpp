@@ -644,7 +644,7 @@ FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
       PRUint32 ID;
       rv = content->GetContentID(&ID);
       if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
-        StateType type = eNoType;
+        nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
         rv = statefulFrame->GetStateType(&type);
         if (NS_SUCCEEDED(rv)) {
           nsISupports* frameState;
@@ -696,7 +696,7 @@ FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
       PRUint32 ID;
       rv = content->GetContentID(&ID);
       if (NS_SUCCEEDED(rv) && ID) { // Must have ID (don't do anonymous content)
-        StateType type = eNoType;
+        nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
         rv = statefulFrame->GetStateType(&type);
         if (NS_SUCCEEDED(rv)) {
           nsISupports* frameState = nsnull;
