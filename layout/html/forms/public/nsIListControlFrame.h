@@ -94,7 +94,7 @@ public:
   /**
    *
    */
-  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, nsIContent* aContent) = 0;
+  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent) = 0;
 
 };
 
