@@ -19,13 +19,15 @@
  *
  * Contributor(s): 
  */
+ 
 
+/* to build this, build mozilla/netwerk/util/netwerkUtil.mcp
+ * I hope I'm the last person to waste 30 minutes looking for the project that builds this file */
 #pragma export on
 #include "nsRepeater.h"
 
 Repeater* Repeater::sRepeaters = 0;
 Repeater* Repeater::sIdlers = 0;
-
 Repeater::Repeater()
 {
   mRepeating = false;
