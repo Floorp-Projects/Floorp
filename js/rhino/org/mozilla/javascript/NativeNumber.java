@@ -18,8 +18,9 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  * Mike McCabe
  *
  * Alternatively, the contents of this file may be used under the
@@ -43,26 +44,9 @@ package org.mozilla.javascript;
  *
  * @author Norris Boyd
  */
-public class NativeNumber extends ScriptableObject {
+public class NativeNumber extends IdScriptable {
 
-    public static void finishInit(Scriptable scope,
-                                  FunctionObject ctor, Scriptable proto)
-    {
-        final int attr = ScriptableObject.DONTENUM |
-                         ScriptableObject.PERMANENT |
-                         ScriptableObject.READONLY;
-
-        String[] names = { "NaN", "POSITIVE_INFINITY", "NEGATIVE_INFINITY",
-                           "MAX_VALUE", "MIN_VALUE" };
-        double[] values = { ScriptRuntime.NaN, Double.POSITIVE_INFINITY,
-                            Double.NEGATIVE_INFINITY, Double.MAX_VALUE,
-                            Double.MIN_VALUE };
-        for (int i=0; i < names.length; i++) {
-            ctor.defineProperty(names[i], new Double(values[i]), attr);
-        }
-    }
-	
-	private static final int MAX_PRECISION = 100;
+    private static final int MAX_PRECISION = 100;
 
     /**
      * Zero-parameter constructor: just used to create Number.prototype
@@ -79,83 +63,193 @@ public class NativeNumber extends ScriptableObject {
         return "Number";
     }
 
-    public static Object jsConstructor(Context cx, Object[] args, 
-                                       Function funObj, boolean inNewExpr)
+    protected void fillConstructorProperties
+        (Context cx, IdFunction ctor, boolean sealed)
     {
+        final int attr = ScriptableObject.DONTENUM |
+                         ScriptableObject.PERMANENT |
+                         ScriptableObject.READONLY;
+
+        String[] names = { "NaN", "POSITIVE_INFINITY", "NEGATIVE_INFINITY",
+                           "MAX_VALUE", "MIN_VALUE" };
+        double[] values = { ScriptRuntime.NaN, Double.POSITIVE_INFINITY,
+                            Double.NEGATIVE_INFINITY, Double.MAX_VALUE,
+                            Double.MIN_VALUE };
+        for (int i=0; i < names.length; i++) {
+            ctor.defineProperty(names[i], new Double(values[i]), attr);
+        }
+
+        super.fillConstructorProperties(cx, ctor, sealed);
+    }
+
+    public int methodArity(int methodId, IdFunction function) {
+        switch (methodId) {
+        case CONSTRUCTOR_ID:
+        case Id_toString:
+        case Id_toLocaleString:
+        case Id_toFixed:
+        case Id_toExponential:
+        case Id_toPrecision:
+            return 1;
+        }
+        return 0;
+    }
+
+    public Object execMethod
+        (int methodId, IdFunction f,
+         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
+        switch (methodId) {
+
+        case CONSTRUCTOR_ID:
+            return jsConstructor(args, thisObj == null);
+
+        case Id_toString: return realThis(thisObj, f).
+            jsFunction_toString(toBase(args, 0));
+
+        case Id_valueOf: return wrap_double(realThis(thisObj, f).
+            jsFunction_valueOf());
+
+        case Id_toLocaleString: return realThis(thisObj, f).
+            jsFunction_toLocaleString(toBase(args, 0));
+
+        case Id_toFixed:
+            return realThis(thisObj, f).jsFunction_toFixed(cx, args);
+
+        case Id_toExponential:
+            return realThis(thisObj, f).jsFunction_toExponential(cx, args);
+
+        case Id_toPrecision:
+            return realThis(thisObj, f).jsFunction_toPrecision(cx, args);
+
+        }
+
+        return Scriptable.NOT_FOUND;
+    }
+
+    private NativeNumber realThis(Scriptable thisObj, IdFunction f) {
+        while (!(thisObj instanceof NativeNumber)) {
+            thisObj = nextInstanceCheck(thisObj, f, true);
+        }
+        return (NativeNumber)thisObj;
+    }
+
+    private static int toBase(Object[] args, int index) {
+        return (index < args.length) ? ScriptRuntime.toInt32(args[index]) : 10;
+    }
+
+    private Object jsConstructor(Object[] args, boolean inNewExpr) {
         double d = args.length >= 1
                    ? ScriptRuntime.toNumber(args[0])
                    : defaultValue;
-    	if (inNewExpr) {
-    	    // new Number(val) creates a new Number object.
-    	    return new NativeNumber(d);
-    	}
-    	// Number(val) converts val to a number value.
-    	return new Double(d);
+        if (inNewExpr) {
+            // new Number(val) creates a new Number object.
+            return new NativeNumber(d);
+        }
+        // Number(val) converts val to a number value.
+        return wrap_double(d);
     }
-    
+
     public String toString() {
-        return jsFunction_toString(Undefined.instance);
+        return jsFunction_toString(10);
     }
 
-    public String jsFunction_toString(Object base) {
-        int i = base == Undefined.instance
-                ? 10 
-                : ScriptRuntime.toInt32(base);
-        return ScriptRuntime.numberToString(doubleValue, i);
+    private String jsFunction_toString(int base) {
+        return ScriptRuntime.numberToString(doubleValue, base);
     }
 
-    public double jsFunction_valueOf() {
+    private double jsFunction_valueOf() {
         return doubleValue;
     }
 
-    public String jsFunction_toLocaleString(Object arg) {
-		return toString();
+    private String jsFunction_toLocaleString(int base) {
+        return jsFunction_toString(base);
     }
 
-    public String jsFunction_toFixed(Object arg) {
-    /* We allow a larger range of precision than 
-		ECMA requires; this is permitted by ECMA. */
-		return num_to(arg, DToA.DTOSTR_FIXED, DToA.DTOSTR_FIXED,
-												-20, MAX_PRECISION, 0);
+    private String jsFunction_toFixed(Context cx, Object[] args) {
+        /* We allow a larger range of precision than
+           ECMA requires; this is permitted by ECMA. */
+        return num_to(cx, args, DToA.DTOSTR_FIXED, DToA.DTOSTR_FIXED,
+                      -20, MAX_PRECISION, 0);
     }
 
-    public String jsFunction_toExponential(Object arg) {
-    /* We allow a larger range of precision than
-		ECMA requires; this is permitted by ECMA. */
-		return num_to(arg, DToA.DTOSTR_STANDARD_EXPONENTIAL,
-							DToA.DTOSTR_EXPONENTIAL, 0, MAX_PRECISION, 1);
+    private String jsFunction_toExponential(Context cx, Object[] args) {
+        /* We allow a larger range of precision than
+           ECMA requires; this is permitted by ECMA. */
+        return num_to(cx, args,
+                      DToA.DTOSTR_STANDARD_EXPONENTIAL,
+                      DToA.DTOSTR_EXPONENTIAL,
+                      0, MAX_PRECISION, 1);
     }
 
-    public String jsFunction_toPrecision(Object arg) {
-    /* We allow a larger range of precision than
-		ECMA requires; this is permitted by ECMA. */
-		return num_to(arg, DToA.DTOSTR_STANDARD, 
-							DToA.DTOSTR_PRECISION, 1, MAX_PRECISION, 0);
-	}
+    private String jsFunction_toPrecision(Context cx, Object[] args) {
+        /* We allow a larger range of precision than
+           ECMA requires; this is permitted by ECMA. */
+        return num_to(cx, args, DToA.DTOSTR_STANDARD, DToA.DTOSTR_PRECISION,
+                      1, MAX_PRECISION, 0);
+    }
 
-	private String num_to(Object arg, int zeroArgMode,
-       int oneArgMode, int precisionMin, int precisionMax, int precisionOffset)
-	{
-	    int precision;
+    private String num_to(Context cx, Object[] args,
+                          int zeroArgMode, int oneArgMode,
+                          int precisionMin, int precisionMax,
+                          int precisionOffset)
+    {
+        int precision;
 
-		if (arg == Undefined.instance) {
-			precision = 0;
-			oneArgMode = zeroArgMode;							
-	    } else {
-			precision = ScriptRuntime.toInt32(arg);
-	        if (precision < precisionMin || precision > precisionMax) {
-			    throw NativeGlobal.constructError(
-			               Context.getCurrentContext(), "RangeError",
-                           ScriptRuntime.getMessage1(
-                               "msg.bad.precision", Integer.toString(precision)),
-			               this);
-			}
-		}
-		StringBuffer result = new StringBuffer();	
-	    DToA.JS_dtostr(result, oneArgMode, precision + precisionOffset, doubleValue);
-		return result.toString();
-	}	
-	
+        if (args.length == 0) {
+            precision = 0;
+            oneArgMode = zeroArgMode;
+        } else {
+            precision = ScriptRuntime.toInt32(args[0]);
+            if (precision < precisionMin || precision > precisionMax) {
+                String msg = ScriptRuntime.getMessage1(
+                    "msg.bad.precision", ScriptRuntime.toString(args[0]));
+                throw NativeGlobal.constructError(cx, "RangeError", msg, this);
+            }
+        }
+        StringBuffer result = new StringBuffer();
+        DToA.JS_dtostr(result, oneArgMode, precision + precisionOffset,
+                       doubleValue);
+        return result.toString();
+    }
+
+    protected int getMaxPrototypeMethodId() { return MAX_PROTOTYPE_METHOD; }
+
+// #string_id_map#
+
+    protected int mapNameToMethodId(String s) {
+        int id;
+// #generated# Last update: 2001-03-29 14:36:47 GMT+02:00
+        L0: { id = 0; String X = null; int c;
+            L: switch (s.length()) {
+            case 7: c=s.charAt(0);
+                if (c=='t') { X="toFixed";id=Id_toFixed; }
+                else if (c=='v') { X="valueOf";id=Id_valueOf; }
+                break L;
+            case 8: X="toString";id=Id_toString; break L;
+            case 11: X="toPrecision";id=Id_toPrecision; break L;
+            case 13: X="toExponential";id=Id_toExponential; break L;
+            case 14: X="toLocaleString";id=Id_toLocaleString; break L;
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
+    }
+
+    private static final int
+        Id_toString              = 1,
+        Id_valueOf               = 2,
+        Id_toLocaleString        = 3,
+        Id_toFixed               = 4,
+        Id_toExponential         = 5,
+        Id_toPrecision           = 6,
+        MAX_PROTOTYPE_METHOD     = 6;
+
+// #/string_id_map#
+
+
     private static final double defaultValue = +0.0;
     private double doubleValue;
 }
