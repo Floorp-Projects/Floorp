@@ -164,65 +164,67 @@ spring.spacer-throbber {
   /* this is throbber box width - 12 */
 	width: 56px;
 }
+
+
 /* Image URLs for all Editor toolbar buttons */
 
-titledbutton#newButton {
+#newButton {
 	list-style-image:url("chrome://editor/skin/images/newfile.gif");
 }
-titledbutton#openButton {
+#openButton {
 	list-style-image:url("chrome://editor/skin/images/openfile.gif");
 }
 
-titledbutton#saveButton {
+#saveButton {
 	list-style-image:url("chrome://editor/skin/images/savefile.gif");
 }
-titledbutton#saveButton[dirty="true"] {
+#saveButton[dirty="true"] {
   list-style-image:url(chrome://editor/skin/images/savemod.gif); 
 }
 
-titledbutton#publishButton {
+#publishButton {
 	list-style-image:url("chrome://editor/skin/images/publish.gif");
 }
-titledbutton#previewButton {
+#previewButton {
 	list-style-image:url("chrome://editor/skin/images/preview.gif");
 }
-titledbutton#printButton {
+#printButton {
 	list-style-image:url("chrome://editor/skin/images/print.gif");
 }
-titledbutton#findButton {
+#findButton {
 	list-style-image:url("chrome://editor/skin/images/find.gif");
 }
-titledbutton#linkButton {
+#linkButton {
 	list-style-image:url("chrome://editor/skin/images/link-white.gif");
 }
-titledbutton#imageButton {
+#imageButton {
 	list-style-image:url("chrome://editor/skin/images/image-white.gif");
 }
-titledbutton#namedAnchorButton {
+#namedAnchorButton {
 	list-style-image:url("chrome://editor/skin/images/anchor-white.gif");
 }
-titledbutton#hlineButton {
+#hlineButton {
 	list-style-image:url("chrome://editor/skin/images/hline-white.gif");
 }
-titledbutton#tableButton {
+#tableButton {
 	list-style-image:url("chrome://editor/skin/images/table-white.gif");
 }
-titledbutton#linkButton-dark {
+#linkButton-dark {
 	list-style-image:url("chrome://editor/skin/images/link.gif");
 }
-titledbutton#imageButton-dark {
+#imageButton-dark {
 	list-style-image:url("chrome://editor/skin/images/image.gif");
 }
-titledbutton#namedAnchorButton-dark {
+#namedAnchorButton-dark {
 	list-style-image:url("chrome://editor/skin/images/anchor.gif");
 }
-titledbutton#hlineButton-dark {
+#hlineButton-dark {
 	list-style-image:url("chrome://editor/skin/images/hline.gif");
 }
-titledbutton#tableButton-dark {
+#tableButton-dark {
 	list-style-image:url("chrome://editor/skin/images/table.gif");
 }
-titledbutton#spellingButton {
+#spellingButton {
 	list-style-image:url("chrome://editor/skin/images/spell.gif");
 }
 

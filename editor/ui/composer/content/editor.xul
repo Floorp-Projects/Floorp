@@ -132,20 +132,20 @@
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
   <toolbar id="EditToolbar" chromeclass="toolbar" class="standard" persist="collapsed">
-    <titledbutton id="newButton"/>
-    <titledbutton id="openButton"/>
-    <titledbutton id="saveButton"/>
-    <titledbutton id="previewButton"/>
+    <button id="newButton"/>
+    <button id="openButton"/>
+    <button id="saveButton"/>
+    <button id="previewButton"/>
  <!--     <toolbarseparator/>  -->
-    <titledbutton id="printButton" />
-    <titledbutton id="findButton"/>
-    <titledbutton id="spellingButton"/>
+    <button id="printButton" />
+    <button id="findButton"/>
+    <button id="spellingButton"/>
       <toolbarseparator/>
-    <titledbutton id="imageButton"/>
-    <titledbutton id="hlineButton"/>
-    <titledbutton id="tableButton"/>
-    <titledbutton id="linkButton"/>
-    <titledbutton id="namedAnchorButton"/>
+    <button id="imageButton"/>
+    <button id="hlineButton"/>
+    <button id="tableButton"/>
+    <button id="linkButton"/>
+    <button id="namedAnchorButton"/>
     <spring flex="100%"/>
 
 		<box id="toolbar_throbber_box" align="vertical">

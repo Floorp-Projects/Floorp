@@ -681,19 +681,19 @@
 
     <!-- Editor toolbar items -->
     <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
-    <titledbutton id="newButton"         class="button28" observes="cmd_newEditor"     value="&newMenu.label;" />
-    <titledbutton id="openButton"        class="button28" observes="Editor:Open"       value="&openToolbarCmd.label;"/>
-    <titledbutton id="saveButton"        class="button28" observes="Editor:Save"/>
-    <titledbutton id="previewButton"     class="button28" observes="Editor:Preview"    value="&previewToolbarCmd.label;"/>
-    <titledbutton id="printButton"       class="other28"  observes="Editor:Print"      value="&printToolbarCmd.label;"/>
-    <titledbutton id="findButton"        class="other28"  observes="cmd_find"          value="&findToolbarCmd.label;"/>
-    <titledbutton id="spellingButton"    class="other28"  value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+    <button class="key-toolbar left" orient="vertical" id="newButton" observes="cmd_newEditor" value="&newMenu.label;" />
+    <button class="key-toolbar left" orient="vertical" id="openButton" observes="Editor:Open" value="&openToolbarCmd.label;"/>
+    <button class="key-toolbar left" orient="vertical" id="saveButton" observes="Editor:Save"/>
+    <button class="key-toolbar left" orient="vertical" id="previewButton" observes="Editor:Preview" value="&previewToolbarCmd.label;"/>
+    <button class="toolbar left" orient="vertical" id="printButton" observes="Editor:Print" value="&printToolbarCmd.label;"/>
+    <button class="toolbar left" orient="vertical" id="findButton" observes="cmd_find" value="&findToolbarCmd.label;"/>
+    <button class="toolbar left" orient="vertical" id="spellingButton" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
 
-    <titledbutton id="imageButton"       class="other28" value="&imageToolbarCmd.label;"  onclick="EditorInsertOrEditImage()"/>
-    <titledbutton id="hlineButton"       class="other28" value="&hruleToolbarCmd.label;"  onclick="EditorInsertOrEditHLine()"/>
-    <titledbutton id="tableButton"       class="other28" value="&tableToolbarCmd.label;"  onclick="EditorInsertOrEditTable(true)"/>
-    <titledbutton id="linkButton"        class="other28" value="&linkToolbarCmd.label;"   onclick="EditorInsertOrEditLink()"/>
-    <titledbutton id="namedAnchorButton" class="other28" value="&anchorToolbarCmd.label;" onclick="EditorInsertOrEditNamedAnchor()"/>
+    <button class="toolbar left" orient="vertical" id="imageButton" value="&imageToolbarCmd.label;" onclick="EditorInsertOrEditImage()"/>
+    <button class="toolbar left" orient="vertical" id="hlineButton" value="&hruleToolbarCmd.label;" onclick="EditorInsertOrEditHLine()"/>
+    <button class="toolbar left" orient="vertical" id="tableButton" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
+    <button class="toolbar left" orient="vertical" id="linkButton" value="&linkToolbarCmd.label;" onclick="EditorInsertOrEditLink()"/>
+    <button class="toolbar left" orient="vertical" id="namedAnchorButton" value="&anchorToolbarCmd.label;" onclick="EditorInsertOrEditNamedAnchor()"/>
 
     <!-- Formatting toolbar items -->
     <html:select class="toolbar" id="ParagraphSelect" size="1" onchange="EditorSelectParagraphFormat()">
