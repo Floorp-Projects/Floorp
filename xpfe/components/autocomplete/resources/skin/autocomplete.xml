@@ -201,7 +201,8 @@
 			},
 
 			finishAutoComplete: function(me, event) {
-                if (me.disableAutocomplete == "true")
+ 			   me.privatefunc.closePopupMenu(me);
+               if (me.disableAutocomplete == "true")
                     return;
 
                 var inputElement = me.anonymousContent[0].firstChild;
@@ -216,7 +217,6 @@
                             inputElement.value = me.lastResults.items.QueryElementAt(me.lastResults.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
                         } catch(e) {};
                         inputElement.setSelectionRange(inputElement.value.length, inputElement.value.length);
-						me.privatefunc.closePopupMenu(me);
 						return;
                     }
                 }
@@ -226,6 +226,7 @@
 
 			closePopupMenu: function(me) {
 				popup = document.getElementById("ac_menupopup");
+dump("CLOSE POPUP MENU, popup=" + popup + ", menuOpen=" + me.menuOpen + "\n");
 				if (popup && me.menuOpen == "true")
 					popup.closePopup();
 			},
@@ -347,12 +348,11 @@
 	</interface>
 
 	<handlers>
-		<handler type="click" value="this.privatefunc.cleanupInputField(this); //TODO: try to catch menu click here"/>
+		<handler type="click" value="this.privatefunc.cleanupInputField(this);"/>
 		<handler type="dblclick" value="this.privatefunc.cleanupInputField(this);"/>
         <handler type="keypress" value="this.privatefunc.processKeyPress(this, event);"/>
-        <handler type="focus" value="dump('FOCUS\n'); this.needToAutocomplete = false;"/>
+        <handler type="focus" value="this.needToAutocomplete = false;"/>
         <handler type="blur" value="
-			dump('BLURR\n');
             if (this.needToAutocomplete)
                 this.privatefunc.finishAutoComplete(this, event);
 			this.privatefunc.cleanupInputField(this);
