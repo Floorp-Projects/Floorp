@@ -657,7 +657,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
   mBounds.y = aY;
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
-  XtMoveWidget(mWidget, aX, GetYCoord(aY));
+  XtMoveWidget(mWidget, (Position)aX,(Position)GetYCoord(aY));
 //    XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
 }
 
