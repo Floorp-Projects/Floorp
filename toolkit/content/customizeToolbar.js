@@ -637,7 +637,7 @@ function setAttribute(aElt, aAttr, aVal)
 
 function isCustomizableToolbar(aElt)
 {
-  return (aElt.localName == "toolbar" &&
+  return aElt.localName == "toolbar" &&
          aElt.getAttribute("customizable") == "true";
 }
 
