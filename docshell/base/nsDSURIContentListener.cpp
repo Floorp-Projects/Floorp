@@ -91,15 +91,12 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
    nsLoadFlags loadAttribs = 0;
    aOpenedChannel->GetLoadAttributes(&loadAttribs);
 
+   PRUint32 loadType = mDocShell->ConvertDocShellLoadInfoToLoadType((nsDocShellInfoLoadType) aCommand);
+   mDocShell->SetLoadType(loadType);
+
    if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
    {
       mDocShell->StopLoad();
-      // ack...we don't want to reuse the previous documents load type,
-      // try to reset it to loadNormal...
-      LoadType loadType = LOAD_NORMAL;
-      if (aCommand == nsIURILoader::viewUserClick)
-        loadType = LOAD_LINK;      
-      mDocShell->SetLoadType(loadType);
    }
 
    nsresult rv = mDocShell->CreateContentViewer(aContentType, 
