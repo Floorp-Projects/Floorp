@@ -89,7 +89,7 @@
 </popupset>
 
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
-       datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+       datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
        onkeyup="if (event.keyCode == 8)	return doDelete(false);"
        multiple="true"
        ondragover="return DragOverTree(event);"
