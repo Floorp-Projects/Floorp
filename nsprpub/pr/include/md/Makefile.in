@@ -59,7 +59,11 @@ ifeq ($(OS_ARCH),AIX)
 ifeq ($(USE_64),1)
 MDCPUCFG_H = _aix64.cfg
 else
+ifeq ($(USE_IPV6),1)
+MDCPUCFG_H = _aix32in6.cfg
+else
 MDCPUCFG_H = _aix32.cfg
+endif
 endif
 endif
 
@@ -103,7 +107,11 @@ ifeq ($(OS_ARCH),SunOS)
 ifeq ($(OS_RELEASE),4.1.3_U1)
 MDCPUCFG_H = _sunos4.cfg
 else
-MDCPUCFG_H = _solaris.cfg
+ifeq ($(USE_64),1)
+MDCPUCFG_H = _solaris64.cfg
+else
+MDCPUCFG_H = _solaris32.cfg
+endif
 endif
 endif
 
@@ -147,34 +155,26 @@ ifeq ($(OS_ARCH),QNX)
 MDCPUCFG_H = _qnx.cfg
 endif
 
+ifeq ($(OS_TARGET),NTO)
+MDCPUCFG_H = _nto.cfg
+endif
+
 ifeq ($(OS_ARCH),BeOS)
 MDCPUCFG_H = _beos.cfg
 endif
 
 endif # ! USE_AUTOCONF
 
-export:: #$(MDCPUCFG_H)
+export:: $(MDCPUCFG_H)
 	$(INSTALL) -m 444 $(CONFIGS) $(DIST)/include/md
-#ifeq ($(MOZ_BITS),16)
-#	cp $(DIST)/include/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
-#	$(INSTALL) -m 444 $(MDCPUCFG_H) $(MOZ_INCL)
-#	mv -f $(DIST)/include/$(MDCPUCFG_H) $(MOZ_INCL)/prcpucfg.h
-#else
-	@if cmp -s $(srcdir)/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h; then \
-	  echo $(DIST)/include/prcpucfg.h unchanged; \
-	else \
-	  echo cp -f $(srcdir)/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h; \
-	  cp -f $(srcdir)/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h; \
-	fi
-#endif
-ifeq ($(OS_ARCH),OpenVMS)
-# mv'ing a link causes the file itself to move, not the link, so fix it.
+	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(DIST)/include
+ifneq ($(OS_ARCH),OpenVMS)
+	mv -f $(DIST)/include/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
+else
+# mv'ing a link causes the file itself to move, not the link.
 	rm -f $(DIST)/include/$(MDCPUCFG_H)
-	if [ ! -L $(DIST)/include/prcpucfg.h ]; then \
-	  mv -f $(DIST)/include/prcpucfg.h $(MDCPUCFG_H); \
-	  ln -fs ../../../nsprpub/pr/include/md/$(MDCPUCFG_H) \
-	    $(DIST)/include/prcpucfg.h; \
-	fi
+	rm -f $(DIST)/include/prcpucfg.h
+	ln -fs `pwd`/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
 endif
 
 release:: export

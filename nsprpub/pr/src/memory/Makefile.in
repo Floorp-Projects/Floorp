@@ -35,7 +35,7 @@ endif
 endif
 endif #!USE_AUTOCONF
 
-CSRCS = prseg.c
+CSRCS = prseg.c prshm.c prshma.c
 
 TARGETS	= $(OBJS)
 
