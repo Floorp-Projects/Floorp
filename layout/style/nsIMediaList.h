@@ -31,15 +31,25 @@ class nsIMediaList : public nsISupportsArray {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IMEDIA_LIST_IID; return iid; }
 
-  NS_IMETHOD GetMediaText(nsAWritableString& aMediaText) = 0;
-  NS_IMETHOD SetMediaText(nsAReadableString& aMediaText) = 0;
-
+  NS_IMETHOD GetText(nsAWritableString& aMediaText) = 0;
+  NS_IMETHOD SetText(nsAReadableString& aMediaText) = 0;
+  NS_IMETHOD MatchesMedium(nsIAtom* aMedium, PRBool* aMatch) = 0;
+  NS_IMETHOD DropReference(void) = 0;
 };
 
+/* Use this macro when declaring classes that implement this interface. */
+#define NS_DECL_NSIMEDIALIST \
+  NS_IMETHOD GetText(nsAWritableString& aMediaText); \
+  NS_IMETHOD SetText(nsAReadableString& aMediaText); \
+  NS_IMETHOD MatchesMedium(nsIAtom* aMedium, PRBool* aMatch); \
+  NS_IMETHOD DropReference(void);
+
 extern NS_HTML nsresult 
-NS_NewMediaList(nsIMediaList** aInstancePtrResult, const nsAReadableString& aMediaText);
+NS_NewMediaList(const nsAReadableString& aMediaText, nsIMediaList** aInstancePtrResult);
 
 extern NS_HTML nsresult 
 NS_NewMediaList(nsIMediaList** aInstancePtrResult);
 
+extern NS_HTML nsresult
+NS_NewMediaList(nsISupportsArray* aArray, nsICSSStyleSheet* aSheet, nsIMediaList** aInstancePtrResult);
 #endif /* nsICSSLoader_h___ */

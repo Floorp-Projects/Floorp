@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Boris Zbarsky <bzbarsky@mit.edu>
+ *
  */
 #include "nsICSSCharsetRule.h"
 #include "nsICSSImportRule.h"
@@ -39,11 +41,16 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSImportRule.h"
+#include "nsIDOMCSSMediaRule.h"
 #include "nsIMediaList.h"
 #include "nsIDOMMediaList.h"
+#include "nsIDOMCSSRuleList.h"
 #include "nsIDOMStyleSheet.h"
+#include "nsIDocument.h"
 
 #include "nsContentUtils.h"
+#include "nsStyleConsts.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -63,6 +70,84 @@ NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; }
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::GetStrength(PRInt32& aStrength) const { return super::GetStrength(aStrength); }   \
 NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; } 
+
+// -------------------------------
+// Style Rule List for group rules
+//
+class CSSGroupRuleRuleListImpl : public nsIDOMCSSRuleList
+{
+public:
+  CSSGroupRuleRuleListImpl(nsICSSGroupRule *aGroupRule);
+
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDOMCSSRULELIST
+
+  void DropReference() { mGroupRule = nsnull; }
+
+protected:
+  virtual ~CSSGroupRuleRuleListImpl(void);
+
+private:
+  nsICSSGroupRule* mGroupRule;
+};
+
+CSSGroupRuleRuleListImpl::CSSGroupRuleRuleListImpl(nsICSSGroupRule *aGroupRule)
+{
+  NS_INIT_REFCNT();
+  // Not reference counted to avoid circular references.
+  // The rule will tell us when its going away.
+  mGroupRule = aGroupRule;
+}
+
+CSSGroupRuleRuleListImpl::~CSSGroupRuleRuleListImpl()
+{
+}
+
+// QueryInterface implementation for CSSGroupRuleRuleList
+NS_INTERFACE_MAP_BEGIN(CSSGroupRuleRuleListImpl)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRuleList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSGroupRuleRuleList)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(CSSGroupRuleRuleListImpl);
+NS_IMPL_RELEASE(CSSGroupRuleRuleListImpl);
+
+NS_IMETHODIMP    
+CSSGroupRuleRuleListImpl::GetLength(PRUint32* aLength)
+{
+  if (mGroupRule) {
+    PRInt32 count;
+    mGroupRule->StyleRuleCount(count);
+    *aLength = (PRUint32)count;
+  } else {
+    *aLength = 0;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+CSSGroupRuleRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
+{
+  nsresult result = NS_OK;
+
+  *aReturn = nsnull;
+  if (mGroupRule) {
+    nsCOMPtr<nsICSSRule> rule;
+
+    result = mGroupRule->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
+    if (rule) {
+      result = CallQueryInterface(rule, aReturn);
+    } else if (result == NS_ERROR_ILLEGAL_VALUE) {
+      result = NS_OK; // per spec: "Return Value ... null if ... not a valid index."
+    }
+  }
+  
+  return result;
+}
 
 // -------------------------------------------
 // nsICSSCharsetRule
@@ -374,7 +459,7 @@ CSSImportRuleImpl::List(FILE* out, PRInt32 aIndent) const
   fputs("\" ", out);
 
   nsAutoString mediaText;
-  mMedia->GetMediaText(mediaText);
+  mMedia->GetText(mediaText);
   fputs(mediaText, out);
   fputs("\n", out);
 
@@ -456,7 +541,7 @@ NS_IMETHODIMP
 CSSImportRuleImpl::SetMedia(const nsString& aMedia)
 {
   if (mMedia) {
-    return mMedia->SetMediaText(aMedia);
+    return mMedia->SetText(aMedia);
   } else {
     return NS_OK;
   }
@@ -466,7 +551,7 @@ NS_IMETHODIMP
 CSSImportRuleImpl::GetMedia(nsString& aMedia) const
 {
   if (mMedia) {
-    return mMedia->GetMediaText(aMedia);
+    return mMedia->GetText(aMedia);
   } else {
     aMedia.Truncate();
     return NS_OK;
@@ -527,7 +612,7 @@ CSSImportRuleImpl::GetCssText(nsAWritableString& aCssText)
   aCssText.Append(NS_LITERAL_STRING(")"));
   if (mMedia) {
     nsAutoString mediaText;
-    mMedia->GetMediaText(mediaText);
+    mMedia->GetText(mediaText);
     if (!mediaText.IsEmpty()) {
       aCssText.Append(NS_LITERAL_STRING(" "));
       aCssText.Append(mediaText);
@@ -596,7 +681,7 @@ CSSImportRuleImpl::GetStyleSheet(nsIDOMCSSStyleSheet * *aStyleSheet)
 //
 class CSSMediaRuleImpl : public nsCSSRule,
                          public nsICSSMediaRule,
-                         public nsIDOMCSSRule
+                         public nsIDOMCSSMediaRule
 {
 public:
   CSSMediaRuleImpl(void);
@@ -618,27 +703,33 @@ public:
 
   // nsICSSMediaRule methods
   NS_IMETHOD  SetMedia(nsISupportsArray* aMedia);
-  NS_IMETHOD  UseForMedium(nsIAtom* aMedium) const;
+  NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const;
 
+  // nsICSSGroupRule methods
   NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule);
-
   NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const;
   NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
-
   NS_IMETHOD  EnumerateRulesForwards(nsISupportsArrayEnumFunc aFunc, void * aData) const;
-
+  NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex);
+  NS_IMETHOD  InsertStyleRuleAt(PRUint32 aIndex, nsICSSRule* aRule);
+  
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
 
+  // nsIDOMCSSMediaRule interface
+  NS_DECL_NSIDOMCSSMEDIARULE
+  
 protected:
-  nsISupportsArray* mMedia;
+  nsCOMPtr<nsIMediaList> mMedia;
   nsISupportsArray* mRules;
+  CSSGroupRuleRuleListImpl* mRuleCollection;
 };
 
 CSSMediaRuleImpl::CSSMediaRuleImpl(void)
   : nsCSSRule(),
     mMedia(nsnull),
-    mRules(nsnull)
+    mRules(nsnull),
+    mRuleCollection(nsnull)
 {
 }
 
@@ -659,13 +750,11 @@ CloneRuleInto(nsISupports* aRule, void* aArray)
 CSSMediaRuleImpl::CSSMediaRuleImpl(const CSSMediaRuleImpl& aCopy)
   : nsCSSRule(aCopy),
     mMedia(nsnull),
-    mRules(nsnull)
+    mRules(nsnull),
+    mRuleCollection(nsnull)
 {
   if (aCopy.mMedia) {
-    NS_NewISupportsArray(&mMedia);
-    if (mMedia) {
-      mMedia->AppendElements(aCopy.mMedia);
-    }
+    NS_NewMediaList(aCopy.mMedia, aCopy.mSheet, getter_AddRefs(mMedia));
   }
 
   if (aCopy.mRules) {
@@ -678,8 +767,14 @@ CSSMediaRuleImpl::CSSMediaRuleImpl(const CSSMediaRuleImpl& aCopy)
 
 CSSMediaRuleImpl::~CSSMediaRuleImpl(void)
 {
-  NS_IF_RELEASE(mMedia);
   NS_IF_RELEASE(mRules);
+  if (mMedia) {
+    mMedia->DropReference();
+  }
+  if (mRuleCollection) {
+    mRuleCollection->DropReference();
+    NS_RELEASE(mRuleCollection);
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(CSSMediaRuleImpl, nsCSSRule);
@@ -691,6 +786,7 @@ NS_INTERFACE_MAP_BEGIN(CSSMediaRuleImpl)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMediaRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSMediaRule)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSMediaRule)
 NS_INTERFACE_MAP_END
@@ -712,6 +808,17 @@ CSSMediaRuleImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
   if (mRules) {
     mRules->EnumerateForwards(SetStyleSheetReference, aSheet);
   }
+  if (mMedia) {
+    nsresult rv;
+    nsCOMPtr<nsISupportsArray> oldMedia(do_QueryInterface(mMedia, &rv));
+    if (NS_FAILED(rv))
+      return rv;
+    mMedia->DropReference();
+    rv = NS_NewMediaList(oldMedia, aSheet, getter_AddRefs(mMedia));
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
   return nsCSSRule::SetStyleSheet(aSheet);
 }
 
@@ -729,13 +836,13 @@ CSSMediaRuleImpl::List(FILE* out, PRInt32 aIndent) const
     PRUint32 count;
     mMedia->Count(&count);
     while (index < count) {
-      nsIAtom* medium = (nsIAtom*)mMedia->ElementAt(index++);
+      nsCOMPtr<nsIAtom> medium;
+      mMedia->QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
       medium->ToString(buffer);
       fputs(buffer, out);
       if (index < count) {
         fputs(", ", out);
       }
-      NS_RELEASE(medium);
     }
   }
   fputs(" {\n", out);
@@ -745,9 +852,9 @@ CSSMediaRuleImpl::List(FILE* out, PRInt32 aIndent) const
     PRUint32 count;
     mRules->Count(&count);
     while (index < count) {
-      nsICSSRule* rule = (nsICSSRule*)mRules->ElementAt(index++);
+      nsCOMPtr<nsICSSRule> rule;
+      mRules->QueryElementAt(index++, NS_GET_IID(nsICSSRule), getter_AddRefs(rule));
       rule->List(out, aIndent + 1);
-      NS_RELEASE(rule);
     }
   }
   fputs("}\n", out);
@@ -791,12 +898,12 @@ void CSSMediaRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     PRUint32 count;
     mMedia->Count(&count);
     while (index < count) {
-      nsIAtom* medium = (nsIAtom*)mMedia->ElementAt(index++);
+      nsCOMPtr<nsIAtom> medium;
+      mMedia->QueryElementAt(index++, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
       if(medium && uniqueItems->AddItem(medium)){
         medium->SizeOf(aSizeOfHandler, &localSize);
         aSize += localSize;
       }
-      NS_IF_RELEASE(medium);
     }
   }
   // we are done with the size we report for ourself
@@ -808,9 +915,9 @@ void CSSMediaRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     PRUint32 count;
     mRules->Count(&count);
     while (index < count) {
-      nsICSSRule* rule = (nsICSSRule*)mRules->ElementAt(index++);
+      nsCOMPtr<nsICSSRule> rule;
+      mRules->QueryElementAt(index++, NS_GET_IID(nsICSSRule), getter_AddRefs(rule));
       rule->SizeOf(aSizeOfHandler, localSize);
-      NS_RELEASE(rule);
     }
   }
 }
@@ -837,26 +944,18 @@ CSSMediaRuleImpl::Clone(nsICSSRule*& aClone) const
 NS_IMETHODIMP
 CSSMediaRuleImpl::SetMedia(nsISupportsArray* aMedia)
 {
-  nsresult result = NS_OK;
-  NS_IF_RELEASE(mMedia);
-  mMedia = aMedia;
-  NS_IF_ADDREF(mMedia);
-  return result;
+  return NS_NewMediaList(aMedia, mSheet, getter_AddRefs(mMedia));
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(PRBool)
 CSSMediaRuleImpl::UseForMedium(nsIAtom* aMedium) const
 {
   if (mMedia) {
-    if (-1 != mMedia->IndexOf(aMedium)) {
-      return NS_OK;
-    }
-    if (-1 != mMedia->IndexOf(nsLayoutAtoms::all)) {
-      return NS_OK;
-    }
-    return NS_COMFALSE;
+    PRBool matches = PR_FALSE;
+    mMedia->MatchesMedium(aMedium, &matches);
+    return matches;
   }
-  return NS_OK;
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -894,10 +993,17 @@ NS_IMETHODIMP
 CSSMediaRuleImpl::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
 {
   if (mRules) {
+    PRInt32 count = 0;
+    nsresult rv = StyleRuleCount(count);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (aIndex >= count) {
+      aRule = nsnull;
+      return NS_ERROR_ILLEGAL_VALUE;
+    }      
     aRule = (nsICSSRule*)mRules->ElementAt(aIndex);
     return NS_OK;
   }
-  return NS_ERROR_INVALID_ARG;
+  return NS_ERROR_ILLEGAL_VALUE;
 }
 
 NS_IMETHODIMP
@@ -906,6 +1012,37 @@ CSSMediaRuleImpl::EnumerateRulesForwards(nsISupportsArrayEnumFunc aFunc, void * 
   if (mRules) {
     return ((mRules->EnumerateForwards(aFunc, aData)) ? NS_OK : NS_ENUMERATOR_FALSE);
   }
+  return NS_OK;
+}
+
+/*
+ * The next two methods (DeleteStyleRuleAt and InsertStyleRuleAt)
+ * should never be called unless you have first called WillDirty() on
+ * the parents tylesheet.  After they are called, DidDirty() needs to
+ * be called on the sheet
+ */
+NS_IMETHODIMP
+CSSMediaRuleImpl::DeleteStyleRuleAt(PRUint32 aIndex)
+{
+  NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsICSSRule> rule;
+  nsresult rv = mRules->QueryElementAt(aIndex, NS_GET_IID(nsICSSRule), getter_AddRefs(rule));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rule->SetStyleSheet(nsnull);
+  return mRules->DeleteElementAt(aIndex);
+}
+
+NS_IMETHODIMP
+CSSMediaRuleImpl::InsertStyleRuleAt(PRUint32 aIndex, nsICSSRule* aRule)
+{
+  NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
+
+  // There is no xpcom-compatible version of InsertElementAt.... :(
+  if (! mRules->InsertElementAt(aRule, aIndex)) {
+    return NS_ERROR_FAILURE;
+  }
+  aRule->SetStyleSheet(mSheet);
   return NS_OK;
 }
 
@@ -926,6 +1063,7 @@ NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult)
   return it->QueryInterface(NS_GET_IID(nsICSSMediaRule), (void **) aInstancePtrResult);
 }
 
+// nsIDOMCSSRule methods
 NS_IMETHODIMP
 CSSMediaRuleImpl::GetType(PRUint16* aType)
 {
@@ -943,7 +1081,8 @@ CSSMediaRuleImpl::GetCssText(nsAWritableString& aCssText)
   if (mMedia) {
     mMedia->Count(&count);
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIAtom> medium (do_QueryInterface(mMedia->ElementAt(index)));
+      nsCOMPtr<nsIAtom> medium;
+      mMedia->QueryElementAt(index, NS_GET_IID(nsIAtom), getter_AddRefs(medium));
       if (medium) {
         nsAutoString tempString;
         if (index > 0)
@@ -960,7 +1099,8 @@ CSSMediaRuleImpl::GetCssText(nsAWritableString& aCssText)
   if (mRules) {
     mRules->Count(&count);
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIDOMCSSRule> rule (do_QueryInterface(mRules->ElementAt(index)));
+      nsCOMPtr<nsIDOMCSSRule> rule;
+      mRules->QueryElementAt(index, NS_GET_IID(nsIDOMCSSRule), getter_AddRefs(rule));
       if (rule) {
         nsAutoString tempString;
         rule->GetCssText(tempString);
@@ -998,6 +1138,60 @@ CSSMediaRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// nsIDOMCSSMediaRule methods
+NS_IMETHODIMP
+CSSMediaRuleImpl::GetMedia(nsIDOMMediaList* *aMedia)
+{
+  NS_ENSURE_ARG_POINTER(aMedia);
+  if (!mMedia) {
+    *aMedia = nsnull;
+    return NS_OK;
+  }
+
+  return CallQueryInterface(mMedia, aMedia);
+}
+
+NS_IMETHODIMP
+CSSMediaRuleImpl::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
+{
+  if (!mRuleCollection) {
+    mRuleCollection = new CSSGroupRuleRuleListImpl(this);
+    if (!mRuleCollection) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mRuleCollection);
+  }
+
+  return CallQueryInterface(mRuleCollection, aRuleList);
+}
+
+NS_IMETHODIMP
+CSSMediaRuleImpl::InsertRule(nsAReadableString & aRule, PRUint32 aIndex, PRUint32* _retval)
+{
+  NS_ENSURE_TRUE(mSheet, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
+  
+  PRUint32 count;
+  mRules->Count(&count);
+  if (aIndex > count)
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  
+  return mSheet->InsertRuleIntoGroup(aRule, this, aIndex, _retval);
+}
+
+NS_IMETHODIMP
+CSSMediaRuleImpl::DeleteRule(PRUint32 aIndex)
+{
+  NS_ENSURE_TRUE(mSheet, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
+  
+  PRUint32 count;
+  mRules->Count(&count);
+  if (aIndex >= count)
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  return mSheet->DeleteRuleFromGroup(this, aIndex);
+}
 
 // -------------------------------------------
 // nsICSSNameSpaceRule
@@ -1251,3 +1445,4 @@ CSSNameSpaceRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+

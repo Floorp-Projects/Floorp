@@ -37,7 +37,7 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICSS_MEDIA_RULE_IID; return iid; }
 
   NS_IMETHOD  SetMedia(nsISupportsArray* aMedia) = 0;
-  NS_IMETHOD  UseForMedium(nsIAtom* aMedium) const = 0;
+  NS_IMETHOD_(PRBool)  UseForMedium(nsIAtom* aMedium) const = 0;
 };
 
 extern NS_HTML nsresult

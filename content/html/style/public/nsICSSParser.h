@@ -75,6 +75,10 @@ public:
                                        PRBool                   aParseOnlyOneDecl,
                                        PRInt32*                 aHint) = 0;
 
+  NS_IMETHOD ParseRule(nsAReadableString& aRule,
+                       nsIURI*            aBaseURL,
+                       nsIStyleRule**     aResult) = 0;
+  
   // Charset management method:
   //  Set the charset before calling any of the Parse emthods if you want the 
   //  charset to be anything other than the default

@@ -33,8 +33,8 @@ interface nsIDOMMediaList : nsISupports
   readonly attribute unsigned long    length;
   DOMString          item(in unsigned long index);
 
-  void               delete(in DOMString oldMedium)
+  void               deleteMedium(in DOMString oldMedium)
                                         raises(DOMException);
-  void               append(in DOMString newMedium)
+  void               appendMedium(in DOMString newMedium)
                                         raises(DOMException);
 };
