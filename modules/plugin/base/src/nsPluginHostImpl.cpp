@@ -48,8 +48,9 @@
 #include "winbase.h"
 #endif
 
-#ifdef XP_MAC
 #include "nsFileSpec.h"
+
+#ifdef XP_MAC
 #include "nsPluginsDir.h"
 #endif
 
