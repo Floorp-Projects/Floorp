@@ -121,7 +121,7 @@ private:
     nsresult SelectChallenge(const char *challenges, nsAFlatCString &challenge, nsIHttpAuthenticator **); 
     nsresult GetAuthenticator(const char *scheme, nsIHttpAuthenticator **);
     void     GetUserPassFromURI(PRUnichar **user, PRUnichar **pass);
-    nsresult ParseRealm(const char *challenge, nsACString &realm);
+    void     ParseRealm(const char *challenge, nsACString &realm);
     nsresult PromptForUserPass(const char *host, PRInt32 port, PRBool proxyAuth, const char *realm, PRUnichar **user, PRUnichar **pass);
     void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header, const char *host, PRInt32 port, const char *path, PRUnichar **user, PRUnichar **pass);
     void     AddAuthorizationHeaders();

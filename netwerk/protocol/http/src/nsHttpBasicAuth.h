@@ -45,7 +45,7 @@
 class nsIURI;
 
 //-----------------------------------------------------------------------------
-// The nsBasicAuth class produces HTTP Basic-auth responses for a username/
+// The nsHttpBasicAuth class produces HTTP Basic-auth responses for a username/
 // (optional)password pair, BASE64("user:pass").
 //-----------------------------------------------------------------------------
 
@@ -59,4 +59,4 @@ public:
 	virtual ~nsHttpBasicAuth();
 };
 
-#endif // nsHttpBasicAuth_h__
+#endif // !nsHttpBasicAuth_h__

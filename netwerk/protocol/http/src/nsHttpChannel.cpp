@@ -496,6 +496,7 @@ nsHttpChannel::ApplyContentConversions()
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIStreamListener> converter;
             nsAutoString from = NS_ConvertASCIItoUCS2(val);
+            ToLowerCase(from);
             rv = serv->AsyncConvertData(from.get(),
                                         NS_LITERAL_STRING("uncompressed").get(),
                                         mListener,
@@ -1673,8 +1674,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
     }
 
     nsCAutoString realm;
-    rv = ParseRealm(challenge.get(), realm);
-    if (NS_FAILED(rv)) return rv;
+    ParseRealm(challenge.get(), realm);
 
     const char *host;
     nsCAutoString path;
@@ -1848,7 +1848,7 @@ nsHttpChannel::GetUserPassFromURI(PRUnichar **user,
     }
 }
 
-nsresult
+void
 nsHttpChannel::ParseRealm(const char *challenge, nsACString &realm)
 {
     //
