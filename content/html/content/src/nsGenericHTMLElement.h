@@ -509,6 +509,7 @@ public:
                                         nsAString& aHash);
 protected:
   nsresult SetElementFocus(PRBool aDoFocus);
+  nsresult RegUnRegAccessKey(PRBool aDoReg);
 
   PRBool IsEventName(nsIAtom* aName);
 };

@@ -69,7 +69,6 @@ CPPSRCS		= \
 		nsGfxTextControlFrame2.cpp \
 		nsHTMLButtonControlFrame.cpp \
 		nsImageControlFrame.cpp \
-		nsLabelFrame.cpp \
 		nsLegendFrame.cpp \
 		nsListControlFrame.cpp \
 		nsIsIndexFrame.cpp \

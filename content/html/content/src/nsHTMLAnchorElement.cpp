@@ -126,15 +126,14 @@ public:
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
                      const nsAString& aValue,
                      PRBool aNotify);
-  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify);
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                       PRBool aNotify);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
 protected:
-  nsresult RegUnRegAccessKey(PRBool aDoReg);
-
   // The cached visited state
   nsLinkState mLinkState;
 
@@ -231,86 +230,23 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape)
 NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, AccessKey, accesskey)
 
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::GetAccessKey(nsAString& aValue)
-{
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchorElement::SetAccessKey(const nsAString& aValue)
-{
-  RegUnRegAccessKey(PR_FALSE);
-
-  nsresult rv = SetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, aValue,
-                        PR_TRUE);
-
-  if (!aValue.IsEmpty()) {
-    RegUnRegAccessKey(PR_TRUE);
-  }
-
-  return rv;
-}
-
-
-// This goes and gets the proper PresContext in order
-// for it to get the EventStateManager so it can register 
-// the access key
-nsresult nsHTMLAnchorElement::RegUnRegAccessKey(PRBool aDoReg)
-{
-  // first check to see if it even has an acess key
-  nsAutoString accessKey;
-  nsresult rv;
-
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
-
-  if (NS_CONTENT_ATTR_NOT_THERE != rv) {
-    nsCOMPtr<nsIPresContext> presContext;
-    GetPresContext(this, getter_AddRefs(presContext));
-
-    // With a valid PresContext we can get the EVM 
-    // and register the access key
-    if (presContext) {
-      nsCOMPtr<nsIEventStateManager> stateManager;
-      presContext->GetEventStateManager(getter_AddRefs(stateManager));
-
-      if (stateManager) {
-        if (aDoReg) {
-          return stateManager->RegisterAccessKey(nsnull, this,
-                                                 (PRUint32)accessKey.First());
-        } else {
-          return stateManager->UnregisterAccessKey(nsnull, this,
-                                                   (PRUint32)accessKey.First());
-        }
-      }
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                  PRBool aCompileEventHandlers)
 {
-  // The document gets set to null before it is destroyed,
-  // so we unregister the the access key here (if it has one)
-  // before setting it to null
-  if (aDocument == nsnull) {
+  // Unregister the access key for the old document.
+  if (mDocument) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsresult rv;
-  rv = nsGenericHTMLContainerElement::SetDocument(aDocument,
-                                                  aDeep,
-                                                  aCompileEventHandlers);
+  nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                                        aCompileEventHandlers);
 
-  // Register the access key here (if it has one) 
-  // if the document isn't null
-  if (aDocument != nsnull) {
+  // Register the access key for the new document.
+  if (mDocument) {
     RegUnRegAccessKey(PR_TRUE);
   }
 
@@ -440,10 +376,6 @@ nsHTMLAnchorElement::GetHref(nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetHref(const nsAString& aValue)
 {
-  // Clobber our "cache", so we'll recompute it the next time
-  // somebody asks for it.
-  mLinkState = eLinkState_Unknown;
-
   return SetAttr(kNameSpaceID_None, nsHTMLAtoms::href, aValue, PR_TRUE);
 }
 
@@ -793,7 +725,19 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
   }
 
-  return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aValue, aNotify);
+  if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
+  nsresult rv =
+      nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aValue, aNotify);
+
+  if (aName == nsHTMLAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
+      !aValue.IsEmpty()) {
+    RegUnRegAccessKey(PR_TRUE);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -804,12 +748,17 @@ nsHTMLAnchorElement::SetAttr(nsINodeInfo* aNodeInfo,
   return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
-      SetLinkState(eLinkState_Unknown);
+    SetLinkState(eLinkState_Unknown);
   }
-  // We still rely on the old way of setting the attribute.
+
+  if (aAttribute == nsHTMLAtoms::accesskey &&
+      kNameSpaceID_None == aNameSpaceID) {
+    RegUnRegAccessKey(PR_FALSE);
+  }
+
   return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }

@@ -123,8 +123,8 @@ public:
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) { mConsumeFocusEvents = aDoConsume; return NS_OK; }
 
   // Access Key Registration
-  NS_IMETHOD RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, PRUint32 aKey);
-  NS_IMETHOD UnregisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, PRUint32 aKey);
+  NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey);
+  NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey);
 
   NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor);
 
