@@ -144,8 +144,8 @@ sub initBug  {
     $self->{'status_whiteboard'} = QuoteXMLChars($self->{'status_whiteboard'});
   }
 
-  $self->{'assigned_to'} = &::DBID_to_real_or_loginname($self->{'assigned_to'});
-  $self->{'reporter'} = &::DBID_to_real_or_loginname($self->{'reporter'});
+  $self->{'assigned_to'} = &::DBID_to_name($self->{'assigned_to'});
+  $self->{'reporter'} = &::DBID_to_name($self->{'reporter'});
 
   my $ccSet = new RelationSet;
   $ccSet->mergeFromDB("select who from cc where bug_id=$bug_id");
