@@ -68,7 +68,8 @@ nsTextControlFrame::~nsTextControlFrame()
 {
 }
 
-nsresult
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
 nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
@@ -76,7 +77,6 @@ nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }
   
