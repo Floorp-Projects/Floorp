@@ -29,7 +29,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIThread.h"
 #include "nsDeque.h"
-#include "nsIObserver.h"
+#include "nsObserver.h"
 #include "nsTraceRefcnt.h"
 #include "nsXPIDLString.h"
 #include "nsIEnumerator.h"

@@ -20,18 +20,22 @@
 #define nsObserverService_h___
 
 #include "nsIObserverService.h"
+#include "nsIObserverList.h"
 
 class nsHashtable;
+class nsString;
+
+// {D07F5195-E3D1-11d2-8ACD-00105A1B8860}
+#define NS_OBSERVERSERVICE_CID \
+    { 0xd07f5195, 0xe3d1, 0x11d2, { 0x8a, 0xcd, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
 
 class nsObserverService : public nsIObserverService {
 public:
+    NS_DEFINE_STATIC_CID_ACCESSOR( NS_OBSERVERSERVICE_CID )
 
 	static nsresult GetObserverService(nsIObserverService** anObserverService);
     
-	NS_IMETHOD AddObserver(nsIObserver** anObserver, nsString* aTopic);
-  NS_IMETHOD RemoveObserver(nsIObserver** anObserver, nsString* aTopic);
-	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator, nsString* aTopic);
-
+    NS_DECL_IOBSERVERSERVICE
    
   nsObserverService();
   virtual ~nsObserverService(void);
@@ -43,7 +47,7 @@ public:
 
 private:
 	
-  NS_IMETHOD GetObserverList(nsIObserverList** anObserverList, nsString* aTopic);
+  NS_IMETHOD GetObserverList(const nsString& aTopic, nsIObserverList** anObserverList);
 
   nsHashtable* mObserverTopicTable;
 

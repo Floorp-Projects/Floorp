@@ -37,9 +37,7 @@
 #include "nsIContentViewerContainer.h"
 
 static NS_DEFINE_IID(kIElementObserverIID, NS_IELEMENTOBSERVER_IID);
-static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
@@ -79,7 +77,7 @@ public:
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
   /* methode for nsIObserver */
-  NS_IMETHOD Notify(nsISupports** result);
+  NS_DECL_IOBSERVER
 
   /* methode for nsIMetaCharsetService */
   NS_IMETHOD Start();
@@ -123,7 +121,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::QueryInterface(REFNSIID aIID, void** aInsta
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if( aIID.Equals ( kIObserverIID )) {
+  if( aIID.Equals ( nsIObserver::GetIID() )) {
     *aInstancePtr = (void*) ((nsIObserver*) this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -320,7 +318,7 @@ done:
    return res;
 }
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMetaCharsetObserver::Notify(nsISupports** result) 
+NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports*, const PRUnichar*, const PRUnichar*) 
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -331,15 +329,15 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
     nsAutoString htmlTopic("htmlparser");
     nsIObserverService* anObserverService = nsnull;
 
-    res = nsServiceManager::GetService(kObserverServiceCID, 
+    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
                                        nsIObserverService::GetIID(),
                                        (nsISupports**) &anObserverService);
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->AddObserver(&mHack, &htmlTopic);
+    res = anObserverService->AddObserver(mHack, htmlTopic);
 
-    nsServiceManager::ReleaseService(kObserverServiceCID, 
+    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
                                     anObserverService);
 done:
     return res;
@@ -351,15 +349,15 @@ NS_IMETHODIMP nsMetaCharsetObserver::End()
     nsAutoString htmlTopic("htmlparser");
     nsIObserverService* anObserverService = nsnull;
 
-    res = nsServiceManager::GetService(kObserverServiceCID, 
+    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
                                        nsIObserverService::GetIID(),
                                        (nsISupports**) &anObserverService);
     if(NS_FAILED(res)) 
         goto done;
      
-    res = anObserverService->RemoveObserver(&mHack, &htmlTopic);
+    res = anObserverService->RemoveObserver(mHack, htmlTopic);
 
-    nsServiceManager::ReleaseService(kObserverServiceCID, 
+    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, 
                                     anObserverService);
 done:
     return res;

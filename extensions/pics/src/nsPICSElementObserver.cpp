@@ -176,7 +176,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, eHTMLTags aTag
     
 }
 
-NS_IMETHODIMP nsPICSElementObserver::Notify(nsISupports** result) 
+NS_IMETHODIMP nsPICSElementObserver::Observe(nsISupports*, const PRUnichar*, const PRUnichar*) 
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

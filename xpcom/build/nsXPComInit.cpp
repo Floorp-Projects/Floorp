@@ -52,8 +52,6 @@ static NS_DEFINE_CID(kArenaCID, NS_ARENA_CID);
 static NS_DEFINE_CID(kBufferCID, NS_BUFFER_CID);
 static NS_DEFINE_CID(kByteBufferCID, NS_BYTEBUFFER_CID);
 static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
-static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
-static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_CID(kPropertiesCID, NS_PROPERTIES_CID);
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 static NS_DEFINE_CID(kUnicharBufferCID, NS_UNICHARBUFFER_CID);
@@ -216,13 +214,13 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
                                 nsSupportsArray::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kObserverCID,
+    rv = RegisterGenericFactory(compMgr, nsObserver::GetCID(), 
                                 NS_OBSERVER_CLASSNAME,
                                 NS_OBSERVER_PROGID,
                                 nsObserver::Create);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kObserverServiceCID,
+    rv = RegisterGenericFactory(compMgr, nsObserverService::GetCID(),
                                 NS_OBSERVERSERVICE_CLASSNAME,
                                 NS_OBSERVERSERVICE_PROGID,
                                 nsObserverService::Create);

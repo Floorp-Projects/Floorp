@@ -57,9 +57,6 @@ static NS_DEFINE_IID(kIPICSIID,                   NS_IPICS_IID);
 static NS_DEFINE_IID(kIPrefIID,                   NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID,                    NS_PREF_CID);
 
-static NS_DEFINE_IID(kIObserverServiceIID,        NS_IOBSERVERSERVICE_IID);
-static NS_DEFINE_IID(kObserverServiceCID,         NS_OBSERVERSERVICE_CID);
-
 static NS_DEFINE_IID(kDocLoaderServiceCID,        NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,         NS_IDOCUMENTLOADER_IID);
 
@@ -527,12 +524,13 @@ nsPICS::Init()
         if (NS_FAILED(rv = NS_NewPICSElementObserver(&mPICSElementObserver)))
           return rv;
   
-        rv = nsServiceManager::GetService(kObserverServiceCID, 
+        rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
                                 nsIObserverService::GetIID(), 
                                 (nsISupports **)&anObserverService);
 
         if(rv == NS_OK) {
-          rv = anObserverService->AddObserver(&mPICSElementObserver, &aTopic);
+          rv = anObserverService->AddObserver(mPICSElementObserver, aTopic);
+          nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, anObserverService );
           if (NS_FAILED(rv))
               return rv;
 

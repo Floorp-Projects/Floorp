@@ -33,9 +33,7 @@ EXPORTS =                          \
         nsIAtom.h                  \
         nsIBuffer.h                \
         nsIByteBuffer.h            \
-        nsIObserver.h              \
         nsIObserverList.h          \
-        nsIObserverService.h       \
         nsIPageManager.h           \
         nsIProperties.h            \
         nsISimpleEnumerator.h      \
@@ -63,6 +61,8 @@ XPILD_MODULE = xpcom_ds
 XPIDLSRCS =                 \
         .\nsICollection.idl \
         .\nsIEnumerator.idl \
+		.\nsIObserver.idl   \
+		.\nsIObserverService.idl   \
         $(NULL)
 
 ################################################################################

@@ -1,2 +1,4 @@
 nsICollection.idl
 nsIEnumerator.idl
+nsIObserver.idl
+nsIObserverService.idl
