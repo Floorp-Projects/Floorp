@@ -321,8 +321,13 @@ function doLogout()
 // load a new device
 function doLoad()
 {
+  //device.loaddlg.width=300
+  //device.loaddlg.height=200
+  var dlgWidth = bundle.GetStringFromName("device.loaddlg.width");
+  var dlgHeight = bundle.GetStringFromName("device.loaddlg.height");
+  //
   window.open("load_device.xul", "loaddevice", 
-              "chrome,width=300,height=200,resizable=0,dialog=1,modal=1");
+              "chrome,width=" + dlgWidth + ",height="+ dlgHeight+ ",resizable=1,dialog=1,modal=1");
   var device_list = document.getElementById("device_list");
   while (device_list.firstChild)
     device_list.removeChild(device_list.firstChild);
