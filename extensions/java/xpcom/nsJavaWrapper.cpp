@@ -69,7 +69,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
     {
-      LOG("byte\n");
+      LOG(("byte\n"));
       if (!aParamInfo.IsOut()) {
         aVariant.val.u8 = env->CallByteMethod(aParam, byteValueMID);
       } else {
@@ -91,7 +91,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I16:
     case nsXPTType::T_U16:
     {
-      LOG("short\n");
+      LOG(("short\n"));
       if (!aParamInfo.IsOut()) {
         aVariant.val.u16 = env->CallShortMethod(aParam, shortValueMID);
       } else {
@@ -113,7 +113,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
     {
-      LOG("int\n");
+      LOG(("int\n"));
       if (!aParamInfo.IsOut()) {
         aVariant.val.u32 = env->CallIntMethod(aParam, intValueMID);
       } else {
@@ -135,7 +135,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_I64:
     case nsXPTType::T_U64:
     {
-      LOG("long\n");
+      LOG(("long\n"));
       if (!aParamInfo.IsOut()) {
         aVariant.val.u64 = env->CallLongMethod(aParam, longValueMID);
       } else {
@@ -156,7 +156,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_FLOAT:
     {
-      LOG("float\n");
+      LOG(("float\n"));
       if (!aParamInfo.IsOut()) {
         aVariant.val.f = env->CallFloatMethod(aParam, floatValueMID);
       } else {
@@ -177,7 +177,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_DOUBLE:
     {
-      LOG("double\n");
+      LOG(("double\n"));
       if (!aParamInfo.IsOut()) {
         aVariant.val.d = env->CallDoubleMethod(aParam, doubleValueMID);
       } else {
@@ -198,7 +198,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_BOOL:
     {
-      LOG("boolean\n");
+      LOG(("boolean\n"));
       if (!aParamInfo.IsOut()) {
         aVariant.val.b = env->CallBooleanMethod(aParam, booleanValueMID);
       } else {
@@ -220,7 +220,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_CHAR:
     case nsXPTType::T_WCHAR:
     {
-      LOG("char\n");
+      LOG(("char\n"));
       if (!aParamInfo.IsOut()) {
         if (tag == nsXPTType::T_CHAR)
           aVariant.val.c = env->CallCharMethod(aParam, charValueMID);
@@ -245,7 +245,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_CHAR_STR:
     case nsXPTType::T_WCHAR_STR:
     {
-      LOG("String\n");
+      LOG(("String\n"));
       jstring data = nsnull;
       if (!aParamInfo.IsOut()) {
         data = (jstring) aParam;
@@ -274,7 +274,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_IID:
     {
-      LOG("String(IID)\n");
+      LOG(("String(IID)\n"));
       jstring data = nsnull;
       if (!aParamInfo.IsOut()) {
         data = (jstring) aParam;
@@ -304,7 +304,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-      LOG("nsISupports\n");
+      LOG(("nsISupports\n"));
       jobject java_obj = nsnull;
       if (!aParamInfo.IsOut()) {
         java_obj = (jobject) aParam;
@@ -373,7 +373,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_ASTRING:
     case nsXPTType::T_DOMSTRING:
     {
-      LOG("String\n");
+      LOG(("String\n"));
       jstring data = nsnull;
       if (!aParamInfo.IsOut()) {
         data = (jstring) aParam;
@@ -401,7 +401,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_UTF8STRING:
     case nsXPTType::T_CSTRING:
     {
-      LOG("StringUTF\n");
+      LOG(("StringUTF\n"));
       jstring data = nsnull;
       if (!aParamInfo.IsOut()) {
         data = (jstring) aParam;
@@ -438,7 +438,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
       {
         if (env->IsInstanceOf(aParam, intArrayClass))
         {
-          LOG("int[] (void*)\n");
+          LOG(("int[] (void*)\n"));
           jboolean isCopy = JNI_FALSE;
           jint* buf = nsnull;
           if (aParam) {
@@ -451,7 +451,7 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
             aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
           }
         } else {
-          LOG("int (void*)\n");
+          LOG(("int (void*)\n"));
           NS_ASSERTION(type.IsPointer(), "T_VOID 'int' handler received non-pointer type");
           aVariant.val.p = (void*) env->CallIntMethod(aParam, intValueMID);
         }
@@ -878,7 +878,7 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
 
     case nsXPTType::T_VOID:
       // handle "void *" as an "int" in Java
-      LOG(" returns int (void*)");
+      LOG((" returns int (void*)"));
       aResult.i = (jint) aVariant.val.p;
       break;
 
@@ -918,7 +918,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
 #ifdef DEBUG
   const char* ifaceName;
   iinfo->GetNameShared(&ifaceName);
-  LOG("=> Calling %s::%s()\n", ifaceName, methodInfo->GetName());
+  LOG(("=> Calling %s::%s()\n", ifaceName, methodInfo->GetName()));
 #endif
 
   PRUint8 paramCount = methodInfo->GetParamCount();
@@ -929,14 +929,14 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
 
     for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
     {
-      LOG("\t Param %d: ", i);
+      LOG(("\t Param %d: ", i));
       const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
 
       if (!paramInfo.IsRetval() && !paramInfo.IsDipper()) {
         rv = SetupParams(env, env->GetObjectArrayElement(aParams, i), paramInfo,
                          methodInfo, iinfo, aMethodIndex, params, params[i]);
       } else if (paramInfo.IsDipper()) {
-        LOG("dipper");
+        LOG(("dipper"));
         const nsXPTType &type = paramInfo.GetType();
         switch (type.TagPart())
         {
@@ -957,11 +957,11 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
             break;
 
           default:
-            LOG("unhandled dipper type\n");
+            LOG(("unhandled dipper type\n"));
             rv = NS_ERROR_UNEXPECTED;
         }
       } else {
-        LOG("retval\n");
+        LOG(("retval\n"));
         params[i].ptr = &(params[i].val);
         params[i].type = paramInfo.GetType();
         params[i].flags = nsXPTCVariant::PTR_IS_DATA;
@@ -1001,12 +1001,12 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
   //  However, GetIIDForMethodParam may need some of the nsID params when it's
   //  looking for the IID of an INTERFACE_IS.  Therefore, we can't delete it
   //  until we've gone through the 'Finalize' loop once and created the result.
-  for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
+  for (PRUint8 j = 0; j < paramCount && NS_SUCCEEDED(rv); j++)
   {
-    const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
+    const nsXPTParamInfo &paramInfo = methodInfo->GetParam(j);
     const nsXPTType &type = paramInfo.GetType();
     if (type.TagPart() == nsXPTType::T_IID) {
-      nsID* iid = (nsID*) params[i].ptr;
+      nsID* iid = (nsID*) params[j].ptr;
       delete iid;
     }
   }

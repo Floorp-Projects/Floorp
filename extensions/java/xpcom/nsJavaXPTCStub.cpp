@@ -67,9 +67,9 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
       nsMemory::Free(iid);
     }
   }
-  LOG("+++ nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s iid=%s)\n", (int) this,
-      mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID), javaObjectName,
-      iid_str ? iid_str : "NULL");
+  LOG(("+++ nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s iid=%s)\n", (int) this,
+       mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID), javaObjectName,
+       iid_str ? iid_str : "NULL"));
   if (isCopy)
     mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
   if (iid_str)
@@ -84,8 +84,8 @@ nsJavaXPTCStub::~nsJavaXPTCStub()
   jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   jstring name = (jstring) mJavaEnv->CallObjectMethod(clazz, getNameMID);
   const char* javaObjectName = mJavaEnv->GetStringUTFChars(name, &isCopy);
-  LOG("--- ~nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s)\n", (int) this,
-      mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID), javaObjectName);
+  LOG(("--- ~nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s)\n", (int) this,
+       mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID), javaObjectName));
   if (isCopy)
     mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
 #endif
@@ -139,7 +139,7 @@ nsJavaXPTCStub::Release()
 NS_IMETHODIMP
 nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
 {
-  LOG("JavaStub::QueryInterface()\n");
+  LOG(("JavaStub::QueryInterface()\n"));
   nsJavaXPTCStub *master = mMaster ? mMaster : this;
 
   // This helps us differentiate between the help classes.
@@ -177,7 +177,7 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   }
 
   // Query Java object
-  LOG("\tCalling Java object queryInterface\n");
+  LOG(("\tCalling Java object queryInterface\n"));
   jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   char* sig = "(Ljava/lang/String;)Lorg/mozilla/xpcom/nsISupports;";
   jmethodID qiMID = mJavaEnv->GetMethodID(clazz, "queryInterface", sig);
@@ -280,7 +280,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
 #ifdef DEBUG
   const char* ifaceName;
   mIInfo->GetNameShared(&ifaceName);
-  LOG("nsJavaXPTCStub::CallMethod [%s::%s]\n", ifaceName, aMethodInfo->GetName());
+  LOG(("nsJavaXPTCStub::CallMethod [%s::%s]\n", ifaceName, aMethodInfo->GetName()));
 #endif
 
   nsresult rv = NS_OK;
@@ -1271,7 +1271,7 @@ nsJavaXPTCStub::GetWeakReference(nsIWeakReference** aInstancePtr)
   if (mMaster)
     return mMaster->GetWeakReference(aInstancePtr);
 
-  LOG("==> nsJavaXPTCStub::GetWeakReference()\n");
+  LOG(("==> nsJavaXPTCStub::GetWeakReference()\n"));
 
   if (!aInstancePtr)
     return NS_ERROR_NULL_POINTER;
