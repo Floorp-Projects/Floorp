@@ -55,8 +55,6 @@ public:
     nsresult SetStreamListener(nsIStreamListener *aListener);
 
     PRUint32         mServerType;           // what kind of server is it.
-    nsCAutoString    mCwd;                  // what dir are we in
-    PRBool           mList;                 // are we sending LIST or NLST
     nsAutoString     mPassword;
     PRInt32          mSuspendedWrite;
 

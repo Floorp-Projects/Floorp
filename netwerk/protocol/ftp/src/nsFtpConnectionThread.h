@@ -72,27 +72,18 @@ typedef enum _FTP_STATE {
     FTP_S_PASS, FTP_R_PASS,
     FTP_S_SYST, FTP_R_SYST,
     FTP_S_ACCT, FTP_R_ACCT,
-    FTP_S_PWD , FTP_R_PWD ,
-    FTP_S_DEL_FILE, FTP_R_DEL_FILE,
-    FTP_S_DEL_DIR , FTP_R_DEL_DIR ,
-    FTP_S_MKDIR, FTP_R_MKDIR,
-    FTP_S_MODE, FTP_R_MODE,
+    FTP_S_TYPE, FTP_R_TYPE,
     FTP_S_CWD,  FTP_R_CWD,
     FTP_S_SIZE, FTP_R_SIZE,
+    FTP_S_REST, FTP_R_REST,
     FTP_S_RETR, FTP_R_RETR,
     FTP_S_STOR, FTP_R_STOR,
-    FTP_S_MDTM, FTP_R_MDTM,
     FTP_S_LIST, FTP_R_LIST,
-    FTP_S_TYPE, FTP_R_TYPE,
-
-///////////////////////
-//// Data channel connection setup states
-    FTP_S_PASV, 
-    FTP_R_PASV
+    FTP_S_PASV, FTP_R_PASV
 } FTP_STATE;
 
 // higher level ftp actions
-typedef enum _FTP_ACTION { GET, PUT, MKDIR, DEL} FTP_ACTION;
+typedef enum _FTP_ACTION {GET, PUT} FTP_ACTION;
 
 class DataRequestForwarder;
 
@@ -124,27 +115,22 @@ private:
     nsresult        S_syst(); FTP_STATE       R_syst();
     nsresult        S_acct(); FTP_STATE       R_acct();
 
-    nsresult        S_pwd();  FTP_STATE       R_pwd();
-    nsresult        S_mode(); FTP_STATE       R_mode();
+    nsresult        S_type(); FTP_STATE       R_type();
     nsresult        S_cwd();  FTP_STATE       R_cwd();
 
     nsresult        S_size(); FTP_STATE       R_size();
-    nsresult        S_mdtm(); FTP_STATE       R_mdtm();
     nsresult        S_list(); FTP_STATE       R_list();
 
+    nsresult        S_rest(); FTP_STATE       R_rest();
     nsresult        S_retr(); FTP_STATE       R_retr();
     nsresult        S_stor(); FTP_STATE       R_stor();
     nsresult        S_pasv();     FTP_STATE   R_pasv();
-    nsresult        S_del_file(); FTP_STATE   R_del_file();
-    nsresult        S_del_dir();  FTP_STATE   R_del_dir();
-
-    nsresult        S_mkdir();    FTP_STATE   R_mkdir();
     // END: STATE METHODS
     ///////////////////////////////////
 
     // internal methods
-    FTP_STATE   FindActionState(void);
     void        SetDirMIMEType(nsString& aString);
+    void        MoveToNextState(FTP_STATE nextState);
     nsresult    Process();
 
 
@@ -169,10 +155,11 @@ private:
     nsCAutoString       mResponseMsg;       // the last command response text
 
         // ****** channel/transport/stream vars 
-    nsFtpControlConnection*         mControlConnection;// cacheable control connection (owns mCPipe)
+    nsFtpControlConnection*         mControlConnection;       // cacheable control connection (owns mCPipe)
+    PRPackedBool                    mReceivedControlData;  
     PRPackedBool                    mTryingCachedControl;     // retrying the password
-    PRPackedBool                    mWaitingForDConn;     // Are we wait for a data connection
-    nsCOMPtr<nsITransport>          mDPipe;            // the data transport
+    PRPackedBool                    mWaitingForDConn;         // Are we wait for a data connection
+    nsCOMPtr<nsITransport>          mDPipe;                   // the data transport
     nsCOMPtr<nsIRequest>            mDPipeRequest;
     DataRequestForwarder*           mDRequestForwarder;
 
@@ -183,8 +170,6 @@ private:
         // ****** connection cache vars
     PRInt32             mServerType;    // What kind of server are we talking to
     PRPackedBool        mList;          // Use LIST instead of NLST
-    nsCAutoString       mCwd;           // Our current working dir.
-    nsCAutoString       mCwdAttempt;    // The dir we're trying to get into.
 
         // ****** protocol interpretation related state vars
     nsAutoString        mUsername;      // username
@@ -198,7 +183,6 @@ private:
     nsCOMPtr<nsIURI>       mURL;        // the uri we're connecting to
     PRInt32                mPort;       // the port to connect to
     nsAutoString           mFilename;   // url filename (if any)
-    PRTime                 mLastModified;// last modified time for file
     nsXPIDLCString         mPath;       // the url's path
 
         // ****** other vars
