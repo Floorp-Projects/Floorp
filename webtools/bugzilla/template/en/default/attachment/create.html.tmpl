@@ -59,17 +59,17 @@
 
   <table class="attachment_entry">
     <tr>
-      <th>File:</th>
+      <th><label for="data">File:</label></th>
       <td>
         <em>Enter the path to the file on your computer.</em><br>
-        <input type="file" name="data" size="50">
+        <input type="file" id="data" name="data" size="50">
       </td>
     </tr>
     <tr>
-      <th>Description:</th>
+      <th><label for="description">Description:</label></th>
       <td>
         <em>Describe the attachment briefly.</em><br>
-        <input type="text" name="description" size="60" maxlength="200">
+        <input type="text" id="description" name="description" size="60" maxlength="200">
       </td>
     </tr>
     <tr>
@@ -152,10 +152,10 @@
       </td>
     </tr>
     <tr>
-      <th>Comment:</th>
+      <th><label for="comment">Comment:</label></th>
       <td>
         <em>(optional) Add a comment about this attachment to the [% terms.bug %].</em><br>
-        <textarea wrap="soft" name="comment" rows="6" cols="80"></textarea>
+        <textarea wrap="soft" id="commment" name="comment" rows="6" cols="80"></textarea>
       </td>
     </tr>
     <tr>
@@ -166,7 +166,7 @@
 
 </form>
 
-<script language="JavaScript" type="text/javascript">
+<script type="text/javascript">
   <!--
   function setContentTypeDisabledState()
   {
@@ -186,6 +186,3 @@
 </script>
 
 [% PROCESS global/footer.html.tmpl %]
-
-
-
