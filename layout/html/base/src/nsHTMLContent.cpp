@@ -197,10 +197,12 @@ void nsHTMLContent::Compact()
 {
 }
 
-nsIDocument* nsHTMLContent::GetDocument() const
+nsresult
+nsHTMLContent::GetDocument(nsIDocument*& aResult) const
 {
+  aResult = mDocument;
   NS_IF_ADDREF(mDocument);
-  return mDocument;
+  return NS_OK;
 }
 
 void nsHTMLContent::SetDocument(nsIDocument* aDocument)
@@ -239,24 +241,28 @@ PRInt32 nsHTMLContent::IndexOf(nsIContent* aPossibleChild) const
   return -1;
 }
 
-PRBool nsHTMLContent::InsertChildAt(nsIContent* aKid, PRInt32 aIndex)
+NS_IMETHODIMP
+nsHTMLContent::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 {
-  return PR_FALSE;
+  return NS_OK;
 }
 
-PRBool nsHTMLContent::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex)
+NS_IMETHODIMP
+nsHTMLContent::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 {
-  return PR_FALSE;
+  return NS_OK;
 }
 
-PRBool nsHTMLContent::AppendChild(nsIContent* aKid)
+NS_IMETHODIMP
+nsHTMLContent::AppendChild(nsIContent* aKid, PRBool aNotify)
 {
-  return PR_FALSE;
+  return NS_OK;
 }
 
-PRBool nsHTMLContent::RemoveChildAt(PRInt32 aIndex)
+NS_IMETHODIMP
+nsHTMLContent::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 {
-  return PR_FALSE;
+  return NS_OK;
 }
 
 void nsHTMLContent::SetAttribute(const nsString& aName, const nsString& aValue)
