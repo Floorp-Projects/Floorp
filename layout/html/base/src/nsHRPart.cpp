@@ -266,12 +266,18 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
   else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
     float pct = position->mWidth.GetPercentValue();
-    aDesiredSize.width = nscoord(pct * aReflowState.maxSize.width);
+    if (aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE) {
+      aDesiredSize.width = 1;
+    }
+    else {
+      aDesiredSize.width = nscoord(pct * aReflowState.maxSize.width);
+    }
   }
   else {
     if (aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE) {
       aDesiredSize.width = 1;
-    } else {
+    }
+    else {
       aDesiredSize.width = aReflowState.maxSize.width;
     }
   }
