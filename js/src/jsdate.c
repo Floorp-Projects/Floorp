@@ -1795,7 +1795,11 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		}
 		array[loop] = js_DoubleToInteger(d);
 	    } else {
-		array[loop] = 0;
+                if (loop == 2) {
+                    array[loop] = 1; /* Default the date argument to 1. */
+                } else {
+                    array[loop] = 0;
+                }
 	    }
 	}
 
@@ -1806,11 +1810,6 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	/* adjust 2-digit years into the 20th century */
 	if (array[0] >= 0 && array[0] <= 99)
 	    array[0] += 1900;
-
-	/* if we got a 0 for 'date' (which is out of range)
-	 * pretend it's a 1 */
-	if (array[2] < 1)
-	    array[2] = 1;
 
 	day = MakeDay(array[0], array[1], array[2]);
 	time = MakeTime(array[3], array[4], array[5], array[6]);
