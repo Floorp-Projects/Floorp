@@ -121,13 +121,13 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
   void SetKeepPumpingData(nsIChannel* channel, nsISupports* context) {
+    NS_ADDREF(channel);
     NS_IF_RELEASE(mChannel);
     mChannel = channel;
-    NS_ADDREF(mChannel);
+
+    NS_IF_ADDREF(context);
     NS_IF_RELEASE(mUserContext);
     mUserContext = context;
-    if (mUserContext)
-        NS_ADDREF(mUserContext);
   }
 #else
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
@@ -242,7 +242,7 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
 #endif
 {
   PRUint32 max_read=0;
-  PRUint32 bytes_read = 0, str_length;
+  PRUint32 bytes_read = 0;
   ilINetReader *reader = mURL->GetReader();
 
   if (mInterrupted || mStatus != 0) {
@@ -264,6 +264,10 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
             max_read = 128;
     }
 
+    if (max_read > (length-bytes_read)) {
+      max_read = length-bytes_read;
+    }
+
     if (max_read > IMAGE_BUF_SIZE) {
       max_read = IMAGE_BUF_SIZE;
     }
@@ -275,15 +279,18 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
 
     err = pIStream->Read(mBuffer,
                          max_read, &nb);
+
     if (err == NS_BASE_STREAM_WOULD_BLOCK) {
+      NS_ASSERTION(nb == 0, "Data will be lost.");
       err = NS_OK;
       break;
     }
     if (NS_FAILED(err) || nb == 0) {
+      NS_ASSERTION(nb == 0, "Data will be lost.");
       break;
     }
-    bytes_read += nb;
 
+    bytes_read += nb;
     if (mFirstRead == PR_TRUE) {
             
       err = reader->FirstWrite((const unsigned char *)mBuffer, nb);
@@ -308,16 +315,14 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
 	    NS_RELEASE(reader);
       return NS_ERROR_ABORT;
     }
-  } while(nb != 0);
+  } while(bytes_read < length);
 
   if (NS_FAILED(err)) {
     mStatus = MK_IMAGE_LOSSAGE;
     mInterrupted = PR_TRUE;
   }
 
-  err = pIStream->Available(&str_length);
-
-  if ((NS_OK == err) && (bytes_read < str_length)) {
+  if (bytes_read < length) {
     // If we haven't emptied the stream, hold onto it, because
     // we will need to read from it subsequently and we don't
     // know if we'll get a OnDataAvailable call again.
@@ -327,6 +332,8 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
     NS_ADDREF(pIStream);
     NS_IF_RELEASE(mStream);
     mStream = pIStream;
+  } else {
+    NS_IF_RELEASE(mStream);
   }
 
   NS_RELEASE(reader);
@@ -340,17 +347,16 @@ ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
   ImageConsumer *consumer = (ImageConsumer *)aClosure;
   nsAutoString status;
 
-  if (consumer->mURL) {
-    consumer->mURL->QueryInterface(kIURLIID, (void**)&url);
-  }
 #ifdef NECKO
   consumer->OnStopRequest(consumer->mChannel, consumer->mUserContext,
                           NS_BINDING_SUCCEEDED, status.GetUnicode());
 #else
+  if (consumer->mURL) {
+    consumer->mURL->QueryInterface(kIURLIID, (void**)&url);
+  }
   consumer->OnStopRequest(url, NS_BINDING_SUCCEEDED, status.GetUnicode());
-#endif
-
   NS_IF_RELEASE(url);
+#endif
 }
 
 NS_IMETHODIMP
@@ -373,23 +379,27 @@ ImageConsumer::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMs
   if((mStream != nsnull) && (status == NS_BINDING_SUCCEEDED)) {
     PRUint32 str_length;
     nsresult err = mStream->Available(&str_length);
-    if (err == NS_OK) {
+    if (NS_SUCCEEDED(err)) {
+      NS_ASSERTION((str_length > 0), "No data left in the stream!");
 #ifdef NECKO
       err = OnDataAvailable(channel, aContext, mStream, 0, str_length);  // XXX fix offset
-      SetKeepPumpingData(channel, aContext);
 #else
       err = OnDataAvailable(aURL, mStream, str_length);
 #endif
-      // If we still have the stream, there's still data to be 
-      // pumped, so we set a timer to call us back again.
-      if ((err == NS_OK) && (mStream != nsnull)) {
-        if ((NS_OK != NS_NewTimer(&mTimer)) ||
-            (NS_OK != mTimer->Init(ImageConsumer::KeepPumpingStream, this, 0))) {
-          mStatus = MK_IMAGE_LOSSAGE;
-          NS_RELEASE(mStream);
-        }
-        else {
-          return NS_OK;
+      if (NS_SUCCEEDED(err)) {
+        // If we still have the stream, there's still data to be 
+        // pumped, so we set a timer to call us back again.
+        if (mStream) {
+          SetKeepPumpingData(channel, aContext);
+
+          if ((NS_OK != NS_NewTimer(&mTimer)) ||
+              (NS_OK != mTimer->Init(ImageConsumer::KeepPumpingStream, this, 0))) {
+            mStatus = MK_IMAGE_LOSSAGE;
+            NS_RELEASE(mStream);
+          }
+          else {
+            return NS_OK;
+          }
         }
       }
       else {
