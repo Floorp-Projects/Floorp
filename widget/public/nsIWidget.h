@@ -115,7 +115,11 @@ enum nsWindowType {
   // child windows (contained inside a window on the desktop (has no border))
   eWindowType_child,
   // windows that are invisible or offscreen
-  eWindowType_invisible
+  eWindowType_invisible,
+  // plugin window
+  eWindowType_plugin,
+  // java plugin window
+  eWindowType_java
 };
 
 
