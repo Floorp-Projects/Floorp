@@ -19,7 +19,7 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= gkxuloutliner_s
+LIBRARY_NAME	= gkxulgrid_s
 REQUIRES	= xpcom \
 		  string \
 		  dom \
@@ -45,30 +45,41 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS	= \
- nsOutlinerBodyFrame.cpp \
- nsOutlinerBoxObject.cpp \
- nsOutlinerColFrame.cpp \
- nsOutlinerSelection.cpp \
- $(NULL)
+        nsGridLayout2.cpp \
+        nsGridRowLayout.cpp \
+        nsGridRowLeafLayout.cpp \
+        nsGridRowLeafFrame.cpp \
+        nsGridRowGroupLayout.cpp \
+        nsGridRowGroupFrame.cpp \
+        nsGrid.cpp \
+        nsGridRow.cpp \
+        nsGridCell.cpp \
+        $(NULL)
 
 EXPORTS = \
- nsOutlinerBodyFrame.h \
- nsOutlinerColFrame.h \
- nsOutlinerSelection.h \
- $(NULL)
+          nsGridLayout2.h       \
+          nsGridRowLayout.h \
+          nsGridRowLeafLayout.h \
+          nsGridRowLeafFrame.h \
+          nsGridRowGroupLayout.h \
+          nsIGridPart.h \
+          nsGrid.h \
+          nsGridRow.h \
+          nsGridCell.h \
+          $(NULL)
 
 DEFINES += -D_IMPL_NS_HTML
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
-		-I$(srcdir)/../../../../base/src \
-		-I$(srcdir)/../../../../../html/style/src \
-		-I$(srcdir)/../../../../../html/base/src \
-		-I$(srcdir)/../../../../../html/forms/src \
-		-I$(srcdir)/../../../../content/src \
-		-I$(srcdir)/../../../../../xml/content/src \
-		-I$(srcdir)/../../../../../base/public \
-		-I$(srcdir)/../../../../../xul/base/src \
+		-I$(srcdir)/../../../base/src \
+		-I$(srcdir)/../../../../html/style/src \
+		-I$(srcdir)/../../../../html/base/src \
+		-I$(srcdir)/../../../../html/forms/src \
+		-I$(srcdir)/../../../content/src \
+		-I$(srcdir)/../../../../xml/content/src \
+		-I$(srcdir)/../../../../base/public \
+		-I$(srcdir)/../../../../xul/base/src \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
