@@ -40,7 +40,7 @@ AC_CANONICAL_SYSTEM
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
 TARGET_OS="${target_os}"
-MOZILLA_VERSION='0.9.9+'
+MOZILLA_VERSION='1.1a+'
 AC_SUBST(MOZILLA_VERSION)
 
 dnl ========================================================
