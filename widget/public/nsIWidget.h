@@ -40,6 +40,8 @@ struct  nsRect;
 struct  nsFont;
 class   nsIMenuBar;
 class   nsIEventListener;
+class   nsIRollupListener;
+
 /**
  * Callback function that processes events.
  * The argument is actually a subtype (subclass) of nsEvent which carries
@@ -660,6 +662,14 @@ class nsIWidget : public nsISupports {
      *
      */
     NS_IMETHOD CaptureMouse(PRBool aCapture) = 0;
+
+    /**
+     * Enables/Disables system capture of any and all events that would cause a
+     * dropdown to be rolled up
+     * @param aCapture PR_TRUE enables capture, PR_FALSE disables capture 
+     *
+     */
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture) = 0;
 };
 
 #endif // nsIWidget_h__

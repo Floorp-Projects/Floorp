@@ -64,6 +64,7 @@ EXPORTS		= \
 		nsIFontSizeIterator.h \
 		nsIFontRetrieverService.h \
 		nsIContextMenu.h \
+    nsIRollupListener.h \
 		$(NULL)
 
 XPIDLSRCS	= \

@@ -33,3 +33,4 @@ nsIPopUpMenu.h
 nsIKeyBindMgr.h
 nsStringUtil.h
 nsIContextMenu.h
+nsIRollupListener.h
