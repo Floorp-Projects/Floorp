@@ -665,6 +665,10 @@
       if ((shortcutURL != null) && (shortcutURL != "")) {
         document.getElementById('urlbar').value = shortcutURL;
       }
+
+	// if the URL is bookmarked, update its "Last Visited" date
+      bmks.UpdateBookmarkLastVisitedDate(document.getElementById('urlbar').value);
+
 	}
     catch (ex) {
       // stifle any exceptions so we're sure to load the URL.

@@ -951,6 +951,7 @@ public:
 	// nsIRDFDataSource
 	NS_IMETHOD AddBookmark(const char *aURI, const PRUnichar *aOptionalTitle);
 	NS_IMETHOD FindShortcut(const PRUnichar *aUserInput, char **aShortcutURL);
+	NS_IMETHOD UpdateBookmarkLastVisitedDate(const char *uri);
 
 	NS_IMETHOD GetURI(char* *uri);
 
@@ -1209,6 +1210,51 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
+{
+	nsCOMPtr<nsIRDFResource>	bookmark;
+	nsresult			rv;
+
+	if (NS_SUCCEEDED(rv = gRDF->GetResource(aURL, getter_AddRefs(bookmark) )))
+	{
+		PRBool			isBookmark = PR_FALSE;
+
+		// Note: always use mInner!! Otherwise, could get into an infinite loop
+		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
+
+		if (NS_SUCCEEDED(rv = mInner->HasAssertion(bookmark, kRDF_type, kNC_Bookmark,
+			PR_TRUE, &isBookmark)) && (isBookmark == PR_TRUE))
+		{
+			nsCOMPtr<nsIRDFDate>	now;
+
+			if (NS_SUCCEEDED(rv = gRDF->GetDateLiteral(PR_Now(), getter_AddRefs(now))))
+			{
+				nsCOMPtr<nsIRDFNode>	lastMod;
+
+				if (NS_SUCCEEDED(rv = mInner->GetTarget(bookmark, kWEB_LastVisitDate, PR_TRUE,
+					getter_AddRefs(lastMod))) && (rv != NS_RDF_NO_VALUE))
+				{
+					rv = mInner->Change(bookmark, kWEB_LastVisitDate, lastMod, now);
+				}
+				else
+				{
+					rv = mInner->Assert(bookmark, kWEB_LastVisitDate, now, PR_TRUE);
+				}
+				
+				// XXX For the moment, do an immediate flush.
+				if (NS_SUCCEEDED(rv))
+				{
+					Flush();
+				}
+			}
+		}
+	}
+	return(rv);
 }
 
 
