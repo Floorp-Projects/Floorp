@@ -31,17 +31,19 @@
 
 .toolbar-primary {
   -moz-binding: url("chrome://communicator/skin/toolbar/toolbarBindings.xml#toolbar-primary");
-  min-height: 43px;
+  min-height: 45px;
+  background-image: none;
   background-color: #B1BDC9;
 }
 
 .toolbar-primary > .toolbar-holder {
   border: none;
+  border-bottom: 1px solid #95A0AD;
 }
 
 .toolbar-primary-icon {
   width: 77px;
-  height: 51px;
+  height: 50px;
   background-repeat: no-repeat;
   background-align: top;
 }

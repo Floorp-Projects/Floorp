@@ -30,7 +30,7 @@
 /* ::::: image precacheing ::::: */
 
 #resource_bundle_navigator {
-  -moz-binding            : url('chrome://navigator/skin/resources.xml#resource_bundle_navigator')      
+  -moz-binding: url("chrome://navigator/skin/resources.xml#resource_bundle_navigator");
 }
 
 /* ::::: primary toolbar buttons ::::: */
@@ -176,56 +176,18 @@
 #forward-button > .menubutton-dual-stack
     > .menubutton-dual-dropmarker-box
 {
-  margin: 30px 0px 0px 25px;
+  margin: 30px 0px 0px 34px;
 }
 
-/* ..... dropmarker ..... */
-
-#back-button > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
-#forward-button > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker
-{
-  list-style-image: url("chrome://navigator/skin/toolbar/mbtn1-arrow.gif");
-}
-
-#back-button:hover > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
-#forward-button:hover > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker
-{
-  list-style-image: url("chrome://navigator/skin/toolbar/mbtn1-arrow-hov.gif");
-}
-
-#back-button:hover:active > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
-#forward-button:hover:active > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker
-{
-  list-style-image: url("chrome://navigator/skin/toolbar/mbtn1-arrow-act.gif");
-}
-
-#back-button[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
-#back-button:hover[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
-#back-button:hover:active[disabled="true"]
-    > .menubutton-dual-stack > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
-#forward-button[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
-#forward-button:hover[disabled="true"] > .menubutton-dual-stack
-    > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
-#forward-button:hover:active[disabled="true"]
-    > .menubutton-dual-stack > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker
-{
-  list-style-image: url("chrome://navigator/skin/toolbar/mbtn1-arrow-dis.gif");
+#reload-button {
+  margin-right: 5px; /* balance out extra dropmarker space  */
 }
 
 /* ::::: navbar-inner - the grooved area around the urlbar ::::: */
 
 #nav-bar-inner {
   -moz-binding: url("chrome://navigator/skin/navigatorBindings.xml#nav-bar-inner");
-  margin: 6px 0px 0px 5px;
+  margin: 7px 0px 0px 5px;
   min-width: 0px;
 }
 
@@ -458,5 +420,4 @@
 #sidebar-splitter[state="collapsed"] > grippy {
   background-image: url("chrome://communicator/skin/sidebar/grip-sidebar-after.gif");
 }
-
 

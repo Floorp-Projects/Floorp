@@ -1,14 +1,9 @@
 <?xml version="1.0"?>
-<bindings id="EditorResourcesBindings"
-          xmlns="http://www.mozilla.org/xbl"
-          xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-          
+
+<bindings id="EditorResourceBindings" xmlns="http://www.mozilla.org/xbl">
          
- <binding id="resource_bundle_editor" extends="" >
+ <binding id="resource_bundle_editor">
    <resources>
-     <!-- begin resources -->
-     <!-- just hover and active states -->
      <image src="chrome://editor/skin/btn1/newfile-hov.gif"/>
      <image src="chrome://editor/skin/btn1/newfile-act.gif"/>
      <image src="chrome://editor/skin/btn1/openfile-hov.gif"/>
@@ -31,9 +26,7 @@
      <image src="chrome://editor/skin/btn1/table-act.gif"/>
      <image src="chrome://editor/skin/btn1/spell-hov.gif"/>
      <image src="chrome://editor/skin/btn1/spell-act.gif"/>
-
-     <!-- end resources -->
-   </resources>	
+   </resources>  
   </binding>
           
-</bindings>  
+</bindings>

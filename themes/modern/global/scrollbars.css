@@ -31,82 +31,72 @@
 
 scrollbar {
   -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
-  -moz-user-focus: ignore; 
   cursor: default;
-
 }
 
 /* ::::: slider ::::: */
 
 slider {
-  -moz-user-focus: ignore;
-  -moz-user-select: none;
   height: 14px;
-  background: url("chrome://global/skin/scrollbar/bar-hrz-mid.gif") repeat-x;
+  background: url("chrome://global/skin/scrollbar/slider-hrz-mid.gif") repeat-x;
 }
 
 slider[align="vertical"] {
-  -moz-user-focus: ignore;
-  -moz-user-select: none;
   border-top: 0px;
   border-bottom: 0px;
   width: 14px;
-  background: url("chrome://global/skin/scrollbar/bar-vrt-mid.gif") repeat-y;
+  background: url("chrome://global/skin/scrollbar/slider-vrt-mid.gif") repeat-y;
 }
 
 /* ::::: thumb (horizontal) ::::: */
 
 thumb {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-horizontal");
-  -moz-user-focus: ignore;
-  -moz-user-select: none;
+  height: 14px;
 }
 
 .thumb-horz-spring-left {
   width: 3px;
-  height: 14px;
   background: url("chrome://global/skin/scrollbar/thumb-hrz-lft.gif") no-repeat;
 }
 
 .thumb-horz-box-middle {
-  height: 14px;
   background: url("chrome://global/skin/scrollbar/thumb-hrz-mid.gif") repeat-x;
 }
 
 .thumb-horz-spring-right {
   width: 3px;
-  height: 14px;
   background: url("chrome://global/skin/scrollbar/thumb-hrz-rit.gif") no-repeat;
 }
 
 .thumb-horz-grippy {
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-hrz-grip.gif");
+  margin-left: 1px;
+  width: 10px;
+  background: url("chrome://global/skin/scrollbar/thumb-hrz-grip.gif") no-repeat;
 }
 
 /* ..... active state ..... */
 
 thumb:active > .thumb-horz-spring-left {
-  background: url("chrome://global/skin/scrollbar/thumb-hrz-act-lft.gif") no-repeat;
+  background: url("chrome://global/skin/scrollbar/thumb-hrz-act-lft-act.gif") no-repeat;
 }
 
 thumb:active > .thumb-horz-box-middle {
-  background: url("chrome://global/skin/scrollbar/thumb-hrz-act-mid.gif") repeat-x;
+  background: url("chrome://global/skin/scrollbar/thumb-hrz-mid-act.gif") repeat-x;
 }
 
 thumb:active > .thumb-horz-spring-right {
-  background: url("chrome://global/skin/scrollbar/thumb-hrz-act-rit.gif") no-repeat;
+  background: url("chrome://global/skin/scrollbar/thumb-hrz-rit-act.gif") no-repeat;
 }
 
 thumb:active > .thumb-horz-box-middle > .thumb-horz-grippy {
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-hrz-act-grip.gif");
+  background-image: url("chrome://global/skin/scrollbar/thumb-hrz-grip-act.gif");
 }
 
 /* ::::: thumb (vertical) ::::: */
 
 thumb[align="vertical"] {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-vertical");
-  -moz-user-focus: ignore;
-  -moz-user-select: none;
 }
 
 .thumb-vert-spring-top {
@@ -127,33 +117,34 @@ thumb[align="vertical"] {
 }
 
 .thumb-vert-grippy {
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-vrt-grip.gif");
+  margin-top: 1px;
+  height: 10px;
+  background: url("chrome://global/skin/scrollbar/thumb-vrt-grip.gif") no-repeat;
 }
 
 /* ..... active state ..... */
 
 thumb:active > .thumb-vert-spring-top {
-  background: url("chrome://global/skin/scrollbar/thumb-vrt-act-top.gif") no-repeat;
+  background: url("chrome://global/skin/scrollbar/thumb-vrt-top-act.gif") no-repeat;
 }
 
 thumb:active > .thumb-vert-box-middle {
-  background: url("chrome://global/skin/scrollbar/thumb-vrt-act-mid.gif") repeat-y;
+  background: url("chrome://global/skin/scrollbar/thumb-vrt-mid-act.gif") repeat-y;
 }
 
 thumb:active > .thumb-vert-spring-bottom {
-  background: url("chrome://global/skin/scrollbar/thumb-vrt-act-btm.gif") no-repeat;
+  background: url("chrome://global/skin/scrollbar/thumb-vrt-btm-act.gif") no-repeat;
 }
 
 thumb:active > .thumb-vert-box-middle > .thumb-vert-grippy {
-  list-style-image: url("chrome://global/skin/scrollbar/thumb-vrt-act-grip.gif");
+  background-image: url("chrome://global/skin/scrollbar/thumb-vrt-grip-act.gif");
 }
 
 /* ::::: scrollbar button ::::: */
 
 scrollbarbutton {
   -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbarbutton");
-  -moz-user-focus: ignore;
-  -moz-user-select: none;
+  cursor: default;
   vertical-align: bottom;
 }
 

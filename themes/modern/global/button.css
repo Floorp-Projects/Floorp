@@ -57,7 +57,7 @@ button {
   /* .......... focused state .......... */
 
 button:focus {
-  border-color: #A5A8B1;
+  border-color: #98A5B2;
   -moz-border-radius: 6px;
 }
     

@@ -32,9 +32,8 @@
 
 /* ::::: image precacheing ::::: */
 
-#resource_bundle_messenger 
-{
-   -moz-binding          : url("chrome://messenger/skin/resources.xml#resource_bundle_messenger");
+#resource_bundle_messenger {
+   -moz-binding: url("chrome://messenger/skin/resources.xml#resource_bundle_messenger");
 }
 
 /* ::::: primary toolbar masthead ::::: */
@@ -382,15 +381,10 @@ searchterm {
 
 /* ..... status bar adjustments ..... */
 
-statusbar, 
-#status-bar,
-.statusbar-internal-box-1 {
-  border-top: none;
-}
-
-#subscribeWindow > statusbar,
-#subscribeWindow > statusbar > .statusbar-internal-box-1 {
-  border-left: none;
+statusbarpanel,
+#component-bar,
+.progressmeter-statusbar {
+  border-top: none !important;
 }
 
 /* ..... splitter adjustments ..... */
@@ -440,7 +434,7 @@ statusbar,
   border-top: none;
 }
 
-.sidebarheader-main {
+#sidebar-box > .sidebarheader-main {
   border-top: none;
   border-bottom: 1px solid #63676B;
   border-left: 1px solid #63676B;
@@ -448,7 +442,7 @@ statusbar,
   background-color: #C7D0D9;
 }
 
-.sidebarheader-main > .sidebarheader-internal-box {
+#sidebar-box > .sidebarheader-main > .sidebarheader-internal-box {
   border-top: 1px solid #EEF0F3;
   border-left: 1px solid #EEF0F3;
   color: #000000;

@@ -73,7 +73,7 @@ html|*.textbox-textarea {
 /* ..... focused state ..... */
   
 textbox[focused="true"] {
-  border: 1px solid #A5A8B1;
+  border: 1px solid #98A5B2;
 }
     
 textbox[focused="true"] > .textbox-internal-box,

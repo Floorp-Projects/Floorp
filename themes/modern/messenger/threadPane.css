@@ -42,10 +42,6 @@ outlinerbody:-moz-outliner-cell-text(unread) {
   font-weight: bold;
 }
 
-outlinerbody:-moz-outliner-cell-text(offline) {
-  font-style: italic;
-}
-
 /* on a collapsed thread, if the top level message is read, but the thread has
  * unread children, underline the text.  4.x mac did this, very slick 
  */

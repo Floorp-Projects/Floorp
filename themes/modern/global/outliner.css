@@ -91,8 +91,8 @@ outlinerbody:-moz-outliner-line {
   border: 1px dotted #808080;
 }
 
-outlinerbody:-moz-outliner-line(selected) {
-  border: 1px dotted #000000;
+outlinerbody:-moz-outliner-line(selected, focus) {
+  border: 1px dotted #FFFFFF;
 }
 
 /* ..... internal box ..... */

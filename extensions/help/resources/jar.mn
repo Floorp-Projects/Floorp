@@ -76,13 +76,14 @@ en-US.jar:
         locale/en-US/help/images/threadbutton.gif          (locale/en-US/images/threadbutton.gif)
         locale/en-US/help/images/wink.gif                  (locale/en-US/images/wink.gif)
 
-
 modern.jar:
-        skin/modern/communicator/help.css               (skin/help.css)
-        skin/modern/communicator/home.gif               (skin/home.gif)
-        skin/modern/communicator/home-act.gif           (skin/home-act.gif)
-        skin/modern/communicator/home-dis.gif           (skin/home-dis.gif)
-        skin/modern/communicator/home-hov.gif           (skin/home-hov.gif)
+        skin/modern/communicator/help.css                    (skin/modern/help.css)
+        skin/modern/communicator/help/home.gif               (skin/modern/home.gif)
+        skin/modern/communicator/help/home-act.gif           (skin/modern/home-act.gif)
+        skin/modern/communicator/help/home-dis.gif           (skin/modern/home-dis.gif)
+        skin/modern/communicator/help/home-hov.gif           (skin/modern/home-hov.gif)
+        skin/modern/communicator/help/mast-help.gif          (skin/modern/mast-help.gif)
+
 classic.jar:
-        skin/classic/communicator/help.css              (skin/help.css)
+        skin/classic/communicator/help.css              (skin/classic/help.css)
 

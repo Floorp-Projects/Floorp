@@ -30,27 +30,23 @@
 /* ::::: progressmeter ::::: */
 
 progressmeter {
-  margin: 0px 4px;
-  padding: 2px 0px;
+  margin: 2px 4px;
+  border-top: 1px solid #8997A1;
+  border-right: 1px solid #E0ECF6;
+  border-bottom: 1px solid #E0ECF6;
+  border-left: 1px solid #8997A1;
+  padding: 1px;
   min-width: 128px;
-}
-
-.progressmeter-progressbar {
-  border-top: 1px solid #606C8F;
-  border-right: 1px solid #D4DDF8;
-  border-bottom: 1px solid #D4DDF8;
-  border-left: 1px solid #606C8F;
-  height: 9px;
-  background: url("chrome://global/skin/progressmeter/progress-bg.gif") #8EA09F repeat-x top;
+  height: 14px;
 }
 
 .progress-bar {
   min-width: 0px;
-  background: url("chrome://global/skin/progressmeter/progress-filler.gif") repeat-x top;
+  background-color: #6B7B8D;
 }
 
 .progressmeter-progressbar[mode="undetermined"] {
-  background: url("chrome://global/skin/progressmeter/progress-busy.gif") repeat-x;
+  background: url("chrome://global/skin/progressmeter/progress-busy.gif");
   visibility: visible !important;
 }
 
@@ -58,3 +54,14 @@ progressmeter {
 .progress-remainder[mode="undetermined"] {
   visibility: hidden;
 }
+
+/* ::::: statusbar progressmeter ::::: */
+
+.progressmeter-statusbar {
+  margin: 0px;
+  border-top: 1px solid #E0ECF6;
+  border-left: 1px solid #E0ECF6;
+  border-right: 1px solid #8997A1;
+  border-bottom: none;
+}
+

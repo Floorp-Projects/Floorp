@@ -56,7 +56,7 @@
 
         <spring flex="1"/>
 
-        <button class="button-toolbar" id="print" onclick="print()"/>
+        <button class="button-toolbar-1" id="print" onclick="print()"/>
 
       </toolbar>
     </toolbox>

@@ -49,7 +49,7 @@ colorpicker[type="button"][open="true"] > .colorpicker-button-internal-box {
 }
 
 colorpicker[type="button"]:focus {
-  border-color: #A5A8B1;
+  border-color: #98A5B2;
 }
 
 /* ::::: colorpicker tiles ::::: */

@@ -68,7 +68,13 @@
 #subscribetree {
   margin: 0px 0px 0px 0px !important;
 }
+/* ::::: statusbar adjustments :::::: */
 
+statusbarpanel,
+#component-bar,
+.progressmeter-statusbar {
+  border: none !important;
+}
 
 /* for search */
 

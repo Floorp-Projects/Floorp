@@ -67,10 +67,7 @@
 }
     
 .button-toolbar:hover:active,
-.button-toolbar[open="true"],
-.button-toolbar[toggled="true"], 
-.button-toolbar[toggled="true"]:hover,
-.button-toolbar[toggled="true"]:hover:active {
+.button-toolbar[open="true"] {
   color: inherit;
 }
 
@@ -101,8 +98,16 @@
 .button-toolbar[toggled="true"],
 .button-toolbar[toggled="true"]:hover,
 .button-toolbar[toggled="true"]:hover:active {
-  background-color: #8998AA;
-  color: #FFFFFF;
+  border-top: 1px solid #454C55;
+  border-right: 1px solid #7D848D;
+  border-bottom: 1px solid #7D848D;
+  border-left: 1px solid #454C55;
+  background-color: #8C9AA8;
+  color: #EFF1F4;
+}
+
+.button-toolbar[toggled="true"]:hover:active > .button-internal-box {
+  padding: 1px 2px 1px 2px;
 }
 
 /* ::::: the largest type of toolbar buttons ::::: */

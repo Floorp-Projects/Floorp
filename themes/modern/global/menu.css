@@ -32,6 +32,7 @@
 menu, 
 menuitem {
   list-style-image: none;
+  color: #000000;
   font: menu;
   vertical-align: middle;
 }

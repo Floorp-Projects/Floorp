@@ -156,7 +156,6 @@ iframe {
 /* ::::: status bar ::::: */
 
 #status-bar {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#statusbar");
   -moz-user-focus: ignore;
   margin: 0px;
   border-top: 1px solid #CED6DD;
@@ -170,17 +169,19 @@ iframe {
   overflow: hidden;
 }
 
-.statusbar-internal-box-1 {
-  border-top: 1px solid #EBF4FF;
-  padding: 1px 2px 1px 2px;
-}
-  
 statusbarpanel {
-  padding: 0px 1px 0px 1px;
+  border-top: 1px solid #E0ECF6;
+  border-right: 1px solid #8997A1;
+  border-left: 1px solid #E0ECF6;
+  padding: 0px 4px;
 }
 
 .statusbar-panel-icon {
   margin: 0px 2px 0px 0px;
+}
+
+.statusbarpanel-icononly {
+  padding: 0px;
 }
 
 /* ::::: miscellaneous ::::: */

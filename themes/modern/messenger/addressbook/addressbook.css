@@ -38,7 +38,7 @@
 /* :::::  addressbook image precaching ::::: */
 
 #resource_bundle_addressbook {
-   -moz-binding: url('chrome://messenger/skin/addressbook/resources.xml#resource_bundle_addressbook');
+   -moz-binding: url("chrome://messenger/skin/addressbook/resources.xml#resource_bundle_addressbook");
 }
 
 /* ::::: primary toolbar buttons ::::: */
@@ -242,12 +242,10 @@ tree {
 
 /* ..... status bar border ..... */
 
-statusbar, #status-bar {
-  border-top: 1px solid #CED6DD !important;
-}
-
-.statusbar-internal-box-1 {
-  border-top: 1px solid #EBF4FF !important;
+statusbarpanel,
+#component-bar,
+.progressmeter-statusbar {
+  border-top: 1px solid #E0ECF6 !important;
 }
 
 /* ::::: Card Edit dialog ::::: */

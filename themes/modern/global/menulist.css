@@ -63,7 +63,7 @@ menulist {
 /* ..... focused state ..... */
 
 menulist:focus {
-  border-color: #A5A8B1;
+  border-color: #98A5B2;
   -moz-border-radius: 7px;
 }
 
@@ -301,7 +301,7 @@ menulist[editable="true"][open="true"] > .menulist-editable-box > .menu-dropmark
 /* ..... focused state ..... */
   
 menulist[editable="true"]:focus {
-  border: 1px solid #A5A8B1;
+  border: 1px solid #98A5B2;
   -moz-border-radius: 0px;
 }
     

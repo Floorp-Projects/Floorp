@@ -106,17 +106,19 @@ menubutton.button-toolbar-2.bottom {
 /* ..... dropmarker box ..... */
 
 .menubutton-dual-dropmarker-box {
-  margin: 26px 0px 0px 28px;
+  margin: 20px 0px 0px 40px;
 }
 
 .button-toolbar-2 + .menubutton-dual-dropmarker-box {
-  margin: 26px 5px 15px 31px;
+  margin: 20px 5px 15px 40px;
 }
 
 /* ..... dropmarker ..... */
 
 .menubutton-dual-dropmarker {
   list-style-image: url("chrome://communicator/skin/toolbar/mbtn1-arrow.gif");
+  width: 13px;
+  height: 11px;
 }
 
 .menubutton-dual:hover > .menubutton-dual-stack

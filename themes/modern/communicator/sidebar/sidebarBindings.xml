@@ -6,15 +6,33 @@
 
   <binding id="sidebar-tab" extends="xul:button">
     <content>
-      <xul:spring class="sidebar-tab-leftcap" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
-      <xul:stack class="sidebar-tab-mid-stack" flex="1">
-        <xul:box class="sidebar-tab-mid">
-          <xul:spring class="sidebar-tab-mid1" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
-          <xul:spring class="sidebar-tab-mid2" inherits="selected,first-panel-after-selected,top-panel,last-panel" flex="1"/>
+      <xul:vbox class="sidebar-tab-left">
+        <xul:spring class="sidebar-tab-left-top" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+        <xul:spring class="sidebar-tab-left-mid" inherits="selected,first-panel-after-selected,top-panel,last-panel"
+                    flex="1"/>
+        <xul:spring class="sidebar-tab-left-btm" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+      </xul:vbox>
+  
+      <xul:stack class="sidebar-tab-mid-1">
+        <xul:vbox class="sidebar-tab-mid-2">
+          <xul:spring class="sidebar-tab-mid-top" inherits="selected,first-panel-after-selected,top-panel,last-panel"
+                      flex="1"/>
+          <xul:spring class="sidebar-tab-mid-btm" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+        </xul:vbox>
+      
+        <xul:box class="sidebar-tab-text-box">
+          <xul:text class="sidebar-tab-text" inherits="value=label" crop="right"/>
         </xul:box>
-        <xul:text class="sidebar-tab-text" inherits="value=label" crop="right"/>
       </xul:stack>
-      <xul:spring class="sidebar-tab-rightcap" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+      
+      <xul:vbox class="sidebar-tab-right">
+        <xul:spring class="sidebar-tab-right-top" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+        <xul:spring class="sidebar-tab-right-mid" inherits="selected,first-panel-after-selected,top-panel,last-panel"
+                    flex="1"/>
+        <xul:spring class="sidebar-tab-right-btm" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
+      </xul:vbox>
+            
+      <xul:spring class="sidebar-tab-rightcap" flex="1"/>
     </content>
   </binding>
 

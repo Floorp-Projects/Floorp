@@ -1,0 +1,117 @@
+/* 
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+@import url("chrome://communicator/skin/");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar masthead ::::: */
+
+#helpToolbar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://communicator/skin/help/mast-help.gif");
+}
+
+/* ::::: primary toolbar buttons ::::: */
+
+.button-toolbar-1 {
+  margin: 0px;
+}
+
+.toolbar-primary-mid-top {
+  background-image: url("chrome://navigator/skin/toolbar/navbar-mid-top.gif");
+}
+
+#helpBackButton {
+	list-style-image: url("chrome://navigator/skin/btn1/back.gif");
+}
+
+#helpBackButton[disabled="true"],
+#helpBackButton[disabled="true"]:hover,
+#helpBackButton[disabled="true"]:hover:active
+{
+	list-style-image: url("chrome://navigator/skin/btn1/back-dis.gif");
+}
+
+#helpBackButton:hover {
+  list-style-image: url("chrome://navigator/skin/btn1/back-hov.gif");
+}
+
+#helpBackButton:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/back-act.gif");
+}
+
+#helpForwardButton {
+	list-style-image: url("chrome://navigator/skin/btn1/forward.gif");
+}
+
+#helpForwardButton[disabled="true"],
+#helpForwardButton[disabled="true"]:hover,
+#helpForwardButton[disabled="true"]:hover:active
+{
+	list-style-image: url("chrome://navigator/skin/btn1/forward-dis.gif");
+}	
+
+#helpForwardButton:hover {
+  list-style-image: url("chrome://navigator/skin/btn1/forward-hov.gif");
+}
+
+#helpForwardButton:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/forward-act.gif");
+}
+
+#helpHomeButton {
+	list-style-image: url("chrome://communicator/skin/help/home.gif");
+}
+
+#helpHomeButton[disabled="true"],
+#helpHomeButton[disabled="true"]:hover,
+#helpHomeButton[disabled="true"]:hover:active
+{
+	list-style-image: url("chrome://communicator/skin/help/home-dis.gif");
+}	
+
+#helpHomeButton:hover {
+  list-style-image: url("chrome://communicator/skin/help/home-hov.gif");
+}
+
+#helpHomeButton:hover:active {
+  list-style-image: url("chrome://communicator/skin/help/home-act.gif");
+}
+
+#print {
+  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
+}
+
+#print[disabled="true"],
+#print[disabled="true"]:hover,
+#print[disabled="true"]:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+}
+
+#print:hover {
+  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+}
+
+#print:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+}
+
