@@ -565,31 +565,8 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
         if (view == mRootView)
         {
           // Convert from pixels to twips
-          float             p2t;
-          nsIScrollableView *scrollView;
-
+          float p2t;
           mContext->GetDevUnitsToAppUnits(p2t);
-
-          //XXX hey look, a hack! :) i'm not proud of it, but it does
-          //work. the purpose is to prevent resizes of the view if the
-          //clip size (assumed to be the size of this window) is the same
-          //as the new size we get here. MMP
-
-          if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scrollView))
-          {
-            nscoord sizex, sizey;
-            float   t2p;
-
-            mContext->GetAppUnitsToDevUnits(t2p);
-
-            scrollView->GetClipSize(&sizex, &sizey);
-
-            if ((width == NSTwipsToIntPixels(sizex, t2p)) &&
-                (height == NSTwipsToIntPixels(sizey, t2p)))
-            {
-              break;
-            }
-          }
 
           SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
                               NSIntPixelsToTwips(height, p2t));

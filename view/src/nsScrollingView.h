@@ -55,19 +55,20 @@ public:
 
   //nsIScrollableView interface
   NS_IMETHOD  ComputeContainerSize();
-  NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight);
+  NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) const;
   NS_IMETHOD  SetScrolledView(nsIView *aScrolledView);
-  NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView);
-  NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord &aY);
+  NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) const;
 
   NS_IMETHOD  ShowQuality(PRBool aShow);
-  NS_IMETHOD  GetShowQuality(PRBool &aShow);
+  NS_IMETHOD  GetShowQuality(PRBool &aShow) const;
   NS_IMETHOD  SetQuality(nsContentQuality aQuality);
 
   NS_IMETHOD  SetScrollPreference(nsScrollPreference aPref);
-  NS_IMETHOD  GetScrollPreference(nsScrollPreference &aScrollPreference);
+  NS_IMETHOD  GetScrollPreference(nsScrollPreference &aScrollPreference) const;
+  NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord &aY) const;
   NS_IMETHOD  ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
-  NS_IMETHOD  GetClipSize(nscoord *aX, nscoord *aY);
+  NS_IMETHOD  SetControlInsets(const nsMargin &aInsets);
+  NS_IMETHOD  GetControlInsets(nsMargin &aInsets) const;
 
   //private
   virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
@@ -92,8 +93,7 @@ protected:
   nsIView             *mHScrollBarView;
   nsIView             *mCornerView;
   nsScrollPreference  mScrollPref;
-  nscoord             mClipX, mClipY;
-
+  nsMargin            mInsets;
   nsITimer            *mScrollingTimer;
   nscoord             mScrollingDelta;
 };
