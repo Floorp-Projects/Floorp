@@ -1,6 +1,7 @@
 s/extern PR_PUBLIC_API/PR_EXTERN/g
 s/PR_PUBLIC_API/PR_IMPLEMENT/g
 s/prhashcode/PRHashNumber/g
+s/int64/PRInt64/g
 s/include "prassert.h"/include "prlog.h"/g
 s/include "prprintf.h"/include "prprf.h"/g
 s/include "prtime.h"/include "prmjtime.h"/g
@@ -32,3 +33,4 @@ s/^#include "prhash.h"\(.*\)/#ifndef NSPR20\
 
 s@/\*JSSRC-SED-MAGIC-COMMENT\*/@#define NETSCAPE_INTERNAL 1\
 #include "jscompat.h"@
+

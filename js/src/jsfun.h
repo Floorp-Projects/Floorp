@@ -27,15 +27,19 @@
 PR_BEGIN_EXTERN_C
 
 struct JSFunction {
+    jsrefcount	 nrefs;		/* number of referencing objects */
     JSObject     *object;       /* back-pointer to GC'ed object header */
     JSNative     call;          /* native method pointer or null */
     uint8        nargs;         /* minimum number of actual arguments */
     uint8        flags;         /* bound method and other flags, see jsapi.h */
+    uint16       extra;         /* number of arg slots for local GC roots */
     uint16       nvars;         /* number of local variables */
+    uint16       spare;         /* reserved for future use */
     JSAtom       *atom;         /* name for diagnostics and decompiling */
     JSScript     *script;       /* interpreted bytecode descriptor or null */
 };
 
+extern JSClass js_ArgumentsClass;
 extern JSClass js_CallClass;
 extern JSClass js_ClosureClass;
 extern JSClass js_FunctionClass;
@@ -43,9 +47,9 @@ extern JSClass js_FunctionClass;
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
-#define JSVAL_IS_FUNCTION(v)                                                  \
+#define JSVAL_IS_FUNCTION(cx, v)                                              \
     (JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) &&                              \
-     JSVAL_TO_OBJECT(v)->map->clasp == &js_FunctionClass)
+     OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass)
 
 extern JSBool
 js_IsIdentifier(JSString *str);
@@ -54,31 +58,41 @@ extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_InitCallAndClosureClasses(JSContext *cx, JSObject *obj,
-			     JSObject *arrayProto);
+js_InitArgsCallClosureClasses(JSContext *cx, JSObject *obj,
+			      JSObject *arrayProto);
 
 extern JSFunction *
-js_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
-	       JSObject *parent, JSAtom *atom);
+js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
+	       uintN flags, JSObject *parent, JSAtom *atom);
+
+extern JSBool
+js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *object);
 
 extern JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative call,
 		  uintN nargs, uintN flags);
 
 extern JSFunction *
-js_ValueToFunction(JSContext *cx, jsval v);
+js_ValueToFunction(JSContext *cx, jsval *vp, JSBool constructing);
+
+extern void
+js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing);
 
 extern JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent);
+js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent,
+		 JSObject *withobj);
 
 extern JSBool
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 
-extern JSBool
-js_GetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+extern JSObject *
+js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool
-js_SetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
+
+extern JSBool
+js_XDRFunction(JSXDRState *xdr, JSObject **objp);
 
 PR_END_EXTERN_C
 

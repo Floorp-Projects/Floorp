@@ -33,33 +33,67 @@
  * make dependency induced by this file should not prove painful.
  */
 
+#include "jspubtd.h"
+
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;
 typedef uint8  jssrcnote;
-typedef int32  jsrefcount;
 typedef uint32 jsatomid;
 
 /* Struct typedefs. */
 typedef struct JSCodeGenerator  JSCodeGenerator;
 typedef struct JSGCThing        JSGCThing;
+typedef struct JSParseNode      JSParseNode;
+typedef struct JSSharpObjectMap JSSharpObjectMap;
 typedef struct JSToken          JSToken;
+typedef struct JSTokenPos       JSTokenPos;
+typedef struct JSTokenPtr       JSTokenPtr;
 typedef struct JSTokenStream    JSTokenStream;
+typedef struct JSTreeContext    JSTreeContext;
+typedef struct JSTryNote       JSTryNote;
 
 /* Friend "Advanced API" typedefs. */
 typedef struct JSAtom           JSAtom;
 typedef struct JSAtomList       JSAtomList;
+typedef struct JSAtomListElement JSAtomListElement;
 typedef struct JSAtomMap        JSAtomMap;
 typedef struct JSAtomState      JSAtomState;
 typedef struct JSCodeSpec       JSCodeSpec;
 typedef struct JSPrinter        JSPrinter;
-typedef struct JSProperty       JSProperty;
 typedef struct JSRegExp         JSRegExp;
 typedef struct JSRegExpStatics  JSRegExpStatics;
 typedef struct JSScope          JSScope;
 typedef struct JSScopeOps       JSScopeOps;
+typedef struct JSScopeProperty  JSScopeProperty;
 typedef struct JSStackFrame     JSStackFrame;
 typedef struct JSSubString      JSSubString;
 typedef struct JSSymbol         JSSymbol;
-typedef struct JSSharpObjectMap JSSharpObjectMap;
+
+/* "Friend" types used by jscntxt.h and jsdbgapi.h. */
+typedef enum JSTrapStatus {
+    JSTRAP_ERROR,
+    JSTRAP_CONTINUE,
+    JSTRAP_RETURN,
+    JSTRAP_LIMIT
+} JSTrapStatus;
+
+typedef JSTrapStatus
+(*JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+		 void *closure);
+
+/* called just after script creation */
+typedef void
+(*JSNewScriptHook)( JSContext   *cx,
+		    const char  *filename,  /* URL this script loads from */
+		    uintN       lineno,     /* line where this script starts */
+		    JSScript    *script,
+		    JSFunction  *fun,
+		    void        *callerdata );
+
+/* called just before script destruction */
+typedef void
+(*JSDestroyScriptHook)( JSContext   *cx,
+			JSScript    *script,
+			void        *callerdata );
 
 #endif /* jsprvtd_h___ */

@@ -20,10 +20,13 @@
  * JS boolean implementation.
  */
 #include "prtypes.h"
+#include "prlog.h"
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
+#include "jsconfig.h"
+#include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -36,6 +39,33 @@ static JSClass boolean_class = {
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
 };
 
+#if JS_HAS_TOSOURCE
+#include "prprf.h"
+
+static JSBool
+bool_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+	      jsval *rval)
+{
+    jsval v;
+    char buf[32];
+    JSString *str;
+
+    if (!JS_InstanceOf(cx, obj, &boolean_class, argv))
+	return JS_FALSE;
+    v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    if (!JSVAL_IS_BOOLEAN(v))
+	return js_obj_toSource(cx, obj, argc, argv, rval);
+    PR_snprintf(buf, sizeof buf, "(new %s(%s))",
+		boolean_class.name,
+		js_boolean_str[JSVAL_TO_BOOLEAN(v) ? 1 : 0]);
+    str = JS_NewStringCopyZ(cx, buf);
+    if (!str)
+	return JS_FALSE;
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+#endif
+
 static JSBool
 bool_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	      jsval *rval)
@@ -46,7 +76,9 @@ bool_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_InstanceOf(cx, obj, &boolean_class, argv))
 	return JS_FALSE;
-    JS_LOCK_VOID(cx, v = js_GetSlot(cx, obj, JSSLOT_PRIVATE));
+    v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    if (!JSVAL_IS_BOOLEAN(v))
+	return js_obj_toString(cx, obj, argc, argv, rval);
     atom = cx->runtime->atomState.booleanAtoms[JSVAL_TO_BOOLEAN(v) ? 1 : 0];
     str = ATOM_TO_STRING(atom);
     if (!str)
@@ -60,11 +92,14 @@ bool_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     if (!JS_InstanceOf(cx, obj, &boolean_class, argv))
 	return JS_FALSE;
-    JS_LOCK_VOID(cx, *rval = js_GetSlot(cx, obj, JSSLOT_PRIVATE));
+    *rval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     return JS_TRUE;
 }
 
 static JSFunctionSpec boolean_methods[] = {
+#if JS_HAS_TOSOURCE
+    {js_toSource_str,   bool_toSource,          0},
+#endif
     {js_toString_str,	bool_toString,		0},
     {js_valueOf_str,	bool_valueOf,		0},
     {0}
@@ -82,19 +117,17 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval bval;
 
     if (argc != 0) {
-	if (!JS_ValueToBoolean(cx, argv[0], &b))
+	if (!js_ValueToBoolean(cx, argv[0], &b))
 	    return JS_FALSE;
 	bval = BOOLEAN_TO_JSVAL(b);
     } else {
 	bval = JSVAL_FALSE;
     }
-    if (obj->map->clasp != &boolean_class) {
+    if (!cx->fp->constructing) {
 	*rval = bval;
 	return JS_TRUE;
     }
-    if (!js_SetSlot(cx, obj, JSSLOT_PRIVATE, bval))
-	return JS_FALSE;
-    *rval = OBJECT_TO_JSVAL(obj);
+    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, bval);
     return JS_TRUE;
 }
 
@@ -105,8 +138,9 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
 
     proto = JS_InitClass(cx, obj, NULL, &boolean_class, Boolean, 1,
 			NULL, boolean_methods, NULL, NULL);
-    if (!proto || !js_SetSlot(cx, proto, JSSLOT_PRIVATE, JSVAL_FALSE))
+    if (!proto)
 	return NULL;
+    OBJ_SET_SLOT(cx, proto, JSSLOT_PRIVATE, JSVAL_FALSE);
     return proto;
 }
 
@@ -118,10 +152,7 @@ js_BooleanToObject(JSContext *cx, JSBool b)
     obj = js_NewObject(cx, &boolean_class, NULL, NULL);
     if (!obj)
 	return NULL;
-    if (!js_SetSlot(cx, obj, JSSLOT_PRIVATE, BOOLEAN_TO_JSVAL(b))) {
-	cx->newborn[GCX_OBJECT] = NULL;
-	return NULL;
-    }
+    OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, BOOLEAN_TO_JSVAL(b));
     return obj;
 }
 
@@ -135,7 +166,6 @@ JSBool
 js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 {
     JSBool b;
-    JSObject *obj;
     jsdouble d;
 
 #if defined XP_PC && defined _MSC_VER &&_MSC_VER <= 800
@@ -144,19 +174,22 @@ js_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 	return JS_TRUE;
 #endif
 
-    /* XXX this should be an if-else chain, but MSVC1.5 really sucks. */
+    /* XXX this should be an if-else chain, but MSVC1.5 crashes if it is. */
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)) {
 	/* Must return early to avoid falling thru to JSVAL_IS_OBJECT case. */
 	*bp = JS_FALSE;
 	return JS_TRUE;
     }
     if (JSVAL_IS_OBJECT(v)) {
-	obj = JSVAL_TO_OBJECT(v);
-	if (!obj->map->clasp->convert(cx, obj, JSTYPE_BOOLEAN, &v))
-	    return JS_FALSE;
-	if (!JSVAL_IS_BOOLEAN(v))
-	    v = JSVAL_TRUE;		/* non-null object is true */
-	b = JSVAL_TO_BOOLEAN(v);
+	if (cx->version == JSVERSION_1_2) {
+	    if (!OBJ_DEFAULT_VALUE(cx, JSVAL_TO_OBJECT(v), JSTYPE_BOOLEAN, &v))
+		return JS_FALSE;
+	    if (!JSVAL_IS_BOOLEAN(v))
+		v = JSVAL_TRUE;		/* non-null object is true */
+	    b = JSVAL_TO_BOOLEAN(v);
+	} else {
+	    b = JS_TRUE;
+	}
     }
     if (JSVAL_IS_STRING(v)) {
 	b = JSVAL_TO_STRING(v)->length ? JS_TRUE : JS_FALSE;

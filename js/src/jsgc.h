@@ -57,10 +57,7 @@ extern void
 js_FinishGC(JSRuntime *rt);
 
 extern JSBool
-js_AddRoot(JSContext *cx, void *rp);
-
-extern JSBool
-js_AddNamedRoot(JSContext *cx, void *rp, const char *name);
+js_AddRoot(JSContext *cx, void *rp, const char *name);
 
 extern JSBool
 js_RemoveRoot(JSContext *cx, void *rp);
@@ -74,7 +71,7 @@ js_LockGCThing(JSContext *cx, void *thing);
 extern JSBool
 js_UnlockGCThing(JSContext *cx, void *thing);
 
-extern void
+extern JS_FRIEND_API(void)
 js_ForceGC(JSContext *cx);
 
 extern void

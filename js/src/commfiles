@@ -23,6 +23,7 @@ jsgc.h
 jsinterp.c
 jsinterp.h
 jslock.h
+jslock.c
 jsmath.c
 jsmath.h
 jsnum.c
@@ -46,5 +47,5 @@ jsscript.c
 jsscript.h
 jsstr.c
 jsstr.h
-jsxdrapi.c
 jsxdrapi.h
+jsxdrapi.c

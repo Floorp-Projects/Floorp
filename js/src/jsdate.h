@@ -52,22 +52,22 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj);
 extern JS_FRIEND_API(int)
 js_DateGetSeconds(JSContext *cx, JSObject* obj);
 
-extern JS_FRIEND_API(void) 
+extern JS_FRIEND_API(void)
 js_DateSetYear(JSContext *cx, JSObject *obj, int year);
 
-extern JS_FRIEND_API(void) 
+extern JS_FRIEND_API(void)
 js_DateSetMonth(JSContext *cx, JSObject *obj, int year);
 
-extern JS_FRIEND_API(void) 
+extern JS_FRIEND_API(void)
 js_DateSetDate(JSContext *cx, JSObject *obj, int date);
 
-extern JS_FRIEND_API(void) 
+extern JS_FRIEND_API(void)
 js_DateSetHours(JSContext *cx, JSObject *obj, int hours);
 
-extern JS_FRIEND_API(void) 
+extern JS_FRIEND_API(void)
 js_DateSetMinutes(JSContext *cx, JSObject *obj, int minutes);
 
-extern JS_FRIEND_API(void) 
+extern JS_FRIEND_API(void)
 js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds);
 
 

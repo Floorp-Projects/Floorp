@@ -42,7 +42,7 @@
 #include "jsscan.h"
 #include "jsscript.h"
 
-JSInterpreterHooks *js_InterpreterHooks = 0;
+JSInterpreterHooks *js_InterpreterHooks = NULL;
 
 JS_FRIEND_API(void)
 js_SetInterpreterHooks(JSInterpreterHooks *hooks)
@@ -61,6 +61,9 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
     memset(cx, 0, sizeof *cx);
 
     cx->runtime = rt;
+#ifdef JS_THREADSAFE
+    js_InitContextForLocking(cx);
+#endif
     if (rt->contextList.next == (PRCList *)&rt->contextList) {
 	/* First context on this runtime: initialize atoms and keywords. */
 	if (!js_InitAtomState(cx, &rt->atomState) ||
@@ -69,8 +72,9 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 	    return NULL;
 	}
     }
+    /* Atomicly append cx to rt's context list. */
+    JS_LOCK_RUNTIME_VOID(rt, PR_APPEND_LINK(&cx->links, &rt->contextList));
 
-    PR_APPEND_LINK(&cx->links, &rt->contextList);
     cx->version = JSVERSION_DEFAULT;
     cx->jsop_eq = JSOP_EQ;
     cx->jsop_ne = JSOP_NE;
@@ -81,7 +85,7 @@ js_NewContext(JSRuntime *rt, size_t stacksize)
 #if JS_HAS_REGEXPS
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
 	js_DestroyContext(cx);
-	return 0;
+	return NULL;
     }
 #endif
     return cx;
@@ -94,11 +98,12 @@ js_DestroyContext(JSContext *cx)
     JSBool rtempty;
 
     rt = cx->runtime;
-    PR_ASSERT(JS_IS_RUNTIME_LOCKED(rt));
 
     /* Remove cx from context list first. */
+    JS_LOCK_RUNTIME(rt);
     PR_REMOVE_LINK(&cx->links);
     rtempty = (rt->contextList.next == (PRCList *)&rt->contextList);
+    JS_UNLOCK_RUNTIME(rt);
 
     if (js_InterpreterHooks && js_InterpreterHooks->destroyContext) {
 	/* This is a stub, but in case it removes roots, call it now. */
@@ -106,7 +111,25 @@ js_DestroyContext(JSContext *cx)
     }
 
     if (rtempty) {
-	/* No more contexts: clear debugging state to remove GC roots. */
+	/* Unpin all pinned atoms before final GC. */
+	js_UnpinPinnedAtoms(&rt->atomState);
+
+	/* Unlock GC things held by runtime pointers. */
+	js_UnlockGCThing(cx, rt->jsNaN);
+	js_UnlockGCThing(cx, rt->jsNegativeInfinity);
+	js_UnlockGCThing(cx, rt->jsPositiveInfinity);
+	js_UnlockGCThing(cx, rt->emptyString);
+
+	/*
+	 * Clear these so they get recreated if the standard classes are
+	 * initialized again.
+	 */
+	rt->jsNaN = NULL;
+	rt->jsNegativeInfinity = NULL;
+	rt->jsPositiveInfinity = NULL;
+	rt->emptyString = NULL;
+
+	/* Clear debugging state to remove GC roots. */
 	JS_ClearAllTraps(cx);
 	JS_ClearAllWatchPoints(cx);
     }
@@ -136,12 +159,14 @@ js_ContextIterator(JSRuntime *rt, JSContext **iterp)
 {
     JSContext *cx = *iterp;
 
-    PR_ASSERT(JS_IS_RUNTIME_LOCKED(rt));
+    JS_LOCK_RUNTIME(rt);
     if (!cx)
 	cx = (JSContext *)rt->contextList.next;
     if ((void *)cx == &rt->contextList)
-	return NULL;
-    *iterp = (JSContext *)cx->links.next;
+	cx = NULL;
+    else
+	*iterp = (JSContext *)cx->links.next;
+    JS_UNLOCK_RUNTIME(rt);
     return cx;
 }
 

@@ -26,23 +26,48 @@
 
 PR_BEGIN_EXTERN_C
 
-struct JSScript {
-    jsbytecode   *code;         /* bytecodes and their immediate operands */
-    uint32       length;        /* length of code vector */
-    JSAtomMap    atomMap;       /* maps immediate index to literal struct */
-    const char   *filename;     /* source filename or null */
-    uintN        lineno;        /* base line number of script */
-    uintN        depth;         /* maximum stack depth in slots */
-    jssrcnote    *notes;        /* line number and other decompiling data */
-    JSSymbol     *args;         /* formal argument list */
-    JSSymbol     *vars;         /* local variable list */
-    JSPrincipals *principals;	/* principals for this script */
-    void         *javaData;     /* extra data used by jsjava.c */
+/*
+ * Exception handling information.
+ * All fields are code offsets, relative to the beginning of the script.
+ */
+
+struct JSTryNote {
+    ptrdiff_t	start;		/* beginning of try{} region */
+    ptrdiff_t	end;		/* end of try{} region */
+    ptrdiff_t	catch;		/* beginning of catch{} (backptr during CG) */
+    ptrdiff_t	finally;	/* beginning of finally handler */
 };
 
+struct JSScript {
+    jsbytecode     *code;          /* bytecodes and their immediate operands */
+    uint32         length;         /* length of code vector */
+    JSAtomMap      atomMap;        /* maps immediate index to literal struct */
+    const char     *filename;      /* source filename or null */
+    uintN          lineno;         /* base line number of script */
+    uintN          depth;          /* maximum stack depth in slots */
+    jssrcnote      *notes;         /* line number and other decompiling data */
+    JSTryNote      *trynotes;      /* exception table for this script */
+    JSPrincipals   *principals;	   /* principals for this script */
+    void           *javaData;      /* XXX extra data used by jsjava.c */
+    JSObject       *object;        /* optional Script-class object wrapper */
+};
+
+extern JSClass js_ScriptClass;
+
+extern JSObject *
+js_InitScriptClass(JSContext *cx, JSObject *obj);
+
 extern JSScript *
-js_NewScript(JSContext *cx, JSCodeGenerator *cg, const char *filename,
-	     uintN lineno, JSPrincipals *principals, JSFunction *fun);
+js_NewScript(JSContext *cx, uint32 length);
+
+extern JSScript *
+js_NewScriptFromParams(JSContext *cx, jsbytecode *code, uint32 length,
+		       const char *filename, uintN lineno, uintN depth,
+		       jssrcnote *notes, JSTryNote *trynotes,
+		       JSPrincipals *principals);
+
+extern JS_FRIEND_API(JSScript *)
+js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun);
 
 extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
@@ -58,6 +83,9 @@ js_LineNumberToPC(JSScript *script, uintN lineno);
 
 extern uintN
 js_GetScriptLineExtent(JSScript *script);
+
+extern JSBool
+js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic);
 
 PR_END_EXTERN_C
 

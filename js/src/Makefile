@@ -31,8 +31,7 @@ endif
 
 MODULE		= js
 
-CSRCS		= prmjtime.c \
-		  jsapi.c \
+CSRCS		= jsapi.c \
 		  jsarray.c \
 		  jsatom.c \
 		  jsbool.c \
@@ -54,6 +53,8 @@ CSRCS		= prmjtime.c \
 		  jsscript.c \
 		  jsstr.c \
 		  jslock.c \
+		  jsxdrapi.c \
+		  prmjtime.c \
 		  $(NULL)
 
 EXPORTS		= jsapi.h \
@@ -83,7 +84,17 @@ EXPORTS		= jsapi.h \
 		  jsscope.h \
 		  jsscript.h \
 		  jsstr.h \
+		  jsxdrapi.h \
 		  $(NULL)
+
+ASFILES = $(wildcard *_$(OS_ARCH).s)
+
+JS_SAFE_ARENA = 1
+
+ifdef JS_SAFE_ARENA
+DEFINES += -DJS_USE_SAFE_ARENA
+CSRCS += prarena.c
+endif
 
 include $(DEPTH)/config/rules.mk
 
@@ -101,9 +112,31 @@ ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
 endif
 
+ifdef JS_NO_THIN_LOCKS
+DEFINES += -DJS_USE_ONLY_NSPR_LOCKS
+endif
+
 ifdef JS_VERSION
 DEFINES += -DJS_VERSION=$(JS_VERSION)
 endif
+
+ifeq ($(CPU_ARCH),sparc)
+
+ifndef JS_NO_ULTRA
+ULTRA_OPTIONS := -xarch=v8plus,-DULTRA_SPARC
+ULTRA_OPTIONSCC := -DULTRA_SPARC
+else
+ULTRA_OPTIONS := -xarch=v8
+ULTRA_OPTIONSCC :=
+endif
+
+ifeq ($(shell uname -m),sun4u)
+ASFLAGS	+= -Wa,$(ULTRA_OPTIONS),-P,-L,-D_ASM,-D__STDC__=0 $(ULTRA_OPTIONSCC)
+else
+ASFLAGS	+= -Wa,-xarch=v8,-P,-L,-D_ASM,-D__STDC__=0
+endif
+
+endif # sparc
 
 INCLUDES	+= -I. 
 

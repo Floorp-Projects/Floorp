@@ -32,16 +32,16 @@ extern JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
-js_NewArrayObject(JSContext *cx, jsint length, jsval *vector);
+js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector);
 
 extern JSBool
-js_GetArrayLength(JSContext *cx, JSObject *obj, jsint *lengthp);
+js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
 extern JSBool
-js_SetArrayLength(JSContext *cx, JSObject *obj, jsint length);
+js_SetLengthProperty(JSContext *cx, JSObject *obj, jsuint length);
 
-extern JSProperty *
-js_HasLengthProperty(JSContext *cx, JSObject *obj);
+extern JSBool
+js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
 /*
  * JS-specific qsort function.

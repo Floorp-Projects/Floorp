@@ -32,22 +32,28 @@
 #include "jspubtd.h"
 
 struct JSScopeOps {
-    JSSymbol *      (*lookup)(JSContext *cx, JSScope *scope, jsval id,
+    JSSymbol *      (*lookup)(JSContext *cx, JSScope *scope, jsid id,
 			      PRHashNumber hash);
-    JSSymbol *      (*add)(JSContext *cx, JSScope *scope, jsval id,
-			   JSProperty *prop);
-    JSBool          (*remove)(JSContext *cx, JSScope *scope, jsval id);
+    JSSymbol *      (*add)(JSContext *cx, JSScope *scope, jsid id,
+			   JSScopeProperty *sprop);
+    JSBool          (*remove)(JSContext *cx, JSScope *scope, jsid id);
     void            (*clear)(JSContext *cx, JSScope *scope);
 };
 
 struct JSScope {
     JSObjectMap     map;                /* base class state */
     JSObject        *object;            /* object that owns this scope */
-    JSProperty      **proptail;         /* pointer to pointer to last prop */
+    JSScopeProperty *props;             /* property list in definition order */
+    JSScopeProperty **proptail;         /* pointer to pointer to last prop */
     JSScopeOps      *ops;               /* virtual operations */
     void            *data;              /* private data specific to ops */
-#if SCOPE_TABLE
-    PRHashEntry     entry;
+#ifdef JS_THREADSAFE
+    JSThinLock      lock;              /* binary semaphore protecting scope */
+    int32           count;              /* entry count for reentrancy */
+#ifdef DEBUG
+    const char      *file[4];           /* file where lock was (re-)taken */
+    unsigned int    line[4];            /* line where lock was (re-)taken */
+#endif
 #endif
 };
 
@@ -57,61 +63,64 @@ struct JSSymbol {
     JSSymbol        *next;              /* next in type-specific list */
 };
 
-#define sym_id(sym)             ((jsval)(sym)->entry.key)
+#define sym_id(sym)             ((jsid)(sym)->entry.key)
 #define sym_atom(sym)           ((JSAtom *)(sym)->entry.key)
-#define sym_property(sym)       ((JSProperty *)(sym)->entry.value)
+#define sym_property(sym)       ((JSScopeProperty *)(sym)->entry.value)
 
-struct JSProperty {
+struct JSScopeProperty {
     jsrefcount      nrefs;              /* number of referencing symbols */
     jsval           id;                 /* id passed to getter and setter */
     JSPropertyOp    getter;             /* getter and setter methods */
     JSPropertyOp    setter;
     uint32          slot;               /* index in obj->slots vector */
-    uint8           flags;              /* flags -- see JSPROP_* in jsapi.h */
+    uint8           attrs;              /* attributes, see jsapi.h JSPROP_ */
     uint8           spare;              /* reserved for future use */
-    JSObject        *object;            /* object that owns this property */
     JSSymbol        *symbols;           /* list of aliasing symbols */
-    JSProperty      *next;              /* doubly-linked list linkage */
-    JSProperty      **prevp;
+    JSScopeProperty *next;              /* doubly-linked list linkage */
+    JSScopeProperty **prevp;
 };
+
+/*
+ * These macros are designed to decouple getter and setter from sprop, by
+ * passing obj2 (in whose scope sprop lives, and in whose scope getter and
+ * setter might be stored apart from sprop -- say in scope->opTable[i] for
+ * a compressed getter or setter index i that is stored in sprop).
+ */
+#define SPROP_GET(cx,sprop,obj,obj2,vp) ((sprop)->getter(cx,obj,sprop->id,vp))
+#define SPROP_SET(cx,sprop,obj,obj2,vp) ((sprop)->setter(cx,obj,sprop->id,vp))
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
 
 extern JSScope *
-js_MutateScope(JSContext *cx, JSObject *obj, jsval id,
-	       JSPropertyOp getter, JSPropertyOp setter, uintN flags,
-	       JSProperty **propp);
+js_MutateScope(JSContext *cx, JSObject *obj, jsid id,
+	       JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
+	       JSScopeProperty **propp);
 
 extern JSScope *
-js_NewScope(JSContext *cx, JSClass *clasp, JSObject *obj);
+js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
+	    JSObject *obj);
 
 extern void
 js_DestroyScope(JSContext *cx, JSScope *scope);
-
-extern JSScope *
-js_HoldScope(JSContext *cx, JSScope *scope);
-
-extern JSScope *
-js_DropScope(JSContext *cx, JSScope *scope);
 
 extern PRHashNumber
 js_HashValue(jsval v);
 
 extern jsval
-js_IdToValue(jsval id);
+js_IdToValue(jsid id);
 
-extern JSProperty *
-js_NewProperty(JSContext *cx, JSScope *scope, jsval id,
-	       JSPropertyOp getter, JSPropertyOp setter, uintN flags);
+extern JSScopeProperty *
+js_NewScopeProperty(JSContext *cx, JSScope *scope, jsid id,
+		    JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
 extern void
-js_DestroyProperty(JSContext *cx, JSProperty *prop);
+js_DestroyScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
 
-extern JSProperty *
-js_HoldProperty(JSContext *cx, JSProperty *prop);
+extern JSScopeProperty *
+js_HoldScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
 
-extern JSProperty *
-js_DropProperty(JSContext *cx, JSProperty *prop);
+extern JSScopeProperty *
+js_DropScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
 
 #endif /* jsscope_h___ */

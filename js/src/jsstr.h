@@ -52,7 +52,7 @@ extern JSSubString js_EmptySubString;
 /* Unicode character attribute lookup tables. */
 extern const uint8 js_X[];
 extern const uint8 js_Y[];
-extern const int32 js_A[];
+extern const uint32 js_A[];
 
 /* Enumerated Unicode general category types. */
 typedef enum JSCharType {
@@ -87,7 +87,7 @@ typedef enum JSCharType {
 } JSCharType;
 
 /* Character classifying and mapping macros, based on java.lang.Character. */
-#define JS_CCODE(c)     (js_A[js_Y[(js_X[(c)>>6]<<6)|((c)&0x3F)]])
+#define JS_CCODE(c)     (js_A[js_Y[(js_X[(uint16)(c)>>6]<<6)|((c)&0x3F)]])
 #define JS_CTYPE(c)     (JS_CCODE(c) & 0x1F)
 
 #define JS_ISALPHA(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                     \
@@ -122,10 +122,10 @@ typedef enum JSCharType {
 
 #ifdef __GNUC__
 
-#define JS_TOUPPER(c)   ({int32 _v = JS_CCODE(c);                             \
-			  (_v & 0x00100000) ? (c) - (_v >> 22) : (c);})
-#define JS_TOLOWER(c)   ({int32 _v = JS_CCODE(c);                             \
-			  (_v & 0x00200000) ? (c) + (_v >> 22) : (c);})
+#define JS_TOUPPER(c)   ({uint32 _v = JS_CCODE(c);                            \
+			  (_v & 0x00100000) ? (c) - ((int32)_v >> 22) : (c);})
+#define JS_TOLOWER(c)   ({uint32 _v = JS_CCODE(c);                            \
+			  (_v & 0x00200000) ? (c) + ((int32)_v >> 22) : (c);})
 
 #else  /* !__GNUC__ */
 
@@ -145,6 +145,13 @@ extern jschar js_ToLower(jschar c);
 #define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
 #define JS7_UNHEX(c)    (uintN)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 #define JS7_ISLET(c)    ((c) < 128 && isalpha(c))
+
+/* Initialize truly global state associated with JS strings. */
+extern JSBool
+js_InitStringGlobals(void);
+
+extern void
+js_FreeStringGlobals(void);
 
 /* Initialize the String class, returning its prototype object. */
 extern JSObject *
@@ -176,6 +183,13 @@ js_StringToObject(JSContext *cx, JSString *str);
  */
 extern JSString *
 js_ValueToString(JSContext *cx, jsval v);
+
+/*
+ * Convert a value to its source expression, returning null after reporting
+ * an error, otherwise returning a new string reference.
+ */
+extern JSString *
+js_ValueToSource(JSContext *cx, jsval v);
 
 #ifdef HT_ENUMERATE_NEXT	/* XXX don't require prhash.h */
 /*
