@@ -94,7 +94,9 @@ include $(topsrcdir)/config/rules.mk
 _UNIT_FILES	= unit/test_all.sh \
 		  unit/head.js \
 		  unit/tail.js \
-		  unit/test_protocolproxyservice.js
+		  unit/test_protocolproxyservice.js \
+		  unit/test_http_headers.js \
+		  $(NULL)
 libs:: $(_UNIT_FILES)
 	$(INSTALL) $^ $(DIST)/bin/necko_unit_tests
 

@@ -196,9 +196,13 @@ nsHttpHandler::~nsHttpHandler()
 nsresult
 nsHttpHandler::Init()
 {
-    nsresult rv = NS_OK;
+    nsresult rv;
 
     LOG(("nsHttpHandler::Init\n"));
+
+    rv = nsHttp::CreateAtomTable();
+    if (NS_FAILED(rv))
+        return rv;
 
     mIOService = do_GetService(kIOServiceCID, &rv);
     if (NS_FAILED(rv)) {

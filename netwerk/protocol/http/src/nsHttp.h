@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -133,11 +134,15 @@ struct nsHttpAtom
 
 struct nsHttp
 {
+    static nsresult CreateAtomTable();
     static void DestroyAtomTable();
 
     // will dynamically add atoms to the table if they don't already exist
     static nsHttpAtom ResolveAtom(const char *);
-    static nsHttpAtom ResolveAtom(const nsACString &s) { return ResolveAtom(PromiseFlatCString(s).get()); }
+    static nsHttpAtom ResolveAtom(const nsACString &s)
+    {
+        return ResolveAtom(PromiseFlatCString(s).get());
+    }
 
     /* Declare all atoms
      *
