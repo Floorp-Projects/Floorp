@@ -745,7 +745,7 @@ NS_IMETHODIMP TokenStreamListener::ProcessHeaders(nsIUTF8StringEnumerator *aHead
     return NS_OK;
 }
 
-NS_IMETHODIMP TokenStreamListener::HandleAttachment(const char *contentType, const char *url, const PRUnichar *displayName, const char *uri, PRBool aNotDownloaded)
+NS_IMETHODIMP TokenStreamListener::HandleAttachment(const char *contentType, const char *url, const PRUnichar *displayName, const char *uri, PRBool aIsExternalAttachment)
 {
     mTokenizer.tokenizeAttachment(contentType, NS_ConvertUCS2toUTF8(displayName).get());
     return NS_OK;
