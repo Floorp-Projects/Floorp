@@ -684,7 +684,13 @@ nsHTTPHandler::InitUserAgentComponents()
     mAppName = "Mozilla";
     mAppVersion = "5.0";
 
-    mAppSecurity = "N"; // XXX needs to be set by HTTPS
+    // Get Security level supported
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "security",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mAppSecurity = UAPrefVal;
+    else
+        mAppSecurity = "N";
 
     // Gather locale.
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "locale", 
