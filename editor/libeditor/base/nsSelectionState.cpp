@@ -423,9 +423,9 @@ nsRangeUpdater::SelAdjJoinNodes(nsIDOMNode *aLeftNode,
     item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_NULL_POINTER;
     
-    // adjust endpoints in aParent
     if (item->startNode.get() == aParent)
     {
+      // adjust start point in aParent
       if (item->startOffset > aOffset)
       {
         item->startOffset--;
@@ -437,8 +437,20 @@ nsRangeUpdater::SelAdjJoinNodes(nsIDOMNode *aLeftNode,
         item->startOffset = aOldLeftNodeLength;
       }
     }
+    else if (item->startNode.get() == aRightNode)
+    {
+      // adjust start point in aRightNode
+      item->startOffset += aOldLeftNodeLength;
+    }
+    else if (item->startNode.get() == aLeftNode)
+    {
+      // adjust start point in aLeftNode
+      item->startNode = aRightNode;
+    }
+
     if (item->endNode.get() == aParent)
     {
+      // adjust end point in aParent
       if (item->endOffset > aOffset)
       {
         item->endOffset--;
@@ -450,16 +462,16 @@ nsRangeUpdater::SelAdjJoinNodes(nsIDOMNode *aLeftNode,
         item->endOffset = aOldLeftNodeLength;
       }
     }
-    // adjust endpoints in aRightNode
-    if (item->startNode.get() == aRightNode)
-      item->startOffset += aOldLeftNodeLength;
-    if (item->endNode.get() == aRightNode)
-      item->endOffset += aOldLeftNodeLength;
-    // adjust endpoints in aLeftNode
-    if (item->startNode.get() == aLeftNode)
-      item->startNode = aRightNode;
-    if (item->endNode.get() == aLeftNode)
+    else if (item->endNode.get() == aRightNode)
+    {
+      // adjust end point in aRightNode
+       item->endOffset += aOldLeftNodeLength;
+    }
+    else if (item->endNode.get() == aLeftNode)
+    {
+      // adjust end point in aLeftNode
       item->endNode = aRightNode;
+    }
   }
   
   return NS_OK;
