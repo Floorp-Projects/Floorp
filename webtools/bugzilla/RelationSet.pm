@@ -32,7 +32,11 @@
 use diagnostics;
 use strict;
 
-require "globals.pl";
+# Everything that uses RelationSet should already have globals.pl loaded
+# so we don't want to load it here.  Doing so causes a loop in Perl because
+# globals.pl turns around and does a 'use RelationSet'
+# See http://bugzilla.mozilla.org/show_bug.cgi?id=72862
+#require "globals.pl";
 
 package RelationSet;
 use CGI::Carp qw(fatalsToBrowser);
@@ -260,3 +264,5 @@ sub toString {
 
   return join(',', sort(@result));
 }  
+
+1;

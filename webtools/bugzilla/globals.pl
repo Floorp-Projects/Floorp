@@ -31,6 +31,7 @@ use strict;
 
 sub globals_pl_sillyness {
     my $zz;
+    $zz = @main::SqlStateStack;
     $zz = @main::chooseone;
     $zz = @main::default_column_list;
     $zz = $main::defaultqueryname;
@@ -48,6 +49,7 @@ sub globals_pl_sillyness {
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
     $zz = @main::prodmaxvotes;
+    $zz = $main::superusergroupset;
 }
 
 #
