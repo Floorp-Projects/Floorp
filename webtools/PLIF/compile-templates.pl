@@ -66,7 +66,10 @@ sub process {
 sub compile {
     my $data = shift;
 
-    my $content = Template::Parser->new()->parse($data);
+    my $parser = Template::Parser->new();
+    my $content = $parser->parse($data);
+
+    die $parser->error() unless $content;
 
     my ($block, $defblocks, $metadata) = @$content{ qw( BLOCK DEFBLOCKS METADATA ) };
 
