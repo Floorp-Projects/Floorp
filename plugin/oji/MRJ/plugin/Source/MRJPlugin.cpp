@@ -48,7 +48,6 @@ extern nsIPlugin* thePlugin;
 nsIPluginManager2* thePluginManager2 = NULL;
 nsIAllocator* theMemoryAllocator = NULL;		// should also be provided by badaptor.cpp.
 
-
 // Common interface IDs.
 
 static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
@@ -56,8 +55,8 @@ static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginManager2IID, NS_IPLUGINMANAGER2_IID);
-static NS_DEFINE_IID(kIMallocCID, NS_ALLOCATOR_CID);
-static NS_DEFINE_IID(kIMallocIID, NS_IALLOCATOR_IID);
+static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
 static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
 static NS_DEFINE_IID(kIThreadManagerIID, NS_ITHREADMANAGER_IID);
@@ -85,7 +84,7 @@ nsresult NSGetFactory(const nsCID &classID, nsISupports* serviceManager, nsIFact
 
 		// Our global operator new wants to use nsIMalloc to do all of its allocation.
 		// This should be available from the Service Manager.
-		if (theServiceManager->GetService(kIMallocCID, kIMallocIID, (nsISupports**)&theMemoryAllocator) != NS_OK)
+		if (theServiceManager->GetService(kAllocatorCID, kIAllocatorIID, (nsISupports**)&theMemoryAllocator) != NS_OK)
 			return NS_ERROR_FAILURE;
 	}
 
