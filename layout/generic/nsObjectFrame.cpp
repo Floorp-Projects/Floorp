@@ -1860,14 +1860,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
             nsIContent* content = nsnull;
             mOwner->GetContent(&content);
             nsCOMPtr<nsISupports> result = nsnull;
-            nsCOMPtr<nsIInputStream> postDataStream = nsnull;
-            nsCOMPtr<nsIInputStream> headersDataStream = nsnull;
+            nsCOMPtr<nsIInputStream> postDataStream;
+            nsCOMPtr<nsIInputStream> headersDataStream;
             if (aPostData) {
-              NS_NewByteInputStream(getter_AddRefs(result),
-                                    (const char *) aPostData, aPostDataLen);
-              if (result) {
-                postDataStream = do_QueryInterface(result, &rv);
-              }
+              NS_NewPostDataStream(getter_AddRefs(postDataStream),
+                                   PR_FALSE,
+                                   (const char *) aPostData, 0);
             }
             if (aHeadersData) {
               NS_NewByteInputStream(getter_AddRefs(result),
