@@ -9,8 +9,20 @@ else {
    $ostype = 'win32';
 }
 
-#FOR WINDOWS 32 PLEASE UNCOMMENT TILL ===
-#system ('c:\x86rel\viewer.exe -v -d 15 -f Url.txt > result.txt');
+#Win32 Autoconfig
+
+if ($ostype == 'win32') {
+
+    $viewer = $viewer_path . "\viewer.exe";
+    print $viewer_path . "\\viewer.exe" . "\n";
+    if (-e $viewer_path . "\\viewer.exe") {
+        system ($viewer_path . '\\viewer.exe -v -d 15 -f url.txt > result.txt');
+    }
+    else {
+       die $viewer_path . "viewer doesn't exist! Check your path.\n";
+   }
+}
+
 #=================================================================
 
 #Linux Autoconfig
