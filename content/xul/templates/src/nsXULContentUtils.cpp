@@ -122,8 +122,7 @@ nsXULContentUtils::Init()
         }
     }
 
-    // XXX HUH?
-    return gRefCnt;
+    return NS_OK;
 }
 
 
@@ -142,7 +141,7 @@ nsXULContentUtils::Finish()
         NS_IF_RELEASE(gFormat);
     }
 
-    return gRefCnt;
+    return NS_OK;
 }
 
 
