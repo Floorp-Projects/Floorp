@@ -3319,8 +3319,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     {
       nsCOMPtr<nsPIDOMWindow> pidomwin(do_QueryInterface(*_retval));
 
-      nsCOMPtr<nsIDOMDocument> temp;
-      pidomwin->GetExtantDocument(getter_AddRefs(temp));
+      nsIDOMDocument *temp = pidomwin->GetExtantDocument();
 
       NS_ASSERTION(temp, "No document in new window!!!");
     }
