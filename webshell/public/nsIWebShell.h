@@ -45,6 +45,7 @@ class nsIPref;
 class nsIContent;
 class nsIURIContentListener;
 class nsIDOMDocument;
+class nsIChromeEventHandler;
 
 // Interface ID for nsIWebShell
 #define NS_IWEB_SHELL_IID \
@@ -310,15 +311,15 @@ public:
 	 */
 	NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType) = 0;
 
-  /**
-   * Get the nearest enclosing chrome shell.
+  /*
+   * Get Chrome Event Handler 
    */
-  NS_IMETHOD GetContainingChromeElement(nsIContent** aResult) = 0;
+  NS_IMETHOD GetChromeEventHandler(nsIChromeEventHandler** aChromeEventHandler) = 0;
 
-  /** 
-   * Set the nearest enclosing chrome shell.
+  /*
+   * Get Chrome Event Handler 
    */
-  NS_IMETHOD SetContainingChromeElement(nsIContent* aChromeElement) = 0;
+  NS_IMETHOD SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler) = 0;
 
   /**
    * Get the content viewer for this webshell.

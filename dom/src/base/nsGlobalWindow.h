@@ -46,6 +46,7 @@
 #include "nsIControllers.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMAbstractView.h"
+#include "nsIChromeEventHandler.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -280,7 +281,7 @@ protected:
   BarPropImpl *mStatusbar;
   BarPropImpl *mScrollbars;
   
-  nsIContent* mChromeElement;
+  nsIChromeEventHandler* mChromeEventHandler;
   nsCOMPtr<nsIControllers> mControllers;
 
   nsTimeoutImpl *mTimeouts;
