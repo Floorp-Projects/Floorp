@@ -163,6 +163,10 @@ lo_InitDocLists(MWContext *context, lo_DocLists *doc_lists)
 
     doc_lists->embed_list = NULL;
     doc_lists->embed_list_count = 0;
+#ifdef notyet /* SHACK */
+    doc_lists->builtin_list = NULL;
+    doc_lists->builtin_list_count = 0;
+#endif /* SHACK */
     doc_lists->applet_list = NULL;
     doc_lists->applet_list_count = 0;
 
@@ -7582,6 +7586,10 @@ void lo_UpdateStateWhileFlushingLine( MWContext *context, lo_DocState *state )
 		  case LO_JAVA:
 		    layer = tptr->lo_java.layer;
 		    border_width = tptr->lo_java.border_width;
+		    break;
+		  case LO_BUILTIN:
+		    layer = tptr->lo_builtin.layer;
+		    border_width = tptr->lo_builtin.border_width;
 		    break;
 #endif
 		  case LO_EMBED:

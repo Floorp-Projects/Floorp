@@ -59,6 +59,10 @@ typedef struct fe_functions {
 			int32 start_pos, int32 end_pos, XP_Bool need_bg);
 	void (*DisplayEmbed)(void *fe_context,
 			int iLocation, LO_EmbedStruct *embed);
+#ifdef SHACK
+	void (*DisplayBuiltin)(void *fe_context,
+			int iLocation, LO_BuiltinStruct *builtin);
+#endif
 	void (*DisplayJavaApp)(void *fe_context,
 			int iLocation, LO_JavaAppStruct *java_app);
 	void (*DisplayImage)(void *fe_context,
@@ -100,6 +104,10 @@ typedef struct fe_functions {
 			LO_EdgeStruct *edge);
 	void (*FreeEmbedElement)(void *fe_context,
 			LO_EmbedStruct *embed);
+#ifdef SHACK
+	void (*FreeBuiltinElement)(void *fe_context,
+			LO_BuiltlinStruct *builtin);
+#endif
 	void (*HideJavaAppElement)(void *fe_context,
 			void *session_data);
 	void (*FreeImageElement)(void *fe_context,

@@ -104,6 +104,16 @@ lo_GetElementBbox(LO_Element *element, XP_Rect *rect)
     }
     break;
 
+#ifdef SHACK
+    case LO_BUILTIN:
+    {
+        LO_BuiltinStruct *builtin = &element->lo_builtin;
+        rect->right  += 2 * (builtin->border_width + builtin->border_horiz_space);
+        rect->bottom += 2 * (builtin->border_width + builtin->border_vert_space);
+    }
+    break;
+#endif /* SHACK */
+
 #ifdef JAVA
     case LO_JAVA:
     {
@@ -1982,6 +1992,11 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 		case LO_TABLE:
 			size = sizeof(LO_TableStruct);
 			break;
+#ifdef SHACK
+		case LO_BUILTIN:
+			size = sizeof(LO_BuiltinStruct);
+			break;
+#endif
 		case LO_CELL:
 			size = sizeof(LO_CellStruct);
 			break;
@@ -3754,6 +3769,11 @@ Bool LO_IsWithinSpan( LO_Element *ele )
 		case LO_JAVA:
 			isInSpan = ele->lo_java.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
 			break;
+#ifdef SHACK
+		case LO_BUILTIN:
+			isInSpan = ele->lo_builtin.ele_attrmask & LO_ELE_IN_SPAN ? TRUE : FALSE;
+			break;
+#endif
 		}
 	}
 	return isInSpan;
