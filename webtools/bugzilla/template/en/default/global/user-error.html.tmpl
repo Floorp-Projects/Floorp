@@ -158,10 +158,8 @@
     [%+ terms.bug %] is a duplicate.  The [% terms.bug %] has not been changed.
 
   [% ELSIF error == "dupe_of_self_disallowed" %]
-    [% title = "Nice Try..." %]
-    Nice try, [% user.login FILTER html %], but it doesn't
-    really make sense to mark [% terms.abug %] as a duplicate of itself,
-    does it?
+    [% title = "Cannot mark [% terms.abug %] as a duplicate of itself" %]
+    You can't mark [% terms.abug %] as a duplicate of itself.
 
   [% ELSIF error == "email_change_in_progress" %]
     [% title = "Email Change Already In Progress" %]
