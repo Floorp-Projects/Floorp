@@ -114,6 +114,13 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_EXIT:
     GenerateMouseEnterExit(aPresContext, aEvent);
     break;
+  case NS_DRAGDROP_OVER:
+    GenerateDragDropEnterExit(aPresContext, aEvent);
+    break;
+  case NS_DRAGDROP_DROP:
+  case NS_DRAGDROP_EXIT:
+    GenerateDragDropEnterExit(aPresContext, aEvent);
+    break;
   case NS_GOTFOCUS:
 #if 0
     nsIViewManager* viewMgr;
@@ -433,13 +440,19 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
 
         if (nsnull != lastContent) {
           lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+
+          if (nsEventStatus_eConsumeNoDefault != status) {
+            SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+          }
           NS_RELEASE(lastContent);
         }
+
 
         //Now dispatch to the frame
         if (nsnull != mLastMouseOverFrame) {
           //XXX Get the new frame
           mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+          mLastMouseOverFrame = nsnull;
         }
       }
     }
@@ -482,7 +495,6 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
           if (nsEventStatus_eConsumeNoDefault != status) {
             SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
           }
-
           //Now dispatch to the frame
           if (nsnull != mLastDragOverFrame) {
             //XXX Get the new frame
@@ -509,7 +521,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
           }
         }
 
-        //Now dispatch to the frame
+       //Now dispatch to the frame
         if (nsnull != mCurrentTarget) {
           //XXX Get the new frame
           mCurrentTarget->HandleEvent(aPresContext, &event, status);
@@ -522,7 +534,8 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
       }
     }
     break;
-  case NS_MOUSE_EXIT:
+  case NS_DRAGDROP_DROP:
+  case NS_DRAGDROP_EXIT:
     {
       //This is actually the window mouse exit event.  Such a think does not
       // yet exist but it will need to eventually.
@@ -539,6 +552,9 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
 
         if (nsnull != lastContent) {
           lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+          if (nsEventStatus_eConsumeNoDefault != status) {
+            SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
+          }
           NS_RELEASE(lastContent);
         }
 
@@ -546,6 +562,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         if (nsnull != mLastDragOverFrame) {
           //XXX Get the new frame
           mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
+          mLastDragOverFrame = nsnull;
         }
       }
     }
