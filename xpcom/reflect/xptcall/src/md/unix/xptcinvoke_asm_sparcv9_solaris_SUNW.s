@@ -22,11 +22,19 @@
  *   Chris Seawood <cls@seawood.org>
  */
 
+/*
+    Platform specific code to invoke XPCOM methods on native objects
+    for sparcv9 Solaris.
 
-/* Platform specific code to invoke XPCOM methods on native objects */
+    See the SPARC Compliance Definition (SCD) Chapter 3
+    for more information about what is going on here, including
+    the use of BIAS (0x7ff).
+    The SCD is available from http://www.sparc.com/.
+*/
 
         .global XPTC_InvokeByIndex
         .type   XPTC_InvokeByIndex, #function
+
 /*
     XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params);
@@ -52,19 +60,19 @@ XPTC_InvokeByIndex:
 !   BIAS is 0x7ff (2047)
 !
 
-! integer regs
-        ldx     [%sp + 0x7ff + 136],%o1    ! %sp + BIAS + 136  (%i1)
-        ldx     [%sp + 0x7ff + 144],%o2    ! %sp + BIAS + 144  (%i2)
-        ldx     [%sp + 0x7ff + 152],%o3    ! %sp + BIAS + 152  (%i3)
-        ldx     [%sp + 0x7ff + 160],%o4    ! %sp + BIAS + 160  (%i4)
-        ldx     [%sp + 0x7ff + 168],%o5    ! %sp + BIAS + 168  (%i5)
+!   load the %o1..5 64bit (extended word) output registers registers 
+        ldx     [%sp + 0x7ff + 136],%o1    ! %i1
+        ldx     [%sp + 0x7ff + 144],%o2    ! %i2
+        ldx     [%sp + 0x7ff + 152],%o3    ! %i3
+        ldx     [%sp + 0x7ff + 160],%o4    ! %i4
+        ldx     [%sp + 0x7ff + 168],%o5    ! %i5
 
-! double (floating point) regs
-        ldd     [%sp + 0x7ff + 136],%d2    ! %sp + BIAS + 136  (%i1)
-        ldd     [%sp + 0x7ff + 144],%d4    ! %sp + BIAS + 144  (%i2)
-        ldd     [%sp + 0x7ff + 152],%d6    ! %sp + BIAS + 152  (%i3)
-        ldd     [%sp + 0x7ff + 160],%d8    ! %sp + BIAS + 160  (%i4)
-        ldd     [%sp + 0x7ff + 168],%d10   ! %sp + BIAS + 168  (%i5)
+!   load the even number double registers starting with %d2
+        ldd     [%sp + 0x7ff + 136],%d2
+        ldd     [%sp + 0x7ff + 144],%d4
+        ldd     [%sp + 0x7ff + 152],%d6
+        ldd     [%sp + 0x7ff + 160],%d8
+        ldd     [%sp + 0x7ff + 168],%d10
         ldd     [%sp + 0x7ff + 176],%d12
         ldd     [%sp + 0x7ff + 184],%d14
         ldd     [%sp + 0x7ff + 192],%d16
@@ -75,8 +83,6 @@ XPTC_InvokeByIndex:
         ldd     [%sp + 0x7ff + 232],%d26
         ldd     [%sp + 0x7ff + 240],%d28
         ldd     [%sp + 0x7ff + 248],%d30
-
-
 
 !
 !   calculate the target address from the vtable
@@ -90,7 +96,7 @@ XPTC_InvokeByIndex:
         jmpl    %l0,%o7             ! call the routine
         mov     %i0,%o0             ! move 'this' pointer to out register
 
-        mov     %o0,%i0             ! propogate return value
+        mov     %o0,%i0             ! propagate return value
         ret
         restore
 
