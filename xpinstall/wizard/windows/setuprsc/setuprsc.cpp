@@ -10,8 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code,
- * released March 31, 1998.
+ * The Original Code is Mozilla Communicator
  *
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are

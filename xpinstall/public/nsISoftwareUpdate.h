@@ -73,6 +73,7 @@ class nsISoftwareUpdate : public nsISupports
             NS_IMETHOD InstallJarCallBack()                   = 0; 
             NS_IMETHOD GetMasterNotifier(nsIXPINotifier **notifier) = 0;
             NS_IMETHOD SetActiveNotifier(nsIXPINotifier *notifier) = 0;
+            NS_IMETHOD StartupTasks() = 0;
 };
 
 

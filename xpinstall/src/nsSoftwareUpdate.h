@@ -50,6 +50,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         NS_IMETHOD InstallJarCallBack();
         NS_IMETHOD GetMasterNotifier(nsIXPINotifier **notifier);
         NS_IMETHOD SetActiveNotifier(nsIXPINotifier *notifier);
+        NS_IMETHOD StartupTasks();
 
         /** SetProgramDirectory() is private for the Install Wizard.
          *  The mStubLockout property makes sure this is only called
@@ -72,7 +73,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         PRLock*           mLock;
         PRBool            mInstalling;
         PRBool            mStubLockout;
-        nsVoidArray*      mJarInstallQueue;
+        nsVoidArray       mJarInstallQueue;
         nsTopProgressNotifier   mMasterNotifier;
 };
 

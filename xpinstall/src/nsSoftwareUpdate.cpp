@@ -103,28 +103,12 @@ nsSoftwareUpdate::GetInstance()
 
 
 nsSoftwareUpdate::nsSoftwareUpdate()
+: mInstalling(PR_FALSE),
+  mStubLockout(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 
-    mStubLockout = PR_FALSE;
-    /***************************************/
-    /* Create us a queue                   */
-    /***************************************/
     mLock = PR_NewLock();
-    mInstalling = PR_FALSE;
-    mJarInstallQueue = new nsVoidArray();
-
-    /***************************************/
-    /* Add us to the Javascript Name Space */
-    /***************************************/
-
-    RegisterNameset();
-
-    /***************************************/
-    /* Register us with NetLib             */
-    /***************************************/
-        // FIX 
-
 
     /***************************************/
     /* Startup the Version Registry        */
@@ -134,30 +118,6 @@ nsSoftwareUpdate::nsSoftwareUpdate()
 
     nsSpecialSystemDirectory appDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     VR_SetRegDirectory( appDir.GetNativePathCString() );
-
-
-    /***************************************/
-    /* Perform Scheduled Tasks             */
-    /***************************************/
-
-/* XXX Temporary workaround: see bugs 8849, 8971 */
-#ifndef XP_UNIX 
-    PR_CreateThread(PR_USER_THREAD,
-                    PerformScheduledTasks,
-                    nsnull, 
-                    PR_PRIORITY_NORMAL, 
-                    PR_GLOBAL_THREAD, 
-                    PR_UNJOINABLE_THREAD,
-                    0);  
-#endif
-
-
-    /***************************************/
-    /* Create a top level observer         */
-    /***************************************/
-
-    nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
-    RegisterNotifier(logger);
 }
 
 
@@ -167,20 +127,17 @@ nsSoftwareUpdate::nsSoftwareUpdate()
 nsSoftwareUpdate::~nsSoftwareUpdate()
 {
     PR_Lock(mLock);
-    if (mJarInstallQueue != nsnull)
-    {
-        nsInstallInfo* element;
-        for (PRInt32 i=0; i < mJarInstallQueue->Count(); i++)
-        {
-            element = (nsInstallInfo*)mJarInstallQueue->ElementAt(i);
-            //FIX:  need to add to registry....
-            delete element;
-        }
 
-        mJarInstallQueue->Clear();
-        delete (mJarInstallQueue);
-        mJarInstallQueue = nsnull;
+    nsInstallInfo* element;
+    for (PRInt32 i=0; i < mJarInstallQueue.Count(); i++)
+    {
+        element = (nsInstallInfo*)mJarInstallQueue.ElementAt(i);
+        //FIX:  need to add to registry....
+        delete element;
     }
+
+    mJarInstallQueue.Clear();
+
     PR_Unlock(mLock);
     PR_DestroyLock(mLock);
 
@@ -236,16 +193,34 @@ nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
 NS_IMETHODIMP
 nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService  *aCmdLineService ) 
 {
-    mStubLockout = PR_TRUE;  // prevent use of nsPIXPIStubHook by browser
+    // prevent use of nsPIXPIStubHook by browser
+    mStubLockout = PR_TRUE;
 
-//    rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
+    /***************************************/
+    /* Add us to the Javascript Name Space */
+    /***************************************/
+
+    RegisterNameset();
+
+    /***************************************/
+    /* Register us with NetLib             */
+    /***************************************/
+        // FIX 
+
+
+    /***************************************/
+    /* Create a top level observer         */
+    /***************************************/
+
+    nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
+    RegisterNotifier(logger);
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSoftwareUpdate::Shutdown()
 {
-//    rv = nsServiceManager::UnregisterService( NS_IXPINSTALLCOMPONENT_PROGID );
     NS_IF_RELEASE(mInstance);
     return NS_OK;
 }
@@ -299,7 +274,7 @@ nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
         return NS_ERROR_OUT_OF_MEMORY;
 
     PR_Lock(mLock);
-    mJarInstallQueue->AppendElement( info );
+    mJarInstallQueue.AppendElement( info );
     PR_Unlock(mLock);
     RunNextInstall();
 
@@ -312,16 +287,24 @@ nsSoftwareUpdate::InstallJarCallBack()
 {
     PR_Lock(mLock);
 
-    nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->ElementAt(0);
+    nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue.ElementAt(0);
     if (nextInstall != nsnull)
         delete nextInstall;
 
-    mJarInstallQueue->RemoveElementAt(0);
+    mJarInstallQueue.RemoveElementAt(0);
     mInstalling = PR_FALSE;
 
     PR_Unlock(mLock);
 
     return RunNextInstall();
+}
+
+
+NS_IMETHODIMP
+nsSoftwareUpdate::StartupTasks()
+{
+    PerformScheduledTasks(0);
+    return NS_OK;
 }
 
 
@@ -334,9 +317,9 @@ nsSoftwareUpdate::RunNextInstall()
     PR_Lock(mLock);
     if (!mInstalling) 
     {
-        if ( mJarInstallQueue->Count() > 0 )
+        if ( mJarInstallQueue.Count() > 0 )
         {
-            info = (nsInstallInfo*)mJarInstallQueue->ElementAt(0);
+            info = (nsInstallInfo*)mJarInstallQueue.ElementAt(0);
 
             if ( info )
                 mInstalling = PR_TRUE;
@@ -680,7 +663,7 @@ nsSoftwareUpdateModule::RegisterSelf(nsIComponentManager *aCompMgr,
     nsresult rv = NS_OK;
 
 #ifdef DEBUG
-    printf("*** XPInstall is being registered\n");
+    printf("*** Registering XPInstall\n");
 #endif
 
     Components* cp = gComponents;
