@@ -1701,15 +1701,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 			// set value to trash folder
 			rv = GetTrashFolder(getter_AddRefs(trash));
 			if (NS_SUCCEEDED(rv) && trash)
-			{
-				// this sucks - but we need value to live past this scope
-				// so we use an nsString from above.
-				PRUnichar *folderName = nsnull;
-				rv = trash->GetName(&folderName);
-				trashNameVal.AssignWithConversion(folderName);
-				PR_FREEIF(folderName);
-				*(char **)getter_Copies(actionTargetFolderUri) = trashNameVal.ToNewCString();
-			}
+				rv = trash->GetURI(getter_Copies(actionTargetFolderUri));
 
 			msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);	// mark read in trash.
 		}
