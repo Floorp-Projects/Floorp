@@ -71,15 +71,30 @@
 <!-- HTML formatting on output -->
 	<titledbox orient="vertical">
     <title value="&savingFiles.title;"/>
-    <checkbox 
-      value      = "&preserveExistingFormatting;"
-      id         = "preserveFormatting" 
-      tooltip    = "aTooltip" tooltiptext="&preserveExistingFormatting.tooltip;"
-      pref       = "true" 
-      preftype   = "bool" 
-      prefstring = "editor.prettyprint"
-      prefattribute="checked"
-    />
+    <spring class="spacer"/>
+    <radiogroup orient="vertical" autostretch="never"
+      id            = "preserveFormatting"
+      pref          = "true"
+      preftype      = "bool"
+      prefstring    = "editor.prettyprint"
+      prefattribute = "data">
+      <radio 
+        group      = "preserveFormatting"
+        data       = "false"
+        value      = "&preserveExistingFormatting;" 
+        accesskey  = "&preserveExistingFormatting.accesskey;"
+        tooltip    = "aTooltip"
+        tooltiptext= "&preserveExistingFormatting.tooltip;"
+      />
+      <radio 
+        group      = "preserveFormatting" 
+        data       = "true"
+        value      = "&reformat.label;" 
+        accesskey  = "&reformat.accesskey;"
+        tooltip    = "aTooltip"
+        tooltiptext= "&reformat.tooltip;"
+      />
+    </radiogroup>
 	</titledbox>
 	
   <titledbox orient="vertical" autostretch="never">
