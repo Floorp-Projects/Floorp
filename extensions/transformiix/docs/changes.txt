@@ -2,6 +2,19 @@ TransforMiiX (TM)
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
 
+Build 20000523
+
+-- Added support for document() function
+   - implemented by Olivier Gerardin
+   - The second argument to the function is not yet supported
+
+-- Added support for lang() function
+   - implemented by Marina Mechtcherikova
+
+-- Fixed bug with doing xsl:copy-of on a document node.
+   - reported by Olivier Gerardin
+
+
 Build 20000420
 
 -- Fixed document base issue with transfromiix.cpp (Nathan)
