@@ -8,8 +8,8 @@
 # a programmer. Be sure to test the None.pm module as well as the
 # other VC Modules.
 
-# $Revision: 1.4 $ 
-# $Date: 2003/05/10 19:56:52 $ 
+# $Revision: 1.5 $ 
+# $Date: 2003/08/17 00:57:38 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcdisplay.tst,v $ 
 # $Name:  $ 
@@ -34,7 +34,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

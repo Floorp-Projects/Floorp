@@ -7,8 +7,8 @@
 # current time.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2003/02/11 00:27:47 $ 
+# $Revision: 1.11 $ 
+# $Date: 2003/08/17 00:57:35 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
@@ -33,7 +33,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

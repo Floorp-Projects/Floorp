@@ -4,8 +4,8 @@
 # bonsai database availible.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2003/05/12 13:51:20 $ 
+# $Revision: 1.2 $ 
+# $Date: 2003/08/17 00:57:43 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -29,10 +29,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

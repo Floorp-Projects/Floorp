@@ -8,8 +8,8 @@
 # URL.
 
 
-# $Revision: 1.16 $ 
-# $Date: 2003/04/20 20:19:29 $ 
+# $Revision: 1.17 $ 
+# $Date: 2003/08/17 00:57:35 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -34,7 +34,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

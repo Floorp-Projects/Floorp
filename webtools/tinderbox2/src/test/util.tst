@@ -5,8 +5,8 @@
 # Util.tst - simple regression tests for the Util.pm module
 
 
-# $Revision: 1.6 $ 
-# $Date: 2003/04/20 20:16:49 $ 
+# $Revision: 1.7 $ 
+# $Date: 2003/08/17 00:57:35 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/util.tst,v $ 
 # $Name:  $ 
@@ -30,7 +30,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

@@ -5,9 +5,9 @@
 # timestamp.tst - test the timestamp code in processmail.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/09/18 19:33:32 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2003/08/17 00:57:35 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/timestamp.tst,v $ 
 # $Name:  $ 
 
@@ -30,7 +30,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
