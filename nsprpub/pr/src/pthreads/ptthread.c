@@ -749,14 +749,13 @@ PR_IMPLEMENT(PRStatus) PR_Yield()
 
 PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime ticks)
 {
-    PRStatus rv;
+    PRStatus rv = PR_SUCCESS;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
     if (PR_INTERVAL_NO_WAIT == ticks)
     {
         _PT_PTHREAD_YIELD();
-        rv = PR_SUCCESS;
     }
     else
     {
