@@ -95,7 +95,7 @@
 - (void)onLoadingStarted;
 - (void)onLoadingCompleted:(BOOL)succeeded;
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
-- (void)onLocationChange:(NSURL*)url;
+- (void)onLocationChange:(NSString*)urlSpec;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;

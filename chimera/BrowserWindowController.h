@@ -112,7 +112,7 @@ class nsIDOMNode;
   NSToolbarItem *mSidebarToolbarItem;
 
   BOOL mInitialized;
-  NSURL* mURL;
+  NSString* mURL;
 
   CHBrowserWrapper* mBrowserView;
 
@@ -146,7 +146,7 @@ class nsIDOMNode;
 -(id)getTabBrowser;
 -(CHBrowserWrapper*)getBrowserWrapper;
 
-- (void)loadURL:(NSURL*)aURL;
+- (void)loadURL:(NSString*)aURLSpec;
 - (void)loadURLString:(NSString*)aStr;
 - (void)updateLocationFields:(NSString *)locationString;
 - (void)updateToolbarItems;
@@ -170,7 +170,7 @@ class nsIDOMNode;
 
 - (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
-            url: (NSURL*)aURL suggestedFilename: (NSString*)aFilename;
+            url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
 - (void)printDocument;
 - (void)printPreview;
 
@@ -184,7 +184,7 @@ class nsIDOMNode;
 
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder;
 - (IBAction)manageBookmarks: (id)aSender;
-- (void)importBookmarks: (NSURL*)aURL;
+- (void)importBookmarks: (NSString*)aURLSpec;
 - (IBAction)toggleSidebar:(id)aSender;
 
 - (void)newTab;
@@ -200,9 +200,9 @@ class nsIDOMNode;
 
 -(void)enterModalSession;
 
--(void)openNewWindowWithURL: (NSURL*)aURL loadInBackground: (BOOL)aLoadInBG;
+-(void)openNewWindowWithURL: (NSString*)aURLSpec loadInBackground: (BOOL)aLoadInBG;
 -(void)openNewWindowWithGroup: (nsIDOMElement*)aFolderElement loadInBackground: (BOOL)aLoadInBG;
--(void)openNewTabWithURL: (NSURL*)aURL loadInBackground: (BOOL)aLoadInBG;
+-(void)openNewTabWithURL: (NSString*)aURLSpec loadInBackground: (BOOL)aLoadInBG;
 
 -(void)autosaveWindowFrame;
 -(void)disableAutosave;

@@ -282,7 +282,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 - (void)drawerDidOpen:(NSNotification *)aNotification
 {
   // XXXdwh This is temporary.
-  //  [[mSidebarBrowserView getBrowserView] loadURI: [NSURL URLWithString: @"http://tinderbox.mozilla.org/SeaMonkey/panel.html"] flags:NSLoadFlagsNone];
+  //  [[mSidebarBrowserView getBrowserView] loadURI: @"http://tinderbox.mozilla.org/SeaMonkey/panel.html" flags:NSLoadFlagsNone];
 
   // Toggle the sidebar icon.
   [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarOpened"]];
@@ -294,7 +294,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
 
   // XXXdwh ignore for now.
-  //  [[mSidebarBrowserView getBrowserView] loadURI: [NSURL URLWithString: @"about:blank"] flags:NSLoadFlagsNone];
+  //  [[mSidebarBrowserView getBrowserView] loadURI: @"about:blank" flags:NSLoadFlagsNone];
 
   if (mDrawerCachedFrame) {
     printf("Got here.\n");
@@ -530,7 +530,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 {
   [mLocationSheetWindow orderOut:self];
   [NSApp endSheet:mLocationSheetWindow returnCode:1];
-  [self loadURL:[NSURL URLWithString:[mLocationSheetURLField stringValue]]];
+  [self loadURL:[mLocationSheetURLField stringValue]];
   
   // Focus and activate our content area.
   [[mBrowserView getBrowserView] setActive: YES];
@@ -569,7 +569,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   [mSidebarTabView selectFirstTabViewItem:self];
 }
 
-- (void)importBookmarks: (NSURL*)aURL
+- (void)importBookmarks: (NSString*)aURLSpec
 {
   // Open the bookmarks sidebar.
   [self manageBookmarks: self];
@@ -579,7 +579,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   [newView setFrame: NSZeroRect];
   [newView setIsBookmarksImport: YES];
   [[[self window] contentView] addSubview: newView];
-  [[newView getBrowserView] loadURI:aURL flags:NSLoadFlagsNone];
+  [[newView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];
 }
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
@@ -587,7 +587,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   // trim off any whitespace around url
   NSMutableString *theURL = [[NSMutableString alloc] initWithString:[sender stringValue]];
   CFStringTrimWhitespace((CFMutableStringRef)theURL);
-  [self loadURL:[NSURL URLWithString:theURL]];
+  [self loadURL:theURL];
   [theURL release];
     
   // Focus and activate our content area.
@@ -600,22 +600,21 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 }
 
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
-            url: (NSURL*)aURL suggestedFilename: (NSString*)aFilename
+            url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
 {
   [[mBrowserView getBrowserView] saveURL: aFilterView filterList: aFilterList
-                                     url: aURL suggestedFilename: aFilename];
+                                     url: aURLSpec suggestedFilename: aFilename];
 }
 
 - (IBAction)viewSource:(id)aSender
 {
   NSString* urlStr = [[mBrowserView getBrowserView] getFocusedURLString];
   NSString* viewSource = [@"view-source:" stringByAppendingString: urlStr];
-  NSURL* urlToLoad = [NSURL URLWithString: viewSource];
 
   PRBool loadInBackground;
   nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
-  [self openNewTabWithURL: urlToLoad loadInBackground: loadInBackground];
+  [self openNewTabWithURL: urlStr loadInBackground: loadInBackground];
 }
 
 - (void)printDocument
@@ -631,7 +630,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 - (void)performSearch
 {
   // XXX go to the user's preferred search engine.
-  [[mBrowserView getBrowserView] loadURI:[NSURL URLWithString: @"http://dmoz.org/"] flags:NSLoadFlagsNone];
+  [[mBrowserView getBrowserView] loadURI: @"http://dmoz.org/" flags:NSLoadFlagsNone];
 }
 
 
@@ -754,7 +753,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (IBAction)home:(id)aSender
 {
-  [[mBrowserView getBrowserView] loadURI:[NSURL URLWithString:[[CHPreferenceManager sharedInstance] homePage:NO]] flags:NSLoadFlagsNone];
+  [[mBrowserView getBrowserView] loadURI:[[CHPreferenceManager sharedInstance] homePage:NO] flags:NSLoadFlagsNone];
 }
 
 - (IBAction)toggleSidebar:(id)aSender
@@ -775,17 +774,17 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 -(void)loadURLString:(NSString*)aStr
 {
-  [self loadURL:[NSURL URLWithString:aStr]];
+  [self loadURL: aStr];
 }
 
 
--(void)loadURL:(NSURL*)aURL
+-(void)loadURL:(NSString*)aURLSpec
 {
     if (mInitialized) {
-        [[mBrowserView getBrowserView] loadURI:aURL flags:NSLoadFlagsNone];
+        [[mBrowserView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];
     }
     else {
-        mURL = aURL;
+        mURL = aURLSpec;
         [mURL retain];
     }
 }
@@ -818,7 +817,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     [newTab setView: newView];
     [mTabBrowser addTabViewItem: newTab];
     
-    [[newView getBrowserView] loadURI:[NSURL URLWithString:@"about:blank"] flags:NSLoadFlagsNone];
+    [[newView getBrowserView] loadURI: @"about:blank" flags:NSLoadFlagsNone];
 
     [mTabBrowser selectLastTabViewItem: self];
 
@@ -880,13 +879,13 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   return mBrowserView;
 }
 
--(void)openNewWindowWithURL: (NSURL*)aURL loadInBackground: (BOOL)aLoadInBG
+-(void)openNewWindowWithURL: (NSString*)aURLSpec loadInBackground: (BOOL)aLoadInBG
 {
   // Autosave our dimensions before we open a new window.  That ensures the size ends up matching.
   [self autosaveWindowFrame];
 
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
-  [browser loadURL: aURL];
+  [browser loadURL: aURLSpec];
   if (aLoadInBG)
     [[browser window] orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
   else {
@@ -915,7 +914,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
   [mSidebarBookmarksDataSource openBookmarkGroup: tabBrowser groupElement: aFolderElement];
 }
 
--(void)openNewTabWithURL: (NSURL*)aURL loadInBackground: (BOOL)aLoadInBG
+-(void)openNewTabWithURL: (NSString*)aURLSpec loadInBackground: (BOOL)aLoadInBG
 {
     NSTabViewItem* newTab = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
     
@@ -929,7 +928,7 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     [newTab setLabel: @"Loading..."];
     [newTab setView: newView];
 
-    [[newView getBrowserView] loadURI:aURL flags:NSLoadFlagsNone];
+    [[newView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];
 
     if (!aLoadInBG) {
       [mTabBrowser selectTabViewItem: newTab];
@@ -1114,15 +1113,14 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     return; // Something bad happened if we can't get prefs.
 
   NSString* hrefStr = [NSString stringWithCharacters: href.get() length:nsCRT::strlen(href.get())];
-  NSURL* urlToLoad = [NSURL URLWithString: hrefStr];
 
   PRBool loadInBackground;
   pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
 
   if (aUseWindow)
-    [self openNewWindowWithURL: urlToLoad loadInBackground: loadInBackground];
+    [self openNewWindowWithURL: hrefStr loadInBackground: loadInBackground];
   else
-    [self openNewTabWithURL: urlToLoad loadInBackground: loadInBackground];
+    [self openNewTabWithURL: hrefStr loadInBackground: loadInBackground];
 }
 
 - (IBAction)savePageAs:(id)aSender
@@ -1142,14 +1140,13 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     return;
 
   NSString* hrefStr = [NSString stringWithCharacters: href.get() length:nsCRT::strlen(href.get())];
-  NSURL* urlToSave = [NSURL URLWithString: hrefStr];
 
   // The user wants to save this link.
   nsAutoString text;
   CHGeckoUtils::GatherTextUnder(mContextMenuNode, text);
 
   [self saveURL: nil filterList: nil
-            url: urlToSave suggestedFilename: [NSString stringWithCharacters: text.get()
+            url: hrefStr suggestedFilename: [NSString stringWithCharacters: text.get()
                                                                       length:nsCRT::strlen(text.get())]];
 }
 
@@ -1163,10 +1160,9 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
       imgElement->GetSrc(url);
 
       NSString* hrefStr = [NSString stringWithCharacters: url.get() length:nsCRT::strlen(url.get())];
-      NSURL* urlToSave = [NSURL URLWithString: hrefStr];
 
       [self saveURL: nil filterList: nil
-                url: urlToSave suggestedFilename: [NSString stringWithCharacters: text.get()
+                url: hrefStr suggestedFilename: [NSString stringWithCharacters: text.get()
                                                                           length:nsCRT::strlen(text.get())]];
   }
 }
@@ -1194,9 +1190,8 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     imgElement->GetSrc(url);
 
     NSString* urlStr = [NSString stringWithCharacters: url.get() length:nsCRT::strlen(url.get())];
-    NSURL* urlToView = [NSURL URLWithString: urlStr];
 
-    [self loadURL: urlToView];
+    [self loadURL: urlStr];
 
     // Focus and activate our content area.
     [[mBrowserView getBrowserView] setActive: YES];

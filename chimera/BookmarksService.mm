@@ -346,7 +346,7 @@
     content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
     if (!href.IsEmpty()) {
       NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
-      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI:[NSURL URLWithString: url] flags: NSLoadFlagsNone];
+      [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI: url flags: NSLoadFlagsNone];
       // Focus and activate our content area.
       [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];
     }
@@ -408,8 +408,8 @@
     if (isExpandable) {
       PRBool isOpen = content->HasAttr(kNameSpaceID_None, BookmarksService::gOpenAtom);
       if (isOpen)
-        [mOutlineView expandItem: item]; 
-      else                                                                                                                                                                                                                                                                                                                                                                                                                                              
+        [mOutlineView expandItem: item];
+      else
         [mOutlineView collapseItem: item];
     }
 #endif
@@ -626,12 +626,11 @@
   
     // stuff it into the string
     NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
-    NSURL* urlToLoad = [NSURL URLWithString: hrefStr];
 
     PRBool loadInBackground;
     pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
 
-    [mBrowserWindowController openNewTabWithURL: urlToLoad loadInBackground: loadInBackground];
+    [mBrowserWindowController openNewTabWithURL: hrefStr loadInBackground: loadInBackground];
   }
 }
 
@@ -647,12 +646,11 @@
   
     // stuff it into the string
     NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
-    NSURL* urlToLoad = [NSURL URLWithString: hrefStr];
 
     nsAutoString group;
     [item contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
     if (group.IsEmpty()) 
-      [mBrowserWindowController openNewWindowWithURL: urlToLoad loadInBackground: NO];
+      [mBrowserWindowController openNewWindowWithURL: hrefStr loadInBackground: NO];
     else {
       nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
       [mBrowserWindowController openNewWindowWithGroup: elt loadInBackground: NO];
@@ -1387,7 +1385,7 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
   NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
 
   // Now load the URL in the window.
-  [aController loadURL:[NSURL URLWithString: url]];
+  [aController loadURL:url];
 
   // Focus and activate our content area.
   [[[aController getBrowserWrapper] getBrowserView] setActive: YES];
@@ -1595,7 +1593,7 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
         else
           tabViewItem = [aTabView tabViewItemAtIndex: currentIndex];
 
-        [[[tabViewItem view] getBrowserView] loadURI:[NSURL URLWithString: url]
+        [[[tabViewItem view] getBrowserView] loadURI: url
                                                flags: NSLoadFlagsNone];
       }
     }

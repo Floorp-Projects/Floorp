@@ -174,10 +174,10 @@
         BookmarksService::OpenBookmarkGroup(self, bookmarkElt);
       } else {
         if (overTabViewItem) {
-          [[[overTabViewItem view] getBrowserView] loadURI:[NSURL URLWithString: url]
+          [[[overTabViewItem view] getBrowserView] loadURI: url
                                                    flags: NSLoadFlagsNone];
         } else if (overContentArea) {
-          [[[[self selectedTabViewItem] view] getBrowserView] loadURI:[NSURL URLWithString: url]
+          [[[[self selectedTabViewItem] view] getBrowserView] loadURI: url
                                                               flags: NSLoadFlagsNone];
         } else
           [self addTabForURL:url];
@@ -188,7 +188,7 @@
     NSDictionary* data = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
 
     if (overTabViewItem || overContentArea) {
-      [[[overTabViewItem view] getBrowserView] loadURI:[NSURL URLWithString: [data objectForKey:@"url"]]
+      [[[overTabViewItem view] getBrowserView] loadURI:[data objectForKey:@"url"]
                                                 flags: NSLoadFlagsNone];
     } else
       [self addTabForURL:[data objectForKey:@"url"]];
@@ -209,7 +209,7 @@
   [tabViewItem setView: newView];
   [self addTabViewItem: tabViewItem];
   
-  [[[tabViewItem view] getBrowserView] loadURI:[NSURL URLWithString: aURL]
+  [[[tabViewItem view] getBrowserView] loadURI: aURL
                                           flags: NSLoadFlagsNone];
 }
 

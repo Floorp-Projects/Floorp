@@ -63,7 +63,7 @@ class nsIDragHelperService;
 // in. If the total number of bytes expected is unknown,
 // maxBytes is -1.
 - (void)onProgressChange:(int)currentBytes outOf:(int)maxBytes;
-- (void)onLocationChange:(NSURL*)url;
+- (void)onLocationChange:(NSString*)urlSpec;
 - (void)onStatusChange:(NSString*)aMessage;
 - (void)onSecurityStateChange:(unsigned long)newState;
 // Called when a context menu should be shown.
@@ -126,7 +126,7 @@ enum {
 - (nsIDOMWindow*)getContentWindow;
 
 // nsIWebNavigation methods
-- (void)loadURI:(NSURL *)url flags:(unsigned int)flags;
+- (void)loadURI:(NSString *)urlSpec flags:(unsigned int)flags;
 - (void)reload:(unsigned int)flags;
 - (BOOL)canGoBack;
 - (BOOL)canGoForward;
@@ -134,11 +134,11 @@ enum {
 - (void)goForward;
 - (void)gotoIndex:(int)index;
 - (void)stop:(unsigned int)flags;
-- (NSURL*)getCurrentURI;
+- (NSString*)getCurrentURI;
 
 - (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
 - (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
-            url: (NSURL*)aURL suggestedFilename: (NSString*)aFilename;
+            url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
 
 - (void)printDocument;
 
