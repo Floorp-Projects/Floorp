@@ -118,7 +118,7 @@ nsresult nsMsgCompFields::Copy(nsIMsgCompFields* pMsgCompFields)
 
 
 
-nsresult nsMsgCompFields::SetHeader(PRInt32 header, const char *value)
+nsresult nsMsgCompFields::SetAsciiHeader(PRInt32 header, const char *value)
 {
   int status = 0;
 	int i = DecodeHeader(header);
@@ -154,7 +154,7 @@ nsresult nsMsgCompFields::SetHeader(PRInt32 header, const PRUnichar *value)
 {
 	char* cString;
 	ConvertFromUnicode(m_internalCharSet, value, &cString);
-	nsresult rv = SetHeader(header, cString);
+	nsresult rv = SetAsciiHeader(header, cString);
 	PR_Free(cString);
 	
 	return rv;
@@ -492,7 +492,7 @@ HJ36954
 			if (existingHeader && *existingHeader && nsCRT::strcasecmp(newsPostUrl, existingHeader))
 				status = NS_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS; /* can only send to one news host at a time */
 			else {
-				SetHeader (MSG_NEWSPOSTURL_HEADER_MASK, newsPostUrl);
+				SetAsciiHeader (MSG_NEWSPOSTURL_HEADER_MASK, newsPostUrl);
 				status = 0; /* we succeeded, no need to keep looking at this header */
 			}
 			PR_Free(newsPostUrl);
