@@ -26,11 +26,7 @@
  */
 
 #include "ntypes.h"
-#ifndef NSPR20
-#include "prarena.h"
-#else
 #include "plarena.h"
-#endif
 
 XP_BEGIN_PROTOS
 
