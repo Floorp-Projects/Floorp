@@ -1010,7 +1010,8 @@ nsFtpState::S_user() {
             mUsername = user;
             mPassword = passwd;
         }
-        usernameStr.AppendWithConversion(mUsername);    
+        // XXX Is UTF-8 the best choice?
+        AppendUTF16toUTF8(mUsername, usernameStr);
     }
     usernameStr.Append(CRLF);
 
@@ -1107,8 +1108,8 @@ nsFtpState::S_pass() {
 
             mPassword = passwd;
         }
-        // XXX mPassword may contain non-ASCII characters!  what do we do?
-        passwordStr.AppendWithConversion(mPassword);    
+        // XXX Is UTF-8 the best choice?
+        AppendUTF16toUTF8(mPassword, passwordStr);
     }
     passwordStr.Append(CRLF);
 

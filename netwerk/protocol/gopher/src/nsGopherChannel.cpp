@@ -648,7 +648,7 @@ nsGopherChannel::SendRequest()
                 return NS_ERROR_FAILURE;
     
             mRequest.Append('\t');
-            mRequest.AppendWithConversion(search.get());
+            AppendUTF16toUTF8(search, mRequest); // XXX Is UTF-8 the right thing?
 
             // and update our uri
             nsCAutoString spec;
@@ -657,7 +657,7 @@ nsGopherChannel::SendRequest()
                 return rv;
 
             spec.Append('?');
-            spec.AppendWithConversion(search.get());
+            AppendUTF16toUTF8(search, spec);
             rv = mUrl->SetSpec(spec);
             if (NS_FAILED(rv))
                 return rv;

@@ -169,7 +169,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
 
         buffer[read] = '\0';
         // XXX charsets?? non-latin1 characters?? utf-16??
-        mBuffer.AppendWithConversion(buffer);
+        AppendASCIItoUTF16(buffer, mBuffer);
         amtRead += read;
 
         PRInt32 front = -1, back = -1, tokenLoc = -1, cursor = 0;

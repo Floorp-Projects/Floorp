@@ -632,6 +632,7 @@ mozTXTToHTMLConv::NumberOfMatches(const PRUnichar * aInString, PRInt32 aInString
 
 
 // NOTE: the converted html for the phrase is appended to aOutString
+// tagHTML and attributeHTML are plain ASCII (literal strings, in fact)
 PRBool
 mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, PRBool col0,
      const PRUnichar* tagTXT, PRInt32 aTagTXTLen, 
@@ -664,9 +665,9 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
   {
     openTags++;
     aOutString.AppendLiteral("<");
-    aOutString.AppendWithConversion(tagHTML);
+    aOutString.AppendASCII(tagHTML);
     aOutString.Append(PRUnichar(' '));
-    aOutString.AppendWithConversion(attributeHTML);
+    aOutString.AppendASCII(attributeHTML);
     aOutString.AppendLiteral("><span class=\"moz-txt-tag\">");
     aOutString.Append(tagTXT);
     aOutString.AppendLiteral("</span>");
@@ -681,7 +682,7 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
     aOutString.AppendLiteral("<span class=\"moz-txt-tag\">");
     aOutString.Append(tagTXT);
     aOutString.AppendLiteral("</span></");
-    aOutString.AppendWithConversion(tagHTML);
+    aOutString.AppendASCII(tagHTML);
     aOutString.Append(PRUnichar('>'));
     return PR_TRUE;
   }

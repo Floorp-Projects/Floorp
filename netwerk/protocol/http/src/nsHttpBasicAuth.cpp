@@ -108,7 +108,7 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
     LossyCopyUTF16toASCII(user, userpass);
     userpass.Append(':'); // always send a ':' (see bug 129565)
     if (password)
-        userpass.AppendWithConversion(password);
+        LossyAppendUTF16toASCII(password, userpass);
 
     // plbase64.h provides this worst-case output buffer size calculation.
     // use calloc, since PL_Base64Encode does not null terminate.
