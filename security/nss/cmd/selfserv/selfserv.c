@@ -1636,7 +1636,7 @@ main(int argc, char **argv)
     rv = launch_threads(&jobLoop, 0, 0, requestCert, useLocalThreads);
 
     if (rv == SECSuccess && logStats) {
-	loggerThread = PR_CreateThread(PR_USER_THREAD, 
+	loggerThread = PR_CreateThread(PR_SYSTEM_THREAD, 
 			logger, NULL, PR_PRIORITY_NORMAL, 
                         useLocalThreads ? PR_LOCAL_THREAD:PR_GLOBAL_THREAD,
                         PR_UNJOINABLE_THREAD, 0);
