@@ -128,6 +128,28 @@ NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
   return NS_OK;
 }
 
+NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns) const
+{
+  aMaxColumns=0;
+  // loop through children, remembering the max of the columns in each row
+  nsIFrame *childFrame = mFirstChild;
+  while (PR_TRUE)
+  {
+    if (nsnull==childFrame)
+      break;
+    const nsStyleDisplay *childDisplay;
+    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    {
+      PRInt32 colCount = ((nsTableRowFrame *)childFrame)->GetMaxColumns();
+      aMaxColumns = PR_MAX(aMaxColumns, colCount);
+    }
+    childFrame->GetNextSibling(childFrame);
+  }
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsTableRowGroupFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
