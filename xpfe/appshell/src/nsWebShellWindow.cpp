@@ -303,9 +303,9 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
   // Create web shell
   mDocShell = do_CreateInstance(kWebShellCID);
-  CallQueryInterface(mDocShell, &mWebShell);
-
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+  CallQueryInterface(mDocShell, &mWebShell);
+  NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
 
   r.x = r.y = 0;
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
