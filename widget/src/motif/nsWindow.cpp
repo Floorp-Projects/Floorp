@@ -389,6 +389,7 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
   }
 
   InitCallbacks();
+  CreateGC();
 }
 
 
