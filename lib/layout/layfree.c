@@ -760,14 +760,6 @@ lo_ScrapeElement(MWContext *context, LO_Element *element, Bool freeTableOrCellSt
 			break;
 
 
-		case LO_LIST:
-			if (element->lo_list.tag != NULL)
-              {
-                PA_FreeTag(element->lo_list.tag);
-                element->lo_list.tag = NULL;
-              }
-            break;
-
 		case LO_MULTICOLUMN:
 			/* should we do this? */
 		  	if (element->lo_multicolumn.tag != NULL)

@@ -1111,8 +1111,6 @@ read_font_spec(char* name, void* field)
         } while ( (tmp = strtok(NULL, ",")) != NULL );
         free(copy);
     }
-
-    free(font_spec);
 }
 
 
@@ -1142,8 +1140,6 @@ write_font_spec(char* name, void* field)
     fe_FreeFontSettings(set);
 
     write_str(name, &font_spec);
-
-    free(font_spec);
 }
 
 

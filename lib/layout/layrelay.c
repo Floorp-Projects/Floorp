@@ -238,7 +238,6 @@ void LO_RelayoutOnResize(MWContext *context, int32 width, int32 height, int32 le
 	if(!state->top_state->is_binary)
 		FE_SetProgressBarPercent(context, 100);
 
-        lo_FreeLayoutData(context, state);
 	FE_FinishedLayout(context);
 
 	/* Tell FE to redraw window */
