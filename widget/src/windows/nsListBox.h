@@ -60,6 +60,7 @@ public:
     void      AllowMultipleSelections(PRBool aMultiple);
     PRInt32   GetSelectedCount();
     void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+    void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
     void      SelectItem(PRInt32 aPosition);
     void      Deselect() ;
     virtual   void      PreCreateWidget(nsWidgetInitData *aInitData);

@@ -180,6 +180,16 @@ void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 
 //-------------------------------------------------------------------------
 //
+//  SetSelectedIndices 
+//
+//-------------------------------------------------------------------------
+void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+{
+  //::SendMessage(mWnd, LB_SETSELITEMS, (int)aSize, (LPARAM)aIndices);
+}
+
+//-------------------------------------------------------------------------
+//
 //  Deselect
 //
 //-------------------------------------------------------------------------
