@@ -1720,7 +1720,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    * May regress in other situations.
    * What a hack
    */
-     nsAutoString urlstr = spec;
+     nsAutoString urlstr = (const char *) spec;
      res = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
   }
   
