@@ -343,7 +343,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 	nsCOMPtr<nsISimpleEnumerator>  entries;
     PRUnichar * rdfValue = nsnull;
     nsAutoString searchAutoStr(searchStr);
-	char * searchCSTR = searchAutoStr.ToNewCString();
+	//char * searchCSTR = searchAutoStr.ToNewCString();
 	   PRUnichar * match = nsnull;
 	   PRInt32 index = -1;
 	   
