@@ -23,6 +23,8 @@
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsUnicodeEncodeHelper.h"
 #include "nsUConvDll.h"
+#include "nsIMappingCache.h"
+#include "nsMappingCache.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeEncodeHelper [declaration]
@@ -59,6 +61,10 @@ public:
   NS_IMETHOD ConvertByMultiTable(const PRUnichar * aSrc, PRInt32 * aSrcLength,
       char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
       uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable);
+
+  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult);
+
+  NS_IMETHOD DestroyCache(nsIMappingCache aCache);
 };
 
 //----------------------------------------------------------------------
@@ -164,6 +170,16 @@ NS_IMETHODIMP nsUnicodeEncodeHelper::ConvertByMultiTable(
   return res;
 }
 
+
+NS_IMETHODIMP nsUnicodeEncodeHelper::CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult)
+{
+   return nsMappingCache::CreateCache(aType, aResult);
+}
+
+NS_IMETHODIMP nsUnicodeEncodeHelper::DestroyCache(nsIMappingCache aCache)
+{
+   return nsMappingCache::DestroyCache(aCache);
+}
 //----------------------------------------------------------------------
 // Class nsEncodeHelperFactory [implementation]
 

@@ -23,6 +23,7 @@
 #include "nscore.h"
 #include "uconvutil.h"
 #include "nsISupports.h"
+#include "nsIMappingCache.h"
 
 // Interface ID for our Unicode Encode Helper interface
 // {D8E6B700-CA9D-11d2-8AA9-00600811A836}
@@ -33,6 +34,9 @@ NS_DECLARE_ID(kIUnicodeEncodeHelperIID,
 // {1767FC50-CAA4-11d2-8AA9-00600811A836}
 NS_DECLARE_ID(kUnicodeEncodeHelperCID, 
   0x1767fc50, 0xcaa4, 0x11d2, 0x8a, 0xa9, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+
+
+#define NS_UNICODEENCODEHELPER_PROGID "component://netscape/intl/unicode/encodehelper"
 
 #define NS_ERROR_UENC_NOHELPER  \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x31)
@@ -63,6 +67,16 @@ public:
   NS_IMETHOD ConvertByMultiTable(const PRUnichar * aSrc, PRInt32 * aSrcLength,
       char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
       uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable) = 0;
+
+  /**
+   * Create a Mapping Cache
+   */
+  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult) = 0;
+
+  /**
+   * Destroy a Mapping Cache
+   */
+  NS_IMETHOD DestroyCache(nsIMappingCache aCache) = 0;
 };
 
 

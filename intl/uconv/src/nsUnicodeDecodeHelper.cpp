@@ -19,10 +19,12 @@
 
 #include "pratom.h"
 #include "unicpriv.h"
-#include "nsIUnicodeDecoder.h"
+#include "nsUConvDll.h"
+#include "nsIMappingCache.h"
+#include "nsMappingCache.h"
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsUnicodeDecodeHelper.h"
-#include "nsUConvDll.h"
+#include "nsIUnicodeDecoder.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeDecodeHelper [declaration]
@@ -68,6 +70,10 @@ public:
   NS_IMETHOD CreateFastTable( uShiftTable * aShiftTable, 
       uMappingTable * aMappingTable, PRUnichar * aFastTable, 
       PRInt32 aTableSize);
+
+  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult);
+
+  NS_IMETHOD DestroyCache(nsIMappingCache aResult);
 };
 
 //----------------------------------------------------------------------
@@ -191,6 +197,16 @@ NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByMultiTable(
   *aSrcLength = src - (PRUint8 *)aSrc;
   *aDestLength  = dest - aDest;
   return res;
+}
+
+NS_IMETHODIMP nsUnicodeDecodeHelper::CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult)
+{
+   return nsMappingCache::CreateCache(aType, aResult);
+}
+
+NS_IMETHODIMP nsUnicodeDecodeHelper::DestroyCache(nsIMappingCache aCache)
+{
+   return nsMappingCache::DestroyCache(aCache);
 }
 
 NS_IMETHODIMP nsUnicodeDecodeHelper::ConvertByFastTable(
