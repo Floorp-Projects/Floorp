@@ -220,19 +220,11 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
     nsCOMPtr<nsILoadGroup> pLoadGroup;
     rv = pHTTPConnection->GetLoadGroup(getter_AddRefs(pLoadGroup));
     if (NS_FAILED(rv)) return rv;
-
     nsCOMPtr<nsIChannel> pChannel;
     if (pLoadGroup) {
       rv = pLoadGroup->GetDefaultLoadChannel(getter_AddRefs(pChannel));
       if (NS_FAILED(rv)) return rv;
     }
-
-    nsCOMPtr<nsIInterfaceRequestor> pInterfaces;
-    nsCOMPtr<nsIPrompt> pPrompter;
-    pHTTPConnection->GetNotificationCallbacks(getter_AddRefs(pInterfaces));
-    if (pInterfaces)
-      pInterfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(pPrompter));
-
     nsCOMPtr<nsIURI> pFirstURL;
     if (pChannel) {
       rv = pChannel->GetURI(getter_AddRefs(pFirstURL));
@@ -240,6 +232,17 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
       rv = pHTTPConnection->GetURI(getter_AddRefs(pFirstURL));
     }
     if (NS_FAILED(rv)) return rv;
+
+    // Get the prompter
+    nsCOMPtr<nsIInterfaceRequestor> pInterfaces;
+    nsCOMPtr<nsIPrompt> pPrompter;
+    if (pChannel) {
+      pChannel->GetNotificationCallbacks(getter_AddRefs(pInterfaces));
+    } else {
+      pHTTPConnection->GetNotificationCallbacks(getter_AddRefs(pInterfaces));
+    }
+    if (pInterfaces)
+      pInterfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(pPrompter));
 
     // Get the expires
     nsXPIDLCString expiresHeader;
