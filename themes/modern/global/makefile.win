@@ -289,3 +289,5 @@ install::
 	$(MAKE_INSTALL) tab-unselect-left.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-unselect-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tab-unselect-right.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) progress-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) progress-filler.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin

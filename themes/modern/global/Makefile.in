@@ -115,6 +115,8 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	check-radio-check.gif \
 	check-radio-focused.gif \
 	check-radio-pressed.gif \
+	progress-bg.gif \
+	progress-filler.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_2 = \

@@ -23,7 +23,7 @@ box.padded {
 /* Header toolbar */
 
 #MsgHeadersToolbar {
-	background-color	: #7B94B2;
+	background-color	: #394B6E;
 	border-top			: 2px solid #4C6484;
 	border-bottom		: 0px;
 	border-left			: 1px solid #48607E;
@@ -39,6 +39,11 @@ box.padded {
 	border-top			: 1px solid #B6CADF;
 }
 
+/* Text labels only for this window */
+
+.label {
+	color: #FFFFFF;
+}
 
 
 /* addressing widget */

@@ -70,6 +70,7 @@ button.plain-extended {}
     font-family			: charcoal, ms sans serif;
     font-weight			: normal;
     margin-right		: 2px;
+    margin-bottom		: 2px;
   }
 
   .button-image-right {

@@ -6,14 +6,16 @@ toolbar
     background-color      : #394B6E;
     border-bottom         : 1px solid #000000;
     border-top			  : 1px solid #B6CADF;
+    min-width			  : 1px;      // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
+									  // Talk to evaughan@netscape.com for details.
   }
 
 toolbargrippy 
   { 
     background		      : url("chrome://global/skin/tb-grippy-up.gif") no-repeat bottom;
-    width                 : 9px;
-    height                : 7px;
-    margin				  : 0px 0px 0px 1px;
+    width                 : 11px;
+    margin				  : 0px 0px 0px 0px;
+    border-bottom		  : 1px solid #1E2526;
   } 
 
 toolbargrippy:hover:active
@@ -82,7 +84,7 @@ toolbar[collapsed="true"] > toolbargrippy
 .toolbar-primary-image-left
   {
 	background            : url("chrome://global/skin/navbar-bg-leftcap.gif") no-repeat;
-    width				  : 24px;
+    width				  : 10px;
     height				  : 46px;
   }
 
@@ -95,7 +97,7 @@ toolbar[collapsed="true"] > toolbargrippy
 .toolbar-primary-image-right
   {
 	background            : url("chrome://global/skin/navbar-bg-rightcap.gif") no-repeat;
-  	width				  : 24px;
+  	width				  : 21px;
   	height				  : 46px;
   }
 

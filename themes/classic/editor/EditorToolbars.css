@@ -39,6 +39,10 @@
     overflow              : hidden;
   }
 
+#EditModeToolbar > toolbargrippy {
+	display: none;
+}
+
 button.edit-mode:hover, 
 button.edit-mode:hover:active,
 button.edit-mode 

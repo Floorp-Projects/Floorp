@@ -1,7 +1,7 @@
 /******* Splitters *******/
 
 /* vertical splitters */
-  window > splitter, box > splitter 
+  window > splitter, box > splitter, splitter
     {
       min-width             : 10px;
       border: none;

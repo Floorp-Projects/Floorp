@@ -11,7 +11,6 @@ tab {
   -moz-binding		: url(chrome://global/skin/classicBindings.xml#tab);
   color				: #000000; 
   padding			: 0px;
-  max-height		: 24px;
 }
 
 .tab-image-left {
@@ -115,10 +114,6 @@ tabbox {
   background		: url(chrome://global/skin/tab-sm-bot-unsel-mid.gif) repeat-x;
 }
 
-.tab-bottom > .tab-image-middle > .tab-left {
-  padding			: 4px 0px;
-}
-
 .tab-bottom > .tab-image-right {
   background		: url(chrome://global/skin/tab-sm-bot-unsel-right.gif) no-repeat;
   width				: 11px;
@@ -126,7 +121,7 @@ tabbox {
 }
 
 .tab-bottom > .tab-image-middle > .tab-text {
-  padding			: 4px 0px 5px 0px;
+  padding			: 4px 0px 1px 0px;
 }
 
 .tab-bottom:hover:active > .tab-image-left { 
@@ -159,7 +154,7 @@ tabbox {
 }
 
 .tabbox-bottom > .tab-border-top-left {
-  background		: url(chrome://global/skin/tab-border-top.gif) repeat-x top;
+  background		: url(chrome://global/skin/tab-border-bot.gif) repeat-x top;
   width				: 2px;
 }
 

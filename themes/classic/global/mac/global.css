@@ -121,6 +121,8 @@
       border-right        : 1px solid #FFFFFF;
       border-left         : 1px solid #9D9D9D;
       border-bottom       : 1px solid #FFFFFF;
+      min-width			  : 1px;      // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
+									  // Talk to evaughan@netscape.com for details.
     }
   
   statusbarpanel

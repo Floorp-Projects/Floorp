@@ -29,10 +29,9 @@
   
   <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
   	<content>
-		<xul:box class="toolbar-primary-image-left">
-			<xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
+		<xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
 					onclick="this.grippyClicked();" tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
-		</xul:box> 
+		<xul:spring class="toolbar-primary-image-left"/> 
 		<xul:box flex="1" class="toolbar-primary-image-middle toolbar-holder" 
 			inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch" autostretch="never">
 			<children/>

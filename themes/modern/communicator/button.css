@@ -58,10 +58,10 @@
     
   .button-toolbar[toggled="true"]
     {
-      border                : 0px solid #036;
+/*      border                : 0px solid #036;
       background-color      : #DFFFFF;
       -moz-border-radius    : 4px;
-    }    
+  */  }    
 
   .button-toolbar[disabled="true"],
   .button-toolbar[disabled="true"]:hover,

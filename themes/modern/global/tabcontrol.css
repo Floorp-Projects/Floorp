@@ -5,6 +5,7 @@ tab {
   -moz-binding		: url(chrome://global/skin/globalBindings.xml#tab);
   padding			: 0px;
   color				: #1C1D1F;
+  margin			: 0px;
 }
 
 .tab-image-left {
@@ -24,7 +25,7 @@ tab {
 }
 
 .tab-text {
-  padding			: 5px 0px 3px 0px;
+  padding			: 3px 0px 3px 0px;
   font-size			: 12px;
   font-family		: charcoal, ms sans serif;
 }
@@ -113,10 +114,6 @@ tabcontrol[align="vertical"] tabbox[align="horizontal"] tab {
   background		: url(chrome://global/skin/tab-bot-unselect-middle.gif) repeat-x;
 }
 
-.tab-bottom > .tab-image-middle > .tab-left {
-  padding			: 4px 0px;
-}
-
 .tab-bottom > .tab-image-right {
   background		: url(chrome://global/skin/tab-bot-unselect-right.gif) no-repeat;
   width				: 11px;
@@ -124,7 +121,7 @@ tabcontrol[align="vertical"] tabbox[align="horizontal"] tab {
 }
 
 .tab-bottom > .tab-image-middle > .tab-text {
-  padding			: 4px 0px 5px 0px;
+  padding			: 4px 0px 1px 0px;
 }
 
 .tab-bottom:hover:active > .tab-image-left { 

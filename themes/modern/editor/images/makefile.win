@@ -131,3 +131,35 @@ install::
 	$(MAKE_INSTALL) table-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) table-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) table-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) align_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) align_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) align_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bold_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bold_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bullets_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bullets_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) center_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) center_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) dec-font-size_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) dec-font-size_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) inc-font-size_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) inc-font-size_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) indent_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) indent_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) italic_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) italic_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) justify_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) justify_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) left_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) left_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) numbers_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) numbers_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) object-popup_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) object-popup_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) object-popup_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) outdent_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) outdent_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) right_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) right_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) underline_active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) underline_hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images

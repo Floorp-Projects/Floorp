@@ -135,6 +135,8 @@
       padding			  : 0px;
       color				  : #D0E7E7;
       font-size			  : 10px;
+      min-width			  : 1px;      // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
+									  // Talk to evaughan@netscape.com for details.
     }
 
 /**
@@ -152,7 +154,7 @@
 /** 
  * XUL <progressmeter> 
  **/
-  progressmeter[mode="undetermined"] > .progressmeter-internal-box
+  progressmeter[mode="undetermined"]
     {
       background-image    : url(chrome://global/skin/progressmeter-busy.gif);
     }
@@ -168,31 +170,32 @@
   
   progressmeter 
     {
-      min-width           : 100px;
-      margin              : 0px 4px 0px 4px;
-      border              : 1px inset #CCCCCC;
+      min-width           : 128px;
+      margin              : 1px 4px 1px 4px;
+      border			  : 0px;
+      height			  : 11px;
     }
 
   progressmeter > .progressmeter-internal-box 
     {
-      border              : 1px solid #000000;
+    	height			  : 9px;
     }
 
 /* progress indicators */
   .progress-bar 
     {
-	  background-color    : #6699cc;
-      border-right        : 1px outset #6699cc;
+	  background	      : url(chrome://global/skin/progress-filler.gif) repeat-x;
+      //border-right        : 1px outset #6699cc;
     }
   
   .progress-remainder 
     {
-	  background-color    : #999999;
+	  background	      : url(chrome://global/skin/progress-bg.gif) repeat-x;
     }
 
   .progressmeter-statusbar 
     {
-      border              : 1px solid #999999;
+      //border              : 1px solid #999999;
       margin              : 0px 4px 0px 4px;
     }
 
@@ -204,15 +207,13 @@
     
   .progressmeter-progressbar[statusbar="true"] > .progress-bar
     {
-      background-color    : #999999;
+      //background-color    : #999999;
       border-right        : none;
     }
    
   .progressmeter-progressbar[statusbar="true"] > .progress-remainder
     {
-      background-color    : #CCCCCC;
-      //background	  		: url(chrome://global/skin/progressmeter.png) no-repeat center;  ///////****************///////
-      //width					: 120px;
+      //background-color    : #CCCCCC;
     }
     
 /** XUL <scrollbar> element **/
