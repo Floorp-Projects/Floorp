@@ -549,7 +549,7 @@ NS_IMETHODIMP nsScrollingView :: SetDimensions(nscoord width, nscoord height, PR
     nsSize  sbSize;
     
     mHScrollBarView->GetDimensions(&sbSize.width, &sbSize.height);
-    mHScrollBarView->SetBounds(0, clipRect.YMost(), clipRect.width,
+    mHScrollBarView->SetBounds(clipRect.x, clipRect.YMost(), clipRect.width,
                                sbSize.height, aPaint);
   }
 
@@ -989,9 +989,13 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
         if (((mSizeX > controlRect.width) &&
             (mScrollPref != nsScrollPreference_kNeverScroll)) ||
             (mScrollPref == nsScrollPreference_kAlwaysScroll))
+        {
           scrollh->Release(); //DO NOT USE NS_RELEASE()! MMP
+        }
         else
+        {
           NS_RELEASE(scrollh); //MUST USE NS_RELEASE()! MMP
+        }
       }
 
       NS_RELEASE(win);
