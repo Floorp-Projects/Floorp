@@ -626,10 +626,12 @@ nsMacWindow :: InstallBorderlessDefProc ( WindowPtr inWindow )
 void
 nsMacWindow :: RemoveBorderlessDefProc ( WindowPtr inWindow )
 {
+#if !TARGET_CARBON
   Handle fakedProc = ((WindowPeek)inWindow)->windowDefProc;
   Handle oldProc = DefProcFakery::GetSystemDefProc(fakedProc);
   DefProcFakery::DestroyDefProc ( fakedProc );
   ((WindowPeek)inWindow)->windowDefProc = oldProc;
+#endif
 }
 
 
