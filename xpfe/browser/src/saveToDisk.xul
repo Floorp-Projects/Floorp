@@ -67,7 +67,7 @@
         }
 
         function onTyping( key ) {
-            if ( key == 13 && dialog.enabled ) {
+            if ( key == 13 &amp;&amp; dialog.enabled ) {
                 ok();
             } else {
                 if ( dialog.enabled ) {
@@ -93,7 +93,7 @@
                 URL:
             </html:td>
             <html:td align="left">
-                <html:input id="dialog.location" readonly style="background-color:lightgray;width:300px;"/>
+                <html:input id="dialog.location" readonly="" style="background-color:lightgray;width:300px;"/>
             </html:td>
         </html:tr>
     
@@ -102,7 +102,7 @@
                 content-type:
             </html:td>
             <html:td>
-                <html:input id="dialog.contentType" readonly style="background-color:lightgray;width:300px;"/>
+                <html:input id="dialog.contentType" readonly="" style="background-color:lightgray;width:300px;"/>
             </html:td>
         </html:tr>
     
@@ -117,10 +117,10 @@
 
         <html:tr>
             <html:td align="center" colspan="2">
-                <html:button id="dialog.ok" onclick="ok()" disabled>OK</html:button>
-                <html:button onclick="cancel()" disabled>Cancel</html:button>
+                <html:button id="dialog.ok" onclick="ok()" disabled="">OK</html:button>
+                <html:button onclick="cancel()" disabled="">Cancel</html:button>
             </html:td>
         </html:tr>
     </html:table>
 
-</xul:window>
+</window>

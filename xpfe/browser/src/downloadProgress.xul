@@ -80,7 +80,7 @@
             // Get current time.
             var now = ( new Date() ).getTime();
             // If interval hasn't elapsed, ignore it.
-            if ( now - lastUpdate < interval && eval(bytes) < eval(max) ) {
+            if ( now - lastUpdate &lt; interval &amp;&amp; eval(bytes) &lt; eval(max) ) {
                 return;
             }
 
@@ -148,7 +148,7 @@
                 Location:
             </html:td>
             <html:td align="left">
-                <html:input id="dialog.location" readonly style="background-color:lightgray;width:300px;"/>
+                <html:input id="dialog.location" readonly="" style="background-color:lightgray;width:300px;"/>
             </html:td>
         </html:tr>
     
@@ -157,7 +157,7 @@
                 Saving:
             </html:td>
             <html:td align="left">
-                <html:input id="dialog.fileName" readonly value="" style="background-color:lightgray;width:300px;"/>
+                <html:input id="dialog.fileName" readonly="" value="" style="background-color:lightgray;width:300px;"/>
             </html:td>
         </html:tr>
 
@@ -201,4 +201,4 @@
 
     </html:table>
 
-</xul:window>
+</window>
