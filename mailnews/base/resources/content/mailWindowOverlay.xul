@@ -1064,7 +1064,7 @@ Rights Reserved.
 		<box id="toolbar_button_box">
                         <menubutton class="menubutton-dual toolbar top" id="button-getmsg" 
                                     value="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
-                                    buttontooltiptext="&getMsgButton.tooltip;" 
+                                    tooltiptext="&getMsgButton.tooltip;" 
                                     observes="cmd_getNewMessages" datasources="rdf:msgaccountmanager" 
                                     containment="http://home.netscape.com/NC-rdf#child" 
                                     ref="msgaccounts:/">
@@ -1157,7 +1157,7 @@ Rights Reserved.
 			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="cmd_nextUnreadMsg"/>
 			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
       <menubutton class="menubutton-dual toolbar top" id="button-mark" value="&markButton.label;" hidden="true"
-                  crop="right" observes="cmd_markAsRead" tooltip="aTooltip" buttontooltiptext="&markButton.tooltip;">  
+                  crop="right" observes="cmd_markAsRead" tooltip="aTooltip" tooltiptext="&markButton.tooltip;">  
             <menupopup oncreate="InitMessageMark()">
                 <menuitem type="checkbox" key="key_toggleRead" id="markReadToolbarItem" value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead" default="true" />
                 <menuitem value="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
@@ -1167,7 +1167,7 @@ Rights Reserved.
             </menupopup>
   	  </menubutton>
       <menubutton class="menubutton-dual toolbar top" id="button-print" value="&printButton.label;" 
-                  crop="right" observes="cmd_print" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
+                  crop="right" observes="cmd_print" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
      	  <menupopup id="printMenu">
     			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
         </menupopup>
