@@ -1106,21 +1106,25 @@ dnl ========================================================
 if test "$MOZ_WIDGET_TOOLKIT" = "gtk"
 then
 	MOZ_ENABLE_GTK=1
+	AC_DEFINE(MOZ_WIDGET_GTK)
 fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "xlib"
 then
 	MOZ_ENABLE_XLIB=1
+	AC_DEFINE(MOZ_WIDGET_XLIB)
 fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "qt"
 then
 	MOZ_ENABLE_QT=1
+	AC_DEFINE(MOZ_WIDGET_QT)
 fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "motif"
 then
 	MOZ_ENABLE_MOTIF=1
+	AC_DEFINE(MOZ_WIDGET_MOTIF)
 fi
 
 

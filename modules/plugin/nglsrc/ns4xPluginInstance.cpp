@@ -27,7 +27,7 @@
 #include "prmem.h"
 #include "nscore.h"
 
-#ifdef XP_UNIX
+#if defined(MOZ_WIDGET_GTK)
 #include "gtkxtbin.h"
 #include "gdksuperwin.h"
 #include "gtkmozbox.h"
@@ -378,7 +378,7 @@ NS_IMETHODIMP ns4xPluginInstance :: QueryInterface(const nsIID& iid,
 
 NS_IMETHODIMP ns4xPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
-#ifdef XP_UNIX
+#ifdef MOZ_WIDGET_GTK
   xtbin = nsnull;
 #endif
   return InitializePlugin(peer);
@@ -514,7 +514,7 @@ NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
-#ifdef XP_UNIX 
+#ifdef MOZ_WIDGET_GTK
   GdkSuperWin               *superwin;
   NPSetWindowCallbackStruct *ws;
 #endif
@@ -530,7 +530,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   
   NPError error;
   
-#ifdef XP_UNIX  
+#ifdef MOZ_WIDGET_GTK
   // Allocate and fill out the ws_info data
   if (!window->ws_info) {
 #ifdef NS_DEBUG
@@ -575,7 +575,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   // And now point the NPWindow structures window 
   // to the actual X window
   window->window = (nsPluginPort *)GTK_XTBIN(xtbin)->xtwindow;
-#endif // XP_UNIX
+#endif // MOZ_WIDGET_GTK
 
   if (fCallbacks->setwindow) {
     // XXX Turns out that NPPluginWindow and NPWindow are structurally

@@ -35,7 +35,7 @@
 #include "npupp.h"
 #include "jri.h"
 
-#ifdef XP_UNIX
+#ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
 #endif
 
@@ -135,7 +135,7 @@ protected:
      */
     NPPluginFuncs* fCallbacks;
 
-#ifdef XP_UNIX
+#ifdef MOZ_WIDGET_GTK
    /**
     * Special GtkXtBin widget that encapsulates the Xt toolkit
     * within a Gtk Application
