@@ -146,14 +146,11 @@ public:
 
   static EventHandlerMapEntry kEventHandlerMap[];
 
-  static PRBool IsMouseHandler(const nsString& aName);
-  static PRBool IsKeyHandler(const nsString& aName);
-  static PRBool IsFocusHandler(const nsString& aName);
-  static PRBool IsXULHandler(const nsString& aName);
-  static PRBool IsScrollHandler(const nsString& aName);
-  static PRBool IsFormHandler(const nsString& aName);
-
+  static PRBool IsSupportedHandler(const nsIID* aIID);
+  
   static nsFixedSizeAllocator kPool;
+
+  static void GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
 
 // Internal member functions
 protected:
@@ -170,8 +167,7 @@ protected:
 
   NS_IMETHOD ConstructAttributeTable(nsIContent* aElement); 
 
-  static void GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
-
+  
 // MEMBER VARIABLES
 protected:
   nsCString mDocURI;
