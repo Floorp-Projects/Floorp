@@ -607,6 +607,9 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_hr:
     rv = NS_NewHTMLHRElement(aResult, aAtom);
     break;
+  case eHTMLTag_html:
+    rv = NS_NewHTMLHtmlElement(aResult, aAtom);
+    break;
   case eHTMLTag_iframe:
     rv = NS_NewHTMLIFrameElement(aResult, aAtom);
     break;
