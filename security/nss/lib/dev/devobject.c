@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.18 $ $Date: 2002/02/15 17:37:58 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.19 $ $Date: 2002/03/04 17:13:52 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -301,6 +301,21 @@ create_cryptoki_instance
     instance->isTokenObject = isTokenObject;
     return instance;
 }
+
+#ifdef NSS_3_4_CODE
+/* exposing this for the smart card cache code */
+NSS_IMPLEMENT nssCryptokiInstance *
+nssCryptokiInstance_Create
+(
+  NSSArena *arena,
+  NSSToken *t, 
+  CK_OBJECT_HANDLE h,
+  PRBool isTokenObject
+)
+{
+    return create_cryptoki_instance(arena, t, h, isTokenObject);
+}
+#endif
 
 static NSSCertificateType
 nss_cert_type_from_ck_attrib(CK_ATTRIBUTE_PTR attrib)
