@@ -208,3 +208,12 @@ function highlightSyntax()
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
   PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
+
+function BrowserSetForcedCharacterSet(aCharset)
+{
+  var docCharset = getBrowser().docShell.QueryInterface(
+                            Components.interfaces.nsIDocCharset);
+  docCharset.charset = aCharset;
+  var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+  PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+}

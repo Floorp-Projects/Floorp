@@ -54,10 +54,10 @@ const MAX_HISTORY_MENU_ITEMS = 15;
 var gRDF = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
+var gReportButton = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
-var gReportButton = null;
 var gURLBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
@@ -1671,24 +1671,6 @@ function BrowserPrint()
     // Unfortunately this will also consume helpful failures, so add a
     // dump(e); // if you need to debug
   }
-}
-
-function BrowserSetDefaultCharacterSet(aCharset)
-{
-  // no longer needed; set when setting Force; see bug 79608
-}
-
-function BrowserSetForcedCharacterSet(aCharset)
-{
-  var docCharset = gBrowser.docShell.QueryInterface(
-                            Components.interfaces.nsIDocCharset);
-  docCharset.charset = aCharset;
-  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
-}
-
-function BrowserSetForcedDetector()
-{
-  gBrowser.documentCharsetInfo.forcedDetector = true;
 }
 
 function BrowserFind()
@@ -4175,136 +4157,6 @@ function saveFrameDocument()
     saveDocument(focusedWindow.document);
 }
 
-function MultiplexHandler(event)
-{
-    var node = event.target;
-    var name = node.getAttribute('name');
-
-    if (name == 'detectorGroup') {
-        SetForcedDetector();
-        SelectDetector(event, true);
-    } else if (name == 'charsetGroup') {
-        var charset = node.getAttribute('id');
-        charset = charset.substring('charset.'.length, charset.length)
-        SetForcedCharset(charset);
-        SetDefaultCharacterSet(charset);
-    } else if (name == 'charsetCustomize') {
-        //do nothing - please remove this else statement, once the charset prefs moves to the pref window
-    } else {
-        SetForcedCharset(node.getAttribute('id'));
-        SetDefaultCharacterSet(node.getAttribute('id'));
-    }
-}
-
-function SetDefaultCharacterSet(charset)
-{
-    BrowserSetDefaultCharacterSet(charset);
-}
-
-function SelectDetector(event, doReload)
-{
-    var uri =  event.target.getAttribute("id");
-    var prefvalue = uri.substring('chardet.'.length, uri.length);
-    if ("off" == prefvalue) { // "off" is special value to turn off the detectors
-        prefvalue = "";
-    }
-
-    try {
-        var str = Components.classes["@mozilla.org/supports-string;1"]
-                            .createInstance(Components.interfaces.nsISupportsString);
-        str.data = prefvalue;
-        gPrefService.setComplexValue("intl.charset.detector",
-                             Components.interfaces.nsISupportsString, str);
-        if (doReload) window._content.location.reload();
-    }
-    catch (ex) {
-        dump("Failed to set the intl.charset.detector preference.\n"+ex+"\n");
-    }
-}
-
-function BrowserSetForcedDetector(doReload) {
-    BrowserSetForcedDetector();
-}
-
-function SetForcedCharset(charset)
-{
-    BrowserSetForcedCharacterSet(charset);
-}
-
-function UpdateCurrentCharset()
-{
-    var menuitem = null;
-
-    // exctract the charset from DOM
-    var wnd = document.commandDispatcher.focusedWindow;
-    if ((window == wnd) || (wnd == null)) wnd = window._content;
-    menuitem = document.getElementById('charset.' + wnd.document.characterSet);
-
-    if (menuitem) {
-        // uncheck previously checked item to workaround Mac checkmark problem
-        // bug 98625
-        if (gPrevCharset) {
-            var pref_item = document.getElementById('charset.' + gPrevCharset);
-            if (pref_item)
-              pref_item.setAttribute('checked', 'false');
-        }
-        menuitem.setAttribute('checked', 'true');
-    }
-}
-
-function UpdateCharsetDetector()
-{
-    var prefvalue;
-
-    try {
-        prefvalue = gPrefService.getComplexValue("intl.charset.detector",
-                                         Components.interfaces.nsIPrefLocalizedString).data;
-    }
-    catch (ex) {
-        prefvalue = "";
-    }
-
-    if (prefvalue == "") prefvalue = "off";
-    dump("intl.charset.detector = "+ prefvalue + "\n");
-
-    prefvalue = 'chardet.' + prefvalue;
-    var menuitem = document.getElementById(prefvalue);
-
-    if (menuitem) {
-        menuitem.setAttribute('checked', 'true');
-    }
-}
-
-function UpdateMenus(event)
-{
-    // use setTimeout workaround to delay checkmark the menu
-    // when onmenucomplete is ready then use it instead of oncreate
-    // see bug 78290 for the detail
-    UpdateCurrentCharset();
-    setTimeout("UpdateCurrentCharset()", 0);
-    UpdateCharsetDetector();
-    setTimeout("UpdateCharsetDetector()", 0);
-}
-
-function CreateMenu(node)
-{
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(null, "charsetmenu-selected", node);
-}
-
-function charsetLoadListener (event)
-{
-    var charset = window._content.document.characterSet;
-
-    if (charset.length > 0 && (charset != gLastBrowserCharset)) {
-        if (!gCharsetMenu)
-           gCharsetMenu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'].getService().QueryInterface(Components.interfaces.nsICurrentCharsetListener);
-        gCharsetMenu.SetCurrentCharset(charset);
-        gPrevCharset = gLastBrowserCharset;
-        gLastBrowserCharset = charset;
-    }
-}
-
 /*
  * Note that most of this routine has been moved into C++ in order to
  * be available for all <browser> tags as well as gecko embedding. See
@@ -4354,4 +4206,161 @@ function getBrowser()
   if (!gBrowser)
     gBrowser = document.getElementById("content");
   return gBrowser;
+}
+
+function MultiplexHandler(event)
+{ try {
+    var node = event.target;
+    var name = node.getAttribute('name');
+
+    if (name == 'detectorGroup') {
+        SetForcedDetector(true);
+        SelectDetector(event, false);
+    } else if (name == 'charsetGroup') {
+        var charset = node.getAttribute('id');
+        charset = charset.substring('charset.'.length, charset.length)
+        SetForcedCharset(charset);
+        SetDefaultCharacterSet(charset);
+    } else if (name == 'charsetCustomize') {
+        //do nothing - please remove this else statement, once the charset prefs moves to the pref window
+    } else {
+        SetForcedCharset(node.getAttribute('id'));
+        SetDefaultCharacterSet(node.getAttribute('id'));
+    }
+    } catch(ex) { alert(ex); }
+}
+
+function SetDefaultCharacterSet(charset)
+{
+    BrowserSetDefaultCharacterSet(charset);
+}
+
+function SelectDetector(event, doReload)
+{
+    var uri =  event.target.getAttribute("id");
+    var prefvalue = uri.substring('chardet.'.length, uri.length);
+    if ("off" == prefvalue) { // "off" is special value to turn off the detectors
+        prefvalue = "";
+    }
+
+    try {
+        var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
+        var str =  Components.classes["@mozilla.org/supports-string;1"]
+                             .createInstance(Components.interfaces.nsISupportsString);
+
+        str.data = prefvalue;
+        pref.setComplexValue("intl.charset.detector",
+                             Components.interfaces.nsISupportsString, str);
+        if (doReload) window._content.location.reload();
+    }
+    catch (ex) {
+        dump("Failed to set the intl.charset.detector preference.\n");
+    }
+}
+
+function SetForcedDetector(doReload)
+{
+    BrowserSetForcedDetector(doReload);
+}
+
+function SetForcedCharset(charset)
+{
+    BrowserSetForcedCharacterSet(charset);
+}
+
+function BrowserSetDefaultCharacterSet(aCharset)
+{
+  // no longer needed; set when setting Force; see bug 79608
+}
+
+function BrowserSetForcedCharacterSet(aCharset)
+{
+  var docCharset = getBrowser().docShell.QueryInterface(
+                            Components.interfaces.nsIDocCharset);
+  docCharset.charset = aCharset;
+  BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+}
+
+function BrowserSetForcedDetector(doReload)
+{
+  getBrowser().documentCharsetInfo.forcedDetector = true;
+  if (doReload)
+    BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+}
+
+function UpdateCurrentCharset()
+{
+    var menuitem = null;
+
+    // exctract the charset from DOM
+    var wnd = document.commandDispatcher.focusedWindow;
+    if ((window == wnd) || (wnd == null)) wnd = window._content;
+    menuitem = document.getElementById('charset.' + wnd.document.characterSet);
+
+    if (menuitem) {
+        // uncheck previously checked item to workaround Mac checkmark problem
+        // bug 98625
+        if (gPrevCharset) {
+            var pref_item = document.getElementById('charset.' + gPrevCharset);
+            if (pref_item)
+              pref_item.setAttribute('checked', 'false');
+        }
+        menuitem.setAttribute('checked', 'true');
+    }
+}
+
+function UpdateCharsetDetector()
+{
+    var prefvalue;
+
+    try {
+        var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
+        prefvalue = pref.getComplexValue("intl.charset.detector",
+                                         Components.interfaces.nsIPrefLocalizedString).data;
+    }
+    catch (ex) {
+        prefvalue = "";
+    }
+
+    if (prefvalue == "") prefvalue = "off";
+    dump("intl.charset.detector = "+ prefvalue + "\n");
+
+    prefvalue = 'chardet.' + prefvalue;
+    var menuitem = document.getElementById(prefvalue);
+
+    if (menuitem) {
+        menuitem.setAttribute('checked', 'true');
+    }
+}
+
+function UpdateMenus(event)
+{
+    // use setTimeout workaround to delay checkmark the menu
+    // when onmenucomplete is ready then use it instead of oncreate
+    // see bug 78290 for the detail
+    UpdateCurrentCharset();
+    setTimeout("UpdateCurrentCharset()", 0);
+    UpdateCharsetDetector();
+    setTimeout("UpdateCharsetDetector()", 0);
+}
+
+function CreateMenu(node)
+{
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.notifyObservers(null, "charsetmenu-selected", node);
+}
+
+function charsetLoadListener (event)
+{
+    var charset = window._content.document.characterSet;
+
+    if (charset.length > 0 && (charset != gLastBrowserCharset)) {
+        if (!gCharsetMenu)
+          gCharsetMenu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'].getService().QueryInterface(Components.interfaces.nsICurrentCharsetListener);
+        gCharsetMenu.SetCurrentCharset(charset);
+        gPrevCharset = gLastBrowserCharset;
+        gLastBrowserCharset = charset;
+    }
 }
