@@ -918,10 +918,22 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
 	  for (; count > 0; count--) {
       nsCOMPtr<nsIX509Cert> cert;
       certdb->GetCertByEmailAddress(nsnull, mailbox_lowercase.get(), getter_AddRefs(cert));
-		  if (!cert) {
-        // failure to find an encryption cert is
-        // fatal for now. We won't be able to encrypt anyway
-        // ssaux 12/03/2001.
+      PRBool foundValidCert = PR_FALSE;
+
+		  if (cert) {
+        PRUint32 verification_result;
+
+        if (NS_SUCCEEDED(
+            cert->VerifyForUsage(nsIX509Cert::CERT_USAGE_EmailRecipient, &verification_result))
+            &&
+            nsIX509Cert::VERIFIED_OK == verification_result)
+        {
+          foundValidCert = PR_TRUE;
+        }
+      }
+      
+      if (!foundValidCert) {
+        // Failure to find a valid encryption cert is fatal.
         // here I assume that mailbox contains ascii rather than utf8.
         SetErrorWithParam(sendReport, NS_LITERAL_STRING("MissingRecipientEncryptionCert").get(), mailbox);
         res = NS_ERROR_FAILURE;
