@@ -340,6 +340,10 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    ActivateParent();
 #endif
 
+   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+   if(appShell)
+     appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
+
    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
    if (parentWindow)
      parentWindow->RemoveChildWindow(this);
@@ -414,12 +418,13 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       mWindow = nsnull;
    }
 
-  /* Unregister very late. This must happen at least after mDocShell
-     is destroyed, because onunload handlers fire then, and those being
-     script, a new window could open. See bug 130719. */
-  nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
-  if(appShell)
-      appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
+   /* Inform the appshellservice we've destroyed this window and it could
+      quit now if it wanted. This must happen at least after mDocShell
+      is destroyed, because onunload handlers fire then, and those being
+      script, anything could happen. A new window could open, even.
+      See bug 130719. */
+   if(appShell)
+      appShell->Quit(nsIAppShellService::eConsiderQuit);
    
    return NS_OK;
 }
