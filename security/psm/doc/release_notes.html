@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.73 [en] (WinNT; U) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (WinNT; U) [Netscape]">
    <meta name="Author" content="Sean Cotter">
    <title>Personal Security Manager Release Notes</title>
 </head>
@@ -18,11 +18,11 @@ Netscape Personal Security Manager</h2></center>
 
 <center>
 <h2>
-Release 1.3</h2></center>
+Release 1.4</h2></center>
 
 <center>
 <h2>
-9/18/2000</h2></center>
+10/12/2000</h2></center>
 
 <center>
 <hr WIDTH="100%"></center>
@@ -32,19 +32,19 @@ the software.
 <p>These notes include information for IS professionals who are thoroughly
 familiar with security and public-key infrastructure (PKI) issues.
 <p>Use of this product is subject to the terms detailed in the license
-agreement accompanying Netscape 6 PR3.
+agreement accompanying Netscape 6.
 <p>
 <hr WIDTH="100%">
 <h2>
 Contents</h2>
 <a href="#Documentation">Documentation</a>
-<br><a href="#Changes Since PSM 1.2">Changes Since Personal Security Manager
-1.2</a>
+<br><a href="#Changes Since PSM 1.3">Changes Since Personal Security Manager
+1.3</a>
 <br><a href="#Software/Hardware Requirements">Software/Hardware Requirements</a>
 <br><a href="#unpacking">Installing Personal Security Manager</a>
 <br><a href="#Using the Test Bed">Using Personal Security Manager</a>
-<br><a href="#Known Bugs/Issues for 13 Release">Known Bugs/Issues for Personal
-Security Manager 1.3</a>
+<br><a href="#Known Bugs/Issues for 14 Release">Known Bugs/Issues for Personal
+Security Manager 1.4</a>
 <br><a href="#Feedback">Feedback</a>
 <p>
 <hr WIDTH="100%">
@@ -69,12 +69,20 @@ see <a href="http://docs.iPlanet.com/docs/manuals/psm.html">http://docs.iPlanet.
 <p>
 <hr WIDTH="100%">
 <h2>
-<a NAME="Changes Since PSM 1.2"></a>Changes Since Personal Security Manager
-1.2</h2>
+<a NAME="Changes Since PSM 1.3"></a>Changes Since Personal Security Manager
+1.3</h2>
 The <a href="http://www.ietf.org/rfc/rfc2246.txt">Transport Layer Security
 (TLS)</a> protocol is turned on by default in Personal Security Manager
-1.3. TLS is an IETF standard based on the Secure Sockets Layer (SSL) protocol.
-<p>Most other changes since Personal Security Manager 1.2 involve minor
+1.4. To turn TLS off, open Personal Security Manager, click the Advanced
+tab, click Options in the left frame, then deselect the checkbox labeled
+"Enable TLS."
+<p>TLS is an IETF standard based on the Secure Sockets Layer (SSL) protocol.
+It can be thought of as SSL version 3.1. Some servers that do not implement
+SSL version 3.0 correctly cannot negotiate the SSL handshake with client
+softwware (such as Personal Security Manager) that support TLS. To allow
+Personal Security Manager to use SSL with any such TLS-intolerant servers,
+you must disable TLS as described above.
+<p>Most other changes since Personal Security Manager 1.3 involve minor
 bug fixes and optimizations.
 <p>Netscape 6 and Mozilla do not supported signed or encrypted email. For
 this reason, features related to email certificates are not available in
@@ -92,34 +100,34 @@ Mozilla and Netscape 6. It is not intended for use with Communicator.
 <hr WIDTH="100%">
 <h2>
 <a NAME="unpacking"></a>Installing Personal Security Manager</h2>
-Personal Security Manager 1.3 is installed with Netscape 6 PR3. To install
-Personal Security Manager 1.3 with Mozilla, see <a href="http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html">http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html</a>.
+Personal Security Manager 1.4 is installed with Netscape 6. To install
+Personal Security Manager 1.4 with Mozilla, see <a href="http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html">http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html</a>.
 <p>The sections that follow describe how the Personal Security Manager
-files are installed with Netscape 6 PR3.
+files are installed with Netscape 6.
 <h3>
 Installing on Windows 95/98/2000/NT</h3>
-When you install Netscape 6 PR3 on Windows, Personal Security Manager is
-installed in the directory <tt>C:\Program Files\Common Files\Netscape Shared\Security\</tt>.
-<p><b>All Windows users:</b> Personal Security Manager 1.3 works with Mozilla
+When you install Netscape 6 on Windows, Personal Security Manager is installed
+in the directory <tt>C:\Program Files\Common Files\Netscape Shared\Security\</tt>.
+<p><b>All Windows users:</b> Personal Security Manager 1.4 works with Mozilla
 and Netscape 6, but it is not currently supported for Communicator 4.x.
-Therefore, you should not attempt to run Personal Security Manager 1.3
+Therefore, you should not attempt to run Personal Security Manager 1.4
 with Communicator 4.x.
-<p>If you have Personal Security Manager 1.2 installed for use with Communicator
-4.x and you want to install Netscape 6 PR3, you should first exit Communicator,
+<p>If you have Personal Security Manager 1.3 installed for use with Communicator
+4.x and you want to install Netscape 6, you should first exit Communicator,
 then rename the directory <tt>C:\Program Files\Common Files\Netscape Shared\Security\</tt>
 to something else, such as <tt>SecurityC47</tt>. When you install Netscape
 6, a new <tt>Security</tt> directory will be created during the installation
 process.
-<p>If you want to run Communicator 4.x with Personal Security Manager 1.2
-after Netscape 6 PR3 has been installed, you should first exit Netscape
-6, then rename the <tt>Security</tt> directory (which now contains the
-Personal Security Manager 1.3 files) to something else (such as <tt>SecurityN6</tt>)
+<p>If you want to run Communicator 4.x with Personal Security Manager 1.3
+after Netscape 6 has been installed, you should first exit Netscape 6,
+then rename the <tt>Security</tt> directory (which now contains the Personal
+Security Manager 1.4 files) to something else (such as <tt>SecurityN6</tt>)
 and rename your <tt>SecurityC47</tt> directory (which contains the Personal
-Security Manager 1.2 files) to Security. You can then launch Communicator
+Security Manager 1.3 files) to Security. You can then launch Communicator
 as usual.
 <h3>
 Installing on Unix</h3>
-When you install Netscape 6 PR3 on Unix, Personal Security Manager is installed
+When you install Netscape 6 on Unix, Personal Security Manager is installed
 in a directory called <tt>psm</tt> in the same directory where the <tt>netscape</tt>
 executable resides.
 <br>&nbsp;
@@ -131,7 +139,8 @@ To <b>disable</b> Personal Security Manager temporarily, exit Netscape
 <li>
 on Unix, remove the directory
 <tt>psm</tt> from the directory where the
-<tt>netscape</tt> executable resides.</li>
+<tt>netscape</tt>
+executable resides.</li>
 
 <li>
 on Windows, rename the directory <tt>C:\Program Files\Common Files\Netscape
@@ -258,9 +267,9 @@ D using Personal Security Manager.</li>
 OSCP</h3>
 Personal Security Manager supports the use of the On-Line Certificate Status
 Protocol (OSCP) to check the validity of certificates in real time. Information
-about this protocol and how configure Personal Security Manager 1.2 and
-a forthcoming version of Certificate Management System to support it will
-be available from <a href="http://docs.iPlanet.com/docs/manuals/psm.html">http://docs.iPlanet.com/docs/manuals/psm.html</a>.
+about this protocol and how configure Personal Security Manager 1.3 and
+Netscape Certificate Management System 4.2 to support it is available from
+<a href="http://docs.iPlanet.com/docs/manuals/psm/12/psmdply.htm">http://docs.iPlanet.com/docs/manuals/psm/12/psmdply.htm</a>
 <p>It's important to note that Personal Security Manager will accept signatures
 from responders only under the following conditions:
 <ul>
@@ -302,8 +311,8 @@ the OCSP responder's certificate) correctly.</li>
 
 <hr WIDTH="100%">
 <h2>
-<a NAME="Known Bugs/Issues for 13 Release"></a>Known Bugs/Issues for Personal
-Security Manager 1.3</h2>
+<a NAME="Known Bugs/Issues for 14 Release"></a>Known Bugs/Issues for Personal
+Security Manager 1.4</h2>
 
 <ul>
 <li>
