@@ -2,10 +2,9 @@
 # This is a list of local files which get copied to the mozilla:dist:idl directory
 #
 
-nsIChromeEventHandler.idl
-nsISelectionController.idl
-nsISelection.idl
-nsISelectionPrivate.idl
-nsISelectionListener.idl
 nsIContentPolicy.idl
 nsIDiskDocument.idl
+nsISelection.idl
+nsISelectionController.idl
+nsISelectionListener.idl
+nsISelectionPrivate.idl
