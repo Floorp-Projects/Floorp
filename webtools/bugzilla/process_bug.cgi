@@ -46,7 +46,6 @@ use Bugzilla::Flag;
 
 use vars qw(%versions
           %components
-          %COOKIE
           %legal_opsys
           %legal_platform
           %legal_priority
@@ -165,8 +164,8 @@ if (defined($::FORM{'id'})) {
 
 # Set up the vars for nagiavtional <link> elements
 my $next_bug;
-if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
-    my @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
+if ($cgi->cookie("BUGLIST") && $::FORM{'id'}) {
+    my @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
     $vars->{'bug_list'} = \@bug_list;
     my $cur = lsearch(\@bug_list, $::FORM{"id"});
     if ($cur >= 0 && $cur < $#bug_list) {
@@ -1284,7 +1283,7 @@ foreach my $id (@idlist) {
             SendSQL("UNLOCK TABLES");
             ThrowUserError('comment_required');
         } else {
-            AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
+            AppendComment($id, Bugzilla->user->login, $::FORM{'comment'},
                           $::FORM{'commentprivacy'}, $timestamp, $::FORM{'work_time'});
             if ($::FORM{'work_time'}) {
                 LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
@@ -1702,7 +1701,7 @@ foreach my $id (@idlist) {
     $vars->{'mailrecipients'} = { 'cc' => \@ccRemoved,
                                   'owner' => $origOwner,
                                   'qa' => $origQaContact,
-                                  'changer' => $::COOKIE{'Bugzilla_login'} };
+                                  'changer' => Bugzilla->user->login };
 
     $vars->{'id'} = $id;
     
@@ -1728,12 +1727,11 @@ foreach my $id (@idlist) {
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
         # Bug 171639 - Duplicate notifications do not need to be private. 
-        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***", 0);
+        AppendComment($duplicate, Bugzilla->user->login, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***", 0);
         CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         
-        $vars->{'mailrecipients'} = { 'changer' => $::COOKIE{'Bugzilla_login'} 
-                                    }; 
+        $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login }; 
 
         $vars->{'id'} = $duplicate;
         $vars->{'type'} = "dupe";
@@ -1746,7 +1744,7 @@ foreach my $id (@idlist) {
 
     if ($check_dep_bugs) {
         foreach my $k (keys(%dependencychanged)) {
-            $vars->{'mailrecipients'} = { 'changer' => $::COOKIE{'Bugzilla_login'} };
+            $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login }; 
             $vars->{'id'} = $k;
             $vars->{'type'} = "dep";
 
