@@ -41,6 +41,8 @@
 #include "nsDrawingSurfaceGTK.h"
 #include "gtkdrawing.h"
 
+#include "nsIObserverService.h"
+#include "nsIServiceManager.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
@@ -57,7 +59,7 @@
 
 #include <gdk/gdkx.h>
 
-NS_IMPL_ISUPPORTS1(nsNativeThemeGTK, nsITheme)
+NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
 
 static int gLastXError;
 
@@ -67,6 +69,11 @@ nsNativeThemeGTK::nsNativeThemeGTK()
     memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
     return;
   }
+
+  // We have to call moz_gtk_shutdown before the event loop stops running.
+  nsCOMPtr<nsIObserverService> obsServ =
+    do_GetService("@mozilla.org/observer-service;1");
+  obsServ->AddObserver(this, "quit-application", PR_FALSE);
 
   mDisabledAtom = do_GetAtom("disabled");
   mCheckedAtom = do_GetAtom("checked");
@@ -90,7 +97,20 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
-  moz_gtk_shutdown();
+}
+
+NS_IMETHODIMP
+nsNativeThemeGTK::Observe(nsISupports *aSubject, const char *aTopic,
+                          const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic, "quit-application")) {
+    moz_gtk_shutdown();
+  } else {
+    NS_NOTREACHED("unexpected topic");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
 }
 
 static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
