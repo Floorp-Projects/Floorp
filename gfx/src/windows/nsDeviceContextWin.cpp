@@ -410,8 +410,12 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsF
   {
     return NS_ERROR_FAILURE;
   }
-  
-  aFont->name.AssignWithConversion(ptrLogFont->lfFaceName);
+
+  PRUnichar name[LF_FACESIZE];
+  name[0] = 0;
+  MultiByteToWideChar(CP_ACP, 0, ptrLogFont->lfFaceName,
+    strlen(ptrLogFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
+  aFont->name = name;
 
   // Do Style
   aFont->style = NS_FONT_STYLE_NORMAL;
