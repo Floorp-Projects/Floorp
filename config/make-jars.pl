@@ -4,7 +4,10 @@
 
 my $cygwin_mountprefix = "";
 if ($^O eq "cygwin") {
-$cygwin_mountprefix = `mount -p | awk '{ if (/^\\//) { print $1; exit } }'`;
+$cygwin_mountprefix = `mount -p | awk '{ if (/^\\//) { print \$1; exit } }'`;
+chomp($cygwin_mountprefix);
+# Remove extra ^M caused by using dos-mode line-endings
+chop $cygwin_mountprefix if (substr($cygwin_mountprefix, -1, 1) eq "\r");
 } else {
 # we'll be pulling in some stuff from the script directory
 require FindBin;
