@@ -20,6 +20,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLStyleSheet.h"
+#include "nsIHTMLCSSStyleSheet.h"
 #include "nsIStyleSet.h"
 #include "nsIDocumentObserver.h"
 #include "nsHTMLAtoms.h"
@@ -72,6 +73,14 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
 
 void nsHTMLDocument::LoadURL(nsIURL* aURL)
 {
+  // Delete references to style sheets - this should be done in superclass...
+  PRInt32 index = mStyleSheets.Count();
+  while (--index >= 0) {
+    nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
+    NS_RELEASE(sheet);
+  }
+  mStyleSheets.Clear();
+
   NS_IF_RELEASE(mAttrStyleSheet);
   NS_IF_RELEASE(mDocumentURL);
   if (nsnull != mDocumentTitle) {
@@ -88,6 +97,11 @@ void nsHTMLDocument::LoadURL(nsIURL* aURL)
     nsIHTMLContentSink* sink;
     rv = NS_NewHTMLContentSink(&sink, this, aURL);
     if (NS_OK == rv) {
+      nsIHTMLCSSStyleSheet* styleAttrSheet;
+      if (NS_OK == NS_NewHTMLCSSStyleSheet(&styleAttrSheet, aURL)) {
+        AddStyleSheet(styleAttrSheet); // tell the world about our new style sheet
+        NS_RELEASE(styleAttrSheet);
+      }
       if (NS_OK == NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL)) {
         AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
       }
