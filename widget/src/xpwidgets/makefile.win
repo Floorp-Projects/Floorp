@@ -29,6 +29,7 @@ DEFINES =-D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT
 CPPSRCS = \
     nsBaseDragService.cpp      \
     nsBaseWidget.cpp      \
+	nsBaseFilePicker.cpp	\
 	nsFileSpecWithUIImpl.cpp         \
 	nsBaseClipboard.cpp         \
 	nsTransferable.cpp         \
@@ -41,6 +42,7 @@ MODULE=raptor
 OBJS= \
 	.\$(OBJDIR)\nsBaseDragService.obj  \
 	.\$(OBJDIR)\nsBaseWidget.obj  \
+	.\$(OBJDIR)\nsBaseFilePicker.obj  \
 	.\$(OBJDIR)\nsFileSpecWithUIImpl.obj  \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
