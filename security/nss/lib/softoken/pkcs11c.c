@@ -3259,17 +3259,15 @@ dsagn_done:
         bitSize = pk11_GetLengthInBits(dhParam.prime.data,dhParam.prime.len);
         if ((bitSize <  DH_MIN_P_BITS) || (bitSize > DH_MAX_P_BITS)) {
 	    crv = CKR_TEMPLATE_INCOMPLETE;
-	    PORT_Free(pqgParam.prime.data);
-	    PORT_Free(pqgParam.subPrime.data);
-	    PORT_Free(pqgParam.base.data);
+	    PORT_Free(dhParam.prime.data);
+	    PORT_Free(dhParam.base.data);
 	    break;
 	}
         bitSize = pk11_GetLengthInBits(dhParam.base.data,dhParam.base.len);
         if ((bitSize <  1) || (bitSize > DH_MAX_P_BITS)) {
 	    crv = CKR_TEMPLATE_INCOMPLETE;
-	    PORT_Free(pqgParam.prime.data);
-	    PORT_Free(pqgParam.subPrime.data);
-	    PORT_Free(pqgParam.base.data);
+	    PORT_Free(dhParam.prime.data);
+	    PORT_Free(dhParam.base.data);
 	    break;
 	}
 
