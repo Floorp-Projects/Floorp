@@ -885,7 +885,7 @@ sub insert
   }
 
   # Assign the bug to the user, if they are allowed to take it
-  my $forcecc = "";
+  my $owner = "";
   
   if ($::FORM{'takebug'} && UserInGroup("editbugs")) {
       SendSQL("select NOW()");
@@ -902,7 +902,7 @@ sub insert
       my @newvalues = ($::userid, "ASSIGNED", "", DBID_to_name($::userid));
       
       # Make sure the person we are taking the bug from gets mail.
-      $forcecc = $oldvalues[3];  
+      $owner = $oldvalues[3];  
                   
       @oldvalues = map(SqlQuote($_), @oldvalues);
       @newvalues = map(SqlQuote($_), @newvalues);
@@ -930,7 +930,8 @@ sub insert
   }   
   
   # Define the variables and functions that will be passed to the UI template.
-  $vars->{'mailrecipients'} =  { 'changer' => $::COOKIE{'Bugzilla_login'} };
+  $vars->{'mailrecipients'} =  { 'changer' => $::COOKIE{'Bugzilla_login'},
+                                 'owner'   => $owner };
   $vars->{'bugid'} = $::FORM{'bugid'};
   $vars->{'attachid'} = $attachid;
   $vars->{'description'} = $description;
