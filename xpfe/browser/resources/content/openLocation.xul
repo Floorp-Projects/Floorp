@@ -41,6 +41,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="onLoad()"
+        style="width: 40em;"
         class="dialog"
         align="vertical"> 
               
@@ -57,15 +58,15 @@
       <spring flex="1"/>
     </box>
     <separator orient="vertical" class="thin"/>
-    <box orient="vertical">
+    <box orient="vertical" flex="1">
       <html>&enter.label;</html>
 
-      <box autostretch="never" style="width: 40em;">
+      <box autostretch="never">
         <!-- spank me -->		
-        <html:input type="text" id="dialog.input" flex="1" onkeyup="doEnabling();"/>
+        <textfield id="dialog.input" flex="1" onkeyup="doEnabling();"/>
         <button value="&chooseFile.label;" onclick="onChooseFile();"/>
       </box>
-      <box autostretch="never">
+      <box autostretch="never" valign="center">
         <text class="label" value="&openWhere.label;"/>
         <menulist id="openAppList">
           <menupopup>
