@@ -32,7 +32,10 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			  onunload="EditorShutdown()" title="&textEditorWindow.title;" align="vertical"
+			  onunload="EditorShutdown()" 
+        titlemodifier="&textEditorWindow.titlemodifier;" 
+        titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
+        align="vertical"
 			  width="640" height="480">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">

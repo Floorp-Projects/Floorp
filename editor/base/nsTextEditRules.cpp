@@ -197,7 +197,8 @@ nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
     case kOutputText:
       return DidOutputText(aSelection, aResult);
   }
-  return NS_ERROR_FAILURE;
+  // Don't fail on transactions we don't handle here!
+  return NS_OK;
 }
 
 

@@ -435,7 +435,7 @@
 <!ENTITY findIcon.url "chrome://editor/skin/images/find.gif">
 <!ENTITY linkIcon.url "chrome://editor/skin/images/link.gif">
 <!ENTITY imageIcon.url "chrome://editor/skin/images/image.gif">
-<!ENTITY targetIcon.url "chrome://editor/skin/images/target.gif">
+<!ENTITY anchorIcon.url "chrome://editor/skin/images/anchor.gif">
 <!ENTITY hlineIcon.url "chrome://editor/skin/images/hline.gif">
 <!ENTITY tableIcon.url "chrome://editor/skin/images/table.gif">
 <!ENTITY spellingIcon.url "chrome://editor/skin/images/spell.gif">

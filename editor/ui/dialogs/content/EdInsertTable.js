@@ -75,6 +75,9 @@ function Startup()
   dialog.columnsInput.value = 2;
 
   dialog.rowsInput.focus();
+
+  // Resize window
+  window.sizeToContent();
 }
 
 // Set dialog widgets with attribute data
@@ -87,9 +90,6 @@ function InitDialog()
   // This sets contents of select combobox list
   dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement,"width","pixelOrPercentSelect");
   dialog.borderInput.value = globalElement.getAttribute("border");
-
-  // Resize window after filling combobox
-  window.sizeToContent();
 }
 
 // Get and validate data from widgets.

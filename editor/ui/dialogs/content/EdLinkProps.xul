@@ -68,7 +68,11 @@
     </xul:box>
     <xul:spring class="spacer"/>
     <div>&NamedAnchorMsg.label;</div>
-    <select id="NamedAnchorList" style="width: 15em;" size="5" onchange="SelectNamedAnchor()"/>
+    <select id="NamedAnchorList" style="width: 15em;" size="3" onchange="SelectNamedAnchor()"/>
+    <xul:spring class="spacer"/>
+    <div>&HeadingMsg.label;</div>
+    <select id="HeadingsList" style="width: 15em;" size="3" onchange="SelectHeading()"/>
+    <div>&HeadingMsg2.label;</div>
     </fieldset>
   </xul:box>
 
