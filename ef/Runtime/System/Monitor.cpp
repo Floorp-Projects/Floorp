@@ -74,7 +74,7 @@ Monitors<MonitorObject>* monitors;
 inline bool Monitor::cmpAndSwap(Int32* w, Int32 ov, Int32 nv)
 {
 	bool r=false;
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
 	__asm   {
 		mov eax,ov
 		mov ecx, nv
@@ -82,20 +82,22 @@ inline bool Monitor::cmpAndSwap(Int32* w, Int32 ov, Int32 nv)
 		lock cmpxchg [ebx], ecx
 		sete r
 	}
-	return r;
-#elif defined(__linux__)
-	__asm__ ("movl %0, %%eax" : /* no outputs */ : "g" (ov));
-	__asm__ ("movl %0, %%ecx" : /* no outputs */ : "g" (nv));
-	__asm__ ("movl %0, %%ebx" : /* no outputs */ : "g" (w));
-	__asm__ ("lock; cmpxchg %%ecx, (%%ebx)" : /* no outputs */ : /* no outputs */);
- 	__asm__ ("sete %0" : "=g" (r) : /* no outputs */);
-	return r;
+#elif defined(__i386__)
+    /* This actually only works 486 and better...  */
+    {
+      Int32 readval;
+
+      __asm__ __volatile__ ("lock; cmpxchgl %3, %1; sete %0"
+                            : "=q" (r), "=m" (*w), "=a" (readval)
+                            : "r" (nv), "m" (*w), "0" (r), "2" (ov));
+    }
 #else
 	ov;
 	PR_fprintf(PR_STDOUT,"compare and swap NYI!!\n");
 	*w = nv;
-	return (true);
+    r = true;
 #endif
+	return r;
 }
 
 inline Int32 Monitor::pushStack() { // for now
