@@ -205,8 +205,13 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
 
   StHandleOwner   handleOwner(decodedDataHandle);  
 
+  OSStatus      status;
   PMPageFormat  newPageFormat = kPMNoPageFormat;
-  OSStatus  status = ::PMUnflattenPageFormat(decodedDataHandle, &newPageFormat);
+  
+  status = ::PMNewPageFormat(&newPageFormat);
+  if (status != noErr) 
+    return NS_ERROR_FAILURE;  
+  status = ::PMUnflattenPageFormat(decodedDataHandle, &newPageFormat);
   if (status != noErr) 
     return NS_ERROR_FAILURE;
 
