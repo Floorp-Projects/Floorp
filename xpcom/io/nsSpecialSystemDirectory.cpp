@@ -69,6 +69,14 @@
 #include "nsHashtable.h"
 #include "prlog.h"
 
+#if defined (XP_MAC) && UNIVERSAL_INTERFACES_VERSION < 0x0340
+    enum {
+      kUserDomain                   = -32763,
+      kDomainLibraryFolderType      = FOUR_CHAR_CODE('dlib')
+    };
+#endif
+
+
 class SystemDirectoriesKey : public nsHashKey {
 public:
 
@@ -599,6 +607,19 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         case Mac_DefaultDownloadDirectory:
             *this = kDefaultDownloadFolderType;
             break;
+            
+        case Mac_UserLibDirectory:
+        {
+            OSErr err;
+            short vRefNum;
+            long dirID;
+            err = ::FindFolder(kUserDomain, kDomainLibraryFolderType, true, &vRefNum, &dirID);
+            if (!err) {
+                err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &mSpec);
+            }
+            mError = NS_FILE_RESULT(err);
+            break;
+        }
 #endif
             
 #if defined (XP_WIN)
