@@ -32,9 +32,12 @@
 #include "XMLDOMUtils.h"
 #include "txIXPathContext.h"
 
-RelationalExpr::RelationalExpr(Expr* aLeftExpr, Expr* aRightExpr,
+RelationalExpr::RelationalExpr(nsAutoPtr<Expr> aLeftExpr,
+                               nsAutoPtr<Expr> aRightExpr,
                                RelationalExprType aOp)
-    : mLeftExpr(aLeftExpr), mRightExpr(aRightExpr), mOp(aOp)
+    : mLeftExpr(aLeftExpr),
+      mRightExpr(aRightExpr),
+      mOp(aOp)
 {
 }
 

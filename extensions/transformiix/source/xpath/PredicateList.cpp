@@ -32,10 +32,6 @@
  * for use with Step and Filter Expressions
  */
 
-PredicateList::PredicateList()
-{
-} // PredicateList
-
 /*
  * Destructor, will delete all Expressions in the list
  */
@@ -51,9 +47,15 @@ PredicateList::~PredicateList()
  * Adds the given Expr to the list
  * @param expr the Expr to add to the list
  */
-void PredicateList::add(Expr* expr)
+nsresult
+PredicateList::add(nsAutoPtr<Expr> aExpr)
 {
-    predicates.add(expr);
+    nsresult rv = predicates.add(aExpr);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    aExpr.forget();
+    
+    return NS_OK;
 } // add
 
 nsresult
