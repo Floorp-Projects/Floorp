@@ -24,7 +24,7 @@
 #include "nsRepository.h"
 
 #if defined(XP_UNIX) || defined(XP_MAC)
-#include <strstream>
+#include <strstream.h>
 #endif
 
 #ifdef XP_PC
