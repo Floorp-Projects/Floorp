@@ -309,9 +309,9 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
+      /*parent,incl,exclgroups*/          kBlock, kNone, kNone,	
       /*special props, prop-range*/       0,kNoPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+      /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_big,
@@ -1579,10 +1579,42 @@ PRBool nsHTMLElement::CanOmitStartTag(eHTMLTags aChild) const{
  * @param 
  * @return
  */
-PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild) {
-  PRBool result=FindTagInSet(aChild,gHeadKids.mTags,gHeadKids.mCount);
+PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild,PRBool& aExclusively) {
+#if 0
+  PRBool result=PR_FALSE;
+
+  aExclusively=PR_FALSE;
+
+  switch(aChild) {
+
+    case eHTMLTag_base:
+    case eHTMLTag_link:
+    case eHTMLTag_meta:
+    case eHTMLTag_title:
+    case eHTMLTag_style:
+      aExclusively=result=PR_TRUE;
+      break;
+
+    case eHTMLTag_bgsound:
+    case eHTMLTag_script:
+    case eHTMLTag_noembed:
+    case eHTMLTag_noscript:
+    case eHTMLTag_whitespace:
+    case eHTMLTag_newline:
+    case eHTMLTag_comment:
+      result=PR_TRUE;
+      break;
+
+    default:
+      break;
+  }
   return result;
+#else
+  aExclusively=PR_TRUE;
+  return FindTagInSet(aChild,gHeadKids.mTags,gHeadKids.mCount);
+#endif
 }
+
 
 
 /**
