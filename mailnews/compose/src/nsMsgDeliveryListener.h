@@ -61,11 +61,11 @@ public:
 
 private:
   // Private Information
-  void                *mTagData;
-  nsFileSpec          *mTempFileSpec;
-  nsMsgDeliveryType   mDeliveryType;
-  nsMsgComposeAndSend *mMsgSendObj;
-  nsMsgSendLater      *mMsgSendLaterObj;
+  void                            *mTagData;
+  nsFileSpec                      *mTempFileSpec;
+  nsMsgDeliveryType               mDeliveryType;
+  nsCOMPtr<nsMsgComposeAndSend>   mMsgSendObj;
+  nsMsgSendLater                  *mMsgSendLaterObj;
   nsMsgDeliveryCompletionCallback mCompletionCallback;
 };
 

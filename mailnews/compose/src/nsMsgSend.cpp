@@ -45,6 +45,7 @@
 #include "nsIMimeURLUtils.h"
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIFileSpec.h"
+#include "nsMsgCopy.h"
 
 #include "nsMsgPrompts.h"
 
@@ -1318,6 +1319,9 @@ MailDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
   {
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
     ptr->DeliverAsMailExit(aUrl, aExitCode);
+
+    if (ptr->mSendListener)
+      delete ptr->mSendListener;
     NS_RELEASE(ptr);
   }
 
@@ -1331,6 +1335,9 @@ NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
   {
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
     ptr->DeliverAsNewsExit(aUrl, aExitCode);
+
+    if (ptr->mSendListener)
+      delete ptr->mSendListener;
     NS_RELEASE(ptr);
   }
 
@@ -1410,19 +1417,19 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && smtpService)
   {
-  	NS_ADDREF(this);
-    nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
-    if (!sendListener)
+  	AddRef();
+    mSendListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
+    if (!mSendListener)
     {
       // RICHIE_TODO - message loss here?
       nsMsgDisplayMessageByString("Unable to create SMTP listener service. Send failed.");
       return MK_OUT_OF_MEMORY;
     }
 
-    sendListener->SetMsgComposeAndSendObject(this);
+    mSendListener->SetMsgComposeAndSendObject(this);
 
     nsFilePath    filePath(*mTempFileSpec);
-    rv = smtpService->SendMailMessage(filePath, buf, sendListener, nsnull);
+    rv = smtpService->SendMailMessage(filePath, buf, mSendListener, nsnull);
   }
   
   PR_FREEIF(buf); // free the buf because we are done with it....
@@ -1440,19 +1447,19 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
   if (NS_SUCCEEDED(rv) && nntpService) 
   {	
-  	NS_ADDREF(this);
-    nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
-    if (!sendListener)
+  	AddRef();
+    mSendListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
+    if (!mSendListener)
     {
       // RICHIE_TODO - message loss here?
       nsMsgDisplayMessageByString("Unable to create NNTP listener service. News Delivery failed.");
       return MK_OUT_OF_MEMORY;
     }
 
-    sendListener->SetMsgComposeAndSendObject(this);
+    mSendListener->SetMsgComposeAndSendObject(this);
     nsFilePath    filePath (*mTempFileSpec);
 
-    rv = nntpService->PostMessage(filePath, mCompFields->GetNewsgroups(), sendListener, nsnull);
+    rv = nntpService->PostMessage(filePath, mCompFields->GetNewsgroups(), mSendListener, nsnull);
   }
 
   return rv;
@@ -1552,13 +1559,12 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckF
 #ifdef NS_DEBUG
   printf("\nDoDeliveryExitProcessing(): DoFcc() call Failed!\n");
 #endif
-    // Everything already cleaned up...just return.
     return;
   } 
   else
   {
-    // Either we started the copy...cleanup happens later...or cleanup was
-    // already taken care of for us.
+    // Either we started the copy...cleanup happens later...or cleanup will
+    // be take care of by a listener...
     return;
   }
 }
@@ -1745,9 +1751,6 @@ nsMsgComposeAndSend::Clear()
 
   // Cleanup listener array...
   DeleteListeners();
-
-  if (mCopyObj)
-    delete mCopyObj;
 }
 
 nsMsgComposeAndSend::nsMsgComposeAndSend()
@@ -1755,6 +1758,7 @@ nsMsgComposeAndSend::nsMsgComposeAndSend()
 	mCompFields = nsnull;			/* Where to send the message once it's done */
   mListenerArray = nsnull;
   mListenerArrayCount = 0;
+  mSendListener = nsnull;
 
 	mOutputFile = nsnull;
 
@@ -1988,6 +1992,12 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus, nsISupports *li
       if (copyListener)
         copyListener->OnStopCopy(aStatus, listenerData);
     }
+  }
+
+  if (mCopyObj)
+  {
+    delete mCopyObj;
+    mCopyObj = nsnull;
   }
 
   return NS_OK;
@@ -2641,7 +2651,7 @@ nsresult
 nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec, 
                                                nsMsgDeliverMode   mode)
 {
-  mCopyObj = new nsMsgCopy();
+  mCopyObj = new nsMsgCopy(); // SHERRY do_QueryInterface(new nsMsgCopy());
   if (!mCopyObj)
     return MK_OUT_OF_MEMORY;
 

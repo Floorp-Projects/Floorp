@@ -94,10 +94,7 @@ nsresult
 CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
 {
   if (obj)
-  {
     mComposeAndSend = obj;
-    NS_ADDREF(mComposeAndSend);
-  }
 
   return NS_OK;
 }
@@ -108,22 +105,20 @@ CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
 // to listen for message copy completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
 
+NS_IMPL_ISUPPORTS(nsMsgCopy, nsMsgCopy::GetIID());
+
 nsMsgCopy::nsMsgCopy()
 {
   mCopyListener = nsnull;
   mFileSpec = nsnull;
-  mMsgSendObj = nsnull;
   mMode = nsMsgDeliverNow;
   mSavePref = nsnull;
+
+  NS_INIT_REFCNT(); 
 }
 
 nsMsgCopy::~nsMsgCopy()
 {
-  if (mMsgSendObj)
-    NS_RELEASE(mMsgSendObj);
-  if (mCopyListener)
-    NS_RELEASE(mCopyListener);
-
   PR_FREEIF(mSavePref);
 }
 
@@ -170,22 +165,15 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   }
 
   mMode = aMode;
-  nsresult rv = DoCopy(aFileSpec, dstFolder, msgToReplace, isDraft, nsnull);
-
-  if (NS_SUCCEEDED(rv))
-  {
-    mMsgSendObj = aMsgSendObj;
-    NS_ADDREF(mMsgSendObj);
-  }
-
+  nsresult rv = DoCopy(aFileSpec, dstFolder, msgToReplace, isDraft, nsnull, aMsgSendObj);
   return rv;
 }
-
 
 nsresult 
 nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
                   nsIMessage *aMsgToReplace, PRBool aIsDraft,
-                  nsITransactionManager *txnMgr)
+                  nsITransactionManager *txnMgr,
+                  nsMsgComposeAndSend   *aMsgSendObj)
 {
   nsresult rv = NS_OK;
 
@@ -194,16 +182,15 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
     return NS_ERROR_FAILURE;
 
 	//Call copyservice with dstFolder, disk file, and txnManager
-	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
+	NS_WITH_SERVICE(nsIMsgCopyService, mCopyService, kMsgCopyServiceCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 	{
-    mCopyListener = new CopyListener();
+    mCopyListener = do_QueryInterface(new CopyListener());
     if (!mCopyListener)
       return MK_OUT_OF_MEMORY;
 
-    NS_ADDREF(mCopyListener);
-    mCopyListener->SetMsgComposeAndSendObject(mMsgSendObj);
-    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, aIsDraft, 
+    mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
+    rv = mCopyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, aIsDraft, 
                                       mCopyListener, nsnull, txnMgr);
 	}
 

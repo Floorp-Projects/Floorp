@@ -133,6 +133,7 @@
 #include "nsIMsgSendListener.h"
 #include "nsMsgCopy.h"
 #include "nsIMsgIdentity.h"
+#include "nsMsgDeliveryListener.h"
 
 #include "net.h" /* should be defined into msgCore.h? */
 
@@ -156,6 +157,7 @@
 //
 class nsMsgSendPart;
 class nsMsgCopy;
+class nsMsgDeliveryListener;
 
 class nsMsgComposeAndSend : public nsIMsgSend
 {
@@ -321,6 +323,7 @@ public:
   // These are needed for callbacks to the FE...  
   nsIMsgSendListener      **mListenerArray;
   PRInt32                 mListenerArrayCount;
+  nsMsgDeliveryListener   *mSendListener;
 
   nsIFileSpec             *mReturnFileSpec;     // a holder for file spec's to be returned to caller
 
