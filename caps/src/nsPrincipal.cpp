@@ -228,18 +228,18 @@ static nsVector* getTempCertificates(const unsigned char **certChain,
 // 			PUBLIC METHODS 
 //
 
-nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len)
+nsPrincipal::nsPrincipal(nsPrincipalType type, const void * key, PRUint32 key_len)
 {
   init(type, key, key_len);
 }
 
-nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, void *zigObject)
+nsPrincipal::nsPrincipal(nsPrincipalType type, const void * key, PRUint32 key_len, void *zigObject)
 {
   init(type, key, key_len);
   itsZig = zigObject;
 }
 
-nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, char *stringRep)
+nsPrincipal::nsPrincipal(nsPrincipalType type, const void * key, PRUint32 key_len, char *stringRep)
 {
   init(type, key, key_len);
   itsString = stringRep;
@@ -664,7 +664,7 @@ nsPrincipalArray* nsPrincipal::getSigners(void* zigPtr, char* pathname)
 // 			PRIVATE METHODS 
 //
 
-void nsPrincipal::init(nsPrincipalType type, void * key, PRUint32 key_len)
+void nsPrincipal::init(nsPrincipalType type, const void * key, PRUint32 key_len)
 {
   switch(type) {
   case nsPrincipalType_Cert:
@@ -698,9 +698,9 @@ void nsPrincipal::init(nsPrincipalType type, void * key, PRUint32 key_len)
   itsNickname = NULL;
 }
 
-PRInt32 nsPrincipal::computeHashCode(void * key, PRUint32 keyLen)
+PRInt32 nsPrincipal::computeHashCode(const void * key, PRUint32 keyLen)
 {
-  char *cptr = (char *)key;
+  const char *cptr = (char *)key;
   //
   // Same basic hash algorithm as used in java.lang.String --
   // no security relevance, only a performance optimization.

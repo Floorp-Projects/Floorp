@@ -35,10 +35,10 @@ public:
 	/* Public Field Accessors */
 	/* Public Methods */
 
-	nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len);
-	nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, char *stringRep);
+	nsPrincipal(nsPrincipalType type, const void * key, PRUint32 key_len);
+	nsPrincipal(nsPrincipalType type, const void * key, PRUint32 key_len, char *stringRep);
 	virtual ~nsPrincipal();
-	nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, void *zigObject);
+	nsPrincipal(nsPrincipalType type, const void * key, PRUint32 key_len, void *zigObject);
 
 	nsPrincipal(nsPrincipalType type, const unsigned char **certChain, 
                 PRUint32 *certChainLengths, 
@@ -121,9 +121,9 @@ private:
 	char* itsString;
 
 	/* Private Methods */
-	void init(nsPrincipalType type, void * key, PRUint32 key_len);
+	void init(nsPrincipalType type, const void * key, PRUint32 key_len);
 
-	PRInt32 computeHashCode(void * key, PRUint32 key_len);
+	PRInt32 computeHashCode(const void * key, PRUint32 key_len);
 
 	PRInt32 computeHashCode(void);
 

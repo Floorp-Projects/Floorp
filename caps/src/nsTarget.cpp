@@ -1078,7 +1078,7 @@ char * nsTarget::toString(void)
 {
   if (itsString != NULL)
     return itsString;
-  char * prinStr = (itsPrincipal != NULL)? itsPrincipal->toString() : "<none>";
+  const char * prinStr = (itsPrincipal != NULL)? itsPrincipal->toString() : "<none>";
   char * itsString = new char [strlen(TARGET_STR) + strlen(itsName) + 
                                strlen(PRIN_STR) + strlen(prinStr) + 1];
   XP_STRCPY(itsString, TARGET_STR); 
