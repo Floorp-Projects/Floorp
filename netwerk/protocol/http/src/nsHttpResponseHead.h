@@ -45,7 +45,10 @@ public:
                          , mCacheControlNoStore(PR_FALSE)
                          , mCacheControlNoCache(PR_FALSE)
                          , mPragmaNoCache(PR_FALSE) {}
-   ~nsHttpResponseHead() {}
+   ~nsHttpResponseHead() 
+   {
+	   Reset();
+   }
     
     nsHttpHeaderArray &Headers()        { return mHeaders; }
     nsHttpVersion      Version()        { return mVersion; }
