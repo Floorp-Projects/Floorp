@@ -215,177 +215,177 @@ void nsProfileLock::FatalSignalHandler(int signo)
 
 nsresult nsProfileLock::LockWithFcntl(const nsACString& lockFilePath)
 {
-  nsresult rv = NS_OK;
-  
-  mLockFileDesc = open(PromiseFlatCString(lockFilePath).get(),
-                        O_WRONLY | O_CREAT | O_TRUNC, 0666);
-  if (mLockFileDesc != -1)
-  {
-      struct flock lock;
-      lock.l_start = 0;
-      lock.l_len = 0; // len = 0 means entire file
-      lock.l_type = F_WRLCK;
-      lock.l_whence = SEEK_SET;
-      if (fcntl(mLockFileDesc, F_SETLK, &lock) == -1)
-      {
-          close(mLockFileDesc);
-          mLockFileDesc = -1;
+    nsresult rv = NS_OK;
 
-          // With OS X, on NFS, errno == ENOTSUP
-          // XXX Check for that and return specific rv for it?
+    mLockFileDesc = open(PromiseFlatCString(lockFilePath).get(),
+                          O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (mLockFileDesc != -1)
+    {
+        struct flock lock;
+        lock.l_start = 0;
+        lock.l_len = 0; // len = 0 means entire file
+        lock.l_type = F_WRLCK;
+        lock.l_whence = SEEK_SET;
+        if (fcntl(mLockFileDesc, F_SETLK, &lock) == -1)
+        {
+            close(mLockFileDesc);
+            mLockFileDesc = -1;
+
+            // With OS X, on NFS, errno == ENOTSUP
+            // XXX Check for that and return specific rv for it?
 #ifdef DEBUG
-          printf("fcntl(F_SETLK) failed. errno = %d\n", errno);
+            printf("fcntl(F_SETLK) failed. errno = %d\n", errno);
 #endif
-          if (errno == EAGAIN || errno == EACCES)
-              rv = NS_ERROR_FILE_ACCESS_DENIED;
-          else
-              rv = NS_ERROR_FAILURE;                
-      }
-      else
-          mHaveLock = PR_TRUE;
-  }
-  else
-  {
-      NS_ERROR("Failed to open lock file.");
-      rv = NS_ERROR_FAILURE;
-  }
-  return rv;
+            if (errno == EAGAIN || errno == EACCES)
+                rv = NS_ERROR_FILE_ACCESS_DENIED;
+            else
+                rv = NS_ERROR_FAILURE;
+        }
+        else
+            mHaveLock = PR_TRUE;
+    }
+    else
+    {
+        NS_ERROR("Failed to open lock file.");
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
 }
 
 nsresult nsProfileLock::LockWithSymlink(const nsACString& lockFilePath)
 {
-  nsresult rv;
-  
-  struct in_addr inaddr;
-  inaddr.s_addr = INADDR_LOOPBACK;
+    nsresult rv;
 
-  char hostname[256];
-  PRStatus status = PR_GetSystemInfo(PR_SI_HOSTNAME, hostname, sizeof hostname);
-  if (status == PR_SUCCESS)
-  {
-      char netdbbuf[PR_NETDB_BUF_SIZE];
-      PRHostEnt hostent;
-      status = PR_GetHostByName(hostname, netdbbuf, sizeof netdbbuf, &hostent);
-      if (status == PR_SUCCESS)
-          memcpy(&inaddr, hostent.h_addr, sizeof inaddr);
-  }
+    struct in_addr inaddr;
+    inaddr.s_addr = htonl(INADDR_LOOPBACK);
 
-  char *signature =
-      PR_smprintf("%s:%lu", inet_ntoa(inaddr), (unsigned long)getpid());
-  const nsPromiseFlatCString& flat = PromiseFlatCString(lockFilePath);
-  const char *fileName = flat.get();
-  int symlink_rv, symlink_errno, tries = 0;
+    char hostname[256];
+    PRStatus status = PR_GetSystemInfo(PR_SI_HOSTNAME, hostname, sizeof hostname);
+    if (status == PR_SUCCESS)
+    {
+        char netdbbuf[PR_NETDB_BUF_SIZE];
+        PRHostEnt hostent;
+        status = PR_GetHostByName(hostname, netdbbuf, sizeof netdbbuf, &hostent);
+        if (status == PR_SUCCESS)
+            memcpy(&inaddr, hostent.h_addr, sizeof inaddr);
+    }
 
-  // use ns4.x-compatible symlinks if the FS supports them
-  while ((symlink_rv = symlink(signature, fileName)) < 0)
-  {
-      symlink_errno = errno;
-      if (symlink_errno != EEXIST)
-          break;
+    char *signature =
+        PR_smprintf("%s:%lu", inet_ntoa(inaddr), (unsigned long)getpid());
+    const nsPromiseFlatCString& flat = PromiseFlatCString(lockFilePath);
+    const char *fileName = flat.get();
+    int symlink_rv, symlink_errno, tries = 0;
 
-      // the link exists; see if it's from this machine, and if
-      // so if the process is still active
-      char buf[1024];
-      int len = readlink(fileName, buf, sizeof buf - 1);
-      if (len > 0)
-      {
-          buf[len] = '\0';
-          char *colon = strchr(buf, ':');
-          if (colon)
-          {
-              *colon++ = '\0';
-              unsigned long addr = inet_addr(buf);
-              if (addr != (unsigned long) -1)
-              {
-                  char *after = nsnull;
-                  pid_t pid = strtol(colon, &after, 0);
-                  if (pid != 0 && *after == '\0')
-                  {
-                      if (addr != inaddr.s_addr)
-                      {
-                          // Remote lock: give up even if stuck.
-                          break;
-                      }
+    // use ns4.x-compatible symlinks if the FS supports them
+    while ((symlink_rv = symlink(signature, fileName)) < 0)
+    {
+        symlink_errno = errno;
+        if (symlink_errno != EEXIST)
+            break;
 
-                      // kill(pid,0) is a neat trick to check if a
-                      // process exists
-                      if (kill(pid, 0) == 0 || errno != ESRCH)
-                      {
-                          // Local process appears to be alive, ass-u-me it
-                          // is another Mozilla instance, or a compatible
-                          // derivative, that's currently using the profile.
-                          // XXX need an "are you Mozilla?" protocol
-                          break;
-                      }
-                  }
-              }
-          }
-      }
+        // the link exists; see if it's from this machine, and if
+        // so if the process is still active
+        char buf[1024];
+        int len = readlink(fileName, buf, sizeof buf - 1);
+        if (len > 0)
+        {
+            buf[len] = '\0';
+            char *colon = strchr(buf, ':');
+            if (colon)
+            {
+                *colon++ = '\0';
+                unsigned long addr = inet_addr(buf);
+                if (addr != (unsigned long) -1)
+                {
+                    char *after = nsnull;
+                    pid_t pid = strtol(colon, &after, 0);
+                    if (pid != 0 && *after == '\0')
+                    {
+                        if (addr != inaddr.s_addr)
+                        {
+                            // Remote lock: give up even if stuck.
+                            break;
+                        }
 
-      // Lock seems to be bogus: try to claim it.  Give up after a large
-      // number of attempts (100 comes from the 4.x codebase).
-      (void) unlink(fileName);
-      if (++tries > 100)
-          break;
-  }
+                        // kill(pid,0) is a neat trick to check if a
+                        // process exists
+                        if (kill(pid, 0) == 0 || errno != ESRCH)
+                        {
+                            // Local process appears to be alive, ass-u-me it
+                            // is another Mozilla instance, or a compatible
+                            // derivative, that's currently using the profile.
+                            // XXX need an "are you Mozilla?" protocol
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
-  PR_smprintf_free(signature);
-  signature = nsnull;
+        // Lock seems to be bogus: try to claim it.  Give up after a large
+        // number of attempts (100 comes from the 4.x codebase).
+        (void) unlink(fileName);
+        if (++tries > 100)
+            break;
+    }
 
-  if (symlink_rv == 0)
-  {
-      // We exclusively created the symlink: record its name for eventual
-      // unlock-via-unlink.
-      rv = NS_OK;
-      mHaveLock = PR_TRUE;
-      mPidLockFileName = strdup(fileName);
-      if (mPidLockFileName)
-      {
-          PR_APPEND_LINK(this, &mPidLockList);
-          if (!setupPidLockCleanup++)
-          {
-              // Clean up on normal termination.
-              atexit(RemovePidLockFiles);
+    PR_smprintf_free(signature);
+    signature = nsnull;
 
-              // Clean up on abnormal termination, using POSIX sigaction.
-              // Don't arm a handler if the signal is being ignored, e.g.,
-              // because mozilla is run via nohup.
-              struct sigaction act, oldact;
-              act.sa_handler = FatalSignalHandler;
-              act.sa_flags = 0;
-              sigfillset(&act.sa_mask);
+    if (symlink_rv == 0)
+    {
+        // We exclusively created the symlink: record its name for eventual
+        // unlock-via-unlink.
+        rv = NS_OK;
+        mHaveLock = PR_TRUE;
+        mPidLockFileName = strdup(fileName);
+        if (mPidLockFileName)
+        {
+            PR_APPEND_LINK(this, &mPidLockList);
+            if (!setupPidLockCleanup++)
+            {
+                // Clean up on normal termination.
+                atexit(RemovePidLockFiles);
+
+                // Clean up on abnormal termination, using POSIX sigaction.
+                // Don't arm a handler if the signal is being ignored, e.g.,
+                // because mozilla is run via nohup.
+                struct sigaction act, oldact;
+                act.sa_handler = FatalSignalHandler;
+                act.sa_flags = 0;
+                sigfillset(&act.sa_mask);
 
 #define CATCH_SIGNAL(signame)                                           \
 PR_BEGIN_MACRO                                                          \
-if (sigaction(signame, NULL, &oldact) == 0 &&                         \
-    oldact.sa_handler != SIG_IGN)                                     \
-{                                                                     \
-    sigaction(signame, &act, &signame##_oldact);                      \
-}                                                                     \
-PR_END_MACRO
+  if (sigaction(signame, NULL, &oldact) == 0 &&                         \
+      oldact.sa_handler != SIG_IGN)                                     \
+  {                                                                     \
+      sigaction(signame, &act, &signame##_oldact);                      \
+  }                                                                     \
+  PR_END_MACRO
 
-              CATCH_SIGNAL(SIGHUP);
-              CATCH_SIGNAL(SIGINT);
-              CATCH_SIGNAL(SIGQUIT);
-              CATCH_SIGNAL(SIGILL);
-              CATCH_SIGNAL(SIGABRT);
-              CATCH_SIGNAL(SIGSEGV);
-              CATCH_SIGNAL(SIGTERM);
+                CATCH_SIGNAL(SIGHUP);
+                CATCH_SIGNAL(SIGINT);
+                CATCH_SIGNAL(SIGQUIT);
+                CATCH_SIGNAL(SIGILL);
+                CATCH_SIGNAL(SIGABRT);
+                CATCH_SIGNAL(SIGSEGV);
+                CATCH_SIGNAL(SIGTERM);
 
 #undef CATCH_SIGNAL
-          }
-      }
-  }
-  else if (symlink_errno == EEXIST)
-      rv = NS_ERROR_FILE_ACCESS_DENIED;
-  else
-  {
+            }
+        }
+    }
+    else if (symlink_errno == EEXIST)
+        rv = NS_ERROR_FILE_ACCESS_DENIED;
+    else
+    {
 #ifdef DEBUG
-      printf("symlink() failed. errno = %d\n", errno);
+        printf("symlink() failed. errno = %d\n", errno);
 #endif
-      rv = NS_ERROR_FAILURE;
-  }
-  return rv;
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
 }
 #endif /* XP_UNIX */
 
@@ -426,7 +426,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
     nsCAutoString filePath;
     rv = lockFile->GetNativePath(filePath);
     if (NS_FAILED(rv))
-        return rv;    
+        return rv;
     rv = LockWithFcntl(filePath);
     if (NS_FAILED(rv) && (rv != NS_ERROR_FILE_ACCESS_DENIED))
     {
@@ -435,7 +435,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
         rv = LockWithSymlink(filePath);
     }
     if (NS_SUCCEEDED(rv))
-    {        
+    {
         // Check for the old-style lock used by pre-mozilla 1.3 builds.
         // Those builds used an earlier check to prevent the application
         // from launching if another instance was already running. Because
@@ -445,12 +445,12 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
             ProcessSerialNumber psn;
             unsigned long launchDate;
         };
-    
+
         PRFileDesc *fd = nsnull;
         PRInt32 ioBytes;
         ProcessInfoRec processInfo;
         LockProcessInfo lockProcessInfo;
-    
+
         rv = lockFile->SetLeafName(OLD_LOCKFILE_NAME);
         if (NS_FAILED(rv))
             return rv;
@@ -459,7 +459,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
         {
             ioBytes = PR_Read(fd, &lockProcessInfo, sizeof(LockProcessInfo));
             PR_Close(fd);
-    
+
             if (ioBytes == sizeof(LockProcessInfo))
             {
                 processInfo.processAppSpec = nsnull;
