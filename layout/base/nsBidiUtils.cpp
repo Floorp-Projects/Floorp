@@ -148,7 +148,7 @@ static const PRUint8 gArabicMapEx[] = {
 0x00, 0x00, 0x00, 0x00, 0x6A, 0x00, 0x6E, 0x00, // 06A0-06A7
 0x00, 0x8E, 0x00, 0x00, 0x00, 0xD3, 0x00, 0x92, // 06A8-06AF
 0x00, 0x9A, 0x00, 0x96, 0x00, 0x00, 0x00, 0x00, // 06B0-06B7
-0x00, 0x00, 0x00, 0xA0, 0x00, 0x00, 0xAA, 0x00, // 06B8-06BF
+0x00, 0x00, 0x9E, 0xA0, 0x00, 0x00, 0xAA, 0x00, // 06B8-06BF
 0xA4, 0xA6, 0x00, 0x00, 0x00, 0xE0, 0xD9, 0xD7, // 06C0-06C7
 0xDB, 0xE2, 0x00, 0xDE, 0xFC, 0x00, 0x00, 0x00, // 06C8-06CF
 0xE4, 0x00, 0xAE, 0xB0                          // 06D0-06D3
@@ -207,9 +207,9 @@ eDJ, eRJ, eDJ, eDJ, eDJ, eDJ, eDJ, eRJ, // 0628-062F
 eRJ, eRJ, eRJ, eDJ, eDJ, eDJ, eDJ, eDJ, // 0630-0637
 eDJ, eDJ, eDJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0638-063F
 eJC, eDJ, eDJ, eDJ, eDJ, eDJ, eDJ, eDJ, // 0640-0647
-eRJ, eRJ, eDJ, eTr, eTr, eTr, eTr, eTr, // 0648-064F
-eTr, eTr, eTr, eTr, eTr, eTr, eNJ, eNJ, // 0650-0657
-eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0658-065F
+eRJ, eDJ, eDJ, eTr, eTr, eTr, eTr, eTr, // 0648-064F
+eTr, eTr, eTr, eTr, eTr, eTr, eTr, eTr, // 0650-0657
+eTr, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0658-065F
 eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0660-0667
 eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0668-066F
 eTr, eRJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0670-0677
@@ -221,11 +221,11 @@ eRJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 0698-069F
 eNJ, eNJ, eNJ, eNJ, eDJ, eNJ, eDJ, eNJ, // 06A0-06A7
 eNJ, eDJ, eNJ, eNJ, eNJ, eDJ, eNJ, eDJ, // 06A8-06AF
 eNJ, eDJ, eNJ, eDJ, eNJ, eNJ, eNJ, eNJ, // 06B0-06B7
-eNJ, eNJ, eNJ, eDJ, eNJ, eNJ, eDJ, eNJ, // 06B8-06BF
+eNJ, eNJ, eDJ, eDJ, eNJ, eNJ, eDJ, eNJ, // 06B8-06BF
 eRJ, eDJ, eNJ, eNJ, eNJ, eRJ, eRJ, eRJ, // 06C0-06C7
 eRJ, eRJ, eNJ, eRJ, eDJ, eNJ, eNJ, eNJ, // 06C8-06CF
 eDJ, eNJ, eRJ, eRJ, eNJ, eNJ, eTr, eTr, // 06D0-06D7
-eTr, eTr, eTr, eTr, eTr, eTr, eTr, eTr, // 06D8-06DF
+eTr, eTr, eTr, eTr, eTr, eNJ, eNJ, eTr, // 06D8-06DF
 eTr, eTr, eTr, eTr, eTr, eNJ, eNJ, eTr, // 06E0-06E7
 eTr, eNJ, eTr, eTr, eTr, eTr, eNJ, eNJ, // 06E8-06EF
 eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, eNJ, // 06F0-06F7
