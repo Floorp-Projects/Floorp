@@ -454,7 +454,9 @@ nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex)
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
 {
-  PRInt32 visibleRows = GetAvailableHeight()/mRowHeight;
+  PRInt32 visibleRows = 0;
+  if (mRowHeight)
+	visibleRows = GetAvailableHeight()/mRowHeight;
   
   // Get our presentation context.
   if (aDelta < visibleRows) {
@@ -893,7 +895,9 @@ nsXULTreeOuterGroupFrame::FindNextRowContent(PRInt32& aDelta, nsIContent* aUpwar
 void
 nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 {
-  PRInt32 rows = GetAvailableHeight()/mRowHeight;
+  PRInt32 rows = 0;
+  if (mRowHeight)
+    rows = GetAvailableHeight()/mRowHeight;
   PRInt32 bottomIndex = mCurrentIndex + rows - 1;
   if (IsFixedRowSize())
     bottomIndex++;
