@@ -87,6 +87,7 @@ BEGIN_MESSAGE_MAP(CBrowserView, CWnd)
 	ON_COMMAND(ID_EDIT_CUT, OnCut)
 	ON_COMMAND(ID_EDIT_COPY, OnCopy)
 	ON_COMMAND(ID_EDIT_PASTE, OnPaste)
+    ON_COMMAND(ID_EDIT_UNDO, OnUndoUrlBarEditOp)
 	ON_COMMAND(ID_EDIT_SELECT_ALL, OnSelectAll)
 	ON_COMMAND(ID_EDIT_SELECT_NONE, OnSelectNone)
 	ON_COMMAND(ID_OPEN_LINK_IN_NEW_WINDOW, OnOpenLinkInNewWindow)
@@ -121,6 +122,8 @@ CBrowserView::CBrowserView()
 	mbDocumentLoading = PR_FALSE;
 
 	m_pFindDlg = NULL;
+
+    m_bUrlBarClipOp = FALSE;
 }
 
 CBrowserView::~CBrowserView()
@@ -430,10 +433,19 @@ void CBrowserView::OnUpdateNavStop(CCmdUI* pCmdUI)
 
 void CBrowserView::OnCut()
 {
-	nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(m_bUrlBarClipOp)
+    {
+        // We need to operate on the URLBar selection
+        mpBrowserFrame->CutUrlBarSelToClipboard();
+        m_bUrlBarClipOp = FALSE;
+    }
+    else
+    {
+	    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
 
-	if(clipCmds)
-		clipCmds->CutSelection();
+	    if(clipCmds)
+		    clipCmds->CutSelection();
+    }
 }
 
 void CBrowserView::OnUpdateCut(CCmdUI* pCmdUI)
@@ -444,15 +456,36 @@ void CBrowserView::OnUpdateCut(CCmdUI* pCmdUI)
 	if (clipCmds)
         clipCmds->CanCutSelection(&canCutSelection);
 
+    if(!canCutSelection)
+    {
+        // Check to see if the Cut cmd is to cut the URL 
+        // selection in the UrlBar
+        if(mpBrowserFrame->CanCutUrlBarSelection())
+        {
+            canCutSelection = TRUE;
+            m_bUrlBarClipOp = TRUE;
+        }
+    }
+
 	pCmdUI->Enable(canCutSelection);
 }
 
 void CBrowserView::OnCopy()
 {
-	nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(m_bUrlBarClipOp)
+    {
+        // We need to operate on the URLBar selection
+        mpBrowserFrame->CopyUrlBarSelToClipboard();
+        m_bUrlBarClipOp = FALSE;
+    }
+    else
+    {
+        // We need to operate on the web page content
+	    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
 
-	if(clipCmds)
-		clipCmds->CopySelection();
+	    if(clipCmds)
+		    clipCmds->CopySelection();
+    }
 }
 
 void CBrowserView::OnUpdateCopy(CCmdUI* pCmdUI)
@@ -463,15 +496,40 @@ void CBrowserView::OnUpdateCopy(CCmdUI* pCmdUI)
     if (clipCmds)
         clipCmds->CanCopySelection(&canCopySelection);
 
+    if(!canCopySelection)
+    {
+        // Check to see if the Copy cmd is to copy the URL 
+        // selection in the UrlBar
+        if(mpBrowserFrame->CanCopyUrlBarSelection())
+        {
+            canCopySelection = TRUE;
+            m_bUrlBarClipOp = TRUE;
+        }
+    }
+
 	pCmdUI->Enable(canCopySelection);
 }
 
 void CBrowserView::OnPaste()
 {
-	nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
+    if(m_bUrlBarClipOp)
+    {
+        mpBrowserFrame->PasteFromClipboardToUrlBar();
+        m_bUrlBarClipOp = FALSE;
+    }
+    else
+    {
+	    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
 
-	if(clipCmds)
-		clipCmds->Paste();
+	    if(clipCmds)
+		    clipCmds->Paste();
+    }    
+}
+
+void CBrowserView::OnUndoUrlBarEditOp()
+{
+    if(mpBrowserFrame->CanUndoUrlBarEditOp())
+        mpBrowserFrame->UndoUrlBarEditOp();
 }
 
 void CBrowserView::OnUpdatePaste(CCmdUI* pCmdUI)
@@ -481,6 +539,15 @@ void CBrowserView::OnUpdatePaste(CCmdUI* pCmdUI)
 	nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(mWebBrowser);
     if (clipCmds)
         clipCmds->CanPaste(&canPaste);
+
+    if(!canPaste)
+    {
+        if(mpBrowserFrame->CanPasteToUrlBar())
+        {
+            canPaste = TRUE;
+            m_bUrlBarClipOp = TRUE;
+        }
+    }
 
 	pCmdUI->Enable(canPaste);
 }

@@ -65,6 +65,40 @@ public:
             AddURLToList(urlStr, false); 
         }
     }
+    inline BOOL EditCtrlHasFocus() {
+        return (GetEditCtrl()->m_hWnd == CWnd::GetFocus()->m_hWnd);
+    }
+    inline BOOL EditCtrlHasSelection() {
+        int nStartChar = 0, nEndChar = 0;
+        if(EditCtrlHasFocus())
+            GetEditCtrl()->GetSel(nStartChar, nEndChar);
+        return (nEndChar > nStartChar) ? TRUE : FALSE;
+    }
+    inline BOOL CanCutToClipboard() {
+        return EditCtrlHasSelection();
+    }
+    inline void CutToClipboard() {
+        GetEditCtrl()->Cut();
+    }
+    inline BOOL CanCopyToClipboard() {
+        return EditCtrlHasSelection();
+    }
+    inline void CopyToClipboard() {
+        GetEditCtrl()->Copy();
+    }
+    inline BOOL CanPasteFromClipboard() {
+        return EditCtrlHasFocus();
+    }
+    inline void PasteFromClipboard() {
+        GetEditCtrl()->Paste();
+    }
+    inline BOOL CanUndoEditOp() {
+        return EditCtrlHasFocus() ? GetEditCtrl()->CanUndo() : FALSE;
+    }
+    inline void UndoEditOp() {        
+        if(EditCtrlHasFocus())
+            GetEditCtrl()->Undo();
+    }
 
 protected:
       CMostRecentUrls m_MRUList;
@@ -89,6 +123,16 @@ public:
 	// The view inside which the embedded browser will
 	// be displayed in
 	CBrowserView    m_wndBrowserView;
+
+    // Wrapper functions for UrlBar clipboard operations
+    inline BOOL CanCutUrlBarSelection() { return m_wndUrlBar.CanCutToClipboard(); }
+    inline void CutUrlBarSelToClipboard() { m_wndUrlBar.CutToClipboard(); }
+    inline BOOL CanCopyUrlBarSelection() { return m_wndUrlBar.CanCopyToClipboard(); }
+    inline void CopyUrlBarSelToClipboard() { m_wndUrlBar.CopyToClipboard(); }
+    inline BOOL CanPasteToUrlBar() { return m_wndUrlBar.CanPasteFromClipboard(); }
+    inline void PasteFromClipboardToUrlBar() { m_wndUrlBar.PasteFromClipboard(); }
+    inline BOOL CanUndoUrlBarEditOp() { return m_wndUrlBar.CanUndoEditOp(); }
+    inline void UndoUrlBarEditOp() { m_wndUrlBar.UndoEditOp(); }
 
 	// This specifies what UI elements this frame will sport
 	// w.r.t. toolbar, statusbar, urlbar etc.
