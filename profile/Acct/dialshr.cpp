@@ -25,26 +25,27 @@
 #endif
 #define WINVER 0x0401
 
-#include <windows.h>
+#include "dialshr.h"
+//include <windows.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>   
 #include <dos.h>
 #include <winbase.h>
 #include <raserror.h>
-#include <shlobj.h>
+//#include <shlobj.h>
 #include <regstr.h>
 #include <tapi.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <winsock.h>
 
-#include "dialshr.h"
+
 #include "resource.h"
-#include "xp_mem.h"
-#include "prefapi.h"
-#include "prmem.h"
-#include "nsString.h"   
+//nclude "xp_mem.h"
+//nclude "prefapi.h"
+//#include "prmem.h"
+//#include "nsString.h"   
  
 #define trace
 
@@ -2743,7 +2744,8 @@ static BOOL createPhoneBookEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& l
 BOOL DialerConfig( char* charData)
 {
 	gHwndParent = GetActiveWindow();
-	
+	printf ("This is the return data %s \n", charData);
+
 	char* modems;
 	modems=GetModemConfig();	
 	printf("this is the modem value %s \n",modems);
@@ -2758,15 +2760,28 @@ BOOL DialerConfig( char* charData)
 	SetDataArray(data);
     
 	char* phone = GetValue("phone");
-    char* loginname = GetValue("loginname");
-    char* loginpass = GetValue("loginpass");
-    char* passagain = GetValue("passagain");
-    char* domainname = GetValue("domainname");
-    char* dnsp = GetValue("dnsp");
-    char* dnss = GetValue("dnss");
 	printf("this is after phone data %s \n",phone);
 
-	printf("this is the loginnamae%s \n",loginname);
+    char* loginname = GetValue("loginname");
+	printf("this is after login name %s \n",loginname);
+
+    char* loginpass = GetValue("loginpass");
+	printf("this is the loginpass %s \n",loginpass);
+
+    char* passagain = GetValue("passagain");
+	printf("this is the passagain %s \n",passagain);
+
+    char* domainname = GetValue("domainname");
+	printf("this is the domainname %s \n",domainname);
+
+	char* dnsp = GetValue("dnsp");
+	printf("this is the dnsp %s \n",dnsp);
+
+    char* dnss = GetValue("dnss");
+	printf("this is the dnss %s \n",dnss);
+
+
+
 
 	strcpy( account.ISPName,loginname ); 
 	
@@ -2801,7 +2816,7 @@ BOOL DialerConfig( char* charData)
 	location.DialType = 1;
 	// outside line access
 
-//	strcpy( location.OutsideLineAccess,"9" );
+	strcpy( location.OutsideLineAccess,"9" );
 	// disable call waiting?
 
 	strcpy( location.UserAreaCode,"650" );
@@ -2809,7 +2824,21 @@ BOOL DialerConfig( char* charData)
 
 	location.UserCountryCode = 1;   // default to US
 
-	//	if ( !dialerDataArray )
+	location.DisableCallWaiting = 0;
+	// disable call waiting code
+
+	strcpy( location.DisableCallWaitingCode,"" );
+	// user area code
+
+	location.DialAsLongDistance = 0;	
+	// long distance access
+
+	strcpy( location.LongDistanceAccess, "" );
+	// dial area code?
+
+//	location.DialAreaCode = 1;	
+	// dial prefix code
+//	if ( !dialerDataArray )
 //		return FALSE;
 
 //	MessageBox(NULL, "Inside DialerConfig", "NSCP", MB_OK);
