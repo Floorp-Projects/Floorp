@@ -379,7 +379,8 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
       return rv;
   } else {
     if (NS_FAILED(DetectCharset(dataCharset)) || dataCharset.IsEmpty()) {
-      dataCharset.Assign(NS_LITERAL_STRING("ISO-8859-1")); // Parser assumes ISO-8859-1
+      // MS documentation states UTF-8 is default for responseText
+      dataCharset.Assign(NS_LITERAL_STRING("UTF-8"));
     }
   }
 
