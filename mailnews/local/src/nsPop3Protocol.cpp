@@ -2519,7 +2519,8 @@ nsPop3Protocol::ProcessPop3State (nsIURL* aURL, nsIInputStream* aInputStream,
             }
 #endif 
             
-            PR_ASSERT (m_username && m_password);
+            PR_ASSERT (m_username);
+            PR_ASSERT (m_password);
             if (!m_username || !m_password)
             {
                 // net_pop3_block = PR_FALSE;
