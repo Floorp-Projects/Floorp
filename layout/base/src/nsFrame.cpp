@@ -1141,18 +1141,17 @@ NS_METHOD nsFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsFrame::ContentChanged(nsIPresShell*   aShell,
-                                  nsIPresContext* aPresContext,
+NS_METHOD nsFrame::ContentChanged(nsIPresContext* aPresContext,
                                   nsIContent*     aChild,
                                   nsISupports*    aSubContent)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::AttributeChanged(nsIPresShell*   aShell,
-                                        nsIPresContext* aPresContext,
+NS_IMETHODIMP nsFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent*     aChild,
-                                        nsIAtom*        aAttribute)
+                                        nsIAtom*        aAttribute,
+                                        PRInt32         aHint)
 {
   return NS_OK;
 }
