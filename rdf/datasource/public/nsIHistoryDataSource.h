@@ -67,5 +67,5 @@ public:
 nsresult
 NS_NewHistoryDataSource(nsIHistoryDataSource** result);
 
-#endif nsIHistoryDataSource_h__
+#endif /* nsIHistoryDataSource_h__ */
 
