@@ -59,6 +59,7 @@ nsHttpChannel::nsHttpChannel()
     , mConnectionInfo(nsnull)
     , mLoadFlags(LOAD_NORMAL)
     , mStatus(NS_OK)
+    , mLogicalOffset(0)
     , mCapabilities(0)
     , mReferrerType(REFERRER_NONE)
     , mCachedResponseHead(nsnull)
@@ -70,6 +71,7 @@ nsHttpChannel::nsHttpChannel()
     , mApplyConversion(PR_TRUE)
     , mFromCacheOnly(PR_FALSE)
     , mCachedContentIsValid(PR_FALSE)
+    , mCachedContentIsPartial(PR_FALSE)
     , mResponseHeadersModified(PR_FALSE)
     , mCanceled(PR_FALSE)
     , mUploadStreamHasHeaders(PR_FALSE)
@@ -389,7 +391,7 @@ nsHttpChannel::SetupTransaction()
     if (mConnectionInfo->UsingSSL() || !mConnectionInfo->UsingHttpProxy()) {
         rv = mURI->GetPath(path);
         if (NS_FAILED(rv)) return rv;
-        // path may contain UTF-8 characters, so ensure that their escaped.
+        // path may contain UTF-8 characters, so ensure that they're escaped.
         if (NS_EscapeURL(path.get(), path.Length(), esc_OnlyNonASCII, buf))
             requestURI = buf.get();
         else
@@ -489,9 +491,14 @@ nsHttpChannel::ProcessResponse()
     switch (httpStatus) {
     case 200:
     case 203:
-    case 206:
         // these can normally be cached
         rv = ProcessNormal();
+        break;
+    case 206:
+        if (mCachedContentIsPartial) // an internal byte range request...
+            rv = ProcessPartialContent();
+        else
+            rv = ProcessNormal();
         break;
     case 300:
     case 301:
@@ -597,6 +604,160 @@ nsHttpChannel::ProcessNormal()
 }
 
 //-----------------------------------------------------------------------------
+// nsHttpChannel <byte-range>
+//-----------------------------------------------------------------------------
+
+nsresult
+nsHttpChannel::SetupByteRangeRequest(PRUint32 partialLen)
+{
+    // cached content has been found to be partial, add necessary request
+    // headers to complete cache entry.
+
+    // use strongest validator available...
+    const char *val = mCachedResponseHead->PeekHeader(nsHttp::ETag);
+    if (!val)
+        val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
+    if (!val) {
+        // if we hit this code it means mCachedResponseHead->IsResumable() is
+        // either broken or not being called.
+        NS_NOTREACHED("no cache validator");
+        return NS_ERROR_FAILURE;
+    }
+
+    char buf[32];
+    PR_snprintf(buf, sizeof(buf), "bytes=%u-", partialLen);
+
+    mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
+    mRequestHead.SetHeader(nsHttp::If_Range, nsDependentCString(val));
+
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::ProcessPartialContent()
+{
+    nsresult rv;
+
+    // ok, we've just received a 206
+    //
+    // we need to stream whatever data is in the cache out first, and then
+    // pick up whatever data is on the wire, writing it into the cache.
+
+    LOG(("nsHttpChannel::ProcessPartialContent [this=%x]\n", this)); 
+
+    NS_ENSURE_TRUE(mCachedResponseHead, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_INITIALIZED);
+
+    // suspend the current transaction (may still get an OnDataAvailable)
+    rv = mTransaction->Suspend();
+    if (NS_FAILED(rv)) return rv;
+
+    // merge any new headers with the cached response headers
+    rv = mCachedResponseHead->UpdateHeaders(mResponseHead->Headers());
+    if (NS_FAILED(rv)) return rv;
+
+    // update the cached response head
+    nsCAutoString head;
+    mCachedResponseHead->Flatten(head, PR_TRUE);
+    rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
+    if (NS_FAILED(rv)) return rv;
+
+    // make the cached response be the current response
+    delete mResponseHead;
+    mResponseHead = mCachedResponseHead;
+    mCachedResponseHead = 0;
+
+    rv = UpdateExpirationTime();
+    if (NS_FAILED(rv)) return rv;
+
+    // the cached content is valid, although incomplete.
+    mCachedContentIsValid = PR_TRUE;
+    return ReadFromCache();
+}
+
+nsresult
+nsHttpChannel::BufferPartialContent(nsIInputStream *input, PRUint32 count)
+{
+    nsresult rv;
+
+    LOG(("nsHttpChannel::BufferPartialContent [this=%x count=%u]\n", this, count));
+
+    if (!mBufferOut) {
+        LOG(("creating pipe...\n"));
+        //
+        // create a pipe for buffering network data (the size of this
+        // pipe must be equal to or greater than the size of the pipe
+        // used to proxy data from the socket transport thread).
+        //
+        rv = NS_NewPipe(getter_AddRefs(mBufferIn),
+                        getter_AddRefs(mBufferOut),
+                        NS_HTTP_SEGMENT_SIZE,
+                        NS_HTTP_BUFFER_SIZE,
+                        PR_TRUE,
+                        PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    PRUint32 bytesWritten = 0;
+    rv = mBufferOut->WriteFrom(input, count, &bytesWritten);
+    if (NS_FAILED(rv) || (bytesWritten != count)) {
+        LOG(("writing to pipe failed [rv=%s bytes-written=%u]\n", rv, bytesWritten));
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::OnDoneReadingPartialCacheEntry(PRBool *streamDone)
+{
+    nsresult rv;
+
+    LOG(("nsHttpChannel::OnDoneReadingPartialCacheEntry [this=%x]", this));
+
+    // by default, assume we would have streamed all data or failed...
+    *streamDone = PR_TRUE;
+
+    // setup cache listener to append to cache entry
+    PRUint32 size;
+    rv = mCacheEntry->GetDataSize(&size);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = InstallCacheListener(size);
+    if (NS_FAILED(rv)) return rv;
+
+    // process any buffered data
+    if (mBufferIn) {
+        PRUint32 avail;
+        rv = mBufferIn->Available(&avail);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mListener->OnDataAvailable(this, mListenerContext, mBufferIn, size, avail);
+        if (NS_FAILED(rv)) return rv;
+
+        // done with the pipe
+        mBufferIn = 0;
+        mBufferOut = 0;
+    }
+
+    // need to track the logical offset of the data being sent to our listener
+    mLogicalOffset = size;
+
+    // we're now completing the cached content, so we can clear this flag.
+    // this puts us in the state of a regular download.
+    mCachedContentIsPartial = PR_FALSE;
+
+    // resume the transaction if it exists, otherwise the pipe contained the
+    // remaining part of the document and we've now streamed all of the data.
+    if (mTransaction) {
+        rv = mTransaction->Resume();
+        if (NS_SUCCEEDED(rv))
+            *streamDone = PR_FALSE;
+    }
+    return rv;
+}
+
+//-----------------------------------------------------------------------------
 // nsHttpChannel <cache>
 //-----------------------------------------------------------------------------
 
@@ -664,7 +825,10 @@ nsHttpChannel::OpenCacheEntry(PRBool *delayed)
         return NS_OK;
     }
     else if (mRequestHead.PeekHeader(nsHttp::Range)) {
-        // we don't support caching for byte range requests
+        // we don't support caching for byte range requests initiated
+        // by our clients.
+        // XXX perhaps we could munge their byte range into the cache
+        // key to make caching sort'a work.
         return NS_OK;
     }
 
@@ -850,18 +1014,24 @@ nsHttpChannel::CheckCache()
     }
 
     // If the cached content-length is set and it does not match the data size
-    // of the cached content, then refetch.
-    PRInt32 contentLength = mCachedResponseHead->ContentLength();
-    if (contentLength != -1) {
+    // of the cached content, then the cached response is partial...
+    // either we need to issue a byte range request or we need to refetch the
+    // entire document.
+    PRUint32 contentLength = (PRUint32) mCachedResponseHead->ContentLength();
+    if (contentLength != PRUint32(-1)) {
         PRUint32 size;
         rv = mCacheEntry->GetDataSize(&size);
         if (NS_FAILED(rv)) return rv;
 
-        if (size != (PRUint32) contentLength) {
+        if (size != contentLength) {
             LOG(("Cached data size does not match the Content-Length header "
                  "[content-length=%u size=%u]\n", contentLength, size));
-            // looks like a partial entry.
-            // XXX must re-fetch until we learn how to do byte range requests.
+            if ((size < contentLength) && mCachedResponseHead->IsResumable()) {
+                // looks like a partial entry.
+                rv = SetupByteRangeRequest(size);
+                if (NS_FAILED(rv)) return rv;
+                mCachedContentIsPartial = PR_TRUE;
+            }
             return NS_OK;
         }
     }
@@ -1002,7 +1172,7 @@ nsHttpChannel::ReadFromCache()
     if (!mSecurityInfo)
         mCacheEntry->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
-    if (mCacheAccess & nsICache::ACCESS_WRITE) {
+    if ((mCacheAccess & nsICache::ACCESS_WRITE) && !mCachedContentIsPartial) {
         // We have write access to the cache, but we don't need to go to the
         // server to validate at this time, so just mark the cache entry as
         // valid in order to allow others access to this cache entry.
@@ -1150,17 +1320,22 @@ nsHttpChannel::FinalizeCacheEntry()
 // Open an output stream to the cache entry and insert a listener tee into
 // the chain of response listeners.
 nsresult
-nsHttpChannel::InstallCacheListener()
+nsHttpChannel::InstallCacheListener(PRUint32 offset)
 {
     nsresult rv;
 
     LOG(("Preparing to write data into the cache [uri=%s]\n", mSpec.get()));
 
-    rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
-    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(mCacheEntry, "no cache entry");
+    NS_ASSERTION(mListener, "no listener");
+
+    if (!mCacheTransport) {
+        rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
+        if (NS_FAILED(rv)) return rv;
+    }
 
     nsCOMPtr<nsIOutputStream> out;
-    rv = mCacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
+    rv = mCacheTransport->OpenOutputStream(offset, PRUint32(-1), 0, getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
 
     // XXX disk cache does not support overlapped i/o yet
@@ -2536,14 +2711,17 @@ nsHttpChannel::GetContentEncodings(nsISimpleEnumerator** aEncodings)
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-    // capture the request's status, so our consumers will know ASAP of any
-    // connection failures, etc - bug 93581
-    request->GetStatus(&mStatus);
+    if (!(mCanceled || NS_FAILED(mStatus))) {
+        // capture the request's status, so our consumers will know ASAP of any
+        // connection failures, etc - bug 93581
+        request->GetStatus(&mStatus);
+    }
 
     LOG(("nsHttpChannel::OnStartRequest [this=%x request=%x status=%x]\n",
         this, request, mStatus));
 
-    if (mTransaction) {
+    // don't enter this block if we're reading from the cache...
+    if (NS_SUCCEEDED(mStatus) && !mCacheReadRequest && mTransaction) {
         // grab the security info from the connection object; the transaction
         // is guaranteed to own a reference to the connection.
         mSecurityInfo = mTransaction->SecurityInfo();
@@ -2578,6 +2756,23 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         mPrevTransaction = nsnull;
     }
 
+    if (mCachedContentIsPartial && NS_SUCCEEDED(status)) {
+        if (request == mTransaction) {
+            // byte-range transaction finished before we got around to streaming it.
+            NS_ASSERTION(mCacheReadRequest, "should be reading from cache right now");
+            NS_RELEASE(mTransaction);
+            mTransaction = nsnull;
+            return NS_OK;
+        }
+        if (request == mCacheReadRequest) {
+            PRBool streamDone;
+            status = OnDoneReadingPartialCacheEntry(&streamDone);
+            if (NS_SUCCEEDED(status) && !streamDone)
+                return status;
+            // otherwise, fall through and fire OnStopRequest...
+        }
+    }
+
     // if the request is for something we no longer reference, then simply 
     // drop this event.
     if ((request != mTransaction) && (request != mCacheReadRequest))
@@ -2586,8 +2781,11 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     mIsPending = PR_FALSE;
     mStatus = status;
 
-    // at this point, we're done with the transaction
+    PRBool isPartial = PR_FALSE;
     if (mTransaction) {
+        // find out if the transaction ran to completion...
+        isPartial = !mTransaction->ResponseIsComplete();
+        // at this point, we're done with the transaction
         NS_RELEASE(mTransaction);
         mTransaction = nsnull;
     }
@@ -2609,12 +2807,21 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     }
 
     if (mCacheEntry) {
-        // we don't want to discard the cache entry if canceled and
-        // reading from the cache.
-        if (mCanceled && (request == mCacheReadRequest))
-            CloseCacheEntry(NS_OK);
-        else
-            CloseCacheEntry(status);
+        nsresult closeStatus = status;
+        if (mCanceled) {
+            // we don't want to discard the cache entry if canceled and
+            // reading from the cache.
+            if (request == mCacheReadRequest)
+                closeStatus = NS_OK;
+            // we also don't want to discard the cache entry if the
+            // server supports byte range requests, because we could always
+            // complete the download at a later time.
+            else if (isPartial && mResponseHead && mResponseHead->IsResumable()) {
+                LOG(("keeping partial response that is resumable!\n"));
+                closeStatus = NS_OK; 
+            }
+        }
+        CloseCacheEntry(closeStatus);
     }
 
     if (mLoadGroup)
@@ -2635,6 +2842,11 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
     LOG(("nsHttpChannel::OnDataAvailable [this=%x request=%x offset=%u count=%u]\n",
         this, request, offset, count));
 
+    if (mCachedContentIsPartial && (request == mTransaction)) {
+        // XXX we can eliminate this buffer once bug 93055 is resolved.
+        return BufferPartialContent(input, count);
+    }
+
     // if the request is for something we no longer reference, then simply 
     // drop this event.
     if ((request != mTransaction) && (request != mCacheReadRequest)) {
@@ -2642,8 +2854,21 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         return NS_BASE_STREAM_CLOSED;
     }
 
-    if (mListener)
-        return mListener->OnDataAvailable(this, mListenerContext, input, offset, count);
+    if (mListener) {
+        //
+        // we have to manually keep the logical offset of the stream up-to-date.
+        // we cannot depend soley on the offset provided, since we may have 
+        // already streamed some data from another source (see, for example,
+        // OnDoneReadingPartialCacheEntry).
+        //
+        nsresult rv =  mListener->OnDataAvailable(this,
+                                                  mListenerContext,
+                                                  input,
+                                                  mLogicalOffset,
+                                                  count);
+        mLogicalOffset += count;
+        return rv;
+    }
 
     return NS_BASE_STREAM_CLOSED;
 }

@@ -307,7 +307,7 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
     if (fileIn == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(fileIn);
-    rv = fileIn->InitWithFileDescriptor(mFD, mFile, PR_FALSE);
+    rv = fileIn->InitWithFileDescriptor(mFD, mFile);
     if (NS_SUCCEEDED(rv)) {
 #ifdef NS_NO_INPUT_BUFFERING
         *aInputStream = fileIn;
@@ -391,13 +391,15 @@ nsFileIO::GetName(nsACString &aName)
 
 nsFileStream::nsFileStream()
     : mFD(nsnull)
+    , mCloseFD(PR_TRUE)
 {
     NS_INIT_REFCNT();
 }
 
 nsFileStream::~nsFileStream()
 {
-    Close();
+    if (mCloseFD)
+        Close();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileStream, nsISeekableStream)
@@ -406,7 +408,8 @@ nsresult
 nsFileStream::Close()
 {
     if (mFD) {
-        PR_Close(mFD);
+        if (mCloseFD)
+            PR_Close(mFD);
         mFD = nsnull;
     }
     return NS_OK;
@@ -505,6 +508,8 @@ nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMETHODIMP
 nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool deleteOnClose)
 {   
+    NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
+
     nsresult rv = NS_OK;
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -516,18 +521,7 @@ nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool del
     PRFileDesc* fd;
     rv = localFile->OpenNSPRFileDesc(ioFlags, perm, &fd);
     if (NS_FAILED(rv)) return rv;
-    
-    return InitWithFileDescriptor(fd, file, deleteOnClose);
-}
 
-nsresult
-nsFileInputStream::InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file, PRBool deleteOnClose)
-{
-    NS_ASSERTION(mFD == nsnull, "already inited");
-    if (mFD || !fd)
-        return NS_ERROR_FAILURE;
-    
-    mLineBuffer = nsnull;    
     mFD = fd;
 
     if (deleteOnClose) {
@@ -540,6 +534,15 @@ nsFileInputStream::InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file, PRBool 
         if (NS_FAILED(rv))
             mFileToDelete = file;
     }
+    return NS_OK;
+}
+
+nsresult
+nsFileInputStream::InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file)
+{
+    NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
+    mFD = fd;
+    mCloseFD = PR_FALSE;
     return NS_OK;
 }
 
@@ -609,6 +612,7 @@ nsFileInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint
      if (NS_SUCCEEDED(rv)) {
          rv = writer(this, closure, readBuf, 0, nBytes, _retval);
          NS_ASSERTION(NS_SUCCEEDED(rv) ? nBytes == *_retval : PR_TRUE, "Didn't write all Data.");
+         // XXX this assertion is invalid!
      }
    
      nsMemory::Free(readBuf);
@@ -647,6 +651,8 @@ nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMETHODIMP
 nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 {
+    NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
+
     nsresult rv;
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -654,21 +660,22 @@ nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
         ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
     if (perm <= 0)
         perm = 0664;
+
     PRFileDesc* fd;
     rv = localFile->OpenNSPRFileDesc(ioFlags, perm, &fd);
     if (NS_FAILED(rv)) return rv;
 
-    return InitWithFileDescriptor(fd, file);
+    mFD = fd;
+    return NS_OK;
 }
 
 
 nsresult
 nsFileOutputStream::InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file)
 {
-    NS_ASSERTION(mFD == nsnull, "already inited");
-    if (mFD || !fd)
-        return NS_ERROR_FAILURE;
+    NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
     mFD = fd;
+    mCloseFD = PR_FALSE;
     return NS_OK;
 }
 

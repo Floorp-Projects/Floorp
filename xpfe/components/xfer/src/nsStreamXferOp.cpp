@@ -168,6 +168,7 @@ nsStreamXferOp::Start( void ) {
                 rv = fts->CreateTransport( mOutputFile, 
                                            PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                                            0664,
+                                           PR_TRUE,
                                            getter_AddRefs( mOutputTransport ) );
     
                 if ( NS_SUCCEEDED( rv ) ) {

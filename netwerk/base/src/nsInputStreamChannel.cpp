@@ -311,9 +311,10 @@ nsStreamIOChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
                  do_GetService(kFileTransportServiceCID, &rv);
         if (NS_FAILED(rv)) goto done;
 
-        rv = fts->CreateTransportFromStreamIO(mStreamIO, getter_AddRefs(mFileTransport));
-        if (NS_FAILED(rv)) goto done; 
-   }
+        rv = fts->CreateTransportFromStreamIO(mStreamIO, PR_TRUE,
+                                              getter_AddRefs(mFileTransport));
+        if (NS_FAILED(rv)) goto done;
+    }
 
     // Hook up the notification callbacks InterfaceRequestor...
     {
