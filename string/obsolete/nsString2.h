@@ -137,19 +137,6 @@ public:
 
 
   /**
-   * This method truncates this string to given length.
-   *
-   * @param   anIndex -- new length of string
-   * @return  nada
-   */
-  void Truncate(PRUint32 anIndex=0) {
-    NS_ASSERTION(anIndex<=mLength, "Can't use |Truncate()| to make a string longer.");
-    if ( anIndex < mLength )
-      SetLength(anIndex);
-  }
-
-
-  /**
    *  Determine whether or not the characters in this
    *  string are in store as 1 or 2 byte (unicode) strings.
    *  
@@ -241,8 +228,6 @@ public:
 
   void ReplaceSubstring( const nsString& aTarget, const nsString& aNewValue );
   void ReplaceSubstring( const PRUnichar* aTarget, const PRUnichar* aNewValue );
-
-  PRInt32 CountChar( PRUnichar aChar ) const;
 
   /**
    *  This method trims characters found in aTrimSet from
@@ -373,41 +358,6 @@ public:
   void AppendWithConversion(char);
 
   virtual void do_AppendFromElement( PRUnichar );
-
-             
-  /*
-   *  Copies n characters from this string to given string,
-   *  starting at the leftmost offset.
-   *  
-   *  
-   *  @param   aCopy -- Receiving string
-   *  @param   aCount -- number of chars to copy
-   *  @return  number of chars copied
-   */
-  PRUint32 Left(nsString& aCopy,PRInt32 aCount) const;
-
-  /*
-   *  Copies n characters from this string to given string,
-   *  starting at the given offset.
-   *  
-   *  
-   *  @param   aCopy -- Receiving string
-   *  @param   aCount -- number of chars to copy
-   *  @param   anOffset -- position where copying begins
-   *  @return  number of chars copied
-   */
-  PRUint32 Mid(nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) const;
-
-  /*
-   *  Copies n characters from this string to given string,
-   *  starting at rightmost char.
-   *  
-   *  
-   *  @param  aCopy -- Receiving string
-   *  @param  aCount -- number of chars to copy
-   *  @return number of chars copied
-   */
-  PRUint32 Right(nsString& aCopy,PRInt32 aCount) const;
 
 
 //void InsertWithConversion(char);

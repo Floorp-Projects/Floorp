@@ -156,7 +156,7 @@ PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength) {
  */
 void nsStr::StrAssign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount){
   if(&aDest!=&aSource){
-    Truncate(aDest,0);
+    StrTruncate(aDest,0);
     StrAppend(aDest,aSource,anOffset,aCount);
   }
 }
@@ -288,7 +288,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
       AddNullTerminator(aDest);
       NSSTR_SEEN(aDest);
     }
-    else Truncate(aDest,aDestOffset);
+    else StrTruncate(aDest,aDestOffset);
   }//if
 }
 
@@ -298,7 +298,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
  * @param   aDest is the nsStr to be truncated
  * @param   aDestOffset is where in aDest truncation is to occur
  */
-void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset){
+void nsStr::StrTruncate(nsStr& aDest,PRUint32 aDestOffset){
   if(aDest.mCapacity && aDestOffset<=aDest.mCapacity){
     aDest.mLength=aDestOffset;
     AddNullTerminator(aDest);
@@ -348,7 +348,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
         if(theIndex<theMax) {
           Delete(aDest,0,theIndex);
         }
-        else Truncate(aDest,0);
+        else StrTruncate(aDest,0);
       }
     }
 
@@ -363,7 +363,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
         else break;
       }
       if(theNewLen<theMax) {
-        Truncate(aDest,theNewLen);
+        StrTruncate(aDest,theNewLen);
       }
     }
 
