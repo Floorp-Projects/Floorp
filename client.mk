@@ -74,7 +74,6 @@ checkout:
 # Pull xpfe
 	$(CVSCO) mozilla/xpfe
 
-
 # Build with autoconf
 configure:	mozilla/configure.in
 	autoobjdir=obj-$(shell mozilla/build/autoconf/config.guess); \
@@ -83,7 +82,12 @@ configure:	mozilla/configure.in
 	if test ! -d mozilla/$$autoobjdir; then $(MKDIR) mozilla/$$autoobjdir; fi; \
 	(cd mozilla/$$autoobjdir; ../configure $(NSPR_CONFIG_FLAG) --enable-toolkit=$(MOZ_TOOLKIT)); \
 
-build:	configure
+mozilla/configure: mozilla/configure.in
+	$(MAKE) -f mozilla/client.mk configure
+
+build:	mozilla/configure
+	autoobjdir=obj-$(shell mozilla/build/autoconf/config.guess); \
+	echo autoobjdir = $$autoobjdir; \
 	(cd mozilla/$$autoobjdir; $(MAKE)); \
 #	(cd mozilla/$$autoobjdir; $(MAKE) depend); \
 
