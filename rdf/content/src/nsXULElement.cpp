@@ -360,6 +360,9 @@ public:
                            const nsString& aAttributeValue,
                            nsRDFDOMNodeList* aElements);
 
+    // Helper routine that crawls a parent chain looking for a tree element.
+    NS_IMETHOD GetParentTree(nsIDOMXULTreeElement** aTreeElement);
+
 private:
     // pseudo-constants
     static nsrefcnt             gRefCnt;
@@ -2040,13 +2043,22 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
       // See if we're a treeitem atom.
       nsRDFDOMNodeList* nodeList = nsnull;
       if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
-
-      }
-      else if (tag && (tag.get() == kTreeRowAtom) && (aName == kSelectedAtom)) {
-
+        nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+        GetParentTree(getter_AddRefs(treeElement));
+        if (treeElement) {
+          nsCOMPtr<nsIDOMNodeList> nodes;
+          treeElement->GetSelectedItems(getter_AddRefs(nodes));
+          nodeList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+        }
       }
       else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
-
+        nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+        GetParentTree(getter_AddRefs(treeElement));
+        if (treeElement) {
+          nsCOMPtr<nsIDOMNodeList> nodes;
+          treeElement->GetSelectedCells(getter_AddRefs(nodes));
+          nodeList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+        }
       }
       if (nodeList) {
         // Append this node to the list.
@@ -2321,15 +2333,28 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     GetTag(*getter_AddRefs(tag));
     if (mDocument && (aNameSpaceID == kNameSpaceID_None)) {
       // See if we're a treeitem atom.
+      // XXX Forgive me father, for I know exactly what I do, and I'm
+      // doing it anyway.  Need to make an nsIRDFNodeList interface that
+      // I can QI to for additions and removals of nodes.  For now
+      // do an evil cast.
       nsRDFDOMNodeList* nodeList = nsnull;
       if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
-
-      }
-      else if (tag && (tag.get() == kTreeRowAtom) && (aName == kSelectedAtom)) {
-
+        nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+        GetParentTree(getter_AddRefs(treeElement));
+        if (treeElement) {
+          nsCOMPtr<nsIDOMNodeList> nodes;
+          treeElement->GetSelectedItems(getter_AddRefs(nodes));
+          nodeList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+        }
       }
       else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
-
+        nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+        GetParentTree(getter_AddRefs(treeElement));
+        if (treeElement) {
+          nsCOMPtr<nsIDOMNodeList> nodes;
+          treeElement->GetSelectedCells(getter_AddRefs(nodes));
+          nodeList = (nsRDFDOMNodeList*)(nodes.get()); // XXX I am evil. Hear me roar.
+        }
       }
       if (nodeList) {
         // Remove this node from the list.
@@ -3260,3 +3285,26 @@ RDFElementImpl::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+RDFElementImpl::GetParentTree(nsIDOMXULTreeElement** aTreeElement)
+{
+  nsCOMPtr<nsIContent> current;
+  GetParent(*getter_AddRefs(current));
+  while (current) {
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag && (tag.get() == kTreeAtom)) {
+      nsCOMPtr<nsIDOMXULTreeElement> element = do_QueryInterface(current);
+      *aTreeElement = element;
+      NS_IF_ADDREF(*aTreeElement);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIContent> parent;
+    current->GetParent(*getter_AddRefs(parent));
+    current = parent.get();
+  }
+  return NS_OK;
+}
+

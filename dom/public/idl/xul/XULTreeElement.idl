@@ -2,6 +2,23 @@ interface XULTreeElement : XULElement {
 /* IID: { 0xa6cf90ec, 0x15b3, 0x11d2, \
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} } */
   readonly attribute NodeList selectedItems;
-  readonly attribute NodeList selectedRows;
   readonly attribute NodeList selectedCells;
+
+  void selectItem(in XULElement treeItem);
+  void selectCell(in XULElement treeCell);
+
+  void clearSelection();
+
+  void addItemToSelection(in XULElement treeItem);
+  void removeItemFromSelection(in XULElement treeItem);
+
+  void addCellToSelection(in XULElement treeCell);
+  void removeCellFromSelection(in XULElement treeCell);
+
+  void selectItemRange(in XULElement startItem, in XULElement endItem);
+  void selectCellRange(in XULElement startItem, in XULElement endItem);
+
+  void selectAll();
+
+  void invertSelection();
 };
