@@ -225,6 +225,9 @@ nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
   }
   // adjust selection
   res = AdjustSelection(aSelection,info->collapsedAction);
+  if (NS_FAILED(res)) return res;
+  // detect empty doc
+  res = CreateBogusNodeIfNeeded(aSelection);
   return res;
 }
   
