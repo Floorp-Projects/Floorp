@@ -80,8 +80,8 @@ FORCE_STATIC_LIB = 1
 # **********************************************************************
 # choose a toolkit specific implementation of nsISVGLibartBitmap:
 
-# gtk2:
-ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+# gtk2 (disabled for now since "gdk_draw_pixbuf" only available in GTK+ >= 2.1):
+ifeq ($(MOZ_GFX_TOOLKIT),gtk2x)
 CPPSRCS  += nsSVGLibartBitmapGdk.cpp
 CFLAGS   += $(MOZ_GTK2_CFLAGS)
 CXXFLAGS += $(MOZ_GTK2_CFLAGS)
@@ -98,7 +98,7 @@ CPPSRCS += nsSVGLibartBitmapMac.cpp
 endif
 
 # default:
-ifeq (,$(filter gtk2 mac cocoa,$(MOZ_GFX_TOOLKIT)))
+ifeq (,$(filter gtk2x mac cocoa,$(MOZ_GFX_TOOLKIT)))
 CPPSRCS += nsSVGLibartBitmapDefault.cpp
 endif
 
