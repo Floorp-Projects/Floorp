@@ -34,9 +34,9 @@ MOTIF			=
 MOTIFLIB		=
 OS_LIBS			=
 
-PLATFORM_FLAGS		= -Wall -Wno-format -DNEXTSTEP -D_NEXT_SOURCE
+PLATFORM_FLAGS		= -Wall -Wno-format -DNEXTSTEP -DRHAPSODY -D_NEXT_SOURCE
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
-PORT_FLAGS		= -DSW_THREADS -DNO_CDEFS_H -DNO_REGEX -DNEED_BSDREGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_MULTICAST -DNO_TZNAME
+PORT_FLAGS		= -DSW_THREADS -DNO_CDEFS_H -DNO_REGEX -DNEED_BSDREGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_MULTICAST -DNO_TZNAME -D_POSIX_SOURCE -DNEED_S_ISLNK -DNEEDS_GETCWD -DNO_X11
 PDJAVA_FLAGS		=
 
 OS_CFLAGS		= $(PLATFORM_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
@@ -61,7 +61,8 @@ CC			= cc
 CCC			= c++
 EMACS			= /bin/true
 PERL			= /usr/bin/perl
-RANLIB			= /bin/libtool
+AR              = /bin/libtool -static -o $@
+RANLIB			= /bin/true
 WHOAMI			= /usr/ucb/whoami
 
 ######################################################################
