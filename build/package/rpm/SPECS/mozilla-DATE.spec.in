@@ -1,6 +1,7 @@
 %define _unpackaged_files_terminate_build 0
-%define toolkit_options --disable-freetype2
+%define toolkit_options --enable-default-toolkit=gtk2 --disable-freetype2 --enable-xft --enable-xft
 %define builddir %{_builddir}/mozilla
+%define gcc_32_libs no
 
 Name:        mozilla
 Summary:     Web browser and mail reader
@@ -20,10 +21,9 @@ Source12:    mozilla-mail.desktop
 Source13:    mozilla-mail-icon.gif
 Source14:    mozilla-compose.desktop
 Source15:    mozilla-compose-icon.gif
-Source16:    mozilla-exclude-list
-Source17:    mozilla-psm-exclude-list
 Source18:    mozilla-xpcom-exclude-list
 Source19:    mozilla-redhat-default-bookmarks.html
+Source20:    mozilla-1.2.1-xft-prefs.js
 Patch0:      mozilla-navigator-overlay-menu.patch
 Patch1:      mozilla-editor-overlay-menu.patch
 Patch6:      mozilla-prefs-debug.patch
@@ -34,14 +34,19 @@ Patch12:     mozilla-psfonts-7.2.patch
 Patch13:     mozilla-nspr-packages.patch
 Patch14:     mozilla-default-plugin-less-annoying.patch
 Patch17:     mozilla-buildid-title.patch
+Patch18:     mozilla-1.2.1-uifont.patch
+Patch20:     mozilla-1.2.1-xft-font-prefs.patch
+
 Buildroot:   /var/tmp/mozilla-root
 Prefix:      /usr
 Group:       Applications/Internet
 Provides:    webclient
+# Removed compat-gcc-c++, compat-libstdc++-devel, compat-gcc
 BuildPrereq: libpng-devel, libjpeg-devel, zlib-devel, zip, perl, autoconf, indexhtml, ORBit-devel, glib-devel, gtk+-devel
 Prereq:      fileutils perl
 Prereq:      /usr/bin/killall
 Requires:    mozilla-nspr = %{version}-%{release}, indexhtml
+ExclusiveArch: i386 s390 s390x x86_64 ppc
 
 %description
 Mozilla is an open-source web browser, designed for standards
@@ -174,8 +179,15 @@ development or web page development.
 %patch17 -p1
 %patch17 -p1 -R
 
+# make it possible to set the uifont
+%patch18 -p1
+
+# patch to make it possible to use the font prefs with xft in a sane
+# manner
+%patch20 -p1
+
 # set up our default bookmarks
-#/bin/cp %{SOURCE19} $RPM_BUILD_DIR/mozilla/profile/defaults/bookmarks.html
+/bin/cp %{SOURCE19} $RPM_BUILD_DIR/mozilla/profile/defaults/bookmarks.html
 
 %build
 
@@ -187,12 +199,14 @@ if test "x$CPUS" = "x" -o "x$CPUS" = "x0"; then
 fi
 
 # build mozilla
+%ifarch i386
 CC=gcc296 CXX=g++296 \
+%endif
 BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
-	./configure --prefix=%{_prefix} --enable-optimize \
+	./configure --prefix=%{_prefix} --libdir=%{_libdir} --enable-optimize \
 	--disable-debug \
-	--with-default-mozilla-five-home=/usr/lib/mozilla-%{version} \
-	--enable-strip \
+	--with-default-mozilla-five-home=%{_libdir}/mozilla-%{version} \
+	--enable-strip-libs \
 	--disable-tests \
 	--disable-short-wchar \
 	--enable-nspr-autoconf \
@@ -201,8 +215,8 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 	--enable-crypto \
 	--disable-xprint \
 	--without-system-nspr \
-	%{toolkit_options} \
 	--with-system-zlib \
+	%{toolkit_options} \
 	--mandir=%{_mandir}
 
 
@@ -230,121 +244,111 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 # /usr/lib/mozilla-VERSION
 
 pushd .
-cd $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}
+cd $RPM_BUILD_ROOT%{_libdir}/mozilla-%{version}
 # copy nspr
 mv -v \
   libnspr4.so libplc4.so libplds4.so \
-  $RPM_BUILD_ROOT/usr/lib/
+  $RPM_BUILD_ROOT%{_libdir}/
 
-# copy nss
-mv -v \
-  libnss3.so libsmime3.so libsoftokn3.so libssl3.so \
-  $RPM_BUILD_ROOT/usr/lib/
-
-# copy system libs
-for i in libgkgfx.so libjsj.so libmozjs.so libxpcom.so \
-  libgtkembedmoz.so libgtksuperwin.so libgtkxtbin.so
-do
-  if [ -f $i ]; then
-    mv -v $i $RPM_BUILD_ROOT/usr/lib/
-    echo /usr/lib/$i >> %{builddir}/mozilla.list
-  else
-    echo $i does not exist - skipping
-  fi
-done
-
-# libnssckbi.so must be in both places
-cp -v libnssckbi.so $RPM_BUILD_ROOT/usr/lib/
 popd
 
 /bin/rm -f %{builddir}/mozilla-nspr.list
 %{SOURCE7} --package nspr --output-file %{builddir}/mozilla-nspr.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib \
-    --install-root /usr/lib
+    --install-dir $RPM_BUILD_ROOT/%{_libdir} \
+    --install-root %{_libdir}
 
 /bin/rm -f %{builddir}/mozilla-nss.list
 %{SOURCE7} --package nss --output-file %{builddir}/mozilla-nss.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib \
-    --install-root /usr/lib
-
-# manually add the libnssckbi.so file
-echo /usr/lib/mozilla-%{version}/libnssckbi.so >> %{builddir}/mozilla-nss.list
+    --install-dir $RPM_BUILD_ROOT/%{_libdir} \
+    --install-root %{_libdir}
 
 # build all of the default browser components
 # base mozilla package (mozilla.list)
 %{SOURCE7} --package langenus --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version}
 
 %{SOURCE7} --package regus --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version}
 
 %{SOURCE7} --package deflenus --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version}
 
 %{SOURCE7} --package xpcom --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version} \
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version} \
     --exclude-file=%{SOURCE18}
 
 %{SOURCE7} --package browser --output-file %{builddir}/mozilla.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version} \
-    --exclude-file=%{SOURCE16}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version} \
 
 # mozilla mail (mozilla-mail.list)
 %{SOURCE7} --package mail --output-file %{builddir}/mozilla-mail.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version}
 
 # mozilla psm (mozilla-psm.list)
 %{SOURCE7} --package psm --output-file %{builddir}/mozilla-psm.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version} \
-    --exclude-file=%{SOURCE17}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version} \
 
 # mozilla chat (mozilla-chat.list)
 %{SOURCE7} --package chatzilla --output-file %{builddir}/mozilla-chat.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version}
 
 # mozilla JS debugger (mozilla-js-debugger.list)
 %{SOURCE7} --package venkman --output-file %{builddir}/mozilla-js-debugger.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version}
 
 # mozilla DOM inspector (mozilla-dom-inspector.list)
 %{SOURCE7} --package inspector --output-file %{builddir}/mozilla-dom-inspector.list \
     --package-file $RPM_BUILD_DIR/mozilla/xpinstall/packager/packages-unix \
-    --install-dir $RPM_BUILD_ROOT/usr/lib/mozilla-%{version} \
-    --install-root /usr/lib/mozilla-%{version}
+    --install-dir $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version} \
+    --install-root %{_libdir}/mozilla-%{version}
 
 # build our initial component and chrome registry
-# we don't need to do this anymore
+
 
 pushd `pwd`
-  cd $RPM_BUILD_ROOT/%{prefix}/lib/mozilla-%{version}
+  cd $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}
+
+  # save a copy of the default installed-chrome.txt file before we
+  # muck with it
+  mkdir chrome/lang
+  cp chrome/installed-chrome.txt chrome/lang/
+
   # register our components
   LD_LIBRARY_PATH=`pwd`:`pwd`/.. MOZILLA_FIVE_HOME=`pwd` ./regxpcom
+
   # set up the default skin and locale to trigger the generation of
   # the user-locales and users-skins.rdf
   echo "skin,install,select,classic/1.0" >> chrome/installed-chrome.txt
   echo "locale,install,select,en-US" >> chrome/installed-chrome.txt
+
+  # save the defaults in a file that will be used later to rebuild the
+  # installed-chrome.txt file
+  echo "skin,install,select,classic/1.0" >> chrome/lang/default.txt
+  echo "locale,install,select,en-US" >> chrome/lang/default.txt
+
   # set up the chrome rdf files
   LD_LIBRARY_PATH=`pwd`:`pwd`/.. MOZILLA_FIVE_HOME=`pwd` ./regchrome
+
   # fix permissions of the chrome directories
   /usr/bin/find . -type d -perm 0700 -exec chmod 755 {} \; || :
 popd
@@ -369,6 +373,13 @@ find $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/ -type f | \
   grep -v "/%{prefix}/include/mozilla-%{version}/nspr" > \
   %{builddir}/mozilla-devel.list
 
+# we only include the libs file if we need the gcc_32_libs is set to
+# true
+if [ "%gcc_32_libs" == "yes" ]; then
+  echo %{_libdir}/mozilla-%{version}/mozilla-gcc-3.2-libs.tar.bz2 >> \
+      %{builddir}/mozilla-devel.list
+fi
+
 find $RPM_BUILD_ROOT/%{prefix}/include/mozilla-%{version}/ -type f | \
   sed -e "s,$RPM_BUILD_ROOT,," | \
   grep "/%{prefix}/include/mozilla-%{version}/nspr" > \
@@ -390,7 +401,7 @@ install -c -m 755 dist/bin/xpcshell \
   dist/bin/xpidl \
   dist/bin/xpt_dump \
   dist/bin/xpt_link \
-  $RPM_BUILD_ROOT/%{prefix}/lib/mozilla-%{version}
+  $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}
 
 # set up our desktop files
 /bin/mkdir -p $RPM_BUILD_ROOT/%{prefix}/share/pixmaps/
@@ -402,30 +413,99 @@ install -c -m 644 %{SOURCE2} %{SOURCE13} %{SOURCE15} \
 install -c -m 644  %{SOURCE4} %{SOURCE12} %{SOURCE14} \
   $RPM_BUILD_ROOT/etc/X11/applnk/Internet
 
-if [ ! -d $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/icons/ ]; then
-  mkdir -m 755 $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/icons
+if [ ! -d $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/icons/ ]; then
+  mkdir -m 755 $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/icons
 fi
 
-if [ ! -d $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/plugins/ ]; then
-  mkdir -m 755 $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/plugins
+if [ ! -d $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/plugins/ ]; then
+  mkdir -m 755 $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/plugins
 fi
 
 # our icons are better!
-install -c -m 644 %{SOURCE9} $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/icons/
-install -c -m 644 %{SOURCE10} $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/icons/
+install -c -m 644 %{SOURCE9} $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/icons/
+install -c -m 644 %{SOURCE10} $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/icons/
 
 # install our mozilla.sh file
-cat %{SOURCE1} | sed -e 's/MOZILLA_VERSION/%{version}/g' > \
+cat %{SOURCE1} | sed -e 's/MOZILLA_VERSION/%{version}/g' \
+		     -e 's,LIBDIR,%{_libdir},g' > \
   $RPM_BUILD_ROOT/usr/bin/mozilla
 
 chmod 755 $RPM_BUILD_ROOT/usr/bin/mozilla
 
 # install our rebuild file
-cat %{SOURCE11} | sed -e 's/MOZILLA_VERSION/%{version}/g' > \
-  $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+cat %{SOURCE11} | sed -e 's/MOZILLA_VERSION/%{version}/g' \
+		      -e 's,LIBDIR,%{_libdir},g' > \
+  $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 
 chmod 755 \
-  $RPM_BUILD_ROOT/usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+  $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
+
+# install the defaults fonts for xft
+cp %{SOURCE20} $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/defaults/pref/xft.js
+
+# install the gre.conf file
+#echo [%{version}] > \
+#  $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/gre.conf
+#echo GRE_PATH=%{_libdir}/mozilla-%{version} >> \
+#  $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/gre.conf
+echo [%{version}] > \
+  $RPM_BUILD_ROOT/etc/gre.conf
+echo GRE_PATH=%{_libdir}/mozilla-%{version} >> \
+  $RPM_BUILD_ROOT/etc/gre.conf
+
+if [ "%gcc_32_libs" == "yes" ]; then
+  make distclean
+
+  if [ -x /usr/bin/getconf ]; then
+    CPUS=`getconf _NPROCESSORS_ONLN`
+  fi
+  if test "x$CPUS" = "x" -o "x$CPUS" = "x0"; then
+    CPUS=1
+  fi
+
+  # build mozilla with the default compiler
+  CC=gcc CXX=g++ \
+  BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
+    ./configure --prefix=%{_prefix} --libdir=%{_libdir} --enable-optimize \
+      --disable-debug \
+      --with-default-mozilla-five-home=/%{_libdir}/mozilla-%{version}/gcc-3.2 \
+      --enable-strip-libs \
+      --disable-tests \
+      --disable-short-wchar \
+      --enable-nspr-autoconf \
+      --enable-extensions=default,irc \
+      --without-mng \
+      --enable-crypto \
+      --disable-xprint \
+      --without-system-nspr \
+      --with-system-zlib \
+      %{toolkit_options} \
+      --enable-old-abi-compat-wrappers \
+      --mandir=%{_mandir}
+
+  BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make export
+  BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 make -j$CPUS libs
+
+  mkdir -p gcc-3.2/components
+  for i in libembed_base_s.a libmozreg_s.a libmozjs.so libmsgbaseutil.so \
+    libnspr4.so libplc4.so libplds4.so libxpcom.so \
+    libldap50.so libprldap50.so components/libabsyncsvc.so \
+    components/libaddrbook.so components/libmork.so \
+    components/libnecko.so components/libpref.so \
+    components/libprofile.so components/librdf.so \
+    components/liburiloader.so \
+    components/libxpconnect.so components/libmozldap.so \
+    components/libuconv.so \
+    components/libvcard.so; do
+      cp -aL dist/lib/$i gcc-3.2/$i
+  done
+
+  find gcc-3.2 -name \*.so -exec strip {} \;
+  cd gcc-3.2
+  tar cf - * | bzip2 -9 > $RPM_BUILD_ROOT/%{_libdir}/mozilla-%{version}/mozilla-gcc-3.2-libs.tar.bz2
+  cd ..
+
+fi
 
 %clean
 #/bin/rm -rf $RPM_BUILD_ROOT
@@ -434,16 +514,16 @@ chmod 755 \
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %postun
 /sbin/ldconfig >/dev/null 2>/dev/null
 # was this an upgrade?
 if [ "$1" == "2" ]; then
-  if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-      /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+  if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+      %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
   fi
 fi
 
@@ -451,15 +531,15 @@ fi
 # Older packages will leave mozilla unusable after the postun script
 # script is run for the old package.  Rebuild the databases after that
 # has been run.
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %preun
 # is a final removal?
 if [ "$1" == "0" ]; then
-  /bin/rm -rf /usr/lib/mozilla/chrome/overlayinfo
-  /bin/rm -f /usr/lib/mozilla/chrome/*.rdf
+  /bin/rm -rf %{_libdir}/mozilla-%{version}/chrome/overlayinfo
+  /bin/rm -f %{_libdir}/mozilla-%{version}/chrome/*.rdf
 fi
 
 %post nspr
@@ -477,8 +557,8 @@ fi
 %post mail
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %postun mail
@@ -486,102 +566,121 @@ fi
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %post psm
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %postun psm
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %post chat
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %postun chat
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %post js-debugger
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %postun js-debugger
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %post dom-inspector
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %postun dom-inspector
 # run ldconfig before regxpcom
 /sbin/ldconfig >/dev/null 2>/dev/null
 
-if [ -f /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
-    /usr/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+if [ -f %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl ]; then
+    %{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
 fi
 
 %files -f mozilla.list
 %defattr(-,root,root)
 %{prefix}/bin/mozilla
-%{prefix}/lib/mozilla-%{version}/mozilla-rebuild-databases.pl
+%{_libdir}/mozilla-%{version}/mozilla-rebuild-databases.pl
+/etc/gre.conf
 %{prefix}/share/pixmaps/mozilla-icon.png
 %{prefix}/share/pixmaps/mozilla-mail-icon.gif
 %{prefix}/share/pixmaps/mozilla-compose-icon.gif
 
-%verify (not md5 mtime size) %{prefix}/lib/mozilla-%{version}/components/compreg.dat
-%verify (not md5 mtime size) %{prefix}/lib/mozilla-%{version}/components/xpti.dat
+%{_libdir}/mozilla-%{version}/defaults/pref/xft.js
 
-%dir %{prefix}/lib/mozilla-%{version}/defaults/pref
-%dir %{prefix}/lib/mozilla-%{version}/defaults/profile
-%dir %{prefix}/lib/mozilla-%{version}/defaults/wallet
-%dir %{prefix}/lib/mozilla-%{version}/defaults
-%dir %{prefix}/lib/mozilla-%{version}/chrome
-%dir %{prefix}/lib/mozilla-%{version}/components
-%dir %{prefix}/lib/mozilla-%{version}/res/builtin
-%dir %{prefix}/lib/mozilla-%{version}/res/rdf
-%dir %{prefix}/lib/mozilla-%{version}/res
-%dir %{prefix}/lib/mozilla-%{version}/icons
-%dir %{prefix}/lib/mozilla-%{version}/defaults/profile/US
-%dir %{prefix}/lib/mozilla-%{version}/searchplugins
+%verify (not md5 mtime size) %{_libdir}/mozilla-%{version}/components/compreg.dat
+%verify (not md5 mtime size) %{_libdir}/mozilla-%{version}/components/xpti.dat
 
-%dir %{prefix}/lib/mozilla-%{version}/plugins
-%dir %{prefix}/lib/mozilla-%{version}/res/html
-%dir %{prefix}/lib/mozilla-%{version}/res/samples
-%dir %{prefix}/lib/mozilla-%{version}/res/entityTables
+%dir %{_libdir}/mozilla-%{version}/defaults/pref
+%dir %{_libdir}/mozilla-%{version}/defaults/profile/US
+%dir %{_libdir}/mozilla-%{version}/defaults/profile
+%dir %{_libdir}/mozilla-%{version}/defaults/wallet
+%dir %{_libdir}/mozilla-%{version}/defaults/autoconfig
+%dir %{_libdir}/mozilla-%{version}/defaults/messenger/US
+%dir %{_libdir}/mozilla-%{version}/defaults/messenger
+%dir %{_libdir}/mozilla-%{version}/defaults
+
+%dir %{_libdir}/mozilla-%{version}/chrome/icons/default
+%dir %{_libdir}/mozilla-%{version}/chrome/icons
+%dir %{_libdir}/mozilla-%{version}/chrome/lang
+%dir %{_libdir}/mozilla-%{version}/chrome
+
+%dir %{_libdir}/mozilla-%{version}/res/builtin
+%dir %{_libdir}/mozilla-%{version}/res/rdf
+%dir %{_libdir}/mozilla-%{version}/res/dtd
+%dir %{_libdir}/mozilla-%{version}/res/fonts
+%dir %{_libdir}/mozilla-%{version}/res
+
+%dir %{_libdir}/mozilla-%{version}/components
+%dir %{_libdir}/mozilla-%{version}/icons
+%dir %{_libdir}/mozilla-%{version}/searchplugins
+
+%dir %{_libdir}/mozilla-%{version}/plugins
+%dir %{_libdir}/mozilla-%{version}/res/html
+%dir %{_libdir}/mozilla-%{version}/res/samples
+%dir %{_libdir}/mozilla-%{version}/res/entityTables
+
+%dir %{_libdir}/mozilla-%{version}
+
+%{_libdir}/mozilla-%{version}/chrome/lang/installed-chrome.txt
+%{_libdir}/mozilla-%{version}/chrome/lang/default.txt
 
 /etc/X11/applnk/Internet/mozilla.desktop
 
@@ -590,7 +689,7 @@ fi
 
 %files nspr-devel -f mozilla-nspr-devel.list
 %defattr(-,root,root)
-%{prefix}/lib/pkgconfig/*
+%{_libdir}/pkgconfig/*
 %{prefix}/bin/mozilla-config
 
 %files nss -f mozilla-nss.list
@@ -601,6 +700,11 @@ fi
 
 %files mail -f mozilla-mail.list
 %defattr(-,root,root)
+%dir %{_libdir}/mozilla-%{version}/chrome/icons/default
+%dir %{_libdir}/mozilla-%{version}/chrome/icons
+%dir %{_libdir}/mozilla-%{version}/chrome
+%dir %{_libdir}/mozilla-%{version}/components
+%dir %{_libdir}/mozilla-%{version}
 /etc/X11/applnk/Internet/mozilla-mail.desktop
 /etc/X11/applnk/Internet/mozilla-compose.desktop
 
@@ -619,26 +723,10 @@ fi
 %files devel -f mozilla-devel.list
 %defattr(-,root,root)
 %{prefix}/share/idl/mozilla-%{version}/*
-%{prefix}/lib/mozilla-%{version}/xpcshell
-%{prefix}/lib/mozilla-%{version}/xpidl
-%{prefix}/lib/mozilla-%{version}/xpt_dump
-%{prefix}/lib/mozilla-%{version}/xpt_link
-
+%{_libdir}/mozilla-%{version}/xpcshell
+%{_libdir}/mozilla-%{version}/xpidl
+%{_libdir}/mozilla-%{version}/xpt_dump
+%{_libdir}/mozilla-%{version}/xpt_link
 
 %changelog
-* Wed Jul 10 2002 Christopher Blizzard <blizzard@redhat.com>
-- Use the components/*.dat files instead of component.reg both in
-rebuild-databases.pl and in packaging.
 
-* Mon Jul  1 2002 Chris Blizzard <blizzard@redhat.com>
-- Move libs into the system that need to be there
-
-* Tue Jun 25 2002 Christopher Blizzard <blizzard@redhat.com>
-- Change mozilla-rebuild-databases.pl to remove compreg.dat as well as
-  component.reg.
-
-* Sun Jun 23 2002 Chris Blizzard <blizzard@redhat.com>
-- Move nspr + nss back into /usr/lib
-
-* Thu Jun 20 2002 Christopher Blizzard <blizzard@redhat.com>
-- Time for a new changelog.

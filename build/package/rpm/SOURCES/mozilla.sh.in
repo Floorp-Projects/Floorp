@@ -39,16 +39,9 @@ ulimit -c 0
 ##
 ## Variables
 ##
-MOZ_DIST_BIN="/usr/lib/mozilla-MOZILLA_VERSION"
-MOZ_PROGRAM="/usr/lib/mozilla-MOZILLA_VERSION/mozilla-bin"
-MOZ_CLIENT_PROGRAM="/usr/lib/mozilla-MOZILLA_VERSION/mozilla-xremote-client"
-
-##
-## Set MOZILLA_FIVE_HOME
-##
-MOZILLA_FIVE_HOME="/usr/lib/mozilla-MOZILLA_VERSION"
-
-export MOZILLA_FIVE_HOME
+MOZ_DIST_BIN="LIBDIR/mozilla-MOZILLA_VERSION"
+MOZ_PROGRAM="LIBDIR/mozilla-MOZILLA_VERSION/mozilla-bin"
+MOZ_CLIENT_PROGRAM="LIBDIR/mozilla-MOZILLA_VERSION/mozilla-xremote-client"
 
 ##
 ## Set LD_LIBRARY_PATH
@@ -59,35 +52,25 @@ then
 else
   LD_LIBRARY_PATH=/usr/lib/mozilla-MOZILLA_VERSION:/usr/lib/mozilla-MOZILLA_VERSION/plugins
 fi
-
 export LD_LIBRARY_PATH
 
 ##
 ## Make sure that we set the plugin path for backwards compatibility
-## if it hasn't already been set.
 ##
-if [ -z "$MOZ_PLUGIN_PATH" ]; then
-    MOZ_PLUGIN_PATH=/usr/lib/mozilla/plugins
-    export MOZ_PLUGIN_PATH
-fi
-
-##
-## Set FONTCONFIG_PATH for Xft/fontconfig
-##
-FONTCONFIG_PATH="/etc/fonts:${MOZILLA_FIVE_HOME}/res/Xft"
-export FONTCONFIG_PATH
+MOZ_PLUGIN_PATH=LIBDIR/mozilla/plugins
+export MOZ_PLUGIN_PATH
 
 # Figure out if we need to ser LD_ASSUME_KERNEL for older versions of the JVM.
 
 function set_jvm_vars() {
 
     # see if the jvm exists in either of the locations
-    if [ -L /usr/lib/mozilla-MOZILLA_VERSION/plugins/libjavaplugin_oji.so ]; then
-        JVM_ORIG_LINK=/usr/lib/mozilla-MOZILLA_VERSION/plugins/libjavaplugin_oji.so
+    if [ -L LIBDIR/mozilla-MOZILLA_VERSION/plugins/libjavaplugin_oji.so ]; then
+        JVM_ORIG_LINK=LIBDIR/mozilla-MOZILLA_VERSION/plugins/libjavaplugin_oji.so
     fi
 
-    if [ -L /usr/lib/mozilla/plugins/libjavaplugin_oji.so ]; then
-        JVM_ORIG_LINK=/usr/lib/mozilla/plugins/libjavaplugin_oji.so
+    if [ -L LIBDIR/mozilla/plugins/libjavaplugin_oji.so ]; then
+        JVM_ORIG_LINK=LIBDIR/mozilla/plugins/libjavaplugin_oji.so
     fi
 
     if [ -z "$JVM_ORIG_LINK" ]; then
@@ -101,7 +84,7 @@ function set_jvm_vars() {
     echo "${JVM_LINK}" | grep -e "^/" 2>&1 > /dev/null
 
     if [ "$?" -ne "0" ]; then
-	JVM_LINK=/usr/lib/mozilla-MOZILLA_VERSION/plugins/${JVM_LINK}
+	JVM_LINK=LIBDIR/mozilla-MOZILLA_VERSION/plugins/${JVM_LINK}
     fi
 
     JVM_BASE=`basename $JVM_LINK`
