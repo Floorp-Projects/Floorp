@@ -81,15 +81,6 @@ public:
                               const nsIID &aIID,
                               void **aResult);
 
-    // Creates a class instance for a specific class ID
-    /*
-      NS_IMETHOD CreateInstance2(const nsCID &aClass, 
-      nsISupports *aDelegate,
-      const nsIID &aIID,
-      void *aSignature,
-      void **aResult);
-    */
-
     // Manually registry a factory for a class
     NS_IMETHOD RegisterFactory(const nsCID &aClass,
                                const char *aClassName,
@@ -109,10 +100,6 @@ public:
     NS_IMETHOD UnregisterFactory(const nsCID &aClass,
                                  nsIFactory *aFactory);
 
-    // Manually unregister a dynamically loaded factory for a class
-    NS_IMETHOD UnregisterFactory(const nsCID &aClass,
-                                      const char *aLibrary);
-
     // Manually unregister a dynamically loaded component
     NS_IMETHOD UnregisterComponent(const nsCID &aClass,
                                    const char *aLibrary);
@@ -128,13 +115,13 @@ public:
     // ".dso",    // Unix
     // ".so",     // Unix
     // ".sl",     // Unix: HP
-    // "_dll",    // Mac
+    // ".shlb",	// Mac
     // ".dlm",    // new for all platforms
     //
     // Directory and fullname are what NSPR will accept. For eg.
-    // 	WIN	y:/home/dp/mozilla/dist/bin
-    //	UNIX	/home/dp/mozilla/dist/bin
-    //	MAC	/Hard drive/mozilla/dist/apprunner
+    //	MAC		/Hard drive/mozilla/dist/bin
+    // 	WIN		y:\Hard drive\mozilla\dist\bin (or) y:/Hard drive/mozilla/dist/bin
+    //	UNIX	/Hard drive/mozilla/dist/bin
     //
     NS_IMETHOD AutoRegister(RegistrationTime when, const char* directory);
     NS_IMETHOD AutoRegisterComponent(RegistrationTime when, const char *fullname);
@@ -175,9 +162,9 @@ protected:
     PRMonitor*       mMon;
     nsHashtable*     mDllStore;
     nsIRegistry*     mRegistry;
-	nsIRegistry::Key mXPCOMKey;
-	nsIRegistry::Key mClassesKey;
-	nsIRegistry::Key mCLSIDKey;
+    nsIRegistry::Key mXPCOMKey;
+    nsIRegistry::Key mClassesKey;
+    nsIRegistry::Key mCLSIDKey;
 };
 
 #define NS_MAX_FILENAME_LEN	1024

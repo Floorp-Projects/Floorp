@@ -134,8 +134,8 @@ PRBool nsDll::Load(void)
 		{
 			m_instance = PR_LoadLibrary(macFileName);
 		}
+        PL_strfree(macFileName);
 	}
-	
 #else
 	// This is the only right way of doing this...
 	m_instance = PR_LoadLibrary(m_fullpath);

@@ -42,27 +42,4 @@ public:
   NS_IMETHOD LockFactory(PRBool aLock) = 0;
 };
 
-#if 0
-/* Excluding IFactory2 until there is proof of its use - dp */
-/**
- * nsIFactory2 allows passing in a signature token when creating an
- * instance. This allows instance recycling.
- */
-
-// {19997C41-A343-11d1-B665-00805F8A2676}
-#define NS_IFACTORY2_IID \
-{ 0x19997c41, 0xa343, 0x11d1, \
-  { 0xb6, 0x65, 0x0, 0x80, 0x5f, 0x8a, 0x26, 0x76 } }
-
-class nsIFactory2: public nsIFactory {
-public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IFACTORY2_IID; return iid; }
-
-  NS_IMETHOD CreateInstance2(nsISupports *aOuter,
-                             REFNSIID aIID,
-                             void *aSignature,
-                             void **aResult) = 0;
-};
-#endif /* 0 */
-
 #endif
