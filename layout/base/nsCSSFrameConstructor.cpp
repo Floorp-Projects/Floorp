@@ -55,6 +55,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsStyleChangeList.h"
+#include "nsCSSAtoms.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -245,6 +246,80 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
   return NS_OK;
 }
 
+PRBool
+nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext,
+                                                   nsIFrame*        aFrame,
+                                                   nsIContent*      aContent,
+                                                   nsIStyleContext* aStyleContext,
+                                                   nsIAtom*         aPseudoElement,
+                                                   nsIFrame**       aResult)
+{
+  *aResult = nsnull; // initialize OUT parameter
+
+  // Probe for the existence of the pseudo-element
+  nsIStyleContext*  pseudoStyleContext;
+  aPresContext->ProbePseudoStyleContextFor(aContent, aPseudoElement, aStyleContext,
+                                           PR_FALSE, &pseudoStyleContext);
+
+  if (pseudoStyleContext) {
+    nsIContent*           textContent;
+    nsIDOMCharacterData*  domData;
+    const nsStyleDisplay* display;
+
+    // See whether the generated content should be displayed.
+    display = (const nsStyleDisplay*)pseudoStyleContext->GetStyleData(eStyleStruct_Display);
+
+    if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
+      PRUint8 displayValue = display->mDisplay;
+
+      // Make sure the 'display' property value is allowable
+      const nsStyleDisplay* subjectDisplay = (const nsStyleDisplay*)
+        aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      if (subjectDisplay->IsBlockLevel()) {
+        // For block-level elements the only allowed 'display' values are:
+        // 'none', 'inline', 'block', and 'marker'
+        if ((NS_STYLE_DISPLAY_INLINE != displayValue) &&
+            (NS_STYLE_DISPLAY_BLOCK != displayValue) &&
+            (NS_STYLE_DISPLAY_MARKER != displayValue)) {
+          // Pseudo-element behaves as if the value were 'block'
+          displayValue = NS_STYLE_DISPLAY_BLOCK;
+        }
+
+      } else {
+        // For inline-level elements the only allowed 'display' values are
+        // 'none' and 'inline'
+        displayValue = NS_STYLE_DISPLAY_INLINE;
+      }
+
+      if (display->mDisplay != displayValue) {
+        // Reset the value
+        nsStyleDisplay* mutableDisplay = (nsStyleDisplay*)
+          pseudoStyleContext->GetMutableStyleData(eStyleStruct_Display);
+
+        mutableDisplay->mDisplay = displayValue;
+      }
+
+      // Now create the content object and frame based on the 'content' property
+      // XXX For the time being just pretend it's text
+      NS_NewTextNode(&textContent);
+      textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+      domData->SetData("GENERATED");
+      NS_RELEASE(domData);
+  
+      // Create a text frame and initialize it
+      nsIFrame* textFrame;
+      NS_NewTextFrame(textFrame);
+      textFrame->Init(*aPresContext, textContent, aFrame, pseudoStyleContext, nsnull);
+  
+      NS_RELEASE(pseudoStyleContext);
+      *aResult = textFrame;
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
 
 /**
  * Request to process the child content elements and create frames.
@@ -263,6 +338,23 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
                                        nsAbsoluteItems& aFixedItems,
                                        nsAbsoluteItems& aFloatingItems)
 {
+  // If the content can contain children, then check for generated content
+  nsIStyleContext*  styleContext = nsnull;
+  PRBool            canContainChildren;
+  aContent->CanContainChildren(canContainChildren);
+
+  if (canContainChildren) {
+    nsIFrame* generatedFrame;
+
+    // Probe for generated content before
+    aFrame->GetStyleContext(&styleContext);
+    if (CreateGeneratedContentFrame(aPresContext, aFrame, aContent, styleContext,
+                                    nsCSSAtoms::beforePseudo, &generatedFrame)) {
+      // Add the generated frame to the child list
+      aFrameItems.AddChild(generatedFrame);
+    }
+  }
+
   // Iterate the child content objects and construct frames
   PRInt32   count;
 
@@ -276,6 +368,18 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
     }
   }
 
+  if (canContainChildren) {
+    nsIFrame* generatedFrame;
+
+    // Probe for generated content after
+    if (CreateGeneratedContentFrame(aPresContext, aFrame, aContent, styleContext,
+                                    nsCSSAtoms::afterPseudo, &generatedFrame)) {
+      // Add the generated frame to the child list
+      aFrameItems.AddChild(generatedFrame);
+    }
+  }
+  
+  NS_IF_RELEASE(styleContext);
   return NS_OK;
 }
 
@@ -1859,6 +1963,8 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
   nsIFrame* newFrame = nsnull;  // the frame we construct
   PRBool    newFrameIsFloaterContainer = PR_FALSE;
   PRBool    isReplaced = PR_FALSE;
+  nsIFrame* beforeGenerated = nsnull;
+  nsIFrame* afterGenerated = nsnull;
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
@@ -2015,13 +2121,21 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
                                aAbsoluteItems, childItems, aFixedItems,
                                aFloatingItems);
         }
+      } else {
+        // Check for generated content before and after.
+        // Note: we don't need to do this in the case where we're processing
+        // children, because ProcessChildren() takes care of this...
+        CreateGeneratedContentFrame(aPresContext, newFrame, aContent, aStyleContext,
+                                    nsCSSAtoms::beforePseudo, &beforeGenerated);
+        CreateGeneratedContentFrame(aPresContext, newFrame, aContent, aStyleContext,
+                                    nsCSSAtoms::afterPseudo, &afterGenerated);
+
       }
 
       // Set the frame's initial child list
-      newFrame->SetInitialChildList(*aPresContext, nsnull,
-                                    childItems.childList);
+      newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
 
-      // Set the frame's floating child list too
+      // Set the frame's floating child list, too
       if (floaterList.childList) {
         newFrame->SetInitialChildList(*aPresContext,
                                       nsLayoutAtoms::floaterList,
@@ -2029,7 +2143,15 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       }
     }
 
-    // If the frame is positioned then create a placeholder frame
+    // If there's :before generated content, then add that frame first.
+    // Note: 'position' and 'float' properties don't apply to :before and
+    // :after pseudo elements, so we always add the generated content frames
+    // to the flow
+    if (beforeGenerated) {
+      aFrameItems.AddChild(beforeGenerated);
+    }
+
+    // If the frame is positioned, then create a placeholder frame
     if (isAbsolutelyPositioned || isFixedPositioned) {
       nsIFrame* placeholderFrame;
 
@@ -2061,6 +2183,11 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
     } else {
       // Add the newly constructed frame to the flow
       aFrameItems.AddChild(newFrame);
+    }
+
+    // If there's :after generated content, then add that frame last
+    if (afterGenerated) {
+      aFrameItems.AddChild(afterGenerated);
     }
   }
 
@@ -2443,8 +2570,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
   // If the frame is a block-level frame and is scrollable, then wrap it
   // in a scroll frame.
-  // XXX Applies to replaced elements, too, but how to tell if the element
-  // is replaced?
   // XXX Ignore tables for the time being
   if ((isBlock && (aDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE)) &&
       IsScrollable(aPresContext, aDisplay)) {
@@ -2572,13 +2697,13 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
                                     floaterList.childList);
     }
   }
-  // otherwise let the display property choose the frame to create
+  // otherwise let the display property influence the frame type to create
   else {
     PRBool  processChildren = PR_FALSE;  // whether we should process child content
     PRBool  newFrameIsFloaterContainer = PR_FALSE;
     nsIFrame* ignore;
 
-    // Use the 'display' property to chose a frame type
+    // Use the 'display' property to choose a frame type
     switch (aDisplay->mDisplay) {
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
