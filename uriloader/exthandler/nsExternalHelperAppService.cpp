@@ -53,6 +53,8 @@
 #include "nsITransport.h"
 #include "nsIFileTransportService.h"
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
+#include "nsIIOService.h"
+#include "nsNetCID.h"
 
 #include "nsMimeTypes.h"
 // used for http content header disposition information.
@@ -70,6 +72,7 @@ const char *FORCE_ALWAYS_ASK_PREF = "browser.helperApps.alwaysAsk.force";
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // forward declaration of a private helper function
 static PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closure);
@@ -827,8 +830,18 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     // leaf name of our temp file...
     nsXPIDLCString leafName;
     url->GetFileName(getter_Copies(leafName));
-    if (leafName)
+    if (leafName.get())
+    {
+      nsCOMPtr<nsIIOService> ioService (do_GetService(kIOServiceCID, &rv));
+      if (NS_SUCCEEDED(rv))
+      {
+        nsXPIDLCString unescapedFileName; 
+        rv = ioService->Unescape(leafName.get(), getter_Copies(unescapedFileName));
+        mSuggestedFileName.Assign(NS_ConvertUTF8toUCS2(unescapedFileName));
+      }
+      else
       mSuggestedFileName.AssignWithConversion(leafName);
+    }
   }
 
   // step (2), generate a salted file name for the temp file....
