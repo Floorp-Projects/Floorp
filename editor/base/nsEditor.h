@@ -461,6 +461,9 @@ public:
   PRBool TagCanContain(const nsAReadableString &aParentTag, nsIDOMNode* aChild);
   virtual PRBool TagCanContainTag(const nsAReadableString &aParentTag, const nsAReadableString &aChildTag);
 
+  /** returns PR_TRUE if aNode is our root node */
+  PRBool IsRootNode(nsIDOMNode *inNode);
+
   /** returns PR_TRUE if aNode is a descendant of our root node */
   PRBool IsDescendantOfBody(nsIDOMNode *inNode);
 

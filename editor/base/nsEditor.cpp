@@ -3250,9 +3250,9 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
     result = node->GetParentNode(getter_AddRefs(parent));
     if ((NS_SUCCEEDED(result)) && parent)
     {
-      if (bNoBlockCrossing && IsBlockNode(parent))
+      if ((bNoBlockCrossing && IsBlockNode(parent)) || IsRootNode(parent))
       {
-        // we are at front of block, do not step out
+        // we are at front of block or root, do not step out
         *aResultNode = nsnull;
         return result;
       }
@@ -3341,9 +3341,9 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
     result = node->GetParentNode(getter_AddRefs(parent));
     if ((NS_SUCCEEDED(result)) && parent)
     {
-      if (bNoBlockCrossing && IsBlockNode(parent))
+      if ((bNoBlockCrossing && IsBlockNode(parent)) || IsRootNode(parent))
       {
-        // we are at front of block, do not step out
+        // we are at end of block or root, do not step out
         *aResultNode = nsnull;
         return result;
       }
@@ -3520,6 +3520,24 @@ nsEditor::TagCanContainTag(const nsAReadableString &aParentTag, const nsAReadabl
   if (NS_FAILED(res)) return PR_FALSE;
 
   return mDTD->CanContain(parentTagEnum, childTagEnum);
+}
+
+PRBool 
+nsEditor::IsRootNode(nsIDOMNode *inNode) 
+{
+  if (!inNode)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+
+  nsresult result = GetRootElement(getter_AddRefs(rootElement));
+
+  if (NS_FAILED(result) || !rootElement)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
+  
+  return inNode == rootNode.get();
 }
 
 PRBool 
