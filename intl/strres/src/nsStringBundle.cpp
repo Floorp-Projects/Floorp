@@ -42,7 +42,7 @@ NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kIPropertiesIID, NS_IPROPERTIES_IID);
+static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 class nsStringBundle : public nsIStringBundle
@@ -56,7 +56,7 @@ public:
   NS_IMETHOD GetStringFromID(PRInt32 aID, nsString& aResult);
   NS_IMETHOD GetStringFromName(const nsString& aName, nsString& aResult);
 
-  nsIProperties* mProps;
+  nsIPersistentProperties* mProps;
 };
 
 nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
@@ -83,11 +83,11 @@ nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
 #endif
     return;
   }
-  *aResult = nsComponentManager::CreateInstance(kPropertiesCID, NULL,
-    kIPropertiesIID, (void**) &mProps);
+  *aResult = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
+    kIPersistentPropertiesIID, (void**) &mProps);
   if (NS_FAILED(*aResult)) {
 #ifdef NS_DEBUG
-    printf("create nsIProperties failed\n");
+    printf("create nsIPersistentProperties failed\n");
 #endif
     return;
   }

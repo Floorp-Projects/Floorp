@@ -21,11 +21,11 @@
 
 #include "nsIFactory.h"
 
-class nsPropertiesFactory : public nsIFactory
+class nsPersistentPropertiesFactory : public nsIFactory
 {
 public:
-  nsPropertiesFactory();
-  virtual ~nsPropertiesFactory();
+  nsPersistentPropertiesFactory();
+  virtual ~nsPersistentPropertiesFactory();
 
   NS_DECL_ISUPPORTS
 
