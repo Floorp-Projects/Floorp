@@ -31,6 +31,7 @@
 #include "nsString.h"
 #include "nsdefs.h"
 #include "nsIFileChannel.h"
+#include "nsILocalFile.h"
 //
 // Native BeOS FileSelector wrapper
 //
