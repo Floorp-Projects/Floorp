@@ -362,7 +362,7 @@
             const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
             if (this.mCurrentTab.getAttribute("busy") == "true" && !this.mIsBusy) {
               this.mIsBusy = true;
-              var webProgress = this.mCurrentBrowser.webProgress;
+              webProgress = this.mCurrentBrowser.webProgress;
               for (i = 0; i < this.mProgressListeners.length; i++) {
                 p = this.mProgressListeners[i];
                 if (p)
@@ -374,7 +374,7 @@
             // we need to fire a stop to all progress listeners.
             if (this.mCurrentTab.getAttribute("busy") != "true" && this.mIsBusy) {
               this.mIsBusy = false;
-              var webProgress = this.mCurrentBrowser.webProgress;
+              webProgress = this.mCurrentBrowser.webProgress;
               for (i = 0; i < this.mProgressListeners.length; i++) {
                 p = this.mProgressListeners[i];
                 if (p)
@@ -428,10 +428,11 @@
   
             var tabBrowser = this.parentNode.parentNode;
             var notifyListeners = true;
+            var i;
+            
             if (tabBrowser.mTabbedMode) {
               // We need to update a tab.
-              var i = 0;
-              for ( ; i < this.childNodes.length; i++) {
+              for (i = 0; i < this.childNodes.length; i++) {
                 if (this.childNodes[i].contentDocument == event.target.ownerDocument) {
                   if (!contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.IMAGE,
                                                 uri, event.target, this.childNodes[i].contentWindow))
@@ -450,7 +451,7 @@
               return;
 
             if (notifyListeners && tabBrowser.mProgressListeners) {
-              for (var i = 0; i < tabBrowser.mProgressListeners.length; i++) {
+              for (i = 0; i < tabBrowser.mProgressListeners.length; i++) {
                 var p = tabBrowser.mProgressListeners[i];
                 if (p)
                   p.onLinkIconAvailable(href);
@@ -772,14 +773,13 @@
           if (this.mCurrentTab == aTab)
             return this.mCurrentBrowser;
 
-          var i = -1;
-          for (i = 0; i < this.mTabContainer.childNodes.length; i++) {
-            if (this.mTabContainer.childNodes[i] == aTab)
-              break;
+          for (var i = 0; i < this.mTabContainer.childNodes.length; i++) {
+            if (this.mTabContainer.childNodes[i] == aTab) {
+              return this.mPanelContainer.childNodes[i];
+            }
           }
 
-          if (i >= 0 && i < this.mPanelContainer.childNodes.length)
-            return this.mPanelContainer.childNodes[i];
+          return null;
         ]]>
         </body>
       </method>
