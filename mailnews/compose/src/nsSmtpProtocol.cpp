@@ -210,7 +210,7 @@ char * NET_SACat (char **destination, const char *source)
 
  */
 /* caller must free the return buffer */
-PRIVATE char *
+static char *
 esmtp_value_encode(char *addr)
 {
 	char *buffer = (char *) PR_Malloc(512); /* esmpt ORCPT allow up to 500 chars encoded addresses */
