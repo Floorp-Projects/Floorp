@@ -180,25 +180,12 @@ nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult 
 nsMenuBarListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  if (!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
-	  mMenuBarFrame->ToggleMenuActiveState();
-    PRBool handled;
-    mMenuBarFrame->Escape(handled);
-	  mAltKeyDown = PR_FALSE;
-  }
   return NS_OK; // means I am NOT consuming event
 }
 
 nsresult 
 nsMenuBarListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  if (!mMenuBarFrame->IsOpen() && mMenuBarFrame->IsActive()) {
-	  mMenuBarFrame->ToggleMenuActiveState();
-	  PRBool handled;
-    mMenuBarFrame->Escape(handled);
-	  mAltKeyDown = PR_FALSE;
-  }
-
   return NS_OK; // means I am NOT consuming event
 }
 

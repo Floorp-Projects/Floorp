@@ -46,11 +46,11 @@ XUL_ATOM(slider, "slider")
 XUL_ATOM(colorpicker, "colorpicker")
 XUL_ATOM(palettename, "palettename")
 XUL_ATOM(fontpicker, "fontpicker")
-XUL_ATOM(radio, "radio")
 XUL_ATOM(text, "text")
 XUL_ATOM(toolbar, "toolbar")
 XUL_ATOM(toolbaritem, "toolbaritem")
 XUL_ATOM(toolbox, "toolbox")
+XUL_ATOM(image, "image")
 
   // The tree atoms
 XUL_ATOM(tree, "tree") // The start of a tree view
