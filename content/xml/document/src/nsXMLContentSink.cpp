@@ -821,7 +821,7 @@ nsXMLContentSink::NotifyError(const nsParserError* aError)
   nsIContent* sourceTextNode = nsnull;
 
   /* Create container and text content nodes */
-  result = NS_CreateHTMLElement(&errorContainerNode, parserErrorTag);
+  result = NS_CreateHTMLElement(&errorContainerNode, parserErrorTag); // XXX these should NOT be in the HTML namespace
   if (NS_OK == result) {  
     result = NS_NewTextNode(&errorTextNode);
     if (NS_OK == result) {    
@@ -1144,7 +1144,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     }
 
     PRBool doneLoading;
-    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
                                        mStyleSheetCount++, 
                                       ((blockParser) ? mParser : nsnull),
                                       doneLoading);

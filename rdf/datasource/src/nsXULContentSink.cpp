@@ -771,7 +771,7 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
     }
 
     PRBool doneLoading;
-    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+    result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
                                        mStyleSheetCount++, 
                                        ((blockParser) ? mParser : nsnull),
                                        doneLoading);
