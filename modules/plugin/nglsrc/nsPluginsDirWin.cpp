@@ -153,7 +153,9 @@ static void FreeStringArray(PRUint32 variants, char ** array)
 nsPluginsDir::nsPluginsDir(PRUint16 location)
 {
   DWORD pathlen; 
-  char path[2000];
+  char path[_MAX_PATH];
+  char newestPath[_MAX_PATH + 4]; // to prevent buffer overrun when adding /bin
+  newestPath[0] = 0;
   const char* allocPath;
   // Use the Moz_BinDirectory
   nsSpecialSystemDirectory plugDir(nsSpecialSystemDirectory::Moz_BinDirectory);
@@ -207,9 +209,72 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
 	  *(nsFileSpec*)this = allocPath;
   }
 
+  if (PLUGINS_DIR_LOCATION_JAVA_JRE == location)
+  {
+    // Case for looking for the Java OJI plugin via the JRE install path
+    HKEY baseloc;
+    HKEY keyloc;
+    FILETIME modTime;
+    FILETIME curVer = {0,0};
+    DWORD type; 
+    DWORD index = 0;
+    DWORD numChars = _MAX_PATH;
+    char curKey[_MAX_PATH] = "Software\\JavaSoft\\Java Plug-in";
+
+    LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ, &baseloc);
+
+    // we must enumerate through the keys because what if there is more than one version?
+    while (ERROR_SUCCESS == result)
+    {
+      path[0] = 0;
+      numChars = _MAX_PATH;
+      pathlen = sizeof(path);
+      result = ::RegEnumKeyEx(baseloc, index, curKey, &numChars, NULL, NULL, NULL, &modTime);
+      index++;
+      if (ERROR_SUCCESS == result)
+      {
+        if (ERROR_SUCCESS == ::RegOpenKeyEx(baseloc, curKey, 0, KEY_QUERY_VALUE, &keyloc))
+        {
+          // we have a sub key
+          if (ERROR_SUCCESS == ::RegQueryValueEx(keyloc, "JavaHome", NULL, &type, (LPBYTE)&path, &pathlen))
+          {
+            // Compare time stamps from registry lookup
+            // Only use the key with the latest time stamp because there could be several
+            //
+            // NOTE: This may not be the highest version revsion number (szKey)
+            // if the user installed an older version AFTER a newer one
+            // This assumes the last version installed is the one the user wants to use
+            // We can also tweak this for checking for a minimum version on szKey
+            if (::CompareFileTime(&modTime,&curVer) > 0 && atof(curKey) >= 1.3)
+            {
+              PL_strcpy(newestPath,path);
+              curVer = modTime;
+            }
+            ::RegCloseKey(keyloc);
+          }          
+        }        
+      }
+    }
+
+    ::RegCloseKey(baseloc);
+    
+    // if nothing is found, then don't add \bin dir
+    // a null path may be returned so .Valid() should be used.
+    if (newestPath[0] != 0)
+      PL_strcat(newestPath,"\\bin");
+
+    allocPath = newestPath;
+    *(nsFileSpec*)this = allocPath;
+
+#ifdef NS_DEBUG
+  if (newestPath[0] != 0)
+    PL_strcpy(path,newestPath);  // so the debug below will print out correct
+#endif
+  }
+
 #ifdef NS_DEBUG 
   if (path[0] != 0) 
-    printf("plugins at: %s\n", path); 
+    printf("Searching for plugins at: %s\n", path); 
 #endif 
 }
 
