@@ -144,7 +144,7 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(NULL, PR_FALSE)
 	m_ibuffer_fp = 0;
 	m_graph_progress_total = 0;
 	m_graph_progress_received = 0;
-	m_updateAsWeGo = FALSE;
+	m_updateAsWeGo = PR_TRUE;
 	m_ignoreNonMailFolder = PR_FALSE;
 	m_isRealMailFolder = PR_TRUE;
 }
@@ -278,7 +278,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 		}
 		else if (m_mailDB != NULL)
 		{
-//			m_mailDB->AddHdrToDB(m_newMsgHdr, NULL, m_updateAsWeGo);
+			m_mailDB->AddNewHdrToDB(m_newMsgHdr, m_updateAsWeGo);
 			// should we release here?
 			m_newMsgHdr = NULL;
 		}
