@@ -29,10 +29,21 @@ include $(DEPTH)/config/autoconf.mk
 EXPORT_RESOURCE_SKIN = \
     $(srcdir)/EditorDialog.css \
     $(srcdir)/EdImageMap.css \
+    $(srcdir)/EdImageMapPage.css \
 		$(NULL)
 
 EXPORT_RESOURCE_IMAGES = \
 		$(srcdir)/images/Map_checker.gif \
+		$(srcdir)/images/Map_circleTool.gif \
+		$(srcdir)/images/Map_contrast.gif \
+		$(srcdir)/images/Map_Copy.gif \
+		$(srcdir)/images/Map_Cut.gif \
+		$(srcdir)/images/Map_Paste.gif \
+		$(srcdir)/images/Map_pointerTool.gif \
+		$(srcdir)/images/Map_polygonTool.gif \
+		$(srcdir)/images/Map_rectangleTool.gif \
+		$(srcdir)/images/Map_zoomIn.gif \
+		$(srcdir)/images/Map_zoomOut.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
