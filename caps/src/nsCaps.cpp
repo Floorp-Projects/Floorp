@@ -84,11 +84,13 @@ nsCapsInitialize()
   // as the factory object in the repository. All other modules should
   // FindFactory and use createInstance to create a instance of nsCCapsManager
   // and ask for nsICapsManager interface.
+  /*
   nsCCapsManagerFactory *pNSCCapsManagerFactory = new nsCCapsManagerFactory();
   if ( pNSCCapsManagerFactory == NULL )
   {
      return PR_FALSE;
   }
+  */
   return PR_TRUE;
 }
 

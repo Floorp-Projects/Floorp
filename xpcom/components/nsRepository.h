@@ -33,7 +33,19 @@
  * Prototypes for dynamic library export functions
  */
 
+class nsIServiceManager;
+
+
+//***********************************************************
+//
+// NSGetFactory should take nsISupports instead of nsIServiceManager
+// as the second param. This is done on purpose!! Please don't change
+// it. 
+//       sudu / stanley
+//
+//***********************************************************
 extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
+                                           nsISupports* serviceMgr,
                                            nsIFactory **aFactory);
 extern "C" NS_EXPORT PRBool   NSCanUnload(void);
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path);
@@ -44,6 +56,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path);
  */
 
 typedef nsresult (*nsFactoryProc)(const nsCID &aCLass,
+                                  nsISupports* serviceMgr,
                                   nsIFactory **aFactory);
 typedef PRBool (*nsCanUnloadProc)(void);
 typedef nsresult (*nsRegisterProc)(const char *path);

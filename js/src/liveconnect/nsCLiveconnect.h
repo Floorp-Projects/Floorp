@@ -154,6 +154,15 @@ public:
     NS_IMETHOD	
     FinalizeJSObject(JNIEnv *jEnv, jsobject obj);
 
+    /**
+     * Get the window object for a plugin instance.
+     *
+     * @param jEnv       - JNIEnv on which the call is being made.
+     * @param obj        - A Native JS Object.
+     * @param jstring    - Return value as a jstring representing a JS object.
+     */
+    NS_IMETHOD
+    ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring);
     ////////////////////////////////////////////////////////////////////////////
     // from nsCLiveconnect:
 

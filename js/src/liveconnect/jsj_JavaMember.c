@@ -64,13 +64,14 @@ JavaMember_finalize(JSContext *cx, JSObject *obj)
     JavaMethodOrFieldValue *member_val;
     JNIEnv *jEnv;
 
+    member_val = JS_GetPrivate(cx, obj);
+    if (!member_val)
+        return;
+
     jsj_MapJSContextToJSJThread(cx, &jEnv);
     if (!jEnv)
         return;
 
-    member_val = JS_GetPrivate(cx, obj);
-    if (!member_val)
-        return;
     JS_RemoveRoot(cx, &member_val->method_val);
     if (JSVAL_IS_GCTHING(member_val->method_val))
         JS_RemoveRoot(cx, &member_val->method_val);
@@ -107,19 +108,32 @@ JavaMember_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         return JS_TRUE;
 
     default:
-        PR_ASSERT(0);
+        JS_ASSERT(0);
         return JS_FALSE;
     }
+}
+
+/*
+ * This function exists only to make JavaMember's Call'able.  The way the JS
+ * engine is written now, it's never actually called because when a JavaMember
+ * is invoked, it's converted to a JS function via JavaMember_convert().
+ */
+JSBool
+JavaMember_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JS_ASSERT(0);
+    return JS_TRUE;
 }
 
 JSClass JavaMember_class = {
     "JavaMember", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub, 
-    JavaMember_convert, JavaMember_finalize
+    JavaMember_convert, JavaMember_finalize,
+    NULL, /* getObjectOps */
+    NULL, /* checkAccess */
+    JavaMember_Call
 };
-
-extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
 JSBool
 jsj_init_JavaMember(JSContext *cx, JSObject *global_obj)

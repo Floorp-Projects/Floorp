@@ -23,6 +23,10 @@
 #include "xp_core.h"    /* include first because of Bool problem */
 #include "prtypes.h"
 #include "nsCom.h"
+#include "jni.h"
+#include "jsdbgapi.h"
+#include "nsError.h"
+
 
 #include "nsjvm.h"
 #include "nsAgg.h"
@@ -31,10 +35,6 @@
 
 class nsSymantecDebugManager;
 
-struct ThreadLocalStorageAtIndex0 {
-    PRUint32 refcount;
-};
-typedef struct ThreadLocalStorageAtIndex0 ThreadLocalStorageAtIndex0;
 
 /*******************************************************************************
  * NsJVMManager is the interface to the JVM manager that the browser sees. All
@@ -42,16 +42,88 @@ typedef struct ThreadLocalStorageAtIndex0 ThreadLocalStorageAtIndex0;
  * nsIJVMManager is the more limited interface what the JVM plugin sees.
  ******************************************************************************/
 
-struct nsJVMManager : public nsIJVMManager {
+struct nsJVMManager : public nsIJVMManager, public nsIThreadManager {
 public:
 
     NS_DECL_AGGREGATED
     
     /* from nsIJVMManager: */
+    
+    /**
+     * Creates a proxy JNI with an optional secure environment (which can be NULL).
+     * There is a one-to-one correspondence between proxy JNIs and threads, so
+     * calling this method multiple times from the same thread will return
+     * the same proxy JNI.
+     */
+	NS_IMETHOD
+	CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv);
+	
+	/**
+	 * Returns the proxy JNI associated with the current thread, or NULL if no
+	 * such association exists.
+	 */
+	NS_IMETHOD
+	GetProxyJNI(JNIEnv** outProxyEnv);
+    
+    /* from nsIThreadManager: */
+    
+	/**
+	 * Returns a unique identifier for the "current" system thread.
+	 */
+	NS_IMETHOD
+	GetCurrentThread(PRUint32* threadID);
 
-    /* NsJVMManager specific methods: */
+	/**
+	 * Pauses the current thread for the specified number of milliseconds.
+	 * If milli is zero, then merely yields the CPU if another thread of
+	 * greater or equal priority.
+	 */
+	NS_IMETHOD
+	Sleep(PRUint32 milli = 0);
+
+	/**
+	 * Creates a unique monitor for the specified address, and makes the
+	 * current system thread the owner of the monitor.
+	 */
+	NS_IMETHOD
+	EnterMonitor(void* address);
+	
+	/**
+	 * Exits the monitor associated with the address.
+	 */
+	NS_IMETHOD
+	ExitMonitor(void* address);
+	
+	/**
+	 * Waits on the monitor associated with the address (must be entered already).
+	 * If milli is 0, wait indefinitely.
+	 */
+	NS_IMETHOD
+	Wait(void* address, PRUint32 milli = 0);
+
+	/**
+	 * Notifies a single thread waiting on the monitor associated with the address (must be entered already).
+	 */
+	NS_IMETHOD
+	Notify(void* address);
+
+	/**
+	 * Notifies all threads waiting on the monitor associated with the address (must be entered already).
+	 */
+	NS_IMETHOD
+	NotifyAll(void* address);
+	
+	/**
+	 * Thread creation primitives.
+	 */
+	NS_IMETHOD
+	CreateThread(PRUint32* threadID, nsIRunnable* runnable);
+
+    /* JVMMgr specific methods: */
 
     /* ====> From here on are things only called by the browser, not the plugin... */
+    NS_IMETHOD
+    GetClasspathAdditions(const char* *result);
 
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
@@ -64,9 +136,11 @@ public:
     nsJVMStatus ShutdownJVM(PRBool fullShutdown = PR_FALSE);
     nsJVMStatus GetJVMStatus(void);
     void SetJVMEnabled(PRBool enabled);
-    
+
+#if 0    
     void        ReportJVMError(nsresult err);
     const char* GetJavaErrorString(JNIEnv* env);
+#endif
 
     nsresult    AddToClassPath(const char* dirPath);
     PRBool      MaybeStartupLiveConnect(void);
@@ -75,8 +149,8 @@ public:
     JSJavaVM*   GetJSJavaVM(void) { return fJSJavaVM; }
 
 
-protected:    
     nsJVMManager(nsISupports* outer);
+protected:    
     virtual ~nsJVMManager(void);
 
     void        EnsurePrefCallbackRegistered(void);
@@ -88,6 +162,7 @@ protected:
     nsISupports*        fDebugManager;
     JSJavaVM *          fJSJavaVM;  
     nsVector*           fClassPathAdditions;
+    char*               fClassPathAdditionsString;
 };
 
 /*******************************************************************************
@@ -115,13 +190,5 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#define NS_JVMMANAGER_CID                            \
-{ /* 38e7ef10-58df-11d2-8164-006008119d7a */         \
-    0x38e7ef10,                                      \
-    0x58df,                                          \
-    0x11d2,                                          \
-    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 #endif // nsJVMManager_h___

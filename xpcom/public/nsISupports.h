@@ -148,6 +148,7 @@ public:
  * constructor you implement.
  */
 #define NS_INIT_REFCNT() mRefCnt = 0
+#define NS_INIT_ISUPPORTS() NS_INIT_REFCNT() // what it should have been called in the first place
 
 /**
  * Use this macro to implement the AddRef method for a given <i>_class</i>

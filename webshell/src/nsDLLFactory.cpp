@@ -21,6 +21,7 @@
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 #include "nsIThrobber.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID,  NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kThrobberCID,          NS_THROBBER_CID);
@@ -31,9 +32,9 @@ nsresult NS_NewDocLoaderServiceFactory(nsIFactory** aResult);
 
 
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_WEB nsresult NSGetFactory_WEB_DLL(const nsCID& aClass, nsIFactory** aFactory)
+extern "C" NS_WEB nsresult NSGetFactory_WEB_DLL(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
 #else
-extern "C" NS_WEB nsresult NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
+extern "C" NS_WEB nsresult NSGetFactory(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
 #endif
 {
   nsresult rv = NS_OK;

@@ -242,6 +242,9 @@ nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                 err = entry->AddListener(shutdownListener);
                 if (err == NS_OK) {
                     mServices->Put(&key, entry);
+                    service->AddRef(); // Add a extra ref so that the service is not freed for now.
+                                       // Should fix it later depending on Mem pressure API or some
+                                       // daemon killer thread.
                     *result = service;
                 }
                 else {
@@ -273,12 +276,16 @@ nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
         err = entry->RemoveListener(shutdownListener);
         // XXX Is this too aggressive? Maybe we should have a memory
         // pressure API that releases services if they're not in use so
-        // that we don't thrash.
+        // that we don't thrash.(warren)
         nsrefcnt cnt = service->Release();
+#if 0
+       // Turns out to be too aggressive. Stanley reported that he always gets a new copy
+       // of service.So do not remove it. Also one cannot depend return value of Release as per COM! (sudu)
         if (err == NS_OK && cnt == 0) {
             mServices->Remove(&key);
             delete entry;
         }
+#endif 
     }
 
     PR_CExitMonitor(this);

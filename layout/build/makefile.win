@@ -54,6 +54,8 @@ MISCDEP =				\
  $(DIST)\lib\jsdom.lib		        \
  $(DIST)\lib\libplc21.lib		\
  $(DIST)\lib\js3250.lib			\
+ $(DIST)\lib\oji.lib                  \
+ $(DIST)\lib\jsj3250.lib                \
  $(LIBNSPR)
 
 LCFLAGS = \

@@ -136,7 +136,7 @@ MyServiceFactory::LockFactory(PRBool aLock)
 static NS_DEFINE_IID(kIMyServiceCID, NS_IMYSERVICE_CID);
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory)
 {
     if (!aClass.Equals(kIMyServiceCID))
         return NS_ERROR_FACTORY_NOT_REGISTERED;

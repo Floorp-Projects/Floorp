@@ -368,7 +368,7 @@ nsAppRunnerFactory::LockFactory(PRBool aLock)
 }
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &cid, nsIFactory** aFactory) {
+NSGetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory ) {
     nsresult rv = NS_OK;
 
     if ( aFactory == 0 ) {

@@ -98,13 +98,14 @@ access_java_array_element(JSContext *cx,
                 return JS_TRUE;
             }
         }
-        JS_ReportError(cx, "illegal operation on JavaArray prototype object");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_BAD_OP_JARRAY);
         return JS_FALSE;
     }
     class_descriptor = java_wrapper->class_descriptor;
     java_array = java_wrapper->java_obj;
     
-    PR_ASSERT(class_descriptor->type == JAVA_SIGNATURE_ARRAY);
+    JS_ASSERT(class_descriptor->type == JAVA_SIGNATURE_ARRAY);
 
     JS_IdToValue(cx, id, &idval);
 
@@ -127,8 +128,8 @@ access_java_array_element(JSContext *cx,
 
                 if (!JSVERSION_IS_ECMA(version)) {
  
-                    JS_ReportError(cx, "Attempt to write to invalid Java array "
-                                       "element \"%s\"", member_name);
+                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                        JSJMSG_CANT_WRITE_JARRAY, member_name);
                     return JS_FALSE;
                 } else {
                     *vp = JSVAL_VOID;
@@ -149,7 +150,8 @@ access_java_array_element(JSContext *cx,
             }
         }
 
-        JS_ReportError(cx, "invalid Java array index expression");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_BAD_INDEX_EXPR);
         return JS_FALSE;
     }
     
@@ -162,7 +164,10 @@ access_java_array_element(JSContext *cx,
 
     /* Just let Java throw an exception instead of checking array bounds here */
     if (index < 0 || index >= array_length) {
-        JS_ReportError(cx, "Java array index %d out of range", index);
+        char numBuf[12];
+        sprintf(numBuf, "%d", index);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                            JSJMSG_BAD_JARRAY_INDEX, numBuf);
         return JS_FALSE;
     }
 #endif
@@ -181,7 +186,7 @@ access_java_array_element(JSContext *cx,
     }
 }
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_getPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JNIEnv *jEnv;
@@ -191,7 +196,7 @@ JavaArray_getPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return access_java_array_element(cx, jEnv, obj, id, vp, JS_FALSE);
 }
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaArray_setPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JNIEnv *jEnv;
@@ -210,11 +215,16 @@ JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                             )
 {
     JNIEnv *jEnv;
+    JSBool result;
+    JSErrorReporter old_reporter;
     jsj_MapJSContextToJSJThread(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
 
-    return access_java_array_element(cx, jEnv, obj, id, NULL, JS_FALSE);
+    old_reporter = JS_SetErrorReporter(cx, NULL);
+    result = access_java_array_element(cx, jEnv, obj, id, NULL, JS_FALSE);
+    JS_SetErrorReporter(cx, old_reporter);
+    return result;
 }
 
 static JSBool
@@ -222,7 +232,8 @@ JavaArray_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportError(cx, "Cannot define a new property in a JavaArray");
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                        JSJMSG_JARRAY_PROP_DEFINE);
     return JS_FALSE;
 }
 
@@ -241,7 +252,7 @@ JavaArray_setAttributes(JSContext *cx, JSObject *obj, jsid id,
 {
     /* We don't maintain JS property attributes for Java class members */
     if (*attrsp != (JSPROP_PERMANENT|JSPROP_ENUMERATE)) {
-        PR_ASSERT(0);
+        JS_ASSERT(0);
         return JS_FALSE;
     }
 
@@ -257,7 +268,8 @@ JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     *vp = JSVAL_FALSE;
     
     if (!JSVERSION_IS_ECMA(version)) {
-        JS_ReportError(cx, "Properties of JavaArray objects may not be deleted");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_JARRAY_PROP_DELETE);
         return JS_FALSE;
     } else {
         /* Attempts to delete permanent properties are silently ignored
@@ -323,7 +335,7 @@ JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         return JS_TRUE;
 
     default:
-        PR_ASSERT(0);
+        JS_ASSERT(0);
         return JS_FALSE;
     }
 }
@@ -334,11 +346,13 @@ JavaArray_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 {
     switch (mode) {
     case JSACC_WATCH:
-        JS_ReportError(cx, "Cannot place watchpoints on JavaArray object properties");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_JARRAY_PROP_WATCH);
         return JS_FALSE;
 
     case JSACC_IMPORT:
-        JS_ReportError(cx, "Cannot export a JavaArray object's properties");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                            JSJMSG_JARRAY_PROP_EXPORT);
         return JS_FALSE;
 
     default:

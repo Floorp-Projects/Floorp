@@ -1,6 +1,20 @@
-/* -*- Mode: C; tab-width: 4; -*- */
-
-/* Insert copyright and license here 19** */
+/* -*- Mode: Java; tab-width: 8; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
 
 /* more doc todo:
  *  threads
@@ -23,7 +37,7 @@ import java.applet.Applet;
  *   which can be used to access methods and fields of the java object.
  *   Converting this wrapper to a string will call the toString method
  *   on the original object, converting to a number will call the
- *   floatValue method if possible and fail otherwise.  Converting
+ *   doubleValue method if possible and fail otherwise.  Converting
  *   to a boolean will try to call the booleanValue method in the
  *   same way.
  * <li>Java arrays are wrapped with a JavaScript object that understands
@@ -35,7 +49,7 @@ import java.applet.Applet;
  * Values passed from JavaScript to Java are converted as follows:<ul>
  * <li>objects which are wrappers around java objects are unwrapped
  * <li>other objects are wrapped with a JSObject
- * <li>strings, numbers and booleans are converted to String, Float,
+ * <li>strings, numbers and booleans are converted to String, Double,
  *   and Boolean objects respectively
  * </ul>
  * This means that all JavaScript values show up as some kind
@@ -139,12 +153,5 @@ public final class JSObject {
      * Override java.lang.Object.equals() because identity is not preserved
      * with instances of JSObject.
      */
-    public boolean equals(Object obj) {
-        JSObject jsobj;
-
-        if (!(obj instanceof JSObject))
-            return false;
-        jsobj = (JSObject)obj;
-	return (internal == jsobj.internal);
-    }
+    public native boolean equals(Object obj);
 }

@@ -38,7 +38,7 @@ extern "C" NS_EXPORT PRBool NSCanUnload()
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, 
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* serviceMgr,
                                            nsIFactory **aFactory)
 {
   if (aFactory == NULL) return NS_ERROR_NULL_POINTER;

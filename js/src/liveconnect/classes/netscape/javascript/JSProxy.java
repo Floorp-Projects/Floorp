@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* ** */
+
 /**
  * The JSProxy interface allows applets and plugins to
  * share javascript contexts.

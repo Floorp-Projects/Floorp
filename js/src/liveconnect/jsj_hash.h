@@ -33,17 +33,17 @@
  */
 #include <stddef.h>
 #include <stdio.h>
-#include "prtypes.h"
+#include "jstypes.h"
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 typedef struct JSJHashEntry  JSJHashEntry;
 typedef struct JSJHashTable  JSJHashTable;
-typedef PRUint32 JSJHashNumber;
+typedef JSUint32 JSJHashNumber;
 #define JSJ_HASH_BITS 32
 typedef JSJHashNumber (*JSJHashFunction)(const void *key, void *arg);
-typedef PRIntn (*JSJHashComparator)(const void *v1, const void *v2, void *arg);
-typedef PRIntn (*JSJHashEnumerator)(JSJHashEntry *he, PRIntn i, void *arg);
+typedef JSIntn (*JSJHashComparator)(const void *v1, const void *v2, void *arg);
+typedef JSIntn (*JSJHashEnumerator)(JSJHashEntry *he, JSIntn i, void *arg);
 
 /* Flag bits in JSJHashEnumerator's return value */
 #define HT_ENUMERATE_NEXT       0       /* continue enumerating entries */
@@ -55,7 +55,7 @@ typedef struct JSJHashAllocOps {
     void *              (*allocTable)(void *pool, size_t size);
     void                (*freeTable)(void *pool, void *item);
     JSJHashEntry *      (*allocEntry)(void *pool, const void *key);
-    void                (*freeEntry)(void *pool, JSJHashEntry *he, PRUintn flag);
+    void                (*freeEntry)(void *pool, JSJHashEntry *he, JSUintn flag);
 } JSJHashAllocOps;
 
 #define HT_FREE_VALUE   0               /* just free the entry's value */
@@ -70,18 +70,18 @@ struct JSJHashEntry {
 
 struct JSJHashTable {
     JSJHashEntry         **buckets;      /* vector of hash buckets */
-    PRUint32              nentries;       /* number of entries in table */
-    PRUint32              shift;          /* multiplicative hash shift */
+    JSUint32              nentries;       /* number of entries in table */
+    JSUint32              shift;          /* multiplicative hash shift */
     JSJHashFunction     keyHash;        /* key hash function */
     JSJHashComparator   keyCompare;     /* key comparison function */
     JSJHashComparator   valueCompare;   /* value comparison function */
     JSJHashAllocOps     *allocOps;      /* allocation operations */
     void                *allocPriv;     /* allocation private data */
 #ifdef HASHMETER
-    PRUint32              nlookups;       /* total number of lookups */
-    PRUint32              nsteps;         /* number of hash chains traversed */
-    PRUint32              ngrows;         /* number of table expansions */
-    PRUint32              nshrinks;       /* number of table contractions */
+    JSUint32              nlookups;       /* total number of lookups */
+    JSUint32              nsteps;         /* number of hash chains traversed */
+    JSUint32              ngrows;         /* number of table expansions */
+    JSUint32              nshrinks;       /* number of table contractions */
 #endif
 };
 
@@ -89,53 +89,53 @@ struct JSJHashTable {
  * Create a new hash table.
  * If allocOps is null, use default allocator ops built on top of malloc().
  */
-PR_EXTERN(JSJHashTable *)
-JSJ_NewHashTable(PRUint32 n, JSJHashFunction keyHash,
+JS_EXTERN_API(JSJHashTable *)
+JSJ_NewHashTable(JSUint32 n, JSJHashFunction keyHash,
                 JSJHashComparator keyCompare, JSJHashComparator valueCompare,
                 JSJHashAllocOps *allocOps, void *allocPriv);
 
-PR_EXTERN(void)
+JS_EXTERN_API(void)
 JSJ_HashTableDestroy(JSJHashTable *ht);
 
 /* Low level access methods */
-PR_EXTERN(JSJHashEntry **)
+JS_EXTERN_API(JSJHashEntry **)
 JSJ_HashTableRawLookup(JSJHashTable *ht, JSJHashNumber keyHash, const void *key, void *arg);
 
-PR_EXTERN(JSJHashEntry *)
+JS_EXTERN_API(JSJHashEntry *)
 JSJ_HashTableRawAdd(JSJHashTable *ht, JSJHashEntry **hep, JSJHashNumber keyHash,
                    const void *key, void *value, void *arg);
 
-PR_EXTERN(void)
+JS_EXTERN_API(void)
 JSJ_HashTableRawRemove(JSJHashTable *ht, JSJHashEntry **hep, JSJHashEntry *he, void *arg);
 
 /* Higher level access methods */
-PR_EXTERN(JSJHashEntry *)
+JS_EXTERN_API(JSJHashEntry *)
 JSJ_HashTableAdd(JSJHashTable *ht, const void *key, void *value, void *arg);
 
-PR_EXTERN(PRBool)
+JS_EXTERN_API(JSBool)
 JSJ_HashTableRemove(JSJHashTable *ht, const void *key, void *arg);
 
-PR_EXTERN(PRIntn)
+JS_EXTERN_API(JSIntn)
 JSJ_HashTableEnumerateEntries(JSJHashTable *ht, JSJHashEnumerator f, void *arg);
 
-PR_EXTERN(void *)
+JS_EXTERN_API(void *)
 JSJ_HashTableLookup(JSJHashTable *ht, const void *key, void *arg);
 
-PR_EXTERN(PRIntn)
+JS_EXTERN_API(JSIntn)
 JSJ_HashTableDump(JSJHashTable *ht, JSJHashEnumerator dump, FILE *fp);
 
 /* General-purpose C string hash function. */
-PR_EXTERN(JSJHashNumber)
+JS_EXTERN_API(JSJHashNumber)
 JSJ_HashString(const void *key);
 
 /* Compare strings using strcmp(), return true if equal. */
-PR_EXTERN(int)
+JS_EXTERN_API(int)
 JSJ_CompareStrings(const void *v1, const void *v2);
 
 /* Stub function just returns v1 == v2 */
-PR_EXTERN(PRIntn)
+JS_EXTERN_API(JSIntn)
 JSJ_CompareValues(const void *v1, const void *v2);
 
-PR_END_EXTERN_C
+JS_END_EXTERN_C
 
 #endif /* jsj_hash_h___ */

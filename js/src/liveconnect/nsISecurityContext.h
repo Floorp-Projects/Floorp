@@ -85,6 +85,6 @@ public:
     0x4c41,                                          \
     0x11d2,                                          \
     { 0xa1, 0xcb, 0x0, 0x80, 0x5f, 0x8f, 0x69, 0x4d } \
-};
+}
 
 #endif // nsISecurityContext_h___

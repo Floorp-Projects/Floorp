@@ -54,15 +54,13 @@ jsj_GetJavaClassName(JSContext *cx, JNIEnv *jEnv, jclass java_class)
     java_class_name_jstr =
         (*jEnv)->CallObjectMethod(jEnv, java_class, jlClass_getName);
 
-
     if (!java_class_name_jstr)
         goto error;
 
     /* Convert to UTF8 encoding and copy */
     java_class_name = jsj_DupJavaStringUTF(cx, jEnv, java_class_name_jstr);
-    if (!java_class_name)
-        return NULL;
 
+    (*jEnv)->DeleteLocalRef(jEnv, java_class_name_jstr);
     return java_class_name;
 
 error:
@@ -99,7 +97,7 @@ get_signature_type(JSContext *cx, JavaClassDescriptor *class_descriptor)
 
     /* Get UTF8 encoding of class name */
     java_class_name = class_descriptor->name;
-    PR_ASSERT(java_class_name);
+    JS_ASSERT(java_class_name);
     if (!java_class_name)
         return JAVA_SIGNATURE_UNKNOWN;
 
@@ -121,10 +119,20 @@ get_signature_type(JSContext *cx, JavaClassDescriptor *class_descriptor)
         type = JAVA_SIGNATURE_BOOLEAN;
     else if (!strcmp(java_class_name, "void"))
         type = JAVA_SIGNATURE_VOID;
+    else if (!strcmp(java_class_name, "java.lang.Boolean"))
+        type = JAVA_SIGNATURE_JAVA_LANG_BOOLEAN;
+    else if (!strcmp(java_class_name, "java.lang.Double"))
+        type = JAVA_SIGNATURE_JAVA_LANG_DOUBLE;
+    else if (!strcmp(java_class_name, "java.lang.String"))
+        type = JAVA_SIGNATURE_JAVA_LANG_STRING;
+    else if (!strcmp(java_class_name, "java.lang.Object"))
+        type = JAVA_SIGNATURE_JAVA_LANG_OBJECT;
+    else if (!strcmp(java_class_name, "java.lang.Class"))
+        type = JAVA_SIGNATURE_JAVA_LANG_CLASS;
+    else if (!strcmp(java_class_name, "netscape.javascript.JSObject"))
+        type = JAVA_SIGNATURE_NETSCAPE_JAVASCRIPT_JSOBJECT;
     else
-        /* Well, I guess it's a Java class, then. */
-        type = JAVA_SIGNATURE_CLASS;
-    
+        type = JAVA_SIGNATURE_OBJECT;
     return type;
 }
 
@@ -175,12 +183,24 @@ compute_java_class_signature(JSContext *cx, JNIEnv *jEnv, JavaSignature *signatu
 
         signature->array_component_signature =
             jsj_GetJavaClassDescriptor(cx, jEnv, component_class);
-        if (!signature->array_component_signature)
+        if (!signature->array_component_signature) {
+            (*jEnv)->DeleteLocalRef(jEnv, component_class);
             return JS_FALSE;
+        }
     } else {
         signature->type = get_signature_type(cx, signature);
     }
     return JS_TRUE;
+}
+
+/*
+ * Convert from JavaSignatureChar enumeration to single-character
+ * signature used by the JDK and JNI methods.
+ */
+static char
+get_jdk_signature_char(JavaSignatureChar type)
+{
+    return "XVZCBSIJFD[LLLLLL"[(int)type];
 }
 
 /*
@@ -195,9 +215,9 @@ jsj_ConvertJavaSignatureToString(JSContext *cx, JavaSignature *signature)
 {
     char *sig;
 
-    if (signature->type == JAVA_SIGNATURE_CLASS) {
+    if (IS_OBJECT_TYPE(signature->type)) {
         /* A non-array object class */
-        sig = PR_smprintf("L%s;", signature->name);
+        sig = JS_smprintf("L%s;", signature->name);
         if (sig)
             jsj_MakeJNIClassname(sig);
 
@@ -209,12 +229,12 @@ jsj_ConvertJavaSignatureToString(JSContext *cx, JavaSignature *signature)
             jsj_ConvertJavaSignatureToString(cx, signature->array_component_signature);
         if (!component_signature_string)
             return NULL;
-        sig = PR_smprintf("[%s", component_signature_string);
+        sig = JS_smprintf("[%s", component_signature_string);
         JS_free(cx, (char*)component_signature_string);
 
     } else {
         /* A primitive class */
-        sig = PR_smprintf("%c", (char)signature->type);
+        sig = JS_smprintf("%c", get_jdk_signature_char(signature->type));
     }
 
     if (!sig) {
@@ -246,7 +266,7 @@ jsj_ConvertJavaSignatureToHRString(JSContext *cx,
             jsj_ConvertJavaSignatureToHRString(cx, acs);
         if (!component_signature_string)
             return NULL;
-        sig = PR_smprintf("%s[]", component_signature_string);
+        sig = JS_smprintf("%s[]", component_signature_string);
         JS_free(cx, (char*)component_signature_string);
 
     } else {
@@ -295,11 +315,8 @@ static void
 destroy_class_descriptor(JSContext *cx, JNIEnv *jEnv, JavaClassDescriptor *class_descriptor)
 {
     JS_FREE_IF(cx, (char *)class_descriptor->name);
-    if (class_descriptor->java_class) {
-        JSJ_HashTableRemove(java_class_reflections,
-                            class_descriptor->java_class, (void*)jEnv);
+    if (class_descriptor->java_class)
         (*jEnv)->DeleteGlobalRef(jEnv, class_descriptor->java_class);
-    }
 
     if (class_descriptor->array_component_signature)
         jsj_ReleaseJavaClassDescriptor(cx, jEnv, class_descriptor->array_component_signature);
@@ -350,18 +367,15 @@ error:
 }
 
 /* Trivial helper for jsj_DiscardJavaClassReflections(), below */
-static PRIntn
-enumerate_remove_java_class(JSJHashEntry *he, PRIntn i, void *arg)
+static JSIntn
+enumerate_remove_java_class(JSJHashEntry *he, JSIntn i, void *arg)
 {
-    JNIEnv *jEnv = (JNIEnv*)arg;
-    jclass java_class;
+    JSJavaThreadState *jsj_env = (JSJavaThreadState *)arg;
     JavaClassDescriptor *class_descriptor;
 
     class_descriptor = (JavaClassDescriptor*)he->value;
 
-    java_class = class_descriptor->java_class;
-    (*jEnv)->DeleteGlobalRef(jEnv, java_class);
-    class_descriptor->java_class = NULL;
+    destroy_class_descriptor(jsj_env->cx, jsj_env->jEnv, class_descriptor);
 
     return HT_ENUMERATE_REMOVE;
 }
@@ -372,10 +386,17 @@ enumerate_remove_java_class(JSJHashEntry *he, PRIntn i, void *arg)
 void
 jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
 {
+    JSJavaThreadState *jsj_env;
+    char *err_msg;
+
+    /* Get the per-thread state corresponding to the current Java thread */
+    jsj_env = jsj_MapJavaThreadToJSJavaThreadState(jEnv, &err_msg);
+    JS_ASSERT(jsj_env);
+
     if (java_class_reflections) {
         JSJ_HashTableEnumerateEntries(java_class_reflections,
                                       enumerate_remove_java_class,
-                                      (void*)jEnv);
+                                      (void*)jsj_env);
         JSJ_HashTableDestroy(java_class_reflections);
         java_class_reflections = NULL;
     }
@@ -391,7 +412,7 @@ jsj_GetJavaClassDescriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
     if (!class_descriptor)
         return new_class_descriptor(cx, jEnv, java_class);
 
-    PR_ASSERT(class_descriptor->ref_count > 0);
+    JS_ASSERT(class_descriptor->ref_count > 0);
     class_descriptor->ref_count++;
     return class_descriptor;
 }
@@ -399,9 +420,21 @@ jsj_GetJavaClassDescriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
 void
 jsj_ReleaseJavaClassDescriptor(JSContext *cx, JNIEnv *jEnv, JavaClassDescriptor *class_descriptor)
 {
-    if (!--class_descriptor->ref_count)
+#if 0
+    /* The ref-counting code doesn't work very well because cycles in the data
+       structures routinely lead to uncollectible JavaClassDescriptor's.  Skip it. */
+    JS_ASSERT(class_descriptor->ref_count >= 1);
+    if (!--class_descriptor->ref_count) {
+        JSJ_HashTableRemove(java_class_reflections,
+                            class_descriptor->java_class, (void*)jEnv);
         destroy_class_descriptor(cx, jEnv, class_descriptor);
+    }
+#endif
 }
+
+#ifdef JSJ_THREADSAFE
+static PRMonitor *java_reflect_monitor = NULL;
+#endif
 
 static JSBool
 reflect_java_methods_and_fields(JSContext *cx,
@@ -410,16 +443,29 @@ reflect_java_methods_and_fields(JSContext *cx,
                                 JSBool reflect_statics_only)
 {
     JavaMemberDescriptor *member_descriptor;
+    JSBool success;
 
-    if (reflect_statics_only)
+    success = JS_TRUE;  /* optimism */
+
+#ifdef JSJ_THREAD_SAFE
+    PR_EnterMonitor(java_reflect_monitor);
+#endif
+
+    /* See if we raced with another thread to reflect members of this class */
+    if (reflect_statics_only) {
+        if (class_descriptor->static_members_reflected)
+            goto done;
         class_descriptor->static_members_reflected = JS_TRUE;
-    else
+    } else {
+        if (class_descriptor->instance_members_reflected)
+            goto done;
         class_descriptor->instance_members_reflected = JS_TRUE;
+    }
     
     if (!jsj_ReflectJavaMethods(cx, jEnv, class_descriptor, reflect_statics_only))
-        return JS_FALSE;
+        goto error;
     if (!jsj_ReflectJavaFields(cx, jEnv, class_descriptor, reflect_statics_only))
-        return JS_FALSE;
+        goto error;
 
     if (reflect_statics_only) {
         member_descriptor = class_descriptor->static_members;
@@ -434,7 +480,16 @@ reflect_java_methods_and_fields(JSContext *cx,
             member_descriptor = member_descriptor->next;
         }
     }
-    return JS_TRUE;
+
+done:
+#ifdef JSJ_THREAD_SAFE
+    PR_ExitMonitor(java_reflect_monitor);
+#endif
+    return success;
+
+error:
+    success = JS_FALSE;
+    goto done;
 }
 
 JavaMemberDescriptor *
@@ -601,5 +656,11 @@ jsj_InitJavaClassReflectionsTable()
 
     if (!java_class_reflections)
         return JS_FALSE;
+
+#ifdef JSJ_THREADSAFE
+    java_reflect_monitor =
+            (struct PRMonitor *) PR_NewNamedMonitor("java_reflect_monitor");
+#endif
+    
     return JS_TRUE;
 }

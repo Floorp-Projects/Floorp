@@ -91,7 +91,6 @@ public:
            const char* url, 
            const char* target = NULL,
            nsIPluginStreamListener* streamListener = NULL,
-           nsPluginStreamType streamType = nsPluginStreamType_Normal,
            const char* altHost = NULL,
            const char* referrer = NULL,
            PRBool forceJSEnabled = PR_FALSE) = 0;
@@ -104,7 +103,6 @@ public:
             PRBool isFile = PR_FALSE,
             const char* target = NULL,
             nsIPluginStreamListener* streamListener = NULL,
-            nsPluginStreamType streamType = nsPluginStreamType_Normal,
             const char* altHost = NULL, 
             const char* referrer = NULL,
             PRBool forceJSEnabled = PR_FALSE,
@@ -182,6 +180,15 @@ public:
 { /* da58ad80-4eb6-11d2-8164-006008119d7a */         \
     0xda58ad80,                                      \
     0x4eb6,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
+// CLSID for the browser's global plugin manager object.
+#define NS_PLUGINMANAGER_CID                         \
+{ /* ce768990-5a4e-11d2-8164-006008119d7a */         \
+    0xce768990,                                      \
+    0x5a4e,                                          \
     0x11d2,                                          \
     {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }

@@ -47,7 +47,7 @@ nsCLiveconnect  *nsCLiveconnectFactory::m_pNSCLiveconnect = NULL;
  +++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
 {
     
     if (!aClass.Equals(kCLiveconnectCID)) {

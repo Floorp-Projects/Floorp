@@ -95,11 +95,12 @@ JavaPackage_setProperty(JSContext *cx, JSObject *obj, jsval slot, jsval *vp)
 {
     JavaPackage_Private *package = JS_GetPrivate(cx, obj);
     if (!package) {
-        JS_ReportError(cx, "illegal attempt to add property to "
-                           "JavaPackage prototype object");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_BAD_ADD_TO_PACKAGE);
         return JS_FALSE;
     }
-    JS_ReportError(cx, "You may not add properties to a JavaPackage object");
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_DONT_ADD_TO_PACKAGE);
     return JS_FALSE;
 }
 
@@ -118,6 +119,10 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     const char *path;
     JNIEnv *jEnv;
 
+    /* Painful hack for pre_define_java_packages() */
+    if (quiet_resolve_failure)
+        return JS_FALSE;
+                
     package = (JavaPackage_Private *)JS_GetPrivate(cx, obj);
     if (!package)
         return JS_TRUE;
@@ -137,7 +142,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
         return JS_FALSE;
 
     path = package->path;
-    newPath = PR_smprintf("%s%s%s", path, (path[0] ? "/" : ""), subPath);
+    newPath = JS_smprintf("%s%s%s", path, (path[0] ? "/" : ""), subPath);
     if (!newPath) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -176,6 +181,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
         JSObject *newClass;
 
         newClass = jsj_define_JavaClass(cx, jEnv, obj, subPath, jclazz);
+        (*jEnv)->DeleteLocalRef(jEnv, jclazz);
         if (!newClass) {
             ok = JS_FALSE;
             goto out;
@@ -186,13 +192,6 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
            doesn't exist.  If we wanted to do a better job, we would check
            the exception type and make sure that it's NoClassDefFoundError */
         (*jEnv)->ExceptionClear(jEnv);
-
-        /* beard: this has to be done here, so built-in classes will be defined. */
-        /* Painful hack for pre_define_java_packages() */
-        if (quiet_resolve_failure) {
-            ok = JS_FALSE;
-            goto out;
-        }
 
         /*
          * If there's no class of the given name, then we must be referring to
@@ -205,10 +204,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
             package = JS_GetPrivate(cx, obj);
             if (package->flags & PKG_SYSTEM) {
                 char *msg, *cp;
-
-                msg = PR_smprintf("No Java system package with name \"%s\" was identified "
-                                  "and no Java class with that name exists either",
-                                  newPath);
+                msg = JS_strdup(cx, newPath);
 
                 /* Check for OOM */
                 if (msg) {
@@ -216,7 +212,8 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
                     for (cp = msg; *cp != '\0'; cp++)
                         if (*cp == '/')
                             *cp = '.';
-                    JS_ReportError(cx, msg);
+                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_MISSING_PACKAGE, msg);
                     free((char*)msg);
                 }
                                
@@ -262,7 +259,7 @@ JavaPackage_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         /* Convert '/' to '.' so that it looks like Java language syntax. */
         if (!package->path)
             break;
-        name = PR_smprintf("[JavaPackage %s]", package->path);
+        name = JS_smprintf("[JavaPackage %s]", package->path);
         if (!name) {
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
@@ -401,7 +398,8 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
             jsval v;
 
             if (!simple_name) {
-                JS_ReportError(cx, "Package %s defined twice ?", package_name);
+                JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                        JSJMSG_DOUBLE_SHIPPING, package_name);
                 goto error;
             }
 
@@ -417,7 +415,8 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
                 /* New package objects should only be created at the terminal
                    sub-package in a fully-qualified package-name */
                 if (strtok(NULL, ".")) {
-                    JS_ReportError(cx, "Illegal predefined package definition for %s",
+                    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                    JSJMSG_BAD_PACKAGE_PREDEF,
                                    package_def->name);
                     goto error;
                 }

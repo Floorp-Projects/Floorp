@@ -40,6 +40,7 @@
 #include "nsISymantecDebugger.h"
 #include "nsICapsManager.h"
 #include "nsILiveconnect.h"
+#include "nsIThreadManager.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

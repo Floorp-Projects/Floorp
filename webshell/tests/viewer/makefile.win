@@ -69,6 +69,8 @@ LINCS=  \
 !ifdef MOZ_FULLCIRCLE
   -I$(PUBLIC)\fulls32 \
 !endif
+  -I$(PUBLIC)\oji \
+  -I$(PUBLIC)\caps \
   $(NULL)
 
 MYLIBS=                         \

@@ -586,10 +586,18 @@ nsCCapsManager::IsAllowed(void *annotation, char* targetName, PRBool *ret_val)
 ////////////////////////////////////////////////////////////////////////////
 // from nsCCapsManager:
 
-nsCCapsManager::nsCCapsManager(nsISupports *aOuter)
+nsCCapsManager::nsCCapsManager(nsISupports *aOuter):m_pNSPrivilegeManager(NULL) 
 {
     NS_INIT_AGGREGATED(aOuter);
-    m_pNSPrivilegeManager = new nsPrivilegeManager();
+    PRBool result;
+    if (Initialize(&result) == NS_OK)
+    {
+      m_pNSPrivilegeManager = new nsPrivilegeManager();
+    }
+    else
+    { 
+      m_pNSPrivilegeManager = NULL;
+    }
 }
 
 nsCCapsManager::~nsCCapsManager()

@@ -54,17 +54,17 @@ typedef struct MacLibrary
 
 #ifdef IMPL_MAC_REPOSITORY
 
-extern "C" nsresult		NSGetFactory_WIDGET_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_GFXWIN_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_VIEW_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_WEB_DLL(const nsCID &, nsIFactory **);
-//extern "C" nsresult		NSGetFactory_PLUGIN_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_PREF_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_PARSER_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_DOM_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_LAYOUT_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_NETLIB_DLL(const nsCID &, nsIFactory **);
-extern "C" nsresult		NSGetFactory_EDITOR_DLL(const nsCID &, nsIFactory **);
+extern "C" nsresult		NSGetFactory_WIDGET_DLL(const nsCID &, nsISupports* , nsIFactory ** );
+extern "C" nsresult		NSGetFactory_GFXWIN_DLL(const nsCID &, nsISupports*, nsIFactory ** );
+extern "C" nsresult		NSGetFactory_VIEW_DLL(const nsCID &, nsISupports*, nsIFactory **);
+extern "C" nsresult		NSGetFactory_WEB_DLL(const nsCID &, nsISupports*, nsIFactory **);
+//extern "C" nsresult		NSGetFactory_PLUGIN_DLL(const nsCID &, nsISupports*, nsIFactory **);
+extern "C" nsresult		NSGetFactory_PREF_DLL(const nsCID &, nsISupports*, nsIFactory **);
+extern "C" nsresult		NSGetFactory_PARSER_DLL(const nsCID &, nsISupports*, nsIFactory **);
+extern "C" nsresult		NSGetFactory_DOM_DLL(const nsCID &, nsISupports*, nsIFactory **);
+extern "C" nsresult		NSGetFactory_LAYOUT_DLL(const nsCID &, nsISupports*, nsIFactory **);
+extern "C" nsresult		NSGetFactory_NETLIB_DLL(const nsCID &, nsISupports*, nsIFactory **);
+extern "C" nsresult		NSGetFactory_EDITOR_DLL(const nsCID &, nsISupports*, nsIFactory **);
 
 extern "C" PRBool		NSCanUnload_PREF_DLL(void);
 

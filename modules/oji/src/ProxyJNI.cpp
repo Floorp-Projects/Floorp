@@ -410,7 +410,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		jmethodID outMethodID = NULL;
 		nsresult result = secureEnv->GetMethodID(clazz, name, sig, &outMethodID);
-		if (result == NS_OK) {
+		if (result == NS_OK && outMethodID != NULL) {
 			JNIHashKey key(outMethodID);
 			JNIMethod* method = (JNIMethod*) theIDTable->Get(&key);
 			if (method == NULL) {
@@ -620,7 +620,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		jfieldID outFieldID = NULL;
 		nsresult result = secureEnv->GetFieldID(clazz, name, sig, &outFieldID);
-		if (result == NS_OK) {
+		if (result == NS_OK && outFieldID != NULL) {
 			JNIHashKey key(outFieldID);
 			JNIField* field = (JNIField*) theIDTable->Get(&key);
 			if (field == NULL) {
@@ -695,7 +695,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		jmethodID outMethodID = NULL;
 		nsresult result = secureEnv->GetStaticMethodID(clazz, name, sig, &outMethodID);
-		if (result == NS_OK) {
+		if (result == NS_OK && outMethodID != NULL) {
 			JNIHashKey key(outMethodID);
 			JNIMethod* method = (JNIMethod*) theIDTable->Get(&key);
 			if (method == NULL) {
@@ -799,7 +799,7 @@ private:
 		ProxyJNIEnv& secureEnv = nsJNIEnvRef(env);
 		jfieldID outFieldID = NULL;
 		nsresult result = secureEnv->GetStaticFieldID(clazz, name, sig, &outFieldID);
-		if (result == NS_OK) {
+		if (result == NS_OK && outFieldID != NULL) {
 			JNIHashKey key(outFieldID);
 			JNIField* field = (JNIField*) theIDTable->Get(&key);
 			if (field == NULL) {
