@@ -37,6 +37,8 @@ TOOLKIT_CPPSRCS = \
 	nsGTKMain.cpp \
 	nsGTKMenu.cpp
 
+INCLUDES += $(topsrcdir)/widget/src/gtk
+
 TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
 TOOLKIT_LIBS   = $(TK_GTK_LIBS)
 else
