@@ -2694,6 +2694,7 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
 
   // only support accesskeys for the following elements
   if (atom != nsXULAtoms::button &&
+      atom != nsXULAtoms::toolbarbutton &&
       atom != nsXULAtoms::checkbox &&
       atom != nsXULAtoms::textbox &&
       atom != nsXULAtoms::tab &&
