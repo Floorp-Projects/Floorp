@@ -26,15 +26,24 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-FILES = \
-	content1.xul	\
-	content2.xul	\
-	content3.xul	\
-	content4.xul	\
-	cpw.xul		\
-	navigation.xul	\
-	common.css	\
-	$(NULL)
+FILES=\
+        content1.xul					\
+        content2.xul					\
+        content3.xul					\
+        content4.xul					\
+		contentManager4.xul				\
+        cpw.xul							\
+        navigationStart.xul				\
+		navigationFinish.xul			\
+        navigationManagerStart.xul		\
+		navigationManagerFinish.xul		\
+        cpwManager.xul					\
+		renameProfile.html				\
+		profileManagerContainer.xul		\
+		profileManager.html				\
+		errorDialog.html				\
+        common.css						\
+        $(NULL)
 
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
