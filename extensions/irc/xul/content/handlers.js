@@ -1097,14 +1097,13 @@ function my_263 (e)
      *   - LIST, with or without a parameter.
      */
 
-    if (("_list" in this) && !this._list.done &&
-        (!("count" in this._list) || (this._list.count == 0)))
+    if (("_list" in this) && !this._list.done && (this._list.count == 0))
     {
         // We attempted a LIST, and we think it failed. :)
         this._list.done = true;
         this._list.error = e.decodeParam(2);
         // Return early for this one if we're saving it.
-        if (("saveTo" in this._list) && this._list.saveTo)
+        if ("saveTo" in this._list)
             return true;
     }
 
@@ -1124,7 +1123,8 @@ function my_list(word, file)
     this._list.regexp = null;
     this._list.done = false;
     this._list.count = 0;
-    this._list.saveTo = file;
+    if (file)
+        this._list.saveTo = file;
 
     if (word instanceof RegExp)
     {
@@ -1194,12 +1194,13 @@ function my_list_init ()
     if (!("_list" in this))
     {
         this._list = new Array();
+        this._list.string = MSG_UNKNOWN;
         this._list.regexp = null;
         this._list.done = false;
         this._list.count = 0;
     }
 
-    if (("saveTo" in this._list) && this._list.saveTo)
+    if ("saveTo" in this._list)
     {
         var file = new LocalFile(this._list.saveTo);
         if (!file.localFile.exists())
@@ -1248,7 +1249,7 @@ function my_323 (e)
 CIRCNetwork.prototype.on322 = /* LIST reply */
 function my_listrply (e)
 {
-    if (!("_list" in this) || !("done" in this._list))
+    if (!("_list" in this) || !("lastLength" in this._list))
         this.listInit();
 
     ++this._list.count;
