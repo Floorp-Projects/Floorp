@@ -790,16 +790,4 @@ nsNNTPNewsgroupList::ClearXOVERState()
 {
     return NS_OK;
 }
-    
 
-nsresult
-NS_NewNewsgroupList(nsINNTPNewsgroupList **aNewsgroupList,
-                    nsINNTPHost *host,
-                    nsINNTPNewsgroup *newsgroup)
-{
-    nsNNTPNewsgroupList *newsgroupList =
-        new nsNNTPNewsgroupList(host, newsgroup);
-    return newsgroupList->QueryInterface(nsINNTPNewsgroupList::IID(),
-                                         (void **)aNewsgroupList);
-
-}

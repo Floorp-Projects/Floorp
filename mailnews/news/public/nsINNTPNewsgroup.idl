@@ -25,6 +25,7 @@
 
 
 #include "nsISupports.idl"
+#include "nsINNTPNewsgroupList.idl"
 
 [object, uuid(1A39CD90-ACAF-11d2-B7EE-00805F05FFA5)]
 interface nsINNTPNewsgroup : nsISupports {
@@ -44,10 +45,12 @@ interface nsINNTPNewsgroup : nsISupports {
 
   attribute boolean subscribed;
   attribute boolean wantNewTotals;
+  attribute nsINNTPNewsgroupList newsgroupList;
 
   void UpdateSummaryFromNNTPInfo(in long oldest,
                                  in long youngest,
                                  in long total_messages);
+
 };
 
 

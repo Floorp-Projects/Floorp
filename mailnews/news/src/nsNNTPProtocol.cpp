@@ -311,10 +311,9 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 	sscanf (colon+1, " %u ", &port);
   }
 
-#ifdef UNREADY_CODE
-  rv = NS_NewMsgNewsHost(m_newsHost, hostAndPort, bVal, port);
-#endif
   if (colon) *colon = ':';
+#ifdef UNREADY_CODE
+  rv = NS_NewNNTPHost(m_newsHost, hostAndPort, bVal, port);
 
   PR_ASSERT(NS_SUCCEEDED(rv));
   if (!NS_SUCCEEDED(rv)) 
@@ -322,6 +321,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 	status = -1;
 	goto FAIL;
   }
+#endif
 
   if (messageID && commandSpecificData && !PL_strcmp (commandSpecificData, "?cancel"))
 	cancel = TRUE;
@@ -2618,13 +2618,11 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 
 	m_articleNumber = m_firstArticle;
 
-#ifdef UNREADY_CODE
-    rv = NS_NewNewsgroupList(&m_newsgroupList,
-                              m_newsHost, m_newsgroup,
-                              m_firstArticle, m_lastArticle,
-                              m_firstPossibleArticle,
-                              m_lastPossibleArticle);
-#endif
+    /* was MSG_InitXOVER() */
+    rv = m_newsgroup->GetNewsgroupList(&m_newsgroupList);
+    if (NS_SUCCEEDED(rv))
+        rv = m_newsgroupList->InitXOVER(m_firstArticle, m_lastArticle);
+
     /* convert nsresult->status */
     status = !NS_SUCCEEDED(rv);
 	PR_FREEIF (host_and_port);

@@ -6,6 +6,7 @@
 #define __gen_nsINNTPNewsgroup_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 
 /* starting interface nsINNTPNewsgroup */
@@ -60,6 +61,10 @@ class nsINNTPNewsgroup : public nsISupports {
   /*  <IDL>  */
   NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals) = 0;
   NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) = 0;
+  NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages) = 0;
