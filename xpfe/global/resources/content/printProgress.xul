@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <!-- ***** BEGIN LICENSE BLOCK *****
  Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -25,6 +25,7 @@
    Scott MacGregor <mscott@netscape.com>
    Jean-Francois Ducarroz <ducarroz@netscape.com>
    Rod Spears <rods@netscape.com>
+   Karsten "Mnyromyr" Düsterloh <mnyromyr@tprac.de>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,61 +43,43 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://global/locale/printProgress.dtd">
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&printWindow.title;"
         style="width: 36em;"
+        buttons="cancel"
         onload="onLoad()"
+        ondialogcancel="onCancel()"
         onunload="onUnload()">
 
   <script type="application/x-javascript" src="chrome://global/content/printProgress.js"/>
 
-    <!-- This is non-visible content that simply adds translatable string
-         into the document so that it is accessible to JS code.
-         
-         XXX-TODO: 
-          convert to use string bundles. 
-    -->
-  
-    <data id="dialog.strings.dialogCloseLabel">&dialogClose.label;</data>
-    <data id="dialog.strings.printComplete">&printComplete;</data>
-    <data id="dialog.strings.progressText">&percentPrint;</data>
-    <data id="dialog.strings.progressLabel">&progress;</data>
-    <data id="dialog.strings.preparing">&preparing;</data>
+  <grid flex="1">
+    <rows>
+      <row/>
+      <row/>
+    </rows>
+    <columns>
+      <column align="end">
+        <label value="&title;"/>
+        <label id="dialog.progressLabel" value="&progress;"/>
+      </column>
+      <column flex="1">
+        <deck id="dialog.titleDeck">
+          <label id="dialog.title" crop="end"/>
+          <label value="&printComplete;"/>
+        </deck>
+        <deck id="dialog.progressDeck">
+          <label id="dialog.tempLabel" value="&preparing;"/>
+          <progressmeter id="dialog.progress" value="0"/>
+        </deck>
+      </column>
+      <column align="end" style="min-width: 4em;">
+        <label/>
+        <label id="dialog.progressText" basevalue="&percentPrint;"/>
+      </column>
+    </columns>
+  </grid>
 
-    <grid flex="1">
-      <columns>
-        <column/>
-        <column/>
-        <column/>
-      </columns>
-      
-      <rows>
-        <row>
-          <hbox pack="end">
-            <label id="dialog.titleLabel" value="&title;"/>
-          </hbox>
-            <label id="dialog.title"/>
-        </row>
-        <row class="thin-separator">             
-          <hbox pack="end">
-            <label id="dialog.progressLabel" value="&progress;"/>
-          </hbox>
-            <label id="dialog.tempLabel" value="&preparing;"/>
-            <progressmeter id="dialog.progress" mode="normal" value="0"/>
-          <hbox pack="end" style="min-width: 2.5em;">
-            <label id="dialog.progressText"/>
-          </hbox>
-        </row>
-      </rows>
-    </grid>
-    <separator/>
-    <hbox id="CancelButton" pack="end">
-      <button id="cancel" label="&dialogCancel.label;" 
-        oncommand="doCancelButton()"/>
-    </hbox>
-</window>
+</dialog>
