@@ -118,6 +118,8 @@ private:
     nsCString                       mReqHeaderBuf;    // flattened request headers
     nsCOMPtr<nsIInputStream>        mReqHeaderStream; // header data stream
     nsCOMPtr<nsIInputStream>        mReqUploadStream; // upload data stream
+    PRUint32                        mReqUploadStreamOffset;
+    PRUint32                        mReqUploadStreamLength;
 
     nsCOMPtr<nsIInputStream>        mSource;
     nsHttpRequestHead              *mRequestHead;     // weak ref
