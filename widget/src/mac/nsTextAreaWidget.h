@@ -22,13 +22,16 @@
 #include "nsWindow.h"
 #include "nsITextAreaWidget.h"
 #include "WASTE.h"
+#include "nsRepeater.h"
 
 /**
  * Native Mac single line edit control wrapper. 
  */
 
-class nsTextAreaWidget : public nsWindow, public nsITextAreaWidget
+class nsTextAreaWidget : public nsWindow, public nsITextAreaWidget, public Repeater
 {
+private:
+	typedef nsWindow Inherited;
 
 public:
   nsTextAreaWidget();
@@ -69,6 +72,9 @@ public:
   // nsWindow Interface
   virtual PRBool 		DispatchMouseEvent(nsMouseEvent &aEvent);
   virtual PRBool 		DispatchWindowEvent(nsGUIEvent& event);
+
+  // Repeater interface
+  virtual	void	RepeatAction(const EventRecord& inMacEvent);
 
   void							PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers);
 
