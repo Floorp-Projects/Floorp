@@ -57,6 +57,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFParserUtils.h"
 #include "nsVoidArray.h"
+#include "nsXPIDLString.h"
 #include "prlog.h"
 #include "prmem.h"
 #include "rdfutil.h"
@@ -98,6 +99,12 @@ static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+
+////////////////////////////////////////////////////////////////////////
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog;
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
@@ -244,6 +251,11 @@ RDFContentSinkImpl::RDFContentSinkImpl()
       mHaveSetRootResource(PR_FALSE)
 {
     NS_INIT_REFCNT();
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsRDFContentSink");
+#endif
 }
 
 
@@ -258,8 +270,6 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
 
     NS_IF_RELEASE(mNameSpaceManager);
     if (mNameSpaceStack) {
-        NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
-
         // There shouldn't be any here except in an error condition
         PRInt32 index = mNameSpaceStack->Count();
 
@@ -270,7 +280,8 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
         delete mNameSpaceStack;
     }
     if (mContextStack) {
-        NS_PRECONDITION(0 == mContextStack->Count(), "content stack not empty");
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("rdfxml: warning: unclosed tag"));
 
         // XXX we should never need to do this, but, we'll write the
         // code all the same. If someone left the content stack dirty,
@@ -280,6 +291,19 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
             nsIRDFResource* resource;
             RDFContentSinkState state;
             PopContext(resource, state);
+
+#ifdef PR_LOGGING
+            // print some fairly useless debugging info
+            // XXX we should save line numbers on the context stack: this'd
+            // be about 1000x more helpful.
+            if (resource) {
+                nsXPIDLCString uri;
+                resource->GetValue(getter_Copies(uri));
+                PR_LOG(gLog, PR_LOG_ALWAYS,
+                       ("rdfxml:   uri=%s", (const char*) uri));
+            }
+#endif
+
             NS_IF_RELEASE(resource);
         }
 
@@ -441,7 +465,8 @@ RDFContentSinkImpl::AddLeaf(const nsIParserNode& aNode)
 NS_IMETHODIMP
 RDFContentSinkImpl::NotifyError(const nsParserError* aError)
 {
-    printf("RDFContentSinkImpl::NotifyError\n");
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml: %s", aError));
     return NS_OK;
 }
 
@@ -450,7 +475,10 @@ NS_IMETHODIMP
 RDFContentSinkImpl::AddXMLDecl(const nsIParserNode& aNode)
 {
     // XXX We'll ignore it for now
-    printf("RDFContentSinkImpl::AddXMLDecl\n");
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml: ignoring XML decl at line %d",
+            aNode.GetSourceLineNumber()));
+
     return NS_OK;
 }
 
@@ -539,7 +567,11 @@ static const char kContentModelBuilderPI[] = "<?rdf-builder";
 NS_IMETHODIMP 
 RDFContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode)
 {
-    printf("RDFContentSinkImpl::AddDocTypeDecl\n");
+    // XXX We'll ignore it for now
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml: ignoring doc type decl at line %d",
+            aNode.GetSourceLineNumber()));
+
     return NS_OK;
 }
 
@@ -605,21 +637,35 @@ RDFContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 RDFContentSinkImpl::AddUnparsedEntity(const nsIParserNode& aNode)
 {
-    printf("RDFContentSinkImpl::AddUnparsedEntity\n");
+    // XXX We'll ignore it for now
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml: ignoring unparsed entity at line %d",
+            aNode.GetSourceLineNumber()));
+
+
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 RDFContentSinkImpl::AddNotation(const nsIParserNode& aNode)
 {
-    printf("RDFContentSinkImpl::AddNotation\n");
+    // XXX We'll ignore it for now
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml: ignoring notation at line %d",
+            aNode.GetSourceLineNumber()));
+
+
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 RDFContentSinkImpl::AddEntityReference(const nsIParserNode& aNode)
 {
-    printf("RDFContentSinkImpl::AddEntityReference\n");
+    // XXX We'll ignore it for now
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml: ignoring entity reference at line %d",
+            aNode.GetSourceLineNumber()));
+
     return NS_OK;
 }
 
