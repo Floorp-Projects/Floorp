@@ -639,11 +639,9 @@ nsCStringKey::Clone() const
 nsCStringKey::nsCStringKey(nsIObjectInputStream* aStream, nsresult *aResult)
     : mStr(nsnull), mStrLen(0), mOwnership(OWN)
 {
-    nsCAutoString str;
-    nsresult rv = aStream->ReadCString(str);
-    mStr = ToNewCString(str);
+    nsresult rv = aStream->ReadStringZ(&mStr);
     if (NS_SUCCEEDED(rv))
-        mStrLen = str.Length();
+        mStrLen = strlen(mStr);
     *aResult = rv;
     MOZ_COUNT_CTOR(nsCStringKey);
 }
@@ -761,11 +759,9 @@ nsStringKey::Clone() const
 nsStringKey::nsStringKey(nsIObjectInputStream* aStream, nsresult *aResult)
     : mStr(nsnull), mStrLen(0), mOwnership(OWN)
 {
-    nsAutoString str;
-    nsresult rv = aStream->ReadString(str);
-    mStr = ToNewUnicode(str);
+    nsresult rv = aStream->ReadWStringZ(&mStr);
     if (NS_SUCCEEDED(rv))
-        mStrLen = str.Length();
+        mStrLen = nsCRT::strlen(mStr);
     *aResult = rv;
     MOZ_COUNT_CTOR(nsStringKey);
 }
