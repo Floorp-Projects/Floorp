@@ -51,6 +51,11 @@ nsDeviceContextGTK::nsDeviceContextGTK()
   mPaletteInfo.numReserved = 0;
   mPaletteInfo.palette = NULL;
   mNumCells = 0;
+
+  mWidthFloat = 0.0f;
+  mHeightFloat = 0.0f;
+  mWidth = -1;
+  mHeight = -1;
 }
 
 nsDeviceContextGTK::~nsDeviceContextGTK()
@@ -134,6 +139,9 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   gtk_widget_destroy(sb);
   gtk_widget_unref(sb);
 
+  mWidthFloat = (float) gdk_screen_width();
+  mHeightFloat = (float) gdk_screen_height();
+
 #ifdef DEBUG
   static PRBool once = PR_TRUE;
   if (once) {
@@ -141,6 +149,8 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     once = PR_FALSE;
   }
 #endif
+
+  DeviceContextImpl::CommonInit();
 
   return NS_OK;
 }
@@ -182,7 +192,7 @@ NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&a
                                w->allocation.width,
                                w->allocation.height,
                                gdk_rgb_get_visual()->depth);
-        
+
         GdkGC *gc = gdk_gc_new(win);
 
         // init the nsDrawingSurfaceGTK
@@ -368,10 +378,16 @@ NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  aWidth = 1;
-  aHeight = 1;
+  if (mWidth == -1)
+    mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
 
-  return NS_ERROR_FAILURE;
+  if (mHeight == -1)
+    mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+
+  aWidth = mWidth;
+  aHeight = mHeight;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,

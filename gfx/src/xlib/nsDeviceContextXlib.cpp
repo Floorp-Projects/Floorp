@@ -52,6 +52,11 @@ nsDeviceContextXlib::nsDeviceContextXlib()
   mScreen = nsnull;
   mVisual = nsnull;
   mDepth = 0;
+
+  mWidthFloat = 0.0f;
+  mHeightFloat = 0.0f;
+  mWidth = -1;
+  mHeight = -1;
 }
 
 nsDeviceContextXlib::~nsDeviceContextXlib()
@@ -126,6 +131,10 @@ nsDeviceContextXlib::CommonInit(void)
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips));
+
+
+  mWidthFloat = (float) WidthOfScreen(mScreen);
+  mHeightFloat = (float) HeightOfScreen(mScreen);
 
   DeviceContextImpl::CommonInit();
 }
@@ -344,9 +353,15 @@ NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetDeviceSurfaceDimensions()\n"));
-  aWidth = 1;
-  aHeight = 1;
+  if (mWidth == -1)
+    mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+
+  if (mHeight == -1)
+    mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+
+  aWidth = mWidth;
+  aHeight = mHeight;
+
   return NS_OK;
 }
 
