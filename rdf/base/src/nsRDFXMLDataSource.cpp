@@ -571,20 +571,14 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     nsCOMPtr<nsIChannel> channel;
     // Null LoadGroup ?
     rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull);
-    if (NS_FAILED(rv))
-    {
-        NS_ERROR("unable to open channel");
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
+
     nsIInputStream* in;
     PRUint32 sourceOffset = 0;
     rv = channel->OpenInputStream(0, -1, &in);
-    if (NS_FAILED(rv))
-    {
-        // file doesn't exist -- just exit
-        // NS_ERROR("unable to open blocking stream");
-        return rv;
-    }
+
+    // If we couldn't open the channel, then just return.
+    if (NS_FAILED(rv)) return NS_OK;
 
     NS_ASSERTION(in != nsnull, "no input stream");
     if (! in) return NS_ERROR_FAILURE;
