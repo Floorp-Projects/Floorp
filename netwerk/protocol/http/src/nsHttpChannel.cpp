@@ -2507,10 +2507,11 @@ nsHttpChannel::Suspend()
 {
     LOG(("nsHttpChannel::Suspend [this=%x]\n", this));
     if (mTransactionPump)
-        mTransactionPump->Suspend();
-    else if (mCachePump)
-        mCachePump->Suspend();
-    return NS_OK;
+        return mTransactionPump->Suspend();
+    if (mCachePump)
+        return mCachePump->Suspend();
+
+    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
@@ -2518,10 +2519,11 @@ nsHttpChannel::Resume()
 {
     LOG(("nsHttpChannel::Resume [this=%x]\n", this));
     if (mTransactionPump)
-        mTransactionPump->Resume();
-    else if (mCachePump)
-        mCachePump->Resume();
-    return NS_OK;
+        return mTransactionPump->Resume();
+    if (mCachePump)
+        return mCachePump->Resume();
+
+    return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
