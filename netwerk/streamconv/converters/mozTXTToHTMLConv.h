@@ -133,14 +133,14 @@ private:
   @return true, if rep is found and limitation spec is met or rep is empty
 */
   PRBool ItMatchesDelimited(const PRUnichar * aInString, PRInt32 aInLength,
-    const char* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
+      const PRUnichar * rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
 
 /**
   @param see ItMatchesDelimited
   @return Number of ItMatchesDelimited in text
 */
   PRUint32 NumberOfMatches(const PRUnichar * aInString, PRInt32 aInStringLength,
-     const char* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
+      const PRUnichar* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after);
 
 /**
   Currently only changes "<", ">" and "&". All others stay as they are.<p>
@@ -280,7 +280,7 @@ private:
   @return Conversion succeeded
 */
   PRBool StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, PRBool col0,
-     const char* tagTXT,
+     const PRUnichar* tagTXT,
      PRInt32 aTagTxtLen, 
      const char* tagHTML, const char* attributeHTML,
      nsString& aOutputString, PRUint32& openTags);
@@ -294,7 +294,7 @@ private:
   @param glyphTextLen (out): see GlyphHit
 */
   PRBool SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool col0,
-         const char* tagTXT, PRInt32 aTagTxtLen, const char* tagHTML,
+         const PRUnichar* tagTXT, PRInt32 aTagTxtLen, const char* tagHTML,
          nsString& outputHTML, PRInt32& glyphTextLen);
 
 /**
