@@ -2107,9 +2107,38 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
 
 
     nsresult rv;
+
+    // If activated by the browser.turbo.singleProfileOnly pref,
+    // check for multi-profile situation and turn off turbo mode
+    // if there are multiple profiles.
+    PRBool singleProfileOnly = PR_FALSE;
+    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID, &rv ) );
+    if ( NS_SUCCEEDED( rv ) ) {
+        prefService->GetBoolPref( "browser.turbo.singleProfileOnly", &singleProfileOnly );
+    }
+    if ( singleProfileOnly ) {
+        nsCOMPtr<nsIProfile> profileMgr( do_GetService( NS_PROFILE_CONTRACTID, &rv ) );
+        if ( NS_SUCCEEDED( rv ) ) {
+            PRInt32 profileCount = 0;
+            if ( NS_SUCCEEDED( profileMgr->GetProfileCount( &profileCount ) ) &&
+                 profileCount > 1 ) {
+                // Turn off turbo mode and quit the application.
+                SetIsServerMode( PR_FALSE );
+                nsCOMPtr<nsIAppShellService> appShell =
+                    do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+                if ( NS_SUCCEEDED( rv ) ) {
+                    appShell->Quit();
+                }
+                return NS_OK;
+            }
+        }
+    }
+
+    // Finally!  If we haven't already, and the user hasn't told us not
+    // to bother them, inform the user that Mozilla will still be alive
+    // and kicking.
     if ( !mShownTurboDialog ) {
         PRBool showDialog = PR_TRUE;
-        nsCOMPtr<nsIPref> prefService ( do_GetService( NS_PREF_CONTRACTID, &rv ) );
         if ( NS_SUCCEEDED( rv ) )
             prefService->GetBoolPref( "browser.turbo.showDialog", &showDialog );
         nsCOMPtr<nsIDOMWindowInternal> domWindowInt ( do_GetInterface( docShell ) );
