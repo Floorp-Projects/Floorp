@@ -77,6 +77,64 @@ nsCSSToken::nsCSSToken()
   mType = eCSSToken_Symbol;
 }
 
+void 
+nsCSSToken::AppendToString(nsString& aBuffer)
+{
+  switch (mType) {
+    case eCSSToken_AtKeyword:
+      aBuffer.Append(PRUnichar('@')); // fall through intentional
+    case eCSSToken_Ident:
+    case eCSSToken_WhiteSpace:
+    case eCSSToken_Function:
+    case eCSSToken_URL:
+    case eCSSToken_InvalidURL:
+    case eCSSToken_HTMLComment:
+      aBuffer.Append(mIdent);
+      break;
+    case eCSSToken_Number:
+      if (mIntegerValid) {
+        aBuffer.Append(mInteger, 10);
+      }
+      else {
+        aBuffer.Append(mNumber);
+      }
+      break;
+    case eCSSToken_Percentage:
+      if (mIntegerValid) {
+        aBuffer.Append(mInteger, 10);
+      }
+      else {
+        aBuffer.Append(mNumber);
+      }
+      aBuffer.Append(PRUnichar('%'));
+      break;
+    case eCSSToken_Dimension:
+      if (mIntegerValid) {
+        aBuffer.Append(mInteger, 10);
+      }
+      else {
+        aBuffer.Append(mNumber);
+      }
+      aBuffer.Append(mIdent);
+      break;
+    case eCSSToken_String:
+      aBuffer.Append(mSymbol);
+      aBuffer.Append(mIdent); // fall through intentional
+    case eCSSToken_Symbol:
+      aBuffer.Append(mSymbol);
+      break;
+    case eCSSToken_ID:
+      aBuffer.Append(PRUnichar('#'));
+      aBuffer.Append(mIdent);
+      break;
+
+    default:
+      NS_ERROR("invalid token type");
+      break;
+  }
+}
+
+
 nsCSSScanner::nsCSSScanner()
 {
   if (nsnull == gLexTable) {
@@ -424,7 +482,9 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
         if (ch < 0) break;
         if (ch == CSS_ESCAPE) {
           ch = ParseEscape(aErrorCode);
-          ident.Append(PRUnichar(ch));
+          if (0 < ch) {
+            ident.Append(PRUnichar(ch));
+          }
         } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
           // This is an invalid URL spec
           ok = PR_FALSE;
@@ -494,7 +554,12 @@ PRInt32 nsCSSScanner::ParseEscape(PRInt32& aErrorCode)
     // "Any character except a hexidecimal digit can be escaped to
     // remove its special meaning by putting a backslash in front"
     // -- CSS1 spec section 7.1
-    (void) Read(aErrorCode);
+    if (EatNewline(aErrorCode)) { // skip escaped newline
+      ch = 0;
+    }
+    else {
+      (void) Read(aErrorCode);
+    }
     return ch;
   }
 }
@@ -517,7 +582,9 @@ PRBool nsCSSScanner::GatherIdent(PRInt32& aErrorCode, PRInt32 aChar,
     if (aChar < 0) break;
     if (aChar == CSS_ESCAPE) {
       aChar = ParseEscape(aErrorCode);
-      aIdent.Append(PRUnichar(aChar));
+      if (0 < aChar) {
+        aIdent.Append(PRUnichar(aChar));
+      }
     } else if ((aChar <= 255) && ((gLexTable[aChar] & IS_IDENT) != 0)) {
       aIdent.Append(PRUnichar(aChar));
     } else {
@@ -667,6 +734,9 @@ PRBool nsCSSScanner::GatherString(PRInt32& aErrorCode, PRInt32 aStop,
                                   nsString& aBuffer)
 {
   for (;;) {
+    if (EatNewline(aErrorCode)) {
+      break;
+    }
     PRInt32 ch = Read(aErrorCode);
     if (ch < 0) {
       return PR_FALSE;
@@ -680,7 +750,9 @@ PRBool nsCSSScanner::GatherString(PRInt32& aErrorCode, PRInt32 aStop,
         return PR_FALSE;
       }
     }
-    aBuffer.Append(PRUnichar(ch));
+    if (0 < ch) {
+      aBuffer.Append(PRUnichar(ch));
+    }
   }
   return PR_TRUE;
 }
