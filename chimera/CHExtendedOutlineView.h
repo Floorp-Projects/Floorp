@@ -19,12 +19,17 @@
 *
 * Contributor(s):
 *   David Hyatt <hyatt@netscape.com> (Original Author)
+*   Max Horn <max@quendi.de> (Context menu & tooltip code)
 */
 
 #import <AppKit/AppKit.h>
 
 @interface CHExtendedOutlineView : NSOutlineView {
   SEL mDeleteAction;
+
+  NSRect mOldFrameRect;
+  int mOldRows;
+  BOOL mDelegateTooltipStringForItem;
 }
 
 -(void)keyDown:(NSEvent*)aEvent;
@@ -32,4 +37,14 @@
 -(void)setDeleteAction: (SEL)deleteAction;
 -(SEL)deleteAction;
 
+-(void)setDelegate:(id)anObject;
+
+@end
+
+@interface NSObject (CHOutlineViewDataSourceToolTips)
+- (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)item;
+@end
+
+@interface NSObject (CHOutlineViewContextMenus)
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item;
 @end
