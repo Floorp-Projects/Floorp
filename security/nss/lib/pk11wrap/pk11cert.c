@@ -853,7 +853,7 @@ pk11_CollectCrls(PK11SlotInfo *slot, CK_OBJECT_HANDLE crlID, void *arg)
 
     new_node->type =  *((CK_BBOOL *)fetchCrl[1].pValue)  ? 
 						SEC_KRL_TYPE : SEC_CRL_TYPE;
-	derCrl.type = 0;
+    derCrl.type = 0;
     derCrl.data = (unsigned char *)fetchCrl[0].pValue;
     derCrl.len = fetchCrl[0].ulValueLen;
     new_node->crl=CERT_DecodeDERCrl(head->arena,&derCrl,new_node->type);
