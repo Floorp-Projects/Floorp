@@ -48,6 +48,8 @@ nsHTTreeDataModel::nsHTTreeDataModel() : nsTreeDataModel(), nsHTDataModel()
 
 	// Hard-coded values.
 	mVisibleColumnCount = 3;
+
+  mSingleControlStripItem = new nsHTControlStripItem();
 }
 
 //--------------------------------------------------------------------
@@ -98,7 +100,7 @@ void nsHTTreeDataModel::SetContentRoot(nsIContent* pContent)
 			for (PRInt32 i = 0; i < numChildren; i++)
 			{
 				nsIContent* child = nsnull;
-				pContent->ChildAt(i, child);
+				pColumnNode->ChildAt(i, child);
 				if (child)
 				{
 					// We have a column to add to our array.
