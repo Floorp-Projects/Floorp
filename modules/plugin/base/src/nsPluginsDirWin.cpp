@@ -294,7 +294,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
 	if(::GetFileVersionInfo((char*)path, NULL, versionsize, verbuf))
 	{
-		info.fName = GetFileName(path);
+		info.fName = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\ProductName");
 		info.fDescription = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\FileDescription");
 
 		info.fMimeType = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\MIMEType");
