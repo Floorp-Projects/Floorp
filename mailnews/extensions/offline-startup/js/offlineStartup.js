@@ -64,7 +64,7 @@ var nsOfflineStartup =
     {    
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
-      var offline = prefs.getBoolPref("network.offline");
+      var offline = !prefs.getBoolPref("network.online");
         var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
         ioService.offline = offline;
       var observerService = Components.
@@ -111,12 +111,12 @@ var nsOfflineStartup =
     {
       debug("network:offline-status-changed: " + aData);
       // if we're not shutting down, and startup mode is "remember online state"
-      if (!gShuttingDown && gOfflineStartupMode == 0)
+      if (!gShuttingDown && gOfflineStartupMode == kRememberLastState)
       {
         debug("remembering offline state: ");
         var prefs = Components.classes["@mozilla.org/preferences-service;1"].
           getService(Components.interfaces.nsIPrefBranch);
-        prefs.setBoolPref("network.offline", aData != "online");
+        prefs.setBoolPref("network.online", aData == "online");
       }
 
     }
