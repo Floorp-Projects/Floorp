@@ -332,7 +332,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 							  MsgFlags flag, nsIOFileStream **ppFileStream)
 {
   static char buf[50];
-  PRInt32 folderStreamPos; //saves the folderStream pos in case we are sharing the stream with other code
+  PRInt32 folderStreamPos = 0; //saves the folderStream pos in case we are sharing the stream with other code
   nsIOFileStream *fileStream = (m_folderStream) ? m_folderStream : *ppFileStream;
   //#ifdef GET_FILE_STUFF_TOGETHER
 #ifdef XP_MAC
