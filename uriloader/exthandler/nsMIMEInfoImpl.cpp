@@ -370,4 +370,3 @@ nsMIMEInfoImpl::LaunchDefaultWithFile(nsIFile* aFile)
   return LaunchWithIProcess(mDefaultApplication, aFile);
 }
 
-
