@@ -959,6 +959,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   }
   aStatus = NS_FRAME_COMPLETE;
 
+  nsHTMLReflowMetrics captionSize(nsnull);
+
   // Initialize our local reflow state
   OuterTableReflowState state(aPresContext, aReflowState);
   if (eReflowReason_Incremental == aReflowState.reason) {
@@ -971,16 +973,17 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
       // Lay out the caption and get its maximum element size
       if (nsnull != mCaptionFrame) {
-        nsSize              maxElementSize;
-        nsHTMLReflowMetrics captionSize(&maxElementSize);
-        nsHTMLReflowState   captionReflowState(aPresContext, aReflowState, mCaptionFrame,
-                                               nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
-                                               eReflowReason_Initial);
+        nsSize maxElementSize;
+        captionSize.maxElementSize = &maxElementSize;
+        nsHTMLReflowState captionReflowState(aPresContext, aReflowState, mCaptionFrame,
+                                             nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+                                             eReflowReason_Initial);
 
         mCaptionFrame->WillReflow(aPresContext);
         rv = mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
         mCaptionFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
         mMinCaptionWidth = maxElementSize.width;
+        captionSize.maxElementSize = nsnull;
       }
     }
 
@@ -1043,13 +1046,14 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
       }
 
       // Reflow the caption. Let it be as high as it wants
-      nsHTMLReflowState   captionReflowState(aPresContext, state.reflowState, mCaptionFrame,
-                                             nsSize(innerSize.width, NS_UNCONSTRAINEDSIZE),
-                                             eReflowReason_Resize);
-      nsHTMLReflowMetrics captionSize(nsnull);
+      nscoord captionAvailWidth = PR_MAX(innerSize.width, mMinCaptionWidth);
+      nsHTMLReflowState captionReflowState(aPresContext, state.reflowState, mCaptionFrame,
+                                           nsSize(captionAvailWidth, NS_UNCONSTRAINEDSIZE),
+                                           eReflowReason_Resize);
       nsRect captionRect(captionMargin.left, captionY, 0, 0);
-      nsReflowStatus  captionStatus;
+      nsReflowStatus captionStatus;
 
+      captionSize.maxElementSize = nsnull;
       ReflowChild(mCaptionFrame, aPresContext, captionSize, captionReflowState,
                   captionRect.x, captionRect.y, 0, captionStatus);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(captionStatus), "unexpected reflow status");
@@ -1087,7 +1091,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   }
   
   // Return our desired rect
-  aDesiredSize.width   = state.innerTableMaxSize.width;
+  aDesiredSize.width   = PR_MAX(state.innerTableMaxSize.width, captionSize.width);
   aDesiredSize.height  = state.y;
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
