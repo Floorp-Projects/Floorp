@@ -2242,15 +2242,6 @@ function EditorSetDefaultPrefsAndDoctype()
       domdoc.insertAfter(headelement, domdoc.firstChild);
   }
 
-  // add title tag if not present
-  var titlenodelist = gEditor.document.getElementsByTagName("title");
-  if (headelement && titlenodelist && titlenodelist.length == 0)
-  {
-     titleElement = domdoc.createElement("title");
-     if (titleElement)
-       headelement.appendChild(titleElement);
-  }
-
   /* only set default prefs for new documents */
   if (!IsUrlAboutBlank(GetDocumentUrl()))
     return;
@@ -2281,7 +2272,7 @@ function EditorSetDefaultPrefsAndDoctype()
         {
           element.setAttribute("http-equiv", "content-type");
           element.setAttribute("content", "text/html; charset=" + prefCharsetString);
-          headelement.appendChild( element );
+          headelement.insertBefore( element, headelement.firstChild );
         }
     }
 
@@ -2324,6 +2315,15 @@ function EditorSetDefaultPrefsAndDoctype()
         }
       }
     }
+  }
+
+  // add title tag if not present
+  var titlenodelist = gEditor.document.getElementsByTagName("title");
+  if (headelement && titlenodelist && titlenodelist.length == 0)
+  {
+     titleElement = domdoc.createElement("title");
+     if (titleElement)
+       headelement.appendChild(titleElement);
   }
 
   // Get editor color prefs
