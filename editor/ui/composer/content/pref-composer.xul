@@ -41,7 +41,7 @@
   <script language="JavaScript">
   <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->
   <![CDATA[
-    _elementIDs = ["maintainTableStructure", "tableDeleteKey", "preserveFormatting", "recentFiles"];
+    var _elementIDs = ["maintainTableStructure", "tableDeleteKey", "preserveFormatting", "recentFiles"];
   ]]>
   </script>        
         
