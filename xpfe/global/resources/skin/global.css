@@ -978,16 +978,11 @@ treecell.image > titledbutton:active {
   padding: 0px;
 }
 
-.tree-icon {
-  width: 100%;
-}
-
 .tree-button {
  margin: 0px;
  padding: 0px;
  border: none;
  list-style-image: inherit;
- width: 100%;
 }
 
 treecell {
