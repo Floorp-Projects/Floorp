@@ -319,26 +319,9 @@ nsHTMLButtonControlFrame::IsReset(PRInt32 type)
 }
 
 PRBool
-nsHTMLButtonControlFrame::IsSubmit(nsIPresContext* aPresContext, PRInt32 type)
+nsHTMLButtonControlFrame::IsSubmit(PRInt32 type)
 {
-  nsCompatibility mode;
-  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
-  if (eCompatibility_Standard == mode && mContent != nsnull) {
-    // The default type for a html4 button is NS_FORM_BUTTON_BUTTON, 
-    // but that does not mean that the type was actually set to "button"
-    // so we need to check here to see if a type was actually set
-    // and oif it wasn't explicitly then we we allow to be a submit
-    if (NS_FORM_BUTTON_BUTTON == type) {
-      nsAutoString type;
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type)) {
-        return PR_FALSE;
-      } else {
-        return PR_TRUE;
-      }
-    }
-  }
-
-  if (NS_FORM_BUTTON_SUBMIT == type || NS_FORM_INPUT_SUBMIT == type) {
+  if (NS_FORM_BUTTON_SUBMIT == type) {
     return PR_TRUE;
   } else {
     return PR_FALSE;
@@ -358,7 +341,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
       nsFormControlHelper::DoManualSubmitOrReset(aPresContext, nsnull, mFormFrame, 
                                                  this, PR_FALSE, PR_FALSE); 
     }
-    else if (IsSubmit(aPresContext, type) == PR_TRUE) {
+    else if (IsSubmit(type) == PR_TRUE) {
       // do Submit & Frame processing of event
       nsFormControlHelper::DoManualSubmitOrReset(aPresContext, nsnull, mFormFrame, 
                                                  this, PR_TRUE, PR_FALSE); 
