@@ -377,10 +377,10 @@ NS_IMETHODIMP XPCJSStackFrame::toString(char **_retval)
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
 
-    char* frametype = mJSFrame ? "JS" : "native";
-    char* filename = mFilename ? mFilename : "<unknown filename>";
-    char* funname = mFunname ? mFunname : "<TOP_LEVEL>";
-    char format[] = "%s frame :: %s :: %s :: line %d";
+    const char* frametype = mJSFrame ? "JS" : "native";
+    const char* filename = mFilename ? mFilename : "<unknown filename>";
+    const char* funname = mFunname ? mFunname : "<TOP_LEVEL>";
+    static const char format[] = "%s frame :: %s :: %s :: line %d";
     int len = sizeof(char)*
                 (strlen(frametype) + strlen(filename) + strlen(funname)) +
               sizeof(format) + 6 /* space for lineno */;
