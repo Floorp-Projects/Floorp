@@ -342,14 +342,16 @@ public class Context
         }
 
         if (old != null) {
-            if (old.factory != null) {
-                throw new IllegalStateException("Context.enter can not be used to recursively enter Context instances already associated with the current thread using Context.call(ContextAction)");
-            }
             if (cx != null && cx != old && cx.enterCount != 0) {
                 // The suplied context must be the context for
                 // the current thread if it is already entered
                 throw new IllegalArgumentException(
                     "Cannot enter Context active on another thread");
+            }
+            if (old.factory != null) {
+                // Context with associated factory will be released
+                // automatically and does not need to change enterCount
+                return old;
             }
             if (old.sealed) onSealedMutation();
             cx = old;
@@ -410,7 +412,9 @@ public class Context
                 "Calling Context.exit without previous Context.enter");
         }
         if (cx.factory != null) {
-            throw new IllegalStateException("Context.exit can not be used to exit context associated with the current thread using Context.call(ContextAction)");
+            // Context with associated factory will be released
+            // automatically and does not need to change enterCount
+            return;
         }
         if (cx.enterCount < 1) Kit.codeBug();
         if (cx.sealed) onSealedMutation();

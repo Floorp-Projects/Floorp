@@ -45,7 +45,7 @@ import java.io.*;
 
 public class Main implements ContextListener
 {
-	// The class implements ContextListener only for compatibility!
+    // The class implements ContextListener only for compatibility!
 
     Dim dim;
     DebugGui debugGui;
