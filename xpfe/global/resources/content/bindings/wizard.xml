@@ -139,6 +139,7 @@
       <constructor><![CDATA[
         this._canAdvance = true;
         this._canRewind = false;
+        this._hasLoaded = false;
         
         this._pageStack = [];
         
@@ -185,11 +186,13 @@
           if (!this.canRewind)
             return;
 
-          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide"))
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide") 
+                               && !this._fireEvent(this.currentPage, "pagerewound"))
             return;
 
           if (!this._fireEvent(this, "wizardback"))
             return;
+            
             
           this._pageStack.pop();
           this.currentPage = this._pageStack[this._pageStack.length-1];
@@ -203,9 +206,10 @@
           if (!this.canAdvance)
             return; 
             
-          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide"))
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide") 
+                               && !this._fireEvent(this.currentPage, "pageadvanced"))
             return;
-          
+            
           if (this.onLastPage) {
             if (this._fireEvent(this, "wizardfinish"))
               window.setTimeout(function() {window.close();}, 1);
@@ -261,6 +265,7 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
+          document.documentElement._hasLoaded = true;
           if (!document.commandDispatcher.focusedElement)
             document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
         ]]>
@@ -271,6 +276,9 @@
         <parameter name="aPage"/>
         <body>
         <![CDATA[
+          if (!this._hasLoaded)
+            return;
+            
           document.commandDispatcher.advanceFocusIntoSubtree(aPage);
           
           // if advanceFocusIntoSubtree tries to focus one of our
@@ -401,8 +409,12 @@
           <xul:spacer flex="1"/>
           <xul:button class="wizard-button" dlgtype="back"/>
           <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
-            <xul:button class="wizard-button" dlgtype="finish" default="true"/> 
-            <xul:button class="wizard-button" dlgtype="next" default="true"/> 
+            <xul:hbox>
+              <xul:button class="wizard-button" dlgtype="finish" default="true" flex="1"/> 
+            </xul:hbox>
+            <xul:hbox>
+              <xul:button class="wizard-button" dlgtype="next" default="true" flex="1"/> 
+            </xul:hbox>
           </xul:deck>
           <xul:button class="wizard-button" dlgtype="cancel"/> 
         </xul:hbox>
