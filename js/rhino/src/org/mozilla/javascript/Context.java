@@ -986,9 +986,8 @@ public class Context {
      public String decompileScript(Script script, Scriptable scope,
                                    int indent)
     {
-        NativeScript ns = (NativeScript) script;
-        ns.initScript(scope);
-        return ns.decompile(this, indent, false);
+        NativeFunction scriptImpl = (NativeFunction) script;
+        return scriptImpl.decompile(this, indent, false);
     }
 
     /**
