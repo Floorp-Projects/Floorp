@@ -23,6 +23,8 @@
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
  *   Tomi Leppikangas <tomi.leppikangas@oulu.fi>
+ *   pocemit <timecop@network.email.ne.jp>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nsRenderingContextXlib.h"
