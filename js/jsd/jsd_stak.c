@@ -25,7 +25,6 @@
  */
 
 #include "jsd.h"
-#include "jsstr.h"
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_THREAD_STATE(JSDThreadState* jsdthreadstate)
@@ -333,9 +332,9 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                const char *bytes, uintN length,
                                const char *filename, uintN lineno, jsval *rval)
 {
-    jschar *chars;
+    JSBool retval;
     JSBool valid;
-    JSBool ok;
+    JSExceptionState* exceptionState;
     JSContext *cx;
 
     JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
@@ -349,14 +348,15 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
 
     cx = jsdthreadstate->context;
     JS_ASSERT(cx);
-    
-    chars = js_InflateString(cx, bytes, length);
-    if (!chars)
-        return JS_FALSE;
-    ok = jsd_EvaluateUCScriptInStackFrame(jsdc, jsdthreadstate, jsdframe, chars,
-                                          length, filename, lineno, rval);
-    JS_free(cx, chars);
-    return ok;
+
+    exceptionState = JS_SaveExceptionState(cx);
+    jsd_StartingEvalUsingFilename(jsdc, filename);
+    retval = JS_EvaluateInStackFrame(cx, jsdframe->fp, bytes, length,
+                                     filename, lineno, rval);
+    jsd_FinishedEvalUsingFilename(jsdc, filename);
+    JS_RestoreExceptionState(cx, exceptionState);
+
+    return retval;
 }
 
 JSString*
