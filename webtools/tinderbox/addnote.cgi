@@ -40,7 +40,13 @@ if( -r "$tree/ignorebuilds.pl" ){
      require "$tree/ignorebuilds.pl";
  }
 
-print "Content-type: text/html\n\n<HTML>\n";
+print "Content-Type:text/html\n";
+if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($form{'note'})) {
+    # Expire the cookie 5 months from now
+    print "Set-Cookie: email=$form{who}; expires="
+        . toGMTString(time + 86400 * 152) . "; path=/\n";
+}     
+print "\n<HTML>\n";
 
 if( $url = $form{"note"} ){
 
@@ -87,7 +93,10 @@ Go back to the Error Log</a>
 
 #print "$buildname \n $buildtime \n $errorparser \n $logfile \n  $tree \n $enc_buildname \n";
 
-    print qq(
+$emailvalue = '';
+$emailvalue = " value='$cookie_jar{email}'" if defined($cookie_jar{email});
+
+print qq(
 <head><title>Add a Comment to $buildname log</title></head>
 <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
@@ -110,7 +119,7 @@ Go back to the Error Log</a>
   <td align=right>
      <NOWRAP>Email address:</NOWRAP>
   </td><td>
-     <INPUT Type='input' name='who' size=32><BR>
+     <INPUT Type='input' name='who' size=32$emailvalue><BR>
   </td>
 </tr><tr valign=top>
   <td align=right>
