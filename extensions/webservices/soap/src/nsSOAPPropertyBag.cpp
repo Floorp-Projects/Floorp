@@ -247,9 +247,8 @@ nsSOAPPropertyBag::GetEnumerator(nsISimpleEnumerator * *aEnumerator)
   nsRefPtr<nsSOAPPropertyBagEnumerator> enumerator = new nsSOAPPropertyBagEnumerator();
   NS_ENSURE_TRUE(enumerator, NS_ERROR_OUT_OF_MEMORY);
 
-  if (!enumerator->Init(this)) {
-    return NS_ERROR_FAILURE;
-  }
+  nsresult rv = enumerator->Init(this);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   NS_ADDREF(*aEnumerator = enumerator);
 
