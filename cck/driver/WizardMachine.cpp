@@ -1436,8 +1436,10 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 	}
 	else if(curWidget->type == "ComboBox")
 	{
-		int selIndex = atoi(curWidget->value);
-		((CComboBox*)curWidget->control)->SetCurSel(selIndex);
+		if (curWidget->value && curWidget->value != "")
+			((CComboBox*)curWidget->control)->SelectString(-1, curWidget->value);
+		else
+			((CComboBox*)curWidget->control)->SetCurSel(0);
 	}
 }
 

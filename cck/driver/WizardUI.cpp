@@ -1207,7 +1207,8 @@ void CWizardUI::UpdateGlobals()
 			**/
 			int selectedIndex = ((CComboBox*)curWidget->control)->GetCurSel();
 			char tmpStr[MIN_SIZE];
-			itoa(selectedIndex, tmpStr, 10);
+			//itoa(selectedIndex, tmpStr, 10);
+			((CComboBox*)curWidget->control)->GetLBText(selectedIndex, tmpStr);
 			curWidget->value = tmpStr;
 
 			/**
