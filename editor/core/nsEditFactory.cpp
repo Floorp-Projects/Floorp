@@ -55,7 +55,7 @@ getEditFactory(nsIFactory **aFactory)
 NS_METHOD
 nsEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     NS_NOTREACHED("!nsEditor");
     return NS_ERROR_NULL_POINTER; 
   } 
@@ -78,8 +78,8 @@ NS_IMPL_RELEASE(nsEditFactory)
 NS_METHOD
 nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  nsEditor *editor = NULL;
-  *aResult  = NULL;
+  nsEditor *editor = nsnull;
+  *aResult  = nsnull;
   
   if (aOuter && !aIID.Equals(kISupportsIID))
     return NS_NOINTERFACE;   // XXX right error?

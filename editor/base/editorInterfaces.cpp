@@ -45,7 +45,7 @@ nsEditorKeyListener::~nsEditorKeyListener()
 nsresult
 nsEditorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
@@ -182,7 +182,7 @@ nsEditorMouseListener::~nsEditorMouseListener()
 nsresult
 nsEditorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
@@ -280,7 +280,7 @@ nsresult
 NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor)
 {
   nsEditorKeyListener* it = new nsEditorKeyListener();
-  if (NULL == it) {
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -297,7 +297,7 @@ nsresult
 NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *aEditor)
 {
   nsEditorMouseListener* it = new nsEditorMouseListener();
-  if (NULL == it) {
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
