@@ -81,7 +81,6 @@ function toggleAffectedChrome(aHide)
   //   (*) navigation bar
   //   (*) personal toolbar
   //   (*) tab browser ``strip''
-  //   (*) sidebar
 
   if (!gChromeState)
     gChromeState = new Object;
@@ -89,38 +88,8 @@ function toggleAffectedChrome(aHide)
   var i = 0;
   chrome[i++] = document.getElementById("main-menubar");
   chrome[i++] = document.getElementById("nav-bar");
+  chrome[i++] = document.getElementById("LocationToolbar");
   chrome[i++] = document.getElementById("PersonalToolbar");
-
-  // sidebar states map as follows:
-  //   was-hidden    => hide/show nothing
-  //   was-collapsed => hide/show only the splitter
-  //   was-shown     => hide/show the splitter and the box
-  if (aHide)
-  {
-    // going into print preview mode
-    if (sidebar_is_collapsed())
-    {
-      gChromeState.sidebar = "was-collapsed";
-      chrome[i++] = document.getElementById("sidebar-splitter");
-    }
-    else if (sidebar_is_hidden())
-      gChromeState.sidebar = "was-hidden";
-    else 
-    {
-      gChromeState.sidebar = "was-visible";
-      chrome[i++] = document.getElementById("sidebar-box");
-      chrome[i++] = document.getElementById("sidebar-splitter");
-    }
-  }
-  else
-  {
-    // restoring normal mode (i.e., leaving print preview mode)
-    if (gChromeState.sidebar == "was-collapsed" ||
-        gChromeState.sidebar == "was-visible")
-      chrome[i++] = document.getElementById("sidebar-splitter");
-    if (gChromeState.sidebar == "was-visible")
-      chrome[i++] = document.getElementById("sidebar-box");
-  }
 
   // now that we've figured out which elements we're interested, toggle 'em
   for (i = 0; i < chrome.length; ++i)
@@ -130,11 +99,7 @@ function toggleAffectedChrome(aHide)
     else
       chrome[i].hidden = false;
   }
-
-  // if we are unhiding and sidebar used to be there rebuild it
-  if (!aHide && gChromeState.sidebar == "was-visible")
-    SidebarRebuild();
-    
+  
   // now deal with the tab browser ``strip'' 
   var theTabbrowser = document.getElementById("content"); 
   if (aHide) // normal mode -> print preview
@@ -162,7 +127,6 @@ function showPrintPreviewToolbar()
   var printPreviewTB = document.createElementNS(kXULNS, "toolbar");
   printPreviewTB.setAttribute("printpreview", true);
   printPreviewTB.setAttribute("id", "print-preview-toolbar");
-
   var navTB = document.getElementById("nav-bar");
   navTB.parentNode.appendChild(printPreviewTB);
 }
@@ -236,7 +200,6 @@ function BrowserPrintPreview()
       gPrintSettings = GetPrintSettings(webBrowserPrint);
       webBrowserPrint.printPreview(gPrintSettings);
     }
-
     // show the toolbar after we go into print preview mode so
     // that we can initialize the toolbar with total num pages
     showPrintPreviewToolbar();
