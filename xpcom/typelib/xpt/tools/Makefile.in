@@ -35,7 +35,7 @@ LIBS		= $(DIST)/lib/libxpt.a
 # when libxpt changes.
 EXTRA_DEPS = $(wildcard $(DIST)/lib/libxpt.*)
 
-# Build xpidl early.  (libs creates .deps used by install.)
+# Build xpt_link and xpt_dump early.  (libs creates .deps used by install.)
 export:: libs install
 
 include $(topsrcdir)/config/rules.mk
