@@ -182,7 +182,7 @@ typedef struct {
     {"1.0", 1, 0, XPT_VERSION_UNSUPPORTED},                                   \
     {"1.1", 1, 1, XPT_VERSION_OLD},                                           \
     {"1.2", 1, 2, XPT_VERSION_CURRENT}                                        \
-};
+}
 
 extern XPT_PUBLIC_API(PRUint16)
 XPT_ParseVersionString(const char* str, PRUint8* major, PRUint8* minor);

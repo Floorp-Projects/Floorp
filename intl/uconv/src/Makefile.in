@@ -146,12 +146,6 @@ SHARED_LIBRARY_LIBS = \
 
 include $(topsrcdir)/config/rules.mk
 
-# Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.
-# QNX simply objects to the way it's being redefined.
-ifeq (,$(filter AIX OpenVMS QNX HP-UX,$(OS_ARCH)))
-CFLAGS		+= -D__STDC__
-endif
-
 # CODESET is not automatically defined on some older versions of Redhat.
 # Define _XOPEN_SOURCE so CODESET will get defined and thus allow 
 # nl_langinfo(CODESET) to compile on these systems.

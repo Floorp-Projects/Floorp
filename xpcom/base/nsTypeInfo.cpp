@@ -246,7 +246,9 @@ const char* nsGetTypeName(void* ptr)
 
 #if defined(linux)
 
+#if !defined(__USE_GNU)
 #define __USE_GNU
+#endif
 #include <dlfcn.h>
 #include <ctype.h>
 #include <string.h>
