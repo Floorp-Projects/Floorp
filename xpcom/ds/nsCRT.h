@@ -83,6 +83,9 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
     ::operator delete(ptr);                  \
   }
 
+// Freeing helper
+#define CRTFREEIF(x) if (x) { nsCRT::free(x); x = 0; }
+
 /// This is a wrapper class around all the C runtime functions. 
 
 class NS_COM nsCRT {
