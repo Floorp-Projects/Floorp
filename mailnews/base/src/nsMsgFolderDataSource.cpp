@@ -61,6 +61,7 @@
 #include "nsIMsgHdr.h"
 #include "nsTraceRefcnt.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
+#include "nsArray.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
@@ -656,44 +657,35 @@ nsMsgFolderDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 }
 
 NS_IMETHODIMP
-nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
-                                      nsIEnumerator/*<nsIRDFResource>*/** commands)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsISupportsArray> cmds;
-
-  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewISupportsArray(getter_AddRefs(cmds));
-    if (NS_FAILED(rv)) return rv;
-    cmds->AppendElement(kNC_Delete);
-    cmds->AppendElement(kNC_ReallyDelete);
-    cmds->AppendElement(kNC_NewFolder);
-    cmds->AppendElement(kNC_GetNewMessages);
-    cmds->AppendElement(kNC_Copy);
-    cmds->AppendElement(kNC_Move);
-    cmds->AppendElement(kNC_CopyFolder);
-    cmds->AppendElement(kNC_MoveFolder);
-    cmds->AppendElement(kNC_MarkAllMessagesRead);
-    cmds->AppendElement(kNC_Compact);
-    cmds->AppendElement(kNC_CompactAll);
-    cmds->AppendElement(kNC_Rename);
-    cmds->AppendElement(kNC_EmptyTrash);
-    cmds->AppendElement(kNC_DownloadFlagged);
-  }
-
-  if (cmds != nsnull)
-    return cmds->Enumerate(commands);
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsMsgFolderDataSource::GetAllCmds(nsIRDFResource* source,
                                       nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
-  NS_NOTYETIMPLEMENTED("sorry!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_NOTYETIMPLEMENTED("no one actually uses me");
+  nsresult rv;
+
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMutableArray> cmds;
+  NS_NewArray(getter_AddRefs(cmds));
+  if (!cmds) return rv;
+
+  cmds->AppendElement(kNC_Delete, PR_FALSE);
+  cmds->AppendElement(kNC_ReallyDelete, PR_FALSE);
+  cmds->AppendElement(kNC_NewFolder, PR_FALSE);
+  cmds->AppendElement(kNC_GetNewMessages, PR_FALSE);
+  cmds->AppendElement(kNC_Copy, PR_FALSE);
+  cmds->AppendElement(kNC_Move, PR_FALSE);
+  cmds->AppendElement(kNC_CopyFolder, PR_FALSE);
+  cmds->AppendElement(kNC_MoveFolder, PR_FALSE);
+  cmds->AppendElement(kNC_MarkAllMessagesRead, PR_FALSE);
+  cmds->AppendElement(kNC_Compact, PR_FALSE);
+  cmds->AppendElement(kNC_CompactAll, PR_FALSE);
+  cmds->AppendElement(kNC_Rename, PR_FALSE);
+  cmds->AppendElement(kNC_EmptyTrash, PR_FALSE);
+  cmds->AppendElement(kNC_DownloadFlagged, PR_FALSE);
+
+  return cmds->Enumerate(commands);
 }
 
 NS_IMETHODIMP

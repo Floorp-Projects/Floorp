@@ -354,26 +354,6 @@ nsAbDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 }
 
 NS_IMETHODIMP
-nsAbDirectoryDataSource::GetAllCommands(nsIRDFResource* source,
-                                      nsIEnumerator/*<nsIRDFResource>*/** commands)
-{
-  nsresult rv;
-  nsCOMPtr<nsISupportsArray> cmds;
-
-  nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewISupportsArray(getter_AddRefs(cmds));
-    NS_ENSURE_SUCCESS(rv, rv);
-    cmds->AppendElement(kNC_Delete);
-    cmds->AppendElement(kNC_DeleteCards);
-  }
-
-  if (cmds != nsnull)
-    return cmds->Enumerate(commands);
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsAbDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                         nsIRDFResource*   aCommand,
                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments,
