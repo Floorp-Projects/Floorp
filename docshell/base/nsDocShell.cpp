@@ -449,7 +449,9 @@ NS_IMETHODIMP nsDocShell::LoadStream(nsIInputStream *aStream, nsIURI *aURI,
       nsresult rv = NS_OK;
       uri = do_CreateInstance(kSimpleURICID, &rv);
       if (NS_FAILED(rv)) return rv;
-      rv = uri->SetSpec("stream");
+      // Make sure that the URI spec "looks" like a protocol and path...
+      // For now, just use a bogus protocol called "internal"
+      rv = uri->SetSpec("internal:load-stream");
       if (NS_FAILED(rv)) return rv;
    }
 
@@ -498,7 +500,7 @@ NS_IMETHODIMP nsDocShell::LoadStream(nsIInputStream *aStream, nsIURI *aURI,
 
    // build up a channel for this stream.
    nsCOMPtr<nsIChannel> channel;
-   NS_ENSURE_SUCCESS(NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, aStream, 
+   NS_ENSURE_SUCCESS(NS_NewInputStreamChannel(getter_AddRefs(channel), uri, aStream, 
                                               aContentType, aContentLen), NS_ERROR_FAILURE);
    
    nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
