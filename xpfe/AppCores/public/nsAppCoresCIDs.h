@@ -45,6 +45,12 @@
     {0x96, 0xc4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}  \
 }
 
+#define NS_BROWSERAPPCORE_FACTORY_CID             \
+{ /* BF4AE23F-BA9B-11d2-96C4-0060B0FB9956 */         \
+    0x108d759f, 0xbab5, 0x11d2,                     \
+    {0x96, 0xc4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}  \
+}
+
 #define NS_TOOLKITCORE_CID                             \
 { /* 1cab9340-c122-11d2-81b2-0060083a0bcf */          \
     0x1cab9340, 0xc122, 0x11d2,                       \
@@ -67,6 +73,18 @@
 { /* {7A3C4060-BC45-11d2-8A3F-00805F8A6608} */      \
     0x7a3c4060, 0xbc45, 0x11d2,                     \
     { 0x8a, 0x3f, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x8 } \
+}
+
+#define NS_EDITORAPPCORE_CID                         \
+{ /* {} */      \
+    0x9afff72b, 0xca9a, 0x11d2,                     \
+    { 0x96, 0xc9, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } \
+}
+
+#define NS_EDITORAPPCORE_FACTORY_CID                     \
+{ /* {739C5B4F-CA9D-11d2-96C9-0060B0FB9956} */          \
+    0x739c5b4f, 0xca9d, 0x11d2,                       \
+    {0x96, 0xc9, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}  \
 }
 
 #endif /* nsAppCoresCIDs_h___ */

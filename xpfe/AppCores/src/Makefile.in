@@ -31,6 +31,9 @@ CPPSRCS= \
 	nsBaseAppCore.cpp       \
 	nsMailCore.cpp       \
 	nsAppCoresNameSet.cpp       \
+	nsEditorAppCore.cpp       \
+	nsEditorAppCoreFactory.cpp       \
+	nsEditorMode.cpp       \
 	nsToolbarCore.cpp       \
 	nsToolkitCore.cpp	\
 	nsBrowserAppCore.cpp       \
@@ -43,6 +46,7 @@ CPPSRCS= \
 	nsAppCoresManagerFactory.cpp       \
 	nsJSBaseAppCore.cpp       \
 	nsJSAppCoresManager.cpp       \
+	nsJSEditorAppCore.cpp       \
 	nsJSMailCore.cpp   \
 	nsJSToolbarCore.cpp   \
 	nsJSToolkitCore.cpp     \

@@ -22,10 +22,13 @@
 #include "nsICmdLineService.h"
 #include "nsAppShellCIDs.h"
 
+#include "nsIEditor.h"
+
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 #include "nsIDOMMailCore.h"
 #include "nsIDOMBrowserAppCore.h"
+#include "nsIDOMEditorAppCore.h"
 
 static NS_DEFINE_IID(kIAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
@@ -33,12 +36,14 @@ static NS_DEFINE_IID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kMailCoreCID,         NS_MAILCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,      NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
+static NS_DEFINE_IID(kEditorAppCoreCID,    NS_EDITORAPPCORE_CID);
 
 #ifdef XP_PC
 
 #define APPSHELL_DLL "nsappshell.dll"
 #define BROWSER_DLL  "nsbrowser.dll"
 #define APPCORES_DLL  "appcores.dll"
+#define EDITOR_DLL "ender.dll"
 
 #else
 
@@ -46,12 +51,14 @@ static NS_DEFINE_IID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
 
 #define APPSHELL_DLL "APPSHELL_DLL"
 #define APPCORES_DLL  "APPCORES_DLL"
+#define EDITOR_DLL	"ENDER_DLL"
 
 #else
 
 // XP_UNIX
 #define APPSHELL_DLL  "libnsappshell.so"
 #define APPCORES_DLL  "libappcores.so"
+#define EDITOR_DLL "libender.so"
 
 #endif // XP_MAC
 
@@ -61,6 +68,7 @@ static NS_DEFINE_IID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 ///static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
+//static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
 
 /*
@@ -93,6 +101,8 @@ NS_SetupRegistry_1()
   nsRepository::RegisterFactory(kMailCoreCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kToolbarCoreCID,    APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kBrowserAppCoreCID, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kEditorAppCoreCID,  APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
 //#endif
 ///  nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }
