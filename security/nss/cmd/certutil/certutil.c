@@ -968,38 +968,38 @@ Usage(char *progName)
 {
 #define FPS fprintf(stderr, 
     FPS "Type %s -H for more detailed descriptions\n", progName);
-    FPS "Usage:  %s -N [-d certdir] [-f pwfile]\n", progName);
-    FPS "\t%s -A -n cert-name -t trustargs [-d certdir] [-a] [-i input]\n", 
+    FPS "Usage:  %s -N [-d certdir] [-P dbprefix] [-f pwfile]\n", progName);
+    FPS "\t%s -A -n cert-name -t trustargs [-d certdir] [-P dbprefix] [-a] [-i input]\n", 
     	progName);
     FPS "\t%s -C [-c issuer-name | -x] -i cert-request-file -o cert-file\n"
 	"\t\t [-m serial-number] [-w warp-months] [-v months-valid]\n"
-        "\t\t [-f pwfile] [-d certdir] [-1] [-2] [-3] [-4] [-5] [-6]\n",
+        "\t\t [-f pwfile] [-d certdir] [-P dbprefix] [-1] [-2] [-3] [-4] [-5] [-6]\n",
 	progName);
-    FPS "\t%s -D -n cert-name [-d certdir]\n", progName);
-    FPS "\t%s -E -n cert-name -t trustargs [-d certdir] [-a] [-i input]\n", 
+    FPS "\t%s -D -n cert-name [-d certdir] [-P dbprefix]\n", progName);
+    FPS "\t%s -E -n cert-name -t trustargs [-d certdir] [-P dbprefix] [-a] [-i input]\n", 
 	progName);
     FPS "\t%s -G -n key-name [-h token-name] [-k rsa] [-g key-size] [-y exp]\n" 
-	"\t\t [-f pwfile] [-z noisefile] [-d certdir]\n", progName);
+	"\t\t [-f pwfile] [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -G [-h token-name] -k dsa [-q pqgfile -g key-size] [-f pwfile]\n"
-	"\t\t [-z noisefile] [-d certdir]\n", progName);
+	"\t\t [-z noisefile] [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -K [-n key-name] [-h token-name] [-k dsa|rsa|all]\n", 
 	progName);
-    FPS "\t\t [-f pwfile] [-d certdir]\n");
-    FPS "\t%s -L [-n cert-name] [-d certdir] [-r] [-a]\n", progName);
-    FPS "\t%s -M -n cert-name -t trustargs [-d certdir]\n",
+    FPS "\t\t [-f pwfile] [-d certdir] [-P dbprefix]\n");
+    FPS "\t%s -L [-n cert-name] [-d certdir] [-P dbprefix] [-r] [-a]\n", progName);
+    FPS "\t%s -M -n cert-name -t trustargs [-d certdir] [-P dbprefix]\n",
 	progName);
-    FPS "\t%s -R -s subj -o cert-request-file [-d certdir] [-p phone] [-a]\n"
+    FPS "\t%s -R -s subj -o cert-request-file [-d certdir] [-P dbprefix] [-p phone] [-a]\n"
 	"\t\t [-k key-type] [-h token-name] [-f pwfile] [-g key-size]\n",
 	progName);
-    FPS "\t%s -V -n cert-name -u usage [-b time] [-e] [-d certdir]\n",
+    FPS "\t%s -V -n cert-name -u usage [-b time] [-e] [-d certdir] [-P dbprefix]\n",
 	progName);
     FPS "\t%s -S -n cert-name -s subj [-c issuer-name | -x]  -t trustargs\n"
 	"\t\t [-k key-type] [-h token-name] [-g key-size]\n"
         "\t\t [-m serial-number] [-w warp-months] [-v months-valid]\n"
-	"\t\t [-f pwfile] [-d certdir]\n"
+	"\t\t [-f pwfile] [-d certdir] [-P dbprefix]\n"
         "\t\t [-p phone] [-1] [-2] [-3] [-4] [-5] [-6]\n",
 	progName);
-    FPS "\t%s -U [-d certdir]\n", progName);
+    FPS "\t%s -U [-d certdir] [-P dbprefix]\n", progName);
     exit(-1);
 }
 
@@ -1028,6 +1028,8 @@ static void LongUsage(char *progName)
 	"   -f pwfile");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "%-20s The input certificate is encoded in ASCII (RFC1113)\n",
 	"   -a");
     FPS "%-20s Specify the certificate file (default is stdin)\n",
@@ -1054,6 +1056,8 @@ static void LongUsage(char *progName)
 	"   -f pwfile");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "%-20s Create key usage extension\n",
 	"   -1 ");
     FPS "%-20s Create basic constraint extension\n",
@@ -1086,6 +1090,8 @@ static void LongUsage(char *progName)
 	"   -q pqgfile");
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
 	"   -d keydir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "\n");
 
     FPS "%-15s Delete a certificate from the database\n",
@@ -1094,12 +1100,16 @@ static void LongUsage(char *progName)
 	"   -n cert-name");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "\n");
 
     FPS "%-15s List all modules\n", /*, or print out a single named module\n",*/
         "-U");
     FPS "%-20s Module database directory (default is '~/.netscape')\n",
         "   -d moddir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
 
     FPS "%-15s List all keys\n", /*, or print out a single named key\n",*/
         "-K");
@@ -1112,6 +1122,8 @@ static void LongUsage(char *progName)
         "   -f password-file");
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
 	"   -d keydir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "\n");
 
     FPS "%-15s List all certs, or print out a single named cert\n",
@@ -1120,6 +1132,8 @@ static void LongUsage(char *progName)
 	"   -n cert-name");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "%-20s For single cert, print binary DER encoding\n",
 	"   -r");
     FPS "%-20s For single cert, print ASCII encoding (RFC1113)\n",
@@ -1134,12 +1148,16 @@ static void LongUsage(char *progName)
 	"   -t trustargs");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "\n");
 
     FPS "%-15s Create a new certificate database\n",
 	"-N");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "\n");
 
     FPS "%-15s Generate a certificate request (stdout)\n",
@@ -1158,6 +1176,8 @@ static void LongUsage(char *progName)
 	"   -f pwfile");
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
 	"   -d keydir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "%-20s Specify the contact phone number (\"123-456-7890\")\n",
 	"   -p phone");
     FPS "%-20s Output the cert request in ASCII (RFC1113); default is binary\n",
@@ -1179,6 +1199,8 @@ static void LongUsage(char *progName)
     FPS "%-25s R \t Email Recipient\n", "");   
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "\n");
 
     FPS "%-15s Make a certificate and add to database\n",
@@ -1209,6 +1231,8 @@ static void LongUsage(char *progName)
 	"   -f pwfile");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
 	"   -d certdir");
+    FPS "%-20s Cert & Key database prefix\n",
+	"   -P dbprefix");
     FPS "%-20s Specify the contact phone number (\"123-456-7890\")\n",
 	"   -p phone");
     FPS "%-20s Create key usage extension\n",
@@ -2032,6 +2056,7 @@ enum {
     opt_Nickname,
     opt_OutputFile,
     opt_PhoneNumber,
+    opt_DBPrefix,
     opt_PQGFile,
     opt_BinaryDER,
     opt_Subject,
@@ -2089,6 +2114,7 @@ static secuCommandFlag certutil_options[] =
 	{ /* opt_Nickname            */  'n', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_OutputFile          */  'o', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_PhoneNumber         */  'p', PR_TRUE,  0, PR_FALSE },
+	{ /* opt_DBPrefix            */  'P', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_PQGFile             */  'q', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_BinaryDER           */  'r', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_Subject             */  's', PR_TRUE,  0, PR_FALSE },
@@ -2112,6 +2138,7 @@ main(int argc, char **argv)
     char *      certfile        = "tempcert";
     char *      certreqfile     = "tempcertreq";
     char *      slotname        = "internal";
+    char *      certPrefix      = "";
     KeyType     keytype         = rsaKey;
     /*char *	keyslot	        = NULL;*/
     /*char *      keynickname     = NULL;*/
@@ -2198,6 +2225,10 @@ main(int argc, char **argv)
 	    return -1;
 	}
     }
+
+    /*  -P certdb name prefix */
+    if (certutil.options[opt_DBPrefix].activated)
+	certPrefix = strdup(certutil.options[opt_DBPrefix].arg);
 
     /*  -q PQG file  */
     if (certutil.options[opt_PQGFile].activated) {
@@ -2415,7 +2446,8 @@ main(int argc, char **argv)
 
     /*  Initialize NSPR and NSS.  */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
+    NSS_Initialize(SECU_ConfigDirectory(NULL), certPrefix, certPrefix,
+                   "secmod.db", PR_FALSE);
     certHandle = CERT_GetDefaultCertDB();
 
     if (certutil.commands[cmd_Version].activated) {
