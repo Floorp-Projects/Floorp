@@ -89,7 +89,6 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
     nsresult res = NS_OK;
-    PRInt32 res;
     switch (aID) {
     case eMetric_WindowTitleHeight:
         aMetric = 0;
