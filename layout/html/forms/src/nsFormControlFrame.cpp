@@ -520,6 +520,8 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsFormControlFrame", aReflowState.reason);
+
   if (!mDidInit) {
     mPresContext = aPresContext;
     InitializeControl(aPresContext);

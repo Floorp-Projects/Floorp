@@ -466,7 +466,7 @@ void LabelHack(nsHTMLReflowState& aReflowState, char* aMessage)
 {
   if (aReflowState.mComputedWidth == 0) {
     aReflowState.mComputedWidth = aReflowState.availableWidth;
-    NS_ASSERTION(0, "LabelHack: Path #1");
+    //NS_ASSERTION(0, "LabelHack: Path #1");
   }
   if ((aReflowState.mComputedWidth != NS_INTRINSICSIZE) &&
       (aReflowState.mComputedWidth > aReflowState.availableWidth) &&
@@ -533,6 +533,7 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+  DO_GLOBAL_REFLOW_COUNT("nsLabelFrame", aReflowState.reason);
 
   PRBool     isStyleChange      = PR_FALSE;
   PRBool     isDirtyChildReflow = PR_FALSE;
