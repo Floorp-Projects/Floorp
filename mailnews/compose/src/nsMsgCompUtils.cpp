@@ -1933,7 +1933,7 @@ ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
     }    
     
     nsAutoString charSetStr(charSet);
-    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, &charSetStr, wrapWidth, converterFlags);
+    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, wrapWidth, converterFlags);
     if (sink && NS_SUCCEEDED(rv)) 
     {  
         sink->DoFragment(PR_TRUE);
