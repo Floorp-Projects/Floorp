@@ -33,29 +33,29 @@
 #endif
 
 /*
-	Public things defined in this file:
+  Public things defined in this file:
 
-																												T* rawTptr;
-		class nsCOMPtr<T>																		nsCOMPtr<T> smartTptr;
+                                                        T* rawTptr;
+    class nsCOMPtr<T>                                   nsCOMPtr<T> smartTptr;
 
-		null_nsCOMPtr()																			smartTptr = null_nsCOMPtr();
+    null_nsCOMPtr()                                     smartTptr = null_nsCOMPtr();
 
-		do_QueryInterface( nsISupports* )										smartTptr = do_QueryInterface(other_ptr);
-		do_QueryInterface( nsISupports*, nsresult* )				smartTptr = do_QueryInterface(other_ptr, &status);
+    do_QueryInterface( nsISupports* )                   smartTptr = do_QueryInterface(other_ptr);
+    do_QueryInterface( nsISupports*, nsresult* )        smartTptr = do_QueryInterface(other_ptr, &status);
 
-		dont_QueryInterface( T* )														smartTptr = dont_QueryInterface(rawTptr);
+    dont_QueryInterface( T* )                           smartTptr = dont_QueryInterface(rawTptr);
 
-		getter_AddRefs( nsCOMPtr<T>& )
-		getter_AddRefs( T* )
-		dont_AddRef( T* )
+    getter_AddRefs( nsCOMPtr<T>& )
+    getter_AddRefs( T* )
+    dont_AddRef( T* )
 
-		CallQueryInterface( nsISupports*, T** )
-		CallQueryInterface( nsISupports*, nsCOMPtr<T>* )
+    CallQueryInterface( nsISupports*, T** )
+    CallQueryInterface( nsISupports*, nsCOMPtr<T>* )
 */
 
 /*
-	Having problems?
-	
+  Having problems?
+  
   See the User Manual at:
     <http://www.meer.net/ScottCollins/doc/nsCOMPtr.html>, or
     <http://www.mozilla.org/projects/xpcom/nsCOMPtr.html>
@@ -88,30 +88,30 @@
     myself for Mac and Windows.
   */
 
-	// under Metrowerks (Mac), we don't have autoconf yet
+  // under Metrowerks (Mac), we don't have autoconf yet
 #ifdef __MWERKS__
-	#define HAVE_CPP_USING
-	#define HAVE_CPP_EXPLICIT
-	#define HAVE_CPP_NEW_CASTS
-	#define HAVE_CPP_BOOL
+  #define HAVE_CPP_USING
+  #define HAVE_CPP_EXPLICIT
+  #define HAVE_CPP_NEW_CASTS
+  #define HAVE_CPP_BOOL
 #endif
 
-	// under VC++ (Windows), we don't have autoconf yet
+  // under VC++ (Windows), we don't have autoconf yet
 #ifdef _MSC_VER
-	#define HAVE_CPP_EXPLICIT
-	#define HAVE_CPP_USING
-	#define HAVE_CPP_NEW_CASTS
+  #define HAVE_CPP_EXPLICIT
+  #define HAVE_CPP_USING
+  #define HAVE_CPP_NEW_CASTS
 
   #if (_MSC_VER<1100)
-		  // before 5.0, VC++ couldn't handle explicit
+      // before 5.0, VC++ couldn't handle explicit
     #undef HAVE_CPP_EXPLICIT
   #elif (_MSC_VER==1100)
       // VC++5.0 has an internal compiler error (sometimes) without this
     #undef HAVE_CPP_USING
   #endif
 
-	#define NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-		// under VC++, we win by inlining StartAssignment
+  #define NSCAP_FEATURE_INLINE_STARTASSIGNMENT
+    // under VC++, we win by inlining StartAssignment
 #endif
 
 #define NSCAP_FEATURE_ALLOW_RAW_POINTERS
@@ -119,26 +119,26 @@
 #define NSCAP_FEATURE_FACTOR_DESTRUCTOR
 
 
-	/*
-		If the compiler doesn't support |explicit|, we'll just make it go away, trusting
-		that the builds under compilers that do have it will keep us on the straight and narrow.
-	*/
+  /*
+    If the compiler doesn't support |explicit|, we'll just make it go away, trusting
+    that the builds under compilers that do have it will keep us on the straight and narrow.
+  */
 #ifndef HAVE_CPP_EXPLICIT
   #define explicit
 #endif
 
 #ifdef HAVE_CPP_BOOL
-	typedef bool NSCAP_BOOL;
+  typedef bool NSCAP_BOOL;
 #else
-	typedef PRBool NSCAP_BOOL;
+  typedef PRBool NSCAP_BOOL;
 #endif
 
 #ifdef HAVE_CPP_NEW_CASTS
-	#define NSCAP_STATIC_CAST(T,x)	static_cast<T>(x)
-	#define NSCAP_REINTERPRET_CAST(T,x)	reinterpret_cast<T>(x)
+  #define NSCAP_STATIC_CAST(T,x)       static_cast<T>(x)
+  #define NSCAP_REINTERPRET_CAST(T,x)  reinterpret_cast<T>(x)
 #else
-	#define NSCAP_STATIC_CAST(T,x) ((T)(x))
-	#define NSCAP_REINTERPRET_CAST(T,x) ((T)(x))
+  #define NSCAP_STATIC_CAST(T,x) ((T)(x))
+  #define NSCAP_REINTERPRET_CAST(T,x) ((T)(x))
 #endif
 
 #ifdef NSCAP_FEATURE_DEBUG_MACROS
@@ -182,7 +182,7 @@ class nsDerivedSafe : public T
       NS_IMETHOD_(nsrefcnt) Release(void);
 #endif
 
-      void operator delete( void*, size_t );               		// NOT TO BE IMPLEMENTED
+      void operator delete( void*, size_t );                  // NOT TO BE IMPLEMENTED
         // declaring |operator delete| private makes calling delete on an interface pointer a compile error
 
       nsDerivedSafe<T>& operator=( const nsDerivedSafe<T>& ); // NOT TO BE IMPLEMENTED
@@ -214,7 +214,7 @@ struct nsDontQueryInterface
     /*
       ...
 
-			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |dont_QueryInterface()| instead.
+      DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |dont_QueryInterface()| instead.
     */
   {
     explicit
@@ -242,7 +242,7 @@ struct nsQueryInterface
     /*
       ...
 
-			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |do_QueryInterface()| instead.
+      DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |do_QueryInterface()| instead.
     */
   {
     explicit
@@ -266,22 +266,22 @@ do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
 
 #ifdef NSCAP_FEATURE_ALLOW_RAW_POINTERS
 
-	#define null_nsCOMPtr() (0)
+  #define null_nsCOMPtr() (0)
 
 #else
 
-	inline
-	const nsQueryInterface
-	null_nsCOMPtr()
-			/*
-				You can use this to assign |NULL| into an |nsCOMPtr|, e.g.,
+  inline
+  const nsQueryInterface
+  null_nsCOMPtr()
+      /*
+        You can use this to assign |NULL| into an |nsCOMPtr|, e.g.,
 
-	        myPtr = null_nsCOMPtr();
-			*/
-		{
-			typedef nsISupports* nsISupports_Ptr;
-			return nsQueryInterface(nsISupports_Ptr(0));
-		}
+          myPtr = null_nsCOMPtr();
+      */
+    {
+      typedef nsISupports* nsISupports_Ptr;
+      return nsQueryInterface(nsISupports_Ptr(0));
+    }
 
 #endif
 
@@ -295,8 +295,8 @@ struct nsDontAddRef
       machinery of |getter_AddRefs| in the argument list to functions that |AddRef|
       their results before returning them to the caller.
 
-			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| or
-			|dont_AddRef()| instead.
+      DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| or
+      |dont_AddRef()| instead.
 
       See also |getter_AddRefs()|, |dont_AddRef()|, and |class nsGetterAddRefs|.
     */
@@ -319,9 +319,9 @@ getter_AddRefs( T* aRawPtr )
       ...makes typing easier, because it deduces the template type, e.g., 
       you write |dont_AddRef(fooP)| instead of |nsDontAddRef<IFoo>(fooP)|.
     */
-	{
-		return nsDontAddRef<T>(aRawPtr);
-	}
+  {
+    return nsDontAddRef<T>(aRawPtr);
+  }
 
 template <class T>
 inline
@@ -334,9 +334,9 @@ dont_AddRef( T* aRawPtr )
 
 
 class nsCOMPtr_base
-		/*
-			...factors implementation for all template versions of |nsCOMPtr|.
-		*/
+    /*
+      ...factors implementation for all template versions of |nsCOMPtr|.
+    */
   {
     public:
 
@@ -347,7 +347,7 @@ class nsCOMPtr_base
         }
 
 #ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
-		 NS_EXPORT ~nsCOMPtr_base();
+     NS_EXPORT ~nsCOMPtr_base();
 #endif
 
 #if 0
@@ -378,11 +378,11 @@ class nsCOMPtr : private nsCOMPtr_base
       typedef T element_type;
 
 #ifndef NSCAP_FEATURE_FACTOR_DESTRUCTOR
-		 ~nsCOMPtr()
-				{
-					if ( mRawPtr )
-						NSCAP_RELEASE(mRawPtr);
-				}
+     ~nsCOMPtr()
+        {
+          if ( mRawPtr )
+            NSCAP_RELEASE(mRawPtr);
+        }
 #endif
 
       nsCOMPtr()
@@ -418,12 +418,12 @@ class nsCOMPtr : private nsCOMPtr_base
         }
 
 #ifdef NSCAP_FEATURE_ALLOW_RAW_POINTERS
-			nsCOMPtr( T* aRawPtr )
-					: nsCOMPtr_base(aRawPtr)
-				{
-					if ( mRawPtr )
-						NSCAP_ADDREF(mRawPtr);
-				}
+      nsCOMPtr( T* aRawPtr )
+          : nsCOMPtr_base(aRawPtr)
+        {
+          if ( mRawPtr )
+            NSCAP_ADDREF(mRawPtr);
+        }
 
       nsCOMPtr<T>&
       operator=( T* rhs )
@@ -512,10 +512,10 @@ class nsCOMPtr : private nsCOMPtr_base
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
           return NSCAP_REINTERPRET_CAST(T**, begin_assignment());
 #else
-					if ( mRawPtr )
-					  NSCAP_RELEASE(mRawPtr);
-					mRawPtr = 0;
-					return NSCAP_REINTERPRET_CAST(T**, &mRawPtr);
+          if ( mRawPtr )
+            NSCAP_RELEASE(mRawPtr);
+          mRawPtr = 0;
+          return NSCAP_REINTERPRET_CAST(T**, &mRawPtr);
 #endif
         }
   };
@@ -532,7 +532,7 @@ class nsGetterAddRefs
         nsCOMPtr<IFoo> fooP;
         ...->QueryInterface(iid, getter_AddRefs(fooP))
 
-			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| instead.
+      DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| instead.
 
       When initialized with a |nsCOMPtr|, as in the example above, it returns
       a |void**| (or |T**| if needed) that the outer call (|QueryInterface| in this
@@ -586,92 +586,92 @@ template <class T, class U>
 inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
-	{
-		return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_STATIC_CAST(const void*, rhs.get());
-	}
+  {
+    return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_STATIC_CAST(const void*, rhs.get());
+  }
 
 template <class T, class U>
 inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, const U* rhs )
-	{
-		return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_STATIC_CAST(const void*, rhs);
-	}
+  {
+    return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_STATIC_CAST(const void*, rhs);
+  }
 
 template <class T, class U>
 inline
 NSCAP_BOOL
 operator==( const U* lhs, const nsCOMPtr<T>& rhs )
-	{
-		return NSCAP_STATIC_CAST(const void*, lhs) == NSCAP_STATIC_CAST(const void*, rhs.get());
-	}
+  {
+    return NSCAP_STATIC_CAST(const void*, lhs) == NSCAP_STATIC_CAST(const void*, rhs.get());
+  }
 
 template <class T>
 inline
 NSCAP_BOOL
 operator==( const nsCOMPtr<T>& lhs, int rhs )
-		// specifically to allow |smartPtr == 0|
-	{
-		return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_REINTERPRET_CAST(const void*, rhs);
-	}
+    // specifically to allow |smartPtr == 0|
+  {
+    return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_REINTERPRET_CAST(const void*, rhs);
+  }
 
 template <class T>
 inline
 NSCAP_BOOL
 operator==( int lhs, const nsCOMPtr<T>& rhs )
-		// specifically to allow |0 == smartPtr|
-	{
-		return NSCAP_REINTERPRET_CAST(const void*, lhs) == NSCAP_STATIC_CAST(const void*, rhs.get());
-	}
+    // specifically to allow |0 == smartPtr|
+  {
+    return NSCAP_REINTERPRET_CAST(const void*, lhs) == NSCAP_STATIC_CAST(const void*, rhs.get());
+  }
 
 template <class T, class U>
 inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, const nsCOMPtr<U>& rhs )
-	{
-		return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_STATIC_CAST(const void*, rhs.get());
-	}
+  {
+    return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_STATIC_CAST(const void*, rhs.get());
+  }
 
 template <class T, class U>
 inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, const U* rhs )
-	{
-		return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_STATIC_CAST(const void*, rhs);
-	}
+  {
+    return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_STATIC_CAST(const void*, rhs);
+  }
 
 template <class T, class U>
 inline
 NSCAP_BOOL
 operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
-	{
-		return NSCAP_STATIC_CAST(const void*, lhs) != NSCAP_STATIC_CAST(const void*, rhs.get());
-	}
+  {
+    return NSCAP_STATIC_CAST(const void*, lhs) != NSCAP_STATIC_CAST(const void*, rhs.get());
+  }
 
 template <class T>
 inline
 NSCAP_BOOL
 operator!=( const nsCOMPtr<T>& lhs, int rhs )
-		// specifically to allow |smartPtr != 0|
-	{
-		return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_REINTERPRET_CAST(const void*, rhs);
-	}
+    // specifically to allow |smartPtr != 0|
+  {
+    return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_REINTERPRET_CAST(const void*, rhs);
+  }
 
 template <class T>
 inline
 NSCAP_BOOL
 operator!=( int lhs, const nsCOMPtr<T>& rhs )
-		// specifically to allow |0 != smartPtr|
-	{
-		return NSCAP_REINTERPRET_CAST(const void*, lhs) != NSCAP_STATIC_CAST(const void*, rhs.get());
-	}
+    // specifically to allow |0 != smartPtr|
+  {
+    return NSCAP_REINTERPRET_CAST(const void*, lhs) != NSCAP_STATIC_CAST(const void*, rhs.get());
+  }
 
 inline
 NSCAP_BOOL
 SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
-	{
-		return nsCOMPtr<nsISupports>( do_QueryInterface(lhs) ) == nsCOMPtr<nsISupports>( do_QueryInterface(rhs) );
-	}
+  {
+    return nsCOMPtr<nsISupports>( do_QueryInterface(lhs) ) == nsCOMPtr<nsISupports>( do_QueryInterface(rhs) );
+  }
 
 #endif // defined(NSCAP_FEATURE_ALLOW_COMPARISONS)
 
@@ -680,13 +680,13 @@ template <class DestinationType>
 inline
 nsresult
 CallQueryInterface( nsISupports* aSource, nsCOMPtr<DestinationType>* aDestination )
-		// a type-safe shortcut for calling the |QueryInterface()| member function
-	{
-		NS_PRECONDITION(aSource, "null parameter");
-		NS_PRECONDITION(aDestination, "null parameter");
+    // a type-safe shortcut for calling the |QueryInterface()| member function
+  {
+    NS_PRECONDITION(aSource, "null parameter");
+    NS_PRECONDITION(aDestination, "null parameter");
 
-		return aSource->QueryInterface(DestinationType::GetIID(), (void**)getter_AddRefs(*aDestination));
-	}
+    return aSource->QueryInterface(DestinationType::GetIID(), (void**)getter_AddRefs(*aDestination));
+  }
 
 
 #endif // !defined(nsCOMPtr_h___)
