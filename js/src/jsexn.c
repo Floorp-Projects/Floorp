@@ -302,21 +302,22 @@ JSBool
 js_exnHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     JSFunction *fun;
-    JSAtom *functionName;
+    jsid exceptionId;
     jsval pval;
 
-    JSObject *obj2;
     *bp = JS_FALSE;
 
     fun = (JSFunction *)JS_GetPrivate(cx, obj);
-    functionName = fun->atom;
+    exceptionId = (jsid)fun->atom;
 
-    obj2 = JSVAL_TO_OBJECT(v);
-    if (!OBJ_GET_PROPERTY(cx, obj2, (jsid)functionName, &pval))
-        return JS_FALSE;
+    if (!JSVAL_IS_PRIMITIVE(v)) {
+        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(v), exceptionId, &pval))
+            return JS_FALSE;
 
-    if (JSVAL_IS_INT(pval))
-        *bp = JS_TRUE;
+        /* XXX isn't this test a little too loose? */
+        if (JSVAL_IS_INT(pval))
+            *bp = JS_TRUE;
+    }
 
     return JS_TRUE;
 }

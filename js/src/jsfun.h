@@ -77,8 +77,7 @@ extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_InitArgsAndCallClasses(JSContext *cx, JSObject *obj,
-			      JSObject *objProto);
+js_InitArgsAndCallClasses(JSContext *cx, JSObject *obj);
 
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
@@ -101,8 +100,7 @@ extern void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing);
 
 extern JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent,
-		 JSObject *withobj);
+js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent);
 
 extern JSBool
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);

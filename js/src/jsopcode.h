@@ -77,7 +77,6 @@ typedef enum JSOp {
 #define JOF_INCDEC        0x0300  /* increment or decrement opcode */
 #define JOF_POST          0x0400  /* postorder increment or decrement */
 #define JOF_IMPORT        0x0800  /* import property op */
-#define JOF_FOR2          0x1000  /* new for/in loop bytecodes */
 
 /*
  * Immediate operand getters, setters, and bounds.

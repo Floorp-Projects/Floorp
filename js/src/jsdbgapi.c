@@ -102,7 +102,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 	/* Restore opcode at pc so it can be saved again. */
 	*pc = (jsbytecode)trap->op;
     } else {
-	trap = (JSTrap*) JS_malloc(cx, sizeof *trap);
+	trap = (JSTrap *) JS_malloc(cx, sizeof *trap);
 	if (!trap || !js_AddRoot(cx, &trap->closure, "trap->closure")) {
 	    if (trap)
 		JS_free(cx, trap);
@@ -424,7 +424,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 
     wp = FindWatchPoint(rt, obj, id);
     if (!wp) {
-	wp = (JSWatchPoint*) JS_malloc(cx, sizeof *wp);
+	wp = (JSWatchPoint *) JS_malloc(cx, sizeof *wp);
 	if (!wp)
 	    return JS_FALSE;
 	if (!js_AddRoot(cx, &wp->closure, "wp->closure")) {
@@ -607,7 +607,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp)
 {
     /* Force creation of argument and call objects if not yet created */
-    JS_GetFrameCallObject(cx, fp);
+    (void) JS_GetFrameCallObject(cx, fp);
     return fp->scopeChain;
 }
 
@@ -615,11 +615,17 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
 {
     if (! fp->fun)
-	return NULL;
+        return NULL;
+#if JS_HAS_ARGS_OBJECT
     /* Force creation of argument object if not yet created */
-     js_GetArgsObject(cx, fp);
+    (void) js_GetArgsObject(cx, fp);
+#endif
 #if JS_HAS_CALL_OBJECT
-    return js_GetCallObject(cx, fp, NULL, NULL);
+    /*
+     * XXX ill-defined: null return here means error was reported, unlike a
+     *     null returned above or in the #else
+     */
+    return js_GetCallObject(cx, fp, NULL);
 #else
     return NULL;
 #endif /* JS_HAS_CALL_OBJECT */
@@ -807,7 +813,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
     }
 
     n = scope->map.freeslot;
-    pd = (JSPropertyDesc*) JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
+    pd = (JSPropertyDesc *) JS_malloc(cx, (size_t)n * sizeof(JSPropertyDesc));
     if (!pd)
 	return JS_FALSE;
     i = 0;

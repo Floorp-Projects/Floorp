@@ -120,7 +120,7 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
 	}
 	sz = JS_MAX(pool->arenasize, nb);	/* allocate a new arena */
 	sz += sizeof *a + pool->mask;           /* header and alignment slop */
-	b = (JSArena*) malloc(sz);
+	b = (JSArena *) malloc(sz);
 	if (!b)
 	    return 0;
 	a = a->next = b;
@@ -187,7 +187,8 @@ FreeArenaList(JSArenaPool *pool, JSArena *head, JSBool reallyFree)
 #ifdef JS_THREADSAFE
 	do {
 	    *ap = b = arena_freelist;
-	} while (!js_CompareAndSwap((jsword*)&arena_freelist,(jsword)b,(jsword)a));
+	} while (!js_CompareAndSwap((jsword *)&arena_freelist, (jsword)b,
+                                    (jsword)a));
 #else
 	*ap = arena_freelist;
 	arena_freelist = a;
@@ -263,8 +264,10 @@ JS_ArenaFinish()
     while (arena_freelist) {
 	a = arena_freelist;
 	next = a->next;
-	if (js_CompareAndSwap((jsword*)&arena_freelist,(jsword)a,(jsword)next))
+	if (js_CompareAndSwap((jsword *)&arena_freelist, (jsword)a,
+                              (jsword)next)) {
 	    free(a);
+        }
     }
 #else
     for (a = arena_freelist; a; a = next) {

@@ -59,6 +59,8 @@ JS_BEGIN_EXTERN_C
  *                            NB: We define or create the function object at
  *                            parse (not emit) time, in order to specialize arg
  *                            and var bytecodes early.
+ *                          pn_flags: TCF_FUN_* flags (see jsemit.h) collected
+ *                            while parsing the function's body
  *                          pn_tryCount: of try statements in function
  *
  * <Statements>
@@ -122,7 +124,7 @@ JS_BEGIN_EXTERN_C
  * TOK_UNARYOP  unary       pn_kid: UNARY expr, pn_op: JSOP_NEG, JSOP_POS,
  *                          JSOP_NOT, JSOP_BITNOT, JSOP_TYPEOF, JSOP_VOID
  * TOK_INC,     unary       pn_kid: MEMBER expr
- * TOK_DEC                  pn_num: arg or local var slot if non-negative
+ * TOK_DEC
  * TOK_NEW      list        pn_head: list of ctor, arg1, arg2, ... argN
  *                          pn_count: 1 + N (where N is number of args)
  *                          ctor is a MEMBER expr
@@ -149,7 +151,8 @@ JS_BEGIN_EXTERN_C
  * TOK_RP       unary       pn_kid: parenthesized expression
  * TOK_NAME,    name        pn_atom: name, string, or object atom
  * TOK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT
- * TOK_OBJECT               pn_op may be *ARG or *VAR with pn_slot >= 0
+ * TOK_OBJECT               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
+ *                          with pn_slot >= 0 and pn_attrs telling const-ness
  * TOK_NUMBER   dval        pn_dval: double value of numeric literal
  * TOK_PRIMARY  nullary     pn_op: JSOp bytecode
  */
@@ -173,8 +176,8 @@ struct JSParseNode {
 	struct {                        /* TOK_FUNCTION node */
 	    JSFunction  *fun;           /* function object private data */
 	    JSParseNode *body;          /* TOK_LC list of statements */
-	    uint32      tryCount;       /* try statement count */
-            JSBool      topLevel;       /* at TL of program or function body */
+            uint32      flags;          /* accumulated tree context flags */
+	    uint32      tryCount;       /* count of try statements in body */
 	} func;
 	struct {                        /* list of next-linked nodes */
 	    JSParseNode *head;          /* first node in list */
@@ -194,7 +197,7 @@ struct JSParseNode {
 	} binary;
 	struct {                        /* one kid if unary */
 	    JSParseNode *kid;
-	    jsint       num;            /* -1 or arg or local/sharp var num */
+	    jsint       num;            /* -1 or sharp variable number */
 	} unary;
 	struct {                        /* name, labeled statement, etc. */
 	    JSAtom      *atom;          /* name or label atom, null if slot */
@@ -209,8 +212,8 @@ struct JSParseNode {
 
 #define pn_fun          pn_u.func.fun
 #define pn_body         pn_u.func.body
+#define pn_flags        pn_u.func.flags
 #define pn_tryCount     pn_u.func.tryCount
-#define pn_topLevel     pn_u.func.topLevel
 #define pn_head         pn_u.list.head
 #define pn_tail         pn_u.list.tail
 #define pn_count        pn_u.list.count
@@ -271,10 +274,6 @@ struct JSParseNode {
 	(list)->pn_tail = &(pn)->pn_next;                                     \
 	(list)->pn_count++;                                                   \
     JS_END_MACRO
-
-/* New names to connote code generation in addition to parse tree gen. */
-#define js_CompileTokenStream   js_Parse
-#define js_CompileFunctionBody  js_ParseFunctionBody
 
 extern JS_FRIEND_API(JSBool)
 js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,

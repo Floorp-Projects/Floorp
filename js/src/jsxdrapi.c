@@ -232,7 +232,7 @@ JS_XDRNewBase(JSContext *cx, JSXDRState *xdr, JSXDRMode mode)
 JS_PUBLIC_API(JSXDRState *)
 JS_XDRNewMem(JSContext *cx, JSXDRMode mode)
 {
-    JSXDRState *xdr = (JSXDRState*) JS_malloc(cx, sizeof(JSXDRMemState));
+    JSXDRState *xdr = (JSXDRState *) JS_malloc(cx, sizeof(JSXDRMemState));
     if (!xdr)
 	return NULL;
     JS_XDRNewBase(cx, xdr, mode);
@@ -338,7 +338,7 @@ JS_XDRCString(JSXDRState *xdr, char **sp)
 	len = strlen(*sp);
     JS_XDRUint32(xdr, &len);
     if (xdr->mode == JSXDR_DECODE) {
-	if (!(*sp = (char*) JS_malloc(xdr->cx, len + 1)))
+	if (!(*sp = (char *) JS_malloc(xdr->cx, len + 1)))
 	    return JS_FALSE;
     }
     if (!JS_XDRBytes(xdr, sp, len)) {
@@ -386,13 +386,13 @@ JS_XDRString(JSXDRState *xdr, JSString **strp)
     if (xdr->mode == JSXDR_ENCODE) {
 	chars = (*strp)->chars;
     } else if (xdr->mode == JSXDR_DECODE) {
-	if (!(chars = (jschar*) JS_malloc(xdr->cx, nbytes + sizeof(jschar))))
+	if (!(chars = (jschar *) JS_malloc(xdr->cx, nbytes + sizeof(jschar))))
 	    return JS_FALSE;
     }
 
     if (nbytes % JSXDR_ALIGN)
 	nbytes += JSXDR_ALIGN - (nbytes % JSXDR_ALIGN);
-    if (!(raw = (jschar*) xdr->ops->raw(xdr, nbytes)))
+    if (!(raw = (jschar *) xdr->ops->raw(xdr, nbytes)))
 	goto bad;
     if (xdr->mode == JSXDR_ENCODE) {
 	for (i = 0; i < len; i++)
@@ -540,11 +540,13 @@ JS_RegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *idp)
 
     nclasses = xdr->nclasses;
     if (nclasses == 0) {
-	registry = (JSClass**) JS_malloc(xdr->cx, REGISTRY_CHUNK * sizeof(JSClass *));
+	registry = (JSClass **)
+            JS_malloc(xdr->cx, REGISTRY_CHUNK * sizeof(JSClass *));
     } else if (nclasses % REGISTRY_CHUNK == 0) {
-	registry = (JSClass**) JS_realloc(xdr->cx,
-			      xdr->registry,
-			      (nclasses + REGISTRY_CHUNK) * sizeof(JSClass *));
+	registry = (JSClass **)
+            JS_realloc(xdr->cx,
+                       xdr->registry,
+                       (nclasses + REGISTRY_CHUNK) * sizeof(JSClass *));
     } else {
         registry = xdr->registry;
     }

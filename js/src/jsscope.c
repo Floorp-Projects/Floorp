@@ -57,7 +57,7 @@ js_hash_id(const void *key)
     v = (jsval)key;
     if (JSVAL_IS_INT(v))
 	return JSVAL_TO_INT(v);
-    atom = (JSAtom*) key;
+    atom = (JSAtom *) key;
     return atom->number;
 }
 
@@ -85,10 +85,10 @@ js_alloc_symbol(void *priv, const void *key)
     JSContext *cx;
     JSSymbol *sym;
 
-    spriv = (JSScopePrivate*) priv;
+    spriv = (JSScopePrivate *) priv;
     JS_ASSERT(JS_IS_SCOPE_LOCKED(spriv->scope));
     cx = spriv->context;
-    sym = (JSSymbol*) JS_malloc(cx, sizeof(JSSymbol));
+    sym = (JSSymbol *) JS_malloc(cx, sizeof(JSSymbol));
     if (!sym)
 	return NULL;
     sym->entry.key = key;
@@ -103,11 +103,11 @@ js_free_symbol(void *priv, JSHashEntry *he, uintN flag)
     JSSymbol *sym, **sp;
     JSScopeProperty *sprop;
 
-    spriv = (JSScopePrivate*) priv;
+    spriv = (JSScopePrivate *) priv;
     JS_ASSERT(JS_IS_SCOPE_LOCKED(spriv->scope));
     cx = spriv->context;
     sym = (JSSymbol *)he;
-    sprop = (JSScopeProperty*) sym->entry.value;
+    sprop = (JSScopeProperty *) sym->entry.value;
     if (sprop) {
 	sym->entry.value = NULL;
 	sprop = js_DropScopeProperty(cx, spriv->scope, sprop);
@@ -137,7 +137,7 @@ static JSHashAllocOps hash_scope_alloc_ops = {
 JS_STATIC_DLL_CALLBACK(JSSymbol *)
 js_hash_scope_lookup(JSContext *cx, JSScope *scope, jsid id, JSHashNumber hash)
 {
-    JSHashTable *table = (JSHashTable*) scope->data;
+    JSHashTable *table = (JSHashTable *) scope->data;
     JSHashEntry **hep;
     JSSymbol *sym;
 
@@ -171,7 +171,7 @@ js_hash_scope_lookup(JSContext *cx, JSScope *scope, jsid id, JSHashNumber hash)
 JS_STATIC_DLL_CALLBACK(JSSymbol *)
 js_hash_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop)
 {
-    JSHashTable *table = (JSHashTable*) scope->data;
+    JSHashTable *table = (JSHashTable *) scope->data;
     const void *key;
     JSHashNumber keyHash;
     JSHashEntry **hep;
@@ -179,7 +179,7 @@ js_hash_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop
     JSScopePrivate *priv;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
-    priv = (JSScopePrivate*) table->allocPriv;
+    priv = (JSScopePrivate *) table->allocPriv;
     priv->context = cx;
     key = (const void *)id;
     keyHash = js_hash_id(key);
@@ -196,11 +196,11 @@ js_hash_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop
 JS_STATIC_DLL_CALLBACK(JSBool)
 js_hash_scope_remove(JSContext *cx, JSScope *scope, jsid id)
 {
-    JSHashTable *table = (JSHashTable*) scope->data;
+    JSHashTable *table = (JSHashTable *) scope->data;
     JSScopePrivate *priv;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
-    priv = (JSScopePrivate*) table->allocPriv;
+    priv = (JSScopePrivate *) table->allocPriv;
     priv->context = cx;
     return JS_HashTableRemove(table, (const void *)id);
 }
@@ -211,11 +211,11 @@ extern JS_FRIEND_DATA(JSScopeOps) js_list_scope_ops;
 JS_STATIC_DLL_CALLBACK(void)
 js_hash_scope_clear(JSContext *cx, JSScope *scope)
 {
-    JSHashTable *table = (JSHashTable*) scope->data;
+    JSHashTable *table = (JSHashTable *) scope->data;
     JSScopePrivate *priv;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
-    priv = (JSScopePrivate*) table->allocPriv;
+    priv = (JSScopePrivate *) table->allocPriv;
     priv->context = cx;
     JS_HashTableDestroy(table);
     JS_free(cx, priv);
@@ -232,14 +232,6 @@ JSScopeOps js_hash_scope_ops = {
 
 /************************************************************************/
 
-static void
-move_sym_to_front(JSSymbol *sym, JSSymbol **nextp, JSSymbol **front)
-{
-    *nextp = (JSSymbol*)sym->entry.next;
-    sym->entry.next = &(*front)->entry;
-    *front = sym;
-}
-
 JS_STATIC_DLL_CALLBACK(JSSymbol *)
 js_list_scope_lookup(JSContext *cx, JSScope *scope, jsid id, JSHashNumber hash)
 {
@@ -250,7 +242,10 @@ js_list_scope_lookup(JSContext *cx, JSScope *scope, jsid id, JSHashNumber hash)
 	 sp = (JSSymbol **)&sym->entry.next) {
 	if (sym_id(sym) == id) {
 	    /* Move sym to the front for shorter searches. */
-            move_sym_to_front(sym,sp,(JSSymbol**)&scope->data);
+            *sp = (JSSymbol *) sym->entry.next;
+            sp = (JSSymbol **) &scope->data;    /* avoid (void *) aliases */
+            sym->entry.next = &(*sp)->entry;    /* NB: *sp could be null! */
+            *sp = sym;
 	    return sym;
 	}
     }
@@ -262,7 +257,7 @@ js_list_scope_lookup(JSContext *cx, JSScope *scope, jsid id, JSHashNumber hash)
 JS_STATIC_DLL_CALLBACK(JSSymbol *)
 js_list_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop)
 {
-    JSSymbol *list = (JSSymbol*) scope->data;
+    JSSymbol *list = (JSSymbol *) scope->data;
     uint32 nsyms;
     JSSymbol *sym, *next, **sp;
     JSHashTable *table;
@@ -278,8 +273,10 @@ js_list_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop
     }
 
     if (nsyms >= HASH_THRESHOLD) {
-	JSScopePrivate *new_priv = (JSScopePrivate*) JS_malloc(cx, sizeof(JSScopePrivate));
-	if (!new_priv) return NULL;
+	JSScopePrivate *new_priv = (JSScopePrivate *)
+            JS_malloc(cx, sizeof(JSScopePrivate));
+	if (!new_priv)
+            return NULL;
 	new_priv->context = cx;
 	new_priv->scope = scope;
 	table = JS_NewHashTable(nsyms, js_hash_id,
@@ -312,7 +309,7 @@ js_list_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop
 	if (!sym)
 	    return NULL;
 	/* Don't set keyHash until we know we need it, above. */
-	sym->entry.next = (JSHashEntry*) scope->data;
+	sym->entry.next = (JSHashEntry *) scope->data;
 	scope->data = sym;
     );
     return sym;
@@ -345,7 +342,7 @@ js_list_scope_clear(JSContext *cx, JSScope *scope)
     JSScopePrivate priv;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
-    while ((sym = (JSSymbol*) scope->data) != NULL) {
+    while ((sym = (JSSymbol *) scope->data) != NULL) {
 	scope->data = sym->entry.next;
 	priv.context = cx;
 	priv.scope = scope;
@@ -398,7 +395,7 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
 {
     JSScope *scope;
 
-    scope = (JSScope*) JS_malloc(cx, sizeof(JSScope));
+    scope = (JSScope *) JS_malloc(cx, sizeof(JSScope));
     if (!scope)
 	return NULL;
     js_InitObjectMap(&scope->map, nrefs, ops, clasp);
@@ -460,7 +457,7 @@ js_NewScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     if (!js_AllocSlot(cx, scope->object, &slot))
 	return NULL;
-    sprop = (JSScopeProperty*) JS_malloc(cx, sizeof(JSScopeProperty));
+    sprop = (JSScopeProperty *) JS_malloc(cx, sizeof(JSScopeProperty));
     if (!sprop) {
 	js_FreeSlot(cx, scope->object, slot);
 	return NULL;
