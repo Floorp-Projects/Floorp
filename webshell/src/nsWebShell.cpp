@@ -40,12 +40,15 @@
 #include "nsplugin.h"
 #include "nsPluginsCID.h"
 #include "nsIPref.h"
-#include "nsIBrowserWindow.h"
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
 
 #include "prlog.h"
 
+
+//XXX used for nsIStreamObserver implementation.  This sould be replaced by DocLoader
+//    notifications...
+#include "nsIURL.h"
 
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
@@ -94,7 +97,8 @@ class nsWebShell : public nsIWebShell,
                    public nsILinkHandler,
                    public nsIScriptContextOwner,
                    public nsIDocumentLoaderObserver,
-                   public nsIRefreshUrl
+                   public nsIRefreshUrl,
+                   public nsIStreamObserver
 {
 public:
   nsWebShell();
@@ -202,6 +206,11 @@ public:
   NS_IMETHOD RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat);
   NS_IMETHOD CancelRefreshURLTimers(void);
 
+  // nsIStreamObserver
+  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg);
 
   // nsWebShell
   void HandleLinkClickEvent(const PRUnichar* aURLSpec,
@@ -277,10 +286,10 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
-static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
+static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
@@ -380,7 +389,6 @@ nsWebShell::ReleaseChildren()
 NS_IMPL_ADDREF(nsWebShell)
 NS_IMPL_RELEASE(nsWebShell)
 
-//XXX missing nsIWebShellContainer!!!
 nsresult
 nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -404,6 +412,11 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDocumentLoaderObserverIID)) {
     *aInstancePtr = (void*)(nsIDocumentLoaderObserver*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIWebShellContainerIID)) {
+    *aInstancePtr = (void*)(nsIWebShellContainer*)this;
     AddRef();
     return NS_OK;
   }
@@ -1029,7 +1042,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                            this,           // Container
                            aPostData,      // Post Data
                            nsnull,         // Extra Info...
-                           mObserver,       // Observer
+                           this,           // Observer
                            (PRInt32)type);      // reload type
 
 
@@ -1127,7 +1140,7 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
                              this,           // Container
                              nsnull,         // Post Data
                              nsnull,         // Extra Info...
-                             mObserver,      // Observer
+                             this,           // Observer
                              nsReload);      // the reload type
   }
   return rv;
@@ -1220,7 +1233,8 @@ NS_IMETHODIMP
 nsWebShell::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
   if (nsnull != mContainer) {
-    return mContainer->BeginLoadURL(aShell, aURL);
+    // XXX: do not propagate this notification up from any frames...
+//  return mContainer->BeginLoadURL(aShell, aURL);
   }
   return NS_OK;
 }
@@ -1241,7 +1255,8 @@ NS_IMETHODIMP
 nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
 {
   if (nsnull != mContainer) {
-    return mContainer->EndLoadURL(aShell, aURL, aStatus);
+    // XXX: do not propagate this notification up from any frames...
+//  return mContainer->EndLoadURL(aShell, aURL, aStatus);
   }
   return NS_OK;
 }
@@ -1411,6 +1426,7 @@ nsWebShell::HandleLinkClickEvent(const PRUnichar* aURLSpec,
   nsIWebShell* shell = GetTarget(aTargetSpec);
   if (nsnull != shell) {
     shell->LoadURL(aURLSpec, aPostData);
+    NS_RELEASE(shell);
   }
 }
 
@@ -1429,21 +1445,10 @@ fputs("Was '", stdout); fputs(mOverURL, stdout); fputs("' '", stdout); fputs(mOv
     mOverURL = aURLSpec;
     mOverTarget = aTargetSpec;
 
-    nsIWebShell *mRootWebShell;
-    GetRootWebShell(mRootWebShell);
-    if (nsnull != mRootWebShell) {
-      nsIWebShellContainer *mRootContainer;
-      mRootWebShell->GetContainer(mRootContainer);
-      if (nsnull != mRootContainer) {
-        nsIBrowserWindow *mBrowser;
-        if (NS_OK == mRootContainer->QueryInterface(kIBrowserWindowIID, (void**)&mBrowser)) {
-          mBrowser->SetStatus(mOverURL);
-          NS_RELEASE(mBrowser);
-        }
-        NS_RELEASE(mRootContainer);
-      }
-      NS_RELEASE(mRootWebShell);
-    }
+    // XXX: Should the IWebShell being passed out be the target WebShell?
+    if (nsnull != mContainer) {
+      mContainer->OverLink(this, aURLSpec, aTargetSpec);
+    } 
   }
   return NS_OK;
 }
@@ -1617,10 +1622,73 @@ nsWebShell::CancelRefreshURLTimers(void) {
     return NS_OK;
 }
 
+//----------------------------------------------------------------------
+
 void nsWebShell::RefreshURLCallback(nsITimer* aTimer, void* aClosure) {
     refreshData *data=(refreshData*)aClosure;
     NS_PRECONDITION((data != nsnull), "Null pointer...");
     data->shell->LoadURL(*data->aUrlSpec, nsnull, PR_TRUE, nsReload);
+}
+
+//----------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsWebShell::OnStartBinding(nsIURL* aURL, const char *aContentType)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull != mObserver) {
+    rv = mObserver->OnStartBinding(aURL, aContentType);
+  }
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsWebShell::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull != mObserver) {
+    rv = mObserver->OnProgress(aURL, aProgress, aProgressMax);
+  }
+
+  if (nsnull != mContainer) {
+    nsAutoString urlString(aURL->GetSpec());
+
+    rv = mContainer->ProgressLoadURL(this, urlString, aProgress, aProgressMax);
+  }
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsWebShell::OnStatus(nsIURL* aURL, const nsString &aMsg)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull != mObserver) {
+    rv = mObserver->OnStatus(aURL, aMsg);
+  }
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsWebShell::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
+{
+  nsresult rv = NS_OK;
+
+  if (nsnull != mObserver) {
+    rv = mObserver->OnStopBinding(aURL, aStatus, aMsg);
+  }
+
+  if (nsnull != mContainer) {
+    nsAutoString urlString(aURL->GetSpec());
+
+    rv = mContainer->EndLoadURL(this, urlString, aStatus);
+  }
+  return rv;
 }
 
 //----------------------------------------------------------------------
