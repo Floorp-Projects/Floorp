@@ -260,13 +260,8 @@ cert_trav_callback(CERTCertificate *cert, SECItem *k, void *data)
 
         if (rv == SECSuccess)
           {
-		  /*
           rv = CERT_VerifyCertNow (issuerCert->dbhandle, issuerCert, 
                     PR_TRUE, certUsageVerifyCA, NULL);
-		    */
-          rv = CERT_VerifyCertNow (issuerCert->dbhandle, issuerCert, 
-                    PR_TRUE, certUsageAnyCA, NULL);
-
           if (rv != SECSuccess)
             {
             rv = PORT_GetError();
