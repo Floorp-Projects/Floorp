@@ -69,6 +69,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIPresShell.h"
+#include "nsIEventStateManager.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
@@ -834,7 +835,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   // create, init, set the parent of the view
   nsIView* view;
   rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, kIViewIID,
-                                        (void **)&view);
+                                         (void **)&view);
   if (NS_OK != rv) {
     NS_ASSERTION(0, "Could not create view for nsHTMLFrame");
     return rv;
@@ -1268,6 +1269,23 @@ nsGfxTextControlFrame::InstallEventListeners()
   nsCOMPtr<nsIDOMEventReceiver> er;
   result = mDoc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(er));
   if (!er) { result = NS_ERROR_NULL_POINTER; }
+
+  // get the view from the webshell
+  nsCOMPtr<nsIPresShell> presShell;
+  result = GetPresShellFor(mWebShell, getter_AddRefs(presShell));
+  if (NS_FAILED(result)) { return result; }
+  if (!presShell) { return NS_ERROR_NULL_POINTER; }
+  nsCOMPtr<nsIViewManager> vm;
+  presShell->GetViewManager(getter_AddRefs(vm));
+  if (!vm) { return NS_ERROR_NULL_POINTER; }
+  nsIScrollableView *sv=nsnull;
+  vm->GetRootScrollableView(&sv);
+  if (!sv) { return NS_ERROR_NULL_POINTER; }
+  nsIView *view;
+  sv->QueryInterface(nsIView::GetIID(), (void **)&view);
+  if (!view) { return NS_ERROR_NULL_POINTER; }
+
+  // instantiate the event listeners
   nsCOMPtr<nsIEnderEventListener> eL;
 
   // we need to hook up our listeners before the editor is initialized
@@ -1279,6 +1297,7 @@ nsGfxTextControlFrame::InstallEventListeners()
     {
       eL->SetFrame(this);
       eL->SetPresContext(mFramePresContext);
+      eL->SetView(view);
     }
     result = er->AddEventListenerByIID(mKeyListener, kIDOMKeyListenerIID);
     if (NS_FAILED(result)) { //we couldn't add the listener
@@ -1294,6 +1313,7 @@ nsGfxTextControlFrame::InstallEventListeners()
     {
       eL->SetFrame(this);
       eL->SetPresContext(mFramePresContext);
+      eL->SetView(view);
       result = er->AddEventListenerByIID(mMouseListener, kIDOMMouseListenerIID);
       if (NS_FAILED(result)) { //we couldn't add the listener
         mMouseListener = do_QueryInterface(nsnull); // null out the listener, it's useless
@@ -1309,6 +1329,7 @@ nsGfxTextControlFrame::InstallEventListeners()
     {
       eL->SetFrame(this);
       eL->SetPresContext(mFramePresContext);
+      eL->SetView(view);
       result = er->AddEventListenerByIID(mFocusListener, kIDOMFocusListenerIID);
       if (NS_FAILED(result)) { //we couldn't add the listener
         mFocusListener = do_QueryInterface(nsnull); // null out the listener, it's useless
@@ -1834,6 +1855,8 @@ NS_IMPL_RELEASE(nsEnderKeyListener)
 nsEnderKeyListener::nsEnderKeyListener()
 {
   NS_INIT_REFCNT();
+  mFrame = nsnull;
+  mView = nsnull;
 }
 
 nsEnderKeyListener::~nsEnderKeyListener()
@@ -1898,9 +1921,10 @@ nsEnderKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
+  nsresult result = NS_OK;
+
   if (mFrame && mContent)
   {
-    // Dispatch the NS_FORM_CHANGE event
     nsEventStatus status = nsEventStatus_eIgnore;
     nsKeyEvent event;
     event.eventStructType = NS_KEY_EVENT;
@@ -1908,18 +1932,34 @@ nsEnderKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     event.message = NS_KEY_DOWN;
     event.flags = NS_EVENT_FLAG_INIT;
     uiEvent->GetKeyCode(&(event.keyCode));
-    /* CharCode is invalid for KEY_DOWN */
-    // uiEvent->GetCharCode(&(event.charCode));
     event.charCode = 0;
     uiEvent->GetShiftKey(&(event.isShift));
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
 
-    // Have the content handle the event.
-    mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+
+    nsIEventStateManager *manager=nsnull;
+    result = mContext->GetEventStateManager(&manager);
+    if (NS_SUCCEEDED(result) && manager) 
+    {
+      //1. Give event to event manager for pre event state changes and generation of synthetic events.
+      result = manager->PreHandleEvent(*mContext, &event, mFrame, status, mView);
+
+      //2. Give event to the DOM for third party and JS use.
+      if (NS_SUCCEEDED(result)) {
+        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
+    
+      //3. In this case, the frame does no processing of the event
+
+      //4. Give event to event manager for post event state changes and generation of synthetic events.
+      if (NS_SUCCEEDED(result)) {
+        result = manager->PostHandleEvent(*mContext, &event, mFrame, status, mView);
+      }
+      NS_RELEASE(manager);
+    }
   }
-  
-  return NS_OK;
+  return result;
 }
 
 nsresult
@@ -1931,6 +1971,8 @@ nsEnderKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
+  nsresult result = NS_OK;
+
   if (mFrame && mContent)
   {
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -1940,17 +1982,34 @@ nsEnderKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
     event.message = NS_KEY_UP;
     event.flags = NS_EVENT_FLAG_INIT;
     uiEvent->GetKeyCode(&(event.keyCode));
-    /* CharCode is invalid for KEY_UP */
-    // uiEvent->GetCharCode(&(event.charCode));
     event.charCode = 0;
     uiEvent->GetShiftKey(&(event.isShift));
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
 
-    // Have the content handle the event.
-    mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+
+    nsIEventStateManager *manager=nsnull;
+    result = mContext->GetEventStateManager(&manager);
+    if (NS_SUCCEEDED(result) && manager) 
+    {
+      //1. Give event to event manager for pre event state changes and generation of synthetic events.
+      result = manager->PreHandleEvent(*mContext, &event, mFrame, status, mView);
+
+      //2. Give event to the DOM for third party and JS use.
+      if (NS_SUCCEEDED(result)) {
+        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
+    
+      //3. In this case, the frame does no processing of the event
+
+      //4. Give event to event manager for post event state changes and generation of synthetic events.
+      if (NS_SUCCEEDED(result)) {
+        result = manager->PostHandleEvent(*mContext, &event, mFrame, status, mView);
+      }
+      NS_RELEASE(manager);
+    }
   }
-  return NS_OK;
+  return result;
 }
 
 nsresult
@@ -1962,7 +2021,9 @@ nsEnderKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  if (mFrame && mContent)
+  nsresult result = NS_OK;
+
+  if (mFrame && mContent && mContext && mView)
   {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsKeyEvent event;
@@ -1976,13 +2037,32 @@ nsEnderKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
 
-    // Have the content handle the event.
-    mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+
+    nsIEventStateManager *manager=nsnull;
+    result = mContext->GetEventStateManager(&manager);
+    if (NS_SUCCEEDED(result) && manager) 
+    {
+      //1. Give event to event manager for pre event state changes and generation of synthetic events.
+      result = manager->PreHandleEvent(*mContext, &event, mFrame, status, mView);
+
+      //2. Give event to the DOM for third party and JS use.
+      if (NS_SUCCEEDED(result)) {
+        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
     
-    // Now have the frame handle the event
-    mFrame->HandleEvent(*mContext, &event, status);
+      //3. Give event to the frame for browser default processing
+      if (NS_SUCCEEDED(result)) {
+        result = mFrame->HandleEvent(*mContext, &event, status);
+      }
+
+      //4. Give event to event manager for post event state changes and generation of synthetic events.
+      if (NS_SUCCEEDED(result)) {
+        result = manager->PostHandleEvent(*mContext, &event, mFrame, status, mView);
+      }
+      NS_RELEASE(manager);
+    }
   }
-  return NS_OK;
+  return result;
 }
 
 
@@ -2009,6 +2089,8 @@ NS_IMPL_RELEASE(nsEnderMouseListener)
 nsEnderMouseListener::nsEnderMouseListener()
 {
   NS_INIT_REFCNT();
+  mFrame = nsnull;
+  mView = nsnull;
 }
 
 nsEnderMouseListener::~nsEnderMouseListener()
@@ -2189,6 +2271,8 @@ NS_IMPL_RELEASE(nsEnderFocusListener)
 nsEnderFocusListener::nsEnderFocusListener()
 {
   NS_INIT_REFCNT();
+  mFrame = nsnull;
+  mView = nsnull;
 }
 
 nsEnderFocusListener::~nsEnderFocusListener()
@@ -2253,7 +2337,11 @@ nsEnderFocusListener::Focus(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  if (mFrame && mContent)
+  printf("Focus %p\n", mFrame);
+
+  nsresult result = NS_OK;
+
+  if (mFrame && mContent && mView)
   {
     mTextValue = "";
     mFrame->GetText(&mTextValue, PR_FALSE);
@@ -2265,12 +2353,34 @@ nsEnderFocusListener::Focus(nsIDOMEvent* aEvent)
     event.message = NS_FOCUS_CONTENT;
     event.flags = NS_EVENT_FLAG_INIT;
 
-    // Have the content handle the event.
-    mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+    nsIEventStateManager *manager=nsnull;
+    result = mContext->GetEventStateManager(&manager);
+    if (NS_SUCCEEDED(result) && manager) 
+    {
+      //1. Give event to event manager for pre event state changes and generation of synthetic events.
+      result = manager->PreHandleEvent(*mContext, &event, mFrame, status, mView);
+
+      //2. Give event to the DOM for third party and JS use.
+      if (NS_SUCCEEDED(result)) {
+        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
     
-    // Now have the frame handle the event
-    mFrame->HandleEvent(*mContext, &event, status);
+      //3. Do the processing for the frame
+      /*
+      nsCOMPtr<nsIContent> content=nsnull;
+      mFrame->GetContent(getter_AddRefs(content));
+      if (content)
+        manager->SetContentState(content, NS_EVENT_STATE_FOCUS);
+      */
+
+      //4. Give event to event manager for post event state changes and generation of synthetic events.
+      if (NS_SUCCEEDED(result)) {
+        result = manager->PostHandleEvent(*mContext, &event, mFrame, status, mView);
+      }
+      NS_RELEASE(manager);
+    }
   }
+
   return NS_OK;
 }
 
@@ -2283,7 +2393,11 @@ nsEnderFocusListener::Blur(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  if (mFrame && mContent)
+  printf("Blur %p\n", mFrame);
+
+  nsresult result = NS_OK;
+
+  if (mFrame && mContent && mView)
   {
     nsString currentValue;
     mFrame->GetText(&currentValue, PR_FALSE);
@@ -2299,9 +2413,6 @@ nsEnderFocusListener::Blur(nsIDOMEvent* aEvent)
 
       // Have the content handle the event.
       mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-    
-      // Now have the frame handle the event
-      mFrame->HandleEvent(*mContext, &event, status);
     }
 
     // Dispatch the blur event
@@ -2312,11 +2423,26 @@ nsEnderFocusListener::Blur(nsIDOMEvent* aEvent)
     event.message = NS_BLUR_CONTENT;
     event.flags = NS_EVENT_FLAG_INIT;
 
-    // Have the content handle the event.
-    mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+    nsIEventStateManager *manager=nsnull;
+    result = mContext->GetEventStateManager(&manager);
+    if (NS_SUCCEEDED(result) && manager) 
+    {
+      //1. Give event to event manager for pre event state changes and generation of synthetic events.
+      result = manager->PreHandleEvent(*mContext, &event, mFrame, status, mView);
+
+      //2. Give event to the DOM for third party and JS use.
+      if (NS_SUCCEEDED(result)) {
+        result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
     
-    // Now have the frame handle the event
-    mFrame->HandleEvent(*mContext, &event, status);
+      //3. In this case, the frame does no processing of the event
+
+      //4. Give event to event manager for post event state changes and generation of synthetic events.
+      if (NS_SUCCEEDED(result)) {
+        result = manager->PostHandleEvent(*mContext, &event, mFrame, status, mView);
+      }
+      NS_RELEASE(manager);
+    }
   }
   return NS_OK;
 }
@@ -2344,6 +2470,8 @@ NS_IMPL_RELEASE(nsEnderSelectionListener)
 nsEnderSelectionListener::nsEnderSelectionListener()
 {
   NS_INIT_REFCNT();
+  mFrame = nsnull;
+  mView = nsnull;
 }
 
 nsEnderSelectionListener::~nsEnderSelectionListener()
