@@ -979,8 +979,6 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
  *  @return  result status
  */
 nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
-  static nsString       theString;
-
   nsresult result=NS_OK;
 
   // adjust line number to what it will be after we finish writing this tag
