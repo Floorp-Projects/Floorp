@@ -308,8 +308,6 @@ function UpdateBookmarksLastVisitedDate(event)
         // Load it using yet another psuedo-onload handler.
         onLoadViaOpenDialog();
     }
-   
-    sidebarOverlayInit();
   }
 
   function Shutdown() {
