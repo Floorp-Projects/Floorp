@@ -38,13 +38,6 @@
 #include "plugin.h"
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
-#include "nsIDebugObject.h"
-#include "nsXPIDLString.h"
-#include "nsIFile.h"
-#include "nsILocalFile.h"
-#include "nsISimpleEnumerator.h"
-#include "nsMemory.h"
-#include "nsNetUtil.h"
 
 // service manager which will give the access to all public browser services
 // we will use memory service as an illustration
@@ -54,9 +47,9 @@ nsIServiceManager * gServiceManager = NULL;
 
 // Unix needs this
 #ifdef XP_UNIX
-#define MIME_TYPES_HANDLED  "application/debug-plugin"
-#define PLUGIN_NAME         "Debug Plugin"
-#define PLUGIN_DESCRIPTION  "Debug Plugin"
+#define MIME_TYPES_HANDLED  "application/simple-plugin"
+#define PLUGIN_NAME         "Simple Plugin Example for Mozilla"
+#define PLUGIN_DESCRIPTION  "Simple Plugin Example for Mozilla"
 
 char* NPP_GetMIMEDescription(void)
 {
@@ -172,89 +165,6 @@ void nsPluginInstance::getVersion(char* *aVersion)
   NS_IF_RELEASE(nsMemoryService);
 }
 
-//-----------------------------------------------------
-
-void 
-nsPluginInstance::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName)
-{
-
-  nsIDebugObject *theDebugObject=NULL;
-
-  if (gServiceManager) {
-    // get service using its contract id and use it to allocate the memory
-    gServiceManager->GetServiceByContractID("@mozilla.org/debug/debugobject;1", NS_GET_IID(nsIDebugObject), (void **)&theDebugObject);
-    if(theDebugObject){
-      theDebugObject->DumpContent(aWindow,aFilePath,aFileName);
-    }
-  }
-}
-
-//-----------------------------------------------------
-
-void 
-nsPluginInstance::StartDirectorySearch(const char *aFilePath)
-{
-nsXPIDLCString  dirPath;
-nsresult        rv;
-
-  nsCOMPtr<nsILocalFile> theDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  rv = NS_InitFileFromURLSpec(theDir, aFilePath);
-
-  if (NS_FAILED(rv)){
-    mIter = 0;
-    return;
-  }
-
-  rv = theDir->GetDirectoryEntries(getter_AddRefs(mIter));
-  if (NS_FAILED(rv)){
-    mIter = 0;
-    return;
-  }
-}
-
-//-----------------------------------------------------
-
-void 
-nsPluginInstance::GetNextFileInDirectory(char **aDirName)
-{
-PRBool                hasMore;
-nsresult              rv;
-nsCOMPtr<nsISupports> supports;
-char*                 URLName;
-
-  *aDirName = 0;
-  if ( 0 ==mIter ){
-    return;
-  }
-
-  while ( NS_SUCCEEDED(mIter->HasMoreElements(&hasMore)) ){
-    rv = mIter->GetNext(getter_AddRefs(supports));
-    if (NS_FAILED(rv))
-      break;
-    nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
-    if (NS_FAILED(rv))
-      break;
-    nsXPIDLCString filePath;
-    char* afilepath;
-    rv = dirEntry->GetPath(&afilepath);
-    if (NS_FAILED(rv))
-      continue;
-
-    if( strstr(afilepath,".html") != 0 ) {
-      *aDirName = afilepath;
-      NS_GetURLSpecFromFile(dirEntry,&URLName);
-      *aDirName = URLName;
-      break;
-    } else {
-      nsMemory::Free(afilepath);
-    }
-  }
-}
-
-
-//-----------------------------------------------------
-
-
 // ==============================
 // ! Scriptability related code !
 // ==============================
@@ -271,7 +181,7 @@ NPError	nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
   switch (aVariable) {
     case NPPVpluginScriptableInstance: {
       // addref happens in getter, so we don't addref here
-      nsIDebugPlugin * scriptablePeer = getScriptablePeer();
+      nsISimplePlugin * scriptablePeer = getScriptablePeer();
       if (scriptablePeer) {
         *(nsISupports **)aValue = scriptablePeer;
       } else
@@ -280,7 +190,7 @@ NPError	nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
     break;
 
     case NPPVpluginScriptableIID: {
-      static nsIID scriptableIID = NS_IDEBUGPLUGIN_IID;
+      static nsIID scriptableIID = NS_ISIMPLEPLUGIN_IID;
       nsIID* ptr = (nsIID *)NPN_MemAlloc(sizeof(nsIID));
       if (ptr) {
           *ptr = scriptableIID;
@@ -312,7 +222,7 @@ NPError	nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
 // ==============================
 //
 // this method will return the scriptable object (and create it if necessary)
-nsIDebugPlugin* nsPluginInstance::getScriptablePeer()
+nsISimplePlugin* nsPluginInstance::getScriptablePeer()
 {
   if (!mScriptablePeer) {
     mScriptablePeer = new nsScriptablePeer(this);
