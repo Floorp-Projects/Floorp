@@ -21,11 +21,17 @@
  */
 
 #include "nsAppShell.h"
+#include "nsToolkit.h"
+#include "nsIWidget.h"
 #include "nsHashtable.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
+#include "nsWidgetsCID.h"
+#include "nsITimer.h"
+#include "nsITimerQueue.h"
 
-NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 // Appshell manager.  Same threads must get the same appshell object,
 // or else the message queue will be taken over by the second (nested)
@@ -142,47 +148,56 @@ nsresult nsAppShell::Run()
 {
    if( !mHmq) return NS_ERROR_FAILURE; // (mHab = 0 is okay)
 
-   // Add a reference to deal with async. shutdown
    NS_ADDREF_THIS();
-
-   // XXX if we're HMQ_CURRENT, peek the first message & get the right one ?
+   int  keepGoing = 1;
+  
+   nsresult rv;
+   NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+   if (NS_FAILED(rv)) return rv;
 
    // Process messages
-   for( ;;)
-   {
-      if( TRUE == WinGetMsg( mHab, &mQmsg, 0, 0, 0))
-      {
-         WinDispatchMsg( mHab, &mQmsg);
-      }
-      else if( mQmsg.msg == WM_QUIT)
-      {
-         if( mQmsg.hwnd)
-            // send WM_SYSCOMMAND, SC_CLOSE to window (tasklist close)
-            WinSendMsg( mQmsg.hwnd, WM_SYSCOMMAND, MPFROMSHORT(SC_CLOSE), 0);
-         else               
-         {
-            if( mQuitNow) // Don't want to close the app when a window is
-               break;     // closed, just when our `Exit' is called.
+   do {
+      // Give priority to system messages (in particular keyboard, mouse,
+      // timer, and paint messages).
+      if (WinPeekMsg((HAB)0, &mQmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
+          WinPeekMsg((HAB)0, &mQmsg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) ||
+          WinPeekMsg((HAB)0, &mQmsg, NULL, 0, WM_USER-1, PM_REMOVE) ||
+          WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_REMOVE)) {
+
+         if (mQmsg.msg != WM_QUIT) {
+            WinDispatchMsg((HAB)0, &mQmsg);
+            if (mDispatchListener)
+               mDispatchListener->AfterDispatch();
+         } else {
+            if( mQmsg.hwnd) {
+               // send WM_SYSCOMMAND, SC_CLOSE to window (tasklist close)
+               WinSendMsg( mQmsg.hwnd, WM_SYSCOMMAND, MPFROMSHORT(SC_CLOSE), 0);
+            } else {
+               if( mQuitNow)     // Don't want to close the app when a window 
+                  keepGoing = 0; // is closed, just when our `Exit' is called.
+            }
          }
-      }
-      else
-      {
-         ULONG pmerr = WinGetLastError( mHab);
-         printf( "WinGetMsg failed with error %x -- bailing out!\n", pmerr);
-         break;
+
+      // process timer queue.
+      } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
+
+         do {
+            queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+         } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
+                  !WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_NOREMOVE));
+      
+      } else {
+         // Block and wait for any posted application message
+         WinWaitMsg((HAB)0, 0, 0);
       }
 
-      if( mDispatchListener)
-         mDispatchListener->AfterDispatch();
-   }
+   } while (keepGoing != 0);
 
    // reset mQuitNow flag for re-entrant appshells
    mQuitNow = FALSE;
 
-   // Release the reference we added earlier
    Release();
-
-   return NS_OK; 
+   return NS_OK;
 }
 
 // GetNativeData - return the HMQ for NS_NATIVE_SHELL
@@ -221,19 +236,40 @@ nsAppShell::~nsAppShell()
 //
 nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
 {
-   BOOL     isNotQuit = WinGetMsg( mHab, &mQmsg, 0, 0, 0);
-   nsresult rc = NS_ERROR_FAILURE;
+   PRBool gotMessage = PR_FALSE;
 
-   if( isNotQuit)
-   {
-      aRealEvent = PR_TRUE;
-      rc = NS_OK;
-      aEvent = &mQmsg;
-   }
-   else
-      aRealEvent = PR_FALSE;
+   nsresult rv;
+   NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
+   if (NS_FAILED(rv)) return rv;
 
-   return rc;
+   do {
+      // Give priority to system messages (in particular keyboard, mouse,
+      // timer, and paint messages).
+      if (WinPeekMsg((HAB)0, &mQmsg, NULL, WM_CHAR, WM_CHAR, PM_REMOVE) ||
+          WinPeekMsg((HAB)0, &mQmsg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+          WinPeekMsg((HAB)0, &mQmsg, NULL, 0, WM_USER-1, PM_REMOVE) || 
+          WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_REMOVE)) {
+
+        gotMessage = PR_TRUE;
+
+      // process timer queue.
+      } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
+
+         do {
+            queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+         } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
+                  !WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_NOREMOVE));
+
+      } else {
+         // Block and wait for any posted application message
+         WinWaitMsg((HAB)0, 0, 0);
+      }
+
+   } while (gotMessage == PR_FALSE);
+
+   aEvent = &mQmsg;
+   aRealEvent = PR_TRUE;
+   return NS_OK;
 }
 
 nsresult nsAppShell::DispatchNativeEvent( PRBool /*aRealEvent*/, void */*aEvent*/)
