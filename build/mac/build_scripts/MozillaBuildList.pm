@@ -882,6 +882,7 @@ sub BuildClientDist()
     }
     if ($main::options{soap})
     {
+        InstallFromManifest(":mozilla:extensions:xmlextras:proxy:public:MANIFEST_IDL", "$distdirectory:idl:");
         InstallFromManifest(":mozilla:extensions:xmlextras:schema:public:MANIFEST_IDL", "$distdirectory:idl:");
         InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
         InstallFromManifest(":mozilla:extensions:xmlextras:wsdl:public:MANIFEST_IDL", "$distdirectory:idl:");
@@ -1199,9 +1200,10 @@ sub BuildIDLProjects()
     }
     if ($main::options{soap})
     {
+        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsproxyIDL.xml", "wsproxy");
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlschemaIDL.xml", "xmlschema");
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.xml", "xmlsoap");
-        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsdlIDL.xml", "xmlwsdl");
+        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlwsdlIDL.xml", "wsdl");
     }
 
     if ($main::options{inspector})
