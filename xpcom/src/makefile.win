@@ -53,6 +53,7 @@ CPPSRCS =			\
 	nsDebug.cpp		\
 	nsHashtable.cpp		\
 	nsID.cpp		\
+	nsCOMPtr.cpp      \
     nsProxyEvent.cpp    \
 	nsRepository.cpp	\
 	nsServiceManager.cpp	\
@@ -69,6 +70,7 @@ CPP_OBJS = \
 	.\$(OBJDIR)\nsDebug.obj			\
 	.\$(OBJDIR)\nsHashtable.obj		\
 	.\$(OBJDIR)\nsID.obj			\
+      .\$(OBJDIR)\nsCOMPtr.obj            \
     .\$(OBJDIR)\nsProxyEvent.obj    \
 	.\$(OBJDIR)\nsRepository.obj		\
 	.\$(OBJDIR)\nsServiceManager.obj	\
