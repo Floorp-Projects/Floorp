@@ -2219,7 +2219,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   mStyleSheetTimerSet = PR_FALSE;
   mNumStyleSheetsLoading = 0;
-  mStyleSheetTimerInterval = (5*1000);
+  mStyleSheetTimerInterval = (120*1000);
   prefs->GetIntPref("content.notify.stylesheettimeout", &mStyleSheetTimerInterval);
 
   nsIHTMLContentContainer* htmlContainer = nsnull;
