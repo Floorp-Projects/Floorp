@@ -34,9 +34,17 @@
     //dump("                         title is '" + window.content.document.title + "'\n");
 
     var history = Components.classes["component://netscape/browser/global-history"].getService();
-    history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-    history.SetPageTitle(window.content.location.href, window.content.document.title);
+    if (history) history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+    if (history) history.SetPageTitle(window.content.location.href, window.content.document.title);
   }
+
+function UpdateBookmarksLastVisitiedDate(event)
+{
+	// if the URL is bookmarked, update its "Last Visited" date
+	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
+	if (bmks)	bmks.UpdateBookmarkLastVisitedDate(document.getElementById('urlbar').value);
+}
 
   function Startup()
   {
@@ -55,6 +63,7 @@
     // Add a capturing event listener to the content window so we'll
     // be notified when onloads complete.
     window.addEventListener("load", UpdateHistory, true);
+    window.addEventListener("load", UpdateBookmarksLastVisitiedDate, true);
   }
 
   function Shutdown() {
@@ -688,11 +697,7 @@ function OpenSearch(tabName)
       if ((shortcutURL != null) && (shortcutURL != "")) {
         document.getElementById('urlbar').value = shortcutURL;
       }
-
-	// if the URL is bookmarked, update its "Last Visited" date
-      bmks.UpdateBookmarkLastVisitedDate(document.getElementById('urlbar').value);
-
-	}
+    }
     catch (ex) {
       // stifle any exceptions so we're sure to load the URL.
     }
