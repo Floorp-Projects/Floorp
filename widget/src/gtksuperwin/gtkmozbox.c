@@ -16,14 +16,22 @@
  * Owen Taylor and Christopher Blizzard.  All Rights Reserved.  */
 
 #include "gtkmozbox.h"
+#include <gtk/gtkmain.h>
 #include <X11/Xlib.h>
 
-static void            gtk_mozbox_class_init (GtkMozBoxClass *klass);
-static void            gtk_mozbox_init       (GtkMozBox      *mozbox);
-static void            gtk_mozbox_realize    (GtkWidget      *widget);
-static GdkFilterReturn gtk_mozbox_filter     (GdkXEvent      *xevent,
-					      GdkEvent       *event,
-					      gpointer        data);
+static void            gtk_mozbox_class_init      (GtkMozBoxClass *klass);
+static void            gtk_mozbox_init            (GtkMozBox      *mozbox);
+static void            gtk_mozbox_realize         (GtkWidget      *widget);
+static void            gtk_mozbox_set_focus       (GtkWindow      *window,
+                                                   GtkWidget      *focus);
+static gint            gtk_mozbox_key_press_event (GtkWidget   *widget,
+                                                   GdkEventKey *event);
+static GdkFilterReturn gtk_mozbox_filter          (GdkXEvent      *xevent,
+                                                   GdkEvent       *event,
+                                                   gpointer        data);
+static GtkWindow *     gtk_mozbox_get_parent_gtkwindow (GtkMozBox *mozbox);
+
+void (*parent_class_set_focus)(GtkWindow *, GtkWidget *);
 
 GtkType
 gtk_mozbox_get_type (void)
@@ -54,10 +62,18 @@ static void
 gtk_mozbox_class_init (GtkMozBoxClass *klass)
 {
   GtkWidgetClass *widget_class;
+  GtkWindowClass *window_class;
 
   widget_class = GTK_WIDGET_CLASS (klass);
+  window_class = GTK_WINDOW_CLASS (klass);
 
-  widget_class->realize = gtk_mozbox_realize;
+  widget_class->realize         = gtk_mozbox_realize;
+  widget_class->key_press_event = gtk_mozbox_key_press_event;
+
+  /* save the parent class' set_focus method */
+  parent_class_set_focus = window_class->set_focus;
+  window_class->set_focus       = gtk_mozbox_set_focus;
+  
 }
 
 static void
@@ -111,6 +127,61 @@ gtk_mozbox_realize (GtkWidget *widget)
   gdk_window_add_filter (widget->window, gtk_mozbox_filter, mozbox);
 }
 
+static void
+gtk_mozbox_set_focus (GtkWindow      *window,
+                      GtkWidget      *focus)
+{
+  GtkMozBox *mozbox;
+  GdkWindow *tmpWindow;
+  GtkWindow *parentGtkWindow;
+
+  g_return_if_fail(window != NULL);
+  g_return_if_fail(GTK_IS_MOZBOX(window));
+
+  mozbox = GTK_MOZBOX(window);
+
+  parentGtkWindow = gtk_mozbox_get_parent_gtkwindow (mozbox);
+
+  if (parentGtkWindow) {
+    parent_class_set_focus(parentGtkWindow, focus);
+    return;
+  }
+
+  /* as a fall back just hand it off to our parent class */
+  parent_class_set_focus(window, focus);
+
+}
+
+static gint
+gtk_mozbox_key_press_event (GtkWidget   *widget,
+                            GdkEventKey *event)
+{
+  GtkWindow *window;
+  GtkMozBox *mozbox;
+  GtkWindow *parentWindow;
+  gboolean   handled = FALSE;
+
+  window = GTK_WINDOW (widget);
+  mozbox = GTK_MOZBOX (widget);
+
+  parentWindow = gtk_mozbox_get_parent_gtkwindow(mozbox);
+
+  /* give the focus window the chance to handle the event first. */
+  if (parentWindow && parentWindow->focus_widget) {
+    handled = gtk_widget_event (parentWindow->focus_widget, (GdkEvent*) event);
+  }
+
+  /* pass it off to the parent widget */
+  if (!handled) {
+    gdk_window_unref(event->window);
+    event->window = mozbox->parent_window;
+    gdk_window_ref(event->window);
+    gdk_event_put((GdkEvent *)event);
+  }
+
+  return TRUE;
+}
+
 static GdkFilterReturn 
 gtk_mozbox_filter (GdkXEvent *xevent,
 		   GdkEvent *event,
@@ -132,6 +203,23 @@ gtk_mozbox_filter (GdkXEvent *xevent,
     default:
       return GDK_FILTER_CONTINUE;
     }
+}
+
+static GtkWindow *
+gtk_mozbox_get_parent_gtkwindow (GtkMozBox *mozbox)
+{
+  GdkWindow *tmpWindow;
+  /* look for a parent GtkWindow in the heirarchy */
+  tmpWindow = mozbox->parent_window;
+  while (tmpWindow) {
+    gpointer data = NULL;
+    gdk_window_get_user_data(tmpWindow, &data);
+    if (data && GTK_IS_WINDOW(data)) {
+      return GTK_WINDOW(data);
+    }
+    tmpWindow = gdk_window_get_parent(tmpWindow);
+  }
+  return NULL;
 }
 
 GtkWidget*

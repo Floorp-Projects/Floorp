@@ -642,6 +642,7 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   nsKeyEvent kevent;
   nsWidget *win = (nsWidget*)p;
 
+  // if there's a focused window rewrite the event to use that window.
   if (win->sFocusWindow)
     win = win->sFocusWindow;
 
@@ -870,9 +871,13 @@ handle_gdk_event (GdkEvent *event, gpointer data)
         // pass it to the nsWindow to be handled
         //
         nsWindow *grabbingWindow = nsWindow::GetGrabWindow();
-        GdkWindow *grabbingGdkWindow = (GdkWindow *)grabbingWindow->GetNativeData(NS_NATIVE_WINDOW);
+        // the grabbingWindow wasn't addrefed by the getter but we
+        // want to keep a reference on it.
+        nsCOMPtr<nsIWidget> grabbingWindowGuard(grabbingWindow);
+        GdkWindow *grabbingGdkWindow = 
+          NS_STATIC_CAST(GdkWindow *,
+                         grabbingWindow->GetNativeData(NS_NATIVE_WINDOW));
         GtkWidget *grabbingMozArea = grabbingWindow->GetMozArea();
-        NS_RELEASE(grabbingWindow);
         if (gtk_widget_child_of_gdk_window(current_grab, grabbingGdkWindow))
         {
           gdk_window_unref (event->any.window);
@@ -894,7 +899,6 @@ handle_gdk_event (GdkEvent *event, gpointer data)
     }
   else
   {
-
     // we need to make sure that if we're doing a gdk_pointer_grab on
     // a superwin that we check to make sure that we account for a
     // real GtkWidget being inside of it.  the grab code in gtk that
@@ -906,17 +910,20 @@ handle_gdk_event (GdkEvent *event, gpointer data)
     // with a gtk scrollbar in it.
     
     nsWindow  *grabbingWindow = nsWindow::GetGrabWindow();
+    // the grabbingWindow wasn't addrefed by the getter but we
+    // want to keep a reference on it.
+    nsCOMPtr<nsIWidget> grabbingWindowGuard(grabbingWindow);
     GtkWidget *tempWidget = NULL;
     if (grabbingWindow)
     {
       // get the GdkWindow that we are grabbing on
-      GdkWindow *grabbingGdkWindow = (GdkWindow *)grabbingWindow->GetNativeData(NS_NATIVE_WINDOW);
-      // release our nsIWidget
-      NS_RELEASE(grabbingWindow);
+      GdkWindow *grabbingGdkWindow =
+        NS_STATIC_CAST(GdkWindow *,
+                       grabbingWindow->GetNativeData(NS_NATIVE_WINDOW));
       // only if this is a GtkWidget object
       if (GTK_IS_WIDGET(object))
       {
-        tempWidget = (GtkWidget *)object;
+        tempWidget = GTK_WIDGET(object);
         // check to see if this widget is the child of the GdkWindow
         // that we are grabbing on.
         if (gtk_widget_child_of_gdk_window(tempWidget, grabbingGdkWindow))
@@ -943,6 +950,13 @@ handle_gdk_event (GdkEvent *event, gpointer data)
           }
           gtk_grab_add(tempWidget);
         }
+        else 
+        {
+          // if the gtk widget in question wasn't the child of the
+          // grabbing window then the grabbing window gets it.
+          dispatch_superwin_event(event, grabbingWindow);
+          return;
+        }
       }
     }
     gtk_main_do_event (event);
@@ -958,14 +972,18 @@ dispatch_superwin_event(GdkEvent *event, nsWindow *window)
   {
     // Check to see whether or not we need to send this to the
     // toplevel window to get passed to the GtkWidget with focus.
-    // This happens in the embedding case.
-    if (!window->sFocusWindow) 
+    // This happens in the embedding case.  If there's a superwin grab
+    // in progress it gets the window events, not the gtk widget.
+    if (!window->sFocusWindow && !window->GrabInProgress()) 
     {
       GtkWidget *mozArea = window->GetMozArea();
       NS_ASSERTION(mozArea, "Failed to get GtkMozArea for superwin event!\n");
+      // get the toplevel window for that widget
+      GtkWidget *toplevel = gtk_widget_get_toplevel(mozArea);
       // pass it off to gtk's event system and return
-      gtk_propagate_event(mozArea, event);
-      return;
+      gboolean handled = gtk_widget_event(toplevel, event);
+      if (handled)
+        return;
     }
   }
 

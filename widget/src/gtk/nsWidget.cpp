@@ -2120,7 +2120,7 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
 /* virtual */ void
 nsWidget::OnRealize(GtkWidget *aWidget)
 {
-  printf("nsWidget::OnRealize(%p)\n",this);
+  printf("nsWidget::OnRealize(%p)\n", NS_STATIC_CAST(void *, this));
 }
 //////////////////////////////////////////////////////////////////////
 
