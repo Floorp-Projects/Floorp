@@ -41,7 +41,7 @@
 #pragma unsigned_char			off
 #pragma exceptions				on
 #pragma bool 					on
-#pragma RTTI                on
+#pragma RTTI                off
 
 
 	/* Save as much space as possible with strings... */
