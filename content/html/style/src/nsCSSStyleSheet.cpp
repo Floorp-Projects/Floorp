@@ -278,7 +278,8 @@ public:
   virtual void PrependStyleRule(nsICSSStyleRule* aRule);
   virtual void AppendStyleRule(nsICSSStyleRule* aRule);
 
-  // XXX style rule enumerations
+  virtual PRInt32   StyleRuleCount(void);
+  virtual nsresult  GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRule);
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -299,7 +300,8 @@ protected:
 
   nsIURLPtr             mURL;
   nsICSSStyleSheetPtr   mFirstChild;
-  nsISupportsArrayPtr   mRules;
+  nsISupportsArrayPtr   mOrderedRules;
+  nsISupportsArrayPtr   mWeightedRules;
   nsICSSStyleSheetPtr   mNext;
   RuleHash*             mRuleHash;
 };
@@ -345,7 +347,9 @@ static PRInt32 gInstanceCount;
 
 CSSStyleSheetImpl::CSSStyleSheetImpl(nsIURL* aURL)
   : nsICSSStyleSheet(),
-    mURL(nsnull), mFirstChild(nsnull), mRules(nsnull), mNext(nsnull),
+    mURL(nsnull), mFirstChild(nsnull), 
+    mOrderedRules(nsnull), mWeightedRules(nsnull), 
+    mNext(nsnull),
     mRuleHash(nsnull)
 {
   NS_INIT_REFCNT();
@@ -551,7 +555,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       child = ((CSSStyleSheetImpl*)child)->mNext;
     }
 
-    if (mRules.IsNotNull()) {
+    if (mWeightedRules.IsNotNull()) {
       if (nsnull == mRuleHash) {
         BuildHash();
       }
@@ -579,7 +583,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       data.mResults = list1;
       mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
       data.mResults = list2;
-      mRules->EnumerateForwards(ContentEnumWrap, &data);
+      mWeightedRules->EnumerateForwards(ContentEnumWrap, &data);
       NS_ASSERTION(list1->Equals(list2), "lists not equal");
       NS_RELEASE(list1);
       NS_RELEASE(list2);
@@ -669,7 +673,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
-  if (mRules.IsNotNull()) {
+  if (mWeightedRules.IsNotNull()) {
     if (nsnull == mRuleHash) {
       BuildHash();
     }
@@ -685,7 +689,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     data.mResults = list1;
     mRuleHash->EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
     data.mResults = list2;
-    mRules->EnumerateForwards(PseudoEnumWrap, &data);
+    mWeightedRules->EnumerateForwards(PseudoEnumWrap, &data);
     NS_ASSERTION(list1->Equals(list2), "lists not equal");
     NS_RELEASE(list1);
     NS_RELEASE(list2);
@@ -736,20 +740,25 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
   ClearHash();
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
-  if (mRules.IsNull()) {
-    if (NS_OK != NS_NewISupportsArray(mRules.AssignPtr()))
+  if (mWeightedRules.IsNull()) {
+    if (NS_OK != NS_NewISupportsArray(mWeightedRules.AssignPtr()))
       return;
   }
-  PRInt32 index = mRules->Count();
+  if (mOrderedRules.IsNull()) {
+    if (NS_OK != NS_NewISupportsArray(mOrderedRules.AssignPtr()))
+      return;
+  }
+  PRInt32 index = mWeightedRules->Count();
   while (0 <= --index) {
-    nsICSSStyleRule* rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRule* rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
     if (rule->GetWeight() > weight) { // insert before rules with equal or lesser weight
       NS_RELEASE(rule);
       break;
     }
     NS_RELEASE(rule);
   }
-  mRules->InsertElementAt(aRule, index + 1);
+  mWeightedRules->InsertElementAt(aRule, index + 1);
+  mOrderedRules->InsertElementAt(aRule, 0);
 }
 
 void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
@@ -759,21 +768,50 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
   ClearHash();
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
-  if (mRules.IsNull()) {
-    if (NS_OK != NS_NewISupportsArray(mRules.AssignPtr()))
+  if (mWeightedRules.IsNull()) {
+    if (NS_OK != NS_NewISupportsArray(mWeightedRules.AssignPtr()))
       return;
   }
-  PRInt32 count = mRules->Count();
+  if (mOrderedRules.IsNull()) {
+    if (NS_OK != NS_NewISupportsArray(mOrderedRules.AssignPtr()))
+      return;
+  }
+  PRInt32 count = mWeightedRules->Count();
   PRInt32 index = -1;
   while (++index < count) {
-    nsICSSStyleRule* rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRule* rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
     if (rule->GetWeight() < weight) { // insert after rules with equal or greater weight (before lower weight)
       NS_RELEASE(rule);
       break;
     }
     NS_RELEASE(rule);
   }
-  mRules->InsertElementAt(aRule, index);
+  mWeightedRules->InsertElementAt(aRule, index);
+  mOrderedRules->AppendElement(aRule);
+}
+
+PRInt32 CSSStyleSheetImpl::StyleRuleCount(void)
+{
+  if (mOrderedRules.IsNotNull()) {
+    return mOrderedRules->Count();
+  }
+  return 0;
+}
+
+nsresult CSSStyleSheetImpl::GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRule)
+{
+  nsresult result = NS_ERROR_ILLEGAL_VALUE;
+
+  if (mOrderedRules.IsNotNull()) {
+    aRule = (nsICSSStyleRule*)mOrderedRules->ElementAt(aIndex);
+    if (nsnull != aRule) {
+      result = NS_OK;
+    }
+  }
+  else {
+    aRule = nsnull;
+  }
+  return result;
 }
 
 void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
@@ -795,10 +833,10 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
-  PRInt32 count = (mRules.IsNotNull() ? mRules->Count() : 0);
+  PRInt32 count = (mWeightedRules.IsNotNull() ? mWeightedRules->Count() : 0);
 
   for (index = 0; index < count; index++) {
-    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mWeightedRules->ElementAt(index);
     rule->List(out, aIndent);
   }
 }
@@ -824,8 +862,8 @@ void CSSStyleSheetImpl::BuildHash(void)
   NS_ASSERTION(nsnull == mRuleHash, "clear rule hash first");
 
   mRuleHash = new RuleHash();
-  if ((nsnull != mRuleHash) && mRules.IsNotNull()) {
-    mRules->EnumerateForwards(BuildHashEnum, mRuleHash);
+  if ((nsnull != mRuleHash) && mWeightedRules.IsNotNull()) {
+    mWeightedRules->EnumerateForwards(BuildHashEnum, mRuleHash);
   }
 }
 
