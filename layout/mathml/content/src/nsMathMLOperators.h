@@ -116,7 +116,13 @@ public:
   // output parameter aFlags to know exactly under which form the operator was
   // found in the operator dictionary.
 
-  static PRBool LookupOperator(const nsStr&          aOperator,
+  static PRBool LookupOperator(const nsString&       aOperator,
+                               const nsOperatorFlags aForm,
+                               nsOperatorFlags*      aFlags,
+                               float*                aLeftSpace,
+                               float*                aRightSpace);
+
+  static PRBool LookupOperator(const nsCString&      aOperator,
                                const nsOperatorFlags aForm,
                                nsOperatorFlags*      aFlags,
                                float*                aLeftSpace,

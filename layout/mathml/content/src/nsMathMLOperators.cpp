@@ -176,7 +176,7 @@ nsMathMLOperators::ReleaseTable(void)
 
 
 PRBool
-nsMathMLOperators::LookupOperator(const nsStr&          aOperator, 
+nsMathMLOperators::LookupOperator(const nsString&          aOperator, 
                                   const nsOperatorFlags aForm,
                                   nsOperatorFlags*      aFlags,
                                   float*                aLeftSpace,
@@ -214,6 +214,19 @@ nsMathMLOperators::LookupOperator(const nsStr&          aOperator,
     }
   }
   return PR_FALSE;
+}
+
+
+
+PRBool
+nsMathMLOperators::LookupOperator(const nsCString&      aOperator, 
+                                  const nsOperatorFlags aForm,
+                                  nsOperatorFlags*      aFlags,
+                                  float*                aLeftSpace,
+                                  float*                aRightSpace)
+{
+  nsAutoString theOperator(aOperator);
+  return LookupOperator(theOperator,aForm,aFlags,aLeftSpace,aRightSpace);
 }
 
 
