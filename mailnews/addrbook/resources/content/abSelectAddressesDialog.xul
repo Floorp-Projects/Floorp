@@ -60,7 +60,7 @@ Contributor(s):
   <vbox flex="1">
   
     <hbox id="topBox" align="center">
-      <label value="&lookIn.label;"/>
+      <label value="&lookIn.label;" accesskey="&lookIn.accesskey;" control="addressbookList"/>
       <menulist id="addressbookList" 
 	            ref="moz-abdirectory://" 
                 datasources="rdf:addressdirectory"
@@ -76,11 +76,11 @@ Contributor(s):
           </rule>
         </template>
       </menulist>  
-	  <label value="&for.label;"/> 
+	  <label value="&for.label;" accesskey="&for.accesskey;" control="searchInput"/> 
 	  <textbox id="searchInput" flex="1"
       oninput="onAbSearchInput(false);"
       onkeypress="onAbSearchKeyPress(event);"/>  
-	  <button id="clear" label="&clearButton.label;" disabled="true" oncommand="onAbClearSearch();"/>
+	  <button id="clear" label="&clearButton.label;" disabled="true" accesskey="&clearButton.accesskey;" oncommand="onAbClearSearch();"/>
     </hbox>
     
     <hbox flex="1">    
@@ -93,13 +93,13 @@ Contributor(s):
       
       <vbox id="addToBucketButtonBox">
         <spacer flex="1"/>
-        <button id="toButton" label="&toButton.label;" oncommand="SelectAddressToButton()"/> 
+        <button id="toButton" label="&toButton.label;" accesskey="&toButton.accesskey;" oncommand="SelectAddressToButton()"/> 
         <spacer class="middle-button-spacer"/>
-        <button id="ccButton" label="&ccButton.label;" oncommand="SelectAddressCcButton()"/> 
+        <button id="ccButton" label="&ccButton.label;" accesskey="&ccButton.accesskey;" oncommand="SelectAddressCcButton()"/> 
         <spacer class="middle-button-spacer"/>
-        <button id="bccButton" label="&bccButton.label;" oncommand="SelectAddressBccButton()"/>  
+        <button id="bccButton" label="&bccButton.label;" accesskey="&bccButton.accesskey;" oncommand="SelectAddressBccButton()"/>  
         <spacer class="above-remove-spacer"/>
-        <button id="remove" label="&removeButton.label;" class="dialog" oncommand="RemoveSelectedFromBucket()"/> 
+        <button id="remove" label="&removeButton.label;" accesskey="&removeButton.accesskey;" class="dialog" oncommand="RemoveSelectedFromBucket()"/> 
         <spacer flex="1"/>
       </vbox>
         
@@ -121,8 +121,8 @@ Contributor(s):
     </hbox>
 
     <hbox id="newEditButtonBox">
-      <button id="new" label="&newButton.label;" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
-      <button id="edit" label="&editButton.label;" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditSelectedCard()"/> 
+      <button id="new" label="&newButton.label;" accesskey="&newButton.accesskey;" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
+      <button id="edit" label="&editButton.label;" accesskey="&editButton.accesskey;" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditSelectedCard()"/> 
     </hbox>
 
     <hbox id="okCancelButtonsRight"/>

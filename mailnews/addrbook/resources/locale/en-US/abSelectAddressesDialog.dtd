@@ -21,14 +21,23 @@ Rights Reserved.
 	<!ENTITY selectAddressWindow.title "Select Addresses">
 <!-- Buttons -->
 	<!ENTITY toButton.label		"To->"> 
+	<!ENTITY toButton.accesskey		"T"> 
 	<!ENTITY ccButton.label		"Cc->"> 
+	<!ENTITY ccButton.accesskey		"C"> 
 	<!ENTITY bccButton.label	"Bcc->">  
+	<!ENTITY bccButton.accesskey	"B">  
 	<!ENTITY newButton.label	"New..."> 
+	<!ENTITY newButton.accesskey	"N"> 
 	<!ENTITY editButton.label	"Edit..."> 
+	<!ENTITY editButton.accesskey	"E">
 	<!ENTITY removeButton.label	"Remove"> 
+	<!ENTITY removeButton.accesskey	"R"> 
 	<!ENTITY lookIn.label	    "Look in:"> 
+	<!ENTITY lookIn.accesskey	    "L"> 
 	<!ENTITY for.label	        "for:"> 
+	<!ENTITY for.accesskey	        "f"> 
 	<!ENTITY clearButton.label	"Clear">
+	<!ENTITY clearButton.accesskey	"a">
 	<!ENTITY stopButton.label	"Stop"> 	
 	<!ENTITY addressMessageTo.label	"Address message to:"> 
 <!-- Tooltips items -->  
