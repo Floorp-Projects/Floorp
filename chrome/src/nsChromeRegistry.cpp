@@ -90,7 +90,6 @@
 #include "nsIXULPrototypeCache.h"
 #endif
 #include "nsIIOService.h"
-#include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"
 #include "nsGfxCIID.h"
 #include "nsIBindingManager.h"
@@ -3204,7 +3203,7 @@ nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsACString & aURL)
 
 nsresult nsChromeRegistry::GetFormSheetURL(nsACString& aURL)
 {
-  aURL = mUseXBLForms ? "chrome://forms/skin/forms.css" : "resource:/res/platform-forms.css";
+  aURL = mUseXBLForms ? "chrome://forms/skin/forms.css" : "resource://gre/res/platform-forms.css";
 
   return NS_OK;
 }
