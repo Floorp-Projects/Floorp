@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -46,6 +46,7 @@
  */
 
 #include "jsstddef.h"
+#include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -117,7 +118,7 @@
  * offset for a given time.  NSPR is also used for Date.toLocaleString(), for
  * locale-specific formatting, and to get a string representing the timezone.
  * (Which turns out to be platform-dependent.)
-
+ *
  * To do:
  * (I did some performance tests by timing how long it took to run what
  *  I had of the js ECMA conformance tests.)
@@ -127,12 +128,13 @@
  * multiple times.  Although - I took a quick stab at this, and I lost
  * rather than gained.  (Fractionally.)  Hard to tell what compilers/processors
  * are doing these days.
-
+ *
  * - look at tweaking function return types to return double instead
  * of int; this seems to make things run slightly faster sometimes.
  * (though it could be architecture-dependent.)  It'd be good to see
  * how this does on win32.  (Tried it on irix.)  Types could use a
- * general going-over.  */
+ * general going-over.
+ */
 
 /*
  * Supporting functions - ECMA 15.9.1.*
@@ -1546,12 +1548,14 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
         } else {
             for (i = 0; i < tzlen; i++) {
                 jschar c = tzbuf[i];
-                if (c > 127 || !(isalpha(c) || isdigit(c) ||
-                      c == ' ' || c == '(' || c == ')'))
+                if (c > 127 ||
+                    !(isalpha(c) || isdigit(c) ||
+                      c == ' ' || c == '(' || c == ')')) {
                     usetz = JS_FALSE;
+                }
             }
         }
-        
+
         /* Also reject it if it's not parenthesized or if it's '()'. */
         if (tzbuf[0] != '(' || tzbuf[1] == ')')
             usetz = JS_FALSE;
@@ -1606,7 +1610,7 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
     return JS_TRUE;
 }
 
-static JSBool 
+static JSBool
 date_toLocaleHelper(JSContext *cx, JSObject *obj, uintN argc,
 		    jsval *argv, jsval *rval, char *format)
 {
@@ -1655,7 +1659,7 @@ date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
      * backward-compatible and non-y2k with msvc; '%#c' requests that a
      * full year be used in the result string.
      */
-    return date_toLocaleHelper(cx, obj, argc, argv, rval, 
+    return date_toLocaleHelper(cx, obj, argc, argv, rval,
 #if defined(_WIN32) && !defined(__MWERKS__)
 				   "%#c"
 #else
