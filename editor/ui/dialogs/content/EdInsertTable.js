@@ -15,6 +15,7 @@ function Startup()
     return;
   dump("EditoreditorShell found for Insert Table dialog\n");
 
+  dump(tagName+" = InsertTable tagName\n");
   tableElement = editorShell.CreateElementWithDefaults(tagName);
   if(!tableElement)
   {
@@ -33,7 +34,7 @@ function Startup()
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of button text and "percentChar" variable
   dialog.widthInput.value = InitPixelOrPercentPopupButton(tableElement, "width", "pixelOrPercentButton");
-  dialog.borderInput.value = tableElement.getAttribute("border");
+  dialog.borderInput.value = 5; //tableElement.getAttribute("border");
 
   // Set default number to 1 row, 2 columns:
   dialog.rowsInput.value = 1;
@@ -74,7 +75,34 @@ function onOK()
       }
     }
   }
+  // Set attributes: these may be empty strings
+  borderText = TrimString(dialog.borderInput.value);
+  if (StringExists(borderText)) {
+    // Set the other attributes on the table
+    if (ValidateNumberString(borderText, 0, maxPixels))
+      tableElement.setAttribute("border", borderText);
+  }
+
+  widthText = TrimString(dialog.widthInput.value);
+  if (StringExists(widthText)) {
+    var maxLimit;
+    if (percentChar == "%") {
+      maxLimit = 100;
+    } else {
+      // Upper limit when using pixels
+      maxLimit = maxPixels;
+    }
+
+    widthText = ValidateNumberString(dialog.widthInput.value, 1, maxLimit);
+    if (widthText != "") {
+      widthText += percentChar;
+      dump("Table Width="+widthText+"\n");
+      tableElement.setAttribute("width", widthText);
+    }
+  }
+
   // Don't delete selected text when inserting
   editorShell.InsertElement(tableElement, false);
+
   window.close();
 }

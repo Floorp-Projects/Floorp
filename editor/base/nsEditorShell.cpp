@@ -1080,9 +1080,9 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
       fileWidget->SetFilterList(1, titles, filters);
       dialogResult = fileWidget->GetFile(nsnull, title, fileSpec);
     } else {
-      nsAutoString titles[] = {"Image Files"};
-      nsAutoString filters[] = {"*.gif; *.jpg; *.jpeg; *.png"};
-      fileWidget->SetFilterList(1, titles, filters);
+      nsAutoString imgTitles[] = {"Image Files"};
+      nsAutoString imgFilters[] = {"*.gif; *.jpg; *.jpeg; *.png"};
+      fileWidget->SetFilterList(1, imgTitles, imgFilters);
       dialogResult = fileWidget->GetFile(nsnull, title, fileSpec);
     }
     // Do this after we get this from preferences
@@ -1871,11 +1871,38 @@ nsEditorShell::InsertImage()
 NS_IMETHODIMP
 nsEditorShell::GetSelectedElement(const PRUnichar *tagName, nsIDOMElement **_retval)
 {
-  if (!_retval)
+  if (!tagName || !_retval)
     return NS_ERROR_NULL_POINTER;
 
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString aTagName(tagName);
+  nsAutoString TagName(tagName);
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        nsCOMPtr<nsIDOMElement> element;
+        if (htmlEditor)
+          return htmlEditor->GetSelectedElement(TagName, _retval);
+      }
+      break;
+    case ePlainTextEditorType:
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetElementOrParentByTagName(const PRUnichar *tagName, nsIDOMNode *node, nsIDOMElement **_retval)
+{
+  if (!tagName || !node || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  nsAutoString TagName(tagName);
   
   switch (mEditorType)
   {
@@ -1883,10 +1910,9 @@ nsEditorShell::GetSelectedElement(const PRUnichar *tagName, nsIDOMElement **_ret
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          return htmlEditor->GetSelectedElement(aTagName, _retval);
+          return htmlEditor->GetElementOrParentByTagName(TagName, node, _retval);
       }
       break;
-    case ePlainTextEditorType:
     default:
       result = NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -2027,6 +2053,170 @@ nsEditorShell::SetSelectionAfterElement(nsIDOMElement* aElement)
 
   return result;
 }
+
+/* Table Editing */
+NS_IMETHODIMP    
+nsEditorShell::GetRowIndex(nsIDOMElement *cellElement, PRInt32 *_retval)
+{
+  if (!cellElement || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->GetRowIndex(cellElement, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::GetColumnIndex(nsIDOMElement *cellElement, PRInt32 *_retval)
+{
+  if (!cellElement || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->GetColumnIndex(cellElement, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::GetCellAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRInt32 colIndex, nsIDOMElement **_retval)
+{
+  if (!tableElement || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->GetCellAt(tableElement, rowIndex, colIndex, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::GetRowCellCount(nsIDOMElement *tableElement, PRInt32 colIndex, PRInt32 *_retval)
+{
+  if (!tableElement || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->GetRowCellCount(tableElement, colIndex, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+
+NS_IMETHODIMP    
+nsEditorShell::GetColumnCellCount(nsIDOMElement *tableElement, PRInt32 rowIndex, PRInt32 *_retval)
+{
+  if (!tableElement || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->GetColumnCellCount(tableElement, rowIndex, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::GetMaxRowCellCount(nsIDOMElement *tableElement, PRInt32 *_retval)
+{
+  if (!tableElement || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->GetMaxRowCellCount(tableElement, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::GetMaxColumnCellCount(nsIDOMElement *tableElement, PRInt32 *_retval)
+{
+  if (!tableElement || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->GetMaxColumnCellCount(tableElement, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+/* end of table editing */
 
 NS_IMETHODIMP
 nsEditorShell::GetEmbeddedObjects(nsISupportsArray **aObjectArray)

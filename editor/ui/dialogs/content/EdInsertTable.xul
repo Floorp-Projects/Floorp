@@ -79,8 +79,8 @@
       <td>
         <!-- THIS IS DUMB Can't figure out how to put "pixels" after the 
              input box and make them center vertically. Used another TD instead -->
-        <input type="text" id="border" size="4"
-            onkeypress="forceInteger('border')" />
+        <input type="text" id="border" size="4" />
+            <!-- onkeypress="forceInteger('border')" /> -->
       </td>
       <td>
         <label for="border"> &pixelsPopup.value; </label>

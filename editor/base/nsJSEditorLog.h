@@ -125,6 +125,7 @@ public:
   NS_IMETHOD InsertList(const nsString& aListType);
   NS_IMETHOD Indent(const nsString& aIndent);
   NS_IMETHOD Align(const nsString& aAlign);
+  NS_IMETHOD GetElementOrParentByTagName(const nsString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn);
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection);
@@ -133,6 +134,16 @@ public:
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
+  NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &aRowIndex);
+  NS_IMETHOD GetRowIndex(nsIDOMElement *aCell, PRInt32 &aRowIndex);
+  NS_IMETHOD GetColumnIndex(nsIDOMElement *aCell, PRInt32 &aColIndex);
+  NS_IMETHOD GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32& aCount);
+  NS_IMETHOD GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32& aCount);
+  NS_IMETHOD GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32& aCount);
+  NS_IMETHOD GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32& aCount);
+  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell);
+  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
+                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan);
   NS_IMETHOD InsertTable();
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);

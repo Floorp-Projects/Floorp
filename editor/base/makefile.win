@@ -48,15 +48,6 @@ CPPSRCS =				\
       nsHTMLEditor.cpp       \
       nsHTMLEditFactory.cpp  \
       EditTable.cpp          \
-      InsertTableTxn.cpp        \
-      InsertTableCellTxn.cpp    \
-      InsertTableColumnTxn.cpp  \
-      InsertTableRowTxn.cpp     \
-      DeleteTableTxn.cpp        \
-      DeleteTableCellTxn.cpp    \
-      DeleteTableColumnTxn.cpp  \
-      DeleteTableRowTxn.cpp     \
-      JoinTableCellsTxn.cpp     \
       nsInternetCiter.cpp     \
       nsAOLCiter.cpp          \
       nsEditorShell.cpp				\
@@ -95,15 +86,6 @@ CPP_OBJS =					\
   .\$(OBJDIR)\nsHTMLEditor.obj        \
   .\$(OBJDIR)\nsHTMLEditFactory.obj   \
   .\$(OBJDIR)\EditTable.obj           \
-  .\$(OBJDIR)\InsertTableTxn.obj      \
-  .\$(OBJDIR)\InsertTableCellTxn.obj  \
-  .\$(OBJDIR)\InsertTableColumnTxn.obj  \
-  .\$(OBJDIR)\InsertTableRowTxn.obj     \
-  .\$(OBJDIR)\DeleteTableTxn.obj        \
-  .\$(OBJDIR)\DeleteTableCellTxn.obj    \
-  .\$(OBJDIR)\DeleteTableColumnTxn.obj  \
-  .\$(OBJDIR)\DeleteTableRowTxn.obj     \
-  .\$(OBJDIR)\JoinTableCellsTxn.obj     \
   .\$(OBJDIR)\nsInternetCiter.obj      \
   .\$(OBJDIR)\nsAOLCiter.obj           \
   .\$(OBJDIR)\nsEditorShell.obj        \

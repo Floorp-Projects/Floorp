@@ -4,6 +4,7 @@ var editorShell;
 var SelectionOnly=1; 
 var FormatedWithDoctype=2; 
 var FormatedWithoutDoctype=6; 
+var maxPixels = 10000;
 
 function InitEditorShell()
 {
@@ -114,39 +115,29 @@ function ShowInputErrorMessage(message)
 
 function TrimStringLeft(string)
 {
-  firstCharIndex = 0;
-  len = string.length;
-  var result;
-
-  while (firstCharIndex < len) {
-    if (!IsWhitespace(string.charAt(firstCharIndex))) break;
-    firstCharIndex = firstCharIndex + 1;
-  }
-  if (firstCharIndex > len) {
-    string = "";
-  } else {
-    string = string.slice(firstCharIndex);
-  }
+  if(!StringExists(string))
+    return "";
+  if( IsWhitespace(string.charAt(0)))
+    string = string.replace(/\s+/, "");
   return string;
 }
 
 function TrimStringRight(string)
 {
-  len = string.length;
-  if (len > 0 ) {
-    lastCharIndex = string.length-1;
-    var result;
-
-    while (lastCharIndex > 0) {
-      // Find the last non-whitespace char
-      if (!IsWhitespace(string.charAt(lastCharIndex))) break;
-      lastCharIndex = lastCharIndex - 1;
-    }
-    if (lastCharIndex == 0) {
-      string = "";
-    } else {
-      string = string.slice(0, lastCharIndex+1);
-    }
+  if(!StringExists(string))
+    return "";
+  var lastCharIndex = string.length-1;
+  var result;
+  var done = false;
+  while (!done && lastCharIndex >= 0) {
+    // Find the last non-whitespace char
+    if (!IsWhitespace(string.charAt(lastCharIndex))) break;
+    lastCharIndex--;
+  }
+  if (lastCharIndex < 0) {
+    string = "";
+  } else {
+    string = string.slice(0, lastCharIndex+1);
   }
   return string;
 }
@@ -159,7 +150,7 @@ function TrimString(string)
 
 function IsWhitespace(character)
 {
-  result = character.match(/\s/);
+  var result = character.match(/\s/);
   if (result == null)
     return false;
   return true;
@@ -168,9 +159,9 @@ function IsWhitespace(character)
 function TruncateStringAtWordEnd(string, maxLength, addEllipses)
 {
   // We assume they probably don't want whitespace at the beginning
-  string = TrimStringLeft(string);
+  var string = TrimStringLeft(string);
 
-  len = string.length;
+  var len = string.length;
   if (len > maxLength) {
     // We need to truncate the string
     var max;
@@ -194,7 +185,7 @@ function TruncateStringAtWordEnd(string, maxLength, addEllipses)
     dump("Skip to first whitspace from end: ");
 
     while (lastCharIndex > 0) {
-      lastChar = string.charAt(lastCharIndex);
+      var lastChar = string.charAt(lastCharIndex);
       dump(lastChar);
       if (IsWhitespace(lastChar)) break;
       lastCharIndex = lastCharIndex -1;
@@ -328,7 +319,9 @@ function forceInteger(elementID)
   
   var stringIn = editfield.value;
   var pat = /\D/g;
-  
+  // THIS DOESN'T WORK ON WINDOWS WITH NATIVE WIDGET
+  // It causes the caret to reposition to the beginning,
+  //  so characters are inserted backwards!
   editfield.value = stringIn.replace(pat, "");
 }
 

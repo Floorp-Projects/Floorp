@@ -3,7 +3,6 @@ var tagName = "hr";
 var hLineElement;
 var tempLineElement;
 var percentChar = "";
-var maxPixels = 10000;
 var shading = true;
 
 // dialog initialization code
