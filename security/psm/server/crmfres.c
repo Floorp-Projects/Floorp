@@ -499,7 +499,7 @@ SSMCRMFRequest_SetKeyGenType(SSMCRMFRequest *crmfReq, SSMKeyGenType keyGenType)
     break;
   case dsaSignNonrepudiation:
     rv = SSMCRMFRequest_SetDSASignNonRepudiation(crmfReq);
-    break;
+  yPKIArchiveOptions(archOpt);  break;
   default:
     SSM_DEBUG("Unknown KeyGenType %d\n", keyGenType);
     rv = PR_FAILURE;
