@@ -50,7 +50,7 @@ static NSString *ProgressWindowFrameSaveName = @"ProgressWindow";
 
 -(void)rebuildViews;
 -(NSMutableArray*)getSelectedProgressViewControllers;
--(void)deselectAllDLInstances:(NSArray*)instances;
+-(void)deselectDLInstancesInArray:(NSArray*)instances;
 -(void)makeDLInstanceVisibleIfItsNotAlready:(ProgressViewController*)controller;
 -(void)killDownloadTimer;
 -(void)setupDownloadTimer;
@@ -210,7 +210,7 @@ static id gSharedProgressController = nil;
   // if its not either clear all selections except the one that just happened
   if (lastMod == kNoKey) {
     // deselect everything
-    [self deselectAllDLInstances:selectedArray];
+    [self deselectDLInstancesInArray:selectedArray];
     [sender setSelected:YES];
     mSelectionPivotIndex = [mProgressViewControllers indexOfObject:[sender getController]];
   }
@@ -238,7 +238,7 @@ static id gSharedProgressController = nil;
       else {
         int senderLocation = [mProgressViewControllers indexOfObject:[sender getController]];
         // deselect everything
-        [self deselectAllDLInstances:selectedArray];
+        [self deselectDLInstancesInArray:selectedArray];
         if (senderLocation <= mSelectionPivotIndex) {
           for (int i = senderLocation; i <= mSelectionPivotIndex; i++) {
             [[((ProgressViewController*)[mProgressViewControllers objectAtIndex:i]) view] setSelected:YES];
@@ -271,7 +271,7 @@ static id gSharedProgressController = nil;
       }      
       // deselect everything if the shift key isn't a modifier
       if (!(mods & NSShiftKeyMask)) {
-        [self deselectAllDLInstances:[self getSelectedProgressViewControllers]];
+        [self deselectDLInstancesInArray:[self getSelectedProgressViewControllers]];
       }
       if (i == [mProgressViewControllers count]) { // if nothing was selected select the first item
         instanceToSelect = 0;
@@ -302,7 +302,7 @@ static id gSharedProgressController = nil;
       }
       // deselect everything if the shift key isn't a modifier
       if (!(mods & NSShiftKeyMask)) {
-        [self deselectAllDLInstances:[self getSelectedProgressViewControllers]];
+        [self deselectDLInstancesInArray:[self getSelectedProgressViewControllers]];
       }
       if (i < 0) { // if nothing was selected select the first item
         instanceToSelect = ([mProgressViewControllers count] - 1);
@@ -358,7 +358,7 @@ static id gSharedProgressController = nil;
   }
 }
 
--(void)deselectAllDLInstances:(NSArray*)instances
+-(void)deselectDLInstancesInArray:(NSArray*)instances
 {
   unsigned count = [instances count];
   for (unsigned i = 0; i < count; i++) {
@@ -412,6 +412,10 @@ static id gSharedProgressController = nil;
   
   [self rebuildViews];
   [self setupDownloadTimer];
+  
+  // downloads should be individually selected when initiated
+  [self deselectDLInstancesInArray:[self getSelectedProgressViewControllers]];
+  [[((ProgressViewController*)progressDisplay) view] setSelected:YES];
   
   // make sure new download is visible
   [self makeDLInstanceVisibleIfItsNotAlready:progressDisplay];
