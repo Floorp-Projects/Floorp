@@ -588,6 +588,9 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIDocument> boundDocument;
   mBoundElement->GetDocument(*getter_AddRefs(boundDocument));
+  if (!boundDocument)
+    return NS_OK;
+
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
   boundDocument->GetScriptGlobalObject(getter_AddRefs(boundGlobal));
 
