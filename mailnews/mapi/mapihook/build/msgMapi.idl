@@ -110,7 +110,7 @@ interface nsIMapi : IUnknown
 
     HRESULT FindNext(  [in] unsigned long aSession, [in] ULONG ulUIParam, [in] LPTSTR lpszMessageType,
                               [in] LPTSTR lpszSeedMessageID, [in] ULONG flFlags, [in] ULONG ulReserved,
-                              [in] [out] LPTSTR lpszMessageID ) ;
+                              [in] [out] char lpszMessageID[64] ) ;
 
     HRESULT ReadMail( [in] unsigned long lhSession, [in] ULONG ulUIParam, [in] LPTSTR lpszMessageID,
                               [in] ULONG flFlags, [in] ULONG ulReserved, [out] lpnsMapiMessage *lppMessage);

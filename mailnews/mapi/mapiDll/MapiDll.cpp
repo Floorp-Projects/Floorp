@@ -315,7 +315,7 @@ ULONG FAR PASCAL MAPISendDocuments(ULONG ulUIParam, LPTSTR lpszDelimChar, LPTSTR
 
 ULONG FAR PASCAL MAPIFindNext(LHANDLE lhSession, ULONG ulUIParam, LPTSTR lpszMessageType,
                               LPTSTR lpszSeedMessageID, FLAGS flFlags, ULONG ulReserved,
-                              LPTSTR lpszMessageID)
+                              unsigned char lpszMessageID[64])
 {
   nsIMapi *pNsMapi = NULL;
 

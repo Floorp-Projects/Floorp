@@ -172,6 +172,22 @@ STDMETHODIMP CMapiImp::Login(unsigned long aUIArg, LOGIN_PW_TYPE aLogin, LOGIN_P
             return hr;
         }
     }
+    else
+    {
+      // get default account
+      nsresult rv;
+      nsCOMPtr <nsIMsgAccountManager> accountManager = 
+        do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv); 
+      NS_ENSURE_SUCCESS(rv,MAPI_E_LOGIN_FAILURE);
+      nsCOMPtr <nsIMsgAccount> account;
+      nsCOMPtr <nsIMsgIdentity> identity;
+       rv = accountManager->GetDefaultAccount(getter_AddRefs(account));
+      NS_ENSURE_SUCCESS(rv,MAPI_E_LOGIN_FAILURE);
+      account->GetDefaultIdentity(getter_AddRefs(identity));
+      NS_ENSURE_SUCCESS(rv,MAPI_E_LOGIN_FAILURE);
+      identity->GetKey(&id_key);
+
+    }
 
     // finally register(create) the session.
     PRUint32 nSession_Id;
@@ -370,7 +386,7 @@ LONG CMapiImp::InitContext(unsigned long session, MsgMapiListContext **listConte
 
 STDMETHODIMP CMapiImp::FindNext(unsigned long aSession, unsigned long ulUIParam, LPTSTR lpszMessageType,
                               LPTSTR lpszSeedMessageID, unsigned long flFlags, unsigned long ulReserved,
-                              LPTSTR lpszMessageID)
+                              unsigned char lpszMessageID[64])
 
 {
   //
@@ -410,7 +426,7 @@ STDMETHODIMP CMapiImp::ReadMail(unsigned long aSession, unsigned long ulUIParam,
   nsCAutoString keyString((char *) lpszMessageID);
   nsMsgKey msgKey = keyString.ToInteger(&irv);
   if (irv)
-    return E_FAIL;
+    return MAPI_E_INVALID_MESSAGE;
   MsgMapiListContext *listContext;
   LONG ret = InitContext(aSession, &listContext);
   if (ret != SUCCESS_SUCCESS)
@@ -427,12 +443,12 @@ STDMETHODIMP CMapiImp::DeleteMail(unsigned long aSession, unsigned long ulUIPara
   nsCAutoString keyString((char *) lpszMessageID);
   nsMsgKey msgKey = keyString.ToInteger(&irv);
   if (irv)
-    return E_FAIL;
+    return SUCCESS_SUCCESS;
   MsgMapiListContext *listContext;
   LONG ret = InitContext(aSession, &listContext);
   if (ret != SUCCESS_SUCCESS)
     return ret;
-  return (listContext->DeleteMessage(msgKey)) ? SUCCESS_SUCCESS : E_FAIL;
+  return (listContext->DeleteMessage(msgKey)) ? SUCCESS_SUCCESS : MAPI_E_INVALID_MESSAGE;
 }
 
 STDMETHODIMP CMapiImp::SaveMail(unsigned long aSession, unsigned long ulUIParam,  lpnsMapiMessage lppMessage,
@@ -613,6 +629,8 @@ lpnsMapiMessage MsgMapiListContext::GetMessage (nsMsgKey key, unsigned long flFl
         message->lpszNoteText = (PRUnichar *) ConvertBodyToMapiFormat (msgHdr);
       
     }
+    if (! (flFlags & MAPI_PEEK))
+      m_db->MarkRead(key, PR_TRUE, nsnull);
   }
   return message;
 }
@@ -668,7 +686,7 @@ void MsgMapiListContext::ConvertRecipientsToMapiFormat (nsIMsgHeaderParser *pars
         {
           mapiRecips[i].lpszAddress = (PRUnichar *) CoTaskMemAlloc(strlen(walkAddresses) + 1);
           if (mapiRecips[i].lpszAddress)
-            strcpy((char *) mapiRecips[i].lpszAddress, walkAddresses);\
+            strcpy((char *) mapiRecips[i].lpszAddress, walkAddresses);
         }
         walkAddresses += strlen (walkAddresses) + 1;
       }

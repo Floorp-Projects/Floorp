@@ -78,7 +78,7 @@ public :
 
     STDMETHODIMP FindNext(  unsigned long aSession, unsigned long ulUIParam, LPTSTR lpszMessageType,
                               LPTSTR lpszSeedMessageID, unsigned long flFlags, unsigned long ulReserved,
-                              LPTSTR lpszMessageID );
+                              unsigned char lpszMessageID[64] );
 
     STDMETHODIMP ReadMail(unsigned long lhSession, unsigned long ulUIParam, LPTSTR lpszMessageID,
                               unsigned long flFlags, unsigned long ulReserved, lpnsMapiMessage *lppMessage);
