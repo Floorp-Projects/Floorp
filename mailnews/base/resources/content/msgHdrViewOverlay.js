@@ -789,7 +789,7 @@ function SendMailToNode(emailAddressNode)
   var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
   if (emailAddressNode && fields && params)
   {
-    fields.to = emailAddressNode.getAttribute("label");
+    fields.to = emailAddressNode.getAttribute("fullAddress");
     params.type = Components.interfaces.nsIMsgCompType.New;
     params.format = Components.interfaces.nsIMsgCompFormat.Default;
     params.composeFields = fields;
