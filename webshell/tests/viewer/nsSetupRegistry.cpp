@@ -207,7 +207,7 @@ static NS_DEFINE_CID(kJVMManagerCID,              NS_JVMMANAGER_CID);
 static NS_DEFINE_IID(kCMenuBarCID,                NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenuCID,                   NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
-static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
+//static NS_DEFINE_IID(kCXULCommandCID,             NS_XULCOMMAND_CID);
 
 
 static NS_DEFINE_IID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
@@ -310,5 +310,5 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCMenuBarCID,       WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuCID,          WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuItemCID,      WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCXULCommandCID,    WIDGET_DLL, PR_FALSE, PR_FALSE);
+  //nsRepository::RegisterFactory(kCXULCommandCID,    WIDGET_DLL, PR_FALSE, PR_FALSE);
 }
