@@ -333,6 +333,9 @@ typedef CK_ULONG          CK_KEY_TYPE;
 #define CKK_JUNIPER         0x0000001D
 #define CKK_CDMF            0x0000001E
 
+/* all these key types are new for v2.11 */
+#define CKK_AES             0x0000001F
+
 #define CKK_VENDOR_DEFINED  0x80000000
 
 
@@ -609,6 +612,13 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_JUNIPER_SHUFFLE            0x00001064
 #define CKM_JUNIPER_WRAP               0x00001065
 #define CKM_FASTHASH                   0x00001070
+
+#define CKM_AES_KEY_GEN                0x00001080
+#define CKM_AES_ECB                    0x00001081
+#define CKM_AES_CBC                    0x00001082
+#define CKM_AES_MAC                    0x00001083
+#define CKM_AES_MAC_GENERAL            0x00001084
+#define CKM_AES_CBC_PAD                0x00001085
 
 #define CKM_VENDOR_DEFINED             0x80000000
 

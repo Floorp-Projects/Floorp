@@ -127,6 +127,7 @@ struct PK11DefaultArrayEntryStr {
 #define SECMOD_MD2_FLAG		0x00000400L
 #define SECMOD_SSL_FLAG		0x00000800L
 #define SECMOD_TLS_FLAG		0x00001000L
+#define SECMOD_AES_FLAG 	0x00002000L
 /* reserved bit for future, do not use */
 #define SECMOD_RESERVED_FLAG    0X08000000L
 #define SECMOD_FRIENDLY_FLAG	0x10000000L

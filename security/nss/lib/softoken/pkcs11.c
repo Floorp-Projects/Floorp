@@ -66,16 +66,22 @@
  */
 
 /* The next three strings must be exactly 32 characters long */
-static char *manufacturerID      = "Netscape Communications Corp    ";
+static char *manufacturerID      = "mozilla.org                     ";
+static char manufacturerID_space[33];
 static char *libraryDescription  = "NSS Internal Crypto Services    ";
+static char libraryDescription_space[33];
 static char *tokDescription      = "NSS Generic Crypto Services     ";
+static char tokDescription_space[33];
 static char *privTokDescription  = "NSS Certificate DB              ";
+static char privTokDescription_space[33];
 /* The next two strings must be exactly 64 characters long, with the
    first 32 characters meaningful  */
 static char *slotDescription     = 
 	"NSS Internal Cryptographic Services Version 3.2                 ";
+static char slotDescription_space[65];
 static char *privSlotDescription = 
 	"NSS User Private Key and Certificate Services                   ";
+static char privSlotDescription_space[65];
 static int minimumPinLen = 0;
 
 #define __PASTE(x,y)    x##y
@@ -233,25 +239,46 @@ struct mechanismList {
 #define CKF_DUZ_IT_ALL		CKF_EN_DE_WR_UN | CKF_SN_VR_RE
 
 static struct mechanismList mechanisms[] = {
+
+     /*
+      * PKCS #11 Mechanism List.
+      *
+      * The first argument is the PKCS #11 Mechanism we support.
+      * The second argument is Mechanism info structure. It includes:
+      *    The minimum key size,
+      *       in bits for RSA, DSA, DH, KEA, RC2 and RC4 * algs.
+      *       in bytes for RC5, AES, and CAST*
+      *       ignored for DES*, IDEA and FORTEZZA based
+      *    The maximum key size,
+      *       in bits for RSA, DSA, DH, KEA, RC2 and RC4 * algs.
+      *       in bytes for RC5, AES, and CAST*
+      *       ignored for DES*, IDEA and FORTEZZA based
+      *     Flags
+      *	      What operations are supported by this mechanism.
+      *  The third argument is a bool which tells if this mechanism is 
+      *    supported in the database token.
+      *
+      */
+
      /* ------------------------- RSA Operations ---------------------------*/
-     {CKM_RSA_PKCS_KEY_PAIR_GEN,{128, 2048, CKF_GENERATE_KEY_PAIR}, PR_TRUE},
-     {CKM_RSA_PKCS,		{ 16,  256, CKF_DUZ_IT_ALL},	PR_TRUE},
+     {CKM_RSA_PKCS_KEY_PAIR_GEN,{128,0xffffffff,CKF_GENERATE_KEY_PAIR},PR_TRUE},
+     {CKM_RSA_PKCS,		{128,0xffffffff, CKF_DUZ_IT_ALL},PR_TRUE},
 #ifdef PK11_RSA9796_SUPPORTED
-     {CKM_RSA_9796,		{ 16,  256, CKF_DUZ_IT_ALL},	PR_TRUE}, 
+     {CKM_RSA_9796,		{128,0xffffffff, CKF_DUZ_IT_ALL},PR_TRUE}, 
 #endif
-     {CKM_RSA_X_509,		{ 16,  256, CKF_DUZ_IT_ALL},	PR_TRUE}, 
+     {CKM_RSA_X_509,		{128,0xffffffff, CKF_DUZ_IT_ALL},PR_TRUE}, 
      /* -------------- RSA Multipart Signing Operations -------------------- */
-     {CKM_MD2_RSA_PKCS,		{16, 256, CKF_SN_VR}, 		PR_TRUE},
-     {CKM_MD5_RSA_PKCS,		{16, 256, CKF_SN_VR}, 		PR_TRUE},
-     {CKM_SHA1_RSA_PKCS,	{16, 256, CKF_SN_VR}, 		PR_TRUE},
+     {CKM_MD2_RSA_PKCS,		{128,0xffffffff, CKF_SN_VR},	PR_TRUE},
+     {CKM_MD5_RSA_PKCS,		{128,0xffffffff, CKF_SN_VR},	PR_TRUE},
+     {CKM_SHA1_RSA_PKCS,	{128,0xffffffff, CKF_SN_VR}, 	PR_TRUE},
      /* ------------------------- DSA Operations --------------------------- */
-     {CKM_DSA_KEY_PAIR_GEN,	{64, 128, CKF_GENERATE_KEY_PAIR}, PR_TRUE},
-     {CKM_DSA,			{64, 128, CKF_SN_VR}, 		PR_TRUE},
-     {CKM_DSA_SHA1,		{64, 128, CKF_SN_VR}, 		PR_TRUE},
+     {CKM_DSA_KEY_PAIR_GEN,	{512, 1024, CKF_GENERATE_KEY_PAIR}, PR_TRUE},
+     {CKM_DSA,			{512, 1024, CKF_SN_VR},		PR_TRUE},
+     {CKM_DSA_SHA1,		{512, 1024, CKF_SN_VR},		PR_TRUE},
      /* -------------------- Diffie Hellman Operations --------------------- */
      /* no diffie hellman yet */
-     {CKM_DH_PKCS_KEY_PAIR_GEN,	{16, 128, CKF_GENERATE_KEY_PAIR}, PR_TRUE}, 
-     {CKM_DH_PKCS_DERIVE,	{16, 128, CKF_DERIVE}, 		PR_TRUE}, 
+     {CKM_DH_PKCS_KEY_PAIR_GEN,	{128, 1024, CKF_GENERATE_KEY_PAIR}, PR_TRUE}, 
+     {CKM_DH_PKCS_DERIVE,	{128, 1024, CKF_DERIVE}, 	PR_TRUE}, 
      /* ------------------------- RC2 Operations --------------------------- */
      {CKM_RC2_KEY_GEN,		{1, 128, CKF_GENERATE},		PR_FALSE},
      {CKM_RC2_ECB,		{1, 128, CKF_EN_DE_WR_UN},	PR_FALSE},
@@ -283,6 +310,13 @@ static struct mechanismList mechanisms[] = {
      {CKM_CDMF_MAC,		{8,  8, CKF_SN_VR},		PR_FALSE},
      {CKM_CDMF_MAC_GENERAL,	{8,  8, CKF_SN_VR},		PR_FALSE},
      {CKM_CDMF_CBC_PAD,		{8,  8, CKF_EN_DE_WR_UN},	PR_FALSE},
+     /* ------------------------- AES Operations --------------------------- */
+     {CKM_AES_KEY_GEN,		{16, 32, CKF_GENERATE},		PR_FALSE},
+     {CKM_AES_ECB,		{16, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
+     {CKM_AES_CBC,		{16, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
+     {CKM_AES_MAC,		{16, 32, CKF_SN_VR},		PR_FALSE},
+     {CKM_AES_MAC_GENERAL,	{16, 32, CKF_SN_VR},		PR_FALSE},
+     {CKM_AES_CBC_PAD,		{16, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
      /* ------------------------- Hashing Operations ----------------------- */
      {CKM_MD2,			{0,   0, CKF_DIGEST},		PR_FALSE},
      {CKM_MD2_HMAC,		{1, 128, CKF_SN_VR},		PR_FALSE},
@@ -318,12 +352,12 @@ static struct mechanismList mechanisms[] = {
 #endif
 #if NSS_SOFTOKEN_DOES_RC5
      /* ------------------------- RC5 Operations --------------------------- */
-     {CKM_RC5_KEY_GEN,		{1, 255, CKF_GENERATE}, 	PR_FALSE},
-     {CKM_RC5_ECB,		{1, 255, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_RC5_CBC,		{1, 255, CKF_EN_DE_WR_UN},	PR_FALSE},
-     {CKM_RC5_MAC,		{1, 255, CKF_SN_VR},  		PR_FALSE},
-     {CKM_RC5_MAC_GENERAL,	{1, 255, CKF_SN_VR},  		PR_FALSE},
-     {CKM_RC5_CBC_PAD,		{1, 255, CKF_EN_DE_WR_UN}, 	PR_FALSE},
+     {CKM_RC5_KEY_GEN,		{1, 32, CKF_GENERATE}, 	PR_FALSE},
+     {CKM_RC5_ECB,		{1, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
+     {CKM_RC5_CBC,		{1, 32, CKF_EN_DE_WR_UN},	PR_FALSE},
+     {CKM_RC5_MAC,		{1, 32, CKF_SN_VR},  		PR_FALSE},
+     {CKM_RC5_MAC_GENERAL,	{1, 32, CKF_SN_VR},  		PR_FALSE},
+     {CKM_RC5_CBC_PAD,		{1, 32, CKF_EN_DE_WR_UN}, 	PR_FALSE},
 #endif
 #ifdef PK11_IDEA_SUPPORTED
      /* ------------------------- IDEA Operations -------------------------- */
@@ -335,12 +369,12 @@ static struct mechanismList mechanisms[] = {
      {CKM_IDEA_CBC_PAD,		{16, 16, CKF_EN_DE_WR_UN}, 	PR_FALSE}, 
 #endif
      /* --------------------- Secret Key Operations ------------------------ */
-     {CKM_GENERIC_SECRET_KEY_GEN,	{1, 256, CKF_GENERATE}, PR_FALSE}, 
-     {CKM_CONCATENATE_BASE_AND_KEY,	{1, 256, CKF_GENERATE}, PR_FALSE}, 
-     {CKM_CONCATENATE_BASE_AND_DATA,	{1, 256, CKF_GENERATE}, PR_FALSE}, 
-     {CKM_CONCATENATE_DATA_AND_BASE,	{1, 256, CKF_GENERATE}, PR_FALSE}, 
-     {CKM_XOR_BASE_AND_DATA,		{1, 256, CKF_GENERATE}, PR_FALSE}, 
-     {CKM_EXTRACT_KEY_FROM_KEY,		{1, 256, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_GENERIC_SECRET_KEY_GEN,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
+     {CKM_CONCATENATE_BASE_AND_KEY,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
+     {CKM_CONCATENATE_BASE_AND_DATA,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
+     {CKM_CONCATENATE_DATA_AND_BASE,	{1, 32, CKF_GENERATE}, PR_FALSE}, 
+     {CKM_XOR_BASE_AND_DATA,		{1, 32, CKF_GENERATE}, PR_FALSE}, 
+     {CKM_EXTRACT_KEY_FROM_KEY,		{1, 32, CKF_DERIVE},   PR_FALSE}, 
      /* ---------------------- SSL Key Derivations ------------------------- */
      {CKM_SSL3_PRE_MASTER_KEY_GEN,	{48, 48, CKF_GENERATE}, PR_FALSE}, 
      {CKM_SSL3_MASTER_KEY_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
@@ -353,27 +387,40 @@ static struct mechanismList mechanisms[] = {
      {CKM_TLS_MASTER_KEY_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
      {CKM_TLS_KEY_AND_MAC_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
      /* ---------------------- PBE Key Derivations  ------------------------ */
-     {CKM_PBE_MD2_DES_CBC,		{64, 64, CKF_DERIVE},   PR_TRUE},
-     {CKM_PBE_MD5_DES_CBC,		{64, 64, CKF_DERIVE},   PR_TRUE},
+     {CKM_PBE_MD2_DES_CBC,		{8, 8, CKF_DERIVE},   PR_TRUE},
+     {CKM_PBE_MD5_DES_CBC,		{8, 8, CKF_DERIVE},   PR_TRUE},
      /* ------------------ NETSCAPE PBE Key Derivations  ------------------- */
-     {CKM_NETSCAPE_PBE_SHA1_DES_CBC,	     { 64,  64, CKF_GENERATE}, PR_TRUE},
-     {CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC,  {192, 192, CKF_GENERATE}, PR_TRUE},
-     {CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC, {192, 192, CKF_GENERATE}, PR_TRUE},
-     {CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC,  { 40,  40, CKF_GENERATE}, PR_TRUE},
-     {CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC, {128, 128, CKF_GENERATE}, PR_TRUE},
-     {CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4,	     { 40,  40, CKF_GENERATE}, PR_TRUE},
-     {CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4,     {128, 128, CKF_GENERATE}, PR_TRUE},
-     {CKM_PBE_SHA1_DES3_EDE_CBC,	     {192, 192, CKF_GENERATE}, PR_TRUE},
-     {CKM_PBE_SHA1_DES2_EDE_CBC,	     {192, 192, CKF_GENERATE}, PR_TRUE},
-     {CKM_PBE_SHA1_RC2_40_CBC,		     { 40,  40, CKF_GENERATE}, PR_TRUE},
-     {CKM_PBE_SHA1_RC2_128_CBC,		     {128, 128, CKF_GENERATE}, PR_TRUE},
-     {CKM_PBE_SHA1_RC4_40,		     { 40,  40, CKF_GENERATE}, PR_TRUE},
-     {CKM_PBE_SHA1_RC4_128,		     {128, 128, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_SHA1_DES_CBC,	     { 8, 8, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC,  {24,24, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC, {24,24, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC,  {40,40, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_SHA1_128_BIT_RC2_CBC, {40,40, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_SHA1_40_BIT_RC4,	     {40,40, CKF_GENERATE}, PR_TRUE},
+     {CKM_NETSCAPE_PBE_SHA1_128_BIT_RC4,     {128,128, CKF_GENERATE}, PR_TRUE},
+     {CKM_PBE_SHA1_DES3_EDE_CBC,	     {24,24, CKF_GENERATE}, PR_TRUE},
+     {CKM_PBE_SHA1_DES2_EDE_CBC,	     {24,24, CKF_GENERATE}, PR_TRUE},
+     {CKM_PBE_SHA1_RC2_40_CBC,		     {40,40, CKF_GENERATE}, PR_TRUE},
+     {CKM_PBE_SHA1_RC2_128_CBC,		     {128,128, CKF_GENERATE}, PR_TRUE},
+     {CKM_PBE_SHA1_RC4_40,		     {40,40, CKF_GENERATE}, PR_TRUE},
+     {CKM_PBE_SHA1_RC4_128,		     {128,128, CKF_GENERATE}, PR_TRUE},
 };
 static CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
 /* load up our token database */
 static CK_RV pk11_importKeyDB(PK11Slot *slot);
 
+
+static char *
+pk11_setStringName(char *inString, char *buffer, int buffer_length) {
+    int full_length, string_length;
+
+    full_length = buffer_length -1;
+    string_length = PORT_Strlen(inString);
+    if (string_length > full_length) string_length = full_length;
+    PORT_Memset(buffer,' ',full_length);
+    buffer[full_length] = 0;
+    PORT_Memcpy(buffer,inString,full_length);
+    return buffer;
+}
 /*
  * Configuration utils
  */
@@ -384,23 +431,29 @@ PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, char *ptokdes,
 {
 
     /* make sure the internationalization was done correctly... */
-    if (man && (PORT_Strlen(man) == 33)) {
-	manufacturerID = man;
+    if (man) {
+	manufacturerID = pk11_setStringName(man,manufacturerID_space,
+						sizeof(manufacturerID_space));
     }
-    if (libdes && (PORT_Strlen(libdes) == 33)) {
-	libraryDescription = libdes;
+    if (libdes) {
+	libraryDescription = pk11_setStringName(libdes,
+		libraryDescription_space, sizeof(libraryDescription_space));
     }
-    if (tokdes && (PORT_Strlen(tokdes) == 33)) {
-	tokDescription = tokdes;
+    if (tokdes) {
+	tokDescription = pk11_setStringName(tokdes,tokDescription_space,
+						 sizeof(tokDescription_space));
     }
-    if (ptokdes && (PORT_Strlen(ptokdes) == 33)) {
-	privTokDescription = ptokdes;
+    if (ptokdes) {
+	privTokDescription = pk11_setStringName(ptokdes,
+		privTokDescription_space, sizeof(privTokDescription_space));
     }
-    if (slotdes && (PORT_Strlen(slotdes) == 65)) {
-	slotDescription = slotdes;
+    if (slotdes) {
+	slotDescription = pk11_setStringName(slotdes,slotDescription_space, 
+					sizeof(slotDescription_space));
     }
-    if (pslotdes && (PORT_Strlen(pslotdes) == 65)) {
-	privSlotDescription = pslotdes;
+    if (pslotdes) {
+	privSlotDescription = pk11_setStringName(pslotdes,
+		privSlotDescription_space, sizeof(privSlotDescription_space));
     }
 
     if (minimumPinLen <= PK11_MAX_PIN) {
