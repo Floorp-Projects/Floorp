@@ -58,13 +58,14 @@
       <![CDATA[
         function onLoad() {
           var versionField = document.getElementById("versionField");
-        versionField.value = document.documentElement.getAttribute("versionlabel") + ' ' 
+          versionField.value = document.documentElement.getAttribute("versionlabel") + ' ' 
                              + navigator.vendorSub + ' (' + navigator.productSub + ')';
 
           var button = document.documentElement.getButton("extra2");
           button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
           gSelectedPage = 0;
           button.addEventListener("command", switchPage, false);
+          document.documentElement.getButton("accept").focus();
         }
 
         function uninit(aEvent)
