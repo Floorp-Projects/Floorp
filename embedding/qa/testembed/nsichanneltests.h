@@ -85,6 +85,7 @@ public:
 	void GetContentLengthTest(nsIChannel *, PRInt16);
 	void OpenTest(nsIChannel *, PRInt16);
 	void AsyncOpenTest(nsIChannel *, PRInt16);
+	void PostAsyncTests(nsIChannel *, PRInt16);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();
 public:
