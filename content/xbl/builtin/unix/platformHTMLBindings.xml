@@ -66,6 +66,8 @@
         command="cmd_redo"/>
     <handler event="keypress" key="r" modifiers="accel"
         command="cmd_redo"/>
+    <handler event="keypress" key="a" modifiers="alt"
+        command="cmd_selectAll"/>
     </handlers>
   </binding>
 
@@ -144,6 +146,8 @@
         command="cmd_redo"/>
     <handler event="keypress" key="r" modifiers="accel"
         command="cmd_redo"/>
+    <handler event="keypress" key="a" modifiers="alt"
+        command="cmd_selectAll"/>
     </handlers>
   </binding>
 
@@ -168,6 +172,7 @@
       <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
       <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectLinePrevious" />
       <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectLineNext" />
+      <handler event="keypress" key="a" modifiers="alt" command="cmd_selectAll"/>
     </handlers>
   </binding>
 
@@ -189,6 +194,7 @@
       <handler event="keypress" key="z" modifiers="control" command="cmd_undo"/>
       <handler event="keypress" key="r" modifiers="accel"   command="cmd_redo"/>
       <handler event="keypress" key="y" modifiers="accel"   command="cmd_redo"/>
+      <handler event="keypress" key="a" modifiers="alt" command="cmd_selectAll"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cutOrDelete"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_copyOrDelete"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
