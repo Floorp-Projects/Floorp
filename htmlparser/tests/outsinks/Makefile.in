@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= outtest
+PROGRAM		= TestOutput
 
 CPPSRCS		= \
 		Convert.cpp \
@@ -35,5 +35,14 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
+TEST_FILES      = \
+		plainwrap.html \
+		entityxif.xif \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
+
+install:: 
+	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
+	$(INSTALL) $(TEST_FILES) $(DIST)/bin/OutTestData
 
