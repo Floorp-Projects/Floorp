@@ -44,6 +44,7 @@ public:
   nscolor         mPenColor;
   HPEN            mSolidPen;
   PRInt32         mFlags;
+  nscolor         mTextColor;
 };
 
 GraphicsState :: GraphicsState()
@@ -59,6 +60,7 @@ GraphicsState :: GraphicsState()
   mPenColor = NS_RGB(0, 0, 0);
   mSolidPen = NULL;
   mFlags = ~FLAGS_ALL;
+  mTextColor = RGB(0, 0, 0);
 }
 
 GraphicsState :: GraphicsState(GraphicsState &aState) :
@@ -74,6 +76,7 @@ GraphicsState :: GraphicsState(GraphicsState &aState) :
   mPenColor = aState.mPenColor;
   mSolidPen = NULL;
   mFlags = ~FLAGS_ALL;
+  mTextColor = aState.mTextColor;
 }
 
 GraphicsState :: ~GraphicsState()
@@ -121,6 +124,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mCurrFontMetrics = nsnull;
   mCurrPenColor = NULL;
   mNullPen = NULL;
+  mCurrTextColor = RGB(0, 0, 0);
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
 #endif
@@ -273,6 +277,7 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
 
 nsresult nsRenderingContextWin :: SetupDC(void)
 {
+  ::SetTextColor(mDC, RGB(0, 0, 0));
   ::SetBkMode(mDC, TRANSPARENT);
   ::SetPolyFillMode(mDC, WINDING);
   return NS_OK;
@@ -352,6 +357,7 @@ void nsRenderingContextWin :: PushState(void)
     state->mPenColor = mStates->mPenColor;
     state->mSolidPen = NULL;
     state->mFlags = ~FLAGS_ALL;
+    state->mTextColor = mStates->mTextColor;
 
     mStates = state;
   }
@@ -868,41 +874,29 @@ void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)
 {
-	int	x,y;
+	int	x = aX;
+  int y = aY;
 
-  SetupFont();
-
-  COLORREF oldColor = ::SetTextColor(mDC, mColor);
-  ::SetBkColor(mDC, RGB(255,128,255));
-	x = aX;
-	y = aY;
+  SetupFontAndColor();
 	mTMatrix->TransformCoord(&x,&y);
   ::ExtTextOut(mDC,x,y,0,NULL,aString,aLength,NULL);
 
   if (mFontMetrics->GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
     DrawLine(aX, aY, aX + aWidth, aY);
-
-  ::SetTextColor(mDC, oldColor);
 }
 
 void nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
-	int		x,y;
+	int		x = aX;
+  int   y = aY;
 
-  SetupFont();
-
-	COLORREF oldColor = ::SetTextColor(mDC, mColor);
-  ::SetBkColor(mDC, RGB(255,128,255));
-	x = aX;
-	y = aY;
+  SetupFontAndColor();
 	mTMatrix->TransformCoord(&x,&y);
   ::ExtTextOutW(mDC,x,y,0,NULL,aString,aLength,NULL);
 
   if (mFontMetrics->GetFont().decorations & NS_FONT_DECORATION_OVERLINE)
     DrawLine(aX, aY, aX + aWidth, aY);
-
-  ::SetTextColor(mDC, oldColor);
 }
 
 void nsRenderingContextWin :: DrawString(const nsString& aString,
@@ -1017,7 +1011,7 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
   return mCurrBrush;
 }
 
-void nsRenderingContextWin :: SetupFont(void)
+void nsRenderingContextWin :: SetupFontAndColor(void)
 {
   if ((mFontMetrics != mCurrFontMetrics) || (NULL == mCurrFontMetrics))
   {
@@ -1028,6 +1022,11 @@ void nsRenderingContextWin :: SetupFont(void)
     mStates->mFont = mCurrFont = tfont;
     mStates->mFontMetrics = mCurrFontMetrics = mFontMetrics;
 //printf("fonts: %d\n", ++numfont);
+  }
+
+  if (mCurrentColor != mCurrTextColor) {
+    ::SetTextColor(mDC, mColor);
+    mStates->mTextColor = mCurrTextColor = mCurrentColor;
   }
 }
 
