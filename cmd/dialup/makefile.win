@@ -17,7 +17,6 @@ DEPTH=..\..
 
 # java/applet produces contents needed in as_html
 DIRS=java as_html win 
-
 !include <$(DEPTH)\config\rules.mak>
 
 install::
@@ -29,7 +28,7 @@ install::
 		$(DEPTH)\..\x86Dbg\plugins
 	$(MAKE_INSTALL) \
 		as_html\signed\asw.jar \
-		as_html
+		$(DEPTH)\..\x86Dbg\asw
 !ifdef MOZ_INSTALL_DIR
 	echo copying plugin to Communicator folder...
 	copy \
@@ -39,4 +38,8 @@ install::
 	copy \
 		java\signed\npasw.jar \
 		$(MOZ_INSTALL_DIR)\Program\Plugins\.
+	echo copying plugin .jar to Commuicator folder...
+	copy \
+		as_html\signed\asw.jar \
+		$(MOZ_INSTALL_DIR)\Program\ASW\.
 !endif
