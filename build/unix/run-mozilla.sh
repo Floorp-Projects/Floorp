@@ -290,7 +290,12 @@ do
       ;;
     -d | --debugger)
       moz_debugger=$2;
-      shift 2
+      if [ "${moz_debugger}" != "" ]; then
+	shift 2
+      else
+        echo "-d requires an argument"
+        exit 1
+      fi
       ;;
     *)
       break;
