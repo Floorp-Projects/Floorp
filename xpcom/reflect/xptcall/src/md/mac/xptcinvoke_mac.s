@@ -52,11 +52,13 @@
 		lwz	r4,168(sp)				# paramCount
 		lwz	r5,172(sp)				# params
 #		addi	r6,sp,128				# fprData
-		mr		r6,sp				# fprData
+		mr	r6,sp					# fprData
 		slwi	r3,r3,2				        # number of bytes of stack required
-		addi	r3,r3,28			# linkage area
+		addi	r3,r3,28				# linkage area
 		mr	r31,sp					# save original stack top
 		sub	sp,sp,r3				# bump the stack
+		lwz	r3,0(r31)				# act like real alloca, so 0(sp) always points back to 
+		stw	r3,0(sp)				# previous stack frame.
 		addi	r3,sp,28				# parameter pointer excludes linkage area size + 'this'
 		
 		bl	.invoke_copy_to_stack
@@ -102,6 +104,14 @@
 		lwz     r31,-4(sp)
         blr
 
+# traceback table.
+	traceback:
+		dc.l	0
+		dc.l	0x00002040
+		dc.l	0
+		dc.l	(traceback - ._XPTC_InvokeByIndex)	# size of the code.
+		dc.w	20					# short length of identifier.
+		dc.b	'._XPTC_InvokeByIndex'
 
 		csect	DATA
         import	TOC
