@@ -335,6 +335,9 @@ protected:
   nsCOMPtr<nsICommandManager> mMidasCommandManager;
   PRBool                      mEditingIsOn;
 
+  nsresult   DoClipboardSecurityCheck(PRBool aPaste);
+  static jsval       sCutCopyInternal_id;
+  static jsval       sPasteInternal_id;  
 };
 
 #endif /* nsHTMLDocument_h___ */

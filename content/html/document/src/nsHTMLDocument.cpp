@@ -4163,6 +4163,7 @@ static const struct MidasCommand gMidasCommandTable[] = {
   { "superscript",   "cmd_superscript",     "", PR_TRUE,  PR_FALSE },
   { "cut",           "cmd_cut",             "", PR_TRUE,  PR_FALSE },
   { "copy",          "cmd_copy",            "", PR_TRUE,  PR_FALSE },
+  { "paste",         "cmd_paste",           "", PR_TRUE,  PR_FALSE },
   { "delete",        "cmd_delete",          "", PR_TRUE,  PR_FALSE },
   { "selectall",     "cmd_selectAll",       "", PR_TRUE,  PR_FALSE },
   { "undo",          "cmd_undo",            "", PR_TRUE,  PR_FALSE },
@@ -4199,7 +4200,6 @@ static const struct MidasCommand gMidasCommandTable[] = {
 // the following will need special review before being turned on
   { "saveas",        "cmd_saveAs",          "", PR_TRUE,  PR_FALSE },
   { "print",         "cmd_print",           "", PR_TRUE,  PR_FALSE },
-  { "paste",         "cmd_paste",           "", PR_TRUE,  PR_FALSE },
 #endif
   { NULL, NULL, NULL, PR_FALSE, PR_FALSE }
 };
@@ -4300,6 +4300,52 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
   return found;  
 }
 
+jsval
+nsHTMLDocument::sCutCopyInternal_id = JSVAL_VOID;
+jsval
+nsHTMLDocument::sPasteInternal_id = JSVAL_VOID;
+
+/* Helper function to check security of clipboard commands. If aPaste is */
+/* true, we check paste, else we check cutcopy */
+nsresult
+nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIScriptSecurityManager> secMan =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+  if (stack) {
+    JSContext *cx = nsnull;
+    stack->Peek(&cx);
+
+    NS_NAMED_LITERAL_CSTRING(classNameStr, "Clipboard");
+
+    if (aPaste) {
+      if (nsHTMLDocument::sPasteInternal_id == JSVAL_VOID) {
+        nsHTMLDocument::sPasteInternal_id =
+          STRING_TO_JSVAL(::JS_InternString(cx, "paste"));
+      }
+      rv = secMan->CheckPropertyAccess(cx, nsnull, classNameStr.get(), 
+                                       nsHTMLDocument::sPasteInternal_id,
+                                       nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+    } else {
+      if (nsHTMLDocument::sCutCopyInternal_id == JSVAL_VOID) {
+        nsHTMLDocument::sCutCopyInternal_id =
+          STRING_TO_JSVAL(::JS_InternString(cx, "cutcopy"));
+      }
+      rv = secMan->CheckPropertyAccess(cx, nsnull, classNameStr.get(), 
+                                       nsHTMLDocument::sCutCopyInternal_id,
+                                       nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+    }
+  }
+  return rv;
+}
+
 /* TODO: don't let this call do anything if the page is not done loading */
 /* boolean execCommand(in DOMString commandID, in boolean doShowUI, 
                                                in DOMString value); */
@@ -4324,6 +4370,18 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   if (doShowUI)
     return NS_ERROR_NOT_IMPLEMENTED;
 
+  nsresult rv;
+
+  if (commandID.Equals(NS_LITERAL_STRING("cut"), nsCaseInsensitiveStringComparator()) ||
+      (commandID.Equals(NS_LITERAL_STRING("copy"), nsCaseInsensitiveStringComparator()))) {
+    rv = DoClipboardSecurityCheck(PR_FALSE);
+  } else if (commandID.Equals(NS_LITERAL_STRING("paste"), nsCaseInsensitiveStringComparator())) {
+    rv = DoClipboardSecurityCheck(PR_TRUE);
+  }
+
+  if (NS_FAILED(rv))
+    return rv;
+
   // get command manager and dispatch command to our window if it's acceptable
   nsCOMPtr<nsICommandManager> cmdMgr;
   GetMidasCommandManager(getter_AddRefs(cmdMgr));
@@ -4340,7 +4398,6 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
                                      cmdToDispatch, paramStr, isBool, boolVal))
     return NS_ERROR_NOT_IMPLEMENTED;
 
-  nsresult rv;
   if (!isBool && paramStr.IsEmpty()) {
     rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull, window);
   } else {
