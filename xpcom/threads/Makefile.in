@@ -31,6 +31,10 @@ LIBRARY_NAME	= xpcomthreads_s
 
 REQUIRES	= xpcom
 
+CSRCS		= \
+		plevent.c \
+		$(NULL)
+
 CPPSRCS		= \
 		nsAutoLock.cpp \
 		nsEventQueue.cpp \
@@ -42,6 +46,7 @@ EXPORTS		= \
 		nsAutoLock.h \
 		nsIEventQueue.h \
 		nsIEventQueueService.h \
+		plevent.h \
 		$(NULL)			
 
 XPIDLSRCS	= \

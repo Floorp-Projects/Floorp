@@ -1,3 +1,4 @@
 nsAutoLock.h
 nsIEventQueue.h 
 nsIEventQueueService.h
+plevent.h
