@@ -54,16 +54,16 @@
 <![CDATA[
   var _elementIDs = ["popupPolicy"];
   var policyButton;
-  var manageButton;
+  var manageTree;
 
   function init() {
     parent.initPanel('chrome://browser/content/pref/pref-popups.xul');
     policyButton = document.getElementById("popupPolicy");
-    manageButton = document.getElementById("popupView");
+    manageTree = document.getElementById("permissionsTree");
     setButtons();
   }
   function setButtons() {
-    manageButton.disabled = !policyButton.checked;
+    manageTree.disabled = !policyButton.checked;
   }
   function selectPolicy() {
     setButtons();
@@ -71,7 +71,7 @@
 ]]>
 </script>
 
-<groupbox id="popupsArea">
+<groupbox id="popupsArea" flex="1">
   <caption label="&popupBlocking.label;"/>
 
   <description>&popupDetails;</description>
@@ -82,9 +82,30 @@
               accesskey="&popupReject.accesskey;"
               oncommand="selectPolicy()" id="popupPolicy"/>
     <spacer flex="1"/>
-    <button id="popupView" label="&popupView.label;"
-              accesskey="&popupView.accesskey;" oncommand="viewPopups();"/>
   </hbox>
+
+  <vbox id="servers" flex="1">
+      <description id="permissionsText" value="&div.blessedservers.label;"/>
+      <separator class="thin"/>
+      <tree id="permissionsTree" flex="1"
+            seltype="multiple" hidecolumnpicker="true"
+            onkeypress="HandlePermissionKeyPress(event)"
+            onselect="PermissionSelected();">
+        <treecols>
+          <treecol id="siteCol" label="&treehead.sitename.label;" flex="5"
+                       onclick="PermissionColumnSort('rawHost');"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+      <hbox>
+        <button id="removePermission" disabled="true" 
+                      label="&removepermission.label;" 
+                      oncommand="DeletePermission();"/>
+        <button id="removeAllPermissions"
+                      label="&removeallpermissions.label;" 
+                      oncommand="DeleteAllPermissions();"/>
+      </hbox>
+  </vbox>
 
 </groupbox>
 

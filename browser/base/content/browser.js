@@ -3147,7 +3147,7 @@ function displayPageInfo()
 function displayPageReport()
 {
     window.openDialog("chrome://browser/content/pageReport.xul", "_blank",
-                      "dialog=no");
+                      "dialog=no,modal");
 }
 
 const mediatorContractId = "@mozilla.org/appshell/window-mediator;1";
