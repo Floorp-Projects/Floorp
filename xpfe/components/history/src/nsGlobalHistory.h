@@ -404,10 +404,9 @@ protected:
   nsresult FindRow(mdb_column aCol, const char *aURL, nsIMdbRow **aResult);
 
 
-  nsresult nsGlobalHistory::FindRow(mdb_column aCol, PRInt64 aValue, 
-    nsIMdbRow **aResult);
+  nsresult FindRow(mdb_column aCol, PRInt64 aValue, nsIMdbRow **aResult);
   nsresult FindRowAndID(mdb_column aCol, const char *aURL, 
-    nsIMdbRow **aResult, PRInt64 *aRowID);
+                        nsIMdbRow **aResult, PRInt64 *aRowID);
 
   //
   // misc unrelated stuff
