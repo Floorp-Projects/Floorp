@@ -52,8 +52,6 @@
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 
-#include "nsIDocument.h"
-
 #include "nsIDOMAttr.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMCharacterData.h"

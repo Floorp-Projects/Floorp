@@ -57,7 +57,7 @@
 #include "txNodeSetContext.h"
 #include "txSingleNodeContext.h"
 #ifndef TX_EXE
-#include "nsIDocShell.h"
+#include "nsIDocument.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"

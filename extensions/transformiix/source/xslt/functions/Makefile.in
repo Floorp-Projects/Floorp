@@ -31,9 +31,7 @@ MODULE = transformiix
 REQUIRES	= string \
 		  xpcom \
 		  dom \
-		  layout \
 		  content \
-		  widget \
 		  unicharutil \
 		  $(NULL)
 endif

@@ -30,6 +30,7 @@
 #include "txAtoms.h"
 #include "mozilladom.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 
 MOZ_DECL_CTOR_COUNTER(Node)

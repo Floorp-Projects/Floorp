@@ -29,7 +29,6 @@
 #define TRANSFRMX_PROCESSORSTATE_H
 
 #include "NodeSet.h"
-#include "NodeStack.h"
 #include "Stack.h"
 #include "ErrorObserver.h"
 #include "NamedMap.h"
