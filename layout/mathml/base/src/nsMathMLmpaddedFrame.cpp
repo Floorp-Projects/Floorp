@@ -82,13 +82,11 @@ nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmpaddedFrame::Init(nsIPresContext*  aPresContext,
-                      nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIStyleContext* aContext,
-                      nsIFrame*        aPrevInFlow)
+nsMathMLmpaddedFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                           nsIFrame*       aParent) 
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  // let the base class get the default from our parent
+  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
 
   /*
   parse the attributes
@@ -138,7 +136,7 @@ nsMathMLmpaddedFrame::Init(nsIPresContext*  aPresContext,
     ParseAttribute(value, mLeftSpaceSign, mLeftSpace, mLeftSpacePseudoUnit);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 PRBool

@@ -32,8 +32,8 @@ nsMathMLFrame::InheritAutomaticData(nsIPresContext* aPresContext,
   mPresentationData.flags = 0;
   mPresentationData.mstyle = nsnull;
   mPresentationData.scriptLevel = 0;
-  mEmbellishData.flags = 0;
 
+  mEmbellishData.flags = 0;
   mEmbellishData.nextFrame = nsnull;
   mEmbellishData.coreFrame = nsnull;
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
