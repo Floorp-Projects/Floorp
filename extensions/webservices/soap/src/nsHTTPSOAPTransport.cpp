@@ -133,7 +133,10 @@ nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(
 		nsISOAPResponse *response, 
 		nsIXMLHttpRequest *request, 
 		nsISOAPResponseListener *listener):
-                  mCall(call), mResponse(response), mRequest(request), mListener(listener) {}
+                  mCall(call), mResponse(response), mRequest(request), mListener(listener)
+{
+  NS_INIT_ISUPPORTS();
+}
 
 nsHTTPSOAPTransportCompletion::~nsHTTPSOAPTransportCompletion()
 {
@@ -257,11 +260,13 @@ NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponse
   rv = variant->SetAsInterface(NS_GET_IID(nsIDOMDocument), messageDocument);
   if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsISOAPCallCompletion> completion;
+
   if (aListener) {
-    *aCompletion = new nsHTTPSOAPTransportCompletion(aCall, aResponse, request, aListener);
-    if (!*aCompletion) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*aCompletion);
-    nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(*aCompletion);
+    completion = new nsHTTPSOAPTransportCompletion(aCall, aResponse, request, aListener);
+    if (!completion) return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(completion);
     rv = eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
     rv = eventTarget->AddEventListener(NS_LITERAL_STRING("error"), listener, PR_FALSE);
@@ -269,6 +274,9 @@ NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponse
   }
   rv = request->Send(variant);
   if (NS_FAILED(rv)) return rv;
+
+  *aCompletion = completion;
+  NS_IF_ADDREF(*aCompletion);
 
   return NS_OK;
 }
