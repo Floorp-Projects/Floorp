@@ -70,6 +70,8 @@ protected:
   // from the asynchronous X routines back to a blocking paste:
   GtkSelectionData mSelectionData;
   PRBool mBlocking;
+  GdkAtom mSelectionAtom;
+
 
   void SelectionReceiver(GtkWidget *aWidget,
                          GtkSelectionData *aSD);

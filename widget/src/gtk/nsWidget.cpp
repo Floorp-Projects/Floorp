@@ -1057,7 +1057,8 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
   case NS_NATIVE_GRAPHIC:
     /* GetSharedGC ups the ref count on the GdkGC so make sure you release
      * it afterwards. */
-    return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
+    NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
+    return (void *)NS_STATIC_CAST(nsToolkit*,mToolkit)->GetSharedGC();
 
   default:
     g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
@@ -1714,6 +1715,9 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   if (aGdkMotionEvent)
   {
     event.time = aGdkMotionEvent->time;
+    event.isShift = aGdkMotionEvent->state & ShiftMask;
+    event.isControl = aGdkMotionEvent->state & ControlMask;
+    event.isAlt = aGdkMotionEvent->state & Mod1Mask;
   }
 
   AddRef();

@@ -67,6 +67,7 @@ enum {
 
 static GdkAtom sSelTypes[TARGET_LAST];
 
+static GdkAtom GDK_SELECTION_CLIPBOARD;
 
 //-------------------------------------------------------------------------
 //
@@ -85,6 +86,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
   mTransferable   = nsnull;
   mSelectionData.data = nsnull;
   mSelectionData.length = 0;
+  mSelectionAtom = GDK_SELECTION_PRIMARY;
 
   // initialize the widget, etc we're binding to
   Init();
@@ -133,23 +135,21 @@ nsClipboard::~nsClipboard()
 #endif /* DEBUG_CLIPBOARD */
 
   // Remove all our event handlers:
-  if (sWidget &&
-      (gdk_selection_owner_get(GDK_SELECTION_PRIMARY) == sWidget->window))
-    gtk_selection_remove_all(sWidget);
+  if (sWidget) {
+    if (gdk_selection_owner_get(GDK_SELECTION_PRIMARY) == sWidget->window)
+      gtk_selection_remove_all(sWidget);
+
+    if (gdk_selection_owner_get(GDK_SELECTION_CLIPBOARD) == sWidget->window)
+      gtk_selection_remove_all(sWidget);
+  }
 
   // free the selection data, if any
   if (mSelectionData.data != nsnull)
     nsAllocator::Free(mSelectionData.data);
 
-  nsClipboard *cb = (nsClipboard*)gtk_object_get_data(GTK_OBJECT(sWidget), "cb");
-  if (cb != nsnull)
-  {
-    NS_RELEASE(cb);
-    gtk_object_remove_data(GTK_OBJECT(sWidget), "cb");
-  }
+  gtk_object_remove_data(GTK_OBJECT(sWidget), "cb");
 
-  if (sWidget)
-  {
+  if (sWidget) {
     gtk_widget_destroy(sWidget);
     sWidget = nsnull;
   }
@@ -198,14 +198,13 @@ void nsClipboard::Init(void)
   sSelTypes[TARGET_IMAGE_GIF]     = gdk_atom_intern(kGIFImageMime, FALSE);
   // compatibility with other apps
 
+  GDK_SELECTION_CLIPBOARD         = gdk_atom_intern("CLIPBOARD", FALSE);
 
   // create invisible widget to use for the clipboard
   sWidget = gtk_invisible_new();
 
   // add the clipboard pointer to the widget so we can get it.
   gtk_object_set_data(GTK_OBJECT(sWidget), "cb", this);
-
-  NS_ADDREF_THIS();
 
   // Handle selection requests if we called gtk_selection_add_target:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_get",
@@ -240,7 +239,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   }
 
   // are we already the owner?
-  if (gdk_selection_owner_get(GDK_SELECTION_PRIMARY) == sWidget->window)
+  if (gdk_selection_owner_get(mSelectionAtom) == sWidget->window)
   {
     // if so, clear all the targets
     __gtk_selection_target_list_remove(sWidget);
@@ -249,7 +248,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 
   // we arn't already the owner, so we will become it
   gint have_selection = gtk_selection_owner_set(sWidget,
-                                                GDK_SELECTION_PRIMARY,
+                                                mSelectionAtom,
                                                 GDK_CURRENT_TIME);
   if (have_selection == 0)
     return NS_ERROR_FAILURE;
@@ -275,13 +274,6 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 
       // add these types as selection targets
       RegisterFormat(format);
-      
-      // if text/unicode is present, also add text/plain to the list of flavors we 
-      // export as we will do the conversion by hand.
-      if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
-        gint textFormat = GetFormat(kTextMime);
-        RegisterFormat(textFormat);
-      }
     }
   }
 
@@ -293,7 +285,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 void nsClipboard::AddTarget(GdkAtom aAtom)
 {
   gtk_selection_add_target(sWidget,
-                           GDK_SELECTION_PRIMARY,
+                           mSelectionAtom,
                            aAtom, aAtom);
 }
 
@@ -360,13 +352,15 @@ void nsClipboard::RegisterFormat(gint format)
 
 
   case TARGET_TEXT_UNICODE:
+    // STRING (what X uses) we will do a conversion internally
+    AddTarget(GDK_SELECTION_TYPE_STRING);
+
     // text/unicode (default)
     AddTarget(sSelTypes[format]);
 
     // UTF8 (what X uses)
     AddTarget(sSelTypes[TARGET_UTF8]);
     break;
-
 
   case TARGET_TEXT_HTML:
     // text/html (default)
@@ -420,7 +414,7 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type)
   g_print("     Doing real conversion of atom type '%s'\n", gdk_atom_name(type));
 #endif
   gtk_selection_convert(sWidget,
-                        GDK_SELECTION_PRIMARY,
+                        mSelectionAtom,
                         type,
                         GDK_CURRENT_TIME);
 
@@ -589,7 +583,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 
   if ( foundData ) {
     nsCOMPtr<nsISupports> genericDataWrapper;
-    nsPrimitiveHelpers::CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
+    nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor, mSelectionData.data,
+                                               mSelectionData.length, getter_AddRefs(genericDataWrapper));
     aTransferable->SetTransferData(foundFlavor,
                                    genericDataWrapper,
                                    mSelectionData.length);
