@@ -233,8 +233,17 @@ int showHelp(void)
 "                                     All allocations are a factor of <num>.\n"
 "      Meaning, an allocation of 1 byte would actually count as <num> bytes.\n"
 "              Set <num> to '1' in order to see the actual allocation sizes.\n"
-"                                                   By default, <num> is %u.\n"
+"              Alignment is taken into account prior to allocation overhead.\n"
+"                                                    By default, <num> is %u.\n"
                    "\n", ST_DEFAULT_ALIGNMENT_SIZE);
+
+        PR_fprintf(PR_STDOUT,
+" -h<num>                                           Set allocation overhead.\n"
+"                            All allocations cost an additional <num> bytes.\n"
+"                 Overhead is taken into account after allocation alignment.\n"
+"              Set <num> to '0' in order to see the actual allocation sizes.\n"
+"                                                   By default, <num> is %u.\n"
+                   "\n", ST_DEFAULT_OVERHEAD_SIZE);
 
         PR_fprintf(PR_STDOUT, "%s",
 " -c<text>     Restrict callsite backtraces to only those containing <text>.\n"
@@ -354,6 +363,7 @@ int initOptions(int aArgCount, char** aArgArray)
     ** As a default, we align byte sizes to a particular size.
     */
     globals.mOptions.mAlignBy = ST_DEFAULT_ALIGNMENT_SIZE;
+    globals.mOptions.mOverhead = ST_DEFAULT_OVERHEAD_SIZE;
 
     /*
     ** Go through all arguments.
@@ -385,10 +395,27 @@ int initOptions(int aArgCount, char** aArgArray)
 
                 case 'h':
                 {
-                    /*
-                    ** Help.
-                    */
-                    globals.mOptions.mShowHelp = __LINE__;
+                    if('\0' != aArgArray[traverse][2])
+                    {
+                        PRInt32 scanRes = 0;
+                        
+                        /*
+                        ** Allocation overhead.
+                        */
+                        scanRes = PR_sscanf(&aArgArray[traverse][2], "%u", &globals.mOptions.mOverhead);
+                        if(1 != scanRes)
+                        {
+                            retval = __LINE__;
+                            globals.mOptions.mShowHelp = __LINE__;
+                        }
+                    }
+                    else
+                    {
+                        /*
+                        ** Help.
+                        */
+                        globals.mOptions.mShowHelp = __LINE__;
+                    }
                 }
                 break;
 
@@ -1093,19 +1120,24 @@ PRUint32 byteSize(STAllocation* aAlloc)
     }
 
     /*
-    ** Need to bump the result by our alignment.
+    ** Need to bump the result by our alignment and overhead.
     ** The idea here is that an allocation actually costs you more than you
-    **  thought (1 byte = 16 bytes).
+    **  thought.
+    **
+    ** The msvcrt malloc has an alignment of 16 with an overhead of 8.
+    ** The win32 HeapAlloc has an alignment of 8 with an overhead of 8.
     */
-    if(0 != retval && 1 < globals.mOptions.mAlignBy)
+    if(0 != retval)
     {
-        PRUint32 mod = 0;
+        PRUint32 eval = 0;
+        PRUint32 over = 0;
 
-        mod = retval % globals.mOptions.mAlignBy;
-        if(0 != mod)
+        eval = retval - 1;
+        if(0 != globals.mOptions.mAlignBy)
         {
-            retval += globals.mOptions.mAlignBy - mod;
+            over = eval % globals.mOptions.mAlignBy;
         }
+        retval = eval + globals.mOptions.mOverhead + globals.mOptions.mAlignBy - over;
     }
 
     return retval;
@@ -4699,6 +4731,7 @@ int displaySettings(void)
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMin", &globals.mOptions.mSizeMin, &changedSet, 1);
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMax", &globals.mOptions.mSizeMax, &changedSet, 1);
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mAlignBy", &globals.mOptions.mAlignBy, &changedSet, 1);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mOverhead", &globals.mOptions.mOverhead, &changedSet, 1);
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mOrderBy", &globals.mOptions.mOrderBy, &changedOrder, 1);
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMin", &globals.mOptions.mLifetimeMin, &changedSet, ST_TIMEVAL_RESOLUTION);
         getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet, ST_TIMEVAL_RESOLUTION);
@@ -4814,10 +4847,14 @@ int displaySettings(void)
     PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mSizeMax\" value=\"%u\"><br>\n", globals.mOptions.mSizeMax);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "Modify the alignment boundry of allocations to see the actual impact an allocation has on a heap;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "meaning that normally an allocation of 1 bytes actually costs more bytes depending on your heap implementation.<p>\n");
+    PR_fprintf(globals.mRequest.mFD, "Modify the alignment boundry and heap overhead of allocations to see the actual impact an allocation has on a heap;<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "meaning that normally an allocation of 1 bytes actually costs more bytes depending on your heap implementation.<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "Overhead is taken into account after allocation alignment.<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "i.e. the msvcrt malloc has an alignment of 16 with an overhead of 8 (1 byte allocation costs 24 heap bytes), the win32 HeapAlloc has an alignment of 8 with an overhead of 8 (1 byte allocation costs 16 heap bytes).<p>\n");
     PR_fprintf(globals.mRequest.mFD, "Align by?<br>\n");
     PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAlignBy\" value=\"%u\"><br>\n", globals.mOptions.mAlignBy);
+    PR_fprintf(globals.mRequest.mFD, "Overhead?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mOverhead\" value=\"%u\"><br>\n", globals.mOptions.mOverhead);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
     PR_fprintf(globals.mRequest.mFD, "Modify the seconds to target allocations of a particular lifespan/duration;<br>\n");
