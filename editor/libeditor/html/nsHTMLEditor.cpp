@@ -2475,6 +2475,119 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString, 
   return InsertHTMLWithCharsetAndContext(aInputString, aCharset, nsAutoString(), nsAutoString());
 }
 
+nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *nsrange,
+                                                  const nsString& aInputString,
+                                                  const nsString& aContextStr,
+                                                  const nsString& aInfoStr,
+                                                  nsCOMPtr<nsIDOMNode> *outFragNode,
+                                                  PRInt32 *outRangeStartHint,
+                                                  PRInt32 *outRangeEndHint)
+{
+  if (!outFragNode || !outRangeStartHint || !outRangeEndHint) 
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+  nsresult res = nsrange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
+  NS_ENSURE_SUCCESS(res, res);
+  *outFragNode = do_QueryInterface(docfrag);
+
+  res = StripFormattingNodes(*outFragNode);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // if we have context info, create a fragment for that too
+  nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
+  nsCOMPtr<nsIDOMNode> contextLeaf;
+  PRInt32 contextDepth = 0;
+  if (aContextStr.Length())
+  {
+    res = nsrange->CreateContextualFragment(aContextStr, getter_AddRefs(contextfrag));
+    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<nsIDOMNode> contextAsNode (do_QueryInterface(contextfrag));
+    res = StripFormattingNodes(contextAsNode);
+    NS_ENSURE_SUCCESS(res, res);
+    // cache the deepest leaf in the context
+    nsCOMPtr<nsIDOMNode> junk, child, tmp = contextAsNode;
+    while (tmp)
+    {
+      contextDepth++;
+      contextLeaf = tmp;
+      contextLeaf->GetFirstChild(getter_AddRefs(tmp));
+    }
+    // unite the two trees
+    contextLeaf->AppendChild(*outFragNode, getter_AddRefs(junk));
+    *outFragNode = contextAsNode;
+    // no longer have fragmentAsNode in tree
+    contextDepth--;
+  }
+  
+  // get the infoString contents
+  nsAutoString numstr1, numstr2;
+  if (aInfoStr.Length())
+  {
+    PRInt32 err, sep;
+    sep = aInfoStr.FindChar((PRUnichar)',');
+    aInfoStr.Left(numstr1, sep);
+    aInfoStr.Mid(numstr2, sep+1, -1);
+    *outRangeStartHint = numstr1.ToInteger(&err) + contextDepth;
+    *outRangeEndHint   = numstr2.ToInteger(&err) + contextDepth;
+  }
+  else
+  {
+    *outRangeStartHint = contextDepth;
+    *outRangeEndHint = contextDepth;
+  }
+  return res;
+}
+
+nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
+                                                nsCOMPtr<nsISupportsArray> *outNodeList,
+                                                PRInt32 aRangeStartHint,
+                                                PRInt32 aRangeEndHint)
+{
+  if (!outNodeList || !aFragmentAsNode) 
+    return NS_ERROR_NULL_POINTER;
+
+  // First off create a range over the portion of docFrag indicated by
+  // the range hints.
+  nsCOMPtr<nsIDOMRange> docFragRange;
+  docFragRange = do_CreateInstance(kCRangeCID);
+  nsCOMPtr<nsIDOMNode> startParent, endParent, tmp;
+  PRInt32 endOffset;
+  startParent = aFragmentAsNode;
+  while (aRangeStartHint > 0)
+  {
+    startParent->GetFirstChild(getter_AddRefs(tmp));
+    startParent = tmp;
+    aRangeStartHint--;
+    NS_ENSURE_TRUE(startParent, NS_ERROR_FAILURE);
+  }
+  endParent = aFragmentAsNode;
+  while (aRangeEndHint > 0)
+  {
+    endParent->GetLastChild(getter_AddRefs(tmp));
+    endParent = tmp;
+    aRangeEndHint--;
+    NS_ENSURE_TRUE(endParent, NS_ERROR_FAILURE);
+  }
+  nsresult res = GetLengthOfDOMNode(endParent, (PRUint32&)endOffset);
+  NS_ENSURE_SUCCESS(res, res);
+
+  res = docFragRange->SetStart(startParent, 0);
+  NS_ENSURE_SUCCESS(res, res);
+  res = docFragRange->SetEnd(endParent, endOffset);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // now use a subtree iterator over the range to create a list of nodes
+  nsTrivialFunctor functor;
+  nsDOMSubtreeIterator iter;
+  res = NS_NewISupportsArray(getter_AddRefs(*outNodeList));
+  NS_ENSURE_SUCCESS(res, res);
+  res = iter.Init(docFragRange);
+  NS_ENSURE_SUCCESS(res, res);
+  res = iter.AppendList(functor, *outNodeList);
+
+  return res;
+}
+
 
 nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputString,
                                                        const nsString& aCharset,
@@ -2518,105 +2631,19 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
     return NS_ERROR_NO_INTERFACE;
 
   // create a dom document fragment that represents the structure to paste
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  res = nsrange->CreateContextualFragment(inputString,
-                                          getter_AddRefs(docfrag));
-  NS_ENSURE_SUCCESS(res, res);
-  nsCOMPtr<nsIDOMNode> fragmentAsNode (do_QueryInterface(docfrag));
-
-  res = StripFormattingNodes(fragmentAsNode);
-  NS_ENSURE_SUCCESS(res, res);
-
-  // if we have context info, create a fragment for that too
-  nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
-  nsCOMPtr<nsIDOMNode> contextLeaf;
-  PRInt32 contextDepth = 0;
-  if (aContextStr.Length())
-  {
-    res = nsrange->CreateContextualFragment(aContextStr,
-                                          getter_AddRefs(contextfrag));
-    NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsIDOMNode> contextAsNode (do_QueryInterface(contextfrag));
-    res = StripFormattingNodes(contextAsNode);
-    NS_ENSURE_SUCCESS(res, res);
-    // cache the deepest leaf in the context
-    nsCOMPtr<nsIDOMNode> junk, child, tmp = contextAsNode;
-    while (tmp)
-    {
-      contextDepth++;
-      contextLeaf = tmp;
-      contextLeaf->GetFirstChild(getter_AddRefs(tmp));
-    }
-    // unite the two trees
-    contextLeaf->AppendChild(fragmentAsNode, getter_AddRefs(junk));
-    fragmentAsNode = contextAsNode;
-    // no longer have fragmentAsNode in tree
-    contextDepth--;
-  }
-  
-  // get the infoString contents
-  nsAutoString numstr1, numstr2;
+  nsCOMPtr<nsIDOMNode> fragmentAsNode;
   PRInt32 rangeStartHint, rangeEndHint;
-  if (aInfoStr.Length())
-  {
-    PRInt32 err, sep;
-    sep = aInfoStr.FindChar((PRUnichar)',');
-    aInfoStr.Left(numstr1, sep);
-    aInfoStr.Mid(numstr2, sep+1, -1);
-    rangeStartHint = numstr1.ToInteger(&err) + contextDepth;
-    rangeEndHint   = numstr2.ToInteger(&err) + contextDepth;
-  }
-  else
-  {
-    rangeStartHint = contextDepth;
-    rangeEndHint = contextDepth;
-  }
+  res = CreateDOMFragmentFromPaste(nsrange, inputString, aContextStr, aInfoStr, 
+                                            &fragmentAsNode, &rangeStartHint, &rangeEndHint);
+  NS_ENSURE_SUCCESS(res, res);
+
 
   // make a list of what nodes in docFrag we need to move
-  
-  // First off create a range over the portion of docFrag indicated by
-  // the range hints.
-  nsCOMPtr<nsIDOMRange> docFragRange;
-  docFragRange = do_CreateInstance(kCRangeCID);
-  nsCOMPtr<nsIDOMNode> startParent, endParent, tmp;
-  PRInt32 endOffset;
-  startParent = fragmentAsNode;
-  while (rangeStartHint > 0)
-  {
-    startParent->GetFirstChild(getter_AddRefs(tmp));
-    startParent = tmp;
-    rangeStartHint--;
-    NS_ENSURE_TRUE(startParent, NS_ERROR_FAILURE);
-  }
-  endParent = fragmentAsNode;
-  while (rangeEndHint > 0)
-  {
-    endParent->GetLastChild(getter_AddRefs(tmp));
-    endParent = tmp;
-    rangeEndHint--;
-    NS_ENSURE_TRUE(endParent, NS_ERROR_FAILURE);
-  }
-  res = GetLengthOfDOMNode(endParent, (PRUint32&)endOffset);
-  NS_ENSURE_SUCCESS(res, res);
-
-  res = docFragRange->SetStart(startParent, 0);
-  NS_ENSURE_SUCCESS(res, res);
-  res = docFragRange->SetEnd(endParent, endOffset);
-  NS_ENSURE_SUCCESS(res, res);
-
-  // now use a subtree iterator over the range to create a list of nodes
-  nsTrivialFunctor functor;
-  nsDOMSubtreeIterator iter;
   nsCOMPtr<nsISupportsArray> nodeList;
-  res = NS_NewISupportsArray(getter_AddRefs(nodeList));
+  res = CreateListOfNodesToPaste(fragmentAsNode, &nodeList, rangeStartHint, rangeEndHint);
   NS_ENSURE_SUCCESS(res, res);
-  res = iter.Init(docFragRange);
-  NS_ENSURE_SUCCESS(res, res);
-  res = iter.AppendList(functor, nodeList);
-  NS_ENSURE_SUCCESS(res, res);   
-
-  // are there any table elements in the list?
   
+  // are there any table elements in the list?  
   // node and offset for insertion
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 offsetOfNewNode;
@@ -2771,7 +2798,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
     {
       nsCOMPtr<nsISupports> isupports = listAndTableArray->ElementAt(highWaterMark);
       nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
-      nsCOMPtr<nsIDOMNode> replaceNode;
+      nsCOMPtr<nsIDOMNode> replaceNode, tmp;
       if (nsHTMLEditUtils::IsTable(curNode))
       {
         // look upward from curNode for a piece of this table
