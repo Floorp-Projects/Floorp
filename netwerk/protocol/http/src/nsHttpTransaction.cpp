@@ -423,7 +423,7 @@ nsHttpTransaction::ParseHead(char *buf,
     // this must be the first time we've been called.
     if (!mHaveStatusLine && mLineBuf.IsEmpty()) {
         // tolerate some junk before the status line
-        char *p = LocateHttpStart(buf, PR_MIN(count, 32));
+        char *p = LocateHttpStart(buf, PR_MIN(count, 8));
         if (!p) {
             mResponseHead->ParseStatusLine("");
             mHaveStatusLine = PR_TRUE;
@@ -433,7 +433,6 @@ nsHttpTransaction::ParseHead(char *buf,
         if (p > buf) {
             // skip over the junk
             *countRead = p - buf;
-            count -= *countRead;
             buf = p;
         }
     }
