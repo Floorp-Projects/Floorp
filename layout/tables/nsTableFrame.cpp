@@ -2982,6 +2982,8 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     break;
   
   case nsIReflowCommand::ReflowDirty:
+    // Problem is we don't know has changed, so assume the worst
+    InvalidateCellMap();
     InvalidateFirstPassCache();
     InvalidateColumnCache();
     InvalidateColumnWidths();
