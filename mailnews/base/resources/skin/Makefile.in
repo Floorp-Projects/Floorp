@@ -38,7 +38,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		message-mail.gif \
 		message-mail-new.gif \
 		message-mail-attach.gif \
-		message-imapdelete.gif \
+		message-mail-imapdelete.gif \
 		message-news.gif \
 		message-news-new.gif \
 		inbox.gif \
