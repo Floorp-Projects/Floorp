@@ -6,7 +6,6 @@ menubar
 
 menu, menuitem  
   {
-    color                 : #000000;
 	  vertical-align        : middle;
   }
 
@@ -14,38 +13,47 @@ menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"]
   {
-	  color                 : #999999;
+	  color                 : graytext;
   }
 
 /* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup 
   {
-    background-color      : #CCCCCC;
-    border                : 1px solid #336699;
+    background-color      : threedface;
+    border-left           : 1px solid threedface;
+    border-top            : 1px solid threedface;
+    border-right          : 1px solid threeddarkshadow;
+    border-bottom         : 1px solid threeddarkshadow;
   }
 
+.popup-internal-box
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+  }  
+  
 menupopup > menu, popup > menu,
 menupopup > menuitem, popup > menuitem
   {
-    max-width             : 250px;
-    min-width             : 125px;
-    margin-left           : 0px;
-    margin-right          : 0px;
-    margin-top            : 0px;
-    margin-bottom         : 0px;
+    max-width             : 60em; /* should move to content */
+    min-width             : 20em; /* should move to content */
+    margin                : 0px;
   }
 
 menuseparator 
   {
-    border-bottom         : 1px solid #336699; 
+    border-top            : 1px solid threedshadow;
+    border-bottom         : 1px solid threedhighlight;
     margin                : 2px 0px 2px 0px;
   }
 
 menubar > menu 
   {
-    border                : 1px solid #FFFFFF;
     padding               : 2px 3px 2px 3px;
     margin                : 2px 0px 2px 0px;
+    border                : 1px solid threedface;
   }
 
 menupopup > menu, menupopup > menuitem,
@@ -56,17 +64,18 @@ popup > menu, popup > menuitem
 
 menubar > menu[menuactive="true"] 
   {
-    border                : 1px solid #CCCCCC;
-    background-color      : #CCCCCC;
-    -moz-border-radius    : 4px;
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
   }
 
 menubar > menu[menuactive="true"][open="true"] 
   {
-    border                : 1px solid #336699;
-    border-bottom         : 1px solid #CCCCCC;
-    background-color      : #CCCCCC;
-    -moz-border-radius    : 4px 4px 0px 0px;
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-right          : 1px solid threedhighlight;
+    border-bottom         : 1px solid threedhighlight;
   }
 
 menupopup > menu[menuactive="true"],
@@ -74,10 +83,9 @@ menupopup > menuitem[menuactive="true"],
 popup > menu[menuactive="true"],
 popup > menuitem[menuactive="true"]
   {
-    background-color      : #336699;
-    color                 : #FFFFFF;
+    background-color      : highlight;
+    color                 : highlighttext;
   }
-
 
 /** 
  * Atomic sub-parts of standard menus
@@ -168,9 +176,9 @@ menuitem[checked="true"][menuactive="true"]
  **/
 .tooltip
   {
-    background-color      : #FFFFCC;
-    border                : 1px outset #FFFFCC;
-    color                 : #000000;
+    background-color      : infobackground;
+    border                : 1px outset infobackground;
+    color                 : infotext;
     font                  : smaller;
     padding               : 3px;
   }
