@@ -26,6 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 CPPSRCS		=  			\
 			TestSocketIO.cpp \
 			TestSocketInput.cpp \
+			TestSocketTransport.cpp \
 			TestFileInput.cpp \
 			nettest.cpp	\
 			$(NULL)

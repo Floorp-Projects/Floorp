@@ -24,8 +24,7 @@ PROG1 = .\$(OBJDIR)\TestFileInput.exe
 PROG2 = .\$(OBJDIR)\TestSocketInput.exe
 PROG3 = .\$(OBJDIR)\TestSocketIO.exe
 PROG4 = .\$(OBJDIR)\TestProtocols.exe
-# nettest was conflicting with the old one in dist
-PROG5 = .\$(OBJDIR)\testnet.exe
+PROG5 = .\$(OBJDIR)\TestSocketTransport.exe
 PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5)
 
 LCFLAGS=-DUSE_NSREG -GX
@@ -78,4 +77,4 @@ $(PROG3): $(OBJDIR) TestSocketIO.cpp
 
 $(PROG4): $(OBJDIR) TestProtocols.cpp
 
-$(PROG5): $(OBJDIR) nettest.cpp
+$(PROG5): $(OBJDIR) TestSocketTransport.cpp
