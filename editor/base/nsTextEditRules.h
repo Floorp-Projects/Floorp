@@ -42,17 +42,18 @@
   * 2. Selection must not be explicitly set by the rule method.  
   *    Any manipulation of Selection must be done by the editor.
   */
-class nsTextEditRules : public nsEditRules
+class nsTextEditRules : public nsIEditRules
 {
 public:
-
+  NS_DECL_ISUPPORTS
+  
               nsTextEditRules();
   virtual     ~nsTextEditRules();
 
-  // nsEditRules methods
+  // nsIEditRules methods
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
-  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection);
+  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
@@ -301,6 +302,26 @@ class nsAutoLockRulesSniffing
 };
 
 
+
+/***************************************************************************
+ * stack based helper class for turning on/off the edit listener.
+ */
+class nsAutoLockListener
+{
+  public:
+  
+  nsAutoLockListener(PRBool *enabled) : mEnabled(enabled)
+                 {if (mEnabled) { mOldState=*mEnabled; *mEnabled = PR_FALSE;}}
+  ~nsAutoLockListener() 
+                 {if (mEnabled) *mEnabled = mOldState;}
+  
+  protected:
+  PRBool *mEnabled;
+  PRBool mOldState;
+};
+
+
+nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
 
 #endif //nsTextEditRules_h__
 

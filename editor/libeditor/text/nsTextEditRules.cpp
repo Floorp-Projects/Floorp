@@ -51,6 +51,17 @@ static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
     return NS_OK;       \
   };
 
+
+nsresult
+NS_NewTextEditRules(nsIEditRules** aInstancePtrResult)
+{
+  nsTextEditRules * rules = new nsTextEditRules();
+  if (rules)
+    return rules->QueryInterface(NS_GET_IID(nsIEditRules), (void**) aInstancePtrResult);
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+
 /********************************************************
  *  Constructor/Destructor 
  ********************************************************/
@@ -62,12 +73,21 @@ nsTextEditRules::nsTextEditRules()
 , mLockRulesSniffing(PR_FALSE)
 , mTheAction(0)
 {
+  NS_INIT_REFCNT();
 }
 
 nsTextEditRules::~nsTextEditRules()
 {
    // do NOT delete mEditor here.  We do not hold a ref count to mEditor.  mEditor owns our lifespan.
 }
+
+/********************************************************
+ *  XPCOM Cruft
+ ********************************************************/
+
+NS_IMPL_ADDREF(nsTextEditRules)
+NS_IMPL_RELEASE(nsTextEditRules)
+NS_IMPL_QUERY_INTERFACE1(nsTextEditRules, nsIEditRules)
 
 
 /********************************************************
@@ -156,7 +176,7 @@ nsTextEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
 
 
 NS_IMETHODIMP
-nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection)
+nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
 {
   if (mLockRulesSniffing) return NS_OK;
   

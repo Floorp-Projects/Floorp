@@ -23,6 +23,11 @@
 #ifndef nsEditRules_h__
 #define nsEditRules_h__
 
+#define NS_IEDITRULES_IID \
+{ /* a6cf911b-15b3-11d2-932e-00805f8add32 */ \
+0xa6cf911b, 0x15b3, 0x11d2, \
+{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+
 class nsHTMLEditor;
 class nsIDOMSelection;
 
@@ -40,20 +45,21 @@ class nsRulesInfo
   int action;
 };
 
-MOZ_DECL_CTOR_COUNTER(nsEditRules);
-
 /***************************************************************************
  * Interface of editing rules.
  *  
  */
-class nsEditRules
+class nsIEditRules : public nsISupports
 {
 public:
-  nsEditRules()          { MOZ_COUNT_CTOR(nsEditRules); }
-  virtual ~nsEditRules() { MOZ_COUNT_DTOR(nsEditRules); }
+  static const nsIID& GetIID() { static nsIID iid = NS_IEDITRULES_IID; return iid; }
+  
+//Interfaces for addref and release and queryinterface
+//NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsIEditRules
+
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags)=0;
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
-  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection)=0;
+  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled)=0;
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
   NS_IMETHOD GetFlags(PRUint32 *aFlags)=0;

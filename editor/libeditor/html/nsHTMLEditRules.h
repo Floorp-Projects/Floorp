@@ -33,19 +33,41 @@ class nsISupportsArray;
 class nsVoidArray;
 class nsIDOMElement;
 
-class nsHTMLEditRules : public nsTextEditRules
+class nsHTMLEditRules : public nsTextEditRules, nsIEditActionListener
 {
 public:
 
+  NS_DECL_ISUPPORTS_INHERITED
+  
             nsHTMLEditRules();
   virtual   ~nsHTMLEditRules();
 
-  // nsEditRules methods
-  NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
-  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection);
+
+  // nsIEditRules methods
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags);
+  NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection);
+  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
+
+  // nsIEditActionListener methods
+  
+  NS_IMETHOD WillCreateNode(const nsString& aTag, nsIDOMNode *aParent, PRInt32 aPosition);
+  NS_IMETHOD DidCreateNode(const nsString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult);
+  NS_IMETHOD WillInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition);
+  NS_IMETHOD DidInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult);
+  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild);
+  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult);
+  NS_IMETHOD WillSplitNode(nsIDOMNode *aExistingRightNode, PRInt32 aOffset);
+  NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode, PRInt32 aOffset, nsIDOMNode *aNewLeftNode, nsresult aResult);
+  NS_IMETHOD WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent);
+  NS_IMETHOD DidJoinNodes(nsIDOMNode  *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent, nsresult aResult);
+  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString);
+  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString, nsresult aResult);
+  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
+  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult);
+  NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection);
+  NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection);
 
 protected:
 
@@ -138,67 +160,19 @@ protected:
   nsresult ConvertWhitespace(const nsString & inString, nsString & outString);
   nsresult ConfirmSelectionInBody();
 
-// removed from use:
-#if 0
-  nsresult AddTrailerBR(nsIDOMNode *aNode);
-  nsresult CreateMozDiv(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outDiv);
-#endif
-
-// data members
-protected:
-  nsCOMPtr<nsIEditActionListener>   mListener;
-  nsCOMPtr<nsIDOMRange> mDocChangeRange;
-  
-// friends
-  friend class nsHTMLEditListener;
-  friend nsresult NS_NewEditListener(nsIEditActionListener **aResult, 
-                                     nsHTMLEditor *htmlEditor,
-                                     nsHTMLEditRules *htmlRules);
-
-};
-
-class nsHTMLEditListener : public nsIEditActionListener
-{
-public:
-  nsHTMLEditListener(nsHTMLEditor *htmlEditor, nsHTMLEditRules *htmlRules);
-  virtual ~nsHTMLEditListener();
-  NS_DECL_ISUPPORTS
- 
-  // nsIEditActionListener methods
-  
-  NS_IMETHOD WillCreateNode(const nsString& aTag, nsIDOMNode *aParent, PRInt32 aPosition);
-  NS_IMETHOD DidCreateNode(const nsString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult);
-  NS_IMETHOD WillInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition);
-  NS_IMETHOD DidInsertNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aPosition, nsresult aResult);
-  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild);
-  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult);
-  NS_IMETHOD WillSplitNode(nsIDOMNode *aExistingRightNode, PRInt32 aOffset);
-  NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode, PRInt32 aOffset, nsIDOMNode *aNewLeftNode, nsresult aResult);
-  NS_IMETHOD WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent);
-  NS_IMETHOD DidJoinNodes(nsIDOMNode  *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent, nsresult aResult);
-  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString);
-  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString, nsresult aResult);
-  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
-  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength, nsresult aResult);
-  NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection);
-  NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection);
-
-protected:
-
-  nsresult MakeRangeFromNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMRange> *outRange);
-  nsresult MakeRangeFromTextOffsets(nsIDOMCharacterData *inNode, 
-                                    PRInt32 inStart, 
-                                    PRInt32 inEnd, 
-                                    nsCOMPtr<nsIDOMRange> *outRange);
-  nsresult MakeCollapsedRange(nsIDOMNode *inNode, PRInt32 inOffset, nsCOMPtr<nsIDOMRange> *outRange);
   PRBool IsDescendantOfBody(nsIDOMNode *inNode) ;
-  
+
 // data members
-  nsHTMLEditor     *mEditor;
-  nsHTMLEditRules  *mRules;
-  nsCOMPtr<nsIDOMNode> mBody;
-  PRUint32          mJoinOffset;  // need to remember an int across willJoin/didJoin...
+protected:
+  nsCOMPtr<nsIDOMRange> mDocChangeRange;
+  PRBool                mListenerEnabled;
+  nsCOMPtr<nsIDOMRange> mUtilRange;
+  nsCOMPtr<nsIDOMNode>  mBody;
+  PRUint32              mJoinOffset;  // need to remember an int across willJoin/didJoin...
+  
 };
+
+nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);
 
 #endif //nsHTMLEditRules_h__
 

@@ -246,9 +246,6 @@ public:
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
-  /** Inherited from nsEditor with special cases for some html nodes **/
-  NS_IMETHOD InsertFormattingForNode(nsIDOMNode* aNode);
-
   NS_IMETHOD Undo(PRUint32 aCount);
   NS_IMETHOD Redo(PRUint32 aCount);
 
@@ -276,7 +273,7 @@ public:
 
   /** All editor operations which alter the doc should be followed
    *  with a call to EndOperation, naming the action and direction */
-  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection, PRBool aSetSelection);
+  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
 
   /** returns PR_TRUE if aParent can contain a child of type aTag */
   PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
@@ -292,7 +289,7 @@ public:
 
 protected:
 
-  virtual void  InitRules();
+  NS_IMETHOD  InitRules();
 
   /** install the event listeners for the editor 
     * used to be part of Init, but now broken out into a separate method
@@ -336,6 +333,10 @@ protected:
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
                       nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect = eNone);
+  NS_IMETHOD JoeCreateBR(nsCOMPtr<nsIDOMNode> *aInOutParent, 
+                         PRInt32 *aInOutOffset, 
+                         nsCOMPtr<nsIDOMNode> *outBRNode, 
+                         EDirection aSelect);
   NS_IMETHOD InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode);
 
 // Table Editing (implemented in nsTableEditor.cpp)
@@ -582,17 +583,59 @@ protected:
   nsresult RelativeFontChangeOnNode( PRInt32 aSizeChange, 
                                      nsIDOMNode *aNode);
 
-  /* helper routines for node/parent manipulations */
-  nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
-  nsresult RemoveContainer(nsIDOMNode *inNode);
-  nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
+  /* helper routines for inline style */
+  nsresult SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode, 
+                                        PRInt32 aStartOffset,
+                                        PRInt32 aEndOffset,
+                                        nsIAtom *aProperty, 
+                                        const nsString *aAttribute,
+                                        const nsString *aValue);
+  nsresult SetInlinePropertyOnNode( nsIDOMNode *aNode,
+                                    nsIAtom *aProperty, 
+                                    const nsString *aAttribute,
+                                    const nsString *aValue);
+
+  nsresult PromoteInlineRange(nsIDOMRange *inRange);
+  nsresult SplitStyleAboveRange(nsIDOMRange *aRange, 
+                                nsIAtom *aProperty, 
+                                const nsString *aAttribute);
+  nsresult SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
+                                PRInt32 *aOffset,
+                                nsIAtom *aProperty, 
+                                const nsString *aAttribute);
+  nsresult RemoveStyleInside(nsIDOMNode *aNode, 
+                             nsIAtom *aProperty, 
+                             const nsString *aAttribute, 
+                             PRBool aChildrenOnly = PR_FALSE);
+
+  PRBool HasAttr(nsIDOMNode *aNode, const nsString *aAttribute);
+  PRBool HasAttrVal(nsIDOMNode *aNode, const nsString *aAttribute, const nsString *aValue);
+  PRBool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
+  PRBool IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
+  PRBool IsOnlyAttribute(nsIDOMNode *aElement, const nsString *aAttribute);
+  PRBool HasMatchingAttributes(nsIDOMNode *aNode1, 
+                               nsIDOMNode *aNode2);
+
+  nsresult GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
+
+  nsresult IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst);
+  nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
+  nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
+  nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
 
   
 // Data members
 protected:
 
-  TypeInState*     mTypeInState;
-  nsEditRules*     mRules;
+  TypeInState*                  mTypeInState;
+  nsCOMPtr<nsIEditRules>        mRules;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
   nsCOMPtr<nsIDOMEventListener> mTextListenerP;

@@ -100,11 +100,41 @@ class nsSelectionState
     nsresult RestoreSelection(nsIDOMSelection *aSel);
     PRBool   IsCollapsed();
     PRBool   IsEqual(nsSelectionState *aSelState);
-
+    void     MakeEmpty();
+    PRBool   IsEmpty();
+    
+    // editor selection gravity routines.  Note that we can't always depend on
+    // DOM Range gravity to do what we want to the "real" selection.  For instance,
+    // if you move a node, that corresponds to deleting it and reinserting it.
+    // DOM Range gravity will promote the selection out of the node on deletion,
+    // which is not what you want if you know you are reinserting it.
+    nsresult SelAdjCreateNode(nsIDOMNode *aParent, PRInt32 aPosition);
+    nsresult SelAdjInsertNode(nsIDOMNode *aParent, PRInt32 aPosition);
+    nsresult SelAdjDeleteNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset);
+    nsresult SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsIDOMNode *aNewLeftNode);
+    nsresult SelAdjJoinNodes(nsIDOMNode *aLeftNode, 
+                             nsIDOMNode *aRightNode, 
+                             nsIDOMNode *aParent, 
+                             PRInt32 aOffset,
+                             PRInt32 aOldLeftNodeLength);
+    nsresult SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, const nsString &aString);
+    nsresult SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PRInt32 aLength);
+    // the following gravity routines need will/did sandwiches, because the other gravity
+    // routines will be called inside of these sandwiches, but should be ignored.
+    nsresult WillReplaceContainer();
+    nsresult DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode);
+    nsresult WillRemoveContainer();
+    nsresult DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset, PRUint32 aNodeOrigLen);
+    nsresult WillInsertContainer();
+    nsresult DidInsertContainer();
+    nsresult WillMoveNode();
+    nsresult DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNode *aNewParent, PRInt32 aNewOffset);
+    
     nsVoidArray mArray;
+    PRBool mLock;
 };
 
-/** implementation of an editor object.  it will be the controler/focal point 
+/** implementation of an editor object.  it will be the controller/focal point 
  *  for the main editor services. i.e. the GUIManager, publishing, transaction 
  *  manager, event interfaces. the idea for the event interfaces is to have them 
  *  delegate the actual commands to the editor independent of the XPFE implementation.
@@ -237,7 +267,7 @@ public:
   NS_IMETHOD InsertNoneditableTextNode(nsIDOMNode* aParent,
                                        PRInt32 aOffset,
                                        nsString& aStr);
-  NS_IMETHOD InsertFormattingForNode(nsIDOMNode* aNode);
+  NS_IMETHOD MarkNodeDirty(nsIDOMNode* aNode);
 
 
   /* output */
@@ -274,8 +304,28 @@ public:
 
   
   NS_IMETHOD InsertTextImpl(const nsString& aStringToInsert);
+  NS_IMETHOD JoeInsertTextImpl(const nsString& aStringToInsert, 
+                               nsCOMPtr<nsIDOMNode> *aInOutNode, 
+                               PRInt32 *aInOutOffset,
+                               nsIDOMDocument *aDoc);
+  NS_IMETHOD JoeInsertTextIntoTextNodeImpl(const nsString& aStringToInsert, 
+                                           nsIDOMCharacterData *aTextNode, 
+                                           PRInt32 aOffset);
   NS_IMETHOD DeleteSelectionImpl(EDirection aAction);
 
+  /* helper routines for node/parent manipulations */
+  nsresult ReplaceContainer(nsIDOMNode *inNode, 
+                            nsCOMPtr<nsIDOMNode> *outNode, 
+                            const nsString &aNodeType,
+                            const nsString *aAttribute = nsnull,
+                            const nsString *aValue = nsnull);
+  nsresult RemoveContainer(nsIDOMNode *inNode);
+  nsresult InsertContainerAbove(nsIDOMNode *inNode, 
+                                nsCOMPtr<nsIDOMNode> *outNode, 
+                                const nsString &aNodeType,
+                                const nsString *aAttribute = nsnull,
+                                const nsString *aValue = nsnull);
+  nsresult MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset);
 
 protected:
 
@@ -423,7 +473,7 @@ public:
 
   /** All editor operations which alter the doc should be followed
    *  with a call to EndOperation, naming the action and direction */
-  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection, PRBool aSetSelection);
+  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
 
   /** return the string that represents text nodes in the content tree */
   static nsresult GetTextNodeTag(nsString& aOutString);
@@ -702,7 +752,8 @@ protected:
   nsWeakPtr       mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
   nsIAtom        *mPlaceHolderName;    // name of placeholder transaction
   PRInt32         mPlaceHolderBatch;   // nesting count for batching
-  nsSelectionState *mSelState;          // saved selection state for placeholder txn batching
+  nsSelectionState *mSelState;         // saved selection state for placeholder txn batching
+  nsSelectionState *mSavedSel;         // cached selection for nsAutoSelectionReset
   PRBool          mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   nsCOMPtr<nsIDOMElement> mBodyElement;    // cached body node
   //
@@ -718,7 +769,6 @@ protected:
   nsCOMPtr<nsISupportsArray>    mDocStateListeners;
 
   PRInt8                        mDocDirtyState;		// -1 = not initialized
-
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
   nsCOMPtr<nsIDTD> mDTD;
 
@@ -726,6 +776,7 @@ protected:
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   friend class nsAutoTxnsConserveSelection;
+  friend class nsAutoSelectionReset;
 };
 
 
