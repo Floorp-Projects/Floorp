@@ -381,54 +381,57 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 
 //////////////////////////////////////////////////////////////////
 //
-// Turning TRACE_EVENTS on will cause printfs for most
-// events that are dispatched.
+// Turning TRACE_EVENTS on will cause printfs for all
+// mouse events that are dispatched.
 //
-// Motion events are extra noisy so they get their own
-// define: TRACE_EVENTS_MOTION
+// These are extra noisy, and thus have their own switch:
+//
+// NS_MOUSE_MOVE
+// NS_PAINT
+// NS_MOUSE_ENTER, NS_MOUSE_EXIT
 //
 //////////////////////////////////////////////////////////////////
 
 #undef TRACE_EVENTS
 #undef TRACE_EVENTS_MOTION
+#undef TRACE_EVENTS_PAINT
+#undef TRACE_EVENTS_CROSSING
 
 #ifdef DEBUG
 void
 nsWindow::DebugPrintEvent(nsGUIEvent &   aEvent,
-                          char *         sMessage,
-                          HWND           aWnd,
-                          PRBool         aPrintCoords)
+                          HWND           aWnd)
 {
-  nsString eventName = "UNKNOWN";
-
 #ifndef TRACE_EVENTS_MOTION
-   if (aEvent.message == NS_MOUSE_MOVE)
-   {
-     return;
-   }
+  if (aEvent.message == NS_MOUSE_MOVE)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_PAINT
+  if (aEvent.message == NS_PAINT)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_CROSSING
+  if (aEvent.message == NS_MOUSE_ENTER || aEvent.message == NS_MOUSE_EXIT)
+  {
+    return;
+  }
 #endif
 
   static int sPrintCount=0;
 
-  printf("%4d %-14s(this=%-8p , HWND=%-8p",
+  printf("%4d %-26s(this=%-8p , HWND=%-8p",
          sPrintCount++,
-         sMessage,
+         (const char *) nsAutoCString(GuiEventToString(aEvent)),
          this,
          aWnd);
          
-  printf(" , event=%-16s",
-         (const char *) nsAutoCString(GuiEventToString(aEvent)));
-
-  if (aPrintCoords)
-  {
-    printf(" , x=%-3d, y=%d)",
-           aEvent.point.x,
-           aEvent.point.y);
-  }
-  else
-  {
-    printf(")");
-  }
+  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
 
   printf("\n");
 }
@@ -507,7 +510,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 PRBool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
 {
 #ifdef TRACE_EVENTS
-  DebugPrintEvent(*event,"Something",mWnd,PR_TRUE);
+  DebugPrintEvent(*event,mWnd);
 #endif
 
   nsEventStatus status;
