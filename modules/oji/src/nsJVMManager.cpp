@@ -269,6 +269,22 @@ nsJVMManager::InitLiveConnectClasses(JSContext* context, JSObject* globalObject)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_METHOD
+nsJVMManager::WrapJavaObject(JSContext* context, jobject javaObject, JSObject* *outJSObject)
+{
+	if (NULL == outJSObject) {
+		return NS_ERROR_NULL_POINTER; 
+	}
+	jsval val;
+	if (JSJ_ConvertJavaObjectToJSValue(context, javaObject, &val)) {
+		*outJSObject = JSVAL_TO_OBJECT(val);
+		return NS_OK;
+	}
+	return NS_ERROR_FAILURE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_METHOD
 nsJVMManager::GetClasspathAdditions(const char* *result)
 {
     if (fClassPathAdditionsString != NULL)

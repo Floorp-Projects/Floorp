@@ -24,7 +24,12 @@
 #ifndef nsILiveConnectManager_h___
 #define nsILiveConnectManager_h___
 
+#ifndef nsISupports_h___
 #include "nsISupports.h"
+#endif
+#ifndef JNI_H
+#include "jni.h"
+#endif
 
 // {d20c8081-cbcb-11d2-a5a0-e884aed9c9fc}
 #define NS_ILIVECONNECTMANAGER_IID \
@@ -65,6 +70,12 @@ public:
      */
 	NS_IMETHOD
     InitLiveConnectClasses(JSContext* context, JSObject* globalObject) = 0;
+    
+    /**
+     * Creates a JavaScript wrapper for a Java object.
+     */
+     NS_IMETHOD
+     WrapJavaObject(JSContext* context, jobject javaObject, JSObject* *outJSObject) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
