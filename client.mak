@@ -67,7 +67,7 @@ CVSCO_NETWORK = $(CVSCO)
 ## Rules for pulling the source from the cvs repository
 ############################################################
 
-pull_and_build_all: pull_seamonkey build_seamonkey
+pull_and_build_all: pull_all build_all
 
 pull_all: pull_seamonkey
 
