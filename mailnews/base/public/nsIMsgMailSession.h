@@ -1,79 +1,58 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+/*
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgMailSession.idl
  */
 
-#ifndef nsIMsgMailSession_h___
-#define nsIMsgMailSession_h___
+#ifndef __gen_nsIMsgMailSession_h__
+#define __gen_nsIMsgMailSession_h__
 
-#include "nsISupports.h"
+#include "nsISupports.h" /* interface nsISupports */
+#include "nsIMsgIncomingServer.h" /* interface nsIMsgIncomingServer */
+#include "nsIMsgSignature.h" /* interface nsIMsgSignature */
+#include "nsIMsgIdentity.h" /* interface nsIMsgIdentity */
+#include "nsIMsgVCard.h" /* interface nsIMsgVCard */
+#include "nsIFolderListener.h" /* interface nsIFolderListener */
+#include "nsrootidl.h" /* interface nsrootidl */
+#include "nsIMsgAccount.h" /* interface nsIMsgAccount */
+#include "nsIMsgAccountManager.h" /* interface nsIMsgAccountManager */
 
-/* D5124440-D59E-11d2-806A-006008128C4E */
+/* starting interface:    nsIMsgMailSession */
 
-#define NS_IMSGMAILSESSION_IID							\
-{ 0xd5124440, 0xd59e, 0x11d2,							\
-    { 0x80, 0x6a, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
+/* {D5124440-D59E-11d2-806A-006008128C4E} */
+#define NS_IMSGMAILSESSION_IID_STR "D5124440-D59E-11d2-806A-006008128C4E"
+#define NS_IMSGMAILSESSION_IID \
+  {0xD5124440, 0xD59E, 0x11d2, \
+    { 0x80, 0x6A, 0x00, 0x60, 0x08, 0x12, 0x8C, 0x4E }}
 
-/* D5124441-D59E-11d2-806A-006008128C4E */
-#define NS_MSGMAILSESSION_CID							\
-{ 0xd5124441, 0xd59e, 0x11d2,							\
-    { 0x80, 0x6a, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
+class nsIMsgMailSession : public nsISupports {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGMAILSESSION_IID)
 
-///////////////////////////////////////////////////////////////////////////////////
-// The mail session is a replacement for the old 4.x MSG_Master object. It contains
-// mail session generic information such as the user's current mail identity, ....
-// I'm starting this off as an empty interface and as people feel they need to
-// add more information to it, they can. I think this is a better approach than 
-// trying to port over the old MSG_Master in its entirety as that had a lot of 
-// cruft in it....
-//////////////////////////////////////////////////////////////////////////////////
+  /* readonly attribute nsIMsgIdentity currentIdentity; */
+  NS_IMETHOD GetCurrentIdentity(nsIMsgIdentity * *aCurrentIdentity) = 0;
 
-#include "nsIMsgIdentity.h"
-#include "nsIMsgIncomingServer.h"
-#include "nsIMsgAccountManager.h"
-#include "nsIFolder.h"
-#include "nsIFolderListener.h"
+  /* readonly attribute nsIMsgIncomingServer currentServer; */
+  NS_IMETHOD GetCurrentServer(nsIMsgIncomingServer * *aCurrentServer) = 0;
 
-class nsIMsgMailSession : public nsISupports
-{
-public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IMSGMAILSESSION_IID; return iid; }
+  /* readonly attribute nsIMsgAccountManager accountManager; */
+  NS_IMETHOD GetAccountManager(nsIMsgAccountManager * *aAccountManager) = 0;
 
-	///////////////////////////////////////////////////////////////////////////////////
-	// The user's current identity is used to abstract out information such as the
-	// user name, pwd, mail server to use, etc....
-	//////////////////////////////////////////////////////////////////////////////////
-
-	NS_IMETHOD GetCurrentIdentity(nsIMsgIdentity ** aIdentity) = 0;
-    NS_IMETHOD GetCurrentServer(nsIMsgIncomingServer* *aServer) = 0;
-    NS_IMETHOD GetAccountManager(nsIMsgAccountManager* *aAccountManager) = 0;
-
-	///////////////////////////////////////////////////////////////////////////////////
-	// Some objects want to get folder notifications from every folder.  Instead of forcing them
-	// to register with every folder, this is a central place where they can register and get all
-	// notifications.
-	//////////////////////////////////////////////////////////////////////////////////////
+  /* void AddFolderListener (in nsIFolderListener listener); */
   NS_IMETHOD AddFolderListener(nsIFolderListener *listener) = 0;
-  NS_IMETHOD RemoveFolderListener(nsIFolderListener *listener) = 0;
-	NS_IMETHOD NotifyFolderItemPropertyChanged(nsISupports *item, char *property, char* oldValue, char* newValue) = 0;
-	NS_IMETHOD NotifyFolderItemPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
-												   PRUint32 newValue) = 0;
-	NS_IMETHOD NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item)= 0;
-	NS_IMETHOD NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item)= 0;
 
+  /* void RemoveFolderListener (in nsIFolderListener listener); */
+  NS_IMETHOD RemoveFolderListener(nsIFolderListener *listener) = 0;
+
+  /* void NotifyFolderItemPropertyChanged (in nsISupports item, in string property, in string oldValue, in string newValue); */
+  NS_IMETHOD NotifyFolderItemPropertyChanged(nsISupports *item, const char *property, const char *oldValue, const char *newValue) = 0;
+
+  /* void NotifyFolderItemPropertyFlagChanged (in nsISupports item, in string property, in unsigned long oldValue, in unsigned long newValue); */
+  NS_IMETHOD NotifyFolderItemPropertyFlagChanged(nsISupports *item, const char *property, PRUint32 oldValue, PRUint32 newValue) = 0;
+
+  /* void NotifyFolderItemAdded (in nsIFolder folder, in nsISupports item); */
+  NS_IMETHOD NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item) = 0;
+
+  /* void NotifyFolderItemDeleted (in nsIFolder folder, in nsISupports item); */
+  NS_IMETHOD NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item) = 0;
 };
 
-#endif /* nsIMsgMailSession_h___ */
+#endif /* __gen_nsIMsgMailSession_h__ */

@@ -120,7 +120,11 @@ NS_IMETHODIMP nsMsgMailSession::RemoveFolderListener(nsIFolderListener * listene
 
 }
 
-NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item, char *property, char* oldValue, char* newValue)
+NS_IMETHODIMP
+nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *item,
+                                                  const char *property,
+                                                  const char* oldValue,
+                                                  const char* newValue)
 {
 	PRInt32 i;
 	for(i = 0; i < mListeners->Count(); i++)
@@ -134,8 +138,11 @@ NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemPropertyChanged(nsISupports *ite
 
 }
 
-NS_IMETHODIMP nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item, char *property,
-																	PRUint32 oldValue, PRUint32 newValue)
+NS_IMETHODIMP
+nsMsgMailSession::NotifyFolderItemPropertyFlagChanged(nsISupports *item,
+                                                      const char *property,
+                                                      PRUint32 oldValue,
+                                                      PRUint32 newValue)
 {
 	PRInt32 i;
 	for(i = 0; i < mListeners->Count(); i++)

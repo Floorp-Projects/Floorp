@@ -48,8 +48,8 @@ public:
 
 	NS_IMETHOD AddFolderListener(nsIFolderListener *listener);
 	NS_IMETHOD RemoveFolderListener(nsIFolderListener *listener);
-	NS_IMETHOD NotifyFolderItemPropertyChanged(nsISupports *item, char *property, char* oldValue, char* newValue);
-	NS_IMETHOD NotifyFolderItemPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
+	NS_IMETHOD NotifyFolderItemPropertyChanged(nsISupports *item, const char *property, const char* oldValue, const char* newValue);
+	NS_IMETHOD NotifyFolderItemPropertyFlagChanged(nsISupports *item, const char *property, PRUint32 oldValue,
 												   PRUint32 newValue);
 	NS_IMETHOD NotifyFolderItemAdded(nsIFolder *folder, nsISupports *item);
 	NS_IMETHOD NotifyFolderItemDeleted(nsIFolder *folder, nsISupports *item);
