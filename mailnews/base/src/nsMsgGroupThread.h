@@ -64,6 +64,7 @@ protected:
   nsresult ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeAnnouncer *announcer);
   nsresult ChangeUnreadChildCount(PRInt32 delta);
   nsresult GetChildHdrForKey(nsMsgKey desiredKey, nsIMsgDBHdr **result, PRInt32 *resultIndex);
+  PRUint32 NumRealChildren();
 
   nsMsgKey        m_threadKey; 
   PRUint32        m_numUnreadChildren;	
@@ -71,6 +72,7 @@ protected:
   nsMsgKey        m_threadRootKey;
   PRUint32        m_newestMsgDate;
   nsMsgKeyArray   m_keys;
+  PRBool          m_dummy; // top level msg is a dummy, e.g., grouped by age.
   nsCOMPtr <nsIMsgDatabase> m_db; // should we make a weak ref or just a ptr?
 };
 

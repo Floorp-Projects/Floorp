@@ -53,6 +53,7 @@ void nsMsgGroupThread::Init()
   m_numUnreadChildren = 0;	
   m_flags = 0;
   m_newestMsgDate = 0;
+  m_dummy = PR_FALSE;
 }
 
 
@@ -104,10 +105,14 @@ NS_IMETHODIMP nsMsgGroupThread::GetSubject(char **result)
 NS_IMETHODIMP nsMsgGroupThread::GetNumChildren(PRUint32 *aNumChildren)
 {
   NS_ENSURE_ARG_POINTER(aNumChildren);
-  *aNumChildren = m_keys.GetSize();
+  *aNumChildren = m_keys.GetSize(); // - ((m_dummy) ? 1 : 0);
   return NS_OK;
 }
 
+PRUint32 nsMsgGroupThread::NumRealChildren()
+{
+  return m_keys.GetSize() - ((m_dummy) ? 1 : 0);
+}
 
 NS_IMETHODIMP nsMsgGroupThread::GetNumUnreadChildren (PRUint32 *aNumUnreadChildren)
 {
@@ -163,31 +168,33 @@ nsresult nsMsgGroupThread::AddMsgHdrInDateOrder(nsIMsgDBHdr *child)
     nsCOMPtr <nsIMsgDBHdr> topLevelHdr;
     PRTime newHdrDate;
     PRTime topLevelHdrDate;
+    PRBool done = PR_FALSE;
 
     child->GetDate(&newHdrDate);
     nsCOMPtr <nsIMsgDBHdr> curHdr;
-    for (PRUint32 childIndex = 0; childIndex < m_keys.GetSize(); childIndex++)
+    for (PRUint32 childIndex = m_keys.GetSize() - 1; !done && !keyAdded; childIndex--)
     {
-      nsMsgKey msgKey;
       PRTime curHdrDate;
       
       ret = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
       if (NS_SUCCEEDED(ret) && curHdr)
       {
         curHdr->GetDate(&curHdrDate);
-        if (LL_CMP(newHdrDate, <, curHdrDate))
+        if (LL_CMP(newHdrDate, >, curHdrDate))
         {
-          if (!childIndex)
-            m_threadRootKey = newHdrKey;
-          m_keys.InsertAt(childIndex, newHdrKey);
+          m_keys.InsertAt(childIndex + 1, newHdrKey);
           keyAdded = PR_TRUE;
           break;
         }
       }
+      done = !childIndex;
     }
   }
   if (!keyAdded)
-    m_keys.Add(newHdrKey);
+  {
+    m_keys.InsertAt(0, newHdrKey);
+    m_threadRootKey = newHdrKey;
+  }
   return ret;
 }
 

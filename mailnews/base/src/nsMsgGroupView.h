@@ -34,6 +34,8 @@
 #include "nsMsgThreadedDBView.h"
 #include "nsHashtable.h"
 
+class nsMsgGroupThread;
+
 class nsMsgGroupView : public nsMsgThreadedDBView
 {
 public:
@@ -50,13 +52,20 @@ public:
   NS_IMETHOD OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUint32 aOldFlags, 
                                       PRUint32 aNewFlags, nsIDBChangeListener *aInstigator);
 
+  NS_IMETHOD LoadMessageByViewIndex(nsMsgViewIndex aViewIndex);
+  NS_IMETHOD GetCellProperties(PRInt32 aRow, nsITreeColumn *aCol, nsISupportsArray *aProperties);
   NS_IMETHOD GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue);
 
 protected:
+  nsMsgGroupThread *AddHdrToThread(nsIMsgDBHdr *msgHdr);
   nsHashKey *AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr); // caller must delete
-  virtual nsresult GetThreadContainingIndex(nsMsgViewIndex index, nsIMsgThread **thread);
+  nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool /*ensureListed*/);
   virtual nsresult GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **pThread);
   virtual PRInt32 FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);
+  nsMsgViewIndex ThreadIndexOfMsg(nsMsgKey msgKey, 
+                                            nsMsgViewIndex msgIndex = nsMsgViewIndex_None,
+                                            PRInt32 *pThreadCount = NULL,
+                                            PRUint32 *pFlags = NULL);
 
   nsHashtable  m_groupsTable;
 };

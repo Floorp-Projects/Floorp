@@ -14,11 +14,6 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
- * the Initial Developer. All Rights Reserved.
- *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -111,7 +106,6 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
       break;
     case nsMsgViewSortType::byDate:
     {
-      PRUint32 ageInDays;
       PRUint32 ageBucket;
       PRTime dateOfMsg;
 	    
@@ -189,6 +183,54 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
   return nsnull;
 }
 
+nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
+{
+  nsMsgKey msgKey;
+  PRUint32 msgFlags;
+  msgHdr->GetMessageKey(&msgKey);
+  msgHdr->GetFlags(&msgFlags);
+  nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
+//  if (m_sortType == nsMsgViewSortType::byDate)
+//    msgKey = ((nsPRUint32Key *) hashKey)->GetValue();
+  nsMsgGroupThread *foundThread = nsnull;
+  foundThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
+  PRBool newThread = !foundThread;
+  nsMsgViewIndex viewIndexOfThread;
+  if (!foundThread)
+  {
+    foundThread = new nsMsgGroupThread(m_db);
+    m_groupsTable.Put(hashKey, foundThread);
+    foundThread->AddRef();
+    if (m_sortType == nsMsgViewSortType::byDate)
+      foundThread->m_dummy = PR_TRUE;
+
+    nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
+    if (insertIndex == nsMsgViewIndex_None)
+      insertIndex = m_keys.GetSize();
+    m_keys.InsertAt(insertIndex, msgKey);
+    m_flags.InsertAt(insertIndex, msgFlags | MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED);
+    m_levels.InsertAt(insertIndex, 0, 1);
+    // if grouped by date, insert dummy header for "age"
+    if (m_sortType == nsMsgViewSortType::byDate)
+    {
+      foundThread->m_keys.InsertAt(0, msgKey/* nsMsgKey_None */);
+      foundThread->m_threadKey = ((nsPRUint32Key *) hashKey)->GetValue();
+    }
+  }
+  else
+  {
+    viewIndexOfThread = GetIndexOfFirstDisplayedKeyInThread(foundThread);
+  }
+  delete hashKey;
+  if (foundThread)
+    foundThread->AddChild(msgHdr, nsnull, PR_FALSE, nsnull /* announcer */);
+  // check if new hdr became thread root
+  if (!newThread && foundThread->m_keys[0] == msgKey)
+    m_keys.SetAt(viewIndexOfThread, msgKey);
+
+  return foundThread;
+}
+
 NS_IMETHODIMP nsMsgGroupView::OpenWithHdrs(nsISimpleEnumerator *aHeaders, nsMsgViewSortTypeValue aSortType, 
                                         nsMsgViewSortOrderValue aSortOrder, nsMsgViewFlagsTypeValue aViewFlags, 
                                         PRInt32 *aCount)
@@ -214,36 +256,11 @@ NS_IMETHODIMP nsMsgGroupView::OpenWithHdrs(nsISimpleEnumerator *aHeaders, nsMsgV
     if (NS_SUCCEEDED(rv) && supports)
     {
       msgHdr = do_QueryInterface(supports);
-      nsMsgKey msgKey;
-      PRUint32 msgFlags;
-      msgHdr->GetMessageKey(&msgKey);
-      msgHdr->GetFlags(&msgFlags);
-      nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
-
-      if (m_sortType == nsMsgViewSortType::byDate)
-        msgKey = ((nsPRUint32Key *) hashKey)->GetValue();
-      nsMsgGroupThread *foundThread = nsnull;
-      foundThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
-      if (!foundThread)
-      {
-        foundThread = new nsMsgGroupThread(m_db);
-        m_groupsTable.Put(hashKey, foundThread);
-        foundThread->AddRef();
-        m_keys.Add(msgKey);
-        m_flags.Add(msgFlags | MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED);
-        m_levels.Add(0);
-        if (m_sortType == nsMsgViewSortType::byDate)
-        {
-          foundThread->m_keys.InsertAt(0, nsMsgKey_None);
-          foundThread->m_threadKey = msgKey;
-        }
-      }
-      delete hashKey;
-      if (foundThread)
-        foundThread->AddChild(msgHdr, nsnull, PR_FALSE, nsnull /* announcer */);
+      AddHdrToThread(msgHdr);
     }
   }
   *aCount = m_keys.GetSize();
+  PRUint32 viewFlag = (m_sortType == nsMsgViewSortType::byDate) ? MSG_VIEW_FLAG_DUMMY : 0;
   //go through the view updating the flags for threads with more than one message...
   for (PRUint32 viewIndex = 0; viewIndex < m_keys.GetSize(); viewIndex++)
   {
@@ -253,11 +270,47 @@ NS_IMETHODIMP nsMsgGroupView::OpenWithHdrs(nsISimpleEnumerator *aHeaders, nsMsgV
     {
       PRUint32 numChildren;
       thread->GetNumChildren(&numChildren);
-      if (numChildren > 1)
-        OrExtraFlag(viewIndex, MSG_VIEW_FLAG_HASCHILDREN); 
+      if (numChildren > 1 || viewFlag)
+        OrExtraFlag(viewIndex, viewFlag | MSG_VIEW_FLAG_HASCHILDREN);
     }
   }
   return rv;
+}
+
+nsresult nsMsgGroupView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool /*ensureListed*/)
+{
+  nsMsgGroupThread *thread = AddHdrToThread(newHdr); 
+  if (thread)
+  {
+    nsMsgKey msgKey;
+    PRUint32 msgFlags;
+    newHdr->GetMessageKey(&msgKey);
+    newHdr->GetFlags(&msgFlags);
+
+    nsMsgViewIndex threadIndex = ThreadIndexOfMsg(msgKey);
+    // may need to fix thread counts
+    if (threadIndex != nsMsgViewIndex_None)
+    {
+      if (! (m_flags[threadIndex] & MSG_FLAG_ELIDED))
+      {
+        PRUint32 msgIndexInThread = thread->m_keys.IndexOf(msgKey);
+        m_keys.InsertAt(threadIndex + msgIndexInThread, msgKey);
+        m_flags.InsertAt(threadIndex + msgIndexInThread, msgFlags);
+        if (msgIndexInThread > 0)
+        {
+          m_levels.InsertAt(threadIndex + msgIndexInThread, 1);
+        }
+        else // insert new header at level 0, and bump old level 0 to 1
+        {
+          m_levels.InsertAt(threadIndex, 0, 1);
+          m_levels.SetAt(threadIndex + 1, 1);
+        }
+      }
+      NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
+    }
+  }
+  // if thread is expanded, we need to add hdr to view...
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgGroupView::OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUint32 aOldFlags, 
@@ -286,31 +339,79 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
   return nsMsgDBView::OnHdrDeleted(aHdrDeleted, aParentKey, aFlags, aInstigator);
 }
 
+NS_IMETHODIMP nsMsgGroupView::GetCellProperties(PRInt32 aRow, nsITreeColumn *aCol, nsISupportsArray *aProperties)
+{
+  if (m_flags[aRow] & MSG_VIEW_FLAG_DUMMY)
+    return aProperties->AppendElement(kDummyMsgAtom);
+  return nsMsgDBView::GetCellProperties(aRow, aCol, aProperties);
+}
+
 NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue)
 {
-  if (m_sortType == nsMsgViewSortType::byDate && m_flags[aRow] & MSG_VIEW_FLAG_ISTHREAD)
+  const PRUnichar* colID;
+  aCol->GetIdConst(&colID);
+  if (m_flags[aRow] & MSG_VIEW_FLAG_DUMMY && colID[0] != 'u')
   {
-    const PRUnichar* colID;
-    aCol->GetIdConst(&colID);
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    nsresult rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
+    nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
+    nsMsgGroupThread *groupThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
     if (colID[0] == 'd')
     {
       aValue.SetCapacity(0);
       // ### need to localize these...
-      switch (m_keys[aRow])
+      // need to get the thread for this row, and use the thread id to switch on.
+      switch (((nsPRUint32Key *)hashKey)->GetValue())
       {
       case 1:
         aValue.Assign(NS_LITERAL_STRING("today"));
         break;
       case 2:
         aValue.Assign(NS_LITERAL_STRING("yesterday"));
+        break;
+      case 3:
+        aValue.Assign(NS_LITERAL_STRING("last week"));
+        break;
+      case 4:
+        aValue.Assign(NS_LITERAL_STRING("two weeks ago"));
+        break;
+      case 5:
+        aValue.Assign(NS_LITERAL_STRING("older..."));
+        break;
+      default:
+        NS_ASSERTION(PR_FALSE, "bad age thread");
+        break;
       }
     }
+    else if (colID[0] == 't')
+    {
+      nsAutoString formattedCountString;
+      PRUint32 numChildren = (groupThread) ? groupThread->NumRealChildren() : 0;
+      formattedCountString.AppendInt(numChildren);
+      aValue.Assign(formattedCountString);
+    }
+    return NS_OK;
   }
   // XXX fix me by making Fetch* take an nsAString& parameter
   nsXPIDLString valueText;
   nsCOMPtr <nsIMsgThread> thread;
 
   return nsMsgDBView::GetCellText(aRow, aCol, aValue);
+}
+
+NS_IMETHODIMP nsMsgGroupView::LoadMessageByViewIndex(nsMsgViewIndex aViewIndex)
+{
+
+  if (m_flags[aViewIndex] & MSG_VIEW_FLAG_DUMMY)
+  {
+    // if we used to have one item selected, and now we have more than one, we should clear the message pane.
+    nsCOMPtr <nsIMsgMessagePaneController> controller;
+    if (mMsgWindow && NS_SUCCEEDED(mMsgWindow->GetMessagePaneController(getter_AddRefs(controller))) && controller)
+      controller->ClearMsgPane();
+    return NS_OK;
+  }
+  else
+    return nsMsgDBView::LoadMessageByViewIndex(aViewIndex);
 }
 
 nsresult nsMsgGroupView::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **pThread)
@@ -330,12 +431,16 @@ PRInt32 nsMsgGroupView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex st
 }
 
 
-nsresult nsMsgGroupView::GetThreadContainingIndex(nsMsgViewIndex index, nsIMsgThread **thread)
+nsMsgViewIndex nsMsgGroupView::ThreadIndexOfMsg(nsMsgKey msgKey, 
+                                            nsMsgViewIndex msgIndex /* = nsMsgViewIndex_None */,
+                                            PRInt32 *pThreadCount /* = NULL */,
+                                            PRUint32 *pFlags /* = NULL */)
 {
-  nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  nsresult rv = GetMsgHdrForViewIndex(index, getter_AddRefs(msgHdr));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return GetThreadContainingMsgHdr(msgHdr, thread);
+  if (msgIndex != nsMsgViewIndex_None && m_sortType == nsMsgViewSortType::byDate)
+  {
+    // this case is all we care about at this point.
+    if (m_flags[msgIndex] & MSG_VIEW_FLAG_ISTHREAD)
+      return msgIndex;
+  }
+  return nsMsgDBView::ThreadIndexOfMsg(msgKey, msgIndex, pThreadCount, pFlags);
 }
-
-
