@@ -206,6 +206,96 @@ PRLogModuleInfo* nsXULDocument::gXULLog;
 
 //----------------------------------------------------------------------
 //
+// PlaceholderChannel
+//
+//   This is a dummy channel implementation that we add to the load
+//   group. It ensures that EndDocumentLoad() in the webshell doesn't
+//   fire before we've finished building the complete document content
+//   model.
+//
+
+class PlaceholderChannel : public nsIChannel
+{
+protected:
+	PlaceholderChannel();
+	virtual ~PlaceholderChannel();
+	
+	static PRInt32 gRefCnt;
+	static nsIURI* gURI;
+
+public:
+	static nsresult
+	Create(nsIChannel** aResult);
+	
+	NS_DECL_ISUPPORTS
+
+	// nsIRequest
+    NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
+    NS_IMETHOD Cancel(void)  { return NS_OK; }
+    NS_IMETHOD Suspend(void) { return NS_OK; }
+    NS_IMETHOD Resume(void)  { return NS_OK; }
+
+	// nsIChannel    
+    NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
+    NS_IMETHOD GetURI(nsIURI * *aURI) { *aURI = gURI; NS_ADDREF(*aURI); return NS_OK; }
+    NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
+	NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval) { *_retval = nsnull; return NS_OK; }
+	NS_IMETHOD AsyncOpen(nsIStreamObserver *observer, nsISupports *ctxt) { return NS_OK; }
+	NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener) { return NS_OK; }
+	NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer) { return NS_OK; }
+	NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes) { *aLoadAttributes = nsIChannel::LOAD_NORMAL; return NS_OK; }
+  	NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes) { return NS_OK; }
+	NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; }
+	NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { *aContentLength = 0; return NS_OK; }
+	NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
+	NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
+	NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = nsnull; return NS_OK; }
+	NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { return NS_OK; }
+	NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
+	NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
+};
+
+PRInt32 PlaceholderChannel::gRefCnt;
+nsIURI* PlaceholderChannel::gURI;
+
+NS_IMPL_ADDREF(PlaceholderChannel);
+NS_IMPL_RELEASE(PlaceholderChannel);
+NS_IMPL_QUERY_INTERFACE2(PlaceholderChannel, nsIRequest, nsIChannel);
+
+nsresult
+PlaceholderChannel::Create(nsIChannel** aResult)
+{
+	PlaceholderChannel* channel = new PlaceholderChannel();
+	if (! channel)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	*aResult = channel;
+	NS_ADDREF(*aResult);
+	return NS_OK;
+}
+
+
+PlaceholderChannel::PlaceholderChannel()
+{
+	NS_INIT_REFCNT();
+	
+	if (gRefCnt++ == 0) {
+		nsresult rv;
+		rv = NS_NewURI(&gURI, "about:xul-master-placeholder", nsnull);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:xul-master-placeholder");
+	}
+}
+
+
+PlaceholderChannel::~PlaceholderChannel()
+{
+	if (--gRefCnt == 0) {
+		NS_IF_RELEASE(gURI);
+	}
+}
+
+//----------------------------------------------------------------------
+//
 // ctors & dtors
 //
 
@@ -213,13 +303,13 @@ nsXULDocument::nsXULDocument(void)
     : mParentDocument(nsnull),
       mScriptContextOwner(nsnull),
       mScriptObject(nsnull),
-      mCurrentScriptProto(nsnull),
       mNextSrcLoadWaiter(nsnull),
       mCharSetID("UTF-8"),
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
       mResolutionPhase(nsForwardReference::eStart),
-      mState(eState_Master)
+      mState(eState_Master),
+      mCurrentScriptProto(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -530,7 +620,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     {
         nsInt64 now(PR_Now());
         now /= nsInt64(1000);
-        printf("##### XUL document created at %ld\n", PRInt32(now));
+        printf("##### XUL document created at %d\n", PRInt32(now));
     }
 #endif
 
@@ -4231,6 +4321,19 @@ nsXULDocument::PrepareToWalk()
         // Add the root element to the XUL document's ID-to-element map.
         rv = AddElementToMap(root);
         if (NS_FAILED(rv)) return rv;
+        
+        // Add a dummy channel to the load group as a placeholder for the document
+        // load
+        rv = PlaceholderChannel::Create(getter_AddRefs(mPlaceholderChannel));
+        if (NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+        NS_ASSERTION(group != nsnull, "no load group");
+        
+        if (group) {
+        	rv = group->AddChannel(mPlaceholderChannel, nsnull);
+        	if (NS_FAILED(rv)) return rv;
+        }
     }
 
     rv = mContextStack.Push(proto, root);
@@ -4520,6 +4623,12 @@ nsXULDocument::ResumeWalk()
 
     // If we get here, there is nothing left for us to walk. The content
     // model is built and ready for layout.
+    rv = ResolveForwardReferences();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = ApplyPersistentAttributes();
+    if (NS_FAILED(rv)) return rv;
+
 #if defined(DEBUG_waterson) || defined(DEBUG_hyatt)
     {
         nsTime finish = PR_Now();
@@ -4534,12 +4643,6 @@ nsXULDocument::ResumeWalk()
         printf("##### XUL document loaded at %d\n", PRInt32(now));
     }
 #endif
-
-    rv = ResolveForwardReferences();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = ApplyPersistentAttributes();
-    if (NS_FAILED(rv)) return rv;
 
     StartLayout();
 
@@ -4566,6 +4669,17 @@ nsXULDocument::ResumeWalk()
     }
 #endif
 
+	// Remove the placeholder channel; if we're the last channel in the
+	// load group, this will fire the OnEndDocumentLoad() method in the
+	// webshell, and run the onload handlers, etc.
+	nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+	if (group) {
+		rv = group->RemoveChannel(mPlaceholderChannel, nsnull, NS_OK, nsnull);
+		if (NS_FAILED(rv)) return rv;
+		
+		mPlaceholderChannel = nsnull;
+	}
+	
     return rv;
 }
 
@@ -4585,10 +4699,11 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
     else {
         // Set the current script prototype so that OnUnicharStreamComplete
         // can get report the right file if there are errors in the script.
-        NS_ASSERTION(!mCurrentScriptProto, "still loading a script when starting another load?");
+        NS_ASSERTION(!mCurrentScriptProto,
+                     "still loading a script when starting another load?");
         mCurrentScriptProto = aScriptProto;
 
-        if (0 && aScriptProto->mSrcLoading) {
+        if (aScriptProto->mSrcLoading) {
             // Another XULDocument load has started, which is still in progress.
             // Remember to ResumeWalk this document when the load completes.
             mNextSrcLoadWaiter = aScriptProto->mSrcLoadWaiters;
@@ -4624,42 +4739,61 @@ nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
     // from the prototype.
     nsresult rv;
 
-    NS_ASSERTION(mCurrentScriptProto /* && mCurrentScriptProto->mSrcLoading */,
+    NS_ASSERTION(mCurrentScriptProto && mCurrentScriptProto->mSrcLoading,
                  "script source not loading on unichar stream complete?");
+
+    // Clear mCurrentScriptProto now, but save it first for use below in
+    // the compile/execute code, and in the while loop that resumes walks
+    // of other documents that raced to load this script
+    nsXULPrototypeScript* scriptProto = mCurrentScriptProto;
+    mCurrentScriptProto = nsnull;
+
+    // Clear the prototype's loading flag before executing the script or
+    // resuming document walks, in case any of those control flows starts a
+    // new script load.
+    scriptProto->mSrcLoading = PR_FALSE;
 
     if (NS_SUCCEEDED(aStatus)) {
         // XXXbe bug warren to provide string length from caller too
-        rv = mCurrentScriptProto->Compile(string, nsCRT::strlen(string),
-                                          mCurrentScriptProto->mSrcURI, 1,
-                                          this);
+        rv = scriptProto->Compile(string, nsCRT::strlen(string),
+                                  scriptProto->mSrcURI, 1,
+                                  this);
+        aStatus = rv;
         if (NS_SUCCEEDED(rv)) {
-            rv = ExecuteScript(mCurrentScriptProto->mScriptObject);
+            rv = ExecuteScript(scriptProto->mScriptObject);
         }
         // ignore any evaluation errors
     }
-
-    // Clear the prototype's loading flag before resuming walks, in case one
-    // starts a new script load.
-    mCurrentScriptProto->mSrcLoading = PR_FALSE;
-
-    // Also clear mCurrentScriptProto for sanity, but first load a pointer to
-    // its list of nsXULDocuments who race to load the same script.
-    nsXULDocument** docp = &mCurrentScriptProto->mSrcLoadWaiters;
-    mCurrentScriptProto = nsnull;
 
     // balance the addref we added in LoadScript()
     NS_RELEASE(aLoader);
 
     rv = ResumeWalk();
 
-    // Resume walking other documents that waited for this one's load
+    // Load a pointer to the prototype-script's list of nsXULDocuments who
+    // raced to load the same script
+    nsXULDocument** docp = &scriptProto->mSrcLoadWaiters;
+
+    // Resume walking other documents that waited for this one's load, first
+    // executing the script we just compiled, in each doc's script context
     nsXULDocument* doc;
     while ((doc = *docp) != nsnull) {
+        NS_ASSERTION(doc->mCurrentScriptProto == scriptProto,
+                     "waiting for wrong script to load?");
+        doc->mCurrentScriptProto = nsnull;
+
+        // Unlink doc from scriptProto's list before executing and resuming
         *docp = doc->mNextSrcLoadWaiter;
         doc->mNextSrcLoadWaiter = nsnull;
+
+        // Execute only if we loaded and compiled successfully, then resume
+        if (NS_SUCCEEDED(aStatus)) {
+            doc->ExecuteScript(scriptProto->mScriptObject);
+        }
         doc->ResumeWalk();
         NS_RELEASE(doc);
     }
+
     return rv;
 }
 
