@@ -165,9 +165,9 @@
     <content orient="vertical">
       <xul:toolbox class="viewer-pane-toolbox" inherits="disabled">
         <xul:toolbar class="viewer-pane-header" tbalign="center" inherits="disabled">
-          <xul:menubutton anonid="viewer-list" class="viewer-list button-toolbar" disabled="true"/>
-          <xul:text anonid="viewer-title" class="viewer-title label toolbar" flex="1"/>
-          <xul:menubutton anonid="viewer-menu" class="viewer-menu button-toolbar" disabled="true"/>
+          <xul:toolbarbutton type="menu" anonid="viewer-list" class="viewer-list" disabled="true"/>
+          <xul:label anonid="viewer-title" class="viewer-title label toolbar" flex="1"/>
+          <xul:toolbarbutton type="menu" anonid="viewer-menu" class="viewer-menu" disabled="true"/>
         </xul:toolbar>
       </xul:toolbox>
       <xul:box class="viewer-pane-box-1" flex="1">

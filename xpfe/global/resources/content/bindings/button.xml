@@ -5,9 +5,6 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="button-base" extends="chrome://global/content/bindings/general.xml#basetext">
-    <resources>
-      <stylesheet src="chrome://global/skin/button.css"/>
-    </resources>
     <implementation>
       <constructor>
       <![CDATA[
@@ -22,57 +19,146 @@
             }
           }
         }
-        ]]>
+      ]]>
       </constructor>
     </implementation>
   </binding>
 
-  <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#button-base">
+  <binding id="button" extends="chrome://global/content/bindings/button.xml#button-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/button.css"/>
+    </resources>
+
     <content>
-      <xul:hbox class="button-internal-box" align="center" flex="1">
-        <xul:image class="button-icon" inherits="src"/>
-        <xul:hbox class="button-text-container" align="center" flex="1">
-          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        </xul:hbox>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:hbox class="box-inherit button-box" 
+                inherits="align,dir,orient,pack" flex="1">
+        <children>
+          <xul:image class="button-icon" inherits="src=image"/>
+          <xul:label class="button-text" inherits="value=label,accesskey,crop" flex="1"/>
+        </children>
       </xul:hbox>
-      <children includes="menupopup"/>
     </content>
   </binding>
 
-  <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#button-base">
+  <binding id="menu" display="xul:menu"
+           extends="chrome://global/content/bindings/button.xml#button"/>
+
+  <binding id="menu-button-base"
+           extends="chrome://global/content/bindings/button.xml#button-base">
+    <implementation>
+      <constructor>
+        this.init();
+      </constructor>
+      
+      <method name="init">
+        <body>
+        <![CDATA[
+          var btn = document.getAnonymousElementByAttribute(this, "anonid", "button");
+          if (!btn)
+            throw "XBL binding for <button type=\"menu-button\"/> binding must contain an element with anonid=\"button\"";
+          
+          btn._menubuttonParent = this;
+          btn.addEventListener("mouseover", function() { this._menubuttonParent.buttonover = true; }, true);
+          btn.addEventListener("mouseout", function() { this._menubuttonParent.buttonover = false; }, true);
+          btn.addEventListener("mousedown", function() { 
+            this._menubuttonParent.buttondown = true;
+            this._menubuttonParent._captureMouseUp();
+          }, true);
+        ]]>
+        </body>
+      </method>
+      
+      <property name="buttonover" onget="return this.getAttribute('buttonover');">
+        <setter>
+        <![CDATA[
+          var v = val || val == "true";
+          if (!v && this.buttondown) { 
+            this.buttondown = false;
+            this._pendingActive = true;
+          } 
+          else {
+            if (this._pendingActive) {
+              this.buttondown = true;
+              this._pendingActive = false;
+            }
+          }
+
+          if (v)
+            this.setAttribute("buttonover", "true");
+          else
+            this.removeAttribute("buttonover");
+          return val;
+        ]]>
+        </setter>
+      </property>
+      
+      <property name="buttondown" onget="return this.getAttribute('buttondown') == 'true';">
+        <setter>
+        <![CDATA[
+          if (val || val == "true")
+            this.setAttribute("buttondown", "true");
+          else
+            this.removeAttribute("buttondown");
+          return val;
+        ]]>
+        </setter>
+      </property>
+      
+      <property name="_pendingActive">false</property>
+
+      <method name="_captureMouseUp">
+        <body>
+        <![CDATA[
+          document.__ButtonMenuMouseDown__ = this;
+          document.addEventListener("mouseup", this._onGlobalMouseUp, true);
+        ]]>
+        </body>
+      </method>
+
+      <method name="_onGlobalMouseUp" readonly="true">
+        <body>
+        <![CDATA[
+          var btn = document.__ButtonMenuMouseDown__;
+          btn._onMouseReallyUp();
+          document.removeEventListener("mouseup", btn._onGlobalMouseUp, true);
+          delete document.__ButtonMenuMouseDown__;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_onMouseReallyUp">
+        <body>
+        <![CDATA[
+          this._pendingActive = false;
+          this.buttondown = false;
+        ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
+  <binding id="menu-button" display="xul:menu"
+           extends="chrome://global/content/bindings/button.xml#menu-button-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/button.css"/>
+    </resources>
+
     <content>
-      <xul:vbox class="button-internal-box" align="center" flex="1">
-        <xul:image class="button-icon" inherits="src"/>
-        <xul:hbox class="button-text-container" align="center" pack="center" flex="1">
-          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:box class="box-inherit button-menubutton-box" flex="1">
+        <xul:button class="box-inherit button-menubutton-button" anonid="button"
+                    flex="1" allowevents="true"
+                    inherits="disabled,crop,image,label,accessKey,command,
+                              buttonover,buttondown,align,dir,pack,orient">
+          <children/>
+        </xul:button>
+        <xul:hbox class="button-menubutton-dropmarker-box">
+          <xul:image class="button-menubutton-dropmarker" inherits="disabled,open"/>
         </xul:hbox>
-      </xul:vbox>
-      <children includes="menupopup"/>
+      </xul:box>
     </content>
   </binding>
   
-  <binding id="buttonright" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content>
-      <xul:hbox class="button-internal-box" align="center" flex="1">
-        <xul:hbox class="button-text-container" align="center" pack="center" flex="1">
-          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        </xul:hbox>
-        <xul:image class="button-icon" inherits="src"/>
-      </xul:hbox>
-      <children includes="menupopup"/>
-    </content>
-  </binding>
-
-  <binding id="buttonbottom" extends="chrome://global/content/bindings/button.xml#button-base">
-    <content>
-      <xul:vbox class="button-internal-box" align="center" flex="1">
-        <xul:hbox class="button-text-container" align="center" pack="center" flex="1">
-          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
-        </xul:hbox>
-        <xul:image class="button-icon" inherits="src"/>
-      </xul:vbox>
-      <children includes="menupopup"/>
-    </content>
-  </binding>
-
 </bindings>

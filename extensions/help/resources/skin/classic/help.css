@@ -29,24 +29,17 @@
     list-style-image      : url("chrome://navigator/skin/back.gif");
   }
 
-#helpBackButton[disabled="true"],
-#helpBackButton[disabled="true"]:hover,
-#helpBackButton[disabled="true"]:hover:active,
-#helpBackButton[disabled="true"] > .menubutton-dual-ex-button:hover,
-#helpBackButton[disabled="true"] > .menubutton-dual-ex-button:hover:active
+#helpBackButton[disabled="true"]
   {
-    list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
+    list-style-image      : url("chrome://navigator/skin/back-disabled.gif") !important;
   }
 
-#helpBackButton:hover,
-#helpBackButton > .menubutton-dual-ex-button:hover,
-#helpBackButton[open="true"] > .menubutton-dual-ex-button
+#helpBackButton[buttonover="true"]
   {
     list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
 
-#helpBackButton:hover:active,
-#helpBackButton > .menubutton-dual-ex-button:hover:active
+#helpBackButton[buttondown="true"]
   {
     list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
   }
@@ -56,24 +49,17 @@
     list-style-image      : url("chrome://navigator/skin/forward.gif");
   }
 
-#helpForwardButton[disabled="true"],
-#helpForwardButton[disabled="true"]:hover,
-#helpForwardButton[disabled="true"]:hover:active,
-#helpForwardButton[disabled="true"] > .menubutton-dual-ex-button:hover,
-#helpForwardButton[disabled="true"] > .menubutton-dual-ex-button:hover:active
+#helpForwardButton[disabled="true"]
   {
-    list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
+    list-style-image      : url("chrome://navigator/skin/forward-disabled.gif") !important;
   }
 
-#helpForwardButton:hover,
-#helpForwardButton > .menubutton-dual-ex-button:hover,
-#helpForwardButton[open="true"] > .menubutton-dual-ex-button
+#helpForwardButton[buttonover="true"]
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
 
-#helpForwardButton:hover:active,
-#helpForwardButton > .menubutton-dual-ex-button:hover:active
+#helpForwardButton[buttondown="true"]
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
   }
@@ -84,10 +70,8 @@
   list-style-image: url("chrome://global/skin/print.gif");
 }
 
-#print[disabled="true"],
-#print[disabled="true"]:hover,
-#print[disabled="true"]:hover:active {
-  list-style-image: url("chrome://global/skin/print-disabled.gif");
+#print[disabled="true"] {
+  list-style-image: url("chrome://global/skin/print-disabled.gif") !important;
 }
 
 #print:hover {

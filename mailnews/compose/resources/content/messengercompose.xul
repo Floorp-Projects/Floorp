@@ -354,31 +354,30 @@
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed">
       <hbox id="toolbar_button_box">
-       <button class="button-toolbar-2 top" 
+       <toolbarbutton class="toolbarbutton-1"
                id="button-send" label="&sendButton.label;"
                tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
                command="cmd_sendButton"
                now_label="&sendButton.label;"
                now_tooltiptext="&sendButton.tooltip;"
                later_label="&sendLaterCmd.label;"
-               later_tooltiptext=""
-               >
-               <observes element="Communicator:WorkMode" attribute="offline"/>
-       </button>
+               later_tooltiptext="">
+        <observes element="Communicator:WorkMode" attribute="offline"/>
+       </toolbarbutton>
        <toolbarseparator class="toolbarseparator-primary"/>
-       <button class="button-toolbar-2 top" 
+       <toolbarbutton class="toolbarbutton-1"
                id="button-address" label="&addressButton.label;" 
                tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" 
                command="cmd_selectAddress"/>
-       <button class="button-toolbar-2 top" 
+       <toolbarbutton class="toolbarbutton-1"
                id="button-attach" label="&attachButton.label;" 
                tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" 
                command="cmd_attachFile"/>
-       <button class="button-toolbar-2 top" 
+       <toolbarbutton class="toolbarbutton-1"
                id="spellingButton" label="&spellingButton.label;" 
                command="cmd_spelling"/>
        <toolbarseparator class="toolbarseparator-primary"/>
-       <button class="button-toolbar-2 top" 
+       <toolbarbutton class="toolbarbutton-1"
                id="button-save" label="&saveButton.label;" 
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
                command="cmd_saveDefault"/>
@@ -435,21 +434,21 @@
       <menulist id="ParagraphSelect"/>
       <menulist id="FontFaceSelect"/>
       <stack id="ColorButtons"/>
-      <button id="DecreaseFontSizeButton"/>
-      <button id="IncreaseFontSizeButton"/>
+      <toolbarbutton id="DecreaseFontSizeButton"/>
+      <toolbarbutton id="IncreaseFontSizeButton"/>
       <toolbarseparator class="toolbarseparator-standard"/>
-      <button id="boldButton"/>
-      <button id="italicButton"/>
-      <button id="underlineButton"/>
+      <toolbarbutton id="boldButton"/>
+      <toolbarbutton id="italicButton"/>
+      <toolbarbutton id="underlineButton"/>
       <toolbarseparator class="toolbarseparator-standard"/>
-      <button id="ulButton"/>
-      <button id="olButton"/>
-      <button id="outdentButton"/>
-      <button id="indentButton"/>
+      <toolbarbutton id="ulButton"/>
+      <toolbarbutton id="olButton"/>
+      <toolbarbutton id="outdentButton"/>
+      <toolbarbutton id="indentButton"/>
       <toolbarseparator class="toolbarseparator-standard"/>
-      <menubutton id="AlignPopupButton"/>
-      <menubutton id="InsertPopupButton"/>
-      <menubutton id="smileButtonMenu" padwithspace="true"/>
+      <toolbarbutton id="AlignPopupButton"/>
+      <toolbarbutton id="InsertPopupButton"/>
+      <toolbarbutton id="smileButtonMenu" padwithspace="true"/>
       <spacer flex="1"/>
     </toolbar>
   </toolbox>

@@ -219,12 +219,12 @@ Rights Reserved.
 	<!-- toolbar -->
 		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed">
 			<hbox id="toolbar_button_box">
-        <button class="button-toolbar-2 top" orient="vertical" id="button-newcard" label="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
-        <button class="button-toolbar-2 top" orient="vertical" id="button-newlist" label="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>
             	<toolbarseparator class="toolbarseparator-primary"/>
-        <button class="button-toolbar-2 top" orient="vertical" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
-        <button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" label="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
-        <button class="button-toolbar-2 top" orient="vertical" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
         <vbox flex="100%">
           <spacer flex="1"/> 

@@ -84,35 +84,33 @@
 
     <!-- button bar -->
     <toolbox id="help-toolbox" class="toolbox-top" deferattached="true">
-      <toolbar class="toolbar-primary" 
-	id="helpToolbar" 
-	grippytooltip="aTooltip" 
-	grippytooltiptext="The Help Toolbar"
-        tbalign="stretch" 
-	persist="collapsed">
+      <toolbar id="helpToolbar" class="toolbar-primary" 
+            	grippytooltip="aTooltip" grippytooltiptext="The Help Toolbar"
+              tbalign="stretch" persist="collapsed">
 
-        <menubutton id="helpBackButton" label="&backBtn.label;" tooltiptext="&backButton.tooltip;"
-                    oncommand="gotoHistoryIndex(event);" buttonaction="goBack();" context="backMenu"
-                    class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoBack">
+        <toolbarbutton id="helpBackButton" type="menu-button" class="toolbarbutton-1"
+                       label="&backBtn.label;" crop="right"
+                       oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
+                       observes="canGoBack" context="backMenu" 
+                       tooltip="aTooltip" tooltiptext="&backButton.tooltip;">
           <menupopup context="" onpopupshowing="createBackMenu(event);"/>
-        </menubutton>
-        <menubutton id="helpForwardButton" label="&fwdBtn.label;" tooltiptext="&forwardButton.tooltip;"
-                    oncommand="gotoHistoryIndex(event);" buttonaction="goForward();" context="forwardMenu"
-                    class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoForward">
+        </toolbarbutton>
+        <toolbarbutton id="helpForwardButton" type="menu-button" class="toolbarbutton-1"
+                       label="&fwdBtn.label;" crop="right"
+                       tooltip="aTooltip" tooltiptext="&forwardButton.tooltip;"
+                       oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
+                       observes="canGoForward" context="forwardMenu">
           <menupopup context="" onpopupshowing="createForwardMenu(event);"/>
-        </menubutton>
-        <button id="helpHomeButton"
-                class="button-toolbar-1 top"
-                label="&homeBtn.label;"
-                tooltiptext="&homeBtn.tooltip;"
-                tooltip="aTooltip"
-                oncommand="goHome();"/>
+        </toolbarbutton>
+        <toolbarbutton id="helpHomeButton" class="toolbarbutton-1"
+                label="&homeBtn.label;" oncommand="goHome();"
+                tooltip="aTooltip" tooltiptext="&homeBtn.tooltip;"/>
 
         <spacer flex="1"/>
 
-        <button id="print" class="button-toolbar-1 top" label="&printButton.label;"
-                tooltip="aTooltip" tooltiptext="&printButton.tooltip;" oncommand="print();"/>
- 
+        <toolbarbutton id="print" class="toolbarbutton-1"
+                       label="&printButton.label;" oncommand="print();"
+                       tooltip="aTooltip" tooltiptext="&printButton.tooltip;"/>
       </toolbar>
     </toolbox>
 

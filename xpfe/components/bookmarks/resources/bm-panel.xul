@@ -76,13 +76,13 @@
   </commands>
   
   <hbox id="panel-bar" class="toolbar">
-    <button class="button-toolbar" label="&command.addBookmark.label;"
+    <toolbarbutton label="&command.addBookmark.label;"
             oncommand="gBookmarksShell.addBookmark();"/>
-    <button class="button-toolbar" label="&command.manageBookmarks.label;"
+    <toolbarbutton label="&command.manageBookmarks.label;"
             oncommand="gBookmarksShell.manageBookmarks();"/>
     <spacer flex="1"/>
     <toolbarseparator/>
-    <button class="button-toolbar" label="&command.findBookmarks.label;"
+    <toolbarbutton label="&command.findBookmarks.label;"
             oncommand="gBookmarksShell.findInBookmarks();"/>
   </hbox>
   

@@ -60,10 +60,10 @@
   </commandset>
   
 
-  <hbox id="component-bar" class="statusbar-panel" persist="collapsed">
-    <button class="button-toolbar-4 taskbutton" id="mini-mail" oncommand="toMessengerWindow()" 
+  <hbox id="component-bar">
+    <toolbarbutton class="taskbutton" id="mini-mail" oncommand="toMessengerWindow()" 
             position="2" tooltip="aTooltip" tooltiptext="&taskMessenger.tooltip;"/>
-    <button class="button-toolbar-4 taskbutton" id="mini-addr" oncommand="toAddressBook();"
+    <toolbarbutton class="taskbutton" id="mini-addr" oncommand="toAddressBook();"
             position="4" tooltip="aTooltip" tooltiptext="&taskAddressBook.tooltip;"/>
   </hbox>
   

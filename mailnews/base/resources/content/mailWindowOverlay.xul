@@ -33,6 +33,7 @@ Rights Reserved.
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 ]>  
+
 <overlay
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -1224,40 +1225,42 @@ Rights Reserved.
 <toolbox id="mailToolbarToolbox">
   <toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
     <hbox id="toolbar_button_box">
-                        <menubutton class="menubutton-dual toolbar top" id="button-getmsg" 
-                                    label="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
-                                    sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
-                                    sortDirection="ascending"
-                                    tooltiptext="&getMsgButton.tooltip;" 
-                                    observes="button_getNewMessages" datasources="rdf:msgaccountmanager" 
-                                    oncommand="goDoCommand('cmd_getNewMessages')" 
-                                    containment="http://home.netscape.com/NC-rdf#child" 
-                                    ref="msgaccounts:/">
-                            <menupopup onpopupshowing="getMsgToolbarMenu_init()">
-                                <menuitem label="&getAllNewMsgCmd.label;" 
-                                          observes="cmd_getMsgsForAuthAccounts"/>
-                                <menuseparator/>
-                            </menupopup>
-                            <template>
-                                <rule nc:CanGetMessages="true">
-                                    <menupopup>
-                                        <menuitem uri="..." 
-                                                  value="..." 
-                                                  label="rdf:http://home.netscape.com/NC-rdf#Name"
-                                                  oncommand="MsgGetMessagesForAccount(event);"/>
-                                    </menupopup>
-                                </rule>
-                            </template>
-                            <menupopup/>
-                        </menubutton>
-      <button class="button-toolbar-2 top" id="button-newmsg" label="&newMsgButton.label;" tooltip="aTooltip" tooltiptext="&newMsgButton.tooltip;" oncommand="MsgNewMessage(event)"/>
+      <toolbarbutton type="menu-button" id="button-getmsg" 
+                     class="toolbarbutton-1"
+                     label="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
+                     sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+                     sortDirection="ascending"
+                     tooltiptext="&getMsgButton.tooltip;" 
+                     observes="button_getNewMessages" datasources="rdf:msgaccountmanager" 
+                     oncommand="goDoCommand('cmd_getNewMessages')" 
+                     containment="http://home.netscape.com/NC-rdf#child" 
+                     ref="msgaccounts:/">
+          <menupopup onpopupshowing="getMsgToolbarMenu_init()">
+              <menuitem label="&getAllNewMsgCmd.label;" 
+                        observes="cmd_getMsgsForAuthAccounts"/>
+              <menuseparator/>
+          </menupopup>
+          <template>
+              <rule nc:CanGetMessages="true">
+                  <menupopup>
+                      <menuitem uri="..." 
+                                value="..." 
+                                label="rdf:http://home.netscape.com/NC-rdf#Name"
+                                oncommand="MsgGetMessagesForAccount(event);"/>
+                  </menupopup>
+              </rule>
+          </template>
+          <menupopup/>
+      </toolbarbutton>
+      <toolbarbutton id="button-newmsg" class="toolbarbutton-1" label="&newMsgButton.label;" tooltip="aTooltip" tooltiptext="&newMsgButton.tooltip;" oncommand="MsgNewMessage(event)"/>
       <toolbarseparator class="toolbarseparator-primary"/>
-      <button class="button-toolbar-2 top" id="button-reply" label="&replyButton.label;" tooltip="aTooltip" tooltiptext="&replyButton.tooltip;" observes="button_reply" oncommand="MsgReplyMessage(event)"/>
-      <button class="button-toolbar-2 top" id="button-replyall" label="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" oncommand="MsgReplyToAllMessage(event)"/>
-      <button class="button-toolbar-2 top" id="button-forward" label="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" oncommand="MsgForwardMessage(event)"/>
+      <toolbarbutton id="button-reply" class="toolbarbutton-1" label="&replyButton.label;" tooltip="aTooltip" tooltiptext="&replyButton.tooltip;" observes="button_reply" oncommand="MsgReplyMessage(event)"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-replyall" label="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" oncommand="MsgReplyToAllMessage(event)"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-forward" label="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" oncommand="MsgForwardMessage(event)"/>
       <toolbarseparator class="toolbarseparator-primary"/>
-      <menubutton class="button-toolbar-2 top" id="button-file" observes="button_file"
-                  datasources="rdf:null" label="&fileButton.label;"
+      <toolbarbutton type="menu" id="button-file" class="toolbarbutton-1" 
+                  label="&fileButton.label;" observes="button_file"
+                  datasources="rdf:null" 
                   tooltip="aTooltip" tooltiptext="&fileButton.tooltip;"
                   sortResource="http://home.netscape.com/NC-rdf#FolderTreeName" sortDirection="ascending">
         <template> 
@@ -1321,10 +1324,10 @@ Rights Reserved.
           </rule>
         </template>
         <menupopup/>
-      </menubutton>
-      <button class="button-toolbar-2 top" id="button-next" label="&nextButton.label;"  oncommand="goDoCommand('cmd_nextUnreadMsg')" tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
-      <button class="button-toolbar-2 top" id="button-delete" label="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
-      <menubutton class="menubutton-dual toolbar top" id="button-mark" label="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
+      </toolbarbutton>
+      <toolbarbutton class="toolbarbutton-1" id="button-next" label="&nextButton.label;"  oncommand="goDoCommand('cmd_nextUnreadMsg')" tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-delete" label="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
+      <toolbarbutton type="menu-button" id="button-mark" class="toolbarbutton-1" label="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
                   crop="right" observes="button_mark" tooltip="aTooltip" tooltiptext="&markButton.tooltip;">  
             <menupopup onpopupshowing="InitMessageMark()">
                 <menuitem type="checkbox" key="key_toggleRead" id="markReadToolbarItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead" default="true" />
@@ -1333,14 +1336,14 @@ Rights Reserved.
                 <menuseparator/>
                 <menuitem type="checkbox" id="markFlaggedToolbarItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
             </menupopup>
-      </menubutton>
-      <menubutton class="menubutton-dual toolbar top" id="button-print" label="&printButton.label;" 
+      </toolbarbutton>
+      <toolbarbutton id="button-print" type="menu-button" class="toolbarbutton-1" label="&printButton.label;" 
                   crop="right" observes="button_print" oncommand="goDoCommand('cmd_print')" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu">
           <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
           </menupopup>
-      </menubutton>
-      <button class="button-toolbar-2 top" id="button-stop" label="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
+      </toolbarbutton>
+      <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
       <spacer flex="1"/>
             <hbox id="throbber-box" autostretch="never">
                 <button id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>

@@ -34,6 +34,10 @@ domi|panel[disabled="true"] > .viewer-pane-box-1 {
   list-style-image: url("chrome://inspector/skin/iconViewerList-dis.gif");
 }
 
+.viewer-menu > .toolbarbutton-box > .toolbarbutton-dropmarker {
+  display: none;
+}
+
 .viewer-menu {
   list-style-image: url("chrome://inspector/skin/iconViewerMenu.gif");
 }
@@ -66,12 +70,6 @@ domi|panel[disabled="true"] > .viewer-pane-box-1 {
 .viewer-pane-toolbox {
   border-top: none;
   border-bottom: none;
-}
-
-.viewer-menu > .menubutton-toolbar-single-internal-box 
-    > .menubutton-toolbar-single-dropmarker 
-{
-  display: none;   
 }
 
 .viewer-pane-header > toolbargrippy {

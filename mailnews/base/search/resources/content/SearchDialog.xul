@@ -106,13 +106,13 @@ Rights Reserved.
        <vbox>
             <spacer flex="1" />
             <button label="&openButton.label;" id="openButton" command="cmd_open" />
-            <menubutton id="fileMessageButton" label="&fileButton.label;"
-                        observes="file_message_button"
-                        oncommand="MoveMessageInSearch(event.target)" 
-                        sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
-                        sortDirection="ascending"
-                        datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-                        ref="msgaccounts:/">
+            <button id="fileMessageButton" type="menu" label="&fileButton.label;"
+                    observes="file_message_button"
+                    oncommand="MoveMessageInSearch(event.target)" 
+                    sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+                    sortDirection="ascending"
+                    datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                    ref="msgaccounts:/">
         <menupopup/>
         <template> 
         <rule nc:NoSelect="true" iscontainer="true" isempty="false">
@@ -173,12 +173,12 @@ Rights Reserved.
             </menupopup>
           </rule>
         </template>
-            </menubutton>
+      </button>
 
-            <button label="&deleteButton.label;" id="deleteButton" command="button_delete"/>
-            <spacer flex="1" />
-       </vbox>      
-    </groupbox>
+      <button label="&deleteButton.label;" id="deleteButton" command="button_delete"/>
+      <spacer flex="1" />
+    </vbox>      
+  </groupbox>
   </vbox>
   <statusbar id="status-bar"/>
   

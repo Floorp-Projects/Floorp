@@ -134,12 +134,12 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   </menubar>
 
   <toolbar id="ToolbarMode">
-    <button class="button-toolbar" observes="Console:modeAll"/>
-    <button class="button-toolbar" observes="Console:modeErrors"/>
-    <button class="button-toolbar" observes="Console:modeWarnings"/>
-    <button class="button-toolbar" observes="Console:modeMessages"/>
+    <toolbarbutton observes="Console:modeAll"/>
+    <toolbarbutton observes="Console:modeErrors"/>
+    <toolbarbutton observes="Console:modeWarnings"/>
+    <toolbarbutton observes="Console:modeMessages"/>
     <toolbarseparator/>
-    <button class="button-toolbar" observes="Console:clear"/>
+    <toolbarbutton observes="Console:clear"/>
   </toolbar>
   
   <toolbar id="ToolbarEval">
