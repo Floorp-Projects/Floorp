@@ -6,6 +6,8 @@
 #include <string>
 #include <iomanip>
 
+#include "Profiler.h"
+
 #ifndef TEST_STD_STRING
 #include "nsString.h"
 #else
@@ -18,6 +20,12 @@ typedef nsStdCString nsCString;
 static const int kTestSucceeded = 0;
 static const int kTestFailed = 1;
 
+#if 0
+#define N 1000
+#else
+#define N 100000
+#endif
+
 
 template <class T>
 inline
@@ -27,7 +35,7 @@ TotalLength( const T& s )
     return s.Length();
   }
 
-template <>
+NS_SPECIALIZE_TEMPLATE
 inline
 PRUint32
 TotalLength( const string& s )
@@ -43,7 +51,7 @@ Find( const T& text, const T& pattern )
     return text.Find(pattern);
   }
 
-template <>
+NS_SPECIALIZE_TEMPLATE
 inline
 PRUint32
 Find( const string& text, const string& pattern )
@@ -103,7 +111,7 @@ test_concat()
 
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         len += TotalLength( s1 + s2 + s3 + s1 + s2 + s3 );
     }
     cout << "TotalLength( s1 + s2 + s3 + s1 + s2 + s3 )" << endl;
@@ -111,7 +119,7 @@ test_concat()
 
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         len += TotalLength( s1 + s2 );
     }
     cout << "TotalLength( s1 + s2 )" << endl;
@@ -139,14 +147,14 @@ test_concat_and_assign()
     
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         s4 = s1 + s2 + s3 + s1 + s2 + s3;
     }
     cout << "s4 = s1 + s2 + s3 + s1 + s2 + s3" << endl;
 
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         s4 = s1 + s2;
     }
     cout << "s4 = s1 + s2" << endl;
@@ -159,13 +167,13 @@ static
 int
 test_compare()
   {
-    nsCString s1("This is a reasonable length string with some text in it and it is good.");
-    nsCString s2("This is a reasonable length string with some text in it and it is bad.");
+    nsCString s1("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxThis is a reasonable length string with some text in it and it is good.");
+    nsCString s2("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxThis is a reasonable length string with some text in it and it is bad.");
 
     int count = 0;
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         if ( s1 > s2 )
           ++count;
     }
@@ -173,7 +181,7 @@ test_compare()
 
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         if ( s1 == s1 )
           ++count;
     }
@@ -197,7 +205,7 @@ test_countchar()
     PRUint32 total = 0;
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         total += s1.CountChar('e');
     }
     cout << "s1.CountChar('e')" << endl;
@@ -216,7 +224,7 @@ test_append_string()
     
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         {
           nsCString s3;
           s3.Append(s1);
@@ -240,7 +248,7 @@ test_repeated_append_string()
     
     {
       TestTimer timer;
-      for ( int i=0; i<1000; ++i )
+      for ( int i=0; i<N; ++i )
         {
           nsCString s3;
           for ( int j=0; j<100; ++j )
@@ -264,7 +272,7 @@ test_repeated_append_char()
     
     {
       TestTimer timer;
-      for ( int i=0; i<1000; ++i )
+      for ( int i=0; i<N; ++i )
         {
           nsCString s1;
           for ( int j=0; j<1000; ++j )
@@ -289,7 +297,7 @@ test_insert_string()
     
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         {
           nsCString s2("This is another string that I will use in the concatenation test.");
           s2.Insert(s1, 3);
@@ -312,7 +320,7 @@ test_find_string()
     PRUint32 position = 0;
     {
       TestTimer timer;
-      for ( int i=0; i<100000; ++i )
+      for ( int i=0; i<N; ++i )
         position = Find(text, pattern);
     }
     cout << "text.Find(pattern)" << endl;
@@ -321,9 +329,37 @@ test_find_string()
   }
 #endif
 
+class Profiler
+  {
+    public:
+      Profiler()
+        {
+#if 0
+          ProfilerInit(collectDetailed, bestTimeBase, 100, 32);
+#endif
+        }
+
+      void
+      Dump( const unsigned char* output_name )
+        {
+#if 0
+          ProfilerDump(output_name);
+#endif
+        }
+
+     ~Profiler()
+        {
+#if 0
+          ProfilerDump(mOutputName);
+          ProfilerTerm();
+#endif
+        }
+  };
+
 int
 main()
   {
+
     cout << "String performance profiling.  Compiled " __DATE__ " " __TIME__ << endl;
 #ifdef TEST_STD_STRING
     cout << "Testing std::string." << endl;
@@ -335,6 +371,8 @@ main()
 
     int tests_failed = 0;
 
+    Profiler profiler;
+
     tests_failed += test_concat();
     tests_failed += test_concat_and_assign();
     tests_failed += test_compare();
@@ -344,6 +382,14 @@ main()
     tests_failed += test_repeated_append_char();
     tests_failed += test_insert_string();
     // tests_failed += test_find_string();
+
+#ifdef TEST_STD_STRING
+    profiler.Dump("\pStandard String.prof");
+#elif defined(NEW_STRING_APIS)
+    profiler.Dump("\pFactored String.prof");
+#else
+    profiler.Dump("\pRaw String.prof");
+#endif
 
     if ( tests_failed )
       cout << "One or more tests FAILED.  Measurements may be invalid." << endl;

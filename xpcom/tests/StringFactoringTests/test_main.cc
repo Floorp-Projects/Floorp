@@ -3,58 +3,47 @@ using namespace std;
 
 #include "nsString.h"
 #include "nsStdStringWrapper.h"
-#include "nsLiteralString.h"
 
+#define NS_USE_WCHAR_T
 
-#if 0
-static
-void
-Call_ToLowerCase( const nsAReadableCString& aSource, nsAWritableCString& aResult )
-  {
-    aSource.ToLowerCase(aResult);
-  }
-
-static
-void
-Call_ToUpperCase( const nsAReadableCString& aSource, nsAWritableCString& aResult )
-  {
-    aSource.ToUpperCase(aResult);
-  }
-#endif
 
 static
 ostream&
-print_string( const nsAReadableString& s, ostream& os = std::cout )
+print_string( const nsAReadableString& s )
   {
     struct PRUnichar_to_char
       {
         char operator()( PRUnichar c ) { return char(c); }
       };
 
-    transform(s.Begin(), s.End(), ostream_iterator<char>(os), PRUnichar_to_char());
-    return os;
+    transform(s.Begin(), s.End(), ostream_iterator<char>(cout), PRUnichar_to_char());
+    return cout;
   }
 
 
 template <class CharT>
 basic_nsLiteralString<CharT>
-make_a_hello_string( CharT* )
+literal_hello( CharT* )
   {
   }
 
 NS_SPECIALIZE_TEMPLATE
 basic_nsLiteralString<char>
-make_a_hello_string( char* )
+literal_hello( char* )
   {
     return basic_nsLiteralString<char>("Hello");
   }
 
 NS_SPECIALIZE_TEMPLATE
 basic_nsLiteralString<PRUnichar>
-make_a_hello_string( PRUnichar* )
+literal_hello( PRUnichar* )
   {
+#ifdef NS_USE_WCHAR_T
+    return basic_nsLiteralString<PRUnichar>(L"Hello");
+#else
     static PRUnichar constant_unicode[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
     return basic_nsLiteralString<PRUnichar>(constant_unicode);
+#endif
   }
 
 static
@@ -68,128 +57,15 @@ CallCMid( nsAWritableCString& aResult, const nsAReadableCString& aSource, PRUint
 
 template <class CharT>
 int
-readable_hello_tests( const basic_nsAReadableString<CharT>& str, ostream& os = std::cout )
-  {
-    int tests_failed = 0;
+test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
+    /*
+      ...this tests a problem that was present in |nsPromiseConcatenation| where,
+      because it originally stored some iteration state in the object itself, rather than
+      in the fragment, the iterators could get confused if used out of sequence.
 
-    if ( str.Length() != 5 )
-      {
-        os << "Length() FAILED" << endl;
-        ++tests_failed;
-      }
-
-    if ( str.First() != CharT('H') )
-      {
-        cout << "|First()| FAILED" << endl;
-        ++tests_failed;
-      }
-
-    if ( str.Last() != CharT('o') )
-      {
-        cout << "|Last()| FAILED" << endl;
-        ++tests_failed;
-      }
-
-    if ( str[3] != CharT('l') )
-      {
-        cout << "|operator[]()| FAILED" << endl;
-        ++tests_failed;
-      }
-
-    if ( str.CountChar( CharT('l') ) != 2 )
-      {
-        cout << "|CountChar()| FAILED" << endl;
-        ++tests_failed;
-      }
-
-    basic_nsAReadableString<CharT>::ConstIterator iter = str.Begin();
-    if ( *iter != CharT('H') )
-      {
-        cout << "iterator FAILED: didn't start out pointing at the right thign or couldn't be dereferenced." << endl;
-        ++tests_failed;
-      }
-
-    ++iter;
-
-    if ( *iter != CharT('e') )
-      {
-        cout << "iterator FAILED: couldn't be incremented, or else couldn't be dereferenced." << endl;
-        ++tests_failed;
-      }
-
-    iter = str.End();
-    --iter;
-    if ( *iter != CharT('o') )
-      {
-        cout << "iterator FAILED: couldn't be set to End(), or else couldn't be decremented, or else couldn't be dereferenced." << endl;
-        ++tests_failed;
-      }
-
-    basic_nsAReadableString<CharT>::ConstIterator iter1 = str.Begin(3);
-    if ( *iter1 != CharT('l') )
-      {
-        cout << "iterator FAILED: couldn't be set to Begin(n), or else couldn't be dereferenced." << endl;
-        ++tests_failed;
-      }
-
-    basic_nsAReadableString<CharT>::ConstIterator iter2 = str.End(2);
-    if ( *iter2 != CharT('l') )
-      {
-        cout << "iterator FAILED: couldn't be set to End(n), or else couldn't be dereferenced." << endl;
-        ++tests_failed;
-      }
-
-    if ( iter1 != iter2 )
-      {
-        cout << "iterator comparison with != FAILED" << endl;
-        ++tests_failed;
-      }
-
-    if ( !(iter1 == iter2) )
-      {
-        cout << "iterator comparison with == FAILED" << endl;
-        ++tests_failed;
-      }
-
-    typedef CharT* CharT_ptr;
-
-    if ( str != make_a_hello_string( CharT_ptr() ) )
-      {
-        cout << "comparison with hello string FAILED" << endl;
-        ++tests_failed;
-      }
-
-    return tests_failed;
-  }
-
-static
-inline
-bool
-compare_equals( const nsAReadableCString& lhs, const nsAReadableCString& rhs )
-  {
-    return bool(lhs == rhs);
-  }
-
-static
-inline
-bool
-compare_equals( const nsLiteralCString& lhs, const nsAReadableCString& rhs )
-  {
-    return bool(lhs == rhs);
-  }
-
-static
-inline
-bool
-compare_equals( const nsAReadableCString& lhs, const nsLiteralCString& rhs )
-  {
-    return bool(lhs == rhs);
-  }
-
-
-template <class CharT>
-int
-test_goofy_iterators( const basic_nsAReadableString<CharT>& aString )
+      This test should be run on any multi-fragment implementation to verify that it
+      does not have the same bug.  Make sure the first fragment is only one character long.
+    */
   {
     typedef typename basic_nsAReadableString<CharT>::ConstIterator ConstIterator;
 
@@ -204,9 +80,192 @@ test_goofy_iterators( const basic_nsAReadableString<CharT>& aString )
     ++iter1; ++iter1;
     if ( iter1 != iter2 )
       {
-        cout << "goofy iterator test FAILED" << endl;
+        cout << "FAILED in |test_multifragment_iterators|" << endl;
         ++tests_failed;
       }
+
+    return tests_failed;
+  }
+
+template <class CharT>
+int
+test_deprecated_GetBufferGetUnicode( const basic_nsAReadableString<CharT>& aReadable )
+  {
+    int tests_failed = 0;
+
+    if ( aReadable.GetBuffer() || aReadable.GetUnicode() )
+      {
+        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: non-zero result." << endl;
+        ++tests_failed;
+      }
+
+    return tests_failed;
+  }
+
+NS_SPECIALIZE_TEMPLATE
+int
+test_deprecated_GetBufferGetUnicode( const basic_nsAReadableString<char>& aReadable )
+  {
+    int tests_failed = 0;
+
+    if ( !aReadable.GetBuffer() )
+      {
+        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: |GetBuffer()| returned 0." << endl;
+        ++tests_failed;
+      }
+
+    if ( aReadable.GetUnicode() )
+      {
+        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: |GetUnicode()| returned a non-zero result." << endl;
+        ++tests_failed;
+      }
+
+    return tests_failed;
+  }
+
+NS_SPECIALIZE_TEMPLATE
+int
+test_deprecated_GetBufferGetUnicode( const basic_nsAReadableString<PRUnichar>& aReadable )
+  {
+    int tests_failed = 0;
+
+    if ( aReadable.GetBuffer() )
+      {
+        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: |GetBuffer()| returned a non-zero result." << endl;
+        ++tests_failed;
+      }
+
+    if ( !aReadable.GetUnicode() )
+      {
+        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: |GetUnicode()| returned 0." << endl;
+        ++tests_failed;
+      }
+
+    return tests_failed;
+  }
+
+template <class CharT>
+int
+test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
+  {
+    int tests_failed = 0;
+
+    if ( aReadable.Length() != 5 )
+      {
+        cout << "FAILED |test_readable_hello|: |Length()| --> " << aReadable.Length() << endl;
+        ++tests_failed;
+      }
+
+    if ( aReadable.First() != CharT('H') )
+      {
+        cout << "FAILED |test_readable_hello|: |First()| --> '" << aReadable.First() << "'" << endl;
+        ++tests_failed;
+      }
+
+    if ( aReadable.Last() != CharT('o') )
+      {
+        cout << "FAILED |test_readable_hello|: |Last()| --> '" << aReadable.Last() << "'" << endl;
+        ++tests_failed;
+      }
+
+    if ( aReadable[3] != CharT('l') )
+      {
+        cout << "FAILED |test_readable_hello|: |operator[]| --> '" << aReadable[3] << "'" << endl;
+        ++tests_failed;
+      }
+
+    if ( aReadable.CountChar( CharT('l') ) != 2 )
+      {
+        cout << "FAILED |test_readable_hello|: |CountChar('l')| --> " << aReadable.CountChar(CharT('l')) << endl;
+        ++tests_failed;
+      }
+
+    basic_nsAReadableString<CharT>::ConstIterator iter = aReadable.Begin();
+    if ( *iter != CharT('H') )
+      {
+        cout << "FAILED |test_readable_hello|: didn't start out pointing to the right thing, or else couldn't be dereferenced. --> '" << *iter << "'" << endl;
+        ++tests_failed;
+      }
+
+    ++iter;
+
+    if ( *iter != CharT('e') )
+      {
+        cout << "FAILED |test_readable_hello|: iterator couldn't be incremented, or else couldn't be dereferenced. --> '" << *iter << "'" << endl;
+        ++tests_failed;
+      }
+
+    iter = aReadable.End();
+    --iter;
+    if ( *iter != CharT('o') )
+      {
+        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |End()|, or else couldn't be decremented, or else couldn't be dereferenced. --> '" << *iter << "'" << endl;
+        ++tests_failed;
+      }
+
+    basic_nsAReadableString<CharT>::ConstIterator iter1 = aReadable.Begin(3);
+    if ( *iter1 != CharT('l') )
+      {
+        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |Begin(n)|, or else couldn't be dereferenced. --> '" << *iter1 << "'" << endl;
+        ++tests_failed;
+      }
+
+    basic_nsAReadableString<CharT>::ConstIterator iter2 = aReadable.End(2);
+    if ( *iter2 != CharT('l') )
+      {
+        cout << "FAILED |test_readable_hello|: iterator couldn't be set to |End(n)|, or else couldn't be dereferenced. --> '" << *iter2 << "'" << endl;
+        ++tests_failed;
+      }
+
+    if ( iter1 != iter2 )
+      {
+        cout << "FAILED |test_readable_hello|: iterator comparison with !=." << endl;
+        ++tests_failed;
+      }
+
+    if ( !(iter1 == iter2) )
+      {
+        cout << "FAILED |test_readable_hello|: iterator comparison with ==." << endl;
+        ++tests_failed;
+      }
+
+    typedef CharT* CharT_ptr;
+    if ( aReadable != literal_hello(CharT_ptr()) )
+      {
+        cout << "FAILED |test_readable_hello|: comparison with \"Hello\"" << endl;
+        ++tests_failed;
+      }
+
+    tests_failed += test_multifragment_iterators(aReadable);
+    tests_failed += test_deprecated_GetBufferGetUnicode(aReadable);
+
+    return tests_failed;
+  }
+
+
+
+
+
+template <class CharT>
+int
+test_writable( basic_nsAWritableString<CharT>& aWritable )
+  {
+    int tests_failed = 0;
+    // ...
+
+
+    {
+      typedef CharT* CharT_ptr;
+      aWritable = literal_hello(CharT_ptr());
+
+      if ( aWritable != literal_hello(CharT_ptr()) )
+        {
+          cout << "FAILED assignment and/or comparison in |test_writable|." << endl;
+          ++tests_failed;
+        }
+
+      tests_failed += test_readable_hello(aWritable);
+    }
 
     return tests_failed;
   }
@@ -222,48 +281,84 @@ main()
   	cout << "String unit tests.  Compiled " __DATE__ " " __TIME__ << endl;
 
 
-      //
-      // |nsLiteralString|
-      //
-
-
-    PRUnichar constant_unicode[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
-    nsLiteralString aLiteralString(constant_unicode);
-    tests_failed += readable_hello_tests(aLiteralString);
-
-    cout << "\"";
-    print_string(aLiteralString) << "\"" << endl;
-
     {
-      const PRUnichar* buffer = aLiteralString.GetUnicode();
-      if ( !buffer )
-        {
-          cout << "|nsLiteralString::GetUnicode()| FAILED: should have returned non-|0|" << endl;
-          ++tests_failed;
-        }
+#ifdef NS_USE_WCHAR_T
+      nsLiteralString s0(L"Hello");
+#else
+      PRUnichar b0[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
+      nsLiteralString s0(b0);
+#endif
+      tests_failed += test_readable_hello(s0);
 
-      const char* cbuffer = aLiteralString.GetBuffer();
-      if ( cbuffer )
-        {
-          cout << "|nsLiteralString::GetBuffer()| FAILED: should have returned |0|" << endl;
-          ++tests_failed;
-        }
+      nsLiteralCString s1("Hello");
+      tests_failed += test_readable_hello(s1);
     }
 
     {
-      nsCString aCString("Hello");
-      tests_failed += readable_hello_tests(aCString);
+#ifdef NS_USE_WCHAR_T
+      nsString s3(L"Hello");
+#else
+      PRUnichar b3[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
+      nsString s3(b3);
+#endif
+      tests_failed += test_readable_hello(s3);
+      tests_failed += test_writable(s3);
+
+      nsCString s4("Hello");
+      tests_failed += test_readable_hello(s4);
+      tests_failed += test_writable(s4);
     }
 
     {
-      nsStdCString aCString("Hello");
-      tests_failed += readable_hello_tests(aCString);
+#ifdef NS_USE_WCHAR_T
+      nsStdString s5(L"Hello");
+#else
+      PRUnichar b5[] = { 'H', 'e', 'l', 'l', 'o', PRUnichar() };
+      nsStdString s5(b5);
+#endif
+      tests_failed += test_readable_hello(s5);
+      tests_failed += test_writable(s5);
+
+      nsStdCString s6("Hello");
+      tests_failed += test_readable_hello(s6);
+      tests_failed += test_writable(s6);
     }
 
     {
-      nsLiteralCString aLiteralCString("Hello");
-      tests_failed += readable_hello_tests(aLiteralCString);
+#ifdef NS_USE_WCHAR_T
+      nsLiteralString s7(L"He");
+      nsString        s8(L"l");
+      nsStdString     s9(L"lo");
+#else
+      PRUnichar b7[] = { 'H', 'e', PRUnichar() };
+      PRUnichar b8[] = { 'l', PRUnichar() };
+      PRUnichar b9[] = { 'l', 'o', PRUnichar() };
+
+      nsLiteralString s7(b7);
+      nsString        s8(b8);
+      nsStdString     s9(b9);
+#endif
+
+      tests_failed += test_readable_hello(s7+s8+s9);
+
+      nsString s13( s7 + s8 + s9 );
+      tests_failed += test_readable_hello(s13);
+
+      nsStdString s14( s7 + s8 + s9 );
+      tests_failed += test_readable_hello(s14);
+
+      // nsSharedString s15( s7 + s8 + s9 );
+      // tests_failed += test_readable_hello(s15);
+
+      nsCString         s10("He");
+      nsLiteralCString  s11("l");
+      nsStdCString      s12("lo");
+      
+      tests_failed += test_readable_hello(s10+s11+s12);
+
+      
     }
+
 
     {
       nsLiteralCString str1("Hello");
@@ -296,14 +391,7 @@ main()
         }
     }
 
-    nsLiteralCString part1("He"), part2("llo");
-    tests_failed += readable_hello_tests(part1+part2);
-
-    nsLiteralCString part2a("l"), part2b("lo");
-    tests_failed += readable_hello_tests(part1+part2a+part2b);
-
-    cout << "The summed string is \"" << part1 + part2a + part2b << "\"" << endl;
-
+#if 0
     nsStdCString extracted_middle("XXXXXXXXXX");
     CallCMid(extracted_middle, part1+part2a+part2b, 1, 3);
     
@@ -316,35 +404,11 @@ main()
         ++tests_failed;
       }
 
-      //
-      // |nsLiteralCString|
-      //
-
-
-    nsLiteralCString aLiteralCString("Goodbye");
-    cout << "\"" << aLiteralCString << "\"" << endl;
-    if ( aLiteralCString.Length() == 7 )
-      cout << "|nsLiteralCString::Length()| OK" << endl;
-    else
-      cout << "|nsLiteralCString::Length()| FAILED" << endl;
-    cout << aLiteralCString << endl;
-
-    const char* cbuffer = aLiteralCString.GetBuffer();
-    cout << "GetBuffer()-->" << showbase << void_ptr(cbuffer) << endl;
-    cout << "GetUnicode()-->" << void_ptr( aLiteralCString.GetUnicode() ) << endl;
-    cout << "The length of the string \"" << aLiteralCString << "\" is " << aLiteralCString.Length() << endl;
 
 
       //
       // |nsStdStringWrapper|, i.e., |nsStdCString|
       //
-
-
-    nsStdCString aCString("Hello");
-    if ( aCString.Length() == 5 )
-      cout << "|nsStdCString::Length()| OK" << endl;
-    else
-      cout << "|nsStdCString::Length()| FAILED" << endl;
 
     {
       nsStdCString extracted_middle;
@@ -360,15 +424,7 @@ main()
         }
     }
 
-    cbuffer = aCString.GetBuffer();
-    cout << "GetBuffer()-->" << showbase << void_ptr(cbuffer) << endl;
-    cout << "GetUnicode()-->" << void_ptr( aCString.GetUnicode() ) << endl;
 
-    // cout << "The length of the string \"" << static_cast<nsAReadableCString>(aCString) << "\" is " << aCString.Length() << endl;
-
-
-    nsLiteralCString source("This is a string long enough to be interesting.");
-    cout << source << endl;
 
     nsStdCString leftString;
     source.Left(leftString, 9);
@@ -376,16 +432,16 @@ main()
 
 
 
-    tests_failed += test_goofy_iterators(part1+part2a+part2b);
-
+    tests_failed += test_multifragment_iterators(part1+part2a+part2b);
+#endif
 
     
     
-    cout << "End of string unit tests. ";
+    cout << "End of string unit tests." << endl;
     if ( !tests_failed )
-      cout << "All tests OK." << endl;
+      cout << "OK, all tests passed." << endl;
     else
-      cout << "One or more tests FAILED." << endl;
+      cout << "FAILED one or more tests." << endl;
 
   	return 0;
   }
