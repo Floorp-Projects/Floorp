@@ -35,7 +35,7 @@
 #define NSPSMSHIMMAXFD 50
 
 
-static PRIntervalTime gTimeout  = PR_INTERVAL_NO_WAIT;
+static PRIntervalTime gTimeout  = PR_INTERVAL_NO_TIMEOUT;
 
 CMT_SocketFuncs nsPSMShimTbl =
 {
@@ -58,12 +58,12 @@ nsPSMShimGetSocket(int unixSock)
     CMSocket   *sock;
     PRSocketOptionData sockopt;
 
-    
+    /*
     if (PR_INTERVAL_NO_WAIT == gTimeout) 
     {
         gTimeout  = PR_SecondsToInterval(PSM_TIMEOUT_IN_SEC);
     }
-
+    */
 
     if (unixSock)
     {
