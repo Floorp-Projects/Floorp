@@ -170,6 +170,7 @@ private:
   nsresult InitMailviewMenu();
   nsresult InitComposerMenu();
   nsresult InitOthers();
+  nsresult InitSecodaryTiers();
 
   nsresult InitStaticMenu(nsISupportsArray * aDecs, 
     nsIRDFResource * aResource, const char * aKey, nsVoidArray * aArray);
@@ -368,6 +369,7 @@ nsCharsetMenu::nsCharsetMenu()
   InitMaileditMenu();
   InitMailviewMenu();
   InitComposerMenu();
+  InitSecodaryTiers();
   InitOthers();
 }
 
@@ -663,15 +665,6 @@ nsresult nsCharsetMenu::InitBrowserMenu()
     &mBrowserMenu);
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
 
-  res = InitMoreSubmenus(decs);
-  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser static X charset menu");
-
-  res = InitMoreMenu(decs, kNC_BrowserMoreCharsetMenuRoot, ".notForBrowser");
-  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser more charset menu");
-
-  res = InitAutodetMenu(kNC_BrowserAutodetMenuRoot);
-  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing chardet menu");
-
   // register prefs callback
   mPrefService->RegisterCallback(kBrowserStaticPrefKey, BrowserStaticChanged, 
     this);
@@ -786,6 +779,31 @@ nsresult nsCharsetMenu::InitOthers()
 
   res = InitMoreMenu(decs, kNC_DecodersRoot, ".notForBrowser");
   if (NS_FAILED(res)) return res;
+
+  return res;
+}
+
+/**
+ * Inits the secondary tiers of the charset menu. Because currently all the CS 
+ * menus are sharing the secondary tiers, one should call this method only 
+ * once for all of them.
+ */
+nsresult nsCharsetMenu::InitSecodaryTiers()
+{
+  nsresult res = NS_OK;
+
+  nsCOMPtr<nsISupportsArray> decs;
+  res = mCCManager->GetDecoderList(getter_AddRefs(decs));
+  if (NS_FAILED(res)) return res;
+
+  res = InitMoreSubmenus(decs);
+  NS_ASSERTION(NS_SUCCEEDED(res), "err init browser charset more submenus");
+
+  res = InitMoreMenu(decs, kNC_BrowserMoreCharsetMenuRoot, ".notForBrowser");
+  NS_ASSERTION(NS_SUCCEEDED(res), "err init browser charset more menu");
+
+  res = InitAutodetMenu(kNC_BrowserAutodetMenuRoot);
+  NS_ASSERTION(NS_SUCCEEDED(res), "err init chardet menu");
 
   return res;
 }
