@@ -1,3 +1,11 @@
+# This is a long list (over 500 urls) which we got from AOL.
+#   BTW, the first url is duplicated several times under the expectation
+#   that the first 5 memory readings will be ignored as startup noise.
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
 http://www.iwin.com
 http://www.infoev.com
 http://www.ITARGET.COM
@@ -10,7 +18,7 @@ http://www.4ANYTHING.COM
 http://www.50MEGS.COM
 http://www.555-1212.COM
 http://www.8M.COM
-#http://www.AA.COM
+http://www.AA.COM
 http://www.ABOUT.COM
 http://www.ACCOUNTONLINE.COM
 http://www.ACCUWEATHER.COM
@@ -101,7 +109,7 @@ http://www.COLUMBIAHOUSE.COM
 http://www.COME.TO
 http://www.COMETSYSTEMS.COM
 http://www.COMMISSION-JUNCTION.COM
-#http://www.COMPAQ.COM
+http://www.COMPAQ.COM
 http://www.COMPUSERVE.COM
 http://www.COMPUTINGCENTRAL.COM
 http://www.CONDENET.com
@@ -186,7 +194,7 @@ http://www.FREESERVERS.COM
 http://www.FREESHOP.COM
 http://www.FREEYELLOW.COM
 http://www.FUNNYGREETINGS.COM
-#http://www.FUNONE.COM
+http://www.FUNONE.COM
 http://www.FUNSTUN.COM
 http://www.GAMESVILLE.com
 http://www.GAP.COM
@@ -298,7 +306,7 @@ http://www.PHOTOWORKS.COM
 http://www.PLANETOFMUSIC.COM
 http://www.PLANETRX.COM
 http://www.POGO.COM
-#http://www.PRESARIO.NET
+http://www.PRESARIO.NET
 http://www.PREVENTION.COM
 http://www.PRICELINE.COM
 http://www.PRIZECENTRAL.COM
@@ -308,7 +316,7 @@ http://www.PRODUCTOPIA.COM
 http://www.PROMOGAMES.COM
 http://www.PROMOTIONS.COM
 http://www.QUICKEN.COM
-#http://www.QVC.COM
+http://www.QVC.COM
 http://www.READERSDIGEST.COM
 http://www.REAL.COM
 http://www.REALNETWORKS.COM
@@ -408,7 +416,7 @@ http://www.WEBSTAKES.COM
 http://www.WSJ.COM
 http://www.WUNDERGROUND.COM
 http://www.X.COM
-#http://www.XDRIVE.COM
+http://www.XDRIVE.COM
 http://www.XOOM.COM
 http://www.YAHOO.COM
 http://www.YIMG.COM

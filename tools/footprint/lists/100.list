@@ -1,4 +1,11 @@
 # These are the "Top 100" from chofmann's list
+#   BTW, the first url is duplicated several times under the expectation
+#   that the first 5 memory readings will be ignored as startup noise.
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
+http://www.yahoo.com
 http://www.yahoo.com
 http://www.netscape.com
 http://www.microsoft.com
