@@ -1605,9 +1605,10 @@ nsWindow::OnEnterNotifySignal(GdkEventCrossing *aGdkCrossingEvent)
 {
   if (GTK_WIDGET_SENSITIVE(GetOwningWidget())) {
     nsWidget::OnEnterNotifySignal(aGdkCrossingEvent);
-    if (mMozArea)
+    if (mMozArea) {
       GTK_PRIVATE_SET_FLAG(mMozArea, GTK_LEAVE_PENDING);
-    mLeavePending = PR_TRUE;
+      mLeavePending = PR_TRUE;
+    }
   }
 }
 
@@ -1615,12 +1616,14 @@ nsWindow::OnEnterNotifySignal(GdkEventCrossing *aGdkCrossingEvent)
 /* virtual */ void
 nsWindow::OnLeaveNotifySignal(GdkEventCrossing *aGdkCrossingEvent)
 {
-  if (mLeavePending) {
-    if (mMozArea)
+  if (mMozArea) {
+    if (mLeavePending) {
       GTK_PRIVATE_UNSET_FLAG(mMozArea, GTK_LEAVE_PENDING);
-    mLeavePending = PR_FALSE;
+      mLeavePending = PR_FALSE;
+      nsWidget::OnLeaveNotifySignal(aGdkCrossingEvent);
+    }
+  } else
     nsWidget::OnLeaveNotifySignal(aGdkCrossingEvent);
-  }
 }
 
 //////////////////////////////////////////////////////////////////////
