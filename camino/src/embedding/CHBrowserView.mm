@@ -46,6 +46,7 @@
 #include "nsIDocCharset.h"
 
 #include "nsIURI.h"
+#include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIChromeEventHandler.h"
