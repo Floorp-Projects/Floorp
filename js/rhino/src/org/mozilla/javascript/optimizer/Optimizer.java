@@ -426,9 +426,7 @@ class Optimizer
     we leave each child as a Number if it can be. The codegen will
     handle moving the pairs of parameters.
 */
-                        Node child = n.getFirstChild(); // the function
-                        rewriteForNumberVariables(child);
-                        child = child.getNext(); // the 'this' object
+                        Node child = n.getFirstChild(); // the function node
                         rewriteForNumberVariables(child);
                         child = child.getNext(); // the first arg
                         while (child != null) {

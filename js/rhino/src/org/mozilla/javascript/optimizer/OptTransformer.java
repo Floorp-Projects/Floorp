@@ -63,79 +63,6 @@ class OptTransformer extends NodeTransformer {
 
     protected void visitCall(Node node, ScriptOrFnNode tree) {
         detectDirectCall(node, tree);
-
-        /*
-         * For
-         *      Call(GetProp(a, b), c, d)   // or GetElem...
-         * we wish to evaluate as
-         *      Call(GetProp(tmp=a, b), tmp, c, d)
-         *
-         * for
-         *      Call(Name("a"), b, c)
-         * we wish to evaluate as
-         *      Call(GetProp(tmp=GetBase("a"), "a"), tmp, b, c)
-         *
-         * and for
-         *      Call(a, b, c);
-         * we wish to evaluate as
-         *      Call(tmp=a, Parent(tmp), c, d)
-         */
-        Node left = node.getFirstChild();
-        boolean addGetThis = false;
-        if (left.getType() == Token.NAME) {
-            String name = left.getString();
-            boolean inFunction = (tree.getType() == Token.FUNCTION);
-            if (inFunction && tree.hasParamOrVar(name)
-                && !inWithStatement())
-            {
-                // call to a var. Transform to Call(GetVar("a"), b, c)
-                left.setType(Token.GETVAR);
-                // fall through to code to add GetParent
-            } else {
-                // transform to Call(GetProp(GetBase("a"), "a"), b, c)
-
-                node.removeChild(left);
-                left.setType(Token.GETBASE);
-                Node str = Node.newString(left.getString());
-                Node getProp = new Node(Token.GETPROP, left, str);
-                node.addChildToFront(getProp);
-                left = getProp;
-
-                // Conditionally set a flag to add a GETTHIS node.
-                // The getThis entry in the runtime will take a
-                // Scriptable object intended to be used as a 'this'
-                // and make sure that it is neither a With object or
-                // an activation object.
-                // Executing getThis requires at least two instanceof
-                // tests, so we only include it if we are currently
-                // inside a 'with' statement, or if we are executing
-                // a script (to protect against an eval inside a with).
-                addGetThis = inWithStatement() || !inFunction;
-                // fall through to GETPROP code
-            }
-        }
-        if (left.getType() != Token.GETPROP &&
-            left.getType() != Token.GETELEM)
-        {
-            node.removeChild(left);
-            Node tmp = createNewTemp(left);
-            Node use = createUseTemp(tmp);
-            use.putProp(Node.TEMP_PROP, tmp);
-            Node parent = new Node(Token.PARENT, use);
-            node.addChildToFront(parent);
-            node.addChildToFront(tmp);
-            return;
-        }
-        Node leftLeft = left.getFirstChild();
-        left.removeChild(leftLeft);
-        Node tmp = createNewTemp(leftLeft);
-        left.addChildToFront(tmp);
-        Node use = createUseTemp(tmp);
-        use.putProp(Node.TEMP_PROP, tmp);
-        if (addGetThis)
-            use = new Node(Token.GETTHIS, use);
-        node.addChildAfter(use, left);
-
         super.visitCall(node, tree);
     }
 
@@ -196,37 +123,6 @@ class OptTransformer extends NodeTransformer {
                     }
                 }
             }
-        }
-    }
-
-    private static Node createNewTemp(Node n) {
-        int type = n.getType();
-        if (type == Token.STRING || type == Token.NUMBER) {
-            // Optimization: clone these values rather than storing
-            // and loading from a temp
-            return n;
-        }
-        return new Node(Token.NEWTEMP, n);
-    }
-
-    private static Node createUseTemp(Node newTemp)
-    {
-        switch (newTemp.getType()) {
-          case Token.NEWTEMP: {
-            Node result = new Node(Token.USETEMP);
-            result.putProp(Node.TEMP_PROP, newTemp);
-            int n = newTemp.getIntProp(Node.USES_PROP, 0);
-            if (n != Integer.MAX_VALUE) {
-                newTemp.putIntProp(Node.USES_PROP, n + 1);
-            }
-            return result;
-          }
-          case Token.STRING:
-            return Node.newString(newTemp.getString());
-          case Token.NUMBER:
-            return Node.newNumber(newTemp.getDouble());
-          default:
-            throw Kit.codeBug();
         }
     }
 
