@@ -70,7 +70,6 @@
 #include "nsIAppShellService.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
-#include "nsIBrowserWindow.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 
