@@ -30,6 +30,7 @@
 #include "nsIEventSinkGetter.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
+#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
 #include "prtime.h"
