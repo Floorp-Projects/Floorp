@@ -1377,31 +1377,26 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   *aPrincipal = nsnull;
 
   nsNSSShutDownPreventionLock locker;
-  SEC_PKCS7DecoderContext * p7_ctxt = nsnull;
   SEC_PKCS7ContentInfo * p7_info = nsnull; 
   unsigned char hash[SHA1_LENGTH]; 
-  PRBool rv;
 
-  p7_ctxt = SEC_PKCS7DecoderStart(ContentCallback,
-                        nsnull,
-                        GetPasswordKeyCallback,
-                        nsnull,
-                        GetDecryptKeyCallback,
-                        nsnull,
-                        DecryptionAllowedCallback);
-  if (!p7_ctxt) {
-    return NS_ERROR_FAILURE;
-  }
+  SECItem item;
+  item.type = siEncodedCertBuffer;
+  item.data = (unsigned char*)aRSABuf;
+  item.len = aRSABufLen;
+  p7_info = SEC_PKCS7DecodeItem(&item,
+                                ContentCallback, nsnull,
+                                GetPasswordKeyCallback, nsnull,
+                                GetDecryptKeyCallback, nsnull,
+                                DecryptionAllowedCallback);
 
-  if (SEC_PKCS7DecoderUpdate(p7_ctxt,aRSABuf, aRSABufLen) != SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
-
-  p7_info = SEC_PKCS7DecoderFinish(p7_ctxt); 
   if (!p7_info) {
     return NS_ERROR_FAILURE;
   }
 
+  // Make sure we call SEC_PKCS7DestroyContentInfo after this point;
+  // otherwise we leak data in p7_info
+  
   //-- If a plaintext was provided, hash it.
   SECItem digest;
   digest.data = nsnull;
@@ -1422,54 +1417,69 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   }
 
   //-- Verify signature
-  rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner, &digest, HASH_AlgSHA1, PR_TRUE);
+  PRBool rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner,
+                                               &digest, HASH_AlgSHA1, PR_TRUE);
   if (rv != PR_TRUE) {
     *aErrorCode = PR_GetError();
   }
 
   // Get the signing cert //
   CERTCertificate *cert = p7_info->content.signedData->signerInfos[0]->cert;
+  nsresult rv2 = NS_OK;
   if (cert) {
-    nsCOMPtr<nsIX509Cert> pCert = new nsNSSCertificate(cert);
-    if (!pCert) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsresult rv2;
-    if (!mScriptSecurityManager) {
-      nsAutoLock lock(mutex);
-      // re-test the condition to prevent double initialization
-      if (!mScriptSecurityManager) {
-        mScriptSecurityManager = 
-           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv2);
-        if (NS_FAILED(rv2)) return rv2;
+    // Use |do { } while (0);| as a "more C++-ish" thing than goto;
+    // this way we don't have to worry about goto across variable
+    // declarations.  We have no loops in this code, so it's OK.
+    do {
+      nsCOMPtr<nsIX509Cert> pCert = new nsNSSCertificate(cert);
+      if (!pCert) {
+        rv2 = NS_ERROR_OUT_OF_MEMORY;
+        break;
       }
-    }
 
-    //-- Create a certificate principal with id and organization data
-    nsAutoString fingerprint;
-    rv2 = pCert->GetSha1Fingerprint(fingerprint);
-    if (NS_FAILED(rv2)) return rv2;
-    nsCOMPtr<nsIPrincipal> certPrincipal;
-    rv2 = mScriptSecurityManager->
-      GetCertificatePrincipal(NS_LossyConvertUTF16toASCII(fingerprint).get(),
-                              nsnull, getter_AddRefs(certPrincipal));
-    if (NS_FAILED(rv2) || !certPrincipal) return rv2;
+      if (!mScriptSecurityManager) {
+        nsAutoLock lock(mutex);
+        // re-test the condition to prevent double initialization
+        if (!mScriptSecurityManager) {
+          mScriptSecurityManager = 
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv2);
+          if (NS_FAILED(rv2)) {
+            break;
+          }
+        }
+      }
 
-    nsAutoString orgName;
-    rv2 = pCert->GetOrganization(orgName);
-    if (NS_FAILED(rv2)) return rv2;
-    rv2 = certPrincipal->SetCommonName(NS_LossyConvertUTF16toASCII(orgName).get());
-    if (NS_FAILED(rv2)) return rv2;
-
-    NS_ADDREF(*aPrincipal = certPrincipal);
+      //-- Create a certificate principal with id and organization data
+      nsAutoString fingerprint;
+      rv2 = pCert->GetSha1Fingerprint(fingerprint);
+      if (NS_FAILED(rv2)) {
+        break;
+      }
+      nsCOMPtr<nsIPrincipal> certPrincipal;
+      rv2 = mScriptSecurityManager->
+        GetCertificatePrincipal(NS_ConvertUTF16toUTF8(fingerprint).get(),
+                                nsnull, getter_AddRefs(certPrincipal));
+      if (NS_FAILED(rv2) || !certPrincipal) {
+        break;
+      }
+      
+      nsAutoString orgName;
+      rv2 = pCert->GetOrganization(orgName);
+      if (NS_FAILED(rv2)) {
+        break;
+      }
+      rv2 = certPrincipal->SetCommonName(NS_ConvertUTF16toUTF8(orgName).get());
+      if (NS_FAILED(rv2)) {
+        break;
+      }
+    
+      NS_ADDREF(*aPrincipal = certPrincipal);
+    } while (0);
   }
 
-  if (p7_info) {
-    SEC_PKCS7DestroyContentInfo(p7_info);
-  }
+  SEC_PKCS7DestroyContentInfo(p7_info);
 
-  return NS_OK;
+  return rv2;
 }
 
 NS_IMETHODIMP
