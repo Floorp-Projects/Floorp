@@ -296,6 +296,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
   
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
+
+  nntpProtocol = new nsNNTPProtocol();
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;;
   
   rv = nntpProtocol->Initialize(nntpUrl);
@@ -369,6 +371,7 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey
 
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
+
   nntpProtocol = new nsNNTPProtocol();
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
   
