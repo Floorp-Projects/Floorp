@@ -547,7 +547,9 @@ LocationImpl::SetPort(const nsAReadableString& aPort)
     result = NS_NewURI(getter_AddRefs(uri), href);
 
     if (uri) {
-      const char *buf = NS_ConvertUCS2toUTF8(aPort).get();
+      // perhaps use nsReadingIterators at some point?
+      NS_ConvertUCS2toUTF8 portStr(aPort);
+      const char *buf = portStr.get();
       PRInt32 port = -1;
 
       if (buf) {
