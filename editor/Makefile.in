@@ -26,10 +26,6 @@ DIRS = public
 
 ifdef MOZ_EDITOR
 DIRS += base guimgr txmgr
-
-ifdef ENABLE_TESTS
-DIRS += tests
-endif
 endif
 
 include $(topsrcdir)/config/config.mk
