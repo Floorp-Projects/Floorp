@@ -342,7 +342,7 @@ _XFE_WIDGET_CLASS_RECORD(caption,Caption) =
     
     /* Composite Part */
     {
-		XtInheritGeometryManager,				/* geometry_manager		*/
+		_XfeLiberalGeometryManager,				/* geometry_manager		*/
 		XtInheritChangeManaged,					/* change_managed		*/
 		XtInheritInsertChild,					/* insert_child			*/
 		XtInheritDeleteChild,					/* delete_child			*/
