@@ -1730,22 +1730,38 @@ static int WriteOutVCardProperties (MimeObject *obj, VObject* v, int* numEmail)
 	return 0;
 }
 
-static int WriteLineToStream (MimeObject *obj, const char *line)
-{
+static int 
+WriteLineToStream (MimeObject *obj, const char *line)               
+{                                                                              
   int     status = 0;
   char    *htmlLine;
-  int     htmlLen =0;
+  int     htmlLen ;                                                          
+  char    *charset = PL_strstr(obj->content_type, "charset=");
+  char    *converted = NULL;
+  PRInt32 converted_length;
+  PRInt32 res;
   
   if ( (!line) || (!*line) )
     return 0;
 
-  htmlLen = nsCRT::strlen(line) + nsCRT::strlen("<DT></DT>") + 1;
+  if (!charset)
+    charset = "ISO-8859-1";
+  
+  // convert from the resource charset.
+  res = INTL_ConvertCharset(charset, "UTF-8", line, nsCRT::strlen(line),
+                            &converted, &converted_length);
+  if ( (res != 0) || (converted == NULL) )
+    converted = (char *)line;
+  else
+    converted[converted_length] = '\0';
+  
+  htmlLen = nsCRT::strlen(converted) + nsCRT::strlen("<DT></DT>") + 1;
   htmlLine = (char *) PR_MALLOC (htmlLen);
   if (htmlLine)
   {
     htmlLine[0] = '\0';
     PL_strcat (htmlLine, "<DT>");
-    PL_strcat (htmlLine, line);
+    PL_strcat (htmlLine, converted);
     PL_strcat (htmlLine, "</DT>");
     status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
     PR_Free ((void*) htmlLine);
@@ -1753,6 +1769,8 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
   else
     status = VCARD_OUT_OF_MEMORY;
   
+  if (converted != line)
+    PR_FREEIF(converted);
   return status;
 }
 

@@ -268,10 +268,18 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
 	  if (status < 0) return status;
 	}
 
-  /* Now convert to the canonical charset, if desired.
-   */
+  // Now convert to the canonical charset, if desired.
+  //
+  PRBool  doConvert = PR_TRUE;
+  // Don't convert vCard data
+  if ( (obj->content_type) && (!PL_strcasecmp(obj->content_type, TEXT_VCARD)) )
+    doConvert = PR_FALSE;
+    
+  // Only convert if the user prefs is false 
   if ( (obj->options && obj->options->charset_conversion_fn) &&
-       (!obj->options->force_user_charset) )  /* Only convert if the user prefs is false */
+       (!obj->options->force_user_charset) &&
+       (doConvert)       
+     )
 	{
 	  PRInt32         converted_len = 0;
     const char      *input_charset = NULL;
