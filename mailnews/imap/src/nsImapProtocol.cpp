@@ -559,37 +559,37 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
   NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
   if (aURL)
   {
-        rv = aURL->QueryInterface(NS_GET_IID(nsIImapUrl), getter_AddRefs(m_runningUrl));
-        if (NS_FAILED(rv)) return rv;
+    rv = aURL->QueryInterface(NS_GET_IID(nsIImapUrl), getter_AddRefs(m_runningUrl));
+    if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(m_server);
-        if (!server)
-        {
-            nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
-            rv = mailnewsUrl->GetServer(getter_AddRefs(server));
-            m_server = getter_AddRefs(NS_GetWeakReference(server));
-        }
-        nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(m_server);
+    if (!server)
+    {
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
+        rv = mailnewsUrl->GetServer(getter_AddRefs(server));
+        m_server = getter_AddRefs(NS_GetWeakReference(server));
+    }
+    nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
 
-        nsCOMPtr<nsIStreamListener> aRealStreamListener = do_QueryInterface(aConsumer);
-        m_runningUrl->GetMockChannel(getter_AddRefs(m_mockChannel));
-        if (m_mockChannel)
-        {   
-            // if we have a listener from a mock channel, over-ride the consumer that was passed in
-            nsCOMPtr<nsIStreamListener> channelListener;
-            m_mockChannel->GetChannelListener(getter_AddRefs(channelListener));
-            if (channelListener) // only over-ride if we have a non null channel listener
-                aRealStreamListener = channelListener;
-            m_mockChannel->GetChannelContext(getter_AddRefs(m_channelContext));
-        }
+    nsCOMPtr<nsIStreamListener> aRealStreamListener = do_QueryInterface(aConsumer);
+    m_runningUrl->GetMockChannel(getter_AddRefs(m_mockChannel));
+    if (m_mockChannel)
+    {   
+      // if we have a listener from a mock channel, over-ride the consumer that was passed in
+      nsCOMPtr<nsIStreamListener> channelListener;
+      m_mockChannel->GetChannelListener(getter_AddRefs(channelListener));
+      if (channelListener) // only over-ride if we have a non null channel listener
+        aRealStreamListener = channelListener;
+      m_mockChannel->GetChannelContext(getter_AddRefs(m_channelContext));
+    }
 
-        // since we'll be making calls directly from the imap thread to the channel listener,
-        // we need to turn it into a proxy object....we'll assume that the listener is on the same thread
-        // as the event sink queue
-        if (aRealStreamListener)
-        {
-            rv = NS_NewAsyncStreamListener(getter_AddRefs(m_channelListener), aRealStreamListener, m_sinkEventQueue);
-        }
+    // since we'll be making calls directly from the imap thread to the channel listener,
+    // we need to turn it into a proxy object....we'll assume that the listener is on the same thread
+    // as the event sink queue
+    if (aRealStreamListener)
+    {
+        rv = NS_NewAsyncStreamListener(getter_AddRefs(m_channelListener), aRealStreamListener, m_sinkEventQueue);
+    }
 
     PRUint32 capability = kCapabilityUndefined;
 
@@ -655,6 +655,11 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       nsCOMPtr<nsISupports> securityInfo;
       m_channel->GetSecurityInfo(getter_AddRefs(securityInfo));
       m_mockChannel->SetSecurityInfo(securityInfo);
+    
+      nsCOMPtr<nsIInterfaceRequestor> callbacks;
+      m_mockChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+      if (callbacks && m_channel)
+        m_channel->SetNotificationCallbacks(callbacks, PR_FALSE);
 
       // and if we have a cache entry that we are saving the message to, set the security info on it too.
       // since imap only uses the memory cache, passing this on is the right thing to do.
@@ -676,6 +681,10 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 // when the connection is done processing the current state, free any per url state data...
 void nsImapProtocol::ReleaseUrlState()
 {
+  // clear out the socket's reference to the notification callbacks for this transaction
+  if (m_channel)
+    m_channel->SetNotificationCallbacks(nsnull, PR_FALSE);
+
   if (m_mockChannel)
   {
     if (m_imapMailFolderSink)
@@ -1308,6 +1317,7 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
     ClearFlag(IMAP_CONNECTION_IS_OPEN);
     TellThreadToDie(PR_FALSE);
   }
+  
   m_channel = nsnull;
   m_outputStream = nsnull;
   m_inputStream = nsnull;
