@@ -529,12 +529,26 @@ done:
                              NULL, NULL, JSPROP_ENUMERATE);
 }
 
+/* XXXbe Consolidate the ugly truth that we don't treat filename as UTF-8
+         with these two functions. */
+static JSString *
+FilenameToString(JSContext *cx, const char *filename)
+{
+    return JS_NewStringCopyZ(cx, filename);
+}
+
+static const char *
+StringToFilename(JSContext *cx, JSString *str)
+{
+    return JS_GetStringBytes(str);
+}
+
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSBool ok;
     jsval pval;
-    int32 lineno;
+    uint32 lineno;
     JSString *message, *filename;
     JSStackFrame *fp;
 
@@ -595,7 +609,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         fp = JS_GetScriptedCaller(cx, NULL);
         if (fp) {
-            filename = JS_NewStringCopyZ(cx, fp->script->filename);
+            filename = FilenameToString(cx, fp->script->filename);
             if (!filename) {
                 ok = JS_FALSE;
                 goto out;
@@ -607,7 +621,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Set the 'lineNumber' property. */
     if (argc > 2) {
-        ok = js_ValueToInt32(cx, argv[2], &lineno);
+        ok = js_ValueToECMAUint32(cx, argv[2], &lineno);
         if (!ok)
             goto out;
     } else {
@@ -689,7 +703,7 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval v;
     JSString *name, *message, *filename, *lineno_as_str, *result;
-    int32 lineno;
+    uint32 lineno;
     size_t lineno_length, name_length, message_length, filename_length, length;
     jschar *chars, *cp;
 
@@ -713,7 +727,7 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (!JS_GetProperty(cx, obj, js_lineno_str, &v) ||
-        !js_ValueToInt32 (cx, v, &lineno)) {
+        !js_ValueToECMAUint32 (cx, v, &lineno)) {
         return JS_FALSE;
     }
 
@@ -1065,33 +1079,40 @@ js_ReportUncaughtException(JSContext *cx)
     bytes = str ? js_GetStringBytes(str) : "null";
     ok = JS_TRUE;
 
-    if (!reportp && exnObject) {
+    if (!reportp &&
+        exnObject &&
+        OBJ_GET_CLASS(cx, exnObject) == &ExceptionClass) {
         jsval v;
         const char *filename;
-        int32 lineno;
+        uint32 lineno;
 
         ok = JS_GetProperty(cx, exnObject, js_message_str, &v);
         if (!ok)
             goto out;
-        bytes = JSVAL_IS_STRING(v) ? JS_GetStringBytes(JSVAL_TO_STRING(v)) : "";
+        if (JSVAL_IS_STRING(v))
+            bytes = JS_GetStringBytes(JSVAL_TO_STRING(v));
 
         ok = JS_GetProperty(cx, exnObject, js_filename_str, &v);
         if (!ok)
             goto out;
-        filename = JSVAL_IS_STRING(v) ? JS_GetStringBytes(JSVAL_TO_STRING(v))
-                                      : "";
+        str = js_ValueToString(cx, v);
+        if (!str) {
+            ok = JS_FALSE;
+            goto out;
+        }
+        filename = StringToFilename(cx, str);
 
         ok = JS_GetProperty(cx, exnObject, js_lineno_str, &v);
         if (!ok)
             goto out;
-        ok = js_ValueToInt32 (cx, v, &lineno);
+        ok = js_ValueToECMAUint32 (cx, v, &lineno);
         if (!ok)
             goto out;
 
         reportp = &report;
         memset(&report, 0, sizeof report);
         report.filename = filename;
-        report.lineno = (lineno >= 0) ? (uintN) lineno : 0;
+        report.lineno = (uintN) lineno;
     }
 
     if (!reportp) {
