@@ -54,9 +54,9 @@ public:
    *                  NOTE: This is not necessarily the same window the form submit result
    *                        will be loaded in (form could have target attribute set)
    *   @param actionURL- URL to which the form will be submitted.
+   *   @param cancelSubmit- outparam - cancels form submit if set to true
    */
-  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL) = 0;
-
+  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit) = 0;
 
 };
 

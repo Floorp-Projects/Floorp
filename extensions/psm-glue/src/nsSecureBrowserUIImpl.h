@@ -69,7 +69,7 @@ public:
 
     // nsIObserver
     NS_DECL_NSIOBSERVER
-    NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI *actionURL);
+    NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI *actionURL, PRBool* cancelSubmit);
 
 protected:
 
