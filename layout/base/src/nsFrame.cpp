@@ -1228,6 +1228,14 @@ NS_METHOD nsFrame::ContentChanged(nsIPresShell*   aShell,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFrame::AttributeChanged(nsIPresShell*   aShell,
+                                        nsIPresContext* aPresContext,
+                                        nsIContent*     aChild,
+                                        nsIAtom*        aAttribute)
+{
+  return NS_OK;
+}
+
 NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext&  aPresContext,
                                     nsReflowMetrics& aMetrics)
 {

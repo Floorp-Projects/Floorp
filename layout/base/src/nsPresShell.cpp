@@ -162,6 +162,9 @@ public:
   NS_IMETHOD ContentChanged(nsIDocument *aDocument,
                             nsIContent* aContent,
                             nsISupports* aSubContent);
+  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
+                              nsIContent*  aContent,
+                              nsIAtom*     aAttribute);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
                              nsIContent* aContainer,
                              PRInt32     aNewIndexInContainer);
@@ -692,13 +695,38 @@ PresShell::ContentChanged(nsIDocument *aDocument,
   nsIFrame* frame = FindFrameWithContent(aContent);
 
   // It's possible the frame whose content changed isn't inserted into the
-  // frame hierarchy yet. This sometimes happens with images inside tables
+  // frame hierarchy yet, or that there is no frame that maps the content
   if (nsnull != frame) {
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
        ("PresShell::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
         aContent, ContentTag(aContent, 0),
         aSubContent, frame));
     frame->ContentChanged(this, mPresContext, aContent, aSubContent);
+  }
+
+  ExitReflowLock();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::AttributeChanged(nsIDocument *aDocument,
+                            nsIContent*  aContent,
+                            nsIAtom*     aAttribute)
+{
+  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
+
+  EnterReflowLock();
+
+  // Notify the first frame that maps the content. It will generate a reflow
+  // command, if necessary
+  nsIFrame* frame = FindFrameWithContent(aContent);
+
+  // Note: There may not be a frame that maps the content
+  if (nsnull != frame) {
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+       ("PresShell::AttributeChanged: content=%p[%s] frame=%p",
+        aContent, ContentTag(aContent, 0), frame));
+    frame->AttributeChanged(this, mPresContext, aContent, aAttribute);
   }
 
   ExitReflowLock();

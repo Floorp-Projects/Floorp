@@ -62,30 +62,33 @@ public:
   NS_IMETHOD BeginLoad(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD EndLoad(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD BeginReflow(nsIDocument *aDocument,
-			 nsIPresShell* aShell) { return NS_OK; }
+			                   nsIPresShell* aShell) { return NS_OK; }
   NS_IMETHOD EndReflow(nsIDocument *aDocument,
-		       nsIPresShell* aShell) { return NS_OK; } 
+		                   nsIPresShell* aShell) { return NS_OK; } 
   NS_IMETHOD ContentChanged(nsIDocument *aDocument,
-			    nsIContent* aContent,
+			                      nsIContent* aContent,
                             nsISupports* aSubContent) { return NS_OK; }
+  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
+                              nsIContent*  aContent,
+                              nsIAtom*     aAttribute) { return NS_OK; }
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
-			     nsIContent* aContainer,
-           PRInt32     aNewIndexInContainer);
+			                       nsIContent* aContainer,
+                             PRInt32     aNewIndexInContainer);
   NS_IMETHOD ContentInserted(nsIDocument *aDocument,
-			     nsIContent* aContainer,
+			                       nsIContent* aContainer,
                              nsIContent* aChild,
                              PRInt32 aIndexInContainer);
   NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
-			     nsIContent* aContainer,
+			                       nsIContent* aContainer,
                              nsIContent* aOldChild,
                              nsIContent* aNewChild,
                              PRInt32 aIndexInContainer);
   NS_IMETHOD ContentWillBeRemoved(nsIDocument *aDocument,
-				  nsIContent* aContainer,
+				                          nsIContent* aContainer,
                                   nsIContent* aChild,
                                   PRInt32 aIndexInContainer) { return NS_OK; }
   NS_IMETHOD ContentHasBeenRemoved(nsIDocument *aDocument,
-				   nsIContent* aContainer,
+				                           nsIContent* aContainer,
                                    nsIContent* aChild,
                                    PRInt32 aIndexInContainer);
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,

@@ -179,6 +179,10 @@ public:
                              nsIPresContext* aPresContext,
                              nsIContent*     aChild,
                              nsISupports*    aSubContent);
+  NS_IMETHOD  AttributeChanged(nsIPresShell*   aShell,
+                               nsIPresContext* aPresContext,
+                               nsIContent*     aChild,
+                               nsIAtom*        aAttribute);
   NS_IMETHOD  GetReflowMetrics(nsIPresContext&  aPresContext,
                                nsReflowMetrics& aMetrics);
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;

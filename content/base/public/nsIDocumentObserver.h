@@ -89,6 +89,20 @@ public:
                             nsISupports* aSubContent) = 0;
 
   /**
+   * Notification that the content model has changed. This method is called
+   * automatically by content objects when an attribute's value has changed
+   * (therefore there is normally no need to invoke this method directly). The
+   * notification is passed to any IDocumentObservers document observers. <p>
+   *
+   * @param aDocument The document being observed
+   * @param aContent the piece of content whose attribute changed
+   * @param aAttribute the atom name of the attribute
+   */
+  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
+                              nsIContent*  aContent,
+                              nsIAtom*     aAttribute) = 0;
+
+  /**
    * Notifcation that the content model has had data appended to the
    * given content object. This method is called automatically by the
    * content container objects when a new content object is appended to
