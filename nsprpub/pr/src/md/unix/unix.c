@@ -3305,6 +3305,9 @@ _MD_LockFile(PRInt32 f)
     struct flock arg;
 
     arg.l_type = F_WRLCK;
+    arg.l_whence = SEEK_SET;
+    arg.l_start = 0;
+    arg.l_len = 0;  /* until EOF */
     rv = fcntl(f, F_SETLKW, &arg);
     if (rv == 0)
         return PR_SUCCESS;
@@ -3319,6 +3322,9 @@ _MD_TLockFile(PRInt32 f)
     struct flock arg;
 
     arg.l_type = F_WRLCK;
+    arg.l_whence = SEEK_SET;
+    arg.l_start = 0;
+    arg.l_len = 0;  /* until EOF */
     rv = fcntl(f, F_SETLK, &arg);
     if (rv == 0)
         return PR_SUCCESS;
@@ -3333,6 +3339,9 @@ _MD_UnlockFile(PRInt32 f)
     struct flock arg;
 
     arg.l_type = F_UNLCK;
+    arg.l_whence = SEEK_SET;
+    arg.l_start = 0;
+    arg.l_len = 0;  /* until EOF */
     rv = fcntl(f, F_SETLK, &arg);
     if (rv == 0)
         return PR_SUCCESS;
