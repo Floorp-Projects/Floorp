@@ -28,6 +28,7 @@ use strict;
 use lib qw(.);
 
 require "CGI.pl";
+require "bug_form.pl";
 
 # Shut up misguided -w warnings about "used only once". For some reason,
 # "use vars" chokes on me when I try it here.
@@ -302,9 +303,14 @@ $mailresults .= $_ while <PMAIL>;
 close(PMAIL);
 
 # Tell the user all about it
-$vars->{'bug_id'} = $id;
-$vars->{'mailresults'} = $mailresults;
+$vars->{'id'} = $id;
+$vars->{'mail'} = $mailresults;
+$vars->{'type'} = "created";
 
 print "Content-type: text/html\n\n";
 $template->process("bug/create/created.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
+
+$::FORM{'id'} = $id;
+
+show_bug("header is already done");

@@ -20,28 +20,11 @@
   #%]
 
 [% PROCESS global/header.html.tmpl 
-  title = "Bug $bug_id Submitted"
+  title = "Bug $id Submitted"
 %]
 
-<table border="1">
-  <tr>
-    <td>
-      <h2>Bug [% bug_id %] has been added to the database.</h2>
+[% PROCESS bug/process/results.html.tmpl %]
 
-      [% mailresults %]
-      
-    </td>
-    <td>
-      <a href="show_bug.cgi?id=[% bug_id %]">Back To Bug# [% bug_id %]</a>
-    </td>
-  </tr>  
-</table>
+<br>
 
-<p>
-<a href="attachment.cgi?bugid=[% bug_id %]&amp;action=enter">
-  Attach a file to this bug</a>.
-</p>
-
-[% PROCESS bug/navigate.html.tmpl %]
-
-[% PROCESS global/footer.html.tmpl %]
+[%# post_bug.cgi will add a copy of the filed bug below here %]

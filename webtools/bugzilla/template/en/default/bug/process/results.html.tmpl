@@ -31,17 +31,18 @@
 
 [% 
   title = {
-    'bug' => "Changes submitted for bug" , 
-    'dupe' => "Duplicate notation added to bug" , 
-    'dep' => "Checking for dependency changes on bug" , 
-    'votes' => "Confirmed by number of votes: bug" , 
+    'bug' => "Changes submitted for bug $id" , 
+    'dupe' => "Duplicate notation added to bug $id" , 
+    'dep' => "Checking for dependency changes on bug $id" , 
+    'votes' => "Bug $id confirmed by number of votes" , 
+    'created' => "Bug $id has been added to the database" , 
   } 
 %]
 
 <table border="1">
   <tr>
     <td>
-      <h2>[% title.$type %] [%+ id %]</h2>
+      <h2>[% title.$type %]</h2>
       [% mail %]
     </td>
     <td>
