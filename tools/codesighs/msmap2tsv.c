@@ -50,15 +50,17 @@ typedef struct __struct_Options
 /*
 **  Options to control how we perform.
 **
-**  mProgramName    Used in help text.
-**  mInput          File to read for input.
-**                  Default is stdin.
-**  mInputName      Name of the file.
-**  mOutput         Output file, append.
-**                  Default is stdout.
-**  mOutputName     Name of the file.
-**  mHelp           Wether or not help should be shown.
-**  mAddress        Wether or not to output addresses.
+**  mProgramName        Used in help text.
+**  mInput              File to read for input.
+**                      Default is stdin.
+**  mInputName          Name of the file.
+**  mOutput             Output file, append.
+**                      Default is stdout.
+**  mOutputName         Name of the file.
+**  mHelp               Wether or not help should be shown.
+**  mAddress            Wether or not to output addresses.
+**  mMatchModules       Array of strings which the module name should match.
+**  mMatchModuleCount   Number of items in array.
 */
 {
     const char* mProgramName;
@@ -68,6 +70,8 @@ typedef struct __struct_Options
     char* mOutputName;
     int mHelp;
     int mAddresses;
+    char** mMatchModules;
+    unsigned mMatchModuleCount;
 }
 Options;
 
@@ -91,11 +95,13 @@ static Switch gInputSwitch = {"--input", "-i", 1, NULL, "Specify input file." DE
 static Switch gOutputSwitch = {"--output", "-o", 1, NULL, "Specify output file." DESC_NEWLINE "Appends if file exists." DESC_NEWLINE "stdout is default."};
 static Switch gHelpSwitch = {"--help", "-h", 0, NULL, "Information on usage."};
 static Switch gAddressesSwitch = {"--addresses", "-a", 0, NULL, "Output segment addresses." DESC_NEWLINE "Helps reveal symbol ordering." DESC_NEWLINE "Lack of simplifies size diffing."};
+static Switch gMatchModuleSwitch = {"--match-module", "-mm", 1, NULL, "Specify a valid module name." DESC_NEWLINE "Multiple specifications allowed." DESC_NEWLINE "If a module name does not match one of the names specified then no output will occur."};
 
 static Switch* gSwitches[] = {
         &gInputSwitch,
         &gOutputSwitch,
         &gAddressesSwitch,
+        &gMatchModuleSwitch,
         &gHelpSwitch
 };
 
@@ -584,6 +590,32 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
             {
                 fsm.mHasModule = __LINE__;
                 forceContinue = 1;
+
+                if(0 != inOptions->mMatchModuleCount)
+                {
+                    unsigned matchLoop = 0;
+                    
+                    /*
+                    **  If this module name doesn't match, then bail.
+                    **  Compare in a case sensitive manner, exact match only.
+                    */
+                    for(matchLoop = 0; matchLoop < inOptions->mMatchModuleCount; matchLoop++)
+                    {
+                        if(0 == strcmp(inModule->mModule, inOptions->mMatchModules[matchLoop]))
+                        {
+                            break;
+                        }
+                    }
+                    
+                    if(matchLoop == inOptions->mMatchModuleCount)
+                    {
+                        /*
+                        **  A match did not occur, bail out of read loop.
+                        **  No error, however.
+                        */
+                        break;
+                    }
+                }
             }
             else
             {
@@ -1058,6 +1090,34 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
             {
                 outOptions->mHelp = __LINE__;
             }
+            else if(current == &gMatchModuleSwitch)
+            {
+                void* moved = NULL;
+
+                /*
+                **  Add the value to the list of allowed module names.
+                */
+                moved = realloc(outOptions->mMatchModules, sizeof(char*) * (outOptions->mMatchModuleCount + 1));
+                if(NULL != moved)
+                {
+                    outOptions->mMatchModules = (char**)moved;
+                    outOptions->mMatchModules[outOptions->mMatchModuleCount] = strdup(current->mValue);
+                    if(NULL != outOptions->mMatchModules[outOptions->mMatchModuleCount])
+                    {
+                        outOptions->mMatchModuleCount++;
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        ERROR_REPORT(retval, current->mValue, "Unable to duplicate string.");
+                    }
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to allocate space for string.");
+                }
+            }
             else
             {
                 retval = __LINE__;
@@ -1085,6 +1145,12 @@ void cleanOptions(Options* inOptions)
     {
         fclose(inOptions->mOutput);
     }
+    while(0 != inOptions->mMatchModuleCount)
+    {
+        inOptions->mMatchModuleCount--;
+        CLEANUP(inOptions->mMatchModules[inOptions->mMatchModuleCount]);
+    }
+    CLEANUP(inOptions->mMatchModules);
 
     memset(inOptions, 0, sizeof(Options));
 }
