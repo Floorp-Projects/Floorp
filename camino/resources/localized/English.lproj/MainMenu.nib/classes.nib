@@ -64,6 +64,7 @@
                 mCreateBookmarksFolderMenuItem = NSMenuItem; 
                 mCreateBookmarksSeparatorMenuItem = NSMenuItem; 
                 mDockMenu = NSMenu; 
+                mExportPanelView = NSView; 
                 mFilterView = NSView; 
                 mGoMenu = NSMenu; 
                 mServersSubmenu = NSMenu; 

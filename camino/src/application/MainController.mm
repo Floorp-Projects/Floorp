@@ -59,7 +59,6 @@
 #import "JSConsole.h"
 #import "NetworkServices.h"
 #import "MVPreferencesController.h"
-#import "SplashScreenWindow.h"
 #import "FindDlgController.h"
 #import "PreferenceManager.h"
 #import "SharedMenusObj.h"
@@ -144,12 +143,7 @@ const int kReuseWindowOnAE = 2;
 
     NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
     mStartURL = url ? [url retain] : nil;
-#if 0
-// there's a lot of debate about having a splash screen. good cocoa apps don't have them
-// at all. turning off here (but not removing any code) for a time to get community feedback.
-// users can get the buildID from the about window if necessary.
-    mSplashScreen = [[SplashScreenWindow alloc] initWithImage:[NSImage imageNamed:@"splash"] withFade:NO];
-#endif
+
     mFindDialog = nil;
     mMenuBookmarks = nil;
     
@@ -201,9 +195,6 @@ const int kReuseWindowOnAE = 2;
   if (!browserWindow)
     [self newWindow: self];
   
-  [mSplashScreen close]; //deallocs on close
-  mSplashScreen = nil;
-
   // Initialize offline mode.
   mOffline = NO;
   nsCOMPtr<nsIIOService> ioService(do_GetService(ioServiceContractID));

@@ -42,7 +42,6 @@
 @class BookmarkManager;
 @class KeychainService;
 @class BrowserWindowController;
-@class SplashScreenWindow;
 @class SharedMenusObj;
 @class PreferenceManager;
 @class FindDlgController;
@@ -73,8 +72,6 @@
     
     BOOL                    mOffline;
 
-    SplashScreenWindow*   	mSplashScreen;
-    
     BookmarkMenu*           mMenuBookmarks;
     BookmarkMenu*           mDockBookmarks;
     
