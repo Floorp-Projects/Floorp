@@ -514,10 +514,12 @@ ChangeManaged(Widget w)
 		}
 	}
 
+#if 0
 	printf("ChangeManaged(%s,last = %s, new = %s)\n",
 		   XtName(w),
 		   old_managed_child ? XtName(old_managed_child) : "NULL",
 		   new_managed_child ? XtName(new_managed_child) : "NULL");
+#endif
 
 	if (new_managed_child)
 	{
@@ -556,7 +558,9 @@ GeometryManager(Widget child,XtWidgetGeometry *request,XtWidgetGeometry *reply)
 	Widget					w = XtParent(child);
     XfeBypassShellPart *	bp = _XfeBypassShellPart(w);
 
+#if 0
 	printf("GeometryManager(w = %s,child = %s)\n",XtName(w),XtName(child));
+#endif
 
 	if (request->request_mode & XtCWQueryOnly)
 	{
@@ -605,7 +609,7 @@ BtnDown(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
     XfeBypassShellPart *	bp = _XfeBypassShellPart(w);
 
-	printf("BtnDown(%s)\n",XtName(w));
+/* 	printf("BtnDown(%s)\n",XtName(w)); */
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -613,7 +617,7 @@ BtnUp(Widget w,XEvent * event,char ** params,Cardinal * nparams)
 {
     XfeBypassShellPart *	bp = _XfeBypassShellPart(w);
 
-	printf("BtnUp(%s)\n",XtName(w));
+/* 	printf("BtnUp(%s)\n",XtName(w)); */
 }
 /*----------------------------------------------------------------------*/
 
@@ -734,11 +738,11 @@ XfeBypassShellUpdateSize(Widget w)
 
 	assert( XfeIsBypassShell(w) );
 
-	printf("XfeBypassShellUpdateSize(%s)\n",XtName(w));
+/* 	printf("XfeBypassShellUpdateSize(%s)\n",XtName(w)); */
 
  	if (_XfeIsAlive(bp->managed_child))
  	{
-		_XfeMakeGeometryRequest(w,
+      _XfeMakeGeometryRequest(w,
 								_XfeWidth(bp->managed_child) + 2 * bp->shadow_thickness,
 								_XfeHeight(bp->managed_child) + 2 * bp->shadow_thickness);
  	}
