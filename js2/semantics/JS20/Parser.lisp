@@ -16,13 +16,13 @@
     (production :identifier ($identifier) identifier-identifier)
     (production :identifier (get) identifier-get)
     (production :identifier (set) identifier-set)
+    (production :identifier (operator) identifier-operator)
     (production :identifier (exclude) identifier-exclude)
     (production :identifier (include) identifier-include)
     
     (production :qualifier (:identifier) qualifier-identifier)
     (production :qualifier (public) qualifier-public)
     (production :qualifier (private) qualifier-private)
-    (production :qualifier (super) qualifier-super)
     ;(production :qualifier (:qualifier \:\: :identifier) qualifier-identifier-qualifier)
     
     (production :simple-qualified-identifier (:identifier) simple-qualified-identifier-identifier)
@@ -47,12 +47,12 @@
     (production :primary-expression ($number) primary-expression-number)
     (production :primary-expression ($string) primary-expression-string)
     (production :primary-expression (this) primary-expression-this)
-    (production :primary-expression (super) primary-expression-super)
     (production :primary-expression ($regular-expression) primary-expression-regular-expression)
     (production :primary-expression (:unit-expression) primary-expression-unit-expression)
     (production :primary-expression (:array-literal) primary-expression-array-literal)
     (production :primary-expression (:object-literal) primary-expression-object-literal)
     (production :primary-expression (:function-expression) primary-expression-function-expression)
+    (production :primary-expression (:super-expression) primary-expression-super-expression)
     ;(production :primary-expression (eval :parenthesized-expression) primary-expression-eval)
     
     (production :parenthesized-expression (\( (:assignment-expression allow-in) \)) parenthesized-expression-assignment-expression)
@@ -91,7 +91,14 @@
     (production :literal-element ((:assignment-expression allow-in)) literal-element-assignment-expression)
     
     
-    (%subsection "Postfix Unary Operators")
+    (%subsection "Super Operator")
+    (production :super-expression (super (:- \( include exclude)) super-expression-super)
+    (production :super-expression (super this) super-expression-super-this)
+    (production :super-expression (super :qualified-identifier) super-expression-super-qualified-identifier)
+    (production :super-expression (super :parenthesized-expression) super-expression-super-parenthesized-expression)
+    
+    
+    (%subsection "Postfix Operators")
     (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression)
     (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression)
     (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression)
@@ -158,7 +165,7 @@
     (production :named-argument-list (:named-argument-list \, :literal-field) named-argument-list-more)
     
     
-    (%subsection "Prefix Unary Operators")
+    (%subsection "Unary Operators")
     (production :unary-expression (:postfix-expression) unary-expression-postfix)
     (production :unary-expression (delete :postfix-expression) unary-expression-delete)
     (production :unary-expression (void :unary-expression) unary-expression-void)
@@ -533,6 +540,7 @@
     (production :function-name (:identifier) function-name-function)
     (production :function-name (get :no-line-break :identifier) function-name-getter)
     (production :function-name (set :no-line-break :identifier) function-name-setter)
+    (production :function-name (operator :no-line-break $string) function-name-operator)
     
     (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures)
     
@@ -560,7 +568,6 @@
     
     (production :rest-parameter (\.\.\.) rest-parameter-none)
     (production :rest-parameter (\.\.\. :parameter) rest-parameter-parameter)
-    ;(production :rest-parameter (\.\.\. :optional-parameter) rest-parameter-optional-parameter)
     
     (production :parameter (:identifier) parameter-identifier)
     (production :parameter (:identifier \: (:type-expression allow-in)) parameter-identifier-and-type)
