@@ -401,6 +401,9 @@ sub MakeResourceAliases()
 
 	_InstallResources(":mozilla:docshell:base:MANIFEST",							"$global_chrome_dir:locale:en-US:", 0);
 
+	 my($layout_chrome_dir) = "$chrome_dir" . "Layout";
+	_InstallResources(":mozilla:layout:html:forms:src:MANIFEST_PROPERTIES",			"$layout_chrome_dir:locale:en-US:", 0);
+
 	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
 
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:",						"$samples_dir");
