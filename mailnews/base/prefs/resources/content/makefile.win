@@ -42,6 +42,7 @@ install::
 	$(MAKE_INSTALL) pref-diskspace.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) AccountWizard.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) AccountWizard.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-overlay.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-accounttype.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-identity.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-identity.js		$(DIST)\bin\chrome\messenger\content\default

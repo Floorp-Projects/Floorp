@@ -21,6 +21,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
+<?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
 
 <window id="intro" title="intro" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

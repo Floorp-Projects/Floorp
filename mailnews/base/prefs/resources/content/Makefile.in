@@ -47,6 +47,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		pref-diskspace.xul \
 		AccountWizard.xul \
 		AccountWizard.js \
+		aw-overlay.xul \
 		aw-accounttype.xul \
 		aw-identity.xul \
 		aw-identity.js \

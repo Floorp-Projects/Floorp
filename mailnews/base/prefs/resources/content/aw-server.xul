@@ -1,6 +1,4 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/wizard.css" type="text/css"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -22,6 +20,9 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
 <window id="serverpage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -32,10 +33,8 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
 
-  <box class="title" align="horizontal">
+  <box id="wizardHeader">
     <html:div class="title">&serverTitle.label;</html:div>
-    <spring flex="100%"/>
-    <titledbutton id="Throbber"/>
   </box>
 
   <box align="vertical" class="padded">

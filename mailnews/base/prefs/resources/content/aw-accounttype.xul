@@ -1,6 +1,4 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/wizard.css" type="text/css"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -22,6 +20,9 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xul-overlay href="chrome://messenger/content/aw-overlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accounttype.dtd" >
 <window id="accounttype" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -29,11 +30,8 @@ Rights Reserved.
     onload="parent.wizardPageLoaded('accounttype');">
 
 <box align="vertical" style="width: 100%; height: 100%" flex="100%">
-
-  <box class="title" align="horizontal">
-    <html:div class="title">&accountTypeTitle.label;</html:div>
-    <spring flex="100%"/>
-    <titledbutton id="Throbber"/>
+  <box id="wizardHeader">
+    <html:span class="title"><html:div class="title">&accountTypeTitle.label;</html:div></html:span>
   </box>
 
   <html:div class="desc">&accountTypeDesc.label;</html:div>

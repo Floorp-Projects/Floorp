@@ -35,7 +35,7 @@ Rights Reserved.
   <html:iframe flex="100%" style="width: 100%; height:100%; border: none"
                src="chrome://messenger/content/aw-accounttype.xul"
                name="wizardContents" scrolling="auto"/>
-  <html:br/><html:hr/>
+  <html:div class="separator" align="horizontal"/>
   <box align="horizontal" style="margin: 10px">
 <!--
     <html:input type="text" id="newPage" flex="100%"/>
