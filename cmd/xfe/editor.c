@@ -5053,7 +5053,15 @@ fe_EditorDeleteItem(MWContext* context, Boolean previous)
 		result = EDT_DeleteChar(context);
 
     if (result != EDT_COP_OK)
-		fe_editor_report_copy_error(context, result);
+    {
+        static Time lastErrTime = 0;
+        Time time = XtLastTimestampProcessed(XtDisplay(CONTEXT_WIDGET(context)));
+	unsigned int delta = (time - lastErrTime);
+
+        if (delta > XtGetMultiClickTime(XtDisplay(CONTEXT_WIDGET(context))))
+            fe_editor_report_copy_error(context, result);
+        lastErrTime = time;
+    }
 
     fe_EditorUpdateToolbar(context, 0);
 }
