@@ -829,11 +829,17 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
             if (!al->table) {
                 /* No hash table yet, so hep had better be null! */
                 JS_ASSERT(!hep);
-                al->table = JS_NewHashTable(8, js_hash_atom_ptr,
+                al->table = JS_NewHashTable(al->count + 1, js_hash_atom_ptr,
                                             JS_CompareValues, JS_CompareValues,
                                             &temp_alloc_ops, cx);
                 if (!al->table)
                     return NULL;
+
+                /*
+                 * Set ht->nentries explicitly, because we are moving entries
+                 * from al to ht, not calling JS_HashTable(Raw|)Add.
+                 */
+                al->table->nentries = al->count;
 
                 /* Insert each ale on al->list into the new hash table. */
                 for (ale2 = al->list; ale2; ale2 = next) {
