@@ -32,7 +32,7 @@ IS_COMPONENT	= 1
 
 REQUIRES	= js pref security ldap img layer xpcom util
 
-CSRCS		= $(OS2CSRCS) prefapi.c
+CSRCS		= prefapi.c
 
 CPPSRCS		= nsPref.cpp
 
@@ -44,33 +44,20 @@ PREF_JS_EXPORTS	= \
 		$(srcdir)/init/config.js \
 		$(NULL)
 
-ifneq ($(subst /,_,$(shell uname -s)),OS2)
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+PREF_JS_EXPORTS	+= $(srcdir)/os2/os2pref.js
+else
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 PREF_JS_EXPORTS	+= $(srcdir)/beos/beos.js
 else
 PREF_JS_EXPORTS	+= $(srcdir)/unix/unix.js
 endif
-else
-PREF_JS_EXPORTS	+= $(srcdir)/win/winpref.js $(srcdir)/os2/os2pref.js
-OS2CSRCS	= prefldap.c
-LIBRARY		= xppref32.$(LIB_SUFFIX)
-OS2_IMPLIB	= 1
-DEF_FILE	= xpOS2.def
-EXTRA_LIBS	= \
-		$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
-		$(LIBNSPR) \
-		$(DIST)/lib/libldap.lib \
-		$(DIST)/lib/liblber.lib \
-		$(DIST)/lib/libldap.lib \
-		$(DIST)/lib/libhash.lib \
-		$(NULL)
 endif
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
-		$(NSPR_LIBS) \
-		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
