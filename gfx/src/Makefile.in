@@ -34,6 +34,10 @@ REQUIRES	= util img xpcom raptor netlib dom js
 
 DIRS		= ps
 
+ifdef MOZ_ENABLE_XPRINT
+DIRS		+= xprint
+endif
+
 # Build xlibrgb only for X toolkits
 ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= xlibrgb
