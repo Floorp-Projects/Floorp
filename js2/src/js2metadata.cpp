@@ -1689,7 +1689,8 @@ namespace MetaData {
             {
                 js2val a;
                 if (!env->findThis(this, true, &a) || (a == JS2VAL_VOID))
-                    reportError(Exception::syntaxError, "No 'this' available", p->pos);
+					if (!cxt->E3compatibility)
+						reportError(Exception::syntaxError, "No 'this' available", p->pos);
             }
             break;
         case ExprNode::superExpr:
@@ -3485,30 +3486,79 @@ static const uint8 urlCharType[256] =
 
     static js2val GlobalObject_parseInt(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
     {
-        const String *str = meta->toString(argv[0]);
-        const char16 *chars = str->data();
-        uint32 length = str->length();
-        const char16 *numEnd;
-        uint base = 0;
-        
-        if (argc > 1) {
-            float64 d = meta->toFloat64(argv[1]);
-            if (!JSDOUBLE_IS_FINITE(d) || ((base = (int32)d) != d))
+        if (argc > 0) {
+            const String *str = meta->toString(argv[0]);
+            const char16 *chars = str->data();
+            uint32 length = str->length();
+            const char16 *numEnd;
+            uint base = 0;
+
+            // we need to handle the prefix & radix ourselves as 'stringToInteger' does it differently
+            const char16 *strEnd = chars + length;
+            const char16 *strStart = skipWhiteSpace(chars, strEnd);
+            if (strStart == strEnd)
                 return meta->engine->nanValue;
-            if (base == 0)
-                base = 10;
-            else
-                if ((base < 2) || (base > 36))
+
+            bool neg = false;
+            if (*strStart == '-') {
+                neg = true;
+                strStart++;
+            }
+            else {
+                if (*strStart == '+')
+                    strStart++;
+            }
+
+            if (argc > 1) {
+                float64 d = meta->toFloat64(argv[1]);
+                base = JS2Engine::float64toInt32(d);
+                if ((base != 0) && ((base < 2) || (base > 36)))
                     return meta->engine->nanValue;
+            }
+            if (*strStart == '0') {
+                if ((strStart[1] & ~0x20) == 'X') {
+                    base = 16;
+                    strStart += 2;
+                }
+                else {
+                    // backwards octal support
+                    if ((argc == 1) && ((strStart + 1) != strEnd) && meta->cxt.E3compatibility) {
+                        base = 8;
+                        strStart++;
+                    }
+                }
+            }
+            if (strStart == strEnd)
+                return meta->engine->nanValue;
+                
+            float64 d = stringToInteger(strStart, strEnd, numEnd, base);
+
+            return meta->engine->allocNumber((neg) ? -d : d);
         }
+		else
+			return meta->engine->nanValue;
         
-        return meta->engine->allocNumber(stringToInteger(chars, chars + length, numEnd, base));
     }
 
     static js2val GlobalObject_parseFloat(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
     {
-        const String *str = meta->toString(argv[0]);
-        return meta->engine->allocNumber(meta->convertStringToDouble(str));
+        if (argc > 0) {
+            const String *str = meta->toString(argv[0]);
+            const char16 *chars = str->data();
+            uint32 length = str->length();
+            const char16 *numEnd;
+            const char16 *strEnd = chars + length;
+            const char16 *strStart = skipWhiteSpace(chars, strEnd);
+            if (strStart == strEnd)
+                return meta->engine->nanValue;
+
+            float64 d = stringToDouble(strStart, strEnd, numEnd);
+            if (numEnd == strStart)
+                return meta->engine->nanValue;
+            return meta->engine->allocNumber(d);
+        }
+        else
+			return meta->engine->nanValue;
     }
 
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)

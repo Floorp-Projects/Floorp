@@ -987,6 +987,7 @@ namespace MetaData {
         }
         phase = execPhase;
         meta->env = env;
+		retval = JS2VAL_VOID;
     }
 
     // Return to previously saved execution state
@@ -1006,13 +1007,11 @@ namespace MetaData {
         // reset to previous env.
         meta->env = activationStackTop->env;
         sp = execStack + activationStackTop->execStackBase;
-        if (!JS2VAL_IS_VOID(activationStackTop->retval))               // XXX might need an actual 'returnValue' flag instead?
-            // if the value being returned is a non-object, prefer it to the value
-            // set in the activation frame. [This is the mechanism used to handle
-            // the automatic return of a new object from an E3 constructor call]
-            if (!JS2VAL_IS_OBJECT(retval))
-                retval = activationStackTop->retval;
-    }
+
+		if (!JS2VAL_IS_VOID(activationStackTop->retval))
+			retval = activationStackTop->retval;
+    
+	}
 
     // GC-mark any JS2Objects in the activation frame stack, the execution stack
     // and in structures contained in those locations.
