@@ -1246,7 +1246,7 @@ nsEditorShell::Exit()
                                                nsIAppShellService::GetIID(),
                                                (nsISupports**)&appShell);
     if (NS_SUCCEEDED(rv)) {
-      appShell->Shutdown();
+      appShell->Quit();
       nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
     } 
   }
