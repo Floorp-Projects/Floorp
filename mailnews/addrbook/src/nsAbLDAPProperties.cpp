@@ -42,6 +42,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 /*
     Table defining the relationship between
@@ -71,7 +72,7 @@
     class of ldap object the property belongs.
 */
 
-MozillaLdapPropertyRelation mozillaLdapPropertyTable[] =
+static MozillaLdapPropertyRelation mozillaLdapPropertyTable[] =
 {
     // inetOrgPerson
     {MozillaProperty_String, "FirstName",        "givenname"},
@@ -200,7 +201,11 @@ void MozillaLdapPropertyRelator::Initialize(void)
 const MozillaLdapPropertyRelation* MozillaLdapPropertyRelator::findMozillaPropertyFromLdap (const char* ldapProperty)
 {
     Initialize();
-    nsCStringKey key (ldapProperty) ;
+    // ensure that we always do a case insensitive comparison
+    // against the incoming ldap attributes.
+    nsCAutoString lowercasedProp (ldapProperty) ;
+    ToLowerCase(nsDependentCString(ldapProperty),lowercasedProp);
+    nsCStringKey key (lowercasedProp) ;
 
     return NS_REINTERPRET_CAST(const MozillaLdapPropertyRelation *, mLdapToMozilla.Get(&key)) ;
 
