@@ -80,6 +80,9 @@ void nsDocLoadObserver::Unregister()
 
 void nsDocLoadObserver::AddEchoRequester(OSType appSignature)
 {
+  // make sure an application is only in the list once
+  mEchoRequesters.RemoveElement((void*)appSignature);
+  
 	mEchoRequesters.AppendElement((void*)appSignature);
 	Register();     // ensure we are registered
 }

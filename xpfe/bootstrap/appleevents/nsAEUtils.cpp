@@ -91,13 +91,17 @@ exit:
 
 OSErr AEGetDescData(const AEDesc *theAEDesc, void *dataPtr, Size maximumSize)
 {
+  OSErr err = noErr;
+  
 	if (theAEDesc->dataHandle)
 	{
 		Size dataLength = GetHandleSize(theAEDesc->dataHandle);
 		BlockMoveData(*theAEDesc->dataHandle, dataPtr, Min(dataLength, maximumSize));
 	}
 	else
-		return paramErr;
+		err = paramErr;
+		
+	return err;
 }
 
 /*----------------------------------------------------------------------------
