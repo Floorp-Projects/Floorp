@@ -447,7 +447,7 @@ class nsDOMWindowController : public nsIController
 {
 public:
 	nsDOMWindowController( nsIDOMWindowInternal* aWindow );
-  ~nsDOMWindowController();
+  virtual ~nsDOMWindowController();
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLER
 
