@@ -113,7 +113,7 @@ nsLanguageAtomService::LookupLanguage(const nsAString &aLanguage,
     nsCOMPtr<nsIAtom> langGroup = do_GetAtom(langGroupStr);
 
     // The hashtable will keep an owning reference to the atom
-    mLangs.Put(lowered, lang);
+    mLangs.Put(lowered, langGroup);
     lang = langGroup;
   }
 
