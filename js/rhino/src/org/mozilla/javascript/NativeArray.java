@@ -592,163 +592,200 @@ public class NativeArray extends IdScriptable {
     {
         long length = (long)getLengthProperty(thisObj);
 
+        if (length <= 1) { return thisObj; }
+
         Object compare;
-        if (args.length > 0 && Undefined.instance != args[0])
+        Object[] cmpBuf;
+        
+        if (args.length > 0 && Undefined.instance != args[0]) {
             // sort with given compare function
             compare = args[0];
-        else
+            cmpBuf = new Object[2]; // Buffer for cmp arguments
+        } else {
             // sort with default compare
             compare = null;
-
-
-        // OPT: Would it make sense to use the extended sort for very small
-        // arrays?
+            cmpBuf = null;
+        }
 
         // Should we use the extended sort function, or the faster one?
         if (length >= Integer.MAX_VALUE) {
-            qsort_extended(cx, compare, thisObj, 0, length - 1);
-        } else {
+            heapsort_extended(cx, scope, thisObj, length, compare, cmpBuf);
+        }
+        else {
+            int ilength = (int)length;
             // copy the JS array into a working array, so it can be
             // sorted cheaply.
-            Object[] working = new Object[(int)length];
-            for (int i=0; i<length; i++) {
+            Object[] working = new Object[ilength];
+            for (int i = 0; i != ilength; ++i) {
                 working[i] = getElem(thisObj, i);
             }
 
-            qsort(cx, compare, working, 0, (int)length - 1, scope);
+            heapsort(cx, scope, working, ilength, compare, cmpBuf);
 
             // copy the working array back into thisObj
-            for (int i=0; i<length; i++) {
+            for (int i = 0; i != ilength; ++i) {
                 setElem(thisObj, i, working[i]);
             }
         }
         return thisObj;
     }
 
-    private static double qsortCompare(Context cx, Object jsCompare, Object x,
-                                       Object y, Scriptable scope)
+    // Return true only if x > y
+    private static boolean isBigger(Context cx, Scriptable scope,
+                                    Object x, Object y,
+                                    Object cmp, Object[] cmpBuf) 
         throws JavaScriptException
     {
+        if (check) {
+            if (cmp == null) {
+                if (cmpBuf != null) Context.codeBug();
+            } else {
+                if (cmpBuf == null || cmpBuf.length != 2) Context.codeBug();
+            }
+        }
+
         Object undef = Undefined.instance;
 
         // sort undefined to end
-        if (undef == x || undef == y) {
-            if (undef != x)
-                return -1;
-            if (undef != y)
-                return 1;
-            return 0;
+        if (undef == y) {
+            return false; // x can not be bigger then undef
+        } else if (undef == x) {
+            return true; // y != undef here, so x > y
         }
-
-        if (jsCompare == null) {
-            // if no compare function supplied, sort lexicographically
+        
+        if (cmp == null) {
+            // if no cmp function supplied, sort lexicographically
             String a = ScriptRuntime.toString(x);
             String b = ScriptRuntime.toString(y);
+            return a.compareTo(b) > 0;
+        }
+        else {
+            // assemble args and call supplied JS cmp function
+            cmpBuf[0] = x;
+            cmpBuf[1] = y;
+            Object ret = ScriptRuntime.call(cx, cmp, null, cmpBuf, scope);
+            double d = ScriptRuntime.toNumber(ret);
 
-            return a.compareTo(b);
-        } else {
-            // assemble args and call supplied JS compare function
-            // OPT: put this argument creation in the caller and reuse it.
-            // XXX what to do when compare function returns NaN?  ECMA states
+            // XXX what to do when cmp function returns NaN?  ECMA states
             // that it's then not a 'consistent compararison function'... but
             // then what do we do?  Back out and start over with the generic
-            // compare function when we see a NaN?  Throw an error?
-            Object[] args = {x, y};
-//             return ScriptRuntime.toNumber(ScriptRuntime.call(jsCompare, null,
-//                                                              args));
+            // cmp function when we see a NaN?  Throw an error?
+
             // for now, just ignore it:
-            double d = ScriptRuntime.
-                toNumber(ScriptRuntime.call(cx, jsCompare, null, args, scope));
 
-            return (d == d) ? d : 0;
+            return d > 0;
         }
     }
-
-    private static void qsort(Context cx, Object jsCompare, Object[] working,
-                              int lo, int hi, Scriptable scope)
+    
+/** Heapsort implementation. 
+ * See "Introduction to Algorithms" by Cormen, Leiserson, Rivest for details.
+ * Adjusted for zero based indexes.
+ */
+    private static void heapsort(Context cx, Scriptable scope,
+                                 Object[] array, int length,
+                                 Object cmp, Object[] cmpBuf)
         throws JavaScriptException
     {
-        Object pivot;
-        int i, j;
-        int a, b;
-
-        while (lo < hi) {
-            i = lo;
-            j = hi;
-            a = i;
-            pivot = working[a];
-            while (i < j) {
-                for(;;) {
-                    b = j;
-                    if (qsortCompare(cx, jsCompare, working[j], pivot, 
-                                     scope) <= 0)
-                        break;
-                    j--;
-                }
-                working[a] = working[b];
-                while (i < j && qsortCompare(cx, jsCompare, working[a],
-                                             pivot, scope) <= 0)
-                {
-                    i++;
-                    a = i;
-                }
-                working[b] = working[a];
-            }
-            working[a] = pivot;
-            if (i - lo < hi - i) {
-                qsort(cx, jsCompare, working, lo, i - 1, scope);
-                lo = i + 1;
-            } else {
-                qsort(cx, jsCompare, working, i + 1, hi, scope);
-                hi = i - 1;
-            }
+        if (check && length <= 1) Context.codeBug();
+        
+        // Build heap
+        for (int i = length / 2; i != 0;) {
+            --i;
+            Object pivot = array[i];
+            heapify(cx, scope, pivot, array, i, length, cmp, cmpBuf);
+        }
+        
+        // Sort heap
+        for (int i = length; i != 1;) {
+            --i;
+            Object pivot = array[i];
+            array[i] = array[0];
+            heapify(cx, scope, pivot, array, 0, i, cmp, cmpBuf);
         }
     }
-
-    // A version that knows about long indices and doesn't use
-    // a working array.  Probably will never be used.
-    private static void qsort_extended(Context cx, Object jsCompare,
-                                       Scriptable target, long lo, long hi)
+    
+/** pivot and child heaps of i should be made into heap starting at i,
+ * original array[i] is never used to have less array access during sorting.
+ */
+    private static void heapify(Context cx, Scriptable scope,
+                                Object pivot, Object[] array, int i, int end,
+                                Object cmp, Object[] cmpBuf)
         throws JavaScriptException
     {
-        Object pivot;
-        long i, j;
-        long a, b;
-
-        while (lo < hi) {
-            i = lo;
-            j = hi;
-            a = i;
-            pivot = getElem(target, a);
-            while (i < j) {
-                for(;;) {
-                    b = j;
-                    if (qsortCompare(cx, jsCompare, getElem(target, j),
-                                     pivot, target) <= 0)
-                        break;
-                    j--;
-                }
-                setElem(target, a, getElem(target, b));
-                while (i < j && qsortCompare(cx, jsCompare,
-                                             getElem(target, a), 
-                                             pivot, target) <= 0)
-                {
-                    i++;
-                    a = i;
-                }
-                setElem(target, b, getElem(target, a));
+        for (;;) {
+            int child = i * 2 + 1;
+            if (child >= end) {
+                break;
             }
-            setElem(target, a, pivot);
-            if (i - lo < hi - i) {
-                qsort_extended(cx, jsCompare, target, lo, i - 1);
-                lo = i + 1;
-            } else {
-                qsort_extended(cx, jsCompare, target, i + 1, hi);
-                hi = i - 1;
+            Object childVal = array[child];
+            if (child + 1 < end) {
+                Object nextVal = array[child + 1];
+                if (isBigger(cx, scope, nextVal, childVal, cmp, cmpBuf)) { 
+                    ++child; childVal = nextVal;
+                }
             }
+            if (!isBigger(cx, scope, childVal, pivot, cmp, cmpBuf)) {
+                break;
+            }
+            array[i] = childVal;
+            i = child;
+        }
+        array[i] = pivot;
+    }
+        
+/** Version of heapsort that call getElem/setElem on target to query/assign
+ * array elements instead of Java array access
+ */
+    private static void heapsort_extended(Context cx, Scriptable scope,
+                                          Scriptable target, long length,
+                                          Object cmp, Object[] cmpBuf)
+        throws JavaScriptException
+    {
+        if (check && length <= 1) Context.codeBug();
+        
+        // Build heap
+        for (long i = length / 2; i != 0;) {
+            --i;
+            Object pivot = getElem(target, i);
+            heapify_extended(cx, scope, pivot, target, i, length, cmp, cmpBuf);
+        }
+        
+        // Sort heap
+        for (long i = length; i != 1;) {
+            --i;
+            Object pivot = getElem(target, i);
+            setElem(target, i, getElem(target, 0));
+            heapify_extended(cx, scope, pivot, target, 0, i, cmp, cmpBuf);
         }
     }
-
+    
+    private static void heapify_extended(Context cx, Scriptable scope,
+                                         Object pivot, Scriptable target,
+                                         long i, long end,
+                                         Object cmp, Object[] cmpBuf)
+        throws JavaScriptException
+    {
+        for (;;) {
+            long child = i * 2 + 1;
+            if (child >= end) {
+                break;
+            }
+            Object childVal = getElem(target, child);
+            if (child + 1 < end) {
+                Object nextVal = getElem(target, child + 1);
+                if (isBigger(cx, scope, nextVal, childVal, cmp, cmpBuf)) { 
+                    ++child; childVal = nextVal;
+                }
+            }
+            if (!isBigger(cx, scope, childVal, pivot, cmp, cmpBuf)) {
+                break;
+            }
+            setElem(target, i, childVal);
+            i = child;
+        }
+        setElem(target, i, pivot);
+    }
+        
     /**
      * Non-ECMA methods.
      */
@@ -1160,4 +1197,6 @@ public class NativeArray extends IdScriptable {
     private static final int maximumDenseLength = 10000;
     
     private boolean prototypeFlag;
+    
+    private static final boolean check = true && Context.check;
 }
