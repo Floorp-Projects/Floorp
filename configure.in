@@ -2638,6 +2638,14 @@ dnl = Set the timer libs according to MOZ_MONOLITHIC_TOOLKIT
 dnl =
 dnl ========================================================
 MOZ_TIMER_LIBS=-ltimer_s
+
+# Beos needs to link the timer in dynamically
+case "$target" in
+    *-beos*)
+        MOZ_TIMER_LIBS=-ltimer_beos
+	;;
+esac
+
 dnl ========================================================
 dnl =
 dnl = End MOZ_TIMER_LIBS
