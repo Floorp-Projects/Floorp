@@ -10,8 +10,8 @@ A * {text-decoration: inherit}
 .es-title {color: #999900}
 .draft-title {color: #FF0000}
 .mod-date {font-size: smaller; font-style: italic; text-align: right}
-.sub {font-size: 50%}
-.sub-num {font-size: smaller; font-style: normal}
+.sub {font-size: 70%}
+.sub-num {font-size: 70%; font-style: normal}
 .syntax {margin-left: 0.5in}
 .indent {margin-left: 0.5in}
 .issue {color: #FF0000}
@@ -23,7 +23,7 @@ DT {font-style: italic; margin-top: 3pt}
 
 .js2 {background-color: #FFFF66; color: #000033}
 .js2-hidden {}
-.es4 {background-color: #CCCCFF; color: #333300}
+.es4 {background-color: #FFCCCC; color: #333300; text-decoration: line-through}
 .es4-hidden {}
 
 .grammar-rule {margin-left: 18pt; margin-top: 6pt; margin-bottom: 6pt}
@@ -32,6 +32,7 @@ DT {font-style: italic; margin-top: 3pt}
 .grammar-argument {margin-left: 18pt; margin-top: 6pt; margin-bottom: 6pt}
 .semantics {margin-left: 9pt; margin-top: 3pt; margin-bottom: 3pt}
 .semantics-next {margin-left: 27pt; margin-bottom: 3pt}
+.semantic-comment {margin-left: 9pt; margin-top: 9pt; margin-bottom: 0pt}
 
 .symbol {font-family: Symbol}
 .unicode {font-family: "Lucida Sans Unicode", serif}
@@ -58,6 +59,7 @@ A.nonterminal:active, .nonterminal A:active, A:active .nonterminal {color: #00FF
 A.type-expression:hover, A:hover .type-expression, A.type-name:hover, A:hover .type-name {color: #990000}
 A.type-expression:active, A:active .type-expression, A.type-name:active, A:active .type-name {color: #FF6666}
 .type-name {font-variant: small-caps}
+.id-name {font-family: Arial, Helvetica, sans-serif; font-variant: small-caps}
 .field-name, A.field-name:link, A.field-name:visited {font-family: Arial, Helvetica, sans-serif; color: #FF0000}
 A.field-name:hover, A:hover .field-name {color: #CC3333}
 A.field-name:active, A:active .field-name {color: #FF6666}
