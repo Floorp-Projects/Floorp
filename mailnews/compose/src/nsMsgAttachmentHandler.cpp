@@ -104,6 +104,7 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 	mAppleFileSpec = nsnull;
 #endif
 
+  mDeleteFile = PR_FALSE;
 }
 
 nsMsgAttachmentHandler::~nsMsgAttachmentHandler()
@@ -404,17 +405,30 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 {
   nsresult      status = 0;
   const char    *url_string = nsnull;
+  char          *tempName = nsnull;
 
   NS_ASSERTION (! m_done, "Already done");
 
   if (!mURL)
     return NS_ERROR_INVALID_ARG;
 
+  tempName = GenerateFileNameFromURI(mURL); // Make it a sane name
+
   mCompFields = compFields;
 
   // First, get as file spec and create the stream for the
   // temp file where we will save this data
-  mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
+  if ((!tempName) || (!*tempName))
+    mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
+  else
+    mFileSpec = nsMsgCreateTempFileSpec(tempName);
+
+  // Set a sane name for the attachment...
+  if (tempName)
+    m_real_name = PL_strdup(tempName);
+
+  PR_FREEIF(tempName);
+
   if (! mFileSpec )
   	return (NS_ERROR_FAILURE);
 
