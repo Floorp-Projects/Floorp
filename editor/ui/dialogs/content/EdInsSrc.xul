@@ -1,18 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window
-[
-
-<!-- These entity declarations will go into a separate, locale file at some point -->
-<!-- Window title -->
-<!ENTITY windowTitle.label "Insert HTML">
-<!ENTITY sourceFieldset.label "HTML Source">
-<!ENTITY sourceEditField.label "Enter HTML source to insert:">
-<!ENTITY OKButton.label "OK">
-<!ENTITY CancelButton.label "Cancel">
-
-]>
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertSource.dtd">
 
 <xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
