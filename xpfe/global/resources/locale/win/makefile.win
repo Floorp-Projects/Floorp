@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
@@ -23,10 +23,8 @@ DISTBROWSER=$(DIST)\bin\chrome\global\locale\en-US
 
 
 install::
-	$(MAKE_INSTALL) globalOverlay.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) dialogOverlay.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) tasksOverlay.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) commonDialog.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) platformGlobalOverlay.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) platformDialogOverlay.dtd $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\locale\en-US\*.*
