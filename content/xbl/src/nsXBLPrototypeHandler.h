@@ -152,9 +152,9 @@ protected:
                           const PRUnichar* aClickCount=nsnull, const PRUnichar* aPreventDefault=nsnull);
 
   void GetEventType(nsAString& type);
-  PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent, PRInt32 aModifiersMask);
+  PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
 
-  PRInt32 KeyToMask(PRInt32 key);
+  static PRInt32 KeyToMask(PRInt32 key);
   
   static PRInt32 kAccelKey;
   static PRInt32 kMenuAccessKey;
@@ -164,6 +164,12 @@ protected:
   static const PRInt32 cAlt;
   static const PRInt32 cControl;
   static const PRInt32 cMeta;
+
+  static const PRInt32 cShiftMask;
+  static const PRInt32 cAltMask;
+  static const PRInt32 cControlMask;
+  static const PRInt32 cMetaMask;
+
   static const PRInt32 cAllModifiers;
 
 protected:
