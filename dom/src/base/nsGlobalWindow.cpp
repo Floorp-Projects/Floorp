@@ -2881,7 +2881,7 @@ GlobalWindowImpl::GetRootFocusController(nsIFocusController** aController)
     if (chromeHandler) {
       nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(chromeHandler));
       if (windowRoot) {
-        windowRoot->GetFocusController(getter_AddRefs(aController));
+        windowRoot->GetFocusController(aController);
       }
     }
   }

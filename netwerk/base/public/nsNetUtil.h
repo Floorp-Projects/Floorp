@@ -589,7 +589,7 @@ NS_AsyncWriteFromStream(nsIRequest **aRequest,
                                   aOffset,
                                   aCount,
                                   aFlags,
-                                  getter_AddRefs(aRequest));
+                                  aRequest);
 }
 
 //
@@ -619,7 +619,7 @@ NS_AsyncReadToStream(nsIRequest **aRequest,
                                  aOffset,
                                  aCount,
                                  aFlags,
-                                 getter_AddRefs(aRequest));
+                                 aRequest);
 }
 
 #endif // nsNetUtil_h__

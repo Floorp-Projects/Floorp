@@ -1244,7 +1244,7 @@ nsWebShell::GetControllerForCommand ( const nsAReadableString & inCommand, nsICo
     nsCOMPtr<nsIFocusController> focusController;
     rv = window->GetRootFocusController ( getter_AddRefs(focusController) );
     if ( focusController )
-      rv = focusController->GetControllerForCommand ( inCommand, getter_AddRefs(outController) );
+      rv = focusController->GetControllerForCommand ( inCommand, outController );
   } // if window
 
   return rv;

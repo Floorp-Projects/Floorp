@@ -2660,7 +2660,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
 	}		
 #endif
 
-    extractHereSpec->Clone(getter_AddRefs(aRealName));
+    extractHereSpec->Clone(aRealName);
 
     return nsInstall::SUCCESS;
 }

@@ -553,7 +553,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         if (status == GDIFF_ERR_CHECKSUM)
             status = GDIFF_ERR_CHECKSUM_RESULT;
 
-        rv = outFileSpec->Clone(getter_AddRefs(newFile));
+        rv = outFileSpec->Clone(newFile);
     } 
     else 
     {
@@ -616,7 +616,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         anotherName->GetLeafName(&leaf);
         anotherName->CopyTo(parent, leaf);
         
-        anotherName->Clone(getter_AddRefs(newFile));
+        anotherName->Clone(newFile);
         
 	}
 	

@@ -155,7 +155,7 @@ nsXULControllers::RemoveControllerAt(PRUint32 index, nsIController **_retval)
   PRBool removed = mControllers.RemoveElementAt(index);
   NS_ASSERTION(removed, "Removal of controller failed");
     
-  controllerData->GetController(getter_AddRefs(_retval));
+  controllerData->GetController(_retval);
   delete controllerData;
   
     return NS_OK;
