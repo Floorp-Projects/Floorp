@@ -543,12 +543,16 @@ function OpenBookmarkGroupFromResource(resource, datasource, rdf) {
   var tabPanels = gBrowser.mPanelContainer.childNodes;
   var tabCount = tabPanels.length;
   var index = 0;
-  for (; containerChildren.hasMoreElements(); ++index) {
-    var res = containerChildren.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    var target = datasource.GetTarget(res, urlResource, true);
+  while (containerChildren.hasMoreElements()) {
+    var resource = containerChildren.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+    var target = datasource.GetTarget(resource, urlResource, true);
     if (target) {
       var uri = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-      gBrowser.addTab(uri);
+      if (index < tabCount)
+        tabPanels[index].loadURI(uri, null, nsIWebNavigation.LOAD_FLAGS_NONE);
+      else
+        gBrowser.addTab(uri);
+      index++;
     }
   }  
   
@@ -557,7 +561,11 @@ function OpenBookmarkGroupFromResource(resource, datasource, rdf) {
      
   // Select the first tab in the group.
   var tabs = gBrowser.mTabContainer.childNodes;
-  gBrowser.selectedTab = tabs[tabCount];
+  gBrowser.selectedTab = tabs[0];
+  
+  // Close any remaining open tabs that are left over.
+  for (var i = tabCount-1; i >= index; i--)
+    gBrowser.removeTab(tabs[i]);
 }
 
 function OpenBookmarkURL(node, datasources)
