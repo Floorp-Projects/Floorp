@@ -43,7 +43,7 @@
 namespace JavaScript {
 namespace ICodeASM {
 
-static uint icodemap_size = 5;
+static uint icodemap_size = 6;
 
 static struct {
     char *name;
