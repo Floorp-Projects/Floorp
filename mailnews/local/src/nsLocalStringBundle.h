@@ -68,6 +68,8 @@ private:
 #define POP3_FOLDER_FOR_TRASH                               4023
 #define POP3_STAT_FAILURE                                   4024
 #define POP3_SERVER_SAID                                    4025
-
+#define DELETING_MSGS_STATUS                                4026
+#define COPYING_MSGS_STATUS                                 4027
+#define MOVING_MSGS_STATUS                                  4028
 
 #endif /* _nsImapStringBundle_H__ */
