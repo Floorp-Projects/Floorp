@@ -75,7 +75,7 @@ void nsCheckButton::LocalToWindowCoordinate(nsRect& aRect)
 }
 
 
-void nsCheckButton::Create(nsIWidget *aParent,
+NS_IMETHODIMP nsCheckButton::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext */*aContext*/,
@@ -130,9 +130,10 @@ void nsCheckButton::Create(nsIWidget *aParent,
 	  //InitCallbacks("nsButton");
 	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
 	}
+	return NS_OK;
 }
 
-void nsCheckButton::Create(nsNativeWidget /*aParent*/,
+NS_IMETHODIMP nsCheckButton::Create(nsNativeWidget /*aParent*/,
                       const nsRect &/*aRect*/,
                       EVENT_CALLBACK /*aHandleEventFunction*/,
                       nsIDeviceContext */*aContext*/,
@@ -141,6 +142,7 @@ void nsCheckButton::Create(nsNativeWidget /*aParent*/,
                       nsWidgetInitData */*aInitData*/)
 {
 	NS_ERROR("This Widget must not use this Create method");
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------

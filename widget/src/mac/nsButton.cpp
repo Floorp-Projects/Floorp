@@ -65,7 +65,7 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 
-void nsButton::Create(nsIWidget *aParent,
+NS_IMETHODIMP nsButton::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext */*aContext*/,
@@ -115,9 +115,10 @@ void nsButton::Create(nsIWidget *aParent,
 	  //InitCallbacks("nsButton");
 	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
 	}
+	return NS_OK;
 }
 
-void nsButton::Create(nsNativeWidget /*aParent*/,
+NS_IMETHODIMP nsButton::Create(nsNativeWidget /*aParent*/,
                       const nsRect &/*aRect*/,
                       EVENT_CALLBACK /*aHandleEventFunction*/,
                       nsIDeviceContext */*aContext*/,
@@ -126,6 +127,7 @@ void nsButton::Create(nsNativeWidget /*aParent*/,
                       nsWidgetInitData */*aInitData*/)
 {
 	NS_ERROR("This Widget must not use this Create method");
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------

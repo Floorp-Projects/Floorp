@@ -68,7 +68,7 @@ nsTextWidget::~nsTextWidget()
  *  @param   aInitData --  
  *  @return  NONE
  */
-void nsTextWidget::Create(nsIWidget *aParent,const nsRect &aRect,EVENT_CALLBACK aHandleEventFunction,
+NS_IMETHODIMP nsTextWidget::Create(nsIWidget *aParent,const nsRect &aRect,EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,nsIAppShell *aAppShell,nsIToolkit *aToolkit, nsWidgetInitData *aInitData) 
 {
 LongRect		destRect,viewRect;
@@ -134,7 +134,7 @@ nsWindow		*thewindow;
 		
 	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
 		}
-
+	return NS_OK;
 }
 
 // ----------------------------------------------------------------
@@ -149,7 +149,7 @@ nsWindow		*thewindow;
  *  @param   aInitData --  
  *  @return  NONE
  */
-void nsTextWidget::Create(nsNativeWidget aParent,
+NS_IMETHODIMP nsTextWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -157,6 +157,7 @@ void nsTextWidget::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+	return NS_OK;
 }
 
 

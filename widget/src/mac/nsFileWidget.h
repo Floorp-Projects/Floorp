@@ -37,7 +37,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
 		NS_DECL_ISUPPORTS
 
 
-    void Create(nsIWidget *aParent,
+    NS_IMETHOD Create(nsIWidget *aParent,
                 const nsRect &aRect,
                 EVENT_CALLBACK aHandleEventFunction,
                 nsIDeviceContext *aContext = nsnull,
@@ -45,7 +45,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
                 nsIToolkit *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull);
 
-    void Create(nsNativeWidget aParent,
+    NS_IMETHOD Create(nsNativeWidget aParent,
                 const nsRect &aRect,
                 EVENT_CALLBACK aHandleEventFunction,
                 nsIDeviceContext *aContext = nsnull,
@@ -55,7 +55,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
 
     // nsIWidget interface
   
-    virtual void            Create( nsIWidget *aParent,
+    NS_IMETHOD            Create( nsIWidget *aParent,
                                     nsString& aTitle,
                                     nsMode aMode,
                                     nsIDeviceContext *aContext = nsnull,
@@ -64,14 +64,14 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
                                     void *aInitData = nsnull);
 
     // nsIFileWidget part
-    virtual PRBool      		Show();
-    virtual void            GetFile(nsString& aFile);
-    virtual void            SetDefaultString(nsString& aString);
-    virtual void            SetFilterList(PRUint32 aNumberOfFilters,
+    virtual PRBool      	Show();
+    NS_IMETHOD            GetFile(nsString& aFile);
+    NS_IMETHOD            SetDefaultString(nsString& aString);
+    NS_IMETHOD           	SetFilterList(PRUint32 aNumberOfFilters,
                                           const nsString aTitles[],
                                           const nsString aFilters[]);
-    virtual void            OnOk();
-    virtual void            OnCancel();
+    NS_IMETHOD            OnOk();
+    NS_IMETHOD            OnCancel();
 
 
   
