@@ -73,6 +73,7 @@
 #include "nsContentErrors.h"
 #include "nsUnitConversion.h"
 #include "nsPrintfCString.h"
+#include "nsIStringBundle.h"
 
 #include "prprf.h"
 #include "math.h"
@@ -402,40 +403,145 @@ NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 
-#define REPORT_UNEXPECTED(err_) \
-  mScanner->AddToError(err_)
+#define REPORT_UNEXPECTED(msg_) \
+  ReportUnexpected(mScanner, #msg_)
 
-#define REPORT_UNEXPECTED_EOF(err_) \
-  mScanner->AddToError(NS_LITERAL_STRING("Unexpected end of file while searching for ") + err_ + NS_LITERAL_STRING("."))
+#define REPORT_UNEXPECTED_P(msg_, params_) \
+  ReportUnexpectedParams(mScanner, #msg_, params_, NS_ARRAY_LENGTH(params_))
 
-#define REPORT_UNEXPECTED_TOKEN(reason_) \
-  ReportUnexpectedToken(mScanner,mToken,reason_)
+#define REPORT_UNEXPECTED_EOF(lf_) \
+  ReportUnexpectedEOF(mScanner, #lf_)
+
+#define REPORT_UNEXPECTED_TOKEN(msg_) \
+  ReportUnexpectedToken(mScanner, mToken, #msg_)
+
+#define REPORT_UNEXPECTED_TOKEN_P(msg_, params_) \
+  ReportUnexpectedTokenParams(mScanner,  mToken, #msg_, \
+                              params_, NS_ARRAY_LENGTH(params_))
+
 
 #define OUTPUT_ERROR() \
   mScanner->OutputError()
 
 #define CLEAR_ERROR() \
   mScanner->ClearError()
-  
 
-static void ReportUnexpectedToken(nsCSSScanner *sc,
-                                  nsCSSToken& tok,
-                                  const nsAString& err)
+static nsIStringBundle *gStringBundle;
+
+static PRBool InitStringBundle()
 {
-  // Flatten the string so we don't append to a concatenation, since
-  // that goes into an infinite loop.  See bug 70083.
-  nsAutoString error(err);
-  error.AppendLiteral(" '");
-  tok.AppendToString(error);
-  error.AppendLiteral("'.");
-  sc->AddToError(error);
+  if (gStringBundle)
+    return PR_TRUE;
+
+  nsCOMPtr<nsIStringBundleService> sbs =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  if (!sbs)
+    return PR_FALSE;
+
+  nsresult rv = 
+    sbs->CreateBundle("chrome://global/locale/css.properties", &gStringBundle);
+  if (NS_FAILED(rv)) {
+    gStringBundle = nsnull;
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+NS_HIDDEN_(void) NS_ShutdownCSSParser()
+{
+  NS_IF_RELEASE(gStringBundle);
+}
+
+#define ENSURE_STRINGBUNDLE \
+  PR_BEGIN_MACRO if (!InitStringBundle()) return; PR_END_MACRO
+
+// aMessage must take no parameters
+static void ReportUnexpected(nsCSSScanner *sc, const char* aMessage)
+{
+  ENSURE_STRINGBUNDLE;
+
+  nsXPIDLString str;
+  gStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
+                                   getter_Copies(str));
+  sc->AddToError(str);
+}
+  
+static void ReportUnexpectedParams(nsCSSScanner *sc, const char* aMessage,
+                                   const PRUnichar **aParams,
+                                   PRUint32 aParamsLength)
+{
+  NS_PRECONDITION(aParamsLength > 0, "use the non-params version");
+  ENSURE_STRINGBUNDLE;
+
+  nsXPIDLString str;
+  gStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
+                                      aParams, aParamsLength,
+                                      getter_Copies(str));
+  sc->AddToError(str);
+}
+
+// aMessage must take no parameters
+static void ReportUnexpectedEOF(nsCSSScanner *sc, const char* aLookingFor)
+{
+  ENSURE_STRINGBUNDLE;
+
+  nsXPIDLString innerStr;
+  gStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aLookingFor).get(),
+                                   getter_Copies(innerStr));
+
+  const PRUnichar *params[] = {
+    innerStr.get()
+  };
+  nsXPIDLString str;
+  gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF").get(),
+                                      params, NS_ARRAY_LENGTH(params),
+                                      getter_Copies(str));
+  sc->AddToError(str);
+}
+
+// aMessage must take 1 parameter (for the string representation of the
+// unexpected token)
+static void ReportUnexpectedToken(nsCSSScanner *sc, nsCSSToken& tok,
+                                  const char *aMessage)
+{
+  ENSURE_STRINGBUNDLE;
+  
+  nsAutoString tokenString;
+  tok.AppendToString(tokenString);
+
+  const PRUnichar *params[] = {
+    tokenString.get()
+  };
+
+  ReportUnexpectedParams(sc, aMessage, params, NS_ARRAY_LENGTH(params));
+}
+
+// aParams's first entry must be null, and we'll fill in the token
+static void ReportUnexpectedTokenParams(nsCSSScanner *sc, nsCSSToken& tok,
+                                        const char* aMessage,
+                                        const PRUnichar **aParams,
+                                        PRUint32 aParamsLength)
+{
+  NS_PRECONDITION(aParamsLength > 1, "use the non-params version");
+  NS_PRECONDITION(aParams[0] == nsnull, "first param should be empty");
+
+  ENSURE_STRINGBUNDLE;
+  
+  nsAutoString tokenString;
+  tok.AppendToString(tokenString);
+  aParams[0] = tokenString.get();
+
+  ReportUnexpectedParams(sc, aMessage, aParams, aParamsLength);
 }
 
 #else
 
-#define REPORT_UNEXPECTED(err_)
-#define REPORT_UNEXPECTED_EOF(err_)
-#define REPORT_UNEXPECTED_TOKEN(reason_)
+#define REPORT_UNEXPECTED(msg_)
+#define REPORT_UNEXPECTED_P(msg_, params_)
+#define REPORT_UNEXPECTED_EOF(lf_)
+#define REPORT_UNEXPECTED_TOKEN(msg_)
+#define REPORT_UNEXPECTED_TOKEN_P(msg_, params_)
 #define OUTPUT_ERROR()
 #define CLEAR_ERROR()
 
@@ -794,8 +900,7 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
   nsCSSToken* tk = &mToken;
   // Get first non-whitespace token
   if (!GetToken(errorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED(
-      NS_LITERAL_STRING("Whitespace-only string given to be parsed as rule."));
+    REPORT_UNEXPECTED(PEParseRuleWSOnly);
     OUTPUT_ERROR();
   } else if (eCSSToken_AtKeyword == tk->mType) {
     ParseAtRule(errorCode, AppendRuleToArray, *aResult);    
@@ -846,9 +951,12 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   nsresult errorCode = NS_OK;
 
   if (eCSSProperty_UNKNOWN == aPropID) { // unknown property
-    REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown property '") +
-                      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(aPropID)) +
-                      NS_LITERAL_STRING("'.  Declaration dropped."));
+    NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
+    const PRUnichar *params[] = {
+      propName.get()
+    };
+    REPORT_UNEXPECTED_P(PEUnknownProperty, params);
+    REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     ReleaseScanner();
     return NS_OK;
@@ -861,10 +969,12 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   if (ParseProperty(errorCode, aPropID)) {
     TransferTempData(aDeclaration, aPropID, PR_FALSE, aChanged);
   } else {
-    REPORT_UNEXPECTED(
-      NS_LITERAL_STRING("Error in parsing value for property '") +
-      NS_ConvertASCIItoUTF16(nsCSSProps::GetStringValue(aPropID)) +
-      NS_LITERAL_STRING("'.  Declaration dropped."));
+    NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
+    const PRUnichar *params[] = {
+      propName.get()
+    };
+    REPORT_UNEXPECTED_P(PEPropertyParsingError, params);
+    REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     ClearTempData(aPropID);
     NS_ASSERTION(errorCode != nsresult(-1), "-1 is no longer used for EOF");
@@ -945,8 +1055,7 @@ PRBool CSSParserImpl::ExpectEndProperty(nsresult& aErrorCode, PRBool aSkipWS)
     UngetToken();
     return PR_TRUE;
   }
-  REPORT_UNEXPECTED_TOKEN(
-    NS_LITERAL_STRING("Expected end of value for property but found"));
+  REPORT_UNEXPECTED_TOKEN(PEExpectEndProperty);
   UngetToken();
   return PR_FALSE;
 }
@@ -969,7 +1078,7 @@ PRBool CSSParserImpl::SkipAtRule(nsresult& aErrorCode)
 {
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("end of unknown at-rule"));
+      REPORT_UNEXPECTED_EOF(PESkipAtRuleEOF);
       return PR_FALSE;
     }
     if (eCSSToken_Symbol == mToken.mType) {
@@ -1038,8 +1147,7 @@ PRBool CSSParserImpl::ParseAtRule(nsresult& aErrorCode, RuleAppendFunc aAppendFu
       return PR_TRUE;
     }
   }
-  REPORT_UNEXPECTED_TOKEN(
-    NS_LITERAL_STRING("Unrecognized at-rule or error parsing at-rule"));
+  REPORT_UNEXPECTED_TOKEN(PEUnknownAtRule);
   OUTPUT_ERROR();
 
   // Skip over unsupported at rule, don't advance section
@@ -1050,13 +1158,12 @@ PRBool CSSParserImpl::ParseCharsetRule(nsresult& aErrorCode, RuleAppendFunc aApp
                                        void* aData)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("charset string in @charset rule"));
+    REPORT_UNEXPECTED_EOF(PECharsetRuleEOF);
     return PR_FALSE;
   }
 
   if (eCSSToken_String != mToken.mType) {
-    REPORT_UNEXPECTED_TOKEN(
-                     NS_LITERAL_STRING("Expected charset string but found"));
+    REPORT_UNEXPECTED_TOKEN(PECharsetRuleNotString);
     return PR_FALSE;
   }
 
@@ -1105,8 +1212,7 @@ PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode,
   PRBool expectIdent = PR_TRUE;
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
-      REPORT_UNEXPECTED_EOF(
-             NS_LITERAL_STRING("end of media list in @import or @media rule"));
+      REPORT_UNEXPECTED_EOF(PEGatherMediaEOF);
       break;
     }
     if (eCSSToken_Symbol == mToken.mType) {
@@ -1115,13 +1221,11 @@ PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode,
         UngetToken();
         return PR_TRUE;
       } else if (',' != symbol) {
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected ',' in media list but found"));
+        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
         UngetToken();
         break;
       } else if (expectIdent) {
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected identifier in media list but found"));
+        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotIdent);
         UngetToken();
         break;
       }
@@ -1137,17 +1241,16 @@ PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode,
         expectIdent = PR_FALSE;
       }
       else {
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected ',' in media list but found"));
+        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
         UngetToken();
         break;
       }
     }
     else {
-      REPORT_UNEXPECTED_TOKEN(
-        expectIdent
-          ? NS_LITERAL_STRING("Expected identifier in media list but found")
-          : NS_LITERAL_STRING("Expected ',' in media list but found"));
+      if (expectIdent)
+        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotIdent);
+      else
+        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
       UngetToken();
       break;
     }
@@ -1168,15 +1271,13 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
   }
 
   if (!GatherURL(aErrorCode, url)) {
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Expected URI in @import rule but found"));
+    REPORT_UNEXPECTED_TOKEN(PEImportNotURI);
     return PR_FALSE;
   }
   
   if (!GatherMedia(aErrorCode, media) ||
       !ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Unexpected token within @import:"));
+    REPORT_UNEXPECTED_TOKEN(PEImportUnexpected);
     // don't advance section, simply ignore invalid @import
     return PR_FALSE;
   }
@@ -1238,7 +1339,7 @@ PRBool CSSParserImpl::ParseGroupRule(nsresult& aErrorCode,
   for (;;) {
     // Get next non-whitespace token
     if (! GetToken(aErrorCode, PR_TRUE)) {
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("end of @media or @-moz-document rule"));
+      REPORT_UNEXPECTED_EOF(PEGroupRuleEOF);
       break;
     }
     if (mToken.IsSymbol('}')) { // done!
@@ -1304,8 +1405,7 @@ PRBool CSSParserImpl::ParseMozDocumentRule(nsresult& aErrorCode,
         !(mToken.mIdent.LowerCaseEqualsLiteral("url") ||
           mToken.mIdent.LowerCaseEqualsLiteral("url-prefix") ||
           mToken.mIdent.LowerCaseEqualsLiteral("domain"))) {
-      REPORT_UNEXPECTED_TOKEN(
-        NS_LITERAL_STRING("Expected url(), url-prefix(), or domain() in @-moz-document rule but found"));
+      REPORT_UNEXPECTED_TOKEN(PEMozDocRuleBadFunc);
       delete urls;
       return PR_FALSE;
     }
@@ -1328,8 +1428,7 @@ PRBool CSSParserImpl::ParseMozDocumentRule(nsresult& aErrorCode,
         !GetURLToken(aErrorCode, PR_TRUE) ||
         (eCSSToken_String != mToken.mType &&
          eCSSToken_URL != mToken.mType)) {
-      REPORT_UNEXPECTED_TOKEN(
-        NS_LITERAL_STRING("Expected URI in @-moz-document rule but found"));
+      REPORT_UNEXPECTED_TOKEN(PEMozDocRuleNotURI);
       delete urls;
       return PR_FALSE;
     }
@@ -1361,8 +1460,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(nsresult& aErrorCode,
                                          void* aData)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(
-                     NS_LITERAL_STRING("namespace prefix in @namespace rule"));
+    REPORT_UNEXPECTED_EOF(PEAtNSPrefixEOF);
     return PR_FALSE;
   }
 
@@ -1373,8 +1471,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(nsresult& aErrorCode,
     prefix = mToken.mIdent;
     ToLowerCase(prefix); // always case insensitive, since stays within CSS
     if (! GetToken(aErrorCode, PR_TRUE)) {
-      REPORT_UNEXPECTED_EOF(
-                        NS_LITERAL_STRING("namespace URI in @namespace rule"));
+      REPORT_UNEXPECTED_EOF(PEAtNSURIEOF);
       return PR_FALSE;
     }
   }
@@ -1402,8 +1499,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(nsresult& aErrorCode,
       }
     }
   }
-  REPORT_UNEXPECTED_TOKEN(
-    NS_LITERAL_STRING("Unexpected token within @namespace:"));
+  REPORT_UNEXPECTED_TOKEN(PEAtNSUnexpected);
 
   return PR_FALSE;
 }
@@ -1471,8 +1567,7 @@ CSSParserImpl::SkipDeclaration(nsresult& aErrorCode, PRBool aCheckForBraces)
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
       if (aCheckForBraces) {
-        REPORT_UNEXPECTED_EOF(
-                          NS_LITERAL_STRING("closing } of declaration block"));
+        REPORT_UNEXPECTED_EOF(PESkipDeclBraceEOF);
       }
       return PR_FALSE;
     }
@@ -1504,7 +1599,7 @@ void CSSParserImpl::SkipRuleSet(nsresult& aErrorCode)
   nsCSSToken* tk = &mToken;
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("closing } of invalid rule set"));
+      REPORT_UNEXPECTED_EOF(PESkipRSBraceEOF);
       break;
     }
     if (eCSSToken_Symbol == tk->mType) {
@@ -1555,8 +1650,7 @@ PRBool CSSParserImpl::ParseRuleSet(nsresult& aErrorCode, RuleAppendFunc aAppendF
   nsCSSSelectorList* slist = nsnull;
   PRUint32 linenum = mScanner->GetLineNumber();
   if (! ParseSelectorList(aErrorCode, slist)) {
-    REPORT_UNEXPECTED(
-      NS_LITERAL_STRING("Ruleset ignored due to bad selector."));
+    REPORT_UNEXPECTED(PEBadSelectorRSIgnored);
     OUTPUT_ERROR();
     SkipRuleSet(aErrorCode);
     return PR_FALSE;
@@ -1610,7 +1704,7 @@ PRBool CSSParserImpl::ParseSelectorList(nsresult& aErrorCode,
   nsCSSToken* tk = &mToken;
   for (;;) {
     if (! GetToken(aErrorCode, PR_TRUE)) {
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("',' or '{'"));
+      REPORT_UNEXPECTED_EOF(PESelectorListExtraEOF);
       break;
     }
 
@@ -1630,7 +1724,7 @@ PRBool CSSParserImpl::ParseSelectorList(nsresult& aErrorCode,
         return PR_TRUE;
       }
     }
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ',' or '{' but found"));
+    REPORT_UNEXPECTED_TOKEN(PESelectorListExtra);
     UngetToken();
     break;
   }
@@ -1769,7 +1863,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
     }
   }
   if (!list) {
-    REPORT_UNEXPECTED(NS_LITERAL_STRING("Selector expected."));
+    REPORT_UNEXPECTED(PESelectorGroupNoSelector);
   }
   if (PRUnichar(0) != combinator) { // no dangling combinators
     if (list) {
@@ -1777,7 +1871,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
     }
     list = nsnull;
     // This should report the problematic combinator
-    REPORT_UNEXPECTED(NS_LITERAL_STRING("Dangling combinator."));
+    REPORT_UNEXPECTED(PESelectorGroupExtraCombinator);
   }
   aList = list;
   if (nsnull != list) {
@@ -1814,8 +1908,7 @@ void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
     }
     if (!nsCSSScanner::StartsIdent(first, second,
                                    nsCSSScanner::GetLexTable())) {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING(
-        "Expected identifier for ID selector but found"));
+      REPORT_UNEXPECTED_TOKEN(PEIDSelNotIdent);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
@@ -1824,8 +1917,7 @@ void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
     aSelector.AddID(mToken.mIdent);
   }
   else {
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING(
-      "Expected non-empty name for ID selector, but found"));
+    REPORT_UNEXPECTED_TOKEN(PEIDSelEmpty);
     UngetToken();
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
@@ -1842,12 +1934,12 @@ void CSSParserImpl::ParseClassSelector(PRInt32&  aDataMask,
                                         nsresult& aErrorCode)
 {
   if (! GetToken(aErrorCode, PR_FALSE)) { // get ident
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("class name"));
+    REPORT_UNEXPECTED_EOF(PEClassSelEOF);
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
   }
   if (eCSSToken_Ident != mToken.mType) {  // malformed selector
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for class selector but found"));
+    REPORT_UNEXPECTED_TOKEN(PEClassSelNotIdent);
     UngetToken();
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
@@ -1876,7 +1968,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       aSelector.SetNameSpace(kNameSpaceID_Unknown); // namespace wildcard
 
       if (! GetToken(aErrorCode, PR_FALSE)) {
-        REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("element type"));
+        REPORT_UNEXPECTED_EOF(PETypeSelEOF);
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
@@ -1895,8 +1987,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
         // don't set tag
       }
       else {
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected element name or '*' but found"));
+        REPORT_UNEXPECTED_TOKEN(PETypeSelNotType);
         UngetToken();
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
@@ -1933,15 +2024,17 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
         mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
       } // else, no declared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
-                          buffer + NS_LITERAL_STRING("'."));
+        const PRUnichar *params[] = {
+          buffer.get()
+        };
+        REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
       aSelector.SetNameSpace(nameSpaceID);
 
       if (! GetToken(aErrorCode, PR_FALSE)) {
-        REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("element type"));
+        REPORT_UNEXPECTED_EOF(PETypeSelEOF);
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
@@ -1960,8 +2053,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
         // don't set tag
       }
       else {
-        REPORT_UNEXPECTED_TOKEN(
-            NS_LITERAL_STRING("Expected element name or '*' but found"));
+        REPORT_UNEXPECTED_TOKEN(PETypeSelNotType);
         UngetToken();
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
@@ -1998,7 +2090,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
 
     // get mandatory tag
     if (! GetToken(aErrorCode, PR_FALSE)) {
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("element type"));
+      REPORT_UNEXPECTED_EOF(PETypeSelEOF);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
@@ -2017,8 +2109,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       // don't set tag
     }
     else {
-      REPORT_UNEXPECTED_TOKEN(
-        NS_LITERAL_STRING("Expected element name or '*' but found"));
+      REPORT_UNEXPECTED_TOKEN(PETypeSelNotType);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
@@ -2060,7 +2151,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
                                       nsresult& aErrorCode)
 {
   if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute name"));
+    REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
   }
@@ -2071,7 +2162,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
     nameSpaceID = kNameSpaceID_Unknown;
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
-        REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute name"));
+        REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
@@ -2079,22 +2170,21 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
         attr = mToken.mIdent;
       }
       else {
-        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
+        REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
         UngetToken();
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
        }
     }
     else {
-      REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected '|' but found"));
+      REPORT_UNEXPECTED_TOKEN(PEAttSelNoBar);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
   }
   else if (mToken.IsSymbol('|')) { // NO namespace
     if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute name"));
+      REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
@@ -2102,7 +2192,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
       attr = mToken.mIdent;
     }
     else {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
+      REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
@@ -2118,13 +2208,15 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
         mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
       } // else, no declared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-        REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
-                          attr + NS_LITERAL_STRING("'."));
+        const PRUnichar *params[] = {
+          attr.get()
+        };
+        REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
-        REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute name"));
+        REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
@@ -2132,7 +2224,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
         attr = mToken.mIdent;
       }
       else {
-        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for attribute name but found"));
+        REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
         UngetToken();
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
@@ -2140,8 +2232,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
     }
   }
   else {  // malformed
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Expected attribute name or namespace but found"));
+    REPORT_UNEXPECTED_TOKEN(PEAttributeNameOrNamespaceExpected);
     UngetToken();
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
@@ -2151,7 +2242,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
     ToLowerCase(attr);
   }
   if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("part of attribute selector"));
+    REPORT_UNEXPECTED_EOF(PEAttSelInnerEOF);
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
   }
@@ -2186,23 +2277,21 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
       func = NS_ATTR_FUNC_EQUALS;
     }
     else {
-      REPORT_UNEXPECTED_TOKEN(
-        NS_LITERAL_STRING("Unexpected token in attribute selector: "));
+      REPORT_UNEXPECTED_TOKEN(PEAttSelUnexpected);
       UngetToken(); // bad function
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
     if (NS_ATTR_FUNC_SET != func) { // get value
       if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
-        REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute value"));
+        REPORT_UNEXPECTED_EOF(PEAttSelValueEOF);
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
       if ((eCSSToken_Ident == mToken.mType) || (eCSSToken_String == mToken.mType)) {
         nsAutoString  value(mToken.mIdent);
         if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
-          REPORT_UNEXPECTED_EOF(
-                             NS_LITERAL_STRING("] to end attribute selector"));
+          REPORT_UNEXPECTED_EOF(PEAttSelCloseEOF);
           aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
           return;
         }
@@ -2231,14 +2320,14 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
           aSelector.AddAttribute(nameSpaceID, attr, func, value, isCaseSensitive);
         }
         else {
-          REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ']' to terminate attribute selector but found"));
+          REPORT_UNEXPECTED_TOKEN(PEAttSelNoClose);
           UngetToken();
           aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
           return;
         }
       }
       else {
-        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier or string for value in attribute selector but found"));
+        REPORT_UNEXPECTED_TOKEN(PEAttSelBadValue);
         UngetToken();
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
@@ -2246,8 +2335,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
     }
   }
   else {
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Unexpected token in attribute selector: "));
+    REPORT_UNEXPECTED_TOKEN(PEAttSelUnexpected);
     UngetToken(); // bad dog, no biscut!
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
@@ -2265,7 +2353,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
                                       PRBool aIsNegated)
 {
   if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("name of pseudo-class or pseudo-element"));
+    REPORT_UNEXPECTED_EOF(PEPseudoSelEOF);
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
   }
@@ -2275,7 +2363,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
   if (mToken.IsSymbol(':')) {
     parsingPseudoElement = PR_TRUE;
     if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("name of pseudo-class or pseudo-element"));
+      REPORT_UNEXPECTED_EOF(PEPseudoSelEOF);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
@@ -2284,7 +2372,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
   // Do some sanity-checking on the token
   if (eCSSToken_Ident != mToken.mType && eCSSToken_Function != mToken.mType) {
     // malformed selector
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class or pseudo-element but found"));
+    REPORT_UNEXPECTED_TOKEN(PEPseudoSelBadName);
     UngetToken();
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
@@ -2322,7 +2410,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
 #endif
        nsCSSPseudoClasses::notPseudo == pseudo ||
        nsCSSPseudoClasses::lang == pseudo)) { // There are no other function pseudos
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Function token for non-function pseudo-class or pseudo-element, or the other way around, when reading"));
+    REPORT_UNEXPECTED_TOKEN(PEPseudoSelNonFunc);
     UngetToken();
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
@@ -2332,7 +2420,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
   if (parsingPseudoElement &&
       !isPseudoElement &&
       !isAnonBox) {
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected pseudo-element but found"));
+    REPORT_UNEXPECTED_TOKEN(PEPseudoSelNotPE);
     UngetToken();
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
@@ -2340,7 +2428,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
 
   if (nsCSSPseudoClasses::notPseudo == pseudo) {
     if (aIsNegated) { // :not() can't be itself negated
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Negation pseudo-class can't be negated"));
+      REPORT_UNEXPECTED_TOKEN(PEPseudoSelDoubleNot);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
@@ -2369,7 +2457,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     // Pseudo-element.  Make some more sanity checks.
     
     if (aIsNegated) { // pseudo-elements can't be negated
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Pseudo-elements can't be negated"));
+      REPORT_UNEXPECTED_TOKEN(PEPseudoSelPEInNot);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
@@ -2384,7 +2472,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
         && !IsTreePseudoElement(pseudo)
 #endif
         ) {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("This pseudo-element must use the \"::\" form: "));
+      REPORT_UNEXPECTED_TOKEN(PEPseudoSelNewStyleOnly);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;      
@@ -2415,21 +2503,21 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
           aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
           return;
         }
-        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Found trailing token after pseudo-element, which must be the last part of a selector: "));
+        REPORT_UNEXPECTED_TOKEN(PEPseudoSelTrailing);
         UngetToken();
         aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
         return;
       }
     }
     else {  // multiple pseudo elements, not legal
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Extra pseudo-element"));
+      REPORT_UNEXPECTED_TOKEN(PEPseudoSelMultiplePE);
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
   } else {
     // Not a pseudo-class, not a pseudo-element.... forget it
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Unknown pseudo-class or pseudo-element"));
+    REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
     UngetToken();
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
@@ -2449,7 +2537,7 @@ void CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&  aDataMask,
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
     
     if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("selector within negation"));
+      REPORT_UNEXPECTED_EOF(PENegationEOF);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
@@ -2494,17 +2582,17 @@ void CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&  aDataMask,
       ParseTypeOrUniversalSelector(aDataMask, *newSel, aParsingStatus, aErrorCode, PR_TRUE);
     }
     if (SELECTOR_PARSING_STOPPED_ERROR == aParsingStatus) {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Malformed simple selector as negation pseudo-class argument"));
+      REPORT_UNEXPECTED_TOKEN(PENegationBadInner);
       return;
     }
     // close the parenthesis
     if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing closing ')' in negation pseudo-class"));
+      REPORT_UNEXPECTED_TOKEN(PENegationNoClose);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     }
   }
   else {
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing argument in negation pseudo-class"));
+    REPORT_UNEXPECTED_TOKEN(PENegationBadArg);
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
   }
 }
@@ -2520,13 +2608,13 @@ void CSSParserImpl::ParseLangSelector(nsCSSSelector& aSelector,
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
 
     if (! GetToken(aErrorCode, PR_TRUE)) { // premature eof
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("argument to :lang selector"));
+      REPORT_UNEXPECTED_EOF(PELangArgEOF);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
     // We expect an identifier with a language abbreviation
     if (eCSSToken_Ident != mToken.mType) {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for lang pseudo-class parameter"));
+      REPORT_UNEXPECTED_TOKEN(PELangArgNotIdent);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
@@ -2536,12 +2624,12 @@ void CSSParserImpl::ParseLangSelector(nsCSSSelector& aSelector,
 
     // close the parenthesis
     if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing closing ')' in lang pseudo-class"));
+      REPORT_UNEXPECTED_TOKEN(PELangNoClose);
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     }
   }
   else {
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Missing argument in lang pseudo-class"));
+    REPORT_UNEXPECTED_TOKEN(PELangNoArg);
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
   }
 }
@@ -2557,7 +2645,7 @@ PRBool CSSParserImpl::ParseSelector(nsresult& aErrorCode,
   PRInt32  parsingStatus = SELECTOR_PARSING_ENDED_OK;
 
   if (! GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("selector"));
+    REPORT_UNEXPECTED_EOF(PESelectorEOF);
     return PR_FALSE;
   }
 
@@ -2608,7 +2696,7 @@ CSSParserImpl::ParseDeclarationBlock(nsresult& aErrorCode,
 {
   if (aCheckForBraces) {
     if (!ExpectSymbol(aErrorCode, '{', PR_TRUE)) {
-      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected '{' to begin declaration block but found"));
+      REPORT_UNEXPECTED_TOKEN(PEBadDeclBlockStart);
       OUTPUT_ERROR();
       return nsnull;
     }
@@ -2646,7 +2734,7 @@ CSSParserImpl::ParseDeclarationBlock(nsresult& aErrorCode,
 PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("color"));
+    REPORT_UNEXPECTED_EOF(PEColorEOF);
     return PR_FALSE;
   }
 
@@ -2782,7 +2870,7 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
   }
 
   // It's not a color
-  REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected color but found"));
+  REPORT_UNEXPECTED_TOKEN(PEColorNotColor);
   UngetToken();
   return PR_FALSE;
 }
@@ -2795,7 +2883,7 @@ PRBool CSSParserImpl::ParseColorComponent(nsresult& aErrorCode,
                                           char aStop)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("color component"));
+    REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
     return PR_FALSE;
   }
   float value;
@@ -2809,8 +2897,7 @@ PRBool CSSParserImpl::ParseColorComponent(nsresult& aErrorCode,
       case COLOR_TYPE_INTEGERS:
         break;
       case COLOR_TYPE_PERCENTAGES:
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected a percentage but found"));
+        REPORT_UNEXPECTED_TOKEN(PEExpectedPercent);
         UngetToken();
         return PR_FALSE;
       default:
@@ -2818,8 +2905,7 @@ PRBool CSSParserImpl::ParseColorComponent(nsresult& aErrorCode,
     }
 
     if (!mToken.mIntegerValid) {
-      REPORT_UNEXPECTED_TOKEN(
-        NS_LITERAL_STRING("Expected an integer but found"));
+      REPORT_UNEXPECTED_TOKEN(PEExpectedInt);
       UngetToken();
       return PR_FALSE;
     }
@@ -2831,8 +2917,7 @@ PRBool CSSParserImpl::ParseColorComponent(nsresult& aErrorCode,
         aType = COLOR_TYPE_PERCENTAGES;
         break;
       case COLOR_TYPE_INTEGERS:
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected an integer but found"));
+        REPORT_UNEXPECTED_TOKEN(PEExpectedInt);
         UngetToken();
         return PR_FALSE;
       case COLOR_TYPE_PERCENTAGES:
@@ -2843,8 +2928,7 @@ PRBool CSSParserImpl::ParseColorComponent(nsresult& aErrorCode,
     value = tk->mNumber * 255.0f;
     break;
   default:
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Expected number or percentage in rgb() but found"));
+    REPORT_UNEXPECTED_TOKEN(PEColorBadRGBContents);
     UngetToken();
     return PR_FALSE;
   }
@@ -2854,12 +2938,12 @@ PRBool CSSParserImpl::ParseColorComponent(nsresult& aErrorCode,
     aComponent = (PRUint8) value;
     return PR_TRUE;
   }
-  PRUnichar stopString[2];
-  stopString[0] = PRUnichar(aStop);
-  stopString[1] = PRUnichar(0);
-  REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected '") +
-                          nsDependentString(stopString, 1) +
-                          NS_LITERAL_STRING("' but found"));
+  const PRUnichar stopString[] = { PRUnichar(aStop), PRUnichar(0) };
+  const PRUnichar *params[] = {
+    nsnull,
+    stopString
+  };
+  REPORT_UNEXPECTED_TOKEN_P(PEColorComponentBadTerm, params);
   return PR_FALSE;
 }
 
@@ -2875,12 +2959,11 @@ PRBool CSSParserImpl::ParseHSLColor(nsresult& aErrorCode, nscolor& aColor,
 
   // Get the hue
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("hue"));
+    REPORT_UNEXPECTED_EOF(PEColorHueEOF);
     return PR_FALSE;
   }
   if (mToken.mType != eCSSToken_Number) {
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Expected a number but found"));
+    REPORT_UNEXPECTED_TOKEN(PEExpectedNumber);
     UngetToken();
     return PR_FALSE;
   }
@@ -2890,18 +2973,17 @@ PRBool CSSParserImpl::ParseHSLColor(nsresult& aErrorCode, nscolor& aColor,
   h = h - floor(h);
   
   if (!ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ',' but found"));
+    REPORT_UNEXPECTED_TOKEN(PEExpectedComma);
     return PR_FALSE;
   }
   
   // Get the saturation
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("saturation"));
+    REPORT_UNEXPECTED_EOF(PEColorSaturationEOF);
     return PR_FALSE;
   }
   if (mToken.mType != eCSSToken_Percentage) {
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Expected a percentage but found"));
+    REPORT_UNEXPECTED_TOKEN(PEExpectedPercent);
     UngetToken();
     return PR_FALSE;
   }
@@ -2910,18 +2992,17 @@ PRBool CSSParserImpl::ParseHSLColor(nsresult& aErrorCode, nscolor& aColor,
   if (s > 1.0f) s = 1.0f;
   
   if (!ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ',' but found"));
+    REPORT_UNEXPECTED_TOKEN(PEExpectedComma);
     return PR_FALSE;
   }
 
   // Get the lightness
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("lightness"));
+    REPORT_UNEXPECTED_EOF(PEColorLightnessEOF);
     return PR_FALSE;
   }
   if (mToken.mType != eCSSToken_Percentage) {
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Expected a percentage but found"));
+    REPORT_UNEXPECTED_TOKEN(PEExpectedPercent);
     UngetToken();
     return PR_FALSE;
   }
@@ -2934,12 +3015,12 @@ PRBool CSSParserImpl::ParseHSLColor(nsresult& aErrorCode, nscolor& aColor,
     return PR_TRUE;
   }
   
-  PRUnichar stopString[2];
-  stopString[0] = PRUnichar(aStop);
-  stopString[1] = PRUnichar(0);
-  REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected '") +
-                          nsDependentString(stopString, 1) +
-                          NS_LITERAL_STRING("' but found"));
+  const PRUnichar stopString[] = { PRUnichar(aStop), PRUnichar(0) };
+  const PRUnichar *params[] = {
+    nsnull,
+    stopString
+  };
+  REPORT_UNEXPECTED_TOKEN_P(PEColorComponentBadTerm, params);
   return PR_FALSE;
 }
  
@@ -2947,13 +3028,12 @@ PRBool CSSParserImpl::ParseHSLColor(nsresult& aErrorCode, nscolor& aColor,
 PRBool CSSParserImpl::ParseColorOpacity(nsresult& aErrorCode, PRUint8& aOpacity)
 {
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("opacity in color value"));
+    REPORT_UNEXPECTED_EOF(PEColorOpacityEOF);
     return PR_FALSE;
   }
 
   if (mToken.mType != eCSSToken_Number) {
-    REPORT_UNEXPECTED_TOKEN(
-      NS_LITERAL_STRING("Expected a number but found"));
+    REPORT_UNEXPECTED_TOKEN(PEExpectedNumber);
     UngetToken();
     return PR_FALSE;
   }
@@ -2961,7 +3041,7 @@ PRBool CSSParserImpl::ParseColorOpacity(nsresult& aErrorCode, PRUint8& aOpacity)
   PRInt32 value = NSToIntRound(mToken.mNumber*255);
 
   if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ')' but found"));
+    REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
     return PR_FALSE;
   }
   
@@ -3013,8 +3093,7 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
       if (aCheckForBraces) {
-        REPORT_UNEXPECTED_EOF(
-                           NS_LITERAL_STRING("';' or '}' to end declaration"));
+        REPORT_UNEXPECTED_EOF(PEDeclEndEOF);
       }
       return PR_FALSE;
     }
@@ -3022,8 +3101,8 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
       propertyName = tk->mIdent;
       // grab the ident before the ExpectSymbol trashes the token
       if (!ExpectSymbol(aErrorCode, ':', PR_TRUE)) {
-        REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ':' but found"));
-        REPORT_UNEXPECTED(NS_LITERAL_STRING("Declaration dropped."));
+        REPORT_UNEXPECTED_TOKEN(PEParseDeclarationNoColon);
+        REPORT_UNEXPECTED(PEDeclDropped);
         OUTPUT_ERROR();
         return PR_FALSE;
       }
@@ -3035,9 +3114,8 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
     }
 
     if (!tk->IsSymbol('}')) {
-      REPORT_UNEXPECTED_TOKEN(
-        NS_LITERAL_STRING("Expected declaration but found"));
-      REPORT_UNEXPECTED(NS_LITERAL_STRING("Skipped to next declaration."));
+      REPORT_UNEXPECTED_TOKEN(PEParseDeclarationDeclExpected);
+      REPORT_UNEXPECTED(PEDeclSkipped);
       OUTPUT_ERROR();
     }
     // Not a declaration...
@@ -3048,18 +3126,21 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
   // Map property name to it's ID and then parse the property
   nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName);
   if (eCSSProperty_UNKNOWN == propID) { // unknown property
-    REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown property '") +
-                       propertyName +
-                       NS_LITERAL_STRING("'.  Declaration dropped."));
+    const PRUnichar *params[] = {
+      propertyName.get()
+    };
+    REPORT_UNEXPECTED_P(PEUnknownProperty, params);
+    REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     return PR_FALSE;
   }
   if (! ParseProperty(aErrorCode, propID)) {
     // XXX Much better to put stuff in the value parsers instead...
-    REPORT_UNEXPECTED(
-      NS_LITERAL_STRING("Error in parsing value for property '") +
-      propertyName +
-      NS_LITERAL_STRING("'.  Declaration dropped."));
+    const PRUnichar *params[] = {
+      propertyName.get()
+    };
+    REPORT_UNEXPECTED_P(PEPropertyParsingError, params);
+    REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     ClearTempData(propID);
     return PR_FALSE;
@@ -3071,7 +3152,7 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
   if (!GetToken(aErrorCode, PR_TRUE)) {
     if (aCheckForBraces) {
       // Premature eof is not ok when proper termination is mandated
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("end of declaration"));
+      REPORT_UNEXPECTED_EOF(PEEndOfDeclEOF);
       ClearTempData(propID);
       return PR_FALSE;
     }
@@ -3084,14 +3165,13 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
         // Look for important ident
         if (!GetToken(aErrorCode, PR_TRUE)) {
           // Premature eof is not ok
-          REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("important"));
+          REPORT_UNEXPECTED_EOF(PEImportantEOF);
           ClearTempData(propID);
           return PR_FALSE;
         }
         if ((eCSSToken_Ident != tk->mType) ||
             !tk->mIdent.LowerCaseEqualsLiteral("important")) {
-          REPORT_UNEXPECTED_TOKEN(
-            NS_LITERAL_STRING("Expected 'important' but found"));
+          REPORT_UNEXPECTED_TOKEN(PEExpectedImportant);
           OUTPUT_ERROR();
           UngetToken();
           ClearTempData(propID);
@@ -3117,7 +3197,7 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
   if (!GetToken(aErrorCode, PR_TRUE)) {
     if (aCheckForBraces) {
       // Premature eof is not ok
-      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("';' or '}' to end declaration"));
+      REPORT_UNEXPECTED_EOF(PEDeclEndEOF);
       ClearTempData(propID);
       return PR_FALSE;
     }
@@ -3132,9 +3212,8 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
     if (!aCheckForBraces) {
       // If we didn't hit eof and we didn't see a semicolon then the
       // declaration is not properly terminated.
-      REPORT_UNEXPECTED_TOKEN(
-        NS_LITERAL_STRING("Expected ';' to terminate declaration but found"));
-      REPORT_UNEXPECTED(NS_LITERAL_STRING("Declaration dropped."));
+      REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);
+      REPORT_UNEXPECTED(PEDeclDropped);
       OUTPUT_ERROR();
       ClearTempData(propID);
       return PR_FALSE;
@@ -3145,11 +3224,11 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
       return PR_TRUE;
     }
   }
-  REPORT_UNEXPECTED_TOKEN(
-    aCheckForBraces
-      ? NS_LITERAL_STRING("Expected ';' or '}' to terminate declaration but found")
-      : NS_LITERAL_STRING("Expected ';' to terminate declaration but found"));
-  REPORT_UNEXPECTED(NS_LITERAL_STRING("Declaration dropped."));
+  if (aCheckForBraces)
+    REPORT_UNEXPECTED_TOKEN(PEBadDeclOrRuleEnd);
+  else
+    REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);
+  REPORT_UNEXPECTED(PEDeclDropped);
   OUTPUT_ERROR();
   ClearTempData(propID);
   return PR_FALSE;
@@ -3715,14 +3794,16 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
             mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
           } // else, no declared namespaces
           if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
-            REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
-                              holdIdent + NS_LITERAL_STRING("'."));
+            const PRUnichar *params[] = {
+              holdIdent.get()
+            };
+            REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
             return PR_FALSE;
           }
           attr.AppendInt(nameSpaceID, 10);
           attr.Append(PRUnichar('|'));
           if (! GetToken(aErrorCode, PR_FALSE)) {
-            REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute name"));
+            REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
             return PR_FALSE;
           }
           if (eCSSToken_Ident == mToken.mType) {
@@ -3735,8 +3816,7 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
             }
           }
           else {
-            REPORT_UNEXPECTED_TOKEN(
-              NS_LITERAL_STRING("Expected attribute name but found"));
+            REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
             UngetToken();
             return PR_FALSE;
           }
@@ -3752,14 +3832,13 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
       }
       else if (mToken.IsSymbol('*')) {  // namespace wildcard
         // Wildcard namespace makes no sense here and is not allowed
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected attribute name but found"));
+        REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
         UngetToken();
         return PR_FALSE;
       }
       else if (mToken.IsSymbol('|')) {  // explicit NO namespace
         if (! GetToken(aErrorCode, PR_FALSE)) {
-          REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute name"));
+          REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
           return PR_FALSE;
         }
         if (eCSSToken_Ident == mToken.mType) {
@@ -3772,15 +3851,13 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
           }
         }
         else {
-          REPORT_UNEXPECTED_TOKEN(
-            NS_LITERAL_STRING("Expected attribute name but found"));
+          REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
           UngetToken();
           return PR_FALSE;
         }
       }
       else {
-        REPORT_UNEXPECTED_TOKEN(
-          NS_LITERAL_STRING("Expected attribute name or namespace but found"));
+        REPORT_UNEXPECTED_TOKEN(PEAttributeNameOrNamespaceExpected);
         UngetToken();
         return PR_FALSE;
       }
@@ -4100,7 +4177,7 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   case eCSSProperty_padding_right_ltr_source:
   case eCSSProperty_padding_right_rtl_source:
     // The user can't use these
-    REPORT_UNEXPECTED(NS_LITERAL_STRING("Attempt to use inaccessible property"));
+    REPORT_UNEXPECTED(PEInaccessibleProperty);
     return PR_FALSE;
 
   default:  // must be single property
