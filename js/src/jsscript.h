@@ -162,7 +162,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 extern jsbytecode *
 js_LineNumberToPC(JSScript *script, uintN lineno);
 
-extern uintN
+extern JS_FRIEND_API(uintN)
 js_GetScriptLineExtent(JSScript *script);
 
 /*

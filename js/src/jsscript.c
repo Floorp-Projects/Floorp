@@ -1278,7 +1278,7 @@ out:
     return script->code + offset;
 }
 
-uintN
+JS_FRIEND_API(uintN)
 js_GetScriptLineExtent(JSScript *script)
 {
     uintN lineno;
