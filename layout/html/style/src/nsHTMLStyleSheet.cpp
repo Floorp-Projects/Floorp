@@ -349,7 +349,7 @@ protected:
                             nsIFrame*   aParentFrame,
                             nsIFrame*&  aFrame);
 
-  PRBool IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay);
+  PRBool IsScrollable(nsIPresContext* aPresContext, nsIAtom* aTag, const nsStyleDisplay* aDisplay);
 
   nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
                         nsIContent* aContent);
@@ -1609,22 +1609,29 @@ HTMLStyleSheetImpl::GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame,
 }
 
 PRBool
-HTMLStyleSheetImpl::IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay)
+HTMLStyleSheetImpl::IsScrollable(nsIPresContext* aPresContext,
+                                 nsIAtom* aTag,
+                                 const nsStyleDisplay* aDisplay)
 {
   // For the time being it's scrollable if the overflow property is auto or
   // scroll, regardless of whether the width or height is fixed in size
   PRInt32 scrolling = -1;
-  nsISupports* container;
-  if (nsnull != aPresContext) {
-    aPresContext->GetContainer(&container);
-    if (nsnull != container) {
-      nsIWebShell* webShell = nsnull;
-      container->QueryInterface(kIWebShellIID, (void**) &webShell);
-      if (nsnull != webShell) {
-        webShell->GetScrolling(scrolling);
-        NS_RELEASE(webShell);
+
+  if (nsHTMLAtoms::body == aTag) {
+    // XXX temporary hack: For body tags we check our webshell and see
+    // if scrolling is enabled there. This needs to go away!
+    nsISupports* container;
+    if (nsnull != aPresContext) {
+      aPresContext->GetContainer(&container);
+      if (nsnull != container) {
+        nsIWebShell* webShell = nsnull;
+        container->QueryInterface(kIWebShellIID, (void**) &webShell);
+        if (nsnull != webShell) {
+          webShell->GetScrolling(scrolling);
+          NS_RELEASE(webShell);
+        }
+        NS_RELEASE(container);
       }
-      NS_RELEASE(container);
     }
   }
 
@@ -1720,10 +1727,10 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // If we're paginated then don't ever make the BODY scrollable
         // XXX Use a special BODY rule for paged media...
         if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
-          if ((display->mDisplay!=NS_STYLE_DISPLAY_TABLE) && display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
+          if ((display->mDisplay!=NS_STYLE_DISPLAY_TABLE) && display->IsBlockLevel() && IsScrollable(aPresContext, tag, display)) {
             // Create a scroll frame which will wrap the frame that needs to
             // be scrolled
-            if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
+            if (NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame))) {
               nsIStyleContext*  scrolledPseudoStyle;
               
               // The scroll frame gets the original style context, and the scrolled
@@ -1869,9 +1876,12 @@ HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresC
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
-    if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
+    nsIAtom* tag;
+    aContent->GetTag(tag);
+    if (display->IsBlockLevel() && IsScrollable(aPresContext, tag, display)) {
       frame->FirstChild(nsnull, frame);
     }
+    NS_IF_RELEASE(tag);
   }
 
   return frame;
