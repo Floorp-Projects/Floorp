@@ -6,4 +6,6 @@ interface XULElement : Element {
 	void addBroadcastListener(in DOMString attr, in Node node);
 	void removeBroadcastListener(in DOMString attr, in Node node);
 	void doCommand();
+
+	NodeList getElementsByAttribute(in DOMString name, in DOMString value);
 };
