@@ -58,9 +58,7 @@ public:
    */
   nsTextFragment() {
     m1b = nsnull;
-    mInHeap = 0;
-    mIs2b = 0;
-    mLength = 0;
+    mAllBits = 0;
   }
 
   ~nsTextFragment();
@@ -117,7 +115,7 @@ public:
    * Return PR_TRUE if this fragment is represented by PRUnichar data
    */
   PRBool Is2b() const {
-    return mIs2b;
+    return mState.mIs2b;
   }
 
   /**
@@ -141,7 +139,7 @@ public:
    * characters, not the number of bytes to store the characters.
    */
   PRInt32 GetLength() const {
-    return PRInt32(mLength);
+    return PRInt32(mState.mLength);
   }
 
   /**
@@ -210,8 +208,8 @@ public:
    * index. This always returns a PRUnichar.
    */
   PRUnichar CharAt(PRInt32 aIndex) const {
-    NS_ASSERTION(PRUint32(aIndex) < mLength, "bad index");
-    return mIs2b ? m2b[aIndex] : PRUnichar(m1b[aIndex]);
+    NS_ASSERTION(PRUint32(aIndex) < mState.mLength, "bad index");
+    return mState.mIs2b ? m2b[aIndex] : PRUnichar(m1b[aIndex]);
   }
 
 protected:
@@ -219,9 +217,17 @@ protected:
     PRUnichar* m2b;
     unsigned char* m1b;
   };
-  PRUint32 mInHeap : 1;
-  PRUint32 mIs2b : 1;
-  PRUint32 mLength : 30;
+
+  struct FragmentBits {
+    PRUint32 mInHeap : 1;
+    PRUint32 mIs2b : 1;
+    PRUint32 mLength : 30;
+  };
+
+  union {
+    PRUint32 mAllBits;
+    FragmentBits mState;
+  };
 
   void ReleaseText();
 };
