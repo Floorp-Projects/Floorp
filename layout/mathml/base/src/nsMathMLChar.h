@@ -49,7 +49,16 @@ struct nsGlyphCode {
   }
 };
 
-// class used to handle stretchy symbols (accent, delimiter and boundary symbols)
+// Class used to handle stretchy symbols (accent, delimiter and boundary symbols).
+// There are composite characters that need to be built recursively from other
+// characters. Since these are rare we use a light-weight mechanism to handle
+// them. Specifically, as need arises we append a singly-linked list of child
+// chars with their mParent pointing to the first element in the list, except in
+// the originating first element itself where it points to null. mSibling points
+// to the next element in the list. Since the originating first element is the
+// parent of the others, we call it the "root" char of the list. Testing !mParent
+// tells whether you are that "root" during the recursion. The parent delegates
+// most of the tasks to the children.
 class nsMathMLChar
 {
 public:
