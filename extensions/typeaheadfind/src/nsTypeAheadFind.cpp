@@ -70,7 +70,9 @@
 #include "nsFrameTraversal.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIImageDocument.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIEventStateManager.h"
 #include "nsIViewManager.h"
@@ -1921,7 +1923,8 @@ nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
   NS_ENSURE_TRUE(doc, NS_OK);
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-  if (xulDoc) {
+  nsCOMPtr<nsIImageDocument> imageDoc(do_QueryInterface(doc));
+  if (xulDoc || imageDoc) {
     return NS_OK; // Avoid any xul docs, whether in chrome or content
   }
 
@@ -2338,6 +2341,45 @@ nsTypeAheadFind::GetChromeEventHandler(nsIDOMWindow *aDOMWin,
   NS_IF_ADDREF(*aChromeTarget);
 }
 
+PRBool
+nsTypeAheadFind::IsTargetContentOkay(nsIContent *aContent)
+{
+  if (!aContent) {
+    return PR_FALSE;
+  }
+
+  if (aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+    nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
+    PRInt32 controlType = formControl->GetType();
+    if (controlType == NS_FORM_SELECT || 
+        controlType == NS_FORM_TEXTAREA ||
+        controlType == NS_FORM_INPUT_TEXT ||
+        controlType == NS_FORM_INPUT_PASSWORD ||
+        controlType == NS_FORM_INPUT_FILE) {
+      // Don't steal keys from these form controls 
+      // - selects have their own incremental find for options
+      // - text fields need to allow typing
+      return PR_FALSE;
+    }
+  }
+  else if (aContent->IsContentOfType(nsIContent::eHTML)) {
+    // Test for isindex, a deprecated kind of text field. We're using a string 
+    // compare because <isindex> is not considered a form control, so it does 
+    // not support nsIFormControl or eHTML_FORM_CONTROL, and it's not worth 
+    // having a table of atoms just for it. Instead, we're paying for 1 extra 
+    // string compare per keystroke, which isn't too bad.
+    nsCOMPtr<nsIAtom> targetTagAtom;
+    aContent->GetTag(*getter_AddRefs(targetTagAtom));
+    nsAutoString targetTagString;
+    targetTagAtom->ToString(targetTagString);
+    if (targetTagString.Equals(NS_LITERAL_STRING("isindex"))) {
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
+}
+
 
 nsresult
 nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent, 
@@ -2363,43 +2405,11 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
 
   // ---- Exit early if in form controls that can be typed in ---------
 
-  if (!targetContent) {
+  if (!IsTargetContentOkay(targetContent)) {
+    if (!mTypeAheadBuffer.IsEmpty()) {
+      CancelFind();
+    }
     return NS_OK;
-  }
-
-  if (targetContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
-    nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(targetContent));
-    PRInt32 controlType = formControl->GetType();
-    if (controlType == NS_FORM_SELECT || 
-        controlType == NS_FORM_TEXTAREA ||
-        controlType == NS_FORM_INPUT_TEXT ||
-        controlType == NS_FORM_INPUT_PASSWORD ||
-        controlType == NS_FORM_INPUT_FILE) {
-      // Don't steal keys from these form controls 
-      // - selects have their own incremental find for options
-      // - text fields need to allow typing
-      if (!mTypeAheadBuffer.IsEmpty()) {
-        CancelFind();
-      }
-      return NS_OK;
-    }
-  }
-  else if (targetContent->IsContentOfType(nsIContent::eHTML)) {
-    // Test for isindex, a deprecated kind of text field. We're using a string 
-    // compare because <isindex> is not considered a form control, so it does 
-    // not support nsIFormControl or eHTML_FORM_CONTROL, and it's not worth 
-    // having a table of atoms just for it. Instead, we're paying for 1 extra 
-    // string compare per keystroke, which isn't too bad.
-    nsCOMPtr<nsIAtom> targetTagAtom;
-    targetContent->GetTag(*getter_AddRefs(targetTagAtom));
-    nsAutoString targetTagString;
-    targetTagAtom->ToString(targetTagString);
-    if (targetTagString.Equals(NS_LITERAL_STRING("isindex"))) {
-      if (!mTypeAheadBuffer.IsEmpty())  {
-        CancelFind();
-      }
-      return NS_OK;
-    }
   }
 
   NS_ADDREF(*aTargetContent = targetContent);
@@ -2791,7 +2801,47 @@ nsTypeAheadController::nsTypeAheadController(nsIFocusController *aFocusControlle
 NS_IMETHODIMP
 nsTypeAheadController::IsCommandEnabled(const char *aCommand, PRBool *aResult)
 {
-  return SupportsCommand(aCommand, aResult);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = PR_FALSE;
+
+  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMElement> focusedElement;
+  mFocusController->GetFocusedElement(getter_AddRefs(focusedElement));
+
+  nsCOMPtr<nsIContent> focusedContent(do_QueryInterface(focusedElement));
+
+  // Make sure we're not focused on a text field, listbox
+  // or other form control that needs typeahead keystrokes
+  if (focusedContent) {
+    *aResult = nsTypeAheadFind::IsTargetContentOkay(focusedContent);
+    return NS_OK;
+  }
+
+  // We're focused on a document
+  nsCOMPtr<nsIDOMWindowInternal> winInternal;
+  mFocusController->GetFocusedWindow(getter_AddRefs(winInternal));
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(winInternal));
+  if (!domWin) {
+    return NS_OK;
+  }
+
+  *aResult = PR_TRUE;
+
+  // Make sure we're not in Midas editing mode
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  domWin->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc(do_QueryInterface(domDoc));
+  if (htmlDoc) {
+    nsAutoString designMode;
+    htmlDoc->GetDesignMode(designMode);
+    if (designMode.Equals(NS_LITERAL_STRING("on"))) {
+      *aResult = PR_FALSE;
+    }
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -304,6 +304,13 @@ function goUpdatePasteMenuItems()
   goUpdateCommand('cmd_paste');
 }
 
+// update Find As You Type menu items, they rely on focus
+function goUpdateFindTypeMenuItems()
+{
+  goUpdateCommand('cmd_findTypeText');
+  goUpdateCommand('cmd_findTypeLinks');
+}
+
 // function that extracts the filename from a url
 function extractFileNameFromUrl(urlstr)
 {

@@ -129,6 +129,7 @@ public:
 
   static nsTypeAheadFind *GetInstance();
   static void ReleaseInstance(void);
+  static PRBool IsTargetContentOkay(nsIContent *aContent);
 
 protected:
   nsresult PrefsReset();

@@ -187,7 +187,7 @@ Rights Reserved.
 <!ENTITY expandAllThreadsCmd.key "*">
 <!ENTITY collapseAllThreadsCmd.label "Collapse All Threads">
 <!ENTITY collapseAllThreadsCmd.accesskey "C">
-<!ENTITY collapseAllThreadsCmd.key "/">
+<!ENTITY collapseAllThreadsCmd.key "\">
 <!ENTITY unreadMsgsCmd.label "Unread">
 <!ENTITY unreadMsgsCmd.accesskey "U">
 <!ENTITY threadsWithUnreadCmd.label "Threads With Unread">

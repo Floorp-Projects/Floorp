@@ -46,6 +46,12 @@
 <!ENTITY preferencesCmd.label				"Preferences...">
 <!ENTITY preferencesCmd.key					"E">  
 <!ENTITY preferencesCmd.accesskey			"e"> 
+<!ENTITY findTypeTextCmd.label "Find Text As You Type">
+<!ENTITY findTypeTextCmd.key "/">
+<!ENTITY findTypeTextCmd.accesskey "x">
+<!ENTITY findTypeLinksCmd.label "Find Links As You Type">
+<!ENTITY findTypeLinksCmd.key "'">
+<!ENTITY findTypeLinksCmd.accesskey "k">
 
 <!ENTITY viewMenu.label					"View"> 
 <!ENTITY viewMenu.accesskey				"v"> 

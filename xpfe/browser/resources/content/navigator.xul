@@ -92,6 +92,7 @@ Contributor(s):
   </stringbundleset>
 
   <commandset id="commands">    
+    <commandset id="findTypeMenuItems"/>
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
