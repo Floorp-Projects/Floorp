@@ -1,0 +1,53 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications.  Portions created by Netscape Communications are
+ * Copyright (C) 2001 by Netscape Communications.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+interface nsIHttpChannel;
+interface nsIURI;
+
+/**
+ * nsIHttpEventSink
+ *
+ * Implement this interface to receive control over various HTTP events.  The
+ * HTTP channel will try to get this interface from its notificationCallbacks
+ * attribute, and if it doesn't find it there it will look for it from its
+ * loadGroup's notificationCallbacks attribute.
+ *
+ * These methods are called before onStartRequest, and should be handled
+ * SYNCHRONOUSLY.
+ */
+[scriptable, uuid(9475a6af-6352-4251-90f9-d65b1cd2ea15)]
+interface nsIHttpEventSink : nsISupports
+{
+    /**
+     * Called when a redirect occurs due to a HTTP response like 302.  The
+     * redirection may be to a non-http channel.
+     *
+     * @return failure cancels redirect
+     */
+    void onRedirect(in nsIHttpChannel httpChannel, 
+                    in nsIChannel newChannel);
+};

@@ -22,7 +22,6 @@
 
 #include "nsISupports.idl"
 #include "nsIURI.idl"
-#include "nsIProxy.idl"
 
 %{C++
 #define NS_PROTOCOLPROXYSERVICE_CID                             \
@@ -35,7 +34,8 @@ interface nsIProtocolProxyService : nsISupports
 {
     readonly attribute PRBool proxyEnabled;
 
-    void examineForProxy(in nsIURI aURI, in nsIProxy aProxy);
+    void examineForProxy(in nsIURI aURI, out string host, out long port, out string type);
+
     /**
     * Add additional items in the "No proxy for" list. This is above
     * the list specified the user-pref. 

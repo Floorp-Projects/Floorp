@@ -179,8 +179,8 @@ nsFtpControlConnection::Connect()
     rv = mCPipe->AsyncWrite(provider, 
                             NS_STATIC_CAST(nsISupports*, (nsIStreamListener*)this),
                             0, PRUint32(-1),
-                            nsITransport::DONT_PROXY_STREAM_PROVIDER |
-                            nsITransport::DONT_PROXY_STREAM_OBSERVER, 
+                            nsITransport::DONT_PROXY_PROVIDER |
+                            nsITransport::DONT_PROXY_OBSERVER, 
                             getter_AddRefs(mWriteRequest));
     if (NS_FAILED(rv)) return rv;
 

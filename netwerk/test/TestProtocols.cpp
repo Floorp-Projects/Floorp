@@ -44,13 +44,12 @@
 #include "nsCRT.h"
 #include "nsIChannel.h"
 #include "nsIURL.h"
-#include "nsIHTTPChannel.h"
-#include "nsIHTTPEventSink.h" 
+#include "nsIHttpChannel.h"
+#include "nsIHttpEventSink.h" 
 #include "nsIInterfaceRequestor.h" 
 #include "nsIDNSService.h" 
 
 #include "nsISimpleEnumerator.h"
-#include "nsIHTTPHeader.h"
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 
@@ -67,6 +66,31 @@ static PRBool gVerbose = PR_FALSE;
 static nsIEventQueue* gEventQ = nsnull;
 static PRBool gAskUserForInput = PR_FALSE;
 
+//-----------------------------------------------------------------------------
+// HeaderVisitor
+//-----------------------------------------------------------------------------
+
+class HeaderVisitor : public nsIHttpHeaderVisitor
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIHTTPHEADERVISITOR
+
+  HeaderVisitor() { NS_INIT_ISUPPORTS(); }
+  virtual ~HeaderVisitor() {}
+};
+NS_IMPL_ISUPPORTS1(HeaderVisitor, nsIHttpHeaderVisitor)
+
+NS_IMETHODIMP
+HeaderVisitor::VisitHeader(const char *header, const char *value)
+{
+  printf("%s: %s\n", header, value);
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// URLLoadInfo
+//-----------------------------------------------------------------------------
 
 class URLLoadInfo : public nsISupports
 {
@@ -100,136 +124,50 @@ URLLoadInfo::~URLLoadInfo()
 
 NS_IMPL_THREADSAFE_ISUPPORTS(URLLoadInfo,NS_GET_IID(nsISupports));
 
+//-----------------------------------------------------------------------------
+// TestHttpEventSink
+//-----------------------------------------------------------------------------
 
-class TestHTTPEventSink : public nsIHTTPEventSink
+class TestHttpEventSink : public nsIHttpEventSink
 {
 public:
-
-  TestHTTPEventSink();
-  virtual ~TestHTTPEventSink();
-
-  // ISupports interface...
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIHTTPEVENTSINK
 
-  // nsIHTTPEventSink interface...
-
-  NS_IMETHOD      OnHeadersAvailable(nsISupports* i_Context);
-
-  // OnRedirect gets fired only if you have set FollowRedirects on the handler!
-  NS_IMETHOD      OnRedirect(nsIChannel *aOldChannel, 
-                             nsIChannel *aNewChannel);
+  TestHttpEventSink();
+  virtual ~TestHttpEventSink();
 };
 
-TestHTTPEventSink::TestHTTPEventSink()
+TestHttpEventSink::TestHttpEventSink()
 {
   NS_INIT_REFCNT();
 }
 
-TestHTTPEventSink::~TestHTTPEventSink()
+TestHttpEventSink::~TestHttpEventSink()
 {
 }
 
 
-NS_IMPL_ISUPPORTS(TestHTTPEventSink,NS_GET_IID(nsIHTTPEventSink));
+NS_IMPL_ISUPPORTS1(TestHttpEventSink, nsIHttpEventSink);
 
+#if 0
 NS_IMETHODIMP
 TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
 {
-    nsCOMPtr<nsISimpleEnumerator> enumerator;
-    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(context));
-    PRBool bMoreHeaders;
-
-    if (pHTTPCon) {
-        nsXPIDLCString value;
-
-        printf("Channel Info:\n");
-        pHTTPCon->GetContentType(getter_Copies(value));
-        printf("\tContent-Type: %s\n", (const char*)value);
-
-        pHTTPCon->GetCharset(getter_Copies(value));
-        printf("\tCharset: %s\n", (const char*)value);
-
-        pHTTPCon->GetRequestHeaderEnumerator(getter_AddRefs(enumerator));
-
-        printf("Request headers:\n");
-        enumerator->HasMoreElements(&bMoreHeaders);
-        while (bMoreHeaders) {
-            nsCOMPtr<nsISupports> item;
-            nsCOMPtr<nsIHTTPHeader> header;
-
-            enumerator->GetNext(getter_AddRefs(item));
-            header = do_QueryInterface(item);
-
-            if (header) {
-                nsCOMPtr<nsIAtom> key;
-                nsAutoString field;
-                header->GetField(getter_AddRefs(key));
-                key->ToString(field);
-                nsCAutoString theField;
-                theField.AssignWithConversion(field);
-                printf("\t%s: ", theField.get());
-
-                header->GetValue(getter_Copies(value));
-                printf("%s\n", (const char*)value);
-            }
-    
-            enumerator->HasMoreElements(&bMoreHeaders);
-        }
-
-        pHTTPCon->GetResponseHeaderEnumerator(getter_AddRefs(enumerator));
-
-        printf("Response headers:\n");
-        enumerator->HasMoreElements(&bMoreHeaders);
-        while (bMoreHeaders) {
-            nsCOMPtr<nsISupports> item;
-            nsCOMPtr<nsIHTTPHeader> header;
-
-            enumerator->GetNext(getter_AddRefs(item));
-            header = do_QueryInterface(item);
-
-            if (header) {
-                nsCOMPtr<nsIAtom> key;
-                nsAutoString field;
-
-                header->GetField(getter_AddRefs(key));
-                key->ToString(field);
-                nsCAutoString theField;
-                theField.AssignWithConversion(field);
-                printf("\t%s: ", theField.get());
-
-                header->GetValue(getter_Copies(value));
-                printf("%s\n", (const char*)value);
-            }
-    
-            enumerator->HasMoreElements(&bMoreHeaders);
-        }
-
-    }
-
-
-    if (gVerbose) {
-        printf("\n+++ TestHTTPEventSink::OnHeadersAvailable +++\n");
-        if (pHTTPCon) {
-            char* type;
-            //optimize later TODO allow atoms here...! intead of just the header strings
-            pHTTPCon->GetContentType(&type);
-            if (type) {
-                printf("\nReceiving ... %s\n", type);
-                nsCRT::free(type);
-            }
-        }
-    }
     return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
-TestHTTPEventSink::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
+TestHttpEventSink::OnRedirect(nsIHttpChannel *channel, nsIChannel *newChannel)
 {
     printf("\n+++ TestHTTPEventSink::OnRedirect +++\n");
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
+// InputTestConsumer
+//-----------------------------------------------------------------------------
 
 class InputTestConsumer : public nsIStreamListener
 {
@@ -243,57 +181,6 @@ public:
   NS_DECL_NSISTREAMLISTENER
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-class OpenObserver : public nsIRequestObserver 
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-
-    OpenObserver(InputTestConsumer* cons)
-        : mInputConsumer(cons) { 
-        NS_INIT_REFCNT();
-    }
-    virtual ~OpenObserver() {}
-
-protected:
-    InputTestConsumer* mInputConsumer;
-};
-
-NS_IMPL_ISUPPORTS1(OpenObserver, nsIRequestObserver);
-
-NS_IMETHODIMP
-OpenObserver::OnStartRequest(nsIRequest *request, nsISupports* context)
-{
-    printf("\n+++ OpenObserver::OnStartRequest +++. Context = %p\n", (void*)context);
-
-    char* type;
-    PRInt32 length = -1;
-    nsresult rv;
-    nsCOMPtr<nsIChannel> pChan(do_QueryInterface(context));
-    rv = pChan->GetContentType(&type);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "GetContentType failed");
-    rv = pChan->GetContentLength(&length);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "GetContentLength failed");
-    printf("    contentType = %s length = %d\n", type, length);
-    nsCRT::free(type);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-OpenObserver::OnStopRequest(nsIRequest *request, nsISupports* context,
-                            nsresult aStatus)
-{
-    printf("\n+++ OpenObserver::OnStopRequest (status = %x) +++."
-           "\tContext = %p\n", 
-           aStatus, (void*)context);
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 InputTestConsumer::InputTestConsumer()
 {
   NS_INIT_REFCNT();
@@ -303,37 +190,52 @@ InputTestConsumer::~InputTestConsumer()
 {
 }
 
-
 NS_IMPL_ISUPPORTS(InputTestConsumer,NS_GET_IID(nsIStreamListener));
-
 
 NS_IMETHODIMP
 InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
 {
   URLLoadInfo* info = (URLLoadInfo*)context;
-  if (info) {
+  if (info)
     info->mConnectTime = PR_Now() - info->mConnectTime;
-  }
 
-  if (gVerbose) {
+  if (gVerbose)
     printf("\nStarted loading: %s\n", info ? info->Name() : "UNKNOWN URL");
-  }
-/*
-  nsCOMPtr<nsIURI> pURI(do_QueryInterface(context));
-  char* location = nsnull;
 
-  if (pURI) {
-    pURI->GetSpec(&location);
+  nsXPIDLCString value;
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  if (channel) {
+
+    printf("Channel Info:\n");
+    channel->GetContentType(getter_Copies(value));
+    printf("\tContent-Type: %s\n", (const char*)value);
+
+    PRInt32 length = -1;
+    channel->GetContentLength(&length);
+    printf("\tContent-Length: %d\n", length);
   }
 
-  printf("\nStarted loading: %s\n", location ? location : "UNKNOWN URL");
-  if (location) {
-    nsCRT::free(location);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+  if (httpChannel) {
+    HeaderVisitor *visitor = new HeaderVisitor();
+    if (!visitor)
+      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(visitor);
+
+    httpChannel->GetCharset(getter_Copies(value));
+    printf("\tCharset: %s\n", (const char*)value);
+
+    printf("\nHTTP request headers:\n");
+    httpChannel->VisitRequestHeaders(visitor);
+
+    printf("\nHTTP response headers:\n");
+    httpChannel->VisitResponseHeaders(visitor);
+
+    NS_RELEASE(visitor);
   }
-*/
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 InputTestConsumer::OnDataAvailable(nsIRequest *request, 
@@ -410,7 +312,7 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
     connectTime = (info->mConnectTime/1000.0)/1000.0;
     readTime    = ((info->mTotalTime-info->mConnectTime)/1000.0)/1000.0;
 
-    nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(request));
+    nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(request));
     if (pHTTPCon) {
         pHTTPCon->GetResponseStatus(&httpStatus);
         bHTTPURL = PR_TRUE;
@@ -433,42 +335,30 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
   } else {
     printf("\nFinished loading: UNKNOWN URL. Status Code: %x\n", aStatus);
   }
-/*
-  nsCOMPtr<nsIURI> pURI(do_QueryInterface(context));
-  char* location = nsnull;
 
-  if (pURI) {
-    pURI->GetSpec(&location);
-  }
-
-  printf("\nFinished loading: %s  Status Code: %x\n", location ? location : "UNKNOWN URL", status);
-
-  if (location) {
-    nsCRT::free(location);
-  }
-*/
   FireDecrement();
-
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
+// NotificationCallbacks
+//-----------------------------------------------------------------------------
 
-class nsNotificationCallbacks : public nsIInterfaceRequestor {
+class NotificationCallbacks : public nsIInterfaceRequestor {
 public:
     NS_DECL_ISUPPORTS
 
-    nsNotificationCallbacks() {
+    NotificationCallbacks() {
         NS_INIT_REFCNT();
     }
 
     NS_IMETHOD GetInterface(const nsIID& eventSinkIID, void* *result) {
         nsresult rv = NS_ERROR_FAILURE;
 
-        if (eventSinkIID.Equals(NS_GET_IID(nsIHTTPEventSink))) {
-          TestHTTPEventSink *sink;
+        if (eventSinkIID.Equals(NS_GET_IID(nsIHttpEventSink))) {
+          TestHttpEventSink *sink;
 
-          sink = new TestHTTPEventSink();
+          sink = new TestHttpEventSink();
           if (sink == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
           NS_ADDREF(sink);
@@ -479,9 +369,11 @@ public:
     }
 };
 
-NS_IMPL_ISUPPORTS1(nsNotificationCallbacks, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS1(NotificationCallbacks, nsIInterfaceRequestor)
 
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
+// helpers...
+//-----------------------------------------------------------------------------
 
 nsresult StartLoadingURL(const char* aUrlString)
 {
@@ -498,7 +390,7 @@ nsresult StartLoadingURL(const char* aUrlString)
         }
         nsCOMPtr<nsIChannel> pChannel;
 
-        nsNotificationCallbacks* callbacks = new nsNotificationCallbacks();
+        NotificationCallbacks* callbacks = new NotificationCallbacks();
         if (!callbacks) {
             NS_ERROR("Failed to create a new consumer!");
             return NS_ERROR_OUT_OF_MEMORY;;
@@ -520,14 +412,11 @@ nsresult StartLoadingURL(const char* aUrlString)
            request object. This is done by QI for the specific
            protocolConnection.
         */
-        nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(pChannel));
+        nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(pChannel));
 
         if (pHTTPCon) {
             // Setting a sample header.
-            nsCOMPtr<nsIAtom> sampleHeader;
-
-            sampleHeader = NS_NewAtom("sample-header-minus-the-colon");
-            rv = pHTTPCon->SetRequestHeader(sampleHeader, "Sample-Value");
+            rv = pHTTPCon->SetRequestHeader("sample-header", "Sample-Value");
             if (NS_FAILED(rv)) return rv;
         }            
         InputTestConsumer* listener;

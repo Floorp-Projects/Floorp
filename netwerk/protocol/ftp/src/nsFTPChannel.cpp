@@ -51,9 +51,7 @@ nsFTPChannel::nsFTPChannel()
       mFTPState(nsnull),
       mLock(nsnull),
       mStatus(NS_OK),
-      mCanceled(PR_FALSE),
-      mProxyPort(-1),
-      mProxyTransparent(PR_FALSE)
+      mCanceled(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -69,10 +67,9 @@ nsFTPChannel::~nsFTPChannel()
     if (mLock) PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS8(nsFTPChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsFTPChannel,
                               nsIChannel,
                               nsIFTPChannel,
-                              nsIProxy,
                               nsIRequest,
                               nsIInterfaceRequestor, 
                               nsIProgressEventSink,
@@ -97,12 +94,6 @@ nsFTPChannel::Init(nsIURI* uri)
     return NS_OK;
 }
 
-nsresult
-nsFTPChannel::SetProxyChannel(nsIChannel *aChannel) 
-{
-    mProxyChannel = aChannel;
-    return NS_OK;
-}
 
 NS_METHOD
 nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -128,8 +119,6 @@ nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsFTPChannel::GetName(PRUnichar* *result)
 {
-    if (mProxyChannel)
-        return mProxyChannel->GetName(result);
     nsresult rv;
     nsXPIDLCString urlStr;
     rv = mURL->GetSpec(getter_Copies(urlStr));
@@ -143,8 +132,6 @@ nsFTPChannel::GetName(PRUnichar* *result)
 NS_IMETHODIMP
 nsFTPChannel::IsPending(PRBool *result) {
     nsAutoLock lock(mLock);
-    if (mProxyChannel)
-        return mProxyChannel->IsPending(result);
     NS_NOTREACHED("nsFTPChannel::IsPending");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -173,11 +160,10 @@ nsFTPChannel::Cancel(nsresult status) {
     mCanceled = PR_TRUE;
 
     mStatus = status;
-    if (mProxyChannel) {
-        return mProxyChannel->Cancel(status);
-    } else if (mFTPState) {
+
+    if (mFTPState) 
         return mFTPState->Cancel(status);
-    }
+
     return NS_OK;
 }
 
@@ -188,9 +174,7 @@ nsFTPChannel::Suspend(void) {
            ("nsFTPChannel::Suspend() called [this=%x]\n", this));
 
     nsAutoLock lock(mLock);
-    if (mProxyChannel) {
-        return mProxyChannel->Suspend();
-    } else if (mFTPState) {
+    if (mFTPState) {
         return mFTPState->Suspend();
     }
     return NS_OK;
@@ -203,9 +187,7 @@ nsFTPChannel::Resume(void) {
            ("nsFTPChannel::Resume() called [this=%x]\n", this));
 
     nsAutoLock lock(mLock);
-    if (mProxyChannel) {
-        return mProxyChannel->Resume();
-    } else if (mFTPState) {
+    if (mFTPState) {
         return mFTPState->Resume();
     }
     return NS_OK;
@@ -240,8 +222,6 @@ nsFTPChannel::GetURI(nsIURI* *aURL)
 NS_IMETHODIMP
 nsFTPChannel::Open(nsIInputStream **result)
 {
-    if (mProxyChannel)
-        return mProxyChannel->Open(result);
     NS_NOTREACHED("nsFTPChannel::Open");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -262,10 +242,6 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) return rv;
     }
 
-    if (mProxyChannel) {
-        return mProxyChannel->AsyncOpen(this, ctxt);
-    }
-
     ////////////////////////////////
     //// setup the channel thread
     if (!mFTPState) {
@@ -284,8 +260,6 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 NS_IMETHODIMP
 nsFTPChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
-    if (mProxyChannel)
-        return mProxyChannel->GetLoadFlags(aLoadFlags);
     *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
@@ -293,8 +267,6 @@ nsFTPChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 NS_IMETHODIMP
 nsFTPChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
-    if (mProxyChannel)
-        return mProxyChannel->SetLoadFlags(aLoadFlags);
     mLoadFlags = aLoadFlags;
     return NS_OK;
 }
@@ -527,69 +499,4 @@ nsFTPChannel::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
                                nsIInputStream *aInputStream, PRUint32 aSourceOffset,
                                PRUint32 aLength) {
     return mListener->OnDataAvailable(this, mUserContext, aInputStream, aSourceOffset, aLength);
-}
-
-// nsIFTPChannel methods
-NS_IMETHODIMP
-nsFTPChannel::GetUsingProxy(PRBool *aUsingProxy)
-{
-    if (!aUsingProxy)
-        return NS_ERROR_NULL_POINTER;
-    *aUsingProxy = (!mProxyHost.IsEmpty() && !mProxyTransparent);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::GetUsingTransparentProxy(PRBool *aUsingProxy)
-{
-    if (!aUsingProxy)
-        return NS_ERROR_NULL_POINTER;
-    *aUsingProxy = (!mProxyHost.IsEmpty() && mProxyTransparent);
-    return NS_OK;
-}
-
-// nsIProxy methods
-NS_IMETHODIMP
-nsFTPChannel::GetProxyHost(char* *_retval) {
-    *_retval = mProxyHost.ToNewCString();
-    if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::SetProxyHost(const char *aProxyHost) {
-    mProxyHost = aProxyHost;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::GetProxyPort(PRInt32 *_retval) {
-    *_retval = mProxyPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::SetProxyPort(PRInt32 aProxyPort) {
-   mProxyPort = aProxyPort;
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::GetProxyType(char * *_retval)
-{
-    *_retval = mProxyType.ToNewCString();
-    if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::SetProxyType(const char * aProxyType)
-{
-    if (nsCRT::strcasecmp(aProxyType, "socks") == 0) {
-        mProxyTransparent = PR_TRUE;
-    } else {
-        mProxyTransparent = PR_FALSE;
-    }
-    mProxyType = aProxyType;
-    return NS_OK;
 }

@@ -1199,7 +1199,7 @@ nsSocketTransport::GetBytesExpected (PRInt32 * bytes)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::SetBytesExpected (PRInt32 bytes)
+nsSocketTransport::SetBytesExpected(PRInt32 bytes)
 {
     nsAutoMonitor mon(mMonitor);
 
@@ -1220,7 +1220,7 @@ nsSocketTransport::GetSecurityInfo(nsISupports **info)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
+nsSocketTransport::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
 {
     NS_ENSURE_ARG_POINTER(aCallbacks);
     *aCallbacks = mNotificationCallbacks;
@@ -1229,27 +1229,34 @@ nsSocketTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
-                                            PRBool isBackground)
+nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
+                                            PRUint32               aFlags)
 {
     mNotificationCallbacks = aCallbacks;
-    mEventSink = 0;
-    if (!mNotificationCallbacks || isBackground) return NS_OK;
+    mProgressSink = 0;
+
+    if (!mNotificationCallbacks || (aFlags & DONT_REPORT_PROGRESS))
+        return NS_OK;
 
     nsCOMPtr<nsIProgressEventSink> sink(do_GetInterface(mNotificationCallbacks));
-    if (!sink) return NS_ERROR_FAILURE;
+    if (!sink) return NS_OK;
 
-    // Now generate a proxied event sink-
+    if (aFlags & DONT_PROXY_PROGRESS) {
+        mProgressSink = sink;
+        return NS_OK;
+    }
+
+    // Otherwise, generate a proxied event sink
     nsresult rv;
     NS_WITH_SERVICE(nsIProxyObjectManager, 
                     proxyMgr, kProxyObjectManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return proxyMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
+    return proxyMgr->GetProxyForObject(NS_CURRENT_EVENTQ, // calling thread
                                        NS_GET_IID(nsIProgressEventSink),
                                        sink,
                                        PROXY_ASYNC | PROXY_ALWAYS,
-                                       getter_AddRefs(mEventSink));
+                                       getter_AddRefs(mProgressSink));
 }
 
 
@@ -1299,10 +1306,10 @@ nsSocketTransport::Dispatch(nsSocketRequest *req)
 nsresult
 nsSocketTransport::OnProgress(nsSocketRequest *req, nsISupports *ctx, PRUint32 offset)
 {
-    if (mEventSink)
+    if (mProgressSink)
         // we don't have content length info at the socket level
         // just pass 0 through.
-        mEventSink->OnProgress(req, ctx, offset, 0);
+        mProgressSink->OnProgress(req, ctx, offset, 0);
     return NS_OK;
 }
 
@@ -1418,9 +1425,9 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
 
     if (NS_SUCCEEDED(rv)) {
         // Proxy the stream listener and observer methods by default.
-        if (!(aFlags & nsITransport::DONT_PROXY_STREAM_OBSERVER)) {
+        if (!(aFlags & nsITransport::DONT_PROXY_OBSERVER)) {
             // Cannot proxy the listener unless the observer part is also proxied.
-            if (!(aFlags & nsITransport::DONT_PROXY_STREAM_PROVIDER)) {
+            if (!(aFlags & nsITransport::DONT_PROXY_PROVIDER)) {
                 rv = NS_NewStreamListenerProxy(getter_AddRefs(listener),
                                                aListener, nsnull,
                                                mBufferSegmentSize,
@@ -1495,9 +1502,9 @@ nsSocketTransport::AsyncWrite(nsIStreamProvider* aProvider,
     
     if (NS_SUCCEEDED(rv)) {
         // Proxy the stream provider and observer methods by default.
-        if (!(aFlags & nsITransport::DONT_PROXY_STREAM_OBSERVER)) {
+        if (!(aFlags & nsITransport::DONT_PROXY_OBSERVER)) {
             // Cannot proxy the provider unless the observer part is also proxied.
-            if (!(aFlags & nsITransport::DONT_PROXY_STREAM_PROVIDER)) {
+            if (!(aFlags & nsITransport::DONT_PROXY_PROVIDER)) {
                 rv = NS_NewStreamProviderProxy(getter_AddRefs(provider),
                                                aProvider, nsnull,
                                                mBufferSegmentSize,
@@ -1758,11 +1765,11 @@ nsSocketTransport::SetSocketConnectTimeout (PRUint32   a_Seconds)
 nsresult
 nsSocketTransport::OnStatus(nsSocketRequest *req, nsISupports *ctxt, nsresult message)
 {
-    if (!mEventSink)
+    if (!mProgressSink)
         return NS_ERROR_FAILURE;
 
     nsAutoString host; host.AssignWithConversion(mHostName);
-    return mEventSink->OnStatus(req, ctxt, message, host.GetUnicode());
+    return mProgressSink->OnStatus(req, ctxt, message, host.GetUnicode());
 }
 
 nsresult
@@ -2191,7 +2198,9 @@ nsSocketBOS::SetObserver(nsIOutputStreamObserver *aObserver)
 //----------------------------------------------------------------------------
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSocketIS, nsIInputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSocketIS,
+                              nsIInputStream,
+                              nsISeekableStream)
 
 nsSocketIS::nsSocketIS()
     : mOffset(0)
@@ -2279,13 +2288,29 @@ nsSocketIS::SetObserver(nsIInputStreamObserver *aObserver)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsSocketIS::Seek(PRInt32 whence, PRInt32 offset)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketIS::Tell(PRUint32 *offset)
+{
+    NS_ENSURE_ARG_POINTER(offset);
+    *offset = mOffset;
+    return NS_OK;
+}
+
 //
 //----------------------------------------------------------------------------
 // nsSocketOS
 //----------------------------------------------------------------------------
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSocketOS, nsIOutputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSocketOS,
+                              nsIOutputStream,
+                              nsISeekableStream)
 
 nsSocketOS::nsSocketOS()
     : mOffset(0)
@@ -2390,6 +2415,20 @@ nsSocketOS::SetObserver(nsIOutputStreamObserver *aObserver)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsSocketOS::Seek(PRInt32 whence, PRInt32 offset)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketOS::Tell(PRUint32 *offset)
+{
+    NS_ENSURE_ARG_POINTER(offset);
+    *offset = mOffset;
+    return NS_OK;
+}
+
 //
 //----------------------------------------------------------------------------
 // nsSocketRequest
@@ -2484,8 +2523,7 @@ nsSocketRequest::Cancel(nsresult status)
     mCanceled = PR_TRUE;
 
     // if status is a fail, we need to force a dispatch
-    if (NS_FAILED(status))
-        mTransport->Dispatch(this);
+    mTransport->Dispatch(this);
     return NS_OK;
 }
 
@@ -2630,6 +2668,8 @@ nsSocketReadRequest::OnRead()
                                     mInputStream,
                                     offset,
                                     amount);
+
+    LOG(("nsSocketReadRequest: listener returned [rv=%x]\n", rv));
 
     //
     // Handle the error conditions

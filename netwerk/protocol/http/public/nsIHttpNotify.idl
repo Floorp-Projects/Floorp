@@ -1,0 +1,54 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
+ */
+
+/* The internal networking library http interface. External modules
+ * desiring to receive notification of internal http events implement this 
+ * interface, and pass it into the nsINetModuleMgr Register and Unregister
+ * methods.
+ */
+
+#include "nsINetNotify.idl"
+
+interface nsIHttpChannel;
+
+[scriptable, uuid(5a6dec35-fb37-4460-85bb-1c572521d0cf)]
+interface nsIHttpNotify : nsINetNotify
+{
+    /**
+     * Before an HTTP request is sent to the server, this method is called.
+     * The implementor of this method can then chose to set any additional
+     * headers for this request before the request is actually sent to the
+     * server.  The HTTP protocol interpreter blocks on this call until it
+     * returns.
+     */
+    void onModifyRequest(in nsIHttpChannel httpChannel);
+
+    /**
+     * After an HTTP server response is received, this method is called
+     * asyncronously.  The implementor can interrogate the nsIHttpChannel as
+     * it deems necessary.  The HTTP protocol interpreter blocks on this call
+     * until it returns.
+     */
+    void onExamineResponse(in nsIHttpChannel httpChannel);
+};

@@ -770,9 +770,9 @@ nsFileTransport::Process(void)
             LOG(("nsFileTransport: READING [this=%x %s] read %u bytes [offset=%u]\n",
                 this, mStreamName.get(), total, mOffset));
 
-            if (mProgress)
-                mProgress->OnProgress(this, mContext, offset,
-                                      PR_MAX(mTotalAmount, 0));
+            if (mProgressSink)
+                mProgressSink->OnProgress(this, mContext, offset,
+                                          PR_MAX(mTotalAmount, 0));
         }
         break;
       }
@@ -813,12 +813,12 @@ nsFileTransport::Process(void)
             saveListener->OnStopRequest(this, saveContext, mStatus);
             saveListener = 0;
         }
-        if (mProgress) {
+        if (mProgressSink) {
             nsAutoString fileName;
             fileName.AssignWithConversion(mStreamName);
-            mProgress->OnStatus(this, saveContext, 
-                                NS_NET_STATUS_READ_FROM, 
-                                fileName.GetUnicode());
+            mProgressSink->OnStatus(this, saveContext, 
+                                    NS_NET_STATUS_READ_FROM, 
+                                    fileName.GetUnicode());
         }
 
         break;
@@ -947,9 +947,9 @@ nsFileTransport::Process(void)
             LOG(("nsFileTransport: WRITING [this=%x %s] wrote %u bytes [offset=%u]\n",
                 this, mStreamName.get(), total, mOffset));
 
-            if (mProgress)
-                mProgress->OnProgress(this, mContext, offset,
-                                      PR_MAX(mTotalAmount, 0));
+            if (mProgressSink)
+                mProgressSink->OnProgress(this, mContext, offset,
+                                          PR_MAX(mTotalAmount, 0));
         }
         break;
       }
@@ -980,10 +980,10 @@ nsFileTransport::Process(void)
             mProvider->OnStopRequest(this, mContext, mStatus);
             mProvider = 0;
         }
-        if (mProgress) {
+        if (mProgressSink) {
             nsAutoString fileName; fileName.AssignWithConversion(mStreamName);
-            nsresult rv = mProgress->OnStatus(this, mContext,
-                                              NS_NET_STATUS_WROTE_TO, 
+            nsresult rv = mProgressSink->OnStatus(this, mContext,
+                                                  NS_NET_STATUS_WROTE_TO, 
                                               fileName.GetUnicode());
             NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStatus failure");
         }
@@ -1037,7 +1037,8 @@ nsFileTransport::GetSecurityInfo(nsISupports * *aSecurityInfo)
 }
 
 NS_IMETHODIMP
-nsFileTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks) {
+nsFileTransport::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
+{
     NS_ENSURE_ARG_POINTER(aCallbacks);
     *aCallbacks = mNotificationCallbacks;
     NS_IF_ADDREF(*aCallbacks);
@@ -1045,25 +1046,34 @@ nsFileTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks) {
 }
 
 NS_IMETHODIMP
-nsFileTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
-                                          PRBool isBackground) {
+nsFileTransport::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
+                                          PRUint32               aFlags)
+{
     mNotificationCallbacks = aCallbacks;
-    mProgress = 0;
-    if (!mNotificationCallbacks || isBackground) return NS_OK;
+    mProgressSink = 0;
+
+    if (!mNotificationCallbacks || (aFlags & DONT_REPORT_PROGRESS))
+        return NS_OK;
 
     nsCOMPtr<nsIProgressEventSink> sink(do_GetInterface(mNotificationCallbacks));
-    if (!sink) return NS_ERROR_FAILURE;
+    if (!sink) return NS_OK;
 
+    if (aFlags & DONT_PROXY_PROGRESS) {
+        mProgressSink = sink;
+        return NS_OK;
+    }
+
+    // Otherwise, generate a proxied event sink
     nsresult rv;
     NS_WITH_SERVICE(nsIProxyObjectManager,
                     proxyMgr, kProxyObjectManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
         
-    return proxyMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
+    return proxyMgr->GetProxyForObject(NS_CURRENT_EVENTQ, // calling thread
                                        NS_GET_IID(nsIProgressEventSink),
                                        sink,
                                        PROXY_ASYNC | PROXY_ALWAYS,
-                                       getter_AddRefs(mProgress));
+                                       getter_AddRefs(mProgressSink));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

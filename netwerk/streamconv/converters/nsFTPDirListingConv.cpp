@@ -24,7 +24,6 @@
 #include "nsMemory.h"
 #include "plstr.h"
 #include "prlog.h"
-#include "nsIHTTPChannel.h"
 #include "nsIAtom.h"
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"

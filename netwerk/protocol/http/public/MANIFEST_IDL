@@ -1,5 +1,5 @@
-nsIHTTPChannel.idl
-nsIHTTPProtocolHandler.idl
-nsIHTTPHeader.idl
+nsIHttpChannel.idl
+nsIHttpProtocolHandler.idl
+nsIHttpAuthenticator.idl
 nsIHttpNotify.idl
-nsIHTTPEventSink.idl
+nsIHttpEventSink.idl

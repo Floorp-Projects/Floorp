@@ -214,4 +214,27 @@
     {0x8f, 0xbc, 0xbe, 0xe8, 0xf9, 0x22, 0xea, 0x67} \
 }
 
-#endif /* !defined(nsNetCID_h__) */
+
+/******************************************************************************
+ * netwerk/protocol/http/ classes
+ */
+
+// This protocol handler implements both HTTP and HTTPS
+#define NS_HTTPPROTOCOLHANDLER_CID \
+{ /* 4f47e42e-4d23-4dd3-bfda-eb29255e9ea3 */         \
+    0x4f47e42e,                                      \
+    0x4d23,                                          \
+    0x4dd3,                                          \
+    {0xbf, 0xda, 0xeb, 0x29, 0x25, 0x5e, 0x9e, 0xa3} \
+}
+
+#define NS_HTTPBASICAUTH_CID \
+{ /* fca3766a-434a-4ae7-83cf-0909e18a093a */         \
+    0xfca3766a,                                      \
+    0x434a,                                          \
+    0x4ae7,                                          \
+    {0x83, 0xcf, 0x09, 0x09, 0xe1, 0x8a, 0x09, 0x3a} \
+}
+
+
+#endif // nsNetCID_h__

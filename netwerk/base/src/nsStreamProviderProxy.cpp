@@ -32,8 +32,8 @@ static PRLogModuleInfo *gStreamProviderProxyLog;
 
 #define LOG(args) PR_LOG(gStreamProviderProxyLog, PR_LOG_DEBUG, args)
 
-#define DEFAULT_BUFFER_SEGMENT_SIZE 2048
-#define DEFAULT_BUFFER_MAX_SIZE  (4*2048)
+#define DEFAULT_BUFFER_SEGMENT_SIZE 4096
+#define DEFAULT_BUFFER_MAX_SIZE  (4*4096)
 
 //----------------------------------------------------------------------------
 // Design Overview
