@@ -1909,6 +1909,12 @@ PRBool nsFontMetricsWin::IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeight
   }
 }
 
+typedef struct {
+  LOGFONT  mLogFont;
+  PRUint16 mWeights;
+  int      mFontCount;
+} nsFontWeightInfo;
+
 static int CALLBACK nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRIC * metrics,
   DWORD fontType, LPARAM closure)
 {
@@ -1918,13 +1924,64 @@ static int CALLBACK nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRI
     return TRUE;
   }
   
+  nsFontWeightInfo* weightInfo = (nsFontWeightInfo*)closure;
   if (NULL != metrics) {
     int pos = metrics->tmWeight / 100;
       // Set a bit to indicate the font weight is available
-    nsFontMetricsWin::SetFontWeight(metrics->tmWeight / 100, (PRUint16*)closure);
+    if (weightInfo->mFontCount == 0)
+      weightInfo->mLogFont = *logFont;
+    nsFontMetricsWin::SetFontWeight(metrics->tmWeight / 100,
+      &weightInfo->mWeights);
+    weightInfo->mFontCount++;
   }
 
   return TRUE; // Keep looking for more weights.
+}
+
+
+static void SearchSimulatedFontWeight(HDC aDC, nsFontWeightInfo* aWeightInfo)
+{
+  int weight, weightCount;
+
+  // if the font does not exist return immediately 
+  if (aWeightInfo->mFontCount == 0) {
+    return;
+  }
+
+  // If two or more nonsimulated variants exist, just use them.
+  weightCount = 0;
+  for (weight = 100; weight <= 900; weight += 100) {
+    if (nsFontMetricsWin::IsFontWeightAvailable(weight, aWeightInfo->mWeights))
+      weightCount++;
+  }
+
+  // If the font does not exist (weightCount == 0) or
+  // there are 2 or more weights already, don't look for
+  // simulated font weights.
+  if ((weightCount == 0) || (weightCount > 1)) {
+    return;
+  }
+
+  // Searching simulated variants.
+  // The tmWeight member holds simulated font weight.
+  LOGFONT logFont = aWeightInfo->mLogFont;
+  for (weight = 100; weight <= 900; weight += 100) {
+    logFont.lfWeight = weight;
+    HFONT hfont = ::CreateFontIndirect(&logFont);
+    HFONT oldfont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
+
+    TEXTMETRIC metrics;
+    GetTextMetrics(aDC, &metrics);
+    if (metrics.tmWeight == weight) {
+//      printf("font weight for %s found: %d%s\n", logFont.lfFaceName, weight,
+//        nsFontMetricsWin::IsFontWeightAvailable(weight, aWeightInfo->mWeights) ?
+//        "" : " (simulated)");
+      nsFontMetricsWin::SetFontWeight(weight / 100, &aWeightInfo->mWeights);
+    }
+
+    ::SelectObject(aDC, (HGDIOBJ)oldfont);
+    ::DeleteObject((HGDIOBJ)hfont);
+  }
 }
 
 
@@ -1940,10 +1997,13 @@ nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName) {
  
   logFont.lfPitchAndFamily = 0;
 
-  PRUint16 weights = 0;
-   ::EnumFontFamiliesEx(aDC, &logFont, nsFontWeightCallback, (LPARAM)&weights, 0);
-//   printf("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weights, weights);
-   return weights;
+  nsFontWeightInfo weightInfo;
+  weightInfo.mWeights = 0;
+  weightInfo.mFontCount = 0;
+   ::EnumFontFamiliesEx(aDC, &logFont, nsFontWeightCallback, (LPARAM)&weightInfo, 0);
+  SearchSimulatedFontWeight(aDC, &weightInfo);
+ //  printf("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weightInfo.mWeights, weightInfo.mWeights);
+  return weightInfo.mWeights;
 }
 
 
