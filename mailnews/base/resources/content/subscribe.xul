@@ -97,6 +97,7 @@ Rights Reserved.
         <tree class="inset" flex="1"
               id="subscribetree"
               datasources="rdf:null"
+              multiple="true"
               onclick="SubscribeOnClick(event);"> 
           <template>
             <rule>    
