@@ -30,12 +30,43 @@
 #define INCL_DOS
 #define INCL_DOSERRORS
 #include <os2.h>
+#include "prlog.h"
 
 #include <uconv.h> // XXX hack XXX
 
 #define COLOR_CUBE_SIZE 216
 
 void PMERROR(const char *str);
+
+// Wrapper code for all OS/2 system calls to check the return code for error condition in debug build.
+// Could be used like this:
+//
+//    HDC hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
+//    GFX (::GpiAssociate (mPrintPS, 0), FALSE);
+//    return GFX (::GpiDestroyPS (mPrintPS), FALSE);
+
+#ifdef DEBUG
+  extern void GFX_LogErr (unsigned ReturnCode, const char* ErrorExpression, const char* FileName, const char* FunctionName, long LineNum);
+
+  inline long GFX_Check (long ReturnCode, long ErrorCode, const char* ErrorExpression, const char* FileName, const char* FunctionName, long LineNum) 
+  { 
+    if (ReturnCode == ErrorCode)
+      GFX_LogErr (ErrorCode, ErrorExpression, FileName, FunctionName, LineNum);
+
+    return ReturnCode ; 
+  }
+
+  #ifdef XP_OS2_VACPP
+    #define GFX(ReturnCode, ErrorCode)\
+            GFX_Check (ReturnCode, ErrorCode, #ReturnCode, __FILE__, __FUNCTION__, __LINE__)
+  #else
+    #define GFX(ReturnCode, ErrorCode)\
+            GFX_Check (ReturnCode, ErrorCode, #ReturnCode, __FILE__, NULL, __LINE__)
+  #endif
+
+#else	// Retail build
+  #define GFX(ReturnCode, ErrorCode) ReturnCode
+#endif
 
 class nsString;
 class nsIDeviceContext;
@@ -95,5 +126,9 @@ extern nsGfxModuleData gModuleData;
 #endif
 
 #define MK_RGB(r,g,b) ((r) * 65536) + ((g) * 256) + (b)
+
+#ifdef DEBUG
+extern PRLogModuleInfo *gGFXOS2LogModule;
+#endif
 
 #endif
