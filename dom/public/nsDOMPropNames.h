@@ -600,6 +600,7 @@
     "htmlulistelement.type", \
     "image.complete", \
     "image.lowsrc", \
+    "javascript.enabled", \
     "keyevent.altkey", \
     "keyevent.charcode", \
     "keyevent.ctrlkey", \

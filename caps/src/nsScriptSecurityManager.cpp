@@ -46,6 +46,7 @@ static NS_DEFINE_CID(kCScriptNameSetRegistryCID,
                      NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 enum {
+    SCRIPT_SECURITY_UNDEFINED_ACCESS,
     SCRIPT_SECURITY_CAPABILITY_ONLY,
     SCRIPT_SECURITY_SAME_DOMAIN_ACCESS,
     SCRIPT_SECURITY_ALL_ACCESS,
@@ -357,10 +358,19 @@ nsScriptSecurityManager::CheckScriptAccess(JSContext *cx,
         *aResult = PR_TRUE;
         return NS_OK;
     }
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
+        return NS_ERROR_FAILURE;
+    }
     nsXPIDLCString capability;
-    PRInt32 secLevel = GetSecurityLevel(cx, domProp, isWrite,
+    PRInt32 secLevel = GetSecurityLevel(principal, domProp, isWrite,
                                         getter_Copies(capability));
     switch (secLevel) {
+      case SCRIPT_SECURITY_UNDEFINED_ACCESS:
+        // If no preference is defined for this property, allow access. 
+        // This violates the rule of a safe default, but means we don't have
+        // to specify the large majority of unchecked properties, only the
+        // minority of checked ones.
       case SCRIPT_SECURITY_ALL_ACCESS:
         *aResult = PR_TRUE;
         return NS_OK;
@@ -403,7 +413,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
     // Otherwise, principal should have a codebase that we can use to
     // do the remaining tests.
     nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-    if (!principal) 
+    if (!codebase) 
         return NS_ERROR_FAILURE;
     nsCOMPtr<nsIURI> uri;
     if (NS_FAILED(codebase->GetURI(getter_AddRefs(uri)))) 
@@ -539,35 +549,66 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
 }
 
 
-
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
                                            PRBool *result)
 {
-     // Even if JavaScript is disabled, we must still execute system scripts
-    *result = mIsJavaScriptEnabled || (principal == mSystemPrincipal);
+    if (principal == mSystemPrincipal) {
+         // Even if JavaScript is disabled, we must still execute system scripts
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    
+    if (GetBit(hasDomainPolicyVector, NS_DOM_PROP_JAVASCRIPT_ENABLED)) {
+        // We may have a per-domain security policy for JavaScript execution
+        nsXPIDLCString capability;
+        PRInt32 secLevel = GetSecurityLevel(principal, 
+                                            NS_DOM_PROP_JAVASCRIPT_ENABLED, 
+                                            PR_FALSE, getter_Copies(capability));
+        if (secLevel != SCRIPT_SECURITY_UNDEFINED_ACCESS) {
+            *result = (secLevel == SCRIPT_SECURITY_ALL_ACCESS);
+            return NS_OK;
+        }
+    }
+    
+    if (mIsJavaScriptEnabled != mIsMailJavaScriptEnabled) {
+        // Is this script running from mail?
+        nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+        if (!codebase) 
+            return NS_ERROR_FAILURE;
+        nsCOMPtr<nsIURI> uri;
+        if (NS_FAILED(codebase->GetURI(getter_AddRefs(uri)))) 
+            return NS_ERROR_FAILURE;
+        nsXPIDLCString scheme;
+        if (NS_FAILED(uri->GetScheme(getter_Copies(scheme))))
+            return NS_ERROR_FAILURE;
+        if (nsCRT::strcmp(scheme, "imap") == 0 || 
+            nsCRT::strcmp(scheme, "mailbox") == 0) 
+        {
+            *result = mIsMailJavaScriptEnabled;
+            return NS_OK;
+        }
+    }
+    *result = mIsJavaScriptEnabled;
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanExecuteFunction(void *jsFunc,
                                             PRBool *result)
 {
-    *result = mIsJavaScriptEnabled;
-    if (!*result) {
-        // norris TODO: figure out JSContext strategy, replace nsnulls below
-        // JavaScript is disabled, but we must still execute system JavaScript
-        JSScript *script = JS_GetFunctionScript(nsnull, (JSFunction *) jsFunc);
-        if (!script)
-            return NS_ERROR_FAILURE;
-        JSPrincipals *jsprin = JS_GetScriptPrincipals(nsnull, script);
-        if (!jsprin)
-            return NS_ERROR_FAILURE;
-        nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) jsprin;
-        *result = (nsJSPrin->nsIPrincipalPtr == mSystemPrincipal);
-    }
-    return NS_OK;
+    // norris TODO: figure out JSContext strategy, replace nsnulls below
+    // JavaScript is disabled, but we must still execute system JavaScript
+    JSScript *script = JS_GetFunctionScript(nsnull, (JSFunction *) jsFunc);
+    if (!script)
+        return NS_ERROR_FAILURE;
+    JSPrincipals *jsprin = JS_GetScriptPrincipals(nsnull, script);
+    if (!jsprin)
+        return NS_ERROR_FAILURE;
+    nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) jsprin;
+
+    return CanExecuteScripts(nsJSPrin->nsIPrincipalPtr, result);
 }
 
 
@@ -803,7 +844,8 @@ nsScriptSecurityManager::CanSetProperty(JSContext *aJSContext,
 
 nsScriptSecurityManager::nsScriptSecurityManager(void)
     : mOriginToPolicyMap(nsnull), mSystemPrincipal(nsnull), 
-      mPrincipals(nsnull), mIsJavaScriptEnabled(PR_FALSE)
+      mPrincipals(nsnull), mIsJavaScriptEnabled(PR_FALSE),
+      mIsMailJavaScriptEnabled(PR_FALSE)
 {
     NS_INIT_REFCNT();
     memset(hasPolicyVector, 0, sizeof(hasPolicyVector));
@@ -871,19 +913,6 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
                                           const char *aCapability,
                                           PRBool* aResult)
 {
-    // Temporary: only enforce if security.checkdomprops pref is enabled
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-	PRBool enabled;
-    if (NS_FAILED(prefs->GetBoolPref("security.checkdomprops", &enabled)) ||
-        !enabled) 
-    {
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
-
     /*
     ** Get origin of subject and object and compare.
     */
@@ -926,6 +955,19 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     if (*aResult)
         return NS_OK;
     
+    // Temporary: only enforce if security.checkdomprops pref not disabled
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	PRBool enabled;
+    if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkdomprops", &enabled)) &&
+        enabled) 
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+
     /*
     ** Access tests failed, so now report error.
     */
@@ -941,11 +983,12 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
 
 
 PRInt32 
-nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, nsDOMProp domProp, 
+nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal, 
+                                          nsDOMProp domProp, 
                                           PRBool isWrite, char **capability)
 {
     nsXPIDLCString prefName;
-    if (NS_FAILED(GetPrefName(cx, domProp, getter_Copies(prefName))))
+    if (NS_FAILED(GetPrefName(principal, domProp, getter_Copies(prefName))))
         return SCRIPT_SECURITY_NO_ACCESS;
     PRInt32 secLevel;
     char *secLevelString;
@@ -980,12 +1023,7 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, nsDOMProp domProp,
             PR_Free(secLevelString);
         return secLevel;
     }
-
-    // If no preference is defined for this property, allow access. 
-    // This violates the rule of a safe default, but means we don't have
-    // to specify the large majority of unchecked properties, only the
-    // minority of checked ones.
-    return SCRIPT_SECURITY_ALL_ACCESS;
+    return SCRIPT_SECURITY_UNDEFINED_ACCESS;
 }
 
 
@@ -1023,7 +1061,7 @@ static char *domPropNames[] = {
 
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetPrefName(JSContext *cx, nsDOMProp domProp, 
+nsScriptSecurityManager::GetPrefName(nsIPrincipal *principal, nsDOMProp domProp, 
                                      char **result)
 {
     nsresult rv;
@@ -1032,10 +1070,6 @@ nsScriptSecurityManager::GetPrefName(JSContext *cx, nsDOMProp domProp,
     if (!GetBit(hasDomainPolicyVector, domProp)) {
         s += defaultStr;
     } else {
-        nsCOMPtr<nsIPrincipal> principal;
-        if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
-            return NS_ERROR_FAILURE;
-        }
         PRBool equals = PR_TRUE;
         if (principal && NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
             return NS_ERROR_FAILURE;
@@ -1171,6 +1205,7 @@ nsScriptSecurityManager::enumeratePolicyCallback(const char *prefName,
 }
 
 static const char jsEnabledPrefName[] = "javascript.enabled";
+static const char jsMailEnabledPrefName[] = "javascript.allow.mailnews";
 
 int
 nsScriptSecurityManager::JSEnabledPrefChanged(const char *pref, void *data)
@@ -1187,6 +1222,13 @@ nsScriptSecurityManager::JSEnabledPrefChanged(const char *pref, void *data)
     {
         // Default to enabled.
         secMgr->mIsJavaScriptEnabled = PR_TRUE;
+    }
+
+    if (NS_FAILED(prefs->GetBoolPref(jsMailEnabledPrefName, 
+                                     &secMgr->mIsMailJavaScriptEnabled))) 
+    {
+        // Default to enabled.
+        secMgr->mIsMailJavaScriptEnabled = PR_TRUE;
     }
 
     return 0;
@@ -1208,8 +1250,9 @@ nsScriptSecurityManager::InitFromPrefs()
     // Set the initial value of the "javascript.enabled" pref
     JSEnabledPrefChanged(jsEnabledPrefName, this);
 
-    // set callback in case the value of the pref changes
+    // set callbacks in case the value of the pref changes
     prefs->RegisterCallback(jsEnabledPrefName, JSEnabledPrefChanged, this);
+    prefs->RegisterCallback(jsMailEnabledPrefName, JSEnabledPrefChanged, this);
 
     PolicyEnumeratorInfo info;
     info.prefs = prefs;
