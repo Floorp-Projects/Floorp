@@ -29,6 +29,7 @@
 #include "il_util.h"
 #include "il_icons.h"
 #include "CBrowserContext.h"
+#include "CBrowserWindow.h" // for CBrowserWindow::ClipOutPopdown()
 #include "CIconContext.h"
 #include "CHTMLView.h"
 #include "RandomFrontEndCrap.h"
@@ -414,7 +415,13 @@ _IMGCB_DisplayPixmap(struct IMGCB* /*self*/, jint /*op*/, void* inContext, IL_Pi
 		fe_mask = mask != NULL ? (NS_PixMap *) mask->client_data : NULL;
 		
 		if ( fe_pixmap != NULL )
-			{			
+			{
+			// pinkerton
+			// we need a way to prevent images in the HTML area from drawing over the 
+			// popdown treeView if it is visible. Clip it out.
+			StClipRgnState savedClip;
+			CBrowserWindow::ClipOutPopdown(theHTMLView);
+			
 			topLeftImage.h = x + x_offset + x_origin;
 			topLeftImage.v = y + y_offset + y_origin;
 
