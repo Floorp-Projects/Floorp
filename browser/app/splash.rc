@@ -38,7 +38,7 @@
 #include <windows.h>
 #include "nsINativeAppSupportWin.h"
 
-1 24 "phoenix.exe.manifest"
+1 24 "MozillaFirebird.exe.manifest"
 
 // Program icon.
 IDI_APPLICATION ICON
@@ -66,8 +66,8 @@ IDD_SPLASH DIALOGEX
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_DDE_APPLICATION_NAME,            "Phoenix"
-    IDS_STARTMENU_APPNAME,              "Phoenix"
+    ID_DDE_APPLICATION_NAME,            "Mozilla Firebird"
+    IDS_STARTMENU_APPNAME,              "Mozilla Firebird"
 END
 
 #ifdef MOZ_STATIC_BUILD
