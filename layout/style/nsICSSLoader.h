@@ -130,6 +130,16 @@ public:
 
   // stop loading one sheet
   NS_IMETHOD StopLoadingSheet(nsIURI* aURL) = 0;
+
+  /**
+   * Whether the loader is enabled or not.
+   * When disabled, processing of new styles is disabled and an attempt
+   * to do so will fail with a return code of
+   * NS_ERROR_NOT_AVAILABLE. Note that this DOES NOT disable
+   * currently loading styles or already processed styles.
+   */
+  NS_IMETHOD GetEnabled(PRBool *aEnabled) = 0;
+  NS_IMETHOD SetEnabled(PRBool aEnabled) = 0;
 };
 
 extern NS_EXPORT nsresult 

@@ -553,7 +553,7 @@ nsSyncLoadService::LoadLocalXBLDocument(nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> listener;
-    rv = doc->StartDocumentLoad(kLoadAsData,
+    rv = doc->StartDocumentLoad("loadAsInteractiveData",
                                 aChannel,
                                 loadGroup,
                                 nsnull,

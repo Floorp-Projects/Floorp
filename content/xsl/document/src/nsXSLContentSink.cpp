@@ -94,7 +94,7 @@ nsXSLContentSink::Init(nsITransformMediator* aTM,
   rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  loader->Suspend();
+  loader->SetEnabled(PR_FALSE);
   loader->RemoveObserver(this);
 
   return rv;

@@ -209,7 +209,7 @@ struct PendingSheetData {
   nsICSSLoaderObserver* mObserver;
 };
 
-class CSSLoaderImpl: public nsICSSLoader {
+class CSSLoaderImpl : public nsICSSLoader {
 public:
   CSSLoaderImpl(void);
   virtual ~CSSLoaderImpl(void);
@@ -291,33 +291,44 @@ public:
 
   nsresult LoadSheet(URLKey& aKey, SheetLoadData* aData);
 
-  nsIDocument*  mDocument;  // the document we live for
-
-  PRBool        mCaseSensitive; // is document CSS case sensitive
-  nsCompatibility mCompatMode;
-  nsString      mPreferredSheet;    // title of preferred sheet
-
-  nsISupportsArray* mParsers;     // array of CSS parsers
-
-  nsHashtable   mLoadedSheets;  // url to first sheet fully loaded for URL
-  nsHashtable   mLoadingSheets; // all current loads
-
-  // mParsingData is (almost?) always needed, so create with storage
-  nsAutoVoidArray   mParsingData; // array of data for sheets currently parsing
-
-  nsVoidArray   mPendingDocSheets;  // loaded sheet waiting for doc insertion
-  nsVoidArray   mPendingAlternateSheets;  // alternates waiting for load to start
-
-  nsHashtable   mSheetMapTable;  // map to insertion index arrays
-
   // stop loading all sheets
   NS_IMETHOD Stop(void);
 
   // stop loading one sheet
   NS_IMETHOD StopLoadingSheet(nsIURI* aURL);
 
+  /**
+   * Is the loader enabled or not.
+   * When disabled, processing of new styles is disabled and an attempt
+   * to do so will fail with a return code of
+   * NS_ERROR_NOT_AVAILABLE. Note that this DOES NOT disable
+   * currently loading styles or already processed styles.
+   */
+  NS_IMETHOD GetEnabled(PRBool *aEnabled);
+  NS_IMETHOD SetEnabled(PRBool aEnabled);
+
+  nsIDocument*      mDocument;  // the document we live for
+
+  PRPackedBool      mCaseSensitive; // is document CSS case sensitive
+  PRPackedBool      mEnabled; // is enabled to load new styles
+  nsCompatibility   mCompatMode;
+  nsString          mPreferredSheet;    // title of preferred sheet
+
+  nsISupportsArray* mParsers;     // array of CSS parsers
+
+  nsHashtable       mLoadedSheets;  // url to first sheet fully loaded for URL
+  nsHashtable       mLoadingSheets; // all current loads
+
+  // mParsingData is (almost?) always needed, so create with storage
+  nsAutoVoidArray   mParsingData; // array of data for sheets currently parsing
+
+  nsVoidArray       mPendingDocSheets;  // loaded sheet waiting for doc insertion
+  nsVoidArray       mPendingAlternateSheets;  // alternates waiting for load to start
+
+  nsHashtable       mSheetMapTable;  // map to insertion index arrays
+
 #ifdef NS_DEBUG
-  PRBool  mSyncCallback;
+  PRBool            mSyncCallback;
 #endif
 };
 
@@ -427,12 +438,13 @@ SheetLoadData::~SheetLoadData(void)
 }
 
 CSSLoaderImpl::CSSLoaderImpl(void)
+  : mDocument(nsnull), 
+    mCaseSensitive(PR_FALSE),
+    mEnabled(PR_TRUE), 
+    mCompatMode(eCompatibility_FullStandards),
+    mParsers(nsnull)
 {
   NS_INIT_ISUPPORTS();
-  mDocument = nsnull;
-  mCaseSensitive = PR_FALSE;
-  mCompatMode = eCompatibility_FullStandards;
-  mParsers = nsnull;
 }
 
 static PRBool PR_CALLBACK ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
@@ -1636,6 +1648,9 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
                                PRBool& aCompleted,
                                nsICSSLoaderObserver* aObserver)
 {
+  if (!mEnabled)
+    return NS_ERROR_NOT_AVAILABLE;
+
   NS_ASSERTION(mDocument, "not initialized");
   if (! mDocument) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1679,6 +1694,9 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
                              PRBool& aCompleted,
                              nsICSSLoaderObserver* aObserver)
 {
+  if (!mEnabled)
+    return NS_ERROR_NOT_AVAILABLE;
+
   NS_ASSERTION(mDocument, "not initialized");
   if (! mDocument) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1778,6 +1796,9 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                               PRInt32 aIndex,
                               nsICSSImportRule* aParentRule)
 {
+  if (!mEnabled)
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsresult result = NS_ERROR_NULL_POINTER;
 
   if (aURL) {
@@ -1865,6 +1886,9 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
                               PRBool& aCompleted,
                               nsICSSLoaderObserver* aObserver)
 {
+  if (!mEnabled)
+    return NS_ERROR_NOT_AVAILABLE;
+  
   nsresult result = NS_ERROR_NULL_POINTER;
   if (aURL) {
     // Get an input stream from the url
@@ -1995,5 +2019,20 @@ CSSLoaderImpl::StopLoadingSheet(nsIURI* aURL)
       Cleanup(key, loadData);
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::GetEnabled(PRBool *aEnabled)
+{
+  NS_ENSURE_ARG_POINTER(aEnabled);
+  *aEnabled = mEnabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSLoaderImpl::SetEnabled(PRBool aEnabled)
+{
+  mEnabled = aEnabled;
   return NS_OK;
 }

@@ -1193,16 +1193,17 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     if (!xblSink)
       return NS_ERROR_FAILURE;
 
-    if (NS_FAILED(rv = doc->StartDocumentLoad("loadAsData", 
-                                              channel,
-                                              loadGroup,
-                                              nsnull,
+    if (NS_FAILED(rv = doc->StartDocumentLoad("loadAsInteractiveData", 
+                                              channel, 
+                                              loadGroup, 
+                                              nsnull, 
                                               getter_AddRefs(listener),
                                               PR_TRUE,
                                               xblSink))) {
       NS_ERROR("Failure to init XBL doc prior to load.");
       return rv;
     }
+
     // We can be asynchronous
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(this, listener, aBoundDocument, doc);
     NS_ENSURE_TRUE(xblListener,NS_ERROR_OUT_OF_MEMORY);

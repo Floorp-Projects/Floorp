@@ -125,6 +125,8 @@
 static char kNameSpaceSeparator = ':';
 #define kXSLType "text/xsl"
 
+static const char* kLoadAsData = "loadAsData";
+
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -853,6 +855,11 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 {
   nsresult rv = NS_OK;
   mPrettyPrintXML = PR_FALSE;
+
+  nsAutoString cmd;
+  if (mParser) mParser->GetCommand(cmd);
+  if (cmd.EqualsWithConversion(kLoadAsData))
+    return NS_OK; // Do not load stylesheets when loading as data
 
   if (aType.EqualsIgnoreCase(kXSLType) ||
       aType.EqualsIgnoreCase(kXMLTextContentType) ||
