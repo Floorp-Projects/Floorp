@@ -136,7 +136,10 @@ class nsINNTPHost {
   NS_IMETHOD AddGroup(const char *groupname, nsINNTPNewsgroup **_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD RemoveGroup(const char *groupName) = 0;
+  NS_IMETHOD RemoveGroupByName(const char *groupName) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD RemoveGroup(const nsINNTPNewsgroup *group) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetDbDirName(char * *aDbDirName) = 0;

@@ -130,9 +130,8 @@ interface nsINNTPHost {
     nsINNTPNewsgroup FindGroup(in string name);
     nsINNTPNewsgroup AddGroup(in string groupname
                               /* , msg_GroupRecord *inGroupRecord */ );
-    void RemoveGroup(in string groupName);
-    /* I thought COM allowed us to override methods.. */
-    /* void RemoveGroup(in nsINNTPNewsgroup group); */
+    void RemoveGroupByName(in string groupName);
+    void RemoveGroup(in nsINNTPNewsgroup group); 
 
     /* Name of directory to store newsgroup
        databases in.  This needs to have
