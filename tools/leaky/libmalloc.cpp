@@ -19,7 +19,18 @@
 #include <errno.h>
 #include <setjmp.h>
 #include <dlfcn.h>
+
+#ifdef NTO
+#include <sys/link.h>
+extern r_debug _r_debug;
+#else
 #include <link.h>
+#endif
+
+#ifdef NTO
+#define JB_BP 0x08
+#include <setjmp.h>
+#endif
 
 extern "C" {
 #ifdef NEED_WRAPPERS
@@ -65,7 +76,11 @@ struct Trailer {
 #if defined(i386)
 static void CrawlStack(malloc_log_entry* me, jmp_buf jb)
 {
+#ifdef NTO
+  u_long* bp = (u_long*) (jb[0].__savearea[JB_BP]);
+#else
   u_long* bp = (u_long*) (jb[0].__jmpbuf[JB_BP]);
+#endif
   u_long numpcs = 0;
   int skip = 2;
   while (numpcs < MAX_STACK_CRAWL) {
@@ -85,7 +100,7 @@ static void CrawlStack(malloc_log_entry* me, jmp_buf jb)
 
 //----------------------------------------------------------------------
 
-#ifdef linux
+#if defined(linux) || defined(NTO)
 static void DumpAddressMap()
 {
   int mfd = open("malloc-map", O_CREAT|O_WRONLY|O_TRUNC, 0666);
@@ -308,9 +323,11 @@ SetMallocFlags(u_long aFlags)
     close(gLogFD);
     gLogFD = -1;
   }
+#ifndef NTO
   if (LIBMALLOC_CHECK & gFlags) {
     mallopt(M_CHECK_ACTION, 1);
   }
+#endif
 
   // Try to guarantee that the address map is always dumped
   atexit(DumpAddressMap);

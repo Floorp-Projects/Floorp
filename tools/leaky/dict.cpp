@@ -13,6 +13,11 @@
 #include <malloc.h>
 #include "dict.h"
 
+#ifdef __QNXNTO__
+/* Need definition of NULL */
+#include <stdio.h>
+#endif
+
 MallocDict::MallocDict(int nb)
 {
     numBuckets = nb;

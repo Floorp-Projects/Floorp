@@ -19,10 +19,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#ifndef NTO
 #include <getopt.h>
+#endif
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifdef NTO
+#include <mem.h>
+#endif
 
 #ifndef FALSE
 #define FALSE 0
