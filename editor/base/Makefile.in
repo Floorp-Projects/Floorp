@@ -60,7 +60,7 @@ CPPSRCS =                       \
 
 MODULE = editor
 
-REQUIRES = xpcom raptor dom base
+REQUIRES = xpcom raptor dom base netlib
 
 include $(topsrcdir)/config/config.mk
 

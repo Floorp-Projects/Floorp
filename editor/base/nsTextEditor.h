@@ -109,6 +109,7 @@ protected:
 
   NS_IMETHOD SetTagFromProperty(nsAutoString &aTag, nsIAtom *aPropName) const;
 
+
 // Data members
 protected:
   nsCOMPtr<nsIEditor> mEditor;
