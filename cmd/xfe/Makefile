@@ -226,7 +226,7 @@ DTWIDGETS_LIB		= $(DIST)/lib/libDtWidgets.a
 XFE_WIDGETS_LIB		= $(DIST)/lib/libXfeWidgets.a
 XFE_WIDGETS_BM_LIB	= $(DIST)/lib/libXfeBm.a
 
-ifeq ($(OS_ARCH),IRIX) 
+ifneq ($(OS_ARCH),IRIX) 
 DYNAMIC_SYMBOLS_F	= -rdynamic # default
 endif
 ifeq ($(OS_ARCH),SunOS) 
