@@ -18,11 +18,7 @@
 #include "nsISupports.idl"
 #include "nsIStreamListener.idl"
 #include "nsIChannel.idl"
-
-%{ C++
-%}
-
-interface nsIMimeStreamConverterListener;
+#include "nsIMimeStreamConverter.idl"
 
 [scriptable, uuid(1C7ABF0C-21E5-11d3-8EF1-00A024A7D144)]
 interface nsIMsgQuote : nsISupports {
@@ -34,5 +30,14 @@ interface nsIMsgQuote : nsISupports {
                              nsIStreamListener aStreamListener);
     readonly attribute nsIMimeStreamConverterListener quoteListener;
     readonly attribute nsIChannel quoteChannel;
+	readonly attribute nsIStreamListener streamListener;
 };
+
+[scriptable, uuid(1EC75AD9-88DE-11d3-989D-001083010E9B)]
+interface nsIMsgQuoteListener : nsIMimeStreamConverterListener
+{
+	attribute nsIMsgQuote msgQuote;
+};
+
+
 
