@@ -80,6 +80,7 @@ default_create_java_vm(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 {
     jint err;
     const char* user_classpath = (const char*)initargs;
+    char* full_classpath = NULL;
 
     /* No Java VM supplied, so create our own */
     JDK1_1InitArgs vm_args;
@@ -92,9 +93,9 @@ default_create_java_vm(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
     /* Prepend the classpath argument to the default JVM classpath */
     if (user_classpath) {
 #if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_MAC)
-        const char *full_classpath = JS_smprintf("%s:%s", user_classpath, vm_args.classpath);
+        full_classpath = JS_smprintf("%s:%s", user_classpath, vm_args.classpath);
 #else
-        const char *full_classpath = JS_smprintf("%s;%s", user_classpath, vm_args.classpath);
+        full_classpath = JS_smprintf("%s;%s", user_classpath, vm_args.classpath);
 #endif
         if (!full_classpath) {
             return JS_FALSE;
@@ -103,6 +104,10 @@ default_create_java_vm(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
     }
 
     err = JNI_CreateJavaVM((JavaVM**)jvm, initialEnv, &vm_args);
+    
+    if (full_classpath)
+        JS_smprintf_free(full_classpath);
+    
     return err == 0;
 }
 
