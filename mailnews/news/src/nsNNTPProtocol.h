@@ -129,7 +129,9 @@ NEWS_FREE
 class nsNNTPProtocol : public nsIStreamListener
 {
 public:
-	nsNNTPProtocol();
+	// Creating a protocol instance requires the URL which needs to be run AND it requires
+	// a transport layer. 
+	nsNNTPProtocol(nsIURL * aURL /* , nsITransportLayer * transportLayer */);
 	
 	~nsNNTPProtocol();
 
@@ -180,8 +182,7 @@ private:
 
 	// Ouput stream for writing commands to the socket
 	nsIOutputStream			* m_outputStream;
-	char					* m_outputBuffer;
-
+	nsIStreamListener	    * m_outputConsumer; // this will eventually be queried from from the transport layer
 	
 	PRUint32 m_flags; // used to store flag information
 
@@ -237,6 +238,19 @@ private:
 	
 	PRInt32	  ProcessNewsState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
 	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
+
+	// initialization function given a new url and transport layer
+	void Initialize(nsIURL * aURL /* , nsITransportLayer * transportLayer */);
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// Communication methods --> Reading and writing protocol
+	////////////////////////////////////////////////////////////////////////////////////////
+
+	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line);
+
+	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
+	// but it also informs the consumer that the data has been written to the stream.
+	PRInt32 SendData(const char * dataBuffer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is designed 
@@ -350,9 +364,6 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
-
-	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line,
-					 char ** buffer, PRUint32 * buffer_size);
 };
 
 #endif  // nsNNTPProtocol_h___
