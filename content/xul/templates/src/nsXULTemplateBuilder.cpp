@@ -106,6 +106,7 @@ nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
 nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
 
 nsIAtom* RDFGenericBuilderImpl::kSubcontainmentAtom;
+nsIAtom* RDFGenericBuilderImpl::kRootcontainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeTemplateAtom;
 nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeContentsGeneratedAtom;
@@ -151,6 +152,7 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
         kNaturalOrderPosAtom = NS_NewAtom("pos");
 
         kSubcontainmentAtom  = NS_NewAtom("subcontainment");
+        kRootcontainmentAtom = NS_NewAtom("rootcontainment");
         kTreeTemplateAtom    = NS_NewAtom("template");
         kRuleAtom            = NS_NewAtom("rule");
 
@@ -233,6 +235,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kNaturalOrderPosAtom);
 
         NS_RELEASE(kSubcontainmentAtom);
+        NS_RELEASE(kRootcontainmentAtom);
         NS_RELEASE(kTreeTemplateAtom);
         NS_RELEASE(kRuleAtom);
         NS_RELEASE(kTreeContentsGeneratedAtom);
@@ -828,7 +831,8 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 
 	// get REQUIRED containment="..." off of template root
 	nsAutoString	templateContainmentValue;
-	if (NS_FAILED(rv = aTemplateRoot->GetAttribute(kNameSpaceID_XUL, kContainmentAtom, templateContainmentValue)))
+	if (NS_FAILED(rv = aTemplateRoot->GetAttribute(kNameSpaceID_None,
+			kContainmentAtom, templateContainmentValue)))
 		return(rv);
 	if (rv != NS_CONTENT_ATTR_HAS_VALUE)
 		return(NS_ERROR_FAILURE);
@@ -850,45 +854,6 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 		if (NS_SUCCEEDED(rv = aTemplateKid->GetTag(*getter_AddRefs(tag))))
 		{
 			nsCOMPtr<nsIContent>	treeGrandchild;
-
-#if 0
-			nsAutoString	containmentValue;
-			if (NS_SUCCEEDED(rv = aTemplateKid->GetAttribute(kNameSpaceID_XUL,
-                                      kContainmentAtom, containmentValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-			{
-				nsIAtom	*containmentAtom = NS_NewAtom(containmentValue);
-				if (nsnull != containmentAtom)
-				{
-					if (tag == containmentAtom)
-					{
-						if (NS_SUCCEEDED(rv = CreateResourceElement(kNameSpaceID_XUL,
-							containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
-						{
-						}
-					}
-					NS_RELEASE(containmentAtom);
-					containmentAtom = nsnull;
-				}
-			}
-			else if (NS_SUCCEEDED(rv = aTemplate->GetAttribute(kNameSpaceID_XUL,
-                                      kItemAtom, containmentValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-			{
-				nsIAtom	*containmentAtom = NS_NewAtom(containmentValue);
-				if (nsnull != containmentAtom)
-				{
-					if (tag == containmentAtom)
-					{
-						if (NS_SUCCEEDED(rv = CreateResourceElement(kNameSpaceID_XUL,
-							containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
-						{
-						}
-					}
-					NS_RELEASE(containmentAtom);
-					containmentAtom = nsnull;
-				}
-			}
-#endif
-
 			if ((tag.get() == containmentAtom.get()) && (nameSpaceID == kNameSpaceID_XUL))
 			{
 				if (NS_FAILED(rv = CreateResourceElement(nameSpaceID,
@@ -936,7 +901,8 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 			{
 				// copy all attributes from template to new node
 				PRInt32		numAttribs;
-				if (NS_SUCCEEDED(rv = aTemplateKid->GetAttributeCount(numAttribs)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+				if (NS_SUCCEEDED(rv = aTemplateKid->GetAttributeCount(numAttribs)) &&
+						(rv == NS_CONTENT_ATTR_HAS_VALUE))
 				{
 					for (PRInt32 aLoop=0; aLoop<numAttribs; aLoop++)
 					{
@@ -1061,23 +1027,54 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement, nsIRDFResource *aP
 		(aTemplate))
 	{
 		nsCOMPtr<nsIContent>	children = do_QueryInterface(aElement);
+		PRBool			isRoot = PR_FALSE;
 
-		// if template specifies a subcontainment attribute, get it
-		// and make sure aElement contains it, otherwise use aElement
-		nsAutoString	attrValue;
-		if (NS_SUCCEEDED(rv = aTemplate->GetAttribute(kNameSpaceID_XUL,
-                              kSubcontainmentAtom, attrValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+		// if template specifies a rootcontainment attribute, get it
+		// and determine if we are building children off of the root
+		nsAutoString	rootAttrValue;
+		if (NS_SUCCEEDED(rv = aTemplate->GetAttribute(kNameSpaceID_None,
+                              kRootcontainmentAtom, rootAttrValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 		{
-			nsCOMPtr<nsIAtom>	childrenAtom = NS_NewAtom(attrValue);
-			if (childrenAtom)
+			nsCOMPtr<nsIAtom>	rootAtom = NS_NewAtom(rootAttrValue);
+			if (rootAtom)
 			{
-				if (NS_SUCCEEDED(rv = EnsureElementHasGenericChild(aElement, kNameSpaceID_XUL,
-							childrenAtom, getter_AddRefs(children))))
+				PRInt32 nameSpaceID;
+				if (NS_SUCCEEDED(rv = aElement->GetNameSpaceID(nameSpaceID)))
 				{
+					if (nameSpaceID == kNameSpaceID_XUL)
+					{
+						nsCOMPtr<nsIAtom>	tag;
+						if (NS_SUCCEEDED(rv = aElement->GetTag(*getter_AddRefs(tag))))
+						{
+							if (tag.get() == rootAtom)
+							{
+								isRoot = PR_TRUE;
+							}
+						}
+					}
 				}
 			}
 		}
 
+		// if template specifies a subcontainment attribute, get it
+		// and make sure aElement contains it (if not the root),
+		// otherwise use aElement
+		if (isRoot == PR_FALSE)
+		{
+			nsAutoString	attrValue;
+			if (NS_SUCCEEDED(rv = aTemplate->GetAttribute(kNameSpaceID_None,
+	                              kSubcontainmentAtom, attrValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+			{
+				nsCOMPtr<nsIAtom>	childrenAtom = NS_NewAtom(attrValue);
+				if (childrenAtom)
+				{
+					if (NS_SUCCEEDED(rv = EnsureElementHasGenericChild(aElement,
+						kNameSpaceID_XUL, childrenAtom, getter_AddRefs(children))))
+					{
+					}
+				}
+			}
+		}
 		rv = PopulateWidgetItemSubtree(aTemplate, aTemplate, children,
 				aElement, aProperty, aValue, aNaturalOrderPos);
 	}
