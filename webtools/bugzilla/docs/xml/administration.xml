@@ -1047,9 +1047,10 @@ skip-networking
     
     <para>
       Templatization also makes localized versions of Bugzilla possible, 
-      for the first time. In the future, a Bugzilla installation may
-      have templates installed for multiple localizations, and select
-      which ones to use based on the user's browser language setting.      
+      for the first time. As of version <![%bz-devel;[2.14.5 which will soon
+      become ]]>2.18, it's possible to have Bugzilla's language determined by
+      the user's browser. More information is available in
+      <xref linkend="template-http-accept"/>.
     </para>
     
     <section>
@@ -1321,6 +1322,29 @@ skip-networking
       </para>        
     </section>          
     
+
+    <section id="template-http-accept">
+      <title>Configuring Bugzilla to Detect the User's Language</title>
+
+      <para>Begining in version 2.18<![%bz-devel;[ (first introduced in version 
+      2.17.4)]]>, it's now possible to have the users web browser tell Bugzilla
+      which language templates to use for each visitor (using the HTTP_ACCEPT
+      header). For this to work, Bugzilla needs to have the correct language
+      templates installed for the version of Bugzilla you are using. Many
+      language templates can be obtained from <ulink 
+      url="http://www.bugzilla.org/download.html#localizations"/>. Instructions
+      for submitting new languages are also available from that location.
+      </para>
+
+      <para>After untarring the localizations (or creating your own) in the 
+      <filename class="directory">[Bugzilla_Root]/template</filename> directory,
+      you must update the <option>languages</option> parameter to contain any
+      localizations you'd like to permit. You may also wish to set the
+      <option>defaultlanguage</option> parameter to something other than
+      <quote>en</quote> if you don't want Engish to be the default language.
+      </para>
+    </section>
+      
   </section>
 
   <section id="cust-change-permissions">
