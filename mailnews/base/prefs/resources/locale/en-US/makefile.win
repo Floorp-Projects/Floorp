@@ -45,6 +45,7 @@ install::
 	$(MAKE_INSTALL) am-imap-advanced.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-copies.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-main.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) am-identity-advanced.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-server-top.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) prefs.properties $(DISTBROWSER)
 	$(MAKE_INSTALL) am-serverwithnoidentities.dtd $(DISTBROWSER)
@@ -71,6 +72,7 @@ clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-imap-advanced.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-copies.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-main.dtd
+	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-identity-advanced.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-server-top.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\prefs.properties
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-serverwithnoidentities.dtd

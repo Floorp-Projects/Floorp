@@ -39,6 +39,7 @@ am-advanced.dtd
 am-imap-advanced.dtd
 am-copies.dtd
 am-main.dtd
+am-identity-advanced.dtd
 am-server-top.dtd
 prefs.properties
 am-serverwithnoidentities.dtd
