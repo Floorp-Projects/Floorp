@@ -81,7 +81,7 @@ static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 // transaction manager
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
-static NS_DEFINE_CID(kCTransactionManagerFactoryCID, NS_TRANSACTION_MANAGER_FACTORY_CID);
+static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 // transactions
 static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
@@ -373,7 +373,7 @@ nsEditor::EnableUndo(PRBool aEnable)
   {
     if (!mTxnMgr)
     {
-      result = gCompMgr->CreateInstance(kCTransactionManagerFactoryCID,
+      result = gCompMgr->CreateInstance(kCTransactionManagerCID,
                                         nsnull,
                                         kITransactionManagerIID, (void **)&txnMgr);
       if (NS_FAILED(result) || !txnMgr) {
