@@ -57,6 +57,11 @@ extern "C" {
 static HINSTANCE g_hInst = NULL;
 #endif
 
+#ifdef XP_BEOS
+#include <OS.h>
+#include <image.h>
+#endif
+
 /*
 ** Define TIMEBOMB_ON for beta builds.
 ** Undef TIMEBOMB_ON for release builds.
@@ -197,6 +202,8 @@ nsNetlibService::nsNetlibService()
     XP_AppPlatform = PL_strdup("Win95");
 #elif defined(XP_MAC)
     XP_AppPlatform = PL_strdup("MacPPC");
+#elif defined(XP_BEOS)
+    XP_AppPlatform = PL_strdup("BeOS");
 #elif defined(XP_UNIX)
     /* XXX: Need to differentiate between various Unisys */
     XP_AppPlatform = PL_strdup("Unix");
@@ -1547,6 +1554,27 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 #endif
 
 #endif /* XP_UNIX */
+
+#ifdef XP_BEOS
+    {
+      static char buf[MAXPATHLEN];
+      int32 cookie = 0;
+      image_info info;
+      char *p;
+      if(get_next_image_info(0, &cookie, &info) == B_OK)
+      {
+        strcpy(buf, info.name);
+        if((p = strrchr(buf, '/')) != 0)
+          *p = 0;
+        else
+          return nsnull;
+
+        resourceBase = XP_STRDUP(buf);
+      }
+      else
+        return nsnull;
+    }
+#endif /* XP_BEOS */
 
 #ifdef XP_MAC
 	resourceBase = XP_STRDUP("usr/local/netscape/bin");
