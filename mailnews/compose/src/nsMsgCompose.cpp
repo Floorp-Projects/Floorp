@@ -61,15 +61,15 @@
 #include "nsAbBaseCID.h"
 #include "nsIAddrDatabase.h"
 #include "nsIAddrBookSession.h"
+#include "nsIAddressBook.h"
 #include "nsIMIMEService.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kMsgRecipientArrayCID, NS_MSGRECIPIENTARRAY_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
@@ -2188,16 +2188,15 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
 
 nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _retval)
 {
-    // Question: is 'ULR' a typo?
-	nsCAutoString unescapeULR; unescapeULR.AssignWithConversion(url);
-	nsUnescape(unescapeULR);
-	if (unescapeULR.IsEmpty())
+	nsCAutoString unescapeURL; unescapeURL.AssignWithConversion(url);
+	nsUnescape(unescapeURL);
+	if (unescapeURL.IsEmpty())
 	{
 		*_retval = nsCRT::strdup(url);
 		return NS_OK;
 	}
 	
-	if (PL_strncasestr(unescapeULR, "file:", 5))
+	if (PL_strncasestr(unescapeURL, "file:", 5))
 	{
 		nsFileURL fileUrl(url);
 		nsFileSpec fileSpec(fileUrl);
@@ -2214,9 +2213,9 @@ nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _r
 		}
 	}
 
-	if (PL_strncasestr(unescapeULR, "http:", 5))
+	if (PL_strncasestr(unescapeURL, "http:", 5))
 	{
-		nsAutoString tempStr; tempStr.AssignWithConversion(&unescapeULR.mBuffer[7]);
+		nsAutoString tempStr; tempStr.AssignWithConversion(&unescapeURL.mBuffer[7]);
 		*_retval = tempStr.ToNewUnicode();
 		return NS_OK;
 	}
@@ -2225,35 +2224,22 @@ nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _r
 	return NS_OK;
 }
 
-static nsresult OpenAddressBook(const char * dbName, nsIAddrDatabase** aDatabase, nsIAbDirectory** aDirectory)
+static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase, nsIAbDirectory** aDirectory)
 {
 	if (!aDatabase || !aDirectory)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv = NS_OK;
-	nsFileSpec* dbPath = nsnull;
+  NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
+  if (NS_SUCCEEDED(rv))
+    rv = addresBook->GetAbDatabaseFromURI(dbUri, aDatabase);
 
-	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		abSession->GetUserProfileDirectory(&dbPath);
-	
-	if (dbPath)
-	{
-		(*dbPath) += dbName;
-
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
-
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
-	}
 	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if (NS_FAILED(rv)) 
 		return rv;
 
 	nsCOMPtr <nsIRDFResource> resource;
-	nsCAutoString path("abdirectory://");
-	path += dbName;
-	rv = rdfService->GetResource(path, getter_AddRefs(resource));
+	rv = rdfService->GetResource(dbUri, getter_AddRefs(resource));
 	if (NS_FAILED(rv)) 
 		return rv;
 
@@ -2261,6 +2247,71 @@ static nsresult OpenAddressBook(const char * dbName, nsIAddrDatabase** aDatabase
 	rv = resource->QueryInterface(nsIAbDirectory::GetIID(), (void **)aDirectory);
 	return rv;
 }
+
+
+nsresult nsMsgCompose::GetABDirectories(nsString& filePath, nsStringArray* directoriesArray, PRBool searchSubDirectory)
+{
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr <nsIRDFResource> resource;
+  char * strFileName = filePath.ToNewCString();
+  rv = rdfService->GetResource(strFileName, getter_AddRefs(resource));
+  Recycle(strFileName);
+  if (NS_FAILED(rv)) return rv;
+
+  // query interface 
+  nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  if (!searchSubDirectory)
+      return rv;
+  
+  nsCOMPtr<nsIEnumerator> subDirectories;
+ 	if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
+	{
+		nsCOMPtr<nsISupports> item;
+		if (NS_SUCCEEDED(subDirectories->First()))
+		{
+		  do
+		  {
+        if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+        {
+          directory = do_QueryInterface(item, &rv);
+          if (NS_SUCCEEDED(rv))
+          {
+            DIR_Server *server = nsnull;
+            if (NS_SUCCEEDED(directory->GetServer(&server)) && server)
+            {
+              nsAutoString subFileName(filePath);
+              if (subFileName.Last() != '/')
+                  subFileName.AppendWithConversion("/");
+              subFileName.AppendWithConversion(server->fileName);
+
+              PRInt32 pos;
+              if (subFileName.CompareWithConversion(kPersonalAddressbookUri) == 0)
+                 pos = 0;
+              else
+                if (subFileName.CompareWithConversion(kCollectedAddressbookUri) == 0)
+                  pos = directoriesArray->Count();
+                else
+                {
+                  pos = directoriesArray->Count() - 1;
+                  if (pos < 0)
+                      pos = 0;
+                }
+              directoriesArray->InsertStringAt(subFileName, pos);
+              rv = GetABDirectories(subFileName, directoriesArray, PR_TRUE);
+            }
+          }
+        }
+      } while (NS_SUCCEEDED(subDirectories->Next()));
+    }
+  }
+  return rv;
+}
+
 
 nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnichar **_retval)
 {
@@ -2286,7 +2337,7 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
     /*ducarroz: for now, I've hardcoded the addressbook DBs we are looking in it, will do much better later! */
     PRInt32 nbrOfAddrbook = 2;
     const char addrbookName[2][20] = {"abook.mab", "history.mab"};
- 
+
     nsCOMPtr<nsIMsgRecipientArray> array;
     nsCOMPtr<nsIMsgRecipientArray> noHTMLArray;
     rv = nsComponentManager::CreateInstance(kMsgRecipientArrayCID, 
@@ -2302,14 +2353,24 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
         nsCOMPtr<nsIAbDirectory> abDirectory;   
     	nsCOMPtr <nsIAbCard> existingCard;
 
-        for (j = 0; j < nbrOfAddrbook; j++)
+      nsStringArray* addrbookDirArray = (nsStringArray*) new nsStringArray;
+      if (addrbookDirArray)
+      {
+        nsString dirPath;
+        nsAutoString root; root.AssignWithConversion(kDirectoryRoot);
+        GetABDirectories(root, addrbookDirArray, TRUE);
+
+       for (j = 0; j < addrbookDirArray->Count(); j++)
         {
             array->GetCount(&nbrRecipients);
             if (nbrRecipients == 0)
                 break;
-            
-            rv = OpenAddressBook(addrbookName[j], getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
-            if (NS_FAILED(rv))
+
+            addrbookDirArray->StringAt(j, dirPath);
+            char * dirPathC = dirPath.ToNewCString();
+            rv = OpenAddressBook(dirPathC, getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
+            Recycle(dirPathC);
+            if (NS_FAILED(rv) || !abDataBase || !abDirectory)
                 continue;
             
             for (i = 0; i < nbrRecipients; i ++)
@@ -2319,33 +2380,34 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
                     continue;
                 nsCAutoString emailStr; emailStr.AssignWithConversion(emailAddr);
 
-    			rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
-    			if (NS_SUCCEEDED(rv) && existingCard)
-    			{
-    			    PRBool bPlainText;
-    			    rv = existingCard->GetSendPlainText(&bPlainText);
-    			    if (NS_SUCCEEDED(rv))
-    			    {
-                        PRBool aBool;
-    			        if (bPlainText)
+    			      rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
+    			      if (NS_SUCCEEDED(rv) && existingCard)
+    			      {
+    			        PRBool bPlainText;
+    			        rv = existingCard->GetSendPlainText(&bPlainText);
+    			        if (NS_SUCCEEDED(rv))
     			        {
+                        PRBool aBool;
+    			          if (bPlainText)
+    			          {
     			            //this guy doesn't want/support HTML message, move it in the noHTML array.
     			            noHTMLArray->AppendString(emailAddr, &aBool);
-    			        }
-    			        array->RemoveStringAt(i, &aBool);
-            			if (aBool)
-            			{
+    			          }
+    			          array->RemoveStringAt(i, &aBool);
+            			  if (aBool)
+            			  {
             			    nbrRecipients --;
             			    i --;
-            			}
-    			    }
-    			}
+            			  }
+    			        }
+    			      }
             }
             if (abDataBase)
                 abDataBase->Close(PR_FALSE);            
         }
+        delete addrbookDirArray;
+     }
     }
-
     //now, build the result
     recipientStr.SetLength(0);
     noHTMLArray->GetCount(&nbrRecipients);
