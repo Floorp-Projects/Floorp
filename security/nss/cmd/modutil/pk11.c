@@ -239,7 +239,19 @@ AddModule(char *moduleName, char *libFile, char *cipherString,
 		  SECMOD_PubCipherFlagstoInternal(ciphers) );
 
 	if(status != SECSuccess) {
-		PR_fprintf(PR_STDERR, errStrings[ADD_MODULE_FAILED_ERR], moduleName);
+                char* errtxt=NULL;
+                PRInt32 copied = 0;
+                if (PR_GetErrorTextLength()) {
+                    errtxt = malloc(PR_GetErrorTextLength());
+                    copied = PR_GetErrorText(errtxt);
+                }
+                if (copied && errtxt) {
+		    PR_fprintf(PR_STDERR, errStrings[ADD_MODULE_FAILED_STATUS_ERR], moduleName, errtxt);
+                    free(errtxt);
+                }
+                else {
+                    PR_fprintf(PR_STDERR, errStrings[ADD_MODULE_FAILED_ERR], moduleName);
+                }
 		return ADD_MODULE_FAILED_ERR;
 	} else {
 		PR_fprintf(PR_STDOUT, msgStrings[ADD_MODULE_SUCCESS_MSG], moduleName);
