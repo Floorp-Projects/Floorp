@@ -570,7 +570,7 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
         // generate a reflow command for "this"
         nsIReflowCommand* reflowCmd = nsnull;
         rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                     nsIReflowCommand::FrameAppended);
+                                     nsIReflowCommand::ReflowDirty);
         if (NS_SUCCEEDED(rv)) {
           aPresShell.AppendReflowCommand(reflowCmd);
           NS_RELEASE(reflowCmd);
@@ -589,7 +589,7 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
       // generate a reflow command for "this"
       nsIReflowCommand* reflowCmd = nsnull;
       rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                   nsIReflowCommand::FrameAppended);
+                                   nsIReflowCommand::ReflowDirty);
       if (NS_SUCCEEDED(rv)) {
         aPresShell.AppendReflowCommand(reflowCmd);
         NS_RELEASE(reflowCmd);
@@ -665,7 +665,6 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
 {
   nsresult rv = NS_OK;
   PRBool generateReflowCommand = PR_FALSE;
-  nsIReflowCommand::ReflowType command = nsIReflowCommand::FrameInserted;
   nsIFrame* target = nsnull;
 
   if (nsnull == aPrevFrame) {
@@ -828,7 +827,8 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
   if (generateReflowCommand) {
     // generate a reflow command for "this"
     nsIReflowCommand* reflowCmd = nsnull;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, target, command);
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, target,
+                                 nsIReflowCommand::ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
       aPresShell.AppendReflowCommand(reflowCmd);
       NS_RELEASE(reflowCmd);
@@ -845,7 +845,6 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
 {
   nsresult rv = NS_OK;
   PRBool generateReflowCommand = PR_FALSE;
-  nsIReflowCommand::ReflowType command = nsIReflowCommand::FrameInserted;
   nsIFrame* target = nsnull;
 
   if (nsnull == aPrevFrame) {
@@ -929,7 +928,8 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
   if (generateReflowCommand) {
     // generate a reflow command for "this"
     nsIReflowCommand* reflowCmd = nsnull;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, target, command);
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, target,
+                                 nsIReflowCommand::ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
       aPresShell.AppendReflowCommand(reflowCmd);
       NS_RELEASE(reflowCmd);
@@ -950,7 +950,6 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
 
   nsresult rv = NS_OK;
   PRBool generateReflowCommand = PR_FALSE;
-  nsIReflowCommand::ReflowType command = nsIReflowCommand::FrameRemoved;
   nsIFrame* target = nsnull;
 
   nsIFrame* oldFrameParent;
@@ -1173,7 +1172,8 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
   if (generateReflowCommand) {
     // generate a reflow command for "this"
     nsIReflowCommand* reflowCmd = nsnull;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, target, command);
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, target,
+                                 nsIReflowCommand::ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
       aPresShell.AppendReflowCommand(reflowCmd);
       NS_RELEASE(reflowCmd);
@@ -1438,7 +1438,20 @@ nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
       nsIFrame* nextFrame;
       aFrame->GetNextSibling(nextFrame);
       if (nsnull != nextFrame) {
+        aStatus |= NS_FRAME_NOT_COMPLETE;
         PushFrames(nextFrame, aFrame);
+      }
+      else if (nsnull != mNextInFlow) {
+        // We must return an incomplete status if there are more child
+        // frames remaining in a next-in-flow that follows this frame.
+        nsInlineFrame* nextInFlow = (nsInlineFrame*) mNextInFlow;
+        while (nsnull != nextInFlow) {
+          if (nextInFlow->mFrames.NotEmpty()) {
+            aStatus |= NS_FRAME_NOT_COMPLETE;
+            break;
+          }
+          nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
+        }
       }
     }
   }
