@@ -90,6 +90,8 @@ public:
     /* void ReturnCode_NS_ERROR_OUT_OF_MEMORY (); */
     NS_IMETHOD ReturnCode_NS_ERROR_OUT_OF_MEMORY();
 
+    /* nsISupports ReturnInterface (in nsISupports obj); */
+    NS_IMETHOD ReturnInterface(nsISupports *obj, nsISupports **_retval);
 
     xpctestEcho();
 private:
@@ -265,6 +267,17 @@ xpctestEcho::ReturnCode_NS_ERROR_UNEXPECTED()
 NS_IMETHODIMP
 xpctestEcho::ReturnCode_NS_ERROR_OUT_OF_MEMORY()
 {return NS_ERROR_OUT_OF_MEMORY;}
+
+NS_IMETHODIMP
+xpctestEcho::ReturnInterface(nsISupports *obj, nsISupports **_retval)
+{
+    if(!_retval)
+        return NS_ERROR_NULL_POINTER;
+    if(obj)
+        NS_ADDREF(obj);
+    *_retval = obj;
+    return NS_OK;
+}        
 
 /***************************************************************************/
 

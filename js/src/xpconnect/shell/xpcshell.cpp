@@ -58,7 +58,7 @@ static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 #ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
+#define XPCOM_DLL  "xpcom.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL  "XPCOM_DLL"

@@ -521,7 +521,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             dp->ptr = &dp->val;
 
             if(!param.IsRetval() &&
-               (!JSVAL_IS_OBJECT(argv[i]) ||
+               (JSVAL_IS_PRIMITIVE(argv[i]) ||
                 !JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &src)))
             {
                 ThrowBadParamException(XPCJSError::NEED_OUT_OBJECT,

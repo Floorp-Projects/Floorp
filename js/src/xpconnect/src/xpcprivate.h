@@ -47,6 +47,10 @@
 #include "xpcjsid.h"
 #include "prlong.h"
 
+#include "nsIScriptObjectOwner.h"   // for DOM hack in xpcconvert.cpp
+#include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+
 extern const char* XPC_VAL_STR;        // 'value' property name for out params
 extern const char* XPC_COMPONENTS_STR; // 'Components' property name
 
