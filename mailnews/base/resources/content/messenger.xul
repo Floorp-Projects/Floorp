@@ -328,6 +328,7 @@ Rights Reserved.
       <menuitem value="&accountManagerCmd.label;" onaction="MsgAccountManager();"/>
       <menuitem value="&prefsCmd.label;" onaction="MsgPreferences();"/>
       <menuitem value="&accountWizardCmd.label;" onaction="MsgAccountWizard();"/>
+	  </menupopup>
     </menu>
     <menu value="&viewMenu.label;">
 	  <menupopup>
@@ -493,6 +494,7 @@ Rights Reserved.
       <menuseparator/>
       <menuitem value="&backCmd.label;" onaction="MsgGoBack();"/>
       <menuitem value="&forwardCmd.label;" onaction="MsgGoForward();"/>
+	  </menupopup>
     </menu>
     <menu value="&msgMenu.label;">
       <menupopup>
