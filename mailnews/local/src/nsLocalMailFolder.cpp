@@ -2647,10 +2647,8 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
 {
 	char		*uidl;
 	char		*header = NULL;
-	PRUint32		offset = 0, size = 0, len = 0, i = 0;
-  nsresult err = NS_OK;
+	PRUint32		size = 0, len = 0, i = 0;
 	nsCOMPtr <nsIMsgDBHdr> hdr;
-	nsMsgKey key = nsMsgKey_None;
 	PRBool leaveOnServer = PR_FALSE;
 	PRBool deleteMailLeftOnServer = PR_FALSE;
 	PRBool changed = PR_FALSE;
