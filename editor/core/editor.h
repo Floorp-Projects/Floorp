@@ -19,6 +19,8 @@
 #include "prmon.h"
 #include "nsIEditor.h"
 #include "nsIContextLoader.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMEventListener.h"
 #include "COM_auto_ptr.h"
 #include "editorInterfaces.h"
 //#include "nsISelection.h"
