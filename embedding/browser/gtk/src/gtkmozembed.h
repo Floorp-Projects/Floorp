@@ -48,25 +48,34 @@ struct _GtkMozEmbedClass
 {
   GtkBinClass parent_class;
 
-  void (* link_message) (GtkMozEmbed *embed);
-  void (* js_status)    (GtkMozEmbed *embed);
-  void (* location)     (GtkMozEmbed *embed);
-  void (* title)        (GtkMozEmbed *embed);
-  void (* progress)     (GtkMozEmbed *embed, gint maxprogress,
-			 gint curprogress);
-  void (* progress_all) (GtkMozEmbed *embed, const char *aURI,
-			 gint maxprogress, gint curprogress);
-  void (* net_state)    (GtkMozEmbed *embed, gint state, guint status);
-  void (* net_state_all)(GtkMozEmbed *embed, const char *aURI,
-			 gint state, guint status);
-  void (* net_start)    (GtkMozEmbed *embed);
-  void (* net_stop)     (GtkMozEmbed *embed);
-  void (* new_window)   (GtkMozEmbed *embed, GtkMozEmbed **newEmbed,
-			 guint chromemask);
-  void (* visibility)   (GtkMozEmbed *embed, gboolean visibility);
-  void (* destroy_brsr) (GtkMozEmbed *embed);
-  gint (* open_uri)     (GtkMozEmbed *embed, const char *aURI);
-  void (* size_to)      (GtkMozEmbed *embed, gint width, gint height);
+  void (* link_message)        (GtkMozEmbed *embed);
+  void (* js_status)           (GtkMozEmbed *embed);
+  void (* location)            (GtkMozEmbed *embed);
+  void (* title)               (GtkMozEmbed *embed);
+  void (* progress)            (GtkMozEmbed *embed, gint maxprogress,
+				gint curprogress);
+  void (* progress_all)        (GtkMozEmbed *embed, const char *aURI,
+				gint maxprogress, gint curprogress);
+  void (* net_state)           (GtkMozEmbed *embed, gint state, guint status);
+  void (* net_state_all)       (GtkMozEmbed *embed, const char *aURI,
+				gint state, guint status);
+  void (* net_start)           (GtkMozEmbed *embed);
+  void (* net_stop)            (GtkMozEmbed *embed);
+  void (* new_window)          (GtkMozEmbed *embed, GtkMozEmbed **newEmbed,
+				guint chromemask);
+  void (* visibility)          (GtkMozEmbed *embed, gboolean visibility);
+  void (* destroy_brsr)        (GtkMozEmbed *embed);
+  gint (* open_uri)            (GtkMozEmbed *embed, const char *aURI);
+  void (* size_to)             (GtkMozEmbed *embed, gint width, gint height);
+  gint (* dom_key_down)        (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_key_press)       (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_key_up)          (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_mouse_down)      (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_mouse_up)        (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_mouse_click)     (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_mouse_dbl_click) (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_mouse_over)      (GtkMozEmbed *embed, gpointer dom_event);
+  gint (* dom_mouse_out)       (GtkMozEmbed *embed, gpointer dom_event);
 };
 
 GtkType      gtk_moz_embed_get_type         (void);
