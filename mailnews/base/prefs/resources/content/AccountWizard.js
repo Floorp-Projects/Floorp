@@ -18,8 +18,8 @@
  * Rights Reserved.
  */
 
-  /* the okCallback is used for sending a callback for the parent window */
-	var okCallback = null;
+/* the okCallback is used for sending a callback for the parent window */
+var okCallback = null;
 /* The account wizard creates new accounts */
 
 /*
@@ -153,50 +153,54 @@ function onLoad() {
     
 function onCancel() 
 {
-	var firstInvalidAccount = getFirstInvalidAccount();
+  var firstInvalidAccount = getFirstInvalidAccount();
 
-	// if the user cancels the the wizard when it pops up because of 
-	// an invalid account (example, a webmail account that activation started)
-	// we just force create it by setting some values and calling the FinishAccount()
-	// see bug #47521 for the full discussion
-	if (firstInvalidAccount) {
-    	var pageData = GetPageData();
-
-		// set the fullName if it doesn't exist
-		if (!pageData.identity.fullName || !pageData.identity.fullName.value) {
-    		setPageData(pageData, "identity", "fullName", "");
-		}
-
-		// set the email if it doesn't exist
-		if (!pageData.identity.email || !pageData.identity.email.value) {
-    		setPageData(pageData, "identity", "email", "user@domain.invalid");
-		}
-	
-		// call FinishAccount() and not onFinish(), since the "finish"
-		// button may be disabled
-		FinishAccount();
-	}
-	else {
-		// since this is not an invalid account
-		// really cancel if the user hits the "cancel" button
-
-    if (!(accountCount > 0)) {
-        var confirmTitle = gPrefsBundle.getString("accountWizard");
-        var confirmMsg = gPrefsBundle.getString("cancelWizard");
-        if (promptService.confirm(window,confirmTitle,confirmMsg))
-          window.close();
-        else 
-          return;
+  // if the user cancels the the wizard when it pops up because of 
+  // an invalid account (example, a webmail account that activation started)
+  // we just force create it by setting some values and calling the FinishAccount()
+  // see bug #47521 for the full discussion
+  if (firstInvalidAccount) {
+    var pageData = GetPageData();
+    // set the fullName if it doesn't exist
+    if (!pageData.identity.fullName || !pageData.identity.fullName.value) {
+      setPageData(pageData, "identity", "fullName", "");
     }
-    else 
-	    window.close();
-    if(top.okCallback)
-    {
+
+    // set the email if it doesn't exist
+    if (!pageData.identity.email || !pageData.identity.email.value) {
+      setPageData(pageData, "identity", "email", "user@domain.invalid");
+    }
+
+    // call FinishAccount() and not onFinish(), since the "finish"
+    // button may be disabled
+    FinishAccount();
+  }
+  else {
+    // since this is not an invalid account
+    // really cancel if the user hits the "cancel" button
+    if (accountCount < 1) {
+      var confirmMsg = gPrefsBundle.getString("cancelWizard");
+      var confirmTitle = gPrefsBundle.getString("accountWizard");
+      var result = {value:0};
+
+      promptService.confirmEx(window, confirmTitle, confirmMsg,
+        (promptService.BUTTON_TITLE_IS_STRING*promptService.BUTTON_POS_0)+
+        (promptService.BUTTON_TITLE_IS_STRING*promptService.BUTTON_POS_1),
+        gPrefsBundle.getString('WizardExit'),
+        gPrefsBundle.getString('WizardContinue'), 
+        null, null, {value:0}, result);
+
+      if (result.value == 0)
+        window.close();
+    }
+    else
+      window.close();
+
+    if(top.okCallback) {
       var state = false;
-      //		dump("cancel callback");
       top.okCallback(state);
     }
-	}
+  }
 }
 
 function onFinish() {
