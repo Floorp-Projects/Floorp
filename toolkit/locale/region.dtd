@@ -3,3 +3,4 @@
 <!ENTITY  releaseURL            "http://www.mozilla.org/releases/">
 <!ENTITY  getNewThemesURL       "http://mozilla.org/themes/download/">
 <!ENTITY  content.version       "1.5a">
+<!ENTITY  locale.dir            "ltr">
