@@ -19,20 +19,14 @@
 # Contributor(s):
 # 
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(OS_ARCH),OS2)
-DIRS		= os2
-else
-DIRS		= unix
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/htmlBindings.xml $(DIST)/bin/res/builtin
+	$(INSTALL) $(srcdir)/platformHTMLBindings.xml $(DIST)/bin/res/builtin
