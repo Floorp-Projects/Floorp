@@ -20,11 +20,13 @@
 #include "nsRenderingContextMac.h"
 //XXX#include "../nsGfxCIID.h"
 
+
+#include <StringCompare.h>
+#include <Fonts.h>
 #include "math.h"
 #include "nspr.h"
 #include "il_util.h"
 #include <FixMath.h>
-#include <Fonts.h>
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 

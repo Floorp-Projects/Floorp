@@ -160,10 +160,12 @@ nsresult nsGfxFactoryMac::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-#ifdef XP_MAC
+#ifdef GFX_STATIC
 extern "C" NS_GFXNONXP nsresult NSGetFactory_GFXWIN_DLL(const nsCID &aClass, nsIFactory **aFactory)
-#else
+#elif defined(GFX_SHARED)
+#pragma export on
 extern "C" NS_GFXNONXP nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+#pragma export off
 #endif
 {
   if (nsnull == aFactory) {
