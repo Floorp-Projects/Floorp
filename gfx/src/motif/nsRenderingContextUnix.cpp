@@ -1059,22 +1059,11 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
 {
 
-
-  ::XSetClipMask(mFrontBuffer->display,
-		 mFrontBuffer->gc,
-		 None);
-  
-  
   ::XCopyArea(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
 	      mFrontBuffer->drawable,
 	      mFrontBuffer->gc,
-	      0, 0, aBounds.width, aBounds.height, 0, 0);
-  
-  if (nsnull != mRegion)
-    ::XSetRegion(mRenderingSurface->display,
-		 mRenderingSurface->gc,
-		 mRegion);
+	      0,0, aBounds.width, aBounds.height, 0,0);
 
   return NS_OK;
 }
