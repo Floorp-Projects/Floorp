@@ -24,10 +24,12 @@
 
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
+#include "prprf.h"
 
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(nsISupports *aOwner, float aT2P)
-  : mType(0), mTwips(0), mString(), mOwner(aOwner), mT2P(aT2P), mScriptObject(nsnull)
+  : mType(CSS_PX), mTwips(0), mString(), mOwner(aOwner), mT2P(aT2P),
+    mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -86,7 +88,77 @@ NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetCssText(nsString& aCssText)
 {
   aCssText.Truncate();
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+
+  switch (mType) {
+    case CSS_PX :
+      {
+        PRInt32 px = NSTwipsToIntPixels(mTwips, mT2P);
+        aCssText.AppendInt(px);
+        aCssText.AppendWithConversion("px");
+
+        break;
+      }
+    case CSS_CM :
+      {
+        float val = NS_TWIPS_TO_CENTIMETERS(mTwips);
+        char buf[64];
+        PR_snprintf(buf, 63, "%.2fcm", val);
+        aCssText.AppendWithConversion("cm");
+        break;
+      }
+    case CSS_MM :
+      {
+        float val = NS_TWIPS_TO_MILLIMETERS(mTwips);
+        char buf[64];
+        PR_snprintf(buf, 63, "%.2fcm", val);
+        aCssText.AppendWithConversion("mm");
+        break;
+      }
+    case CSS_IN :
+      {
+        float val = NS_TWIPS_TO_INCHES(mTwips);
+        char buf[64];
+        PR_snprintf(buf, 63, "%.2fcm", val);
+        aCssText.AppendWithConversion("in");
+        break;
+      }
+    case CSS_PT :
+      {
+        float val = NSTwipsToFloatPoints(mTwips);
+        char buf[64];
+        PR_snprintf(buf, 63, "%.2fcm", val);
+        aCssText.AppendWithConversion("pt");
+        break;
+      }
+    case CSS_STRING :
+      {
+        aCssText.Append(mString);
+        break;
+      }
+    case CSS_PC :
+    case CSS_UNKNOWN :
+    case CSS_NUMBER :
+    case CSS_PERCENTAGE :
+    case CSS_EMS :
+    case CSS_EXS :
+    case CSS_DEG :
+    case CSS_RAD :
+    case CSS_GRAD :
+    case CSS_MS :
+    case CSS_S :
+    case CSS_HZ :
+    case CSS_KHZ :
+    case CSS_DIMENSION :
+    case CSS_URI :
+    case CSS_IDENT :
+    case CSS_ATTR :
+    case CSS_COUNTER :
+    case CSS_RECT :
+    case CSS_RGBCOLOR :
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+
+  return NS_OK;
 }
 
 

@@ -63,6 +63,12 @@ public:
     mType = CSS_STRING;
   }
 
+  void SetString(const nsString& aString)
+  {
+    mString.Assign(aString);
+    mType = CSS_STRING;
+  }
+
 private:
   PRUint16 mType;
 
