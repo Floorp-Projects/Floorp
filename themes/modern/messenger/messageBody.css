@@ -165,6 +165,7 @@ span.moz-smiley-s16
   padding-left: 20px; 
   background-repeat: no-repeat; 
   background-position: center center;
+  -moz-user-select: all;
 }
 
 span.moz-smiley-s1 > span,
