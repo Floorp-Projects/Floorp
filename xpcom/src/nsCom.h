@@ -56,8 +56,8 @@
 
 #else  /* !XP_PC */
 
-#define NS_EXPORT
-#define NS_EXPORT_(type) type
+#define NS_EXPORT __declspec(export)
+#define NS_EXPORT_(type) __declspec(export) type
 
 #define NS_IMETHOD_(type) virtual type
 #define NS_IMETHOD virtual nsresult
