@@ -33,7 +33,6 @@
 
 #include "interpreter.h"
 #include "world.h"
-#include "vmtypes.h"
 
 namespace JavaScript {
 namespace JSTypes {
@@ -126,9 +125,9 @@ struct Linkage : public Context::Frame, public gc_base {
     {
     }
     
-    Context::Frame* getNext() { return mNext; }
+Context::Frame* getNext() { return mNext; }
     
-    void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode)
+void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode)
     {
         pc = mReturnPC;
         registers = &mActivation->mRegisters;
@@ -138,34 +137,38 @@ struct Linkage : public Context::Frame, public gc_base {
 
 JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 {
-    // initial activation.
-    Activation* activation = new Activation(iCode, args);
-    JSValues* registers = &activation->mRegisters;
+    assert(mActivation == 0); /* recursion == bad */
+    
+    JSValue rv;
+    mActivation = new Activation(iCode, args);
+    JSValues* registers = &mActivation->mRegisters;
+    mICode = iCode;
 
     InstructionIterator begin_pc = iCode->its_iCode->begin();
-    InstructionIterator pc = begin_pc;
+    mPc = begin_pc;
 
     // stack of all catch/finally handlers available for the current activation
-    std::stack<InstructionIterator> subroutineStack;    // to implement jsr/rts for finally code
+    // to implement jsr/rts for finally code
+    std::stack<InstructionIterator> subroutineStack;
+
     while (true) {
         try {
             // tell any listeners about the current execution state.
             // XXX should only do this if we're single stepping/tracing.
-            if (mListeners.size()) {
-                broadcast(pc, registers, activation->mICode);
-            }
-            Instruction* instruction = *pc;
+            if (mListeners.size())
+                broadcast(STEP);
+
+            Instruction* instruction = *mPc;
             switch (instruction->op()) {
             case CALL:
                 {
                     Call* call = static_cast<Call*>(instruction);
-                    mLinkage = new Linkage(mLinkage, ++pc, begin_pc, activation,
-                                            op1(call));
-                    ICodeModule* target = 
-                        (*registers)[op2(call)].function->getICode();
-                    activation = new Activation(target, activation, op3(call));
-                    registers = &activation->mRegisters;
-                    begin_pc = pc = target->its_iCode->begin();
+                    mLinkage = new Linkage(mLinkage, ++mPc, begin_pc,
+                                           mActivation, op1(call));
+                    mICode = (*registers)[op2(call)].function->getICode();
+                    mActivation = new Activation(mICode, mActivation, op3(call));
+                    registers = &mActivation->mRegisters;
+                    begin_pc = mPc = mICode->its_iCode->begin();
                 }
                 continue;
 
@@ -174,13 +177,17 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue result;
                     Linkage *linkage = mLinkage;
                     if (!linkage)
-                        return result;
+                    {
+                        rv = result;
+                        goto out;
+                    }
                     mLinkage = linkage->mNext;
-                    activation = linkage->mActivation;
-                    registers = &activation->mRegisters;
+                    mActivation = linkage->mActivation;
+                    registers = &mActivation->mRegisters;
                     (*registers)[linkage->mResult] = result;
-                    pc = linkage->mReturnPC;
+                    mPc = linkage->mReturnPC;
                     begin_pc = linkage->mBasePC;
+                    mICode = mActivation->mICode;
                 }
                 continue;
 
@@ -192,13 +199,17 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         result = (*registers)[op1(ret)];
                     Linkage* linkage = mLinkage;
                     if (!linkage)
-                        return result;
+                    {
+                        rv = result;
+                        goto out;
+                    }
                     mLinkage = linkage->mNext;
-                    activation = linkage->mActivation;
-                    registers = &activation->mRegisters;
+                    mActivation = linkage->mActivation;
+                    registers = &mActivation->mRegisters;
                     (*registers)[linkage->mResult] = result;
-                    pc = linkage->mReturnPC;
+                    mPc = linkage->mReturnPC;
                     begin_pc = linkage->mBasePC;
+                    mICode = mActivation->mICode;
                 }
                 continue;
             case MOVE:
@@ -281,7 +292,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     GenericBranch* bra =
                         static_cast<GenericBranch*>(instruction);
-                    pc = begin_pc + ofs(bra);
+                    mPc = begin_pc + ofs(bra);
                     continue;
                 }
                 break;
@@ -290,7 +301,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 < 0) {
-                        pc = begin_pc + ofs(bc);
+                        mPc = begin_pc + ofs(bc);
                         continue;
                     }
                 }
@@ -300,7 +311,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 <= 0) {
-                        pc = begin_pc + ofs(bc);
+                        mPc = begin_pc + ofs(bc);
                         continue;
                     }
                 }
@@ -310,7 +321,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 == 0) {
-                        pc = begin_pc + ofs(bc);
+                        mPc = begin_pc + ofs(bc);
                         continue;
                     }
                 }
@@ -320,7 +331,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 != 0) {
-                        pc = begin_pc + ofs(bc);
+                        mPc = begin_pc + ofs(bc);
                         continue;
                     }
                 }
@@ -330,7 +341,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 >= 0) {
-                        pc = begin_pc + ofs(bc);
+                        mPc = begin_pc + ofs(bc);
                         continue;
                     }
                 }
@@ -340,7 +351,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc)].i32 > 0) {
-                        pc = begin_pc + ofs(bc);
+                        mPc = begin_pc + ofs(bc);
                         continue;
                     }
                 }
@@ -396,7 +407,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NOT:
                 {
                     Not* nt = static_cast<Not*>(instruction);
-                    (*registers)[dst(nt)] = JSValue(int32(!(*registers)[src1(nt)].i32));
+                    (*registers)[dst(nt)] =
+                        JSValue(int32(!(*registers)[src1(nt)].i32));
                 }
                 break;
             
@@ -409,28 +421,29 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case TRY:
                 {       // push the catch handler address onto the try stack
                     Try* tri = static_cast<Try*>(instruction);
-                    activation->catchStack.push_back(new Handler(op1(tri), op2(tri)));
+                    mActivation->catchStack.push_back(new Handler(op1(tri),
+                                                                  op2(tri)));
                 }   
                 break;
             case ENDTRY :
                 {
-                    Handler *h = activation->catchStack.back();
-                    activation->catchStack.pop_back();
+                    Handler *h = mActivation->catchStack.back();
+                    mActivation->catchStack.pop_back();
                     delete h;
                 }
                 break;
             case JSR :
                 {
-                    subroutineStack.push(++pc);
+                    subroutineStack.push(++mPc);
                     Jsr* jsr = static_cast<Jsr*>(instruction);
                     uint32 offset = ofs(jsr);
-                    pc = begin_pc + offset;
+                    mPc = begin_pc + offset;
                     continue;
                 }
             case RTS :
                 {
                     ASSERT(!subroutineStack.empty());
-                    pc = subroutineStack.top();
+                    mPc = subroutineStack.top();
                     subroutineStack.pop();
                     continue;
                 }
@@ -441,24 +454,24 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             }
     
             // increment the program counter.
-            ++pc;
+            ++mPc;
         }
         catch (JSException x) {
             if (mLinkage) {
-                if (activation->catchStack.empty()) {
+                if (mActivation->catchStack.empty()) {
                     Linkage *pLinkage = mLinkage;
                     for (; pLinkage != NULL; pLinkage = pLinkage->mNext) {
                         if (!pLinkage->mActivation->catchStack.empty()) {
-                            activation = pLinkage->mActivation;
-                            Handler *h = activation->catchStack.back();
-                            registers = &activation->mRegisters;
+                            mActivation = pLinkage->mActivation;
+                            Handler *h = mActivation->catchStack.back();
+                            registers = &mActivation->mRegisters;
                             begin_pc = pLinkage->mBasePC;
                             if (h->catchTarget) {
-                                pc = begin_pc + h->catchTarget->mOffset;
+                                mPc = begin_pc + h->catchTarget->mOffset;
                             }
                             else {
                                 ASSERT(h->finallyTarget);
-                                pc = begin_pc + h->finallyTarget->mOffset;
+                                mPc = begin_pc + h->finallyTarget->mOffset;
                             }
                             mLinkage = pLinkage;
                             break;
@@ -468,21 +481,33 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         continue;
                 }
                 else {
-                    Handler *h = activation->catchStack.back();
+                    Handler *h = mActivation->catchStack.back();
                     if (h->catchTarget) {
-                        pc = begin_pc + h->catchTarget->mOffset;
+                        mPc = begin_pc + h->catchTarget->mOffset;
                     }
                     else {
                         ASSERT(h->finallyTarget);
-                        pc = begin_pc + h->finallyTarget->mOffset;
+                        mPc = begin_pc + h->finallyTarget->mOffset;
                     }
                     continue;
                 }
             }
-            return x.value;            
+            rv = x.value;
         }
     }
+
+ out:
+    delete mActivation;
+    mActivation = 0;
+    return rv;
+    
 } /* interpret */
+
+
+JSValues &Context::getRegisters()
+{
+    return mActivation->mRegisters;
+}
 
 void Context::addListener(Listener* listener)
 {
@@ -493,7 +518,8 @@ typedef std::vector<Context::Listener*>::iterator ListenerIterator;
 
 void Context::removeListener(Listener* listener)
 {   
-    for (ListenerIterator i = mListeners.begin(), e = mListeners.end(); i != e; ++i) {
+    for (ListenerIterator i = mListeners.begin(), e = mListeners.end();
+         i != e; ++i) {
         if (*i == listener) {
             mListeners.erase(i);
             break;
@@ -501,11 +527,12 @@ void Context::removeListener(Listener* listener)
     }
 }
 
-void Context::broadcast(InstructionIterator pc, JSValues* registers, ICodeModule* iCode)
+void Context::broadcast(InterpretStage Stage)
 {
-    for (ListenerIterator i = mListeners.begin(), e = mListeners.end(); i != e; ++i) {
+    for (ListenerIterator i = mListeners.begin(), e = mListeners.end();
+         i != e; ++i) {
         Listener* listener = *i;
-        listener->listen(this, pc, registers, iCode);
+        listener->listen(this, Stage);
     }
 }
 

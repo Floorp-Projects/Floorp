@@ -33,9 +33,29 @@
 
 /* this is all vapor, don't take it to serious yet */
 
+#ifndef debugger_h
+#define debugger_h
+
+#include "utilities.h"
+#include "interpreter.h"
+
 namespace JavaScript {
 namespace Debugger {
+    class Shell {
+    public:        
+        Shell (World &aWorld, Formatter &aOut, Formatter &aErr) :
+            mWorld(aWorld), mOut(aOut), mErr(aErr) {}
 
+        bool doCommand (Interpreter::Context *context,
+                        const String &aSource);
+
+    private:
+        World &mWorld;
+        Formatter &mOut, &mErr;        
+        
+    };
+    
+#if 0
     typedef void (debuggerCallback) (Context *aContext, ICodeDebugger *aICD);
     
     class Breakpoint {
@@ -78,6 +98,9 @@ namespace Debugger {
             KILL
         };
 
+        /**
+         * tell the debugger what to do when the debuggerCallback returns
+         */
         void setNextAction (DebuggerAction aAction);
 
         /**
@@ -105,6 +128,9 @@ namespace Debugger {
         
     }; /* class ICodeDebugger */
 
+#endif /* 0 */
+
 } /* namespace Debugger */
 } /* namespace JavaScript */
 
+#endif /* debugger_h */
