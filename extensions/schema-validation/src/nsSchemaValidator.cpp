@@ -2410,25 +2410,13 @@ nsresult nsSchemaValidator::ValidateBuiltinTypeFloat(const nsAString & aNodeValu
 }
 
 PRBool nsSchemaValidator::IsValidSchemaFloat(const nsAString & aNodeValue, float *aResult){
-  PRBool isValid = PR_FALSE;
-  NS_ConvertUTF16toUTF8 temp(aNodeValue);
-  char * pEnd;
-  float floatValue = strtod(temp.get(), &pEnd);
+  PRBool isValid = PR_TRUE;
+  nsAutoString temp(aNodeValue);
 
-  if (*pEnd == '\0')
-    isValid = PR_TRUE;
-
-  // convert back to string and compare
-  char floatStr[50];
-  PR_snprintf(floatStr, sizeof(floatStr), "%f", floatValue);
-  
-  if (strcmp(temp.get(), floatStr) == 0)
+  PRInt32 errorCode;
+  float floatValue = temp.ToFloat(&errorCode);
+  if (NS_FAILED(errorCode))
     isValid = PR_FALSE;
-
-#ifdef DEBUG
-  if (!isValid)
-    printf("\n  Not valid float: %f", floatValue);
-#endif
 
   if (aResult)
     *aResult = floatValue;
