@@ -110,7 +110,7 @@ DOMViewer.prototype =
   get subject() { return this.mSubject },
   set subject(aObject) {
     this.mSubject = aObject;
-    this.mDOMView.rootNode = aObject;
+    this.mDOMView.rootNode = aObject.documentElement;
     this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
     this.setInitialSelection(aObject);
   },
@@ -699,7 +699,7 @@ DOMViewer.prototype =
   
   getAllDocuments: function()
   {
-    var doc = this.mDOMView.rootNode; // The node is the top-level document node.
+    var doc = this.mDOMView.rootNode.ownerDocument;
     var results = [doc];
     this.findDocuments(doc, results);
     return results;
