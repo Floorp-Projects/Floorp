@@ -37,7 +37,7 @@
   </treebody>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
-    <treeitem id="news:/" open="false">
+    <treeitem id="news://news.mozilla.org" open="false">
       <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/>&newsHost.label;</treecell>
     </treeitem>
   </treebody>
