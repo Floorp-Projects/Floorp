@@ -340,7 +340,7 @@ BEGIN {
                           $tt+$rowspan+$previous_rowspan-1)) {
           print "\n", &query_ref($br->{td}, 
                                  $br->{previousbuildtime},
-                                 $br->{buildtime});
+                                 $br->{buildtime} - 1);
           print "C</a>";
         }
       }
@@ -408,10 +408,16 @@ sub print_table_header {
 sub print_table_footer {
   print "</table>\n";
 
-  my $nextdate = $maxdate - $hours*60*60;
+  my $nextdate = $maxdate - 12*60*60;
   print &open_showbuilds_href(maxdate=>"$nextdate", nocrap=>'1')
-       ."Show next $hours hours</a>";
-
+       ."Show previous $hours hours</a><br>";
+  if ($hours != 24) {
+    my $save_hours = $hours;
+    $hours = 24;
+    print &open_showbuilds_href(maxdate=>"$nextdate", nocrap=>'1')
+      ."Show previous 24 hours</a>";
+    $hours = $save_hours;
+  }
   print "<p><a href='${rel_path}admintree.cgi?tree=$tree'>",
         "Administrate Tinderbox Trees</a><br>\n";
 }
