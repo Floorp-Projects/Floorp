@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -439,7 +439,7 @@ nsMsgIdentity::getFolderPref(const char *prefname, char **retval)
 nsresult 
 nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
 {
-    char *oldpref = nsnull;
+    nsXPIDLCString oldpref;
     nsresult rv;
     nsCOMPtr<nsIRDFResource> res;
     nsCOMPtr<nsIMsgFolder> folder;
@@ -455,8 +455,8 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
     else
         return NS_ERROR_FAILURE;
 
-    rv = getFolderPref(prefname, &oldpref);
-    if (NS_SUCCEEDED(rv) && oldpref)
+    rv = getFolderPref(prefname, getter_Copies(oldpref));
+    if (NS_SUCCEEDED(rv) && (const char*)oldpref)
     {
         rv = rdf->GetResource(oldpref, getter_AddRefs(res));
         if (NS_SUCCEEDED(rv) && res)

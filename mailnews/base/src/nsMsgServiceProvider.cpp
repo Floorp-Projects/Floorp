@@ -130,9 +130,6 @@ nsMsgServiceProviderService::Init()
     nsXPIDLCString url;
     ispFile->GetURLString(getter_Copies(url));
     
-#if defined(DEBUG_alecf) || defined(DEBUG_tao)
-    printf("nsMsgServiceProvider: reading %s\n", (const char*)url);
-#endif
 
     rv = LoadDataSource(url);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed reading in the datasource\n");

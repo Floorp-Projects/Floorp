@@ -36,7 +36,7 @@ public:
   NS_DECL_NSIMSGACCOUNT
   
 private:
-  char *m_accountKey;
+  nsXPIDLCString m_accountKey;
   nsIPref *m_prefs;
   nsCOMPtr<nsIMsgIncomingServer> m_incomingServer;
 

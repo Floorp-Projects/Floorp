@@ -161,9 +161,12 @@ private:
   static PRBool PR_CALLBACK writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
   static PRBool PR_CALLBACK closeCachedConnections(nsHashKey *aKey, void *aData, void *closure);
 
-  static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
-  static char *getUniqueAccountKey(const char* prefix,
-                                   nsISupportsArray *accounts);
+  static void getUniqueKey(const char* prefix,
+                           nsHashtable *hashTable,
+                           nsCString& aResult);
+  static void getUniqueAccountKey(const char* prefix,
+                                  nsISupportsArray *accounts,
+                                  nsCString& aResult);
 
   
   nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);

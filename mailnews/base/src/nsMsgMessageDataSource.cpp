@@ -224,101 +224,77 @@ nsresult nsMsgMessageDataSource::Init()
 
 nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 {
-    // STRING USE WARNING: more of a suggestion, really -- perhaps using |NS_ConvertASCIItoUCS2| right in the |createNode| calls
-    //  would be cleaner.  It should generate identical code
-
 	PRUnichar *prustr = nsnull;
+	createNode(NS_LITERAL_STRING(" "), getter_AddRefs(kEmptyStringLiteral), rdf);
 
-	nsAutoString str; str.AssignWithConversion(" ");
-	createNode(str, getter_AddRefs(kEmptyStringLiteral), rdf);
+  //
+  // internal strings - not to be localized - usually reflected into the DOM
+  // via the datasource, so that content can be styled
+  //
+  
+  // priority stuff
+	createNode(NS_LITERAL_STRING("lowest"), getter_AddRefs(kLowestLiteral), rdf);
+	createNode(NS_LITERAL_STRING("low"), getter_AddRefs(kLowLiteral), rdf);
+	createNode(NS_LITERAL_STRING("high"), getter_AddRefs(kHighLiteral), rdf);
+	createNode(NS_LITERAL_STRING("highest"),getter_AddRefs(kHighestLiteral),rdf);
+	createNode(NS_LITERAL_STRING("4"), getter_AddRefs(kLowestSortLiteral), rdf);
+	createNode(NS_LITERAL_STRING("3"), getter_AddRefs(kLowSortLiteral), rdf);
+	createNode(NS_LITERAL_STRING("2"), getter_AddRefs(kNormalSortLiteral), rdf);
+	createNode(NS_LITERAL_STRING("1"), getter_AddRefs(kHighSortLiteral), rdf);
+	createNode(NS_LITERAL_STRING("0"), getter_AddRefs(kHighestSortLiteral), rdf);
 
-	str.AssignWithConversion("lowest");
-	createNode(str, getter_AddRefs(kLowestLiteral), rdf);
+  // message status - 
+	createNode(NS_LITERAL_STRING("flagged"),getter_AddRefs(kFlaggedLiteral),rdf);
+	createNode(NS_LITERAL_STRING("unflagged"), getter_AddRefs(kUnflaggedLiteral), rdf);
+	createNode(NS_LITERAL_STRING("replied"),getter_AddRefs(kRepliedLiteral),rdf);
+	createNode(NS_LITERAL_STRING("new"), getter_AddRefs(kNewLiteral), rdf);
+	createNode(NS_LITERAL_STRING("read"), getter_AddRefs(kReadLiteral), rdf);
+	createNode(NS_LITERAL_STRING("fowarded"), getter_AddRefs(kForwardedLiteral), rdf);
 
-	prustr = GetString(NS_LITERAL_STRING("priorityLowest"));
-	str.Assign(prustr);
-	createNode(str, getter_AddRefs(kLowestLiteralDisplayString), rdf);
+  // other useful strings
+	createNode(NS_LITERAL_STRING("true"), getter_AddRefs(kTrueLiteral), rdf);
+	createNode(NS_LITERAL_STRING("false"), getter_AddRefs(kFalseLiteral), rdf);
+	createNode(NS_LITERAL_STRING("news"), getter_AddRefs(kNewsLiteral), rdf);
+	createNode(NS_LITERAL_STRING("mail"), getter_AddRefs(kMailLiteral), rdf);
 
-	str.AssignWithConversion("low");
-	createNode(str, getter_AddRefs(kLowLiteral), rdf);
+  //
+  // localized strings - some of the above strings need to be displayed
+  // to the user
 
-	prustr = GetString(NS_LITERAL_STRING("priorityLow"));
-	str.Assign(prustr);
-	createNode(str, getter_AddRefs(kLowLiteralDisplayString), rdf);
-	
-	str.AssignWithConversion("high");
-	createNode(str, getter_AddRefs(kHighLiteral), rdf);
+  // priority
+	prustr = GetString(NS_LITERAL_STRING("priorityHighest"));
+	createNode(prustr, getter_AddRefs(kHighestLiteralDisplayString), rdf);
+  Recycle(prustr);
 
 	prustr = GetString(NS_LITERAL_STRING("priorityHigh"));
-	str.Assign(prustr);
-	createNode(str, getter_AddRefs(kHighLiteralDisplayString), rdf);
+	createNode(prustr, getter_AddRefs(kHighLiteralDisplayString), rdf);
+  Recycle(prustr);
 
-	str.AssignWithConversion("highest");
-	createNode(str, getter_AddRefs(kHighestLiteral), rdf);
-
-	prustr = GetString(NS_LITERAL_STRING("priorityHighest"));
-	str.Assign(prustr);
-	createNode(str, getter_AddRefs(kHighestLiteralDisplayString), rdf);
-
-	str.AssignWithConversion("4");
-	createNode(str, getter_AddRefs(kLowestSortLiteral), rdf);
-	str.AssignWithConversion("3");
-	createNode(str, getter_AddRefs(kLowSortLiteral), rdf);
-	str.AssignWithConversion("2");
-	createNode(str, getter_AddRefs(kNormalSortLiteral), rdf);
-	str.AssignWithConversion("1");
-	createNode(str, getter_AddRefs(kHighSortLiteral), rdf);
-	str.AssignWithConversion("0");
-	createNode(str, getter_AddRefs(kHighestSortLiteral), rdf);
-
-	str.AssignWithConversion("flagged");
-	createNode(str, getter_AddRefs(kFlaggedLiteral), rdf);
+	prustr = GetString(NS_LITERAL_STRING("priorityLow"));
+	createNode(prustr, getter_AddRefs(kLowLiteralDisplayString), rdf);
+  Recycle(prustr);
 	
-	str.AssignWithConversion("unflagged");
-	createNode(str, getter_AddRefs(kUnflaggedLiteral), rdf);
-	
-	str.AssignWithConversion("replied");
-	createNode(str, getter_AddRefs(kRepliedLiteral), rdf);
+	prustr = GetString(NS_LITERAL_STRING("priorityLowest"));
+	createNode(prustr, getter_AddRefs(kLowestLiteralDisplayString), rdf);
+  Recycle(prustr);
 
-	prustr = GetString(NS_LITERAL_STRING("replied"));
-	str.Assign(prustr);
-	createNode(str, getter_AddRefs(kRepliedLiteralDisplayString), rdf);
-	
-	str.AssignWithConversion("fowarded");
-	createNode(str, getter_AddRefs(kForwardedLiteral), rdf);
-
-	prustr = GetString(NS_LITERAL_STRING("forwarded"));
-	str.Assign(prustr);
-	createNode(str, getter_AddRefs(kForwardedLiteralDisplayString), rdf);
-	
-	str.AssignWithConversion("new");
-	createNode(str, getter_AddRefs(kNewLiteral), rdf);
-
+  // message status
 	prustr = GetString(NS_LITERAL_STRING("new"));
-	str.Assign(prustr);
-	createNode(str, getter_AddRefs(kNewLiteralDisplayString), rdf);
+	createNode(prustr, getter_AddRefs(kNewLiteralDisplayString), rdf);
+  Recycle(prustr);
 	
-	str.AssignWithConversion("read");
-	createNode(str, getter_AddRefs(kReadLiteral), rdf);
-
 	prustr = GetString(NS_LITERAL_STRING("read"));
-	str.Assign(prustr);
-	createNode(str, getter_AddRefs(kReadLiteralDisplayString), rdf);
+	createNode(prustr, getter_AddRefs(kReadLiteralDisplayString), rdf);
+  Recycle(prustr);
 	
-	str.AssignWithConversion("true");
-	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
+	prustr = GetString(NS_LITERAL_STRING("forwarded"));
+	createNode(prustr, getter_AddRefs(kForwardedLiteralDisplayString), rdf);
+  Recycle(prustr);
 	
-	str.AssignWithConversion("false");
-	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
-	
-	str.AssignWithConversion("news");
-	createNode(str, getter_AddRefs(kNewsLiteral), rdf);
-	
-	str.AssignWithConversion("mail");
-	createNode(str, getter_AddRefs(kMailLiteral), rdf);
+	prustr = GetString(NS_LITERAL_STRING("replied"));
+	createNode(prustr, getter_AddRefs(kRepliedLiteralDisplayString), rdf);
+  Recycle(prustr);
 
-	if(prustr != nsnull)
-		nsCRT::free(prustr);
 	return NS_OK;
 }
 
@@ -341,23 +317,9 @@ nsresult nsMsgMessageDataSource::CreateArcsOutEnumerators()
 
 NS_IMPL_ADDREF_INHERITED(nsMsgMessageDataSource, nsMsgRDFDataSource)
 NS_IMPL_RELEASE_INHERITED(nsMsgMessageDataSource, nsMsgRDFDataSource)
-
-NS_IMETHODIMP
-nsMsgMessageDataSource::QueryInterface(REFNSIID iid, void** result)
-{
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-	if(iid.Equals(NS_GET_IID(nsIFolderListener)))
-	{
-		*result = NS_STATIC_CAST(nsIFolderListener*, this);
-		NS_ADDREF(this);
-		return NS_OK;
-	}
-	else
-		return nsMsgRDFDataSource::QueryInterface(iid, result);
-}
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMsgMessageDataSource,
+                                   nsMsgRDFDataSource,
+                                   nsIFolderListener);
 
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsMsgMessageDataSource::GetURI(char* *uri)
@@ -432,35 +394,18 @@ nsMsgMessageDataSource::GetString(const PRUnichar *aStringName)
 }
 
 //sender is the string we need to parse.  senderuserName is the parsed user name we get back.
-nsresult nsMsgMessageDataSource::GetSenderName(const PRUnichar *sender, nsAutoString *senderUserName)
+nsresult nsMsgMessageDataSource::GetSenderName(const PRUnichar *sender, nsAutoString& senderUserName)
 {
 	//XXXOnce we get the csid, use Intl version
 	nsresult rv = NS_OK;
 	if(mHeaderParser)
 	{
 
-		char *name;
-    nsAutoString senderStr(sender);
-		char *senderUTF8 = senderStr.ToNewUTF8String();
-		if(!senderUTF8)
-			return NS_ERROR_FAILURE;
+		nsXPIDLCString name;
 
-		if(NS_SUCCEEDED(rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", senderUTF8, &name)))
-        {
-			if(name)
-			{
-				PRUnichar *newSender;
-				nsAutoString fmt; fmt.AssignWithConversion("%s");
-				newSender = nsTextFormatter::smprintf(fmt.GetUnicode(),name);
-				if(newSender)
-				{
-					senderUserName->Assign(newSender);
-					nsTextFormatter::smprintf_free(newSender);
-				}
-				nsCRT::free(name);
-			}
-			Recycle(senderUTF8);
-		}
+    rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", NS_ConvertUCS2toUTF8(sender), getter_Copies(name));
+    if (NS_SUCCEEDED(rv) && (const char*)name)
+      senderUserName.Assign(NS_ConvertUTF8toUCS2(name));
 	}
 	return rv;
 }
@@ -470,7 +415,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetSources(nsIRDFResource* property,
                                                 PRBool tv,
                                                 nsISimpleEnumerator** sources)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(PR_FALSE, "Not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -511,25 +456,14 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 				(kNC_OrderReceived == property) || (kNC_HasAttachment == property) ||
 				(kNC_MessageType == property))
 		{
-			nsSingletonEnumerator* cursor =
-				new nsSingletonEnumerator(source);
-			if (cursor == nsnull)
-				return NS_ERROR_OUT_OF_MEMORY;
-			NS_ADDREF(cursor);
-			*targets = cursor;
-			rv = NS_OK;
+      rv = NS_NewSingletonEnumerator(targets, source);
 		}
 	}
 
 
 	if(!*targets) {
 	  //create empty cursor
-	  nsCOMPtr<nsISupportsArray> assertions;
-	  rv = NS_NewISupportsArray(getter_AddRefs(assertions));
-		if(NS_FAILED(rv))
-			return rv;
-
-    rv = NS_NewArrayEnumerator(targets, assertions);
+    rv = NS_NewEmptyEnumerator(targets);
 	}
 	return rv;
 }
@@ -1209,7 +1143,7 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
       rv = message->GetFlags(&flags);
       if(NS_SUCCEEDED(rv) && (flags & MSG_FLAG_HAS_RE))
 			{
-					nsAutoString reStr; reStr.AssignWithConversion("Re: ");
+					nsAutoString reStr(NS_LITERAL_STRING("Re: "));
 					reStr.Append(subject);
 					*((PRUnichar **)getter_Copies(subject)) = nsXPIDLString::Copy(reStr.GetUnicode());
 			}
@@ -1238,7 +1172,7 @@ nsMsgMessageDataSource::createMessageSenderNode(nsIMessage *message,
 	{
       rv = message->GetMime2DecodedAuthor(getter_Copies(sender));
       if(NS_SUCCEEDED(rv))
-				 rv = GetSenderName(sender, &senderUserName);
+				 rv = GetSenderName(sender, senderUserName);
 			if(NS_SUCCEEDED(rv))
 	       rv = createNode(senderUserName, target, getRDFService());
 	}
@@ -1263,7 +1197,7 @@ nsMsgMessageDataSource::createMessageRecipientNode(nsIMessage *message,
 	{
 		rv = message->GetMime2DecodedRecipients(getter_Copies(recipients));
 		if(NS_SUCCEEDED(rv))
-			rv = GetSenderName(recipients, &recipientUserName);
+			rv = GetSenderName(recipients, recipientUserName);
 		if(NS_SUCCEEDED(rv))
 			rv = createNode(recipientUserName, target, getRDFService());
 	}
@@ -1450,11 +1384,11 @@ nsresult
 nsMsgMessageDataSource::createFlaggedStringFromFlag(PRUint32 flags, nsAutoString &flaggedStr)
 {
 	nsresult rv = NS_OK;
-	flaggedStr.AssignWithConversion(" ");
+	flaggedStr.Assign(NS_LITERAL_STRING(" "));
 	if(flags & MSG_FLAG_MARKED)
-		flaggedStr.AssignWithConversion("flagged");
+		flaggedStr.Assign(NS_LITERAL_STRING("flagged"));
 	else 
-		flaggedStr.AssignWithConversion("unflagged");
+		flaggedStr.Assign(NS_LITERAL_STRING("unflagged"));
 	return rv;
 }
 
@@ -1463,13 +1397,13 @@ nsMsgMessageDataSource::createPriorityString(nsMsgPriorityValue priority, nsAuto
 {
 	nsresult rv = NS_OK;
 	PRUnichar *prustr;
-	priorityStr.AssignWithConversion(" ");
+	priorityStr.Assign(NS_LITERAL_STRING(" "));
 	switch (priority)
 	{
 		case nsMsgPriority::notSet:
 		case nsMsgPriority::none:
 		case nsMsgPriority::normal:
-			priorityStr.AssignWithConversion(" ");
+			priorityStr.Assign(NS_LITERAL_STRING(" "));
 			break;
 		case nsMsgPriority::lowest:
 			//priorityStr = "Lowest";
@@ -1581,12 +1515,8 @@ nsMsgMessageDataSource::createMessageSizeNode(nsIMessage *message, nsIRDFNode **
 
 	if(!sort)
 	{
-		char * kbStr = PR_smprintf("%uKB", sizeInKB);
-		if(kbStr)
-		{
-			sizeStr.AssignWithConversion(kbStr);
-			PR_smprintf_free(kbStr);
-		}
+    sizeStr.AppendInt(sizeInKB);
+    sizeStr.AppendWithConversion("KB");
 		rv = createNode(sizeStr, target, getRDFService());
 	}
 	else
@@ -1673,7 +1603,7 @@ nsresult nsMsgMessageDataSource::GetUnreadChildrenNode(nsIMsgThread *thread, nsI
 	if(NS_SUCCEEDED(rv))
 	{
 		if(numUnread > 0)
-			rv = createNode(numUnread, target, getRDFService());
+			rv = createIntNode(numUnread, target, getRDFService());
 		else
 			rv = createNode(emptyString, target, getRDFService());
 	}
@@ -1690,7 +1620,7 @@ nsresult nsMsgMessageDataSource::GetTotalChildrenNode(nsIMsgThread *thread, nsIR
 	if(NS_SUCCEEDED(rv))
 	{
 		if(numChildren > 0)
-			rv = createNode(numChildren, target, getRDFService());
+			rv = createIntNode(numChildren, target, getRDFService());
 		else
 			rv = createNode(emptyString, target, getRDFService());
 	}

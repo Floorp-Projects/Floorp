@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -239,39 +239,40 @@ nsMsgAccountManager::getPrefService()
   return NS_OK;
 }
 
-char *
+void
 nsMsgAccountManager::getUniqueKey(const char* prefix,
-                                  nsHashtable *hashTable)
+                                  nsHashtable *hashTable,
+                                  nsCString& aResult)
 {
   PRInt32 i=1;
-  char key[30];
   PRBool unique=PR_FALSE;
 
   do {
-    PR_snprintf(key, 10, "%s%d",prefix, i++);
-    nsStringKey hashKey(key);
+    aResult=prefix;
+    aResult.AppendInt(i++);
+    nsStringKey hashKey(aResult);
     void* hashElement = hashTable->Get(&hashKey);
     
     if (!hashElement) unique=PR_TRUE;
   } while (!unique);
 
-  return nsCRT::strdup(key);
 }
 
-char *
+void
 nsMsgAccountManager::getUniqueAccountKey(const char *prefix,
-                                         nsISupportsArray *accounts)
+                                         nsISupportsArray *accounts,
+                                         nsCString& aResult)
 {
   PRInt32 i=1;
-  char key[30];
   PRBool unique = PR_FALSE;
   
   findAccountByKeyEntry findEntry;
-  findEntry.key = key;
   findEntry.account = nsnull;
   
   do {
-    PR_snprintf(key, 10, "%s%d", prefix, i++);
+      aResult = prefix;
+      aResult.AppendInt(i++);
+      findEntry.key = aResult.GetBuffer();
     
     accounts->EnumerateForwards(findAccountByKey, (void *)&findEntry);
 
@@ -279,17 +280,21 @@ nsMsgAccountManager::getUniqueAccountKey(const char *prefix,
     findEntry.account = nsnull;
   } while (!unique);
 
-  return nsCRT::strdup(key);
 }
 
 nsresult
 nsMsgAccountManager::CreateIdentity(nsIMsgIdentity **_retval)
 {
-  if (!_retval) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(_retval);
+  
+  nsresult rv;
 
-  char *key = getUniqueKey(ID_PREFIX, &m_identities);
+  nsCAutoString key;
+  getUniqueKey(ID_PREFIX, &m_identities, key);
 
-  return createKeyedIdentity(key, _retval);
+  rv = createKeyedIdentity(key, _retval);
+
+  return rv;
 }
 
 nsresult
@@ -358,12 +363,14 @@ nsMsgAccountManager::CreateIncomingServer(const char* username,
                                           const char* type,
                                           nsIMsgIncomingServer **_retval)
 {
-  if (!_retval) return NS_ERROR_NULL_POINTER;
-  // make sure we've loaded existing accounts
-  nsresult rv = LoadAccounts();
-  if (NS_FAILED(rv)) return rv;
-  const char *key = getUniqueKey(SERVER_PREFIX, &m_incomingServers);
-  return createKeyedServer(key, username, hostname, type, _retval);
+  NS_ENSURE_ARG_POINTER(_retval);
+  nsresult rv;
+
+  nsCAutoString key;
+  getUniqueKey(SERVER_PREFIX, &m_incomingServers, key);
+  rv = createKeyedServer(key, username, hostname, type, _retval);
+
+  return rv;
 }
 
 nsresult
@@ -1239,9 +1246,10 @@ nsMsgAccountManager::createKeyedAccount(const char* key,
 nsresult
 nsMsgAccountManager::CreateAccount(nsIMsgAccount **_retval)
 {
-    if (!_retval) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(_retval);
 
-    const char *key=getUniqueAccountKey(ACCOUNT_PREFIX, m_accounts);
+    nsCAutoString key;
+    getUniqueAccountKey(ACCOUNT_PREFIX, m_accounts, key);
 
     return createKeyedAccount(key, _retval);
 }

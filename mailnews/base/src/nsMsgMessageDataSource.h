@@ -122,7 +122,7 @@ protected:
 	//String bundle:
 	nsCOMPtr<nsIStringBundle>   mStringBundle;
 
-	nsresult  GetSenderName(const PRUnichar *sender, nsAutoString *senderUserName);
+	nsresult  GetSenderName(const PRUnichar *sender, nsAutoString& senderUserName);
 
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
 							 nsIRDFNode **target);

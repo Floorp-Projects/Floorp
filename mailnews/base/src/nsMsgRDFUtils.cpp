@@ -88,7 +88,7 @@ nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfS
   nsCOMPtr<nsIRDFLiteral> value;
 
   if (str) {
-	rv = rdfService->GetLiteral(str, getter_AddRefs(value));
+    rv = rdfService->GetLiteral(str, getter_AddRefs(value));
   } else {
 	PRUnichar blankStr[] = { 0 };
 	rv = rdfService->GetLiteral(blankStr, getter_AddRefs(value));
@@ -114,15 +114,6 @@ nsresult createNode(nsString& str, nsIRDFNode **node, nsIRDFService *rdfService)
 	return rv;
 }
 
-nsresult createNode(PRUint32 value, nsIRDFNode **node, nsIRDFService *rdfService)
-{
-	nsresult rv;
-	nsAutoString str;
-  str.AppendInt((PRInt32)value);
-	rv = createNode(str, node, rdfService);
-	return rv;
-}
-
 nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfService)
 {
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
@@ -130,16 +121,13 @@ nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfSe
 	if (!rdfService) return NS_ERROR_NULL_POINTER;  
 	nsCOMPtr<nsIRDFLiteral> value;
   nsAutoString str; str.AssignWithConversion(charstr);
-  PRUnichar *ucharstr = str.ToNewUnicode();
-  if (ucharstr)
-  {
-	rv = rdfService->GetLiteral(ucharstr, getter_AddRefs(value));
+
+  rv = rdfService->GetLiteral(NS_ConvertUTF8toUCS2(charstr).GetUnicode(), getter_AddRefs(value));
+  
 	if(NS_SUCCEEDED(rv)) {
 		*node = value;
 		NS_IF_ADDREF(*node);
 	}
-	nsMemory::Free(ucharstr);
-  }
   return rv;
 }
 

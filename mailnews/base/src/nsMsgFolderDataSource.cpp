@@ -26,7 +26,7 @@
 
 #include "nsMsgFolderDataSource.h"
 #include "nsMsgFolderFlags.h"
-#include "nsMsgFolder.h"
+
 #include "nsMsgRDFUtils.h"
 #include "nsIMessage.h"
 
@@ -1443,7 +1443,7 @@ nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node
 {
 
 	if(numMessages >0)
-		createNode(numMessages, node, getRDFService());
+		createIntNode(numMessages, node, getRDFService());
 	else if(numMessages == -1)
 	{
 		nsAutoString unknownMessages; unknownMessages.AssignWithConversion("???");
