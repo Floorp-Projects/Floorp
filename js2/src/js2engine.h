@@ -51,6 +51,8 @@ namespace MetaData {
 enum JS2Op {
     eAdd,
     eSubtract,
+    eEqual,
+    eNotEqual,
     eTrue,
     eFalse,
     eNull,
@@ -70,12 +72,14 @@ enum JS2Op {
     eReturnVoid,
     ePushFrame,         // <frame index:u16>
     ePopFrame,
-    eToBoolean,
+//    eToBoolean,
     eBranchFalse,       // <branch displacement:s32> XXX save space with short and long versions instead ?
     eBranchTrue,        // <branch displacement:s32>
     eBranch,            // <branch displacement:s32>
     eNew,               // <argCount:u16>
     eCall,              // <argCount:u16>
+
+    ePopv,
 
     eLexicalPostInc,    // <multiname index:u16>
     eLexicalPostDec,    // <multiname index:u16>

@@ -45,13 +45,12 @@
 	        String *bstr = toString(b);
                 String *c = new String(*astr);
                 *c += *bstr;
-                retval = STRING_TO_JS2VAL(c);
-	        push(retval);
+	        push(STRING_TO_JS2VAL(c));
 	    }
 	    else {
                 float64 anum = toNumber(a);
                 float64 bnum = toNumber(b);
-                retval = pushNumber(anum + bnum);
+                pushNumber(anum + bnum);
 	    } 
         }
         break;
@@ -61,7 +60,91 @@
 	    js2val b = pop();
             float64 anum = toNumber(a);
             float64 bnum = toNumber(b);
-            retval = pushNumber(anum - bnum);
+            pushNumber(anum - bnum);
+        }
+        break;
+
+    case eEqual:
+        {
+            bool rval;
+	    js2val a = pop();
+	    js2val b = pop();
+            if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
+                rval = (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b));
+            else
+            if (JS2VAL_IS_BOOLEAN(a)) {
+                if (JS2VAL_IS_BOOLEAN(b))
+                    rval = (JS2VAL_TO_BOOLEAN(a) == JS2VAL_TO_BOOLEAN(b));
+                else {
+                    js2val ap = toNumber(a);
+                    js2val bp = toPrimitive(b);
+                    if (JS2VAL_IS_NULL(bp) || JS2VAL_IS_UNDEFINED(bp))
+                        rval = false;
+                    else
+                        rval = float64Compare(a, toNumber(bp));
+                }
+            }
+            else
+            if (JS2VAL_IS_NUMBER(a)) {
+                js2val bp = toPrimitive(b);
+                if (JS2VAL_IS_NULL(bp) || JS2VAL_IS_UNDEFINED(bp))
+                    rval = false;
+                else
+                    rval = float64Compare(a, toNumber(bp));
+            }
+            else 
+            if (JS2VAL_IS_STRING(a)) {
+                js2val bp = toPrimitive(b);
+                if (JS2VAL_IS_NULL(bp) || JS2VAL_IS_UNDEFINED(bp))
+                    rval = false;
+                else
+                if (JS2VAL_IS_BOOLEAN(bp) || JS2VAL_IS_NUMBER(bp))
+                    rval = float64Compare();
+                else
+                    rval = (*JS2VAL_TO_STRING(a) == *JS2VAL_TO_STRING(bp));
+            }
+            else     // a is not a primitive at this point, see if b is...
+            if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
+                rval = false;
+            else
+            if (JS2VAL_IS_BOOLEAN(b)) {
+                js2val ap = toPrimitive(a);
+                if (JS2VAL_IS_NULL(ap) || JS2VAL_IS_UNDEFINED(ap))
+                    rval = false;
+                else
+                if (JS2VAL_IS_BOOLEAN(ap))
+                    rval = (JS2VAL_TO_BOOLEAN(ap) == JS2VAL_TO_BOOLEAN(b));
+                else {
+                    ap = toNumber(ap);
+                    js2val bp = toNumber(b);
+                    rval = float64Compare(ap, bp);
+                }
+            }
+            else
+            if (JS2VAL_IS_NUMBER(b)) {
+                js2val ap = toPrimitive(a);
+                if (JS2VAL_IS_NULL(ap) || JS2VAL_IS_UNDEFINED(ap))
+                    rval = false;
+                else
+                    rval = float64Compare(toNumber(ap), JS2VAL_TO_NUMBER(b));
+            }
+            else
+            if (JS2VAL_IS_STRING(b)) {
+                js2val ap = toPrimitive(a);
+                if (JS2VAL_IS_NULL(ap) || JS2VAL_IS_UNDEFINED(ap))
+                    rval = false;
+                else
+                if (JS2VAL_IS_BOOLEAN(ap) || JS2VAL_IS_NUMBER(ap))
+                    rval = float64Compare(toNumber(ap), toNumber(b));
+                else
+                    rval = (*JS2VAL_TO_STRING(ap) == *JS2VAL_TO_STRING(b));
+            }
+            else
+                rval = (JS2VAL_TO_OBJECT(a) == JS2VAL_TO_OBJECT(b));
+               
+
+            push(BOOL_TO_JS2VAL(rval));
+
         }
         break;
 
@@ -69,40 +152,40 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            retval = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toNumber(retval);
-            retval = allocNumber(num);
+            js2val rval = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(rval);
             meta->env.lexicalWrite(meta, mn, allocNumber(num + 1.0), true, phase);
+            pushNumber(num);
         }
         break;
     case eLexicalPostDec:
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            retval = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toNumber(retval);
-            retval = allocNumber(num);
+            js2val rval = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(rval);
             meta->env.lexicalWrite(meta, mn, allocNumber(num - 1.0), true, phase);
+            pushNumber(num);
         }
         break;
     case eLexicalPreInc:
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            retval = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toNumber(retval);
-            retval = pushNumber(num + 1.0);
-            meta->env.lexicalWrite(meta, mn, retval, true, phase);
+            js2val rval = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(rval);
+            rval = pushNumber(num + 1.0);
+            meta->env.lexicalWrite(meta, mn, rval, true, phase);
         }
         break;
     case eLexicalPreDec:
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            retval = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toNumber(retval);
-            retval = pushNumber(num - 1.0);
-            meta->env.lexicalWrite(meta, mn, retval, true, phase);
+            js2val rval = meta->env.lexicalRead(meta, mn, phase);
+            float64 num = toNumber(rval);
+            rval = pushNumber(num - 1.0);
+            meta->env.lexicalWrite(meta, mn, rval, true, phase);
         }
         break;
 
@@ -112,11 +195,12 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            float64 num = toNumber(retval);
-            retval = allocNumber(num);
+            float64 num = toNumber(rval);
             meta->writeProperty(baseVal, mn, &lookup, true, allocNumber(num + 1.0), RunPhase);
+            pushNumber(num);
         }
         break;
     case eDotPostDec:
@@ -125,11 +209,12 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            float64 num = toNumber(retval);
-            retval = allocNumber(num);
+            float64 num = toNumber(rval);
             meta->writeProperty(baseVal, mn, &lookup, true, allocNumber(num - 1.0), RunPhase);
+            pushNumber(num);
         }
         break;
     case eDotPreInc:
@@ -138,11 +223,12 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            float64 num = toNumber(retval);
-            retval = pushNumber(num + 1.0);
-            meta->writeProperty(baseVal, mn, &lookup, true, retval, RunPhase);
+            float64 num = toNumber(rval);
+            rval = pushNumber(num + 1.0);
+            meta->writeProperty(baseVal, mn, &lookup, true, rval, RunPhase);
         }
         break;
     case eDotPreDec:
@@ -151,11 +237,12 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            float64 num = toNumber(retval);
-            retval = pushNumber(num - 1.0);
-            meta->writeProperty(baseVal, mn, &lookup, true, retval, RunPhase);
+            float64 num = toNumber(rval);
+            rval = pushNumber(num - 1.0);
+            meta->writeProperty(baseVal, mn, &lookup, true, rval, RunPhase);
         }
         break;
     case eBracketPostInc:
@@ -165,11 +252,12 @@
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            float64 num = toNumber(retval);
-            retval = allocNumber(num);
+            float64 num = toNumber(rval);
             meta->writeProperty(baseVal, &mn, &lookup, true, allocNumber(num + 1.0), RunPhase);
+            pushNumber(num);
         }
         break;
     case eBracketPostDec:
@@ -179,11 +267,12 @@
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            float64 num = toNumber(retval);
-            retval = allocNumber(num);
+            float64 num = toNumber(rval);
             meta->writeProperty(baseVal, &mn, &lookup, true, allocNumber(num - 1.0), RunPhase);
+            pushNumber(num);
         }
         break;
     case eBracketPreInc:
@@ -193,11 +282,12 @@
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            float64 num = toNumber(retval);
-            retval = pushNumber(num + 1.0);
-            meta->writeProperty(baseVal, &mn, &lookup, true, retval, RunPhase);
+            float64 num = toNumber(rval);
+            rval = pushNumber(num + 1.0);
+            meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
         }
         break;
     case eBracketPreDec:
@@ -207,10 +297,11 @@
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            float64 num = toNumber(retval);
-            retval = pushNumber(num - 1.0);
-            meta->writeProperty(baseVal, &mn, &lookup, true, retval, RunPhase);
+            float64 num = toNumber(rval);
+            rval = pushNumber(num - 1.0);
+            meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
         }
         break;

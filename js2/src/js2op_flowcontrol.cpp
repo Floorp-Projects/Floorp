@@ -33,11 +33,10 @@
 
     case eBranchTrue:
         {
-            retval = pop();
-            ASSERT(JS2VAL_IS_BOOLEAN(retval));
-            bool b = JS2VAL_TO_BOOLEAN(retval);
+            js2val cond = pop();
+            bool b = toBoolean(cond);
             if (b) {
-                int32 offset = BytecodeContainer::getShort(pc);
+                int32 offset = BytecodeContainer::getOffset(pc);
                 pc += offset;
             }
             else 
@@ -47,11 +46,10 @@
 
     case eBranchFalse:
         {
-            retval = pop();
-            ASSERT(JS2VAL_IS_BOOLEAN(retval));
-            bool b = JS2VAL_TO_BOOLEAN(retval);
+            js2val cond = pop();
+            bool b = toBoolean(cond);
             if (!b) {
-                int32 offset = BytecodeContainer::getShort(pc);
+                int32 offset = BytecodeContainer::getOffset(pc);
                 pc += offset;
             }
             else 
@@ -61,7 +59,7 @@
 
     case eBranch:
         {
-            int32 offset = BytecodeContainer::getShort(pc);
+            int32 offset = BytecodeContainer::getOffset(pc);
             pc += offset;
         }
         break;

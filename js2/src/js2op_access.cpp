@@ -38,8 +38,10 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            push(rval);
         }
         break;
 
@@ -47,24 +49,27 @@
     // the value on the stack top
     case eDotWrite:
         {
-            retval = pop();
+            js2val rval = pop();
             LookupKind lookup(false, NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = pop();
-            meta->writeProperty(baseVal, mn, &lookup, true, retval, RunPhase);
-            push(retval);
+            meta->writeProperty(baseVal, mn, &lookup, true, rval, RunPhase);
+            push(rval);
         }
         break;
 
+    // Read the multiname property, but leave the base and the value on the stack
     case eDotRef:
         {
             LookupKind lookup(false, NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             js2val baseVal = top();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+            js2val rval;
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            push(rval);
         }
         break;
 
@@ -73,8 +78,7 @@
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            retval = meta->env.lexicalRead(meta, mn, phase);
-            push(retval);
+            push(meta->env.lexicalRead(meta, mn, phase));
 	}
         break;
 
@@ -82,20 +86,21 @@
     // the value on the stack top.
     case eLexicalWrite: 
         {
-            retval = top();
+            js2val rval = top();
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            meta->env.lexicalWrite(meta, mn, retval, true, phase);
+            meta->env.lexicalWrite(meta, mn, rval, true, phase);
 	}
         break;
 
+    // Construct a reference pair consisting of a NULL base and the read value
     case eLexicalRef: 
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            retval = meta->env.lexicalRead(meta, mn, phase);
+            js2val rval = meta->env.lexicalRead(meta, mn, phase);
             push(JS2VAL_NULL);
-            push(retval);
+            push(rval);
 	}
         break;
 
@@ -120,10 +125,12 @@
             LookupKind lookup(false, NULL);
             js2val indexVal = pop();
             js2val baseVal = pop();
+            js2val rval;
             String *indexStr = toString(indexVal);
             Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            push(rval);
         }
         break;
 
@@ -132,26 +139,28 @@
     case eBracketWrite:
         {
             LookupKind lookup(false, NULL);
-            retval = pop();
+            js2val rval = pop();
             js2val indexVal = pop();
             js2val baseVal = pop();
             String *indexStr = toString(indexVal);
             Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
-            meta->writeProperty(baseVal, &mn, &lookup, true, retval, RunPhase);
-            push(retval);
+            meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
+            push(rval);
         }
         break;
 
-    // Read an index property from a base object, push the value onto the stack
+    // Leave the base object on the stack and push the property value
     case eBracketRef:
         {
             LookupKind lookup(false, NULL);
             js2val indexVal = pop();
             js2val baseVal = top();
+            js2val rval;
             String *indexStr = toString(indexVal);
             Multiname mn(world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &retval))
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &rval))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            push(rval);
         }
         break;
 

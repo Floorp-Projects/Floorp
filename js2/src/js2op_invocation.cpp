@@ -47,11 +47,10 @@
                 const DynamicPropertyMap::value_type e(nameAtom, fieldVal);
                 pInst->dynamicProperties.insert(e);
             }
-            retval = OBJECT_TO_JS2VAL(pInst);
-            push(retval);
+            push(OBJECT_TO_JS2VAL(pInst));
         }
         break;
-
+/*
     case eToBoolean:
         {
             js2val v = pop();
@@ -60,7 +59,7 @@
             push(retval);
         }
         break;
-
+*/
     case eNew:
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
@@ -70,8 +69,7 @@
             JS2Object *obj = JS2VAL_TO_OBJECT(v);
             ASSERT(obj->kind == ClassKind);
             JS2Class *c = checked_cast<JS2Class *>(obj);
-            retval = OBJECT_TO_JS2VAL(c->construct(this));
-            push(retval);
+            push(OBJECT_TO_JS2VAL(c->construct(this)));
         }
         break;
 
@@ -109,6 +107,12 @@
             }
             else
                 ASSERT(false);
+        }
+        break;
+
+    case ePopv:
+        {
+            retval = pop();
         }
         break;
 

@@ -252,6 +252,8 @@ int getStackEffect(JS2Op op)
 
     case eAdd:          // pop two, push one
     case eSubtract:
+    case eEqual:
+    case eNotEqual:
         return -1;  
 
     case eString:
@@ -264,21 +266,21 @@ int getStackEffect(JS2Op op)
     case eLexicalRead:
         return 1;       // push the value
     case eLexicalWrite:
-        return -1;      // pop the value
+        return 0;       // leave the value
     case eLexicalRef:
         return 2;       // push base & value
 
     case eDotRead:
         return 0;       // pop a base, push the value
     case eDotWrite:
-        return -2;      // pop a base and the value
+        return -1;      // pop a base, leave the value
     case eDotRef:
         return 1;       // leave the base, push the value
 
     case eBracketRead:
         return -1;      // pop a base and an index, push the value
     case eBracketWrite:
-        return -3;      // pop a base and an index and the value
+        return -2;      // pop a base and an index, leave the value
     case eBracketRef:
         return 1;       // leave the base, pop the index, push the value
 
@@ -286,8 +288,11 @@ int getStackEffect(JS2Op op)
     case eBranch:
         return 0;
 
-    case eToBoolean:    // pop object, push boolean
-        return 0;
+    case ePopv:         // pop a statement result value
+        return -1;      
+
+//    case eToBoolean:    // pop object, push boolean
+//        return 0;
 
     case ePushFrame:    // affect the frame stack...
     case ePopFrame:     // ...not the exec stack

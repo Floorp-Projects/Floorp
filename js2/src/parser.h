@@ -579,6 +579,10 @@ namespace JavaScript {
 
         void print(PrettyPrinter &f, bool noSemi) const;
         virtual void printContents(PrettyPrinter &f, bool noSemi) const;
+#ifdef EPIMETHEUS
+        MetaData::LabelID breakLabelID;
+        MetaData::LabelID continueLabelID;
+#endif
     };
 
     struct BinaryStmtNode: UnaryStmtNode {

@@ -710,14 +710,9 @@ public:
     bool unused;                    // true if the unused attribute has been given
 };
 
-typedef std::map<const StringAtom *, BytecodeContainer::LabelID> LabelSet;
-class JumpTarget {
-public:
-    JumpTarget() : breakTargets(new LabelSet()), continueTargets(new LabelSet()) { }
 
-    LabelSet *breakTargets;
-    LabelSet *continueTargets;
-};
+typedef std::vector<StmtNode *> TargetList;
+typedef std::vector<StmtNode *>::iterator TargetListIterator;
 
 struct MemberDescriptor {
     StaticMember *staticMember;
@@ -735,9 +730,9 @@ public:
     js2val EvalStmtList(Phase phase, StmtNode *p);
 
 
-    void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p, LabelSet *stmtLbl, JumpTarget *jt);
+    void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
     void ValidateTypeExpression(Context *cxt, Environment *env, ExprNode *e)    { ValidateExpression(cxt, env, e); } 
-    void ValidateStmt(Context *cxt, Environment *env, StmtNode *p, LabelSet *stmtLbl, JumpTarget *jt);
+    void ValidateStmt(Context *cxt, Environment *env, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 
@@ -817,6 +812,7 @@ public:
     Environment env;
     Context cxt;
 
+    TargetList targetList;
 
 };
 

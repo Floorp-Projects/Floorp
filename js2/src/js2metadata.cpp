@@ -71,17 +71,15 @@ namespace MetaData {
      * Validate the linked list of statement nodes beginning at 'p'
      */
     void JS2Metadata::ValidateStmtList(StmtNode *p) {
-        LabelSet stmtLbl;
-        JumpTarget jt;
         while (p) {
-            ValidateStmt(&cxt, &env, p, &stmtLbl, &jt);
+            ValidateStmt(&cxt, &env, p);
             p = p->next;
         }
     }
 
-    void JS2Metadata::ValidateStmtList(Context *cxt, Environment *env, StmtNode *p, LabelSet *stmtLbl, JumpTarget *jt) {
+    void JS2Metadata::ValidateStmtList(Context *cxt, Environment *env, StmtNode *p) {
         while (p) {
-            ValidateStmt(cxt, env, p, stmtLbl, jt);
+            ValidateStmt(cxt, env, p);
             p = p->next;
         }
     }
@@ -91,7 +89,7 @@ namespace MetaData {
     /*
      * Validate an individual statement 'p', including it's children
      */
-    void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, StmtNode *p, LabelSet *stmtLbl, JumpTarget *jt) {
+    void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, StmtNode *p) {
         switch (p->getKind()) {
         case StmtNode::block:
         case StmtNode::group:
@@ -99,86 +97,79 @@ namespace MetaData {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
                 b->compileFrame = new BlockFrame();
                 env->addFrame(b->compileFrame);
-                ValidateStmtList(cxt, env, b->statements, stmtLbl, jt);
+                ValidateStmtList(cxt, env, b->statements);
                 env->removeTopFrame();
             }
             break;
         case StmtNode::label:
             {
+                LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
 /*
     A labelled statement catches contained, named, 'breaks' but simply adds itself as a label for
     contained iteration statements. (i.e. you can 'break' out of a labelled statement, but not 'continue'
-    one
+    one, however the statement label becomes a 'continuable' label for all contained iteration statements.
 */
-
-                LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
-                l->labelID = bCon->getLabel();
-                std::pair<LabelSet::iterator, bool> breakResult = jt->breakTargets->insert(LabelSet::value_type(&l->name, l->labelID));
-                if (!breakResult.second)
-                    reportError(Exception::syntaxError, "Duplicate statement label", p->pos);
-                std::pair<LabelSet::iterator, bool> stmtLblResult = stmtLbl->insert(LabelSet::value_type(&l->name, l->labelID));
-               
-                ValidateStmt(cxt, env, l->stmt, stmtLbl, jt);
-
-                jt->breakTargets->erase(breakResult.first);
-                stmtLbl->erase(stmtLblResult.first);
+                // Make sure there is no existing break target with the same name
+                for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
+                    switch ((*si)->getKind()) {
+                    case StmtNode::label:
+                        if (checked_cast<LabelStmtNode *>(*si)->name == l->name)
+                            reportError(Exception::syntaxError, "Duplicate statement label", p->pos);
+                        break;
+                    }
+                }
+                targetList.push_back(p);
+                ValidateStmt(cxt, env, l->stmt);
+                targetList.pop_back();
             }
             break;
         case StmtNode::If:
             {
                 UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
                 ValidateExpression(cxt, env, i->expr);
-                ValidateStmt(cxt, env, i->stmt, stmtLbl, jt);
+                ValidateStmt(cxt, env, i->stmt);
             }
             break;
         case StmtNode::IfElse:
             {
                 BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
                 ValidateExpression(cxt, env, i->expr);
-                ValidateStmt(cxt, env, i->stmt, stmtLbl, jt);
-                ValidateStmt(cxt, env, i->stmt2, stmtLbl, jt);
+                ValidateStmt(cxt, env, i->stmt);
+                ValidateStmt(cxt, env, i->stmt2);
             }
             break;
         case StmtNode::While:
             {
-                // add 'default' to list of statement labels, these
-                // are all continue targets (either by name or default).
-                // [adding 'default' simply means pushing the continue target onto the
-                // existing continueLabels list]
-                // The default break label is the bottom of the while
-                // loop.
-
-/*
-                continueLabel = getLabel();
-                breakLabel = getLabel();
-
-                <bra> --> <continueLabel>
-                setLabel(loopTop);
-
-                addContinueLabel(continueLabel);
-                addBreakLabel(breakLabel);
-                
-                <stmt>
-                setLabel(continueLabel);
-                <expr>
-                <test> --> <loopTop>
-                setLabel(breakLabel);
-
-
-*/
-
+                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
+                targetList.push_back(p);
+                ValidateExpression(cxt, env, w->expr);
+                ValidateStmt(cxt, env, w->stmt);
+                targetList.pop_back();
             }
             break;
         case StmtNode::Break:
-            {
-//                if identifier, look in breakLabel list and jump to matched entry's LabelID
-//                else jump to top of breakLabel list's LabelID
-            }
-            break;
         case StmtNode::Continue:
             {
-//                if identifier, look in continueLabel list and jump to matched entry's LabelID
-//                else jump to top of continueLabel list's LabelID
+                GoStmtNode *g = checked_cast<GoStmtNode *>(p);
+                bool found = false;
+                if (g->name) {
+                    // Make sure the name is on the targetList as a viable break/continue target...
+                    for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
+                        if ((*si)->getKind() == StmtNode::label) {
+                            if (checked_cast<LabelStmtNode *>(*si)->name == *g->name) {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else  // so long as the targetList isn't empty we're fine...
+                    found = !targetList.empty();
+                if (!found) 
+                    reportError(Exception::syntaxError, 
+                                (p->getKind() == StmtNode::Break) ? "No such break target available" 
+                                                             : "No such continue target available",
+                                p->pos);
             }
             break;
         case StmtNode::Return:
@@ -237,7 +228,7 @@ namespace MetaData {
                     // XXX define a static binding for each parameter
                     pb = pb->next;
                 }
-                ValidateStmt(cxt, env, f->function.body, stmtLbl, jt);
+                ValidateStmt(cxt, env, f->function.body);
                 env->removeTopFrame();
                 if (unchecked 
                         && ((topFrame->kind == GlobalObjectKind)
@@ -412,7 +403,7 @@ namespace MetaData {
                 defineStaticMember(env, classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                 if (classStmt->body) {
                     env->addFrame(c);
-                    ValidateStmtList(cxt, env, classStmt->body->statements, stmtLbl, jt);
+                    ValidateStmtList(cxt, env, classStmt->body->statements);
                     ASSERT(env->getTopFrame() == c);
                     env->removeTopFrame();
                 }
@@ -502,7 +493,6 @@ namespace MetaData {
                 UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
                 Reference *r = EvalExprNode(env, phase, i->expr);
                 if (r) r->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(eToBoolean, p->pos);
                 bCon->emitBranch(eBranchFalse, skipOverStmt, p->pos);
                 EvalStmt(env, phase, i->stmt);
                 bCon->setLabel(skipOverStmt);
@@ -515,7 +505,6 @@ namespace MetaData {
                 BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
                 Reference *r = EvalExprNode(env, phase, i->expr);
                 if (r) r->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(eToBoolean, p->pos);
                 bCon->emitBranch(eBranchFalse, falseStmt, p->pos);
                 EvalStmt(env, phase, i->stmt);
                 bCon->emitBranch(eBranch, skipOverFalseStmt, p->pos);
@@ -526,6 +515,23 @@ namespace MetaData {
             break;
         case StmtNode::While:
             {
+                UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
+                w->breakLabelID = bCon->getLabel();
+                w->continueLabelID = bCon->getLabel();
+                BytecodeContainer::LabelID loopTop = bCon->getLabel();
+
+                targetList.push_back(p);
+
+                bCon->emitBranch(eBranch, w->continueLabelID, p->pos);
+                bCon->setLabel(loopTop);
+                EvalStmt(env, phase, w->stmt);
+                bCon->setLabel(w->continueLabelID);
+                Reference *r = EvalExprNode(env, phase, w->expr);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitBranch(eBranchTrue, loopTop, p->pos);
+                bCon->setLabel(w->breakLabelID);
+
+                targetList.pop_back();
             }
             break;
         case StmtNode::Return:
@@ -626,6 +632,7 @@ namespace MetaData {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                 Reference *r = EvalExprNode(env, phase, e->expr);
                 if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(ePopv, p->pos);
             }
             break;
         case StmtNode::Namespace:
@@ -943,6 +950,8 @@ namespace MetaData {
             }
             break;
 
+        case ExprNode::equal:
+        case ExprNode::notEqual:
         case ExprNode::assignment:
         case ExprNode::add:
         case ExprNode::subtract:
@@ -1037,6 +1046,13 @@ namespace MetaData {
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
             }
             break;
+        case ExprNode::equal:
+            binaryOp = eEqual;
+            goto doBinary;
+        case ExprNode::notEqual:
+            binaryOp = eNotEqual;
+            goto doBinary;
+
         case ExprNode::add:
             binaryOp = eAdd;
             goto doBinary;
