@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.7 $ $Date: 2001/10/11 18:40:31 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.8 $ $Date: 2001/10/19 18:10:57 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -206,5 +206,27 @@ nssCKObject_IsAttributeTrue
     }
     *rvStatus = PR_SUCCESS;
     return (PRBool)(bool == CK_TRUE);
+}
+
+NSS_IMPLEMENT PRStatus 
+nssCKObject_SetAttributes
+(
+  CK_OBJECT_HANDLE object,
+  CK_ATTRIBUTE_PTR obj_template,
+  CK_ULONG count,
+  nssSession *session,
+  NSSSlot  *slot
+)
+{
+    CK_RV ckrv;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(slot)->C_SetAttributeValue(session->handle, object, 
+                                            obj_template, count);
+    nssSession_ExitMonitor(session);
+    if (ckrv == CKR_OK) {
+	return PR_SUCCESS;
+    } else {
+	return PR_FAILURE;
+    }
 }
 
