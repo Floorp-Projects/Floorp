@@ -47,14 +47,12 @@
 #include "nsILDAPMessageListener.h"
 
 /* Header file */
-class nsLDAPChannel : public nsIChannel, public nsIRunnable, 
-    public nsILDAPMessageListener
+class nsLDAPChannel : public nsIChannel, public nsILDAPMessageListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
-  NS_DECL_NSIRUNNABLE
   NS_DECL_NSILDAPMESSAGELISTENER
 
   nsLDAPChannel();
@@ -67,16 +65,17 @@ public:
   static NS_METHOD
   Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 
+protected:
+
   // these are internal functions, called by the dispatcher function
   // OnLDAPMessage()
   //
   nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage);
   nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);
+  nsresult OnLDAPBind(nsILDAPMessage *aMessage);
   // XXX - should go away
   //
   nsresult pipeWrite(char *str);
-
-protected:
   
   // instance vars for read/write nsIChannel attributes
   //
@@ -92,7 +91,6 @@ protected:
   nsCOMPtr<nsIStreamListener> mAsyncListener; // since we can't call mListener
                                              // directly from the worker thread
   nsCOMPtr<nsILDAPConnection> mConnection; // LDAP connection for this channel
-  nsCOMPtr<nsILDAPOperation> mOperation; // current LDAP operation
   nsCOMPtr<nsIThread> mThread; // worker thread for this channel
   nsCOMPtr<nsIStreamListener> mListener; // whoever is listening to us
   nsCOMPtr<nsISupports> mResponseContext; 

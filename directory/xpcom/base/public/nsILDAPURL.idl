@@ -36,4 +36,52 @@
 [scriptable, uuid(7310562d-1567-43c7-a123-633c1ba3663e)]
 interface nsILDAPURL : nsIURI {
 
+    /**
+     * the distinguished name of the URL (ie the base DN for the search)
+     */
+    attribute string dn;
+
+    /**
+     * the LDAP attributes to return.  defaults to all attributes.
+     *
+     * XXXdmose - there should be a setter for this too
+     */
+    void getAttributes(out unsigned long count, 
+		       [retval, array, size_is(count)] out string values);
+
+    /**
+     * the scope of the search.  defaults to NS_LDAP_SCOPE_BASE. 
+     */
+    attribute long scope;
+
+    /**
+     * search just the base object
+     */
+    const long NS_LDAP_SCOPE_BASE = 0;
+    
+    /** 
+     * search only the children of the base object
+     */
+    const long NS_LDAP_SCOPE_ONELEVEL = 1;
+
+    /**
+     * search the entire subtree under and including the base object
+     */
+    const long NS_LDAP_SCOPE_SUBTREE = 2;
+
+    /**
+     * the search filter. "(objectClass=*)" is the default.
+     */
+    attribute string filter;
+
+    /**
+     * any options defined for this URL (check options using a bitwise and)
+     */
+    attribute unsigned long options;
+
+    /**
+     * if this is set, this is an ldaps: URL, not an ldap: URL
+     */
+    const unsigned long NS_LDAP_URL_OPT_SECURE = 0x01;
+
 };

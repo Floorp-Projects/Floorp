@@ -48,5 +48,9 @@ XPIDLSRCS	= 	nsILDAPConnection.idl \
 			nsILDAPURL.idl \
 			$(NULL)
 
+EXPORTS		= \
+		nsLDAP.h \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 

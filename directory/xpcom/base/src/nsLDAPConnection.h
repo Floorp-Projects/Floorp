@@ -37,6 +37,10 @@
 #include "nsILDAPConnection.h"
 #include "ldap.h"
 #include "nsString.h"
+#include "nsIThread.h"
+#include "nsIRunnable.h"
+#include "nsCOMPtr.h"
+#include "nsILDAPMessageListener.h"
 
 // 0d871e30-1dd2-11b2-8ea9-831778c78e93
 //
@@ -44,13 +48,14 @@
 { 0x0d871e30, 0x1dd2, 0x11b2, \
  { 0x8e, 0xa9, 0x83, 0x17, 0x78, 0xc7, 0x8e, 0x93 }}
 
-class nsLDAPConnection : public nsILDAPConnection {
-
+class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
+{
     friend class nsLDAPOperation;
     friend class nsLDAPMessage;
 
   public:
     NS_DECL_ISUPPORTS;
+    NS_DECL_NSIRUNNABLE;
     NS_DECL_NSILDAPCONNECTION;
 
     // constructor & destructor
@@ -61,8 +66,11 @@ class nsLDAPConnection : public nsILDAPConnection {
   protected:
   
     // the LDAP SDK's struct for the connection
-    LDAP *mConnectionHandle;	// the LDAP C SDK's connection object
-    nsCString *mBindName; 	// who to bind as
+    LDAP *mConnectionHandle;		// the LDAP C SDK's connection object
+    nsCString *mBindName; 		// who to bind as
+    nsCOMPtr<nsIThread> mThread;       	// thread which marshals results
+    nsCOMPtr<nsILDAPMessageListener> mMessageListener;	// results go here
+    static struct timeval sNullTimeval;
 };
 
 #endif /* _nsLDAPConnection_h_ */

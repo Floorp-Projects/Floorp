@@ -41,9 +41,12 @@
 [scriptable, uuid(dc721d4b-3ff2-4387-a80c-5e29545f774a)]
 interface nsILDAPMessageListener : nsISupports
 {
-    // aMessage is the message that was returned, and aRetVal is the 
-    // return code from ldap_result()
-    //
+    /**
+     * Messages received are passed back via this function.
+     *
+     * @arg aMessage  The message that was returned, NULL if none was.
+     * @arg aRetVal   the return value from ldap_result()
+     */
     void onLDAPMessage(in nsILDAPMessage aMessage, in PRInt32 aRetVal);
 };
 

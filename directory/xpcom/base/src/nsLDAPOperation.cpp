@@ -31,13 +31,12 @@
  * GPL.
  */
 
-#include "ldap.h"
+#include "nsLDAP.h"
 #include "nsLDAPOperation.h"
 #include "nsILDAPMessage.h"
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
-
-struct timeval nsLDAPOperation::sNullTimeval = {0, 0};
+#include "nspr.h"
 
 // constructor
 nsLDAPOperation::nsLDAPOperation()
@@ -52,18 +51,24 @@ nsLDAPOperation::~nsLDAPOperation()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPOperation, nsILDAPOperation);
 
-// the connection this operation is on
-//
-// attribute nsILDAPConnection connection;
-//
+/**
+ * Initializes this operation.  Must be called prior to use. 
+ *
+ * @param aConnection connection this operation should use
+ * @param aMessageListener where are the results are called back to.  NOTE:
+ *        this param is currently unused; it's here in preparation for
+ * 	  shared nsILDAPConnections.
+ */
 NS_IMETHODIMP
-nsLDAPOperation::SetConnection(nsILDAPConnection *aConnection)
+nsLDAPOperation::Init(nsILDAPConnection *aConnection,
+		      nsILDAPMessageListener *aMessageListener)
 {
     nsresult rv;
 
-    // set the connection
+    // set the connection & listener
     //
     mConnection = aConnection;
+    mMessageListener = aMessageListener;
 
     // get and cache the connection handle
     //	
@@ -106,49 +111,6 @@ nsLDAPOperation::SimpleBind(const char *passwd)
     }
 }
 
-// wrapper for ldap_result
-NS_IMETHODIMP
-nsLDAPOperation::Result(PRInt32 aAll, 
-			PRIntervalTime aTimeout, 
-			nsILDAPMessage* *aMessage,
-			PRInt32 *_retval)
-{
-    LDAPMessage *msgHandle;
-    nsCOMPtr<nsILDAPMessage> msg;
-
-    nsresult rv;
-
-    NS_ENSURE_ARG_POINTER(aMessage);
-    NS_ENSURE_ARG_POINTER(_retval);
-
-    // make the call
-    // XXX use aTimeout, not sNullTimeval
-    //
-    *_retval =	ldap_result(mConnectionHandle, mMsgId,
-			    aAll, &sNullTimeval, &msgHandle);
-    
-    // if we didn't error or timeout, create an nsILDAPMessage
-    //	
-    if (*_retval != 0 && *_retval != -1) {
-	
-	// create the message
-	//
-	msg = do_CreateInstance("mozilla.network.ldapmessage", &rv);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	// initialize it
-        //	
-	rv = msg->Init(this, msgHandle);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-    }
-
-    *aMessage = msg;
-    NS_IF_ADDREF(*aMessage);
-
-    return NS_OK;
-}
-
 // wrappers for ldap_search_ext
 //
 int
@@ -164,18 +126,64 @@ nsLDAPOperation::SearchExt(const char *base, // base DN to search
 {
     return ldap_search_ext(this->mConnectionHandle, base, scope, 
 			   filter, attrs, attrsOnly, serverctrls, 
-			   clientctrls, timeoutp, sizelimit, &(this->mMsgId));
+			   clientctrls, timeoutp, sizelimit, 
+			   &(this->mMsgId));
 }
 
-int
-nsLDAPOperation::SearchExt(const char *base, // base DN to search
-			   int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
-			   const char* filter, // search filter
-			   struct timeval *timeoutp, // how long to wait
-			   int sizelimit) // max # of entries to return
+
+/**
+ * wrapper for ldap_search_ext(): kicks off an async search request.
+ *
+ * @param aBaseDn		Base DN to search
+ * @param aScope		One of LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
+ * @param aFilter		Search filter
+ * @param aTimeOut		How long to wait
+ * @param aSizeLimit	Maximum number of entries to return.
+ *
+ * XXX doesn't currently handle LDAPControl params
+ *
+ * void searchExt(in string aBaseDn, in PRInt32 aScope,
+ *		  in string aFilter, in PRIntervalTime aTimeOut,
+ *		  in PRInt32 aSizeLimit);
+ */
+NS_IMETHODIMP
+nsLDAPOperation::SearchExt(const char *aBaseDn, PRInt32 aScope, 
+			   const char *aFilter, PRIntervalTime aTimeOut,
+			   PRInt32 aSizeLimit) 
 {
-    return nsLDAPOperation::SearchExt(base, scope, filter, NULL, 0, NULL,
-				      NULL, timeoutp, sizelimit);
+    // XXX deal with timeouts
+    //
+    int retVal = nsLDAPOperation::SearchExt(aBaseDn, aScope, aFilter, NULL, 0, 
+					    NULL, NULL, NULL, aSizeLimit);
+
+    switch (retVal) {
+
+    case LDAP_SUCCESS: 
+	return NS_OK;
+	break;
+
+    case LDAP_PARAM_ERROR:
+	return NS_ERROR_ILLEGAL_VALUE;
+	break;
+
+    case LDAP_ENCODING_ERROR:
+	return NS_ERROR_LDAP_ENCODING_ERROR;
+	break;
+
+    case LDAP_SERVER_DOWN:
+	return NS_ERROR_LDAP_SERVER_DOWN;
+	break;
+
+    case LDAP_NO_MEMORY:
+	return NS_ERROR_OUT_OF_MEMORY;
+	break;
+
+    case LDAP_NOT_SUPPORTED:
+	return NS_ERROR_LDAP_NOT_SUPPORTED;
+	break;
+    }
+
+    return NS_ERROR_UNEXPECTED;
 }
 
 // wrapper for ldap_url_search
@@ -189,6 +197,14 @@ nsLDAPOperation::UrlSearch(const char *aURL, // the search URL
     this->mMsgId = ldap_url_search(this->mConnectionHandle, aURL, 
 				   aAttrsOnly);
     if (this->mMsgId == -1) {
+	abort();
+#ifdef DEBUG
+    char *s;
+
+    (void)this->mConnection->GetErrorString(&s);
+    PR_fprintf(PR_STDERR, "UrlSearch failed: %s\n", s);
+    ldap_memfree(s);
+#endif
 	return NS_ERROR_FAILURE;
     }
 

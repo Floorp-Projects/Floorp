@@ -35,10 +35,10 @@
 #include "nsLDAPProtocolHandler.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
-#include "nsIURI.h"
+#include "nsLDAPURL.h"
 #include "nsLDAPChannel.h"
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
+static NS_DEFINE_CID(kLDAPURLCID, NS_LDAPURL_CID);
 
 // QueryInterface, AddRef, and Release
 //
@@ -79,55 +79,54 @@ nsLDAPProtocolHandler::GetDefaultPort(PRInt32 *result)
 }
 
 // construct an appropriate URI
-// code borrowed from nsFingerHandler.cpp
 //
 NS_IMETHODIMP
 nsLDAPProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-			      nsIURI **result) {
+			      nsIURI **result) 
+{
+    nsCOMPtr<nsILDAPURL> url;
     nsresult rv;
 
     // no concept of a relative ldap url
     NS_ASSERTION(!aBaseURI, "base url passed into LDAP protocol handler");
 
-    nsIURI* uri;
-    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
-                                            NS_GET_IID(nsIURI),
-                                            (void**)&uri);
-    if (NS_FAILED(rv)) return rv;
+    url = do_CreateInstance(kLDAPURLCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // XXX - possibly should implement using our own nsILDAPURI which 
     // validates the URI on SetSpec().  alternatively, we could call 
     // ldap_url_parse and friends here.
     //
-    rv = uri->SetSpec((char*)aSpec);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(uri);
-        return rv;
-    }
+    rv = url->SetSpec((char*)aSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    *result = uri;
-    return rv;
+    // this is a getter, so we need to AddRef on the way out
+    //
+    *result = url;
+    NS_ADDREF(*result);
+
+    return NS_OK;
 }
 
-// code borrowed from nsFingerHandler.cpp
-//
 NS_IMETHODIMP
 nsLDAPProtocolHandler::NewChannel(nsIURI* uri, 
 				  nsIChannel* *result)
 {
   nsresult rv;
-    
-  nsLDAPChannel* channel;
-  rv = nsLDAPChannel::Create(nsnull, NS_GET_IID(nsIChannel),
-			     (void**)&channel);
-  if (NS_FAILED(rv)) return rv;
+  nsLDAPChannel *channel;
 
+  rv = nsLDAPChannel::Create(nsnull, NS_GET_IID(nsIChannel),(void **)&channel);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   rv = channel->Init(uri);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(channel);
-    return rv;
+      NS_RELEASE(channel);
+      return rv;
   }
-
+  // the channel was already AddRefed for us, and since this function itself
+  // is a getter, there's no need to release it here.
+  //
   *result = channel;
+
   return NS_OK;
 }

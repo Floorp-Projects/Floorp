@@ -41,6 +41,8 @@
 
 [ptr] native ldapConnectionHandle(LDAP);
 
+interface nsILDAPMessageListener;
+
 [scriptable, uuid(337ad2fe-1dd2-11b2-89f8-aae1221ec86c)]
 interface nsILDAPConnection : nsISupports
 {
@@ -50,11 +52,20 @@ interface nsILDAPConnection : nsISupports
     // who we're binding as
     readonly attribute string bindName;
 
+    /**
+     * Operations on this connection get their results called back to this
+     * interface.  This really should (and eventually will be) implemented
+     * implemented on a per operation-basis (to allow for shared 
+     * nsILDAPConnections), but for now, this MUST be set BEFORE calling
+     * init on this connection.
+     */
+    attribute nsILDAPMessageListener messageListener;
+
     // set up the connection.  the first two params are for ldap init, 
     // the third is for this connection
     //
     void init(in string aHost, in short aPort, in string aBindName);
-  
+
     // wrapper for ldap_get_lderrno()
     long getLdErrno(out string matched, out string s);
 

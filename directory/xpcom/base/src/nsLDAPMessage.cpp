@@ -98,23 +98,20 @@ nsLDAPMessage::~nsLDAPMessage(void)
 // associate this message with an existing operation
 //
 NS_IMETHODIMP
-nsLDAPMessage::Init(nsILDAPOperation *aOperation, LDAPMessage *aMsgHandle)
+nsLDAPMessage::Init(nsILDAPConnection *aConnection, LDAPMessage *aMsgHandle)
 {
     nsresult rv;
 
-    NS_ENSURE_ARG_POINTER(aOperation);
+    NS_ENSURE_ARG_POINTER(aConnection);
     NS_ENSURE_ARG_POINTER(aMsgHandle);
     
     // initialize the appropriate member vars
     //
-    mOperation = aOperation;
+    mConnection = aConnection;
     mMsgHandle = aMsgHandle;
 
     // cache the connection handle associated with this operation
     //
-    rv = mOperation->GetConnection(getter_AddRefs(mConnection));
-    NS_ENSURE_SUCCESS(rv,rv);
-
     rv = mConnection->GetConnectionHandle(&mConnectionHandle);
     NS_ENSURE_SUCCESS(rv,rv);
 

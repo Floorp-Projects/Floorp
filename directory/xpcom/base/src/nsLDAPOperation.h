@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsILDAPConnection.h"
 #include "nsILDAPOperation.h"
+#include "nsILDAPMessageListener.h"
 
 // 97a479d0-9a44-47c6-a17a-87f9b00294bb
 #define NS_LDAPOPERATION_CID \
@@ -76,9 +77,9 @@ class nsLDAPOperation : public nsILDAPOperation
 
   protected:
     nsCOMPtr<nsILDAPConnection> mConnection; // connection this op is on
+    nsCOMPtr<nsILDAPMessageListener> mMessageListener; // results go here
     PRInt32 mMsgId;	     // opaque handle to outbound message for this op
     LDAP *mConnectionHandle; // cached from mConnection->GetConnectionHandle()
-    static struct timeval sNullTimeval;
 };
 
 #endif /* _nsLDAPOperation_h */

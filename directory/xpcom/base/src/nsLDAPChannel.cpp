@@ -32,11 +32,13 @@
  * GPL.
  */
 
+#include "nsLDAPConnection.h"
 #include "nsLDAPChannel.h"
 #include "nsString.h"
 #include "nsMimeTypes.h"
 #include "nsIPipe.h"
 #include "nsXPIDLString.h"
+#include "nsILDAPURL.h"
 
 // for NS_NewAsyncStreamListener
 //
@@ -50,8 +52,8 @@
 #include "nspr.h"
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsLDAPChannel, nsIChannel, nsIRequest,	
-			      nsIRunnable, nsILDAPMessageListener);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
+			      nsILDAPMessageListener);
 
 nsLDAPChannel::nsLDAPChannel()
 {
@@ -75,17 +77,12 @@ nsLDAPChannel::Init(nsIURI *uri)
     // create an LDAP connection
     //
     mConnection = do_CreateInstance("mozilla.network.ldapconnection", &rv);
-    if (NS_FAILED(rv)) {
-	return rv;
-    }
-
-    // initialize it with the defaults
-    // XXX - should use nsLDAPURL and get the correct default
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // set up the listener callback
     //
-    rv = mConnection->Init("memberdir.netscape.com", LDAP_PORT, NULL);
-    if (NS_FAILED(rv)) {
-	return (rv);
-    }
+    rv = mConnection->SetMessageListener(this);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
 }
@@ -512,7 +509,9 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 			 nsISupports* aCtxt)
 {
     nsresult rv;
-    nsXPIDLCString urlSpec;
+    nsCOMPtr<nsILDAPOperation> bindOperation;
+    nsXPIDLCString host;
+    PRInt32 port;
 
     // deal with the input args
     //
@@ -525,45 +524,75 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 	mLoadGroup->AddChannel(this, nsnull);
     }
 
-    // start search
+    // slurp out relevant pieces of the URL
     //
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR, "starting search\n");
-#endif
-
-    // create and initialize an LDAP operation (to be used for the bind)
-    //	
-    mOperation = do_CreateInstance("mozilla.network.ldapoperation", &rv);
-    if (NS_FAILED(rv)) {
-	return (rv);
-    }
-    rv = mOperation->SetConnection(mConnection);
-    if (NS_FAILED(rv)) {
-	return (rv);
-    }
-
-    // get the URI spec
-    //
-    rv = mURI->GetSpec(getter_Copies(urlSpec));
+    rv = mURI->GetHost(getter_Copies(host));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    rv = mURI->GetPort(&port);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (port == -1)
+	port = LDAP_PORT;
+
+    // we don't currently allow for a default host
+    //
+    if (nsCRT::strlen(host) == 0)
+	return NS_ERROR_MALFORMED_URI;
+
+    // since the LDAP SDK does all the socket management, we don't have
+    // an underlying transport channel to create an nsIInputStream to hand
+    // back to the nsIStreamListener.  So we do it ourselves:
+    //
+    if (!mReadPipeIn) {
+    
+	// get a new pipe, propagating any error upwards
+	//
+	rv = NS_NewPipe(getter_AddRefs(mReadPipeIn), 
+			getter_AddRefs(mReadPipeOut));
+	NS_ENSURE_SUCCESS(rv, rv);
+
+	// the side of the pipe used on the main UI thread cannot block
+	//
+	NS_ENSURE_SUCCESS(mReadPipeIn->SetNonBlocking(PR_TRUE), 
+			  NS_ERROR_UNEXPECTED);
+
+	// but the side of the pipe used by the worker thread can block
+	//
+	NS_ENSURE_SUCCESS(mReadPipeOut->SetNonBlocking(PR_FALSE),
+			  NS_ERROR_UNEXPECTED);
+    } 
 
     // we already know the content type, so we can fire this now
     //
     mListener->OnStartRequest(this, mResponseContext);
 
-    // XXX what about timeouts? 
-    // XXX failure is a reasonable thing; don't assert
+    // initialize it with the defaults
+    // XXXdmose - need to deal with bind name
     //
-    rv = mOperation->UrlSearch(urlSpec, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    // kick off a thread to wait for results
-    //
-    NS_ASSERTION(!mThread, "nsLDAPChannel thread already exists!");
-
-    rv = NS_NewThread(getter_AddRefs(mThread), this, 0, PR_JOINABLE_THREAD);
+    rv = mConnection->Init(host, port, NULL);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // create and initialize an LDAP operation (to be used for the bind)
+    //	
+    bindOperation = do_CreateInstance("mozilla.network.ldapoperation", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = bindOperation->Init(mConnection, this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // kick off a bind operation 
+    // XXXdmose better error handling / passthrough; deal with password
+    // 
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR, "initiating SimpleBind\n");
+#endif
+    rv = bindOperation->SimpleBind(NULL);
+    if (NS_FAILED(rv)) {
+#ifdef DEBUG
+	PR_fprintf(PR_STDERR, "bindOperation->SimpleBind failed. rv=%d\n", rv);
+#endif
+	return(rv);
+    }
 
     return NS_OK;
 }
@@ -588,111 +617,6 @@ nsLDAPChannel::AsyncWrite(nsIInputStream* fromStream,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// for nsIRunnable.  this is the actual LDAP server interaction code for 
-// AsyncRead().  it gets executed on a worker thread so we don't block 
-// the main UI thread.
-//
-NS_IMETHODIMP
-nsLDAPChannel::Run(void)
-{
-  nsresult rv;
-  nsXPIDLCString spec;
-  PRInt32 returnCode;
-  nsCOMPtr<nsILDAPMessage> myMessage;
-  char *errString; // XXX fix ownership model
-
-#ifdef DEBUG_dmose  
-  PR_fprintf(PR_STDERR, "nsLDAPChannel::Run() entered!\n");
-#endif
-
-  // XXX how does this get destroyed?
-  //
-  rv = NS_NewAsyncStreamListener(getter_AddRefs(mAsyncListener), mListener, 
-				 NS_UI_THREAD_EVENTQ);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // since the LDAP SDK does all the socket management, we don't have
-  // an underlying transport channel to create an nsIInputStream to hand
-  // back to the nsIStreamListener.  So we do it ourselves:
-  //
-  if (!mReadPipeIn) {
-    
-    // get a new pipe, propagating any error upwards
-    //
-    rv = NS_NewPipe(getter_AddRefs(mReadPipeIn), getter_AddRefs(mReadPipeOut));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // the side of the pipe used on the main UI thread cannot block
-    //
-    NS_ENSURE_SUCCESS(mReadPipeIn->SetNonBlocking(PR_TRUE), 
-		      NS_ERROR_UNEXPECTED);
-
-    // but the side of the pipe used by the worker thread can block
-    //
-    NS_ENSURE_SUCCESS(mReadPipeOut->SetNonBlocking(PR_FALSE),
-		      NS_ERROR_UNEXPECTED);
-  } else {
-    // XXX handle incorrect second call to Run
-  }
-
-  // wait for results
-  //
-#ifdef DEBUG_dmose
-  PR_fprintf(PR_STDERR, "waiting for messages\n");
-#endif
-
-  returnCode = LDAP_SUCCESS;
-  while ( returnCode != LDAP_RES_SEARCH_RESULT ) {
-
-      // XXX is 0 the right value?
-      //
-      rv = mOperation->Result(LDAP_MSG_ONE, (PRIntervalTime)0,
-			      getter_AddRefs(myMessage), &returnCode);
-
-      switch (returnCode) {
-      case -1: // something went wrong
-	  (void)mConnection->GetErrorString(&errString);
-#ifdef DEBUG
-	  PR_fprintf(PR_STDERR,"\nmyOperation->Result() [URLSearch]: %s\n",
-		     errString);
-#endif
-	  ldap_memfree(errString); 
-	  return NS_ERROR_FAILURE;
-      case 0: // nothing's been returned yet
-	  break; 	
-
-      default:
-	  this->OnLDAPMessage(myMessage, returnCode);
-	  break;
-
-      }
-      myMessage = 0;
-
-      PR_Sleep(200);
-  }
-
-  // close the pipe
-  //	
-  rv = mReadPipeOut->Close();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // all done
-  //
-  mAsyncListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
-
-#ifdef DEBUG
-    // gdb cannot handle threads exiting, so we sit around forever
-    //
-    while (1) {
-	PR_Sleep(20000);
-    }
-#endif	    
-
-  return NS_OK;
-}
-
-// XXXdmose should this function should go away?
-//
 nsresult
 nsLDAPChannel::pipeWrite(char *str)
 {
@@ -702,40 +626,119 @@ nsLDAPChannel::pipeWrite(char *str)
   rv = mReadPipeOut->Write(str, strlen(str), &bytesWritten);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mAsyncListener->OnDataAvailable(this, mResponseContext, mReadPipeIn, 
+  // XXXdmose deal more gracefully with an error here
+  //
+  rv = mListener->OnDataAvailable(this, mResponseContext, mReadPipeIn, 
 				  mReadPipeOffset, strlen(str));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mReadPipeOffset += bytesWritten;
   return NS_OK;
 }
 
-// method for nsILDAPMessageListener
-//
-// void OnLDAPMessage (in nsILDAPMessage aMessage, ); 
-//
+/**
+ * Messages received are passed back via this function.
+ *
+ * @arg aMessage  The message that was returned, NULL if none was.
+ * @arg aRetVal   the return value from ldap_result()
+ *
+ * void OnLDAPMessage (in nsILDAPMessage aMessage, in PRInt32 aRetVal
+ */
 NS_IMETHODIMP 
 nsLDAPChannel::OnLDAPMessage(nsILDAPMessage *aMessage, PRInt32 aRetVal)
 {
     switch (aRetVal) {
 
-    // a search entry has been returned
-    //
+    case LDAP_RES_BIND:
+	// a bind has completed
+	return OnLDAPBind(aMessage);
+	break;
+
     case LDAP_RES_SEARCH_ENTRY:
+
+	// a search entry has been returned
+	//
 	return OnLDAPSearchEntry(aMessage);
 	break;
 
-    // the search is finished; we're all done
-    //	
     case LDAP_RES_SEARCH_RESULT:
+
+	// the search is finished; we're all done
+	//	
 	return OnLDAPSearchResult(aMessage);
+	break;
+
+    default:
+	// XXX bogus.  but for now..
+	//
+#ifdef DEBUG	
+	PR_fprintf(PR_STDERR, "unexpected LDAP message received.\n");
+#endif
 	break;
     }
 
-    return NS_ERROR_UNEXPECTED;
+    return NS_OK;
+}
+
+nsresult
+nsLDAPChannel::OnLDAPBind(nsILDAPMessage *aMessage) 
+{
+    nsCOMPtr<nsILDAPOperation> searchOperation;
+    nsCOMPtr<nsILDAPURL> url;
+    nsXPIDLCString baseDn;
+    nsXPIDLCString filter;
+    PRInt32 scope;
+    nsresult rv;
+
+    // XXX should call ldap_parse_result() here
+
+    // create and initialize an LDAP operation (to be used for the bind)
+    //	
+    searchOperation = do_CreateInstance("mozilla.network.ldapoperation", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = searchOperation->Init(mConnection, this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // QI() the URI to an nsILDAPURL so we get can the LDAP specific portions
+    //
+    url = do_QueryInterface(mURI, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // get a base DN.  
+    // XXXdmose - is it reasonable to barf on an empty dn?
+    //
+    rv = url->GetDn(getter_Copies(baseDn));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (nsCRT::strlen(baseDn) == 0) {
+	return NS_ERROR_MALFORMED_URI;
+    }
+
+    // get the scope
+    //
+    rv = url->GetScope(&scope);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // and the filter 
+    //
+    rv = url->GetFilter(getter_Copies(filter));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // time to kick off the search.
+    //
+    // XXX what about timeouts? 
+    // XXX failure is a reasonable thing; don't assert
+    //
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR, "bind completed; starting search\n");
+#endif
+    rv = searchOperation->SearchExt(baseDn, scope, filter, 0, LDAP_NO_LIMIT);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    return NS_OK;
 }
 
 // void OnLDAPSearchResult (in nsILDAPMessage aMessage);
-//
-// XXX need to addref my message? deal with scope?
 //
 nsresult
 nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
@@ -755,25 +758,25 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
 	return NS_ERROR_FAILURE;
     }
 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR,"unbinding\n");
-#endif    
-
     // XXXdmose this is synchronous!  (and presumably could conceivably stall)
     // should check SDK code to verify, and somehow deal with this better.
     //
     mConnection = 0;
 
-#ifdef DEBUG_dmose
-    PR_fprintf(PR_STDERR,"unbound\n");
-#endif
+    // all done
+    //
+    mListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
+
+    // close the pipe
+    //
+    rv = mReadPipeOut->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
 }
 
 // void OnLDAPSearchEntry (in nsILDAPMessage aMessage);
 //
-// XXX need to addref my message? deal with scope?
 // XXXdmose most of this function should live in nsILDAPMessage::toString()
 //
 nsresult

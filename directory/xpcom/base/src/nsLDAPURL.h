@@ -31,8 +31,9 @@
  * GPL.
  */
 
-#include "ldap.h"
+#include "nsLDAP.h"
 #include "nsILDAPURL.h"
+#include "nsString.h"
 
 // cb7c67f8-0053-4072-89e9-501cbd1b35ab
 #define NS_LDAPURL_CID \
@@ -51,4 +52,5 @@ class nsLDAPURL : public nsILDAPURL
 
   protected:
     LDAPURLDesc *mDesc; 	// the URL descriptor we're wrapping
+    nsCString mSpec;		// string representation
 };

@@ -56,6 +56,10 @@ CPPSRCS		= \
 		nsLDAPURL.cpp \
 		$(NULL)
 
+CSRCS		= \
+		nsLDAPConnectionCallbacks.c \
+		$(NULL)
+
 EXTRA_DSO_LDOPTS += -lldap40 -llber40 $(MOZ_COMPONENT_LIBS) 
 
 include $(topsrcdir)/config/rules.mk

@@ -45,10 +45,14 @@
 [scriptable, uuid(973ff50f-2002-4f0c-b57d-2242156139a2)]
 interface nsILDAPMessage : nsISupports
 {
-    // initialize an operation
-    //
-    [noscript] void init(in nsILDAPOperation operation, 
-			 in ldapMsgHandle msgHandle);
+    /** 
+     * Initializes a message.
+     *
+     * @param aConnection 	The connection this message lives on.
+     * @param aMsgHandle	The native LDAPMessage to be wrapped.
+     */
+    [noscript] void init(in nsILDAPConnection aConnection,
+			 in ldapMsgHandle aMsgHandle);
 
     // wrapper for ldap_get_dn
     //
