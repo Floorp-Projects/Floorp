@@ -63,15 +63,13 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
                        nsIStyleContext* aContext,
                        nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
   nsCOMPtr<nsIStyleContext> menuStyle;
-  rv = aPresContext.ResolvePseudoStyleContextFor(aContent, 
+  nsresult rv = aPresContext.ResolvePseudoStyleContextFor(aContent, 
                                                   nsXULAtoms::dropDownMenuPseudo, 
                                                   aContext,
                                                   PR_FALSE,
                                                   getter_AddRefs(menuStyle));
-
+  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, menuStyle, aPrevInFlow);
   CreateViewForFrame(aPresContext, this, menuStyle, PR_TRUE);
   return rv;
 }
