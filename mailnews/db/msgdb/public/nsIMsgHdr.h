@@ -74,6 +74,9 @@ public:
     NS_IMETHOD OrFlags(PRUint32 flags, PRUint32 *result) = 0;
     NS_IMETHOD AndFlags(PRUint32 flags, PRUint32 *result) = 0;
 
+	// Mark message routines
+	NS_IMETHOD MarkRead(PRBool bRead) = 0;
+
     NS_IMETHOD GetMessageKey(nsMsgKey *result) = 0;
     NS_IMETHOD GetThreadId(nsMsgKey *result) = 0;
     NS_IMETHOD SetThreadId(nsMsgKey inKey) = 0;
