@@ -95,8 +95,7 @@ int main()
     CallCreateInstance(NS_TEST_SERVICE_CONTRACTID, &myITestService);
 
     /* Test CallGetService */
-    nsIShutdownListener *myShutdownListener =
-        NS_STATIC_CAST(nsIShutdownListener*, mySupportsPtr);
+    nsIShutdownListener *myShutdownListener = nsnull;
     CallGetService(kTestServiceCID, &myITestService);
     CallGetService(kTestServiceCID, myShutdownListener, &myITestService);
     CallGetService(NS_TEST_SERVICE_CONTRACTID, &myITestService);
