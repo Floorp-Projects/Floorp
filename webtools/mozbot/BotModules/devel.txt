@@ -1,7 +1,7 @@
 MODULE API DOCUMENTATION  
 ========================
 
-This file documents the mozbot 2.4 bot module API.
+This file documents the mozbot 2.5 bot module API.
 Revisions are welcome.
 
 Sample module
@@ -364,7 +364,7 @@ set to 1. This won't be a problem if your module only returns 1
 
 *** SpottedJoin($event, $channel, $who)
 
- Called when someone joins a channel.
+ Called when someone joins a channel (including the bot).
 
  Return 1 if you can't do anything (this is all the default
  implementation does).
@@ -372,7 +372,7 @@ set to 1. This won't be a problem if your module only returns 1
 
 *** SpottedPart($event, $channel, $who)
 
- Called when someone leaves a channel.
+ Called when someone leaves a channel (including the bot).
 
  Return 1 if you can't do anything (this is all the default
  implementation does).
@@ -380,7 +380,8 @@ set to 1. This won't be a problem if your module only returns 1
 
 *** SpottedKick($event, $channel, $who)
 
- Called when someone leaves a channel, um, forcibly.
+ Called when someone leaves a channel, um, forcibly (including the
+ bot).
 
  Return 1 if you can't do anything (this is all the default
  implementation does).
@@ -391,6 +392,12 @@ set to 1. This won't be a problem if your module only returns 1
  Called when someone leaves a server. You can't use say or directSay
  as no channel involved and the user has quit, anyway (obviously).
  This may change in future implementations (don't ask me how, please...).
+
+ This does not get called for the bot itself. There is no way to
+ reliably detect this (the core code itself has difficulty detecting
+ this case, and sometimes only detects it when it is not really in a
+ position to call into the modules). You may wish to use the 'unload'
+ handler or 'DESTROY' function instead.
 
  Return 1 if you can't do anything (this is all the default
  implementation does).
@@ -502,6 +509,26 @@ set to 1. This won't be a problem if your module only returns 1
  of $self->{$variable}.
 
  Always call inherited function if you cannot get the variable yourself!
+
+
+*** unload()
+
+ Called when the module is unloaded. However, this is not always
+ reliably called when the module is unloaded immediately prior to the
+ bot shutting down or branching to a different process.
+
+ In general, relying on this function is poor design. It should only
+ really be used for things like untie-ing from hashes or disconnecting
+ from databases, where the code executing is not critical, merely good
+ manners or helpful.
+
+ This method's name may change in a future version of the mozbot API. 
+ You are encouraged not to use this method. It is documented for
+ completeness only.
+
+ No special return values. Always call inherited function! (Failure to
+ do so can result in memory leaks.)
+ 
 
 
 The $event variable is a hash with the following keys:
