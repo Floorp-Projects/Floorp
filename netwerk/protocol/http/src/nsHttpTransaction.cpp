@@ -283,6 +283,7 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
         }
 
         postEvent = !mTransportStatusInProgress;
+        mTransportStatusInProgress = PR_TRUE;
     }
 
     // only post an event if there is not already an event in progress.  we
