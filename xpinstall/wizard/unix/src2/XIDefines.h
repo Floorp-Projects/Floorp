@@ -142,16 +142,6 @@ do {                                                    \
     }                                                   \
 } while (0); 
 
-#define XI_ERR_BAIL_EXCEPT(_function, _errexpected)     \
-do {                                                    \
-    err = _function;                                    \
-    if (err != OK && err != _errexpected)               \
-    {                                                   \
-        ErrorHandler(err);                              \
-        goto BAIL;                                      \
-    }                                                   \
-} while(0);
-        
 #define XI_VERIFY(_ptr)                                 \
 do {                                                    \
     if (!_ptr)                                          \
