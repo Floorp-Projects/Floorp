@@ -426,7 +426,7 @@ static void Do8Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
   } else {
     for (y = 0; y < aNumLines; y++) {
       for (int i = 0; i < aNumBytes; i++) {
-        if (aSImage[i] != aS2Image[i]) {
+        if (aSImage[i] == aS2Image[i]) {
           aDImage[i] = aSImage[i];
         }
       }
