@@ -770,17 +770,22 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
-			foundProfileCommandArg = PR_TRUE;
-            // get a platform charset
-            nsAutoString charSet;
-            rv = GetPlatformCharset(charSet);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
-
-            // convert the profile name to Unicode
+            foundProfileCommandArg = PR_TRUE;
             nsAutoString currProfileName; 
-            rv = ConvertStringToUnicode(charSet, cmdResult, currProfileName);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
+            if (nsCRT::IsAscii(cmdResult))  {
+                currProfileName.AssignWithConversion(cmdResult);
+            }
+            else {
+                // get a platform charset
+                nsAutoString charSet;
+                rv = GetPlatformCharset(charSet);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
 
+                // convert the profile name to Unicode
+                rv = ConvertStringToUnicode(charSet, cmdResult, currProfileName);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
+            }
+ 
 #ifdef DEBUG_profile
             printf("ProfileName : %s\n", (const char*)cmdResult);
 #endif /* DEBUG_profile */
@@ -833,20 +838,23 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #ifdef DEBUG_profile_verbose
             printf("profileName & profileDir are: %s\n", (const char*)cmdResult);
 #endif
-
-			foundProfileCommandArg = PR_TRUE;
-
-            // get a platform charset
-            nsAutoString charSet;
-            rv = GetPlatformCharset(charSet);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
-
-            // convert the profile name to Unicode
+            foundProfileCommandArg = PR_TRUE;
             nsAutoString currProfileName; 
-            nsCAutoString profileName(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
-            rv = ConvertStringToUnicode(charSet, profileName.get(), currProfileName);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
+ 
+            if (nsCRT::IsAscii(cmdResult))  {
+                currProfileName.AssignWithConversion(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
+            }
+            else {
+                // get a platform charset
+                nsAutoString charSet;
+                rv = GetPlatformCharset(charSet);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
 
+                // convert the profile name to Unicode
+                nsCAutoString profileName(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
+                rv = ConvertStringToUnicode(charSet, profileName.get(), currProfileName);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
+            }
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
             if (!currProfileDirString.IsEmpty()) {
