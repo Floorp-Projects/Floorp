@@ -43,6 +43,9 @@
 #include "nsISupportsPrimitives.h"
 #include "nsINetModRegEntry.h"
 #include "nsICacheService.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsPrintfCString.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
@@ -67,13 +70,8 @@
 extern PRThread *NS_SOCKET_THREAD;
 #endif
 
-static const char NETWORK_PREFS[] = "network.";
-static const char INTL_ACCEPT_LANGUAGES[] = "intl.accept_languages";
-static const char INTL_ACCEPT_CHARSET[] = "intl.charset.default";
-
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -81,10 +79,17 @@ static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
-#define UA_PREF_PREFIX "general.useragent."
-#define UA_APPNAME "Mozilla"
-#define UA_APPVERSION "5.0"
+#define UA_PREF_PREFIX          "general.useragent."
+#define UA_APPNAME              "Mozilla"
+#define UA_APPVERSION           "5.0"
 #define UA_APPSECURITY_FALLBACK "N"
+
+#define HTTP_PREF_PREFIX        "network.http."
+#define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
+#define INTL_ACCEPT_CHARSET     "intl.charset.default"
+
+#define UA_PREF(_pref) UA_PREF_PREFIX _pref
+#define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
 
 //-----------------------------------------------------------------------------
 // nsHttpHandler <public>
@@ -128,18 +133,13 @@ nsHttpHandler::~nsHttpHandler()
     nsHttp::DestroyAtomTable();
 
     if (mPrefs) {
-        mPrefs->UnregisterCallback(NETWORK_PREFS, 
-                nsHttpHandler::PrefsCallback, (void*)this);
-        mPrefs->UnregisterCallback(INTL_ACCEPT_LANGUAGES, 
-                nsHttpHandler::PrefsCallback, (void*)this);
-        mPrefs->UnregisterCallback(UA_PREF_PREFIX "override", 
-                nsHttpHandler::PrefsCallback, (void*)this);
-        mPrefs->UnregisterCallback(INTL_ACCEPT_CHARSET, 
-                nsHttpHandler::PrefsCallback, (void*)this);
-        mPrefs->UnregisterCallback(UA_PREF_PREFIX "locale", 
-                nsHttpHandler::PrefsCallback, (void*)this);
-        mPrefs->UnregisterCallback(UA_PREF_PREFIX "misc",
-                nsHttpHandler::PrefsCallback, (void *)this);
+        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefs);
+        if (pbi) {
+            pbi->RemoveObserver(HTTP_PREF_PREFIX, this);
+            pbi->RemoveObserver(UA_PREF_PREFIX, this);
+            pbi->RemoveObserver(INTL_ACCEPT_LANGUAGES, this); 
+            pbi->RemoveObserver(INTL_ACCEPT_CHARSET, this);
+        }
     }
 
     LOG(("dropping active connections...\n"));
@@ -205,28 +205,48 @@ nsHttpHandler::Init()
     if (!mConnectionLock)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mPrefs = do_GetService(kPrefServiceCID, &rv);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("unable to continue without prefs service");
-        return rv;
-    }
-
     InitUserAgentComponents();
 
-    mPrefs->RegisterCallback(NETWORK_PREFS, 
-            nsHttpHandler::PrefsCallback, (void*)this);
-    mPrefs->RegisterCallback(INTL_ACCEPT_LANGUAGES, 
-            nsHttpHandler::PrefsCallback, (void*)this);
-    mPrefs->RegisterCallback(UA_PREF_PREFIX "override", 
-            nsHttpHandler::PrefsCallback, (void*)this);
-    mPrefs->RegisterCallback(INTL_ACCEPT_CHARSET, 
-            nsHttpHandler::PrefsCallback, (void*)this);
-    mPrefs->RegisterCallback(UA_PREF_PREFIX "locale", 
-            nsHttpHandler::PrefsCallback, (void*)this);
-    mPrefs->RegisterCallback(UA_PREF_PREFIX "misc",
-            nsHttpHandler::PrefsCallback, (void *)this);
+    // get a root prefs branch
+    {
+        nsCOMPtr<nsIPrefService> prefService =
+            do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = prefService->GetBranch(nsnull, getter_AddRefs(mPrefs));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // monitor some preference changes
+    {
+        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefs, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        pbi->AddObserver(HTTP_PREF_PREFIX, this);
+        pbi->AddObserver(UA_PREF_PREFIX, this);
+        pbi->AddObserver(INTL_ACCEPT_LANGUAGES, this); 
+        pbi->AddObserver(INTL_ACCEPT_CHARSET, this);
+    }
 
     PrefsChanged();
+
+#if DEBUG
+    // dump user agent prefs
+    LOG(("> app-name = %s\n", mAppName.get()));
+    LOG(("> app-version = %s\n", mAppVersion.get()));
+    LOG(("> platform = %s\n", mPlatform.get()));
+    LOG(("> oscpu = %s\n", mOscpu.get()));
+    LOG(("> security = %s\n", mSecurity.get()));
+    LOG(("> language = %s\n", mLanguage.get()));
+    LOG(("> misc = %s\n", mMisc.get()));
+    LOG(("> vendor = %s\n", mVendor.get()));
+    LOG(("> vendor-sub = %s\n", mVendorSub.get()));
+    LOG(("> vendor-comment = %s\n", mVendorComment.get()));
+    LOG(("> product = %s\n", mProduct.get()));
+    LOG(("> product-sub = %s\n", mProductSub.get()));
+    LOG(("> product-comment = %s\n", mProductComment.get()));
+    LOG(("> user-agent = %s\n", UserAgent()));
+#endif
 
     mSessionStartTime = NowInSeconds();
 
@@ -339,11 +359,7 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
 
     if (!checkedPref) {
         // XXX should register a prefs changed callback for this
-        nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        prefs->GetBoolPref("browser.cache.enable", &useCache);
-
+        mPrefs->GetBoolPref("browser.cache.enable", &useCache);
         checkedPref = PR_TRUE;
     }
 
@@ -637,8 +653,10 @@ nsHttpHandler::OnExamineResponse(nsIHttpChannel *chan)
 const char *
 nsHttpHandler::UserAgent()
 {
-    if (mUserAgentOverride)
+    if (mUserAgentOverride) {
+        LOG(("using general.useragent.override : %s\n", mUserAgentOverride.get()));
         return mUserAgentOverride.get();
+    }
 
     if (mUserAgentIsDirty) {
         BuildUserAgent();
@@ -935,50 +953,10 @@ nsHttpHandler::BuildUserAgent()
 void
 nsHttpHandler::InitUserAgentComponents()
 {
-    // User-specified override
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "override",
-        getter_Copies(mUserAgentOverride));
-
-    // Gather vendor values.
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "vendor",
-        getter_Copies(mVendor));
-
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "vendorSub",
-        getter_Copies(mVendorSub));
-
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "vendorComment",
-        getter_Copies(mVendorComment));
-
-    // Gather product values.
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "product",
-        getter_Copies(mProduct));
-
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "productSub",
-        getter_Copies(mProductSub));
-
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "productComment",
-        getter_Copies(mProductComment));
-
-    // Gather misc value.
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "misc",
-        getter_Copies(mMisc));
 
     // Gather Application name and Version.
     mAppName.Adopt(nsCRT::strdup(UA_APPNAME));
     mAppVersion.Adopt(nsCRT::strdup(UA_APPVERSION));
-
-    // Get Security level supported
-    mPrefs->CopyCharPref(UA_PREF_PREFIX "security",
-        getter_Copies(mSecurity));
-    if (!mSecurity)
-        mSecurity.Adopt(nsCRT::strdup(UA_APPSECURITY_FALLBACK));
-
-    // Gather locale.
-    nsXPIDLString uval;
-    mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
-        getter_Copies(uval));
-    if (uval)
-        mLanguage.Adopt(ToNewUTF8String(nsDependentString(uval)));
 
       // Gather platform.
     mPlatform.Adopt(nsCRT::strdup(
@@ -1071,66 +1049,153 @@ nsHttpHandler::InitUserAgentComponents()
 void
 nsHttpHandler::PrefsChanged(const char *pref)
 {
-    PRBool bChangedAll = pref ? PR_FALSE : PR_TRUE;
-
     if (!mPrefs) {
-        NS_NOTREACHED("No preference service available!");
+        NS_ERROR("not initialized");
         return;
     }
 
     nsresult rv = NS_OK;
     PRInt32 val;
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive.timeout") == 0) {
-        rv = mPrefs->GetIntPref("network.http.keep-alive.timeout", &val);
+    LOG(("nsHttpHandler::PrefsChanged [pref=%x]\n", pref));
+
+#define PREF_CHANGED(p) ((pref == nsnull) || !PL_strcmp(pref, p))
+
+    //
+    // UA components
+    //
+
+    // Gather vendor values.
+    if (PREF_CHANGED(UA_PREF("vendor"))) {
+        mPrefs->GetCharPref(UA_PREF("vendor"),
+            getter_Copies(mVendor));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+    if (PREF_CHANGED(UA_PREF("vendorSub"))) {
+        mPrefs->GetCharPref(UA_PREF("vendorSub"),
+            getter_Copies(mVendorSub));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+    if (PREF_CHANGED(UA_PREF("vendorComment"))) {
+        mPrefs->GetCharPref(UA_PREF("vendorComment"),
+            getter_Copies(mVendorComment));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
+    // Gather product values.
+    if (PREF_CHANGED(UA_PREF("product"))) {
+        mPrefs->GetCharPref(UA_PREF_PREFIX "product",
+            getter_Copies(mProduct));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+    if (PREF_CHANGED(UA_PREF("productSub"))) {
+        mPrefs->GetCharPref(UA_PREF("productSub"),
+            getter_Copies(mProductSub));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+    if (PREF_CHANGED(UA_PREF("productComment"))) {
+        mPrefs->GetCharPref(UA_PREF("productComment"),
+            getter_Copies(mProductComment));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
+    // Gather misc value.
+    if (PREF_CHANGED(UA_PREF("misc"))) {
+        mPrefs->GetCharPref(UA_PREF("misc"),
+            getter_Copies(mMisc));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
+    // Get Security level supported
+    if (PREF_CHANGED(UA_PREF("security"))) {
+        mPrefs->GetCharPref(UA_PREF("security"), getter_Copies(mSecurity));
+        if (!mSecurity)
+            mSecurity.Adopt(nsCRT::strdup(UA_APPSECURITY_FALLBACK));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
+    // Gather locale.
+    if (PREF_CHANGED(UA_PREF("locale"))) {
+        nsCOMPtr<nsIPrefLocalizedString> pls;
+        mPrefs->GetComplexValue(UA_PREF("locale"),
+                                NS_GET_IID(nsIPrefLocalizedString),
+                                getter_AddRefs(pls));
+        if (pls) {
+            nsXPIDLString uval;
+            pls->ToString(getter_Copies(uval));
+            if (uval)
+                mLanguage.Adopt(ToNewUTF8String(nsDependentString(uval)));
+        } 
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
+    // general.useragent.override
+    if (PREF_CHANGED(UA_PREF("override"))) {
+        mPrefs->GetCharPref(UA_PREF("override"),
+                            getter_Copies(mUserAgentOverride));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
+    // general.useragent.misc
+    if (PREF_CHANGED(UA_PREF("misc"))) {
+        mPrefs->GetCharPref(UA_PREF("misc"), getter_Copies(mMisc));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
+    //
+    // HTTP options
+    //
+
+    if (PREF_CHANGED(HTTP_PREF("keep-alive.timeout"))) {
+        rv = mPrefs->GetIntPref(HTTP_PREF("keep-alive.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mIdleTimeout = (PRUint16) CLAMP(val, 1, 0xffff);
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.request.max-attempts") == 0) {
-        rv = mPrefs->GetIntPref("network.http.request.max-attempts", &val);
+    if (PREF_CHANGED(HTTP_PREF("request.max-attempts"))) {
+        rv = mPrefs->GetIntPref(HTTP_PREF("request.max-attempts"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxRequestAttempts = (PRUint16) CLAMP(val, 1, 0xffff);
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.request.max-start-delay") == 0) {
-        rv = mPrefs->GetIntPref("network.http.request.max-start-delay", &val);
+    if (PREF_CHANGED(HTTP_PREF("request.max-start-delay"))) {
+        rv = mPrefs->GetIntPref(HTTP_PREF("request.max-start-delay"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxRequestDelay = (PRUint16) CLAMP(val, 0, 0xffff);
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.max-connections") == 0) {
-        rv = mPrefs->GetIntPref("network.http.max-connections", &val);
+    if (PREF_CHANGED(HTTP_PREF("max-connections"))) {
+        rv = mPrefs->GetIntPref(HTTP_PREF("max-connections"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxConnections = (PRUint16) CLAMP(val, 1, 0xffff);
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.max-connections-per-server") == 0) {
-        rv = mPrefs->GetIntPref("network.http.max-connections-per-server", &val);
+    if (PREF_CHANGED(HTTP_PREF("max-connections-per-server"))) {
+        rv = mPrefs->GetIntPref(HTTP_PREF("max-connections-per-server"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.max-persistent-connections-per-server") == 0) {
-        rv = mPrefs->GetIntPref("network.http.max-persistent-connections-per-server", &val);
+    if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-server"))) {
+        rv = mPrefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-server"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxPersistentConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.sendRefererHeader") == 0) {
-        rv = mPrefs->GetIntPref("network.http.sendRefererHeader", (PRInt32 *) &val);
+    if (PREF_CHANGED(HTTP_PREF("sendRefererHeader"))) {
+        rv = mPrefs->GetIntPref(HTTP_PREF("sendRefererHeader"), (PRInt32 *) &val);
         if (NS_SUCCEEDED(rv))
             mReferrerLevel = (PRUint8) CLAMP(val, 0, 0xff);
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.version") == 0) {
+    if (PREF_CHANGED(HTTP_PREF("version"))) {
         nsXPIDLCString httpVersion;
-        mPrefs->CopyCharPref("network.http.version", getter_Copies(httpVersion));
+        mPrefs->GetCharPref(HTTP_PREF("version"), getter_Copies(httpVersion));
 	
         if (httpVersion) {
-            if (PL_strcmp(httpVersion, "1.1") == 0)
+            if (!PL_strcmp(httpVersion, "1.1"))
                 mHttpVersion = NS_HTTP_VERSION_1_1;
-            else if (PL_strcmp(httpVersion, "0.9") == 0)
+            else if (!PL_strcmp(httpVersion, "0.9"))
                 mHttpVersion = NS_HTTP_VERSION_0_9;
             else
                 mHttpVersion = NS_HTTP_VERSION_1_0;
@@ -1148,8 +1213,8 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     PRBool cVar = PR_FALSE;
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.keep-alive") == 0) {
-        rv = mPrefs->GetBoolPref("network.http.keep-alive", &cVar);
+    if (PREF_CHANGED(HTTP_PREF("keep-alive"))) {
+        rv = mPrefs->GetBoolPref(HTTP_PREF("keep-alive"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
                 mCapabilities |= NS_HTTP_ALLOW_KEEPALIVE;
@@ -1158,8 +1223,8 @@ nsHttpHandler::PrefsChanged(const char *pref)
         }
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.proxy.keep-alive") == 0) {
-        rv = mPrefs->GetBoolPref("network.http.proxy.keep-alive", &cVar);
+    if (PREF_CHANGED(HTTP_PREF("proxy.keep-alive"))) {
+        rv = mPrefs->GetBoolPref(HTTP_PREF("proxy.keep-alive"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
                 mProxyCapabilities |= NS_HTTP_ALLOW_KEEPALIVE;
@@ -1168,8 +1233,8 @@ nsHttpHandler::PrefsChanged(const char *pref)
         }
     }
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.pipelining") == 0) {
-        rv = mPrefs->GetBoolPref("network.http.pipelining", &cVar);
+    if (PREF_CHANGED(HTTP_PREF("pipelining"))) {
+        rv = mPrefs->GetBoolPref(HTTP_PREF("pipelining"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
                 mCapabilities |=  NS_HTTP_ALLOW_PIPELINING;
@@ -1179,15 +1244,12 @@ nsHttpHandler::PrefsChanged(const char *pref)
     }
 
     /*
-    mPipelineFirstRequest = PR_FALSE;
-    rv = mPrefs->GetBoolPref("network.http.pipelining.firstrequest", &mPipelineFirstRequest);
-
     mPipelineMaxRequests  = DEFAULT_PIPELINE_MAX_REQUESTS;
     rv = mPrefs->GetIntPref("network.http.pipelining.maxrequests", &mPipelineMaxRequests );
     */
 
-    if (bChangedAll || PL_strcmp(pref, "network.http.proxy.pipelining") == 0) {
-        rv = mPrefs->GetBoolPref("network.http.proxy.pipelining", &cVar);
+    if (PREF_CHANGED(HTTP_PREF("proxy.pipelining"))) {
+        rv = mPrefs->GetBoolPref(HTTP_PREF("proxy.pipelining"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
                 mProxyCapabilities |=  NS_HTTP_ALLOW_PIPELINING;
@@ -1197,14 +1259,6 @@ nsHttpHandler::PrefsChanged(const char *pref)
     }
 
     /*
-    if (bChangedAll || PL_strcmp(pref, "network.http.proxy.ssl.connect") == 0) {
-        rv = mPrefs->GetBoolPref("network.http.proxy.ssl.connect", &cVar);
-        if (NS_SUCCEEDED(rv))
-            mProxySSLConnectAllowed = (cVar != 0);
-    }
-    */
-
-    /*
     if (bChangedAll || PL_strcmp(pref, "network.http.connect.timeout") == 0)
         mPrefs->GetIntPref("network.http.connect.timeout", &mConnectTimeout);
 
@@ -1212,83 +1266,53 @@ nsHttpHandler::PrefsChanged(const char *pref)
         mPrefs->GetIntPref("network.http.request.timeout", &mRequestTimeout);
     */
 
-    if (bChangedAll || PL_strcmp(pref, INTL_ACCEPT_LANGUAGES) == 0) {
-        nsXPIDLString acceptLanguages;
-        rv = mPrefs->GetLocalizedUnicharPref(INTL_ACCEPT_LANGUAGES, 
-                getter_Copies(acceptLanguages));
-        if (NS_SUCCEEDED(rv))
-            SetAcceptLanguages(NS_ConvertUCS2toUTF8(acceptLanguages).get());
-    }
-
-    if (bChangedAll || PL_strcmp(pref, INTL_ACCEPT_CHARSET) == 0) {
-        nsXPIDLString acceptCharset;
-        rv = mPrefs->GetLocalizedUnicharPref(INTL_ACCEPT_CHARSET, 
-                getter_Copies(acceptCharset));
-        if (NS_SUCCEEDED(rv))
-            SetAcceptCharsets(NS_ConvertUCS2toUTF8(acceptCharset).get());
-    }
-
-    // general.useragent.override
-    if (bChangedAll || PL_strcmp(pref, UA_PREF_PREFIX "override") == 0) {
-        char *temp = 0;
-        rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "override", &temp);
-        if (NS_SUCCEEDED(rv)) {
-            mUserAgentOverride.Adopt(temp);
-            temp = 0;
-            mUserAgentIsDirty = PR_TRUE;
-        }
-        NS_ASSERTION(!temp, "trouble: |CopyCharPref| failed, but returned a string anyway!");
-    }
-
-    if (bChangedAll || PL_strcmp(pref, UA_PREF_PREFIX "locale") == 0) {
-        // 55156: re-Gather locale.
-        nsXPIDLString uval;
-        rv = mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
-                                             getter_Copies(uval));
-        if (NS_SUCCEEDED(rv)) {
-            mLanguage.Adopt(ToNewUTF8String(nsDependentString(uval)));
-            mUserAgentIsDirty = PR_TRUE;
-        }
-    }
-
-    // general.useragent.misc
-    if (bChangedAll || PL_strcmp(pref, UA_PREF_PREFIX "misc") == 0) {
-        char* temp;
-        rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "misc",
-                                  &temp);
-        if (NS_SUCCEEDED(rv)) {
-            mMisc.Adopt(temp);
-            temp = 0;
-            mUserAgentIsDirty = PR_TRUE;
-        }
-        NS_ASSERTION(!temp, "trouble: |CopyCharPref| failed, but returned a string anyway!");
-    }
-
-    if (bChangedAll || PL_strcmp(pref, "network.http.accept.default") == 0) {
+    if (PREF_CHANGED(HTTP_PREF("accept.default"))) {
         nsXPIDLCString accept;
-        rv = mPrefs->CopyCharPref("network.http.accept.default",
+        rv = mPrefs->GetCharPref(HTTP_PREF("accept.default"),
                                   getter_Copies(accept));
         if (NS_SUCCEEDED(rv))
             SetAccept(accept);
     }
     
-    if (bChangedAll || PL_strcmp(pref, "network.http.accept-encoding") == 0) {
+    if (PREF_CHANGED(HTTP_PREF("accept-encoding"))) {
         nsXPIDLCString acceptEncodings;
-        rv = mPrefs->CopyCharPref("network.http.accept-encoding",
+        rv = mPrefs->GetCharPref(HTTP_PREF("accept-encoding"),
                                   getter_Copies(acceptEncodings));
         if (NS_SUCCEEDED(rv))
             SetAcceptEncodings(acceptEncodings);
     }
-}
 
-PRInt32 PR_CALLBACK
-nsHttpHandler::PrefsCallback(const char *pref, void *self)
-{
-    nsHttpHandler *handler = (nsHttpHandler *) self;
-    NS_ASSERTION(handler, "bad instance data");
-    if (handler)
-        handler->PrefsChanged(pref);
-    return 0;
+    //
+    // INTL options
+    //
+
+    if (PREF_CHANGED(INTL_ACCEPT_LANGUAGES)) {
+        nsCOMPtr<nsIPrefLocalizedString> pls;
+        mPrefs->GetComplexValue(INTL_ACCEPT_LANGUAGES,
+                                NS_GET_IID(nsIPrefLocalizedString),
+                                getter_AddRefs(pls));
+        if (pls) {
+            nsXPIDLString uval;
+            pls->ToString(getter_Copies(uval));
+            if (uval)
+                SetAcceptLanguages(NS_ConvertUCS2toUTF8(uval).get());
+        } 
+    }
+
+    if (PREF_CHANGED(INTL_ACCEPT_CHARSET)) {
+        nsCOMPtr<nsIPrefLocalizedString> pls;
+        mPrefs->GetComplexValue(INTL_ACCEPT_CHARSET,
+                                NS_GET_IID(nsIPrefLocalizedString),
+                                getter_AddRefs(pls));
+        if (pls) {
+            nsXPIDLString uval;
+            pls->ToString(getter_Copies(uval));
+            if (uval)
+                SetAcceptCharsets(NS_ConvertUCS2toUTF8(uval).get());
+        } 
+    }
+
+#undef PREF_CHANGED
 }
 
 /**
@@ -1791,6 +1815,8 @@ nsHttpHandler::Observe(nsISupports *subject,
         // depend on this value.
         mSessionStartTime = NowInSeconds();
     }
+    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("nsPref:changed").get()))
+        PrefsChanged(NS_ConvertUCS2toUTF8(data).get());
     return NS_OK;
 }
 
