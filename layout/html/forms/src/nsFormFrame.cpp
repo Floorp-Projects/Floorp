@@ -74,12 +74,9 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 #ifdef SingleSignon
 #define FORM_TYPE_TEXT          1
 #define FORM_TYPE_PASSWORD      7
-#include "nsINetService.h"
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #endif
 
-#ifdef ClientWallet
+#if defined(ClientWallet) || defined(SingleSignon)
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -847,9 +844,9 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 	}
 
 #ifdef SingleSignon
-  nsINetService *service;
-  nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
+  nsIWalletService *service;
+  nsresult res = nsServiceManager::GetService(kWalletServiceCID,
+                                          kIWalletServiceIID,
                                           (nsISupports **)&service);
   if ((NS_OK == res) && (nsnull != service)) {
 	  res = service->SI_RememberSignonData
