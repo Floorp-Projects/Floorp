@@ -131,22 +131,51 @@ nsPresContext::GetFontPreferences()
     }
     if (mLangGroup) {
       nsAutoString pref("font.size.");
-      pref.Append(mDefaultFont.name);
-      pref.Append('.');
       const PRUnichar* langGroup = nsnull;
       mLangGroup->GetUnicode(&langGroup);
       pref.Append(langGroup);
       char name[128];
       pref.ToCString(name, sizeof(name));
-      PRInt32 size = 12;
-      mPrefs->GetIntPref(name, &size);
-      mDefaultFont.size = NSIntPointsToTwips(size);
-      pref.SetString("font.size.monospace.");
-      pref.Append(langGroup);
-      pref.ToCString(name, sizeof(name));
-      size = 10;
-      mPrefs->GetIntPref(name, &size);
-      mDefaultFixedFont.size = NSIntPointsToTwips(size);
+      mPrefs->CopyCharPref(name, &value);
+      char* defaultSize = "16px";
+      if (!value) {
+        value = defaultSize;
+      }
+      char* p = value;
+      PRInt32 size = 0;
+      while ((*p >= '0') && (*p <= '9')) {
+        size = ((size * 10) + (*p - '0'));
+        p++;
+      }
+      if (!size) {
+        while (*p) {
+          p++;
+        }
+      }
+      nscoord sz;
+      if (!PL_strcmp(p, "px")) {
+        float p2t;
+        GetScaledPixelsToTwips(&p2t);
+        sz = NSFloatPixelsToTwips((float) size, p2t);
+        mDefaultFont.size = sz;
+        mDefaultFixedFont.size = sz;
+      }
+      else if (!PL_strcmp(p, "pt")) {
+        sz = NSIntPointsToTwips(size);
+        mDefaultFont.size = sz;
+        mDefaultFixedFont.size = sz;
+      }
+      else {
+        float p2t;
+        GetScaledPixelsToTwips(&p2t);
+        sz = NSFloatPixelsToTwips(16.0, p2t);
+        mDefaultFont.size = sz;
+        mDefaultFixedFont.size = sz;
+      }
+      if (value != defaultSize) {
+        nsAllocator::Free(value);
+        value = nsnull;
+      }
     }
   }
 }
