@@ -69,10 +69,11 @@
 	<menu />
 </popup>
 
+<html:div style="width: 100px; height: 100px;" flex="1">
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
        ondblclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"
-       flex="1">
+       style="width:100%;height:100%">
 
   <template>
     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -124,5 +125,6 @@
     </treerow>
   </treehead>
 </tree>
+</html:div>
 
 </window>
