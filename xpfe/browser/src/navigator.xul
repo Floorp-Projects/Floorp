@@ -493,7 +493,7 @@
     <toolbar id="mainbar">
  	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
 
-      <html:td width="160px">
+      <html:td valign="middle" width="155">
 
 		  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled"/>			
@@ -515,18 +515,17 @@
 	      </titledbutton>
 	  </html:td>
 	  
-	  <html:td style="vertical-align:center">
-		  <html:input id="urlbar" html:style="vertical-align: center; width: 100%" html:type="text" 
-			  html:onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
+	  <html:td valign="middle">
+			<html:input id="urlbar" style="width: 100%" type="text" 
+			  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
 	  </html:td>
 	  
-	  <html:td width="80px">
+	  <html:td width="80" valign="middle">
 	  <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
 				onclick="window.frames[0].print()">
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
-	      	  
-          <titledbutton id="Throbber" style="list-style-image:url(resource:/res/throbber/anims00.gif);" onClick="window.frames[0].home()">
+          <titledbutton id="Throbber" style="list-style-image:url(resource:/res/throbber/anims00.gif);" onclick="window.frames[0].home()">
              <observes element="Browser:Throbber" attribute="busy"/>
           </titledbutton>
       </html:td>
@@ -549,36 +548,6 @@
      <html:iframe html:name="content" html:src="BrowserInitPage.html" html:width="100%" html:height="440px"></html:iframe>
   </html:div>
 
-  <html:div id="footer_bar">
-  	<toolbox>
-  	<toolbar id="taskbar">
-  	 <html:table class="statusbar" style="table-spacing:0;table-padding:0;width:99%;border:1px;">
-        <html:tr>
-        <html:td>
-  	 	<titledbutton align="left" src="resource:/res/toolbar/TB_popup.gif" value="Web" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Mail" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Chat" />
-  	 	</html:td>
-  	 	<html:td>
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="DayPlanner" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Shopping" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="My Desk" />
-  	 	</html:td>
-  	 	<html:td>
-  	 	</html:td>
-  	 	<html:td align="right">
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Open Windows" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniNav.gif" value="" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniMail.gif" value="" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniAddr.gif" value="" />
-  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniComp.gif" value="" />
-  	 	</html:td>
-  		</html:tr>
-	</html:table>
- </toolbar>
-  	</toolbox>
-  	
-  </html:div>
   
 <html:div id="footer">
     <html:script>
@@ -744,6 +713,38 @@
     
     </html:center>
   </html:div>
+
+  <html:div id="footer_bar">
+  	<toolbox>
+  	<toolbar id="taskbar">
+  	 <html:table class="statusbar" style="table-spacing:0;table-padding:0;width:99%;border:1px;">
+        <html:tr>
+        <html:td>
+  	 	<titledbutton align="left" src="resource:/res/toolbar/TB_popup.gif" value="Web" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Mail" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Chat" />
+  	 	</html:td>
+  	 	<html:td>
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="DayPlanner" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Shopping" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="My Desk" />
+  	 	</html:td>
+  	 	<html:td>
+  	 	</html:td>
+  	 	<html:td align="right">
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Open Windows" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniNav.gif" value="" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniMail.gif" value="" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniAddr.gif" value="" />
+  	 	<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniComp.gif" value="" />
+  	 	</html:td>
+  		</html:tr>
+	</html:table>
+ </toolbar>
+  	</toolbox>
+  	
+  </html:div>
+
 
 
 </window>
