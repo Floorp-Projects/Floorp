@@ -27,7 +27,7 @@
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
 
- * $Id: Names.h,v 1.9 2001/05/12 12:00:17 peterv%netscape.com Exp $
+ * $Id: Names.h,v 1.10 2001/06/26 11:58:51 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_NAMES_H
@@ -59,6 +59,7 @@ extern const String FOR_EACH;
 extern const String IF;
 extern const String IMPORT;
 extern const String INCLUDE;
+extern const String KEY;
 extern const String MESSAGE;
 extern const String NUMBER;
 extern const String OTHERWISE;
@@ -103,6 +104,7 @@ extern const String PRIORITY_ATTR;
 extern const String SELECT_ATTR;
 extern const String STANDALONE;
 extern const String TEST_ATTR;
+extern const String USE_ATTR;
 extern const String USE_ATTRIBUTE_SETS_ATTR;
 extern const String VALUE_ATTR;
 extern const String VERSION_ATTR;

@@ -20,12 +20,12 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Map.cpp,v 1.2 2000/06/11 12:21:13 Peter.VanderBeken%pandora.be Exp $
+ * $Id: Map.cpp,v 1.3 2001/06/26 11:58:46 sicking%bigfoot.com Exp $
  */
 
 /*
  * A Hashtable for TxObjects
- * @version $Revision: 1.2 $ $Date: 2000/06/11 12:21:13 $
+ * @version $Revision: 1.3 $ $Date: 2001/06/26 11:58:46 $
  */
 
 
@@ -62,7 +62,7 @@ void Map::initialize(Int32 size) {
 
     //-- by default the Map will not delete it's
     //-- object references
-    doObjectDeletion = MB_FALSE;
+    mOwnership = eOwnsNone;
 
     //-- create a new array of bucket pointers
     elements = new BucketItem*[size];
@@ -85,20 +85,10 @@ Map::~Map() {
 
 
 /**
- * Removes all elements from the Map. If the object deletion flag
- * has been set to true (by a call to setObjectDeletion) objects
- * will also be deleted as they are removed from the map
+ * Removes all elements from the Map. Deletes objects according
+ * to the mOwnership attribute
 **/
 void Map::clear() {
-    clear(doObjectDeletion);
-} //-- clear
-
-/**
- * Removes all elements from the Map
- * @param deleteObjects a flag indicating whether or not to delete the
- * objects and keys currently in the map
-**/
-void Map::clear(MBool deleteObjects) {
 
     for (int i = 0; i < numberOfBuckets; i++) {
 
@@ -106,15 +96,10 @@ void Map::clear(MBool deleteObjects) {
         while (bktItem) {
             BucketItem* tItem = bktItem;
             bktItem = bktItem->next;
-            //-- repoint item to 0 to prevent deletion
-            if ( ! deleteObjects ) {
-                tItem->item = 0;
-                tItem->key  = 0;
-            }
-            else {
+            if (mOwnership & eOwnsItems)
                 delete tItem->item;
+            if (mOwnership & eOwnsKeys)
                 delete tItem->key;
-            }
             //--delete tItem;
             delete tItem;
         }
@@ -239,13 +224,11 @@ TxObject* Map::remove(TxObject* key) {
 } //-- remove
 
 /**
- * Sets the object deletion flag. If set to true, objects, including
- * keys, in the Map will be deleted upon calling the clear() method, or
- * upon destruction. By default this is false.
+ * Sets the ownership flag.
 **/
-void  Map::setObjectDeletion(MBool deleteObjects) {
-    doObjectDeletion = deleteObjects;
-} //-- setObjectDeletion
+void  Map::setOwnership(txMapOwnership aOwnership) {
+    mOwnership = aOwnership;
+} //-- setOwnership
 
 /**
  * Returns the number of key-object pairs in the Map

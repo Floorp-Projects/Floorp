@@ -30,7 +30,7 @@
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.31 $ $Date: 2001/06/20 07:07:09 $
+ * @version $Revision: 1.32 $ $Date: 2001/06/26 11:58:51 $
 **/
 
 #include "ProcessorState.h"
@@ -682,6 +682,32 @@ Document* ProcessorState::getLoadedDocument(String& url) {
     return (Document*) loadedDocuments.get(docUrl);
 }
 
+/**
+ * Adds the supplied xsl:key to the set of keys
+**/
+MBool ProcessorState::addKey(Element* keyElem) {
+    String keyName = keyElem->getAttribute(NAME_ATTR);
+    if(!XMLUtils::isValidQName(keyName))
+        return MB_FALSE;
+    txXSLKey* xslKey = (txXSLKey*)xslKeys.get(keyName);
+    if (!xslKey) {
+        xslKey = new txXSLKey(this);
+        if (!xslKey)
+            return MB_FALSE;
+        xslKeys.put(keyName, xslKey);
+    }
+
+    return xslKey->addKey(keyElem->getAttribute(MATCH_ATTR), keyElem->getAttribute(USE_ATTR));
+}
+
+/**
+ * Adds the supplied xsl:key to the set of keys
+ * returns NULL if no such key exists
+**/
+txXSLKey* ProcessorState::getKey(String& keyName) {
+    return (txXSLKey*)xslKeys.get(keyName);
+}
+
   //--------------------------------------------------/
  //- Virtual Methods from derived from ContextState -/
 //--------------------------------------------------/
@@ -799,8 +825,7 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
        return new DocumentFunctionCall(this, xslDocument);
    }
    else if (KEY_FN.isEqual(name)) {
-       err = "function not yet implemented: ";
-       err.append(name);
+       return new txKeyFunctionCall(this);
    }
    else if (FORMAT_NUMBER_FN.isEqual(name)) {
        err = "function not yet implemented: ";
@@ -998,6 +1023,9 @@ void ProcessorState::initialize() {
 	        } //-- end for each att
 	    } //-- end if atts are not null
 	}
+    
+    //-- make sure all keys are deleted
+    xslKeys.setObjectDeletion(MB_TRUE);
     
     //-- Make sure all loaded documents get deleted
     loadedDocuments.setObjectDeletion(MB_TRUE);

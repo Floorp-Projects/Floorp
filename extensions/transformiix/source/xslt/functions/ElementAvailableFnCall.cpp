@@ -81,6 +81,7 @@ ExprResult* ElementAvailableFunctionCall::evaluate(Node* context, ContextState* 
                          localName.isEqual(IF) ||
                          localName.isEqual(IMPORT) ||
                          localName.isEqual(INCLUDE) ||
+                         localName.isEqual(KEY) ||
                          localName.isEqual(MESSAGE) ||
                          localName.isEqual(NUMBER) ||
                          localName.isEqual(OTHERWISE) ||

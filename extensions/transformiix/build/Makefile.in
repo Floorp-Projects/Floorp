@@ -121,6 +121,7 @@ LOBJS =../source/base/ArrayList.o \
   ../source/xslt/functions/ElementAvailableFnCall.o \
   ../source/xslt/functions/FunctionAvailableFnCall.o \
   ../source/xslt/functions/GenerateIdFunctionCall.o \
+  ../source/xslt/functions/txKeyFunctionCall.o \
   ../source/xslt/functions/SystemPropertyFunctionCall.o \
   ../source/xslt/util/NodeSorter.o \
   ../source/xslt/util/NodeStack.o \

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.14 2001/06/20 07:07:11 sicking%bigfoot.com Exp $
+ * $Id: ProcessorState.h,v 1.15 2001/06/26 11:58:52 sicking%bigfoot.com Exp $
  */
 
 
@@ -40,10 +40,12 @@
 #include "StringList.h"
 #include "OutputFormat.h"
 
+class txXSLKey;
+
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.14 $ $Date: 2001/06/20 07:07:11 $
+ * @version $Revision: 1.15 $ $Date: 2001/06/26 11:58:52 $
 **/
 class ProcessorState : public ContextState {
 
@@ -252,6 +254,17 @@ public:
     **/
     Document* getLoadedDocument(String& url);
 
+    /**
+     * Adds the supplied xsl:key to the set of keys
+    **/
+    MBool addKey(Element* xslKey);
+
+    /**
+     * Returns the key with the supplied name
+     * returns NULL if no such key exists
+    **/
+    txXSLKey* getKey(String& keyName);
+
     //-------------------------------------/
     //- Virtual Methods from ContextState -/
     //-------------------------------------/
@@ -399,6 +412,11 @@ private:
      * the set of loaded documents
     **/
     NamedMap       loadedDocuments;
+    
+    /**
+     * The set of all available keys
+    **/
+    NamedMap       xslKeys;
 
 
     XSLTAction*    currentAction;

@@ -32,6 +32,7 @@ CPPSRCS=					\
 	ElementAvailableFnCall.cpp		\
 	FunctionAvailableFnCall.cpp		\
 	GenerateIDFunctionCall.cpp		\
+	txKeyFunctionCall.cpp			\
 	SystemPropertyFunctionCall.cpp	\
 	$(NULL)
 
@@ -41,6 +42,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\ElementAvailableFnCall.obj		\
 	.\$(OBJDIR)\FunctionAvailableFnCall.obj		\
 	.\$(OBJDIR)\GenerateIDFunctionCall.obj		\
+	.\$(OBJDIR)\txKeyFunctionCall.obj		\
 	.\$(OBJDIR)\SystemPropertyFunctionCall.obj	\
 	$(NULL)
 
