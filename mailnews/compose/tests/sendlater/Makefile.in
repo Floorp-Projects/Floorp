@@ -35,6 +35,7 @@ LIBS		= \
 		-lraptorgfx \
 		-lxpcom \
 		-lmozjs \
+		-lmsgbaseutil \
 		$(NSPR_LIBS) \
 		$(NULL)
 
