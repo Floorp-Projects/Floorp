@@ -42,6 +42,7 @@
 #include "prenv.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
@@ -232,16 +233,17 @@ nsResProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // URLs, so there is no "outer" given to CreateInstance 
 
     nsIURI* url;
+    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
+                                            NS_GET_IID(nsIURI),
+                                            (void**)&url);
+    if (NS_FAILED(rv)) return rv;
+
     if (aBaseURI) {
-        rv = aBaseURI->Clone(&url);
+        nsXPIDLCString aResolvedURI;
+        rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
         if (NS_FAILED(rv)) return rv;
-        rv = url->SetRelativePath(aSpec);
-    }
-    else {
-        rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                                NS_GET_IID(nsIURI),
-                                                (void**)&url);
-        if (NS_FAILED(rv)) return rv;
+        rv = url->SetSpec(aResolvedURI);
+    } else {
         rv = url->SetSpec((char*)aSpec);
     }
 

@@ -34,6 +34,7 @@
 #include "nsISupportsArray.h"
 #include "nsFileSpec.h"
 #include "nsAutoLock.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kNoAuthUrlParserCID, NS_NOAUTHORITYURLPARSER_CID);
@@ -105,26 +106,27 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
     nsCOMPtr<nsIURI> url;
     nsCOMPtr<nsIURLParser> urlparser;
-    if (aBaseURI) {
-        rv = aBaseURI->Clone(getter_AddRefs(url));
-        if (NS_FAILED(rv)) return rv;
-        rv = url->SetRelativePath(aSpec);
-    }
-    else {
-        rv = nsComponentManager::CreateInstance(kNoAuthUrlParserCID, 
+
+    rv = nsComponentManager::CreateInstance(kNoAuthUrlParserCID, 
                                     nsnull, NS_GET_IID(nsIURLParser),
                                     getter_AddRefs(urlparser));
-        if (NS_FAILED(rv)) return rv;
-        rv = nsComponentManager::CreateInstance(kStandardURLCID, 
-                                    nsnull, NS_GET_IID(nsIURI),
-                                    getter_AddRefs(url));
-        if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
+    rv = nsComponentManager::CreateInstance(kStandardURLCID, 
+                             nsnull, NS_GET_IID(nsIURI),
+                             getter_AddRefs(url));
+    if (NS_FAILED(rv)) return rv;
+    rv = url->SetURLParser(urlparser);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = url->SetURLParser(urlparser);
+    if (aBaseURI)
+    {
+        nsXPIDLCString aResolvedURI;
+        rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
         if (NS_FAILED(rv)) return rv;
+        rv = url->SetSpec(aResolvedURI);
+    } else {
         rv = url->SetSpec((char*)aSpec);
     }
-
     if (NS_FAILED(rv)) return rv;
 
     *result = url.get();
