@@ -55,6 +55,13 @@ include $(srcdir)/../config/xmlterm_config.mk
 
 include $(topsrcdir)/config/rules.mk
 
+chrome::
+	@$(REGCHROME) content xmlterm xmlterm.jar; \
+	$(REGCHROME) locale en-US/xmlterm xmlterm.jar; \
+	$(REGCHROME) skin modern/xmlterm xmlterm.jar;
+
+## NOTE: Put all the skin stuff in the content directory for the moment
+##       (Otherwise every Mozilla skin will need to provide an xmlterm skin!)
+
 install::
 	$(INSTALL) $(srcdir)/xmlterm-service.js $(DIST)/bin/components
-

@@ -10,7 +10,7 @@
 # implied. See the MPL for the specific language governing
 # rights and limitations under the MPL.
 # 
-# The Original Code is lineterm.
+# The Original Code is XMLterm.
 # 
 # The Initial Developer of the Original Code is Ramalingam Saravanan.
 # Portions created by Ramalingam Saravanan <svn@xmlterm.org> are
@@ -41,10 +41,13 @@ include $(DEPTH)/config/autoconf.mk
 
 CHROME_DIR = packages/xmlterm
 
-CHROME_TYPE = skin
+## NOTE: Put all the skin stuff in the content directory for the moment
+##       (Otherwise every Mozilla skin will need to provide an xmlterm skin!)
 
-CHROME_SKIN_DIR = xmlterm/skin
-CHROME_SKIN	= \
+CHROME_TYPE = content
+
+CHROME_CONTENT_DIR = xmlterm/content
+CHROME_CONTENT	= \
 		xmlterm.css \
 		xmltpage.css \
 		wheel.gif \

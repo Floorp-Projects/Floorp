@@ -21,7 +21,11 @@
 
 -->
 
-<?xml-stylesheet href="chrome://xmlterm/skin/xmlterm.css" type="text/css"?> 
+<!--
+NOTE: Put all the skin stuff in the content directory for the moment
+      (Otherwise every Mozilla skin will need to provide an xmlterm skin!)
+-->
+<?xml-stylesheet href="chrome://xmlterm/content/xmlterm.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
