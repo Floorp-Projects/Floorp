@@ -413,14 +413,29 @@ NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aD
 {
   if (aReason & nsISelectionListener::MOUSEUP_REASON)//this wont do
     return NS_OK;
-	if (mVisible)
-		StopBlinking();
+
   nsCOMPtr<nsISelection> domSel(do_QueryReferent(mDomSelectionWeak));
-  if (domSel.get() != aDomSel)
-    return NS_OK; //ignore this then.
+
+  // The same caret is shared amongst the document and any text widgets it
+  // may contain. This means that the caret could get notifications from
+  // multiple selections.
+  //
+  // If this notification is for a selection that is not the one the
+  // the caret is currently interested in (mDomSelectionWeak), then there
+  // is nothing to do!
+
+  if (domSel != aDomSel)
+    return NS_OK;
+
   if (mVisible)
+  {
+    // Stop the caret from blinking in its previous location.
+    StopBlinking();
+
+    // Start the caret blinking in the new location.
     StartBlinking();
-  
+  }
+
   return NS_OK;
 }
 
