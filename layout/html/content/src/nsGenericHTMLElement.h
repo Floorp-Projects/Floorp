@@ -54,6 +54,7 @@ class nsIURI;
 class nsIFormControlFrame;
 class nsIForm;
 class nsIPresState;
+class nsIPluginInstance;
 
 class nsGenericHTMLElement : public nsGenericElement {
 public:
@@ -334,6 +335,14 @@ public:
   static PRBool InNavQuirksMode(nsIDocument* aDoc);
 
   nsIHTMLAttributes* mAttributes;
+
+protected:
+  nsresult GetPluginInstance(nsIPluginInstance** aPluginInstance);
+
+  nsresult GetPluginScriptObject(nsIScriptContext* aContext,
+                                 void** aScriptObject);
+  PRBool GetPluginProperty(JSContext *aContext, JSObject *aObj, jsval aID,
+                           jsval *aVp);
 };
 
 //----------------------------------------------------------------------
