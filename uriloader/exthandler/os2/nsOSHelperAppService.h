@@ -46,6 +46,10 @@ public:
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   NS_IMETHOD LoadUrl(nsIURI * aURL);
 
+  // over ride nsIMIMEService methods to contain windows registry look up steps....
+  NS_IMETHOD GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval);
+  NS_IMETHOD GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo ** _retval);
+
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 
   //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
@@ -53,7 +57,7 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
   
 protected:
-
+  nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);
 };
 
 #endif // nsOSHelperAppService_h__
