@@ -26,32 +26,6 @@
 
 #include "prtypes.h"
 
-#include "FlushAllocator.h"
-
-
-//##############################################################################
-//##############################################################################
-
-void* Flush_Allocate( size_t size, Boolean zero )
-{
-	void *newBlock = malloc( size );
-	if ((newBlock != NULL) && zero)
-		memset(newBlock, 0, size);
-	return newBlock;
-}
-
-void Flush_Free( void* item )
-{
-	free(item);
-}
-
-void* Flush_Reallocate( void* item, size_t size )
-{
-	void*	newBlock = NULL;
-	newBlock = realloc( item, size );
-	return newBlock;
-}
-
 
 //##############################################################################
 //##############################################################################
@@ -67,9 +41,7 @@ void* operator new (size_t size, const std::nothrow_t& ) throw()
 
 void* operator new( size_t size )
 {
-	void* mem = operator new ( size, ::nothrow );
-//	ThrowIfNil_( mem );
-	return mem;
+	return operator new ( size, ::nothrow );
 }
 
 void operator delete( void* block )
