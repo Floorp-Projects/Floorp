@@ -388,14 +388,7 @@ NS_METHOD TextFrame::GetCursorAt(nsIPresContext& aPresContext,
                                  nsIFrame** aFrame,
                                  PRInt32& aCursor)
 {
-  nsStyleColor* styleColor = (nsStyleColor*)
-    mStyleContext->GetData(kStyleColorSID);
-  if (styleColor->mCursor != NS_STYLE_CURSOR_INHERIT) {
-    // If this container has a particular cursor, use it, otherwise
-    // let the child decide.
-    *aFrame = this;
-  }
-  aCursor = (PRInt32) styleColor->mCursor;
+  aCursor = NS_STYLE_CURSOR_IBEAM;
   return NS_OK;
 }
 
