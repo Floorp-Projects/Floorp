@@ -64,7 +64,6 @@
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsITextControlFrame.h"
-#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsIURI.h"
 #include "nsGUIEvent.h"
@@ -1274,17 +1273,6 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   nsIDocument *document = nsnull;
   if (shell)
     document = shell->GetDocument();
-
-  // The anonymous <div> used by <inputs> never gets scrollbars.
-  nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(parent));
-  if (textFrame) {
-    // Make sure we are not a text area.
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
-    if (!textAreaElement) {
-      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
-      return;
-    }
-  }
 
   // create horizontal scrollbar
   if (!document) {
