@@ -484,8 +484,11 @@ public class ScriptRuntime {
 
     }
 
-    // ALERT: should it be deprecated ?
-    public static Scriptable toObject(Scriptable scope, Object val) {
+    public static Scriptable toObject(Scriptable scope, Object val)
+    {
+        if (val instanceof Scriptable && val != Undefined.instance) {
+            return (Scriptable)val;
+        }
         return toObject(Context.getContext(), scope, val, null);
     }
 
@@ -509,14 +512,14 @@ public class ScriptRuntime {
     public static Scriptable toObject(Context cx, Scriptable scope, Object val,
                                       Class staticClass)
     {
-        if (val == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
-        }
         if (val instanceof Scriptable) {
             if (val == Undefined.instance) {
                 throw NativeGlobal.typeError0("msg.undef.to.object", scope);
             }
             return (Scriptable) val;
+        }
+        if (val == null) {
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         String className = val instanceof String ? "String" :
                            val instanceof Number ? "Number" :
@@ -753,16 +756,10 @@ public class ScriptRuntime {
     }
 
     public static Scriptable getParent(Object obj) {
-        Scriptable s;
-        try {
-            s = (Scriptable) obj;
-        }
-        catch (ClassCastException e) {
+        if (!(obj instanceof Scriptable)) {
             return null;
         }
-        if (s == null) {
-            return null;
-        }
+        Scriptable s = (Scriptable)obj;
         return getThis(s.getParentScope());
     }
 
@@ -780,12 +777,7 @@ public class ScriptRuntime {
     }
 
     public static Object setProto(Object obj, Object value, Scriptable scope) {
-        Scriptable start;
-        try {
-            start = (Scriptable) obj;
-        } catch(ClassCastException e) {
-            start = toObject(scope, obj);
-        }
+        Scriptable start = toObject(scope, obj);
         Scriptable result = value == null ? null : toObject(scope, value);
         Scriptable s = result;
         while (s != null) {
@@ -795,20 +787,12 @@ public class ScriptRuntime {
             }
             s = s.getPrototype();
         }
-        if (start == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
-        }
         start.setPrototype(result);
         return result;
     }
 
     public static Object setParent(Object obj, Object value, Scriptable scope) {
-        Scriptable start;
-        try {
-            start = (Scriptable) obj;
-        } catch(ClassCastException e) {
-            start = toObject(scope, obj);
-        }
+        Scriptable start = toObject(scope, obj);
         Scriptable result = value == null ? null : toObject(scope, value);
         Scriptable s = result;
         while (s != null) {
@@ -817,9 +801,6 @@ public class ScriptRuntime {
                     "msg.cyclic.value", "__parent__");
             }
             s = s.getParentScope();
-        }
-        if (start == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         start.setParentScope(result);
         return result;
@@ -948,12 +929,7 @@ public class ScriptRuntime {
             String property = (s != null) ? s : Integer.toString(index);
             throw NativeGlobal.undefReadError(obj, property, scope);
         }
-        Scriptable start;
-        try {
-            start = (Scriptable)obj;
-        } catch (ClassCastException e) {
-            start = toObject(scope, obj);
-        }
+        Scriptable start = toObject(scope, obj);
         if (s != null) {
             return getStrIdElem(start, s);
         }
@@ -1183,14 +1159,11 @@ public class ScriptRuntime {
                               Object[] args, Scriptable scope)
         throws JavaScriptException
     {
-        Function function;
-        try {
-            function = (Function) fun;
-        }
-        catch (ClassCastException e) {
+        if (!(fun instanceof Function)) {
             throw NativeGlobal.typeError1
                 ("msg.isnt.function", toString(fun), scope);
         }
+        Function function = (Function)fun;
         Scriptable thisObj;
         if (thisArg instanceof Scriptable || thisArg == null) {
             thisObj = (Scriptable) thisArg;
@@ -1267,18 +1240,12 @@ public class ScriptRuntime {
                                        Object[] args, Scriptable scope)
         throws JavaScriptException
     {
-        Function f;
-        try {
-            f = (Function) fun;
-            if (f != null) {
-                return f.construct(cx, scope, args);
-           }
-            // else fall through to error
-        } catch (ClassCastException e) {
-            // fall through to error
+        if (!(fun instanceof Function)) {
+            throw NativeGlobal.typeError1
+                ("msg.isnt.function", toString(fun), scope);
         }
-        throw NativeGlobal.typeError1
-            ("msg.isnt.function", toString(fun), scope);
+        Function function = (Function)fun;
+        return function.construct(cx, scope, args);
     }
 
     public static Scriptable newObjectSpecial(Context cx, Object fun,
@@ -1387,16 +1354,9 @@ public class ScriptRuntime {
                     scopeChain);
     }
 
-    public static Object postIncrement(Object obj, String id, Scriptable scope) {
-        Scriptable start;
-        try {
-            start = (Scriptable) obj;
-        } catch (ClassCastException e) {
-            start = toObject(scope, obj);
-        }
-        if (start == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
-        }
+    public static Object postIncrement(Object obj, String id, Scriptable scope)
+    {
+        Scriptable start = toObject(scope, obj);
         Scriptable m = start;
         do {
             Object result = m.get(id, start);
@@ -1481,15 +1441,7 @@ public class ScriptRuntime {
     }
 
     public static Object postDecrement(Object obj, String id, Scriptable scope) {
-        Scriptable start;
-        try {
-            start = (Scriptable) obj;
-        } catch (ClassCastException e) {
-            start = toObject(scope, obj);
-        }
-        if (start == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
-        }
+        Scriptable start = toObject(scope, obj);
         Scriptable m = start;
         do {
             Object result = m.get(id, start);
@@ -1516,9 +1468,10 @@ public class ScriptRuntime {
         if (val == null || !(val instanceof Scriptable)) {
             return val;
         }
-        Object result = ((Scriptable) val).getDefaultValue(null);
+        Scriptable s = (Scriptable)val;
+        Object result = s.getDefaultValue(null);
         if (result != null && result instanceof Scriptable)
-            throw NativeGlobal.typeError0("msg.bad.default.value", val);
+            throw NativeGlobal.typeError0("msg.bad.default.value", s);
         return result;
     }
 

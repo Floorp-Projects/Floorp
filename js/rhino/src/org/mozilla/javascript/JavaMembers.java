@@ -231,19 +231,16 @@ class JavaMembers {
             }
         }
         else {
-            Field field = null;
+            if (!(member instanceof Field)) {
+                String str = (member == null) ? "msg.java.internal.private"
+                                              : "msg.java.method.assign";
+                throw Context.reportRuntimeError1(str, name);
+            }
+            Field field = (Field)member;
+            Object javaValue = NativeJavaObject.coerceType(field.getType(),
+                                                           value, true);
             try {
-                field = (Field) member;
-                if (field == null) {
-                    throw Context.reportRuntimeError1(
-                        "msg.java.internal.private", name);
-                }
-                field.set(javaObject,
-                          NativeJavaObject.coerceType(field.getType(), value,
-                                                      true));
-            } catch (ClassCastException e) {
-                throw Context.reportRuntimeError1(
-                    "msg.java.method.assign", name);
+                field.set(javaObject, javaValue);
             } catch (IllegalAccessException accessEx) {
                 throw new RuntimeException("unexpected IllegalAccessException "+
                                            "accessing Java field");

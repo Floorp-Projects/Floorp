@@ -536,7 +536,7 @@ public class NativeGlobal implements IdFunctionMaster {
     public static EcmaError constructError(Context cx,
                                            String error,
                                            String message,
-                                           Object scope)
+                                           Scriptable scope)
     {
         int[] linep = { 0 };
         String filename = cx.getSourcePositionFromStack(linep);
@@ -544,12 +544,14 @@ public class NativeGlobal implements IdFunctionMaster {
                               filename, linep[0], 0, null);
     }
 
-    static EcmaError typeError0(String messageId, Object scope) {
+    static EcmaError typeError0(String messageId, Scriptable scope)
+    {
         return constructError(Context.getContext(), "TypeError",
             ScriptRuntime.getMessage0(messageId), scope);
     }
 
-    static EcmaError typeError1(String messageId, Object arg1, Object scope) {
+    static EcmaError typeError1(String messageId, Object arg1, Scriptable scope)
+    {
         return constructError(Context.getContext(), "TypeError",
             ScriptRuntime.getMessage1(messageId, arg1), scope);
     }
@@ -581,23 +583,15 @@ public class NativeGlobal implements IdFunctionMaster {
     public static EcmaError constructError(Context cx,
                                            String error,
                                            String message,
-                                           Object scope,
+                                           Scriptable scope,
                                            String sourceName,
                                            int lineNumber,
                                            int columnNumber,
                                            String lineSource)
     {
-        Scriptable scopeObject;
-        try {
-            scopeObject = (Scriptable) scope;
-        }
-        catch (ClassCastException x) {
-            throw new RuntimeException(x.toString());
-        }
-
         Object args[] = { message };
         try {
-            Scriptable errorObject = cx.newObject(scopeObject, error, args);
+            Scriptable errorObject = cx.newObject(scope, error, args);
             errorObject.put("name", errorObject, error);
             return new EcmaError((NativeError)errorObject, sourceName,
                                  lineNumber, columnNumber, lineSource);

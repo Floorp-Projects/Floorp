@@ -1002,14 +1002,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                       String propertyName, Object value,
                                       int attributes)
     {
-        ScriptableObject obj;
-        try {
-            obj = (ScriptableObject)destination;
-        }catch (ClassCastException e) {
+        if (!(destination instanceof ScriptableObject)) {
             destination.put(propertyName, destination, value);
             return;
         }
-        obj.defineProperty(propertyName, value, attributes);
+        ScriptableObject so = (ScriptableObject)destination;
+        so.defineProperty(propertyName, value, attributes);
     }
 
     /**

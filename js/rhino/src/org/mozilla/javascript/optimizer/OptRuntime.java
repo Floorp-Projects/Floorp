@@ -262,16 +262,13 @@ public final class OptRuntime extends ScriptRuntime {
         if (thisArg instanceof NativeCall)
             thisArg = ScriptableObject.getTopLevelScope(thisArg);
 
-        Function function;
-        try {
-            function = (Function) prop;
-        }
-        catch (ClassCastException e) {
+        if (!(prop instanceof Function)) {
             Object[] errorArgs = { toString(prop)  };
             throw cx.reportRuntimeError(
                 getMessage("msg.isnt.function", errorArgs));
         }
 
+        Function function = (Function)prop;
         return function.call(cx, scope, thisArg, args);
     }
 

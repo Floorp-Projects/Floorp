@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  * Mike McCabe
  *
  * Alternatively, the contents of this file may be used under the
@@ -41,19 +42,23 @@ package org.mozilla.javascript;
  * See ECMA 15.2.
  * @author Norris Boyd
  */
-public class NativeObject extends IdScriptable {
+public class NativeObject extends IdScriptable
+{
 
-    public static void init(Context cx, Scriptable scope, boolean sealed) {
+    public static void init(Context cx, Scriptable scope, boolean sealed)
+    {
         NativeObject obj = new NativeObject();
         obj.prototypeFlag = true;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return "Object";
     }
 
-    public int methodArity(int methodId) {
+    public int methodArity(int methodId)
+    {
         if (prototypeFlag) {
             switch (methodId) {
                 case Id_constructor:           return 1;
@@ -82,10 +87,11 @@ public class NativeObject extends IdScriptable {
                     return js_toString(cx, thisObj);
 
                 case Id_toLocaleString:
-                    return js_toLocaleString(cx, thisObj);
+                    // Not supported
+                    return js_toString(cx, thisObj);
 
                 case Id_valueOf:
-                    return js_valueOf(thisObj);
+                    return thisObj;
 
                 case Id_hasOwnProperty:
                     return js_hasOwnProperty(thisObj, args);
@@ -108,15 +114,16 @@ public class NativeObject extends IdScriptable {
             // FunctionObject.construct will set up parent, proto
             return ctorObj.construct(cx, ctorObj.getParentScope(), args);
         }
-        if (args.length == 0 || args[0] == null ||
-            args[0] == Undefined.instance)
+        if (args.length == 0 || args[0] == null
+            || args[0] == Undefined.instance)
         {
             return new NativeObject();
         }
         return ScriptRuntime.toObject(cx, ctorObj.getParentScope(), args[0]);
     }
 
-    public String toString() {
+    public String toString()
+    {
         Context cx = Context.getCurrentContext();
         if (cx != null)
             return js_toString(cx, this);
@@ -124,15 +131,12 @@ public class NativeObject extends IdScriptable {
             return "[object " + getClassName() + "]";
     }
 
-    private static String js_toString(Context cx, Scriptable thisObj) {
+    private static String js_toString(Context cx, Scriptable thisObj)
+    {
         if (cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE)) {
             return toSource(cx, thisObj);
         }
         return "[object " + thisObj.getClassName() + "]";
-    }
-
-    private static String js_toLocaleString(Context cx, Scriptable thisObj) {
-        return js_toString(cx, thisObj);
     }
 
     private static String toSource(Context cx, Scriptable thisObj)
@@ -145,7 +149,7 @@ public class NativeObject extends IdScriptable {
             toplevel = true;
             iterating = false;
             cx.iterating = new ObjToIntMap(31);
-        }else {
+        } else {
             toplevel = false;
             iterating = cx.iterating.has(thisObj);
         }
@@ -169,12 +173,12 @@ public class NativeObject extends IdScriptable {
                         result.append('\"');
                         result.append(ScriptRuntime.escapeString((String)p));
                         result.append('\"');
-                    }else {
+                    } else {
                         result.append(ScriptRuntime.toString(p));
                     }
                 }
             }
-        }finally {
+        } finally {
             if (toplevel) {
                 cx.iterating = null;
             }
@@ -182,10 +186,6 @@ public class NativeObject extends IdScriptable {
 
         result.append('}');
         return result.toString();
-    }
-
-    private static Object js_valueOf(Scriptable thisObj) {
-        return thisObj;
     }
 
     private static Object js_hasOwnProperty(Scriptable thisObj, Object[] args)
@@ -201,19 +201,19 @@ public class NativeObject extends IdScriptable {
                                                   Scriptable thisObj,
                                                   Object[] args)
     {
-        try {
-            if (args.length != 0) {
-                String name = ScriptRuntime.toString(args[0]);
-                if (thisObj.has(name, thisObj)) {
-                    int a = ((ScriptableObject)thisObj).getAttributes(name, thisObj);
-                    if ((a & ScriptableObject.DONTENUM) == 0)
-                        return Boolean.TRUE;
+        if (args.length != 0) {
+            String name = ScriptRuntime.toString(args[0]);
+            if (thisObj.has(name, thisObj)) {
+                if (thisObj instanceof ScriptableObject) {
+                    ScriptableObject so = (ScriptableObject)thisObj;
+                    try {
+                        int a = so.getAttributes(name, thisObj);
+                        if ((a & ScriptableObject.DONTENUM) == 0) {
+                            return Boolean.TRUE;
+                        }
+                    } catch (PropertyException x) { }
                 }
             }
-        }
-        catch (PropertyException x) {
-        }
-        catch (ClassCastException x) {
         }
         return Boolean.FALSE;
     }
@@ -232,7 +232,8 @@ public class NativeObject extends IdScriptable {
         return Boolean.FALSE;
     }
 
-    protected String getIdName(int id) {
+    protected String getIdName(int id)
+    {
         if (prototypeFlag) {
             switch (id) {
                 case Id_constructor:          return "constructor";
@@ -249,7 +250,8 @@ public class NativeObject extends IdScriptable {
 
 // #string_id_map#
 
-    protected int mapNameToId(String s) {
+    protected int mapNameToId(String s)
+    {
         if (!prototypeFlag) { return 0; }
         int id;
 // #generated# Last update: 2001-04-24 12:37:03 GMT+02:00
