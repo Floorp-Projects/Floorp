@@ -80,21 +80,35 @@ vbox {
 
 /********** button **********/
 
-button,
-button.left {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonleft");
+button {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#button");
 }
 
-button.top {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#buttontop");
+button[type="menu"] {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
 }
 
-button.right {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonright");
+button[type="menu-button"] {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#menu-button");
 }
 
-button.bottom {
-  -moz-binding: url("chrome://global/content/bindings/button.xml#buttonbottom");
+/********** toolbarbutton **********/
+
+toolbarbutton {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton");
+  -moz-user-focus: ignore;
+}
+
+toolbarbutton[type="menu"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu");
+}
+
+toolbarbutton[type="menu-button"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
+}
+
+.toolbarbutton-text {
+  text-align: center;
 }
 
 /******** browser, editor, iframe ********/
@@ -539,45 +553,6 @@ menulist[editable="true"] {
 menulist > menupopup > menuitem {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic") !important;
 }
-
-/********** menubutton **********/
-
-menubutton {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-single-left");
-}
-
-menubutton.right {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-single-right");
-}
-
-menubutton.top {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-single-top");
-}
-
-menubutton.bottom {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-single-bottom");
-}
-
-.menubutton-dual,
-.menubutton-dual.left {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-dual-left");
-}
-  
-.menubutton-dual.top {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-dual-top");
-}
-  
-.menubutton-dual.right {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-dual-right");
-}
-  
-.menubutton-dual.bottom {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-dual-bottom");
-}
-  
-.menubutton-icon {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-icon");
-} 
 
 /********** splitter **********/
 

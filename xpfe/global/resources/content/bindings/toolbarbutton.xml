@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+
+<bindings id="toolbarbuttonBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="toolbarbutton" display="xul:button"
+           extends="chrome://global/content/bindings/button.xml#button-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
+    </resources>
+    
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+  	  <xul:hbox class="box-inherit toolbarbutton-box"
+                inherits="align,dir,pack,orient" flex="1">
+        <children>
+          <xul:image class="toolbarbutton-icon" inherits="src=image"/>
+          <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                     inherits="value=label,accesskey,crop,dragover-top"/>
+        </children>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="menu" display="xul:menu" 
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+  	  <xul:hbox class="box-inherit toolbarbutton-box"
+                inherits="align,dir,pack,orient" flex="1">
+        <children>
+          <xul:image class="toolbarbutton-icon" inherits="src=image"/>
+          <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                     inherits="value=label,accesskey,crop,dragover-top"/>
+        </children>
+        <xul:image class="toolbarbutton-dropmarker" inherits="open,disabled"/>
+      </xul:hbox>
+    </content>
+  </binding>
+  
+  <binding id="menu-button" display="xul:menu" 
+           extends="chrome://global/content/bindings/button.xml#menu-button-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
+    </resources>
+
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:hbox class="box-inherit toolbarbutton-menubutton-box" flex="1">
+        <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button" anonid="button"
+                           flex="1" allowevents="true"
+                           inherits="disabled,crop,image,label,accessKey,command,
+                                     buttonover,buttondown,align,dir,pack,orient">
+          <children/>
+        </xul:toolbarbutton>
+        <xul:hbox class="toolbarbutton-menubutton-dropmarker-box" inherits="disabled,open">
+          <xul:image class="toolbarbutton-menubutton-dropmarker" inherits="disabled,open"/>
+        </xul:hbox>
+      </xul:hbox>
+    </content>
+
+  </binding>
+
+</bindings>

@@ -22,6 +22,10 @@
 
  @namespace domi url("http://www.mozilla.org/inspector");
  
+domi|panel[disabled="true"] > .viewer-pane-box-1 {
+  visibility: collapse;
+}
+
 .viewer-list {
   list-style-image: url("chrome://inspector/skin/iconViewerList.gif");
 }
@@ -31,7 +35,6 @@
 }
 
 .viewer-menu {
-  -moz-binding: url("chrome://global/content/bindings/menubutton.xml#menubutton-single-left") !important;
   list-style-image: url("chrome://inspector/skin/iconViewerMenu.gif");
 }
 
@@ -39,11 +42,11 @@
   list-style-image: url("chrome://inspector/skin/iconViewerMenu-dis.gif");
 }
 
-.viewer-pane-header > toolbargrippy {
-  display: none;
+.viewer-menu > .toolbarbutton-box > .toolbarbutton-dropmarker {
+  display: none;   
 }
 
-domi|panel[disabled="true"] > .viewer-pane-box-1 {
-  visibility: collapse;
+.viewer-pane-header > toolbargrippy {
+  display: none;
 }
 

@@ -8,7 +8,7 @@
 
   <binding id="titledSplitter" extends="chrome://global/content/bindings/splitter.xml#splitter">
     <content>
-      <xul:box class="titledsplitter-container" orient="vertical" flex="1">
+      <xul:vbox class="titledsplitter-container" flex="1">
         <xul:spacer class="titledsplitter-dragbar"/>
         <xul:box class="titledsplitter-titlebox" flex="1" onmousedown="event.stopPropagation()">
           <xul:box autostretch="never">
@@ -20,7 +20,7 @@
             <xul:image class="titledsplitter-closeimage"/>
           </xul:button>
         </xul:box>
-      </xul:box>
+      </xul:vbox>
     </content>
 
     <implementation>

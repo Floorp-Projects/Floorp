@@ -127,12 +127,12 @@ editor.xul has these - do we need them?
 
      <!-- toolbar filled out from editorOverlay -->
     <toolbar class="toolbar-primary" id="EditToolbar" persist="collapsed">
-      <button id="newButton"/>
-      <button id="openButton"/>
-      <button id="saveButton"/>
+      <toolbarbutton id="newButton"/>
+      <toolbarbutton id="openButton"/>
+      <toolbarbutton id="saveButton"/>
       <spacer class="separator_small"/>
-      <menubutton id="printButton"/>
-      <button id="spellingButton"/>
+      <toolbarbutton id="printButton"/>
+      <toolbarbutton id="spellingButton"/>
       <spacer flex="1"/>
     </toolbar>    
   </toolbox>

@@ -64,7 +64,7 @@
       <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
         label="&sidebar.panels.label;" persist="hidden" type="box"
         collapse="after" onmouseup="PersistHeight();">
-        <menubutton id="sidebar-panel-picker" menubuttontype="sidebar-panels" class="button-toolbar-4" crop="right"
+        <toolbarbutton type="menu" id="sidebar-panel-picker" menubuttontype="sidebar-panels"
           onpopupshowing="SidebarBuildPickerPopup();"
           label="&sidebar.picker.label;" >
           <menupopup id="sidebar-panel-picker-popup" popupanchor="topright"
@@ -100,7 +100,7 @@
                       oncommand="BrowseMorePanels();" />
             <menuseparator />
           </menupopup>
-        </menubutton>
+        </toolbarbutton>
       </sidebarheader>
   
       <vbox id="sidebar-panels"

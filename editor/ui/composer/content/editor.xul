@@ -169,18 +169,18 @@
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
   <toolbar class="toolbar-primary" id="EditToolbar" persist="collapsed" tbalign="stretch">
-    <button id="newButton"/>
-    <button id="openButton"/>
-    <button id="saveButton"/>
-    <button id="previewButton"/>
-    <menubutton id="printButton" />
-    <button id="spellingButton"/>
+    <toolbarbutton id="newButton"/>
+    <toolbarbutton id="openButton"/>
+    <toolbarbutton id="saveButton"/>
+    <toolbarbutton id="previewButton"/>
+    <toolbarbutton id="printButton" />
+    <toolbarbutton id="spellingButton"/>
     <toolbarseparator class="toolbarseparator-primary"/>
-    <button id="imageButton"/>
-    <button id="hlineButton"/>
-    <button id="tableButton"/>
-    <button id="linkButton"/>
-    <button id="namedAnchorButton"/>
+    <toolbarbutton id="imageButton"/>
+    <toolbarbutton id="hlineButton"/>
+    <toolbarbutton id="tableButton"/>
+    <toolbarbutton id="linkButton"/>
+    <toolbarbutton id="namedAnchorButton"/>
     <spacer flex="1"/>
     <hbox id="throbber-box" autostretch="never">
       <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
@@ -196,28 +196,28 @@
       <stack id="ColorButtons"/>
     </hbox>
 
-    <button id="DecreaseFontSizeButton"/>
-    <button id="IncreaseFontSizeButton"/>
+    <toolbarbutton id="DecreaseFontSizeButton"/>
+    <toolbarbutton id="IncreaseFontSizeButton"/>
 
     <toolbarseparator class="toolbarseparator-standard"/>
 
-    <button id="boldButton"/>
-    <button id="italicButton"/>
-    <button id="underlineButton"/>
+    <toolbarbutton id="boldButton"/>
+    <toolbarbutton id="italicButton"/>
+    <toolbarbutton id="underlineButton"/>
 
     <toolbarseparator class="toolbarseparator-standard"/>
     
-    <button id="ulButton"/>
-    <button id="olButton"/>
-    <button id="outdentButton"/>
-    <button id="indentButton"/>
+    <toolbarbutton id="ulButton"/>
+    <toolbarbutton id="olButton"/>
+    <toolbarbutton id="outdentButton"/>
+    <toolbarbutton id="indentButton"/>
 
     <toolbarseparator class="toolbarseparator-standard"/>
 
-    <button id="align-left-button"/>
-    <button id="align-center-button"/>
-    <button id="align-right-button"/>
-    <button id="align-justify-button"/>
+    <toolbarbutton id="align-left-button"/>
+    <toolbarbutton id="align-center-button"/>
+    <toolbarbutton id="align-right-button"/>
+    <toolbarbutton id="align-justify-button"/>
 
     <!-- TODO: Change to a menulist? -->
     <!-- menu>
@@ -266,7 +266,7 @@
 
     <!-- Some of this is from globarOverlay.xul -->
     <statusbar id="status-bar">
-      <hbox id="component-bar"/>
+      <statusbarpanel id="component-bar"/>
       <statusbarpanel id="statusText" label="&statusText.label;" flex="1" crop="right"/>
       <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
     </statusbar>

@@ -584,8 +584,9 @@
 
 
   <!-- smiley menu -->
-  <menubutton id="smileButtonMenu" class="button-toolbar" observes="cmd_smiley"
-			tooltip="aTooltip" tooltiptext="&SmileButton.tooltip;">
+  <toolbarbutton type="menu" id="smileButtonMenu"
+                 observes="cmd_smiley"
+                 tooltip="aTooltip" tooltiptext="&SmileButton.tooltip;">
        <menupopup id="smilyPopup">
                <menuitem class="smiley insert-smile menuitem-iconic"       label="&smiley1Cmd.label;" 
 						oncommand="doStatefulCommand('cmd_smiley', ':-)'  )"  />
@@ -602,11 +603,10 @@
                <menuitem class="smiley insert-undecided menuitem-iconic"   label="&smiley7Cmd.label;"
 						oncommand="doStatefulCommand('cmd_smiley', ':-\\' )" />           
        </menupopup>
-   </menubutton>
-
+   </toolbarbutton>
 
   <!-- this is only used in messengercompose.xul -->
-  <menubutton id="AlignPopupButton" class="button-toolbar" observes="cmd_align"
+  <toolbarbutton type="menu" id="AlignPopupButton" observes="cmd_align"
               tooltip="aTooltip" tooltiptext="&AlignPopupButton.tooltip;">
     <menupopup id="AlignPopup">
       <menuitem id="AlignLeftItem" class="menuitem-iconic" label="&alignLeft.label;"
@@ -618,10 +618,10 @@
       <menuitem id="AlignJustifyItem" class="menuitem-iconic" label="&alignJustify.label;"
                 oncommand="doStatefulCommand('cmd_align', 'justify')"/>
     </menupopup>
-  </menubutton>
+  </toolbarbutton>
 
   <!-- InsertPopupButton is used by messengercompose.xul -->
-  <menubutton id="InsertPopupButton" class="button-toolbar" observes="cmd_insert"
+  <toolbarbutton type="menu" id="InsertPopupButton" observes="cmd_insert"
               tooltip="aTooltip" tooltiptext="&InsertPopupButton.tooltip;">
     <menupopup id="InsertPopup">
       <menuitem id="InsertLinkItem" class="menuitem-iconic" observes="cmd_link"
@@ -635,54 +635,52 @@
       <menuitem id="InsertTableItem"  class="menuitem-iconic" observes="cmd_table"
                 oncommand="goDoCommand('cmd_table')" label="&tableToolbarCmd.label;"/>
     </menupopup>
-  </menubutton>
+  </toolbarbutton>
 
   <!-- Editor toolbar items -->
   <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
-  <button class="button-toolbar-2 top"    id="newButton"       
-          label="&newMenu.label;"         observes="cmd_newEditor"
-          tooltip="aTooltip"              tooltiptext="&newToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="openButton"
-          label="&openToolbarCmd.label;"  observes="cmd_open"
-          tooltip="aTooltip"              tooltiptext="&openToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="saveButton"
-                                          observes="cmd_save"
-          tooltip="aTooltip"              tooltiptext="&saveToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="previewButton"
-          label="&previewToolbarCmd.label;" observes="cmd_preview"
-          tooltip="aTooltip"              tooltiptext="&previewToolbarCmd.tooltip;"/>
+  <toolbarbutton id="newButton" class="toolbarbutton-1"
+                 label="&newMenu.label;" observes="cmd_newEditor"
+                 tooltip="aTooltip" tooltiptext="&newToolbarCmd.tooltip;"/>
+  <toolbarbutton id="openButton" class="toolbarbutton-1"
+                 label="&openToolbarCmd.label;" observes="cmd_open"
+                 tooltip="aTooltip" tooltiptext="&openToolbarCmd.tooltip;"/>
+  <toolbarbutton id="saveButton" class="toolbarbutton-1" observes="cmd_save"
+                 tooltip="aTooltip" tooltiptext="&saveToolbarCmd.tooltip;"/>
+  <toolbarbutton id="previewButton" class="toolbarbutton-1"
+                 label="&previewToolbarCmd.label;" observes="cmd_preview"
+                 tooltip="aTooltip" tooltiptext="&previewToolbarCmd.tooltip;"/>
 
-  <menubutton class="menubutton-dual toolbar top" id="printButton" label="&printToolbarCmd.label;" 
-              observes="cmd_print" tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;"
-              crop="right">  
+  <toolbarbutton id="printButton" type="menu-button" class="toolbarbutton-1"
+                 label="&printToolbarCmd.label;" observes="cmd_print"
+                 tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;">
     <menupopup id="printMenu">
       <menuitem accesskey="&fileprint.accesskey;"      label="&printCmd.label;" default="true"/>
       <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
     </menupopup>
-  </menubutton>
+  </toolbarbutton>
     
-  <button class="button-toolbar-2 top"    id="findButton"
-          label="&findToolbarCmd.label;"  observes="cmd_find"
-          tooltip="aTooltip"              tooltiptext="&findToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="spellingButton"
-          label="&spellToolbarCmd.label;" observes="cmd_spelling"
-          tooltip="aTooltip"              tooltiptext="&spellToolbarCmd.tooltip;"/>
-
-  <button class="button-toolbar-2 top"    id="imageButton"
-          label="&imageToolbarCmd.label;" observes="cmd_image"
-          tooltip="aTooltip"              tooltiptext="&imageToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="hlineButton"
-          label="&hruleToolbarCmd.label;" observes="cmd_hline"
-          tooltip="aTooltip"              tooltiptext="&hruleToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="tableButton"
-          label="&tableToolbarCmd.label;" observes="cmd_table"
-          tooltip="aTooltip"              tooltiptext="&tableToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="linkButton"
-          label="&linkToolbarCmd.label;"  observes="cmd_link"
-          tooltip="aTooltip"              tooltiptext="&linkToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="namedAnchorButton"
-          label="&anchorToolbarCmd.label;" observes="cmd_anchor"
-          tooltip="aTooltip"               tooltiptext="&anchorToolbarCmd.tooltip;"/>
+  <toolbarbutton id="findButton" class="toolbarbutton-1"
+                 label="&findToolbarCmd.label;" observes="cmd_find"
+                 tooltip="aTooltip" tooltiptext="&findToolbarCmd.tooltip;"/>
+  <toolbarbutton id="spellingButton" class="toolbarbutton-1"
+                 label="&spellToolbarCmd.label;" observes="cmd_spelling"
+                 tooltip="aTooltip" tooltiptext="&spellToolbarCmd.tooltip;"/>
+  <toolbarbutton id="imageButton" class="toolbarbutton-1"
+                 label="&imageToolbarCmd.label;" observes="cmd_image"
+                 tooltip="aTooltip" tooltiptext="&imageToolbarCmd.tooltip;"/>
+  <toolbarbutton id="hlineButton" class="toolbarbutton-1"
+                 label="&hruleToolbarCmd.label;" observes="cmd_hline"
+                 tooltip="aTooltip" tooltiptext="&hruleToolbarCmd.tooltip;"/>
+  <toolbarbutton id="tableButton" class="toolbarbutton-1"
+                 label="&tableToolbarCmd.label;" observes="cmd_table"
+                 tooltip="aTooltip" tooltiptext="&tableToolbarCmd.tooltip;"/>
+  <toolbarbutton id="linkButton" class="toolbarbutton-1"
+                 label="&linkToolbarCmd.label;" observes="cmd_link"
+                 tooltip="aTooltip" tooltiptext="&linkToolbarCmd.tooltip;"/>
+  <toolbarbutton id="namedAnchorButton" class="toolbarbutton-1"
+                 label="&anchorToolbarCmd.label;" observes="cmd_anchor"
+                 tooltip="aTooltip" tooltiptext="&anchorToolbarCmd.tooltip;"/>
 
   <!-- Formatting toolbar items. "value" are HTML tagnames, don't translate -->
   <menulist class="toolbar-focustarget" id="ParagraphSelect" tooltip="aTooltip" tooltiptext="&ParagraphSelect.tooltip;" crop="right">
@@ -741,56 +739,64 @@
   </stack>
 
 <!-- A BUG IN CSS/BOXES MAKES THIS ASSERT WHEN CLASS= IS PRESENT AND WE TRY TO COLLAPSE THE TOOLBOX -->
-  <button class="button-toolbar" id="DecreaseFontSizeButton" observes="cmd_decreaseFont"
-          tooltip="aTooltip"     tooltiptext="&decreaseFontSizeToolbarCmd.tooltip;"/>
-  <button class="button-toolbar" id="IncreaseFontSizeButton" observes="cmd_increaseFont"
-          tooltip="aTooltip"     tooltiptext="&increaseFontSizeToolbarCmd.tooltip;"/>
+  <toolbarbutton id="DecreaseFontSizeButton" observes="cmd_decreaseFont"
+          tooltip="aTooltip" tooltiptext="&decreaseFontSizeToolbarCmd.tooltip;"/>
+  <toolbarbutton id="IncreaseFontSizeButton" observes="cmd_increaseFont"
+          tooltip="aTooltip" tooltiptext="&increaseFontSizeToolbarCmd.tooltip;"/>
 
-  <button class="button-toolbar" id="boldButton" observes="cmd_bold"
-          tooltip="aTooltip"     tooltiptext="&boldToolbarCmd.tooltip;">
+  <toolbarbutton id="boldButton" observes="cmd_bold"
+          tooltip="aTooltip" tooltiptext="&boldToolbarCmd.tooltip;">
     <observes element="cmd_bold" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_bold')"/>
-  </button>
-  <button class="button-toolbar" id="italicButton" observes="cmd_italic"
-          tooltip="aTooltip"     tooltiptext="&italicToolbarCmd.tooltip;">
+  </toolbarbutton>
+  <toolbarbutton id="italicButton" observes="cmd_italic"
+          tooltip="aTooltip" tooltiptext="&italicToolbarCmd.tooltip;">
     <observes element="cmd_italic" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_italic')"/>
-  </button>
-  <button class="button-toolbar" id="underlineButton" observes="cmd_underline"
-          tooltip="aTooltip"     tooltiptext="&underlineToolbarCmd.tooltip;">
+  </toolbarbutton>
+  <toolbarbutton id="underlineButton" observes="cmd_underline"
+          tooltip="aTooltip" tooltiptext="&underlineToolbarCmd.tooltip;">
     <observes element="cmd_underline" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_underline')"/>
-  </button>
+  </toolbarbutton>
 
-  <button class="button-toolbar" id="ulButton" observes="cmd_ul"
-          tooltip="aTooltip"     tooltiptext="&bulletListToolbarCmd.tooltip;">
+  <toolbarbutton id="ulButton" observes="cmd_ul"
+          tooltip="aTooltip" tooltiptext="&bulletListToolbarCmd.tooltip;">
       <observes element="cmd_ul" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ul')"/>
-  </button>
+  </toolbarbutton>
 
-  <button class="button-toolbar" id="olButton" observes="cmd_ol"
-          tooltip="aTooltip"     tooltiptext="&numberListToolbarCmd.tooltip;">
+  <toolbarbutton id="olButton" observes="cmd_ol"
+          tooltip="aTooltip" tooltiptext="&numberListToolbarCmd.tooltip;">
       <observes element="cmd_ol" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ol')"/>
-  </button>
+  </toolbarbutton>
 
-  <button class="button-toolbar format" id="outdentButton"    observes="cmd_outdent"
-          tooltip="aTooltip"            tooltiptext="&outdentToolbarCmd.tooltip;"/>
-  <button class="button-toolbar format" id="indentButton"     observes="cmd_indent"
-          tooltip="aTooltip"            tooltiptext="&indentToolbarCmd.tooltip;"/>
+  <toolbarbutton id="outdentButton" observes="cmd_outdent"
+          tooltip="aTooltip" tooltiptext="&outdentToolbarCmd.tooltip;"/>
+  <toolbarbutton id="indentButton" observes="cmd_indent"
+          tooltip="aTooltip" tooltiptext="&indentToolbarCmd.tooltip;"/>
 
   <!-- alignment buttons -->
-  <button class="button-toolbar" id="align-left-button"     oncommand="doStatefulCommand('cmd_align', 'left')"
-    tooltip="aTooltip" tooltiptext="&alignLeft.tooltip;" >
-    <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'left')" />
-  </button>
-  <button class="button-toolbar" id="align-center-button"   oncommand="doStatefulCommand('cmd_align', 'center')"
-    tooltip="aTooltip" tooltiptext="&alignCenter.tooltip;" >
-    <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'center')"/>
-  </button>
-  <button class="button-toolbar" id="align-right-button"    oncommand="doStatefulCommand('cmd_align', 'right')"
-    tooltip="aTooltip" tooltiptext="&alignRight.tooltip;" >
-    <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'right')"/>
-  </button>
-  <button class="button-toolbar" id="align-justify-button"  oncommand="doStatefulCommand('cmd_align', 'justify')"
-    tooltip="aTooltip" tooltiptext="&alignJustify.tooltip;" >
-    <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'justify')"/>
-  </button>
+  <toolbarbutton id="align-left-button" 
+                 oncommand="doStatefulCommand('cmd_align', 'left')"
+                 tooltip="aTooltip" tooltiptext="&alignLeft.tooltip;" >
+    <observes element="cmd_align" attribute="state" 
+              onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'left')" />
+  </toolbarbutton>
+  <toolbarbutton id="align-center-button"
+                 oncommand="doStatefulCommand('cmd_align', 'center')"
+                 tooltip="aTooltip" tooltiptext="&alignCenter.tooltip;" >
+    <observes element="cmd_align" attribute="state" 
+              onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'center')"/>
+  </toolbarbutton>
+  <toolbarbutton id="align-right-button"
+                 oncommand="doStatefulCommand('cmd_align', 'right')"
+                 tooltip="aTooltip" tooltiptext="&alignRight.tooltip;" >
+    <observes element="cmd_align" attribute="state"
+              onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'right')"/>
+  </toolbarbutton>
+  <toolbarbutton id="align-justify-button"
+                 oncommand="doStatefulCommand('cmd_align', 'justify')"
+                 tooltip="aTooltip" tooltiptext="&alignJustify.tooltip;" >
+    <observes element="cmd_align" attribute="state"
+              onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'justify')"/>
+  </toolbarbutton>
   
   <!-- Edit Mode toolbar -->
   <tab id="NormalModeButton"   class="tab-bottom edit-mode _plain" type="text" selected="1" label="&NormalModeTab.label;"  oncommand="SetEditMode(1);"

@@ -234,19 +234,19 @@
     </menubar>
 
     <toolbar id="command-toolbar" tbalign="stretch" grippy="false">
-      <button class="button-toolbar" id="newfolder" label="&command.newFolder.label;" 
+      <toolbarbutton id="newfolder" label="&command.newFolder.label;" 
               command="cmd_newfolder"/>
-      <button class="button-toolbar" id="newseparator" label="&command.newSeparator.label;" 
+      <toolbarbutton id="newseparator" label="&command.newSeparator.label;" 
               command="cmd_newseparator"/>
       <toolbarseparator/>
-      <button class="button-toolbar" id="fileBookmark" label="&command.fileBookmark.label;"
+      <toolbarbutton id="fileBookmark" label="&command.fileBookmark.label;"
               command="cmd_bm_fileBookmark"/>
       <toolbarseparator/>
-      <button class="button-toolbar" id="properties" label="&command.properties.label;"
+      <toolbarbutton id="properties" label="&command.properties.label;"
               command="cmd_properties"/>
-      <button class="button-toolbar" id="rename" label="&command.rename.label;"
+      <toolbarbutton id="rename" label="&command.rename.label;"
               command="cmd_rename"/>
-      <button class="button-toolbar" id="delete" label="&command.delete.label;"
+      <toolbarbutton id="delete" label="&command.delete.label;"
               command="cmd_bm_delete"/>
     </toolbar>
   </toolbox>
