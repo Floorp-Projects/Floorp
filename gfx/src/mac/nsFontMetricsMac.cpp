@@ -144,11 +144,11 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFo
   }
   else if (aGenericFamily.EqualsIgnoreCase("cursive"))
   {
-     aFontFace="Zapf Chancery";
+     aFontFace="Apple Chancery";
   }
   else if (aGenericFamily.EqualsIgnoreCase("fantasy"))
   {
-    aFontFace ="New Century Schlbk";
+    aFontFace ="Gadget";
   }
   else if (aGenericFamily.EqualsIgnoreCase("monospace"))
   {
