@@ -60,7 +60,10 @@
     mLabelStringWidth = -1;
     mImagePadding = 0;
     mImageSpace = 2;
+    mImageAlpha = 1.0;
     mIsDraggable = NO;
+    mClickHoldTimeoutSeconds = 60.0 * 60.0 * 24.0;
+    mLastClickHoldTimedOut = NO;
   }
   return self;
 }
@@ -193,6 +196,17 @@
   mTruncLabelString = nil;
 }
 
+- (void)setClickHoldTimeout:(float)timeoutSeconds
+{
+  mClickHoldTimeoutSeconds = timeoutSeconds;
+}
+
+- (BOOL)lastClickHoldTimedOut
+{
+  return mLastClickHoldTimedOut;
+}
+
+
 #pragma mark -
 
 - (BOOL)isDraggable
@@ -232,6 +246,8 @@
 
 - (BOOL)trackMouse:(NSEvent *)theEvent inRect:(NSRect)cellFrame ofView:(NSView *)controlView untilMouseUp:(BOOL)untilMouseUp
 {
+  mLastClickHoldTimedOut = NO;
+
   if (!mIsDraggable)
     return [super trackMouse:theEvent inRect:cellFrame ofView:controlView untilMouseUp:untilMouseUp];
 
@@ -239,7 +255,8 @@
   NSPoint lastWindowLocation  = firstWindowLocation;
   NSPoint curWindowLocation   = firstWindowLocation;
   NSEventType lastEvent       = (NSEventType)0;
-  
+  NSDate* clickHoldBailTime   = [NSDate dateWithTimeIntervalSinceNow:mClickHoldTimeoutSeconds];
+
   if (![self startTrackingAt:curWindowLocation inView:controlView])
     return NO;
   
@@ -247,9 +264,14 @@
   {
     NSEvent* event = [NSApp nextEventMatchingMask:
             (NSLeftMouseDraggedMask | NSLeftMouseUpMask)
-              untilDate:nil
+              untilDate:clickHoldBailTime
               inMode:NSEventTrackingRunLoopMode
               dequeue:YES];
+    if (!event)
+    {
+      mLastClickHoldTimedOut = YES;
+      break;
+    }
 
     curWindowLocation = [event locationInWindow];
     lastEvent = [event type];

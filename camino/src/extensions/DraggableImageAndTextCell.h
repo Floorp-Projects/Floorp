@@ -46,8 +46,10 @@
   float           mImagePadding;
   float           mImageSpace;
   float           mImageAlpha;
+  float						mClickHoldTimeoutSeconds;
   BOOL            mTruncateLabel;
   BOOL            mIsDraggable;
+  BOOL						mLastClickHoldTimedOut;
 }
 
 - (id)initTextCell:(NSString*)aString;
@@ -64,6 +66,9 @@
 
 - (BOOL)isDraggable;
 - (void)setDraggable:(BOOL)inDraggable;
+
+- (void)setClickHoldTimeout:(float)timeoutSeconds;
+- (BOOL)lastClickHoldTimedOut;
 
 @end
 
