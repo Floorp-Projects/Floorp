@@ -69,8 +69,10 @@ function editDocument(aDocument)
 function editPageOrFrame()
 {
   var focusedWindow = document.commandDispatcher.focusedWindow;
-  var url = getContentFrameURI(focusedWindow);
 
+  // if the uri is a specific frame, grab it, else use the frameset uri 
+  // and let Composer handle error if necessary
+  var url = getContentFrameURI(focusedWindow);
   editPage(url, window, false)
 }
 
@@ -81,10 +83,6 @@ function editPageOrFrame()
 //   and we need a delay to let dialog close)
 function editPage(url, launchWindow, delay)
 {
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isContentFrame(focusedWindow))
-    url = Components.lookupMethod(focusedWindow, 'location').call(focusedWindow).href;
-
   // Always strip off "view-source:"
   if (url.slice(0,12) == "view-source:")
     url = url.slice(13);
