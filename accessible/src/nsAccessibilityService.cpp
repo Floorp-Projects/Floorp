@@ -40,7 +40,9 @@
 #include "nsHTMLImageAccessible.h"
 #include "nsHTMLAreaAccessible.h"
 #include "nsHTMLLinkAccessible.h"
-#include "nsHTMLSelectAccessible.h"
+#include "nsHTMLSelectListAccessible.h"
+#include "nsHTMLComboboxAccessible.h"
+#include "nsHTMLListboxAccessible.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsILink.h"
@@ -73,66 +75,83 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAccessibilityService, nsIAccessibilityService);
 NS_IMETHODIMP 
 nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISupports* aFrame, nsIAccessible **_retval)
 {
-  nsIFrame* f = NS_STATIC_CAST(nsIFrame*, aFrame);
+  // XXX - jgaunt - looks like we aren't using this
+  //nsIFrame* f = NS_STATIC_CAST(nsIFrame*, aFrame);
 
-  nsCOMPtr<nsIPresContext> c(do_QueryInterface(aPresContext));
-  NS_ASSERTION(c,"Error non prescontext passed to accessible factory!!!");
+  nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
+  NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
-  nsCOMPtr<nsIPresShell> s;
-  c->GetShell(getter_AddRefs(s));
+  nsCOMPtr<nsIPresShell> presShell;
+  presContext->GetShell(getter_AddRefs(presShell));
 
-  NS_ASSERTION(s,"Error not presshell!!");
+  NS_ASSERTION(presShell,"Error not presshell!!");
 
-  nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(s);
+  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
 
-  *_retval = new nsRootAccessible(wr);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
+  *_retval = new nsRootAccessible(weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLSelectAccessible(nsIDOMNode* node, nsISupports* aPresContext, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLComboboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIPresContext> c(do_QueryInterface(aPresContext));
-  NS_ASSERTION(c,"Error non prescontext passed to accessible factory!!!");
+  nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
+  NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
-  nsCOMPtr<nsIPresShell> s;
-  c->GetShell(getter_AddRefs(s)); 
+  nsCOMPtr<nsIPresShell> presShell;
+  presContext->GetShell(getter_AddRefs(presShell)); 
 
-  nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(s);
+  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
 
-  *_retval = new nsHTMLSelectAccessible(node, wr);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
- 
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTMLComboboxAccessible(aDOMNode, weakShell);
+  if (! *_retval)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* node, nsIAccessible *aAccParent, nsISupports* aPresContext, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLListboxAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIPresContext> c(do_QueryInterface(aPresContext));
-  NS_ASSERTION(c,"Error non prescontext passed to accessible factory!!!");
+  nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
+  NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
-  nsCOMPtr<nsIPresShell> s;
-  c->GetShell(getter_AddRefs(s)); 
+  nsCOMPtr<nsIPresShell> presShell;
+  presContext->GetShell(getter_AddRefs(presShell)); 
 
-  nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(s);
+  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
 
-  *_retval = new nsHTMLSelectOptionAccessible(aAccParent, node, wr);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
+  *_retval = new nsHTMLListboxAccessible(aDOMNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIAccessible *aAccParent, nsISupports* aPresContext, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
+  NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
+
+  nsCOMPtr<nsIPresShell> presShell;
+  presContext->GetShell(getter_AddRefs(presShell)); 
+
+  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(presShell);
+
+  *_retval = new nsHTMLSelectOptionAccessible(aAccParent, aDOMNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 
@@ -141,18 +160,17 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLCheckboxAccessible(nsISupports *
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLCheckboxAccessible(node, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  }
+  *_retval = new nsHTMLCheckboxAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 /* nsIAccessible createHTMRadioButtonAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
@@ -160,18 +178,17 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsISupport
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLRadioButtonAccessible(node, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTMLRadioButtonAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 /* nsIAccessible createHTMLButtonAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
@@ -179,18 +196,17 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLButtonAccessible(nsISupports *aF
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLButtonAccessible(node, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTMLButtonAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 /* nsIAccessible createHTML4ButtonAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
@@ -198,18 +214,17 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTML4ButtonAccessible(nsISupports *a
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTML4ButtonAccessible(node, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTML4ButtonAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 /* nsIAccessible createHTMLTextAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
@@ -217,18 +232,17 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFra
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTextAccessible(node, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTMLTextAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 
@@ -237,18 +251,17 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTableAccessible(nsISupports *aFr
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTableAccessible(node, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTMLTableAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 /* nsIAccessible createHTMLTableCellAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
@@ -256,18 +269,17 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTableCellAccessible(nsISupports 
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTableCellAccessible(node, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTMLTableCellAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 /* nsIAccessible createHTMLImageAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
@@ -275,8 +287,8 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFr
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
   nsIImageFrame* imageFrame = nsnull;
@@ -287,13 +299,12 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFr
   if (!imageFrame)
     return NS_ERROR_FAILURE;
 
-  *_retval = new nsHTMLImageAccessible(node, imageFrame, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTMLImageAccessible(node, imageFrame, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 /* nsIAccessible createHTMLAreaAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
@@ -302,13 +313,11 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLAreaAccessible(nsIWeakReference 
 {
   *_retval = new nsHTMLAreaAccessible(aDOMNode, aAccParent, aShell);
 
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
 
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 /* nsIAccessible createHTMLTextFieldAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
@@ -316,35 +325,33 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTextFieldAccessible(nsISupports 
 {
   nsIFrame* frame;
   nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIWeakReference> shell;
-  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(shell), getter_AddRefs(node));
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTextFieldAccessible(node, shell);
-  if (*_retval) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  } 
-    
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsHTMLTextFieldAccessible(node, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aNode)
 {
+  NS_ASSERTION(aFrame,"Error -- 1st argument (aFrame) is null!!");
   *aRealFrame = NS_STATIC_CAST(nsIFrame*, aFrame);
   nsCOMPtr<nsIContent> content;
   (*aRealFrame)->GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
   *aNode = node;
-  NS_ADDREF(*aNode);
+  NS_IF_ADDREF(*aNode);
 
   nsCOMPtr<nsIDocument> document;
   content->GetDocument(*getter_AddRefs(document));
   if (!document)
     return NS_ERROR_FAILURE;
-  if (!document)
-     return NS_ERROR_FAILURE;
 
 #ifdef DEBUG
   PRInt32 shells = document->GetNumberOfShells();
@@ -353,72 +360,68 @@ NS_IMETHODIMP nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aR
 
   // do_GetWR only works into a |nsCOMPtr| :-(
   nsCOMPtr<nsIPresShell> tempShell;
-  nsCOMPtr<nsIWeakReference> weak;
+  nsCOMPtr<nsIWeakReference> weakShell;
   document->GetShellAt(0, getter_AddRefs(tempShell));
-  weak = do_GetWeakReference(tempShell);
-  NS_IF_ADDREF(*aShell = weak);
+  weakShell = do_GetWeakReference(tempShell);
+  NS_IF_ADDREF(*aShell = weakShell);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateAccessible(nsIDOMNode* node, nsISupports* document, nsIAccessible **_retval)
+nsAccessibilityService::CreateAccessible(nsIDOMNode* aDOMNode, nsISupports* aDocument, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIContent> content (do_QueryInterface(node));
-
-  nsCOMPtr<nsIDocument> d (do_QueryInterface(document));
-  if (!d)
+  nsCOMPtr<nsIDocument> document (do_QueryInterface(aDocument));
+  if (!document)
     return NS_ERROR_FAILURE;
 
 #ifdef DEBUG
-  PRInt32 shells = d->GetNumberOfShells();
+  PRInt32 shells = document->GetNumberOfShells();
   NS_ASSERTION(shells > 0,"Error no shells!");
 #endif
 
   nsCOMPtr<nsIPresShell> tempShell;
-  d->GetShellAt(0, getter_AddRefs(tempShell));
-  nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(tempShell);
+  document->GetShellAt(0, getter_AddRefs(tempShell));
+  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(tempShell);
 
-  *_retval = new nsAccessible(node, wr);
-  if ( *_retval ) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsAccessible(aDOMNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLBlockAccessible(nsIDOMNode* node, nsISupports* document, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLBlockAccessible(nsIDOMNode* aDOMNode, nsISupports* aDocument, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIContent> content (do_QueryInterface(node));
-
-  nsCOMPtr<nsIDocument> d (do_QueryInterface(document));
-  if (!d)
+  nsCOMPtr<nsIDocument> document (do_QueryInterface(aDocument));
+  if (!document)
     return NS_ERROR_FAILURE;
 
 #ifdef DEBUG
-  PRInt32 shells = d->GetNumberOfShells();
+  PRInt32 shells = document->GetNumberOfShells();
   NS_ASSERTION(shells > 0,"Error no shells!");
 #endif
 
   nsCOMPtr<nsIPresShell> tempShell;
-  d->GetShellAt(0, getter_AddRefs(tempShell));
-  nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(tempShell);
+  document->GetShellAt(0, getter_AddRefs(tempShell));
+  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(tempShell);
 
-  *_retval = new nsAccessible(node, wr);
-  if ( *_retval ) {
-    NS_ADDREF(*_retval);
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
+  *_retval = new nsAccessible(aDOMNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* node, nsISupports* aPresContext, nsIAccessible **_retval)
+nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
 {
   *_retval = nsnull;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
   NS_ASSERTION(content,"Error non nsIContent passed to accessible factory!!!");
 
   nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
@@ -447,9 +450,9 @@ nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* node, nsISupports
             nsCOMPtr<nsIDocument> innerDoc;
             ps->GetDocument(getter_AddRefs(innerDoc)); 
             if (innerDoc) {
-              nsCOMPtr<nsIAccessible> root = new nsHTMLIFrameRootAccessible(node, wr);
+              nsCOMPtr<nsIAccessible> root = new nsHTMLIFrameRootAccessible(aDOMNode, wr);
               if ( root ) {
-                nsHTMLIFrameAccessible* frameAcc = new nsHTMLIFrameAccessible(node, root, weakRef, innerDoc);
+                nsHTMLIFrameAccessible* frameAcc = new nsHTMLIFrameAccessible(aDOMNode, root, weakRef, innerDoc);
                 if ( frameAcc != nsnull ) {
                   *_retval = NS_STATIC_CAST(nsIAccessible*, frameAcc);
                   if ( *_retval ) {
@@ -615,8 +618,6 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIWeakReference *aPresSh
   return NS_OK;
 }
 
-
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -627,11 +628,11 @@ NS_NewAccessibilityService(nsIAccessibilityService** aResult)
   if (! aResult)
       return NS_ERROR_NULL_POINTER;
 
-  nsAccessibilityService* a = new nsAccessibilityService();
-  if (a == nsnull)
+  nsAccessibilityService* accService = new nsAccessibilityService();
+  if (!accService)
       return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(a);
-  *aResult = a;
+  NS_ADDREF(accService);
+  *aResult = accService;
   return NS_OK;
 }
 
