@@ -30,8 +30,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.21 $ 
-# $Date: 2002/05/06 19:04:58 $ 
+# $Revision: 1.22 $ 
+# $Date: 2002/05/06 19:08:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Notice.pm,v $ 
 # $Name:  $ 
@@ -84,7 +84,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.21 $ )[1];
+$VERSION = ( qw $Revision: 1.22 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -394,9 +394,7 @@ sub status_table_row {
                 "\t</td>\n");
   } else {
     @outrow = ("\t<!-- skipping: Notice: tree: $tree -->\n".
-               "\t\t<td>\n".
-               "\t\t\t$HTMLPopUp::EMPTY_TABLE_CELL\n".
-               "\t\t</td>\n");
+               "\t\t<td>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
 
   }
 
