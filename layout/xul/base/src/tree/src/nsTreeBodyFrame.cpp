@@ -295,7 +295,7 @@ nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
   // Delete our column structures.
   delete mColumns;
   mColumns = nsnull;
-
+  
   // Drop our ref to the view.
   if (mView)
     mView->SetOutliner(nsnull);
@@ -316,6 +316,8 @@ nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
     // Always null out the cached outliner body frame.
     nsAutoString outlinerBody; outlinerBody.AssignWithConversion("outlinerbody");
     box->RemoveProperty(outlinerBody.GetUnicode());
+
+    mOutlinerBoxObject = nsnull; // Drop our ref here.
   }
 
   mView = nsnull;
