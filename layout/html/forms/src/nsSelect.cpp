@@ -501,6 +501,7 @@ nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     nsresult stat = mWidget->QueryInterface(kListWidgetIID, (void **) &list);
     NS_ASSERTION((NS_OK == stat), "invalid widget");
     PRInt32 index = list->GetSelectedIndex();
+    NS_RELEASE(list);
     if (index >= 0) {
       nsOption* selected = GetNthOption(index);
       if (selected) {
@@ -524,6 +525,7 @@ nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     if (numSelections >= 0) {
       PRInt32* selections = new PRInt32[numSelections];
       list->GetSelectedIndices(selections, numSelections);
+      NS_RELEASE(list);
       PRInt32 numValues;
       aNumValues = 0;
       for (int i = 0; i < numSelections; i++) {
@@ -588,6 +590,7 @@ nsSelect::Reset()
   if (mIsComboBox && (numChildren > 0) && (selIndex < 0)) {
     list->SelectItem(0);
   }
+  NS_RELEASE(list);
 }  
 
 
