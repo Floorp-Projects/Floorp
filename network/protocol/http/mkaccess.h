@@ -80,7 +80,7 @@ net_http_password_data_interp(
         char *password_buffer, int32 password_buffer_size);
 
 PUBLIC void NET_DeleteCookie(char* cookieURL);
-PUBLIC void NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry);
+PUBLIC void NET_DisplayCookieInfoAsHTML(MWContext * context);
 
 
 /*============================================================================================
