@@ -484,6 +484,14 @@
   <a name="add_comment"></a>
   <textarea wrap="hard" name="comment" id="comment" rows="10" cols="80"
             accesskey="c"></textarea>
+
+  [% IF NOT bug.cc || NOT bug.cc.contains(user.login) %]
+    <br>
+    <label>
+      <input type="checkbox" name="addselfcc">
+      Add [% user.login FILTER html %] to CC list
+    </label>
+  [% END %]
   <br>
 
   [% IF bug.groups.size > 0 %]

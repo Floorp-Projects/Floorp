@@ -651,7 +651,7 @@ my @groupDel = ();
 
 SendSQL("SELECT groups.id, isactive FROM groups, user_group_map WHERE " .
         "groups.id = user_group_map.group_id AND " .
-        "user_group_map.user_id = $::userid AND " .
+        "user_group_map.user_id = $whoid AND " .
         "isbless = 0 AND isbuggroup = 1");
 while (my ($b, $isactive) = FetchSQLData()) {
     # The multiple change page may not show all groups a bug is in
@@ -831,7 +831,7 @@ my $duplicate = 0;
 # What we'll do here is formulate the CC data into two hashes of ID's involved
 # in this CC change.  Then those hashes can be used later on for the actual change.
 my (%cc_add, %cc_remove);
-if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
+if (defined $::FORM{newcc} || defined $::FORM{'addselfcc'} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
     # If masscc is defined, then we came from buglist and need to either add or
     # remove cc's... otherwise, we came from bugform and may need to do both.
     my ($cc_add, $cc_remove) = "";
@@ -856,6 +856,9 @@ if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{massc
             my $pid = DBNameToIdAndCheck($person);
             $cc_add{$pid} = $person;
         }
+    }
+    if ($::FORM{'addselfcc'}) {
+        $cc_add{$whoid} = $user->login;
     }
     if ($cc_remove) {
         $cc_remove =~ s/[\s,]+/ /g; # Change all delimiters to a single space
@@ -1468,7 +1471,7 @@ foreach my $id (@idlist) {
     }
 
     my @ccRemoved = (); 
-    if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
+    if (defined $::FORM{newcc} || defined $::FORM{'addselfcc'} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
         # Get the current CC list for this bug
         my %oncc;
         SendSQL("SELECT who FROM cc WHERE bug_id = $id");
@@ -1595,7 +1598,7 @@ foreach my $id (@idlist) {
                 "AND newcontrolmap.product_id = $newproduct_id " .
                 "LEFT JOIN user_group_map " .
                 "ON user_group_map.group_id = groups.id " .
-                "AND user_group_map.user_id = $::userid " .
+                "AND user_group_map.user_id = $whoid " .
                 "AND user_group_map.isbless = 0 " .
                 "LEFT JOIN bug_group_map " .
                 "ON bug_group_map.group_id = groups.id " .
@@ -1829,7 +1832,7 @@ foreach my $id (@idlist) {
 # now show the next bug
 if ($next_bug) {
     if (detaint_natural($next_bug) && Bugzilla->user->can_see_bug($next_bug)) {
-        my $bug = new Bugzilla::Bug($next_bug, $::userid);
+        my $bug = new Bugzilla::Bug($next_bug, $whoid);
         ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 
         # next.html.tmpl includes edit.html.tmpl, and therefore we
