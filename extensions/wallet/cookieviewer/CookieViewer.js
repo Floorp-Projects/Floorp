@@ -510,10 +510,9 @@ function onOK(){
   deletedCookies = gone_c.split(",");
   var cookieCount;
   for (cookieCount=0; cookieCount<deletedCookies.length-1; cookieCount++) {
-    cookiemanager.remove(cookies[deletedCookies[cookieCount]].host,
-                                cookies[deletedCookies[cookieCount]].name,
-                                cookies[deletedCookies[cookieCount]].path,
-                                document.getElementById("checkbox").checked);
+    var index = parseInt(deletedCookies[cookieCount]);
+    cookiemanager.remove(cookies[index].host, cookies[index].name, cookies[index].path,
+                         document.getElementById("checkbox").checked);
   }
 
   var deletedCookiePermissions = [];
@@ -523,7 +522,7 @@ function onOK(){
        cperm_count<deletedCookiePermissions.length-1;
        cperm_count++) {
     permissionmanager.remove
-      (cpermissions[deletedCookiePermissions[cperm_count]].host, cookieType);
+      (cpermissions[parseInt(deletedCookiePermissions[cperm_count])].host, cookieType);
   }
 
   var deletedImagePermissions = [];
@@ -533,7 +532,7 @@ function onOK(){
        iperm_count<deletedImagePermissions.length-1;
        iperm_count++) {
     permissionmanager.remove
-      (ipermissions[deletedImagePermissions[iperm_count]].host, imageType);
+      (ipermissions[parseInt(deletedImagePermissions[iperm_count])].host, imageType);
   }
   return true;
 }
