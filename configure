@@ -16,7 +16,6 @@ _AUTOCONF_TOOLS_DIR=`dirname $0`/./build/autoconf
 ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
-ac_default_prefix=`pwd`/dist
 ac_help="$ac_help
   --with-x                use the X Window System"
 ac_help="$ac_help
@@ -797,7 +796,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:801: checking host system type" >&5
+echo "configure:800: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -818,7 +817,7 @@ host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 echo "$ac_t""$host" 1>&6
 
 echo $ac_n "checking target system type""... $ac_c" 1>&6
-echo "configure:822: checking target system type" >&5
+echo "configure:821: checking target system type" >&5
 
 target_alias=$target
 case "$target_alias" in
@@ -836,7 +835,7 @@ target_os=`echo $target | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 echo "$ac_t""$target" 1>&6
 
 echo $ac_n "checking build system type""... $ac_c" 1>&6
-echo "configure:840: checking build system type" >&5
+echo "configure:839: checking build system type" >&5
 
 build_alias=$build
 case "$build_alias" in
@@ -858,10 +857,11 @@ test "$host_alias" != "$target_alias" &&
     NONENONEs,x,x, &&
   program_prefix=${target_alias}-
 
-
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
 TARGET_OS="${target_os}"
+MOZILLA_VERSION='0.9.6+'
+
 
 CFLAGS="${CFLAGS=}"
 CPPFLAGS="${CPPFLAGS=}"
@@ -13283,6 +13283,7 @@ s%@build_alias@%$build_alias%g
 s%@build_cpu@%$build_cpu%g
 s%@build_vendor@%$build_vendor%g
 s%@build_os@%$build_os%g
+s%@MOZILLA_VERSION@%$MOZILLA_VERSION%g
 s%@HOST_CC@%$HOST_CC%g
 s%@HOST_CXX@%$HOST_CXX%g
 s%@HOST_RANLIB@%$HOST_RANLIB%g
