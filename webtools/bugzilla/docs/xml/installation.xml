@@ -613,7 +613,7 @@ Options ExecCGI
 	    <programlisting>
 bash# mkdir /usr/bonsaitools  
 bash# mkdir /usr/bonsaitools/bin 
-bash# ln -s /usr/bin/perl /usr/bosaitools/bin/perl
+bash# ln -s /usr/bin/perl /usr/bonsaitools/bin/perl
 	    </programlisting>
 	  </para>
 	  <para>
