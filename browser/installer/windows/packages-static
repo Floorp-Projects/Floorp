@@ -305,3 +305,6 @@ bin\components\talkback-l10n.ini
 bin\components\talkback.cnt
 bin\components\talkback.exe
 bin\components\talkback.hlp
+
+[reporter]
+bin\chrome\reporter.jar

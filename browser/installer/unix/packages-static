@@ -314,3 +314,6 @@ bin/chrome/help.jar
 bin/components/libqfaservices.so
 bin/components/qfaservices.xpt
 bin/components/talkback/*
+
+[reporter]
+bin/chrome/reporter.jar
