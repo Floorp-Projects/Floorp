@@ -369,6 +369,10 @@ MOZ_COMPONENT_XPCOM_LIBS += -lboehm
 XPCOM_LIBS += -lboehm
 endif
 
+ifneq (,$(filter xpcom,$(BUILD_MODULES)))
+DEFINES += -DXPCOM_STANDALONE
+endif
+
 ifneq ($(OS_ARCH),WINNT)
 
 ifdef MOZ_NATIVE_MAKEDEPEND
