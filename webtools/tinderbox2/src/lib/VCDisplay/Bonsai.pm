@@ -4,8 +4,8 @@
 # installed bonsai and are using cvsblame cvsguess and cvsquery to let
 # your webserver render html pages of your CVS repository.
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/25 16:41:10 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/09 19:12:55 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/Bonsai.pm,v $ 
 # $Name:  $ 
@@ -40,7 +40,12 @@
 package VCDisplay;
 
 
-# Tinderbox libraries
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
 
 use HTMLPopUp;
 use TreeData;

@@ -6,8 +6,8 @@
 # cvsquery an we may need to generalize the interfaces in the future
 # to accomidate more VC systems.
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:19:13 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:12:49 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/None.pm,v $ 
 # $Name:  $ 
@@ -38,18 +38,17 @@
 
 
 
-# Load standard perl libraries
-
-# Load Tinderbox libraries
-
+package VCDisplay;
 
 $VERSION = '#tinder_version#';
 
 
-package VCDisplay;
 
+# Load standard perl libraries
 
-# Tinderbox libraries
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
 
 use TreeData;
 use HTMLPopUp;
