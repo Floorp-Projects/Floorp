@@ -858,6 +858,7 @@ browser/components/bookmarks/Makefile
 browser/components/bookmarks/public/Makefile
 browser/components/bookmarks/src/Makefile
 browser/components/build/Makefile
+browser/components/cookieviewer/Makefile
 browser/components/downloads/Makefile
 browser/components/downloads/public/Makefile
 browser/components/downloads/src/Makefile
@@ -882,6 +883,9 @@ toolkit/components/filepicker/Makefile
 toolkit/components/history/Makefile
 toolkit/components/history/public/Makefile
 toolkit/components/history/src/Makefile
+toolkit/components/passwordmgr/Makefile
+toolkit/components/passwordmgr/base/Makefile
+toolkit/components/passwordmgr/resources/Makefile
 toolkit/components/satchel/Makefile
 toolkit/components/satchel/public/Makefile
 toolkit/components/satchel/src/Makefile
