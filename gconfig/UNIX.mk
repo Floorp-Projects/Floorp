@@ -36,6 +36,7 @@ MKDEPEND        = $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
 MKDEPENDENCIES  = $(NSINSTALL_DIR)/$(OBJDIR_NAME)/depend.mk
 
 GUI_LIBS        = -lXm -lXt -lX11
+MATH_LIB        = -lm
 OPT_SLASH       = /
 LIB_PREFIX      = lib
 LIB_SUFFIX      = a
@@ -43,6 +44,9 @@ NSPR_LIBS       = nspr21 plds21 plc21 msgc21 nspr21
 LINK_PROGRAM    = $(CC)
 XP_REG_LIB      = reg
 ARCHIVE_SUFFIX  = 
+NATIVE_PLATFORM = unix
+NATIVE_RAPTOR_WIDGET = widgetunix
+NATIVE_RAPTOR_GFX = gfxunix
 
 ####################################################################
 #

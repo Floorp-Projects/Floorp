@@ -47,6 +47,9 @@ LIB_SUFFIX   = lib
 DLL_SUFFIX   = dll
 OUT_NAME     = -out:
 ARCHIVE_SUFFIX = _s
+NATIVE_PLATFORM=win
+NATIVE_RAPTOR_WIDGET =
+NATIVE_RAPTOR_GFX =
 
 ifdef RCFILE
 RCFILE       := $(RCFILE).rc
@@ -54,6 +57,7 @@ RESFILE      = $(OBJDIR)/$(RCFILE:.rc=.res)
 endif
 
 OS_LIBS = gdi32.lib kernel32.lib advapi32.lib user32.lib
+MATH_LIB=
 
 GUI_LIBS = 
 NSPR_LIBS = libplds21 libplc21 libnspr21 libmsgc21

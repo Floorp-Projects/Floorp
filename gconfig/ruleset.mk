@@ -160,12 +160,21 @@ ifdef EXTRA_LIBS
 	EXTRA_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)$(LIB_PREFIX), $(EXTRA_LIBS:%=%$(STATIC_LIB_SUFFIX)))
 endif
 
-# Rules to convert EXTRA_LIBS to platform-dependent naming scheme
+# Rules to convert AR_LIBS to platform-dependent naming scheme
 ifdef AR_LIBS
   ifeq ($(OS_ARCH), WINNT)
 	AR_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH), $(AR_LIBS:%=%$(LIBRARY_VERSION)$(ARCHIVE_SUFFIX)$(STATIC_LIB_SUFFIX)))
   else
 	AR_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)lib, $(AR_LIBS:%=%$(LIBRARY_VERSION)$(ARCHIVE_SUFFIX)$(STATIC_LIB_SUFFIX)))
+  endif
+endif
+
+# Rules to convert LD_LIBS to platform-dependent naming scheme
+ifdef LD_LIBS
+  ifeq ($(OS_ARCH), WINNT)
+	LD_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH), $(LD_LIBS:%=%$(STATIC_LIB_SUFFIX)))
+  else
+	LD_LIBS := $(addprefix $(CONFIG_DIST_BIN)$(OPT_SLASH)lib, $(LD_LIBS:%=%$(STATIC_LIB_SUFFIX)))
   endif
 endif
 
