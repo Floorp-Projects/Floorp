@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.35 2001/03/02 03:40:48 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.36 2001/03/06 00:12:09 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.35 $ $Date: 2001/03/02 03:40:48 $
+ * @version $Revision: 1.36 $ $Date: 2001/03/06 00:12:09 $
 **/
 
 /**
@@ -203,7 +203,7 @@ void XSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument, String& href)
                 parseStylesheetPI(data, type, tmpHref);
                 if ( XSL_MIME_TYPE.isEqual(type) ) {
                     href.clear();
-                    href.append(tmpHref);
+                    URIUtils::resolveHref(tmpHref, node->getBaseURI(), href);
                 }
             }
         }
@@ -276,10 +276,10 @@ void XSLTProcessor::parseStylesheetPI(String& data, String& type, String& href) 
  * resolving relative URIs
  * @return the result tree.
 **/
-Document* XSLTProcessor::process(Document& xmlDocument, String& documentBase) {
+Document* XSLTProcessor::process(Document& xmlDocument) {
     //-- look for Stylesheet PI
     Document xslDocument; //-- empty for now
-    return process(xmlDocument, xslDocument, documentBase);
+    return process(xmlDocument, xslDocument);
 } //-- process
 
 /**
@@ -289,10 +289,11 @@ Document* XSLTProcessor::process(Document& xmlDocument, String& documentBase) {
  * @return the result tree.
 **/
 Document* XSLTProcessor::process
-(istream& xmlInput, istream& xslInput, String& documentBase) {
+    (istream& xmlInput, String& xmlFilename,
+     istream& xslInput, String& xslFilename) {
     //-- read in XML Document
     XMLParser xmlParser;
-    Document* xmlDoc = xmlParser.parse(xmlInput);
+    Document* xmlDoc = xmlParser.parse(xmlInput, xmlFilename);
     if (!xmlDoc) {
         String err("error reading XML document: ");
         err.append(xmlParser.getErrorString());
@@ -300,7 +301,7 @@ Document* XSLTProcessor::process
         return 0;
     }
     //-- Read in XSL document
-    Document* xslDoc = xmlParser.parse(xslInput);
+    Document* xslDoc = xmlParser.parse(xslInput, xslFilename);
     if (!xslDoc) {
         String err("error reading XSL stylesheet document: ");
         err.append(xmlParser.getErrorString());
@@ -308,7 +309,7 @@ Document* XSLTProcessor::process
         delete xmlDoc;
         return 0;
     }
-    Document* result = process(*xmlDoc, *xslDoc, documentBase);
+    Document* result = process(*xmlDoc, *xslDoc);
     delete xmlDoc;
     delete xslDoc;
     return result;
@@ -324,10 +325,10 @@ Document* XSLTProcessor::process
  * resolving relative URIs
  * @return the result tree.
 **/
-Document* XSLTProcessor::process(istream& xmlInput, String& documentBase) {
+Document* XSLTProcessor::process(istream& xmlInput, String& xmlFilename) {
     //-- read in XML Document
     XMLParser xmlParser;
-    Document* xmlDoc = xmlParser.parse(xmlInput);
+    Document* xmlDoc = xmlParser.parse(xmlInput, xmlFilename);
     if (!xmlDoc) {
         String err("error reading XML document: ");
         err.append(xmlParser.getErrorString());
@@ -338,10 +339,10 @@ Document* XSLTProcessor::process(istream& xmlInput, String& documentBase) {
     String href;
     String errMsg;
     getHrefFromStylesheetPI(*xmlDoc, href);
-    istream* xslInput = URIUtils::getInputStream(href,documentBase,errMsg);
+    istream* xslInput = URIUtils::getInputStream(href,errMsg);
     Document* xslDoc = 0;
     if ( xslInput ) {
-        xslDoc = xmlParser.parse(*xslInput);
+        xslDoc = xmlParser.parse(*xslInput, href);
         delete xslInput;
     }
     if (!xslDoc) {
@@ -351,7 +352,7 @@ Document* XSLTProcessor::process(istream& xmlInput, String& documentBase) {
         delete xmlDoc;
         return 0;
     }
-    Document* result = process(*xmlDoc, *xslDoc, documentBase);
+    Document* result = process(*xmlDoc, *xslDoc);
     delete xmlDoc;
     delete xslDoc;
     return result;
@@ -529,14 +530,14 @@ void XSLTProcessor::processTopLevel
  * and returns the result tree
 **/
 Document* XSLTProcessor::process
-   (Document& xmlDocument, Document& xslDocument, String& documentBase)
+   (Document& xmlDocument, Document& xslDocument)
 {
 
     Document* result = new Document();
 
     //-- create a new ProcessorState
     ProcessorState ps(xslDocument, *result);
-    ps.setDocumentBase(documentBase);
+    ps.setDocumentBase(xslDocument.getBaseURI());
 
     //-- add error observers
     ListIterator* iter = errorObservers.iterator();
@@ -567,8 +568,7 @@ Document* XSLTProcessor::process
 void XSLTProcessor::process
    (  Document& xmlDocument,
       Document& xslDocument,
-      ostream& out,
-      String& documentBase  )
+      ostream& out)
 {
 
 
@@ -576,7 +576,7 @@ void XSLTProcessor::process
 
     //-- create a new ProcessorState
     ProcessorState ps(xslDocument, *result);
-    ps.setDocumentBase(documentBase);
+    ps.setDocumentBase(xslDocument.getBaseURI());
 
     //-- add error observers
     ListIterator* iter = errorObservers.iterator();
@@ -611,11 +611,11 @@ void XSLTProcessor::process
  * will not close the ostream argument
 **/
 void XSLTProcessor::process
-   (istream& xmlInput, ostream& out, String& documentBase)
+   (istream& xmlInput, String& xmlFilename, ostream& out)
 {
 
     XMLParser xmlParser;
-    Document* xmlDoc = xmlParser.parse(xmlInput);
+    Document* xmlDoc = xmlParser.parse(xmlInput, xmlFilename);
     if (!xmlDoc) {
         String err("error reading XML document: ");
         err.append(xmlParser.getErrorString());
@@ -626,10 +626,10 @@ void XSLTProcessor::process
     String href;
     String errMsg;
     getHrefFromStylesheetPI(*xmlDoc, href);
-    istream* xslInput = URIUtils::getInputStream(href,documentBase,errMsg);
+    istream* xslInput = URIUtils::getInputStream(href,errMsg);
     Document* xslDoc = 0;
     if ( xslInput ) {
-        xslDoc = xmlParser.parse(*xslInput);
+        xslDoc = xmlParser.parse(*xslInput, href);
         delete xslInput;
     }
     if (!xslDoc) {
@@ -639,7 +639,7 @@ void XSLTProcessor::process
         delete xmlDoc;
         return;
     }
-    process(*xmlDoc, *xslDoc, out, documentBase);
+    process(*xmlDoc, *xslDoc, out);
     delete xmlDoc;
     delete xslDoc;
 } //-- process
@@ -652,11 +652,13 @@ void XSLTProcessor::process
  * will not close the ostream argument
 **/
 void XSLTProcessor::process
-   (istream& xmlInput, istream& xslInput, ostream& out, String& documentBase)
+   (istream& xmlInput, String& xmlFilename,
+    istream& xslInput, String& xslFilename,
+    ostream& out)
 {
     //-- read in XML Document
     XMLParser xmlParser;
-    Document* xmlDoc = xmlParser.parse(xmlInput);
+    Document* xmlDoc = xmlParser.parse(xmlInput, xmlFilename);
     if (!xmlDoc) {
         String err("error reading XML document: ");
         err.append(xmlParser.getErrorString());
@@ -664,7 +666,7 @@ void XSLTProcessor::process
         return;
     }
     //-- read in XSL Document
-    Document* xslDoc = xmlParser.parse(xslInput);
+    Document* xslDoc = xmlParser.parse(xslInput, xslFilename);
     if (!xslDoc) {
         String err("error reading XSL stylesheet document: ");
         err.append(xmlParser.getErrorString());
@@ -672,7 +674,7 @@ void XSLTProcessor::process
         delete xmlDoc;
         return;
     }
-    process(*xmlDoc, *xslDoc, out, documentBase);
+    process(*xmlDoc, *xslDoc, out);
     delete xmlDoc;
     delete xslDoc;
 } //-- process

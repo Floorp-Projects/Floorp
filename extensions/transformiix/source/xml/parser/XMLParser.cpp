@@ -34,7 +34,7 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.13 2001/01/22 21:54:20 axel%pike.org Exp $
+ * $Id: XMLParser.cpp,v 1.14 2001/03/06 00:12:18 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XMLParser.h"
@@ -77,13 +77,14 @@ XMLParser::~XMLParser()
 } //-- ~XMLParser
 
 Document* XMLParser::getDocumentFromURI
-    (String& href, String& documentBase, String& errMsg)
+    (const String& href, const String& baseUri, String& errMsg)
 {
+
+    String documentURL;
+    URIUtils::resolveHref(href, baseUri, documentURL);
 
 #ifdef MOZ_XSL
     nsresult rv = NS_OK;
-    String documentURL;
-    URIUtils::resolveHref(href, documentBase, documentURL);
     nsCOMPtr<nsIURI> documentURI;
     NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return NULL;
@@ -102,11 +103,11 @@ Document* XMLParser::getDocumentFromURI
 
     return new Document(theDocument);
 #else
-    istream* xslInput = URIUtils::getInputStream(href, documentBase, errMsg);
+    istream* xslInput = URIUtils::getInputStream(documentURL, errMsg);
 
     Document* resultDoc = 0;
     if ( xslInput ) {
-        resultDoc = parse(*xslInput);
+        resultDoc = parse(*xslInput, documentURL);
         delete xslInput;
     }
     if (!resultDoc) {
@@ -122,7 +123,7 @@ Document* XMLParser::getDocumentFromURI
  *  Parses the given input stream and returns a DOM Document.
  *  A NULL pointer will be returned if errors occurred
 **/
-Document* XMLParser::parse(istream& inputStream)
+Document* XMLParser::parse(istream& inputStream, const String& uri)
 {
   const int bufferSize = 1000;
 
@@ -137,6 +138,7 @@ Document* XMLParser::parse(istream& inputStream)
   XML_Parser parser = XML_ParserCreate(NULL);
   ParserState ps;
   ps.document = new Document();
+  ps.document->documentBaseURI = uri;
   ps.currentNode = ps.document;
 
   XML_SetUserData(parser, &ps);

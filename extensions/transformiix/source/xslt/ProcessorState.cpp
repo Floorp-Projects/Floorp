@@ -25,17 +25,18 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.19 2001/02/15 09:21:03 axel%pike.org Exp $
+ * $Id: ProcessorState.cpp,v 1.20 2001/03/06 00:12:13 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.19 $ $Date: 2001/02/15 09:21:03 $
+ * @version $Revision: 1.20 $ $Date: 2001/03/06 00:12:13 $
 **/
 
 #include "ProcessorState.h"
 #include "XSLTFunctions.h"
+#include "URIUtils.h"
 
   //-------------/
  //- Constants -/
@@ -681,6 +682,24 @@ void ProcessorState::stripSpace(String& names) {
 
 } //-- stripSpace
 
+/**
+ * Adds a document to set of loaded documents
+**/
+void ProcessorState::addLoadedDocument(Document* doc, String& url) {
+    String docUrl;
+    URIUtils::getDocumentURI(url, docUrl);
+    loadedDocuments.put(docUrl, doc);
+}
+
+/**
+ * Returns a loaded document given it's url. NULL if no such doc exists
+**/
+Document* ProcessorState::getLoadedDocument(String& url) {
+    String docUrl;
+    URIUtils::getDocumentURI(url, docUrl);
+    return (Document*) loadedDocuments.get(docUrl);
+}
+
   //--------------------------------------------------/
  //- Virtual Methods from derived from ContextState -/
 //--------------------------------------------------/
@@ -791,7 +810,7 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
    String err;
 
    if (DOCUMENT_FN.isEqual(name)) {
-       return new DocumentFunctionCall(xslDocument);
+       return new DocumentFunctionCall(this, xslDocument);
    }
    else if (KEY_FN.isEqual(name)) {
        err = "function not yet implemented: ";
@@ -1031,5 +1050,8 @@ void ProcessorState::initialize() {
 
 	    //cout << "XSLT namespace: " << xsltNameSpace << endl;
 	}
+    
+    //-- Make sure all loaded documents get deleted
+    loadedDocuments.setObjectDeletion(MB_TRUE);
 }
 
