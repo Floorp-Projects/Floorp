@@ -38,8 +38,13 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 void PR_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
-  printf("JavaScript error: %s\nURL :%s, LineNo :%u\nLine text: '%s', Error text: '%s'\n", message, 
-         report->filename, report->lineno, report->linebuf, report->tokenptr);
+  if (nsnull != report) {
+    printf("JavaScript error: %s\nURL :%s, LineNo :%u\nLine text: '%s', Error text: '%s'\n", message, 
+           report->filename, report->lineno, report->linebuf, report->tokenptr);
+  }
+  else {
+    printf("JavaScript error: %s\n", message);
+  }
 }
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
