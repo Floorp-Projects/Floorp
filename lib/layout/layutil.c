@@ -27,13 +27,11 @@
 #include "stystruc.h"
 #include "stystack.h"
 #include "layers.h"
-#ifdef NSPR20
 #ifdef XP_MAC
 #include "prpriv.h"
 #else
 #include "private/prpriv.h"		/* for PR_NewNamedMonitor */
 #endif
-#endif /* NSPR20 */
 #include "intl_csi.h"
 
 #ifdef DOM
@@ -2193,7 +2191,6 @@ lo_SetNamedAnchor(lo_DocState *state, PA_Block name)
 
     doc_lists = lo_GetCurrentDocLists(state);
     
-#ifdef MOCHA
     if (state->in_relayout) {
         /* Look for the old lo_NameList.  Its mocha_object is still valid. */
         lo_NameList *name_list = doc_lists->name_list;
@@ -2224,7 +2221,6 @@ lo_SetNamedAnchor(lo_DocState *state, PA_Block name)
         }
     }
     if (!name_rec || !state->in_relayout) {
-#endif /* MOCHA */
         name_rec = XP_NEW(lo_NameList);
         if (name_rec == NULL)
             {
@@ -2232,10 +2228,8 @@ lo_SetNamedAnchor(lo_DocState *state, PA_Block name)
                 PA_FREE(name);
                 return FALSE;
             }
-#ifdef MOCHA
         name_rec->mocha_object = NULL;
     }
-#endif /* MOCHA */
     name_rec->x = 0;
     name_rec->y = 0;
     name_rec->name = name;
@@ -2338,7 +2332,6 @@ lo_SetNamedSpan(lo_DocState *state, PA_Block id)
 
     doc_lists = lo_GetCurrentDocLists(state);
     
-#ifdef MOCHA
     if (state->in_relayout) {
         /* Look for the old lo_NameList.  Its mocha_object is still valid. */
         lo_NameList *span_list = doc_lists->span_list;
@@ -2369,7 +2362,6 @@ lo_SetNamedSpan(lo_DocState *state, PA_Block id)
         }
     }
     if (!name_rec || !state->in_relayout) {
-#endif /* MOCHA */
         name_rec = XP_NEW(lo_NameList);
         if (name_rec == NULL)
             {
@@ -2377,10 +2369,8 @@ lo_SetNamedSpan(lo_DocState *state, PA_Block id)
                 PA_FREE(id);
                 return FALSE;
             }
-#ifdef MOCHA
         name_rec->mocha_object = NULL;
     }
-#endif /* MOCHA */
     name_rec->x = 0;
     name_rec->y = 0;
     name_rec->name = id;
@@ -2653,11 +2643,9 @@ lo_AppendToLineList(MWContext *context, lo_DocState *state,
         }
 	state->current_named_anchor = NULL;
 	}
-#ifdef MOCHA
     else if (state->current_anchor) {
         state->current_anchor->element = element;
     }
-#endif /* MOCHA */
 
 	element->lo_any.next = NULL;
 	element->lo_any.prev = NULL;

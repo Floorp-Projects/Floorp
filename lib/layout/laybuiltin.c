@@ -179,9 +179,7 @@ lo_FormatBuiltinInternal (MWContext *context, lo_DocState *state, PA_Tag *tag,
 #endif
 
     builtin->nextBuiltin = NULL;
-#ifdef MOCHA
     builtin->mocha_object = NULL;
-#endif
 
 	builtin->FE_Data = NULL;
 	builtin->session_data = NULL;

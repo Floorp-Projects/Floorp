@@ -860,9 +860,7 @@ lo_reuse_current_state(MWContext *context, lo_DocState *state,
 	state->edit_current_offset = 0;
 	state->edit_relayout_display_blocked = FALSE;
 #endif
-#ifdef MOCHA
 	state->in_relayout = FALSE;
-#endif
 
 	state->cur_text_block = NULL;
 	
@@ -2662,26 +2660,22 @@ lo_merge_form_data(lo_FormData *new_form_list, lo_FormData *hold_form_list)
 	{
 		if (hold_ele_list[i] != new_ele_list[i])
 		{
-#ifdef MOCHA
 			if (new_ele_list[i]->mocha_object == NULL)
 			{
 				new_ele_list[i]->mocha_object
 				    = hold_ele_list[i]->mocha_object;
 			}
-#endif
 			hold_ele_list[i] = new_ele_list[i];
 		}
 	}
 	PA_UNLOCK(hold_form_list->form_elements);
 	PA_UNLOCK(new_form_list->form_elements);
 
-#ifdef MOCHA
 	/* XXX sometimes the second pass does not reflect a form object! */
 	if (new_form_list->mocha_object != NULL)
 	{
 		hold_form_list->mocha_object = new_form_list->mocha_object;
 	}
-#endif
 	return(hold_form_list);
 }
 

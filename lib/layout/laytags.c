@@ -7463,9 +7463,6 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		 * this can result in the loss of body data!
 		 */
 		case P_UNKNOWN:
-#ifndef MOCHA
-		unknown:
-#endif
 			if (state->top_state->in_head != FALSE)
 			{
 			    char *tdata;

@@ -41,9 +41,7 @@ extern int MK_OUT_OF_MEMORY;
 #define IL_CLIENT               /* Defined by Image Library clients */
 #include "libimg.h"             /* Image Library public API. */
 
-#ifdef MOCHA
 #include "libevent.h"
-#endif /* MOCHA */
 
 #include "timing.h"
 
@@ -1358,9 +1356,7 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
 	LO_ImageStruct *image;
     int32 layer_id;
-#ifdef MOCHA
     LM_ImageEvent mocha_event;
-#endif /* MOCHA */
 
 	image = (LO_ImageStruct *)tag->lo_data;
 	if (image == NULL)
@@ -1368,7 +1364,6 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		return;
 	}
 
-#ifdef MOCHA
     layer_id = lo_CurrentLayerId(state);
     image->layer_id = layer_id;
     /* Reflect the image into Javascript */
@@ -1393,7 +1388,6 @@ lo_PartialFormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
         mocha_event = LM_IMGERROR;
         ET_SendImageEvent(context, image, mocha_event);
     }
-#endif
 
 	tag->lo_data = NULL;
 
@@ -2130,13 +2124,11 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		}
 	}
 
-#ifdef MOCHA
     layer_id = lo_CurrentLayerId(state);
     image->layer_id = layer_id;
     
     /* Reflect the image into Javascript */
     lo_ReflectImage(context, state, tag, image, FALSE, layer_id);
-#endif
 
     if (context->compositor) {
         image->layer = lo_CreateImageLayer(context, image, NULL);
@@ -2959,11 +2951,9 @@ lo_ImageObserver(XP_Observable observable, XP_ObservableMsg message,
 {
     IL_MessageData *data = (IL_MessageData*)message_data;
     lo_ImageObsClosure *image_obs_closure = (lo_ImageObsClosure *)closure;
-    MWContext *context = NULL;
-    LO_ImageStruct *lo_image = NULL;
-#ifdef MOCHA
+    MWContext *context=NULL;
+    LO_ImageStruct *lo_image;
     LM_ImageEvent mocha_event;
-#endif /* MOCHA */
 
     if (image_obs_closure) {
         context = image_obs_closure->context;

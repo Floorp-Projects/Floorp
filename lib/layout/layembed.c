@@ -332,10 +332,7 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	lo_DocLists *doc_lists;
 
     embed->nextEmbed= NULL;
-#ifdef MOCHA
     embed->objTag.mocha_object = NULL;
-#endif
-
 	embed->objTag.FE_Data = NULL;
 	embed->objTag.session_data = NULL;
 	embed->objTag.line_height = state->line_height;

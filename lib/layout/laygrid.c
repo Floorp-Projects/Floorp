@@ -2131,9 +2131,7 @@ lo_BeginGrid(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		return;
 	}
 
-#ifdef MOCHA
 	(void)lo_ProcessContextEventHandlers(context, state, tag);
-#endif
 
 	grid->rows = rows;
 	grid->row_percents = row_percents;
@@ -2796,9 +2794,7 @@ lo_BeginSubgrid(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		return;
 	}
 
-#ifdef MOCHA
 	(void)lo_ProcessContextEventHandlers(context, state, tag);
-#endif
 
 	subgrid->rows = rows;
 	subgrid->row_percents = row_percents;

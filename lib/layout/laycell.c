@@ -982,11 +982,7 @@ void lo_CreateCellFromSubDoc( MWContext *context, lo_DocState *state,
  * back up to the top level state, instead of propogating up
  * like we used to.
  */
-#ifdef MOCHA
 		lo_AddNameList(state->top_state->doc_state, subdoc_state);
-#else
-		lo_AddNameList(state, subdoc_state);
-#endif /* MOCHA */
 	}
 }
 

@@ -187,10 +187,7 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 	lo_DocLists *doc_lists;
 
     java_app->nextApplet = NULL;
-#ifdef MOCHA
     java_app->objTag.mocha_object = NULL;
-#endif
-
 	java_app->objTag.FE_Data = NULL;
 	java_app->objTag.session_data = NULL;
 	java_app->objTag.line_height = state->line_height;
