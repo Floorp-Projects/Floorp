@@ -15,6 +15,39 @@ Don't believe for a minute that you can use this stuff without first
 understanding most of the code.
 
 
+	============================
+	Configuration files you need
+	============================
+
+Lots of configuration files need to be placed in the data subdir.
+This is also where bonsai keeps its running state.  These two things
+ought to be split into different directories, but that hasn't happened
+yet.
+
+Some of these files are:
+
+configdata: 	some TCL source that defines treelist, a list of trees you want
+		to track, and treedata, information about each of those trees.
+		A sample configdata:
+
+	set treelist {default newlayout}
+
+	set treeinfo(default,module) MozillaSource
+	set treeinfo(default,branch) {}
+	set treeinfo(default,repository) {/cvsroot}
+	set treeinfo(default,description) {Mozilla Source Code}
+	set treeinfo(default,shortdesc) {Mozilla}
+
+	set treeinfo(newlayout,module) Raptor
+	set treeinfo(newlayout,branch) {}
+	set treeinfo(newlayout,repository) {/cvsroot}
+	set treeinfo(newlayout,description) {New Layout -- Main Line}
+	set treeinfo(newlayout,shortdesc) {New Layout}
+
+
+hidelist:	A list of regexps that define filenames that we don't want
+		to let people see via the bonsai pages.
+
 	=================================
 	What's What in the Bonsai sources:
 	=================================
