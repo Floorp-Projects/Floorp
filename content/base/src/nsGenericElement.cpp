@@ -1731,13 +1731,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
       // check the document on the nodeinfo to see whether we need a
       // new nodeinfo
-      nsIDocument *ownerDocument = GetOwnerDoc();
-      if (aDocument != ownerDocument) {
-
-        if (HasProperties()) {
-          ownerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
-        }
-
+      if (aDocument != GetOwnerDoc()) {
         // get a new nodeinfo
         nsNodeInfoManager* nodeInfoManager = aDocument->NodeInfoManager();
         if (nodeInfoManager) {
@@ -3645,51 +3639,4 @@ nsGenericElement::GetContentsAsText(nsAString& aText)
       tc->AppendTextTo(aText);
     }
   }
-}
-
-void*
-nsGenericElement::GetProperty(nsIAtom  *aPropertyName, nsresult *aStatus) const
-{
-  nsIDocument *doc = GetDocument();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable()->GetProperty(this, aPropertyName, aStatus);
-}
-
-nsresult
-nsGenericElement::SetProperty(nsIAtom            *aPropertyName,
-                              void               *aValue,
-                              NSPropertyDtorFunc  aDtor)
-{
-  nsIDocument *doc = GetDocument();
-  if (!doc)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = doc->PropertyTable()->SetProperty(this, aPropertyName,
-                                                  aValue, aDtor, nsnull);
-  if (NS_SUCCEEDED(rv))
-    SetFlags(GENERIC_ELEMENT_HAS_PROPERTIES);
-
-  return rv;
-}
-
-nsresult
-nsGenericElement::DeleteProperty(nsIAtom *aPropertyName)
-{
-  nsIDocument *doc = GetDocument();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable()->DeleteProperty(this, aPropertyName);
-}
-
-void*
-nsGenericElement::UnsetProperty(nsIAtom  *aPropertyName, nsresult *aStatus)
-{
-  nsIDocument *doc = GetDocument();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable()->UnsetProperty(this, aPropertyName, aStatus);
 }

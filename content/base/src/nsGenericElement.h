@@ -85,11 +85,8 @@ typedef unsigned long PtrBits;
 /** Whether this content is anonymous */
 #define GENERIC_ELEMENT_IS_ANONYMOUS           0x00000008U
 
-/** Whether this content has had any properties set on it */
-#define GENERIC_ELEMENT_HAS_PROPERTIES         0x00000010U
-
 /** The number of bits to shift the bit field to get at the content ID */
-#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 5
+#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 4
 
 /** This mask masks out the bits that are used for the content ID */
 #define GENERIC_ELEMENT_CONTENT_ID_MASK \
@@ -415,14 +412,6 @@ public:
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
   virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
-  virtual void* GetProperty(nsIAtom  *aPropertyName,
-                            nsresult *aStatus = nsnull) const;
-  virtual nsresult SetProperty(nsIAtom            *aPropertyName,
-                               void               *aValue,
-                               NSPropertyDtorFunc  aDtor);
-  virtual nsresult DeleteProperty(nsIAtom  *aPropertyName);
-  virtual void*    UnsetProperty(nsIAtom *aPropertyName,
-                                 nsresult *aStatus = nsnull);
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
@@ -745,13 +734,6 @@ protected:
 
     return (flags & GENERIC_ELEMENT_HAS_LISTENERMANAGER &&
             sEventListenerManagersHash.ops);
-  }
-
-  PRBool HasProperties() const
-  {
-    PtrBits flags = GetFlags();
-
-    return (flags & GENERIC_ELEMENT_HAS_PROPERTIES) != 0;
   }
 
   /**

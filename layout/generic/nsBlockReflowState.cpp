@@ -495,7 +495,8 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
       // at their original position.
       if (NS_STYLE_POSITION_RELATIVE == kid->GetStyleDisplay()->mPosition) {
         nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
-                      kid->GetProperty(nsLayoutAtoms::computedOffsetProperty));
+          mPresContext->FrameManager()->GetFrameProperty(kid,
+                                    nsLayoutAtoms::computedOffsetProperty, 0));
 
         if (offsets) {
           tx -= offsets->x;

@@ -240,7 +240,10 @@ nsSubDocumentFrame::Init(nsPresContext* aPresContext,
     nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
     nsIFrame* contentParent = nsnull;
 
-    void *value = UnsetProperty(contentParentAtom, &rv);
+    void *value =
+      aPresContext->FrameManager()->GetFrameProperty(this, contentParentAtom,
+                                                     NS_IFRAME_MGR_REMOVE_PROP,
+                                                     &rv);
     if (NS_SUCCEEDED(rv)) {
           contentParent = (nsIFrame*)value;
     }
