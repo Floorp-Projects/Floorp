@@ -57,8 +57,11 @@
 
 use Cwd;
 use Getopt::Std;
+use File::Find;
 use File::Path;
 getopts('o:s:');
+
+@libraryList = undef;
 
 #// constants
 $SUBDIR = "mozilla-installer";
@@ -161,6 +164,22 @@ spew("Completed copying build files");
 system("perl xptlink.pl -o unix -s $topobjdir/dist -d $STAGE -v");
 spew("Completed xptlinking"); 
 
+#// strip libs
+RecursiveStrip($STAGE);
+spew("Completed stripping libs in $STAGE");
+
+#// regenerate the NSS .chk files
+system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libsoftokn3.so");
+if(-e "$STAGE/psm/bin/libfreebl_pure32_3.so")
+{
+  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_pure32_3.so");
+}
+if(-e "$STAGE/psm/bin/libfreebl_hybrid_3.so")
+{
+  system("$topobjdir/dist/bin/run-mozilla.sh $topobjdir/dist/bin/shlibsign -v -i $STAGE/psm/bin/libfreebl_hybrid_3.so");
+}
+spew("Completed signing NSS libraries");
+
 #// call makeall.pl tunneling args (delivers .xpis to $topobjdir/installer/stage)
 chdir("$topsrcdir/xpinstall/packager/unix");
 system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI");
@@ -210,4 +229,28 @@ sub copy
         die "--- deliver.pl: couldn't cp cause ".$_[0]." doesn't exist: $!";
     }
     system ("cp ".$_[0]." ".$_[1]);
+}
+
+##
+# RecursiveStrip
+#
+# Strips all strippable files by recursing into all directories and calling
+# the strip utility on all files.
+#
+# @param   targetDir  the directory to traverse recursively
+#
+sub RecursiveStrip
+{
+    my($targetDir) = $_[0];
+
+    undef @libraryList;
+    find({ wanted => \&find_libraries, no_chdir => 1 }, $targetDir);
+
+    # strip all strippable files
+    system("strip @libraryList") if (defined(@libraryList));
+}
+
+sub find_libraries
+{
+    push @libraryList, $File::Find::name;
 }
