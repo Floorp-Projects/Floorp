@@ -43,6 +43,8 @@ $who_list = [];
 $who_list2 = [];
 @note_array = ();
 
+$bloat_by_log = {};
+
 
 #$body_tag = "<BODY TEXT=#000000 BGCOLOR=#8080C0 LINK=#FFFFFF VLINK=#800080 ALINK=#FFFF00>";
 #$body_tag = "<BODY TEXT=#000000 BGCOLOR=#FFFFC0 LINK=#0000FF VLINK=#800080 ALINK=#FF00FF>";
@@ -66,7 +68,6 @@ sub lock{
     #    flock( LOCKFILE_LOCK, 2 );
     #}
     #$lock_count++;
-
 }
 
 sub unlock{
@@ -182,6 +183,8 @@ sub load_data {
   }
 
   &make_build_table;
+
+  load_bloat($td1);
 }
 
 sub load_buildlog {
@@ -286,23 +289,23 @@ sub loadquickparseinfo {
   }
 }
 
+# Load data about who checked in when
+#   File format: <build_time>|<email_address>
+#
 sub load_who {
-  my ($who_list, $td) = @_;
-  my $d, $w, $i, $bfound;
+  my ($who_list, $treedata) = @_;
+  local $_;
   
-  open(WHOLOG, "<$td->{name}/who.dat");
+  open(WHOLOG, "<$treedata->{name}/who.dat");
   while (<WHOLOG>) {
-    $i = $time_count;
-    chop;
-    ($d,$w) = split /\|/;
-    $bfound = 0;
-    while ($i > 0 and not $bfound) {
-      if ($d <= $build_time_times->[$i]) {
-        $who_list->[$i+1]->{$w} = 1;
-        $bfound = 1;
-      }
-      else {
-        $i--;
+    chomp;
+    my ($checkin_time, $email) = split /\|/;
+
+    # Find the time slice where this checkin belongs.
+    for (my $ii = $time_count; $ii > 0; $ii--) {
+      if ($checkin_time <= $build_time_times->[$ii]) {
+        $who_list->[$ii+1]->{$email} = 1;
+        last;
       }
     }
   }
@@ -311,6 +314,21 @@ sub load_who {
   #
   if ($time_count > 0) {
     $who_list->[$time_count] = {};
+  }
+}
+    
+# Load data about code bloat
+#   File format: <build_time>|<build_name>|<leak_delta>|<bloat_delta>
+#
+sub load_bloat {
+  my ($treedata) = @_;
+  local $_;
+  open(BLOATLOG, "<$treedata->{name}/bloat.dat");
+  while (<BLOATLOG>) {
+    chomp;
+    my ($logfile, $leaks, $bloat) = split /\|/;
+    warn "$logfile $leaks $bloat\n";
+    $bloat_by_log->{$logfile} = [ $leaks, $bloat ];
   }
 }
     
