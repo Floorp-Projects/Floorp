@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.38 $ $Date: 2002/03/04 17:13:54 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.39 $ $Date: 2002/03/04 22:39:28 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -185,10 +185,10 @@ destroy_token_certs(nssList *certList, NSSToken *token, PRBool renewInstances)
          cert  = (NSSCertificate *)nssListIterator_Next(certs))
     {
 	removeIt = instance_destructor(cert, token);
-	if (removeIt || !renewInstances) {
+	if (removeIt) {
 	    nssList_Remove(certList, cert);
 	    CERT_DestroyCertificate(STAN_GetCERTCertificate(cert));
-	} else {
+	} else if (renewInstances) {
 	    /* force an update of the nickname and slot fields of the cert */
 	    (void)stan_GetCERTCertificate(cert, PR_TRUE);
 	}
@@ -200,7 +200,7 @@ destroy_token_certs(nssList *certList, NSSToken *token, PRBool renewInstances)
 NSS_IMPLEMENT void
 nssCertificateList_DestroyTokenCerts(nssList *certList, NSSToken *token)
 {
-    destroy_token_certs(certList, token, PR_FALSE);
+    destroy_token_certs(certList, token, PR_TRUE);
 }
 
 NSS_IMPLEMENT void

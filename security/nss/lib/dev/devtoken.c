@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.7 $ $Date: 2002/02/16 00:29:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.8 $ $Date: 2002/03/04 22:39:21 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -167,12 +167,14 @@ nssToken_Destroy
 	if (tok->defaultSession) {
 	    nssSession_Destroy(tok->defaultSession);
 	}
-#endif
 	if (tok->arena) {
 	    return NSSArena_Destroy(tok->arena);
 	} else {
 	    nss_ZFreeIf(tok);
 	}
+#else
+	    nss_ZFreeIf(tok);
+#endif
     }
     return PR_SUCCESS;
 }
