@@ -30,7 +30,7 @@ var	pref = null;
 function debug(msg)
 {
 	// uncomment for debugging information
-	dump(msg+"\n");
+	// dump(msg+"\n");
 }
 
 
