@@ -54,11 +54,14 @@ EXTRA_DSO_LDOPTS+=$(DIST)/lib/libraptorwidgetunix_s.a
 endif
 
 EXTRA_DSO_LDOPTS+=\
+	$(DIST)/lib/libraptorwidgetunix_s.a \
 	$(DIST)/lib/libraptorbasewidget_s.a \
-	$(DIST)/bin/libxpcom.so \
-	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libreg.so \
-	$(NSPR_LIBS)
+	-L$(DIST)/bin \
+	-lxpcom \
+	-lraptorbase \
+	-lreg \
+	$(LIBNSPR)\
+	$(DIST)/lib/libplc21.a
 
 EXTRA_DSO_LDOPTS += $(FE_X_LIBS) $(XLDFLAGS) $(XLIBS)
 

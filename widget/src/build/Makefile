@@ -32,9 +32,10 @@ CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
 EXTRA_DSO_LDOPTS+=\
 	$(DIST)/lib/libraptorwidgetunix_s.a \
 	$(DIST)/lib/libraptorbasewidget_s.a \
-	$(DIST)/bin/libxpcom.so \
-	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libreg.so \
+	-L$(DIST)/bin \
+	-lxpcom \
+	-lraptorbase \
+	-lreg \
 	$(LIBNSPR)\
 	$(DIST)/lib/libplc21.a
 
