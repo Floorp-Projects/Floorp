@@ -27,6 +27,8 @@
 #include "nsIURL.h"
 #include "nsILocalFile.h"
 
+#include <InternetConfig.h>
+
 // this is a platform specific class that abstracts an application.
 // we treat this object as a cookie when we pass it to an external app handler..
 // the handler will present this cookie back to the helper app service along with a
@@ -134,4 +136,44 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIFile * aTempFile, n
   }
   else
     return NS_ERROR_FAILURE;
+}
+
+
+// FIX ME --> implement
+NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
+{
+  // look up the protocol scheme in the windows registry....if we find a match then we have a handler for it...
+  *aHandlerExists = PR_FALSE;
+  return NS_OK;
+}
+
+// FIX ME --> implement
+NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
+{
+	nsresult rv = NS_OK;
+
+  // use internet config to launch the uri
+	nsXPIDLCString	uriStr;
+	pUri->GetSpec( getter_Copies( uriStr));
+
+	OSStatus err;
+	ICInstance inst;
+	long startSel;
+	long endSel = nsCRT::strlen( (const char *)uriStr);
+
+	err = ICStart(&inst, 'MOSS');
+	if (err == noErr) 
+  {
+		err = ICFindConfigFile( inst, 0, nil);
+		if (err == noErr) 
+    {
+			startSel = 0;
+			err = ICLaunchURL(inst, "\p", (char *)((const char *) uriStr), endSel, &startSel, &endSel);
+			if (err == noErr)
+				rv = NS_OK;
+		}
+ 		(void) ICStop(inst);
+ 	}
+  
+  return rv;
 }
