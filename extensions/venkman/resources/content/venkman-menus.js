@@ -233,6 +233,7 @@ function createMainToolbar(document)
 
     maintoolbar = document.getElementById("maintoolbar-outer");
     maintoolbar.removeAttribute ("collapsed");
+    maintoolbar.className = "toolbar-primary chromeclass-toolbar";
     var toolbox = document.getElementById("main-toolbox");
     toolbox.removeAttribute ("collapsed");
 }
