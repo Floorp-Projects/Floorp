@@ -20,20 +20,19 @@
   -- 
   -- Contributor(s): Akkana Peck
   -->
-<title>Ender Plain Text Test Page</title>
+<title>Simple html page</title>
 </head>
 
-<body style="white-space: -moz-pre-wrap; width: 72ch; font-family: -moz-fixed; background-color: rgb(255,255,255); ">
+<body>
+<h1>Simple html page</h1>
 
-80 char width (for reference only)
----------|---------|---------|---------|---------|---------|---------|---------|
-Welcome to the Gecko Plaintext Editor.
-This message has the wrapping set to 72 columns using a style sheet.
-Typed text will wrap to the current wrap setting.  You can view or set the wrap settings by typing various characters, as such:
--  alt-C:  print the current wrap column setting.
--  alt-]:  increase the wrap setting by 5
--  alt-[:  decrease the wrap setting by 5
-- ctrl-\:  wrap to window width (wrapcolumn = -1)
--  alt-\:  turn off wrapping (wrapcolumn = 0)
+Here is a <a href="http://www.mozilla.org">link to the mozilla.org</a> page.
+Here is some <u>underlined and <b>bold</b>ened</u>ified text.
+
+<p>
+Here is a line ending with a space
+followed by a line break.
+The output should contain only one space between "space" and "followed".
+
 </body>
 </html>

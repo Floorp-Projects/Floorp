@@ -18,22 +18,22 @@
   -- Copyright (C) 1998-1999 Netscape Communications Corporation. All
   -- Rights Reserved.
   -- 
-  -- Contributor(s): Akkana Peck
+  -- Contributor(s): 
   -->
 <title>Ender Plain Text Test Page</title>
 </head>
 
 <body style="white-space: -moz-pre-wrap; width: 72ch; font-family: -moz-fixed; background-color: rgb(255,255,255); ">
 
-80 char width (for reference only)
+80 char width (for reference only):
 ---------|---------|---------|---------|---------|---------|---------|---------|
-Welcome to the Gecko Plaintext Editor.
-This message has the wrapping set to 72 columns using a style sheet.
-Typed text will wrap to the current wrap setting.  You can view or set the wrap settings by typing various characters, as such:
--  alt-C:  print the current wrap column setting.
--  alt-]:  increase the wrap setting by 5
--  alt-[:  decrease the wrap setting by 5
-- ctrl-\:  wrap to window width (wrapcolumn = -1)
--  alt-\:  turn off wrapping (wrapcolumn = 0)
+Here is a <a href="http://www.mozilla.org">link to mozilla.org</a>.
+Here is some <u>underlined and <b>bold</b>ened</u>ified text.
+This is a test to make sure the output converters pick up the moz-pre-wrap style.  They don't necessarily have to pick up the exact wrap setting.
+
+- This should be tested with wrapping on.
+- This should be tested with wrapping off.
+
+This is the end.
 </body>
 </html>

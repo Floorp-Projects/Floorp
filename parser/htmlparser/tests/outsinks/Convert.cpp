@@ -47,21 +47,42 @@ static NS_DEFINE_IID(kParserCID, NS_PARSER_IID);
 // Interface IID's
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
-nsresult
-Compare(nsString& str, nsString& filename)
+int
+Compare(nsString& str, nsString& aFileName)
 {
-  printf("Sorry, don't know how to compare yet\n");
-  char* charstar = str.ToNewUTF8String();
-  printf("Output string is: %s\n-------------------- \n", charstar);
-  delete[] charstar;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Open the file in a Unix-centric way,
+  // until I find out how to use nsFileSpec:
+  char* filename = aFileName.ToNewCString();
+  FILE* file = fopen(filename, "r");
+  if (!file)
+  {
+    fprintf(stderr, "Can't open file %s", filename);
+    perror(" ");
+    delete[] filename;
+    return 2;
+  }
+  delete[] filename;
+
+  // Inefficiently read from the file:
+  nsString inString;
+  char c;
+  while ((c = getc(file)) != EOF)
+    inString += c;
+  if (file != stdin)
+    fclose(file);
+
+  if (str == inString)
+    return 0;
+  else
+    return 1;
 }
 
 //----------------------------------------------------------------------
 // Convert html on stdin to either plaintext or (if toHTML) html
 //----------------------------------------------------------------------
 nsresult
-HTML2text(nsString& inString, nsString& inType, nsString& outType, int wrapCol, nsString& compareAgainst)
+HTML2text(nsString& inString, nsString& inType, nsString& outType,
+          int flags, int wrapCol, nsString& compareAgainst)
 {
   nsresult rv = NS_OK;
 
@@ -81,10 +102,10 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType, int wrapCol, 
 
   // Create the appropriate output sink
   if (outType == "text/html")
-    rv = NS_New_HTML_ContentSinkStream(&sink, &outString, 0);
+    rv = NS_New_HTML_ContentSinkStream(&sink, &outString, flags);
 
   else  // default to plaintext
-    rv = NS_New_HTMLToTXT_SinkStream(&sink, &outString, wrapCol, 2);
+    rv = NS_New_HTMLToTXT_SinkStream(&sink, &outString, wrapCol, flags);
 
   if (NS_FAILED(rv))
   {
@@ -123,7 +144,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType, int wrapCol, 
     return Compare(outString, compareAgainst);
 
   char* charstar = outString.ToNewUTF8String();
-  printf("Output string is:\n--------------------\n%s\n--------------------\n",
+  printf("Output string is:\n--------------------\n%s--------------------\n",
          charstar);
   delete[] charstar;
 
@@ -137,6 +158,7 @@ int main(int argc, char** argv)
   nsString inType ("text/html");
   nsString outType ("text/plain");
   int wrapCol = 72;
+  int flags = 0;
   nsString compareAgainst;
 
 
@@ -151,11 +173,11 @@ int main(int argc, char** argv)
     {
       case 'h':
         printf("\
-Usage: %s [-i intype] [-o outtype] [-w wrapcol] [-c comparison_file] infile\n\
+Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] infile\n\
 \tIn/out types are mime types (e.g. text/html)\n\
 \tcomparison_file is a file against which to compare the output\n\
 \t  (not yet implemented\n\
-\tDefaults are -i text/html -o text/plain -w 72 [stdin]\n",
+\tDefaults are -i text/html -o text/plain -f 0 -w 72 [stdin]\n",
                progname);
         exit(0);
 
@@ -184,6 +206,16 @@ Usage: %s [-i intype] [-o outtype] [-w wrapcol] [-c comparison_file] infile\n\
           wrapCol = atoi(argv[0]+2);
         else {
           wrapCol = atoi(argv[1]);
+          --argc;
+          ++argv;
+        }
+        break;
+
+      case 'f':
+        if (isdigit(argv[0][2]))
+          flags = atoi(argv[0]+2);
+        else {
+          flags = atoi(argv[1]);
           --argc;
           ++argv;
         }
@@ -230,14 +262,5 @@ Usage: %s [-i intype] [-o outtype] [-w wrapcol] [-c comparison_file] infile\n\
   if (file != stdin)
     fclose(file);
 
-#if 0
-  printf("Input string is: %s\n-------------------- \n",
-         inString.ToNewCString());
-  printf("------------------------------------\n");
-#endif
-
-  printf("inType = '%s', outType = '%s'\n", inType.ToNewCString(), outType.ToNewCString());
-  HTML2text(inString, inType, outType, wrapCol, compareAgainst);
-
-  return 0;
+  return HTML2text(inString, inType, outType, flags, wrapCol, compareAgainst);
 }
