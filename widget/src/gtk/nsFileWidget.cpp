@@ -54,7 +54,7 @@ nsFileWidget::~nsFileWidget()
       gchar *data = (gchar*)gtk_object_get_data(GTK_OBJECT(menu_item), "filters");
       
       if (data)
-        delete[] data;
+        nsCRT::free(data);
     }
   }
 
@@ -163,7 +163,7 @@ NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
     gtk_menu_append(GTK_MENU(mFilterMenu), menu_item);
     gtk_widget_show(menu_item);
 
-    delete[] foo;
+    nsCRT::free(foo);
   }
 
   return NS_OK;

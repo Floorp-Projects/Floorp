@@ -156,7 +156,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
   char *foo = Label.ToNewCString();
   g_print("%s\n", foo);
-  delete [] foo;
+  nsCRT::free(foo);
 
   widget = nsMenuItem::CreateLocalized(Label);
   gtk_widget_show(widget);
