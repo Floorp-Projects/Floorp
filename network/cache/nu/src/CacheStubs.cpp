@@ -204,6 +204,12 @@ CacheObject_GetSize(const void* pThis)
 }
 
 PRUint32
+CacheObject_GetState(const void* pThis)
+{
+    return pThis ? ((nsCacheObject*)pThis)->State() : 0;
+}
+
+PRUint32
 CacheObject_Hits(const void* pThis)
 {
     return pThis ? ((nsCacheObject*)pThis)->Hits() : 0;
@@ -330,6 +336,13 @@ CacheObject_SetSize(void* pThis, const PRUint32 i_Size)
 {
     if (pThis)
         ((nsCacheObject*)pThis)->Size(i_Size);
+}
+
+void
+CacheObject_SetState(void* pThis, const PRUint32 i_State)
+{
+    if (pThis)
+        ((nsCacheObject*)pThis)->State(i_State);
 }
 
 PRBool
