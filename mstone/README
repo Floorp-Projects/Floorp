@@ -1,9 +1,10 @@
 
-                    MAILSTONE 4.15
+                    MSTONE 4.2
 
-Mailstone is a mail server performance testing tool designed to
-simulate the different types and volume of mail traffic a mail server
-would experience during a peak activity period.
+Mstone is a mail server performance testing tool designed to simulate
+the different types and volume of mail traffic a mail server would
+experience during a peak activity period.  Mstone was formerly known
+as Mailstone.
 
 A quick installation guide is available in INSTALL.
 
@@ -14,7 +15,7 @@ http://developer.iplanet.com/docs/manuals/messaging.html
 Testing strategy
 ----------------
 
-Mailstone is capable of opening SMTP, POP3, IMAP4, and other protocol
+Mstone is capable of opening SMTP, POP3, IMAP4, and other protocol
 connections to mail servers.  The number and type of connections made
 to the mail server is based on a weighted command list which provides
 the ability to test mail server implementation requirements.
@@ -24,21 +25,21 @@ and then cleanup client machine files.  Each client machine has a copy
 of the mailclient program and SMTP message files.  When the test is
 run, the mailclient is started with the proper command line and work load.
 
-After experimenting with MailStone loads, you will notice that there
+After experimenting with mstone loads, you will notice that there
 are a few factors that can distort server the byte and message
 throughput.  You will find that the server byte throughput is related
 to the average SMTP message (file) size.  Also, server throughput, in
 bytes and messages, is affected by larger than normal POP3/IMAP4
-mailboxes.  So it is important to approach the MailStone command
+mailboxes.  So it is important to approach the mstone command
 configuration with data collected from existing mail server
 implementations, for example, a customer might say "during our peak
 activity in the morning, we handle up to two thousand employees
 sending an average of 5 messages of 20K average size and receiving 25
 messages of same size". With input like this, you can begin tuning
-MailStone to generate relevant data.
+mstone to generate relevant data.
 
 There are two important things to consider when reviewing the results of
-MailStone performance analysis:  Was the test run on target for
+mstone performance analysis:  Was the test run on target for
 simulating the type and volume of mail traffic; and did the server, both
 software and machine, handle the load within an acceptable margin?
 
@@ -57,8 +58,8 @@ being achieved and the server cpu usage and process run queue is not
 settling down after the initial spike, then modifications to the server
 architecture could be in order.
 
-The analysis of MailStone results is an iterative process of client
-(MailStone client) and server tuning.  The bottom line is to determine
+The analysis of mstone results is an iterative process of client
+(mstone client) and server tuning.  The bottom line is to determine
 whether the messaging solution can handle the type of load expected in
 an acceptable manner.
 

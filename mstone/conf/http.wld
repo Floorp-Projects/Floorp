@@ -1,7 +1,7 @@
 # MailStone workload configuration file. See sample.wld for detailed usage
 # Typical HTTP GETs
 
-<include conf/general.wld>
+<includeOnce conf/general.wld>
 
 <HTTP>
 weight 100

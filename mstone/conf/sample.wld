@@ -2,6 +2,9 @@
 #
 # Include other workload files like this:
 # <include conf/morework.wld>
+#
+# If you want a workload included ONLY ONCE in the test, use this
+# <includeOnce conf/morework.wld>
 # 
 # See Also:
 #	smtp.wld	- typical SMTP delivery test

@@ -1,7 +1,7 @@
 # MailStone workload configuration file. See sample.wld for detailed usage
 # Typical WMAP checks/reads
 
-<include conf/general.wld>
+<includeOnce conf/general.wld>
 
 <CONFIG>	# test specific config
   title		WMAP reads
