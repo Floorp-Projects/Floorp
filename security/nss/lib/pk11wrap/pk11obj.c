@@ -673,7 +673,7 @@ PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, SECItem *hash)
 
     mech.mechanism = pk11_mapSignKeyType(key->keyType);
 
-    if (!PK11_HasAttributeSet(slot,key->pkcs11ID,CKA_PRIVATE)) {
+    if (SECKEY_HAS_ATTRIBUTE_SET(key,CKA_PRIVATE)) {
 	PK11_HandlePasswordCheck(slot, key->wincx);
     }
 
@@ -726,7 +726,7 @@ pk11_PrivDecryptRaw(SECKEYPrivateKey *key, unsigned char *data,
      * decryption? .. because the user may have asked for 'ask always'
      * and this is a private key operation. In practice, thought, it's mute
      * since only servers wind up using this function */
-    if (!PK11_HasAttributeSet(slot,key->pkcs11ID,CKA_PRIVATE)) {
+    if (SECKEY_HAS_ATTRIBUTE_SET(key,CKA_PRIVATE)) {
 	PK11_HandlePasswordCheck(slot, key->wincx);
     }
     session = pk11_GetNewSession(slot,&owner);

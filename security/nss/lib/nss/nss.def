@@ -252,7 +252,6 @@ PORT_FreeArena;
 PORT_NewArena;
 PORT_Realloc;
 PORT_ZAlloc;
-PORT_ZFree;
 RSA_FormatBlock;
 SECITEM_CompareItem;
 SECKEY_CreateRSAPrivateKey;
@@ -830,6 +829,7 @@ HASH_Clone;
 HASH_HashBuf;
 HASH_ResultLenByOidTag;
 HASH_ResultLenContext;
+SECKEY_CacheStaticFlags;
 SECOID_AddEntry;
 ;+    local:
 ;+       *;

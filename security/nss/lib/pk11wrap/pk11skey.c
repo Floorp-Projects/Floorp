@@ -1877,7 +1877,7 @@ PK11_PubUnwrapSymKey(SECKEYPrivateKey *wrappingKey, SECItem *wrappedKey,
     CK_MECHANISM_TYPE wrapType = pk11_mapWrapKeyType(wrappingKey->keyType);
     PK11SlotInfo    *slot = wrappingKey->pkcs11Slot;
 
-    if (!PK11_HasAttributeSet(slot,wrappingKey->pkcs11ID,CKA_PRIVATE)) {
+    if (SECKEY_HAS_ATTRIBUTE_SET(wrappingKey,CKA_PRIVATE)) {
 	PK11_HandlePasswordCheck(slot,wrappingKey->wincx);
     }
     
@@ -1900,7 +1900,7 @@ PK11_PubUnwrapSymKeyWithFlags(SECKEYPrivateKey *wrappingKey,
 
     templateCount = pk11_FlagsToAttributes(flags, keyTemplate, &ckTrue);
 
-    if (!PK11_HasAttributeSet(slot,wrappingKey->pkcs11ID,CKA_PRIVATE)) {
+    if (SECKEY_HAS_ATTRIBUTE_SET(wrappingKey,CKA_PRIVATE)) {
 	PK11_HandlePasswordCheck(slot,wrappingKey->wincx);
     }
     
@@ -1930,7 +1930,7 @@ PK11_PubUnwrapSymKeyWithFlagsPerm(SECKEYPrivateKey *wrappingKey,
 
     templateCount += pk11_FlagsToAttributes(flags, attrs, &cktrue);
 
-    if (!PK11_HasAttributeSet(slot,wrappingKey->pkcs11ID,CKA_PRIVATE)) {
+    if (SECKEY_HAS_ATTRIBUTE_SET(wrappingKey,CKA_PRIVATE)) {
 	PK11_HandlePasswordCheck(slot,wrappingKey->wincx);
     }
     
