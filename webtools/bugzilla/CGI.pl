@@ -171,7 +171,7 @@ sub ProcessMultipartFormFields {
                 $fieldvalue =~ s/\r$//;
                 if ( defined $::FORM{$fieldname} ) {
                     $::FORM{$fieldname} .= $fieldvalue;
-		                push @{$::MFORM{$fieldname}}, $fieldvalue;
+                    push @{$::MFORM{$fieldname}}, $fieldvalue;
                 } else {
                     $::FORM{$fieldname} = $fieldvalue;
                     $::MFORM{$fieldname} = [$fieldvalue];
