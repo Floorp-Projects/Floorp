@@ -1873,11 +1873,56 @@ nsBlockFrame::PrepareStyleChangedReflow(nsBlockReflowState& aState)
 nsresult
 nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 {
-  // Mark everything dirty
+  // See if we can try and avoid marking all the lines as dirty
+  PRBool  tryAndSkipLines = PR_FALSE;
+
+  // See if this is this a constrained resize reflow
+  if ((aState.mReflowState.reason == eReflowReason_Resize) &&
+      (NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableWidth)) {
+
+    // If the text is left-aligned, then we try and avoid reflowing the lines
+    const nsStyleText* mStyleText = (const nsStyleText*)
+      mStyleContext->GetStyleData(eStyleStruct_Text);
+
+    if (NS_STYLE_TEXT_ALIGN_LEFT == mStyleText->mTextAlign) {
+      // If it's preformatted text, then we don't need to mark any lines
+      // as dirty
+      if (aState.mNoWrap) {
+        return NS_OK;
+      }
+
+      tryAndSkipLines = PR_TRUE;
+    }
+  }
+
   nsLineBox* line = mLines;
-  while (nsnull != line) {
-    line->MarkDirty();
-    line = line->mNext;
+  if (tryAndSkipLines) {
+    // The line's bounds are relative to the border edge of the frame
+    nscoord newAvailWidth = aState.mReflowState.mComputedBorderPadding.left +
+                            aState.mReflowState.mComputedWidth;
+    
+    while (nsnull != line) {
+      // We don't have to mark the line dirty if:
+      // - the line fits within the new available space
+      // - it's inline (not a block)
+      // - it's either the last line in the block -or- it ended with a
+      //   break after
+      if (line->IsBlock() ||
+          (line->mNext && (line->mBreakType != NS_STYLE_CLEAR_NONE)) ||
+          (line->mCombinedArea.XMost() > newAvailWidth)) {
+
+        // We have to mark the line dirty
+        line->MarkDirty();
+      }
+      line = line->mNext;
+    }
+  }
+  else {
+    // Mark everything dirty
+    while (nsnull != line) {
+      line->MarkDirty();
+      line = line->mNext;
+    }
   }
   return NS_OK;
 }
