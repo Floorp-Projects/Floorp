@@ -76,7 +76,7 @@ NS_IMETHODIMP bcXPCOMProxy::CallMethod(PRUint16 methodIndex,
     PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMProxy::CallMethod %s [%d]\n",info->GetName(),methodIndex));
     bcICall *call = orb->CreateCall(&iid, &oid, methodIndex);
     bcIMarshaler *marshaler = call->GetMarshaler();
-    bcXPCOMMarshalToolkit * mt = new bcXPCOMMarshalToolkit(methodIndex, interfaceInfo, params);
+    bcXPCOMMarshalToolkit * mt = new bcXPCOMMarshalToolkit(methodIndex, interfaceInfo, params,orb);
     mt->Marshal(marshaler);
     orb->SendReceive(call);
     bcIUnMarshaler * unmarshaler = call->GetUnMarshaler();
@@ -105,6 +105,10 @@ nsrefcnt bcXPCOMProxy::Release(void) {
 
 NS_IMETHODIMP bcXPCOMProxy::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    if (aIID.Equals(NS_GET_IID(bcXPCOMProxy))) { //hack for getting oid
+        *aInstancePtr = &oid;
+        return NS_OK;
+    }
     PRUint16 methodIndex = 0;
     const nsXPTMethodInfo *info;
     nsIInterfaceInfo *inInfo;

@@ -28,9 +28,34 @@
 #include "bcXPCOMStub.h"
 #include "bcXPCOMLog.h"
 
-bcXPCOMStub::bcXPCOMStub(nsISupports *o) {
-    object = o;
+
+#include "nsIServiceManager.h"
+
+#include "nsIThread.h"
+
+
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+struct CallInfo;
+
+static void* PR_CALLBACK EventHandler(PLEvent *self);
+static void  PR_CALLBACK DestroyHandler(PLEvent *self);
+
+
+struct CallInfo {
+    CallInfo(nsIEventQueue * eq, bcICall *c, bcIStub *s) {
+        callersEventQ = eq; call = c; stub = s; completed = PR_FALSE;
+    }
+    nsCOMPtr<nsIEventQueue> callersEventQ;
+    bcICall *call;
+    bcIStub *stub;
+    PRBool completed;
+};
+
+bcXPCOMStub::bcXPCOMStub(nsISupports *o) : object(o) {
     NS_ADDREF(object);
+    _mOwningThread = NS_CurrentThread();
+    eventQService = do_GetService(kEventQueueServiceCID);
+    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(owningEventQ));
 }
 
 bcXPCOMStub::~bcXPCOMStub() {
@@ -39,44 +64,95 @@ bcXPCOMStub::~bcXPCOMStub() {
 
 void bcXPCOMStub::Dispatch(bcICall *call) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
-    bcIID iid; bcOID oid; bcMID mid;
-    call->GetParams(&iid, &oid, &mid);
-    nsIInterfaceInfo *interfaceInfo;
-    nsIInterfaceInfoManager* iimgr;
-    if( (iimgr = XPTI_GetInterfaceInfoManager()) ) {
-        if (NS_FAILED(iimgr->GetInfoForIID(&iid, &interfaceInfo))) {
-            return;  //nb exception handling
+    if (_mOwningThread == NS_CurrentThread()) {
+        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::Dispatch(bcICall *call)\n"));
+        bcIID iid; bcOID oid; bcMID mid;
+        call->GetParams(&iid, &oid, &mid);
+        nsIInterfaceInfo *interfaceInfo;
+        nsIInterfaceInfoManager* iimgr;
+        if( (iimgr = XPTI_GetInterfaceInfoManager()) ) {
+            if (NS_FAILED(iimgr->GetInfoForIID(&iid, &interfaceInfo))) {
+                return;  //nb exception handling
+            }
+            NS_RELEASE(iimgr);
+        } else {
+            return;
         }
-        NS_RELEASE(iimgr);
-    } else {
+        nsXPTCVariant *params;
+        nsXPTMethodInfo* info;
+        interfaceInfo->GetMethodInfo(mid,(const nsXPTMethodInfo **)&info);
+        int paramCount = info->GetParamCount();
+        bcXPCOMMarshalToolkit * mt = NULL;
+        if (paramCount > 0) {
+            PR_LOG(log, PR_LOG_DEBUG, ("--[c++]bcXPCOMStub paramCount %d\n",paramCount));
+            params = (nsXPTCVariant *)  PR_Malloc(sizeof(nsXPTCVariant)*paramCount);
+            mt = new bcXPCOMMarshalToolkit(mid, interfaceInfo, params, call->GetORB());
+            bcIUnMarshaler * um = call->GetUnMarshaler();
+            mt->UnMarshal(um);
+        }
+        //nb return value; excepion handling
+        XPTC_InvokeByIndex(object, mid, paramCount, params);
+        if (mt != NULL) { //nb to do what about nsresult ?
+            bcIMarshaler * m = call->GetMarshaler();    
+            mt->Marshal(m);
+        }
+        //nb memory deallocation
         return;
-    }
-    nsXPTCVariant *params;
-    nsXPTMethodInfo* info;
-    interfaceInfo->GetMethodInfo(mid,(const nsXPTMethodInfo **)&info);
-    int paramCount = info->GetParamCount();
-    bcXPCOMMarshalToolkit * mt = NULL;
-    if (paramCount > 0) {
-        PR_LOG(log, PR_LOG_DEBUG, ("--[c++]bcXPCOMStub paramCount %d\n",paramCount));
-        params = (nsXPTCVariant *)  PR_Malloc(sizeof(nsXPTCVariant)*paramCount);
-        mt = new bcXPCOMMarshalToolkit(mid, interfaceInfo, params);
-        bcIUnMarshaler * um = call->GetUnMarshaler();
-        mt->UnMarshal(um);
-    }
-    //nb return value; excepion handling
-    XPTC_InvokeByIndex(object, mid, paramCount, params);
-    if (mt != NULL) { //nb to do what about nsresult ?
-        bcIMarshaler * m = call->GetMarshaler();    
-        mt->Marshal(m);
-    }
-    //nb memory deallocation
-    return;
+    } else {
+        PRBool eventLoopCreated = PR_FALSE;
+        nsresult rv = NS_OK;
+
+        nsCOMPtr<nsIEventQueue> eventQ;
+        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+        if (NS_FAILED(rv)) {
+            rv = eventQService->CreateMonitoredThreadEventQueue();
+            eventLoopCreated = PR_TRUE;
+            if (NS_FAILED(rv))
+                return;
+            rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+        }
+        
+        if (NS_FAILED(rv)) {
+            return;
+        }
+        CallInfo * callInfo = new CallInfo(eventQ,call,this);
+        PLEvent *event = PR_NEW(PLEvent);
+        PL_InitEvent(event, 
+                     callInfo,
+                     EventHandler,
+                     DestroyHandler);
+        owningEventQ->PostEvent(event);
+        while (1) {
+            PR_LOG(log, PR_LOG_DEBUG, ("--Dispatch we got new event\n"));
+            PLEvent *nextEvent;
+            rv = eventQ->WaitForEvent(&nextEvent);
+            if (callInfo->completed) {
+                PR_DELETE(nextEvent);
+                break; //we are done
+            }
+            if (NS_FAILED(rv)) {
+                break;
+            }
+            eventQ->HandleEvent(nextEvent);
+        }
+    }  
 }
 
 
 
+static void* EventHandler(PLEvent *self) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--about to EventHandler\n"));
+    CallInfo * callInfo = (CallInfo*)PL_GetEventOwner(self);
+    callInfo->stub->Dispatch(callInfo->call);
+    callInfo->completed = PR_TRUE;
+    PR_LOG(log, PR_LOG_DEBUG, ("--about to callInfo->callersEventQ->PostEvent;\n"));
+    PLEvent *event = PR_NEW(PLEvent);
+    callInfo->callersEventQ->PostEvent(event);
+    return NULL;
+}
 
-
-
+static void  PR_CALLBACK DestroyHandler(PLEvent *self) {
+}
 
 

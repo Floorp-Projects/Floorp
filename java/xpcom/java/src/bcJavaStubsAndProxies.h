@@ -40,6 +40,7 @@
  {0x7cadf6e8, 0x1dd2, 0x11b2,  \
  {0x9a, 0x6e, 0xb1, 0xc3, 0x78,0x44, 0xe0, 0x04}}
 
+class nsHashtable;
 class bcJavaStubsAndProxies : public nsISupports {
     NS_DECL_ISUPPORTS
     NS_DEFINE_STATIC_IID_ACCESSOR(BC_JAVASTUBSANDPROXIES_IID)  
@@ -57,6 +58,13 @@ class bcJavaStubsAndProxies : public nsISupports {
     static jclass proxyFactory;
     static jmethodID getProxyID;
     static jmethodID getInterfaceID;
+
+    static jclass java_lang_reflect_Proxy;
+    static jmethodID getInvocationHandlerID;
+    static jclass org_mozilla_xpcom_ProxyHandler;
+    static jmethodID getOIDID;
+    nsHashtable * oid2objectMap;
+
 };
 
 #endif  /*  __bcJavaStubsAndProxies_h */

@@ -26,6 +26,7 @@
 #include "bcJavaGlobal.h"
 #include "bcORB.h"
 #include "bcIIDJava.h"
+#include "nsHashtable.h"
 
 jclass bcJavaStubsAndProxies::componentLoader = 0;
 jmethodID bcJavaStubsAndProxies::loadComponentID = 0;
@@ -33,6 +34,11 @@ jmethodID bcJavaStubsAndProxies::loadComponentID = 0;
 jclass bcJavaStubsAndProxies::proxyFactory = 0;
 jmethodID bcJavaStubsAndProxies::getProxyID = 0;
 jmethodID bcJavaStubsAndProxies::getInterfaceID = 0;
+
+jclass bcJavaStubsAndProxies::java_lang_reflect_Proxy = 0;
+jmethodID bcJavaStubsAndProxies::getInvocationHandlerID = 0;
+jclass bcJavaStubsAndProxies::org_mozilla_xpcom_ProxyHandler = 0;
+jmethodID bcJavaStubsAndProxies::getOIDID = 0;
 
 NS_DEFINE_CID(kORBCIID,BC_ORB_CID);
 NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaStubsAndProxies);
@@ -52,11 +58,34 @@ NS_IMPL_NSGETMODULE("BlackConnect Java stubs and proxies",components);
 NS_IMPL_ISUPPORTS(bcJavaStubsAndProxies,NS_GET_IID(bcJavaStubsAndProxies));
 
 
+class bcOIDKey : public nsHashKey { 
+protected:
+    bcOID key;
+public:
+    bcOIDKey(bcOID oid) {
+        key = oid;
+    }
+    virtual ~bcOIDKey() {
+    }
+    PRUint32 HashCode(void) const {                                               
+        return (PRUint32)key;                                                      
+    }                                                                             
+                                                                                
+    PRBool Equals(const nsHashKey *aKey) const {                                  
+        return (key == ((const bcOIDKey *) aKey)->key);                          
+    }  
+    nsHashKey *Clone() const {                                                    
+        return new bcOIDKey(key);                                                 
+    }                                      
+};
+
 bcJavaStubsAndProxies::bcJavaStubsAndProxies() {
     NS_INIT_REFCNT();
+    oid2objectMap = new nsHashtable(256,PR_TRUE);
 }
 
 bcJavaStubsAndProxies::~bcJavaStubsAndProxies() {
+    delete oid2objectMap;
 }
 
 NS_IMETHODIMP bcJavaStubsAndProxies::GetStub(jobject obj, bcIStub **stub) {
@@ -73,10 +102,18 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIOR
     if (!componentLoader) {
         Init();
     }
-
-    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
-    jobject jiid = bcIIDJava::GetObject((nsIID*)&iid);
-    *proxy = env->CallStaticObjectMethod(proxyFactory,getProxyID, (jlong)oid, jiid, (jlong)orb);
+    bcOIDKey *key = new bcOIDKey(oid);
+    void *tmp = oid2objectMap->Get(key);
+    delete key;
+    if (tmp != NULL) { //we have shortcut
+        *proxy = (jobject)tmp;
+        PR_LOG(log, PR_LOG_DEBUG, ("\n--bcJavaStubsAndProxies::GetProxy we have shortcut for oid=%d\n",oid));
+    } else {
+        JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+        jobject jiid = bcIIDJava::GetObject((nsIID*)&iid);
+        *proxy = env->CallStaticObjectMethod(proxyFactory,getProxyID, (jlong)oid, jiid, (jlong)orb);
+        EXCEPTION_CHECKING(env);
+    }
     return NS_OK;
 }
 
@@ -94,9 +131,26 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetInterface(const nsIID &iid,  jclass *cla
 }
 
 NS_IMETHODIMP  bcJavaStubsAndProxies::GetOID(jobject object, bcIORB *orb, bcOID *oid) {
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
+    nsresult rv = NS_OK;
+    JNIEnv * env = bcJavaGlobal::GetJNIEnv();
+    if (env->IsInstanceOf(object,java_lang_reflect_Proxy)) {
+        EXCEPTION_CHECKING(env);
+        jobject handler = env->CallStaticObjectMethod(java_lang_reflect_Proxy,getInvocationHandlerID,object);
+        EXCEPTION_CHECKING(env);
+        if (handler != NULL
+            && env->IsInstanceOf(handler,org_mozilla_xpcom_ProxyHandler)) {
+            EXCEPTION_CHECKING(env);
+            *oid = env->CallLongMethod(handler,getOIDID);
+            PR_LOG(log, PR_LOG_DEBUG, ("--bcJavaStubsAndProxies::GetOID we are using old oid %d\n",*oid));
+            return rv;
+        }
+    }
     bcIStub *stub = new bcJavaStub(object);
     *oid = orb->RegisterStub(stub);
-    return NS_OK;
+    oid2objectMap->Put(new bcOIDKey(*oid),object);
+    return rv;
+
 }
 
 NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) { 
@@ -172,7 +226,48 @@ void bcJavaStubsAndProxies::Init(void) {
         return;
     }
 
+    java_lang_reflect_Proxy  = env->FindClass("java/lang/reflect/Proxy");
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
+    }
+    
+    getInvocationHandlerID = 
+        env->GetStaticMethodID(java_lang_reflect_Proxy, "getInvocationHandler",
+                               "(Ljava/lang/Object;)Ljava/lang/reflect/InvocationHandler;");
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
+    }
 
+    java_lang_reflect_Proxy = (jclass)env->NewGlobalRef(java_lang_reflect_Proxy);
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
+    }
+
+    org_mozilla_xpcom_ProxyHandler  = env->FindClass("org/mozilla/xpcom/ProxyHandler");
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
+    }
+    org_mozilla_xpcom_ProxyHandler = (jclass)env->NewGlobalRef(org_mozilla_xpcom_ProxyHandler);
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
+    }
+
+    getOIDID = env->GetMethodID(org_mozilla_xpcom_ProxyHandler, "getOID","()J");
+    if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        componentLoader = 0;
+        return;
+    }
 
 }
 

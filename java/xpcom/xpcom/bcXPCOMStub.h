@@ -24,6 +24,8 @@
 #define __bcXPCOMStub_h
 #include "nsISupports.h"
 #include "bcIStub.h"
+#include "nsCOMPtr.h"
+#include "nsIEventQueueService.h"
 
 class bcXPCOMStub : public bcIStub {
 public:
@@ -32,6 +34,9 @@ public:
     virtual void Dispatch(bcICall *call) ;
 private:
     nsISupports *object;
+    void* _mOwningThread;
+    nsCOMPtr<nsIEventQueue> owningEventQ;
+    nsCOMPtr<nsIEventQueueService>  eventQService;
 };
 
 #endif

@@ -39,12 +39,25 @@
    {0x7de11df0, 0x1dd2, 0x11b2, \
    {0xb1, 0xe1, 0xd9, 0xd5, 0xc6, 0xdd, 0x06, 0x8b }}
 
+class nsSupportsHashtable;
+
 class bcXPCOMStubsAndProxies : public nsISupports {
     NS_DECL_ISUPPORTS
     NS_DEFINE_STATIC_IID_ACCESSOR(BC_XPCOMSTUBSANDPROXIES_IID)  
     NS_IMETHOD GetStub(nsISupports *obj, bcIStub **stub);
+    NS_IMETHOD GetOID(nsISupports *obj, bcIORB *orb, bcOID *oid);
     NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy);
     bcXPCOMStubsAndProxies();
     virtual ~bcXPCOMStubsAndProxies();
+private:
+    nsSupportsHashtable * oid2objectMap;
 };
 #endif /*  __bcXPCOMStubsAndProxies_h */
+
+
+
+
+
+
+
+

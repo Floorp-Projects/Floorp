@@ -32,8 +32,9 @@ static NS_DEFINE_CID(kORBCIID,BC_ORB_CID);
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 
 bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterfaceInfo *_interfaceInfo, 
-					 nsXPTCMiniVariant* _params) {
+					 nsXPTCMiniVariant* _params, bcIORB *_orb) {
     callSide = onClient;
+    orb = _orb;
     methodIndex = _methodIndex;
     interfaceInfo = _interfaceInfo;
     interfaceInfo->GetMethodInfo(methodIndex,(const nsXPTMethodInfo**) &info);  // These do *not* make copies ***explicit bending of XPCOM rules***
@@ -54,8 +55,9 @@ bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterface
 }
 
 bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterfaceInfo *_interfaceInfo, 
-                                             nsXPTCVariant* _params) {
+                                             nsXPTCVariant* _params, bcIORB *_orb) {
     callSide = onServer;
+    orb = _orb;
     methodIndex = _methodIndex;
     interfaceInfo = _interfaceInfo;
     interfaceInfo->GetMethodInfo(methodIndex,(const nsXPTMethodInfo **)&info);  // These do *not* make copies ***explicit bending of XPCOM rules***
@@ -297,21 +299,11 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                 PR_LOG(log, PR_LOG_DEBUG, ("--[c++]XPCOMMarshallToolkit INTERFACE iid=%s\n",iid->ToString()));
                 bcOID oid = 0;
                 if (*(char**)data != NULL) {
-                    NS_WITH_SERVICE(bcORB, _orb, kORBCIID, &r);
-                    if (NS_FAILED(r)) {
-                        return r; //nb am I sure about that?
-                    }
-                    
                     NS_WITH_SERVICE(bcXPCOMStubsAndProxies, xpcomStubsAndProxies, kXPCOMStubsAndProxies, &r);
                     if (NS_FAILED(r)) {
                         return r;
                     }
-
-                    bcIORB *orb;
-                    _orb->GetORB(&orb);
-                    bcIStub *stub = NULL;
-                    xpcomStubsAndProxies->GetStub(*(nsISupports**)data, &stub);
-                    oid = orb->RegisterStub(stub);
+                    xpcomStubsAndProxies->GetOID(*(nsISupports**)data, orb,&oid);
                 }
                 m->WriteSimple(&oid, XPTType2bcXPType(type));
                 m->WriteSimple(iid,bc_T_IID);

@@ -32,9 +32,9 @@
 class bcXPCOMMarshalToolkit {
 public:
     bcXPCOMMarshalToolkit(PRUint16 methodIndex,
-                        nsIInterfaceInfo *interfaceInfo, nsXPTCMiniVariant* params);
+                        nsIInterfaceInfo *interfaceInfo, nsXPTCMiniVariant* params, bcIORB *orb);
     bcXPCOMMarshalToolkit(PRUint16 methodIndex,
-                        nsIInterfaceInfo *interfaceInfo, nsXPTCVariant* params);
+                        nsIInterfaceInfo *interfaceInfo, nsXPTCVariant* params, bcIORB *orb);
     virtual ~bcXPCOMMarshalToolkit();
     nsresult Marshal(bcIMarshaler *);
     nsresult UnMarshal(bcIUnMarshaler *);
@@ -45,6 +45,7 @@ private:
     nsXPTMethodInfo *info;
     nsXPTCVariant *params;
     nsIInterfaceInfo * interfaceInfo;
+    bcIORB *orb;
     nsresult GetArraySizeFromParam( nsIInterfaceInfo *interfaceInfo, 
                            const nsXPTMethodInfo* method,
                            const nsXPTParamInfo& param,

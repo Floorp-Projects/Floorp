@@ -55,6 +55,10 @@ class ProxyHandler implements InvocationHandler {
         return null;
     }
 
+    long getOID() {
+        return oid;
+    }
+
     private long oid;
     private IID iid;
     private long orb;

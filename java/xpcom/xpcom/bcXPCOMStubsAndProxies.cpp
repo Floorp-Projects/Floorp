@@ -21,6 +21,7 @@
  */
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
+#include "nsHashtable.h"
 #include "bcXPCOMStubsAndProxies.h"
 #include "bcXPCOMStub.h"
 #include "bcXPCOMProxy.h"
@@ -43,11 +44,36 @@ NS_IMPL_NSGETMODULE("BlackConnect XPCOM stubs and proxies",components);
 NS_IMPL_ISUPPORTS(bcXPCOMStubsAndProxies,NS_GET_IID(bcXPCOMStubsAndProxies));
 
 
+
+class bcOIDKey : public nsHashKey { 
+protected:
+    bcOID key;
+public:
+    bcOIDKey(bcOID oid) {
+        key = oid;
+    }
+    virtual ~bcOIDKey() {
+    }
+    PRUint32 HashCode(void) const {                                               
+        return (PRUint32)key;                                                      
+    }                                                                             
+                                                                                
+    PRBool Equals(const nsHashKey *aKey) const {                                  
+        return (key == ((const bcOIDKey *) aKey)->key);                          
+    }  
+    nsHashKey *Clone() const {                                                    
+        return new bcOIDKey(key);                                                 
+    }                                      
+};
+
+
 bcXPCOMStubsAndProxies::bcXPCOMStubsAndProxies() {
     NS_INIT_REFCNT();
+    oid2objectMap = new nsSupportsHashtable(256, PR_TRUE);
 }
 
 bcXPCOMStubsAndProxies::~bcXPCOMStubsAndProxies() {
+    delete oid2objectMap;
 }
 
 NS_IMETHODIMP bcXPCOMStubsAndProxies::GetStub(nsISupports *obj, bcIStub **stub) {
@@ -58,16 +84,41 @@ NS_IMETHODIMP bcXPCOMStubsAndProxies::GetStub(nsISupports *obj, bcIStub **stub) 
     return NS_OK;
 }
 
+NS_IMETHODIMP bcXPCOMStubsAndProxies::GetOID(nsISupports *obj, bcIORB *orb, bcOID *oid) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    bcOID *tmp;
+    if (NS_SUCCEEDED(obj->QueryInterface(NS_GET_IID(bcXPCOMProxy),(void**)&tmp))) {
+        *oid = *tmp;
+        PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcXPCOMProxy::GetOID obj %p is a proxy to oid %d\n",obj,*oid));
+    } else {
+        bcIStub *stub = NULL;
+        GetStub(obj, &stub);
+        *oid = orb->RegisterStub(stub);
+        oid2objectMap->Put(new bcOIDKey(*oid),obj);
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP bcXPCOMStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    nsresult rv = NS_OK;
     PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::GetProxy iid=%s\n",iid.ToString()));
     if (!proxy) {
-        printf("--bcXPCOMStubsAndProxies::GetProxy failed\n");
+        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::GetProxy failed\n"));
         return NS_ERROR_NULL_POINTER;
     }
-    *proxy = new bcXPCOMProxy(oid,iid,orb);
-    NS_IF_ADDREF(*proxy);
-    return NS_OK;
+    *proxy = NULL;
+    nsHashKey * key =  new bcOIDKey(oid);
+    *proxy = oid2objectMap->Get(key); //doing shortcut
+    delete key;
+    if (*proxy != NULL) {
+        rv = (*proxy)->QueryInterface(iid,(void **)proxy);
+        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::GetProxy we have shortcut for oid=%d\n",oid));
+    } else {
+        *proxy = new bcXPCOMProxy(oid,iid,orb);
+        NS_IF_ADDREF(*proxy);
+    }
+    return rv;
 }
 
 
