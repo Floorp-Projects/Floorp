@@ -199,12 +199,13 @@ Archive=
 [Dialog Program Folder]
 Show Dialog=TRUE
 Title=Select Program Folder
-Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folder list.  Click Next to continue.
+Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
 
 [Dialog Advanced Settings]
 Show Dialog=FALSE
 Title=Advanced Settings
 Message0=Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from relative to where you are.
+Message1=Check the option below if you wish to save the downloaded installer files locally for future use.  They will be saved into ...\$ProductName$\Install
 
 [Dialog Start Install]
 Show Dialog=TRUE
