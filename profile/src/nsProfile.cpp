@@ -28,7 +28,6 @@
 #include "plstr.h"
 #include "prenv.h"
 
-#include "NSReg.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"

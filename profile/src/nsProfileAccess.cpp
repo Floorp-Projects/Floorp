@@ -27,7 +27,6 @@
 #include "plstr.h"
 #include "prenv.h"
 
-#include "NSReg.h"
 #include "nsIEnumerator.h"
 #include "prprf.h"
 #include "nsSpecialSystemDirectory.h"
