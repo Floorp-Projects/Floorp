@@ -291,6 +291,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 
   mCacheSize.width             = kSizeNotSet;
   mCacheSize.height            = kSizeNotSet;
+  mCachedAscent                = kSizeNotSet;
   mCachedMaxElementSize.width  = kSizeNotSet;
   mCachedMaxElementSize.height = kSizeNotSet;
   mCachedAvailableSize.width   = kSizeNotSet;
@@ -968,6 +969,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
     SetChildFrameSize(aDropDownBtn, aBtnWidth, aDesiredSize.height);
     aDesiredSize.width = 0;
     aDesiredSize.height = dispHeight;
+    // XXX What about ascent and descent?
     return;
   }
 
@@ -1129,6 +1131,11 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
+
+  aDesiredSize.ascent =
+    txtKidSize.ascent + aReflowState.mComputedBorderPadding.top;
+  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
+  
   // Now cache the available height as our height without border and padding
   // This sets up the optimization for if a new available width comes in and we are equal or
   // less than it we can bail
@@ -1139,7 +1146,8 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
     if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
       mCachedAvailableSize.height = aDesiredSize.height - (aBorderPadding.top + aBorderPadding.bottom);
     }
-    nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+    nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent,
+                                         mCachedMaxElementSize, aDesiredSize);
   }
 
   ///////////////////////////////////////////////////////////////////
@@ -1239,7 +1247,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   //      cached AvailableSize.width == aCacheSize.width
   //
   // NOTE: this returns whether we are doing an Incremental reflow
-  nsFormControlFrame::SkipResizeReflow(mCacheSize, 
+  nsFormControlFrame::SkipResizeReflow(mCacheSize,
+                                       mCachedAscent,
                                        mCachedMaxElementSize, 
                                        mCachedAvailableSize, 
                                        aDesiredSize, aReflowState, 
@@ -1283,12 +1292,6 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsRect displayRect;
   nsRect buttonRect;
   nsRect dropdownRect;
-
-  // get our border and padding, 
-  // XXX - should be the same mComputedBorderPadding?
-  // maybe we should use that?
-  nsMargin borderPadding(0, 0, 0, 0);
-  CalcBorderPadding(borderPadding);
 
    // Get the current sizes of the combo box child frames
   mDisplayFrame->GetRect(displayRect);
@@ -1340,7 +1343,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         REFLOW_DEBUG_MSG("------------Reflowing AreaFrame and bailing----\n\n");
         ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
                            mDisplayFrame, mButtonFrame, mItemDisplayWidth, 
-                           scrollbarWidth, borderPadding);
+                           scrollbarWidth, aReflowState.mComputedBorderPadding);
         REFLOW_COUNTER();
         UNCONSTRAINED_CHECK();
         REFLOW_DEBUG_MSG3("&** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
@@ -1397,8 +1400,10 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         REFLOW_DEBUG_MSG("---- Doing AreaFrame Reflow and then bailing out\n");
         // Do simple reflow and bail out
         ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
-                           mDisplayFrame, mButtonFrame, 
-                           mItemDisplayWidth, scrollbarWidth, borderPadding, kSizeNotSet, PR_TRUE);
+                       mDisplayFrame, mButtonFrame, 
+                       mItemDisplayWidth, scrollbarWidth,
+                       aReflowState.mComputedBorderPadding,
+                       kSizeNotSet, PR_TRUE);
         REFLOW_DEBUG_MSG3("+** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
         REFLOW_COUNTER();
         UNCONSTRAINED_CHECK();
@@ -1422,6 +1427,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
             aDesiredSize.width  = mCacheSize.width;
             aDesiredSize.height = mCacheSize.height;
+            aDesiredSize.ascent = mCachedAscent;
+            aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
             if (aDesiredSize.maxElementSize != nsnull) {
               aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
@@ -1556,7 +1563,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // for the display area
   mDropdownFrame->GetRect(dropdownRect);
   if (eReflowReason_Resize == aReflowState.reason) {
-    dropdownRect.Deflate(borderPadding);
+    dropdownRect.Deflate(aReflowState.mComputedBorderPadding);
   }
 
   // Get maximum size of the largest item in the dropdown
@@ -1627,7 +1634,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // this reflows and makes and last minute adjustments
   ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
                      mDisplayFrame, mButtonFrame, mItemDisplayWidth, scrollbarWidth, 
-                     borderPadding, size.height);
+                     aReflowState.mComputedBorderPadding, size.height);
 
   // The dropdown was reflowed UNCONSTRAINED before, now we need to check to see
   // if it needs to be resized. 
@@ -1703,13 +1710,17 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   // this is so if our cached avilable size is ever equal to or less 
   // than the real avilable size we can bail out
   if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
-    mCachedAvailableSize.width  = aDesiredSize.width - (borderPadding.left + borderPadding.right);
+    mCachedAvailableSize.width  = aDesiredSize.width -
+      (aReflowState.mComputedBorderPadding.left +
+       aReflowState.mComputedBorderPadding.right);
   }
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-    mCachedAvailableSize.height = aDesiredSize.height - (borderPadding.top + borderPadding.bottom);
+    mCachedAvailableSize.height = aDesiredSize.height -
+      (aReflowState.mComputedBorderPadding.top +
+       aReflowState.mComputedBorderPadding.bottom);
   }
 
-  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent, mCachedMaxElementSize, aDesiredSize);
 
   REFLOW_DEBUG_MSG3("** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
   REFLOW_COUNTER();
@@ -1951,7 +1962,10 @@ nsComboboxControlFrame::ActuallyDisplayText(nsAString& aText, PRBool aNotify)
 {
   nsresult rv = NS_OK;
   if (aText.IsEmpty()) {
-    nsAutoString space(PRUnichar(' '));
+    // Have to use a non-breaking space for line-height calculations
+    // to be right
+    static const PRUnichar spaceArr[] = { 0xA0, 0x00 };
+    nsDependentString space(spaceArr);
     rv = mDisplayContent->SetText(space.get(), space.Length(), aNotify);
   } else {
     const nsAFlatString& flat = PromiseFlatString(aText);

@@ -955,8 +955,9 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->height = maxHeight;
   }
 
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
+  aDesiredSize.ascent =
+    kidDesiredSize.ascent + aReflowState.mComputedBorderPadding.top;
+  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
     ("exit nsScrollFrame::Reflow: status=%d width=%d height=%d",

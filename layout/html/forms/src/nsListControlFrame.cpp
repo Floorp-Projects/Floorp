@@ -837,7 +837,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // so we can check timings against the old version
 #if 1
 
-  nsFormControlFrame::SkipResizeReflow(mCacheSize, 
+  nsFormControlFrame::SkipResizeReflow(mCacheSize,
+                                       mCachedAscent,
                                        mCachedMaxElementSize, 
                                        mCachedAvailableSize, 
                                        aDesiredSize, aReflowState, 
@@ -999,6 +1000,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
     mCachedUnconstrainedSize.width  = scrolledAreaDesiredSize.width;
     mCachedUnconstrainedSize.height = scrolledAreaDesiredSize.height;
+    mCachedAscent                   = scrolledAreaDesiredSize.ascent;
     mCachedDesiredMaxSize.width     = scrolledAreaDesiredSize.maxElementSize->width;
     mCachedDesiredMaxSize.height    = scrolledAreaDesiredSize.maxElementSize->height;
   } else {
@@ -1280,8 +1282,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   } else {
     aDesiredSize.width  = visibleWidth;
     aDesiredSize.height = visibleHeight;
-    aDesiredSize.ascent = aDesiredSize.height;
-    aDesiredSize.descent = 0;
+    aDesiredSize.ascent =
+      scrolledAreaDesiredSize.ascent + aReflowState.mComputedBorderPadding.top;
+    aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
   }
 
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -1319,7 +1322,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   //REFLOW_DEBUG_MSG3("** nsLCF Caching AW: %d  AH: %d\n", PX(mCachedAvailableSize.width), PX(mCachedAvailableSize.height));
 
-  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedAscent,
+                                       mCachedMaxElementSize, aDesiredSize);
 
   REFLOW_DEBUG_MSG3("** Done nsLCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
 

@@ -281,6 +281,7 @@ protected:
   nsSize                mCacheSize;
   nsSize                mCachedMaxElementSize;
   nsSize                mCachedAvailableSize;
+  nscoord               mCachedAscent;
 
   nsSize                mCachedUncDropdownSize;
   nsSize                mCachedUncComboSize;
