@@ -47,6 +47,16 @@ package org.mozilla.javascript;
 public class JavaScriptException extends Exception
 {
     /**
+     * @deprecated
+     * Use {@link EvaluatorException#EvaluatorException(String)} to report
+     * exceptions in Java code.
+     */
+    public JavaScriptException(Object value)
+    {
+        this(value, "", 0);
+    }
+
+    /**
      * Create a JavaScript exception wrapping the given JavaScript value
      *
      * @param value the JavaScript value thrown.
