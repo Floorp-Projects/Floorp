@@ -56,8 +56,10 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aP
  * otherwise the cell get a proportion of the remaining space 
  *  as determined by the table width attribute.  If no table width attribute, it gets 0 width
  */
-PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,
-                                                               nscoord         aComputedWidth)
+PRBool 
+FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*          aPresContext,
+                                                        nscoord                  aComputedWidth,
+                                                        const nsHTMLReflowState& aReflowState)
 {
   // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
   const nsStylePosition* tablePosition;
@@ -65,17 +67,15 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* a
   PRBool tableIsFixedWidth = eStyleUnit_Coord   == tablePosition->mWidth.GetUnit() ||
                              eStyleUnit_Percent == tablePosition->mWidth.GetUnit();
 
-  const nsStyleSpacing* tableSpacing;
-  mTableFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)tableSpacing);
-  nsMargin borderPadding;
-  tableSpacing->CalcBorderPaddingFor(mTableFrame, borderPadding); 
-
   PRInt32 numCols = mTableFrame->GetColCount();
   PRInt32 colX;
   // availWidth is used as the basis for percentage width columns. It is aComputedWidth
   // minus table border, padding, & cellspacing
-  nscoord availWidth = aComputedWidth - borderPadding.left - borderPadding.right - 
-                       ((numCols + 1) * mTableFrame->GetCellSpacingX());
+  nscoord availWidth = (NS_UNCONSTRAINEDSIZE == aComputedWidth) 
+    ? NS_UNCONSTRAINEDSIZE
+    : aComputedWidth - aReflowState.mComputedBorderPadding.left - 
+      aReflowState.mComputedBorderPadding.right - 
+      ((numCols + 1) * mTableFrame->GetCellSpacingX());
   
   PRInt32 specifiedCols = 0;  // the number of columns whose width is given
   nscoord totalColWidth = 0;  // the sum of the widths of the columns 
@@ -106,7 +106,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* a
     } // get the percentage width
     else if ((eStyleUnit_Percent == colPosition->mWidth.GetUnit()) &&
              (aComputedWidth != NS_UNCONSTRAINEDSIZE)) { 
-      // Only apply percentages if we're unconstrained.
+      // Only apply percentages if we're constrained.
       float percent = colPosition->mWidth.GetPercentValue();
       colWidths[colX] = NSToCoordRound(percent * (float)availWidth); 
     }

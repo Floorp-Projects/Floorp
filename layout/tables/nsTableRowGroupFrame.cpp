@@ -710,7 +710,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
                   // spans. Set the cell frame's height
                   cellFrame->SizeTo(aPresContext, cellFrameSize.width, availHeightOfRowsSpanned);
                   // Realign cell content based on new height
-                  ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild(aPresContext);
+                  ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild(aPresContext, aReflowState);
                 }
                 else {
                   // the cell's height is larger than the available space of the rows it

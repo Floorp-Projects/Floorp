@@ -436,19 +436,17 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
   * Align the cell's child frame within the cell
   *
   */
-void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
+void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContext,
+                                            const nsHTMLReflowState& aReflowState)
 {
-  const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   const nsStyleText* textStyle =
       (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
   /* XXX: remove tableFrame when border-collapse inherits */
-  nsTableFrame* tableFrame=nsnull;
+  nsTableFrame* tableFrame = nsnull;
   (void) nsTableFrame::GetTableFrame(this, tableFrame);
   nsMargin borderPadding;
   GetCellBorder (borderPadding, tableFrame);
-  nsMargin padding;
-  spacing->GetPadding(padding);
+  nsMargin padding = nsTableFrame::GetPadding(aReflowState, this);
   borderPadding += padding;
   
   nscoord topInset = borderPadding.top;
@@ -604,9 +602,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  nsMargin padding;
-  spacing->GetPadding(padding);
-  nsMargin borderPadding = padding;
+  nsMargin borderPadding = aReflowState.mComputedPadding;
   nsMargin border;
   GetCellBorder(border, tableFrame);
   if ((NS_UNCONSTRAINEDSIZE == availSize.width) || !GetContentEmpty()) {
@@ -681,6 +677,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (eReflowReason_Initial == aReflowState.reason) {
     kidOrigin.MoveTo(leftInset, topInset);
   } else {
+    // handle percent padding-left which was 0 during initial reflow
+    if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mPadding.GetLeftUnit()) {
+      nsRect kidRect;
+      firstKid->GetRect(kidRect);
+      // only move in the x direction for the same reason as above
+      kidOrigin.MoveTo(leftInset, kidRect.y);
+      firstKid->MoveTo(aPresContext, leftInset, kidRect.y);
+    }
     firstKid->GetOrigin(kidOrigin);
   }
   if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
@@ -733,7 +737,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     nscoord spacingX = tableFrame->GetCellSpacingX();
     nscoord spacingExtra = spacingX * (colspan - 1);
     smallestMinWidth += spacingExtra;
-    if (padding.left > 0) {
+    if (aReflowState.mComputedPadding.left > 0) {
       smallestMinWidth -= onePixel;
     }
   }
@@ -1090,7 +1094,9 @@ PRUint8 nsTableCellFrame::GetOpposingEdge(PRUint8 aEdge)
   return result;
 }
 
-void nsTableCellFrame::GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame)
+void 
+nsTableCellFrame::GetCellBorder(nsMargin&     aBorder, 
+                                nsTableFrame* aTableFrame)
 {
   aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
   if (nsnull==aTableFrame) {

@@ -354,6 +354,13 @@ nsTableFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsTableFrame::IsPercentageBase(PRBool& aBase) const
+{
+  aBase = PR_TRUE;
+  return NS_OK;
+}
+
 void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext, 
                                        nsIFrame*       aFrame,
                                        nsIContent*     aContent, 
@@ -1393,9 +1400,7 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
         GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
         nsMargin borderPadding;
         GetTableBorder (borderPadding); // gets the max border thickness for each edge
-        nsMargin padding;
-        tableSpacing->GetPadding(padding);
-        borderPadding += padding;
+        borderPadding += aReflowState.reflowState.mComputedPadding;
         nscoord cellSpacing = GetCellSpacingX();
         nsSize  kidMaxElementSize;
         ((nsTableRowGroupFrame*)kidFrame)->GetMaxElementSize(kidMaxElementSize);
@@ -1440,19 +1445,18 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
   return NS_OK;
 }
 
-void nsTableFrame::SetColumnDimensions(nsIPresContext* aPresContext, nscoord aHeight)
+void 
+nsTableFrame::SetColumnDimensions(nsIPresContext* aPresContext, 
+                                  nscoord         aHeight,
+                                  const nsMargin& aBorderPadding)
 {
-  const nsStyleSpacing* spacing =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin borderPadding;
-  spacing->CalcBorderPaddingFor(this, borderPadding);
-  nscoord colHeight = aHeight -= borderPadding.top + borderPadding.bottom;
+  nscoord colHeight = aHeight -= aBorderPadding.top + aBorderPadding.bottom;
   nscoord cellSpacingX = GetCellSpacingX();
   nscoord halfCellSpacingX = NSToCoordRound(((float)cellSpacingX) / (float)2);
 
   nsIFrame* colGroupFrame = mColGroups.FirstChild();
   PRInt32 colX = 0;
-  nsPoint colGroupOrigin(borderPadding.left, borderPadding.top);
+  nsPoint colGroupOrigin(aBorderPadding.left, aBorderPadding.top);
   PRInt32 numCols = GetColCount();
   while (nsnull != colGroupFrame) {
     nscoord colGroupWidth = 0;
@@ -1515,6 +1519,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
   aStatus = NS_FRAME_COMPLETE;
+  // XXX yank this nasty code and see what happens, and then yank other
+  // similar calls to InvalidateFirstPassCache.
   if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) &&
       (this == (nsTableFrame *)GetFirstInFlow())) {
     InvalidateFirstPassCache();
@@ -1545,7 +1551,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     }
     if (mTableLayoutStrategy && (needsRecalc || !IsColumnWidthsValid())) {
       nscoord boxWidth = CalcBorderBoxWidth(aReflowState);
-      mTableLayoutStrategy->Initialize(aPresContext, aDesiredSize.maxElementSize, boxWidth);
+      mTableLayoutStrategy->Initialize(aPresContext, aDesiredSize.maxElementSize, 
+                                       boxWidth, aReflowState);
       mBits.mColumnWidthsValid = PR_TRUE; //so we don't do this a second time below
     }
 
@@ -1556,7 +1563,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
                           aDesiredSize.maxElementSize);
 
       // assign table width
-      SetTableWidth(aPresContext);
+      SetTableWidth(aPresContext, aReflowState);
     }
 
     if ((eReflowReason_Initial == aReflowState.reason) &&
@@ -1606,7 +1613,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     // set aDesiredSize and aMaxElementSize
   }
 
-  SetColumnDimensions(aPresContext, aDesiredSize.height);
+  SetColumnDimensions(aPresContext, aDesiredSize.height, aReflowState.mComputedBorderPadding);
   if (pass1MaxElementSize) {
     aDesiredSize.maxElementSize = pass1MaxElementSize;
   }
@@ -1621,7 +1628,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     if (isAutoWidth && !IsMaximumWidthValid()) {
       // Initialize the strategy and have it compute the natural size of
       // the table
-      mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE);
+      mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE, aReflowState);
 
       // Now the maximum width is valid
       mBits.mMaximumWidthValid = PR_TRUE;
@@ -1918,13 +1925,9 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext*          aPresContext,
   // set out param
   aStatus = NS_FRAME_COMPLETE;
 
-  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   GetTableBorder (borderPadding);   // this gets the max border thickness at each edge
-  nsMargin padding;
-  mySpacing->GetPadding(padding);
-  borderPadding += padding;
+  borderPadding += aReflowState.mComputedPadding;
 
   InnerTableReflowState state(aPresContext, aReflowState, borderPadding);
 
@@ -1981,13 +1984,9 @@ void nsTableFrame::ComputePercentBasisForRows(const nsHTMLReflowState& aReflowSt
   nscoord height = CalcBorderBoxHeight(aReflowState, PR_TRUE);
   if ((height > 0) && (height != NS_UNCONSTRAINEDSIZE)) {
     // exclude our border and padding
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-	  nsMargin borderPadding(0,0,0,0);
-    // XXX handle percentages
-    if (spacing->GetBorderPadding(borderPadding)) {
-     height -= borderPadding.top + borderPadding.bottom;
-    }
+    nsMargin borderPadding = aReflowState.mComputedBorderPadding;
+    height -= borderPadding.top + borderPadding.bottom;
+
     // exclude cell spacing for all rows
     height -= (1 + GetRowCount()) * GetCellSpacingY();
     height = PR_MAX(0, height);
@@ -2180,19 +2179,6 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
 
   aWidth -= xOffset;
  
-  return NS_OK;
-}
-
-NS_METHOD nsTableFrame::GetBorderPlusMarginPadding(nsMargin& aResult)
-{
-  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin borderPadding;
-  GetTableBorder (borderPadding);
-  nsMargin padding;
-  mySpacing->GetPadding(padding);
-  borderPadding += padding;
-  aResult = borderPadding;
   return NS_OK;
 }
 
@@ -2471,9 +2457,12 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext* aPresContext,
   }
   reflowState.availableWidth = pass1Width;
 
-  nsMargin borderPadding;
-  GetBorderPlusMarginPadding(borderPadding);
-  InnerTableReflowState state(aPresContext, reflowState, borderPadding);
+  // get margin + border + padding
+  nsMargin borderMarginPadding;
+  GetTableBorder (borderMarginPadding);
+  borderMarginPadding += aReflowState.mComputedMargin + aReflowState.mComputedPadding;
+
+  InnerTableReflowState state(aPresContext, reflowState, borderMarginPadding);
 
   // determine if this frame is the target or not
   nsIFrame *target=nsnull;
@@ -2659,9 +2648,7 @@ nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
       GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
       nsMargin borderPadding;
       GetTableBorder (borderPadding); // gets the max border thickness for each edge
-      nsMargin padding;
-      tableSpacing->GetPadding(padding);
-      borderPadding += padding;
+      borderPadding += aReflowState.reflowState.mComputedPadding;
       nscoord cellSpacing = GetCellSpacingX();
       nsSize  kidMaxElementSize;
       ((nsTableRowGroupFrame*)frame)->GetMaxElementSize(kidMaxElementSize);
@@ -2723,9 +2710,7 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
     GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
     nsMargin borderPadding;
     GetTableBorder (borderPadding); // gets the max border thickness for each edge
-    nsMargin padding;
-    tableSpacing->GetPadding(padding);
-    borderPadding += padding;
+    borderPadding += aReflowState.reflowState.mComputedPadding;
     nscoord cellSpacing = GetCellSpacingX();
     nscoord kidWidth = kidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
     aDesiredSize.maxElementSize->width = PR_MAX(aDesiredSize.maxElementSize->width, kidWidth); 
@@ -2854,9 +2839,7 @@ void nsTableFrame::PlaceChild(nsIPresContext*        aPresContext,
     GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
     nsMargin borderPadding;
     GetTableBorder (borderPadding); // gets the max border thickness for each edge
-    nsMargin padding;
-    tableSpacing->GetPadding(padding);
-    borderPadding += padding;
+    borderPadding += aReflowState.reflowState.mComputedPadding;
     nscoord cellSpacing = GetCellSpacingX();
     nscoord kidWidth = aKidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
     aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidWidth); 
@@ -2922,9 +2905,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       GetTableBorderForRowGroup(GetRowGroupFrameFor(kidFrame, childDisplay), borderPadding);
       const nsStyleSpacing* tableSpacing;
       GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)tableSpacing));
-      nsMargin padding;
-      tableSpacing->GetPadding(padding);
-      borderPadding += padding;
+      borderPadding += aReflowState.reflowState.mComputedPadding;
 
       // Reflow the child into the available space
       nsHTMLReflowState  kidReflowState(aPresContext, aReflowState.reflowState,
@@ -3219,13 +3200,13 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode);
-    mTableLayoutStrategy->Initialize(aPresContext, aMaxElementSize, boxWidth);
+    mTableLayoutStrategy->Initialize(aPresContext, aMaxElementSize, boxWidth, aReflowState);
     mBits.mColumnWidthsValid=PR_TRUE;
   }
   // fixed-layout tables need to reinitialize the layout strategy. When there are scroll bars
   // reflow gets called twice and the 2nd time has the correct space available.
   else if (!IsAutoLayout(&aReflowState)) {
-    mTableLayoutStrategy->Initialize(aPresContext, aMaxElementSize, boxWidth);
+    mTableLayoutStrategy->Initialize(aPresContext, aMaxElementSize, boxWidth, aReflowState);
   }
 
   mTableLayoutStrategy->BalanceColumnWidths(aPresContext, mStyleContext, aReflowState, maxWidth);
@@ -3243,7 +3224,8 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   add in table insets
   set rect
   */
-void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
+void nsTableFrame::SetTableWidth(nsIPresContext*          aPresContext,
+                                 const nsHTMLReflowState& aReflowState)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
   nsTableCellMap* cellMap = GetCellMap();
@@ -3279,9 +3261,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   GetTableBorder (borderPadding); // this gets the max border value at every edge
-  nsMargin padding;
-  spacing->GetPadding(padding);
-  borderPadding += padding;
+  borderPadding += aReflowState.mComputedPadding;
 
   nscoord rightInset = borderPadding.right;
   nscoord leftInset = borderPadding.left;
@@ -3293,7 +3273,8 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
 }
 
 // XXX percentage based margin/border/padding
-nscoord GetVerticalMarginBorderPadding(nsIFrame* aFrame, const nsIID& aIID)
+nscoord GetVerticalMarginBorderPadding(nsIFrame*                aFrame, 
+                                       const nsIID&             aIID)
 {
   nscoord result = 0;
   if (!aFrame) {
@@ -3305,8 +3286,8 @@ nscoord GetVerticalMarginBorderPadding(nsIFrame* aFrame, const nsIID& aIID)
     nsIHTMLContent* htmlContent = nsnull;
     rv = iContent->QueryInterface(aIID, (void **)&htmlContent);  
     if (htmlContent && NS_SUCCEEDED(rv)) { 
-      nsIStyleContext* styleContext;
-      aFrame->GetStyleContext(&styleContext); // XXX fix this leak
+      nsCOMPtr<nsIStyleContext> styleContext;
+      aFrame->GetStyleContext(getter_AddRefs(styleContext)); 
       const nsStyleSpacing* spacing =
         (const nsStyleSpacing*)styleContext->GetStyleData(eStyleStruct_Spacing);
 	    nsMargin margin(0,0,0,0);
@@ -3506,13 +3487,8 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
               // the first row group's y position starts inside our padding
               const nsStyleSpacing* spacing =
                 (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  	          nsMargin margin(0,0,0,0);
-              if (spacing->GetBorder(margin)) { // XXX see bug 10636 and handle percentages
-                rowGroupYPos = margin.top;
-              }
-              if (spacing->GetPadding(margin)) { // XXX see bug 10636 and handle percentages
-                rowGroupYPos += margin.top;
-              }
+              nsMargin borderPadding = aReflowState.mComputedBorderPadding;
+              rowGroupYPos = borderPadding.top;
               firstRowGroupFrame = childFrame;
             }
           }
@@ -3849,6 +3825,91 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
 #endif
 }
 
+nscoord 
+CalcPercentPadding(nscoord      aBasis,
+                   nsStyleCoord aStyleCoord)
+{
+  float percent = (NS_UNCONSTRAINEDSIZE == aBasis)
+                  ? 0 : aStyleCoord.GetPercentValue();
+  return NSToCoordRound(((float)aBasis) * percent);
+}
+
+void 
+GetPaddingFor(const nsSize&         aBasis, 
+              const nsStyleSpacing& aSpacing, 
+              nsMargin&             aPadding)
+{
+  nsStyleCoord styleCoord;
+  aSpacing.mPadding.GetTop(styleCoord);
+  if (eStyleUnit_Percent == aSpacing.mPadding.GetTopUnit()) {
+    aPadding.top = CalcPercentPadding(aBasis.height, styleCoord);
+  }
+  else if (eStyleUnit_Coord == aSpacing.mPadding.GetTopUnit()) {
+    aPadding.top = styleCoord.GetCoordValue();
+  }
+
+  aSpacing.mPadding.GetRight(styleCoord);
+  if (eStyleUnit_Percent == aSpacing.mPadding.GetRightUnit()) {
+    aPadding.right = CalcPercentPadding(aBasis.width, styleCoord);
+  }
+  else if (eStyleUnit_Coord == aSpacing.mPadding.GetTopUnit()) {
+    aPadding.right = styleCoord.GetCoordValue();
+  }
+
+  aSpacing.mPadding.GetBottom(styleCoord);
+  if (eStyleUnit_Percent == aSpacing.mPadding.GetBottomUnit()) {
+    aPadding.bottom = CalcPercentPadding(aBasis.height, styleCoord);
+  }
+  else if (eStyleUnit_Coord == aSpacing.mPadding.GetTopUnit()) {
+    aPadding.bottom = styleCoord.GetCoordValue();
+  }
+
+  aSpacing.mPadding.GetLeft(styleCoord);
+  if (eStyleUnit_Percent == aSpacing.mPadding.GetLeftUnit()) {
+    aPadding.left = CalcPercentPadding(aBasis.width, styleCoord);
+  }
+  else if (eStyleUnit_Coord == aSpacing.mPadding.GetTopUnit()) {
+    aPadding.left = styleCoord.GetCoordValue();
+  }
+}
+
+nsMargin
+nsTableFrame::GetPadding(const nsHTMLReflowState& aReflowState,
+                         const nsTableCellFrame*  aCellFrame)
+{
+  const nsStyleSpacing* spacing;
+  aCellFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)spacing);
+  nsMargin padding(0,0,0,0);
+  if (!spacing->GetPadding(padding)) {
+    const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
+    while (parentRS) {
+      if (parentRS->frame) {
+        nsCOMPtr<nsIAtom> frameType;
+        parentRS->frame->GetFrameType(getter_AddRefs(frameType));
+        if (nsLayoutAtoms::tableFrame == frameType.get()) {
+          nsSize basis(parentRS->mComputedWidth, parentRS->mComputedHeight);
+          GetPaddingFor(basis, *spacing, padding);
+          break;
+        }
+      }
+      parentRS = parentRS->parentReflowState;
+    }
+  }
+  return padding;
+}
+
+nsMargin
+nsTableFrame::GetPadding(const nsSize&           aBasis,
+                         const nsTableCellFrame* aCellFrame)
+{
+  const nsStyleSpacing* spacing;
+  aCellFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)spacing);
+  nsMargin padding(0,0,0,0);
+  if (!spacing->GetPadding(padding)) {
+    GetPaddingFor(aBasis, *spacing, padding);
+  }
+  return padding;
+}
 
 NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin& aMargin)
 {
@@ -4169,10 +4230,12 @@ nscoord nsTableFrame::GetMaxTableContentWidth()
   return result;
 }
 
-void nsTableFrame::SetMaxElementSize(nsSize* aMaxElementSize)
+void nsTableFrame::SetMaxElementSize(nsSize*         aMaxElementSize,
+                                     const nsMargin& aPadding)
 {
-  if (nsnull!=mTableLayoutStrategy)
-    mTableLayoutStrategy->SetMaxElementSize(aMaxElementSize);
+  if (nsnull!=mTableLayoutStrategy) {
+    mTableLayoutStrategy->SetMaxElementSize(aMaxElementSize, aPadding);
+  }
 }
 
 
