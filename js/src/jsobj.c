@@ -3116,6 +3116,34 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     return ok;
 }
 
+static void
+ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
+{
+    /*
+     * The decompiler may need to access the args of the function in
+     * progress rather than the one we had hoped to call.
+     * So we switch the cx->fp to the frame below us. We stick the
+     * current frame in the dormantFrameChain to protect it from gc.
+     */
+
+    JSStackFrame *fp = cx->fp;
+    if (fp->down) {
+        JS_ASSERT(!fp->dormantNext);
+        fp->dormantNext = cx->dormantFrameChain;
+        cx->dormantFrameChain = fp;
+        cx->fp = fp->down;
+    }
+
+    js_ReportIsNotFunction(cx, vp, constructing);
+
+    if (fp->down) {
+        JS_ASSERT(cx->dormantFrameChain == fp);
+        cx->dormantFrameChain = fp->dormantNext;
+        fp->dormantNext = NULL;
+        cx->fp = fp;
+    }
+}
+
 JSBool
 js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -3123,18 +3151,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->call) {
-        /*
-         * The decompiler may need to access the args of the function in
-         * progress, so we switch the function pointer in the frame to the
-         * function below us, rather than the one we had hoped to call.
-         * XXXbe doesn't this case arise for js_Construct too?
-         */
-        JSStackFrame *fp = cx->fp;
-        JSFunction *fun = fp->fun;
-        if (fp->down)   /* guaranteed ? */
-            fp->fun = fp->down->fun;
-        js_ReportIsNotFunction(cx, &argv[-2], JS_FALSE);
-        fp->fun = fun;
+        ReportIsNotFunction(cx, &argv[-2], JS_FALSE);
         return JS_FALSE;
     }
     return clasp->call(cx, obj, argc, argv, rval);
@@ -3148,7 +3165,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->construct) {
-        js_ReportIsNotFunction(cx, &argv[-2], JS_TRUE);
+        ReportIsNotFunction(cx, &argv[-2], JS_TRUE);
         return JS_FALSE;
     }
     return clasp->construct(cx, obj, argc, argv, rval);
