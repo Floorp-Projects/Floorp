@@ -69,7 +69,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
   {
     PRUint32 count;
     nsCOMPtr<nsIDOMCharacterData> textNode;
-    textNode = do_QueryInterface(mStartParent, &result);
+    textNode = do_QueryInterface(mStartParent);
     if (textNode)
       textNode->GetLength(&count);
     else
@@ -81,7 +81,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
     }
     NS_ASSERTION(mStartOffset<=(PRInt32)count, "bad start offset");
 
-    textNode = do_QueryInterface(mEndParent, &result);
+    textNode = do_QueryInterface(mEndParent);
     if (textNode)
       textNode->GetLength(&count);
     else

@@ -52,7 +52,7 @@ public:
 
 // Editing Operations
   NS_IMETHOD SetTextProperty(nsIAtom *aProperty);
-  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PRBool &aAll);
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAny, PRBool &aAll);
   NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty);
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
@@ -136,6 +136,28 @@ protected:
                                                           PRInt32      aEndOffset,
                                                           nsIDOMNode  *aParent,
                                                           nsIAtom     *aPropName);
+
+  NS_IMETHOD RemoveTextPropertiesForNode(nsIDOMNode *aNode, 
+                                         nsIDOMNode *aParent,
+                                         PRInt32     aStartOffset,
+                                         PRInt32     aEndOffset,
+                                         nsIAtom    *aPropName);
+
+  NS_IMETHOD RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
+                                                        PRInt32     aStartOffset,
+                                                        nsIDOMNode *aEndNode,
+                                                        PRInt32     aEndOffset,
+                                                        nsIDOMNode *aParent,
+                                                        nsIAtom    *aPropName);
+
+  NS_IMETHOD RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
+                                                             nsIDOMNode  *aStartNode,
+                                                             PRInt32      aStartOffset,
+                                                             nsIDOMNode  *aEndNode,
+                                                             PRInt32      aEndOffset,
+                                                             nsIDOMNode  *aParent,
+                                                             nsIAtom     *aPropName);
+
 
 
   NS_IMETHOD SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPropName);

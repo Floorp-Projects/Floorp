@@ -36,9 +36,9 @@ DeleteTextTxn::~DeleteTextTxn()
 }
 
 NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
-                             nsIDOMCharacterData *aElement,
-                             PRUint32 aOffset,
-                             PRUint32 aNumCharsToDelete)
+                                  nsIDOMCharacterData *aElement,
+                                  PRUint32 aOffset,
+                                  PRUint32 aNumCharsToDelete)
 {
   NS_ASSERTION(aEditor&&aElement, "bad arg");
   mEditor = do_QueryInterface(aEditor);
@@ -46,6 +46,10 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;
   NS_ASSERTION(0!=aNumCharsToDelete, "bad arg, numCharsToDelete");
+  PRUint32 count;
+  aElement->GetLength(&count);
+  NS_ASSERTION(count<aNumCharsToDelete, "bad arg, numCharsToDelete.  Not enough characters in node");
+  NS_ASSERTION(count<aOffset+aNumCharsToDelete, "bad arg, numCharsToDelete.  Not enough characters in node");
   mDeletedText = "";
   return NS_OK;
 }
