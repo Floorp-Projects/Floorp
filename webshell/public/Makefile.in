@@ -30,7 +30,6 @@ EXPORTS =					\
         nsIContentViewerContainer.h		\
         nsIDocumentLoader.h			\
 	nsIDocumentLoaderObserver.h		\
-	nsIExternalDocLoadObs.h			\
         nsIDocumentViewer.h			\
 	nsILinkHandler.h			\
 	nsIThrobber.h				\
