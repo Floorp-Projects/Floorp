@@ -735,8 +735,9 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
       if (htmlFormElement) {
         nsCOMPtr<nsIContent> content = do_QueryInterface(htmlFormElement);
         if (content) {
-          // Set the parent.
-          content->SetParent(mRoot);
+          // XXX Would like to make this anonymous, but still need
+          // the form's frame to get built. For now make it explicit.
+          mRoot->InsertChildAt(content, 0, PR_FALSE); 
         }
         mDocument->SetForm(htmlFormElement);
       }
