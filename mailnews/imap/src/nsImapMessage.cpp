@@ -70,9 +70,9 @@ nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 		nsParseImapMessageURI(uri, messageFolderURIStr, &key);
 		nsString folderOnly, folderURIStr;
 
-		if (messageFolderURIStr.Find(kImapMessageRootURI) != ((PRInt32)-1))
+		if (messageFolderURIStr.Find(kImapRootURI) != ((PRInt32)-1))
 		{
-			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kImapMessageRootURI));
+			messageFolderURIStr.Right(folderOnly, messageFolderURIStr.Length() -nsCRT::strlen(kImapRootURI));
 			folderURIStr = kImapRootURI;
 			folderURIStr+= folderOnly;
 			nsIRDFResource *folderResource;
