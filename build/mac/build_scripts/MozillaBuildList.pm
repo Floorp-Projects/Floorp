@@ -317,6 +317,14 @@ sub ProcessJarManifests()
         CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:classic:jar.mn", $chrome_dir, \%jars);
         CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:modern:jar.mn", $chrome_dir, \%jars);
       }
+      if ($main::options{p3p})
+      {
+        CreateJarFromManifest(":mozilla:extensions:p3p:resources:jar.mn", $chrome_dir, \%jars);
+      }
+      if ($main::options{jsdebugger})
+      {
+        CreateJarFromManifest(":mozilla:extensions:venkman:resources:jar.mn", $chrome_dir, \%jars);
+      }
     }
     
     CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
@@ -522,7 +530,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",                          "$distdirectory:idl:");
     InstallFromManifest(":mozilla:xpcom:threads:MANIFEST_IDL",                     "$distdirectory:idl:");
     InstallFromManifest(":mozilla:xpcom:components:MANIFEST_IDL",                  "$distdirectory:idl:");
-    InstallFromManifest(":mozilla:xpcom:components:MANIFEST_COMPONENTS",           "${dist_dir}Components:");
 
     InstallFromManifest(":mozilla:xpcom:base:MANIFEST",                            "$distdirectory:xpcom:");
     InstallFromManifest(":mozilla:xpcom:components:MANIFEST",                      "$distdirectory:xpcom:");
@@ -616,7 +623,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:netwerk:build:MANIFEST",                         "$distdirectory:netwerk:");
     InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",                   "$distdirectory:netwerk:");
     InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST_IDL",               "$distdirectory:idl:");
-    InstallFromManifest(":mozilla:netwerk:base:src:MANIFEST_COMPONENTS",           "${dist_dir}Components:");
     InstallFromManifest(":mozilla:netwerk:socket:base:MANIFEST_IDL",               "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:protocol:about:public:MANIFEST_IDL",     "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:protocol:data:public:MANIFEST_IDL",      "$distdirectory:idl:");
@@ -762,7 +768,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",            "$distdirectory:idl:");
 
     my $dir = '';
-    for $dir (qw(bookmarks find history related sample search shistory sidebar ucth urlbarhistory xfer))
+    for $dir (qw(bookmarks find history related search shistory sidebar ucth urlbarhistory xfer))
     {
         InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",       "$distdirectory:idl:");
     }
@@ -846,8 +852,19 @@ sub BuildClientDist()
     if ($main::options{inspector})
     {
         InstallFromManifest(":mozilla:extensions:inspector:base:public:MANIFEST_IDL", "$distdirectory:idl:");
-        InstallFromManifest(":mozilla:extensions:inspector:resources:content:prefs:MANIFEST", "$distdirectory:defaults:pref");
-        InstallFromManifest(":mozilla:extensions:inspector:resources:content:res:MANIFEST", "$distdirectory:res:inspector");
+    }
+
+    #P3P
+    if ($main::options{p3p})
+    {
+        InstallFromManifest(":mozilla:extensions:p3p:public:MANIFEST", "$distdirectory:idl:");
+    }
+
+    #JS DEBUGGER
+    if ($main::options{jsdebugger})
+    {
+        InstallFromManifest(":mozilla:js:jsd:idl:MANIFEST_IDL", "$distdirectory:idl:");
+        InstallFromManifest(":mozilla:js:jsd:MANIFEST", "$distdirectory:jsdebug:");
     }
 
     print("--- Client Dist export complete ----\n");
@@ -1123,6 +1140,16 @@ sub BuildIDLProjects()
         BuildIDLProject(":mozilla:extensions:inspector:macbuild:inspectorIDL.mcp", "inspector");
     }
 
+    if ($main::options{p3p})
+    {
+        BuildIDLProject(":mozilla:extensions:p3p:macbuild:p3pIDL.mcp", "p3p");
+    }
+
+    if ($main::options{jsdebugger})
+    {
+        BuildIDLProject(":mozilla:js:jsd:macbuild:jsdIDL.mcp", "jsdservice");
+    }
+
     EndBuildModule("idl");
 }
 
@@ -1196,6 +1223,7 @@ sub BuildCommonProjects()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
+    my $dist_dir = GetBinDirectory();
 
     StartBuildModule("common");
 
@@ -1231,6 +1259,8 @@ sub BuildCommonProjects()
     BuildOneProject(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider.mcp", "mpfilelocprovider$D.o", 0, 0, 0);
     MakeAlias(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider$D.o", ":mozilla:dist:mpfilelocprovider:");
     
+    InstallFromManifest(":mozilla:xpcom:components:MANIFEST_COMPONENTS",         "${dist_dir}Components:");
+
     EndBuildModule("common");
 }
 
@@ -1349,7 +1379,7 @@ sub BuildNeckoProjects()
     # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
     my($C) = $main::options{carbon} ? "Carbon" : "";
 
-    my($Components) = $main::DEBUG ? ":mozilla:dist:viewer_debug:Components:" : ":mozilla:dist:viewer:Components:";
+    my $dist_dir = GetBinDirectory();
 
     StartBuildModule("necko");
 
@@ -1363,6 +1393,8 @@ sub BuildNeckoProjects()
 
     BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",       "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
           
+    InstallFromManifest(":mozilla:netwerk:base:src:MANIFEST_COMPONENTS", "${dist_dir}Components:");
+
     EndBuildModule("necko");
 }
 
@@ -1717,7 +1749,7 @@ sub BuildExtensionsProjects()
 
         if ($main::options{ldap_experimental})
         {
-            InstallResources(":mozilla:extensions:directory:xpcom:datasource:MANIFEST_COMPONENTS", "${dist_dir}Components");
+            InstallResources(":mozilla:directory:xpcom:datasource:MANIFEST_COMPONENTS", "${dist_dir}Components");
         }
     }
     
@@ -1747,6 +1779,18 @@ sub BuildExtensionsProjects()
     if ($main::options{inspector})
     {
         BuildOneProject(":mozilla:extensions:inspector:macbuild:inspector.mcp", "inspector$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+    
+    # P3P
+    if ($main::options{p3p})
+    {
+        BuildOneProject(":mozilla:extensions:p3p:macbuild:p3p.mcp", "p3p$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+    
+    # JS Debugger
+    if ($main::options{jsdebugger})
+    {
+        BuildOneProject(":mozilla:js:jsd:macbuild:JSD.mcp", "jsdService$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
     EndBuildModule("extensions");
