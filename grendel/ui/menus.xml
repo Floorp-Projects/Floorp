@@ -121,11 +121,14 @@
    <menuitem id="msgReplyAll" category="message" action="msgReplyAll"
     label="$msgReplyAllLabel" accel="$msgReplyAllAccel"
     description=""/>
-   <menuitem id="msgForward" category="message" action="msgForward"
-    label="$msgForwardLabel" accel="$msgForwardAccel"
+   <menuitem id="fwdQuoted" category="message" action="fwdQuoted"
+    label="$fwdQuotedLabel" accel="$fwdQuotedAccel"
     description=""/>
-   <menuitem id="msgForwardQuoted" category="message" action="msgForwardQuoted"
-    label="$msgForwardQuotedLabel" accel="$msgForwardQuotedAccel"
+   <menuitem id="fwdInline" category="message" action="fwdInline"
+    label="$fwdInlineLabel" accel="$fwdInlineAccel"
+    description=""/>
+   <menuitem id="fwdAttachment" category="message" action="fwdAttachment"
+    label="$fwdAttachmentLabel" accel="$fwdAttachmentAccel"
     description=""/>
     <menuitem type="separator"/>
     <menu id="msgMark" category="message"

@@ -922,7 +922,7 @@ public class FolderPanel extends GeneralPanel {
       super(aName);
       fScope = aScope;
 
-      this.setEnabled(aScope == kQuoted);
+      this.setEnabled(aScope != kAttachment);
     }
 
     public void actionPerformed(ActionEvent aEvent) {
@@ -932,7 +932,7 @@ public class FolderPanel extends GeneralPanel {
                          "Need to have exactly one message selected to reply");
       }
       Composition frame = new Composition();
-      frame.initializeAsForward((Message) (selection.elementAt(0)));
+      frame.initializeAsForward((Message) (selection.elementAt(0)), fScope);
       frame.show();
       frame.requestFocus();
     }

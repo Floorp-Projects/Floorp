@@ -201,6 +201,15 @@ public class CompositionPanel extends GeneralPanel {
   }
 
   /**
+   * Inline the orgininal message when forwarding
+   */
+   
+  public void InlineOriginalMessage() {
+    InlineOriginalText iot = new InlineOriginalText();
+    iot.actionPerformed(new ActionEvent(this,0,""));
+  }
+
+  /**
    * Add a signature
    */
    
@@ -266,6 +275,7 @@ public class CompositionPanel extends GeneralPanel {
   public static final String sendNowTag               ="sendNow";
   public static final String sendLaterTag             ="sendLater";
   public static final String quoteOriginalTextTag     ="quoteOriginalText";
+  public static final String inlineOriginalTextTag    ="inlineOriginalText";
   public static final String addSignatureTag          ="addSignatureAction";
   public static final String selectAddressesTag       ="selectAddresses";
   public static final String goOfflineTag             ="goOffline";
@@ -639,6 +649,100 @@ public class CompositionPanel extends GeneralPanel {
           try {
             doc.insertString(position, "> ", null);
             position += 2;
+            doc.insertString(position, line.toString(), null);
+            position += line.length();
+            doc.insertString(position, "\n", null);
+            position += 1;
+          } catch (BadLocationException e) {
+          }
+        }
+      }
+      repaint();
+      try {
+        plaintext.close();
+      } catch (IOException e) {
+      }
+    }
+  }
+
+  /**
+   * Inline the original text message into the editor.
+   * @see QuoteOriginalText
+   */
+  class InlineOriginalText extends UIAction {
+    InlineOriginalText() {
+      super(inlineOriginalTextTag);
+      this.setEnabled(true);
+    }
+    public void actionPerformed(ActionEvent event) {
+      if (referredMsg == null) return; // Or beep or whine??? ###
+      // ### Get the message as a stream of text.  This involves
+      // complicated things like invoking the MIME parser, and throwing
+      // away non-text parts, and translating HTML to text, and so on.
+      // Yeah, right.
+      InputStream plaintext = null;
+      try {
+        plaintext = referredMsg.getInputStream();
+      } catch (IOException ioe) {
+      } catch (MessagingException e) {
+      }
+      if (plaintext == null) return; // Or beep or whine??? ###
+
+
+      int position = mEditor.getCaretPosition();
+      Document doc = mEditor.getDocument();
+
+      MessageExtra mextra = MessageExtraFactory.Get(referredMsg);
+      String author;
+      try {
+        author = mextra.getAuthor();
+      } catch (MessagingException e) {
+        author = "???";         // I18N? ###
+      }
+      String subject;
+      try {
+        subject = referredMsg.getSubject();
+      } catch (MessagingException e) {
+        subject = "???";         // I18N? ###
+      }
+      String tmp = "\n\n-------- Original Message --------\n";
+      tmp = tmp + "From: " + author + "\n";                      // I18N ###
+      tmp = tmp + "Subject: " + subject + "\n";
+      tmp = tmp + "\n";
+      try {
+        doc.insertString(position, tmp, null);
+        position += tmp.length();
+      } catch (BadLocationException e) {
+      }
+
+      // OK, now insert the data from the plaintext, and precede each
+      // line with "> ".
+
+      ByteLineBuffer linebuffer = new ByteLineBuffer();
+      ByteBuf empty = new ByteBuf();
+      linebuffer.setOutputEOL(empty);
+
+      boolean eof = false;
+
+      ByteBuf buf = new ByteBuf();
+      ByteBuf line = new ByteBuf();
+
+      while (!eof) {
+        buf.setLength(0);
+        try {
+          eof = (buf.read(plaintext, 1024) < 0);
+        } catch (IOException e) {
+          eof = true;
+        }
+        if (eof) {
+          linebuffer.pushEOF();
+        } else {
+          linebuffer.pushBytes(buf);
+        }
+        while (linebuffer.pullLine(line)) {
+          try {
+            //doc.insertString(position, "> ", null);
+            //position += 2;
             doc.insertString(position, line.toString(), null);
             position += line.length();
             doc.insertString(position, "\n", null);

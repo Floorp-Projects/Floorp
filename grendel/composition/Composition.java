@@ -41,6 +41,7 @@ import grendel.storage.MessageExtraFactory;
 import grendel.widgets.Animation;
 import grendel.widgets.CollapsiblePanel;
 import grendel.widgets.GrendelToolBar;
+import grendel.ui.FolderPanel;
 import grendel.ui.GeneralFrame;
 import grendel.ui.StoreFactory;
 
@@ -197,7 +198,7 @@ public class Composition extends GeneralFrame {
 
     /** Initialize the headers and body of this composition 
         as being a message that is forwarded 'quoted'. */
-    public void initializeAsForward(Message msg) {
+    public void initializeAsForward(Message msg, int aScope) {
         mCompositionPanel.setReferredMessage(msg);
         MessageExtra mextra = MessageExtraFactory.Get(msg);
 
@@ -207,7 +208,13 @@ public class Composition extends GeneralFrame {
         }
 
         // Quote the original text
-        mCompositionPanel.QuoteOriginalMessage();
+        if (aScope == FolderPanel.kQuoted) {
+          mCompositionPanel.QuoteOriginalMessage();
+        }
+
+        if (aScope == FolderPanel.kInline) {
+          mCompositionPanel.InlineOriginalMessage();
+        }
 
     }
 
