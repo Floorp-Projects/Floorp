@@ -131,14 +131,14 @@ private:
     nsCOMPtr<nsIContent>                mRoot;
     nsCOMPtr<nsIHTMLElementFactory>     mHTMLElementFactory;
 
-    // The "element recycler" is used to recycle elements that are
+    // These "zombie elements" are a pool of elements that are
     // removed from the content model. When a new element is created
     // via the DOM document.createElement() API, or an element is
     // removed from the content model using the DOM APIs, the element
-    // is placed in the recycler. This ensures that subsequent
+    // is placed in the pool. This ensures that subsequent
     // insertion of the node will result in the same object being
     // re-used, rather than a new element being created.
-    nsCOMPtr<nsISupportsArray> mElementRecycler;
+    nsCOMPtr<nsISupportsArray> mZombiePool;
 
     // pseudo-constants
     static PRInt32 gRefCnt;
@@ -210,7 +210,7 @@ public:
     nsresult RemoveChild(nsIContent* aElement,
                          nsIRDFNode* aValue);
 
-    nsresult CreateOrRecycleElement(nsINameSpace* aContainingNameSpace,
+    nsresult CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
                                     nsIRDFResource* aResource,
                                     nsIContent** aResult);
 
@@ -261,7 +261,7 @@ public:
     MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFResource** aResult);
 
     nsresult
-    RecycleNode(nsIDOMNode* aElement);
+    AddNodeToZombiePool(nsIDOMNode* aElement);
 
     nsresult
     GetParentNodeWithHTMLHack(nsIDOMNode* aNode, nsCOMPtr<nsIDOMNode>* aResult);
@@ -522,7 +522,7 @@ RDFXULBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
     rv = gNameSpaceManager->CreateRootNameSpace(*getter_AddRefs(nameSpace));
     if (NS_FAILED(rv)) return rv;
 
-    rv = CreateOrRecycleElement(nameSpace, aResource, getter_AddRefs(mRoot));
+    rv = CreateOrReuseElement(nameSpace, aResource, getter_AddRefs(mRoot));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create root element");
     if (NS_FAILED(rv)) return rv;
 
@@ -780,8 +780,8 @@ RDFXULBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
     // Create a content element. This sets up the underlying document
     // graph properly. Specifically, it:
     //
-    // 1) Checks the element recycle bin to see if an element exists
-    //    that can be recycled. XXX NOT IMPLEMENTED!
+    // 1) Checks the zombie pool to see if an element exists
+    //    that can be re-used. XXX NOT IMPLEMENTED!
     //
     // 2) If aResource is null, it assigns the element an "anonymous"
     //    URI as its ID. The URI is relative to the current document's
@@ -1182,7 +1182,7 @@ RDFXULBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
 
             // Recycle the new child, so that the node will be re-used
             // in the content model.
-            rv = RecycleNode(aNewChild);
+            rv = AddNodeToZombiePool(aNewChild);
             if (NS_FAILED(rv)) return rv;
 
             // Create a container wrapper
@@ -1270,12 +1270,12 @@ RDFXULBuilderImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, ns
             if (NS_FAILED(rv)) return rv;
 
             // Recycle the old element
-            rv = RecycleNode(aOldChild);
+            rv = AddNodeToZombiePool(aOldChild);
             if (NS_FAILED(rv)) return rv;
 
             // ...and the new one, _now_, so that we're sure to get it
             // when the asserts bubble back up from the graph.
-            rv = RecycleNode(aNewChild);
+            rv = AddNodeToZombiePool(aNewChild);
             if (NS_FAILED(rv)) return rv;
 
             // ...and add the new child to the collection at the old child's index
@@ -1338,7 +1338,7 @@ RDFXULBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
 
         // Recycle the element, so if it is inserted into the content
         // model again, we re-use the same object.
-        rv = RecycleNode(aOldChild);
+        rv = AddNodeToZombiePool(aOldChild);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1417,7 +1417,7 @@ RDFXULBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
 
             // Recycle the new element _now_, so that we're sure to
             // get it when the asserts bubble back up from the graph.
-            rv = RecycleNode(aNewChild);
+            rv = AddNodeToZombiePool(aNewChild);
             if (NS_FAILED(rv)) return rv;
 
             rv = container->AppendElement(newChild);
@@ -1655,7 +1655,7 @@ RDFXULBuilderImpl::AppendChild(nsINameSpace* aNameSpace,
         
         // If it's a resource, then add it as a child container.
         nsCOMPtr<nsIContent> child;
-        rv = CreateOrRecycleElement(aNameSpace, resource, getter_AddRefs(child));
+        rv = CreateOrReuseElement(aNameSpace, resource, getter_AddRefs(child));
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new XUL element");
         if (NS_FAILED(rv)) return rv;
 
@@ -1781,9 +1781,9 @@ RDFXULBuilderImpl::RemoveChild(nsIContent* aElement, nsIRDFNode* aValue)
 }
 
 nsresult
-RDFXULBuilderImpl::CreateOrRecycleElement(nsINameSpace* aContainingNameSpace,
-                                          nsIRDFResource* aResource,
-                                          nsIContent** aResult)
+RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
+                                        nsIRDFResource* aResource,
+                                        nsIContent** aResult)
 {
     nsresult rv;
 
@@ -1813,14 +1813,14 @@ RDFXULBuilderImpl::CreateOrRecycleElement(nsINameSpace* aContainingNameSpace,
     if (NS_FAILED(rv)) return rv;
 
     // XXX We can make this faster if we need to.
-    if (mElementRecycler) {
+    if (mZombiePool) {
         PRUint32 count;
-        rv = mElementRecycler->Count(&count);
+        rv = mZombiePool->Count(&count);
         if (NS_FAILED(rv)) return rv;
 
         while (PRInt32(count--) >= 0) {
             nsCOMPtr<nsIContent> element = 
-                do_QueryInterface( mElementRecycler->ElementAt(count) );
+                do_QueryInterface( mZombiePool->ElementAt(count) );
 
             nsCOMPtr<nsIRDFResource> resource;
             rv = nsRDFContentUtils::GetElementResource(element, getter_AddRefs(resource));
@@ -1831,7 +1831,7 @@ RDFXULBuilderImpl::CreateOrRecycleElement(nsINameSpace* aContainingNameSpace,
                 continue;
 
             // found it!
-            mElementRecycler->RemoveElementAt(count);
+            mZombiePool->RemoveElementAt(count);
 
             *aResult = element;
             NS_ADDREF(*aResult);
@@ -2713,9 +2713,9 @@ RDFXULBuilderImpl::MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFR
 
 
 nsresult
-RDFXULBuilderImpl::RecycleNode(nsIDOMNode* aNode)
+RDFXULBuilderImpl::AddNodeToZombiePool(nsIDOMNode* aNode)
 {
-    // Place the specified element in the element recycler so that it
+    // Place the specified element in the zombie pool so that it
     // may be re-used.
     nsresult rv;
 
@@ -2723,14 +2723,21 @@ RDFXULBuilderImpl::RecycleNode(nsIDOMNode* aNode)
     if (! element)
         return NS_ERROR_UNEXPECTED;
 
-    if (! mElementRecycler) {
-        rv = NS_NewISupportsArray(getter_AddRefs(mElementRecycler));
+    // See if the element has an ID attribute (and thus, a node in the
+    // graph to which it corresponds). If not, we can't re-use it.
+    nsAutoString id;
+    rv = element->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+        return NS_OK;
+
+    if (! mZombiePool) {
+        rv = NS_NewISupportsArray(getter_AddRefs(mZombiePool));
         if (NS_FAILED(rv)) return rv;
     }
 
-    NS_ASSERTION(mElementRecycler->IndexOf(element) < 0, "Element already in the recycler");
+    NS_ASSERTION(mZombiePool->IndexOf(element) < 0, "Element already in the recycler");
 
-    mElementRecycler->AppendElement(element);
+    mZombiePool->AppendElement(element);
     return NS_OK;
 }
 
