@@ -764,6 +764,7 @@ nsresult nsScanner::ReadTagIdentifier(nsString& aString) {
         case '\b':
         case '\t':
         case '\v':
+        case '\f':
         case '<':
         case '>':
         case '/':
