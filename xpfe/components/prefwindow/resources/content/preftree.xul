@@ -76,6 +76,11 @@
       <treechildren>
         <treeitem>
           <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-history.xul" value="&history.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-languages2.xul" value="&languages.label;"/> 
           </treerow>
         </treeitem>

@@ -46,6 +46,7 @@ CHROME_L10N = \
 		pref-debug.dtd \
 		pref-download.dtd \
 		pref-fonts.dtd \
+		pref-history.dtd \
 		pref-languages.dtd \
 		pref-languages2.dtd \
 		pref-navigator.dtd \
