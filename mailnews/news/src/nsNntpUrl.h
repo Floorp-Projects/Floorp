@@ -55,6 +55,8 @@ public:
     // this should be an IDL attribute
     NS_IMETHOD SetNewsgroupName(char * aNewsgroupName);
     NS_IMETHOD GetNewsgroupName(char ** aNewsgroupName);
+
+	NS_IMETHOD SetUsername(const char *aUserName);
      
 	// from nsIMsgUriUrl
 	NS_IMETHOD GetURI(char ** aURI); 
@@ -67,8 +69,10 @@ public:
 
 protected:  
     nsINNTPNewsgroupPost *m_newsgroupPost;
+	virtual const char * GetUserName() { return m_userName.GetBuffer();}
     
     nsFileSpec	*m_filePath; 
+	nsCString m_userName;
 
 	/* NNTP specific event sinks */
 	nsINNTPHost				* m_newsHost;

@@ -234,6 +234,17 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 	}
 }
 
+NS_IMETHODIMP nsNntpUrl::SetUsername(const char *aUserName)
+{
+	nsresult rv = NS_OK;
+	if (aUserName)
+		m_userName = aUserName;
+	else
+		rv = NS_ERROR_NULL_POINTER;
+
+	return rv;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsINntpUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////

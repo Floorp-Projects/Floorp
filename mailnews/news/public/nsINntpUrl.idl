@@ -48,4 +48,5 @@ interface nsINntpUrl : nsISupports {
   readonly attribute nsIMsgDBHdr messageHeader;
   attribute nsMsgKey messageKey;
   attribute string newsgroupName;
+  void SetUsername(in string aUserName);
 };

@@ -67,9 +67,7 @@ public:
 	// interface here that would encapsulte things like username, domain, password,
 	// etc...
 	NS_IMETHOD GetUserEmailAddress(const char ** aUserName);
-	NS_IMETHOD SetUserEmailAddress(const nsString& aUserName);
-	NS_IMETHOD GetUserPassword(const nsString ** aUserPassword);
-	NS_IMETHOD SetUserPassword(const nsString& aUserPassword);
+	NS_IMETHOD SetUserEmailAddress(const char * aUserName);
 
     // nsSmtpUrl
 
@@ -79,6 +77,7 @@ protected:
     virtual ~nsSmtpUrl();
 	// protocol specific code to parse a url...
     virtual nsresult ParseUrl();
+	virtual const char * GetUserName() { return m_userName.GetBuffer();}
 
 	// data retrieved from parsing the url: (Note the url could be a post from file or it could be inthe url)
     char		*m_toPart;
@@ -101,10 +100,7 @@ protected:
 	PRBool	    m_forcePlainText;
 
 	/* Smtp specific event sinks */
-	nsString	m_userPassword;
-	char	   *m_userNameString; // char * version of m_userName
-	nsString	m_userName;
-
+	nsCString	m_userName;
 	nsFilePath  m_fileName;
 
 	// it is possible to encode the message to parse in the form of a url.

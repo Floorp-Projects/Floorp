@@ -44,8 +44,6 @@ nsresult NS_NewSmtpUrl(const nsIID &aIID, void ** aInstancePtrResult)
 }
 
 nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl(), 
-    m_userPassword(""),
-    m_userName(""),
     m_fileName("")
 {
 	// nsISmtpUrl specific state...
@@ -64,14 +62,11 @@ nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl(),
 	m_organizationPart = nsnull;
 	m_replyToPart = nsnull;
 	m_priorityPart = nsnull;
-
-	m_userNameString = nsnull;
 }
  
 nsSmtpUrl::~nsSmtpUrl()
 {
 	CleanupSmtpState(); 
-	delete [] m_userNameString;
 	PR_FREEIF(m_toPart);
 }
   
@@ -302,46 +297,25 @@ nsresult nsSmtpUrl::GetUserEmailAddress(const char ** aUserName)
 {
 	nsresult rv = NS_OK;
 	if (aUserName)
-		*aUserName = m_userNameString;
+		*aUserName = m_userName.GetBuffer();
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv;
 }
 
-nsresult nsSmtpUrl::GetUserPassword(const nsString ** aUserPassword)
+nsresult nsSmtpUrl::SetUserEmailAddress(const char * aUserName)
 {
 	nsresult rv = NS_OK;
-	if (aUserPassword)
-		*aUserPassword = &m_userPassword;
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv;
-}
-
-nsresult nsSmtpUrl::SetUserEmailAddress(const nsString& aUserName)
-{
-	nsresult rv = NS_OK;
-	if (aUserName.GetUnicode())
-	{
+	if (aUserName)
+	{	
 		m_userName = aUserName;
-		if (m_userNameString)
-			delete [] m_userNameString;
-		m_userNameString = m_userName.ToNewCString();
 	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
 
 	return rv;
 }
 	
-nsresult nsSmtpUrl::SetUserPassword(const nsString& aUserPassword)
-{
-	nsresult rv = NS_OK;
-	if (aUserPassword.GetUnicode())
-	{
-		m_userPassword = aUserPassword;
-	}
-
-	return rv;
-}
 
 nsresult nsSmtpUrl::GetMessageContents(const char ** aToPart, const char ** aCcPart, const char ** aBccPart, 
 		const char ** aFromPart, const char ** aFollowUpToPart, const char ** aOrganizationPart, 
