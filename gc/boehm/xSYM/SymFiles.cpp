@@ -45,6 +45,7 @@
 
 struct sym_file {
 	// file data structures.
+	FSSpec mFileSpec;
 	SInt16 mFileRef;
 	UInt8* mPageBuffer;
 	UInt32 mPageOffset;
@@ -54,18 +55,20 @@ struct sym_file {
 	ResourceTableEntry mCodeEntry;
 	UInt8** mNameTable;
 	
-	sym_file();
+	sym_file(const FSSpec* spec);
 	~sym_file();
 	
-	bool open(const FSSpec* spec);
+	bool init();
+	bool open();
+	bool close();
 	bool seek(UInt32 position);
 	UInt32 read(void* buffer, UInt32 count);
 
 	const UInt8* getName(UInt32 nameIndex);
 };
 
-sym_file::sym_file()
-	:	mFileRef(-1), mPageBuffer(NULL), mPageOffset(0), mBufferOffset(0),
+sym_file::sym_file(const FSSpec* spec)
+	:	mFileSpec(*spec), mFileRef(-1), mPageBuffer(NULL), mPageOffset(0), mBufferOffset(0),
 		mNameTable(NULL)
 {
 }
@@ -94,10 +97,10 @@ sym_file::~sym_file()
 	}
 }
 
-bool sym_file::open(const FSSpec* spec)
+bool sym_file::init()
 {
-	// open the specified symbol file.
-	if (::FSpOpenDF(spec, fsRdPerm, &mFileRef) != noErr)
+	// open the file.
+	if (!open())
 		return false;
 
 	// read the header. should make sure it is a valid .xSYM file, etc.
@@ -145,12 +148,34 @@ bool sym_file::open(const FSSpec* spec)
 	return true;
 }
 
+bool sym_file::open()
+{
+	if (mFileRef == -1) {
+		// open the specified symbol file.
+		if (::FSpOpenDF(&mFileSpec, fsRdPerm, &mFileRef) != noErr)
+			return false;
+	}
+	return true;
+}
+
+bool sym_file::close()
+{
+	if (mFileRef != -1) {
+		::FSClose(mFileRef);
+		mFileRef = -1;
+	}
+	return true;
+}
+
 bool sym_file::seek(UInt32 position)
 {
 	if (position != (mPageOffset + mBufferOffset)) {
 		// if position is off current page, the resync the buffer.
 		UInt32 pageSize = mHeader.dshb_page_size;
 		if (position < mPageOffset || position >= (mPageOffset + pageSize)) {
+			// make sure the file is open.
+			if (!open())
+				return false;
 			// read the nearest page to this offset.
 			mPageOffset = (position - (position % pageSize));
 			if (::SetFPos(mFileRef, fsFromStart, mPageOffset) != noErr)
@@ -291,17 +316,21 @@ int get_source(sym_file* symbols, UInt32 codeOffset, char fileName[256], UInt32*
 
 sym_file* open_sym_file(const FSSpec* symSpec)
 {
-	sym_file* symbols = new sym_file;
-	if (symbols != NULL) {	
-		if (!symbols->open(symSpec)) {
+	sym_file* symbols = new sym_file(symSpec);
+	if (symbols != NULL) {
+		if (!symbols->init()) {
 			delete symbols;
 			return NULL;
 		}
+		// don't leave the file open, if possible.
+		symbols->close();
 	}
 	return symbols;
 }
 
 void close_sym_file(sym_file* symbols)
 {
-	delete symbols;
+	if (symbols != NULL) {
+		delete symbols;
+	}
 }
