@@ -35,6 +35,7 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 
 import javax.swing.JComponent;
+import javax.swing.JList;
 import javax.swing.JFrame;
 import javax.swing.JDialog;
 import javax.swing.ButtonGroup;
@@ -82,6 +83,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   String id;
   String attr;
   PageModel model;
+  Class ref;
 
   /**
    * Build a menu builder which operates on XML formatted data
@@ -94,6 +96,10 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
     this.attr = attr;
     this.id = id;
     this.model = model;
+  }
+
+  public void setReference(Class reference) {
+    ref = reference;
   }
 
   /**
@@ -139,9 +145,15 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       if (config.getAttribute("href") != null 
 	  && config.getAttribute("role").equals("stringprops")
 	  && config.getTagName().equals("link")) {
-	linkURL = getClass().getResource(config.getAttribute("href"));
+        if (ref == null) {
+          linkURL = getClass().getResource(config.getAttribute("href"));
+        } else {
+          linkURL = ref.getResource(config.getAttribute("href"));
+        }
 	properties = new Properties();
-	if (linkURL != null) properties.load(linkURL.openStream());
+	if (linkURL != null) {
+          properties.load(linkURL.openStream());
+        }
       }
     } catch (IOException io) {
       io.printStackTrace();
@@ -323,6 +335,8 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       item = buildTextField(current);
     } else if (type.equals("button")) { // buttons
       item = new JButton(getReferencedLabel(current, "command"));
+    } else if (type.equals("jlist")) {
+      item = buildList(current);
     } else if (type.equals("custom")) {
       item = new JButton("Custom");
     }
@@ -334,10 +348,15 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
 
     return item;
   }
+
+  protected JList buildList(Element current) {
+    JList list = new JList();
+
+    return list;
+  }
   
   protected JLabel buildLabel(Element current) {
     JLabel label = new JLabel(getReferencedLabel(current, "title"));
-    label.setHorizontalAlignment(SwingConstants.RIGHT);
     return label;
   }
 
@@ -361,8 +380,6 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       } else {
 	parent.add(item, cons);
       }
-    } else {
-      parent.add(item);
     }
     
     return item;
