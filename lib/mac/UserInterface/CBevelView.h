@@ -30,7 +30,7 @@ typedef struct SSubBevel {
 	Rect		cachedLocalFrame;
 } SSubBevel;
 
-class CBevelView : public LView
+class CBevelView : public LOffscreenView
 {
 	public:
 		enum { class_ID = 'BvVw' };

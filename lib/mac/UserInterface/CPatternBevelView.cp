@@ -65,8 +65,10 @@ void CPatternBevelView::DrawBeveledFill(void)
 	Point theAlignment;
 	CSharedPatternWorld::CalcRelativePoint(this, CSharedPatternWorld::eOrientation_Port, theAlignment);
 	
-	CGrafPtr thePort = (CGrafPtr)GetMacPort();
-
+	//CGrafPtr thePort = (CGrafPtr)GetMacPort();
+	CGrafPtr thePort;
+	GetPort ( (GrafPtr*) &thePort );
+	
 	StClipRgnState theClipSaver(mBevelRegion);
 	mPatternWorld->Fill(thePort, theFrame, theAlignment);
 }

@@ -35,7 +35,7 @@
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 CBevelView::CBevelView(LStream *inStream)
-	:	LView(inStream),
+	:	LOffscreenView(inStream),
 		mBevelList(sizeof(SSubBevel)),
 		mBevelGrowIcon(true)
 {
