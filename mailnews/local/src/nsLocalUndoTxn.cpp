@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "msgCore.h"
+#include "nsIMsgHdr.h"
 #include "nsLocalUndoTxn.h"
 #include "nsImapCore.h"
 #include "nsMsgImapCID.h"

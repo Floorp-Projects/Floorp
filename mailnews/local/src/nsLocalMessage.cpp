@@ -18,12 +18,14 @@
 
 
 #include "msgCore.h"    // precompiled header...
+#include "nsIMsgHdr.h"
 #include "nsLocalMessage.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
 #include "nsLocalUtils.h"
+#include "nsIMsgFolder.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 

@@ -21,6 +21,7 @@
 #include "MailNewsTypes.h"
 #include "nntpCore.h"
 
+#include "nsIMsgHdr.h"
 #include "nsNNTPProtocol.h"
 #include "nsINNTPArticleList.h"
 #include "nsIOutputStream.h"

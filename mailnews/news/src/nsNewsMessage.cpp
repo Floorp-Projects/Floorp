@@ -18,6 +18,8 @@
 
 
 #include "msgCore.h"    // precompiled header...
+#include "nsIMsgHdr.h"
+#include "nsIMsgFolder.h"
 #include "nsNewsMessage.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
