@@ -40,7 +40,7 @@
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
 
-class httpValidateChecker;
+class imgCacheValidator;
 
 class imgRequestProxy;
 
@@ -82,7 +82,7 @@ public:
 private:
   friend class imgRequestProxy;
   friend class imgLoader;
-  friend class httpValidateChecker;
+  friend class imgCacheValidator;
 
   inline void SetLoadId(void *aLoadId) {
     mLoadId = aLoadId;
@@ -127,7 +127,7 @@ private:
   void *mLoadId;
   PRTime mLoadTime;
 
-  httpValidateChecker *mValidator;
+  imgCacheValidator *mValidator;
   PRBool   mIsMultiPartChannel;
 };
 

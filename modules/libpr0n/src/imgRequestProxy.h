@@ -78,7 +78,7 @@ protected:
   void OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode); 
 
 private:
-  friend class httpValidateChecker;
+  friend class imgCacheValidator;
 
   imgRequest *mOwner;
 

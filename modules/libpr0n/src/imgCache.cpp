@@ -38,6 +38,9 @@
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
 
+#include "nsIFile.h"
+#include "nsIFileURL.h"
+
 NS_IMPL_ISUPPORTS3(imgCache, imgICache, nsIObserver, nsISupportsWeakReference)
 
 imgCache::imgCache()
@@ -183,6 +186,12 @@ PRBool imgCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor 
 
   entry->MarkValid();
 
+  // If file, force revalidation on expiration
+  PRBool isFile;
+  aKey->SchemeIs("file", &isFile);
+  if (isFile)
+    entry->SetMetaDataElement("MustValidateIfExpired", "true");
+
   *aEntry = entry;
   NS_ADDREF(*aEntry);
 
@@ -229,6 +238,25 @@ PRBool imgCache::Get(nsIURI *aKey, PRBool *aHasExpired, imgRequest **aRequest, n
       *aHasExpired = PR_TRUE;
     } else {
       *aHasExpired = PR_FALSE;
+    }
+    // Special treatment for file URLs - entry has expired if file has changed
+    nsCOMPtr<nsIFileURL> fileUrl(do_QueryInterface(aKey));
+    if (fileUrl) {
+      PRUint32 lastModTime;
+      entry->GetLastModified(&lastModTime);
+
+      nsCOMPtr<nsIFile> theFile;
+      rv = fileUrl->GetFile(getter_AddRefs(theFile));
+      if (NS_SUCCEEDED(rv)) {
+        PRInt64 fileLastMod;
+        rv = theFile->GetLastModifiedTime(&fileLastMod);
+        if (NS_SUCCEEDED(rv)) {
+          // nsIFile uses millisec, NSPR usec
+          PRInt64 one_thousand = LL_INIT(0, 1000);
+          LL_MUL(fileLastMod, fileLastMod, one_thousand);
+          *aHasExpired = SecondsFromPRTime((PRTime)fileLastMod) > lastModTime;
+        }
+      }
     }
   }
 
