@@ -1,0 +1,218 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/* nsISupports wrappers for single primitive pieces of data. */
+
+#include "nsISupports.idl"
+
+/**
+ * These first three are pointer types and do data copying
+ * using the nsIAllocator. Be careful!
+ */ 
+
+[scriptable, uuid(d18290a0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsID : nsISupports
+{
+    attribute nsIDPtr data;
+};
+
+[scriptable, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
+interface nsISupportsString : nsISupports
+{
+    attribute string data;
+};
+
+[scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
+interface nsISupportsWString : nsISupports
+{
+    attribute wstring data;
+};
+
+/**
+ * The rest are truly primitive and are passed by value
+ */ 
+
+[scriptable, uuid(ddc3b490-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRBool : nsISupports
+{
+    attribute PRBool data;
+};
+
+[scriptable, uuid(dec2e4e0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUint8 : nsISupports
+{
+    attribute PRUint8 data;
+};
+
+[scriptable, uuid(df403240-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUnichar : nsISupports
+{
+    attribute PRUnichar data;
+};
+
+[scriptable, uuid(dfacb090-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUint16 : nsISupports
+{
+    attribute PRUint16 data;
+};
+
+[scriptable, uuid(e01dc470-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUint32 : nsISupports
+{
+    attribute PRUint32 data;
+};
+
+[scriptable, uuid(e13567c0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRUint64 : nsISupports
+{
+    attribute PRUint64 data;
+};
+
+[scriptable, uuid(e2563630-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRTime : nsISupports
+{
+    attribute PRTime data;
+};
+
+[scriptable, uuid(e2b05e40-4a1c-11d3-9890-006008962422)]
+interface nsISupportsChar : nsISupports
+{
+    attribute char data;
+};
+
+[scriptable, uuid(e30d94b0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRInt16 : nsISupports
+{
+    attribute PRInt16 data;
+};
+
+[scriptable, uuid(e36c5250-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRInt32 : nsISupports
+{
+    attribute PRInt32 data;
+};
+
+[scriptable, uuid(e3cb0ff0-4a1c-11d3-9890-006008962422)]
+interface nsISupportsPRInt64 : nsISupports
+{
+    attribute PRInt64 data;
+};
+
+/////////////////////////////////////////////////////////////////////////
+
+%{C++
+// {ACF8DC40-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_ID_CID \
+{ 0xacf8dc40, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_ID_PROGID "component://netscape/supports-id"
+#define NS_SUPPORTS_ID_CLASSNAME "Supports ID"
+
+
+// {ACF8DC41-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_STRING_CID \
+{ 0xacf8dc41, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_STRING_PROGID "component://netscape/supports-string"
+#define NS_SUPPORTS_STRING_CLASSNAME "Supports String"
+
+// {ACF8DC42-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_WSTRING_CID \
+{ 0xacf8dc42, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_WSTRING_PROGID "component://netscape/supports-wstring"
+#define NS_SUPPORTS_WSTRING_CLASSNAME "Supports WString"
+
+// {ACF8DC43-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRBOOL_CID \
+{ 0xacf8dc43, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRBOOL_PROGID "component://netscape/supports-PRBool"
+#define NS_SUPPORTS_PRBOOL_CLASSNAME "Supports PRBool"
+
+// {ACF8DC44-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRUINT8_CID \
+{ 0xacf8dc44, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRUINT8_PROGID "component://netscape/supports-PRUint8"
+#define NS_SUPPORTS_PRUINT8_CLASSNAME "Supports PRUint8"
+
+// {ACF8DC45-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRUNICHAR_CID \
+{ 0xacf8dc45, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRUNICHAR_PROGID "component://netscape/supports-PRUnichar"
+#define NS_SUPPORTS_PRUNICHAR_CLASSNAME "Supports PRUnichar"
+
+// {ACF8DC46-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRUINT16_CID \
+{ 0xacf8dc46, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRUINT16_PROGID "component://netscape/supports-PRUint16"
+#define NS_SUPPORTS_PRUINT16_CLASSNAME "Supports PRUint16"
+
+// {ACF8DC47-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRUINT32_CID \
+{ 0xacf8dc47, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRUINT32_PROGID "component://netscape/supports-PRUint32"
+#define NS_SUPPORTS_PRUINT32_CLASSNAME "Supports PRUint32"
+
+// {ACF8DC48-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRUINT64_CID \
+{ 0xacf8dc48, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRUINT64_PROGID "component://netscape/supports-PRUint64"
+#define NS_SUPPORTS_PRUINT64_CLASSNAME "Supports PRUint64"
+
+// {ACF8DC49-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRTIME_CID \
+{ 0xacf8dc49, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRTIME_PROGID "component://netscape/supports-PRTime"
+#define NS_SUPPORTS_PRTIME_CLASSNAME "Supports PRTime"
+
+// {ACF8DC4A-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_CHAR_CID \
+{ 0xacf8dc4a, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_CHAR_PROGID "component://netscape/supports-Char"
+#define NS_SUPPORTS_CHAR_CLASSNAME "Supports Char"
+
+// {ACF8DC4B-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRInt16_CID \
+{ 0xacf8dc4b, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRInt16_PROGID "component://netscape/supports-PRInt16"
+#define NS_SUPPORTS_PRInt16_CLASSNAME "Supports PRInt16"
+
+// {ACF8DC4C-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRInt32_CID \
+{ 0xacf8dc4c, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRInt32_PROGID "component://netscape/supports-PRInt32"
+#define NS_SUPPORTS_PRInt32_CLASSNAME "Supports PRInt32"
+
+// {ACF8DC4D-4A25-11d3-9890-006008962422}
+#define NS_SUPPORTS_PRInt64_CID \
+{ 0xacf8dc4d, 0x4a25, 0x11d3, \
+    { 0x98, 0x90, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+#define NS_SUPPORTS_PRInt64_PROGID "component://netscape/supports-PRInt64"
+#define NS_SUPPORTS_PRInt64_CLASSNAME "Supports PRInt64"
+%}
+
