@@ -42,6 +42,7 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsIWalletService.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIClipboard.h"
@@ -84,6 +85,7 @@
 
 static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 
@@ -1004,7 +1006,9 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
 
-
+  // Startup wallet service so it registers for notifications
+  NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
+                  
 	InitCachePrefs();
 	
   // Start main event loop
