@@ -819,7 +819,11 @@ nsWindow::SetCursor(imgIContainer* aCursor)
     if (!frame)
         return NS_ERROR_NOT_AVAILABLE;
 
-    nsCOMPtr<nsIGdkPixbufImage> pixImg(do_GetInterface(frame));
+    nsCOMPtr<nsIImage> img(do_GetInterface(frame));
+    if (!img)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<nsIGdkPixbufImage> pixImg(do_QueryInterface(img));
     if (!pixImg)
         return NS_ERROR_NOT_AVAILABLE;
 

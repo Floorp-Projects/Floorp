@@ -344,7 +344,11 @@ nsGNOMEShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
 static nsresult
 WriteImage(const nsCString& aPath, gfxIImageFrame* aImage)
 {
-  nsCOMPtr<nsIGdkPixbufImage> pixImg(do_GetInterface(aImage));
+  nsCOMPtr<nsIImage> img(do_GetInterface(aImage));
+  if (!img)
+      return NS_ERROR_NOT_AVAILABLE;
+
+  nsCOMPtr<nsIGdkPixbufImage> pixImg(do_QueryInterface(img));
   if (!pixImg)
       return NS_ERROR_NOT_AVAILABLE;
 
