@@ -27,22 +27,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 FILES		= \
-		article.gif \
-		document.gif \
 		folder-closed.gif \
 		folder-open.gif \
 		loading.gif \
-		dom-test-1.xul \
-		dom-test-2.xul \
-		dom-test-3.xul \
 		dom-test-4.css \
-		dom-test-4.xul \
-		dom-test-5.xul \
-		dom-test-6.xul \
-		dom-test-7.xul \
-		dom-test-8.xul \
 		ignore-test.xul \
-		xpidl-test-1.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
