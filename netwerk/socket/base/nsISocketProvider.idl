@@ -37,36 +37,64 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "prio.h"
-%}
+[ptr] native nsFileDescStar(struct PRFileDesc);
 
-[ptr] native nsFileDescStar(PRFileDesc);
+/**
+ * nsISocketProvider
+ */
+[noscript, uuid(4c29772e-cf73-414a-98d9-661761a4511a)]
+interface nsISocketProvider : nsISupports
+{
+    /**
+     * newSocket
+     *
+     * @param aFamily
+     *        The address family for this socket (PR_AF_INET or PR_AF_INET6).
+     * @param aHost
+     *        The hostname for this connection.
+     * @param aPort
+     *        The port for this connection.
+     * @param aProxyHost
+     *        If non-null, the proxy hostname for this connection.
+     * @param aProxyPort
+     *        The proxy port for this connection.
+     * @param aFileDesc
+     *        The resulting PRFileDesc.
+     * @param aSecurityInfo
+     *        Any security info that should be associated with aFileDesc.  This
+     *        object typically implements nsITransportSecurityInfo.
+     */
+    void newSocket(in long            aFamily,
+                   in string          aHost, 
+                   in long            aPort,
+                   in string          aProxyHost,
+                   in long            aProxyPort,
+                   out nsFileDescStar aFileDesc, 
+                   out nsISupports    aSecurityInfo);
 
-[noscript, uuid(0906de00-5414-11d3-bbc8-0000861d1237)]
-interface nsISocketProvider : nsISupports {
-
-  void NewSocket(in string host, 
-                 in long port,
-                 in string proxyHost,
-                 in long proxyPort,
-                 out nsFileDescStar fileDesc, 
-                 out nsISupports securityInfo );
-
-  void AddToSocket(in string host, 
-                   in long port,
-                   in string proxyHost,
-                   in long proxyPort,
-                   in nsFileDescStar fileDesc, 
-                   out nsISupports securityInfo );
-
+    /**
+     * addToSocket
+     *
+     * This function is called to allow the socket provider to layer a PRFileDesc
+     * on top of another PRFileDesc.  For example, SSL via a SOCKS proxy.
+     *
+     * Parameters are the same as newSocket with the exception of aFileDesc, which
+     * is an in-param instead.
+     */
+    void addToSocket(in long           aFamily,
+                     in string         aHost, 
+                     in long           aPort,
+                     in string         aProxyHost,
+                     in long           aProxyPort,
+                     in nsFileDescStar aFileDesc, 
+                     out nsISupports   aSecurityInfo);
 };
 
 %{C++
-#define NS_NETWORK_SOCKET_CONTRACTID                "@mozilla.org/network/socket;1"
-#define NS_NETWORK_SOCKET_CONTRACTID_PREFIX         NS_NETWORK_SOCKET_CONTRACTID "?type="
-#define NS_NETWORK_SOCKET_CONTRACTID_PREFIX_LENGTH  41 // strlen(NS_NETWORK_SOCKET_CONTRACTID_PREFIX)
-
-#define NS_ERROR_UNKNOWN_SOCKET_TYPE            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 51)
-#define NS_ERROR_SOCKET_CREATE_FAILED           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 52)
+/**
+ * nsISocketProvider implementations should be registered with XPCOM under a
+ * contract ID of the form: "@mozilla.org/network/socket;2?type=foo"
+ */
+#define NS_NETWORK_SOCKET_CONTRACTID_PREFIX \
+    "@mozilla.org/network/socket;2?type="
 %}

@@ -144,20 +144,6 @@ public:
     //
     nsresult AttachSocket(PRFileDesc *fd, nsASocketHandler *);
 
-    //
-    // LookupHost checks to see if we've previously resolved the hostname
-    // during this session.  We remember all successful connections to prevent
-    // ip-address spoofing.  See bug 149943.
-    //
-    // Returns TRUE if found, and sets |addr| to the cached value.
-    //
-    nsresult LookupHost(const nsACString &host, PRUint16 port, PRIPv6Addr *addr);
-
-    // 
-    // Remember host:port -> IP address mapping.
-    //
-    nsresult RememberHost(const nsACString &host, PRUint16 port, PRIPv6Addr *addr);
-
 private:
 
     virtual ~nsSocketTransportService();
@@ -261,23 +247,6 @@ private:
     };
     PendingSocket *mPendingQHead;
     PendingSocket *mPendingQTail;
-
-    //-------------------------------------------------------------------------
-    // mHostDB maps host:port -> nsHostEntry
-    //-------------------------------------------------------------------------
-
-    struct nsHostEntry : PLDHashEntryStub
-    {
-        PRIPv6Addr  addr;
-        const char *hostport() const { return (const char *) key; }
-    };
-
-    static PLDHashTableOps ops;
-
-    static PRBool PR_CALLBACK MatchEntry(PLDHashTable *, const PLDHashEntryHdr *, const void *);
-    static void   PR_CALLBACK ClearEntry(PLDHashTable *, PLDHashEntryHdr *);
-
-    PLDHashTable mHostDB;
 };
 
 extern nsSocketTransportService *gSocketTransportService;

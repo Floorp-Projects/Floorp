@@ -21,22 +21,15 @@
  *   Justin Bradford <jab@atdot.org>
  */
 
-#ifndef _NSSOCKSIOLAYER_H_
-#define _NSSOCKSIOLAYER_H_
+#ifndef nsSOCKSIOLayer_h__
+#define NSSOCKSIOLayer_h__
 
 #include "prtypes.h"
 #include "prio.h"
-#include "nsISOCKSSocketInfo.h"
+#include "nscore.h"
 
-nsresult nsSOCKSIOLayerNewSocket(const char *host, 
-                                 PRInt32 port,
-                                 const char *proxyHost,
-                                 PRInt32 proxyPort,
-                                 PRInt32 socksVersion,
-                                 PRFileDesc **fd, 
-                                 nsISupports **info);
-
-nsresult nsSOCKSIOLayerAddToSocket(const char *host, 
+nsresult nsSOCKSIOLayerAddToSocket(PRInt32 family,
+                                   const char *host, 
                                    PRInt32 port,
                                    const char *proxyHost,
                                    PRInt32 proxyPort,
@@ -44,4 +37,4 @@ nsresult nsSOCKSIOLayerAddToSocket(const char *host,
                                    PRFileDesc *fd, 
                                    nsISupports **info);
 
-#endif /* _NSSOCKSIOLAYER_H_ */
+#endif /* nsSOCKSIOLayer_h__ */

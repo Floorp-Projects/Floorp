@@ -39,21 +39,14 @@
 
 interface nsISocketProvider;
 
+/**
+ * nsISocketProviderService
+ *
+ * Provides a mapping between a socket type and its associated socket provider
+ * instance.  One could also use the service manager directly.
+ */
 [noscript, uuid(8f8a23d0-5472-11d3-bbc8-0000861d1237)]
 interface nsISocketProviderService : nsISupports
 {
-  nsISocketProvider GetSocketProvider(in string socketType);
+    nsISocketProvider getSocketProvider(in string socketType);
 };
-
-
-%{C++
-
-#define NS_SOCKETPROVIDERSERVICE_CID                 \
-{ /* ed394ba0-5472-11d3-bbc8-0000861d1237 */         \
-  0xed394ba0,                                        \
-  0x5472,                                            \
-  0x11d3,                                            \
-  {0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37}   \
-}
-
-%}

@@ -37,48 +37,21 @@
 
 #include "nsString.h"
 #include "nsIServiceManager.h"
-
-#include "nsSocketProviderService.h"
 #include "nsISocketProvider.h"
+#include "nsSocketProviderService.h"
+#include "nsNetError.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-nsSocketProviderService::nsSocketProviderService()
-{
-}
-
-nsresult
-nsSocketProviderService::Init()
-{
-  return NS_OK;
-}
-
-nsSocketProviderService::~nsSocketProviderService()
-{
-}
 
 NS_METHOD
 nsSocketProviderService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   nsresult rv;
-
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsSocketProviderService* pSockProvServ = new nsSocketProviderService();
-  if (pSockProvServ == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(pSockProvServ);
-  rv = pSockProvServ->Init();
-  if (NS_FAILED(rv))
-    {
-    delete pSockProvServ;
-    return rv;
-    }
-  rv = pSockProvServ->QueryInterface(aIID, aResult);
-  NS_RELEASE(pSockProvServ);
-
+  nsCOMPtr<nsISocketProviderService> inst = new nsSocketProviderService();
+  if (!inst)
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  else
+    rv = inst->QueryInterface(aIID, aResult);
   return rv;
 }
 
@@ -87,19 +60,18 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSocketProviderService, nsISocketProviderService)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsSocketProviderService::GetSocketProvider(const char *aSocketType, nsISocketProvider **_result)
+nsSocketProviderService::GetSocketProvider(const char         *type,
+                                           nsISocketProvider **result)
 {
   nsresult rv;
-
   nsCAutoString contractID(
-          nsDependentCString(NS_NETWORK_SOCKET_CONTRACTID_PREFIX) +
-          nsDependentCString(aSocketType));
+          NS_LITERAL_CSTRING(NS_NETWORK_SOCKET_CONTRACTID_PREFIX) +
+          nsDependentCString(type));
 
-  rv = CallGetService(contractID.get(), _result);
+  rv = CallGetService(contractID.get(), result);
   if (NS_FAILED(rv)) 
-      return NS_ERROR_UNKNOWN_SOCKET_TYPE;
-
-  return NS_OK;
+      rv = NS_ERROR_UNKNOWN_SOCKET_TYPE;
+  return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -45,6 +45,7 @@
 #include "nsIRequest.h"
 #include "nsEventQueueUtils.h"
 #include "nsAutoPtr.h"
+#include "nsNetCID.h"
 
 static const char kSecurityProperties[] =
   "chrome://communicator/locale/webservices/security.properties";
@@ -230,14 +231,14 @@ nsWSAUtils::GetOfficialHostName(nsIURI* aServiceURI,
   if (NS_FAILED(rv)) 
     return rv;
   
-  nsXPIDLCString host;
+  nsCAutoString host;
   aServiceURI->GetHost(host);
 
   nsRefPtr<nsDNSListener> listener = new nsDNSListener();
   NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     
-  nsCOMPtr<nsIRequest> dummy;
-  rv = dns->Lookup(host, listener, nsnull, getter_AddRefs(dummy));
+  nsCOMPtr<nsIDNSRequest> dummy;
+  rv = dns->AsyncResolve(host, PR_FALSE, listener, nsnull, getter_AddRefs(dummy));
   
   if (NS_FAILED(rv)) 
     return rv;
@@ -292,26 +293,13 @@ nsDNSListener::~nsDNSListener()
 }
 
 NS_IMETHODIMP
-nsDNSListener::OnStartLookup(nsISupports* aContext, const char* aHost)
+nsDNSListener::OnLookupComplete(nsIDNSRequest* aRequest, 
+                                nsIDNSRecord* aRecord,
+                                nsresult aStatus)
 {
-  return NS_OK;
-}
+  if (aRecord)
+    aRecord->GetCanonicalName(mOfficialHostName);
 
-NS_IMETHODIMP
-nsDNSListener::OnFound(nsISupports* aContext, 
-                       const char* aHost, 
-                       nsHostEnt* aHostEnt)
-{
-  if (aHostEnt)
-    mOfficialHostName.Assign(aHostEnt->hostEnt.h_name);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDNSListener::OnStopLookup(nsISupports* aContext, 
-                            const char* aHost,
-                            nsresult aStatus)
-{ 
   // Post an event to the UI thread's event queue to cause
   // ProcessPendingEvents to run.
   nsCOMPtr<nsIEventQueue> uiEventQ;

@@ -1,3 +1,4 @@
+# vim: noexpandtab ts=8 sw=8
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -33,55 +34,43 @@ REQUIRES	= xpcom \
 		  util \
 		  $(NULL)
 
-CPPSRCS		= \
-		PropertiesTest.cpp \
-		urltest.cpp \
-		TestCallbacks.cpp \
-		TestPageLoad.cpp \
-		TestPerf.cpp \
-		TestIDN.cpp \
-		TestURLParser.cpp \
-		TestStandardURL.cpp \
-		TestSocketTransport.cpp \
-		TestUpload.cpp \
-		TestStreamTransport.cpp \
-		TestStreamChannel.cpp \
-		TestStreamPump.cpp \
-		TestProtocols.cpp \
-		TestBlockingSocket.cpp \
-		$(NULL)
-
-#		TestHttp.cpp \
-#		TestFileInput.cpp \
-#		TestFileInput2.cpp \
-#		TestMCTransport.cpp \
-#		TestSocketIO.cpp \
-#		TestSocketInput.cpp \
-#		TestSocketTransport.cpp \
-#		TestFileTransport.cpp
+CPPSRCS		= PropertiesTest.cpp \
+		  urltest.cpp \
+		  TestCallbacks.cpp \
+		  TestPageLoad.cpp \
+		  TestPerf.cpp \
+		  TestIDN.cpp \
+		  TestURLParser.cpp \
+		  TestStandardURL.cpp \
+		  TestSocketTransport.cpp \
+		  TestUpload.cpp \
+		  TestStreamTransport.cpp \
+		  TestStreamChannel.cpp \
+		  TestStreamPump.cpp \
+		  TestProtocols.cpp \
+		  TestBlockingSocket.cpp \
+		  TestDNS.cpp \
+		  $(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 
-LIBS		= \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
-		$(NULL)
+LIBS		= $(EXTRA_DSO_LIBS) \
+		  $(MOZ_JS_LIBS) \
+		  $(XPCOM_LIBS) \
+		  $(NSPR_LIBS) \
+		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-_RES_FILES = \
-		urlparse.dat \
-		urlparse_unx.dat \
-		jarlist.dat \
-		$(NULL)
+_RES_FILES 	= urlparse.dat \
+		  urlparse_unx.dat \
+		  jarlist.dat \
+		  $(NULL)
 
 libs:: $(_RES_FILES)
 		$(INSTALL) $^ $(DIST)/bin/res
 
 install:: $(_RES_FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
-

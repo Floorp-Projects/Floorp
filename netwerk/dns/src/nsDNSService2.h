@@ -34,29 +34,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIDNSService.h"
+#include "nsIIDNService.h"
+#include "nsIObserver.h"
+#include "nsHostResolver.h"
+#include "nsAutoPtr.h"
+#include "prlock.h"
 
-interface nsIDNSRequest;
-interface nsIDNSRecord;
-
-/**
- * nsIDNSListener
- */
-[scriptable, uuid(36413eba-3a2a-444d-b88e-df9b6d306b73)]
-interface nsIDNSListener : nsISupports
+class nsDNSService : public nsIDNSService
+                   , public nsIObserver
 {
-    /**
-     * called when an asynchronous host lookup completes.
-     *
-     * @param aRequest
-     *        the value returned from asyncResolve.
-     * @param aRecord
-     *        the DNS record corresponding to the hostname that was resolved.
-     *        this parameter is null if there was an error.
-     * @param aStatus
-     *        if the lookup failed, this parameter gives the reason.
-     */
-    void onLookupComplete(in nsIDNSRequest aRequest,
-                          in nsIDNSRecord  aRecord,
-                          in nsresult      aStatus);
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDNSSERVICE
+    NS_DECL_NSIOBSERVER
+
+    nsDNSService();
+    virtual ~nsDNSService();
+
+private:
+    nsRefPtr<nsHostResolver>  mResolver;
+    nsCOMPtr<nsIIDNService>   mIDN;
+    PRLock                   *mLock;
+
+    // mLock protects access to mResolver
 };

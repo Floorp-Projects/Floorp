@@ -49,7 +49,8 @@
 #include "nsIDNSService.h"
 #include "nsIRequestObserver.h"
 #include "nsIProxyObjectManager.h"
-#include "netCore.h"
+#include "nsEventQueueUtils.h"
+#include "nsNetError.h"
 
 const char kConsoleServiceContractId[] = "@mozilla.org/consoleservice;1";
 const char kDNSServiceContractId[] = "@mozilla.org/network/dns-service;1";
@@ -62,8 +63,7 @@ nsLDAPConnection::nsLDAPConnection()
       mPendingOperations(0),
       mRunnable(0),
       mSSL(PR_FALSE),
-      mDNSRequest(0),
-      mDNSFinished(PR_FALSE)
+      mDNSRequest(0)
 {
 }
 
@@ -100,7 +100,7 @@ nsLDAPConnection::~nsLDAPConnection()
   // Init listener (if still there).
   //
   if (mDNSRequest) {
-      mDNSRequest->Cancel(NS_BINDING_ABORTED);
+      mDNSRequest->Cancel();
       mDNSRequest = 0;
   }
   mInitListener = 0;
@@ -209,20 +209,11 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
         return NS_ERROR_FAILURE;
     }
 
-    // Get a proxy object so the callback happens on the current thread.
-    // This is now a Synchronous proxy, due to the fact that the DNS
-    // service hands out data which it later deallocates, and the async
-    // proxy makes this unreliable. See bug 102227 for more details.
-    //
-    rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
-                              NS_GET_IID(nsIDNSListener), 
-                              NS_STATIC_CAST(nsIDNSListener*, this), 
-                              PROXY_SYNC | PROXY_ALWAYS, 
-                              getter_AddRefs(selfProxy));
-
+    nsCOMPtr<nsIEventQueue> curEventQ;
+    rv = NS_GetCurrentEventQ(getter_AddRefs(curEventQ));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPConnection::Init(): couldn't "
-                 "create proxy to this object for callback");
+                 "get current event queue");
         return NS_ERROR_FAILURE;
     }
 
@@ -242,10 +233,10 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
 
         return NS_ERROR_FAILURE;
     }
-    rv = pDNSService->Lookup(aHost, 
-                             selfProxy,
-                             nsnull, 
-                             getter_AddRefs(mDNSRequest));
+    mDNSHost = aHost;
+    rv = pDNSService->AsyncResolve(mDNSHost,
+                                   PR_FALSE, this, curEventQ, 
+                                   getter_AddRefs(mDNSRequest));
 
     if (NS_FAILED(rv)) {
         switch (rv) {
@@ -253,24 +244,14 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
         case NS_ERROR_UNKNOWN_HOST:
         case NS_ERROR_FAILURE:
         case NS_ERROR_OFFLINE:
-            return rv;
+            break;
 
         default:
-            return NS_ERROR_UNEXPECTED;
+            rv = NS_ERROR_UNEXPECTED;
         }
+        mDNSHost.Truncate();
     }
-
-    // The DNS service can actually call the listeners even before the
-    // Lookup() function has returned. If that happens, we can still hold
-    // a reference to the DNS request, even after the DNS lookup is done.
-    // If this happens, lets just get rid of the DNS request, since we won't
-    // need it any more.
-    //
-    if (mDNSFinished && mDNSRequest) {
-        mDNSRequest = 0;
-    }
-
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -823,102 +804,50 @@ nsLDAPConnectionLoop::Run(void)
     return NS_OK;
 }
 
-//
-// nsIDNSListener implementation, for asynchronous DNS. Once the lookup
-// has finished, we will initialize the LDAP connection properly.
-//
 NS_IMETHODIMP
-nsLDAPConnection::OnStartLookup(nsISupports *aContext, const char *aHostName)
-{
-    // Initialize some members which will be used in the other callbacks.
-    //
-    mDNSStatus = NS_OK;
-    mResolvedIP = "";
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLDAPConnection::OnFound(nsISupports *aContext, 
-                          const char* aHostName,
-                          nsHostEnt *aHostEnt) 
-{
-    PRUint32 index = 0;
-    PRNetAddr netAddress;
-    char addrbuf[64];
-
-    // Do we have a proper host entry? If not, set the internal DNS
-    // status to indicate that host lookup failed.
-    //
-    if (!aHostEnt->hostEnt.h_addr_list || !aHostEnt->hostEnt.h_addr_list[0]) {
-        mDNSStatus = NS_ERROR_UNKNOWN_HOST;
-
-        return NS_ERROR_UNKNOWN_HOST;
-    }
-    
-    // Make sure our address structure is initialized properly
-    //
-    memset(&netAddress, 0, sizeof(netAddress));
-    PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &netAddress);
-
-    // Loop through the addresses, and add them to our IP string.
-    //
-    while (aHostEnt->hostEnt.h_addr_list[index]) {
-        if (aHostEnt->hostEnt.h_addrtype == PR_AF_INET6) {
-            memcpy(&netAddress.ipv6.ip, aHostEnt->hostEnt.h_addr_list[index],
-                   sizeof(netAddress.ipv6.ip));
-        } else {
-            // Can this ever happen? Not sure, cause everything seems to be
-            // IPv6 internally, even in the DNS service.
-            //
-            PR_ConvertIPv4AddrToIPv6(*(PRUint32*)aHostEnt->hostEnt.h_addr_list[0],
-                                     &netAddress.ipv6.ip);
-        }
-        if (PR_IsNetAddrType(&netAddress, PR_IpAddrV4Mapped)) {
-            // If there are more IPs in the list, we separate them with
-            // a space, as supported/used by the LDAP C-SDK.
-            //
-            if (index)
-                mResolvedIP.Append(' ');
-
-            // Convert the IPv4 address to a string, and append it to our
-            // list of IPs.
-            //
-            PR_NetAddrToString(&netAddress, addrbuf, sizeof(addrbuf));
-            if ((addrbuf[0] == ':') && (strlen(addrbuf) > 7))
-                mResolvedIP.Append(addrbuf+7);
-            else
-                mResolvedIP.Append(addrbuf);
-        }
-        index++;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLDAPConnection::OnStopLookup(nsISupports *aContext,
-                               const char *aHostName,
-                               nsresult aStatus)
-{
-    nsCOMPtr<nsILDAPMessageListener> selfProxy;
+nsLDAPConnection::OnLookupComplete(nsIDNSRequest *aRequest,
+                                   nsIDNSRecord  *aRecord,
+                                   nsresult       aStatus)
+{    
     nsresult rv = NS_OK;
 
-    if (NS_FAILED(mDNSStatus)) {
-        // We failed previously in the OnFound() callback
+    if (aRecord) {
+        // Build mResolvedIP list
         //
-        switch (mDNSStatus) {
-        case NS_ERROR_UNKNOWN_HOST:
-        case NS_ERROR_FAILURE:
-            rv = mDNSStatus;
-            break;
+        mResolvedIP.Truncate();
 
-        default:
-            rv = NS_ERROR_UNEXPECTED;
-            break;
+        PRInt32 index = 0;
+        char addrbuf[64];
+        PRNetAddr addr;
+
+        while (NS_SUCCEEDED(aRecord->GetNextAddr(0, &addr))) {
+            // We can only use v4 addresses
+            //
+            PRBool v4mapped = PR_FALSE;
+            if (addr.raw.family == PR_AF_INET6)
+                v4mapped = PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped);
+            if (addr.raw.family == PR_AF_INET || v4mapped) {
+                // If there are more IPs in the list, we separate them with
+                // a space, as supported/used by the LDAP C-SDK.
+                //
+                if (index++)
+                    mResolvedIP.Append(' ');
+
+                // Convert the IPv4 address to a string, and append it to our
+                // list of IPs.  Strip leading '::FFFF:' (the IPv4-mapped-IPv6 
+                // indicator) if present.
+                //
+                PR_NetAddrToString(&addr, addrbuf, sizeof(addrbuf));
+                if ((addrbuf[0] == ':') && (strlen(addrbuf) > 7))
+                    mResolvedIP.Append(addrbuf+7);
+                else
+                    mResolvedIP.Append(addrbuf);
+            }
         }
-    } else if (NS_FAILED(aStatus)) {
-        // The DNS service failed , lets pass something reasonable
+    }
+
+    if (NS_FAILED(aStatus)) {
+        // The DNS service failed, lets pass something reasonable
         // back to the listener.
         //
         switch (aStatus) {
@@ -977,7 +906,7 @@ nsLDAPConnection::OnStopLookup(nsISupports *aContext,
                 rv = NS_ERROR_UNEXPECTED;
             }
 
-            rv = nsLDAPInstallSSL(mConnectionHandle, aHostName);
+            rv = nsLDAPInstallSSL(mConnectionHandle, mDNSHost.get());
             if (NS_FAILED(rv)) {
                 NS_ERROR("nsLDAPConnection::OnStopLookup(): Error installing"
                          " secure LDAP routines for connection");
@@ -1023,7 +952,7 @@ nsLDAPConnection::OnStopLookup(nsISupports *aContext,
     // indicating that DNS has finished.
     //
     mDNSRequest = 0;
-    mDNSFinished = PR_TRUE;
+    mDNSHost.Truncate();
 
     // Call the listener, and then we can release our reference to it.
     //

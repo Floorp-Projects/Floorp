@@ -47,7 +47,6 @@
 #include "nsSocketProviderService.h"
 #include "nscore.h"
 #include "nsSimpleURI.h"
-#include "nsDnsService.h"
 #include "nsLoadGroup.h"
 #include "nsStreamLoader.h"
 #include "nsUnicharStreamLoader.h"
@@ -56,7 +55,6 @@
 #include "nsBufferedStreams.h"
 #include "nsMIMEInputStream.h"
 #include "nsSOCKSSocketProvider.h"
-#include "nsSOCKS4SocketProvider.h"
 #include "nsCacheService.h"
 
 #include "nsNetCID.h"
@@ -73,6 +71,9 @@
 
 #include "nsIOService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIOService, Init)
+
+#include "nsDNSService2.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDNSService, Init)
   
 #include "nsProtocolProxyService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProtocolProxyService, Init)
@@ -575,14 +576,14 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_SOCKETTRANSPORTSERVICE_CID,
       NS_SOCKETTRANSPORTSERVICE_CONTRACTID,
       nsSocketTransportServiceConstructor },
-    { "Socket Provider Service", 
+    { NS_SOCKETPROVIDERSERVICE_CLASSNAME,
       NS_SOCKETPROVIDERSERVICE_CID,
-      "@mozilla.org/network/socket-provider-service;1",
+      NS_SOCKETPROVIDERSERVICE_CONTRACTID,
       nsSocketProviderService::Create },
-    { "DNS Service", 
+    { NS_DNSSERVICE_CLASSNAME,
       NS_DNSSERVICE_CID,
-      "@mozilla.org/network/dns-service;1",
-      nsDNSService::Create },
+      NS_DNSSERVICE_CONTRACTID,
+      nsDNSServiceConstructor },
     { NS_IDNSERVICE_CLASSNAME,
       NS_IDNSERVICE_CID,
       NS_IDNSERVICE_CONTRACTID,
@@ -968,16 +969,16 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
 #endif
 
-    {  NS_ISOCKSSOCKETPROVIDER_CLASSNAME,
+    {  "nsSOCKSSocketProvider",
        NS_SOCKSSOCKETPROVIDER_CID,
-       NS_ISOCKSSOCKETPROVIDER_CONTRACTID,
-       nsSOCKSSocketProvider::Create
+       NS_NETWORK_SOCKET_CONTRACTID_PREFIX "socks",
+       nsSOCKSSocketProvider::CreateV5
     },
 
-    {  NS_ISOCKS4SOCKETPROVIDER_CLASSNAME,
+    {  "nsSOCKS4SocketProvider",
        NS_SOCKS4SOCKETPROVIDER_CID,
-       NS_ISOCKS4SOCKETPROVIDER_CONTRACTID,
-       nsSOCKS4SocketProvider::Create
+       NS_NETWORK_SOCKET_CONTRACTID_PREFIX "socks4",
+       nsSOCKSSocketProvider::CreateV4
     },
 
     {  NS_CACHESERVICE_CLASSNAME,

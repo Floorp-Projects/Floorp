@@ -36,27 +36,52 @@
 
 #include "nsISupports.idl"
 
-interface nsIDNSRequest;
-interface nsIDNSRecord;
+[ptr] native PRNetAddrStar(union PRNetAddr);
 
 /**
- * nsIDNSListener
+ * nsIDNSRecord
+ *
+ * this interface represents the result of a DNS lookup.  since a DNS
+ * query may return more than one resolved IP address, the record acts
+ * like an enumerator, allowing the caller to easily step through the
+ * list of IP addresses.
  */
-[scriptable, uuid(36413eba-3a2a-444d-b88e-df9b6d306b73)]
-interface nsIDNSListener : nsISupports
+[scriptable, uuid(31c9c52e-1100-457d-abac-d2729e43f506)]
+interface nsIDNSRecord : nsISupports
 {
     /**
-     * called when an asynchronous host lookup completes.
+     * @return the canonical hostname for this record.
      *
-     * @param aRequest
-     *        the value returned from asyncResolve.
-     * @param aRecord
-     *        the DNS record corresponding to the hostname that was resolved.
-     *        this parameter is null if there was an error.
-     * @param aStatus
-     *        if the lookup failed, this parameter gives the reason.
+     * e.g., www.mozilla.org --> gila.mozilla.org
      */
-    void onLookupComplete(in nsIDNSRequest aRequest,
-                          in nsIDNSRecord  aRecord,
-                          in nsresult      aStatus);
+    readonly attribute ACString canonicalName;
+
+    /**
+     * this function copies the value of the next IP address into the
+     * given PRNetAddr struct and increments the internal address iterator.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
+     * the record.
+     */
+    [noscript] void getNextAddr(in PRUint16 port, in PRNetAddrStar addr);
+
+    /**
+     * this function returns the value of the next IP address as a
+     * string and increments the internal address iterator.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
+     * the record.
+     */
+    ACString getNextAddrAsString();
+
+    /**
+     * this function returns true if there is another address in the record.
+     */
+    boolean hasMore();
+
+    /**
+     * this function resets the internal address iterator to the first
+     * address in the record.
+     */
+    void rewind();
 };

@@ -193,7 +193,8 @@ nsLDAPSSLConnect(const char *hostlist, int defport, int timeout,
     // clear, and I suspect it may depend on the format of the name in
     // the certificate.  Need to investigate.
     //
-    rv = tlsSocketProvider->AddToSocket(sessionClosure->hostname, defport,
+    rv = tlsSocketProvider->AddToSocket(PR_AF_INET,
+					sessionClosure->hostname, defport,
 					nsnull, 0, socketInfo.soinfo_prfd,
                                         getter_AddRefs(securityInfo));
     if (NS_FAILED(rv)) {

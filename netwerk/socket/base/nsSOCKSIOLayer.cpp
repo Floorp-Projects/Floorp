@@ -19,6 +19,8 @@
  *
  * Contributor(s):
  *   Justin Bradford <jab@atdot.org>
+ *   Bradley Baetz <bbaetz@acm.org>
+ *   Darin Fisher <darin@meer.net>
  */
 
 #include "nspr.h"
@@ -26,7 +28,10 @@
 #include "nsCRT.h"
 
 #include "nsIServiceManager.h"
+#include "nsIDNSService.h"
+#include "nsISOCKSSocketInfo.h"
 #include "nsSOCKSIOLayer.h"
+#include "nsNetCID.h"
 
 static PRDescIdentity	nsSOCKSIOLayerIdentity;
 static PRIOMethods	nsSOCKSIOLayerMethods;
@@ -46,144 +51,44 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo
 {
 public:
     nsSOCKSSocketInfo();
-    virtual ~nsSOCKSSocketInfo();
+    virtual ~nsSOCKSSocketInfo() {}
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSISOCKSSOCKETINFO
-    
-    NS_IMETHOD GetProxyHost(char * *aProxyHost); 
-    NS_IMETHOD SetProxyHost(const char * aProxyHost); 
-    NS_IMETHOD GetProxyPort(PRInt32 *aProxyPort); 
-    NS_IMETHOD SetProxyPort(PRInt32 aProxyPort); 
-    NS_IMETHOD GetProxyType(char * *aProxyType); 
-    NS_IMETHOD SetProxyType(const char * aProxyType); 
-    NS_IMETHOD GetSOCKSVersion(PRInt32 *aVersion);
-    NS_IMETHOD SetSOCKSVersion(PRInt32 aVersion);
 
-protected:
+    void Init(PRInt32 version, const char *proxyHost, PRInt32 proxyPort);
     
-    char*	mProxyHost;
-    PRInt32	mProxyPort;
-    char*   mProxyType;
-    PRInt32  mSOCKSVersion;      // SOCKS version 4 or 5 (default is 5)
-    
-    // nsISOCKSSocketInfo
-    PRNetAddr	mInternalProxyAddr;
-    PRNetAddr	mExternalProxyAddr;
-    PRNetAddr	mDestinationAddr;
+    const nsCString &ProxyHost() { return mProxyHost; }
+    PRInt32          ProxyPort() { return mProxyPort; }
+    PRInt32          Version()   { return mVersion; }
+
+private:
+    nsCString mProxyHost;
+    PRInt32	  mProxyPort;
+    PRInt32   mVersion;   // SOCKS version 4 or 5
+    PRNetAddr mInternalProxyAddr;
+    PRNetAddr mExternalProxyAddr;
+    PRNetAddr mDestinationAddr;
 };
 
 nsSOCKSSocketInfo::nsSOCKSSocketInfo()
-: mSOCKSVersion(-1)
+    : mProxyPort(-1)
+    , mVersion(-1)
 {
-    mProxyHost = nsnull;
-    mProxyPort = -1;
-    mProxyType = nsnull;
-    
     PR_InitializeNetAddr(PR_IpAddrAny, 0, &mInternalProxyAddr);
     PR_InitializeNetAddr(PR_IpAddrAny, 0, &mExternalProxyAddr);
     PR_InitializeNetAddr(PR_IpAddrAny, 0, &mDestinationAddr);
 }
 
-nsSOCKSSocketInfo::~nsSOCKSSocketInfo()
+void
+nsSOCKSSocketInfo::Init(PRInt32 version, const char *proxyHost, PRInt32 proxyPort)
 {
-    PR_FREEIF(mProxyHost);
+    mVersion   = version;
+    mProxyHost = proxyHost;
+    mProxyPort = proxyPort;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsSOCKSSocketInfo, nsISOCKSSocketInfo)
-
-NS_IMETHODIMP 
-nsSOCKSSocketInfo::GetProxyHost(char * *aProxyHost)
-{
-    if (!aProxyHost) return NS_ERROR_NULL_POINTER;
-    if (mProxyHost) 
-    {
-        *aProxyHost = nsCRT::strdup(mProxyHost);
-        return (*aProxyHost == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        *aProxyHost = nsnull;
-        return NS_OK;
-    }
-}
-
-NS_IMETHODIMP 
-nsSOCKSSocketInfo::SetProxyHost(const char * aProxyHost)
-{
-    PR_FREEIF(mProxyHost);
-    if (aProxyHost)
-    {
-        mProxyHost = nsCRT::strdup(aProxyHost);
-        return (mProxyHost == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        mProxyHost = nsnull;
-        return NS_OK;
-    }
-}
-
-NS_IMETHODIMP 
-nsSOCKSSocketInfo::GetProxyPort(PRInt32 *aProxyPort)
-{
-    *aProxyPort = mProxyPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSOCKSSocketInfo::SetProxyPort(PRInt32 aProxyPort)
-{
-    mProxyPort = aProxyPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSOCKSSocketInfo::GetProxyType(char * *aProxyType)
-{
-    if (!aProxyType) return NS_ERROR_NULL_POINTER;
-    if (mProxyType) 
-    {
-        *aProxyType = nsCRT::strdup(mProxyType);
-        return (*aProxyType == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        *aProxyType = nsnull;
-        return NS_OK;
-    }
-}
-
-NS_IMETHODIMP 
-nsSOCKSSocketInfo::SetProxyType(const char * aProxyType)
-{
-    PR_FREEIF(mProxyType);
-    if (aProxyType)
-    {
-        mProxyType = nsCRT::strdup(aProxyType);
-        return (mProxyType == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        mProxyType = nsnull;
-        return NS_OK;
-    }
-}
-
-NS_IMETHODIMP 
-nsSOCKSSocketInfo::GetSOCKSVersion(PRInt32 *aVersion)
-{
-    *aVersion = mSOCKSVersion;
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsSOCKSSocketInfo::SetSOCKSVersion(PRInt32 aVersion)
-{
-    mSOCKSVersion = aVersion;
-    return NS_OK;
-}
-
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::GetExternalProxyAddr(PRNetAddr * *aExternalProxyAddr)
@@ -561,44 +466,35 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
     if (info == NULL) return PR_FAILURE;
     
     // First, we need to look up our proxy...
-    char scratch[PR_NETDB_BUF_SIZE];
-    PRHostEnt hostentry;
-    nsXPIDLCString proxyHost;
+    const nsCString &proxyHost = info->ProxyHost();
 
-    nsresult rv = info->GetProxyHost(getter_Copies(proxyHost));
-
-    if (NS_FAILED(rv) || proxyHost.IsEmpty()) {
+    if (proxyHost.IsEmpty())
         return PR_FAILURE;
-    }
 
-    PRInt32 socksVersion = -1;
-    rv = info->GetSOCKSVersion(&socksVersion);
-    if (NS_FAILED(rv)) {
-  
-        return PR_FAILURE;
-    }
+    PRInt32 socksVersion = info->Version();
 
     LOGDEBUG(("nsSOCKSIOLayerConnect SOCKS %u; proxyHost: %s.", socksVersion, proxyHost.get()));
 
-    status = PR_GetHostByName(proxyHost, scratch, PR_NETDB_BUF_SIZE, &hostentry);
-    
-    if (PR_SUCCESS != status) {
-        LOGERROR(("PR_GetHostByName() failed. proxyHost = %s, status = %x.",proxyHost.get(), status));
-        return status;
-    }
-    
-    // Extract the proxy addr
-    PRIntn entEnum = 0;
+    // Sync resolve the proxy hostname.
     PRNetAddr proxyAddr;
-    PRInt32 proxyPort;
-    info->GetProxyPort(&proxyPort);
-    entEnum = PR_EnumerateHostEnt(entEnum, &hostentry, proxyPort, &proxyAddr);
-    
-    if (entEnum <= 0) {
-        LOGERROR(("PR_EnumerateHostEnt() failed. proxyPort = %u, entEnum = %u.", proxyPort, entEnum));
-        return PR_FAILURE;
+    {
+        nsCOMPtr<nsIDNSService> dns;
+        nsCOMPtr<nsIDNSRecord> rec; 
+        nsresult rv;
+        
+        dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+            return PR_FAILURE;
+
+        rv = dns->Resolve(proxyHost, PR_FALSE, getter_AddRefs(rec));
+        if (NS_FAILED(rv))
+            return PR_FAILURE;
+
+        rv = rec->GetNextAddr(info->ProxyPort(), &proxyAddr);
+        if (NS_FAILED(rv))
+            return PR_FAILURE;
     }
-    
+
     info->SetInternalProxyAddr(&proxyAddr);
     
     // For now, we'll do this as a blocking connect,
@@ -662,6 +558,8 @@ nsSOCKSIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime /*ti
  
 
     NS_ASSERTION((socksVersion == 4) || (socksVersion == 5), "SOCKS Version must be selected");
+
+    nsresult rv;
 
     // Try to connect via SOCKS 5.
     if (socksVersion == 5) {
@@ -767,101 +665,10 @@ nsSOCKSIOLayerListen(PRFileDesc *fd, PRIntn backlog)
     return fd->lower->methods->listen(fd->lower, backlog);
 }
 
-
-// create a new socket with a SOCKS IO layer
-nsresult
-nsSOCKSIOLayerNewSocket(const char *host, 
-                        PRInt32 port,
-                        const char *proxyHost,
-                        PRInt32 proxyPort,
-                        PRInt32 socksVersion,
-                        PRFileDesc **fd, 
-                        nsISupports** info)
-{
-    NS_ENSURE_TRUE((socksVersion == 4) || (socksVersion == 5), NS_ERROR_NOT_INITIALIZED);
-
-
-    if (firstTime)
-    {
-        nsSOCKSIOLayerIdentity		= PR_GetUniqueIdentity("SOCKS layer");
-        nsSOCKSIOLayerMethods		= *PR_GetDefaultIOMethods();
-        
-        nsSOCKSIOLayerMethods.connect	= nsSOCKSIOLayerConnect;
-        nsSOCKSIOLayerMethods.bind	= nsSOCKSIOLayerBind;
-        nsSOCKSIOLayerMethods.acceptread = nsSOCKSIOLayerAcceptRead;
-        nsSOCKSIOLayerMethods.getsockname = nsSOCKSIOLayerGetName;
-        nsSOCKSIOLayerMethods.getpeername = nsSOCKSIOLayerGetPeerName;
-        nsSOCKSIOLayerMethods.accept	= nsSOCKSIOLayerAccept;
-        nsSOCKSIOLayerMethods.listen	= nsSOCKSIOLayerListen;
-        nsSOCKSIOLayerMethods.close	= nsSOCKSIOLayerClose;
-        
-        firstTime			= PR_FALSE;
-
-#if defined(PR_LOGGING)
-        gSOCKSLog = PR_NewLogModule("SOCKS");
-#endif
-
-
-    }
-    
-    LOGDEBUG(("Entering nsSOCKSIOLayerNewSocket()."));
-    
-    PRFileDesc *	sock;
-    PRFileDesc *	layer;
-    PRStatus	rv;
-    
-    /* Get a normal NSPR socket */
-    sock = PR_NewTCPSocket();
-    if (! sock) 
-    {
-        LOGERROR(("PR_NewTCPSocket() failed"));
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    
-    layer = PR_CreateIOLayerStub(nsSOCKSIOLayerIdentity, &nsSOCKSIOLayerMethods);
-    if (! layer)
-    {
-        LOGERROR(("PR_CreateIOLayerStub() failed."));
-        PR_Close(sock);
-        return NS_ERROR_FAILURE;
-    }
-    
-    nsSOCKSSocketInfo * infoObject = new nsSOCKSSocketInfo();
-    if (!infoObject)
-    {
-        LOGERROR(("Failed to create nsSOCKSSocketInfo()."));
-        PR_Close(sock);
-        // clean up IOLayerStub
-        PR_DELETE(layer);
-        return NS_ERROR_FAILURE;
-    }
-    
-    NS_ADDREF(infoObject);
-    infoObject->SetProxyHost(proxyHost);
-    infoObject->SetProxyPort(proxyPort);
-    infoObject->SetSOCKSVersion(socksVersion);
-    layer->secret = (PRFilePrivate*) infoObject;
-    rv = PR_PushIOLayer(sock, PR_GetLayersIdentity(sock), layer);
-    
-    if (NS_FAILED(rv))
-    {
-        LOGERROR(("PR_PushIOLayer() failed. rv = %x.", rv));
-        PR_Close(sock);
-        NS_RELEASE(infoObject);
-        PR_DELETE(layer);
-        return NS_ERROR_FAILURE;
-    }
-    
-    *fd = sock;
-    *info = infoObject;
-    NS_ADDREF(*info);
-
-    return NS_OK;
-}
-
 // add SOCKS IO layer to an existing socket
 nsresult
-nsSOCKSIOLayerAddToSocket(const char *host, 
+nsSOCKSIOLayerAddToSocket(PRInt32 family,
+                          const char *host, 
                           PRInt32 port,
                           const char *proxyHost,
                           PRInt32 proxyPort,
@@ -916,9 +723,7 @@ nsSOCKSIOLayerAddToSocket(const char *host,
     }
     
     NS_ADDREF(infoObject);
-    infoObject->SetProxyHost(proxyHost);
-    infoObject->SetProxyPort(proxyPort);
-    infoObject->SetSOCKSVersion(socksVersion);
+    infoObject->Init(socksVersion, proxyHost, proxyPort);
     layer->secret = (PRFilePrivate*) infoObject;
     rv = PR_PushIOLayer(fd, PR_GetLayersIdentity(fd), layer);
     
@@ -934,5 +739,3 @@ nsSOCKSIOLayerAddToSocket(const char *host,
     NS_ADDREF(*info);
     return NS_OK;
 }
-
-

@@ -23,6 +23,7 @@
 
 #include "nsTLSSocketProvider.h"
 #include "nsNSSIOLayer.h"
+#include "nsNetError.h"
 
 nsTLSSocketProvider::nsTLSSocketProvider()
 {
@@ -36,14 +37,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsTLSSocketProvider, nsISocketProvider,
                               nsISSLSocketProvider)
 
 NS_IMETHODIMP
-nsTLSSocketProvider::NewSocket(const char *host,
+nsTLSSocketProvider::NewSocket(PRInt32 family,
+                               const char *host,
                                PRInt32 port,
                                const char *proxyHost,
                                PRInt32 proxyPort,
                                PRFileDesc **_result,
                                nsISupports **securityInfo)
 {
-  nsresult rv = nsSSLIOLayerNewSocket(host,
+  nsresult rv = nsSSLIOLayerNewSocket(family,
+                                      host,
                                       port,
                                       proxyHost,
                                       proxyPort,
@@ -56,14 +59,16 @@ nsTLSSocketProvider::NewSocket(const char *host,
 
 // Add the SSL IO layer to an existing socket
 NS_IMETHODIMP
-nsTLSSocketProvider::AddToSocket(const char *host,
+nsTLSSocketProvider::AddToSocket(PRInt32 family,
+                                 const char *host,
                                  PRInt32 port,
                                  const char *proxyHost,
                                  PRInt32 proxyPort,
                                  PRFileDesc *aSocket,
                                  nsISupports **securityInfo)
 {
-  nsresult rv = nsSSLIOLayerAddToSocket(host,
+  nsresult rv = nsSSLIOLayerAddToSocket(family,
+                                        host,
                                         port,
                                         proxyHost,
                                         proxyPort,

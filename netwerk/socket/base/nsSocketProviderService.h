@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NSSOCKETPROVIDERSERVICE_H_
-#define _NSSOCKETPROVIDERSERVICE_H_
+#ifndef nsSocketProviderService_h__
+#define nsSocketProviderService_h__
 
 #include "nsISocketProviderService.h"
 
@@ -44,19 +44,12 @@ class nsSocketProviderService : public nsISocketProviderService
 {
 public:
   NS_DECL_ISUPPORTS
-
   NS_DECL_NSISOCKETPROVIDERSERVICE
 
-  // nsISocketProviderService methods:
-  nsSocketProviderService();
-  virtual ~nsSocketProviderService();
+  nsSocketProviderService() {}
+  virtual ~nsSocketProviderService() {}
 
-  static NS_METHOD
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-  nsresult Init();
-
-protected:
+  static NS_METHOD Create(nsISupports *, REFNSIID aIID, void **aResult);
 };
 
-#endif /* _NSSOCKETPROVIDERSERVICE_H */
+#endif /* nsSocketProviderService_h__ */
