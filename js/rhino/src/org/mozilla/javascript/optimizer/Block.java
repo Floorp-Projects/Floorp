@@ -243,77 +243,12 @@ class Block
         return sw.toString();
     }
 
-    /*
-        We maintain the liveSet as each statement executes, identifying
-        those variables that are live across function calls
-
-    */
-    void lookForVariablesAndCalls(Node n, boolean liveSet[],
-                                  OptFunctionNode fn)
-    {
-        switch (n.getType()) {
-            case Token.SETVAR :
-                {
-                    Node lhs = n.getFirstChild();
-                    Node rhs = lhs.getNext();
-                    lookForVariablesAndCalls(rhs, liveSet, fn);
-                    Object theVarProp = n.getProp(Node.VARIABLE_PROP);
-                    if (theVarProp != null) {
-                        int theVarIndex = ((OptLocalVariable)theVarProp).getIndex();
-                        liveSet[theVarIndex] = true;
-                    }
-                }
-                break;
-            case Token.CALL : {
-                    Node child = n.getFirstChild();
-                    while (child != null) {
-                        lookForVariablesAndCalls(child, liveSet, fn);
-                        child = child.getNext();
-                    }
-                    for (int i = 0; i < liveSet.length; i++) {
-                        if (liveSet[i])
-                            fn.getVar(i).markLiveAcrossCall();
-                    }
-                }
-                break;
-            case Token.GETVAR :
-                {
-                    Object theVarProp = n.getProp(Node.VARIABLE_PROP);
-                    if (theVarProp != null) {
-                        int theVarIndex = ((OptLocalVariable)theVarProp).getIndex();
-                        if ((n.getProp(Node.LASTUSE_PROP) != null)
-                                && !itsLiveOnExitSet.test(theVarIndex))
-                            liveSet[theVarIndex] = false;
-                    }
-                }
-                break;
-            default :
-                Node child = n.getFirstChild();
-                while (child != null) {
-                    lookForVariablesAndCalls(child, liveSet, fn);
-                    child = child.getNext();
-                }
-                break;
-        }
-    }
-
     void markAnyTypeVariables(OptFunctionNode fn)
     {
         for (int i = 0; i < fn.getVarCount(); i++)
             if (itsLiveOnEntrySet.test(i))
                 fn.getVar(i).assignType(Optimizer.AnyType);
 
-    }
-
-    void markVolatileVariables(OptFunctionNode fn)
-    {
-        boolean liveSet[] = new boolean[fn.getVarCount()];
-        for (int i = 0; i < liveSet.length; i++)
-            liveSet[i] = itsLiveOnEntrySet.test(i);
-        for (int i = itsStartNodeIndex; i <= itsEndNodeIndex; i++) {
-            Node n = itsStatementNodes[i];
-            lookForVariablesAndCalls(n, liveSet, fn);
-        }
     }
 
     /*
@@ -424,7 +359,7 @@ class Block
             Literals,
             Arithmetic operations - always return a Number
     */
-    int findExpressionType(Node n)
+    private static int findExpressionType(Node n)
     {
         switch (n.getType()) {
             case Token.NUMBER :

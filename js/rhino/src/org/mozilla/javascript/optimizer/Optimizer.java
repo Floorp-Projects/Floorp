@@ -292,10 +292,6 @@ class Optimizer
         'undefined'-ness of that variable.
 */
 
-        for (int i = 0; i < theBlocks.length; i++) {
-            theBlocks[i].markVolatileVariables(fn);
-        }
-
         theBlocks[0].markAnyTypeVariables(fn);
     }
 

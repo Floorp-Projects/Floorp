@@ -53,7 +53,6 @@ final class OptLocalVariable implements JavaVariable {
     public String toString() {
         return "LocalVariable : '" + getName()
                     + "', index = " + getIndex()
-                    + ", LiveAcrossCall = " + itsLiveAcrossCall
                     + ", isNumber = " + itsIsNumber
                     + ", isParameter = " + isParameter()
                     + ", JRegister = " + itsJRegister;
@@ -104,10 +103,6 @@ final class OptLocalVariable implements JavaVariable {
 
     boolean isParameter()   { return itsIsParameter; }
 
-    void markLiveAcrossCall()     { itsLiveAcrossCall = true; }
-    void clearLiveAcrossCall()    { itsLiveAcrossCall = false; }
-    boolean isLiveAcrossCall()    { return itsLiveAcrossCall; }
-
     boolean assignType(int aType) {
         itsTypeUnion |= aType;
         return itsTypeUnion != aType;
@@ -123,7 +118,6 @@ final class OptLocalVariable implements JavaVariable {
 
     private short itsJRegister = -1;   // unassigned
 
-    private boolean itsLiveAcrossCall;
     private boolean itsIsNumber;
 
     private int itsTypeUnion;        // the union of all assigned types
