@@ -22,23 +22,51 @@
 
 #include "nsISupports.h"
 #include "nsGUIEvent.h"
-
+#include "nsIWebShell.h"  
 
 /* Forward declarations.... */
 class nsIURL;
 class nsIAppShell;
 class nsIWidget;
-class nsIWebShell;
+class nsIWidgetController;
 
-
-class nsWebShellWindow : public nsISupports
+class nsWebShellWindow : public nsIWebShellContainer
 {
 public:
   nsWebShellWindow();
 
+  // nsISupports interface...
   NS_DECL_ISUPPORTS
 
-  nsresult Initialize(nsIAppShell* aShell, nsIURL* aUrl);
+  // nsIWebShellContainer interface...
+  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
+                         const PRUnichar* aURL,
+                         nsLoadType aReason);
+
+  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
+                          const PRUnichar* aURL);
+
+  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
+                             const PRUnichar* aURL,
+                             PRInt32 aProgress,
+                             PRInt32 aProgressMax);
+
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
+                        const PRUnichar* aURL,
+                        PRInt32 aStatus);
+
+  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
+                         PRBool aVisible,
+                         nsIWebShell *&aNewWebShell);
+
+  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
+                                  nsIWebShell*& aResult);
+
+  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell);
+
+
+  // nsWebShellWindow methods...
+  nsresult Initialize(nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID);
   
   nsIWidget* GetWidget(void) { return mWindow; }
 
@@ -49,6 +77,7 @@ protected:
 
   nsIWidget*   mWindow;
   nsIWebShell* mWebShell;
+  nsIWidgetController* mController;
 };
 
 
