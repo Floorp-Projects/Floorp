@@ -71,6 +71,8 @@ protected:
 public:
   virtual const char* get() const { return mStr; }
 
+  PRBool IsEmpty() const { return mLength == 0; }
+
 public: 
   /**
    * Default constructor. 

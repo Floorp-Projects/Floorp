@@ -102,6 +102,11 @@ class NS_COM nsDependentString
       // nsDependentString( const self_type& );                                 // auto-generated copy-constructor OK
       // ~nsDependentString();                                                  // auto-generated destructor OK
 
+      // optimize these when possible
+      virtual const char_type* get() const { return mHandle.DataStart(); }
+      virtual PRUint32 Length() const      { return mHandle.DataLength(); }
+      PRBool IsEmpty() const               { return mHandle.DataLength() == 0; }
+      
     private:
         // NOT TO BE IMPLEMENTED
       void operator=( const self_type& );                                       // we're immutable, so no copy-assignment operator
@@ -175,6 +180,11 @@ class NS_COM nsDependentCString
 
       // nsDependentCString( const self_type& );                                 // auto-generated copy-constructor OK
       // ~nsDependentCString();                                                  // auto-generated destructor OK
+
+      // optimize these when possible
+      virtual const char_type* get() const { return mHandle.DataStart(); }
+      virtual PRUint32 Length() const      { return mHandle.DataLength(); }
+      PRBool IsEmpty() const               { return mHandle.DataLength() == 0; }
 
     private:
         // NOT TO BE IMPLEMENTED

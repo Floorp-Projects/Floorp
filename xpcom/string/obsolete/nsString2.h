@@ -111,7 +111,9 @@ protected:
   virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
 
 public:
-  virtual const PRUnichar* get() const;
+  virtual const PRUnichar* get() const { return mUStr; }
+
+  PRBool IsEmpty() const { return mLength == 0; }
 
 public:
   /**
