@@ -125,15 +125,18 @@ static const char kCookiesStrictDomains[] = "network.cookie.strictDomains";
 
 nsCookiePrefObserver::nsCookiePrefObserver()
 {
-  nsresult rv;
+}
 
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal;
+nsresult
+nsCookiePrefObserver::Init()
+{
+  nsresult rv;
 
   // install and cache the preferences observer
   mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    prefInternal = do_QueryInterface(mPrefBranch, &rv);
-  }
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
 
   // add observers
   if (NS_SUCCEEDED(rv)) {
@@ -151,20 +154,22 @@ nsCookiePrefObserver::nsCookiePrefObserver()
 #endif
     prefInternal->AddObserver(kCookiesAskPermission, this, PR_TRUE);
     prefInternal->AddObserver(kCookiesStrictDomains, this, PR_TRUE);
-
-    // initialize prefs
-    rv = ReadPrefs();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Error occured reading cookie preferences");
-    }
   }
+
+  // initialize prefs
+  rv = ReadPrefs();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Error occured reading cookie preferences");
+  }
+
+  return NS_OK;
 }
 
 nsCookiePrefObserver::~nsCookiePrefObserver()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsCookiePrefObserver, nsIObserver)
+NS_IMPL_ISUPPORTS2(nsCookiePrefObserver, nsIObserver, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsCookiePrefObserver::Observe(nsISupports *aSubject,
@@ -173,9 +178,8 @@ nsCookiePrefObserver::Observe(nsISupports *aSubject,
 {
   nsresult rv;
 
-  // check the topic, and the cached prefservice
-  if (!mPrefBranch ||
-      nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
+  // check the topic
+  if (nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -299,11 +303,6 @@ nsresult
 nsCookiePrefObserver::ReadPrefs()
 {
   nsresult rv, rv2 = NS_OK;
-
-  // check the prefservice is cached
-  if (!mPrefBranch) {
-    return NS_ERROR_FAILURE;
-  }
 
   PRInt32 tempPrefValue;
 #ifdef MOZ_PHOENIX

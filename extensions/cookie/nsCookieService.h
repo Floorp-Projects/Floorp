@@ -72,9 +72,7 @@ class nsCookiePrefObserver : public nsIObserver
     nsCookiePrefObserver();
     virtual ~nsCookiePrefObserver();
     nsresult Init();
-    nsresult Install();
     nsresult ReadPrefs();
-    nsresult Remove();
 
     // member variables for caching prefs
 #ifdef MOZ_PHOENIX
@@ -115,7 +113,7 @@ public:
   NS_DECL_NSICOOKIESERVICE
 
   nsCookieService();
-  virtual ~nsCookieService(void);
+  virtual ~nsCookieService();
   nsresult Init();
 
 protected:

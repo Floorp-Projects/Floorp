@@ -89,9 +89,7 @@ nsCookieService::~nsCookieService()
   // clean up memory
   COOKIE_RemoveAll();
 
-  if (gCookiePrefObserver) {
-    delete gCookiePrefObserver;
-  }
+  NS_IF_RELEASE(gCookiePrefObserver);
   if (sCookieList) {
     delete sCookieList;
   }
@@ -99,6 +97,8 @@ nsCookieService::~nsCookieService()
 
 nsresult nsCookieService::Init()
 {
+  nsresult rv;
+
   // install the main cookie pref observer (defined in nsCookieService.h)
   // this will be integrated into nsCookieService when nsCookies is removed.
   gCookiePrefObserver = new nsCookiePrefObserver();
@@ -109,8 +109,12 @@ nsresult nsCookieService::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // init nsCookiePrefObserver, and fail if it can't get the prefbranch
+  NS_ADDREF(gCookiePrefObserver);
+  rv = gCookiePrefObserver->Init();
+  if (NS_FAILED(rv)) return rv;
+
   // cache mCookieFile
-  nsresult rv;
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mCookieFile));
   if (NS_SUCCEEDED(rv)) {
     rv = mCookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName2));
