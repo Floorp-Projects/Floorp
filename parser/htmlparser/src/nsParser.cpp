@@ -512,7 +512,7 @@ PRInt32 nsParser::Parse(fstream& aStream){
 PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString){
   PRInt32 result=kNoError;
 
-  CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename),&aSourceBuffer,0);
+  CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,PR_FALSE),&aSourceBuffer,0);
   PushContext(*pc);
   if(PR_TRUE==anHTMLString)
     pc->mSourceType="text/html";
