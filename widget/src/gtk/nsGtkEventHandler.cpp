@@ -360,6 +360,7 @@ gint nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p)
 //==============================================================
 gint nsGtkWidget_CheckButton_Toggle_Callback(GtkWidget *w, gpointer p)
 {
+#if 0
   nsCheckButton *checkBtn = (nsCheckButton*)gtk_object_get_user_data(GTK_OBJECT(w));
   if (GTK_TOGGLE_BUTTON(w)->active)
     checkBtn->Armed();
@@ -367,6 +368,7 @@ gint nsGtkWidget_CheckButton_Toggle_Callback(GtkWidget *w, gpointer p)
     checkBtn->DisArmed();
 
   return PR_FALSE;
+#endif
 }
 
 //==============================================================
@@ -406,7 +408,6 @@ gint nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p)
 //==============================================================
 gint nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
 {
-  //  nsScrollbar *widget = (nsScrollbar*)gtk_object_get_user_data(GTK_OBJECT(w));
   nsScrollbar *widget = (nsScrollbar*) p;
   nsScrollbarEvent sevent;
 

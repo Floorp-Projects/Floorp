@@ -74,19 +74,14 @@ class nsWidget : public nsBaseWidget
 
     NS_IMETHOD GetBounds(nsRect &aRect);
 
-    nscolor GetForegroundColor(void);
-    NS_IMETHOD SetForegroundColor(const nscolor &aColor);
-    nscolor GetBackgroundColor(void);
     NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
 
     nsIFontMetrics *GetFont(void);
     NS_IMETHOD SetFont(const nsFont &aFont);
 
-    nsCursor GetCursor(void);
     NS_IMETHOD SetCursor(nsCursor aCursor);
 
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
-
 
     void* GetNativeData(PRUint32 aDataType);
     nsIRenderingContext *GetRenderingContext(void);

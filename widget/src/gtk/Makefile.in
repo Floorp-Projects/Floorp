@@ -62,14 +62,9 @@ CPPSRCS= \
 	nsWidget.cpp \
 	nsWindow.cpp
 
-CSRCS = gtklayout.c \
-	$(NULL)
-
 TARGETS = $(LIBRARY)
 
 MKSHLIB :=
 
 include $(topsrcdir)/config/rules.mk
-
-gtklayout.o nsWindow.o: gtklayout.h
 

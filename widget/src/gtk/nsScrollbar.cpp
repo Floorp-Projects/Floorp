@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
@@ -25,49 +25,20 @@
 
 #include "nsGtkEventHandler.h"
 
-NS_IMPL_ADDREF(nsScrollbar);
-NS_IMPL_RELEASE(nsScrollbar);
+NS_IMPL_ADDREF (nsScrollbar);
+NS_IMPL_RELEASE (nsScrollbar);
 
 //-------------------------------------------------------------------------
 //
 // nsScrollbar constructor
 //
 //-------------------------------------------------------------------------
-nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
+nsScrollbar::nsScrollbar (PRBool aIsVertical):nsWidget (), nsIScrollbar ()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_REFCNT ();
 
-  mOrientation  = (aIsVertical) ?
+  mOrientation = (aIsVertical) ?
     GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
-}
-
-//-------------------------------------------------------------------------
-//
-// Create the native scrollbar widget
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::CreateNative(GtkWidget *parentWindow)
-{
-  // Create scrollbar, random default values
-  mAdjustment = gtk_adjustment_new(0, 0, 100, 1, 25, 25);
-
-  if (mOrientation == GTK_ORIENTATION_HORIZONTAL) {
-    mWidget = gtk_hscrollbar_new(GTK_ADJUSTMENT(mAdjustment));
-  } else {
-    mWidget = gtk_vscrollbar_new(GTK_ADJUSTMENT(mAdjustment));
-  }
-  gtk_widget_set_name(mWidget, "nsScrollbar");
-  gtk_object_set_user_data(GTK_OBJECT(mAdjustment), mWidget);
-
-  gtk_signal_connect(GTK_OBJECT (mAdjustment),
-                     "changed",
-                     GTK_SIGNAL_FUNC(nsGtkWidget_Scrollbar_Callback),
-                     this);
-  gtk_signal_connect(GTK_OBJECT (mAdjustment),
-                     "value_changed",
-                     GTK_SIGNAL_FUNC(nsGtkWidget_Scrollbar_Callback),
-                     this);
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -75,8 +46,38 @@ NS_METHOD nsScrollbar::CreateNative(GtkWidget *parentWindow)
 // nsScrollbar destructor
 //
 //-------------------------------------------------------------------------
-nsScrollbar::~nsScrollbar()
+nsScrollbar::~nsScrollbar ()
 {
+}
+
+//-------------------------------------------------------------------------
+//
+// Create the native scrollbar widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsScrollbar::CreateNative (GtkWidget * parentWindow)
+{
+  // Create scrollbar, random default values
+  mAdjustment = GTK_ADJUSTMENT (gtk_adjustment_new (0, 0, 100, 1, 25, 25));
+
+  switch (mOrientation)
+    {
+    case GTK_ORIENTATION_HORIZONTAL:
+      mWidget = gtk_hscrollbar_new (mAdjustment);
+      break;
+    case GTK_ORIENTATION_VERTICAL:
+      mWidget = gtk_vscrollbar_new (mAdjustment);
+      break;
+    }
+
+  gtk_widget_set_name (mWidget, "nsScrollbar");
+
+  gtk_signal_connect (GTK_OBJECT (mAdjustment),
+		      "value_changed",
+		      GTK_SIGNAL_FUNC (nsGtkWidget_Scrollbar_Callback),
+		      this);
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -84,22 +85,24 @@ nsScrollbar::~nsScrollbar()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+nsresult nsScrollbar::QueryInterface (const nsIID & aIID, void **aInstancePtr)
 {
-  if (aInstancePtr == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  if (aInstancePtr == NULL)
+    {
+      return NS_ERROR_NULL_POINTER;
+    }
 
   // get parent's interface
-  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
+  nsresult result = nsWidget::QueryInterface (aIID, aInstancePtr);
 
-  static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
+  static NS_DEFINE_IID (kInsScrollbarIID, NS_ISCROLLBAR_IID);
   // if not asking for parent, check for our interface IID
-  if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
-    *aInstancePtr = (void*) ((nsIScrollbar*)this);
-    AddRef();
-    result = NS_OK;
-  }
+  if (result == NS_NOINTERFACE && aIID.Equals (kInsScrollbarIID))
+    {
+      *aInstancePtr = (void *) ((nsIScrollbar *) this);
+      AddRef ();
+      result = NS_OK;
+    }
 
   return result;
 }
@@ -109,10 +112,10 @@ nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // Define the range settings
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
+NS_METHOD nsScrollbar::SetMaxRange (PRUint32 aEndRange)
 {
-  GTK_ADJUSTMENT(mAdjustment)->upper = aEndRange;
-  gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "changed");
+  GTK_ADJUSTMENT (mAdjustment)->upper = (float) aEndRange;
+  gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
   return NS_OK;
 }
 
@@ -122,9 +125,9 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 // Return the range settings
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetMaxRange(PRUint32 & aMaxRange)
+NS_METHOD nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
 {
-  aMaxRange = (PRUint32) GTK_ADJUSTMENT(mAdjustment)->upper;
+  aMaxRange = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->upper;
   return NS_OK;
 }
 
@@ -134,9 +137,9 @@ NS_METHOD nsScrollbar::GetMaxRange(PRUint32 & aMaxRange)
 // Set the thumb position
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
+NS_METHOD nsScrollbar::SetPosition (PRUint32 aPos)
 {
-  gtk_adjustment_set_value(GTK_ADJUSTMENT(mAdjustment), aPos);
+  gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), (float) aPos);
   return NS_OK;
 }
 
@@ -146,9 +149,9 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 // Get the current thumb position.
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetPosition(PRUint32 & aPos)
+NS_METHOD nsScrollbar::GetPosition (PRUint32 & aPos)
 {
-  aPos = (PRUint32) GTK_ADJUSTMENT(mAdjustment)->value;
+  aPos = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->value;
   return NS_OK;
 }
 
@@ -158,13 +161,14 @@ NS_METHOD nsScrollbar::GetPosition(PRUint32 & aPos)
 // Set the thumb size
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
+NS_METHOD nsScrollbar::SetThumbSize (PRUint32 aSize)
 {
-  if (aSize > 0) {
-    GTK_ADJUSTMENT(mAdjustment)->page_increment = aSize;
-    GTK_ADJUSTMENT(mAdjustment)->page_size = aSize;
-    gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "changed");
-  }
+  if (aSize > 0)
+    {
+      GTK_ADJUSTMENT (mAdjustment)->page_increment = (float) aSize;
+      GTK_ADJUSTMENT (mAdjustment)->page_size = (float) aSize;
+      gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
+    }
   return NS_OK;
 }
 
@@ -174,9 +178,9 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 // Get the thumb size
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetThumbSize(PRUint32 & aThumbSize)
+NS_METHOD nsScrollbar::GetThumbSize (PRUint32 & aThumbSize)
 {
-  aThumbSize = (PRUint32) GTK_ADJUSTMENT(mAdjustment)->page_size;
+  aThumbSize = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->page_size;
   return NS_OK;
 }
 
@@ -186,12 +190,13 @@ NS_METHOD nsScrollbar::GetThumbSize(PRUint32 & aThumbSize)
 // Set the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
+NS_METHOD nsScrollbar::SetLineIncrement (PRUint32 aLineIncrement)
 {
-  if (aLineIncrement > 0) {
-    GTK_ADJUSTMENT(mAdjustment)->step_increment = aLineIncrement;
-    gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "changed");
-  }
+  if (aLineIncrement > 0)
+    {
+      GTK_ADJUSTMENT (mAdjustment)->step_increment = (float) aLineIncrement;
+      gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
+    }
   return NS_OK;
 }
 
@@ -201,9 +206,9 @@ NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aLineIncrement)
 // Get the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::GetLineIncrement(PRUint32 & aLineInc)
+NS_METHOD nsScrollbar::GetLineIncrement (PRUint32 & aLineInc)
 {
-  aLineInc = (PRUint32) GTK_ADJUSTMENT(mAdjustment)->step_increment;
+  aLineInc = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->step_increment;
   return NS_OK;
 }
 
@@ -213,23 +218,23 @@ NS_METHOD nsScrollbar::GetLineIncrement(PRUint32 & aLineInc)
 // Set all scrolling parameters
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
-                                     PRUint32 aPosition, PRUint32 aLineIncrement)
+NS_METHOD nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSize,
+	       PRUint32 aPosition, PRUint32 aLineIncrement)
 {
-  int thumbSize = (((int)aThumbSize) > 0?aThumbSize:1);
-  int maxRange  = (((int)aMaxRange) > 0?aMaxRange:10);
-  int mLineIncrement = (((int)aLineIncrement) > 0?aLineIncrement:1);
+  int thumbSize = (((int) aThumbSize) > 0 ? aThumbSize : 1);
+  int maxRange = (((int) aMaxRange) > 0 ? aMaxRange : 10);
+  int mLineIncrement = (((int) aLineIncrement) > 0 ? aLineIncrement : 1);
 
   int maxPos = maxRange - thumbSize;
-  int pos    = ((int)aPosition) > maxPos ? maxPos-1 : ((int)aPosition);
+  int pos = ((int) aPosition) > maxPos ? maxPos - 1 : ((int) aPosition);
 
-  GTK_ADJUSTMENT(mAdjustment)->lower = 0;
-  GTK_ADJUSTMENT(mAdjustment)->upper = maxRange;
-  GTK_ADJUSTMENT(mAdjustment)->page_size = thumbSize;
-  GTK_ADJUSTMENT(mAdjustment)->page_increment = thumbSize;
-  GTK_ADJUSTMENT(mAdjustment)->step_increment = mLineIncrement;
+  GTK_ADJUSTMENT (mAdjustment)->lower = 0;
+  GTK_ADJUSTMENT (mAdjustment)->upper = maxRange;
+  GTK_ADJUSTMENT (mAdjustment)->page_size = thumbSize;
+  GTK_ADJUSTMENT (mAdjustment)->page_increment = thumbSize;
+  GTK_ADJUSTMENT (mAdjustment)->step_increment = mLineIncrement;
   // this will emit the changed signal for us
-  gtk_adjustment_set_value(GTK_ADJUSTMENT(mAdjustment), pos);
+  gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), pos);
   return NS_OK;
 }
 
@@ -239,30 +244,30 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 // paint message. Don't send the paint out
 //
 //-------------------------------------------------------------------------
-PRBool nsScrollbar::OnPaint(nsPaintEvent &aEvent)
+PRBool nsScrollbar::OnPaint (nsPaintEvent & aEvent)
 {
   return PR_FALSE;
 }
 
 
-PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
+PRBool nsScrollbar::OnResize (nsSizeEvent & aEvent)
 {
   return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
-int nsScrollbar::AdjustScrollBarPosition(int aPosition)
+int nsScrollbar::AdjustScrollBarPosition (int aPosition)
 {
   int maxRange;
   int sliderSize;
 #if 0
-  XtVaGetValues(mWidget, XmNmaximum, &maxRange,
-                XmNsliderSize, &sliderSize,
-                nsnull);
+  XtVaGetValues (mWidget, XmNmaximum, &maxRange,
+		 XmNsliderSize, &sliderSize,
+		 nsnull);
   int cap = maxRange - sliderSize;
   return aPosition > cap ? cap : aPosition;
 #endif
-  return 0;  /* XXX */
+  return 0;			/* XXX */
 }
 
 //-------------------------------------------------------------------------
@@ -270,126 +275,132 @@ int nsScrollbar::AdjustScrollBarPosition(int aPosition)
 // Deal with scrollbar messages (actually implemented only in nsScrollbar)
 //
 //-------------------------------------------------------------------------
-PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
+PRBool nsScrollbar::OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
   PRBool result = PR_TRUE;
   float newPosition;
 
-  switch (aEvent.message) {
-
-    // scroll one line right or down
-  case NS_SCROLLBAR_LINE_NEXT:
+  switch (aEvent.message)
     {
-      newPosition = GTK_ADJUSTMENT(mAdjustment)->value;
-      // newPosition += mLineIncrement;
-      newPosition += 10;
-      PRUint32 thumbSize;
-      PRUint32 maxRange;
-      GetThumbSize(thumbSize);
-      GetMaxRange(maxRange);
-      PRUint32 max = maxRange - thumbSize;
-      if (newPosition > (int)max)
-        newPosition = (int)max;
 
-      // if an event callback is registered, give it the chance
-      // to change the increment
-      if (mEventCallback) {
-        aEvent.position = newPosition;
-        result = ConvertStatus((*mEventCallback)(&aEvent));
-        newPosition = aEvent.position;
+      // scroll one line right or down
+    case NS_SCROLLBAR_LINE_NEXT:
+      {
+	newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
+	// newPosition += mLineIncrement;
+	newPosition += 10;
+	PRUint32 thumbSize;
+	PRUint32 maxRange;
+	GetThumbSize (thumbSize);
+	GetMaxRange (maxRange);
+	PRUint32 max = maxRange - thumbSize;
+	if (newPosition > (int) max)
+	  newPosition = (int) max;
+
+	// if an event callback is registered, give it the chance
+	// to change the increment
+	if (mEventCallback)
+	  {
+	    aEvent.position = (PRUint32) newPosition;
+	    result = ConvertStatus ((*mEventCallback) (&aEvent));
+	    newPosition = aEvent.position;
+	  }
+	break;
       }
-      break;
-    }
 
 
-    // scroll one line left or up
-  case NS_SCROLLBAR_LINE_PREV:
-    {
-      newPosition = GTK_ADJUSTMENT(mAdjustment)->value;
+      // scroll one line left or up
+    case NS_SCROLLBAR_LINE_PREV:
+      {
+	newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
 
-      // newPosition -= mLineIncrement;
-      newPosition -= 10;
-      if (newPosition < 0)
-        newPosition = 0;
+	// newPosition -= mLineIncrement;
+	newPosition -= 10;
+	if (newPosition < 0)
+	  newPosition = 0;
 
-      // if an event callback is registered, give it the chance
-      // to change the decrement
-      if (mEventCallback) {
-        aEvent.position = newPosition;
-        aEvent.widget = (nsWidget*)this;
-        result = ConvertStatus((*mEventCallback)(&aEvent));
-        newPosition = aEvent.position;
+	// if an event callback is registered, give it the chance
+	// to change the decrement
+	if (mEventCallback)
+	  {
+	    aEvent.position = (PRUint32) newPosition;
+	    aEvent.widget = (nsWidget *) this;
+	    result = ConvertStatus ((*mEventCallback) (&aEvent));
+	    newPosition = aEvent.position;
+	  }
+	break;
       }
-      break;
-    }
 
-    // Scrolls one page right or down
-  case NS_SCROLLBAR_PAGE_NEXT:
-    {
-      newPosition = GTK_ADJUSTMENT(mAdjustment)->value;
-      PRUint32 thumbSize;
-      GetThumbSize(thumbSize);
-      PRUint32 maxRange;
-      GetThumbSize(thumbSize);
-      GetMaxRange(maxRange);
-      PRUint32 max = maxRange - thumbSize;
-      if (newPosition > (int)max)
-        newPosition = (int)max;
+      // Scrolls one page right or down
+    case NS_SCROLLBAR_PAGE_NEXT:
+      {
+	newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
+	PRUint32 thumbSize;
+	GetThumbSize (thumbSize);
+	PRUint32 maxRange;
+	GetThumbSize (thumbSize);
+	GetMaxRange (maxRange);
+	PRUint32 max = maxRange - thumbSize;
+	if (newPosition > (int) max)
+	  newPosition = (int) max;
 
-      // if an event callback is registered, give it the chance
-      // to change the increment
-      if (mEventCallback) {
-        aEvent.position = newPosition;
-        result = ConvertStatus((*mEventCallback)(&aEvent));
-        newPosition = aEvent.position;
+	// if an event callback is registered, give it the chance
+	// to change the increment
+	if (mEventCallback)
+	  {
+	    aEvent.position = (PRUint32) newPosition;
+	    result = ConvertStatus ((*mEventCallback) (&aEvent));
+	    newPosition = aEvent.position;
+	  }
+	break;
       }
-      break;
-    }
 
-    // Scrolls one page left or up.
-  case NS_SCROLLBAR_PAGE_PREV:
-    {
-      newPosition = GTK_ADJUSTMENT(mAdjustment)->value;
-      if (newPosition < 0)
-        newPosition = 0;
+      // Scrolls one page left or up.
+    case NS_SCROLLBAR_PAGE_PREV:
+      {
+	newPosition = GTK_ADJUSTMENT (mAdjustment)->value;
+	if (newPosition < 0)
+	  newPosition = 0;
 
-      // if an event callback is registered, give it the chance
-      // to change the increment
-      if (mEventCallback) {
-        aEvent.position = newPosition;
-        result = ConvertStatus((*mEventCallback)(&aEvent));
-        newPosition = aEvent.position;
+	// if an event callback is registered, give it the chance
+	// to change the increment
+	if (mEventCallback)
+	  {
+	    aEvent.position = (PRUint32) newPosition;
+	    result = ConvertStatus ((*mEventCallback) (&aEvent));
+	    newPosition = aEvent.position;
+	  }
+	break;
       }
-      break;
-    }
 
 
-    // Scrolls to the absolute position. The current position is specified by
-    // the cPos parameter.
-  case NS_SCROLLBAR_POS:
-    {
-      newPosition = cPos;
+      // Scrolls to the absolute position. The current position is specified by
+      // the cPos parameter.
+    case NS_SCROLLBAR_POS:
+      {
+	newPosition = cPos;
 
-      // if an event callback is registered, give it the chance
-      // to change the increment
-      if (mEventCallback) {
-        aEvent.position = newPosition;
-        result = ConvertStatus((*mEventCallback)(&aEvent));
-        newPosition = aEvent.position;
+	// if an event callback is registered, give it the chance
+	// to change the increment
+	if (mEventCallback)
+	  {
+	    aEvent.position = (PRUint32) newPosition;
+	    result = ConvertStatus ((*mEventCallback) (&aEvent));
+	    newPosition = aEvent.position;
+	  }
+	break;
       }
-      break;
     }
-  }
   /*
-    GTK_ADJUSTMENT(mAdjustment)->value = newPosition;
-    gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "value_changed");
-  */
+     GTK_ADJUSTMENT(mAdjustment)->value = newPosition;
+     gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "value_changed");
+   */
   /*
-    if (mEventCallback) {
-    aEvent.position = cPos;
-    result = ConvertStatus((*mEventCallback)(&aEvent));
-    newPosition = aEvent.position;
-    }
-  */
+     if (mEventCallback) {
+     aEvent.position = cPos;
+     result = ConvertStatus((*mEventCallback)(&aEvent));
+     newPosition = aEvent.position;
+     }
+   */
   return result;
 }

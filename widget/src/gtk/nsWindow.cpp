@@ -548,8 +548,8 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     GtkAdjustment* vert = gtk_layout_get_vadjustment(GTK_LAYOUT(mWidget));
     horiz->value -= aDx;
     vert->value -= aDy;
-    gtk_signal_emit_by_name(GTK_OBJECT(horiz), "value_changed");
-    gtk_signal_emit_by_name(GTK_OBJECT(vert), "value_changed");
+    gtk_adjustment_value_changed(horiz);
+    gtk_adjustment_value_changed(vert);
   }
   return NS_OK;
 }

@@ -125,7 +125,6 @@ NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 {
   mIsPassword = aIsPassword?PR_FALSE:PR_TRUE;
   if (GTK_IS_ENTRY(mWidget)) {
-    g_print("gtk_entry_set_visibility(GTK_ENTRY(%p), %d);\n",mWidget, mIsPassword);
     gtk_entry_set_visibility(GTK_ENTRY(mWidget), mIsPassword);
   }
   // this won't work for gtk_texts
@@ -139,7 +138,6 @@ NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyF
                "SetReadOnly - Widget is NULL, Create may not have been called!");
   aOldReadOnlyFlag = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag?PR_FALSE:PR_TRUE;
-  g_print("gtk_editable_set_editable(GTK_EDITABLE(%p), %d);\n",mWidget, mIsReadOnly);
   gtk_editable_set_editable(GTK_EDITABLE(mWidget), mIsReadOnly);
   return NS_OK;
 }

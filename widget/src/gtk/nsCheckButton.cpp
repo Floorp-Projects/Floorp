@@ -82,49 +82,11 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 //-------------------------------------------------------------------------
 //
-// Armed
-//
-//-------------------------------------------------------------------------
-void nsCheckButton::Armed()
-{
-  mIsArmed      = PR_TRUE;
-  mValueWasSet  = PR_FALSE;
-  mInitialState = GTK_TOGGLE_BUTTON(mWidget)->active;
-}
-
-//-------------------------------------------------------------------------
-//
-// DisArmed
-//
-//-------------------------------------------------------------------------
-void nsCheckButton::DisArmed()
-{
-  if (mValueWasSet) {
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), PR_TRUE);
-/*
-    XmToggleButtonSetState(mWidget, mNewValue, PR_TRUE);
-*/
-  } else {
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), PR_TRUE);
-/*
-    XmToggleButtonSetState(mWidget, mInitialState, PR_TRUE);
-*/
-  }
-  mIsArmed = PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
 // Set this button label
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
-  int state = aState;
-  if (mIsArmed) {
-    mNewValue    = aState;
-    mValueWasSet = PR_TRUE;
-  }
   gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), aState);
   return NS_OK;
 }
@@ -136,16 +98,8 @@ NS_METHOD nsCheckButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-  int state = GTK_TOGGLE_BUTTON(mWidget)->active;
-  if (mIsArmed) {
-    if (mValueWasSet) {
-      aState = mNewValue;
-    } else {
-      aState = state;
-    }
-  } else {
-    aState = state;
-  }
+  gint state = GTK_TOGGLE_BUTTON(mWidget)->active;
+  aState = state;
   return NS_OK;
 }
 

@@ -36,7 +36,7 @@ nsListBox::nsListBox() : nsWidget(), nsIListWidget(), nsIListBox()
 {
   NS_INIT_REFCNT();
   mMultiSelect = PR_FALSE;
-  mBackground  = NS_RGB(124, 124, 124);
+//  mBackground  = NS_RGB(124, 124, 124);
 }
 
 //-------------------------------------------------------------------------
@@ -46,6 +46,11 @@ nsListBox::nsListBox() : nsWidget(), nsIListWidget(), nsIListBox()
 //-------------------------------------------------------------------------
 nsListBox::~nsListBox()
 {
+  if (mCList)
+  {
+    ::gtk_widget_destroy(mCList);
+    mCList = nsnull;
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -337,7 +342,7 @@ NS_METHOD nsListBox::CreateNative(GtkWidget *parentWindow)
   gtk_widget_set_name(mWidget, "nsListBox");
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mWidget),
                                   GTK_POLICY_AUTOMATIC,
-				  GTK_POLICY_ALWAYS);
+				  GTK_POLICY_AUTOMATIC);
 
   mCList = ::gtk_clist_new(1);
   gtk_clist_column_titles_hide(GTK_CLIST(mCList));

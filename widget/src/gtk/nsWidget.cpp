@@ -58,6 +58,13 @@ nsWidget::nsWidget()
 
 nsWidget::~nsWidget()
 {
+  if (mWidget)
+  {
+    if (GTK_IS_WIDGET(mWidget))
+      gtk_widget_destroy(mWidget);
+    mWidget = nsnull;
+  }
+  nsBaseWidget::Destroy();
 }
 
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
@@ -81,6 +88,7 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
   ::gtk_widget_destroy(mWidget);
+  mWidget = nsnull;
   return NS_OK;
 }
 
@@ -132,7 +140,9 @@ NS_METHOD nsWidget::Show(PRBool bState)
 
 NS_METHOD nsWidget::IsVisible(PRBool &aState)
 {
+    gint RealVis = GTK_WIDGET_VISIBLE(mWidget);
     aState = mShown;
+    g_return_val_if_fail(RealVis == mShown, NS_ERROR_FAILURE);
     return NS_OK;
 }
 
@@ -221,47 +231,6 @@ NS_METHOD nsWidget::GetBounds(nsRect &aRect)
 
 //-------------------------------------------------------------------------
 //
-// Get the foreground color
-//
-//-------------------------------------------------------------------------
-nscolor nsWidget::GetForegroundColor(void)
-{
-    /* can we safely cache this? */
-    return mForeground;
-}
-
-//-------------------------------------------------------------------------
-//
-// Set the foreground color
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWidget::SetForegroundColor(const nscolor &aColor)
-{
-    GtkStyle *style;
-    GdkColor color;
-    mForeground = aColor;
-
-    NSCOLOR_TO_GDKCOLOR(color, aColor);
-    style = gtk_style_copy(mWidget->style);
-    style->fg[GTK_STATE_NORMAL] = color;
-    gtk_widget_set_style(mWidget, style);
-
-    return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get the background color
-//
-//-------------------------------------------------------------------------
-nscolor nsWidget::GetBackgroundColor(void)
-{
-    /* can we safely cache this? */
-    return mBackground;
-}
-
-//-------------------------------------------------------------------------
-//
 // Set the background color
 //
 //-------------------------------------------------------------------------
@@ -271,6 +240,9 @@ NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
     GdkColor color;
     mBackground = aColor;
 
+    nsBaseWidget::SetBackgroundColor(aColor);
+
+/* FIXME do we need the rest of this? (look at the windows code) */
     NSCOLOR_TO_GDKCOLOR(color, aColor);
 #ifdef DBG
     g_print("nsWidget::SetBackgroundColor %d %d %d\n", color.red, color.blue, color.green);
@@ -302,17 +274,6 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::SetFont");
     return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get this component cursor
-//
-//-------------------------------------------------------------------------
-nsCursor nsWidget::GetCursor(void)
-{
-    NS_NOTYETIMPLEMENTED("nsWidget::GetCursor");
-    return eCursor_standard;
 }
 
 //-------------------------------------------------------------------------
