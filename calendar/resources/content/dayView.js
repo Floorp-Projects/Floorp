@@ -307,13 +307,18 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
       
    var eventBox = document.createElement( "hbox" );
    
-   top = eval( ( startHour*kDayViewHourHeight ) + ( ( startMinutes/60 ) * kDayViewHourHeight ) );
-   eventBox.setAttribute( "top", top );
-   eventBox.setAttribute( "height", ( hourDuration*kDayViewHourHeight ) - 2 );
-   eventBox.setAttribute( "width", 500 / calendarEventDisplay.NumberOfSameTimeEvents );
-   left = eval( ( ( calendarEventDisplay.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) )  + kDayViewHourLeftStart );
-   eventBox.setAttribute( "left", left );
-   
+   var topHeight = eval( ( startHour*kDayViewHourHeight ) + ( ( startMinutes/60 ) * kDayViewHourHeight ) );
+   topHeight = Math.round( topHeight ) - 1;
+   eventBox.setAttribute( "top", topHeight );
+   eventBox.setAttribute( "height", Math.round( ( hourDuration*kDayViewHourHeight ) + 1 ) );
+   var width = Math.round( 500 / calendarEventDisplay.NumberOfSameTimeEvents );
+   eventBox.setAttribute( "width", width );
+   eventBox.setAttribute( "style", "max-width: "+width+"px;" );
+   var left = eval( ( ( calendarEventDisplay.CurrentSpot - 1 ) * width )  + kDayViewHourLeftStart );
+   left = left - ( 1 * ( calendarEventDisplay.CurrentSpot - 1 ));
+   eventBox.setAttribute( "left", Math.round( left ) );
+   eventBox.setAttribute( "style", "max-width: "+width+";max-height: "+eventBox.getAttribute( "height" )+";overflow: never;" );
+
    eventBox.setAttribute( "class", "day-view-event-class" );
    eventBox.setAttribute( "flex", "1" );
    eventBox.setAttribute( "eventbox", "dayview" );
@@ -321,22 +326,16 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "savetip" );
-         
-
    eventBox.setAttribute( "id", "day-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
 
    var eventHTMLElement = document.createElement( "description" );
    eventHTMLElement.setAttribute( "id", "day-view-event-html"+calendarEventDisplay.event.id );
-
    var eventTextElement = document.createTextNode( eventText );
-   
    eventHTMLElement.setAttribute( "class", "day-view-event-text-class" );
-   eventHTMLElement.setAttribute( "width", eventBox.getAttribute( "width" ) );
-   eventHTMLElement.setAttribute( "style", "max-width: "+eventBox.getAttribute( "width" )+";"+";max-height: "+eventBox.getAttribute( "height" )+";overflow: never;"  );
-   eventBox.setAttribute( "style", "max-width: "+eventBox.getAttribute( "width" )+";max-height: "+eventBox.getAttribute( "height" )+";overflow: never;" );
    
    eventHTMLElement.appendChild( eventTextElement );
+   
    eventBox.appendChild( eventHTMLElement );
 
    // add a property to the event box that holds the calendarEvent that the
