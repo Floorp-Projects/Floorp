@@ -1059,12 +1059,35 @@ nsFontMetricsXft::FindFont(PRUnichar aChar)
     }
 
     // go forth and find us some fonts
-    if (!mMatched)
-        DoMatch();
+    if (mMatchType == eNoMatch) {
+        // Optimistically just look for the best match font.
+        // This can be completed in linear time, which is ideal if all
+        // of the characters we're asked for can be found in this font.
+        DoMatch(PR_FALSE);
+    }
 
     // Now that we have the fonts loaded and ready to run, return the
     // font in our loaded list that supports the character
-    for (PRInt32 i = 0, end = mLoadedFonts.Count(); i < end; ++i) {
+
+    if (mLoadedFonts.Count() == 0) {
+        // No fonts were matched at all.  This probably means out-of-memory
+        // or some equally bad condition.
+        return nsnull;
+    }
+
+    nsFontXft *font = (nsFontXft *)mLoadedFonts.ElementAt(0);
+    if (font->HasChar(PRUint32(aChar)))
+        return font;
+
+    // We failed to find the character in the best-match font, so load
+    // _all_ matching fonts if we haven't already done so.
+
+    if (mMatchType == eBestMatch)
+        DoMatch(PR_TRUE);
+
+    // Now check the remaining fonts
+
+    for (PRInt32 i = 1, end = mLoadedFonts.Count(); i < end; ++i) {
         nsFontXft *font = (nsFontXft *)mLoadedFonts.ElementAt(i);
         if (font->HasChar(PRUint32(aChar)))
             return font;
@@ -1213,19 +1236,22 @@ nsFontMetricsXft::SetupFCPattern(void)
 }
 
 void
-nsFontMetricsXft::DoMatch(void)
+nsFontMetricsXft::DoMatch(PRBool aMatchAll)
 {
     FcFontSet *set = nsnull;
     // now that we have a pattern we can match
-    FcCharSet *charset;
     FcResult   result;
 
-    set = FcFontSort(0, mPattern, FcTrue, &charset, &result);
-
-    // we don't need the charset since we're going to break it up into
-    // specific fonts anyway
-    if (charset)
-        FcCharSetDestroy(charset);
+    if (aMatchAll) {
+        set = FcFontSort(0, mPattern, FcTrue, NULL, &result);
+    }
+    else {
+        FcPattern* font = FcFontMatch(0, mPattern, &result);
+        if (font) {
+            set = FcFontSetCreate();
+            FcFontSetAdd(set, font);
+        }
+    }
 
     // did we not match anything?
     if (!set) {
@@ -1272,7 +1298,10 @@ nsFontMetricsXft::DoMatch(void)
     set = nsnull;
 
     // Done matching!
-    mMatched = PR_TRUE;
+    if (aMatchAll)
+        mMatchType = eAllMatching;
+    else
+        mMatchType = eBestMatch;
     return;
 
     // if we got this far, something went terribly wrong
@@ -1319,8 +1348,6 @@ nsFontMetricsXft::SetupMiniFont(void)
     if (!xftFont)
         return NS_ERROR_NOT_AVAILABLE;
 
-    FcPattern *pat = nsnull;
-
     mMiniFontAscent = xftFont->ascent;
     mMiniFontDescent = xftFont->descent;
 
@@ -1340,14 +1367,9 @@ nsFontMetricsXft::SetupMiniFont(void)
     XftDefaultSubstitute(GDK_DISPLAY(), DefaultScreen(GDK_DISPLAY()),
                          pattern);
 
-    FcFontSet *set = nsnull;
     FcResult res;
     
-    set = FcFontSort(0, pattern, FcTrue, NULL, &res);
-
-    if (set) {
-        pat = FcFontRenderPrepare(0, pattern, set->fonts[0]);
-    }
+    FcPattern *pat = FcFontMatch(0, pattern, &res);
 
     if (pat) {
         font = XftFontOpenPattern(GDK_DISPLAY(), pat);
@@ -1393,8 +1415,6 @@ nsFontMetricsXft::SetupMiniFont(void)
         FcPatternDestroy(pat);
     if (pattern)
         FcPatternDestroy(pattern);
-    if (set)
-        FcFontSetSortDestroy(set);
 
     return NS_OK;
 }
@@ -1503,50 +1523,38 @@ nsFontMetricsXft::EnumerateGlyphs(const FcChar32 *aString, PRUint32 aLen,
 
     for ( ; i < aLen; i ++) {
         FcChar32 c = aString[i];
-        nsFontXft *currFont = nsnull;
-        nsFontXft *font = nsnull;
+        nsFontXft *currFont;
 
-        // Walk the list of fonts, looking for a font that supports
-        // this character.
-        for (PRInt32 j = 0, end = mLoadedFonts.Count(); j < end; ++j) {
-            font = (nsFontXft *)mLoadedFonts.ElementAt(j);
-            if (font->HasChar(c)) {
-                currFont = font;
-                goto FoundFont; // for speed -- avoid "if" statement
-            }
-        }
-
-        // We get here when a font is not found so we need  to take care
-        // of the unknown glyph after processing any left  over text.
-        if (prevFont) {
-            rv = aCallback(&aString[start], i - start, prevFont,
-                           aCallbackData);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            prevFont = nsnull;
-        }
-
-        rv = aCallback(&c, 1, nsnull,  aCallbackData);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // Jump to the top of the loop
-        continue;
-
-        // FoundFont is jumped to when a suitable font is found that
-        // matches the character in question. 
-    FoundFont:
-        if (prevFont) {
-            if (currFont != prevFont) {
-                rv = aCallback(&aString[start], i - start, prevFont, 
+        // Look for a font that supports this character.
+        if (!(currFont = FindFont(c))) {
+            // We get here when a font is not found so we need  to take care
+            // of the unknown glyph after processing any left  over text.
+            if (prevFont) {
+                rv = aCallback(&aString[start], i - start, prevFont,
                                aCallbackData);
                 NS_ENSURE_SUCCESS(rv, rv);
-                start = i;
-                prevFont = currFont;
+
+                prevFont = nsnull;
             }
+
+            rv = aCallback(&c, 1, nsnull, aCallbackData);
+            NS_ENSURE_SUCCESS(rv, rv);
         }
         else {
-            prevFont = currFont;
-            start = i;
+            // We've found a suitable font for this character.
+            if (prevFont) {
+                if (currFont != prevFont) {
+                    rv = aCallback(&aString[start], i - start, prevFont, 
+                                   aCallbackData);
+                    NS_ENSURE_SUCCESS(rv, rv);
+                    start = i;
+                    prevFont = currFont;
+                }
+            }
+            else {
+                prevFont = currFont;
+                start = i;
+            }
         }
     }
 
