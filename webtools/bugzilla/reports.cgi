@@ -719,7 +719,9 @@ sub most_recently_doomed
         print "<TABLE>\n";
         print "<TR><TD COLSPAN=2>\n";
         print "$totalpeople engineers have $bugtotal untouched new bugs.\n";
-        print "These are the 20 most doomed.";
+        if ($totalpeople > 20) {
+            print "These are the 20 most doomed.";
+            }
         print "</TD></TR>\n";
 
         while (@people)
