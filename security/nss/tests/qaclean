@@ -46,6 +46,10 @@ Ps()
 
 Kill()
 {
+	if [ "$1" = "$$" ]
+	then
+		return
+	fi
 	echo "Killing PID $1"
     kill $1
     sleep 1
@@ -101,6 +105,7 @@ case $os_name in
 esac
 }
 
+nt_warning
 case $1 in 
 	?*)
 		rsh $1 '/u/sonmi/bin/qaclean'
