@@ -1857,8 +1857,7 @@ nsHTMLEditor::SplitTableCell()
   //...so suppress Rules System selection munging
   nsAutoTxnsConserveSelection dontChangeSelection(this);
 
-  nsCOMPtr<nsIDOMElement> newCellInRow;
-  nsCOMPtr<nsIDOMElement> newCellInCol;
+  nsCOMPtr<nsIDOMElement> newCell;
   PRInt32 rowIndex = startRowIndex;
   PRInt32 rowSpanBelow, colSpanAfter;
 
@@ -1869,15 +1868,17 @@ nsHTMLEditor::SplitTableCell()
     // We really split row-wise only if we had rowspan > 1
     if (rowSpanBelow > 0)
     {
-      res = SplitCellIntoRows(table, rowIndex, startColIndex, 1, rowSpanBelow, nsnull);
+      res = SplitCellIntoRows(table, rowIndex, startColIndex, 1, rowSpanBelow, getter_AddRefs(newCell));
       if (NS_FAILED(res)) return res;
+      CopyCellBackgroundColor(newCell, cell);
     }
     PRInt32 colIndex = startColIndex;
     // Now split the cell with rowspan = 1 into cells if it has colSpan > 1
     for (colSpanAfter = actualColSpan-1; colSpanAfter > 0; colSpanAfter--)
     {
-      res = SplitCellIntoColumns(table, rowIndex, colIndex, 1, colSpanAfter, nsnull);
+      res = SplitCellIntoColumns(table, rowIndex, colIndex, 1, colSpanAfter, getter_AddRefs(newCell));
       if (NS_FAILED(res)) return res;
+      CopyCellBackgroundColor(newCell, cell);
       colIndex++;
     }
     // Point to the new cell and repeat
@@ -1966,6 +1967,10 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
   if (actualRowSpan <= 1 || (aRowSpanAbove + aRowSpanBelow) > actualRowSpan)
     return NS_OK;
 
+  PRInt32 rowCount, colCount;
+  res = GetTableSize(aTable, rowCount, colCount);
+  if (NS_FAILED(res)) return res;
+
   nsCOMPtr<nsIDOMElement> cell2;
   nsCOMPtr<nsIDOMElement> lastCellFound;
   PRInt32 startRowIndex2, startColIndex2, rowSpan2, colSpan2, actualRowSpan2, actualColSpan2;
@@ -1988,7 +1993,7 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
     if (NS_FAILED(res) || !cell) return NS_ERROR_FAILURE;
 
     // Skip over cells spanned from above (like the one we are splitting!)
-    if (startRowIndex2 == rowBelowIndex)
+    if (cell2 && startRowIndex2 == rowBelowIndex)
     {
       if (insertAfter)
       {
@@ -2014,7 +2019,12 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
       lastCellFound = cell2;
     }
     // Skip to next available cellmap location
-    colIndex += actualColSpan2;
+    colIndex += PR_MAX(actualColSpan2, 1);
+
+    // Done when past end of total number of columns
+    if (colIndex > colCount)
+        break;
+
   } while(PR_TRUE);
 
   if (!cell2 && lastCellFound)
@@ -2047,12 +2057,6 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
     res = CopyCellBackgroundColor(newCell, cell2);
   }
   return res;
-
-
-
-  if (NS_FAILED(res)) return res;
-
-  return CopyCellBackgroundColor(*aNewCell, cell);
 }
 
 NS_IMETHODIMP
@@ -2457,50 +2461,54 @@ nsHTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
   // Prevent rules testing until we're done
   nsAutoRules beginRulesSniffing(this, kOpDeleteNode, nsIEditor::eNext);
 
-  // Get index of last child in target cell
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  nsCOMPtr<nsIDOMNode> cellChild;
-  res = targetCell->GetChildNodes(getter_AddRefs(childNodes));
-  // If we fail or don't have children, 
-  //  we insert at index 0
-  PRInt32 insertIndex = 0;
-
-  if ((NS_SUCCEEDED(res)) && (childNodes))
+  // Don't need to merge if cell is empty
+  if (!IsEmptyCell(aCellToMerge))
   {
-    // Start inserting just after last child
-    PRUint32 len;
-    res = childNodes->GetLength(&len);
-    if (NS_FAILED(res)) return res;
-    if (len == 1 && IsEmptyCell(aTargetCell))
+    // Get index of last child in target cell
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    nsCOMPtr<nsIDOMNode> cellChild;
+    res = targetCell->GetChildNodes(getter_AddRefs(childNodes));
+    // If we fail or don't have children, 
+    //  we insert at index 0
+    PRInt32 insertIndex = 0;
+
+    if ((NS_SUCCEEDED(res)) && (childNodes))
     {
-      if (IsEmptyCell(aTargetCell))
+      // Start inserting just after last child
+      PRUint32 len;
+      res = childNodes->GetLength(&len);
+      if (NS_FAILED(res)) return res;
+      if (len == 1 && IsEmptyCell(aTargetCell))
       {
-        // Delete the empty node
-        nsCOMPtr<nsIDOMNode> tempNode;
-        res = childNodes->Item(0, getter_AddRefs(cellChild));
-        if (NS_FAILED(res)) return res;
-        res = DeleteNode(cellChild);
-        if (NS_FAILED(res)) return res;
-        insertIndex = 0;
+        if (IsEmptyCell(aTargetCell))
+        {
+          // Delete the empty node
+          nsCOMPtr<nsIDOMNode> tempNode;
+          res = childNodes->Item(0, getter_AddRefs(cellChild));
+          if (NS_FAILED(res)) return res;
+          res = DeleteNode(cellChild);
+          if (NS_FAILED(res)) return res;
+          insertIndex = 0;
+        }
       }
+      else
+        insertIndex = (PRInt32)len;
     }
-    else
-      insertIndex = (PRInt32)len;
-  }
 
-  // Move the contents
-  PRBool hasChild;
-  cellToMerge->HasChildNodes(&hasChild);
-  while (hasChild)
-  {
-    cellToMerge->GetLastChild(getter_AddRefs(cellChild));
-    res = DeleteNode(cellChild);
-    if (NS_FAILED(res)) return res;
-
-    res = InsertNode(cellChild, targetCell, insertIndex);
-    if (NS_FAILED(res)) return res;
-
+    // Move the contents
+    PRBool hasChild;
     cellToMerge->HasChildNodes(&hasChild);
+    while (hasChild)
+    {
+      cellToMerge->GetLastChild(getter_AddRefs(cellChild));
+      res = DeleteNode(cellChild);
+      if (NS_FAILED(res)) return res;
+
+      res = InsertNode(cellChild, targetCell, insertIndex);
+      if (NS_FAILED(res)) return res;
+
+      cellToMerge->HasChildNodes(&hasChild);
+    }
   }
 
   // Delete cells whose contents were moved
