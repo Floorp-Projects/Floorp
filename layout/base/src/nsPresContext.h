@@ -83,6 +83,9 @@ public:
                                     nsIStyleContext* aParentContext,
                                     PRBool aForceUnique,
                                     nsIStyleContext** aResult);
+  NS_IMETHOD ResolveStyleContextForNonElement(nsIStyleContext* aParentContext,
+                                              PRBool aForceUnique,
+                                              nsIStyleContext** aResult);
   NS_IMETHOD ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsIStyleContext* aParentContext,
