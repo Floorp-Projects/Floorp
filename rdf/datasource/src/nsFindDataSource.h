@@ -101,6 +101,8 @@ private:
 				nsVoidArray **array /* out */);
 	NS_METHOD	parseResourceIntoFindTokens(nsIRDFResource *u,
 				findTokenPtr tokens);
+	NS_METHOD	doMatch(nsIRDFLiteral *literal, char *matchMethod,
+				char *matchText);
 	NS_METHOD	parseFindURL(nsIRDFResource *u,
 				nsVoidArray *array);
 
