@@ -8,7 +8,7 @@
 ; ; file comment 
 ; 
 
-[install]
+[xpcom]
 viewer:Component Registry
 viewer:Components:libjar.shlb 
 viewer:Components:xpinstall.shlb 
