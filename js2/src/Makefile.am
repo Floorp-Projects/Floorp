@@ -23,6 +23,7 @@ libjs2_a_SOURCES = \
 	numerics.cpp \
 	parser.cpp \
 	reader.cpp \
+        regexpwrapper.cpp \
 	strings.cpp \
 	tracer.cpp \
 	token.cpp \
