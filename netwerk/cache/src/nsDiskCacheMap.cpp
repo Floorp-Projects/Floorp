@@ -157,7 +157,7 @@ nsDiskCacheMap::Open(nsILocalFile *  cacheDirectory)
     if (NS_FAILED(rv))  return rv;  // unable to open or create file
     
     // check size of map file
-    PRUint32  mapSize = PR_Available(mMapFD);
+    PRInt32  mapSize = PR_Available(mMapFD);
     if (mapSize < 0) {
         rv = NS_ERROR_UNEXPECTED;
         goto error_exit;
@@ -643,7 +643,7 @@ nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
     PRUint32  size      = diskEntry->Size();
     PRUint32  fileIndex = CalculateFileIndex(size);
     PRUint32  blockSize = BLOCK_SIZE_FOR_INDEX(fileIndex);
-    PRUint32  blocks    = blockSize ? size / blockSize + 1 : 0;
+    PRUint32  blocks    = blockSize ? ((size - 1) / blockSize) + 1 : 0;
 
     // Deallocate old storage if necessary    
     if (binding->mRecord.MetaLocationInitialized()) {
@@ -754,10 +754,11 @@ nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer
     // determine block file & number of blocks
     PRUint32  fileIndex  = CalculateFileIndex(size);
     PRUint32  blockSize  = BLOCK_SIZE_FOR_INDEX(fileIndex);
-    PRUint32  blockCount = blockSize ? size / blockSize + 1 : 0;
+    PRUint32  blockCount = 0;
     PRInt32   startBlock = 0;
     
     if (size > 0) {
+        blockCount = ((size - 1) / blockSize) + 1;
         startBlock = mBlockFile[fileIndex - 1].AllocateBlocks(blockCount);
 
         rv = mBlockFile[fileIndex - 1].WriteBlocks(buffer, startBlock, blockCount);
