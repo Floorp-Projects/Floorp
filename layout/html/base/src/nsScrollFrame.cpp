@@ -668,6 +668,8 @@ nsScrollFrame::Paint(nsIPresContext&      aPresContext,
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *spacing, mStyleContext, 0);
+      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
     }
   }
 
