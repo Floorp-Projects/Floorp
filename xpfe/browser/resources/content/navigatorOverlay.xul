@@ -132,11 +132,11 @@
 	<broadcaster id="Browser:FindAgain" value="&findAgainCmd.label;"         oncommand="BrowserFindAgain();" />	
 	
 	<!-- Go Menu -->
-	<broadcaster id="canGoBack"	      disabled="true" buttonaction="BrowserBack();"/>
-	<broadcaster id="canGoForward"    disabled="true" buttonaction="BrowserForward();"/>
-	<broadcaster id="Browser:Back"    value="&goBackCmd.label;"    oncommand="BrowserBack();" />
-	<broadcaster id="Browser:Forward" value="&goForwardCmd.label;" oncommand="BrowserForward();" />
-	<broadcaster id="Browser:Home"    value="&goHomeCmd.label;"    oncommand="BrowserHome();" />
+	<broadcaster id="canGoBack"       disabled="true"/>
+	<broadcaster id="canGoForward"    disabled="true"/>
+	<broadcaster id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
+	<broadcaster id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
+	<broadcaster id="Browser:Home"    oncommand="BrowserHome();"/>
 
 	<!-- Bookmarks Menu -->
 	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window._content.location.href,window._content.document.title);"/>
@@ -291,9 +291,9 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
   
   <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
 	  <menupopup oncreate="updateGoMenu(event);">
-		  <menuitem id="menuitem-back" value="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;"  key="goBackKb" observes="canGoBack"/>
-		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;"  key="goForwardKb" observes="canGoForward" />
-		  <menuitem id="menuitem-home" observes="Browser:Home"/>
+		  <menuitem id="menuitem-back"    value="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    observes="Browser:Back"    key="goBackKb"/>
+		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" observes="Browser:Forward" key="goForwardKb"/>
+		  <menuitem id="menuitem-home"    value="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    observes="Browser:Home"/>
 		  <menuseparator />
 	  </menupopup>
   </menu>       
