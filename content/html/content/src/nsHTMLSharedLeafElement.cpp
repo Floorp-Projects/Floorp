@@ -267,7 +267,8 @@ nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return nsGenericHTMLLeafElement::StringToAttribute(aAttribute, aValue,
+                                                     aResult);
 }
 
 NS_IMETHODIMP
@@ -405,7 +406,8 @@ nsHTMLSharedLeafElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
     }
   }
 
-  return NS_OK;
+  return nsGenericHTMLLeafElement::GetMappedAttributeImpact(aAttribute,
+                                                            aModType, aHint);
 }
 
 NS_IMETHODIMP
