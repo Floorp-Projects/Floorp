@@ -77,8 +77,6 @@ function initializeDialog(filter)
     var filterName = document.getElementById("filterName");
     filterName.value = filter.filterName;
 
-    setScope(getScope(filter));
-
     // now test by initializing the psuedo <searchterm>
     var searchTerm = document.getElementById("searchTerm");
     
@@ -88,11 +86,9 @@ function initializeDialog(filter)
       var filterRow = createFilterRow(filter, i);
       filterRowContainer.appendChild(filterRow);
 
-      setScope(getScope(filter))
       // now that it's been added to the document, we can initialize it.
       initializeFilterRow(filter, i);
     }
-
 }
 
 function createFilterRow(filter, index)
@@ -177,5 +173,5 @@ function initializeFilterRow(filter, index)
 {
     var filterTermObject = document.getElementById("searchTerm" + index);
 
-    filterTermObject.initialize(filter, index);
+    filterTermObject.initialize(filter, index, getScope(filter));
 }
