@@ -20,7 +20,6 @@
  *   Seth Spitzer <sspitzer@netscape.com>
  */
 
-const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
 const kLabelOffset = 1;  // 1=2-1, from msgViewPickerOveraly.xul, <menuitem value="2" id="labelMenuItem1"/>
 const kLastDefaultViewIndex = 8;  // 8, because 7 + 1, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
 const kCustomItemValue = "7"; // from msgViewPickerOveraly.xul, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
