@@ -95,7 +95,9 @@ public:
 
   NS_IMETHOD    SelectAll()=0;
 
-  NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown)=0;
+  NS_IMETHOD    Find()=0;
+
+  NS_IMETHOD    FindNext()=0;
 
   NS_IMETHOD    BeginBatchChanges()=0;
 
@@ -150,6 +152,8 @@ public:
   NS_IMETHOD    GetPersonalDictionaryWord(nsString& aReturn)=0;
 
   NS_IMETHOD    CloseSpellChecking()=0;
+
+  NS_IMETHOD    RunUnitTests()=0;
 };
 
 
@@ -183,7 +187,8 @@ public:
   NS_IMETHOD    Copy();  \
   NS_IMETHOD    Paste();  \
   NS_IMETHOD    SelectAll();  \
-  NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown);  \
+  NS_IMETHOD    Find();  \
+  NS_IMETHOD    FindNext();  \
   NS_IMETHOD    BeginBatchChanges();  \
   NS_IMETHOD    EndBatchChanges();  \
   NS_IMETHOD    InsertText(const nsString& aTextToInsert);  \
@@ -211,6 +216,7 @@ public:
   NS_IMETHOD    RemoveWordFromDictionary(const nsString& aWord);  \
   NS_IMETHOD    GetPersonalDictionaryWord(nsString& aReturn);  \
   NS_IMETHOD    CloseSpellChecking();  \
+  NS_IMETHOD    RunUnitTests();  \
 
 
 
@@ -244,7 +250,8 @@ public:
   NS_IMETHOD    Copy() { return _to Copy(); }  \
   NS_IMETHOD    Paste() { return _to Paste(); }  \
   NS_IMETHOD    SelectAll() { return _to SelectAll(); }  \
-  NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown) { return _to Find(aSearchTerm, aMatchCase, aSearchDown); }  \
+  NS_IMETHOD    Find() { return _to Find(); }  \
+  NS_IMETHOD    FindNext() { return _to FindNext(); }  \
   NS_IMETHOD    BeginBatchChanges() { return _to BeginBatchChanges(); }  \
   NS_IMETHOD    EndBatchChanges() { return _to EndBatchChanges(); }  \
   NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to InsertText(aTextToInsert); }  \
@@ -272,6 +279,7 @@ public:
   NS_IMETHOD    RemoveWordFromDictionary(const nsString& aWord) { return _to RemoveWordFromDictionary(aWord); }  \
   NS_IMETHOD    GetPersonalDictionaryWord(nsString& aReturn) { return _to GetPersonalDictionaryWord(aReturn); }  \
   NS_IMETHOD    CloseSpellChecking() { return _to CloseSpellChecking(); }  \
+  NS_IMETHOD    RunUnitTests() { return _to RunUnitTests(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitEditorAppCoreClass(nsIScriptContext *aContext, void **aPrototype);

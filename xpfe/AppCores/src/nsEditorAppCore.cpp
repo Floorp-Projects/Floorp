@@ -59,6 +59,7 @@
 
 #include "nsIFileWidget.h"
 #include "nsIDOMToolkitCore.h"
+#include "nsIFindComponent.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -649,39 +650,19 @@ nsEditorAppCore::SetEnableCallback(const nsString& aScript)
 NS_IMETHODIMP    
 nsEditorAppCore::LoadUrl(const nsString& aUrl)
 {
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
-  if (globalObj)
-  {
-    nsCOMPtr<nsIWebShell> webShell;
-    globalObj->GetWebShell(getter_AddRefs(webShell));
-    if (webShell)
-      webShell->LoadURL(aUrl.GetUnicode());
-  }
-  
-  return NS_OK;
+  if (!mContentAreaWebShell)
+    return NS_ERROR_NOT_INITIALIZED;
+      
+  return mContentAreaWebShell->LoadURL(aUrl.GetUnicode());
 }
 
 NS_IMETHODIMP    
 nsEditorAppCore::PrepareDocumentForEditing()
 {
-  nsresult  rv = NS_OK;
-  
-  NS_PRECONDITION(mContentWindow, "Content window not set yet");
-  if (!mContentWindow)
+  if (!mContentAreaWebShell)
     return NS_ERROR_NOT_INITIALIZED;
-    
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
-  if (!globalObj) {
-    return NS_ERROR_FAILURE;
-  }
 
-  nsCOMPtr<nsIWebShell> webShell;
-  globalObj->GetWebShell(getter_AddRefs(webShell));
-  if (webShell) {
-    DoEditorMode(webShell);
-  }
-  
-  return rv;
+  return DoEditorMode(mContentAreaWebShell);
 }
 
 NS_IMETHODIMP    
@@ -706,22 +687,20 @@ nsEditorAppCore::SetContentWindow(nsIDOMWindow* aWin)
       return NS_ERROR_NULL_POINTER;
 
   mContentWindow = aWin;
-  //NS_ADDREF(aWin);
-  
-  mContentScriptContext = GetScriptContext(aWin);
+  mContentScriptContext = GetScriptContext(mContentWindow);		// XXX does this AddRef?
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
-  if (!globalObj)
+  nsresult  rv;
+  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow, &rv);
+  if (NS_FAILED(rv) || !globalObj)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIWebShell> webShell;
   globalObj->GetWebShell(getter_AddRefs(webShell));
-  if (webShell)
-  {
-    webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
-  }
-
-  return NS_OK;
+  if (!webShell)
+    return NS_ERROR_FAILURE;
+    
+  mContentAreaWebShell = webShell;			// dont AddRef
+  return mContentAreaWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
 }
 
 
@@ -1200,11 +1179,43 @@ nsEditorAppCore::InsertText(const nsString& textToInsert)
   return err;
 }
 
+// Both Find and FindNext call through here.
+NS_IMETHODIMP
+nsEditorAppCore::DoFind(PRBool aFindNext)
+{
+  if (!mContentAreaWebShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // Get find component.
+  nsIFindComponent *finder;
+  nsresult rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
+                                     nsIFindComponent::GetIID(),
+                                     (nsISupports**)&finder );
+  if ( NS_SUCCEEDED(rv) && finder )
+  {
+    rv = (aFindNext) ? finder->FindNext(mContentAreaWebShell) : finder->Find(mContentAreaWebShell);
+
+    // Release the service.
+    nsServiceManager::ReleaseService( NS_IFINDCOMPONENT_PROGID, finder );
+  }
+  else
+  {
+    NS_ASSERTION(0, "GetService failed for find component.");
+  }
+
+  return rv;
+}
 
 NS_IMETHODIMP
-nsEditorAppCore::Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown)
+nsEditorAppCore::Find()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return DoFind(PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::FindNext()
+{
+  return DoFind(PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -1879,6 +1890,10 @@ nsEditorAppCore::DeleteSuggestedWordList()
   return NS_OK;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 NS_IMETHODIMP
 nsEditorAppCore::BeginBatchChanges()
 {
@@ -1967,6 +1982,24 @@ nsEditorAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScr
 
     aContext->EvaluateString(aScript, url, 0, rVal, &isUndefined);
   } 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::RunUnitTests()
+{
+  PRInt32  numTests = 0;
+  PRInt32  numTestsFailed = 0;
+  
+  nsresult err = NS_OK;
+  nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
+  if (editor)
+    err = editor->DebugUnitTests(&numTests, &numTestsFailed);
+
+#ifdef APP_DEBUG
+  printf("\nRan %ld tests, of which %ld failed\n", numTests, numTestsFailed);
+#endif
+
   return NS_OK;
 }
 

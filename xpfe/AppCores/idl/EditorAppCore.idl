@@ -45,7 +45,8 @@ interface EditorAppCore : BaseAppCore
   
   void selectAll();
   
-  void find(in DOMString searchTerm, in boolean matchCase, in boolean searchDown);
+  void find();
+  void findNext();
   
   void beginBatchChanges();
   void endBatchChanges();
@@ -79,4 +80,6 @@ interface EditorAppCore : BaseAppCore
   void removeWordFromDictionary(in DOMString word);
   DOMString getPersonalDictionaryWord();
   void closeSpellChecking();
+  
+  void runUnitTests();
 };

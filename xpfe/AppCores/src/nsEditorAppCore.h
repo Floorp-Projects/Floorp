@@ -132,7 +132,8 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    SelectAll();
 
     NS_IMETHOD		InsertText(const nsString& textToInsert);
-		NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown);
+		NS_IMETHOD    Find();
+		NS_IMETHOD    FindNext();
 
     // These next two will be replaced with the SetElementProperties
     NS_IMETHOD		InsertLink();
@@ -154,6 +155,8 @@ class nsEditorAppCore : public nsBaseAppCore,
 
 	  NS_IMETHOD    BeginBatchChanges();
 	  NS_IMETHOD    EndBatchChanges();
+
+    NS_IMETHOD    RunUnitTests();
 
     // nsIDocumentLoaderObserver
     NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand);
@@ -187,6 +190,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
 		NS_IMETHOD			CreateWindowWithURL(const char* urlStr);
 		NS_IMETHOD  	  PrepareDocumentForEditing();
+		NS_IMETHOD      DoFind(PRBool aFindNext);
 		
     nsString            mEnableScript;     
     nsString            mDisableScript;     
@@ -194,11 +198,12 @@ class nsEditorAppCore : public nsBaseAppCore,
     nsIScriptContext   *mToolbarScriptContext;
     nsIScriptContext   *mContentScriptContext;
 
-    nsIDOMWindow       *mToolbarWindow;			// weak reference
-    nsIDOMWindow       *mContentWindow;			// weak reference
+    nsIDOMWindow       *mToolbarWindow;				// weak reference
+    nsIDOMWindow       *mContentWindow;				// weak reference
 
-    nsIWebShellWindow  *mWebShellWin;				// weak reference
-    nsIWebShell        *mWebShell;					// weak reference
+    nsIWebShellWindow  *mWebShellWin;					// weak reference
+    nsIWebShell        *mWebShell;						// weak reference
+    nsIWebShell        *mContentAreaWebShell;	// weak reference
 
 		EEditorType					mEditorType;
 		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)

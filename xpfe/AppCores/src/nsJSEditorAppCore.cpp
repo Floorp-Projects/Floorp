@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -79,9 +80,20 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case EDITORAPPCORE_CONTENTSASTEXT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.contentsastext", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetContentsAsText(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -93,6 +105,11 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case EDITORAPPCORE_CONTENTSASHTML:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.contentsashtml", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetContentsAsHTML(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -104,6 +121,11 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case EDITORAPPCORE_EDITORDOCUMENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.editordocument", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMDocument* prop;
         if (NS_OK == a->GetEditorDocument(&prop)) {
           // get the js object
@@ -116,6 +138,11 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case EDITORAPPCORE_EDITORSELECTION:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.editorselection", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMSelection* prop;
         if (NS_OK == a->GetEditorSelection(&prop)) {
           // get the js object
@@ -128,6 +155,11 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case EDITORAPPCORE_PARAGRAPHFORMAT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.paragraphformat", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetParagraphFormat(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -139,6 +171,11 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case EDITORAPPCORE_WRAPCOLUMN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.wrapcolumn", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetWrapColumn(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -151,6 +188,7 @@ GetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -174,9 +212,20 @@ SetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case EDITORAPPCORE_WRAPCOLUMN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.wrapcolumn", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -194,6 +243,7 @@ SetEditorAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -245,6 +295,21 @@ EditorAppCoreSetEditorType(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.seteditortype", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -282,6 +347,21 @@ EditorAppCoreSetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsAutoString b2;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.settextproperty", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -323,6 +403,21 @@ EditorAppCoreRemoveTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval 
   nsAutoString b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.removetextproperty", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -366,6 +461,21 @@ EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsAutoString b5;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.gettextproperty", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -414,6 +524,21 @@ EditorAppCoreSetBodyAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.setbodyattribute", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -452,6 +577,21 @@ EditorAppCoreSetBackgroundColor(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.setbackgroundcolor", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -489,6 +629,21 @@ EditorAppCoreGetLocalFileURL(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsAutoString b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.getlocalfileurl", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -534,6 +689,21 @@ EditorAppCoreSetParagraphFormat(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.setparagraphformat", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -570,6 +740,21 @@ EditorAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.loadurl", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -605,6 +790,21 @@ EditorAppCoreNewWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.newwindow", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -637,6 +837,21 @@ EditorAppCoreOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.open", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -671,6 +886,21 @@ EditorAppCoreSave(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.save", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -703,6 +933,21 @@ EditorAppCoreSaveAs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.saveas", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -737,6 +982,21 @@ EditorAppCoreCloseWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.closewindow", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -769,6 +1029,21 @@ EditorAppCorePrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.print", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -803,6 +1078,21 @@ EditorAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.exit", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -835,6 +1125,21 @@ EditorAppCoreUndo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.undo", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -869,6 +1174,21 @@ EditorAppCoreRedo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.redo", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -901,6 +1221,21 @@ EditorAppCoreCut(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.cut", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -935,6 +1270,21 @@ EditorAppCoreCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.copy", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -967,6 +1317,21 @@ EditorAppCorePaste(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.paste", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1001,6 +1366,21 @@ EditorAppCoreSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.selectall", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1031,37 +1411,87 @@ EditorAppCoreFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 {
   nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsAutoString b0;
-  PRBool b1;
-  PRBool b2;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.find", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  if (argc >= 0) {
 
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    if (!nsJSUtils::nsConvertJSValToBool(&b1, cx, argv[1])) {
-      return JS_FALSE;
-    }
-
-    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->Find(b0, b1, b2)) {
+    if (NS_OK != nativeThis->Find()) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function find requires 3 parameters");
+    JS_ReportError(cx, "Function find requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method FindNext
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreFindNext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.findnext", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->FindNext()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function findNext requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -1079,6 +1509,21 @@ EditorAppCoreBeginBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.beginbatchchanges", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1113,6 +1558,21 @@ EditorAppCoreEndBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.endbatchchanges", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1146,6 +1606,21 @@ EditorAppCoreInsertText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.inserttext", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1182,6 +1657,21 @@ EditorAppCoreInsertLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.insertlink", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1214,6 +1704,21 @@ EditorAppCoreInsertImage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.insertimage", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1248,6 +1753,21 @@ EditorAppCoreInsertList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.insertlist", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1285,6 +1805,21 @@ EditorAppCoreIndent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.indent", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1320,6 +1855,21 @@ EditorAppCoreAlign(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.align", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1358,6 +1908,21 @@ EditorAppCoreGetSelectedElement(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.getselectedelement", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1394,6 +1959,21 @@ EditorAppCoreCreateElementWithDefaults(JSContext *cx, JSObject *obj, uintN argc,
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.createelementwithdefaults", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1432,6 +2012,21 @@ EditorAppCoreInsertElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   PRBool b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.insertelement", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1479,6 +2074,21 @@ EditorAppCoreInsertLinkAroundSelection(JSContext *cx, JSObject *obj, uintN argc,
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.insertlinkaroundselection", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1520,6 +2130,21 @@ EditorAppCoreSelectElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.selectelement", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1563,6 +2188,21 @@ EditorAppCoreSetCaretAfterElement(JSContext *cx, JSObject *obj, uintN argc, jsva
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.setcaretafterelement", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1604,6 +2244,21 @@ EditorAppCoreSetToolbarWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.settoolbarwindow", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1647,6 +2302,21 @@ EditorAppCoreSetContentWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.setcontentwindow", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1688,6 +2358,21 @@ EditorAppCoreSetWebShellWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.setwebshellwindow", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1731,6 +2416,21 @@ EditorAppCoreStartSpellChecking(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.startspellchecking", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1764,6 +2464,21 @@ EditorAppCoreGetNextMisspelledWord(JSContext *cx, JSObject *obj, uintN argc, jsv
   nsAutoString nativeRet;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.getnextmisspelledword", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1799,6 +2514,21 @@ EditorAppCoreGetSuggestedWord(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.getsuggestedword", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1833,6 +2563,21 @@ EditorAppCoreCheckCurrentWord(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.checkcurrentword", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1871,6 +2616,21 @@ EditorAppCoreReplaceWord(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   PRBool b2;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.replaceword", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1914,6 +2674,21 @@ EditorAppCoreIgnoreWordAllOccurrences(JSContext *cx, JSObject *obj, uintN argc, 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.ignorewordalloccurrences", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1949,6 +2724,21 @@ EditorAppCoreAddWordToDictionary(JSContext *cx, JSObject *obj, uintN argc, jsval
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.addwordtodictionary", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1986,6 +2776,21 @@ EditorAppCoreRemoveWordFromDictionary(JSContext *cx, JSObject *obj, uintN argc, 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.removewordfromdictionary", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -2022,6 +2827,21 @@ EditorAppCoreGetPersonalDictionaryWord(JSContext *cx, JSObject *obj, uintN argc,
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.getpersonaldictionaryword", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -2055,6 +2875,21 @@ EditorAppCoreCloseSpellChecking(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.closespellchecking", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -2077,13 +2912,61 @@ EditorAppCoreCloseSpellChecking(JSContext *cx, JSObject *obj, uintN argc, jsval 
 }
 
 
+//
+// Native method RunUnitTests
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreRunUnitTests(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "editorappcore.rununittests", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->RunUnitTests()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function runUnitTests requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for EditorAppCore
 //
 JSClass EditorAppCoreClass = {
   "EditorAppCore", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetEditorAppCoreProperty,
@@ -2137,7 +3020,8 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"copy",          EditorAppCoreCopy,     0},
   {"paste",          EditorAppCorePaste,     0},
   {"selectAll",          EditorAppCoreSelectAll,     0},
-  {"find",          EditorAppCoreFind,     3},
+  {"find",          EditorAppCoreFind,     0},
+  {"findNext",          EditorAppCoreFindNext,     0},
   {"beginBatchChanges",          EditorAppCoreBeginBatchChanges,     0},
   {"endBatchChanges",          EditorAppCoreEndBatchChanges,     0},
   {"insertText",          EditorAppCoreInsertText,     1},
@@ -2165,6 +3049,7 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"removeWordFromDictionary",          EditorAppCoreRemoveWordFromDictionary,     1},
   {"getPersonalDictionaryWord",          EditorAppCoreGetPersonalDictionaryWord,     0},
   {"closeSpellChecking",          EditorAppCoreCloseSpellChecking,     0},
+  {"runUnitTests",          EditorAppCoreRunUnitTests,     0},
   {0}
 };
 
