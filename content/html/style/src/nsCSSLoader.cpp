@@ -1699,8 +1699,6 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
   RecycleParser(parser);
 
-  NS_ASSERTION(aLoadData->mPendingChildren >= 0,
-               "Negatively many kids?");
   NS_ASSERTION(aLoadData->mPendingChildren == 0 || !aLoadData->mSyncLoad,
                "Sync load has leftover pending children!");
   
@@ -1787,6 +1785,10 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
       }
       data->mParserToUnblock = nsnull; // drop the ref, just in case
     }
+
+    NS_ASSERTION(!data->mParentData ||
+                 data->mParentData->mPendingChildren != 0,
+                 "Broken pending child count on our parent");
 
     if (data->mParentData &&
         --(data->mParentData->mPendingChildren) == 0 &&
