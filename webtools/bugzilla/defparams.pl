@@ -21,6 +21,8 @@
 #                 Dawn Endico <endico@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
+#                 Jake <jake@acutex.net>
+#
 
 # This file defines all the parameters that we have a GUI to edit within
 # Bugzilla.
@@ -390,13 +392,20 @@ Subject: [Bug %bugid%] %neworchanged% - %summary%
 %diffs%");
 
 DefParam("newemailtech",
-q{There is now experimental code in Bugzilla to do the email diffs in a 
-new and exciting way.  But this stuff is not very cooked yet.  So, right
-now, to use it, the maintainer has to turn on this checkbox, and each user
-has to then turn on the "New email tech" preference.},
+q{The way that email diffs are constructed by Bugzilla.  You can revert to
+the old technology by turning this off, but this is not advised, as the old 
+email tech will probably disappear in the next version of Bugzilla.  Some
+features (watches, server side mail filtering) depend on newemailtech being
+set to on.},
     "b",
-    0);
+    1);
 
+DefParam("newemailtechdefault",
+q{Make "newemailtech" the default for all new accounts created.  This will
+not change any existing accounts nor will it remove a users ability to go
+back to the oldmail system (requires "newemailtech" to be on as well).},
+    "b",
+    1);
 
 DefParam("newchangedmail",
 q{The same as 'changedmail', but used for the newemailtech stuff.},

@@ -19,6 +19,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
+#                 Jake <jake@acutex.net>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -582,6 +583,8 @@ sub InsertNewUser {
     for (my $i=0 ; $i<8 ; $i++) {
         $password .= substr("abcdefghijklmnopqrstuvwxyz", int(rand(26)), 1);
     }
+    my $usenewemailtech = Param('newemailtech') & Param('newemailtechdefault');
+
     SendSQL("select bit, userregexp from groups where userregexp != ''");
     my $groupset = "0";
     while (MoreSQLData()) {
@@ -599,7 +602,7 @@ sub InsertNewUser {
             
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
-    SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset) values ($username, $realname, '$password', encrypt('$password'), $groupset)");
+    SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset, newemailtech) values ($username, $realname, '$password', encrypt('$password'), $groupset, $usenewemailtech)");
     return $password;
 }
 

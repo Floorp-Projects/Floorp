@@ -127,15 +127,15 @@ On which of these bugs would you like email notification of changes?
         my $checkedpart = $newemailtech ? "CHECKED" : "";
         print qq{
 <TR><TD COLSPAN="2"><HR></TD></TR>
-<TR><TD COLSPAN="2"><FONT COLOR="red">New!</FONT>
-Bugzilla has a new email 
-notification scheme.  It is <b>experimental and bleeding edge</b> and will 
-hopefully evolve into a brave new happy world where all the spam and ugliness
-of the old notifications will go away.  If you wish to sign up for this (and 
-risk any bugs), check here.
+<TR><TD COLSPAN="2"><FONT COLOR="red">Updated!</FONT>
+Bugzilla's new standard email notification scheme allows for the use of 
+features such as watching other users and selecting which bug changes you get 
+mail about.  You can revert to the old notification scheme by unchecking this
+box, but this isn't recommended, because the old scheme is no longer
+supported and will be going away in an upcoming version of Bugzilla.
 </TD></TR>
 };
-        EmitEntry("Check here to sign up (and risk any bugs)",
+        EmitEntry("Uncheck here to revert",
                   qq{<INPUT TYPE="checkbox" NAME="newemailtech" $checkedpart>New email tech});
     }
 
