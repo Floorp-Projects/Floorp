@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.h,v 1.6 2002/02/27 21:49:41 bishakhabanerjee%netscape.com Exp $
+ * $Id: sslmutex.h,v 1.7 2002/05/16 13:36:02 wtc%netscape.com Exp $
  */
 #ifndef __SSLMUTEX_H_
 #define __SSLMUTEX_H_ 1
@@ -77,7 +77,7 @@ typedef struct
 
 typedef int    sslPID;
 
-#elif defined(LINUX) || defined(AIX) || defined(VMS) || defined(BEOS) || defined(BSDI)
+#elif defined(LINUX) || defined(AIX) || defined(VMS) || defined(BEOS) || defined(BSDI) || defined(NETBSD)
 
 #include <sys/types.h>
 #include "prtypes.h"
