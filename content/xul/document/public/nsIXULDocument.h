@@ -33,9 +33,8 @@
 #ifndef nsIXULDocument_h___
 #define nsIXULDocument_h___
 
-class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class...
-
 #include "nsIXMLDocument.h"
+#include "nsString.h"
 
 class nsForwardReference;
 class nsIAtom;
@@ -47,6 +46,7 @@ class nsIRDFResource;
 class nsISupportsArray;
 class nsIXULPrototypeDocument;
 class nsIURI;
+class nsIContent;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IRDFDOCUMENT_IID \

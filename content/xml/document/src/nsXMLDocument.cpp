@@ -46,7 +46,7 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-
+#include "nsIBaseWindow.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMDocumentType.h"
@@ -1037,6 +1037,29 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
   }
 
   return result;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::SetTitle(const PRUnichar *aTitle)
+{
+  // Pass on to any interested containers
+  PRInt32 i, n = mPresShells.Count();
+  for (i = 0; i < n; i++) {
+    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(i);
+    nsCOMPtr<nsIPresContext> cx;
+    shell->GetPresContext(getter_AddRefs(cx));
+    nsCOMPtr<nsISupports> container;
+    if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
+      if (container) {
+        nsCOMPtr<nsIBaseWindow> docShell(do_QueryInterface(container));
+        if(docShell) {
+          docShell->SetTitle(aTitle);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
