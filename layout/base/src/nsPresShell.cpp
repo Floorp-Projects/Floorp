@@ -1021,11 +1021,6 @@ PresShell::VerifyIncrementalReflow()
 
   // Setup hierarchical relationship in view manager
   vm->SetRootView(view);
-  nsIWidget* window = view->GetWidget();
-  if (window) {
-    vm->SetRootWindow(window);
-    NS_RELEASE(window);
-  }
 
   // Make the new presentation context the same size as our
   // presentation context.
