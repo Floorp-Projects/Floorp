@@ -57,7 +57,7 @@ ReleaseDestructorEventHandler(PLEvent *self)
 static void PR_CALLBACK 
 ReleaseDestructorDestroyHandler(PLEvent *self)
 {
-    PR_DELETE(self);
+    delete self;
 }
 
 static void
@@ -122,10 +122,10 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                  
                                                                                 \
     if (callDirectly)                                                           \
     {                                                                           \
-      NS_DELETEXPCOM(this);                                                     \
+      NS_RELEASE(this);                                                         \
       return 0;                                                                 \
     }                                                                           \
-    PLEvent *event = PR_NEW(PLEvent);                                           \
+    PLEvent *event = new PLEvent;                                               \
     if (event == nsnull)                                                        \
     {                                                                           \
       NS_ASSERTION(0, "Could not create a plevent. Deleting on wrong thread!"); \
