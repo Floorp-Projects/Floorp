@@ -71,7 +71,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN nsIFrameSelection interfaces*/
-  NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, nsIFrame *aFrame);
+  NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent);
   NS_IMETHOD TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection);
   NS_IMETHOD ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame);
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
@@ -534,49 +534,70 @@ void printRange(nsIDOMRange *aDomRange)
  *  focus  DomNode, it is invalid?  The answer now is yes.
  */
 NS_IMETHODIMP
-nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
+nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
 {
-  if (!aGuiEvent || !aFrame)
+  if (!aGuiEvent ||!aTracker)
     return NS_ERROR_NULL_POINTER;
+
+  nsIFrame *anchor;
+  nsIFrame *frame;
+  nsresult result = aTracker->GetFocus(&frame, &anchor);
+  if (NS_FAILED(result))
+    return result;
   if (NS_KEY_DOWN == aGuiEvent->message) {
-    nsCOMPtr<nsIContent> content;
-    if (NS_FAILED(aFrame->GetContent(getter_AddRefs(content))) || !content)
-      return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIDOMNode> domnode(do_QueryInterface(content));
-    if (!domnode)
-      return NS_ERROR_FAILURE;
 
     PRBool selected;
     PRInt32 beginoffset;
     PRInt32 endoffset;
     PRInt32 contentoffset;
     nsresult result = NS_OK;
-    result = aFrame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
-    if (NS_FAILED(result)){
-        return result;
-    }
 
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
     nsIFrame *resultFrame;
     PRInt32   frameOffset;
     PRInt32   contentOffset;
     PRInt32   offsetused = beginoffset;
+    nsIFrame *frameused;
+    result = frame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
+    if (NS_FAILED(result)){
+      return result;
+    }
     switch (keyEvent->keyCode){
       case nsIDOMEvent::VK_LEFT  : 
         //we need to look for the previous PAINTED location to move the cursor to.
         printf("debug vk left\n");
-        if (endoffset < beginoffset)
+        if (keyEvent->isShift || (endoffset < beginoffset)){ //f,a
           offsetused = endoffset;
-        if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+          frameused = frame;
+        }
+        else {
+          result = anchor->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
+          if (NS_FAILED(result)){
+            return result;
+          }
+          offsetused = beginoffset;
+          frameused = anchor;
+        }
+        if (NS_SUCCEEDED(frameused->PeekOffset(eSelectCharacter, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
           return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
         break;
       case nsIDOMEvent::VK_RIGHT : 
         //we need to look for the next PAINTED location to move the cursor to.
         printf("debug vk right\n");
-        if (endoffset > beginoffset)
+        if (!keyEvent->isShift && (endoffset < beginoffset)){ //f,a
+          result = anchor->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
+          if (NS_FAILED(result)){
+            return result;
+          }
+          offsetused = beginoffset;
+          frameused = anchor;
+        }
+        else {
           offsetused = endoffset;
-        if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+          frameused = frame;
+        }
+        if (NS_SUCCEEDED(frameused->PeekOffset(eSelectCharacter, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
           return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
       case nsIDOMEvent::VK_UP : 

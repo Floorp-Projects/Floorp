@@ -1801,7 +1801,7 @@ PresShell::HandleEvent(nsIView         *aView,
     if (mSelection && mFocusEventFrame && aEvent->eventStructType == NS_KEY_EVENT)
     {
       mSelection->EnableFrameNotification(PR_FALSE);
-      mSelection->HandleKeyEvent((nsIFocusTracker *)this, aEvent, mFocusEventFrame);
+      mSelection->HandleKeyEvent((nsIFocusTracker *)this, aEvent);
       mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
       //we are a listener now.
     }
