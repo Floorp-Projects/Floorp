@@ -401,6 +401,7 @@ HR {
   margin-top: 0;
   margin-bottom: 0;
   text-align: center;
+  border: 1px -moz-bg-inset;
 }
 BR {
   display: inline;
