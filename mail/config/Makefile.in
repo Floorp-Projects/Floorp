@@ -104,5 +104,4 @@ endif
 libs::
 	$(MAKE) mail_chrome
 	$(MAKE) mail_copy
-	touch $(DIST)/thunderbird/.autoreg
 
