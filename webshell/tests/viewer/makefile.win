@@ -93,6 +93,7 @@ LINCS=  \
 LLIBS=                         \
  $(DIST)\lib\gkgfxwin.lib   \
  $(DIST)\lib\timer_s.lib \
+ $(DIST)\lib\util.lib \
  $(DIST)\lib\raptornativewidgets_s.lib     \
  $(DIST)\lib\raptorbasewidget_s.lib     \
  $(DIST)\lib\raptorwidget_s.lib     \

@@ -41,7 +41,8 @@
 //***    nsWebBrowserChrome: Object Management
 //*****************************************************************************
 
-nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull)
+nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull), mTimerSet(PR_FALSE)
+
 {
 	NS_INIT_REFCNT();
 }
@@ -436,25 +437,54 @@ void nsWebBrowserChrome::OnLoadStart(nsIChannel* aChannel)
    if(mBrowserWindow->mThrobber)
       mBrowserWindow->mThrobber->Start();
 
-   nsCOMPtr<nsIURI> uri;
-   aChannel->GetURI(getter_AddRefs(uri));
-  
-   if(mBrowserWindow->mStatus)
-      {
-      nsXPIDLCString uriString;
+   if (aChannel) {
 
-      uri->GetSpec(getter_Copies(uriString));
-
-      nsAutoString url; url.AssignWithConversion(uriString);
-      url.AppendWithConversion(": start");
-      PRUint32 size;
-      mBrowserWindow->mStatus->SetText(url,size);
+     nsCOMPtr<nsIURI> uri;
+     aChannel->GetURI(getter_AddRefs(uri));
+     
+#ifdef MOZ_PERF_METRICS
+      if (PR_FALSE == mTimerSet) {
+        char* url;
+        nsresult rv = NS_OK;
+        rv = uri->GetSpec(&url);
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_TIMER_LOG(("*** Timing layout processes on url: '%s', WebBrowserChrome: %p\n", url, this));
+          delete [] url;
+        }
+        MOZ_TIMER_DEBUGLOG(("Reset and start: nsWebBrowserChrome::OnLoadStart(), this=%p\n", this));
+        MOZ_TIMER_RESET(mTotalTime);
+        MOZ_TIMER_START(mTotalTime);
+        mTimerSet = PR_TRUE;
       }
+#endif
+
+      if(mBrowserWindow->mStatus)
+        {
+        nsXPIDLCString uriString;
+
+        uri->GetSpec(getter_Copies(uriString));
+
+        nsAutoString url; url.AssignWithConversion(uriString);
+        url.AppendWithConversion(": start");
+        PRUint32 size;
+        mBrowserWindow->mStatus->SetText(url,size);
+        }
+   } // if (aChannel)
 }
 
 void nsWebBrowserChrome::OnLoadFinished(nsIChannel* aChannel, 
    PRInt32 aProgressStatusFlags)
 {
+#ifdef MOZ_PERF_METRICS
+  if ( (aProgressStatusFlags & nsIWebProgress::flag_win_stop) && mTimerSet ) {
+    MOZ_TIMER_DEBUGLOG(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
+    MOZ_TIMER_STOP(mTotalTime);
+    MOZ_TIMER_LOG(("Total (Layout + Page Load) Time (webBrowserChrome=%p): ", this));
+    MOZ_TIMER_PRINT(mTotalTime);
+    mTimerSet = PR_FALSE;
+  }
+#endif
+
    nsXPIDLCString uriString;
    if(aChannel)
       {
