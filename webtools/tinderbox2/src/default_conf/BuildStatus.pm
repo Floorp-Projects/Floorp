@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.15 $ 
-# $Date: 2002/04/26 22:57:22 $ 
+# $Revision: 1.16 $ 
+# $Date: 2002/05/02 01:50:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -119,6 +119,10 @@ package BuildStatus;
                         'html_color' => 'red',
                         'html_color' => '#ee0000',
                         'hdml_char'=> '!',
+                        # People are really attached to the flame gif
+                        # for the header of broken builds
+                        'header_background'=> 'file:/opt/apache/htdocs/tinderbox2/gif/1afi003r.gif',  
+                        'header_background'=> 'file:/home/kestes/mozilla/webtools/tinderbox2/src/gif/1afi003r.gif',  
                         'handler' => \&main::null,
                         'description' => 'Build failed',
                         'order' => 2
@@ -147,12 +151,47 @@ package BuildStatus;
                         },
           );
 
-sub get_status_handler {
-    my $buildstatus = @_;
 
-    my $handler = $BuildStatus::STATUS{$buildstatus}{'handler'};
+# This is probably very mozilla specific, but you may wish to use the
+# tinderboxprint command in your build logs to print other test
+# results data.
 
-    return $handler;
+
+%TinderboxPrint = (
+
+                        'A'  => {
+                                 'description'=> '(Nuber of Allocs)',
+                                 },
+                         'Bl' => {
+                                  'description'=> '(bytes allocated, bloat)',
+                                 },
+                        'Lk' => {
+                                 'description'=> '(bytes leaked)',
+                                },
+                        'MH' => {
+                                  'description'=> '(bytes allocated, Max Heap)',
+                                },
+                        'Tp' => {
+                                 'description'=> '(PageLoadTime in milliseconds)',
+                                },
+                        'Ts' => {
+                                 'description'=> '(StartTime in milliseconds)',
+                                },
+                        );
+
+
+sub TinderboxPrintLegend {
+    my $out;
+
+    my @keys = sort keys %TinderboxPrintLegand;
+    foreach $key (@keys) {
+        my $value = $TinderboxPrintLegand{$key}{'description'};
+        
+        $out .= "\t\t\t<tr><td align=center><TT>$key</TT></td>\n";
+        $out .= "\t\t\t\t<td>= $value</td></tr>\n";
+    }
+
+    return $out;
 }
 
 sub set_status_handler {
@@ -269,6 +308,32 @@ sub status2descriptions {
   for ($i=0; $i <= $#latest_status; $i++) {
     my ($status) = $latest_status[$i];
     my ($out) = $STATUS{$status}{'description'};
+    push @out, $out;
+  }
+
+  return @out;
+}
+
+sub status2handler {
+  my (@latest_status) = @_;
+  my (@out);
+
+  for ($i=0; $i <= $#latest_status; $i++) {
+    my ($status) = $latest_status[$i];
+    my ($out) = $STATUS{$status}{'handler'};
+    push @out, $out;
+  }
+
+    return @out;
+}
+
+sub status2header_background {
+  my (@latest_status) = @_;
+  my (@out);
+
+  for ($i=0; $i <= $#latest_status; $i++) {
+    my ($status) = $latest_status[$i];
+    my ($out) = $STATUS{$status}{'header_background'};
     push @out, $out;
   }
 
