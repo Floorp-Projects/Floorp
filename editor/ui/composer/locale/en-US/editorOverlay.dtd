@@ -110,115 +110,115 @@
 
 <!-- Charset menu items -->
 <!ENTITY dcharMenu.label "Character Set  ISO">
-<!ENTITY viewcharsetmenu.accesskey "s">
+<!ENTITY viewcharsetmenu.accesskey "">
 <!ENTITY dcharMenu1.label "Character Set  Multibyte">
-<!ENTITY viewcharsetmenu1.accesskey "xxx">
+<!ENTITY viewcharsetmenu1.accesskey "">
 <!ENTITY dcharMenu2.label "Character Set  Cyrillic">
-<!ENTITY viewcharsetmenu2.accesskey "xxx">
+<!ENTITY viewcharsetmenu2.accesskey "">
 <!ENTITY dcharMenu3.label "Character Set  SE Asian/Armenian/Semitic">
-<!ENTITY viewcharsetmenu3.accesskey "xxx">
+<!ENTITY viewcharsetmenu3.accesskey "">
 <!ENTITY dcharMenu4.label "Character Set  Macintosh">
-<!ENTITY viewcharsetmenu4.accesskey "xxx">
+<!ENTITY viewcharsetmenu4.accesskey "">
 <!ENTITY dcharMenu5.label "Character Set  Windows">
-<!ENTITY viewcharsetmenu5.accesskey "xxx">
+<!ENTITY viewcharsetmenu5.accesskey "">
 <!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
-<!ENTITY charsetLatin1.accesskey "l">
+<!ENTITY charsetLatin1.accesskey "">
 <!ENTITY dcharIso2Cmd.label "Central European (ISO-8859-2)">
-<!ENTITY charsetLatin2.accesskey "2">
+<!ENTITY charsetLatin2.accesskey "">
 <!ENTITY dcharIso3Cmd.label "South European (ISO-8859-3)">
-<!ENTITY charsetLatin3.accesskey "3">
+<!ENTITY charsetLatin3.accesskey "">
 <!ENTITY dcharIso4Cmd.label "Baltic (ISO-8859-4)">
-<!ENTITY charsetLatin4.accesskey "4">
+<!ENTITY charsetLatin4.accesskey "">
 <!ENTITY dcharIso9Cmd.label "Turkish (ISO-8859-9)">
-<!ENTITY charsetLatin5.accesskey "9">
+<!ENTITY charsetLatin5.accesskey "">
 <!ENTITY dcharIso10Cmd.label "Nordic (ISO-8859-10)">
-<!ENTITY charsetLatin6.accesskey "1">
+<!ENTITY charsetLatin6.accesskey "">
 <!ENTITY dcharIso13Cmd.label "Baltic (ISO-8859-13)">
-<!ENTITY charsetLatin7.accesskey "n">
+<!ENTITY charsetLatin7.accesskey "">
 <!ENTITY dcharIso14Cmd.label "Celtic (ISO-8859-14)">
-<!ENTITY charsetLatin8.accesskey "f">
+<!ENTITY charsetLatin8.accesskey "">
 <!ENTITY dcharIso15Cmd.label "Western (ISO-8859-15)">
-<!ENTITY charsetLatin9.accesskey "9">
+<!ENTITY charsetLatin9.accesskey "">
 <!ENTITY dcharWinLat2Cmd.label "Central European (Windows-1250)"> 
-<!ENTITY charsetWinLatin2.accesskey "0">
+<!ENTITY charsetWinLatin2.accesskey "">
 <!ENTITY dcharWinLat1Cmd.label "Western (Windows-1252)">
-<!ENTITY charsetWinLatin1.accesskey "d">
+<!ENTITY charsetWinLatin1.accesskey "">
 <!ENTITY dcharWinLat5Cmd.label "Turkish (Windows-1254)">
-<!ENTITY charsetWinLatin5.accesskey "o">
+<!ENTITY charsetWinLatin5.accesskey "">
 <!ENTITY dcharWinBalRimCmd.label "Baltic (Windows-1257)">
-<!ENTITY charsetWinBaltic.accesskey "b">
+<!ENTITY charsetWinBaltic.accesskey "">
 <!ENTITY dcharMacRomCmd.label "Western (MacRoman)">
-<!ENTITY charsetMacRoman.accesskey "m">
+<!ENTITY charsetMacRoman.accesskey "">
 <!ENTITY dcharMacCenEuroCmd.label "Central European (MacCE)">
-<!ENTITY charsetMacCentralEurope.accesskey "e">
+<!ENTITY charsetMacCentralEurope.accesskey "">
 <!ENTITY dcharMacTurCmd.label "Turkish (MacTurkish)">
-<!ENTITY charsetMacTurkish.accesskey "xxx">
+<!ENTITY charsetMacTurkish.accesskey "">
 <!ENTITY dcharMacCroaCmd.label "Croatian (MacCroatian)">
-<!ENTITY charsetMacCroatian.accesskey "c">
+<!ENTITY charsetMacCroatian.accesskey "">
 <!ENTITY dcharMacRomanianCmd.label "Romanian (MacRomanian)">
-<!ENTITY charsetMacRomanian.accesskey "xxx">
+<!ENTITY charsetMacRomanian.accesskey "">
 <!ENTITY dcharMacIceCmd.label "Icelandic (MacIcelandic)">
-<!ENTITY charsetMacIcelandic.accesskey "i">
+<!ENTITY charsetMacIcelandic.accesskey "">
 <!ENTITY dcharJapanCmd.label "Japanese (ISO-2022-JP)">
-<!ENTITY charsetJIS.accesskey "j">
+<!ENTITY charsetJIS.accesskey "">
 <!ENTITY dcharJapanShiftjsCmd.label "Japanese (Shift_JIS)">
-<!ENTITY charsetshiftJIS.accesskey "s">
+<!ENTITY charsetshiftJIS.accesskey "">
 <!ENTITY dcharJapanEucCmd.label "Japanese (EUC-JP)">
-<!ENTITY charsetJapaneseEUC.accesskey "p">
+<!ENTITY charsetJapaneseEUC.accesskey "">
 <!ENTITY dcharTradChiBigCmd.label "Chinese Traditional (Big5)">
-<!ENTITY charsetChineseBig5.accesskey "5">
+<!ENTITY charsetChineseBig5.accesskey "">
 <!ENTITY dcharTriChiEucCmd.label "Chinese Traditional (EUC-TW)">
-<!ENTITY charsetChineseEUC.accesskey "xxx">
+<!ENTITY charsetChineseEUC.accesskey "">
 <!ENTITY dcharSimpChiGbCmd.label "Chinese Simplified (GB2312)">
-<!ENTITY charsetChineseSimplified.accesskey "f">
+<!ENTITY charsetChineseSimplified.accesskey "">
 <!ENTITY dcharKoreanCmd.label "Korean (EUC-KR)">
-<!ENTITY charsetKorean.accesskey "k">
+<!ENTITY charsetKorean.accesskey "">
 <!ENTITY dcharUtf7Cmd.label "Unicode (UTF-7)">
-<!ENTITY charsetUTF7.accesskey "7">
+<!ENTITY charsetUTF7.accesskey "">
 <!ENTITY dcharUtf8Cmd.label "Unicode (UTF-8)">
-<!ENTITY charsetUTF8.accesskey "8">
+<!ENTITY charsetUTF8.accesskey "">
 <!ENTITY dcharIsoCyrCmd.label "Cyrillic (ISO-8859-5)">
-<!ENTITY charsetISOCyrillic.accesskey "y">
+<!ENTITY charsetISOCyrillic.accesskey "">
 <!ENTITY dcharEcmaCyrCmd.label "Cyrillic (ISO-IR-111)">
-<!ENTITY charsetECMACyrillic.accesskey "xxx">
+<!ENTITY charsetECMACyrillic.accesskey "">
 <!ENTITY dcharDosCyrCmd.label "Cyrillic (CP-866)">
-<!ENTITY charsetDOSCyrillic.accesskey "d">
+<!ENTITY charsetDOSCyrillic.accesskey "">
 <!ENTITY dcharWinCyrCmd.label "Cyrillic (Windows-1251)">
-<!ENTITY charsetWinCyrillic.accesskey "xxx">
+<!ENTITY charsetWinCyrillic.accesskey "">
 <!ENTITY dcharMacCyrCmd.label "Cyrillic (MacCyrillic)">
-<!ENTITY charsetMacCyrillic.accesskey "xxx">
+<!ENTITY charsetMacCyrillic.accesskey "">
 <!ENTITY dcharMacUkrCmd.label "Cyrillic/Ukrainian (MacUkrainian)">
-<!ENTITY charsetMacUkrainian.accesskey "xxx">
+<!ENTITY charsetMacUkrainian.accesskey "">
 <!ENTITY dcharRusCmd.label "Cyrillic (KOI8-R)">
-<!ENTITY charsetRussian.accesskey "r">
+<!ENTITY charsetRussian.accesskey "">
 <!ENTITY dcharUkrCmd.label "Cyrillic/Ukrainian (KOI8-U)">
-<!ENTITY charsetUkrainian.accesskey "u">
+<!ENTITY charsetUkrainian.accesskey "">
 <!ENTITY dcharIsoGreekCmd.label "Greek (ISO-8859-7)">
-<!ENTITY charsetGreek.accesskey "g">
+<!ENTITY charsetGreek.accesskey "">
 <!ENTITY dcharWinGreekCmd.label "Greek (Windows-1253)">
-<!ENTITY charsetWinGreek.accesskey "xxx">
+<!ENTITY charsetWinGreek.accesskey "">
 <!ENTITY dcharMacGreekCmd.label "Greek (MacGreek)">
-<!ENTITY charsetMacGreek.accesskey "xxx">
+<!ENTITY charsetMacGreek.accesskey "">
 <!ENTITY dcharWinVietCmd.label "Vietnamese (Windows-1258)">
-<!ENTITY charsetWinVietnamese.accesskey "v">
+<!ENTITY charsetWinVietnamese.accesskey "">
 <!ENTITY dcharVietTcnCmd.label "Vietnamese (TCVN5712)">
-<!ENTITY charsetVietnameseTCN.accesskey "xxx">
+<!ENTITY charsetVietnameseTCN.accesskey "">
 <!ENTITY dcharVietViCmd.label "Vietnamese (VISCII)">
-<!ENTITY charsetVietnameseVIS.accesskey "xxx">
+<!ENTITY charsetVietnameseVIS.accesskey "">
 <!ENTITY dcharVieVpCmd.label "Vietnamese (VPS)">
-<!ENTITY charsetVietnameseVPS.accesskey "xxx">
+<!ENTITY charsetVietnameseVPS.accesskey "">
 <!ENTITY dcharThaiCmd.label "Thai (TIS-620)">
-<!ENTITY charsetThai.accesskey "t">
+<!ENTITY charsetThai.accesskey "">
 <!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
-<!ENTITY charsetArmenian.accesskey "a">
+<!ENTITY charsetArmenian.accesskey "">
 <!ENTITY dcharIso6Cmd.label ".Arabic (ISO-8859-6)">
-<!ENTITY charsetArabic.accesskey "6">
+<!ENTITY charsetArabic.accesskey "">
 <!ENTITY dcharIso8Cmd.label ".Hebrew (ISO-8859-8)">
-<!ENTITY charsetHebrew.accesskey "h">
+<!ENTITY charsetHebrew.accesskey "">
 <!ENTITY dcharCp1255Cmd.label "Hebrew (Windows-1255)">
-<!ENTITY charsetWinHebrew.accesskey "w">
+<!ENTITY charsetWinHebrew.accesskey "">
 <!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
-<!ENTITY charsetWinArabic.accesskey "xxx">
+<!ENTITY charsetWinArabic.accesskey "">
 
 <!-- Insert menu items -->
 <!ENTITY insertMenu.label "Insert">
