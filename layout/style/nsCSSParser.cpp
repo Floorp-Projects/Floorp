@@ -35,8 +35,6 @@ static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 
-// XXX url's spec'd in a style sheet are relative to the style sheet
-// (this includes things like background-image!).
 // XXX cell-padding, spacing, etc.???
 
 struct Selector {
@@ -1358,7 +1356,18 @@ PRBool CSSParserImpl::ParseVariant(PRInt32* aErrorCode,
   }
   if (((aVariants & VARIANT_URL) != 0) &&
       (eCSSToken_URL == tk->mType)) {
-    aDeclaration->AddValue(aName, nsCSSValue(tk->mIdent));
+    // Translate url into an absolute url if the url is relative to
+    // the style sheet.
+    // XXX editors won't like this - too bad for now
+    nsAutoString absURL;
+    nsString baseURL;
+    nsresult rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
+    if (NS_OK == rv) {
+      aDeclaration->AddValue(aName, nsCSSValue(absURL));
+    }
+    else {
+      aDeclaration->AddValue(aName, nsCSSValue(tk->mIdent));
+    }
     return PR_TRUE;
   }
   if ((aVariants & VARIANT_COLOR) != 0) {
