@@ -85,8 +85,8 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
             NS_RELEASE(scrollView);
 
-            if ((width == NS_TO_INT_ROUND(sizex * t2p)) &&
-                (height == NS_TO_INT_ROUND(sizey * t2p)))
+            if ((width == NSTwipsToIntPixels(sizex, t2p)) &&
+                (height == NSTwipsToIntPixels(sizey, t2p)))
             {
               NS_IF_RELEASE(rootView);
               NS_RELEASE(presContext);
@@ -95,8 +95,8 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
             }
           }
 
-          vm->SetWindowDimensions(NS_TO_INT_ROUND(width * p2t),
-                                  NS_TO_INT_ROUND(height * p2t));
+          vm->SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
+                                  NSIntPixelsToTwips(height, p2t));
           result = nsEventStatus_eConsumeNoDefault;
         }
 
@@ -143,15 +143,15 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
         // pass on to view somewhere else to deal with
 
-        aEvent->point.x = NS_TO_INT_ROUND(aEvent->point.x * cx->GetPixelsToTwips());
-        aEvent->point.y = NS_TO_INT_ROUND(aEvent->point.y * cx->GetPixelsToTwips());
+        aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, cx->GetPixelsToTwips());
+        aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, cx->GetPixelsToTwips());
 
         result = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
                                            NS_VIEW_FLAG_CHECK_PARENT |
                                            NS_VIEW_FLAG_CHECK_SIBLINGS);
 
-        aEvent->point.x = NS_TO_INT_ROUND(aEvent->point.x * cx->GetTwipsToPixels());
-        aEvent->point.y = NS_TO_INT_ROUND(aEvent->point.y * cx->GetTwipsToPixels());
+        aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, cx->GetTwipsToPixels());
+        aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, cx->GetTwipsToPixels());
 
         NS_RELEASE(cx);
         NS_RELEASE(vm);
@@ -726,8 +726,8 @@ void nsView :: SetPosition(nscoord x, nscoord y)
     pwidget = GetOffsetFromWidget(&parx, &pary);
     NS_IF_RELEASE(pwidget);
     
-    mWindow->Move(NS_TO_INT_ROUND((x + parx + offx) * scale),
-                  NS_TO_INT_ROUND((y + pary + offy) * scale));
+    mWindow->Move(NSTwipsToIntPixels((x + parx + offx), scale),
+                  NSTwipsToIntPixels((y + pary + offy), scale));
 
     NS_RELEASE(px);
   }
@@ -770,7 +770,7 @@ void nsView :: SetDimensions(nscoord width, nscoord height)
     nsIPresContext  *px = mViewManager->GetPresContext();
     float           t2p = px->GetTwipsToPixels();
   
-    mWindow->Resize(NS_TO_INT_ROUND(t2p * width), NS_TO_INT_ROUND(t2p * height),
+    mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
                     PR_TRUE);
 
     NS_RELEASE(px);

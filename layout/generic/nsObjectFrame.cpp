@@ -163,7 +163,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
     else {
       float p2t = aPresContext->GetPixelsToTwips();
-      aMetrics.width = nscoord(p2t * EMBED_DEF_DIM);
+      aMetrics.width = NSIntPixelsToTwips(EMBED_DEF_DIM, p2t);
     }
   }
   if (!haveHeight) {
@@ -172,7 +172,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
     else {
       float p2t = aPresContext->GetPixelsToTwips();
-      aMetrics.height = nscoord(p2t * EMBED_DEF_DIM);
+      aMetrics.height = NSIntPixelsToTwips(EMBED_DEF_DIM, p2t);
     }
   }
   aMetrics.ascent = aMetrics.height;
@@ -293,7 +293,7 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
   aRenderingContext.SetColor(NS_RGB(0, 0, 0));
   aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   float p2t = aPresContext.GetPixelsToTwips();
-  nscoord px3 = nscoord(3 * p2t);
+  nscoord px3 = NSIntPixelsToTwips(3, p2t);
   nsAutoString tmp;
   nsIAtom* atom = mContent->GetTag();
   if (nsnull != atom) {

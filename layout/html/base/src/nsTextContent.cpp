@@ -514,7 +514,7 @@ NS_METHOD TextFrame::Paint(nsIPresContext& aPresContext,
 
 #if XXX
     if (font->mThreeD) {
-      nscoord onePixel = nscoord(1.0f * aPresContext.GetPixelsToTwips());
+      nscoord onePixel = NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips());
       aRenderingContext.SetColor(color->mBackgroundColor);
       PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, onePixel, onePixel);
     }

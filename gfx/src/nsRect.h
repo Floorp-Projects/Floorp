@@ -112,11 +112,14 @@ struct NS_GFX nsRect {
   nsRect& operator+=(const nsPoint& aPoint) {x += aPoint.x; y += aPoint.y; return *this;}
   nsRect& operator-=(const nsPoint& aPoint) {x -= aPoint.x; y -= aPoint.y; return *this;}
 
-  nsRect& operator*=(const float aScale) {x = NS_TO_INT_ROUND(x * aScale); 
-                                          y = NS_TO_INT_ROUND(y * aScale); 
-                                          width = NS_TO_INT_ROUND(width * aScale); 
-                                          height = NS_TO_INT_ROUND(height * aScale); 
+  nsRect& operator*=(const float aScale) {x = NSToCoordRound(x * aScale); 
+                                          y = NSToCoordRound(y * aScale); 
+                                          width = NSToCoordRound(width * aScale); 
+                                          height = NSToCoordRound(height * aScale); 
                                           return *this;}
+
+  nsRect& ScaleRoundOut(const float aScale);
+  nsRect& ScaleRoundIn(const float aScale);
 
   // Helper methods for computing the extents
   nscoord XMost() const {return x + width;}

@@ -1158,7 +1158,7 @@ HTMLContentSink::ScrollToRef()
 #if 0
 nsIPresContext* cx = shell->GetPresContext();
 float t2p = cx->GetTwipsToPixels();
-printf("x=%d y=%d\n", nscoord(x * t2p), nscoord(y * t2p));
+printf("x=%d y=%d\n", NSTwipsToIntPixels(x, t2p), NSTwipsToIntPixels(y, t2p));
 NS_RELEASE(cx);
 #endif
                 sview->SetScrollPreference(mOriginalScrollPreference);

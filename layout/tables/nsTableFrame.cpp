@@ -899,10 +899,10 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
         nsMargin margin;
         cellFrame->GetMargin(margin);
         fprintf(out,"Margin -- Top: %d Left: %d Bottom: %d Right: %d \n",  
-                NS_TWIPS_TO_POINTS_INT(margin.top),
-                NS_TWIPS_TO_POINTS_INT(margin.left),
-                NS_TWIPS_TO_POINTS_INT(margin.bottom),
-                NS_TWIPS_TO_POINTS_INT(margin.right));
+                NSTwipsToIntPoints(margin.top),
+                NSTwipsToIntPoints(margin.left),
+                NSTwipsToIntPoints(margin.bottom),
+                NSTwipsToIntPoints(margin.right));
       
         for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
 
@@ -914,10 +914,10 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
         right = (mBorderFrame[NS_SIDE_RIGHT] ? cellFrame->GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_RIGHT], NS_SIDE_RIGHT) : 0);
 
         fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  
-                    NS_TWIPS_TO_POINTS_INT(top),
-                    NS_TWIPS_TO_POINTS_INT(left),
-                    NS_TWIPS_TO_POINTS_INT(bottom),
-                    NS_TWIPS_TO_POINTS_INT(right));
+                    NSTwipsToIntPoints(top),
+                    NSTwipsToIntPoints(left),
+                    NSTwipsToIntPoints(bottom),
+                    NSTwipsToIntPoints(right));
     */
       }
     }
@@ -2906,7 +2906,7 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     PRInt32 intValue = 0;
 
     if (ConvertToPixelValue(border_value,1,intValue))
-      border = nscoord(p2t*(float)intValue); 
+      border = NSIntPixelsToTwips(intValue, p2t); 
   }
   MapHTMLBorderStyle(*spacingData,border);
 }

@@ -162,9 +162,9 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   float app2dev = aContext->GetAppUnitsToDevUnits();
   float app2twip = app2dev * aContext->GetDevUnitsToTwips();
 
-  float rounded = NS_POINTS_TO_TWIPS_FLOAT(NS_TWIPS_TO_POINTS_INT(mFont->size * app2twip)) / app2twip;
+  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
     // round font size off to floor point size to be windows compatible
-//  logFont.lfHeight = - NS_TO_INT_ROUND(rounded * app2dev);  // this is proper (windows) rounding
+//  logFont.lfHeight = - NSToIntRound(rounded * app2dev);  // this is proper (windows) rounding
   logFont.lfHeight = - LONG(rounded * app2dev);  // this floor rounding is to make ours compatible with Nav 4.0
   strncpy(logFont.lfFaceName,
           MapFamilyToFont(mFont->name),

@@ -30,7 +30,7 @@
 nsScrollbar::nsScrollbar(nsISupports *aOuter, PRBool aIsVertical) : nsWindow(aOuter)
 {
     mPositionFlag  = (aIsVertical) ? SBS_VERT : SBS_HORZ;
-    mScaleFactor   = 1.0;
+    mScaleFactor   = 1.0f;
     mLineIncrement = 0;
     mBackground    = ::GetSysColor(COLOR_SCROLLBAR);
     mBrush         = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
@@ -75,9 +75,9 @@ nsresult nsScrollbar::QueryObject(const nsIID& aIID, void** aInstancePtr)
 void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
     if (aEndRange > 32767)
-        mScaleFactor = aEndRange / 32767.0;
+        mScaleFactor = aEndRange / 32767.0f;
     if (mWnd) {
-        VERIFY(::SetScrollRange(mWnd, SB_CTL, 0, NS_TO_INT_ROUND(aEndRange / mScaleFactor), TRUE));
+        VERIFY(::SetScrollRange(mWnd, SB_CTL, 0, NSToIntRound(aEndRange / mScaleFactor), TRUE));
     }
 }
 
@@ -94,7 +94,7 @@ PRUint32 nsScrollbar::GetMaxRange()
         VERIFY(::GetScrollRange(mWnd, SB_CTL, &startRange, &endRange));
     }
 
-    return (PRUint32)NS_TO_INT_ROUND(endRange * mScaleFactor);
+    return (PRUint32)NSToIntRound(endRange * mScaleFactor);
 }
 
 
@@ -105,7 +105,7 @@ PRUint32 nsScrollbar::GetMaxRange()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    ::SetScrollPos(mWnd, SB_CTL, NS_TO_INT_ROUND(aPos / mScaleFactor), TRUE);
+    ::SetScrollPos(mWnd, SB_CTL, NSToIntRound(aPos / mScaleFactor), TRUE);
 }
 
 
@@ -116,7 +116,7 @@ void nsScrollbar::SetPosition(PRUint32 aPos)
 //-------------------------------------------------------------------------
 PRUint32 nsScrollbar::GetPosition()
 {
-    return (PRUint32)NS_TO_INT_ROUND(::GetScrollPos(mWnd, SB_CTL) * mScaleFactor);
+    return (PRUint32)NSToIntRound(::GetScrollPos(mWnd, SB_CTL) * mScaleFactor);
 }
 
 
@@ -131,7 +131,7 @@ void nsScrollbar::SetThumbSize(PRUint32 aSize)
         SCROLLINFO si;
         si.cbSize = sizeof(SCROLLINFO);
         si.fMask = SIF_PAGE;
-        si.nPage = NS_TO_INT_ROUND(aSize / mScaleFactor);
+        si.nPage = NSToIntRound(aSize / mScaleFactor);
         ::SetScrollInfo(mWnd, SB_CTL, &si, TRUE);
     }
 }
@@ -149,7 +149,7 @@ PRUint32 nsScrollbar::GetThumbSize()
         si.cbSize = sizeof(SCROLLINFO);
         si.fMask = SIF_PAGE;
         VERIFY(::GetScrollInfo(mWnd, SB_CTL, &si));
-        return (PRUint32)NS_TO_INT_ROUND(si.nPage * mScaleFactor);
+        return (PRUint32)NSToIntRound(si.nPage * mScaleFactor);
     }
 
     return 0;
@@ -163,7 +163,7 @@ PRUint32 nsScrollbar::GetThumbSize()
 //-------------------------------------------------------------------------
 void nsScrollbar::SetLineIncrement(PRUint32 aSize)
 {
-    mLineIncrement = NS_TO_INT_ROUND(aSize / mScaleFactor);
+    mLineIncrement = NSToIntRound(aSize / mScaleFactor);
 }
 
 
@@ -174,7 +174,7 @@ void nsScrollbar::SetLineIncrement(PRUint32 aSize)
 //-------------------------------------------------------------------------
 PRUint32 nsScrollbar::GetLineIncrement()
 {
-    return (PRUint32)NS_TO_INT_ROUND(mLineIncrement * mScaleFactor);
+    return (PRUint32)NSToIntRound(mLineIncrement * mScaleFactor);
 }
 
 
@@ -187,20 +187,20 @@ void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
     if (aMaxRange > 32767)
-        mScaleFactor = aMaxRange / 32767.0;
+        mScaleFactor = aMaxRange / 32767.0f;
 
     if (mWnd) {
         SCROLLINFO si;
         si.cbSize = sizeof(SCROLLINFO);
         si.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
-        si.nPage = NS_TO_INT_ROUND(aThumbSize / mScaleFactor);
-        si.nPos = NS_TO_INT_ROUND(aPosition / mScaleFactor);
+        si.nPage = NSToIntRound(aThumbSize / mScaleFactor);
+        si.nPos = NSToIntRound(aPosition / mScaleFactor);
         si.nMin = 0;
-        si.nMax = NS_TO_INT_ROUND(aMaxRange / mScaleFactor);
+        si.nMax = NSToIntRound(aMaxRange / mScaleFactor);
         ::SetScrollInfo(mWnd, SB_CTL, &si, TRUE);
     }
 
-    mLineIncrement = NS_TO_INT_ROUND(aLineIncrement / mScaleFactor);
+    mLineIncrement = NSToIntRound(aLineIncrement / mScaleFactor);
 }
 
 
@@ -257,10 +257,10 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
                 event.point.x = cpos.x;
                 event.point.y = cpos.y;
                 event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);
+                event.position = (PRUint32)NSToIntRound(newPosition * mScaleFactor);
 
                 result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position / mScaleFactor);
+                newPosition = NSToIntRound(event.position / mScaleFactor);
             }
 
             ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);
@@ -291,10 +291,10 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
                 event.point.x = cpos.x;
                 event.point.y = cpos.y;
                 event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);
+                event.position = (PRUint32)NSToIntRound(newPosition * mScaleFactor);
 
                 result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position / mScaleFactor);
+                newPosition = NSToIntRound(event.position / mScaleFactor);
             }
 
             ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);
@@ -330,11 +330,11 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
                 event.point.x = cpos.x;
                 event.point.y = cpos.y;
                 event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);;
+                event.position = (PRUint32)NSToIntRound(newPosition * mScaleFactor);;
 
 
                 result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position / mScaleFactor);
+                newPosition = NSToIntRound(event.position / mScaleFactor);
             }
 
             ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);
@@ -369,10 +369,10 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
                 event.point.x = cpos.x;
                 event.point.y = cpos.y;
                 event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);
+                event.position = (PRUint32)NSToIntRound(newPosition * mScaleFactor);
 
                 result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position / mScaleFactor);
+                newPosition = NSToIntRound(event.position / mScaleFactor);
             }
 
             ::SetScrollPos(mWnd, SB_CTL, newPosition - 10, TRUE);
@@ -401,10 +401,10 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
                 event.point.x = cpos.x;
                 event.point.y = cpos.y;
                 event.time = ::GetMessageTime();
-                event.position = (PRUint32)NS_TO_INT_ROUND(newPosition * mScaleFactor);
+                event.position = (PRUint32)NSToIntRound(newPosition * mScaleFactor);
 
                 result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NS_TO_INT_ROUND(event.position * mScaleFactor);
+                newPosition = NSToIntRound(event.position * mScaleFactor);
             }
 
             ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);

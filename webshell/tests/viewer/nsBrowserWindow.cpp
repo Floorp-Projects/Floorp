@@ -535,7 +535,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   float t2d = dc->GetTwipsToDevUnits();
   nsFont font(TOOL_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
               NS_FONT_WEIGHT_NORMAL, 0,
-              nscoord(t2d * NS_POINTS_TO_TWIPS_INT(TOOL_BAR_FONT_SIZE)));
+              nscoord(t2d * NSIntPointsToTwips(TOOL_BAR_FONT_SIZE)));
   NS_RELEASE(dc);
 
   // Create and place back button
@@ -601,7 +601,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   float t2d = dc->GetTwipsToDevUnits();
   nsFont font(STATUS_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
               NS_FONT_WEIGHT_NORMAL, 0,
-              nscoord(t2d * NS_POINTS_TO_TWIPS_INT(STATUS_BAR_FONT_SIZE)));
+              nscoord(t2d * NSIntPointsToTwips(STATUS_BAR_FONT_SIZE)));
   NS_RELEASE(dc);
 
   nsRect r(0, 0, aWidth, THROBBER_HEIGHT);

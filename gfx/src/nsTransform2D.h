@@ -98,7 +98,7 @@ public:
   **/
 
   void GetTranslation(float *ptX, float *ptY) { *ptX = m20; *ptY = m21; }
-  void GetTranslationCoord(nscoord *ptX, nscoord *ptY) { *ptX = NS_TO_INT_ROUND(m20); *ptY = NS_TO_INT_ROUND(m21); }
+  void GetTranslationCoord(nscoord *ptX, nscoord *ptY) { *ptX = NSToCoordRound(m20); *ptY = NSToCoordRound(m21); }
 
  /**
   * get the X translation portion of this transform
@@ -109,7 +109,7 @@ public:
   **/
 
   float GetXTranslation(void)                 { return m20; }
-  nscoord GetXTranslationCoord(void)          { return NS_TO_INT_ROUND(m20); }
+  nscoord GetXTranslationCoord(void)          { return NSToCoordRound(m20); }
 
  /**
   * get the Y translation portion of this transform
@@ -120,7 +120,7 @@ public:
   **/
 
   float GetYTranslation(void)               { return m21; }
-  nscoord GetYTranslationCoord(void)        { return NS_TO_INT_ROUND(m21); }
+  nscoord GetYTranslationCoord(void)        { return NSToCoordRound(m21); }
 
  /**
   * set this matrix and type from another Transform2D

@@ -83,7 +83,7 @@ BRFrame::Paint(nsIPresContext&      aPresContext,
   if (nsIFrame::GetShowFrameBorders()) {
     float p2t = aPresContext.GetPixelsToTwips();
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
-    aRenderingContext.FillRect(0, 0, nscoord(5 * p2t), mRect.height);
+    aRenderingContext.FillRect(0, 0, NSIntPixelsToTwips(5, p2t), mRect.height);
   }
   return NS_OK;
 }

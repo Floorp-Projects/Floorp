@@ -954,8 +954,8 @@ void nsRenderingContextWin :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY
 
   nscoord width, height;
 
-  width = NS_TO_INT_ROUND(mP2T * aImage->GetWidth());
-  height = NS_TO_INT_ROUND(mP2T * aImage->GetHeight());
+  width = NSToCoordRound(mP2T * aImage->GetWidth());
+  height = NSToCoordRound(mP2T * aImage->GetHeight());
 
   this->DrawImage(aImage, aX, aY, width, height);
 }

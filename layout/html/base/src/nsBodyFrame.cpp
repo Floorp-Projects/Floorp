@@ -384,7 +384,7 @@ nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
                       aBorderPadding.right;
       if (! aPresContext->IsPaginated()) {
         nsIDeviceContext* dc = aPresContext->GetDeviceContext();
-        result.width -= NS_TO_INT_ROUND(dc->GetScrollBarWidth());
+        result.width -= NSToCoordRound(dc->GetScrollBarWidth());
         NS_RELEASE(dc);
       }
     }

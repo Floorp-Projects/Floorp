@@ -128,7 +128,7 @@ NS_METHOD nsDOMEvent::SetScreenY(PRInt32 aScreenY)
 
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 {
-  *aClientX = NS_TO_INT_ROUND(mEvent->point.x * mPresContext->GetTwipsToPixels());
+  *aClientX = NSTwipsToIntPixels(mEvent->point.x, mPresContext->GetTwipsToPixels());
   return NS_OK;
 }
 
@@ -139,7 +139,7 @@ NS_METHOD nsDOMEvent::SetClientX(PRInt32 aClientX)
 
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
-  *aClientY = NS_TO_INT_ROUND(mEvent->point.y * mPresContext->GetTwipsToPixels());
+  *aClientY = NSTwipsToIntPixels(mEvent->point.y, mPresContext->GetTwipsToPixels());
   return NS_OK;
 }
 

@@ -693,8 +693,8 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 
     // Convert image dimensions into nscoord's
     float p2t = aPresContext.GetPixelsToTwips();
-    nscoord tileWidth = nscoord(p2t * imageSize.width);
-    nscoord tileHeight = nscoord(p2t * imageSize.height);
+    nscoord tileWidth = NSIntPixelsToTwips(imageSize.width, p2t);
+    nscoord tileHeight = NSIntPixelsToTwips(imageSize.height, p2t);
 
     PRIntn repeat = aColor.mBackgroundRepeat;
     PRIntn xcount, ycount;

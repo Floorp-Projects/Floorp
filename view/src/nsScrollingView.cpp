@@ -33,6 +33,9 @@ static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
+#define NS_TO_INT_ROUND(x)            ((PRInt32)floor((x) + 0.5))
+#define NS_POINTS_TO_TWIPS_INT(x)     ((PRInt32)(20 * (x)))
+
 class ScrollBarView : public nsView
 {
 public:

@@ -124,8 +124,8 @@ public:
   nsButtonType GetButtonType() const;
   nsButtonTagType GetButtonTagType() const;
 
-  virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
-  virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
+  virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
+  virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 
@@ -360,12 +360,12 @@ nsInputButtonFrame::GetButtonTagType() const
   return button->GetButtonTagType();
 }
 
-PRInt32 nsInputButtonFrame::GetVerticalBorderWidth(float aPixToTwip) const
+nscoord nsInputButtonFrame::GetVerticalBorderWidth(float aPixToTwip) const
 {
-   return (int)(4 * aPixToTwip + 0.5);
+   return NSIntPixelsToTwips(4, aPixToTwip);
 }
 
-PRInt32 nsInputButtonFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+nscoord nsInputButtonFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 {
   return GetVerticalBorderWidth(aPixToTwip);
 }
@@ -373,12 +373,12 @@ PRInt32 nsInputButtonFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 nscoord nsInputButtonFrame::GetVerticalInsidePadding(float aPixToTwip, 
                                                      nscoord aInnerHeight) const
 {
-  //return (int)(4 * aPixToTwip + 0.5);
+  //return NSIntPixelsToTwips(4, aPixToTwip);
 #ifdef XP_PC
-  return (nscoord)(aInnerHeight * .25 + 0.5);
+  return (nscoord)NSToIntRound((float)aInnerHeight * 0.25f);
 #endif
 #ifdef XP_UNIX
-  return (nscoord)(aInnerHeight * .50 + 0.5);
+  return (nscoord)NSToIntRound((float)aInnerHeight * 0.50f);
 #endif
 }
 
@@ -388,16 +388,16 @@ nscoord nsInputButtonFrame::GetHorizontalInsidePadding(float aPixToTwip,
 {
 #ifdef XP_PC
   if (kBackwardMode == GetMode()) {
-    return (nscoord)((aInnerWidth * .25) + 0.5);
+    return (nscoord)NSToIntRound(float(aInnerWidth) * 0.25f);
   } else {
-    return (nscoord)(10 * aPixToTwip + 0.5)+8;
+    return NSIntPixelsToTwips(10, aPixToTwip) + 8;
   }
 #endif
 #ifdef XP_UNIX
   if (kBackwardMode == GetMode()) {
-    return (nscoord)(aInnerWidth * .5 + 0.5);
+    return (nscoord)NSToIntRound(float(aInnerWidth) * 0.5f);
   } else {
-    return (nscoord)(20 * aPixToTwip + 0.5);
+    return NSIntPixelsToTwips(20, aPixToTwip);
   }
 #endif
 }

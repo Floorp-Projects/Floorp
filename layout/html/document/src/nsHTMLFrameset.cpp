@@ -163,7 +163,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord 
         // Now that we know the size we are laying out in, turn fixed
         // pixel dimensions into percents.
         // XXX maybe use UnitConverter for proper rounding? MMP
-        aValues[i] = (nscoord) NS_TO_INT_ROUND(100 * p2t * aSpecs[i].mValue / aSize);
+        aValues[i] = NSToCoordRound(100 * p2t * aSpecs[i].mValue / aSize);
         if (aValues[i] < 1) aValues[i] = 1;
         pixel += aValues[i];
         break;
@@ -288,7 +288,7 @@ void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord 
 PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext) 
 {
   float p2t = aPresContext->GetPixelsToTwips();
-  return NS_TO_INT_ROUND(p2t * 6);
+  return NSIntPixelsToTwips(6, p2t);
 }
 
 PRIntn
@@ -859,10 +859,10 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
     aRenderingContext.SetColor (color);
     aRenderingContext.DrawLine (x0, y0, x1, y1);
     if (mVertical) {
-      x0 += nscoord(p2t + 0.5);
+      x0 += NSIntPixelsToTwips(1, p2t);
       x1 =  x0;
     } else {
-      y0 += nscoord(p2t + 0.5);
+      y0 += NSIntPixelsToTwips(1, p2t);
       y1 =  y0;
     }
   }
@@ -894,8 +894,8 @@ NS_METHOD nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext,
           aEventStatus = nsEventStatus_eConsumeNoDefault;
         }
 	      if (eMouseDown == mLastMouseState) {
-          //((nsInput*)mContent)->SetClickPoint(NS_TO_INT_ROUND(conv * aEvent->point.x),
-          //                                    NS_TO_INT_ROUND(conv * aEvent->point.y));   
+          //((nsInput*)mContent)->SetClickPoint(NSToCoordRound(conv * aEvent->point.x),
+          //                                    NSToCoordRound(conv * aEvent->point.y));   
  		      //MouseClicked(&aPresContext);
 	        mLastMouseState = eMouseDrag;
 	      }
@@ -904,8 +904,8 @@ NS_METHOD nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext,
 	    break;
     case NS_MOUSE_LEFT_BUTTON_UP:
 	    if (eMouseDrag == mLastMouseState) {
-        //((nsInput*)mContent)->SetClickPoint(NS_TO_INT_ROUND(conv * aEvent->point.x),
-        //                                    NS_TO_INT_ROUND(conv * aEvent->point.y));   
+        //((nsInput*)mContent)->SetClickPoint(NSToCoordRound(conv * aEvent->point.x),
+        //                                    NSToCoordRound(conv * aEvent->point.y));   
  		    //MouseClicked(&aPresContext);
 	    } 
 	    mLastMouseState = eMouseUp;

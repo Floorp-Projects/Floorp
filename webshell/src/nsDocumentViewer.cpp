@@ -349,8 +349,8 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
     mWindow->GetBounds(bounds);
     width = bounds.width;
     height = bounds.height;
-    width = NS_TO_INT_ROUND(width * mPresContext->GetPixelsToTwips());
-    height = NS_TO_INT_ROUND(height * mPresContext->GetPixelsToTwips());
+    width = NSIntPixelsToTwips(width, mPresContext->GetPixelsToTwips());
+    height = NSIntPixelsToTwips(height, mPresContext->GetPixelsToTwips());
     mViewManager->DisableRefresh();
     mViewManager->SetWindowDimensions(width, height);
 

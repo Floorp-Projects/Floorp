@@ -245,9 +245,9 @@ void nsStyleSpacing::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) 
 }
 
 static const nscoord kBorderWidths[3] = 
-  { NS_POINTS_TO_TWIPS_INT(1), 
-    NS_POINTS_TO_TWIPS_INT(3), 
-    NS_POINTS_TO_TWIPS_INT(5) };
+  { NSIntPointsToTwips(1), 
+    NSIntPointsToTwips(3), 
+    NSIntPointsToTwips(5) };
 
 void nsStyleSpacing::CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
 {

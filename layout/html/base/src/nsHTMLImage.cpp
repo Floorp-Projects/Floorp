@@ -316,14 +316,14 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
             // from width.
             aDesiredSize.width = styleSize.width;
             aDesiredSize.height =
-              nscoord(styleSize.width * imageHeight / imageWidth);
+              (nscoord)NSToIntRound(styleSize.width * imageHeight / imageWidth);
           }
           else {
             // We have a height and an auto width. Compute width from
             // height.
             aDesiredSize.height = styleSize.height;
             aDesiredSize.width =
-              nscoord(styleSize.height * imageWidth / imageHeight);
+              (nscoord)NSToIntRound(styleSize.height * imageWidth / imageHeight);
           }
         }
         else {
@@ -346,8 +346,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       float p2t = aPresContext->GetPixelsToTwips();
       nsSize imageSize;
       mImageLoader->GetSize(imageSize);
-      aDesiredSize.width = nscoord(imageSize.width * p2t);
-      aDesiredSize.height = nscoord(imageSize.height * p2t);
+      aDesiredSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
+      aDesiredSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
     }
   }
 }
@@ -595,14 +595,14 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
         nsRect  inner;
         GetInnerArea(&aPresContext, inner);
 
-        nscoord p2t = (nscoord)aPresContext.GetPixelsToTwips();
-        nsRecessedBorder recessedBorder(p2t);
+        float p2t = aPresContext.GetPixelsToTwips();
+        nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
                                     inner, recessedBorder, 0);
-        inner.Deflate(p2t, p2t);
+        inner.Deflate(NSIntPixelsToTwips(1, p2t), NSIntPixelsToTwips(1, p2t));
 
         // Leave a 8 pixel left/right padding, and a 5 pixel top/bottom padding
-        inner.Deflate(8 * p2t, 5 * p2t);
+        inner.Deflate(NSIntPixelsToTwips(8, p2t), NSIntPixelsToTwips(5, p2t));
 
         // If there's room, then display the alt-text
         if (!inner.IsEmpty()) {
@@ -618,8 +618,8 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     GetInnerArea(&aPresContext, inner);
     if (mImageLoader.GetLoadImageFailed()) {
       float p2t = aPresContext.GetPixelsToTwips();
-      inner.width = nscoord(p2t * image->GetWidth());
-      inner.height = nscoord(p2t * image->GetHeight());
+      inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
+      inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
     }
     aRenderingContext.DrawImage(image, inner);
 
@@ -745,8 +745,8 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
         // the image's borders.
         nsRect inner;
         GetInnerArea(&aPresContext, inner);
-        nscoord x = nscoord(t2p * (aEvent->point.x - inner.x));
-        nscoord y = nscoord(t2p * (aEvent->point.y - inner.y));
+        PRInt32 x = NSTwipsToIntPixels((aEvent->point.x - inner.x), t2p);
+        PRInt32 y = NSTwipsToIntPixels((aEvent->point.y - inner.y), t2p);
         nsresult r = map->IsInside(x, y, docURL, absURL, target, altText,
                                    &suppress);
         NS_IF_RELEASE(docURL);
@@ -771,8 +771,8 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
 
         // Note: We don't subtract out the border/padding here to remain
         // compatible with navigator. [ick]
-        nscoord x = nscoord(t2p * aEvent->point.x);
-        nscoord y = nscoord(t2p * aEvent->point.y);
+        PRInt32 x = NSTwipsToIntPixels(aEvent->point.x, t2p);
+        PRInt32 y = NSTwipsToIntPixels(aEvent->point.y, t2p);
         char cbuf[50];
         PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", x, y);
         absURL.Append(cbuf);
@@ -819,8 +819,8 @@ ImageFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
     GetInnerArea(&aPresContext, inner);
     aCursor = NS_STYLE_CURSOR_DEFAULT;
     float t2p = aPresContext.GetTwipsToPixels();
-    nscoord x = nscoord(t2p * (aPoint.x - inner.x));
-    nscoord y = nscoord(t2p * (aPoint.y - inner.y));
+    PRInt32 x = NSTwipsToIntPixels((aPoint.x - inner.x), t2p);
+    PRInt32 y = NSTwipsToIntPixels((aPoint.y - inner.y), t2p);
     if (NS_OK == map->IsInside(x, y)) {
       aCursor = NS_STYLE_CURSOR_HAND;
     }
@@ -1023,7 +1023,7 @@ nsHTMLImage::MapAttributesInto(nsIStyleContext* aContext,
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
       float p2t = aPresContext->GetPixelsToTwips();
-      nsStyleCoord three(nscoord(p2t*3));
+      nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         display->mFloats = NS_STYLE_FLOAT_LEFT;

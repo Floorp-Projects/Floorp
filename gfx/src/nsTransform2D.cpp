@@ -279,8 +279,8 @@ void nsTransform2D :: TransformNoXLateCoord(nscoord *ptX, nscoord *ptY)
       break;
 
     case MG_2DSCALE:
-      *ptX = NS_TO_INT_ROUND(*ptX * m00);
-      *ptY = NS_TO_INT_ROUND(*ptY * m11);
+      *ptX = NSToCoordRound(*ptX * m00);
+      *ptY = NSToCoordRound(*ptY * m11);
       break;
 
     default:
@@ -288,8 +288,8 @@ void nsTransform2D :: TransformNoXLateCoord(nscoord *ptX, nscoord *ptY)
       x = (float)*ptX;
       y = (float)*ptY;
 
-      *ptX = NS_TO_INT_ROUND(x * m00 + y * m10);
-      *ptY = NS_TO_INT_ROUND(x * m01 + y * m11);
+      *ptX = NSToCoordRound(x * m00 + y * m10);
+      *ptY = NSToCoordRound(x * m01 + y * m11);
 
       break;
   }
@@ -350,27 +350,27 @@ void nsTransform2D :: TransformCoord(nscoord *ptX, nscoord *ptY)
       break;
 
     case MG_2DTRANSLATION:
-      *ptX += NS_TO_INT_ROUND(m20);
-      *ptY += NS_TO_INT_ROUND(m21);
+      *ptX += NSToCoordRound(m20);
+      *ptY += NSToCoordRound(m21);
       break;
 
     case MG_2DSCALE:
-      *ptX = NS_TO_INT_ROUND(*ptX * m00);
-      *ptY = NS_TO_INT_ROUND(*ptY * m11);
+      *ptX = NSToCoordRound(*ptX * m00);
+      *ptY = NSToCoordRound(*ptY * m11);
       break;
 
     case MG_2DGENERAL:
       x = (float)*ptX;
       y = (float)*ptY;
 
-      *ptX = NS_TO_INT_ROUND(x * m00 + y * m10);
-      *ptY = NS_TO_INT_ROUND(x * m01 + y * m11);
+      *ptX = NSToCoordRound(x * m00 + y * m10);
+      *ptY = NSToCoordRound(x * m01 + y * m11);
 
       break;
 
     case MG_2DSCALE | MG_2DTRANSLATION:
-      *ptX = NS_TO_INT_ROUND(*ptX * m00 + m20);
-      *ptY = NS_TO_INT_ROUND(*ptY * m11 + m21);
+      *ptX = NSToCoordRound(*ptX * m00 + m20);
+      *ptY = NSToCoordRound(*ptY * m11 + m21);
       break;
 
     default:
@@ -378,8 +378,8 @@ void nsTransform2D :: TransformCoord(nscoord *ptX, nscoord *ptY)
       x = (float)*ptX;
       y = (float)*ptY;
 
-      *ptX = NS_TO_INT_ROUND(x * m00 + y * m10 + m20);
-      *ptY = NS_TO_INT_ROUND(x * m01 + y * m11 + m21);
+      *ptX = NSToCoordRound(x * m00 + y * m10 + m20);
+      *ptY = NSToCoordRound(x * m01 + y * m11 + m21);
 
       break;
   }
@@ -456,37 +456,37 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
       break;
 
     case MG_2DTRANSLATION:
-      *aX += NS_TO_INT_ROUND(m20);
-      *aY += NS_TO_INT_ROUND(m21);
+      *aX += NSToCoordRound(m20);
+      *aY += NSToCoordRound(m21);
       break;
 
     case MG_2DSCALE:
-      *aX = NS_TO_INT_ROUND(*aX * m00);
-      *aY = NS_TO_INT_ROUND(*aY * m11);
-      *aWidth = NS_TO_INT_ROUND(*aWidth * m00);
-      *aHeight = NS_TO_INT_ROUND(*aHeight * m11);
+      *aX = NSToCoordRound(*aX * m00);
+      *aY = NSToCoordRound(*aY * m11);
+      *aWidth = NSToCoordRound(*aWidth * m00);
+      *aHeight = NSToCoordRound(*aHeight * m11);
       break;
 
     case MG_2DGENERAL:
       x = (float)*aX;
       y = (float)*aY;
 
-      *aX = NS_TO_INT_ROUND(x * m00 + y * m10);
-      *aY = NS_TO_INT_ROUND(x * m01 + y * m11);
+      *aX = NSToCoordRound(x * m00 + y * m10);
+      *aY = NSToCoordRound(x * m01 + y * m11);
 
       x = (float)*aWidth;
       y = (float)*aHeight;
 
-      *aHeight = NS_TO_INT_ROUND(x * m00 + y * m10);
-      *aHeight = NS_TO_INT_ROUND(x * m01 + y * m11);
+      *aHeight = NSToCoordRound(x * m00 + y * m10);
+      *aHeight = NSToCoordRound(x * m01 + y * m11);
 
       break;
 
     case MG_2DSCALE | MG_2DTRANSLATION:
-      *aX = NS_TO_INT_ROUND(*aX * m00 + m20);
-      *aY = NS_TO_INT_ROUND(*aY * m11 + m21);
-      *aWidth = NS_TO_INT_ROUND(*aWidth * m00);
-      *aHeight = NS_TO_INT_ROUND(*aHeight * m11);
+      *aX = NSToCoordRound(*aX * m00 + m20);
+      *aY = NSToCoordRound(*aY * m11 + m21);
+      *aWidth = NSToCoordRound(*aWidth * m00);
+      *aHeight = NSToCoordRound(*aHeight * m11);
       break;
 
     default:
@@ -494,14 +494,14 @@ void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, 
       x = (float)*aX;
       y = (float)*aY;
 
-      *aX = NS_TO_INT_ROUND(x * m00 + y * m10 + m20);
-      *aY = NS_TO_INT_ROUND(x * m01 + y * m11 + m21);
+      *aX = NSToCoordRound(x * m00 + y * m10 + m20);
+      *aY = NSToCoordRound(x * m01 + y * m11 + m21);
 
       x = (float)*aWidth;
       y = (float)*aHeight;
 
-      *aWidth = NS_TO_INT_ROUND(x * m00 + y * m10);
-      *aHeight = NS_TO_INT_ROUND(x * m01 + y * m11);
+      *aWidth = NSToCoordRound(x * m00 + y * m10);
+      *aHeight = NSToCoordRound(x * m01 + y * m11);
 
       break;
   }
