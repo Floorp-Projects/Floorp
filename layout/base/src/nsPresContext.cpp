@@ -634,6 +634,18 @@ nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                             PRBool aForceUnique,
                                             nsIStyleContext** aResult)
 {
+  return ResolvePseudoStyleWithComparator(aParentContent, aPseudoTag, aParentContext,
+                                          aForceUnique, nsnull, aResult);
+}
+
+NS_IMETHODIMP
+nsPresContext::ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
+                                                nsIAtom* aPseudoTag,
+                                                nsIStyleContext* aParentContext,
+                                                PRBool aForceUnique,
+                                                nsICSSPseudoComparator* aComparator,
+                                                nsIStyleContext** aResult)
+{
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
@@ -645,7 +657,7 @@ nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
   if (NS_SUCCEEDED(rv)) {
     if (set) {
       result = set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag,
-                                          aParentContext, aForceUnique);
+                                          aParentContext, aForceUnique, aComparator);
       if (nsnull == result) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       }

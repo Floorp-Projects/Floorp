@@ -35,6 +35,7 @@ class nsIPresContext;
 class nsIContent;
 class nsISupportsArray;
 class nsIAtom;
+class nsICSSPseudoComparator;
 
 // IID for the nsIStyleRuleProcessor interface {015575fe-7b6c-11d3-ba05-001083023c2b}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
@@ -63,6 +64,7 @@ public:
                            nsIContent* aParentContent,
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
+                           nsICSSPseudoComparator* aComparator,
                            nsISupportsArray* aResults) = 0;
 
   // Test if style is dependent on content state

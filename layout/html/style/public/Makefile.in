@@ -33,6 +33,7 @@ EXPORTS		= \
 		nsCSSAtomList.h \
 		nsICSSLoader.h \
 		nsICSSParser.h \
+		nsICSSPseudoComparator.h \
 		nsICSSStyleSheet.h \
 		nsStyleUtil.h \
 		nsICSSLoaderObserver.h \

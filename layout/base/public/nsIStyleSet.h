@@ -42,6 +42,8 @@ struct nsFindFrameHint;
 #include "nsVoidArray.h"
 class nsISizeOfHandler;
 
+class nsICSSPseudoComparator;
+
 #define SHARE_STYLECONTEXTS
 
 #ifdef SHARE_STYLECONTEXTS
@@ -105,7 +107,8 @@ public:
                                                  nsIContent* aParentContent,
                                                  nsIAtom* aPseudoTag,
                                                  nsIStyleContext* aParentContext,
-                                                 PRBool aForceUnique = PR_FALSE) = 0;
+                                                 PRBool aForceUnique = PR_FALSE,
+                                                 nsICSSPseudoComparator* aComparator = nsnull) = 0;
 
   // This funtions just like ResolvePseudoStyleFor except that it will
   // return nsnull if there are no explicit style rules for that

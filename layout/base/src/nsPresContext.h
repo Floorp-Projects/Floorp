@@ -83,6 +83,12 @@ public:
                                           nsIStyleContext* aParentContext,
                                           PRBool aForceUnique,
                                           nsIStyleContext** aResult);
+  NS_IMETHOD ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
+                                          nsIAtom* aPseudoTag,
+                                          nsIStyleContext* aParentContext,
+                                          PRBool aForceUnique,
+                                          nsICSSPseudoComparator* aComparator,
+                                          nsIStyleContext** aResult);
   NS_IMETHOD ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                         nsIAtom* aPseudoTag,
                                         nsIStyleContext* aParentContext,
