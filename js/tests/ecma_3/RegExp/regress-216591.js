@@ -58,7 +58,7 @@ var expectedmatches = new Array();
 
 status = inSection(1);
 string = 'a {result.data.DATA} b';
-pattern = /\{(([a-z0-9\-_]+?\.)+?)([a-z0-9\-_]+?)\}/gi;
+pattern = /\{(([a-z0-9\-_]+?\.)+?)([a-z0-9\-_]+?)\}/i;
 actualmatch = string.match(pattern);
 expectedmatch = Array('{result.data.DATA}', 'result.data.', 'data.', 'DATA');
 addThis();
