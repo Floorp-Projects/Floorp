@@ -70,6 +70,9 @@ public:
                 LastModified(void) const;
 	void        LastModified(PRIntervalTime i_lastModified);
 
+    PRInt16     Module(void) const;
+    void        Module(PRUint16 i_m);
+
 	PRUint32    Size(void) const;
 	void        Size(PRUint32 s);
 
@@ -92,6 +95,8 @@ protected:
                 m_LastAccessed, m_LastModified;
 	PRUint32	m_Size;
 	char*	    m_Url;
+
+    PRInt16    m_Module;
 
 private:
     nsCacheObject& operator=(const nsCacheObject& x);	
@@ -146,6 +151,16 @@ inline PRIntervalTime nsCacheObject::LastModified(void) const
 inline void nsCacheObject::LastModified(PRIntervalTime i_LastModified)
 {
 	m_LastModified = i_LastModified;
+}
+
+inline PRInt16 nsCacheObject::Module(void) const
+{
+    return m_Module;
+}
+
+inline void nsCacheObject::Module(PRUint16 i_Module) 
+{
+    m_Module = i_Module;
 }
 
 inline PRUint32 nsCacheObject::Size(void) const

@@ -380,6 +380,16 @@ SOURCE=.\cbView.cpp
 !IF  "$(CFG)" == "cb - Win32 Release"
 
 DEP_CPP_CBVIE=\
+	"..\..\..\..\..\dist\public\cache\nsCacheManager.h"\
+	"..\..\..\..\..\dist\public\cache\nsCacheModule.h"\
+	"..\..\..\..\..\dist\public\cache\nsCacheObject.h"\
+	"..\..\..\..\..\dist\public\cache\nsDiskModule.h"\
+	"..\..\..\..\..\dist\public\cache\nsMemCacheObject.h"\
+	"..\..\..\..\..\dist\public\cache\nsMemModule.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\obsolete\protypes.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prcpucfg.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prinrval.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\prtypes.h"\
 	".\cb.h"\
 	".\cbDoc.h"\
 	".\cbView.h"\
@@ -387,10 +397,8 @@ DEP_CPP_CBVIE=\
 	".\StdAfx.h"\
 	
 NODEP_CPP_CBVIE=\
-	".\nsCacheManager.h"\
-	".\nsCacheObject.h"\
-	".\nsDiskModule.h"\
-	".\nsMemModule.h"\
+	"..\..\..\..\..\dist\public\cache\nsISupports.h"\
+	"..\..\..\..\..\dist\win32_d.obj\include\protypes.h"\
 	
 
 "$(INTDIR)\cbView.obj" : $(SOURCE) $(DEP_CPP_CBVIE) "$(INTDIR)"\

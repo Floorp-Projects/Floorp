@@ -50,6 +50,7 @@ nsMemModule::~nsMemModule()
 	}
 }
 
+/* TODO dont make copies */
 PRBool nsMemModule::AddObject(nsCacheObject* i_pObject)
 {
 	if (i_pObject)

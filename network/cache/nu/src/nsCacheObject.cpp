@@ -15,8 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include <string.h>
-#include <assert.h>
+#include <xp_core.h>
+#include <xp_str.h>
+#include <xpassert.h>
 
 #include "nsCacheObject.h"
 #include "nsCacheTrace.h"
@@ -33,7 +34,8 @@ static const PRIntervalTime DEFAULT_EXPIRES = PR_SecondsToInterval(86400);
 nsCacheObject::nsCacheObject():
 	m_Flags(INIT), 
 	m_Url(new char[1]), 
-	m_Etag(new char[1])
+	m_Etag(new char[1]),
+    m_Module(-1)
 {
 	Init();
 	*m_Url = '\0';
@@ -67,14 +69,14 @@ nsCacheObject::nsCacheObject(const char* i_url):
 		m_Etag(new char[1])
 {
 	Init();
-	assert(i_url);
+	PR_ASSERT(i_url);
 	strcpy(m_Url, i_url);
 	*m_Etag = '\0';
 }
 
 void nsCacheObject::Address(const char* i_url) 
 {
-	assert(i_url);
+	PR_ASSERT(i_url && *i_url);
 	if (m_Url)
 		delete[] m_Url;
 	m_Url = new char[strlen(i_url) + 1];
@@ -83,7 +85,7 @@ void nsCacheObject::Address(const char* i_url)
 
 void nsCacheObject::Etag(const char* i_etag) 
 {
-	assert(i_etag && *i_etag);
+	PR_ASSERT(i_etag && *i_etag);
 	if (m_Etag)
 		delete[] m_Etag;
 	m_Etag = new char[strlen(i_etag) + 1];
@@ -96,10 +98,11 @@ void nsCacheObject::Init()
     m_Hits = 0;
 }
 
+/* Caller must free returned string */
 const char*	nsCacheObject::Trace() const
 {
 	char linebuffer[256];
-	char* total = 0;
+	char* total;
 
 	sprintf(linebuffer, "nsCacheObject:URL=%s,SIZE=%d,ET=%s,\n\tLM=%d,LA=%d,EXP=%d,HITS=%d\n", 
 			m_Url, 
@@ -109,7 +112,9 @@ const char*	nsCacheObject::Trace() const
 			m_LastAccessed,
 			m_Expires,
 			m_Hits);
-	APPEND(linebuffer);
+
+    total = new char[strlen(linebuffer) +1];
+    strcpy(total, linebuffer);
 
 	return total;
 }

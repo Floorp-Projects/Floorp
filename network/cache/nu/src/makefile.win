@@ -23,10 +23,10 @@ DLL = .\$(OBJDIR)\$(DLLNAME).dll
 
 LIBRARY_NAME=cachelib
 
-MISCDEP = 		\
+MISCDEP = 		    \
+    $(LIBNSPR)  	    \
     $(DIST)\lib\xpcom32.lib \
-	$(LIBNSPR)				\
-	$(NULL)
+    $(NULL)
 
 MODULE = cache
 
@@ -37,6 +37,7 @@ OBJS =					\
 	.\$(OBJDIR)\nsDiskModule.obj 	\
 	.\$(OBJDIR)\nsCacheTrace.obj 	\
 	.\$(OBJDIR)\nsCacheManager.obj 	\
+	.\$(OBJDIR)\nsCachePref.obj 	\
 	.\$(OBJDIR)\nsMemCacheObject.obj 	\
 	$(NULL)
 
@@ -51,9 +52,9 @@ LCFLAGS =				\
 	-DNS_DLLNAME=$(DLLNAME).dll	\
 	$(NULL)
 	
-LLIBS =				\
- 	$(DIST)\lib\xpcom32.lib \
-	$(LIBNSPR)				\
+LLIBS =				 \
+ 	$(DIST)\lib\xpcom32.lib  \
+	$(LIBNSPR)		 \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -38,6 +38,7 @@ protected:
 private:
     nsGeneric(const nsGeneric& o);
     nsGeneric& operator=(const nsGeneric& o);
-}
+};
+
 #endif // nsGeneric_h__
 
