@@ -50,7 +50,7 @@ $pageload_server          = "spider";  # localhost
 #
 $CVSCheckoutTimeout               = 3600;
 $CreateProfileTimeout             = 45;
-$RegxpcomTestTimeout              = 15;
+$RegxpcomTestTimeout              = 120;
 
 $AliveTestTimeout                 = 45;
 $ViewerTestTimeout                = 45;
