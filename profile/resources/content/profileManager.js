@@ -188,21 +188,16 @@ function addTreeItem(num, name, migrate)
   newrow.setAttribute("rowMigrate", migrate);
 
   var elem = document.createElement('treecell');
-
+  
   // Hack in a differentation for migration
   if (migrate) {
-    var text = document.createTextNode('Migrate');
+    elem.setAttribute("value", "Migrate");
   }
-  else {
-    var text = document.createTextNode('');
-  }
-
-  elem.appendChild(text);
+  
   newrow.appendChild(elem);
 
   var elem = document.createElement('treecell');
-  var text = document.createTextNode(name);
-  elem.appendChild(text);
+  elem.setAttribute("value", name);
   newrow.appendChild(elem);
 
   newitem.appendChild(newrow);

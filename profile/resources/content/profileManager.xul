@@ -50,8 +50,8 @@
 
  	 		<treehead>
 				<treerow>
-					<treecell>&migration.label;</treecell>
-					<treecell>&user.label;</treecell>
+					<treecell value="&migration.label;"/>
+					<treecell value="&user.label;"/>
 				</treerow>
 	  		</treehead>
 
