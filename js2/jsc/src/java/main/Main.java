@@ -44,19 +44,20 @@ public class Main {
     /**
      * Entry point.
      */
+
     public static void main(String[] args) {
-	/* Preprocess @file arguments */
-	try {
-	    args = CommandLine.parse(args);
-	} catch (FileNotFoundException e) {
-	    Util.error("at.args.cant.read", e.getMessage());
-	} catch (IOException e) {
-	    Util.error("at.args.io.exception", e.getMessage());
+		/* Preprocess @file arguments */
+		try {
+			args = CommandLine.parse(args);
+		} catch (FileNotFoundException e) {
+			System.out.println("Can't read "+ e.getMessage());
+		} catch (IOException e) {
+			System.out.println("I/O error " + e.getMessage());
+		}
+		
+		new Main(args).run();
+		System.exit(0);
 	}
-	
-	new Main(args).run();
-	System.exit(0);
-    }
 
     /**
      * Parse options.
@@ -69,51 +70,39 @@ public class Main {
 
 
     public Main(String[] args) {
-	if (args.length == 0) {
-	    Util.usage(1);
-	}
-	
-	/* Default values for options, overridden by user options. */
+		if (args.length == 0) {
+			System.out.println("Wrong args, read the 'readme' and try again");
+		}
+		
+		/* Default values for options, overridden by user options. */
 
-	int i = 0;
-	for (; i < args.length; i++) {
-	    if (args[i].equals("-i")||args[i].equals("-input")) {
-		    traceInput = true;
-	    } else if (args[i].equals("-l")||args[i].equals("-lexer")) {
-		    traceLexer = true;
-	    } else if (args[i].equals("-p")||args[i].equals("-parser")) {
-		    traceParser = true;
-	    } else if (args[i].equals("-d")||args[i].equals("-debug")) {
-		    debug = true;
-	    } else if (args[i].charAt(0) == '-') {
-            Util.error("unknown.option", args[i], null, true);
-	    } else {
-		    break; /* The rest must be classes. */
-	    }
-	}
+		int i = 0;
+		for (; i < args.length; i++) {
+			if (args[i].equals("-i")||args[i].equals("-input")) {
+				traceInput = true;
+			} else if (args[i].equals("-l")||args[i].equals("-lexer")) {
+				traceLexer = true;
+			} else if (args[i].equals("-p")||args[i].equals("-parser")) {
+				traceParser = true;
+			} else if (args[i].equals("-d")||args[i].equals("-debug")) {
+				debug = true;
+			} else if (args[i].charAt(0) == '-') {
+				System.out.println("Unknown.option "+ args[i]);
+			} else {
+				break; /* The rest must be classes. */
+			}
+		}
 
-	/*
-	 * Arrange for output destination.
-	 */
+		/* 
+		 * Grab the rest of argv[] ... this must be the classes.
+		 */
 
-/*
-	if (odir != null && ofile != null)
-	    Util.error("dir.file.mixed");
-	if (odir != null)
-	    ; //setOutDir(odir);
-	if (ofile != null)
-	    Debugger.setOutFile(ofile);
-*/
-
-	/* 
-	 * Grab the rest of argv[] ... this must be the classes.
-	 */
-	classes = new String[args.length - i];
-	System.arraycopy(args, i, classes, 0, args.length - i);
-	
-	if (classes.length == 0) {
-	    Util.error("no.classes.specified");
-	}
+		classes = new String[args.length - i];
+		System.arraycopy(args, i, classes, 0, args.length - i);
+		
+		if (classes.length == 0) {
+			System.out.println("No script specified");
+		}
 
     }
     
@@ -169,7 +158,6 @@ public class Main {
                 parser    = new Parser(reader);
                 Evaluator cevaluator = new ConstantEvaluator();
 
-                System.gc();
 	            t = System.currentTimeMillis();
                 node = parser.parseProgram();
                 errorCount = parser.errorCount();
