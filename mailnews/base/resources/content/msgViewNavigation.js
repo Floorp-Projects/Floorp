@@ -82,7 +82,6 @@ function GetSubFoldersInFolderPaneOrder(folder)
       var element = subFolderEnumerator.currentItem();
 	  var msgFolder = element.QueryInterface(Components.interfaces.nsIMsgFolder);
       msgFolders[msgFolders.length] = msgFolder;
-	  
 
       subFolderEnumerator.next();
     }
@@ -96,23 +95,34 @@ function GetSubFoldersInFolderPaneOrder(folder)
   return msgFolders;
 }
 
-function FindNextChildFolder(folder)
+function FindNextChildFolder(aParent, aAfter)
 {
-  // if there is unread mail in the trash, sent, drafts, unsent messages
-  // templates or junk special folder, 
-  // we ignore it when doing cross folder "next" navigation
-  if (IsSpecialFolder(folder, MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE | MSG_FOLDER_FLAG_TEMPLATES | MSG_FOLDER_FLAG_JUNK))
-    return null;
+  // Search the child folders of aParent for unread messages
+  // but in the case that we are working up from the current folder
+  // we need to skip up to and including the current folder
+  // we skip the current folder in case a mail view is hiding unread messages
+  if (aParent.getNumUnread(true) > 0) {
+    var subFolders = GetSubFoldersInFolderPaneOrder(aParent);
+    var i = 0;
+    var folder = null;
 
-  if (folder.getNumUnread(false) > 0)
-    return folder;
+    // Skip folders until after the specified child
+    while (folder != aAfter)
+      folder = subFolders[i++];
 
-  if (folder.getNumUnread(true) > 0) {
-    var subFolders = GetSubFoldersInFolderPaneOrder(folder);
-    for (var i = 0; i < subFolders.length; i++) {
-      folder = FindNextChildFolder(subFolders[i]);
-      if (folder)
-        return folder;
+    while (i < subFolders.length) {
+      folder = subFolders[i++];
+      // if there is unread mail in the trash, sent, drafts, unsent messages
+      // templates or junk special folder, 
+      // we ignore it when doing cross folder "next" navigation
+      if (!IsSpecialFolder(folder, MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE | MSG_FOLDER_FLAG_TEMPLATES | MSG_FOLDER_FLAG_JUNK)) {
+        if (folder.getNumUnread(false) > 0)
+          return folder;
+
+        folder = FindNextChildFolder(folder, null);
+        if (folder)
+          return folder;
+      }
     }
   }
 
@@ -125,7 +135,7 @@ function FindNextFolder()
   // and below us, in the folder pane
   // note use of gDBView restricts this function to message folders
   // otherwise you could go next unread from a server
-  var folder = FindNextChildFolder(gDBView.msgFolder);
+  var folder = FindNextChildFolder(gDBView.msgFolder, null);
   if (folder)
     return folder;
 
@@ -135,18 +145,9 @@ function FindNextFolder()
   for (folder = gDBView.msgFolder; !folder.isServer; ) {
 
     var parent = folder.parent;
-    var msgFolders = GetSubFoldersInFolderPaneOrder(parent);
-    for (var i = 0; i < msgFolders.length; i++)
-      if (msgFolders[i].URI == folder.URI)
-        break;
-    
-    // the current folder is at index i
-    // start at the next folder after that, if there is one
-    while (++i < msgFolders.length) {
-      folder = FindNextChildFolder(msgFolders[i]);
-      if (folder)
-        return folder;
-    }
+    folder = FindNextChildFolder(parent, folder);
+    if (folder)
+      return folder;
  
     // none at this level after the current folder.  go up.
     folder = parent;
@@ -163,7 +164,7 @@ function FindNextFolder()
   }
   
   for (var j = i + 1; j < rootFolders.length; j++) {
-    folder = FindNextChildFolder(rootFolders[j]);
+    folder = FindNextChildFolder(rootFolders[j], null);
     if (folder)
       return folder;
   }
@@ -171,7 +172,7 @@ function FindNextFolder()
   // if nothing from the current account down to the bottom
   // (of the folder pane), start again at the top.
   for (j = 0; j <= i; j++) {
-    folder = FindNextChildFolder(rootFolders[j]);
+    folder = FindNextChildFolder(rootFolders[j], null);
     if (folder)
       return folder;
   }
