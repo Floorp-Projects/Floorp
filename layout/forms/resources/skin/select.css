@@ -45,7 +45,7 @@
 select[size] {
   border: 2px inset ThreeDFace;
   margin: 0;
-  min-height: none;
+  min-height: 0;
   color: inherit;
 /*  -moz-appearance: treeview; */
 }
