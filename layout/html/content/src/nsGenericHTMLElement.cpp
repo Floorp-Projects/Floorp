@@ -2307,7 +2307,7 @@ nsGenericHTMLElement::ParseColor(const nsString& aString,
       aResult.SetStringValue(colorStr);
       return PR_TRUE;
     }
-    if (NS_HexToRGB(cbuf, &color)) {
+    if (NS_LooseHexToRGB(cbuf, &color)) {
       aResult.SetColorValue(color);
       return PR_TRUE;
     }
