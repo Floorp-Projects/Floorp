@@ -636,7 +636,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     // 1. it is a way for the user to deselect with the keyboard
     // 2. it is a way for the user to cancel incremental find with
     //    visual feedback
-    if (mIsTypeAheadOn) {
+    if (mLinksOnlyManuallySet || !mTypeAheadBuffer.IsEmpty()) {
       // If Escape is normally used for a command, don't do it
       aEvent->PreventDefault();
       CancelFind();
@@ -1780,7 +1780,7 @@ nsTypeAheadFind::FindNext(PRBool aFindBackwards, nsISupportsInterfacePointer *aC
 NS_IMETHODIMP
 nsTypeAheadFind::GetIsActive(PRBool *aIsActive)
 {
-  *aIsActive = !mTypeAheadBuffer.IsEmpty();
+  *aIsActive = mLinksOnlyManuallySet || !mTypeAheadBuffer.IsEmpty();
 
   return NS_OK;
 }
@@ -1973,6 +1973,11 @@ nsTypeAheadFind::CancelFind()
   //   4. Window scrolls
   //   5. User tabs (this can move the selection)
   //   6. Timer expires
+
+  if (mLinksOnlyManuallySet == PR_FALSE && mTypeAheadBuffer.IsEmpty()) {
+    // Nothing to cancel
+    return NS_OK;
+  }
 
   if (mIsTypeAheadOn || mRepeatingMode != eRepeatingNone) {
     mTypeAheadBuffer.Truncate();
