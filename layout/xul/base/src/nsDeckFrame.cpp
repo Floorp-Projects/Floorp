@@ -322,11 +322,13 @@ nsDeckFrame::Paint(nsIPresContext* aPresContext,
 
   // only paint the seleced box
   nsIBox* box = GetSelectedBox();
-  nsIFrame* frame = nsnull;
-  box->GetFrame(&frame);
+  if (box) {
+    nsIFrame* frame = nsnull;
+    box->GetFrame(&frame);
 
-  if (frame != nsnull)
-    PaintChild(aPresContext, aRenderingContext, aDirtyRect, frame, aWhichLayer);
+    if (frame != nsnull)
+      PaintChild(aPresContext, aRenderingContext, aDirtyRect, frame, aWhichLayer);
+  }
 
   return NS_OK;
 

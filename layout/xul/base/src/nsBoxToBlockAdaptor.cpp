@@ -53,6 +53,10 @@
 #include "nsBoxToBlockAdaptor.h"
 #include "nsILineIterator.h"
 #include "nsIFontMetrics.h"
+#include "nsHTMLContainerFrame.h"
+#include "nsWidgetsCID.h"
+
+static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 //#define DEBUG_REFLOW
 //#define DEBUG_GROW
@@ -127,7 +131,44 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
   mOverflow.width = 0;
   mOverflow.height = 0;
   mIncludeOverflow = PR_TRUE;
+  mPresShell = aPresShell;
   NeedsRecalc();
+}
+
+NS_IMETHODIMP
+nsBoxToBlockAdaptor::SetParentBox(nsIBox* aParent)
+{
+  nsresult rv = nsBox::SetParentBox(aParent);
+
+  nsIBox* parent = aParent;
+
+  
+  if (parent) {
+    PRBool needsWidget = PR_FALSE;
+    parent->ChildrenMustHaveWidgets(needsWidget);
+    if (needsWidget) {
+        nsCOMPtr<nsIPresContext> context;
+        mPresShell->GetPresContext(getter_AddRefs(context));
+        nsIView* view = nsnull;
+        mFrame->GetView(context, &view);
+
+        if (!view) {
+           nsCOMPtr<nsIStyleContext> style;
+           mFrame->GetStyleContext(getter_AddRefs(style));
+           nsHTMLContainerFrame::CreateViewForFrame(context,mFrame,style,nsnull,PR_TRUE); 
+           mFrame->GetView(context, &view);
+        }
+
+        nsIWidget* widget;
+        view->GetWidget(widget);
+
+        if (!widget)
+           view->CreateWidget(kWidgetCID);   
+    }
+  }
+  
+
+  return rv;
 }
 
 PRBool
@@ -687,6 +728,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
         if (needsReflow) {
            Redraw(aState);
            redrawAfterReflow = PR_TRUE;
+           //printf("Redrawing!!!/n");
         }
 
    } break;
