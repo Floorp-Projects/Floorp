@@ -65,9 +65,6 @@ nsresult
 rdf_MakeRelativeRef(const nsString& aBaseURI, nsString& aURI);
 
 nsresult
-rdf_MakeRelativeName(const nsString& aBaseURI, nsString& aURI);
-
-nsresult
 rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI);
 
 nsresult
