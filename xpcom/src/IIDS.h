@@ -47,43 +47,43 @@ nsIDTD = { /* a6cf9053-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9054-15b3-11d2-932e-00805f8add32 */
+nsPlaceholderFrame = { /* a6cf9054-15b3-11d2-932e-00805f8add32 */
     0xa6cf9054,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9055-15b3-11d2-932e-00805f8add32 */
+nsIViewerContainer = { /* a6cf9055-15b3-11d2-932e-00805f8add32 */
     0xa6cf9055,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9056-15b3-11d2-932e-00805f8add32 */
+nsIContentViewer = { /* a6cf9056-15b3-11d2-932e-00805f8add32 */
     0xa6cf9056,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9057-15b3-11d2-932e-00805f8add32 */
+nsIDocumentViewer = { /* a6cf9057-15b3-11d2-932e-00805f8add32 */
     0xa6cf9057,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9058-15b3-11d2-932e-00805f8add32 */
+nsIWebShell = { /* a6cf9058-15b3-11d2-932e-00805f8add32 */
     0xa6cf9058,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf9059-15b3-11d2-932e-00805f8add32 */
+nsWebShell = { /* a6cf9059-15b3-11d2-932e-00805f8add32 */
     0xa6cf9059,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf905a-15b3-11d2-932e-00805f8add32 */
+nsIWebShellContainer = { /* a6cf905a-15b3-11d2-932e-00805f8add32 */
     0xa6cf905a,
     0x15b3,
     0x11d2,
