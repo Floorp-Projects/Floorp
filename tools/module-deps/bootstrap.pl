@@ -297,7 +297,7 @@ sub FindMakefiles {
   print "\nConfiguring ... \n";
   unlink("$basedir/mozilla/config.cache");
   chdir("$basedir/mozilla");
-  my $configure_cmd = "./configure --enable-standalone-modules=$root_modules --disable-ldap --disable-tests";
+  my $configure_cmd = "./configure --enable-standalone-modules=$root_modules --disable-ldap --disable-tests --disable-installer";
   $rv = run_shell_command("$configure_cmd");
 
   #

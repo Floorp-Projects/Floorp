@@ -3248,6 +3248,20 @@ if test "$TX_EXE"; then
   fi
 fi
 
+dnl ========================================================
+dnl Installer
+dnl ========================================================
+case "$target_os" in
+    solaris*|linux*|msvc*|mksnt*|cygwin*|mingw*)
+        MOZ_INSTALLER=1
+        ;;
+esac
+
+MOZ_ARG_DISABLE_BOOL(installer,
+[  --disable-installer     Disable building of installer],
+    MOZ_INSTALLER=,
+    MOZ_INSTALLER=1 )
+AC_SUBST(MOZ_INSTALLER)
 
 dnl ========================================================
 dnl build the tests by default
