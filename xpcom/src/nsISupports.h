@@ -50,8 +50,10 @@ typedef nsID nsIID;
 /**
  * IID for the nsISupports interface
  * {00000000-0000-0000-c000-000000000046}
+ *
+ * NOTE: NEVER EVER EVER EVER EVER change this IID. Never. Not once.
+ * No. Don't do it. Stop!
  */
-
 #define NS_ISUPPORTS_IID      \
 { 0x00000000, 0x0000, 0x0000, \
   {0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46} }
