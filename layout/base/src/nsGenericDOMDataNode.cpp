@@ -821,6 +821,22 @@ nsGenericDOMDataNode::GetRangeList(nsVoidArray*& aResult) const
   return NS_OK;
 }
 
+nsresult
+nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
+                             size_t aInstanceSize) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  PRUint32 sum = 0;
+#ifdef DEBUG
+  sum += (PRUint32) aInstanceSize;
+  sum += mText.GetLength() *
+    (mText.Is2b() ? sizeof(PRUnichar) : sizeof(char));
+#endif
+  *aResult = sum;
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 

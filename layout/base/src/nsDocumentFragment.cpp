@@ -202,6 +202,17 @@ public:
     {  return mInner.RangeRemove(aRange); }                                                                        
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const 
     {  return mInner.GetRangeList(aResult); }                                                                        
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    if (!aResult) {
+      return NS_ERROR_NULL_POINTER;
+    }
+#ifdef DEBUG
+    *aResult = sizeof(*this);
+#else
+    *aResult = 0;
+#endif
+    return NS_OK;
+  }
 
 protected:
   nsGenericContainerElement mInner;

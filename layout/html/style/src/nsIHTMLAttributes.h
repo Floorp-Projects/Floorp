@@ -87,6 +87,8 @@ public:
 #endif
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+
+  NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
 };
 
 class nsIHTMLMappedAttributes : public nsISupports {

@@ -573,18 +573,6 @@ nsGenericHTMLElement::GetNameSpaceID(PRInt32& aID) const
   return NS_OK;
 }
 
-
-//void
-//nsHTMLTagContent::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
-//{
-//  if (!aHandler->HaveSeen(mTag)) {
-//    mTag->SizeOf(aHandler);
-//  }
-//  if (!aHandler->HaveSeen(mAttributes)) {
-//    mAttributes->SizeOf(aHandler);
-//  }
-//}
-
 nsresult 
 nsGenericHTMLElement::ParseAttributeString(const nsString& aStr, 
                                            nsIAtom*& aName,
@@ -1230,6 +1218,26 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
   }
   fputs(">\n", out);
 
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
+                             size_t aInstanceSize) const
+{
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  PRUint32 sum = 0;
+#ifdef DEBUG
+  sum += (PRUint32) aInstanceSize;
+  if (mAttributes) {
+    PRUint32 attrs = 0;
+    mAttributes->SizeOf(aSizer, &attrs);
+    sum += attrs;
+  }
+#endif
+  *aResult = sum;
   return NS_OK;
 }
 

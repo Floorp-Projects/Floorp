@@ -289,7 +289,7 @@ public:
     NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const;
     NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
     NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const;
-    NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
+    NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
     NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
                               nsEvent* aEvent,
                               nsIDOMEvent** aDOMEvent,
@@ -2810,10 +2810,17 @@ RDFElementImpl::FinishConvertToXIF(nsXIFConverter& aConverter) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::SizeOf(nsISizeOfHandler* aHandler) const
+RDFElementImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!aResult) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    PRUint32 sum = 0;
+#ifdef DEBUG
+    sum += (PRUint32) sizeof(this);
+#endif
+    *aResult = sum;
+    return NS_OK;
 }
 
 

@@ -163,6 +163,8 @@ public:
   nsresult RangeAdd(nsIDOMRange& aRange);
   nsresult RangeRemove(nsIDOMRange& aRange);
   nsresult GetRangeList(nsVoidArray*& aResult) const;
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
+                  size_t aInstanceSize) const;
   
   // Implementation for nsIJSScriptObject
   PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -277,6 +279,8 @@ public:
   nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
   nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
   nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
+                  size_t aInstanceSize) const;
 
   void ListAttributes(FILE* out) const;
 
@@ -526,7 +530,10 @@ public:
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
-  }                                                                        
+  }                                                                        \
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
+    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
+  }
 
 #define NS_IMPL_ICONTENT_NO_SETPARENT_USING_GENERIC(_g)                    \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -634,7 +641,10 @@ public:
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
-  }                                                                        
+  }                                                                        \
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
+    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
+  }
 
 #define NS_IMPL_ICONTENT_NO_SETDOCUMENT_USING_GENERIC(_g)                  \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -742,7 +752,10 @@ public:
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
-  }                                                                        
+  }                                                                        \
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
+    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
+  }
 
 #define NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(_g)     \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
@@ -848,7 +861,10 @@ public:
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
-  }                                                                        
+  }                                                                        \
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {   \
+    return _g.SizeOf(aSizer, aResult, sizeof(*this));                      \
+  }
   
 /**
  * Implement the nsIScriptObjectOwner API by forwarding the methods to a
