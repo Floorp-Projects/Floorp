@@ -294,7 +294,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 
     rv = compMgr->RegisterComponent(kCSmtpServiceCID,
 										"Message Compose SMTP Service",
-										"Xcomponent://netscape/messengercompose/smtp",
+										"component://netscape/messengercompose/smtp",
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 
@@ -308,7 +308,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
   
     rv = compMgr->RegisterComponent(kCMsgQuoteCID,
 										"Message Quoting",
-										"Xcomponent://netscape/messengercompose/quoting",
+										"component://netscape/messengercompose/quoting",
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
 
