@@ -14,7 +14,7 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
- */
+ */ 
 
 
 #include "nsIDTDDebug.h"
@@ -530,6 +530,36 @@ nsresult CNavDTD::HandleToken(CToken* aToken){
   return result;
 }
 
+/**
+ * This gets called after we've handled a given start tag.
+ * It's a generic hook to let us to post processing.
+ * @param   aToken contains the tag in question
+ * @param   aChildTag is the tag itself.
+ * @return  status
+ */
+PRInt32 CNavDTD::DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag){
+  PRInt32 result=kNoError;
+
+
+  CToken* theNextToken=mParser->PeekToken();
+  if(theNextToken)  {
+    eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
+    if(eToken_newline==theType){
+
+      switch(aChildTag){
+        case eHTMLTag_pre:
+        case eHTMLTag_listing:
+            //we skip the first newline token inside PRE and LISTING
+          mParser->PopToken();
+          break;
+        default:
+          break;
+      }//switch
+
+    }//if
+  }//if
+  return result;
+}
 
 
 /**
@@ -549,11 +579,14 @@ nsresult CNavDTD::HandleToken(CToken* aToken){
 nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  eHTMLTags theParentTag=mBodyContext->mElements.Last();
   nsresult  result=NS_OK;
-  PRBool    contains=CanContain(theParentTag,aChildTag);
+  eHTMLTags theParentTag=mBodyContext->mElements.Last();
 
-  if(PR_FALSE==contains){
+  if(RequiresAutomaticClosure(theParentTag,aChildTag)){
+    result=CloseContainersTo(aChildTag,PR_TRUE);
+  }
+
+  if(PR_FALSE==CanContain(theParentTag,aChildTag)){
     if(CanPropagate(theParentTag,aChildTag))
       result=CreateContextStackFor(aChildTag);
     else result=kCantPropagate;
@@ -581,6 +614,10 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
     }
     result=AddLeaf(aNode);
   }
+
+  //now do any post processing necessary on the tag...
+  if(NS_OK==result)
+    DidHandleStartTag(aToken,aChildTag);
   return result;
 }
 
@@ -600,18 +637,20 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
  */
 nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  eHTMLTags     tokenTagType=(eHTMLTags)aToken->GetTypeID();
 
   //Begin by gathering up attributes...
   nsCParserNode attrNode((CHTMLToken*)aToken,mLineNumber); 
   PRInt16       attrCount=aToken->GetAttributeCount();
   nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(attrNode,attrCount);
+  eHTMLTags     theParent=mBodyContext->mElements.Last();
+  eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
 
   if(NS_OK==result) {
       //now check to see if this token should be omitted...
-    if(PR_FALSE==CanOmit(mBodyContext->mElements.Last(),tokenTagType)) {
+
+    if(PR_FALSE==CanOmit(theParent,theChildTag)) {
   
-      switch(tokenTagType) {
+      switch(theChildTag) {
 
         case eHTMLTag_title:
           {
@@ -658,13 +697,13 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         default:
-          result=HandleDefaultStartToken(aToken,tokenTagType,attrNode);
+          result=HandleDefaultStartToken(aToken,theChildTag,attrNode);
           break;
       } //switch
     } //if
   } //if
 
-  if(eHTMLTag_newline==tokenTagType)
+  if(eHTMLTag_newline==theChildTag)
     mLineNumber++;
 
   return result;
@@ -1050,18 +1089,20 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
   ***********************************************************************************/
 
 static eHTMLTags gTagSet1[]={ 
-  eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
+  eHTMLTag_a,         eHTMLTag_abbr,      eHTMLTag_acronym,   
+  eHTMLTag_address,   eHTMLTag_applet,
   eHTMLTag_blink,     eHTMLTag_b,         eHTMLTag_basefont,  eHTMLTag_bdo,
   eHTMLTag_big,
   eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
-  eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
+  eHTMLTag_cite,      eHTMLTag_code,      
+  eHTMLTag_del,       eHTMLTag_dfn,       eHTMLTag_dir,
   eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_dt,
   eHTMLTag_em,        eHTMLTag_embed,
   eHTMLTag_fieldset,  eHTMLTag_font,      eHTMLTag_form,      
   eHTMLTag_h1,        eHTMLTag_h2,        eHTMLTag_h3,        
   eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
   eHTMLTag_hr,        eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,
-  eHTMLTag_input,     eHTMLTag_isindex,   
+  eHTMLTag_input,     eHTMLTag_ins,       eHTMLTag_isindex,   
   
   eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_layer,     eHTMLTag_li,
   eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
@@ -1077,13 +1118,16 @@ static eHTMLTags gTagSet1[]={
   eHTMLTag_whitespace};
 
 static eHTMLTags gTagSet2[]={ 
-  eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
+  eHTMLTag_a,         eHTMLTag_abbr,      eHTMLTag_acronym,   
+  eHTMLTag_applet,    eHTMLTag_blink,
   eHTMLTag_b,
   eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
-  eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
-  eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
+  eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      
+  eHTMLTag_del,       eHTMLTag_dfn,       eHTMLTag_div,       
+  eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
   eHTMLTag_embed,
-  eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
+  eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       
+  eHTMLTag_input,     eHTMLTag_ins,
   eHTMLTag_kbd,        
 
   eHTMLTag_label,     eHTMLTag_layer,     eHTMLTag_map,       eHTMLTag_newline,
@@ -1099,7 +1143,8 @@ static eHTMLTags gTagSet2[]={
   eHTMLTag_wbr,       eHTMLTag_whitespace};
 
 static eHTMLTags gTagSet3[]={ 
-  eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_blink,
+  eHTMLTag_a,         eHTMLTag_abbr,      eHTMLTag_acronym,   
+  eHTMLTag_applet,    eHTMLTag_blink,
   eHTMLTag_b,
   eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
   eHTMLTag_body,      eHTMLTag_caption,   eHTMLTag_center,    eHTMLTag_cite,
@@ -1156,7 +1201,7 @@ inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount
  */
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
-  PRBool result=(eHTMLTag_userdefined==aChild) ? PR_TRUE : !IsContainer(aParent);
+  PRBool result=!IsContainer(aParent);
 
 
     /***************************************************************************
@@ -1196,16 +1241,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   }
   else {
     switch((eHTMLTags)aParent) {
-      case eHTMLTag_address:
-        result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
-        break;
-
-      case eHTMLTag_applet:
-        if(eHTMLTag_param==aChild)
-          result=PR_TRUE;
-        else
-          result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
-        break;
 
       case eHTMLTag_blockquote:
       case eHTMLTag_body:
@@ -1351,7 +1386,15 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         }
         break;
 
+      case eHTMLTag_applet:
       case eHTMLTag_object:
+        if(eHTMLTag_param==aChild) {
+          result=PR_TRUE;
+          break;
+        }
+        //otherwise fall through...
+
+      case eHTMLTag_address:
       case eHTMLTag_pre:
         result=FindTagInSet(aChild,gTagSet2,sizeof(gTagSet2)/sizeof(eHTMLTag_unknown));
         break;
@@ -1482,6 +1525,40 @@ PRBool CNavDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
   }
   return result;
 }
+
+/**
+ *  This method is called to determine whether or not a tag
+ *  can be autoclosed. This means that based on the current
+ *  context, the stack should be closed to the nearest matching
+ *  tag.
+ *  
+ *  @param   aTag -- tag enum of child to be tested
+ *  @return  PR_TRUE if autoclosure should occur
+ */
+PRBool CNavDTD::RequiresAutomaticClosure(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
+  static eHTMLTags gAutoCloseTags[]={eHTMLTag_li,eHTMLTag_td,eHTMLTag_tr};
+
+  PRBool    result=PR_FALSE;
+  PRInt32   theParentIndex=kNotFound;
+ 
+  /***************************************************************************************
+    How this works:
+      1. Find the nearest parent on the appropriate stack that can gate the given child.
+      2. See if another child tag that matches this one is already open.
+      3. If there is and IT'S NOT GATED then autoclose it.
+   ***************************************************************************************/
+  if(eHTMLTag_unknown!=aParentTag){
+    if(PR_TRUE==FindTagInSet(aChildTag,gAutoCloseTags,sizeof(gAutoCloseTags)/sizeof(eHTMLTag_unknown))) {
+     
+      if(PR_TRUE==HasOpenContainer(aChildTag)) {
+        if(PR_FALSE==IsGatedFromClosing(aChildTag))
+          result=PR_TRUE;
+      }
+    }
+  }
+  return result;
+}
+
 
 /**
  *  This method gets called to determine whether a given 

@@ -516,11 +516,12 @@ protected:
      * @param   aTag -- represents the transient style tag to be handled.
      * @return  error code -- usually 0
      */
-    nsresult OpenTransientStyles(eHTMLTags aTag);
-    nsresult CloseTransientStyles(eHTMLTags aTag);
-    nsresult UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
-    nsresult UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
-    PRBool  CanContainStyles(eHTMLTags aTag) const;
+    nsresult  OpenTransientStyles(eHTMLTags aTag);
+    nsresult  CloseTransientStyles(eHTMLTags aTag);
+    nsresult  UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
+    nsresult  UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
+    PRBool    CanContainStyles(eHTMLTags aTag) const;
+    PRBool    RequiresAutomaticClosure(eHTMLTags aParentTag,eHTMLTags aChildTag) const;
 
     /****************************************************
         These methods interface with the parser to do
@@ -566,8 +567,8 @@ protected:
 
 		PRInt32			CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 		PRInt32			CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
+    PRInt32     DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag);    
 
-    
     nsParser*           mParser;
     nsIHTMLContentSink* mSink;
 
