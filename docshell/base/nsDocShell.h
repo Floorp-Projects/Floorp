@@ -235,17 +235,6 @@ protected:
    NS_IMETHOD EnsureContentListener();
    NS_IMETHOD EnsureScriptEnvironment();
 
-
-   NS_IMETHOD FireStartDocumentLoad(nsIDocumentLoader* aLoader,
-                                    nsIURI* aURL,
-                                    const char* aCommand);
-
-   NS_IMETHOD FireEndDocumentLoad(nsIDocumentLoader* aLoader,
-                                  nsIChannel* aChannel,
-                                  nsresult aStatus);
-
-   NS_IMETHOD InsertDocumentInDocTree();
-
    PRBool IsFrame();
 
 protected:

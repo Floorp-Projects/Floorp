@@ -192,7 +192,11 @@ public:
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aContainerResult);
+  NS_IMETHOD LoadComplete(nsresult aStatus);
+  NS_IMETHOD Destroy(void);
   NS_IMETHOD Stop(void);
+  NS_IMETHOD GetDOMDocument(nsIDOMDocument **aResult);
+  NS_IMETHOD SetDOMDocument(nsIDOMDocument *aDocument);
   NS_IMETHOD GetBounds(nsRect& aResult);
   NS_IMETHOD SetBounds(const nsRect& aBounds);
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
@@ -622,6 +626,18 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 }
 
 NS_IMETHODIMP
+DocumentViewerImpl::LoadComplete(nsresult aStatus)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::Destroy(void)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 DocumentViewerImpl::Stop(void)
 {
   if (mDocument) {
@@ -632,6 +648,18 @@ DocumentViewerImpl::Stop(void)
     mPresContext->Stop();
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetDOMDocument(nsIDOMDocument **aResult)
+{
+  return CallQueryInterface(mDocument.get(), aResult);
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
+{
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
