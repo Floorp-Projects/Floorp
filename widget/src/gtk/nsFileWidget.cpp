@@ -80,6 +80,13 @@ static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
   gtk_main_quit();
 }
 
+static void file_destroy_dialog(GtkWidget *w, gpointer data)
+{
+  GtkFileSelection *fs = GTK_FILE_SELECTION(data);
+
+  fs->fileop_dialog = NULL;
+}
+
 static void filter_item_activated(GtkWidget *w, gpointer data)
 {
   //  nsFileWidget *f = (nsFileWidget*)data;
@@ -128,6 +135,81 @@ PRBool nsFileWidget::Show()
     ret = PR_FALSE;
   }
   return ret;
+}
+
+//-------------------------------------------------------------------------
+//
+// Show - Display the replace dialog
+//
+//-------------------------------------------------------------------------
+PRBool nsFileWidget::AskReplace()
+{
+  PRBool  theReplace = PR_FALSE;
+  GtkWidget *dialog;
+  GtkWidget *vbox;
+  GtkWidget *replace;
+  GtkWidget *cancel;
+  GtkWidget *label;
+  GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
+  gchar *filename;
+  gchar *buf;
+ 
+  if( fs->fileop_dialog )
+    return( PR_FALSE );
+
+  filename = gtk_entry_get_text( GTK_ENTRY(fs->selection_entry));
+
+  fs->fileop_file = filename;
+
+  fs->fileop_dialog = dialog = gtk_dialog_new ();
+  gtk_signal_connect (GTK_OBJECT (dialog), "destroy",
+              (GtkSignalFunc) file_destroy_dialog,
+              (gpointer) fs);
+
+  gtk_window_set_title (GTK_WINDOW (dialog), "Replace?");
+  gtk_window_set_position( GTK_WINDOW(dialog), GTK_WIN_POS_MOUSE);
+  
+  if( GTK_WINDOW(fs)->modal )
+      gtk_window_set_modal( GTK_WINDOW(dialog), TRUE);
+
+  vbox = gtk_vbox_new(FALSE, 0);
+  gtk_container_set_border_width(GTK_CONTAINER(vbox), 8);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), vbox,
+                     FALSE, FALSE, 0);
+  gtk_widget_show(vbox);
+
+  buf = g_strconcat( "Replace file \"", filename, "\" ?", NULL);
+  label = gtk_label_new(buf);
+  gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+  gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 5);
+  gtk_widget_show(label);
+  g_free(buf);
+
+  // Add the replace button to window
+  replace = gtk_button_new_with_label( "Replace" );
+  gtk_signal_connect( GTK_OBJECT( replace ), "clicked",
+                      GTK_SIGNAL_FUNC(file_ok_clicked),
+                      &theReplace);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+                     replace, TRUE, TRUE, 0);
+  GTK_WIDGET_SET_FLAGS(replace, GTK_CAN_DEFAULT);
+  gtk_widget_show(replace);
+
+  // Add the cancel button to the window
+  cancel = gtk_button_new_with_label( "Cancel" );
+  gtk_signal_connect( GTK_OBJECT( cancel ), "clicked",
+                      GTK_SIGNAL_FUNC(file_cancel_clicked),
+                      &theReplace);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->action_area),
+                     cancel, TRUE, TRUE, 0);
+  GTK_WIDGET_SET_FLAGS(cancel, GTK_CAN_DEFAULT);
+  gtk_widget_grab_default(cancel);
+  gtk_widget_show(cancel);
+
+  gtk_widget_show(dialog);
+
+  gtk_main();
+  return (PRBool)theReplace;
 }
 
 //-------------------------------------------------------------------------
@@ -311,12 +393,23 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget *aParent,
 nsFileDlgResults nsFileWidget::PutFile(nsIWidget *aParent,
                                        const nsString &promptString,
                                        nsFileSpec &theFileSpec)
-{ 
-	Create(aParent, promptString, eMode_save, nsnull, nsnull);
-	if (Show() == PR_TRUE)
-	{
-		GetFile(theFileSpec);
-		return nsFileDlgResults_OK;
-	}
-  return nsFileDlgResults_Cancel; 
+{
+  nsFileDlgResults theResult = nsFileDlgResults_Cancel;
+  
+  Create(aParent, promptString, eMode_save, nsnull, nsnull);
+  if (Show() == PR_TRUE)
+  {
+    GetFile(theFileSpec);
+    if( theFileSpec.Exists() )
+    {
+      PRBool result = AskReplace();
+      theResult = result ? nsFileDlgResults_Replace : nsFileDlgResults_Cancel;
+      // Ask for replace dialog
+    }
+    else
+    {
+      theResult = nsFileDlgResults_OK;
+    }
+  }
+  return theResult; 
 }
