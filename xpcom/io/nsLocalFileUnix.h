@@ -64,6 +64,15 @@
     #include <sys/mount.h>
 #endif
 
+// 64-bit stat
+#if defined(HAVE_STAT64) && defined(HAVE_LSTAT64)
+#    undef stat
+#    undef lstat
+#    define stat stat64
+#    define lstat lstat64
+#    define STAT_IS_64
+#endif
+
 class NS_COM nsLocalFile : public nsILocalFile
 {
 public:
