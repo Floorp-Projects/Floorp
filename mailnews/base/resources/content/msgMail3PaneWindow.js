@@ -76,7 +76,12 @@ var folderListener = {
 				{
 					var id = selArray[0].getAttribute('id');
 					if(uri == id)
+					{
+						var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+						if(msgFolder)
+							msgFolder.EndFolderLoading();
 						RerootFolder(uri);
+					}
 				}
 			}
 		}

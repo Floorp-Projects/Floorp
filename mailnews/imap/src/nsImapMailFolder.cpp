@@ -397,7 +397,8 @@ nsresult nsImapMailFolder::GetDatabase()
 
 		if(mDatabase)
 		{
-			mDatabase->AddListener(this);
+			if(mAddListener)
+				mDatabase->AddListener(this);
 
 			// if we have to regenerate the folder, run the parser url.
 			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
@@ -1279,7 +1280,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
             return rv;
         if (!mDatabase) 
             return NS_ERROR_NULL_POINTER;
-        if (mDatabase)
+        if (mDatabase && mAddListener)
             mDatabase->AddListener(this);
     }
     if (aSpec->folderSelected)
@@ -1344,7 +1345,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 				SummaryChanged();
                 rv = NS_ERROR_UNEXPECTED;
                 if (mDatabase) {
-                    mDatabase->AddListener(this);
+					if(mAddListener)
+	                    mDatabase->AddListener(this);
                     rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
                 }
 			}

@@ -276,6 +276,16 @@ nsMsgFolder::GetMessages(nsISimpleEnumerator* *result)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMsgFolder::StartFolderLoading(void)
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::EndFolderLoading(void)
+{
+	return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMsgFolder::UpdateFolder()
 {

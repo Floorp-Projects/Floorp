@@ -56,7 +56,7 @@ NS_IMETHODIMP nsMsgDBFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 nsMsgDBFolder::nsMsgDBFolder(void)
-: mCharset("")
+: mCharset(""), mAddListener(PR_TRUE)
 {
 
 }
@@ -68,6 +68,22 @@ nsMsgDBFolder::~nsMsgDBFolder(void)
 		mDatabase->RemoveListener(this);
 		mDatabase->Close(PR_TRUE);
 	}
+}
+
+NS_IMETHODIMP nsMsgDBFolder::StartFolderLoading(void)
+{
+	if(mDatabase)
+		mDatabase->RemoveListener(this);
+	mAddListener = PR_FALSE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
+{
+	if(mDatabase)
+		mDatabase->AddListener(this);
+	mAddListener = PR_TRUE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::GetThreads(nsISimpleEnumerator** threadEnumerator)

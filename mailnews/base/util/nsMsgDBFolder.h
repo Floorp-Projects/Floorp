@@ -41,6 +41,8 @@ public:
 	virtual ~nsMsgDBFolder(void);
   NS_DECL_NSIDBCHANGELISTENER
   
+	NS_IMETHOD  StartFolderLoading(void);
+	NS_IMETHOD  EndFolderLoading(void);
 	NS_IMETHOD GetThreads(nsISimpleEnumerator** threadEnumerator);
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
@@ -68,6 +70,7 @@ protected:
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;  
 	nsString mCharset;
+	PRBool mAddListener;
 
 
 };

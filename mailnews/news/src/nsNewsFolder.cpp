@@ -364,7 +364,8 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		}
 
 		if (mDatabase) {
-			rv = mDatabase->AddListener(this);
+			if(mAddListener)
+				rv = mDatabase->AddListener(this);
 		    nsresult rv;
 		    nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
 		    if (NS_FAILED(rv))

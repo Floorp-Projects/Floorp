@@ -80,9 +80,6 @@ nsMsgFolderDataSource::nsMsgFolderDataSource():
 nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 {
   nsresult rv;
-  nsIRDFService *rdf = getRDFService();
-  if(rdf)
-	rdf->UnregisterDataSource(this);
 
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 	if(NS_SUCCEEDED(rv))

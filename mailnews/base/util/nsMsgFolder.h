@@ -95,6 +95,9 @@ public:
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator* *result);
   NS_IMETHOD GetMessages(nsISimpleEnumerator* *result);
+  NS_IMETHOD  StartFolderLoading(void);
+  NS_IMETHOD  EndFolderLoading(void);
+
   NS_IMETHOD UpdateFolder();
 
   NS_IMETHOD GetThreads(nsISimpleEnumerator ** threadEnumerator);

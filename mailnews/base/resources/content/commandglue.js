@@ -165,6 +165,7 @@ function ChangeFolderByURI(uri)
   {
 	try
 	{
+		msgfolder.StartFolderLoading();
 		msgfolder.UpdateFolder();
 	}
 	catch(ex)

@@ -480,7 +480,8 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 		if(mDatabase)
 		{
 
-			mDatabase->AddListener(this);
+			if(mAddListener)
+				mDatabase->AddListener(this);
 
 			// if we have to regenerate the folder, run the parser url.
 			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
