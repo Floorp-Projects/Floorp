@@ -28,7 +28,8 @@ EXPORTS=nsIFormManager.h \
   nsIFormControlFrame.h \
   nsIFormSubmitObserver.h \
   nsIFormProcessor.h \
-  nsISelectControlFrame.h
+  nsISelectControlFrame.h \
+  nsIGfxTextControlFrame.h 
 
 MODULE=raptor 
 

@@ -37,6 +37,7 @@ EXPORTS		= \
 		nsIFormSubmitObserver.h \
 		nsIFormProcessor.h \
 		nsISelectControlFrame.h \
+		nsIGfxTextControlFrame.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -9,3 +9,4 @@ nsIRadioControlFrame.h
 nsIFormSubmitObserver.h
 nsIFormProcessor.h
 nsISelectControlFrame.h
+nsIGfxTextControlFrame.h
