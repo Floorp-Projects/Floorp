@@ -40,11 +40,11 @@ BOOL WIN32_IsMoveFileExBroken()
     /* the NT option MOVEFILE_DELAY_UNTIL_REBOOT is broken on 
      * Windows NT 3.51 Service Pack 4 and NT 4.0 before Service Pack 2
      */
-    BOOL broken = FALSE;
+    BOOL broken = PR_FALSE;
     OSVERSIONINFO osinfo;
 
     // they *all* appear broken--better to have one way that works.
-    return TRUE;
+    return PR_TRUE;
 
     osinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     if (GetVersionEx(&osinfo) && osinfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
@@ -53,7 +53,7 @@ BOOL WIN32_IsMoveFileExBroken()
         {
             if ( 0 == stricmp(osinfo.szCSDVersion,"Service Pack 4"))
             {
-                broken = TRUE;
+                broken = PR_TRUE;
             }
         }
         else if ( osinfo.dwMajorVersion == 4 )
@@ -61,7 +61,7 @@ BOOL WIN32_IsMoveFileExBroken()
             if (osinfo.szCSDVersion[0] == '\0' || 
                 (0 == stricmp(osinfo.szCSDVersion,"Service Pack 1")))
             {
-                broken = TRUE;
+                broken = PR_TRUE;
             }
         }
     }
@@ -105,7 +105,7 @@ PRInt32 DoWindowsReplaceExistingFileStuff(const char* currentName, const char* f
                     tmpname[len-1] = '~';
                     tmpname[len] = '\0';
                     if ( stat(tmpname, &statbuf) != 0 )
-                        nameFound = TRUE;
+                        nameFound = PR_TRUE;
                     else
                         len++;
             }
