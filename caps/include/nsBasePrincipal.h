@@ -61,8 +61,10 @@ public:
     nsresult
     InitFromPersistent(const char *name, const char *data);
 
-    NS_IMETHOD
-    Save(nsSupportsHashtable* aPrincipals, nsIPref *prefs);
+    NS_IMETHOD 
+    ToStreamableForm(char** aName, char** aData);
+
+    static const char Invalid[];
 
 protected:
     enum AnnotationValue { AnnotationEnabled=1, AnnotationDisabled };

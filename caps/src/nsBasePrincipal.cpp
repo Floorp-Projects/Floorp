@@ -28,7 +28,6 @@
 
 //////////////////////////
 
-
 nsBasePrincipal::nsBasePrincipal()
     : mCapabilities(nsnull), mPrefName(nsnull)
 {
@@ -62,6 +61,9 @@ nsBasePrincipal::GetJSPrincipals(JSPrincipals **jsprin)
     return NS_OK;
 }
 
+const char
+nsBasePrincipal::Invalid[] = "Invalid";
+
 NS_IMETHODIMP 
 nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
 {
@@ -69,6 +71,16 @@ nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
         *result = nsIPrincipal::ENABLE_UNKNOWN;
         return NS_OK;
     }
+    else // If this principal is marked invalid, can't enable any capabilities
+    {
+        nsStringKey invalidKey(Invalid);
+        if (mCapabilities->Exists(&invalidKey))
+        {
+           *result = nsIPrincipal::ENABLE_DENIED;
+           return NS_OK;
+        }
+    }
+
     const char *start = capability;
     *result = nsIPrincipal::ENABLE_GRANTED;
     for(;;) {
@@ -96,6 +108,16 @@ nsBasePrincipal::SetCanEnableCapability(const char *capability,
         if (!mCapabilities)
             return NS_ERROR_OUT_OF_MEMORY;
     }
+    else // If this principal is marked invalid, can't enable any capabilities
+    {
+        nsStringKey invalidKey(Invalid);
+        if (mCapabilities->Exists(&invalidKey))
+            return NS_OK;
+    }
+
+    if (PL_strcmp(capability, Invalid) == 0)
+        mCapabilities->Reset();
+
     const char *start = capability;
     for(;;) {
         const char *space = PL_strchr(start, ' ');
@@ -166,7 +188,7 @@ nsBasePrincipal::RevertCapability(const char *capability, void **annotation)
         }
     }
     return NS_OK;
-}
+}    
 
 NS_IMETHODIMP
 nsBasePrincipal::SetCapability(const char *capability, void **annotation,
@@ -175,7 +197,7 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
     if (*annotation == nsnull) {
         *annotation = new nsHashtable(5);
         if (!*annotation)
-            return NS_ERROR_OUT_OF_MEMORY;
+             return NS_ERROR_OUT_OF_MEMORY;
         // This object owns its annotations. Save them so we can release
         // them when we destroy this object.
         mAnnotations.AppendElement(*annotation);
@@ -202,37 +224,55 @@ nsBasePrincipal::InitFromPersistent(const char *name, const char* data)
 {
     // Parses capabilities strings of the form 
     // "Capability=value ..."
-    // ie. "UniversalBrowserRead=0 UniversalBrowserWrite=1"
-    // where value is from 0 to 3 as defined in nsIPrincipal.idl
+    // ie. "UniversalBrowserRead=Granted UniversalBrowserWrite=Denied"
+
+    //-- Empty the capability table
     if (mCapabilities)
         mCapabilities->Reset();
 
+    //-- Save the preference name
     nsCAutoString nameString(name);
     mPrefName = nameString.ToNewCString();
 
-    static const char *prefix = ".X";
-    const char *p = PL_strstr(name, prefix);
-    if (p) {
-        int n = atoi(p + sizeof(prefix)-1);
+    const char* ordinalBegin = PL_strpbrk(name, "1234567890");
+    if (ordinalBegin) {
+        int  n = atoi(ordinalBegin);
         if (mCapabilitiesOrdinal <= n)
             mCapabilitiesOrdinal = n+1;
     }
     
+    //-- Parse the capabilities
     for (;;)
     {
         char* wordEnd = PL_strchr(data, '=');
         if (wordEnd == nsnull)
             break;
-        *wordEnd = '\0';
+        while (*(wordEnd-1) == ' ')
+            wordEnd--;
         const char* cap = data;
-        data = wordEnd+1; // data is now pointing at the numeric value
-        PRInt16 value = (PRInt16)(*data) - (PRInt16)'0';
-        nsresult rv = SetCanEnableCapability(cap, value);
-        if (NS_FAILED(rv)) return rv;
-        if (data[1] == '\0') // End of the data
-            break;
+        data = wordEnd+1;
+        *wordEnd = '\0';
+        while (*data == ' ' || *data == '=')
+            data++;
+
+        PRInt16 value;
+        if (*data == 'G' || *data == 'g' || *data == 'Y' ||
+            *data == 'y' || *data == 'T' || *data == 't' || 
+            (*data - '0') == nsIPrincipal::ENABLE_GRANTED ||
+            *data == '1')
+            value = nsIPrincipal::ENABLE_GRANTED;
+        else if (*data == 'D' || *data == 'd' || *data == 'N' ||
+            *data == 'n' || *data == 'F' || *data == 'f' || 
+            (*data - '0') == nsIPrincipal::ENABLE_DENIED ||
+            *data == '0')
+            value = nsIPrincipal::ENABLE_DENIED;
         else
-            data += 2; // data is now at the beginning of the next capability string
+            value = nsIPrincipal::ENABLE_UNKNOWN;
+        
+        if(NS_FAILED(SetCanEnableCapability(cap, value))) 
+            return NS_ERROR_FAILURE;
+        while (*data != ' ' && *data != '\0') data++;
+        while (*data == ' ') data++;
     }
     return NS_OK;
 }
@@ -240,43 +280,35 @@ nsBasePrincipal::InitFromPersistent(const char *name, const char* data)
 PR_STATIC_CALLBACK(PRBool)
 AppendCapability(nsHashKey *aKey, void *aData, void *aStr)
 {
-    char value = (char)((unsigned int)aData) + '0';
     nsCString *capStr = (nsCString*) aStr;    
     capStr->Append(' ');
     capStr->AppendWithConversion(((nsStringKey *) aKey)->GetString());
     capStr->Append('=');
-    capStr->Append(value);
+    switch ((PRInt16)aData) 
+    {
+    case nsIPrincipal::ENABLE_GRANTED:
+        capStr->Append("Granted");
+        break;
+    case nsIPrincipal::ENABLE_DENIED:
+        capStr->Append("Denied");
+        break;
+    default:
+        capStr->Append("Unknown");
+    }
     return PR_TRUE;
 }   
-        
 
-NS_IMETHODIMP
-nsBasePrincipal::Save(nsSupportsHashtable* aPrincipals, nsIPref *aPref)
+NS_IMETHODIMP 
+nsBasePrincipal::ToStreamableForm(char** aName, char** aData)
 {
-    //-- Save in hashtable
-    nsIPrincipalKey key(this);
-    // This is a little sneaky. "supports" below is a void *, which won't 
-    // be refcounted, but is matched with a key that is the same object,
-    // which will be refcounted.
-    aPrincipals->Put(&key, this);
-
-    //-- Save to preferences
     char *streamableForm;
     if (NS_FAILED(ToString(&streamableForm)))
         return NS_ERROR_FAILURE;
     if (mCapabilities) {
-        nsCAutoString result(streamableForm);
-        mCapabilities->Enumerate(AppendCapability, (void*)&result);
-        streamableForm = result.ToNewCString();
+        nsCAutoString buildingCapString(streamableForm);
+        mCapabilities->Enumerate(AppendCapability, (void*)&buildingCapString);
+        streamableForm = buildingCapString.ToNewCString();
     }
-    if (!mPrefName) {
-        nsCAutoString s("security.principal.X");
-        s.AppendInt(mCapabilitiesOrdinal++);
-        mPrefName = s.ToNewCString();
-    }
-    nsresult rv = aPref->SetCharPref(mPrefName, streamableForm);
-    Recycle(streamableForm);
-    return rv;
+    *aData = streamableForm;
+    return NS_OK;
 }
-
-
