@@ -923,3 +923,12 @@ _PR_MD_UNLOCKFILE(PRInt32 f)
     }
 } /* end _PR_MD_UNLOCKFILE() */
 
+PRInt32
+_PR_MD_PIPEAVAILABLE(PRFileDesc *fd)
+{
+    if (NULL == fd)
+		PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
+	else
+		PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return -1;
+}

@@ -247,6 +247,7 @@ extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
     const struct timeval *);
 #define _MD_FSYNC                     _PR_MD_FSYNC
 #define _MD_SOCKETAVAILABLE           _PR_MD_SOCKETAVAILABLE
+#define _MD_PIPEAVAILABLE             _PR_MD_PIPEAVAILABLE
 #define _MD_SET_FD_INHERITABLE        _PR_MD_SET_FD_INHERITABLE
 
 #define _MD_INIT_ATOMIC()
