@@ -3328,13 +3328,13 @@ SINGSIGN_PromptUsernameAndPassword
 {
 }
 
-PUBLIC char *
+char *
 SINGSIGN_PromptPassword
     (char *prompt, char *URLName, PRBool pickFirstUser)
 {
 }
 
-PUBLIC char *
+char *
 SINGSIGN_Prompt (char *prompt, char* defaultUsername, char *URLName)
 {
 }
