@@ -1033,6 +1033,15 @@ nsEditor::InsertFormattingForNode(nsIDOMNode* aNode)
   if (nodeType != nsIDOMNode::ELEMENT_NODE)
     return NS_OK;
 
+  // Insert formatting only for block nodes
+  // (would it be better to insert for any non-inline node?)
+  PRBool block;
+  res = IsNodeBlock(aNode, block);
+  if (NS_FAILED(res))
+    return res;
+  if (!block)
+    return NS_OK;
+
   nsCOMPtr<nsIDOMNode> parent;
   res = aNode->GetParentNode(getter_AddRefs(parent));
   if (NS_FAILED(res))
