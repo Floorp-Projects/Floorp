@@ -38,6 +38,11 @@
   and the string value
   The second argument is the sRGBA value for the named color
 
+  'name' entries *must* use only lowercase characters.
+
+  ** Break these invarient and bad things will happen. **    
+
+
  ******/
 
 
