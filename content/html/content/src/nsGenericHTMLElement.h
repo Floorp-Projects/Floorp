@@ -23,12 +23,14 @@
 #include "nsIContent.h"
 #include "nsHTMLValue.h"
 #include "nsVoidArray.h"
+#include "nsIJSScriptObject.h"
 
 extern const nsIID kIDOMNodeIID;
 extern const nsIID kIDOMElementIID;
 extern const nsIID kIDOMHTMLElementIID;
 extern const nsIID kIDOMEventReceiverIID;
 extern const nsIID kIScriptObjectOwnerIID;
+extern const nsIID kIJSScriptObjectIID;
 extern const nsIID kISupportsIID;
 extern const nsIID kIContentIID;
 extern const nsIID kIHTMLContentIID;
@@ -44,6 +46,7 @@ class nsIStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
+class nsChildContentList;
 
 enum nsSetAttrNotify {
   eSetAttrNotify_None = 0,
@@ -52,7 +55,7 @@ enum nsSetAttrNotify {
   eSetAttrNotify_Restart = 3
 };
 
-class nsGenericHTMLElement {
+class nsGenericHTMLElement : public nsIJSScriptObject {
 public:
   nsGenericHTMLElement();
   ~nsGenericHTMLElement();
@@ -146,6 +149,21 @@ public:
                        nsIFrame*        aParentFrame,
                        nsIStyleContext* aStyleContext,
                        nsIFrame*&       aResult);
+
+  // Implementation for nsIJSScriptObject
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext);
+  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, jsval aID);
+  virtual void      Finalize(JSContext *aContext);
+  virtual PRBool    Construct(JSContext *cx, JSObject *obj, uintN argc, 
+                              jsval *argv, jsval *rval);
+
+  // Implementation for nsISupports
+  NS_DECL_ISUPPORTS
 
   //----------------------------------------
 
@@ -387,7 +405,7 @@ public:
   nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
-  nsVoidArray mChildren;
+  nsChildContentList *mChildren;
 };
 
 //----------------------------------------------------------------------
@@ -824,7 +842,13 @@ public:
     *_iptr = (void*) tmp;                                       \
     AddRef();                                                   \
     return NS_OK;                                               \
-  }
+  }                                                             \
+  if (_id.Equals(kIJSScriptObjectIID)) {                        \
+    nsIJSScriptObject* tmp = (nsIJSScriptObject*)&mInner;       \
+    *_iptr = (void*) tmp;                                       \
+    AddRef();                                                   \
+    return NS_OK;                                               \
+  }                                                             
 
 /**
  * A macro to implement the getter and setter for a given string

@@ -25,6 +25,7 @@
 #include "nsIDOMAttribute.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMNodeList.h"
 #include "nsIEventListenerManager.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLStyleSheet.h"
@@ -65,6 +66,7 @@ NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 //NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
@@ -75,6 +77,7 @@ static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 
 static nsIContentDelegate* gContentDelegate;
 
@@ -166,6 +169,45 @@ public:
 private:
   nsIHTMLContent& mContent;
   void* mScriptObject;
+};
+
+
+// Class that holds the child list of a content element and also
+// implements the nsIDOMNodeList interface.
+class nsChildContentList : public nsIDOMNodeList, 
+                           public nsIScriptObjectOwner 
+{
+public:
+  nsChildContentList();
+  virtual ~nsChildContentList() {}
+  
+  NS_DECL_ISUPPORTS
+  
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
+  
+  // nsIDOMNodeList interface
+  NS_DECL_IDOMNODELIST
+  
+  // Methods stolen from nsVoidArray
+  PRInt32 Count() { return mArray.Count(); }
+  nsIContent* ElementAt(PRInt32 aIndex) const 
+  { return (nsIContent*)mArray.ElementAt(aIndex); }
+  PRBool InsertElementAt(nsIContent* aElement, PRInt32 aIndex)
+  { return mArray.InsertElementAt(aElement, aIndex); }
+  PRBool ReplaceElementAt(nsIContent* aElement, PRInt32 aIndex)
+  { return mArray.ReplaceElementAt(aElement, aIndex); }
+  PRBool AppendElement(nsIContent* aElement)
+  { return mArray.AppendElement(aElement); }
+  PRBool RemoveElementAt(PRInt32 aIndex)
+  { return mArray.RemoveElementAt(aIndex); }
+  PRInt32 IndexOf(nsIContent* aPossibleElement) const
+  { return mArray.IndexOf(aPossibleElement); }
+  void Compact() { mArray.Compact(); }
+
+private:
+  nsVoidArray mArray;
+  void *mScriptObject;
 };
 
 //----------------------------------------------------------------------
@@ -1814,6 +1856,162 @@ nsGenericHTMLElement::RemoveEventListener(nsIDOMEventListener* aListener,
 
 //----------------------------------------------------------------------
 
+// nsIJSScriptObject implementation
+
+PRBool    
+nsGenericHTMLElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return PR_TRUE;
+}
+
+PRBool    
+nsGenericHTMLElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return PR_TRUE;
+}
+
+PRBool    
+nsGenericHTMLElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return PR_TRUE;
+}
+ 
+PRBool    
+nsGenericHTMLElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  nsIScriptObjectOwner *owner;
+
+  if (NS_OK != mContent->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner)) {
+    return PR_FALSE;
+  }
+
+  if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
+    nsAutoString propName, prefix;
+    propName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+    prefix.SetString(propName, 2);
+    if (prefix == "on") {
+      nsIEventListenerManager *manager = nsnull;
+
+      if (propName == "onmousedown" || propName == "onmouseup" || propName ==  "onclick" ||
+         propName == "onmouseover" || propName == "onmouseout") {
+        if (NS_OK == GetListenerManager(&manager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMMouseListenerIID)) {
+            NS_RELEASE(manager);
+            return PR_FALSE;
+          }
+        }
+      }
+      else if (propName == "onkeydown" || propName == "onkeyup" || propName == "onkeypress") {
+        if (NS_OK == GetListenerManager(&manager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMKeyListenerIID)) {
+            NS_RELEASE(manager);
+            return PR_FALSE;
+          }
+        }
+      }
+      else if (propName == "onmousemove") {
+        if (NS_OK == GetListenerManager(&manager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMMouseMotionListenerIID)) {
+            NS_RELEASE(manager);
+            return PR_FALSE;
+          }
+        }
+      }
+      else if (propName == "onfocus" || propName == "onblur") {
+        if (NS_OK == GetListenerManager(&manager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMFocusListenerIID)) {
+            NS_RELEASE(manager);
+            return PR_FALSE;
+          }
+        }
+      }
+      else if (propName == "onsubmit" || propName == "onreset") {
+        if (NS_OK == GetListenerManager(&manager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMFormListenerIID)) {
+            NS_RELEASE(manager);
+            return PR_FALSE;
+          }
+        }
+      }
+      else if (propName == "onload" || propName == "onunload" || propName == "onabort" ||
+               propName == "onerror") {
+        if (NS_OK == GetListenerManager(&manager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != manager->RegisterScriptEventListener(mScriptCX, owner, kIDOMLoadListenerIID)) {
+            NS_RELEASE(manager);
+            return PR_FALSE;
+          }
+        }
+      }
+      NS_IF_RELEASE(manager);
+    }
+  }
+
+  NS_IF_RELEASE(owner);
+
+  return PR_TRUE;
+}
+ 
+PRBool    
+nsGenericHTMLElement::EnumerateProperty(JSContext *aContext)
+{
+  return PR_TRUE;
+}
+
+PRBool    
+nsGenericHTMLElement::Resolve(JSContext *aContext, jsval aID)
+{
+  return PR_TRUE;
+}
+
+PRBool    
+nsGenericHTMLElement::Convert(JSContext *aContext, jsval aID)
+{
+  return PR_TRUE;
+}
+
+void      
+nsGenericHTMLElement::Finalize(JSContext *aContext)
+{
+}
+ 
+PRBool    
+nsGenericHTMLElement::Construct(JSContext *cx, JSObject *obj, 
+                                uintN argc, jsval *argv, jsval *rval)
+{
+  return PR_TRUE;
+}
+
+//----------------------------------------------------------------------
+
+// nsISupports implementation
+
+NS_IMETHODIMP
+nsGenericHTMLElement::QueryInterface(REFNSIID aIID,void** aInstancePtr)
+{
+  return mContent->QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsGenericHTMLElement::AddRef()
+{
+  return mContent->AddRef();
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsGenericHTMLElement::Release()
+{
+  return mContent->Release();
+}
+
+
+//----------------------------------------------------------------------
+
 nsresult
 nsGenericHTMLElement::AddScriptEventListener(nsIAtom* aAttribute,
                                              nsHTMLValue& aValue,
@@ -1967,7 +2165,7 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsString& aString,
     aResult.SetPercentValue(float(val)/100.0f);
 	} else if (tmp.Last() == '*') {
     if (val < 0) val = 0;
-    aResult.SetIntValue(val, eHTMLUnit_Proportional);	// proportional values are integers
+    aResult.SetIntValue(val, eHTMLUnit_Proportional); // proportional values are integers
   } else {
     if (eHTMLUnit_Pixel == aValueUnit) {
       aResult.SetPixelValue(val);
@@ -2519,21 +2717,103 @@ nsGenericHTMLLeafElement::SizeOf(nsISizeOfHandler* aHandler) const
 
 //----------------------------------------------------------------------
 
+nsChildContentList::nsChildContentList()
+{
+  NS_INIT_REFCNT();
+  mScriptObject = nsnull;
+}
+
+NS_IMPL_ADDREF(nsChildContentList);
+NS_IMPL_RELEASE(nsChildContentList);
+
+nsresult
+nsChildContentList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIDOMNodeListIID)) {
+    nsIDOMNodeList* tmp = this;
+    *aInstancePtr = (void*)tmp;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtr = (void*)tmp;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    nsIDOMNodeList* tmp1 = this;
+    nsISupports* tmp2 = tmp1;
+    *aInstancePtr = (void*)tmp2;
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+nsresult 
+nsChildContentList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptNodeList(aContext, (nsISupports *)(nsIDOMNodeList *)this, nsnull, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+  return res;
+}
+
+nsresult 
+nsChildContentList::ResetScriptObject()
+{
+  mScriptObject = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsChildContentList::GetLength(PRUint32* aLength)
+{
+  *aLength = (PRUint32)mArray.Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  nsIContent *content;
+  nsresult res = NS_OK;
+  
+  content = (nsIContent *)mArray.ElementAt(aIndex);
+  if (nsnull != content) {
+    res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+    NS_RELEASE(content);
+  }
+  else {
+    *aReturn = nsnull;
+  }
+
+  return res;
+}
+
+
+//----------------------------------------------------------------------
+
 nsGenericHTMLContainerElement::nsGenericHTMLContainerElement()
 {
+  mChildren = new nsChildContentList();
+  NS_ADDREF(mChildren);
 }
 
 nsGenericHTMLContainerElement::~nsGenericHTMLContainerElement()
 {
-  PRInt32 n = mChildren.Count();
+  PRInt32 n = mChildren->Count();
   for (PRInt32 i = 0; i < n; i++) {
-    nsIContent* kid = (nsIContent*) mChildren.ElementAt(i);
+    nsIContent* kid = mChildren->ElementAt(i);
     NS_RELEASE(kid);
   }
-//  if (nsnull != mChildNodes) {
-//    mChildNodes->ReleaseContent();
-//    NS_RELEASE(mChildNodes);
-//  }
+  NS_RELEASE(mChildren);
 }
 
 nsresult
@@ -2559,22 +2839,13 @@ nsGenericHTMLContainerElement::Equals(nsIDOMNode* aNode, PRBool aDeep,
 nsresult
 nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-    *aChildNodes = nsnull;
-    return NS_OK;
-//  NS_PRECONDITION(nsnull != aChildNodes, "null pointer");
-//  if (nsnull == mChildNodes) {
-//    mChildNodes = new nsDOMNodeList(this);
-//    NS_ADDREF(mChildNodes);
-//  }
-//  *aChildNodes = mChildNodes;
-//  NS_ADDREF(mChildNodes);
-//  return NS_OK;
+  return mChildren->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
 }
 
 nsresult
 nsGenericHTMLContainerElement::GetHasChildNodes(PRBool* aReturn)
 {
-  if (0 != mChildren.Count()) {
+  if (0 != mChildren->Count()) {
     *aReturn = PR_TRUE;
   } 
   else {
@@ -2586,7 +2857,7 @@ nsGenericHTMLContainerElement::GetHasChildNodes(PRBool* aReturn)
 nsresult
 nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = (nsIContent*) mChildren.ElementAt(0);
+  nsIContent *child = mChildren->ElementAt(0);
   if (nsnull != child) {
     nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
@@ -2599,7 +2870,7 @@ nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 nsresult
 nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
 {
-  nsIContent *child = (nsIContent*) mChildren.ElementAt(mChildren.Count()-1);
+  nsIContent *child = mChildren->ElementAt(mChildren->Count()-1);
   if (nsnull != child) {
     nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
@@ -2796,7 +3067,7 @@ nsGenericHTMLContainerElement::FinishConvertToXIF(nsXIFConverter& aConverter) co
 nsresult
 nsGenericHTMLContainerElement::Compact()
 {
-  mChildren.Compact();
+  mChildren->Compact();
   return NS_OK;
 }
 
@@ -2810,7 +3081,7 @@ nsGenericHTMLContainerElement::CanContainChildren(PRBool& aResult) const
 nsresult
 nsGenericHTMLContainerElement::ChildCount(PRInt32& aCount) const
 {
-  aCount = mChildren.Count();
+  aCount = mChildren->Count();
   return NS_OK;
 }
 
@@ -2818,7 +3089,7 @@ nsresult
 nsGenericHTMLContainerElement::ChildAt(PRInt32 aIndex,
                                        nsIContent*& aResult) const
 {
-  nsIContent *child = (nsIContent*) mChildren.ElementAt(aIndex);
+  nsIContent *child = mChildren->ElementAt(aIndex);
   if (nsnull != child) {
     NS_ADDREF(child);
   }
@@ -2831,7 +3102,7 @@ nsGenericHTMLContainerElement::IndexOf(nsIContent* aPossibleChild,
                                        PRInt32& aIndex) const
 {
   NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
-  aIndex = mChildren.IndexOf(aPossibleChild);
+  aIndex = mChildren->IndexOf(aPossibleChild);
   return NS_OK;
 }
 
@@ -2841,7 +3112,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
                                              PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
-  PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
+  PRBool rv = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
@@ -2862,8 +3133,8 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
                                               PRBool aNotify)
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
-  nsIContent* oldKid = (nsIContent*) mChildren.ElementAt(aIndex);
-  PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
+  nsIContent* oldKid = mChildren->ElementAt(aIndex);
+  PRBool rv = mChildren->ReplaceElementAt(aKid, aIndex);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
@@ -2885,7 +3156,7 @@ nsresult
 nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION((nsnull != aKid) && (aKid != mContent), "null ptr");
-  PRBool rv = mChildren.AppendElement(aKid);
+  PRBool rv = mChildren->AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
@@ -2903,7 +3174,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 nsresult
 nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 {
-  nsIContent* oldKid = (nsIContent*) mChildren.ElementAt(aIndex);
+  nsIContent* oldKid = mChildren->ElementAt(aIndex);
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
     if (aNotify) {
@@ -2911,7 +3182,7 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         doc->ContentWillBeRemoved(mContent, oldKid, aIndex);
       }
     }
-    PRBool rv = mChildren.RemoveElementAt(aIndex);
+    PRBool rv = mChildren->RemoveElementAt(aIndex);
     if (aNotify) {
       if (nsnull != doc) {
         doc->ContentHasBeenRemoved(mContent, oldKid, aIndex);
