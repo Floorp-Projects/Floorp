@@ -58,7 +58,9 @@ nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
                            nsIInputStream* in)
 {
     mURI = uri;
-    mContentType = nsCRT::strdup(contentType);
+    nsCAutoString cType(contentType);
+    cType.ToLowerCase();
+    mContentType = cType.ToNewCString();
     if (mContentType == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     mInputStream = in;
