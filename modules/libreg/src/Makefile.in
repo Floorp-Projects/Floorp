@@ -59,3 +59,7 @@ else
 	$(CC) -o $@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<
 endif
 
+vr_stubs.c: $(DEPTH)/build/build_number
+
+$(DEPTH)/build/build_number:
+	cd $(DEPTH)/config; $(MAKE) ../build/build_number
