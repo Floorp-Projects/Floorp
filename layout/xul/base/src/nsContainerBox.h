@@ -79,7 +79,9 @@ public:
   virtual void InitChildren(nsBoxLayoutState& aState, nsIFrame* aList);
   virtual nsIBox* GetPrevious(nsIFrame* aChild);
   virtual void SanityCheck(nsFrameList& aFrameList);
+#ifdef DEBUG_LAYOUT
   virtual void SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug);
+#endif
   virtual void CheckBoxOrder(nsBoxLayoutState& aState);
   
   static nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);

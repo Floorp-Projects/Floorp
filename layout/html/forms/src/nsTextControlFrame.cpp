@@ -1973,7 +1973,9 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
      return NS_OK;
   }
 
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
+#endif
 
   aSize.width = 0;
   aSize.height = 0;

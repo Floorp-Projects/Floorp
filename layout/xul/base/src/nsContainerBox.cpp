@@ -395,6 +395,7 @@ nsContainerBox::InitChildren(nsBoxLayoutState& aState, nsIFrame* aList)
 
 }
 
+#ifdef DEBUG_LAYOUT
 void
 nsContainerBox::SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PRBool aDebug)
 {
@@ -406,6 +407,7 @@ nsContainerBox::SetDebugOnChildList(nsBoxLayoutState& aState, nsIBox* aChild, PR
         child->GetNextBox(&child);
      }
 }
+#endif
 
 void
 nsContainerBox::SanityCheck(nsFrameList& aFrameList)

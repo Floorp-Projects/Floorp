@@ -360,7 +360,9 @@ nsHTMLScrollFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 NS_IMETHODIMP
 nsHTMLScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
+#endif
 
   nsGfxScrollFrameInner::ScrollbarStyles styles = GetScrollbarStyles();
 
@@ -474,7 +476,9 @@ nsHTMLScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsHTMLScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
+#endif
 
   nsresult rv = mInner.mScrollAreaBox->GetMinSize(aState, aSize);
 
@@ -509,7 +513,9 @@ nsHTMLScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsHTMLScrollFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
+#endif
 
   aSize.width = NS_INTRINSICSIZE;
   aSize.height = NS_INTRINSICSIZE;
@@ -898,7 +904,9 @@ nsXULScrollFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 NS_IMETHODIMP
 nsXULScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
+#endif
 
   nsGfxScrollFrameInner::ScrollbarStyles styles = GetScrollbarStyles();
 
@@ -1012,7 +1020,9 @@ nsXULScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsXULScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
+#endif
 
   nsresult rv = mInner.mScrollAreaBox->GetMinSize(aState, aSize);
 
@@ -1047,7 +1057,9 @@ nsXULScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsXULScrollFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
+#ifdef DEBUG_LAYOUT
   PropagateDebug(aState);
+#endif
 
   aSize.width = NS_INTRINSICSIZE;
   aSize.height = NS_INTRINSICSIZE;

@@ -296,6 +296,7 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
 }
 
 
+#ifdef DEBUG_LAYOUT
 NS_IMETHODIMP
 nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 {
@@ -329,7 +330,7 @@ nsPopupSetFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDeb
 
       return NS_OK;
 }
-
+#endif
 
 
 void

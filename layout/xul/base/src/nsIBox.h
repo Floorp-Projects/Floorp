@@ -60,8 +60,8 @@ class nsBoxLayoutState;
 struct nsRect;
 struct nsSize;
 
-// {162F6B5A-F926-11d3-BA06-001083023C1E}
-#define NS_IBOX_IID { 0x162f6b5a, 0xf926, 0x11d3, { 0xba, 0x6, 0x0, 0x10, 0x83, 0x2, 0x3c, 0x1e } }
+// {b29f0101-eb3c-4f66-804e-58faf9dbb380}
+#define NS_IBOX_IID { 0xb29f0101, 0xeb3c, 0x4f66, { 0x80, 0x4e, 0x58, 0xfa, 0xf9, 0xdb, 0xb3, 0x80 } }
 
 #define DEFAULT_ORDINAL_GROUP 1
 
@@ -100,8 +100,6 @@ public:
   NS_IMETHOD HasDirtyChildren(PRBool& aIsDirty)=0;
   NS_IMETHOD MarkDirty(nsBoxLayoutState& aState)=0;
   NS_IMETHOD MarkDirtyChildren(nsBoxLayoutState& aState)=0;
-  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug)=0;
-  NS_IMETHOD GetDebug(PRBool& aDebug)=0;
   NS_IMETHOD GetChildBox(nsIBox** aBox)=0;
   NS_IMETHOD GetNextBox(nsIBox** aBox)=0;
   NS_IMETHOD SetNextBox(nsIBox* aBox)=0;
@@ -123,7 +121,6 @@ public:
   NS_IMETHOD GetDirection(PRBool& aIsNormal)=0;
   NS_IMETHOD Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE)=0;
   NS_IMETHOD NeedsRecalc()=0;
-  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox)=0;
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   NS_IMETHOD RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)=0;
@@ -131,6 +128,10 @@ public:
   NS_IMETHOD MarkChildrenStyleChange()=0;
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
 #ifdef DEBUG_LAYOUT
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug)=0;
+  NS_IMETHOD GetDebug(PRBool& aDebug)=0;
+  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox)=0;
+
   NS_IMETHOD DumpBox(FILE* out)=0;
 #endif
   NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust)=0;
