@@ -31,7 +31,7 @@ CHROME_CONTENT = \
 	.\addressingWidgetOverlay.xul \
 	.\askSendFormat.js \
 	.\askSendFormat.xul \
-	($NULL)
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
