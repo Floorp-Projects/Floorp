@@ -19,7 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
 
-[object, uuid(cf0df3b0-3401-11d2-8163-006008119d7a)]
+[object, uuid(56decae0-3406-11d2-8163-006008119d7a)]
 interface nsIShutdownListener : nsISupports {
 
   void OnShutdown(in nsCID aClass, in nsISupports service);
