@@ -37,7 +37,6 @@ EXPORTS		= \
 		nsImapMailFolder.h \
 		nsImapProtocol.h \
 		nsImapProxyEvent.h \
-		nsIImapHostSessionList.h \
 		nsImapSearchResults.h \
 		nsImapServerResponseParser.h \
 		nsImapService.h \

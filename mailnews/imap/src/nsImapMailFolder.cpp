@@ -39,7 +39,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 #include "nsImapUndoTxn.h"
-#include "nsIImapHostSessionList.h"
+#include "nsIIMAPHostSessionList.h"
 
 #ifdef DOING_FILTERS
 #include "nsIMsgFilter.h"
