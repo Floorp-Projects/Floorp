@@ -27,7 +27,7 @@ include $(DEPTH)/config/autoconf.mk
 
 # build our subdirs, too
 ifdef ACCESSIBILITY
-DIRS		= mai
+#DIRS		= mai
 endif
 
 MODULE		= widget
