@@ -70,7 +70,7 @@ protected:
 
 private:
     // Put up file picker dialog.
-    NS_IMETHOD SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **result, const nsCString &suggested );
+    NS_IMETHOD SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **result, const nsCString &suggested );
     nsCString  SuggestNameFor( nsIChannel *aChannel, char const *suggestedName );
 
     // Objects of this class are counted to manage library unloading...
@@ -119,7 +119,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
                                                  char const *contentType,
                                                  char const *suggestedName ) {
     // Prompt the user for the destination file.
-    nsCOMPtr<nsIFileSpec> outputFile;
+    nsCOMPtr<nsILocalFile> outputFile;
     PRBool isValid = PR_FALSE;
     nsresult rv = SelectFile( parent, 
                               getter_AddRefs( outputFile ),
@@ -127,11 +127,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
 
     if ( NS_SUCCEEDED( rv )
          &&
-         outputFile
-         &&
-         NS_SUCCEEDED( outputFile->IsValid( &isValid ) )
-         &&
-         isValid ) {
+         outputFile ) {
         // Try to get HTTP channel.
         nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
         if ( httpChannel ) {
@@ -218,7 +214,7 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
 }
 
 NS_IMETHODIMP
-nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **aResult, const nsCString &suggested ) {
+nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResult, const nsCString &suggested ) {
     nsresult rv = NS_OK;
 
     if ( aResult ) {
@@ -277,43 +273,19 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **aResul
                 rv = picker->Show( &rc );
             }
 
-            #ifdef DEBUG_law
-            printf( "\nFile picker result = 0x%04X\n\n", (int)rc );
-            #endif
             if ( rc != nsIFilePicker::returnCancel ) {
                 // Give result to caller.
-                nsCOMPtr<nsILocalFile> selection;
-                if ( NS_SUCCEEDED( picker->GetFile( getter_AddRefs( selection ) ) ) ) {
-                    nsXPIDLCString selectionPath;
-                    if ( NS_SUCCEEDED( selection->GetPath( getter_Copies( selectionPath ) ) ) ) {
-                        rv = NS_NewFileSpec( aResult );
-                        if ( NS_SUCCEEDED( rv ) ) {
-                            rv = (*aResult)->SetNativePath( selectionPath );
-                            printf( "\nresult native path = %s\n\n", (const char *)selectionPath );
-                        }
-                    }
-                }
+                rv = picker->GetFile( getter_AddRefs( aResult ) );
 
                 if ( NS_SUCCEEDED( rv ) && prefs ) {
                     // Save selected directory for next time.
-                    nsCOMPtr<nsIFileSpec> startDirPath;
-                    rv = (*aResult)->GetParent( getter_AddRefs(startDirPath));
+                    nsCOMPtr<nsIFile> newStartDir;
+                    rv = (*aResult)->GetParent( getter_AddRefs( newStartDir ) );
 
-                    // go through nsFileSpec to get to nsILocalFile
-                    nsFileSpec startDirSpec;
+                    startDir = do_QueryInterface( newStartDir );
 
-                    if (NS_SUCCEEDED(rv))
-                      rv = startDirPath->GetFileSpec(&startDirSpec);
-                    
-                    if (NS_SUCCEEDED(rv))
-                      rv = NS_FileSpecToIFile(&startDirSpec,
-                                              getter_AddRefs(startDir));
-                    
                     if ( NS_SUCCEEDED( rv ) && startDir ) {
-                        prefs->SetFileXPref( "browser.download.dir", startDir);
-                        #ifdef DEBUG_law
-                        printf( "\nbrowser.download.dir has been reset\n\n" );
-                        #endif
+                        prefs->SetFileXPref( "browser.download.dir", startDir );
                     }
                 }
             } else if ( NS_SUCCEEDED( rv ) ) {

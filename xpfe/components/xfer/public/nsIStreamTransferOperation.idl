@@ -22,9 +22,9 @@
 
 #include "nsISupports.idl"
 #include "nsIChannel.idl"
-#include "nsIFileSpec.idl"
 
 interface nsIObserver;
+interface nsILocalFile;
 
 /*------------------------- nsIStreamTransferOperation -------------------------
 | This interface is provided to enable the JavaScript portion of the standard  |
@@ -37,7 +37,7 @@ interface nsIObserver;
 [scriptable, uuid(E2200F90-3E23-11d3-806A-00600811A9C3)]
 interface nsIStreamTransferOperation : nsISupports {
     readonly attribute nsIChannel  source;
-    readonly attribute nsIFileSpec target;
+    readonly attribute nsILocalFile target;
 
     attribute nsIObserver observer;
 
@@ -56,4 +56,8 @@ interface nsIStreamTransferOperation : nsISupports {
     const unsigned long kOpRead             = 10;
     const unsigned long kOpCreateFile       = 11;
     const unsigned long kOpAsyncRead        = 12;
+
+    // Reason codes (for write errors):
+    const unsigned long kReasonAccessError  = 1;
+    const unsigned long kReasonDiskFull     = 2;
 };

@@ -28,7 +28,7 @@
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
 #include "nsIOutputStream.h"
-#include "nsIFileSpec.h"
+#include "nsILocalFile.h"
 
 #include "nsCOMPtr.h"
 
@@ -56,7 +56,7 @@ class nsStreamXferOp : public nsIStreamTransferOperation,
 #endif
 public:
     // ctor/dtor
-    nsStreamXferOp( nsIChannel *source, nsIFileSpec *target );
+    nsStreamXferOp( nsIChannel *source, nsILocalFile *target );
     virtual ~nsStreamXferOp();
 
     // Implementation.
@@ -85,11 +85,12 @@ private:
     nsCOMPtr<nsIChannel>      mInputChannel;
     nsCOMPtr<nsIChannel>      mOutputChannel;
     nsCOMPtr<nsIOutputStream> mOutputStream;
-    nsCOMPtr<nsIFileSpec>     mOutputSpec;
+    nsCOMPtr<nsILocalFile>    mOutputFile;
     nsIObserver              *mObserver; // Not owned; owner should call SetObserver(0) prior
                                          // to this object getting destroyed.
     int                       mContentLength;
     unsigned long             mBytesProcessed;
+    PRBool                    mError;
 }; // nsStreamXferOp
 
 #endif

@@ -58,14 +58,15 @@ NS_IMPL_ISUPPORTS4(nsStreamXferOp, nsIStreamObserver, nsIStreamTransferOperation
 #endif
 
 // ctor - save arguments in data members.
-nsStreamXferOp::nsStreamXferOp( nsIChannel *source, nsIFileSpec *target ) 
+nsStreamXferOp::nsStreamXferOp( nsIChannel *source, nsILocalFile *target ) 
     : mInputChannel( source ),
       mOutputChannel( 0 ),
       mOutputStream( 0 ),
-      mOutputSpec( target ),
+      mOutputFile( target ),
       mObserver( 0 ),
       mContentLength( 0 ),
-      mBytesProcessed( 0 ) {
+      mBytesProcessed( 0 ),
+      mError( PR_FALSE ) {
     // Properly initialize refcnt.
     NS_INIT_REFCNT();
 }
@@ -73,9 +74,6 @@ nsStreamXferOp::nsStreamXferOp( nsIChannel *source, nsIFileSpec *target )
 // dtor
 nsStreamXferOp::~nsStreamXferOp() {
     // Delete dynamically allocated members (file and buffer).
-#ifdef DEBUG_law
-    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp destructor called\n" );
-#endif
 }
 
 // Invoke nsIDOMWindowInternal::OpenDialog, passing this object as argument.
@@ -134,14 +132,24 @@ NS_IMETHODIMP
 nsStreamXferOp::OnError( int operation, nsresult errorCode ) {
     nsresult rv = NS_OK;
 
-#ifdef DEBUG_law
-    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnError; op=%d, rv=0x%08X\n",
-                  operation, (int)errorCode );
-#endif
+    // Record fact that an error has occurred.
+    mError = PR_TRUE;
 
     if ( mObserver ) {
-        char buf[32];
-        PR_snprintf( buf, sizeof( buf ), "%d %X", operation, (int)errorCode );
+        // Pick off error codes of interest and convert to strings
+        // so JS code can test for them without hardcoded numbers.
+        PRUint32 reason = 0;
+        if ( errorCode == NS_ERROR_FILE_ACCESS_DENIED ) {
+            reason = kReasonAccessError;
+        } else if ( errorCode == NS_ERROR_FILE_READ_ONLY ) {
+            reason = kReasonAccessError;
+        } else if ( errorCode == NS_ERROR_FILE_NO_DEVICE_SPACE ) {
+            reason = kReasonDiskFull;
+        } else if ( errorCode == NS_ERROR_FILE_DISK_FULL ) {
+            reason = kReasonDiskFull;
+        }
+        char buf[64];
+        PR_snprintf( buf, sizeof( buf ), "%d %X %u", operation, (int)errorCode, reason );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onError" ).GetUnicode(),
                                  NS_ConvertASCIItoUCS2( buf ).GetUnicode() );
@@ -167,14 +175,10 @@ nsStreamXferOp::Start( void ) {
     
             if ( NS_SUCCEEDED( rv ) ) {
                 // Next, create output file channel.
-                nsFileSpec target;      // XXX eliminate
-                mOutputSpec->GetFileSpec( &target );
-                nsCOMPtr<nsILocalFile> file;
-                rv = NS_NewLocalFile(target, PR_FALSE, getter_AddRefs(file));
-                if (NS_SUCCEEDED(rv)) {
-                    rv = fts->CreateTransport(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-                                              0664, getter_AddRefs( mOutputChannel));
-                }
+                rv = fts->CreateTransport( mOutputFile, 
+                                           PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+                                           0664,
+                                           getter_AddRefs( mOutputChannel ) );
     
                 if ( NS_SUCCEEDED( rv ) ) {
 #ifdef USE_ASYNC_READ
@@ -272,21 +276,17 @@ nsStreamXferOp::Stop( void ) {
 // We also open the output stream at this point.
 NS_IMETHODIMP
 nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG_law
-    DEBUG_PRINTF( PR_STDOUT, "nsStreamXferOp::OnStartRequest; channel=0x%08X, context=0x%08X\n",
-                  (int)(void*)channel, (int)(void*)aContext );
-#endif
+    nsresult rv = NS_ERROR_FAILURE;
 
 #ifdef USE_ASYNC_READ
-    // Open output stream.
-    rv = mOutputChannel->OpenOutputStream( getter_AddRefs( mOutputStream ) );
-
-    if ( NS_FAILED( rv ) ) {
-        // Give up all hope.
-        this->OnError( kOpOpenOutputStream, rv );
-        this->Stop();
+    if ( !mOutputStream ) {
+        // Open output stream.
+        rv = mOutputChannel->OpenOutputStream( getter_AddRefs( mOutputStream ) );
+        if ( NS_FAILED( rv ) ) {
+            // Give up all hope.
+            this->OnError( kOpOpenOutputStream, rv );
+            this->Stop();
+        }
     }
 #endif // USE_ASYNC_READ
 
@@ -307,27 +307,42 @@ nsStreamXferOp::OnDataAvailable( nsIChannel     *channel,
         // Write the data to the output stream.
         // Read a buffer full till aLength bytes have been processed.
         char buffer[ 8192 ];
-        unsigned long bytesRemaining = aLength;
-        while ( bytesRemaining ) {
-            unsigned int bytesRead;
+        char *bufPtr = buffer;
+        unsigned long bytesToRead = aLength;
+        while ( NS_SUCCEEDED( rv ) && bytesToRead ) {
+            // Write out remainder of read buffer.
+            unsigned int bytesToWrite;
             // Read a buffer full or the number remaining (whichever is smaller).
             rv = aIStream->Read( buffer,
-                                 PR_MIN( sizeof( buffer ), bytesRemaining ),
-                                 &bytesRead );
+                                 PR_MIN( sizeof( buffer ), bytesToRead ),
+                                 &bytesToWrite );
             if ( NS_SUCCEEDED( rv ) ) {
-                // Write the bytes just read to the output stream.
-                unsigned int bytesWritten;
-                rv = mOutputStream->Write( buffer, bytesRead, &bytesWritten );
-                if ( NS_SUCCEEDED( rv ) && bytesWritten == bytesRead ) {
-                    // All bytes written OK.
-                    bytesRemaining -= bytesWritten;
-                } else {
-                    // Something is wrong.
+                // Record bytes that have been read so far.
+                bytesToRead -= bytesToWrite;
+
+                // Write out the data until something goes wrong, or, it is
+                // all written.  We loop because for some errors (e.g., disk
+                // full), we get NS_OK with some bytes written, then an error.
+                // So, we want to write again in that case to get the actual
+                // error code.
+                const char *bufPtr = buffer; // Where to write from.
+                while ( NS_SUCCEEDED( rv ) && bytesToWrite ) {
+                    unsigned int bytesWritten = 0;
+                    rv = mOutputStream->Write( buffer, bytesToWrite, &bytesWritten );
                     if ( NS_SUCCEEDED( rv ) ) {
-                        // Not all bytes were written for some strange reason.
-                        rv = NS_ERROR_FAILURE;
+                        // Adjust count of amount to write and the write location.
+                        bytesToWrite -= bytesWritten;
+                        bufPtr       += bytesWritten;
+                        // Force an error if (for some reason) we get NS_OK but
+                        // no bytes written.
+                        if ( !bytesWritten ) {
+                            rv = NS_ERROR_FAILURE;
+                            this->OnError( kOpWrite, rv );
+                        }
+                    } else {
+                        // Something is wrong.
+                        this->OnError( kOpWrite, rv );
                     }
-                    this->OnError( kOpWrite, rv );
                 }
             } else {
                 this->OnError( kOpRead, rv );
@@ -434,7 +449,7 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
     if ( NS_FAILED( aStatus ) ) {
         this->Stop();
         // XXX need to use aMsg when it is provided
-        this->OnError( kOpAsyncWrite, aStatus );
+        this->OnError( kOpAsyncRead, aStatus );
     }
 
     // Close the output stream.
@@ -450,7 +465,7 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
     mOutputChannel = 0;
 
     // Notify observer that the download is complete.
-    if ( mObserver ) {
+    if ( !mError && mObserver ) {
         nsString msg(aMsg);
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
                                   NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_CONTRACTID ";onCompletion" ).GetUnicode(),
@@ -481,11 +496,11 @@ nsStreamXferOp::GetSource( nsIChannel**result ) {
 }
 
 NS_IMETHODIMP
-nsStreamXferOp::GetTarget( nsIFileSpec**result ) {
+nsStreamXferOp::GetTarget( nsILocalFile**result ) {
     nsresult rv = NS_OK;
 
     if ( result ) {
-        *result = mOutputSpec;
+        *result = mOutputFile;
         NS_IF_ADDREF( *result );
     } else {
         rv = NS_ERROR_NULL_POINTER;

@@ -26,7 +26,8 @@ var dialog;
 
 function loadDialog() {
     dialog.location.setAttribute( "value", data.source.URI.spec );
-    dialog.fileName.setAttribute( "value", data.target.nativePath );
+    dialog.fileName.setAttribute( "value", data.target.unicodePath );
+    dialog.error = false;
 }
 
 var contractId = "@mozilla.org/appshell/component/xfer;1";
@@ -59,24 +60,22 @@ var observer = {
 }
 
 function getString( stringId ) {
-   // Check if we've fetched this string already.
-   if ( !dialog.strings[ stringId ] ) {
-      // Try to get it.
-      var elem = document.getElementById( "dialog.strings."+stringId );
-      if ( elem
+    // Check if we've fetched this string already.
+    if ( !( stringId in dialog.strings ) ) {
+        // Try to get it.
+        var elem = document.getElementById( "dialog.strings."+stringId );
+        if ( elem
            &&
-           elem.childNodes
+           elem.firstChild
            &&
-           elem.childNodes[0]
-           &&
-           elem.childNodes[0].nodeValue ) {
-         dialog.strings[ stringId ] = elem.childNodes[0].nodeValue;
-      } else {
-         // If unable to fetch string, use an empty string.
-         dialog.strings[ stringId ] = "";
-      }
-   }
-   return dialog.strings[ stringId ];
+           elem.firstChild.nodeValue ) {
+            dialog.strings[ stringId ] = elem.firstChild.nodeValue;
+        } else {
+            // If unable to fetch string, use an empty string.
+            dialog.strings[ stringId ] = "";
+        }
+    }
+    return dialog.strings[ stringId ];
 }
 
 function replaceInsert( text, index, value ) {
@@ -89,8 +88,8 @@ function replaceInsert( text, index, value ) {
 function onLoad() {
     // Set global variables.
     data = window.arguments[0];
+
     if ( !data ) {
-        dump( "Invalid argument to downloadProgress.xul\n" );
         window.close()
         return;
     }
@@ -111,17 +110,36 @@ function onLoad() {
 
     // Commence transfer.
     data.observer = observer;
-    data.Start();
+    try {
+        data.Start();
+    } catch( exception ) {
+        onError( exception );
+    }
 }
 
 function onUnload() {
-    // Unhook observer.
-    data.observer = null;
+    // Only do this one time...
+    if ( data ) {
+        // Unhook underlying xfer operation.
+        var op = data;
+        data = null;
 
-    // See if we completed normally (i.e., are closing ourself).
-    if ( !completed ) {
-        // Terminate transfer.
-        data.Stop();
+        // Unhook observer.
+        op.observer = null;
+    
+        // See if we completed normally (i.e., are closing ourself).
+        if ( started && !completed ) {
+            // Terminate transfer.
+            try {
+                op.Stop();
+            } catch ( exception ) {
+                if ( !dialog.error ) {
+                    // Show error now.
+                    onError( exception );
+                }
+            }
+            op = null;
+        }
     }
 }
 
@@ -141,7 +159,7 @@ var warningLimit = 30000; // Warn on Cancel after 30 sec (30000 milleseconds).
 
 function stop() {
    // If too much time has elapsed, make sure it's OK to quit.
-   if ( started ) {
+   if ( started && !completed ) {
       // Get current time.
       var now = ( new Date() ).getTime();
    
@@ -155,7 +173,7 @@ function stop() {
    }
 
    // Stop the transfer.
-   data.Stop();
+   onUnload();
 
    // Close the window.
    window.close();
@@ -321,11 +339,6 @@ function onCompletion( status ) {
         // Close the window in 2 seconds (to ensure user sees we're done).
         window.setTimeout( "window.close();", 2000 );
     } catch ( exception ) {
-        dump( "Error setting close timeout\n" );
-        // OK, try to just close the window immediately.
-        window.close();
-        // If that's not working either, change button text to give user a clue.
-        dialog.cancel.childNodes[0].nodeValue = "Close";
     }
 }
 
@@ -336,16 +349,56 @@ function onStatus( status ) {
    if ( status.length > 9 ) {
       dialog.status.setAttribute("value", status);
    }
-}
+}                                 
 
 function onError( errorCode ) {
-    // XXX - l10n
-    var msg = "Unknown error";
-    switch ( errorCode ) {
-        default:
-            msg += " [" + errorCode + "]\n";
+    // Record fact we had an error.
+    dialog.error = true;
+
+    // Errorcode has format: "operation rv <string>" where
+    //   operation - operation that failed; values are as defined
+    //               in nsIStreamTransferOperation.idl
+    //   rv        - actual nsresult (in "%X" format)
+    //   reason    - reason for failure; values are as defined
+    //               in nsIStreamTransferOperation.idl
+    var msg;
+    switch ( parseInt( errorCode.split(" ")[0] ) ) {
+        // Write errors...
+        case Components.interfaces.nsIStreamTransferOperation.kOpWrite :
+        case Components.interfaces.nsIStreamTransferOperation.kOpAsyncWrite :
+        case Components.interfaces.nsIStreamTransferOperation.kOpOpenOutputStream :
+        case Components.interfaces.nsIStreamTransferOperation.kOpCreateTransport :
+        case Components.interfaces.nsIStreamTransferOperation.kOpOutputClose :
+        case Components.interfaces.nsIStreamTransferOperation.kOpOutputCancel :
+            // Look for some specific reasons.
+            switch ( parseInt( errorCode.split(" ")[2] ) ) {
+                case Components.interfaces.nsIStreamTransferOperation.kReasonAccessError :
+                    // Access/permission error.
+                    msg = getString( "accessErrorMsg" );
+                    break;
+    
+                case Components.interfaces.nsIStreamTransferOperation.kReasonDiskFull :
+                    // Out of space error.
+                    msg = getString( "diskFullMsg" );
+                    break;
+    
+                default :
+                    // Generic write error.
+                    msg = getString( "writeErrorMsg" );
+                    break;
+            }
+            break;
+
+        // Read errors...
+        default :
+            // Presume generic read error.
+            msg = getString( "readErrorMsg" );
             break;
     }
+    // Tell user.
     alert( msg );
-    window.close();
+    // Dump error code to console.
+    dump( "downloadProgress.js onError: " + errorCode + "\n" );
+    // Terminate transfer and clean up.
+    stop();
 }

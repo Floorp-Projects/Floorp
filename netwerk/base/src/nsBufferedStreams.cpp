@@ -350,6 +350,10 @@ nsBufferedOutputStream::Flush(void)
 {
     nsresult rv;
     PRUint32 amt;
+    if (!mStream) {
+        // Stream already cancelled/flushed; probably because of error.
+        return NS_OK;
+    }
     rv = Sink()->Write(mBuffer, mCursor, &amt);
     if (NS_FAILED(rv)) return rv;
     mBufferStartOffset += amt;
