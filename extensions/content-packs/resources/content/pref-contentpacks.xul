@@ -84,7 +84,7 @@
       if (newContentPack && (newContentPack != oldContentPack))
       {
         try {
-          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
+          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
           chromeRegistry.selectLocale(newContentPack, true);
           var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
           observerService.notifyObservers(null, "locale-selected", null);
@@ -113,7 +113,7 @@
       if (newLanguagePack && (newLanguagePack != oldLanguagePack))
       {
         try {
-          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
+          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
           chromeRegistry.selectLocale(newLanguagePack, true);
           var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
           observerService.notifyObservers(null, "locale-selected", null);
