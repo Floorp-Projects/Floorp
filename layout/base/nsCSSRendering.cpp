@@ -2274,11 +2274,17 @@ PRInt32       curIndex,c1Index;
 nsPoint       thePath[MAXPATHSIZE];
 nsPoint       polyPath[MAXPOLYPATHSIZE];
 PRInt16       np;
+nscoord       twipsPerPixel;
+float         p2t;
+
+  // needed for our border thickness
+  aPresContext.GetPixelsToTwips(&p2t);
+  twipsPerPixel = NSToCoordRound(p2t);
 
   aRenderingContext.SetColor(aColor.mBackgroundColor);
 
   // set the rounded rect up, and let'er rip
-  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aTheRadius);
+  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aTheRadius,twipsPerPixel);
   outerPath.GetRoundedBorders(UL,UR,LL,LR);
 
   // BUILD THE ENTIRE OUTSIDE PATH
@@ -2359,8 +2365,9 @@ QBCurve       Icr1,Icr2,Icr3,Icr4;
 nsPoint       thePath[MAXPATHSIZE];
 PRInt16       np;
 nsMargin      border;
-nscoord       twipsPerPixel;
-float         p2t;
+nscoord       twipsPerPixel,qtwips;
+float         p2t,x,y;
+nsTransform2D *theTransform;
 
   aBorderStyle.CalcBorderFor(aForFrame, border);
   if ((0 == border.left) && (0 == border.right) &&
@@ -2370,86 +2377,78 @@ float         p2t;
 
   // needed for our border thickness
   aPresContext.GetPixelsToTwips(&p2t);
-  twipsPerPixel = (nscoord) p2t;
+  twipsPerPixel = NSToCoordRound(p2t);
 
   // Base our thickness check on the segment being less than a pixel and 1/2
-  twipsPerPixel += twipsPerPixel >> 2;
+  qtwips = twipsPerPixel >> 2;
 
-  // set the rounded rect up, and let'er rip
-  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aBorderRadius);
+  outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aBorderRadius,twipsPerPixel);
   outerPath.GetRoundedBorders(UL,UR,LL,LR);
   outerPath.CalcInsetCurves(IUL,IUR,ILL,ILR,border);
 
   // TOP LINE -- construct and divide the curves first, then put together our top and bottom paths
-  if(0==border.top)
-    return;
-  // construct and divide the curves needed
   UL.MidPointDivide(&cr1,&cr2);
   UR.MidPointDivide(&cr3,&cr4);
   IUL.MidPointDivide(&Icr1,&Icr2);
   IUR.MidPointDivide(&Icr3,&Icr4);
-
-  // the outer part of the path
-  np=0;
-  thePath[np++].MoveTo(cr2.mAnc1.x,cr2.mAnc1.y);
-  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
-  thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
-  thePath[np++].MoveTo(cr3.mAnc1.x, cr3.mAnc1.y);
-  thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
-  thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
+  if(0!=border.top){
+    np=0;
+    thePath[np++].MoveTo(cr2.mAnc1.x,cr2.mAnc1.y);
+    thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+    thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
+    thePath[np++].MoveTo(cr3.mAnc1.x, cr3.mAnc1.y);
+    thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
+    thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
  
-  thePath[np++].MoveTo(Icr3.mAnc2.x,Icr3.mAnc2.y);
-  thePath[np++].MoveTo(Icr3.mCon.x, Icr3.mCon.y);
-  thePath[np++].MoveTo(Icr3.mAnc1.x, Icr3.mAnc1.y);
-  thePath[np++].MoveTo(Icr2.mAnc2.x, Icr2.mAnc2.y);
-  thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
-  thePath[np++].MoveTo(Icr2.mAnc1.x, Icr2.mAnc1.y);
-
-  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_TOP,border,twipsPerPixel);
-
+    thePath[np++].MoveTo(Icr3.mAnc2.x,Icr3.mAnc2.y);
+    thePath[np++].MoveTo(Icr3.mCon.x, Icr3.mCon.y);
+    thePath[np++].MoveTo(Icr3.mAnc1.x, Icr3.mAnc1.y);
+    thePath[np++].MoveTo(Icr2.mAnc2.x, Icr2.mAnc2.y);
+    thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
+    thePath[np++].MoveTo(Icr2.mAnc1.x, Icr2.mAnc1.y);
+    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_TOP,border,qtwips);
+  }
   // RIGHT  LINE ----------------------------------------------------------------
-  if(0==border.right)
-    return;
   LR.MidPointDivide(&cr2,&cr3);
   ILR.MidPointDivide(&Icr2,&Icr3);
-  np=0;
-  thePath[np++].MoveTo(cr4.mAnc1.x,cr4.mAnc1.y);
-  thePath[np++].MoveTo(cr4.mCon.x, cr4.mCon.y);
-  thePath[np++].MoveTo(cr4.mAnc2.x,cr4.mAnc2.y);
-  thePath[np++].MoveTo(cr2.mAnc1.x,cr2.mAnc1.y);
-  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
-  thePath[np++].MoveTo(cr2.mAnc2.x,cr2.mAnc2.y);
+  if(0!=border.right){
+    np=0;
+    thePath[np++].MoveTo(cr4.mAnc1.x,cr4.mAnc1.y);
+    thePath[np++].MoveTo(cr4.mCon.x, cr4.mCon.y);
+    thePath[np++].MoveTo(cr4.mAnc2.x,cr4.mAnc2.y);
+    thePath[np++].MoveTo(cr2.mAnc1.x,cr2.mAnc1.y);
+    thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+    thePath[np++].MoveTo(cr2.mAnc2.x,cr2.mAnc2.y);
 
-  thePath[np++].MoveTo(Icr2.mAnc2.x,Icr2.mAnc2.y);
-  thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
-  thePath[np++].MoveTo(Icr2.mAnc1.x,Icr2.mAnc1.y);
-  thePath[np++].MoveTo(Icr4.mAnc2.x,Icr4.mAnc2.y);
-  thePath[np++].MoveTo(Icr4.mCon.x, Icr4.mCon.y);
-  thePath[np++].MoveTo(Icr4.mAnc1.x,Icr4.mAnc1.y);
-
-  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_RIGHT,border,twipsPerPixel);
+    thePath[np++].MoveTo(Icr2.mAnc2.x,Icr2.mAnc2.y);
+    thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
+    thePath[np++].MoveTo(Icr2.mAnc1.x,Icr2.mAnc1.y);
+    thePath[np++].MoveTo(Icr4.mAnc2.x,Icr4.mAnc2.y);
+    thePath[np++].MoveTo(Icr4.mCon.x, Icr4.mCon.y);
+    thePath[np++].MoveTo(Icr4.mAnc1.x,Icr4.mAnc1.y);
+    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_RIGHT,border,qtwips);
+  }
 
   // bottom line ----------------------------------------------------------------
-  if(0==border.bottom)
-    return;
   LL.MidPointDivide(&cr2,&cr4);
   ILL.MidPointDivide(&Icr2,&Icr4);
-  np=0;
-  thePath[np++].MoveTo(cr3.mAnc1.x,cr3.mAnc1.y);
-  thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
-  thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
-  thePath[np++].MoveTo(cr2.mAnc1.x, cr2.mAnc1.y);
-  thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
-  thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
+  if(0!=border.bottom){
+    np=0;
+    thePath[np++].MoveTo(cr3.mAnc1.x,cr3.mAnc1.y);
+    thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
+    thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
+    thePath[np++].MoveTo(cr2.mAnc1.x, cr2.mAnc1.y);
+    thePath[np++].MoveTo(cr2.mCon.x, cr2.mCon.y);
+    thePath[np++].MoveTo(cr2.mAnc2.x, cr2.mAnc2.y);
 
-  thePath[np++].MoveTo(Icr2.mAnc2.x,Icr2.mAnc2.y);
-  thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
-  thePath[np++].MoveTo(Icr2.mAnc1.x, Icr2.mAnc1.y);
-  thePath[np++].MoveTo(Icr3.mAnc2.x, Icr3.mAnc2.y);
-  thePath[np++].MoveTo(Icr3.mCon.x, Icr3.mCon.y);
-  thePath[np++].MoveTo(Icr3.mAnc1.x, Icr3.mAnc1.y);
-  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_BOTTOM,border,twipsPerPixel);
-
+    thePath[np++].MoveTo(Icr2.mAnc2.x,Icr2.mAnc2.y);
+    thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
+    thePath[np++].MoveTo(Icr2.mAnc1.x, Icr2.mAnc1.y);
+    thePath[np++].MoveTo(Icr3.mAnc2.x, Icr3.mAnc2.y);
+    thePath[np++].MoveTo(Icr3.mCon.x, Icr3.mCon.y);
+    thePath[np++].MoveTo(Icr3.mAnc1.x, Icr3.mAnc1.y);
+    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_BOTTOM,border,qtwips);
+  }
   // left line ----------------------------------------------------------------
   if(0==border.left)
     return;
@@ -2469,7 +2468,7 @@ float         p2t;
   thePath[np++].MoveTo(Icr4.mCon.x, Icr4.mCon.y);
   thePath[np++].MoveTo(Icr4.mAnc1.x, Icr4.mAnc1.y);
 
-  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_LEFT,border,twipsPerPixel);
+  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_LEFT,border,qtwips);
 }
 
 
@@ -2700,8 +2699,17 @@ PRInt16   adjust=0;
  *	@update 4/13/99 dwc
  */
 void 
-RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius)
+RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius,PRInt16 aNumTwipPerPix)
 {
+nscoord x,y,width,height,br;
+
+
+  // convert this rect to pixel boundaries
+  x = (aLeft/aNumTwipPerPix)*aNumTwipPerPix;
+  y = (aTop/aNumTwipPerPix)*aNumTwipPerPix;
+  width = (aWidth/aNumTwipPerPix)*aNumTwipPerPix;
+  height = (aHeight/aNumTwipPerPix)*aNumTwipPerPix;
+  br = (aRadius/aNumTwipPerPix)*aNumTwipPerPix;
 
   if( (aRadius) > (aWidth>>1) ){
     mRoundness = (aWidth>>1); 
@@ -2722,10 +2730,10 @@ RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRIn
   }
 
   // important coordinates that the path hits
-  mOuterLeft = aLeft;
-  mOuterRight = aLeft + aWidth;
-  mOuterTop = aTop;
-  mOuterBottom = aTop+aHeight;
+  mOuterLeft = x;
+  mOuterRight = x + width;
+  mOuterTop = y;
+  mOuterBottom = y+height;
   mInnerLeft = mOuterLeft + mRoundness;
   mInnerRight = mOuterRight - mRoundness;
   mInnerTop = mOuterTop + mRoundness;
