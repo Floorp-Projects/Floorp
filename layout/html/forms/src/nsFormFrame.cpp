@@ -65,11 +65,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsHTMLParts.h"
 #include "nsIReflowCommand.h"
 
-// GetParentHTMLFrameDocument
-#include "nsIWebShell.h"
-#include "nsIContentViewerContainer.h"
-#include "nsIDocumentViewer.h"
-
 #include "nsIUnicodeEncoder.h"
 
 // FormSubmit observer notification
@@ -86,15 +81,20 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "prmem.h"
 #include "prenv.h"
 
-#define SPECIFY_CHARSET_IN_CONTENT_TYPE
-#define FIX_NON_ASCII_MULTIPART
+// Rewrite of Multipart form posting
+#include "nsSpecialSystemDirectory.h"
+#include "nsIFileSpec.h"
+#include "nsFileSpec.h"
+#include "nsIProtocolHandler.h"
+#include "nsIHTTPProtocolHandler.h"
+#include "nsIServiceManager.h"
+#include "nsEscape.h"
+#include "nsIMIMEService.h"
 
-// GetParentHTMLFrameDocument
-static NS_DEFINE_IID(kIWebshellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
-static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+#define SPECIFY_CHARSET_IN_CONTENT_TYPE
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
 //----------------------------------------------------------------------
 
@@ -140,6 +140,7 @@ nsFormFrame::nsFormFrame()
 
 nsFormFrame::~nsFormFrame()
 {
+  RemoveRadioGroups();
 }
 
 PRBool 
@@ -245,7 +246,7 @@ nsFormFrame::OnReset()
 {
   PRInt32 numControls = mFormControls.Count();
   for (int i = 0; i < numControls; i++) {
-	  nsIFormControlFrame* fcFrame = (nsIFormControlFrame*) mFormControls.ElementAt(i);
+    nsIFormControlFrame* fcFrame = (nsIFormControlFrame*) mFormControls.ElementAt(i);
     fcFrame->Reset();
   }
   return NS_OK;
@@ -458,13 +459,19 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     }
   }
 
+  nsIFileSpec* multipartDataFile = nsnull;
   if (isURLEncoded) {
-    ProcessAsURLEncoded(isPost, data, fcFrame);
+    result = ProcessAsURLEncoded(isPost, data, fcFrame);
   }
   else {
-    ProcessAsMultipart(data, fcFrame);
+    result = ProcessAsMultipart(multipartDataFile, fcFrame);
   }
 
+  // Don't bother submitting form if we failed to generate a valid submission
+  if (NS_FAILED(result)) {
+    NS_IF_RELEASE(multipartDataFile);
+    return result;
+  }
 
   // make the url string
   nsILinkHandler* handler;
@@ -476,6 +483,10 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsIURI* docURL = nsnull;
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
+    NS_ASSERTION(doc, "No document found in Form Submit!\n");
+
+    doc->GetBaseURL(docURL);
+    NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
 
       // If an action is not specified and we are inside 
       // a HTML document then reload the URL. This makes us
@@ -492,13 +503,17 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         // so do nothing.
         return NS_OK;
       } 
-    }
 
-    while (doc && !docURL) {
-      doc->GetBaseURL(docURL);
-      if (!docURL) {
-        doc = GetParentHTMLFrameDocument(doc);
-        if (!doc) break;
+      // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
+      // passed a zero length rel path.
+      char* relPath = nsnull;
+      docURL->GetSpec(&relPath);
+      NS_ASSERTION(relPath, "Rel path couldn't be formed in form submit!\n");
+      if (relPath) {
+        href.Append(relPath);
+        nsCRT::free(relPath);
+      } else {
+        result = NS_ERROR_OUT_OF_MEMORY;
       }
     }
     NS_IF_RELEASE(doc);
@@ -525,7 +540,28 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       nsresult rv;
       char* postBuffer = data.ToNewCString();
 
-      rv = NS_NewPostDataStream(!isURLEncoded, postBuffer, 0, &postDataStream);
+      if (isURLEncoded) {
+        rv = NS_NewPostDataStream(!isURLEncoded, postBuffer, 0, &postDataStream);
+      } else {
+// Cut-and-paste of NS_NewPostDataStream
+        NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIProtocolHandler> pHandler;
+	rv = serv->GetProtocolHandler("http", getter_AddRefs(pHandler));
+	if (NS_FAILED(rv)) return rv;
+	
+	nsCOMPtr<nsIHTTPProtocolHandler> http = do_QueryInterface(pHandler, &rv);
+	if (NS_FAILED(rv)) return rv;
+	
+// Cut-and-paste of nsHTTPHandler::NewPostDataStream inside if(isFile)
+        nsIInputStream* rawStream = nsnull; // Strong
+        rv = multipartDataFile->GetInputStream(&rawStream); // AddRef
+	if (NS_FAILED(rv)) return rv;
+	
+	rv = http->NewEncodeStream(rawStream, nsIHTTPProtocolHandler::ENCODE_NORMAL, &postDataStream);
+        NS_RELEASE(rawStream);
+// End Cut-and-pastisms
+      }
 
       if (NS_OK != rv) {
         delete [] postBuffer;
@@ -538,50 +574,26 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
                            absURLSpec.GetUnicode(),
                            target.GetUnicode(), postDataStream);
     }
-    NS_IF_RELEASE(postDataStream);
+// We need to delete the data file somewhere...
+//    if (!isURLEncoded) {
+//      nsFileSpec mdf = nsnull;
+//      result = multipartDataFile->GetFileSpec(&mdf);
+//      if (NS_SUCCEEDED(result) && mdf) {
+//        mdf.Delete(PR_FALSE);
+//      }
+//    }
+// XXX DON'T NS_IF_RELEASE(postDataStream), this happens in Necko!
     NS_IF_RELEASE(handler);
 
 DebugPrint("url", absURLSpec);
 DebugPrint("data", data);
   }
-  return NS_OK;
+  return result;
 }
 
-// netlib has a general function (netlib\modules\liburl\src\escape.c) 
-// which does url encoding. Since netlib is not yet available for raptor,
-// the following will suffice. Convert space to +, don't convert alphanumeric,
-// conver each non alphanumeric char to %XY where XY is the hexadecimal 
-// equavalent of the binary representation of the character. 
-// 
-PRIVATE
-void URLEncode(char* aInString, char* aOutString)
-{
-  if (nsnull == aInString) {
-	return;
-  }
-  static char *toHex = "0123456789ABCDEF";
-  char* outChar = aOutString;
-  for (char* inChar = aInString; *inChar; inChar++) {
-    if(' ' == *inChar) {                                     // convert space to +
-	    *outChar++ = '+';
-	  } else if ( (((*inChar - '0') >= 0) && (('9' - *inChar) >= 0)) ||   // don't conver alphanumeric
-                (((*inChar - 'a') >= 0) && (('z' - *inChar) >= 0)) ||   // or '.' or '_'
-				        (((*inChar - 'A') >= 0) && (('Z' - *inChar) >= 0)) ||
-                ('.' == *inChar) || ('_' == *inChar)) {
-	    *outChar++ = *inChar;
-	  } else {                                                 // convert all else to hex
-	    *outChar++ = '%';
-      *outChar++ = toHex[(*inChar >> 4) & 0x0F];
-      *outChar++ = toHex[*inChar & 0x0F];
-	  }
-  }
-  *outChar = 0;  // terminate the string
-}
-
-
-
-PRIVATE
-char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder)
+// XXX i18n helper routines
+char*
+nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder)
 {
    char* res = nsnull;
    if(NS_SUCCEEDED(encoder->Reset()))
@@ -606,63 +618,22 @@ char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder*
    return res;
 }
 
-
-PRIVATE
-nsString* URLEncode(nsString& aString, nsIUnicodeEncoder* encoder) 
-{  
-  
+// XXX i18n helper routines
+nsString*
+nsFormFrame::URLEncode(nsString& aString, nsIUnicodeEncoder* encoder) 
+{
   char* inBuf = nsnull;
   if(encoder)
-     inBuf  = UnicodeToNewBytes(aString.GetUnicode(), aString.Length(), encoder);
+    inBuf  = UnicodeToNewBytes(aString.GetUnicode(), aString.Length(), encoder);
 
   if(nsnull == inBuf)
-     inBuf  = aString.ToNewCString();
+    inBuf  = aString.ToNewCString();
 
-  char* outBuf = new char[ (strlen(inBuf) * 3) + 1 ];
-        
-	URLEncode(inBuf, outBuf);
-	nsString* result = new nsString(outBuf);
-	   delete [] outBuf;
-	   delete [] inBuf;
-	return result;
-}
-
-// Hack to get the document from the parent HTML Frame.
-// We need this to find the base URL for submitting forms that are created in Javascript
-nsIDocument*
-nsFormFrame::GetParentHTMLFrameDocument(nsIDocument* doc) {
-  nsIDocument* parentDocument = nsnull;
-  nsIScriptContextOwner* webshellOwner = nsnull;
-  if (!doc) return nsnull;
-  if ((webshellOwner = doc->GetScriptContextOwner()) != nsnull) {
-    nsIWebShell* webshell = nsnull;
-    if (NS_OK == webshellOwner->QueryInterface(kIWebshellIID, (void **)&webshell)) {
-      nsIWebShell* pWebshell = nsnull;
-      if (NS_OK == webshell->GetParent(pWebshell)) {
-        nsIContentViewerContainer* pContentViewerContainer = nsnull;
-        if (NS_OK == pWebshell->QueryInterface(kIContentViewerContainerIID, (void **)&pContentViewerContainer)) {
-          nsIContentViewer* pContentViewer = nsnull;
-          if (NS_OK == pContentViewerContainer->GetContentViewer(&pContentViewer)) {
-            nsIDocumentViewer* pDocumentViewer;
-            if (NS_OK == pContentViewer->QueryInterface(kIDocumentViewerIID, (void **)&pDocumentViewer)) {
-              nsIDocument* pDocument = nsnull;
-              if (NS_OK == pDocumentViewer->GetDocument(pDocument)) {
-                parentDocument = pDocument;
-                NS_RELEASE(doc); // Release the child doc for the caller
-              }
-              NS_RELEASE (pDocumentViewer);
-            }
-            NS_RELEASE(pContentViewer);
-          }
-          NS_RELEASE(pContentViewerContainer);
-        }
-        NS_RELEASE(pWebshell);
-      }
-      NS_RELEASE(webshell);
-     }
-     NS_RELEASE(webshellOwner);
-  }
-  return parentDocument;
+  char* outBuf = nsEscape(inBuf, url_Path);
+  nsString* result = new nsString(outBuf);
+  nsCRT::free(outBuf);
+  nsCRT::free(inBuf);
+  return result;
 }
 
 void nsFormFrame::GetSubmitCharset(nsString& oCharset)
@@ -682,6 +653,7 @@ void nsFormFrame::GetSubmitCharset(nsString& oCharset)
   }
 
 }
+
 NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
 {
   *encoder = nsnull;
@@ -703,104 +675,113 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
 }
 
 #define CRLF "\015\012"   
-void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
+nsresult nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
 {
+  nsresult rv = NS_OK;
   nsString buf;
   PRBool firstTime = PR_TRUE;
   PRUint32 numChildren = mFormControls.Count();
 
   nsIUnicodeEncoder *encoder = nsnull;
-  if(NS_FAILED( GetEncoder(&encoder) ) )
+  if(NS_FAILED(GetEncoder(&encoder)))  // Non-fatal error
      encoder = nsnull;
 
   // collect and encode the data from the children controls
   for (PRUint32 childX = 0; childX < numChildren; childX++) {
-	  nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
-	  if (child && child->IsSuccessful(aFrame)) {
-		  PRInt32 numValues = 0;
-		  PRInt32 maxNumValues = child->GetMaxNumValues();
-			if (maxNumValues <= 0) {
-				continue;
-			}
-		  nsString* names = new nsString[maxNumValues];
-		  nsString* values = new nsString[maxNumValues];
-			if (PR_TRUE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
-				for (int valueX = 0; valueX < numValues; valueX++) {
-				  if (PR_TRUE == firstTime) {
-					  firstTime = PR_FALSE;
-				  } else {
-				    buf += "&";
-				  }
-					nsString* convName = URLEncode(names[valueX], encoder);
-				  buf += *convName;
-					delete convName;
-					buf += "=";
-					nsString* convValue = URLEncode(values[valueX], encoder);
-					buf += *convValue;
-					delete convValue;
-				}
-			}
-      delete [] names;
-			delete [] values;
-		}
-	}
-  NS_IF_RELEASE(encoder);
+    nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
+    if (child && child->IsSuccessful(aFrame)) {
+      PRInt32 numValues = 0;
+      PRInt32 maxNumValues = child->GetMaxNumValues();
+      if (0 >= maxNumValues) {
+        continue;
+      }
+      nsString* names = new nsString[maxNumValues];
+      if (!names) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        nsString* values = new nsString[maxNumValues];
+        if (!values) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        } else {
+          if (PR_TRUE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
+            for (int valueX = 0; valueX < numValues; valueX++){
+              if (PR_TRUE == firstTime) {
+                firstTime = PR_FALSE;
+              } else {
+                buf += "&";
+              }
+              nsString* convName = URLEncode(names[valueX], encoder);
+              buf += *convName;
+              delete convName;
+              buf += "=";
+              nsString* convValue = URLEncode(values[valueX], encoder);
+              buf += *convValue;
+              delete convValue;
+            }
+          }
+          delete [] values;
+        }
+        delete [] names;
+      }
+    }
 
     // Use the base URL as a referer for now
+    char* spec = nsnull;
     nsIURI* docURL = nsnull;
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
-    while (doc && !docURL) {
+    NS_ASSERTION(doc, "No document found in Form Submit!\n");
+    if (!doc) {
+      rv = NS_ERROR_UNEXPECTED;
+    } else {
       doc->GetBaseURL(docURL);
+      NS_RELEASE(doc);
+      NS_ASSERTION(docURL, "No base URL found in Form Submit!\n");
       if (!docURL) {
-        doc = GetParentHTMLFrameDocument(doc);
-        if (!doc) break;
+        rv = NS_ERROR_UNEXPECTED;
+      } else {
+        docURL->GetSpec(&spec);
+        NS_RELEASE(docURL);
       }
     }
-    NS_IF_RELEASE(doc);
-	char* spec = nsnull;
-	if (docURL)
-	{
-		docURL->GetSpec(&spec);
-	}
-	NS_IF_RELEASE(docURL);
 
-  aData.SetLength(0);
-  if (isPost) {
-    char size[16];
-    sprintf(size, "%d", buf.Length());
-    aData = "Content-type: application/x-www-form-urlencoded";
+    aData.SetLength(0);
+    if (isPost) {
+      char size[16];
+      sprintf(size, "%d", buf.Length());
+      aData = "Content-type: application/x-www-form-urlencoded";
 #ifdef SPECIFY_CHARSET_IN_CONTENT_TYPE
-    nsString charset;
-    GetSubmitCharset(charset);
-    aData += "; charset=";
-    aData += charset;
+      nsString charset;
+      GetSubmitCharset(charset);
+      aData += "; charset=";
+      aData += charset;
 #endif
-    aData += CRLF;
-	if (spec)
-	{
-		aData += "Referer: ";
-		aData += spec;
-		nsCRT::free(spec);
-		aData += CRLF;
-	}
-    aData += "Content-Length: ";
-    aData += size;
-    aData += CRLF;
-    aData += CRLF;
-  }
-  else {
-    aData += '?';
-    if (spec) {
-      nsCRT::free(spec);
+      aData += CRLF;
+      if (spec) {
+        aData += "Referer: ";
+        aData += spec;
+        nsCRT::free(spec);
+        aData += CRLF;
+      }
+      aData += "Content-Length: ";
+      aData += size;
+      aData += CRLF;
+      aData += CRLF;
+    } else {
+      aData += '?';
+      if (spec) {
+        nsCRT::free(spec);
+      }
     }
   }
-
   aData += buf;
+  NS_IF_RELEASE(encoder);
+  return rv;
 }
 
 // include the file name without the directory
-const char* nsFormFrame::GetFileNameWithinPath(char* aPathName)
+const char*
+nsFormFrame::GetFileNameWithinPath(char* aPathName)
 {
   char* fileNameStart = PL_strrchr(aPathName, '\\'); // windows
   if (!fileNameStart) { // try unix
@@ -814,101 +795,37 @@ const char* nsFormFrame::GetFileNameWithinPath(char* aPathName)
   }
 }
 
-// this needs to be provided by a higher level, since navigator might override
-// the temp directory. XXX does not check that parm is big enough
-PRBool
-nsFormFrame::Temp_GetTempDir(char* aTempDirName)
+nsresult
+nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 {
-  aTempDirName[0] = 0;
-  const char* env;
+  nsresult rv = NS_OK;
+  PRBool unknown = PR_TRUE;
+  
+  if (aPathName) {
+    int len = nsCRT::strlen(aPathName);
+    if (0 < len) {
 
-  if ((env = (const char *) getenv("TMP")) == nsnull) {
-    if ((env = (const char *) getenv("TEMP")) == nsnull) {
-	    strcpy(aTempDirName, ".");
+      // Get file extension and mimetype from that.
+      char* fileExt = &aPathName[len-1];
+      for (int i = len-1; i >= 0; i--) {
+        if ('.' == aPathName[i]) {
+          break;
+        }
+        fileExt--;
+      }
+      NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+      rv = MIMEService->GetTypeFromExtension(fileExt, aContentType);
+      unknown = NS_FAILED(rv);
     }
   }
-  if (*env == '\0')	{	// null string means "." 
-    strcpy(aTempDirName, ".");
+  if (unknown) {
+    rv = NS_OK;
+    NS_ASSERTION(!(*aContentType), "Content type not found but assigned!\n");
+    *aContentType = nsCRT::strdup("unknown");
+    if (!(*aContentType)) rv = NS_ERROR_OUT_OF_MEMORY;
   }
-  if (0 == aTempDirName[0]) {
-    strcpy(aTempDirName, env);
-  }
-  return PR_TRUE;
+  return rv;
 }
-
-// the following is a temporary measure until NET_cinfo_find_type or its
-// replacement is available
-void nsFormFrame::Temp_GetContentType(char* aPathName, char* aContentType)
-{
-  if (!aPathName) {
-    strcpy(aContentType, "unknown");
-    return;
-  }
-
-  int len = strlen(aPathName);
-  if (len <= 0) {
-    strcpy(aContentType, "unknown");
-    return;
-  }
-
-  char* fileExt = &aPathName[len-1];
-  for (int i = len-1; i >= 0; i--) {
-    if ('.' == aPathName[i]) {
-      break;
-    }
-    fileExt--;
-  }
-  if ((0 == nsCRT::strcasecmp(fileExt, ".html")) ||
-      (0 == nsCRT::strcasecmp(fileExt, ".htm"))) {
-    strcpy(aContentType, "text/html");
-  }
-  else if (0 == nsCRT::strcasecmp(fileExt, ".txt")) { 
-    strcpy(aContentType, "text/plain");
-  }
-  else if (0 == nsCRT::strcasecmp(fileExt, ".gif")) { 
-    strcpy(aContentType, "image/gif");
-  }
-  else if ((0 == nsCRT::strcasecmp(fileExt, ".jpeg")) ||
-           (0 == nsCRT::strcasecmp(fileExt, ".jpg"))) {
-    strcpy(aContentType, "image/jpeg");
-  }
-  else if (0 == nsCRT::strcasecmp(fileExt, ".art")){
-    strcpy(aContentType, "image/x-art");
-  }
-  else { // don't bother trying to do the others here
-    strcpy(aContentType, "unknown");
-  }
-}
-
-
-#if 0
-  char* tmpDir = aFileName;		// copy name to fname */
-  // Keep generating file names till we find one that's not in use
-    while ((*env != '\0') && count++ {
-      *ptr++ = *env++;
-    }
-    if (ptr[-1] != '\\' && ptr[-1] != '/')
-      *ptr++ = '\\';		/* append backslash if not in env variable */
-    /* Append a suitable file name */
-    next_file_num++;		/* advance counter */
-    sprintf(ptr, "JPG%03d.TMP", next_file_num);
-    /* Probe to see if file name is already in use */
-    if ((tfile = fopen(fname, READ_BINARY)) == NULL)
-      break;
-    fclose(tfile);		/* oops, it's there; close tfile & try again */
-  }
-
-  char* tempDir = getenv("temp");
-  if (!tempDir) {
-    tempDir = getenv("tmp");
-  }
-  if (tempDir) {
-    return PR_TRUE;
-  }
-  else {
-    return PR_FALSE;
-  }
-#endif
 
 #define CONTENT_DISP "Content-Disposition: form-data; name=\""
 #define FILENAME "\"; filename=\""
@@ -916,51 +833,44 @@ void nsFormFrame::Temp_GetContentType(char* aPathName, char* aContentType)
 #define CONTENT_ENCODING "Content-Encoding: "
 #define BUFSIZE 1024
 #define MULTIPART "multipart/form-data"
-#define END "--"
+#define SEP "--"
 
-void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFrame)
+nsresult nsFormFrame::ProcessAsMultipart(nsIFileSpec*& aMultipartDataFile, nsIFormControlFrame* aFrame)
 {
-#ifdef FIX_NON_ASCII_MULTIPART
-  nsIUnicodeEncoder *encoder=nsnull;
-#endif
-  aData.SetLength(0);
   char buffer[BUFSIZE];
   PRInt32 numChildren = mFormControls.Count();
 
-  // construct a temporary file to put the data into 
-  char tmpFileName[BUFSIZE];
-  char* result = Temp_GenerateTempFileName((PRInt32)BUFSIZE, tmpFileName);
-  if (!result) {
-    return;
-  }
-
-  PRFileDesc* tmpFile = PR_Open(tmpFileName, PR_CREATE_FILE | PR_WRONLY, 0644);
-  if (!tmpFile) {
-    return;
-	}
+  // Create a temporary file to write the form post data to
+  nsSpecialSystemDirectory tempDir(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  tempDir += "formpost";
+  tempDir.MakeUnique();
+  nsIFileSpec* postDataFile = nsnull;
+  nsresult rv = NS_NewFileSpecWithSpec(tempDir, &postDataFile);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Post data file couldn't be created!");
+  if (NS_FAILED(rv)) return rv;
 
   // write the content-type, boundary to the tmp file
-	char boundary[80];
-  sprintf(boundary, "-----------------------------%d%d%d", 
+  char boundary[80];
+  sprintf(boundary, "---------------------------%d%d%d", 
           rand(), rand(), rand());
   sprintf(buffer, "Content-type: %s; boundary=%s" CRLF, MULTIPART, boundary);
-	PRInt32 len = PR_Write(tmpFile, buffer, PL_strlen(buffer));
-  if (len < 0) {
-    return;
-  }
+  PRInt32 wantbytes = 0, gotbytes = 0;
+  rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
+  if (NS_FAILED(rv) || (wantbytes != gotbytes)) return rv;
 
-#ifdef FIX_NON_ASCII_MULTIPART
+  nsIUnicodeEncoder *encoder=nsnull;
   if(NS_FAILED( GetEncoder(&encoder) ) )
      encoder = nsnull;
-#endif
 
   PRInt32 boundaryLen = PL_strlen(boundary);
-	PRInt32	contDispLen = PL_strlen(CONTENT_DISP);
+  PRInt32 contDispLen = PL_strlen(CONTENT_DISP);
   PRInt32 crlfLen     = PL_strlen(CRLF);
+  PRInt32 sepLen      = PL_strlen(SEP);
 
-  // compute the content length, passing through all of the form controls
-	PRInt32 contentLen = crlfLen; // extra crlf after content-length header
+  // compute the content length
+  /////////////////////////////
 
+  PRInt32 contentLen = 0; // extra crlf after content-length header not counted
   PRInt32 childX;  // stupid compiler
   for (childX = 0; childX < numChildren; childX++) {
     nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
@@ -968,338 +878,230 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFram
       PRInt32 type;
       child->GetType(&type);
       if (child->IsSuccessful(aFrame)) {
-		    PRInt32 numValues = 0;
-		    PRInt32 maxNumValues = child->GetMaxNumValues();
-			  if (maxNumValues <= 0) {
+        PRInt32 numValues = 0;
+        PRInt32 maxNumValues = child->GetMaxNumValues();
+        if (maxNumValues <= 0) {
           continue;
         }
-		    nsString* names  = new nsString[maxNumValues];
-		    nsString* values = new nsString[maxNumValues];
-			  if (PR_FALSE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
+        nsString* names  = new nsString[maxNumValues];
+        nsString* values = new nsString[maxNumValues];
+        if (PR_FALSE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
           continue;
         }
-        contentLen += boundaryLen + crlfLen;
-        contentLen += contDispLen;
-		    for (int valueX = 0; valueX < numValues; valueX++) {
-
+        for (int valueX = 0; valueX < numValues; valueX++) {
           char* name = nsnull;
           char* value = nsnull;
 
-#ifdef FIX_NON_ASCII_MULTIPART
           if(encoder) {
               name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
               value  = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
           }
-#endif
 
           if(nsnull == name)
-              name  = names[valueX].ToNewCString();
+            name  = names[valueX].ToNewCString();
           if(nsnull == value)
-              value = values[valueX].ToNewCString();
+            value = values[valueX].ToNewCString();
 
           if ((0 == names[valueX].Length()) || (0 == values[valueX].Length())) {
             continue;
           }
-				  contentLen += PL_strlen(name);
-			    contentLen += 1 + crlfLen;  // ending name quote plus CRLF
+
+          // Add boundary line
+          contentLen += sepLen + boundaryLen + crlfLen;
+
+          // Add Content-Disp line
+          contentLen += contDispLen;
+          contentLen += PL_strlen(name);
+
+          // File inputs also list filename on Content-Disp line
           if (NS_FORM_INPUT_FILE == type) { 
             contentLen += PL_strlen(FILENAME);
+            const char* fileNameStart = GetFileNameWithinPath(value);
+	    contentLen += PL_strlen(fileNameStart);
+	  }
+          // End Content-Disp Line (quote plus CRLF)
+          contentLen += 1 + crlfLen;  // ending name quote plus CRLF
 
-            // include the file name without the directory
-            char* fileNameStart = PL_strrchr(value, '/'); // unix
-            if (!fileNameStart) { // try windows
-              fileNameStart = PL_strrchr(value, '\\');
+          // File inputs add Content-Type line
+          if (NS_FORM_INPUT_FILE == type) {
+            char* contentType = nsnull;
+            rv = GetContentType(value, &contentType);
+            if (NS_FAILED(rv)) break; // Need to free up anything here?
+            contentLen += PL_strlen(CONTENT_TYPE);
+            contentLen += PL_strlen(contentType) + crlfLen;
+            nsCRT::free(contentType);
+          }
+	  
+          // Blank line before value
+          contentLen += crlfLen;
+
+          // File inputs add file contents next
+          if (NS_FORM_INPUT_FILE == type) {
+            PRFileInfo fileInfo;
+            if (PR_SUCCESS == PR_GetFileInfo(value, &fileInfo)) {
+              contentLen += fileInfo.size;
             }
-            fileNameStart = (fileNameStart) ? fileNameStart+1 : value; 
-			      contentLen += PL_strlen(fileNameStart);
-
-					  // determine the content-type of the file
-
-            char contentType[128];
-					  Temp_GetContentType(value, &contentType[0]);
-				    contentLen += PL_strlen(CONTENT_TYPE);
-					  contentLen += PL_strlen(contentType) + crlfLen + crlfLen;
-
-			      // get the size of the file
-				    PRFileInfo fileInfo;
-				    if (PR_SUCCESS == PR_GetFileInfo(value, &fileInfo)) {
-					    contentLen += fileInfo.size;
-            }
-				  }
-          else {
+            // Add CRLF after file
+	    contentLen += crlfLen;
+          } else {
+	    // Non-file inputs add value line
             contentLen += PL_strlen(value) + crlfLen;
           }
           delete [] name;
           delete [] value;
         }
- 			  delete [] names;
-			  delete [] values;
-		  }
-
-      aData = tmpFileName;
-    }
-	}
-
-  contentLen += boundaryLen + PL_strlen(END) + crlfLen;
-
-  // write the content 
-  sprintf(buffer, "Content-Length: %d" CRLF CRLF, contentLen);
-	PR_Write(tmpFile, buffer, PL_strlen(buffer));
-
-  // write the content passing through all of the form controls a 2nd time
-  for (childX = 0; childX < numChildren; childX++) {
-	  nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
-    if (child) {
-      PRInt32 type;
-      child->GetType(&type);
-      if (child->IsSuccessful(aFrame)) {
-		    PRInt32 numValues = 0;
-		    PRInt32 maxNumValues = child->GetMaxNumValues();
-			  if (maxNumValues <= 0) {
-          continue;
-        }
-		    nsString* names  = new nsString[maxNumValues];
-		    nsString* values = new nsString[maxNumValues];
-			  if (PR_FALSE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
-          continue;
-        }
-		    for (int valueX = 0; valueX < numValues; valueX++) {
-          char* name = nsnull;
-          char* value = nsnull;
-
-#ifdef FIX_NON_ASCII_MULTIPART
-          if(encoder) {
-              name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
-              value  = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
-          }
-#endif
-
-          if(nsnull == name)
-              name  = names[valueX].ToNewCString();
-          if(nsnull == value)
-              value = values[valueX].ToNewCString();
-
-          if ((0 == names[valueX].Length()) || (0 == values[valueX].Length())) {
-            continue;
-          }
-	        sprintf(buffer, "%s" CRLF, boundary);
-		      PR_Write(tmpFile, buffer, PL_strlen(buffer));
-			    PR_Write(tmpFile, CONTENT_DISP, contDispLen);
-				  PR_Write(tmpFile, name, PL_strlen(name));
-
-          if (NS_FORM_INPUT_FILE == type) {
-				    PR_Write(tmpFile, FILENAME, PL_strlen(FILENAME));
-            const char* fileNameStart = GetFileNameWithinPath(value);
-            PR_Write(tmpFile, fileNameStart, PL_strlen(fileNameStart)); 
-          }
-			    PR_Write(tmpFile, "\"" CRLF, PL_strlen("\"" CRLF)); // end content disp
-
-          if (NS_FORM_INPUT_FILE == type) {
-					  // determine the content-type of the file
-            char contentType[128];
-					  Temp_GetContentType(value, &contentType[0]);
-	          PR_Write(tmpFile, CONTENT_TYPE, PL_strlen(CONTENT_TYPE));
-	          PR_Write(tmpFile, contentType, PL_strlen(contentType));
-				    PR_Write(tmpFile, CRLF, PL_strlen(CRLF));
-			      PR_Write(tmpFile, CRLF, PL_strlen(CRLF)); // end content-type header
-
-            PRFileDesc* contentFile = PR_Open(value, PR_RDONLY, 0644);
-					  if(contentFile) {
-              PRInt32 size;
-						  while((size = PR_Read(contentFile, buffer, BUFSIZE)) > 0) {
-							  PR_Write(tmpFile, buffer, size);
-						  }
-						  PR_Close(contentFile);
-					  }
-				  }
-          else {
- 					  PR_Write(tmpFile, value, PL_strlen(value));
-            PR_Write(tmpFile, CRLF, crlfLen);
-          }
-          delete [] name;
-          delete [] value;
-        }
- 			  delete [] names;
-			  delete [] values;
+        delete [] names;
+        delete [] values;
       }
-		}
-	}
 
-	sprintf(buffer, "%s--" CRLF, boundary);
-  PR_Write(tmpFile, buffer, PL_strlen(buffer));
-
-  PR_Close(tmpFile);
-	
-#ifdef FIX_NON_ASCII_MULTIPART
-  NS_IF_RELEASE(encoder);
-#endif
-	//StrAllocCopy(url_struct->post_data, tmpfilename);
-	//url_struct->post_data_is_file = TRUE;
-
-}
-
-// THE FOLLOWING WAS TAKEN FROM CMD/WINFE/FEGUI AND MODIFIED TO JUST 
-// GENERATE A TEMPFILE NAME. 
-
-
-// Windows _tempnam() lets the TMP environment variable override things sent in
-//  so it look like we're going to have to make a temp name by hand
-//
-// The user should *NOT* free the returned string.  It is stored in static space
-//  and so is not valid across multiple calls to this function
-//
-// The names generated look like
-//   c:\netscape\cache\m0.moz
-//   c:\netscape\cache\m1.moz
-// up to...
-//   c:\netscape\cache\m9999999.moz
-// after that if fails
-//
-char* nsFormFrame::Temp_GenerateTempFileName(PRInt32 aMaxSize, char* file_buf)
-{
-  char directory[128];
-  Temp_GetTempDir(&directory[0]);
-  static char ext[] = ".TMP";
-  static char prefix[] = "nsform";
-
-  //  We need to base our temporary file names on time, and not on sequential
-  //    addition because of the cache not being updated when the user
-  //    crashes and files that have been deleted are over written with
-  //    other files; bad data.
-  //  The 52 valid DOS file name characters are
-  //    0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_^$~!#%&-{}@`'()
-  //  We will only be using the first 32 of the choices.
-  //
-  //  Time name format will be M+++++++.MOZ
-  //    Where M is the single letter prefix (can be longer....)
-  //    Where +++++++ is the 7 character time representation (a full 8.3
-  //      file name will be made).
-  //    Where .MOZ is the file extension to be used.
-  //
-  //  In the event that the time requested is the same time as the last call
-  //    to this function, then the current time is incremented by one,
-  //    as is the last time called to facilitate unique file names.
-  //  In the event that the invented file name already exists (can't
-  //    really happen statistically unless the clock is messed up or we
-  //    manually incremented the time), then the times are incremented
-  //    until an open name can be found.
-  //
-  //  time_t (the time) has 32 bits, or 4,294,967,296 combinations.
-  //  We will map the 32 bits into the 7 possible characters as follows:
-  //    Starting with the lsb, sets of 5 bits (32 values) will be mapped
-  //      over to the appropriate file name character, and then
-  //      incremented to an approprate file name character.
-  //    The left over 2 bits will be mapped into the seventh file name
-  //      character.
-  //
-  
-  int i_letter, i_timechars, i_numtries = 0;
-  char ca_time[8];
-  time_t this_call = (time_t)0;
-  
-  //  We have to base the length of our time string on the length
-  //    of the incoming prefix....
-  //
-  i_timechars = 8 - strlen(prefix);
-  
-  //  Infinite loop until the conditions are satisfied.
-  //  There is no danger, unless every possible file name is used.
-  //
-  while(1)  {
-    //    We used to use the time to generate this.
-    //    Now, we use some crypto to avoid bug #47027
-    //RNG_GenerateGlobalRandomBytes((void *)&this_call, sizeof(this_call));
-	  char* output=(char *)&this_call;
-    size_t len = sizeof(this_call);
-	  size_t i;
-	  srand((unsigned int) PR_IntervalToMilliseconds(PR_IntervalNow()));
-	  for (i=0;i<len; i++) {
-		  int t = rand();
-		  *output = (char) (t % 256);
-		  output++;
-	  }
-
-    //  Convert the time into a 7 character string.
-    //  Strip only the signifigant 5 bits.
-    //  We'll want to reverse the string to make it look coherent
-    //    in a directory of file names.
-    //
-    for(i_letter = 0; i_letter < i_timechars; i_letter++) {
-      ca_time[i_letter] = (char)((this_call >> (i_letter * 5)) & 0x1F);
-      
-      //  Convert any numbers to their equivalent ascii code
-      //
-      if(ca_time[i_letter] <= 9)  {
-        ca_time[i_letter] += '0';
-      }
-      //  Convert the character to it's equivalent ascii code
-      //
-      else  {
-        ca_time[i_letter] += 'A' - 10;
-      }
-    }
-    
-    //  End the created time string.
-    //
-    ca_time[i_letter] = '\0';
-    
-    //  Reverse the time string.
-    //
-// XXX fix this
-#ifdef XP_PC
-    _strrev(ca_time);
-#endif   
-    //  Create the fully qualified path and file name.
-    //
-    sprintf(file_buf, "%s\\%s%s%s", directory, prefix, ca_time, ext);
-
-    //  Determine if the file exists, and mark that we've tried yet
-    //    another file name (mark to be used later).
-    //  
-	  //  Use the system call instead of XP_Stat since we already
-	  //  know the name and we don't want recursion
-	  //
-// XXX fix this
-#ifdef XP_PC
-	  struct _stat statinfo;
-    int status  = _stat(file_buf, &statinfo);
-#else
-    int status = 1;
-#endif
-    i_numtries++;
-    
-    //  If it does not exists, we are successful, return the name.
-    //
-    if(status == -1)  {
-      //      TRACE("Temp file name is %s\n", file_buf);
-      return(file_buf);
-    }
-    
-    //  If there is no room for additional characters in the time,
-    //    we'll have to return NULL here, or we go infinite.
-    //    This is a one case scenario where the requested prefix is
-    //    actually 8 letters long.
-    //  Infinite loops could occur with a 7, 6, 5, etc character prefixes
-    //    if available files are all eaten up (rare to impossible), in
-    //    which case, we should check at some arbitrary frequency of
-    //    tries before we give up instead of attempting to Vulcanize
-    //    this code.  Live long and prosper.
-    //
-    if(i_timechars == 0)  {
-      break;
-    }
-    else if(i_numtries == 0x00FF) {
-      break;
+      aMultipartDataFile = postDataFile;
     }
   }
-  
-  //  Requested name is thought to be impossible to generate.
-  //
-  //TRACE("No more temp file names....\n");
-  return(NULL);
-  
-}
 
+  // Add the post file boundary line
+  contentLen += sepLen + boundaryLen + sepLen + crlfLen;
+
+  // write the content 
+  ////////////////////
+
+  sprintf(buffer, "Content-Length: %d" CRLF CRLF, contentLen);
+  rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
+  if (NS_SUCCEEDED(rv) && (wantbytes == gotbytes)) {
+
+    // write the content passing through all of the form controls a 2nd time
+    for (childX = 0; childX < numChildren; childX++) {
+      nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX);
+      if (child) {
+        PRInt32 type;
+        child->GetType(&type);
+        if (child->IsSuccessful(aFrame)) {
+          PRInt32 numValues = 0;
+          PRInt32 maxNumValues = child->GetMaxNumValues();
+          if (maxNumValues <= 0) {
+            continue;
+          }
+          nsString* names  = new nsString[maxNumValues];
+          nsString* values = new nsString[maxNumValues];
+            if (PR_FALSE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
+            continue;
+          }
+          for (int valueX = 0; valueX < numValues; valueX++) {
+            char* name = nsnull;
+            char* value = nsnull;
+
+            if(encoder) {
+              name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
+              value = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
+            }
+
+            if(nsnull == name)
+              name  = names[valueX].ToNewCString();
+            if(nsnull == value)
+              value = values[valueX].ToNewCString();
+
+            if ((0 == names[valueX].Length()) || (0 == values[valueX].Length())) {
+              continue;
+            }
+
+	    // Print boundary line
+            sprintf(buffer, SEP "%s" CRLF, boundary);
+            rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
+            if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+
+            // Print Content-Disp line
+            rv = postDataFile->Write(CONTENT_DISP, wantbytes = contDispLen, &gotbytes);
+            if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;	  
+            rv = postDataFile->Write(name, wantbytes = PL_strlen(name), &gotbytes);
+            if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+
+            // File inputs also list filename on Content-Disp line
+            if (NS_FORM_INPUT_FILE == type) {
+              rv = postDataFile->Write(FILENAME, wantbytes = PL_strlen(FILENAME), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+              const char* fileNameStart = GetFileNameWithinPath(value);
+              rv = postDataFile->Write(fileNameStart, wantbytes = PL_strlen(fileNameStart), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+            }
+
+            // End Content Disp
+            rv = postDataFile->Write("\"" CRLF , wantbytes = PL_strlen("\"" CRLF), &gotbytes);
+            if (!(NS_SUCCEEDED(rv) && (wantbytes == gotbytes))) break;
+
+            // File inputs write Content-Type line
+            if (NS_FORM_INPUT_FILE == type) {
+              char* contentType = nsnull;
+              rv = GetContentType(value, &contentType);
+              if (NS_FAILED(rv)) break;
+              rv = postDataFile->Write(CONTENT_TYPE, wantbytes = PL_strlen(CONTENT_TYPE), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+              rv = postDataFile->Write(contentType, wantbytes = PL_strlen(contentType), &gotbytes);
+              nsCRT::free(contentType);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+              // end content-type header
+	    }
+
+            // Blank line before value
+            rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+            if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+
+            // File inputs print file contents next
+            if (NS_FORM_INPUT_FILE == type) {
+              nsIFileSpec* contentFile = nsnull;
+	      rv = NS_NewFileSpec(&contentFile);
+              NS_ASSERTION(contentFile, "Post content file couldn't be created!");
+	      if (NS_FAILED(rv) || !contentFile) break; // NS_ERROR_OUT_OF_MEMORY
+	      rv = contentFile->SetNativePath(value);
+              NS_ASSERTION(contentFile, "Post content file path couldn't be set!");
+	      if (NS_FAILED(rv)) {
+	        NS_RELEASE(contentFile);
+		break;
+              }
+              // Print file contents
+              PRInt32 size = 1;
+              while (1) {
+	        char* readbuffer = nsnull;
+                rv = contentFile->Read(&readbuffer, BUFSIZE, &size);
+                if (NS_FAILED(rv) || 0 >= size) break;
+                rv = postDataFile->Write(readbuffer, wantbytes = size, &gotbytes);
+                if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+              }
+	      NS_RELEASE(contentFile);
+	      // Print CRLF after file
+              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+            }
+
+	    // Non-file inputs print value line
+            else {
+              rv = postDataFile->Write(value, wantbytes = PL_strlen(value), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+              rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
+              if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
+            }
+            delete [] name;
+            delete [] value;
+          }
+          delete [] names;
+          delete [] values;
+        }
+      }
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    sprintf(buffer, SEP "%s" SEP CRLF, boundary);
+    rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
+    if (NS_SUCCEEDED(rv) && (wantbytes == gotbytes)) {
+      rv = postDataFile->CloseStream();
+    }
+  }
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Generating the form post temp file failed.\n");
+  NS_IF_RELEASE(encoder);
+  return rv;
+}
 
 // static helper functions for nsIFormControls
 
@@ -1428,4 +1230,3 @@ nsFormFrame::StyleChangeReflow(nsIPresContext* aPresContext,
     NS_RELEASE(reflowCmd);
   }
 }
-
