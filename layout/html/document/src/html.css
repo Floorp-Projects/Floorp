@@ -829,7 +829,7 @@ input[type="text"] {
   margin-right:  0px;
 } 
 
-input[type=text][disabled] {
+input[type="text"][disabled] {
   color: gray;
 }
 
@@ -1039,7 +1039,7 @@ td select, td select[size="1"] {
   margin-bottom: 2px;
 }
 
-td input[type="text"] {
+td input[type="text"], input[type="password"] {
   margin-top:    1px;
   margin-bottom: 1px;
 }
