@@ -114,7 +114,7 @@ nsMsgFilterDelegateFactory::getFilterListDelegate(nsIRDFResource *aOuter,
     NS_ENSURE_SUCCESS(rv, rv);
     
     *aResult = filterList;
-    NS_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult);
     return NS_OK;
 }
 
@@ -162,7 +162,7 @@ nsMsgFilterDelegateFactory::getFilterDelegate(nsIRDFResource *aOuter,
     if (NS_FAILED(rv)) return rv;
 
     *aResult = filter;
-    NS_ADDREF(*aResult);
+    NS_IF_ADDREF(*aResult);
     
     return NS_OK;
 }
