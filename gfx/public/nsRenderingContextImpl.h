@@ -27,6 +27,13 @@
 #include "nsPoint.h"
 
 
+typedef struct {	
+    double x;	  // x coordinate of edge's intersection with current scanline */
+    double dx;	// change in x with respect to y 
+    int i;	    // edge number: edge i goes from mPointList[i] to mPointList[i+1] 
+} Edge;
+
+
 class nsRenderingContextImpl : public nsIRenderingContext
 {
 
@@ -36,6 +43,8 @@ public:
 
 protected:
   nsTransform2D		  *mTranMatrix;		// The rendering contexts transformation matrix
+  int               mAct;		        // number of active edges 
+  Edge              *mActive;	      // active edge list:edges crossing scanline y
 
 public:
   nsRenderingContextImpl();
@@ -59,6 +68,14 @@ public:
    *	@update 03/29/00 dwc
    */
   NS_IMETHOD FillPath(nsPathPoint aPointArray[],PRInt32 aNumPts);
+
+  /**
+   * Fill a poly in the current foreground color
+   * @param aPoints points to use for the drawing, last must equal first
+   * @param aNumPonts number of points in the polygon
+   */
+  NS_IMETHOD RasterPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+
 
   /** ---------------------------------------------------
    *  See documentation in nsIRenderingContext.h
@@ -95,7 +112,8 @@ protected:
    */
   void  TileImage(nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight);
 
-
+  void cdelete(int i);
+  void cinsert(int i,int y,const nsPoint aPointArray[],PRInt32 aNumPts);
 
 public:
 
@@ -118,7 +136,7 @@ public:
   void SetControls(nsFloatPoint &aAnc1,nsFloatPoint &aCon,nsFloatPoint &aAnc2) { mAnc1 = aAnc1; mCon = aCon; mAnc2 = aAnc2;}
   void SetPoints(nscoord a1x,nscoord a1y,nscoord acx,nscoord acy,nscoord a2x,nscoord a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
   void SetPoints(float a1x,float a1y,float acx,float acy,float a2x,float a2y) {mAnc1.MoveTo(a1x,a1y),mCon.MoveTo(acx,acy),mAnc2.MoveTo(a2x,a2y);}
-
+  void DebugPrint();
 /** ---------------------------------------------------
  *  Divide a Quadratic curve into line segments if it is not smaller than a certain size
  *  else it is so small that it can be approximated by 2 lineto calls
