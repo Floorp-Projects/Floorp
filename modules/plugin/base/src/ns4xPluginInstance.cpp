@@ -769,11 +769,17 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
 
   mPeer = peer;
 
-  nsCOMPtr<nsIPluginTagInfo> taginfo = do_QueryInterface(mPeer, &rv);
+  nsCOMPtr<nsIPluginTagInfo2> taginfo = do_QueryInterface(mPeer, &rv);
 
   if (NS_SUCCEEDED(rv))
-    taginfo->GetAttributes(count, names, values);
-
+  {
+    nsPluginTagType tagtype;
+    taginfo->GetTagType(&tagtype);
+    if (tagtype == nsPluginTagType_Embed)
+      taginfo->GetAttributes(count, names, values);
+    else  // nsPluginTagType_Object
+      taginfo->GetParameters(count, names, values);
+  }
   if (fCallbacks->newp == nsnull)
     return NS_ERROR_FAILURE; // XXX right error?
   
