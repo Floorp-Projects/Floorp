@@ -23,6 +23,7 @@ security        0
 browserutils    0
 intl            0
 nglayout        0
+accessiblity    0
 editor          0
 embedding       0
 viewer          0
@@ -56,6 +57,7 @@ carbon          0
 cache           1
 useimg2         1
 lowmem          0
+accessible      1
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
