@@ -16,11 +16,11 @@
 # Reserved.
 
 
-
+  
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -40,6 +40,10 @@ include $(topsrcdir)/config/config.mk
 
 ifdef MOZ_MAIL_NEWS
 CSRCS		+= mime.c
+else
+ifdef MOZ_MAIL_COMPOSE
+CSRCS		+= mime.c
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
