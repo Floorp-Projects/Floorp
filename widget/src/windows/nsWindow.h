@@ -35,12 +35,11 @@
 
 #include "nsVoidArray.h"
 
-//#define DRAG_DROP
+#define DRAG_DROP
 #ifdef DRAG_DROP
-class CfDropTarget;
-class CfDropSource;
-class CfDragDrop;
-//class nsDropTarget;
+class nsIDragTarget;
+class nsIDragSource;
+class nsNativeDragTarget;
 #endif
 
 #define NSRGB_2_COLOREF(color) \
@@ -169,7 +168,7 @@ protected:
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
-    virtual PRBool          OnKey(PRUint32 aEventType, UINT nChar, UINT nRepCnt, UINT nFlags);
+    virtual PRBool          OnKey(PRUint32 aEventType, PRBool aCalcCharCode, TCHAR aCharCode, UINT nChar, UINT nRepCnt, UINT nFlags);
 
     virtual PRBool          DispatchFocus(PRUint32 aEventType);
     virtual PRBool          OnScroll(UINT scrollCode, int cPos);
@@ -228,10 +227,8 @@ protected:
     // Drag & Drop
 
 #ifdef DRAG_DROP
-    //nsDropTarget * mDropTarget;
-    CfDropSource * mDropSource;
-    CfDropTarget * mDropTarget;
-    CfDragDrop   * mDragDrop;
+    //nsIDragSource * mDragSource;
+    nsNativeDragTarget * mNativeDragTarget;
 #endif
     // Enumeration of the methods which are accessable on the "main GUI thread"
     // via the CallMethod(...) mechanism...
