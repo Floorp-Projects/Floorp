@@ -178,8 +178,9 @@ nsHTTPChannel::Cancel(nsresult status)
   mStatus = status;
   rv = mRequest->Cancel(status);
 
-  if (mResponseDataListener)
-      mFinalListener -> FireNotifications ();
+// XXX/ruslan: uncomment me when the webshell learns to handle notifications as agreed
+//  if (mResponseDataListener)
+//      mFinalListener -> FireNotifications ();
 
   if (mOpenObserver && !mFiredOpenOnStopRequest)
   {
