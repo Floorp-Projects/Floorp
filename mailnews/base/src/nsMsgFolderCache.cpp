@@ -95,7 +95,8 @@ nsMsgFolderCache::QueryInterface(const nsIID& iid, void **result)
 NS_IMETHODIMP
 nsMsgFolderCache::OnShutdown(const nsCID& aClass, nsISupports *service)
 {
-	if (aClass.Equals(kCMsgMailSessionCID)) 
+	// I'm getting a bogus class id here - don't know why.
+//	if (aClass.Equals(kCMsgMailSessionCID)) 
 	{
 		nsCOMPtr <nsIMsgAccountManager> accountManager;
 
@@ -203,7 +204,7 @@ nsresult nsMsgFolderCache::InitExistingDB()
 	return err;
 }
 
-nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool create)
+nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool exists)
 {
 	nsresult ret=NS_OK;
 	nsIMdbFactory *myMDBFactory = GetMDBFactory();
@@ -225,30 +226,11 @@ nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool create)
 #if defined(XP_PC) || defined(XP_MAC)
 //			UnixToNative(nativeFileName);
 #endif
+			if (exists)
 			{
 				mdbOpenPolicy inOpenPolicy;
 				mdb_bool	canOpen;
 				mdbYarn		outFormatVersion;
-				// char		bufFirst512Bytes[512];
-				// mdbYarn		first512Bytes;
-
-				// first512Bytes.mYarn_Buf = bufFirst512Bytes;
-				// first512Bytes.mYarn_Size = 512;
-				// first512Bytes.mYarn_Fill = 512;
-				// first512Bytes.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
-
-				// {
-				// 	nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(dbName));
-				// 	if (dbStream)
-				// 	{
-				// 		PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
-				// 		first512Bytes.mYarn_Fill = bytesRead;
-				// 		dbStream->close();
-				// 		delete dbStream;
-				// 	}
-				// 	else
-				// 		return NS_ERROR_OUT_OF_MEMORY;
-				// }
 				
 				nsIMdbFile* oldFile = 0;
 				ret = myMDBFactory->OpenOldFile(m_mdbEnv, dbHeap, nativeFileName,
@@ -301,7 +283,7 @@ nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool create)
 				DumpContents();
 #endif
 			}
-			else if (create)	// ### need error code saying why open file store failed
+			else // ### need error code saying why open file store failed
 			{
 				nsIMdbFile* newFile = 0;
 				ret = myMDBFactory->CreateNewFile(m_mdbEnv, dbHeap, dbName, &newFile);
@@ -323,15 +305,6 @@ nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool create)
 					newFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
 				}
 
-				// mdbOpenPolicy inOpenPolicy;
-
-				// inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
-				// inOpenPolicy.mOpenPolicy_MinMemory = 0;
-				// inOpenPolicy.mOpenPolicy_MaxLazy = 0;
-
-				// ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, NULL, dbName, &inOpenPolicy, &m_mdbStore);
-				// if (ret == NS_OK)
-				// 	ret = InitNewDB();
 			}
 			if(thumb)
 			{
@@ -356,8 +329,9 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 
 		if (NS_SUCCEEDED(rv))
 		{
+			PRBool exists = m_dbFileSpec.Exists();
 			// ### evil cast until MDB supports file streams.
-			rv = OpenMDB((const char *) m_dbFileSpec, PR_TRUE);
+			rv = OpenMDB((const char *) m_dbFileSpec, exists);
 		}
 	}
 	return rv;
