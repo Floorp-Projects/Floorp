@@ -461,7 +461,17 @@
       <menuitem name="&goPrevnCmd.label;" onclick="BrowserBack();"/>
     </menu>
     <menu name="&bookmarksMenu.label;" onclick="OpenBookmarkURL(event.target)" 
-						   datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
+						   datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot" open="true">
+
+	<template>
+		<rule iscontainer="true">
+			<menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" open="true" />
+		</rule>
+		<rule>
+			<menuitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" onclick="OpenBookmarkURL(event.target)" />
+		</rule>
+	</template>
+
 		<menuitem name="&addCurPageCmd.label;" onclick="BrowserAddBookmark(window.frames[0].frames[1].location.href,window.frames[0].frames[1].document.title);"/>
 		<menuitem name="&manBookmarksCmd.label;" onclick="BrowserEditBookmarks();"/>
 		<separator/>
@@ -617,8 +627,18 @@
           </titledbutton>
 	</toolbar>
 
-    <toolbar class="main-bar" chromeclass="toolbar">
-    	<titledbutton id="home-button" align="right" value="&homeButton.label;" 
+    <toolbar class="main-bar" chromeclass="toolbar" datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder">
+	<template>
+		<rule iscontainer="true">
+			<titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+		</rule>
+		
+		<rule>
+			<titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" onclick="OpenBookmarkURL(event.target)" />
+		</rule>
+	</template>
+
+        	<titledbutton id="home-button" align="right" value="&homeButton.label;" 
 			onclick="BrowserHome()"/>
 		<titledbutton id="netscape-button" align="right" value="&netscapeButton.label;" 
 			onclick="window.frames[0].frames[1].location.href='http://home.netscape.com'"/>
