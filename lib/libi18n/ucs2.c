@@ -139,6 +139,14 @@ PRIVATE uint16 cp1251ToTbl[] = {
 #include "cp1251.ut"
 };
 /*--------------------------------------------------------------------------*/
+/*	ArmSCII		*/
+PRIVATE uint16 armsciiFromTbl[] = {
+#include "armscii.uf"
+};
+PRIVATE uint16 armsciiToTbl[] = {
+#include "armscii.ut"
+};
+/*--------------------------------------------------------------------------*/
 /*	Japanese stuff */
 PRIVATE uint16 JIS0208FromTbl[] = {
 #include "jis0208.uf"
@@ -255,10 +263,14 @@ PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 		
 	case CS_KOI8_R:
 		return (uTable*) koi8rToTbl;
-
+		
 	case CS_CP_1251:
 		return (uTable*) cp1251ToTbl;
 		
+	/*	ArmSCII		*/
+	case CS_ARMSCII8:
+		return (uTable*) armsciiToTbl;
+
 	/*	Japanese */
 	case CS_JISX0208:
 		return (uTable*) JIS0208ToTbl;
@@ -338,6 +350,10 @@ PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 	case CS_CP_1251:
 		return (uTable*) cp1251FromTbl;
 		
+	/*	ArmSCII		*/
+	case CS_ARMSCII8:
+		return (uTable*) armsciiFromTbl;
+
 	/*	Japanese */
 	case CS_JISX0208:
 		return (uTable*) JIS0208FromTbl;

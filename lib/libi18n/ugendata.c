@@ -157,7 +157,7 @@ PRIVATE	int16*	strShiftTable[MAXCSIDINTBL] =
 	0,			0,			utf8ShiftT,	0,				0,			big5ShiftT,	0,			sbShiftT,
 	sbShiftT,	sbShiftT,	sbShiftT,	sbShiftT,		sbShiftT,	sbShiftT,	sbShiftT,			0,
 	0,			0,			0,			0,				0,			0,			0,			0,
-	0,			0,			0,			0,				0,			0,			sbShiftT,	0
+	0,	0,	0,	0,	0,	0,	sbShiftT,	sbShiftT
 };
 
 PRIVATE UnicodeTableSet unicodetableset[] =
@@ -310,9 +310,9 @@ MODULE_PRIVATE UnicodeTableSet* GetUnicodeTableSet(uint16 csid)
 -----------------------------------------------------------------------------------*/
 MODULE_PRIVATE uShiftTable* GetShiftTableFromCsid(uint16 csid)
 {
-	return (uShiftTable*)(strShiftTable[csid & 0x3F]);
+	return (uShiftTable*)(strShiftTable[csid & 0x3F]); 
 }
 MODULE_PRIVATE uShiftTable* InfoToShiftTable(unsigned char info)
 {
-	return (uShiftTable*)(npcShiftTable[info & (MAXCSIDINTBL - 1)]);
+	return (uShiftTable*)(npcShiftTable[info & (MAXCSIDINTBL - 1)]); 
 }

@@ -75,6 +75,7 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"ISO-10646-UCS-2", "UCS2", CS_UCS2},
 			{"ISO-10646-UCS-4", "UCS4", CS_UCS4},
 			{"x-imap4-modified-utf7", "", CS_IMAP4_UTF7},
+			{"armscii-8", "", CS_ARMSCII8},
 
 #ifdef XP_OS2
 	/* Additional OS/2 codepages. These are IANA primary names */
