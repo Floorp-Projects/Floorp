@@ -16,11 +16,14 @@
  * Reserved.
  */
 
+// ftp implementation header
+
 #ifndef nsFtpProtocolConnection_h___
 #define nsFtpProtocolConnection_h___
 
 #include "nsIFtpProtocolConnection.h"
 #include "nsIStreamListener.h"
+#include "nsITransport.h"
 
 class nsIConnectionGroup;
 class nsIFtpEventSink;
@@ -94,6 +97,8 @@ protected:
     PRBool                  mPasv;
     PRBool                  mConnected;
     FTP_STATE               mState;
+    nsITransport*     mCPipe; // the command channel
+    nsITransport*     mDPipe; // the data channel
 };
 
 #endif /* nsFtpProtocolConnection_h___ */
