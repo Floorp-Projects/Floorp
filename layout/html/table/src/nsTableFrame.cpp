@@ -3479,12 +3479,18 @@ nsTableFrame::CalcDesiredWidth(nsIPresContext&          aPresContext,
     tableWidth += totalColWidth;
   }
 
-  if (numCols > 0) {
+  if (numCols > 0)
     tableWidth += cellSpacing; // add last cellspacing
-    // Add the width between the border edge and the child area
-    nsMargin childOffset = GetChildAreaOffset(aPresContext, &aReflowState);
-    tableWidth += childOffset.left + childOffset.right;
-  } 
+
+  PRBool isPctWidth = PR_FALSE;
+  nscoord compWidth = aReflowState.mComputedWidth;
+  if (!IsAutoWidth(&isPctWidth) &&
+      (NS_UNCONSTRAINEDSIZE != compWidth) && !isPctWidth)
+    tableWidth = PR_MAX(tableWidth, compWidth);
+
+  // Add the width between the border edge and the child area
+  nsMargin childOffset = GetChildAreaOffset(aPresContext, &aReflowState);
+  tableWidth += childOffset.left + childOffset.right;
 
   return tableWidth;
 }
@@ -4312,6 +4318,9 @@ nsTableFrame::CalcMinAndPreferredWidths(nsIPresContext* aPresContext,
         aPrefWidth = mTableLayoutStrategy->CalcPctAdjTableWidth(*aPresContext, aReflowState, availWidth, p2t);
       }
     }
+    if (0 == numCols) { // degenerate case
+      aMinWidth = aPrefWidth = 0;
+    }
   }
   else { // a specified fix width becomes the min or preferred width
     nscoord compWidth = aReflowState.mComputedWidth;
@@ -4321,9 +4330,6 @@ nsTableFrame::CalcMinAndPreferredWidths(nsIPresContext* aPresContext,
       aMinWidth = PR_MAX(aMinWidth, compWidth);
       aPrefWidth = PR_MAX(aMinWidth, compWidth);
     }
-  }
-  if (0 == numCols) { // degenerate case
-    aMinWidth = aPrefWidth = 0;
   }
 }
 
