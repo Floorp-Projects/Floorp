@@ -18,7 +18,7 @@
 
 	<box align="horizontal" flex="100%" style="padding: 10px">
 		<box align="vertical" flex="25%">
-<html:div style="border-style:inset" flex="100%">
+<html:div style="border-style:inset;width:100px;height:100px" flex="100%">
 	<tree rdf:datasources="rdf:msgaccountmanager"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
           onselect="onAccountClick(event.target)" id="accounttree"
