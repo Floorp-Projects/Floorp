@@ -187,7 +187,10 @@ public interface Scriptable {
      * <LI>org.mozilla.javascript.Scriptable objects</LI>
      * <LI>null</LI>
      * <LI>The value returned by Context.getUndefinedValue()</LI> 
-     * </UL><p>    
+     * </UL><p> 
+     * Arbitrary Java objects may be wrapped in a Scriptable by first calling
+     * <code>Context.toObject</code>. This allows the property of a JavaScript
+     * object to contain an arbitrary Java object as a value.<p> 
      * Note that <code>has</code> will be called by the runtime first before
      * <code>set</code> is called to determine in which object the
      * property is defined.
@@ -199,6 +202,7 @@ public interface Scriptable {
      * @see org.mozilla.javascript.Scriptable#has
      * @see org.mozilla.javascript.Scriptable#get
      * @see org.mozilla.javascript.ScriptableObject#putProperty
+     * @see org.mozilla.javascript.Context#toObject
      */
     public void put(String name, Scriptable start, Object value);
 
