@@ -28,6 +28,7 @@ LIBRARY_NAME = raptorhtmlbase_s
 CPPSRCS=				\
 	nsAbsoluteFrame.cpp		\
 	nsBRFrame.cpp			\
+	nsBlockBandData.cpp		\
 	nsBlockFrame.cpp		\
 	nsBlockReflowContext.cpp	\
 	nsBodyFrame.cpp			\
