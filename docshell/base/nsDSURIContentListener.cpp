@@ -41,7 +41,13 @@ nsDSURIContentListener::~nsDSURIContentListener()
 // nsDSURIContentListener::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS1(nsDSURIContentListener, nsIURIContentListener)
+NS_IMPL_ADDREF(nsDSURIContentListener)
+NS_IMPL_RELEASE(nsDSURIContentListener)
+
+NS_INTERFACE_MAP_BEGIN(nsDSURIContentListener)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+NS_INTERFACE_MAP_END
 
 //*****************************************************************************
 // nsDSURIContentListener::nsIURIContentListener
