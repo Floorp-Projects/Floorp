@@ -586,7 +586,7 @@ NS_IMETHODIMP nsMsgProtocol::GetStatus(nsresult *status)
   if (m_request)
 	  return m_request->GetStatus(status);
 
-  *status = NS_ERROR_FAILURE;
+  *status = NS_OK;
   return *status;
 }
 
