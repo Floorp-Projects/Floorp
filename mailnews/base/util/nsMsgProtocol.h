@@ -23,29 +23,38 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIEventQueue.h"
-#include "nsCOMPtr.h"
 #include "nsIChannel.h"
+#include "nsIURL.h"
+#include "nsILoadGroup.h"
+#include "nsCOMPtr.h"
 
 // This is a helper class used to encapsulate code shared between all of the
 // mailnews protocol objects (imap, news, pop, smtp, etc.) In particular,
 // it unifies the core networking code for the protocols. My hope is that
 // this will make unification with Necko easier as we'll only have to change
 // this class and not all of the mailnews protocols.
-class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener
+class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener, public nsIChannel
 {
 public:
 	nsMsgProtocol();
 	virtual ~nsMsgProtocol();
 
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+	// nsIChannel support
+	NS_DECL_NSICHANNEL
+	NS_DECL_NSIREQUEST
+  
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSISTREAMOBSERVER
 
 	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
 	// then calls the base class which opens the socket if it needs opened. If the socket is 
 	// already opened then we just call ProcessProtocolState to start the churning process.
 	// aConsumer is the consumer for the url. It can be null if this argument is not appropriate
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
+
+	virtual nsresult SetUrl(nsIURI * aURL); // sometimes we want to set the url before we load it
+	virtual nsresult SetLoadGroup(nsILoadGroup * aLoadGroup);
 
 	// Flag manipulators
 	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
@@ -88,6 +97,12 @@ protected:
 	PRInt32		m_readCount;
 
 	nsFileSpec	m_tempMsgFileSpec;  // we currently have a hack where displaying a msg involves writing it to a temp file first
+
+	// the following is a catch all for nsIChannel related data
+	nsCOMPtr<nsIURI>  m_url; // the running url
+	nsCOMPtr<nsIStreamListener> m_channelListener;
+	nsCOMPtr<nsISupports>		m_channelContext;
+	nsCOMPtr<nsILoadGroup>		m_loadGroup;
 };
 
 #endif /* nsMsgProtocol_h__ */

@@ -22,12 +22,13 @@
 #include "nsISocketTransportService.h"
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsILoadGroup.h"
 #include "nsIIOService.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsMsgProtocol, nsCOMTypeInfo<nsIStreamListener>::GetIID())
+NS_IMPL_ISUPPORTS2(nsMsgProtocol, nsIStreamListener, nsIChannel)
 
 nsMsgProtocol::nsMsgProtocol()
 {
@@ -165,9 +166,15 @@ NS_IMETHODIMP nsMsgProtocol::OnStartRequest(nsIChannel * aChannel, nsISupports *
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(ctxt, &rv);
 	if (NS_SUCCEEDED(rv) && aMsgUrl)
-		return aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
-	else
-		return NS_ERROR_NO_INTERFACE;
+		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
+
+	// if we are set up as a channel, we should notify our channel listener that we are starting...
+	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
+	// happens to be using
+	if (m_channelListener)
+		rv = m_channelListener->OnStartRequest(this, m_channelContext);
+
+	return rv;
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
@@ -176,12 +183,18 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(ctxt, &rv);
 	if (NS_SUCCEEDED(rv) && aMsgUrl)
-		return aMsgUrl->SetUrlState(PR_FALSE, aStatus);
-	else
-		return NS_ERROR_NO_INTERFACE;
+		rv = aMsgUrl->SetUrlState(PR_FALSE, aStatus);
+
+	// if we are set up as a channel, we should notify our channel listener that we are starting...
+	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
+	// happens to be using
+	if (m_channelListener)
+		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus, aMsg);
+
+	return rv;
 }
 
-nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
+nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
 	// okay now kick us off to the next state...
 	// our first state is a process state so drive the state machine...
@@ -191,6 +204,14 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 	if (NS_SUCCEEDED(rv))
 	{
 		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
+
+    // if the url is given a stream consumer then we should use it to forward calls to...
+    if (!m_channelListener && aConsumer) // if we don't have a registered listener already
+    {
+      m_channelListener = do_QueryInterface(aConsumer);
+      if (!m_channelContext)
+        m_channelContext = do_QueryInterface(aURL);
+    }
 
 		if (!m_socketIsOpen)
 		{
@@ -205,3 +226,137 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 	return rv;
 }
 
+///////////////////////////////////////////////////////////////////////
+// The rest of this file is mostly nsIChannel mumbo jumbo stuff
+///////////////////////////////////////////////////////////////////////
+
+nsresult nsMsgProtocol::SetUrl(nsIURI * aURL)
+{
+	m_url = dont_QueryInterface(aURL);
+	return NS_OK;
+}
+
+nsresult nsMsgProtocol::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+	m_loadGroup = dont_QueryInterface(aLoadGroup);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgProtocol::GetURI(nsIURI * *aURI)
+{
+	nsresult rv = NS_OK;
+	if (aURI)
+	{
+		if (m_url)
+			rv = m_url->QueryInterface(NS_GET_IID(nsIURI), (void **) aURI);
+		else
+			*aURI = nsnull;
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv;
+}
+ 
+NS_IMETHODIMP nsMsgProtocol::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener)
+{
+	// set the stream listener and then load the url
+	m_channelContext = ctxt;
+	m_channelListener = listener;
+
+	// the following load group code is completely bogus....
+	nsresult rv = NS_OK;
+	if (m_loadGroup)
+	{
+		nsCOMPtr<nsILoadGroupListenerFactory> factory;
+		//
+		// Create a load group "proxy" listener...
+		//
+		rv = m_loadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
+		if (factory) 
+		{
+			nsCOMPtr<nsIStreamListener> newListener;
+			rv = factory->CreateLoadGroupListener(m_channelListener, getter_AddRefs(newListener));
+			if (NS_SUCCEEDED(rv)) 
+				m_channelListener = newListener;
+		}
+	} // if aLoadGroup
+
+	return LoadUrl(m_url, nsnull);
+}
+
+NS_IMETHODIMP nsMsgProtocol::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
+{
+	*aContentType = nsCRT::strdup("message/rfc822");
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgProtocol::GetContentLength(PRInt32 * aContentLength)
+{
+  *aContentLength = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgProtocol::GetPrincipal(nsIPrincipal * *aPrincipal)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::SetPrincipal(nsIPrincipal * aPrincipal)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// From nsIRequest
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsMsgProtocol::IsPending(PRBool *result)
+{
+    *result = PR_TRUE;
+    return NS_OK; 
+}
+
+NS_IMETHODIMP nsMsgProtocol::Cancel()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::Suspend()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgProtocol::Resume()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
