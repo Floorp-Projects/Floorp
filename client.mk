@@ -52,8 +52,8 @@ ifndef MOZ_TOOLKIT
 MOZ_TOOLKIT	= USE_DEFAULT
 endif
 
-ifndef WITH_NSPR
-WITH_NSPR	= /usr/local/nspr
+ifndef NSPR_INSTALL_DIR
+NSPR_INSTALL_DIR = /usr/local/nspr
 endif
 
 -include $(DEPTH)/config/config.mk
@@ -79,7 +79,7 @@ build:
 	PWD=`pwd`
 	(cd mozilla; $(AUTOCONF))
 	if test ! -d mozilla/$(OBJDIR); then rm -rf mozilla/$(@OBJDIR); mkdir -D mozilla/$(OBJDIR); else true; fi
-	(cd mozilla/$(OBJDIR); ../configure --with-nspr=$(WITH_NSPR) --enable-toolkit=$(MOZ_TOOLKIT))
+	(cd mozilla/$(OBJDIR); ../configure --with-nspr=$(NSPR_INSTALL_DIR) --enable-toolkit=$(MOZ_TOOLKIT))
 	(cd mozilla/$(OBJDIR); gmake depend)
 	(cd mozilla/$(OBJDIR); gmake)
 
@@ -92,5 +92,5 @@ build:
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
 nspr:
-	($(MAKE) -C mozilla/nsprpub DIST=$(WITH_NSPR) NSDISTMODE=copy NS_USE_GCC=1 MOZILLA_CLIENT=1 NO_MDUPDATE=1 NS_USE_NATIVE= )
+	($(MAKE) -C mozilla/nsprpub DIST=$(NSPR_INSTALL_DIR) NSDISTMODE=copy NS_USE_GCC=1 MOZILLA_CLIENT=1 NO_MDUPDATE=1 NS_USE_NATIVE= )
 
