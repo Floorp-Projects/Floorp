@@ -397,6 +397,8 @@ function onOKCommand()
         recurUnits    = getFieldValue("repeat-length-units", "value");
         recurInterval = getFieldValue("repeat-length-field");
 
+        recurrenceInfo.recurStart = event.startDate;
+        
         if (getFieldValue("repeat-forever-radio", "selected")) {
             recurrenceInfo.recurCount = -1;
         }
@@ -407,6 +409,17 @@ function onOKCommand()
             var recurEndDate = document.getElementById("repeat-end-date-picker").value;
             recurrenceInfo.recurEnd.jsDate = recurEndDate;
         }
+
+        recurrenceInfo.interval = recurInterval;
+        
+        var typeMap = { "days"  : Components.interfaces.calIAttendee.CAL_RECUR_DAILY,
+                        "weeks"   : Components.interfaces.calIAttendee.CAL_RECUR_WEEKLY,
+                        "months" : Components.interfaces.calIAttendee.CAL_RECUR_MONTHLY,
+                        "years"  : Components.interfaces.calIAttendee.CAL_RECUR_YEARLY
+                      }
+        recurrenceInfo.recurType = typeMap[recurUnits];
+        // XXX need to do extra work for weeks here and for months incase extra things are checked
+
 
 
         // Exceptions
@@ -1578,7 +1591,7 @@ function processComponentType()
 function onIniviteAdd()
 {
     textBox = document.getElementById("invite-email-field");
-    addAttendee(textBox.email);
+    addAttendee(textBox.value);
 }
 
 function addAttendee(email)
