@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIMsgFolder.idl"
 #include "nsIFileSpec.idl"
+#include "nsIMessage.idl"
 #include "nsIMsgCopyServiceListener.idl"
 
 %{C++
@@ -32,25 +33,39 @@ interface nsITransactionManager;
 [scriptable, uuid(bce41600-28df-11d3-abf7-00805f8ac968)]
 interface nsIMsgCopyService : nsISupports {
 
-	void CopyMessages(in nsIMsgFolder srcFolder,	/* ui source folder */
-	                  in nsISupportsArray messages, /* messages to copy with */
-					  in nsIMsgFolder dstFolder,	/* destination folder */
-					  in boolean isMove,		 	/* move messages */
-					  in nsITransactionManager txnMgr); /* undo manager */
+    /**
+     *
+     */
+	void CopyMessages(in nsIMsgFolder srcFolder,
+	                  in nsISupportsArray messages,
+					  in nsIMsgFolder dstFolder,
+					  in boolean isMove,
+                      in nsIMsgCopyServiceListener listener,
+                      in nsISupports listenerData,
+					  in nsITransactionManager txnMgr);
 
-	void CopyMessage(in nsIFileSpec fileSpec,	/* canonical mime msg file */
-					 in nsIMsgFolder dstFolder, /* destination folder */
-					 in nsITransactionManager txnMgr); /* undo manager */
+    /**
+     *
+     */
+	void CopyFileMessage(in nsIFileSpec fileSpec,
+                         in nsIMsgFolder dstFolder,
+                         in nsIMessage msgToReplace,
+                         in boolean isDraft,
+                         in nsIMsgCopyServiceListener listener,
+                         in nsISupports listenerData,
+                         in nsITransactionManager txnMgr);
 
-	void NotifyCompletion(in nsISupports aSupport, /* a src folder or file spec */
-						  in nsIMsgFolder dstFolder); /* destination folder */
-
-    void RegisterListener(in nsIMsgCopyServiceListener listener,
-                          in nsISupports aSupport, // either an ui source
-                                                   // folder or a file spec
-                          in nsIMsgFolder dstFolder,
-                          in nsISupports listenerData);
-
-    void UnregisterListener(in nsIMsgCopyServiceListener listener);
+    /**
+     * Notify the message copy service that the destination folder has finished
+     * it's messages copying operation so that the copy service can continue
+     * copying the rest of the messages if there are more to copy with.
+     * aSupport and dstFolder uniquely identify a copy service request.
+     *
+     * aSupport -- the originator of CopyMessages or CopyFileMessage; it can
+     *             be either a nsIMsgFolder or a nsIFileSpec
+     * dstFolder -- the destination folder which performs the copy operation
+     */
+	void NotifyCompletion(in nsISupports aSupport,
+						  in nsIMsgFolder dstFolder);
 
 };

@@ -23,13 +23,18 @@
 interface nsIMsgCopyServiceListener : nsISupports {
 
     /**
-     * Notify the observer that the message has started to be copied. This method is
-     * called only once, at the beginning of a message copyoperation.
+     * Notify the observer that the message has started to be copied. This
+     * method is called only once, at the beginning of a message
+     * copyoperation. 
+     * listenerData -
      */
     void OnStartCopy(in nsISupports listenerData);
 
     /**
      * Notify the observer that progress as occurred for the message copy
+     * aProgress -
+     * aProgressMax -
+     * listenerData -
      */
     void OnProgress(in PRUint32 aProgress, 
                     in PRUint32 aProgressMax, 
@@ -37,12 +42,10 @@ interface nsIMsgCopyServiceListener : nsISupports {
 
     /**
      * Notify the observer that the message copied operation has completed.  
-     * 
-     * This method is called regardless of whether the the operation was successful.
-     * aMsgID   The message id for the mail message
-     * status   Status code for the message send.
-     * msg      A text string describing the error.
-     * returnFileSpec The returned file spec for save to file operations.
+     * This method is called regardless of whether the the operation was
+     * successful.
+     * aStatus - indicate whether the operation was succeeded
+     * listenerData - 
      */
     void OnStopCopy(in nsresult aStatus, in nsISupports listenerData);
 
