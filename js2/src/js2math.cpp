@@ -218,8 +218,8 @@ static void random_init(JS2Metadata *meta)
     meta->rngInitialized = true;
 
     /* meta->rngMultiplier = 0x5DEECE66DL */
-    JSLL_ISHL(tmp, 0x5D, 32);
-    JSLL_UI2L(tmp2, 0xEECE66DL);
+    JSLL_ISHL(tmp, 0x5, 32);
+    JSLL_UI2L(tmp2, 0xDEECE66DL);
     JSLL_OR(meta->rngMultiplier, tmp, tmp2);
 
     /* meta->rngAddend = 0xBL */
@@ -230,8 +230,8 @@ static void random_init(JS2Metadata *meta)
     JSLL_SHL(tmp2, tmp, 48);
     JSLL_SUB(meta->rngMask, tmp2, tmp);
 
-    /* meta->rngDscale = (jsdouble)(1L << 54) */
-    JSLL_SHL(tmp2, tmp, 54);
+    /* meta->rngDscale = (jsdouble)(1L << 53) */
+    JSLL_SHL(tmp2, tmp, 53);
     JSLL_L2D(meta->rngDscale, tmp2);
 
     /* Finally, set the seed from current time. */
@@ -257,7 +257,7 @@ static float64 random_nextDouble(JS2Metadata *meta)
     int64 tmp, tmp2;
     float64 d;
 
-    JSLL_ISHL(tmp, random_next(meta, 27), 27);
+    JSLL_ISHL(tmp, random_next(meta, 26), 27);
     JSLL_UI2L(tmp2, random_next(meta, 27));
     JSLL_ADD(tmp, tmp, tmp2);
     JSLL_L2D(d, tmp);
