@@ -30,7 +30,6 @@ const MSG_FOLDER_FLAG_OFFLINE = 0x8000000;
 
 function OnLoad()
 {	
-
     if (window.arguments && window.arguments[0]) {
         if (window.arguments[0].msgWindow) {
             gParentMsgWindow = window.arguments[0].msgWindow;
@@ -49,7 +48,6 @@ function OnLoad()
     document.getElementById("workOffline").checked = gWorkOffline;
 
     return true;
-
 }
 
 function syncOkButton()
@@ -83,33 +81,24 @@ function syncCancelButton()
     return true;
 }
 
-
 function OnSelect()
 {	  
-
    top.window.openDialog("chrome://messenger/content/msgSelectOffline.xul", "", "centerscreen,chrome,modal,titlebar,resizable=yes");
    return true;
-
 }
-
 
 function selectOkButton()
 {
-
     return true;
-
 }
 
 function selectCancelButton()
 {	
-
     return true;
-
 }
 
 function selectOnLoad()
 {
-
     doSetOKCancel(selectOkButton,selectCancelButton);
 
     msgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
@@ -134,12 +123,10 @@ function selectOnLoad()
     SetServerOpen();
     SortFolder('FolderColumn', 'http://home.netscape.com/NC-rdf#FolderTreeName');
     LoadSyncTree();
-
 } 
 
 function SortFolder(column, sortKey)
 {
-
     var node = FindInWindow(window, column);
     if(!node) {
         dump('Couldnt find sort column\n');
@@ -148,12 +135,10 @@ function SortFolder(column, sortKey)
     SortColumn(node, sortKey, null, null);
     node.setAttribute("sortActive", "false");
     return true;
-
 }
 
 function FindInWindow(currentWindow, id)
 {
-
     var item = currentWindow.document.getElementById(id);
     if(item)
     return item;
@@ -170,7 +155,6 @@ function FindInWindow(currentWindow, id)
 
 function LoadSyncTree()
 {
-
     var allServers = gAccountManager.allServers;
     for (var i=0;i<allServers.Count();i++)	{
 
@@ -189,12 +173,10 @@ function LoadSyncTree()
             currentServer.PerformExpand(msgWindow);
         }
     }
-
 }
 
 function SetServerOpen()
 {
-
     if ( gSynchronizeTree && gSynchronizeTree.childNodes ) 	{
         for ( var i = gSynchronizeTree.childNodes.length - 1; i >= 0; i-- ) {
             var treechild = gSynchronizeTree.childNodes[i];
@@ -217,11 +199,8 @@ function SetServerOpen()
     }
 }
 
-
-
 function onSpaceClick(event)
 {
-
     // if click checkbox,  reverse selected status,
     var t = event.originalTarget;
     if (t.localName == "checkbox") {
@@ -236,11 +215,10 @@ function onSpaceClick(event)
 
 function UpdateNode(node, target)
 {
-
     var folder = null;
     var uri = node.getAttribute("id");
     if(uri)
-        folder = GetMsgFolder(uri);
+        folder = GetMsgFolderFromUri(uri);
     if(folder) {
 
         if(folder.isServer) {			
@@ -258,19 +236,5 @@ function UpdateNode(node, target)
     } 
 }
 
-function GetMsgFolder(uri)
-{
-
-    try {
-        var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
-        RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-        var resource = RDF.GetResource(uri);
-        var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-        return msgfolder;
-    }
-    catch (ex) { }
-    return null;
-
-}
 
 
