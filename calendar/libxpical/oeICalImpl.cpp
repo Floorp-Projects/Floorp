@@ -246,13 +246,7 @@ oeICalImpl::oeICalImpl()
 
         m_batchMode = false;
 
-        nsresult rv;
-        nsCOMPtr<nsITimer> alarmtimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-        alarmtimer->QueryInterface(NS_GET_IID(nsITimer), (void **)&m_alarmtimer);
-        if( NS_FAILED( rv ) )
-            m_alarmtimer = nsnull;
-        else
-            m_alarmtimer->Init( AlarmTimerCallback, this, 0, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
+        m_alarmtimer = nsnull;
 }
 
 oeICalImpl::~oeICalImpl()
@@ -263,8 +257,12 @@ oeICalImpl::~oeICalImpl()
     for( int i=0; i<m_observerlist.size(); i++ ) {
         m_observerlist[i]->Release();
     }
-    if( m_alarmtimer && ( m_alarmtimer->GetDelay() != 0 ) )
-        m_alarmtimer->Cancel();
+    if( m_alarmtimer  ) {
+        if ( m_alarmtimer->GetDelay() != 0 )
+            m_alarmtimer->Cancel();
+        m_alarmtimer->Release();
+        m_alarmtimer = nsnull;
+    }
 }
 
 /**
@@ -1292,13 +1290,24 @@ void oeICalImpl::SetupAlarmManager() {
         }
         tmplistptr = tmplistptr->next;
     }
-    if( m_alarmtimer && ( m_alarmtimer->GetDelay() != 0 ) )
-        m_alarmtimer->Cancel();
+    if( m_alarmtimer  ) {
+        if ( m_alarmtimer->GetDelay() != 0 )
+            m_alarmtimer->Cancel();
+        m_alarmtimer->Release();
+        m_alarmtimer = nsnull;
+    }
     if( !icaltime_is_null_time( nextalarm ) ) {
 #ifdef ICAL_DEBUG
         printf( "NEXT ALARM IS: %s\n", icaltime_as_ctime( nextalarm ) );
 #endif
         time_t timediff = icaltime_as_timet( nextalarm ) - icaltime_as_timet( now );
-        m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
+        
+        nsresult rv;
+        nsCOMPtr<nsITimer> alarmtimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+        alarmtimer->QueryInterface(NS_GET_IID(nsITimer), (void **)&m_alarmtimer);
+        if( NS_FAILED( rv ) )
+            m_alarmtimer = nsnull;
+        else
+            m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
     }
 }
