@@ -75,8 +75,9 @@ public:
         return mContentLength;
     }
 
-private:
     nsresult EnsureJarStream();
+
+private:
 
     nsCOMPtr<nsIZipReaderCache> mJarCache;
     nsCOMPtr<nsIZipReader>      mJarReader;
@@ -557,6 +558,10 @@ nsJARChannel::Open(nsIInputStream **stream)
 
     if (!mJarInput)
         return NS_ERROR_UNEXPECTED;
+
+    // force load the jar file now so GetContentLength will return a
+    // meaningful value once we return.
+    mJarInput->EnsureJarStream();
 
     NS_ADDREF(*stream = mJarInput);
     return NS_OK;

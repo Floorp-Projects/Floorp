@@ -273,7 +273,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     }
     
     rv = chan->GetContentLength (&len);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv) || len == PRUint32(-1))
     {
         errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOCONTENT);
         goto return_exception;
