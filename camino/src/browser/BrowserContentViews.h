@@ -40,6 +40,7 @@
 
 @class BookmarkToolbar;
 @class BrowserTabView;
+@class BrowserTabBarView;
 
 @interface BrowserContentView : NSView
 {
@@ -56,12 +57,13 @@
 
 @end
 
-
 @interface BrowserContainerView : NSView
 {
+  IBOutlet BrowserTabView *mTabView;
+  IBOutlet BrowserTabBarView *mTabBarView;
 }
-@end
 
+@end
 
 @interface BookmarkManagerView : NSView
 {

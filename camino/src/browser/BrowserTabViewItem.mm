@@ -41,10 +41,13 @@
 #import "NSPasteboard+Utils.h"
 
 #import "BrowserTabViewItem.h"
+#import "BrowserTabView.h"
 
 #import "CHBrowserView.h"
 #import "MainController.h"
 #import "BrowserWindowController.h"
+#import "TruncatingTextAndImageCell.h"
+#import "TabButtonCell.h"
 
 // we cannot use the spinner before 10.2, so don't allow it. This is the
 // version of appkit in 10.2 (taken from the 10.3 SDK headers which we cannot use).
@@ -58,176 +61,20 @@ const double kJaguarAppKitVersion = 663;
 
 #pragma mark -
 
-// XXX move this to a new file
-@interface NSTruncatingTextAndImageCell : NSCell
-{
-  NSImage         *mImage;
-  NSMutableString *mTruncLabelString;
-  int             mLabelStringWidth;      // -1 if not known
-  float           mImagePadding;
-  float           mImageSpace;
-  float           mImageAlpha;
-  float           mRightGutter;           // leave space for an icon on the right
-  BOOL            mImageIsVisible;
-}
-
-- (id)initTextCell:(NSString*)aString;
-- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView*)controlView;
-
-- (void)setImagePadding:(float)padding;
-- (void)setImageSpace:(float)space;
-- (void)setImageAlpha:(float)alpha;
-- (void)setRightGutter:(float)rightPadding;
-- (void)setImageVisible:(BOOL)visible;
-
-- (void)setImage:(NSImage *)anImage;
-- (NSImage *)image;
-
-@end
-
-@implementation NSTruncatingTextAndImageCell
-
-- (id)initTextCell:(NSString*)aString
-{
-  if ((self = [super initTextCell:aString]))
-  {
-    mLabelStringWidth = -1;
-    mImagePadding = 0;
-    mImageSpace = 2;
-    mRightGutter = 0.0;
-    mImageIsVisible = NO;
-  }
-  return self;
-}
-
-- (void)dealloc
-{
-  [mImage release];
-  [mTruncLabelString release];
-  [super dealloc];
-}
-
-- copyWithZone:(NSZone *)zone
-{
-    NSTruncatingTextAndImageCell *cell = (NSTruncatingTextAndImageCell *)[super copyWithZone:zone];
-    cell->mImage = [mImage retain];
-    cell->mTruncLabelString = nil;
-    cell->mLabelStringWidth = -1;
-    cell->mRightGutter = mRightGutter;
-    cell->mImageIsVisible = mImageIsVisible;
-    return cell;
-}
-
-- (void)drawInteriorWithFrame:(NSRect)cellFrame inView:(NSView*)controlView
-{
-  NSRect textRect = cellFrame;
-  NSRect imageRect;
-
-  // we always reserve space for the image, even if there isn't one
-  // assume the image rect is always square
-  float imageWidth = NSHeight(cellFrame) - 2 * mImagePadding;
-  NSDivideRect(cellFrame, &imageRect, &textRect, imageWidth, NSMinXEdge);
-  
-  if (mImage && mImageIsVisible)
-  {
-    NSRect imageSrcRect = NSZeroRect;
-    imageSrcRect.size = [mImage size];    
-    [mImage drawInRect:NSInsetRect(imageRect, mImagePadding, mImagePadding)
-          fromRect:imageSrcRect operation:NSCompositeSourceOver fraction:mImageAlpha];
-  }
-  
-  // remove image space
-  NSDivideRect(textRect, &imageRect, &textRect, mImageSpace, NSMinXEdge);
-
-  int cellWidth = (int)NSWidth(textRect) - (int)mRightGutter;
-  NSDictionary *cellAttributes = [[self attributedStringValue] attributesAtIndex:0 effectiveRange:nil];
-
-  if (mLabelStringWidth != cellWidth || !mTruncLabelString)
-  {
-    [mTruncLabelString release];
-    mTruncLabelString = [[NSMutableString alloc] initWithString:[self stringValue]];
-    [mTruncLabelString truncateToWidth:cellWidth at:kTruncateAtEnd withAttributes:cellAttributes];
-    mLabelStringWidth = cellWidth;
-  }
-  
-  [mTruncLabelString drawInRect:textRect withAttributes:cellAttributes];
-}
-
-- (void)setStringValue:(NSString *)aString
-{
-  if (![aString isEqualToString:[self stringValue]])
-  {
-    [mTruncLabelString release];
-    mTruncLabelString = nil;
-  }
-  [super setStringValue:aString];
-}
-
-- (void)setAttributedStringValue:(NSAttributedString *)attribStr
-{
-  if (![attribStr isEqualToAttributedString:[self attributedStringValue]])
-  {
-    [mTruncLabelString release];
-    mTruncLabelString = nil;
-  }
-  [super setAttributedStringValue:attribStr];
-}
-
-- (void)setImage:(NSImage *)anImage 
-{
-  if (anImage != mImage)
-  {
-    [mImage release];
-    mImage = [anImage retain];
-  }
-}
-
-- (void)setImageVisible:(BOOL)visible
-{
-  mImageIsVisible = visible;
-}
-
-- (NSImage *)image
-{
-  return mImage;
-}
-
-- (void)setImagePadding:(float)padding
-{
-  mImagePadding = padding;
-}
-
-- (void)setImageSpace:(float)space
-{
-  mImageSpace = space;
-}
-
-- (void)setImageAlpha:(float)alpha
-{
-  mImageAlpha = alpha;
-}
-
-- (void)setRightGutter:(float)rightPadding
-{
-  mRightGutter = rightPadding;
-}
-
-@end
-
-#pragma mark -
-
 // a container view for the items in the tab view item. We use a subclass of
 // NSView to handle drag and drop, and context menus
 @interface BrowserTabItemContainerView : NSView
 {
   BrowserTabViewItem*           mTabViewItem;
-  NSTruncatingTextAndImageCell* mLabelCell;
+  TruncatingTextAndImageCell* mLabelCell;
+  TabButtonCell* mTabButtonCell;
   
   BOOL           mIsDropTarget;
   BOOL           mSelectTabOnMouseUp;
 }
 
-- (NSTruncatingTextAndImageCell*)labelCell;
+- (TruncatingTextAndImageCell*)labelCell;
+- (TabButtonCell*)tabButtonCell;
 
 - (void)showDragDestinationIndicator;
 - (void)hideDragDestinationIndicator;
@@ -244,11 +91,11 @@ const double kJaguarAppKitVersion = 663;
     
     mTabViewItem = tabViewItem;
 
-    mLabelCell = [[NSTruncatingTextAndImageCell alloc] init];
+    mLabelCell = [[TruncatingTextAndImageCell alloc] init];
     [mLabelCell setControlSize:NSSmallControlSize];		// doesn't work?
     [mLabelCell setImagePadding:0.0];
     [mLabelCell setImageSpace:2.0];
-    [mLabelCell setRightGutter:kCloseButtonWidth];
+    mTabButtonCell = [[TabButtonCell alloc] initFromTabViewItem:mTabViewItem];
     
     [self registerForDraggedTypes:[NSArray arrayWithObjects:
         @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, NSURLPboardType, nil]];
@@ -259,12 +106,18 @@ const double kJaguarAppKitVersion = 663;
 - (void)dealloc
 {
   [mLabelCell release];
+  [mTabButtonCell release];
   [super dealloc];
 }
 
-- (NSTruncatingTextAndImageCell*)labelCell
+- (TruncatingTextAndImageCell*)labelCell
 {
   return mLabelCell;
+}
+
+- (TabButtonCell *)tabButtonCell
+{
+  return mTabButtonCell;
 }
 
 // allow clicks in background windows to switch tabs
@@ -276,19 +129,6 @@ const double kJaguarAppKitVersion = 663;
 - (BOOL)mouseDownCanMoveWindow
 {
   return NO;
-}
-
-- (void)drawRect:(NSRect)aRect
-{
-  [mLabelCell drawWithFrame:[self bounds] inView:self];
-  
-  if (mIsDropTarget)
-  {
-    NSRect	hilightRect = NSOffsetRect(NSInsetRect([self bounds], 1.0, 0), -1.0, 0);
-    NSBezierPath* dropTargetOutline = [NSBezierPath bezierPathWithRoundCorneredRect:hilightRect cornerRadius:4.0];
-    [[NSColor colorWithCalibratedWhite:0.0 alpha:0.15] set];
-    [dropTargetOutline fill];
-  }
 }
 
 - (void)showDragDestinationIndicator
@@ -381,7 +221,7 @@ const double kJaguarAppKitVersion = 663;
 // NSResponder methods
 - (void)mouseDown:(NSEvent *)theEvent
 {
-  NSRect  iconRect   = NSMakeRect(0, 0, 16, 16);
+  NSRect  iconRect   = [self convertRect: [mLabelCell imageFrame] fromView: nil];
   NSPoint localPoint = [self convertPoint: [theEvent locationInWindow] fromView: nil];
   
   // this is a bit evil. Because the tab view's mouseDown captures the mouse, we'll
@@ -396,7 +236,7 @@ const double kJaguarAppKitVersion = 663;
   }
   
   mSelectTabOnMouseUp = NO;
-  [[self nextResponder] mouseDown:theEvent];
+  [[mTabViewItem tabView] selectTabViewItem:mTabViewItem];
 }
 
 - (void)mouseUp:(NSEvent *)theEvent
@@ -412,7 +252,7 @@ const double kJaguarAppKitVersion = 663;
 
 - (void)mouseDragged:(NSEvent*)theEvent
 {
-  NSRect  iconRect   = NSMakeRect(0, 0, 16, 16);
+  NSRect  iconRect   = [self convertRect: [mLabelCell imageFrame] fromView: nil];//NSMakeRect(0, 0, 16, 16);
   NSPoint localPoint = [self convertPoint: [theEvent locationInWindow] fromView: nil];
 
   if (!NSPointInRect(localPoint, iconRect) || ![mTabViewItem draggable])
@@ -420,25 +260,27 @@ const double kJaguarAppKitVersion = 663;
     [[self nextResponder] mouseDragged:theEvent];
     return;
   }
-  
-  mSelectTabOnMouseUp = NO;
-
-  CHBrowserView* browserView = (CHBrowserView*)[mTabViewItem view];
-  
-  NSString     *url = [browserView getCurrentURLSpec];
-  NSString     *title = [mLabelCell stringValue];
-  NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
-
-  NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-  [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
-  [pboard setDataForURL:url title:cleanedTitle];
-  
-  NSPoint dragOrigin = [self frame].origin;
-  dragOrigin.y += [self frame].size.height;
-  
-  [self dragImage: [MainController createImageForDragging:[mLabelCell image] title:title]
-                    at:NSMakePoint(0, 0) offset:NSMakeSize(0, 0)
-                    event:theEvent pasteboard:pboard source:self slideBack:YES];
+  // only initiate the drag if the original mousedown was in the right place... implied by mSelectTabOnMouseUp
+  if (mSelectTabOnMouseUp) {
+    mSelectTabOnMouseUp = NO;
+    
+    CHBrowserView* browserView = (CHBrowserView*)[mTabViewItem view];
+    
+    NSString     *url = [browserView getCurrentURLSpec];
+    NSString     *title = [mLabelCell stringValue];
+    NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
+    
+    NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
+    [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
+    [pboard setDataForURL:url title:cleanedTitle];
+    
+    NSPoint dragOrigin = [self frame].origin;
+    dragOrigin.y += [self frame].size.height;
+    
+    [self dragImage: [MainController createImageForDragging:[mLabelCell image] title:title]
+                 at:localPoint offset:NSMakeSize(0, 0)
+              event:theEvent pasteboard:pboard source:self slideBack:YES];
+  }
 }
 
 - (void)setMenu:(NSMenu *)aMenu
@@ -449,6 +291,7 @@ const double kJaguarAppKitVersion = 663;
     [[aMenu itemAtIndex:i] setTag:[mTabViewItem tag]];
 
   [super setMenu:aMenu];
+  [mTabButtonCell setMenu:aMenu];
 }
 
 @end
@@ -472,7 +315,7 @@ const double kJaguarAppKitVersion = 663;
     // create progress wheel. keep a strong ref as view goes in and out of view hierarchy. We
     // cannot use |NSProgressIndicatorSpinningStyle| on 10.1, so don't bother even creating it
     // and let all the calls to it be no-ops elsewhere in this class (prevents clutter, imho).
-#if 0
+#if USE_PROGRESS_SPINNER
 // the progress spinner causes content to shear when scrolling because of
 // redraw problems on jaguar and panther. Removing until we can fix it. (bug 203349)
     if (NSAppKitVersionNumber >= kJaguarAppKitVersion) {
@@ -497,7 +340,7 @@ const double kJaguarAppKitVersion = 663;
     [mCloseButton setTarget:self];
     [mCloseButton setAction:@selector(closeTab)];
     [mCloseButton setAutoresizingMask:NSViewMinXMargin];
-    [mTabContentsView addSubview:mCloseButton];
+    [mCloseButton retain];
 
     [[self tabView] setAutoresizesSubviews:YES];
 
@@ -541,8 +384,6 @@ const double kJaguarAppKitVersion = 663;
 - (void)closeTab
 {
 	[[self view] windowClosed];
-	[mCloseButton removeFromSuperview];
-	[mProgressWheel removeFromSuperview];
 	[[self tabView] removeTabViewItem:self];
 }
 
@@ -582,6 +423,7 @@ const double kJaguarAppKitVersion = 663;
 {
   NSAttributedString* labelString = [[[NSAttributedString alloc] initWithString:label attributes:mLabelAttributes] autorelease];
   [[mTabContentsView labelCell] setAttributedStringValue:labelString];
+  [(BrowserTabView *)[self tabView] refreshTabBar:NO];
 
   [super setLabel:label];
 }
@@ -591,11 +433,21 @@ const double kJaguarAppKitVersion = 663;
   return [[mTabContentsView labelCell] stringValue];
 }
 
+- (TruncatingTextAndImageCell *)labelCell
+{
+  return [mTabContentsView labelCell];
+}
+
+- (TabButtonCell *)tabButtonCell
+{
+  return [mTabContentsView tabButtonCell];
+}
+
 -(void)setTabIcon:(NSImage *)newIcon
 {
   [super setTabIcon:newIcon];
   [[mTabContentsView labelCell] setImage:mTabIcon];
-  [mTabContentsView setNeedsDisplay:YES];
+  [(BrowserTabView *)[self tabView] refreshTabBar:NO];
 }
 
 - (void)setTabIcon:(NSImage *)newIcon isDraggable:(BOOL)draggable
@@ -605,18 +457,27 @@ const double kJaguarAppKitVersion = 663;
   [[mTabContentsView labelCell] setImageAlpha:(draggable ? 1.0 : 0.6)];  
 }
 
+- (void)willBeRemoved:(BOOL)remove
+{
+  if (remove) {
+    [mCloseButton removeFromSuperview];
+    [mProgressWheel removeFromSuperview];
+  }
+}
+
 #pragma mark -
 
 - (void)startLoadAnimation
 {
 #if USE_PROGRESS_SPINNER
-  // supress the tab icon while the spinner is over it
-  [[mTabContentsView labelCell] setImageVisible: NO];
-  [mTabContentsView setNeedsDisplay:YES];
-  
   // add spinner to tab view and start animation
-  [mTabContentsView addSubview:mProgressWheel];
+  [[mTabContentsView labelCell] addProgressIndicator:mProgressWheel];
+  [(BrowserTabView *)[self tabView] refreshTabBar:NO];
   [mProgressWheel startAnimation:self];
+#else
+  // allow the favicon to display if there's no spinner
+  [[mTabContentsView labelCell] setImageVisible: YES];
+  [mTabContentsView setNeedsDisplay:YES];
 #endif
 }
 
@@ -629,8 +490,14 @@ const double kJaguarAppKitVersion = 663;
 #if USE_PROGRESS_SPINNER
   // stop animation and remove spinner from tab view
   [mProgressWheel stopAnimation:self];
-  [mProgressWheel removeFromSuperview];
+  [[mTabContentsView labelCell] removeProgressIndicator];
+  [(BrowserTabView *)[self tabView] refreshTabBar:NO];
 #endif
+}
+
+- (NSButton *) closeButton
+{
+  return mCloseButton;
 }
 
 #pragma mark -

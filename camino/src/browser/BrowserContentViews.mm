@@ -40,6 +40,7 @@
 
 #import "BookmarkToolbar.h"
 #import "BrowserTabView.h"
+#import "BrowserTabBarView.h"
 
 
 /*
@@ -87,7 +88,6 @@
     |_______________________________________________________________|
     
 */
-
 
 @implementation BrowserContentView
 
@@ -205,23 +205,20 @@
 
 #pragma mark -
 
-@implementation BrowserContainerView : NSView
+@implementation BrowserContainerView
 
 - (void)resizeSubviewsWithOldSize:(NSSize)oldFrameSize
 {
-  BrowserTabView* browserTabView = (BrowserTabView *)[[self subviews] objectAtIndex:0];
-  float tabsTopSpace = [browserTabView getExtraTopSpace];
-
-  // nuke the shadow. It's a shame we need this hard-coded values.
-  const float kHorizontalEdgeShadowWidth = 10.0;
-  const float kBottomEdgeShadowWidth = 12.0;
-
-  NSRect adjustedRect = [self frame];
-  adjustedRect = NSInsetRect(adjustedRect, -kHorizontalEdgeShadowWidth, 0);
-  adjustedRect.origin.y = -kBottomEdgeShadowWidth;
-  adjustedRect.size.height -= (tabsTopSpace - kBottomEdgeShadowWidth);
-
-  [browserTabView setFrame:adjustedRect];
+  NSRect adjustedRect = [self bounds];
+  // mTabView will have set the appropriate size by now
+  adjustedRect.size.height -= [mTabBarView frame].size.height;  
+  [mTabView setFrame:adjustedRect];
+  
+  NSRect tbRect = adjustedRect;
+  tbRect.size.height = [mTabBarView frame].size.height;
+  tbRect.origin.x = 0;
+  tbRect.origin.y = NSMaxY(adjustedRect);
+  [mTabBarView setFrame:tbRect];
 }
 
 @end

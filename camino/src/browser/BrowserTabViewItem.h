@@ -42,6 +42,8 @@
 
 // a subclass of IconTabViewItem that handles dragging of site icons
 @class BrowserTabItemContainerView;
+@class TruncatingTextAndImageCell;
+@class TabButtonCell;
 
 @interface BrowserTabViewItem : IconTabViewItem
 {
@@ -57,10 +59,17 @@
 - (NSView*)tabItemContentsView;
 - (int)tag;
 - (void)setTabIcon:(NSImage *)newIcon isDraggable:(BOOL)draggable;
+- (TruncatingTextAndImageCell *)labelCell;
+- (TabButtonCell *)tabButtonCell;
 
 // call to start and stop the progress animation on this tab
 - (void)startLoadAnimation;
 - (void)stopLoadAnimation;
+
+// call before removing to clean up close button and progress spinner
+- (void)willBeRemoved:(BOOL)remove;
+
+- (NSButton *)closeButton;
 
 + (NSImage*)closeIcon;
 + (NSImage*)closeIconPressed;

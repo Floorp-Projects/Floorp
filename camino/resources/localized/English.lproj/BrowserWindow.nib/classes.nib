@@ -55,7 +55,12 @@
             }; 
             SUPERCLASS = NSObject; 
         }, 
-        {CLASS = BrowserContainerView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            CLASS = BrowserContainerView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mTabBarView = BrowserTabBarView; mTabView = BrowserTabView; }; 
+            SUPERCLASS = NSView; 
+        }, 
         {
             ACTIONS = {toggleBookmarkManager = id; }; 
             CLASS = BrowserContentView; 
@@ -68,7 +73,19 @@
             }; 
             SUPERCLASS = NSView; 
         }, 
-        {CLASS = BrowserTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
+        {
+            CLASS = BrowserTabBarView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mTabView = BrowserTabView; }; 
+            SUPERCLASS = NSView; 
+        }, 
+        {
+            CLASS = BrowserTabView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mTabBar = BrowserTabBarView; }; 
+            SUPERCLASS = NSTabView; 
+        }, 
+        {CLASS = BrowserTabViewItem; LANGUAGE = ObjC; SUPERCLASS = IconTabViewItem; }, 
         {
             CLASS = BrowserWindow; 
             LANGUAGE = ObjC; 
@@ -184,6 +201,7 @@
             OUTLETS = {mBrowserWindowController = BrowserWindowController; }; 
             SUPERCLASS = RDFOutlineViewDataSource; 
         }, 
+        {CLASS = IconTabViewItem; LANGUAGE = ObjC; SUPERCLASS = NSTabViewItem; }, 
         {CLASS = LocationBar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {
             ACTIONS = {
@@ -249,6 +267,7 @@
             }; 
             SUPERCLASS = NSObject; 
         }, 
+        {CLASS = NSImage; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {CLASS = NSObject; LANGUAGE = ObjC; }, 
         {CLASS = PageProxyIcon; LANGUAGE = ObjC; SUPERCLASS = NSImageView; }, 
         {
@@ -258,8 +277,11 @@
             SUPERCLASS = NSObject; 
         }, 
         {CLASS = RDFOutlineViewItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = RolloverTrackingCell; LANGUAGE = ObjC; SUPERCLASS = NSCell; }, 
         {CLASS = SearchTextField; LANGUAGE = ObjC; SUPERCLASS = NSTextField; }, 
-        {CLASS = ThrobberHandler; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+        {CLASS = TabButtonCell; LANGUAGE = ObjC; SUPERCLASS = RolloverTrackingCell; }, 
+        {CLASS = ThrobberHandler; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = TruncatingTextAndImageCell; LANGUAGE = ObjC; SUPERCLASS = NSCell; }
     ); 
     IBVersion = 1; 
 }

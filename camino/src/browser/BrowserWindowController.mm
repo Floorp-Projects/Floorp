@@ -2359,6 +2359,7 @@ static NSArray* sToolbarDefaults = nil;
 
   // Connect up the new view
   mBrowserView = [aTabViewItem view];
+  [mTabBrowser refreshTabBar:YES];
       
   // Make the new view the primary content area.
   [mBrowserView makePrimaryBrowserView: mURLBar status: mStatus windowController: self];
@@ -2367,6 +2368,7 @@ static NSArray* sToolbarDefaults = nil;
 - (void)tabViewDidChangeNumberOfTabViewItems:(NSTabView *)aTabView
 {
   [[NSApp delegate] fixCloseMenuItemKeyEquivalents];
+  [mTabBrowser refreshTabBar:YES];
 }
 
 -(id)getTabBrowser

@@ -47,6 +47,8 @@
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
 #import "BookmarkToolbar.h"
+#import "BrowserTabBarView.h"
+
 
 //////////////////////////
 //     NEEDS IMPLEMENTED : Implement drag tracking for moving tabs around.
@@ -130,7 +132,10 @@
   // of the tab being removed. Users, however, want the tab to the right to
   // be selected. This also matches how mozilla works. Select the right tab
   // first so we don't take the hit of displaying the left tab before we switch.
-  if ( [self selectedTabViewItem] == tabViewItem )
+  
+  // make sure the close button and spinner get removed
+  [(BrowserTabViewItem *)tabViewItem willBeRemoved:YES];
+  if ([self selectedTabViewItem] == tabViewItem)
     [self selectNextTabViewItem:self];
   [super removeTabViewItem:tabViewItem];
   [self showOrHideTabsAsAppropriate];
@@ -192,8 +197,21 @@
 /*** Instance Methods                   ***/
 /******************************************/
 
-// 03-03-2002 mlj: Modifies tab view size and type appropriately... Fragile.
-// Only to be used with the 2 types of tab view which we use in Chimera.
+// redraws the tab bar, rebuilding it if instructed
+- (void)refreshTabBar:(BOOL)rebuild
+{
+  // don't bother if it's not even visible
+  if ([self tabsVisible]) {
+    if (rebuild) {
+      [mTabBar rebuildTabBar];
+    } else {
+      [mTabBar setNeedsDisplay:YES];
+    }
+  }
+}
+
+
+// Only to be used with the 2 types of tab view which we use in Camino.
 - (void)showOrHideTabsAsAppropriate
 {
   //if ( autoHides == YES )
@@ -201,62 +219,35 @@
     BOOL tabVisibilityChanged = NO;
     BOOL tabsVisible = NO;
     
-    if ( [[self tabViewItems] count] < 2)
-    {
-      if ( [self tabViewType] != NSNoTabsBezelBorder )
-      {
-        [self setTabViewType:NSNoTabsBezelBorder];
+    if ([[self tabViewItems] count] < 2) {
+      if ([mTabBar frame].size.height != 0)
         tabVisibilityChanged = YES;
-      }
       tabsVisible = NO;
-    }
-    else
-    {
-      if ( [self tabViewType] != NSTopTabsBezelBorder )
-      {
-        [self setTabViewType:NSTopTabsBezelBorder];
+    } else {
+      if ([mTabBar frame].size.height == 0)
         tabVisibilityChanged = YES;
-      }
       tabsVisible = YES;
     }
 
     // tell the tabs that visibility changed
     NSArray* tabViewItems = [self tabViewItems];
-    for (unsigned int i = 0; i < [tabViewItems count]; i ++)
-    {
+    for (unsigned int i = 0; i < [tabViewItems count]; i ++) {
       NSTabViewItem* tabItem = [tabViewItems objectAtIndex:i];
       if ([tabItem isMemberOfClass:[BrowserTabViewItem class]])
         [(BrowserTabViewItem*)tabItem updateTabVisibility:tabsVisible];
     }
     
-    if (tabVisibilityChanged)
-    {
-      [[[[self window] windowController] bookmarkToolbar] setDrawBottomBorder:!tabsVisible];
-
+    if (tabVisibilityChanged) {
+      NSRect newTabBarFrame = [mTabBar frame];
+      newTabBarFrame.size.height = tabsVisible ? [mTabBar tabBarHeight]:0.0;
+      [mTabBar setFrame:newTabBarFrame];
       // tell the superview to resize its subviews
       [[self superview] resizeSubviewsWithOldSize:[[self superview] frame].size];
       [self setNeedsDisplay:YES];
     }
-	}
+  }
 }
 
-//
-// -getExtraTopSpace
-//
-// return the gap we want to have to make us display correctly. Note the tab dimensions
-// changed in panther so we have to use different constants.
-//
-- (float)getExtraTopSpace;
-{
-  const float kPantherAppKit = 743.0;
-  
-  const float kTabsVisibleTopGap    = 4.0;      // space above the tabs
-  const float kTabsVisibleTopGapPanther = 0.0;  // no gap above tabs on panther
-  const float kTabsInvisibleTopGap  = -7.0;		  // space removed to push tab content up when no tabs are visible
-  
-	return ([self tabsVisible]) ? 
-    ((NSAppKitVersionNumber >= kPantherAppKit) ? kTabsVisibleTopGapPanther : kTabsVisibleTopGap) : kTabsInvisibleTopGap;
-}
 
 - (BOOL)tabsVisible
 {
@@ -371,7 +362,10 @@
   NSArray*        pasteBoardTypes = [[sender draggingPasteboard] types];
 
   [self hideDragDestinationIndicator];
-  
+  if (!overTabViewItem)
+    // if there's no tabviewitem at the point within our view, check the tabbar as well.
+    overTabViewItem = [mTabBar tabViewItemAtPoint:[sender draggingLocation]];
+    
   if ([pasteBoardTypes containsObject: @"MozBookmarkType"])
   {
     NSArray* draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
