@@ -59,7 +59,7 @@ if ($category=="All") {$category="";}
 
 
 if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = $_GET["pageid"]; } //Default PageID is 1
-$type="T"; //Default Type is T
+$type="E"; //Default Type is E
 
 unset($typename);
 $types = array("E"=>"Extensions","T"=>"Themes","U"=>"Updates");
@@ -87,7 +87,7 @@ if (!$category) {$categoryname = "All $typename"; } else {$categoryname = $categ
     <meta http-equiv="Content-Language" content="en">
     <meta http-equiv="Content-Style-Type" content="text/css">
 
-<TITLE>Mozilla Update :: Themes - List - <?php echo"$categoryname"; if ($pageid) {echo" - Page $pageid"; } ?></TITLE>
+<TITLE>Mozilla Update :: Extensions - List - <?php echo"$categoryname"; if ($pageid) {echo" - Page $pageid"; } ?></TITLE>
 
 <?php
 if ($rsslist) {
@@ -137,10 +137,7 @@ $sql .="WHERE Type = '$type' AND AppName = '$application' AND `approved` = 'YES'
 if ($editorpick=="true") { $sql .="AND TR.Pick = 'YES' "; }
 if ($category && $category !=="%") {$sql .="AND CatName LIKE '$category' ";}
 if ($app_version) { $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";}
-//MacOSX Specific override for All+Mac themes. Bug 252294
-if ($OS=="MacOSX") { $app_os = $OS; } else { $app_os = "ALL"; }
-if ($OS) { $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = '$app_os') "; }
-
+if ($OS) { $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') "; }
 if ($catname == "Popular") { $sql .=" AND TM.downloadcount > '5'"; }
 $sql .="GROUP BY `Name` ";
 if ($orderby) {
@@ -319,6 +316,7 @@ INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
 INNER  JOIN t_os TOS ON TV.OSID = TOS.OSID
 WHERE TV.ID = '$id' AND TV.Version = '$row[Version]' AND TA.AppName = '$appname' AND TOS.OSName = '$osname' LIMIT 1";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+$vid = $row[MAXvID];
   $row = mysql_fetch_array($sql_result2);
 
    $vid = $row["vID"];
@@ -337,6 +335,7 @@ $sql3 = "SELECT `PreviewURI`, `caption` from `t_previews` WHERE `ID` = '$id' AND
    $row3 = mysql_fetch_array($sql_result3);
    $previewuri = $row3["PreviewURI"];
    $caption = $row3["caption"];
+
 
 if ($VerDateAdded > $dateadded) {$dateadded = $VerDateAdded; }
 if ($VerDateUpdated > $dateupdated) {$dateupdated = $VerDateUpdated; }
@@ -391,7 +390,7 @@ echo"<DIV class=\"iconbar\">";
 if ($appname=="Thunderbird") {
 echo"<A HREF=\"moreinfo.php?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
-echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A>";
+echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
 echo"<BR><SPAN class=\"filesize\">&nbsp;&nbsp;$filesize kb</SPAN></DIV>";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
@@ -408,7 +407,7 @@ echo"</DIV>\n";
 } //End While Loop
 if ($totalresults=="0") {
 echo"<DIV id=\"item\" class=\"noitems\">\n";
-echo"No themes found in this category for ".ucwords($application).".\n";
+echo"No extensions found in this category for ".ucwords($application).".\n";
 echo"</DIV>\n";
 
 }

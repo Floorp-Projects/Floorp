@@ -46,7 +46,7 @@ require"../core/config.php";
     <meta http-equiv="Content-Language" content="en">
     <meta http-equiv="Content-Style-Type" content="text/css">
 
-<TITLE>Mozilla Update :: Themes - Change the Look of Mozilla Software</TITLE>
+<TITLE>Mozilla Update :: Extensions - Add Features to Mozilla Software</TITLE>
 
 <?php
 include"$page_header";
@@ -54,7 +54,7 @@ include"$page_header";
 
 <div id="mBody">
 <?php
-$type = "T";
+$type = "E";
 if ($_GET["application"]) {$application=$_GET["application"]; }
 
 $index="yes";
@@ -103,11 +103,11 @@ echo"<SPAN class=\"itemdescription\">$body</SPAN><BR>\n";
 </DIV>
 
 <div id="mBody">
-<h3>What is a Theme?</h3>
-<p>Themes are skins for <?php print(ucwords($application)); ?>, they allow you to change the look and
-feel of the browser and personalize it to your tastes. A theme can simply change the colors of <?php print(ucwords($application)); ?> 
-or it can change every piece of the browser appearance.</p>
-
+<h3>What is an Extension?</h3>
+<p>Extensions are small add-ons that add new functionality to <?php print(ucwords($application)); ?>.
+They can add anything from a toolbar button to a completely new feature. They allow the browser to be customized to fit the
+personal needs of each user if they need addtional features<?php if ($application !=="mozilla") { ?>, while keeping <?php print(ucwords($application)); ?> small
+to download <?php } ?>.</p>
 
 <?php
 //Temporary!! Current Version Array Code
@@ -120,20 +120,17 @@ $currentver_display = $currentver_display_array[$application];
   <!-- Start News Columns -->
   <div class="frontcolumn">
 <a href="http://www.mozilla.org/news.rdf"><img src="../images/rss.png" width="28" height="16" class="rss" alt="Mozilla News in RSS"></a><h2 style="margin-top: 0;"><a href="showlist.php?category=Newest" title="New Extensions on Mozilla Update">New Additions</a></h2>
-<span class="newsSubline">New and Updated Themes</span>
+<span class="newsSubline">New and Updated Extensions</span>
 <ul class="news">
 
 <?php
 $i=0;
-//MacOSX Specific override for All+Mac themes. Bug 252294
-if ($_SESSION["app_os"]=="MacOSX") { $app_os = $_SESSION["app_os"]; } else { $app_os = "ALL"; }
-
 $sql = "SELECT TM.ID, TV.vID, TM.Name, TV.Version, TV.DateAdded
 FROM  `t_main` TM
-INNER JOIN t_version TV ON TM.ID = TV.ID
-INNER JOIN t_applications TA ON TV.AppID = TA.AppID
-INNER JOIN t_os TOS ON TV.OSID = TOS.OSID
-WHERE `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$_SESSION[app_os]' OR `OSName` = '$app_os') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
+INNER  JOIN t_version TV ON TM.ID = TV.ID
+INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
+INNER  JOIN t_os TOS ON TV.OSID = TOS.OSID
+WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND (`OSName` = '$_SESSION[app_os]' OR `OSName` = 'ALL') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
    $i++;
@@ -169,7 +166,7 @@ $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.download
 FROM  `t_main` TM
 INNER  JOIN t_version TV ON TM.ID = TV.ID
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `DownloadCount` > '0' AND `approved` = 'YES' ORDER BY `DownloadCount` DESC ";
+WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
    $i++;
