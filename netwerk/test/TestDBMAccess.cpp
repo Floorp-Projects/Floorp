@@ -169,12 +169,12 @@ writeFile(int cycles)
     PRIntervalTime time = PR_IntervalNow();
     while (cycles--) {
         // create "cache" directories
-        mkdir("/tmp/foo", 0755);
+        PR_MkDir("/tmp/foo", 0755);
         
         for (x=0; x<32; x++) {
             nsCAutoString filename; filename.Assign("/tmp/foo/");
             filename.AppendInt(x);
-            mkdir(filename, 0755);
+            PR_MkDir(filename, 0755);
         }
         
         // create "cache" files
