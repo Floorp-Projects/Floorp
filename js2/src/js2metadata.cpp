@@ -122,13 +122,14 @@ namespace MetaData {
                         CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
                         if (a->dynamic || a->prototype)
                             reportError(Exception::definitionError, "Illegal attribute", p->pos);
-                        MemberModifier memberMod = a->memberMod;
+                        Attribute::MemberModifier memberMod = a->memberMod;
                         if ((env->getTopFrame()->kind == Frame::Class)
                                 && (memberMod == Attribute::NoModifier))
-                            memberMod == Attribute::Final;
+                            memberMod = Attribute::Final;
                         switch (memberMod) {
                         case Attribute::NoModifier:
                         case Attribute::Static:
+                            break;
                         }
                     }
 
