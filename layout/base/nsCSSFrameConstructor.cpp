@@ -1661,6 +1661,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
 
     NS_NewAreaFrame(areaFrame, 0);
     areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext, nsnull);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
+                                             styleContext, PR_FALSE);
 
     // The area frame is the "initial containing block"
     mInitialContainingBlock = areaFrame;
