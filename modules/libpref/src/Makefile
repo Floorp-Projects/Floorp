@@ -78,17 +78,28 @@ CONFIG_FILES	+= \
 		  unix/unix.js \
 		  $(NULL)
 
+##############################
+# Magic PREF_ generation hacks
+
+# put auto-generated headers in here
 HEADER_DEST_DIR = prefnames
-# figure out what the headers are (including paths)
+
+# find names of files by stripping path and converting .js -> .h
 CONFIG_FILE_HEADERS = $(notdir $(CONFIG_FILES:%.js=%.h))
 
 # strip out the path and add the dest and pref_ prefix
 CONFIG_FILE_EXPORTS = $(addprefix $(HEADER_DEST_DIR)/pref_,$(CONFIG_FILE_HEADERS))
 
+# export these new files so other modules can use them
 EXPORTS += $(CONFIG_FILE_EXPORTS)
 
 include $(DEPTH)/config/rules.mk
 
+# VPATH allows us to make sure the auto-generation rule works for
+# everything in VPATH (so init/all.js->pref_all.h etc)
+VPATH += init/ unix/
+
+# this comes after rules.mk because rules.mk blows it away
 INCLUDES	+= -I$(DEPTH)/cmd/xfe/icons -Iunix
 
 $(LIBRARY): $(OBJS)
@@ -104,21 +115,11 @@ unix/jsbuffer.h: Makefile $(CONFIG_FILES)
 	@cat $(CONFIG_FILES) | sed 's/\\/\\\\/g' | sed 's/\\r/\\n/' | sed 's/\"/\\\"/g' | sed 's/^M//g' | sed 's/^/"/' | sed 's/$$/\\n"/' >> $@
 	@echo \; >> $@
 
+# create the directory if necessary
 $(HEADER_DEST_DIR):
 	mkdir $(HEADER_DEST_DIR)
 
-# these rules are ugly because we have already stripped out
-# path of the source .js file
-# (i.e. we've lost the file.h -> sourcedir/source.h mapping)
-
-# we have to make seperate rules for each subdirectory to appease gmake
-# (if anyone knows how to do this more cleanly, feel free)
-
-$(HEADER_DEST_DIR)/pref_%.h: init/%.js $(HEADER_DEST_DIR)
-	$(PERL) prefheader.pl $< > $@
-
-$(HEADER_DEST_DIR)/pref_%.h: unix/%.js $(HEADER_DEST_DIR)
-	$(PERL) prefheader.pl $< > $@
-
-$(HEADER_DEST_DIR)/pref_%.h: %.js 	$(HEADER_DEST_DIR)
+# generate the header files so that path/file.js -> pref_file.h
+# path must be in the VPATH above
+$(HEADER_DEST_DIR)/pref_%.h: %.js $(HEADER_DEST_DIR)
 	$(PERL) prefheader.pl $< > $@
