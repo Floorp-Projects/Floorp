@@ -195,6 +195,7 @@ viewer:defaults:pref:xpinstall.js
 viewer:defaults:profile:*
 viewer:res:arrow.gif
 viewer:res:charsetalias.properties 
+viewer:res:acceptlanguage.properties
 viewer:res:charsetData.properties 
 viewer:res:charsetTitles.properties 
 viewer:res:entityTables:*

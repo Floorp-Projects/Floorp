@@ -42,7 +42,17 @@ interface nsIStringBundle : nsISupports
 {
   wstring GetStringFromID(in long aID);
   wstring GetStringFromName([const] in wstring aName);
-  nsIBidirectionalEnumerator GetEnumeration();
+  
+  /*
+  Don't use - nsIEnumerator and its subinterfaces have been deprecated	
+  */
+  [noscript] nsIBidirectionalEnumerator GetEnumeration();
+
+  /*
+  Implements nsISimpleEnumerator, replaces nsIEnumerator 
+  */
+  nsISimpleEnumerator getSimpleEnumeration();
+
 };
 
 [scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]

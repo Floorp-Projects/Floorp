@@ -41,6 +41,7 @@ public:
   NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader);
   NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass);
   NS_IMETHOD EnumerateProperties(nsIBidirectionalEnumerator* *aResult);
+  NS_IMETHOD SimpleEnumerateProperties(nsISimpleEnumerator** aResult);
 
   // XXX these 2 methods will be subsumed by the ones from 
   // nsIProperties once we figure this all out
@@ -65,23 +66,23 @@ protected:
 class nsPropertyElement : public nsIPropertyElement 
 {
 public:
-	nsPropertyElement();
-	virtual ~nsPropertyElement();
+  nsPropertyElement();
+  virtual ~nsPropertyElement();
 
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
-	static NS_METHOD
-	Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static NS_METHOD
+  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-	// nsIPropertyElement methods:
-	NS_IMETHOD GetKey(nsString** aReturnKey);
-	NS_IMETHOD GetValue(nsString** aReturnValue);
-	NS_IMETHOD SetKey(nsString* aKey);
-	NS_IMETHOD SetValue(nsString* aValue);
+  // nsIPropertyElement methods:
+  NS_IMETHOD GetKey(PRUnichar **aReturnKey);
+  NS_IMETHOD GetValue(PRUnichar **aReturnValue);
+  NS_IMETHOD SetKey(nsString* aKey);
+  NS_IMETHOD SetValue(nsString* aValue);
 
 protected:
-	nsString* mKey;
-	nsString* mValue;
+  nsString* mKey;
+  nsString* mValue;
 };
 
 #endif /* nsPersistentProperties_h___ */

@@ -221,47 +221,54 @@ main(int argc, char *argv[])
  nsIBidirectionalEnumerator* propEnum = nsnull;
   ret = bundle->GetEnumeration(&propEnum);
   if (NS_FAILED(ret)) {
-	  printf("cannot get enumeration\n");
-	  return 1;
+    printf("cannot get enumeration\n");
+    return 1;
   }
   ret = propEnum->First();
   if (NS_FAILED(ret))
   {
-	printf("enumerator is empty\n");
-	return 1;
+  printf("enumerator is empty\n");
+  return 1;
   }
 
   cout << endl << "Key" << "\t" << "Value" << endl;
   cout <<		  "---" << "\t" << "-----" << endl;
   while (NS_SUCCEEDED(ret))
   {
-	  nsIPropertyElement* propElem = nsnull;
-	  ret = propEnum->CurrentItem((nsISupports**)&propElem);
-	  if (NS_FAILED(ret)) {
-		printf("failed to get current item\n");
-		return 1;
-	  }
-	  nsString* key = nsnull;
-	  nsString* val = nsnull;
-	  ret = propElem->GetKey(&key);
-	  if (NS_FAILED(ret)) {
-		  printf("failed to get current element's key\n");
-		  return 1;
-	  }
-	  ret = propElem->GetValue(&val);
-	  if (NS_FAILED(ret)) {
-		  printf("failed to get current element's value\n");
-		  return 1;
-	  }
-	  char* keyCStr = key->ToNewCString();
-	  char* valCStr = val->ToNewCString();
-	  if (keyCStr && valCStr) 
-		cout << keyCStr << "\t" << valCStr << endl;
-	  delete[] keyCStr;
-	  delete[] valCStr;
-      delete key;
-      delete val;
-	  ret = propEnum->Next();
+    nsIPropertyElement* propElem = nsnull;
+    ret = propEnum->CurrentItem((nsISupports**)&propElem);
+    if (NS_FAILED(ret)) {
+    printf("failed to get current item\n");
+    return 1;
+    }
+
+    PRUnichar *pKey = nsnull;
+    PRUnichar *pVal = nsnull;
+
+    ret = propElem->GetKey(&pKey);
+    if (NS_FAILED(ret)) {
+      printf("failed to get current element's key\n");
+      return 1;
+    }
+    ret = propElem->GetValue(&pVal);
+    if (NS_FAILED(ret)) {
+      printf("failed to get current element's value\n");
+      return 1;
+    }
+
+    nsAutoString keyAdjustedLengthBuff(pKey);
+    nsAutoString valAdjustedLengthBuff(pVal);
+
+    char* keyCStr = keyAdjustedLengthBuff.ToNewCString();
+    char* valCStr = valAdjustedLengthBuff.ToNewCString();
+    if (keyCStr && valCStr) 
+    cout << keyCStr << "\t" << valCStr << endl;
+    delete[] keyCStr;
+    delete[] valCStr;
+    delete[] pKey;
+    delete[] pVal;
+
+    ret = propEnum->Next();
   }
 
   return 0;
