@@ -431,7 +431,9 @@ nsCharsetConverterManager::GetCharsetLangGroup(const char * aCharset,
 {
   // resolve the charset first
   nsCAutoString charset;
-  GetCharsetAlias(aCharset, charset);
+
+  nsresult rv = GetCharsetAlias(aCharset, charset);
+  if (NS_FAILED(rv)) return rv;
 
   // fully qualify to possibly avoid vtable call
   return nsCharsetConverterManager::GetCharsetLangGroupRaw(charset.get(),
@@ -452,13 +454,8 @@ nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset,
     if (NS_FAILED(res)) return res;
   }
 
-  nsCAutoString alias;
-  res = GetCharsetAlias(aCharset, alias);
-
-  if (NS_FAILED(res)) return res;
-
   nsAutoString langGroup;
-  res = GetBundleValue(mDataBundle, alias.get(), NS_LITERAL_STRING(".LangGroup"), langGroup);
+  res = GetBundleValue(mDataBundle, aCharset, NS_LITERAL_STRING(".LangGroup"), langGroup);
 
   *aResult = NS_NewAtom(langGroup);
   return res;
