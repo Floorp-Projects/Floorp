@@ -3366,7 +3366,6 @@ GetBlockFrameAndLineIter(nsIFrame* aFrame, nsIFrame** aBlockFrame)
 {
   nsILineIterator* it;
   nsIFrame *blockFrame = aFrame;
-  nsIFrame *thisBlock = aFrame;
 
   blockFrame = blockFrame->GetParent();
   if (!blockFrame) //if at line 0 then nothing to do
@@ -3381,7 +3380,6 @@ GetBlockFrameAndLineIter(nsIFrame* aFrame, nsIFrame** aBlockFrame)
 
   while (blockFrame)
   {
-    thisBlock = blockFrame;
     blockFrame = blockFrame->GetParent();
     if (blockFrame) {
       result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),
@@ -4341,26 +4339,6 @@ GetIBSpecialSibling(nsIPresContext* aPresContext,
   }
 
   return NS_OK;
-}
-
-/*
- * Get the last-in-flow's next sibling, or, if there is none, get the
- * parent's next in flow's first child.
- */
-static nsIFrame*
-GetNextSiblingAcrossLines(nsIPresContext *aPresContext, nsIFrame *aFrame)
-{
-  aFrame = aFrame->GetLastInFlow();
-
-  nsIFrame *result = aFrame->GetNextSibling();
-  if (result)
-    return result;
-
-  nsIFrame *parent;
-  aFrame->GetParent()->GetNextInFlow(&parent);
-  if (!parent)
-    return nsnull;
-  return parent->GetFirstChild(nsnull);
 }
 
 /**
