@@ -25,6 +25,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
         nsProgressMeterFrame.cpp        \
+        nsTitledButtonFrame.cpp        \
 	nsToolboxFrame.cpp		\
 	nsToolbarFrame.cpp		\
 	nsTreeFrame.cpp			\
@@ -34,6 +35,7 @@ CPPSRCS=					\
 
 CPP_OBJS=					\
         .\$(OBJDIR)\nsProgressMeterFrame.obj    \
+        .\$(OBJDIR)\nsTitledButtonFrame.obj    \
 	.\$(OBJDIR)\nsToolboxFrame.obj		\
 	.\$(OBJDIR)\nsToolbarFrame.obj		\
 	.\$(OBJDIR)\nsTreeFrame.obj	\
@@ -49,6 +51,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
    -I..\..\..\html\document\src \
    -I..\..\..\html\table\src \
    -I..\..\content\src \
+   -I..\..\..\html\forms\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
 
 LCFLAGS = \

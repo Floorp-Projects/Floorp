@@ -39,6 +39,7 @@ CPPSRCS= \
   nsLegendFrame.cpp \
   nsHTMLButtonControlFrame.cpp \
   nsLabelFrame.cpp \
+  nsButtonFrameRenderer.cpp \
   nsImageControlFrame.cpp
 
 CPP_OBJS= \
@@ -57,6 +58,7 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsLegendFrame.obj \
   .\$(OBJDIR)\nsHTMLButtonControlFrame.obj \
   .\$(OBJDIR)\nsLabelFrame.obj \
+  .\$(OBJDIR)\nsButtonFrameRenderer.obj \
   .\$(OBJDIR)\nsImageControlFrame.obj
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\

@@ -45,6 +45,7 @@ nsIAtom* nsXULAtoms::treecol;
 nsIAtom* nsXULAtoms::treecolgroup;
 
 nsIAtom* nsXULAtoms::progressmeter;
+nsIAtom* nsXULAtoms::titledbutton;
 nsIAtom* nsXULAtoms::mode;
 
 
@@ -87,6 +88,8 @@ void nsXULAtoms::AddrefAtoms() {
 	treecolgroup = NS_NewAtom("treecolgroup");
 
 	progressmeter = NS_NewAtom("progressmeter");
+	titledbutton = NS_NewAtom("titledbutton");
+
 	mode = NS_NewAtom("mode");
 
     widget = NS_NewAtom("widget");

@@ -61,7 +61,17 @@
 #include "nsToolbarFrame.h"
 #include "nsTreeIndentationFrame.h"
 #include "nsTreeCellFrame.h"
+
+nsresult
+NS_NewProgressMeterFrame ( nsIFrame*& aNewFrame );
+
+nsresult
+NS_NewTitledButtonFrame ( nsIFrame*& aNewFrame );
+
+/*
 #include "nsProgressMeterFrame.h"
+#include "nsTitledButtonFrame.h"
+*/
 #endif
 
 //#define FRAMEBASED_COMPONENTS 1 // This is temporary please leave in for now - rods
@@ -1126,6 +1136,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 
 #ifdef INCLUDE_XUL
   if (  (nsXULAtoms::button          == tag.get())  ||
+	    (nsXULAtoms::titledbutton    == tag.get())  ||
         (nsXULAtoms::checkbox        == tag.get())  ||
         (nsXULAtoms::radio           == tag.get())  ||
         (nsXULAtoms::text            == tag.get())  ||
@@ -1137,7 +1148,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treeindentation == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
-        (nsXULAtoms::progressmeter   == tag.get()    )) {
+        (nsXULAtoms::progressmeter   == tag.get()  )) {
     return PR_TRUE;
   }
 #endif
@@ -1965,6 +1976,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
     rv = NS_NewProgressMeterFrame(newFrame);
   }
   // End of PROGRESS METER CONSTRUCTION logic
+
+  // TITLED BUTTON CONSTRUCTION
+  else if (aTag == nsXULAtoms::titledbutton) {
+    processChildren = PR_TRUE;
+    rv = NS_NewTitledButtonFrame(newFrame);
+  }
+  // End of TITLED BUTTON CONSTRUCTION logic
 
   }
 
