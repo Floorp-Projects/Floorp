@@ -5301,20 +5301,30 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
           newWordBufSize += moreSize;
           if (newWordBuf != aWordBuf) {
             newWordBuf = (PRUnichar*)nsMemory::Realloc(newWordBuf, sizeof(PRUnichar)*newWordBufSize);
+            NS_ASSERTION(newWordBuf, "not enough memory");
           } else {
             newWordBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar)*newWordBufSize);
-            nsCRT::memcpy((void*)newWordBuf, aWordBuf, sizeof(PRUnichar)*newWordBufSize-moreSize);
+            NS_ASSERTION(newWordBuf, "not enough memory");
+            if(newWordBuf)  {
+                nsCRT::memcpy((void*)newWordBuf, aWordBuf, sizeof(PRUnichar)*(newWordBufSize-moreSize));
+            }
           }
-          moreWidth = ComputeWordFragmentWidth(aPresContext,
-                                                   aLineBreaker,
-                                                   aLineLayout,
-                                                   aReflowState,
-                                                   aNextFrame, content, tc,
-                                                   &stop,
-                                                   newWordBuf,
-                                                   aWordLen,
-                                                   newWordBufSize);
-          NS_ASSERTION((moreWidth >= 0), "ComputeWordFragmentWidth is returning negative");
+
+          if(newWordBuf)  {
+            moreWidth = ComputeWordFragmentWidth(aPresContext,
+                                                 aLineBreaker,
+                                                 aLineLayout,
+                                                 aReflowState,
+                                                 aNextFrame, content, tc,
+                                                 &stop,
+                                                 newWordBuf,
+                                                 aWordLen,
+                                                 newWordBufSize);
+            NS_ASSERTION((moreWidth >= 0), "ComputeWordFragmentWidth is returning negative");
+          } else {
+            stop = PR_TRUE;
+            moreWidth = 0;
+          }  
         }
 
         NS_RELEASE(tc);
@@ -5345,8 +5355,9 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
 #ifdef DEBUG_WORD_WRAPPING
   printf("  total word width=%d\n", aBaseWidth + addedWidth);
 #endif
-  if (newWordBuf != aWordBuf)
+  if (newWordBuf && (newWordBuf != aWordBuf)) {
     nsMemory::Free(newWordBuf);
+  }
   return aBaseWidth + addedWidth;
 }
                                     
