@@ -24,20 +24,13 @@
 #include "plstr.h"
 
 nsMsgRDFFolder::nsMsgRDFFolder(const char* uri)
+  : nsRDFResource(uri), mFolder(nsnull)
 {
-	NS_INIT_REFCNT();
-	mURI = PL_strdup(uri);
-	mFolder = nsnull;
-
 }
 
 nsMsgRDFFolder::~nsMsgRDFFolder()
 {
-	PR_FREEIF(mURI);
-
-	if(mFolder)	
-		NS_RELEASE(mFolder);
-
+  NS_IF_RELEASE(mFolder);
 }
 
 NS_IMPL_ADDREF(nsMsgRDFFolder)
@@ -50,65 +43,12 @@ nsMsgRDFFolder::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if(iid.Equals(nsIRDFResource::IID()) ||
-    iid.Equals(nsIRDFNode::IID()) ||
-		iid.Equals(nsIMsgRDFFolder::IID()) ||
-		iid.Equals(::nsISupports::IID())) {
+	if (iid.Equals(nsIMsgRDFFolder::IID())) {
     *result = NS_STATIC_CAST(nsIMsgRDFFolder*, this);
-	}
-
-  if(*result != nsnull)
-	{
 		AddRef();
 		return NS_OK;
 	}
-
-	return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP nsMsgRDFFolder::EqualsNode(nsIRDFNode* node, PRBool* result) const
-{
-	nsresult rv;
-	nsIRDFResource* resource;
-  if (NS_SUCCEEDED(node->QueryInterface(nsIRDFResource::IID(), (void**) &resource)))
-	{
-		rv = EqualsResource(resource, result);
-		NS_RELEASE(resource);
-	}
-  else {
-		*result = PR_FALSE;
-		rv = NS_OK;\
-  }
-	return rv;
-}
-
-NS_IMETHODIMP nsMsgRDFFolder::GetValue(const char* *uri) const
-{
-	if (!uri)
-		return NS_ERROR_NULL_POINTER;
-	*uri = mURI;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgRDFFolder::EqualsResource(const nsIRDFResource* resource, PRBool* result) const
-{
-	if (!resource || !result)  return NS_ERROR_NULL_POINTER;
-
-	const char *uri;
-	if(NS_SUCCEEDED(resource->GetValue(&uri)))
-	{
-		return EqualsString(uri, result);
-	}
-
-	return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsMsgRDFFolder::EqualsString(const char* uri, PRBool* result) const
-{
-  if (!uri || !result)
-		return NS_ERROR_NULL_POINTER;
-  *result = (PL_strcmp(uri, mURI) == 0);
-  return NS_OK;
+	return nsRDFResource::QueryInterface(iid, result);
 }
 
 NS_IMETHODIMP nsMsgRDFFolder::GetFolder(nsIMsgFolder * *aFolder)

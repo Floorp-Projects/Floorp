@@ -18,29 +18,19 @@
 
 #include "nsIMsgRDFFolder.h"
 
-class nsMsgRDFFolder : public nsIMsgRDFFolder
+class nsMsgRDFFolder : public nsRDFResource, public nsIMsgRDFFolder
 {
-private:
-	char *	mURI;
-	nsIMsgFolder *mFolder;
 public: 
-	nsMsgRDFFolder(const char* uri);
-	virtual ~nsMsgRDFFolder();
-
-	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-	//nsIRDFNode
-  NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
-
-	//nsIRDFResource
-	NS_IMETHOD GetValue(const char* *uri) const;
-  NS_IMETHOD EqualsResource(const nsIRDFResource* resource, PRBool* result) const;
-  NS_IMETHOD EqualsString(const char* uri, PRBool* result) const;
-
-	//nsIMsgRDFFolder
+	// nsIMsgRDFFolder methods:
 	NS_IMETHOD GetFolder(nsIMsgFolder * *aFolder);
 	NS_IMETHOD SetFolder(nsIMsgFolder * aFolder);
 
+  // nsMsgRDFFolder methods:
+	nsMsgRDFFolder(const char* uri);
+	virtual ~nsMsgRDFFolder();
 
+protected:
+	nsIMsgFolder *mFolder;
 };
