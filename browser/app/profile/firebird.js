@@ -128,7 +128,8 @@ pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload 
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
 pref("browser.download.useProgressDialogs", true);
 pref("browser.download.openSidebar", false);
-pref("browser.download.useDownloadDir", false);
+pref("browser.download.useDownloadDir", true);
+pref("browser.download.folderList", 0);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
