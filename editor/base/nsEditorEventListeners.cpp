@@ -1244,6 +1244,14 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 
+nsresult
+nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
+{
+  // ...figure out if a drag should be started...
+  
+  return NS_OK;
+}
+
 
 nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)

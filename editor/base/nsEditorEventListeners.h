@@ -93,7 +93,6 @@ public:
 
 /*BEGIN implementations of textevent handler interface*/
     virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-public:
     virtual nsresult HandleText(nsIDOMEvent* aTextEvent);
 /*END implementations of textevent handler interface*/
 
@@ -125,10 +124,9 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of textevent handler interface*/
-    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-public:
-    virtual nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent);
-	virtual nsresult HandleEndComposition(nsIDOMEvent* aCompositionEvent);
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  virtual nsresult HandleStartComposition(nsIDOMEvent* aCompositionEvent);
+  virtual nsresult HandleEndComposition(nsIDOMEvent* aCompositionEvent);
 /*END implementations of textevent handler interface*/
 
 protected:
@@ -157,8 +155,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of mouseevent handler interface*/
-    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-public:
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
@@ -194,12 +191,12 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of dragevent handler interface*/
-    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-public:
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
   virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
   virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
   virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragGesture(nsIDOMEvent* aDragEvent);
 /*END implementations of dragevent handler interface*/
 
 protected:
@@ -228,8 +225,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /*BEGIN implementations of focus event handler interface*/
-    virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
-public:
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   virtual nsresult Focus(nsIDOMEvent* aEvent);
   virtual nsresult Blur(nsIDOMEvent* aEvent);
 /*END implementations of focus event handler interface*/
