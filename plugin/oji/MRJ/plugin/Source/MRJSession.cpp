@@ -41,6 +41,10 @@
 #include <Appearance.h>
 #include <Resources.h>
 
+#if (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
+#include <ControlDefinitions.h>
+#endif
+
 extern MRJConsole* theConsole;
 extern short thePluginRefnum;
 
