@@ -183,7 +183,8 @@ interface nsIMsgSend : nsISupports
                               in voidPtr                      relatedPart,
                               in nsIDOMWindowInternal         parentWindow,
                               in nsIMsgProgress               progress,
-                              in nsIMsgSendListener           aListener
+                              in nsIMsgSendListener           aListener,
+                              in string                       password
                              );
                               
     
@@ -194,8 +195,9 @@ interface nsIMsgSend : nsISupports
                          in PRBool               digest_p,
                          in nsMsgDeliverMode     mode,
                          in nsIMsgDBHdr          msgToReplace,
-                         in nsIMsgSendListener   aListener
-                        ); 
+                         in nsIMsgSendListener   aListener,
+                         in string               password
+                       ); 
 
     /* Abort current send/save operation */
     void abort();

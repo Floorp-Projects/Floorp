@@ -650,6 +650,11 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
 
 	}
 
+  params->GetSendListener(getter_AddRefs(mExternalSendListener));
+  nsXPIDLCString smtpPassword;
+  params->GetSmtpPassword(getter_Copies(smtpPassword));
+  mSmtpPassword = (const char *)smtpPassword;
+
   return CreateMessage(originalMsgURI, type, format, composeFields);
 }
 
@@ -806,7 +811,8 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
                     nsnull,             					      // nsMsgSendPart                     *relatedPart,
                     m_window,                           // nsIDOMWindowInternal              *parentWindow;
                     mProgress,                          // nsIMsgProgress                    *progress,
-                    sendListener);                      // listener
+                    sendListener,                       // listener
+                    mSmtpPassword.get());
 
       // Cleanup converted body...
       if (newBody)
@@ -1286,7 +1292,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
 NS_IMETHODIMP nsMsgCompose::GetProgress(nsIMsgProgress **_retval)
 {
-  NS_ENSURE_ARG(_retval);
+  NS_ENSURE_ARG_POINTER(_retval);
   *_retval = mProgress;
   NS_IF_ADDREF(*_retval);
   return NS_OK;
@@ -1294,8 +1300,16 @@ NS_IMETHODIMP nsMsgCompose::GetProgress(nsIMsgProgress **_retval)
 
 NS_IMETHODIMP nsMsgCompose::GetMessageSend(nsIMsgSend **_retval)
 {
-  NS_ENSURE_ARG(_retval);
+  NS_ENSURE_ARG_POINTER(_retval);
   *_retval = mMsgSend;
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompose::GetExternalSendListener(nsIMsgSendListener **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = mExternalSendListener;
   NS_IF_ADDREF(*_retval);
   return NS_OK;
 }
@@ -1959,6 +1973,16 @@ nsMsgComposeSendListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
 #ifdef NS_DEBUG
   printf("nsMsgComposeSendListener::OnStartSending()\n");
 #endif
+
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+	if (compose)
+  {
+    nsCOMPtr<nsIMsgSendListener> externalListener;
+    compose->GetExternalSendListener(getter_AddRefs(externalListener));
+    if (externalListener)
+      externalListener->OnStartSending(aMsgID, aMsgSize);
+  }
+
   return NS_OK;
 }
   
@@ -1968,6 +1992,16 @@ nsMsgComposeSendListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRU
 #ifdef NS_DEBUG
   printf("nsMsgComposeSendListener::OnProgress()\n");
 #endif
+
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+	if (compose)
+  {
+    nsCOMPtr<nsIMsgSendListener> externalListener;
+    compose->GetExternalSendListener(getter_AddRefs(externalListener));
+    if (externalListener)
+      externalListener->OnProgress(aMsgID, aProgress, aProgressMax);
+  }
+
   return NS_OK;
 }
 
@@ -1977,6 +2011,15 @@ nsMsgComposeSendListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
 #ifdef NS_DEBUG
   printf("nsMsgComposeSendListener::OnStatus()\n");
 #endif
+
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+	if (compose)
+  {
+    nsCOMPtr<nsIMsgSendListener> externalListener;
+    compose->GetExternalSendListener(getter_AddRefs(externalListener));
+    if (externalListener)
+      externalListener->OnStatus(aMsgID, aMsg);
+  }
 
   return NS_OK;
 }
@@ -2047,7 +2090,12 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       if (progress)
         progress->CloseProgressDialog(PR_TRUE);
 		}
-	}
+
+    nsCOMPtr<nsIMsgSendListener> externalListener;
+    compose->GetExternalSendListener(getter_AddRefs(externalListener));
+    if (externalListener)
+      externalListener->OnStopSending(aMsgID, aStatus, aMsg, returnFileSpec);
+}
 
   return rv;
 }
@@ -2057,7 +2105,14 @@ nsMsgComposeSendListener::OnGetDraftFolderURI(const char *aFolderURI)
 {
   nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
 	if (compose)
+  {
     compose->SetSavedFolderURI(aFolderURI);
+
+    nsCOMPtr<nsIMsgSendListener> externalListener;
+    compose->GetExternalSendListener(getter_AddRefs(externalListener));
+    if (externalListener)
+      externalListener->OnGetDraftFolderURI(aFolderURI);
+  }
 
   return NS_OK;
 }

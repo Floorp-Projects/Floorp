@@ -92,8 +92,8 @@ NS_IMPL_ISUPPORTS2(nsSmtpService, nsISmtpService, nsIProtocolHandler);
 nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         const char * aRecipients, 
                                         nsIMsgIdentity * aSenderIdentity,
+                                        const char * aPassword,
                                         nsIUrlListener * aUrlListener, 
-                                        nsISmtpServer * aServer,
                                         nsIMsgStatusFeedback *aStatusFeedback,
                                         nsIInterfaceRequestor* aNotificationCallbacks,
                                         nsIURI ** aURL,
@@ -119,6 +119,9 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 
 	if (NS_SUCCEEDED(rv) && smtpServer)
 	{
+    if (aPassword && *aPassword)
+		  smtpServer->SetPassword(aPassword);
+
     nsXPIDLCString smtpHostName;
     nsXPIDLCString smtpUserName;
 

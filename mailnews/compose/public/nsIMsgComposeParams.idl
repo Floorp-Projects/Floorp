@@ -25,6 +25,7 @@
 #include "nsISupports.idl"
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgCompFields.idl"
+#include "nsIMsgSendListener.idl"
 
 typedef long MSG_ComposeType;
 
@@ -65,4 +66,7 @@ interface nsIMsgComposeParams : nsISupports {
 
   attribute nsIMsgCompFields      composeFields;
   attribute boolean               bodyIsLink;
+
+  attribute nsIMsgSendListener	  sendListener;
+  attribute string                smtpPassword;
 };

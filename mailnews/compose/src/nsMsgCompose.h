@@ -126,6 +126,9 @@ private:
 	nsMsgDocumentStateListener        *mDocumentListener;
 	MSG_ComposeType                   mType;		//Message type
   nsCOMPtr<nsISupportsArray>        mStateListeners;		// contents are nsISupports
+
+  nsCOMPtr<nsIMsgSendListener>      mExternalSendListener;
+  nsCString                         mSmtpPassword;
     
   friend class QuotingOutputStreamListener;
 	friend class nsMsgDocumentStateListener;

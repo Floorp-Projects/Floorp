@@ -311,6 +311,17 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const char *msgCom
 	return rv;
 }
 
+nsresult nsMsgComposeService::OpenComposeWindowWithParams(const char *msgComposeWindowURL,
+														  nsIMsgComposeParams *params)
+{
+  NS_ENSURE_ARG_POINTER(params);
+
+#ifdef MSGCOMP_TRACE_PERFORMANCE
+  TimeStamp("Start opening the window", PR_TRUE);
+#endif
+  return openWindow(msgComposeWindowURL, params);
+}
+
 nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
                                           nsIMsgComposeParams *params,
                                           nsIMsgCompose **_retval)

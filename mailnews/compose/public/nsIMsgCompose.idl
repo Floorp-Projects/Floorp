@@ -185,10 +185,10 @@ interface nsIMsgCompose : nsISupports {
 	   of the body to 0 (clean).
 	*/
 	attribute boolean bodyModified;
-	
+
 
 	/* The following functions are for internal use, essentially for the listener */
-	
+
 	/* ... */
 	[noscript] void setCiteReference(in nsString citeReference);
 
@@ -201,18 +201,21 @@ interface nsIMsgCompose : nsISupports {
   /* set any reply flags on the original message's folder */
   [noscript] void processReplyFlags();
 
-	/* ... */
-	[noscript] void convertAndLoadComposeWindow(in nsIEditorShell aEditorShell, in nsStringRef aPrefix, in nsStringRef aBuf, 
+  /* ... */
+  [noscript] void convertAndLoadComposeWindow(in nsIEditorShell aEditorShell, in nsStringRef aPrefix, in nsStringRef aBuf, 
                                               in nsStringRef aSignature, in boolean aQuoted, in boolean aHTMLEditor);
 
-	/* Tell the doc state listeners that the doc state has changed */
-	[noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType, in nsresult aResult);
+  /* Tell the doc state listeners that the doc state has changed */
+  [noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType, in nsresult aResult);
 
   /* Retreive the progress object */
   [noscript] nsIMsgProgress getProgress();
   
   /* Retreive the message send object */
   [noscript] nsIMsgSend getMessageSend();
+
+  /* Retreive the external send listener */
+  nsIMsgSendListener getExternalSendListener();
   
 	/* ... */
   [noscript] void buildBodyMessageAndSignature();

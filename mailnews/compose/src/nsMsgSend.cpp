@@ -2667,7 +2667,8 @@ nsMsgComposeAndSend::Init(
 						  const char *attachment1_body,
 						  PRUint32 attachment1_body_length,
 						  const nsMsgAttachmentData *attachments,
-						  const nsMsgAttachedFile *preloaded_attachments)
+						  const nsMsgAttachedFile *preloaded_attachments,
+              const char *password)
 {
 	nsresult      rv = NS_OK;
 	
@@ -2759,6 +2760,8 @@ nsMsgComposeAndSend::Init(
     if (NS_FAILED(rv))
       return rv;
   }
+
+  mSmtpPassword = password;
 
   return HackAttachments(attachments, preloaded_attachments);
 }
@@ -3027,7 +3030,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     nsCOMPtr<nsIMsgStatusFeedback> msgStatus (do_QueryInterface(mSendProgress));
 
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
-                                      uriListener, nsnull, msgStatus,
+                                      mSmtpPassword.get(), uriListener, msgStatus,
                                       callbacks, nsnull, getter_AddRefs(mRunningRequest));
   }
   
@@ -3521,7 +3524,8 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 						  void                              *relatedPart,
 						  nsIDOMWindowInternal              *parentWindow,
 						  nsIMsgProgress                    *progress,
-              nsIMsgSendListener                *aListener
+              nsIMsgSendListener                *aListener,
+              const char                        *password
               )
 {
   nsresult      rv;
@@ -3544,7 +3548,8 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 					digest_p, dont_deliver_p, mode, msgToReplace,
 					attachment1_type, attachment1_body,
 					attachment1_body_length,
-					attachments, preloaded_attachments);
+					attachments, preloaded_attachments,
+          password);
 
 	if (NS_SUCCEEDED(rv))
 		return NS_OK;
@@ -3556,12 +3561,13 @@ nsresult
 nsMsgComposeAndSend::SendMessageFile(
               nsIMsgIdentity                    *aUserIndentity,
  						  nsIMsgCompFields                  *fields,
-              nsIFileSpec                        *sendIFileSpec,
+              nsIFileSpec                       *sendIFileSpec,
               PRBool                            deleteSendFileOnCompletion,
 						  PRBool                            digest_p,
 						  nsMsgDeliverMode                  mode,
               nsIMsgDBHdr                       *msgToReplace,
-              nsIMsgSendListener                *aListener
+              nsIMsgSendListener                *aListener,
+              const char                        *password
               )
 {
   nsresult      rv;
@@ -3606,11 +3612,11 @@ nsMsgComposeAndSend::SendMessageFile(
   rv = Init(aUserIndentity, (nsMsgCompFields *)fields, sendFileSpec,
 					    digest_p, PR_FALSE, mode, msgToReplace, 
 					    nsnull, nsnull, nsnull,
-					    nsnull, nsnull);
-	if (NS_SUCCEEDED(rv))
-  { 
+					    nsnull, nsnull,
+              password);
+
+  if (NS_SUCCEEDED(rv))
     return DeliverMessage();
-  }
   else
     return rv;
 }

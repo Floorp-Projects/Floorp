@@ -66,7 +66,7 @@ NS_IMETHODIMP nsMsgComposeParams::SetFormat(MSG_ComposeFormat aFormat)
   return NS_OK;
 }
 
-/* attribute wstring originalMsgURI; */
+/* attribute string originalMsgURI; */
 NS_IMETHODIMP nsMsgComposeParams::GetOriginalMsgURI(char * *aOriginalMsgURI)
 {
   NS_ENSURE_ARG_POINTER(aOriginalMsgURI);
@@ -133,3 +133,38 @@ NS_IMETHODIMP nsMsgComposeParams::SetBodyIsLink(PRBool aBodyIsLink)
   mBodyIsLink = aBodyIsLink;
   return NS_OK;
 }
+
+/* attribute nsIMsgSendLisneter sendListener; */
+NS_IMETHODIMP nsMsgComposeParams::GetSendListener(nsIMsgSendListener * *aSendListener)
+{
+  NS_ENSURE_ARG_POINTER(aSendListener);
+  
+  if (mSendListener)
+  {
+     *aSendListener = mSendListener;
+     NS_ADDREF(*aSendListener);
+  }
+  else
+    *aSendListener = nsnull;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgComposeParams::SetSendListener(nsIMsgSendListener * aSendListener)
+{
+  mSendListener = aSendListener;
+  return NS_OK;
+}
+
+/* attribute string smtpPassword; */
+NS_IMETHODIMP nsMsgComposeParams::GetSmtpPassword(char * *aSmtpPassword)
+{
+  NS_ENSURE_ARG_POINTER(aSmtpPassword);
+  
+  *aSmtpPassword = mSMTPPassword.ToNewCString();
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgComposeParams::SetSmtpPassword(const char * aSmtpPassword)
+{
+  mSMTPPassword = aSmtpPassword;
+  return NS_OK;
+}
+

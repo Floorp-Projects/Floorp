@@ -677,41 +677,45 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 
 	if (NS_FAILED( rv)) {
 
-		rv = m_pSendProxy->CreateAndSendMessage(	nsnull,			// no editor shell
-										m_pIdentity,	// dummy identity
-										m_pMsgFields,	// message fields
-										PR_FALSE,		// digest = NO
-										PR_TRUE,		// dont_deliver = YES, make a file
-										nsIMsgSend::nsMsgDeliverNow,	// mode
-										nsnull,			// no message to replace
-										pMimeType,		// body type
-										m_pBody,		// body pointer
-										m_bodyLen,		// body length
-										nsnull,			// remote attachment data
-										pAttach,		// local attachments
-										nsnull,			// related part
-										nsnull,     // parent window
-										nsnull,     // progress listener
-										m_pListener);		// listener
+		rv = m_pSendProxy->CreateAndSendMessage(
+                    nsnull,			                  // no editor shell
+										m_pIdentity,	                // dummy identity
+										m_pMsgFields,	                // message fields
+										PR_FALSE,		                  // digest = NO
+										PR_TRUE,		                  // dont_deliver = YES, make a file
+										nsIMsgSend::nsMsgDeliverNow,  // mode
+										nsnull,			                  // no message to replace
+										pMimeType,		                // body type
+										m_pBody,		                  // body pointer
+										m_bodyLen,		                // body length
+										nsnull,			                  // remote attachment data
+										pAttach,		                  // local attachments
+										nsnull,			                  // related part
+										nsnull,                       // parent window
+										nsnull,                       // progress listener
+										m_pListener,		              // listener
+                    nsnull);                      // password
 
 	}
 	else {
-		rv = m_pSendProxy->CreateAndSendMessage(	nsnull,			// no editor shell
-										m_pIdentity,	// dummy identity
-										m_pMsgFields,	// message fields
-										PR_FALSE,		// digest = NO
-										PR_TRUE,		// dont_deliver = YES, make a file
-										nsIMsgSend::nsMsgDeliverNow,	// mode
-										nsnull,			// no message to replace
-										pMimeType,		// body type
-										body,		// body pointer
-										body.Length(),		// body length
-										nsnull,			// remote attachment data
-										pAttach,		// local attachments
-										nsnull,			// related part
-										nsnull,     // parent window
-										nsnull,     // progress listener
-										m_pListener);		// listener
+		rv = m_pSendProxy->CreateAndSendMessage(
+                    nsnull,			                  // no editor shell
+										m_pIdentity,	                // dummy identity
+										m_pMsgFields,	                // message fields
+										PR_FALSE,		                  // digest = NO
+										PR_TRUE,		                  // dont_deliver = YES, make a file
+										nsIMsgSend::nsMsgDeliverNow,  // mode
+										nsnull,			                  // no message to replace
+										pMimeType,		                // body type
+										body,		                      // body pointer
+										body.Length(),		            // body length
+										nsnull,			                  // remote attachment data
+										pAttach,		                  // local attachments
+										nsnull,			                  // related part
+										nsnull,                       // parent window
+										nsnull,                       // progress listener
+										m_pListener,		              // listener
+                    nsnull);                      // password
 
 	}
 

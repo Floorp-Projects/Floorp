@@ -522,7 +522,8 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
                                  PR_FALSE, // PRBool digest_p,
                                  nsIMsgSend::nsMsgDeliverNow, // nsMsgDeliverMode mode,
                                  nsnull, // nsIMsgDBHdr *msgToReplace, 
-                                 sendListener); 
+                                 sendListener,
+                                 nsnull); 
   NS_IF_RELEASE(sendListener);
   return rv;
 }

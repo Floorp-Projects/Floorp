@@ -54,6 +54,9 @@ interface nsIMsgComposeService : nsISupports {
 										in nsIMsgCompFields compFields, in nsIMsgIdentity identity);
 
 	/* ... */
+	void OpenComposeWindowWithParams(in string msgComposeWindowURL, in nsIMsgComposeParams params);
+
+	/* ... */
 	nsIMsgCompose InitCompose(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams params);
 
  	/* This function is use for debugging purpose only and may go away at anytime without warning */

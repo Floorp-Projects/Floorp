@@ -39,4 +39,6 @@ public:
   nsCOMPtr<nsIMsgIdentity>      mIdentity;
   nsCOMPtr<nsIMsgCompFields>    mComposeFields;
   PRBool                        mBodyIsLink;
+  nsCOMPtr<nsIMsgSendListener>  mSendListener;
+  nsCString                     mSMTPPassword;
 };

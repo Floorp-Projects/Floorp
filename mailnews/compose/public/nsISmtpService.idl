@@ -48,19 +48,21 @@ interface nsISmtpService : nsISupports {
   // If you don't care about listening to the url, feel free to pass in
   // nsnull for that argument.
   //
-  // You can also pass an SMTP server as an argument if you want to send
-  // this message with a specific server.. otherwise it will use the
-  // default server
+  // You can also pass an password as an argument if you want to prevent
+  // a dialog to popup if the password is needed for a secure transmission
+  //
+  // The server associate to the Sender Identity will be used or the default
+  // server.
   //////////////////////////////////////////////////////////////////////////
 
   void SendMailMessage(in nsIFileSpec aFilePath, in string aRecipients, 
                        in nsIMsgIdentity aSenderIdentity,
+                       in string aPassword,
                        in nsIUrlListener aUrlListener, 
-                       in nsISmtpServer aServer,
-					   in nsIMsgStatusFeedback aStatusListener, 
+					             in nsIMsgStatusFeedback aStatusListener, 
                        in nsIInterfaceRequestor aNotificationCallbacks,
                        out nsIURI aURL,
-					   out nsIRequest aRequest);
+					             out nsIRequest aRequest);
 
   /**
    * A copy of the array of SMTP servers, as stored in the preferences

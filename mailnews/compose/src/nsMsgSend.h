@@ -234,7 +234,8 @@ public:
 			             const char       *attachment1_body,
 			             PRUint32         attachment1_body_length,
 			             const nsMsgAttachmentData   *attachments,
-			             const nsMsgAttachedFile     *preloaded_attachments);
+			             const nsMsgAttachedFile     *preloaded_attachments,
+                   const char       *password);
 
   //
   // Setup the composition fields
@@ -382,6 +383,8 @@ protected:
 private:
   // will set m_attachment1_body & m_attachment1_body_length;
   nsresult EnsureLineBreaks(const char *body, PRUint32 body_len);
+
+  nsCString               mSmtpPassword;                // store the smtp Password use during a send
 };
 
 // 
