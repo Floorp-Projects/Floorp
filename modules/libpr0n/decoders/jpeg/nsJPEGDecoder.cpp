@@ -257,6 +257,12 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
     mObserver->OnStartDecode(nsnull, nsnull);
 
+    /* we only support jpegs with 1 or 3 components currently. */
+    if (mInfo.output_components != 1 ||
+        mInfo.output_components != 3) {
+      mState = JPEG_ERROR;
+      return NS_ERROR_UNEXPECTED;
+    }
 
     /* Check if the request already has an image container.
        this is the case when multipart/x-mixed-replace is being downloaded
@@ -329,7 +335,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      */
     int row_stride;
 
-    if(mInfo.output_components == 1)
+    if (mInfo.output_components == 1)
       row_stride = mInfo.output_width;
     else
       row_stride = mInfo.output_width * 4; // use 4 instead of mInfo.output_components
@@ -634,7 +640,9 @@ my_error_exit (j_common_ptr cinfo)
   /* Create the message */
   (*cinfo->err->format_message) (cinfo, buffer);
 
-  fprintf(stderr, "my_error_exit()\n%s\n", buffer);
+#ifdef DEBUG
+  fprintf(stderr, "JPEG decoding error:\n%s\n", buffer);
+#endif
 
   /* Return control to the setjmp point. */
   longjmp(err->setjmp_buffer, error_code);
