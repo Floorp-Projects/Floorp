@@ -133,8 +133,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPresShellIID, NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
-static PRLogModuleInfo* gShellLogModuleInfo;
-
 class PresShell : public nsIPresShell, private nsIDocumentObserver {
 public:
   PresShell();
@@ -212,9 +210,6 @@ protected:
 
 PresShell::PresShell()
 {
-#ifdef NS_DEBUG
-  gShellLogModuleInfo = PR_NewLogModule("shell");
-#endif
 }
 
 nsrefcnt
@@ -527,17 +522,18 @@ PresShell::ProcessReflowCommands()
 
       // Dispatch the reflow command
       nsSize          maxSize;
-      
       mRootFrame->GetSize(maxSize);
 #ifdef NS_DEBUG
-      nsIReflowCommand::ReflowType  type;
-
+      nsIReflowCommand::ReflowType type;
       rc->GetType(type);
-      PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
-             ("PresShell::ProcessReflowCommands: reflow command type=%d", type));
+      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+         ("PresShell::ProcessReflowCommands: begin reflow command type=%d",
+          type));
 #endif
       rc->Dispatch(*mPresContext, desiredSize, maxSize);
       NS_RELEASE(rc);
+      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+         ("PresShell::ProcessReflowCommands: end reflow command"));
     }
 
     // Place and size the root frame
@@ -585,10 +581,10 @@ PresShell::ContentChanged(nsIContent*  aContent,
   // It's possible the frame whose content changed isn't inserted into the
   // frame hierarchy yet. This sometimes happens with images inside tables
   if (nsnull != frame) {
-    PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
-           ("PresShell::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
-            aContent, ContentTag(aContent, 0),
-            aSubContent, frame));
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+       ("PresShell::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
+        aContent, ContentTag(aContent, 0),
+        aSubContent, frame));
     frame->ContentChanged(this, mPresContext, aContent, aSubContent);
   }
 
@@ -607,7 +603,7 @@ PresShell::ContentAppended(nsIContent* aContainer)
   while (nsnull != parentContainer) {
     nsIFrame* frame = FindFrameWithContent(parentContainer);
     if (nsnull != frame) {
-      PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
              ("PresShell::ContentAppended: container=%p[%s] frame=%p",
               aContainer, ContentTag(aContainer, 0), frame));
       frame->ContentAppended(this, mPresContext, aContainer);
@@ -631,7 +627,7 @@ PresShell::ContentInserted(nsIContent* aContainer,
 
   nsIFrame* frame = FindFrameWithContent(aContainer);
   NS_PRECONDITION(nsnull != frame, "null frame");
-  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("PresShell::ContentInserted: container=%p[%s] child=%p[%s][%d] frame=%p",
       aContainer, ContentTag(aContainer, 0),
       aChild, ContentTag(aChild, 1), aIndexInContainer,
@@ -655,7 +651,7 @@ PresShell::ContentReplaced(nsIContent* aContainer,
 
   nsIFrame* frame = FindFrameWithContent(aContainer);
   NS_PRECONDITION(nsnull != frame, "null frame");
-  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("PresShell::ContentReplaced: container=%p[%s] oldChild=%p[%s][%d] newChild=%p[%s] frame=%p",
       aContainer, ContentTag(aContainer, 0),
       aOldChild, ContentTag(aOldChild, 1), aIndexInContainer,
@@ -673,7 +669,7 @@ PresShell::ContentWillBeRemoved(nsIContent* aContainer,
                                 nsIContent* aChild,
                                 PRInt32     aIndexInContainer)
 {
-  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("PresShell::ContentWillBeRemoved: container=%p[%s] child=%p[%s][%d]",
       aContainer, ContentTag(aContainer, 0),
       aChild, ContentTag(aChild, 1), aIndexInContainer));
@@ -689,10 +685,11 @@ PresShell::ContentHasBeenRemoved(nsIContent* aContainer,
 
   nsIFrame* frame = FindFrameWithContent(aContainer);
   NS_PRECONDITION(nsnull != frame, "null frame");
-  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("PresShell::ContentHasBeenRemoved: container=%p child=%p[%d] frame=%p",
       aContainer, aChild, aIndexInContainer, frame));
-  frame->ContentDeleted(this, mPresContext, aContainer, aChild, aIndexInContainer);
+  frame->ContentDeleted(this, mPresContext, aContainer, aChild,
+                        aIndexInContainer);
   ProcessReflowCommands();
   return NS_OK;
 }
