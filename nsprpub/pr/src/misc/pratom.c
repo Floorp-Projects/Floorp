@@ -24,6 +24,8 @@
 #include "pratom.h"
 #include "primpl.h"
 
+#include <string.h>
+
 /*
  * The following is a fallback implementation that emulates
  * atomic operations for platforms without atomic operations.
