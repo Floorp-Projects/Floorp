@@ -54,18 +54,28 @@ static const PRUint16 g_EUCKRShiftTable[] =  {
 
 static const uRange g_EUCKRRanges[] = {
   { 0x00, 0x7E },
+  { 0xA4, 0xA4 },   // 8byte seq. for Hangul syllables not available
+                    // in pre-composed form in KS X 1001
   { 0xA1, 0xFE }
 };
 #endif
 
+static const PRUint16 g_DecomposedHangulShiftTable[] =  {
+  0, uDecomposedHangulCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+
+
 
 static const PRUint16 *g_EUCKRShiftTableSet [] = {
   g_ASCIIShiftTable,
+  g_DecomposedHangulShiftTable,
   g_EUCKRShiftTable
 };
 
 static const PRUint16 *g_EUCKRMappingTableSet [] ={
   g_AsciiMapping,
+  g_HangulNullMapping,
   g_utKSC5601Mapping
 };
 
@@ -74,7 +84,7 @@ static const PRUint16 *g_EUCKRMappingTableSet [] ={
 // Class nsEUCKRToUnicode [implementation]
 
 nsEUCKRToUnicode::nsEUCKRToUnicode() 
-: nsMultiTableDecoderSupport(2,
+: nsMultiTableDecoderSupport(3,
                         (uRange*) &g_EUCKRRanges,
                         (uShiftTable**) &g_EUCKRShiftTableSet, 
                         (uMappingTable**) &g_EUCKRMappingTableSet)

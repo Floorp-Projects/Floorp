@@ -19,3 +19,37 @@
  *
  * Contributor(s): 
  */
+
+#ifndef nsCP949ToUnicode_h___
+#define nsCP949ToUnicode_h___
+
+#include "nsUCvKOSupport.h"
+
+//----------------------------------------------------------------------
+// Class nsCP949ToUnicode [declaration]
+
+/**
+ * A character set converter from CP949 to Unicode.
+ *
+ * @created         06/Apr/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsCP949ToUnicode : public nsMultiTableDecoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsCP949ToUnicode();
+
+protected:
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+};
+
+#endif /* nsCP949ToUnicode_h___ */

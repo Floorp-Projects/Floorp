@@ -36,8 +36,8 @@ static const PRUint16 gKSC5601ShiftTable[] =  {
   0, u2BytesGRCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
-static const PRUint16 gComposedHangulShiftTable[] =  {
-  0, uComposedHangulCharset,  
+static const PRUint16 gDecomposedHangulShiftTable[] =  {
+  0, uDecomposedHangulCharset,  
   ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
@@ -50,7 +50,7 @@ static const PRUint16 *g_EUCKRMappingTable[3] = {
 static const PRUint16 *g_EUCKRShiftTable[3] =  {
   gAsciiShiftTable,
   gKSC5601ShiftTable,
-  gComposedHangulShiftTable
+  gDecomposedHangulShiftTable
 };
 
 //----------------------------------------------------------------------

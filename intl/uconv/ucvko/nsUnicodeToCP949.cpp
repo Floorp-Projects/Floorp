@@ -19,3 +19,65 @@
  *
  * Contributor(s): 
  */
+
+
+#include "nsUnicodeToCP949.h"
+#include "nsUCvKODll.h"
+
+//----------------------------------------------------------------------
+// Global functions and data [declaration]
+
+
+static const PRUint16 gAsciiShiftTable[] =  {
+  0, u1ByteCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+
+static const PRUint16 gKSC5601ShiftTable[] =  {
+  0, u2BytesGRCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+static const PRUint16 gCP949ShiftTable[] =  {
+  0, u2BytesCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+
+// Unicode Hangul syllables (not enumerated in KS X 1001) to CP949 : 8822 of them
+static const PRUint16 g_ufCP949NoKSCHangulMapping[] = {
+#include "u20cp949hangul.uf"
+};
+
+
+
+static const PRUint16 *g_CP949MappingTable[3] = {
+  g_AsciiMapping,
+  g_ufKSC5601Mapping,
+  g_ufCP949NoKSCHangulMapping
+};
+
+static const PRUint16 *g_CP949ShiftTable[3] =  {
+  gAsciiShiftTable,
+  gKSC5601ShiftTable,
+  gCP949ShiftTable
+};
+
+//----------------------------------------------------------------------
+// Class nsUnicodeToEUCKR [implementation]
+
+nsUnicodeToCP949::nsUnicodeToCP949() 
+: nsMultiTableEncoderSupport(3,
+                        (uShiftTable**) g_CP949ShiftTable, 
+                        (uMappingTable**) g_CP949MappingTable)
+{
+}
+
+//----------------------------------------------------------------------
+// Subclassing of nsTableEncoderSupport class [implementation]
+
+NS_IMETHODIMP nsUnicodeToCP949::GetMaxLength(const PRUnichar * aSrc, 
+                                              PRInt32 aSrcLength,
+                                              PRInt32 * aDestLength)
+{
+  *aDestLength = aSrcLength * 2; 
+  return NS_OK;
+}
