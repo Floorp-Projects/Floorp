@@ -31,7 +31,7 @@
 typedef enum {
   k1stBlk,
   k2ndBlk,
-  klastBlk,
+  klastBlk
 } nsDebugDetectorSel;
 
 //--------------------------------------------------------------------
