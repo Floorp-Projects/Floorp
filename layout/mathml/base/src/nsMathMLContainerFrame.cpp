@@ -611,6 +611,9 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
       rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
       NS_ASSERTION(NS_SUCCEEDED(rv) && mathMLFrame, "Something is wrong somewhere");
       if (NS_SUCCEEDED(rv) && mathMLFrame) {
+        PRBool stretchAll =
+          NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ||
+          NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags);
 
         // And the trick is that the child's rect.x is still holding the descent,
         // and rect.y is still holding the ascent ...
@@ -621,7 +624,8 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
         if (aStretchDirection != NS_STRETCH_DIRECTION_DEFAULT &&
             aStretchDirection != mEmbellishData.direction) {
           // change the direction and confine the stretch to us
-          GetPreferredStretchSize(aPresContext, aRenderingContext, 0,
+          GetPreferredStretchSize(aPresContext, aRenderingContext, 
+                                  stretchAll ? STRETCH_CONSIDER_EMBELLISHMENTS : 0,
                                   mEmbellishData.direction, containerSize);
         }
 
@@ -638,8 +642,7 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
         // Now that this embellished child may have changed, we need to
         // fire the stretch on its siblings using our updated size
 
-        if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ||
-            NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags)) {
+        if (stretchAll) {
 
           nsStretchDirection stretchDir =
             NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) ?
