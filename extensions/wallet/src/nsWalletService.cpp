@@ -63,8 +63,9 @@ nsWalletlibService::~nsWalletlibService()
   NS_IF_RELEASE(gKeyedStreamGenerator);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsWalletlibService,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsWalletlibService,
                               nsIWalletService,
+                              nsIObserver,
                               nsIFormSubmitObserver,
                               nsIDocumentLoaderObserver,
                               nsIPasswordSink,

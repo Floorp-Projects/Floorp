@@ -33,6 +33,7 @@
 #include "nsIURI.h"
 
 class nsWalletlibService : public nsIWalletService,
+                           public nsIObserver,
                            public nsIFormSubmitObserver,
                            public nsIDocumentLoaderObserver,
                            public nsIPasswordSink,
