@@ -1413,36 +1413,40 @@ sub RemoveVotes {
     }
 }
 
-
 sub Param ($) {
     my ($value) = (@_);
-    if (defined $::param{$value}) {
-        return $::param{$value};
+    if (! defined $::param{$value}) {
+        # Um, maybe we haven't sourced in the params at all yet.
+        if (stat("data/params")) {
+            # Write down and restore the version # here.  That way, we get 
+            # around anyone who maliciously tries to tweak the version number
+            # by editing the params file.  Not to mention that in 2.0, there 
+            # was a bug that wrote the version number out to the params file...
+            my $v = $::param{'version'};
+            require "data/params";
+            $::param{'version'} = $v;
+        }
     }
 
-    # Um, maybe we haven't sourced in the params at all yet.
-    if (stat("data/params")) {
-        # Write down and restore the version # here.  That way, we get around
-        # anyone who maliciously tries to tweak the version number by editing
-        # the params file.  Not to mention that in 2.0, there was a bug that
-        # wrote the version number out to the params file...
-        my $v = $::param{'version'};
-        require "data/params";
-        $::param{'version'} = $v;
+    if (! defined $::param{$value}) {
+        # Well, that didn't help.  Maybe it's a new param, and the user
+        # hasn't defined anything for it.  Try and load a default value
+        # for it.
+        require "defparams.pl";
+        WriteParams();
     }
-    if (defined $::param{$value}) {
+
+    # If it's still not defined, we're pimped.
+    die "Can't find param named $value" if (! defined $::param{$value});
+
+    if ($::param_type{$value} eq "m") {
+        my $valueList = eval($::param{$value});
+        return $valueList if (!($@) && ref($valueList) eq "ARRAY");
+        die "Multi-list param '$value' eval() failure ('$@'); data/params is horked";
+    }
+    else {
         return $::param{$value};
     }
-    # Well, that didn't help.  Maybe it's a new param, and the user
-    # hasn't defined anything for it.  Try and load a default value
-    # for it.
-    require "defparams.pl";
-    WriteParams();
-    if (defined $::param{$value}) {
-        return $::param{$value};
-    }
-    # We're pimped.
-    die "Can't find param named $value";
 }
 
 # Take two comma or space separated strings and return what

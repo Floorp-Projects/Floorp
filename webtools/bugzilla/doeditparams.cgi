@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 J. Paul Reed <preed@sigkill.com>
 
 use diagnostics;
 use strict;
@@ -51,14 +52,30 @@ PutHeader("Saving new parameters");
 foreach my $i (@::param_list) {
 #    print "Processing $i...<BR>\n";
     if (exists $::FORM{"reset-$i"}) {
-        $::FORM{$i} = $::param_default{$i};
+        if ($::param_type{$i} eq "s") {
+            my $index = get_select_param_index($i, $::param_default{$i}->[1]);
+            die "Param not found for '$i'" if ($index eq undef);
+            $::FORM{$i} = $index; 
+        }
+        elsif ($::param_type{$i} eq "m") {
+            # For 'multi' selects, default is the 2nd anon array of the default
+            @{$::MFORM{$i}} = ();
+            foreach my $defaultPrm (@{$::param_default{$i}->[1]}) {
+                my $index = get_select_param_index($i, $defaultPrm); 
+                die "Param not found for '$i'" if ($index eq undef);
+                push(@{$::MFORM{$i}}, $index); 
+            }
+        }
+        else {
+            $::FORM{$i} = $::param_default{$i};
+        }
     }
     $::FORM{$i} =~ s/\r\n?/\n/g;   # Get rid of windows/mac-style line endings.
     $::FORM{$i} =~ s/^\n$//;      # assume single linefeed is an empty string
     if ($::FORM{$i} ne Param($i)) {
         if (defined $::param_checker{$i}) {
             my $ref = $::param_checker{$i};
-            my $ok = &$ref($::FORM{$i});
+            my $ok = &$ref($::FORM{$i}, $i);
             if ($ok ne "") {
                 print "New value for $i is invalid: $ok<p>\n";
                 print "Please hit <b>Back</b> and try again.\n";
@@ -69,7 +86,22 @@ foreach my $i (@::param_list) {
         print "Changed $i.<br>\n";
 #      print "Old: '" . url_quote(Param($i)) . "'<BR>\n";
 #      print "New: '" . url_quote($::FORM{$i}) . "'<BR>\n";
-        $::param{$i} = $::FORM{$i};
+        if ($::param_type{$i} eq "s") {
+            $::param{$i} = $::param_default{$i}->[0]->[$::FORM{$i}];
+        }
+        elsif ($::param_type{$i} eq "m") {
+            my $multiParamStr = "[ ";
+            foreach my $chosenParam (@{$::MFORM{$i}}) {
+                $multiParamStr .= 
+                 "'$::param_default{$i}->[0]->[$chosenParam]', ";
+            }
+            $multiParamStr .= " ]";
+
+            $::param{$i} = $multiParamStr;
+        }
+        else {
+            $::param{$i} = $::FORM{$i};
+        }
     }
 }
 

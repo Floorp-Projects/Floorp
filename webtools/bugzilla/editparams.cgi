@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 J. Paul Reed <preed@sigkill.com>
 
 
 use diagnostics;
@@ -30,7 +31,8 @@ require "defparams.pl";
 
 # Shut up misguided -w warnings about "used only once":
 use vars @::param_desc,
-    @::param_list;
+    @::param_list,
+    @::param_default;
 
 ConnectToDatabase();
 confirm_login();
@@ -85,6 +87,48 @@ foreach my $i (@::param_list) {
             }
             print "<input type=radio name=$i value=1 $on>On\n";
             print "<input type=radio name=$i value=0 $off>Off\n";
+            last SWITCH;
+        };
+        /^m$/ && do {
+            my $optList = $::param_default{$i}->[0]; #'cause we use it so much 
+            ## showing 5 options seems like a nice round number; this should
+            ## probably be configurable; if you care, file a bug ;-)
+            my $boxSize = scalar(@{$optList}) < 5 ? scalar(@{$optList}) : 5;
+
+            print "<select multiple size=\"$boxSize\" name=\"$i\">\n";
+
+            for (my $optNum = 0; $optNum < scalar(@{$optList}); $optNum++) {
+                my $selected = "";
+
+                foreach my $selectedVal (@{$value}) {
+                    if ($selectedVal eq $optList->[$optNum]) {
+                        $selected = "selected";
+                        last;
+                    }
+                }
+
+                print "<option $selected value=\"$optNum\">" .
+                 "$optList->[$optNum]</option>\n";
+            }
+
+            print "</select>\n";
+            last SWITCH;
+        };
+        /^s$/ && do {
+            print "<select name=\"$i\">\n";
+            #'cause we use it so much below
+            my $optList = $::param_default{$i}->[0]; 
+
+            for (my $optNum = 0; $optNum < scalar(@{$optList}); $optNum++) {
+                my $selected = "";
+                if ($value eq $optList->[$optNum]) {
+                    $selected = "selected";
+                }
+
+                print "<option $selected value=\"$optNum\">" .
+                 "$optList->[$optNum]</option>\n";
+            }
+            print "</select>\n";
             last SWITCH;
         };
         # DEFAULT

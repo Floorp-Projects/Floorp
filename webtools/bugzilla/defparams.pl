@@ -22,6 +22,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
 #                 Jake <jake@acutex.net>
+#                 J. Paul Reed <preed@sigkill.com>
 #
 
 # This file defines all the parameters that we have a GUI to edit within
@@ -43,12 +44,34 @@ sub defparams_pl_sillyness {
     $zz = %::param_checker;
     $zz = %::param_desc;
     $zz = %::param_type;
+    $zz = %::MFORM;
 }
 
 sub WriteParams {
     foreach my $i (@::param_list) {
         if (!defined $::param{$i}) {
-            $::param{$i} = $::param_default{$i};
+            if ($::param_type{$i} eq "m") {
+                ## For list params (single or multi), param_default is an array
+                ## with the second element as the default; we have to loop
+                ## through it to get them all for multi lists and we have to
+                ## select the second one by itself for single list (next branch
+                ## of the if)
+                my $multiParamStr = "[ ";
+                foreach my $defaultParam (@{$::param_default{$i}->[1]}) {
+                    $multiParamStr .= "'$defaultParam', "; 
+                }
+
+                $multiParamStr .= " ]";
+
+                $::param{$i} = $multiParamStr;
+            }
+            elsif ($::param_type{$i} eq "s") {
+                $::param{$i} = $::param_default{$i}->[1];
+            }
+            else {
+                $::param{$i} = $::param_default{$i};
+            }
+
             if (!defined $::param{$i}) {
                 die "No default parameter ever specified for $i";
             }
@@ -67,7 +90,11 @@ sub WriteParams {
     rename $tmpname, "data/params" || die "Can't rename $tmpname to data/params";
     ChmodDataFile('data/params', 0666);
 }
-    
+
+## $checker is a CODE ref that points to a function that verifies the
+## parameter for validity; it is called by doeditparams.cgi with the value
+## of the param as the first arg and the param name as the 2nd arg (which
+## many checker functions ignore, but a couple of them need it.
 
 sub DefParam {
     my ($id, $desc, $type, $default, $checker) = (@_);
@@ -80,6 +107,57 @@ sub DefParam {
     }
 }
 
+## Converts text parameters for single- and multi-select type params to their
+## array indices; takes the name of the parameter and the value you want the
+## index of; returns undef on failure.
+
+sub get_select_param_index {
+    my ($paramName, $val) = (@_);
+
+    return undef if ($::param_type{$paramName} !~ /^m|s$/);
+
+    my $paramList = $::param_default{$paramName}->[0];
+
+    for (my $ndx = 0; $ndx < scalar(@{$paramList}); $ndx++) {
+        ## The first element of the $param_default array in selects is the
+        ## list of possible params; search through this array for a match.
+        return $ndx if ($val eq $paramList->[$ndx]);
+    }
+
+    return undef;
+}
+
+sub check_multi {
+    my ($value, $param) = (@_);
+
+    if ($::param_type{$param} eq "s") {
+        if (check_numeric($value) ne "") {
+            return "List param types must be digits";
+        }
+        elsif ($value < 0 || $value > $#{$::param_default{$param}->[0]}) {
+            return "Invalid choice for single-select list param '$param'";
+        }
+        else {
+            return "";
+        }
+    }
+    elsif ($::param_type{$param} eq "m") {
+        foreach my $chkParam (@{$::MFORM{$param}}) {
+            if (check_numeric($chkParam) ne "") {
+                return "List param types must be digits";
+            }
+            elsif ($chkParam < 0 || $chkParam > 
+             $#{$::param_default{$param}->[0]}) {
+                return "Invalid choice for multi-select list param '$param'";
+            }
+        }
+
+        return "";
+    }
+    else {
+        return "Invalid param type for check_multi(); contact your BZ admin";
+    }
+}
 
 sub check_numeric {
     my ($value) = (@_);
@@ -119,6 +197,33 @@ sub check_shadowdb {
 # t -- A short text entry field (suitable for a single line)
 # l -- A long text field (suitable for many lines)
 # b -- A boolean value (either 1 or 0)
+# m -- A list of values, with many selectable (shows up as a select box)
+#      To specify the list of values, make the 'default value' for DefParam()
+#      a reference to two anonymous arrays, the first being the list of options
+#      and the second being a list of defaults (which must appear in the 
+#      first anonymous array), i.e.:
+#       DefParam("multiselect", "A list of options, choose many", 
+#                "m", [ ['a','b','c','d'], ['a', 'd'] ], \&check_multi);
+#
+#      Here, 'a' and 'd' are the default options, and the user may pick any
+#      combination of a, b, c, and d as valid options.
+#
+#      &check_multi should always be used as the param verification function
+#      for list (single and multiple) parameter types.
+#
+# s -- A list of values, with one selectable (shows up as a select box)
+#      To specify the list of values, make the default value a reference to
+#      an anonymous array with two items inside of it, the first being an 
+#      array of the possible values and the second being the scalar that is
+#      the default default value, i.e.:
+#       DefParam("singleselect", "A list of options, choose one", "s", 
+#               [ ['a','b','c'], 'b'], \&check_multi);
+#      
+#      Here, 'b' is the default option, and 'a' and 'c' are other possible
+#      options, but only one at a time! 
+#
+#      &check_multi should always be used as the param verification function
+#      for list (single and multiple) parameter types.
 
 DefParam("maintainer",
          "The email address of the person who maintains this installation of Bugzilla.",
