@@ -43,6 +43,7 @@
 #include "prenv.h" /* for PR_GetEnv */ 
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecG
