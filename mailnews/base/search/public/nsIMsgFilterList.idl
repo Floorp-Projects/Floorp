@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -41,6 +42,7 @@
 #include "nsIMsgFilterHitNotify.idl"
 
 interface nsIOFileStream;
+interface nsIOutputStream;
 
 ///////////////////////////////////////////////////////////////////////////////
 // The Msg Filter List is an interface designed to make accessing filter lists
@@ -68,7 +70,7 @@ interface nsIMsgFilterList : nsISupports {
 
     attribute nsIMsgFolder folder;
     readonly attribute short version;
-	readonly attribute string arbitraryHeaders;
+    readonly attribute string arbitraryHeaders;
     readonly attribute boolean shouldDownloadAllHeaders;
     readonly attribute unsigned long filterCount;
     nsIMsgFilter getFilterAt(in unsigned long filterIndex);
@@ -111,14 +113,15 @@ interface nsIMsgFilterList : nsISupports {
                            in nsIMsgFilterHitNotify listener,
                            in nsIMsgWindow msgWindow);
 
-	// IO routines, used by filter object filing code.
-
+    // IO routines, used by filter object filing code.
     void writeIntAttr(in nsMsgFilterFileAttribValue attrib, in long value, in nsIOFileStream stream);
     void writeStrAttr(in nsMsgFilterFileAttribValue attrib, in string value, in nsIOFileStream stream);
     void writeWstrAttr(in nsMsgFilterFileAttribValue attrib, in wstring value, in nsIOFileStream stream);
     void writeBoolAttr(in nsMsgFilterFileAttribValue attrib, in boolean value, in nsIOFileStream stream);
     boolean matchOrChangeFilterTarget(in string oldUri, in string newUri, in boolean caseInsensitive);
-    
+ 
+    attribute nsIOutputStream logStream;
+    readonly attribute string logURL;
 };
 
 

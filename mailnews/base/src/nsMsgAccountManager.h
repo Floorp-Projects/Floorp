@@ -127,7 +127,7 @@ private:
   static PRBool PR_CALLBACK hashUnloadServer(nsHashKey *aKey, void *aData,
                                      void *closure);
 
-  // close connection and forget cached password
+  // shutdown server and forget cached password
   static PRBool PR_CALLBACK hashLogoutOfServer(nsHashKey *aKey, void *aData,
                                      void *closure);
 
@@ -173,6 +173,7 @@ private:
 
   // write out the server's cache through the given folder cache
   static PRBool PR_CALLBACK writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
+  static PRBool PR_CALLBACK shutdown(nsHashKey *aKey, void *aData, void *closure);
   static PRBool PR_CALLBACK closeCachedConnections(nsHashKey *aKey, void *aData, void *closure);
 
   static void getUniqueKey(const char* prefix,

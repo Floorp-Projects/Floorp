@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -50,12 +51,14 @@
 #include "nsXPIDLString.h"
 #include "nsMsgSearchScopeTerm.h"
 #include "nsIMsgAccountManager.h"
+#include "nsIMsgIncomingServer.h"
 #include "nsMsgSearchValue.h"
 #include "nsReadableUtils.h"
 #include "nsEscape.h"
 #include "nsMsgUtf7Utils.h"
 #include "nsIImportService.h"
 #include "nsISupportsObsolete.h"
+#include "nsIOutputStream.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -253,71 +256,79 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHdr)
+NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgDBHdr *msgHdr)
 {
-	PRTime	date;
-	char	dateStr[40];	/* 30 probably not enough */
-	nsMsgRuleActionType actionType;
+    nsCOMPtr <nsIOutputStream> logStream;
+    nsresult rv = m_filterList->GetLogStream(getter_AddRefs(logStream));
+    NS_ENSURE_SUCCESS(rv,rv);
+  
+    PRTime date;
+    char dateStr[40];	/* 30 probably not enough */
+    nsMsgRuleActionType actionType;
     nsXPIDLCString actionFolderUri;
     
-	nsXPIDLCString	author;
-	nsXPIDLCString	subject;
+    nsXPIDLCString author;
+    nsXPIDLCString subject;
     nsXPIDLString filterName;
 
-	GetFilterName(getter_Copies(filterName));
-	GetAction(&actionType);
-	nsresult res;
-    res = msgHdr->GetDate(&date);
-   	PRExplodedTime exploded;
+    GetFilterName(getter_Copies(filterName));
+    GetAction(&actionType);
+    rv = msgHdr->GetDate(&date);
+    PRExplodedTime exploded;
     PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
     PR_FormatTimeUSEnglish(dateStr, 100, "%m/%d/%Y %I:%M %p", &exploded);
 
-	msgHdr->GetAuthor(getter_Copies(author));
-	msgHdr->GetSubject(getter_Copies(subject));
-	if (stream)
-	{
-        
-		*stream << "Applied filter \"";
-		*stream << NS_ConvertUCS2toUTF8(filterName).get();
-        
-		*stream << "\" to message from ";
-		*stream << (const char*)author;
-		*stream << " - ";
-		*stream << (const char *)subject;
-		*stream << " at ";
-		*stream << dateStr;
-		*stream << "\n";
-		const char *actionStr = GetActionStr(actionType);
-        
-		*stream << "Action = ";
-		*stream << actionStr;
-		*stream << " ";
-        
-		if (actionType == nsMsgFilterAction::MoveToFolder) {
-            GetActionTargetFolderUri(getter_Copies(actionFolderUri));
-            *stream << (const char *)actionFolderUri;
-        } else {
-            *stream << "";
-        }
-        
-		*stream << "\n\n";
-//		XP_FilePrintf(*m_logFile, "Action = %s %s\n\n", actionStr, actionValue);
-		if (actionType == nsMsgFilterAction::MoveToFolder)
-		{
-			nsXPIDLCString msgId;
-			msgHdr->GetMessageId(getter_Copies(msgId));
-			*stream << "mailbox:";
-			*stream << (const char *) actionFolderUri;
-			*stream << "id = ";
-			*stream << (const char*)msgId;
-			*stream << "\n";
+    msgHdr->GetAuthor(getter_Copies(author));
+    msgHdr->GetSubject(getter_Copies(subject));
 
-//			XP_FilePrintf(m_logFile, "mailbox:%s?id=%s\n", value, (const char *) msgId);
-		}
-	}
-	return NS_OK;
+    nsCString buffer;
+    buffer.SetCapacity(512);
+
+    buffer = "<pre>\n";
+    buffer += "Applied filter \"";
+    buffer +=  NS_ConvertUCS2toUTF8(filterName).get();
+    buffer +=  "\" to message from ";
+    buffer +=  (const char*)author;
+    buffer +=  " - ";
+    buffer +=  (const char *)subject;
+    buffer +=  " at ";
+    buffer +=  dateStr;
+    buffer +=  "\n";
+    const char *actionStr = GetActionStr(actionType);
+    buffer +=  "Action = ";
+    buffer +=  actionStr;
+    buffer +=  " ";
+        
+    if (actionType == nsMsgFilterAction::MoveToFolder) {
+      GetActionTargetFolderUri(getter_Copies(actionFolderUri));
+      buffer += actionFolderUri.get();
+    } 
+         
+    buffer += "\n";
+    if (actionType == nsMsgFilterAction::MoveToFolder) {
+      nsXPIDLCString msgId;
+      msgHdr->GetMessageId(getter_Copies(msgId));
+      buffer += (const char *) actionFolderUri;
+      buffer += " id = ";
+      buffer += (const char*)msgId;
+      buffer += "\n";
+    }
+    buffer += "</pre>\n";
+
+    PRUint32 writeCount;
+    rv = logStream->Write(buffer.get(), buffer.Length(), &writeCount);
+    NS_ENSURE_SUCCESS(rv,rv);
+ 
+    // flush to disk after ever log hit  
+    rv = logStream->Flush();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ASSERTION(writeCount == buffer.Length(), "did write out full log hit");
+    if (writeCount != buffer.Length())
+     return NS_ERROR_FAILURE;
+
+    return NS_OK;
 }
-
 
 NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
 									const char *headers, PRUint32 headersSize, PRBool *pResult)

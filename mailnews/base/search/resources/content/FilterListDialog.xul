@@ -19,13 +19,15 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 
 Contributor(s):  Hkan Waara <hwaara@chello.se>
-
+                 Seth Spitzer <sspitzer@netscape.com>
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/filterDialog.css" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
+
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd">
+
 <dialog id="filterListDialog"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -42,6 +44,7 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
 
   <script type="application/x-javascript" src="chrome://messenger/content/FilterListDialog.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
   <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
 
   <keyset id="dialogKeys"/>
@@ -64,6 +67,11 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
           </template>
         </menupopup>
       </menulist>
+      <spacer flex="1"/> 
+      <vbox>
+        <button label="&viewLogButton.label;" accesskey="&viewLogButton.accesskey;" oncommand="viewLog();"/>
+        <checkbox id="logFilters" label="&logFilters.label;" accesskey="&logFilters.accesskey;" oncommand="toggleLogFilters()"/>
+      </vbox>
   </hbox>
 
   <grid flex="1">
@@ -143,6 +151,17 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
     </rows>
   </grid>
      
-  <separator/>
+  <hbox align="center">
+    <button id="runFiltersButton" label="&runFilters.label;" accesskey="&runFilters.accesskey;" oncommand="runSelectedFilters();" disabled="true"/>
 
+    <label id="onLabel" value="&on.label;" disabled="true" control="runFiltersFolder"/>
+
+    <menulist id="runFiltersFolder" disabled="true"/>
+
+    <spacer flex="1"/>
+
+  </hbox>
+
+  <separator/>
 </dialog>
+

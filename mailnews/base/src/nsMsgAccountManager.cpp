@@ -209,8 +209,8 @@ nsresult nsMsgAccountManager::Shutdown()
     WriteToFolderCache(m_msgFolderCache);
   }
 
-  CloseCachedConnections();
-  UnloadAccounts();
+  (void)ShutdownServers();
+  (void)UnloadAccounts();
   
   //shutdown removes nsIIncomingServer listener from biff manager, so do it after accounts have been unloaded
   nsCOMPtr<nsIMsgBiffManager> biffService = do_GetService(NS_MSGBIFFMANAGER_CONTRACTID, &rv);
@@ -930,8 +930,8 @@ nsMsgAccountManager::hashUnloadServer(nsHashKey *aKey, void *aData,
 
 /* static */ void nsMsgAccountManager::LogoutOfServer(nsIMsgIncomingServer *aServer)
 {
-    nsresult rv = aServer->CloseCachedConnections();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
+    nsresult rv = aServer->Shutdown();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Shutdown of server failed");
     rv = aServer->ForgetSessionPassword();
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove the password associated with server");
 }
@@ -1113,14 +1113,22 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
    return PR_TRUE;
 }
 
-
-// enumaration for closing cached connections.
 PRBool nsMsgAccountManager::closeCachedConnections(nsHashKey *aKey, void *aData, void *closure)
 {
-    nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
+  nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
 
-	server->CloseCachedConnections();
-	return PR_TRUE;
+  server->CloseCachedConnections();
+
+  return PR_TRUE;
+}
+
+PRBool nsMsgAccountManager::shutdown(nsHashKey *aKey, void *aData, void *closure)
+{
+  nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
+
+  server->Shutdown();
+
+  return PR_TRUE;
 }
 
 
@@ -1540,7 +1548,7 @@ nsMsgAccountManager::SetSpecialFoldersForIdentities()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMsgAccountManager::UnloadAccounts()
 {
   // release the default account
@@ -1558,17 +1566,24 @@ nsMsgAccountManager::UnloadAccounts()
 }
 
 NS_IMETHODIMP
+nsMsgAccountManager::ShutdownServers()
+{
+  m_incomingServers.Enumerate(shutdown, nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgAccountManager::CloseCachedConnections()
 {
-	m_incomingServers.Enumerate(closeCachedConnections, nsnull);
-	return NS_OK;
+  m_incomingServers.Enumerate(closeCachedConnections, nsnull);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgAccountManager::CleanupOnExit()
 {
-	m_incomingServers.Enumerate(cleanupOnExit, nsnull);
-	return NS_OK;
+  m_incomingServers.Enumerate(cleanupOnExit, nsnull);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

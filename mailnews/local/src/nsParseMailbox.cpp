@@ -1440,7 +1440,6 @@ nsParseNewMailState::nsParseNewMailState()
     : m_tmpdbName(nsnull), m_usingTempDB(PR_FALSE), m_disableFilters(PR_FALSE)
 {
 	m_inboxFileStream = nsnull;
-	m_logFile = nsnull;
 	m_ibuffer = nsnull;
 	m_ibuffer_size = 0;
 	m_ibuffer_fp = 0;
@@ -1477,7 +1476,6 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, n
     rv = rootMsgFolder->GetServer(getter_AddRefs(server));
     if (NS_SUCCEEDED(rv))
       rv = server->GetFilterList(aMsgWindow, getter_AddRefs(m_filterList));
-    m_logFile = nsnull;
    
 	if (m_filterList)
       rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
@@ -1491,11 +1489,6 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, n
 
 nsParseNewMailState::~nsParseNewMailState()
 {
-	if (m_logFile != nsnull)
-	{
-		m_logFile->close();
-		delete m_logFile;
-	}
 	if (m_mailDB)
 		m_mailDB->Close(PR_TRUE);
 //	if (m_usingTempDB)
@@ -1577,29 +1570,6 @@ void	nsParseNewMailState::SetUsingTempDB(PRBool usingTempDB, char *tmpDBName)
 	m_usingTempDB = usingTempDB;
 	m_tmpdbName = tmpDBName;
 }
-
-
-nsOutputFileStream * nsParseNewMailState::GetLogFile ()
-{
-	// This log file is used by regular filters and JS filters
-	if (m_logFile == nsnull)
-	{
-    nsCOMPtr<nsIFile> logDir;
-    NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(logDir));
-
-    logDir->AppendNative(NS_LITERAL_CSTRING("filter.log"));
-
-    nsCAutoString pathBuf;
-    nsresult rv = logDir->GetNativePath(pathBuf);
-    if (NS_FAILED(rv)) return nsnull;
-
-		nsFileSpec logFile(pathBuf.get());
-
-		m_logFile = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE, 00600);
-	}
-	return m_logFile;
-}
-
 
 nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 {
@@ -1745,7 +1715,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         if (m_filterList)
 	  m_filterList->GetLoggingEnabled(&loggingEnabled);
 	if (loggingEnabled && !m_msgMovedByFilter && actionType != nsMsgFilterAction::MoveToFolder)
-		filter->LogRuleHit(GetLogFile(), msgHdr);
+		filter->LogRuleHit(msgHdr);
 	}
 	return rv;
 }
@@ -1958,7 +1928,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   if (m_filterList)
     m_filterList->GetLoggingEnabled(&loggingEnabled);
   if (loggingEnabled)
-    filter->LogRuleHit(GetLogFile(), mailHdr);
+    filter->LogRuleHit(mailHdr);
   
   // cleanup after mailHdr in source DB because we moved the message.
   m_mailDB->RemoveHeaderMdbRow(mailHdr);
@@ -2077,8 +2047,11 @@ nsresult ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 					idsToMoveFromInbox->Add(keyToFilter);
 
 					// this is our last best chance to log this
-					if (m_filterList->LoggingEnabled())
-						filter->LogRuleHit(GetLogFile(), mailHdr);
+                                        PRBool loggingEnabled = PR_FALSE;
+                                        if (m_filterList)
+                                          m_filterList->GetLoggingEnabled(&loggingEnabled);
+                                        if (loggingEnabled)
+                                          filter->LogRuleHit(mailHdr);
 
 					if (imapDeleteIsMoveToTrash)
 					{

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -52,6 +53,7 @@
 #include "nsIImportService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFilterService.h"
+#include "nsIFileStreams.h"
 #include "nsISupportsObsolete.h"
 
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
@@ -67,13 +69,13 @@ static const PRUnichar unicodeFormatter[] = {
 nsMsgFilterList::nsMsgFilterList() :
     m_fileVersion(0)
 {
-	// I don't know how we're going to report this error if we failed to create the isupports array...
-	nsresult rv;
-	rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
-	m_loggingEnabled = PR_FALSE;
-	m_curFilter = nsnull;
+  // I don't know how we're going to report this error if we failed to create the isupports array...
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
+  m_loggingEnabled = PR_FALSE;
+  m_curFilter = nsnull;
   m_arbitraryHeaders.SetLength(0);
-	NS_INIT_ISUPPORTS();
+
+  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ADDREF(nsMsgFilterList)
@@ -82,18 +84,17 @@ NS_IMPL_QUERY_INTERFACE1(nsMsgFilterList, nsIMsgFilterList)
 
 NS_IMETHODIMP nsMsgFilterList::CreateFilter(const PRUnichar *name,class nsIMsgFilter **aFilter)
 {
-	NS_ENSURE_ARG_POINTER(aFilter);
+  NS_ENSURE_ARG_POINTER(aFilter);
 
-	nsMsgFilter *filter = new nsMsgFilter;
-    NS_ENSURE_TRUE(filter, NS_ERROR_OUT_OF_MEMORY);
+  nsMsgFilter *filter = new nsMsgFilter;
+  NS_ENSURE_TRUE(filter, NS_ERROR_OUT_OF_MEMORY);
     
-	*aFilter = filter;
-    NS_ADDREF(*aFilter);
+  NS_ADDREF(*aFilter = filter);
     
-    filter->SetFilterName(name);
-    filter->SetFilterList(this);
+  filter->SetFilterName(name);
+  filter->SetFilterList(this);
     
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMPL_GETSET(nsMsgFilterList, LoggingEnabled, PRBool, m_loggingEnabled);
@@ -117,6 +118,90 @@ NS_IMETHODIMP nsMsgFilterList::SaveToFile(nsIOFileStream *stream)
 	if (!stream)
 		return NS_ERROR_NULL_POINTER;
 	return SaveTextFilters(stream);
+}
+
+nsresult 
+nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
+{
+  nsCOMPtr <nsIMsgFolder> folder;
+  nsresult rv = GetFolder(getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIMsgIncomingServer> server;
+  rv = folder->GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = server->GetLocalPath(aFileSpec);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = (*aFileSpec)->AppendRelativeUnixPath("filterlog.html");
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilterList::GetLogURL(char **aLogURL)
+{
+  nsCOMPtr <nsIFileSpec> file;
+  nsresult rv = GetLogFileSpec(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = file->GetURLString(aLogURL);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilterList::SetLogStream(nsIOutputStream *aLogStream)
+{
+  // if there is a log stream already, flush it to disk and close it
+  if (m_logStream) {
+    nsresult rv = m_logStream->Flush();
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = m_logStream->Close();
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  m_logStream = aLogStream;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilterList::GetLogStream(nsIOutputStream **aLogStream)
+{
+  NS_ENSURE_ARG_POINTER(aLogStream);
+
+  nsresult rv;
+
+  if (!m_logStream) {
+    nsCOMPtr <nsIFileSpec> file;
+    rv = GetLogFileSpec(getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsXPIDLCString nativePath;
+    rv = file->GetNativePath(getter_Copies(nativePath));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsILocalFile> logFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = logFile->InitWithNativePath(nsDependentCString(nativePath));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // append to the end of the log file
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(m_logStream),
+                                   logFile,
+                                   PR_CREATE_FILE | PR_WRONLY | PR_APPEND,
+                                   0600);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (!m_logStream)
+      return NS_ERROR_FAILURE;
+  }
+ 
+  NS_ADDREF(*aLogStream = m_logStream);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -171,13 +256,11 @@ NS_IMETHODIMP
 nsMsgFilterList::SetDefaultFile(nsIFileSpec *aFileSpec)
 {
     nsresult rv;
-    m_defaultFile = 
-        do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
+    m_defaultFile = do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = m_defaultFile->FromFileSpec(aFileSpec);
     NS_ENSURE_SUCCESS(rv, rv);
-
     return NS_OK;
 }
 
@@ -637,7 +720,6 @@ nsresult nsMsgFilterList::SaveTextFilters(nsIOFileStream *aStream)
 
 nsMsgFilterList::~nsMsgFilterList()
 {
-
 	// filters should be released for free, because only isupports array
 	// is holding onto them, right?
 //	PRUint32			filterCount;

@@ -268,7 +268,6 @@ protected:
 			void		LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
 	nsCOMPtr <nsIMsgFilterList> m_filterList;
 	nsCOMPtr <nsIFolder> m_rootFolder;
-	nsOutputFileStream	*m_logFile;
 	nsIOFileStream		*m_inboxFileStream;
 	nsFileSpec			m_inboxFileSpec;
 	PRBool				m_disableFilters;

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -2843,7 +2844,6 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
 #endif
   if (NS_SUCCEEDED(filter->GetAction(&actionType)))
   {
-
     if (actionType == nsMsgFilterAction::MoveToFolder)
     {
         filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
@@ -2964,9 +2964,19 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
       default:
         break;
       }
+   
+      // we log move hits in MoveIncorporatedMessage()
+      if (actionType != nsMsgFilterAction::MoveToFolder) {
+        PRBool loggingEnabled = PR_FALSE;
+        if (m_filterList)
+          (void)m_filterList->GetLoggingEnabled(&loggingEnabled);
+
+        if (loggingEnabled) 
+          (void)filter->LogRuleHit(msgHdr); 
+      }
     }
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::SetImapFlags(const char *uids, PRInt32 flags, nsIURI **url)
@@ -3342,10 +3352,12 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
         // keep track of nsIMsgFolder, nsMsgKeyArray pairs here in the imap code.
 //        nsMsgKeyArray *idsToMoveFromInbox = msgFolder->GetImapIdsToMoveFromInbox();
 //        idsToMoveFromInbox->Add(keyToFilter);
+        PRBool loggingEnabled = PR_FALSE;
+        if (m_filterList)
+          (void)m_filterList->GetLoggingEnabled(&loggingEnabled);
 
-        // this is our last best chance to log this
-//        if (m_filterList->LoggingEnabled())
-//          filter->LogRuleHit(GetLogFile(), mailHdr);
+        if (loggingEnabled) 
+          (void)filter->LogRuleHit(mailHdr); 
 
         if (imapDeleteIsMoveToTrash)
         {

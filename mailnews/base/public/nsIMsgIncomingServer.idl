@@ -198,6 +198,9 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* close any server connections */
   void CloseCachedConnections();
+ 
+  /* ... */
+  void shutdown();
 
   /* access to generic attributes */
   boolean getBoolValue(in string attr);

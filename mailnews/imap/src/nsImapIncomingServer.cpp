@@ -970,7 +970,6 @@ NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 NS_IMETHODIMP
 nsImapIncomingServer::CloseCachedConnections()
 {
-  
   nsCOMPtr<nsIImapProtocol> connection;
   PR_CEnterMonitor(this);
   
@@ -988,6 +987,7 @@ nsImapIncomingServer::CloseCachedConnections()
     if (connection)
       connection->TellThreadToDie(PR_TRUE);
   }
+
   PR_CExitMonitor(this);
   return rv;
 }
@@ -3652,23 +3652,27 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
 NS_IMETHODIMP 
 nsImapIncomingServer::GetShouldDownloadAllHeaders(PRBool *aResult)
 {
-  nsresult rv = NS_OK;      //for now checking for filters is enough
-  nsCOMPtr <nsIMsgFilterList> filterList;  //later on we might have to check for MDN                              ;
-  if (!mFilterList)       
-    GetFilterList(nsnull, getter_AddRefs(filterList));
-  if (mFilterList)
-    rv = mFilterList->GetShouldDownloadAllHeaders(aResult);
-  else
-    *aResult = PR_FALSE;
+  *aResult = PR_FALSE;
+
+  //for now checking for filters is enough
+  //later on we might have to check for MDN
+  nsCOMPtr <nsIMsgFilterList> filterList;  
+  nsresult rv = GetFilterList(nsnull, getter_AddRefs(filterList));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = filterList->GetShouldDownloadAllHeaders(aResult);
+  NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::GetArbitraryHeaders(char **aResult)
 {
-  nsresult rv =NS_OK;
-  if (mFilterList)
-   rv = mFilterList->GetArbitraryHeaders(aResult);
+  nsCOMPtr <nsIMsgFilterList> filterList;  
+  nsresult rv = GetFilterList(nsnull, getter_AddRefs(filterList));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = filterList->GetArbitraryHeaders(aResult);
   return rv;
 }
 

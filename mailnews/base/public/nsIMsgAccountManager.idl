@@ -162,12 +162,15 @@ interface nsIMsgAccountManager : nsISupports {
   void LoadAccounts();
 
   void SetSpecialFoldersForIdentities();
+
   /* unload accounts frees all the account manager data structures */
   void UnloadAccounts();
 
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
-  void CloseCachedConnections();
+  void closeCachedConnections();
+  void shutdownServers();
+
   void CleanupOnExit();
   void SetFolderDoingEmptyTrash(in nsIMsgFolder folder);
   boolean GetEmptyTrashInProgress();

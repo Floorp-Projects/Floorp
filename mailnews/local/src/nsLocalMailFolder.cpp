@@ -190,7 +190,9 @@ nsShouldIgnoreFile(nsString& name)
   if (firstChar == '.' || firstChar == '#' || name.CharAt(name.Length() - 1) == '~')
     return PR_TRUE;
 
-  if (name.EqualsIgnoreCase("rules.dat") || name.EqualsIgnoreCase("rulesbackup.dat"))
+  if (name.EqualsIgnoreCase("rules.dat") || 
+      name.EqualsIgnoreCase("filterlog.html") || 
+      name.EqualsIgnoreCase("rulesbackup.dat"))
     return PR_TRUE;
 
 

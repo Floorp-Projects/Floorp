@@ -217,10 +217,26 @@ NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderC
 }
 
 NS_IMETHODIMP
+nsMsgIncomingServer::Shutdown()
+{
+  nsresult rv = CloseCachedConnections();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIMsgFilterList> filterList;
+  rv = GetFilterList(nsnull, getter_AddRefs(filterList));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // close the filter log stream
+  rv = filterList->SetLogStream(nsnull);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMsgIncomingServer::CloseCachedConnections()
 {
-	// derived class should override if they cache connections.
-	return NS_OK;
+  // derived class should override if they cache connections.
+  return NS_OK;
 }
 
 NS_IMETHODIMP

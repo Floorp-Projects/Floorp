@@ -24,6 +24,9 @@ var editButton;
 var deleteButton;
 var reorderUpButton;
 var reorderDownButton;
+var runFiltersButton;
+var runFiltersFolderPickerLabel;
+var runFiltersFolderPicker;
 
 const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
@@ -51,10 +54,11 @@ function onLoad()
     deleteButton = document.getElementById("deleteButton");
     reorderUpButton = document.getElementById("reorderUpButton");
     reorderDownButton = document.getElementById("reorderDownButton");
+    runFiltersButton = document.getElementById("runFiltersButton");
+    runFiltersFolderPickerLabel = document.getElementById("onLabel");
+    runFiltersFolderPicker = document.getElementById("runFiltersFolder");
 
     updateButtons();
-
-    moveToAlertPosition();
 
     // get the selected server if it can have filters.
     var firstItem = getSelectedServerForFilters();
@@ -111,16 +115,14 @@ function onCancel()
 function onServerClick(event)
 {
     var item = event.target;
-
-    // don't check this in.
-    setTimeout("setServer(\"" + item.id + "\");", 0);
+    setServer(item.id, true);
 }
 
 // roots the tree at the specified server
-function setServer(uri)
+function setServer(uri, rebuild)
 {
    var resource = rdf.GetResource(uri);
-   var msgFolder =  resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+   var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
    //Calling getFilterList will detect any errors in rules.dat, backup the file, and alert the user
    //we need to do this because gFilterTree.setAttribute will cause rdf to call getFilterList and there is 
@@ -129,8 +131,32 @@ function setServer(uri)
    if (msgFolder)
      msgFolder.getFilterList(gFilterListMsgWindow);
 
-    gFilterTree.setAttribute("ref", uri);
-    updateButtons();
+   gFilterTree.setAttribute("ref", uri);
+
+   // root the folder picker to this server
+   runFiltersFolderPicker.setAttribute("ref", uri);
+   // select the first folder., for POP3 and IMAP, the INBOX
+   runFiltersFolderPicker.selectedIndex = 0;
+   SetFolderPicker(runFiltersFolderPicker.selectedItem.getAttribute("id"),"runFiltersFolder");
+
+   // rebuild tree, since we changed the uri, and clear selection
+   if (rebuild) {
+     gFilterTree.view.selection.clearSelection();
+     gFilterTree.builder.rebuild();
+   }
+
+   var logFilters = document.getElementById("logFilters");
+   var curFilterList = currentFilterList();
+   logFilters.checked = curFilterList.loggingEnabled;
+
+   updateButtons();
+}
+
+function toggleLogFilters()
+{
+   var logFilters = document.getElementById("logFilters");
+   var curFilterList = currentFilterList();
+   curFilterList.loggingEnabled = logFilters.checked;
 }
 
 function toggleFilter(aFilterURI)
@@ -149,19 +175,28 @@ function selectServer(uri)
     var serverMenu = document.getElementById("serverMenu");
     var menuitems = serverMenu.getElementsByAttribute("id", uri);
     serverMenu.selectedItem = menuitems[0];
-    setServer(uri);
+    setServer(uri, false);
+}
+
+function getFilter(index)
+{
+  var filter = gFilterTree.builderView.getResourceAtIndex(index);
+  filter = filter.GetDelegate("filter", Components.interfaces.nsIMsgFilter);
+  return filter;
 }
 
 function currentFilter()
 {
-    if (gFilterTree.currentIndex == -1)
-        return null;
+    var currentIndex = gFilterTree.currentIndex;
+    if (currentIndex == -1)
+      return null;
     
     var filter;
+
     try {
-        filter = gFilterTree.builderView.getResourceAtIndex(gFilterTree.currentIndex);
-        filter = filter.GetDelegate("filter", Components.interfaces.nsIMsgFilter);
+      filter = getFilter(currentIndex);
     } catch (ex) {
+      filter = null;
     }
     return filter;
 }
@@ -225,6 +260,30 @@ function onDown(event)
     moveCurrentFilter(nsMsgFilterMotion.down);
 }
 
+function viewLog()
+{
+  var uri = gFilterTree.getAttribute("ref");
+  var server = rdf.GetResource(uri).QueryInterface(Components.interfaces.nsIMsgFolder).server;
+
+  var filterList = currentFilterList();
+  openTopWin(filterList.logURL);
+}
+
+function runSelectedFilters()
+{
+  var folderURI = runFiltersFolderPicker.getAttribute("uri");
+
+  var sel = gFilterTree.view.selection;
+  for (var i = 0; i < sel.getRangeCount(); i++) {
+    var start = {}, end = {};
+    sel.getRangeAt(i, start, end);
+    for (var j = start.value; j <= end.value; j++) {
+      var filter = getFilter(j);
+      alert("run filter " + filter.filterName + " on " + folderURI);
+    }
+  }
+}
+
 function moveCurrentFilter(motion)
 {
     var filterList = currentFilterList();
@@ -244,7 +303,7 @@ function refreshFilterList()
     // store the selected resource before we rebuild the tree
     var selectedRes = gFilterTree.currentIndex >= 0 ? gFilterTree.builderView.getResourceAtIndex(gFilterTree.currentIndex) : null;
 
-    // rebuild the tree    
+    // rebuild the tree   
     gFilterTree.view.selection.clearSelection();
     gFilterTree.builder.rebuild();
 
@@ -261,11 +320,23 @@ function refreshFilterList()
 
 function updateButtons()
 {
-    var filterSelected = gFilterTree.view.selection.count > 0;
-    editButton.disabled = !filterSelected;
-    deleteButton.disabled = !filterSelected;
-    reorderUpButton.disabled = !(filterSelected && gFilterTree.currentIndex > 0);
-    reorderDownButton.disabled = !(filterSelected && gFilterTree.currentIndex < gFilterTree.view.rowCount-1);
+    var numFiltersSelected = gFilterTree.view.selection.count;
+    var oneFilterSelected = (numFiltersSelected == 1);
+
+    // "edit" and "delete" only enabled when one filter selected
+    editButton.disabled = !oneFilterSelected;
+    deleteButton.disabled = !oneFilterSelected;
+
+    // we can run multiple filters on a folder
+    // so only disable this UI if no filters are selected
+    runFiltersButton.disabled = !numFiltersSelected;
+    runFiltersFolderPickerLabel.disabled = !numFiltersSelected;
+    runFiltersFolderPicker.disabled = !numFiltersSelected;
+
+    // "up" enabled only if one filter selected, and it's not the first
+    reorderUpButton.disabled = !(oneFilterSelected && gFilterTree.currentIndex > 0);
+    // "down" enabled only if one filter selected, and it's not the last
+    reorderDownButton.disabled = !(oneFilterSelected && gFilterTree.currentIndex < gFilterTree.view.rowCount-1);
 }
 
 /**
