@@ -29,6 +29,8 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"
 
 #include "X11/Xlib.h"
 
@@ -43,7 +45,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
-                   nsIDeviceContext* aContext);
+                   nsIDeviceContext* aCX);
   NS_IMETHOD  Destroy();
 
   NS_IMETHOD  GetXHeight(nscoord& aResult);
