@@ -961,9 +961,10 @@ SameOrSubdomainOfTarget(nsIURI* aOriginURI, nsIURI* aTargetURI,
 // set).  This puts control of loading in the hands of the target,
 // which is more secure. (per Nav 4.x)
 //
-static PRBool
-ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
-               nsIDocShellTreeItem* aTargetTreeItem)
+/* static */
+PRBool
+nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
+                           nsIDocShellTreeItem* aTargetTreeItem)
 {
     nsCOMPtr<nsIScriptSecurityManager> securityManager =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
@@ -995,6 +996,19 @@ ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
     nsCOMPtr<nsIURI> originDocumentURI;
     rv = originWebNav->GetCurrentURI(getter_AddRefs(originDocumentURI));
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && originDocumentURI, PR_TRUE);
+
+    // This may be wyciwyg URI... if so, we need to extract the actual
+    // URI from it.
+    if (sURIFixup) {
+        PRBool isWyciwyg = PR_FALSE;
+        rv = originDocumentURI->SchemeIs("wyciwyg", &isWyciwyg);      
+        if (isWyciwyg && NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIURI> temp;
+            sURIFixup->CreateExposableURI(originDocumentURI,
+                                          getter_AddRefs(temp));
+            originDocumentURI = temp;
+        }
+    }
 
     // Get target principal uri (including document.domain)
     nsCOMPtr<nsIDOMDocument> targetDOMDocument =
@@ -1832,10 +1846,11 @@ nsDocShell::GetSameTypeRootTreeItem(nsIDocShellTreeItem ** aRootTreeItem)
     return NS_OK;
 }
 
-static PRBool
-CanAccessItem(nsIDocShellTreeItem* aTargetItem,
-              nsIDocShellTreeItem* aAccessingItem,
-              PRBool aConsiderOpener = PR_TRUE)
+/* static */
+PRBool
+nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
+                          nsIDocShellTreeItem* aAccessingItem,
+                          PRBool aConsiderOpener)
 {
     NS_PRECONDITION(aTargetItem, "Must have target item!");
 

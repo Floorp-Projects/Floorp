@@ -329,11 +329,9 @@ protected:
       return t_sec;
     }
 
-
-
-    virtual nsresult FindTarget(const PRUnichar *aTargetName,
-                                PRBool *aIsNewWindow,
-                                nsIDocShell **aResult);
+    nsresult FindTarget(const PRUnichar *aTargetName,
+                        PRBool *aIsNewWindow,
+                        nsIDocShell **aResult);
 
     PRBool IsFrame();
 
@@ -346,6 +344,14 @@ protected:
                                  nsresult aResult);
 
     nsresult CheckLoadingPermissions();
+
+    // Security checks to prevent frameset spoofing.  See comments at
+    // implementation sites.
+    static PRBool CanAccessItem(nsIDocShellTreeItem* aTargetItem,
+                                nsIDocShellTreeItem* aAccessingItem,
+                                PRBool aConsiderOpener = PR_TRUE);
+    static PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
+                                 nsIDocShellTreeItem* aTargetTreeItem);
 
     void SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest);
 
