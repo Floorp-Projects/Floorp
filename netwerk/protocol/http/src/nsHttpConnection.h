@@ -151,7 +151,6 @@ private:
     nsHttpConnectionInfo           *mConnInfo;    // hard ref
 
     PRLock                         *mLock;
-    PRInt32                         mSuspendCount;
 
     PRUint32                        mLastReadTime;
     PRUint16                        mMaxHangTime;    // max download time before dropping keep-alive status

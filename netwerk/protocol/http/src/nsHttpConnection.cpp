@@ -67,7 +67,6 @@ nsHttpConnection::nsHttpConnection()
     : mTransaction(nsnull)
     , mConnInfo(nsnull)
     , mLock(nsnull)
-    , mSuspendCount(0)
     , mLastReadTime(0)
     , mIdleTimeout(0)
     , mKeepAlive(PR_TRUE) // assume to keep-alive by default
