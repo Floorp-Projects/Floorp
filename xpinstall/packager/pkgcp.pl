@@ -218,7 +218,7 @@ sub do_delete
 		rmtree ($target, 0, 0) ||
 			die "Error: rmtree() failed: $!.  Exiting...\n";
 	} else {
-		die "Error: delete failed: $target is not a file or directory ($package, $component, $lineno).  Exiting...\n";
+		warn "Warning: delete failed: $target is not a file or directory ($package, $component, $lineno).\n";
 	}
 }
 
