@@ -675,9 +675,8 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 				rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
 
 			RequestOverrideInfo(aMsgWindow);
-		}
-    
-    canRunButBusy = PR_TRUE;
+      canRunButBusy = PR_TRUE;
+		}    
 	}
 	// if we got here and we have a connection, then we should return it!
 	if (canRunUrlImmediately && connection)
@@ -2016,6 +2015,7 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
       if (aMsgWindow)
         aMsgWindow->GetPromptDialog(getter_AddRefs(dialogPrompter));
   		rv = m_logonRedirector->Logon(userName, password, dialogPrompter, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
+      if (NS_FAILED(rv)) return OnLogonRedirectionError(nsnull, PR_TRUE);
 		}
 	}
 
