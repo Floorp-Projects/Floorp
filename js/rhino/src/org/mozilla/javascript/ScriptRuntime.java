@@ -2047,6 +2047,7 @@ public class ScriptRuntime {
     }
 
     public static final Object[] emptyArgs = new Object[0];
+    public static final String[] emptyStrings = new String[0];
 
 }
 
