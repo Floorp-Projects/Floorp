@@ -658,12 +658,12 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     // This is a pre-existing subframe. If the load was not originally initiated
                     // by session history, (if (!shEntry) condition succeeded) and mCurrentURI is not null,
                     // it is possible that a parent's onLoadHandler or even self's onLoadHandler is loading 
-                    // a new page in this child. Check parent's and self's onLoadHandler flag  and if it is set,
+                    // a new page in this child. Check parent's and self's busy flag  and if it is set,
                     // we don't want this onLoadHandler load to get in to session history.
-                    PRBool parentInOnLoadHandler=PR_FALSE, selfInOnLoadHandler = PR_FALSE;
-                    parentDS->GetIsExecutingOnLoadHandler(&parentInOnLoadHandler);                    
-                    GetIsExecutingOnLoadHandler(&selfInOnLoadHandler);
-                    if ((parentInOnLoadHandler || selfInOnLoadHandler) && shEntry) {
+                    PRUint32 parentBusy=BUSY_FLAGS_NONE, selfBusy = BUSY_FLAGS_NONE;
+                    parentDS->GetBusyFlags(&parentBusy);                    
+                    GetBusyFlags(&selfBusy);
+                    if (((parentBusy & BUSY_FLAGS_BUSY) || (selfBusy & BUSY_FLAGS_BUSY)) && shEntry) {
                         loadType = LOAD_NORMAL_REPLACE;
                         shEntry = nsnull; 
                     }
