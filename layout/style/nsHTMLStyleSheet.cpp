@@ -873,7 +873,6 @@ HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
 
   // Handle the content style rules.
   if (styledContent) {
-    nsChangeHint hint = NS_STYLE_HINT_NONE;
     if (styledContent->HasAttributeDependentStyle(aData->mAttribute)) {
       *aResult = PR_TRUE;
       return NS_OK;
