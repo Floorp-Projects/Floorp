@@ -54,14 +54,14 @@ leaky::leaky()
   sortByFrequency = FALSE;
   dumpAll = FALSE;
   dumpGraph = FALSE;
-  dumpXML = FALSE;
+  dumpHTML = FALSE;
   quiet = FALSE;
   showAll = FALSE;
   showAddress = FALSE;
   stackDepth = 100000;
 
-  fd = -1;
-  base = last = 0;
+  mappedLogFile = -1;
+  firstLogEntry = lastLogEntry = 0;
   buckets = DefaultBuckets;
   dict = 0;
 
@@ -148,7 +148,7 @@ void leaky::initialize(int argc, char** argv)
 	}
 	break;
       case 'x':
-	dumpXML = TRUE;
+	dumpHTML = TRUE;
 	break;
       case 'q':
 	quiet = TRUE;
@@ -216,14 +216,14 @@ void leaky::open()
   setupSymbols(progFile);
 
   // open up the log file
-  fd = ::open(logFile, O_RDONLY);
-  if (fd < 0) {
+  mappedLogFile = ::open(logFile, O_RDONLY);
+  if (mappedLogFile < 0) {
     perror("open");
     exit(-1);
   }
   off_t size;
-  base = (malloc_log_entry*) mapFile(fd, PROT_READ, &size);
-  last = (malloc_log_entry*)((char*)base + size);
+  firstLogEntry = (malloc_log_entry*) mapFile(mappedLogFile, PROT_READ, &size);
+  lastLogEntry = (malloc_log_entry*)((char*)firstLogEntry + size);
 
   analyze();
 
@@ -320,7 +320,7 @@ int leaky::excluded(malloc_log_entry* lep)
 
 //----------------------------------------------------------------------
 
-void leaky::displayStackTrace(malloc_log_entry* lep)
+void leaky::displayStackTrace(FILE* out, malloc_log_entry* lep)
 {
   char** pcp = &lep->pcs[0];
   u_int n = (lep->numpcs < stackDepth) ? lep->numpcs : stackDepth;
@@ -337,13 +337,13 @@ void leaky::displayStackTrace(malloc_log_entry* lep)
       symbolName = buf;
     }
     if (showAddress) {
-      printf("%s[%p] ", symbolName, *pcp);
+      fprintf(out, "%s[%p] ", symbolName, *pcp);
     }
     else {
-      printf("%s ", symbolName);
+      fprintf(out, "%s ", symbolName);
     }
   }
-  printf("\n");
+  fprintf(out, "\n");
 }
 
 char* typeFromLog[] = {
@@ -362,14 +362,14 @@ void leaky::dumpEntryToLog(malloc_log_entry* lep)
 	 typeFromLog[lep->type],
 	 lep->address, lep->size, lep->oldaddress,
 	 lep->numpcs);
-  displayStackTrace(lep);
+  displayStackTrace(stdout, lep);
 }
 
 void leaky::dumpLog()
 {
   if (showAll) {
-    malloc_log_entry* lep = base;
-    while (lep < last) {
+    malloc_log_entry* lep = firstLogEntry;
+    while (lep < lastLogEntry) {
       dumpEntryToLog(lep);
       lep = (malloc_log_entry*) &lep->pcs[lep->numpcs];
     }
@@ -393,7 +393,7 @@ void leaky::insertAddress(u_long address, malloc_log_entry* lep)
     assert(*lepp);
     if (!quiet) {
       printf("Address %lx allocated twice\n", address);
-      displayStackTrace(lep);
+      displayStackTrace(stdout, lep);
     }
     errors++;
   } else {
@@ -407,7 +407,7 @@ void leaky::removeAddress(u_long address, malloc_log_entry* lep)
   if (!lepp) {
     if (!quiet) {
       printf("Free of unallocated %lx\n", address);
-      displayStackTrace(lep);
+      displayStackTrace(stdout, lep);
     }
     errors++;
   } else {
@@ -417,8 +417,8 @@ void leaky::removeAddress(u_long address, malloc_log_entry* lep)
 
 void leaky::analyze()
 {
-  malloc_log_entry* lep = base;
-  while (lep < last) {
+  malloc_log_entry* lep = firstLogEntry;
+  while (lep < lastLogEntry) {
     switch (lep->type) {
       case malloc_log_malloc:
       case malloc_log_new:
@@ -473,28 +473,39 @@ void leaky::buildLeakGraph()
   malloc_log_entry* lep;
   dict->rewind();
   while (NULL != (lep = dict->next())) {
-    Symbol* prevSymbol = NULL;
+    char** basepcp = &lep->pcs[0];
+    char** pcp = &lep->pcs[lep->numpcs - 1];
 
-    // For each pc in the leak
-    char** pcp = &lep->pcs[0];
-    u_int n = (lep->numpcs < stackDepth) ? lep->numpcs : stackDepth;
-    for (u_int i = 0; i < n; i++, pcp++) {
-      Symbol* currentSymbol = findSymbol((u_long) *pcp);
-      if (currentSymbol) {
-	currentSymbol->leaker = true;
-	currentSymbol->calls++;
-	if (i == 0) {
-	  currentSymbol->bytesDirectlyLeaked += lep->size;
-	}
-	else {
-	  currentSymbol->childBytesLeaked += lep->size;
-	}
-	if (prevSymbol) {
-	  currentSymbol->AddChild(prevSymbol);
-	  prevSymbol->AddParent(currentSymbol);
-	}
+    // Find root for this allocation
+    Symbol* sym = findSymbol((u_long) *pcp);
+    TreeNode* node = sym->root;
+    if (!node) {
+      displayStackTrace(stderr, lep);
+      sym->root = node = new TreeNode(sym);
+    }
+    pcp--;
+
+    // Build tree underneath the root
+    for (; pcp >= basepcp; pcp--) {
+      // Share nodes in the tree until there is a divergence
+      sym = findSymbol((u_long) *pcp);
+      if (!sym) {
+	break;
       }
-      prevSymbol = currentSymbol;
+      TreeNode* nextNode = node->GetDirectDescendant(sym);
+      if (!nextNode) {
+	// Make a new node at the point of divergence
+	nextNode = node->AddDescendant(sym);
+      }
+
+      if (pcp == basepcp) {
+	nextNode->bytesLeaked += lep->size;
+      }
+      else {
+	node->descendantBytesLeaked += lep->size;
+      }
+
+      node = nextNode;
     }
   }
 }
@@ -502,7 +513,7 @@ void leaky::buildLeakGraph()
 Symbol* leaky::findLeakGraphRoot(Symbol* aStart, Symbol* aEnd)
 {
   while (aStart < aEnd) {
-    if (aStart->leaker && !aStart->parents) {
+    if (aStart->root) {
       return aStart;
     }
     aStart++;
@@ -512,183 +523,118 @@ Symbol* leaky::findLeakGraphRoot(Symbol* aStart, Symbol* aEnd)
 
 void leaky::dumpLeakGraph()
 { 
-  if (dumpXML) {
-#ifdef USE_XML
-    printf("<?xml version=\"1.0\"?>\n");
-    printf("<?xml-stylesheet href=\"http://klink/leaky/leaky.css\" type=\"text/css\"?>\n");
-    printf("<root xmlns:html=\"http://www.w3.org/TR/REC-html40\">\n");
-    printf("<html:script src=\"http://klink/leaky/leaky.js\"/>\n");
-    printf("<key>\n");
-    printf("Key:<html:br/>\n");
-    printf("<b>Bytes directly leaked</b><html:br/>\n");
-    printf("<k>Bytes leaked by descendants</k></key>\n");
-#else
+  if (dumpHTML) {
     printf("<html><head><title>Leaky Graph</title>\n");
-    printf("<style src=\"http://klink/leaky/leaky.css\"></style>\n");
-    printf("<script src=\"http://klink/leaky/leaky.js\"/></script>\n");
+    printf("<style src=\"resource:/res/leaky/leaky.css\"></style>\n");
+    printf("<script src=\"resource:/res/leaky/leaky.js\"/></script>\n");
     printf("</head><body><div class=\"key\">\n");
     printf("Key:<br>\n");
     printf("<span class=b>Bytes directly leaked</span><br>\n");
     printf("<span class=d>Bytes leaked by descendants</span></div>\n");
-#endif
   }
   Symbol* base = externalSymbols;
   Symbol* end = externalSymbols + usefulSymbols;
   while (base < end) {
-    Symbol* root = findLeakGraphRoot(base, end);
-    if (!root) break;
-    if (root->NotDumped()) {
-      root->SetDumped();
-      dumpLeakTree(root, 0, true);
-    }
-    base = root + 1;
+    Symbol* sym = findLeakGraphRoot(base, end);
+    if (!sym) break;
+    dumpLeakTree(sym->root, 0);
+    base = sym + 1;
   }
-  if (dumpXML) {
-#ifdef USE_XML
-    printf("</root>\n");
-#else
+  if (dumpHTML) {
     printf("</body></html>\n");
-#endif
   }
 }
 
-void leaky::dumpLeakTree(Symbol* aSymbol, int aIndent, bool aEven)
+void leaky::dumpLeakTree(TreeNode* aNode, int aIndent)
 {
-#if 0
-  float avgBytesLeaked =
-    (float) (aSymbol->bytesDirectlyLeaked + aSymbol->childBytesLeaked) /
-    (float) aSymbol->calls;
-#endif
-
-  bool haveVisibleDescendants = false;
-  SymbolNode* node = aSymbol->children;
-  while (node) {
-    Symbol* kid = node->symbol;
-    if (kid && kid->NotDumped()) {
-      haveVisibleDescendants = true;
-      break;
-    }
-    node = node->next;
-  }
-
-  if (dumpXML) {
-#ifdef USE_XML
-    printf("<n class=\"%s\">", aEven ? "e" : "o");
-    if (haveVisibleDescendants) {
-      printf("<html:img onmouseout=\"O(event);\" onmouseover=\"I(event);\" onclick=\"C(event);\" src=\"http://klink/leaky/%s.gif\"/>"
+  Symbol* sym = aNode->symbol;
+  if (dumpHTML) {
+    printf("<div class=\"n\">\n");
+    if (aNode->HasDescendants()) {
+      printf("<img onmouseout=\"O(event);\" onmouseover=\"I(event);\" ");
+      printf("onclick=\"C(event);\" src=\"resource:/res/leaky/%s.gif\">",
 	     aIndent > 1 ? "close" : "open");
     }
-    printf("<s>%s</s><b>%ld</b><k>%ld</k>\n",
-	   aSymbol->name,
-	   aSymbol->bytesDirectlyLeaked,
-	   aSymbol->childBytesLeaked);
-#else
-    printf("<div class=\"n %c\">\n", aEven ? 'e' : 'o');
-    if (haveVisibleDescendants) {
-      printf("<img onmouseout=\"O(event);\" onmouseover=\"I(event);\" onclick=\"C(event);\" src=\"http://klink/leaky/%s.gif\">",
-	     aIndent > 1 ? "close" : "open");
-    }
-    printf("<span class=s>%s</span><span class=b>%ld</span><span class=d>%ld</span>\n",
-	   aSymbol->name,
-	   aSymbol->bytesDirectlyLeaked,
-	   aSymbol->childBytesLeaked);
-#endif
+    printf("<span class=s>%s</span><span class=b>%ld</span>",
+	   sym->name,
+	   aNode->bytesLeaked);
+    printf("<span class=d>%ld</span>\n",
+	   aNode->descendantBytesLeaked);
   }
   else {
     indentBy(aIndent);
     printf("%s bytesLeaked=%ld (%ld from kids)\n", 
-	   aSymbol->name,
-	   aSymbol->bytesDirectlyLeaked,
-	   aSymbol->childBytesLeaked);
+	   sym->name,
+	   aNode->bytesLeaked,
+	   aNode->descendantBytesLeaked);
   }
 
-  node = aSymbol->children;
+  TreeNode* node = aNode->descendants;
   int kidNum = 0;
   while (node) {
-    Symbol* kid = node->symbol;
-    if (kid && kid->NotDumped()) {
-      kid->SetDumped();
-      dumpLeakTree(kid, aIndent + 1, 0 == (kidNum & 1));
-      kidNum++;
-    }
-    node = node->next;
+    sym = node->symbol;
+    dumpLeakTree(node, aIndent + 1);
+    kidNum++;
+    node = node->nextSibling;
   }
 
-  if (dumpXML) {
-#ifdef USE_XML
-    printf("</n>");
-#else
+  if (dumpHTML) {
     printf("</div>");
-#endif
   }
 }
 
 //----------------------------------------------------------------------
 
-SymbolNode* SymbolNode::freeList;
+TreeNode* TreeNode::freeList;
 
-void* SymbolNode::operator new(size_t size)
+void* TreeNode::operator new(size_t size)
 {
   if (!freeList) {
-    SymbolNode* newNodes = (SymbolNode*) new char[sizeof(SymbolNode) * 5000];
+    TreeNode* newNodes = (TreeNode*) new char[sizeof(TreeNode) * 5000];
     if (!newNodes) {
       return NULL;
     }
-    SymbolNode* n = newNodes;
-    SymbolNode* end = newNodes + 5000 - 1;
+    TreeNode* n = newNodes;
+    TreeNode* end = newNodes + 5000 - 1;
     while (n < end) {
-      n->next = n + 1;
+      n->nextSibling = n + 1;
       n++;
     }
-    n->next = NULL;
+    n->nextSibling = NULL;
     freeList = newNodes;
   }
 
-  SymbolNode* rv = freeList;
-  freeList = rv->next;
+  TreeNode* rv = freeList;
+  freeList = rv->nextSibling;
 
   return (void*) rv;
 }
 
-void SymbolNode::operator delete(void* ptr)
+void TreeNode::operator delete(void* ptr)
 {
-  SymbolNode* node = (SymbolNode*) ptr;
+  TreeNode* node = (TreeNode*) ptr;
   if (node) {
-    node->next = freeList;
+    node->nextSibling = freeList;
     freeList = node;
   }
 }
 
-//----------------------------------------------------------------------
-
-void Symbol::Init(const char* aName, u_long aAddress)
+TreeNode* TreeNode::GetDirectDescendant(Symbol* aSymbol)
 {
-  name = aName ? strdup(aName) : "";
-  address = aAddress;
-  dumped = false;
-  leaker = false;
-  calls = 0;
-  parents = NULL;
-  children = NULL;
-  bytesDirectlyLeaked = 0;
-  childBytesLeaked = 0;
-}
-
-void Symbol::AddParent(Symbol* aParent)
-{
-  SymbolNode* node = new SymbolNode(aParent);
-  if (node) {
-    node->next = parents;
-    parents = node;
+  TreeNode* node = descendants;
+  while (node) {
+    if (node->symbol == aSymbol) {
+      return node;
+    }
+    node = node->nextSibling;
   }
+  return NULL;
 }
 
-void Symbol::AddChild(Symbol* aChild)
+TreeNode* TreeNode::AddDescendant(Symbol* aSymbol)
 {
-  SymbolNode* node = new SymbolNode(aChild);
-  if (node) {
-    node->next = children;
-    children = node;
-  }
+  TreeNode* node = new TreeNode(aSymbol);
+  node->nextSibling = descendants;
+  descendants = node;
+  return node;
 }
-

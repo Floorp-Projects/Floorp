@@ -15,6 +15,7 @@
 
 #include "config.h"
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include "dict.h"
 #include "strset.h"
@@ -23,43 +24,44 @@ typedef unsigned int u_int;
 
 struct Symbol;
 
-struct SymbolNode {
-  SymbolNode(Symbol* aSymbol) {
+struct TreeNode {
+  TreeNode(Symbol* aSymbol) {
     symbol = aSymbol;
-    next = NULL;
+    nextSibling = NULL;
+    descendants = NULL;
   }
+
+  TreeNode* GetDirectDescendant(Symbol* aSymbol);
+
+  bool HasDescendants() const {
+    return NULL != descendants;
+  }
+
+  TreeNode* AddDescendant(Symbol* aSymbol);
+
+  TreeNode* descendants;
+  TreeNode* nextSibling;
+  Symbol* symbol;
+
+  u_long bytesLeaked;
+  u_long descendantBytesLeaked;
 
   void* operator new(size_t size);
   void operator delete(void* ptr);
 
-  Symbol* symbol;
-  SymbolNode* next;
-
-  static SymbolNode* freeList;
+  static TreeNode* freeList;
 };
 
 struct Symbol {
   char* name;
   u_long address;
-  bool dumped;
-  bool leaker;
-  u_long calls;
-  SymbolNode* parents;
-  SymbolNode* children;
-  u_long bytesDirectlyLeaked;
-  u_long childBytesLeaked;
+  TreeNode* root;
 
-  bool NotDumped() const {
-    return 0 == dumped;
+  void Init(const char* aName, u_long aAddress) {
+    name = aName ? strdup(aName) : "";
+    address = aAddress;
+    root = NULL;
   }
-
-  void SetDumped() {
-    dumped = 1;
-  }
-
-  void Init(const char* aName, u_long aAddress);
-  void AddParent(Symbol* aParent);
-  void AddChild(Symbol* aChild);
 };
 
 struct LoadMapEntry {
@@ -82,15 +84,15 @@ struct leaky {
   int   sortByFrequency;
   int   dumpAll;
   int   dumpGraph;
-  int   dumpXML;
+  int   dumpHTML;
   int   quiet;
   int   showAll;
   int   showAddress;
   u_int  stackDepth;
 
-  int   fd;
-  malloc_log_entry* base;
-  malloc_log_entry* last;
+  int   mappedLogFile;
+  malloc_log_entry* firstLogEntry;
+  malloc_log_entry* lastLogEntry;
   u_int  buckets;
   MallocDict*  dict;
 
@@ -128,7 +130,7 @@ struct leaky {
   void insertAddress(u_long address, malloc_log_entry* lep);
   void removeAddress(u_long address, malloc_log_entry* lep);
 
-  void displayStackTrace(malloc_log_entry* lep);
+  void displayStackTrace(FILE* out, malloc_log_entry* lep);
 
   void ReadSymbols(const char* fileName, u_long aBaseAddress);
   void ReadSharedLibrarySymbols();
@@ -139,7 +141,7 @@ struct leaky {
   void buildLeakGraph();
   Symbol* findLeakGraphRoot(Symbol* aStart, Symbol* aEnd);
   void dumpLeakGraph();
-  void dumpLeakTree(Symbol* aRoot, int aIndent, bool aEven);
+  void dumpLeakTree(TreeNode* aNode, int aIndent);
 
   static void indentBy(int aCount) {
     while (--aCount >= 0) fputs("  ", stdout);
