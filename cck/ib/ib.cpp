@@ -668,11 +668,6 @@ int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefV
 	}
 	else
 	{
-		CString dirPlainTextPrefs = PlainTextPrefsFile.Left(PlainTextPrefsFile.Find('/'));
-		if (GetFileAttributes(dirPlainTextPrefs) == -1)
-		// directory does not exist
-			_mkdir(dirPlainTextPrefs);
-
 		// Create a plain text prefs with only a comment.
 		CreateNewFile(PlainTextPrefsFile, "/* prefs configured in NCADM */\n");
 	}
