@@ -1386,11 +1386,17 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         JSBool ok;
 
         /*
-         * Save the rightContext from the current regexp, since it
-         * gets stuck at the end of the replacement string and may
-         * be clobbered by a RegExp usage in the lambda function.
+         * Save the regExpStatics from the current regexp, since they may be
+         * clobbered by a RegExp usage in the lambda function.  Note that all
+         * members of JSRegExpStatics are JSSubStrings, so not GC roots, save
+         * input, which is rooted otherwise via argv[-1] in str_replace.
+         *
+         * We need to clear moreParens in the top-of-stack cx->regExpStatics
+         * to it won't be possibly realloc'ed, leaving the bottom-of-stack
+         * moreParens pointing to freed memory.
          */
-        JSSubString saveRightContext = cx->regExpStatics.rightContext;
+        JSRegExpStatics save = cx->regExpStatics;
+        cx->regExpStatics.moreParens = NULL;
 
         /*
          * In the lambda case, not only do we find the replacement string's
@@ -1468,7 +1474,9 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
       lambda_out:
         js_FreeStack(cx, mark);
-        cx->regExpStatics.rightContext = saveRightContext;
+        if (cx->regExpStatics.moreParens)
+            JS_free(cx, cx->regExpStatics.moreParens);
+        cx->regExpStatics = save;
         return ok;
     }
 #endif /* JS_HAS_REPLACE_LAMBDA */
