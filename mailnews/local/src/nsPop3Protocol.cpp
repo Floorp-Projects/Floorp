@@ -1375,13 +1375,23 @@ PRInt32 nsPop3Protocol::AuthFallback()
             m_pop3ConData->next_state = POP3_SEND_PASSWORD;
     else
     {
-        // response code received,
-        // login failed not because of wrong credential
-        if(TestFlag(POP3_STOPLOGIN) ||
-           TestCapFlag(POP3_HAS_AUTH_RESP_CODE) && !TestFlag(POP3_AUTH_FAILURE))
+        // response code received shows that login failed not because of
+        // wrong credential -> stop login without retry or pw dialog, only alert
+        if (TestFlag(POP3_STOPLOGIN))
             return(Error((m_password_already_sent) 
                          ? POP3_PASSWORD_FAILURE : POP3_USERNAME_FAILURE));
 
+        // response code received shows that server is certain about the
+        // credential was wrong -> no fallback, show alert and pw dialog
+        if (TestFlag(POP3_AUTH_FAILURE))
+        {
+            Error((m_password_already_sent) 
+                         ? POP3_PASSWORD_FAILURE : POP3_USERNAME_FAILURE);
+            SetFlag(POP3_PASSWORD_FAILED);
+            return 0;
+        }
+
+        // we have no certain response code -> fallback and try again
         if (m_useSecAuth)
         {
             // If one authentication failed, we're going to
