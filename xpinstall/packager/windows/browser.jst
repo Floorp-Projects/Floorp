@@ -201,6 +201,7 @@ function createShortcuts()
                     fTemp = fileExe;
                     fileExe = getFolder("file:///", fTemp);
                     newKey = fileExe + ' -turbo';
+                    winreg.createKey(subkey,"");
                     winreg.setValueString(subkey, valname, newKey);
                 } 
                 else 
