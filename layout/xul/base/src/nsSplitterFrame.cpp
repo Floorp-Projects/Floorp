@@ -817,7 +817,6 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   nsIBox* childBox = nsnull;
   mParentBox->GetChildBox(&childBox); 
 
-  PRBool skip = PR_FALSE;
   while (nsnull != childBox) 
   { 
     nsIFrame* childFrame = nsnull;

@@ -645,7 +645,7 @@ nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
    nsIPresContext* presContext = aState.GetPresContext();
    nsReflowStatus status = NS_FRAME_COMPLETE;
    nsHTMLReflowMetrics desiredSize(nsnull);
-   nsresult rv;
+   nsresult rv = NS_OK;
  
    if (reflowState) {
 

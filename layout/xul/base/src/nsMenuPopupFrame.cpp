@@ -2140,7 +2140,7 @@ nsMenuPopupFrame::AttributeChanged(nsIPresContext* aPresContext,
   if (aAttribute == nsXULAtoms::left || aAttribute == nsXULAtoms::top)
     MoveToAttributePosition();
   
-  return NS_OK;
+  return rv;
 }
 
 void 

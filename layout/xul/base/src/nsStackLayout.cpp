@@ -264,8 +264,6 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   nsRect clientRect;
   aBox->GetClientRect(clientRect);
 
-  nsRect childRect;
-
   PRBool grow;
 
   do {

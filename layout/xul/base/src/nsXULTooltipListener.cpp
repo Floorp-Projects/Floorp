@@ -437,8 +437,6 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
 nsresult
 nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
 {
-  nsresult rv = NS_OK;
-  
   if (!mCurrentTooltip)
     return NS_OK;
 

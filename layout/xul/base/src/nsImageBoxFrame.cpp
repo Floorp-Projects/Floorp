@@ -282,8 +282,7 @@ nsImageBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
     Redraw(state);
   }
 
-
-  return NS_OK;
+  return rv;
 }
 
 nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell), mIntrinsicSize(0,0),
