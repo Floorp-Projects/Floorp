@@ -222,6 +222,7 @@ typedef enum JSExnType {
 	  JSEXN_TOPRIMITIVEERR,
 	  JSEXN_DEFAULTVALUEERR,
 	JSEXN_ARRAYERR,
+	JSEXN_RANGEERR,
 	JSEXN_LIMIT
 } JSExnType;
 
@@ -244,6 +245,7 @@ static struct JSExnSpec exceptions[] = {
     { JSEXN_CONVERSIONERR, "ToPrimitiveError"  },
     { JSEXN_CONVERSIONERR, "DefaultValueError" },
     { JSEXN_ERR,           "ArrayError"        },
+    { JSEXN_ERR,           "RangeError"        },
     {0}
 };
 

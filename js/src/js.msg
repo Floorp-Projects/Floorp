@@ -206,3 +206,4 @@ MSG_DEF(JSMSG_BAD_INDIRECT_CALL,      146, 1, JSEXN_CALLERR, "function {0} must 
 MSG_DEF(JSMSG_UNCAUGHT_EXCEPTION,     147, 1, JSEXN_NONE, "uncaught exception: {0}")
 MSG_DEF(JSMSG_INVALID_BACKREF,        148, 0, JSEXN_SYNTAXERR, "non-octal digit in an escape sequence that doesn't match a back-reference")
 MSG_DEF(JSMSG_BAD_BACKREF,            149, 0, JSEXN_SYNTAXERR, "back-reference exceeds number of capturing parentheses")
+MSG_DEF(JSMSG_PRECISION_RANGE,        150, 1, JSEXN_RANGEERR, "precision {0} out of range")
