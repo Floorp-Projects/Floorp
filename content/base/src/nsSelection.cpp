@@ -4246,7 +4246,8 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
                   nsCOMPtr<nsIContent> childAt;
                   if (NS_SUCCEEDED(content->ChildAt(startOffset, *getter_AddRefs(childAt))))
                   {
-                    if (NS_SUCCEEDED(childAt->GetTag(atom)) && atom == nsSelection::sTableAtom)
+                    if ( (childAt) &&  
+                        (NS_SUCCEEDED(childAt->GetTag(atom)) && atom == nsSelection::sTableAtom) )
                     {
                       mFrameSelection->mSelectingTableCellMode = TABLESELECTION_TABLE;
                     }
