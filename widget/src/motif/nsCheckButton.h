@@ -60,9 +60,9 @@ public:
                 nsIToolkit *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull);
 
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool OnPaint(nsPaintEvent &aEvent);
-  virtual PRBool OnResize(nsSizeEvent &aEvent);
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
+  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
+  virtual PRBool OnResize(nsSizeEvent & aEvent) { return PR_FALSE; }
 
   // These are needed to Override the auto check behavior
   void Armed();
