@@ -13,6 +13,10 @@
 	0	des3_ecb_-D	DES3_ECB_Decrypt
 	0	des3_cbc_-E	DES3_CBC_Encrypt
 	0	des3_cbc_-D	DES3_CBC_Decrypt
+	0	aes_ecb_-E	AES_ECB_Encrypt
+	0	aes_ecb_-D	AES_ECB_Decrypt
+	0	aes_cbc_-E	AES_CBC_Encrypt
+	0	aes_cbc_-D	AES_CBC_Decrypt
 	0	rc2_ecb_-E	RC2_ECB_Encrypt
 	0	rc2_ecb_-D	RC2_ECB_Decrypt
 	0	rc2_cbc_-E	RC2_CBC_Encrypt
