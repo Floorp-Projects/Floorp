@@ -833,7 +833,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
           //from the middle of the value. Try stripping the quote and continuing...
 
           if(kQuote==aChar){
-            result=aScanner.GetChar(aChar); //strip quote.
+            result=aScanner.SkipOver(aChar); //strip quote.
           }
         }
       }//if
