@@ -20,7 +20,7 @@ public:
 // Dialog Data
 	//{{AFX_DATA(CRegMozCtlDlg)
 	enum { IDD = IDD_REGMOZCTL_DIALOG };
-		// NOTE: the ClassWizard will add data members here
+	CString	m_szMozillaDir;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -40,6 +40,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnRegister();
 	afx_msg void OnUnregister();
+	afx_msg void OnPickDir();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
