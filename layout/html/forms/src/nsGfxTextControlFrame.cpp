@@ -2057,7 +2057,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 #ifdef DEBUG
   mDebugTotalReflows++;
   if (1==mDebugTotalReflows) {  // first reflow, better be initial reflow!
-    NS_ASSERTION((eReflowReason_Initial == aReflowState.reason), "Frame got first reflow, but reason is not "initial");
+    NS_ASSERTION((eReflowReason_Initial == aReflowState.reason), "Frame got first reflow, but reason is not 'initial'");
   }
   if (eReflowReason_Resize == aReflowState.reason) {
     mDebugResizeReflows++;
