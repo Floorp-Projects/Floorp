@@ -231,6 +231,10 @@ function InitMessageMenu()
   }
 
   // we only kill and watch threads for news
+  var threadMenuSeparator = document.getElementById("threadItemsSeparator");
+  if (threadMenuSeparator) {
+      threadMenuSeparator.setAttribute("hidden", isNews ? "" : "true");
+  }
   var killThreadMenuItem = document.getElementById("killThread");
   if (killThreadMenuItem) {
       killThreadMenuItem.setAttribute("hidden", isNews ? "" : "true");

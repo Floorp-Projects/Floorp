@@ -1236,6 +1236,7 @@ Rights Reserved.
         <menuitem type="checkbox" id="markFlaggedMenuItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
       </menupopup>
     </menu>
+    <menuseparator id="threadItemsSeparator"/>
     <menuitem label="&killThreadMenu.label;"
         accesskey="&killThreadMenu.accesskey;"
         key="key_killThread"
