@@ -202,15 +202,18 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aURL, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // SetQuery is safe to use here, as the msgURI that we used for SetSpec()
-  // does not already have a query.
-  if (! bAutoQuote) /* We don't need to quote the message body but we still need to extract the headers */
-    rv = mailNewsUrl->SetQuery("header=only");
-  else if (quoteHeaders)
-    rv = mailNewsUrl->SetQuery("header=quote");
-  else
-    rv = mailNewsUrl->SetQuery("header=quotebody");
+  nsXPIDLCString queryPart;
+  rv = mailNewsUrl->GetQuery(getter_Copies(queryPart));
+  if (!queryPart.IsEmpty())
+    queryPart.Append('&');
 
+  if (! bAutoQuote) /* We don't need to quote the message body but we still need to extract the headers */
+    queryPart.Append("header=only");
+  else if (quoteHeaders)
+    queryPart.Append("header=quote");
+  else
+    queryPart.Append("header=quotebody");
+  rv = mailNewsUrl->SetQuery(queryPart.get());
   NS_ENSURE_SUCCESS(rv,rv);
 
   // if we were given a non empty charset, then use it
