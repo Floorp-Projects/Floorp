@@ -247,7 +247,16 @@ static int
 MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   int status;
+
+  // Has this method already been called for this object?
+  // In that case return.
   if (obj->closed_p) return 0;
+
+  nsXPIDLCString citationColor;
+  MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
+  if (text && text->mCitationColor)
+    citationColor.Adopt(text->mCitationColor);
+
   PRBool quoting = ( obj->options
     && ( obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting ||
          obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
