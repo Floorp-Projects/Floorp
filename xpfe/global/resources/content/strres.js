@@ -100,6 +100,10 @@ function localeSwitching(winType, baseDirectory, providerName)
   // Get the new targets 
   // file:/u/tao/gila/mozilla-org/html/projects/intl/chrome/
   // da-DK
+  if (baseDirectory == "") {
+	baseDirectory =  "resource:/chrome/";
+  }
+
   var finalBase = baseDirectory;
   if (baseDirectory != "") {
 	finalBase += winType + "/locale/" + providerName + "/";
