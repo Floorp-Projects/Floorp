@@ -105,10 +105,17 @@ sub LoadConfig {
 
 sub SetupEnv {
     umask 0;
-    $ENV{LD_LIBRARY_PATH} = "$Settings::BaseDir/$Settings::DirName/mozilla/${Settings::ObjDir}dist/bin:/usr/lib/png:"
-      ."/usr/local/lib:$Settings::BaseDir/$Settings::DirName/mozilla/dist/bin";
+    my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
+    $ENV{LD_LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}dist/bin"
+                          . ":/usr/lib/png:/usr/local/lib";
+    $ENV{LD_LIBRARY_PATH} .= ":$topsrcdir/dist/bin"
+      if defined $Setting::Objdir and $Settings::Objdir ne '';
+    $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}dist/bin";
     $ENV{DISPLAY} = $Settings::DisplayServer;
-    $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName" if $Settings::MozConfigFileName ne '' and -e $Settings::MozConfigFileName;
+    $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName" 
+      if $Settings::MozConfigFileName ne '' and -e $Settings::MozConfigFileName;
+    $ENV{HOME} = "$Settings::BaseDir/$Settings::DirName"
+
 }
 
 sub SetupPath {

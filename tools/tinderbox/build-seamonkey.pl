@@ -10,8 +10,8 @@ use strict;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
-
-$::Version = '$Revision: 1.74 $ ';
+use Config; # for $Config{sig_name} and $Config{sig_num}
+$::Version = '$Revision: 1.75 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -172,7 +172,7 @@ sub BuildIt {
     # Bypass profile at startup.
     $ENV{MOZ_BYPASS_PROFILE_AT_STARTUP} = 1;
     
-    print_log "Starting dir is : $build_dir\n";
+    print "Starting dir is : $build_dir\n";
     
     while (not $exit_early) {
         # $BuildSleep is the minimum amount of time a build is allowed to take.
@@ -180,7 +180,7 @@ sub BuildIt {
         # something is broken.
         my $sleep_time = ($Settings::BuildSleep * 60) - (time - $start_time);
         if (not $Settings::TestOnly and $sleep_time > 0) {
-            print_log "\n\nSleeping $sleep_time seconds ...\n";
+            print "\n\nSleeping $sleep_time seconds ...\n";
             sleep $sleep_time;
         }
         $start_time = time();
@@ -321,47 +321,42 @@ sub run_tests {
 
     # Mozilla alive test
     print_log "Running AliveTest ...\n";
-    my $build_status = RunAliveTest($build_dir, $binary, 45);
-    return $build_status if $build_status ne 'success';
+    my $test_result = AliveTest($build_dir, $binary, 45);
 
     # Viewer alive test
-    if ($Settings::ViewerTest) {
+    if ($Settings::ViewerTest and $test_result eq 'success') {
         print_log "Running ViewerTest ...\n";
-        $build_status = RunAliveTest($build_dir, "$binary_dir/viewer", 45);
-        return $build_status if $build_status ne 'success';
+        $test_result = AliveTest($build_dir, "$binary_dir/viewer", 45);
     }
     
     # Bloat test
-    if ($Settings::BloatStats or $Settings::BloatTest) {
-        $build_status = RunBloatTest($binary, $build_dir);
-        return $build_status if $build_status ne 'success';
+    if ($Settings::BloatStats or $Settings::BloatTest
+        and $test_result eq 'success') {
+        print_log "Running BloatTest ...\n";
+        $test_result = BloatTest($binary, $build_dir);
     }
     
-    # MailNews test
-    # Needs the following security pref set:
+    # MailNews test needs this preference set:
     #   user_pref("signed.applets.codebase_principal_support",true);
-    # First time around, you get two dialogs, they set this pref:
+    # First run gives two dialogs; they set this preference:
     #   user_pref("security.principal.X0","[Codebase http://www.mozilla.org/quality/mailnews/APITest.html] UniversalBrowserRead=1 UniversalXPConnect=1");
-    if ($Settings::MailNewsTest) {
+    if ($Settings::MailNewsTest and $test_result eq 'success') {
         print_log "Running MailNewsTest ...\n";
-        # Hack: testing some partial success string for now.
-        $build_status = &RunFileBasedTest("MailNewsTest", $binary_dir,
-            "$binary_basename"
-               ." http://www.mozilla.org/quality/mailnews/APITest.html", 
-            90, "MAILNEWS TEST: Passed", 1);
-        return $build_status if $build_status ne 'success';
+        my $cmd = "$binary_basename "
+                  ."http://www.mozilla.org/quality/mailnews/APITest.html";
+        $test_result = FileBasedTest("MailNewsTest", $binary_dir, $cmd, 
+                                      90, "MAILNEWS TEST: Passed", 1);
     }
     
-    # Run Editor test.
-    if ($Settings::EditorTest or $Settings::DomToTextConversionTest) {
+    # Editor test
+    if (($Settings::EditorTest or $Settings::DomToTextConversionTest)
+       and $test_result eq 'success') {
         print_log "Running  DomToTextConversionTest ...\n";
-        $build_status = &RunFileBasedTest("DomToTextConversionTest",
-                                          $build_dir, $binary_dir,
-                                         "TestOutSinks", 15,
-                                         "FAILED", 0);
-        return $build_status if $build_status ne 'success';
+        $test_result =
+          FileBasedTest("DomToTextConversionTest", $build_dir, $binary_dir,
+                        "TestOutSinks", 15, "FAILED", 0);
     }
-    return $build_status;
+    return $test_result;
 }
 
 sub BinaryExists {
@@ -427,95 +422,151 @@ sub PrintEnv {
 
 # Parse a file for $token, given a file handle.
 sub file_has_token {
-    my ($filehandle, $token) = @_;
+    my ($filename, $token) = @_;
     local $_;
-    
-    while (<$filehandle>) {
+    my $has_token = 0;
+    open TESTLOG, "<$filename" or die "Cannot open file, $filename: $!";
+    while (<TESTLOG>) {
         if (/$token/) {
-            print "Found a '$token'!\n";
-            return 1;
+            $has_token = 1;
+            last;
         }
     }
-    return 0;
+    close TESTLOG;
+    return $has_token;
 }
 
-sub killer {
-    &killproc($::pid);
-}
-
-sub killproc {
-    my ($local_pid) = @_;
+sub kill_process {
+    my ($target_pid) = @_;
     my $status;
     
-    # try to kill 3 times, then try a kill -9
+    # Try to kill 3 times, then try a kill -9
     for (my $ii=0; $ii < 3; $ii++) {
-        kill('TERM',$local_pid);
-        # give it 3 seconds to actually die
-        sleep 3;
-        $status = waitpid($local_pid, WNOHANG());
-        last if $status != 0;
+        kill 'TERM' => $target_pid;
+        sleep 3;  # Give it 3 seconds to actually die
+        my $pid = waitpid($target_pid, WNOHANG());
+        return if ($pid == $target_pid and WIFEXITED($?)) or $pid == -1;
     }
-    return $status;
+    for (my $ii=0; $ii < 3; $ii++) {
+        kill 'KILL' => $target_pid;
+        sleep 2;  # Give it 2 second to actually die
+        my $pid = waitpid($target_pid, WNOHANG());
+        return if ($pid == $target_pid and WIFEXITED($?)) or $pid == -1;
+    }
+    die "Unable to kill process: $target_pid";
 }
 
-# Start up Mozilla, test passes if Mozilla is still alive
-# after $waittime (seconds).
-#
-sub RunAliveTest {
-    my ($build_dir, $binary, $testTimeoutSec) = @_;
-    my $status = 0;
-    my $binary_basename = basename($binary);
-    my $binary_dir = dirname($binary);
-    my $binary_log = "$build_dir/runlog";
+BEGIN {
+    my %sig_num = ();
+    my @sig_name = ();
 
-    die "Error: RunAliveTest: No binary given" unless defined $binary;
-    
-    $ENV{LD_LIBRARY_PATH} = $binary_dir;
-    $ENV{MOZILLA_FIVE_HOME} = $binary_dir;
+    sub sig_name {
+        # Find the name of a signal number
+        my ($number) = @_;
+        
+        unless (@sig_name) {
+            unless($Config{sig_name} && $Config{sig_num}) {
+                die "No sigs?";
+            } else {
+                my @names = split ' ', $Config{sig_name};
+                @sig_num{@names} = split ' ', $Config{sig_num};
+                foreach (@names) {
+                    $sig_name[$sig_num{$_}] ||= $_;
+                }
+            }
+        }
+        return $sig_name[$number];
+    }
+}
 
-    $::pid = fork; # Fork off a child process.
+sub fork_and_log {
+    # Fork a sub process and log the output.
+    my ($dir, $cmd, $logfile) = @_;
+
+    my $pid = fork; # Fork off a child process.
     
-    unless ($::pid) { # child
-        chdir $binary_dir;
-        $ENV{HOME} = $build_dir;
-        open STDOUT, ">$binary_log";
+    unless ($pid) { # child
+
+        chdir $dir;
+        open STDOUT, ">$logfile";
         open STDERR, ">&STDOUT";
         select STDOUT; $| = 1;  # make STDOUT unbuffered
         select STDERR; $| = 1;  # make STDERR unbuffered
-        exec $binary_basename
-          or die "Could not exec: $binary_basename from $binary_dir";
+        my $now = localtime();
+        print "$cmd started $now\n";
+        exec $cmd;
+        die "Could not exec()";
     }
-    
-    # Parent - Wait $testTimeoutSec seconds then check on child
-    sleep $testTimeoutSec;
-    $status = waitpid($::pid, WNOHANG());
-    
-    if ($status == 0) {
-        print_log "$binary_basename quit AliveTest with status $status\n";
-    } else {
-        print_log "Error: $binary_basename has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
-        print_log "----------- failure output from $binary_basename for alive test --------------- \n";
-        open READRUNLOG, "$binary_log";
-        while (my $line = <READRUNLOG>) {
-            print_log $line;
+    return $pid;
+}
+
+sub wait_for_pid {
+    # Wait for a process to exit or kill it if it takes too long.
+    my ($pid, $timeout_secs) = @_;
+    my ($exit_value, $signal_num, $dumped_core, $timed_out) = (0,0,0,0);
+
+    $SIG{ALRM} = sub { die "timeout" };
+    eval {
+        alarm $timeout_secs;
+        while (1) {
+            my $wait_pid = waitpid($pid, WNOHANG());
+            last if ($wait_pid == $pid and WIFEXITED($?)) or $wait_pid == -1;
+            sleep 1;
         }
-        close READRUNLOG;
-        print_log "--------------- End of AliveTest($binary_basename) Output -------------------- \n";
-        return 'testfailed';
+        $exit_value = $? >> 8;
+        $signal_num = $? >> 127;
+        $dumped_core = $? & 128;
+        alarm 0; # Clear the alarm
+    };
+    if ($@) {
+        if ($@ =~ /timeout/) {
+            kill_process($pid);
+            $timed_out = 1;
+        } else { # Died for some other reason.
+            alarm(0);
+            die; # Propagate the error up.
+        }
     }
-    
-    &killproc($::pid);
-    
-    print_log "----------- success output from $binary_basename for alive test --------------- \n";
+    unless ($timed_out) {
+        my $now = localtime();
+        print_log "Child exited $now\n";
+    }
+    return $timed_out, $exit_value, sig_name($signal_num), $dumped_core;
+}
+
+# Start up Mozilla, test passes if Mozilla is still alive
+# after $timeout_secs (seconds).
+#
+sub AliveTest {
+    my ($build_dir, $binary, $timeout_secs) = @_;
+    my $binary_basename = basename($binary);
+    my $binary_dir = dirname($binary);
+    my $binary_log = "$build_dir/runlog";
+    local $_;
+
+    my $pid = fork_and_log($binary_dir, $binary_basename, $binary_log);
+    my ($timed_out, $exit_value, $sig_name, $dumped_core)
+      = wait_for_pid($pid, $timeout_secs);
+    print_log "----------- Output from $binary_basename for alive test --------------- \n";
     open READRUNLOG, "$binary_log";
-    while (my $line = <READRUNLOG>) {
-        print_log $line;
-    }
+    print_log "  $_" while <READRUNLOG>;
     close READRUNLOG;
-    print_log "--------------- End of AliveTest ($binary_basename) Output -------------------- \n";
-    return 'success';
-    
-} # RunAliveTest
+    print_log "----------- End Output from $binary_basename for alive test ----------- \n";
+    if (not $timed_out) {
+        print_log "Error: alive test: $binary_basename received"
+                  ." SIG$sig_name\n" if $sig_name ne 'ZERO';
+        print_log "Error: alive test: $binary_basename had an exit status of"
+                  ." $exit_value\n";
+        if ($dumped_core) {
+            print_log "Error: alive test: $binary_basename dumped core.\n";
+        }
+        print_log "Turn the tree orange now.\n";
+        return 'testfailed';
+    } else {
+        print_log "$binary_basename still up after $timeout_secs seconds\n";
+        return 'success';
+    }
+}
 
 # Run a generic test that writes output to stdout, save that output to a
 # file, parse the file looking for failure token and report status based
@@ -530,185 +581,102 @@ sub RunAliveTest {
 #     failure string.  If this is set to 1, then invert logic to look for
 #     success string.
 #
-# Note: I tried to merge this function with RunAliveTest(),
+# Note: I tried to merge this function with AliveTest(),
 #       the process flow control got too confusing :(  -mcafee
 #
-sub RunFileBasedTest {
-    my ($test_name, $build_dir, $binary_dir, $testExecString, $testTimeoutSec, 
-        $statusToken, $statusTokenMeansPass) = @_;
+sub FileBasedTest {
+    my ($test_name, $build_dir, $binary_dir, $test_command, $timeout_secs, 
+        $status_token, $status_token_means_pass) = @_;
     local $_;
 
-    print_log "Running $testExecString\n";
-    
-    $ENV{LD_LIBRARY_PATH} = $binary_dir;
-    $ENV{MOZILLA_FIVE_HOME} = $binary_dir;
-    
     # Assume the app is the first argument in the execString.
-    my ($binary_basename) = (split /\s+/, $testExecString)[0];
+    my ($binary_basename) = (split /\s+/, $test_command)[0];
     my $binary = "$binary_dir/$binary_basename";
     my $binary_log = "$build_dir/$test_name.log";
 
-    print_log "Binary = $binary\n";
-    print_log "Binary Log = $binary_log\n";
-    
-    # Fork off a child process.
-    $::pid = fork;
-    
-    unless ($::pid) { # child
-        print_log "child\n";
-        print_log "2:Binary = $binary\n";
-        
-        # The following set of lines makes stdout/stderr show up
-        # in the tinderbox logs.
-        $ENV{HOME} = $build_dir;
-        open STDOUT, ">$binary_log";
-        open STDERR, ">&STDOUT";
-        select STDOUT; $| = 1;  # make STDOUT unbuffered
-        select STDERR; $| = 1;  # make STDERR unbuffered
-        
-        # Timestamp when we're running the test.
-        print_log `date`, "\n";
-        
-        if (-e $binary) {
-            my $cmd = "$testExecString";
-            print_log "$cmd\n";
-            chdir($binary_dir);
-            exec $cmd;
-        } else {
-            print_log "Error: cannot run $test_name\n";
-        }
-        die "Couldn't exec()";        
-    } else {
-        print "parent\n";
-        print_log "parent\n";
-    }
-    
-    # Set up a timer with a signal handler.
-    $SIG{ALRM} = \&killer;
-    
-    # Wait $testTimeoutSec seconds, then kill the process if it's still alive.
-    alarm $testTimeoutSec;
-    print "testTimeoutSec = $testTimeoutSec\n";
-    print_log "testTimeoutSec = $testTimeoutSec\n";
-    
-    my $status = waitpid($::pid, 0);
-    
-    # Back to parent.
-    
-    # Clear the alarm so we don't kill the next test!
-    alarm 0;
-    
-    # Determine proper status, look in log file for failure token.
-    # XXX: What if test is supposed to exit, but crashes?  -mcafee
-    
-    print_log "$test_name exited with status $status\n";
-    
-    if ($status < 0) {
-        print_log "$test_name timed out and needed to be killed.\n";
-    } else {
-        print_log "$test_name completed on its own, before the timeout.\n";
-    }
-    
-    open TESTLOG, "<$binary_log" or die "Can't open $!";
-    # Return 1 if we find statusToken in output.
-    $status = file_has_token(*TESTLOG, $statusToken);
-    
-    if($status) {
-        print_log "found statusToken $statusToken!\n";
-    } else {
-        print_log "statusToken $statusToken not found\n";
-    }
-    close TESTLOG;
-    
-    # If we're using success string, invert status logic.
-    if($statusTokenMeansPass == 1) {
-        # Invert $status.  This is probably sloppy perl, help me!
-        if($status == 0) {
-            $status = 1;
-        } else {
-            $status = 0;
-        }
-    }
-    
-    # Write test output to log.
-    if ($status == 0) {
-        print_log "----------- success output from $test_name test --------------- \n";
-    } else {
-        print_log "Error: $test_name has failed.  Turn the tree orange now.\n";
-        print_log "----------- failure output from $test_name test --------------- \n";
-    }
-    
-    # Parse the test log, dumping lines into tinderbox log.
+    my $pid = fork_and_log($binary_dir, $test_command, $binary_log);
+    my ($timed_out, $exit_value, $sig_name, $dumped_core)
+      = wait_for_pid($pid, $timeout_secs);
+
+    print_log "----------- Output from $test_name test --------------- \n";
     open READRUNLOG, "$binary_log";
     print_log $_ while <READRUNLOG>;
     close READRUNLOG;
-    print_log "--------------- End of $test_name Output -------------------- \n";
-    
-    if ($status == 0) {
-        return 'success';
+    print_log "----------- End of output from $test_name test -------- \n";
+
+    if ($timed_out) {
+        print_log "Error: $test_name timed out after $timeout_secs.\n";
+        return 'testfailed';
+    } elsif ($exit_value == 0) {
+        print_log "$test_name exited normally\n";
     } else {
+        print_log "Error: $test_name received SIG$sig_name\n"
+          if $sig_name ne 'ZERO';
+        print_log "Error: $test_name had an exit status of"
+          ." $exit_value\n";
+        if ($dumped_core) {
+            print_log "Error: $test_name dumped core.\n";
+        }
         return 'testfailed';
     }
-} # RunFileBasedTest
+    my $found_token = file_has_token($binary_log, $status_token);
+    if ($found_token) {
+        print_log "Found status token in log file: $status_token\n";
+    } else {
+        print_log "Status token, $status_token, not found\n";
+    }
+    
+    if (($status_token_means_pass and $found_token) or
+        (not $status_token_means_pass and not $found_token)) {
+        return 'success';
+    } else {
+        print_log "Error: $test_name has failed.  Turn the tree orange now.\n";
+        return 'testfailed';
+    }
+} # FileBasedTest
 
-
-sub RunBloatTest {
+sub BloatTest {
     my ($binary, $build_dir) = @_;
     my $binary_basename = basename($binary);
     my $binary_dir = dirname($binary);
     my $binary_log = "$build_dir/bloat-cur.log";
     my $old_binary_log = "$build_dir/bloat-prev.log";
-    my $status = 0;
+    my $timeout_secs = 120;
     local $_;
 
-    print_log "Running BloatTest ...\n";
-    
-    $ENV{LD_LIBRARY_PATH} = $binary_dir;
-    $ENV{MOZILLA_FIVE_HOME} = $binary_dir;
-    
     # Turn on ref counting to track leaks (bloaty tool).
     $ENV{XPCOM_MEM_BLOAT_LOG} = "1"; 
     
     rename($binary_log, $old_binary_log);
     
-    # Fork off a child process.
-    $::pid = fork;
-    
-    unless ($::pid) { # child
-        chdir $binary_dir;
-        
-        $ENV{HOME} = $build_dir;
-        open STDOUT, ">$binary_log";
-        open STDERR, ">&STDOUT";
-        select STDOUT; $| = 1;  # make STDOUT unbuffered
-        select STDERR; $| = 1;  # make STDERR unbuffered
-        
-        if (-e "bloaturls.txt") {
-            my $cmd = "$binary_basename -f bloaturls.txt";
-            print_log $cmd;
-            exec $cmd;
-        } else {
-            print_log "Error: bloaturls.txt does not exist.\n";
-        }
-        die "Could not exec()";
+    unless (-e "$binary_dir/bloaturls.txt") {
+        print_log "Error: bloaturls.txt does not exist.\n";
+        return 'testfailed';
     }
+
+    my $cmd = "$binary_basename -f bloaturls.txt";
+    my $pid = fork_and_log($binary_dir, $cmd, $binary_log);
+    my ($timed_out, $exit_value, $sig_name, $dumped_core)
+      = wait_for_pid($pid, $timeout_secs);
     
-    $SIG{ALRM} = \&killer; # Set up a timer with a signal handler.
+    print_log "----------- BloatTest Output --------------- \n";
+    open READRUNLOG, "$binary_log";
+    print_log "  $_" while <READRUNLOG>;
+    close READRUNLOG;
+    print_log "----------- End of BloatTest Output -------- \n";
     
-    alarm 120; # Wait 120 seconds, then kill the process if it's still alive.
-    $status = waitpid($::pid, 0);
-    alarm 0; # Clear the alarm to avoid killing next test.
-    
-    print_log "$binary_basename quit bloat test with status $status\n";
-    if ($status <= 0) {
-        print_log "Error: bloat test: $binary_basename has crashed or quit.\n";
-        print_log "Turn the tree orange now.\n";
-        print_log "----------- BloatTest Output --------------- \n";
-        open READRUNLOG, "$binary_log";
-        print_log $_ while <READRUNLOG>;
-        close READRUNLOG;
-        print_log "--------------- End of BloatTest Output ---------------- \n";
-        
+    if ($timed_out or $exit_value) {
+        if ($timed_out) {
+            print_log "Error: BloatTest timed out after $timeout_secs.\n";
+        } else {
+            print_log "Error: BloatTest received SIG$sig_name\n"
+              if $sig_name ne 'ZERO';
+            print_log "Error: BloatTest had an exit status of $exit_value\n";
+            if ($dumped_core) {
+                print_log "Error: BloatTest dumped core.\n";
+            }
+            print_log "Turn the tree orange now.\n";
+        }
         # HACK.  Clobber isn't reporting bloat status properly,
         # only turn tree orange for depend build.  This has
         # been filed as bug 22052.  -mcafee
@@ -718,19 +686,14 @@ sub RunBloatTest {
             return 'success';
         }
     }
+
     print_log "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
-    
     open DIFF, "$build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log|"
       or die "Unable to run bloatdiff.pl";
     print_log $_ while <DIFF>;
     close DIFF;
     print_log "######################## END BLOAT STATISTICS\n</a>\n";
     
-    print_log "----- success output from $binary_basename for BloatTest ----- \n";
-    open READRUNLOG, "$binary_log";
-    print_log $_ while <READRUNLOG>;
-    close READRUNLOG;
-    print_log "--------------- End of BloatTest Output -------------------- \n";
     return 'success';
 }
 
