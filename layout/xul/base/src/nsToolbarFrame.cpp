@@ -66,7 +66,9 @@ nsToolbarFrame :: nsToolbarFrame ( )
 //
 nsToolbarFrame :: ~nsToolbarFrame ( )
 {
+#ifdef NS_DEBUG
   printf("Deleting toolbar frame\n");
+#endif
 }
 
 
@@ -171,8 +173,6 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
 { 
   if ( !aEvent ) 
     return nsEventStatus_eIgnore; 
-
-  printf("nsToolbarFrame :: HandleEvent %d\n", aEvent->message); 
 
   switch (aEvent->message) { 
     case NS_DRAGDROP_ENTER: 
