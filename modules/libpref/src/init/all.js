@@ -230,6 +230,10 @@ pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
 
+// Default bookmark sorting
+pref("browser.bookmarks.sort.direction", "descending");
+pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
+
 //Internet Search
 pref("browser.search.defaultenginename", "chrome://communicator-region/locale/region.properties");
 
