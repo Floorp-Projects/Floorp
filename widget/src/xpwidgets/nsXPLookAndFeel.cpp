@@ -89,6 +89,16 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
   { "ui.dragFullWindow", eMetric_DragFullWindow, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.menusCanOverlapOSBar", eMetric_MenusCanOverlapOSBar,
     PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.treeOpenDelay",
+    eMetric_TreeOpenDelay, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.treeCloseDelay",
+    eMetric_TreeCloseDelay, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.treeLazyScrollDelay",
+    eMetric_TreeLazyScrollDelay, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.treeScrollDelay",
+    eMetric_TreeScrollDelay, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.treeScrollLinesMax",
+    eMetric_TreeScrollLinesMax, PR_FALSE, nsLookAndFeelTypeInt, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =

@@ -101,13 +101,6 @@
 
 #define ELLIPSIS "..."
 
-// Delay (ms) for opening spring-loaded folders.
-static const PRUint32 kOpenDelay = 1000;
-// Delay (ms) for triggering the tree scrolling.
-static const PRUint32 kLazyScrollDelay = 150;
-// Delay (ms) for scrolling the tree.
-static const PRUint32 kScrollDelay = 100;
-
 // The style context cache impl
 nsStyleContext*
 nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
@@ -331,7 +324,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
  mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
  mFocused(PR_FALSE), mColumnsDirty(PR_TRUE), mDropAllowed(PR_FALSE), mHasFixedRowCount(PR_FALSE),
  mVerticalOverflow(PR_FALSE), mImageGuard(PR_FALSE), mReflowCallbackPosted(PR_FALSE),
- mDropRow(-1), mDropOrient(-1), mScrollLines(0), mTimer(nsnull)
+ mDropRow(-1), mDropOrient(-1), mScrollLines(0), mTimer(nsnull), mValueArray(~PRInt32(0))
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -1643,6 +1636,39 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
     nsBoxLayoutState state(mPresContext);
     MarkDirty(state);
   }
+}
+
+nsresult
+nsTreeBodyFrame::CreateTimer(const nsILookAndFeel::nsMetricID aID,
+                             nsTimerCallbackFunc aFunc, PRInt32 aType,
+                             nsITimer** aTimer)
+{
+  // Get the delay from the look and feel service.
+  PRInt32 delay = 0;
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  mPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
+  if (lookAndFeel) {
+    lookAndFeel->GetMetric(aID, delay);
+  }
+
+  nsCOMPtr<nsITimer> timer;
+
+  // Create a new timer only if the delay is greater than zero.
+  // Zero value means that this feature is completely disabled.
+  if (delay > 0) {
+    timer = do_CreateInstance("@mozilla.org/timer;1");
+    if (timer) {
+      nsCOMPtr<nsITimerInternal> timerInternal = do_QueryInterface(timer);
+      if (timerInternal) {
+        timerInternal->SetIdle(PR_FALSE);
+      }
+      timer->InitWithFuncCallback(aFunc, this, delay, aType);
+    }
+  }
+
+  NS_IF_ADDREF(*aTimer = timer);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
@@ -3450,7 +3476,16 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
 NS_IMETHODIMP
 nsTreeBodyFrame::OnDragDrop (nsIDOMEvent* aEvent)
 {
-  mView->Drop (mDropRow, mDropOrient);
+  mView->Drop(mDropRow, mDropOrient);
+
+  // Remove the drop folder and all its parents from the array.
+  PRInt32 parentIndex;
+  mView->GetParentIndex(mDropRow, &parentIndex);
+  while (parentIndex >= 0) {
+    mValueArray.RemoveValue(parentIndex);
+    mView->GetParentIndex(parentIndex, &parentIndex);
+  }
+
   return NS_OK;
 } // OnDragDrop
 
@@ -3472,6 +3507,13 @@ nsTreeBodyFrame::OnDragExit(nsIDOMEvent* aEvent)
   if (mTimer) {
     mTimer->Cancel();
     mTimer = nsnull;
+  }
+
+  if (mValueArray.Count()) {
+    // Close all spring loaded folders except the drop folder.
+    CreateTimer(nsILookAndFeel::eMetric_TreeCloseDelay,
+                CloseCallback, nsITimer::TYPE_ONE_SHOT,
+                getter_AddRefs(mTimer));
   }
 
   return NS_OK;
@@ -3508,21 +3550,16 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
     }
 #if !defined(XP_MAC) && !defined(XP_MACOSX)
     if (!lastScrollLines) {
-      // Entering the scroll region.
-      // Set a timer to trigger the tree scrolling.
+      // Cancel any previosly initialized timer.
       if (mTimer) {
         mTimer->Cancel();
         mTimer = nsnull;
       }
 
-      mTimer = do_CreateInstance("@mozilla.org/timer;1");
-
-      nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mTimer);
-      ti->SetIdle(PR_FALSE);
-
-      mTimer->InitWithFuncCallback(ScrollCallback, this, kLazyScrollDelay, 
-                                   nsITimer::TYPE_REPEATING_SLACK);
-
+      // Set a timer to trigger the tree scrolling.
+      CreateTimer(nsILookAndFeel::eMetric_TreeLazyScrollDelay,
+                  LazyScrollCallback, nsITimer::TYPE_ONE_SHOT,
+                  getter_AddRefs(mTimer));
      }
 #else
     ScrollByLines(mScrollLines);
@@ -3557,11 +3594,9 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
           mView->IsContainerOpen(mDropRow, &isOpen);
           if (!isOpen) {
             // This node isn't expanded, set a timer to expand it.
-            mTimer = do_CreateInstance("@mozilla.org/timer;1");
-            nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mTimer);
-            ti->SetIdle(PR_FALSE);
-            mTimer->InitWithFuncCallback(OpenCallback, this, kOpenDelay, 
-                                         nsITimer::TYPE_ONE_SHOT);
+            CreateTimer(nsILookAndFeel::eMetric_TreeOpenDelay,
+                        OpenCallback, nsITimer::TYPE_ONE_SHOT,
+                        getter_AddRefs(mTimer));
           }
         }
       }
@@ -3665,16 +3700,28 @@ nsTreeBodyFrame::ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16
     }
 
     if (CanAutoScroll(*aRow)) {
+      // Get the max value from the look and feel service.
+      PRInt32 scrollLinesMax = 0;
+      nsCOMPtr<nsILookAndFeel> lookAndFeel;
+      mPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
+      if (lookAndFeel) {
+        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TreeScrollLinesMax,
+                               scrollLinesMax);
+        scrollLinesMax--;
+        if (scrollLinesMax < 0)
+          scrollLinesMax = 0;
+      }
+
       // Determine if we're w/in a margin of the top/bottom of the tree during a drag.
       // This will ultimately cause us to scroll, but that's done elsewhere.
-      PRInt32 height = (2 * mRowHeight) / 3;
+      nscoord height = (3 * mRowHeight) / 4;
       if (yTwips < height) {
         // scroll up
-        *aScrollLines = -1;
+        *aScrollLines = NSToIntRound(-scrollLinesMax * (1 - (float)yTwips / height) - 1);
       }
       else if (yTwips > mRect.height - height) {
         // scroll down
-        *aScrollLines = 1;
+        *aScrollLines = NSToIntRound(scrollLinesMax * (1 - (float)(mRect.height - yTwips) / height) + 1);
       }
     }
   }
@@ -3685,6 +3732,11 @@ nsTreeBodyFrame::ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16
 NS_IMETHODIMP
 nsTreeBodyFrame::OnDragEnter(nsIDOMEvent* aEvent)
 {
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+  }
+
   // cache the drag session
   nsresult rv;
   nsCOMPtr<nsIDragService> dragService = 
@@ -3704,8 +3756,44 @@ nsTreeBodyFrame::OpenCallback(nsITimer *aTimer, void *aClosure)
     aTimer->Cancel();
     self->mTimer = nsnull;
 
-    if (self->mDropRow >= 0)
+    if (self->mDropRow >= 0) {
+      self->mValueArray.AppendValue(self->mDropRow);
       self->mView->ToggleOpenState(self->mDropRow);
+    }
+  }
+}
+
+void
+nsTreeBodyFrame::CloseCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsTreeBodyFrame* self = NS_STATIC_CAST(nsTreeBodyFrame*, aClosure);
+  if (self) {
+    aTimer->Cancel();
+    self->mTimer = nsnull;
+
+    for (PRInt32 i = self->mValueArray.Count() - 1; i >= 0; i--) {
+      if (self->mView)
+        self->mView->ToggleOpenState(self->mValueArray[i]);
+      self->mValueArray.RemoveValueAt(i);
+    }
+  }
+}
+
+void
+nsTreeBodyFrame::LazyScrollCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsTreeBodyFrame* self = NS_STATIC_CAST(nsTreeBodyFrame*, aClosure);
+  if (self) {
+    aTimer->Cancel();
+    self->mTimer = nsnull;
+
+    if (self->mView) {
+      self->ScrollByLines(self->mScrollLines);
+      // Set a new timer to scroll the tree repeatedly.
+      self->CreateTimer(nsILookAndFeel::eMetric_TreeScrollDelay,
+                        ScrollCallback, nsITimer::TYPE_REPEATING_SLACK,
+                        getter_AddRefs(self->mTimer));
+    }
   }
 }
 
@@ -3717,10 +3805,6 @@ nsTreeBodyFrame::ScrollCallback(nsITimer *aTimer, void *aClosure)
     // Don't scroll if we are already at the top or bottom of the view.
     if (self->mView && self->CanAutoScroll(self->mDropRow)) {
       self->ScrollByLines(self->mScrollLines);
-      PRUint32 delay = 0;
-      aTimer->GetDelay(&delay);
-      if (delay != kScrollDelay)
-        aTimer->SetDelay(kScrollDelay);
     }
     else {
       aTimer->Cancel();

@@ -51,6 +51,7 @@
 #include "nsHashtable.h"
 #include "nsITimer.h"
 #include "nsIReflowCallback.h"
+#include "nsILookAndFeel.h"
 
 #include "imgIDecoderObserver.h"
 
@@ -445,7 +446,19 @@ protected:
   // Mark ourselves dirty if we're a select widget
   void MarkDirtyIfSelect();
 
+  // Create a new timer. This method is used to delay various actions like
+  // opening/closing folders or tree scrolling.
+  // aID is type of the action, aFunc is the function to be called when
+  // the timer fires and aType is type of timer - one shot or repeating.
+  nsresult CreateTimer(const nsILookAndFeel::nsMetricID aID,
+                       nsTimerCallbackFunc aFunc, PRInt32 aType,
+                       nsITimer** aTimer);
+
   static void OpenCallback(nsITimer *aTimer, void *aClosure);
+
+  static void CloseCallback(nsITimer *aTimer, void *aClosure);
+
+  static void LazyScrollCallback(nsITimer *aTimer, void *aClosure);
 
   static void ScrollCallback(nsITimer *aTimer, void *aClosure);
 
@@ -526,7 +539,10 @@ protected: // Data Members
 
   nsCOMPtr<nsIDragSession> mDragSession;
 
-  // Timer for opening spring-loaded folders or scrolling the tree.
+  // Timer for opening/closing spring loaded folders or scrolling the tree.
   nsCOMPtr<nsITimer> mTimer;
+
+  // A value array used to keep track of all spring loaded folders.
+  nsValueArray mValueArray;
 
 }; // class nsTreeBodyFrame
