@@ -172,14 +172,21 @@ static CWResult	Compile(CWPluginContext context)
 	// build an argument list and call the compiler.
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeHeader, false, false };
 	GetSettings(context, settings);
-	
+
+#if 0	
 	// if generating .xpt files, let the IDE tell us where to put the output file.
 	// otherwise, put them in the project's output directory.
 	if (settings.mode == kXPIDLModeTypelib)
 		err = CWGetSuggestedObjectFileSpec(context, fileNum, &gOutputFile);
 	else
 		err = CWGetOutputFileDirectory(gPluginContext, &gOutputFile);
-		
+#else
+	// always generate the output file into the project target's data directory.
+	err = CWGetSuggestedObjectFileSpec(context, fileNum, &gOutputFile);
+#endif
+	if (!CWSUCCESS(err))
+		return (err);
+	
 	int argc = 3;
 	char* modes[] = { "header", "stub", "typelib", "doc" };
 	char* argv[] = { "xpidl", "-m", modes[settings.mode - 1], NULL, NULL, NULL, NULL, };
