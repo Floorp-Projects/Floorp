@@ -1,0 +1,505 @@
+<?xml version="1.0"?>
+
+<bindings id="tabBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="tab-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/tabbox.css"/>
+    </resources>
+  </binding>
+
+  <binding id="tabbox"
+           extends="chrome://global/content/widgets/tabbox.xml#tab-base">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTabBoxAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
+      <property name="handleCtrlTab">
+        <setter>
+        <![CDATA[
+          this.setAttribute("handleCtrlTab", val);
+          return val;
+        ]]>
+        </setter>
+        <getter>
+        <![CDATA[
+          return (this.getAttribute("handleCtrlTab") != "false");
+        ]]>
+        </getter>
+      </property>
+      
+      <property name="handleCtrlPageUpDown">
+        <setter>
+        <![CDATA[
+          this.setAttribute("handleCtrlPageUpDown", val);
+          return val;
+        ]]>
+        </setter>
+        <getter>
+        <![CDATA[
+          return (this.getAttribute("handleCtrlPageUpDown") != "false");
+        ]]>
+        </getter>
+      </property>
+
+      <property name="_tabs">
+        <getter>
+        <![CDATA[
+          var tabs = this.getElementsByTagNameNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+              "tabs");
+          return tabs.length ? tabs[0] : null;
+        ]]>
+        </getter>
+      </property>
+
+      <property name="_tabpanels">
+        <getter>
+        <![CDATA[
+          var tabpanels = this.getElementsByTagNameNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+              "tabpanels");
+          return tabpanels.length ? tabpanels[0] : null;
+        ]]>
+        </getter>
+      </property>
+      
+      <property name="selectedIndex"
+                onget="return this._tabs ? this._tabs.selectedIndex : null;">
+        <setter>
+        <![CDATA[
+          if (this._tabs)
+            this._tabs.selectedIndex = val;
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="selectedTab"
+                onget="return this._tabs ? this._tabs.selectedItem : null;">
+        <setter>
+        <![CDATA[
+          if (!val)
+            throw Components.results.NS_ERROR_NULL_POINTER;
+          if (this._tabs)
+            this._tabs.selectedItem = val;
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="selectedPanel"
+                onget="return this._tabpanels ? this._tabpanels.selectedPanel : null;">
+        <setter>
+        <![CDATA[
+          if (!val)
+            throw Components.results.NS_ERROR_NULL_POINTER;
+          if (this._tabpanels)
+            this._tabpanels.selectedPanel = val;
+          return val;
+        ]]>
+        </setter>
+      </property>
+    </implementation>
+    
+    <handlers>
+      <handler event="keypress" keycode="vk_tab" modifiers="control">
+        <![CDATA[
+         if (this._tabs && this.handleCtrlTab) {
+           this._tabs.advanceSelectedTab(1);
+           event.preventDefault();
+         }
+         ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
+        <![CDATA[
+         if (this._tabs && this.handleCtrlTab) {
+           this._tabs.advanceSelectedTab(-1);
+           event.preventDefault();
+         }
+         ]]>
+      </handler>
+
+      <handler event="keypress" keycode="vk_page_up" modifiers="control">
+        <![CDATA[
+         if (this._tabs && this.handleCtrlPageUpDown) {
+           this._tabs.advanceSelectedTab(-1);
+         }
+         ]]>
+      </handler>
+
+      <handler event="keypress" keycode="vk_page_down" modifiers="control">
+        <![CDATA[
+         if (this._tabs && this.handleCtrlPageUpDown) {
+           this._tabs.advanceSelectedTab(1);
+         }
+         ]]>
+      </handler>
+
+    </handlers>
+  </binding>
+
+  <binding id="tabs" display="xul:box"
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
+    <content>
+      <xul:spacer class="tabs-left"/>
+      <children/>
+      <xul:spacer class="tabs-right" flex="1"/>
+    </content>
+    
+    <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+      <constructor>
+      <![CDATA[
+        // first and last tabs need to be able to have unique styles
+        // and also need to select first tab on startup.
+        var tabs = this.getElementsByTagNameNS(
+                      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                      "tab");
+        if (tabs.length) {
+          if (tabs.length > 1) {
+          tabs[0].setAttribute("first-tab", "true");
+          tabs[tabs.length - 1].setAttribute("last-tab", "true");
+          }
+          else if (tabs.length == 1)
+          tabs[0].setAttribute("first-tab", "true");
+        }
+        this.selectedItem = tabs[0];
+        var o = this.getAttribute("orient");
+        if (!o)
+          this.setAttribute("orient", "horizontal");
+      ]]>
+      </constructor>
+      
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTabsAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
+      <property name="selectedIndex">
+        <getter>
+        <![CDATA[
+          for (var i = 0; i < this.childNodes.length; i++) {
+            if (this.childNodes[i].selected)
+              return i;
+          }
+          // throw an exception when no tab is selected (we shouldn't get here)
+          throw Components.results.NS_ERROR_FAILURE;
+        ]]></getter>
+        
+        <setter>
+        <![CDATA[
+          var tabs = this.getElementsByTagNameNS(
+                         "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                         "tab");
+          var tab = tabs.length >= val ? null : tabs[val];
+          if (tab)
+            this.selectedItem = tab;
+          return tab;
+        ]]></setter>
+      </property>
+
+      <property name="selectedItem">
+        <getter>
+        <![CDATA[
+          for (var i = 0; i < this.childNodes.length; i++) {
+            if (this.childNodes[i].selected)
+              return this.childNodes[i];
+          }
+          // throw an exception when no tab is selected (we shouldn't get here)
+          throw Components.results.NS_ERROR_FAILURE;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          if (!val)
+            throw Components.results.NS_ERROR_NULL_POINTER;
+            
+          if (!val.selected)
+            val.selected = true;
+          var selectedIndex = 0;
+          for (var i = 0; i < this.childNodes.length; i++) {
+            if (this.childNodes[i].selected) {
+              if (this.childNodes[i] != val)
+                this.childNodes[i].selected = false;
+              else 
+                selectedIndex = i;
+            }
+          }
+          
+          // Fire an onselect event for the tabs element.
+          var event = document.createEvent('Events');
+          event.initEvent('select', false, true);
+          this.dispatchEvent(event);
+
+          var parent = this.parentNode;
+          while (parent && parent.localName != 'tabbox')
+            parent = parent.parentNode;
+
+          if (!parent)
+            return val;
+
+          var tabpanels = parent.getElementsByTagNameNS(
+                               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                               "tabpanels");
+          tabpanels = tabpanels.length ? tabpanels[0] : null;
+          // This will cause an onselect event to fire for the tabpanel element.
+          if (tabpanels)
+            tabpanels.selectedIndex = selectedIndex; 
+          return val;
+        ]]>
+        </setter>
+      </property>
+    
+      <method name="advanceSelectedTab">
+        <parameter name="aDir"/>
+        <body>
+        <![CDATA[
+          var startTab = this.selectedItem;
+          var next = startTab[aDir == -1 ? "previousSibling" : "nextSibling"];
+
+          while (next != startTab && (!next || next.getAttribute("hidden"))) {
+            if (next && next.getAttribute("hidden"))
+              next = next[aDir == -1 ? "previousSibling" : "nextSibling"];
+            if (!next)
+              next = aDir == 1 ? this.childNodes[0] : this.childNodes[this.childNodes.length - 1];
+          }
+
+          if (next && next != startTab) {
+            this.selectedItem = next;
+            next.focus();
+            document.commandDispatcher.advanceFocusIntoSubtree(next);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="label"/>
+        <parameter name="value"/>
+        <body>
+        <![CDATA[
+          var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var tab = document.createElementNS(XULNS, "tab");
+          tab.setAttribute("label", label);
+          tab.setAttribute("value", value);
+          this.appendChild(tab);
+          return tab;
+        ]]>
+        </body>
+      </method>
+      
+      <method name="insertItemAt">
+        <parameter name="index"/>
+        <parameter name="label"/>
+        <parameter name="value"/>
+        <body>
+        <![CDATA[
+          var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var tab = document.createElementNS(XULNS, "tab");
+          tab.setAttribute("label", label);
+          tab.setAttribute("value", value);
+          var before = this.childNodes[index];
+          if (before)
+            this.insertBefore(tab, before);
+          else
+            this.appendChild(tab);
+          return tab;
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeItemAt">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          var remove = this.childNodes[index];
+          if (remove)
+            this.removeChild(remove);
+          return remove;
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+  
+  <binding id="tabs-closebutton" 
+           extends="chrome://global/content/bindings/tabbox.xml#tabs">
+    <content>
+      <xul:hbox flex="1" style="min-width: 1px;">
+        <children/>
+        <xul:spacer class="tabs-right" flex="1"/>
+      </xul:hbox>
+      <xul:stack>
+        <xul:spacer class="tabs-right"/>
+        <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
+          <xul:toolbarbutton class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
+  </binding>
+  
+  <binding id="tabpanels"
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTabPanelsAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
+      <property name="selectedIndex">
+        <getter>
+        <![CDATA[
+          var indexStr = this.getAttribute("selectedIndex");
+          return indexStr ? parseInt(indexStr) : -1;
+        ]]>
+        </getter>
+                        
+        <setter>
+        <![CDATA[
+          if (this.selectedIndex == val)
+            return val;
+          this.setAttribute("selectedIndex", val);
+          var event = document.createEvent("Events");
+          event.initEvent("select", false, true);
+          this.dispatchEvent(event);
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+
+      <property name="selectedPanel">
+        <getter>
+          <![CDATA[
+            return this.childNodes[this.selectedIndex];
+          ]]>
+        </getter>
+
+        <setter>
+          <![CDATA[
+            var selectedIndex = -1;
+            for (var panel = val; panel != null; panel = panel.previousSibling)
+              ++selectedIndex;
+            this.selectedIndex = selectedIndex;
+            return val;
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="tab" display="xul:button"
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
+    <content>
+      <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
+      <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
+    </content>
+    
+    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTabAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
+      <property name="label">
+        <getter>
+          return this.getAttribute("label");
+        </getter>
+        <setter>  
+          this.setAttribute("label", val);
+          return val;
+        </setter>
+      </property>
+
+      <property name="tabs" 
+                onget="return this.getAttribute('tabs');"
+                onset="this.setAttribute('tabs', val); return val;"/>
+
+      <!-- XXX -->                
+      <property name="selected">
+        <getter>
+          return this.getAttribute("selected") == "true" ? true : false;
+        </getter>
+        <setter>
+          this.setAttribute("selected", val);
+          if (this.previousSibling) {
+            if (val)
+              this.previousSibling.setAttribute("beforeselected", val);
+            else
+              this.previousSibling.removeAttribute("beforeselected");
+          }
+          if (this.nextSibling) {
+            if (val)
+              this.nextSibling.setAttribute("afterselected", val);
+            else
+              this.nextSibling.removeAttribute("afterselected");
+          }
+          return val;
+        </setter>
+      </property>
+    </implementation>
+    
+    <handlers>
+      <handler event="click" button="0">
+      <![CDATA[
+        var tabs = this.parentNode;
+        do {
+          if (tabs.localName == "tabs")
+            break;
+          tabs = tabs.parentNode;
+        } while(tabs.localName != "tabbox");
+        tabs.selectedItem = this;
+        if (!this.selected) this.selected = true;
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_left">
+      <![CDATA[
+        this.parentNode.advanceSelectedTab(-1);
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_right">
+      <![CDATA[
+        this.parentNode.advanceSelectedTab(1);
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_up">
+      <![CDATA[
+        this.parentNode.advanceSelectedTab(-1);
+      ]]>
+      </handler>
+      
+      <handler event="keypress" keycode="vk_down">
+      <![CDATA[
+        this.parentNode.advanceSelectedTab(1);
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+</bindings>
+

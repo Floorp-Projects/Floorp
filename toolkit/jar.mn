@@ -8,6 +8,7 @@ toolkit.jar:
          content/global/charset.js                          (content/charset.js)
 +        content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
 +        content/global/widgets/tabbrowser.xml              (content/widgets/tabbrowser.xml)
++        content/global/widgets/tabbox.xml                  (content/widgets/tabbox.xml)
 
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)

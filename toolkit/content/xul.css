@@ -531,21 +531,21 @@ stack, bulletinboard {
 /********** tabbox *********/
 
 tabbox {
-  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabbox");
+  -moz-binding: url("chrome://global/content/widgets/tabbox.xml#tabbox");
   -moz-box-orient: vertical;
 }
 
 tabs {
-  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabs");
+  -moz-binding: url("chrome://global/content/widgets/tabbox.xml#tabs");
   -moz-box-orient: horizontal;
 }
 
 tabs[closebutton="true"] {
-  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabs-closebutton");
+  -moz-binding: url("chrome://global/content/widgets/tabbox.xml#tabs-closebutton");
 }
 
 tab {
-  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tab");
+  -moz-binding: url("chrome://global/content/widgets/tabbox.xml#tab");
   -moz-box-align: center;
   -moz-box-pack: center;
 }

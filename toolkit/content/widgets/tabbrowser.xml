@@ -79,7 +79,6 @@
           </xul:menupopup>
 
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
-                    tooltiptextnew="&newTabButton.tooltip;"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
                                 event.stopPropagation();"
