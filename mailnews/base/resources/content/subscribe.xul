@@ -94,6 +94,7 @@ Rights Reserved.
               flex="1"
               datasources="rdf:null"
               flags="dont-build-content"
+              statedatasource="rdf:null"
               disableKeyNavigation="true"
               onkeypress="onSubscribeTreeKeyPress(event);"
               onclick="SubscribeOnClick(event);"> 
