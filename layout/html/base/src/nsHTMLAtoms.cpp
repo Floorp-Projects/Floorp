@@ -83,6 +83,7 @@ nsIAtom* nsHTMLAtoms::embed;
 nsIAtom* nsHTMLAtoms::encoding;
 nsIAtom* nsHTMLAtoms::enctype;
 nsIAtom* nsHTMLAtoms::face;
+nsIAtom* nsHTMLAtoms::fieldset;
 nsIAtom* nsHTMLAtoms::font;
 nsIAtom* nsHTMLAtoms::fontWeight;
 nsIAtom* nsHTMLAtoms::_for;
@@ -121,6 +122,7 @@ nsIAtom* nsHTMLAtoms::link;
 nsIAtom* nsHTMLAtoms::left;
 nsIAtom* nsHTMLAtoms::leftpadding;
 nsIAtom* nsHTMLAtoms::length;
+nsIAtom* nsHTMLAtoms::legend;
 nsIAtom* nsHTMLAtoms::longdesc;
 nsIAtom* nsHTMLAtoms::lowsrc;
 nsIAtom* nsHTMLAtoms::marginheight;
@@ -294,6 +296,7 @@ void nsHTMLAtoms::AddrefAtoms()
     encoding = NS_NewAtom("ENCODING");
     enctype = NS_NewAtom("ENCTYPE");
     face = NS_NewAtom("FACE");
+    fieldset = NS_NewAtom("FIELDSET");
     font = NS_NewAtom("FONT");
     fontWeight = NS_NewAtom("FONT-WEIGHT");
     _for = NS_NewAtom("FOR");
@@ -331,6 +334,7 @@ void nsHTMLAtoms::AddrefAtoms()
     link = NS_NewAtom("LINK");
     left = NS_NewAtom("LEFT");
     leftpadding = NS_NewAtom("LEFTPADDING");
+    legend = NS_NewAtom("LEGEND");
     length = NS_NewAtom("LENGTH");
     lowsrc = NS_NewAtom("LOWSRC");
     marginheight = NS_NewAtom("MARGINHEIGHT");
@@ -501,6 +505,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(embed);
     NS_RELEASE(encoding);
     NS_RELEASE(face);
+    NS_RELEASE(fieldset);
     NS_RELEASE(font);
     NS_RELEASE(fontWeight);
     NS_RELEASE(_for);
@@ -535,6 +540,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(link);
     NS_RELEASE(left);
     NS_RELEASE(leftpadding);
+    NS_RELEASE(legend);
     NS_RELEASE(length);
     NS_RELEASE(lowsrc);
     NS_RELEASE(marginheight);

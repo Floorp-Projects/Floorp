@@ -74,6 +74,9 @@ extern nsresult
 NS_NewHTMLEmbedElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 
 extern nsresult
+NS_NewHTMLFieldSetElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+
+extern nsresult
 NS_NewHTMLFontElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 
 extern nsresult
@@ -314,8 +317,16 @@ NS_NewCheckboxControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                            nsIFrame*& aResult);
 
 extern nsresult
+NS_NewFieldSetFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                    nsIFrame*& aResult);
+
+extern nsresult
 NS_NewFileControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                        nsIFrame*& aResult);
+
+extern nsresult
+NS_NewLegendFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                  nsIFrame*& aResult);
 
 extern nsresult
 NS_NewTextControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,

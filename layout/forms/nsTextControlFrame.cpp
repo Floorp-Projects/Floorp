@@ -282,7 +282,7 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
   nsFont font(aPresContext->GetDefaultFixedFont()); 
   GetFont(aPresContext, font);
   mWidget->SetFont(font);
-  SetColors();
+  SetColors(*aPresContext);
 
   PRUint32 ignore;
   
@@ -301,7 +301,6 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
     NS_RELEASE(text);
   } else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&textArea)) {
     textArea->SetText(value, ignore);
-    mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
     NS_RELEASE(textArea);
   }
 }

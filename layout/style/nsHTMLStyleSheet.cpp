@@ -1208,6 +1208,14 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   else if (nsHTMLAtoms::embed == aTag) {
     rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
   }
+  else if (nsHTMLAtoms::fieldset == aTag) {
+    rv = NS_NewFieldSetFrame(aContent, aParentFrame, aNewFrame);
+    processChildren = PR_TRUE;
+  }
+  else if (nsHTMLAtoms::legend == aTag) {
+    rv = NS_NewLegendFrame(aContent, aParentFrame, aNewFrame);
+    processChildren = PR_TRUE;
+  }
   else if (nsHTMLAtoms::object == aTag) {
     rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
 //    processChildren = PR_TRUE;

@@ -291,11 +291,17 @@ NOBR {
   white-space: nowrap;
 }
 LEGEND {
-  display: none;
+  display: block;
+	padding-left: 2px;
+	padding-right: 2px;
+  border: 2px solid black;
 }
 FIELDSET {
-  display: inline;
-  border: inset 2px white;
+  display: block;
+  border: 2px solid black;
+	padding: 4px;
+	margin-left: 2px;
+	margin-right: 2px;
 }
 
 // Lists

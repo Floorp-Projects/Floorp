@@ -33,6 +33,8 @@ CPPSRCS =				\
 	nsRadioControlFrame.cpp		\
 	nsTextControlFrame.cpp  	\
 	nsSelectControlFrame.cpp        \
+	nsFieldSetFrame.cpp   \
+	nsLegendFrame.cpp   \
 	$(NULL)
 
 MODULE = raptor

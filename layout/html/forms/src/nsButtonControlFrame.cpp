@@ -359,7 +359,7 @@ nsButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
     nsFont font(aPresContext->GetDefaultFixedFont()); 
     GetFont(aPresContext, font);
     mWidget->SetFont(font);
-    SetColors();
+    SetColors(*aPresContext);
 
     nsString value;
     nsresult result = GetValue(&value);

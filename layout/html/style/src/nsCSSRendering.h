@@ -38,7 +38,8 @@ public:
                           const nsRect& aDirtyRect,
                           const nsRect& aBounds,
                           const nsStyleSpacing& aStyle,
-                          PRIntn aSkipSides);
+                          PRIntn aSkipSides,
+                          nsRect* aGap = 0);
 
   /**
    * Render the background for an element using css rendering rules
@@ -75,7 +76,8 @@ protected:
                        const nsRect& borderOutside,
                        const nsRect& borderInside,
                        PRBool printing,
-                       nscoord twipsPerPixel);
+                       nscoord twipsPerPixel,
+                       nsRect* aGap = 0);
 
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,
@@ -83,7 +85,17 @@ protected:
                               const nscolor borderColors[],
                               const nsRect& borderOutside,
                               const nsRect& borderInside,
-                              PRIntn aSkipSides);
+                              PRIntn aSkipSides,
+                              nsRect* aGap);
+
+  static void DrawLine (nsIRenderingContext& aContext, 
+                        nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2,
+                        nsRect* aGap);
+
+  static void FillPolygon (nsIRenderingContext& aContext, 
+                           const nsPoint aPoints[],
+                           PRInt32 aNumPoints,
+                           nsRect* aGap);
 };
 
 #endif /* nsCSSRendering_h___ */

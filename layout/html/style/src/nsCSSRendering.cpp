@@ -36,6 +36,88 @@
 #define DASH_LENGTH 3           //3 times longer than dot
 
 
+// Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
+// This services fieldset legends and only works for coords defining horizontal lines.
+void nsCSSRendering::DrawLine (nsIRenderingContext& aContext, 
+                               nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2,
+                               nsRect* aGap)
+{
+  if (nsnull == aGap) {
+    aContext.DrawLine(aX1, aY1, aX2, aY2);
+  } else {
+    nscoord x1 = (aX1 < aX2) ? aX1 : aX2;
+    nscoord x2 = (aX1 < aX2) ? aX2 : aX1;
+    nsPoint gapUpperRight(aGap->x + aGap->width, aGap->y);
+    nsPoint gapLowerRight(aGap->x + aGap->width, aGap->y + aGap->height);
+    if ((aGap->y <= aY1) && (gapLowerRight.y >= aY2)) {
+      if ((aGap->x > x1) && (aGap->x < x2)) {
+        aContext.DrawLine(x1, aY1, aGap->x, aY1);
+      } 
+      if ((gapLowerRight.x > x1) && (gapLowerRight.x < x2)) {
+        aContext.DrawLine(gapUpperRight.x, aY2, x2, aY2);
+      } 
+    } else {
+      aContext.DrawLine(aX1, aY1, aX2, aY2);
+    }
+  }
+}
+
+// Fill a polygon, skipping that portion which crosses aGap. aGap defines a rectangle gap
+// This services fieldset legends and only works for points defining a horizontal rectangle 
+void nsCSSRendering::FillPolygon (nsIRenderingContext& aContext, 
+                                  const nsPoint aPoints[],
+                                  PRInt32 aNumPoints,
+                                  nsRect* aGap)
+{
+  if (nsnull == aGap) {
+    aContext.FillPolygon(aPoints, aNumPoints);
+  } else if (4 == aNumPoints) {
+    nsPoint gapUpperRight(aGap->x + aGap->width, aGap->y);
+    nsPoint gapLowerRight(aGap->x + aGap->width, aGap->y + aGap->height);
+
+    // sort the 4 points by x
+    nsPoint points[4];
+    for (int i = 0; i < 4; i++) {
+      points[i] = aPoints[i];
+    }
+    for (i = 0; i < 3; i++) {
+      for (int j = i+1; j < 4; j++) { 
+        if (points[j].x < points[i].x) {
+          nsPoint swap = points[i];
+          points[i] = points[j];
+          points[j] = swap;
+        }
+      }
+    }
+
+    nsPoint upperLeft  = (points[0].y <= points[1].y) ? points[0] : points[1];
+    nsPoint lowerLeft  = (points[0].y <= points[1].y) ? points[1] : points[0];
+    nsPoint upperRight = (points[2].y <= points[3].y) ? points[2] : points[3];
+    nsPoint lowerRight = (points[2].y <= points[3].y) ? points[3] : points[2];
+
+
+    if ((aGap->y <= upperLeft.y) && (gapLowerRight.y >= lowerRight.y)) {
+      if ((aGap->x > upperLeft.x) && (aGap->x < upperRight.x)) {
+        nsPoint leftRect[4];
+        leftRect[0] = upperLeft;
+        leftRect[1] = nsPoint(aGap->x, upperLeft.y);
+        leftRect[2] = nsPoint(aGap->x, lowerLeft.y);
+        leftRect[3] = lowerLeft;
+        aContext.FillPolygon(leftRect, 4);
+      } 
+      if ((gapUpperRight.x > upperLeft.x) && (gapUpperRight.x < upperRight.x)) {
+        nsPoint rightRect[4];
+        rightRect[0] = nsPoint(gapUpperRight.x, upperRight.y);
+        rightRect[1] = upperRight;
+        rightRect[2] = lowerRight;
+        rightRect[3] = nsPoint(gapLowerRight.x, lowerRight.y);
+        aContext.FillPolygon(rightRect, 4);
+      } 
+    } else {
+      aContext.FillPolygon(aPoints, aNumPoints);
+    }      
+  }
+}
 
 /**
  * Make a bevel color
@@ -275,7 +357,8 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                               const nsRect& borderOutside,
                               const nsRect& borderInside,
                               PRBool printing,
-                              nscoord twipsPerPixel)
+                              nscoord twipsPerPixel,
+                              nsRect* aGap)
 {
   nsPoint theSide[MAX_POLY_POINTS];
   nscolor theColor = borderColors[whichSide];
@@ -296,9 +379,11 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                    BORDER_INSIDE, 0.5f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor, printing));
     if (2 == np) {
-      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
     } else {
-      aContext.FillPolygon (theSide, np);
+      //aContext.FillPolygon (theSide, np);
+      FillPolygon (aContext, theSide, np, aGap);
     }
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_OUTSIDE, 0.5f, twipsPerPixel);
@@ -307,9 +392,11 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
           ? NS_STYLE_BORDER_STYLE_GROOVE
           : NS_STYLE_BORDER_STYLE_RIDGE, theColor,printing));
     if (2 == np) {
-      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
     } else {
-      aContext.FillPolygon (theSide, np);
+      //aContext.FillPolygon (theSide, np);
+      FillPolygon (aContext, theSide, np, aGap);
     }
     break;
 
@@ -318,9 +405,11 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                    BORDER_FULL, 1.0f, twipsPerPixel);
     aContext.SetColor (borderColors[whichSide]);
     if (2 == np) {
-      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
     } else {
-      aContext.FillPolygon (theSide, np);
+      //aContext.FillPolygon (theSide, np);
+      FillPolygon (aContext, theSide, np, aGap);
     }
     break;
 
@@ -329,16 +418,20 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                    BORDER_INSIDE, 0.333333f, twipsPerPixel);
     aContext.SetColor (borderColors[whichSide]);
     if (2 == np) {
-      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
     } else {
-      aContext.FillPolygon (theSide, np);
-    }
+      //aContext.FillPolygon (theSide, np);
+      FillPolygon (aContext, theSide, np, aGap);
+   }
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_OUTSIDE, 0.333333f, twipsPerPixel);
     if (2 == np) {
-      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
     } else {
-      aContext.FillPolygon (theSide, np);
+      //aContext.FillPolygon (theSide, np);
+      FillPolygon (aContext, theSide, np, aGap);
     }
     break;
 
@@ -348,9 +441,11 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                    BORDER_FULL, 1.0f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor,printing));
     if (2 == np) {
-      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
     } else {
-      aContext.FillPolygon (theSide, np);
+      //aContext.FillPolygon (theSide, np);
+      FillPolygon (aContext, theSide, np, aGap);
     }
     break;
   }
@@ -366,7 +461,8 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      const nscolor borderColors[],
                                      const nsRect& borderOutside,
                                      const nsRect& borderInside,
-                                     PRIntn aSkipSides)
+                                     PRIntn aSkipSides,
+                                     nsRect* aGap)
 {
   PRIntn dashLength;
   nsRect dashRect, firstRect, currRect;
@@ -595,7 +691,8 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  const nsRect& aDirtyRect,
                                  const nsRect& aBounds,
                                  const nsStyleSpacing& aStyle,
-                                 PRIntn aSkipSides)
+                                 PRIntn aSkipSides,
+                                 nsRect* aGap)
 {
   PRIntn    cnt;
   nsMargin  border;
@@ -624,7 +721,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
     // Draw the dashed/dotted lines first
     DrawDashedSides(cnt, aRenderingContext, aStyle.mBorderStyle,
                     aStyle.mBorderColor, inside, outside,
-                    aSkipSides);
+                    aSkipSides, aGap);
   }
 
   // Draw all the other sides
@@ -632,19 +729,19 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
 
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
     DrawSide(aRenderingContext, NS_SIDE_TOP, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel);
+             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
     DrawSide(aRenderingContext, NS_SIDE_LEFT, aStyle.mBorderStyle, 
-             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel);
+             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
     DrawSide(aRenderingContext, NS_SIDE_BOTTOM, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel);
+             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
     DrawSide(aRenderingContext, NS_SIDE_RIGHT, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel);
+             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel, aGap);
   }
 }
 
