@@ -1950,7 +1950,8 @@ public class ScriptRuntime {
     public static NativeFunction defineFunction(Scriptable scope,
                                                 String className,
                                                 String fnName,
-                                                Object loadingObject)
+                                                Object loadingObject,
+                                                Context cx)
         throws ClassNotFoundException
     {
         NativeFunction fn;
@@ -1958,7 +1959,7 @@ public class ScriptRuntime {
             ClassLoader loader = loadingObject.getClass().getClassLoader();
             Class clazz = (loader == null) ? Class.forName(className)
                                            : loader.loadClass(className);
-            fn = createFunctionObject(scope, clazz);
+            fn = createFunctionObject(scope, clazz, cx);
         }
         catch (ClassNotFoundException e) {
             throw WrappedException.wrapException(e);
@@ -1969,13 +1970,14 @@ public class ScriptRuntime {
         return fn;
     }
 
-    public static NativeFunction createFunctionObject(Scriptable scope,
-                                                      Class functionClass)
+    public static NativeFunction createFunctionObject(Scriptable scope, 
+                                                      Class functionClass,
+                                                      Context cx)
     {
         Constructor[] ctors = functionClass.getConstructors();
 
         NativeFunction result = null;
-        Object[] initArgs = { scope };
+        Object[] initArgs = { scope, cx };
         try {
             result = (NativeFunction) ctors[0].newInstance(initArgs);
         }
