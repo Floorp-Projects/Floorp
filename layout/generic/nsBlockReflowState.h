@@ -1364,6 +1364,18 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
       }
     }
   }
+
+#if 0
+#ifdef NOISY_SPACEMANAGER
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    if (mSpaceManager) {
+      ListTag(stdout);
+      printf(": space-manager after reflow\n");
+      mSpaceManager->List(stdout);
+    }
+  }
+#endif
+#endif
   
   // If this is an incremental reflow and we changed size, then make sure our
   // border is repainted if necessary
@@ -5341,6 +5353,50 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
     PRBool clipState;
     aRenderingContext.PopState(clipState);
   }
+
+#if 0
+  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
+    // Render the bands in the spacemanager
+    nsISpaceManager* sm = mSpaceManager;
+
+    if (nsnull != sm) {
+      nsBlockBandData band;
+      band.Init(sm, nsSize(mRect.width, mRect.height));
+      nscoord y = 0;
+      while (y < mRect.height) {
+        nsRect availArea;
+        band.GetAvailableSpace(y, availArea);
+  
+        // Render a box and a diagonal line through the band
+        aRenderingContext.SetColor(NS_RGB(0,255,0));
+        aRenderingContext.DrawRect(0, availArea.y,
+                                   mRect.width, availArea.height);
+        aRenderingContext.DrawLine(0, availArea.y,
+                                   mRect.width, availArea.YMost());
+  
+        // Render boxes and opposite diagonal lines around the
+        // unavailable parts of the band.
+        PRInt32 i;
+        for (i = 0; i < band.GetTrapezoidCount(); i++) {
+          const nsBandTrapezoid* trapezoid = band.GetTrapezoid(i);
+          if (nsBandTrapezoid::Available != trapezoid->mState) {
+            nsRect r;
+            trapezoid->GetRect(r);
+            if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
+              aRenderingContext.SetColor(NS_RGB(0,255,128));
+            }
+            else {
+              aRenderingContext.SetColor(NS_RGB(128,255,0));
+            }
+            aRenderingContext.DrawRect(r);
+            aRenderingContext.DrawLine(r.x, r.YMost(), r.XMost(), r.y);
+          }
+        }
+        y = availArea.YMost();
+      }
+    }
+  }
+#endif
 
   return NS_OK;
 }
