@@ -14,11 +14,7 @@
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
-  <hbox align="center">
-    <label value="Active Panel:"/>
-    <menulist flex="1" label="(None)"/>
-  </hbox>
-  <browser id="browser" type="content" flex="1"
-           onclick="return contentAreaClick(event);"
+  <browser id="browser" type="content" flex="1" src="chrome://browser/content/web-panels.xml"
+           onclick="return window.parent.contentAreaClick(event);"
            ondragdrop="nsDragAndDrop.drop(event, panelAreaDNDObserver);"/>
 </page>
