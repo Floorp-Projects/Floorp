@@ -279,6 +279,8 @@
 <!ENTITY historyButton.label            "History">
 <!ENTITY historyButton.tooltip          "Display pages you've viewed recently">
 
+<!ENTITY mailMenu.label                   "Mail &amp; News">
+<!ENTITY mailMenu.accesskey               "M">
 <!ENTITY mailButton.label                 "Mail">
 <!ENTITY mailButton.tooltip               "Read and Send Mail">
 <!ENTITY mailButton.readMail.label        "Read Mail">
