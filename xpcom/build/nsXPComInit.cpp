@@ -48,6 +48,8 @@
 
 #include "nsFileSpecImpl.h"
 
+#include "nsThread.h"
+
 // base
 static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 // ds
@@ -88,6 +90,8 @@ static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 // threads
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
+static NS_DEFINE_CID(kThreadCID, NS_THREAD_CID);
+static NS_DEFINE_CID(kThreadPoolCID, NS_THREADPOOL_CID);
 // proxy
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
@@ -319,6 +323,18 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 NS_EVENTQUEUE_CLASSNAME,
                                 NS_EVENTQUEUE_PROGID,
                                 nsEventQueueImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kThreadCID,
+                                NS_THREAD_CLASSNAME,
+                                NS_THREAD_PROGID,
+                                nsThread::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kThreadPoolCID,
+                                NS_THREADPOOL_CLASSNAME,
+                                NS_THREADPOOL_PROGID,
+                                nsThreadPool::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, 

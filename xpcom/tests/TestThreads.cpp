@@ -58,7 +58,7 @@ TestThreads()
     nsresult rv;
 
     nsIThread* runner;
-    rv = NS_NewThread(&runner, new nsRunner(0));
+    rv = NS_NewThread(&runner, new nsRunner(0), 0, PR_JOINABLE_THREAD);
     if (NS_FAILED(rv)) {
         printf("failed to create thread\n");
         return rv;
@@ -97,8 +97,7 @@ TestThreads()
 
     ////////////////////////////////////////////////////////////////////////////
     // try an unjoinable thread 
-    rv = NS_NewThread(&runner, new nsRunner(1), 0, 
-                      PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD);
+    rv = NS_NewThread(&runner, new nsRunner(1));
     if (NS_FAILED(rv)) {
         printf("failed to create thread\n");
         return rv;
