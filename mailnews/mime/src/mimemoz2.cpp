@@ -120,7 +120,9 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   if (tmp->real_name)
   {
     char *fname = NULL;
-    fname = mime_decode_filename(tmp->real_name, charset);
+    fname = mime_decode_filename(tmp->real_name, charset,
+                                 obj->options->default_charset,
+                                 obj->options->override_charset);
     PR_FREEIF(charset);
     if (fname && fname != tmp->real_name)
     {
@@ -130,7 +132,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   }
   else
   {
-    tmp->real_name = MimeHeaders_get_name(child->headers);
+    tmp->real_name = MimeHeaders_get_name(child->headers, obj->options);
   }
 
   if ( (!tmp->real_name) && (tmp->real_type) && (nsCRT::strncasecmp(tmp->real_type, "text", 4)) )
@@ -360,7 +362,9 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
         // So we should parse both types.
 
         char *fname = NULL;
-        fname = mime_decode_filename(tmp->real_name, charset);
+        fname = mime_decode_filename(tmp->real_name, charset,
+                                     aChild->options->default_charset,
+                                     aChild->options->override_charset);
         PR_FREEIF(charset);
 
         if (fname && fname != tmp->real_name)
@@ -401,7 +405,9 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
           // So we should parse both types.
 
           char *fname = NULL;
-          fname = mime_decode_filename(tmp->real_name, charset);
+          fname = mime_decode_filename(tmp->real_name, charset,
+                                     aChild->options->default_charset,
+                                     aChild->options->override_charset);
           PR_FREEIF(charset);
 
           if (fname && fname != tmp->real_name)
@@ -1326,7 +1332,7 @@ MimeDisplayOptions::MimeDisplayOptions()
 
   whattodo = 0 ;
   default_charset = nsnull;
-  override_charset = nsnull;
+  override_charset = PR_FALSE;
   force_user_charset = PR_FALSE;
   stream_closure = nsnull;
 
@@ -1383,7 +1389,6 @@ MimeDisplayOptions::~MimeDisplayOptions()
 {
   PR_FREEIF(part_to_load);
   PR_FREEIF(default_charset);
-  PR_FREEIF(override_charset);
 }
 ////////////////////////////////////////////////////////////////
 // Bridge routines for new stream converter XP-COM interface 
@@ -1960,8 +1965,11 @@ ResetChannelCharset(MimeObject *obj)
                     (*cSet != CR) && (*cSet != LF) && (*cSet != '"') )
               ptr2++;
             
-            if (*cSet)
-              obj->options->override_charset = nsCRT::strdup(cSet);
+            if (*cSet) {
+              PR_FREEIF(obj->options->default_charset);
+              obj->options->default_charset = nsCRT::strdup(cSet);
+              obj->options->override_charset = PR_TRUE;
+            }
 
             PR_FREEIF(cSet);
           }

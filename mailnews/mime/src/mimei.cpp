@@ -534,7 +534,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
         )))
 #endif
 	{
-	  char *name = MimeHeaders_get_name(hdrs);
+	  char *name = MimeHeaders_get_name(hdrs, opts);
 	  if (name)
 		{
 		  override_content_type = opts->file_type_fn (name, opts->stream_closure);
@@ -970,7 +970,7 @@ mime_find_suggested_name_of_part(const char *part, MimeObject *obj)
   obj = mime_address_to_part(part, obj);
   if (!obj) return 0;
 
-  result = (obj->headers ? MimeHeaders_get_name(obj->headers) : 0);
+  result = (obj->headers ? MimeHeaders_get_name(obj->headers, obj->options) : 0);
 
   /* If this part doesn't have a name, but this part is one fork of an
 	 AppleDouble, and the AppleDouble itself has a name, then use that. */
@@ -979,7 +979,7 @@ mime_find_suggested_name_of_part(const char *part, MimeObject *obj)
 	  obj->parent->headers &&
 	  mime_typep(obj->parent,
 				 (MimeObjectClass *) &mimeMultipartAppleDoubleClass))
-	result = MimeHeaders_get_name(obj->parent->headers);
+	result = MimeHeaders_get_name(obj->parent->headers, obj->options);
 
   /* Else, if this part is itself an AppleDouble, and one of its children
 	 has a name, then use that (check data fork first, then resource.) */
@@ -990,13 +990,13 @@ mime_find_suggested_name_of_part(const char *part, MimeObject *obj)
 	  if (cont->nchildren > 1 &&
 		  cont->children[1] &&
 		  cont->children[1]->headers)
-		result = MimeHeaders_get_name(cont->children[1]->headers);
+		result = MimeHeaders_get_name(cont->children[1]->headers, obj->options);
 
 	  if (!result &&
 		  cont->nchildren > 0 &&
 		  cont->children[0] &&
 		  cont->children[0]->headers)
-		result = MimeHeaders_get_name(cont->children[0]->headers);
+		result = MimeHeaders_get_name(cont->children[0]->headers, obj->options);
 	}
 
   /* Ok, now we have the suggested name, if any.
@@ -1302,7 +1302,7 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
 	  if (obj->headers)
 		{
 		  char *ct;
-		  name = MimeHeaders_get_name(obj->headers);
+		  name = MimeHeaders_get_name(obj->headers, obj->options);
 
 		  ct = MimeHeaders_get(obj->headers, HEADER_CONTENT_TYPE,
 							   PR_FALSE, PR_FALSE);

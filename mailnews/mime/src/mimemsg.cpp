@@ -437,8 +437,8 @@ HG09091
     const char      *input_charset = NULL;
     MimeInlineText  *text = (MimeInlineText *) body;
 
-    if (obj->options->override_charset && (*obj->options->override_charset))
-      input_charset = obj->options->override_charset;
+    if (obj->options->override_charset && (*obj->options->default_charset))
+      input_charset = obj->options->default_charset;
     else if ( (text) && (text->charset) && (*(text->charset)) )
       input_charset = text->charset;
     else 

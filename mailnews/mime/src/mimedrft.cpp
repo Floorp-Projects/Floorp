@@ -1574,7 +1574,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     // if we've been told to use an override charset then do so....otherwise use the charset
     // inside the message header...
     if (mdd->options && mdd->options->override_charset)
-        mdd->mailcharset = nsCRT::strdup(mdd->options->override_charset);
+        mdd->mailcharset = nsCRT::strdup(mdd->options->default_charset);
     else
     {
       char *contentType = NULL;
@@ -1627,7 +1627,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   char *workURLSpec = nsnull;
   char *contLoc = nsnull;
 
-  newAttachment->real_name = MimeHeaders_get_name ( headers );
+  newAttachment->real_name = MimeHeaders_get_name ( headers, mdd->options );
   contLoc = MimeHeaders_get( headers, HEADER_CONTENT_LOCATION, PR_FALSE, PR_FALSE );
   if (!contLoc)
       contLoc = MimeHeaders_get( headers, HEADER_CONTENT_BASE, PR_FALSE, PR_FALSE );

@@ -118,7 +118,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
   {
     if (session->data_object)
     {
-      char    **override_charset = nsnull;
+      PRBool   *override_charset = nsnull;
       char    **default_charset = nsnull;
       char    **url_name = nsnull;
 
@@ -155,16 +155,22 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
         if (i18nUrl)
         {
           nsXPIDLString uniCharset;
-          i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
-          nsAutoString charset(uniCharset);
-          if (!charset.IsEmpty())
-            *default_charset = charset.ToNewCString();
+          nsAutoString charset;
 
           // check to see if we have a charset override...and if we do, set that field appropriately too...
           nsresult rv = i18nUrl->GetCharsetOverRide(getter_Copies(uniCharset));
           charset = uniCharset;
-          if (NS_SUCCEEDED(rv) && !charset.IsEmpty() ) 
-            *override_charset = charset.ToNewCString();
+          if (NS_SUCCEEDED(rv) && !charset.IsEmpty() ) {
+            *override_charset = PR_TRUE;
+            *default_charset = charset.ToNewCString();
+          }
+          else
+          {
+            i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
+            charset = uniCharset;
+            if (!charset.IsEmpty())
+              *default_charset = charset.ToNewCString();
+          }
 
           // if there is no manual override and a folder charset exists
           // then check if we have a folder level override
@@ -173,7 +179,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
             PRBool folderCharsetOverride;
             rv = i18nUrl->GetFolderCharsetOverride(&folderCharsetOverride);
             if (NS_SUCCEEDED(rv) && folderCharsetOverride)
-              *override_charset = nsCRT::strdup(*default_charset);
+              *override_charset = PR_TRUE;
 
             // notify the default to msgWindow (for the menu check mark)
             nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aURI));
@@ -184,22 +190,18 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
               if (msgWindow)
                 msgWindow->SetMailCharacterSet(NS_ConvertASCIItoUCS2(*default_charset));
             }
-          }
 
-          // if the pref says always override and no manual override then set the folder charset to override
-          // in future, the override flag to be per folder instead of a global pref
-          if (charset.IsEmpty()) {
-            nsCOMPtr <nsIPref> prefs = do_GetService(kPrefCID, &rv);
-            if (NS_SUCCEEDED(rv) && prefs) 
-            {
-              PRBool  force_override;
-              rv = prefs->GetBoolPref("mailnews.force_charset_override", &force_override);
-              if (NS_SUCCEEDED(rv) && force_override) 
+            // if the pref says always override and no manual override then set the folder charset to override
+            if (!*override_charset) {
+              nsCOMPtr <nsIPref> prefs = do_GetService(kPrefCID, &rv);
+              if (NS_SUCCEEDED(rv) && prefs) 
               {
-                i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
-                charset.Assign(uniCharset);
-                if (!charset.IsEmpty())
-                  *override_charset = charset.ToNewCString();
+                PRBool  force_override;
+                rv = prefs->GetBoolPref("mailnews.force_charset_override", &force_override);
+                if (NS_SUCCEEDED(rv) && force_override) 
+                {
+                  *override_charset = PR_TRUE;
+                }
               }
             }
           }

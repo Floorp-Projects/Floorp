@@ -202,13 +202,12 @@ public:
 							   assume when no other one is specified via a
 							   `charset' parameter.
 							 */
-  char *override_charset;	/* If this is non-NULL, then we will assume that
-							   all data is in this charset, regardless of what
-							   the `charset' parameter of that part says.
-							   This overrides `default_charset' as well.
-							   (This is to cope with the fact that, in the
-							   real world, many messages are mislabelled with
-							   the wrong charset.)
+  PRBool override_charset;	/* If this is PR_TRUE, then we will assume that
+							   all data is in the default_charset, regardless
+                               of what the `charset' parameter of that part
+                               says. (This is to cope with the fact that, in
+                               the real world, many messages are mislabelled
+                               with the wrong charset.)
 							 */
   PRBool  force_user_charset; /* this is the new strategy to deal with incorrectly
                                  labeled attachments */

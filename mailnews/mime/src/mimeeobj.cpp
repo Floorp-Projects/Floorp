@@ -186,7 +186,6 @@ GOTTA STILL DO THIS FOR QUOTING!
     // obj->options really owns the storage for this.
     newopt.part_to_load = nsnull;
     newopt.default_charset = nsnull;
-    newopt.override_charset = nsnull;
     PR_FREEIF(id);
     PR_FREEIF(id_url);
     PR_FREEIF(id_name);

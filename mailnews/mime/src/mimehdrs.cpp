@@ -677,15 +677,6 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
     if (opt->format_out != nsMimeOutput::nsMimeMessageSaveAs)
       output_charset = "UTF-8";
 
-    // if we have an override charset, use it first...otherwise fall back to the
-    // default charset. Note: these charsets will only be used if the header isn't
-    // mime encoded.
-    const char * inputCharset = nsnull;
-    if (opt->override_charset)
-      inputCharset = opt->override_charset;
-    else if (opt->default_charset)
-      inputCharset = opt->default_charset;
-
     // check if we're converting from input charset to utf-8, and if so, cache converters.
     if (!opt->m_unicodeToUTF8Encoder)
     {
@@ -698,9 +689,9 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
           nsCOMPtr <nsIAtom> sourceCharsetAtom;
           nsCOMPtr <nsIAtom> destCharsetAtom;
 
-          opt->charsetForCachedInputDecoder = inputCharset;
+          opt->charsetForCachedInputDecoder = opt->default_charset;
           nsAutoString sourceCharset, destCharset;
-          sourceCharset.AssignWithConversion(inputCharset);
+          sourceCharset.AssignWithConversion(opt->default_charset);
           destCharset.AssignWithConversion(output_charset);
           rv = ccm2->GetCharsetAtom(sourceCharset.GetUnicode(), getter_AddRefs(sourceCharsetAtom));
           rv = ccm2->GetCharsetAtom(destCharset.GetUnicode(), getter_AddRefs(destCharsetAtom));
@@ -710,16 +701,16 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
       }
     }
 
-    PRBool useInputCharsetConverter = opt->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(inputCharset, opt->charsetForCachedInputDecoder);
+    PRBool useInputCharsetConverter = opt->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(opt->default_charset, opt->charsetForCachedInputDecoder);
 	  int status;
     if (useInputCharsetConverter)
 		  status = opt->rfc1522_conversion_fn(input, input_length,
-								   inputCharset, output_charset,  /* no input charset? */
+								   opt->default_charset, output_charset,  /* no input charset? */
 								   &converted, &converted_len,
                    opt->stream_closure, opt->m_inputCharsetToUnicodeDecoder , opt->m_unicodeToUTF8Encoder);
     else
 		  status = opt->rfc1522_conversion_fn(input, input_length,
-								   inputCharset, output_charset,  /* no input charset? */
+								   opt->default_charset, output_charset,  /* no input charset? */
 								   &converted, &converted_len,
                    opt->stream_closure, nsnull , opt->m_unicodeToUTF8Encoder);
 
@@ -882,7 +873,8 @@ extern PRInt16 INTL_DefaultMailToWinCharSetID(PRInt16 csid);
 /* Given text purporting to be a qtext header value, strip backslashes that
 	may be escaping other chars in the string. */
 char *
-mime_decode_filename(char *name, const char *charset)
+mime_decode_filename(char *name, const char *charset,
+                     const char *default_charset, PRBool override_charset)
 {
 	char *s = name, *d = name;
 	char *cvt, *returnVal = NULL;
@@ -906,7 +898,8 @@ mime_decode_filename(char *name, const char *charset)
 	*d = 0;
 	returnVal = name;
 	
-    cvt = MIME_DecodeMimePartIIStr(returnVal, 0, PR_TRUE);
+    cvt = MIME_DecodeMimeHeader(returnVal, default_charset, override_charset,
+                                PR_TRUE);
 
     if (cvt && cvt != returnVal) {
       returnVal = cvt;
@@ -922,7 +915,7 @@ mime_decode_filename(char *name, const char *charset)
    X-Sun-Data-Name: NAME (no RFC, but used by MailTool)
  */
 char *
-MimeHeaders_get_name(MimeHeaders *hdrs)
+MimeHeaders_get_name(MimeHeaders *hdrs, MimeDisplayOptions *opts)
 {
   char *s = 0, *name = 0, *cvt = 0;
   char *charset = nsnull; // for RFC2231 support
@@ -964,7 +957,9 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
 		/*	Argh. What we should do if we want to be robust is to decode qtext
 			in all appropriate headers. Unfortunately, that would be too scary
 			at this juncture. So just decode qtext/mime2 here. */
-		cvt = mime_decode_filename(name, charset);
+		cvt = mime_decode_filename(name, charset,
+                                   opts->default_charset,
+                                   opts->override_charset);
 		PR_FREEIF(charset);
 
 	   	if (cvt && cvt != name)

@@ -190,7 +190,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 	  obj->options &&
 	  obj->options->file_type_fn)
 	{
-	  char *name = MimeHeaders_get_name(mult->hdrs);
+	  char *name = MimeHeaders_get_name(mult->hdrs, obj->options);
 	  if (name)
 		{
 		  mime_ct2 = obj->options->file_type_fn(name,
