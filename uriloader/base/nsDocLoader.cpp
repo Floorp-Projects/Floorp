@@ -1810,16 +1810,16 @@ nsDocumentBindInfo::OnStartBinding(nsIURI* aURL, const char *aContentType)
     nsCOMPtr<nsIURI> aURL;
     rv = channel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(rv)) return rv;
-#endif
+    char* aContentType;
+    channel->GetContentType(&aContentType);
+#endif // NECKO
 
 #if defined(DEBUG)
 #ifdef NECKO
-    char* aContentType;
-    channel->GetContentType(&aContentType);
     char* spec;
 #else
     const char* spec;
-#endif
+#endif // NECKO
     (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -1828,7 +1828,7 @@ nsDocumentBindInfo::OnStartBinding(nsIURI* aURL, const char *aContentType)
 #ifdef NECKO
     nsCRT::free(spec);
     nsCRT::free(aContentType);
-#endif
+#endif // NECKO
 #endif /* DEBUG */
 
     /* If the binding has been canceled via Stop() then abort the load... */
