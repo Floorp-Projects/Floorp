@@ -111,7 +111,7 @@ static nsresult IsMoveMessage(nsIURI *aURL, PRBool *isMoveMessage)
 		rv = mailboxURL->GetMailboxAction(&mailboxAction);
 
 		if(NS_SUCCEEDED(rv))
-			*isMoveMessage = (mailboxAction == nsMailboxActionMoveMessage);
+			*isMoveMessage = (mailboxAction == nsIMailboxUrl::ActionMoveMessage);
 	}
 
 
