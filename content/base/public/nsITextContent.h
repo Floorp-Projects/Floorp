@@ -74,6 +74,12 @@ public:
    * Query method to see if the frame is nothing but whitespace
    */
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult) = 0;
+
+  /**
+   * Clone this content node. Unlike the nsIDOMNode equivalent, this
+   * method allows you to specify whether to copy the text as well.
+   */
+  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone) = 0;
 };
 
 //----------------------------------------------------------------------

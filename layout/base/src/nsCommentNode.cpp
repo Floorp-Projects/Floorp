@@ -201,6 +201,7 @@ public:
                      PRBool aNotify);
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult)
     { return mInner.IsOnlyWhitespace(aResult); }
+  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone); 
 
 protected:
   nsGenericDOMDataNode mInner;
@@ -290,6 +291,33 @@ nsCommentNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   // the instance will be deleted.
   result = it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
   if (NS_FAILED(result)) {
+    return result;
+  }
+  nsAutoString data;
+  result = GetData(data);
+  if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
+    return result;
+  }
+  result = it->SetData(data);
+  if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
+    return result;
+  }
+  return result;
+}
+
+NS_IMETHODIMP 
+nsCommentNode::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
+{
+  nsresult result = NS_OK;
+  nsCommentNode* it;
+  NS_NEWXPCOM(it, nsCommentNode);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  result = it->QueryInterface(kITextContentIID, (void**) aReturn);
+  if (NS_FAILED(result) || !aCloneText) {
     return result;
   }
   nsAutoString data;

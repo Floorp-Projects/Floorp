@@ -184,6 +184,33 @@ nsXMLCDATASection::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return result;
 }
 
+NS_IMETHODIMP 
+nsXMLCDATASection::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
+{
+  nsresult result = NS_OK;
+  nsXMLCDATASection* it;
+  NS_NEWXPCOM(it, nsXMLCDATASection);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  result = it->QueryInterface(kITextContentIID, (void**) aReturn);
+  if (NS_FAILED(result) || !aCloneText) {
+    return result;
+  }
+  nsAutoString data;
+  result = GetData(data);
+  if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
+    return result;
+  }
+  result = it->SetData(data);
+  if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
+    return result;
+  }
+  return result;
+}
+
 NS_IMETHODIMP
 nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
 {

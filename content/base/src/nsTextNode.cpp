@@ -177,6 +177,33 @@ nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return result;
 }
 
+NS_IMETHODIMP 
+nsTextNode::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
+{
+  nsresult result = NS_OK;
+  nsTextNode* it;
+  NS_NEWXPCOM(it, nsTextNode);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  result = it->QueryInterface(kITextContentIID, (void**) aReturn);
+  if (NS_FAILED(result) || !aCloneText) {
+    return result;
+  }
+  nsAutoString data;
+  result = GetData(data);
+  if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
+    return result;
+  }
+  result = it->SetData(data);
+  if (NS_FAILED(result)) {
+    NS_RELEASE(*aReturn);
+    return result;
+  }
+  return result;
+}
+
 NS_IMETHODIMP
 nsTextNode::List(FILE* out, PRInt32 aIndent) const
 {
@@ -219,3 +246,4 @@ nsTextNode::SetContentID(PRUint32 aID)
   mContentID = aID;
   return NS_OK;
 }
+

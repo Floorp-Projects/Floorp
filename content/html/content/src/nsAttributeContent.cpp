@@ -180,6 +180,7 @@ public:
                    PRInt32 aLength,
                    PRBool aNotify);
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult);
+  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone); 
 
   //----------------------------------------
 
@@ -536,6 +537,27 @@ nsAttributeContent::IsOnlyWhitespace(PRBool* aResult)
 
   *aResult = PR_TRUE;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAttributeContent::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
+{
+  nsresult result = NS_OK;
+  nsAttributeContent* it;
+  NS_NEWXPCOM(it, nsAttributeContent);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  result = it->QueryInterface(kITextContentIID, (void**) aReturn);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+  result = it->Init(mContent, mNameSpaceID, mAttrName);
+  if (NS_FAILED(result) || !aCloneText) {
+    return result;
+  }
+  it->mText = mText;
+  return result;
 }
 
 NS_IMETHODIMP
