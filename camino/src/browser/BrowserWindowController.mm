@@ -96,6 +96,8 @@
 
 #include <QuickTime/QuickTime.h>
 
+#include "nsAppDirectoryServiceDefs.h"
+
 #define USE_DRAWER_FOR_BOOKMARKS 0
 #if USE_DRAWER_FOR_BOOKMARKS
 #import "ImageAndTextCell.h"
@@ -3113,10 +3115,56 @@ enum BWCOpenDest {
 + (NSDictionary *)searchURLDictionary
 {
   static NSDictionary *searchURLDictionary = nil;
+  if (searchURLDictionary)
+    return searchURLDictionary;
 
-  if (searchURLDictionary == nil)
-    searchURLDictionary = [[NSDictionary alloc] initWithContentsOfFile:
-      [[NSBundle mainBundle] pathForResource:@"SearchURLList" ofType:@"plist"]];
+  NSString *defaultSearchEngineList = [[NSBundle mainBundle] pathForResource:@"SearchURLList" ofType:@"plist"];
+
+  //
+  // We haven't read the search engine list yet attempt to read from user's profile directory
+  //
+  nsCOMPtr<nsIFile> aDir;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aDir));
+  if (aDir) {
+    nsCAutoString aDirPath;
+    nsresult rv = aDir->GetNativePath(aDirPath);
+    if (NS_SUCCEEDED(rv)) {
+      NSString *profileDir = [NSString stringWithUTF8String:aDirPath.get()];  
+
+      //
+      // If the file exists we read it from the profile directory
+      // If it doesn't we attempt to copy it there from our app bundle first
+      // (so that the user has something to edit in future)
+      //
+      NSString *searchEngineListPath    = [profileDir stringByAppendingPathComponent:@"SearchURLList.plist"];
+      NSFileManager *fileManager = [NSFileManager defaultManager];
+      if ( [fileManager isReadableFileAtPath:searchEngineListPath] ||
+           [fileManager copyPath:defaultSearchEngineList toPath:searchEngineListPath handler:nil] )
+        searchURLDictionary = [[NSDictionary alloc] initWithContentsOfFile:searchEngineListPath];
+      else {
+#if DEBUG
+        NSLog(@"Unable to copy search engine list to user profile directory");
+#endif
+      }
+    }
+    else {
+#if DEBUG
+      NSLog(@"Unable to get profile directory");
+#endif
+    }
+  }
+  else {
+#if DEBUG
+    NSLog(@"Unable to determine profile directory");
+#endif
+  }
+  
+  //
+  // If reading from the profile directory failed for any reason
+  // then read the default search engine list from our application bundle directly
+  //
+  if (!searchURLDictionary) 
+    searchURLDictionary = [[NSDictionary alloc] initWithContentsOfFile:defaultSearchEngineList];
   
   return searchURLDictionary;
 }
