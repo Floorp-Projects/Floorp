@@ -71,6 +71,49 @@
 
 NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
 
+static nsresult
+OpenUserKeyForReading(HKEY aStartKey, const char* aKeyName, HKEY* aKey)
+{
+  DWORD result = ::RegOpenKeyEx(aStartKey, aKeyName, 0, KEY_READ, aKey);
+
+  switch (result) {
+  case ERROR_SUCCESS:
+    break;
+  case ERROR_ACCESS_DENIED:
+    return NS_ERROR_FILE_ACCESS_DENIED;
+  case ERROR_FILE_NOT_FOUND:
+    if (aStartKey == HKEY_LOCAL_MACHINE) {
+      // prevent infinite recursion on the second pass through here if 
+      // ::RegOpenKeyEx fails in the all-users case. 
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return OpenUserKeyForReading(HKEY_LOCAL_MACHINE, aKeyName, aKey);
+  }
+  return NS_OK;
+}
+
+static nsresult
+OpenKeyForWriting(const char* aKeyName, HKEY* aKey, PRBool aForAllUsers, PRBool aCreate)
+{
+  nsresult rv = NS_OK;
+
+  HKEY rootKey = aForAllUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+  DWORD result = ::RegOpenKeyEx(rootKey, aKeyName, 0, KEY_READ | KEY_WRITE, aKey);
+
+  switch (result) {
+  case ERROR_SUCCESS:
+    break;
+  case ERROR_ACCESS_DENIED:
+    return NS_ERROR_FILE_ACCESS_DENIED;
+  case ERROR_FILE_NOT_FOUND:
+    if (aCreate)
+      result = ::RegCreateKey(HKEY_LOCAL_MACHINE, aKeyName, aKey);
+    rv = NS_ERROR_FILE_NOT_FOUND;
+    break;
+  }
+  return rv;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Default Browser Registry Settings
 //
@@ -80,11 +123,11 @@ NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellServic
 //    .htm .html .shtml .xht .xhtml 
 //   are mapped like so:
 //
-//   HKLM\SOFTWARE\Classes\.<ext>\      (default)   REG_SZ  FirefoxHTML
+//   HKCU\SOFTWARE\Classes\.<ext>\      (default)   REG_SZ  FirefoxHTML
 //
 //   as aliases to the class:
 //
-//   HKLM\SOFTWARE\Classes\FirefoxHTML\
+//   HKCU\SOFTWARE\Classes\FirefoxHTML\
 //     DefaultIcon                      (default)   REG_SZ  <appname>,1
 //     shell\open\command               (default)   REG_SZ  <appname> -url "%1"
 //
@@ -94,7 +137,7 @@ NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellServic
 //    HTTP, HTTPS, FTP, GOPHER, CHROME
 //   are mapped like so:
 //
-//   HKLM\SOFTWARE\Classes\<protocol>\
+//   HKCU\SOFTWARE\Classes\<protocol>\
 //     DefaultIcon                      (default)   REG_SZ  <appname>,1
 //     shell\open\command               (default)   REG_SZ  <appname> -url "%1"
 //     shell\open\ddeexec               (default)   REG_SZ  "%1",,-1,0,,,,
@@ -107,7 +150,7 @@ NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellServic
 //   The following keys are set to make Firefox appear in the Windows XP
 //   Start Menu as the browser:
 //   
-//   HKLM\SOFTWARE\Clients\StartMenuInternet
+//   HKCU\SOFTWARE\Clients\StartMenuInternet
 //     firefox.exe\DefaultIcon             (default)   REG_SZ  <appname>,0
 //     firefox.exe\shell\open\command      (default)   REG_SZ  <appname>
 //     firefox.exe\shell\properties        (default)   REG_SZ  Firefox &Options
@@ -117,7 +160,7 @@ NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellServic
 //   ---------------------
 //   Every key that is set has the previous value stored in:
 //    
-//   HKLM\SOFTWARE\Mozilla\Desktop\        <keyname>   REG_SZ oldval
+//   HKCU\SOFTWARE\Mozilla\Desktop\        <keyname>   REG_SZ oldval
 //
 //   If there is no previous value, an empty value is set to indicate that the
 //   key should be removed completely. 
@@ -240,9 +283,8 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
 
     ::ZeroMemory(currValue, sizeof(currValue));
     HKEY theKey;
-    DWORD result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                                  key.get(), 0, KEY_READ, &theKey);
-    if (REG_SUCCEEDED(result)) {
+    nsresult rv = OpenUserKeyForReading(HKEY_CURRENT_USER, key.get(), &theKey);
+    if (NS_SUCCEEDED(rv)) {
       DWORD len = sizeof currValue;
       DWORD result = ::RegQueryValueEx(theKey, settings->valueName, NULL, NULL, (LPBYTE)currValue, &len);
       if (REG_FAILED(result) || strcmp(data.get(), currValue) != 0) {
@@ -263,13 +305,12 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes)
+nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 {
   // Locate the Backup key
   HKEY backupKey;
-  DWORD result = ::RegOpenKey(HKEY_LOCAL_MACHINE, MOZ_BACKUP_REGISTRY, &backupKey);
-  if (result == ERROR_FILE_NOT_FOUND)
-    result = ::RegCreateKey(HKEY_LOCAL_MACHINE, MOZ_BACKUP_REGISTRY, &backupKey);
+  nsresult rv = OpenKeyForWriting(MOZ_BACKUP_REGISTRY, &backupKey, aForAllUsers, PR_TRUE);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) return rv;
 
   SETTING* settings;
   SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
@@ -301,11 +342,12 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes)
 
     PRBool replaceExisting = aClaimAllTypes ? PR_TRUE : !(settings->flags & NON_ESSENTIAL);
     SetRegKey(key.get(), settings->valueName, data.get(),
-              PR_TRUE, backupKey, replaceExisting);
+              PR_TRUE, backupKey, replaceExisting, aForAllUsers);
   }
 
   // Select the Default Browser for the Windows XP Start Menu
-  SetRegKey(NS_LITERAL_CSTRING(SMI).get(), "", exeName.get(), PR_TRUE, backupKey, aClaimAllTypes);
+  SetRegKey(NS_LITERAL_CSTRING(SMI).get(), "", exeName.get(), PR_TRUE, 
+            backupKey, aClaimAllTypes, aForAllUsers);
 
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService("@mozilla.org/intl/stringbundle;1"));
   nsCOMPtr<nsIStringBundle> bundle, brandBundle;
@@ -319,7 +361,8 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes)
   nsCAutoString key1(NS_LITERAL_CSTRING(SMI));
   key1.Append(exeName);
   key1.Append("\\");
-  SetRegKey(key1.get(), "", NS_ConvertUCS2toUTF8(brandFullName).get(), PR_TRUE, backupKey, aClaimAllTypes);
+  SetRegKey(key1.get(), "", NS_ConvertUCS2toUTF8(brandFullName).get(), PR_TRUE, 
+            backupKey, aClaimAllTypes, aForAllUsers);
   
   // Set the Options menu item title
   nsXPIDLString brandShortName;
@@ -334,7 +377,8 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes)
   nsCAutoString key2(NS_LITERAL_CSTRING(SMI "%APPEXE%\\shell\\properties"));
   PRInt32 offset = key2.Find("%APPEXE%");
   key2.Replace(offset, 8, exeName);
-  SetRegKey(key2.get(), "", NS_ConvertUCS2toUTF8(optionsTitle).get(), PR_TRUE, backupKey, aClaimAllTypes);
+  SetRegKey(key2.get(), "", NS_ConvertUCS2toUTF8(optionsTitle).get(), PR_TRUE, 
+            backupKey, aClaimAllTypes, aForAllUsers);
 
   // Refresh the Shell
   ::SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, NULL,
@@ -345,19 +389,18 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes)
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::RestoreFileSettings()
+nsWindowsShellService::RestoreFileSettings(PRBool aForAllUsers)
 {
   // Locate the Backup key
   HKEY backupKey;
-  DWORD result = ::RegOpenKey(HKEY_LOCAL_MACHINE, MOZ_BACKUP_REGISTRY, &backupKey);
-  if (result == ERROR_FILE_NOT_FOUND)
-    result = ::RegCreateKey(HKEY_LOCAL_MACHINE, MOZ_BACKUP_REGISTRY, &backupKey);
+  nsresult rv = OpenKeyForWriting(MOZ_BACKUP_REGISTRY, &backupKey, aForAllUsers, PR_FALSE);
+  if (NS_FAILED(rv)) return rv;
 
   DWORD i = 0;
   do {
     char origKeyName[MAX_BUF];
     DWORD len = sizeof origKeyName;
-    result = ::RegEnumValue(backupKey, i++, origKeyName, &len, 0, 0, 0, 0);
+    DWORD result = ::RegEnumValue(backupKey, i++, origKeyName, &len, 0, 0, 0, 0);
     if (REG_SUCCEEDED(result)) {
       char origValue[MAX_BUF];
       DWORD len = sizeof origValue;
@@ -385,25 +428,23 @@ nsWindowsShellService::RestoreFileSettings()
 void
 nsWindowsShellService::SetRegKey(const char* aKeyName, const char* aValueName, 
                                  const char* aValue, PRBool aBackup,
-                                 HKEY aBackupKey, PRBool aReplaceExisting)
+                                 HKEY aBackupKey, PRBool aReplaceExisting,
+                                 PRBool aForAllUsers)
 {
   char buf[MAX_BUF];
   DWORD len = sizeof buf;
 
   HKEY theKey;
-  DWORD result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, aKeyName, 0, KEY_READ | KEY_WRITE, &theKey);
-  if (result == ERROR_FILE_NOT_FOUND) 
-    result = ::RegCreateKey(HKEY_LOCAL_MACHINE, aKeyName, &theKey);
-  if (REG_FAILED(result))
-    return;
+  nsresult rv = OpenKeyForWriting(aKeyName, &theKey, aForAllUsers, PR_TRUE);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) return;
 
   // If we're not allowed to replace an existing key, and one exists (i.e. the
   // result isn't ERROR_FILE_NOT_FOUND, then just return now. 
-  if (!aReplaceExisting)
+  if (!aReplaceExisting && rv != NS_ERROR_FILE_NOT_FOUND)
     return;
 
   // Get the old value
-  result = ::RegQueryValueEx(theKey, aValueName, NULL, NULL, (LPBYTE)buf, &len);
+  DWORD result = ::RegQueryValueEx(theKey, aValueName, NULL, NULL, (LPBYTE)buf, &len);
 
   // Back up the old value
   if (aBackup && REG_SUCCEEDED(result))
@@ -646,14 +687,12 @@ nsWindowsShellService::OpenPreferredApplication(PRInt32 aApplication)
 
   // Find the default application for this class.
   HKEY theKey;
-  DWORD result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, clientKey.get(),
-                                0, KEY_READ, &theKey);
-  if (REG_FAILED(result))
-    return NS_OK;
+  nsresult rv = OpenUserKeyForReading(HKEY_CURRENT_USER, clientKey.get(), &theKey);
+  if (NS_FAILED(rv)) return rv;
 
   char buf[MAX_BUF];
   DWORD type, len = sizeof buf;
-  result = ::RegQueryValueEx(theKey, "", 0, &type, (LPBYTE)&buf, &len);
+  DWORD result = ::RegQueryValueEx(theKey, "", 0, &type, (LPBYTE)&buf, &len);
   if (REG_FAILED(result) || nsDependentCString(buf).IsEmpty()) 
     return NS_OK;
 
@@ -662,16 +701,14 @@ nsWindowsShellService::OpenPreferredApplication(PRInt32 aApplication)
   clientKey.Append(buf);
   clientKey.Append("\\shell\\open\\command");
 
-  result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, clientKey.get(),
-                          0, KEY_READ, &theKey);
-  if (REG_FAILED(result))
-    return NS_OK;
+  rv = OpenUserKeyForReading(HKEY_CURRENT_USER, clientKey.get(), &theKey);
+  if (NS_FAILED(rv)) return rv;
 
   ::ZeroMemory(buf, sizeof(buf));
   len = sizeof buf;
   result = ::RegQueryValueEx(theKey, "", 0, &type, (LPBYTE)&buf, &len);
   if (REG_FAILED(result) || nsDependentCString(buf).IsEmpty()) 
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   nsCAutoString path; path.Assign(buf);
 

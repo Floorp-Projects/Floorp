@@ -102,7 +102,7 @@ function onOK()
   var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
                         .getService(Components.interfaces.nsIShellService);      
   if ("shouldBeDefaultBrowser" in parent && parent.shouldBeDefautBrowser)
-    shell.setDefaultBrowser(true);
+    shell.setDefaultBrowser(true, false);
 }
 
 function Startup()
@@ -230,7 +230,7 @@ function checkNow()
                             (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
                             null, null, null, null, { });
     if (rv == 0)
-      shell.setDefaultBrowser(true);
+      shell.setDefaultBrowser(true, false);
   }
   else {
     promptMessage = shellBundle.getFormattedString("alreadyDefaultBrowser",

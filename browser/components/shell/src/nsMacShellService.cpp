@@ -49,7 +49,7 @@ nsMacShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrow
 }
 
 NS_IMETHODIMP
-nsMacShellService::SetDefaultBrowser(PRBool aClaimAllTypes)
+nsMacShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 {
   return NS_OK;
 }

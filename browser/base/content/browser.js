@@ -535,7 +535,7 @@ function delayedStartup()
                          (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
                          null, null, null, checkboxLabel, checkEveryTime);
     if (rv == 0)
-      shell.setDefaultBrowser(true);
+      shell.setDefaultBrowser(true, false);
     shell.shouldCheckDefaultBrowser = checkEveryTime.value;
   }
 #endif
