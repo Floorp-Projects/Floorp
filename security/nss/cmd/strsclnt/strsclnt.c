@@ -1144,6 +1144,7 @@ main(int argc, char **argv)
                 (certsTested != connections);
 
     exitVal = ( exitVal || failed_already );
+    SSL_ClearSessionCache();
     if (NSS_Shutdown() != SECSuccess) {
         exit(1);
     }
