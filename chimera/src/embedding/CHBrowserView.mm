@@ -359,20 +359,14 @@ nsCocoaBrowserListener::ExitModalEventLoop(nsresult aStatus)
 // Implementation of nsIEmbeddingSiteWindow
 /* void setDimensions (in unsigned long flags, in long x, in long y, in long cx, in long cy); */
 NS_IMETHODIMP 
-nsCocoaBrowserListener::SetDimensions(PRUint32 flags, 
-				      PRInt32 x, 
-				      PRInt32 y, 
-				      PRInt32 cx, 
-				      PRInt32 cy)
+nsCocoaBrowserListener::SetDimensions(PRUint32 flags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
-  if (!mView) {
+  if (!mView)
     return NS_ERROR_FAILURE;
-  }
 
   NSWindow* window = [mView window];
-  if (!window) {
+  if (!window)
     return NS_ERROR_FAILURE;
-  }
 
   if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
     NSPoint origin;
@@ -399,40 +393,35 @@ nsCocoaBrowserListener::SetDimensions(PRUint32 flags,
 
 /* void getDimensions (in unsigned long flags, out long x, out long y, out long cx, out long cy); */
 NS_IMETHODIMP 
-nsCocoaBrowserListener::GetDimensions(PRUint32 flags, 
-				      PRInt32 *x, 
-				      PRInt32 *y, 
-				      PRInt32 *cx, 
-				      PRInt32 *cy)
+nsCocoaBrowserListener::GetDimensions(PRUint32 flags,  PRInt32 *x,  PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
-  NS_ENSURE_ARG_POINTER(x);
-  NS_ENSURE_ARG_POINTER(y);
-  NS_ENSURE_ARG_POINTER(cx);
-  NS_ENSURE_ARG_POINTER(cy);
-
-  if (!mView) {
+  if (!mView)
     return NS_ERROR_FAILURE;
-  }
 
   NSWindow* window = [mView window];
-  if (!window) {
+  if (!window)
     return NS_ERROR_FAILURE;
-  }
 
   NSRect frame = [window frame];
   if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION) {
-    *x = (PRInt32)frame.origin.x;
-    *y = (PRInt32)frame.origin.y;
+    if ( x )
+      *x = (PRInt32)frame.origin.x;
+    if ( y )
+      *y = (PRInt32)frame.origin.y;
   }
   if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER) {
-    *cx = (PRInt32)frame.size.width;
-    *cy = (PRInt32)frame.size.height;
+    if ( cx )
+      *cx = (PRInt32)frame.size.width;
+    if ( cy )
+      *cy = (PRInt32)frame.size.height;
   }
   else if (flags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER) {
     NSView* contentView = [window contentView];
     NSRect contentFrame = [contentView frame];
-    *cx = (PRInt32)contentFrame.size.width;
-    *cy = (PRInt32)contentFrame.size.height;    
+    if ( cx )
+      *cx = (PRInt32)contentFrame.size.width;
+    if ( cy )
+      *cy = (PRInt32)contentFrame.size.height;    
   }
 
   return NS_OK;
