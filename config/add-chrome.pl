@@ -1,12 +1,14 @@
 #!/perl
 
-my $installedChromeFile = $ARGV[0];
-my $chromeType = $ARGV[1];
-my $pkgName = $ARGV[2];
-my $jarFileName = $ARGV[3];
-my $disableJarPackaging = $ARGV[4];
+use File::Path;
 
-#print "add-chrome $installedChromeFile $chromeType $pkgName $jarFileName $disableJarPackaging\n";
+my $installedChromeFile = $ARGV[0];
+my $disableJarPackaging = $ARGV[1];
+my $chromeType = $ARGV[2];
+my $pkgName = $ARGV[3];
+my $jarFileName = $ARGV[4];
+
+#print "add-chrome $installedChromeFile $disableJarPackaging $chromeType $pkgName $jarFileName\n";
 
 if ($jarFileName =~ /(.*)\.jar/) {
     $jarFileName = $1;
@@ -34,6 +36,12 @@ if (open(FILE, "<$installedChromeFile")) {
     }
     close(FILE) || die "error: can't close $installedChromeFile: $!";
 }
+
+my $dir = $installedChromeFile;
+if ("$dir" =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
+    $dir = $1;
+}
+mkpath($dir, 0, 0755);
 
 open(FILE, ">>$installedChromeFile") || die "can't open $installedChromeFile: $!";
 print FILE "$line\n";

@@ -110,7 +110,7 @@ install:: master.ini
 	$(MAKE_INSTALL) master.ini $(DIST)\bin\
 !endif
 
-install::
-	$(RM) $(DIST)\bin\chrome\installed-chrome.txt
+#install::
+#	$(RM) $(DIST)\bin\chrome\installed-chrome.txt
 
 FORCE::

@@ -600,7 +600,11 @@ chrome::
 
 !endif
 
-REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt 1
+!else
+REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt 0
+!endif
 
 regchrome:
 

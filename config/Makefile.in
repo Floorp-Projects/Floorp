@@ -95,8 +95,8 @@ nsBuildID.h: build_number
 	$(PERL) $(srcdir)/aboutime.pl $@ build_number
 
 # clear record of installed chrome on complete rebuild
-install::
-	$(RM) $(DIST)/bin/chrome/installed-chrome.txt
+#install::
+#	$(RM) $(DIST)/bin/chrome/installed-chrome.txt
 
 FORCE:
 
