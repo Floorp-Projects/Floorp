@@ -1089,8 +1089,10 @@ nsWindow::SetFocus(PRBool aRaise)
   if (top_mozarea)
     toplevel = gtk_widget_get_toplevel(top_mozarea);
 
-  // map the window if the pref says to
-  if (gRaiseWindows && aRaise)
+  // map the window if the pref says to and neither the mozarea or its
+  // toplevel window has focus
+  if (gRaiseWindows && aRaise && toplevel && top_mozarea &&
+      (!GTK_WIDGET_HAS_FOCUS(top_mozarea) && !GTK_WIDGET_HAS_FOCUS(toplevel)))
     GetAttention();
 
 #ifdef DEBUG_FOCUS
