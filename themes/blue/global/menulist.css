@@ -134,7 +134,8 @@
     }
 
 /* rules for popups and separators associated with menulists */
-  menulist > menupopup 
+  menulist > menupopup,
+  .menulist-menupopup
     {
       border-left         : 1px solid #000000;
       border-right        : 1px solid #000000;

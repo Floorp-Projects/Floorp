@@ -310,7 +310,9 @@ menulist[editable="true"]:focus > .menulist-internal-box > .menulist-dropmarker-
 /* rules for popups and separators associated with menulists */
 
 /** -- modern's version --
-  menulist > menupopup {
+  menulist > menupopup,
+  .menulist-menupopup
+  {
     border              : 1px solid #313948;
     padding             : 0px;
     min-width           : 0px;
@@ -366,7 +368,8 @@ menulist[editable="true"]:focus > .menulist-internal-box > .menulist-dropmarker-
 -- end modern's version -- **/
 
 /* rules for popups and separators associated with menulists */
-  menulist > menupopup 
+  menulist > menupopup,
+  .menulist-menupopup 
     {
       border-left           : thin solid white;
       border-top            : thin solid white;
