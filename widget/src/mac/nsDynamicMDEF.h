@@ -25,7 +25,9 @@
 #ifndef nsDynamicMDEF_h__
 #define nsDynamicMDEF_h__
 
+#include "nsSupportsArray.h"
 #include "nsIMenu.h"
+
 #include <Menus.h>
 
 pascal void nsDynamicMDEFMain(
@@ -39,5 +41,70 @@ void nsPreviousMenuStackUnwind(
   nsIMenu * aMenuJustBuilt, 
   MenuHandle aMenuHandleJustBuilt);
   
+
+// helper class useful for counting instances
+class nsInstanceCounter
+{
+public:
+        nsInstanceCounter(const char* inDesc)
+        : mInstanceCount(0)
+        , mDescription(inDesc)
+        {
+        }
+        
+        ~nsInstanceCounter()
+        {
+          printf("%s %ld\n", mDescription, mInstanceCount);
+        }
+
+        nsInstanceCounter& operator ++()          // prefix
+        {
+          ++ mInstanceCount;
+          return *this;                
+        }
+
+        nsInstanceCounter& operator -- ()        // prefix
+        {
+          -- mInstanceCount;
+          return *this;
+        }
+
+protected:
+
+  PRInt32     mInstanceCount;
+  const char* mDescription;
+
+};
+
+
+//------------------------------------------------------------------------------
+
+class nsMenuStack
+{
+public:
+                nsMenuStack();
+                ~nsMenuStack();
+
+
+  PRInt32       Count()
+                {
+                  PRUint32  num;
+                  mMenuArray.Count(&num);
+                  return (PRInt32)num;
+                }
+                
+                // returns addreffed nsIMenu
+  nsresult      GetMenuAt(PRInt32 aIndex, nsIMenu **outMenu);
+  PRBool        HaveMenuAt(PRInt32 aIndex);
+  PRBool        RemoveMenuAt(PRInt32 aIndex);                       // no release
+  PRBool        InsertMenuAt(nsIMenu* aElement, PRInt32 aIndex);    // no addrefs; weak ref.
+  
+protected:
+
+  nsSupportsArray   mMenuArray;     // array of weak refs to nsIMenus
+
+};
+
+
 
 #endif nsDynamicMDEF_h__
