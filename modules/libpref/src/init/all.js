@@ -297,7 +297,9 @@ pref("mime.table.allow_add", true);
 pref("mime.table.allow_edit", true);
 pref("mime.table.allow_remove", true);
 
-pref("netcenter.register", false);
+//prefs for product registration/activation
+pref("browser.registration.enable", false);
+pref("browser.registration.url", "");
 
 pref("security.checkuri", true);
 pref("security.checkdomprops", true);
