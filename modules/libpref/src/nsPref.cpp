@@ -1046,7 +1046,7 @@ PrefResult pref_OpenFileSpec(
 } // pref_OpenFile
 
 //----------------------------------------------------------------------------------------
-PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
+PrefResult PREF_SavePrefFileSpecWith(
     nsIFileSpec* fileSpec,
     PLHashEnumerator heSaveProc)
 //----------------------------------------------------------------------------------------
