@@ -902,6 +902,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
     PRInt32 passwordLength = nsCRT::strlen((const char *) origPassword);
     if (!(const char*) origPassword || passwordLength == 0)
 	    return NS_ERROR_SMTP_USERNAME_UNDEFINED;
+	password.Assign((const char*) origPassword);
   }
   else
     password.Assign(mLogonCookie);
