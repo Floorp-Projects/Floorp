@@ -217,8 +217,8 @@ void InitDrawEvent(GdkRectangle *area,
   anEvent.eventStructType = NS_PAINT_EVENT;
 
   if (area != NULL) {
-    nsRect rect(area->x, area->y, area->width, area->height);
-    anEvent.rect = &rect;
+    nsRect *rect = new nsRect(area->x, area->y, area->width, area->height);
+    anEvent.rect = rect;
   }
 }
 
@@ -235,8 +235,9 @@ void InitExposeEvent(GdkEventExpose *aGEE,
   anEvent.eventStructType = NS_PAINT_EVENT;
 
   if (aGEE != NULL) {
-    nsRect rect(aGEE->area.x, aGEE->area.y, aGEE->area.width, aGEE->area.height);
-    anEvent.rect = &rect;
+    nsRect *rect = new nsRect(aGEE->area.x, aGEE->area.y,
+                              aGEE->area.width, aGEE->area.height);
+    anEvent.rect = rect;
     anEvent.time = gdk_event_get_time((GdkEvent*)aGEE);
   }
 }
