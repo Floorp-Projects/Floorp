@@ -30,6 +30,30 @@ LOCAL_INCLUDES	+= -I../../include
 
 LIBS		= \
 	-lcache \
+	-lmozdbm \
+	-lnetlib \
+	-lraptorbase \
+	-lnetcache \
+	-lmimetype \
+	-lremoturl \
+	-lsockstuburl \
+	-lhttpurl \
+	-lfileurl \
+	-lftpurl \
+	-lgophurl \
+	-lpwcac \
+	-labouturl \
+	-lnetwork \
+	-lnetutil \
+	-lnetcnvts \
+	-lgmbase$(MOZ_TOOLKIT) \
+	$(TK_LIBS) \
+	-lpref \
+	-ljs \
+	-lsecfree \
+	-lxpcom \
+	-lxp \
+	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
 
