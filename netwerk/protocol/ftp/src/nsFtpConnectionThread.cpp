@@ -137,12 +137,22 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
     NS_IF_RELEASE(mContext);
     NS_IF_RELEASE(mEventQueue);
 
+    // Close the data channel
+    NS_IF_RELEASE(mDPipe);
+
+    // Close the command channel
+    NS_RELEASE(mCPipe);
+
+    // lose the socket transport
+    NS_RELEASE(mSTS);
+
     nsAllocator::Free(mURLSpec);
 }
 
 nsresult
 nsFtpConnectionThread::Process() {
     nsresult rv;
+    PRBool continueRead = PR_FALSE;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() started for %x (spec =%s)\n", mUrl, mURLSpec));
     
@@ -166,11 +176,13 @@ nsFtpConnectionThread::Process() {
                 PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - read \"%s\" (%d bytes)\n", mUrl, buffer, read));
 
                 // get the response code out.
-                PR_sscanf(buffer, "%d", &mResponseCode);
-                mResponseCode = mResponseCode / 100; // truncate it
+                if (!continueRead) {
+                    PR_sscanf(buffer, "%d", &mResponseCode);
+                    mResponseCode = mResponseCode / 100; // truncate it
+                }
 
                 // see if we're handling a multi-line response.
-                if (buffer[3] == '-') {
+                if (continueRead || (buffer[3] == '-')) {
                     // yup, multi-line response, start appending
                     char *tmpBuffer = buffer, *crlf = nsnull;
                     PRBool lastLine = PR_FALSE;
@@ -197,8 +209,10 @@ nsFtpConnectionThread::Process() {
                         } else {
                             mState = mNextState;
                         }
+                        continueRead = PR_FALSE;
                     } else {
                         // don't increment state, we need to read more.
+                        continueRead = PR_TRUE;
                     }
                     break;
                 }
@@ -693,6 +707,7 @@ nsFtpConnectionThread::Process() {
 ///////////////////////////////////
 nsresult
 nsFtpConnectionThread::S_user() {
+    nsresult rv;
     char *buffer;
     PRUint32 bufLen, bytes;
     nsString2 usernameStr("USER ");
@@ -712,8 +727,9 @@ nsFtpConnectionThread::S_user() {
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, buffer));
 
-    return mCOutStream->Write(buffer, bufLen, &bytes);
+    rv = mCOutStream->Write(buffer, bufLen, &bytes);
     nsAllocator::Free(buffer);
+    return rv;
 }
 
 FTP_STATE
@@ -1229,21 +1245,32 @@ nsFtpConnectionThread::R_list() {
     nsISupports *ctxtSup = nsnull;
     rv = dataCtxt->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&ctxtSup);
 
-    nsFtpOnDataAvailableEvent* event =
-        new nsFtpOnDataAvailableEvent(mListener, mChannel, ctxtSup); // XXX the destroy event method
-                                                                      // XXX needs to clean up this new.
-    if (!event) return FTP_ERROR;
+    // tell the user that we've begun the transaction.
+    nsFtpOnStartRequestEvent* startEvent =
+        new nsFtpOnStartRequestEvent(mListener, mChannel, mContext);
+    if (!startEvent) return FTP_ERROR;
 
-    rv = event->Init(stringStream, 0, read);
-    NS_RELEASE(stringStream);
+    rv = startEvent->Fire(mEventQueue);
     if (NS_FAILED(rv)) {
-        delete event;
+        delete startEvent;
         return FTP_ERROR;
     }
 
-    rv = event->Fire(mEventQueue);
+    nsFtpOnDataAvailableEvent* availEvent =
+        new nsFtpOnDataAvailableEvent(mListener, mChannel, ctxtSup); // XXX the destroy event method
+                                                                      // XXX needs to clean up this new.
+    if (!availEvent) return FTP_ERROR;
+
+    rv = availEvent->Init(stringStream, 0, read);
+    NS_RELEASE(stringStream);
     if (NS_FAILED(rv)) {
-        delete event;
+        delete availEvent;
+        return FTP_ERROR;
+    }
+
+    rv = availEvent->Fire(mEventQueue);
+    if (NS_FAILED(rv)) {
+        delete availEvent;
         return FTP_ERROR;
     }
 
@@ -1317,6 +1344,17 @@ nsFtpConnectionThread::R_retr() {
         dataCtxt->SetContentType(contentType);
         nsISupports *ctxtSup = nsnull;
         rv = dataCtxt->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&ctxtSup);
+
+        // tell the user that we've begun the transaction.
+        nsFtpOnStartRequestEvent* startEvent =
+            new nsFtpOnStartRequestEvent(mListener, mChannel, mContext);
+        if (!startEvent) return FTP_ERROR;
+
+        rv = startEvent->Fire(mEventQueue);
+        if (NS_FAILED(rv)) {
+            delete startEvent;
+            return FTP_ERROR;
+        }
 
         nsFtpOnDataAvailableEvent* event =
             new nsFtpOnDataAvailableEvent(mListener, mChannel, ctxtSup); // XXX the destroy event method
@@ -1452,7 +1490,7 @@ nsFtpConnectionThread::R_pasv() {
     char *type = nsnull;
     rv = mChannel->GetContentType(&type);
     nsString2 typeStr;
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv) || !type) 
         typeStr = "bin";
     else
         typeStr = type;
@@ -1628,18 +1666,6 @@ nsFtpConnectionThread::Run() {
     ///////////////////////////////
 
     mConnected = PR_TRUE;
-
-    // tell the user that we've begun the transaction.
-    nsFtpOnStartRequestEvent* event =
-        new nsFtpOnStartRequestEvent(mListener, mChannel, mContext);
-    if (event == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = event->Fire(mEventQueue);
-    if (NS_FAILED(rv)) {
-        delete event;
-        return rv;
-    }
 
     rv = Process();
 
