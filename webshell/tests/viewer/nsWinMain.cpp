@@ -170,3 +170,4 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam,
   return main(0, nsnull);
 }
 #endif
+
