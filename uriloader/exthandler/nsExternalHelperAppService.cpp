@@ -47,6 +47,10 @@
 
 #include "nsCExternalHandlerService.h" // contains progids for the helper app service
 
+#ifdef XP_MAC
+#include "nsILocalFileMac.h"
+#endif // XP_MAC
+
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
@@ -416,7 +420,21 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 
 #ifdef XP_MAC
  // create a temp file for the data...and open it for writing.
-  NS_GetSpecialDirectory(NS_MAC_DESKTOP_DIR, getter_AddRefs(mTempFile));
+ // use NS_MAC_DEFAULT_DOWNLOAD_DIR which gets download folder from InternetConfig
+ // if it can't get download folder pref, then it uses desktop folder
+  NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(mTempFile));
+ // while we're here, also set Mac type and creator
+ if (mMimeInfo)
+ {
+   nsCOMPtr<nsILocalFileMac> macfile = do_QueryInterface(mTempFile);
+   if (macfile)
+   {
+     PRUint32 type, creator;
+     mMimeInfo->GetMacType(&type);
+     mMimeInfo->GetMacCreator(&creator);
+     macfile->SetFileTypeAndCreator(type, creator);
+   }
+ }
 #else
   // create a temp file for the data...and open it for writing.
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
