@@ -1032,6 +1032,9 @@ struct LO_EmbedStruct_struct {
     PA_Block embed_src;
     lo_NVList attributes;
     lo_NVList parameters;
+#ifdef DOM
+    uint16 ele_attrmask;
+#endif
 };
 
 #define LO_JAVA_SELECTOR_APPLET             0
@@ -1060,6 +1063,9 @@ struct LO_JavaAppStruct_struct {
     Bool may_script;
     lo_NVList attributes;
     lo_NVList parameters;
+#ifdef DOM
+    uint16 ele_attrmask;
+#endif
 };
 
 

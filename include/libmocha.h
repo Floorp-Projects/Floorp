@@ -165,6 +165,15 @@ typedef enum {
 #endif
 } ReflectedObject;
 
+#ifdef DOM
+/*
+ * Construct a DOM_Node for the given tag and add it to the tree.
+ */
+void /* DOM_Node */ *
+LM_ReflectTagNode(PA_Tag *tag, void /*lo_TopState*/ *top_state,
+                  MWContext *context);
+#endif
+
 /*
  * Generates an id-to-object mapping key from the ReflectedObject
  * type, the containing layer id and the id of the object itself.
