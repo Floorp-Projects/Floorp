@@ -175,7 +175,123 @@ public:
   NS_IMETHOD NamedItem(const nsString& aName, nsIDOMNode** aReturn);
 
   // nsIContent
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
+  //NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
+    return mInner.GetDocument(aResult);
+  }
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
+  NS_IMETHOD GetParent(nsIContent*& aResult) const {
+    return mInner.GetParent(aResult);
+  }
+  NS_IMETHOD SetParent(nsIContent* aParent);
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
+    return mInner.CanContainChildren(aResult);
+  }
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {
+    return mInner.ChildCount(aResult);
+  }
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+    return mInner.ChildAt(aIndex, aResult);
+  }
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
+    return mInner.IndexOf(aPossibleChild, aResult);
+  }
+
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+
+  NS_IMETHOD IsSynthetic(PRBool& aResult) {
+    return mInner.IsSynthetic(aResult);
+  }
+  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {
+    return mInner.GetNameSpaceID(aResult);
+  }
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const {
+    return mInner.GetTag(aResult);
+  }
+  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
+    return mInner.GetNodeInfo(aResult);
+  }
+  NS_IMETHOD ParseAttributeString(const nsString& aStr,
+                                  nsIAtom*& aName,
+                                  PRInt32& aNameSpaceID) {
+    return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);
+  }
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                nsIAtom*& aPrefix) {
+    return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);
+  }
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          const nsString& aValue, PRBool aNotify) {
+    return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);
+  }
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
+                          const nsString& aValue, PRBool aNotify) {
+    return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
+  }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          nsString& aResult) const {
+    return mInner.GetAttribute(aNameSpaceID, aName, aResult);
+  }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          nsIAtom*& aPrefix, nsString& aResult) const {
+    return mInner.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);
+  }
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                            PRBool aNotify) {
+    return mInner.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);
+  }
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                PRInt32& aNameSpaceID,
+                                nsIAtom*& aName,
+                                nsIAtom*& aPrefix) const {
+    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);
+  }
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
+    return mInner.GetAttributeCount(aResult);
+  }
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {
+    return mInner.List(out, aIndent);
+  }
+  NS_IMETHOD DumpContent(FILE* out,
+                         PRInt32 aIndent,
+                         PRBool aDumpAll) const {
+    return mInner.DumpContent(out, aIndent,aDumpAll);
+  }
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {
+    return mInner.BeginConvertToXIF(aConverter);
+  }
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {
+    return mInner.ConvertContentToXIF(aConverter);
+  }
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {
+    return mInner.FinishConvertToXIF(aConverter);
+  }
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
+                            nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus* aEventStatus);
+  NS_IMETHOD GetContentID(PRUint32* aID) {
+    return mInner.GetContentID(aID);
+  }
+  NS_IMETHOD SetContentID(PRUint32 aID) {
+    return mInner.SetContentID(aID);
+  }
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {
+    return mInner.RangeAdd(aRange);
+  }
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) {
+    return mInner.RangeRemove(aRange);
+  }
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {
+    return mInner.GetRangeList(aResult);
+  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+  NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+  NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);   
 
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
@@ -316,6 +432,53 @@ nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 // nsIContent
+NS_IMETHODIMP
+nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify) 
+{
+  nsresult res = mInner.AppendChildTo(aKid, aNotify);
+  if (NS_SUCCEEDED(res)) {
+    AddOption(aKid);
+  }
+  return res;
+}
+NS_IMETHODIMP
+nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                   PRBool aNotify) 
+{
+
+  nsresult res = mInner.InsertChildAt(aKid, aIndex, aNotify);
+  if (NS_SUCCEEDED(res)) {
+    // No index is necessary
+    // It dirties list and the list automatically 
+    // refreshes itself on next access
+    AddOption(aKid); 
+  }
+  return res;
+}
+NS_IMETHODIMP
+nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) 
+{
+  nsCOMPtr<nsIContent> content;
+  if (NS_SUCCEEDED(ChildAt(aIndex, *getter_AddRefs(content)))) {
+    RemoveOption(content);
+  }
+  nsresult res = mInner.ReplaceChildAt(aKid, aIndex, aNotify);
+  if (NS_SUCCEEDED(res)) {
+    AddOption(aKid);
+  }
+  return res;
+}
+NS_IMETHODIMP
+nsHTMLSelectElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify) 
+{
+  nsCOMPtr<nsIContent> content;
+  ChildAt(aIndex, *getter_AddRefs(content));
+  nsresult res = mInner.RemoveChildAt(aIndex, aNotify);
+  if (NS_SUCCEEDED(res) && content) {
+    RemoveOption(content);
+  }
+  return res;
+}
 
 NS_IMETHODIMP
 nsHTMLSelectElement::SetParent(nsIContent* aParent)
