@@ -1633,8 +1633,8 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
 // anchor point is the (x, y) location where the first tile should
 // be placed
 //
-// The anchor values are normalized wrt to the upper-left edge of the
-// bounds, and are always in the range:
+// For repeated tiling, the anchor values are normalized wrt to the upper-left
+// edge of the bounds, and are always in the range:
 // -(aTileWidth - 1) <= anchor.x <= 0
 // -(aTileHeight - 1) <= anchor.y <= 0
 //
@@ -1675,6 +1675,8 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
       x %= aTileWidth;
       x = x - aTileWidth;
     }
+
+    NS_POSTCONDITION((x >= -(aTileWidth - 1)) && (x <= 0), "bad computed anchor value");
   }
   aResult.x = x;
 
@@ -1707,12 +1709,10 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
       y %= aTileHeight;
       y = y - aTileHeight;
     }
+    
+    NS_POSTCONDITION((y >= -(aTileHeight - 1)) && (y <= 0), "bad computed anchor value");
   }
   aResult.y = y;
-
-  NS_POSTCONDITION((aResult.x >= -(aTileWidth - 1)) && (aResult.x <= 0) &&
-                   (aResult.y >= -(aTileHeight - 1)) && (aResult.y <= 0),
-                   "bad computed anchor value");
 }
 
 // Returns the clip view associated with the scroll frame's scrolling
