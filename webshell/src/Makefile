@@ -24,6 +24,8 @@ MODULE=raptor
 
 REQUIRES=xpcom raptor dom js netlib
 
+EXTRA_DSO_LDOPTS += -lm
+
 INCLUDES += -I../public -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$(PUBLIC)/js -I(PUBLIC)/netlib
 
 DEFINES = -D_IMPL_NS_WEB
