@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.11 $ $Date: 2002/04/15 15:22:04 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.12 $ $Date: 2002/04/18 17:29:59 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -43,9 +43,9 @@ static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.11 $ $D
 #include "pkit.h"
 #endif /* PKIT_H */
 
-#ifndef DEVT_H
-#include "devt.h"
-#endif /* DEVT_H */
+#ifndef DEVM_H
+#include "devm.h"
+#endif /* DEVM_H */
 
 #include "pki3hack.h"
 #include "dev3hack.h"
@@ -117,11 +117,19 @@ static NSSSlot *
 nssSlot_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
 {
     NSSSlot *rvSlot;
-    rvSlot = nss_ZNEW(td->arena, NSSSlot);
+    NSSArena *arena;
+    arena = nssArena_Create();
+    if (!arena) {
+	return NULL;
+    }
+    rvSlot = nss_ZNEW(arena, NSSSlot);
     if (!rvSlot) {
+	nssArena_Destroy(arena);
 	return NULL;
     }
     rvSlot->base.refCount = 1;
+    rvSlot->base.lock = PZ_NewLock(nssILockOther);
+    rvSlot->base.arena = arena;
     rvSlot->pk11slot = nss3slot;
     rvSlot->epv = nss3slot->functionList;
     rvSlot->slotID = nss3slot->slotID;
@@ -134,24 +142,41 @@ NSS_IMPLEMENT NSSToken *
 nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
 {
     NSSToken *rvToken;
-    rvToken = nss_ZNEW(td->arena, NSSToken);
+    NSSArena *arena;
+    arena = nssArena_Create();
+    if (!arena) {
+	return NULL;
+    }
+    rvToken = nss_ZNEW(arena, NSSToken);
     if (!rvToken) {
+	nssArena_Destroy(arena);
 	return NULL;
     }
     rvToken->base.refCount = 1;
+    rvToken->base.lock = PZ_NewLock(nssILockOther);
+    rvToken->base.arena = arena;
     rvToken->pk11slot = nss3slot;
     rvToken->epv = nss3slot->functionList;
     rvToken->defaultSession = nssSession_ImportNSS3Session(td->arena,
                                                        nss3slot->session,
                                                        nss3slot->sessionLock,
                                                        nss3slot->defRWSession);
+    /* if (!PK11_IsInternal(nss3slot) && PK11_IsHW(nss3slot)) */
+    /* The above test was used in 3.4, for this cache have it always on */
+    if (PR_TRUE) {
+	rvToken->cache = nssTokenObjectCache_Create(rvToken, 
+	                                            PR_TRUE, PR_TRUE, PR_TRUE);
+	if (!rvToken->cache) {
+	    nssArena_Destroy(arena);
+	    return (NSSToken *)NULL;
+	}
+    }
     rvToken->trustDomain = td;
     /* Grab the token name from the PKCS#11 fixed-length buffer */
     rvToken->base.name = nssUTF8_Duplicate(nss3slot->token_name,td->arena);
     rvToken->slot = nssSlot_CreateFromPK11SlotInfo(td, nss3slot);
     rvToken->slot->token = rvToken;
     rvToken->defaultSession->slot = rvToken->slot;
-    rvToken->base.arena = td->arena;
     return rvToken;
 }
 
@@ -195,8 +220,7 @@ nssToken_Refresh(NSSToken *token)
                                                        nss3slot->session,
                                                        nss3slot->sessionLock,
                                                        nss3slot->defRWSession);
-    nssToken_DestroyCertList(token, PR_TRUE);
-    return nssToken_LoadCerts(token);
+    return PR_SUCCESS;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -225,6 +249,14 @@ nssToken_GetTrustOrder
     return module->trustOrder;
 }
 
+NSS_IMPLEMENT PRBool
+nssSlot_IsLoggedIn
+(
+  NSSSlot *slot
+)
+{
+    return PK11_IsLoggedIn(slot->pk11slot, NULL);
+}
 
 
 NSSTrustDomain *

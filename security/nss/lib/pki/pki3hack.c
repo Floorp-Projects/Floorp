@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.48 $ $Date: 2002/04/15 15:22:09 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.49 $ $Date: 2002/04/18 17:30:03 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -71,9 +71,6 @@ static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.48 $ $D
 #include "pkistore.h"
 #include "secmod.h"
 
-/* if it's got more than 10 certs, it better handle traversal well */
-#define NSSTOKEN_MAX_LOCAL_CERTS 10
-
 NSSTrustDomain *g_default_trust_domain = NULL;
 
 NSSCryptoContext *g_default_crypto_context = NULL;
@@ -98,232 +95,6 @@ STAN_GetDefaultCryptoToken
 {
     PK11SlotInfo *pk11slot = PK11_GetInternalSlot();
     return PK11Slot_GetNSSToken(pk11slot);
-}
-
-static CERTCertificate *
-stan_GetCERTCertificate(NSSCertificate *c, PRBool forceUpdate);
-
-/* stuff the cert in the global trust domain cache, and then add a reference
- * to remain with the token in a list.
- */
-static PRStatus
-cache_token_cert(NSSCertificate *c, void *arg)
-{
-    NSSToken *token = (NSSToken *)arg;
-    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
-    NSSCertificate *cp = nssCertificate_AddRef(c);
-    if (nssList_Count(token->certList) > NSSTOKEN_MAX_LOCAL_CERTS) {
-	nssToken_DestroyCertList(token, PR_TRUE);
-	/* terminate the traversal */
-	return PR_FAILURE;
-    }
-    nssTrustDomain_AddCertsToCache(td, &c, 1);
-    if (cp == c) {
-	NSSCertificate_Destroy(cp);
-    } else {
-	/* The cert was already in the cache, from another token.  Add this
-	 * token's instance to the cert.
-	 */
-	nssCryptokiObject **instance;
-	instance = nssPKIObject_GetInstances(&cp->object);
-	nssPKIObject_AddInstance(&c->object, *instance);
-	nss_ZFreeIf(instance);
-    }
-    /* This list reference persists with the token */
-    nssList_Add(token->certList, nssCertificate_AddRef(c));
-    /* The cert needs to become external (made into a CERTCertificate)
-     * in order for it to be properly released.
-     * Force an update of the nickname and slot fields.
-     */
-    (void)stan_GetCERTCertificate(c, PR_TRUE);
-    return PR_SUCCESS;
-}
-
-static PRBool instance_destructor(NSSCertificate *c, NSSToken *token)
-{
-    nssPKIObject_RemoveInstanceForToken(&c->object, token);
-    /* XXX cheating, this code to be replaced anyway */
-    if (c->object.numInstances == 0) {
-	return PR_TRUE;
-    }
-    return PR_FALSE;
-}
-
-NSS_IMPLEMENT void
-destroy_token_certs(nssList *certList, NSSToken *token, PRBool renewInstances)
-{
-    nssListIterator *certs;
-    NSSCertificate *cert;
-    PRBool removeIt;
-    certs = nssList_CreateIterator(certList);
-    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
-         cert != (NSSCertificate *)NULL;
-         cert  = (NSSCertificate *)nssListIterator_Next(certs))
-    {
-	removeIt = instance_destructor(cert, token);
-	if (removeIt) {
-	    nssList_Remove(certList, cert);
-	    CERT_DestroyCertificate(STAN_GetCERTCertificate(cert));
-	} else if (renewInstances) {
-	    /* force an update of the nickname and slot fields of the cert */
-	    (void)stan_GetCERTCertificate(cert, PR_TRUE);
-	}
-    }
-    nssListIterator_Finish(certs);
-    nssListIterator_Destroy(certs);
-}
-
-NSS_IMPLEMENT void
-nssCertificateList_DestroyTokenCerts(nssList *certList, NSSToken *token)
-{
-    destroy_token_certs(certList, token, PR_TRUE);
-}
-
-NSS_IMPLEMENT void
-nssCertificateList_RemoveTokenCerts(nssList *certList, NSSToken *token)
-{
-    nssListIterator *certs;
-    NSSCertificate *cert;
-    PRBool removeIt;
-    certs = nssList_CreateIterator(certList);
-    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
-         cert != (NSSCertificate *)NULL;
-         cert  = (NSSCertificate *)nssListIterator_Next(certs))
-    {
-	removeIt = instance_destructor(cert, token);
-	if (removeIt) {
-	    nssList_Remove(certList, cert);
-	} else {
-	    /* force an update of the nickname and slot fields of the cert */
-	    (void)stan_GetCERTCertificate(cert, PR_TRUE);
-	}
-    }
-    nssListIterator_Finish(certs);
-    nssListIterator_Destroy(certs);
-}
-
-/* destroy the list of certs on a token */
-NSS_IMPLEMENT void
-nssToken_DestroyCertList(NSSToken *token, PRBool renewInstances)
-{
-    if (!token->certList) {
-	return;
-    }
-    destroy_token_certs(token->certList, token, renewInstances);
-    nssList_Clear(token->certList, NULL);
-    /* leave the list non-null to prevent it from being searched */
-}
-
-static void
-add_token_certs_to_list(NSSToken *token)
-{
-    nssCryptokiObject **objects, **op;
-    nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
-    objects = nssToken_FindCertificates(token, NULL, tokenOnly, 0, NULL);
-    if (!objects) {
-	return;
-    }
-    for (op = objects; *op; op++) {
-	nssPKIObject *pkiob = nssPKIObject_Create(NULL, *op, 
-	                                          token->trustDomain, NULL);
-	if (pkiob) {
-	    NSSCertificate *c = nssCertificate_Create(pkiob);
-	    nssList_Add(token->certList, c);
-	}
-    }
-    nss_ZFreeIf(objects);
-}
-
-/* create a list of local cert references for certain tokens */
-NSS_IMPLEMENT PRStatus
-nssToken_LoadCerts(NSSToken *token)
-{
-    PRStatus nssrv = PR_SUCCESS;
-    nssTokenCertSearch search;
-    if (!PK11_IsInternal(token->pk11slot) && PK11_IsHW(token->pk11slot)) {
-	/* Hardware token certs will be immediately cached, and no searches
-	 * will be performed on the token (the certs will be discovered by
-	 * cache lookups)
-	 */
-	search.callback = cache_token_cert;
-	search.cbarg = token;
-	search.cached = NULL;
-	search.searchType = nssTokenSearchType_TokenOnly;
-	if (!token->certList) {
-	    token->certList = nssList_Create(token->base.arena, PR_FALSE);
-	    if (!token->certList) {
-		return PR_FAILURE;
-	    }
-	} else if (nssList_Count(token->certList) > 0) {
-	    /* already been done */
-	    return PR_SUCCESS;
-	}
-	/* ignore the rv, just work without the list */
-	add_token_certs_to_list(token);
-	(void)nssToken_SetTrustCache(token);
-	(void)nssToken_SetCrlCache(token);
-
-	/* even if there are no certs, leave a valid list pointer should
-	 * any be imported.  Having the pointer will also prevent searches,
-	 * see below.
-	 */
-	if (nssList_Count(token->certList) == 0 &&
-	    !PK11_IsLoggedIn(token->pk11slot, NULL)) {
-	    /* If the token is not logged in, that may be the reason no
-	     * certs were found.
-	     */
-	    token->loggedIn = PR_FALSE;
-	}
-    }
-    return nssrv;
-}
-
-NSS_IMPLEMENT void
-nssToken_UpdateTrustForCerts(NSSToken *token)
-{
-    nssListIterator *certs;
-    NSSCertificate *cert;
-    certs = nssList_CreateIterator(token->certList);
-    for (cert  = (NSSCertificate *)nssListIterator_Start(certs);
-         cert != (NSSCertificate *)NULL;
-         cert  = (NSSCertificate *)nssListIterator_Next(certs))
-    {
-	CERTCertificate *cc = STAN_GetCERTCertificate(cert);
-	cc->trust = NULL;
-	/* force an update of the trust fields of the CERTCertificate */
-	(void)stan_GetCERTCertificate(cert, PR_FALSE);
-    }
-    nssListIterator_Finish(certs);
-    nssListIterator_Destroy(certs);
-}
-
-NSS_IMPLEMENT PRBool
-nssToken_SearchCerts
-(
-  NSSToken *token,
-  PRBool *notPresentOpt
-)
-{
-    if (notPresentOpt) {
-	*notPresentOpt = PR_FALSE;
-    }
-    if (!nssToken_IsPresent(token)) {
-	nssToken_DestroyCertList(token, PR_TRUE); /* will free cached certs */
-	if (notPresentOpt) {
-	    *notPresentOpt = PR_TRUE;
-	}
-    } else if (token->certList && 
-	       nssList_Count(token->certList) == 0 &&
-	       !token->loggedIn) {
-	/* If the token has no cached certs, but wasn't logged in, check
-	 * to see if it is logged in now and retry
-	 */
-	if (PK11_IsLoggedIn(token->pk11slot, NULL)) {
-	    token->loggedIn = PR_TRUE;
-	    nssToken_LoadCerts(token);
-	}
-    }
-    return (PRBool) (token->certList == NULL);
 }
 
 NSS_IMPLEMENT PRStatus
@@ -352,17 +123,9 @@ STAN_LoadDefaultNSS3TrustDomain
 	}
     }
     SECMOD_ReleaseReadLock(moduleLock);
+    td->tokens = nssList_CreateIterator(td->tokenList);
     g_default_trust_domain = td;
     g_default_crypto_context = NSSTrustDomain_CreateCryptoContext(td, NULL);
-    /* Cache hardware token certs with the token to make them persistent */
-    td->tokens = nssList_CreateIterator(td->tokenList);
-    for (token =  (NSSToken *)nssListIterator_Start(td->tokens);
-         token != (NSSToken *)NULL;
-	 token =  (NSSToken *)nssListIterator_Next(td->tokens)) 
-    {
-	nssToken_LoadCerts(token);
-    }
-    nssListIterator_Finish(td->tokens);
     return PR_SUCCESS;
 }
 
@@ -379,21 +142,11 @@ STAN_AddModuleToDefaultTrustDomain
     for (i=0; i<module->slotCount; i++) {
 	token = nssToken_CreateFromPK11SlotInfo(td, module->slots[i]);
 	PK11Slot_SetNSSToken(module->slots[i], token);
-	nssToken_LoadCerts(token);
 	nssList_Add(td->tokenList, token);
     }
     nssListIterator_Destroy(td->tokens);
     td->tokens = nssList_CreateIterator(td->tokenList);
     return SECSuccess;
-}
-
-NSS_IMPLEMENT void
-STAN_DestroyNSSToken(NSSToken *token)
-{
-    if (token->certList) {
-	nssToken_DestroyCertList(token, PR_FALSE);
-    }
-    nssToken_Destroy(token);
 }
 
 NSS_IMPLEMENT SECStatus
@@ -410,7 +163,7 @@ STAN_RemoveModuleFromDefaultTrustDomain
 	token = PK11Slot_GetNSSToken(module->slots[i]);
 	if (token) {
 	    nssList_Remove(td->tokenList, token);
-	    STAN_DestroyNSSToken(token);
+	    nssToken_Destroy(token);
  	}
     }
     nssListIterator_Destroy(td->tokens);

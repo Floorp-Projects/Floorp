@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.20 $ $Date: 2002/04/15 15:22:00 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.21 $ $Date: 2002/04/18 17:29:51 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -357,14 +357,10 @@ nssCryptokiCertificate_GetAttributes
 	return PR_SUCCESS;
     }
 
-#ifdef PURE_STAN_BUILD
     status = nssToken_GetCachedObjectAttributes(certObject->token, arenaOpt,
                                                 certObject, CKO_CERTIFICATE,
                                                 cert_template, template_size);
     if (status != PR_SUCCESS) {
-#else
-    if (PR_TRUE) {
-#endif
 
 	session = sessionOpt ? 
 	          sessionOpt : 
@@ -577,15 +573,11 @@ nssCryptokiTrust_GetAttributes
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CODE_SIGNING,     csTrust);
     NSS_CK_TEMPLATE_FINISH(trust_template, attr, trust_size);
 
-#ifdef PURE_STAN_BUILD
     status = nssToken_GetCachedObjectAttributes(trustObject->token, NULL,
                                                 trustObject, 
                                                 CKO_NETSCAPE_TRUST,
                                                 trust_template, trust_size);
     if (status != PR_SUCCESS) {
-#else
-    if (PR_TRUE) {
-#endif
 	session = sessionOpt ? 
 	          sessionOpt : 
 	          nssToken_GetDefaultSession(trustObject->token);
@@ -607,16 +599,15 @@ nssCryptokiTrust_GetAttributes
     return PR_SUCCESS;
 }
 
-#ifdef PURE_STAN_BUILD
 NSS_IMPLEMENT PRStatus
 nssCryptokiCRL_GetAttributes
 (
   nssCryptokiObject *crlObject,
   nssSession *sessionOpt,
   NSSArena *arenaOpt,
-  NSSItem *crl,
-  NSSItem *krl,
-  NSSItem *url
+  NSSItem *encodingOpt,
+  NSSUTF8 **urlOpt,
+  PRBool *isKRLOpt
 )
 {
     PRStatus status;
@@ -626,12 +617,19 @@ nssCryptokiCRL_GetAttributes
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE crl_template[5];
     CK_ULONG crl_size;
+    PRUint32 i;
 
     NSS_CK_TEMPLATE_START(crl_template, attr, crl_size);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TOKEN, isToken);
-    NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_VALUE);
-    NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_NETSCAPE_KRL);
-    NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_NETSCAPE_URL);
+    if (encodingOpt) {
+	NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_VALUE);
+    }
+    if (urlOpt) {
+	NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_NETSCAPE_URL);
+    }
+    if (isKRLOpt) {
+	NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_NETSCAPE_KRL);
+    }
     NSS_CK_TEMPLATE_FINISH(crl_template, attr, crl_size);
 
     status = nssToken_GetCachedObjectAttributes(crlObject->token, NULL,
@@ -653,10 +651,69 @@ nssCryptokiCRL_GetAttributes
 	}
     }
 
-    NSS_CK_ATTRIBUTE_TO_ITEM(&crl_template[0], crl);
-    NSS_CK_ATTRIBUTE_TO_ITEM(&crl_template[1], krl);
-    NSS_CK_ATTRIBUTE_TO_ITEM(&crl_template[2], url);
+    i=0;
+    if (encodingOpt) {
+	NSS_CK_ATTRIBUTE_TO_ITEM(&crl_template[i], encodingOpt); i++;
+    }
+    if (urlOpt) {
+	NSS_CK_ATTRIBUTE_TO_UTF8(&crl_template[i], *urlOpt); i++;
+    }
+    if (isKRLOpt) {
+	NSS_CK_ATTRIBUTE_TO_BOOL(&crl_template[i], *isKRLOpt); i++;
+    }
     return PR_SUCCESS;
 }
-#endif /* PURE_STAN_BUILD */
+
+NSS_IMPLEMENT PRStatus
+nssCryptokiPrivateKey_SetCertificate
+(
+  nssCryptokiObject *keyObject,
+  nssSession *sessionOpt,
+  NSSUTF8 *nickname,
+  NSSItem *id,
+  NSSDER *subject
+)
+{
+    CK_RV ckrv;
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE key_template[3];
+    CK_ULONG key_size;
+    void *epv = nssToken_GetCryptokiEPV(keyObject->token);
+    nssSession *session;
+    NSSToken *token = keyObject->token;
+    nssSession *defaultSession = nssToken_GetDefaultSession(token);
+    PRBool createdSession = PR_FALSE;
+
+    NSS_CK_TEMPLATE_START(key_template, attr, key_size);
+    NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL, nickname);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ID, id);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT, subject);
+    NSS_CK_TEMPLATE_FINISH(key_template, attr, key_size);
+
+    if (sessionOpt) {
+	if (!nssSession_IsReadWrite(sessionOpt)) {
+	    return PR_FAILURE;
+	} else {
+	    session = sessionOpt;
+	}
+    } else if (nssSession_IsReadWrite(defaultSession)) {
+	session = defaultSession;
+    } else {
+	NSSSlot *slot = nssToken_GetSlot(token);
+	session = nssSlot_CreateSession(token->slot, NULL, PR_TRUE);
+	createdSession = PR_TRUE;
+	nssSlot_Destroy(slot);
+    }
+
+    ckrv = CKAPI(epv)->C_SetAttributeValue(session->handle,
+                                           keyObject->handle,
+                                           key_template,
+                                           key_size);
+
+    if (createdSession) {
+	nssSession_Destroy(session);
+    }
+
+    return (ckrv == CKR_OK) ? PR_SUCCESS : PR_FAILURE;
+}
 

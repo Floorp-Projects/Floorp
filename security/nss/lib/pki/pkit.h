@@ -35,7 +35,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.12 $ $Date: 2002/04/15 15:22:10 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.13 $ $Date: 2002/04/18 17:30:04 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -189,6 +189,15 @@ struct NSSCryptoContextStr
 struct NSSTimeStr {
     PRTime prTime;
 };
+
+struct NSSCRLStr {
+  nssPKIObject object;
+  NSSDER encoding;
+  NSSUTF8 *url;
+  PRBool isKRL;
+};
+
+typedef struct NSSCRLStr NSSCRL;
 
 struct NSSPoliciesStr;
 

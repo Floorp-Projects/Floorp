@@ -35,7 +35,7 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.10 $ $Date: 2002/04/15 15:22:10 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.11 $ $Date: 2002/04/18 17:30:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSDEVT_H
@@ -74,29 +74,6 @@ STAN_LoadDefaultNSS3TrustDomain
 
 NSS_EXTERN void
 STAN_Shutdown();
-
-NSS_EXTERN void
-STAN_DestroyNSSToken(NSSToken *token);
-
-NSS_EXTERN PRBool
-nssToken_SearchCerts
-(
-  NSSToken *token,
-  PRBool *notPresentOpt
-);
-
-/* renewInstances -- if the cached token certs have multiple instances,
- * don't destroy them.  If this parameter is false, they will be destroyed
- * anyway (used for clean shutdown).
- */
-NSS_EXTERN void
-nssToken_DestroyCertList(NSSToken *token, PRBool renewInstances);
-
-NSS_EXTERN void
-nssCertificateList_DestroyTokenCerts(nssList *certList, NSSToken *token);
-
-NSS_EXTERN void
-nssCertificateList_RemoveTokenCerts(nssList *certList, NSSToken *token);
 
 NSS_EXTERN SECStatus
 STAN_AddModuleToDefaultTrustDomain

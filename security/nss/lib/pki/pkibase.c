@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.2 $ $Date: 2002/04/15 15:22:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.3 $ $Date: 2002/04/18 17:30:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -506,6 +506,22 @@ nssCertificateArray_Traverse
     return status;
 }
 
+
+NSS_IMPLEMENT void
+nssCRLArray_Destroy
+(
+  NSSCRL **crls
+)
+{
+    if (crls) {
+	NSSCRL **crlp;
+	for (crlp = crls; *crlp; crlp++) {
+	    nssCRL_Destroy(*crlp);
+	}
+	nss_ZFreeIf(crls);
+    }
+}
+
 /*
  * Object collections
  */
@@ -513,8 +529,9 @@ nssCertificateArray_Traverse
 typedef enum
 {
   pkiObjectType_Certificate = 0,
-  pkiObjectType_PrivateKey = 1,
-  pkiObjectType_PublicKey = 2
+  pkiObjectType_CRL = 1,
+  pkiObjectType_PrivateKey = 2,
+  pkiObjectType_PublicKey = 3
 } pkiObjectType;
 
 /* Each object is defined by a set of items that uniquely identify it.
@@ -847,6 +864,10 @@ nssPKIObjectCollection_Traverse
 	    status = (*callback->func.cert)((NSSCertificate *)node->object, 
 	                                    callback->arg);
 	    break;
+	case pkiObjectType_CRL: 
+	    status = (*callback->func.crl)((NSSCRL *)node->object, 
+	                                   callback->arg);
+	    break;
 	case pkiObjectType_PrivateKey: 
 	    status = (*callback->func.pvkey)((NSSPrivateKey *)node->object, 
 	                                     callback->arg);
@@ -985,6 +1006,109 @@ nssPKIObjectCollection_GetCertificates
 	    nss_ZFreeIf(rvOpt);
 	}
 	return (NSSCertificate **)NULL;
+    }
+    return rvOpt;
+}
+
+/*
+ * CRL/KRL collections
+ */
+
+static void
+crl_destroyObject(nssPKIObject *o)
+{
+    NSSCRL *crl = (NSSCRL *)o;
+    nssCRL_Destroy(crl);
+}
+
+static PRStatus
+crl_getUIDFromObject(nssPKIObject *o, NSSItem *uid)
+{
+    NSSCRL *crl = (NSSCRL *)o;
+    NSSDER *encoding;
+    encoding = nssCRL_GetEncoding(crl);
+    uid[0] = *encoding;
+    uid[1].data = NULL; uid[1].size = 0;
+    return PR_SUCCESS;
+}
+
+static PRStatus
+crl_getUIDFromInstance(nssCryptokiObject *instance, NSSItem *uid, 
+                       NSSArena *arena)
+{
+    return nssCryptokiCRL_GetAttributes(instance,
+                                        NULL,    /* XXX sessionOpt */
+                                        arena,   /* arena    */
+                                        &uid[0], /* encoding */
+                                        NULL,    /* url      */
+                                        NULL);   /* isKRL    */
+}
+
+static nssPKIObject *
+crl_createObject(nssPKIObject *o)
+{
+    return (nssPKIObject *)nssCRL_Create(o);
+}
+
+NSS_IMPLEMENT nssPKIObjectCollection *
+nssCRLCollection_Create
+(
+  NSSTrustDomain *td,
+  NSSCRL **crlsOpt
+)
+{
+    PRStatus status;
+    nssPKIObjectCollection *collection;
+    collection = nssPKIObjectCollection_Create(td, NULL);
+    collection->objectType = pkiObjectType_CRL;
+    collection->destroyObject = crl_destroyObject;
+    collection->getUIDFromObject = crl_getUIDFromObject;
+    collection->getUIDFromInstance = crl_getUIDFromInstance;
+    collection->createObject = crl_createObject;
+    if (crlsOpt) {
+	for (; *crlsOpt; crlsOpt++) {
+	    nssPKIObject *object = (nssPKIObject *)(*crlsOpt);
+	    status = nssPKIObjectCollection_AddObject(collection, object);
+	}
+    }
+    return collection;
+}
+
+NSS_IMPLEMENT NSSCRL **
+nssPKIObjectCollection_GetCRLs
+(
+  nssPKIObjectCollection *collection,
+  NSSCRL **rvOpt,
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+)
+{
+    PRStatus status;
+    PRUint32 rvSize;
+    PRBool allocated = PR_FALSE;
+    if (collection->size == 0) {
+	return (NSSCRL **)NULL;
+    }
+    if (maximumOpt == 0) {
+	rvSize = collection->size;
+    } else {
+	rvSize = PR_MIN(collection->size, maximumOpt);
+    }
+    if (!rvOpt) {
+	rvOpt = nss_ZNEWARRAY(arenaOpt, NSSCRL *, rvSize + 1);
+	if (!rvOpt) {
+	    return (NSSCRL **)NULL;
+	}
+	allocated = PR_TRUE;
+    }
+    status = nssPKIObjectCollection_GetObjects(collection, 
+                                               (nssPKIObject **)rvOpt, 
+                                               rvSize);
+    if (status != PR_SUCCESS) {
+	if (allocated) {
+	    nss_ZFreeIf(rvOpt);
+	}
+	return (NSSCRL **)NULL;
     }
     return rvOpt;
 }

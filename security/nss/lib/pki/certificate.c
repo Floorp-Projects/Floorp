@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.34 $ $Date: 2002/04/15 15:22:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.35 $ $Date: 2002/04/18 17:30:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -1034,5 +1034,80 @@ nssSMIMEProfile_Destroy
 	(void)nssPKIObject_Destroy(&profile->object);
     }
     return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT NSSCRL *
+nssCRL_Create
+(
+  nssPKIObject *object
+)
+{
+    PRStatus status;
+    NSSCRL *rvCRL;
+    NSSArena *arena = object->arena;
+    PR_ASSERT(object->instances != NULL && object->numInstances > 0);
+    rvCRL = nss_ZNEW(arena, NSSCRL);
+    if (!rvCRL) {
+	return (NSSCRL *)NULL;
+    }
+    rvCRL->object = *object;
+    /* XXX should choose instance based on some criteria */
+    status = nssCryptokiCRL_GetAttributes(object->instances[0],
+                                          NULL,  /* XXX sessionOpt */
+                                          arena,
+                                          &rvCRL->encoding,
+                                          &rvCRL->url,
+                                          &rvCRL->isKRL);
+    if (status != PR_SUCCESS) {
+	return (NSSCRL *)NULL;
+    }
+    return rvCRL;
+}
+
+NSS_IMPLEMENT NSSCRL *
+nssCRL_AddRef
+(
+  NSSCRL *crl
+)
+{
+    if (crl) {
+	nssPKIObject_AddRef(&crl->object);
+    }
+    return crl;
+}
+
+NSS_IMPLEMENT PRStatus
+nssCRL_Destroy
+(
+  NSSCRL *crl
+)
+{
+    if (crl) {
+	(void)nssPKIObject_Destroy(&crl->object);
+    }
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT PRStatus
+nssCRL_DeleteStoredObject
+(
+  NSSCRL *crl,
+  NSSCallback *uhh
+)
+{
+    return nssPKIObject_DeleteStoredObject(&crl->object, uhh, PR_TRUE);
+}
+
+NSS_IMPLEMENT NSSDER *
+nssCRL_GetEncoding
+(
+  NSSCRL *crl
+)
+{
+    if (crl->encoding.data != NULL && crl->encoding.size > 0) {
+	return &crl->encoding;
+    } else {
+	return (NSSDER *)NULL;
+    }
 }
 
