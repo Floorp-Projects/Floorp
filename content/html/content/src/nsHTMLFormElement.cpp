@@ -165,6 +165,7 @@ public:
   NS_IMETHOD OnSubmitClickEnd();
   NS_IMETHOD FlushPendingSubmission();
   NS_IMETHOD ForgetPendingSubmission();
+  NS_IMETHOD GetActionURL(nsIURI** aActionURL);
 
   // nsIRadioGroupContainer
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
@@ -263,12 +264,7 @@ protected:
    */
   nsresult WalkFormElements(nsIFormSubmission* aFormSubmission,
                             nsIContent* aSubmitElement);
-  /**
-   * Get the full URL to submit to.  Do not submit if the returned URL is null.
-   *
-   * @param aActionURL the full, unadulterated URL you'll be submitting to
-   */
-  nsresult GetActionURL(nsIURI** aActionURL);
+
   /**
    * Notify any submit observsers of the submit.
    *
@@ -1113,89 +1109,6 @@ nsHTMLFormElement::WalkFormElements(nsIFormSubmission* aFormSubmission,
   return NS_OK;
 }
 
-nsresult
-nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
-{
-  nsresult rv = NS_OK;
-
-  *aActionURL = nsnull;
-
-  //
-  // Grab the URL string
-  //
-  nsAutoString action;
-  GetAction(action);
-
-  //
-  // Form the full action URL
-  //
-
-  // Get the document to form the URL.
-  // We'll also need it later to get the DOM window when notifying form submit
-  // observers (bug 33203)
-  if (!mDocument) {
-    return NS_OK; // No doc means don't submit, see Bug 28988
-  }
-
-  // Get base URL
-  nsCOMPtr<nsIURI> docURL;
-  mDocument->GetDocumentURL(getter_AddRefs(docURL));
-  NS_ENSURE_TRUE(docURL, NS_ERROR_UNEXPECTED);
-
-  // If an action is not specified and we are inside
-  // a HTML document then reload the URL. This makes us
-  // compatible with 4.x browsers.
-  // If we are in some other type of document such as XML or
-  // XUL, do nothing. This prevents undesirable reloading of
-  // a document inside XUL.
-
-  nsCOMPtr<nsIURI> actionURL;
-  if (action.IsEmpty()) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
-    if (!htmlDoc) {
-      // Must be a XML, XUL or other non-HTML document type
-      // so do nothing.
-      return NS_OK;
-    }
-
-    rv = docURL->Clone(getter_AddRefs(actionURL));
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(*getter_AddRefs(baseURL));
-    NS_ASSERTION(baseURL, "No Base URL found in Form Submit!\n");
-    if (!baseURL) {
-      return NS_OK; // No base URL -> exit early, see Bug 30721
-    }
-    rv = NS_NewURI(getter_AddRefs(actionURL), action, nsnull, baseURL);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  //
-  // Verify the URL should be reached
-  //
-  // Get security manager, check to see if access to action URI is allowed.
-  //
-  // XXX This code has not been tested.  mailto: does not work in forms.
-  //
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = securityManager->CheckLoadURI(docURL, actionURL,
-                                     nsIScriptSecurityManager::STANDARD);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  //
-  // Assign to the output
-  //
-  *aActionURL = actionURL;
-  NS_ADDREF(*aActionURL);
-
-  return rv;
-}
-
-
 // nsIForm
 
 NS_IMETHODIMP
@@ -1342,6 +1255,88 @@ nsHTMLFormElement::ForgetPendingSubmission()
   // just delete the pending submission
   mPendingSubmission = nsnull;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
+{
+  nsresult rv = NS_OK;
+
+  *aActionURL = nsnull;
+
+  //
+  // Grab the URL string
+  //
+  nsAutoString action;
+  GetAction(action);
+
+  //
+  // Form the full action URL
+  //
+
+  // Get the document to form the URL.
+  // We'll also need it later to get the DOM window when notifying form submit
+  // observers (bug 33203)
+  if (!mDocument) {
+    return NS_OK; // No doc means don't submit, see Bug 28988
+  }
+
+  // Get base URL
+  nsCOMPtr<nsIURI> docURL;
+  mDocument->GetDocumentURL(getter_AddRefs(docURL));
+  NS_ENSURE_TRUE(docURL, NS_ERROR_UNEXPECTED);
+
+  // If an action is not specified and we are inside
+  // a HTML document then reload the URL. This makes us
+  // compatible with 4.x browsers.
+  // If we are in some other type of document such as XML or
+  // XUL, do nothing. This prevents undesirable reloading of
+  // a document inside XUL.
+
+  nsCOMPtr<nsIURI> actionURL;
+  if (action.IsEmpty()) {
+    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+    if (!htmlDoc) {
+      // Must be a XML, XUL or other non-HTML document type
+      // so do nothing.
+      return NS_OK;
+    }
+
+    rv = docURL->Clone(getter_AddRefs(actionURL));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    nsCOMPtr<nsIURI> baseURL;
+    GetBaseURL(*getter_AddRefs(baseURL));
+    NS_ASSERTION(baseURL, "No Base URL found in Form Submit!\n");
+    if (!baseURL) {
+      return NS_OK; // No base URL -> exit early, see Bug 30721
+    }
+    rv = NS_NewURI(getter_AddRefs(actionURL), action, nsnull, baseURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  //
+  // Verify the URL should be reached
+  //
+  // Get security manager, check to see if access to action URI is allowed.
+  //
+  // XXX This code has not been tested.  mailto: does not work in forms.
+  //
+  nsCOMPtr<nsIScriptSecurityManager> securityManager =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = securityManager->CheckLoadURI(docURL, actionURL,
+                                     nsIScriptSecurityManager::STANDARD);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  //
+  // Assign to the output
+  //
+  *aActionURL = actionURL;
+  NS_ADDREF(*aActionURL);
+
+  return rv;
 }
 
 NS_IMETHODIMP
