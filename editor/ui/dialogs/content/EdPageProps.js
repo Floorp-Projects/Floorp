@@ -47,7 +47,6 @@ function Startup()
     window.close();
   }
   dialog.PageLocation     = document.getElementById("PageLocation");
-  dialog.PageModDate      = document.getElementById("PageModDate");
   dialog.TitleInput       = document.getElementById("TitleInput");
   dialog.AuthorInput      = document.getElementById("AuthorInput");
   dialog.DescriptionInput = document.getElementById("DescriptionInput");
@@ -60,7 +59,12 @@ function Startup()
   //   so set only if not new doc URL
   var location = editorShell.editorDocument.location;
   if (location != "about:blank")
+  {
     dialog.PageLocation.setAttribute("value", editorShell.editorDocument.location);
+    // Get last-modified file date+time
+    // TODO: Convert this to local time?
+    document.getElementById("PageModDate").setAttribute("value",editorShell.editorDocument.lastModified);
+  }
 
   authorElement = GetMetaElement("author");
   if (!authorElement)
