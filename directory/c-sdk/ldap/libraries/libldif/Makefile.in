@@ -40,6 +40,8 @@ INSTALLDIR      = $(DIST)/$(OBJDIR_NAME)
 
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE 	+= $(LIBLDIF)
+
 LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
 INCLUDES	+= -I$(HDIR) -I$(INSTALLDIR)/include -I$(DIST)/include
 DEFINES		+= $(DEFS)

@@ -48,6 +48,8 @@ RELEASE_LIBS	= $(DLLSSLDAP)
 
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE 	+= $(LIBSSLDAP) $(DLLSSLDAP)
+
 LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
 INCLUDES	+= -I$(DISTHDIR) -I$(HDIR) -I$(INSTALLDIR)/include \
 		   -I$(DIST)/include \
