@@ -42,3 +42,18 @@ sub split_cgi_args {
     }
 }
 
+sub url_encode {
+  my ($s) = @_;
+
+  $s =~ s/\%/\%25/g;
+  $s =~ s/\=/\%3d/g;
+  $s =~ s/\?/\%3f/g;
+  $s =~ s/ /\%20/g;
+  $s =~ s/\n/\%0a/g;
+  $s =~ s/\r//g;
+  $s =~ s/\"/\%22/g;
+  $s =~ s/\'/\%27/g;
+  $s =~ s/\|/\%7c/g;
+  $s =~ s/\&/\%26/g;
+  return $s;
+}
