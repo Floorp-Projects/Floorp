@@ -1,2 +1,10 @@
-nsMetaCharsetCID.h
+nsCharsetDetectionAdaptorCID.h
+nsDetectionConfident.h
+nsICharsetDetectionAdaptor.h
+nsICharsetDetectionObserver.h
+nsICharsetDetector.h
 nsIMetaCharsetService.h
+nsIStringCharsetDetector.h
+nsIXMLEncodingService.h
+nsMetaCharsetCID.h
+nsXMLEncodingCID.h
