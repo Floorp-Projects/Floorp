@@ -357,7 +357,7 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		WIDGET* curWidget = CurrentNode->pageWidgets[i];
 		if (curWidget->widgetID != nID) 
 			continue;
-		if (curWidget->type == "EditBox" || curWidget->type == "JSEditBox")
+		if (curWidget->type == "EditBox")
 		{
 			if (wNotifyCode == EN_KILLFOCUS)
 				if(((CEdit*)curWidget->control)->GetModify())
@@ -523,46 +523,6 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 		if (curWidget->value && curWidget->value != "")
 		{
 			selRv = ((CComboBox*)curWidget->control)->SelectString(-1, curWidget->value);
-
-			CString rootPath1 = GetGlobal("Root");
-			CString tpath1 = rootPath1 + "nscpxpiLinux";
-			int direxist = GetFileAttributes(tpath1);
-			if (strcmp((curWidget->value),"Windows") == 0)
-			{
-				WIDGET *widg = findWidget("LinuxPath");
-				if (widg)
-				widg->control->EnableWindow(FALSE);
-				widg = findWidget("Text7888");
-				if (widg)
-				widg->control->EnableWindow(FALSE);
-				widg = findWidget("Button9888");
-				if (widg)
-				widg->control->EnableWindow(FALSE);
-			}
-			else if ((strcmp(curWidget->value,"Linux")==0) && (direxist == -1))
-			{
-				WIDGET *widg = findWidget("LinuxPath");
-				if (widg)
-				widg->control->EnableWindow(TRUE);
-				widg = findWidget("Text7888");
-				if (widg)
-				widg->control->EnableWindow(TRUE);
-				widg = findWidget("Button9888");
-				if (widg)
-				widg->control->EnableWindow(TRUE);
-			}
-			else if ((strcmp(curWidget->value,"Linux")==0) && (direxist != -1))
-			{
-				WIDGET *widg = findWidget("LinuxPath");
-				if (widg)
-					widg->control->EnableWindow(FALSE);
-				widg = findWidget("Text7888");
-				if (widg)
-					widg->control->EnableWindow(FALSE);
-				widg = findWidget("Button9888");
-				if (widg)
-					widg->control->EnableWindow(FALSE);
-			}		
 		}
 
 		if (selRv == CB_ERR)
@@ -572,38 +532,6 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
   else if(curWidget->type == "PrefsTree")
   {
   }
-
-    else if(curWidget->type == "JSEditBox")
-  {
-		CEdit *pEditCtl = ((CEdit*)curWidget->control);
-    pEditCtl->SetSel(0,-1);
-    pEditCtl->Clear();
-
-		CString rootPath	= GetGlobal("Root");
-  	CString configName	= GetGlobal("CustomizationList");
-		CString localJavaScriptFile = rootPath + "Configs\\" + configName + "\\" + curWidget->attrib;
-
-    if (theApp.FileExists(localJavaScriptFile))
-    {
-      CStdioFile sf(localJavaScriptFile,CFile::modeRead | CFile::typeText);
-      CString strLine;
-
-      while (sf.ReadString(strLine))
-      {
-        strLine+="\r\n";
-	      int len=pEditCtl->GetWindowTextLength();
-	      pEditCtl->SetSel(len,len);
-	      pEditCtl->ReplaceSel(strLine);
-      }
-
-      sf.Close();
-    
-      // place cursor at top
-      pEditCtl->SetSel(-1,-1,FALSE);
-
-    }  // local JS file exists
-
-  }  // JSEditBox
 
 }
 
@@ -690,20 +618,6 @@ void CWizardUI::CreateControls()
 			{
 				//Set maximum number of characters allowed per line - limit set to 200
 				((CEdit*)curWidget->control)->SetLimitText(int(curWidget->fieldlen.length));
-				((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
-				((CEdit*)curWidget->control)->SetModify(FALSE);
-			}
-		}
-    else if (widgetType == "JSEditBox")
-    {
-			curWidget->control = new CEdit;//Added new style parameter ES_AUTOHSCROLL- to allow *GASP* SCROLLING!!
-			if (rv = ((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
-													_T("EDIT"), 
-													NULL,
-													WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER |ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL,
-													tmpRect,this, ID, 0 ))
-			{
-				//Set maximum number of characters allowed per line - limit set to 200
 				((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
 				((CEdit*)curWidget->control)->SetModify(FALSE);
 			}
@@ -1081,19 +995,13 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 
 		rv = CString(temp);
 	}
-	else if (widgetType == "EditBox")
-  {
+	else if (widgetType == "EditBox") {
 		char myLine[MAX_SIZE];
 		curWidget->control->GetWindowText(myLine, 250);
 
 		CString line = (CString)myLine;
 		rv = line;
 	}
-  else if (widgetType == "JSEditBox")
-  {
-
-  }
-
 	else if (widgetType == "ListBox")
 	{
 		LPINT choices;
@@ -1148,37 +1056,11 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 		{
 			char tmpStr[MIN_SIZE];
 			((CComboBox*)curWidget->control)->GetLBText(selectedIndex, tmpStr);
-			
-			CString rootPath1 = GetGlobal("Root");
-			CString tpath1 = rootPath1 + "nscpxpiLinux";
-			int direxist = GetFileAttributes(tpath1);
-			if ((strcmp(tmpStr,"Windows")) == 0)
-			{
-				WIDGET *widg = findWidget("LinuxPath");
-				if (widg)
-				widg->control->EnableWindow(FALSE);
-				widg = findWidget("Text7888");
-				if (widg)
-				widg->control->EnableWindow(FALSE);
-				widg = findWidget("Button9888");
-				if (widg)
-				widg->control->EnableWindow(FALSE);
-			}
-			else if ((strcmp(tmpStr,"Linux")==0) && (direxist == -1))
-			{
-				WIDGET *widg = findWidget("LinuxPath");
-				if (widg)
-				widg->control->EnableWindow(TRUE);
-				widg = findWidget("Text7888");
-				if (widg)
-				widg->control->EnableWindow(TRUE);
-				widg = findWidget("Button9888");
-				if (widg)
-				widg->control->EnableWindow(TRUE);
-			}
-			else
-			{}
 			rv = CString(tmpStr);
+		}
+		else
+		{
+			rv = curWidget->value;
 		}
 	}
 /*	else if (widgetType == "DynamicText") 
@@ -1227,50 +1109,7 @@ void CWizardUI::UpdateGlobals()
 
       ((CPrefEditView*)curWidget->control)->DoSavePrefsTree(localPrefsFile);
     }
-    else if (curWidget->type == "JSEditBox")
-    {
- 			CString rootPath	= GetGlobal("Root");
-			CString configName	= GetGlobal("CustomizationList");
-			CString localJavaScriptFile = rootPath + "Configs\\" + configName + "\\" + curWidget->attrib;
-
-      // save it to the file, simple text mode
-      CEdit *pJSEB = (CEdit *)curWidget->control;
-      CString strText;
-
-      if (pJSEB->GetModify())
-      {
-        FILE* fp = fopen(localJavaScriptFile, "wt");
-        int nLineCount, nLineLength;
-
-        if (fp)
-        {
-          nLineCount = pJSEB->GetLineCount();
-
-          for (i=0;i < nLineCount;i++)
-          {
-            nLineLength = pJSEB->GetLine(i, strText.GetBuffer(512),1024);
-            strText.ReleaseBuffer(nLineLength);
-
-            if (nLineLength)
-            {
-
-              if (!fwrite(strText, 1, nLineLength, fp))
-               break;
-              fwrite("\n",1,1,fp);
-            }
-
-          }  // line loop
-
-         fclose(fp);
-
-        }  // file open okay
-
-      }  // edit control modified
-
-    }  // JSEditBox
-
 	}
-
 	IsNewValue = TRUE;
 }
 
