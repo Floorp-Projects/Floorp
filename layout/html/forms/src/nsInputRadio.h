@@ -19,11 +19,13 @@
 #ifndef nsInputRadio_h___
 #define nsInputRadio_h___
 
-#include "nsInputCheckbox.h"
+// this class defintion will be moved into nsInputRadio.cpp
+
+#include "nsInput.h"
 class nsIAtom;
 class nsString;
 
-class nsInputRadio : public nsInputCheckbox {
+class nsInputRadio : public nsInput {
 public:
   nsInputRadio (nsIAtom* aTag, nsIFormManager* aManager);
 

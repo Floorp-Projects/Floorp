@@ -24,6 +24,8 @@
 #include "nsCSSRendering.h"
 #include "nsHTMLIIDs.h"
 
+// this file is obsolete and will be removed
+
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 
 enum FormElementType {

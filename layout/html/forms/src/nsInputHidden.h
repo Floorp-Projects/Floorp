@@ -23,6 +23,8 @@
 class nsIAtom;
 class nsString;
 
+// this class definition will move to nsInputHidden.cpp
+
 class nsInputHidden : public nsInput {
 public:
   nsInputHidden (nsIAtom* aTag, nsIFormManager* aManager);

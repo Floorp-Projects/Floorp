@@ -19,18 +19,16 @@
 #ifndef nsInputFrame_h___
 #define nsInputFrame_h___
 
-//#include "nsHTMLParts.h"
 #include "nsHTMLTagContent.h"
 #include "nsISupports.h"
 #include "nsIWidget.h"
-class nsIView;
-//#include "nsIRenderingContext.h"
-//#include "nsIPresContext.h"
-//#include "nsIStyleContext.h"
 #include "nsLeafFrame.h"
-//#include "nsCSSRendering.h"
-//#include "nsHTMLIIDs.h"
 
+class nsIView;
+
+/**
+  * Enumeration of possible mouse states used to detect mouse clicks
+  */
 enum nsMouseState {
   eMouseNone,
   eMouseEnter,
@@ -38,45 +36,109 @@ enum nsMouseState {
   eMouseUp
 };
 
+/** 
+  * nsInputFrame is the base class for frames of form controls. It
+  * provides a uniform way of creating widgets, resizing, and painting.
+  * @see nsLeafFrame and its base classes for more info
+  */
 class nsInputFrame : public nsLeafFrame {
 public:
+  /**
+    * Main constructor
+    * @param aContent the content representing this frame
+    * @param aIndexInParent the position in the parent frame's children which this frame occupies
+    * @param aParentFrame the parent frame
+    */
   nsInputFrame(nsIContent* aContent,
                PRInt32 aIndexInParent,
                nsIFrame* aParentFrame);
 
+  // nsLeafFrame overrides
+
+  /** 
+    * Respond to a gui event
+    * @see nsIFrame::HandleEvent
+    */
+  virtual nsEventStatus HandleEvent(nsIPresContext& aPresContext, 
+                                    nsGUIEvent* aEvent);
+  /**
+    * Draw this frame within the context of a presentation context and rendering context
+    * @see nsIFrame::Paint
+    */
   virtual void Paint(nsIPresContext& aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect);
 
+  /**
+    * Respond to the request to resize and/or reflow
+    * @see nsIFrame::ResizeReflow
+    */
   virtual ReflowStatus  ResizeReflow(nsIPresContext*  aCX,
                                      nsReflowMetrics& aDesiredSize,
                                      const nsSize&    aMaxSize,
                                      nsSize*          aMaxElementSize);
 
-  virtual const nsIID GetCID(); // make this pure virtual
+  // New Behavior
 
-  virtual const nsIID GetIID(); // make this pure virtual
+  /**
+    * Get the class id of the widget associated with this frame
+    * @return the class id
+    */
+  virtual const nsIID GetCID(); 
 
+  /**
+    * Get the interface id of widget associated with this frame
+    * @return the interface id
+    */
+  virtual const nsIID GetIID(); 
+
+  /**
+    * Get the widget associated with this frame
+    * @param aView the view associated with the frame. It is a convience parm.
+    * @param aWidget the address of address of where the widget will be placed.
+    * This method doses an AddRef on the widget.
+    */
   virtual nsresult GetWidget(nsIView* aView, nsIWidget** aWidget);
 
-  virtual void InitializeWidget(nsIView *aView) = 0;  // initialize widget in ResizeReflow
+  /**
+    * Perform opertations after the widget associated with this frame has been
+    * fully constructed.
+    */
+  virtual void InitializeWidget(nsIView *aView) = 0;  
 
-  virtual void PreInitializeWidget(nsIPresContext* aPresContext, 
-	                               nsSize& aBounds); // make this pure virtual
-
-  virtual nsEventStatus HandleEvent(nsIPresContext& aPresContext, 
-                             nsGUIEvent* aEvent);
-
+  /**
+    * Respond to a mouse click (e.g. mouse enter, mouse down, mouse up)
+    */
   virtual void MouseClicked() {}
 
+  /**
+    * Perform operations before the widget associated with this frame has been
+    * constructed.
+    * @param aPresContext the presentation context
+    * @param aBounds the bounds of this frame. It will be set by this method.
+    */
+  virtual void PreInitializeWidget(nsIPresContext* aPresContext, 
+	                                 nsSize& aBounds); 
+
 protected:
+
   virtual ~nsInputFrame();
+
+  /**
+    * Get the size that this frame would occupy without any constraints
+    * @param aPresContext the presentation context
+    * @param aDesiredSize the size desired by this frame, to be set by this method
+    * @param aMaxSize the maximum size available for this frame
+    */
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               nsReflowMetrics& aDesiredSize,
                               const nsSize& aMaxSize);
+  /**
+    * Return PR_TRUE if the bounds of this frame have been set
+    */
   PRBool BoundsAreSet();
 
-  nsSize   mCacheBounds;
+  nsSize       mCacheBounds;
   nsMouseState mLastMouseState;
 };
 

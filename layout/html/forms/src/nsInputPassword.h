@@ -23,6 +23,8 @@
 class nsIAtom;
 class nsString;
 
+// this class definition will move to nsInputPassword.cpp
+
 class nsInputPassword : public nsInputText {
 public:
   nsInputPassword (nsIAtom* aTag, nsIFormManager* aManager);

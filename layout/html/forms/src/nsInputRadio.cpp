@@ -92,7 +92,7 @@ nsInputRadioFrame::InitializeWidget(nsIView *aView)
 // nsInputRadio
 
 nsInputRadio::nsInputRadio(nsIAtom* aTag, nsIFormManager* aManager)
-  : nsInputCheckbox(aTag, aManager) 
+  : nsInput(aTag, aManager) 
 {
 }
 
