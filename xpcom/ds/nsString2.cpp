@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -737,75 +736,23 @@ char* nsString::ToNewCString() const {
  * http://www.cis.ohio-state.edu/htbin/rfc/rfc2279.html
  */
 char* nsString::ToNewUTF8String() const {
-  nsCString temp("");
-  temp.SetCapacity(8); //ensure that we get an allocated buffer instead of the common empty one.
+  NS_ConvertUCS2toUTF8 temp(mUStr);
 
-  // Caculate how many bytes we need
-  PRUnichar* p;
-  PRInt32 utf8len;
-  for(p = this->mUStr, utf8len=0; 0 != (*p);p++)
-  {
-     if(0x0000 == ((*p) & 0x007F))
-        utf8len += 1; // 0000 0000 - 0000 007F
-     else if(0x0000 == ((*p) & 0x07FF))
-        utf8len += 2; // 0000 0080 - 0000 07FF
-     else 
-        utf8len += 3; // 0000 0800 - 0000 FFFF
-     // Note: Surrogate pair need 4 bytes, but in this caculation
-     // we count as 6 bytes. It will wast 2 bytes per surrogate pair
+  char* result;
+  if (temp.mOwnsBuffer) {
+    // We allocated. Trick the string into not freeing its buffer to
+    // avoid an extra allocation.
+    result = temp.mStr;
+
+    temp.mStr=0;
+    temp.mOwnsBuffer = PR_FALSE;
+  }
+  else {
+    // We didn't allocate a buffer, so we need to copy it out of the
+    // nsCAutoString's storage.
+    result = nsCRT::strdup(temp.mStr);
   }
 
-  if((utf8len+1) > 8)
-     temp.SetCapacity(utf8len+1); 
-
-  char* result=temp.mStr;
-  char* out = result;
-  PRUint32 ucs4=0;
-
-  for(p = this->mUStr, utf8len=0; 0 != (*p);p++)
-  {
-     if(0 == ucs4) {
-       if(0x0000 == ((*p) & 0xFF80)) {
-          *out++ = (char)*p;
-       } else if(0x0000 == ((*p) & 0xF800)) {
-          *out++ = 0xC0 | (char)((*p) >> 6);
-          *out++ = 0x80 | (char)(0x003F & (*p));
-       } else {
-          if( 0xD800 == ( 0xFC00 & (*p))) 
-          { // D800- DBFF - High Surrogate 
-            // N = (H- D800) *400 + 10000 + ...
-            ucs4 = 0x10000 | ((0x03FF & (*p)) << 10);
-          } else if( 0xDC00 == ( 0xFC00 & (*p))) { 
-            // DC00- DFFF - Low Surrogate 
-            // error here. We should hit High Surrogate first
-            // Do not output any thing in this case
-          } else {
-            *out++ = 0xE0 | (char)((*p) >> 12);
-            *out++ = 0x80 | (char)(0x003F & (*p >> 6));
-            *out++ = 0x80 | (char)(0x003F & (*p) );
-          }
-       }
-     } else {
-       if( 0xDC00 == (0xFC00 & (*p))) { 
-         // DC00- DFFF - Low Surrogate 
-         // N += ( L - DC00 )  
-         ucs4 |= (0x03FF & (*p));
-         // 0001 0000-001F FFFF
-         *out++ = 0xF0 | (char)(ucs4 >> 18);
-         *out++ = 0x80 | (char)(0x003F & (ucs4 >> 12));
-         *out++ = 0x80 | (char)(0x003F & (ucs4 >> 6));
-         *out++ = 0x80 | (char)(0x003F & ucs4) ;
-       } else {
-         // Got a High Surrogate but no low surrogate
-         // output nothing.
-       }
-       ucs4 = 0;
-     }
-  }
-  *out = '\0'; // null terminate
-  temp.mStr=0;
-  temp.mOwnsBuffer=PR_FALSE;
-  
   return result;
 }
 
