@@ -268,6 +268,8 @@ morkThumb::Make_LargeCommit(morkEnv* ev,
           morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
           morkFile::SlotStrongFile(file, ev, &outThumb->mThumb_File);
           morkWriter::SlotStrongWriter(writer, ev, &outThumb->mThumb_Writer);
+		  // writer no longer holds on to this.
+		  writer->CutStrongRef(ev);
         }
       }
     }
