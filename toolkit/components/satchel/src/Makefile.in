@@ -29,26 +29,31 @@ MODULE = satchel
 LIBRARY_NAME = satchel_s
 FORCE_STATIC_LIB = 1
 
-REQUIRES = xpcom \
-		       string \
-		       autocomplete \
-		       uriloader \
-		       dom \
-		       layout \
-		       docshell \
-		       gfx \
-		       necko \
-		       widget \
-		       content \
-		       view \
-		       locale \
-		       mork \
-		       unicharutil \
-		       js \
-		       $(NULL)
+REQUIRES = 	\
+		xpcom \
+		string \
+		autocomplete \
+		uriloader \
+		dom \
+		layout \
+		docshell \
+		gfx \
+		necko \
+		widget \
+		content \
+		view \
+		locale \
+		mork \
+		unicharutil \
+		js \
+		windowwatcher \
+		intl \
+		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
           nsFormHistory.cpp \
           $(NULL)
+
+LOCAL_INCLUDES = -I$(srcdir)/../../passwordmgr/base
 
 include $(topsrcdir)/config/rules.mk

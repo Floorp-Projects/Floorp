@@ -33,34 +33,40 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = nsToolkitCompsModule
 
-REQUIRES = xpcom \
-		       string \
-		       layout \
-		       dom \
-		       mork \
-		       pref \
-		       rdf \
-		       intl \
-		       docshell \
-		       autocomplete \
-		       history \
-		       satchel \
-		       $(NULL)
+REQUIRES = 	\
+		xpcom \
+		string \
+		layout \
+		dom \
+		mork \
+		pref \
+		rdf \
+		intl \
+		docshell \
+		autocomplete \
+		history \
+		satchel \
+		necko \
+		windowwatcher \
+		uriloader \
+		$(NULL)
 
 EXPORTS = nsToolkitCompsCID.h
 
-CPPSRCS = nsModule.cpp \
-          $(NULL)
+CPPSRCS = nsModule.cpp
 
 LOCAL_INCLUDES = \
-    -I$(srcdir)/../autocomplete/src \
-    -I$(srcdir)/../history/src \
-    -I$(srcdir)/../satchel/src \
+	-I$(srcdir)/../autocomplete/src \
+	-I$(srcdir)/../history/src \
+	-I$(srcdir)/../satchel/src \
+	-I$(srcdir)/../passwordmgr/base \
+	$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)satchel_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LIBS = gkgfx

@@ -64,6 +64,7 @@
 #include "nsRect.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsPasswordManager.h"
 
 NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
@@ -457,12 +458,27 @@ NS_IMETHODIMP
 nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAString &aSearchParam,
                                   nsIAutoCompleteResult *aPreviousResult, nsIAutoCompleteObserver *aListener)
 {
-  nsFormHistory *history = nsFormHistory::GetInstance();
+  nsCOMPtr<nsIAutoCompleteResult> result;
+  nsCOMPtr<nsIAutoCompleteMdbResult> mdbResult = do_QueryInterface(aPreviousResult);
 
-  nsIAutoCompleteMdbResult *result = nsnull;
-  history->AutoCompleteSearch(aSearchParam, aSearchString, NS_STATIC_CAST(nsIAutoCompleteMdbResult *, aPreviousResult), &result);
+  nsPasswordManager* passMgr = nsPasswordManager::GetInstance();
 
-  NS_IF_RELEASE(history);
+  // Only hand off a previous result to the password manager if it's
+  // a password manager result (i.e. not an nsIAutoCompleteMdbResult).
+
+  if (!passMgr->AutoCompleteSearch(aSearchString,
+                                   mdbResult ? nsnull : aPreviousResult,
+                                   mFocusedInput,
+                                   getter_AddRefs(result)))
+  {
+    nsFormHistory *history = nsFormHistory::GetInstance();
+    history->AutoCompleteSearch(aSearchParam,
+                                aSearchString,
+                                mdbResult,
+                                getter_AddRefs(result));
+
+    NS_IF_RELEASE(history);
+  }
 
   aListener->OnSearchResult(this, result);  
   
