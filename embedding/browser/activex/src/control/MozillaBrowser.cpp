@@ -728,12 +728,15 @@ HRESULT CMozillaBrowser::Initialize()
 	// Create an object to represent the path
 	if (_tcslen(szBinDirPath) > 0)
 	{
+	    nsCOMPtr<nsILocalFile> binDir;
+	    
 		USES_CONVERSION;
-		nsresult res = NS_InitEmbedding(T2A(szBinDirPath));
+		NS_NewLocalFile(T2A(szBinDirPath), TRUE, getter_AddRefs(binDir));
+		nsresult res = NS_InitEmbedding(binDir, nsnull);
 	}
     else
     {
-        NS_InitEmbedding((const char *) nsnull);
+        NS_InitEmbedding(nsnull, nsnull);
     }
 
 	return S_OK;
