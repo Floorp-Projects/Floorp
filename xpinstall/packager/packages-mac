@@ -147,7 +147,6 @@ viewer:Components:prefextras.xpt
 viewer:Components:libutil.xpt
 viewer:Components:lwbrk.shlb 
 viewer:Components:Mork.shlb 
-viewer:Components:mozBrowser.shlb 
 viewer:Components:mozBrowser.xpt 
 viewer:Components:mozcomps.xpt 
 viewer:Components:nsIStringBundle.xpt 

@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  appshell \
 		  history \
+		  browser \
 		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
@@ -79,6 +80,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)urlbarhistory_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)timebomb_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -92,6 +94,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../timebomb          \
 	-I$(srcdir)/../urlbarhistory/src \
 	-I$(srcdir)/../windowds \
+	-I$(srcdir)/../../browser/src \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

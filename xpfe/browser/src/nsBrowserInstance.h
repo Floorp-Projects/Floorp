@@ -47,8 +47,13 @@
 #include "nscore.h"
 #include "nsISupports.h"
 
+// for nsBrowserStatusHandler
+#include "nsIContentHandler.h"
+#include "nsICmdLineHandler.h"
+
 class nsIDocShell;
 class nsIDOMWindowInternal;
+class nsIPref;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserInstance:
@@ -87,6 +92,21 @@ class nsBrowserInstance : public nsIBrowserInstance,
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
 #endif
+};
+
+class nsBrowserContentHandler : public nsIContentHandler, public nsICmdLineHandler
+{
+public:
+  NS_DECL_NSICONTENTHANDLER
+  NS_DECL_NSICMDLINEHANDLER
+  NS_DECL_ISUPPORTS
+  CMDLINEHANDLER_REGISTERPROC_DECLS
+
+  nsBrowserContentHandler();
+  virtual ~nsBrowserContentHandler();
+
+protected:
+  PRBool NeedHomepageOverride(nsIPref *aPrefService);
 };
 
 #endif // nsBrowserInstance_h___
