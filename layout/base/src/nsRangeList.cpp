@@ -807,6 +807,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
 
     offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
     weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
+
     nsIFrame *frame;
     result = mDomSelections[SELECTION_NORMAL]->GetPrimaryFrameForFocusNode(&frame);
     if (NS_FAILED(result))
@@ -1056,6 +1057,20 @@ nsRangeList::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
   if (!aNode || !aReturnFrame)
     return NS_ERROR_NULL_POINTER;
   nsresult result;
+  PRBool canContainChildren = PR_FALSE;
+  result = aNode->CanContainChildren(canContainChildren);
+  if (canContainChildren)
+  {
+    if (aOffset >= 0)
+    {
+      result = aNode->ChildAt(aOffset, aNode);
+      if (NS_FAILED(result))
+        return result;
+      if (!aNode) //out of bounds?
+        return NS_ERROR_FAILURE;
+    }
+  }
+  
 	result = mTracker->GetPrimaryFrameFor(aNode, aReturnFrame);
 	if (NS_FAILED(result))
 		return result;
