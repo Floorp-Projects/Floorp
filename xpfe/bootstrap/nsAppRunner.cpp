@@ -22,14 +22,17 @@
 #include "plevent.h"
 
 #include "nsIAppShell.h"
+#include "nsICmdLineService.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
 
 
 /*
@@ -47,15 +50,25 @@ static int TranslateReturnValue(nsresult aResult)
 
 extern "C" void NS_SetupRegistry_1();
 
+void
+PrintUsage(void)
+{
+   fprintf(stderr, "Usage: apprunner <url>\n");
+   fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
+}
 
 
 int main(int argc, char* argv[])
 {
   nsresult rv;
   nsString controllerCID;
-#if 0
-  nsICmdLineArguements* cmdLineArgs = nsnull;
-#endif
+
+  nsICmdLineService *  cmdLineArgs = nsnull;
+  char *  urlstr=nsnull;
+  char *   progname = nsnull;
+  char *   width=nsnull, *height=nsnull;
+  char *  iconic_state=nsnull;
+
   nsIAppShellService* appShell = nsnull;
 
   /*
@@ -73,20 +86,59 @@ int main(int argc, char* argv[])
    * Start up the core services:
    *  - Command-line processor.
    */
-#if 0
-  rv = nsServiceManager::GetService(kCmdLineProcessorCID,
-                                    kICmdLineArgumentsIID,
+
+  rv = nsServiceManager::GetService(kCmdLineServiceCID,
+                                    kICmdLineServiceIID,
                                     (nsISupports **)&cmdLineArgs);
   if (!NS_SUCCEEDED(rv)) {
+    fprintf(stderr, "Could not obtain CmdLine processing service\n");
     goto done;
   }
 
+  // Initialize the cmd line service 
   rv = cmdLineArgs->Initialize(argc, argv);
-  if (PR_FALSE == NS_SUCCEEDED(rv)) {
+  if (rv  == NS_ERROR_INVALID_ARG) {
+    PrintUsage();
     goto done;
   }
+  
+  // Get the URL to load
+  rv = cmdLineArgs->GetURLToLoad(&urlstr);
+  if (rv  == NS_ERROR_INVALID_ARG) {
+    PrintUsage();
+    goto done;
+  }
+  // Default URL if one was not provided in the cmdline
+  if (nsnull == urlstr)
+      urlstr = "resource:/res/samples/test0.html";
+  else
+      fprintf(stderr, "URL to load is %s\n", urlstr);
 
-#endif
+
+  // Check if -iconic was set
+  rv = cmdLineArgs->GetCmdLineValue("-iconic", &iconic_state);
+  if (rv != NS_OK)
+     goto done;
+  else {
+    if (nsnull == iconic_state)
+      fprintf(stderr, "iconic  state not set\n");
+    else
+      fprintf(stderr, "iconic state set \n");
+  }
+  
+ 
+  // Get the value of -width option
+  rv = cmdLineArgs->GetCmdLineValue("-width", &width);
+  if (rv != NS_OK)
+     goto done;
+  else {
+    if (width)
+      fprintf(stderr, "Width is set to %s\n", width);
+    else
+      fprintf(stderr, "width was not set\n");
+  }
+  
+   
 
   /*
    * Create the Application Shell instance...
@@ -117,7 +169,7 @@ int main(int argc, char* argv[])
   nsIURL* url;
   nsIWidget* newWindow;
   
-  rv = NS_NewURL(&url, "resource:/res/samples/appshell.html");
+  rv = NS_NewURL(&url, urlstr);
   if (NS_FAILED(rv)) {
     goto done;
   }
