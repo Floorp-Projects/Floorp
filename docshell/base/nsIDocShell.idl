@@ -30,7 +30,6 @@
 
 %{ C++
 #include "nsIPresContext.h"
-#include "nsIDocumentLoaderObserver.h"
 %}
 
 /**
@@ -41,7 +40,6 @@
 [ptr] native nsIPresShell(nsIPresShell);
 
 interface nsIChromeEventHandler;
-interface nsIDocumentLoaderObserver;
 interface nsIDocShellLoadInfo;
 interface nsIDocumentCharsetInfo;
 interface nsIWebNavigation;
