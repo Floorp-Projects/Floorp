@@ -19,7 +19,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-LIBRARY_NAME = http
+LIBRARY_NAME = httpprotocol
 
 IS_COMPONENT = 1
 

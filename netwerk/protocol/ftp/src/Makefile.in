@@ -19,7 +19,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-LIBRARY_NAME = ftp
+LIBRARY_NAME = ftpprotocol
 
 IS_COMPONENT = 1
 

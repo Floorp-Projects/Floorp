@@ -348,8 +348,8 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
     } 
     // Synchronous transport...
     else {
-      rv = mTransport->OpenInputStream (&mInStream);
-      rv = mTransport->OpenOutputStream(&mOutStream);
+      rv = mTransport->OpenInputStream(0, -1, &mInStream);
+      rv = mTransport->OpenOutputStream(0, &mOutStream);
     }
   }
 }

@@ -1035,9 +1035,11 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 
 
 NS_IMETHODIMP
-nsSocketTransport::OpenInputStream(nsIInputStream* *result)
+nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, 
+                                   nsIInputStream* *result)
 {
   nsresult rv = NS_OK;
+  NS_ASSERTION(startPosition == 0, "fix me");
 
   // Enter the socket transport lock...
   nsAutoLock lock(mLock);
@@ -1081,9 +1083,10 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
 
 
 NS_IMETHODIMP
-nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
+nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *result)
 {
   nsresult rv = NS_OK;
+  NS_ASSERTION(startPosition == 0, "fix me");
 
   // Enter the socket transport lock...
   nsAutoLock lock(mLock);

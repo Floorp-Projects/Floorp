@@ -18,7 +18,7 @@ MODULE = netwerk
 DEPTH = ..\..\..\..
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=ftp
+DLLNAME=ftpprotocol
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
