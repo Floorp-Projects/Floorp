@@ -2128,6 +2128,7 @@ void CreateLinuxInstaller()
 		}
 		fclose(fin);
 	}
+	fputs("[END]\n", fout);
 	fclose(fout);
 	DeleteFile(templinuxPath+"\\Config.ini");
 	rename(templinuxPath+"\\config.tmp",templinuxPath+"\\config.ini");	
