@@ -454,7 +454,7 @@
 #define JS_HAS_SEQUENCE_OPS     1       /* has array.slice, string.concat */
 #define JS_HAS_INITIALIZERS     1       /* has var o = {'foo': 42, 'bar':3} */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
-#define JS_HAS_EXPORT_IMPORT    0       /* has export fun; import obj.fun */
+#define JS_HAS_EXPORT_IMPORT    1       /* has export fun; import obj.fun */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_TRIPLE_EQOPS     1       /* has === and !== identity eqops */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
