@@ -90,43 +90,26 @@ BEGIN_COM_MAP(CMozillaBrowser)
 	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IWebBrowser2)			//Requests to IWebBrowser will actually get the vtable of IWebBrowser2
 	COM_INTERFACE_ENTRY_IID(IID_IWebBrowser, IWebBrowser2)			//ditto
 	COM_INTERFACE_ENTRY_IID(IID_IWebBrowserApp, IWebBrowser2)		//ditto
-	
 	COM_INTERFACE_ENTRY_IMPL(IViewObjectEx)							//CMozillaBrowser derives from IViewObjectEx
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject2, IViewObjectEx)	//Request to IViewObject2 will actually get the vtable of IViewObjectEx
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject, IViewObjectEx)
-	
 	COM_INTERFACE_ENTRY_IMPL(IOleInPlaceObjectWindowless)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IOleInPlaceObject, IOleInPlaceObjectWindowless)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IOleWindow, IOleInPlaceObjectWindowless)
-	
 	COM_INTERFACE_ENTRY_IMPL(IOleInPlaceActiveObject)
-	
 	COM_INTERFACE_ENTRY_IMPL(IOleControl)
-	
 	COM_INTERFACE_ENTRY_IMPL(IOleObject)
-
 //	COM_INTERFACE_ENTRY_IMPL(IQuickActivate) // This causes size assertion in ATL
-	
 	COM_INTERFACE_ENTRY_IMPL(IPersistStorage)
-	
 	COM_INTERFACE_ENTRY_IMPL(IPersistStreamInit)
-	
 	COM_INTERFACE_ENTRY_IMPL(ISpecifyPropertyPages)
-	
 	COM_INTERFACE_ENTRY_IMPL(IDataObject)
-	
 	COM_INTERFACE_ENTRY(IOleCommandTarget)
-	
 	COM_INTERFACE_ENTRY(IProvideClassInfo)
-	
 	COM_INTERFACE_ENTRY(IProvideClassInfo2)
-	
 	COM_INTERFACE_ENTRY(ISupportErrorInfo)
-	
 	COM_INTERFACE_ENTRY_IMPL(IConnectionPointContainer)
-	
 	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents,  CDWebBrowserEvents1)	//Requests to DWebBrowserEvents will get the vtable of CDWebBrowserEvents1
-	
 	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2, CDWebBrowserEvents2)	//Requests to DWebBrowserEvents2 will get the vtable of CDWebBrowserEvents2
 END_COM_MAP()
 
@@ -274,8 +257,6 @@ BEGIN_OLECOMMAND_TABLE()
 	OLECOMMAND_HANDLER(IDM_JUSTIFYNONE, &CGID_MSHTML, NULL, L"", L"")
 END_OLECOMMAND_TABLE()
 
-
-
 	HWND GetCommandTargetWindow() const
 	{
 		return m_hWnd;
@@ -322,6 +303,10 @@ protected:
 	nsIPref             *   m_pIPref;
 	nsIEditor			*	m_pEditor;
 
+	// System registry key for various control settings
+	CRegKey                 m_SystemKey;
+	// User registry key for various control settings
+	CRegKey                 m_UserKey;
 	// Indicates the browser is busy doing something
 	BOOL					m_bBusy;
 	// Flag to indicate if browser is in edit mode or not
@@ -337,8 +322,15 @@ protected:
 	// List of registered browser helper objects
 	ObjectList				m_cBrowserHelperList;
 
-	virtual HRESULT SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr);
+	// Pointer to the component folder
+	nsFileSpec			   *m_pComponentPath;
+	// Pointer to the component file
+	nsFileSpec			   *m_pComponentFile;
+
 	virtual HRESULT CreateWebShell();
+	virtual HRESULT InitWebShell();
+	virtual HRESULT TermWebShell();
+	virtual HRESULT SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr);
 	virtual HRESULT GetPresShell(nsIPresShell **pPresShell);
 	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
 	virtual HRESULT SetEditorMode(BOOL bEnabled);
