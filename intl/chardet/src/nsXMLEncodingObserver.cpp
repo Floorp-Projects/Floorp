@@ -97,7 +97,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                      const PRUnichar* nameArray[], 
                      const PRUnichar* valueArray[])
 {
-    if(0 != nsCRT::strcasecmp(aTag, "?XML")) 
+    if(0 != nsCRT::strcasecmp(aTag, NS_LITERAL_STRING("?XML").get())) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
@@ -132,20 +132,20 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
       PRBool bGotCurrentCharsetSource = PR_FALSE;
       PRBool bGotEncoding = PR_FALSE;
 
-      nsAutoString currentCharset;    currentCharset.AssignWithConversion("unknown");
-      nsAutoString charsetSourceStr;  charsetSourceStr.AssignWithConversion("unknown");
-      nsAutoString encoding;          encoding.AssignWithConversion("unknown");
+      nsAutoString currentCharset(NS_LITERAL_STRING("unknown"));
+      nsAutoString charsetSourceStr(NS_LITERAL_STRING("unknown"));
+      nsAutoString encoding(NS_LITERAL_STRING("unknown"));
 
       for(i=0; i < numOfAttributes; i++) 
       {
-         if(0==nsCRT::strcmp(nameArray[i], "charset")) 
+         if(0==nsCRT::strcmp(nameArray[i], NS_LITERAL_STRING("charset").get())) 
          {
            bGotCurrentCharset = PR_TRUE;
            currentCharset = valueArray[i];
-         } else if(0==nsCRT::strcmp(nameArray[i], "charsetSource")) {
+         } else if(0==nsCRT::strcmp(nameArray[i], NS_LITERAL_STRING("charsetSource").get())) {
            bGotCurrentCharsetSource = PR_TRUE;
            charsetSourceStr = valueArray[i];
-         } else if(0==nsCRT::strcasecmp(nameArray[i], "encoding")) { 
+         } else if(0==nsCRT::strcasecmp(nameArray[i], NS_LITERAL_STRING("encoding").get())) { 
            bGotEncoding = PR_TRUE;
            encoding = valueArray[i];
          }
