@@ -23,6 +23,8 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
+#include <X11/Xatom.h>
+
 //#define NOISY_FONTS 1
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
@@ -30,8 +32,24 @@ static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 nsFontMetricsGTK::nsFontMetricsGTK()
 {
   NS_INIT_REFCNT();
+  mDeviceContext = nsnull;
   mFont = nsnull;
   mFontHandle = nsnull;
+
+  mHeight = 0;
+  mAscent = 0;
+  mDescent = 0;
+  mLeading = 0;
+  mMaxAscent = 0;
+  mMaxDescent = 0;
+  mMaxAdvance = 0;
+  mXHeight = 0;
+  mSuperscriptOffset = 0;
+  mSubscriptOffset = 0;
+  mStrikeoutSize = 0;
+  mStrikeoutOffset = 0;
+  mUnderlineSize = 0;
+  mUnderlineOffset = 0;
 }
 
 nsFontMetricsGTK::~nsFontMetricsGTK()
@@ -42,7 +60,7 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
   }
 
   if (nsnull != mFontHandle) {
-    gdk_font_unref (mFontHandle);
+    ::gdk_font_unref (mFontHandle);
   }
 }
 
@@ -71,7 +89,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
     return NS_ERROR_NOT_INITIALIZED;
 
   mFont = new nsFont(aFont);
-  mContext = aContext;
+  mDeviceContext = aContext;
   mFontHandle = nsnull;
 
   firstFace.ToCString(wildstring, namelen);
@@ -186,7 +204,7 @@ char * nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts, i
 {
   int         idx;
   float       app2dev;
-  mContext->GetAppUnitsToDevUnits(app2dev);
+  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
 //  XXX FIX ME
   PRInt32     desiredpix = NSToIntRound(app2dev * desired);
   XFontStruct *curfont;
@@ -235,30 +253,42 @@ void nsFontMetricsGTK::RealizeFont()
 {
 //XXX this API is dead... MMP
 //  nsNativeWidget  widget;
-//  mContext->GetNativeWidget(widget);
+//  mDeviceContext->GetNativeWidget(widget);
   XFontStruct *fontInfo;
-
+  nscoord CharWidths[256];
+  
   fontInfo = (XFontStruct *)GDK_FONT_XFONT(mFontHandle);
 
   float f;
-  mContext->GetDevUnitsToAppUnits(f);
+  mDeviceContext->GetDevUnitsToAppUnits(f);
 
   mAscent = nscoord(fontInfo->ascent * f);
   mDescent = nscoord(fontInfo->descent * f);
   mMaxAscent = nscoord(fontInfo->ascent * f) ;
   mMaxDescent = nscoord(fontInfo->descent * f);
 
-  mHeight = nscoord((fontInfo->ascent + fontInfo->descent) * f) ;
+  mHeight = nscoord((fontInfo->ascent + fontInfo->descent) * f);
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
+
+  unsigned long pr;
+//  XGetFontProperty(fontInfo, , mStrikeoutOffset);
+//  XGetFontProperty(fontInfo, , mStrikeoutSize);
+  ::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr);
+  mXHeight = nscoord(pr * f);
+
+  ::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr);
+  mUnderlineOffset = nscoord(pr * f);
+  ::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr);
+  mUnderlineSize = nscoord(pr * f);
 
   PRUint32 i;
 
   for (i = 0; i < 256; i++)
   {
     if ((i < fontInfo->min_char_or_byte2) || (i > fontInfo->max_char_or_byte2))
-      mCharWidths[i] = mMaxAdvance;
+      CharWidths[i] = mMaxAdvance;
     else
-      mCharWidths[i] = nscoord((fontInfo->per_char[i - fontInfo->min_char_or_byte2].width) * f);
+      CharWidths[i] = nscoord((fontInfo->per_char[i - fontInfo->min_char_or_byte2].width) * f);
   }
 
   mLeading = 0;
@@ -266,33 +296,33 @@ void nsFontMetricsGTK::RealizeFont()
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetXHeight(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = mXHeight;
   return NS_OK;
 }
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetSuperscriptOffset(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = mSuperscriptOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetSubscriptOffset(nscoord& aResult)
 {
-  aResult = mMaxAscent / 2;     // XXX temporary code!
+  aResult = mSubscriptOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
-  aOffset = 0; /* XXX */
-  aSize = 0;  /* XXX */
+  aOffset = mStrikeoutOffset;
+  aSize = mStrikeoutSize;
   return NS_OK;
 }
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
-  aOffset = 0; /* XXX */
-  aSize = 0;  /* XXX */
+  aOffset = mUnderlineOffset;
+  aSize = mUnderlineSize;
   return NS_OK;
 }
 
@@ -338,30 +368,3 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
   return NS_OK;
 }
 
-// XXX unused???
-
-static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsIDeviceContext* aDC,
-                                   nsString& aFontFace)
-{
-  // the CSS generic names (conversions from Nav for now)
-  // XXX this  need to check availability with the dc
-  PRBool  aliased;
-  if (aGenericFamily.EqualsIgnoreCase("serif")) {
-    aDC->GetLocalFontName("times", aFontFace, aliased);
-  }
-  else if (aGenericFamily.EqualsIgnoreCase("sans-serif")) {
-    aDC->GetLocalFontName("helvetica", aFontFace, aliased);
-  }
-  else if (aGenericFamily.EqualsIgnoreCase("cursive")) {
-    aDC->GetLocalFontName("script", aFontFace, aliased);  // XXX ???
-  }
-  else if (aGenericFamily.EqualsIgnoreCase("fantasy")) {
-    aDC->GetLocalFontName("helvetica", aFontFace, aliased);
-  }
-  else if (aGenericFamily.EqualsIgnoreCase("monospace")) {
-    aDC->GetLocalFontName("fixed", aFontFace, aliased);
-  }
-  else {
-    aFontFace.Truncate();
-  }
-}

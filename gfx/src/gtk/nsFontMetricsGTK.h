@@ -25,6 +25,7 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
+#include "nsDeviceContextGTK.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -57,29 +58,31 @@ public:
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
-
-  NS_IMETHOD  GetFont(const nsFont*& aFont);
+  NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
 protected:
   char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
   void RealizeFont();
 
-  nsFont            *mFont;
-  nsIDeviceContext  *mContext;
-  GdkFont           *mFontHandle;
-  nscoord           mCharWidths[256];
-  nscoord           mHeight;
-  nscoord           mAscent;
-  nscoord           mDescent;
-  nscoord           mLeading;
-  nscoord           mMaxAscent;
-  nscoord           mMaxDescent;
-  nscoord           mMaxAdvance;
+  nsIDeviceContext    *mDeviceContext;
+  nsFont              *mFont;
+  GdkFont             *mFontHandle;
+
+  nscoord             mHeight;
+  nscoord             mAscent;
+  nscoord             mDescent;
+  nscoord             mLeading;
+  nscoord             mMaxAscent;
+  nscoord             mMaxDescent;
+  nscoord             mMaxAdvance;
+  nscoord             mXHeight;
+  nscoord             mSuperscriptOffset;
+  nscoord             mSubscriptOffset;
+  nscoord             mStrikeoutSize;
+  nscoord             mStrikeoutOffset;
+  nscoord             mUnderlineSize;
+  nscoord             mUnderlineOffset;
 };
 
 #endif
-
-
-
-
