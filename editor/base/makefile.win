@@ -30,7 +30,6 @@ CPPSRCS =				\
       TextEditorTest.cpp     \
       nsEditorEventListeners.cpp   \
       nsEditProperty.cpp     \
-      nsEditorFactory.cpp    \
       EditTxn.cpp            \
       EditAggregateTxn.cpp   \
       ChangeAttributeTxn.cpp \
@@ -52,7 +51,6 @@ CPPSRCS =				\
       nsAOLCiter.cpp         \
       nsInterfaceState.cpp   \
       nsEditorShell.cpp      \
-      nsEditorShellFactory.cpp	\
 	   IMETextTxn.cpp			     \
 	   IMECommitTxn.cpp			   \
 	$(NULL)
@@ -66,7 +64,6 @@ CPP_OBJS =					\
   .\$(OBJDIR)\nsHTMLEditRules.obj     \
   .\$(OBJDIR)\nsEditorEventListeners.obj		\
 	.\$(OBJDIR)\nsEditProperty.obj	    \
-  .\$(OBJDIR)\nsEditorFactory.obj		    \
   .\$(OBJDIR)\EditTxn.obj             \
   .\$(OBJDIR)\EditAggregateTxn.obj    \
   .\$(OBJDIR)\ChangeAttributeTxn.obj  \
@@ -88,7 +85,6 @@ CPP_OBJS =					\
   .\$(OBJDIR)\nsAOLCiter.obj          \
   .\$(OBJDIR)\nsInterfaceState.obj    \
   .\$(OBJDIR)\nsEditorShell.obj       \
-  .\$(OBJDIR)\nsEditorShellFactory.obj \
   .\$(OBJDIR)\IMETextTxn.obj          \
   .\$(OBJDIR)\IMECommitTxn.obj        \
 	$(NULL)

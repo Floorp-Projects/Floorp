@@ -35,7 +35,6 @@ CPPSRCS		= \
 		nsHTMLEditRules.cpp \
 		nsEditorEventListeners.cpp \
 		nsEditProperty.cpp \
-		nsEditorFactory.cpp \
 		nsHTMLEditor.cpp \
 		ChangeAttributeTxn.cpp \
 		EditTxn.cpp \
@@ -57,7 +56,6 @@ CPPSRCS		= \
 		nsAOLCiter.cpp \
 		nsInterfaceState.cpp \
 		nsEditorShell.cpp \
-		nsEditorShellFactory.cpp \
 		IMETextTxn.cpp \
 		IMECommitTxn.cpp \
 		nsHTMLEditorLog.cpp \
