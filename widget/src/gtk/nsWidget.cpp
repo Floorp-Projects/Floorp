@@ -1743,6 +1743,9 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 /* virtual */ void
 nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 {
+  if (aGdkCrossingEvent->subwindow != NULL)
+    return;
+
   // If there is a button motion target, then we can ignore this
   // event since what the gecko event system expects is for
   // only motion events to be sent to that widget, even if the
@@ -1774,6 +1777,9 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 /* virtual */ void
 nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 {
+  if (aGdkCrossingEvent->subwindow != NULL)
+    return;
+
   // If there is a button motion target, then we can ignore this
   // event since what the gecko event system expects is for
   // only motion events to be sent to that widget, even if the

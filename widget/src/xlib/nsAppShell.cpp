@@ -1024,6 +1024,9 @@ nsAppShell::HandleEnterEvent(XEvent *event, nsWidget *aWidget)
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Enter event for window 0x%lx\n",
                                        event->xcrossing.window));
 
+  if (event->xcrossing.subwindow != None)
+    return;
+
   if(is_wm_ungrab_enter(&event->xcrossing))
     return;
 
@@ -1051,6 +1054,9 @@ nsAppShell::HandleLeaveEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Leave event for window 0x%lx\n",
                                        event->xcrossing.window));
+
+  if (event->xcrossing.subwindow != None)
+    return;
 
   if(is_wm_grab_leave(&event->xcrossing))
     return;

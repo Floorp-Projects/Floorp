@@ -1282,6 +1282,9 @@ nsWindow::OnDeleteEvent(GtkWidget *aWidget, GdkEventAny *aEvent)
 void
 nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 {
+    if (aEvent->subwindow != NULL)
+        return;
+
     nsMouseEvent event(NS_MOUSE_ENTER, this);
 
     event.point.x = nscoord(aEvent->x);
@@ -1296,6 +1299,9 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 void
 nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 {
+    if (aEvent->subwindow != NULL)
+        return;
+
     nsMouseEvent event(NS_MOUSE_EXIT, this);
 
     event.point.x = nscoord(aEvent->x);
@@ -1828,6 +1834,8 @@ nsWindow::OnDragLeaveEvent(GtkWidget *aWidget,
                            guint aTime,
                            gpointer aData)
 {
+    // XXX Do we want to pass this on only if the event's subwindow is null?
+
     LOG(("nsWindow::OnDragLeaveSignal(%p)\n", this));
 
     sIsDraggingOutOf = PR_TRUE;
@@ -1993,6 +2001,8 @@ nsWindow::OnDragLeave(void)
 void
 nsWindow::OnDragEnter(nscoord aX, nscoord aY)
 {
+    // XXX Do we want to pass this on only if the event's subwindow is null?
+
     LOG(("nsWindow::OnDragEnter(%p)\n", this));
     
     nsMouseEvent event(NS_DRAGDROP_ENTER, this);
