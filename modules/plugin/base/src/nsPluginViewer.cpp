@@ -156,12 +156,13 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   void CancelTimer();
+  void StartTimer();
 
   nsPluginPort* GetPluginPort();
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent);
-  void FixUpPluginWindow();
+  nsPluginPort* FixUpPluginWindow();
 #endif
                    
 private:
@@ -173,7 +174,7 @@ private:
   PRPackedBool       mWidgetVisible;    // used on Mac to store our widget's visible state
 };
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   static void GetWidgetPosClipAndVis(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY, 
                                      nsRect& aClipRect, PRBool& aIsVisible);
 #endif
@@ -228,7 +229,7 @@ NS_IMPL_QUERY_INTERFACE4(PluginViewerImpl,
 
 PluginViewerImpl::~PluginViewerImpl()
 {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   if (mOwner) mOwner->CancelTimer();
 #endif
 
@@ -346,7 +347,7 @@ PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
     mWindow->GetClientBounds(r);
     rv = CreatePlugin(request, host, nsRect(0, 0, r.width, r.height), aResult);
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     // On Mac, we need to initiate the intial invalidate for full-page plugins to ensure
     // the entire window gets cleared. Otherwise, Acrobat won't initially repaint on top 
     // of our previous presentation and we may have garbage leftover
@@ -376,9 +377,9 @@ PluginViewerImpl::CreatePlugin(nsIRequest* request, nsIPluginHost* aHost, const 
     win->clipRect.left = aBounds.x;
     win->clipRect.bottom = aBounds.YMost();
     win->clipRect.right = aBounds.XMost();
-  #ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     win->ws_info = nsnull;   //XXX need to figure out what this is. MMP
-  #endif
+#endif
 
     nsIURI* uri;
     rv = mChannel->GetURI(&uri);
@@ -456,6 +457,9 @@ PluginViewerImpl::Destroy(void)
   // doing this in the destructor is too late.
   if(mOwner != nsnull)
   {
+    // stop the timer explicitly to reduce reference count.
+    mOwner->CancelTimer();
+
     nsCOMPtr<nsIPluginInstance> inst;
     if(NS_SUCCEEDED(mOwner->GetInstance(*getter_AddRefs(inst))))
     {
@@ -520,7 +524,7 @@ HandlePluginEvent(nsGUIEvent *aEvent)
   // the Mac, and presumably others, send NS_MOUSE_ACTIVATE
   if (aEvent->message == NS_MOUSE_ACTIVATE) {
     (nsIWidget*)(aEvent->widget)->SetFocus();  // send focus to child window
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   // furthermore on the Mac nsMacEventHandler sends the NS_PLUGIN_ACTIVATE
   // followed by the mouse down event, so we need to handle this
   } else {
@@ -614,7 +618,8 @@ PluginViewerImpl::SetBounds(const nsRect& aBounds)
         win->clipRect.bottom = aBounds.YMost();
         win->clipRect.right = aBounds.XMost();
         
-#ifdef XP_MAC   // On Mac we also need to add in the widget offset to the plugin window
+#if defined(XP_MAC) || defined(XP_MACOSX)
+        // On Mac we also need to add in the widget offset to the plugin window
         mOwner->FixUpPluginWindow();
 #endif        
         ((nsPluginNativeWindow *)win)->CallSetWindow(inst);
@@ -641,7 +646,8 @@ PluginViewerImpl::Move(PRInt32 aX, PRInt32 aY)
         win->clipRect.top = aY;
         win->clipRect.left = aX;
 
-#ifdef XP_MAC   // On Mac we also need to add in the widget offset to the plugin window
+#if defined(XP_MAC) || defined(XP_MACOSX)
+        // On Mac we also need to add in the widget offset to the plugin window
         mOwner->FixUpPluginWindow();
 #endif
         ((nsPluginNativeWindow *)win)->CallSetWindow(inst);
@@ -1050,14 +1056,13 @@ pluginInstanceOwner :: pluginInstanceOwner()
 pluginInstanceOwner :: ~pluginInstanceOwner()
 {
   // shut off the timer.
-  if (mPluginTimer != nsnull) {
-    CancelTimer();
-  }
+  CancelTimer();
 
   NS_IF_RELEASE(mInstance);
 
   mWindow = nsnull;
   mViewer = nsnull;
+  mWidgetVisible = PR_TRUE;
 
   // clean up plugin native window object
   nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);
@@ -1108,41 +1113,27 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
   NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
 
   PRBool    windowless;
-  nsresult  rv = NS_OK;
   
-  if (nsnull != mInstance)
-  {
-#if defined(XP_MAC)
-          // start a periodic timer to provide null events to the plugin instance.
-          mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-          if (rv == NS_OK)
-            rv = mPluginTimer->InitWithCallback(this, 1020 / 60, nsITimer::TYPE_REPEATING_SLACK);
-#endif
-
-
+  if (nsnull != mInstance) {
     mInstance->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
 
-    if (PR_TRUE == windowless)
-    {
+    if (PR_TRUE == windowless) {
       mPluginWindow->window = nsnull;    //XXX this needs to be a HDC
       mPluginWindow->type = nsPluginWindowType_Drawable;
-    }
-    else if (nsnull != mWindow)
-    {
-      mPluginWindow->window = (nsPluginPort *)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+    } else if (nsnull != mWindow) {
       mPluginWindow->type = nsPluginWindowType_Window;
-    }
-    else
+      mPluginWindow->window = (nsPluginPort *)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+    } else
       return NS_ERROR_FAILURE;
-  }
-  else
-    return NS_ERROR_FAILURE;
 
-#if defined(XP_MAC)
-  FixUpPluginWindow();
+#if defined(XP_MAC) || defined(XP_MACOSX)
+    FixUpPluginWindow();
+    // start the idle timer.
+    StartTimer();
 #endif
-
-  return rv;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP pluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
@@ -1256,15 +1247,15 @@ NS_IMETHODIMP pluginInstanceOwner :: Init(PluginViewerImpl *aViewer, nsIWidget *
 
 // Here's where we forward events to plugins.
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
 #if TARGET_CARBON
 static void InitializeEventRecord(EventRecord* event)
 {
     memset(event, 0, sizeof(EventRecord));
-    GetGlobalMouse(&event->where);
-    event->when = TickCount();
-    event->modifiers = GetCurrentKeyModifiers();
+    ::GetGlobalMouse(&event->where);
+    event->when = ::TickCount();
+    event->modifiers = ::GetCurrentKeyModifiers();
 }
 #else
 inline void InitializeEventRecord(EventRecord* event) { ::OSEventAvail(0, event); }
@@ -1307,7 +1298,7 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   if (!mInstance || !mWindow || anEvent.message == NS_MENU_SELECTED)
     return rv;
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     //if (mWidget != NULL) {  // check for null mWidget
         EventRecord* event = (EventRecord*)anEvent.nativeMsg;
         if (event == NULL || event->what == nullEvent ||
@@ -1316,19 +1307,19 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
             GUItoMacEvent(anEvent, macEvent);
             event = &macEvent;
             if (event->what == updateEvt) {
-                nsPluginPort* pluginPort = GetPluginPort();
                 // Add in child windows absolute position to get make the dirty rect
                 // relative to the top-level window.
-                FixUpPluginWindow();
-                
-                EventRecord updateEvent;
-                InitializeEventRecord(&updateEvent);
-                updateEvent.what = updateEvt;
-                updateEvent.message = UInt32(pluginPort->port);
-
-                nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
-                PRBool eventHandled = PR_FALSE;
-                mInstance->HandleEvent(&pluginEvent, &eventHandled);
+                nsPluginPort* pluginPort = FixUpPluginWindow();
+                if (pluginPort) {
+                    EventRecord updateEvent;
+                    InitializeEventRecord(&updateEvent);
+                    updateEvent.what = updateEvt;
+                    updateEvent.message = UInt32(pluginPort->port);
+    
+                    nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+                    PRBool eventHandled = PR_FALSE;
+                    mInstance->HandleEvent(&pluginEvent, &eventHandled);
+                }
             }
             return nsEventStatus_eConsumeNoDefault;
             
@@ -1361,37 +1352,29 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
 NS_IMETHODIMP pluginInstanceOwner::Notify(nsITimer* /* timer */)
 {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     // validate the plugin clipping information by syncing the plugin window info to
     // reflect the current widget location. This makes sure that everything is updated
     // correctly in the event of scrolling in the window.
-    FixUpPluginWindow();
     if (mInstance != NULL) {
-        EventRecord idleEvent;
-        InitializeEventRecord(&idleEvent);
-        idleEvent.what = nullEvent;
+        nsPluginPort* pluginPort = FixUpPluginWindow();
+        if (pluginPort) {
+            EventRecord idleEvent;
+            InitializeEventRecord(&idleEvent);
+            idleEvent.what = nullEvent;
 
-        // give a bogus 'where' field of our null event when hidden, so Flash
-        // won't respond to mouse moves in other tabs, see bug 120875
-        if (!mWidgetVisible)
-          idleEvent.where.h = idleEvent.where.v = 20000;
-        
-        nsPluginPort* pluginPort = GetPluginPort();
-        nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
-        
-        PRBool eventHandled = PR_FALSE;
-        mInstance->HandleEvent(&pluginEvent, &eventHandled);
+            // give a bogus 'where' field of our null event when hidden, so Flash
+            // won't respond to mouse moves in other tabs, see bug 120875
+            if (!mWidgetVisible)
+              idleEvent.where.h = idleEvent.where.v = 20000;
+
+            nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(pluginPort->port) };
+
+            PRBool eventHandled = PR_FALSE;
+            mInstance->HandleEvent(&pluginEvent, &eventHandled);
+        }
     }
-
-#ifndef REPEATING_TIMERS
-  // reprime the timer? currently have to create a new timer for each call, which is
-  // kind of wasteful. need to get periodic timers working on all platforms.
-  nsresult rv;
-  mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_SUCCEEDED(rv))
-    mPluginTimer->InitWithCallback(this, 1020 / 60, nsITimer::TYPE_ONE_SHOT);
-#endif  // REPEATING_TIMERS
-#endif // XP_MAC
+#endif // XP_MAC || XP_MACOSX
   return NS_OK;
 }
 
@@ -1402,6 +1385,21 @@ void pluginInstanceOwner::CancelTimer()
         mPluginTimer->Cancel();
         mPluginTimer = nsnull;
     }
+}
+
+
+void pluginInstanceOwner::StartTimer()
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  nsresult rv;
+
+  // start a periodic timer to provide null events to the plugin instance.
+  if (!mPluginTimer) {
+    mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (rv == NS_OK)
+      rv = mPluginTimer->InitWithCallback(this, 1020 / 60, nsITimer::TYPE_REPEATING_SLACK);
+  }
+#endif
 }
 
 nsPluginPort* pluginInstanceOwner::GetPluginPort()
@@ -1416,7 +1414,7 @@ nsPluginPort* pluginInstanceOwner::GetPluginPort()
   return result;
 }
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
   // calculate the absolute position and clip for a widget 
   // and use other windows in calculating the clip
@@ -1476,31 +1474,58 @@ static void GetWidgetPosClipAndVis(nsIWidget* aWidget,nscoord& aAbsX, nscoord& a
 } 
 
 
-void pluginInstanceOwner::FixUpPluginWindow()
+nsPluginPort* pluginInstanceOwner::FixUpPluginWindow()
 {
   if (!mPluginWindow)
-    return;
+    return nsnull;
 
   if (mWindow) {
+    nsPluginPort* pluginPort = GetPluginPort();
     nscoord absWidgetX = 0;
     nscoord absWidgetY = 0;
     nsRect widgetClip(0,0,0,0);
     PRBool isVisible = PR_TRUE;
     GetWidgetPosClipAndVis(mWindow,absWidgetX,absWidgetY,widgetClip,isVisible);
 
-    if (mWidgetVisible != isVisible)
-      mWidgetVisible = isVisible;
-
+#if defined(MOZ_WIDGET_COCOA)
+    // set the port coordinates
+    mPluginWindow->x = -pluginPort->portx;
+    mPluginWindow->y = -pluginPort->porty;
+    widgetClip.x += mPluginWindow->x - absWidgetX;
+    widgetClip.y += mPluginWindow->y - absWidgetY;
+#else
     // set the port coordinates
     mPluginWindow->x = absWidgetX;
     mPluginWindow->y = absWidgetY;
+#endif
 
     // fix up the clipping region
     mPluginWindow->clipRect.top = widgetClip.y;
     mPluginWindow->clipRect.left = widgetClip.x;
     mPluginWindow->clipRect.bottom =  mPluginWindow->clipRect.top + widgetClip.height;
     mPluginWindow->clipRect.right =  mPluginWindow->clipRect.left + widgetClip.width;  
+
+    if (mWidgetVisible != isVisible) {
+      mWidgetVisible = isVisible;
+      // must do this to disable async Java Applet drawing
+      if (isVisible) {
+        mInstance->SetWindow(mPluginWindow);
+      } else {
+        mInstance->SetWindow(nsnull);
+        // switching states, do not draw
+        pluginPort = nsnull;
+      }
+    }
+
+#if defined(MOZ_WIDGET_COCOA)
+    if (!mWidgetVisible) {
+      mPluginWindow->clipRect.right = mPluginWindow->clipRect.left;
+      mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
+    }
+#endif
+    return pluginPort;
   }
+  return nsnull;
 }
 
 #endif
