@@ -1748,10 +1748,40 @@ HTMLContentSink::CloseHead(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 {
-  NS_PRECONDITION(nsnull == mBody, "parser called OpenBody twice");
+  //NS_PRECONDITION(nsnull == mBody, "parser called OpenBody twice");
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenBody", aNode);
+  // Check for attributes on the second body and apply them to the
+  // existing BODY node.
+  if(mBody != nsnull){
+    PRInt32 attrCount = aNode.GetAttributeCount();
+    if(attrCount){
+      nsAutoString k, newValue;
+      nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+      for (PRInt32 index = 0; index < attrCount; index++) {
+        // Get upper-cased key
+        const nsString& key = aNode.GetKeyAt(index);
+ 
+        k.Truncate();
+        k.Append(key);
+        k.ToLowerCase();
+
+        nsIAtom*  keyAtom = NS_NewAtom(k);
+        nsHTMLValue oldValue;
+    
+        // Get value and remove mandatory quotes
+        GetAttributeValueAt(aNode, index, newValue, sco);
+        // Add attribute to body
+        mBody->SetAttribute(kNameSpaceID_HTML, keyAtom, newValue, PR_TRUE);
+        NS_RELEASE(keyAtom);
+      }
+      NS_IF_RELEASE(sco);      
+    }
+    NS_ADDREF(mBody);
+    mCurrentContext->mStackPos++;
+    return NS_OK;
+  }
 
   // Open body. Note that we pre-append the body to the root so that
   // incremental reflow during document loading will work properly.
