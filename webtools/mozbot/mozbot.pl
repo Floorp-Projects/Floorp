@@ -118,6 +118,7 @@ if ((defined($ARGV[0])) and ($ARGV[0] eq '--chroot')) {
 use Net::IRC 0.7; # 0.7 is not backwards compatible with 0.63 for CTCP responses
 use IO::SecurePipe; # internal based on IO::Pipe
 use IO::Select;
+use Socket;
 use Carp qw(cluck confess);
 use Configuration; # internal
 use Mails; # internal
@@ -192,7 +193,7 @@ my $recentMessageCountPenalty = 10; # if we hit the limit, bump it up by this mu
 my $variablepattern = '[-_:a-zA-Z0-9]+';
 my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
-my $helpline = 'see http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
+my $helpline = 'http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
 my $serverRestrictsIRCNames = '';
 my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 
@@ -295,7 +296,8 @@ sub connect {
         $ircname = "[$ircname] $helpline";
     }
 
-    until ($bot = $irc->newconn(
+    until (inet_aton($server) and # we check this first because Net::IRC::Connection doesn't
+           $bot = $irc->newconn(
              Server => $server,
              Port => $port,
              Nick => $nicks[$nick],
@@ -304,9 +306,12 @@ sub connect {
              LocalAddr => $localAddr,
            )) {
         &debug("Could not connect. Are you sure '$server:$port' is a valid host?");
+        unless (inet_aton($server)) {
+            &debug('I couldn\'t resolve it.');
+        }
         if (defined($localAddr)) {
             if ($Net::IRC::VERSION < 0.73) {
-                &debug("To use 'localAddr' you need Net::IRC version 0.73 or higher (you have $Net::IRC::VERSION)");
+                &debug("Note that to use 'localAddr' you need Net::IRC version 0.73 or higher (you have $Net::IRC::VERSION)");
             } else {
                 &debug("Is '$localAddr' the correct address of the interface to use?");
             }
@@ -2578,6 +2583,7 @@ sub Restart {
     my $self = shift;
     my ($event, $reason) = @_;
     $event->{'bot'}->quit($reason);
+    sleep 1; # wait one second to give the quit message a chance
     # Note that `exec' will not call our `END' blocks, nor will it
     # call any `DESTROY' methods in our objects. So we fork a child to
     # do that first.
