@@ -28,6 +28,8 @@ var ListElement;
 var originalListType = "";
 var ListType = "";
 var MixedListSelection = false;
+var BulletStyleType = "";
+var originalBulletStyleType = "";
 
 // dialog initialization code
 function Startup()
@@ -130,6 +132,7 @@ function InitDialog()
     gDialog.StartingNumberInput.value = globalElement.getAttribute("start");
   }
   gDialog.BulletStyleList.selectedIndex = index;
+  originalBulletStyleType = type;
 }
 
 function BuildBulletStyleList()
@@ -197,7 +200,7 @@ function BuildBulletStyleList()
     gDialog.AdvancedEditButton.setAttribute("disabled","true");
 
   if (label)
-    gDialog.BulletStyleLabel.setAttribute("value",label);
+    gDialog.BulletStyleLabel.setAttribute("label",label);
 }
 
 function SelectListType()
@@ -270,7 +273,8 @@ function ValidateData()
           type = "square";
           break;
       }
-      if (type)
+      BulletStyleType = type;
+      if (type && gDialog.ChangeAllRadio.selected)
         globalElement.setAttribute("type",type);
       else
         globalElement.removeAttribute("type");
@@ -297,7 +301,8 @@ function ValidateData()
           type = "a";
           break;
       }
-      if (type)
+      BulletStyleType = type;
+      if (type && gDialog.ChangeAllRadio.selected)
         globalElement.setAttribute("type",type);
       else
         globalElement.removeAttribute("type");
@@ -330,11 +335,12 @@ function onAccept()
       changeList = true;
     }
     else
-      changeList = MixedListSelection || ListType != originalListType;
+      changeList = MixedListSelection || ListType != originalListType || BulletStyleType != originalBulletStyleType;
 
     if (changeList)
     {
-      editorShell.MakeOrChangeList(ListType, gDialog.ChangeAllRadio.selected);
+      editorShell.MakeOrChangeList(ListType, gDialog.ChangeAllRadio.selected,
+                                   (BulletStyleType != originalBulletStyleType) ? BulletStyleType : null);
 
       if (ListType)
       {

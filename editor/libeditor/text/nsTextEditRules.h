@@ -224,6 +224,7 @@ class nsTextRulesInfo : public nsRulesInfo
     collapsedAction(nsIEditor::eNext),
     bOrdered(PR_FALSE),
     entireList(PR_FALSE),
+    bulletType(0),
     alignType(0),
     blockType(0),
     insertElement(0)
@@ -243,6 +244,7 @@ class nsTextRulesInfo : public nsRulesInfo
   // kMakeList
   PRBool bOrdered;
   PRBool entireList;
+  const nsAReadableString *bulletType;
 
   // kAlign
   const nsAReadableString *alignType;

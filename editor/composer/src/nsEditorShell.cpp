@@ -2841,14 +2841,19 @@ nsEditorShell::DoAfterSave(PRBool aShouldUpdateURL, const PRUnichar *aURLString)
 }
 
 NS_IMETHODIMP
-nsEditorShell::MakeOrChangeList(const PRUnichar *listType, PRBool entireList)
+nsEditorShell::MakeOrChangeList(const PRUnichar *listType, PRBool entireList,
+                                const PRUnichar *bulletType)
 {
   nsresult err = NS_NOINTERFACE;
 
   if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
   nsAutoString aListType(listType);
-  
+  nsAutoString aBulletType;
+  if (bulletType) {
+    aBulletType.Assign(bulletType);
+  }
+
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
@@ -2863,7 +2868,7 @@ nsEditorShell::MakeOrChangeList(const PRUnichar *listType, PRBool entireList)
         }
       }
       else
-        err = mEditor->MakeOrChangeList(aListType, entireList);
+        err = mEditor->MakeOrChangeList(aListType, entireList, aBulletType);
       break;
 
     case ePlainTextEditorType:

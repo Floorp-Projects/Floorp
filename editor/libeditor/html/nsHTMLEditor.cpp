@@ -2196,7 +2196,7 @@ nsHTMLEditor::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList)
+nsHTMLEditor::MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList, const nsAReadableString& aBulletType)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -2215,6 +2215,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAReadableString& aListType, PRBool entire
   nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeList);
   ruleInfo.blockType = &aListType;
   ruleInfo.entireList = entireList;
+  ruleInfo.bulletType = &aBulletType;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
 

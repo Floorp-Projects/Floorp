@@ -52,10 +52,6 @@
         <menuitem label="&definitionList.value;"/>
       </menupopup>
     </menulist>
-    <radiogroup id="RadioGroup" index="0" persist="index">
-      <radio id="ChangeAll"      label="&changeEntireListRadio.label;"/>
-      <radio id="ChangeSelected" label="&changeSelectedRadio.label;"/>
-    </radiogroup>
   </groupbox>
   <spacer class="spacer"/>
 
@@ -72,6 +68,10 @@
     </hbox>
     <description id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</description>
   </groupbox>
+  <radiogroup id="RadioGroup" index="0" persist="index">
+    <radio id="ChangeAll"      label="&changeEntireListRadio.label;"/>
+    <radio id="ChangeSelected" label="&changeSelectedRadio.label;"/>
+  </radiogroup>
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>
 </dialog>

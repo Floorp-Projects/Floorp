@@ -135,7 +135,7 @@ protected:
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult MoveContents(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
   nsresult DeleteNonTableElements(nsIDOMNode *aNode);
-  nsresult WillMakeList(nsISelection *aSelection, const nsAReadableString *aListType, PRBool aEntireList, PRBool *aCancel, PRBool *aHandled, const nsAReadableString *aItemType=nsnull);
+  nsresult WillMakeList(nsISelection *aSelection, const nsAReadableString *aListType, PRBool aEntireList, const nsAReadableString *aBulletType, PRBool *aCancel, PRBool *aHandled, const nsAReadableString *aItemType=nsnull);
   nsresult WillRemoveList(nsISelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
   nsresult WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);

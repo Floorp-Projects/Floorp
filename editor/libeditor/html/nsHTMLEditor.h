@@ -163,7 +163,7 @@ public:
   NS_IMETHOD GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign);
   NS_IMETHOD GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent);
 
-  NS_IMETHOD MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList);
+  NS_IMETHOD MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList, const nsAReadableString& aBulletType);
   NS_IMETHOD RemoveList(const nsAReadableString& aListType);
   NS_IMETHOD Indent(const nsAReadableString& aIndent);
   NS_IMETHOD Align(const nsAReadableString& aAlign);

@@ -312,7 +312,7 @@ interface nsIHTMLEditor : nsISupports
    * Document me!
    * 
    */
-  void  MakeOrChangeList(in DOMString   aListType, in boolean entireList);
+  void  MakeOrChangeList(in DOMString   aListType, in boolean entireList, in DOMString aBulletType);
 
   /**
    * Document me!
