@@ -573,12 +573,13 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
 
 NS_IMETHODIMP
 nsDocument::AttributeChanged(nsIContent* aChild,
-                             nsIAtom* aAttribute)
+                             nsIAtom* aAttribute,
+                             PRInt32 aHint)
 {
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->AttributeChanged(this, aChild, aAttribute);
+    observer->AttributeChanged(this, aChild, aAttribute, aHint);
   }
   return NS_OK;
 }

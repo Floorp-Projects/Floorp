@@ -70,7 +70,8 @@ public:
                             nsISupports* aSubContent) { return NS_OK; }
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
-                              nsIAtom*     aAttribute) { return NS_OK; }
+                              nsIAtom*     aAttribute,
+                              PRInt32      aHint) { return NS_OK; }
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
 			                       nsIContent* aContainer,
                              PRInt32     aNewIndexInContainer);
