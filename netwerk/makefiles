@@ -5,6 +5,9 @@ netwerk/base/src/Makefile
 netwerk/dns/Makefile
 netwerk/dns/public/Makefile
 netwerk/dns/src/Makefile
+netwerk/util/Makefile
+netwerk/util/public/Makefile
+netwerk/util/src/Makefile
 netwerk/build/Makefile
 netwerk/protocol/Makefile
 netwerk/protocol/file/Makefile
