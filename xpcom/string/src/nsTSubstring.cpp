@@ -426,6 +426,8 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const cha
           }
       }
 
+    cutStart = PR_MIN(cutStart, Length());
+
     ReplacePrep(cutStart, cutLength, length);
 
     if (length > 0)
@@ -449,6 +451,8 @@ nsTSubstring_CharT::ReplaceASCII( index_type cutStart, size_type cutLength, cons
       }
 #endif
 
+    cutStart = PR_MIN(cutStart, Length());
+
     ReplacePrep(cutStart, cutLength, length);
 
     if (length > 0)
@@ -466,6 +470,8 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const sub
       }
 
     size_type length = tuple.Length();
+
+    cutStart = PR_MIN(cutStart, Length());
 
     ReplacePrep(cutStart, cutLength, length);
 
