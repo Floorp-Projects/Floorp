@@ -239,7 +239,7 @@ public:
     PRUnichar theLast=aName.Last();
     PRInt32   theLen=aName.Length();
     if((2<theLen) && (theFirst==theLast) && (kQuote==theFirst)) {
-      aName.Mid(mName,1,theLen-2);
+      mName = Substring(aName, 1, theLen - 2);
     } 
     else mName=aName;
 
@@ -247,7 +247,7 @@ public:
     theLast=aValue.Last();
     theLen=aValue.Length();
     if((2<theLen) && (theFirst==theLast) && (kQuote==theFirst)) {
-      aValue.Mid(mValue,1,theLen-2);
+      mName = Substring(aValue, 1, theLen - 2);
     }
     else mValue=aValue;
 

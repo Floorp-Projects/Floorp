@@ -2419,7 +2419,7 @@ static PRUint32 DecodeArrayDimensions(const nsAString& src, PRInt32* aDimensionS
     ;
   if (*i2 != ']') {                  //  In this case, not an array dimension
     PRInt32 len = Distance(i1, i2) - 1;  //  This is the size to truncate to at the end.
-    src.Left(dst, len);              //  Truncate the string.
+    dst = Substring(src, 0, len);              //  Truncate the string.
     return 0;                       //  Eliminated white space.
   }
 
@@ -2490,7 +2490,7 @@ static PRUint32 DecodeArrayDimensions(const nsAString& src, PRInt32* aDimensionS
       }
     }
   }
-  src.Left(dst, len);              //  Truncate the string.
+  dst = Substring(dst, 0, len);              //  Truncate the string.
   return dimensionCount + 1;                    //  Return the number of dimensions
 }
 

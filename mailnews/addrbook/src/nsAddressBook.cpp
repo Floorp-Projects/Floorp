@@ -1333,8 +1333,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
   // check if they equal .tab,.txt, or .csv, if so, use those
   // otherwise, treat as LDIF
   if (leafName.Length() > EXTENSION_LENGTH) {
-    nsCAutoString extension;
-    leafName.Right(extension, EXTENSION_LENGTH); 
+    nsCAutoString extension(Substring(leafName, leafName.Length() - EXTENSION_LENGTH, EXTENSION_LENGTH));
 
     // treat .TXT, .Tab, .csV like .txt, .tab, and .csv
     ToLowerCase(extension);

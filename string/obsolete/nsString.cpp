@@ -776,6 +776,19 @@ void nsCString::Adopt(char* aPtr, PRInt32 aLength) {
   nsStrPrivate::Initialize(*this, aPtr, aLength, aLength, eOneByte, PR_TRUE);
 }
 
+nsCString::size_type
+nsCString::Mid( self_type& aResult, index_type aStartPos, size_type aLengthToCopy ) const
+  {
+      // If we're just assigning our entire self, give |aResult| the opportunity to share
+    if ( aStartPos == 0 && aLengthToCopy >= Length() )
+      aResult = *this;
+    else
+      aResult = Substring(*this, aStartPos, aLengthToCopy);
+
+    return aResult.Length();
+  }
+
+
 /**********************************************************************
   Searching methods...                
  *********************************************************************/

@@ -438,7 +438,7 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAString& aURI, 
         static const PRInt32 kFudge = 0;
 #endif
         PRInt32 len = spec.Length();
-        aURI.Right(aElementID, aURI.Length() - (len + kFudge));
+        aElementID = Substring(aURI, len + kFudge, aURI.Length() - (len + kFudge));
     }
     else {
         aElementID = aURI;

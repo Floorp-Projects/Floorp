@@ -344,7 +344,7 @@ nsresult
     return NS_OK;
   }
   nsAutoString prefix;
-  aQName.Left(prefix, i);
+  prefix = Substring(aQName, 0, i);
 
   nsAutoString result;
   if (prefix.Equals(kXMLPrefix)) {
@@ -396,7 +396,7 @@ nsresult
   if (i < 0)
     aLocalName = aQName;
   else
-    aQName.Mid(aLocalName, i + 1, aQName.Length() - i);
+    aLocalName = Substring(aLocalName, i+1, aQName.Length() - (i+1));
   return NS_OK;
 }
 

@@ -303,6 +303,27 @@ public:
   // Takes ownership of aPtr, sets the current length to aLength if specified.
   void Adopt( PRUnichar* aPtr, PRInt32 aLength = -1 );
 
+  /*
+    |Left|, |Mid|, and |Right| are annoying signatures that seem better almost
+    any _other_ way than they are now.  Consider these alternatives
+    
+    aWritable = aReadable.Left(17);   // ...a member function that returns a |Substring|
+    aWritable = Left(aReadable, 17);  // ...a global function that returns a |Substring|
+    Left(aReadable, 17, aWritable);   // ...a global function that does the assignment
+    
+    as opposed to the current signature
+
+    aReadable.Left(aWritable, 17);    // ...a member function that does the assignment
+
+    or maybe just stamping them out in favor of |Substring|, they are just duplicate functionality
+
+    aWritable = Substring(aReadable, 0, 17);
+  */
+            
+  size_type  Left( self_type&, size_type ) const;
+  size_type  Mid( self_type&, PRUint32, PRUint32 ) const;
+  size_type  Right( self_type&, size_type ) const;
+
   /**********************************************************************
     Searching methods...                
    *********************************************************************/
@@ -425,6 +446,22 @@ private:
   void AppendWithConversion( const PRUnichar*, PRInt32=-1 );
   void InsertWithConversion( const PRUnichar*, PRUint32, PRInt32=-1 );
 };
+
+inline
+nsString::size_type
+nsString::Left( nsAString& aResult, size_type aLengthToCopy ) const
+  {
+    return Mid(aResult, 0, aLengthToCopy);
+  }
+
+inline
+nsString::size_type
+nsString::Right( self_type& aResult, size_type aLengthToCopy ) const
+  {
+    size_type myLength = Length();
+    aLengthToCopy = NS_MIN(myLength, aLengthToCopy);
+    return Mid(aResult, myLength-aLengthToCopy, aLengthToCopy);
+  }
 
 // NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
 // NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsString, PRUnichar)

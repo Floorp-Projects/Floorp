@@ -142,7 +142,7 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(nsIAbDirectoryProperties *aProp
       nsDependentCString uriStr(uri);
       
       if (Substring(uriStr, 0, kMDBDirectoryRootLen).Equals(kMDBDirectoryRoot))
-        uriStr.Right(fileName, uriStr.Length() - kMDBDirectoryRootLen);
+          fileName = Substring(uriStr, kMDBDirectoryRootLen, uriStr.Length() - kMDBDirectoryRootLen);
 
       (*dbPath) += fileName.get();
 

@@ -521,7 +521,8 @@ nsNameValuePairDB::RenameTmp(const char* aCatalogName)
   //
   // Rename the tmp to current
   //
-  current_name.Right(current_name_tail, current_name.Length() - last_slash - 1);
+  current_name_tail = Substring(current_name, last_slash+1,
+                                current_name.Length() - (last_slash + 1));
   rv = tmp_file->MoveToNative(dir, current_name_tail);
   if (NS_FAILED(rv))
     goto Rename_Error;

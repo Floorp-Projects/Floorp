@@ -300,9 +300,9 @@ nsFIXptr::Evaluate(nsIDOMDocument *aDocument,
     nsAutoString expr1, expr2;
     nsCOMPtr<nsIDOMRange> range1, range2;
 
-    aExpression.Left(expr1, split);
-    aExpression.Mid(expr2, split + 1, aExpression.Length());
-
+    expr1 = Substring(aExpression, 0, split);
+    expr2 = Substring(aExpression, split + 1,
+                      aExpression.Length() - (split + 1));
     rv = GetRange(aDocument, expr1, getter_AddRefs(range1)); 
     if (!range1)
       return rv;
