@@ -46,11 +46,8 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/askViewZoom.js"/>
 
-  <hbox>
+  <hbox align="center">
     <label value="&selectZoom.label;"/>
-  </hbox>
-
-  <hbox>
     <textbox id="zoomValue" oninput="doEnabling();"/>
   </hbox>
 
