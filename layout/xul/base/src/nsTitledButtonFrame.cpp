@@ -334,7 +334,7 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
 
         if (mImageLoader.IsImageSizeKnown()) {
           nsIImage* image = mImageLoader.GetImage();
-          if (image->GetWidth() == mImageRect.width && image->GetHeight() == mImageRect.height) {
+          if (image && image->GetWidth() == mImageRect.width && image->GetHeight() == mImageRect.height) {
              reflow = PR_FALSE;
              Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
           }
