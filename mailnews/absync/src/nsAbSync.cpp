@@ -657,11 +657,11 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindow *aDOMWindow, PRInt32 *aTransa
     goto EarlyExit;
 
   if (mPostString.IsEmpty())
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=%s&ver=%s", 
+    prefixStr = PR_smprintf("last=%u&protocol=%s&client=%s&ver=%s", 
                             mLastChangeNum, ABSYNC_PROTOCOL, 
                             clientIDStr, ABSYNC_VERSION);
   else
-    prefixStr = PR_smprintf("last=%u&protocol=%d&client=%s&ver=%s&", 
+    prefixStr = PR_smprintf("last=%u&protocol=%s&client=%s&ver=%s&", 
                             mLastChangeNum, ABSYNC_PROTOCOL, 
                             clientIDStr, ABSYNC_VERSION);
 
