@@ -116,28 +116,25 @@ static Switch* gSwitches[] = {
 };
 
 
-typedef struct __struct_TMState
+typedef struct __struct_AnyArray
 /*
-**  State of our current operation.
-**  Stats we are trying to calculate.
+**  Variable sized item array.
 **
-**  mOptions        Obilgatory options pointer.
-**  mTMR            The tmreader, used in tmreader API calls.
-**  mLoopExitTMR    Set to non zero in order to quickly exit from tmreader
-**                      input loop.  This will also result in an error.
-**  uMinTicks       Start of run, milliseconds.
-**  uMaxTicks       End of run, milliseconds.
+**  mItems      The void pointer items.
+**  mItemSize   Size of each different item.
+**  mCount      The number of items in the array.
+**  mCapacity   How many more items we can hold before reallocing.
+**  mGrowBy     How many items we allocate when we grow.
 */
 {
-    Options* mOptions;
-    tmreader* mTMR;
-
-    int mLoopExitTMR;
-
-    unsigned uMinTicks;
-    unsigned uMaxTicks;
+    void* mItems;
+    unsigned mItemSize;
+    unsigned mCount;
+    unsigned mCapacity;
+    unsigned mGrowBy;
 }
-TMState;
+AnyArray;
+typedef AnyArray HeapObjectArray;
 
 
 typedef enum __enum_HeapEventType
@@ -163,8 +160,6 @@ HeapObjectType;
 
 
 typedef struct __struct_HeapObject HeapObject;
-
-
 typedef struct __struct_HeapHistory
 /*
 **  A marker as to what has happened.
@@ -208,6 +203,30 @@ struct __struct_HeapObject
     HeapHistory mBirth;
     HeapHistory mDeath;
 };
+
+
+typedef struct __struct_TMState
+/*
+**  State of our current operation.
+**  Stats we are trying to calculate.
+**
+**  mOptions        Obilgatory options pointer.
+**  mTMR            The tmreader, used in tmreader API calls.
+**  mLoopExitTMR    Set to non zero in order to quickly exit from tmreader
+**                      input loop.  This will also result in an error.
+**  uMinTicks       Start of run, milliseconds.
+**  uMaxTicks       End of run, milliseconds.
+*/
+{
+    Options* mOptions;
+    tmreader* mTMR;
+
+    int mLoopExitTMR;
+
+    unsigned uMinTicks;
+    unsigned uMaxTicks;
+}
+TMState;
 
 
 int initOptions(Options* outOptions, int inArgc, char** inArgv)
@@ -471,10 +490,168 @@ void showHelp(Options* inOptions)
 }
 
 
+AnyArray* arrayCreate(unsigned inItemSize, unsigned inGrowBy)
+/*
+**  Create an array container object.
+*/
+{
+    AnyArray* retval = NULL;
+
+    if(0 != inGrowBy && 0 != inItemSize)
+    {
+        retval = (AnyArray*)calloc(1, sizeof(AnyArray));
+        retval->mItemSize = inItemSize;
+        retval->mGrowBy = inGrowBy;
+    }
+
+    return retval;
+}
+
+
+void arrayDestroy(AnyArray* inArray)
+/*
+**  Release the memory the array contains.
+**  This will release the items as well.
+*/
+{
+    if(NULL != inArray)
+    {
+        if(NULL != inArray->mItems)
+        {
+            free(inArray->mItems);
+        }
+        free(inArray);
+    }
+}
+
+
+unsigned arrayAlloc(AnyArray* inArray, unsigned inItems)
+/*
+**  Resize the item array capcity to a specific number of items.
+**  This could possibly truncate the array, so handle that as well.
+**
+**  returns unsigned        <= inArray->mCapactiy on success.
+*/
+{
+    unsigned retval = (unsigned)-1;
+
+    if(NULL != inArray)
+    {
+        void* moved = NULL;
+
+        moved = realloc(inArray->mItems, inItems * inArray->mItemSize);
+        if(NULL != moved)
+        {
+            inArray->mItems = moved;
+            inArray->mCapacity = inItems;
+            if(inArray->mCount > inItems)
+            {
+                inArray->mCount = inItems;
+            }
+
+            retval = inItems;
+        }
+    }
+
+    return retval;
+}
+
+
+void* arrayItem(AnyArray* inArray, unsigned inIndex)
+/*
+**  Return the array item at said index.
+**  Zero based index.
+**
+**  returns void*       NULL on failure.
+*/
+{
+    void* retval = NULL;
+
+    if(NULL != inArray && inIndex < inArray->mCount)
+    {
+        retval = (void*)((char*)inArray->mItems + (inArray->mItemSize * inIndex));
+    }
+
+    return retval;
+}
+
+
+unsigned arrayIndex(AnyArray* inArray, void* inItem, unsigned inStartIndex)
+/*
+**  Go through the array from the index specified looking for an item
+**      match.
+**  We allow specifying the start index in order to handle arrays with
+**      duplicate items.
+**
+**  returns unsigned        >= inArray->mCount on failure.
+*/
+{
+    unsigned retval = (unsigned)-1;
+
+    if(NULL != inArray && NULL != inItem && inStartIndex < inArray->mCount)
+    {
+        void* curItem = NULL;
+
+        for(retval = inStartIndex; retval < inArray->mCount; retval++)
+        {
+            curItem = arrayItem(inArray, retval);
+            if(0 == memcmp(inItem, curItem, inArray->mItemSize))
+            {
+                break;
+            }
+        }
+    }
+
+
+    return retval;
+}
+
+
+unsigned arrayAddItem(AnyArray* inArray, void* inItem)
+/*
+**  Add a new item to the array.
+**  This is done by copying the item.
+**
+**  returns unsigned        < inArray->mCount on success.
+*/
+{
+    unsigned retval = (unsigned)-1;
+
+    if(NULL != inArray && NULL != inItem)
+    {
+        int noCopy = 0;
+
+        /*
+        **  See if the array should grow.
+        */
+        if(inArray->mCount == inArray->mCapacity)
+        {
+            unsigned allocRes = 0;
+
+            allocRes = arrayAlloc(inArray, inArray->mCapacity + inArray->mGrowBy);
+            if(allocRes > inArray->mCapacity)
+            {
+                noCopy = __LINE__;
+            }
+        }
+
+        if(0 == noCopy)
+        {
+            retval = inArray->mCount;
+
+            inArray->mCount++;
+            memcpy(arrayItem(inArray, retval), inItem, inArray->mItemSize);
+        }
+    }
+
+    return retval;
+}
+
+
 int simpleHeapEvent(TMState* inStats, HeapEventType inType, unsigned mTimestamp, unsigned inSerial, unsigned inHeapID, unsigned inSize)
 /*
-**  Generally, this event intends to chain one old heap object to a newer heap object.
-**  Otherwise, the functionality should recognizable ala simpleHeapEvent.
+**  A new heap event will cause the creation of a new heap object.
+**  The new heap object will displace, or replace, a heap object of a different type.
 */
 {
     int retval = 0;
