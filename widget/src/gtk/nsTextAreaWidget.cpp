@@ -37,7 +37,6 @@ NS_IMPL_RELEASE(nsTextAreaWidget)
 //-------------------------------------------------------------------------
 nsTextAreaWidget::nsTextAreaWidget()
 {
-  mMakeReadOnly = PR_FALSE;
   mBackground = NS_RGB(124, 124, 124);
 }
 
@@ -59,8 +58,6 @@ NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_text_new(FALSE, FALSE);
   gtk_widget_set_name(mWidget, "nsTextAreaWidget");
-  gtk_editable_set_editable(GTK_EDITABLE(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
-
   return NS_OK;
 }
 

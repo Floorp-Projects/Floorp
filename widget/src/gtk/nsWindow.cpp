@@ -276,11 +276,12 @@ void nsWindow::InitCallbacks(char * aName)
                      "key_release_event",
 		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyReleaseMask_EventHandler),
 		     this);
-
+/*
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "size_allocate",
          GTK_SIGNAL_FUNC(nsGtkWidget_Resize_EventHandler),
          this);
+*/
 }
 
 //-------------------------------------------------------------------------
