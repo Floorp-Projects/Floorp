@@ -199,17 +199,17 @@ NS_IMETHODIMP nsXIFFormatConverter::Convert(nsIDataFlavor * aFromDataFlavor, voi
   if (toMimeInQuestion.Equals(kTextMime)) {
     if (NS_OK == ConvertFromXIFToText(srcText, text)) {
       *aToData = (void *)text.ToNewCString();
-      *aDataToLen = text.Length()+1;
+      *aDataToLen = text.Length();
     }
   } else if (toMimeInQuestion.Equals(kHTMLMime)) {
     if (NS_OK == ConvertFromXIFToHTML(srcText, text)) {
       *aToData = (void *)text.ToNewCString();
-      *aDataToLen = text.Length()+1;
+      *aDataToLen = text.Length();
     }
   } else if (toMimeInQuestion.Equals(kAOLMailMime)) {
     if (NS_OK == ConvertFromXIFToAOLMail(srcText, text)) {
       *aToData = (void *)text.ToNewCString();
-      *aDataToLen = text.Length()+1;
+      *aDataToLen = text.Length();
     }
   }
 
