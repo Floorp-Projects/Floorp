@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
 nsFTPChannel::nsFTPChannel()
     : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull),
-      mLoadAttributes(LOAD_NORMAL), mLoadGroup(nsnull), mContext(nsnull)
+      mLoadAttributes(LOAD_NORMAL), mLoadGroup(nsnull), mContext(nsnull), mEventQueue(nsnull)
 {
 
     nsresult rv;
@@ -61,8 +61,6 @@ nsFTPChannel::nsFTPChannel()
     if (NS_SUCCEEDED(rv)) {
         rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
     }
-    if (NS_FAILED(rv))
-        mEventQueue = nsnull;    
 }
 
 nsFTPChannel::~nsFTPChannel() {
@@ -96,8 +94,7 @@ nsFTPChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
 }
 
 nsresult
-nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
-                   nsIEventQueue* queue)
+nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter)
 {
     nsresult rv;
 
@@ -106,9 +103,6 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
 
     mUrl = uri;
     NS_ADDREF(mUrl);
-
-    mEventQueue = queue;
-    NS_ADDREF(mEventQueue);
 
     if (getter) {
         nsIProgressEventSink* eventSink;

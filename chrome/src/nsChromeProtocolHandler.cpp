@@ -141,7 +141,6 @@ nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                     nsIEventSinkGetter* eventSinkGetter,
-                                    nsIEventQueue* eventQueue,
                                     nsIChannel* *result)
 {
     nsresult rv;

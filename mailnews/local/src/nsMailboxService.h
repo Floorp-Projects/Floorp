@@ -78,7 +78,7 @@ public:
 	NS_IMETHOD GetDefaultPort(PRInt32 *aDefaultPort);
 	NS_IMETHOD MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval);
 	NS_IMETHOD NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval);
-	NS_IMETHOD NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIEventQueue *eventQueue, nsIChannel **_retval);
+	NS_IMETHOD NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval);
 	
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIProtocolHandler interface 

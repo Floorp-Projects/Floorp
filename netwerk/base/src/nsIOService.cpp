@@ -223,16 +223,8 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
     rv = GetProtocolHandler((const char*)scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIEventQueue> eventQ;
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
-                                            getter_AddRefs(eventQ));
-    if (NS_FAILED(rv)) return rv;
-
     nsIChannel* channel;
-    rv = handler->NewChannel(verb, aURI, eventSinkGetter, eventQ,
-                             &channel);
+    rv = handler->NewChannel(verb, aURI, eventSinkGetter, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

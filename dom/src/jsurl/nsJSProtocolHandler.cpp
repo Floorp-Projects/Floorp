@@ -42,7 +42,7 @@ public:
 
     nsJSInputStream()
         : mVerb(nsnull), mURI(nsnull), mEventSinkGetter(nsnull),
-          mEventQueue(nsnull), mResult(nsnull), mLength(0), mReadCursor(0) {
+          mResult(nsnull), mLength(0), mReadCursor(0) {
         NS_INIT_REFCNT();
     }
 
@@ -50,21 +50,17 @@ public:
         if (mVerb) nsCRT::free(mVerb);
         NS_IF_RELEASE(mURI);
         NS_IF_RELEASE(mEventSinkGetter);
-        NS_IF_RELEASE(mEventQueue);
         if (mResult) nsCRT::free(mResult);
     }
 
     nsresult Init(const char* verb, nsIURI* uri,
-                  nsIEventSinkGetter* eventSinkGetter,
-                  nsIEventQueue* eventQueue) {
+                  nsIEventSinkGetter* eventSinkGetter) {
         mVerb = nsCRT::strdup(verb);    // XXX do we need this?
         if (mVerb == nsnull) return NS_ERROR_OUT_OF_MEMORY;
         mURI = uri;
         NS_ADDREF(mURI);
         mEventSinkGetter = eventSinkGetter;
         NS_ADDREF(mEventSinkGetter);
-        mEventQueue = eventQueue;
-        NS_ADDREF(mEventQueue);
         return NS_OK;
     }
 
@@ -136,7 +132,6 @@ protected:
     char*               mVerb;
     nsIURI*             mURI;
     nsIEventSinkGetter* mEventSinkGetter;
-    nsIEventQueue*      mEventQueue;
     char*               mResult;
     PRUint32            mLength;
     PRUint32            mReadCursor;
@@ -147,7 +142,6 @@ NS_IMPL_ISUPPORTS(nsJSInputStream, nsIInputStream::GetIID());
 nsresult
 NS_NewJSInputStream(const char* verb, nsIURI* uri,
                     nsIEventSinkGetter* eventSinkGetter,
-                    nsIEventQueue* eventQueue,
                     nsIInputStream* *result)
 {
     nsJSInputStream* js = new nsJSInputStream();
@@ -155,7 +149,7 @@ NS_NewJSInputStream(const char* verb, nsIURI* uri,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(js);
 
-    nsresult rv = js->Init(verb, uri, eventSinkGetter, eventQueue);
+    nsresult rv = js->Init(verb, uri, eventSinkGetter);
     if (NS_FAILED(rv)) {
         NS_RELEASE(js);
         return rv;
@@ -267,7 +261,6 @@ nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_IMETHODIMP
 nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                 nsIEventSinkGetter* eventSinkGetter,
-                                nsIEventQueue* eventQueue,
                                 nsIChannel* *result)
 {
     // Strategy: Let's use an "input stream channel" here with a special 
@@ -279,7 +272,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_FAILED(rv)) return rv;
 
     nsIInputStream* in;
-    rv = NS_NewJSInputStream(verb, uri, eventSinkGetter, eventQueue, &in);
+    rv = NS_NewJSInputStream(verb, uri, eventSinkGetter, &in);
     if (NS_FAILED(rv)) return rv;
 
     rv = serv->NewInputStreamChannel(uri, "text/html", in, &channel);

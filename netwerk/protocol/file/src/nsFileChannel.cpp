@@ -92,8 +92,7 @@ nsFileChannel::nsFileChannel()
 
 nsresult
 nsFileChannel::Init(nsFileProtocolHandler* handler,
-                    const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
-                    nsIEventQueue* queue)
+                    const char* verb, nsIURI* uri, nsIEventSinkGetter* getter)
 {
     nsresult rv;
 
@@ -154,9 +153,6 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 		nsCRT::free(url);
 		mSpec = fileURL;
 	}
-
-    mEventQueue = queue;
-    NS_IF_ADDREF(mEventQueue);
 
     return NS_OK;
 }

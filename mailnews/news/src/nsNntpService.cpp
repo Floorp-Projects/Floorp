@@ -854,7 +854,7 @@ NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 	return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIEventQueue *eventQueue, nsIChannel **_retval)
+NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
 {
     *_retval = nsnull;
 	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us

@@ -29,7 +29,6 @@ public:
     NS_IMETHOD NewChannel(const char *verb,
                           nsIURI *aURI,
                           nsIEventSinkGetter *eventSinkGetter,
-                          nsIEventQueue *eventQueue,
                           nsIChannel **result);
 
     nsAboutBlank() { NS_INIT_REFCNT(); }
