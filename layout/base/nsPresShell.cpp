@@ -5922,6 +5922,25 @@ PresShell::HandleEvent(nsIView         *aView,
   if (aEvent->message == NS_THEMECHANGED && mPresContext)
     return mPresContext->ThemeChanged();
 
+  // Check for a system color change up front, since the frame type is irrelevenat
+  if ((aEvent->message == NS_SYSCOLORCHANGED) && mPresContext) {
+    nsIViewManager *vm;
+    if ((NS_SUCCEEDED(GetViewManager(&vm))) && vm) {
+      // Only dispatch system color change when the message originates from
+      // from the root views widget. This is necessary to prevent us from 
+      // dispatching the SysColorChanged notification for each child window 
+      // which may be redundant.
+      nsIView *view;
+      vm->GetRootView(view);
+      if (view == aView) {
+        aHandled = PR_TRUE;
+        *aEventStatus = nsEventStatus_eConsumeDoDefault;
+        return mPresContext->SysColorChanged();
+      }
+    }
+    return NS_OK;
+  }
+
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;
 

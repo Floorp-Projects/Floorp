@@ -644,6 +644,63 @@ private:
 
 static nsAttentionTimerMonitor *gAttentionTimerMonitor = 0;
 
+// Code to dispatch WM_SYSCOLORCHANGE message to all child windows.
+// WM_SYSCOLORCHANGE is only sent to top-level windows, but the 
+// cross platform API requires that NS_SYSCOLORCHANGE message be sent to
+// all child windows as well. When running in an embedded application
+// we may not receive a WM_SYSCOLORCHANGE message because the top 
+// level window is owned by the embeddor. Note: this code can be used to
+// dispatch other global messages (i.e messages that must be sent to all 
+// nsIWidget instances. 
+
+// Enumerate all child windows sending aMsg to each of them
+
+BOOL CALLBACK nsWindow::BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg) 
+{
+  LONG proc = ::GetWindowLong(aWnd, GWL_WNDPROC);
+  if (proc == (LONG)&nsWindow::WindowProc) {
+    // its one of our windows so go ahead and send a message to it
+    WNDPROC winProc = (WNDPROC)GetWindowLong(aWnd, GWL_WNDPROC);
+    ::CallWindowProc(winProc, aWnd, aMsg, 0, 0);
+  }
+  // Send message to children of this window
+  ::EnumChildWindows(aWnd, nsWindow::BroadcastMsgToChildren, aMsg);
+  return TRUE;
+}
+
+// Enumerate all top level windows specifying that the children of each
+// top level window should be enumerated. Do *not* send the message to 
+// each top level window since it is assumed that the toolkit will send 
+// aMsg to them directly. 
+
+BOOL CALLBACK nsWindow::BroadcastMsg(HWND aTopWindow, LPARAM aMsg)
+{
+  // Iterate each of aTopWindows child windows sending the aMsg
+  // to each of them.
+  EnumChildWindows(aTopWindow, nsWindow::BroadcastMsgToChildren, aMsg);
+  return TRUE;
+}
+
+// This method is called from nsToolkit::WindowProc to forward global
+// messages which need to be dispatched to all child windows.
+
+void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg, 
+                                   WPARAM wParam, LPARAM lParam)
+
+{
+  switch (msg) {
+    case WM_SYSCOLORCHANGE:
+      // System color changes are posted to top-level windows only.
+      // The NS_SYSCOLORCHANGE must be dispatched to all child 
+      // windows as well.  
+     ::EnumThreadWindows(GetCurrentThreadId(), nsWindow::BroadcastMsg, msg);
+    break;
+  }
+}
+
+// End of the methods to dispatch global messages
+
+
 PRBool gIsDestroyingAny = PR_FALSE;
 
 //-------------------------------------------------------------------------
@@ -3423,6 +3480,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_DISPLAYCHANGE:
           DispatchStandardEvent(NS_DISPLAYCHANGED);
+        break;
+
+        case WM_SYSCOLORCHANGE:
+          // Note: This is sent for child windows as well as top-level windows.
+          // The Win32 toolkit normally only sends these events to top-level windows.
+          // But we cycle through all of the childwindows and send it to them as well
+          // so all presentations get notified properly. 
+          // See nsWindow::GlobalMsgWindowProc.
+          DispatchStandardEvent(NS_SYSCOLORCHANGED);
         break;
         
         case WM_NOTIFY:

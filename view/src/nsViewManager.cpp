@@ -1798,7 +1798,17 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
       }
       break;
 
-
+    case NS_SYSCOLORCHANGED:
+      {
+        nsView *view = nsView::GetViewFor(aEvent->widget);
+        nsCOMPtr<nsIViewObserver> obs;
+        GetViewObserver(*getter_AddRefs(obs));
+        if (obs) {
+          PRBool handled;
+          obs->HandleEvent(view, aEvent, aStatus, PR_TRUE, handled);
+        }
+      }
+      break;
 
     default:
       {
@@ -2029,7 +2039,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
     }
     return status;
   }
-
+    
   nsAutoVoidArray targetViews;
   nsAutoVoidArray heldRefCountsToOtherVMs;
 

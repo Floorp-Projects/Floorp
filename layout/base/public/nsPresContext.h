@@ -535,6 +535,11 @@ public:
    */
   NS_IMETHOD ThemeChanged() = 0;
 
+  /*
+   * Notify the pres context that a system color has changed
+   */
+  NS_IMETHOD SysColorChanged() = 0;
+
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;
   NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRendingContext, nsIFrame * aFrame, PRUint32 aColor) = 0;
