@@ -3555,7 +3555,8 @@ function BrowserToolbarChanged()
   gProxyFavIcon = document.getElementById("page-proxy-favicon");
   gProxyDeck = document.getElementById("page-proxy-deck");
   var homeButton = document.getElementById("home-button");
-  if (homeButton)
+  if (homeButton) {
+    var homePage = getHomePage();
     homeButton.setAttribute("tooltiptext", homePage);
   window.XULBrowserWindow.init();
 }
