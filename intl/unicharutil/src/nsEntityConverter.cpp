@@ -85,7 +85,7 @@ nsEntityConverter::LoadVersionPropertyFile()
 
       for (PRUint32 i = 0; i < mVersionListLength && NS_SUCCEEDED(rv); i++) {
         key.SetLength(0);
-        key.AppendWithConversion(i+1, 10);
+        key.AppendInt(i+1, 10);
 	      rv = entityProperties->GetStringProperty(key, value);
         PRUint32 len = value.Length();
         if (kVERSION_STRING_LEN < len) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
@@ -206,7 +206,7 @@ nsEntityConverter::ConvertToEntity(PRUnichar character, PRUint32 entityVersion, 
       continue;
 
     nsAutoString key, value; key.AssignWithConversion("entity.");
-		key.AppendWithConversion(character,10);
+		key.AppendInt(character,10);
     nsresult rv = entityProperties->GetStringProperty(key, value);
     if (NS_SUCCEEDED(rv)) {
       *_retval = value.ToNewCString();
@@ -235,7 +235,7 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
   PRUint32 len = nsCRT::strlen(inString);
   for (PRUint32 i = 0; i < len; i++) {
     nsAutoString value, key; key.AssignWithConversion("entity.");
-		key.AppendWithConversion(inString[i],10);
+		key.AppendInt(inString[i],10);
     entity = NULL;
     for (PRUint32 mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
       if (0 == (entityVersion & mask)) 
