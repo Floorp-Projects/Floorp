@@ -60,6 +60,17 @@ insert into components (value, program, initialowner) values ("PerLDAP", "Direct
 insert into components (value, program, initialowner) values ("LDAP Tools", "Directory", "chuckb@netscape.com");
 
 
+insert into components (value, program, initialowner) values ("Networking", "MailNews", "mscott@netscape.com");
+insert into components (value, program, initialowner) values ("Database", "MailNews", "davidmc@netscape.com");
+insert into components (value, program, initialowner) values ("MIME", "MailNews", "rhp@netscape.com");
+insert into components (value, program, initialowner) values ("Security", "MailNews", "jefft@netscape.com");
+insert into components (value, program, initialowner) values ("Composition", "MailNews", "ducarroz@netscape.com");
+insert into components (value, program, initialowner) values ("Address Book", "MailNews", "putterman@netscape.com");
+insert into components (value, program, initialowner) values ("Front End", "MailNews", "warren@netscape.com");
+insert into components (value, program, initialowner) values ("Back End", "MailNews", "phil@netscape.com");
+
+
+
 insert into components (value, program, initialowner) values ("Macintosh FE", "Mozilla", "sdagley@netscape.com");
 insert into components (value, program, initialowner) values ("Windows FE", "Mozilla", "blythe@netscape.com");
 insert into components (value, program, initialowner) values ("XFE", "Mozilla", "ramiro@netscape.com");
