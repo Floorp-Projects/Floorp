@@ -35,7 +35,7 @@
 
 #include "plhash.h"
 #include "prlock.h"
-#include "nscom.h"
+#include "nsCom.h"
 #include "nscore.h"
 
 class nsHashtable;
