@@ -1529,7 +1529,7 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, nsresult aStatus,
         aURL->GetSpec(&url);
       else
         url = "";      
-      cerr << "Load of URL '" << url << "' failed.  Error code: " 
+      cerr << "nsDocumentBindInfo::OnStopBinding: Load of URL '" << url << "' failed.  Error code: " 
         << NS_ERROR_GET_CODE(aStatus) << "\n";
     }
 
