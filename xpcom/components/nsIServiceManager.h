@@ -32,6 +32,7 @@
 #endif
 
 class nsIShutdownListener;
+class nsIDirectoryServiceProvider;
 
 #define NS_ISERVICEMANAGER_IID                       \
 { /* cf0df3b0-3401-11d2-8163-006008119d7a */         \
@@ -368,8 +369,11 @@ NS_NewServiceManager(nsIServiceManager* *result);
 extern NS_COM nsresult
 NS_InitXPCOM(nsIServiceManager* *result, nsIFile* binDirectory);
 
+// appFileLocationProvider provides application relative file locations.
+// If nsnull is passed, the default implementation will be created and used.
+
 extern NS_COM nsresult
-NS_InitXPCOM2(const char* productName, nsIServiceManager* *result, nsIFile* binDirectory);
+NS_InitXPCOM2(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Shutdown of XPCOM. XPCOM hosts an observer (NS_XPCOM_SHUTDOWN_OBSERVER_ID)

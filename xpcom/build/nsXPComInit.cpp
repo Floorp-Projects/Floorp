@@ -65,6 +65,7 @@
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppFileLocationProvider.h"
 #include "nsICategoryManager.h"
 
 #include "nsAtomService.h"
@@ -199,14 +200,13 @@ extern PRBool gShuttingDown;
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result, 
                              nsIFile* binDirectory)
 {
-    return NS_InitXPCOM2(nsnull, result, binDirectory);
+    return NS_InitXPCOM2(result, binDirectory, nsnull);
 }
 
 
-nsresult NS_COM NS_InitXPCOM2(const char* productName,
-                             nsIServiceManager* *result, 
-                             nsIFile* binDirectory
-)
+nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result, 
+                              nsIFile* binDirectory,
+                              nsIDirectoryServiceProvider* appFileLocationProvider)
 {
     nsresult rv = NS_OK;
 
@@ -261,7 +261,7 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
         if (!dirService)
             return NS_ERROR_NO_INTERFACE;
 
-        rv = dirService->Init(productName);
+        rv = dirService->Init();
         
         if (NS_FAILED(rv))
             return rv;
@@ -284,7 +284,14 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
             nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory, &spec);
             
         }
-
+        if (!appFileLocationProvider) {
+            appFileLocationProvider = new nsAppFileLocationProvider;
+            if (!appFileLocationProvider)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+        rv = dirService->RegisterProvider(appFileLocationProvider);
+        if (NS_FAILED(rv)) return rv;
+        
         
         rv = compMgr->Init();
         if (NS_FAILED(rv))

@@ -122,12 +122,6 @@ ifdef MOZ_FULLCIRCLE
 XP_LIBS			+= $(FULLCIRCLE_LIBS)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-XP_LIBS			+= -llibxpfelocation_s
-else
-XP_LIBS			+= -lxpfelocation_s
-endif
-
 XP_LIBS			+= \
 			$(XP_NS_UNDERBAR_CRAP) \
 			$(XP_DIST_LIBS) \

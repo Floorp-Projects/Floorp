@@ -281,8 +281,6 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 
 nsIAtom*  nsDirectoryService::sCurrentProcess = nsnull;
-nsIAtom*  nsDirectoryService::sAppRegistryDirectory = nsnull;
-nsIAtom*  nsDirectoryService::sAppRegistry = nsnull;
 nsIAtom*  nsDirectoryService::sComponentRegistry = nsnull;
 nsIAtom*  nsDirectoryService::sComponentDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sOS_DriveDirectory = nsnull;
@@ -369,7 +367,7 @@ nsDirectoryService::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
 }
 
 nsresult
-nsDirectoryService::Init(const char *productName)
+nsDirectoryService::Init()
 {
     nsresult rv;
     mHashtable = new nsSupportsHashtable(256, PR_TRUE);
@@ -379,13 +377,9 @@ nsDirectoryService::Init(const char *productName)
     rv = NS_NewISupportsArray(getter_AddRefs(mProviders));
     if (NS_FAILED(rv)) return rv;
     
-    mProductName = productName;
-
     nsDirectoryService::sCurrentProcess             = NS_NewAtom(NS_XPCOM_CURRENT_PROCESS_DIR);
     nsDirectoryService::sComponentRegistry          = NS_NewAtom(NS_XPCOM_COMPONENT_REGISTRY_FILE);
     nsDirectoryService::sComponentDirectory         = NS_NewAtom(NS_XPCOM_COMPONENT_DIR);
-    nsDirectoryService::sAppRegistryDirectory       = NS_NewAtom(NS_XPCOM_APPLICATION_REGISTRY_DIR);
-    nsDirectoryService::sAppRegistry                = NS_NewAtom(NS_XPCOM_APPLICATION_REGISTRY_FILE);
     
     nsDirectoryService::sOS_DriveDirectory          = NS_NewAtom(NS_OS_DRIVE_DIR);
     nsDirectoryService::sOS_TemporaryDirectory      = NS_NewAtom(NS_OS_TEMP_DIR);
@@ -465,8 +459,6 @@ nsDirectoryService::~nsDirectoryService()
      delete mHashtable;
 
      NS_IF_RELEASE(nsDirectoryService::sCurrentProcess);
-     NS_IF_RELEASE(nsDirectoryService::sAppRegistryDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sAppRegistry);
      NS_IF_RELEASE(nsDirectoryService::sComponentRegistry);
      NS_IF_RELEASE(nsDirectoryService::sComponentDirectory);
      NS_IF_RELEASE(nsDirectoryService::sOS_DriveDirectory);
@@ -721,74 +713,6 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     if (inAtom == nsDirectoryService::sCurrentProcess)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
-    }
-    else if (inAtom == nsDirectoryService::sAppRegistryDirectory)
-    {
-        nsCOMPtr<nsIFile> homeDir;
-        GetFile(HOME_DIR, persistent, getter_AddRefs(homeDir));
-        
-#if defined(XP_WIN)
-        PRBool dirExists = PR_FALSE;
-        PRBool invalidHome = PR_FALSE;
-        if (homeDir)
-        {
-            homeDir->Exists(&dirExists);
-            if (!dirExists)
-                invalidHome = PR_TRUE;        
-        }
-        else
-        {
-            // We got a null value from file service.
-            // Home directory is not available/set.
-            invalidHome = PR_TRUE;
-        }
-  
-        // If home directory is invalid or absent, use windows
-        // directory as fall back.
-        if (invalidHome)
-            GetFile(NS_WIN_WINDOWS_DIR,persistent, getter_AddRefs(homeDir));
-#endif
-        if (homeDir)
-        {
-            localFile = do_QueryInterface(homeDir);
-
-            nsCString productName = mProductName;
-
-            if (!(productName.mLength))
-                productName = DEFAULT_PRODUCT_DIR;
-
-            nsCString temp = productName;
-            if (localFile)
-                rv = localFile->Append(temp);           
-
-            if (NS_SUCCEEDED(rv))
-            {
-
-                // Create the new directory
-                PRBool newDirExists = PR_FALSE;
-                localFile->Exists(&newDirExists);
-
-                if (!newDirExists)
-                {
-                    rv = localFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
-                }
-            }
-        }
-        else
-          rv = NS_ERROR_FAILURE;
-    }
-    else if (inAtom == nsDirectoryService::sAppRegistry)
-    {
-        nsCOMPtr<nsIFile> registryDir;
-        GetFile(NS_XPCOM_APPLICATION_REGISTRY_DIR, persistent, getter_AddRefs(registryDir));
-        
-        if (registryDir)
-        {
-            localFile = do_QueryInterface(registryDir);
-            rv = localFile->Append(APP_REGISTRY_NAME);    
-        } 
-        else
-            rv = NS_ERROR_FAILURE;
     }
     else if (inAtom == nsDirectoryService::sComponentRegistry)
     {

@@ -25,7 +25,6 @@
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
 
-class nsIAtom;
 class nsIFile;
 
 //*****************************************************************************
@@ -44,21 +43,8 @@ protected:
    virtual              ~nsAppFileLocationProvider();
 
    NS_METHOD            CloneMozBinDirectory(nsILocalFile **aLocalFile);   
+   NS_METHOD            GetProductDirectory(nsILocalFile **aLocalFile);
+   NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
   
-   static PRInt32       sInstanceCount;
-
-   static nsIAtom*      sApp_PrefDefaultsFolder50;
-   static nsIAtom*      sApp_ProfileDefaultsFolder50;
-   static nsIAtom*      sApp_ProfileDefaultsNoLocFolder50;
-
-   static nsIAtom*      sApp_DefaultUserProfileRoot50;
-         
-   static nsIAtom*      sApp_ResDirectory;
-   static nsIAtom*      sApp_DefaultsFolder50;
-   static nsIAtom*      sApp_ChromeDirectory;
-   static nsIAtom*      sApp_PluginsDirectory;
-
-   static nsIAtom*      sApp_SearchDirectory50;
-   
    nsCOMPtr<nsILocalFile> mMozBinDirectory;
 };

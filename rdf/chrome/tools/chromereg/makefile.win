@@ -21,7 +21,6 @@ PROG = .\$(OBJDIR)\regchrome.exe
 PROGRAMS = $(PROG)
 
 LINCS=  \
-	$(DIST)\lib\appfilelocprovider_s.$(LIB_SUFFIX) \
 	-Iservices         \
 	-I$(PUBLIC)\xpcom
 

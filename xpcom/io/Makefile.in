@@ -50,6 +50,7 @@ CPPSRCS		= \
 		nsStorageStream.cpp \
 		nsScriptableInputStream.cpp \
 		nsByteArrayInputStream.cpp \
+		nsAppFileLocationProvider.cpp \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -62,6 +63,7 @@ EXPORTS		= \
 		nsEscape.h \
 		nsDirectoryService.h \
 		nsDirectoryServiceDefs.h \
+		nsAppDirectoryServiceDefs.h \
 		nsLocalFile.h \
 		nsLinebreakConverter.h \
 		nsFileSpec.h \

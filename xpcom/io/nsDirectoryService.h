@@ -37,8 +37,6 @@ class nsDirectoryService : public nsIDirectoryService, public nsIProperties, pub
 
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_DIRECTORY_SERVICE_CID);
   
-  nsresult Init();
-
   // nsISupports interface
   NS_DECL_ISUPPORTS
 
@@ -62,11 +60,7 @@ private:
     nsSupportsHashtable* mHashtable;
     nsCOMPtr<nsISupportsArray> mProviders;
 
-    nsCString mProductName;
-
     static nsIAtom *sCurrentProcess;
-    static nsIAtom *sAppRegistryDirectory;
-    static nsIAtom *sAppRegistry;
     static nsIAtom *sComponentRegistry;
     static nsIAtom *sComponentDirectory;
     static nsIAtom *sOS_DriveDirectory;

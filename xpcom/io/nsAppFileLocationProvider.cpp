@@ -31,7 +31,6 @@
 #include "nsXPIDLString.h"
 #include "nsIChromeRegistry.h"
 
-static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
 
 #if defined(XP_MAC)
 #include <Folders.h>
@@ -66,6 +65,22 @@ static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
 
+#ifdef XP_MAC
+#define APP_REGISTRY_NAME "Application Registry"
+#elif defined(XP_WIN) || defined(XP_OS2)
+#define APP_REGISTRY_NAME "registry.dat"
+#else
+#define APP_REGISTRY_NAME "appreg"
+#endif 
+
+// define default product directory
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
+#define DEFAULT_PRODUCT_DIR "Mozilla"
+#elif defined (XP_UNIX)
+#define DEFAULT_PRODUCT_DIR ".mozilla"
+#endif
+
+
 #if XP_MAC
 #define DEFAULTS_DIR_NAME           "Defaults"
 #define DEFAULTS_PREF_DIR_NAME      "Pref"
@@ -84,24 +99,6 @@ static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 #define SEARCH_DIR_NAME             "searchplugins" 
 #endif
 
-//*****************************************************************************
-// nsAppFileLocationProvider::Static Variables
-//*****************************************************************************   
-
-PRInt32 nsAppFileLocationProvider::sInstanceCount = 0;
- 
-nsIAtom* nsAppFileLocationProvider::sApp_DefaultsFolder50        = nsnull;
-nsIAtom* nsAppFileLocationProvider::sApp_PrefDefaultsFolder50    = nsnull;
-nsIAtom* nsAppFileLocationProvider::sApp_ProfileDefaultsFolder50 = nsnull;
-nsIAtom* nsAppFileLocationProvider::sApp_ProfileDefaultsNoLocFolder50 = nsnull;
-
-nsIAtom* nsAppFileLocationProvider::sApp_DefaultUserProfileRoot50 = nsnull;
-
-nsIAtom* nsAppFileLocationProvider::sApp_ResDirectory            = nsnull;
-nsIAtom* nsAppFileLocationProvider::sApp_ChromeDirectory         = nsnull;
-nsIAtom* nsAppFileLocationProvider::sApp_PluginsDirectory        = nsnull;
-
-nsIAtom* nsAppFileLocationProvider::sApp_SearchDirectory50       = nsnull;
 
 //*****************************************************************************
 // nsAppFileLocationProvider::Constructor/Destructor
@@ -110,60 +107,10 @@ nsIAtom* nsAppFileLocationProvider::sApp_SearchDirectory50       = nsnull;
 nsAppFileLocationProvider::nsAppFileLocationProvider()
 {
     NS_INIT_ISUPPORTS();
-    
-    if (sInstanceCount++ == 0) {
-    
-      // Defaults
-        sApp_DefaultsFolder50        = NS_NewAtom(NS_APP_DEFAULTS_50_DIR);
-        sApp_PrefDefaultsFolder50    = NS_NewAtom(NS_APP_PREF_DEFAULTS_50_DIR);
-        sApp_ProfileDefaultsFolder50 = NS_NewAtom(NS_APP_PROFILE_DEFAULTS_50_DIR);
-        sApp_ProfileDefaultsNoLocFolder50 = NS_NewAtom(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR);
- 
-      // Profile Root
-        sApp_DefaultUserProfileRoot50 = NS_NewAtom(NS_APP_USER_PROFILES_ROOT_DIR);
-            
-      // Application Directories
-        sApp_ResDirectory            = NS_NewAtom(NS_APP_RES_DIR);
-        sApp_ChromeDirectory         = NS_NewAtom(NS_APP_CHROME_DIR);
-        sApp_PluginsDirectory        = NS_NewAtom(NS_APP_PLUGINS_DIR);
-      
-      // Search
-        sApp_SearchDirectory50       = NS_NewAtom(NS_APP_SEARCH_DIR);
-    }
-    
-    nsresult rv;
-    
-    // Get the mozilla bin directory
-    // 1. Check the directory service first for NS_XPCOM_CURRENT_PROCESS_DIR
-    //    This will be set if a directory was passed to NS_InitXPCOM
-    // 2. If that doesn't work, set it to be the current process directory
-    
-    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-        rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
-
-    if (NS_FAILED(rv)) {
-        rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
-    }
 }
 
 nsAppFileLocationProvider::~nsAppFileLocationProvider()
 {
-    if (--sInstanceCount == 0) {
-
-        NS_IF_RELEASE(sApp_DefaultsFolder50);        
-        NS_IF_RELEASE(sApp_PrefDefaultsFolder50);
-        NS_IF_RELEASE(sApp_ProfileDefaultsFolder50);
-        NS_IF_RELEASE(sApp_ProfileDefaultsNoLocFolder50);
-
-        NS_IF_RELEASE(sApp_DefaultUserProfileRoot50);
-              
-        NS_IF_RELEASE(sApp_ResDirectory);
-        NS_IF_RELEASE(sApp_ChromeDirectory);
-        NS_IF_RELEASE(sApp_PluginsDirectory);
-
-        NS_IF_RELEASE(sApp_SearchDirectory50);
-    }
 }
 
 
@@ -172,7 +119,6 @@ nsAppFileLocationProvider::~nsAppFileLocationProvider()
 //*****************************************************************************   
 
 NS_IMPL_ISUPPORTS1(nsAppFileLocationProvider, nsIDirectoryServiceProvider)
-
 
 //*****************************************************************************
 // nsAppFileLocationProvider::nsIDirectoryServiceProvider
@@ -187,16 +133,23 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
 	*_retval = nsnull;
 	*persistant = PR_TRUE;
 	
-    nsIAtom* inAtom = NS_NewAtom(prop);
-    NS_ENSURE_TRUE(inAtom, NS_ERROR_OUT_OF_MEMORY);
-
-    if (inAtom == sApp_DefaultsFolder50)
+    if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
+    {
+        rv = GetProductDirectory(getter_AddRefs(localFile));
+    }
+    else if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
+    {
+        rv = GetProductDirectory(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->Append(APP_REGISTRY_NAME);
+    }
+    else if (nsCRT::strcmp(prop, NS_APP_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(DEFAULTS_DIR_NAME);
     }
-    else if (inAtom == sApp_PrefDefaultsFolder50)
+    else if (nsCRT::strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -205,7 +158,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
                 rv = localFile->AppendRelativePath(DEFAULTS_PREF_DIR_NAME);
         }
     }
-    else if (inAtom == sApp_ProfileDefaultsFolder50)
+    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -221,7 +174,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
             }
         }
     }
-    else if (inAtom == sApp_ProfileDefaultsNoLocFolder50)
+    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -230,37 +183,35 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
                 rv = localFile->AppendRelativePath(DEFAULTS_PROFILE_DIR_NAME);
         }
     }
-    else if (inAtom == sApp_DefaultUserProfileRoot50)
+    else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
     {
         rv = GetDefaultUserProfileRoot(getter_AddRefs(localFile));   
     }
-    else if (inAtom == sApp_ResDirectory)
+    else if (nsCRT::strcmp(prop, NS_APP_RES_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(RES_DIR_NAME);
     }
-    else if (inAtom == sApp_ChromeDirectory)
+    else if (nsCRT::strcmp(prop, NS_APP_CHROME_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(CHROME_DIR_NAME);
     }
-    else if (inAtom == sApp_PluginsDirectory)
+    else if (nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(PLUGINS_DIR_NAME);
     }
-    else if (inAtom == sApp_SearchDirectory50)
+    else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(SEARCH_DIR_NAME);
     }
     
-    NS_RELEASE(inAtom);
-
 	if (localFile && NS_SUCCEEDED(rv))
 		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
 		
@@ -270,11 +221,30 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
 
 NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalFile)
 {
-    NS_ENSURE_TRUE(mMozBinDirectory, NS_ERROR_FAILURE);
     NS_ENSURE_ARG_POINTER(aLocalFile);
+    nsresult rv;
+    
+    if (!mMozBinDirectory)
+    {        
+        // Get the mozilla bin directory
+        // 1. Check the directory service first for NS_XPCOM_CURRENT_PROCESS_DIR
+        //    This will be set if a directory was passed to NS_InitXPCOM
+        // 2. If that doesn't work, set it to be the current process directory
+        
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+            return rv;
+        
+        rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
+        if (NS_FAILED(rv)) {
+            rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
+            if (NS_FAILED(rv))
+                return rv;
+        }
+    }
     
     nsCOMPtr<nsIFile> aFile;
-    nsresult rv = mMozBinDirectory->Clone(getter_AddRefs(aFile));
+    rv = mMozBinDirectory->Clone(getter_AddRefs(aFile));
     if (NS_FAILED(rv))
         return rv;
 
@@ -286,34 +256,15 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalF
     return NS_OK;
 }
 
-//****************************************************************************************
-// Static Routines
-//****************************************************************************************
-
-static nsresult GetChromeLocale(PRUnichar** localeName)
-{
-    NS_ENSURE_ARG_POINTER(localeName);
-
-    nsresult rv;    
-    *localeName = nsnull;
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-
-    if (NS_SUCCEEDED(rv)) {
-        nsString tmpstr; tmpstr.AssignWithConversion("navigator");
-        rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), localeName);
-    }
-    return rv;
-}
-
 
 //----------------------------------------------------------------------------------------
-// GetDefaultUserProfileRoot - Gets the directory which contains each user profile dir
+// GetProductDirectory - Gets the directory which contains the application data folder
 //
 // UNIX   : ~/.mozilla/
-// WIN    : <Application Data folder on user's machine>\Mozilla\Users50 
-// Mac    : :Documents:Mozilla:Users50:
+// WIN    : <Application Data folder on user's machine>\Mozilla 
+// Mac    : :Documents:Mozilla:
 //----------------------------------------------------------------------------------------
-static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
+NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFile)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
     
@@ -347,12 +298,6 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
 #elif defined(XP_UNIX)
     rv = NS_NewLocalFile(PR_GetEnv("HOME"), PR_TRUE, getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
-    rv = localDir->AppendRelativePath(".mozilla");
-    if (NS_FAILED(rv)) return rv;
-    rv = localDir->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && !exists)
-      rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv)) return rv;
 #elif defined(XP_BEOS)
     char path[MAXPATHLEN];
     find_directory(B_USER_SETTINGS_DIRECTORY, 0, 0, path, MAXPATHLEN);
@@ -364,20 +309,44 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
     path[len+1] = '\0';
     rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
-    rv = localDir->AppendRelativePath("mozilla");
+#else
+#error dont_know_how_to_get_product_dir_on_your_platform
+#endif
+
+    rv = localDir->AppendRelativePath(DEFAULT_PRODUCT_DIR);
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
-      rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0);
+        rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
     if (NS_FAILED(rv)) return rv;
-#else
-#error dont_know_how_to_do_profiles_on_your_platform
-#endif
+
+    *aLocalFile = localDir;
+    NS_ADDREF(*aLocalFile);
+
+   return rv; 
+}
+
+
+//----------------------------------------------------------------------------------------
+// GetDefaultUserProfileRoot - Gets the directory which contains each user profile dir
+//
+// UNIX   : ~/.mozilla/
+// WIN    : <Application Data folder on user's machine>\Mozilla\Users50 
+// Mac    : :Documents:Mozilla:Users50:
+//----------------------------------------------------------------------------------------
+NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
+{
+    NS_ENSURE_ARG_POINTER(aLocalFile);
+    
+    nsresult rv;
+    PRBool exists;
+    nsCOMPtr<nsILocalFile> localDir;
+   
+    rv = GetProductDirectory(getter_AddRefs(localDir));
+    if (NS_FAILED(rv)) return rv;
 
 #if defined(XP_MAC) || defined(XP_OS2) || defined(XP_PC)
     // These 3 platforms share this part of the path - do them as one
-    rv = localDir->AppendRelativePath("Mozilla");
-    if (NS_FAILED(rv)) return rv;
     rv = localDir->AppendRelativePath("Users50");
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
@@ -392,3 +361,21 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
    return rv; 
 }
 
+//****************************************************************************************
+// Static Routines
+//****************************************************************************************
+
+static nsresult GetChromeLocale(PRUnichar** localeName)
+{
+    NS_ENSURE_ARG_POINTER(localeName);
+
+    nsresult rv;    
+    *localeName = nsnull;
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+
+    if (NS_SUCCEEDED(rv)) {
+        nsString tmpstr; tmpstr.AssignWithConversion("navigator");
+        rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), localeName);
+    }
+    return rv;
+}

@@ -35,6 +35,7 @@
 #include "nsFileStream.h"
 #include "nsEscape.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
 
@@ -109,7 +110,7 @@ nsProfileAccess::nsProfileAccess()
     m4xProfiles          =  new nsVoidArray();
 
     // Get the profile registry path
-    NS_GetSpecialDirectory(NS_XPCOM_APPLICATION_REGISTRY_FILE, getter_AddRefs(mNewRegFile));
+    NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_FILE, getter_AddRefs(mNewRegFile));
 
     PRBool regDataMoved = PR_FALSE;
     PRBool oldMozRegFileExists = PR_FALSE;

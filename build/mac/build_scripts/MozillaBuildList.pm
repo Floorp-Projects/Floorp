@@ -502,9 +502,6 @@ sub BuildClientDist()
     #LIBUTIL
     InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",                "$distdirectory:libutil:");
 
-    # APPFILELOCPROVIDER
-    InstallFromManifest(":mozilla:modules:appfilelocprovider:public:MANIFEST",     "$distdirectory:appfilelocprovider:");
-
     # MPFILELOCPROVIDER
     InstallFromManifest(":mozilla:modules:mpfilelocprovider:public:MANIFEST",      "$distdirectory:mpfilelocprovider:");
 
@@ -1128,8 +1125,6 @@ sub BuildCommonProjects()
 
     #// Static libraries
     # Static Libs
-    BuildOneProject(":mozilla:modules:appfilelocprovider:macbuild:appfilelocprovider.mcp", "appfilelocprovider$D.o", 0, 0, 0);
-    MakeAlias(":mozilla:modules:appfilelocprovider:macbuild:appfilelocprovider$D.o", ":mozilla:dist:appfilelocprovider:");
     BuildOneProject(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider.mcp", "mpfilelocprovider$D.o", 0, 0, 0);
     MakeAlias(":mozilla:modules:mpfilelocprovider:macbuild:mpfilelocprovider$D.o", ":mozilla:dist:mpfilelocprovider:");
     
