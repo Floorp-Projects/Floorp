@@ -584,11 +584,6 @@ sub MakeLibAliases()
 		$appath = <F>;
 		close(F);
 
-		#// WasteLib
-		my($wastelibpath) = $appath;
-		$wastelibpath =~ s/[^:]*$/MacOS Support:WASTE 1.3 Distribution:WASTELib/;
-		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
-
 		#// ProfilerLib
 		if ($main::PROFILE)
 		{
