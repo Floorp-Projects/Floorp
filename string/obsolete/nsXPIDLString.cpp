@@ -47,7 +47,7 @@ nsXPIDLString::~nsXPIDLString()
 }
 
 
-nsXPIDLString::operator const PRUnichar*()
+nsXPIDLString::operator const PRUnichar*() const
 {
     return mBuf;
 }
@@ -141,7 +141,7 @@ nsXPIDLCString& nsXPIDLCString::operator =(const char* aCString)
 }
 
 
-nsXPIDLCString::operator const char*()
+nsXPIDLCString::operator const char*() const
 {
     return mBuf;
 }
