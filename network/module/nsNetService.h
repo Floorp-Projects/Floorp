@@ -20,6 +20,7 @@
 #define net_serv_h___
 
 #include "nspr.h"
+#include "nsIPref.h"
 #include "nsINetService.h"
 
 class nsINetContainerApplication;
@@ -47,6 +48,7 @@ private:
     /* XXX: This is temporary until bamwrap.cpp is removed... */
     void *m_stubContext;
     nsINetContainerApplication *mContainer;
+    nsIPref *mPref;
 };
 
 
