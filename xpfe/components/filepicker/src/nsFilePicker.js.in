@@ -136,6 +136,11 @@ nsFilePicker.prototype = {
       this.appendFilter(bundle.GetStringFromName("xulTitle"),
                    bundle.GetStringFromName("xulFilter"));
     }
+    if (filterMask & nsIFilePicker.filterApps) {
+      // We use "..apps" as a special filter for executable files
+      this.appendFilter(bundle.GetStringFromName("appsTitle"),
+                        "..apps");
+    }
     if (filterMask & nsIFilePicker.filterAll) {
       this.appendFilter(bundle.GetStringFromName("allTitle"),
                    bundle.GetStringFromName("allFilter"));

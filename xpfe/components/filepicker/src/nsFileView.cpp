@@ -654,9 +654,17 @@ nsFileView::FilterFiles()
     
     if (!isHidden) {
       for (PRInt32 j = 0; j < filterCount; ++j) {
-        if (NS_WildCardMatch(ucsLeafName.get(),
-                             (const PRUnichar*) mCurrentFilters.ElementAt(j),
-                             PR_TRUE) == MATCH) {
+        PRBool matched = PR_FALSE;
+        if (!nsCRT::strcmp((const PRUnichar*) mCurrentFilters.ElementAt(j),
+                           NS_LITERAL_STRING("..apps").get()))
+        {
+          file->IsExecutable(&matched);
+        } else
+          matched = (NS_WildCardMatch(ucsLeafName.get(),
+                                      (const PRUnichar*) mCurrentFilters.ElementAt(j),
+                                      PR_TRUE) == MATCH);
+
+        if (matched) {
           mFilteredFiles->AppendElement(file);
           ++filteredFiles;
           break;

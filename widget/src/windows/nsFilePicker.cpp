@@ -747,7 +747,12 @@ nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
 {
   mFilterList.Append(aTitle);
   mFilterList.Append(PRUnichar('\0'));
-  mFilterList.Append(aFilter);
+
+  if (!nsCRT::strcmp(aFilter, NS_LITERAL_STRING("..apps").get()))
+    mFilterList.Append(NS_LITERAL_STRING("*.exe; *.com"));
+  else
+    mFilterList.Append(aFilter);
+
   mFilterList.Append(PRUnichar('\0'));
 
   return NS_OK;
