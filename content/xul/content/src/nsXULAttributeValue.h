@@ -51,7 +51,7 @@ public:
 
     nsresult    GetValue(nsAWritableString& aResult);
 
-    nsresult    SetValue(const nsAReadableString& aValue, PRBool forceAtom=false);
+    nsresult    SetValue(const nsAReadableString& aValue, PRBool forceAtom=PR_FALSE);
 
     nsresult    GetValueAsAtom(nsIAtom** aResult);
 };
