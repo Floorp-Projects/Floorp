@@ -76,11 +76,66 @@
 { 0xdc5fde90, 0x439d, 0x11d3, \
     { 0x98, 0x8c, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
 
+#define NS_XPCTESTOBJECTREADONLY_CID \
+  {0x1364941e, 0x4462, 0x11d3, \
+    { 0x82, 0xee, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTOBJECTREADWRITE_CID \
+  {0x3b9b1d38, 0x491a, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTIN_CID \
+  {0x318d6f6a, 0x5411, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTOUT_CID \
+  {0x4105ae88, 0x5599, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTCONST_CID \
+  {0x83f57a56, 0x4f55, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTCALLJS_CID \
+  {0x38ba7d98, 0x5a54, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTSCRIPTABLE_CID \
+  {0x9ede3336, 0x5fee, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTPARENTONE_CID \
+  {0x5408fdcc, 0x60a3, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTPARENTTWO_CID \
+  {0x63137392, 0x60a3, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTCHILD2_CID \
+  {0x66bed216, 0x60a3, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTCHILD3_CID \
+  {0x62353978, 0x614e, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTCHILD4_CID \
+  {0xa6d22202, 0x622b, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+
+#define NS_XPCTESTCHILD5_CID \
+  {0xba3eef4e, 0x6250, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+#if 0
+#define NS_XPCTESTCONSTRUCTWITHARGS_CID \
+  {0xbd39c75c, 0x6a05, 0x11d3, \
+    { 0x82, 0xef, 0x00, 0x60, 0xb0, 0xeb, 0x59, 0x6f }}
+#endif /* 0 */
 // {5B9AF380-6569-11d3-989E-006008962422}
 #define NS_ARRAY_CID \
 { 0x5b9af380, 0x6569, 0x11d3, \
     { 0x98, 0x9e, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } };
-
 
 // 'namespace' class
 class xpctest
@@ -100,6 +155,51 @@ public:
 
   static const nsID& GetOverloadedCID() {static nsID cid = NS_OVERLOADED_CID; return cid;}
   static NS_METHOD ConstructOverloaded(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestObjectReadOnlyCID() {static nsID cid = NS_XPCTESTOBJECTREADONLY_CID; return cid;}
+  static NS_METHOD ConstructXPCTestObjectReadOnly(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  
+  static const nsID& GetXPCTestObjectReadWriteCID() {static nsID cid = NS_XPCTESTOBJECTREADWRITE_CID; return cid;}
+  static NS_METHOD ConstructXPCTestObjectReadWrite(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  
+  static const nsID& GetXPCTestInCID() { static nsID cid = NS_XPCTESTIN_CID; return cid; }
+  static NS_METHOD ConstructXPCTestIn(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestOutCID() { static nsID cid = NS_XPCTESTOUT_CID; return cid; }
+  static NS_METHOD ConstructXPCTestOut(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestInOutCID() { static nsID cid = NS_XPCTESTOUT_CID; return cid; }
+  static NS_METHOD ConstructXPCTestInOut(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestConstCID() { static nsID cid = NS_XPCTESTCONST_CID; return cid; }
+  static NS_METHOD ConstructXPCTestConst(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+#if 0
+  static const nsID& GetXPCTestConstructWithArgsCID() { static nsID cid = NS_XPCTESTCONSTRUCTWITHARGS_CID; return cid; }
+  static NS_METHOD ConstructXPCTestConstructWithArgs(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static const nsID& GetXPCTestScriptableCID() { static nsID cid = NS_XPCTESTSCRIPTABLE_CID; return cid; }
+  static NS_METHOD ConstructXPCTestScriptable(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+#endif /* 0 */
+
+  static const nsID& GetXPCTestCallJSCID() { static nsID cid = NS_XPCTESTCALLJS_CID; return cid; }
+  static NS_METHOD ConstructXPCTestCallJS(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestParentOneCID() { static nsID cid = NS_XPCTESTPARENTONE_CID; return cid; }
+  static NS_METHOD ConstructXPCTestParentOne(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestParentTwoCID() { static nsID cid = NS_XPCTESTPARENTTWO_CID; return cid; }
+  static NS_METHOD ConstructXPCTestParentTwo(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestChild2CID() { static nsID cid = NS_XPCTESTCHILD2_CID; return cid; }
+  static NS_METHOD ConstructXPCTestChild2(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestChild3CID() { static nsID cid = NS_XPCTESTCHILD3_CID; return cid; }
+  static NS_METHOD ConstructXPCTestChild3(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestChild4CID() { static nsID cid = NS_XPCTESTCHILD4_CID; return cid; }
+  static NS_METHOD ConstructXPCTestChild4(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+  static const nsID& GetXPCTestChild5CID() { static nsID cid = NS_XPCTESTCHILD5_CID; return cid; }
+  static NS_METHOD ConstructXPCTestChild5(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   static const nsID& GetArrayTestCID() {static nsID cid = NS_ARRAY_CID; return cid;}
   static NS_METHOD ConstructArrayTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);

@@ -71,6 +71,39 @@ NSGetFactory(nsISupports* aServMgr,
         rv = factory->SetConstructor(xpctest::ConstructStringTest);
     else if(aClass.Equals(xpctest::GetOverloadedCID()))
         rv = factory->SetConstructor(xpctest::ConstructOverloaded);
+    else if(aClass.Equals(xpctest::GetXPCTestObjectReadOnlyCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestObjectReadOnly);
+    else if(aClass.Equals(xpctest::GetXPCTestObjectReadWriteCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestObjectReadWrite);
+    else if(aClass.Equals(xpctest::GetXPCTestInCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestIn);
+    else if(aClass.Equals(xpctest::GetXPCTestOutCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestOut);
+    else if(aClass.Equals(xpctest::GetXPCTestInOutCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestInOut);
+    else if(aClass.Equals(xpctest::GetXPCTestCallJSCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestCallJS);
+    else if(aClass.Equals(xpctest::GetXPCTestConstCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestConst);
+#if (0)
+    else if(aClass.Equals(xpctest::GetXPCTestConstructWithArgsCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestConstructWithArgs);
+    else if(aClass.Equals(xpctest::GetXPCTestScriptableCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestScriptable);
+
+#endif /* 0 */
+    else if(aClass.Equals(xpctest::GetXPCTestParentOneCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestParentOne);
+    else if(aClass.Equals(xpctest::GetXPCTestParentTwoCID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestParentTwo);
+	else if(aClass.Equals(xpctest::GetXPCTestChild2CID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestChild2);
+	else if(aClass.Equals(xpctest::GetXPCTestChild3CID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestChild3);
+	else if(aClass.Equals(xpctest::GetXPCTestChild4CID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestChild4);
+	else if(aClass.Equals(xpctest::GetXPCTestChild5CID()))
+        rv = factory->SetConstructor(xpctest::ConstructXPCTestChild5);
     else if(aClass.Equals(xpctest::GetArrayTestCID()))
         rv = factory->SetConstructor(xpctest::ConstructArrayTest);
     else
@@ -117,12 +150,65 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     rv = compMgr->RegisterComponent(xpctest::GetOverloadedCID(),
                                     "nsOverloaded", "nsOverloaded", aPath,
                                     PR_TRUE, PR_TRUE);
-
+    rv = compMgr->RegisterComponent(xpctest::GetXPCTestObjectReadOnlyCID(),
+                                    "xpcTestObjectReadOnly", "xpcTestObjectReadOnly", aPath,
+                                    PR_TRUE, PR_TRUE);
     rv = compMgr->RegisterComponent(xpctest::GetArrayTestCID(),
                                     "nsArrayTest", "nsArrayTest", aPath,
                                     PR_TRUE, PR_TRUE);
+    rv = compMgr->RegisterComponent(xpctest::GetXPCTestObjectReadWriteCID(),
+                                    "xpcTestObjectReadWrite", "xpcTestObjectReadWrite", aPath,
+                                    PR_TRUE, PR_TRUE);
 
-    return rv;
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestInCID(),
+                                    "xpcTestIn", "xpcTestIn", aPath,
+                                    PR_TRUE, PR_TRUE);
+
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestOutCID(),
+                                    "xpcTestOut", "xpcTestOut", aPath,
+                                    PR_TRUE, PR_TRUE);
+
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestInOutCID(),
+                                    "xpcTestOut", "xpcTestInOut", aPath,
+                                    PR_TRUE, PR_TRUE);
+
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestConstCID(),
+                                    "xpcTestConst", "xpcTestConst", aPath,
+                                    PR_TRUE, PR_TRUE);
+#if 0
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestConstructWithArgsCID(),
+                                    "xpcTestConstructArgs", "xpcTestConstructArgs", aPath,
+                                    PR_TRUE, PR_TRUE);
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestScriptableCID(),
+                                    "xpcTestScriptable", "xpcTestScriptable", aPath,
+                                    PR_TRUE, PR_TRUE);
+#endif /* 0 */
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestCallJSCID(),
+                                    "xpcTestCallJS", "xpcTestCallJS", aPath,
+                                    PR_TRUE, PR_TRUE);
+
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestParentOneCID(),
+                                    "xpcTestParentOne", "xpcTestParentOne", aPath,
+                                    PR_TRUE, PR_TRUE);
+
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestParentTwoCID(),
+                                    "xpcTestParentTwo", "xpcTestParentTwo", aPath,
+                                    PR_TRUE, PR_TRUE);
+	
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestChild2CID(),
+                                    "xpcTestChild2", "xpcTestChild2", aPath,
+                                    PR_TRUE, PR_TRUE);
+
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestChild3CID(),
+                                    "xpcTestChild3", "xpcTestChild3", aPath,
+                                    PR_TRUE, PR_TRUE);
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestChild4CID(),
+                                    "xpcTestChild4", "xpcTestChild4", aPath,
+                                    PR_TRUE, PR_TRUE);
+	rv = compMgr->RegisterComponent(xpctest::GetXPCTestChild5CID(),
+                                    "xpcTestChild5", "xpcTestChild5", aPath,
+                                    PR_TRUE, PR_TRUE);
+	return rv;
 }
 
 extern "C" PR_IMPLEMENT(nsresult)
@@ -138,8 +224,24 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(xpctest::GetNoisyCID(), aPath);
     rv = compMgr->UnregisterComponent(xpctest::GetStringTestCID(), aPath);
     rv = compMgr->UnregisterComponent(xpctest::GetOverloadedCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestObjectReadWriteCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestObjectReadOnlyCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestInCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestOutCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestInOutCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestConstCID(), aPath);
+/*
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestConstructWithArgsCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestScriptableCID(), aPath);
+*/
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestCallJSCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestParentOneCID(), aPath);
+    rv = compMgr->UnregisterComponent(xpctest::GetXPCTestParentTwoCID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestChild2CID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestChild3CID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestChild4CID(), aPath);
+	rv = compMgr->UnregisterComponent(xpctest::GetXPCTestChild5CID(), aPath);
     rv = compMgr->UnregisterComponent(xpctest::GetArrayTestCID(), aPath);
 
     return rv;
 }
-

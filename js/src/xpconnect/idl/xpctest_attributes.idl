@@ -1,0 +1,27 @@
+#include "nsISupports.idl"
+/*
+ *	This defines the interface for a test object.
+ *
+ */
+
+[scriptable, uuid(1364941e-4462-11d3-82ee-0060b0eb596f)]
+interface nsIXPCTestObjectReadOnly : nsISupports {
+	readonly attribute string  strReadOnly;
+	readonly attribute boolean boolReadOnly;
+	readonly attribute short   shortReadOnly;
+	readonly attribute long    longReadOnly;
+	readonly attribute float   floatReadOnly;
+	readonly attribute char    charReadOnly;
+
+	string getID();
+};
+
+[scriptable, uuid(3b9b1d38-491a-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestObjectReadWrite : nsISupports {
+	attribute string  stringProperty;
+	attribute boolean booleanProperty;
+	attribute short   shortProperty;
+	attribute long    longProperty;
+	attribute float   floatProperty;
+	attribute char    charProperty;
+};

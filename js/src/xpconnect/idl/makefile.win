@@ -44,6 +44,14 @@ XPIDLSRCS = \
 	.\nsIJSContextStack.idl \
 	.\nsIJSRuntimeService.idl \
 	.\nsIXPCSecurityManager.idl \
+	.\xpctest_attributes.idl\
+	.\xpctest_in.idl\
+ 	.\xpctest_const.idl\
+ 	.\xpctest_out.idl\
+	.\xpctest_inout.idl\
+	.\xpctest_calljs.idl\
+    	.\xpctest_multiple.idl\
+   	.\xpctest_const.idl\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

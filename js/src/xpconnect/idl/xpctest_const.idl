@@ -1,0 +1,106 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Public License (the "GPL"), in which case the
+ * provisions of the GPL are applicable instead of those above.
+ * If you wish to allow use of your version of this file only
+ * under the terms of the GPL and not to allow others to use your
+ * version of this file under the NPL, indicate your decision by
+ * deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL.  If you do not delete
+ * the provisions above, a recipient may use your version of this
+ * file under either the NPL or the GPL.
+ */
+
+/**
+ * This describes an interface for objects withconst attributes of 
+ * different types and uses expressions to generate const values.
+ * | ^ & >> << + - * / % and unary - +
+ * scoped literals
+ */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+/**
+ *	Only consts of type short and long are respected.
+ */
+
+[scriptable, uuid(83f57a56-4f55-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestConst : nsISupports {
+
+	const short              shortConst   = 254;
+	const long               longConst    = 1234567890;
+	const long long          longLongConst= 12345678901234567890;
+	const unsigned short     unsignedShortConst = 255;
+	const unsigned long      unsignedLongConst  = 123456789;
+	const unsigned long long unsignedLongLongConst = 123456789;
+	const long				longExpressionConst = 500*500;
+
+	const PRUint8            prUint8Const   = 255;
+	const PRUint16           prUint16Const  = 65535;
+	const PRUint32           prUint32Const  = 4294967295;
+	const PRUint64           prUint64Const  = 18446744073709552000;
+
+/*
+// built-in types
+	const boolean            booleanConstTrue = "TRUE";
+	const boolean			 booleanConstFalse = "FALSE";
+
+	//const octet              octetConst   = 255;
+
+	const float              floatConst  = 0.123456789;
+	const double             doubleConst = -0.123456789;
+	const char               charConst   = 'Z';
+	const wchar              wcharConst  = 'B';
+	const string             stringConst = "XPConnect const string";
+	const wstring            wstringConst= "XPConnect const wstring";
+
+
+*/
+/*
+// PRTypes
+	const PRBool             prBoolConst    = TRUE;
+	const PRUnichar          prUnicharConst = 'X';
+
+	const PRInt16            prInt16Const   = 255;
+	const PRInt32            prInt32Const   = 65535;
+	const PRInt64            prInt64Const   = 4294967295;
+	const PRTime             prTimeConst    = 18446744073709552000;
+	const nsrefcnt           nsrefcntConst  = 4294967295;
+	const nsresult           nsresultConst  = 4294967295;
+*/
+// natives
+/*
+	[noscript] const native voidStar    voidStarConst=
+	[noscript] const native voidRef     voidRefConst =
+	[noscript] const native nsIDRef     nsIDRefConst =
+	[noscript] const native nsIIDRef    nsIIDRefConst=
+	[noscript] const native nsCIDRef    nsCIDRefConst=
+	[noscript] const native nsIDPtr     nsIDPtrConst =
+	[noscript] const native nsIIDPtr    nsIIDPtrConst=
+	[noscript] const native nsCIDPtr    nsCIDPtrConst=
+	[noscript] const native nsQIResult  nsQIResultConst=
+*/
+};
+
