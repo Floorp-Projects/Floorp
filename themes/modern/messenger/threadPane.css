@@ -192,11 +192,13 @@ treechildren:-moz-tree-image(junkStatusCol) {
 }
 
 treechildren:-moz-tree-image(junkStatusCol, junk) {
-  list-style-image: url("chrome://messenger/skin/icons/message-junk-junk.gif");
+  list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");
 }
 
 treechildren:-moz-tree-image(junkStatusCol, notjunk) {
-  list-style-image: url("chrome://messenger/skin/icons/message-junk-notjunk.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
+  padding-left: 0px;
+  padding-right: 4px;
 }
 
 /* ..... subject column ..... */
