@@ -18,9 +18,10 @@
 
 #include "nsDeviceContextSpecFactoryP.h"
 #include "nsDeviceContextSpecPh.h"
-#include <Pt.h>
 #include "nsGfxCIID.h"
 #include "plstr.h"
+
+#include <Pt.h>
 #include "nsPhGfxLog.h"
 
 nsDeviceContextSpecFactoryPh :: nsDeviceContextSpecFactoryPh()
@@ -44,7 +45,6 @@ NS_IMPL_RELEASE(nsDeviceContextSpecFactoryPh)
 NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: Init(void)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecFactoryPh::Init - Not Implemented\n"));
-
   return NS_OK;
 }
 
@@ -54,7 +54,38 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIDeviceC
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecFactoryPh::CreateDeviceContextSpec - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecFactoryPh::CreateDeviceContextSpec aQuiet=<%d> aOldSpec=<%p>\n", aQuiet, aOldSpec));
 
-  return NS_OK;
+  nsresult  			  rv = NS_ERROR_FAILURE;
+  PpPrintContext_t 		  *pc = nsnull;
+  int                     action;
+  
+	/* Create a Printer Context */
+	pc = PpPrintCreatePC();
+
+    /* copy over user selections from prOps to PrintContext */
+
+	/* REVISIT: Need to find my parent widget */
+    action = PtPrintSelection(NULL, NULL, NULL, pc, (Pt_PRINTSEL_DFLT_LOOK));
+    if (action == Pt_PRINTSEL_PRINT)
+	{
+	  nsIDeviceContextSpec    *devSpec = nsnull;
+	  nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
+
+		if (nsnull != devSpec)
+		{
+		  /* Pass ownership of the "pc" to the nsDeviceContextSpecPh */
+		  if (NS_OK == ((nsDeviceContextSpecPh *)devSpec)->Init(aQuiet, pc))
+		  {
+		    aNewSpec = devSpec;
+			rv = NS_OK;
+		  }
+		}
+	}
+	else if (action == Pt_PRINTSEL_PREVIEW)
+	{
+		/* REVISIT: Somehow trigger a Print Preview? */	
+	}
+
+	return rv;
 }

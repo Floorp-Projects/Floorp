@@ -19,6 +19,7 @@
 #include "nsDeviceContextPh.h"
 #include "nsRenderingContextPh.h"
 #include "nsDeviceContextSpecPh.h"
+#include "../ps/nsDeviceContextPS.h"
 #include "il_util.h"
 #include "nsPhGfxLog.h"
 
@@ -104,14 +105,49 @@ NS_IMETHODIMP nsDeviceContextPh :: Init(nsNativeWidget aWidget)
 
 nsresult nsDeviceContextPh :: Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with nsNativeDeviceContext\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init with nsNativeDeviceContext - Not Implemented\n"));
+
+  // this is a temporary hack, assumer 300 dpi / 72
+  mPixelsToTwips = 300.0f/72.0f;
+  mTwipsToPixels = 1 / mPixelsToTwips;  
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CreateRenderingContext - Not Implemented\n"));
-  return NS_OK;
+
+  /* I stole this code from windows but its not working yet! */
+  nsIRenderingContext *pContext;
+  nsresult             rv;
+  nsDrawingSurfacePh  *surf;
+   
+	pContext = new nsRenderingContextPh();
+	
+	if (nsnull != pContext)
+	{
+	  NS_ADDREF(pContext);
+	  surf = new nsDrawingSurfacePh();
+	  if (nsnull != surf)
+	  {
+//        rv = surf->Init(mDC);
+//        if (NS_OK == rv)
+          rv = pContext->Init(this, surf);
+      }
+	  else
+	     rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else
+       rv = NS_ERROR_OUT_OF_MEMORY;
+
+    if (NS_OK != rv)
+    {
+      NS_IF_RELEASE(pContext);
+    }
+
+    aContext = pContext;
+    return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
@@ -240,6 +276,16 @@ NS_IMETHODIMP nsDeviceContextPh :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceSurfaceDimensions - Not Implemented\n"));
+
+  if (mWidth == -1)
+	mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+
+  if (mHeight == -1)
+    mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+
+  aWidth = mWidth;
+  aHeight = mHeight;
+
   return NS_OK;
 }
 
@@ -248,7 +294,12 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDe
                                                         nsIDeviceContext *&aContext)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceContextFor - Not Implemented\n"));
-  return NS_OK;
+
+  aContext = new nsDeviceContextPh();
+  ((nsDeviceContextPh*) aContext)->mSpec = aDevice;
+  NS_ADDREF(aDevice);
+  
+  return ((nsDeviceContextPh *) aContext)->Init((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)

@@ -35,7 +35,7 @@ public:
                                      PRBool aQuiet);
 
 protected:
-  ~nsDeviceContextSpecFactoryPh();
+  virtual ~nsDeviceContextSpecFactoryPh();
 };
 
 #endif

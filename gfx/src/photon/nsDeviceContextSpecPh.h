@@ -29,15 +29,13 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(char *aDriverName, char *aDeviceName );
-  NS_IMETHOD GetDriverName(char *&aDriverName) const;
-  NS_IMETHOD GetDeviceName(char *&aDeviceName) const;
+  NS_IMETHOD Init(PRBool aQuiet, PpPrintContext_t *aPrintContext);
+  NS_IMETHOD GetPrintContext(PpPrintContext_t *&aPrintContext) const;
 
 protected:
   virtual ~nsDeviceContextSpecPh();
 
-  char    *mDriverName;
-  char    *mDeviceName;
+  PpPrintContext_t *mPC;
 };
 
 #endif
