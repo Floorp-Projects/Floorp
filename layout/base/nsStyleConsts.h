@@ -167,7 +167,6 @@
 #define NS_STYLE_CONTENT_NO_CLOSE_QUOTE         3
 
 // See nsStyleColor
-#define NS_STYLE_CURSOR_INHERIT                 0
 #define NS_STYLE_CURSOR_AUTO                    1
 #define NS_STYLE_CURSOR_CROSSHAIR               2
 #define NS_STYLE_CURSOR_DEFAULT                 3    // ie: an arrow
