@@ -74,7 +74,7 @@ public:
 
     NS_DECL_ISUPPORTS
     // nsINNTPHost
-    NS_IMETHOD Initialize(nsINntpUrl *runningURL, const char *username, const char *hostname, PRInt32 port);
+    NS_IMETHOD Initialize(nsINntpUrl *runningURL, const char *username, const char *hostname);
     
     NS_IMPL_CLASS_GETSET(SupportsExtensions, PRBool,
                          m_supportsExtensions);
@@ -190,35 +190,9 @@ private:
     void addNew(MSG_GroupName* group);
 	void ClearNew();
 
-	virtual void dump();
-
-	virtual PRInt32 getPort();
-
-  
-	// Return the name of this newshost.
-	const char* getStr();
-
-	// Returns the name of this newshost, possibly followed by ":<port>" if
-	// the port number for this newshost is not the default.
-	const char* getNameAndPort();
-
-    // Returns a fully descriptive name for this newshost, including the
-    // above ":<port>" and also possibly a trailing (and localized) property
-	virtual const char* getFullUIName();
-
-
 	// Get the nsIMsgFolder which represents this host; the children
 	// of this nsIMsgFolder are the groups in this host.
 	nsIMsgFolder* GetHostInfo() {return m_hostinfo;}
-
-
-#ifdef HAVE_MASTER
-	MSG_Master* GetMaster() {
-		return m_master;
-	}
-#endif
-
-
 
 	// GetNumGroupsNeedingCounts() returns how many newsgroups we have
 	// that we don't have an accurate count of unread/total articles.
@@ -356,17 +330,9 @@ protected:
 
 	char* m_hostname;
     char* m_username;
-	PRInt32 m_port;
-
-	char* m_nameAndPort;
-	char* m_fullUIName;
 
 	nsISupportsArray* m_groups;	// List of nsINNTPNewsgroup* objects.
 	nsISupportsArray* m_newsgrouplists;  // List of nsINNTPNewsgroupList* objects.
-
-#ifdef HAVE_MASTER
-	MSG_Master* m_master;
-#endif
 
 	nsIMsgFolder* m_hostinfo;	// Object representing entire newshost in
 								// tree.

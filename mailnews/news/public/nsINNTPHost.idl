@@ -29,7 +29,7 @@ interface nsINntpUrl;
 [scriptable, uuid(6b128da0-d74f-11d2-b7f9-00805f05ffa5)]
 interface nsINNTPHost : nsISupports {
 
-    void Initialize(in nsINntpUrl runningURL, in string username, in string hostname, in long port);
+    void Initialize(in nsINntpUrl runningURL, in string username, in string hostname);
     
     attribute boolean supportsExtensions;
     void AddExtension(in string extension);

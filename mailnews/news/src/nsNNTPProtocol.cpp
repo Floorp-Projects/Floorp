@@ -515,36 +515,42 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // find the news host
+    // find the server
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = accountManager->FindServer(m_userName,
                                     m_hostName,
                                     "nntp",
                                     getter_AddRefs(server));
+	if (NS_FAILED(rv)) return rv;
+	if (!server) return NS_ERROR_FAILURE;
     
-	if (NS_SUCCEEDED(rv) && server) {
-		m_nntpServer = do_QueryInterface(server, &rv);
-		if (NS_SUCCEEDED(rv) && m_nntpServer) {
-			PRInt32 max_articles;
-			rv = m_nntpServer->GetMaxArticles(&max_articles);
-			if (NS_SUCCEEDED(rv)) {
-				net_NewsChunkSize = max_articles;
-			}
-		}
+	m_nntpServer = do_QueryInterface(server, &rv);
+	if (NS_FAILED(rv)) return rv;
+	if (!m_nntpServer) return NS_ERROR_FAILURE;
 
-        rv = server->GetIsSecure(&isSecure);
-        if (NS_FAILED(rv)) return rv;
+	PRInt32 max_articles;
+	rv = m_nntpServer->GetMaxArticles(&max_articles);
+	if (NS_SUCCEEDED(rv)) {
+		net_NewsChunkSize = max_articles;
 	}
+
+    rv = server->GetIsSecure(&isSecure);
+    if (NS_FAILED(rv)) return rv;
 
     PRInt32 port = 0;
     rv = m_url->GetPort(&port);
-    if (NS_FAILED(rv) || !port || (port == -1)) {
-        if (isSecure) {
-            port = SECURE_NEWS_PORT;
-        }
-        else {
-            port = NEWS_PORT;
-        }
+    if (NS_FAILED(rv) || (port<=0)) {
+		rv = server->GetPort(&port);
+        if (NS_FAILED(rv)) return rv;
+
+		if (port<=0) {
+			if (isSecure) {
+            	port = SECURE_NEWS_PORT;
+        	}
+        	else {
+            	port = NEWS_PORT;
+        	}
+		}
 
         rv = m_url->SetPort(port);
         if (NS_FAILED(rv)) return rv;
@@ -742,20 +748,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	  m_nntpServer = do_QueryInterface(server, &rv);
 	  if (NS_FAILED(rv) || !m_nntpServer) goto FAIL;
 
-      PRBool isSecure = PR_FALSE;
-      rv = server->GetIsSecure(&isSecure);
-      if (NS_FAILED(rv)) goto FAIL;
-
-      if (!port) {
-        if (isSecure) {
-            port = SECURE_NEWS_PORT;
-        }
-        else {
-            port = NEWS_PORT;
-        }
-      }
-
-      m_newsHost->Initialize(m_runningURL, m_userName, m_hostName, port);
+      m_newsHost->Initialize(m_runningURL, m_userName, m_hostName);
 
 	  // save it on our url for future use....
 	  m_runningURL->SetNntpHost(m_newsHost);

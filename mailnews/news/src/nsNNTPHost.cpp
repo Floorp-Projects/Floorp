@@ -48,8 +48,6 @@ nsNNTPHost::nsNNTPHost()
 
     m_hostname = nsnull;
     m_username = nsnull;
-    m_nameAndPort = nsnull;
-    m_fullUIName = nsnull;
     m_groups = nsnull;
     m_newsgrouplists = nsnull;
     m_hostinfo = nsnull;
@@ -75,7 +73,7 @@ nsNNTPHost::~nsNNTPHost()
 	CleanUp();
 }
 
-nsresult nsNNTPHost::Initialize(nsINntpUrl *runningURL, const char *username, const char *hostname, PRInt32 port)
+nsresult nsNNTPHost::Initialize(nsINntpUrl *runningURL, const char *username, const char *hostname)
 {
     m_hostname = new char [PL_strlen(hostname) + 1];
 	PL_strcpy(m_hostname, hostname);
@@ -88,14 +86,8 @@ nsresult nsNNTPHost::Initialize(nsINntpUrl *runningURL, const char *username, co
 	m_username = nsnull;
     }
     
-	NS_ASSERTION(port, "port was 0");
-	if (port == 0) port = NEWS_PORT;
-	m_port = port;
-
 	m_searchableGroupCharsets = PL_NewHashTable(20, PL_HashString, PL_CompareStrings, PL_CompareValues, nsnull, nsnull);
 
-	m_nameAndPort = nsnull;
-	m_fullUIName = nsnull;
 	m_optionLines = nsnull;
 	m_filename = nsnull;
 	m_groups = nsnull;
@@ -126,9 +118,7 @@ nsNNTPHost::CleanUp() {
 	PR_FREEIF(m_optionLines);
 	if (m_filename) delete [] m_filename;
 	if (m_hostname) delete [] m_hostname;
-    	if (m_username) delete [] m_username;
-	PR_FREEIF(m_nameAndPort);
-	PR_FREEIF(m_fullUIName);
+    if (m_username) delete [] m_username;
 	NS_IF_RELEASE(m_groups);
 	NS_IF_RELEASE(m_newsgrouplists);
 	if (m_dbfilename) delete [] m_dbfilename;
@@ -198,39 +188,6 @@ void nsNNTPHost::ClearNew()
 	
 	LL_I2L(increment,1);
 	LL_ADD(m_firstnewdate,now,increment);
-}
-
-
-
-void nsNNTPHost::dump()
-{
-	// ###tw  Write me...
-}
-
-
-PRInt32 nsNNTPHost::getPort()
-{
-	return m_port;
-}
-
-const char* nsNNTPHost::getNameAndPort()
-{
-	if (!m_nameAndPort) {
-		if (m_port != (NEWS_PORT)) {
-			m_nameAndPort = PR_smprintf("%s:%ld", m_hostname, long(m_port));
-		} else {
-			m_nameAndPort = PL_strdup(m_hostname);
-		}
-	}
-	return m_nameAndPort;
-}
-
-const char* nsNNTPHost::getFullUIName()
-{
-	if (!m_fullUIName) {
-		return getNameAndPort();
-	}
-	return m_fullUIName;
 }
 
 nsresult
@@ -1658,21 +1615,6 @@ nsNNTPHost::SetPushAuth(PRBool value)
 	}
     return NS_OK;
 }
-
-
-
-const char*
-nsNNTPHost::GetURLBase()
-{
-	if (!m_urlbase) {
-		m_urlbase = PR_smprintf("%s://%s", "news",
-								getNameAndPort());
-	}
-	return m_urlbase;
-}
-
-
-
 
 PRInt32 nsNNTPHost::RemoveHost()
 {

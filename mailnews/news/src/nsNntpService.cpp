@@ -841,7 +841,7 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
 }
 
 nsresult
-nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRBool isSecure, nsIMsgIncomingServer **server)
+nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRBool isSecure, PRInt32 port, nsIMsgIncomingServer **server)
 {
 	nsresult rv;
 	// username can be null.
@@ -862,6 +862,9 @@ nsNntpService::CreateNewsAccount(const char *username, const char *hostname, PRB
 	rv = (*server)->SetIsSecure(isSecure);
 	if (NS_FAILED(rv)) return rv;
 	
+	rv = (*server)->SetPort(port);
+	if (NS_FAILED(rv)) return rv;
+
 	nsCOMPtr <nsIMsgIdentity> identity;
 	rv = accountManager->CreateIdentity(getter_AddRefs(identity));
 	if (NS_FAILED(rv)) return rv;
@@ -886,11 +889,19 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   nsXPIDLCString hostName;
   nsXPIDLCString userName;
   nsXPIDLCString scheme;
+  PRInt32 port = 0;
   nsresult rv;
   
+#ifdef DEBUG_sspitzer
+  nsXPIDLCString spec;
+  rv = aUri->GetSpec(getter_Copies(spec));
+  printf("GetProtocolForUri(%s,...)\n",(const char *)spec);
+#endif
+
   rv = aUri->GetHost(getter_Copies(hostName));
   rv = aUri->GetPreHost(getter_Copies(userName));
   rv = aUri->GetScheme(getter_Copies(scheme));
+  rv = aUri->GetPort(&port);
 
   nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -922,6 +933,8 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
  	messengerMigrator->UpgradePrefs(); 
   }
 
+  // xxx todo what if we have two servers on the same host, but different ports?
+  // or no port, but isSecure (snews:// vs news://) is different?
   rv = accountManager->FindServer((const char *)userName,
                                 (const char *)hostName,
                                 "nntp",
@@ -932,7 +945,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
 	  if (nsCRT::strcasecmp("snews",(const char *)scheme) == 0) {
 		  isSecure = PR_TRUE;
 	  }
-	  rv = CreateNewsAccount((const char *)userName,(const char *)hostName,isSecure,getter_AddRefs(server));
+	  rv = CreateNewsAccount((const char *)userName,(const char *)hostName,isSecure,port,getter_AddRefs(server));
   }
    
   if (NS_FAILED(rv)) return rv;
