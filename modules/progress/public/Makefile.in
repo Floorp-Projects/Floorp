@@ -26,4 +26,12 @@ MODULE	= progress
 
 EXPORTS	= $(srcdir)/pw_public.h
 
+ifdef MOZ_SMOOTH_PROGRESS
+EXPORTS += \
+	nsITransferListener.h	\
+	nsProgressManager.h	\
+	progress.h		\
+	$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
