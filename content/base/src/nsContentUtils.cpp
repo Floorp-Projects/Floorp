@@ -854,7 +854,7 @@ PRBool
 nsContentUtils::IsCallerChrome()
 {
   if (!sSecurityManager) {
-    return NS_OK;
+    return PR_FALSE;
   }
 
   PRBool is_caller_chrome = PR_FALSE;
