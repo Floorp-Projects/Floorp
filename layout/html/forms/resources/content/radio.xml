@@ -43,7 +43,7 @@
   <binding id="radio" extends="xul:button">
     <content>
       <xul:hbox class="input-radio-check-box2" flex="1">
-        <xul:image class="input-radio-check"/>
+        <xul:image class="input-radio-check" flex="1"/>
       </xul:hbox>
     </content>
     <implementation implements="nsIAccessibleProvider">
