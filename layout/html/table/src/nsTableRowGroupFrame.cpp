@@ -832,9 +832,8 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
 void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext, 
                                               nsReflowMetrics& aDesiredSize)
 {
-  // iterate children, tell all rows to shrink wrap
+  // iterate children and for each row get its height
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
-  PRInt32 rowGroupHeight = 0;
   nscoord topInnerMargin = 0;
   nscoord bottomInnerMargin = 0;
   PRInt32 numRows;
@@ -842,8 +841,8 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
   PRInt32 *rowHeights = new PRInt32[numRows];
   nsCRT::memset (rowHeights, 0, numRows*sizeof(PRInt32));
 
-  /* Step 1:  set the row height to the height of the tallest cell,
-   *          and resize all cells in that row to that height (except cells with rowspan>1)
+  /* Step 1:  get the height of the tallest cell in the row and save it for
+   *          pass 2
    */
   nsTableRowFrame*  rowFrame = (nsTableRowFrame*)mFirstChild;
   PRInt32           rowIndex = 0;
@@ -857,14 +856,6 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
 
     // save the row height for pass 2 below
     rowHeights[rowIndex] = maxRowHeight;
-
-    // resize the row
-    nsSize  rowFrameSize;
-    rowFrame->GetSize(rowFrameSize);
-    rowFrame->SizeTo(rowFrameSize.width, maxRowHeight);
-    
-    // Update the running row group height
-    rowGroupHeight += maxRowHeight;
 
     // Update top and bottom inner margin if applicable
     if (0 == rowIndex) {
@@ -891,7 +882,7 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
    *    I think in this case, we have to make another pass through step 2.
    *    There should be a "rational" check to terminate that kind of loop after n passes, probably 3 or 4.
    */
-  rowGroupHeight = 0;
+  PRInt32 rowGroupHeight = 0;
   rowFrame = (nsTableRowFrame*)mFirstChild;
   rowIndex = 0;
   while (nsnull != rowFrame)
