@@ -145,7 +145,15 @@ namespace MetaData {
         mLabelList[label].setLocation(this, mBuffer.size()); 
     }
 
-
+    void BytecodeContainer::mark()
+    {
+        for (std::vector<Multiname *>::iterator mi = mMultinameList.begin(), mend = mMultinameList.end(); (mi != mend); mi++) {
+            GCMARKOBJECT(*mi);   
+        }
+        for (std::vector<Frame *>::iterator fi = mFrameList.begin(), fend = mFrameList.end(); (fi != fend); fi++) {
+            GCMARKOBJECT(*fi);   
+        }
+    }
 
 }
 }

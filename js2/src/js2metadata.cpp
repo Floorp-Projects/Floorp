@@ -1039,6 +1039,14 @@ namespace MetaData {
         return new CompoundAttribute(); 
     }
 
+    void CompoundAttribute::markChildren()
+    {
+        if (namespaces) {
+            for (NamespaceListIterator i = namespaces->begin(), end = namespaces->end(); (i != end); i++) {
+                GCMARKOBJECT(*i)
+            }
+        }
+    }
 
 
 /************************************************************************************
@@ -1050,6 +1058,7 @@ namespace MetaData {
     // Validate the entire expression rooted at p
     void JS2Metadata::ValidateExpression(Context *cxt, Environment *env, ExprNode *p)
     {
+        JS2Object::gc(this);
         switch (p->getKind()) {
         case ExprNode::Null:
         case ExprNode::number:
@@ -1090,6 +1099,10 @@ namespace MetaData {
             }
             break;
 
+        case ExprNode::lessThan:
+        case ExprNode::lessThanOrEqual:
+        case ExprNode::greaterThan:
+        case ExprNode::greaterThanOrEqual:
         case ExprNode::equal:
         case ExprNode::notEqual:
         case ExprNode::assignment:
@@ -1186,6 +1199,18 @@ namespace MetaData {
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
             }
             break;
+        case ExprNode::lessThan:
+            binaryOp = eLess;
+            goto doBinary;
+        case ExprNode::lessThanOrEqual:
+            binaryOp = eLessEqual;
+            goto doBinary;
+        case ExprNode::greaterThan:
+            binaryOp = eGreater;
+            goto doBinary;
+        case ExprNode::greaterThanOrEqual:
+            binaryOp = eGreaterEqual;
+            goto doBinary;
         case ExprNode::equal:
             binaryOp = eEqual;
             goto doBinary;
@@ -1581,6 +1606,12 @@ doBinary:
             nsList.push_back(*nli);
     }
 
+    void Multiname::markChildren()
+    {
+        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
+            GCMARKOBJECT(*n)
+        }
+    }
 
 /************************************************************************************
  *
@@ -1873,22 +1904,36 @@ doBinary:
         //else A hoisted binding of the same var already exists, so there is no need to create another one
     }
 
+
+#define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name) c = new JS2Class(super, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true
+
     JS2Metadata::JS2Metadata(World &world) :
         world(world),
         engine(new JS2Engine(world)),
         publicNamespace(new Namespace(engine->public_StringAtom)),
         bCon(new BytecodeContainer()),
-        glob(world),
-        env(new MetaData::SystemFrame(), &glob)
+        glob(new GlobalObject(world)),
+        env(new MetaData::SystemFrame(), glob)
     {
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
 
-        objectClass = new JS2Class(NULL, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), false, true, false, engine->object_StringAtom);
-        objectClass->complete = true;
-
-        functionClass = new JS2Class(objectClass, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), false, true, true, engine->function_StringAtom);
-        functionClass->complete = true;
+        MAKEBUILTINCLASS(objectClass, NULL, false, true, false, engine->object_StringAtom);
+        MAKEBUILTINCLASS(undefinedClass, objectClass, false, false, true, engine->undefined_StringAtom);
+        MAKEBUILTINCLASS(nullClass, objectClass, false, true, true, engine->null_StringAtom);
+        MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, world.identifiers["boolean"]);
+        MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, false, world.identifiers["general number"]);
+        MAKEBUILTINCLASS(numberClass, generalNumberClass, false, false, true, world.identifiers["number"]);
+        MAKEBUILTINCLASS(characterClass, objectClass, false, false, true, world.identifiers["character"]);
+        MAKEBUILTINCLASS(stringClass, objectClass, false, false, true, world.identifiers["string"]);
+        MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, true, world.identifiers["namespace"]);
+        MAKEBUILTINCLASS(attributeClass, objectClass, false, true, true, world.identifiers["attribute"]);
+        MAKEBUILTINCLASS(classClass, objectClass, false, true, true, world.identifiers["class"]);
+        MAKEBUILTINCLASS(functionClass, objectClass, false, true, true, engine->function_StringAtom);
+        MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, world.identifiers["prototype"]);
+        MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, world.identifiers["package"]);
+        
+        forbiddenMember = new StaticMember(Member::Forbidden);
     }
 
     // objectType(o) returns an OBJECT o's most specific type.
@@ -2451,6 +2496,38 @@ readClassProperty:
         return result;
     }
 
+    // gc-mark all contained JS2Objects and their children 
+    // and then invoke mark on all other structures that contain JS2Objects
+    void JS2Metadata::mark()
+    {        
+        GCMARKOBJECT(publicNamespace);
+        GCMARKOBJECT(forbiddenMember);
+        GCMARKOBJECT(undefinedClass);
+        GCMARKOBJECT(nullClass);
+        GCMARKOBJECT(booleanClass);
+        GCMARKOBJECT(generalNumberClass);
+        GCMARKOBJECT(numberClass);
+        GCMARKOBJECT(characterClass);
+        GCMARKOBJECT(stringClass);
+        GCMARKOBJECT(objectClass);
+        GCMARKOBJECT(namespaceClass);
+        GCMARKOBJECT(classClass);
+        GCMARKOBJECT(packageClass);
+        GCMARKOBJECT(prototypeClass);
+        GCMARKOBJECT(attributeClass);
+        GCMARKOBJECT(functionClass);
+
+        if (bCon)
+            bCon->mark();
+        if (engine)
+            engine->mark();
+        env.mark();
+
+        GCMARKOBJECT(glob);
+    
+    }
+
+
     /*
      * Throw an exception of the specified kind, indicating the position 'pos' and
      * attaching the given message. If 'arg' is specified, replace {0} in the message
@@ -2494,7 +2571,7 @@ readClassProperty:
     }
     
     // Allocate from this or the next Pond (make a new one if necessary)
-    void *Pond::allocFromPond(int32 sz)
+    void *Pond::allocFromPond(int32 sz, bool isJS2Object)
     {
         // Try scannning the free list...
         PondScum *p = freeHeader;
@@ -2507,6 +2584,12 @@ readClassProperty:
                 else
                     freeHeader = (PondScum *)(p->owner);
                 p->owner = this;
+                p->resetMark();      // might have lingering mark from previous gc
+                if (isJS2Object)
+                    p->setIsJS2Object();
+#ifdef DEBUG
+                memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
+#endif
                 return (p + 1);
             }
             pre = p;
@@ -2517,11 +2600,13 @@ readClassProperty:
         if (sz > (pondSize - (pondTop - pondBase))) {
             if (nextPond == NULL)
                 nextPond = new Pond(sz, nextPond);
-            return nextPond->allocFromPond(sz);
+            return nextPond->allocFromPond(sz, isJS2Object);
         }
         p = (PondScum *)pondTop;
         p->owner = this;
         p->setSize(sz);
+        if (isJS2Object)
+            p->setIsJS2Object();
         pondTop += sz;
 #ifdef DEBUG
         memset((p + 1), 0xB7, sz - sizeof(PondScum));
@@ -2533,7 +2618,6 @@ readClassProperty:
     void Pond::returnToPond(PondScum *p)
     {
         p->owner = (Pond *)freeHeader;
-        p->resetMark();      // might have lingering mark from previous gc
         uint8 *t = (uint8 *)(p + 1);
 #ifdef DEBUG
         memset(t, 0xB7, p->getSize() - sizeof(PondScum));
@@ -2560,7 +2644,7 @@ readClassProperty:
         uint8 *t = pondBase;
         while (t != pondTop) {
             PondScum *p = (PondScum *)t;
-            if (!p->isMarked())
+            if (!p->isMarked() && (p->owner == this))   // (owner != this) ==> already on free list
                 returnToPond(p);
             t += p->getSize();
         }
@@ -2594,7 +2678,13 @@ readClassProperty:
 
     }
 
- 
+    void JS2Class::markChildren()
+    {
+        GCMARKOBJECT(super)
+        GCMARKOBJECT(prototype)
+        GCMARKOBJECT(privateNamespace)
+    }
+
  /************************************************************************************
  *
  *  DynamicInstance
@@ -2616,8 +2706,29 @@ readClassProperty:
         }
     }
 
- 
- /************************************************************************************
+    void DynamicInstance::markChildren()
+    {
+        GCMARKOBJECT(type)
+        if (slots) {
+            ASSERT(type);
+            for (uint32 i = 0; (i < type->slotCount); i++) {
+                if (JS2VAL_IS_OBJECT(slots[i].value)) {
+                    JS2Object *obj = JS2VAL_TO_OBJECT(slots[i].value);
+                    GCMARKOBJECT(obj)
+                }
+            }
+        }
+        for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
+            if (JS2VAL_IS_OBJECT(i->second)) {
+                JS2Object *obj = JS2VAL_TO_OBJECT(i->second);
+                GCMARKOBJECT(obj)
+            }
+        }        
+    }
+
+
+
+/************************************************************************************
  *
  *  FixedInstance
  *
@@ -2638,6 +2749,77 @@ readClassProperty:
         }
     }
 
+    void FixedInstance::markChildren()
+    {
+        GCMARKOBJECT(type)
+        if (slots) {
+            ASSERT(type);
+            for (uint32 i = 0; (i < type->slotCount); i++) {
+                if (JS2VAL_IS_OBJECT(slots[i].value)) {
+                    JS2Object *obj = JS2VAL_TO_OBJECT(slots[i].value);
+                    GCMARKOBJECT(obj)
+                }
+            }
+        }
+    }
+
+
+ /************************************************************************************
+ *
+ *  PrototypeInstance
+ *
+ ************************************************************************************/
+
+
+    void PrototypeInstance::markChildren()
+    {
+        GCMARKOBJECT(parent)
+        for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
+            if (JS2VAL_IS_OBJECT(i->second)) {
+                JS2Object *obj = JS2VAL_TO_OBJECT(i->second);
+                GCMARKOBJECT(obj)
+            }
+        }        
+    }
+
+/************************************************************************************
+ *
+ *  Frame
+ *
+ ************************************************************************************/
+
+    void Frame::markChildren()
+    {
+        GCMARKOBJECT(nextFrame)
+        GCMARKOBJECT(pluralFrame)
+        StaticBindingIterator sbi, end;
+        for (sbi = staticReadBindings.begin(), end = staticReadBindings.end(); (sbi != end); sbi++) {
+            GCMARKOBJECT(sbi->second->content)
+        }
+        for (sbi = staticWriteBindings.begin(), end = staticWriteBindings.end(); (sbi != end); sbi++) {
+            GCMARKOBJECT(sbi->second->content)
+        }
+    }
+
+
+ /************************************************************************************
+ *
+ *  GlobalObject
+ *
+ ************************************************************************************/
+
+    void GlobalObject::markChildren()
+    {
+        Frame::markChildren();
+        GCMARKOBJECT(internalNamespace)
+        for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
+            if (JS2VAL_IS_OBJECT(i->second)) {
+                JS2Object *obj = JS2VAL_TO_OBJECT(i->second);
+                GCMARKOBJECT(obj)
+            }
+        }        
+    }
+
 
  /************************************************************************************
  *
@@ -2648,6 +2830,15 @@ readClassProperty:
     void ParameterFrame::instantiate(Environment *env)
     {
         env->instantiateFrame(pluralFrame, this);
+    }
+
+    void ParameterFrame::markChildren()
+    {
+        Frame::markChildren();
+        if (JS2VAL_IS_OBJECT(thisObject)) {
+            JS2Object *obj = JS2VAL_TO_OBJECT(thisObject);
+            GCMARKOBJECT(obj)
+        }
     }
 
 
@@ -2680,7 +2871,7 @@ readClassProperty:
         rootList.push_back(p);
     }
 
-    void JS2Object::gc()
+    void JS2Object::gc(JS2Metadata *meta)
     {
         pond.resetMarks();
         for (std::vector<PondScum **>::iterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
@@ -2688,20 +2879,23 @@ readClassProperty:
             if (p) {
                 ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
                 p->mark();
-                // now examine the object contained in the PondScum and mark
-                // all gc objects referenced from it
+                if (p->isJS2Object()) {
+                    JS2Object *obj = (JS2Object *)(p + 1);
+                    GCMARKOBJECT(obj)
+                }
             }
         }
+        meta->mark();
         pond.moveUnmarkedToFreeList();
     }
 
-    void *JS2Object::alloc(size_t s)
+    void *JS2Object::alloc(size_t s, bool isJS2Object)
     {
         s += sizeof(PondScum);
         // make sure that the thing is 8-byte aligned
         if (s & 0x7) s += 8 - (s & 0x7);
         ASSERT(s <= 0x7FFFFFFF);
-        return pond.allocFromPond((int32)s);
+        return pond.allocFromPond((int32)s, isJS2Object);
     }
 
     void JS2Object::unalloc(void *t)

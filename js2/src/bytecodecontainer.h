@@ -90,6 +90,8 @@ public:
     BytecodeContainer() : mStackTop(0), mStackMax(0) { }
     BytecodeContainer::~BytecodeContainer()          { }
 
+
+    void mark();
     
     uint8 *getCodeStart()                   { return mBuffer.begin(); }
 

@@ -77,6 +77,8 @@ public:
     bool isMarked()         { return ((size & 0x80000000) != 0); }
     uint32 getSize()        { return size & 0x3FFFFFFF; }
     void setSize(uint32 sz) { ASSERT((sz & 0xC000000) == 0); size = (sz & 0x3FFFFFFF); }
+    void setIsJS2Object()   { size |= 0x40000000; }
+    bool isJS2Object()      { return ((size & 0x30000000) != 0); }
 
     Pond *owner;    // for a piece of scum in use, this points to it's own Pond
                     // otherwise it's a link to the next item on the free list
@@ -94,7 +96,7 @@ class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
     
-    void *allocFromPond(int32 sz);
+    void *allocFromPond(int32 sz, bool isJS2Object);
     void returnToPond(PondScum *p);
 
     void resetMarks();
@@ -111,6 +113,7 @@ public:
     Pond *nextPond;
 };
 
+#define GCMARKOBJECT(n) if ((n) && !(n)->isMarked()) { (n)->mark(); (n)->markChildren(); }
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
@@ -124,14 +127,20 @@ public:
 
     static Pond pond;
     static std::vector<PondScum **> rootList;
-    static void gc();
+    static void gc(JS2Metadata *meta);
     static void addRoot(void *t);   // pass the address of any JS2Object pointer
 
-    static void *alloc(size_t s);
+    static void *alloc(size_t s, bool isJS2Object = false);
     static void unalloc(void *p);
 
-    void *operator new(size_t s)    { return alloc(s); }
+    void *operator new(size_t s)    { return alloc(s, true); }
     void operator delete(void *p)   { unalloc(p); }
+
+    virtual void markChildren()     { }
+    bool isMarked()                 { return ((PondScum *)this)[-1].isMarked(); }
+    void mark()                     { ((PondScum *)this)[-1].mark(); }
+
+    static void mark(void *p)       { ((PondScum *)p)[-1].mark(); }
 
 
 #ifdef DEBUG
@@ -198,6 +207,7 @@ public:
     NamespaceList nsList;
     const StringAtom &name;
 
+    virtual void markChildren();
 };
 
 
@@ -248,6 +258,9 @@ public:
                                 // bindings that refer to this member.)
 
     virtual StaticMember *clone()       { ASSERT(false); return NULL; }
+    virtual bool isMarked()             { return true; }
+    virtual void mark()                 { }
+    virtual void markChildren()         { }
 };
 
 #define FUTURE_TYPE ((JS2Class *)(-1))
@@ -264,6 +277,10 @@ public:
     js2val value;                   // This variable's current value; future if the variable has not been declared yet;
                                     // uninitialised if the variable must be written before it can be read
     bool immutable;                 // true if this variable's value may not be changed once set
+
+    virtual bool isMarked()             { return (JS2VAL_IS_OBJECT(value) && JS2VAL_TO_OBJECT(value)->isMarked()); }
+    virtual void mark()                 { if (JS2VAL_IS_OBJECT(value)) JS2VAL_TO_OBJECT(value)->mark(); }
+    virtual void markChildren()         { if (JS2VAL_IS_OBJECT(value)) JS2VAL_TO_OBJECT(value)->markChildren(); }
 };
 
 class HoistedVar : public StaticMember {
@@ -272,6 +289,10 @@ public:
 
     js2val value;                   // This variable's current value
     bool hasFunctionInitializer;    // true if this variable was created by a function statement
+
+    virtual bool isMarked()             { return (JS2VAL_IS_OBJECT(value) && JS2VAL_TO_OBJECT(value)->isMarked()); }
+    virtual void mark()                 { if (JS2VAL_IS_OBJECT(value)) JS2VAL_TO_OBJECT(value)->mark(); }
+    virtual void markChildren()         { if (JS2VAL_IS_OBJECT(value)) JS2VAL_TO_OBJECT(value)->markChildren(); }
 };
 
 class ConstructorMethod : public StaticMember {
@@ -400,6 +421,9 @@ public:
 
     Frame *nextFrame;
     Frame *pluralFrame;                         // for a singular frame, this the plural frame from which it will be instantiated
+
+    virtual void markChildren();
+
 };
 
 
@@ -433,6 +457,7 @@ public:
     const StringAtom &name;
 
     virtual void instantiate(Environment * /* env */)  { }      // nothing to do
+    virtual void markChildren();
 
 };
 
@@ -442,6 +467,7 @@ public:
 
     Namespace *internalNamespace;               // This global object's internal namespace
     DynamicPropertyMap dynamicProperties;       // A set of this global object's dynamic properties
+    virtual void markChildren();
 };
 
 
@@ -465,6 +491,7 @@ public:
     Environment *env;           // The environment to pass to the call or construct procedure
     const StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
     Slot        *slots;         // A set of slots that hold this instance's fixed property values
+    virtual void markChildren();
 };
 
 // Instances of dynamic classes are represented as DYNAMICINSTANCE records. These instances can contain fixed and dynamic properties.
@@ -479,6 +506,7 @@ public:
     const StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
     Slot        *slots;         // A set of slots that hold this instance's fixed property values
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
+    virtual void markChildren();
 };
 
 // Prototype instances are represented as PROTOTYPE records. Prototype instances
@@ -492,6 +520,7 @@ public:
                                         // the value of the function’s prototype property at the time of the call;
                                         // none otherwise.
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
+    virtual void markChildren();
 };
 
 
@@ -622,6 +651,7 @@ public:
     bool prototype;                 // true if this function is not an instance method but defines this anyway
 
     virtual void instantiate(Environment *env);
+    virtual void markChildren();
 };
 
 class BlockFrame : public Frame {
@@ -667,6 +697,7 @@ public:
 
     void instantiateFrame(Frame *pluralFrame, Frame *singularFrame);
 
+    void mark()                         { GCMARKOBJECT(firstFrame) }
 
 private:
     Frame *firstFrame;
@@ -728,6 +759,8 @@ public:
                                     // true if the attribute override without arguments was given; none if the override attribute was not given.
     bool prototype;                 // true if the prototype attribute has been given
     bool unused;                    // true if the unused attribute has been given
+
+    virtual void markChildren();
 };
 
 
@@ -811,29 +844,32 @@ public:
     StaticMember *forbiddenMember;  // just need one of these hanging around
 
     // The base classes:
+    JS2Class *objectClass;
     JS2Class *undefinedClass;
     JS2Class *nullClass;
     JS2Class *booleanClass;
+    JS2Class *generalNumberClass;
     JS2Class *numberClass;
     JS2Class *characterClass;
     JS2Class *stringClass;
-    JS2Class *objectClass;
     JS2Class *namespaceClass;
-    JS2Class *classClass;
-    JS2Class *packageClass;
-    JS2Class *prototypeClass;
     JS2Class *attributeClass;
+    JS2Class *classClass;
     JS2Class *functionClass;
+    JS2Class *prototypeClass;
+    JS2Class *packageClass;
 
     Parser *mParser;                // used for error reporting
 
     BytecodeContainer *bCon;        // the current output container
 
-    GlobalObject glob;
+    GlobalObject *glob;
     Environment env;
     Context cxt;
 
     TargetList targetList;
+
+    void mark();
 
 };
 

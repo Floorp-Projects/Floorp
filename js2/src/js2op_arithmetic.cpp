@@ -64,6 +64,66 @@
         }
         break;
 
+    case eLess:
+        {
+	    js2val a = pop();
+	    js2val b = pop();
+            js2val ap = toPrimitive(a);
+            js2val bp = toPrimitive(b);
+            bool rval;
+            if (JS2VAL_IS_STRING(ap) && JS2VAL_IS_STRING(bp))
+                rval = (*JS2VAL_TO_STRING(ap) < *JS2VAL_TO_STRING(bp));
+            else
+                rval = toNumber(ap) < toNumber(bp);
+            push(BOOLEAN_TO_JS2VAL(rval));
+        }
+        break;
+
+    case eLessEqual:
+        {
+	    js2val a = pop();
+	    js2val b = pop();
+            js2val ap = toPrimitive(a);
+            js2val bp = toPrimitive(b);
+            bool rval;
+            if (JS2VAL_IS_STRING(ap) && JS2VAL_IS_STRING(bp))
+                rval = (*JS2VAL_TO_STRING(ap) <= *JS2VAL_TO_STRING(bp));
+            else
+                rval = toNumber(ap) <= toNumber(bp);
+            push(BOOLEAN_TO_JS2VAL(rval));
+        }
+        break;
+
+    case eGreater:
+        {
+	    js2val a = pop();
+	    js2val b = pop();
+            js2val ap = toPrimitive(a);
+            js2val bp = toPrimitive(b);
+            bool rval;
+            if (JS2VAL_IS_STRING(ap) && JS2VAL_IS_STRING(bp))
+                rval = (*JS2VAL_TO_STRING(ap) > *JS2VAL_TO_STRING(bp));
+            else
+                rval = toNumber(ap) > toNumber(bp);
+            push(BOOLEAN_TO_JS2VAL(rval));
+        }
+        break;
+    
+    case eGreaterEqual:
+        {
+	    js2val a = pop();
+	    js2val b = pop();
+            js2val ap = toPrimitive(a);
+            js2val bp = toPrimitive(b);
+            bool rval;
+            if (JS2VAL_IS_STRING(ap) && JS2VAL_IS_STRING(bp))
+                rval = (*JS2VAL_TO_STRING(ap) >= *JS2VAL_TO_STRING(bp));
+            else
+                rval = toNumber(ap) >= toNumber(bp);
+            push(BOOLEAN_TO_JS2VAL(rval));
+        }
+        break;
+    
     case eNotEqual:
     case eEqual:
         {

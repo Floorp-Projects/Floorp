@@ -53,6 +53,10 @@ enum JS2Op {
     eSubtract,
     eEqual,
     eNotEqual,
+    eLess,
+    eGreater,
+    eLessEqual,
+    eGreaterEqual,
     eTrue,
     eFalse,
     eNull,
@@ -129,12 +133,12 @@ public:
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
 
+    World &world;
     // Current engine execution state
     uint8 *pc;
     BytecodeContainer *bCon;
     JS2Metadata *meta;
     Phase phase;
-    World &world;
 
 
 
@@ -184,7 +188,7 @@ public:
     js2val top()                { return *(sp - 1); }
     js2val top(int argCount)    { return *(sp - (1 + argCount)); }
 
-
+    void mark();
 
 
     static JS2Object *defaultConstructor(JS2Engine *engine);
