@@ -1235,8 +1235,9 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   }
   NS_IF_RELEASE(mDocElement); 
 
-  // Clear any buffered-up text we have
-  mText = nsnull;
+  // Clear any buffered-up text we have.  It's enough to set the length to 0.
+  // The buffer itself is allocated when we're created and deleted in our
+  // destructor, so don't mess with it.
   mTextLength = 0;
 
   if (mXSLTProcessor) {
