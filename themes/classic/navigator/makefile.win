@@ -45,8 +45,6 @@ install::
 	$(MAKE_INSTALL) location-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) location.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) messagel.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) mynetscape.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) n-box-persbar.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) questionl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
