@@ -69,7 +69,10 @@
     <vbox halign="right">
       <button class="dialog" label="&edit.sslciphers;"
         oncommand="window.openDialog('chrome://pippki/content/pref-ciphers.xul', '',
-                       'modal=yes,resizable,chrome');" />
+                       'modal=yes,resizable,chrome');"
+        id="editSSLCiphersButton"
+        pref="true" preftype="bool" prefattribute="disabled"
+        prefstring="security.disable_button.editSSLCiphers" />
     </vbox>
 
   </groupbox>

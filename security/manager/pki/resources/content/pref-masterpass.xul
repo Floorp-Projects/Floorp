@@ -49,7 +49,10 @@
     </html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&changepassword.button;" disabled="false"
-        oncommand="ChangePW();" />
+        oncommand="ChangePW();"
+        id="changePasswordButton"
+        pref="true" preftype="bool" prefattribute="disabled"
+        prefstring="security.disable_button.changePassword" />
     </hbox>
   </groupbox>
 

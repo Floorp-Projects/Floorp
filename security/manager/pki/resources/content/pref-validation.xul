@@ -52,8 +52,11 @@
     <label value="&validation.crl.label;"/>
     <html> &validation.crl.description; </html>
     <hbox halign="left" autostretch="never">
-      <button class="dialog" label="&validation.managecrls.button;" disabled="false"
-        oncommand="openCrlManager();" />
+      <button class="dialog" label="&validation.managecrls.button;"
+        oncommand="openCrlManager();"
+        id="managecrlbutton"
+        pref="true" preftype="bool" prefattribute="disabled"
+        prefstring="security.OCSP.disable_button.managecrl" />
     </hbox>
   </groupbox>
 
