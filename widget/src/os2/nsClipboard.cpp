@@ -262,7 +262,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
                                PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
           PRUnichar* uchtemp = (PRUnichar*)pMozData;
-          for (int i=0;i<NumOfBytes;i++) {
+          for (int i=0;i<NumOfChars;i++) {
             switch (uchtemp[i]) {
               case 0x2018:
               case 0x2019:
