@@ -304,27 +304,12 @@ public final class OptRuntime extends ScriptRuntime {
         return result;
     }
 
-    public static void initFunction(NativeFunction fn,
-                                    Scriptable scope,
-                                    String fnName,
-                                    boolean setName)
-    {
-        initFunction(scope, fn);
-        if (setName) {
-            ScriptableObject.defineProperty(scope, fnName, fn,
-                                            ScriptableObject.PERMANENT);
-        }
-    }
-
     public static void setupFunction(NativeFunction fn,
                                      Scriptable scope,
-                                     boolean setName)
+                                     int functionType)
     {
         ScriptRuntime.initFunction(scope, fn);
-
-        String fnName = fn.getFunctionName();
-        if (setName && fnName != null && fnName.length() != 0) {
-            ScriptableObject.putProperty(scope, fnName, fn);
-        }
+        ScriptRuntime.putFunction(scope, fn.getFunctionName(), fn,
+                                  functionType, false);
     }
 }

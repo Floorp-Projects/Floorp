@@ -70,11 +70,13 @@ public class Codegen extends Interpreter {
     public Object compile(Context cx, Scriptable scope, Node tree,
                           Object securityDomain,
                           SecurityController securityController,
-                          ClassNameHelper nameHelper)
+                          ClassNameHelper cnh)
     {
         ObjArray classFiles = new ObjArray();
         ObjArray names = new ObjArray();
         String generatedName = null;
+
+        OptClassNameHelper nameHelper = (OptClassNameHelper) cnh;
 
         Exception e = null;
         Class result = null;
@@ -134,29 +136,28 @@ public class Codegen extends Interpreter {
         if (e != null)
             throw new RuntimeException("Malformed optimizer package " + e);
 
-        OptClassNameHelper onh = (OptClassNameHelper) nameHelper;
-        if (onh.getTargetImplements() != null ||
-            onh.getTargetExtends() != null)
-        {
-            String name = onh.getJavaScriptClassName(null, true);
+        Class[] interfaces = nameHelper.getTargetImplements();
+        Class superClass = nameHelper.getTargetExtends();
+        if (interfaces != null || superClass != null) {
+            String name = nameHelper.getJavaScriptClassName(null, true);
             ScriptableObject obj = new NativeObject();
             for (Node cursor = tree.getFirstChild(); cursor != null;
                  cursor = cursor.getNext())
             {
                 if (cursor.getType() == TokenStream.FUNCTION) {
-                    obj.put(cursor.getString(), obj,
-                            cursor.getProp(Node.FUNCTION_PROP));
+                    OptFunctionNode fnNode
+                        = (OptFunctionNode)cursor.getProp(Node.FUNCTION_PROP);
+                    obj.put(fnNode.getFunctionName(), obj, fnNode);
                 }
             }
+            if (superClass == null)
+                superClass = Object.class;
             try {
-                Class superClass = onh.getTargetExtends();
-                if (superClass == null)
-                    superClass = Object.class;
                 JavaAdapter.createAdapterClass(cx, obj, name,
                                                superClass,
-                                               onh.getTargetImplements(),
+                                               interfaces,
                                                generatedName,
-                                               onh);
+                                               nameHelper);
             } catch (ClassNotFoundException exn) {
                 // should never happen
                 throw new Error(exn.toString());
@@ -174,7 +175,8 @@ public class Codegen extends Interpreter {
                 throw new RuntimeException
                     ("Unable to instantiate compiled class:"+ex.toString());
             }
-            OptRuntime.setupFunction(f, scope, true);
+            OptFunctionNode fnNode = (OptFunctionNode)tree;
+            OptRuntime.setupFunction(f, scope, fnNode.getFunctionType());
             return f;
         } else {
             NativeScript script;
@@ -374,11 +376,17 @@ public class Codegen extends Interpreter {
     }
 
     public String generateCode(Node tree, ObjArray names, ObjArray classFiles,
-                               ClassNameHelper nameHelper)
+                               OptClassNameHelper nameHelper)
     {
-        this.itsNameHelper = (OptClassNameHelper) nameHelper;
-        this.namesVector = names;
-        this.classFilesVector = classFiles;
+        ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
+        if (fns != null) {
+            for (int i = 0; i != fns.size(); ++i) {
+                OptFunctionNode fn = (OptFunctionNode) fns.get(i);
+                Codegen codegen = new Codegen();
+                codegen.generateCode(fn, names, classFiles, nameHelper);
+            }
+        }
+
         Context cx = Context.getCurrentContext();
         itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
 
@@ -411,7 +419,7 @@ public class Codegen extends Interpreter {
                                       "Lorg/mozilla/javascript/Scriptable;" +
                                       "[Ljava/lang/Object;)Ljava/lang/Object;",
                                       (short)(ClassFileWriter.ACC_PUBLIC
-                                                    + ClassFileWriter.ACC_FINAL));
+                                              | ClassFileWriter.ACC_FINAL));
                 addByteCode(ByteCode.ALOAD_0);
                 addByteCode(ByteCode.ALOAD_1);
                 addByteCode(ByteCode.ALOAD_2);
@@ -485,9 +493,9 @@ public class Codegen extends Interpreter {
             if (tree.getType() != TokenStream.SCRIPT)
                 badTree();
             vars = (VariableTable) tree.getProp(Node.VARS_PROP);
-            boolean isPrimary = itsNameHelper.getTargetExtends() == null &&
-                                itsNameHelper.getTargetImplements() == null;
-            this.name = itsNameHelper.getJavaScriptClassName(null, isPrimary);
+            boolean isPrimary = nameHelper.getTargetExtends() == null &&
+                                nameHelper.getTargetImplements() == null;
+            this.name = nameHelper.getJavaScriptClassName(null, isPrimary);
             classFile = new ClassFileWriter(name, superClassName, itsSourceFile);
             classFile.addInterface("org/mozilla/javascript/Script");
             generateScriptCtor(cx, tree);
@@ -518,12 +526,10 @@ public class Codegen extends Interpreter {
 
         byte[] bytes = classFile.toByteArray();
 
-        namesVector.add(name);
-        classFilesVector.add(bytes);
+        names.add(name);
+        classFiles.add(bytes);
 
         classFile = null;
-        namesVector = null;
-        classFilesVector = null;
 
         return name;
     }
@@ -582,7 +588,7 @@ public class Codegen extends Interpreter {
                         = (OptFunctionNode) node.getProp(Node.FUNCTION_PROP);
                     int t = fn.getFunctionType();
                     if (t != FunctionNode.FUNCTION_STATEMENT) {
-                        visitFunction(fn, t == FunctionNode.FUNCTION_EXPRESSION_STATEMENT);
+                        visitFunction(fn, t);
                     }
                 }
                 break;
@@ -1185,18 +1191,6 @@ public class Codegen extends Interpreter {
             generateRegExpLiterals(regexps, inCtor);
         }
 
-        ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
-        if (fns != null) {
-            setNonTrivialInit(methodName);
-            for (int i = 0; i != fns.size(); ++i) {
-                OptFunctionNode fn = (OptFunctionNode) fns.get(i);
-                Codegen codegen = new Codegen();
-                codegen.generateCode(fn, namesVector, classFilesVector,
-                                     itsNameHelper);
-                generateCreateFunction(fn);
-            }
-        }
-
         if (tree instanceof OptFunctionNode) {
 
             OptFunctionNode fnNode = (OptFunctionNode)tree;
@@ -1237,6 +1231,7 @@ public class Codegen extends Interpreter {
                 classFile.startMethod(getSourceMethodStr,
                                       "()Ljava/lang/Object;",
                                       (short)flags);
+                ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
                 if (fns == null) {
                     // generate return <source-literal-string>;
                     push(source);
@@ -1315,52 +1310,6 @@ public class Codegen extends Interpreter {
                             fieldName, "Lorg/mozilla/javascript/regexp/NativeRegExp;");
         }
     }
-
-    // On exit it leaves on stack new function
-    private void generateCreateFunction(OptFunctionNode fn) {
-        String fnClassName = fn.getClassName();
-        addByteCode(ByteCode.NEW, fnClassName);
-        addByteCode(ByteCode.DUP);
-        if (inFunction) {
-            addByteCode(ByteCode.ALOAD_0); // load "this" argument
-        } else {
-            aload(variableObjectLocal);
-        }
-        aload(contextLocal);           // load 'cx'
-        addSpecialInvoke(fnClassName, "<init>",
-                         "(Lorg/mozilla/javascript/Scriptable;" +
-                          "Lorg/mozilla/javascript/Context;)",
-                         "V");
-
-        // 'fn' still on stack, dup it to use later
-        addByteCode(ByteCode.DUP);
-        // load 'scope'
-        if (inFunction) {
-            addByteCode(ByteCode.ALOAD_0); // load "this" argument
-        } else {
-            aload(variableObjectLocal);
-        }
-        // load 'fnName'
-        String str = fn.getFunctionName();
-        if (str != null) {
-            push(str);
-        } else {
-            addByteCode(ByteCode.ACONST_NULL);
-        }
-        // load boolean indicating whether fn name should be set in scope
-        boolean setFnName = str != null && str.length() > 0 &&
-                            fn.getFunctionType() ==
-                                FunctionNode.FUNCTION_STATEMENT;
-        addByteCode(setFnName ? ByteCode.ICONST_1 : ByteCode.ICONST_0);
-
-        addOptRuntimeInvoke("initFunction",
-                            "(Lorg/mozilla/javascript/NativeFunction;"
-                            +"Lorg/mozilla/javascript/Scriptable;"
-                            +"Ljava/lang/String;"
-                            +"Z)",
-                            "V");
-    }
-
 
     /**
      * Generate the prologue for a function or script.
@@ -1537,11 +1486,11 @@ public class Codegen extends Interpreter {
         astore(variableObjectLocal);
 
         ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
-        if (inFunction && fns != null) {
+        if (fns != null) {
             for (int i=0; i < fns.size(); i++) {
                 OptFunctionNode fn = (OptFunctionNode) fns.get(i);
                 if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
-                    visitFunction(fn, true);
+                    visitFunction(fn, FunctionNode.FUNCTION_STATEMENT);
                     addByteCode(ByteCode.POP);
                 }
             }
@@ -1597,7 +1546,7 @@ public class Codegen extends Interpreter {
         addByteCode(ByteCode.ARETURN);
     }
 
-    private void visitFunction(OptFunctionNode fn, boolean setName) {
+    private void visitFunction(OptFunctionNode fn, int functionType) {
         String fnClassName = fn.getClassName();
         addByteCode(ByteCode.NEW, fnClassName);
         // Call function constructor
@@ -1610,11 +1559,11 @@ public class Codegen extends Interpreter {
                          "V");
         addByteCode(ByteCode.DUP); // copy of function
         aload(variableObjectLocal);
-        push(setName ? 1 : 0);
+        push(functionType);
         addOptRuntimeInvoke("setupFunction",
                             "(Lorg/mozilla/javascript/NativeFunction;"
                             +"Lorg/mozilla/javascript/Scriptable;"
-                            +"Z)",
+                            +"I)",
                             "V");
         // leave on stack new function instance
     }
@@ -3777,11 +3726,8 @@ public class Codegen extends Interpreter {
     boolean inFunction;
     boolean inDirectCallFunction;
     private ClassFileWriter classFile;
-    private ObjArray namesVector;
-    private ObjArray classFilesVector;
     private short scriptRuntimeIndex;
     private int version;
-    private OptClassNameHelper itsNameHelper;
 
     private String itsSourceFile;
     private int itsLineNumber;
