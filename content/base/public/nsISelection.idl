@@ -74,37 +74,50 @@ interface nsISelection : nsISupports
     nsIDOMRange getRangeAt(in long index);
 
     /**
-     * Sets the whole selection down to a single point specified
-     * by the node and offset.
+     * Collapses the selection to a single point, at the specified offset
+     * in the given DOM node. When the selection is collapsed, and the content
+     * is focused and editable, the caret will blink there.
+     * @param parentNode      The given dom node where the selection will be set
+     * @param offset          Where in given dom node to place the selection (the offset into the given node)
      */
     void collapse(in nsIDOMNode parentNode, in long offset);
 
+
     /**
-     * Changes the current selection to extend to the specified node
-     * and offset.
+     * Extends the selection by moving the focus to the specified node and offset,
+     * preserving the anchor postion.  The new selection end result will always
+     * be from the anchor to the new focus, regardless of direction.
+     * @param parentNode      The node where the selection will be extended to
+     * @param offset          Where in node to place the offset in the new focused node
      */
     void extend(in nsIDOMNode parentNode, in long offset);
 
     /**
-     * Sets the whole selection to be a point at the start of the current
-     * selection.
+     * Collapses the whole selection to a single point at the start
+     * of the current selection (irrespective of direction).  If content
+     * is focused and editable, the caret will blink there.
      */
     void collapseToStart();
 
     /**
-     * Sets the whole selection to be a point at the end of the current
-     * selection.
+     * Collapses the whole selection to a single point at the end
+     * of the current selection (irrespective of direction).  If content
+     * is focused and editable, the caret will blink there.
      */
     void collapseToEnd();
 
     /**
-     * Tests whether the node is in the selection, optionally
-     * using recursion to locate it.
+     * The value of entirelyContained determines the detail of the search to determine if
+     * the selection contains the node.  If entirelyContained is set to PR_TRUE, t
+     * or false if
+     * @param node      The node where the selection will be extended to
+     * @param entirelyContained Whether
      */
-    boolean containsNode(in nsIDOMNode node, in boolean recursive);
+    boolean containsNode(in nsIDOMNode node, in boolean entirelyContained);
 
     /**
      * Adds all children of the specified node to the selection.
+     * @param parentNode  the parent of the children to be added to the selection.
      */
     void selectAllChildren(in nsIDOMNode parentNode); 
 
@@ -130,8 +143,8 @@ interface nsISelection : nsISupports
 
     /**
      * Modifies the cursor Bidi level after a change in keyboard direction
-     *  @param langRTL is PR_TRUE if the new language is right-to-left or
-     *                 PR_FALSE if the new language is left-to-right
+     * @param langRTL is PR_TRUE if the new language is right-to-left or
+     *                PR_FALSE if the new language is left-to-right.
      */
     void selectionLanguageChange(in boolean langRTL);
 
