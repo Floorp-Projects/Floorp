@@ -36,7 +36,7 @@
 interface nsIScriptContext;
 interface nsIScriptGlobalObject;
 
-[scriptable, uuid(ED8640A0-A6AB-11d3-AFC2-00A024FFC08C)]
+[scriptable, uuid(A94EC640-0BBA-11D2-B326-00805F8A3859)]
 interface nsIScriptContextOwner : nsISupports
 {
   /**
