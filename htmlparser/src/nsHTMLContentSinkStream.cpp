@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 const  int            gTabSize=2;
 
-static const nsString gMozDirty = NS_ConvertToString("_moz_dirty");
+static const NS_NAMED_LITERAL_STRING(gMozDirty, "_moz_dirty");
 
 /**
  *  This method gets called as part of our COM-like interfaces.

@@ -54,7 +54,7 @@ public:
    *        a constructor. PR_FALSE if it is a global object.
    * @result NS_OK if successful
    */
-  NS_IMETHOD RegisterGlobalName(const nsString& aName, 
+  NS_IMETHOD RegisterGlobalName(const nsAReadableString& aName, 
                                 const nsIID& aIID,
                                 const nsIID& aCID,
                                 PRBool aIsConstructor) = 0;
@@ -65,7 +65,7 @@ public:
    * @param aName the name to remove
    * @result NS_OK if successful
    */
-  NS_IMETHOD UnregisterGlobalName(const nsString& aName) = 0;
+  NS_IMETHOD UnregisterGlobalName(const nsAReadableString& aName) = 0;
 
   /**
    * Used to look up the manager using a name as a key. The
@@ -83,7 +83,7 @@ public:
    * @result NS_OK if the lookup succeeded. NS_ERROR_INVALID_ARG
    *         if the lookup failed.
    */
-  NS_IMETHOD LookupName(const nsString& aName, 
+  NS_IMETHOD LookupName(const nsAReadableString& aName, 
                         PRBool& aIsConstructor,
                         nsIID& aIID,
                         nsIID& aCID) = 0;

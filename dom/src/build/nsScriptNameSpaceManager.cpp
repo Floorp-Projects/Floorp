@@ -22,6 +22,7 @@
 
 #include "nsScriptNameSpaceManager.h"
 #include "prmem.h"
+#include "nsReadableUtils.h"
 
 typedef struct {
   nsIID mIID;
@@ -56,12 +57,10 @@ nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
   }
 }
 
-static NS_DEFINE_IID(kIScriptNameSpaceManagerIID, NS_ISCRIPTNAMESPACEMANAGER_IID);
-
-NS_IMPL_ISUPPORTS(nsScriptNameSpaceManager, kIScriptNameSpaceManagerIID);
+NS_IMPL_ISUPPORTS1(nsScriptNameSpaceManager, nsIScriptNameSpaceManager);
 
 NS_IMETHODIMP 
-nsScriptNameSpaceManager::RegisterGlobalName(const nsString& aName, 
+nsScriptNameSpaceManager::RegisterGlobalName(const nsAReadableString& aName, 
                                              const nsIID& aIID,
                                              const nsIID& aCID,
                                              PRBool aIsConstructor)
@@ -71,7 +70,6 @@ nsScriptNameSpaceManager::RegisterGlobalName(const nsString& aName,
                                    PL_CompareValues, nsnull, nsnull);
   }
   
-  char* name = aName.ToNewCString();
   nsGlobalNameStruct* gn = (nsGlobalNameStruct*)PR_NEW(nsGlobalNameStruct);
   if (nsnull == gn) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -80,16 +78,17 @@ nsScriptNameSpaceManager::RegisterGlobalName(const nsString& aName,
   gn->mCID = aCID;
   gn->mIsConstructor = aIsConstructor;
 
+  char* name = ToNewCString(aName);
   PL_HashTableAdd(mGlobalNames, name, (void *)gn);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsScriptNameSpaceManager::UnregisterGlobalName(const nsString& aName)
+nsScriptNameSpaceManager::UnregisterGlobalName(const nsAReadableString& aName)
 {
   if (nsnull != mGlobalNames) {
-    char* name = aName.ToNewCString();
+    char* name = ToNewCString(aName);
     PLHashNumber hn = PL_HashString(name);
     PLHashEntry** hep = PL_HashTableRawLookup(mGlobalNames,
                                               hn,
@@ -98,7 +97,7 @@ nsScriptNameSpaceManager::UnregisterGlobalName(const nsString& aName)
 
     if (nsnull != entry) {  
       nsGlobalNameStruct* gn = (nsGlobalNameStruct*)entry->value;
-      char* hname = (char*)entry->key;;
+      char* hname = (char*)entry->key;
 
       delete gn;
       PL_HashTableRemove(mGlobalNames, name);
@@ -112,13 +111,13 @@ nsScriptNameSpaceManager::UnregisterGlobalName(const nsString& aName)
 }
 
 NS_IMETHODIMP 
-nsScriptNameSpaceManager::LookupName(const nsString& aName, 
+nsScriptNameSpaceManager::LookupName(const nsAReadableString& aName, 
                                      PRBool& aIsConstructor,
                                      nsIID& aIID,
                                      nsIID& aCID)
 {
   if (nsnull != mGlobalNames) {
-    char* name = aName.ToNewCString();
+    char* name = ToNewCString(aName);
     nsGlobalNameStruct* gn = (nsGlobalNameStruct*)PL_HashTableLookup(mGlobalNames, name);
     nsCRT::free(name);
 
@@ -148,7 +147,6 @@ NS_NewScriptNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return manager->QueryInterface(kIScriptNameSpaceManagerIID, (void **)aInstancePtr);
-
+  return manager->QueryInterface(NS_GET_IID(nsIScriptNameSpaceManager), (void **)aInstancePtr);
 }
 

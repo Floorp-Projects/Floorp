@@ -1778,7 +1778,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Set the neccessary style attributes on the text control.
 
   if (IsSingleLineTextControl())
-    rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING_SINGLELINE), PR_FALSE);
+    rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertASCIItoUCS2(DIV_STRING_SINGLELINE), PR_FALSE);
   else {
     nsAutoString divStr; divStr.AssignWithConversion(DIV_STRING);
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
@@ -1794,7 +1794,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  // rv = divContent->SetAttribute(kNameSpaceID_None,nsXULAtoms::debug, NS_ConvertToString("true"), PR_FALSE);
+  // rv = divContent->SetAttribute(kNameSpaceID_None,nsXULAtoms::debug, NS_LITERAL_STRING("true"), PR_FALSE);
   rv = aChildList.AppendElement(divContent);
 
   if (NS_FAILED(rv))

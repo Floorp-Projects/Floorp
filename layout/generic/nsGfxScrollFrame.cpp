@@ -414,10 +414,10 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nsCOMPtr<nsIContent> content;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
   content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align,
-                        NS_ConvertToString("horizontal"), PR_FALSE);
+                        NS_LITERAL_STRING("horizontal"), PR_FALSE);
 
   content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                        NS_ConvertToString("true"), PR_FALSE);
+                        NS_LITERAL_STRING("true"), PR_FALSE);
 
   aAnonymousChildren.AppendElement(content);
 
@@ -425,10 +425,10 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   content = nsnull;
   elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
   content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align,
-                        NS_ConvertToString("vertical"), PR_FALSE);
+                        NS_LITERAL_STRING("vertical"), PR_FALSE);
 
   content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                        NS_ConvertToString("true"), PR_FALSE);
+                        NS_LITERAL_STRING("true"), PR_FALSE);
 
   aAnonymousChildren.AppendElement(content);
 
@@ -1400,7 +1400,7 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
     return;
 
   if (!aVisible)
-     content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, NS_ConvertToString("true"), PR_TRUE);
+     content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, NS_LITERAL_STRING("true"), PR_TRUE);
   else
      content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, PR_TRUE);
 

@@ -180,7 +180,7 @@ eAutoDetectResult nsExpatDTD::CanParse(CParserContext& aParserContext,nsString& 
     else {
       if(-1<aBuffer.Find("<?xml ")) {
         if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType( NS_ConvertToString(kXMLTextContentType) );
+          aParserContext.SetMimeType( NS_ConvertASCIItoUCS2(kXMLTextContentType) );
         }
         result=eValidDetect;
       }

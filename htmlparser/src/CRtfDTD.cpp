@@ -757,7 +757,7 @@ nsresult CRtfDTD::HandleControlWord(CToken* aToken){
             break;
           case eRTFCtrl_tab:
             {
-              CTextToken theToken2( NS_ConvertToString("   ") );
+              CTextToken theToken2( NS_LITERAL_STRING("   ") );
               result=HandleContent(&theToken2);
             }
             break;

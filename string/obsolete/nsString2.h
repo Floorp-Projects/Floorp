@@ -599,29 +599,6 @@ class NS_COM NS_ConvertASCIItoUCS2
       NS_ConvertASCIItoUCS2( PRUnichar );
   };
 
-#define NS_ConvertToString NS_ConvertASCIItoUCS2
-
-#if 0
-inline
-nsAutoString
-NS_ConvertToString( const char* aCString )
-  {
-    nsAutoString result;
-    result.AssignWithConversion(aCString);
-    return result;
-  }
-
-inline
-nsAutoString
-NS_ConvertToString( const char* aCString, PRUint32 aLength )
-  {
-    nsAutoString result;
-    result.AssignWithConversion(aCString, aLength);
-    return result;
-  }
-#endif
-
-
 class NS_COM NS_ConvertUTF8toUCS2
       : public nsAutoString
   {

@@ -317,7 +317,7 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
         if(BufferContainsHTML(aBuffer,theBufHasXML)){
           result = eValidDetect ;
           if(0==aParserContext.mMimeType.Length()) {
-            aParserContext.SetMimeType(NS_ConvertToString(kHTMLTextContentType));
+            aParserContext.SetMimeType(NS_ConvertASCIItoUCS2(kHTMLTextContentType));
             if(!theBufHasXML) {
               switch(aParserContext.mDTDMode) {
                 case eDTDMode_strict:
@@ -417,7 +417,7 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
 
         if(!mBodyContext->GetCount()) {
             //if the content model is empty, then begin by opening <html>...
-          CStartToken *theToken=(CStartToken*)mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
+          CStartToken *theToken=(CStartToken*)mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html"));
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
         }
 
@@ -668,7 +668,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNo
     CObserverService* theService=mParser->GetObserverService();
     if(theService) {
       const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
-      result=theService->Notify(aTag,aNode,(void*)bundle, NS_ConvertToString(kHTMLTextContentType), mParser);
+      result=theService->Notify(aTag,aNode,(void*)bundle, NS_ConvertASCIItoUCS2(kHTMLTextContentType), mParser);
     }
   }
 

@@ -115,11 +115,11 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 
 	// We probabaly should put the following info into resource ....
 	// smRoman
-	mGenericFontMapping[smRoman][kSerif]     = new nsAutoString( NS_ConvertToString("Times") );
-	mGenericFontMapping[smRoman][kSansSerif] = new nsAutoString( NS_ConvertToString("Helvetica") ); // note: MRJ use Geneva for Sans-Serif
-	mGenericFontMapping[smRoman][kMonospace] = new nsAutoString( NS_ConvertToString("Courier") );
-	mGenericFontMapping[smRoman][kCursive]   =  new nsAutoString( NS_ConvertToString("Zapf Chancery") );
-	mGenericFontMapping[smRoman][kFantasy]   = new nsAutoString( NS_ConvertToString("New Century Schlbk") );
+	mGenericFontMapping[smRoman][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Times") );
+	mGenericFontMapping[smRoman][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Helvetica") ); // note: MRJ use Geneva for Sans-Serif
+	mGenericFontMapping[smRoman][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Courier") );
+	mGenericFontMapping[smRoman][kCursive]   = new nsAutoString( NS_LITERAL_STRING("Zapf Chancery") );
+	mGenericFontMapping[smRoman][kFantasy]   = new nsAutoString( NS_LITERAL_STRING("New Century Schlbk") );
 
 	// smJapanese
 	static PRUnichar jfontname1[] = {
@@ -137,14 +137,14 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 	mGenericFontMapping[smJapanese][kMonospace] = new nsAutoString(jfontname3);
 
 	// smTradChinese
-	mGenericFontMapping[smTradChinese][kSerif]     = new nsAutoString( NS_ConvertToString("Apple LiSung Light") );
-	mGenericFontMapping[smTradChinese][kSansSerif] = new nsAutoString( NS_ConvertToString("Apple LiGothic Medium") );
-	mGenericFontMapping[smTradChinese][kMonospace] = new nsAutoString( NS_ConvertToString("Apple LiGothic Medium") );
+	mGenericFontMapping[smTradChinese][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Apple LiSung Light") );
+	mGenericFontMapping[smTradChinese][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Apple LiGothic Medium") );
+	mGenericFontMapping[smTradChinese][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Apple LiGothic Medium") );
 
 	// smKorean
-	mGenericFontMapping[smKorean][kSerif]     = new nsAutoString( NS_ConvertToString("AppleMyungjo") );
-	mGenericFontMapping[smKorean][kSansSerif] = new nsAutoString( NS_ConvertToString("AppleGothic") );
-	mGenericFontMapping[smKorean][kMonospace] = new nsAutoString( NS_ConvertToString("AppleGothic") );
+	mGenericFontMapping[smKorean][kSerif]     = new nsAutoString( NS_LITERAL_STRING("AppleMyungjo") );
+	mGenericFontMapping[smKorean][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("AppleGothic") );
+	mGenericFontMapping[smKorean][kMonospace] = new nsAutoString( NS_LITERAL_STRING("AppleGothic") );
 
 	// smArabic
 	static PRUnichar afontname1[] = {
@@ -173,40 +173,39 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 	mGenericFontMapping[smHebrew][kMonospace] = new nsAutoString(hfontname2);
 
 	// smCyrillic
-	mGenericFontMapping[smCyrillic][kSerif]     = new nsAutoString( NS_ConvertToString("Latinski") );
-	mGenericFontMapping[smCyrillic][kSansSerif] = new nsAutoString( NS_ConvertToString("Pryamoy Prop") );
-	mGenericFontMapping[smCyrillic][kMonospace] = new nsAutoString( NS_ConvertToString("APC Courier") );
+	mGenericFontMapping[smCyrillic][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Latinski") );
+	mGenericFontMapping[smCyrillic][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Pryamoy Prop") );
+	mGenericFontMapping[smCyrillic][kMonospace] = new nsAutoString( NS_LITERAL_STRING("APC Courier") );
 
 	// smDevanagari
-	mGenericFontMapping[smDevanagari][kSerif]     = new nsAutoString( NS_ConvertToString("Devanagari MT") );
-	mGenericFontMapping[smDevanagari][kSansSerif] = new nsAutoString( NS_ConvertToString("Devanagari MT") );
-	mGenericFontMapping[smDevanagari][kMonospace] = new nsAutoString( NS_ConvertToString("Devanagari MT") );
+	mGenericFontMapping[smDevanagari][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Devanagari MT") );
+	mGenericFontMapping[smDevanagari][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Devanagari MT") );
+	mGenericFontMapping[smDevanagari][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Devanagari MT") );
 
 	// smGurmukhi
-	static nsAutoString gurukhiMT_str( NS_ConvertToString("Gurmukhi MT") );
-	mGenericFontMapping[smGurmukhi][kSerif]     = new nsAutoString( NS_ConvertToString("Gurmukhi MT") );
-	mGenericFontMapping[smGurmukhi][kSansSerif] = new nsAutoString( NS_ConvertToString("Gurmukhi MT") );
-	mGenericFontMapping[smGurmukhi][kMonospace] = new nsAutoString( NS_ConvertToString("Gurmukhi MT") );
+	mGenericFontMapping[smGurmukhi][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Gurmukhi MT") );
+	mGenericFontMapping[smGurmukhi][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Gurmukhi MT") );
+	mGenericFontMapping[smGurmukhi][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Gurmukhi MT") );
 
 	// smGujarati
-	mGenericFontMapping[smGujarati][kSerif]     = new nsAutoString( NS_ConvertToString("Gujarati MT") );
-	mGenericFontMapping[smGujarati][kSansSerif] = new nsAutoString( NS_ConvertToString("Gujarati MT") );
-	mGenericFontMapping[smGujarati][kMonospace] = new nsAutoString( NS_ConvertToString("Gujarati MT") );
+	mGenericFontMapping[smGujarati][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Gujarati MT") );
+	mGenericFontMapping[smGujarati][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Gujarati MT") );
+	mGenericFontMapping[smGujarati][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Gujarati MT") );
 
 	// smThai
-	mGenericFontMapping[smThai][kSerif]     = new nsAutoString( NS_ConvertToString("Thonburi") );
-	mGenericFontMapping[smThai][kSansSerif] = new nsAutoString( NS_ConvertToString("Krungthep") );
-	mGenericFontMapping[smThai][kMonospace] = new nsAutoString( NS_ConvertToString("Ayuthaya") );
+	mGenericFontMapping[smThai][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Thonburi") );
+	mGenericFontMapping[smThai][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Krungthep") );
+	mGenericFontMapping[smThai][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Ayuthaya") );
 
 	// smSimpChinese
-	mGenericFontMapping[smSimpChinese][kSerif]     = new nsAutoString( NS_ConvertToString("Song") );
-	mGenericFontMapping[smSimpChinese][kSansSerif] = new nsAutoString( NS_ConvertToString("Hei") );
-	mGenericFontMapping[smSimpChinese][kMonospace] = new nsAutoString( NS_ConvertToString("Hei") );
+	mGenericFontMapping[smSimpChinese][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Song") );
+	mGenericFontMapping[smSimpChinese][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Hei") );
+	mGenericFontMapping[smSimpChinese][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Hei") );
 
 	// smCentralEuroRoman
-	mGenericFontMapping[smCentralEuroRoman][kSerif]     = new nsAutoString( NS_ConvertToString("Times CE") );
-	mGenericFontMapping[smCentralEuroRoman][kSansSerif] = new nsAutoString( NS_ConvertToString("Helvetica CE") );
-	mGenericFontMapping[smCentralEuroRoman][kMonospace] = new nsAutoString( NS_ConvertToString("Courier CE") );
+	mGenericFontMapping[smCentralEuroRoman][kSerif]     = new nsAutoString( NS_LITERAL_STRING("Times CE") );
+	mGenericFontMapping[smCentralEuroRoman][kSansSerif] = new nsAutoString( NS_LITERAL_STRING("Helvetica CE") );
+	mGenericFontMapping[smCentralEuroRoman][kMonospace] = new nsAutoString( NS_LITERAL_STRING("Courier CE") );
 }
 //--------------------------------------------------------------------------
 
