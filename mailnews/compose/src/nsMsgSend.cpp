@@ -2209,11 +2209,13 @@ nsMsgComposeAndSend::ImapAppendAddBccHeadersIfNeeded(URL_Struct *url)
 		post_data = nsMsgCreateTempFileName("nsmail.tmp");
 		if (post_data)
 		{
-			PRFileDesc *dstFile = PR_Open(post_data, PR_WRONLY | PR_CREATE_FILE, 0);
-			if (dstFile)
+			nsFileSpec        dstSpec(post_data);
+			nsOutputFileStream dstFile(dstSpec, PR_WRONLY | PR_CREATE_FILE);
+			if (dstFile.is_open())
 			{
-				PRFileDesc *srcFile = PR_Open(m_msg_file_name, PR_RDONLY, 0);
-				if (srcFile)
+				nsFileSpec srcSpec(m_msg_file_name); // mscott - shouldn't we be storing m_msg_file_name as a file spec?
+				nsInputFileStream srcFile(srcSpec);
+				if (srcFile.is_open())
 				{
 					char *tmpBuffer = NULL;
 					int bSize = TEN_K;
@@ -2227,20 +2229,18 @@ nsMsgComposeAndSend::ImapAppendAddBccHeadersIfNeeded(URL_Struct *url)
 					int bytesRead = 0;
 					if (tmpBuffer)
 					{
-						PR_Write(dstFile, "Bcc: ", 5);
-						PR_Write(dstFile, bcc_headers, PL_strlen(bcc_headers));
-						PR_Write(dstFile, CRLF, PL_strlen(CRLF));
-						bytesRead = PR_Read(srcFile, tmpBuffer, bSize);
+						dstFile << "Bcc: " << bcc_headers << CRLF;
+						bytesRead = srcFile.read(tmpBuffer, bSize);
 						while (bytesRead > 0)
 						{
-							PR_Write(dstFile, tmpBuffer, bytesRead);
-							bytesRead = PR_Read(srcFile, tmpBuffer, bSize);
+							dstFile.write(tmpBuffer, bytesRead);
+							bytesRead = srcFile.read(tmpBuffer, bSize);
 						}
 						PR_Free(tmpBuffer);
 					}
-					PR_Close(srcFile);
+					srcFile.close();
 				}
-				PR_Close(dstFile);
+				dstFile.close();
 			}
 		}
 	}

@@ -25,6 +25,7 @@
 #include "nsMsgEncoders.h"
 #include "nsMsgI18N.h"
 #include "nsMsgCompUtils.h"
+#include "nsFileStream.h"
 
 #include "MsgCompGlue.h"
 
@@ -503,7 +504,6 @@ int nsMsgSendPart::Write()
 {
   int status = 0;
   char *separator = 0;
-  PRFileDesc *file = NULL;
   
 #define PUSHLEN(str, length)									\
   do {														\
@@ -527,21 +527,16 @@ int nsMsgSendPart::Write()
       m_buffer = (char *) PR_Malloc(sizeof(char) * (length + 1));
       if (m_buffer) 
 	  {
-        file = PR_Open(m_filename, PR_RDONLY, 0);
-        if (file) 
+		nsInputFileStream file(mySpec);
+        if (file.is_open()) 
 		{
-          PR_Read(file, m_buffer, length);
-          PR_Close(file);
-          m_buffer[length] = '\0';
-          file = NULL;
-          PR_FREEIF(m_filename);
-          m_filename = NULL;
+			length = file.read(m_buffer, length);
+			file.close();
+			m_buffer[length] = '\0';
+			PR_FREEIF(m_filename);
         }
         else 
-		{
 		  PR_Free(m_buffer);
-          m_buffer = NULL;
-        }
       }
     }
     if (m_buffer) 
@@ -815,8 +810,6 @@ int nsMsgSendPart::Write()
   
 FAIL:
   PR_FREEIF(separator);
-  if (file)
-    PR_Close(file);
   if (m_intlDocToMailConverter) {
     nsMsgI18NDestroyCharCodeConverter(m_intlDocToMailConverter);
     m_intlDocToMailConverter = NULL;
