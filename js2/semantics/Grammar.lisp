@@ -155,8 +155,7 @@
 (defstruct (action (:constructor make-action (type expr))
                    (:predicate action?))
   (type nil :read-only t)                     ;The unparsed type of the action's result
-  (expr nil :read-only t)                     ;The unparsed source expression that defines the action
-  (code nil))                                 ;The generated lisp source code that performs the action
+  (expr nil :read-only t))                    ;The unparsed source expression that defines the action
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -300,33 +299,33 @@
 ; link is the lhs's link type.
 (defun depict-general-production (markup-stream general-production link &optional symbols-with-subscripts)
   (let ((lhs (general-production-lhs general-production))
-        (rhs-components (general-production-rhs-components general-production)))
-    (depict-general-nonterminal markup-stream lhs link)
+        (rhs-components (general-production-rhs-components general-production))
+        (counts-hash (make-hash-table :test *grammar-symbol-=*)))
+    (when symbols-with-subscripts
+      (dolist (symbol symbols-with-subscripts)
+        (setf (gethash symbol counts-hash) 0))
+      (dolist (production-rhs-component (cons lhs (general-production-rhs general-production)))
+        (when (general-grammar-symbol? production-rhs-component)
+          (let ((symbol (general-grammar-symbol-symbol production-rhs-component)))
+            (when (gethash symbol counts-hash)
+              (incf (gethash symbol counts-hash))))))
+      (maphash #'(lambda (symbol count)
+                   (assert-true (> count 0))
+                   (if (> count 1)
+                     (setf (gethash symbol counts-hash) 0)
+                     (remhash symbol counts-hash)))
+               counts-hash))
+    (depict-general-nonterminal markup-stream lhs link (gethash (general-grammar-symbol-symbol lhs) counts-hash))
     (depict markup-stream " " :derives-10)
     (if rhs-components
-      (let ((counts-hash (make-hash-table :test *grammar-symbol-=*)))
-        (when symbols-with-subscripts
-          (dolist (symbol symbols-with-subscripts)
-            (setf (gethash symbol counts-hash) 0))
-          (dolist (production-rhs-component (cons lhs (general-production-rhs general-production)))
-            (when (general-grammar-symbol? production-rhs-component)
-              (let ((symbol (general-grammar-symbol-symbol production-rhs-component)))
-                (when (gethash symbol counts-hash)
-                  (incf (gethash symbol counts-hash))))))
-          (maphash #'(lambda (symbol count)
-                       (assert-true (> count 0))
-                       (if (> count 1)
-                         (setf (gethash symbol counts-hash) 0)
-                         (remhash symbol counts-hash)))
-                   counts-hash))
-        (dolist (production-rhs-component rhs-components)
-          (let ((subscript nil))
-            (when (general-grammar-symbol? production-rhs-component)
-              (let ((symbol (general-grammar-symbol-symbol production-rhs-component)))
-                (when (gethash symbol counts-hash)
-                  (setq subscript (incf (gethash symbol counts-hash))))))
-            (depict-space markup-stream)
-            (depict-production-rhs-component markup-stream production-rhs-component subscript))))
+      (dolist (production-rhs-component rhs-components)
+        (let ((subscript nil))
+          (when (general-grammar-symbol? production-rhs-component)
+            (let ((symbol (general-grammar-symbol-symbol production-rhs-component)))
+              (when (gethash symbol counts-hash)
+                (setq subscript (incf (gethash symbol counts-hash))))))
+          (depict-space markup-stream)
+          (depict-production-rhs-component markup-stream production-rhs-component subscript)))
       (depict markup-stream " " :left-angle-quote "empty" :right-angle-quote))))
 
 
@@ -1092,7 +1091,7 @@
   (items-hash nil :type (or null hash-table))            ;Hash table of (production . dot) -> item; nil for a cleaned grammar or a grammar without a parser
   (states nil :type list)                                ;List of LR(0) states (in order of state numbers)
   ;The following fields are used for the action generator.
-  (action-signatures nil :type (or null hash-table)))    ;Hash table of grammar-symbol -> list of (action-symbol . type-or-type-expr)
+  (action-signatures nil :type (or null hash-table)))    ;Hash table of grammar-symbol -> list of (action-symbol type-or-type-expr writable)
 
 
 ; Return a list of the given terminal's variants, including the terminal itself.

@@ -331,6 +331,12 @@
                      :break 1)))))
 
 
+; (writable-cell <element-type>)
+;   "<element-type>"
+(defun depict-writable-cell (markup-stream world level element-type-expr)
+  (depict-type-expr markup-stream world element-type-expr level))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DEPICTING EXPRESSIONS
 
@@ -906,6 +912,14 @@
   (depict-in-or-not-in markup-stream world level value-annotated-expr type type-expr :not-member-10 :not-equal))
 
 
+;;; Writable Cells
+
+; (writable-cell-of <element-type>)
+(defun depict-writable-cell-of (markup-stream world level)
+  (declare (ignore markup-stream world level))
+  (error "No notation to creation of a writable cell"))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DEPICTING STATEMENTS
 
@@ -982,9 +996,11 @@
 
 
 ; (<- <name> <value>)
-(defun depict-<- (markup-stream world semicolon last-paragraph-style name value-annotated-expr)
+(defun depict-<- (markup-stream world semicolon last-paragraph-style name value-annotated-expr global)
   (depict-paragraph (markup-stream last-paragraph-style)
-    (depict-local-variable markup-stream name)
+    (if global
+      (depict-global-variable markup-stream name :reference)
+      (depict-local-variable markup-stream name))
     (depict markup-stream " " :assign-10)
     (depict-logical-block (markup-stream 6)
       (depict-break markup-stream 1)
@@ -996,6 +1012,17 @@
 (defun depict-&= (markup-stream world semicolon last-paragraph-style record-type label record-annotated-expr value-annotated-expr)
   (depict-paragraph (markup-stream last-paragraph-style)
     (depict-& markup-stream world %unary% record-type label record-annotated-expr)
+    (depict markup-stream " " :assign-10)
+    (depict-logical-block (markup-stream 6)
+      (depict-break markup-stream 1)
+      (depict-expression markup-stream world value-annotated-expr %expr%)
+      (depict-semicolon markup-stream semicolon))))
+
+
+; (action<- <action> <value>)
+(defun depict-action<- (markup-stream world semicolon last-paragraph-style action-annotated-expr value-annotated-expr)
+  (depict-paragraph (markup-stream last-paragraph-style)
+    (depict-expression markup-stream world action-annotated-expr %expr%)
     (depict markup-stream " " :assign-10)
     (depict-logical-block (markup-stream 6)
       (depict-break markup-stream 1)
@@ -1414,10 +1441,10 @@
     (depict-type-expr markup-stream world type-expr)))
 
 
-(defun depict-equals-and-value (markup-stream world value-annotated-expr)
+(defun depict-equals-and-value (markup-stream world value-annotated-expr assignment)
   (depict-break markup-stream 1)
   (depict-logical-block (markup-stream 4)
-    (depict markup-stream "= ")
+    (depict markup-stream assignment " ")
     (depict-expression markup-stream world value-annotated-expr %expr%)
     (depict markup-stream ";")))
 
@@ -1449,7 +1476,19 @@
         (depict-logical-block (markup-stream 0)
           (depict-global-variable markup-stream name :definition)
           (depict-colon-and-type markup-stream world type-expr)
-          (depict-equals-and-value markup-stream world value-annotated-expr))))))
+          (depict-equals-and-value markup-stream world value-annotated-expr "="))))))
+
+
+; (defvar <name> <type> <value>)
+(defun depict-defvar (markup-stream world depict-env name type-expr value-expr)
+  (let ((value-annotated-expr (nth-value 2 (scan-value world *null-type-env* value-expr))))
+    (if (eq (car value-annotated-expr) 'expr-annotation:begin)
+      (error "defvar shouldn't use begin")
+      (depict-semantics (markup-stream depict-env)
+        (depict-logical-block (markup-stream 0)
+          (depict-global-variable markup-stream name :definition)
+          (depict-colon-and-type markup-stream world type-expr)
+          (depict-equals-and-value markup-stream world value-annotated-expr :assign-10))))))
 
 
 ; (defun <name> (-> (<type1> ... <typen>) <result-type>) (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
@@ -1524,10 +1563,11 @@
 
 ; (declare-action <action-name> <general-grammar-symbol> <type> <mode> <parameter-list> <command> ... <command>)
 ; <mode> is one of:
-;    :hide      Don't depict this action declaration because it's for a hidden production
-;    :singleton Don't depict this action declaration because it contains a singleton production
+;    :hide      Don't depict this action declaration because it's for a hidden production;
+;    :singleton Don't depict this action declaration because it contains a singleton production;
 ;    :action    Depict this action declaration; all corresponding actions will be depicted by depict-action;
 ;    :actfun    Depict this action declaration; all corresponding actions will be depicted by depict-actfun;
+;    :writable  Depict this action declaration but not actions.
 ; <parameter-list> contains the names of the action parameters when <mode> is :actfun.
 (defun depict-declare-action (markup-stream world depict-env action-name general-grammar-symbol-source type-expr mode parameter-list &rest commands)
   (let* ((grammar-info (checked-depict-env-grammar-info depict-env))
@@ -1563,7 +1603,12 @@
                (depict-paragraph (markup-stream :statement-last)
                  (depict-semantic-keyword markup-stream 'end :after)
                  (depict-semantic-keyword markup-stream 'proc nil)
-                 (depict markup-stream ";"))))))))))
+                 (depict markup-stream ";"))))))
+        (:writable
+         (depict-delayed-action (markup-stream depict-env action-name)
+           (depict-semantics (markup-stream depict-env)
+             (depict-declare-action-contents markup-stream world action-name general-grammar-symbol type-expr)
+             (depict markup-stream ";"))))))))
 
 
 ; Declare and define the lexer-action on the charclass given by nonterminal.
@@ -1617,7 +1662,7 @@
            (general-production (grammar-general-production grammar production-name))
            (lhs (general-production-lhs general-production)))
       (unless (hidden-nonterminal? lhs)
-        (let* ((initial-env (general-production-action-env grammar general-production))
+        (let* ((initial-env (general-production-action-env grammar general-production t))
                (type (scan-type world type-expr))
                (value-annotated-expr (nth-value 1 (scan-typed-value-or-begin world initial-env value-expr type)))
                (action-grammar-symbols (annotated-expr-grammar-symbols value-annotated-expr))
@@ -1660,7 +1705,7 @@
                       (depict-action-signature markup-stream action-name general-production action-grammar-symbols)
                       (when (eq mode :singleton)
                         (depict-colon-and-type markup-stream world type-expr))
-                      (depict-equals-and-value markup-stream world value-annotated-expr))))))))))))
+                      (depict-equals-and-value markup-stream world value-annotated-expr "="))))))))))))
 
 
 ; (terminal-action <action-name> <terminal> <lisp-function>)

@@ -830,6 +830,7 @@
 ;;;   <value>        value of this identifier if it is a variable of type other than ->
 ;;;   <function>     value of this identifier if it is a variable of type ->
 ;;;   :value-expr    unparsed expression defining the value of this identifier if it is a variable
+;;;   :mutable       if present and non-nil, this identifier is a mutable variable
 ;;;   :type          type of this identifier if it is a variable
 ;;;   :type-expr     unparsed expression defining the type of this identifier if it is a variable
 ;;;   :tag           tag structure if this identifier is a tag
@@ -1049,22 +1050,23 @@
 ;;; TYPES
 
 (deftype typekind ()
-         '(member     ;tag              ;parameters
-           :bottom    ;nil              ;nil
-           :void      ;nil              ;nil
-           :boolean   ;nil              ;nil
-           :integer   ;nil              ;nil
-           :rational  ;nil              ;nil
-           :finite64  ;nil              ;nil    ;All non-zero finite 64-bit double-precision floating-point numbers
-           :character ;nil              ;nil
-           :->        ;nil              ;(result-type arg1-type arg2-type ... argn-type)
-           :string    ;nil              ;(character)
-           :vector    ;nil              ;(element-type)
-           :list-set  ;nil              ;(element-type)
-           :range-set ;nil              ;(element-type)
-           :tag       ;tag              ;nil
-           :denormalized-tag ;tag       ;nil
-           :union))   ;nil              ;(type ... type) sorted by ascending serial numbers
+         '(member            ;tag              ;parameters
+           :bottom           ;nil              ;nil
+           :void             ;nil              ;nil
+           :boolean          ;nil              ;nil
+           :integer          ;nil              ;nil
+           :rational         ;nil              ;nil
+           :finite64         ;nil              ;nil    ;All non-zero finite 64-bit double-precision floating-point numbers
+           :character        ;nil              ;nil
+           :->               ;nil              ;(result-type arg1-type arg2-type ... argn-type)
+           :string           ;nil              ;(character)
+           :vector           ;nil              ;(element-type)
+           :list-set         ;nil              ;(element-type)
+           :range-set        ;nil              ;(element-type)
+           :tag              ;tag              ;nil
+           :denormalized-tag ;tag              ;nil
+           :union            ;nil              ;(type ... type) sorted by ascending serial numbers
+           :writable-cell))  ;nil              ;(element-type)
 
 ;A denormalized-tag is a singleton tag type whose value carries no meaning.
 ;
@@ -1156,6 +1158,16 @@
 (defun make-denormalized-tag-type (world tag)
   (assert-true (tag-keyword tag))
   (make-type world :denormalized-tag tag nil 'always-true 'always-false))
+
+
+(declaim (inline make-writable-cell-type))
+(defun make-writable-cell-type (world element-type)
+  (make-type world :writable-cell nil (list element-type) nil nil))
+
+(declaim (inline writable-cell-element-type))
+(defun writable-cell-element-type (type)
+  (assert-true (eq (type-kind type) :writable-cell))
+  (car (type-parameters type)))
 
 
 ; Return true if the type is a tag type or a union of tag types all of which have a field with
@@ -1593,6 +1605,9 @@
                   (print-type (pprint-pop) stream)
                   (pprint-exit-if-list-exhausted)
                   (format stream " ~:_"))))
+      (:writable-cell (pprint-logical-block (stream nil :prefix "(" :suffix ")")
+                        (format stream "writable-cell ~@_")
+                        (print-type (writable-cell-element-type type) stream)))
       (t (error "Bad typekind ~S" (type-kind type))))))
 
 
@@ -1717,6 +1732,11 @@
   (apply #'make-union-type world (mapcar #'(lambda (type-expr)
                                              (scan-type world type-expr allow-forward-references))
                                          type-exprs)))
+
+
+; (writable-cell <element-type>)
+(defun scan-writable-cell (world allow-forward-references element-type)
+  (make-writable-cell-type world (scan-type world element-type allow-forward-references)))
 
 
 ; Resolve all forward type references to refer to their target types.
@@ -2115,6 +2135,7 @@
   ;                       ;   index is the one-based index used to distinguish among identical
   ;                       ;     symbols in the rhs of a production.  The first occurrence of this
   ;                       ;     symbol has index 1, the second has index 2, and so on.
+  ;                       ;     The occurrence of symbol on the left side of the production has index 0.
   local-symbol            ;A unique local variable name used to represent the action function's value in the generated lisp code
   type                    ;Type of the action function's value
   general-grammar-symbol) ;The general-grammar-symbol corresponding to the index-th instance of symbol in the production's rhs
@@ -2133,12 +2154,7 @@
 
 ; If the currently generated function is an action for a rule with at least index
 ; instances of the given grammar-symbol's symbol on the right-hand side, and if action is
-; a legal action for that symbol, return three values:
-;   the name to use from the generated lisp code to refer to the result of calling
-;     the action on the index-th instance of this symbol;
-;   the action result's type;
-;   the general-grammar-symbol corresponding to the index-th instance of this symbol in the rhs.
-; Otherwise, return nil.
+; a legal action for that symbol, return the type-env-action; otherwise, return nil.
 ; action must already be world-interned.
 (defun type-env-get-action (type-env action symbol index)
   (assoc (list* action symbol index) type-env :test #'equal))
@@ -2233,6 +2249,8 @@
 ;;;   A range-set of integers or characters (represented by an intset of its elements converted to integers)
 ;;;   A tag (represented by either a keyword or a list (keyword [serial-num] field-value1 ... field-value n));
 ;;;     serial-num is a unique integer present only on mutable tag instances.
+;;;   A writable-cell (represented by a cons whose car is a flag that is true if the cell is initialized
+;;;     and cdr is nil or the value)
 
 
 ; Return true if the value appears to have the given tag.  This function
@@ -2280,6 +2298,10 @@
     (:tag (value-has-tag value (type-tag type) shallow))
     (:union (some #'(lambda (subtype) (value-has-type value subtype shallow))
                   (type-parameters type)))
+    (:writable-cell (and (consp value)
+                         (if (car value)
+                           (or shallow (value-has-type (cdr value) (writable-cell-element-type type)))
+                           (null (cdr value)))))
     (t (error "Bad typekind ~S" (type-kind type)))))
 
 
@@ -2350,6 +2372,9 @@
               (when (value-has-type value subtype t)
                 (print-value value subtype stream)
                 (return))))
+    (:writable-cell (if (car value)
+                      (print-value (cdr value) (writable-cell-element-type type) stream)
+                      (write-string "uninitialized" stream)))
     (t (error "Bad typekind ~S" (type-kind type)))))
 
 
@@ -2404,13 +2429,45 @@
        (eq (second annotated-expr) (world-find-symbol world special-form))))
 
 
-; Return the value of the variable with the given symbol.
+; Return the value of the global variable with the given symbol.
 ; Compute the value if the variable was unbound.
 ; Use the *busy-variables* list to prevent infinite recursion while computing variable values.
 (defmacro fetch-value (symbol)
   `(if (boundp ',symbol)
      (symbol-value ',symbol)
      (compute-variable-value ',symbol)))
+
+
+; Store the value into the global variable with the given symbol.
+(defmacro store-global-value (symbol value)
+  `(if (boundp ',symbol)
+     (setf (symbol-value ',symbol) ,value)
+     (error "Unbound variable ~S" ',symbol)))
+
+
+; Generate a lisp expression that will call the given action on the grammar symbol.
+; type-env is the type environment.
+; Return three values:
+;   The expression's value (a lisp expression)
+;   The expression's type
+;   The annotated value-expr
+(defun scan-action-call (type-env action symbol &optional (index 1 index-supplied))
+  (unless (integerp index)
+    (error "Production rhs grammar symbol index ~S must be an integer" index))
+  (let ((symbol-action (type-env-get-action type-env action symbol index)))
+    (unless symbol-action
+      (error "Action ~S not found" (list action symbol index)))
+    (let ((multiple-symbols (type-env-get-action type-env action symbol (if (= index 0) 1 2))))
+      (when (and (not index-supplied) multiple-symbols)
+        (error "Ambiguous index in action ~S" (list action symbol)))
+      (when (and (= index 1)
+                 (not multiple-symbols)
+                 (grammar-symbol-= symbol (assert-non-null (get-type-env-flag type-env :lhs-symbol))))
+        (setq multiple-symbols t))
+      (values (type-env-action-local-symbol symbol-action)
+              (type-env-action-type symbol-action)
+              (list* 'expr-annotation:action action (type-env-action-general-grammar-symbol symbol-action)
+                     (and multiple-symbols (list index)))))))
 
 
 ; Generate a lisp expression that will compute the value of value-expr.
@@ -2459,23 +2516,6 @@
                          (->-result-type function-type)
                          (list* 'expr-annotation:call function-annotated-expr arg-annotated-exprs))))))))
      
-     ;Scan an action call
-     (scan-action-call (action symbol &optional (index 1 index-supplied))
-       (unless (integerp index)
-         (error "Production rhs grammar symbol index ~S must be an integer" index))
-       (let ((symbol-action (type-env-get-action type-env action symbol index)))
-         (unless symbol-action
-           (error "Action ~S not found" (list action symbol index)))
-         (let ((multiple-symbols (type-env-get-action type-env action symbol 2)))
-           (when (and (not index-supplied) multiple-symbols)
-             (error "Ambiguous index in action ~S" (list action symbol)))
-           (values (type-env-action-local-symbol symbol-action)
-                   (type-env-action-type symbol-action)
-                   (list* 'expr-annotation:action action (type-env-action-general-grammar-symbol symbol-action)
-                          (and (or multiple-symbols
-                                   (grammar-symbol-= symbol (assert-non-null (get-type-env-flag type-env :lhs-symbol))))
-                               (list index)))))))
-     
      ;Scan an interned identifier
      (scan-identifier (symbol)
        (let ((symbol-binding (type-env-get-local type-env symbol)))
@@ -2517,7 +2557,17 @@
                (if (and (symbol-action symbol)
                         (let ((local (type-env-get-local type-env symbol)))
                           (not (and local (eq (type-kind (type-env-local-type local)) :->)))))
-                 (apply #'scan-action-call symbol rest)
+                 (multiple-value-bind (action-value action-type action-annotated-expr) (apply #'scan-action-call type-env symbol rest)
+                   (if (eq (type-kind action-type) :writable-cell)
+                     (progn
+                       (assert-true (symbolp action-value))
+                       (values
+                        `(if (car ,action-value)
+                           (cdr ,action-value)
+                           (error "Uninitialized writable-cell"))
+                        (writable-cell-element-type action-type)
+                        action-annotated-expr))
+                     (values action-value action-type action-annotated-expr)))
                  (multiple-value-call #'scan-call (scan-identifier symbol) rest)))))
          (multiple-value-call #'scan-call (scan-value world type-env first) rest)))
      
@@ -3607,6 +3657,19 @@
        true-type-env))))
 
 
+;;; Writable Cells
+
+; (writable-cell-of <element-type>)
+; Makes an uninitialized writable cell of the given type.
+(defun scan-writable-cell-of (world type-env special-form element-type-expr)
+  (declare (ignore type-env))
+  (let ((element-type (scan-type world element-type-expr)))
+    (values
+     '(cons nil nil)
+     (make-writable-cell-type world element-type)
+     (list* 'expr-annotation:special-form special-form))))
+
+
 
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; STATEMENT EXPRESSIONS
@@ -3653,29 +3716,35 @@
 ; Compute the initial type-env to use for the given general-production's action code.
 ; The first cell of the type-env gives the production's lhs nonterminal's symbol;
 ; the remaining cells give the action arguments in order.
-(defun general-production-action-env (grammar general-production)
-  (let* ((current-indices nil)
+; If include-lhs is true, include the lhs's actions with index 0 at the beginning of the
+; environment.
+(defun general-production-action-env (grammar general-production include-lhs)
+  (let* ((index-override nil)
+         (current-indices nil)
          (lhs-general-nonterminal (general-production-lhs general-production))
          (bound-arguments-alist (nonterminal-sample-bound-argument-alist grammar lhs-general-nonterminal)))
-    (set-type-env-flag 
-     (mapcan
-      #'(lambda (general-grammar-symbol)
-          (let* ((symbol (general-grammar-symbol-symbol general-grammar-symbol))
-                 (index (incf (getf current-indices symbol 0)))
-                 (grammar-symbol (instantiate-general-grammar-symbol bound-arguments-alist general-grammar-symbol)))
-            (mapcar
-             #'(lambda (declaration)
-                 (let* ((action-symbol (car declaration))
-                        (action-type (cdr declaration))
-                        (local-symbol (gensym (symbol-name action-symbol))))
-                   (make-type-env-action
-                    (list* action-symbol symbol index)
-                    local-symbol
-                    action-type
-                    general-grammar-symbol)))
-             (grammar-symbol-signature grammar grammar-symbol))))
-      (general-production-rhs general-production))
-     :lhs-symbol (general-grammar-symbol-symbol lhs-general-nonterminal))))
+    (flet ((general-symbol-action-env (general-grammar-symbol)
+             (let* ((symbol (general-grammar-symbol-symbol general-grammar-symbol))
+                    (index (or index-override (incf (getf current-indices symbol 0))))
+                    (grammar-symbol (instantiate-general-grammar-symbol bound-arguments-alist general-grammar-symbol)))
+               (mapcar
+                #'(lambda (declaration)
+                    (let* ((action-symbol (car declaration))
+                           (action-type (cdr declaration))
+                           (local-symbol (gensym (symbol-name action-symbol))))
+                      (make-type-env-action
+                       (list* action-symbol symbol index)
+                       local-symbol
+                       action-type
+                       general-grammar-symbol)))
+                (grammar-symbol-signature grammar grammar-symbol)))))
+      (let ((env (set-type-env-flag 
+                  (mapcan #'general-symbol-action-env (general-production-rhs general-production))
+                  :lhs-symbol (general-grammar-symbol-symbol lhs-general-nonterminal))))
+        (when include-lhs
+          (setq index-override 0)
+          (setq env (nconc (general-symbol-action-env lhs-general-nonterminal) env)))
+        env))))
 
 
 ; Return the number of arguments that a function returned by compute-action-code
@@ -3690,13 +3759,7 @@
 ; Compute the code for evaluating body-expr to obtain the value of one of the
 ; production's actions.  Verify that the result has the given type and that the
 ; type is the same as type-expr.
-; The code is a lambda-expression that takes as arguments the results of all
-; defined actions on the production's rhs.  The arguments are listed in the
-; same order as the grammar symbols in the rhs.  If a grammar symbol in the rhs
-; has more than one associated action, arguments are used corresponding to all
-; of the actions in the same order as they were declared.  If a grammar symbol
-; in the rhs has no associated actions, no argument is used for it.
-(defun compute-action-code (world grammar production action-symbol type-expr body-expr type)
+(defun compute-action-code (world production action-symbol type-expr body-expr type initial-env)
   (handler-bind (((or error warning)
                   #'(lambda (condition)
                       (declare (ignore condition))
@@ -3706,17 +3769,67 @@
       (unless (type= type type2)
         (error "Action declared using type ~A but defined using ~A"
                (print-type-to-string type) (print-type-to-string type2))))
-    (let* ((initial-env (general-production-action-env grammar production))
-           (args (mapcar #'cadr (cdr initial-env)))
-           (body-code (scan-typed-value-or-begin world initial-env body-expr type))
-           (named-body-code (name-lambda body-code
-                                         (concatenate 'string (symbol-name (production-name production))
-                                                      "~" (symbol-name action-symbol))
-                                         (world-package world))))
-      (gen-lambda args named-body-code))))
+    (let ((body-code (scan-typed-value-or-begin world initial-env body-expr type)))
+      (name-lambda body-code
+                   (concatenate 'string (symbol-name (production-name production))
+                                "~" (symbol-name action-symbol))
+                   (world-package world)))))
 
 
-; Return a list of all grammar symbols's symbols that are present in at least one expr-annotation:action
+; Compute the body of all grammar actions for this production.
+(defun compute-production-code (world grammar production)
+  (let* ((lhs (production-lhs production))
+         (n-action-args (n-action-args grammar production))
+         (initial-env (general-production-action-env grammar production nil))
+         (args (mapcar #'cadr (cdr initial-env))))
+    (assert-true (= (length args) n-action-args))
+    (let* ((result-vars nil)
+           (code-bindings
+            (mapcar
+             #'(lambda (action-binding)
+                 (let ((action-symbol (car action-binding))
+                       (action (cdr action-binding)))
+                   (unless action
+                     (error "Missing action ~S for production ~S" (car action-binding) (production-name production)))
+                   (multiple-value-bind (has-type type) (action-declaration grammar (production-lhs production) action-symbol)
+                     (declare (ignore has-type))
+                     (let ((code (compute-action-code world production action-symbol (action-type action) (action-expr action) type initial-env))
+                           (result-var (gensym (symbol-name action-symbol))))
+                       (when *trace-variables*
+                         (format *trace-output* "~&~@<~S[~S] := ~2I~_~:W~:>~%" action-symbol (production-name production) code))
+                       (push result-var result-vars)
+                       (push (make-type-env-action
+                              (list* action-symbol (general-grammar-symbol-symbol lhs) 0)
+                              result-var
+                              type
+                              lhs)
+                             initial-env)
+                       (list result-var code)))))
+             (production-actions production)))
+           (filtered-args (mapcar #'(lambda (arg)
+                                      (and (tree-member arg code-bindings) arg))
+                                  args))
+           (production-code
+            (if code-bindings
+              `(lambda (stack)
+                 (list*-bind ,(nreconc filtered-args '(stack-rest)) stack
+                   (let* ,code-bindings
+                     (list* ,@result-vars stack-rest))))
+              `(lambda (stack)
+                 (nthcdr ,n-action-args stack))))
+           (production-code-name (unique-function-name world (string (production-name production)))))
+      (setf (production-n-action-args production) n-action-args)
+      (when *trace-variables*
+        (format *trace-output* "~&~@<all[~S] := ~2I~_~:W~:>~%" (production-name production) production-code))
+      (handler-bind (((or error warning)
+                      #'(lambda (condition)
+                          (declare (ignore condition))
+                          (format *error-output* "~&While computing production ~S:~%" (production-name production)))))
+        (quiet-compile production-code-name production-code)
+        (setf (production-evaluator production) (symbol-function production-code-name))))))
+
+
+; Return a list of all grammar symbols' symbols that are present in at least one expr-annotation:action
 ; in the annotated expression.  The symbols are returned in no particular order.
 (defun annotated-expr-grammar-symbols (annotated-expr)
   (let ((symbols nil))
@@ -3796,21 +3909,31 @@
 
 
 ; (<- <name> <value>)
-; Mutate the local variable.
+; Mutate the local or global variable.
 (defun scan-<- (world type-env rest-statements last special-form name value-expr)
   (let* ((symbol (scan-name world name))
-         (symbol-binding (type-env-get-local type-env symbol)))
-    (unless symbol-binding
-      (error "Unknown local variable ~A" name))
-    (unless (eq (type-env-local-mode symbol-binding) :var)
-      (error "Local variable ~A not writable" name))
-    (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr (type-env-local-type symbol-binding))
+         (symbol-binding (type-env-get-local type-env symbol))
+         type)
+    (if symbol-binding
+      (if (eq (type-env-local-mode symbol-binding) :var)
+        (setq type (type-env-local-type symbol-binding))
+        (error "Local variable ~A not writable" name))
+      (progn
+        (setq type (symbol-type symbol))
+        (unless type
+          (error "Unknown local or global variable ~A" name))
+        (unless (get symbol :mutable)
+          (error "Global variable ~A not writable" name))))
+    (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr type)
       (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
                            (scan-statements world type-env rest-statements last t)
         (values
-         (cons (list 'setq (type-env-local-name symbol-binding) value-code) rest-codes)
+         (cons (if symbol-binding
+                 (list 'setq (type-env-local-name symbol-binding) value-code)
+                 (list 'store-global-value symbol value-code))
+               rest-codes)
          rest-live
-         (cons (list special-form name value-annotated-expr) rest-annotated-stmts))))))
+         (cons (list special-form name value-annotated-expr (not symbol-binding)) rest-annotated-stmts))))))
 
 
 ; (&= <record-expr> <value-expr>)
@@ -3853,6 +3976,39 @@
               rest-codes)
              rest-live
              (cons (list special-form record-type label record-annotated-expr value-annotated-expr) rest-annotated-stmts))))))))
+
+
+; (action<- <action> <value>)
+; Mutate the writable action.  This can be done only once per action.
+(defun scan-action<- (world type-env rest-statements last special-form action value-expr)
+  (unless (and (consp action) (identifier? (first action)))
+    (error "Bad action: ~S" action))
+  (let ((symbol (world-intern world (first action))))
+    (unless (symbol-action symbol)
+      (error "~S is not an action name" (first action)))
+    (multiple-value-bind (action-value action-type action-annotated-expr) (apply #'scan-action-call type-env symbol (rest action))
+      (unless (eq (type-kind action-type) :writable-cell)
+        (error "action<- type ~S must be a writable-cell" action-type))
+      (assert-true (symbolp action-value))
+      (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr (writable-cell-element-type action-type))
+        (multiple-value-bind (rest-codes rest-live rest-annotated-stmts)
+                             (scan-statements world type-env rest-statements last t)
+          (values
+           (if (or (symbolp value-code) (numberp value-code))
+             (list* `(when (car ,action-value)
+                       (error "Attempt to write ~S to an already initialized writable-cell ~S" ,value-code ,action-value))
+                    `(setf (car ,action-value) t)
+                    `(setf (cdr ,action-value) ,value-code)
+                    rest-codes)
+             (let ((v (gensym "V")))
+               (cons `(let ((,v ,value-code))
+                        (when (car ,action-value)
+                          (error "Attempt to write ~S to an already initialized writable-cell ~S" ,v ,action-value))
+                        (setf (car ,action-value) t)
+                        (setf (cdr ,action-value) ,v))
+                     rest-codes)))
+           rest-live
+           (cons (list special-form action-annotated-expr value-annotated-expr) rest-annotated-stmts)))))))
 
 
 ; (return [<value-expr>])
@@ -4174,7 +4330,7 @@
 
 ; (define <name> <type> <value>)
 ; (defun <name> (-> (<type1> ... <typen>) <result-type>) (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
-; Create the variable in the world but do not evaluate its type or value yet.
+; Create the constant in the world but do not evaluate its type or value yet.
 (defun scan-define (world grammar-info-var name type-expr value-expr)
   (declare (ignore grammar-info-var))
   (let ((symbol (scan-name world name)))
@@ -4182,6 +4338,19 @@
       (error "Attempt to redefine variable ~A" symbol))
     (setf (get symbol :value-expr) value-expr)
     (setf (get symbol :type-expr) type-expr)
+    (export-symbol symbol)))
+
+
+; (defvar <name> <type> <value>)
+; Create the variable in the world but do not evaluate its type or value yet.
+(defun scan-defvar (world grammar-info-var name type-expr value-expr)
+  (declare (ignore grammar-info-var))
+  (let ((symbol (scan-name world name)))
+    (unless (eq (get symbol :value-expr *get2-nonce*) *get2-nonce*)
+      (error "Attempt to redefine variable ~A" symbol))
+    (setf (get symbol :value-expr) value-expr)
+    (setf (get symbol :type-expr) type-expr)
+    (setf (get symbol :mutable) t)
     (export-symbol symbol)))
 
 
@@ -4211,14 +4380,15 @@
 
 ; (declare-action <action-name> <general-grammar-symbol> <type> <mode> <parameter-list> <command> ... <command>)
 ; <mode> is one of:
-;    :hide      Don't depict this action declaration because it's for a hidden production
-;    :singleton Don't depict this action declaration because it contains a singleton production
+;    :hide      Don't depict this action declaration because it's for a hidden production;
+;    :singleton Don't depict this action declaration because it contains a singleton production;
 ;    :action    Depict this action declaration; all corresponding actions will be depicted by depict-action;
 ;    :actfun    Depict this action declaration; all corresponding actions will be depicted by depict-actfun;
+;    :writable  Depict this action declaration but not actions.
 ; <parameter-list> contains the names of the action parameters when <mode> is :actfun.
 (defun scan-declare-action (world grammar-info-var action-name general-grammar-symbol-source type-expr mode parameter-list &rest commands)
   (declare (ignore parameter-list))
-  (unless (member mode '(:hide :singleton :action :actfun))
+  (unless (member mode '(:hide :singleton :action :actfun :writable))
     (error "Bad declare-action mode ~S" mode))
   (let* ((grammar (checked-grammar grammar-info-var))
          (action-symbol (scan-name world action-name))
@@ -4235,9 +4405,9 @@
 ; <mode> is one of:
 ;    :hide      Don't depict this action;
 ;    :singleton Depict this action along with its declaration;
-;    :first     Depict this action, which is the first in the rule
-;    :middle    Depict this action, which is neither the first nor the last in the rule
-;    :last      Depict this action, which is the last in the rule
+;    :first     Depict this action, which is the first in the rule;
+;    :middle    Depict this action, which is neither the first nor the last in the rule;
+;    :last      Depict this action, which is the last in the rule.
 (defun scan-action (world grammar-info-var action-name production-name type-expr mode value-expr)
   (unless (member mode '(:hide :singleton :first :middle :last))
     (error "Bad action mode ~S" mode))
@@ -4285,6 +4455,7 @@
      (deftype scan-deftype depict-deftype)
      (define scan-define depict-define)
      (defun scan-define depict-defun)    ;Occurs from desugaring a function define
+     (defvar scan-defvar depict-defvar)
      (set-grammar scan-set-grammar depict-set-grammar)
      (clear-grammar scan-clear-grammar depict-clear-grammar)
      (declare-action scan-declare-action depict-declare-action)
@@ -4300,6 +4471,7 @@
      (function scan-function depict-function)
      (<- scan-<- depict-<-)
      (&= scan-&= depict-&=)
+     (action<- scan-action<- depict-action<-)
      (return scan-return depict-return)
      (rwhen scan-rwhen depict-cond)
      (when scan-when depict-cond)
@@ -4366,7 +4538,10 @@
      
      ;;Unions
      (in scan-in depict-in)
-     (not-in scan-not-in depict-not-in))
+     (not-in scan-not-in depict-not-in)
+     
+     ;;Writable Cells
+     (writable-cell-of scan-writable-cell-of depict-writable-cell-of)) ;For internal use only
     
     (:condition
      (not scan-not-condition)
@@ -4382,7 +4557,8 @@
      (list-set scan-list-set depict-set)
      (range-set scan-range-set depict-set)
      (tag scan-tag-type depict-tag-type)
-     (union scan-union depict-union))))
+     (union scan-union depict-union)
+     (writable-cell scan-writable-cell depict-writable-cell))))
 
 
 (defparameter *default-primitives*
@@ -4724,43 +4900,7 @@
     (each-grammar-production
      grammar
      #'(lambda (production)
-         (let* ((n-action-args (n-action-args grammar production))
-                (codes
-                 (mapcar
-                  #'(lambda (action-binding)
-                      (let ((action-symbol (car action-binding))
-                            (action (cdr action-binding)))
-                        (unless action
-                          (error "Missing action ~S for production ~S" (car action-binding) (production-name production)))
-                        (multiple-value-bind (has-type type) (action-declaration grammar (production-lhs production) action-symbol)
-                          (declare (ignore has-type))
-                          (let ((code (compute-action-code world grammar production action-symbol (action-type action) (action-expr action) type)))
-                            (setf (action-code action) code)
-                            (when *trace-variables*
-                              (format *trace-output* "~&~@<~S[~S] := ~2I~_~:W~:>~%" action-symbol (production-name production) code))
-                            code))))
-                  (production-actions production)))
-                (production-code
-                 (if codes
-                   (let* ((vars-and-rest (intern-n-vars-with-prefix "ARG" n-action-args '(stack-rest)))
-                          (vars (nreverse (butlast vars-and-rest)))
-                          (applied-codes (mapcar #'(lambda (code) (apply #'gen-apply code vars))
-                                                 (nreverse codes))))
-                     `(lambda (stack)
-                        (list*-bind ,vars-and-rest stack
-                          (list* ,@applied-codes stack-rest))))
-                   `(lambda (stack)
-                      (nthcdr ,n-action-args stack))))
-                (production-code-name (unique-function-name world (string (production-name production)))))
-           (setf (production-n-action-args production) n-action-args)
-           (when *trace-variables*
-             (format *trace-output* "~&~@<all[~S] := ~2I~_~:W~:>~%" (production-name production) production-code))
-           (handler-bind (((or error warning)
-                           #'(lambda (condition)
-                               (declare (ignore condition))
-                               (format *error-output* "~&While computing production ~S:~%" (production-name production)))))
-             (quiet-compile production-code-name production-code)
-             (setf (production-evaluator production) (symbol-function production-code-name))))))))
+         (compute-production-code world grammar production)))))
 
 
 ; Evaluate the given commands in the world.
@@ -5141,23 +5281,34 @@
   (assert-type action-declarations (list (tuple symbol t)))
   (preprocess-ensure-grammar preprocessor-state)
   (labels
-    ((actions-match (action-declarations parameter-lists actions)
+    ((writable-action (action-declaration)
+       (let ((type (second action-declaration)))
+         (and (consp type)
+              (eq (first type) 'writable-cell))))
+     
+     (actions-match (action-declarations parameter-lists actions)
        (or (and (endp action-declarations) (endp parameter-lists) (endp actions))
-           (let ((declared-action-name (caar action-declarations))
-                 (action-name (caar actions))
-                 (parameter-list :value))
-             (when (consp action-name)
-               (setq parameter-list (mapcar #'(lambda (arg)
-                                                (if (consp arg)
-                                                  (first arg)
-                                                  arg))
-                                            (rest action-name)))
-               (setq action-name (first action-name)))
-             (when (eq (first parameter-lists) t)
-               (setf (first parameter-lists) parameter-list))
-             (and (eq declared-action-name action-name)
-                  (equal (first parameter-lists) parameter-list)
-                  (actions-match (rest action-declarations) (rest parameter-lists) (rest actions)))))))
+           (let ((action-declaration (first action-declarations)))
+             (if (writable-action action-declaration)
+               (progn
+                 (when (eq (first parameter-lists) t)
+                   (setf (first parameter-lists) :value))
+                 (actions-match (rest action-declarations) (rest parameter-lists) actions))
+               (let ((declared-action-name (first action-declaration))
+                     (action-name (caar actions))
+                     (parameter-list :value))
+                 (when (consp action-name)
+                   (setq parameter-list (mapcar #'(lambda (arg)
+                                                    (if (consp arg)
+                                                      (first arg)
+                                                      arg))
+                                                (rest action-name)))
+                   (setq action-name (first action-name)))
+                 (when (eq (first parameter-lists) t)
+                   (setf (first parameter-lists) parameter-list))
+                 (and (eq declared-action-name action-name)
+                      (equal (first parameter-lists) parameter-list)
+                      (actions-match (rest action-declarations) (rest parameter-lists) (rest actions)))))))))
     
     (let* ((n-productions 0)
            (parameter-lists (make-list (length action-declarations) :initial-element t))
@@ -5180,34 +5331,41 @@
               (preprocessor-state-highlight preprocessor-state)))))
       (when (= n-productions 0)
         (error "Empty rule"))
-      (dotimes (i (length action-declarations))
-        (let* ((action-declaration (pop action-declarations))
-               (parameter-list (pop parameter-lists))
-               (declare-mode (cond
-                              ((= n-productions 1) :singleton)
-                              ((eq parameter-list :value) :action)
-                              (t (assert-true (listp parameter-list)) :actfun)))
-               (j 0))
-          (push (list*
-                 'declare-action (first action-declaration) general-grammar-symbol (second action-declaration) declare-mode parameter-list
-                 (each-preprocessed-command
-                  #'(lambda (production highlight)
-                      (declare (ignore highlight))
-                      (let ((name (fourth production))
-                            (action (nth (+ i 4) production))
-                            (mode (cond
-                                   ((= n-productions 1) :singleton)
-                                   ((= j 0) :first)
-                                   ((= j (1- n-productions)) :last)
-                                   (t :middle))))
-                        (incf j)
-                        (list (list* 'action (first action) name (second action-declaration) mode (rest action)))))
-                  preprocessor-state
-                  productions
-                  (preprocessor-state-highlight preprocessor-state)))
-                commands-reverse)
-          (assert-true (= j n-productions))))
-      (values (nreverse commands-reverse) t))))
+      (let ((i 4))
+        (dolist (action-declaration action-declarations)
+          (let* ((parameter-list (pop parameter-lists))
+                 (writable (writable-action action-declaration))
+                 (declare-mode (cond
+                                (writable :writable)
+                                ((= n-productions 1) :singleton)
+                                ((eq parameter-list :value) :action)
+                                (t (assert-true (listp parameter-list)) :actfun)))
+                 (j 0))
+            (push (list*
+                   'declare-action (first action-declaration) general-grammar-symbol (second action-declaration) declare-mode parameter-list
+                   (each-preprocessed-command
+                    #'(lambda (production highlight)
+                        (declare (ignore highlight))
+                        (let ((name (fourth production))
+                              (action (if writable
+                                        (list (first action-declaration)
+                                              (list 'writable-cell-of (second (second action-declaration))))
+                                        (nth i production)))
+                              (mode (cond
+                                     ((= n-productions 1) :singleton)
+                                     ((= j 0) :first)
+                                     ((= j (1- n-productions)) :last)
+                                     (t :middle))))
+                          (incf j)
+                          (list (list* 'action (first action) name (second action-declaration) mode (rest action)))))
+                    preprocessor-state
+                    productions
+                    (preprocessor-state-highlight preprocessor-state)))
+                  commands-reverse)
+            (assert-true (= j n-productions))
+            (unless writable
+              (incf i))))
+        (values (nreverse commands-reverse) t)))))
 
 
 ; (exclude <lhs> ... <lhs>)
