@@ -367,8 +367,11 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
 	if (IS_STRING_ATTRIBUTE(m_attribute) && m_value.string)
 	{
 		PRBool	quoteVal = PR_FALSE;
-		// need to quote strings with ')' - filter code will escape quotes
-		if (PL_strchr(m_value.string, ')'))
+		// need to quote strings with ')' and strings starting with '"' or ' '
+		// filter code will escape quotes
+		if (PL_strchr(m_value.string, ')') ||
+			(m_value.string[0] == ' ') ||
+			(m_value.string[0] == '"'))
 		{
 			quoteVal = PR_TRUE;
 			outputStr += "\"";
