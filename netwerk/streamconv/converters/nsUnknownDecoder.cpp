@@ -307,6 +307,12 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
     }
   }
 
+  if (mContentType.IsEmpty()) {
+    // sniff the first couple bytes to see if we are dealing with an image 
+    // Unlike html, it is safe to sniff for image content types for local files so 
+    // we don't need to check for isLocalFile here..
+    SniffForImageMimeType((const char*)mBuffer, mBufferLen);
+  }
   //
   // See if the buffer has any embedded nulls.  If not, then lets just
   // call it text/plain...
@@ -325,6 +331,58 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
     mContentType = APPLICATION_OCTET_STREAM;
   }
 }
+
+// the following routine was ripped directly from some code in libpr0n...
+void nsUnknownDecoder::SniffForImageMimeType(const char *buf, PRUint32 len)
+{
+  /* Is it a GIF? */
+  if (len >= 4 && !nsCRT::strncmp(buf, "GIF8", 4))  {
+    mContentType = NS_LITERAL_CSTRING("image/gif");
+    return;
+  }
+
+  /* or a PNG? */
+  if (len >= 4 && ((unsigned char)buf[0]==0x89 &&
+                   (unsigned char)buf[1]==0x50 &&
+                   (unsigned char)buf[2]==0x4E &&
+                   (unsigned char)buf[3]==0x47))
+  { 
+    mContentType = NS_LITERAL_CSTRING("image/png");
+    return;
+  }
+
+  /* maybe a JPEG (JFIF)? */
+  /* JFIF files start with SOI APP0 but older files can start with SOI DQT
+   * so we test for SOI followed by any marker, i.e. FF D8 FF
+   * this will also work for SPIFF JPEG files if they appear in the future.
+   *
+   * (JFIF is 0XFF 0XD8 0XFF 0XE0 <skip 2> 0X4A 0X46 0X49 0X46 0X00)
+   */
+  if (len >= 3 &&
+     ((unsigned char)buf[0])==0xFF &&
+     ((unsigned char)buf[1])==0xD8 &&
+     ((unsigned char)buf[2])==0xFF)
+  {
+    mContentType = NS_LITERAL_CSTRING("image/jpeg");
+    return;
+  }
+
+  /* or how about ART? */
+  /* ART begins with JG (4A 47). Major version offset 2.
+   * Minor version offset 3. Offset 4 must be NULL.
+   */
+  if (len >= 5 &&
+   ((unsigned char) buf[0])==0x4a &&
+   ((unsigned char) buf[1])==0x47 &&
+   ((unsigned char) buf[4])==0x00 )
+  {
+    mContentType = NS_LITERAL_CSTRING("image/x-jg");
+    return;
+  }
+
+  /* none of the above?  I give up */
+}
+
 
 nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
                                                      nsISupports *aCtxt)

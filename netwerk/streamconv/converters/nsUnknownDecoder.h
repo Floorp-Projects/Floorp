@@ -63,6 +63,7 @@ protected:
 
 protected:
   nsCOMPtr<nsIStreamListener> mNextListener;
+  void SniffForImageMimeType(const char *buf, PRUint32 len);
 
   char *mBuffer;
   PRUint32 mBufferLen;
