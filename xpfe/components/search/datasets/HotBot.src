@@ -1,5 +1,6 @@
 <search
 	name = "Hotbot"
+	description="Search the Internet with Hotbot"
 	method = get
 	action = "http://www.hotbot.com/text/results.asp"
 	>

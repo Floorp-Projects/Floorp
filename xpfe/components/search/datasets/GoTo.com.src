@@ -1,16 +1,8 @@
-# Created by Gord Lacey
-# Visit www.apple-donuts.com
-# mailto:bluefrog@shaw.wave.ca
-
-
 <search 
 name="GoTo.com"
+description="Search made simple."
 method=get
 action="http://www.goto.com/d/search/;$sessionid$RMUSKAQAARYTVQFIEEOQPUQ"
-update="http://www.apple-donuts.com/sherlock/Goto.com.src.hqx"
-updateCheckDays = 3 
-bannerLink = "http://www.apple-donuts.com/sherlocksearch/link/index.html"
-bannerImage = '<img src = "http://www.apple-donuts.com/sherlocksearch/link/banner.gif">'
 >
 	
 <INPUT NAME="Keywords" user>

@@ -1,5 +1,6 @@
 <search
     name="Excite"
+    description="Search the Internet with Excite"
     method="GET"
     action="http://search.excite.com/search.gw"
     >
