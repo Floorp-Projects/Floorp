@@ -62,8 +62,6 @@ function onLoad()
     setDefaultButton = document.getElementById("setDefaultButton");
 
     refreshServerList();
-
-    doSetOKCancel(onOk, 0);
 }
 
 function onSelectionChange(event)
@@ -103,7 +101,7 @@ function onSetDefault(event)
 function onOk()
 {
     window.arguments[0].result = true;
-    window.close();
+    return true;
 }
 
 function updateButtons()
