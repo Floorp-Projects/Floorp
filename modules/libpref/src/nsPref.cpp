@@ -285,6 +285,10 @@ nsresult nsPref::useDefaultPrefFile()
     if (Exists(prefsFile))
         return ReadUserPrefsFrom(prefsFile);
 
+    // need to save the prefs now
+    mFileSpec = prefsFile; // Already addreffed when retrieved.
+    rv = SavePrefFile(); 
+
     return rv;
 } // nsPref::useDefaultPrefFile
 
