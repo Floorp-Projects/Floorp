@@ -2636,6 +2636,25 @@ static PRBool isJavaPlugin(nsPluginTag * tag)
   return (nsnull == PL_strncasecmp(filename, "npjava", 6));
 }
 
+// currently 'unwanted' plugins are Java, and all other plugins except
+// RealPlayer, Acrobat, Flash
+static PRBool isUnwantedPlugin(nsPluginTag * tag)
+{
+  if(tag->mFileName == nsnull)
+    return PR_TRUE;
+
+  if(nsnull == PL_strncasecmp(tag->mMimeType, "audio/x-pn-realaudio-plugin", PL_strlen(tag->mMimeType)))
+    return PR_FALSE;
+
+  if(nsnull == PL_strncasecmp(tag->mMimeType, "application/pdf", PL_strlen(tag->mMimeType)))
+    return PR_FALSE;
+
+  if(nsnull == PL_strncasecmp(tag->mMimeType, "application/x-shockwave-flash", PL_strlen(tag->mMimeType)))
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
 // currently we decided to look in both local plugins dir and 
@@ -2718,7 +2737,8 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
         PRBool bAddIt = PR_TRUE;
 
         // make sure we ignore 4.x Java plugins no matter what
-        if(isJavaPlugin(pluginTag))
+        // and other unwanted plugins as per temporary decision described in #23856
+        if(isUnwantedPlugin(pluginTag))
           bAddIt = PR_FALSE;
         else
         {
