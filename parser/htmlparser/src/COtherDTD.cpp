@@ -4,7 +4,7 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of 
  * the License at http://www.mozilla.org/NPL/
- *              
+ *                
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or 
  * implied. See the License for the specific language governing
@@ -20,7 +20,7 @@
  * Contributor(s):   
  */          
     
-//#define ENABLE_CRC   
+//#define ENABLE_CRC    
 //#define RICKG_DEBUG    
  
       
@@ -55,7 +55,7 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOTHERHTML_DTD_IID); 
- 
+  
 static const  char* kNullToken = "Error: Null token given";
 static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static char*        kVerificationDir = "c:/temp";
@@ -1457,22 +1457,22 @@ nsresult COtherDTD::CloseBody(const nsIParserNode *aNode){
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: COtherDTD::CloseBody(), this=%p\n", this));
-
+ 
   nsresult result=(mSink) ? mSink->CloseBody(*aNode) : NS_OK; 
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::CloseBody(), this=%p\n", this));
   START_TIMER();
-
-  return result;
-}
-
+ 
+  return result;  
+}    
+     
 /**
  * This method does two things: 1st, help construct
  * our own internal model of the content-stack; and
  * 2nd, pass this message on to the sink.
  * @update  gess4/6/98
  * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
+ * @return  TRUE if ok, FALSE if error 
  */
 nsresult COtherDTD::OpenForm(const nsIParserNode *aNode){
   if(mHasOpenForm)
