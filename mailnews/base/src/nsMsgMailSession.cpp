@@ -559,8 +559,8 @@ nsMsgMailSession::GetSelectedLocaleDataDir(nsIFile *defaultsDir)
     nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
       do_GetService("@mozilla.org/chrome/chrome-registry;1", &rv);
     if (NS_SUCCEEDED(rv)) {                                                 
-      nsXPIDLString localeName;                                           
-      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
+      nsCAutoString localeName;                                           
+      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global-region"), localeName);
 
       if (NS_SUCCEEDED(rv) && !localeName.IsEmpty()) {
         PRBool localeDirExists = PR_FALSE;                              
@@ -569,7 +569,7 @@ nsMsgMailSession::GetSelectedLocaleDataDir(nsIFile *defaultsDir)
         rv = defaultsDir->Clone(getter_AddRefs(localeDataDir));     
         NS_ENSURE_SUCCESS(rv,rv);                                       
 
-        rv = localeDataDir->Append(localeName);
+        rv = localeDataDir->AppendNative(localeName);
         NS_ENSURE_SUCCESS(rv,rv);                                       
 
         rv = localeDataDir->Exists(&localeDirExists);                   
@@ -577,7 +577,7 @@ nsMsgMailSession::GetSelectedLocaleDataDir(nsIFile *defaultsDir)
 
         if (localeDirExists) {                                          
           // use locale provider instead                              
-          rv = defaultsDir->Append(localeName);
+          rv = defaultsDir->AppendNative(localeName);
           NS_ENSURE_SUCCESS(rv,rv);                                   
         }                                                               
       }                                                                   

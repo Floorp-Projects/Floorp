@@ -1113,11 +1113,10 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     rv = cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(cmdUI));
     if (NS_SUCCEEDED(rv)){
         if (cmdUI) {
-            nsAutoString UILocaleName;
-            UILocaleName.AssignWithConversion(cmdUI);
+            nsCAutoString UILocaleName(cmdUI);
             nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
             if (chromeRegistry)
-                rv = chromeRegistry->SelectLocale(UILocaleName.get(), PR_FALSE);
+                rv = chromeRegistry->SelectLocale(UILocaleName, PR_FALSE);
         }
     }
     // match OS when no cmdline override
@@ -1125,7 +1124,7 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
       nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);
-        rv = chromeRegistry->SelectLocale(uiLang.get(), PR_FALSE);
+        rv = chromeRegistry->SelectLocale(NS_ConvertUCS2toUTF8(uiLang), PR_FALSE);
       }
     }
 
@@ -1133,11 +1132,10 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     rv = cmdLineArgs->GetCmdLineValue(CONTENTLOCALE_CMD_LINE_ARG, getter_Copies(cmdContent));
     if (NS_SUCCEEDED(rv)){
         if (cmdContent) {
-            nsAutoString ContentLocaleName;
-            ContentLocaleName.AssignWithConversion(cmdContent);
+            nsCAutoString contentLocaleName(cmdContent);
             nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
             if(chromeRegistry)
-                rv = chromeRegistry->SelectLocale(ContentLocaleName.get(), PR_FALSE);
+                rv = chromeRegistry->SelectLocale(contentLocaleName, PR_FALSE);
         }
     }
     // match OS when no cmdline override
@@ -1145,7 +1143,7 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
       nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);        
-        rv = chromeRegistry->SelectLocale(country.get(), PR_FALSE);
+        rv = chromeRegistry->SelectLocale(NS_ConvertUCS2toUTF8(country), PR_FALSE);
       }
     }
 

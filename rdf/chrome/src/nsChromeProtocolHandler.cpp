@@ -636,8 +636,8 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         //aURI->GetSpec(getter_Copies(oldSpec));
         //printf("*************************** %s\n", (const char*)oldSpec);
 
-        nsXPIDLCString spec;
-        rv = reg->ConvertChromeURL(aURI, getter_Copies(spec));
+        nsCAutoString spec;
+        rv = reg->ConvertChromeURL(aURI, spec);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIIOService> ioServ(do_GetService(kIOServiceCID, &rv));

@@ -62,7 +62,7 @@ interface nsIChromeRegistry : nsISupports
    *
    * @param aChromeURL the URL that is to be converted.
    */
-  string convertChromeURL(in nsIURI aChromeURL);
+  AUTF8String convertChromeURL(in nsIURI aChromeURL);
 
   /**
    * get the style sheets for a specific chrome URL
@@ -89,15 +89,15 @@ interface nsIChromeRegistry : nsISupports
 interface nsIXULChromeRegistry : nsIChromeRegistry {
 
   /* Applies a skin or locale to all possible packages */
-  void selectSkin(in wstring skinName, in boolean useProfile);
-  void selectLocale(in wstring localeName, in boolean useProfile);
-  void deselectSkin(in wstring skinName, in boolean useProfile);
-  void deselectLocale(in wstring localeName, in boolean useProfile);
-  PRInt32 isSkinSelected(in wstring skinName, in boolean useProfile);
-  PRInt32 isLocaleSelected(in wstring localeName, in boolean useProfile);
+  void selectSkin(in ACString skinName, in boolean useProfile);
+  void selectLocale(in ACString localeName, in boolean useProfile);
+  void deselectSkin(in ACString skinName, in boolean useProfile);
+  void deselectLocale(in ACString localeName, in boolean useProfile);
+  PRInt32 isSkinSelected(in ACString skinName, in boolean useProfile);
+  PRInt32 isLocaleSelected(in ACString localeName, in boolean useProfile);
  
  // Special additional APIs for locales only.
-  void selectLocaleForProfile(in wstring localeName, in wstring profilePath);
+  void selectLocaleForProfile(in ACString localeName, in wstring profilePath);
   
   /* Should be called when locales change to reload all chrome (including XUL). */
   void reloadChrome();
@@ -109,31 +109,33 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
   boolean checkLocaleVersion(in wstring localeName);
 
   /* Apply skin/locale to a specific package */
-  void selectSkinForPackage(in wstring skinName,
+  void selectSkinForPackage(in ACString skinName,
                             in wstring packageName,
                             in boolean useProfile);
   
-  void selectLocaleForPackage(in wstring localeName,
+  void selectLocaleForPackage(in ACString localeName,
                               in wstring packageName,
                               in boolean useProfile);
   
-  void deselectSkinForPackage(in wstring skinName,
+  void deselectSkinForPackage(in ACString skinName,
                               in wstring packageName,
                               in boolean useProfile);
   
-  void deselectLocaleForPackage(in wstring localeName,
+  void deselectLocaleForPackage(in ACString localeName,
                                 in wstring packageName,
                                 in boolean useProfile);
   
-  boolean isSkinSelectedForPackage(in wstring skinName,
+  boolean isSkinSelectedForPackage(in ACString skinName,
                                    in wstring packageName,
                                    in boolean useProfile);
   
-  boolean isLocaleSelectedForPackage(in wstring localeName,
+  boolean isLocaleSelectedForPackage(in ACString localeName,
                                      in wstring packageName,
                                      in boolean useProfile);
 
-  wstring getSelectedLocale(in wstring packageName);
+  ACString getSelectedLocale(in ACString packageName);
+  ACString getSelectedSkin(in ACString packageName);
+  
   nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
   
   /* Should be called when skins change. Reloads only stylesheets. */
@@ -146,10 +148,10 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
                    in boolean useProfile,
                    in boolean allowScripts);
   
-  void uninstallSkin(in wstring skinName, in boolean useProfile);
+  void uninstallSkin(in ACString skinName, in boolean useProfile);
 
   void installLocale(in string baseURL, in boolean useProfile);
-  void uninstallLocale(in wstring localeName, in boolean useProfile);
+  void uninstallLocale(in ACString localeName, in boolean useProfile);
 
   void installPackage(in string baseURL, in boolean useProfile);
   void uninstallPackage(in wstring packageName, in boolean useProfile);

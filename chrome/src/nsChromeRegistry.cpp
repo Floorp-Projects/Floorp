@@ -246,16 +246,15 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsChromeRegistry::nsChromeRegistry() : mRDFService(nsnull),
-                                       mRDFContainerUtils(nsnull)
+                                       mRDFContainerUtils(nsnull),
+                                       mUseXBLForms(PR_FALSE),
+                                       mInstallInitialized(PR_FALSE),
+                                       mProfileInitialized(PR_FALSE),
+                                       mRuntimeProvider(PR_FALSE),
+                                       mBatchInstallFlushes(PR_FALSE),
+                                       mSearchedForOverride(PR_FALSE)
 {
   NS_INIT_REFCNT();
-
-  mInstallInitialized = PR_FALSE;
-  mProfileInitialized = PR_FALSE;
-
-  mUseXBLForms = PR_FALSE;
-  mBatchInstallFlushes = PR_FALSE;
-  mRuntimeProvider = PR_FALSE;
 
   nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
   if (prefService)
@@ -511,7 +510,7 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
+nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsACString& aResult)
 {
   nsresult rv = NS_OK;
   NS_ASSERTION(aChromeURL, "null url!");
@@ -576,14 +575,15 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
     }
   }
 
-  *aResult = ToNewCString(finalURL + remaining);
+  aResult = finalURL + remaining;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsChromeRegistry::GetBaseURL(const nsCString& aPackage, const nsCString& aProvider,
-                             nsCString& aBaseURL)
+nsresult
+nsChromeRegistry::GetBaseURL(const nsACString& aPackage,
+                             const nsACString& aProvider,
+                             nsACString& aBaseURL)
 {
   nsCOMPtr<nsIRDFResource> resource;
 
@@ -665,7 +665,7 @@ nsChromeRegistry::GetBaseURL(const nsCString& aPackage, const nsCString& aProvid
 }
 
 // locate
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::FindProvider(const nsACString& aPackage,
                                const nsACString& aProvider,
                                nsIRDFResource *aArc,
@@ -717,7 +717,7 @@ nsChromeRegistry::FindProvider(const nsACString& aPackage,
     if (kid) {
       // get its name
       nsCAutoString providerName;
-      rv = nsChromeRegistry::FollowArc(mChromeDataSource, providerName, kid, mName);
+      rv = FollowArc(mChromeDataSource, providerName, kid, mName);
       if (NS_FAILED(rv)) return rv;
 
       // get its package list
@@ -742,7 +742,7 @@ nsChromeRegistry::FindProvider(const nsACString& aPackage,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
                                           const nsACString& aPackage,
                                           const nsACString& aProvider,
@@ -793,7 +793,7 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
 
       // get its name
       nsCAutoString packageName;
-      rv = nsChromeRegistry::FollowArc(mChromeDataSource, packageName, package, mName);
+      rv = FollowArc(mChromeDataSource, packageName, package, mName);
       if (NS_FAILED(rv))
         continue;       // don't fail if package has not yet been installed
 
@@ -803,7 +803,7 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
           useProfile = PR_FALSE; // Always force the auto-selection to be in the
                                  // install dir for the packages required to bring up the profile UI.
         rv = SelectProviderForPackage(aProvider,
-                                      NS_ConvertASCIItoUCS2(aProviderName).get(),
+                                      aProviderName,
                                       NS_ConvertASCIItoUCS2(packageName).get(),
                                       aArc, useProfile, PR_TRUE);
         if (NS_FAILED(rv))
@@ -818,8 +818,11 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile,
-                                                     PRBool aCreateDS, nsIRDFDataSource **aResult)
+nsresult
+nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL,
+                                       PRBool aIsOverlay, PRBool aUseProfile,
+                                       PRBool aCreateDS,
+                                       nsIRDFDataSource **aResult)
 {
   *aResult = nsnull;
 
@@ -879,7 +882,9 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL, PRBool 
   return LoadDataSource(overlayFile, aResult, aUseProfile, nsnull);
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL, nsISupportsArray **aResult)
+nsresult
+nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL,
+                                 nsISupportsArray **aResult)
 {
   *aResult = nsnull;
 
@@ -919,7 +924,9 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumera
   return GetDynamicInfo(aChromeURL, PR_TRUE, aResult);
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult)
+nsresult
+nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay,
+                                 nsISimpleEnumerator **aResult)
 {
   *aResult = nsnull;
 
@@ -983,10 +990,11 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsACString &aFileName,
-                                               nsIRDFDataSource **aResult,
-                                               PRBool aUseProfileDir,
-                                               const char *aProfilePath)
+nsresult
+nsChromeRegistry::LoadDataSource(const nsACString &aFileName,
+                                 nsIRDFDataSource **aResult,
+                                 PRBool aUseProfileDir,
+                                 const char *aProfilePath)
 {
   // Init the data source to null.
   *aResult = nsnull;
@@ -1078,7 +1086,7 @@ nsChromeRegistry::GetResource(const nsCString& aURL,
 
 nsresult
 nsChromeRegistry::FollowArc(nsIRDFDataSource *aDataSource,
-                            nsCString& aResult,
+                            nsACString& aResult,
                             nsIRDFResource* aChromeResource,
                             nsIRDFResource* aProperty)
 {
@@ -1112,7 +1120,7 @@ nsChromeRegistry::FollowArc(nsIRDFDataSource *aDataSource,
     const PRUnichar *s;
     rv = literal->GetValueConst(&s);
     if (NS_FAILED(rv)) return rv;
-    aResult.AssignWithConversion(s);
+    aResult.Assign(NS_ConvertUCS2toUTF8(s));
   }
   else {
     // This should _never_ happen.
@@ -1236,7 +1244,7 @@ static PRBool IsChromeURI(nsIURI* aURI)
     return PR_FALSE;
 }
 
-NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
+nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
 {
   // Deal with our subframes first.
   nsCOMPtr<nsIDOMWindowCollection> frames;
@@ -1379,11 +1387,12 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
-                                                      const PRUnichar *aOverlayURI,
-                                                      PRBool aIsOverlay,
-                                                      PRBool aUseProfile,
-                                                      PRBool aRemove)
+nsresult
+nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
+                                        const PRUnichar *aOverlayURI,
+                                        PRBool aIsOverlay,
+                                        PRBool aUseProfile,
+                                        PRBool aRemove)
 {
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
@@ -1484,8 +1493,11 @@ NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
   return rv;
 }
 
-NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSource(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource,
-                                                        PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove)
+nsresult
+nsChromeRegistry::UpdateDynamicDataSource(nsIRDFDataSource *aDataSource,
+                                          nsIRDFResource *aResource,
+                                          PRBool aIsOverlay,
+                                          PRBool aUseProfile, PRBool aRemove)
 {
   nsCOMPtr<nsIRDFContainer> container;
   nsresult rv;
@@ -1536,8 +1548,10 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSource(nsIRDFDataSource *aDataS
 }
 
 
-NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSources(nsIRDFDataSource *aDataSource,
-                                                        PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove)
+nsresult
+nsChromeRegistry::UpdateDynamicDataSources(nsIRDFDataSource *aDataSource,
+                                           PRBool aIsOverlay,
+                                           PRBool aUseProfile, PRBool aRemove)
 {
   nsresult rv;
   nsCOMPtr<nsIRDFResource> resource;
@@ -1587,19 +1601,19 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSources(nsIRDFDataSource *aData
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::SelectSkin(const PRUnichar* aSkin,
+NS_IMETHODIMP nsChromeRegistry::SelectSkin(const nsACString& aSkin,
                                         PRBool aUseProfile)
 {
   return SetProvider(NS_LITERAL_CSTRING("skin"), mSelectedSkin, aSkin, aUseProfile, nsnull, PR_TRUE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::SelectLocale(const PRUnichar* aLocale,
+NS_IMETHODIMP nsChromeRegistry::SelectLocale(const nsACString& aLocale,
                                           PRBool aUseProfile)
 {
   return SetProvider(NS_LITERAL_CSTRING("locale"), mSelectedLocale, aLocale, aUseProfile, nsnull, PR_TRUE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::SelectLocaleForProfile(const PRUnichar *aLocale,
+NS_IMETHODIMP nsChromeRegistry::SelectLocaleForProfile(const nsACString& aLocale,
                                                        const PRUnichar *aProfilePath)
 {
   // to be changed to use given path
@@ -1615,9 +1629,30 @@ NS_IMETHODIMP nsChromeRegistry::SetRuntimeProvider(PRBool runtimeProvider)
 }
 
 
-/* wstring getSelectedLocale (); */
-NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
-                                                  PRUnichar **_retval)
+/* ACString getSelectedLocale (ACString packageName); */
+NS_IMETHODIMP
+nsChromeRegistry::GetSelectedLocale(const nsACString& aPackageName,
+                                    nsACString& aResult)
+{
+  return GetSelectedProvider(aPackageName,
+                             NS_LITERAL_CSTRING("locale"), mSelectedLocale,
+                             aResult);
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetSelectedSkin(const nsACString& aPackageName,
+                                  nsACString& aResult)
+{
+  return GetSelectedProvider(aPackageName,
+                             NS_LITERAL_CSTRING("skin"), mSelectedSkin,
+                             aResult);
+}
+
+nsresult
+nsChromeRegistry::GetSelectedProvider(const nsACString& aPackageName,
+                                      const nsACString& aProvider,
+                                      nsIRDFResource* aSelectionArc,
+                                      nsACString& _retval)
 {
   // check if mChromeDataSource is null; do we need to apply this to every instance?
   // is there a better way to test if the data source is ready?
@@ -1625,9 +1660,8 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
     return NS_ERROR_FAILURE;
   }
 
-  nsString packageStr(aPackageName);
   nsCAutoString resourceStr("urn:mozilla:package:");
-  resourceStr += NS_ConvertUCS2toUTF8(packageStr.get());
+  resourceStr += aPackageName;
 
   // Obtain the resource.
   nsresult rv = NS_OK;
@@ -1643,13 +1677,13 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
 
   // Follow the "selectedLocale" arc.
   nsCOMPtr<nsIRDFNode> selectedProvider;
-  if (NS_FAILED(rv = mChromeDataSource->GetTarget(resource, mSelectedLocale, PR_TRUE, getter_AddRefs(selectedProvider)))) {
+  if (NS_FAILED(rv = mChromeDataSource->GetTarget(resource, aSelectionArc, PR_TRUE, getter_AddRefs(selectedProvider)))) {
     NS_ERROR("Unable to obtain the provider.");
     return rv;
   }
 
   if (!selectedProvider) {
-    rv = FindProvider(NS_ConvertUCS2toUTF8(packageStr.get()), NS_LITERAL_CSTRING("locale"), mSelectedLocale, getter_AddRefs(selectedProvider));
+    rv = FindProvider(aPackageName, aProvider, aSelectionArc, getter_AddRefs(selectedProvider));
     if (!selectedProvider)
       return rv;
   }
@@ -1664,57 +1698,49 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
     return rv;
 
   // trim down to "urn:mozilla:locale:ja-JP"
-  nsAutoString ustr = NS_ConvertUTF8toUCS2(uri);
+  nsCAutoString packageStr(":");
+  packageStr += aPackageName;
 
-  packageStr.Insert(PRUnichar(':'), 0);
+  nsCAutoString ustr(uri);
   PRInt32 pos = ustr.RFind(packageStr);
-  nsString urn;
+  nsCAutoString urn;
   ustr.Left(urn, pos);
 
-  rv = GetResource(NS_ConvertUCS2toUTF8(urn.get()), getter_AddRefs(resource));
+  rv = GetResource(urn, getter_AddRefs(resource));
   if (NS_FAILED(rv)) {
     NS_ERROR("Unable to obtain the provider resource.");
     return rv;
   }
 
   // From this resource, follow the "name" arc.
-  nsCAutoString lc_name; // is this i18n friendly? RDF now use UTF8 internally
-  rv = nsChromeRegistry::FollowArc(mChromeDataSource,
-                                   lc_name,
-                                   resource,
-                                   mName);
-  if (NS_FAILED(rv)) return rv;
-
-  // this is not i18n friendly? RDF now use UTF8 internally.
-  *_retval = ToNewUnicode(lc_name);
-
-  return NS_OK;
+  return FollowArc(mChromeDataSource, _retval, resource, mName);
 }
 
-NS_IMETHODIMP nsChromeRegistry::DeselectSkin(const PRUnichar* aSkin,
+NS_IMETHODIMP nsChromeRegistry::DeselectSkin(const nsACString& aSkin,
                                         PRBool aUseProfile)
 {
   return SetProvider(NS_LITERAL_CSTRING("skin"), mSelectedSkin, aSkin, aUseProfile, nsnull, PR_FALSE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::DeselectLocale(const PRUnichar* aLocale,
+NS_IMETHODIMP nsChromeRegistry::DeselectLocale(const nsACString& aLocale,
                                           PRBool aUseProfile)
 {
   return SetProvider(NS_LITERAL_CSTRING("locale"), mSelectedLocale, aLocale, aUseProfile, nsnull, PR_FALSE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsACString& aProvider,
-                                            nsIRDFResource* aSelectionArc,
-                                            const PRUnichar* aProviderName,
-                                            PRBool aUseProfile, const char *aProfilePath,
-                                            PRBool aIsAdding)
+nsresult
+nsChromeRegistry::SetProvider(const nsACString& aProvider,
+                              nsIRDFResource* aSelectionArc,
+                              const nsACString& aProviderName,
+                              PRBool aUseProfile, const char *aProfilePath,
+                              PRBool aIsAdding)
 {
   // Build the provider resource str.
   // e.g., urn:mozilla:skin:aqua/1.0
   nsCAutoString resourceStr( "urn:mozilla:" );
   resourceStr += aProvider;
   resourceStr += ":";
-  resourceStr.AppendWithConversion(aProviderName);
+  resourceStr += aProviderName;
 
   // Obtain the provider resource.
   nsresult rv = NS_OK;
@@ -1792,7 +1818,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsACString& aProvider,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::SetProviderForPackage(const nsACString& aProvider,
                                         nsIRDFResource* aPackageResource,
                                         nsIRDFResource* aProviderPackageResource,
@@ -1825,51 +1851,51 @@ nsChromeRegistry::SetProviderForPackage(const nsACString& aProvider,
   return rv;
 }
 
-NS_IMETHODIMP nsChromeRegistry::SelectSkinForPackage(const PRUnichar *aSkin,
-                                                  const PRUnichar *aPackageName,
+NS_IMETHODIMP nsChromeRegistry::SelectSkinForPackage(const nsACString& aSkin,
+                                                     const PRUnichar *aPackageName,
                                                   PRBool aUseProfile)
 {
   return SelectProviderForPackage(NS_LITERAL_CSTRING("skin"), aSkin, aPackageName, mSelectedSkin, aUseProfile, PR_TRUE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::SelectLocaleForPackage(const PRUnichar *aLocale,
-                                                    const PRUnichar *aPackageName,
+NS_IMETHODIMP nsChromeRegistry::SelectLocaleForPackage(const nsACString& aLocale,
+                                                       const PRUnichar *aPackageName,
                                                     PRBool aUseProfile)
 {
   return SelectProviderForPackage(NS_LITERAL_CSTRING("locale"), aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_TRUE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::DeselectSkinForPackage(const PRUnichar *aSkin,
+NS_IMETHODIMP nsChromeRegistry::DeselectSkinForPackage(const nsACString& aSkin,
                                                   const PRUnichar *aPackageName,
                                                   PRBool aUseProfile)
 {
   return SelectProviderForPackage(NS_LITERAL_CSTRING("skin"), aSkin, aPackageName, mSelectedSkin, aUseProfile, PR_FALSE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::DeselectLocaleForPackage(const PRUnichar *aLocale,
+NS_IMETHODIMP nsChromeRegistry::DeselectLocaleForPackage(const nsACString& aLocale,
                                                     const PRUnichar *aPackageName,
                                                     PRBool aUseProfile)
 {
   return SelectProviderForPackage(NS_LITERAL_CSTRING("locale"), aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_FALSE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::IsSkinSelectedForPackage(const PRUnichar *aSkin,
+NS_IMETHODIMP nsChromeRegistry::IsSkinSelectedForPackage(const nsACString& aSkin,
                                                   const PRUnichar *aPackageName,
                                                   PRBool aUseProfile, PRBool* aResult)
 {
   return IsProviderSelectedForPackage(NS_LITERAL_CSTRING("skin"), aSkin, aPackageName, mSelectedSkin, aUseProfile, aResult);
 }
 
-NS_IMETHODIMP nsChromeRegistry::IsLocaleSelectedForPackage(const PRUnichar *aLocale,
+NS_IMETHODIMP nsChromeRegistry::IsLocaleSelectedForPackage(const nsACString& aLocale,
                                                     const PRUnichar *aPackageName,
                                                     PRBool aUseProfile, PRBool* aResult)
 {
   return IsProviderSelectedForPackage(NS_LITERAL_CSTRING("locale"), aLocale, aPackageName, mSelectedLocale, aUseProfile, aResult);
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::SelectProviderForPackage(const nsACString& aProviderType,
-                                           const PRUnichar *aProviderName,
+                                           const nsACString& aProviderName,
                                            const PRUnichar *aPackageName,
                                            nsIRDFResource* aSelectionArc,
                                            PRBool aUseProfile, PRBool aIsAdding)
@@ -1880,7 +1906,7 @@ nsChromeRegistry::SelectProviderForPackage(const nsACString& aProviderType,
   nsCAutoString provider( "urn:mozilla:" );
   provider += aProviderType;
   provider += ":";
-  provider.AppendWithConversion(aProviderName);
+  provider += aProviderName;
   provider += ":";
   provider.AppendWithConversion(aPackageName);
 
@@ -1929,22 +1955,23 @@ nsChromeRegistry::SelectProviderForPackage(const nsACString& aProviderType,
                                aUseProfile, nsnull, aIsAdding);
 }
 
-NS_IMETHODIMP nsChromeRegistry::IsSkinSelected(const PRUnichar* aSkin,
+NS_IMETHODIMP nsChromeRegistry::IsSkinSelected(const nsACString& aSkin,
                                                PRBool aUseProfile, PRInt32* aResult)
 {
   return IsProviderSelected(NS_LITERAL_CSTRING("skin"), aSkin, mSelectedSkin, aUseProfile, aResult);
 }
 
-NS_IMETHODIMP nsChromeRegistry::IsLocaleSelected(const PRUnichar* aLocale,
+NS_IMETHODIMP nsChromeRegistry::IsLocaleSelected(const nsACString& aLocale,
                                                  PRBool aUseProfile, PRInt32* aResult)
 {
   return IsProviderSelected(NS_LITERAL_CSTRING("locale"), aLocale, mSelectedLocale, aUseProfile, aResult);
 }
 
-NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsACString& aProvider,
-                                                   const PRUnichar* aProviderName,
-                                                   nsIRDFResource* aSelectionArc,
-                                                   PRBool aUseProfile, PRInt32* aResult)
+nsresult
+nsChromeRegistry::IsProviderSelected(const nsACString& aProvider,
+                                     const nsACString& aProviderName,
+                                     nsIRDFResource* aSelectionArc,
+                                     PRBool aUseProfile, PRInt32* aResult)
 {
   // Build the provider resource str.
   // e.g., urn:mozilla:skin:aqua/1.0
@@ -1952,7 +1979,7 @@ NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsACString& aProvider,
   nsCAutoString resourceStr( "urn:mozilla:" );
   resourceStr += aProvider;
   resourceStr += ":";
-  resourceStr.AppendWithConversion(aProviderName);
+  resourceStr += aProviderName;
   // Obtain the provider resource.
   nsresult rv = NS_OK;
   nsCOMPtr<nsIRDFResource> resource;
@@ -2029,9 +2056,9 @@ NS_IMETHODIMP nsChromeRegistry::IsProviderSelected(const nsACString& aProvider,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::IsProviderSelectedForPackage(const nsACString& aProviderType,
-                                               const PRUnichar *aProviderName,
+                                               const nsACString& aProviderName,
                                                const PRUnichar *aPackageName,
                                                nsIRDFResource* aSelectionArc,
                                                PRBool aUseProfile, PRBool* aResult)
@@ -2043,7 +2070,7 @@ nsChromeRegistry::IsProviderSelectedForPackage(const nsACString& aProviderType,
   nsCAutoString provider( "urn:mozilla:" );
   provider += aProviderType;
   provider += ":";
-  provider.AppendWithConversion(aProviderName);
+  provider += aProviderName;
   provider += ":";
   provider.AppendWithConversion(aPackageName);
 
@@ -2070,7 +2097,7 @@ nsChromeRegistry::IsProviderSelectedForPackage(const nsACString& aProviderType,
                                  aUseProfile, aResult);
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::IsProviderSetForPackage(const nsACString& aProvider,
                                           nsIRDFResource* aPackageResource,
                                           nsIRDFResource* aProviderPackageResource,
@@ -2096,10 +2123,11 @@ nsChromeRegistry::IsProviderSetForPackage(const nsACString& aProvider,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
-                                                const nsACString& aBaseURL,
-                                                PRBool aUseProfile, PRBool aAllowScripts,
-                                                PRBool aRemove)
+nsresult
+nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
+                                  const nsACString& aBaseURL,
+                                  PRBool aUseProfile, PRBool aAllowScripts,
+                                  PRBool aRemove)
 {
   // XXX don't allow local chrome overrides of install chrome!
 #ifdef DEBUG
@@ -2486,7 +2514,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallPackage(const char* aBaseURL, PRBool aUse
                          aUseProfile, PR_TRUE, PR_FALSE);
 }
 
-NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const PRUnichar* aSkinName, PRBool aUseProfile)
+NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const nsACString& aSkinName, PRBool aUseProfile)
 {
   // The skin must first be deselected.
   DeselectSkin(aSkinName, aUseProfile);
@@ -2495,7 +2523,7 @@ NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const PRUnichar* aSkinName, PRBool
   return UninstallProvider(NS_LITERAL_CSTRING("skin"), aSkinName, aUseProfile);
 }
 
-NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const PRUnichar* aLocaleName, PRBool aUseProfile)
+NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const nsACString& aLocaleName, PRBool aUseProfile)
 {
   // The locale must first be deselected.
   DeselectLocale(aLocaleName, aUseProfile);
@@ -2509,9 +2537,9 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const PRUnichar* aPackageName, 
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::UninstallProvider(const nsACString& aProviderType,
-                                    const PRUnichar* aProviderName,
+                                    const nsACString& aProviderName,
                                     PRBool aUseProfile)
 {
   // XXX We are going to simply do a snip of the arc from the seq ROOT to
@@ -2529,8 +2557,7 @@ nsChromeRegistry::UninstallProvider(const nsACString& aProviderType,
 
   // Obtain the child we wish to remove.
   nsCAutoString specificChild(prefix);
-  nsCAutoString provName; provName.AssignWithConversion(aProviderName);
-  specificChild += provName;
+  specificChild += aProviderName;
 
   // Instantiate the data source we wish to modify.
   nsCOMPtr<nsIRDFDataSource> installSource;
@@ -2568,8 +2595,8 @@ nsChromeRegistry::UninstallProvider(const nsACString& aProviderType,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
+nsresult
+nsChromeRegistry::GetProfileRoot(nsACString& aFileURL)
 {
    nsresult rv;
    nsCOMPtr<nsIFile> userChromeDir;
@@ -2622,19 +2649,10 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
    return NS_GetURLSpecFromFile(userChromeDir, aFileURL);
 }
 
-NS_IMETHODIMP
-nsChromeRegistry::GetInstallRoot(nsCString& aFileURL)
+nsresult
+nsChromeRegistry::GetInstallRoot(nsIFile** aFileURL)
 {
-  nsresult rv;
-  nsCOMPtr<nsIFile> appChromeDir;
-
-  // Build a fileSpec that points to the destination
-  // (bin dir + chrome)
-  rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(appChromeDir));
-  if (NS_FAILED(rv) || !appChromeDir)
-    return NS_ERROR_FAILURE;
-
-  return NS_GetURLSpecFromFile(appChromeDir, aFileURL);
+  return NS_GetSpecialDirectory(NS_APP_CHROME_DIR, aFileURL);
 }
 
 NS_IMETHODIMP
@@ -2693,7 +2711,7 @@ nsChromeRegistry::ReloadChrome()
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::GetArcs(nsIRDFDataSource* aDataSource,
                           const nsCString& aType,
                           nsISimpleEnumerator** aResult)
@@ -2728,7 +2746,7 @@ nsChromeRegistry::GetArcs(nsIRDFDataSource* aDataSource,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 {
   nsresult rv = NS_OK;
@@ -2891,7 +2909,7 @@ nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet*
   return NS_OK;
 }
 
-nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsCString & aURL)
+nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsACString & aURL)
 {
   aURL = mProfileRoot;
   if (aIsChrome)
@@ -2910,10 +2928,16 @@ nsresult nsChromeRegistry::GetFormSheetURL(nsCString& aURL)
 
 nsresult nsChromeRegistry::LoadInstallDataSource()
 {
-    nsresult rv = GetInstallRoot(mInstallRoot);
-    if (NS_FAILED(rv)) return rv;
-    mInstallInitialized = PR_TRUE;
-    return AddToCompositeDataSource(PR_FALSE);
+  nsCOMPtr<nsIFile> installRootFile;
+  
+  nsresult rv = GetInstallRoot(getter_AddRefs(installRootFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = NS_GetURLSpecFromFile(installRootFile, mInstallRoot);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  mInstallInitialized = PR_TRUE;
+  return AddToCompositeDataSource(PR_FALSE);
 }
 
 nsresult nsChromeRegistry::LoadProfileDataSource()
@@ -2932,8 +2956,8 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     // Select and Remove skins based on a pref set in a previous session.
     nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
     if (pref) {
-      nsXPIDLString skinToSelect;
-      rv = pref->CopyUnicharPref("general.skins.selectedSkin", getter_Copies(skinToSelect));
+      nsXPIDLCString skinToSelect;
+      rv = pref->CopyCharPref("general.skins.selectedSkin", getter_Copies(skinToSelect));
       if (NS_SUCCEEDED(rv)) {
         rv = SelectSkin(skinToSelect, PR_TRUE);
         if (NS_SUCCEEDED(rv))
@@ -3189,9 +3213,8 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
     // process the line
     if (skin.Equals(chromeType)) {
       if (isSelection) {
-        NS_ConvertUTF8toUCS2 name(chromeLocation);
 
-        rv = SelectSkin(name.get(), isProfile);
+        rv = SelectSkin(nsDependentCString(chromeLocation), isProfile);
 #ifdef DEBUG
         printf("***** Chrome Registration: Selecting skin %s as default\n", (const char*)chromeLocation);
 #endif
@@ -3203,9 +3226,8 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       rv = InstallPackage(chromeURL.get(), isProfile);
     else if (locale.Equals(chromeType)) {
       if (isSelection) {
-        NS_ConvertUTF8toUCS2 name(chromeLocation);
 
-        rv = SelectLocale(name.get(), isProfile);
+        rv = SelectLocale(nsDependentCString(chromeLocation), isProfile);
 #ifdef DEBUG
         printf("***** Chrome Registration: Selecting locale %s as default\n", (const char*)chromeLocation);
 #endif
@@ -3303,10 +3325,11 @@ NS_IMETHODIMP nsChromeRegistry::CheckLocaleVersion(const PRUnichar *aLocale,
 }
 
 
-NS_IMETHODIMP nsChromeRegistry::CheckProviderVersion (const nsACString& aProviderType,
-                                                      const PRUnichar* aProviderName,
-                                                      nsIRDFResource* aSelectionArc,
-                                                      PRBool *aCompatible)
+nsresult
+nsChromeRegistry::CheckProviderVersion (const nsACString& aProviderType,
+                                        const PRUnichar* aProviderName,
+                                        nsIRDFResource* aSelectionArc,
+                                        PRBool *aCompatible)
 {
   *aCompatible = PR_TRUE;
 

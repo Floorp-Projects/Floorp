@@ -567,7 +567,8 @@ extern "C" void RunChromeInstallOnThread(void *data)
               rv = reg->InstallSkin(spec.get(), PR_TRUE, PR_FALSE);
                 if (NS_SUCCEEDED(rv) && selected)
                 {
-                    rv = reg->SelectSkin(info->GetArguments(), PR_TRUE);
+                    NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
+                    rv = reg->SelectSkin(utf8Args, PR_TRUE);
                 }
             }
 
@@ -576,7 +577,8 @@ extern "C" void RunChromeInstallOnThread(void *data)
                 rv = reg->InstallLocale(spec.get(), PR_TRUE);
                 if (NS_SUCCEEDED(rv) && selected)
                 {
-                    rv = reg->SelectLocale(info->GetArguments(), PR_TRUE);
+                    NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
+                    rv = reg->SelectLocale(utf8Args, PR_TRUE);
                 }
             }
 

@@ -81,29 +81,36 @@ public:
 
 public:
   static nsresult FollowArc(nsIRDFDataSource *aDataSource,
-                            nsCString& aResult, nsIRDFResource* aChromeResource,
+                            nsACString& aResult,
+                            nsIRDFResource* aChromeResource,
                             nsIRDFResource* aProperty);
 
   static nsresult UpdateArc(nsIRDFDataSource *aDataSource, nsIRDFResource* aSource, nsIRDFResource* aProperty, 
                             nsIRDFNode *aTarget, PRBool aRemove);
 
 protected:
-  NS_IMETHOD GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, PRBool aCreateDS, nsIRDFDataSource **aResult);
-  NS_IMETHOD GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
+  nsresult GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, PRBool aCreateDS, nsIRDFDataSource **aResult);
+  nsresult GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
 
   nsresult GetResource(const nsCString& aChromeType, nsIRDFResource** aResult);
   
-  NS_IMETHOD UpdateDynamicDataSource(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, 
-                                     PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove);
-  NS_IMETHOD UpdateDynamicDataSources(nsIRDFDataSource *aDataSource, PRBool aIsOverlay, 
-                                      PRBool aUseProfile, PRBool aRemove);
-  NS_IMETHOD WriteInfoToDataSource(const char *aDocURI, const PRUnichar *aOverlayURI,
-                                   PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove);
+  nsresult UpdateDynamicDataSource(nsIRDFDataSource *aDataSource,
+                                   nsIRDFResource *aResource,
+                                   PRBool aIsOverlay, PRBool
+                                   aUseProfile, PRBool aRemove);
+  nsresult UpdateDynamicDataSources(nsIRDFDataSource *aDataSource,
+                                    PRBool aIsOverlay,
+                                    PRBool aUseProfile, PRBool
+                                    aRemove);
+  nsresult WriteInfoToDataSource(const char *aDocURI,
+                                 const PRUnichar *aOverlayURI,
+                                 PRBool aIsOverlay, PRBool
+                                 aUseProfile, PRBool aRemove);
  
   nsresult LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsACString & aURL);
   nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
   
-  nsresult GetUserSheetURL(PRBool aIsChrome, nsCString & aURL);
+  nsresult GetUserSheetURL(PRBool aIsChrome, nsACString & aURL);
   nsresult GetFormSheetURL(nsCString& aURL);
   
   nsresult LoadInstallDataSource();
@@ -112,91 +119,94 @@ protected:
   nsresult FlushCaches();
 
 private:
-  NS_IMETHOD LoadDataSource(const nsACString &aFileName, nsIRDFDataSource **aResult,
-                            PRBool aUseProfileDirOnly = PR_FALSE, const char *aProfilePath = nsnull);
+  nsresult LoadDataSource(const nsACString &aFileName,
+                          nsIRDFDataSource **aResult,
+                          PRBool aUseProfileDirOnly = PR_FALSE,
+                          const char *aProfilePath = nsnull);
 
-  NS_IMETHOD GetProfileRoot(nsCString& aFileURL);
-  NS_IMETHOD GetInstallRoot(nsCString& aFileURL);
+  static nsresult GetProfileRoot(nsACString& aFileURL);
+  static nsresult GetInstallRoot(nsIFile** aFileURL);
 
-  NS_IMETHOD RefreshWindow(nsIDOMWindowInternal* aWindow);
+  nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
 
-  NS_IMETHOD GetArcs(nsIRDFDataSource* aDataSource,
-                        const nsCString& aType,
-                        nsISimpleEnumerator** aResult);
+  nsresult GetArcs(nsIRDFDataSource* aDataSource,
+                   const nsCString& aType,
+                   nsISimpleEnumerator** aResult);
 
-  NS_IMETHOD AddToCompositeDataSource(PRBool aUseProfile);
+  nsresult AddToCompositeDataSource(PRBool aUseProfile);
   
-  NS_IMETHOD GetBaseURL(const nsCString& aPackage, const nsCString& aProvider, 
-                             nsCString& aBaseURL);
+  nsresult GetBaseURL(const nsACString& aPackage,
+                      const nsACString& aProvider, 
+                      nsACString& aBaseURL);
 
-  NS_IMETHOD FindProvider(const nsACString& aPackage,
-                          const nsACString& aProvider,
-                          nsIRDFResource *aArc,
-                          nsIRDFNode **aSelectedProvider);
+  nsresult FindProvider(const nsACString& aPackage,
+                        const nsACString& aProvider,
+                        nsIRDFResource *aArc,
+                        nsIRDFNode **aSelectedProvider);
 
-  NS_IMETHOD SelectPackageInProvider(nsIRDFResource *aPackageList,
+  nsresult SelectPackageInProvider(nsIRDFResource *aPackageList,
                                    const nsACString& aPackage,
                                    const nsACString& aProvider,
                                    const nsCString& aProviderName,
                                    nsIRDFResource *aArc,
                                    nsIRDFNode **aSelectedProvider);
 
-  NS_IMETHOD SetProvider(const nsACString& aProvider,
-                         nsIRDFResource* aSelectionArc,
-                         const PRUnichar* aProviderName,
-                         PRBool aAllUsers, 
-                         const char *aProfilePath, 
-                         PRBool aIsAdding);
+  nsresult SetProvider(const nsACString& aProvider,
+                       nsIRDFResource* aSelectionArc,
+                       const nsACString& aProviderName,
+                       PRBool aAllUsers, 
+                       const char *aProfilePath, 
+                       PRBool aIsAdding);
 
-  NS_IMETHOD SetProviderForPackage(const nsACString& aProvider,
-                                   nsIRDFResource* aPackageResource, 
-                                   nsIRDFResource* aProviderPackageResource, 
-                                   nsIRDFResource* aSelectionArc, 
-                                   PRBool aAllUsers, const char *aProfilePath, 
-                                   PRBool aIsAdding);
+  nsresult SetProviderForPackage(const nsACString& aProvider,
+                                 nsIRDFResource* aPackageResource, 
+                                 nsIRDFResource* aProviderPackageResource, 
+                                 nsIRDFResource* aSelectionArc, 
+                                 PRBool aAllUsers, const char *aProfilePath, 
+                                 PRBool aIsAdding);
 
-  NS_IMETHOD SelectProviderForPackage(const nsACString& aProviderType,
-                                        const PRUnichar *aProviderName, 
+  nsresult SelectProviderForPackage(const nsACString& aProviderType,
+                                    const nsACString& aProviderName, 
+                                    const PRUnichar *aPackageName, 
+                                    nsIRDFResource* aSelectionArc, 
+                                    PRBool aUseProfile, PRBool aIsAdding);
+
+  nsresult GetSelectedProvider(const nsACString& aPackage,
+                               const nsACString& aProviderName,
+                               nsIRDFResource* aSelectionArc,
+                               nsACString& aResult);
+  
+  nsresult CheckProviderVersion (const nsACString& aProviderType,
+                                 const PRUnichar* aProviderName,
+                                 nsIRDFResource* aSelectionArc,
+                                 PRBool *aCompatible);
+
+  nsresult IsProviderSelected(const nsACString& aProvider,
+                              const nsACString& aProviderName,
+                              nsIRDFResource* aSelectionArc,
+                              PRBool aUseProfile, PRInt32* aResult);
+  
+  nsresult IsProviderSelectedForPackage(const nsACString& aProviderType,
+                                        const nsACString& aProviderName, 
                                         const PRUnichar *aPackageName, 
                                         nsIRDFResource* aSelectionArc, 
-                                        PRBool aUseProfile, PRBool aIsAdding);
-
-  NS_IMETHOD CheckProviderVersion (const nsACString& aProviderType,
-                                      const PRUnichar* aProviderName,
-                                      nsIRDFResource* aSelectionArc,
-                                      PRBool *aCompatible);
-
-  NS_IMETHOD IsProviderSelected(const nsACString& aProvider,
-                                const PRUnichar* aProviderName,
-                                nsIRDFResource* aSelectionArc,
-                                PRBool aUseProfile, PRInt32* aResult);
-  NS_IMETHOD IsProviderSelectedForPackage(const nsACString& aProviderType,
-                                          const PRUnichar *aProviderName, 
-                                          const PRUnichar *aPackageName, 
-                                          nsIRDFResource* aSelectionArc, 
-                                          PRBool aUseProfile, PRBool* aResult);
-  NS_IMETHOD IsProviderSetForPackage(const nsACString& aProvider,
+                                        PRBool aUseProfile, PRBool* aResult);
+  nsresult IsProviderSetForPackage(const nsACString& aProvider,
                                      nsIRDFResource* aPackageResource, 
                                      nsIRDFResource* aProviderPackageResource, 
                                      nsIRDFResource* aSelectionArc, 
                                      PRBool aUseProfile, PRBool* aResult);
 
-  NS_IMETHOD InstallProvider(const nsACString& aProviderType,
+  nsresult InstallProvider(const nsACString& aProviderType,
                              const nsACString& aBaseURL,
                              PRBool aUseProfile, PRBool aAllowScripts, PRBool aRemove);
-  NS_IMETHOD UninstallProvider(const nsACString& aProviderType, const PRUnichar* aProviderName, PRBool aUseProfile);
+  nsresult UninstallProvider(const nsACString& aProviderType, const nsACString& aProviderName, PRBool aUseProfile);
 
   nsresult ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
   PRBool GetProviderCount(const nsACString& aProviderType, nsIRDFDataSource* aDataSource);
 
 protected:
-  PRBool mInstallInitialized;
-  PRBool mProfileInitialized;
-  
-  PRBool mUseXBLForms;
-  PRBool mRuntimeProvider;
-
   nsCString mProfileRoot;
   nsCString mInstallRoot;
 
@@ -206,10 +216,6 @@ protected:
   nsSupportsHashtable* mDataSourceTable;
   nsIRDFService* mRDFService;
   nsIRDFContainerUtils* mRDFContainerUtils;
-
-  // Boolean that indicates we should batch flushes of the main
-  // chrome.rdf file.
-  PRBool mBatchInstallFlushes;
 
   // Resources
   nsCOMPtr<nsIRDFResource> mSelectedSkin;
@@ -232,5 +238,19 @@ protected:
   nsCOMPtr<nsICSSStyleSheet> mUserChromeSheet;
   nsCOMPtr<nsICSSStyleSheet> mUserContentSheet;
   nsCOMPtr<nsICSSStyleSheet> mFormSheet;
+  
+  PRBool mUseXBLForms;
+  
+  PRPackedBool mInstallInitialized;
+  PRPackedBool mProfileInitialized;
+  
+  PRPackedBool mRuntimeProvider;
+
+  // Boolean that indicates we should batch flushes of the main
+  // chrome.rdf file.
+  PRPackedBool mBatchInstallFlushes;
+
+  // make sure we only look once for the JAR override
+  PRPackedBool mSearchedForOverride;
 };
 
