@@ -420,7 +420,7 @@ nsMessenger::OpenURL(const char * url)
 {
 	if (url)
 	{
-#ifdef DEBUG_sspitzer
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 		printf("nsMessenger::OpenURL(%s)\n",url);
 #endif    
 		nsIMsgMessageService * messageService = nsnull;

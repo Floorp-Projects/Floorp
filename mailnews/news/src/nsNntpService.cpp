@@ -637,7 +637,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
 nsresult 
 nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener, nsIURI **_retval)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   printf("nsNntpService::RunNewsUrl(%s,%s,%u,...)\n", (const char *)nsAutoCString(urlString), (const char *)nsAutoCString(newsgroupName), key);
 #endif
   

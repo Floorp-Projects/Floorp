@@ -23,6 +23,10 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth)
+#define NS_MsgHashIfNecessary 1
+#endif
+
 nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 {
 
@@ -245,7 +249,7 @@ nsresult NS_MsgHashIfNecessary(nsString &name)
 #endif
   nsAutoString str(name, eOneByte);
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NS_MsgHashIfNecessary
   printf("in: %s\n",str.GetBuffer());
 #endif
 
@@ -266,7 +270,7 @@ nsresult NS_MsgHashIfNecessary(nsString &name)
                 (unsigned long) StringHash(str.GetBuffer()));
   }
   name = hashedname;
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NS_MsgHashIfNecessary
   printf("out: %s\n",hashedname);
 #endif
   

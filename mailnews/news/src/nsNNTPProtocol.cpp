@@ -74,11 +74,6 @@
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
-#ifdef DEBUG_sspitzer_
-#define DEBUG_NEWS 1
-#endif
-
-
 // move these to a string bundle
 #define UNTIL_STRING_BUNDLES_XP_HTML_NEWS_ERROR "<TITLE>Error!</TITLE>\n<H1>Error!</H1> newsgroup server responded: <b>%.256s</b><p>\n"
 #define UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED "<b><p>Perhaps the article has expired</b><p>\n"
@@ -2918,7 +2913,7 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
       
 	  rv = m_newsgroup->GetName(&groupName);
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
       printf("leaking group name?\n");
 #endif
       
@@ -3985,8 +3980,8 @@ PRInt32 nsNNTPProtocol::Cancel()
 #endif /* BUG_7770_FIXED */
     }
 
+#ifdef DEBUG_NEWS
     // just me for now...
-#ifdef DEBUG_sspitzer
     // delete the message from the db here.
     nsMsgKey key = nsMsgKey_None;
     rv = m_runningURL->GetMessageKey(&key);

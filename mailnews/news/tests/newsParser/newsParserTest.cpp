@@ -81,7 +81,7 @@ protected:
 
 newsTestDriver::newsTestDriver()
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("in newsTestDriver::newsTestDriver()\n");
 #endif
     m_newsDB = nsnull;
@@ -89,7 +89,7 @@ newsTestDriver::newsTestDriver()
 
 newsTestDriver::~newsTestDriver()
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("in newsTestDriver::~newsTestDriver()\n");
 #endif
 }
@@ -133,7 +133,7 @@ nsresult newsTestDriver::AddNewHeader(const char *subject, const char *author, c
     
     m_newsDB->CreateNewHdr(key, getter_AddRefs(newMsgHdr));
     if (NS_FAILED(rv)) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
         printf("m_newsDB->CreateNewHdr() failed\n");
 #endif
         return rv;
@@ -146,7 +146,7 @@ nsresult newsTestDriver::AddNewHeader(const char *subject, const char *author, c
     
     rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
     if (NS_FAILED(rv)) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
         printf("m_newsDB->AddNewHdrToDB() failed\n");
 #endif
         return rv;           
@@ -161,7 +161,7 @@ nsresult newsTestDriver::GetPath(const char *uri, nsFileSpec& aPathName)
 
   rv = nsNewsURI2Path(kNewsRootURI, uri, aPathName);
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   printf("newsTestDriver::GetPath(%s,??) -> %s\n", uri, (const char *)aPathName);
 #endif
 
@@ -181,7 +181,7 @@ nsresult newsTestDriver::GetDatabase(const char *uri)
         rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
         if (NS_SUCCEEDED(rv) && newsDBFactory) {
                 newsDBOpen = newsDBFactory->Open(path, PR_TRUE, PR_FALSE, getter_AddRefs(m_newsDB));
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
                 if (NS_SUCCEEDED(newsDBOpen)) {
                     printf ("newsDBFactory->Open() succeeded\n");
                 }
@@ -191,7 +191,7 @@ nsresult newsTestDriver::GetDatabase(const char *uri)
 #endif
                 return rv;
         }
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
         else {
             printf("nsComponentManager::CreateInstance(kCNewsDB,...) failed\n");
         }
