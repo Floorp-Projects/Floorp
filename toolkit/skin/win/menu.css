@@ -96,10 +96,17 @@ menubar > menu {
   padding: 2px 5px 2px 7px;
   margin: 1px 0px 1px 0px;
 }
-
 menubar > menu[_moz-menuactive="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  border-left: 1px solid ThreeDHighlight;
+}
+menubar > menu[_moz-menuactive="true"][open="true"] {
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDShadow;
 }
 
 /* ..... internal content .... */
