@@ -116,7 +116,7 @@ nsresult nsAbAutoCompleteSession::PopulateTableWithAB(nsIEnumerator * aABCards)
             break;
     }
 
-    return rv;
+    return NS_OK;
 }
 
 nsresult nsAbAutoCompleteSession::InitializeTable()
@@ -168,7 +168,7 @@ nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 	}
 }
 
-NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener)
+NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener)
 {
 	// mscott - right now I'm not even going to bother to make this synchronous...
 	// I'll beef it up with some test data later but we want to see if this idea works for right now...
@@ -204,7 +204,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, con
 											m_searchNameCompletionEntryTable[nIndex].emailAddress, &fullAddress);
 				nsString searchResult(fullAddress);
 				// iterate over the table looking for a match
-				rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());
+				rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult.GetUnicode());
 				break;
 			}
 		}
@@ -217,7 +217,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, con
 			if (atSignIndex < 0)
 			{
 				searchResult += m_domain;				
-				rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());
+				rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult.GetUnicode());
 			}
 		}
 	}

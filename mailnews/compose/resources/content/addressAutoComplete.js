@@ -1,16 +1,14 @@
 var AddressAutoCompleteListener = {
-	OnAutoCompleteResult: function(doc_id, aOriginalString, aMatch) {
-		dump("textId = " + doc_id + "\n");
+	OnAutoCompleteResult: function(aItem, aOriginalString, aMatch) {
+		dump("aItem = " + aItem + "\n");
 
-		var field = document.getElementById(doc_id);
-
-		if ( field )
+		if ( aItem )
 		{
-			dump("value = " + field.value + "\n");
+			dump("value = " + aItem.value + "\n");
 			dump("aOriginalString = " + aOriginalString + "\n");
 			dump("aMatch = " + aMatch + "\n");
 
-			field.value = aMatch;
+			aItem.value = aMatch;
 		}
 	}
 };
@@ -41,5 +39,5 @@ function AutoCompleteAddress(inputElement)
 		ac = ac.QueryInterface(Components.interfaces.nsIAutoCompleteSession);
 	}
 
-	ac.AutoComplete(inputElement.getAttribute('id'), inputElement.value, AddressAutoCompleteListener);
+	ac.AutoComplete(inputElement, inputElement.value, AddressAutoCompleteListener);
 }
