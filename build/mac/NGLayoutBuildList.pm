@@ -352,19 +352,59 @@ sub MakeResourceAliases()
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
 
 	my($domds_dir) = "$samples_dir" . "rdf:";
-	_InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",					"$domds_dir");
+        _InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",                                        "$domds_dir");
 
-	my($xpinstall_ch_dir) = "$chrome_dir" . "XPinstall";
-	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_ch_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_ch_dir:content:default:", 0);
-	_InstallResources(":mozilla:xpinstall:res:skin:MANIFEST",							"$xpinstall_ch_dir:skin:default:", 0);
-	
-	my($profile_chrome_dir) = "$chrome_dir" . "Profile";
-	_InstallResources(":mozilla:profile:resources:content:MANIFEST",					"$profile_chrome_dir:content:default", 0);
-	_InstallResources(":mozilla:profile:resources:skin:MANIFEST",						"$profile_chrome_dir:skin:default", 0);
-	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:profile:pref-migrator:resources:content:MANIFEST",		"$profile_chrome_dir:content:default", 0);
-	_InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST",	"$profile_chrome_dir:locale:en-US:", 0);
+    # Top level chrome directories
+
+    my($navigator_chrome_dir) = "$chrome_dir" . "navigator:";
+    my($navigator_content_chrome_dir) = "$navigator_chrome_dir" . "content:";
+    my($navigator_locale_chrome_dir) = "$navigator_chrome_dir" . "locale:";
+    my($navigator_skin_chrome_dir) = "$navigator_chrome_dir" . "skin:";
+
+        my($global_chrome_dir) = "$chrome_dir" . "global:";
+        my($global_content_chrome_dir) = "$global_chrome_dir" . "content:";
+    my($global_locale_chrome_dir) = "$global_chrome_dir" . "locale:";
+    my($global_skin_chrome_dir) = "$global_chrome_dir" . "skin:";
+
+    my($communicator_chrome_dir) = "$chrome_dir" . "communicator:";
+    my($communicator_content_chrome_dir) = "$communicator_chrome_dir" . "content:";
+    my($communicator_locale_chrome_dir) = "$communicator_chrome_dir" . "locale:";
+    my($communicator_skin_chrome_dir) = "$communicator_chrome_dir" . "skin:";
+
+    my($messenger_chrome_dir) = "$chrome_dir" . "messenger:";
+    my($messenger_content_chrome_dir) = "$messenger_chrome_dir" . "content:";
+    my($messenger_locale_chrome_dir) = "$messenger_chrome_dir" . "locale:";
+    my($messenger_skin_chrome_dir) = "$messenger_chrome_dir" . "skin:";
+
+    my($editor_chrome_dir) = "$chrome_dir" . "editor:";
+    my($editor_content_chrome_dir) = "$editor_chrome_dir" . "content:";
+    my($editor_locale_chrome_dir) = "$editor_chrome_dir" . "locale:";
+    my($editor_skin_chrome_dir) = "$editor_chrome_dir" . "skin:";
+
+    my($aim_chrome_dir) = "$chrome_dir" . "aim:";
+
+
+    # xpinstall lives inside of the top level communicator dist dir
+
+        my($xpinstall_content_chrome_dir) = "$communicator_content_chrome_dir" . "xpinstall:";
+        my($xpinstall_locale_chrome_dir) = "$communicator_locale_chrome_dir" . "xpinstall:";
+        my($xpinstall_skin_chrome_dir) = "$communicator_skin_chrome_dir" . "xpinstall:";
+
+        _InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",                                       "$xpinstall_locale_chrome_dir", 0);
+        _InstallResources(":mozilla:xpinstall:res:content:MANIFEST",                                            "$xpinstall_content_chrome_dir", 0);
+        _InstallResources(":mozilla:xpinstall:res:skin:MANIFEST",                                                       "$xpinstall_skin_chrome_dir", 0);
+
+        # profile lives inside of the top level communicator dist dir
+
+    my($profile_content_chrome_dir) = "$communicator_content_chrome_dir" . "profile";
+        my($profile_locale_chrome_dir) = "$communicator_locale_chrome_dir" . "profile";
+        my($profile_skin_chrome_dir) = "$communicator_skin_chrome_dir" . "profile";
+
+        _InstallResources(":mozilla:profile:resources:content:MANIFEST",                                        "$profile_content_chrome_dir", 0);
+        _InstallResources(":mozilla:profile:resources:skin:MANIFEST",                                           "$profile_skin_chrome_dir", 0);
+        _InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",                           "$profile_locale_chrome_dir", 0);
+        _InstallResources(":mozilla:profile:pref-migrator:resources:content:MANIFEST",          "$profile_content_chrome_dir", 0);
+        _InstallResources(":mozilla:profile:pref-migrator:resources:locale:en-US:MANIFEST",     "$profile_locale_chrome_dir", 0);
 
 	# need to duplicate this line if more files in default profile folder
 	my($defaults_dir) = "$dist_dir" . "Defaults:";
@@ -374,120 +414,131 @@ sub MakeResourceAliases()
 	my($default_profile_dir) = "$defaults_dir"."Profile:";
 	mkdir($default_profile_dir, 0);
 
-	_copy(":mozilla:profile:defaults:bookmarks.html",									"$default_profile_dir"."bookmarks.html");
-	_copy(":mozilla:profile:defaults:panels.rdf",										"$default_profile_dir"."panels.rdf");
+        _copy(":mozilla:profile:defaults:bookmarks.html",                                                                       "$default_profile_dir"."bookmarks.html");
+        _copy(":mozilla:profile:defaults:panels.rdf",                                                                           "$default_profile_dir"."panels.rdf");
 
 	# Default _pref_ directory stuff
 	my($default_pref_dir) = "$defaults_dir"."Pref:";
 	mkdir($default_pref_dir, 0);
-	_InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",						"$default_pref_dir", 0);
-	_InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",					"$default_pref_dir", 0);
-	_InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",						"$default_pref_dir", 0);
-	_InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",						"$default_pref_dir", 0);
+        _InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",                                           "$default_pref_dir", 0);
+        _InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",                                        "$default_pref_dir", 0);
+        _InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",                                         "$default_pref_dir", 0);
+        _InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",                                          "$default_pref_dir", 0);
 
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
-	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
-	 my($global_chrome_dir) = "$chrome_dir" . "Global";
 
-	_InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",				"$navigator_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",					"$navigator_chrome_dir:skin:default");
-	_InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",			"$navigator_chrome_dir:locale:en-US:", 0);
+        _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",                           "$navigator_content_chrome_dir");
+        _InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",                                      "$navigator_skin_chrome_dir");
+        _InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",                      "$navigator_locale_chrome_dir", 0);
 
-	#SECURITY
-	_InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_GLOBAL",		"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_NAV",			"$navigator_chrome_dir:content:default");
-	_InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",			"$global_chrome_dir:locale:en-US:");
-	_InstallResources(":mozilla:extensions:psm-glue:res:skin:MANIFEST",					"$navigator_chrome_dir:skin:default");
+        #SECURITY
+        _InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_GLOBAL",           "$global_content_chrome_dir");
+        _InstallResources(":mozilla:extensions:psm-glue:res:content:MANIFEST_NAV",                      "$navigator_content_chrome_dir");
+        _InstallResources(":mozilla:extensions:psm-glue:res:locale:en-US:MANIFEST",                     "$global_locale_chrome_dir");
+        _InstallResources(":mozilla:extensions:psm-glue:res:skin:MANIFEST",                                     "$navigator_skin_chrome_dir");
 
-	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",				"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",			"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",					"$global_chrome_dir:skin:default");
-	_InstallResources(":mozilla:xpfe:global:resources:skin:mac:MANIFEST",  				"$chrome_dir");
-	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",			"$chrome_dir");
-	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",			"$global_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",		"$global_chrome_dir:locale:en-US:", 0);
+        _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",                            "$global_content_chrome_dir");
+        _InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",                        "$global_content_chrome_dir");
+        _InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",                                       "$global_skin_chrome_dir");
+        _InstallResources(":mozilla:xpfe:global:resources:skin:mac:MANIFEST",                           "$chrome_dir");
+        _InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",                        "$chrome_dir");
+        _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",                       "$global_locale_chrome_dir", 0);
+        _InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",           "$global_locale_chrome_dir", 0);
 
-	_InstallResources(":mozilla:docshell:base:MANIFEST",								"$global_chrome_dir:locale:en-US:", 0);
+        _InstallResources(":mozilla:docshell:base:MANIFEST",                                                            "$global_locale_chrome_dir", 0);
 
-	 my($layout_chrome_dir) = "$chrome_dir" . "Layout";
-	_InstallResources(":mozilla:layout:html:forms:src:MANIFEST_PROPERTIES",				"$layout_chrome_dir:locale:en-US:", 0);
+        my($layout_locale_hack_dir) = "$communicator_locale_chrome_dir"."layout:";
+        mkdir($layout_locale_hack_dir, 0);
+        _InstallResources(":mozilla:layout:html:forms:src:MANIFEST_PROPERTIES",                 "$layout_locale_hack_dir", 0);
 
-	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
+        _InstallResources(":mozilla:xpfe:browser:src:MANIFEST",                                                         "$samples_dir");
 
-	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:",						"$samples_dir");
-	_MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:",							"$samples_dir");
+        BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:",                                            "$samples_dir");
+        _MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:",                                                       "$samples_dir");
 		
 	# if ($main::build{editor})
 	{
-		my($editor_chrome_dir) = "$chrome_dir" . "Editor";
+                _InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",                               "$editor_content_chrome_dir", 0);
+                _InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",                                  "$editor_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",                  "$editor_locale_chrome_dir", 0);
 
-		_InstallResources(":mozilla:editor:ui:composer:content:MANIFEST",				"$editor_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:editor:ui:composer:skin:MANIFEST",					"$editor_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:editor:ui:composer:locale:en-US:MANIFEST",			"$editor_chrome_dir:locale:en-US:", 0);
-
-		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",					"$editor_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",			"$editor_chrome_dir:locale:en-US:", 0);
+                _InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",                                "$editor_content_chrome_dir", 0);
+                _InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",                                   "$editor_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",                   "$editor_locale_chrome_dir", 0);
 	}
 
 	if ($main::build{extensions})
 	{
-		my($irc_bin_dir) = "$chrome_dir"."Chatzilla";
-		_InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",					"$irc_bin_dir:content:default:lib:js");
-		_InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",					"$irc_bin_dir:content:default:lib:xul");
-		_InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",				"$irc_bin_dir:content:default");
-		_InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",					"$irc_bin_dir:skin:default");
-		_InstallResources(":mozilla:extensions:irc:xul:skin:images:MANIFEST",			"$irc_bin_dir:skin:default:images");
+            # Chatzilla is a toplevel component
+                my($chatzilla_bin_dir) = "$chrome_dir"."chatzilla";
+
+                _InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",                                    "$chatzilla_bin_dir:content:lib:js");
+                _InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",                                   "$chatzilla_bin_dir:content:lib:xul");
+                _InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",                               "$chatzilla_bin_dir:content");
+                _InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",                                  "$chatzilla_bin_dir:skin");
+                _InstallResources(":mozilla:extensions:irc:xul:skin:images:MANIFEST",                   "$chatzilla_bin_dir:skin:images");
 	}
 
 	# if ($main::build{mailnews})
 	{
-		my($mailnews_dir) = "$resource_dir" . "Mailnews";
-		my($messenger_chrome_dir) = "$chrome_dir" . "Messenger";
-		my($messengercomposer_chrome_dir) = "$chrome_dir" . "MessengerCompose";
-		my($addressbook_chrome_dir) = "$chrome_dir" . "Addressbook";
-		
-		_InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",			 "$messenger_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:base:resources:content:mac:MANIFEST",			 "$messenger_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",				 "$messenger_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:mailnews:base:resources:locale:en-US:MANIFEST",		 "$messenger_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",	 "$messenger_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:base:prefs:resources:locale:en-US:MANIFEST", "$messenger_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",		 "$messenger_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",	 "$messenger_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:base:search:resources:locale:en-US:MANIFEST",		"$messenger_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",				 "$messenger_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:mailnews:mime:resources:content:MANIFEST",				"$messenger_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",	 "$messenger_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:mailnews:mime:emitters:resources:content:MANIFEST",		"$messenger_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",			 "$messenger_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:mailnews:local:resources:locale:en-US:MANIFEST",	 "$messenger_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",				 "$messenger_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:mailnews:news:resources:content:MANIFEST",			 "$messenger_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:news:resources:locale:en-US:MANIFEST",		 "$messenger_chrome_dir:locale:en-US:", 0);
+                # Messenger is a top level component
+                my($mailnews_dir) = "$resource_dir" . "messenger";
+                my($messenger_chrome_dir) = "$chrome_dir" . "messenger:";
+                my($messenger_content_chrome_dir) = "$messenger_chrome_dir" . "content:";
+                my($messenger_locale_chrome_dir) = "$messenger_chrome_dir" . "locale:";
+                my($messenger_skin_chrome_dir) = "$messenger_chrome_dir" . "skin:";
 
-		_InstallResources(":mozilla:mailnews:imap:resources:locale:en-US:MANIFEST",		 "$messenger_chrome_dir:locale:en-US:", 0);
+                # messenger compose resides within messenger
+                my($messengercompose_content_chrome_dir) = "$messenger_content_chrome_dir" . "messengercompose:";
+                my($messengercompose_locale_chrome_dir) = "$messenger_locale_chrome_dir" . "messengercompose:";
+                my($messengercompose_skin_chrome_dir) = "$messenger_skin_chrome_dir" . "messengercompose:";
 
-		_InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",					 "$messenger_chrome_dir:locale:en-US:", 0); 
-		_InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",		"$mailnews_dir:messenger:", 0); 
+            # addressbook resides within messenger
+            my($addressbook_content_chrome_dir) = "$messenger_content_chrome_dir" . "addressbook:";
+                my($addressbook_locale_chrome_dir) = "$messenger_locale_chrome_dir" . "addressbook:";
+                my($addressbook_skin_chrome_dir) = "$messenger_skin_chrome_dir" . "addressbook:";
 
-		_InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",		 "$messengercomposer_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",			 "$messengercomposer_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:mailnews:compose:resources:locale:en-US:MANIFEST",	 "$messengercomposer_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",	 "$messengercomposer_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:compose:prefs:resources:locale:en-US:MANIFEST",	"$messengercomposer_chrome_dir:locale:en-US:", 0);
+                _InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",                   "$messenger_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:base:resources:content:mac:MANIFEST",               "$messenger_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",                              "$messenger_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:base:resources:locale:en-US:MANIFEST",              "$messenger_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:base:prefs:resources:content:MANIFEST",     "$messenger_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:base:prefs:resources:locale:en-US:MANIFEST", "$messenger_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:base:prefs:resources:skin:MANIFEST",                "$messenger_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:base:search:resources:content:MANIFEST",    "$messenger_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:base:search:resources:locale:en-US:MANIFEST",              "$messenger_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:mime:resources:skin:MANIFEST",                              "$messenger_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:mime:resources:content:MANIFEST",                          "$messenger_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:mime:emitters:resources:skin:MANIFEST",     "$messenger_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:mime:emitters:resources:content:MANIFEST",         "$messenger_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:local:resources:skin:MANIFEST",                     "$messenger_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:local:resources:locale:en-US:MANIFEST",     "$messenger_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:news:resources:skin:MANIFEST",                              "$messenger_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:news:resources:content:MANIFEST",                   "$messenger_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:news:resources:locale:en-US:MANIFEST",              "$messenger_locale_chrome_dir", 0);
 
-		_InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",		 "$addressbook_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",			 "$addressbook_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",	 "$addressbook_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_chrome_dir:locale:en-US:", 0);
+                _InstallResources(":mozilla:mailnews:imap:resources:locale:en-US:MANIFEST",              "$messenger_locale_chrome_dir", 0);
 
-    	_InstallResources(":mozilla:mailnews:import:resources:content:MANIFEST", 		"$messenger_chrome_dir:content:default:", 0);
-    	_InstallResources(":mozilla:mailnews:import:resources:skin:MANIFEST", 			"$messenger_chrome_dir:skin:default:", 0);
-    	_InstallResources(":mozilla:mailnews:import:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
-    	_InstallResources(":mozilla:mailnews:import:eudora:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
-    	_InstallResources(":mozilla:mailnews:import:text:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
+                _InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                                   "$messenger_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",                "$mailnews_dir:messenger:", 0);
+
+                _InstallResources(":mozilla:mailnews:compose:resources:content:MANIFEST",                "$messengercompose_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:compose:resources:skin:MANIFEST",                   "$messengercompose_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:compose:resources:locale:en-US:MANIFEST",   "$messengercompose_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:compose:prefs:resources:content:MANIFEST",  "$messengercompose_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:compose:prefs:resources:locale:en-US:MANIFEST",    "$messengercompose_locale_chrome_dir", 0);
+
+                _InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",               "$addressbook_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",                  "$addressbook_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",  "$addressbook_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_content_chrome_dir", 0);
+                _InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_locale_chrome_dir", 0);
+
+        _InstallResources(":mozilla:mailnews:import:resources:content:MANIFEST",                "$messenger_content_chrome_dir", 0);
+        _InstallResources(":mozilla:mailnews:import:resources:skin:MANIFEST",                   "$messenger_skin_chrome_dir", 0);
+        _InstallResources(":mozilla:mailnews:import:resources:locale:en-US:MANIFEST",   "$messenger_locale_chrome_dir", 0);
+        _InstallResources(":mozilla:mailnews:import:eudora:resources:locale:en-US:MANIFEST",    "$messenger_locale_chrome_dir", 0);
+        _InstallResources(":mozilla:mailnews:import:text:resources:locale:en-US:MANIFEST",      "$messenger_locale_chrome_dir", 0);
 	
 	}
 	
@@ -496,104 +547,136 @@ sub MakeResourceAliases()
 	_copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
 		
 	# Install XPFE component resources
-	_InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",					"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:components:find:resources:locale:MANIFEST",			"$global_chrome_dir:locale");
-	{
-		my($bookmarks_dir) = "$chrome_dir"."Bookmarks";
-		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-content",	"$bookmarks_dir:content:default");
-		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-skin",		"$bookmarks_dir:skin:default");
-		_InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:MANIFEST",	"$bookmarks_dir:locale");
-	}
-	{
-		my($directory_dir) = "$chrome_dir"."Directory";
-		_InstallResources(":mozilla:xpfe:components:directory:MANIFEST-content",			"$directory_dir:content:default");
-		_InstallResources(":mozilla:xpfe:components:directory:MANIFEST-skin",				"$directory_dir:skin:default");
-		_InstallResources(":mozilla:xpfe:components:directory:locale:MANIFEST",				"$directory_dir:locale");
-	}
-	{
-		my($regviewer_dir) = "$chrome_dir"."RegViewer";
-		_InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-content",			"$regviewer_dir:content:default");
-		_InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-skin",				"$regviewer_dir:skin:default");
-		_InstallResources(":mozilla:xpfe:components:regviewer:locale:MANIFEST",				"$regviewer_dir:locale");
-	}
-	{
-		my($history_dir) = "$chrome_dir"."History";
-		_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",	"$history_dir:content:default");
-		_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",		"$history_dir:skin:default");
-		_InstallResources(":mozilla:xpfe:components:history:resources:locale:MANIFEST",		"$history_dir:locale");
-	}
-	{
-		my($related_dir) = "$chrome_dir"."Related";
-		_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-content",	"$related_dir:content:default");
-		_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-skin",		"$related_dir:skin:default");
-		_InstallResources(":mozilla:xpfe:components:related:resources:locale:MANIFEST",		"$related_dir:locale");
-	}
-	{
-		my($search_dir) = "$chrome_dir"."Search";
-		_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-content",		"$search_dir:content:default");
-		_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-skin",		"$search_dir:skin:default");
-		_InstallResources(":mozilla:xpfe:components:search:resources:locale:MANIFEST",		"$search_dir:locale");
+
+        _InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",                                   "$global_content_chrome_dir");
+        _InstallResources(":mozilla:xpfe:components:find:resources:locale:en-US:MANIFEST",                      "$global_locale_chrome_dir");
+        {
+                my($bookmarks_content_chrome_dir) = "$communicator_content_chrome_dir"."bookmarks:";
+                my($bookmarks_locale_chrome_dir) = "$communicator_locale_chrome_dir"."bookmarks:";
+                my($bookmarks_skin_chrome_dir) = "$communicator_skin_chrome_dir"."bookmarks:";
+
+                _InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-content",      "$bookmarks_content_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST-skin",         "$bookmarks_skin_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:en-US:MANIFEST", "$bookmarks_locale_chrome_dir");
+        }
+        {
+            my($directory_content_chrome_dir) = "$communicator_content_chrome_dir"."directory:";
+                my($directory_locale_chrome_dir) = "$communicator_locale_chrome_dir"."directory:";
+                my($directory_skin_chrome_dir) = "$communicator_skin_chrome_dir"."directory:";
+
+                _InstallResources(":mozilla:xpfe:components:directory:MANIFEST-content",                        "$directory_content_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:directory:MANIFEST-skin",                           "$directory_skin_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:directory:locale:en-US:MANIFEST",                           "$directory_locale_chrome_dir");
+        }
+        {
+            my($regviewer_content_chrome_dir) = "$communicator_content_chrome_dir"."regviewer:";
+                my($regviewer_locale_chrome_dir) = "$communicator_locale_chrome_dir"."regviewer:";
+                my($regviewer_skin_chrome_dir) = "$communicator_skin_chrome_dir"."regviewer:";
+
+                _InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-content",                        "$regviewer_content_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-skin",                           "$regviewer_skin_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:regviewer:locale:en-US:MANIFEST",                           "$regviewer_locale_chrome_dir");
+        }
+        {
+                my($history_content_chrome_dir) = "$communicator_content_chrome_dir"."history:";
+                my($history_locale_chrome_dir) = "$communicator_locale_chrome_dir"."history:";
+                my($history_skin_chrome_dir) = "$communicator_skin_chrome_dir"."history:";
+
+                _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",        "$history_content_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",           "$history_skin_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:history:resources:locale:en-US:MANIFEST",           "$history_locale_chrome_dir");
+        }
+        {
+            my($related_content_chrome_dir) = "$communicator_content_chrome_dir"."related:";
+                my($related_locale_chrome_dir) = "$communicator_locale_chrome_dir"."related:";
+                my($related_skin_chrome_dir) = "$communicator_skin_chrome_dir"."related:";
+
+                _InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-content",        "$related_content_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-skin",           "$related_skin_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:related:resources:locale:en-US:MANIFEST",           "$related_locale_chrome_dir");
+        }
+        {
+            my($search_content_chrome_dir) = "$communicator_content_chrome_dir"."search:";
+                my($search_locale_chrome_dir) = "$communicator_locale_chrome_dir"."search:";
+                my($search_skin_chrome_dir) = "$communicator_skin_chrome_dir"."search:";
+
+                _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-content",         "$search_content_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST-skin",            "$search_skin_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:search:resources:locale:en-US:MANIFEST",            "$search_locale_chrome_dir");
 
 		my($searchdatasets_dir) = "$resource_dir" . "rdf:datasets:";
-		_InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",				"$searchdatasets_dir");
-	}
-	{
-		my($sidebar_chrome_dir) = "$chrome_dir" . "Sidebar";
-		_InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",	"$sidebar_chrome_dir:content:default");
-		_InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-skin",		"$sidebar_chrome_dir:skin:default");
-		_InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:MANIFEST",		"$sidebar_chrome_dir:locale");
-		_InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",					"${dist_dir}Components");
-	}
-	{
-		my($directory_dir) = "$chrome_dir"."Timebomb";
-		_InstallResources(":mozilla:xpfe:components:timebomb:resources:content:MANIFEST",   "$directory_dir:content:default");
-		_InstallResources(":mozilla:xpfe:components:timebomb:resources:locale:en-US:MANIFEST",	"$directory_dir:locale:en-US");
-	}
-	
-	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",					"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:components:ucth:resources:locale:MANIFEST",			"$global_chrome_dir:locale");
-	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",					"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:components:xfer:resources:locale:MANIFEST",			"$global_chrome_dir:locale");
-	
- 	{
- 		my($pref_chrome_dir) = "$chrome_dir" . "Pref";
- 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST", 		"$pref_chrome_dir:content:default:", 0);
- 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",			"$pref_chrome_dir:skin:default:", 0);
- 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",	"$pref_chrome_dir:locale:en-US:", 0);
- 	}
+                _InstallResources(":mozilla:xpfe:components:search:datasets:MANIFEST",                          "$searchdatasets_dir");
+        }
+        {
+            my($sidebar_content_chrome_dir) = "$communicator_content_chrome_dir"."sidebar:";
+                my($sidebar_locale_chrome_dir) = "$communicator_locale_chrome_dir"."sidebar:";
+                my($sidebar_skin_chrome_dir) = "$communicator_skin_chrome_dir"."sidebar:";
 
-	_InstallResources(":mozilla:xpfe:components:console:resources:content:MANIFEST", 		"$global_chrome_dir:content:default:", 0);
-	_InstallResources(":mozilla:xpfe:components:console:resources:skin:MANIFEST",			"$global_chrome_dir:skin:default:", 0);
-	_InstallResources(":mozilla:xpfe:components:console:resources:locale:en-US:MANIFEST",	"$global_chrome_dir:locale:en-US:", 0);
+                _InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-content",        "$sidebar_content_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:sidebar:resources:MANIFEST-skin",           "$sidebar_skin_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:en-US:MANIFEST",           "$sidebar_locale_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",                                      "${dist_dir}Components");
+        }
+        {
+            my($timebomb_content_chrome_dir) = "$communicator_content_chrome_dir"."timebomb:";
+                my($timebomb_locale_chrome_dir) = "$communicator_locale_chrome_dir"."timebomb:";
+                my($timebomb_skin_chrome_dir) = "$communicator_skin_chrome_dir"."timebomb:";
 
-	_InstallResources(":mozilla:xpfe:components:autocomplete:resources:skin:MANIFEST",	 	"$chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:timebomb:resources:content:MANIFEST",   "$timebomb_content_chrome_dir");
+                _InstallResources(":mozilla:xpfe:components:timebomb:resources:locale:en-US:MANIFEST",  "$timebomb_locale_chrome_dir");
+        }
 
-	{
-		 my($wallet_chrome_dir) = "$chrome_dir" . "Wallet";
-		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",				"$wallet_chrome_dir:content:default:", 0);
-		_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",						"$wallet_chrome_dir:content:default:", 0);
+        _InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",                                   "$global_content_chrome_dir");
+        _InstallResources(":mozilla:xpfe:components:ucth:resources:locale:en-US:MANIFEST",                      "$global_locale_chrome_dir");
+        _InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",                                   "$global_content_chrome_dir");
+        _InstallResources(":mozilla:xpfe:components:xfer:resources:locale:en-US:MANIFEST",                      "$global_locale_chrome_dir");
 
-		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_PROPERTIES",			"$wallet_chrome_dir:locale:en-US:", 0);
-		_InstallResources(":mozilla:extensions:wallet:src:MANIFEST_PROPERTIES",				"$wallet_chrome_dir:locale:en-US:", 0);
-	
-		_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
-		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
-	}
+        {
+                my($pref_content_chrome_dir) = "$communicator_content_chrome_dir"."pref:";
+                my($pref_locale_chrome_dir) = "$communicator_locale_chrome_dir"."pref:";
+                my($pref_skin_chrome_dir) = "$communicator_skin_chrome_dir"."pref:";
+
+                _InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",             "$pref_content_chrome_dir", 0);
+                _InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",                        "$pref_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",        "$pref_locale_chrome_dir", 0);
+        }
+
+        _InstallResources(":mozilla:xpfe:components:console:resources:content:MANIFEST",                "$global_content_chrome_dir", 0);
+        _InstallResources(":mozilla:xpfe:components:console:resources:skin:MANIFEST",                   "$global_skin_chrome_dir", 0);
+        _InstallResources(":mozilla:xpfe:components:console:resources:locale:en-US:MANIFEST",   "$global_locale_chrome_dir", 0);
+
+    # XXX autocomplete needs to move somewhere
+        _InstallResources(":mozilla:xpfe:components:autocomplete:resources:skin:MANIFEST",              "$chrome_dir");
+
+        {
+                my($wallet_content_chrome_dir) = "$communicator_content_chrome_dir"."wallet:";
+                my($wallet_locale_chrome_dir) = "$communicator_locale_chrome_dir"."wallet:";
+                my($wallet_skin_chrome_dir) = "$communicator_skin_chrome_dir"."wallet:";
+
+                _InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",                           "$wallet_content_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",                           "$wallet_content_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",                          "$wallet_content_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",                                         "$wallet_content_chrome_dir", 0);
+
+                _InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_PROPERTIES",        "$wallet_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_PROPERTIES",        "$wallet_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST_PROPERTIES",       "$wallet_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_PROPERTIES",                      "$wallet_locale_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:src:MANIFEST_PROPERTIES",                         "$wallet_locale_chrome_dir", 0);
+
+                _InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_SKIN",                    "$wallet_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_SKIN",                      "$wallet_skin_chrome_dir", 0);
+                _InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_SKIN",                      "$wallet_skin_chrome_dir", 0);
+        }
     {
-		 my($caps_chrome_dir) = "$chrome_dir" . "Security";
-		_InstallResources(":mozilla:caps:src:MANIFEST_PROPERTIES",	"$caps_chrome_dir:locale:en-US:", 0);
-	}
-
-
+                my($security_content_chrome_dir) = "$communicator_content_chrome_dir"."security:";
+                my($security_locale_chrome_dir) = "$communicator_locale_chrome_dir"."security:";
+                my($security_skin_chrome_dir) = "$communicator_skin_chrome_dir"."security:";
+                _InstallResources(":mozilla:caps:src:MANIFEST_PROPERTIES",      "$security_locale_chrome_dir", 0);
+        }
 
 	# QA Menu
-	_InstallResources(":mozilla:intl:strres:tests:MANIFEST",			"$resource_dir");
+        _InstallResources(":mozilla:intl:strres:tests:MANIFEST",                        "$resource_dir");
 
 	print("--- Resource copying complete ----\n");
 }
@@ -639,24 +722,24 @@ sub BuildRuntimeDist()
 	print("--- Starting Runtime Dist export ----\n");
 
 	#MAC_COMMON
-	_InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
-	_InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",				"$distdirectory:mac:common:");
-	_InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
-	_InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",						"$distdirectory:mac:common:morefiles:");
+        _InstallFromManifest(":mozilla:build:mac:MANIFEST",                                                             "$distdirectory:mac:common:");
+        _InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",                             "$distdirectory:mac:common:");
+        _InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",                              "$distdirectory:mac:common:");
+        _InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",                                             "$distdirectory:mac:common:morefiles:");
 
 	#GC_LEAK_DETECTOR
-	_InstallFromManifest(":mozilla:gc:boehm:MANIFEST",								"$distdirectory:gc:");
-	
-	#INCLUDE
-	_InstallFromManifest(":mozilla:config:mac:MANIFEST",							"$distdirectory:config:");
-	_InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:");
+        _InstallFromManifest(":mozilla:gc:boehm:MANIFEST",                                                              "$distdirectory:gc:");
+
+        #INCLUDE
+        _InstallFromManifest(":mozilla:config:mac:MANIFEST",                                                    "$distdirectory:config:");
+        _InstallFromManifest(":mozilla:config:mac:MANIFEST_config",                                             "$distdirectory:config:");
 	
 	#NSPR	
-	_InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",					"$distdirectory:nspr:");		
-	_InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
-	_InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",						"$distdirectory:nspr:");		
-	_InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
-	_InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
+        _InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",                                    "$distdirectory:nspr:");
+        _InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",                                 "$distdirectory:nspr:mac:");
+        _InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",                                                "$distdirectory:nspr:");
+        _InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",                              "$distdirectory:nspr:");
+        _InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",                              "$distdirectory:nspr:");
 
 	print("--- Runtime Dist export complete ----\n");
 }
@@ -676,308 +759,307 @@ sub BuildClientDist()
 
 	 print("--- Starting Client Dist export ----\n");
 
-	_InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
-#	_InstallFromManifest(":mozilla:lib:mac:Instrumentation:MANIFEST",				"$distdirectory:mac:inst:");
+        _InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",                                                  "$distdirectory:mac:common:");
+#       _InstallFromManifest(":mozilla:lib:mac:Instrumentation:MANIFEST",                               "$distdirectory:mac:inst:");
 
 	#INCLUDE
 
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
-	_MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
+        _MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",       ":mozilla:dist:config:MacConfigInclude.h");
 
-	_InstallFromManifest(":mozilla:include:MANIFEST",								"$distdirectory:include:");		
+        _InstallFromManifest(":mozilla:include:MANIFEST",                                                               "$distdirectory:include:");
 
 	#INTL
 	#CHARDET
-	_InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST",					"$distdirectory:chardet");
+        _InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST",                                   "$distdirectory:chardet");
 
 	#UCONV
-	_InstallFromManifest(":mozilla:intl:uconv:idl:MANIFEST_IDL",					"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",						"$distdirectory:uconv:");
-	_InstallFromManifest(":mozilla:intl:uconv:ucvlatin:MANIFEST",					"$distdirectory:uconv:");
-	_InstallFromManifest(":mozilla:intl:uconv:ucvja:MANIFEST",						"$distdirectory:uconv:");
-#	_InstallFromManifest(":mozilla:intl:uconv:ucvja2:MANIFEST",						"$distdirectory:uconv:");
-	_InstallFromManifest(":mozilla:intl:uconv:ucvtw:MANIFEST",						"$distdirectory:uconv:");
-	_InstallFromManifest(":mozilla:intl:uconv:ucvtw2:MANIFEST",						"$distdirectory:uconv:");
-	_InstallFromManifest(":mozilla:intl:uconv:ucvcn:MANIFEST",						"$distdirectory:uconv:");
-	_InstallFromManifest(":mozilla:intl:uconv:ucvko:MANIFEST",						"$distdirectory:uconv:");
-#	_InstallFromManifest(":mozilla:intl:uconv:ucvth:MANIFEST",						"$distdirectory:uconv:");
-#	_InstallFromManifest(":mozilla:intl:uconv:ucvvt:MANIFEST",						"$distdirectory:uconv:");
-	_InstallFromManifest(":mozilla:intl:uconv:ucvibm:MANIFEST",						"$distdirectory:uconv:");
-
+        _InstallFromManifest(":mozilla:intl:uconv:idl:MANIFEST_IDL",                                    "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",                                             "$distdirectory:uconv:");
+        _InstallFromManifest(":mozilla:intl:uconv:ucvlatin:MANIFEST",                                   "$distdirectory:uconv:");
+        _InstallFromManifest(":mozilla:intl:uconv:ucvja:MANIFEST",                                              "$distdirectory:uconv:");
+#       _InstallFromManifest(":mozilla:intl:uconv:ucvja2:MANIFEST",                                             "$distdirectory:uconv:");
+        _InstallFromManifest(":mozilla:intl:uconv:ucvtw:MANIFEST",                                              "$distdirectory:uconv:");
+        _InstallFromManifest(":mozilla:intl:uconv:ucvtw2:MANIFEST",                                             "$distdirectory:uconv:");
+        _InstallFromManifest(":mozilla:intl:uconv:ucvcn:MANIFEST",                                              "$distdirectory:uconv:");
+        _InstallFromManifest(":mozilla:intl:uconv:ucvko:MANIFEST",                                              "$distdirectory:uconv:");
+#       _InstallFromManifest(":mozilla:intl:uconv:ucvth:MANIFEST",                                              "$distdirectory:uconv:");
+#       _InstallFromManifest(":mozilla:intl:uconv:ucvvt:MANIFEST",                                              "$distdirectory:uconv:");
+        _InstallFromManifest(":mozilla:intl:uconv:ucvibm:MANIFEST",                                             "$distdirectory:uconv:");
 
 	#UNICHARUTIL
-	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST",				"$distdirectory:unicharutil");
-#	_InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST_IDL",			"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST",                               "$distdirectory:unicharutil");
+#       _InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST_IDL",                   "$distdirectory:idl:");
 
 	#LOCALE
-	_InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",					"$distdirectory:locale:");
-	_InstallFromManifest(":mozilla:intl:locale:idl:MANIFEST_IDL",					"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:intl:locale:public:MANIFEST",                                    "$distdirectory:locale:");
+        _InstallFromManifest(":mozilla:intl:locale:idl:MANIFEST_IDL",                                   "$distdirectory:idl:");
 
 	#LWBRK
-	_InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",						"$distdirectory:lwbrk:");
+        _InstallFromManifest(":mozilla:intl:lwbrk:public:MANIFEST",                                             "$distdirectory:lwbrk:");
 
 	#STRRES
-	_InstallFromManifest(":mozilla:intl:strres:public:MANIFEST_IDL",				"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:intl:strres:public:MANIFEST_IDL",                                "$distdirectory:idl:");
 
 	#JPEG
-	_InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
+        _InstallFromManifest(":mozilla:jpeg:MANIFEST",                                                                  "$distdirectory:jpeg:");
 
 	#LIBREG
-	_InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",				"$distdirectory:libreg:");
+        _InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",                                "$distdirectory:libreg:");
 
 	#XPCOM
-	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",						"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",							"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",							"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpcom:threads:MANIFEST_IDL",						"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST_IDL",					"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST_COMPONENTS", 			"${dist_dir}Components:");
+        _InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",                                                "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",                                                  "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",                                                  "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpcom:threads:MANIFEST_IDL",                                             "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpcom:components:MANIFEST_IDL",                                  "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpcom:components:MANIFEST_COMPONENTS",                   "${dist_dir}Components:");
 
-	_InstallFromManifest(":mozilla:xpcom:base:MANIFEST",							"$distdirectory:xpcom:");
-	_InstallFromManifest(":mozilla:xpcom:components:MANIFEST",						"$distdirectory:xpcom:");
-	_InstallFromManifest(":mozilla:xpcom:ds:MANIFEST",								"$distdirectory:xpcom:");
-	_InstallFromManifest(":mozilla:xpcom:io:MANIFEST",								"$distdirectory:xpcom:");
-	_InstallFromManifest(":mozilla:xpcom:threads:MANIFEST",							"$distdirectory:xpcom:");
-	_InstallFromManifest(":mozilla:xpcom:proxy:public:MANIFEST",					"$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:base:MANIFEST",                                                    "$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:components:MANIFEST",                                              "$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:ds:MANIFEST",                                                              "$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:io:MANIFEST",                                                              "$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:threads:MANIFEST",                                                 "$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:proxy:public:MANIFEST",                                    "$distdirectory:xpcom:");
 
-	_InstallFromManifest(":mozilla:xpcom:reflect:xptinfo:public:MANIFEST",			"$distdirectory:xpcom:");
-	_InstallFromManifest(":mozilla:xpcom:reflect:xptcall:public:MANIFEST",			"$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:reflect:xptinfo:public:MANIFEST",                  "$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:reflect:xptcall:public:MANIFEST",                  "$distdirectory:xpcom:");
 
-	_InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",				"$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",                              "$distdirectory:xpcom:");
 	
 	#ZLIB
-	_InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
+        _InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",                                              "$distdirectory:zlib:");
 
 	#LIBJAR
-	_InstallFromManifest(":mozilla:modules:libjar:MANIFEST",						"$distdirectory:libjar:");
-	_InstallFromManifest(":mozilla:modules:libjar:MANIFEST_IDL",					"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:modules:libjar:MANIFEST",                                                "$distdirectory:libjar:");
+        _InstallFromManifest(":mozilla:modules:libjar:MANIFEST_IDL",                                    "$distdirectory:idl:");
 
 	#LIBUTIL
-	_InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",				"$distdirectory:libutil:");
+        _InstallFromManifest(":mozilla:modules:libutil:public:MANIFEST",                                "$distdirectory:libutil:");
 
 	#SUN_JAVA
-	_InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",				"$distdirectory:sun-java:");
-	_InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",					"$distdirectory:sun-java:");
+        _InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",                                "$distdirectory:sun-java:");
+        _InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",                                 "$distdirectory:sun-java:");
 
 	#JS
-	_InstallFromManifest(":mozilla:js:src:MANIFEST",								"$distdirectory:js:");
+        _InstallFromManifest(":mozilla:js:src:MANIFEST",                                                                "$distdirectory:js:");
 
 	#LIVECONNECT
-	_InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",					"$distdirectory:liveconnect:");
+        _InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",                                    "$distdirectory:liveconnect:");
 	
 	#XPCONNECT	
-	_InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",					"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
+        _InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",                                  "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",                               "$distdirectory:xpconnect:");
 
 	#CAPS
-	_InstallFromManifest(":mozilla:caps:include:MANIFEST",							"$distdirectory:caps:");
-	_InstallFromManifest(":mozilla:caps:idl:MANIFEST",								"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:caps:include:MANIFEST",                                                  "$distdirectory:caps:");
+        _InstallFromManifest(":mozilla:caps:idl:MANIFEST",                                                              "$distdirectory:idl:");
 
 	#LIBPREF
-	_InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",				"$distdirectory:libpref:");
-	_InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST_IDL",			"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST",                                "$distdirectory:libpref:");
+        _InstallFromManifest(":mozilla:modules:libpref:public:MANIFEST_IDL",                    "$distdirectory:idl:");
 
 	#PROFILE
-	_InstallFromManifest(":mozilla:profile:public:MANIFEST_IDL",					"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:profile:public:MANIFEST_IDL",                                    "$distdirectory:idl:");
 
 	#PREF_MIGRATOR
-	_InstallFromManifest(":mozilla:profile:pref-migrator:public:MANIFEST",			"$distdirectory:profile:");
+        _InstallFromManifest(":mozilla:profile:pref-migrator:public:MANIFEST",                  "$distdirectory:profile:");
 
 	#LIBIMAGE
-	_InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",					"$distdirectory:libimg:");
-	_InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",					"$distdirectory:libimg:");
-	_InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:");
-	_InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",				"$distdirectory:libimg:");
+        _InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",                                    "$distdirectory:libimg:");
+        _InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",                                    "$distdirectory:libimg:");
+        _InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",                                 "$distdirectory:libimg:");
+        _InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",                             "$distdirectory:libimg:");
 
 	#PLUGIN
-	_InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
-	_InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",					"$distdirectory:plugin:");
-	_InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",					"$distdirectory:plugin:");
-	_InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						"$distdirectory:oji:");
-	_InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",					"$distdirectory:oji:");
+        _InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",                                 "$distdirectory:plugin:");
+        _InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",                                 "$distdirectory:plugin:");
+        _InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",                                    "$distdirectory:plugin:");
+        _InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",                                               "$distdirectory:oji:");
+        _InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",                                    "$distdirectory:oji:");
 	
 	#DB
-	_InstallFromManifest(":mozilla:db:mdb:public:MANIFEST",							"$distdirectory:db:");
-	_InstallFromManifest(":mozilla:db:mork:build:MANIFEST",							"$distdirectory:db:");
+        _InstallFromManifest(":mozilla:db:mdb:public:MANIFEST",                                                 "$distdirectory:db:");
+        _InstallFromManifest(":mozilla:db:mork:build:MANIFEST",                                                 "$distdirectory:db:");
 
 	#DBM
-	_InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
+        _InstallFromManifest(":mozilla:dbm:include:MANIFEST",                                                   "$distdirectory:dbm:");
 	
 	#URILOADER
-	_InstallFromManifest(":mozilla:uriloader:base:MANIFEST_IDL",					"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:uriloader:base:MANIFEST_IDL",                                    "$distdirectory:idl:");
 	
 	#NETWERK
-	_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",					"$distdirectory:netwerk:");
-	_InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:socket:base:MANIFEST_IDL",				"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:protocol:about:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:protocol:data:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	#_InstallFromManifest(":mozilla:netwerk:protocol:file:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST",			"$distdirectory:netwerk:");
-	_InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",					"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:netwerk:mime:public:MANIFEST",					"$distdirectory:netwerk:");
+        _InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",                                   "$distdirectory:netwerk:");
+        _InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST_IDL",                               "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:netwerk:socket:base:MANIFEST_IDL",                               "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:netwerk:protocol:about:public:MANIFEST_IDL",             "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:netwerk:protocol:data:public:MANIFEST_IDL",              "$distdirectory:idl:");
+        #_InstallFromManifest(":mozilla:netwerk:protocol:file:public:MANIFEST_IDL",             "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST_IDL",              "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST",                  "$distdirectory:netwerk:");
+        _InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",               "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",               "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",                                  "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:netwerk:mime:public:MANIFEST",                                   "$distdirectory:netwerk:");
 
-	#SECURITY
-	_InstallFromManifest(":mozilla:extensions:psm-glue:public:MANIFEST",			"$distdirectory:idl:");
+        #SECURITY
+        _InstallFromManifest(":mozilla:extensions:psm-glue:public:MANIFEST",                    "$distdirectory:idl:");
 
-	_InstallFromManifest(":mozilla:security:psm:lib:client:MANIFEST",				"$distdirectory:security:");
-	_InstallFromManifest(":mozilla:security:psm:lib:protocol:MANIFEST",				"$distdirectory:security:");
+        _InstallFromManifest(":mozilla:security:psm:lib:client:MANIFEST",                               "$distdirectory:security:");
+        _InstallFromManifest(":mozilla:security:psm:lib:protocol:MANIFEST",                             "$distdirectory:security:");
 	
 	#EXTENSIONS
-	_InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",						"$distdirectory:cookie:");
-	_InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
+        _InstallFromManifest(":mozilla:extensions:cookie:MANIFEST",                                             "$distdirectory:cookie:");
+        _InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",                              "$distdirectory:wallet:");
 
 	#WEBSHELL
-	_InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
-	_InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",			"$distdirectory:webshell:");
+        _InstallFromManifest(":mozilla:webshell:public:MANIFEST",                                               "$distdirectory:webshell:");
+        _InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",                  "$distdirectory:webshell:");
 
 	#LAYOUT
-	_InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:base:public:MANIFEST",					"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",			"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",				"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:html:document:public:MANIFEST",			"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",					"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",				"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",				"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",			"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",				"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",				"$distdirectory:layout:");
-	_InstallFromManifest(":mozilla:layout:xbl:public:Manifest",						"$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:build:MANIFEST",                                                  "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:base:public:MANIFEST",                                    "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:base:public:MANIFEST_IDL",                                "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",                    "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",                              "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:html:document:public:MANIFEST",                   "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",                              "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",                                 "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",                                  "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",                              "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",                              "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:base:src:MANIFEST",                                               "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:events:public:MANIFEST",                                  "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:events:src:MANIFEST",                                             "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",                    "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",                             "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",                                "$distdirectory:layout:");
+        _InstallFromManifest(":mozilla:layout:xbl:public:Manifest",                                             "$distdirectory:layout:");
 
 	#GFX
-	_InstallFromManifest(":mozilla:gfx:public:MANIFEST",							"$distdirectory:gfx:");
-	_InstallFromManifest(":mozilla:gfx:idl:MANIFEST_IDL",							"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:gfx:public:MANIFEST",                                                    "$distdirectory:gfx:");
+        _InstallFromManifest(":mozilla:gfx:idl:MANIFEST_IDL",                                                   "$distdirectory:idl:");
 
 	#VIEW
-	_InstallFromManifest(":mozilla:view:public:MANIFEST",							"$distdirectory:view:");
+        _InstallFromManifest(":mozilla:view:public:MANIFEST",                                                   "$distdirectory:view:");
 
 	#DOM
-	_InstallFromManifest(":mozilla:dom:public:MANIFEST",							"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:public:MANIFEST_IDL",						"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:dom:public:base:MANIFEST",						"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",					"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:public:range:MANIFEST",						"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:public:html:MANIFEST",						"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:public:css:MANIFEST",						"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
-	_InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:public:MANIFEST",                                                    "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:public:MANIFEST_IDL",                                                "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:dom:public:base:MANIFEST",                                               "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",                                    "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",                                 "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:public:events:MANIFEST",                                             "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:public:range:MANIFEST",                                              "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:public:html:MANIFEST",                                               "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:public:css:MANIFEST",                                                "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",                                                 "$distdirectory:dom:");
+        _InstallFromManifest(":mozilla:dom:src:base:MANIFEST",                                                  "$distdirectory:dom:");
 
 	#JSURL
-	_InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST_IDL",						"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST_IDL",                                             "$distdirectory:idl:");
 
 	#HTMLPARSER
-	_InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",						"$distdirectory:htmlparser:");
+        _InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",                                                "$distdirectory:htmlparser:");
 
 	#EXPAT
-	_InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",						"$distdirectory:expat:");
+        _InstallFromManifest(":mozilla:expat:xmlparse:MANIFEST",                                                "$distdirectory:expat:");
 	
 	#DOCSHELL
-	_InstallFromManifest(":mozilla:docshell:base:MANIFEST_IDL",						"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:docshell:base:MANIFEST_IDL",                                             "$distdirectory:idl:");
 
 	#EMBEDDING
-	_InstallFromManifest(":mozilla:embedding:browser:webbrowser:MANIFEST_IDL",		"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:embedding:browser:setup:MANIFEST_IDL",			"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:embedding:browser:webbrowser:MANIFEST_IDL",              "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:embedding:browser:setup:MANIFEST_IDL",                   "$distdirectory:idl:");
 
 	#WIDGET
-	_InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
-	_InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",						"$distdirectory:widget:");
-	_InstallFromManifest(":mozilla:widget:timer:public:MANIFEST",					"$distdirectory:widget:");
+        _InstallFromManifest(":mozilla:widget:public:MANIFEST",                                                 "$distdirectory:widget:");
+        _InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",                                             "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",                                                "$distdirectory:widget:");
+        _InstallFromManifest(":mozilla:widget:timer:public:MANIFEST",                                   "$distdirectory:widget:");
 
 	#RDF
-	_InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
-	_InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
-	_InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",					"$distdirectory:rdf:");
-	_InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
-	_InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
-	_InstallFromManifest(":mozilla:rdf:tests:domds:MANIFEST",						"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",                                                  "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",                                               "$distdirectory:rdf:");
+        _InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",                                               "$distdirectory:rdf:");
+        _InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",                                    "$distdirectory:rdf:");
+        _InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",                                 "$distdirectory:rdf:");
+        _InstallFromManifest(":mozilla:rdf:build:MANIFEST",                                                             "$distdirectory:rdf:");
+        _InstallFromManifest(":mozilla:rdf:tests:domds:MANIFEST",                                               "$distdirectory:idl:");
 	
 	#CHROME
-	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",						"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",                                             "$distdirectory:idl:");
 	
 	#EDITOR
-	_InstallFromManifest(":mozilla:editor:idl:MANIFEST",							"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:editor:txmgr:idl:MANIFEST",						"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
-	_InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",					"$distdirectory:editor:txmgr");
-	_InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",					"$distdirectory:editor:txtsvc");
+        _InstallFromManifest(":mozilla:editor:idl:MANIFEST",                                                    "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:editor:txmgr:idl:MANIFEST",                                              "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:editor:public:MANIFEST",                                                 "$distdirectory:editor:");
+        _InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",                                   "$distdirectory:editor:txmgr");
+        _InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",                                  "$distdirectory:editor:txtsvc");
 	
 	#SILENTDL
-	#_InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
+        #_InstallFromManifest(":mozilla:silentdl:MANIFEST",                                                             "$distdirectory:silentdl:");
 
 	#XPINSTALL (the one and only!)
-	_InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",						"$distdirectory:xpinstall:");
+        _InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                                              "$distdirectory:xpinstall:");
 
 	# XPFE COMPONENTS
-	_InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",				"$distdirectory:xpfe:components");
-	_InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",			"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",                                "$distdirectory:xpfe:components");
+        _InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",                    "$distdirectory:idl:");
 
 	my $dir = '';
 	for $dir (qw(bookmarks find history related sample search shistory sidebar ucth xfer)) {
-	_InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	}
-	_InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST",			    "$distdirectory:xpfe:");
-	_InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST_IDL",		    "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",               "$distdirectory:idl:");
+        }
+        _InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST",                          "$distdirectory:xpfe:");
+        _InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST_IDL",              "$distdirectory:idl:");
 
 	# directory
-	_InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",			"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",                 "$distdirectory:idl:");
 	# regviewer
-	 _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",		"$distdirectory:idl:");
+         _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",                "$distdirectory:idl:");
 	# console
-	 _InstallFromManifest(":mozilla:xpfe:components:console:MANIFEST_IDL",			"$distdirectory:idl:");
+         _InstallFromManifest(":mozilla:xpfe:components:console:MANIFEST_IDL",                  "$distdirectory:idl:");
 	# autocomplete
 	_InstallFromManifest(":mozilla:xpfe:components:autocomplete:public:MANIFEST_IDL", "$distdirectory:idl:");
 
 	# XPAPPS
-	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
-	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",				"$distdirectory:idl:");
-	_InstallFromManifest(":mozilla:xpfe:browser:public:MANIFEST_IDL",				"$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",                                  "$distdirectory:xpfe:");
+        _InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",                              "$distdirectory:idl:");
+        _InstallFromManifest(":mozilla:xpfe:browser:public:MANIFEST_IDL",                               "$distdirectory:idl:");
 	
 	# MAILNEWS
-	 _InstallFromManifest(":mozilla:mailnews:public:MANIFEST",						"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",					"$distdirectory:idl:");
-	 _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
-	 _InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST",			"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST_IDL",		"$distdirectory:idl:");
-	 _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",				"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST_IDL",			"$distdirectory:idl:");
-	 _InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",				"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",				"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",				"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:imap:build:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:imap:src:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST_IDL",				"$distdirectory:idl:");
-	 _InstallFromManifest(":mozilla:mailnews:mime:src:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:mime:build:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:mime:emitters:src:MANIFEST",			"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",					"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",			"$distdirectory:idl:");
-	 _InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",				"$distdirectory:mailnews:");
-	 _InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",				"$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:public:MANIFEST",                                              "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:public:MANIFEST_IDL",                                  "$distdirectory:idl:");
+         _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",                                 "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",                             "$distdirectory:idl:");
+         _InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",                                  "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",                                    "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",                                   "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST",                  "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:base:search:public:MANIFEST_IDL",              "$distdirectory:idl:");
+         _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",                              "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST_IDL",                  "$distdirectory:idl:");
+         _InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",                               "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",                             "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",                              "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",                                "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",                                 "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",                                   "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",                                 "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:imap:build:MANIFEST",                                  "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:imap:src:MANIFEST",                                    "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",                                 "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST_IDL",                             "$distdirectory:idl:");
+         _InstallFromManifest(":mozilla:mailnews:mime:src:MANIFEST",                                    "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:mime:build:MANIFEST",                                  "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:mime:emitters:src:MANIFEST",                   "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",                                 "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",                                  "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",                             "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",                 "$distdirectory:idl:");
+         _InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",                                "$distdirectory:mailnews:");
+         _InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",                              "$distdirectory:mailnews:");
 	 
 	 print("--- Client Dist export complete ----\n");
 }
