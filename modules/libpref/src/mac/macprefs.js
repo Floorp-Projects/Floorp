@@ -52,6 +52,92 @@ pref("taskbar.mac.is_vertical",             true);
 
 pref("mail.server_type_on_restart",         -1);
 
+// default font name (in UTF8)
+
+pref("font.name.serif.ar", "ثلث‮ ‬أبيض");
+pref("font.name.sans-serif.ar", "البيان");
+pref("font.name.monospace.ar", "جيزة");
+pref("font.name.cursive.ar", "XXX.cursive");
+pref("font.name.fantasy.ar", "XXX.fantasy");
+
+pref("font.name.serif.el", "Times GR");
+pref("font.name.sans-serif.el", "Helvetica GR");
+pref("font.name.monospace.el", "Courier GR");
+pref("font.name.cursive.el", "XXX.cursive");
+pref("font.name.fantasy.el", "XXX.fantasy");
+
+pref("font.name.serif.he", "פנינים‮ ‬חדש");
+pref("font.name.sans-serif.he", "אריאל");
+pref("font.name.monospace.he", "אריאל");
+pref("font.name.cursive.he", "XXX.cursive");
+pref("font.name.fantasy.he", "XXX.fantasy");
+
+pref("font.name.serif.ja", "本明朝−Ｍ"); 
+pref("font.name.sans-serif.ja", "丸ゴシック−Ｍ"); 
+pref("font.name.monospace.ja", "Osaka−等幅"); 
+pref("font.name.cursive.ja", "XXX.cursive");
+pref("font.name.fantasy.ja", "XXX.fantasy");
+
+pref("font.name.serif.ko", "AppleMyungjo"); 
+pref("font.name.sans-serif.ko", "AppleGothic"); 
+pref("font.name.monospace.ko", "AppleGothic"); 
+pref("font.name.cursive.ko", "XXX.cursive");
+pref("font.name.fantasy.ko", "XXX.fantasy");
+
+pref("font.name.serif.th", "Thonburi");
+pref("font.name.sans-serif.th", "Krungthep");
+pref("font.name.monospace.th", "Ayuthaya");
+pref("font.name.cursive.th", "XXX.cursive");
+pref("font.name.fantasy.th", "XXX.fantasy");
+
+pref("font.name.serif.tr", "Times");
+pref("font.name.sans-serif.tr", "Arial");
+pref("font.name.monospace.tr", "CourierR");
+pref("font.name.cursive.tr", "XXX.cursive");
+pref("font.name.fantasy.tr", "XXX.fantasy");
+
+pref("font.name.serif.x-baltic", "Times CE");
+pref("font.name.sans-serif.x-baltic", "Helvetica CE");
+pref("font.name.monospace.x-baltic", "Courier CE");
+pref("font.name.cursive.x-baltic", "XXX.cursive");
+pref("font.name.fantasy.x-baltic", "XXX.fantasy");
+
+pref("font.name.serif.x-central-euro", "Times CE");
+pref("font.name.sans-serif.x-central-euro", "Helvetica CE");
+pref("font.name.monospace.x-central-euro", "Courier CE");
+pref("font.name.cursive.x-central-euro", "XXX.cursive");
+pref("font.name.fantasy.x-central-euro", "XXX.fantasy");
+
+pref("font.name.serif.x-cyrillic", "Latinski");
+pref("font.name.sans-serif.x-cyrillic", "Pryamoy Prop");
+pref("font.name.monospace.x-cyrillic", "APC Courier");
+pref("font.name.cursive.x-cyrillic", "XXX.cursive");
+pref("font.name.fantasy.x-cyrillic", "XXX.fantasy");
+
+pref("font.name.serif.x-unicode", "Times");
+pref("font.name.sans-serif.x-unicode", "Helvetica");
+pref("font.name.monospace.x-unicode", "Courier");
+pref("font.name.cursive.x-unicode", "Zapf Chancery");
+pref("font.name.fantasy.x-unicode", "New Century Schlbk");
+
+pref("font.name.serif.x-western", "Times");
+pref("font.name.sans-serif.x-western", "Helvetica");
+pref("font.name.monospace.x-western", "Courier");
+pref("font.name.cursive.x-western", "Zapf Chancery");
+pref("font.name.fantasy.x-western", "New Century Schlbk");
+
+pref("font.name.serif.zh-CN", "Song");
+pref("font.name.sans-serif.zh-CN", "Hei");
+pref("font.name.monospace.zh-CN", "Hei");
+pref("font.name.cursive.zh-CN", "XXX.cursive");
+pref("font.name.fantasy.zh-CN", "XXX.fantasy");
+
+pref("font.name.serif.zh-TW", "Apple LiSung Light"); 
+pref("font.name.sans-serif.zh-TW", "Apple LiGothic Medium");  
+pref("font.name.monospace.zh-TW", "Apple LiGothic Medium");  
+pref("font.name.cursive.zh-TW", "XXX.cursive");
+pref("font.name.fantasy.zh-TW", "XXX.fantasy");
+
 
 // This overrides the setting in config.js (which points to the Windows page)
 config("menu.help.item_0.label","Help Contents");
