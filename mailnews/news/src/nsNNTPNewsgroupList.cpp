@@ -83,13 +83,16 @@ class nsNNTPNewsgroupList : public nsINNTPArticleList
 #endif
 {
 public:
-  nsNNTPNewsgroupList();
+  nsNNTPNewsgroupList(nsINNTPHost *, nsINNTPNewsgroup*);
   virtual  ~nsNNTPNewsgroupList();
+  static void operator delete(void *);
+  NS_DECL_ISUPPORTS;
 
-  NS_DECL_ISUPPORTS
-
-  
   // nsINNTPArticleList
+  NS_IMETHOD Init(const nsINNTPHost *, const nsINNTPNewsgroup *);
+  NS_IMETHOD AddArticleKey(PRInt32);
+  NS_IMETHOD FinishAddingArticleKeys();
+    
   NS_IMETHOD GetRangeOfArtsToDownload(nsINNTPHost* host,
                                       const char* group_name,
                                       PRInt32 first_possible,
@@ -108,6 +111,8 @@ public:
   NS_IMETHOD ProcessNonXOVER(char *line);
   NS_IMETHOD FinishXOVER(int status);
 
+
+    
 private:
   NS_METHOD InitNewsgroupList(const char *url, const char *groupName);
 
@@ -170,9 +175,11 @@ protected:
 
 
 
-nsNNTPNewsgroupList::nsNNTPNewsgroupList()
+nsNNTPNewsgroupList::nsNNTPNewsgroupList(nsINNTPHost* host,
+                                         nsINNTPNewsgroup *newsgroup)
 {
-      NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
+    Init(host, newsgroup);
 }
 
 #if 0
@@ -744,4 +751,16 @@ nsNNTPNewsgroupList::FinishXOVER (int status)
 	}
 	return 0;
 	// nsNNTPNewsgroupList object gets deleted by the master when a new one is created.
+}
+
+nsresult
+NS_NewNewsgroupList(nsINNTPNewsgroupList **aNewsgroupList,
+                    nsINNTPHost *host,
+                    nsINNTPNewsgroup *newsgroup)
+{
+    nsNNTPNewsgroupList *newsgroupList =
+        new nsNNTPNewsgroupList(host, newsgroup);
+    return newsgroupList->QueryInterface(nsINNTPNewsgroupList::IID(),
+                                         (void **)aNewsgroupList);
+
 }
