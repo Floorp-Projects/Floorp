@@ -81,8 +81,8 @@ nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 NS_IMETHODIMP
 nsScreenGtk :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *outTop = mXOrg;
-  *outLeft = mYOrg;
+  *outLeft = mXOrg;
+  *outTop = mYOrg;
   *outWidth = mWidth;
   *outHeight = mHeight;
 
