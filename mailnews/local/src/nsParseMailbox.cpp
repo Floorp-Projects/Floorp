@@ -200,7 +200,6 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
   /* the following macro is used to initialize the ref counting data */
 	NS_INIT_REFCNT();
 
-	m_mailboxName = nsnull;
 	m_obuffer = nsnull;
 	m_obuffer_size = 0;
 	m_ibuffer = nsnull;
@@ -215,7 +214,6 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
 
 nsMsgMailboxParser::~nsMsgMailboxParser()
 {
-	PR_FREEIF(m_mailboxName);
 }
 
 void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
@@ -1457,8 +1455,6 @@ nsresult
 nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream)
 {
     nsresult rv;
-	m_mailboxName = nsCRT::strdup(folder);
-
 	m_position = folder.GetFileSize();
 	m_rootFolder = rootFolder;
 	m_inboxFileSpec = folder;
@@ -1678,6 +1674,8 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 	{
 		PRUint32 numFolders;
 		rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
+    if (inbox)
+      inbox->GetURI(getter_Copies(m_inboxUri));
 		char * headers = m_headers.GetBuffer();
 		PRUint32 headersSize = m_headers.GetBufferPos();
 		nsresult matchTermStatus;
@@ -1736,7 +1734,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 		case nsMsgFilterAction::MoveToFolder:
 			// if moving to a different file, do it.
 			if ((const char*)actionTargetFolderUri &&
-                PL_strcasecmp(m_mailboxName, actionTargetFolderUri))
+                nsCRT::strcasecmp(m_inboxUri, actionTargetFolderUri))
 			{
 				msgHdr->GetFlags(&msgFlags);
 
@@ -1781,12 +1779,10 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 				}
 				nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (const char *) actionTargetFolderUri, filter);
 				if (NS_SUCCEEDED(err))
-				{
 					m_msgMovedByFilter = PR_TRUE;
-					*applyMore = PR_FALSE;
-				}
 
 			}
+      *applyMore = PR_FALSE; 
 			break;
 		case nsMsgFilterAction::MarkRead:
 			MarkFilteredMessageRead(msgHdr);

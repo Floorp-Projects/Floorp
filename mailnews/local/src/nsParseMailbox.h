@@ -159,7 +159,6 @@ public:
     NS_DECL_NSISTREAMLISTENER
 
 	void			SetDB (nsIMsgDatabase *mailDB) {m_mailDB = dont_QueryInterface(mailDB); }
-	char			*GetMailboxName() {return m_mailboxName;}
 
 	void			SetIncrementalUpdate(PRBool update) {m_updateAsWeGo = update;}
 	void			SetIgnoreNonMailFolder(PRBool ignoreNonMailFolder) {m_ignoreNonMailFolder = ignoreNonMailFolder;}
@@ -190,7 +189,7 @@ protected:
 
 	// data
     nsString        m_folderName;
-	char			*m_mailboxName;
+	nsXPIDLCString		m_inboxUri;
 	nsByteArray		m_inputStream;
 	PRInt32			m_obuffer_size;
 	char			*m_obuffer;
