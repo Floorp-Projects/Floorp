@@ -68,6 +68,9 @@
 	    this.initScrollbar();
 	  </constructor>
     </implementation>
+    <handlers>
+      <handler event="contextmenu" action="event.preventDefault();"/>
+    </handlers>
   </binding>
 
 

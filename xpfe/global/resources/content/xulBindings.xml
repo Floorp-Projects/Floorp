@@ -24,18 +24,6 @@
     </content>
   </binding>
 
-  <binding id="scrollbar">
-    <content>
-      <xul:scrollbarbutton type="decrement">
-        <xul:image inherits="src"/>
-      </xul:scrollbarbutton>
-      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment"/>
-      <xul:scrollbarbutton type="increment">
-      <xul:image inherits="src"/>
-    </xul:scrollbarbutton>
-    </content>
-  </binding>
-
   <binding id="tab">
     <content>
       <xul:image inherits="src" class="tab-left"/>
@@ -554,6 +542,9 @@
         </setter>
       </property>
     </implementation>     
+    <handlers>
+      <handler event="contextmenu" action="event.preventDefault();"/>
+    </handlers>
   </binding>
   
   
