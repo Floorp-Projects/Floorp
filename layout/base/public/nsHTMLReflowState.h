@@ -202,6 +202,12 @@ struct nsHTMLReflowState {
   // set it. if false, the reflow sets alignCharOffset
   PRPackedBool     mUseAlignCharOffset;
 
+  // a table cell has a constrained mComputedWidth to accomodate its inner block.
+  // since it is treated like a containing block for percent calculations, this flag
+  // indicates not to use mComputedWidth for percent calculations if true.
+  // it also propogates into descendants whose width is percentage.
+  PRBool           mIsAutoWidthPctBase;
+
   // Cached pointers to the various style structs used during intialization
   const nsStyleDisplay* mStyleDisplay;
   const nsStylePosition* mStylePosition;
