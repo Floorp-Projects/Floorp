@@ -125,6 +125,7 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\rock_gra.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\bg.jpg $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test10.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test_pr.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) throbber\anims00.gif $(DIST)\bin\res\throbber
 	$(MAKE_INSTALL) throbber\anims01.gif $(DIST)\bin\res\throbber
 	$(MAKE_INSTALL) throbber\anims02.gif $(DIST)\bin\res\throbber
