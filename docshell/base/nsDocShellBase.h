@@ -121,6 +121,8 @@ protected:
                                   nsresult aStatus,
                                   nsIDocumentLoaderObserver * aObserver);
 
+   NS_IMETHOD InsertDocumentInDocTree();
+
    NS_IMETHOD DestroyChildren();
 
 protected:

@@ -1387,9 +1387,12 @@ NS_IMETHODIMP nsDocShellBase::Embed(nsIContentViewer* aContentViewer,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetContentViewer(nsIContentViewer** aResult)
+NS_IMETHODIMP nsDocShellBase::GetContentViewer(nsIContentViewer** aContentViewer)
 {
-  NS_ENSURE_SUCCESS(PR_FALSE, NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_ARG_POINTER(aContentViewer);
+
+  *aContentViewer = mContentViewer;
+  NS_IF_ADDREF(*aContentViewer);
   return NS_OK;
 }
 
@@ -1648,8 +1651,49 @@ nsDocShellBase::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
        NS_ENSURE_SUCCESS(dlObserver->OnEndDocumentLoad(mDocLoader, aChannel, aStatus, aDocLoadObserver), 
                          NS_ERROR_FAILURE);
     }
+
+    /* put the new document in the doc tree */
+    NS_ENSURE_SUCCESS(InsertDocumentInDocTree(), NS_ERROR_FAILURE);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellBase::InsertDocumentInDocTree()
+{
+  nsCOMPtr<nsIDocShell> parent;
+  NS_ENSURE_SUCCESS(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  // null parent is legal.  If we have a parent, hook up our doc to the parent's doc
+  if (parent)
+  {
+    // Get the document object for the parent
+    nsCOMPtr<nsIContentViewerContainer> parentAsContentViewerContainer;
+    parentAsContentViewerContainer = do_QueryInterface(parent);
+    NS_ENSURE_TRUE(parentAsContentViewerContainer, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIContentViewer> parentContentViewer;
+    NS_ENSURE_SUCCESS(parentAsContentViewerContainer->GetContentViewer(getter_AddRefs(parentContentViewer)), 
+                      NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(parentContentViewer, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDocumentViewer> parentDocViewer;
+    parentDocViewer = do_QueryInterface(parentContentViewer);
+    NS_ENSURE_TRUE(parentDocViewer, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocument> parentDoc;
+    NS_ENSURE_SUCCESS(parentDocViewer->GetDocument(*getter_AddRefs(parentDoc)), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(parentDoc, NS_ERROR_FAILURE);
+
+    // Get the document object for this
+    nsCOMPtr<nsIDocumentViewer> docViewer;
+    docViewer = do_QueryInterface(mContentViewer);
+    NS_ENSURE_TRUE(docViewer, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocument> doc;
+    NS_ENSURE_SUCCESS(docViewer->GetDocument(*getter_AddRefs(doc)), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+    doc->SetParentDocument(parentDoc);
+    parentDoc->AddSubDocument(doc);
+  }
   return NS_OK;
 }
 
