@@ -21,7 +21,7 @@
 
 
 MODULE=content_xul
-
+XPIDL_MODULE=xul
 DEPTH=..\..\..\..
 
 EXPORTS	= \

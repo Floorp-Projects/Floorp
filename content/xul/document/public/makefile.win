@@ -21,6 +21,7 @@
 
 
 MODULE=content_xul
+XPIDL_MODULE=xuldoc
 
 DEPTH=..\..\..\..
 
