@@ -121,10 +121,12 @@ function ConfirmDelete()
     var lString = bundle.GetStringFromName("migratebeforedelete");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     var title = bundle.GetStringFromName("deletetitle");
-    if (commonDialogService.Confirm(window, title, lString))
-      profile.migrateProfile( profilename, true );
-    else
-      return false;
+    if (commonDialogService.Confirm(window, title, lString)) {
+      profile.deleteProfile( name, false );
+      var profileKids = document.getElementById( "profilekids" )
+      profileKids.removeChild( selected );
+    }
+    return;
   }
 
   var win = window.openDialog('chrome://communicator/content/profile/deleteProfile.xul', 'Deleter', 'chrome,modal=yes');
@@ -145,9 +147,6 @@ function DeleteProfile( deleteFiles )
       profileKids.removeChild( selected );
     }
     catch (ex) {
-      var lString = bundle.GetStringFromName("deletefailed");
-      lString = lString.replace(/\s*<html:br\/>/g,"\n");
-      alert( lString );
     }
     if( firstAdjacent )
       profileTree.selectItem( firstAdjacent );
