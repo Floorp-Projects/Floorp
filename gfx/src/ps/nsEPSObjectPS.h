@@ -16,7 +16,7 @@
  * The Original Code is developed for mozilla.
  *
  * The Initial Developer of the Original Code is
- * Kenneth Herron <kherron@newsguy.com>.
+ * Kenneth Herron <kherron@fastmail.us>.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
@@ -41,19 +41,17 @@
 #define NSEPSOBJECTPS_H
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "nscore.h"
 #include "prtypes.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 
 class nsEPSObjectPS {
     public:
         /** ---------------------------------------------------
          * Constructor
          */
-        nsEPSObjectPS(const char *aData, unsigned long aDataLength);
+        nsEPSObjectPS(FILE *aFile);
 
         /** ---------------------------------------------------
          * @return the result code from parsing the EPS data.
@@ -80,16 +78,13 @@ class nsEPSObjectPS {
 
     private:
         nsresult        mStatus;
-        const char     *mData;
-        unsigned long   mDataLength;
-        const char     *mCurrPos;
+        FILE *          mEPSF;
         PRFloat64       mBBllx,
                         mBBlly,
                         mBBurx,
                         mBBury;
 
         void            Parse();
-        void            Reset();
         PRBool          EPSFFgets(nsACString& aBuffer);
 };
 

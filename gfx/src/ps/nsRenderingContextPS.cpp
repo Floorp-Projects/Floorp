@@ -51,8 +51,6 @@
 #include "nsEPSObjectPS.h"
 #include "nsLocalFile.h"
 
-#include <sys/mman.h>
-#include <errno.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -1380,28 +1378,14 @@ NS_IMETHODIMP nsRenderingContextPS::RetrieveCurrentNativeGraphicData(PRUint32 * 
 NS_IMETHODIMP nsRenderingContextPS::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 {
   nsresult    rv;
-  int         fd;
-  const char *data;
-  size_t      datalen;
 
   /* EPSFs aren't supposed to have side effects, so if width or height is
    * zero, just return. */
   if ((aRect.width == 0) || (aRect.height == 0))
     return NS_OK;
 
-  /* Get file size */
-  fseek(aDataFile, 0, SEEK_END);
-  datalen = ftell(aDataFile);
-
-  fflush(aDataFile);
-  fd = fileno(aDataFile);
-  data = (const char *)mmap(0, datalen, PROT_READ, MAP_SHARED, fd, 0); 
-  if ((int)data == -1)
-    return nsresultForErrno(errno);
-
-  nsEPSObjectPS eps(data, datalen);
+  nsEPSObjectPS eps(aDataFile);
   if (NS_FAILED(eps.GetStatus())) {
-    munmap((char *)data, datalen);
     return NS_ERROR_INVALID_ARG;
   }
  
@@ -1410,8 +1394,6 @@ NS_IMETHODIMP nsRenderingContextPS::RenderEPS(const nsRect& aRect, FILE *aDataFi
  
   rv = mPSObj->render_eps(trect, eps);
 
-  munmap((char *)data, datalen);
-  
   return rv;
 }
 
