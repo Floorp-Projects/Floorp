@@ -149,9 +149,9 @@ CS_CNS11643_13,
 CS_CNS11643_14,			
 CS_CNS11643_15,			
 CS_CNS11643_16,			
-CS_VISCII,		/* Should change to CS_VIET_VISCII */
+CS_VIET_VISCII,
 	
-CS_VIQR,	 	/* Should change to CS_VIET_VIQR */		
+CS_VIET_VIQR,
 CS_KOI8_U,			
 CS_ISO_IR_111,			
 CS_8859_6_I,			
@@ -162,9 +162,9 @@ CS_8859_8_E,
 CS_JOHAB,			
 	
 CS_JOHABFONT,			
-CS_UNKNOWN,		/* should change to CS_VIET_VPS */	
-CS_UNKNOWN,		/* should change to CS_VIET_TCVN */	
-CS_UNKNOWN,		/* should change to CS_VIET_VNI */	
+CS_VIET_VPS,
+CS_VIET_TCVN,
+CS_VIET_VNI,
 	
 /* 0x60 - 0x6F*/	
 CS_UNKNOWN,			

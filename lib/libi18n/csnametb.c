@@ -95,8 +95,8 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"x-cns11643-14", "", CS_CNS11643_14},
 			{"x-cns11643-15", "", CS_CNS11643_15},
 			{"x-cns11643-16", "", CS_CNS11643_16},
-			{"VISCII", "", CS_VISCII},
-			{"VIQR", "", CS_VIQR},
+			{"VISCII", "", CS_VIET_VISCII},
+			{"VIQR", "", CS_VIET_VIQR},
 			{"koi8-u", "", CS_KOI8_U},
 			{"iso-ir-111", "", CS_ISO_IR_111},
 			{"iso_8859-6-e", "", CS_8859_6_E},
@@ -105,6 +105,9 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"iso_8859-8-i", "", CS_8859_8_I},
 			{"x-johab", "", CS_JOHAB}, /* CP 1361 */
 			{"x-johabfont", "", CS_JOHABFONT}, /* hangterm johab font */
+			{"x-viet-vps", "", CS_VIET_VPS},
+			{"x-viet-tcvn", "", CS_VIET_TCVN},
+			{"x-viet-vni", "", CS_VIET_VIQR},
 
 	/* Additional OS/2 codepages. These are IANA primary names */
 			{"ibm850", "Cp850", CS_CP_850},         /* PC Latin 1 */
@@ -277,10 +280,10 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"RESERVED", "", CS_DEFAULT},			/* or unknown charset		*/
 
 	/* aliases for VISCII:	*/
-			{"csVISCII", "", CS_VISCII},
+			{"csVISCII", "", CS_VIET_VISCII},
 
 	/* aliases for VIQR:	*/
-			{"csVIQR", "", CS_VIQR},
+			{"csVIQR", "", CS_VIET_VIQR},
 
 	/* aliases for ISO-8859-4:	*/
 			{"ISO_8859-4:1988", "", CS_8859_4},
