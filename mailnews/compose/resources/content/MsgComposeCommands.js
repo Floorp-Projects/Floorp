@@ -538,8 +538,6 @@ var defaultController =
           gMailSession.topmostMsgWindow;
           return true;
         } catch (ex) { return false; }
-      case "cmd_rewrap":
-        return !focusedElement;
 
       //Format Menu
       case "cmd_decreaseFont":
