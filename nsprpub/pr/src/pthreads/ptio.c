@@ -2450,6 +2450,8 @@ static PRIOMethods _pr_file_methods = {
     (PRGetpeernameFN)_PR_InvalidStatus,    
     (PRGetsockoptFN)_PR_InvalidStatus,    
     (PRSetsockoptFN)_PR_InvalidStatus,    
+    (PRGetsocketoptionFN)_PR_InvalidStatus,
+    (PRSetsocketoptionFN)_PR_InvalidStatus
 };
 
 static PRIOMethods _pr_tcp_methods = {
