@@ -943,13 +943,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   else
     password.Assign(mLogonCookie);
   
-  if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
-  {
-	  base64Str = 
-          PL_Base64Encode((const char *) username, 
-                          nsCRT::strlen((const char*)username), nsnull);
-  }
-  else
+  if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
   {
 	  char plain_string[512];
 	  int len = 1; /* first <NUL> char */
@@ -962,12 +956,18 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 	  len += PL_strlen(password);
 
 	  base64Str = PL_Base64Encode(plain_string, len, nsnull);
+  }
+  else
+  {
+	  base64Str = 
+          PL_Base64Encode((const char *) username, 
+                          nsCRT::strlen((const char*)username), nsnull);
   } 
   if (base64Str) {
-	  if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
-		  PR_snprintf(buffer, sizeof(buffer), "AUTH LOGIN %.256s" CRLF, base64Str);
-	  else if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
+	  if (TestFlag(SMTP_AUTH_PLAIN_ENABLED))
 		  PR_snprintf(buffer, sizeof(buffer), "AUTH PLAIN %.256s" CRLF, base64Str);
+	  else if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
+		  PR_snprintf(buffer, sizeof(buffer), "AUTH LOGIN %.256s" CRLF, base64Str);
 	  else
 		  return (NS_ERROR_COMMUNICATIONS_ERROR);
 	
