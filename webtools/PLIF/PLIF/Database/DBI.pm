@@ -198,7 +198,7 @@ sub setupConfigure {
         if (defined($value)) {
             $self->propertySet($property, $value);
         } else {
-            $self->dump(9, "Did not have a value for '$property',aborting setup.");
+            $self->dump(9, "Did not have a value for '$property', aborting setup.");
             return "$prefix.$property";
         }
     }
