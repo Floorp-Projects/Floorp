@@ -291,7 +291,6 @@ Rights Reserved.
 					<menuitem id="menu_showTaskbar"/>
 				</menupopup>
 			</menu>
-			<menuitem id="viewParagraphMarks"/>
 			<menuseparator/>
 			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
