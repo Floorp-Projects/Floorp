@@ -77,6 +77,7 @@ SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS = \
 	  	$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_TIMER_LIBS) \
 		$(NULL)
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
