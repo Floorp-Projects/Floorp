@@ -24,8 +24,6 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-#include "nsXtEventHandler.h"
-
 #include <gtk/gtk.h>
 
 NS_IMPL_ADDREF(nsButton)
@@ -51,12 +49,12 @@ NS_METHOD nsButton::Create(nsIWidget        *aParent,
                       nsWidgetInitData *aInitData) 
 {
   aParent->AddChild(this);
-  GtkWidget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else if (aAppShell) {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = (GtkWidget *) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
 
   InitToolkit(aToolkit, aParent);

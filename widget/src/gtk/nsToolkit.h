@@ -20,7 +20,7 @@
 #define TOOLKIT_H
 
 #include "nsIToolkit.h"
-#include "X11/Xlib.h"
+#include <gtk/gtk.h>
 
 struct MethodInfo;
 
@@ -41,7 +41,7 @@ public:
   NS_IMETHOD            Init(PRThread *aThread);
   
 public:
-  NS_IMETHOD_(GC) GetSharedGC();
+  NS_IMETHOD_(GdkGC) GetSharedGC();
   NS_IMETHOD_(void) SetSharedGC(GdkGC aGC);
 
 private:
