@@ -158,23 +158,38 @@ function loadCalendarEventDialog()
 
     gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
 
-    /*
-    if (event.recurForever) {
-        event.recurEnd.setTime(gEndDate);
+
+
+    if (event.recurrenceInfo && event.recurrenceInfo.recurType != 0) {
+        setFieldValue("repeat-checkbox", true, "checked");
+        setFieldValue("repeat-length-field", event.recurrenceInfo.interval);
+        
+        var typeMap = { }
+        typeMap["days"]   = Components.interfaces.calIRecurrenceInfo.CAL_RECUR_DAILY;
+        typeMap["weeks"]  = Components.interfaces.calIRecurrenceInfo.CAL_RECUR_WEEKLY;
+        typeMap["months"] = Components.interfaces.calIRecurrenceInfo.CAL_RECUR_MONTHLY;
+        typeMap["years"]  = Components.interfaces.calIRecurrenceInfo.CAL_RECUR_YEARLY;
+        // (from old code) don't put the extra "value" element here, or it won't work.
+        setFieldValue("repeat-length-units", typeMap[event.recurrenceInfo.recurType]);
+        
+        if (event.recurrenceInfo.recurCount == -1) {
+            setFieldValue("repeat-forever-radio", true, "selected");
+        }
+        else if (event.recurrenceInfo.recurCount > 0) {
+            setFieldValue("repeat-numberoftimes-radio", true, "selected");
+            setFieldValue("repeat-numberoftimes-textbox", Math.max(event.recurrenceInfo.recurCount, 1));
+        }
+        if (event.recurrenceInfo.recurEnd) {
+            setFieldValue("repeat-until-radio", true, "selected" );
+            document.getElementById("repeat-end-date-picker").value = event.recurrenceInfo.recurEnd.jsDate;
+        }
+
+        // XXX hook up exceptions    
     }
-    
-    //do the stuff for exceptions
-    var ArrayOfExceptions = event.getExceptions();
 
-    while( ArrayOfExceptions.hasMoreElements() ) {
-        var ExceptionTime = ArrayOfExceptions.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data;
-
-        var ExceptionDate = new Date( ExceptionTime );
-
-        addException( ExceptionDate );
-    }
 
     //file attachments;
+    /*
     for( var i = 0; i < event.attachmentsArray.Count(); i++ ) {
         var thisAttachment = event.attachmentsArray.QueryElementAt( i, Components.interfaces.nsIMsgAttachment );
 
@@ -409,7 +424,7 @@ function onOKCommand()
         }
         else if (getFieldValue("repeat-until-radio", "selected")) {
             var recurEndDate = document.getElementById("repeat-end-date-picker").value;
-            recurrenceInfo.recurEnd.jsDate = recurEndDate;
+            recurrenceInfo.recurEnd = jsDateToDateTime(recurEndDate);
         }
 
         recurrenceInfo.interval = recurInterval;
