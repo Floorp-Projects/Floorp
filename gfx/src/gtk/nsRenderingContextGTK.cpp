@@ -142,14 +142,15 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 
 NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
 {
-  gint x, y, w, h, d;
-  gdk_window_get_geometry(mSurface->GetDrawable(), &x, &y, &w, &h, &d);
-  
   if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) )
   {
     mClipRegion->Init();
-    mClipRegion->SetTo(0, 0, w, h);
-  } 
+    mClipRegion->SetTo(0,0,0,0);
+  } else {
+    // we're going to crash shortly after if we hit this, but we will return NS_ERROR_FAILURE anyways.
+    return NS_ERROR_FAILURE;
+  }
+
 
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
@@ -406,7 +407,12 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
       mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
       break;
   }
-
+#if 0
+  nscolor color = mCurrentColor;
+  SetColor(NS_RGB(255,   0,   0));
+  DrawRect(aRect);
+  SetColor(color);
+#endif
   aClipEmpty = mClipRegion->IsEmpty();
 
   mClipRegion->GetNativeRegion((void*&)rgn);
@@ -1425,6 +1431,13 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 {
   nscoord x, y, w, h;
 
+  if (mClipRegion->IsEmpty())
+  {
+    // this is bad!
+    //    printf("drawing image with empty clip region\n");
+    return NS_ERROR_FAILURE;
+  }
+
   x = aX;
   y = aY;
   w = aWidth;
@@ -1441,6 +1454,13 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
                                                const nsRect& aDRect)
 {
   nsRect	sr,dr;
+
+  if (mClipRegion->IsEmpty())
+  {
+    // this is bad!
+    //    printf("drawing image with empty clip region\n");
+    return NS_ERROR_FAILURE;
+  }
 
   sr = aSRect;
   mTMatrix->TransformCoord(&sr.x, &sr.y,
@@ -1503,6 +1523,16 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
 
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
     mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+
+#if 0
+  // XXX impliment me
+  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+  {
+    // we should use the source clip region if this flag is used...
+    nsIRegion *region;
+    CopyClipRegion();
+  }
+#endif
 
   //XXX flags are unused. that would seem to mean that there is
   //inefficiency somewhere... MMP

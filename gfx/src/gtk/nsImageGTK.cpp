@@ -337,7 +337,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
-
   // XXX kipp: this is temporary code until we eliminate the
   // width/height arguments from the draw method.
   if ((aWidth != mWidth) || (aHeight != mHeight)) {
@@ -355,6 +354,11 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 #endif
 
   nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
+
+  // make a copy of the GC so that we can completly restore the things we are about to change
+  GdkGC *copyGC;
+  copyGC = gdk_gc_new(drawing->GetDrawable());
+  gdk_gc_copy(copyGC, drawing->GetGC());
 
   XImage *x_image = nsnull;
   Pixmap pixmap = 0;
@@ -475,7 +479,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
                         mImageBits, mRowBytes);
   }
 
-  if (nsnull != mAlphaPixmap)
+  if (mAlphaPixmap)
   {
     // Setup gc to use the given alpha-pixmap for clipping
     gdk_gc_set_clip_mask(drawing->GetGC(), mAlphaPixmap);
@@ -503,12 +507,11 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
                        aWidth,                      // width
                        aHeight);                    // height
 
-  if (mAlphaPixmap != nsnull)
-  {
-    // Revert gc to its old clip-mask and origin
-    gdk_gc_set_clip_origin(drawing->GetGC(), 0, 0);
-    gdk_gc_set_clip_mask(drawing->GetGC(), nsnull);
-  }
+
+  // restore GC we copied at the beginning
+  gdk_gc_copy(drawing->GetGC(), copyGC);
+  gdk_gc_unref(copyGC);
+
 
 #ifdef CHEAP_PERFORMANCE_MEASURMENT
   gEndTime = PR_Now();
