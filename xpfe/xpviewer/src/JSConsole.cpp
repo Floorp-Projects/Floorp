@@ -882,8 +882,7 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
 
             // evaluate the string
             jsval returnValue;
-            if (mContext->EvaluateString(cleanBuffer, 
-                                         strlen(cleanBuffer),
+            if (mContext->EvaluateString(nsString(cleanBuffer), 
                                          nsnull,
                                          0,
                                          &returnValue)) {
