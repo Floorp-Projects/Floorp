@@ -432,7 +432,7 @@ void nsHTMLAtoms::AddrefAtoms()
     onblur = NS_NewAtom("onblur");
     onchange = NS_NewAtom("onchange");
     onclick = NS_NewAtom("onclick");
-    ondragdrop = NS_NewAtom("ondblclick");
+    ondblclick = NS_NewAtom("ondblclick");
     ondragdrop = NS_NewAtom("ondragdrop");
     onerror = NS_NewAtom("onerror");
     onfocus = NS_NewAtom("onfocus");
