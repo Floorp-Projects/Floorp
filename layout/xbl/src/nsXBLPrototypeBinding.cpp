@@ -49,6 +49,8 @@
 #include "nsXBLService.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsFixedSizeAllocator.h"
+#include "xptinfo.h"
+#include "nsIInterfaceInfoManager.h"
 
 // Helper Classes =====================================================================
 
@@ -117,7 +119,8 @@ nsIAtom* nsXBLPrototypeBinding::kContentAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kInheritsAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kHTMLAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kValueAtom = nsnull;
-
+nsIAtom* nsXBLPrototypeBinding::kImplementationAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kImplementsAtom = nsnull;
 nsFixedSizeAllocator nsXBLPrototypeBinding::kPool;
 
 static const size_t kBucketSizes[] = {
@@ -140,7 +143,8 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsCString& aID, nsIContent* a
   mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
   mAttributeTable(nsnull), 
-  mInsertionPointTable(nsnull)
+  mInsertionPointTable(nsnull),
+  mInterfaceTable(nsnull)
 {
   NS_INIT_REFCNT();
   
@@ -160,6 +164,8 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsCString& aID, nsIContent* a
     kInheritsAtom = NS_NewAtom("inherits");
     kHTMLAtom = NS_NewAtom("html");
     kValueAtom = NS_NewAtom("value");
+    kImplementationAtom = NS_NewAtom("implementation");
+    kImplementsAtom = NS_NewAtom("implements");
   }
 
   // These all use atoms, so we have to do these ops last to ensure
@@ -178,6 +184,11 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsCString& aID, nsIContent* a
     ConstructAttributeTable(content);
     ConstructInsertionTable(content);
   }
+
+  nsCOMPtr<nsIContent> impl;
+  GetImmediateChild(kImplementationAtom, getter_AddRefs(impl));
+  if (impl)
+    ConstructInterfaceTable(impl);
 }
 
 
@@ -185,6 +196,7 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
 {
   delete mAttributeTable;
   delete mInsertionPointTable;
+  delete mInterfaceTable;
   gRefCnt--;
   if (gRefCnt == 0) {
     NS_RELEASE(kInheritStyleAtom);
@@ -195,6 +207,8 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
     NS_RELEASE(kInheritsAtom);
     NS_RELEASE(kHTMLAtom);
     NS_RELEASE(kValueAtom);
+    NS_RELEASE(kImplementationAtom);
+    NS_RELEASE(kImplementsAtom);
   }
 }
 
@@ -521,6 +535,17 @@ nsXBLPrototypeBinding::GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXBLPrototypeBinding::ImplementsInterface(REFNSIID aIID, PRBool* aResult)
+{
+  // Init the answer to FALSE.
+  *aResult = PR_FALSE;
+
+  // Now check our IID table.
+  
+  return NS_OK;
+}
+
 // Internal helpers ///////////////////////////////////////////////////////////////////////
 
 void
@@ -804,6 +829,55 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
   }
 }
 
+void
+nsXBLPrototypeBinding::ConstructInterfaceTable(nsIContent* aElement)
+{
+  nsAutoString impls;
+  aElement->GetAttribute(kNameSpaceID_None, kImplementsAtom, impls);
+  if (!impls.IsEmpty()) {
+    // Obtain the interface info manager that can tell us the IID
+    // for a given interface name.
+    nsCOMPtr<nsIInterfaceInfoManager> infoManager = getter_AddRefs(XPTI_GetInterfaceInfoManager());
+    if (!infoManager)
+      return;
+
+    // Create the table.
+    if (!mInterfaceTable)
+      mInterfaceTable = new nsSupportsHashtable(4);
+
+    // The user specified at least one attribute.
+    char* str = impls.ToNewCString();
+    char* newStr;
+    // XXX We should use a strtok function that tokenizes PRUnichars
+    // so that we don't have to convert from Unicode to ASCII and then back
+
+    char* token = nsCRT::strtok( str, ", ", &newStr );
+    while( token != NULL ) {
+      // Take the name and try obtain an IID.
+      nsIID* iid = nsnull;
+      infoManager->GetIIDForName(token, &iid);
+      if (iid) {
+        // We found a valid iid.  Add it to our table.
+        nsIIDKey key(*iid);
+        mInterfaceTable->Put(&key, mBinding);
+        nsMemory::Free(iid);
+      }
+
+      token = nsCRT::strtok( newStr, ", ", &newStr );
+    }
+
+    nsMemory::Free(str);
+  }
+
+  // Recur into our children.
+  PRInt32 childCount;
+  aElement->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aElement->ChildAt(i, *getter_AddRefs(child));
+    ConstructAttributeTable(child);
+  }
+}
 
 void
 nsXBLPrototypeBinding::GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray** aList)

@@ -62,6 +62,8 @@
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIWeakReference.h"
 
+#include "nsIXPConnect.h"
+
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
@@ -231,6 +233,8 @@ public:
 
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD FlushChromeBindings();
+
+  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult);
 
   // nsIStyleRuleSupplier
   NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult);
@@ -665,6 +669,50 @@ nsBindingManager::FlushChromeBindings()
   mDocumentTable = nsnull;
   
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult)
+{
+  *aResult = nsnull;
+  nsCOMPtr<nsIXBLBinding> binding;
+  GetBinding(aContent, getter_AddRefs(binding));
+  if (binding) {
+    PRBool supports;
+    binding->ImplementsInterface(aIID, &supports);
+    if (supports) {
+      // Create an XPC wrapper for the script object and hand it back.
+      JSObject* jsobj = (JSObject*)aScriptObject;
+
+      nsCOMPtr<nsIDocument> doc;
+      aContent->GetDocument(*getter_AddRefs(doc));
+      if (!doc)
+        return NS_NOINTERFACE;
+
+      nsCOMPtr<nsIScriptGlobalObject> global;
+      doc->GetScriptGlobalObject(getter_AddRefs(global));
+      if (!global)
+        return NS_NOINTERFACE;
+
+      nsCOMPtr<nsIScriptContext> context;
+      global->GetContext(getter_AddRefs(context));
+      if (!context)
+        return NS_NOINTERFACE;
+
+      JSContext* jscontext = (JSContext*)context->GetNativeContext();
+      if (!jscontext)
+        return NS_NOINTERFACE;
+
+      nsCOMPtr<nsIXPConnect> xpConnect = do_GetService("@mozilla.org/js/xpc/XPConnect;1");
+      if (!xpConnect)
+        return NS_NOINTERFACE;
+
+      return xpConnect->WrapJS(jscontext, jsobj, aIID, aResult);
+    }
+  }
+  
+  *aResult = nsnull;
+  return NS_NOINTERFACE;
 }
 
 NS_IMETHODIMP
