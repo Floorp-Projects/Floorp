@@ -94,18 +94,6 @@ var gChromeState = null; // chrome state before we went into print preview
 var gFormHistory = null;
 var gFormFillEnabled = true;
 
-const dlObserver = {
-  observe: function(subject, topic, state) {  
-    if (topic != "dl-start") return;
-    var open = gPrefService.getBoolPref("browser.download.openSidebar");
-    if (open) {
-      var sidebar = document.getElementById("sidebar-box");
-      if (sidebar.hidden || (sidebar.getAttribute("sidebarcommand") != "viewDownloadsSidebar"))
-        toggleSidebar("viewDownloadsSidebar");
-    }
-  }
-};
-  
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -452,10 +440,6 @@ function delayedStartup()
                               .getService(Components.interfaces.nsIPrefService);
   gPrefService = gPrefService.getBranch(null);
 
-  var observerService = Components.classes["@mozilla.org/observer-service;1"]
-                                  .getService(Components.interfaces.nsIObserverService);
-  observerService.addObserver(dlObserver, "dl-start", false);
-  
   // Enable/Disable Form Fill
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pbi.addObserver(gFormFillPrefListener.domain, gFormFillPrefListener, false);
@@ -528,11 +512,6 @@ function Shutdown()
     document.persist("sidebar-box", "src");
     document.persist("sidebar-title", "value");
   }
-
-  var service = Components.classes["@mozilla.org/observer-service;1"]
-                            .getService(Components.interfaces.nsIObserverService);
-  service.removeObserver(dlObserver, "dl-start");
-  service = null;
 
   window.XULBrowserWindow.destroy();
   window.XULBrowserWindow = null;
