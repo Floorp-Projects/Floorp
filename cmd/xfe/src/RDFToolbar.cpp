@@ -36,6 +36,8 @@
 #include <Xfe/ToolBar.h>
 #include <Xfe/ToolTip.h>
 
+#include "ToolbarButton.h"
+#include "ToolbarSeparator.h"
 #include "ToolbarUrlBar.h"
 
 #if DEBUG_radha
@@ -274,38 +276,57 @@ XFE_RDFToolbar::isToolbarFolderValid()
 void
 XFE_RDFToolbar::addItem(HT_Resource node)
 {
-    Widget item = NULL;
-
     HT_Resource   toolbarRoot   = getRootFolder();
     HT_Resource   parent        = HT_GetParent(node);
 
     // This node doesn't belong here.
     if (toolbarRoot != parent) return;
+
+	XFE_ToolbarItem * item = NULL;
         
     // Headers
     if (HT_IsContainer(node))
     {
-        item = createXfeCascade(_toolbar, node);
+		// To be replace with an XFE_ToolbarItem soon.
+        createCascade(_toolbar, node);
     }
     // Separators
     else if (HT_IsSeparator(node))
     {
-        item = createSeparator(_toolbar);
+		item = new XFE_ToolbarSeparator(_frame,
+										_toolbar,
+										node,
+										"toolbarSeparator");
+
     }
     // UrlBar
     else if (HT_IsURLBar(node))
     {
-		item = createUrlBar(_toolbar,node);
+		item = new XFE_ToolbarUrlBar(_frame,
+									 _toolbar,
+									 node,
+									 "toolbarUrlBar");
+
+		item->registerInterest(XFE_ToolbarUrlBar::urlBarTextActivatedNotice,
+							   this,
+							   urlBarTextActivatedNotice_cb,
+							   (void *) item);
     }
     // Normal items
     else
     {
-        item = createXfeButton(_toolbar, node);
+		item = new XFE_ToolbarButton(_frame,
+									 _toolbar,
+									 node,
+									 "toolbarButton");
     }
-    
-    XP_ASSERT( XfeIsAlive(item) );
-    
-    XtManageChild(item);
+
+	if (item)
+	{
+		item->initialize();
+
+		item->show();
+	}
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
@@ -443,84 +464,8 @@ XFE_RDFToolbar::configureXfeCascade(Widget item,HT_Resource entry)
 #endif
 }
 //////////////////////////////////////////////////////////////////////////
-
-
-Widget 
-XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
-{
-    XP_ASSERT( XfeIsAlive(parent) );
-
-    D(printf("Create xfe push : %s\n",HT_GetNodeName(entry)));
-
-    Widget                  button;
-    Arg                     av[20];
-    Cardinal                ac;
-    ItemCallbackStruct *    data = NULL;
-    Boolean                 enableTooltips = True;
-
-    ac = 0;
-    XtSetArg(av[ac],XmNuserData, entry);  ac++;
-    XtSetArg(av[ac],XmNforceDimensionToMax, False);  ac++;
-
-    button = XfeCreateButton(parent,"bookmarkButton",av,ac);
-
-    // Set the item's label
-    XFE_RDFUtils::setItemLabelString(_frame->getContext(),button,entry);
-
-    configureXfeButton(button,entry);
-
-    // Create a new bookmark data structure for the callbacks
-    data = XP_NEW_ZAP(ItemCallbackStruct);
-
-    data->object    = this;
-    data->entry        = entry;
-
-      /* Add the tooltip Callback */
-       XfeTipStringAdd(button);
-       XfeTipStringSetObtainCallback(button, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) data);
-
-       /* Set up the status bar text */
-       XfeDocStringAdd(button);
-       XfeDocStringSetObtainCallback(button, docStringSetCB, (XtPointer)data);
-
-       XfeDocStringSetCallback(button, docStringCB, (XtPointer)data);
-
-    XtAddCallback(button,
-                  XmNactivateCallback,
-                  &XFE_RDFMenuToolbarBase::item_activated_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(button,
-                  XmNarmCallback,
-                  &XFE_RDFMenuToolbarBase::item_armed_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(button,
-                  XmNdisarmCallback,
-                  &XFE_RDFMenuToolbarBase::item_disarmed_cb,
-                  (XtPointer) data);
-
-    /*
-    XtAddCallback(button,
-                  XmNenterCallback,
-                  &XFE_RDFMenuToolbarBase::item_enter_cb,
-                  (XtPointer) data);
-
-    XtAddCallback(button,
-                  XmNleaveCallback,
-                  &XFE_RDFMenuToolbarBase::item_leave_cb,
-                  (XtPointer) data);
-                  */
-    XtAddCallback(button,
-                  XmNdestroyCallback,
-                  &XFE_RDFMenuToolbarBase::item_free_data_cb,
-                  (XtPointer) data);
-
-    return button;
-}
-//////////////////////////////////////////////////////////////////////////
-Widget 
-XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
+void
+XFE_RDFToolbar::createCascade(Widget parent,HT_Resource entry)
 {
     XP_ASSERT( XfeIsAlive(parent) );
 
@@ -588,27 +533,7 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
     // Keep track of the submenu mapping
     trackSubmenuMapping(submenu);
 
-    return cascade;
-}
-//////////////////////////////////////////////////////////////////////////
-Widget 
-XFE_RDFToolbar::createUrlBar(Widget parent,HT_Resource entry)
-{
-    XP_ASSERT( XfeIsAlive(parent) );
-
-	XFE_ToolbarUrlBar * urlbar = new XFE_ToolbarUrlBar(_frame,
-													   parent,
-													   entry,
-													   "toolbarUrlBar");
-
-	urlbar->registerInterest(XFE_ToolbarUrlBar::urlBarTextActivatedNotice,
-                             this,
-                             urlBarTextActivatedNotice_cb,
-							 (void *) urlbar);
-
-	urlbar->initialize();
-
-	return urlbar->getBaseWidget();
+	XtManageChild(cascade);
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
@@ -631,7 +556,10 @@ XFE_RDFToolbar::updateAppearance()
 //////////////////////////////////////////////////////////////////////////
 /* static */
 void
-XFE_RDFToolbar::tooltipCB(Widget w, XtPointer client_data, XmString * string_return, Boolean * need_to_free_string )
+XFE_RDFToolbar::tooltipCB(Widget		/* w */, 
+						  XtPointer		client_data, 
+						  XmString *	string_return, 
+						  Boolean *		need_to_free_string)
 {
 
     ItemCallbackStruct * ttip = (ItemCallbackStruct * )client_data;
@@ -669,7 +597,10 @@ XFE_RDFToolbar::tooltipCB(Widget w, XtPointer client_data, XmString * string_ret
 //////////////////////////////////////////////////////////////////////////
 /* static */
 void
-XFE_RDFToolbar::docStringSetCB(Widget w, XtPointer client_data, XmString * string_return, Boolean * need_to_free_string )
+XFE_RDFToolbar::docStringSetCB(Widget		/* w */, 
+							   XtPointer	client_data, 
+							   XmString *	string_return, 
+							   Boolean *	need_to_free_string)
 {
 
     ItemCallbackStruct * ttip = (ItemCallbackStruct * )client_data;
@@ -699,25 +630,24 @@ XFE_RDFToolbar::docStringSetCB(Widget w, XtPointer client_data, XmString * strin
     else
 	{
 		
-		Boolean isContainer = HT_IsContainer(entry);
+//		Boolean isContainer = HT_IsContainer(entry);
 		MWContext * context = (obj->getFrame())->getContext();
 		
 		*string_return = XFE_RDFUtils::getStringFromResource(context,entry);
 
 		*need_to_free_string = True;
     }
-
 }
-
-
 //////////////////////////////////////////////////////////////////////////
-/* static */
-void
-XFE_RDFToolbar::docStringCB(Widget w, XtPointer client_data, unsigned char reason, XmString string_return)
+/* static */ void
+XFE_RDFToolbar::docStringCB(Widget			/* w */, 
+							XtPointer		client_data, 
+							unsigned char	reason, 
+							XmString		string_return)
 {
     ItemCallbackStruct * ttip = (ItemCallbackStruct * )client_data;
     XFE_RDFToolbar * obj = (XFE_RDFToolbar *) ttip->object;
-    HT_Resource  entry = (HT_Resource) ttip->entry;
+/*     HT_Resource  entry = (HT_Resource) ttip->entry; */
 
     char *      str = NULL;
 
