@@ -806,7 +806,7 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
   rv = aBaseURL->GetSpec(getter_Copies(url));
   if (NS_FAILED(rv)) return rv;
 
-  mBaseURL = url;
+  mBaseURL.Assign(url);
 
   static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
   rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, nsnull,
