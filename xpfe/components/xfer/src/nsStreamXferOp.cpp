@@ -165,27 +165,6 @@ nsStreamXferOp::Start( void ) {
                 nsCOMPtr<nsILocalFile> file;
                 rv = NS_NewLocalFile(target, getter_AddRefs(file));
                 if (NS_SUCCEEDED(rv)) {
-                    // create the file on the file system.
-
-                    rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644); // XXX what permissions???
-                    if (NS_ERROR_FILE_ALREADY_EXISTS == rv) {
-                        rv = file->Delete(PR_FALSE); // the user has already confirmed they
-                                                     // want to overwrite the file.
-                        if (NS_FAILED(rv)) {
-                            this->OnError(kOpCreateFile, rv);
-                            return rv;
-                        }
-
-                        rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644); // XXX what permissions???
-                        if (NS_FAILED(rv)) {
-                            this->OnError(kOpCreateFile, rv);
-                            return rv;
-                        }
-                    } else if (NS_FAILED(rv)) {
-                        this->OnError(kOpCreateFile, rv);
-                        return rv;
-                    }
-
                     rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0,
                                               getter_AddRefs( mOutputChannel));
                 }
@@ -308,7 +287,7 @@ nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
 
     if (mContentLength < 1) {
         NS_ASSERTION(channel, "should have a channel");
-        rv = mInputChannel->GetContentLength(&mContentLength);
+        rv = channel->GetContentLength(&mContentLength);
         if (NS_FAILED(rv)) return rv;
     }
 

@@ -104,8 +104,7 @@ public:
 
         PRBool isDir;
         rv = mFile->IsDirectory(&isDir);
-        if (NS_FAILED(rv)) return rv;
-        if (isDir) {
+        if (NS_SUCCEEDED(rv) && isDir) {
             *contentType = nsCRT::strdup("application/http-index-format");
         }
         else {
@@ -162,8 +161,7 @@ public:
         nsresult rv;
         PRBool isDir;
         rv = mFile->IsDirectory(&isDir);
-        if (NS_FAILED(rv)) return rv;
-        if (isDir) {
+        if (NS_SUCCEEDED(rv) && isDir) {
             rv = nsDirectoryIndexStream::Create(mFile, aInputStream);
             PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                    ("nsFileTransport: opening local dir %s for input (%x)",
@@ -194,8 +192,7 @@ public:
         nsresult rv;
         PRBool isDir;
         rv = mFile->IsDirectory(&isDir);
-        if (NS_FAILED(rv)) return rv;
-        if (isDir) {
+        if (NS_SUCCEEDED(rv) && isDir) {
             return NS_ERROR_FAILURE;
         }
 
@@ -1070,14 +1067,16 @@ nsFileTransport::Process(void)
 
         if (mSink) {
             mSink->Flush();
+            mSink = null_nsCOMPtr();
         }
-        if (mBufferInputStream)
+        if (mBufferInputStream) {
             mBufferInputStream = null_nsCOMPtr();
+        }
         else if (mBuffer) {
             delete mBuffer;
             mBuffer = nsnull;
         }
-        mSink = null_nsCOMPtr();
+        (void)mSource->Close();
         mSource = null_nsCOMPtr();
 
         mState = OPENED;
