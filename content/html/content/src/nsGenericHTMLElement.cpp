@@ -1660,7 +1660,7 @@ nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
     rv = NS_NewObjectFrame(mContent, aParentFrame, frame);
   }
   else if (mTag == nsHTMLAtoms::body) {
-    rv = nsBodyFrame::NewFrame(&frame, mContent, aParentFrame);
+    rv = NS_NewBodyFrame(mContent, aParentFrame, frame);
   }
   else if (mTag == nsHTMLAtoms::br) {
     rv = NS_NewBRFrame(mContent, aParentFrame, frame);
@@ -1670,6 +1670,9 @@ nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
   }
   else if (mTag == nsHTMLAtoms::hr) {
     rv = NS_NewHRFrame(mContent, aParentFrame, frame);
+  }
+  else if (mTag == nsHTMLAtoms::html) {
+    rv = NS_NewHTMLFrame(mContent, aParentFrame, frame);
   }
   else if (mTag == nsHTMLAtoms::img) {
     rv = NS_NewImageFrame(mContent, aParentFrame, frame);
