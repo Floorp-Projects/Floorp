@@ -15,12 +15,14 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-MODULE = netwerk
-
 DEPTH = ../../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+
+MODULE = netwerk
+XPIDL_MODULE = netwerk_base
 
 XPIDLSRCS =                      \
         nsIChannel.idl           \
