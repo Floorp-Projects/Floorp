@@ -686,24 +686,25 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
                       PRBool            aRebuildIfNecessary)
 {
   PRInt32 origNumMapRows = mRows.Count();
-  PRInt32 origNumCols    = aMap.GetColCount();
+  PRInt32 origNumCols = aMap.GetColCount();
+  PRBool  zeroRowSpan;
+  PRInt32 rowSpan = GetRowSpanForNewCell(aCellFrame, aRowIndex, zeroRowSpan);
+  // add new rows if necessary
+  PRInt32 endRowIndex = aRowIndex + rowSpan - 1;
+  if (endRowIndex >= origNumMapRows) {
+    Grow(aMap, 1 + endRowIndex - origNumMapRows);
+  }
 
   // get the first null CellData in the desired row. It may be 1 past the end if there are none
   PRInt32 startColIndex;
-  if (aRowIndex < origNumMapRows) {
-    for (startColIndex = 0; startColIndex < origNumCols; startColIndex++) {
-      CellData* data = GetMapCellAt(aMap, aRowIndex, startColIndex, PR_TRUE);
-      if (!data) {
-        break; // we found the col
-      }
+  for (startColIndex = 0; startColIndex < origNumCols; startColIndex++) {
+    CellData* data = GetMapCellAt(aMap, aRowIndex, startColIndex, PR_TRUE);
+    if (!data) {
+      break; // we found the col
     }
   }
-  else {
-    startColIndex = 0;
-  }
 
-  PRBool zeroRowSpan, zeroColSpan;
-  PRInt32 rowSpan = GetRowSpanForNewCell(aCellFrame, aRowIndex, zeroRowSpan);
+  PRBool  zeroColSpan;
   PRInt32 colSpan = GetColSpanForNewCell(aCellFrame, startColIndex, origNumCols, zeroColSpan);
 
   // if the new cell could potentially span into other rows and collide with 
@@ -717,11 +718,6 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
 
   mRowCount = PR_MAX(mRowCount, aRowIndex + 1);
 
-  // add new rows if necessary
-  PRInt32 endRowIndex = aRowIndex + rowSpan - 1;
-  if (endRowIndex >= origNumMapRows) {
-    Grow(aMap, 1 + endRowIndex - origNumMapRows);
-  }
   // add new cols to the table map if necessary
   PRInt32 endColIndex = startColIndex + colSpan - 1;
   if (endColIndex >= origNumCols) {
