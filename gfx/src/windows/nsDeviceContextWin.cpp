@@ -46,6 +46,17 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
   }
 }
 
+nsresult nsDeviceContextWin::Init(nsNativeWidget aWidget)
+{
+  HWND      hwnd = (HWND)aWidget;
+  HDC       hdc = ::GetDC(hwnd);
+
+  mDepth = (PRUint32)::GetDeviceCaps(hdc, BITSPIXEL);
+  ::ReleaseDC(hwnd, hdc);
+
+  return DeviceContextImpl::Init(aWidget);
+}
+
 float nsDeviceContextWin :: GetScrollBarWidth() const
 {
   return ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;
@@ -89,17 +100,22 @@ NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const char * aFontName)
     return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsDeviceContextWin::GetDepth(PRUint32& aDepth)
+{
+  aDepth = mDepth;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextWin::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   HWND      hwnd = (HWND)GetNativeWidget();
   HDC       hdc = ::GetDC(hwnd);
   nsresult  result = NS_OK;
-  int       bitsPerPixel = ::GetDeviceCaps(hdc, BITSPIXEL);
   int       rasterCaps = ::GetDeviceCaps(hdc, RASTERCAPS);
   ::ReleaseDC(hwnd, hdc);
 
   // See if we're dealing with an 8-bit palette device
-  if ((8 == bitsPerPixel) && (rasterCaps & RC_PALETTE)) {
+  if ((8 == mDepth) && (rasterCaps & RC_PALETTE)) {
     // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
     // than DIB_RGB_COLORS, so make sure the indexes match that of the
     // GDI physical palette
@@ -107,6 +123,7 @@ NS_IMETHODIMP nsDeviceContextWin::CreateILColorSpace(IL_ColorSpace*& aColorSpace
     // Note: the image library doesn't use the reserved colors, so it doesn't
     // matter what they're set to...
     IL_RGB  reserved[10];
+    memset(reserved, 0, sizeof(reserved));
     IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
     if (nsnull == colorMap) {
       return NS_ERROR_OUT_OF_MEMORY;

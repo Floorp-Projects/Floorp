@@ -217,6 +217,12 @@ nsNativeWidget DeviceContextImpl :: GetNativeWidget(void)
   return mWidget;
 }
 
+NS_IMETHODIMP DeviceContextImpl::GetDepth(PRUint32& aDepth)
+{
+  aDepth = 24;
+  return NS_OK;
+}
+
 nsresult DeviceContextImpl::CreateIconILGroupContext()
 {
   ilIImageRenderer* renderer;

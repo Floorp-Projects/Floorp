@@ -62,6 +62,8 @@ public:
 
   NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage);
 
+  NS_IMETHOD GetDepth(PRUint32& aDepth);
+
   NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
 
 protected:
