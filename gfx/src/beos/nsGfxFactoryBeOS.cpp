@@ -51,6 +51,7 @@
 #include "nsScreenManagerBeOS.h" 
 #include "nsScriptableRegion.h" 
 #include "nsDeviceContextBeOS.h" 
+#include "nsPrintOptionsBeOS.h"
 #include "nsImageBeOS.h" 
 #include "nsFontList.h"
 
@@ -68,6 +69,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorBeOS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerBeOS) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorBeOS) 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsBeOS)
  
 // our custom constructors 
  
@@ -177,7 +179,11 @@ static nsModuleComponentInfo components[] =
     NS_PRINTER_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/printer_enumerator/beos;1",
     "@mozilla.org/gfx/printerenumerator;1",
-    nsPrinterEnumeratorBeOSConstructor }    
+    nsPrinterEnumeratorBeOSConstructor },
+  { "BeOS Printer Options",
+  	NS_PRINTOPTIONS_CID,
+  	"@mozilla.org/gfx/printoptions;1",
+  	nsPrintOptionsBeOSConstructor }
 };   
 
 NS_IMPL_NSGETMODULE(nsGfxBeOSModule, components) 
