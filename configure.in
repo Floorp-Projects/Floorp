@@ -563,11 +563,12 @@ case "$target" in
     if test ! "$GNU_CC"; then
 	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
     fi
-    # Hack for FreeBSD 2.2
-    if test -z "$MKSHLIB_FORCE_ALL"; then
-	MKSHLIB_FORCE_ALL='-Wl,-Bforcearchive'
-	MKSHLIB_UNFORCE_ALL=''
-    fi
+# Can't have force w/o an unforce.
+#    # Hack for FreeBSD 2.2
+#    if test -z "$MKSHLIB_FORCE_ALL"; then
+#	MKSHLIB_FORCE_ALL='-Wl,-Bforcearchive'
+#	MKSHLIB_UNFORCE_ALL=''
+#    fi
     ;; 
 
 *-hpux*)
