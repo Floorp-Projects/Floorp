@@ -630,26 +630,19 @@ nsBrowserInstance::Close()
 // return DOM objects. And we need a dom window to bootstrap the browser
 /////////////////////////////////////////////////////////////////////////
 
+NS_IMPL_ISUPPORTS1(nsChromeStartupHandler, nsICmdLineHandler)
+CMDLINEHANDLER_IMPL(nsChromeStartupHandler, "-chrome", "", "",
+                    "Load the specified chrome.",
+                    NS_CHROMESTARTUPHANDLER_CONTRACTID,
+                    "Chrome Startup Handler", PR_TRUE, "", PR_FALSE)
 
-NS_IMPL_ADDREF(nsBrowserContentHandler)
-NS_IMPL_RELEASE(nsBrowserContentHandler)
-
-NS_INTERFACE_MAP_BEGIN(nsBrowserContentHandler)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentHandler)
-   NS_INTERFACE_MAP_ENTRY(nsIContentHandler)
-   NS_INTERFACE_MAP_ENTRY(nsICmdLineHandler)
-NS_INTERFACE_MAP_END
-
-nsBrowserContentHandler::nsBrowserContentHandler()
-{
-}
-
-nsBrowserContentHandler::~nsBrowserContentHandler()
-{
-}
-
-CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","Load the specified chrome.", PR_TRUE, PR_FALSE)
-CMDLINEHANDLER_REGISTERPROC_IMPL(nsBrowserContentHandler, "Browser Startup Handler", NS_BROWSERSTARTUPHANDLER_CONTRACTID)
+NS_IMPL_ISUPPORTS2(nsBrowserContentHandler, nsIContentHandler, nsICmdLineHandler)
+CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler, "-browser",
+                           "general.startup.browser", "Load the browser.",
+                           PR_TRUE, PR_TRUE)
+CMDLINEHANDLER_REGISTERPROC_IMPL(nsBrowserContentHandler,
+                                 "Browser Startup Handler",
+                                 NS_BROWSERSTARTUPHANDLER_CONTRACTID)
 NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char **aChromeUrlForTask) {
 
   if (!aChromeUrlForTask)
