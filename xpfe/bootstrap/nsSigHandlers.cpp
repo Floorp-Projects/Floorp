@@ -40,6 +40,10 @@
 #include <stdlib.h> // atoi
 #endif
 
+#if defined(SOLARIS)
+#include <sys/resource.h>
+#endif
+
 #ifdef XP_BEOS
 #include <string.h>
 extern "C" const char * strsignal(int);
@@ -153,4 +157,29 @@ void InstallUnixSignalHandlers(const char *ProgramName)
     setrlimit(RLIMIT_AS, &r);
   }
 #endif
+
+#if defined(SOLARIS)
+
+    #define NOFILES 512
+
+    // Boost Solaris file descriptors
+    {
+	struct rlimit rl;
+	
+	if (getrlimit(RLIMIT_NOFILE, &rl) == 0)
+
+	    if (rl.rlim_cur < NOFILES) {
+		rl.rlim_cur = NOFILES;
+
+		if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
+		    perror("setrlimit(RLIMIT_NOFILE)");
+		    fprintf(stderr, "Cannot exceed hard limit for open files");
+		}
+#if defined(DEBUG)
+	    	if (getrlimit(RLIMIT_NOFILE, &rl) == 0)
+		    printf("File descriptors set to %d\n", rl.rlim_cur);
+#endif //DEBUG
+	    }
+    }
+#endif //SOLARIS
 }
