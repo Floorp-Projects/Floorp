@@ -49,8 +49,7 @@ void XXXNeverCalled()
     nsVoidArray();
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
-//    NS_NewPipe(NULL, NULL);
-    NS_NewPipe2(NULL, NULL, 0, 0);
+    NS_NewPipe(NULL, NULL, 0, 0, 0, NULL);
     nsFileSpec s;
     NS_NewIOFileStream(NULL, s, 0, 0);
     nsInputFileStream(s, 0, 0);

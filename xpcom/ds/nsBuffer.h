@@ -33,19 +33,21 @@ public:
 
     // nsIBuffer methods:
     NS_IMETHOD Init(PRUint32 growBySize, PRUint32 maxSize,
-                    nsIAllocator* allocator);
+                    nsIBufferObserver* observer, nsIAllocator* allocator);
     NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount);
     NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void* closure, PRUint32 count,
                             PRUint32 *readCount);
     NS_IMETHOD GetReadSegment(PRUint32 segmentLogicalOffset, 
                               const char* *resultSegment,
                               PRUint32 *resultSegmentLen);
+    NS_IMETHOD GetReadableAmount(PRUint32 *amount);
     NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount);
     NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount);
     NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
                              PRUint32 *writeCount);
     NS_IMETHOD GetWriteSegment(char* *resultSegment,
                                PRUint32 *resultSegmentLen);
+    NS_IMETHOD GetWritableAmount(PRUint32 *amount);
     NS_IMETHOD SetEOF();
     NS_IMETHOD AtEOF(PRBool *result);
     NS_IMETHOD Search(const char* forString, PRBool ignoreCase,
@@ -62,6 +64,7 @@ protected:
     PRUint32            mGrowBySize;
     PRUint32            mMaxSize;
     nsIAllocator*       mAllocator;
+    nsIBufferObserver*  mObserver;
 
     PRCList             mSegments;
     PRUint32            mBufferSize;
