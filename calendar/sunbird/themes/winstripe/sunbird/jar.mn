@@ -11,3 +11,6 @@ calendar.jar:
         skin/classic/calendar/pref/Options.png                      (pref/Options.png)
         skin/classic/calendar/pref/pref.css                         (pref/pref.css)
 +       skin/classic/calendar/datetimepickers/minimonth.css         (datetimepickers/minimonth.css)
+classic.jar:
+   ./icon.png
+   ./preview.png
