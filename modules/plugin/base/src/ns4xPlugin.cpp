@@ -53,6 +53,13 @@
 #include "nsIPluginInstancePeer2.h"
 #include "nsIJSContextStack.h"
 
+#include "nsPIPluginInstancePeer.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsIDocument.h"
+#include "nsIScriptGlobalObject.h"
+
 #ifdef XP_MAC
 #include <Resources.h>
 #endif
@@ -1211,6 +1218,73 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       return NPERR_GENERIC_ERROR;
   }
 
+  case NPNVDOMElement: {
+    ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
+    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
+
+    nsCOMPtr<nsIPluginInstancePeer> pip;
+    inst->GetPeer(getter_AddRefs(pip));
+    nsCOMPtr<nsIPluginTagInfo2> pti2 (do_QueryInterface(pip));
+    if (pti2) {
+      nsCOMPtr<nsIDOMElement> e;
+      pti2->GetDOMElement(getter_AddRefs(e));
+      if (e) {
+        NS_ADDREF(*(nsIDOMElement**)result = e.get());
+        return NPERR_NO_ERROR;
+      }
+    }
+    return NPERR_GENERIC_ERROR;
+  }
+
+  case NPNVDOMDocument: {
+    ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
+    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
+
+    nsCOMPtr<nsIPluginInstancePeer> pip;
+    inst->GetPeer(getter_AddRefs(pip));
+    nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(pip));
+    if (pp) {
+      nsCOMPtr<nsIPluginInstanceOwner> owner;
+      pp->GetOwner(getter_AddRefs(owner));
+      if (owner) {
+        nsCOMPtr<nsIDocument> doc;
+        owner->GetDocument(getter_AddRefs(doc));
+        nsCOMPtr<nsIDOMDocument> domDoc (do_QueryInterface(doc));
+        if (domDoc) {
+          NS_ADDREF(*(nsIDOMDocument**)result = domDoc.get());
+          return NPERR_NO_ERROR;
+        }
+      }
+    }
+    return NPERR_GENERIC_ERROR;
+  }
+
+  case NPNVDOMWindow: {
+    ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
+    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
+
+    nsCOMPtr<nsIPluginInstancePeer> pip;
+    inst->GetPeer(getter_AddRefs(pip));
+    nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(pip));
+    if (pp) {
+      nsCOMPtr<nsIPluginInstanceOwner> owner;
+      pp->GetOwner(getter_AddRefs(owner));
+      if (owner) {
+        nsCOMPtr<nsIDocument> doc;
+        owner->GetDocument(getter_AddRefs(doc));
+        if (doc) {
+          nsCOMPtr<nsIScriptGlobalObject> globalScript;
+          doc->GetScriptGlobalObject(getter_AddRefs(globalScript));
+          nsCOMPtr<nsIDOMWindow> domWindow (do_QueryInterface(globalScript));
+          if (domWindow) {
+            NS_ADDREF(*(nsIDOMWindow**)result = domWindow.get());
+            return NPERR_NO_ERROR;
+          }
+        }
+      }
+    }
+    return NPERR_GENERIC_ERROR;
+  }
   default : return NPERR_GENERIC_ERROR;
   }
 }
