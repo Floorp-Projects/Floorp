@@ -31,34 +31,33 @@ LIBRARY_NAME	= composer
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsComposerModule
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  js \
-		  locale \
-		  gfx \
-		  layout \
-		  content \
-		  uriloader \
-		  widget \
-		  txmgr \
-		  htmlparser \
-		  necko \
-		  pref \
-		  view \
-		  appshell \
-		  rdf \
-		  webshell \
-		  timer \
-		  txtsvc \
-		  intl \
-		  lwbrk \
-		  docshell \
-		  chrome \
-		  caps \
-		  appcomps \
-		  xuldoc \
-		  $(NULL)
+REQUIRES        = xpcom \
+                  string \
+                  dom \
+                  layout \
+                  locale \
+                  content \
+                  uriloader \
+                  txmgr \
+                  htmlparser \
+                  necko \
+                  pref \
+                  view \
+                  webshell \
+                  timer \
+                  intl \
+                  docshell \
+                  gfx \
+                  widget \
+                  xuldoc \
+                  txtsvc \
+                  appshell \
+                  appcomps \
+                  windowwatcher \
+                  chrome \
+                  exthandler \
+                  mimetype \
+                  $(NULL)
 
 CPPSRCS  = \
            nsEditorShell.cpp              \

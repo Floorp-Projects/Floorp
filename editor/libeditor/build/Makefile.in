@@ -36,34 +36,28 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS)    \
 		$(MOZ_JS_LIBS)           \
 		$(NULL)
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  js \
-		  locale \
-		  gfx \
-		  layout \
-		  content \
-		  uriloader \
-		  widget \
-		  txmgr \
-		  htmlparser \
-		  necko \
-		  pref \
-		  view \
-		  appshell \
-		  rdf \
-		  webshell \
-		  timer \
-		  txtsvc \
-		  intl \
-		  lwbrk \
-		  docshell \
-		  chrome \
-		  caps \
-		  appcomps \
-		  xuldoc \
-		  $(NULL)
+REQUIRES        = xpcom \
+                  string \
+                  dom \
+                  layout \
+                  locale \
+                  content \
+                  uriloader \
+                  txmgr \
+                  htmlparser \
+                  necko \
+                  pref \
+                  view \
+                  webshell \
+                  timer \
+                  intl \
+                  docshell \
+                  gfx \
+                  widget \
+                  appshell \
+                  xuldoc \
+                  txtsvc \
+                  $(NULL)
 
 # MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY=1
 ifdef MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY

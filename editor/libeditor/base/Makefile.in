@@ -28,7 +28,30 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= editor
 LIBRARY_NAME	= editorbase_s
-# REQUIRES	= xpcom string dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
+
+REQUIRES        = xpcom \
+                  string \
+                  dom \
+                  locale \
+                  layout \
+                  content \
+                  uriloader \
+                  txmgr \
+                  htmlparser \
+                  necko \
+                  pref \
+                  view \
+                  appshell \
+                  rdf \
+                  webshell \
+                  timer \
+                  txtsvc \
+                  intl \
+                  docshell \
+                  gfx \
+                  widget \
+                  xuldoc \
+                  $(NULL)
 
 # Internal header files, needed by other editor sublibs:
 INTERNAL_HDR_DIR = ../internal
