@@ -15,7 +15,7 @@
 
   <RDF:Description about="NC:ispinfo">
     <NC:providers>
-      <NC:nsIMsgAccount about="domain:">
+      <NC:nsIMsgAccount about="newsblog">
 
         <!-- server info -->
         <NC:incomingServer>
