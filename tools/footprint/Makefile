@@ -63,7 +63,7 @@
 # Where <b1> is the slope and <b0> is the y-intercept.
 LINEAR_REGRESSION=awk -f linear-regression.awk
 
-WATCH=watch.sh
+WATCH=./watch.sh
 
 MOZILLA_DIR=../../dist/bin
 PROGRAM=mozilla-bin
