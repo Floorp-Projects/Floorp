@@ -34,3 +34,16 @@ writable by others (drwxr-xr-x).
 Finally, if you are using suexec then it won't be able to stat a
 symlink to Main, so delete the symlink, rename Main to nph-Main, and
 then create a symlink Main that points to nph-Main.
+
+
+
+
+PROFILING
+
+run Main with -d:DProf, then use dprofpp with one of the following
+arguments:
+
+-E vs -I         exclude or include child times: -E is more useful
+-l vs -v vs -z   sort by number of calls vs average time spent vs total time spent
+-O 15            number of lines to show
+-S               the tree vs the list
