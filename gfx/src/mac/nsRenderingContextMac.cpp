@@ -1394,3 +1394,13 @@ NS_IMETHODIMP nsRenderingContextMac::RetrieveCurrentNativeGraphicData(PRUint32 *
 {
   return NS_OK;
 }
+
+NS_IMETHODIMP nsRenderingContextMac::InvertRect(const nsRect& aRect)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextMac::InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+  return NS_OK;
+}
