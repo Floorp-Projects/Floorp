@@ -768,10 +768,15 @@ function BrowserLoadURL(aTriggeringEvent)
   if (url.match(/^view-source:/)) {
     BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
+    if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
+        aTriggeringEvent.ctrlKey)
+      // Tack www. and .com on.
+      url = gURLBar.value = "www." + url + ".com";
+
     if (gPrefService && gPrefService.getBoolPref("browser.tabs.opentabfor.urlbar") &&
         getBrowser().localName == "tabbrowser" &&
-        aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
-        aTriggeringEvent.ctrlKey) {
+        aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
+        aTriggeringEvent.shiftKey) {
       var t = getBrowser().addTab(getShortcutOrURI(url)); // open link in new tab
       getBrowser().selectedTab = t;
     }
@@ -4138,7 +4143,7 @@ function openNewTabOrWindow(event, href, linkNode)
   if (gPrefService && gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick") &&
       ("getBrowser" in window) && getBrowser().localName == "tabbrowser") {
     var loadInBackground = gPrefService.getBoolPref("browser.tabs.loadInBackground");
-    if (event.shiftKey)
+    if (event.ctrlKey)
       loadInBackground = !loadInBackground;
     var theTab = getBrowser().addTab(href, getReferrer(document));
     if (!loadInBackground)
@@ -4173,19 +4178,11 @@ function handleLinkClick(event, href, linkNode)
 {
   switch (event.button) {                                   
     case 0:                                                         // if left button clicked
-      if (event.metaKey || event.ctrlKey) {                         // and meta or ctrl are down
+      if (event.metaKey || event.shiftKey) {                         // and meta or shift are down
         if (openNewTabOrWindow(event, href, linkNode))
           return true;
       } 
-      var saveModifier = true;
-      if (gPrefService) {
-        try {
-          saveModifier = gPrefService.getBoolPref("ui.key.saveLink.shift");
-        }
-        catch(ex) {            
-        }
-      }
-      saveModifier = saveModifier ? event.shiftKey : event.altKey;
+      var saveModifier = event.altKey;
         
       if (saveModifier) {                                           // if saveModifier is down
         saveURL(href, linkNode ? gatherTextUnder(linkNode) : "");
@@ -4211,8 +4208,8 @@ function middleMousePaste( event )
   if (!url)
     return false;
 
-  // On ctrl-middleclick, open in new window or tab.
-  if (event.ctrlKey)
+  // On shift-middleclick, open in new window or tab.
+  if (event.shiftKey)
     return openNewTabOrWindow(event, url, null);
 
   // If ctrl wasn't down, then just load the url in the current win/tab.
