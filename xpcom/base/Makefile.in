@@ -74,7 +74,10 @@ EXPORTS		= \
 
 ifdef NS_TRACE_MALLOC
 CSRCS           += nsTraceMalloc.c
-CPPSRCS         += nsTypeInfo.cpp
+CPPSRCS         += nsTypeInfo.cpp 
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS		+= nsDebugHelpWin32.cpp nsWinTraceMalloc.cpp
+endif
 EXPORTS         += nsTraceMalloc.h
 DEFINES         += -DNS_TRACE_MALLOC
 endif

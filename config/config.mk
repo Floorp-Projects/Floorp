@@ -306,12 +306,10 @@ endif
 # No opt to give sane callstacks.
 #
 ifdef NS_TRACE_MALLOC
-_WIN32_TM_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
-OS_CFLAGS += $(_WIN32_TM_FLAGS)
-OS_CXXFLAGS += $(_WIN32_TM_FLAGS)
+MOZ_OPTIMIZE_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
 OS_LDFLAGS += /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
 endif
-# MOZ_TRACE_MALLOC
+# NS_TRACE_MALLOC
 
 # if MOZ_DEBUG is not set and MOZ_MAPINFO
 MAPFILE=$(LIBRARY_NAME).map
@@ -561,26 +559,26 @@ ifeq ($(OS_ARCH),WINNT)
 #//------------------------------------------------------------------------
 ifdef USE_STATIC_LIBS
 RTL_FLAGS=-MT          # Statically linked multithreaded RTL
-ifneq (,$(MOZ_DEBUG)$(MOZ_TRACE_MALLOC))
+ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 RTL_FLAGS=-MTd         # Statically linked multithreaded MSVC4.0 debug RTL
-endif # MOZ_DEBUG || MOZ_TRACE_MALLOC
+endif # MOZ_DEBUG || NS_TRACE_MALLOC
 
 else # !USE_STATIC_LIBS
 
 ifdef USE_NON_MT_LIBS
 RTL_FLAGS=-ML          # Statically linked non-multithreaded LIBC RTL
-ifneq (,$(MOZ_DEBUG)$(MOZ_TRACE_MALLOC))
+ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 RTL_FLAGS=-MLd         # Statically linked non-multithreaded LIBC debug RTL
-endif # MOZ_DEBUG || MOZ_TRACE_MALLOC
+endif # MOZ_DEBUG || NS_TRACE_MALLOC
 
 else # ! USE_NON_MT_LIBS
 
 RTL_FLAGS=-MD          # Dynamically linked, multithreaded RTL
-ifneq (,$(MOZ_DEBUG)$(MOZ_TRACE_MALLOC))
+ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 ifndef MOZ_NO_DEBUG_RTL
 RTL_FLAGS=-MDd         # Dynamically linked, multithreaded MSVC4.0 debug RTL
 endif 
-endif # MOZ_DEBUG || MOZ_TRACE_MALLOC
+endif # MOZ_DEBUG || NS_TRACE_MALLOC
 endif # USE_NON_MT_LIBS
 endif # USE_STATIC_LIBS
 endif # WINNT
