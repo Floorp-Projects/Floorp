@@ -240,7 +240,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
           //    this.)  See bug 7554, bug 49897, and bug 96813.
           nsEventStatus status = *aEventStatus;
           rv = DispatchClickEvent(aPresContext, NS_STATIC_CAST(nsInputEvent*, aEvent),
-                                  content, PR_TRUE, &status);
+                                  content, PR_FALSE, &status);
           // Do we care about the status this returned?  I don't think we do...
         }
         break;
