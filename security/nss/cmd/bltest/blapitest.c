@@ -1105,7 +1105,7 @@ dsa_test(blapitestInfo *info)
 		dsakey_to_file(key, "tmp.key");
 	}
 	if (info->sign) {
-		info->out.len = 48;
+		info->out.len = DSA_SIGNATURE_LEN;
 		info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 		if (info->usesigseed) {
 			if (info->sigseed.len == 0)
@@ -1134,12 +1134,12 @@ dsa_test(blapitestInfo *info)
 		for (i=0; i<numiter; i++)
 			rv = DSA_VerifyDigest(&pubkey, &info->out, &info->in);
 		TIMEFINISH("DSA VERIFY", info->in.len);
-		if (rv == SECSuccess) {
-			PR_fprintf(PR_STDOUT, "Signature verified.\n");
-		} else {
+		if (rv != SECSuccess) {
 			PR_fprintf(PR_STDOUT, "Signature failed verification!\n");
 			CHECKERROR(rv, __LINE__);
-		}
+		} /*else {
+			PR_fprintf(PR_STDOUT, "Signature verified.\n");
+		}*/
 	}
 	PORT_FreeArena(key->params.arena, PR_TRUE);
 	return SECSuccess;
@@ -1444,7 +1444,7 @@ get_params(blapitestInfo *info, char *mode, int num)
 	PRFileDesc *file;
 	*/
 	FILE *file;
-	char filename[32];
+	char filename[256];
 	char *mark, *param, *val;
 	int index = 0;
 	int len;
@@ -1480,7 +1480,7 @@ get_params(blapitestInfo *info, char *mode, int num)
 static SECStatus
 get_ascii_file_data(SECItem *item, char *mode, char *type, int num)
 {
-	char filename[32];
+	char filename[256];
 	PRFileDesc *file;
 	SECStatus rv;
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, mode, type, num);
@@ -1494,6 +1494,8 @@ get_ascii_file_data(SECItem *item, char *mode, char *type, int num)
 	if ((PL_strcmp(mode, "rsa") == 0 || PL_strcmp(mode, "dsa") == 0) && 
 	    PL_strcmp(type, "key") == 0)
 		atob(SECITEM_DupItem(item), item);
+	if (PL_strcmp(mode, "dsa") == 0 && PL_strcmp(type, "plaintext") == 0)
+		atob(SECITEM_DupItem(item), item);
 	/* remove a trailing newline, else byte count will be wrong */
 	if (item->data[item->len-1] == '\n')
 		item->len--;
@@ -1502,13 +1504,14 @@ get_ascii_file_data(SECItem *item, char *mode, char *type, int num)
 }
 
 static SECStatus
-blapi_selftest(char **modesToTest, int numModesToTest)
+blapi_selftest(char **modesToTest, int numModesToTest, 
+               PRBool encrypt, PRBool decrypt)
 {
 	blapitestCryptoFn cryptofn;
 	blapitestInfo info;
 	SECItem output, asciiOut, item, inpCopy;
 	SECStatus rv;
-	char filename[32];
+	char filename[256];
 	PRFileDesc *file;
 	char *mode;
 	int i, j, nummodes;
@@ -1559,22 +1562,27 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 			rv = SECU_FileToItem(&asciiOut, file);
 			PR_Close(file);
 			rv = atob(&asciiOut, &output);
+			if (!encrypt) goto decrypt;
 			info.encrypt = info.hash = info.sign = PR_TRUE;
 			(*cryptofn)(&info);
 			if (SECITEM_CompareItem(&output, &info.out) != 0) {
 				printf("encrypt self-test for %s failed!\n", mode);
-			} else {
+			} /*else {
 				printf("encrypt self-test for %s passed.\n", mode);
-			}
+			}*/
+decrypt:
+			if (!decrypt) continue;
 			info.encrypt = info.hash = info.sign = PR_FALSE;
 			info.decrypt = info.verify = PR_TRUE;
 			if (PL_strcmp(mode, "dsa") == 0) {
+				if (info.out.len == 0)
+				    SECITEM_CopyItem(NULL, &info.out, &output);
 				rv = (*cryptofn)(&info);
-				if (rv == SECSuccess) {
-					printf("signature self-test for %s passed.\n", mode);
-				} else {
+				if (rv != SECSuccess) {
 					printf("signature self-test for %s failed!\n", mode);
-				}
+				} /*else {
+					printf("signature self-test for %s passed.\n", mode);
+				}*/
 			} else {
 				SECITEM_ZfreeItem(&info.in, PR_FALSE);
 				SECITEM_ZfreeItem(&info.out, PR_FALSE);
@@ -1584,9 +1592,9 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 				if (rv == SECSuccess) {
 					if (SECITEM_CompareItem(&inpCopy, &info.out) != 0) {
 						printf("decrypt self-test for %s failed!\n", mode);
-					} else {
+					} /*else {
 						printf("decrypt self-test for %s passed.\n", mode);
-					}
+					}*/
 				}
 			}
 		}
@@ -1712,10 +1720,14 @@ int main(int argc, char **argv)
 		return dump_file(mode, dumpfile);
 
 	if (doselftest) {
+		if (!info.encrypt && !info.decrypt) {
+			info.encrypt = info.decrypt = PR_TRUE;  /* do both */
+		}
 		if (numModesToTest > 0) {
-			return blapi_selftest(modesToTest, numModesToTest);
+			return blapi_selftest(modesToTest, numModesToTest,
+			                      info.encrypt, info.decrypt);
 		} else {
-			return blapi_selftest(NULL, 0);
+			return blapi_selftest(NULL, 0, info.encrypt, info.decrypt);
 		}
 	}
 
@@ -1751,6 +1763,7 @@ int main(int argc, char **argv)
 	}
 
 	RNG_RNGInit();
+	RNG_SystemInfoForRNG();
 
 	if (keyfile) {
 		/* RSA and DSA keys are always b64 encoded. */
