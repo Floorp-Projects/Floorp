@@ -1718,7 +1718,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
         PRUint32 last_update;
       	
 		if (!m_newsHost) {
-#ifdef DEBUG
+#ifdef DEBUG_NEWS
 			printf("m_newsHost is null, panic!\n");
 #endif
 			return -1;
@@ -1791,7 +1791,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 		nsresult rv;
 		PRBool searchable=PR_FALSE;
 		if (!m_newsHost) {
-#ifdef DEBUG
+#ifdef DEBUG_NEWS
 			printf("m_newsHost is null, panic!\n");
 #endif
 			return -1;
@@ -2244,9 +2244,11 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		  */
 		if (m_typeWanted != CANCEL_WANTED || nsCRT::strncmp(outputBuffer, "Content-Type:", 13))
 		{
+#ifdef DEBUG_NEWS
 			// for test purposes...we'd want to write this line out to an rfc-822 stream converter...
 			// we don't have one now so print the data out so we can verify that we got it....
 			printf("%s", outputBuffer);
+#endif
 
             // if we are attempting to cancel, we want to snarf the headers and save the aside, which is what
             // ParseHeaderForCancel() does.
@@ -4638,7 +4640,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
     while(!TestFlag(NNTP_PAUSE_FOR_READ))
 	{
 
-#if DEBUG_NEWS
+#ifdef DEBUG_NEWS
         printf("Next state: %s\n",stateLabels[m_nextState]); 
 #endif
 		// examine our current state and call an appropriate handler for that state.....
