@@ -22,6 +22,8 @@ $DomToTextConversionTest = 0;
 $MailNewsTest = 0;
 $MozConfigFileName = 'mozconfig';
 $MozProfileName = 'default';
+$BloatTestTimeout	= 120;
+$DomTestTimeout		= 45;
 
 #- Set these to what makes sense for your system
 $Make          = 'gmake';       # Must be GNU make
