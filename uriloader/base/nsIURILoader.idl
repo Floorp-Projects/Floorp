@@ -116,19 +116,5 @@ interface nsIURILoader : nsISupports
    */
   nsILoadGroup getLoadGroupForContext(in nsISupports aWindowContext);
   nsIDocumentLoader getDocumentLoaderForContext (in nsISupports aWindowContext);
-
-
-  /**
-   * mscott -> I'm going to move this out into a separate private interface
-   */
-  void dispatchContent(in string aContentType,
-                       in boolean aIsContentPreferred,
-                       in nsIRequest aRequest, 
-                       in nsISupports aCtxt,
-                       in nsIURIContentListener aContentListener,
-                       in nsISupports aSrcWindowContext,
-                       out string aDesiredContentType,
-                       out nsIURIContentListener aTargetListener,
-                       out boolean abortDispatch);
 };
 

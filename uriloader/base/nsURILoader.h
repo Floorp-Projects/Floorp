@@ -47,6 +47,8 @@
 #include "nsString.h"
 #include "nsIWeakReference.h"
 
+class nsDocumentOpenInfo;
+
 class nsURILoader : public nsIURILoader
 {
 public:
@@ -65,11 +67,7 @@ protected:
   // prepare the load cookie for the window context
   nsresult SetupLoadCookie(nsISupports * aWindowContext, nsIInterfaceRequestor ** aLoadCookie);
 
-  // a small helper function
-  PRBool ShouldHandleContent(nsIURIContentListener * aCntListener, 
-                             const char * aContentType,
-                             PRBool bIsContentPreferred,
-                             char ** aContentTypeToUse);
+  friend class nsDocumentOpenInfo;
 };
 
 #endif /* nsURILoader_h__ */
