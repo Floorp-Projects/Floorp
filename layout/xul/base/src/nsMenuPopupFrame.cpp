@@ -1503,6 +1503,8 @@ nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
     if (!aHandledFlag) {
       // We should close up.
       mCurrentMenu->OpenMenu(PR_FALSE);
+      // SelectMenu() so DOMMenuItemActive is fired for accessibility
+      mCurrentMenu->SelectMenu(PR_TRUE);
       aHandledFlag = PR_TRUE;
     }
   }
@@ -1819,6 +1821,8 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
     if (theDirection == eNavigationDirection_Start) {
       // Close it up.
       mCurrentMenu->OpenMenu(PR_FALSE);
+      // SelectMenu() so DOMMenuItemActive is fired for accessibility
+      mCurrentMenu->SelectMenu(PR_TRUE);
       aHandledFlag = PR_TRUE;
     }
   }
