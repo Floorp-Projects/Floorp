@@ -20,3 +20,9 @@ Rights Reserved.
 
 <!ENTITY subscribeButton.label				"Subscribe">
 <!ENTITY unsubscribeButton.label			"Unsubscribe">
+<!ENTITY refreshButton.label				"Refresh">
+<!ENTITY folders.label						"Newsgroup:">
+<!ENTITY server.label						"Server:">
+<!ENTITY foldersHeader.label				"newsgroup">
+<!ENTITY subscribedHeader.label				"subscribed">
+<!ENTITY messagesHeader.label				"messages">
