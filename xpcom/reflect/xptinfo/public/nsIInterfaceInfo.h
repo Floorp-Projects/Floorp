@@ -58,10 +58,11 @@ public:
 
     // Get the interface information or iid associated with a param of some
     // method in this interface.
-    NS_IMETHOD GetInfoForParam(const nsXPTParamInfo* param, 
+    NS_IMETHOD GetInfoForParam(uint16 methodIndex, const nsXPTParamInfo* param, 
                                nsIInterfaceInfo** info) = 0;
     // returns IAllocatator alloc'd copy
-    NS_IMETHOD GetIIDForParam(const nsXPTParamInfo* param, nsIID** iid) = 0;
+    NS_IMETHOD GetIIDForParam(uint16 methodIndex, const nsXPTParamInfo* param, 
+                              nsIID** iid) = 0;
 };
 
 #endif /* nsIInterfaceInfo_h___ */

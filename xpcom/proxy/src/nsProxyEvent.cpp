@@ -144,7 +144,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     ///////////////////////////////////////////////////////////////////////
     // Auto-proxification
     ///////////////////////////////////////////////////////////////////////
-    nsresult rv = AutoProxyParameterList(methodInfo, params, interfaceInfo, convertInParameters);
+    nsresult rv = AutoProxyParameterList(methodIndex, methodInfo, params, interfaceInfo, convertInParameters);
     ///////////////////////////////////////////////////////////////////////
     
     if (NS_FAILED(rv))
@@ -197,7 +197,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
         ///////////////////////////////////////////////////////////////////////
         // Auto-proxification
         ///////////////////////////////////////////////////////////////////////
-        rv = AutoProxyParameterList(methodInfo, params, interfaceInfo, convertOutParameters);
+        rv = AutoProxyParameterList(methodIndex, methodInfo, params, interfaceInfo, convertOutParameters);
         ///////////////////////////////////////////////////////////////////////
         
         mDestQueue->ExitMonitor();
@@ -217,7 +217,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
 
 
 nsresult
-nsProxyObject::AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
+nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
                                       nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType)
 {
     nsresult rv = NS_OK;
@@ -266,7 +266,7 @@ nsProxyObject::AutoProxyParameterList(nsXPTMethodInfo *methodInfo, nsXPTCMiniVar
                 {
                     nsIID* iid;
 
-                    interfaceInfo->GetIIDForParam(&paramInfo, &iid);
+                    interfaceInfo->GetIIDForParam((PRUint16)methodIndex, &paramInfo, &iid);
 
                     rv = manager->GetProxyObject(GetQueue(), 
                                                  *iid,
