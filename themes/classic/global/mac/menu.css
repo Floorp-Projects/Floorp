@@ -243,15 +243,18 @@ menuitem[checked="true"][menuactive="true"]
 }
 
 autorepeatbutton {
+  margin: 1px 2px 2px 1px;
+  border: 1px solid transparent;
+  padding: 1px;
+  height: 1em;  
   text-align: left;
   vertical-align: middle;
 }
 
 autorepeatbutton:hover {
-  background-color      : #333399;	/*none of the CSS system colours capture this*/
-}
-
-
+  margin: 1px;
+  border: 1px inset #DDDDDD;
+  padding: 2px 1px 1px 2px;
 }
 
 autorepeatbutton > .autorepeatbutton-up {

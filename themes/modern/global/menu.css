@@ -230,13 +230,19 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
 }
 
 autorepeatbutton {
+  margin: 1px 2px 2px 1px;
+  border: 1px solid transparent;
+  padding: 3px;
+  height: 1em;  
   text-align: center;
   vertical-align: middle;
-  padding: 1px;
 }
 
 autorepeatbutton:hover {
-  background-color: #486380;
+  margin: 1px;
+  border: 1px inset #A5B2C2;
+  padding: 4px 3px 3px 4px;
+  background-color: #A5B2C2;
 }
 
 /*

@@ -14,7 +14,6 @@ menuitem
     cursor                : default !important;    
   }
 
-
 menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
 menuitem[menuactive="true"][disabled="true"]
@@ -241,13 +240,19 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
 
 autorepeatbutton 
   {
+    margin                : 1px 2px 2px 1px;
+    border                : 1px solid transparent;
+    padding               : 1px;
+    height                : 1em;  
     text-align            : center;
     vertical-align        : middle;
   }
 
 autorepeatbutton:hover 
   {
-    background-color      : highlight;
+    margin                : 1px;
+    border                : 1px inset threedface;
+    padding               : 2px 1px 1px 2px;
   }
 
 .popup-infopopup  
