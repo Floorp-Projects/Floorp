@@ -145,10 +145,6 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
-  NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
-                         const nsPoint&  aPoint,
-                         nsIFrame**      aFrame,
-                         PRInt32&        aCursor);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD VerifyTree() const;
@@ -3818,30 +3814,6 @@ nsCSSBlockFrame::HandleEvent(nsIPresContext& aPresContext,
     kid->GetNextSibling(kid);
   }
 
-  return NS_OK;
-}
-
-// XXX move into nsFrame
-NS_IMETHODIMP
-nsCSSBlockFrame::GetCursorAt(nsIPresContext& aPresContext,
-                             const nsPoint&  aPoint,
-                             nsIFrame**      aFrame,
-                             PRInt32&        aCursor)
-{
-  aCursor = NS_STYLE_CURSOR_INHERIT;
-
-  nsIFrame* kid = (nsnull == mLines) ? nsnull : mLines->mFirstChild;
-  nsPoint tmp;
-  while (nsnull != kid) {
-    nsRect kidRect;
-    kid->GetRect(kidRect);
-    if (kidRect.Contains(aPoint)) {
-      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      kid->GetCursorAt(aPresContext, tmp, aFrame, aCursor);
-      break;
-    }
-    kid->GetNextSibling(kid);
-  }
   return NS_OK;
 }
 
