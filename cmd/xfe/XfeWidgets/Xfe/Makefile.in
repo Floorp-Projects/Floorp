@@ -142,7 +142,6 @@ EXPORTS			= \
 				OrientedP.h \
 				Pane.h \
 				PaneP.h \
-				PrepareP.h \
 				Primitive.h \
 				PrimitiveP.h \
 				ProgressBar.h \

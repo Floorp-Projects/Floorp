@@ -107,6 +107,13 @@ typedef struct _XfeLogoRec
 /*----------------------------------------------------------------------*/
 #define _XfeLogoPart(w) &(((XfeLogoWidget) w) -> xfe_logo)
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeLogo - superclass = XfeButton										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XFE_PREPARE_LOGO_ANIMATION					XfePrepare6
+
 XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end LogoP.h			*/

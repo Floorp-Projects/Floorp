@@ -120,6 +120,24 @@ typedef struct _XfeTabRec
 /*----------------------------------------------------------------------*/
 #define _XfeTabPart(w) &(((XfeTabWidget) w)->xfe_tab)
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeTab - superclass = XfeButton										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XFE_PREPARE_TAB_BOTTOM_PIXMAP				XfePrepare6
+#define _XFE_PREPARE_TAB_HORIZONTAL_PIXMAP			XfePrepare7
+#define _XFE_PREPARE_TAB_LEFT_PIXMAP				XfePrepare8
+#define _XFE_PREPARE_TAB_RIGHT_PIXMAP				XfePrepare9
+#define _XFE_PREPARE_TAB_TOP_PIXMAP					XfePrepare10
+#define _XFE_PREPARE_TAB_VERTICAL_PIXMAP			XfePrepare11
+#define _XFE_PREPARE_TAB_BOTTOM_RAISED_PIXMAP		XfePrepare12
+#define _XFE_PREPARE_TAB_HORIZONTAL_RAISED_PIXMAP	XfePrepare13
+#define _XFE_PREPARE_TAB_LEFT_RAISED_PIXMAP			XfePrepare14
+#define _XFE_PREPARE_TAB_RIGHT_RAISED_PIXMAP		XfePrepare15
+#define _XFE_PREPARE_TAB_TOP_RAISED_PIXMAP			XfePrepare16
+#define _XFE_PREPARE_TAB_VERTICAL_RAISED_PIXMAP		XfePrepare17
+
 XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end TabP.h		*/

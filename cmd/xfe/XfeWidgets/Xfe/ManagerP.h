@@ -30,7 +30,6 @@
 #include <Xfe/XfeP.h>
 #include <Xfe/PrimitiveP.h>
 #include <Xfe/Manager.h>
-#include <Xfe/PrepareP.h>
 #include <Xfe/Linked.h>
 #include <Xm/ManagerP.h>
 

@@ -1294,9 +1294,6 @@ DeleteStaticChild(Widget child)
 static void
 PrepareComponents(Widget w,int flags)
 {
-    if (flags & _XFE_PREPARE_LABEL_STRING)
-    {
-    }
 }
 /*----------------------------------------------------------------------*/
 static void

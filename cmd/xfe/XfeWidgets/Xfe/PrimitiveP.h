@@ -29,7 +29,6 @@
 
 #include <Xfe/XfeP.h>
 #include <Xfe/Primitive.h>
-#include <Xfe/PrepareP.h>
 #include <Xm/PrimitiveP.h>
 #include <Xm/DrawP.h>
 

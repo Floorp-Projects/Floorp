@@ -164,6 +164,15 @@ typedef struct _XfeButtonRec
 /*----------------------------------------------------------------------*/
 #define _XfeButtonPart(w) &(((XfeButtonWidget) w) -> xfe_button)
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeButton - superclass = XfeLabel									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XFE_PREPARE_BUTTON_PIXMAP					XfePrepare2
+#define _XFE_PREPARE_BUTTON_ARMED_PIXMAP			XfePrepare3
+#define _XFE_PREPARE_BUTTON_RAISED_PIXMAP			XfePrepare4
+#define _XFE_PREPARE_BUTTON_INSENSITIVE_PIXMAP		XfePrepare5
 
 /*----------------------------------------------------------------------*/
 /*																		*/
