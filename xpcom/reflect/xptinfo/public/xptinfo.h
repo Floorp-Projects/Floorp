@@ -231,7 +231,10 @@ public:
     const nsXPTType GetType() const
         {return type.prefix;}
 
-    // XXX this is ugly
+    // XXX this is ugly. But sometimes you gotta do what you gotta do.
+    // A reinterpret_cast won't do the trick here. And this plain C cast
+    // works correctly and is safe enough.
+    // See http://bugzilla.mozilla.org/show_bug.cgi?id=49641
     const nsXPTCMiniVariant* GetValue() const
         {return (nsXPTCMiniVariant*) &value;}
 private:
