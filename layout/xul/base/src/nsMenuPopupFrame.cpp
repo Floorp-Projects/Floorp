@@ -651,6 +651,25 @@ nsMenuPopupFrame::AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPo
       popupAlign.AssignWithConversion("bottomleft");
   }
 
+  // Adjust position for margins at the aligned corner
+  const nsStyleMargin* smargin = 
+    (const nsStyleMargin*)mStyleContext->GetStyleData(eStyleStruct_Margin);
+  nsMargin margin;
+  smargin->GetMargin(margin);
+  if (popupAlign == NS_LITERAL_STRING("topleft")) {
+    *ioXPos += margin.left;
+    *ioYPos += margin.top;
+  } else if (popupAlign == NS_LITERAL_STRING("topright")) {
+    *ioXPos += margin.right;
+    *ioYPos += margin.top;
+  } else if (popupAlign == NS_LITERAL_STRING("bottomleft")) {
+    *ioXPos += margin.left;
+    *ioYPos += margin.bottom;
+  } else if (popupAlign == NS_LITERAL_STRING("bottomright")) {
+    *ioXPos += margin.right;
+    *ioYPos += margin.bottom;
+  }
+  
   if (popupAnchor == NS_LITERAL_STRING("topright") && popupAlign == NS_LITERAL_STRING("topleft")) {
     *ioXPos += inParentRect.width;
   }
@@ -907,6 +926,15 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
 
     xpos = NSIntPixelsToTwips(newXPos, p2t);
     ypos = NSIntPixelsToTwips(newYPos, p2t);
+
+    // Add in the top and left margins
+    const nsStyleMargin* smargin = 
+      (const nsStyleMargin*)mStyleContext->GetStyleData(eStyleStruct_Margin);
+    nsMargin margin;
+    smargin->GetMargin(margin);
+    
+    xpos += margin.left;
+    ypos += margin.top;
   } 
   else {
     anchoredToParent = PR_TRUE;
