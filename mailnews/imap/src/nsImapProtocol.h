@@ -40,7 +40,6 @@
 #include "nsVoidArray.h"
 #include "nsMsgLineBuffer.h" // we need this to use the nsMsgLineStreamBuffer helper class...
 #include "nsIInputStream.h"
-#include "nsIWebShell.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsISupportsArray.h"
 #include "nsIThread.h"
@@ -53,7 +52,6 @@
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
-class nsIWebShell;
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
