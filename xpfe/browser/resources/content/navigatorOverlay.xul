@@ -204,7 +204,9 @@ Contributor(s): ______________________________________. -->
 		  	</menupopup>
 		  </menu>
    
-      <menuitem value="&sidebarCmd.label;" oncommand="sidebarShowHide();"/>
+      <!-- shaver asks: shouldn't this be in sidebarOverlay? -->
+      <menuitem id="menu_sidebar" type="checkbox" value="&sidebarCmd.label;"
+                oncommand="sidebarShowHide();"/>
       <menuseparator />
       <menuitem value="&enlargeTextSizeCmd.label;" 
         oncommand="BrowserReload();"/>
