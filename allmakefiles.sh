@@ -367,7 +367,7 @@ xpfe/components/Makefile
 xpfe/components/public/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile
-xpfe/components/resources/Makefile
+xpfe/components/find/resources/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
