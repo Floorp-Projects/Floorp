@@ -81,7 +81,7 @@
     <separator class="thin" orient="vertical"/>
     
     <box orient="vertical" flex="1">
-      <tree id="profiles" class="inset" flex="1"
+      <tree id="profiles" class="inset" flex="1" style="height: 0px;"
             onclick="HandleClickEvent( event );"
             onselect="DoEnabling();"
             onkeypress="HandleKeyEvent( event );">
