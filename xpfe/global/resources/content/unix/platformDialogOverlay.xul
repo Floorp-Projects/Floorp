@@ -21,11 +21,6 @@
 					  align="right"
 					  onclick="doOKButton()"/>	
 		<spring style="width:10px"/>
-		<titledbutton id="cancel"
-					  class="dialog push"
-					  value="&cancelButton.label;"
-					  onclick="doCancelButton()"/>	
-		<spring style="width:10px"/>
 		<titledbutton id="Button2"
 					  class="dialog push"
 					  value="&cancelButton.label;"
@@ -37,6 +32,11 @@
 					  value="&cancelButton.label;"
 					  style="display:none;"
 					  onclick="doButton3()"/>	
+		<spring style="width:10px"/>
+		<titledbutton id="cancel"
+					  class="dialog push"
+					  value="&cancelButton.label;"
+					  onclick="doCancelButton()"/>	
 		<spring flex="100%"/>
 	</box>
 	
