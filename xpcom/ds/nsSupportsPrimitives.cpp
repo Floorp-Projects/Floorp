@@ -19,6 +19,7 @@
 #include "nsSupportsPrimitives.h"
 #include "nsCRT.h"
 #include "nsIAllocator.h"
+#include "prprf.h"
 
 /***************************************************************************/
 
@@ -66,6 +67,33 @@ NS_IMETHODIMP nsSupportsIDImpl::SetData(nsID *aData)
         mData = nsnull;
     return NS_OK;
 }
+
+NS_IMETHODIMP nsSupportsIDImpl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    *_retval = nsnull;
+    if(mData)
+    {
+        char * str = mData->ToString();
+        if(str)
+        {
+            *_retval = (char*) nsAllocator::Clone(str, 
+                                    (nsCRT::strlen(str)+1)*sizeof(char));
+            delete [] str;
+        }
+    }
+    else
+    {
+      static const char nullStr[] = "null";
+      *_retval = (char*) nsAllocator::Clone(nullStr, sizeof(nullStr));
+    }
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
+
 
 /***************************************************************************/
 
@@ -116,6 +144,11 @@ NS_IMETHODIMP nsSupportsStringImpl::SetData(char *aData)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsSupportsStringImpl::toString(char **_retval)
+{
+    return GetData(_retval);
+}  
+
 /***************************************************************************/
 
 NS_IMPL_ISUPPORTS(nsSupportsWStringImpl, NS_GET_IID(nsISupportsWString))
@@ -165,6 +198,11 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetData(PRUnichar *aData)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsSupportsWStringImpl::toString(PRUnichar **_retval)
+{
+    return GetData(_retval);
+}  
+
 /***************************************************************************/
 
 NS_IMPL_ISUPPORTS(nsSupportsPRBoolImpl, NS_GET_IID(nsISupportsPRBool))
@@ -194,6 +232,19 @@ NS_IMETHODIMP nsSupportsPRBoolImpl::SetData(PRBool aData)
     mData = aData;
     return NS_OK;
 }
+
+NS_IMETHODIMP nsSupportsPRBoolImpl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    const char * str = mData ? "true" : "false";
+    *_retval = (char*) nsAllocator::Clone(str,
+                                (nsCRT::strlen(str)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
 
 /***************************************************************************/
 
@@ -225,35 +276,22 @@ NS_IMETHODIMP nsSupportsPRUint8Impl::SetData(PRUint8 aData)
     return NS_OK;
 }
 
-/***************************************************************************/
-
-NS_IMPL_ISUPPORTS(nsSupportsPRUnicharImpl, NS_GET_IID(nsISupportsPRUnichar))
-
-nsSupportsPRUnicharImpl::nsSupportsPRUnicharImpl()
-    : mData(0)
+NS_IMETHODIMP nsSupportsPRUint8Impl::toString(char **_retval)
 {
-    NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
-}
-
-nsSupportsPRUnicharImpl::~nsSupportsPRUnicharImpl() {}
-
-NS_IMETHODIMP nsSupportsPRUnicharImpl::GetData(PRUint16 *aData)
-{
-    if(!aData)
+    if(!_retval)
     {
         NS_ASSERTION(0,"Bad pointer");
         return NS_ERROR_NULL_POINTER;
     }
-    *aData = mData;
-    return NS_OK;
-}
+    static const int size = 8;
+    char buf[size];
 
-NS_IMETHODIMP nsSupportsPRUnicharImpl::SetData(PRUint16 aData)
-{
-    mData = aData;
-    return NS_OK;
-}
+    PR_snprintf(buf, size, "%u", (PRUint16) mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
 
 /***************************************************************************/
 
@@ -285,6 +323,23 @@ NS_IMETHODIMP nsSupportsPRUint16Impl::SetData(PRUint16 aData)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsSupportsPRUint16Impl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 8;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%u", (int) mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
+
 /***************************************************************************/
 
 NS_IMPL_ISUPPORTS(nsSupportsPRUint32Impl, NS_GET_IID(nsISupportsPRUint32))
@@ -314,6 +369,23 @@ NS_IMETHODIMP nsSupportsPRUint32Impl::SetData(PRUint32 aData)
     mData = aData;
     return NS_OK;
 }
+
+NS_IMETHODIMP nsSupportsPRUint32Impl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 16;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%lu", mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
 
 /***************************************************************************/
 
@@ -345,6 +417,23 @@ NS_IMETHODIMP nsSupportsPRUint64Impl::SetData(PRUint64 aData)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsSupportsPRUint64Impl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 32;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%llu", mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
+
 /***************************************************************************/
 
 NS_IMPL_ISUPPORTS(nsSupportsPRTimeImpl, NS_GET_IID(nsISupportsPRTime))
@@ -374,6 +463,23 @@ NS_IMETHODIMP nsSupportsPRTimeImpl::SetData(PRTime aData)
     mData = aData;
     return NS_OK;
 }
+
+NS_IMETHODIMP nsSupportsPRTimeImpl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 32;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%llu", mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
 
 /***************************************************************************/
 
@@ -405,6 +511,22 @@ NS_IMETHODIMP nsSupportsCharImpl::SetData(char aData)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsSupportsCharImpl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    *_retval = (char*) nsAllocator::Alloc(2*sizeof(char));
+    if(!*_retval)
+        NS_ERROR_OUT_OF_MEMORY;
+    (*_retval)[0] = mData;
+    (*_retval)[1] = 0;
+    return NS_OK;
+}  
+
 /***************************************************************************/
 
 NS_IMPL_ISUPPORTS(nsSupportsPRInt16Impl, NS_GET_IID(nsISupportsPRInt16))
@@ -434,6 +556,23 @@ NS_IMETHODIMP nsSupportsPRInt16Impl::SetData(PRInt16 aData)
     mData = aData;
     return NS_OK;
 }
+
+NS_IMETHODIMP nsSupportsPRInt16Impl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 8;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%d", mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
 
 /***************************************************************************/
 
@@ -465,6 +604,23 @@ NS_IMETHODIMP nsSupportsPRInt32Impl::SetData(PRInt32 aData)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsSupportsPRInt32Impl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 16;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%ld", mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
+
 /***************************************************************************/
 
 NS_IMPL_ISUPPORTS(nsSupportsPRInt64Impl, NS_GET_IID(nsISupportsPRInt64))
@@ -495,5 +651,115 @@ NS_IMETHODIMP nsSupportsPRInt64Impl::SetData(PRInt64 aData)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsSupportsPRInt64Impl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 32;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%lld", mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
+
 /***************************************************************************/
 
+NS_IMPL_ISUPPORTS(nsSupportsFloatImpl, NS_GET_IID(nsISupportsFloat))
+
+nsSupportsFloatImpl::nsSupportsFloatImpl()
+    : mData(float(0.0))
+{
+    NS_INIT_ISUPPORTS();
+    NS_ADDREF_THIS();
+}
+
+nsSupportsFloatImpl::~nsSupportsFloatImpl() {}
+
+NS_IMETHODIMP nsSupportsFloatImpl::GetData(float *aData)
+{
+    if(!aData)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aData = mData;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsFloatImpl::SetData(float aData)
+{
+    mData = aData;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsFloatImpl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 32;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%f", (double) mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
+
+/***************************************************************************/
+
+NS_IMPL_ISUPPORTS(nsSupportsDoubleImpl, NS_GET_IID(nsISupportsDouble))
+
+nsSupportsDoubleImpl::nsSupportsDoubleImpl()
+    : mData(double(0.0))
+{
+    NS_INIT_ISUPPORTS();
+    NS_ADDREF_THIS();
+}
+
+nsSupportsDoubleImpl::~nsSupportsDoubleImpl() {}
+
+NS_IMETHODIMP nsSupportsDoubleImpl::GetData(double *aData)
+{
+    if(!aData)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aData = mData;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsDoubleImpl::SetData(double aData)
+{
+    mData = aData;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsDoubleImpl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    static const int size = 32;
+    char buf[size];
+
+    PR_snprintf(buf, size, "%f", mData);
+
+    *_retval = (char*) nsAllocator::Clone(buf,
+                                (nsCRT::strlen(buf)+1)*sizeof(char));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
+
+/***************************************************************************/

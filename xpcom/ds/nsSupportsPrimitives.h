@@ -28,6 +28,7 @@ public:
 
     NS_IMETHOD GetData(nsID **aData);
     NS_IMETHOD SetData(nsID *aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsIDImpl();
     virtual ~nsSupportsIDImpl();
@@ -45,6 +46,7 @@ public:
 
     NS_IMETHOD GetData(char **aData);
     NS_IMETHOD SetData(char *aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsStringImpl();
     virtual ~nsSupportsStringImpl();
@@ -62,6 +64,7 @@ public:
 
     NS_IMETHOD GetData(PRUnichar **aData);
     NS_IMETHOD SetData(PRUnichar *aData);
+    NS_IMETHOD toString(PRUnichar **_retval);
 
     nsSupportsWStringImpl();
     virtual ~nsSupportsWStringImpl();
@@ -79,6 +82,7 @@ public:
 
     NS_IMETHOD GetData(PRBool *aData);
     NS_IMETHOD SetData(PRBool aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRBoolImpl();
     virtual ~nsSupportsPRBoolImpl();
@@ -96,29 +100,13 @@ public:
 
     NS_IMETHOD GetData(PRUint8 *aData);
     NS_IMETHOD SetData(PRUint8 aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRUint8Impl();
     virtual ~nsSupportsPRUint8Impl();
 
 private:
     PRUint8 mData;
-};
-
-/***************************************************************************/
-
-class nsSupportsPRUnicharImpl : public nsISupportsPRUnichar
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetData(PRUint16 *aData);
-    NS_IMETHOD SetData(PRUint16 aData);
-
-    nsSupportsPRUnicharImpl();
-    virtual ~nsSupportsPRUnicharImpl();
-
-private:
-    PRUint16 mData;
 };
 
 /***************************************************************************/
@@ -130,6 +118,7 @@ public:
 
     NS_IMETHOD GetData(PRUint16 *aData);
     NS_IMETHOD SetData(PRUint16 aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRUint16Impl();
     virtual ~nsSupportsPRUint16Impl();
@@ -147,6 +136,7 @@ public:
 
     NS_IMETHOD GetData(PRUint32 *aData);
     NS_IMETHOD SetData(PRUint32 aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRUint32Impl();
     virtual ~nsSupportsPRUint32Impl();
@@ -164,6 +154,7 @@ public:
 
     NS_IMETHOD GetData(PRUint64 *aData);
     NS_IMETHOD SetData(PRUint64 aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRUint64Impl();
     virtual ~nsSupportsPRUint64Impl();
@@ -181,6 +172,7 @@ public:
 
     NS_IMETHOD GetData(PRTime *aData);
     NS_IMETHOD SetData(PRTime aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRTimeImpl();
     virtual ~nsSupportsPRTimeImpl();
@@ -198,6 +190,7 @@ public:
 
     NS_IMETHOD GetData(char *aData);
     NS_IMETHOD SetData(char aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsCharImpl();
     virtual ~nsSupportsCharImpl();
@@ -215,6 +208,7 @@ public:
 
     NS_IMETHOD GetData(PRInt16 *aData);
     NS_IMETHOD SetData(PRInt16 aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRInt16Impl();
     virtual ~nsSupportsPRInt16Impl();
@@ -232,6 +226,7 @@ public:
 
     NS_IMETHOD GetData(PRInt32 *aData);
     NS_IMETHOD SetData(PRInt32 aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRInt32Impl();
     virtual ~nsSupportsPRInt32Impl();
@@ -249,6 +244,7 @@ public:
 
     NS_IMETHOD GetData(PRInt64 *aData);
     NS_IMETHOD SetData(PRInt64 aData);
+    NS_IMETHOD toString(char **_retval);
 
     nsSupportsPRInt64Impl();
     virtual ~nsSupportsPRInt64Impl();
@@ -257,6 +253,43 @@ private:
     PRInt64 mData;
 };
 
+/***************************************************************************/
+
+class nsSupportsFloatImpl : public nsISupportsFloat
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD GetData(float *aData);
+    NS_IMETHOD SetData(float aData);
+    NS_IMETHOD toString(char **_retval);
+
+    nsSupportsFloatImpl();
+    virtual ~nsSupportsFloatImpl();
+
+private:
+    float mData;
+};
+
+/***************************************************************************/
+
+class nsSupportsDoubleImpl : public nsISupportsDouble
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD GetData(double *aData);
+    NS_IMETHOD SetData(double aData);
+    NS_IMETHOD toString(char **_retval);
+
+    nsSupportsDoubleImpl();
+    virtual ~nsSupportsDoubleImpl();
+
+private:
+    double mData;
+};
+
+/***************************************************************************/
 
 
 

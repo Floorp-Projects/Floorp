@@ -60,15 +60,16 @@ static NS_DEFINE_CID(kSupportsStringCID, NS_SUPPORTS_STRING_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
 static NS_DEFINE_CID(kSupportsPRBoolCID, NS_SUPPORTS_PRBOOL_CID);
 static NS_DEFINE_CID(kSupportsPRUint8CID, NS_SUPPORTS_PRUINT8_CID);
-static NS_DEFINE_CID(kSupportsPRUnicharCID, NS_SUPPORTS_PRUNICHAR_CID);
 static NS_DEFINE_CID(kSupportsPRUint16CID, NS_SUPPORTS_PRUINT16_CID);
 static NS_DEFINE_CID(kSupportsPRUint32CID, NS_SUPPORTS_PRUINT32_CID);
 static NS_DEFINE_CID(kSupportsPRUint64CID, NS_SUPPORTS_PRUINT64_CID);
 static NS_DEFINE_CID(kSupportsPRTimeCID, NS_SUPPORTS_PRTIME_CID);
 static NS_DEFINE_CID(kSupportsCharCID, NS_SUPPORTS_CHAR_CID);
-static NS_DEFINE_CID(kSupportsPRInt16CID, NS_SUPPORTS_PRInt16_CID);
-static NS_DEFINE_CID(kSupportsPRInt32CID, NS_SUPPORTS_PRInt32_CID);
-static NS_DEFINE_CID(kSupportsPRInt64CID, NS_SUPPORTS_PRInt64_CID);
+static NS_DEFINE_CID(kSupportsPRInt16CID, NS_SUPPORTS_PRINT16_CID);
+static NS_DEFINE_CID(kSupportsPRInt32CID, NS_SUPPORTS_PRINT32_CID);
+static NS_DEFINE_CID(kSupportsPRInt64CID, NS_SUPPORTS_PRINT64_CID);
+static NS_DEFINE_CID(kSupportsFloatCID, NS_SUPPORTS_FLOAT_CID);
+static NS_DEFINE_CID(kSupportsDoubleCID, NS_SUPPORTS_DOUBLE_CID);
 // io
 static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
 static NS_DEFINE_CID(kDirectoryIteratorCID, NS_DIRECTORYITERATOR_CID);
@@ -88,7 +89,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsStringImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsWStringImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRBoolImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRUint8Impl)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRUnicharImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRUint16Impl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRUint32Impl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRUint64Impl)
@@ -97,6 +97,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsCharImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRInt16Impl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRInt32Impl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRInt64Impl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsFloatImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsDoubleImpl)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM initialization
@@ -319,12 +321,6 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result)
                                 nsSupportsPRUint8ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
-    rv = RegisterGenericFactory(compMgr, kSupportsPRUnicharCID,
-                                NS_SUPPORTS_PRUNICHAR_CLASSNAME,
-                                NS_SUPPORTS_PRUNICHAR_PROGID,
-                                nsSupportsPRUnicharImplConstructor);
-    if (NS_FAILED(rv)) return rv;
-
     rv = RegisterGenericFactory(compMgr, kSupportsPRUint16CID,
                                 NS_SUPPORTS_PRUINT16_CLASSNAME,
                                 NS_SUPPORTS_PRUINT16_PROGID,
@@ -356,21 +352,33 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result)
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRInt16CID,
-                                NS_SUPPORTS_PRInt16_CLASSNAME,
-                                NS_SUPPORTS_PRInt16_PROGID,
+                                NS_SUPPORTS_PRINT16_CLASSNAME,
+                                NS_SUPPORTS_PRINT16_PROGID,
                                 nsSupportsPRInt16ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRInt32CID,
-                                NS_SUPPORTS_PRInt32_CLASSNAME,
-                                NS_SUPPORTS_PRInt32_PROGID,
+                                NS_SUPPORTS_PRINT32_CLASSNAME,
+                                NS_SUPPORTS_PRINT32_PROGID,
                                 nsSupportsPRInt32ImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kSupportsPRInt64CID,
-                                NS_SUPPORTS_PRInt64_CLASSNAME,
-                                NS_SUPPORTS_PRInt64_PROGID,
+                                NS_SUPPORTS_PRINT64_CLASSNAME,
+                                NS_SUPPORTS_PRINT64_PROGID,
                                 nsSupportsPRInt64ImplConstructor);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kSupportsFloatCID,
+                                NS_SUPPORTS_FLOAT_CLASSNAME,
+                                NS_SUPPORTS_FLOAT_PROGID,
+                                nsSupportsFloatImplConstructor);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kSupportsDoubleCID,
+                                NS_SUPPORTS_DOUBLE_CLASSNAME,
+                                NS_SUPPORTS_DOUBLE_PROGID,
+                                nsSupportsDoubleImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     // Prepopulate registry for performance
