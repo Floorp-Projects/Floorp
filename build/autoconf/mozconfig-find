@@ -17,10 +17,10 @@
 # Copyright (C) 1999 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s): Stephen Lamm <slamm@netscape.com>
 #
 
-# find-mozconfig.sh - Loads options from .mozconfig onto configure's
+# mozconfigfind - Loads options from .mozconfig onto configure's
 #    command-line. The .mozconfig file is searched for in the 
 #    order:
 #       if $MOZCONFIG is set, use that.

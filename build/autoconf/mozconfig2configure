@@ -17,10 +17,10 @@
 # Copyright (C) 1999 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s): Stephen Lamm <slamm@netscape.com>
 #
 
-# load-mozconfig.sh - Loads options from .mozconfig onto configure's
+# mozconfig2configure - Loads options from .mozconfig onto configure's
 #    command-line. See find-mozconfig.sh for how the config file is
 #    found
 #
@@ -39,8 +39,6 @@
 #
 # ac_add_options can be called multiple times in .mozconfig.
 #    Each call adds more options to configure's command-line.
-#
-# Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
 # Note: $_AUTOCONF_TOOLS_DIR must be defined in the script that includes this.
 
@@ -66,7 +64,7 @@ mk_add_options() {
 }
 
 ac_echo_options() {
-  echo "Adding options from $MOZCONFIG:"
+  echo "Adding configure options from $MOZCONFIG:"
   eval "set -- $mozconfig_ac_options"
   for _opt
   do

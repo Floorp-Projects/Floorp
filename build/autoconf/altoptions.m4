@@ -99,7 +99,7 @@ dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 AC_DEFUN(MOZ_READ_MOZCONFIG,
 [AC_REQUIRE([AC_INIT_BINSH])dnl
 # Read in '.mozconfig' script to set the initial options.
-# See the load-mozconfig.sh script for more details.
+# See the mozconfig2configure script for more details.
 _AUTOCONF_TOOLS_DIR=`dirname [$]0`/[$1]/build/autoconf
 . $_AUTOCONF_TOOLS_DIR/mozconfig2configure])
 
