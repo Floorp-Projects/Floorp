@@ -1313,6 +1313,8 @@ nsEditorShell::GetAlignment(PRBool *aMixed, PRUnichar **_retval)
         tagStr.AssignWithConversion("center");
       else if (firstAlign == nsIHTMLEditor::eRight)  
         tagStr.AssignWithConversion("right");
+      else if (firstAlign == nsIHTMLEditor::eJustify)
+        tagStr.AssignWithConversion("justify");
       *_retval = tagStr.ToNewUnicode();
     }  
   }
