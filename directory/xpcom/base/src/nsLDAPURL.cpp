@@ -249,7 +249,7 @@ NS_IMETHODIMP nsLDAPURL::Equals(nsIURI *other, PRBool *_retval)
 NS_IMETHODIMP nsLDAPURL::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 {
     if (!i_Scheme) return NS_ERROR_INVALID_ARG;
-    id (*i_Scheme == 'l' || *i_Scheme == 'L') {
+    if (*i_Scheme == 'l' || *i_Scheme == 'L') {
         *o_Equals = PL_strcasecmp("ldap", i_Scheme) ? PR_FALSE : PR_TRUE;
     } else {
         *o_Equals = PR_FALSE;
