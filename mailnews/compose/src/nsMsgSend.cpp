@@ -377,10 +377,6 @@ nsresult nsMsgSendMimeDeliveryState::SendMessage(nsIMsgCompFields *fields, const
 		else
 			nBodyLength = 0;
 
-		printf("SendMessage to: %s\n", ((nsMsgCompFields *)fields)->GetTo());
-		printf("subject: %s\n", ((nsMsgCompFields *)fields)->GetSubject());
-		printf("\n%s", pBody);
-
 		StartMessageDelivery(NULL, NULL, (nsMsgCompFields *)fields, PR_FALSE, PR_FALSE,
 			MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, 0, NULL, NULL, NULL);				
 	}
@@ -3215,8 +3211,10 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 		PUSH_NEWLINE ();
 	}
 
+
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
+
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
 		nsString aNSStr;
@@ -3637,9 +3635,9 @@ int MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
   if (!subject_p)
 	{
 		char* sAppName = nsnull;
+		nsresult rv = NS_OK;
+		NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
 
-        nsresult rv = NS_OK;
-        NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv);
 		if (NS_SUCCEEDED(rv) && pNetService)
 		{
 			nsString aNSStr;
@@ -4976,9 +4974,7 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
 	if (NS_SUCCEEDED(rv) && smtpService)
-	{	
 		rv = smtpService->SendMailMessage(filePath, buf, nsnull, nsnull);
-	}
 
 	PR_FREEIF(buf); // free the buf because we are done with it....
 }
