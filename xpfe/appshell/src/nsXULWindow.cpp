@@ -811,44 +811,48 @@ NS_IMETHODIMP nsXULWindow::EnsureAuthPrompter()
  
 void nsXULWindow::OnChromeLoaded()
 {
-  mChromeLoaded = PR_TRUE;
+  nsresult rv = EnsureContentTreeOwner();
 
-  if(mContentTreeOwner)
-    mContentTreeOwner->ApplyChromeFlags();
+  if (NS_SUCCEEDED(rv)) {
+    mChromeLoaded = PR_TRUE;
 
-  LoadTitleFromXUL();
-  LoadWindowClassFromXUL();
-  LoadIconFromXUL();
-  LoadSizeFromXUL();
-  if(mIntrinsicallySized) {
-    // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
-    if(markupViewer)
-      markupViewer->SizeToContent();
+    if(mContentTreeOwner)
+      mContentTreeOwner->ApplyChromeFlags();
+
+    LoadTitleFromXUL();
+    LoadWindowClassFromXUL();
+    LoadIconFromXUL();
+    LoadSizeFromXUL();
+    if(mIntrinsicallySized) {
+      // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
+      nsCOMPtr<nsIContentViewer> cv;
+      mDocShell->GetContentViewer(getter_AddRefs(cv));
+      nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
+      if(markupViewer)
+        markupViewer->SizeToContent();
+    }
+
+    PRBool positionSet = PR_TRUE;
+    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
+  #ifdef XP_UNIX
+    // don't override WM placement on unix for independent, top-level windows
+    // (however, we think the benefits of intelligent dependent window placement
+    // trump that override.)
+    if (!parentWindow)
+      positionSet = PR_FALSE;
+  #endif
+    if (positionSet)
+      positionSet = LoadPositionFromXUL();
+    LoadSizeStateFromXUL();
+
+    //LoadContentAreas();
+
+    if (mCenterAfterLoad && !positionSet)
+      Center(parentWindow, parentWindow ? PR_FALSE : PR_TRUE, PR_FALSE);
+
+    if(mShowAfterLoad)
+      SetVisibility(PR_TRUE);
   }
-
-  PRBool positionSet = PR_TRUE;
-  nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
-#ifdef XP_UNIX
-  // don't override WM placement on unix for independent, top-level windows
-  // (however, we think the benefits of intelligent dependent window placement
-  // trump that override.)
-  if (!parentWindow)
-    positionSet = PR_FALSE;
-#endif
-  if (positionSet)
-    positionSet = LoadPositionFromXUL();
-  LoadSizeStateFromXUL();
-
-  //LoadContentAreas();
-
-  if (mCenterAfterLoad && !positionSet)
-    Center(parentWindow, parentWindow ? PR_FALSE : PR_TRUE, PR_FALSE);
-
-  if(mShowAfterLoad)
-    SetVisibility(PR_TRUE);
 }
 
 PRBool nsXULWindow::LoadPositionFromXUL()
