@@ -372,14 +372,14 @@ PRIVATE XP_Bool _stub_PromptUsernameAndPassword(MWContext *context,
     char *tmp_pass = *password;
 
     printf("%s\n", msg);
-    printf("%cUser (default=%s): ", '\007', tmp_user);
+    printf("%cUser: ", '\007');
     fgets(buf, sizeof buf, stdin);
     if (strlen(buf)) {
       tmp_user = PL_strdup(buf);
       tmp_user[strlen(tmp_user)-1] = '\0';
     }
 
-    printf("%cPassword (default=%s): ", '\007', tmp_pass);
+    printf("%cPassword: ", '\007');
     fgets(buf, sizeof buf, stdin);
     if (strlen(buf)) {
       tmp_pass = PL_strdup(buf);
