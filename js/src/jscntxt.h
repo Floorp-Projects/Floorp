@@ -66,7 +66,7 @@ struct JSRuntime {
 
     /* Garbage collector state, used by jsgc.c. */
     JSArenaPool         gcArenaPool;
-    JSArenaPool         gcFlagsPool;
+    JSGCThing           *gcFinalVec;
     JSHashTable         *gcRootsHash;
     JSHashTable         *gcLocksHash;
     JSGCThing           *gcFreeList;
@@ -184,6 +184,13 @@ struct JSArgumentFormatMap {
 };
 #endif
 
+struct JSStackHeader {
+    uintN               nslots;
+    JSStackHeader       *down;
+};
+
+#define JS_STACK_SEGMENT(sh)    ((jsval *)(sh) + 2)
+
 struct JSContext {
     JSCList             links;
 
@@ -268,6 +275,9 @@ struct JSContext {
 
     /* Non-null if init'ing standard classes lazily, to stop recursion. */
     JSDHashTable        *resolving;
+
+    /* PDL of stack headers describing stack slots not rooted by argv, etc. */
+    JSStackHeader       *stackHeaders;
 };
 
 /* Slightly more readable macros, also to hide bitset implementation detail. */

@@ -1938,22 +1938,9 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; cds->name; cds++) {
-#if JS_ALIGN_OF_DOUBLE == 8
-	/*
-	 * The GC ignores references outside its pool such as &cds->dval,
-	 * so we don't need to GC-alloc constant doubles.
-	 */
-	jsdouble d = cds->dval;
-	jsint i;
-
-	value = (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i))
-		? INT_TO_JSVAL(i)
-		: DOUBLE_TO_JSVAL(&cds->dval);
-#else
 	ok = js_NewNumberValue(cx, cds->dval, &value);
 	if (!ok)
 	    break;
-#endif
 	flags = cds->flags;
 	if (!flags)
 	    flags = JSPROP_READONLY | JSPROP_PERMANENT;
@@ -3608,8 +3595,7 @@ JS_ClearPendingException(JSContext *cx)
 }
 
 #if JS_HAS_EXCEPTIONS
-struct JSExceptionState
-{
+struct JSExceptionState {
     JSBool throwing;
     jsval  exception;
 };
@@ -3620,6 +3606,7 @@ JS_SaveExceptionState(JSContext *cx)
 {
 #if JS_HAS_EXCEPTIONS
     JSExceptionState *state;
+
     CHECK_REQUEST(cx);
     state = (JSExceptionState *) JS_malloc(cx, sizeof(JSExceptionState));
     if (state) {

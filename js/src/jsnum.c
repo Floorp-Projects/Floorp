@@ -628,7 +628,7 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 	*dp = JSVAL_TO_BOOLEAN(v) ? 1 : 0;
     } else {
 #if JS_BUG_FALLIBLE_TONUM
-	str = js_DecompileValueGenerator(cx, JS_TRUE, v, NULL);
+	str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
 badstr:
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NAN,
@@ -714,7 +714,7 @@ js_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
     if (!js_ValueToNumber(cx, v, &d))
 	return JS_FALSE;
     if (JSDOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
-	str = js_DecompileValueGenerator(cx, JS_TRUE, v, NULL);
+	str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
 	if (str) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_CANT_CONVERT, JS_GetStringBytes(str));

@@ -37,7 +37,7 @@
  *
  * This GC allocates only fixed-sized things big enough to contain two words
  * (pointers) on any host architecture.  It allocates from an arena pool (see
- * jsarena.h).  It uses a parallel arena-pool array of flag bytes to hold the
+ * jsarena.h).  It uses an ideally parallel array of flag bytes to hold the
  * mark bit, finalizer type index, etc.
  *
  * XXX swizzle page to freelist for better locality of reference
@@ -63,20 +63,154 @@
 #include "jsstr.h"
 
 /*
- * Arena sizes, the first must be a multiple of the second so the two arena
- * pools can be maintained (in particular, arenas may be destroyed from the
- * middle of each pool) in parallel.
+ * GC arena sizing depends on amortizing arena overhead using a large number
+ * of things per arena, and on the thing/flags ratio of 8:1 on most platforms.
+ *
+ * On 64-bit platforms, we would have half as many things per arena because
+ * pointers are twice as big, so we double the bytes for things per arena.
+ * This preserves the 1024 byte flags sub-arena size, which relates to the
+ * GC_PAGE_SIZE (see below for why).
  */
-#define GC_ARENA_SIZE	8192		/* 1024 (512 on Alpha) objects */
-#define GC_FLAGS_SIZE	(GC_ARENA_SIZE / sizeof(JSGCThing))
-#define GC_ROOTS_SIZE	256		/* SWAG, small enough to amortize */
+#if JS_BYTES_PER_WORD == 8
+# define GC_THINGS_SHIFT 14     /* 16KB for things on Alpha, etc. */
+#else
+# define GC_THINGS_SHIFT 13     /* 8KB for things on most platforms */
+#endif
+#define GC_THINGS_SIZE  JS_BIT(GC_THINGS_SHIFT)
+#define GC_FLAGS_SIZE   (GC_THINGS_SIZE / sizeof(JSGCThing))
+#define GC_ARENA_SIZE   (GC_THINGS_SIZE + GC_FLAGS_SIZE)
 
-static JSHashNumber   gc_hash_root(const void *key);
-
+/* The private JSGCThing struct, which describes a gcFreelist element. */
 struct JSGCThing {
-    JSGCThing       *next;
-    uint8           *flagp;
+    JSGCThing   *next;
+    uint8       *flagp;
 };
+
+/*
+ * A GC arena contains one flag byte for every thing in its heap, and supports
+ * O(1) lookup of a flag given its thing's address.
+ *
+ * To implement this, we take advantage of the thing/flags numerology: given
+ * the 8K bytes worth of GC-things, there are 1K flag bytes.  We mask a thing's
+ * address with ~1023 to find a JSGCPageInfo record at the front of a mythical
+ * "GC page" within the larger 8K thing arena.  That JSGCPageInfo contains a
+ * pointer to the 128 flag bytes corresponding to the things in the page, so we
+ * index into this flags array using the thing's index within its page.
+ *
+ * To align thing pages on 1024-byte boundaries, we must allocate the 9KB of
+ * flags+things arena payload, then find the first 0 mod 1024 boundary after
+ * the first payload address.  That's where things start, with a JSGCPageInfo
+ * taking up the first thing-slot, as usual for 0 mod 1024 byte boundaries.
+ * The effect of this alignment trick is to split the flags into at most 2
+ * discontiguous spans, one before the things and one after (if we're really
+ * lucky, and the arena payload starts on a 0 mod 1024 byte boundary, no need
+ * to split).
+ *
+ * The overhead of this scheme for most platforms is (16+8*(8+1))/(16+9K) or
+ * .95% (assuming 16 byte JSArena header size, and 8 byte JSGCThing size).
+ *
+ * Here's some ASCII art showing an arena:
+ *
+ *   split
+ *     |
+ *     V
+ *  +--+-------+-------+-------+-------+-------+-------+-------+-------+-----+
+ *  |fB|  tp0  |  tp1  |  tp2  |  tp3  |  tp4  |  tp5  |  tp6  |  tp7  | fA  |
+ *  +--+-------+-------+-------+-------+-------+-------+-------+-------+-----+
+ *              ^                                 ^
+ *  tI ---------+                                 |
+ *  tJ -------------------------------------------+
+ *
+ *  - fB are the "before split" flags, fA are the "after split" flags
+ *  - tp0-tp7 are the 8 thing pages
+ *  - thing tI points into tp1, whose flags are below the split, in fB
+ *  - thing tJ points into tp5, clearly above the split
+ *
+ * In general, one of the thing pages will have some of its things' flags on
+ * the low side of the split, and the rest of its things' flags on the high
+ * side.  All the other pages have flags only below or only above.  Therefore
+ * we'll have to test something to decide whether the split divides flags in
+ * a given thing's page.  So we store the split pointer (the pointer to tp0)
+ * in each JSGCPageInfo, along with the flags pointer for the 128 flag bytes
+ * ideally starting, for tp0 things, at the beginning of the arena's payload
+ * (at the start of fB).
+ *
+ * That is, each JSGCPageInfo's flags pointer is 128 bytes from the previous,
+ * or at the start of the arena if there is no previous page in this arena.
+ * Thus these ideal 128-byte flag pages run contiguously from the start of the
+ * arena (right over the split!), and the JSGCPageInfo flags pointers contain
+ * no discontinuities over the split created by the thing pages.  So if, for a
+ * given JSGCPageInfo *pi, we find that
+ *
+ *  pi->flags + ((jsuword)thing % 1023) / sizeof(JSGCThing) >= pi->split
+ *
+ * then we must add GC_THINGS_SIZE to the nominal flags pointer to jump over
+ * all the thing pages that split the flags into two discontiguous spans.
+ *
+ * (If we need to implement card-marking for an incremental GC write barrier,
+ * we can use the low byte of the pi->split pointer as the card-mark, for an
+ * extremely efficient write barrier: when mutating an object obj, just store
+ * a 1 byte at (uint8 *) ((jsuword)obj & ~1023) for little-endian platforms.
+ * When finding flags, we'll of course have to mask split with ~255, but it is
+ * guaranteed to be 1024-byte aligned, so no information is lost by overlaying
+ * the card-mark byte on split's low byte.)
+ */
+#define GC_PAGE_SHIFT   10
+#define GC_PAGE_MASK    JS_BITMASK(GC_PAGE_SHIFT)
+#define GC_PAGE_SIZE    JS_BIT(GC_PAGE_SHIFT)
+
+typedef struct JSGCPageInfo {
+    uint8       *split;
+    uint8       *flags;
+} JSGCPageInfo;
+
+#define FIRST_THING_PAGE(a)     (((a)->base + GC_FLAGS_SIZE) & ~GC_PAGE_MASK)
+
+static JSGCThing *
+gc_new_arena(JSArenaPool *pool)
+{
+    uint8 *flagp, *split, *pagep, *limit;
+    JSArena *a;
+    JSGCThing *thing;
+    JSGCPageInfo *pi;
+    
+    /* Use JS_ArenaAllocate to grab another 9K-net-size hunk of space. */
+    flagp = (uint8 *) JS_ArenaAllocate(pool, GC_ARENA_SIZE);
+    if (!flagp)
+        return NULL;
+    a = pool->current;
+
+    /* Reset a->avail to start at the flags split, aka the first thing page. */
+    a->avail = FIRST_THING_PAGE(a);
+    split = pagep = (uint8 *) a->avail;
+    a->avail += sizeof(JSGCPageInfo);
+    thing = (JSGCThing *) a->avail;
+    a->avail += sizeof(JSGCThing);
+
+    /* Initialize the JSGCPageInfo records at the start of every thing page. */
+    limit = pagep + GC_THINGS_SIZE;
+    do {
+        pi = (JSGCPageInfo *) pagep;
+        pi->split = split;
+        pi->flags = flagp;
+        flagp += GC_PAGE_SIZE >> (GC_THINGS_SHIFT -  GC_PAGE_SHIFT);
+        pagep += GC_PAGE_SIZE;
+    } while (pagep < limit);
+    return thing;
+}
+
+static uint8 *
+gc_find_flags(void *thing)
+{
+    JSGCPageInfo *pi;
+    uint8 *flagp;
+
+    pi = (JSGCPageInfo *) ((jsuword)thing & ~GC_PAGE_MASK);
+    flagp = pi->flags + ((jsuword)thing & GC_PAGE_MASK) / sizeof(JSGCThing);
+    if (flagp >= pi->split)
+        flagp += GC_THINGS_SIZE;
+    return flagp;
+}
 
 typedef void (*GCFinalizeOp)(JSContext *cx, JSGCThing *thing);
 
@@ -103,9 +237,22 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
 #define METER(x) /* nothing */
 #endif
 
+/* Initial size of the gcRootsHash table (SWAG, small enough to amortize). */
+#define GC_ROOTS_SIZE   256
+#define GC_FINALIZE_LEN 1024
+
+static JSHashNumber   gc_hash_root(const void *key);
+
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
+    JS_ASSERT(sizeof(JSGCThing) == sizeof(JSGCPageInfo));
+    JS_ASSERT(sizeof(JSGCThing) >= sizeof(JSObject));
+    JS_ASSERT(sizeof(JSGCThing) >= sizeof(JSString));
+    JS_ASSERT(sizeof(JSGCThing) >= sizeof(jsdouble));
+    JS_ASSERT(GC_FLAGS_SIZE >= GC_PAGE_SIZE);
+    JS_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
+
     if (!gc_finalizers[GCX_OBJECT]) {
 	gc_finalizers[GCX_OBJECT] = (GCFinalizeOp)js_FinalizeObject;
 	gc_finalizers[GCX_STRING] = (GCFinalizeOp)js_FinalizeString;
@@ -116,13 +263,17 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 
     JS_InitArenaPool(&rt->gcArenaPool, "gc-arena", GC_ARENA_SIZE,
 		     sizeof(JSGCThing));
-    JS_InitArenaPool(&rt->gcFlagsPool, "gc-flags", GC_FLAGS_SIZE,
-		     sizeof(uint8));
+    rt->gcFinalVec = malloc(GC_FINALIZE_LEN * sizeof(JSGCThing));
+    if (!rt->gcFinalVec)
+        return JS_FALSE;
     rt->gcRootsHash = JS_NewHashTable(GC_ROOTS_SIZE, gc_hash_root,
 				      JS_CompareValues, JS_CompareValues,
 				      NULL, NULL);
-    if (!rt->gcRootsHash)
+    if (!rt->gcRootsHash) {
+        free(rt->gcFinalVec);
+        rt->gcFinalVec = NULL;
 	return JS_FALSE;
+    }
     rt->gcLocksHash = NULL;     /* create lazily */
     rt->gcMaxBytes = maxbytes;
     return JS_TRUE;
@@ -148,10 +299,9 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "      maximum GC nesting level: %lu\n", rt->gcStats.maxlevel);
     fprintf(fp, "   potentially useful GC calls: %lu\n", rt->gcStats.poke);
     fprintf(fp, "              useless GC calls: %lu\n", rt->gcStats.nopoke);
-    fprintf(fp, "        thing arena corruption: %lu\n", rt->gcStats.badarena);
-    fprintf(fp, "        flags arena corruption: %lu\n", rt->gcStats.badflag);
     fprintf(fp, "     thing arenas freed so far: %lu\n", rt->gcStats.afree);
-    fprintf(fp, "     flags arenas freed so far: %lu\n", rt->gcStats.fafree);
+    fprintf(fp, "  extra stack segments scanned: %lu\n", rt->gcStats.stackseg);
+    fprintf(fp, "   stack segment slots scanned: %lu\n", rt->gcStats.segslots);
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(fp);
 #endif
@@ -168,8 +318,11 @@ js_FinishGC(JSRuntime *rt)
     js_DumpGCStats(rt, stdout);
 #endif
     JS_FinishArenaPool(&rt->gcArenaPool);
-    JS_FinishArenaPool(&rt->gcFlagsPool);
     JS_ArenaFinish();
+    if (rt->gcFinalVec) {
+        free(rt->gcFinalVec);
+        rt->gcFinalVec = NULL;
+    }
     JS_HashTableDestroy(rt->gcRootsHash);
     rt->gcRootsHash = NULL;
     if (rt->gcLocksHash) {
@@ -221,6 +374,11 @@ js_AllocGCThing(JSContext *cx, uintN flags)
     rt = cx->runtime;
     JS_LOCK_GC(rt);
     JS_ASSERT(rt->gcLevel == 0);
+    if (rt->gcLevel != 0) {
+        METER(rt->gcStats.finalfail++);
+        JS_UNLOCK_GC(rt);
+        return NULL;
+    }
     METER(rt->gcStats.alloc++);
 retry:
     thing = rt->gcFreeList;
@@ -230,30 +388,54 @@ retry:
 	METER(rt->gcStats.freelen--);
 	METER(rt->gcStats.recycle++);
     } else {
-        flagp = NULL;
-	if (rt->gcBytes < rt->gcMaxBytes &&
+        if (rt->gcBytes < rt->gcMaxBytes &&
             (tried_gc || rt->gcMallocBytes < rt->gcMaxBytes))
         {
-	    JS_ARENA_ALLOCATE_TYPE(thing, JSGCThing, &rt->gcArenaPool);
-            if (thing)
-                JS_ARENA_ALLOCATE_TYPE(flagp, uint8, &rt->gcFlagsPool);
-	}
-	if (!thing || !flagp) {
-	    if (thing)
-		JS_ARENA_RELEASE(&rt->gcArenaPool, thing);
-	    if (!tried_gc) {
-		JS_UNLOCK_GC(rt);
-		js_GC(cx, GC_KEEP_ATOMS);
-		tried_gc = JS_TRUE;
-		JS_LOCK_GC(rt);
-		METER(rt->gcStats.retry++);
-		goto retry;
-	    }
-	    METER(rt->gcStats.fail++);
-	    JS_UNLOCK_GC(rt);
-	    JS_ReportOutOfMemory(cx);
-	    return NULL;
-	}
+            /*
+             * Inline form of JS_ARENA_ALLOCATE adapted to truncate the current
+             * arena's limit to a GC_PAGE_SIZE boundary, and to skip over every
+             * GC_PAGE_SIZE-byte-aligned thing (which is actually not a thing,
+             * it's a JSGCPageInfo record).
+             */
+            JSArenaPool *pool = &rt->gcArenaPool;
+            JSArena *a = pool->current;
+            size_t nb = sizeof(JSGCThing);
+            jsuword p = a->avail;
+            jsuword q = p + nb;
+
+            if (q > (a->limit & ~GC_PAGE_MASK)) {
+                thing = gc_new_arena(pool);
+            } else {
+                if ((p & GC_PAGE_MASK) == 0) {
+                    /* Beware, p points to a JSGCPageInfo record! */
+                    p = q;
+                    q += nb;
+                    JS_ArenaCountAllocation(pool, nb);
+                }
+                a->avail = q;
+                thing = (JSGCThing *)p;
+            }
+            JS_ArenaCountAllocation(pool, nb);
+        }
+
+        /* Consider doing a "last ditch" GC if thing couldn't be allocated. */
+        if (!thing) {
+            if (!tried_gc) {
+                JS_UNLOCK_GC(rt);
+                js_GC(cx, GC_KEEP_ATOMS);
+                tried_gc = JS_TRUE;
+                JS_LOCK_GC(rt);
+                METER(rt->gcStats.retry++);
+                goto retry;
+            }
+            METER(rt->gcStats.fail++);
+            JS_UNLOCK_GC(rt);
+            JS_ReportOutOfMemory(cx);
+            return NULL;
+        }
+
+        /* Find the flags pointer given thing's address. */
+        flagp = gc_find_flags(thing);
     }
     *flagp = (uint8)flags;
     rt->gcBytes += sizeof(JSGCThing) + sizeof(uint8);
@@ -267,31 +449,6 @@ retry:
     thing->flagp = NULL;
     JS_UNLOCK_GC(rt);
     return thing;
-}
-
-static uint8 *
-gc_find_flags(JSRuntime *rt, void *thing)
-{
-    jsuword index, offset, length;
-    JSArena *a, *fa;
-
-    index = 0;
-    for (a = rt->gcArenaPool.first.next; a; a = a->next) {
-	offset = JS_UPTRDIFF(thing, a->base);
-	length = a->avail - a->base;
-	if (offset < length) {
-	    index += offset / sizeof(JSGCThing);
-	    for (fa = rt->gcFlagsPool.first.next; fa; fa = fa->next) {
-		offset = fa->avail - fa->base;
-		if (index < offset)
-		    return (uint8 *)fa->base + index;
-		index -= offset;
-	    }
-	    return NULL;
-	}
-	index += length / sizeof(JSGCThing);
-    }
-    return NULL;
 }
 
 static JSHashNumber
@@ -317,15 +474,14 @@ js_LockGCThing(JSContext *cx, void *thing)
 
     if (!thing)
 	return JS_TRUE;
-    rt = cx->runtime;
-    flagp = gc_find_flags(rt, thing);
-    if (!flagp)
-	return JS_FALSE;
+    flagp = gc_find_flags(thing);
+    flags = *flagp;
 
     ok = JS_TRUE;
+    rt = cx->runtime;
     JS_LOCK_GC(rt);
-    flags = *flagp;
     lockbits = (flags & GCF_LOCKMASK);
+
     if (lockbits != GCF_LOCKMASK) {
         if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
             /* Objects may require "deep locking", i.e., rooting by value. */
@@ -385,14 +541,13 @@ js_UnlockGCThing(JSContext *cx, void *thing)
 
     if (!thing)
 	return JS_TRUE;
-    rt = cx->runtime;
-    flagp = gc_find_flags(rt, thing);
-    if (!flagp)
-	return JS_FALSE;
-
-    JS_LOCK_GC(rt);
+    flagp = gc_find_flags(thing);
     flags = *flagp;
+
+    rt = cx->runtime;
+    JS_LOCK_GC(rt);
     lockbits = (flags & GCF_LOCKMASK);
+
     if (lockbits != GCF_LOCKMASK) {
         if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
             /* Defend against a call on an unlocked object. */
@@ -434,10 +589,10 @@ JS_EXPORT_DATA(void *) js_LiveThingToFind;
 #include "dump_xpc.h"
 #endif
 
-static const char*
-gc_object_class_name(JSRuntime* rt, void* thing)
+static const char *
+gc_object_class_name(void* thing)
 {
-    uint8 *flagp = gc_find_flags(rt, thing);
+    uint8 *flagp = gc_find_flags(thing);
     const char *className = "";
 
     if (flagp && ((*flagp & GCF_TYPEMASK) == GCX_OBJECT)) {
@@ -452,7 +607,7 @@ gc_object_class_name(JSRuntime* rt, void* thing)
                                   ? NULL
                                   : JSVAL_TO_PRIVATE(privateValue);
 
-            const char* xpcClassName = GetXPCObjectClassName(privateThing);
+            const char *xpcClassName = GetXPCObjectClassName(privateThing);
             if (xpcClassName)
                 className = xpcClassName;
         }
@@ -463,8 +618,7 @@ gc_object_class_name(JSRuntime* rt, void* thing)
 }
 
 static void
-gc_dump_thing(JSRuntime* rt, JSGCThing *thing, uint8 flags, GCMarkNode *prev,
-              FILE *fp)
+gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
 {
     GCMarkNode *next = NULL;
     char *path = NULL;
@@ -476,7 +630,7 @@ gc_dump_thing(JSRuntime* rt, JSGCThing *thing, uint8 flags, GCMarkNode *prev,
     while (next) {
         path = JS_sprintf_append(path, "%s(%s).",
                                  next->name,
-                                 gc_object_class_name(rt, next->thing));
+                                 gc_object_class_name(next->thing));
         next = next->next;
     }
     if (!path)
@@ -491,7 +645,7 @@ gc_dump_thing(JSRuntime* rt, JSGCThing *thing, uint8 flags, GCMarkNode *prev,
         void      *privateThing = JSVAL_IS_VOID(privateValue)
                                   ? NULL
                                   : JSVAL_TO_PRIVATE(privateValue);
-        const char* className = gc_object_class_name(rt, thing);
+        const char *className = gc_object_class_name(thing);
         fprintf(fp, "object %08p %s", privateThing, className);
         break;
       }
@@ -514,6 +668,7 @@ static void
 gc_mark_atom_key_thing(void *thing, void *arg)
 {
     JSContext *cx = (JSContext *) arg;
+
     GC_MARK(cx, thing, "atom", NULL);
 }
 
@@ -544,8 +699,8 @@ js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg)
 void
 js_MarkGCThing(JSContext *cx, void *thing, void *arg)
 {
-    JSRuntime *rt;
     uint8 flags, *flagp;
+    JSRuntime *rt;
     JSObject *obj;
     uint32 nslots;
     jsval v, *vp, *end;
@@ -556,30 +711,26 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
 
     if (!thing)
 	return;
-    rt = cx->runtime;
-    flagp = gc_find_flags(rt, thing);
-    if (!flagp)
-	return;
 
-    /* Check for something on the GC freelist to handle recycled stack. */
+    flagp = gc_find_flags(thing);
     flags = *flagp;
-    if (flags == GCF_FINAL)
-	return;
-
+    JS_ASSERT(flags != GCF_FINAL);
 #ifdef GC_MARK_DEBUG
     if (js_LiveThingToFind == thing)
-        gc_dump_thing(rt, thing, flags, arg, stderr);
+        gc_dump_thing(thing, flags, arg, stderr);
 #endif
 
     if (flags & GCF_MARK)
 	return;
+
     *flagp |= GCF_MARK;
+    rt = cx->runtime;
     METER(if (++rt->gcStats.depth > rt->gcStats.maxdepth)
 	      rt->gcStats.maxdepth = rt->gcStats.depth);
 
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap)
-        gc_dump_thing(rt, thing, flags, arg, js_DumpGCHeap);
+        gc_dump_thing(thing, flags, arg, js_DumpGCHeap);
 #endif
 
     if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
@@ -666,21 +817,23 @@ gc_root_marker(JSHashEntry *he, intN i, void *arg)
         JSContext *cx = (JSContext *)arg;
 #ifdef DEBUG
         JSArena *a;
+        jsuword firstpage;
         JSBool root_points_to_gcArenaPool = JS_FALSE;
 	void *thing = JSVAL_TO_GCTHING(v);
 
         for (a = cx->runtime->gcArenaPool.first.next; a; a = a->next) {
-	    if (JS_UPTRDIFF(thing, a->base) < a->avail - a->base) {
+            firstpage = FIRST_THING_PAGE(a);
+	    if (JS_UPTRDIFF(thing, firstpage) < a->avail - firstpage) {
                 root_points_to_gcArenaPool = JS_TRUE;
                 break;
             }
         }
         if (!root_points_to_gcArenaPool && he->value) {
             fprintf(stderr, 
-              "Error: The address passed to JS_AddNamedRoot currently "
-              "holds an invalid jsval.\n "
-              "  This is usually caused by a missing call to JS_RemoveRoot.\n "
-              "  Root name is \"%s\".\n", (const char *) he->value); 
+"JS API usage error: the address passed to JS_AddNamedRoot currently holds an\n"
+"invalid jsval.  This is usually caused by a missing call to JS_RemoveRoot.\n"
+"The root's name is \"%s\".\n",
+                    (const char *) he->value); 
         }
         JS_ASSERT(root_points_to_gcArenaPool);
 #endif
@@ -712,21 +865,64 @@ js_ForceGC(JSContext *cx)
     JS_ArenaFinish();
 }
 
+#define GC_MARK_JSVALS(cx, len, vec, name)                                    \
+    JS_BEGIN_MACRO                                                            \
+        jsval _v, *_vp, *_end;                                                \
+                                                                              \
+        for (_vp = vec, _end = _vp + len; _vp < _end; _vp++) {                \
+            _v = *_vp;                                                        \
+            if (JSVAL_IS_GCTHING(_v))                                         \
+                GC_MARK(cx, JSVAL_TO_GCTHING(_v), name, NULL);                \
+        }                                                                     \
+    JS_END_MACRO
+
+/*
+ * Finalize phase.
+ * Don't hold the GC lock while running finalizers!
+ */
+static void
+gc_finalize_phase(JSContext *cx, uintN len)
+{
+    JSRuntime *rt;
+    JSGCThing *final, *limit, *thing;
+    uint8 flags, *flagp;
+    GCFinalizeOp finalizer;
+
+    rt = cx->runtime;
+    JS_UNLOCK_GC(rt);
+    for (final = rt->gcFinalVec, limit = final + len; final < limit; final++) {
+	thing = final->next;
+	flagp = final->flagp;
+	flags = *flagp;
+	finalizer = gc_finalizers[flags & GCF_TYPEMASK];
+	if (finalizer) {
+	    *flagp = (uint8)(flags | GCF_FINAL);
+	    finalizer(cx, thing);
+	}
+
+	/*
+	 * Set flags to GCF_FINAL, signifying that thing is free, but don't
+	 * thread thing onto rt->gcFreeList.  We need the GC lock to rebuild
+	 * the freelist below while also looking for free-able arenas.
+	 */
+	*flagp = GCF_FINAL;
+    }
+    JS_LOCK_GC(rt);
+}
+
 void
 js_GC(JSContext *cx, uintN gcflags)
 {
     JSRuntime *rt;
     JSContext *iter, *acx;
-    JSArena *a, *ma, *fa, **ap, **fap;
-    jsval v, *vp, *sp;
-    jsuword begin, end;
     JSStackFrame *fp, *chain;
-    uintN i;
-    void *mark;
-    uint8 flags, *flagp;
-    JSGCThing *thing, *final, **flp, **oflp;
-    GCFinalizeOp finalizer;
-    JSBool a_all_clear, f_all_clear;
+    uintN i, depth, nslots;
+    JSStackHeader *sh;
+    JSArena *a, **ap;
+    uintN finalpos;
+    uint8 flags, *flagp, *split;
+    JSGCThing *thing, *limit, *final, **flp, **oflp;
+    JSBool all_clear;
 #ifdef JS_THREADSAFE
     jsword currentThread;
     uint32 requestDebit;
@@ -873,54 +1069,33 @@ restart:
 	}
 
 	for (fp = chain; fp; fp = chain = chain->dormantNext) {
-	    sp = fp->sp;
-	    if (sp) {
-		for (a = acx->stackPool.first.next; a; a = a->next) {
-                    /*
-                     * Don't scan beyond the current context's top of stack,
-                     * because we may be nesting a GC from within a call to
-                     * js_AllocGCThing originating from a conversion call made
-                     * by js_Interpret with local variables holding the only
-                     * references to other, unrooted GC-things (e.g., a non-
-                     * newborn object that was just popped off the stack).
-                     *
-                     * Yes, this means we're not doing "exact GC", exactly.
-                     * This temporary failure to collect garbage held only
-                     * by unrecycled stack space should be fixed, but it is
-                     * not a leak bug, and the bloat issue should also be
-                     * small and transient (the next GC will likely get any
-                     * true garbage, as the stack will have pulsated).  But
-                     * it deserves an XXX.
-                     */
-                    begin = a->base;
-                    end = a->avail;
-                    if (acx != cx &&
-                        JS_UPTRDIFF(sp, begin) < JS_UPTRDIFF(end, begin)) {
-                        end = (jsuword)sp;
-                    }
-		    for (vp = (jsval *)begin; vp < (jsval *)end; vp++) {
-			v = *vp;
-			if (JSVAL_IS_GCTHING(v))
-			    GC_MARK(cx, JSVAL_TO_GCTHING(v), "stack", NULL);
-		    }
-		    if (end == (jsuword)sp)
-			break;
-		}
-	    }
-	    do {
-		GC_MARK(cx, fp->scopeChain, "scope chain", NULL);
-		GC_MARK(cx, fp->thisp, "this", NULL);
-		if (JSVAL_IS_GCTHING(fp->rval))
-		    GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval", NULL);
-		if (fp->callobj)
-		    GC_MARK(cx, fp->callobj, "call object", NULL);
-		if (fp->argsobj)
-		    GC_MARK(cx, fp->argsobj, "arguments object", NULL);
-		if (fp->script)
-		    js_MarkScript(cx, fp->script, NULL);
-		if (fp->sharpArray)
-		    GC_MARK(cx, fp->sharpArray, "sharp array", NULL);
-	    } while ((fp = fp->down) != NULL);
+            do {
+                if (fp->callobj)
+                    GC_MARK(cx, fp->callobj, "call object", NULL);
+                if (fp->argsobj)
+                    GC_MARK(cx, fp->argsobj, "arguments object", NULL);
+                if (fp->varobj)
+                    GC_MARK(cx, fp->varobj, "variables object", NULL);
+                if (fp->script) {
+                    js_MarkScript(cx, fp->script, NULL);
+                    depth = fp->script->depth;
+                    if (JS_UPTRDIFF(fp->sp, fp->spbase) < depth * sizeof(jsval))
+                        nslots = fp->sp - fp->spbase;
+                    else
+                        nslots = depth;
+                    GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
+                }
+                GC_MARK(cx, fp->thisp, "this", NULL);
+                if (fp->argv)
+                    GC_MARK_JSVALS(cx, fp->argc, fp->argv, "arg");
+                if (JSVAL_IS_GCTHING(fp->rval))
+                    GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval", NULL);
+                if (fp->vars)
+                    GC_MARK_JSVALS(cx, fp->nvars, fp->vars, "var");
+                GC_MARK(cx, fp->scopeChain, "scope chain", NULL);
+                if (fp->sharpArray)
+                    GC_MARK(cx, fp->sharpArray, "sharp array", NULL);
+            } while ((fp = fp->down) != NULL);
 	}
 
 	/* Cleanup temporary "dormant" linkage. */
@@ -942,75 +1117,52 @@ restart:
         if (acx->rval2set && JSVAL_IS_GCTHING(acx->rval2))
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2", NULL);
 #endif
+
+        for (sh = cx->stackHeaders; sh; sh = sh->down) {
+            METER(rt->gcStats.stackseg++);
+            METER(rt->gcStats.segslots += sh->nslots);
+            GC_MARK_JSVALS(cx, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
+        }
     }
 
     /*
-     * Sweep phase.
-     * Mark tempPool for release of finalization records at label out.
+     * Sweep phase, with interleaved finalize phase.
      */
-    ma = cx->tempPool.current;
-    mark = JS_ARENA_MARK(&cx->tempPool);
+    finalpos = 0;
     js_SweepAtomState(&rt->atomState, gcflags);
-    fa = rt->gcFlagsPool.first.next;
-    flagp = (uint8 *)fa->base;
     for (a = rt->gcArenaPool.first.next; a; a = a->next) {
-	for (thing = (JSGCThing *)a->base; thing < (JSGCThing *)a->avail;
-	     thing++) {
-	    if (flagp >= (uint8 *)fa->avail) {
-		fa = fa->next;
-		JS_ASSERT(fa);
-		if (!fa) {
-		    METER(rt->gcStats.badflag++);
-		    goto out;
-		}
-		flagp = (uint8 *)fa->base;
-	    }
-	    flags = *flagp;
-	    if (flags & GCF_MARK) {
-		*flagp &= ~GCF_MARK;
-	    } else if (!(flags & (GCF_LOCKMASK | GCF_FINAL))) {
-		JS_ARENA_ALLOCATE_TYPE(final, JSGCThing, &cx->tempPool);
-		if (!final)
-		    goto finalize_phase;
-		final->next = thing;
-		final->flagp = flagp;
-		JS_ASSERT(rt->gcBytes >= sizeof(JSGCThing) + sizeof(uint8));
-		rt->gcBytes -= sizeof(JSGCThing) + sizeof(uint8);
-	    }
-	    flagp++;
-	}
+        flagp = (uint8 *) a->base;
+        split = (uint8 *) FIRST_THING_PAGE(a);
+        limit = (JSGCThing *) a->avail;
+        for (thing = (JSGCThing *) split; thing < limit; thing++) {
+            if (((jsuword)thing & GC_PAGE_MASK) == 0) {
+                flagp++;
+                thing++;
+            }
+            flags = *flagp;
+            if (flags & GCF_MARK) {
+                *flagp &= ~GCF_MARK;
+            } else if (!(flags & (GCF_LOCKMASK | GCF_FINAL))) {
+                if (finalpos == GC_FINALIZE_LEN) {
+                    gc_finalize_phase(cx, finalpos);
+                    finalpos = 0;
+                }
+                final = &rt->gcFinalVec[finalpos++];
+                final->next = thing;
+                final->flagp = flagp;
+                JS_ASSERT(rt->gcBytes >= sizeof(JSGCThing) + sizeof(uint8));
+                rt->gcBytes -= sizeof(JSGCThing) + sizeof(uint8);
+            }
+            if (++flagp == split)
+                flagp += GC_THINGS_SIZE;
+        }
     }
 
-finalize_phase:
     /*
-     * Finalize phase.
-     * Don't hold the GC lock while running finalizers!
+     * Last finalize phase, if needed.
      */
-    JS_UNLOCK_GC(rt);
-    for (final = (JSGCThing *) mark; ; final++) {
-	if ((jsuword)final >= ma->avail) {
-	    ma = ma->next;
-	    if (!ma)
-		break;
-	    final = (JSGCThing *)ma->base;
-	}
-	thing = final->next;
-	flagp = final->flagp;
-	flags = *flagp;
-	finalizer = gc_finalizers[flags & GCF_TYPEMASK];
-	if (finalizer) {
-	    *flagp |= GCF_FINAL;
-	    finalizer(cx, thing);
-	}
-
-	/*
-	 * Set flags to GCF_FINAL, signifying that thing is free, but don't
-	 * thread thing onto rt->gcFreeList.  We need the GC lock to rebuild
-	 * the freelist below while also looking for free-able arenas.
-	 */
-	*flagp = GCF_FINAL;
-    }
-    JS_LOCK_GC(rt);
+    if (finalpos)
+        gc_finalize_phase(cx, finalpos);
 
     /*
      * Free phase.
@@ -1020,62 +1172,47 @@ finalize_phase:
     a = *ap;
     if (!a)
 	goto out;
-    thing = (JSGCThing *)a->base;
-    a_all_clear = f_all_clear = JS_TRUE;
+    all_clear = JS_TRUE;
     flp = oflp = &rt->gcFreeList;
     *flp = NULL;
     METER(rt->gcStats.freelen = 0);
 
-    fap = &rt->gcFlagsPool.first.next;
-    while ((fa = *fap) != NULL) {
-	/* XXX optimize by unrolling to use word loads */
-	for (flagp = (uint8 *)fa->base; ; flagp++) {
-	    JS_ASSERT(a);
-	    if (!a) {
-		METER(rt->gcStats.badarena++);
-		goto out;
-	    }
-	    if (thing >= (JSGCThing *)a->avail) {
-		if (a_all_clear) {
-		    JS_ARENA_DESTROY(&rt->gcArenaPool, a, ap);
-		    flp = oflp;
-		    METER(rt->gcStats.afree++);
-		} else {
-		    ap = &a->next;
-		    a_all_clear = JS_TRUE;
-		    oflp = flp;
-		}
-		a = *ap;
-		if (!a)
-		    break;
-		thing = (JSGCThing *)a->base;
-	    }
-	    if (flagp >= (uint8 *)fa->avail)
-		break;
-	    if (*flagp != GCF_FINAL) {
-		a_all_clear = f_all_clear = JS_FALSE;
-	    } else {
-		thing->flagp = flagp;
-		*flp = thing;
-		flp = &thing->next;
-		METER(rt->gcStats.freelen++);
-	    }
-	    thing++;
-	}
-	if (f_all_clear) {
-	    JS_ARENA_DESTROY(&rt->gcFlagsPool, fa, fap);
-	    METER(rt->gcStats.fafree++);
-	} else {
-	    fap = &fa->next;
-	    f_all_clear = JS_TRUE;
-	}
-    }
+    do {
+        flagp = (uint8 *) a->base;
+        split = (uint8 *) FIRST_THING_PAGE(a);
+        limit = (JSGCThing *) a->avail;
+        for (thing = (JSGCThing *) split; thing < limit; thing++) {
+            if (((jsuword)thing & GC_PAGE_MASK) == 0) {
+                flagp++;
+                thing++;
+            }
+            if (*flagp != GCF_FINAL) {
+                all_clear = JS_FALSE;
+            } else {
+                thing->flagp = flagp;
+                *flp = thing;
+                flp = &thing->next;
+                METER(rt->gcStats.freelen++);
+            }
+            if (++flagp == split)
+                flagp += GC_THINGS_SIZE;
+        }
+
+        if (all_clear) {
+            JS_ARENA_DESTROY(&rt->gcArenaPool, a, ap);
+            flp = oflp;
+            METER(rt->gcStats.afree++);
+        } else {
+            ap = &a->next;
+            all_clear = JS_TRUE;
+            oflp = flp;
+        }
+    } while ((a = *ap) != NULL);
 
     /* Terminate the new freelist. */
     *flp = NULL;
 
 out:
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
     if (rt->gcLevel > 1) {
 	rt->gcLevel = 1;
 	goto restart;
