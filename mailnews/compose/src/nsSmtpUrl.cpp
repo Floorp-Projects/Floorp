@@ -283,7 +283,6 @@ nsresult nsSmtpUrl::ParseUrl()
 	nsresult rv = NS_OK;
 
 	// the recipients should consist of just the path part up to to the query part
-	char * uriPath = nsnull;
 	rv = GetFileName(&m_toPart);
 
 	// now parse out the search field...
