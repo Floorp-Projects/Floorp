@@ -134,11 +134,11 @@ struct _TCP_ConData {
 
 /* Global TCP connect variables
  */
-PUBLIC u_long NET_SocksHost=0;
+PUBLIC unsigned long NET_SocksHost=0;
 PUBLIC short NET_SocksPort=0;
 PUBLIC char * NET_SocksHostName=0;
 
-PUBLIC Bool socksFailure=FALSE;
+PUBLIC PRBool socksFailure=FALSE;
 
 PUBLIC int NET_InGetHostByName = FALSE; /* global semaphore */
 
@@ -178,7 +178,7 @@ NET_SetTCPConnectTimeout(uint32 seconds) {
  */
 int NET_SetSocksHost(char * host)
 {
-	XP_Bool is_numeric_ip;
+	PRBool is_numeric_ip;
 	char *host_cp;
 
 #ifdef MOZ_OFFLINE
@@ -223,11 +223,15 @@ int NET_SetSocksHost(char * host)
 
         if (is_numeric_ip)  /* Numeric node address */
           {
+            PRNetAddr netAddr;
+            PRStatus status;
 		    TRACEMSG(("Socks host is numeric"));
 
-            /* some systems return a number instead of a struct
-             */
-            NET_SocksHost = inet_addr(host);
+            /* some systems return a number instead of a struct */
+            status = PR_StringToNetAddr(host, &netAddr);
+            if (PR_SUCCESS == status) {
+                NET_SocksHost = netAddr.inet.ip;
+            }
 			if (NET_SocksHostName) PR_Free (NET_SocksHostName);
             NET_SocksHostName = PL_strdup(host);
           }
@@ -256,7 +260,7 @@ int NET_SetSocksHost(char * host)
 				socksFailure=TRUE;
                 return 0;  /* Fail? */
               }
-			memcpy(&NET_SocksHost, hp->h_addr, hp->h_length);
+			memcpy(&NET_SocksHost, hp->h_addr_list[0], hp->h_length);
           }
 		if (cp) {
 			*cp = ':';
@@ -440,33 +444,6 @@ net_CheckDNSCache(CONST char * hostname)
 		  }
       }
     return(0);
-}
-
-/*  print an IP address from a sockaddr struct
- *
- *  This routine is only used for TRACE messages
- */
-#if defined(XP_WIN) || defined(XP_OS2)
-MODULE_PRIVATE char *CONST
-NET_IpString (struct sockaddr_in *sin)
-#else
-MODULE_PRIVATE CONST char * 
-NET_IpString (struct sockaddr_in *sin)
-#endif
-{
-    static char buffer[32];
-    int a,b,c,d;
-    unsigned char *pc;
-
-    pc = (unsigned char *) &sin->sin_addr;
-
-    a = (int) *pc;
-    b = (int) *(++pc);
-    c = (int) *(++pc);
-    d = (int) *(++pc);
-    PR_snprintf(buffer, sizeof(buffer), "%d.%d.%d.%d", a,b,c,d);
-
-    return buffer;
 }
 
 /* a list of dis-allowed ports for gopher connections for security reasons */
@@ -750,13 +727,18 @@ net_FindAddress (const char *host_ptr,
 		     * code uses for host lookup to be a specific ip address. */
 		    static char firstTime = 1;
 		    if (firstTime) {
+                PRNetAddr netAddr;
+                PRStatus status;
 			    char *ns = getenv("SOCKS_NS");
 			    firstTime = 0;
 			    if (ns && ns[0]) {
 				    /* Use a specific host for dns lookups */
 					extern int res_init (void);
 				    res_init();
-				    _res.nsaddr_list[0].sin_addr.s_addr = inet_addr(ns);
+                    status = PR_StringToNetAddr(ns, &netAddr);
+                    if (PR_SUCCESS == status) {
+                        _res.nsaddr_list[0].sin_addr.s_addr = netAddr.inet.ip;
+                    }
 				    _res.nscount = 1;
 			      }
 		      }
@@ -1052,7 +1034,7 @@ NET_BeginConnect (CONST char   *url,
 			      TCP_ConData **tcp_con_data,
           	      MWContext    *window_id,
 			      char        **error_msg,
-				  u_long		socks_host,
+				  unsigned long		socks_host,
 				  short			socks_port,
                   PRUint32 localIP)
 {

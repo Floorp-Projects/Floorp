@@ -18,6 +18,7 @@
  */
 #ifdef XP_PC
 #include <windows.h>
+#include <winsock2.h>
 #include "net.h"
 #include "nsISupports.h"
 #include "merrors.h"

@@ -27,7 +27,7 @@ typedef struct _TCP_ConData TCP_ConData;
 
 /* the socks host in U long form
  */
-extern u_long NET_SocksHost;
+extern unsigned long NET_SocksHost;
 extern short NET_SocksPort;
 extern char *NET_SocksHostName;
 
@@ -55,19 +55,6 @@ NET_DebugNetWrite (PRFileDesc *fildes, CONST void *buf, unsigned nbyte);
 extern int32
 NET_BlockingWrite (PRFileDesc *filedes, CONST void * buf, unsigned int nbyte);
 
-
-/*  print an IP address from a sockaddr struct
- *
- *  This routine is only used for TRACE messages
- */
-#if defined(XP_WIN) || defined(XP_OS2)
-extern char *CONST
-NET_IpString (struct sockaddr_in* sin);
-#else
-extern const char *
-NET_IpString (struct sockaddr_in* sin);
-#endif
-
 /* free left over tcp connection data if there is any
  */
 extern void NET_FreeTCPConData(TCP_ConData * data);
@@ -91,7 +78,7 @@ NET_BeginConnect  (CONST char   *url,
 				   TCP_ConData **tcp_con_data, 
 				   MWContext    *window_id,
 				   char        **error_msg,
-				   u_long        socks_host,
+				   unsigned long        socks_host,
 				   short         socks_port,
                    PRUint32 localIP);
 

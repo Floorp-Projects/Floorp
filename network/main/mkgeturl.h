@@ -76,7 +76,7 @@ typedef struct _ActiveEntry {
 
     char *    proxy_conf;	/* Proxy autoconfig string */
     char *    proxy_addr;	/* Proxy address in host:port format */
-    u_long    socks_host;	/* SOCKS host IP address */
+    unsigned long    socks_host;	/* SOCKS host IP address */
     short     socks_port;	/* SOCKS port number */
 
 } ActiveEntry;
