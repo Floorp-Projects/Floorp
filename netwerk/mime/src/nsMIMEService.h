@@ -45,6 +45,7 @@ class nsMIMEService : public nsIMIMEService {
 
 private:
     nsresult InitFromURI(nsIURI *aUri);
+    nsresult InitFromFile(const char *aFileName);
     nsresult InitFromHack();
 
     nsVoidArray*            mInfoArray;
