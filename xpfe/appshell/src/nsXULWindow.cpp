@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 // Local includes
@@ -637,7 +638,12 @@ void nsXULWindow::OnChromeLoaded()
       mContentTreeOwner->ApplyChromeFlags();
 
    LoadTitleFromXUL();
+#ifdef XP_UNIX
+   /* don't override wm placement prefs on unix --dr */
+   LoadPositionAndSizeFromXUL(PR_FALSE, PR_TRUE);
+#else
    LoadPositionAndSizeFromXUL(PR_TRUE, PR_TRUE);
+#endif
 
    if(mIntrinsicallySized)
       {
