@@ -65,46 +65,6 @@ public class GeneralPanel extends JPanel {
     return null;
   }
 
-  protected JButton makeToolbarButton(String aAction) {
-    Icon icon = new ImageIcon(getClass().getResource("images/toolbar/" + aAction + ".gif"));
-    Icon iconDisabled = new ImageIcon(getClass().getResource("images/toolbar/" + aAction + "-disabled.gif"));
-    Icon iconPressed = new ImageIcon(getClass().getResource("images/toolbar/" + aAction + "-pressed.gif"));
-    Icon iconRollover = new ImageIcon(getClass().getResource("images/toolbar/"  + aAction + "-rollover.gif"));
-
-    JButton res = new JButton();
-
-    res.setIcon(icon);
-    res.setHorizontalTextPosition(JButton.CENTER);
-    res.setVerticalTextPosition(JButton.BOTTOM);
-    res.setDisabledIcon(iconDisabled);
-    res.setPressedIcon(iconPressed);
-    res.setRolloverIcon(iconRollover);
-    res.setActionCommand(aAction);
-    res.setRolloverEnabled(true);
-    res.setBorder(BorderFactory.createEmptyBorder());
-    Font f=res.getFont();
-    Font nf=new Font(f.getName(), Font.PLAIN, f.getSize()-1);
-    res.setFont(nf);
-    ResourceBundle resources = ResourceBundle.getBundle(fResourceBase + ".Toolbar");
-    String text = resources.getString(aAction);
-    res.setText(text);
-    
-    Dimension d=res.getPreferredSize();
-    System.out.println(d.getWidth());
-    System.out.println(d.getHeight());
-    double w=d.getWidth();
-    if (w > 48) {
-      d.setSize(w, 38);
-    } else {
-      d.setSize(48, 38);
-    }
-    res.setMinimumSize(d);
-    res.setMaximumSize(d);
-    res.setPreferredSize(d);
-
-    return res;
-  }
-
   protected GrendelToolBar buildToolBar(String aToolbar, UIAction[] aActions) {
     GrendelToolBar res = null;
 
