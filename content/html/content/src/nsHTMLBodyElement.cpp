@@ -80,8 +80,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
-  NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
 
   // The new mapping function.
@@ -152,20 +150,6 @@ BodyRule::~BodyRule()
 }
 
 NS_IMPL_ISUPPORTS1(BodyRule, nsIStyleRule)
-
-NS_IMETHODIMP
-BodyRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
-{
-  aResult = PRBool(this == aRule);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BodyRule::HashValue(PRUint32& aValue) const
-{
-  aValue = NS_PTR_TO_INT32(mPart);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 BodyRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
