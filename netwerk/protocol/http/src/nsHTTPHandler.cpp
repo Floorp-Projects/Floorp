@@ -232,7 +232,6 @@ nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
             rv = pChannel->GetURI(getter_AddRefs(channelURI));
             if (NS_SUCCEEDED(rv) && (channelURI.get() == i_URL))
             {
-                NS_ADDREF(pChannel);
                 *o_Instance = pChannel;
                 // TODO return NS_USING_EXISTING... 
                 // or NS_DUPLICATE_REQUEST something like that.
