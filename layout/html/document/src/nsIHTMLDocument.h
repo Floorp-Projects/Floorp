@@ -44,7 +44,7 @@ class nsICSSLoader;
  */
 class nsIHTMLDocument : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IHTMLDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLDOCUMENT_IID)
 
   NS_IMETHOD AddImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
