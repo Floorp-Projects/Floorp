@@ -294,13 +294,16 @@ sub ValidateBugID {
     my ($isauthorized, $reporter, $assignee, $qacontact, $reporter_accessible, 
         $assignee_accessible, $qacontact_accessible, $cclist_accessible) = FetchSQLData();
 
-    # Finish validation and return if the user is authorized either by being
-    # a member of all necessary groups or by being the reporter, assignee, or QA contact.
-    return
-      if $isauthorized 
-        || ($reporter_accessible && $reporter == $userid)
-        || ($assignee_accessible && $assignee == $userid)
-        || ($qacontact_accessible && $qacontact == $userid);
+    # Finish validation and return if the user is a member of all groups to which the bug belongs.
+    return if $isauthorized;
+
+    # Finish validation and return if the user is in a role that has access to the bug.
+    if ($userid) {
+        return 
+	  if ($reporter_accessible && $reporter == $userid)
+            || ($assignee_accessible && $assignee == $userid)
+              || ($qacontact_accessible && $qacontact == $userid);
+    }
 
     # Try to authorize the user one more time by seeing if they are on 
     # the cc: list.  If so, finish validation and return.
