@@ -220,10 +220,18 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
     PARAMSTORE* params = PR_Malloc(sizeof(PARAMSTORE));
     params->start = start;
     params->thread = thread;
+#ifdef XP_OS2_VACPP /* No exception handler for VACPP */
+    thread->md.handle = thread->id = (TID) _beginthread(
+                    (void(* _Optlink)(void*))start,
+                    NULL, 
+                    thread->stack->stackSize,
+                    thread);
+#else
     thread->md.handle = thread->id = (TID) _beginthread(ExcpStartFunc,
                                                         NULL, 
                                                         thread->stack->stackSize,
                                                         params);
+#endif
     if(thread->md.handle == -1) {
         return PR_FAILURE;
     }

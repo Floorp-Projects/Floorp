@@ -693,7 +693,7 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 #ifdef XP_OS2_VACPP
 	h = GETHOSTBYNAME((char *)name);
 #else
-    h = GETHOSTBYNAME(name);
+	h = GETHOSTBYNAME(name);
 #endif
     
 	if (NULL == h)
@@ -924,7 +924,7 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 #else /* _PR_INET6 */
     LOCK_DNS();
 #ifdef XP_OS2_VACPP
-	h = GETHOSTBYNAME((char *)name);
+    h = GETHOSTBYNAME((char *)name);
 #else
     h = GETHOSTBYNAME(name);
 #endif
@@ -1373,7 +1373,7 @@ PRUintn _PR_NetAddrSize(const PRNetAddr* addr)
 #else
         addrsize = sizeof(addr->ipv6);
 #endif
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2_EMX)
     else if (AF_UNIX == addr->raw.family)
         addrsize = sizeof(addr->local);
 #endif

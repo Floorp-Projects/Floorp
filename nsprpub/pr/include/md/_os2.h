@@ -242,9 +242,6 @@ extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 
 /* --- Socket IO stuff --- */
 
-#define TCPV40HDRS
-#define BSD_SELECT
-
 /* The ones that don't map directly may need to be re-visited... */
 #ifdef XP_OS2_VACPP
 #define EPIPE                     EBADF
@@ -286,7 +283,11 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_CLOSE_SOCKET              _MD_CloseSocket
 #define _MD_SENDTO                    (_PR_MD_SENDTO)
 #define _MD_RECVFROM                  (_PR_MD_RECVFROM)
+#ifdef XP_OS2_VACPP
+#define _MD_SOCKETPAIR(s, type, proto, sv) -1
+#else
 #define _MD_SOCKETPAIR                (_PR_MD_SOCKETPAIR)
+#endif
 #define _MD_GETSOCKNAME               (_PR_MD_GETSOCKNAME)
 #define _MD_GETPEERNAME               (_PR_MD_GETPEERNAME)
 #define _MD_GETSOCKOPT                (_PR_MD_GETSOCKOPT)

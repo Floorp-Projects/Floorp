@@ -1395,7 +1395,7 @@ extern PRUintn _PR_NetAddrSize(const PRNetAddr* addr);
 ** struct sockaddr_in6.
 */
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2_EMX)
 #define PR_NETADDR_SIZE(_addr) 					\
         ((_addr)->raw.family == PR_AF_INET		\
         ? sizeof((_addr)->inet)					\
@@ -1411,7 +1411,7 @@ extern PRUintn _PR_NetAddrSize(const PRNetAddr* addr);
 
 #else
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2_EMX)
 #define PR_NETADDR_SIZE(_addr) 					\
         ((_addr)->raw.family == PR_AF_INET		\
         ? sizeof((_addr)->inet)					\

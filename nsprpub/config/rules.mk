@@ -378,10 +378,15 @@ ifeq ($(OS_ARCH),OS2)
 	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
 	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
 	echo EXPORTS >> $@
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	grep -v ';+' $< | grep -v ';-' | \
+	sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' >> $@
+else
 	grep -v ';+' $< | grep -v ';-' | \
 	sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,\([\t ]*\),\1_,' | \
 	awk 'BEGIN {ord=1;} { print($$0 " @" ord " RESIDENTNAME"); ord++;}'	>> $@
 	$(ADD_TO_DEF_FILE)
+endif
 endif
 
 #
