@@ -58,6 +58,7 @@ CPPSRCS		= \
 		nsStyleCoord.cpp \
 		nsStyleContext.cpp \
 		nsStyleSet.cpp \
+		nsTextContentChangeData.cpp \
 		nsTextFragment.cpp \
 		nsTextNode.cpp \
 		nsXIFConverter.cpp \
