@@ -428,9 +428,9 @@ static nsresult savePrefFile(nsIFile* aFile)
     return NS_BASE_STREAM_OSERROR;
 
   stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
-    
-  /* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
-  pref_HashTableEnumerateEntries(pref_savePref, valueArray);
+
+  // get the lines that we're supposed to be writing to the file
+  PL_DHashTableEnumerate(&gHashTable, pref_savePref, valueArray);
     
   /* Sort the preferences to make a readable file on disk */
   NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char*), pref_CompareStrings, NULL);

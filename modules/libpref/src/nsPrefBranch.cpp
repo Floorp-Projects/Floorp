@@ -535,7 +535,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
 
   ed.parent = getPrefName(aStartingAt);
   ed.pref_list = &prefArray;
-  pref_HashTableEnumerateEntries(pref_enumChild, &ed);
+  PL_DHashTableEnumerate(&gHashTable, pref_enumChild, &ed);
 
   // now that we've built up the list, run the callback on
   // all the matching elements
