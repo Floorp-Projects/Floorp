@@ -541,8 +541,21 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_BODY);
     pn->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
 
-    /* If a top-level function has no name, it must be a (useless) closure. */
-    pn->pn_op = (outerFun || lambda || !funAtom) ? JSOP_CLOSURE : JSOP_NOP;
+#if JS_HAS_LEXICAL_CLOSURE
+    /*
+     * Generate a closure if in a nested function, or if in 'with (o) eval(s)'
+     * where s contains a function definition, or if in a with statement being
+     * compiled from the same source that contains this function.  Otherwise,
+     * if in a lambda expression, generate a function object reference.  Else,
+     * generate an annotated NOP if a top-level function.
+     */
+    if (outerFun || cx->fp->scopeChain != parent || InWithStatement(tc))
+        pn->pn_op = JSOP_CLOSURE;
+    else if (lambda)
+        pn->pn_op = JSOP_OBJECT;
+    else
+#endif
+        pn->pn_op = JSOP_NOP;
     pn->pn_fun = fun;
     pn->pn_body = pn2;
     pn->pn_tryCount = funtc.tryCount;
