@@ -20,8 +20,8 @@
 #define _nsMsgPrompts_H_
 
 nsresult      nsMsgDisplayMessageByID(PRInt32 msgID);
-nsresult      nsMsgDisplayMessageByString(char *msg);
+nsresult      nsMsgDisplayMessageByString(const PRUnichar * msg);
 nsresult      nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer);
-nsresult      nsMsgAskBooleanQuestionByID(char *msg, PRBool *answer);
+nsresult      nsMsgAskBooleanQuestionByString(const PRUnichar * msg, PRBool *answer);
 
 #endif /* _nsMsgPrompts_H_ */

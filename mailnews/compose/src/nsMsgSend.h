@@ -176,7 +176,7 @@ public:
   //
   void (*m_attachments_done_callback) (
 									   nsresult                 status,
-									   const char               *error_msg,
+									   const PRUnichar              *error_msg,
 									   struct nsMsgAttachedFile *attachments);
   
   //
@@ -200,7 +200,7 @@ public:
                                         nsMsgDeliverMode   mode);
 
   void	      Clear();
-  void	      Fail(nsresult failure_code, char *error_msg);
+  void	      Fail(nsresult failure_code, const PRUnichar * error_msg);
 
   NS_METHOD   SendToMagicFolder (nsMsgDeliverMode flag);
   nsresult    QueueForLater();

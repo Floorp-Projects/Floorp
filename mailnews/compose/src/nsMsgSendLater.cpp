@@ -296,7 +296,7 @@ SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
     else
     {
       // RICHIE - do we do the message loss here?
-      nsMsgDisplayMessageByString("Failed to get message from unsent folder.");
+      nsMsgDisplayMessageByID(NS_ERROR_QUEUED_DELIVERY_FAILED);
 
       // Save failed, but we will still keep trying to send the rest...
       rv = ptr->StartNextMailFileSend();
@@ -405,7 +405,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
     else
     {
       // RICHIE - do we do the message loss here?
-      nsMsgDisplayMessageByString("Sending of message failed.");
+      nsMsgDisplayMessageByID(NS_ERROR_SEND_FAILED);
     }
 
     // Regardless, we will still keep trying to send the rest...
@@ -707,9 +707,6 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
   nsresult ret = mMessageFolder->GetMessages(&mEnumerator);
 	if (NS_FAILED(ret) || (!mEnumerator))
   {
-    // RICHIE - do we do the message loss here?
-    nsMsgDisplayMessageByString("*** NOTICE *** If you failed, more than likely, this is the problem\ndescribed by Bug #10344.");
-
     NS_RELEASE(mIdentity);
     mIdentity = nsnull;
     return NS_ERROR_FAILURE;

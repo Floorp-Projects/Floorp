@@ -28,60 +28,23 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
 {
   nsresult rv;
 
-  char *msg = ComposeBEGetStringByID(msgID);
-  if (!msg)
-    return NS_ERROR_INVALID_ARG;
-
-#ifdef NECKO
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-#else
-  NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
-#endif
-  if (NS_FAILED(rv))
-    return NS_ERROR_FACTORY_NOT_LOADED;
-
-  nsAutoString alertText(msg);
-  if (dialog) 
-  {
-#if defined(BUG_7770_FIXED)
-    rv = dialog->Alert(alertText);
-#else
-    // will only work for single byte languages for now
-    printf("Alert: %s", msg);
-#endif
-  }
-
-  PR_FREEIF(msg);
-  return NS_OK;
+  PRUnichar * msg = ComposeGetStringByID(msgID);
+  rv = nsMsgDisplayMessageByString(msg);
+  nsCRT::free(msg);	
+  return rv;
 }
 
 nsresult
-nsMsgDisplayMessageByString(char *msg)
+nsMsgDisplayMessageByString(const PRUnichar * msg)
 {
   nsresult rv;
 
   if ((!msg) || (!*msg))
     return NS_ERROR_INVALID_ARG;
 
-#ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-#else
-  NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
-#endif
-  if (NS_FAILED(rv))
-    return NS_ERROR_FACTORY_NOT_LOADED;
-
-  nsAutoString alertText(msg);
-  if (dialog) 
-  {
-#if defined(BUG_7770_FIXED)
-    rv = dialog->Alert(alertText);
-#else
-    // will only work for single byte languages for now
-    printf("Alert: %s", msg);
-#endif    
-  }
-
+  if (NS_FAILED(rv)) return rv;
+  rv = dialog->Alert(msg);
   return NS_OK;
 }
 
@@ -91,34 +54,17 @@ nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
   nsresult rv;
   PRInt32 result;
 
-  char *msg = ComposeBEGetStringByID(msgID);
-  if (!msg)
-    return NS_ERROR_INVALID_ARG;
+  PRUnichar * msg = ComposeGetStringByID(msgID);
+  nsMsgAskBooleanQuestionByString(msg, answer);
+  nsCRT::free(msg);
+  return NS_OK;
 
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
-  if (NS_FAILED(rv))
-    return NS_ERROR_FACTORY_NOT_LOADED;
-  
-  nsAutoString confirmText(msg);
-  if (dialog) 
-  {
-    rv = dialog->Confirm(confirmText.GetUnicode(), &result);
-    if (result == 1) 
-    {
-      *answer = PR_TRUE;
-    }
-    else 
-    {
-      *answer = PR_FALSE;
-    }
-  }
-
-  PR_FREEIF(msg);
+  nsCRT::free(msg);
   return NS_OK;
 }     
 
 nsresult
-nsMsgAskBooleanQuestionByID(char *msg, PRBool *answer)
+nsMsgAskBooleanQuestionByString(const PRUnichar * msg, PRBool *answer)
 {
   nsresult rv;
   PRInt32 result;
@@ -128,22 +74,16 @@ nsMsgAskBooleanQuestionByID(char *msg, PRBool *answer)
 
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
   if (NS_FAILED(rv))
-    return NS_ERROR_FACTORY_NOT_REGISTERED;
+    return NS_ERROR_FACTORY_NOT_LOADED;
   
-  nsAutoString confirmText(msg);
   if (dialog) 
   {
-    rv = dialog->Confirm(confirmText.GetUnicode(), &result);
+    rv = dialog->Confirm(msg, &result);
     if (result == 1) 
-    {
       *answer = PR_TRUE;
-    }
     else 
-    {
       *answer = PR_FALSE;
-    }
   }
 
-  PR_FREEIF(msg);
   return NS_OK;
 }     

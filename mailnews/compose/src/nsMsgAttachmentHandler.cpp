@@ -609,9 +609,6 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 nsresult
 nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 {
-  nsString  tMsg(aMsg);
-  char      *eMsg = tMsg.ToNewCString();
-
   NS_ASSERTION(m_mime_delivery_state != NULL, "not-null m_mime_delivery_state");
 
   // Close the file, but don't delete the disk file (or the file spec.) 
@@ -712,7 +709,6 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		  if (NS_FAILED(status))
 			{
 			  m_mime_delivery_state->Fail(status, 0);
-        delete eMsg;
 			  return NS_ERROR_UNEXPECTED;
 			}
 		}
@@ -725,7 +721,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		// the exit routine and terminating the delivery.
 	  if (NS_FAILED(status))
 		{
-		  m_mime_delivery_state->Fail(status, eMsg);
+		  m_mime_delivery_state->Fail(status, aMsg);
 		}
 	  else
 		{
@@ -738,11 +734,10 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		// then report that error and continue 
 	  if (NS_FAILED(status))
 		{
-		  m_mime_delivery_state->Fail(status, eMsg);
+		  m_mime_delivery_state->Fail(status, aMsg);
 		}
 	}
 
-  delete eMsg;
   return NS_OK;
 }
 

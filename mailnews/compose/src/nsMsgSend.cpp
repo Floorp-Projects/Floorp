@@ -344,7 +344,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	PRBool plaintext_is_mainbody_p = PR_FALSE; // only using text converted from HTML?
 	char *buffer = 0;
 	char *buffer_tail = 0;
-	char* error_msg = nsnull;
   PRBool multiPartRelatedWithAttachments = PR_FALSE;
   char  *attachmentSeparator = nsnull;
   char  *multipartRelatedSeparator = nsnull;
@@ -1074,20 +1073,19 @@ FAIL:
   PR_FREEIF(multipartRelatedSeparator);
   PR_FREEIF(attachmentSeparator);
 
-	PR_FREEIF(headers);
-	if (in_file) 
+  PR_FREEIF(headers);
+  if (in_file) 
   {
-		PR_Close (in_file);
-		in_file = nsnull;
-	}
+	  PR_Close (in_file);
+	  in_file = nsnull;
+  }
 
 	if (shouldDeleteDeliveryState)
 	{
 		if (status < 0) 
-    {
+		{
 			m_status = status;
-			Fail (status, error_msg);
-      PR_FREEIF(error_msg);
+			Fail (status, nsnull);
 		}
 	}
 
@@ -2453,10 +2451,10 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 	if (!buf) 
   {
     // RICHIE_TODO: message loss here
-    char    *eMsg = ComposeBEGetStringByID(NS_ERROR_OUT_OF_MEMORY);
+    PRUnichar *eMsg = ComposeGetStringByID(NS_ERROR_OUT_OF_MEMORY);
     Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
     NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
-    PR_FREEIF(eMsg);
+	nsCRT::free(eMsg);
     return NS_ERROR_OUT_OF_MEMORY;
 	}
 
@@ -2493,7 +2491,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     if (!mSendListener)
     {
       // RICHIE_TODO - message loss here?
-      nsMsgDisplayMessageByString("Unable to create SMTP listener service. Send failed.");
+      nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -2525,7 +2523,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     if (!mSendListener)
     {
       // RICHIE_TODO - message loss here?
-      nsMsgDisplayMessageByString("Unable to create NNTP listener service. News Delivery failed.");
+      nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -2545,7 +2543,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 }
 
 void 
-nsMsgComposeAndSend::Fail(nsresult failure_code, char *error_msg)
+nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
 {
   if (NS_FAILED(failure_code))
   {
@@ -2576,11 +2574,11 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckF
 #endif
 
     // RICHIE_TODO - message lost here!
-    char    *eMsg = ComposeBEGetStringByID(aExitCode);
+    PRUnichar * eMsg = ComposeGetStringByID(aExitCode);
     
     Fail(aExitCode, eMsg);
     NotifyListenersOnStopSending(nsnull, aExitCode, nsnull, nsnull);
-    PR_FREEIF(eMsg);
+	nsCRT::free(eMsg);
     return;
   }
 #ifdef NS_DEBUG
@@ -2676,7 +2674,7 @@ nsMsgComposeAndSend::DoFcc()
   nsresult rv = MimeDoFCC(mTempFileSpec,
                           nsMsgDeliverNow,
                           mCompFields->GetBcc(),
-							            mCompFields->GetFcc(), 
+						  mCompFields->GetFcc(), 
                           mCompFields->GetNewspostUrl());
   if (NS_FAILED(rv))
   {
@@ -2684,10 +2682,10 @@ nsMsgComposeAndSend::DoFcc()
     // If we hit here, the copy operation FAILED and we should at least tell the
     // user that it did fail but the send operation has already succeeded.
     //
-    char    *eMsg = ComposeBEGetStringByID(rv);
+    PRUnichar  *eMsg = ComposeGetStringByID(rv);
     Fail(rv, eMsg);
     NotifyListenersOnStopCopy(rv);
-    PR_FREEIF(eMsg);
+	nsCRT::free(eMsg);
   }
 
   return rv;
@@ -3157,10 +3155,10 @@ nsMsgComposeAndSend::SendToMagicFolder(nsMsgDeliverMode mode)
     if (NS_FAILED(rv))
     {
       // RICHIE_TODO: message loss here
-      char    *eMsg = ComposeBEGetStringByID(rv);
+      PRUnichar * eMsg = ComposeGetStringByID(rv);
       Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
       NotifyListenersOnStopCopy(rv);
-      PR_FREEIF(eMsg);
+	  nsCRT::free(eMsg);
     }
     
     return rv;
