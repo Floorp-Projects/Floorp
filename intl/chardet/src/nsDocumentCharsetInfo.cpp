@@ -85,6 +85,7 @@ NS_IMETHODIMP nsDocumentCharsetInfo::SetForcedCharset(nsIAtom * aCharset)
 NS_IMETHODIMP nsDocumentCharsetInfo::GetForcedCharset(nsIAtom ** aResult)
 {
   *aResult = mForcedCharset;
+  if (mForcedCharset) NS_ADDREF(*aResult);
   return NS_OK;
 }
 
