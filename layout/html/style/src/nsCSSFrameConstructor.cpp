@@ -3557,6 +3557,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                              nsIFrame*       aParentFrame,
                                              nsIFrame**      aContinuingFrame)
 {
+#if 1
   nsresult  rv;
   nsIFrame* continuingFrame;
 
@@ -3567,6 +3568,89 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
   NS_RELEASE(styleContext);
   *aContinuingFrame = continuingFrame;
   return rv;
+#else
+  nsIAtom*  frameType;
+  nsIFrame* newFrame = nsnull;
+  PRBool    forceView = PR_FALSE;
+  nsresult  rv;
+
+  aFrame->GetFrameType(&frameType);
+
+  if (nsLayoutAtoms::textFrame == frameType) {
+    rv = NS_NewTextFrame(newFrame);
+    
+  } else if (nsHTMLAtoms::inlineFrame == frameType) {
+    NS_NewInlineFrame(newFrame);
+  
+  } else if (nsHTMLAtoms::blockFrame == frameType) {
+    NS_NewBlockFrame(newFrame, 0);
+  
+  } else if (nsLayoutAtoms::areaFrame == frameType) {
+    // XXX What should be used for the flags?
+    NS_NewAreaFrame(newFrame, 0);
+  
+  } else if (nsLayoutAtoms::pageFrame == frameType) {
+    NS_NewPageFrame(newFrame);
+    forceView = PR_TRUE;
+
+  } else if (nsLayoutAtoms::tableOuterFrame == frameType) {
+    NS_NewTableOuterFrame(newFrame);
+
+  } else if (nsLayoutAtoms::tableFrame == frameType) {
+    NS_NewTableFrame(newFrame);
+
+  } else if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
+    NS_NewTableRowGroupFrame(newFrame);
+
+  } else if (nsLayoutAtoms::tableRowFrame == frameType) {
+    NS_NewTableRowFrame(newFrame);
+
+  } else if (nsLayoutAtoms::tableCellFrame == frameType) {
+    NS_NewTableCellFrame(newFrame);
+
+  } else {
+    NS_ASSERTION(PR_FALSE, "unexpected frame type");
+    rv = NS_ERROR_UNEXPECTED;
+  }
+
+  if (NS_SUCCEEDED(rv) && newFrame) {
+    nsIContent*       content;
+    nsIStyleContext*  styleContext;
+
+    // Initialize the continuing frame, and create a view for it if appropriate
+    aFrame->GetContent(&content);
+    aFrame->GetStyleContext(&styleContext);
+    newFrame->Init(*aPresContext, content, aParentFrame, styleContext);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                             styleContext, forceView);
+    NS_RELEASE(styleContext);
+    NS_RELEASE(content);
+
+    // Append it to the flow
+    newFrame->AppendToFlow(aFrame);
+
+    // Make sure some of the flag bits are set
+    // XXX Maybe it would be better if we passed the prev-in-flow into the Init()
+    // call, and that way the frame can add itself to the flow and replicate any
+    // state...
+    nsFrameState  state;
+    nsFrameState  newState;
+    aFrame->GetFrameState(&state);
+    newFrame->GetFrameState(&newState);
+
+    if (state & NS_FRAME_SYNC_FRAME_AND_VIEW) {
+      newState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
+    }
+    if (state & NS_FRAME_REPLACED_ELEMENT) {
+      newState |= NS_FRAME_REPLACED_ELEMENT;
+    }
+    newFrame->SetFrameState(newState);
+  }
+  NS_RELEASE(frameType);
+
+  *aContinuingFrame = newFrame;
+  return rv;
+#endif
 }
 
 nsresult
