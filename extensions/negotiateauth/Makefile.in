@@ -49,7 +49,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= negotiateauth
 LIBRARY_NAME	= negotiateauth
-EXPORT_LIBRARY	= 1
+# Do not set EXPORT_LIBRARY as we do not want negotiateauth in the static libs list
+#EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 
 LOCAL_INCLUDES	= $(GSSAPI_INCLUDES)
