@@ -132,9 +132,13 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
      cp ? cp : "(null)", mTargetFrame, mImageLoadStatus));
 
   // Start image load request
-  // XXX Use aBackgroundColor
+  // XXX SPARKY
+#if 0
+  mImageRequest = aGroup->GetImage(cp, this, aBackgroundColor, 0, 0, 0);
+#else
   nscolor bgcolor = NS_RGB(255,255,255);
   mImageRequest = aGroup->GetImage(cp, this, &bgcolor, 0, 0, 0);
+#endif
   delete cp;
 
   return NS_OK;
