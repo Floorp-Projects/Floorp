@@ -124,10 +124,10 @@ private:
     nsEntryList *LookupEntryList(const char *host, PRInt32 port, nsAFlatCString &key);
 
     // hash table allocation functions
-    static void        *AllocTable(void *, PRSize size);
-    static void         FreeTable(void *, void *item);
-    static PLHashEntry *AllocEntry(void *, const void *key);
-    static void         FreeEntry(void *, PLHashEntry *he, PRUintn flag);
+    static void*        PR_CALLBACK AllocTable(void *, PRSize size);
+    static void         PR_CALLBACK FreeTable(void *, void *item);
+    static PLHashEntry* PR_CALLBACK AllocEntry(void *, const void *key);
+    static void         PR_CALLBACK FreeEntry(void *, PLHashEntry *he, PRUintn flag);
 
     static PLHashAllocOps gHashAllocOps;
     
