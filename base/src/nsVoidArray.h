@@ -71,4 +71,55 @@ private:
   nsVoidArray(const nsVoidArray& other);
 };
 
+
+class nsString;
+
+typedef PRBool (*nsStringArrayEnumFunc)(nsString& aElement, void *aData);
+
+class NS_BASE nsStringArray: protected nsVoidArray
+{
+public:
+  nsStringArray(void);
+  ~nsStringArray(void);
+
+  nsStringArray& operator=(const nsStringArray& other);
+
+  void  SizeOf(nsISizeOfHandler* aHandler) const;
+
+  PRInt32 Count(void) const {
+    return mCount;
+  }
+
+  void StringAt(PRInt32 aIndex, nsString& aString) const;
+  nsString* StringAt(PRInt32 aIndex) const;
+  nsString* operator[](PRInt32 aIndex) const { return StringAt(aIndex); }
+
+  PRInt32 IndexOf(const nsString& aPossibleString) const;
+  PRInt32 IndexOfIgnoreCase(const nsString& aPossibleString) const;
+
+  PRBool InsertStringAt(const nsString& aString, PRInt32 aIndex);
+
+  PRBool ReplaceStringAt(const nsString& aString, PRInt32 aIndex);
+
+  PRBool AppendString(const nsString& aString) {
+    return InsertStringAt(aString, mCount);
+  }
+
+  PRBool RemoveString(const nsString& aString);
+  PRBool RemoveStringIgnoreCase(const nsString& aString);
+  PRBool RemoveStringAt(PRInt32 aIndex);
+  void   Clear(void);
+
+  void Compact(void) {
+    nsVoidArray::Compact();
+  }
+
+  PRBool EnumerateForwards(nsStringArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateBackwards(nsStringArrayEnumFunc aFunc, void* aData);
+
+private:
+  /// Copy constructors are not allowed
+  nsStringArray(const nsStringArray& other);
+};
+
 #endif /* nsVoidArray_h___ */
