@@ -23,7 +23,16 @@
       </xul:hbox>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextboxElement">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTextBoxAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
       <field name="mInputField">null</field>
       
       <property name="inputField" readonly="true">
@@ -38,7 +47,7 @@
                                   onget="return this.inputField.value;"/>
       <property name="type"       onset="this.inputField.type = val; return val;"
                                   onget="return this.inputField.type;"/>
-      <property name="maxlength"  onset="this.inputField.maxlength = val; return val;"
+      <property name="maxLength"  onset="this.inputField.maxlength = val; return val;"
                                   onget="return this.inputField.maxlength;"/>
       <property name="disabled"   onset="this.inputField.disabled = val;
                                          if (val) this.setAttribute('disabled', 'true');
