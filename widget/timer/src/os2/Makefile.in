@@ -40,6 +40,7 @@ MODULE		= timer
 LIBRARY_NAME	= timeros2_s
 REQUIRES	= xpcom \
 		  string \
+		  widget \
 		  $(NULL)
 
 EXPORTS=nsTimerManager.h nsWindowsTimer.h nsIWindowsTimerMap.h os2TimerGlue.h
