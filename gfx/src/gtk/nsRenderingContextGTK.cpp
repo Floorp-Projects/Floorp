@@ -112,7 +112,7 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
       gdk_window_ref((GdkWindow*)win);
     else
     {
-      GtkWidget *w = aWindow->GetNativeData(NS_NATIVE_WIDGET);
+      GtkWidget *w = (GtkWidget *) aWindow->GetNativeData(NS_NATIVE_WIDGET);
 
       win = gdk_pixmap_new(nsnull,
                            w->allocation.width,
