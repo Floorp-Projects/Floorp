@@ -36,8 +36,8 @@
 			fileEncoding = 10;
 			isa = PBXFileReference;
 			name = English;
-			path = English.lproj/InfoPlist.strings;
-			refType = 4;
+			path = resources/localized/English.lproj/InfoPlist.strings;
+			refType = 2;
 		};
 		089C165EFE840E0CC02AAC07 = {
 			fileRef = 089C165CFE840E0CC02AAC07;
@@ -177,7 +177,6 @@
 				29B97323FDCFA39411CA2CEA,
 				19C28FACFE9D520D11CA2CBB,
 				F6BD637A01B30E0F01A962F7,
-				F50E1BA70207EB8201F281DF,
 			);
 			isa = PBXGroup;
 			name = Chimera;
@@ -196,8 +195,9 @@
 		};
 		29B97316FDCFA39411CA2CEA = {
 			isa = PBXFileReference;
-			path = main.m;
-			refType = 4;
+			name = main.m;
+			path = src/application/main.m;
+			refType = 2;
 		};
 		29B97317FDCFA39411CA2CEA = {
 			children = (
@@ -222,8 +222,9 @@
 		};
 		29B97319FDCFA39411CA2CEA = {
 			isa = PBXFileReference;
-			path = MainMenu.nib;
-			refType = 4;
+			name = English;
+			path = resources/localized/English.lproj/MainMenu.nib;
+			refType = 2;
 		};
 		29B97323FDCFA39411CA2CEA = {
 			children = (
@@ -469,7 +470,6 @@
 				2EEC3E63028138724B000102,
 				2E748B74029A448D4B000102,
 				F53E012A02AEE91D01A967F3,
-				F53E013302AEEA2901A967F3,
 				F632AF8502B9AEBB01000103,
 				F59236C202C89ACA0100012B,
 				F5A3669802CCFAF601DC3354,
@@ -494,16 +494,16 @@
 		29B97328FDCFA39411CA2CEA = {
 			buildActionMask = 2147483647;
 			files = (
-				F518430702063A9001A966FE,
+				F507A84203116E1D01026D5D,
 				089C165EFE840E0CC02AAC07,
 				F5555C8602022F070164C72B,
 				F5555C8702022F070164C72B,
 				F5555C8802022F070164C72B,
 				F5555C8902022F070164C72B,
 				F5547D61020333DA01F448B0,
-				F518430602063A8A01A966FE,
+				F507A84503116E5501026D5D,
 				F51842FF020629B701A966FE,
-				F5173959020CE1E50189DA0C,
+				F507A84B03116E6E01026D5D,
 				F5264FD4020D4C25010001CA,
 				F5264FD5020D4C25010001CA,
 				F5264FD6020D4C25010001CA,
@@ -512,15 +512,15 @@
 				F5264FD9020D4C25010001CA,
 				F5264FDA020D4C25010001CA,
 				F55CCFD3020E98EA010001CA,
-				F528E217020FD5D80168DE43,
+				F507A84E03116E7401026D5D,
 				F5568A8F0217C7F5010001CA,
 				F5568A910217CA82010001CA,
-				F5247C2E02289FD9013DD99A,
+				F507A84803116E6901026D5D,
 				F53F2206022B7C78010001CA,
 				F53F2207022B7C78010001CA,
-				F53F2208022B7C78010001CA,
-				F585677E02382E97010001CA,
-				F568C3CE023A49C0010001CA,
+				F507A86203128A3D01026D5D,
+				F507A85403116EA401026D5D,
+				F507A85703116EBB01026D5D,
 				F568C3D4023A4F71010001CA,
 				F538DFB3023B3739010001CA,
 				F538DFB4023B3739010001CA,
@@ -545,7 +545,7 @@
 				F5179423028275B901A967DF,
 				F540BD1B029ED15301026D5D,
 				F540BD1D029ED17901026D5D,
-				F53E013002AEE9BD01A967F3,
+				F507A85103116E7901026D5D,
 				F50EA34502BAAAB701000103,
 				F50EA34602BAAAB701000103,
 				F50EA34702BAAAB701000103,
@@ -656,13 +656,15 @@
 //2E4
 		2E2939FF027F33604B000102 = {
 			isa = PBXFileReference;
-			path = CHPageProxyIcon.mm;
-			refType = 4;
+			name = PageProxyIcon.mm;
+			path = src/browser/PageProxyIcon.mm;
+			refType = 2;
 		};
 		2E293A00027F33604B000102 = {
 			isa = PBXFileReference;
-			path = CHPageProxyIcon.h;
-			refType = 4;
+			name = PageProxyIcon.h;
+			path = src/browser/PageProxyIcon.h;
+			refType = 2;
 		};
 		2E293A01027F33604B000102 = {
 			fileRef = 2E293A00027F33604B000102;
@@ -678,13 +680,15 @@
 		};
 		2E748B72029A448D4B000102 = {
 			isa = PBXFileReference;
-			path = CHGoMenu.h;
-			refType = 4;
+			name = GoMenu.h;
+			path = src/browser/GoMenu.h;
+			refType = 2;
 		};
 		2E748B73029A448D4B000102 = {
 			isa = PBXFileReference;
-			path = CHGoMenu.mm;
-			refType = 4;
+			name = GoMenu.mm;
+			path = src/browser/GoMenu.mm;
+			refType = 2;
 		};
 		2E748B74029A448D4B000102 = {
 			fileRef = 2E748B72029A448D4B000102;
@@ -700,13 +704,15 @@
 		};
 		2EEC3E61028138714B000102 = {
 			isa = PBXFileReference;
-			path = CHBookmarksOutlineView.h;
-			refType = 4;
+			name = BookmarksOutlineView.h;
+			path = src/bookmarks/BookmarksOutlineView.h;
+			refType = 2;
 		};
 		2EEC3E62028138714B000102 = {
 			isa = PBXFileReference;
-			path = CHBookmarksOutlineView.mm;
-			refType = 4;
+			name = BookmarksOutlineView.mm;
+			path = src/bookmarks/BookmarksOutlineView.mm;
+			refType = 2;
 		};
 		2EEC3E63028138724B000102 = {
 			fileRef = 2EEC3E61028138714B000102;
@@ -813,10 +819,251 @@
 			settings = {
 			};
 		};
+		F507A84103116E1D01026D5D = {
+			children = (
+				29B97319FDCFA39411CA2CEA,
+			);
+			isa = PBXVariantGroup;
+			name = MainMenu.nib;
+			path = "";
+			refType = 4;
+		};
+		F507A84203116E1D01026D5D = {
+			fileRef = F507A84103116E1D01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84303116E1D01026D5D = {
+			fileRef = F507A84103116E1D01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84403116E5501026D5D = {
+			children = (
+				F51842FC0206176901A966FE,
+			);
+			isa = PBXVariantGroup;
+			name = BrowserWindow.nib;
+			refType = 4;
+		};
+		F507A84503116E5501026D5D = {
+			fileRef = F507A84403116E5501026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84603116E5501026D5D = {
+			fileRef = F507A84403116E5501026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84703116E6901026D5D = {
+			children = (
+				F5247C2D02289FD9013DD99A,
+			);
+			isa = PBXVariantGroup;
+			name = alert.nib;
+			refType = 4;
+		};
+		F507A84803116E6901026D5D = {
+			fileRef = F507A84703116E6901026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84903116E6901026D5D = {
+			fileRef = F507A84703116E6901026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84A03116E6E01026D5D = {
+			children = (
+				F5173958020CE1E50189DA0C,
+			);
+			isa = PBXVariantGroup;
+			name = ProgressDialog.nib;
+			refType = 4;
+		};
+		F507A84B03116E6E01026D5D = {
+			fileRef = F507A84A03116E6E01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84C03116E6E01026D5D = {
+			fileRef = F507A84A03116E6E01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84D03116E7401026D5D = {
+			children = (
+				F528E216020FD5D80168DE43,
+			);
+			isa = PBXVariantGroup;
+			name = FindDialog.nib;
+			refType = 4;
+		};
+		F507A84E03116E7401026D5D = {
+			fileRef = F507A84D03116E7401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A84F03116E7401026D5D = {
+			fileRef = F507A84D03116E7401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85003116E7901026D5D = {
+			children = (
+				F53E012F02AEE9BD01A967F3,
+			);
+			isa = PBXVariantGroup;
+			name = BookmarkInfoPanel.nib;
+			refType = 4;
+		};
+		F507A85103116E7901026D5D = {
+			fileRef = F507A85003116E7901026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85203116E7901026D5D = {
+			fileRef = F507A85003116E7901026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85303116EA401026D5D = {
+			children = (
+				F585677D02382E97010001CA,
+			);
+			isa = PBXVariantGroup;
+			name = MVPreferences.nib;
+			refType = 4;
+		};
+		F507A85403116EA401026D5D = {
+			fileRef = F507A85303116EA401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85503116EA401026D5D = {
+			fileRef = F507A85303116EA401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85603116EBB01026D5D = {
+			children = (
+				F568C3CD023A49C0010001CA,
+			);
+			isa = PBXVariantGroup;
+			name = AboutBox.nib;
+			refType = 4;
+		};
+		F507A85703116EBB01026D5D = {
+			fileRef = F507A85603116EBB01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85803116EBC01026D5D = {
+			fileRef = F507A85603116EBB01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85903116FF301026D5D = {
+			children = (
+				F5A8CE5002DFF167013CA8EC,
+			);
+			isa = PBXVariantGroup;
+			name = Appearance.nib;
+			path = PreferencePanes/Appearance;
+			refType = 2;
+		};
+		F507A85A03116FF301026D5D = {
+			fileRef = F507A85903116FF301026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85B0311895401026D5D = {
+			children = (
+				F52627DA027E98A401000102,
+			);
+			isa = PBXVariantGroup;
+			name = Navigation.nib;
+			refType = 4;
+		};
+		F507A85C0311895401026D5D = {
+			fileRef = F507A85B0311895401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85D0311948201026D5D = {
+			children = (
+				F57F205E029997E701000106,
+			);
+			isa = PBXVariantGroup;
+			name = Privacy.nib;
+			path = PreferencePanes/Privacy;
+			refType = 2;
+		};
+		F507A85E0311948201026D5D = {
+			fileRef = F507A85D0311948201026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A85F031194B101026D5D = {
+			children = (
+				F53F21FD022B7C77010001CA,
+			);
+			isa = PBXVariantGroup;
+			name = Personal.nib;
+			path = PreferencePanes/Personal;
+			refType = 2;
+		};
+		F507A860031194B101026D5D = {
+			fileRef = F507A85F031194B101026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A86103128A3D01026D5D = {
+			children = (
+				F53F21EE022B7C77010001CA,
+			);
+			isa = PBXVariantGroup;
+			name = MVPreferencePaneGroups.strings;
+			refType = 4;
+		};
+		F507A86203128A3D01026D5D = {
+			fileRef = F507A86103128A3D01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F507A86303128A3D01026D5D = {
+			fileRef = F507A86103128A3D01026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F507BA480213AD5F01D93544 = {
 			isa = PBXFileReference;
-			path = BookmarksService.h;
-			refType = 4;
+			name = BookmarksService.h;
+			path = src/bookmarks/BookmarksService.h;
+			refType = 2;
 		};
 		F507BA4A0213AD5F01D93544 = {
 			fileRef = F507BA480213AD5F01D93544;
@@ -826,8 +1073,9 @@
 		};
 		F507BA4C0213AFF701D93544 = {
 			isa = PBXFileReference;
-			path = BookmarksService.mm;
-			refType = 4;
+			name = BookmarksService.mm;
+			path = src/bookmarks/BookmarksService.mm;
+			refType = 2;
 		};
 		F507BA4D0213AFF701D93544 = {
 			fileRef = F507BA4C0213AFF701D93544;
@@ -868,7 +1116,8 @@
 		};
 		F507BA540213C29E01D93544 = {
 			isa = PBXFileReference;
-			path = bookmarks.xml;
+			name = bookmarks.xml;
+			path = resources/application/bookmarks.xml;
 			refType = 2;
 		};
 		F507BA560213C29E01D93544 = {
@@ -892,13 +1141,15 @@
 		};
 		F50D9DE202ECC2C601BB4219 = {
 			isa = PBXFileReference;
-			path = nsDownloadListener.h;
-			refType = 4;
+			name = nsDownloadListener.h;
+			path = src/download/nsDownloadListener.h;
+			refType = 2;
 		};
 		F50D9DE302ECC2C601BB4219 = {
 			isa = PBXFileReference;
-			path = nsDownloadListener.mm;
-			refType = 4;
+			name = nsDownloadListener.mm;
+			path = src/download/nsDownloadListener.mm;
+			refType = 2;
 		};
 		F50D9DE402ECC2C601BB4219 = {
 			fileRef = F50D9DE202ECC2C601BB4219;
@@ -942,13 +1193,15 @@
 		};
 		F50D9DED02EE0AB101BB4219 = {
 			isa = PBXFileReference;
-			path = DownloadProgressDisplay.h;
-			refType = 4;
+			name = CHDownloadProgressDisplay.h;
+			path = src/embedding/CHDownloadProgressDisplay.h;
+			refType = 2;
 		};
 		F50D9DEE02EE0AB101BB4219 = {
 			isa = PBXFileReference;
-			path = DownloadProgressDisplay.mm;
-			refType = 4;
+			name = CHDownloadProgressDisplay.mm;
+			path = src/embedding/CHDownloadProgressDisplay.mm;
+			refType = 2;
 		};
 		F50D9DEF02EE0AB101BB4219 = {
 			fileRef = F50D9DED02EE0AB101BB4219;
@@ -964,13 +1217,15 @@
 		};
 		F50D9DF102EE194001BB4219 = {
 			isa = PBXFileReference;
-			path = DownloadFactories.h;
-			refType = 4;
+			name = CHDownloadFactories.h;
+			path = src/embedding/CHDownloadFactories.h;
+			refType = 2;
 		};
 		F50D9DF202EE194001BB4219 = {
 			isa = PBXFileReference;
-			path = DownloadFactories.mm;
-			refType = 4;
+			name = CHDownloadFactories.mm;
+			path = src/embedding/CHDownloadFactories.mm;
+			refType = 2;
 		};
 		F50D9DF302EE194001BB4219 = {
 			fileRef = F50D9DF102EE194001BB4219;
@@ -986,13 +1241,15 @@
 		};
 		F50D9DF502EE2B9A01BB4219 = {
 			isa = PBXFileReference;
-			path = SaveHeaderSniffer.h;
-			refType = 4;
+			name = SaveHeaderSniffer.h;
+			path = src/download/SaveHeaderSniffer.h;
+			refType = 2;
 		};
 		F50D9DF602EE2B9A01BB4219 = {
 			isa = PBXFileReference;
-			path = SaveHeaderSniffer.mm;
-			refType = 4;
+			name = SaveHeaderSniffer.mm;
+			path = src/download/SaveHeaderSniffer.mm;
+			refType = 2;
 		};
 		F50D9DF702EE2B9B01BB4219 = {
 			fileRef = F50D9DF502EE2B9A01BB4219;
@@ -1041,143 +1298,6 @@
 			settings = {
 			};
 		};
-		F50E1BA70207EB8201F281DF = {
-			children = (
-				F5EA337802EF886D01A96654,
-				F5948A48029EB9C801000102,
-				F50E1BC90207F99201F281DF,
-				F50E1BBC0207F27B01F281DF,
-				F50E1BAE0207EE5F01F281DF,
-			);
-			isa = PBXGroup;
-			name = "Mozilla Source Tree";
-			refType = 4;
-		};
-		F50E1BAE0207EE5F01F281DF = {
-			children = (
-				F50E1BB20207EE9F01F281DF,
-				F50E1BAF0207EE5F01F281DF,
-			);
-			isa = PBXGroup;
-			name = layout;
-			path = "";
-			refType = 4;
-		};
-		F50E1BAF0207EE5F01F281DF = {
-			children = (
-				F50E1BB00207EE5F01F281DF,
-			);
-			isa = PBXGroup;
-			name = html;
-			refType = 4;
-		};
-		F50E1BB00207EE5F01F281DF = {
-			children = (
-				F50E1BB10207EE5F01F281DF,
-			);
-			isa = PBXGroup;
-			name = base;
-			refType = 4;
-		};
-		F50E1BB10207EE5F01F281DF = {
-			children = (
-				F50E1BB40207EE9F01F281DF,
-			);
-			isa = PBXGroup;
-			name = src;
-			refType = 4;
-		};
-		F50E1BB20207EE9F01F281DF = {
-			children = (
-				F50E1BB30207EE9F01F281DF,
-			);
-			isa = PBXGroup;
-			name = base;
-			refType = 4;
-		};
-		F50E1BB30207EE9F01F281DF = {
-			children = (
-				F50E1BB50207EEDC01F281DF,
-			);
-			isa = PBXGroup;
-			name = src;
-			refType = 4;
-		};
-		F50E1BB40207EE9F01F281DF = {
-			isa = PBXFileReference;
-			name = nsPresShell.cpp;
-			path = ../layout/html/base/src/nsPresShell.cpp;
-			refType = 2;
-		};
-		F50E1BB50207EEDC01F281DF = {
-			isa = PBXFileReference;
-			name = nsPresContext.cpp;
-			path = ../layout/base/src/nsPresContext.cpp;
-			refType = 2;
-		};
-		F50E1BBC0207F27B01F281DF = {
-			children = (
-				F50E1BBD0207F27B01F281DF,
-			);
-			isa = PBXGroup;
-			name = intl;
-			refType = 4;
-		};
-		F50E1BBD0207F27B01F281DF = {
-			children = (
-				F50E1BBE0207F27B01F281DF,
-			);
-			isa = PBXGroup;
-			name = locale;
-			refType = 4;
-		};
-		F50E1BBE0207F27B01F281DF = {
-			children = (
-				F50E1BBF0207F2B701F281DF,
-			);
-			isa = PBXGroup;
-			name = src;
-			refType = 4;
-		};
-		F50E1BBF0207F2B701F281DF = {
-			isa = PBXFileReference;
-			name = nsLanguageAtomService.cpp;
-			path = ../intl/locale/src/nsLanguageAtomService.cpp;
-			refType = 2;
-		};
-		F50E1BC90207F99201F281DF = {
-			children = (
-				F5C321D402CBD01C014E7D56,
-				F5C321D002CBCEF7014E7D56,
-				F50E1BCA0207F99201F281DF,
-				F51D9B0A020940C101A80166,
-			);
-			isa = PBXGroup;
-			name = content;
-			refType = 4;
-		};
-		F50E1BCA0207F99201F281DF = {
-			children = (
-				F50E1BCB0207F99201F281DF,
-			);
-			isa = PBXGroup;
-			name = base;
-			refType = 4;
-		};
-		F50E1BCB0207F99201F281DF = {
-			children = (
-				F50E1BCC0207F9B101F281DF,
-			);
-			isa = PBXGroup;
-			name = src;
-			refType = 4;
-		};
-		F50E1BCC0207F9B101F281DF = {
-			isa = PBXFileReference;
-			name = nsRuleNode.cpp;
-			path = ../content/base/src/nsRuleNode.cpp;
-			refType = 2;
-		};
 		F50EA33D02BAAAB701000103 = {
 			children = (
 				F50EA33E02BAAAB701000103,
@@ -1189,43 +1309,51 @@
 				F50EA34402BAAAB701000103,
 			);
 			isa = PBXGroup;
-			path = throbber;
-			refType = 4;
+			name = throbber;
+			path = resources/images/throbber;
+			refType = 2;
 		};
 		F50EA33E02BAAAB701000103 = {
 			isa = PBXFileReference;
-			path = "throbber-01.gif";
-			refType = 4;
+			name = "throbber-01.gif";
+			path = "resources/images/throbber/throbber-01.gif";
+			refType = 2;
 		};
 		F50EA33F02BAAAB701000103 = {
 			isa = PBXFileReference;
-			path = "throbber-02.gif";
-			refType = 4;
+			name = "throbber-02.gif";
+			path = "resources/images/throbber/throbber-02.gif";
+			refType = 2;
 		};
 		F50EA34002BAAAB701000103 = {
 			isa = PBXFileReference;
-			path = "throbber-03.gif";
-			refType = 4;
+			name = "throbber-03.gif";
+			path = "resources/images/throbber/throbber-03.gif";
+			refType = 2;
 		};
 		F50EA34102BAAAB701000103 = {
 			isa = PBXFileReference;
-			path = "throbber-04.gif";
-			refType = 4;
+			name = "throbber-04.gif";
+			path = "resources/images/throbber/throbber-04.gif";
+			refType = 2;
 		};
 		F50EA34202BAAAB701000103 = {
 			isa = PBXFileReference;
-			path = "throbber-05.gif";
-			refType = 4;
+			name = "throbber-05.gif";
+			path = "resources/images/throbber/throbber-05.gif";
+			refType = 2;
 		};
 		F50EA34302BAAAB701000103 = {
 			isa = PBXFileReference;
-			path = "throbber-06.gif";
-			refType = 4;
+			name = "throbber-06.gif";
+			path = "resources/images/throbber/throbber-06.gif";
+			refType = 2;
 		};
 		F50EA34402BAAAB701000103 = {
 			isa = PBXFileReference;
-			path = throbber.gif;
-			refType = 4;
+			name = throbber.gif;
+			path = resources/images/throbber/throbber.gif;
+			refType = 2;
 		};
 		F50EA34502BAAAB701000103 = {
 			fileRef = F50EA33E02BAAAB701000103;
@@ -1313,8 +1441,9 @@
 		};
 		F5125A110202064D01FAFD9F = {
 			isa = PBXFileReference;
-			path = CHBrowserWrapper.h;
-			refType = 4;
+			name = BrowserWrapper.h;
+			path = src/browser/BrowserWrapper.h;
+			refType = 2;
 		};
 		F5125A140202064D01FAFD9F = {
 			fileRef = F5125A110202064D01FAFD9F;
@@ -1440,8 +1569,9 @@
 		};
 		F5137A1102676B9101026D05 = {
 			isa = PBXFileReference;
-			path = CHFind.h;
-			refType = 4;
+			name = Find.h;
+			path = src/find/Find.h;
+			refType = 2;
 		};
 		F5137A1202676B9101026D05 = {
 			fileRef = F5137A1102676B9101026D05;
@@ -1451,24 +1581,21 @@
 		};
 		F5173958020CE1E50189DA0C = {
 			isa = PBXFileReference;
-			path = ProgressDialog.nib;
-			refType = 4;
-		};
-		F5173959020CE1E50189DA0C = {
-			fileRef = F5173958020CE1E50189DA0C;
-			isa = PBXBuildFile;
-			settings = {
-			};
+			name = English;
+			path = resources/localized/English.lproj/ProgressDialog.nib;
+			refType = 2;
 		};
 		F517395A020CE3740189DA0C = {
 			isa = PBXFileReference;
-			path = ProgressDlgController.h;
-			refType = 4;
+			name = ProgressDlgController.h;
+			path = src/download/ProgressDlgController.h;
+			refType = 2;
 		};
 		F517395B020CE3740189DA0C = {
 			isa = PBXFileReference;
-			path = ProgressDlgController.mm;
-			refType = 4;
+			name = ProgressDlgController.mm;
+			path = src/download/ProgressDlgController.mm;
+			refType = 2;
 		};
 		F517395C020CE3750189DA0C = {
 			fileRef = F517395A020CE3740189DA0C;
@@ -1496,8 +1623,9 @@
 		};
 		F5179422028275B801A967DF = {
 			isa = PBXFileReference;
-			path = globe_ico.tif;
-			refType = 4;
+			name = globe_ico.tif;
+			path = resources/images/chrome/globe_ico.tif;
+			refType = 2;
 		};
 		F5179423028275B901A967DF = {
 			fileRef = F5179422028275B801A967DF;
@@ -1534,7 +1662,6 @@
 				F52F87CC027D75C301A80165,
 				2E748B72029A448D4B000102,
 				F53E012902AEE91C01A967F3,
-				F53E013202AEEA2801A967F3,
 				F5A3669302CCFAF601DC3354,
 				F59236C102C89AC90100012B,
 				F50D9DE202ECC2C601BB4219,
@@ -1554,13 +1681,15 @@
 		};
 		F51842FC0206176901A966FE = {
 			isa = PBXFileReference;
-			path = BrowserWindow.nib;
-			refType = 4;
+			name = English;
+			path = resources/localized/English.lproj/BrowserWindow.nib;
+			refType = 2;
 		};
 		F51842FE020629B701A966FE = {
 			isa = PBXFileReference;
-			path = sidebar.tif;
-			refType = 4;
+			name = sidebar.tif;
+			path = resources/images/toolbar/sidebar.tif;
+			refType = 2;
 		};
 		F51842FF020629B701A966FE = {
 			fileRef = F51842FE020629B701A966FE;
@@ -1568,22 +1697,11 @@
 			settings = {
 			};
 		};
-		F518430602063A8A01A966FE = {
-			fileRef = F51842FC0206176901A966FE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F518430702063A9001A966FE = {
-			fileRef = 29B97319FDCFA39411CA2CEA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F51B70B4026EC8A601A80166 = {
 			isa = PBXFileReference;
-			path = Navigator.scriptSuite;
-			refType = 4;
+			name = Navigator.scriptSuite;
+			path = resources/application/Navigator.scriptSuite;
+			refType = 2;
 		};
 		F51B70B5026EC8A601A80166 = {
 			fileRef = F51B70B4026EC8A601A80166;
@@ -1593,13 +1711,15 @@
 		};
 		F51B70B6026EC98B01A80166 = {
 			isa = PBXFileReference;
-			path = CHGetURLCommand.h;
-			refType = 4;
+			name = GetURLCommand.h;
+			path = src/appleevents/GetURLCommand.h;
+			refType = 2;
 		};
 		F51B70B7026EC98B01A80166 = {
 			isa = PBXFileReference;
-			path = CHGetURLCommand.mm;
-			refType = 4;
+			name = GetURLCommand.mm;
+			path = src/appleevents/GetURLCommand.mm;
+			refType = 2;
 		};
 		F51B70B8026EC98B01A80166 = {
 			fileRef = F51B70B6026EC98B01A80166;
@@ -1612,54 +1732,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F51D9B0A020940C101A80166 = {
-			children = (
-				F51D9B0B020940C101A80166,
-				F51D9B0D0209421401A80166,
-				F5C321D702CBD0CE014E7D56,
-			);
-			isa = PBXGroup;
-			name = xul;
-			refType = 4;
-		};
-		F51D9B0B020940C101A80166 = {
-			children = (
-				F51D9B0C020940C101A80166,
-			);
-			isa = PBXGroup;
-			name = document;
-			refType = 4;
-		};
-		F51D9B0C020940C101A80166 = {
-			children = (
-			);
-			isa = PBXGroup;
-			name = src;
-			refType = 4;
-		};
-		F51D9B0D0209421401A80166 = {
-			children = (
-				F51D9B0E0209421401A80166,
-			);
-			isa = PBXGroup;
-			name = templates;
-			path = "";
-			refType = 4;
-		};
-		F51D9B0E0209421401A80166 = {
-			children = (
-				F51D9B0F020942AE01A80166,
-			);
-			isa = PBXGroup;
-			name = src;
-			refType = 4;
-		};
-		F51D9B0F020942AE01A80166 = {
-			isa = PBXFileReference;
-			name = nsXULTemplateBuilder.cpp;
-			path = ../content/xul/templates/src/nsXULTemplateBuilder.cpp;
-			refType = 2;
 		};
 		F51D9B1402094BB501A80166 = {
 			children = (
@@ -1683,58 +1755,11 @@
 			settings = {
 			};
 		};
-		F522EFC502F73CF901A96654 = {
-			isa = PBXFileReference;
-			name = nsBaseClipboard.cpp;
-			path = ../widget/src/xpwidgets/nsBaseClipboard.cpp;
-			refType = 2;
-		};
-		F522EFC602F73CF901A96654 = {
-			isa = PBXFileReference;
-			name = nsBaseDragService.cpp;
-			path = ../widget/src/xpwidgets/nsBaseDragService.cpp;
-			refType = 2;
-		};
-		F522EFC702F73CF901A96654 = {
-			isa = PBXFileReference;
-			name = nsBaseWidget.cpp;
-			path = ../widget/src/xpwidgets/nsBaseWidget.cpp;
-			refType = 2;
-		};
-		F522EFC802F73CF901A96654 = {
-			isa = PBXFileReference;
-			name = nsClipboardHelper.cpp;
-			path = ../widget/src/xpwidgets/nsClipboardHelper.cpp;
-			refType = 2;
-		};
-		F522EFC902F73CF901A96654 = {
-			isa = PBXFileReference;
-			name = nsDataFlavor.cpp;
-			path = ../widget/src/xpwidgets/nsDataFlavor.cpp;
-			refType = 2;
-		};
-		F522EFCA02F73CF901A96654 = {
-			isa = PBXFileReference;
-			name = nsPrimitiveHelpers.cpp;
-			path = ../widget/src/xpwidgets/nsPrimitiveHelpers.cpp;
-			refType = 2;
-		};
-		F522EFCB02F73CF901A96654 = {
-			isa = PBXFileReference;
-			name = nsTransferable.cpp;
-			path = ../widget/src/xpwidgets/nsTransferable.cpp;
-			refType = 2;
-		};
 		F5247C2D02289FD9013DD99A = {
 			isa = PBXFileReference;
-			path = alert.nib;
-			refType = 4;
-		};
-		F5247C2E02289FD9013DD99A = {
-			fileRef = F5247C2D02289FD9013DD99A;
-			isa = PBXBuildFile;
-			settings = {
-			};
+			name = English;
+			path = resources/localized/English.lproj/alert.nib;
+			refType = 2;
 		};
 		F5247C2F0228B5E7013DD99A = {
 			children = (
@@ -1921,11 +1946,12 @@
 				F52627D4027E982201000102,
 				F52627D5027E982201000102,
 				F52627D8027E984501000102,
-				F52627DA027E98A401000102,
+				F507A85B0311895401026D5D,
 			);
 			isa = PBXGroup;
-			path = Navigation;
-			refType = 4;
+			name = Navigation;
+			path = PreferencePanes/Navigation;
+			refType = 2;
 		};
 		F52627CD027E976B01000102 = {
 			isa = PBXBundleReference;
@@ -2009,7 +2035,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F52627D9027E984601000102,
-				F52627DB027E98A401000102,
+				F507A85C0311895401026D5D,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -2044,15 +2070,17 @@
 		F52627D4027E982201000102 = {
 			indentWidth = 2;
 			isa = PBXFileReference;
-			path = Navigation.h;
-			refType = 4;
+			name = Navigation.h;
+			path = PreferencePanes/Navigation/Navigation.h;
+			refType = 2;
 			tabWidth = 2;
 		};
 		F52627D5027E982201000102 = {
 			indentWidth = 2;
 			isa = PBXFileReference;
-			path = Navigation.mm;
-			refType = 4;
+			name = Navigation.mm;
+			path = PreferencePanes/Navigation/Navigation.mm;
+			refType = 2;
 			tabWidth = 2;
 		};
 		F52627D6027E982201000102 = {
@@ -2069,8 +2097,9 @@
 		};
 		F52627D8027E984501000102 = {
 			isa = PBXFileReference;
-			path = Navigation.tiff;
-			refType = 4;
+			name = Navigation.tiff;
+			path = PreferencePanes/Navigation/Navigation.tiff;
+			refType = 2;
 		};
 		F52627D9027E984601000102 = {
 			fileRef = F52627D8027E984501000102;
@@ -2080,14 +2109,9 @@
 		};
 		F52627DA027E98A401000102 = {
 			isa = PBXFileReference;
-			path = Navigation.nib;
-			refType = 4;
-		};
-		F52627DB027E98A401000102 = {
-			fileRef = F52627DA027E98A401000102;
-			isa = PBXBuildFile;
-			settings = {
-			};
+			name = English;
+			path = PreferencePanes/Navigation/English.lproj/Navigation.nib;
+			refType = 2;
 		};
 		F52627DC027E9CCD01000102 = {
 			fileRef = F557193A022B4102010001CA;
@@ -2109,8 +2133,16 @@
 		};
 		F5264FCB020D4C25010001CA = {
 			children = (
-				F5E1196C022CDCA7010001CA,
-				F5E1196D022CDCA7010001CA,
+				F5555C8202022F070164C72B,
+				F5555C8302022F070164C72B,
+				F5555C8402022F070164C72B,
+				F5555C8502022F070164C72B,
+				F5547D60020333DA01F448B0,
+				F51842FE020629B701A966FE,
+				F53F5AE902448BC8010001CA,
+				F53F5AEA02448BC8010001CA,
+				F55CCFD2020E98EA010001CA,
+				F5EB9376030C92450100010C,
 			);
 			isa = PBXGroup;
 			name = "Toolbar-Browser";
@@ -2119,8 +2151,13 @@
 		};
 		F5264FCC020D4C25010001CA = {
 			children = (
-				F5E1196E022CDCA7010001CA,
-				F5E1196F022CDCA7010001CA,
+				F5264FCD020D4C25010001CA,
+				F5264FCE020D4C25010001CA,
+				F5264FCF020D4C25010001CA,
+				F5264FD0020D4C25010001CA,
+				F5264FD1020D4C25010001CA,
+				F5264FD2020D4C25010001CA,
+				F5264FD3020D4C25010001CA,
 			);
 			isa = PBXGroup;
 			name = "Toolbar-SaveDialog";
@@ -2128,38 +2165,45 @@
 		};
 		F5264FCD020D4C25010001CA = {
 			isa = PBXFileReference;
-			path = saveCancel.tif;
-			refType = 4;
+			name = saveCancel.tif;
+			path = resources/images/toolbar/saveCancel.tif;
+			refType = 2;
 		};
 		F5264FCE020D4C25010001CA = {
 			isa = PBXFileReference;
-			path = saveLeaveOpenNO.tif;
-			refType = 4;
+			name = saveLeaveOpenNO.tif;
+			path = resources/images/toolbar/saveLeaveOpenNO.tif;
+			refType = 2;
 		};
 		F5264FCF020D4C25010001CA = {
 			isa = PBXFileReference;
-			path = saveLeaveOpenYES.tif;
-			refType = 4;
+			name = saveLeaveOpenYES.tif;
+			path = resources/images/toolbar/saveLeaveOpenYES.tif;
+			refType = 2;
 		};
 		F5264FD0020D4C25010001CA = {
 			isa = PBXFileReference;
-			path = saveOpenFile.tif;
-			refType = 4;
+			name = saveOpenFile.tif;
+			path = resources/images/toolbar/saveOpenFile.tif;
+			refType = 2;
 		};
 		F5264FD1020D4C25010001CA = {
 			isa = PBXFileReference;
-			path = savePause.tif;
-			refType = 4;
+			name = savePause.tif;
+			path = resources/images/toolbar/savePause.tif;
+			refType = 2;
 		};
 		F5264FD2020D4C25010001CA = {
 			isa = PBXFileReference;
-			path = saveResume.tif;
-			refType = 4;
+			name = saveResume.tif;
+			path = resources/images/toolbar/saveResume.tif;
+			refType = 2;
 		};
 		F5264FD3020D4C25010001CA = {
 			isa = PBXFileReference;
-			path = saveShowFile.tif;
-			refType = 4;
+			name = saveShowFile.tif;
+			path = resources/images/toolbar/saveShowFile.tif;
+			refType = 2;
 		};
 		F5264FD4020D4C25010001CA = {
 			fileRef = F5264FCD020D4C25010001CA;
@@ -2205,19 +2249,15 @@
 		};
 		F528E216020FD5D80168DE43 = {
 			isa = PBXFileReference;
-			path = FindDialog.nib;
-			refType = 4;
-		};
-		F528E217020FD5D80168DE43 = {
-			fileRef = F528E216020FD5D80168DE43;
-			isa = PBXBuildFile;
-			settings = {
-			};
+			name = English;
+			path = resources/localized/English.lproj/FindDialog.nib;
+			refType = 2;
 		};
 		F528E218020FD8400168DE43 = {
 			isa = PBXFileReference;
-			path = FindDlgController.h;
-			refType = 4;
+			name = FindDlgController.h;
+			path = src/find/FindDlgController.h;
+			refType = 2;
 		};
 		F528E219020FD8400168DE43 = {
 			fileRef = F528E218020FD8400168DE43;
@@ -2227,8 +2267,9 @@
 		};
 		F528E21A020FD9620168DE43 = {
 			isa = PBXFileReference;
-			path = FindDlgController.mm;
-			refType = 4;
+			name = FindDlgController.mm;
+			path = src/find/FindDlgController.mm;
+			refType = 2;
 		};
 		F528E21B020FD9620168DE43 = {
 			fileRef = F528E21A020FD9620168DE43;
@@ -2239,8 +2280,8 @@
 		F52CE65902BFA88701026D5D = {
 			isa = PBXFileReference;
 			name = English;
-			path = English.lproj/Localizable.strings;
-			refType = 4;
+			path = resources/localized/English.lproj/Localizable.strings;
+			refType = 2;
 		};
 		F52CE65C02BFA8B701026D5D = {
 			children = (
@@ -2283,13 +2324,15 @@
 		};
 		F52D5CCF027A887001A80166 = {
 			isa = PBXFileReference;
-			path = CHAutoCompleteTextField.h;
-			refType = 4;
+			name = AutoCompleteTextField.h;
+			path = src/browser/AutoCompleteTextField.h;
+			refType = 2;
 		};
 		F52D5CD0027A887001A80166 = {
 			isa = PBXFileReference;
-			path = CHAutoCompleteTextField.mm;
-			refType = 4;
+			name = AutoCompleteTextField.mm;
+			path = src/browser/AutoCompleteTextField.mm;
+			refType = 2;
 		};
 		F52D5CD1027A887001A80166 = {
 			fileRef = F52D5CCF027A887001A80166;
@@ -2305,13 +2348,15 @@
 		};
 		F52D5CD3027A88C601A80166 = {
 			isa = PBXFileReference;
-			path = CHAutoCompleteDataSource.h;
-			refType = 4;
+			name = AutoCompleteDataSource.h;
+			path = src/browser/AutoCompleteDataSource.h;
+			refType = 2;
 		};
 		F52D5CD4027A88C601A80166 = {
 			isa = PBXFileReference;
-			path = CHAutoCompleteDataSource.mm;
-			refType = 4;
+			name = AutoCompleteDataSource.mm;
+			path = src/browser/AutoCompleteDataSource.mm;
+			refType = 2;
 		};
 		F52D5CD5027A88C601A80166 = {
 			fileRef = F52D5CD3027A88C601A80166;
@@ -2327,14 +2372,16 @@
 		};
 		F52D5CD7027D3D5001A80166 = {
 			isa = PBXFileReference;
-			path = CHPreferenceManager.h;
-			refType = 4;
+			name = PreferenceManager.h;
+			path = src/preferences/PreferenceManager.h;
+			refType = 2;
 		};
 		F52D5CD8027D3D5001A80166 = {
 			indentWidth = 2;
 			isa = PBXFileReference;
-			path = CHPreferenceManager.mm;
-			refType = 4;
+			name = PreferenceManager.mm;
+			path = src/preferences/PreferenceManager.mm;
+			refType = 2;
 		};
 		F52D5CD9027D3D5001A80166 = {
 			fileRef = F52D5CD7027D3D5001A80166;
@@ -2386,22 +2433,26 @@
 		};
 		F52F87CB027D75C301A80165 = {
 			isa = PBXFileReference;
-			path = CHHistoryDataSource.h;
-			refType = 4;
+			name = HistoryDataSource;
+			path = src/history/HistoryDataSource.h;
+			refType = 2;
 		};
 		F52F87CC027D75C301A80165 = {
 			isa = PBXFileReference;
-			path = CHRDFOutlineViewDataSource.h;
-			refType = 4;
+			name = RDFOutlineViewDataSource.h;
+			path = src/extensions/RDFOutlineViewDataSource.h;
+			refType = 2;
 		};
 		F52F87CD027D75C301A80165 = {
 			isa = PBXFileReference;
-			path = CHHistoryDataSource.mm;
+			name = HistoryDataSource.mm;
+			path = src/history/HistoryDataSource.mm;
 			refType = 4;
 		};
 		F52F87CE027D75C301A80165 = {
 			isa = PBXFileReference;
-			path = CHRDFOutlineViewDataSource.mm;
+			name = RDFOutlineViewDataSource.mm;
+			path = src/extensions/RDFOutlineViewDataSource.mm;
 			refType = 4;
 		};
 		F52F87CF027D75C301A80165 = {
@@ -2442,23 +2493,27 @@
 		};
 		F538DFAF023B3739010001CA = {
 			isa = PBXFileReference;
-			path = fileHtml.icns;
-			refType = 4;
+			name = fileHtml.icns;
+			path = resources/images/app/fileHtml.icns;
+			refType = 2;
 		};
 		F538DFB0023B3739010001CA = {
 			isa = PBXFileReference;
-			path = filePreferences.icns;
-			refType = 4;
+			name = filePreferences.icns;
+			path = resources/images/app/filePreferences.icns;
+			refType = 2;
 		};
 		F538DFB1023B3739010001CA = {
 			isa = PBXFileReference;
-			path = appicon.icns;
-			refType = 4;
+			name = appicon.icns;
+			path = resources/images/app/appicon.icns;
+			refType = 2;
 		};
 		F538DFB2023B3739010001CA = {
 			isa = PBXFileReference;
-			path = fileBookmark.icns;
-			refType = 4;
+			name = fileBookmark.icns;
+			path = resources/images/app/fileBookmark.icns;
+			refType = 2;
 		};
 		F538DFB3023B3739010001CA = {
 			fileRef = F538DFAF023B3739010001CA;
@@ -2498,7 +2553,8 @@
 		};
 		F53E012902AEE91C01A967F3 = {
 			isa = PBXFileReference;
-			path = BookmarkInfoController.h;
+			name = BookmarkInfoController.h;
+			path = src/bookmarks/BookmarkInfoController.h;
 			refType = 2;
 		};
 		F53E012A02AEE91D01A967F3 = {
@@ -2515,7 +2571,8 @@
 		};
 		F53E012C02AEE93601A967F3 = {
 			isa = PBXFileReference;
-			path = BookmarkInfoController.mm;
+			name = BookmarkInfoController.mm;
+			path = src/bookmarks/BookmarkInfoController.mm;
 			refType = 2;
 		};
 		F53E012D02AEE93701A967F3 = {
@@ -2532,37 +2589,9 @@
 		};
 		F53E012F02AEE9BD01A967F3 = {
 			isa = PBXFileReference;
-			path = BookmarkInfoPanel.nib;
+			name = English;
+			path = resources/localized/English.lproj/BookmarkInfoPanel.nib;
 			refType = 2;
-		};
-		F53E013002AEE9BD01A967F3 = {
-			fileRef = F53E012F02AEE9BD01A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F53E013102AEE9BD01A967F3 = {
-			fileRef = F53E012F02AEE9BD01A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F53E013202AEEA2801A967F3 = {
-			isa = PBXFileReference;
-			path = StringUtils.h;
-			refType = 2;
-		};
-		F53E013302AEEA2901A967F3 = {
-			fileRef = F53E013202AEEA2801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F53E013402AEEA2901A967F3 = {
-			fileRef = F53E013202AEEA2801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F53EAB79027EBDE801000102 = {
 			isa = PBXTargetDependency;
@@ -2570,8 +2599,9 @@
 		};
 		F53EB4800269861601A80166 = {
 			isa = PBXFileReference;
-			path = panel_icon.tif;
-			refType = 4;
+			name = panel_icon.tif;
+			path = resources/images/toolbar/panel_icon.tif;
+			refType = 2;
 		};
 		F53EB4810269861601A80166 = {
 			fileRef = F53EB4800269861601A80166;
@@ -2589,68 +2619,80 @@
 				F53F21F5022B7C77010001CA,
 			);
 			isa = PBXGroup;
-			path = PreferencePanes;
-			refType = 4;
+			name = PreferencePanes;
+			path = src/preferences;
+			refType = 2;
 		};
 		F53F21EC022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencePaneDefaults.plist;
-			refType = 4;
+			name = MVPreferencePaneDefaults.plist;
+			path = src/preferences/MVPreferencePaneDefaults.plist;
+			refType = 2;
 		};
 		F53F21ED022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencePaneGroups.plist;
-			refType = 4;
+			name = MVPreferencePaneGroups.plist;
+			path = src/preferences/MVPreferencePaneGroups.plist;
+			refType = 2;
 		};
 		F53F21EE022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencePaneGroups.strings;
-			refType = 4;
+			name = English;
+			path = resources/localized/English.lproj/MVPreferencePaneGroups.strings;
+			refType = 2;
 		};
 		F53F21EF022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencesController.h;
-			refType = 4;
+			name = MVPreferencesController.h;
+			path = src/preferences/MVPreferencesController.h;
+			refType = 2;
 		};
 		F53F21F0022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencesController.mm;
-			refType = 4;
+			name = MVPreferencesController.mm;
+			path = src/preferences/MVPreferencesController.mm;
+			refType = 2;
 		};
 		F53F21F1022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencesGroupedIconView.h;
-			refType = 4;
+			name = MVPreferencesGroupedIconView.h;
+			path = src/preferences/MVPreferencesGroupedIconView.h;
+			refType = 2;
 		};
 		F53F21F2022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencesGroupedIconView.m;
-			refType = 4;
+			name = MVPreferencesGroupedIconView.m;
+			path = src/preferences/MVPreferencesGroupedIconView.m;
+			refType = 2;
 		};
 		F53F21F3022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencesMultipleIconView.h;
-			refType = 4;
+			name = MVPreferencesMultipleIconView.h;
+			path = src/preferences/MVPreferencesMultipleIconView.h;
+			refType = 2;
 		};
 		F53F21F4022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferencesMultipleIconView.m;
-			refType = 4;
+			name = MVPreferencesMultipleIconView.m;
+			path = src/preferences/MVPreferencesMultipleIconView.m;
+			refType = 2;
 		};
 		F53F21F5022B7C77010001CA = {
 			children = (
-				F53F21FD022B7C77010001CA,
+				F507A85F031194B101026D5D,
 				F53F21FE022B7C77010001CA,
 				F53F2200022B7C77010001CA,
 				F53F21FF022B7C77010001CA,
 			);
 			isa = PBXGroup;
-			path = Personal;
-			refType = 4;
+			name = Personal;
+			path = PreferencePanes/Personal;
+			refType = 2;
 		};
 		F53F21FD022B7C77010001CA = {
 			isa = PBXFileReference;
-			path = Personal.nib;
+			name = English;
+			path = English.lproj/Personal.nib;
 			refType = 4;
 		};
 		F53F21FE022B7C77010001CA = {
@@ -2698,12 +2740,6 @@
 			settings = {
 			};
 		};
-		F53F2208022B7C78010001CA = {
-			fileRef = F53F21EE022B7C77010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F53F220E022B7C78010001CA = {
 			fileRef = F53F21F0022B7C77010001CA;
 			isa = PBXBuildFile;
@@ -2724,13 +2760,15 @@
 		};
 		F53F5AE902448BC8010001CA = {
 			isa = PBXFileReference;
-			path = sidebarOpened.tif;
-			refType = 4;
+			name = sidebarOpened.tif;
+			path = resources/images/toolbar/sidebarOpened.tif;
+			refType = 2;
 		};
 		F53F5AEA02448BC8010001CA = {
 			isa = PBXFileReference;
-			path = sidebarClosed.tif;
-			refType = 4;
+			name = sidebarClosed.tif;
+			path = resources/images/toolbar/sidebarClosed.tif;
+			refType = 2;
 		};
 		F53F5AEB02448BC9010001CA = {
 			fileRef = F53F5AE902448BC8010001CA;
@@ -2746,8 +2784,9 @@
 		};
 		F540BD1A029ED15301026D5D = {
 			isa = PBXFileReference;
-			path = security_lock.tif;
-			refType = 4;
+			name = security_lock.tif;
+			path = resources/images/chrome/security_lock.tif;
+			refType = 2;
 		};
 		F540BD1B029ED15301026D5D = {
 			fileRef = F540BD1A029ED15301026D5D;
@@ -2757,8 +2796,9 @@
 		};
 		F540BD1C029ED17901026D5D = {
 			isa = PBXFileReference;
-			path = security_broken.tif;
-			refType = 4;
+			name = security_broken.tif;
+			path = resources/images/chrome/security_broken.tif;
+			refType = 2;
 		};
 		F540BD1D029ED17901026D5D = {
 			fileRef = F540BD1C029ED17901026D5D;
@@ -2780,13 +2820,15 @@
 		};
 		F541495A02711A8301A80166 = {
 			isa = PBXFileReference;
-			path = CHToolbarAdditions.h;
-			refType = 4;
+			name = CHToolbarAdditions.h;
+			path = src/extensions/ToolbarAdditions.h;
+			refType = 2;
 		};
 		F541495B02711A8301A80166 = {
 			isa = PBXFileReference;
-			path = CHToolbarAdditions.m;
-			refType = 4;
+			name = CHToolbarAdditions.m;
+			path = src/extensions/ToolbarAdditions.m;
+			refType = 2;
 		};
 		F541495C02711A8301A80166 = {
 			fileRef = F541495A02711A8301A80166;
@@ -2802,12 +2844,14 @@
 		};
 		F541495E02711B0001A80166 = {
 			isa = PBXFileReference;
-			path = CHImageAdditions.h;
+			name = CHImageAdditions.h;
+			path = src/extensions/ImageAdditions.h;
 			refType = 2;
 		};
 		F541495F02711B0001A80166 = {
 			isa = PBXFileReference;
-			path = CHImageAdditions.m;
+			name = CHImageAdditions.m;
+			path = src/extensions/ImageAdditions.m;
 			refType = 2;
 		};
 		F541496002711B0101A80166 = {
@@ -2824,13 +2868,15 @@
 		};
 		F541496202714F9A01A80166 = {
 			isa = PBXFileReference;
-			path = groupbookmark.tif;
-			refType = 4;
+			name = groupbookmark.tif;
+			path = resources/images/chrome/groupbookmark.tif;
+			refType = 2;
 		};
 		F541496302714F9A01A80166 = {
 			isa = PBXFileReference;
-			path = separator_on.tif;
-			refType = 4;
+			name = separator_on.tif;
+			path = resources/images/toolbar/separator_on.tif;
+			refType = 2;
 		};
 		F541496402714F9A01A80166 = {
 			fileRef = F541496202714F9A01A80166;
@@ -2852,13 +2898,15 @@
 		};
 		F549ACDE0302DE6001026D5D = {
 			isa = PBXFileReference;
-			path = ToolTip.mm;
-			refType = 4;
+			name = ToolTip.mm;
+			path = src/browser/ToolTip.mm;
+			refType = 2;
 		};
 		F549ACDF0302DE6001026D5D = {
 			isa = PBXFileReference;
-			path = "NSScreen+Utils.m";
-			refType = 4;
+			name = "NSScreen+Utils.m";
+			path = "src/extensions/NSScreen+Utils.m";
+			refType = 2;
 		};
 		F549ACE00302DE6101026D5D = {
 			fileRef = F549ACDE0302DE6001026D5D;
@@ -2886,8 +2934,9 @@
 		};
 		F549ACE40302DEBB01026D5D = {
 			isa = PBXFileReference;
-			path = "NSScreen+Utils.h";
-			refType = 4;
+			name = "NSScreen+Utils.h";
+			path = "src/extensions/NSScreen+Utils.h";
+			refType = 2;
 		};
 		F549ACE50302DEBB01026D5D = {
 			fileRef = F549ACE40302DEBB01026D5D;
@@ -2903,8 +2952,9 @@
 		};
 		F549ACE70302DEF001026D5D = {
 			isa = PBXFileReference;
-			path = ToolTip.h;
-			refType = 4;
+			name = ToolTip.h;
+			path = src/browser/ToolTip.h;
+			refType = 2;
 		};
 		F549ACE80302DEF001026D5D = {
 			fileRef = F549ACE70302DEF001026D5D;
@@ -2967,8 +3017,9 @@
 		};
 		F5547D60020333DA01F448B0 = {
 			isa = PBXFileReference;
-			path = home.tif;
-			refType = 4;
+			name = home.tif;
+			path = resources/images/toolbar/home.tif;
+			refType = 2;
 		};
 		F5547D61020333DA01F448B0 = {
 			fileRef = F5547D60020333DA01F448B0;
@@ -2978,23 +3029,27 @@
 		};
 		F5555C8202022F070164C72B = {
 			isa = PBXFileReference;
-			path = back.tif;
-			refType = 4;
+			name = back.tif;
+			path = resources/images/toolbar/back.tif;
+			refType = 2;
 		};
 		F5555C8302022F070164C72B = {
 			isa = PBXFileReference;
-			path = forward.tif;
-			refType = 4;
+			name = forward.tif;
+			path = resources/images/toolbar/forward.tif;
+			refType = 2;
 		};
 		F5555C8402022F070164C72B = {
 			isa = PBXFileReference;
-			path = reload.tif;
-			refType = 4;
+			name = reload.tif;
+			path = resources/images/toolbar/reload.tif;
+			refType = 2;
 		};
 		F5555C8502022F070164C72B = {
 			isa = PBXFileReference;
-			path = stop.tif;
-			refType = 4;
+			name = stop.tif;
+			path = resources/images/toolbar/stop.tif;
+			refType = 2;
 		};
 		F5555C8602022F070164C72B = {
 			fileRef = F5555C8202022F070164C72B;
@@ -3022,8 +3077,9 @@
 		};
 		F5568A8E0217C7F5010001CA = {
 			isa = PBXFileReference;
-			path = smallDocument.tiff;
-			refType = 4;
+			name = smallDocument.tiff;
+			path = resources/images/chrome/smallDocument.tiff;
+			refType = 2;
 		};
 		F5568A8F0217C7F5010001CA = {
 			fileRef = F5568A8E0217C7F5010001CA;
@@ -3033,8 +3089,9 @@
 		};
 		F5568A900217CA82010001CA = {
 			isa = PBXFileReference;
-			path = folder.tiff;
-			refType = 4;
+			name = folder.tiff;
+			path = resources/images/chrome/folder.tiff;
+			refType = 2;
 		};
 		F5568A910217CA82010001CA = {
 			fileRef = F5568A900217CA82010001CA;
@@ -3044,13 +3101,15 @@
 		};
 		F557149D023B46BF010001CA = {
 			isa = PBXFileReference;
-			path = splash.tif;
-			refType = 4;
+			name = splash.tif;
+			path = resources/images/app/splash.tif;
+			refType = 2;
 		};
 		F557149E023B46BF010001CA = {
 			isa = PBXFileReference;
-			path = about.tif;
-			refType = 4;
+			name = about.tif;
+			path = resources/images/app/about.tif;
+			refType = 2;
 		};
 		F557149F023B46C0010001CA = {
 			fileRef = F557149D023B46BF010001CA;
@@ -3066,8 +3125,9 @@
 		};
 		F55714A1023B4898010001CA = {
 			isa = PBXFileReference;
-			path = smallbookmark.tif;
-			refType = 4;
+			name = smallbookmark.tif;
+			path = resources/images/chrome/smallbookmark.tif;
+			refType = 2;
 		};
 		F55714A2023B4899010001CA = {
 			fileRef = F55714A1023B4898010001CA;
@@ -3099,13 +3159,15 @@
 		};
 		F558099D02F22168015DF512 = {
 			isa = PBXFileReference;
-			path = "NSString+Utils.h";
-			refType = 4;
+			name = "NSString+Utils.h";
+			path = "src/extensions/NSString+Utils.h";
+			refType = 2;
 		};
 		F558099E02F22168015DF512 = {
 			isa = PBXFileReference;
-			path = "NSString+Utils.mm";
-			refType = 4;
+			name = "NSString+Utils.mm";
+			path = "src/extensions/NSString+Utils.mm";
+			refType = 2;
 		};
 		F558099F02F22169015DF512 = {
 			fileRef = F558099D02F22168015DF512;
@@ -3127,13 +3189,15 @@
 		};
 		F5581379030AEF9B0176F207 = {
 			isa = PBXFileReference;
-			path = RemoteDataProvider.h;
-			refType = 4;
+			name = RemoteDataProvider.h;
+			path = src/browser/RemoteDataProvider.h;
+			refType = 2;
 		};
 		F558137A030AEF9B0176F207 = {
 			isa = PBXFileReference;
-			path = SiteIconProvider.h;
-			refType = 4;
+			name = SiteIconProvider.h;
+			path = src/browser/SiteIconProvider.h;
+			refType = 2;
 		};
 		F558137B030AEF9B0176F207 = {
 			children = (
@@ -3147,13 +3211,15 @@
 		};
 		F558137C030AEF9B0176F207 = {
 			isa = PBXFileReference;
-			path = RemoteDataProvider.mm;
-			refType = 4;
+			name = RemoteDataProvider.mm;
+			path = src/browser/RemoteDataProvider.mm;
+			refType = 2;
 		};
 		F558137D030AEF9B0176F207 = {
 			isa = PBXFileReference;
-			path = SiteIconProvider.mm;
-			refType = 4;
+			name = SiteIconProvider.mm;
+			path = src/browser/SiteIconProvider.mm;
+			refType = 2;
 		};
 		F558137E030AEF9C0176F207 = {
 			fileRef = F5581379030AEF9B0176F207;
@@ -3205,13 +3271,15 @@
 		};
 		F558B1F0030F6E470166970F = {
 			isa = PBXFileReference;
-			path = nsCocoaBrowserListener.h;
-			refType = 4;
+			name = CHBrowserListener.h;
+			path = src/embedding/CHBrowserListener.h;
+			refType = 2;
 		};
 		F558B1F1030F6E470166970F = {
 			isa = PBXFileReference;
-			path = nsCocoaBrowserListener.mm;
-			refType = 4;
+			name = CHBrowserListener.mm;
+			path = src/embedding/CHBrowserListener.mm;
+			refType = 2;
 		};
 		F558B1F2030F6E470166970F = {
 			fileRef = F558B1F0030F6E470166970F;
@@ -3263,8 +3331,9 @@
 		};
 		F55B6BF402EF1F7E01026D5D = {
 			isa = PBXFileReference;
-			path = "broken-image.gif";
-			refType = 4;
+			name = "broken-image.gif";
+			path = "resources/images/gecko/broken-image.gif";
+			refType = 2;
 		};
 		F55B6BF702EF1FD901026D5D = {
 			fileRef = F55B6BF402EF1F7E01026D5D;
@@ -3280,8 +3349,9 @@
 		};
 		F55C4DD302D2864D0130B065 = {
 			isa = PBXFileReference;
-			path = CHUserDefaults.h;
-			refType = 4;
+			name = UserDefaults.h;
+			path = src/application/UserDefaults.h;
+			refType = 2;
 		};
 		F55C4DD402D2864E0130B065 = {
 			fileRef = F55C4DD302D2864D0130B065;
@@ -3291,8 +3361,9 @@
 		};
 		F55CCFD2020E98EA010001CA = {
 			isa = PBXFileReference;
-			path = print.tif;
-			refType = 4;
+			name = print.tif;
+			path = resources/images/toolbar/print.tif;
+			refType = 2;
 		};
 		F55CCFD3020E98EA010001CA = {
 			fileRef = F55CCFD2020E98EA010001CA;
@@ -3302,7 +3373,8 @@
 		};
 		F5607CB5023944AD01A967DF = {
 			isa = PBXFileReference;
-			path = CHGeckoUtils.h;
+			name = GeckoUtils.h;
+			path = src/extensions/GeckoUtils.h;
 			refType = 2;
 		};
 		F5607CB6023944AE01A967DF = {
@@ -3334,18 +3406,21 @@
 		};
 		F564872F023B957F010001CA = {
 			isa = PBXFileReference;
-			path = historyicon.tif;
-			refType = 4;
+			name = historyicon.tif;
+			path = resources/images/toolbar/historyicon.tif;
+			refType = 2;
 		};
 		F5648730023B957F010001CA = {
 			isa = PBXFileReference;
-			path = searchicon.tif;
-			refType = 4;
+			name = searchicon.tif;
+			path = resources/images/toolbar/searchicon.tif;
+			refType = 2;
 		};
 		F5648731023B957F010001CA = {
 			isa = PBXFileReference;
-			path = bookicon.tif;
-			refType = 4;
+			name = bookicon.tif;
+			path = resources/images/toolbar/bookicon.tif;
+			refType = 2;
 		};
 		F5648732023B957F010001CA = {
 			fileRef = F564872F023B957F010001CA;
@@ -3367,13 +3442,15 @@
 		};
 		F5648739023C3857010001CA = {
 			isa = PBXFileReference;
-			path = CHIconTabViewItem.h;
-			refType = 4;
+			name = IconTabViewItem.h;
+			path = src/extensions/IconTabViewItem.h;
+			refType = 2;
 		};
 		F564873A023C3857010001CA = {
 			isa = PBXFileReference;
-			path = CHIconTabViewItem.mm;
-			refType = 4;
+			name = IconTabViewItem.mm;
+			path = src/extensions/IconTabViewItem.mm;
+			refType = 2;
 		};
 		F564873B023C3857010001CA = {
 			fileRef = F5648739023C3857010001CA;
@@ -3395,12 +3472,14 @@
 		};
 		F566BD1202EFA9AD01A967F3 = {
 			isa = PBXFileReference;
-			path = CocoaPromptService.h;
+			name = CocoaPromptService.h;
+			path = src/browser/CocoaPromptService.h;
 			refType = 2;
 		};
 		F566BD1302EFA9AD01A967F3 = {
 			isa = PBXFileReference;
-			path = CocoaPromptService.mm;
+			name = CocoaPromptService.mm;
+			path = src/browser/CocoaPromptService.mm;
 			refType = 2;
 		};
 		F566BD1402EFA9AD01A967F3 = {
@@ -3429,8 +3508,9 @@
 		};
 		F56769FB0208F74A010001CA = {
 			isa = PBXFileReference;
-			path = BrowserWindowController.mm;
-			refType = 4;
+			name = BrowserWindowController.mm;
+			path = src/browser/BrowserWindowController.mm;
+			refType = 2;
 		};
 		F56769FC0208F74A010001CA = {
 			fileRef = F56769FB0208F74A010001CA;
@@ -3440,24 +3520,21 @@
 		};
 		F568C3CD023A49C0010001CA = {
 			isa = PBXFileReference;
-			path = AboutBox.nib;
-			refType = 4;
-		};
-		F568C3CE023A49C0010001CA = {
-			fileRef = F568C3CD023A49C0010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
+			name = English;
+			path = resources/localized/English.lproj/AboutBox.nib;
+			refType = 2;
 		};
 		F568C3CF023A4A5A010001CA = {
 			isa = PBXFileReference;
-			path = CHAboutBox.h;
-			refType = 4;
+			name = AboutBox.h;
+			path = src/application/AboutBox.h;
+			refType = 2;
 		};
 		F568C3D0023A4A5A010001CA = {
 			isa = PBXFileReference;
-			path = CHAboutBox.m;
-			refType = 4;
+			name = AboutBox.m;
+			path = src/application/AboutBox.m;
+			refType = 2;
 		};
 		F568C3D1023A4A5B010001CA = {
 			fileRef = F568C3CF023A4A5A010001CA;
@@ -3473,8 +3550,9 @@
 		};
 		F568C3D3023A4F71010001CA = {
 			isa = PBXFileReference;
-			path = Credits.rtf;
-			refType = 4;
+			name = Credits.rtf;
+			path = resources/application/Credits.rtf;
+			refType = 2;
 		};
 		F568C3D4023A4F71010001CA = {
 			fileRef = F568C3D3023A4F71010001CA;
@@ -3496,7 +3574,8 @@
 		};
 		F56F241F02AC6D0401A967F3 = {
 			isa = PBXFileReference;
-			path = nsStaticComponents.cpp;
+			name = nsStaticComponents.cpp;
+			path = src/application/nsStaticComponents.cpp;
 			refType = 2;
 		};
 		F56F242102AC6D0401A967F3 = {
@@ -4100,8 +4179,8 @@
 		F56F837202E47CCD01EF35C9 = {
 			isa = PBXFileReference;
 			name = RegionNames.strings;
-			path = English.lproj/RegionNames.strings;
-			refType = 4;
+			path = PreferencePanes/Appearance/English.lproj/RegionNames.strings;
+			refType = 2;
 		};
 		F56F837402E47DB401EF35C9 = {
 			children = (
@@ -4109,7 +4188,8 @@
 			);
 			isa = PBXVariantGroup;
 			name = RegionNames.strings;
-			refType = 4;
+			path = PreferencePanes/Appearance;
+			refType = 2;
 		};
 		F56F837502E47DB501EF35C9 = {
 			fileRef = F56F837402E47DB401EF35C9;
@@ -4119,13 +4199,15 @@
 		};
 		F57074B5026BA85F01A80166 = {
 			isa = PBXFileReference;
-			path = CHBookmarksToolbar.h;
-			refType = 4;
+			name = BookmarksToolbar.h;
+			path = src/bookmarks/BookmarksToolbar.h;
+			refType = 2;
 		};
 		F57074B6026BA85F01A80166 = {
 			isa = PBXFileReference;
-			path = CHBookmarksToolbar.mm;
-			refType = 4;
+			name = BookmarksToolbar.mm;
+			path = src/bookmarks/BookmarksToolbar.mm;
+			refType = 2;
 		};
 		F57074B7026BA85F01A80166 = {
 			fileRef = F57074B5026BA85F01A80166;
@@ -4141,13 +4223,15 @@
 		};
 		F57074B9026BFD0101A80166 = {
 			isa = PBXFileReference;
-			path = CHBookmarksButton.h;
-			refType = 4;
+			name = BookmarksButton.h;
+			path = src/bookmarks/BookmarksButton.h;
+			refType = 2;
 		};
 		F57074BA026BFD0101A80166 = {
 			isa = PBXFileReference;
-			path = CHBookmarksButton.mm;
-			refType = 4;
+			name = BookmarksButton.mm;
+			path = src/bookmarks/BookmarksButton.mm;
+			refType = 2;
 		};
 		F57074BB026BFD0201A80166 = {
 			fileRef = F57074B9026BFD0101A80166;
@@ -4163,13 +4247,15 @@
 		};
 		F57074BD026D80DF01A80166 = {
 			isa = PBXFileReference;
-			path = CHLocationBar.h;
-			refType = 4;
+			name = LocationBar.h;
+			path = src/browser/LocationBar.h;
+			refType = 2;
 		};
 		F57074BE026D80DF01A80166 = {
 			isa = PBXFileReference;
-			path = CHLocationBar.mm;
-			refType = 4;
+			name = LocationBar.mm;
+			path = src/browser/LocationBar.mm;
+			refType = 2;
 		};
 		F57074BF026D80DF01A80166 = {
 			fileRef = F57074BD026D80DF01A80166;
@@ -4327,20 +4413,20 @@
 		};
 		F57F205D029997E701000106 = {
 			children = (
-				F57F205E029997E701000106,
+				F507A85D0311948201026D5D,
 				F57F205F029997E701000106,
 				F57F2060029997E701000106,
 				F57F2061029997E701000106,
 			);
 			isa = PBXGroup;
 			name = Privacy;
-			path = Personal;
-			refType = 4;
+			path = PreferencePanes/Privacy;
+			refType = 2;
 		};
 		F57F205E029997E701000106 = {
 			isa = PBXFileReference;
-			name = Privacy.nib;
-			path = PreferencePanes/Privacy/Privacy.nib;
+			name = English;
+			path = PreferencePanes/Privacy/English.lproj/Privacy.nib;
 			refType = 2;
 		};
 		F57F205F029997E701000106 = {
@@ -4365,7 +4451,7 @@
 			isa = PBXBundleReference;
 			name = Privacy.prefPane;
 			path = build/Privacy.prefPane;
-			refType = 4;
+			refType = 2;
 		};
 		F57F2064029997E701000106 = {
 			buildActionMask = 2147483647;
@@ -4384,17 +4470,11 @@
 		F57F2066029997E701000106 = {
 			buildActionMask = 2147483647;
 			files = (
-				F57F2067029997E701000106,
+				F507A85E0311948201026D5D,
 				F57F2068029997E701000106,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
-		};
-		F57F2067029997E701000106 = {
-			fileRef = F57F205E029997E701000106;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F57F2068029997E701000106 = {
 			fileRef = F57F205F029997E701000106;
@@ -4523,18 +4603,20 @@
 		};
 		F5807369023A1514010001CA = {
 			isa = PBXFileReference;
-			path = CHSplashScreenWindow.h;
-			refType = 4;
+			name = SplashScreenWindow.h;
+			path = src/application/SplashScreenWindow.h;
+			refType = 2;
 		};
 		F580736A023A1514010001CA = {
 			isa = PBXFileReference;
-			path = CHSplashScreenWindow.m;
+			name = SplashScreenWindow.m;
+			path = src/application/SplashScreenWindow.m;
 			refType = 4;
 		};
 		F580736B023A1514010001CA = {
 			children = (
 				F568C3D3023A4F71010001CA,
-				F568C3CD023A49C0010001CA,
+				F507A85603116EBB01026D5D,
 				F568C3CF023A4A5A010001CA,
 				F568C3D0023A4A5A010001CA,
 			);
@@ -4599,20 +4681,15 @@
 		};
 		F585677D02382E97010001CA = {
 			isa = PBXFileReference;
-			path = MVPreferences.nib;
-			refType = 4;
-		};
-		F585677E02382E97010001CA = {
-			fileRef = F585677D02382E97010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
+			name = English;
+			path = resources/localized/English.lproj/MVPreferences.nib;
+			refType = 2;
 		};
 		F58581AD022B8D61010001CA = {
 			isa = PBXBundleReference;
 			name = Personal.prefPane;
 			path = build/Personal.prefPane;
-			refType = 4;
+			refType = 2;
 		};
 		F58581AE022B8D62010001CA = {
 			buildPhases = (
@@ -4688,7 +4765,7 @@
 		F58581B0022B8D62010001CA = {
 			buildActionMask = 2147483647;
 			files = (
-				F58581B5022B8E0D010001CA,
+				F507A860031194B101026D5D,
 				F58581B6022B8E0D010001CA,
 			);
 			isa = PBXResourcesBuildPhase;
@@ -4720,12 +4797,6 @@
 		};
 		F58581B4022B8E0D010001CA = {
 			fileRef = F53F21FF022B7C77010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F58581B5022B8E0D010001CA = {
-			fileRef = F53F21FD022B7C77010001CA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -4766,12 +4837,12 @@
 		};
 		F58A94F2023F10CA010001CA = {
 			children = (
-				29B97319FDCFA39411CA2CEA,
-				F51842FC0206176901A966FE,
-				F5247C2D02289FD9013DD99A,
-				F5173958020CE1E50189DA0C,
-				F528E216020FD5D80168DE43,
-				F53E012F02AEE9BD01A967F3,
+				F507A84103116E1D01026D5D,
+				F507A84403116E5501026D5D,
+				F507A84703116E6901026D5D,
+				F507A84A03116E6E01026D5D,
+				F507A84D03116E7401026D5D,
+				F507A85003116E7901026D5D,
 			);
 			isa = PBXGroup;
 			name = Nibs;
@@ -4779,13 +4850,15 @@
 		};
 		F59236C002C89AC90100012B = {
 			isa = PBXFileReference;
-			path = AppDirServiceProvider.cpp;
-			refType = 4;
+			name = AppDirServiceProvider.cpp;
+			path = src/application/AppDirServiceProvider.cpp;
+			refType = 2;
 		};
 		F59236C102C89AC90100012B = {
 			isa = PBXFileReference;
-			path = AppDirServiceProvider.h;
-			refType = 4;
+			name = AppDirServiceProvider.h;
+			path = src/application/AppDirServiceProvider.h;
+			refType = 2;
 		};
 		F59236C202C89ACA0100012B = {
 			fileRef = F59236C102C89AC90100012B;
@@ -4811,28 +4884,6 @@
 			settings = {
 			};
 		};
-		F5948A48029EB9C801000102 = {
-			children = (
-				F5948A49029EB9E301000102,
-			);
-			isa = PBXGroup;
-			name = xpcom;
-			refType = 4;
-		};
-		F5948A49029EB9E301000102 = {
-			children = (
-				F5948A4A029EBA3701000102,
-			);
-			isa = PBXGroup;
-			name = components;
-			refType = 4;
-		};
-		F5948A4A029EBA3701000102 = {
-			isa = PBXFileReference;
-			name = nsComponentManager.cpp;
-			path = ../xpcom/components/nsComponentManager.cpp;
-			refType = 2;
-		};
 		F5960E9C02BA686001000103 = {
 			fileRef = F5FEDBCB02AD8DD101A967F3;
 			isa = PBXBuildFile;
@@ -4841,7 +4892,8 @@
 		};
 		F59A0E320307635401A967F3 = {
 			isa = PBXFileReference;
-			path = chimera.js;
+			name = chimera.js;
+			path = resources/application/chimera.js;
 			refType = 2;
 		};
 		F59A0E350307639801A967F3 = {
@@ -4858,7 +4910,8 @@
 		};
 		F59E9F3D0237E28401A967DF = {
 			isa = PBXFileReference;
-			path = ContentClickListener.h;
+			name = ContentClickListener.h;
+			path = src/browser/ContentClickListener.h;
 			refType = 2;
 		};
 		F59E9F3E0237E28401A967DF = {
@@ -4869,7 +4922,8 @@
 		};
 		F59E9F3F0237E43401A967DF = {
 			isa = PBXFileReference;
-			path = ContentClickListener.mm;
+			name = ContentClickListener.mm;
+			path = src/browser/ContentClickListener.mm;
 			refType = 2;
 		};
 		F59E9F400237E43401A967DF = {
@@ -4880,7 +4934,8 @@
 		};
 		F5A112C902DF270F01026D5D = {
 			isa = PBXFileReference;
-			path = "loading-image.gif";
+			name = "loading-image.gif";
+			path = "resources/images/gecko/loading-image.gif";
 			refType = 2;
 		};
 		F5A112CA02DF270F01026D5D = {
@@ -4897,8 +4952,9 @@
 		};
 		F5A3669302CCFAF601DC3354 = {
 			isa = PBXFileReference;
-			path = BookmarksDataSource.h;
-			refType = 4;
+			name = BookmarksDataSource.h;
+			path = src/bookmarks/BookmarksDataSource.h;
+			refType = 2;
 		};
 		F5A3669402CCFAF601DC3354 = {
 			children = (
@@ -4915,8 +4971,9 @@
 		};
 		F5A3669502CCFAF601DC3354 = {
 			isa = PBXFileReference;
-			path = BookmarksDataSource.mm;
-			refType = 4;
+			name = BookmarksDataSource.mm;
+			path = src/bookmarks/BookmarksDataSource.mm;
+			refType = 2;
 		};
 		F5A3669602CCFAF601DC3354 = {
 			children = (
@@ -4986,14 +5043,14 @@
 		F5A8CE4102DFEF4C013CA8EC = {
 			isa = PBXFileReference;
 			name = PreferencePaneBase.h;
-			path = Shared/PreferencePaneBase.h;
-			refType = 4;
+			path = PreferencePanes/Shared/PreferencePaneBase.h;
+			refType = 2;
 		};
 		F5A8CE4202DFEF4C013CA8EC = {
 			isa = PBXFileReference;
 			name = PreferencePaneBase.mm;
-			path = Shared/PreferencePaneBase.mm;
-			refType = 4;
+			path = PreferencePanes/Shared/PreferencePaneBase.mm;
+			refType = 2;
 		};
 		F5A8CE4302DFEF4C013CA8EC = {
 			fileRef = F5A8CE4102DFEF4C013CA8EC;
@@ -5088,7 +5145,7 @@
 		F5A8CE4902DFF039013CA8EC = {
 			buildActionMask = 2147483647;
 			files = (
-				F5A8CE5402DFF167013CA8EC,
+				F507A85A03116FF301026D5D,
 				F5A8CE5502DFF167013CA8EC,
 				F5F9FBDD02E1414C012B5DB7,
 				F56F837502E47DB501EF35C9,
@@ -5127,34 +5184,39 @@
 			children = (
 				F5A8CE4E02DFF167013CA8EC,
 				F5A8CE4F02DFF167013CA8EC,
-				F5A8CE5002DFF167013CA8EC,
+				F507A85903116FF301026D5D,
 				F5A8CE5102DFF167013CA8EC,
 				F5F9FBD902E13767012B5DB7,
 				F56F837402E47DB401EF35C9,
 			);
 			isa = PBXGroup;
-			path = Appearance;
-			refType = 4;
+			name = Appearance;
+			path = PreferencePanes/Appearance;
+			refType = 2;
 		};
 		F5A8CE4E02DFF167013CA8EC = {
 			isa = PBXFileReference;
-			path = Appearance.h;
-			refType = 4;
+			name = Appearance.h;
+			path = PreferencePanes/Appearance/Appearance.h;
+			refType = 2;
 		};
 		F5A8CE4F02DFF167013CA8EC = {
 			isa = PBXFileReference;
-			path = Appearance.mm;
-			refType = 4;
+			name = Appearance.mm;
+			path = PreferencePanes/Appearance/Appearance.mm;
+			refType = 2;
 		};
 		F5A8CE5002DFF167013CA8EC = {
 			isa = PBXFileReference;
-			path = Appearance.nib;
-			refType = 4;
+			name = English;
+			path = PreferencePanes/Appearance/English.lproj/Appearance.nib;
+			refType = 2;
 		};
 		F5A8CE5102DFF167013CA8EC = {
 			isa = PBXFileReference;
-			path = Appearance.tiff;
-			refType = 4;
+			name = Appearance.tiff;
+			path = PreferencePanes/Appearance/Appearance.tiff;
+			refType = 2;
 		};
 		F5A8CE5202DFF167013CA8EC = {
 			fileRef = F5A8CE4E02DFF167013CA8EC;
@@ -5164,12 +5226,6 @@
 		};
 		F5A8CE5302DFF167013CA8EC = {
 			fileRef = F5A8CE4102DFEF4C013CA8EC;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5A8CE5402DFF167013CA8EC = {
-			fileRef = F5A8CE5002DFF167013CA8EC;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5224,8 +5280,9 @@
 		};
 		F5AE04B20206A34801A967DF = {
 			isa = PBXFileReference;
-			path = BrowserWindowController.h;
-			refType = 4;
+			name = BrowserWindowController.h;
+			path = src/browser/BrowserWindowController.h;
+			refType = 2;
 		};
 		F5AE04B40206A34801A967DF = {
 			fileRef = F5AE04B20206A34801A967DF;
@@ -5235,8 +5292,9 @@
 		};
 		F5AE04B60206A37C01A967DF = {
 			isa = PBXFileReference;
-			path = MainController.h;
-			refType = 4;
+			name = MainController.h;
+			path = src/application/MainController.h;
+			refType = 2;
 		};
 		F5AE04B80206A37C01A967DF = {
 			fileRef = F5AE04B60206A37C01A967DF;
@@ -5246,8 +5304,9 @@
 		};
 		F5AE04BA0206A4FE01A967DF = {
 			isa = PBXFileReference;
-			path = MainController.mm;
-			refType = 4;
+			name = MainController.mm;
+			path = src/application/MainController.mm;
+			refType = 2;
 		};
 		F5AE04BB0206A4FE01A967DF = {
 			fileRef = F5AE04BA0206A4FE01A967DF;
@@ -5290,13 +5349,15 @@
 		};
 		F5B950BC030C83B601A96654 = {
 			isa = PBXFileReference;
-			path = BrowserTabViewItem.h;
-			refType = 4;
+			name = BrowserTabViewItem.h;
+			path = src/browser/BrowserTabViewItem.h;
+			refType = 2;
 		};
 		F5B950BD030C83B601A96654 = {
 			isa = PBXFileReference;
-			path = BrowserTabViewItem.mm;
-			refType = 4;
+			name = BrowserTabViewItem.mm;
+			path = src/browser/BrowserTabViewItem.mm;
+			refType = 2;
 		};
 		F5B950BE030C83B601A96654 = {
 			fileRef = F5B950BC030C83B601A96654;
@@ -5548,7 +5609,6 @@
 				F5BAAB4002AC4A2E01A967F3,
 				F5BAAB4102AC4A2E01A967F3,
 				F53E012B02AEE91D01A967F3,
-				F53E013402AEEA2901A967F3,
 				F59236C402C89ACA0100012B,
 				F5A3669A02CCFB7A01DC3354,
 				F50D9DE702ECC36201BB4219,
@@ -5573,16 +5633,16 @@
 		F5BAAB1B02AC45D301A967F3 = {
 			buildActionMask = 2147483647;
 			files = (
-				F5BAAB4202AC4A5301A967F3,
+				F507A84303116E1D01026D5D,
 				F5BAAB4302AC4A5301A967F3,
 				F5BAAB4402AC4A5301A967F3,
 				F5BAAB4502AC4A5301A967F3,
 				F5BAAB4602AC4A5301A967F3,
 				F5BAAB4702AC4A5301A967F3,
 				F5BAAB4802AC4A5301A967F3,
-				F5BAAB4902AC4A5301A967F3,
+				F507A84603116E5501026D5D,
 				F5BAAB4A02AC4A5301A967F3,
-				F5BAAB4B02AC4A5301A967F3,
+				F507A84C03116E6E01026D5D,
 				F5BAAB4C02AC4A5301A967F3,
 				F5BAAB4D02AC4A5301A967F3,
 				F5BAAB4E02AC4A5301A967F3,
@@ -5591,15 +5651,15 @@
 				F5BAAB5102AC4A5301A967F3,
 				F5BAAB5202AC4A5301A967F3,
 				F5BAAB5302AC4A5301A967F3,
-				F5BAAB5402AC4A5301A967F3,
+				F507A84F03116E7401026D5D,
 				F5BAAB5602AC4A5301A967F3,
 				F5BAAB5702AC4A5301A967F3,
-				F5BAAB5802AC4A5301A967F3,
+				F507A84903116E6901026D5D,
 				F5BAAB5902AC4A5301A967F3,
 				F5BAAB5A02AC4A5301A967F3,
-				F5BAAB5B02AC4A5301A967F3,
-				F5BAAB5C02AC4A5301A967F3,
-				F5BAAB5D02AC4A5301A967F3,
+				F507A86303128A3D01026D5D,
+				F507A85503116EA401026D5D,
+				F507A85803116EBC01026D5D,
 				F5BAAB5E02AC4A5301A967F3,
 				F5BAAB5F02AC4A5301A967F3,
 				F5BAAB6002AC4A5301A967F3,
@@ -5624,7 +5684,7 @@
 				F5BAAB7502AC4A5301A967F3,
 				F5BAAB7702AC4A5301A967F3,
 				F5BAAB7802AC4A5301A967F3,
-				F53E013102AEE9BD01A967F3,
+				F507A85203116E7901026D5D,
 				F50EA34C02BAB1E401000103,
 				F50EA34D02BAB1E401000103,
 				F50EA34E02BAB1E401000103,
@@ -5973,12 +6033,6 @@
 			settings = {
 			};
 		};
-		F5BAAB4202AC4A5301A967F3 = {
-			fileRef = 29B97319FDCFA39411CA2CEA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5BAAB4302AC4A5301A967F3 = {
 			fileRef = 089C165CFE840E0CC02AAC07;
 			isa = PBXBuildFile;
@@ -6015,20 +6069,8 @@
 			settings = {
 			};
 		};
-		F5BAAB4902AC4A5301A967F3 = {
-			fileRef = F51842FC0206176901A966FE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5BAAB4A02AC4A5301A967F3 = {
 			fileRef = F51842FE020629B701A966FE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB4B02AC4A5301A967F3 = {
-			fileRef = F5173958020CE1E50189DA0C;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -6081,12 +6123,6 @@
 			settings = {
 			};
 		};
-		F5BAAB5402AC4A5301A967F3 = {
-			fileRef = F528E216020FD5D80168DE43;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5BAAB5602AC4A5301A967F3 = {
 			fileRef = F5568A8E0217C7F5010001CA;
 			isa = PBXBuildFile;
@@ -6099,12 +6135,6 @@
 			settings = {
 			};
 		};
-		F5BAAB5802AC4A5301A967F3 = {
-			fileRef = F5247C2D02289FD9013DD99A;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5BAAB5902AC4A5301A967F3 = {
 			fileRef = F53F21EC022B7C77010001CA;
 			isa = PBXBuildFile;
@@ -6113,24 +6143,6 @@
 		};
 		F5BAAB5A02AC4A5301A967F3 = {
 			fileRef = F53F21ED022B7C77010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB5B02AC4A5301A967F3 = {
-			fileRef = F53F21EE022B7C77010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB5C02AC4A5301A967F3 = {
-			fileRef = F585677D02382E97010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5BAAB5D02AC4A5301A967F3 = {
-			fileRef = F568C3CD023A49C0010001CA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -7338,13 +7350,15 @@
 		};
 		F5BF71450231B8BC010001CA = {
 			isa = PBXFileReference;
-			path = BrowserTabView.h;
-			refType = 4;
+			name = BrowserTabView.h;
+			path = src/browser/BrowserTabView.h;
+			refType = 2;
 		};
 		F5BF71460231B8BC010001CA = {
 			isa = PBXFileReference;
-			path = BrowserTabView.mm;
-			refType = 4;
+			name = BrowserTabView.mm;
+			path = src/browser/BrowserTabView.mm;
+			refType = 2;
 		};
 		F5BF71510231DC5D010001CA = {
 			fileRef = F5BF71450231B8BC010001CA;
@@ -7406,33 +7420,17 @@
 			settings = {
 			};
 		};
-		F5C321D002CBCEF7014E7D56 = {
-			isa = PBXFileReference;
-			name = nsXBLService.cpp;
-			path = /Volumes/Development/Projects/Mozilla/Chimera/mozilla/content/xbl/src/nsXBLService.cpp;
-			refType = 0;
-		};
-		F5C321D402CBD01C014E7D56 = {
-			isa = PBXFileReference;
-			name = xmlparse.c;
-			path = /Volumes/Development/Projects/Mozilla/Chimera/mozilla/expat/xmlparse/xmlparse.c;
-			refType = 0;
-		};
-		F5C321D702CBD0CE014E7D56 = {
-			isa = PBXFileReference;
-			name = nsXMLContentSink.cpp;
-			path = /Volumes/Development/Projects/Mozilla/Chimera/mozilla/content/xml/document/src/nsXMLContentSink.cpp;
-			refType = 0;
-		};
 		F5C3AB810270072A01A80166 = {
 			isa = PBXFileReference;
-			path = CHExtendedOutlineView.h;
-			refType = 4;
+			name = ExtendedOutlineView.h;
+			path = src/extensions/ExtendedOutlineView.h;
+			refType = 2;
 		};
 		F5C3AB820270072A01A80166 = {
 			isa = PBXFileReference;
-			path = CHExtendedOutlineView.mm;
-			refType = 4;
+			name = ExtendedOutlineView.mm;
+			path = src/extensions/ExtendedOutlineView.mm;
+			refType = 2;
 		};
 		F5C3AB830270072A01A80166 = {
 			fileRef = F5C3AB810270072A01A80166;
@@ -7458,8 +7456,8 @@
 		F5CA1A1A02D3956F01F34900 = {
 			isa = PBXFileReference;
 			name = English;
-			path = English.lproj/Navigator.scriptTerminology;
-			refType = 4;
+			path = resources/localized/English.lproj/Navigator.scriptTerminology;
+			refType = 2;
 		};
 		F5CA1A1B02D3957001F34900 = {
 			fileRef = F5CA1A1902D3956F01F34900;
@@ -7475,10 +7473,10 @@
 		};
 		F5CA1A1D02D4ECDA01F34900 = {
 			children = (
-				F585677D02382E97010001CA,
+				F507A85303116EA401026D5D,
 				F53F21EC022B7C77010001CA,
 				F53F21ED022B7C77010001CA,
-				F53F21EE022B7C77010001CA,
+				F507A86103128A3D01026D5D,
 				F53F21EF022B7C77010001CA,
 				F53F21F0022B7C77010001CA,
 				F53F21F1022B7C77010001CA,
@@ -7492,7 +7490,8 @@
 		};
 		F5D1421902BC88F801A967F3 = {
 			isa = PBXFileReference;
-			path = "redo-prebinding.sh";
+			name = "redo-prebinding.sh";
+			path = "src/scripts/redo-prebinding.sh";
 			refType = 2;
 		};
 		F5D1421A02BC88F901A967F3 = {
@@ -7503,17 +7502,20 @@
 		};
 		F5D33CBC02EF61A901A967F3 = {
 			isa = PBXFileReference;
-			path = SecurityDialogs.h;
+			name = SecurityDialogs.h;
+			path = src/browser/SecurityDialogs.h;
 			refType = 2;
 		};
 		F5D33CBD02EF61A901A967F3 = {
 			isa = PBXFileReference;
-			path = AppComponents.mm;
+			name = AppComponents.mm;
+			path = src/application/AppComponents.mm;
 			refType = 2;
 		};
 		F5D33CBE02EF61A901A967F3 = {
 			isa = PBXFileReference;
-			path = SecurityDialogs.mm;
+			name = SecurityDialogs.mm;
+			path = src/browser/SecurityDialogs.mm;
 			refType = 2;
 		};
 		F5D33CBF02EF61AA01A967F3 = {
@@ -7578,8 +7580,9 @@
 		};
 		F5DAB15002698C0D01A80166 = {
 			isa = PBXFileReference;
-			path = bookmark_on.tif;
-			refType = 4;
+			name = bookmark_on.tif;
+			path = resources/images/toolbar/bookmark_on.tif;
+			refType = 2;
 		};
 		F5DAB15102698C0D01A80166 = {
 			fileRef = F5DAB15002698C0D01A80166;
@@ -7589,18 +7592,21 @@
 		};
 		F5DAB15202698D5401A80166 = {
 			isa = PBXFileReference;
-			path = delete_on.tif;
-			refType = 4;
+			name = delete_on.tif;
+			path = resources/images/toolbar/delete_on.tif;
+			refType = 2;
 		};
 		F5DAB15302698D5401A80166 = {
 			isa = PBXFileReference;
-			path = edit_on.tif;
-			refType = 4;
+			name = edit_on.tif;
+			path = resources/images/toolbar/edit_on.tif;
+			refType = 2;
 		};
 		F5DAB15402698D5401A80166 = {
 			isa = PBXFileReference;
-			path = folder_on.tif;
-			refType = 4;
+			name = folder_on.tif;
+			path = resources/images/toolbar/folder_on.tif;
+			refType = 2;
 		};
 		F5DAB15502698D5401A80166 = {
 			fileRef = F5DAB15202698D5401A80166;
@@ -7622,33 +7628,39 @@
 		};
 		F5DE10E60209DC0601A967DF = {
 			isa = PBXFileReference;
-			path = nsAlertController.h;
-			refType = 4;
+			name = nsAlertController.h;
+			path = src/browser/nsAlertController.h;
+			refType = 2;
 		};
 		F5DE10E70209DC0601A967DF = {
 			isa = PBXFileReference;
-			path = CHBrowserView.h;
-			refType = 4;
+			name = CHBrowserView.h;
+			path = src/embedding/CHBrowserView.h;
+			refType = 2;
 		};
 		F5DE10E80209DC0601A967DF = {
 			isa = PBXFileReference;
-			path = nsCocoaBrowserService.h;
-			refType = 4;
+			name = CHBrowserService.h;
+			path = src/embedding/CHBrowserService.h;
+			refType = 2;
 		};
 		F5DE10E90209DC0601A967DF = {
 			isa = PBXFileReference;
-			path = nsAlertController.mm;
-			refType = 4;
+			name = nsAlertController.mm;
+			path = src/browser/nsAlertController.mm;
+			refType = 2;
 		};
 		F5DE10EA0209DC0601A967DF = {
 			isa = PBXFileReference;
-			path = CHBrowserView.mm;
-			refType = 4;
+			name = CHBrowserView.mm;
+			path = src/embedding/CHBrowserView.mm;
+			refType = 2;
 		};
 		F5DE10EB0209DC0601A967DF = {
 			isa = PBXFileReference;
-			path = nsCocoaBrowserService.mm;
-			refType = 4;
+			name = CHBrowserService.mm;
+			path = src/embedding/CHBrowserService.mm;
+			refType = 2;
 		};
 		F5DE10EC0209DC0601A967DF = {
 			fileRef = F5DE10E60209DC0601A967DF;
@@ -7685,51 +7697,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F5E1196C022CDCA7010001CA = {
-			children = (
-				F5555C8202022F070164C72B,
-				F5555C8302022F070164C72B,
-				F5555C8402022F070164C72B,
-				F5555C8502022F070164C72B,
-				F5547D60020333DA01F448B0,
-				F51842FE020629B701A966FE,
-				F53F5AE902448BC8010001CA,
-				F53F5AEA02448BC8010001CA,
-				F55CCFD2020E98EA010001CA,
-				F5EB9376030C92450100010C,
-			);
-			isa = PBXGroup;
-			name = "Purple Images";
-			refType = 4;
-		};
-		F5E1196D022CDCA7010001CA = {
-			children = (
-			);
-			isa = PBXGroup;
-			name = "Gray Images";
-			refType = 4;
-		};
-		F5E1196E022CDCA7010001CA = {
-			children = (
-				F5264FCD020D4C25010001CA,
-				F5264FCE020D4C25010001CA,
-				F5264FCF020D4C25010001CA,
-				F5264FD0020D4C25010001CA,
-				F5264FD1020D4C25010001CA,
-				F5264FD2020D4C25010001CA,
-				F5264FD3020D4C25010001CA,
-			);
-			isa = PBXGroup;
-			name = "Purple Images";
-			refType = 4;
-		};
-		F5E1196F022CDCA7010001CA = {
-			children = (
-			);
-			isa = PBXGroup;
-			name = "Gray Images";
-			refType = 4;
 		};
 		F5E37B0C02EE959601A967F3 = {
 			fileRef = F55C4DD302D2864D0130B065;
@@ -7785,65 +7752,10 @@
 			settings = {
 			};
 		};
-		F5EA337802EF886D01A96654 = {
-			children = (
-				F5EA337902EF889001A96654,
-				F5EA337A02EF889001A96654,
-				F5EA337B02EF889001A96654,
-				F5EA337C02EF889001A96654,
-				F5EA337D02EF889001A96654,
-				F5EA337E02EF889001A96654,
-				F522EFC502F73CF901A96654,
-				F522EFC602F73CF901A96654,
-				F522EFC702F73CF901A96654,
-				F522EFC802F73CF901A96654,
-				F522EFC902F73CF901A96654,
-				F522EFCA02F73CF901A96654,
-				F522EFCB02F73CF901A96654,
-			);
-			isa = PBXGroup;
-			name = widget;
-			refType = 4;
-		};
-		F5EA337902EF889001A96654 = {
-			isa = PBXFileReference;
-			name = nsAppShellCocoa.mm;
-			path = ../widget/src/cocoa/nsAppShellCocoa.mm;
-			refType = 2;
-		};
-		F5EA337A02EF889001A96654 = {
-			isa = PBXFileReference;
-			name = nsChildView.mm;
-			path = ../widget/src/cocoa/nsChildView.mm;
-			refType = 2;
-		};
-		F5EA337B02EF889001A96654 = {
-			isa = PBXFileReference;
-			name = nsCocoaWindow.mm;
-			path = ../widget/src/cocoa/nsCocoaWindow.mm;
-			refType = 2;
-		};
-		F5EA337C02EF889001A96654 = {
-			isa = PBXFileReference;
-			name = nsDragHelperService.cpp;
-			path = ../widget/src/cocoa/nsDragHelperService.cpp;
-			refType = 2;
-		};
-		F5EA337D02EF889001A96654 = {
-			isa = PBXFileReference;
-			name = nsDragService.cpp;
-			path = ../widget/src/cocoa/nsDragService.cpp;
-			refType = 2;
-		};
-		F5EA337E02EF889001A96654 = {
-			isa = PBXFileReference;
-			name = nsToolkit.mm;
-			path = ../widget/src/cocoa/nsToolkit.mm;
-			refType = 2;
-		};
 		F5EB9376030C92450100010C = {
 			isa = PBXFileReference;
-			path = showsource.tif;
+			name = showsource.tif;
+			path = resources/images/toolbar/showsource.tif;
 			refType = 2;
 		};
 		F5EB9377030C92450100010C = {
@@ -7896,8 +7808,9 @@
 		};
 		F5F190BB02D1F81A01026D5D = {
 			isa = PBXFileReference;
-			path = ToolbarDefaults.plist;
-			refType = 4;
+			name = ToolbarDefaults.plist;
+			path = resources/application/ToolbarDefaults.plist;
+			refType = 2;
 		};
 		F5F190BC02D1F81A01026D5D = {
 			fileRef = F5F190BB02D1F81A01026D5D;
@@ -7913,8 +7826,9 @@
 		};
 		F5F190BE02D217C201026D5D = {
 			isa = PBXFileReference;
-			path = WebsiteDefaults.strings;
-			refType = 4;
+			name = WebsiteDefaults.strings;
+			path = resources/application/WebsiteDefaults.strings;
+			refType = 2;
 		};
 		F5F190BF02D217C201026D5D = {
 			fileRef = F5F190BE02D217C201026D5D;
@@ -7965,8 +7879,9 @@
 		};
 		F5F9FBD902E13767012B5DB7 = {
 			isa = PBXFileReference;
-			path = RegionMapping.plist;
-			refType = 4;
+			name = RegionMapping.plist;
+			path = PreferencePanes/Appearance/RegionMapping.plist;
+			refType = 2;
 		};
 		F5F9FBDD02E1414C012B5DB7 = {
 			fileRef = F5F9FBD902E13767012B5DB7;
@@ -8022,13 +7937,15 @@
 //F64
 		F632AF8302B9AEBB01000103 = {
 			isa = PBXFileReference;
-			path = BrowserWindow.h;
-			refType = 4;
+			name = BrowserWindow.h;
+			path = src/browser/BrowserWindow.h;
+			refType = 2;
 		};
 		F632AF8402B9AEBB01000103 = {
 			isa = PBXFileReference;
-			path = BrowserWindow.mm;
-			refType = 4;
+			name = BrowserWindow.mm;
+			path = src/browser/BrowserWindow.mm;
+			refType = 2;
 		};
 		F632AF8502B9AEBB01000103 = {
 			fileRef = F632AF8302B9AEBB01000103;
@@ -8056,7 +7973,8 @@
 		};
 		F6BA6D4E01B2F8A601A962F7 = {
 			isa = PBXFileReference;
-			path = CHBrowserWrapper.mm;
+			name = BrowserWrapper.mm;
+			path = src/browser/BrowserWrapper.mm;
 			refType = 2;
 		};
 		F6BA6D4F01B2F8A601A962F7 = {
