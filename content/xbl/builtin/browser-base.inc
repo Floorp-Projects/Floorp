@@ -22,9 +22,6 @@
       <handler event="keypress" keycode="VK_LEFT" command="cmd_scrollLeft" />
       <handler event="keypress" keycode="VK_RIGHT" command="cmd_scrollRight" />
 
-      <handler event="keypress" keycode="VK_HOME" command="cmd_scrollTop"/>
-      <handler event="keypress" keycode="VK_END" command="cmd_scrollBottom"/>
-
       <handler event="keypress" key="x" command="cmd_cut" modifiers="accel"/>
       <handler event="keypress" key="c" command="cmd_copy" modifiers="accel"/>
       <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
