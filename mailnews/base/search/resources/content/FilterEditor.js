@@ -150,7 +150,7 @@ function saveFilter() {
     if (action == nsMsgFilterAction.MoveToFolder) {
         if (gActionTargetElement)
             targetUri = gActionTargetElement.selectedItem.getAttribute("data");
-        dump("folder target = " + gActionTargetElement.selectedItem + "\n");
+        //dump("folder target = " + gActionTargetElement.selectedItem + "\n");
         if (!targetUri || targetUri == "") {
             var str = Bundle.GetStringFromName("mustSelectFolder");
             window.alert(str);
