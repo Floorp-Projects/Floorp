@@ -83,6 +83,7 @@ public class AttrImpl_setValue_String_1 extends BWBaseTest implements Execution
                 TestLoader.logErrPrint("Could not Create Attribute dummyattr_4");
                 return BWBaseTest.FAILED;
              } else {
+               try {
                 a.setValue("1");
 		String str = a.getValue();
 		if (str == null) {
@@ -95,6 +96,11 @@ public class AttrImpl_setValue_String_1 extends BWBaseTest implements Execution
                   TestLoader.logErrPrint("Attr 'setValue(1)' FAILED ...");
                   return BWBaseTest.FAILED;
                 }
+               } catch (RuntimeException r) {
+                   String msg = "Caught RuntimeException " + r ;
+                   TestLoader.logErrPrint(msg);
+                   return BWBaseTest.FAILED;
+               }
              }
       } else {
              System.out.println("Document is  NULL..");
