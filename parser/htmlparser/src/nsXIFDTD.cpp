@@ -527,9 +527,12 @@ nsresult nsXIFDTD::HandleTextToken(CToken* aToken) {
 
   nsresult result = NS_OK;
 
-  if (type == eXIFTag_text) {
+  if (type == eXIFTag_text)
+  {
     nsString& temp = aToken->GetStringValueXXX();
-    if (temp != "<xml version=\"1.0\"?>") {
+
+    if (temp != "<xml version=\"1.0\"?>")
+    {
       result= AddLeaf(node);
     }
   }
@@ -820,13 +823,15 @@ PRBool nsXIFDTD::IsHTMLContainer(eHTMLTags aTag) const {
   *
   */
 
-PRBool nsXIFDTD::GetAttribute(const nsIParserNode& aNode, const nsString& aKey, nsString& aValue) {
+PRBool nsXIFDTD::GetAttribute(const nsIParserNode& aNode, const nsString& aKey, nsString& aValue)
+{
   PRInt32   i;
   PRInt32   count = aNode.GetAttributeCount();
   for (i = 0; i < count; i++)
   {
     const nsString& key = aNode.GetKeyAt(i);
-    if (key.Equals(aKey)) {
+    if (key.Equals(aKey))
+    {
       const nsString& value = aNode.GetValueAt(i);
       aValue = value;
       aValue.StripChars("\"");
@@ -875,6 +880,38 @@ PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString
   return hasValue;
 }
 
+
+
+
+/**
+ * 
+ * @update	gess12/28/98 
+ * @param 
+ * @return
+ */
+eHTMLTags nsXIFDTD::GetStartTag(const nsIParserNode& aNode, nsString& aName) 
+{
+  eXIFTags  type = (eXIFTags)aNode.GetNodeType();  
+  eHTMLTags tag = eHTMLTag_unknown;
+
+  switch (type)
+  {
+    case eXIFTag_container:
+    case eXIFTag_leaf:
+      if (GetAttribute(aNode,nsString("isa"),aName))
+        tag = tag = nsHTMLTags::LookupTag(aName);
+    break;
+
+    case eXIFTag_css_stylesheet:
+      aName = "style";
+      tag = nsHTMLTags::LookupTag(aName);
+    break;  
+
+    default:
+    break;  
+  }
+  return tag;
+}
 
 
 /**
@@ -1015,29 +1052,27 @@ PRBool nsXIFDTD::StartTopOfStack()
 
 /**
  * 
- * @update	gess 02/07/00
+ * @update	gess12/28/98
  * @param 
  * @return
  */
 void nsXIFDTD::BeginStartTag(const nsIParserNode& aNode)
 {
   eXIFTags  type = (eXIFTags)aNode.GetNodeType();
-  eHTMLTags tag = eHTMLTag_unknown;
+  eHTMLTags tag;
+  nsString  tagName;
 
   switch (type)
   {
     case eXIFTag_container:
     case eXIFTag_leaf:
-      {
-        nsAutoString tagName;
-        if (GetAttribute(aNode,nsString("isa"),tagName))
-          tag = nsHTMLTags::LookupTag(tagName);
-
+        tag = GetStartTag(aNode,tagName);
         if (type == eXIFTag_container)
           PushHTMLTag(tag,tagName);  
  
+//        CToken*         token = new CStartToken(tagName);
+//        nsCParserNode*  node = new nsCParserNode(token);
         PushNodeAndToken(tagName);
-      }
       break;
     default:
       break;
@@ -1054,7 +1089,7 @@ void nsXIFDTD::AddEndTag(const nsIParserNode& aNode)
   PopHTMLTag(tag,name);
    
   // Create a parse node for form this token
-  CEndToken     token(tag);
+  CEndToken     token(*name);
   nsCParserNode node(&token);
 
   // close the container 
@@ -1439,11 +1474,17 @@ void nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
       mMaxCSSSelectorWidth = temp;
   }
   
+  //const char* name = nsHTMLTags::GetStringValue(eHTMLTag_html);
 }
 
 void nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
 {
-  nsAutoString tagName("style");
+  nsString tagName(nsHTMLTags::GetStringValue(eHTMLTag_style));
+
+  if (mLowerCaseTags == PR_TRUE)
+    tagName.ToLowerCase();
+  else
+    tagName.ToUpperCase();
 
   CStartToken   startToken(tagName);
   nsCParserNode startNode((CToken*)&startToken);
