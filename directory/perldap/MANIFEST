@@ -17,3 +17,4 @@ test_api/write.pl
 test_api/api.pl
 examples/lfinger.pl
 examples/qsearch.pl
+examples/monitor.pl
