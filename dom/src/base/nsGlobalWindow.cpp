@@ -47,7 +47,6 @@
 #include "nsNetUtil.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
-#include "nsRDFCID.h"
 #include "nsContentCID.h"
 
 // Interfaces Needed
