@@ -116,13 +116,6 @@ extern "C" NS_COM nsresult NS_NewCStringInputStream(
     // file stream interfaces in nsIFileStream.h
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewStringOutputStream(
-    nsISupports** aStreamResult,
-    nsString& aStringToChange);
-    // Factory method to get an nsOutputStream from a string.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
-
-//----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewCharInputStream(
     nsISupports** aStreamResult,
     const char* aStringToRead);
@@ -136,19 +129,6 @@ extern "C" NS_COM nsresult NS_NewCharOutputStream(
     // Factory method to get an nsOutputStream to a string.  Result will implement all the
     // file stream interfaces in nsIFileStream.h
 
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewStringIOStream(
-    nsISupports** aStreamResult,
-    nsString& aStringToChange);
-    // Factory method to get an nsOutputStream to a string.  Result will implement all the
-// file stream interfaces in nsIFileStream.h
-
-//----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewCharIOStream(
-    nsISupports** aStreamResult,
-    char** aStringToChange);
-    // Factory method to get an nsOutputStream to a string.  Result will implement all the
-    // file stream interfaces in nsIFileStream.h
 
 //----------------------------------------------------------------------------------------
 extern "C" NS_COM nsresult NS_NewByteInputStream(

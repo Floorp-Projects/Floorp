@@ -608,43 +608,6 @@ private:
 }; // class nsRandomAccessOutputStream
 
 //========================================================================================
-class NS_COM nsOutputStringStream
-//========================================================================================
-: public nsRandomAccessOutputStream
-{
-public:
-                                      nsOutputStringStream(char*& stringToChange);
-                                      nsOutputStringStream(nsString& stringToChange);
-
-    // Output streamers.  Unfortunately, they don't inherit!
-    nsOutputStream&                   operator << (const char* buf)
-                                        { return nsOutputStream::operator << (buf); }
-    nsOutputStream&                   operator << (char ch)
-                                        { return nsOutputStream::operator << (ch); }
-    nsOutputStream&                   operator << (short val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (unsigned short val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (long val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (unsigned long val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (int val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (unsigned int val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
-                                        { return nsOutputStream::operator << (pf); }
-
-private:
-
-    // private and unimplemented to disallow copies and assigns
-                                      nsOutputStringStream(const nsOutputStringStream& rhs);
-    nsOutputStringStream&             operator=(const nsOutputStringStream& rhs);
-
-}; // class nsOutputStringStream
-
-//========================================================================================
 class NS_COM nsOutputFileStream
 // Please read the comments at the top of this file
 //========================================================================================
