@@ -41,6 +41,7 @@
 #include "nsDOMEvent.h"
 #include "nsXULAttributes.h"
 #include "nsHashtable.h"
+#include "nsIPresShell.h"
 #include "nsIAtom.h"
 #include "nsIXMLContent.h"
 #include "nsIDOMAttr.h"
@@ -255,6 +256,11 @@ public:
     nsresult EnsureContentsGenerated(void) const;
 
     nsresult AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
+
+    nsresult ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString& attrName);
+
+    static nsresult
+    ExecuteJSCode(nsIDOMElement* anElement);
 
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
@@ -1683,6 +1689,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
                 if (element) {
                     // First we set the attribute in the observer.
                     element->SetAttribute(aString, aValue);
+                    ExecuteOnChangeHandler(element, aString);
                 }
             }
         }
@@ -2227,6 +2234,88 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anE
 	}
 
 	return NS_OK;
+}
+
+
+nsresult
+RDFElementImpl::ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString& attrName)
+{
+    // Now we execute the onchange handler in the context of the
+    // observer. We need to find the observer in order to
+    // execute the handler.
+    nsCOMPtr<nsIDOMNodeList> nodeList;
+    if (NS_SUCCEEDED(anElement->GetElementsByTagName("observes",
+                                                     getter_AddRefs(nodeList)))) {
+        // We have a node list that contains some observes nodes.
+        PRUint32 length;
+        nodeList->GetLength(&length);
+        for (PRUint32 i = 0; i < length; i++) {
+            nsIDOMNode* domNode;
+            nodeList->Item(i, &domNode);
+            nsCOMPtr<nsIDOMElement> domElement;
+            domElement = do_QueryInterface(domNode);
+            if (domElement) {
+                // We have a domElement. Find out if it was listening to us.
+                nsAutoString listeningToID;
+                domElement->GetAttribute("element", listeningToID);
+                nsAutoString broadcasterID;
+                GetAttribute("id", broadcasterID);
+                if (listeningToID == broadcasterID) {
+                    // We are observing the broadcaster, but is this the right
+                    // attribute?
+                    nsAutoString listeningToAttribute;
+                    domElement->GetAttribute("attribute", listeningToAttribute);
+                    if (listeningToAttribute == attrName) {
+                        // This is the right observes node.
+                        // Execute the onchange event handler
+                        ExecuteJSCode(domElement);
+                    }
+                }
+            }
+            NS_IF_RELEASE(domNode);
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+RDFElementImpl::ExecuteJSCode(nsIDOMElement* anElement)
+{ 
+    // This code executes in every presentation context in which this
+    // document is appearing.
+    nsCOMPtr<nsIContent> content;
+    content = do_QueryInterface(anElement);
+    if (!content)
+      return NS_OK;
+
+    nsCOMPtr<nsIDocument> document;
+    content->GetDocument(*getter_AddRefs(document));
+
+    if (!document)
+      return NS_OK;
+
+    PRInt32 count = document->GetNumberOfShells();
+    for (PRInt32 i = 0; i < count; i++) {
+        nsIPresShell* shell = document->GetShellAt(i);
+        if (nsnull == shell)
+            continue;
+
+        // Retrieve the context in which our DOM event will fire.
+        nsCOMPtr<nsIPresContext> aPresContext;
+        shell->GetPresContext(getter_AddRefs(aPresContext));
+    
+        NS_RELEASE(shell);
+
+        // Handle the DOM event
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_FORM_CHANGE; // XXX: I feel dirty and evil for subverting this.
+        content->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+    }
+
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
