@@ -20,7 +20,7 @@ DEPTH=../../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-	test.cpp \
+	nettest.cpp \
 	$(NULL)
 
 INCLUDES+=-I../src -I$(DIST)/include
@@ -39,7 +39,11 @@ EX_LIBS = \
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
-	-lXm			\
+	/usr/local/lib/libXm.so \
+	/usr/X11/lib/libXt.so	\
+	/usr/X11/lib/libSM.so	\
+	/usr/X11/lib/libICE.so	\
+	/usr/X11/lib/libX11.so	\
 	$(NULL)
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
