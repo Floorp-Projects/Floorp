@@ -20,8 +20,8 @@
  * Contributor(s): 
  */
 
-#ifndef nsFileControlFrame_h___
-#define nsFileControlFrame_h___
+#ifndef nsGfxTextControlFrame2_h___
+#define nsGfxTextControlFrame2_h___
 
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
