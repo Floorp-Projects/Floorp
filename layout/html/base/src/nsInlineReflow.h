@@ -64,8 +64,6 @@ public:
 
   void RelativePositionFrames();
 
-  void GetScents(nscoord& aMaxAscent, nscoord& aMaxDescent);
-
   PRInt32 GetCurrentFrameNum() const { return mFrameNum; }
 
   void ChangeFrameCount(PRInt32 aCount) {
@@ -83,11 +81,17 @@ public:
 
   nscoord GetCarriedOutMarginFlags() const { return mCarriedOutMarginFlags; }
 
-  nscoord GetTopMargin() const { return mMargin.top; }
+  nscoord GetTopMargin() const {
+    return mFrameData->mMargin.top;
+  }
 
-  nscoord GetBottomMargin() const { return mMargin.bottom; }
+  nscoord GetBottomMargin() const {
+    return mFrameData->mMargin.bottom;
+  }
 
-  PRUintn GetMarginFlags() const { return mMarginFlags; }
+  PRUintn GetMarginFlags() const {
+    return mFrameData->mMarginFlags;
+  }
 
   static PRUintn CalculateBlockMarginsFor(nsIPresContext& aPresContext,
                                           nsIFrame* aFrame,
@@ -101,7 +105,7 @@ public:
   static nscoord MaxMargin(nscoord a, nscoord b);
 
 protected:
-  void SetFrame(nsIFrame* aFrame);
+  nsresult SetFrame(nsIFrame* aFrame);
 
   PRBool TreatFrameAsBlockFrame();
 
@@ -127,8 +131,6 @@ protected:
 
   void PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds);
 
-  nsresult SetFrameData(const nsHTMLReflowMetrics& aMetrics);
-
   void UpdateFrames();
 
   // The outer frame that contains the frames that we reflow.
@@ -139,21 +141,33 @@ protected:
   nsIPresContext& mPresContext;
   PRBool mOuterIsBlock;
 
-  nsIFrame* mFirstFrame;
   PRIntn mFrameNum;
 
+  /*
+   * For each frame reflowed, we keep this state around
+   */
   struct PerFrameData {
+    nsIFrame* mFrame;
+
     nscoord mAscent;            // computed ascent value
     nscoord mDescent;           // computed descent value
+
     nsMargin mMargin;           // computed margin value
+    PRUintn mMarginFlags;
+
+    // Location and size of frame after its reflowed but before it is
+    // positioned finally by VerticalAlignFrames
+    nsRect mBounds;
+
+    nsSize mMaxElementSize;
   };
 
   PerFrameData* mFrameData;
+  PerFrameData* mFrameDataBase;
   PerFrameData mFrameDataBuf[20];
   PRIntn mNumFrameData;
 
   // Current frame state
-  nsIFrame* mFrame;
   const nsStyleSpacing* mSpacing;
   const nsStylePosition* mPosition;
   const nsStyleDisplay* mDisplay;
@@ -174,8 +188,6 @@ protected:
 
   // The frame's computed margin values (includes auto value
   // computation)
-  nsMargin mMargin;
-  PRUintn mMarginFlags;
   nscoord mRightMargin;/* XXX */
   nscoord mCarriedOutTopMargin;
   nscoord mCarriedOutBottomMargin;
@@ -190,7 +202,6 @@ protected:
   nscoord mRightEdge;
 
   nscoord mTopEdge;
-  nscoord mY;
   nscoord mBottomEdge;
 
   PRBool mUpdatedBand;
