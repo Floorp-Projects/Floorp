@@ -65,6 +65,7 @@
 				014CEA440018CDF011CA2923,
 				014CEA450018CDF011CA2923,
 			);
+			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			mainGroup = 0867D691FE84028FC02AAC07;
 			productRefGroup = 034768DFFF38A50411DB9C8B;
@@ -118,8 +119,9 @@
 				HEADER_SEARCH_PATHS = "../../../../dist/include/mimetype ../../../../dist/include/find ../../../../dist/include/webbrowserpersist ../../../../dist/include/commandhandler ../../../../dist/include/exthandler ../../../../dist/include/helperAppDlg ../../../../dist/include/profile ../../../../dist/include/xpcom ../../../../dist/include/string ../../../../dist/include/docshell ../../../../dist/include/webshell ../../../../dist/include/necko ../../../../dist/include/widget ../../../../dist/include/dom ../../../../dist/include/gfx ../../../../dist/include/layout ../../../../dist/include/content ../../../../dist/include/uriloader ../../../../dist/include/webbrwsr ../../../../dist/include/shistory ../../../../dist/include/embed_base ../../../../dist/include/pref ../../../../dist/include/windowwatcher ../../../../dist/include/mpfilelocprovider ../../../../dist/include ../../../../dist/include/nspr";
 				LIBRARY_SEARCH_PATHS = "../../../../dist/bin ../../../../dist/lib";
 				OPTIMIZATION_CFLAGS = "-O2";
-				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\"  -DIBMBIDI";
+				OTHER_CFLAGS = "-fno-rtti \"-DOSTYPE=\\\"Darwin1.4\\\"\" \"-DOSARCH=\\\"Darwin\\\"\"";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				PREFIX_HEADER = "../../../../mozilla-config.h";
 				PRODUCT_NAME = CHBrowserView;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -Wno-long-long";
@@ -158,7 +160,6 @@
 </dict>
 </plist>
 ";
-			shouldUseHeadermap = 1;
 		};
 		0867D69DFE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -315,11 +316,13 @@
 //F53
 //F54
 		F52978A40371981701026DCE = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHClickListener.h;
 			refType = 2;
 		};
 		F52978A50371981701026DCE = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHClickListener.mm;
 			refType = 2;
@@ -337,56 +340,67 @@
 			};
 		};
 		F57D38940330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHBrowserListener.h;
 			refType = 2;
 		};
 		F57D38950330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHBrowserListener.mm;
 			refType = 2;
 		};
 		F57D38960330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHBrowserService.h;
 			refType = 2;
 		};
 		F57D38970330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHBrowserService.mm;
 			refType = 2;
 		};
 		F57D38980330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHBrowserView.h;
 			refType = 2;
 		};
 		F57D38990330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHBrowserView.mm;
 			refType = 2;
 		};
 		F57D389A0330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHDownloadFactories.h;
 			refType = 2;
 		};
 		F57D389B0330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHDownloadFactories.mm;
 			refType = 2;
 		};
 		F57D389C0330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHDownloadProgressDisplay.h;
 			refType = 2;
 		};
 		F57D389D0330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = CHDownloadProgressDisplay.mm;
 			refType = 2;
 		};
 		F57D389E0330DAB701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = nsAlertController.h;
 			refType = 2;
@@ -476,11 +490,13 @@
 			};
 		};
 		F57D38AA0330DC9701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = "NSString+Utils.h";
 			refType = 2;
 		};
 		F57D38AB0330DC9701026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = "NSString+Utils.mm";
 			refType = 2;
@@ -511,21 +527,25 @@
 			refType = 4;
 		};
 		F57D38AF0330DFF201026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = SaveHeaderSniffer.h;
 			refType = 2;
 		};
 		F57D38B00330DFF201026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = SaveHeaderSniffer.mm;
 			refType = 2;
 		};
 		F57D38B10330E1D101026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = nsDownloadListener.h;
 			refType = 2;
 		};
 		F57D38B20330E1D101026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = nsDownloadListener.mm;
 			refType = 2;
@@ -543,11 +563,13 @@
 			refType = 4;
 		};
 		F57D38B40330E25501026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = ProgressDlgController.h;
 			refType = 2;
 		};
 		F57D38B50330E25501026D5D = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = ProgressDlgController.mm;
 			refType = 2;
@@ -608,6 +630,7 @@
 //F63
 //F64
 		F64C5F1A01B58AC001A962F7 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = nsAlertController.mm;
 			refType = 2;
