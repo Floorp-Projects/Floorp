@@ -41,6 +41,7 @@
       ftpCheck(false);
       turboCheck();
       sysPrefCheck();
+      initJVMConfigList();
     }   
     
     function ftpCheck(setFocus) {
@@ -161,7 +162,8 @@
     <caption label="&advancedTitle.label;"/>
     <vbox align="start" id="contentEnablingBox">
       <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
-                prefstring="security.enable_java"/>
+                prefstring="security.enable_java"
+                oncommand="javaCheck(true)"/>
     </vbox>
     <vbox>
     <vbox align="start">
@@ -177,6 +179,187 @@
     </vbox>
     <separator/>
   </groupbox>
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    function javaCheck(setFocus) {
+      if (!jvmConfigList) return;
+      var checked = document.getElementById("advancedJavaAllow").checked;
+      setVisible(checked);
+    }
+
+    const nsIJVMConfig = Components.interfaces.nsIJVMConfig;
+    const jvmConfigMgr = getJVMConfigMgr();
+    const jvmConfigList = getJVMConfigList();
+    const currentJVMPluginPath = getCurrentJVMPluginPath();
+    var oldJVMConfig = null;
+
+    function getJVMConfigMgr() {
+      return Components.classes["@mozilla.org/oji/jvm-config-mgr;1"]
+               .getService(Components.interfaces.nsIJVMConfigManager);
+    }
+
+    function getJVMConfigList() {
+      if (!jvmConfigMgr)
+        jvmConfigMgr = getJVMConfigMgr();
+
+      if (jvmConfigMgr)
+        return jvmConfigMgr.getJVMConfigList();
+
+      return null;
+    }
+
+    function getCurrentJVMPluginPath() {
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefBranch);
+
+      if (prefs) {
+        // Since we don't have a fullPath attribute in nsIDOMPlugin,
+        // we have to set the set pref "plugin.expose_full_path"
+        // to true and then get it. Related bug is 204476
+        var oldValue = prefs.getBoolPref("plugin.expose_full_path");
+        if (!oldValue)
+          prefs.setBoolPref("plugin.expose_full_path", true);
+
+        var result;
+        try {
+          result = navigator.mimeTypes["application/x-java-vm"]
+                     .enabledPlugin.filename;
+        } catch (e) { result = ""; };
+
+        // Set the pref to original value.
+        if (!oldValue)
+          prefs.setBoolPref("plugin.expose_full_path", oldValue);
+        return result;
+      }
+
+      return "";
+    }
+
+    const jvmConfigListView = {
+      currentJVMConfig : null,
+
+      rowCount : 0,
+
+      setTree : function(tree) {},
+      getImageSrc : function(row, column) {},
+      getProgressMode : function(row, column) {},
+      getCellValue : function(row, column) {},
+      isSeparator : function(index) {return false;},
+      isSorted: function() { return false; },
+      isContainer : function(index) {return false;},
+      cycleHeader : function(aColId, aElt) {},
+      getRowProperties : function(row, column, prop) {},
+      getColumnProperties : function(column, columnElement, prop) {},
+      getCellProperties : function(row, prop) {},
+
+      getCellText : function(row,column) {
+        if (jvmConfigList) {
+          var jvmConfig = jvmConfigList.queryElementAt(row, nsIJVMConfig);
+          if (column == "name")
+            return jvmConfig.version;
+          if (column == "home")
+            return jvmConfig.path.path;
+        }
+        return "";
+      },
+
+      refresh : function(jvmConfigListObj) {
+        if (jvmConfigList) {
+          this.rowCount = jvmConfigList.length;
+          var currentIndex = -1;
+          for (i = 0; i < this.rowCount; i++) {
+            var jvmConfig = jvmConfigList.queryElementAt(i, nsIJVMConfig)
+            var jvmHome = jvmConfig.path.path;
+            if (currentJVMPluginPath.indexOf(jvmHome + "/") >= 0) {
+              this.currentJVMConfig = jvmConfig;
+              currentIndex = i;
+            }
+          }
+          // Only show the panel if we have the choice.
+          if (jvmConfigList.length == 0 ||
+             (jvmConfigList.length == 1 && currentIndex >= 0)) {
+            setVisible(false);
+            return;
+          }
+          jvmConfigListObj.treeBoxObject.view = this;
+          if (currentIndex >= 0)
+            jvmConfigListView.selection.select(currentIndex);
+        } else {
+          this.rowCount = 0;
+        }
+      },
+
+      getCurrentJVMConfig : function() {
+        return this.currentJVMConfig;
+      },
+    };
+
+    function setVisible(visible) {
+      var javaConfigPanel = document.getElementById("javaPluginSettings");
+      javaConfigPanel.setAttribute("hidden", visible ? "" : "true");
+    }
+
+    function initJVMConfigList() {
+      var javaChecked = document.getElementById("advancedJavaAllow").checked;
+      if (jvmConfigList) {
+        var jvmConfigListObj = document.getElementById("jvmConfigListObj");
+        if (jvmConfigListObj) {
+          jvmConfigListView.refresh(jvmConfigListObj);
+          oldJVMConfig = jvmConfigListView.getCurrentJVMConfig();
+          parent.hPrefWindow.registerOKCallbackFunc(switchJVM);
+        }
+        if (!javaChecked) setVisible(false);
+      } else {
+        setVisible(false);
+      }
+    }
+
+    function switchJVM() {
+      var currentIndex = jvmConfigListView.selection.currentIndex;
+      if (currentIndex >= 0 && jvmConfigMgr && jvmConfigList) {
+        var currentJVMConfig =
+              jvmConfigList.queryElementAt(currentIndex, nsIJVMConfig);
+        if (currentJVMConfig && currentJVMConfig != oldJVMConfig) {
+          var promptService =
+                Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                  .getService(Components.interfaces.nsIPromptService);
+
+          var navbundle = document.getElementById("navBundle");
+          var brandbundle = document.getElementById("brandBundle");
+          var dialogTitle = navbundle.getString("switchJVMTitle");
+
+          try {
+            jvmConfigMgr.setCurrentJVMConfig(currentJVMConfig);
+          } catch (e) {
+            errorMsg =  navbundle.getString("switchJVMFailed");
+            promptService.alert(window, dialogTitle, errorMsg);
+            return;
+          }
+
+          oldJVMConfig = currentJVMConfig;
+        }
+      }
+    }
+  ]]>
+  </script>
+  <stringbundle id="navBundle"
+                src="chrome://navigator/locale/navigator.properties"/>
+  <stringbundle id="brandBundle"
+                src="chrome://global/locale/brand.properties"/>
+  <groupbox id="javaPluginSettings" align="start">
+    <caption label="&jvm.configuration;"/>
+    <tree id="jvmConfigListObj" style="width: 60em; height: 10em"
+          hidecolumnpicker="true">
+      <treecols>
+        <treecol id="name" label="&jvm.name;" flex="2"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="home" label="&jvm.home;" flex="13"/>
+      </treecols>
+      <treechildren/>
+    </tree>
+  </groupbox>
+
   <groupbox id="perfSettings">
     <caption id="perfLabel" label="&perfTitle.label;"/>
     <vbox id="perfBox" align="start">
