@@ -312,6 +312,8 @@ nsXInstaller::DrawNavButtons()
     gtk_container_add(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
     gtk_widget_show(gCtx->nextLabel);
     gtk_widget_show(gCtx->backLabel);
+    GTK_WIDGET_SET_FLAGS(gCtx->next, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(gCtx->next);
     
     navbtnhbox = gtk_hbox_new(TRUE, 10);
     canvasvbox = gtk_vbox_new(TRUE, 10);
@@ -324,11 +326,11 @@ nsXInstaller::DrawNavButtons()
 
     gtk_table_attach(GTK_TABLE(navbtntable), gCtx->back, 2, 3, 0, 1, 
         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-               static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+               static_cast<GtkAttachOptions>(GTK_SHRINK),
                5, 5);
     gtk_table_attach(GTK_TABLE(navbtntable), gCtx->next, 3, 4, 0, 1,
         static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-               static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+               static_cast<GtkAttachOptions>(GTK_SHRINK),
                5, 5);
 
     gtk_widget_show(navbtntable); 
@@ -446,6 +448,8 @@ ErrorHandler(int aErr, const char* aErrMsg)
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sErrDlg)->vbox), label);
     
+    GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
+    gtk_widget_grab_default(okButton);
     gtk_widget_show_all(sErrDlg);
 
     return aErr;
