@@ -635,7 +635,7 @@ nsRegistryDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator 
             if (NS_FAILED(rv)) return rv;
 
             array->AppendElement(property);
-        } while (0);
+        } while (1);
     }
 
     return NS_NewArrayEnumerator(_retval, array);
