@@ -256,7 +256,13 @@ nsTreeFrame::HandleEvent(nsIPresContext* aPresContext,
         nsCOMPtr<nsIDOMNode> node;
         itemNodeList->Item(0, getter_AddRefs(node));
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-        treeRowGroup->IndexOfRow(aPresContext, content, rowIndex);
+        nsTableRowFrame* firstRow=nsnull;
+        treeRowGroup->GetFirstRowFrame(&firstRow);
+        nsCOMPtr<nsIContent> rowContent;
+        if (firstRow) {
+          firstRow->GetContent(getter_AddRefs(rowContent));
+          treeRowGroup->IndexOfRow(aPresContext, rowContent, rowIndex);
+        }
       }
       else if (cellLength != 0 && itemLength != 0) {
         nsCOMPtr<nsIDOMNode> node;
