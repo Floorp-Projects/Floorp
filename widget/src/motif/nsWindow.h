@@ -121,7 +121,6 @@ public:
     NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     NS_IMETHOD            DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
-    NS_IMETHOD            SetVerticalScrollbar(nsIWidget * aScrollbar);
     NS_IMETHOD            GetClientBounds(nsRect &aRect);
     NS_IMETHOD            GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
     NS_IMETHOD            EnableFileDrop(PRBool aEnable);
@@ -165,23 +164,6 @@ protected:
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData);
-
-  void CreateMainWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData);
-
-  void CreateChildWindow(nsNativeWidget aNativeParent, nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData);
-
 
   void InitToolkit(nsIToolkit *aToolkit, nsIWidget * aWidgetParent);
   void InitDeviceContext(nsIDeviceContext *aContext, Widget aWidgetParent);
