@@ -58,6 +58,8 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIDocumentEncoder.h"
+#include "nsRange.h"
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
@@ -196,6 +198,7 @@ private:
   char              **mParamNames;
   char              **mParamVals;
   char              *mDocumentBase;
+  char              *mTagText;
   nsIWidget         *mWidget;
   nsIPresContext    *mContext;
   nsCOMPtr<nsITimer> mPluginTimer;
@@ -1430,6 +1433,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mParamNames = nsnull;
   mParamVals = nsnull;
   mDocumentBase = nsnull;
+  mTagText = nsnull;
   mPluginHost = nsnull;
 }
 
@@ -1510,6 +1514,12 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   {
     nsCRT::free(mDocumentBase);
     mDocumentBase = nsnull;
+  }
+  
+  if (nsnull != mTagText)
+  {
+    nsCRT::free(mTagText);
+    mTagText = nsnull;
   }
 
   NS_IF_RELEASE(mWidget);
@@ -1916,9 +1926,46 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
 {
-printf("instance owner gettagtext called\n");
-  *result = "";
-  return NS_ERROR_FAILURE;
+    if (nsnull == mTagText) {
+        nsresult rv;
+        nsCOMPtr<nsIContent> content;
+        rv = mOwner->GetContent(getter_AddRefs(content));
+        if (NS_FAILED(rv))
+            return rv;
+        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content, &rv));
+        if (NS_FAILED(rv))
+            return rv;
+        nsCOMPtr<nsIDocument> document;
+        rv = GetDocument(getter_AddRefs(document));
+        if (NS_FAILED(rv))
+            return rv;
+        nsCOMPtr<nsIDocumentEncoder> docEncoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html", &rv));
+        if (NS_FAILED(rv))
+            return rv;
+        rv = docEncoder->Init(document, NS_LITERAL_STRING("text/html"), nsIDocumentEncoder::OutputEncodeEntities);
+        if (NS_FAILED(rv))
+            return rv;
+
+        nsCOMPtr<nsIDOMRange> range(new nsRange);
+        if (!range)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = range->SelectNode(node);
+        if (NS_FAILED(rv))
+            return rv;
+
+        docEncoder->SetRange(range);
+        nsString elementHTML;
+        rv = docEncoder->EncodeToString(elementHTML);
+        if (NS_FAILED(rv))
+            return rv;
+
+        mTagText = elementHTML.ToNewUTF8String();
+        if (!mTagText)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+    *result = mTagText;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const*& names, const char*const*& values)
