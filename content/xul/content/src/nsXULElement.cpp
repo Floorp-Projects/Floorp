@@ -84,6 +84,8 @@
 #include "prlog.h"
 #include "rdf.h"
 
+#include "nsIController.h"
+
 // The XUL interfaces implemented by the RDF content node.
 #include "nsIDOMXULElement.h"
 
@@ -313,7 +315,7 @@ private:
     nsVoidArray*		   mBroadcastListeners; // [WEAK]
     nsIDOMXULElement*      mBroadcaster;        // [OWNER]
     nsXULElement*          mInnerXULElement;    // [OWNER]
-
+    nsIController*         mController;         // [OWNER]
 };
 
 
@@ -346,6 +348,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mContentsMustBeGenerated(PR_FALSE),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
+      mController(nsnull),
       mInnerXULElement(nsnull)
 {
     NS_INIT_REFCNT();
@@ -415,6 +418,8 @@ RDFElementImpl::~RDFElementImpl()
         mBroadcaster->RemoveBroadcastListener("*", parentElement);
         NS_RELEASE(mBroadcaster);
     }
+
+    NS_IF_RELEASE(mController);
 
     if (--gRefCnt == 0) {
         if (gRDFService) {
@@ -2788,12 +2793,16 @@ RDFElementImpl::GetStyleHintForAttributeChange(const nsIAtom* aAttribute, PRInt3
 NS_IMETHODIMP
 RDFElementImpl::GetController(nsIController** aResult)
 {
-  *aResult = nsnull;
+  NS_IF_ADDREF(mController);
+  *aResult = mController;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 RDFElementImpl::SetController(nsIController* aController)
 {
+  NS_IF_RELEASE(mController);
+  mController = aController;
+  NS_IF_ADDREF(mController);
   return NS_OK;
 }
