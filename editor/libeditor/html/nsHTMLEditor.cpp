@@ -2594,17 +2594,37 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
     return NS_ERROR_NULL_POINTER;
   
   nsresult res = NS_OK;
-  // If no node supplied, use anchor node of current selection
-  if (!aNode)
+  nsCOMPtr<nsIDOMNode> currentNode;
+
+  if (aNode)
+    currentNode = aNode;
+  else
   {
+    // If no node supplied, get it from anchor node of current selection
     nsCOMPtr<nsIDOMSelection>selection;
     res = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(res)) return res;
     if (!selection) return NS_ERROR_NULL_POINTER;
 
-    //TODO: Do I need to release the node?
-    if(NS_FAILED(selection->GetAnchorNode(&aNode)))
-      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMNode> anchorNode;
+    res = selection->GetAnchorNode(getter_AddRefs(anchorNode));
+    if(NS_FAILED(res)) return res;
+    if (!anchorNode)  return NS_ERROR_FAILURE;
+
+    // Try to get the actual selected node
+    PRBool hasChildren = PR_FALSE;
+    anchorNode->HasChildNodes(&hasChildren);
+    if (hasChildren)
+    {
+      PRInt32 offset;
+      res = selection->GetAnchorOffset(&offset);
+      if(NS_FAILED(res)) return res;
+      currentNode = nsEditor::GetChildAt(anchorNode, offset);
+      if (!currentNode) return NS_ERROR_FAILURE;
+    } else {
+      // anchor node is probably a text node - just use that
+      currentNode = anchorNode;
+    }
   }
    
   nsAutoString TagName = aTagName;
@@ -2621,7 +2641,6 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
   // default is null - no element found
   *aReturn = nsnull;
   
-  nsCOMPtr<nsIDOMNode> currentNode = aNode;
   nsCOMPtr<nsIDOMNode> parent;
   PRBool bNodeFound = PR_FALSE;
 

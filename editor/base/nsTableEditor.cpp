@@ -1193,7 +1193,7 @@ nsHTMLEditor::SelectTableRow()
                         actualRowSpan, actualColSpan, isSelected);
     if (NS_FAILED(res)) break;
     // Skip cells that are spanned from previous rows or columns
-    if (cell && currentRowIndex == startRowIndex && currentColIndex == startColIndex)
+    if (cell && currentRowIndex == startRowIndex && currentColIndex == col)
     {
       cellNode = do_QueryInterface(cell);
       res =  nsEditor::AppendNodeToSelectionAsRange(cellNode);
@@ -1257,7 +1257,7 @@ nsHTMLEditor::SelectTableColumn()
                         actualRowSpan, actualColSpan, isSelected);
     if (NS_FAILED(res)) break;
     // Skip cells that are spanned from previous rows or columns
-    if (cell && currentRowIndex == startRowIndex && currentColIndex == startColIndex)
+    if (cell && currentRowIndex == row && currentColIndex == startColIndex)
     {
       cellNode = do_QueryInterface(cell);
       res =  nsEditor::AppendNodeToSelectionAsRange(cellNode);
@@ -1644,19 +1644,14 @@ nsHTMLEditor::GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
   if (!aSelection) return NS_ERROR_FAILURE;
 
   // Find the first selected cell
-  res = GetFirstSelectedCell(getter_AddRefs(aCell));
+//  res = GetFirstSelectedCell(getter_AddRefs(aCell));
   if (!aCell)
   {
     //If a cell wasn't selected, then assume the selection is INSIDE 
     //  and use anchor node to search up to the containing cell
-    nsCOMPtr<nsIDOMNode> anchorNode;
-
-    res = aSelection->GetAnchorNode(getter_AddRefs(anchorNode));
-    if (NS_FAILED(res)) return res;
-    if (!anchorNode)    return NS_ERROR_FAILURE;
-
-    // Get the cell enclosing the selection anchor
-    res = GetElementOrParentByTagName("td", anchorNode, getter_AddRefs(aCell));
+    // Test if selected node (from anchor node) is a cell 
+    //   or get the enclosing by a cell
+    res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(aCell));
     if (NS_FAILED(res)) return res;
     if (!aCell)         return NS_ERROR_FAILURE;
   }
