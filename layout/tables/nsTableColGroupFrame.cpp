@@ -52,87 +52,89 @@ nsresult
 nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   nsresult rv=NS_OK;
-  nsIFrame* tableFrame=nsnull;
-  GetGeometricParent(tableFrame);
-  // Process the newly added column frames
-  for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
-    // Set the preliminary values for the column frame
-    nsIContent* kid;
-    kidFrame->GetContent(kid);
-    // should use style to get this value
-    PRInt32 repeat=1;
-    nsIHTMLTableColElement* colContent = nsnull;
-    rv = kid->QueryInterface(kIHTMLTableColElementIID, 
-                     (void**) &colContent); // colContent: ADDREF++
-    NS_RELEASE(kid);
-    if (rv==NS_OK)
-    {
-      colContent->GetSpanValue(&repeat);
-      NS_RELEASE(colContent);
-    }
-    PRInt32 colIndex = mStartColIndex + mColCount;
-    ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex, repeat);
-    mColCount+= repeat;
-    ((nsTableColFrame *)kidFrame)->SetColumnIndex(colIndex);
-    ((nsTableFrame *)tableFrame)->AddColumnFrame((nsTableColFrame *)kidFrame);
-  }
-  // colgroup's span attribute is how many columns the group represents
-  // in the absence of any COL children
-  if (0==mColCount)
+  nsTableFrame* tableFrame=nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
   {
-    nsIFrame *firstImplicitColFrame=nsnull;
-    nsIFrame *prevColFrame=nsnull;
-    nsAutoString colTag;
-    nsHTMLAtoms::col->ToString(colTag);
-    mColCount = GetSpan();
-    for (PRInt32 colIndex=0; colIndex<mColCount; colIndex++)
-    {
-      nsIHTMLContent *col=nsnull;
-      // create an implicit col
-      rv = NS_CreateHTMLElement(&col, colTag);  // ADDREF: col++
-      //XXX mark the col implicit
-      mContent->AppendChildTo((nsIContent*)col, PR_FALSE);
-
-      // Create a new col frame
-      nsIFrame* colFrame;
-      NS_NewTableColFrame(col, this, colFrame);
-
-      // Set its style context
-      nsIStyleContextPtr colStyleContext =
-        aPresContext.ResolveStyleContextFor(col, this, PR_TRUE);
-      colFrame->SetStyleContext(&aPresContext, colStyleContext);
-      colFrame->Init(aPresContext, nsnull);
-
-      // Set nsColFrame-specific information
-      PRInt32 absColIndex = mStartColIndex + colIndex;
-      ((nsTableColFrame *)(colFrame))->InitColFrame (absColIndex, 1);
-      ((nsTableColFrame *)colFrame)->SetColumnIndex(absColIndex);
-      ((nsTableFrame *)tableFrame)->AddColumnFrame((nsTableColFrame *)colFrame);
-
-      //hook into list of children
-      if (nsnull==firstImplicitColFrame)
-        firstImplicitColFrame = colFrame;
-      else
-        prevColFrame->SetNextSibling(colFrame);
-      prevColFrame = colFrame;
-    }
-    // hook new columns into col group child list
-    if (nsnull==mFirstChild)
-      mFirstChild = firstImplicitColFrame;
-    else
-    {
-      nsIFrame *lastChild = mFirstChild;
-      nsIFrame *nextChild = lastChild;
-      while (nsnull!=nextChild)
+    // Process the newly added column frames
+    for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+      // Set the preliminary values for the column frame
+      nsIContent* kid;
+      kidFrame->GetContent(kid);
+      // should use style to get this value
+      PRInt32 repeat=1;
+      nsIHTMLTableColElement* colContent = nsnull;
+      rv = kid->QueryInterface(kIHTMLTableColElementIID, 
+                       (void**) &colContent); // colContent: ADDREF++
+      NS_RELEASE(kid);
+      if (rv==NS_OK)
       {
-        lastChild = nextChild;
-        nextChild->GetNextSibling(nextChild);
+        colContent->GetSpanValue(&repeat);
+        NS_RELEASE(colContent);
       }
-      lastChild->SetNextSibling(firstImplicitColFrame);
+      PRInt32 colIndex = mStartColIndex + mColCount;
+      ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex, repeat);
+      mColCount+= repeat;
+      ((nsTableColFrame *)kidFrame)->SetColumnIndex(colIndex);
+      tableFrame->AddColumnFrame((nsTableColFrame *)kidFrame);
     }
-  }
-  SetStyleContextForFirstPass(aPresContext);
+    // colgroup's span attribute is how many columns the group represents
+    // in the absence of any COL children
+    if (0==mColCount)
+    {
+      nsIFrame *firstImplicitColFrame=nsnull;
+      nsIFrame *prevColFrame=nsnull;
+      nsAutoString colTag;
+      nsHTMLAtoms::col->ToString(colTag);
+      mColCount = GetSpan();
+      for (PRInt32 colIndex=0; colIndex<mColCount; colIndex++)
+      {
+        nsIHTMLContent *col=nsnull;
+        // create an implicit col
+        rv = NS_CreateHTMLElement(&col, colTag);  // ADDREF: col++
+        //XXX mark the col implicit
+        mContent->AppendChildTo((nsIContent*)col, PR_FALSE);
 
+        // Create a new col frame
+        nsIFrame* colFrame;
+        NS_NewTableColFrame(col, this, colFrame);
+
+        // Set its style context
+        nsIStyleContextPtr colStyleContext =
+          aPresContext.ResolveStyleContextFor(col, this, PR_TRUE);
+        colFrame->SetStyleContext(&aPresContext, colStyleContext);
+        colFrame->Init(aPresContext, nsnull);
+
+        // Set nsColFrame-specific information
+        PRInt32 absColIndex = mStartColIndex + colIndex;
+        ((nsTableColFrame *)(colFrame))->InitColFrame (absColIndex, 1);
+        ((nsTableColFrame *)colFrame)->SetColumnIndex(absColIndex);
+        tableFrame->AddColumnFrame((nsTableColFrame *)colFrame);
+
+        //hook into list of children
+        if (nsnull==firstImplicitColFrame)
+          firstImplicitColFrame = colFrame;
+        else
+          prevColFrame->SetNextSibling(colFrame);
+        prevColFrame = colFrame;
+      }
+      // hook new columns into col group child list
+      if (nsnull==mFirstChild)
+        mFirstChild = firstImplicitColFrame;
+      else
+      {
+        nsIFrame *lastChild = mFirstChild;
+        nsIFrame *nextChild = lastChild;
+        while (nsnull!=nextChild)
+        {
+          lastChild = nextChild;
+          nextChild->GetNextSibling(nextChild);
+        }
+        lastChild->SetNextSibling(firstImplicitColFrame);
+      }
+    }
+    SetStyleContextForFirstPass(aPresContext);
+  }
   return rv;
 }
 
@@ -233,54 +235,55 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
 NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPresContext)
 {
   // get the table frame
-  nsIFrame* tableFrame=nsnull;
-  GetGeometricParent(tableFrame);
-  
-  // get the style for the table frame
-  nsStyleTable *tableStyle;
-  tableFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  nsTableFrame* tableFrame=nsnull;
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+  {  
+    // get the style for the table frame
+    nsStyleTable *tableStyle;
+    tableFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
 
-  // if COLS is set, then map it into the COL frames
-  if (NS_STYLE_TABLE_COLS_NONE != tableStyle->mCols)
-  {
-    // set numCols to the number of columns effected by the COLS attribute
-    PRInt32 numCols=0;
-    if (NS_STYLE_TABLE_COLS_ALL == tableStyle->mCols)
-      numCols = LengthOf(mFirstChild);
-    else 
-      numCols = tableStyle->mCols;
-
-    // for every column effected, set its width style
-    PRInt32 colIndex=0;
-    nsIFrame *colFrame=mFirstChild;
-    while (nsnull!=colFrame)
+    // if COLS is set, then map it into the COL frames
+    if (NS_STYLE_TABLE_COLS_NONE != tableStyle->mCols)
     {
-      nsStyleDisplay * colDisplay=nsnull;
-      colFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)colDisplay));
-      if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
-      {
-        nsIStyleContextPtr colStyleContext;
-        nsStylePosition * colPosition=nsnull;
-        colFrame->GetStyleContext(&aPresContext, colStyleContext.AssignRef());
-        colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
-        if (colIndex<numCols)
-        {
-          nsStyleCoord width (1, eStyleUnit_Proportional);
-          colPosition->mWidth = width;
-        }
-        else
-        {
-          colPosition->mWidth.SetCoordValue(0);
-        }
-        colStyleContext->RecalcAutomaticData(&aPresContext);
-        colIndex++;
-      }
-      colFrame->GetNextSibling(colFrame);
-    }
+      // set numCols to the number of columns effected by the COLS attribute
+      PRInt32 numCols=0;
+      if (NS_STYLE_TABLE_COLS_ALL == tableStyle->mCols)
+        numCols = LengthOf(mFirstChild);
+      else 
+        numCols = tableStyle->mCols;
 
-    mStyleContext->RecalcAutomaticData(&aPresContext);
+      // for every column effected, set its width style
+      PRInt32 colIndex=0;
+      nsIFrame *colFrame=mFirstChild;
+      while (nsnull!=colFrame)
+      {
+        nsStyleDisplay * colDisplay=nsnull;
+        colFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)colDisplay));
+        if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
+        {
+          nsIStyleContextPtr colStyleContext;
+          nsStylePosition * colPosition=nsnull;
+          colFrame->GetStyleContext(&aPresContext, colStyleContext.AssignRef());
+          colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
+          if (colIndex<numCols)
+          {
+            nsStyleCoord width (1, eStyleUnit_Proportional);
+            colPosition->mWidth = width;
+          }
+          else
+          {
+            colPosition->mWidth.SetCoordValue(0);
+          }
+          colStyleContext->RecalcAutomaticData(&aPresContext);
+          colIndex++;
+        }
+        colFrame->GetNextSibling(colFrame);
+      }
+      mStyleContext->RecalcAutomaticData(&aPresContext);
+    }
   }
-  return NS_OK;
+  return rv;
 }
 
 

@@ -79,7 +79,7 @@ public:
   PRBool IsNested(const nsHTMLReflowState& aReflowState, nsStylePosition *& aPosition) const;
 
   /** helper method to find the table parent of any table frame object */
-  static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aOutFrame);
+  static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aTableFrame);
 
   /** helper method for getting the width of the table's containing block */
   static nscoord GetTableContainerWidth(const nsHTMLReflowState& aState);
@@ -96,6 +96,11 @@ public:
   PRBool IsRowGroup(PRInt32 aDisplayType);
 
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
+
+  /** complete the append of aRowGroupFrame to the table
+    * this builds the cell map
+    */
+  NS_IMETHOD DidAppendRowGroup(nsTableRowGroupFrame *aRowGroupFrame);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -315,6 +320,12 @@ protected:
                                  nsIFrame *             aInsertedFrame,
                                  PRBool                 aReplace);
 
+    NS_IMETHOD IR_ColGroupAppended(nsIPresContext&        aPresContext,
+                                 nsHTMLReflowMetrics&   aDesiredSize,
+                                 InnerTableReflowState& aReflowState,
+                                 nsReflowStatus&        aStatus,
+                                 nsIFrame *             aAppendedFrame); 
+
   NS_IMETHOD IR_ColGroupRemoved(nsIPresContext&        aPresContext,
                                 nsHTMLReflowMetrics&   aDesiredSize,
                                 InnerTableReflowState& aReflowState,
@@ -327,6 +338,12 @@ protected:
                                  nsReflowStatus&        aStatus,
                                  nsIFrame *             aInsertedFrame,
                                  PRBool                 aReplace);
+
+  NS_IMETHOD IR_RowGroupAppended(nsIPresContext&        aPresContext,
+                                 nsHTMLReflowMetrics&   aDesiredSize,
+                                 InnerTableReflowState& aReflowState,
+                                 nsReflowStatus&        aStatus,
+                                 nsIFrame *             aAppendedFrame);
 
   NS_IMETHOD IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                 nsHTMLReflowMetrics&   aDesiredSize,
@@ -414,11 +431,16 @@ protected:
                                         nscoord aMaxHeight);
 
   /** given the new parent size, do I really need to do a reflow? */
-  virtual PRBool NeedsReflow(const nsSize& aMaxSize);
+  virtual PRBool NeedsReflow(const nsHTMLReflowState& aReflowState, 
+                             const nsSize&            aMaxSize);
 
   /** returns PR_TRUE if the cached pass 1 data is still valid */
   virtual PRBool IsFirstPassValid() const;
 
+public:
+  virtual void InvalidateFirstPassCache();
+
+protected:
   /** do post processing to setting up style information for the frame */
   NS_IMETHOD DidSetStyleContext(nsIPresContext& aPresContext);
 
@@ -431,16 +453,24 @@ protected:
     */
   virtual void GrowCellMap(PRInt32 aColCount);
 
+  /** returns PR_TRUE if the cached pass 1 data is still valid */
+  virtual PRBool IsCellMapValid() const;
+
+public:
   /** ResetCellMap is called when the cell structure of the table is changed.
     * Call with caution, only when changing the structure of the table such as 
     * inserting or removing rows, changing the rowspan or colspan attribute of a cell, etc.
     */
-  virtual void ResetCellMap ();
+  virtual void InvalidateCellMap();
+    
+protected:
+  /** iterates all child frames and creates a new cell map */
+  NS_IMETHOD ReBuildCellMap();
 
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
     */
-  virtual nsCellMap *GetCellMap();
+  virtual nsCellMap *GetCellMap() const;
 
   /** for debugging only
     * prints out information about the cell map
@@ -559,6 +589,7 @@ private:
   PRInt32      mColumnWidthsLength; // the number of column lengths this frame has allocated
   PRBool       mColumnWidthsSet;    // PR_TRUE if column widths have been set at least once
   PRBool       mFirstPassValid;     // PR_TRUE if first pass data is still legit
+  PRBool       mCellMapValid;       // PR_TRUE if cell map data is still legit
   PRBool       mIsInvariantWidth;   // PR_TRUE if table width cannot change
   PRInt32      mColCount;           // the number of columns in this table
   PRInt32      mEffectiveColCount;  // the number of columns in this table adjusted for weird table attributes

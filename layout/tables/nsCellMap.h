@@ -119,6 +119,9 @@ public:
 		*/
   void AppendColumnFrame(nsTableColFrame *aColFrame);
 
+  /** empty the column frame cache */
+  void ClearColumnCache();
+
 	/** returns PR_TRUE if the row at aRowIndex has any cells that are the result
 		* of a row-spanning cell above it.  So, given this table:<BR>
 		* <PRE>
@@ -225,6 +228,12 @@ inline PRInt32 nsCellMap::GetRowCount() const
 inline void nsCellMap::AppendColumnFrame(nsTableColFrame *aColFrame)
 {
   mColFrames->AppendElement(aColFrame);
+}
+
+inline void nsCellMap::ClearColumnCache()
+{
+  if (nsnull!=mColFrames)
+    mColFrames->Clear();
 }
 
 
