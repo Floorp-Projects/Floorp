@@ -893,7 +893,7 @@ nsHTTPChannel::CheckCache()
 			nsCOMPtr< nsIStreamAsFileObserver> observer;
 			PRUint32 count = 0;
 			mStreamAsFileObserverArray->Count( & count );
-			for ( PRInt32 i=0; i< count; i++ )
+			for ( PRUint32 i=0; i< count; i++ )
 			{
 				mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
 				streamAsFile->AddObserver( observer );
@@ -2159,7 +2159,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
 			nsCOMPtr< nsIStreamAsFileObserver> observer;
 			PRUint32 count = 0;
 			mStreamAsFileObserverArray->Count( & count );
-			for ( PRInt32 i=0; i< count; i++ )
+			for ( PRUint32 i=0; i< count; i++ )
 			{
 				mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
 				streamAsFile->AddObserver( observer );

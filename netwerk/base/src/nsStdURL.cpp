@@ -43,6 +43,13 @@ static NS_DEFINE_CID(kStdURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kThisStdURLImplementationCID,
                      NS_THIS_STANDARDURL_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
+static NS_DEFINE_CID(kAuthURLParserCID, NS_AUTHORITYURLPARSER_CID);
+static NS_DEFINE_CID(kNoAuthURLParserCID, NS_NOAUTHORITYURLPARSER_CID);
+
+// Global objects. Released from the module shudown routine.
+nsIURLParser * nsStdURL::gStdURLParser = NULL;
+nsIURLParser * nsStdURL::gAuthURLParser = NULL;
+nsIURLParser * nsStdURL::gNoAuthURLParser = NULL;
 
 #if defined (XP_MAC)
 static void SwapSlashColon(char * s)
@@ -59,28 +66,44 @@ static void SwapSlashColon(char * s)
 } 
 #endif
 
-nsStdURL::nsStdURL()
-    : mScheme(nsnull),
-      mUsername(nsnull),
-      mPassword(nsnull),
-      mHost(nsnull),
-      mPort(-1),
-      mDirectory(nsnull),
-      mFileBaseName(nsnull),
-      mFileExtension(nsnull),
-      mParam(nsnull),
-      mQuery(nsnull),
-      mRef(nsnull)
+NS_IMETHODIMP
+nsStdURL::InitGlobalObjects()
 {
-    NS_INIT_REFCNT();
-    /* Create the standard URLParser */
-    nsComponentManager::CreateInstance(kStdURLParserCID, 
-                                       nsnull, NS_GET_IID(nsIURLParser),
-                                       getter_AddRefs(mURLParser));
+    nsresult rv;
+    if (!gStdURLParser) {
+        nsCOMPtr<nsIURLParser> urlParser;
 
+        // Get the global instance of standard URLParser
+        urlParser = do_GetService(kStdURLParserCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        gStdURLParser = urlParser.get();
+        NS_ADDREF(gStdURLParser);
+
+        // Get the global instance of Auth URLParser
+        urlParser = do_GetService(kAuthURLParserCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        gAuthURLParser = urlParser.get();
+        NS_ADDREF(gAuthURLParser);
+
+        // Get the global instance of NoAuth URLParser
+        urlParser = do_GetService(kNoAuthURLParserCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        gNoAuthURLParser = urlParser.get();
+        NS_ADDREF(gNoAuthURLParser);
+    }
+    return NS_OK;
 }
 
-nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
+NS_IMETHODIMP
+nsStdURL::ShutdownGlobalObjects()
+{
+    NS_IF_RELEASE(gNoAuthURLParser);
+    NS_IF_RELEASE(gAuthURLParser);
+    NS_IF_RELEASE(gStdURLParser);
+    return NS_OK;
+}
+
+nsStdURL::nsStdURL(nsISupports* outer)
     : mScheme(nsnull),
       mUsername(nsnull),
       mPassword(nsnull),
@@ -91,40 +114,46 @@ nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
       mFileExtension(nsnull),
       mParam(nsnull),
       mQuery(nsnull),
-      mRef(nsnull)
+      mRef(nsnull),
+      mDefaultPort(-1)
 {
-    NS_INIT_REFCNT();
-
     NS_INIT_AGGREGATED(outer);
+    InitGlobalObjects();
+    mURLParser = gStdURLParser; // XXX hack - shouldn't be needed, should be calling Init
+}
 
-    char* eSpec = nsnull;
-    nsresult rv = DupString(&eSpec,i_Spec);
-    if (NS_SUCCEEDED(rv)){
-
-        // Skip leading spaces and control-characters
-        char* fwdPtr= (char*) eSpec;
-        while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
-            fwdPtr++;
-        // Remove trailing spaces and control-characters
-        if (fwdPtr) {
-            char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
-            if (*bckPtr > '\0' && *bckPtr <= ' ') {
-                while ((bckPtr-fwdPtr) >= 0 && (*bckPtr <= ' ')) {
-                    bckPtr--;
-                }
-                *(bckPtr+1) = '\0';
-            }
-        }
-
-        /* Create the standard URLParser */
-        nsComponentManager::CreateInstance(kStdURLParserCID, 
-                                           nsnull, NS_GET_IID(nsIURLParser),
-                                           getter_AddRefs(mURLParser));
-
-        if (fwdPtr && mURLParser)
-            Parse((char*)fwdPtr);
+NS_IMETHODIMP
+nsStdURL::Init(PRUint32 urlType, PRInt32 defaultPort, 
+               const char* initialSpec, nsIURI* baseURI)
+{
+    nsresult rv;
+    switch (urlType) {
+      case nsIStandardURL::URLTYPE_STANDARD:
+        mURLParser = gStdURLParser;
+        break;
+      case nsIStandardURL::URLTYPE_AUTHORITY:
+        mURLParser = gAuthURLParser;
+        break;
+      case nsIStandardURL::URLTYPE_NO_AUTHORITY:
+        mURLParser = gNoAuthURLParser;
+        break;
+      default:
+        NS_NOTREACHED("bad urlType");
+        return NS_ERROR_FAILURE;
     }
-    CRTFREEIF(eSpec);
+    mDefaultPort = defaultPort;
+
+    if (initialSpec == nsnull) return NS_OK;
+
+    nsXPIDLCString resolvedURI;
+    if (baseURI) {
+        rv = baseURI->Resolve(initialSpec, getter_Copies(resolvedURI));
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        resolvedURI = initialSpec;
+    }
+    return SetSpec(resolvedURI);
 }
 
 nsStdURL::nsStdURL(const nsStdURL& otherURL)
@@ -204,9 +233,12 @@ nsStdURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
             aIID.Equals(NS_GET_IID(nsIURI)) ||
             aIID.Equals(NS_GET_IID(nsIFileURL)))
         *aInstancePtr = NS_STATIC_CAST(nsIURL*, this);
-     else {
+    else if (aIID.Equals(NS_GET_IID(nsIStandardURL))) {
+		*aInstancePtr = NS_STATIC_CAST(nsIStandardURL*, this);
+	}
+    else {
         *aInstancePtr = nsnull;
-          return NS_NOINTERFACE;
+        return NS_NOINTERFACE;
     }
     NS_ADDREF((nsISupports*)*aInstancePtr);
     return NS_OK;
@@ -217,46 +249,37 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
 {
     PRBool eq = PR_FALSE;
     if (i_OtherURI) {
-        nsIURL* url = nsnull;
+        nsStdURL* other = nsnull;
         nsresult rv = i_OtherURI->QueryInterface(kThisStdURLImplementationCID,
-                                                 (void**)&url);
+                                                 (void**)&other);
         if (NS_FAILED(rv)) {
             *o_Equals = eq;
             return rv;
         }
         // Maybe the directorys are different
-        if (nsCRT::strcasecmp(this->mDirectory,
-                              ((nsStdURL*)url)->mDirectory)==0) {
+        if (nsCRT::strcasecmp(mDirectory, other->mDirectory)==0) {
             // Or the Filebasename?
-            if (nsCRT::strcasecmp(this->mFileBaseName,
-                                 ((nsStdURL*)url)->mFileBaseName)==0) {
+            if (nsCRT::strcasecmp(mFileBaseName, other->mFileBaseName)==0) {
                 // Maybe the Fileextension?
-                if (nsCRT::strcasecmp(this->mFileExtension,
-                         ((nsStdURL*)url)->mFileExtension)==0) {
+                if (nsCRT::strcasecmp(mFileExtension, other->mFileExtension)==0) {
                     // Or the Host?
-                    if (nsCRT::strcasecmp(this->mHost,
-                             ((nsStdURL*)url)->mHost)==0) {
+                    if (nsCRT::strcasecmp(mHost, other->mHost)==0) {
                         // Or the Scheme?
-                        if (nsCRT::strcasecmp(this->mScheme,
-                                 ((nsStdURL*)url)->mScheme)==0) {
+                        if (nsCRT::strcasecmp(mScheme, other->mScheme)==0) {
                             // Username?
-                            if (nsCRT::strcasecmp(this->mUsername,
-                                     ((nsStdURL*)url)->mUsername)==0) {
+                            if (nsCRT::strcasecmp(mUsername, other->mUsername)==0) {
                                 // Password?
-                                if (nsCRT::strcasecmp(this->mPassword,
-                                   ((nsStdURL*)url)->mPassword)==0) {
+                                if (nsCRT::strcasecmp(mPassword, other->mPassword)==0) {
                                     // Param?
-                                    if (nsCRT::strcasecmp(this->mParam,
-                                       ((nsStdURL*)url)->mParam)==0) {
+                                    if (nsCRT::strcasecmp(mParam, other->mParam)==0) {
                                         // Query?
-                                        if (nsCRT::strcasecmp(this->mQuery,
-                                        ((nsStdURL*)url)->mQuery)==0) {
+                                        if (nsCRT::strcasecmp(mQuery, other->mQuery)==0) {
                                             // Ref?
-                                            if (nsCRT::strcasecmp(this->mRef,
-                                          ((nsStdURL*)url)->mRef)==0) {
+                                            if (nsCRT::strcasecmp(mRef, other->mRef)==0) {
                                                 // Port?
-                                                if (this->mPort == 
-                                             ((nsStdURL*)url)->mPort) {
+                                                PRInt32 myPort = mPort != -1 ? mPort : mDefaultPort;
+                                                PRInt32 theirPort = other->mPort != -1 ? other->mPort : other->mDefaultPort;
+                                                if (myPort == theirPort) {
                                                     // They are equal!!!!!
                                                     eq = PR_TRUE;
                                                 }
@@ -270,7 +293,7 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
                 }
             }
         }
-        NS_RELEASE(url);
+        NS_RELEASE(other);
     }
     *o_Equals = eq;
     return NS_OK;
@@ -287,21 +310,6 @@ nsStdURL::Clone(nsIURI **o_URI)
     *o_URI = url;
     NS_ADDREF(url);
     return rv;
-}
-
-nsresult 
-nsStdURL::GetURLParser(nsIURLParser* *aURLParser)
-{
-    *aURLParser = mURLParser.get();
-    NS_ADDREF(*aURLParser);
-    return NS_OK;
-}
-
-nsresult 
-nsStdURL::SetURLParser(nsIURLParser* aURLParser)
-{
-    mURLParser = aURLParser;
-    return NS_OK;
 }
 
 nsresult
@@ -431,7 +439,7 @@ nsStdURL::GetSpec(char **o_Spec)
     if (mHost)
     {
         rv = AppendString(finalSpec,mHost,HOSTESCAPED,nsIIOService::url_Host);
-        if (-1 != mPort)
+        if (-1 != mPort && mPort != mDefaultPort)
         {
             char* portBuffer = PR_smprintf(":%d", mPort);
             if (!portBuffer)
@@ -508,10 +516,10 @@ nsStdURL::Create(nsISupports *aOuter,
     if (!aResult)
          return NS_ERROR_INVALID_POINTER;
 
-     if (aOuter && !aIID.Equals(NS_GET_IID(nsISupports)))
-         return NS_ERROR_INVALID_ARG;
+    if (aOuter && !aIID.Equals(NS_GET_IID(nsISupports)))
+        return NS_ERROR_INVALID_ARG;
 
-    nsStdURL* url = new nsStdURL(nsnull, aOuter);
+    nsStdURL* url = new nsStdURL(aOuter);
     if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 

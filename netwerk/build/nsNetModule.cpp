@@ -297,6 +297,13 @@ CreateNewNSTXTToHTMLConvFactory(nsISupports *aOuter, REFNSIID aIID, void **aResu
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
 
+// Necko module shutdown hook
+static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
+{
+    // Release the url parser that the stdurl is holding.
+    nsStdURL::ShutdownGlobalObjects();
+}
+
 static nsModuleComponentInfo gNetModuleInfo[] = {
     { "I/O Service", 
       NS_IOSERVICE_CID,
@@ -584,4 +591,5 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
 
 };
 
-NS_IMPL_NSGETMODULE("necko core and primary protocols", gNetModuleInfo)
+NS_IMPL_NSGETMODULE_WITH_DTOR("necko core and primary protocols", gNetModuleInfo,
+                              nsNeckoShutdown)

@@ -40,14 +40,13 @@
     {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-class nsStdURL : public nsIFileURL
+class nsStdURL : public nsIFileURL, nsIStandardURL
 {
 public:
     ///////////////////////////////////////////////////////////////////////////
     // nsStdURL methods:
 
-    nsStdURL();
-    nsStdURL(const char* i_Spec, nsISupports* outer=nsnull);
+    nsStdURL(nsISupports* outer = nsnull);
     nsStdURL(const nsStdURL& i_URL); 
     virtual ~nsStdURL();
 
@@ -57,10 +56,15 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
+    // Global objects management.
+    static NS_METHOD InitGlobalObjects();
+    static NS_METHOD ShutdownGlobalObjects();
+
     NS_DECL_AGGREGATED
     NS_DECL_NSIURI
     NS_DECL_NSIURL
     NS_DECL_NSIFILEURL
+    NS_DECL_NSISTANDARDURL
 
 protected:
     enum Format { ESCAPED, // Normal URL escaping
@@ -92,6 +96,13 @@ protected:
     char*       mRef;
 
     nsCOMPtr<nsIURLParser> mURLParser;
+    PRInt32     mDefaultPort;   // port for protocol (used for canonicalizing, and printing)
+
+    // Global objects. Dont use comptr as its destructor will cause
+    // a coredump if we leak it.
+    static nsIURLParser *gStdURLParser;
+    static nsIURLParser *gAuthURLParser;
+    static nsIURLParser *gNoAuthURLParser;
 
     // If a file was given to SetFile, then this instance variable holds it.
     // If GetFile is called, we synthesize one and cache it here.

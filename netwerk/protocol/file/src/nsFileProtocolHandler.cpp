@@ -104,34 +104,16 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // file: URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
 
-    nsCOMPtr<nsIURI> url;
-    nsCOMPtr<nsIURLParser> urlparser;
+    nsCOMPtr<nsIStandardURL> url;
 
-    rv = nsComponentManager::CreateInstance(kNoAuthUrlParserCID, 
-                                    nsnull, NS_GET_IID(nsIURLParser),
-                                    getter_AddRefs(urlparser));
-    if (NS_FAILED(rv)) return rv;
     rv = nsComponentManager::CreateInstance(kStandardURLCID, 
-                             nsnull, NS_GET_IID(nsIURI),
-                             getter_AddRefs(url));
+                                            nsnull, NS_GET_IID(nsIStandardURL),
+                                            getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
-    rv = url->SetURLParser(urlparser);
-    if (NS_FAILED(rv)) return rv;
-
-    if (aBaseURI)
-    {
-        nsXPIDLCString aResolvedURI;
-        rv = aBaseURI->Resolve(aSpec, getter_Copies(aResolvedURI));
-        if (NS_FAILED(rv)) return rv;
-        rv = url->SetSpec(aResolvedURI);
-    } else {
-        rv = url->SetSpec((char*)aSpec);
-    }
+    rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, aSpec, aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
-    *result = url.get();
-    NS_ADDREF(*result);
-    return rv;
+    return url->QueryInterface(NS_GET_IID(nsIURI), (void**)result);
 }
 
 NS_IMETHODIMP

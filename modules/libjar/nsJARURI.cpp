@@ -238,18 +238,6 @@ nsJARURI::SetPath(const char * aPath)
 }
 
 NS_IMETHODIMP
-nsJARURI::GetURLParser(nsIURLParser * *aURLParser)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsJARURI::SetURLParser(nsIURLParser * aURLParser)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsJARURI::Equals(nsIURI *other, PRBool *result)
 {
     nsresult rv;

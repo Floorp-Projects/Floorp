@@ -21,7 +21,6 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIURLParser.idl"
 
 /**
  * URIs are essentially structured names for things -- anything.
@@ -118,11 +117,6 @@ interface nsIURI : nsISupports
      * For SetPath if none is provided, one would be prefixed to the path. 
      */
     attribute string path;
-
-    /**
-     * This is a handle to the Parser used to parse the URI
-     */
-    attribute nsIURLParser URLParser;
 
     /**
      * Note that this comparison is only on char* level. Use 
