@@ -31,6 +31,7 @@
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
 #include "nsDateTimeFormatCID.h"
+#include "nsMsgBaseCID.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);

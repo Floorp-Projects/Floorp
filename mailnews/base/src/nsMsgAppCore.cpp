@@ -67,6 +67,8 @@
 #include "nsIMessageView.h"
 
 #include "nsMsgUtils.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgLocalCID.h"
 
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);

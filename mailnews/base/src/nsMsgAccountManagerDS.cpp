@@ -40,6 +40,7 @@
 
 #include "nsMsgRDFUtils.h"
 #include "nsIMsgFolder.h"
+#include "nsMsgBaseCID.h"
 
 // turn this on to see useful output
 #undef DEBUG_amds
