@@ -253,6 +253,8 @@ pass_1(TreeState *state)
 #ifdef DEBUG_shaver
         fprintf(stderr, "writing typelib was %ssuccessful\n",
                 ok ? "" : "not ");
+#else
+        ;   // msvc would like a statement here
 #endif
     }
 
@@ -391,13 +393,13 @@ fill_pd_from_type(TreeState *state, XPTParamDescriptor *pd, uint8 flags,
               }
               default:
                 fprintf(stderr, "Can't yet handle %s ident in param list\n",
-                        IDL_NODE_TYPE_NAME(up));
+                        /*IDL_NODE_TYPE_NAME(up)*/"that type");
                 return FALSE;
             }
             break;
           default:
             fprintf(stderr, "Can't yet handle %s in param list\n",
-                    IDL_NODE_TYPE_NAME(type));
+                    /*IDL_NODE_TYPE_NAME(up)*/"that type");
             return FALSE;
         }
     } else {
