@@ -218,15 +218,15 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
 
   nscoord x = aRect.x;
   switch (aJust) {
-    case NS_PRINT_JUSTIFY_LEFT:
+    case nsIPrintOptions::kJustLeft:
       // do nothing, already set
       break;
 
-    case NS_PRINT_JUSTIFY_CENTER:
+    case nsIPrintOptions::kJustCenter:
       x += (aRect.width - width) / 2;
       break;
 
-    case NS_PRINT_JUSTIFY_RIGHT:
+    case nsIPrintOptions::kJustRight:
       x += aRect.width - width;
       break;
   } // switch
@@ -314,7 +314,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // get the current margin
-    mPrintOptions->GetMargin(mMargin);
+    mPrintOptions->GetMarginInTwips(mMargin);
 
     nsRect  rect(0,0,mRect.width, mRect.height);
 
@@ -353,13 +353,13 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     mPrintOptions->GetPrintOptionsBits(&printOptBits);
 
     // print page numbers
-    if (printOptBits & NS_PRINT_OPTIONS_PRINT_PAGE_NUMS && mPageNumFormat != nsnull) {
-      PRInt32 justify = NS_PRINT_JUSTIFY_LEFT;
+    if (printOptBits & nsIPrintOptions::kOptPrintPageNums && mPageNumFormat != nsnull) {
+      PRInt16 justify = nsIPrintOptions::kJustLeft;
       mPrintOptions->GetPageNumJust(&justify);
 
       PRUnichar *  valStr;
       // print page number totals "x of x"
-      if (printOptBits & NS_PRINT_OPTIONS_PRINT_PAGE_TOTAL) {
+      if (printOptBits & nsIPrintOptions::kOptPrintPageTotal) {
         valStr = nsTextFormatter::smprintf(mPageNumFormat, mPageNum, mTotNumPages);
       } else {
         valStr = nsTextFormatter::smprintf(mPageNumFormat, mPageNum);
@@ -370,7 +370,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     }
 
     // print localized date
-    if (printOptBits & NS_PRINT_OPTIONS_PRINT_DATE_PRINTED) {
+    if (printOptBits & nsIPrintOptions::kOptPrintDatePrinted) {
       // Get Locale for Formating DateTime
       nsCOMPtr<nsILocale> locale; 
       NS_WITH_SERVICE(nsILocaleService, localeSvc, kLocaleServiceCID, &rv);
@@ -390,7 +390,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
             time( &ltime );
             rv = dateTime->FormatTMTime(locale, kDateFormatShort, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
             if (NS_SUCCEEDED(rv)) {
-              DrawHeaderFooter(aRenderingContext, this, eFooter, NS_PRINT_JUSTIFY_RIGHT, dateString, rect, visibleHeight);
+              DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintOptions::kJustRight, dateString, rect, visibleHeight);
             }
           }
         }
@@ -398,21 +398,22 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     }
 
 
-    PRBool usingHalfThePage = (printOptBits & NS_PRINT_OPTIONS_PRINT_DOC_TITLE) && (printOptBits & NS_PRINT_OPTIONS_PRINT_DOC_LOCATION);
+    PRBool usingHalfThePage = (printOptBits & nsIPrintOptions::kOptPrintDocTitle) && 
+                              (printOptBits & nsIPrintOptions::kOptPrintDocLoc);
         
     // print document title
     PRUnichar * title;
     mPrintOptions->GetTitle(&title); // creates memory
-    if (title != nsnull && (printOptBits & NS_PRINT_OPTIONS_PRINT_DOC_TITLE)) {
-      DrawHeaderFooter(aRenderingContext, this, eHeader, NS_PRINT_JUSTIFY_LEFT, nsAutoString(title), rect, visibleHeight, usingHalfThePage);
+    if (title != nsnull && (printOptBits & nsIPrintOptions::kOptPrintDocTitle)) {
+      DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustLeft, nsAutoString(title), rect, visibleHeight, usingHalfThePage);
       nsMemory::Free(title);
     }
 
     // print document URL
     PRUnichar * url;
-    mPrintOptions->GetURL(&url);
-    if (title != url && (printOptBits & NS_PRINT_OPTIONS_PRINT_DOC_LOCATION)) {
-      DrawHeaderFooter(aRenderingContext, this, eHeader, NS_PRINT_JUSTIFY_RIGHT, nsAutoString(url), rect, visibleHeight, usingHalfThePage);
+    mPrintOptions->GetDocURL(&url);
+    if (title != url && (printOptBits & nsIPrintOptions::kOptPrintDocLoc)) {
+      DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustRight, nsAutoString(url), rect, visibleHeight, usingHalfThePage);
       nsMemory::Free(url);
     }
 
@@ -455,4 +456,3 @@ nsPageFrame::SetPageNumberFormat(PRUnichar * aFormatStr)
   }
   mPageNumFormat = aFormatStr;
 }
-

@@ -102,6 +102,14 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
         </radiogroup>
       </row>
       <row>
+        <text class="label" value="&printframeGroup.label;" id="printrangeGroupLabel" flex ="1"/>
+        <radiogroup id="printrangeGroup" orient="vertical">
+          <radio group = "printrangeGroup" id = "aslayedoutRadio" value = "&aslayedoutRadio.label;" />
+          <radio group = "printrangeGroup" id = "selectedframeRadio" value = "&selectedframeRadio.label;" />
+          <radio group = "printrangeGroup" id = "eachframesepRadio" value = "&eachframesepRadio.label;" />
+        </radiogroup>
+      </row>
+      <row>
         <text class="label" value="&marginInput.label;" flex ="1"/>
 	      <box orient="horizontal">
 	        <box orient="horizontal" autostretch="never">

@@ -79,9 +79,9 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame() :
   nsresult rv;
   NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
-    PRInt32 printType;
+    PRInt16 printType;
     printService->GetPrintRange(&printType);
-    mIsPrintingSelection = ePrintRange_Selection == nsPrintRange(printType);
+    mIsPrintingSelection = nsIPrintOptions::kRangeSelection == printType;
   }
 
 }
@@ -372,24 +372,23 @@ nsSimplePageSequenceFrame::Print(nsIPresContext*         aPresContext,
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_ARG_POINTER(aPrintOptions);
 
-  nsPrintRange printRangeType;
+  PRInt32 printRangeType;
   PRInt32 fromPageNum;
   PRInt32 toPageNum;
-  PRInt32 marginL, marginR, marginT, marginB;
   PRBool  printEvenPages, printOddPages;
 
-  PRInt32 printType;
+  PRInt16 printType;
   aPrintOptions->GetPrintRange(&printType);
-  printRangeType = (nsPrintRange)printType;
-  aPrintOptions->GetPageRange(&fromPageNum, &toPageNum);
-  aPrintOptions->GetMargins(&marginT, &marginL, &marginR, &marginB);
-  mMargin.SizeTo(nscoord(marginL), nscoord(marginT), nscoord(marginR), nscoord(marginB));
+  printRangeType = printType;
+  aPrintOptions->GetStartPageRange(&fromPageNum);
+  aPrintOptions->GetEndPageRange(&toPageNum);
+  aPrintOptions->GetMarginInTwips(mMargin);
 
-  aPrintOptions->GetPrintOptions(NS_PRINT_OPTIONS_PRINT_EVEN_PAGES, &printEvenPages);
-  aPrintOptions->GetPrintOptions(NS_PRINT_OPTIONS_PRINT_ODD_PAGES, &printOddPages);
+  aPrintOptions->GetPrintOptions(nsIPrintOptions::kOptPrintEvenPages, &printEvenPages);
+  aPrintOptions->GetPrintOptions(nsIPrintOptions::kOptPrintOddPages, &printOddPages);
 
-  PRBool doingPageRange = ePrintRange_SpecifiedPageRange == printRangeType ||
-                          ePrintRange_Selection == printRangeType;
+  PRBool doingPageRange = nsIPrintOptions::kRangeSpecifiedPageRange == printRangeType ||
+                          nsIPrintOptions::kRangeSelection == printRangeType;
 
   // If printing a range of pages make sure at least the starting page
   // number is valid
@@ -441,11 +440,11 @@ nsSimplePageSequenceFrame::Print(nsIPresContext*         aPresContext,
       pageNum++;
     }
   }
-  printf("***** Setting aPresContext %p is painting selection %d\n", aPresContext, ePrintRange_Selection == printRangeType);
+  printf("***** Setting aPresContext %p is painting selection %d\n", aPresContext, nsIPrintOptions::kRangeSelection == printRangeType);
 #endif
 
   // Determine if we are rendering only the selection
-  aPresContext->SetIsRenderingOnlySelection(ePrintRange_Selection == printRangeType);
+  aPresContext->SetIsRenderingOnlySelection(nsIPrintOptions::kRangeSelection == printRangeType);
 
 
   if (doingPageRange) {
@@ -482,7 +481,7 @@ nsSimplePageSequenceFrame::Print(nsIPresContext*         aPresContext,
     }
 
     // adjust total number of pages
-    if (ePrintRange_Selection == printRangeType) {
+    if (nsIPrintOptions::kRangeSelection == printRangeType) {
       totalPages = toPageNum - fromPageNum + 1;
     } else {
       totalPages = pageNum - 1;
@@ -517,7 +516,7 @@ nsSimplePageSequenceFrame::Print(nsIPresContext*         aPresContext,
 
   // Now go get the Localized Page Formating String
   PRBool doingPageTotals = PR_TRUE;
-  aPrintOptions->GetPrintOptions(NS_PRINT_OPTIONS_PRINT_PAGE_TOTAL, &doingPageTotals);
+  aPrintOptions->GetPrintOptions(nsIPrintOptions::kOptPrintPageTotal, &doingPageTotals);
 
   nsAutoString pageFormatStr;
   rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, 
@@ -627,8 +626,8 @@ nsSimplePageSequenceFrame::Print(nsIPresContext*         aPresContext,
       }
     }
 
-    if (ePrintRange_Selection != printRangeType ||
-        (ePrintRange_Selection == printRangeType && printThisPage)) {
+    if (nsIPrintOptions::kRangeSelection != printRangeType ||
+        (nsIPrintOptions::kRangeSelection == printRangeType && printThisPage)) {
       printedPageNum++;
     }
 

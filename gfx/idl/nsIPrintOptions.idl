@@ -26,97 +26,62 @@
 %{ C++
 #include "nsMargin.h"
 #include "nsFont.h"
-
-  enum nsPrintRange {
-    ePrintRange_AllPages,           // print all pages
-    ePrintRange_SpecifiedPageRange, // only print pages in the specified range
-    ePrintRange_Selection,          // only print the selection
-    ePrintRange_FocusFrame          // only print the frame with the current focus
-  };
-
-  /**
-   * Print Option Printing state bits. 
-   */
-  typedef PRUint32 nsPrintOptionsType;
-
-#define NS_PRINT_OPTIONS_PRINT_ODD_PAGES        0x00000001
-#define NS_PRINT_OPTIONS_PRINT_EVEN_PAGES       0x00000002
-#define NS_PRINT_OPTIONS_PRINT_DOC_TITLE        0x00000004
-#define NS_PRINT_OPTIONS_PRINT_DOC_LOCATION     0x00000008
-#define NS_PRINT_OPTIONS_PRINT_PAGE_NUMS        0x00000010
-#define NS_PRINT_OPTIONS_PRINT_PAGE_TOTAL       0x00000020
-#define NS_PRINT_OPTIONS_PRINT_DATE_PRINTED     0x00000040
-#define NS_PRINT_OPTIONS_ENABLE_SELECTION_RADIO 0x00000080
-
-// There are currently NOT supported
-#define NS_PRINT_OPTIONS_PRINT_BEVEL_LINES      0x00000100
-#define NS_PRINT_OPTIONS_PRINT_BLACK_TEXT       0x00000200
-#define NS_PRINT_OPTIONS_PRINT_BLACK_LINES      0x00000400
-#define NS_PRINT_OPTIONS_PRINT_LAST_PAGE_FIRST  0x00000800
-#define NS_PRINT_OPTIONS_PRINT_BACKGROUNDS      0x00001000
-
-// Justification Flags
-#define NS_PRINT_JUSTIFY_LEFT      0x00000001
-#define NS_PRINT_JUSTIFY_CENTER    0x00000002
-#define NS_PRINT_JUSTIFY_RIGHT     0x00000004
-
 %}
+
+/**
+ * Native types
+ */
+  [ref] native nsNativeMarginRef(nsMargin);
+  [ref] native nsNativeFontRef(nsFont);
+  [ref] native nsNativeStringRef(nsString);
 
 /**
  * Simplified graphics interface for JS rendering.
  */
 [scriptable, uuid(CAE87E20-479E-11d4-A856-00105A183419)]
 
-
 interface nsIPrintOptions : nsISupports
 {
-%{C++
-  // Set Default Font of Header and footer
-  NS_IMETHOD SetDefaultFont(const nsFont &aFont) = 0;
-  NS_IMETHOD SetFontNamePointSize(const nsString& aFontName, nscoord aPointSize) = 0;
+  /* Print Option Flags for Bit Field*/
+  const long kOptPrintOddPages              = 0x00000001;
+  const long kOptPrintEvenPages             = 0x00000002;
+  const long kOptPrintDocTitle              = 0x00000004;
+  const long kOptPrintDocLoc                = 0x00000008;
+  const long kOptPrintPageNums              = 0x00000010;
+  const long kOptPrintPageTotal             = 0x00000020;
+  const long kOptPrintDatePrinted           = 0x00000040;
+  const long kPrintOptionsEnableSelectionRB = 0x00000080;
 
-  NS_IMETHOD GetDefaultFont(nsFont &aFont) = 0;
+  /* Print Range Enums */
+  const long kRangeAllPages           = 0;
+  const long kRangeSpecifiedPageRange = 1;
+  const long kRangeSelection          = 2;
+  const long kRangeFocusFrame         = 3;
 
-
-  // non-scriptable helper method
-  NS_IMETHOD GetMargin(nsMargin& aMargin) = 0;
-%}
+  /* Justification Enums */
+  const long kJustLeft   = 0;
+  const long kJustCenter = 1;
+  const long kJustRight  = 2;
 
   /**
-   * Set PageMargins
+   * Page Size Constants
    */
-  void SetMargins(in PRInt32 aTop, in PRInt32 aLeft, in PRInt32 aRight, in PRInt32 aBottom);
+  const short kLetterPaperSize    = 0;
+  const short kLegalPaperSize     = 1;
+  const short kExecutivePaperSize = 2;
+  const short kA4PaperSize        = 3;
 
   /**
-   * Get PageMargins
+   * Print Frame Constants
    */
-  void GetMargins(out PRInt32 aTop, out PRInt32 aLeft, out PRInt32 aRight, out PRInt32 aBottom);
-
+  const short kFramesAsIs    = 0;
+  const short kSelectedFrame = 1;
+  const short kEachFrameSep  = 2;
 
   /**
    * Show Native Print Options dialog, this may not be supported on all platforms
    */
   void ShowNativeDialog();
-
-  /**
-   * Set Print Range
-   */
-  void SetPrintRange(in PRInt32 aPrintRange);
-
-  /**
-   * Get Print Range
-   */
-  void GetPrintRange(out PRInt32 aPrintRange);
-
-  /**
-   * Set Page Range
-   */
-  void SetPageRange(in PRInt32 aStartPage, in PRInt32 aEndPage);
-
-  /**
-   * Get Page Range
-   */
-  void GetPageRange(out PRInt32 aStartPage, out PRInt32 aEndPage);
 
   /**
    * Set PrintOptions 
@@ -126,42 +91,12 @@ interface nsIPrintOptions : nsISupports
   /**
    * Get PrintOptions 
    */
-  void GetPrintOptions(in PRInt32 aType, out PRBool aTurnOnOff);
+  PRBool GetPrintOptions(in PRInt32 aType);
 
   /**
    * Set PrintOptions Bit field
    */
-  void GetPrintOptionsBits(out PRInt32 aBits);
-
-  /**
-   * Set Title field for Header 
-   */
-  void SetTitle(in wstring aTitle);
-
-  /**
-   * Get Title field for Header 
-   */
-  void GetTitle(out wstring aTitle);
-
-  /**
-   * Set URL field for Header 
-   */
-  void SetURL(in wstring aURL);
-
-  /**
-   * Get URL field for Header 
-   */
-  void GetURL(out wstring aURL);
-
-  /**
-   * Set Page Number Print Justification
-   */
-  void SetPageNumJust(in PRInt32 aJust);
-
-  /**
-   * Set Page Number Print Justification
-   */
-  void GetPageNumJust(out PRInt32 aJust);
+  PRInt32 GetPrintOptionsBits();
 
   /**
    * Read Prefs 
@@ -172,5 +107,46 @@ interface nsIPrintOptions : nsISupports
    * Write Prefs
    */
   void WritePrefs();
+
+
+  /**
+   * Data Members
+   */
+  attribute long    startPageRange;    
+  attribute long    endPageRange;    
+
+  attribute double  marginTop;     /*  these are in inches */
+  attribute double  marginLeft;
+  attribute double  marginBottom;
+  attribute double  marginRight;
+
+  attribute short   printRange; 
+  attribute short   pageNumJust; 
+  attribute wstring title;
+  attribute wstring docURL;
+
+  attribute boolean isPrintFrame;
+  attribute short   printFrameType;
+
+  /* Additional XP Related */
+  attribute boolean printReversed;
+  attribute boolean printInColor;  /* a false means grayscale */
+  attribute long    paperSize;     /*  see page size consts */
+  attribute wstring printCommand;
+  attribute boolean printToFile;
+  attribute wstring toFileName;
+
+  /* No Script Methods */
+
+  [noscript] void SetFontNamePointSize(in nsNativeStringRef aName, in PRInt32 aPointSize);
+
+  [noscript] void SetMarginInTwips(in nsNativeMarginRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetMarginInTwips(in nsNativeMarginRef aMargin);
+
+  [noscript] void SetDefaultFont(in nsNativeFontRef aMargin);
+  /* Purposely made this an "in" arg */
+  [noscript] void GetDefaultFont(in nsNativeFontRef aMargin);
+
 
 };

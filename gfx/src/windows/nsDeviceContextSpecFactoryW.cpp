@@ -30,6 +30,9 @@
 
 #include "nsIPrintOptions.h"
 
+// This is for extending the dialog
+#include <dlgs.h>
+
 nsDeviceContextSpecFactoryWin :: nsDeviceContextSpecFactoryWin()
 {
   NS_INIT_REFCNT();
@@ -50,45 +53,104 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: Init(void)
   return NS_OK;
 }
 
+//--------------------------------------------------------
+static void SetRadio(HWND         aParent, 
+                     UINT         aId, 
+                     PRBool       aIsSet,
+                     PRBool       isEnabled = PR_TRUE) 
+{
+  HWND wnd = GetDlgItem (aParent, aId);
+  if (!wnd) {
+    return;
+  }
+  if (!isEnabled) {
+    ::EnableWindow(wnd, FALSE);
+    return;
+  }
+  ::EnableWindow(wnd, TRUE);
+  ::SendMessage(wnd, BM_SETCHECK, (WPARAM)aIsSet, (LPARAM)0);
+}
+
+//--------------------------------------------------------
+static UINT gFrameSelectedRadioBtn = NULL;
+
+//--------------------------------------------------------
+UINT CALLBACK PrintHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam) 
+{
+  if (uiMsg == WM_COMMAND) {
+    gFrameSelectedRadioBtn = LOWORD(wParam);
+
+  } else if (uiMsg == WM_INITDIALOG) {
+    PRINTDLG *   printDlg    = (PRINTDLG *)lParam;
+    PRBool       doingFrames = (PRBool)printDlg->lCustData;
+    HWND         collateChk  = GetDlgItem (hdlg, chx2);
+    if (collateChk) {
+      ::ShowWindow(collateChk, SW_SHOW);
+    }
+    if (!doingFrames) {
+      // we are using this function to disabe the group box
+      SetRadio(hdlg, grp3, PR_FALSE, PR_FALSE); 
+      // now disable radiobuttons
+      SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE); 
+      SetRadio(hdlg, rad5, PR_FALSE, PR_FALSE); 
+      SetRadio(hdlg, rad6, PR_FALSE, PR_FALSE); 
+    } else {
+      SetRadio(hdlg, rad4, PR_FALSE, PR_FALSE);  // XXX this is just temporary
+      SetRadio(hdlg, rad5, PR_TRUE); 
+      SetRadio(hdlg, rad6, PR_FALSE); 
+    }
+  }
+  return 0L;
+}
+
 //XXX this method needs to do what the API says...
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
+  NS_ENSURE_ARG_POINTER(aWidget);
+
   nsresult  rv = NS_ERROR_FAILURE;
   NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
 
   PRINTDLG  prntdlg;
+
+  HWND      hWnd      = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
+  HINSTANCE hInstance = (HINSTANCE)::GetWindowLong(hWnd, GWL_HINSTANCE);
 
   prntdlg.lStructSize = sizeof(prntdlg);
   prntdlg.hwndOwner = NULL;               //XXX need to find a window here. MMP
   prntdlg.hDevMode = NULL;
   prntdlg.hDevNames = NULL;
   prntdlg.hDC = NULL;
-  prntdlg.Flags = PD_ALLPAGES | PD_RETURNIC | PD_HIDEPRINTTOFILE;
+  prntdlg.Flags = PD_ALLPAGES | PD_RETURNIC | PD_HIDEPRINTTOFILE | 
+                  PD_ENABLEPRINTTEMPLATE | PD_ENABLEPRINTHOOK | PD_USEDEVMODECOPIESANDCOLLATE;
 
   // if there is a current selection then enable the "Selection" radio button
+  PRBool isPrintFrames = PR_FALSE;
   if (printService) {
     PRBool isOn;
-    printService->GetPrintOptions(NS_PRINT_OPTIONS_ENABLE_SELECTION_RADIO, &isOn);
+    printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
     if (!isOn) {
       prntdlg.Flags |= PD_NOSELECTION;
     }
+    printService->GetIsPrintFrame(&isPrintFrames);
   }
-  prntdlg.nFromPage = 1;
-  prntdlg.nToPage = 1;
-  prntdlg.nMinPage = 0;
-  prntdlg.nMaxPage = 1000;
-  prntdlg.nCopies = 1;
-  prntdlg.hInstance = NULL;
-  prntdlg.lCustData = 0;
-  prntdlg.lpfnPrintHook = NULL;
-  prntdlg.lpfnSetupHook = NULL;
-  prntdlg.lpPrintTemplateName = NULL;
+
+  prntdlg.nFromPage           = 1;
+  prntdlg.nToPage             = 1;
+  prntdlg.nMinPage            = 0;
+  prntdlg.nMaxPage            = 1000;
+  prntdlg.nCopies             = 1;
+  prntdlg.hInstance           = hInstance;
+  prntdlg.lCustData           = (DWORD)isPrintFrames;
+  prntdlg.lpfnPrintHook       = PrintHookProc;
+  prntdlg.lpfnSetupHook       = NULL;
+  prntdlg.lpPrintTemplateName = (LPCTSTR)"PRINTDLGNEW";
   prntdlg.lpSetupTemplateName = NULL;
-  prntdlg.hPrintTemplate = NULL;
-  prntdlg.hSetupTemplate = NULL;
+  prntdlg.hPrintTemplate      = NULL;
+  prntdlg.hSetupTemplate      = NULL;
 
 
   if(PR_TRUE == aQuiet){
@@ -116,16 +178,33 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
     if(printService) {
 
       if (prntdlg.Flags & PD_SELECTION) {
-        printService->SetPrintRange(ePrintRange_Selection);
+        printService->SetPrintRange(nsIPrintOptions::kRangeSelection);
 
       } else if (prntdlg.Flags & PD_PAGENUMS) {
-        printService->SetPrintRange(ePrintRange_SpecifiedPageRange);
-        printService->SetPageRange(prntdlg.nFromPage, prntdlg.nToPage);
+        printService->SetPrintRange(nsIPrintOptions::kRangeSpecifiedPageRange);
+        printService->SetStartPageRange(prntdlg.nFromPage);
+        printService->SetEndPageRange( prntdlg.nToPage);
 
       } else { // (prntdlg.Flags & PD_ALLPAGES)
-        printService->SetPrintRange(ePrintRange_AllPages);
+        printService->SetPrintRange(nsIPrintOptions::kRangeAllPages);
       }
-    }  
+
+      // check to see about the frame radio buttons
+      switch (gFrameSelectedRadioBtn) {
+        case rad4: 
+          printService->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
+          break;
+        case rad5: 
+          printService->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
+          break;
+        case rad6: 
+          printService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
+          break;
+        default:
+          printService->SetIsPrintFrame(PR_FALSE);
+      } // switch 
+    }
+
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     PRBool  printSelection = prntdlg.Flags & PD_SELECTION;

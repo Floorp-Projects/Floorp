@@ -36,39 +36,43 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTOPTIONS
 
-  // C++ methods
-  NS_IMETHOD SetDefaultFont(const nsFont &aFont);
-  NS_IMETHOD SetFontNamePointSize(const nsString& aFontName, nscoord aPointSize);
-
-  NS_IMETHOD GetDefaultFont(nsFont &aFont);
-
-  // non-scriptable C++ helper method
-  NS_IMETHOD GetMargin(nsMargin& aMargin);
-
   nsPrintOptions();
   virtual ~nsPrintOptions();
 
 protected:
   void ReadBitFieldPref(nsIPref * aPref, const char * aPrefId, PRInt32 anOption);
   void WriteBitFieldPref(nsIPref * aPref, const char * aPrefId, PRInt32 anOption);
-  void ReadJustification(nsIPref *  aPref, const char * aPrefId, PRInt32& aJust, PRInt32 aInitValue);
-  void WriteJustification(nsIPref * aPref, const char * aPrefId, PRInt32 aJust);
+  void ReadJustification(nsIPref *  aPref, const char * aPrefId, PRInt16& aJust, PRInt16 aInitValue);
+  void WriteJustification(nsIPref * aPref, const char * aPrefId, PRInt16 aJust);
   void ReadInchesToTwipsPref(nsIPref * aPref, const char * aPrefId, nscoord&  aTwips);
   void WriteInchesFromTwipsPref(nsIPref * aPref, const char * aPrefId, nscoord aTwips);
 
+  nsresult ReadPrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
+  nsresult WritePrefString(nsIPref * aPref, const char * aPrefId, nsString& aString);
+
   // Members 
   nsMargin      mMargin;
+  PRInt32       mPrintOptions;
 
-  nsPrintRange  mPrintRange;
+  // scriptable data members
+  PRInt16       mPrintRange;
   PRInt32       mStartPageNum; // only used for ePrintRange_SpecifiedRange
   PRInt32       mEndPageNum;
-  PRInt32       mPageNumJust;
+  PRInt16       mPageNumJust;
 
-  PRInt32       mPrintOptions;
+  PRInt16       mPrintFrameType;
+  PRBool        mIsPrintFrame;
 
   nsFont*       mDefaultFont;
   nsString      mTitle;
   nsString      mURL;
+
+  PRBool        mPrintReversed;
+  PRBool        mPrintInColor; // a false means grayscale
+  PRInt32       mPaperSize;    // see page size consts
+  nsString      mPrintCommand;
+  PRBool        mPrintToFile;
+  nsString      mToFileName;
 
 };
 
