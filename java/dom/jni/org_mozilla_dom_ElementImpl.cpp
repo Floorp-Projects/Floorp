@@ -676,7 +676,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagNameN
     return NULL;
   }
 
-  return JavaDOMGlobals::CreateNodeSubtype(env, (nsIDOMNode*)nodes);
+  jobject jnodes = env->AllocObject(JavaDOMGlobals::nodeListClass);
+  if (!jnodes) {
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getElementsByTagNameNS: failed to allocate object");
+    return NULL;
+  }
+
+  env->SetLongField(jnodes, JavaDOMGlobals::nodeListPtrFID, (jlong) nodes);
+  if (env->ExceptionOccurred()) {
+    JavaDOMGlobals::ThrowException(env,
+      "Element.getElementsByTagNameNS: failed to set node ptr");
+    return NULL;
+  }
+
+  nodes->AddRef();
+  return jnodes;
 }
 
 /*
