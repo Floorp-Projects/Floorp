@@ -446,19 +446,6 @@ _PR_MD_SWITCH_CONTEXT(PRThread *thread)
     _PR_Schedule();
 }
 
-/*
- * The /GT option of MSVC 6.0 SP3 fails to prevent compiler optimizations
- * that are unsafe for fibers' access to static thread local storage.
- * We work around this problem by moving all the code after the
- * SwitchToFiber() call to a separate function.  (Bugzilla bug #39712)
- */
-
-static void
-PostSwitchWork(void)
-{
-    POST_SWITCH_WORK();
-}
-
 void
 _PR_MD_RESTORE_CONTEXT(PRThread *thread)
 {
@@ -476,16 +463,7 @@ _PR_MD_RESTORE_CONTEXT(PRThread *thread)
         _PR_MD_SET_LAST_THREAD(me);
         thread->no_sched = 1;
         SwitchToFiber(thread->md.fiber_id);
-#if 0
         POST_SWITCH_WORK();
-#else
-        /*
-         * Move the code after SwitchToFiber() to another function so
-         * that it is not jointly optimized with the code before the
-         * SwitchToFiber() call.  See comments before PostSwitchWork().
-         */
-        PostSwitchWork();
-#endif
     }
 }
 
