@@ -602,7 +602,7 @@ function downMouse(event){
                 ylock = true;
                 startX = parseInt(curObj.style.left);
                 break;
-              deafult:
+              default:
                 return;
             } 
           }
