@@ -55,7 +55,7 @@
       <menuitem id="context-reload"
                 label="&reloadCmd.label;"
                 accesskey="&reloadCmd.accesskey;"
-                oncommand="BrowserReload();"/>
+                oncommand="reload();"/>
       <menuseparator/>
       <menuitem id="zoom-out"
       		label="&textZoomReduceBtn.label;"

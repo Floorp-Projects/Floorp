@@ -117,7 +117,7 @@
 
     <vbox flex="1">
 
-        <!-- button bar -->
+#       <!-- button bar -->
         <toolbox id="help-toolbox" class="toolbox-top" mode="icons" iconsize="small" customizable="true">
             
             <toolbarpalette id="HelpToolbarPalette">
@@ -173,12 +173,12 @@
             <toolbar id="helpToolbar" toolbarname="Help Toolbar" class="toolbar-primary
                     chromeclass-toolbar" mode="icons" iconsize="small"
                     customizable="true"
-                    defaultset="help-sidebar-button,spacer,separator,spacer,help-back-button,help-forward-button,help-home-button,spacer,separator,spacer,help-print-button,spacer,separator,spacer,help-toolbar-customization"
+                    defaultset="help-sidebar-button,separator,help-back-button,help-forward-button,help-home-button,separator,help-toolbar-customization,spring,help-print-button,separator,spacer,throbber-box"
                     context="toolbar-context-menu"/>
 	    <toolbarset id="customToolbars"/>
         </toolbox>
 
-        <!-- the two help panes (sidebar & content) -->
+#       <!-- the two help panes (sidebar & content) -->
         <hbox flex="1">
             <vbox id="helpsidebar-box" persist="width">
 
@@ -225,7 +225,7 @@
                     </treecols>
                 </tree>
 
-                <!-- index panel -->
+#               <!-- index panel -->
                 <button id="help-index-btn" class="box-texttab texttab-sidebar"
                     label="&indextab.label;"
                     oncommand="showPanel('help-index');expandAllIndexEntries();"/>
@@ -270,7 +270,7 @@
                     </treecols>
                 </tree>
 
-                <!-- search panel -->
+#               <!-- search panel -->
                 <button id="help-search-btn" class="box-texttab texttab-sidebar"
                     label="&searchtab.label;"
                     oncommand="showPanel('help-search')"/>
@@ -327,7 +327,7 @@
                     </tree>
                 </vbox>
 
-                <!-- table of contents panel -->
+#               <!-- table of contents panel -->
                 <button id="help-toc-btn" class="box-texttab texttab-sidebar"
                     label="&toctab.label;"
                     oncommand="showPanel('help-toc')"/>
