@@ -292,7 +292,7 @@ clean clobber::
 	rm -rf $(DIST)/$(APP_NAME).app
 endif
 
-README_FILE = $(topsrcdir)/README.txt
+README_FILE = $(srcdir)/README.txt
 
 libs::
 	$(INSTALL) $(README_FILE) $(DIST)/bin
