@@ -25,14 +25,20 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= jsurl
 LIBRARY_NAME	= jsurl
 
+ifdef NECKO
+CPPSRCS = \
+	nsJSProtocolHandler.cpp	\
+	$(NULL)
+else
+EXPORTS= $(srcdir)/jsurl.h
+
 CPPSRCS = \
 	jsurl.cpp	\
 	$(NULL)
+endif
 
-EXPORTS= $(srcdir)/jsurl.h
-
-REQUIRES	= network dbm util pref js java fileurl \
-	security layer img httpurl lay parse style dom raptor netlib xpcom
+REQUIRES = network dbm util pref js java fileurl \
+	   security layer img httpurl lay parse style dom raptor netlib xpcom
 
 include $(topsrcdir)/config/rules.mk
 

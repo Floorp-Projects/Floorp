@@ -38,11 +38,19 @@ LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 LLIBS=  \
 	$(NULL)
 OBJS=   \
+!ifdef NECKO
+	.\$(OBJDIR)\nsJSProtocolHandler.obj	\
+!else
 	.\$(OBJDIR)\jsurl.obj		\
+!endif
 	$(NULL)
 	
 CPPSRCS = \
+!ifdef NECKO
+	nsJSProtocolHandler.cpp	\
+!else
 	jsurl.cpp	\
+!endif
 	$(NULL)
 
 LIBRARY_NAME=jsurl 
