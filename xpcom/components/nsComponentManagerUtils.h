@@ -19,6 +19,10 @@
 #ifndef nsComponentManagerUtils_h__
 #define nsComponentManagerUtils_h__
 
+#ifndef nsCOMPtr_h__
+#include "nsCOMPtr.h"
+#endif
+
 #ifndef OBSOLETE_MODULE_LOADING
 /*
  * Prototypes for dynamic library export functions. Your DLL/DSO needs to export
@@ -170,6 +174,73 @@ public:
   static nsresult EnumerateProgIDs(nsIEnumerator** aEmumerator);
 
 };
+
+
+class NS_EXPORT nsCreateInstanceByCID : public nsCOMPtr_helper
+	{
+		public:
+			nsCreateInstanceByCID( const nsCID& aCID, nsISupports* aOuter, nsresult* aErrorPtr )
+					: mCID(aCID),
+						mOuter(aOuter),
+						mErrorPtr(aErrorPtr)
+				{
+					// nothing else to do here
+				}
+
+			virtual nsresult operator()( const nsIID&, void** ) const;
+
+		private:
+			const nsCID&	mCID;
+			nsISupports*	mOuter;
+			nsresult*			mErrorPtr;
+	};
+
+class NS_EXPORT nsCreateInstanceByProgID : public nsCOMPtr_helper
+	{
+		public:
+			nsCreateInstanceByProgID( const char* aProgID, nsISupports* aOuter, nsresult* aErrorPtr )
+					: mProgID(aProgID),
+						mOuter(aOuter),
+						mErrorPtr(aErrorPtr)
+				{
+					// nothing else to do here
+				}
+
+			virtual nsresult operator()( const nsIID&, void** ) const;
+
+		private:
+			const char*	  mProgID;
+			nsISupports*	mOuter;
+			nsresult*			mErrorPtr;
+	};
+
+inline
+const nsCreateInstanceByCID
+do_CreateInstance( const nsCID& aCID, nsresult* error = 0 )
+	{
+		return nsCreateInstanceByCID(aCID, 0, error);
+	}
+
+inline
+const nsCreateInstanceByCID
+do_CreateInstance( const nsCID& aCID, nsISupports* aOuter, nsresult* error = 0 )
+	{
+		return nsCreateInstanceByCID(aCID, aOuter, error);
+	}
+
+inline
+const nsCreateInstanceByProgID
+do_CreateInstance( const char* aProgID, nsresult* error = 0 )
+	{
+		return nsCreateInstanceByProgID(aProgID, 0, error);
+	}
+
+inline
+const nsCreateInstanceByProgID
+do_CreateInstance( const char* aProgID, nsISupports* aOuter, nsresult* error = 0 )
+	{
+		return nsCreateInstanceByProgID(aProgID, aOuter, error);
+	}
 
 /* keys for registry use */
 extern const char xpcomBaseName[];

@@ -28,6 +28,29 @@
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
+nsresult
+nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+  {
+    nsresult status = nsServiceManager::GetService(mCID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    if ( mErrorPtr )
+      *mErrorPtr = status;
+    return status;
+  }
+
+nsresult
+nsGetServiceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) const
+  {
+    nsresult status;
+    if ( mProgID )
+      status = nsServiceManager::GetService(mProgID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    else
+      status = NS_ERROR_NULL_POINTER;
+
+    if ( mErrorPtr )
+      *mErrorPtr = status;
+    return status;
+  }
+
 class nsServiceEntry {
 public:
 
