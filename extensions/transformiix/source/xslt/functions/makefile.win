@@ -22,8 +22,8 @@
 DEPTH=..\..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-!if defined(TX_EXE)
-DEFINES=$(DEFINES) -DTX_EXE
+!if defined(MOZ_XSL)
+DEFINES=$(DEFINES) -DMOZ_XSL
 !endif
 
 CPPSRCS=					\

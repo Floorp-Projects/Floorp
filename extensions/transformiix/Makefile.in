@@ -30,7 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 ifneq ($(OS_ARCH),OS2)
 
 DIRS            = source
-ifndef TX_EXE
+ifdef MOZ_XSL
 DIRS += build public
 endif
 

@@ -24,8 +24,8 @@ include <$(DEPTH)/config/config.mak>
 
 DIRS=util functions
 
-!if defined(TX_EXE)
-DEFINES= $(DEFINES) -DTX_EXE
+!if defined(MOZ_XSL)
+DEFINES= $(DEFINES) -DMOZ_XSL
 !endif
 
 CPPSRCS=					\
@@ -49,7 +49,7 @@ CPP_OBJS=					\
 EXPORTS = 					\
 	$(NULL)
 
-!ifndef TX_EXE
+!ifdef MOZ_XSL
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\xpath -I..\xml\dom -I..\xml\dom\mozImpl \
       -I..\base -I ..\xml -I ..\xml\util -I .\util -I ..\net -I..\xml\parser -I.\functions
 !else

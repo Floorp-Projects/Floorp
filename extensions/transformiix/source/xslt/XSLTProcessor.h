@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.18 2001/06/10 11:30:44 axel%pike.org Exp $
+ * $Id: XSLTProcessor.h,v 1.19 2001/06/10 12:54:58 axel%pike.org Exp $
  */
 
 
@@ -29,14 +29,14 @@
 #define TRANSFRMX_XSLTPROCESSOR_H
 
 #ifndef __BORLANDC__
-#ifdef TX_EXE
+#ifndef MOZ_XSL
 #include <iostream.h>
 #include <fstream.h>
 #endif
 #endif
 
 
-#ifndef TX_EXE
+#ifdef MOZ_XSL
 #include "nsIDocumentTransformer.h"
 #endif
 
@@ -49,7 +49,7 @@
 #include "ErrorObserver.h"
 #include "List.h"
 
-#ifndef TX_EXE
+#ifdef MOZ_XSL
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
 #define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
 { 0xbacd8ad0, 0x552f, 0x11d3, {0xa9, 0xf7, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
@@ -63,16 +63,16 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.18 $ $Date: 2001/06/10 11:30:44 $
+ * @version $Revision: 1.19 $ $Date: 2001/06/10 12:54:58 $
 **/
 class XSLTProcessor
-#ifndef TX_EXE
+#ifdef MOZ_XSL
 : public nsIDocumentTransformer
 #endif
 {
 
 public:
-#ifndef TX_EXE
+#ifdef MOZ_XSL
     // nsISupports interface
     NS_DECL_ISUPPORTS
     // nsIDocumentTransformer interface
@@ -113,7 +113,7 @@ public:
       //--------------------------------------------/
      //-- Methods that return the Result Document -/
     //--------------------------------------------/
-#ifdef TX_EXE
+#ifndef MOZ_XSL
     /**
      * Parses all XML Stylesheet PIs associated with the
      * given XML document. If any stylesheet PIs are found with
@@ -152,7 +152,7 @@ public:
     Document* process(istream& xmlInput, String& xmlFilename,
                       istream& xslInput, String& xslFilename);
 
-#ifdef TX_EXE
+#ifndef MOZ_XSL
     /**
      * Reads an XML document from the given XML input stream. The
      * XML document is processed using the associated XSL document
@@ -245,7 +245,7 @@ private:
                       ProcessorState* ps);
 
 
-#ifdef TX_EXE
+#ifndef MOZ_XSL
 
     /**
      * Prints the given XML document to the given ostream and uses
@@ -299,7 +299,7 @@ private:
     **/
     void notifyError(String& errorMessage, ErrorObserver::ErrorLevel level);
 
-#ifdef TX_EXE
+#ifndef MOZ_XSL
     /**
      * Parses the contents of data, and returns the type and href psuedo attributes
     **/
