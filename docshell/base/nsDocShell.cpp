@@ -4743,10 +4743,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         //
         if (mDisallowPopupWindows) {
             PRBool bIsChromeOrResource = PR_FALSE;
-
-            aURI->SchemeIs("chrome", &bIsChromeOrResource);
+            mCurrentURI->SchemeIs("chrome", &bIsChromeOrResource);
             if (!bIsChromeOrResource) {
-                aURI->SchemeIs("resource", &bIsChromeOrResource);
+                aURI->SchemeIs("chrome", &bIsChromeOrResource);
+                if (!bIsChromeOrResource) {
+                    aURI->SchemeIs("resource", &bIsChromeOrResource);
+                }
             }
             if (!bIsChromeOrResource) {
                 if (name.EqualsIgnoreCase("_blank") ||
