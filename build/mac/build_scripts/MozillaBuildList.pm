@@ -290,6 +290,7 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:editor:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:embedding:browser:chrome:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:embedding:browser:chrome:locale:en-US:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:extensions:cookie:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:extensions:wallet:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:intl:uconv:src:jar.mn", $chrome_dir, \%jars);
