@@ -3004,7 +3004,7 @@ ET_JSCFExecute(MWContext *context, const char *script_name,
     JSCFResult *res;
     MozillaEvent_JSCFExecute* event = PR_NEW(MozillaEvent_JSCFExecute);
     if(!event)
-	return NULL;
+	return (JSCFResult) 0;
 
     PR_InitEvent(&event->ce.event, NULL,
 		 (PRHandleEventProc)et_HandleEvent_JSCFExecute,
