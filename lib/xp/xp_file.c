@@ -20,6 +20,7 @@
 #include "xp.h"
 #include "plstr.h"
 #include "prmon.h"
+#include "rosetta.h"
 
 #ifdef XP_MAC
 #include "prpriv.h"
@@ -1136,7 +1137,24 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
          sprintf(buf, "%.900s/%s", conf_dir, policyFN);
          break;
      }
+#endif /* MOZ_SECURITY */
+
+	case xpSecurityModule:
+     	{
+         extern void fe_GetProgramDirectory(char *path, int len);
+#ifdef HPUX
+         char *secModuleFN = "cmnav.sl";
+#else
+#ifdef SUNOS4
+         char *secModuleFN = "cmnav.so.1.0";
+#else
+         char *secModuleFN = "cmnav.so";
 #endif
+#endif
+    	HG06196
+	break;
+	}
+
 	case xpPKCS12File:
 	  /* Convert /a/b/c/foo to /a/b/c/foo.p12 (note leading dot) */
 	  {
