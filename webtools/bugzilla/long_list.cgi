@@ -99,7 +99,6 @@ $vars->{'bugs'} = \@bugs;
 $vars->{'use_keywords'} = 1 if (@::legal_keywords);
 
 $vars->{'quoteUrls'} = \&quoteUrls;
-$vars->{'time2str'} = \&time2str;
 $vars->{'str2time'} = \&str2time;
 
 # Work out a sensible filename for Content-Disposition.

@@ -38,7 +38,7 @@
 %]
 
 <div align="center">
-  <b>[% currenttime %]</b><br>
+  <b>[% time2str("%a %b %e %T %Z %Y", currenttime) %]</b><br>
 
   [% IF debug %]
     <p>[% query FILTER html %]</p>

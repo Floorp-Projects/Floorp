@@ -1539,7 +1539,7 @@ if ($::FORM{'debug'}) {
 $vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
 
 $vars->{'quip'} = GetQuip();
-$vars->{'currenttime'} = time2str("%a %b %e %T %Z %Y", time());
+$vars->{'currenttime'} = time();
 
 # The following variables are used when the user is making changes to multiple bugs.
 if ($dotweak) {

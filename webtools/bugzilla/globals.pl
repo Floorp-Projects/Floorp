@@ -1757,6 +1757,9 @@ $::vars =
     # Function for retrieving global parameters.
     'Param' => \&Param ,
 
+    # Function to create date strings
+    'time2str' = \&time2str;
+
     # Function for processing global parameters that contain references
     # to other global parameters.
     'PerformSubsts' => \&PerformSubsts ,
