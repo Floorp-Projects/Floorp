@@ -4021,26 +4021,8 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                 channel->GetURI(getter_AddRefs(uri));
                 // Add the original url to global History so that
                 // visited url color changes happen.
-                if (uri) {
-                    // Update Global history if necessary...
-                    PRBool updateHistory = PR_FALSE;
-                    ShouldAddToGlobalHistory(uri, &updateHistory);
-                    if (updateHistory) {
-                        AddToGlobalHistory(uri);
-                        // this is a redirect, so hide the page from
-                        // being enumerated in history
-                        if (mGlobalHistory) {
-                            nsCOMPtr<nsIBrowserHistory> browserHistory =
-                                do_QueryInterface(mGlobalHistory);
-                            if (browserHistory) {
-                                nsCAutoString urlString;
-                                if (NS_SUCCEEDED(uri->GetSpec(urlString)))
-                                    browserHistory->HidePage(urlString.get());
-                            }
-                        }
-                            
-                    }
-                }               // uri
+                if (uri)
+                    AddToGlobalHistory(uri, PR_TRUE);
             }                   // channel
         }                       // aProgress
     }
@@ -5558,7 +5540,6 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
 {
     NS_ASSERTION(aURI, "uri is null");
 
-    UpdateCurrentGlobalHistory();
     PRBool updateHistory = PR_TRUE;
     PRBool equalUri = PR_FALSE;
     PRBool shAvailable = PR_TRUE;  
@@ -5611,10 +5592,10 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
      *  frameset pages is to add new methods to nsIDocShellTreeItem.
      * Hopefully I don't have to do that. 
      */
-    if ((mLoadType == LOAD_NORMAL ||
+    if (equalUri &&
+        (mLoadType == LOAD_NORMAL ||
          mLoadType == LOAD_LINK) &&
-        !inputStream && 
-        equalUri)
+        !inputStream)
     {
         mLoadType = LOAD_NORMAL_REPLACE;
     }
@@ -5653,12 +5634,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
             (void) AddToSessionHistory(aURI, aChannel, getter_AddRefs(mLSHE));
         }
 
-        // Update Global history if necessary...
-        updateHistory = PR_FALSE;
-        ShouldAddToGlobalHistory(aURI, &updateHistory);
-        if (updateHistory) {
-            AddToGlobalHistory(aURI);
-        }
+        // Update Global history
+        AddToGlobalHistory(aURI, IsFrame());
     }
 
     // If this was a history load, update the index in 
@@ -6091,7 +6068,7 @@ nsDocShell::ShouldDiscardLayoutState(nsIHttpChannel * aChannel)
 // nsDocShell: Global History
 //*****************************************************************************   
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd)
 {
     *aShouldAdd = PR_FALSE;
@@ -6193,9 +6170,14 @@ NS_IMETHODIMP nsDocShell::MakeEditable(PRBool inWaitForUriLoad)
   return mEditorData->MakeEditable(inWaitForUriLoad);
 }
 
-NS_IMETHODIMP
-nsDocShell::AddToGlobalHistory(nsIURI * aURI)
+nsresult
+nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aHidden)
 {
+    // first check if we should be adding it
+    PRBool updateHistory;
+    ShouldAddToGlobalHistory(aURI, &updateHistory);
+    if (!updateHistory) return NS_OK;
+    
     NS_ENSURE_STATE(mGlobalHistory);
 
     nsCAutoString spec;
@@ -6203,13 +6185,15 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI)
 
     NS_ENSURE_SUCCESS(mGlobalHistory->AddPage(spec.get()), NS_ERROR_FAILURE);
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::UpdateCurrentGlobalHistory()
-{
-    // XXX Add code here that needs to update the current history item
+    // this is a redirect, so hide the page from
+    // being enumerated in history
+    if (aHidden) {
+        nsCOMPtr<nsIBrowserHistory> browserHistory =
+            do_QueryInterface(mGlobalHistory);
+        if (browserHistory) {
+            browserHistory->HidePage(spec.get());
+        }
+    }
     return NS_OK;
 }
 

@@ -236,9 +236,8 @@ protected:
     PRBool ShouldDiscardLayoutState(nsIHttpChannel * aChannel);
     
     // Global History
-    NS_IMETHOD ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd);
-    NS_IMETHOD AddToGlobalHistory(nsIURI * aURI);
-    NS_IMETHOD UpdateCurrentGlobalHistory();
+    nsresult ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd);
+    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool );
 
     // Helper Routines
     NS_IMETHOD GetPromptAndStringBundle(nsIPrompt ** aPrompt,
