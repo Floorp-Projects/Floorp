@@ -181,6 +181,7 @@ static nsresult
 FindInterfaceByName(const char* aName, nsIInterfaceInfoSuperManager* iism,
                     nsIInterfaceInfoManager **aSet, nsIInterfaceInfo **_retval)
 {
+  NS_ENSURE_ARG_POINTER(aSet);
   if (NS_SUCCEEDED(iism->GetInfoForName(aName, _retval)) && *_retval) {
     NS_ADDREF(*aSet = iism);
     return NS_OK;
@@ -222,7 +223,8 @@ FindInterfaceIndexByName(const char* aName, nsIInterfaceInfoSuperManager* iism,
   }
 
   nsCOMPtr<nsIInterfaceInfo> info;
-  rv = FindInterfaceByName(aName, iism, nsnull, getter_AddRefs(info));
+  nsCOMPtr<nsIInterfaceInfoManager> unused;
+  rv = FindInterfaceByName(aName, iism, getter_AddRefs(unused), getter_AddRefs(info));
   if (NS_FAILED(rv)) {
     return rv;
   }
