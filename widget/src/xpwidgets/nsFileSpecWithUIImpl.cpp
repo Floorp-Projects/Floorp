@@ -29,6 +29,7 @@
 #include "nsIWebShell.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
+#include "nsIViewManager.h"
 
 #undef NS_FILE_FAILURE
 #define NS_FILE_FAILURE NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES,(0xFFFF))
