@@ -1200,69 +1200,22 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
   nsIDocument *document = GetCurrentDoc();
   if (!document) return;
 
+  // Flush all pending notifications so that our frames are uptodate
+  // Make sure to do this before we start grabbing layout objects like
+  // presshells.
+  document->FlushPendingNotifications(Flush_Layout);
+  
   nsIPresShell *presShell = document->GetShellAt(0);
   if (!presShell) {
-    NS_ERROR("couldn't get presshell");
     return;
   }
 
-  nsPresContext *context = presShell->GetPresContext();
-  if (!context) {
-    NS_ERROR("couldn't get prescontext");
-    return;
-  }
-   
-  // Flush all pending notifications so that our frames are uptodate
-  document->FlushPendingNotifications(Flush_Layout);
-    
   nsIFrame* frame;
   presShell->GetPrimaryFrameFor(this, &frame);
 
-  float t2p;
-  t2p = context->TwipsToPixels();
-
-  
-  nsIWidget* widget = nsnull;
-        
-  while (frame) {
-    // Look for a widget so we can get screen coordinates
-    nsIView* view = frame->GetView();
-    if (view) {
-      // handle scrolled views along the way:
-      nsIScrollableView* scrollableView = nsnull;
-      CallQueryInterface(view, &scrollableView);
-      if (scrollableView) {
-        nscoord scrollX, scrollY;
-        scrollableView->GetScrollPosition(scrollX, scrollY);
-        x -= scrollX;
-        y -= scrollY;
-      }
-
-      // if this is a widget we break and get screen coords from it:
-      widget = view->GetWidget();
-      if (widget)
-        break;
-    }
-          
-    // No widget yet, so count up the coordinates of the frame 
-    nsPoint origin = frame->GetPosition();
-    x += origin.x;
-    y += origin.y;
-      
-    frame = frame->GetParent();
-  }
-        
-  
-  // Convert to pixels using that scale
-  x = NSTwipsToIntPixels(x, t2p);
-  y = NSTwipsToIntPixels(y, t2p);
-  
-  if (widget) {
-    // Add the widget's screen coordinates to the offset we've counted
-    nsRect client(0,0,0,0);
-    nsRect screen;
-    widget->WidgetToScreen(client, screen);
-    x += screen.x;
-    y += screen.y;
+  if (frame) {
+    nsIntRect rect = frame->GetScreenRect();
+    x = rect.x;
+    y = rect.y;
   }
 }

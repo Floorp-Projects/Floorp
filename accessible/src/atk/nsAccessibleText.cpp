@@ -712,7 +712,7 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   shell->GetPrimaryFrameFor(content, &frame);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsRect frameRect = frame->GetRect();
+  nsIntRect frameScreenRect = frame->GetScreenRectExternal();
 
   nsCOMPtr<nsIRenderingContext> rc;
   shell->CreateRenderingContext(frame, getter_AddRefs(rc));
@@ -749,43 +749,15 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
     *aHeight = NSTwipsToIntPixels(tmpHeight, t2p);
   }
 
-  //Getting x and y
-  PRInt32 tmpX, tmpY;
-  tmpX = frameRect.x;
-  tmpY = frameRect.y;
-
   //add the width of the string before current char
   nsAutoString beforeString;
   nscoord beforeWidth;
   if (NS_SUCCEEDED(GetText(0, aOffset, beforeString)) &&
       NS_SUCCEEDED(rc->GetWidth(beforeString, beforeWidth))) {
-    tmpX += beforeWidth;
+    frameScreenRect.x += NSTwipsToIntPixels(beforeWidth, t2p);
   }
 
-  //find the topest frame, add the offset recursively
-  nsIFrame* tmpFrame = frame;
-  nsIFrame* parentFrame = tmpFrame->GetParent();
-  while (parentFrame) {
-    nsPoint origin = parentFrame->GetPosition();
-    tmpX += origin.x;
-    tmpY += origin.y;
-    tmpFrame = parentFrame;
-    parentFrame = tmpFrame->GetParent();
-  }
-
-  tmpX = NSTwipsToIntPixels(tmpX, t2p);
-  tmpY = NSTwipsToIntPixels(tmpY, t2p);
-
-  //change to screen co-ord
-  nsIWidget *frameWidget = tmpFrame->GetWindow();
-  if (frameWidget) {
-    nsRect oldRect(tmpX, tmpY, 0, 0), newRect;
-    if (NS_SUCCEEDED(frameWidget->WidgetToScreen(oldRect, newRect))) {
-      tmpX = newRect.x;
-      tmpY = newRect.y;
-    }
-  }
-
+  PRInt32 screenX = 0, screenY = 0;
   if (aCoordType == COORD_TYPE_WINDOW) {
     //co-ord type = window
     nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(doc));
@@ -798,20 +770,15 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
     nsCOMPtr<nsIDOMWindowInternal> windowInter(do_QueryInterface(abstractView));
     NS_ENSURE_TRUE(windowInter, NS_ERROR_FAILURE);
 
-    PRInt32 screenX,screenY;
     if (NS_FAILED(windowInter->GetScreenX(&screenX)) ||
         NS_FAILED(windowInter->GetScreenY(&screenY))) {
       return NS_ERROR_FAILURE;
     }
+  }
+  // else default: co-ord type = screen
 
-    *aX = tmpX - screenX;
-    *aY = tmpY - screenY;
-  }
-  else {
-    //default: co-ord type = screen
-    *aX = tmpX;
-    *aY = tmpY;
-  }
+  *aX = frameScreenRect.x - screenX;
+  *aY = frameScreenRect.y - screenY;
 
   return NS_OK;
 }

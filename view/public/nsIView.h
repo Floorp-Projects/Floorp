@@ -186,6 +186,13 @@ public:
   nsPoint GetOffsetTo(const nsIView* aOther) const;
 
   /**
+   * Get the screen position of the view.
+   * @return the pixel position of the top-left of the view in screen
+   * coordinates.
+   */
+  nsIntPoint GetScreenPosition() const;
+  
+  /**
    * Called to query the visibility state of a view.
    * @result current visibility state
    */
@@ -291,7 +298,7 @@ public:
    * XXX Remove this 'virtual' when gfx+widget are merged into gklayout;
    * Mac widget depends on this method, which is BOGUS!
    */
-  virtual nsIWidget* GetNearestWidget(nsPoint* aOffset);
+  virtual nsIWidget* GetNearestWidget(nsPoint* aOffset) const;
 
   /**
    * Create a widget to associate with this view.

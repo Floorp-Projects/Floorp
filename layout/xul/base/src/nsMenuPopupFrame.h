@@ -178,7 +178,6 @@ public:
   void EnsureMenuItemIsVisible(nsIMenuFrame* aMenuFrame);
 
   void MoveTo(PRInt32 aLeft, PRInt32 aTop);
-  void GetScreenPosition(nsIView* aView, nsPoint& aScreenPosition);
 
   void GetAutoPosition(PRBool* aShouldAutoPosition);
   void SetAutoPosition(PRBool aShouldAutoPosition);

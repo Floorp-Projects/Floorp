@@ -754,11 +754,30 @@ nsPoint nsIView::GetOffsetTo(const nsIView* aOther) const
   return offset;
 }
 
-nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset)
+nsIntPoint nsIView::GetScreenPosition() const
+{
+  nsIntRect screenRect(0,0,0,0);  
+  nsPoint toWidgetOffset(0,0);
+  nsIWidget* widget = GetNearestWidget(&toWidgetOffset);
+  if (widget) {
+    nsCOMPtr<nsIDeviceContext> dx;
+    mViewManager->GetDeviceContext(*getter_AddRefs(dx));
+    float t2p = dx->AppUnitsToDevUnits();
+    nsIntRect ourRect(NSTwipsToIntPixels(toWidgetOffset.x, t2p),
+                      NSTwipsToIntPixels(toWidgetOffset.y, t2p),
+                      0,
+                      0);
+    widget->WidgetToScreen(ourRect, screenRect);
+  }
+  
+  return nsIntPoint(screenRect.x, screenRect.y);
+}
+
+nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset) const
 {
   nsPoint pt(0, 0);
-  nsView* v;
-  for (v = NS_STATIC_CAST(nsView*, this);
+  const nsView* v;
+  for (v = NS_STATIC_CAST(const nsView*, this);
        v && !v->HasWidget(); v = v->GetParent()) {
     pt += v->GetPosition();
   }
@@ -766,7 +785,7 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset)
     if (aOffset) {
       *aOffset = pt;
     }
-    return NS_STATIC_CAST(nsView*, this)->GetViewManager()->GetWidget();
+    return NS_STATIC_CAST(const nsView*, this)->GetViewManager()->GetWidget();
   }
 
   // pt is now the offset from v's origin to this's origin

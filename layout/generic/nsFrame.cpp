@@ -2296,6 +2296,37 @@ nsPoint nsIFrame::GetOffsetTo(const nsIFrame* aOther) const
   return offset;
 }
 
+// virtual
+nsIntRect nsIFrame::GetScreenRectExternal() const
+{
+  return GetScreenRect();
+}
+
+nsIntRect nsIFrame::GetScreenRect() const
+{
+  nsIntRect retval(0,0,0,0);
+  nsPoint toViewOffset(0,0);
+  nsIView* view = GetClosestView(&toViewOffset);
+
+  if (view) {
+    nsPoint toWidgetOffset(0,0);
+    nsIWidget* widget = view->GetNearestWidget(&toWidgetOffset);
+
+    if (widget) {
+      nsRect ourRect = mRect;
+      ourRect += toViewOffset + toWidgetOffset;
+      ourRect.ScaleRoundOut(GetPresContext()->TwipsToPixels());
+      // Is it safe to pass the same rect for both args of WidgetToScreen?
+      // It's not clear, so let's not...
+      nsIntRect ourPxRect(ourRect.x, ourRect.y, ourRect.width, ourRect.height);
+      
+      widget->WidgetToScreen(ourPxRect, retval);
+    }
+  }
+
+  return retval;
+}
+
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
 NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPresContext* aPresContext,

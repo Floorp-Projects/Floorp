@@ -264,11 +264,10 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 }
 
 nsresult
-nsBoxObject::GetScreenRect(nsRect& aRect)
+nsBoxObject::GetScreenPosition(nsIntPoint& aPoint)
 {
-  aRect.x = aRect.y = 0;
-  aRect.Empty();
- 
+  aPoint.x = aPoint.y = 0;
+  
   if (!mContent)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -287,40 +286,10 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
         nsIFrame* frame;
         presShell->GetPrimaryFrameFor(mContent, &frame);
         
-        PRInt32 offsetX = 0;
-        PRInt32 offsetY = 0;
-        nsIWidget* widget = nsnull;
-        
-        while (frame) {
-          // Look for a widget so we can get screen coordinates
-          if (frame->HasView()) {
-            widget = frame->GetView()->GetWidget();
-            if (widget)
-              break;
-          }
-          
-          // No widget yet, so count up the coordinates of the frame 
-          nsPoint origin = frame->GetPosition();
-          offsetX += origin.x;
-          offsetY += origin.y;
-      
-          frame = frame->GetParent();
-        }
-        
-        if (widget) {
-          // Get the scale from that Presentation Context
-          float scale;
-          scale = presContext->TwipsToPixels();
-          
-          // Convert to pixels using that scale
-          offsetX = NSTwipsToIntPixels(offsetX, scale);
-          offsetY = NSTwipsToIntPixels(offsetY, scale);
-          
-          // Add the widget's screen coordinates to the offset we've counted
-          nsRect oldBox(0,0,0,0);
-          widget->WidgetToScreen(oldBox, aRect);
-          aRect.x += offsetX;
-          aRect.y += offsetY;
+        if (frame) {
+          nsIntRect rect = frame->GetScreenRect();
+          aPoint.x = rect.x;
+          aPoint.y = rect.y;
         }
       }
     }
@@ -368,11 +337,11 @@ nsBoxObject::GetHeight(PRInt32* aResult)
 NS_IMETHODIMP
 nsBoxObject::GetScreenX(PRInt32 *_retval)
 {
-  nsRect rect;
-  nsresult rv = GetScreenRect(rect);
+  nsIntPoint position;
+  nsresult rv = GetScreenPosition(position);
   if (NS_FAILED(rv)) return rv;
   
-  *_retval = rect.x;
+  *_retval = position.x;
   
   return NS_OK;
 }
@@ -380,11 +349,11 @@ nsBoxObject::GetScreenX(PRInt32 *_retval)
 NS_IMETHODIMP
 nsBoxObject::GetScreenY(PRInt32 *_retval)
 {
-  nsRect rect;
-  nsresult rv = GetScreenRect(rect);
+  nsIntPoint position;
+  nsresult rv = GetScreenPosition(position);
   if (NS_FAILED(rv)) return rv;
   
-  *_retval = rect.y;
+  *_retval = position.y;
   
   return NS_OK;
 }
