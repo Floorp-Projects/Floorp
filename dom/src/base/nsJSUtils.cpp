@@ -420,7 +420,7 @@ nsJSUtils::nsConvertJSValToBool(PRBool* aProp,
                                 jsval aValue)
 {
   JSBool temp;
-  if (JSVAL_IS_BOOLEAN(aValue) && JS_ValueToBoolean(aContext, aValue, &temp)) {
+  if (JS_ValueToBoolean(aContext, aValue, &temp)) {
     *aProp = (PRBool)temp;
   }
   else {
