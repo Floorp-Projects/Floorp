@@ -44,7 +44,7 @@ nsMozIconURI::~nsMozIconURI()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsMozIconURI, nsIMozIconURI, nsIURI, nsISerializable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsMozIconURI, nsIMozIconURI, nsIURI)
 
 #define NS_MOZICON_SCHEME           "moz-icon:"
 #define NS_MOZ_ICON_DELIMITER        '?'
