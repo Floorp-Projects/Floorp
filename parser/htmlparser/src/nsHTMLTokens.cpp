@@ -815,7 +815,7 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
   };
   static const nsReadEndCondition theEndCondition(terminalChars);
 
-  nsScannerIterator currPos,endPos,altEndPos;
+  nsScannerIterator currPos, endPos, altEndPos;
   PRUint32 truncPos = 0;
   aScanner.CurrentPosition(currPos);
   aScanner.EndReading(endPos);
@@ -833,7 +833,9 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
 
   nsresult result = NS_OK;
 
-  while (currPos != endPos) {
+  // Note that if we're already at the end of the document, the ConsumeUntil
+  // will fail, and we'll do the right thing.
+  do {
     result = ConsumeUntil(theContent, mNewlineCount, aScanner, 
                           theEndCondition, PR_TRUE, aFlag);
 
@@ -915,7 +917,7 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
     // We did not find the terminal string yet so
     // include the character that stopped consumption.
     theContent.writable().Append(ch);
-  }
+  } while (currPos != endPos);
 
   return result;
 }
