@@ -43,15 +43,19 @@
 #include "FullPath.h"  /* For FSpLocationFromFullPath() */
 #endif
 
+#ifdef XP_BEOS
+#include <FindDirectory.h>
+#endif 
 
 #define DEF_REG "/.mozilla/registry"
 #define WIN_REG "\\mozregistry.dat"
 #define MAC_REG "\pMozilla Registry"
+#define BEOS_REG "/mozilla/registry"
 
 #define DEF_VERREG "/.netscape/registry"
 #define WIN_VERREG "\\nsreg.dat"
 #define MAC_VERREG "\pNetscape Registry"
-
+#define BEOS_VERREG "/mozilla/registry"
 
 
 /* ------------------------------------------------------------------
@@ -482,7 +486,7 @@ int strncasecmp(const char *str1, const char *str2, int length)
  */
 
 /*allow OS/2 and Macintosh to use this main to test...*/
-#if (defined(STANDALONE_REGISTRY) && defined(XP_MAC)) || defined(XP_UNIX) || defined(XP_OS2)
+#if (defined(STANDALONE_REGISTRY) && defined(XP_MAC)) || defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
 
 #include <stdlib.h>
 
@@ -582,7 +586,86 @@ char* vr_findVerRegName ()
 
 #endif /*XP_UNIX*/
 
-#if defined(STANDALONE_REGISTRY) && (defined(XP_UNIX) || defined(XP_OS2) || defined(XP_MAC))
+ /* ------------------------------------------------------------------
+ *  BeOS STUBS
+ * ------------------------------------------------------------------
+ */
+
+#ifdef XP_BEOS
+
+#ifdef STANDALONE_REGISTRY
+extern XP_File vr_fileOpen (const char *name, const char * mode)
+{
+    XP_File fh = NULL;
+    struct stat st;
+
+    if ( name != NULL ) {
+        if ( stat( name, &st ) == 0 )
+            fh = fopen( name, XP_FILE_UPDATE_BIN );
+        else
+            fh = fopen( name, XP_FILE_TRUNCATE_BIN );
+    }
+
+    return fh;
+}
+#endif /*STANDALONE_REGISTRY*/
+
+extern void vr_findGlobalRegName ()
+{
+#ifndef STANDALONE_REGISTRY
+    char *def = NULL;
+      char settings[1024];
+      find_directory(B_USER_SETTINGS_DIRECTORY, -1, false, settings, sizeof(settings));
+    if (settings != NULL) {
+        def = (char *) XP_ALLOC(XP_STRLEN(settings) + XP_STRLEN(BEOS_REG)+1);
+        if (def != NULL) {
+          XP_STRCPY(def, settings);
+          XP_STRCAT(def, BEOS_REG);
+        }
+    }
+    if (def != NULL) {
+        globalRegName = XP_STRDUP(def);
+    } else {
+        globalRegName = XP_STRDUP(TheRegistry);
+    }
+    XP_FREEIF(def);
+#else
+    globalRegName = XP_STRDUP(TheRegistry);
+#endif /*STANDALONE_REGISTRY*/
+}
+
+char* vr_findVerRegName ()
+{
+    if ( verRegName != NULL )
+        return verRegName;
+
+#ifndef STANDALONE_REGISTRY
+    {
+        char *def = NULL;
+        char settings[1024];
+        find_directory(B_USER_SETTINGS_DIRECTORY, -1, false, settings, sizeof(settings));
+        if (settings != NULL) {
+            def = (char *) XP_ALLOC(XP_STRLEN(settings) + XP_STRLEN(BEOS_VERREG)+1);
+            if (def != NULL) {
+                XP_STRCPY(def, settings);
+                XP_STRCAT(def, BEOS_VERREG);
+            }
+        }
+        if (def != NULL) {
+            verRegName = XP_STRDUP(def);
+        }
+        XP_FREEIF(def);
+    }
+#else
+    verRegName = XP_STRDUP(TheRegistry);
+#endif /*STANDALONE_REGISTRY*/
+
+    return verRegName;
+}
+
+#endif /*XP_BEOS*/
+
+#if defined(STANDALONE_REGISTRY) && (defined(XP_UNIX) || defined(XP_OS2) || defined(XP_MAC) || defined(XP_BEOS))
 
 int main(int argc, char *argv[])
 {
