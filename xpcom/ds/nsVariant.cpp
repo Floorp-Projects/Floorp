@@ -191,10 +191,10 @@ static void FreeArray(nsDiscriminatedUnion* data)
         CASE__FREE_ARRAY_PTR(VTYPE_CHAR_STR, char)
         CASE__FREE_ARRAY_PTR(VTYPE_WCHAR_STR, PRUnichar)
         CASE__FREE_ARRAY_IFACE(VTYPE_INTERFACE, nsISupports)
+        CASE__FREE_ARRAY_IFACE(VTYPE_INTERFACE_IS, nsISupports)
 
         // The rest are illegal.
         case nsIDataType::VTYPE_VOID:        
-        case nsIDataType::VTYPE_INTERFACE_IS:        
         case nsIDataType::VTYPE_ASTRING:        
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
         case nsIDataType::VTYPE_STRING_SIZE_IS:        
