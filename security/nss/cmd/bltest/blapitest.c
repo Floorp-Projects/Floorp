@@ -1807,13 +1807,13 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    mode = modes[i];
 	else
 	    mode = i;
+	if (mode == bltestINVALID) {
+	    fprintf(stderr, "%s: Skipping invalid mode.\n",progName);
+	    continue;
+	}
 	modestr = mode_strings[mode];
 	cipherInfo.mode = mode;
 	params = &cipherInfo.params;
-	if (mode == bltestINVALID) {
-	    fprintf(stderr, "%s: Skipping invalid mode %s.\n",progName,modestr);
-	    continue;
-	}
 #ifdef TRACK_BLTEST_BUG
 	if (mode == bltestRSA) {
 	    fprintf(stderr, "[%s] Self-Testing RSA\n", __bltDBG);
@@ -2089,6 +2089,8 @@ int main(int argc, char **argv)
     bltest.options = bltest_options;
 
     progName = strrchr(argv[0], '/');
+    if (!progName) 
+	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
     rv = RNG_RNGInit();
