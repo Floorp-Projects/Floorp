@@ -463,13 +463,14 @@ char *DecodeQ(const char *in, PRUint32 length)
   if (dest == nsnull)
     return nsnull;
   while (length > 0) {
+    PRUintn c = 0;
     switch (*in) {
     case '=':
       // check if |in| in the form of '=hh'  where h is [0-9a-fA-F].
       if (length < 3 || !ISHEXCHAR(in[1]) || !ISHEXCHAR(in[2]))
         goto badsyntax;
-      PR_sscanf(in + 1, "%2X", out);
-      ++out;
+      PR_sscanf(in + 1, "%2X", &c);
+      *out++ = (char) c;
       in += 3;
       length -= 3;
       break;
