@@ -4853,6 +4853,20 @@ fi
 AC_SUBST(MOZ_XUL)
 
 dnl ========================================================
+dnl disable profile sharing
+dnl ========================================================
+MOZ_PROFILESHARING=1
+MOZ_IPCD=
+MOZ_ARG_DISABLE_BOOL(profilesharing,
+[  --disable-profilesharing           Disable profile sharing],
+    MOZ_PROFILESHARING=,
+    MOZ_PROFILESHARING=1 )
+if test "$MOZ_PROFILESHARING"; then
+  MOZ_IPCD=1
+  AC_DEFINE(MOZ_PROFILESHARING)
+fi
+
+dnl ========================================================
 dnl necko configuration options
 dnl ========================================================
 
@@ -5033,6 +5047,9 @@ AC_SUBST(MOZ_LDAP_XPCOM_EXPERIMENTAL)
 AC_SUBST(LDAP_CFLAGS)
 AC_SUBST(LDAP_LIBS)
 AC_SUBST(LIBICONV)
+
+AC_SUBST(MOZ_PROFILESHARING)
+AC_SUBST(MOZ_IPCD)
 
 AC_SUBST(HAVE_XIE)
 AC_SUBST(MOZ_XIE_LIBS)
