@@ -548,14 +548,19 @@ static PRBool intlmime_only_ascii_str(const char *s)
 static unsigned char * utf8_nextchar(unsigned char *str)
 {
   int len = PL_strlen((char *) str);
-  if (*str < 128) {
+  if (len == 0) {
+    return str;
+  }
+  else if (*str < 128) {
     return (str+1);
   }
-  else if ((len >= 2) && (*str & 0xC0)) {
-    return (str+2);
-  }
-  else if ((len >= 3) && (*str & 0xE0)) {
+  // RFC 2279 defines more than 3 bytes sequences (0xF0, 0xF8, 0xFC),
+  // but I think we won't encounter those cases as long as we're supporting UCS-2 and no surrogate.
+  else if ((len >= 3) && (*str >= 0xE0)) {
     return (str+3);
+  }
+  else if ((len >= 2) && (*str >= 0xC0)) {
+    return (str+2);
   }
   PR_ASSERT(PR_FALSE);
   return (str+1); // error, return +1 to avoid infinite loop
@@ -1397,10 +1402,11 @@ char * Strstr_UTF8(const char *s1, const char *s2)
   char *str = (char *) s1;
   int len = PL_strlen(s2);
   do {
-    if (!strncmp(str, s2, len)) {
+    if (!PL_strncmp(str, s2, len)) {
       return str;
     }
-  } while (str = NextChar_UTF8(str));
+    str = NextChar_UTF8(str);
+  } while (*str);
   return NULL;
 }
 
