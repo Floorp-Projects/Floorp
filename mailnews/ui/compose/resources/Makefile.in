@@ -32,5 +32,34 @@ EXPORT_RESOURCE_SAMPLES = \
 	./ComposeFrame.html \
 	$(NULL)
 
+EXPORT_RESOURCE_TOOBAR = \
+	./mail_options.gif \
+	./mail_options_mo.gif \
+	./mail_options_dis.gif \
+	./mail_options_dep.gif \
+	./mail_quotemsg.gif \
+	./mail_quotemsg_mo.gif \
+	./mail_quotemsg_dis.gif \
+	./mail_quotemsg_dep.gif \
+	./mail_selectaddress.gif \
+	./mail_selectaddress_mo.gif \
+	./mail_selectaddress_dis.gif \
+	./mail_selectaddress_dep.gif \
+	./mail_attach.gif \
+	./mail_attach_mo.gif \
+	./mail_attach_dis.gif \
+	./mail_attach_dep.gif \
+	./mail_spelling.gif \
+	./mail_spelling_mo.gif \
+	./mail_spelling_dis.gif \
+	./mail_spelling_dep.gif \
+	./mail_save.gif \
+	./mail_save_mo.gif \
+	./mail_save_dis.gif \
+	./mail_save_dep.gif \
+	$(NULL)
+
+
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
+	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/res/toolbar

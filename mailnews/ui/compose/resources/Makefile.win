@@ -24,8 +24,56 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) Compose.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ComposeFrame.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) mail_options.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_options_mo.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_options_dis.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_options_dep.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_quotemsg.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_quotemsg_mo.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_quotemsg_dis.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_quotemsg_dep.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_selectaddress.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_selectaddress_mo.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_selectaddress_dis.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_selectaddress_dep.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_attach.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_attach_mo.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_attach_dis.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_attach_dep.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_spelling.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_spelling_mo.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_spelling_dis.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_spelling_dep.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_save.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_save_mo.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_save_dis.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) mail_save_dep.gif $(DIST)\bin\res\toolbar
 
 clobber::
 	rm -f $(DIST)\bin\res\samples\Compose.xul
 	rm -f $(DIST)\bin\res\samples\ComposeFrame.html
+	rm -f $(DIST)\bin\res\toolbar\mail_options.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_options_mo.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_options_dis.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_options_dep.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_quotemsg.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_quotemsg_mo.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_quotemsg_dis.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_quotemsg_dep.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_selectaddress.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_selectaddress_mo.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_selectaddress_dis.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_selectaddress_dep.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_attach.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_attach_mo.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_attach_dis.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_attach_dep.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_spelling.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_spelling_mo.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_spelling_dis.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_spelling_dep.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_save.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_save_mo.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_save_dis.gif
+	rm -f $(DIST)\bin\res\toolbar\mail_save_dep.gif
 
