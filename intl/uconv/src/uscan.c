@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   jeroen.dobbelaere@acunia.com
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -505,8 +506,8 @@ PRIVATE PRBool uCheckAndScanByTable(
   PRInt16 itemnum = shift->numOfItem;
   for(i=0;i<itemnum;i++)
   {
-    if( ( in[0] >=  cell[i].shiftin.Min) &&
-      ( in[0] <=  cell[i].shiftin.Max))
+    if( ( in[0] >=  cell[i].shiftin_Min) &&
+      ( in[0] <=  cell[i].shiftin_Max))
     {
       if(inbuflen < cell[i].reserveLen)
         return PR_FALSE;
