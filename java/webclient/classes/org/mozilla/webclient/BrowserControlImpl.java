@@ -33,6 +33,7 @@ import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import java.awt.Rectangle;
+import java.awt.Canvas;
 
 /**
  *
@@ -40,7 +41,7 @@ import java.awt.Rectangle;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: BrowserControlImpl.java,v 1.5 1999/11/06 02:24:17 dmose%mozilla.org Exp $
+ * @version $Id: BrowserControlImpl.java,v 1.6 1999/12/03 01:55:29 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControl
  *
@@ -71,14 +72,16 @@ public class BrowserControlImpl extends Object implements BrowserControl, EventR
 	 */
 
 	private int nativeWebShell;
+    private Canvas myCanvas;
 
 //
 // Constructors and Initializers    
 //
 
-public BrowserControlImpl(int windowPtr, Rectangle bounds) throws Exception 
+protected BrowserControlImpl(Canvas yourCanvas)
 {
-	nativeWebShell = BrowserControlMozillaShim.webShellCreate(windowPtr, bounds);
+    ParameterCheck.nonNull(yourCanvas);
+    myCanvas = yourCanvas;
 }
 
 //
@@ -92,6 +95,16 @@ public BrowserControlImpl(int windowPtr, Rectangle bounds) throws Exception
 // 
 // Methods from BrowserControl
 // 
+
+public void createWindow(int windowPtr, Rectangle bounds) throws Exception 
+{
+	nativeWebShell = BrowserControlMozillaShim.webShellCreate(windowPtr, bounds);
+}
+
+public Canvas getCanvas()
+{
+    return myCanvas;
+}
 
 public void loadURL(String urlString) throws Exception 
 {
@@ -268,7 +281,7 @@ public static void main(String [] args)
     //    BrowserControlImpl me = new BrowserControlImpl();
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.5 1999/11/06 02:24:17 dmose%mozilla.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.6 1999/12/03 01:55:29 edburns%acm.org Exp $");
     
 }
 

@@ -27,12 +27,15 @@ package org.mozilla.webclient;
 
 // BrowserControlCore.java
 
+import java.awt.Canvas;
+import java.awt.Rectangle;
+
 /**
  *
  *  <B>BrowserControlCore</B> Defines the core methods for browsing
  *
 
- * @version $Id: BrowserControlCore.java,v 1.3 1999/11/06 02:24:17 dmose%mozilla.org Exp $
+ * @version $Id: BrowserControlCore.java,v 1.4 1999/12/03 01:55:28 edburns%acm.org Exp $
  * 
 
  * @see	org.mozilla.webclient.BrowserControlExtended
@@ -59,6 +62,10 @@ public boolean forward() throws Exception;
 public boolean refresh() throws Exception;
 
 public int getNativeWebShell();
+
+public void createWindow(int windowPtr, Rectangle bounds) throws Exception;
+
+public Canvas getCanvas();
 
 } // end of interface BrowserControlCore
 

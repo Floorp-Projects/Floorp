@@ -33,6 +33,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import org.mozilla.webclient.*;
+import org.mozilla.util.Assert;
 
 /**
  *
@@ -40,9 +41,9 @@ import org.mozilla.webclient.*;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozilla.java,v 1.4 1999/11/06 02:24:19 dmose%mozilla.org Exp $
+ * @version $Id: EmbeddedMozilla.java,v 1.5 1999/12/03 01:55:30 edburns%acm.org Exp $
  * 
- * @see	org.mozilla.webclient.BrowserControlCanvasFactory
+ * @see	org.mozilla.webclient.BrowserControlFactory
 
  */
 
@@ -114,29 +115,28 @@ public static void printUsage()
 		controlPanel.add(buttonsPanel, BorderLayout.WEST);
 
 		// Create the browser
-		BrowserControlCanvas browser  = null;
+        Canvas browserCanvas = null;
 
         try {
-            BrowserControlCanvasFactory.setAppData(binDir);
-			browser = BrowserControlCanvasFactory.newBrowserControlCanvas();
+            BrowserControlFactory.setAppData(binDir);
+			browserControl = BrowserControlFactory.newBrowserControl();
         }
         catch(Exception e) {
-            System.out.println("Can't create BrowserControlCanvas: " + 
+            System.out.println("Can't create BrowserControl: " + 
                                e.getMessage());
         }
-
-		browser.setSize(defaultWidth, defaultHeight);
+        browserCanvas = browserControl.getCanvas();
+        Assert.assert(null != browserCanvas);
+		browserCanvas.setSize(defaultWidth, defaultHeight);
 	
-		// Add the control panel and the browser
+		// Add the control panel and the browserCanvas
 		add(controlPanel, BorderLayout.NORTH);
-		add(browser,      BorderLayout.CENTER);
+		add(browserCanvas,      BorderLayout.CENTER);
 		
 		pack();
 		show();
 		toFront();
 	
-		browserControl = browser.getWebShell();
-
 		try {
 	        browserControl.loadURL(url);
 			urlField.setText(url);

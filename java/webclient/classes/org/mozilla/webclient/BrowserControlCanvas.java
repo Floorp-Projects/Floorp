@@ -52,7 +52,7 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.4 1999/11/06 02:24:16 dmose%mozilla.org Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.5 1999/12/03 01:55:26 edburns%acm.org Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -111,13 +111,10 @@ protected BrowserControlCanvas ()
 	
 } // BrowserControlCanvas() ctor
 
-protected static void initialize(String verifiedBinDirAbsolutePath)
+protected void initialize(BrowserControl controlImpl)
 {
-	try {
-		BrowserControlMozillaShim.initialize(verifiedBinDirAbsolutePath);
-	} catch (Exception e) {
-		System.out.println(e.toString());
-	}
+    ParameterCheck.nonNull(controlImpl);
+    webShell = controlImpl;
 }
 
 /**
@@ -151,7 +148,8 @@ public void addNotify ()
 
 	try {
 		Rectangle r = new Rectangle(getBoundsRelativeToWindow());
-		webShell = new BrowserControlImpl(nativeWindow, r);
+        Assert.assert(null != webShell);
+        webShell.createWindow(nativeWindow, r);
 	} catch (Exception e) {
 		dsi.unlock();
 		System.out.println(e.toString());

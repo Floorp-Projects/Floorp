@@ -25,7 +25,7 @@
 
 package org.mozilla.webclient;
 
-// BrowserControlCanvasFactory.java
+// BrowserControlFactory.java
 
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
@@ -36,20 +36,20 @@ import java.io.FileNotFoundException;
 
 /**
  *
- *  <B>BrowserControlCanvasFactory</B> creates concrete instances of BrowserControlCanvas
+ *  <B>BrowserControlFactory</B> creates concrete instances of BrowserControl
 
  * <B>Lifetime And Scope</B> <P>
 
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlCanvasFactory.java,v 1.5 1999/11/06 02:24:17 dmose%mozilla.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.1 1999/12/03 01:55:28 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
  */
 
-public class BrowserControlCanvasFactory extends Object
+public class BrowserControlFactory extends Object
 {
 //
 // Protected Constants
@@ -75,7 +75,7 @@ public class BrowserControlCanvasFactory extends Object
 // Constructors and Initializers    
 //
 
-public BrowserControlCanvasFactory()
+public BrowserControlFactory()
 {
     Assert.assert(false, "This class shouldn't be constructed.");
 }
@@ -139,21 +139,32 @@ public static void setAppData(String absolutePathToNativeBrowserBinDir) throws F
             throw new ClassNotFoundException("Could not determine WebShellCanvas class to load\n");
         }
         
-        BrowserControlCanvas.initialize(absolutePathToNativeBrowserBinDir);
+        try {
+            BrowserControlMozillaShim.initialize(absolutePathToNativeBrowserBinDir);
+        }
+        catch (Exception e) {
+            throw new ClassNotFoundException("Can't initialize native browser: " + 
+                                             e.getMessage());
+        }
         appDataHasBeenSet = true;
     }
 }
 
-public static BrowserControlCanvas newBrowserControlCanvas() throws InstantiationException, IllegalAccessException, IllegalStateException
+public static BrowserControl newBrowserControl() throws InstantiationException, IllegalAccessException, IllegalStateException
 {
     if (!appDataHasBeenSet) {
         throw new IllegalStateException("Can't create BrowserControlCanvasInstance: setAppData() has not been called.");
     }
     Assert.assert(null != browserControlCanvasClass);
     
-    BrowserControlCanvas result = null;
-    result = (BrowserControlCanvas) browserControlCanvasClass.newInstance();
-    
+    BrowserControlCanvas newCanvas = null;
+    BrowserControl result = null; 
+    newCanvas = (BrowserControlCanvas) browserControlCanvasClass.newInstance();
+    if (null != newCanvas &&
+	null != (result = new BrowserControlImpl(newCanvas))) {
+        newCanvas.initialize(result);
+    }
+
     return result;
 }
 
@@ -171,22 +182,24 @@ public static void main(String [] args)
 {
     System.out.println("doing asserts");
     Assert.setEnabled(true);
-    Log.setApplicationName("BrowserControlCanvasFactory");
+    Log.setApplicationName("BrowserControlFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlCanvasFactory.java,v 1.5 1999/11/06 02:24:17 dmose%mozilla.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.1 1999/12/03 01:55:28 edburns%acm.org Exp $");
 
-    BrowserControlCanvas canvas = null;
+    java.awt.Canvas canvas = null;
+    BrowserControl control = null;
     try {
-        BrowserControlCanvasFactory.setAppData(args[0]);
-        canvas = BrowserControlCanvasFactory.newBrowserControlCanvas();
+        BrowserControlFactory.setAppData(args[0]);
+        control = BrowserControlFactory.newBrowserControl();
+	Assert.assert(control != null);
+	canvas = control.getCanvas();
+	Assert.assert(canvas != null);
     }
     catch (Exception e) {
         System.out.println(e.getMessage());
     }
-
-	Assert.assert(null != canvas);
 }
 
 // ----UNIT_TEST_END
 
-} // end of class BrowserControl!CanvasFactory
+} // end of class BrowserControlFactory

@@ -33,6 +33,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import org.mozilla.webclient.*;
+import org.mozilla.util.Assert;
 
 /**
  *
@@ -40,9 +41,9 @@ import org.mozilla.webclient.*;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: SwingEmbeddedMozilla.java,v 1.2 1999/11/06 02:24:19 dmose%mozilla.org Exp $
+ * @version $Id: SwingEmbeddedMozilla.java,v 1.3 1999/12/03 01:55:31 edburns%acm.org Exp $
  * 
- * @see	org.mozilla.webclient.BrowserControlCanvasFactory
+ * @see	org.mozilla.webclient.BrowserControlFactory
 
  */
 
@@ -100,21 +101,22 @@ public SwingEmbeddedMozilla (String title, String binDir, String url)
     setSize(defaultWidth, defaultHeight);
 	
     // Create the browser
-    BrowserControlCanvas browser  = null;
+    Canvas browserCanvas  = null;
     
     try {
-        BrowserControlCanvasFactory.setAppData(binDir);
-        browser = BrowserControlCanvasFactory.newBrowserControlCanvas();
+        BrowserControlFactory.setAppData(binDir);
+        browserControl = BrowserControlFactory.newBrowserControl();
     }
     catch(Exception e) {
         System.out.println("Can't create BrowserControlCanvas: " + 
                            e.getMessage());
     }
-
-    browser.setSize(defaultWidth, defaultHeight);
+    browserCanvas = browserControl.getCanvas();
+    Assert.assert(null != browserCanvas);
+    browserCanvas.setSize(defaultWidth, defaultHeight);
 
 	// Add the control panel and the browser
-    contentPane.add(browser,      BorderLayout.CENTER);
+    contentPane.add(browserCanvas,      BorderLayout.CENTER);
     
     
     controlPanel = new CommandPanel(this);
@@ -127,8 +129,6 @@ public SwingEmbeddedMozilla (String title, String binDir, String url)
     show();
     toFront();
 	
-    browserControl = browser.getWebShell();
-
     //        DocumentLoadListener dll;
     try {
         //            dll = new DocumentLoadListener();
