@@ -33,7 +33,7 @@
               return this.stringBundle.formatStringFromName(aStringKey, aStringsArray, aStringsArray.length);
             }
             catch (e) {
-              dump("*** Failed to get string " + aStringKey + " in bundle: " + this.src + "\n");
+              dump("*** Failed to format string " + aStringKey + " in bundle: " + this.src + "\n");
               throw e;
             }
           ]]>
