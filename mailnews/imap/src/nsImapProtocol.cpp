@@ -3716,6 +3716,10 @@ PRBool nsImapProtocol::CheckNewMail()
 
 /* static */ void nsImapProtocol::LogImapUrl(const char *logMsg, nsIImapUrl *imapUrl)
 {
+  // nsImapProtocol is not always constructed before this static method is called
+  if (!IMAP)
+    IMAP = PR_NewLogModule("IMAP");
+
   if (PR_LOG_TEST(IMAP, PR_LOG_ALWAYS))
   {
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
