@@ -90,6 +90,12 @@ foreach my $i (@::param_list) {
     print $rowbreak;
 }
 
+print "<tr><th align=right valign=top>version:</th><td>
+What version of Bugzilla this is.  This can't be modified here, but
+<tt>%version%</tt> can be used as a parameter in places that understand
+such parameters</td></tr>
+<tr><td></td><td>" . Param('version') . "</td></tr>";
+
 print "</table>\n";
 
 print "<input type=reset value=\"Reset form\"><br>\n";
