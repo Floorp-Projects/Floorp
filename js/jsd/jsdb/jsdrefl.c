@@ -618,7 +618,7 @@ GetClosestLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     JSD_LockScriptSubsystem(data->jsdcTarget);
     active = JSD_IsActiveScript(data->jsdcTarget, jsdscript);
     JSD_UnlockScriptSubsystem(data->jsdcTarget);
-    if(! active );
+    if(! active )
     {
         JS_ReportError(cx, "GetClosestLine passed inactive script");
         return JS_FALSE;
