@@ -402,6 +402,9 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
     nsresult rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
     nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
+    if (!hashKey)
+      return NS_OK;
+
     nsMsgGroupThread *groupThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
     if (colID[0] == 'd')
     {
