@@ -33,6 +33,7 @@ SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
 LIBS		= \
 		$(MOZ_COMPONENT_LIBS) \
 		-lphembedmoz \
+  -lgkgfx \
 		$(TK_LIBS) \
 		$(NULL)
 

@@ -38,7 +38,7 @@ SHARED_LIBRARY_LIBS= \
 		$(NULL)
 
 EXPORTS		= \
-		PtMozilla.h
+		PtMozilla.h MozEmbedChrome.h nsIPhEmbed.h
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
