@@ -50,6 +50,94 @@ rdf_IsContainer(nsIRDFResourceManager* mgr,
 PRBool
 rdf_IsResource(nsIRDFNode* node);
 
+
+/**
+ * Various utilities routines for making assertions in a data source
+ */
+
+// 0. node, node, node
+nsresult
+rdf_Assert(nsIRDFDataSource* ds,
+           nsIRDFNode* subject,
+           nsIRDFNode* predicate,
+           nsIRDFNode* object);
+
+// 1. string, string, string
+nsresult
+rdf_Assert(nsIRDFResourceManager* mgr,
+           nsIRDFDataSource* ds,
+           const nsString& subjectURI,
+           const nsString& predicateURI,
+           const nsString& objectURI);
+
+// 2. node, node, string
+nsresult
+rdf_Assert(nsIRDFResourceManager* mgr,
+           nsIRDFDataSource* ds,
+           nsIRDFNode* subject,
+           nsIRDFNode* predicate,
+           const nsString& objectURI);
+
+// 3. node, string, string
+nsresult
+rdf_Assert(nsIRDFResourceManager* mgr,
+           nsIRDFDataSource* ds,
+           nsIRDFNode* subject,
+           const nsString& predicateURI,
+           const nsString& objectURI);
+
+// 4. node, string, node
+nsresult
+rdf_Assert(nsIRDFResourceManager* mgr,
+           nsIRDFDataSource* ds,
+           nsIRDFNode* subject,
+           const nsString& predicateURI,
+           nsIRDFNode* object);
+
+// 5. string, string, node
+nsresult
+rdf_Assert(nsIRDFResourceManager* mgr,
+           nsIRDFDataSource* ds,
+           const nsString& subjectURI,
+           const nsString& predicateURI,
+           nsIRDFNode* object);
+
+
+nsresult
+rdf_CreateAnonymousNode(nsIRDFResourceManager* mgr,
+                        nsIRDFNode*& result);
+
+
+nsresult
+rdf_CreateBag(nsIRDFResourceManager* mgr,
+              nsIRDFDataSource* ds,
+              nsIRDFNode*& result);
+
+
+nsresult
+rdf_ContainerGetNextValue(nsIRDFResourceManager* mgr,
+                          nsIRDFDataSource* ds,
+                          nsIRDFNode* container,
+                          PRInt32& result);
+
+
+nsresult
+rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
+                        nsIRDFDataSource* ds,
+                        nsIRDFNode* container,
+                        nsIRDFNode* element);
+
+nsresult
+rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
+                        nsIRDFDataSource* ds,
+                        nsIRDFNode* container,
+                        const nsString& literalOrURI);
+
+PRBool
+rdf_ResourceEquals(nsIRDFResourceManager* mgr,
+                   nsIRDFNode* resource,
+                   const nsString& uri);
+
 #endif // rdfutil_h__
 
 
