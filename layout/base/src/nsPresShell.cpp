@@ -31,6 +31,7 @@
 #include "prlog.h"
 #include "nsVoidArray.h"
 #include "nsIPref.h"
+#include "nsIViewObserver.h"
 
 #undef NOISY
 
@@ -133,8 +134,12 @@ FrameHashTable::Remove(nsIFrame* aKey)
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPresShellIID, NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
+static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
 
-class PresShell : public nsIPresShell, private nsIDocumentObserver {
+class PresShell : public nsIPresShell, public nsIViewObserver,
+                  private nsIDocumentObserver
+
+{
 public:
   PresShell();
 
@@ -193,11 +198,24 @@ public:
   NS_IMETHOD ExitReflowLock();
   virtual void BeginObservingDocument();
   virtual void EndObservingDocument();
-  virtual void ResizeReflow(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   virtual nsIFrame* GetRootFrame();
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   virtual void ProcessReflowCommands();
+
+  //nsIViewObserver
+
+  //nsIViewObserver interface
+
+  NS_IMETHOD Paint(nsIView *aView,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect);
+  NS_IMETHOD HandleEvent(nsIView*        aView,
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+  NS_IMETHOD Scrolled(nsIView *aView);
+  NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
 protected:
   ~PresShell();
@@ -295,6 +313,11 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
+  if (aIID.Equals(kIViewObserverIID)) {
+    *aInstancePtr = (void*) ((nsIViewObserver*) this);
+    AddRef();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*) ((nsISupports*) ((nsIPresShell*)this));
     AddRef();
@@ -311,7 +334,7 @@ PresShell::~PresShell()
     NS_RELEASE(mDocument);
   }
   if (nsnull != mRootFrame) {
-    mRootFrame->DeleteFrame();
+    mRootFrame->DeleteFrame(*mPresContext);
   }
   NS_IF_RELEASE(mViewManager);
   //Release mPresContext after mViewManager
@@ -345,6 +368,9 @@ PresShell::Init(nsIDocument* aDocument,
   NS_ADDREF(aDocument);
   mViewManager = aViewManager;
   NS_ADDREF(mViewManager);
+
+  //doesn't add a ref since we own it... MMP
+  mViewManager->SetViewObserver((nsIViewObserver *)this);
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
@@ -421,7 +447,7 @@ PresShell::EndObservingDocument()
   }
 }
 
-void
+NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
   EnterReflowLock();
@@ -489,6 +515,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   }
 
   ExitReflowLock();
+
+  return NS_OK; //XXX this needs to be real. MMP
 }
 
 nsIFrame*
@@ -785,6 +813,70 @@ PresShell::FindFrameWithContent(nsIContent* aContent)
   return ::FindFrameWithContent(mRootFrame, aContent);
 }
 
+//nsIViewObserver
+
+NS_IMETHODIMP PresShell :: Paint(nsIView              *aView,
+                                 nsIRenderingContext& aRenderingContext,
+                                 const nsRect&        aDirtyRect)
+{
+  nsIFrame  *frame;
+  nsresult rv;
+
+  NS_ASSERTION(!(nsnull == aView), "null view");
+
+  frame = (nsIFrame *)aView->GetClientData();
+
+  if (nsnull != frame)
+    rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect);
+  else
+    rv = NS_OK;
+
+  return rv;
+}
+
+NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
+                                       nsGUIEvent*     aEvent,
+                                       nsEventStatus&  aEventStatus)
+{
+  nsIFrame  *frame;
+  nsresult  rv;
+  
+  NS_ASSERTION(!(nsnull == aView), "null view");
+
+  frame = (nsIFrame *)aView->GetClientData();
+
+  if (nsnull != frame)
+    rv = frame->HandleEvent(*mPresContext, aEvent, aEventStatus);
+  else
+    rv = NS_OK;
+
+  return rv;
+}
+
+NS_IMETHODIMP PresShell :: Scrolled(nsIView *aView)
+{
+  nsIFrame  *frame;
+  nsresult  rv;
+  
+  NS_ASSERTION(!(nsnull == aView), "null view");
+
+  frame = (nsIFrame *)aView->GetClientData();
+
+  if (nsnull != frame)
+  {
+    rv = NS_OK;
+  }
+  else
+    rv = NS_OK;
+
+  return rv;
+}
+
+NS_IMETHODIMP PresShell :: ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight)
+{
+  return ResizeReflow(aWidth, aHeight);
+}
+
 #ifdef NS_DEBUG
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
@@ -996,9 +1088,11 @@ PresShell::VerifyIncrementalReflow()
   // Create a new view manager.
   rv = NSRepository::CreateInstance(kViewManagerCID, nsnull, kIViewManagerIID,
                                     (void**) &vm);
-  if ((NS_OK != rv) || (NS_OK != vm->Init(cx))) {
+  if ((NS_OK != rv) || (NS_OK != vm->Init(dc))) {
     NS_ASSERTION(NS_OK == rv, "failed to create view manager");
   }
+
+  vm->SetViewObserver((nsIViewObserver *)this);
 
   // Create a child window of the parent that is our "root view/window"
   // Create a view
