@@ -294,15 +294,15 @@ public final class JavaAdapter
 
         // Generate Java methods, fields for remaining properties that
         // are not overrides.
-        for (Scriptable o=jsObj; o != null; o = (Scriptable)o.getPrototype()) {
-            Object[] ids = jsObj.getIds();
-            for (int j=0; j < ids.length; j++) {
-                if (!(ids[j] instanceof String))
+        if (jsObj != null) {
+            Object[] ids = ScriptableObject.getPropertyIds(jsObj);
+            for (int i = 0; i != ids.length; ++i) {
+                if (!(ids[i] instanceof String))
                     continue;
-                String id = (String) ids[j];
+                String id = (String) ids[i];
                 if (generatedMethods.has(id))
                     continue;
-                Object f = o.get(id, o);
+                Object f = ScriptableObject.getProperty(jsObj, id);
                 int length;
                 if (f instanceof Function) {
                     Function p = (Function) f;
