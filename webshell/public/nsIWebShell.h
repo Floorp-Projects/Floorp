@@ -170,10 +170,6 @@ public:
    */
   NS_IMETHOD Repaint(PRBool aForce) = 0;
 
-  // SetContextView moved to bottom to keep branch/tip interfaces
-  // compatible
-  NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult) = 0;
-
   /**
    * Set the nsIWebShellContainer for the WebShell.
    */

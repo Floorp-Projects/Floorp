@@ -41,6 +41,8 @@ public:
   NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
                    const char* aCommand,
                    nsISupports* aExtraInfo) = 0;
+
+  NS_IMETHOD GetContentViewer(nsIContentViewer** aResult) = 0;
 };
 
 #endif /* nsIContentViewerContainer_h___ */
