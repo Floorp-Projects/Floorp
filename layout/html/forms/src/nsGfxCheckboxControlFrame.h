@@ -63,8 +63,9 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-   //nsIRadioControlFrame methods
+   //nsICheckboxControlFrame methods
   NS_IMETHOD SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext);
+  NS_IMETHOD SetIsInClickEvent(PRBool aVal);
 
   void InitializeControl(nsIPresContext* aPresContext);
 
@@ -133,8 +134,9 @@ protected:
   virtual void PaintMixedMark(nsIRenderingContext& aRenderingContext,
                                float aPixelsToTwips, const nsRect& aRect) ;
 
-    //GFX-rendered state variables
-  CheckState mChecked;
+  //GFX-rendered state variables
+  PRBool           mInClickEvent;
+  CheckState       mChecked;
   nsIStyleContext* mCheckButtonFaceStyle;
 
 private:

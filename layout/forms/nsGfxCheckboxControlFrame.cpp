@@ -54,7 +54,8 @@ NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 // Initialize GFX-rendered state
 nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame()
 : mChecked(eOff),
-  mCheckButtonFaceStyle(nsnull)
+  mCheckButtonFaceStyle(nsnull),
+  mInClickEvent(PR_FALSE)
 {
 }
 
@@ -91,6 +92,14 @@ nsGfxCheckboxControlFrame::SetCheckboxFaceStyleContext(nsIStyleContext *aCheckbo
 {
   mCheckButtonFaceStyle = aCheckboxFaceStyleContext;
   NS_ADDREF(mCheckButtonFaceStyle);
+  return NS_OK;
+}
+
+//--------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::SetIsInClickEvent(PRBool aVal)
+{
+  mInClickEvent = aVal;
   return NS_OK;
 }
 
@@ -414,6 +423,22 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
 nsGfxCheckboxControlFrame::CheckState 
 nsGfxCheckboxControlFrame::GetCheckboxState ( )
 {
+  // If we are processing an onclick event then
+  // always return the opposite value
+  // additional explanantion is in nsICheckboxControlFrame or nsHTMLInputElement.cpp
+  if (mInClickEvent) {
+    if (!IsTristateCheckbox()) {
+      return mChecked == eOn? eOff : eOn;
+    } else {
+      switch (mChecked) {
+        case eOff:   return eOn;
+        case eOn:    return eMixed;
+        case eMixed: return eOff;
+      default:
+        break;
+      }
+    }
+  }
   return mChecked;
 }
 
