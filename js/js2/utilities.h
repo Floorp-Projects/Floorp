@@ -448,10 +448,8 @@ namespace JavaScript {
 	struct ArenaObject {
 		void *operator new(size_t size, Arena &arena) {return arena.allocate(size);}
 		void *operator new[](size_t size, Arena &arena) {return arena.allocate(size);}
-	  #ifndef __MWERKS__	// Metrowerks 5.3 bug: These aren't supported yet
 		void operator delete(void *, Arena &) {}
 		void operator delete[](void *, Arena &) {}
-	  #endif
 	  private:
 		void operator delete(void *, size_t) {}
 		void operator delete[](void *) {}
@@ -1503,19 +1501,15 @@ inline void *operator new(size_t size, JavaScript::Arena &arena) {return arena.a
  inline void *operator new[](size_t size, JavaScript::Arena &arena) {return arena.allocate(size);}
 #endif
 
-#ifndef __MWERKS__	// Metrowerks 5.3 bug: Two-argument delete isn't supported yet
- // Global delete operators.  These are only called in the rare cases that a constructor throws an exception
- // and has to undo an operator new.  An explicit delete statement will never invoke these.
- inline void operator delete(void *, JavaScript::Arena &) {}
- #ifndef _WIN32		// Microsoft Visual C++ 6.0 bug: new and new[] aren't distinguished
-  inline void operator delete[](void *, JavaScript::Arena &) {}
- #endif
+// Global delete operators.  These are only called in the rare cases that a constructor throws an exception
+// and has to undo an operator new.  An explicit delete statement will never invoke these.
+inline void operator delete(void *, JavaScript::Arena &) {}
+#ifndef _WIN32		// Microsoft Visual C++ 6.0 bug: new and new[] aren't distinguished
+ inline void operator delete[](void *, JavaScript::Arena &) {}
 #endif
 
 template <typename T>
 inline void *operator new(size_t DEBUG_ONLY(size), JavaScript::Pool<T> &pool) {ASSERT(size == sizeof(T)); return pool.allocate();}
-#ifndef __MWERKS__	// Metrowerks 5.3 bug: Two-argument delete isn't supported yet
- template <typename T>
- inline void operator delete(void *t, JavaScript::Pool<T> &pool) {pool.deallocate(t);}
-#endif
+template <typename T>
+inline void operator delete(void *t, JavaScript::Pool<T> &pool) {pool.deallocate(t);}
 #endif
