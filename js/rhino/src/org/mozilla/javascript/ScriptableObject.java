@@ -811,7 +811,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
         // If we got here, there isn't an "init" method with the right
         // parameter types.
-        Hashtable exclusionList = getExclusionList();
 
         Constructor[] ctors = clazz.getConstructors();
         Constructor protoCtor = null;
@@ -834,16 +833,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         // Find out whether there are any methods that begin with
         // "js". If so, then only methods that begin with special
         // prefixes will be defined as JavaScript entities.
-        // The prefixes "js_" and "jsProperty_" are deprecated.
-        final String genericPrefix = "js_";
         final String functionPrefix = "jsFunction_";
         final String staticFunctionPrefix = "jsStaticFunction_";
-        final String propertyPrefix = "jsProperty_";
         final String getterPrefix = "jsGet_";
         final String setterPrefix = "jsSet_";
         final String ctorName = "jsConstructor";
 
-        boolean hasPrefix = false;
         Method[] ctorMeths = FunctionObject.findMethods(clazz, ctorName);
         Member ctorMember = null;
         if (ctorMeths != null) {
@@ -853,40 +848,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                         ctorMeths[0], ctorMeths[1]));
             }
             ctorMember = ctorMeths[0];
-            hasPrefix = true;
-        }
-
-        // Deprecated: look for functions with the same name as the class
-        // and consider them constructors.
-        for (int i=0; i < methods.length; i++) {
-            String name = methods[i].getName();
-            String prefix = null;
-            if (!name.startsWith("js")) // common start to all prefixes
-                prefix = null;
-            else if (name.startsWith(genericPrefix))
-                prefix = genericPrefix;
-            else if (name.startsWith(functionPrefix))
-                prefix = functionPrefix;
-            else if (name.startsWith(staticFunctionPrefix))
-                prefix = staticFunctionPrefix;
-            else if (name.startsWith(propertyPrefix))
-                prefix = propertyPrefix;
-            else if (name.startsWith(getterPrefix))
-                prefix = getterPrefix;
-            else if (name.startsWith(setterPrefix))
-                prefix = setterPrefix;
-            if (prefix != null) {
-                hasPrefix = true;
-                name = name.substring(prefix.length());
-            }
-            if (name.equals(className)) {
-                if (ctorMember != null) {
-                    throw new ClassDefinitionException(
-                        Context.getMessage2("msg.multiple.ctors",
-                                            ctorMember, methods[i]));
-                }
-                ctorMember = methods[i];
-            }
         }
 
         if (ctorMember == null) {
@@ -912,12 +873,11 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
         ctor.addAsConstructor(scope, proto);
 
-        if (!hasPrefix && exclusionList == null)
-            exclusionList = getExclusionList();
         Method finishInit = null;
         for (int i=0; i < methods.length; i++) {
-            if (!hasPrefix && methods[i].getDeclaringClass() != clazz)
+            if (methods[i] == ctorMember) {
                 continue;
+            }
             String name = methods[i].getName();
             if (name.equals("finishInit")) {
                 Class[] parmTypes = methods[i].getParameterTypes();
@@ -936,36 +896,27 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 continue;
             if (name.equals(ctorName))
                 continue;
+
             String prefix = null;
-            if (hasPrefix) {
-                if (name.startsWith(genericPrefix)) {
-                    prefix = genericPrefix;
-                } else if (name.startsWith(functionPrefix)) {
-                    prefix = functionPrefix;
-                } else if (name.startsWith(staticFunctionPrefix)) {
-                    prefix = staticFunctionPrefix;
-                    if (!Modifier.isStatic(methods[i].getModifiers())) {
-                        throw new ClassDefinitionException(
-                            "jsStaticFunction must be used with static method.");
-                    }
-                } else if (name.startsWith(propertyPrefix)) {
-                    prefix = propertyPrefix;
-                } else if (name.startsWith(getterPrefix)) {
-                    prefix = getterPrefix;
-                } else if (name.startsWith(setterPrefix)) {
-                    prefix = setterPrefix;
-                } else {
-                    continue;
+            if (name.startsWith(functionPrefix)) {
+                prefix = functionPrefix;
+            } else if (name.startsWith(staticFunctionPrefix)) {
+                prefix = staticFunctionPrefix;
+                if (!Modifier.isStatic(methods[i].getModifiers())) {
+                    throw new ClassDefinitionException(
+                        "jsStaticFunction must be used with static method.");
                 }
-                name = name.substring(prefix.length());
-            } else if (exclusionList.get(name) != null)
-                continue;
-            if (methods[i] == ctorMember) {
+            } else if (name.startsWith(getterPrefix)) {
+                prefix = getterPrefix;
+            } else if (name.startsWith(setterPrefix)) {
+                prefix = setterPrefix;
+            } else {
                 continue;
             }
-            if (prefix != null && prefix.equals(setterPrefix))
+            name = name.substring(prefix.length());
+            if (prefix == setterPrefix)
                 continue;   // deal with set when we see get
-            if (prefix != null && prefix.equals(getterPrefix)) {
+            if (prefix == getterPrefix) {
                 if (!(proto instanceof ScriptableObject)) {
                     throw PropertyException.withMessage2
                         ("msg.extend.scriptable",                                                         proto.getClass().toString(), name);
@@ -987,49 +938,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                                           attr);
                 continue;
             }
-            if ((name.startsWith("get") || name.startsWith("set")) &&
-                name.length() > 3 &&
-                !(hasPrefix && (prefix.equals(functionPrefix) ||
-                                prefix.equals(staticFunctionPrefix))))
-            {
-                if (!(proto instanceof ScriptableObject)) {
-                    throw PropertyException.withMessage2
-                        ("msg.extend.scriptable",
-                         proto.getClass().toString(), name);
-                }
-                if (name.startsWith("set"))
-                    continue;   // deal with set when we see get
-                StringBuffer buf = new StringBuffer();
-                char c = name.charAt(3);
-                buf.append(Character.toLowerCase(c));
-                if (name.length() > 4)
-                    buf.append(name.substring(4));
-                String propertyName = buf.toString();
-                buf.setCharAt(0, c);
-                buf.insert(0, "set");
-                String setterName = buf.toString();
-                Method[] setter = FunctionObject.findMethods(
-                                    clazz,
-                                    hasPrefix ? genericPrefix + setterName
-                                              : setterName);
-                if (setter != null && setter.length != 1) {
-                    throw PropertyException.withMessage2
-                        ("msg.no.overload", name, clazz.getName());
-                }
-                if (setter == null && hasPrefix)
-                    setter = FunctionObject.findMethods(
-                                clazz,
-                                propertyPrefix + setterName);
-                int attr = ScriptableObject.PERMANENT |
-                           ScriptableObject.DONTENUM  |
-                           (setter != null ? 0
-                                           : ScriptableObject.READONLY);
-                Method m = setter == null ? null : setter[0];
-                ((ScriptableObject) proto).defineProperty(propertyName, null,
-                                                          methods[i], m,
-                                                          attr);
-                continue;
-            }
+
             FunctionObject f = new FunctionObject(name, methods[i], proto);
             if (f.isVarArgsConstructor()) {
                 throw Context.reportRuntimeError1
@@ -1775,18 +1684,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         slots = newSlots;
     }
 
-    private static Hashtable getExclusionList() {
-        if (exclusionList != null)
-            return exclusionList;
-        Hashtable result = new Hashtable(17);
-        Method[] methods = ScriptRuntime.FunctionClass.getMethods();
-        for (int i=0; i < methods.length; i++) {
-            result.put(methods[i].getName(), Boolean.TRUE);
-        }
-        exclusionList = result;
-        return result;
-    }
-
     Object[] getIds(boolean getAll) {
         Slot[] s = slots;
         Object[] a = ScriptRuntime.emptyArgs;
@@ -1873,7 +1770,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
     private static final Object HAS_STATIC_ACCESSORS = Void.TYPE;
     private static final Slot REMOVED = new Slot();
-    private static Hashtable exclusionList = null;
 
     private transient Slot[] slots;
     // If count >= 0, it gives number of keys or if count < 0,
