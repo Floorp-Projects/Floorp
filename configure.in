@@ -181,6 +181,7 @@ dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+    MKCSHLIB='$(CC) $(DSO_LDOPTS)'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-fPIC'
 
@@ -196,6 +197,7 @@ if test "$GNU_CC"; then
     _USE_CPP_INCLUDE_FLAG=1
 else
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    MKCSHLIB='$(MKSHLIB)'
     DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     DSO_CFLAGS='-KPIC'
     _DEFINES_CFLAGS='$(ACDEFINES)'
@@ -259,6 +261,7 @@ case "$target" in
 		DSO_CFLAGS='-DPIC -brtl -qflag=w:w'
 	fi
 	MKSHLIB='makeC++SharedLib_r -p1 -brtl -berok --'
+	MKCSHLIB='$(MKSHLIB)'
 	;;
 
 *-*-solaris*) 
@@ -266,6 +269,7 @@ case "$target" in
     if test ! "$GNU_CC"; then
        LDFLAGS='-xildoff'
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+       MKCSHLIB='$(CC) $(DSO_LDOPTS)'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
        DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
@@ -295,6 +299,7 @@ case "$target" in
 *-*-sunos*) 
     DSO_LDOPTS=''
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    MKCSHLIB='$(MKSHLIB)'
     ;;
 
 alpha*-*-linux*)
@@ -354,6 +359,7 @@ dnl Test for a.out platform and handle C++ libraries correctly
     DSO_CFLAGS='-fPIC'
     DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    MKCSHLIB='$(MKSHLIB)'
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
 	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
     fi
@@ -369,12 +375,14 @@ dnl Test for a.out platform and handle C++ libraries correctly
     fi
     DSO_LDOPTS='-b -E -L$(DIST)/bin'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    MKCSHLIB='$(MKSHLIB)'
     ;;
 
 *-irix*)
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(DSO_LDOPTS)'
+    MKCSHLIB='$(CC) $(DSO_LDOPTS)'
     dnl I think this will probably break builds using both gcc and GNU ld.
     MKSHLIB_FORCE_ALL='-Wl,-all'
     MKSHLIB_UNFORCE_ALL='-Wl,-none'
@@ -1728,6 +1736,7 @@ AC_SUBST(USE_STRING2)
 AC_SUBST(WRAP_MALLOC_CFLAGS)
 AC_SUBST(WRAP_MALLOC_LIB)
 AC_SUBST(MKSHLIB)
+AC_SUBST(MKCSHLIB)
 AC_SUBST(MKSHLIB_FORCE_ALL)
 AC_SUBST(MKSHLIB_UNFORCE_ALL)
 AC_SUBST(DSO_CFLAGS)

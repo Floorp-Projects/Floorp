@@ -1,38 +1,54 @@
-#! gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
 
-DEPTH = ../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = dbm
+MODULE		= dbm
+LIBRARY_NAME	= $(MOZ_LIB_DBM_PREFIX)dbm
 
-CSRCS = db.c	   \
-	h_bigkey.c \
-	h_func.c   \
-	h_log2.c   \
-	h_page.c   \
-	hash.c	   \
-	hash_buf.c \
-	hsearch.c  \
-	memmove.c  \
-	mktemp.c   \
-	ndbm.c	   \
-	snprintf.c \
-	strerror.c \
-	nsres.c	   \
-	$(NULL)
+LIB_IS_C_ONLY	= 1
 
-LIBRARY_NAME = $(MOZ_LIB_DBM_PREFIX)dbm
+CSRCS		= db.c \
+		  h_bigkey.c \
+		  h_func.c \
+		  h_log2.c \
+		  h_page.c \
+		  hash.c \
+		  hash_buf.c \
+		  hsearch.c \
+		  memmove.c \
+		  mktemp.c \
+		  ndbm.c \
+		  snprintf.c \
+		  strerror.c \
+		  nsres.c \
+		  $(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/../include
+LOCAL_INCLUDES	= -I$(srcdir)/../include
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DMEMMOVE -D__DBINTERFACE_PRIVATE $(SECURITY_FLAG)
+DEFINES		+= -DMEMMOVE -D__DBINTERFACE_PRIVATE $(SECURITY_FLAG)
 
 ifeq ($(OS_ARCH),AIX)
-	OS_LIBS += -lc_r
+OS_LIBS		+= -lc_r
 endif
