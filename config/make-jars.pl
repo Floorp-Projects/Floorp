@@ -1,6 +1,6 @@
 #!/perl
 
-# make-jars [-f] [-v] [-d <chromeDir>] [-s <srcdir>] < <jar.mn>
+# make-jars [-f] [-v] [-l] [-d <chromeDir>] [-s <srcdir>] < <jar.mn>
 
 use strict;
 
@@ -16,7 +16,7 @@ use IO::File;
 
 my $objdir = getcwd;
 
-getopts("d:s:vf");
+getopts("d:s:vfl");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -38,10 +38,16 @@ if (defined($::opt_f)) {
     $flatfilesonly = 1;
 }
 
+my $nofilelocks = 0;
+if (defined($::opt_l)) {
+    $nofilelocks = 1;
+}
+
 if ($verbose) {
     print "make-jars "
         . "-v -d $chromeDir "
         . ($flatfilesonly ? "-f " : "")
+        . ($nofilelocks ? "-l " : "")
         . ($baseFilesDir ? "-s $baseFilesDir " : "")
         . "\n";
 }
@@ -50,8 +56,10 @@ sub zipErrorCheck($$$)
 {
     my ($err,$lockfile,$lockhandle) = @_;
     return if ($err == 0 || $err == 12);
-    unlink($lockfile);
-    flock($lockhandle, LOCK_UN);
+    if (!$nofilelocks) {
+	unlink($lockfile);
+	flock($lockhandle, LOCK_UN);
+    }
     die ("Error invoking zip: $err");
 }
 
@@ -66,12 +74,14 @@ sub JarIt
     my $oldDir = cwd();
     chdir("$destPath/$jarfile");
     #print "cd $destPath/$jarfile\n";
-    
+
     my $lockfile = "../$jarfile.lck";
     my $lockhandle = new IO::File;
-    open($lockhandle,">$lockfile") || 
-	die("WARNING: Could not create lockfile for $lockfile. Exiting.\n");
-    flock($lockhandle, LOCK_EX);
+    if (!$nofilelocks) {
+	open($lockhandle,">$lockfile") || 
+	    die("WARNING: Could not create lockfile for $lockfile. Exiting.\n");
+	flock($lockhandle, LOCK_EX);
+    }
 
     if (!($args eq "")) {
 	my $cwd = getcwd;
@@ -122,9 +132,10 @@ sub JarIt
 	    $err = $? >> 8;
 	zipErrorCheck($err,$lockfile,$lockhandle);
     }
-    unlink("$lockfile");
-    flock($lockhandle, LOCK_UN);
-
+    if (!$nofilelocks) {
+	unlink("$lockfile");
+	flock($lockhandle, LOCK_UN);
+    }
     chdir($oldDir);
     #print "cd $oldDir\n";
 }
