@@ -18,454 +18,14 @@
 
 #include "nsFontMetricsWin.h"
 #include "prmem.h"
+#include "plhash.h"
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
-
-typedef struct UnicodeRange
-{
-#undef UNICODE_RANGE_DESCRIPTION
-#ifdef UNICODE_RANGE_DESCRIPTION
-  PRUint8  bit;
-  char*    description;
-#endif
-  PRUint16 begin;
-  PRUint16 end;
-} UnicodeRange;
-
-static UnicodeRange unicodeRanges[128] =
-{
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    0, "Basic Latin",
-#endif
-    0x0020, 0x007E
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    1, "Latin-1 Supplement",
-#endif
-    0x00A0, 0x00FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    2, "Latin Extended-A",
-#endif
-    0x0100, 0x017F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    3, "Latin Extended-B",
-#endif
-    0x0180, 0x024F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    4, "IPA Extensions",
-#endif
-    0x0250, 0x02AF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    5, "Spacing Modifier Letters",
-#endif
-    0x02B0, 0x02FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    6, "Combining Diacritical Marks",
-#endif
-    0x0300, 0x036F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    7, "Basic Greek",
-#endif
-    0x0370, 0x03CF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    8, "Greek Symbols and Coptic",
-#endif
-    0x03D0, 0x03FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    9, "Cyrillic",
-#endif
-    0x0400, 0x04FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    10, "Armenian",
-#endif
-    0x0530, 0x058F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    11, "Basic Hebrew",
-#endif
-    0x05D0, 0x05FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    12, "Hebrew Extended",
-#endif
-    0x0590, 0x05CF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    13, "Basic Arabic",
-#endif
-    0x0600, 0x0652
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    14, "Arabic Extended",
-#endif
-    0x0653, 0x06FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    15, "Devanagari",
-#endif
-    0x0900, 0x097F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    16, "Bengali",
-#endif
-    0x0980, 0x09FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    17, "Gurmukhi",
-#endif
-    0x0A00, 0x0A7F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    18, "Gujarati",
-#endif
-    0x0A80, 0x0AFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    19, "Oriya",
-#endif
-    0x0B00, 0x0B7F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    20, "Tamil",
-#endif
-    0x0B80, 0x0BFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    21, "Telugu",
-#endif
-    0x0C00, 0x0C7F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    22, "Kannada",
-#endif
-    0x0C80, 0x0CFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    23, "Malayalam",
-#endif
-    0x0D00, 0x0D7F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    24, "Thai",
-#endif
-    0x0E00, 0x0E7F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    25, "Lao",
-#endif
-    0x0E80, 0x0EFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    26, "Basic Georgian",
-#endif
-    0x10D0, 0x10FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    27, "Georgian Extended",
-#endif
-    0x10A0, 0x10CF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    28, "Hangul Jamo",
-#endif
-    0x1100, 0x11FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    29, "Latin Extended Additional",
-#endif
-    0x1E00, 0x1EFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    30, "Greek Extended",
-#endif
-    0x1F00, 0x1FFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    31, "General Punctuation",
-#endif
-    0x2000, 0x206F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    32, "Subscripts and Superscripts",
-#endif
-    0x2070, 0x209F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    33, "Currency Symbols",
-#endif
-    0x20A0, 0x20CF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    34, "Combining Diacritical Marks for Symbols",
-#endif
-    0x20D0, 0x20FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    35, "Letter-like Symbols",
-#endif
-    0x2100, 0x214F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    36, "Number Forms",
-#endif
-    0x2150, 0x218F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    37, "Arrows",
-#endif
-    0x2190, 0x21FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    38, "Mathematical Operators",
-#endif
-    0x2200, 0x22FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    39, "Miscellaneous Technical",
-#endif
-    0x2300, 0x23FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    40, "Control Pictures",
-#endif
-    0x2400, 0x243F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    41, "Optical Character Recognition",
-#endif
-    0x2440, 0x245F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    42, "Enclosed Alphanumerics",
-#endif
-    0x2460, 0x24FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    43, "Box Drawing",
-#endif
-    0x2500, 0x257F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    44, "Block Elements",
-#endif
-    0x2580, 0x259F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    45, "Geometric Shapes",
-#endif
-    0x25A0, 0x25FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    46, "Miscellaneous Symbols",
-#endif
-    0x2600, 0x26FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    47, "Dingbats",
-#endif
-    0x2700, 0x27BF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    48, "Chinese, Japanese, and Korean (CJK) Symbols and Punctuation",
-#endif
-    0x3000, 0x303F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    49, "Hiragana",
-#endif
-    0x3040, 0x309F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    50, "Katakana",
-#endif
-    0x30A0, 0x30FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    51, "Bopomofo",
-#endif
-    0x3100, 0x312F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    52, "Hangul Compatibility Jamo",
-#endif
-    0x3130, 0x318F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    53, "CJK Miscellaneous",
-#endif
-    0x3190, 0x319F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    54, "Enclosed CJK",
-#endif
-    0x3200, 0x32FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    55, "CJK Compatibility",
-#endif
-    0x3300, 0x33FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    56, "Hangul",
-#endif
-    0xAC00, 0xD7A3
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    57, "Reserved for Unicode Subranges",
-#endif
-    0x3D2E, 0x44B7
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    58, "Reserved for Unicode Subranges",
-#endif
-    0x44B8, 0x4DFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    59, "CJK Unified Ideographs",
-#endif
-    0x4E00, 0x9FFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    60, "Private Use Area",
-#endif
-    0xE000, 0xF8FF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    61, "CJK Compatibility Ideographs",
-#endif
-    0xF900, 0xFAFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    62, "Alphabetic Presentation Forms",
-#endif
-    0xFB00, 0xFB4F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    63, "Arabic Presentation Forms-A",
-#endif
-    0xFB50, 0xFDFF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    64, "Combining Half Marks",
-#endif
-    0xFE20, 0xFE2F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    65, "CJK Compatibility Forms",
-#endif
-    0xFE30, 0xFE4F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    66, "Small Form Variants",
-#endif
-    0xFE50, 0xFE6F
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    67, "Arabic Presentation Forms-B",
-#endif
-    0xFE70, 0xFEFE
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    68, "Halfwidth and Fullwidth Forms",
-#endif
-    0xFF00, 0xFFEF
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    69, "Specials",
-#endif
-    0xFFF0, 0xFFFD
-  },
-  {
-#ifdef UNICODE_RANGE_DESCRIPTION
-    70-127, "Reserved for Unicode Subranges",
-#endif
-    0x0000, 0x0000
-  }
-};
 
 typedef struct nsGlobalFont
 {
   nsString*     name;
-  FONTSIGNATURE signature;
+  LOGFONT       logFont;
   PRUint8*      map;
 } nsGlobalFont;
 
@@ -480,19 +40,12 @@ nsFontMetricsWin :: nsFontMetricsWin()
   
 nsFontMetricsWin :: ~nsFontMetricsWin()
 {
-  if (nsnull != mFont)
-  {
+  if (nsnull != mFont) {
     delete mFont;
     mFont = nsnull;
   }
 
-  if (NULL != mFontHandle)
-  {
-    ::DeleteObject(mFontHandle);
-    mFontHandle = NULL;
-  }
-
-#ifdef FONT_SWITCHING
+  mFontHandle = nsnull; // released below
 
   if (mFonts) {
     delete [] mFonts;
@@ -511,8 +64,6 @@ nsFontMetricsWin :: ~nsFontMetricsWin()
     PR_Free(mLoadedFonts);
     mLoadedFonts = nsnull;
   }
-
-#endif /* FONT_SWITCHING */
 
   mDeviceContext = nsnull;
 }
@@ -579,34 +130,6 @@ nsFontMetricsWin :: Destroy()
   return NS_OK;
 }
 
-static void
-MapGenericFamilyToFont(const nsString& aGenericFamily,
-                       nsIDeviceContext* aDC,
-                       nsString& aFontFace)
-{
-  // the CSS generic names (conversions from Nav for now)
-  // XXX this  need to check availability with the dc
-  PRBool  aliased;
-  if (aGenericFamily.EqualsIgnoreCase("serif")) {
-    aDC->GetLocalFontName(nsString("Times New Roman"), aFontFace, aliased);
-  }
-  else if (aGenericFamily.EqualsIgnoreCase("sans-serif")) {
-    aDC->GetLocalFontName(nsString("Arial"), aFontFace, aliased);
-  }
-  else if (aGenericFamily.EqualsIgnoreCase("cursive")) {
-    aDC->GetLocalFontName(nsString("Script"), aFontFace, aliased);
-  }
-  else if (aGenericFamily.EqualsIgnoreCase("fantasy")) {
-    aDC->GetLocalFontName(nsString("Arial"), aFontFace, aliased);
-  }
-  else if (aGenericFamily.EqualsIgnoreCase("monospace")) {
-    aDC->GetLocalFontName(nsString("Courier New"), aFontFace, aliased);
-  }
-  else {
-    aFontFace.Truncate();
-  }
-}
-
 void
 nsFontMetricsWin::FillLogFont(LOGFONT* logFont)
 {
@@ -649,36 +172,362 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont)
 #endif
 }
 
-#ifdef FONT_SWITCHING
+#undef CMAP
+#define CMAP (('c') | ('m' << 8) | ('a' << 16) | ('p' << 24))
+#undef HEAD
+#define HEAD (('h') | ('e' << 8) | ('a' << 16) | ('d' << 24))
+#undef LOCA
+#define LOCA (('l') | ('o' << 8) | ('c' << 16) | ('a' << 24))
+#undef NAME
+#define NAME (('n') | ('a' << 8) | ('m' << 16) | ('e' << 24))
 
-static void
-FillBitMap(FONTSIGNATURE* aSignature, PRUint8* aMap)
+#undef GET_SHORT
+#define GET_SHORT(p) (((p)[0] << 8) | (p)[1])
+#undef GET_LONG
+#define GET_LONG(p) (((p)[0] << 24) | ((p)[1] << 16) | ((p)[2] << 8) | (p)[3])
+
+static PRUint16
+GetGlyph(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
+  PRUint16* idRangeOffset, PRUint16* idDelta, PRUint8* end, PRUint16 aChar)
 {
-  DWORD* array = aSignature->fsUsb;
-  int i = 0;
-  int dword;
-#ifdef UNICODE_RANGE_DESCRIPTION
-  printf("  FONTSIGNATURE.fsUsb:");
-  for (dword = 0; dword < 4; dword++) {
-    printf(" 0x%08X", array[dword]);
-  }
-  printf("\n");
-#endif
-  for (dword = 0; dword < 4; dword++) {
-    for (int bit = 0; bit < sizeof(DWORD) * 8; bit++) {
-      if ((array[dword] >> bit) & 1) {
-        int end = unicodeRanges[i].end;
-        for (int c = unicodeRanges[i].begin; c <= end; c++) {
-          ADD_GLYPH(aMap, c);
-        }
-#ifdef UNICODE_RANGE_DESCRIPTION
-        printf("    %s\n",
-          unicodeRanges[i].description?unicodeRanges[i].description:"NULL");
-#endif
-      }
-      i++;
+  PRUint16 glyph = 0;
+  PRUint16 i;
+  for (i = 0; i < segCount; i++) {
+    if (endCode[i] >= aChar) {
+      break;
     }
   }
+  PRUint16 startC = startCode[i];
+  if (startC <= aChar) {
+    if (idRangeOffset[i]) {
+      PRUint16* p =
+        (idRangeOffset[i]/2 + (aChar - startC) + &idRangeOffset[i]);
+      if ((PRUint8*) p < end) {
+        if (*p) {
+          glyph = idDelta[i] + *p;
+        }
+      }
+    }
+    else {
+      glyph = idDelta[i] + aChar;
+    }
+  }
+
+  return glyph;
+}
+
+static int
+GetNAME(HDC aDC, nsString* aName)
+{
+  DWORD len = GetFontData(aDC, NAME, 0, nsnull, 0);
+  if ((len == GDI_ERROR) || (!len)) {
+    return 0;
+  }
+  PRUint8* buf = (PRUint8*) PR_Malloc(len);
+  if (!buf) {
+    return 0;
+  }
+  DWORD newLen = GetFontData(aDC, NAME, 0, buf, len);
+  if (newLen != len) {
+    PR_Free(buf);
+    return 0;
+  }
+  PRUint8* p = buf + 2;
+  PRUint16 n = GET_SHORT(p);
+  p += 2;
+  PRUint16 offset = GET_SHORT(p);
+  p += 2;
+  PRUint16 i;
+  PRUint16 idLength;
+  PRUint16 idOffset;
+  for (i = 0; i < n; i++) {
+    PRUint16 platform = GET_SHORT(p);
+    p += 2;
+    PRUint16 encoding = GET_SHORT(p);
+    p += 4;
+    PRUint16 name = GET_SHORT(p);
+    p += 2;
+    idLength = GET_SHORT(p);
+    p += 2;
+    idOffset = GET_SHORT(p);
+    p += 2;
+    // XXX what about symbol? (platform 3, encoding 0)
+    if ((platform == 3) && (encoding == 1) && (name == 3)) {
+      break;
+    }
+  }
+  if (i == n) {
+    PR_Free(buf);
+    return 0;
+  }
+  p = buf + offset + idOffset;
+  idLength /= 2;
+  for (i = 0; i < idLength; i++) {
+    PRUnichar c = GET_SHORT(p);
+    p += 2;
+    aName->Append(c);
+  }
+
+  PR_Free(buf);
+
+  return 1;
+}
+
+static PLHashNumber
+HashKey(const void* aString)
+{
+  return (PLHashNumber)
+    nsCRT::HashValue(((const nsString*) aString)->GetUnicode());
+}
+
+static PRIntn
+CompareKeys(const void* aStr1, const void* aStr2)
+{
+  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(),
+    ((const nsString*) aStr2)->GetUnicode()) == 0;
+}
+
+static int
+GetIndexToLocFormat(HDC aDC)
+{
+  PRUint16 indexToLocFormat;
+  if (GetFontData(aDC, HEAD, 50, &indexToLocFormat, 2) != 2) {
+    return -1;
+  }
+  if (!indexToLocFormat) {
+    return 0;
+  }
+  return 1;
+}
+
+static PRUint8*
+GetSpaces(HDC aDC)
+{
+  int isLong = GetIndexToLocFormat(aDC);
+  if (isLong < 0) {
+    return nsnull;
+  }
+  DWORD len = GetFontData(aDC, LOCA, 0, nsnull, 0);
+  if ((len == GDI_ERROR) || (!len)) {
+    return nsnull;
+  }
+  PRUint8* buf = (PRUint8*) PR_Malloc(len);
+  if (!buf) {
+    return nsnull;
+  }
+  DWORD newLen = GetFontData(aDC, LOCA, 0, buf, len);
+  if (newLen != len) {
+    PR_Free(buf);
+    return nsnull;
+  }
+  if (isLong) {
+    DWORD longLen = ((len / 4) - 1);
+    PRUint32* longBuf = (PRUint32*) buf;
+    for (PRUint32 i = 0; i < longLen; i++) {
+      if (longBuf[i] == longBuf[i+1]) {
+        buf[i] = 1;
+      }
+      else {
+        buf[i] = 0;
+      }
+    }
+  }
+  else {
+    DWORD shortLen = ((len / 2) - 1);
+    PRUint16* shortBuf = (PRUint16*) buf;
+    for (PRUint16 i = 0; i < shortLen; i++) {
+      if (shortBuf[i] == shortBuf[i+1]) {
+        buf[i] = 1;
+      }
+      else {
+        buf[i] = 0;
+      }
+    }
+  }
+
+  return buf;
+}
+
+#undef SET_SPACE
+#define SET_SPACE(c) ADD_GLYPH(spaces, c)
+#undef SHOULD_BE_SPACE
+#define SHOULD_BE_SPACE(c) FONT_HAS_GLYPH(spaces, c)
+
+static PRUint8*
+GetCMAP(HDC aDC)
+{
+  static PLHashTable* fontMaps = nsnull;
+  static int initialized = 0;
+  if (!initialized) {
+    initialized = 1;
+    fontMaps = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, nsnull,
+      nsnull);
+  }
+  nsString* name = new nsString();
+  if (!name) {
+    return nsnull;
+  }
+  PRUint8* map;
+  if (GetNAME(aDC, name)) {
+    map = (PRUint8*) PL_HashTableLookup(fontMaps, name);
+    if (map) {
+      delete name;
+      return map;
+    }
+    map = (PRUint8*) PR_Calloc(8192, 1);
+    if (!map) {
+      delete name;
+      return nsnull;
+    }
+  }
+  else {
+    // return an empty map, so that we never try this font again
+    static PRUint8* emptyMap = nsnull;
+    if (!emptyMap) {
+      emptyMap = (PRUint8*) PR_Calloc(8192, 1);
+    }
+    delete name;
+    return emptyMap;
+  }
+
+  DWORD len = GetFontData(aDC, CMAP, 0, nsnull, 0);
+  if ((len == GDI_ERROR) || (!len)) {
+    delete name;
+    PR_Free(map);
+    return nsnull;
+  }
+  PRUint8* buf = (PRUint8*) PR_Malloc(len);
+  if (!buf) {
+    delete name;
+    PR_Free(map);
+    return nsnull;
+  }
+  DWORD newLen = GetFontData(aDC, CMAP, 0, buf, len);
+  if (newLen != len) {
+    PR_Free(buf);
+    delete name;
+    PR_Free(map);
+    return nsnull;
+  }
+  PRUint8* p = buf + 2;
+  PRUint16 n = GET_SHORT(p);
+  p += 2;
+  PRUint16 i;
+  PRUint32 offset;
+  for (i = 0; i < n; i++) {
+    PRUint16 platformID = GET_SHORT(p);
+    p += 2;
+    PRUint16 encodingID = GET_SHORT(p);
+    p += 2;
+    offset = GET_LONG(p);
+    p += 4;
+    // XXX what about symbol fonts? (platform = 3, encoding = 0)
+    if ((platformID == 3) && (encodingID == 1)) {
+      break;
+    }
+  }
+  if (i == n) {
+    PR_Free(buf);
+    delete name;
+    PR_Free(map);
+    return nsnull;
+  }
+  p = buf + offset;
+  PRUint16 format = GET_SHORT(p);
+  if (format != 4) {
+    PR_Free(buf);
+    delete name;
+    PR_Free(map);
+    return nsnull;
+  }
+  PRUint8* end = buf + len;
+
+  // XXX byte swapping only required for little endian (ifdef?)
+  while (p < end) {
+    PRUint8 tmp = p[0];
+    p[0] = p[1];
+    p[1] = tmp;
+    p += 2;
+  }
+
+  PRUint16* s = (PRUint16*) (buf + offset);
+  PRUint16 segCount = s[3] / 2;
+  PRUint16* endCode = &s[7];
+  PRUint16* startCode = endCode + segCount + 1;
+  PRUint16* idDelta = startCode + segCount;
+  PRUint16* idRangeOffset = idDelta + segCount;
+  PRUint16* glyphIdArray = idRangeOffset + segCount;
+
+  static int spacesInitialized = 0;
+  static PRUint8 spaces[8192];
+  if (!spacesInitialized) {
+    spacesInitialized = 1;
+    SET_SPACE(0x0020);
+    SET_SPACE(0x00A0);
+    for (PRUint16 c = 0x2000; c <= 0x200B; c++) {
+      SET_SPACE(c);
+    }
+    SET_SPACE(0x3000);
+  }
+  PRUint8* isSpace = GetSpaces(aDC);
+  if (!isSpace) {
+    PR_Free(buf);
+    delete name;
+    PR_Free(map);
+    return nsnull;
+  }
+
+  for (i = 0; i < segCount; i++) {
+    if (idRangeOffset[i]) {
+      PRUint16 startC = startCode[i];
+      PRUint16 endC = endCode[i];
+      for (PRUint32 c = startC; c <= endC; c++) {
+        PRUint16* g =
+          (idRangeOffset[i]/2 + (c - startC) + &idRangeOffset[i]);
+        if ((PRUint8*) g < end) {
+          if (*g) {
+            PRUint16 glyph = idDelta[i] + *g;
+            if (isSpace[glyph]) {
+              if (SHOULD_BE_SPACE(c)) {
+                ADD_GLYPH(map, c);
+              }
+            }
+            else {
+              ADD_GLYPH(map, c);
+            }
+          }
+        }
+        else {
+          // XXX should we trust this font at all if it does this?
+        }
+      }
+      //printf("0x%04X-0x%04X ", startC, endC);
+    }
+    else {
+      PRUint16 endC = endCode[i];
+      for (PRUint32 c = startCode[i]; c <= endC; c++) {
+        PRUint16 glyph = idDelta[i] + c;
+        if (isSpace[glyph]) {
+          if (SHOULD_BE_SPACE(c)) {
+            ADD_GLYPH(map, c);
+          }
+        }
+        else {
+          ADD_GLYPH(map, c);
+        }
+      }
+      //printf("0x%04X-0x%04X ", startCode[i], endC);
+    }
+  }
+  //printf("\n");
+
+  PR_Free(buf);
+  PR_Free(isSpace);
+
+  // XXX check to see if an identical map has already been added to table
+  PL_HashTableAdd(fontMaps, name, map);
+
+  return map;
 }
 
 nsFontWin*
@@ -708,13 +557,13 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
     }
     nsFontWin* font = &mLoadedFonts[mLoadedFontsCount++];
     font->font = hfont;
-    memset(font->map, 0, sizeof(font->map));
-    FONTSIGNATURE signature;
-    GetTextCharsetInfo(aDC, &signature, 0);
-#ifdef UNICODE_RANGE_DESCRIPTION
-    printf("%s\n", logFont.lfFaceName);
-#endif
-    FillBitMap(&signature, font->map);
+    font->map = GetCMAP(aDC);
+    if (!font->map) {
+      mLoadedFontsCount--;
+      ::SelectObject(aDC, (HGDIOBJ) oldFont);
+      ::DeleteObject(hfont);
+      return nsnull;
+    }
     ::SelectObject(aDC, (HGDIOBJ) oldFont);
 
     return font;
@@ -726,6 +575,12 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
 static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
   DWORD fontType, LPARAM closure)
 {
+  // XXX do we really want to ignore non-TrueType fonts?
+  if (!(fontType & TRUETYPE_FONTTYPE)) {
+    //printf("rejecting %s\n", logFont->lfFaceName);
+    return 1;
+  }
+
   // XXX make this smarter: don't add font to list if we already have a font
   // with the same font signature -- erik
   if (gGlobalFontsCount == gGlobalFontsAlloc) {
@@ -744,23 +599,12 @@ static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
 
   // XXX do correct character encoding conversion here
   font->name = new nsString(logFont->lfFaceName);
-
-// XXX use the fast way on NT only?
-#if 0
-  NEWTEXTMETRICEX* metricsEx = (NEWTEXTMETRICEX*) metrics;
-  font->signature = metricsEx->ntmFontSig;
-#else
-  HDC dc = (HDC) closure;
-  HFONT hfont = ::CreateFontIndirect(logFont);
-  if (hfont) {
-    HFONT oldFont = (HFONT) ::SelectObject(dc, (HGDIOBJ) hfont);
-    GetTextCharsetInfo(dc, &font->signature, 0);
-    ::SelectObject(dc, (HGDIOBJ) oldFont);
-    ::DeleteObject(hfont);
+  if (!font->name) {
+    gGlobalFontsCount--;
+    return 0;
   }
-#endif
-
   font->map = nsnull;
+  font->logFont = *logFont;
 
   return 1;
 }
@@ -773,20 +617,26 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
     logFont.lfCharSet = DEFAULT_CHARSET;
     logFont.lfFaceName[0] = 0;
     logFont.lfPitchAndFamily = 0;
-    EnumFontFamiliesEx(aDC, &logFont, enumProc, (LPARAM) aDC, 0);
+
+    /*
+     * msdn.microsoft.com/library states that
+     * EnumFontFamiliesExW is only on NT/2000
+     */
+    EnumFontFamiliesEx(aDC, &logFont, enumProc, nsnull, 0);
   }
   for (int i = 0; i < gGlobalFontsCount; i++) {
     if (!gGlobalFonts[i].map) {
-      gGlobalFonts[i].map = (PRUint8*) PR_Calloc(8192, 1);
-      if (!gGlobalFonts[i].map) {
-        return nsnull;
+      HFONT font = ::CreateFontIndirect(&gGlobalFonts[i].logFont);
+      if (!font) {
+        continue;
       }
-#ifdef UNICODE_RANGE_DESCRIPTION
-      char name[LF_FACESIZE];
-      gGlobalFonts[i].name->ToCString(name, sizeof(name));
-      printf("%s\n", name);
-#endif
-      FillBitMap(&gGlobalFonts[i].signature, gGlobalFonts[i].map);
+      HFONT oldFont = (HFONT) ::SelectObject(aDC, font);
+      gGlobalFonts[i].map = GetCMAP(aDC);
+      ::SelectObject(aDC, oldFont);
+      ::DeleteObject(font);
+      if (!gGlobalFonts[i].map) {
+        continue;
+      }
     }
     if (FONT_HAS_GLYPH(gGlobalFonts[i].map, c)) {
       return LoadFont(aDC, gGlobalFonts[i].name);
@@ -796,75 +646,87 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
   return nsnull;
 }
 
+typedef struct nsFontFamilyName
+{
+  char* mName;
+  char* mWinName;
+} nsFontFamilyName;
+
+static nsFontFamilyName gFamilyNameTable[] =
+{
+  { "times",           "Times New Roman" },
+  { "times roman",     "Times New Roman" },
+  { "times new roman", "Times New Roman" },
+  { "arial",           "Arial" },
+  { "helvetica",       "Arial" },
+  { "courier",         "Courier New" },
+  { "courier new",     "Courier New" },
+
+  { "serif",      "Times New Roman" },
+  { "sans-serif", "Arial" },
+  { "fantasy",    "Arial" },
+  { "cursive",    "Arial" },
+  { "monospace",  "Courier New" },
+
+  { nsnull, nsnull }
+};
+
+static PLHashTable* gFamilyNames = nsnull;
+
 nsFontWin*
 nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
 {
+  static int gInitialized = 0;
+  if (!gInitialized) {
+    gInitialized = 1;
+    gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, nsnull,
+      nsnull);
+    nsFontFamilyName* f = gFamilyNameTable;
+    while (f->mName) {
+      nsString* name = new nsString(f->mName);
+      nsString* winName = new nsString(f->mWinName);
+      if (name && winName) {
+        PL_HashTableAdd(gFamilyNames, name, (void*) winName);
+      }
+      f++;
+    }
+  }
+
   while (mFontsIndex < mFontsCount) {
-    nsFontWin* font = LoadFont(aDC, &mFonts[mFontsIndex++]);
-    if (font && FONT_HAS_GLYPH(font->map, aChar)) {
-      return font;
+    nsString* name = &mFonts[mFontsIndex++];
+    nsString* low = new nsString(*name);
+    if (low) {
+      low->ToLowerCase();
+      nsString* winName = (nsString*) PL_HashTableLookup(gFamilyNames, low);
+      delete low;
+      if (!winName) {
+        winName = name;
+      }
+      nsFontWin* font = LoadFont(aDC, winName);
+      if (font && FONT_HAS_GLYPH(font->map, aChar)) {
+        return font;
+      }
     }
   }
 
   return nsnull;
 }
 
-#endif /* FONT_SWITCHING */
-
-struct FontEnumData {
-  FontEnumData(nsIDeviceContext* aContext, TCHAR* aFaceName
-#ifdef FONT_SWITCHING
-    , nsFontMetricsWin* aMetrics, HDC aDC
-#endif /* FONT_SWITCHING */
-  )
-  {
-    mContext = aContext;
-    mFaceName = aFaceName;
-#ifdef FONT_SWITCHING
-    mMetrics = aMetrics;
-    mDC = aDC;
-    mFoundASCIIFont = 0;
-#endif /* FONT_SWITCHING */
+nsFontWin*
+nsFontMetricsWin::FindFont(HDC aDC, PRUnichar aChar)
+{
+  nsFontWin* font = FindLocalFont(aDC, aChar);
+  if (!font) {
+    font = FindGlobalFont(aDC, aChar);
   }
-  nsIDeviceContext* mContext;
-  TCHAR* mFaceName;
-#ifdef FONT_SWITCHING
-  nsFontMetricsWin* mMetrics;
-  HDC mDC;
-  char mFoundASCIIFont;
-#endif /* FONT_SWITCHING */
-};
 
-#ifndef FONT_SWITCHING
+  return font;
+}
 
 static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
-  FontEnumData* data = (FontEnumData*)aData;
-  if (aGeneric) {
-    nsAutoString realFace;
-    MapGenericFamilyToFont(aFamily, data->mContext, realFace);
-    realFace.ToCString(data->mFaceName, LF_FACESIZE);
-    return PR_FALSE;  // stop
-  }
-  else {
-    nsAutoString realFace;
-    PRBool  aliased;
-    data->mContext->GetLocalFontName(aFamily, realFace, aliased);
-    if (aliased || (NS_OK == data->mContext->CheckFontExistence(realFace))) {
-      realFace.ToCString(data->mFaceName, LF_FACESIZE);
-      return PR_FALSE;  // stop
-    }
-  }
-  return PR_TRUE;
-}
-
-#else /* FONT_SWITCHING */
-
-static void
-FontEnumHelper(FontEnumData* data, nsString* realFace)
-{
-  nsFontMetricsWin* metrics = data->mMetrics;
+  nsFontMetricsWin* metrics = (nsFontMetricsWin*) aData;
   if (metrics->mFontsCount == metrics->mFontsAlloc) {
     int newSize = 2 * (metrics->mFontsAlloc ? metrics->mFontsAlloc : 1);
     nsString* newPointer = new nsString[newSize];
@@ -877,51 +739,21 @@ FontEnumHelper(FontEnumData* data, nsString* realFace)
       metrics->mFontsAlloc = newSize;
     }
     else {
-      return;
+      return PR_FALSE; // stop
     }
   }
-  metrics->mFonts[metrics->mFontsCount++].SetString(realFace->GetUnicode());
-  if (!data->mFoundASCIIFont) {
-    nsFontWin* font =
-      metrics->LoadFont(data->mDC, &metrics->mFonts[metrics->mFontsIndex++]);
-    if (font && FONT_HAS_GLYPH(font->map, 'a')) {
-      data->mFoundASCIIFont = 1;
-      realFace->ToCString(data->mFaceName, LF_FACESIZE);
-    }
-  }
-}
+  metrics->mFonts[metrics->mFontsCount++].SetString(aFamily.GetUnicode());
 
-static PRBool
-FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
-{
-  FontEnumData* data = (FontEnumData*)aData;
   if (aGeneric) {
-    nsAutoString realFace;
-    MapGenericFamilyToFont(aFamily, data->mContext, realFace);
-    FontEnumHelper(data, &realFace);
-    return PR_TRUE;  // don't stop
+    return PR_FALSE; // stop
   }
-  else {
-    nsAutoString realFace;
-    PRBool  aliased;
-    data->mContext->GetLocalFontName(aFamily, realFace, aliased);
-    if (aliased || (NS_OK == data->mContext->CheckFontExistence(realFace))) {
-      FontEnumHelper(data, &realFace);
-      return PR_TRUE;  // don't stop
-    }
-  }
-  return PR_TRUE;
-}
 
-#endif /* FONT_SWITCHING */
+  return PR_TRUE; // don't stop
+}
 
 void
 nsFontMetricsWin::RealizeFont()
 {
-  LOGFONT logFont;
-  FillLogFont(&logFont);
-  logFont.lfFaceName[0] = '\0';
-
   HWND win = NULL;
   HDC dc = NULL;
 
@@ -934,15 +766,13 @@ nsFontMetricsWin::RealizeFont()
     dc = ::GetDC(win);
   }
 
-#ifdef FONT_SWITCHING
-  FontEnumData  data(mDeviceContext, logFont.lfFaceName, this, dc);
-#else
-  FontEnumData  data(mDeviceContext, logFont.lfFaceName);
-#endif
-  mFont->EnumerateFamilies(FontEnumCallback, &data); 
+  mFont->EnumerateFamilies(FontEnumCallback, this); 
 
-  // Create font handle from font spec
-  mFontHandle = ::CreateFontIndirect(&logFont);
+  nsFontWin* font = FindFont(dc, 'a');
+  if (!font) {
+    return;
+  }
+  mFontHandle = font->font;
 
   HFONT oldfont = (HFONT)::SelectObject(dc, (HGDIOBJ) mFontHandle);
 

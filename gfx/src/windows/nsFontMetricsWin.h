@@ -29,9 +29,6 @@
 #include "nsCRT.h"
 #include "nsDeviceContextWin.h"
 
-#define FONT_SWITCHING
-#ifdef FONT_SWITCHING
-
 #ifdef FONT_HAS_GLYPH
 #undef FONT_HAS_GLYPH
 #endif
@@ -44,11 +41,9 @@
 
 typedef struct nsFontWin
 {
-  HFONT   font;
-  PRUint8 map[8192]; // XXX save memory by sharing these among fonts -- erik
+  HFONT    font;
+  PRUint8* map;
 } nsFontWin;
-
-#endif /* FONT_SWITCHING */
 
 class nsFontMetricsWin : public nsIFontMetrics
 {
@@ -77,10 +72,9 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
-#ifdef FONT_SWITCHING
-
   nsFontWin*  FindGlobalFont(HDC aDC, PRUnichar aChar);
   nsFontWin*  FindLocalFont(HDC aDC, PRUnichar aChar);
+  nsFontWin*  FindFont(HDC aDC, PRUnichar aChar);
   nsFontWin*  LoadFont(HDC aDC, nsString* aName);
 
   nsFontWin           *mLoadedFonts;
@@ -91,8 +85,6 @@ public:
   PRUint16            mFontsAlloc;
   PRUint16            mFontsCount;
   PRUint16            mFontsIndex;
-
-#endif /* FONT_SWITCHING */
 
 protected:
   void FillLogFont(LOGFONT* aLogFont);
