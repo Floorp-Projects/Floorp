@@ -312,8 +312,6 @@ const int kMaxFullNameLength 			= 256;
 
 extern char *msg_MagicFolderName(MSG_Prefs* prefs, uint32 flag, int *pStatus);
 
-#define	kIsRead			0x00000001
-
 #define MIME_MakeFromField(a)  PL_strdup("testmsg@netscape.com")
 
 #define DRAFTS_FOLDER_NAME  "Draft"
