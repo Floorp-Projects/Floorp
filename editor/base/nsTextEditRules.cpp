@@ -1579,7 +1579,7 @@ nsTextEditRules::DoTextInsertion(nsIDOMSelection *aSelection,
 nsresult
 nsTextEditRules::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
 {
-  if (!outNode) return NS_ERROR_NULL_POINTER;
+  if (!outNode || !inNode) return NS_ERROR_NULL_POINTER;
   nsresult res = NS_OK;
   *outNode = nsnull;
   nsCOMPtr<nsIDOMNode> temp, node = do_QueryInterface(inNode);
@@ -1588,7 +1588,7 @@ nsTextEditRules::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *o
   {
     res = node->GetPreviousSibling(getter_AddRefs(temp));
     if (NS_FAILED(res)) return res;
-    if (!temp) return NS_ERROR_FAILURE;
+    if (!temp) return NS_OK;  // return null sibling
     // if it's editable, we're done
     if (mEditor->IsEditable(temp)) break;
     // otherwise try again
@@ -1596,6 +1596,30 @@ nsTextEditRules::GetPriorHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *o
   }
   *outNode = temp;
   return res;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetPriorHTMLSibling: returns the previous editable sibling, if there is
+//                   one within the parent.  just like above routine but
+//                   takes a parent/offset instead of a node.
+//                       
+nsresult
+nsTextEditRules::GetPriorHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode || !inParent) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  *outNode = nsnull;
+  if (!inOffset) return NS_OK;  // return null sibling if at offset zero
+  nsCOMPtr<nsIDOMNode> node = nsEditor::GetChildAt(inParent,inOffset-1);
+  if (mEditor->IsEditable(node)) 
+  {
+    *outNode = node;
+    return res;
+  }
+  // else
+  return GetPriorHTMLSibling(node, outNode);
 }
 
 
@@ -1624,6 +1648,30 @@ nsTextEditRules::GetNextHTMLSibling(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *ou
   }
   *outNode = temp;
   return res;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetNextHTMLSibling: returns the next editable sibling, if there is
+//                   one within the parent.  just like above routine but
+//                   takes a parent/offset instead of a node.
+//                       
+nsresult
+nsTextEditRules::GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode || !inParent) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  *outNode = nsnull;
+  nsCOMPtr<nsIDOMNode> node = nsEditor::GetChildAt(inParent,inOffset);
+  if (!node) return NS_OK; // return null sibling if no sibling
+  if (mEditor->IsEditable(node)) 
+  {
+    *outNode = node;
+    return res;
+  }
+  // else
+  return GetPriorHTMLSibling(node, outNode);
 }
 
 

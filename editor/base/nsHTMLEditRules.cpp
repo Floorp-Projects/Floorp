@@ -791,7 +791,17 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
     {
       nsCOMPtr<nsIDOMNode> nodeToDelete;
       
-      if (aAction == nsIEditor::ePrevious)
+      // first note that the right node to delete might be the one we
+      // are in.  For example, if a list item is deleted one character at a time,
+      // eventually it will be empty (except for a moz-br).  If the user hits 
+      // backspace again, they expect the item itself to go away.  Check to
+      // see if we are in an "empty" node.
+      // Note: do NOT delete table elements this way.
+      PRBool bIsEmptyNode;
+      res = IsEmptyNode(node, &bIsEmptyNode, PR_TRUE, PR_FALSE);
+      if (bIsEmptyNode && !mEditor->IsTableElement(node))
+        nodeToDelete = node;
+      else if (aAction == nsIEditor::ePrevious)
         res = GetPriorHTMLNode(node, offset, &nodeToDelete);
       else if (aAction == nsIEditor::eNext)
         res = GetNextHTMLNode(node, offset, &nodeToDelete);
@@ -1832,6 +1842,24 @@ nsHTMLEditRules::IsAnchor(nsIDOMNode *node)
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
   if (tag == "a")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsImage: true if node an html image node
+//                  
+PRBool 
+nsHTMLEditRules::IsImage(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditRules::IsImage");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag == "img")
   {
     return PR_TRUE;
   }
@@ -3640,69 +3668,77 @@ nsHTMLEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirect
     }
   }
   
-  // we aren't in a textnode: look for a nearby text node.
+  // we aren't in a textnode: are we adjacent to a break or an image?
+  res = GetPriorHTMLSibling(selNode, selOffset, &nearNode);
+  if (NS_FAILED(res)) return res;
+  if (nearNode && (IsBreak(nearNode)  || IsImage(nearNode)))
+    return NS_OK; // this is a good place for the caret to be
+  res = GetNextHTMLSibling(selNode, selOffset, &nearNode);
+  if (NS_FAILED(res)) return res;
+  if (nearNode && (IsBreak(nearNode)  || IsImage(nearNode)))
+    return NS_OK; // this is a good place for the caret to be
+
+  // look for a nearby text node.
   // prefer the correct direction.
-  res = FindNearTextNode(selNode, selOffset, aAction, &nearNode);
+  res = FindNearSelectableNode(selNode, selOffset, aAction, &nearNode);
   if (NS_FAILED(res)) return res;
-  // did we suceed in getting back a node?
-  nsIEditor::EDirection dir;
-  if (!nearNode)
-  {
-    // if not try again in other direction
-    dir = nsIEditor::eNext;
-    if (aAction == nsIEditor::eNext) dir = nsIEditor::ePrevious;
-    res = FindNearTextNode(selNode, selOffset, dir, &nearNode);
-    if (NS_FAILED(res)) return res;
-  }
-  else
-  {
-    dir = aAction;
-  }
-  // is the nearnode a text node?
+
   if (!nearNode) return NS_OK; // couldn't find a near text node
+
+  // is the nearnode a text node?
   textNode = do_QueryInterface(nearNode);
-  if (!textNode) return NS_ERROR_UNEXPECTED;
-  PRInt32 offset = 0;
-  // put selection in right place:
-  if (dir == nsIEditor::ePrevious)
-    textNode->GetLength((PRUint32*)&offset);
-  res = aSelection->Collapse(nearNode,offset);
-  if (NS_FAILED(res)) return res;
+  if (textNode)
+  {
+    PRInt32 offset = 0;
+    // put selection in right place:
+    if (aAction == nsIEditor::ePrevious)
+      textNode->GetLength((PRUint32*)&offset);
+    res = aSelection->Collapse(nearNode,offset);
+  }
+  else  // must be break or image
+  {
+    res = nsEditor::GetNodeLocation(nearNode, &selNode, &selOffset);
+    if (NS_FAILED(res)) return res;
+    if (aAction == nsIEditor::ePrevious) selOffset++;  // want to be beyond it if we backed up to it
+    res = aSelection->Collapse(selNode, selOffset);
+  }
   return res;
 }
 
 nsresult
-nsHTMLEditRules::FindNearTextNode(nsIDOMNode *aSelNode, 
-                                  PRInt32 aSelOffset, 
-                                  nsIEditor::EDirection aDirection,
-                                  nsCOMPtr<nsIDOMNode> *outTextNode)
+nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode, 
+                                        PRInt32 aSelOffset, 
+                                        nsIEditor::EDirection aDirection,
+                                        nsCOMPtr<nsIDOMNode> *outSelectableNode)
 {
-  if (!aSelNode || !outTextNode) return NS_ERROR_NULL_POINTER;
-  *outTextNode = nsnull;
+  if (!aSelNode || !outSelectableNode) return NS_ERROR_NULL_POINTER;
+  *outSelectableNode = nsnull;
   nsresult res = NS_OK;
   
-  nsCOMPtr<nsIDOMNode> nearNode;
+  nsCOMPtr<nsIDOMNode> nearNode, curNode;
   if (aDirection == nsIEditor::ePrevious)
     res = GetPriorHTMLNode(aSelNode, aSelOffset, &nearNode);
   else
     res = GetNextHTMLNode(aSelNode, aSelOffset, &nearNode);
   if (NS_FAILED(res)) return res;
-    
-  // if there is no node then punt
-  if (!nearNode) return NS_OK;
-    
-  // is nearNode also a descendant of same block?
-  nsCOMPtr<nsIDOMNode> block, nearBlock;
-  if (mEditor->IsBlockNode(aSelNode)) block = aSelNode;
-  else block = mEditor->GetBlockNodeParent(aSelNode);
-  if (mEditor->IsBlockNode(nearNode)) nearBlock = nearNode;
-  else nearBlock = mEditor->GetBlockNodeParent(nearNode);
   
-  if (block != nearBlock) return NS_OK; // punt - we dont want to jump across a block  
- 
-  // is the nearnode a text node?
-  nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(nearNode);
-  if (textNode) *outTextNode = nearNode;
+  // scan in the right direction until we find an eligible text node,
+  // but dont cross any breaks, images, or table elements.
+  while (nearNode && !(mEditor->IsTextNode(nearNode) || IsBreak(nearNode)  || IsImage(nearNode)))
+  {
+    // dont cross any table elements
+    if (mEditor->IsTableElement(nearNode))
+      return NS_OK;  
+
+    curNode = nearNode;
+    if (aDirection == nsIEditor::ePrevious)
+      res = GetPriorHTMLNode(curNode, &nearNode);
+    else
+      res = GetNextHTMLNode(curNode, &nearNode);
+    if (NS_FAILED(res)) return res;
+  }
+  
+  if (nearNode) *outSelectableNode = do_QueryInterface(nearNode);
   return res;
 }
 
