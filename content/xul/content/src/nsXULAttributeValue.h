@@ -64,9 +64,9 @@ public:
 
     void        ReleaseValue();
 
-    nsresult    GetValue(nsAWritableString& aResult);
+    nsresult    GetValue(nsAString& aResult);
 
-    nsresult    SetValue(const nsAReadableString& aValue, PRBool forceAtom=PR_FALSE);
+    nsresult    SetValue(const nsAString& aValue, PRBool forceAtom=PR_FALSE);
 
     nsresult    GetValueAsAtom(nsIAtom** aResult);
 };

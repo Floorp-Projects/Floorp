@@ -76,7 +76,7 @@ nsXBLProtoImplField::Destroy(PRBool aIsCompiled)
 }
 
 void 
-nsXBLProtoImplField::AppendFieldText(const nsAReadableString& aText)
+nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 {
   if (mFieldText) {
     nsDependentString fieldTextStr(mFieldText, mFieldTextLength);

@@ -89,21 +89,21 @@ NS_NewXMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
 // XXX These belongs elsewhere
 extern nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
-                               const nsAReadableString& aTarget,
-                               const nsAReadableString& aData);
+                               const nsAString& aTarget,
+                               const nsAString& aData);
 
 extern nsresult
 NS_NewXMLEntity(nsIContent** aInstancePtrResult,
-                const nsAReadableString& aName,
-                const nsAReadableString& aPublicId,
-                const nsAReadableString& aSystemId,
-                const nsAReadableString& aNotationName);
+                const nsAString& aName,
+                const nsAString& aPublicId,
+                const nsAString& aSystemId,
+                const nsAString& aNotationName);
 
 extern nsresult
 NS_NewXMLNotation(nsIContent** aInstancePtrResult,
-                  const nsAReadableString& aName,
-                  const nsAReadableString& aPublicId,
-                  const nsAReadableString& aSystemId);
+                  const nsAString& aName,
+                  const nsAString& aPublicId,
+                  const nsAString& aSystemId);
 
 class nsIDOMNamedNodeMap;
 

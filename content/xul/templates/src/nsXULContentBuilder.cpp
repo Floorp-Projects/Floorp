@@ -262,7 +262,7 @@ protected:
     virtual PRBool
     CompileSimpleAttributeCondition(PRInt32 aNameSpaceID,
                                     nsIAtom* aAttribute,
-                                    const nsAReadableString& aValue,
+                                    const nsAString& aValue,
                                     InnerNode* aParentNode,
                                     TestNode** aResult);
     /**
@@ -655,7 +655,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // XXX because gcc-2.7.2.3 is too dumb to keep a
             // compiler-generated temporary around.
             NS_ConvertUTF8toUCS2 x(uri);
-            const nsAReadableString& id = x;
+            const nsAString& id = x;
             rv = realKid->SetAttr(kNameSpaceID_None, nsXULAtoms::id, id, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
             if (NS_FAILED(rv)) return rv;
@@ -1636,7 +1636,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
     NS_NAMED_LITERAL_STRING(true_, "true");
     NS_NAMED_LITERAL_STRING(false_, "false");
     
-    const nsAReadableString& newcontainer =
+    const nsAString& newcontainer =
         iscontainer ? true_ : false_;
 
     if (oldcontainer != newcontainer) {
@@ -1648,7 +1648,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
         nsAutoString oldempty;
         aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, oldempty);
 
-        const nsAReadableString& newempty =
+        const nsAString& newempty =
             (iscontainer && isempty) ? true_ : false_;
 
         if (oldempty != newempty) {
@@ -2232,7 +2232,7 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
 PRBool
 nsXULContentBuilder::CompileSimpleAttributeCondition(PRInt32 aNameSpaceID,
                                                      nsIAtom* aAttribute,
-                                                     const nsAReadableString& aValue,
+                                                     const nsAString& aValue,
                                                      InnerNode* aParentNode,
                                                      TestNode** aResult)
 {

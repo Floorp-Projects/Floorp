@@ -46,7 +46,7 @@
 #ifndef nsIXBLPrototypeHandler_h__
 #define nsIXBLPrototypeHandler_h__
 
-#include "nsAReadableString.h"
+#include "nsAString.h"
 
 class nsIContent;
 class nsIDOMEvent;
@@ -69,7 +69,7 @@ public:
   NS_IMETHOD KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent, PRBool* aResult) = 0;
 
   NS_IMETHOD GetHandlerElement(nsIContent** aResult) = 0;
-  NS_IMETHOD AppendHandlerText(const nsAReadableString& aText) = 0;
+  NS_IMETHOD AppendHandlerText(const nsAString& aText) = 0;
 
   NS_IMETHOD GetPhase(PRUint8* aPhase) = 0;
 

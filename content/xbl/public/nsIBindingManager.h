@@ -149,9 +149,9 @@ public:
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
                                      PRBool* aMultipleInsertionPoints) = 0;
 
-  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL) = 0;
-  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL) = 0;
-  NS_IMETHOD LoadBindingDocument(nsIDocument* aDocument, const nsAReadableString& aURL,
+  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAString& aURL) = 0;
+  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsAString& aURL) = 0;
+  NS_IMETHOD LoadBindingDocument(nsIDocument* aDocument, const nsAString& aURL,
                                  nsIDocument** aResult) = 0;
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding)=0;

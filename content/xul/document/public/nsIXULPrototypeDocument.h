@@ -46,7 +46,7 @@
 #define nsIXULPrototypeDocument_h__
 
 #include "nsISerializable.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 
 class nsIAtom;
 class nsIPrincipal;
@@ -85,8 +85,8 @@ public:
     NS_IMETHOD AddOverlayReference(nsIURI* aURI) = 0;
     NS_IMETHOD GetOverlayReferences(nsISupportsArray** aResult) = 0;
 
-    NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAWritableString& aData) const = 0;
-    NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAReadableString& aData) = 0;
+    NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const = 0;
+    NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData) = 0;
 
     NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aResult) = 0;
     NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;

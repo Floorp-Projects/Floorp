@@ -106,7 +106,7 @@ nsClassList::GetClasses(nsClassList* aList, nsVoidArray& aArray)
 
 
 nsresult
-nsClassList::ParseClasses(nsClassList** aList, const nsAReadableString& aClassString)
+nsClassList::ParseClasses(nsClassList** aList, const nsAString& aClassString)
 {
     static const PRUnichar kNullCh = PRUnichar('\0');
 
@@ -153,7 +153,7 @@ nsClassList::ParseClasses(nsClassList** aList, const nsAReadableString& aClassSt
 
 nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                nsINodeInfo* aNodeInfo,
-                               const nsAReadableString& aValue)
+                               const nsAString& aValue)
     : mContent(aContent),
       mNodeInfo(aNodeInfo)
 {
@@ -171,7 +171,7 @@ nsXULAttribute::~nsXULAttribute()
 nsresult
 nsXULAttribute::Create(nsIContent* aContent,
                        nsINodeInfo* aNodeInfo,
-                       const nsAReadableString& aValue,
+                       const nsAString& aValue,
                        nsXULAttribute** aResult)
 {
     NS_ENSURE_ARG_POINTER(aNodeInfo);
@@ -205,20 +205,20 @@ NS_IMPL_RELEASE(nsXULAttribute);
 // nsIDOMNode interface
 
 NS_IMETHODIMP
-nsXULAttribute::GetNodeName(nsAWritableString& aNodeName)
+nsXULAttribute::GetNodeName(nsAString& aNodeName)
 {
     GetQualifiedName(aNodeName);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetNodeValue(nsAWritableString& aNodeValue)
+nsXULAttribute::GetNodeValue(nsAString& aNodeValue)
 {
     return mValue.GetValue(aNodeValue);
 }
 
 NS_IMETHODIMP
-nsXULAttribute::SetNodeValue(const nsAReadableString& aNodeValue)
+nsXULAttribute::SetNodeValue(const nsAString& aNodeValue)
 {
     return SetValue(aNodeValue);
 }
@@ -287,19 +287,19 @@ nsXULAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetNamespaceURI(nsAWritableString& aNamespaceURI)
+nsXULAttribute::GetNamespaceURI(nsAString& aNamespaceURI)
 {
   return mNodeInfo->GetNamespaceURI(aNamespaceURI);
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetPrefix(nsAWritableString& aPrefix)
+nsXULAttribute::GetPrefix(nsAString& aPrefix)
 {
   return mNodeInfo->GetPrefix(aPrefix);
 }
 
 NS_IMETHODIMP
-nsXULAttribute::SetPrefix(const nsAReadableString& aPrefix)
+nsXULAttribute::SetPrefix(const nsAString& aPrefix)
 {
     // XXX: Validate the prefix string!
 
@@ -321,7 +321,7 @@ nsXULAttribute::SetPrefix(const nsAReadableString& aPrefix)
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetLocalName(nsAWritableString& aLocalName)
+nsXULAttribute::GetLocalName(nsAString& aLocalName)
 {
   return mNodeInfo->GetLocalName(aLocalName);
 }
@@ -380,8 +380,8 @@ nsXULAttribute::Normalize()
 }
 
 NS_IMETHODIMP
-nsXULAttribute::IsSupported(const nsAReadableString& aFeature,
-                            const nsAReadableString& aVersion,
+nsXULAttribute::IsSupported(const nsAString& aFeature,
+                            const nsAString& aVersion,
                             PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -389,23 +389,23 @@ nsXULAttribute::IsSupported(const nsAReadableString& aFeature,
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetBaseURI(nsAWritableString &aURI)
+nsXULAttribute::GetBaseURI(nsAString &aURI)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsXULAttribute::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
-                                      nsAWritableString& aPrefix)
+nsXULAttribute::LookupNamespacePrefix(const nsAString& aNamespaceURI,
+                                      nsAString& aPrefix)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsXULAttribute::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
-                                   nsAWritableString& aNamespaceURI) 
+nsXULAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                                   nsAString& aNamespaceURI) 
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -415,7 +415,7 @@ nsXULAttribute::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
 // nsIDOMAttr interface
 
 NS_IMETHODIMP
-nsXULAttribute::GetName(nsAWritableString& aName)
+nsXULAttribute::GetName(nsAString& aName)
 {
     GetQualifiedName(aName);
     return NS_OK;
@@ -430,13 +430,13 @@ nsXULAttribute::GetSpecified(PRBool* aSpecified)
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetValue(nsAWritableString& aValue)
+nsXULAttribute::GetValue(nsAString& aValue)
 {
     return mValue.GetValue(aValue);
 }
 
 NS_IMETHODIMP
-nsXULAttribute::SetValue(const nsAReadableString& aValue)
+nsXULAttribute::SetValue(const nsAString& aValue)
 {
     // We call back to the content node's SetValue() method so we can
     // share all of the work that it does.
@@ -456,7 +456,7 @@ nsXULAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
 // Implementation methods
 
 void
-nsXULAttribute::GetQualifiedName(nsAWritableString& aQualifiedName)
+nsXULAttribute::GetQualifiedName(nsAString& aQualifiedName)
 {
     mNodeInfo->GetQualifiedName(aQualifiedName);
 }
@@ -464,7 +464,7 @@ nsXULAttribute::GetQualifiedName(nsAWritableString& aQualifiedName)
 
 
 nsresult
-nsXULAttribute::SetValueInternal(const nsAReadableString& aValue)
+nsXULAttribute::SetValueInternal(const nsAString& aValue)
 {
     return mValue.SetValue( aValue, mNodeInfo->Equals(nsXULAtoms::id) );
 }
@@ -544,7 +544,7 @@ nsXULAttributes::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-nsXULAttributes::GetNamedItem(const nsAReadableString& aName,
+nsXULAttributes::GetNamedItem(const nsAString& aName,
                               nsIDOMNode** aReturn)
 {
     NS_PRECONDITION(aReturn != nsnull, "null ptr");
@@ -591,7 +591,7 @@ nsXULAttributes::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsXULAttributes::RemoveNamedItem(const nsAReadableString& aName,
+nsXULAttributes::RemoveNamedItem(const nsAString& aName,
                                  nsIDOMNode** aReturn)
 {
     nsCOMPtr<nsIDOMElement> element( do_QueryInterface(mContent) );
@@ -614,8 +614,8 @@ nsXULAttributes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsXULAttributes::GetNamedItemNS(const nsAReadableString& aNamespaceURI, 
-                                const nsAReadableString& aLocalName,
+nsXULAttributes::GetNamedItemNS(const nsAString& aNamespaceURI, 
+                                const nsAString& aLocalName,
                                 nsIDOMNode** aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -630,8 +630,8 @@ nsXULAttributes::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsXULAttributes::RemoveNamedItemNS(const nsAReadableString& aNamespaceURI, 
-                                   const nsAReadableString& aLocalName,
+nsXULAttributes::RemoveNamedItemNS(const nsAString& aNamespaceURI, 
+                                   const nsAString& aLocalName,
                                    nsIDOMNode** aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -665,12 +665,12 @@ nsresult nsXULAttributes::SetClassList(nsClassList* aClassList)
     return NS_OK;
 }
 
-nsresult nsXULAttributes::UpdateClassList(const nsAReadableString& aValue)
+nsresult nsXULAttributes::UpdateClassList(const nsAString& aValue)
 {
     return nsClassList::ParseClasses(&mClassList, aValue);
 }
 
-nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsAReadableString& aValue)
+nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsAString& aValue)
 {
     if (aValue.IsEmpty())
     {

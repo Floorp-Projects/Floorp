@@ -56,7 +56,7 @@ class nsXBLPrototypeResources
 {
 public:
   void LoadResources(PRBool* aResult);
-  void AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc);
+  void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
   nsresult FlushSkinSheets();
 

@@ -59,7 +59,7 @@ struct nsXBLResource {
   nsIAtom* mType;
   nsString mSrc;
 
-  nsXBLResource(nsIAtom* aType, const nsAReadableString& aSrc) {
+  nsXBLResource(nsIAtom* aType, const nsAString& aSrc) {
     MOZ_COUNT_CTOR(nsXBLResource);
     mNext = nsnull;
     mType = aType;
@@ -81,7 +81,7 @@ public:
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
 
   void LoadResources(PRBool* aResult);
-  void AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc);
+  void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
   void AddResourceListener(nsIContent* aElement);
 
   nsXBLResourceLoader(nsIXBLPrototypeBinding* aBinding, nsXBLPrototypeResources* aResources);

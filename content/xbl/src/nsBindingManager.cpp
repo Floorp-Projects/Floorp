@@ -254,9 +254,9 @@ public:
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
                                      PRBool* aMultipleInsertionPoints);
 
-  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL);
-  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL);
-  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL,
+  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAString& aURL);
+  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsAString& aURL);
+  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsAString& aURL,
                                  nsIDocument** aResult);
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
@@ -770,7 +770,7 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aRes
 }
 
 NS_IMETHODIMP
-nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL)
+nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAString& aURL)
 {
   // First we need to load our binding.
   nsresult rv;
@@ -792,7 +792,7 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAReadableStrin
 }
 
 NS_IMETHODIMP
-nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL)
+nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAString& aURL)
 {
   /*
   nsCOMPtr<nsIXBLBinding> binding;
@@ -829,7 +829,7 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAReadableSt
 }
 
 NS_IMETHODIMP
-nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL,
+nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAString& aURL,
                                       nsIDocument** aResult)
 {
   NS_ConvertUCS2toUTF8 url(aURL);

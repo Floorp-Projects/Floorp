@@ -71,7 +71,7 @@ nsXBLPrototypeResources::~nsXBLPrototypeResources()
 }
 
 void 
-nsXBLPrototypeResources::AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc)
+nsXBLPrototypeResources::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
 {
   if (mLoader)
     mLoader->AddResource(aResourceType, aSrc);

@@ -53,7 +53,7 @@ struct nsXBLParameter {
   nsXBLParameter* mNext;
   char* mName;
 
-  nsXBLParameter(const nsAReadableString& aName) {
+  nsXBLParameter(const nsAString& aName) {
     MOZ_COUNT_CTOR(nsXBLParameter);
     mName = ToNewCString(aName);
     mNext = nsnull;
@@ -93,7 +93,7 @@ struct nsXBLUncompiledMethod {
     return result;
   }
 
-  void AppendBodyText(const nsAReadableString& aText) {
+  void AppendBodyText(const nsAString& aText) {
     if (mBodyText) {
       PRUnichar* temp = mBodyText;
       mBodyText = ToNewUnicode(nsDependentString(temp) + aText);
@@ -103,7 +103,7 @@ struct nsXBLUncompiledMethod {
       mBodyText = ToNewUnicode(aText);
   }
 
-  void AddParameter(const nsAReadableString& aText) {
+  void AddParameter(const nsAString& aText) {
     nsXBLParameter* param = new nsXBLParameter(aText);
     if (!param)
       return;
@@ -122,8 +122,8 @@ public:
   virtual ~nsXBLProtoImplMethod();
   virtual void Destroy(PRBool aIsCompiled);
 
-  void AppendBodyText(const nsAReadableString& aBody);
-  void AddParameter(const nsAReadableString& aName);
+  void AppendBodyText(const nsAString& aBody);
+  void AddParameter(const nsAString& aName);
 
   virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
                                  void* aScriptObject, void* aTargetClassObject);

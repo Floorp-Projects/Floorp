@@ -143,8 +143,8 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 
 NS_EXPORT nsresult
 NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
-                  const nsAReadableString& aNamespaceURI, 
-                  const nsAReadableString& aQualifiedName, 
+                  const nsAString& aNamespaceURI, 
+                  const nsAString& aQualifiedName, 
                   nsIDOMDocumentType* aDoctype,
                   nsIURI* aBaseURI)
 {
@@ -326,13 +326,13 @@ nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
 }
 
 NS_IMETHODIMP
-nsXMLDocument::EvaluateFIXptr(const nsAReadableString& aExpression, nsIDOMRange **aRange)
+nsXMLDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange)
 {
   return nsFIXptr::Evaluate(this, aExpression, aRange);
 }
 
 NS_IMETHODIMP
-nsXMLDocument::Load(const nsAReadableString& aUrl)
+nsXMLDocument::Load(const nsAString& aUrl)
 {
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIURI> uri;
@@ -740,7 +740,7 @@ nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASection** aReturn)
+nsXMLDocument::CreateCDATASection(const nsAString& aData, nsIDOMCDATASection** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
@@ -765,7 +765,7 @@ nsXMLDocument::CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASec
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateEntityReference(const nsAReadableString& aName, nsIDOMEntityReference** aReturn)
+nsXMLDocument::CreateEntityReference(const nsAString& aName, nsIDOMEntityReference** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
@@ -774,8 +774,8 @@ nsXMLDocument::CreateEntityReference(const nsAReadableString& aName, nsIDOMEntit
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateProcessingInstruction(const nsAReadableString& aTarget, 
-                                           const nsAReadableString& aData, 
+nsXMLDocument::CreateProcessingInstruction(const nsAString& aTarget, 
+                                           const nsAString& aData, 
                                            nsIDOMProcessingInstruction** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -795,7 +795,7 @@ nsXMLDocument::CreateProcessingInstruction(const nsAReadableString& aTarget,
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateElement(const nsAReadableString& aTagName, 
+nsXMLDocument::CreateElement(const nsAString& aTagName, 
                               nsIDOMElement** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -890,8 +890,8 @@ nsXMLDocument::ImportNode(nsIDOMNode* aImportedNode,
 }
 
 NS_IMETHODIMP
-nsXMLDocument::CreateAttributeNS(const nsAReadableString& aNamespaceURI,
-                                 const nsAReadableString& aQualifiedName,
+nsXMLDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
+                                 const nsAString& aQualifiedName,
                                  nsIDOMAttr** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -912,8 +912,8 @@ nsXMLDocument::CreateAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aQualifiedName,
+nsXMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
+                               const nsAString& aQualifiedName,
                                nsIDOMElement** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -930,7 +930,7 @@ nsXMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
 }
 
 static nsIContent *
-MatchId(nsIContent *aContent, const nsAReadableString& aName)
+MatchId(nsIContent *aContent, const nsAString& aName)
 {
   nsAutoString value;
   nsIContent *result = nsnull;
@@ -968,7 +968,7 @@ MatchId(nsIContent *aContent, const nsAReadableString& aName)
 }
 
 NS_IMETHODIMP
-nsXMLDocument::GetElementById(const nsAReadableString& aElementId,
+nsXMLDocument::GetElementById(const nsAString& aElementId,
                              nsIDOMElement** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -1024,14 +1024,14 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::SetBaseTarget(const nsAReadableString &aBaseTarget)
+nsXMLDocument::SetBaseTarget(const nsAString &aBaseTarget)
 {
   mBaseTarget.Assign(aBaseTarget);
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::GetBaseTarget(nsAWritableString &aBaseTarget)
+nsXMLDocument::GetBaseTarget(nsAString &aBaseTarget)
 {
   aBaseTarget.Assign(mBaseTarget);
   return NS_OK;

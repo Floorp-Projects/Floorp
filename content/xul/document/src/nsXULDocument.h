@@ -169,21 +169,21 @@ public:
 
     NS_IMETHOD SetBaseURL(nsIURI *aURI);
     
-    NS_IMETHOD GetBaseTarget(nsAWritableString &aBaseTarget);
+    NS_IMETHOD GetBaseTarget(nsAString &aBaseTarget);
 
-    NS_IMETHOD SetBaseTarget(const nsAReadableString &aBaseTarget);
+    NS_IMETHOD SetBaseTarget(const nsAString &aBaseTarget);
 
     NS_IMETHOD GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
 
-    NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharSetID);
+    NS_IMETHOD GetDocumentCharacterSet(nsAString& oCharSetID);
 
-    NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID);
+    NS_IMETHOD SetDocumentCharacterSet(const nsAString& aCharSetID);
 
     NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource);
     
     NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource);
 
-    NS_IMETHOD GetContentLanguage(nsAWritableString& aContentLanguage) const;
+    NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const;
 
 #ifdef IBMBIDI
     /**
@@ -203,9 +203,9 @@ public:
     NS_IMETHOD SetWordBreaker(nsIWordBreaker* aWordBreaker) ;
 
     NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField,
-                             nsAWritableString& aData) const;
+                             nsAString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aheaderField,
-                             const nsAReadableString& aData);
+                             const nsAString& aData);
 
     NS_IMETHOD CreateShell(nsIPresContext* aContext,
                            nsIViewManager* aViewManager,
@@ -321,7 +321,7 @@ public:
 
     NS_IMETHOD SelectAll();
 
-    NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+    NS_IMETHOD FindNext(const nsAString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
     NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE, PRBool aUpdateViews = PR_FALSE);
 
@@ -350,9 +350,9 @@ public:
     NS_IMETHOD SetTitle(const PRUnichar *aTitle);
 
     // nsIXULDocument interface
-    NS_IMETHOD AddElementForID(const nsAReadableString& aID, nsIContent* aElement);
-    NS_IMETHOD RemoveElementForID(const nsAReadableString& aID, nsIContent* aElement);
-    NS_IMETHOD GetElementsForID(const nsAReadableString& aID, nsISupportsArray* aElements);
+    NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);
+    NS_IMETHOD RemoveElementForID(const nsAString& aID, nsIContent* aElement);
+    NS_IMETHOD GetElementsForID(const nsAString& aID, nsISupportsArray* aElements);
     NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
     NS_IMETHOD ResolveForwardReferences();
     NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument);
@@ -368,8 +368,8 @@ public:
     NS_IMETHOD OnResumeContentSink();
     
     // nsIDOMEventCapturer interface
-    NS_IMETHOD    CaptureEvent(const nsAReadableString& aType);
-    NS_IMETHOD    ReleaseEvent(const nsAReadableString& aType);
+    NS_IMETHOD    CaptureEvent(const nsAString& aType);
+    NS_IMETHOD    ReleaseEvent(const nsAString& aType);
 
     // nsIDOMEventReceiver interface (yuck. inherited from nsIDOMEventCapturer)
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -378,10 +378,10 @@ public:
     NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
     // nsIDOMEventTarget interface
-    NS_IMETHOD AddEventListener(const nsAReadableString& aType,
+    NS_IMETHOD AddEventListener(const nsAString& aType,
                                 nsIDOMEventListener* aListener,
                                 PRBool aUseCapture);
-    NS_IMETHOD RemoveEventListener(const nsAReadableString& aType,
+    NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                    nsIDOMEventListener* aListener,
                                    PRBool aUseCapture);
     NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
@@ -422,7 +422,7 @@ public:
 
     static nsresult
     GetElementsByTagName(nsIContent* aContent,
-                         const nsAReadableString& aTagName,
+                         const nsAString& aTagName,
                          PRInt32 aNamespaceID,
                          nsRDFDOMNodeList* aElements);
 
@@ -460,12 +460,12 @@ protected:
 
     static nsresult
     GetElementsByAttribute(nsIDOMNode* aNode,
-                           const nsAReadableString& aAttribute,
-                           const nsAReadableString& aValue,
+                           const nsAString& aAttribute,
+                           const nsAString& aValue,
                            nsRDFDOMNodeList* aElements);
 
     nsresult
-    ParseTagString(const nsAReadableString& aTagName, nsIAtom*& aName,
+    ParseTagString(const nsAString& aTagName, nsIAtom*& aName,
                    nsIAtom*& aPrefix);
 
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };

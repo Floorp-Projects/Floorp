@@ -54,7 +54,7 @@ public:
   virtual ~nsXBLProtoImplField();
   virtual void Destroy(PRBool aIsCompiled);
 
-  void AppendFieldText(const nsAReadableString& aText);
+  void AppendFieldText(const nsAString& aText);
   
   virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
                                  void* aScriptObject, void* aTargetClassObject);

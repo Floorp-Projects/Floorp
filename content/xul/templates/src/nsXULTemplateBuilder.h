@@ -281,7 +281,7 @@ public:
     virtual PRBool
     CompileSimpleAttributeCondition(PRInt32 aNameSpaceID,
                                     nsIAtom* aAttribute,
-                                    const nsAReadableString& aValue,
+                                    const nsAString& aValue,
                                     InnerNode* aParentNode,
                                     TestNode** aResult);
     /**
@@ -292,16 +292,16 @@ public:
 
     static void
     AddBindingsFor(nsXULTemplateBuilder* aSelf,
-                   const nsAReadableString& aVariable,
+                   const nsAString& aVariable,
                    void* aClosure);
 
     // XXX sigh, the string template foo doesn't mix with
     // operator->*() on egcs-1.1.2, so we'll need to explicitly pass
     // "this" and use good ol' fashioned static callbacks.
     void
-    ParseAttribute(const nsAReadableString& aAttributeValue,
-                   void (*aVariableCallback)(nsXULTemplateBuilder* aThis, const nsAReadableString&, void*),
-                   void (*aTextCallback)(nsXULTemplateBuilder* aThis, const nsAReadableString&, void*),
+    ParseAttribute(const nsAString& aAttributeValue,
+                   void (*aVariableCallback)(nsXULTemplateBuilder* aThis, const nsAString&, void*),
+                   void (*aTextCallback)(nsXULTemplateBuilder* aThis, const nsAString&, void*),
                    void* aClosure);
 
     nsresult
@@ -312,22 +312,22 @@ public:
 
     nsresult
     SubstituteText(nsTemplateMatch& aMatch,
-                   const nsAReadableString& aAttributeValue,
+                   const nsAString& aAttributeValue,
                    nsAString& aResult);
 
     static void
-    SubstituteTextAppendText(nsXULTemplateBuilder* aThis, const nsAReadableString& aText, void* aClosure);
+    SubstituteTextAppendText(nsXULTemplateBuilder* aThis, const nsAString& aText, void* aClosure);
 
     static void
-    SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis, const nsAReadableString& aVariable, void* aClosure);    
+    SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis, const nsAString& aVariable, void* aClosure);    
 
     PRBool
     IsAttrImpactedByVars(nsTemplateMatch& aMatch,
-                         const nsAReadableString& aAttributeValue,
+                         const nsAString& aAttributeValue,
                          const VariableSet& aModifiedVars);
 
     static void
-    IsVarInSet(nsXULTemplateBuilder* aThis, const nsAReadableString& aVariable, void* aClosure);
+    IsVarInSet(nsXULTemplateBuilder* aThis, const nsAString& aVariable, void* aClosure);
 
     nsresult
     SynchronizeAll(nsIRDFResource* aSource,

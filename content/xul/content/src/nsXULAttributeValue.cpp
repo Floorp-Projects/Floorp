@@ -61,7 +61,7 @@ nsXULAttributeValue::~nsXULAttributeValue()
 
 
 
-nsresult nsXULAttributeValue::GetValue( nsAWritableString& aResult )
+nsresult nsXULAttributeValue::GetValue( nsAString& aResult )
 {
     nsresult rv = NS_OK;
     if (! mValue) {
@@ -80,7 +80,7 @@ nsresult nsXULAttributeValue::GetValue( nsAWritableString& aResult )
 }
 
 
-nsresult nsXULAttributeValue::SetValue(const nsAReadableString& aValue,
+nsresult nsXULAttributeValue::SetValue(const nsAString& aValue,
                                        PRBool forceAtom)
 {   
     nsCOMPtr<nsIAtom> newAtom;

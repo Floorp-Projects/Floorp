@@ -105,7 +105,7 @@ public:
     GetClasses(nsClassList* aList, nsVoidArray& aArray);
 
     static nsresult
-    ParseClasses(nsClassList** aList, const nsAReadableString& aValue);
+    ParseClasses(nsClassList** aList, const nsAString& aValue);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -116,7 +116,7 @@ class nsXULAttribute : public nsIDOMAttr,
 protected:
     nsXULAttribute(nsIContent* aContent,
                    nsINodeInfo* aNodeInfo,
-                   const nsAReadableString& aValue);
+                   const nsAString& aValue);
 
     virtual ~nsXULAttribute();
 
@@ -124,7 +124,7 @@ public:
     static nsresult
     Create(nsIContent* aContent,
            nsINodeInfo* aNodeInfo,
-           const nsAReadableString& aValue,
+           const nsAString& aValue,
            nsXULAttribute** aResult);
 
     // nsISupports interface
@@ -140,10 +140,10 @@ public:
     NS_DECL_NSIDOMATTR
 
     // Implementation methods
-    void GetQualifiedName(nsAWritableString& aAttributeName);
+    void GetQualifiedName(nsAString& aAttributeName);
 
     nsINodeInfo* GetNodeInfo() const { return mNodeInfo; }
-    nsresult     SetValueInternal(const nsAReadableString& aValue);
+    nsresult     SetValueInternal(const nsAString& aValue);
     nsresult     GetValueAsAtom(nsIAtom** aResult);
 
 protected:
@@ -184,8 +184,8 @@ public:
     nsresult HasClass(nsIAtom* aClass) const;
 
     nsresult SetClassList(nsClassList* aClassList);
-    nsresult UpdateClassList(const nsAReadableString& aValue);
-    nsresult UpdateStyleRule(nsIURI* aDocURL, const nsAReadableString& aValue);
+    nsresult UpdateClassList(const nsAString& aValue);
+    nsresult UpdateStyleRule(nsIURI* aDocURL, const nsAString& aValue);
 
     nsresult SetInlineStyleRule(nsIStyleRule* aRule);
     nsresult GetInlineStyleRule(nsIStyleRule*& aRule);

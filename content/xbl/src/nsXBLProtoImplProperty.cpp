@@ -145,7 +145,7 @@ nsXBLProtoImplProperty::Destroy(PRBool aIsCompiled)
 }
 
 void 
-nsXBLProtoImplProperty::AppendGetterText(const nsAReadableString& aText)
+nsXBLProtoImplProperty::AppendGetterText(const nsAString& aText)
 {
   if (mGetterText) {
     PRUnichar* temp = mGetterText;
@@ -157,7 +157,7 @@ nsXBLProtoImplProperty::AppendGetterText(const nsAReadableString& aText)
 }
 
 void 
-nsXBLProtoImplProperty::AppendSetterText(const nsAReadableString& aText)
+nsXBLProtoImplProperty::AppendSetterText(const nsAString& aText)
 {
   if (mSetterText) {
     PRUnichar* temp = mSetterText;

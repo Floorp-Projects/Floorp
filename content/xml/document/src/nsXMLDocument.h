@@ -79,29 +79,29 @@ public:
 
   NS_IMETHOD EndLoad();
 
-  NS_IMETHOD GetBaseTarget(nsAWritableString &aBaseTarget);
-  NS_IMETHOD SetBaseTarget(const nsAReadableString &aBaseTarget);
+  NS_IMETHOD GetBaseTarget(nsAString &aBaseTarget);
+  NS_IMETHOD SetBaseTarget(const nsAString &aBaseTarget);
 
   // nsIDOMNode interface
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIDOMDocument interface
   NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
-  NS_IMETHOD    CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASection** aReturn);
-  NS_IMETHOD    CreateEntityReference(const nsAReadableString& aName, nsIDOMEntityReference** aReturn);
-  NS_IMETHOD    CreateProcessingInstruction(const nsAReadableString& aTarget, const nsAReadableString& aData, nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD    CreateElement(const nsAReadableString& aTagName, 
+  NS_IMETHOD    CreateCDATASection(const nsAString& aData, nsIDOMCDATASection** aReturn);
+  NS_IMETHOD    CreateEntityReference(const nsAString& aName, nsIDOMEntityReference** aReturn);
+  NS_IMETHOD    CreateProcessingInstruction(const nsAString& aTarget, const nsAString& aData, nsIDOMProcessingInstruction** aReturn);
+  NS_IMETHOD    CreateElement(const nsAString& aTagName, 
                               nsIDOMElement** aReturn);
   NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode,
                            PRBool aDeep,
                            nsIDOMNode** aReturn);
-  NS_IMETHOD    CreateElementNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aQualifiedName,
+  NS_IMETHOD    CreateElementNS(const nsAString& aNamespaceURI,
+                               const nsAString& aQualifiedName,
                                nsIDOMElement** aReturn);
-  NS_IMETHOD    CreateAttributeNS(const nsAReadableString& aNamespaceURI,
-                                  const nsAReadableString& aQualifiedName,
+  NS_IMETHOD    CreateAttributeNS(const nsAString& aNamespaceURI,
+                                  const nsAString& aQualifiedName,
                                   nsIDOMAttr** aReturn);
-  NS_IMETHOD    GetElementById(const nsAReadableString& aElementId,
+  NS_IMETHOD    GetElementById(const nsAString& aElementId,
                                nsIDOMElement** aReturn);
 
   // nsIXMLDocument interface

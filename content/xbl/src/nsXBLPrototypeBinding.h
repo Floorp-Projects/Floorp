@@ -75,7 +75,7 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWea
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aRec);
 
   NS_IMETHOD LoadResources(PRBool* aResult);
-  NS_IMETHOD AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc);
+  NS_IMETHOD AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
 
   NS_IMETHOD InheritsStyle(PRBool* aResult);
 
@@ -89,7 +89,7 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWea
 
   NS_IMETHOD InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject);
   
-  NS_IMETHOD ConstructInterfaceTable(const nsAReadableString& aImpls);
+  NS_IMETHOD ConstructInterfaceTable(const nsAString& aImpls);
   
   NS_IMETHOD SetImplementation(nsXBLProtoImpl* aImpl) { mImplementation = aImpl; return NS_OK; };
   NS_IMETHOD InstallImplementation(nsIContent* aBoundElement);
@@ -139,7 +139,7 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWea
   NS_IMETHOD Initialize();
 
 public:
-  nsXBLPrototypeBinding(const nsAReadableCString& aRef, nsIXBLDocumentInfo* aInfo, nsIContent* aElement);
+  nsXBLPrototypeBinding(const nsACString& aRef, nsIXBLDocumentInfo* aInfo, nsIContent* aElement);
   virtual ~nsXBLPrototypeBinding();
 
   

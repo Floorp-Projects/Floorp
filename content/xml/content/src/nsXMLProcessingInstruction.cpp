@@ -60,22 +60,22 @@ class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
                                    public nsStyleLinkElement
 {
 public:
-  nsXMLProcessingInstruction(const nsAReadableString& aTarget,
-                             const nsAReadableString& aData);
+  nsXMLProcessingInstruction(const nsAString& aTarget,
+                             const nsAString& aData);
   virtual ~nsXMLProcessingInstruction();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMETHOD GetNodeName(nsAWritableString& aNodeName);
-  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) {
+  NS_IMETHOD GetNodeName(nsAString& aNodeName);
+  NS_IMETHOD GetLocalName(nsAString& aLocalName) {
     return nsGenericDOMDataNode::GetLocalName(aLocalName);
   }
-  NS_IMETHOD GetNodeValue(nsAWritableString& aNodeValue) {
+  NS_IMETHOD GetNodeValue(nsAString& aNodeValue) {
     return nsGenericDOMDataNode::GetNodeValue(aNodeValue);
   }
-  NS_IMETHOD SetNodeValue(const nsAReadableString& aNodeValue) {
+  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue) {
     nsresult rv = nsGenericDOMDataNode::SetNodeValue(aNodeValue);
     UpdateStyleSheet(PR_TRUE);
     return rv;
@@ -125,32 +125,32 @@ public:
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {
     return nsGenericDOMDataNode::GetOwnerDocument(aOwnerDocument);
   }
-  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNamespaceURI) {
+  NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI) {
     return nsGenericDOMDataNode::GetNamespaceURI(aNamespaceURI);
   }
-  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) {
+  NS_IMETHOD GetPrefix(nsAString& aPrefix) {
     return nsGenericDOMDataNode::GetPrefix(aPrefix);
   }
-  NS_IMETHOD SetPrefix(const nsAReadableString& aPrefix) {
+  NS_IMETHOD SetPrefix(const nsAString& aPrefix) {
     return nsGenericDOMDataNode::SetPrefix(aPrefix);
   }
   NS_IMETHOD Normalize() {
     return NS_OK;
   }
-  NS_IMETHOD IsSupported(const nsAReadableString& aFeature,
-                      const nsAReadableString& aVersion,
+  NS_IMETHOD IsSupported(const nsAString& aFeature,
+                      const nsAString& aVersion,
                       PRBool* aReturn) {
     return nsGenericDOMDataNode::IsSupported(aFeature, aVersion, aReturn);
   }
-  NS_IMETHOD GetBaseURI(nsAWritableString& aURI) {
+  NS_IMETHOD GetBaseURI(nsAString& aURI) {
     return nsGenericDOMDataNode::GetBaseURI(aURI);
   }
-  NS_IMETHOD LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
-                                   nsAWritableString& aPrefix) {
+  NS_IMETHOD LookupNamespacePrefix(const nsAString& aNamespaceURI,
+                                   nsAString& aPrefix) {
     return nsGenericDOMDataNode::LookupNamespacePrefix(aNamespaceURI, aPrefix);
   }
-  NS_IMETHOD LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
-                                nsAWritableString& aNamespaceURI) {
+  NS_IMETHOD LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                                nsAString& aNamespaceURI) {
     return nsGenericDOMDataNode::LookupNamespaceURI(aNamespacePrefix,
                                                     aNamespaceURI);
   }
@@ -179,13 +179,13 @@ public:
 #endif
 
   // nsStyleLinkElement
-  NS_IMETHOD GetCharset(nsAWritableString& aCharset);
+  NS_IMETHOD GetCharset(nsAString& aCharset);
 
 protected:
-  void GetStyleSheetInfo(nsAWritableString& aUrl,
-                         nsAWritableString& aTitle,
-                         nsAWritableString& aType,
-                         nsAWritableString& aMedia,
+  void GetStyleSheetInfo(nsAString& aUrl,
+                         nsAString& aTitle,
+                         nsAString& aType,
+                         nsAString& aMedia,
                          PRBool* aIsAlternate);
 
   PRBool GetAttrValue(const nsAString& aAttr, nsAString& aValue);
@@ -195,8 +195,8 @@ protected:
 
 nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
-                               const nsAReadableString& aTarget,
-                               const nsAReadableString& aData)
+                               const nsAString& aTarget,
+                               const nsAString& aData)
 {
   *aInstancePtrResult = new nsXMLProcessingInstruction(aTarget, aData);
   NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
@@ -206,8 +206,8 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   return NS_OK;
 }
 
-nsXMLProcessingInstruction::nsXMLProcessingInstruction(const nsAReadableString& aTarget,
-                                                       const nsAReadableString& aData) :
+nsXMLProcessingInstruction::nsXMLProcessingInstruction(const nsAString& aTarget,
+                                                       const nsAString& aData) :
   mTarget(aTarget)
 {
   nsGenericDOMDataNode::SetData(aData);
@@ -233,7 +233,7 @@ NS_IMPL_RELEASE_INHERITED(nsXMLProcessingInstruction, nsGenericDOMDataNode)
 
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetTarget(nsAWritableString& aTarget)
+nsXMLProcessingInstruction::GetTarget(nsAString& aTarget)
 {
   aTarget.Assign(mTarget);
 
@@ -241,7 +241,7 @@ nsXMLProcessingInstruction::GetTarget(nsAWritableString& aTarget)
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::SetData(const nsAReadableString& aData)
+nsXMLProcessingInstruction::SetData(const nsAString& aData)
 {
   nsresult rv = nsGenericDOMDataNode::SetData(aData);
   UpdateStyleSheet(PR_TRUE);
@@ -249,7 +249,7 @@ nsXMLProcessingInstruction::SetData(const nsAReadableString& aData)
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetData(nsAWritableString& aData)
+nsXMLProcessingInstruction::GetData(nsAString& aData)
 {
   return nsGenericDOMDataNode::GetData(aData);
 }
@@ -326,7 +326,7 @@ nsXMLProcessingInstruction::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetNodeName(nsAWritableString& aNodeName)
+nsXMLProcessingInstruction::GetNodeName(nsAString& aNodeName)
 {
   aNodeName.Assign(mTarget);
   return NS_OK;
@@ -431,7 +431,7 @@ static PRBool InProlog(nsIDOMNode *aThis)
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetCharset(nsAWritableString& aCharset)
+nsXMLProcessingInstruction::GetCharset(nsAString& aCharset)
 {
   if (!GetAttrValue(NS_LITERAL_STRING("charset"), aCharset)) {
     return NS_ERROR_FAILURE;
@@ -441,10 +441,10 @@ nsXMLProcessingInstruction::GetCharset(nsAWritableString& aCharset)
 }
 
 void
-nsXMLProcessingInstruction::GetStyleSheetInfo(nsAWritableString& aUrl,
-                                              nsAWritableString& aTitle,
-                                              nsAWritableString& aType,
-                                              nsAWritableString& aMedia,
+nsXMLProcessingInstruction::GetStyleSheetInfo(nsAString& aUrl,
+                                              nsAString& aTitle,
+                                              nsAString& aType,
+                                              nsAString& aMedia,
                                               PRBool* aIsAlternate)
 {
   nsresult rv = NS_OK;

@@ -284,7 +284,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
 */
 
 nsresult
-nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult)
+nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
 {
     if (! aNode) {
         aResult.Truncate();
@@ -351,7 +351,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult)
 }
 
 nsresult
-nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI)
+nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAString& aElementID, nsCString& aURI)
 {
     // Convert an element's ID to a URI that can be used to refer to
     // the element in the XUL graph.
@@ -397,7 +397,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAReadableStrin
 
 
 nsresult
-nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAReadableString& aID, nsIRDFResource** aResult)
+nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAString& aID, nsIRDFResource** aResult)
 {
     nsresult rv;
 
@@ -416,7 +416,7 @@ nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAReadable
 
 
 nsresult
-nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAReadableString& aURI, nsAWritableString& aElementID)
+nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAString& aURI, nsAString& aElementID)
 {
     // Convert a URI into an element ID that can be accessed from the
     // DOM APIs.
@@ -466,7 +466,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDF
 
 
 nsresult
-nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aAttribute, nsIRDFResource** aResult)
+nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAString& aAttribute, nsIRDFResource** aResult)
 {
     // construct a fully-qualified URI from the namespace/tag pair.
 

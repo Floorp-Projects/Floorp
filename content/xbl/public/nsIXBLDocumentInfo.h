@@ -72,8 +72,8 @@ public:
 
   NS_IMETHOD GetDocumentURI(nsCString& aDocURI)=0;
 
-  NS_IMETHOD GetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding** aResult)=0;
-  NS_IMETHOD SetPrototypeBinding(const nsAReadableCString& aRef, nsIXBLPrototypeBinding* aBinding)=0;
+  NS_IMETHOD GetPrototypeBinding(const nsACString& aRef, nsIXBLPrototypeBinding** aResult)=0;
+  NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsIXBLPrototypeBinding* aBinding)=0;
 
   NS_IMETHOD FlushSkinStylesheets()=0;
 };

@@ -76,7 +76,7 @@ public:
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aReceiver)=0;
 
   NS_IMETHOD LoadResources(PRBool* aLoaded)=0;
-  NS_IMETHOD AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc)=0;
+  NS_IMETHOD AddResource(nsIAtom* aResourceType, const nsAString& aSrc)=0;
 
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
 
@@ -93,7 +93,7 @@ public:
   NS_IMETHOD SetImplementation(nsXBLProtoImpl* aImpl)=0;
   NS_IMETHOD InstallImplementation(nsIContent* aBoundElement)=0;
 
-  NS_IMETHOD ConstructInterfaceTable(const nsAReadableString& aImpls)=0;
+  NS_IMETHOD ConstructInterfaceTable(const nsAString& aImpls)=0;
   
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
                               nsIContent* aChangedElement, nsIContent* aAnonymousContent)=0;
@@ -139,7 +139,7 @@ public:
 };
 
 extern nsresult
-NS_NewXBLPrototypeBinding(const nsAReadableCString& aRef, 
+NS_NewXBLPrototypeBinding(const nsACString& aRef, 
                           nsIContent* aElement, nsIXBLDocumentInfo* aInfo, 
                           nsIXBLPrototypeBinding** aResult);
 

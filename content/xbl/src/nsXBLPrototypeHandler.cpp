@@ -145,7 +145,7 @@ nsXBLPrototypeHandler::GetHandlerElement(nsIContent** aResult)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeHandler::AppendHandlerText(const nsAReadableString& aText) 
+nsXBLPrototypeHandler::AppendHandlerText(const nsAString& aText) 
 {
   if (mHandlerText) {
     // Append our text to the existing text.
@@ -771,7 +771,7 @@ static const keyCodeData gKeyCodes[] = {
 
 };
 
-PRInt32 nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAReadableString& aKeyName)
+PRInt32 nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAString& aKeyName)
 {
   nsCAutoString keyName;
   keyName.AssignWithConversion(aKeyName);
@@ -808,7 +808,7 @@ PRInt32 nsXBLPrototypeHandler::KeyToMask(PRInt32 key)
 }
 
 void
-nsXBLPrototypeHandler::GetEventType(nsAWritableString& aEvent)
+nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
 {
   mHandlerElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::event, aEvent);
   

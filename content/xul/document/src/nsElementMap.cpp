@@ -163,7 +163,7 @@ nsElementMap::ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* a
 
 
 nsresult
-nsElementMap::Add(const nsAReadableString& aID, nsIContent* aContent)
+nsElementMap::Add(const nsAString& aID, nsIContent* aContent)
 {
     NS_PRECONDITION(mMap != nsnull, "not initialized");
     if (! mMap)
@@ -262,7 +262,7 @@ nsElementMap::Add(const nsAReadableString& aID, nsIContent* aContent)
 
 
 nsresult
-nsElementMap::Remove(const nsAReadableString& aID, nsIContent* aContent)
+nsElementMap::Remove(const nsAString& aID, nsIContent* aContent)
 {
     NS_PRECONDITION(mMap != nsnull, "not initialized");
     if (! mMap)
@@ -340,7 +340,7 @@ nsElementMap::Remove(const nsAReadableString& aID, nsIContent* aContent)
 
 
 nsresult
-nsElementMap::Find(const nsAReadableString& aID, nsISupportsArray* aResults)
+nsElementMap::Find(const nsAString& aID, nsISupportsArray* aResults)
 {
     NS_PRECONDITION(mMap != nsnull, "not initialized");
     if (! mMap)
@@ -359,7 +359,7 @@ nsElementMap::Find(const nsAReadableString& aID, nsISupportsArray* aResults)
 
 
 nsresult
-nsElementMap::FindFirst(const nsAReadableString& aID, nsIContent** aResult)
+nsElementMap::FindFirst(const nsAString& aID, nsIContent** aResult)
 {
     NS_PRECONDITION(mMap != nsnull, "not initialized");
     if (! mMap)
