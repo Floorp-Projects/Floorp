@@ -2522,6 +2522,46 @@ static nsModuleComponentInfo components[] = {
     NS_CONTENT_HANDLER_PROGID_PREFIX"text/html", 
     nsBrowserContentHandlerConstructor 
   },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"text/xul", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"text/rdf", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"text/css", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"image/gif", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"image/jpeg", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"image/png", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"image/tiff", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"application/http-index-format", 
+    nsBrowserContentHandlerConstructor 
+  },
   { "Browser Startup Handler",
     NS_BROWSERCONTENTHANDLER_CID,
     NS_BROWSERSTARTUPHANDLER_PROGID, 
