@@ -1,0 +1,256 @@
+; Base Embedding Package File for mach-o mac builds
+;
+;
+;
+
+[Embed]
+
+; 
+; Sample App + launch script
+; 
+;TestGtkEmbed
+;run-mozilla.sh
+
+; 
+; NSPR:
+; 
+libnspr4.dylib
+libplc4.dylib
+libplds4.dylib
+
+; 
+; Javascript:
+; 
+libmozjs.dylib
+
+
+
+; 
+; DOM:
+; 
+components/libjsdom.dylib 
+
+
+; 
+; XPCOM:
+; 
+libxpcom.dylib 
+
+
+
+; 
+; Components: (need to trim fat)
+; 
+
+; appshell 
+
+components/libnsappshell.dylib
+components/appshell.xpt 
+
+
+; caps
+components/libcaps.dylib
+components/caps.xpt                     
+
+; chrome
+components/libchrome.dylib                   
+components/chrome.xpt                   
+
+; cookies
+components/libcookie.dylib                   
+
+; docshell
+components/libdocshell.dylib                 
+components/docshell.xpt            
+
+; dom
+components/dom.xpt                      
+components/dom_base.xpt
+components/dom_core.xpt
+components/dom_css.xpt
+components/dom_events.xpt
+components/dom_html.xpt
+components/dom_range.xpt
+components/dom_stylesheets.xpt
+components/dom_traversal.xpt
+components/dom_views.xpt
+components/dom_xbl.xpt
+components/dom_xul.xpt
+
+; editor
+components/libeditor.dylib                   
+components/editor.xpt
+
+; embedding                   
+components/libmozbrwsr.dylib                 
+components/libwebbrwsr.dylib  ; wtf!  it is needed?!
+components/mozbrwsr.xpt                 
+components/webBrowser_core.xpt
+components/libembedcomponents.dylib
+components/windowwatcher.xpt
+
+; find functionality
+components/libtxtsvc.dylib
+components/txtsvc.xpt
+
+; gfx
+components/libgfx_mac.dylib                     
+components/gfx.xpt 
+libgkgfx.dylib 
+
+; gfx2
+components/libgfx2.dylib
+components/gfx2.xpt
+
+; jar
+components/libjar50.dylib
+components/jar.xpt
+
+; javascript
+components/libjsurl.dylib
+components/jsurl.xpt
+
+; layout
+components/libgkcontent.dylib
+res/dtd/*
+components/libgklayout.dylib                   
+components/libhtmlpars.dylib                 
+components/libgkview.dylib                   
+components/layout_base.xpt              
+components/layout_xul.xpt               
+components/content_base.xpt
+
+; netwerk
+
+libmozz.dylib
+components/libnecko.dylib                    
+components/necko.xpt                    
+components/libnecko2.dylib                   
+components/necko_about.xpt              
+components/necko_cache.xpt              
+components/necko_data.xpt               
+components/necko_dns.xpt                
+components/necko_ftp.xpt                
+components/necko_http.xpt               
+components/necko_jar.xpt                
+components/necko_res.xpt                
+components/necko_strconv.xpt            
+
+; imagelib
+libmozjpeg.dylib
+components/libimglib2.dylib
+components/imglib2.xpt
+components/libimggif.dylib
+components/libimgjpeg.dylib
+components/libimgpng.dylib
+components/libimgppm.dylib
+
+; prefs
+components/pref.xpt                     
+components/libpref.dylib
+
+; profile
+components/libprofile.dylib                  
+components/profile.xpt
+
+; wallet
+; Optional - only if you need password persistence
+components/libwallet.dylib
+components/wallet.xpt                  
+
+; psm2
+; Optional - only if you need PSM2 support
+components/libpipboot.dylib
+components/pipboot.xpt
+components/libpipnss.dylib
+components/pipnss.xpt
+chrome/pipnss.jar
+components/libpippki.dylib
+components/pippki.xpt
+chrome/pippki.jar
+defaults/pref/security-prefs.js
+libnss3.dylib
+libsmime3.dylib
+libsoftokn3.dylib
+libssl3.dylib
+
+; rdf
+components/librdf.dylib
+components/rdf.xpt
+
+; session history
+components/libshistory.dylib
+components/shistory.xpt
+
+; required l10n libraries
+
+components/libunicharutil.dylib
+components/libuconv.dylib
+components/uconv.xpt
+components/liblwbrk.dylib
+components/libnslocale.dylib
+components/libucvlatin.dylib
+components/unicharutil.xpt
+components/libchardet.dylib
+; optional - on english only systems
+; components/libucvja.dylib for japanese
+; components/libucvko.dylib for korean
+; components/libucvcn.dylib for simplified chinese
+; components/libucvtw.dylib for traditional chinese
+; components/libucvtw2.dylib for traditional chinese
+; components/libucvibm.dylib for ibm
+
+
+res/language.properties
+res/langGroups.properties
+res/charsetData.properties
+res/charsetalias.properties
+res/unixcharset.properties
+; res/strres.properties 
+
+; required i18n libs
+components/libstrres.dylib
+
+; required prefs files
+defaults/pref/all.js
+defaults/pref/initpref.js
+defaults/pref/unix.js
+
+; uriloader
+components/liburiloader.dylib
+components/uriloader.xpt
+
+; widget
+components/libwidget_mac.dylib
+components/widget.xpt
+
+; xpconnect
+components/libxpconnect.dylib
+components/xpconnect.xpt
+
+; xpcom
+components/xpcom_base.xpt
+components/xpcom_components.xpt
+components/xpcom_ds.xpt
+components/xpcom_io.xpt
+components/xpcom_threads.xpt
+components/xpcom_xpti.xpt
+
+;
+; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
+; 
+chrome/embed.jar
+; 
+; res:
+; 
+res/html.css   
+res/quirk.css
+res/viewsource.css
+res/ua.css
+res/forms.css
+res/arrow.gif
+res/arrowd.gif
+res/loading-image.gif
+res/broken-image.gif
+res/builtin/*
+res/entityTables/*
