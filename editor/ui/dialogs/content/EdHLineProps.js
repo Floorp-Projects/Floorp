@@ -48,7 +48,9 @@ function Startup()
 
   // Initialize control values based on existing attributes
 
-  dialog.heightInput.value = hLineElement.getAttribute("height");
+    // Just to be confusing, "size" is used instead of height
+    // We will use "height" here and in UI
+  dialog.heightInput.value = hLineElement.getAttribute("size");
   width = hLineElement.getAttribute("width");
 
   // This assumes initial button text is "percent"
@@ -121,9 +123,9 @@ function ValidateData(setAttributes)
   }
   dump("Setting height="+height+"\n");
   if (setAttributes) {
-    hLineElement.setAttribute("height", height);
+    hLineElement.setAttribute("size", height);
   } else {
-    hLineElement.setAttribute("height", height);
+    hLineElement.setAttribute("size", height);
   }
 
   var maxLimit;
