@@ -99,6 +99,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI, nsIStreamLis
 			nsString folderURI;
 			nsFileSpec folderPath ("");
 			nsMsgKey msgKey;
+			
 			nsParseLocalMessageURI(aSrcMailboxURI, folderURI, &msgKey);
 			char *rootURI = folderURI.ToNewCString();
 			nsURI2Path(kMessageRootURI, rootURI, folderPath);
@@ -137,9 +138,8 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI, nsIStreamLis
 	return rv;
 }
 
-nsresult nsMailboxService::DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
-										  nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, 
-										  nsIURL ** aURL)
+nsresult nsMailboxService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 	nsMailboxUrl * mailboxUrl = nsnull;
 	nsIMailboxUrl * url = nsnull;
@@ -154,11 +154,17 @@ nsresult nsMailboxService::DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgK
 		{
 			// okay now generate the url string
 			char * urlSpec = nsnull;
-			nsFilePath filePath(aMailboxPath); // convert to file url representation...
-			if (aMessageID) 
-				urlSpec = PR_smprintf("mailboxMessage://%s?messageId=%s&number=%d", (const char *) filePath, aMessageKey);
-			else
-				urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, aMessageKey);
+			
+			// decompose the uri into a full path and message id...
+			nsString folderURI;
+			nsFileSpec folderSpec;
+			nsMsgKey msgIndex;
+
+			nsParseLocalMessageURI(aMessageURI, folderURI, &msgIndex);
+			nsURI2Path(kMessageRootURI, nsAutoCString(folderURI), folderSpec);
+
+			nsFilePath filePath(folderSpec); // convert to file url representation...
+			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgIndex);
 			
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
@@ -201,7 +207,11 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFileSpec& aMailboxPath, 
 			// okay, we have the msgKey so let's get rid of our db state...
 			mailDb->Close(PR_TRUE);
 			mailDb = nsnull;
-			rv = DisplayMessage(aMailboxPath, msgKey, nsnull, aDisplayConsumer, aUrlListener, aURL);
+			char * uri = nsnull;
+
+			nsBuildLocalMessageURI(aMailboxPath, msgKey, &uri);
+
+			rv = DisplayMessage(uri, aDisplayConsumer, aUrlListener, aURL);
 		}
 		else
 			rv = NS_ERROR_FAILURE;

@@ -54,8 +54,8 @@ public:
 	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
 						   nsIUrlListener * aUrlListener, nsIURL **aURL);
 
-	NS_IMETHOD DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
-								nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL);
+	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
+							  nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 	NS_IMETHOD DisplayMessageNumber(const nsFileSpec& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
 									nsIUrlListener * aUrlListener, nsIURL ** aURL);
