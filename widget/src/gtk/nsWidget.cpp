@@ -1039,7 +1039,13 @@ PRBool nsWidget::DispatchFocus(nsGUIEvent &aEvent)
 #undef TRACE_EVENTS_PAINT
 #undef TRACE_EVENTS_CROSSING
 
-#if defined(DEBUG_mcafee) || !defined(DEBUG_pavlov)
+#if 0
+#ifdef DEBUG_pavlov
+#define EVENT_SPAM
+#endif
+#endif
+
+#if defined(DEBUG_mcafee) || defined(EVENT_SPAM)
 #define TRACE_EVENTS 1
 #define TRACE_EVENTS_MOTION 1
 #define TRACE_EVENTS_PAINT 1
