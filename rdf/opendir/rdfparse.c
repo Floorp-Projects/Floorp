@@ -85,12 +85,13 @@ void readRDFFile (char* file) {
         printf("Error in RDF File\n");
       }
     }
-    printf("Finished reading %s\n", file); 
-	freeMem(rf->line);
+    
+    freeMem(rf->line);
     rf->line = NULL;
     freeMem(rf->holdOver);
     rf->holdOver = NULL;
     free(buff);
+    printf("Finished reading %s\n", file); 
   } else  printf("Could not find %s\n", file);    
 }
 
@@ -248,7 +249,7 @@ parseNextRDFXMLBlobInt(RDFT f, char* blob, int size) {
       c = blob[++n]; 
       if ((c == '\n') || (c == '\r')) lineNumber++;
     }
-    while ((m < RDF_BUF_SIZE) && (c != '<') && (c != '>')) {
+    while ((m < RDF_BUF_SIZE-1) && (c != '<') && (c != '>')) {
       f->line[m] = c;
       m++;
       somethingseenp = (somethingseenp || (!(wsCharp(c))));
