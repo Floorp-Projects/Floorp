@@ -22,10 +22,11 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
-   title = "Locate attachment"
+   title = "Locate attachment",
+   onload = "document.forms['choose-id'].id.focus()"
  %]
 
-<form method="get" action="attachment.cgi">
+<form name="choose-id" method="get" action="attachment.cgi">
   <p>Access an attachment by entering its ID into the form below:</p>
   <p>Attachment ID: <input name="id" size="6">
   <button name="action" value="edit">&nbsp;Edit&nbsp;</button>
