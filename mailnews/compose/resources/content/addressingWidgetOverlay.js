@@ -323,7 +323,12 @@ function awGetRowByInputElement(inputElement)
 function awCopyNode(node, parentNode, beforeNode)
 {
 	dump("awCopyNode\n");
-	
+
+        // XXXwaterson Ideally, we'd just do this, but for bug 26528
+        // (and some of the funky logic about the 'id' attribute in
+        // awCopyNodeAndChildren).
+        //
+	//var newNode = node.cloneNode(true);
 	var newNode = awCopyNodeAndChildren(node);
 	
 	if ( beforeNode )
@@ -393,6 +398,13 @@ function awCopyNodeAndChildren(node)
 				}
 			}
 		}
+
+                if ( node.nodeName == "INPUT" )
+                {
+                        // copy the event handler, as it's not
+                        // sufficient to just set the attribute.
+                        newNode.onkeyup = node.onkeyup;
+                }
 	}
 	
 	return newNode;
