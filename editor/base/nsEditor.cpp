@@ -59,6 +59,8 @@
 #include "nsIWidget.h"
 #include "nsIScrollbar.h"
 
+#include "nsIFrame.h"  // Needed by IME code
+
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
@@ -2358,32 +2360,73 @@ nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTex
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-static nsIWidget* GetDeepestWidget(nsIView * aView)
+static nsresult
+GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget **aResult)
 {
+  if (!aPresShell || !aRoot || !aResult)
+    return NS_ERROR_NULL_POINTER;
 
-  PRInt32 count;
-  aView->GetChildCount(count);
-  if (0 != count) {
-    for (PRInt32 i=0;i<count;i++) {
-      nsIView * child;
-      aView->GetChild(i, child);
-      nsIWidget * widget = GetDeepestWidget(child);
-      if (widget) {
-        return widget;
-      } else {
-        aView->GetWidget(widget);
-        if (widget) {
-          nsCOMPtr<nsIScrollbar> scrollbar(do_QueryInterface(widget));
-          if (scrollbar) {
-            NS_RELEASE(widget);
-          } else {
-            return widget;
-          }
-        }
-      }
-    }
+  *aResult = 0;
+
+  nsresult result;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aRoot);
+
+  if (!content)
+    return NS_ERROR_FAILURE;
+
+  nsIFrame *frame = 0; // Not ref counted
+
+  result = aPresShell->GetPrimaryFrameFor(content, &frame);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPresContext> presContext;
+
+  result = aPresShell->GetPresContext(getter_AddRefs(presContext));
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  // Check first to see if this frame contains a view with a native widget.
+
+  nsIView *view = 0; // Not ref counted
+
+  result = frame->GetView(presContext, &view);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (view)
+  {
+    result = view->GetWidget(*aResult);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (*aResult)
+      return NS_OK;
   }
-  return nsnull;
+
+  // frame doesn't have a view with a widget, so call GetWindow()
+  // which will traverse it's parent hierarchy till it finds a
+  // view with a widget.
+
+  result = frame->GetWindow(presContext, aResult);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!*aResult)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2407,25 +2450,29 @@ nsEditor::ForceCompositionEnd()
 
   nsresult res = NS_OK;
   nsCOMPtr<nsIPresShell> shell;
-  
-  GetPresShell(getter_AddRefs(shell));
-  if (shell) {
-      nsCOMPtr<nsIViewManager> viewmgr;
 
-      shell->GetViewManager(getter_AddRefs(viewmgr));
-      if (viewmgr) {
-        nsIView* view;
-        viewmgr->GetRootView(view);      // views are not refCounted
-        nsIWidget *widget =  GetDeepestWidget(view);
-        if (widget) {
-           nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(widget);
-           if(kb) {
-                res = kb->ResetInputState();
-           }
-           NS_RELEASE(widget);
-        }
-      }
-  }
+  res = GetPresShell(getter_AddRefs(shell));
+
+  if (NS_FAILED(res))
+    return res;
+
+  if (!shell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWidget> widget;
+
+  res = GetEditorContentWindow(shell, mBodyElement, getter_AddRefs(widget));
+
+  if (NS_FAILED(res))
+    return res;
+
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(widget);
+
+  if(kb)
+    res = kb->ResetInputState();
   
   return NS_OK;
 }
