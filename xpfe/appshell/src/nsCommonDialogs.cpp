@@ -96,11 +96,6 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	
-	nsString yes("yes");
-	nsString no("no");
-	block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() );
-		block->SetString( nsICommonDialogs::eButton1Text, no.GetUnicode() );
-	
 	rv = DoDialog( inParent, block, kPromptURL );
 	
 	PRInt32 buttonPressed = 0;
