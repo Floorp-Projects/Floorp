@@ -472,7 +472,7 @@ function ClearTreelist(tree)
 function GetSelectedTreelistAttribute(tree, attr)
 {
   if (tree)
-    return tree.selectedCells[0].getAttribute(attr);
+    return tree.selectedItems[0].firstChild.firstChild.getAttribute(attr);
 
   return "";
 }
