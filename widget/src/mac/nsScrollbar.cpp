@@ -325,11 +325,16 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 	if ((PRInt32)aPos < 0)
 		aPos = 0;
 	PRUint32 aMax = mFullImageSize - mVisibleImageSize;
+	
+	PRInt32 oldValue = mValue;
 	mValue = ((PRInt32)aPos) > aMax ? aMax : ((int)aPos);
 
 	// redraw the scrollbar. should update be done now, or later?
-	Invalidate(PR_FALSE);
-	Update();
+	if (mValue != oldValue)
+	{
+		Invalidate(PR_FALSE);
+		Update();
+	}
 	
 	return NS_OK;
 }
