@@ -180,12 +180,6 @@ function MsgSortBySize()
     MsgSortThreadPane(nsMsgViewSortType.bySize);
 }
 
-function MsgSortByLines() 
-{
-    dump("XXX fix MsgSortByLines()\n");
-    //MsgSortThreadPane(nsMsgViewSortType.byLines);
-}
-
 function MsgSortByUnread()
 {
     MsgSortThreadPane(nsMsgViewSortType.byUnread);

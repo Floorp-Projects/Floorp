@@ -365,28 +365,14 @@ function SetSentFolderColumns(isSentFolder)
 
 function SetNewsFolderColumns(isNewsFolder)
 {
-  dump("XXX fix me, I need to show lines or size depending on if the folder is news or not\n");
-/*
-  var sizeColumn = document.getElementById("SizeColumnHeader");
-  var sizeColumnTemplate = document.getElementById("SizeColumnTemplate");
+  var sizeColumn = document.getElementById("sizeCol");
 
-  var memoryColumnHeader = document.getElementById("MemoryColumn");
-
-  if (isNewsFolder)
-  {
+  if (isNewsFolder) {
      sizeColumn.setAttribute("label",gMessengerBundle.getString("linesColumnHeader"));
-     sizeColumn.setAttribute("onclick", "return top.MsgSortByLines();");
-     sizeColumnTemplate.setAttribute("label", "rdf:http://home.netscape.com/NC-rdf#Lines");
-     memoryColumnHeader.setAttribute("resource","http://home.netscape.com/NC-rdf#Lines");
   }
-  else
-  {
+  else {
      sizeColumn.setAttribute("label", gMessengerBundle.getString("sizeColumnHeader"));
-     sizeColumn.setAttribute("onclick", "return top.MsgSortBySize();");
-     sizeColumnTemplate.setAttribute("label", "rdf:http://home.netscape.com/NC-rdf#Size");
-     memoryColumnHeader.setAttribute("resource","http://home.netscape.com/NC-rdf#Size");
   }
-*/
 }
 
 function UpdateStatusMessageCounts(folder)
