@@ -117,8 +117,13 @@ extern nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
 
 NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **aWebBrowser)
 {
+   static int gCount = 0;
+
    NS_ENSURE_ARG_POINTER(aWebBrowser);
    *aWebBrowser = nsnull;
+
+   if (++gCount > 1)
+     return NS_OK;
 
     mWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
     
