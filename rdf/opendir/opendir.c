@@ -30,6 +30,8 @@ WriteClient (void* obj, char* buffer) {
 }
 
 void AnswerOpenDirQuery(WriteClientProc callBack, void* obj, char* query);
+void  AnswerSearchQuery (WriteClientProc callBack, void* obj, char *query) ;
+
 #define PREFIX "<html><body><a href=\"/\"><center><img src=\"http://directory.mozilla.org/img/opendir.gif\" width=396 height=79 border=\"0\"></center></a>"
 
 #define POSTFIX "</body><html>"
@@ -37,17 +39,25 @@ void AnswerOpenDirQuery(WriteClientProc callBack, void* obj, char* query);
 long
 Run(ServerSession_t obj)
 {
-	char* query = (char*) malloc(300);
-	WAIgetRequestInfo(obj, "QUERY",  &query);
+  char* query = (char*) malloc(300);
+  char* val;
 
-	//WAIsetResponseContentLength(obj, 10000);
-	WAIStartResponse(obj);
-        WriteClient(obj, PREFIX);
-        
-     AnswerOpenDirQuery(WriteClient, obj, query);
-        WriteClient(obj, POSTFIX);
-        /*	WAIWriteClient(obj, (const unsigned char *)query, strlen(query));  */
-	return 0;
+  WAIgetRequestInfo(obj, "QUERY",  &query);
+  if (!query) return 0;
+  val = strchr(query, '=');
+  if (!val) return 0;
+  val++;
+  *(val -1) = '\0';
+  WAIStartResponse(obj);
+  WriteClient(obj, PREFIX);
+  
+  if (strcmp(query, "browse") == 0) {
+    AnswerOpenDirQuery(WriteClient, obj, val);
+  } else if (strcmp(query, "search") == 0) {
+    AnswerSearchQuery(WriteClient, obj, val);
+  }
+  WriteClient(obj, POSTFIX);
+  return 0;
 }
 
 
