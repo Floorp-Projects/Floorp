@@ -1017,6 +1017,11 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtrResult = (void*) ((nsISupports*) this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 
