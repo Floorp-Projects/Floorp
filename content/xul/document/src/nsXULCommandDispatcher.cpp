@@ -370,9 +370,9 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
     return NS_OK;
 
   nsCOMPtr<nsIDOMEventTarget> t;
-  aEvent->GetTarget(getter_AddRefs(t));
+  aEvent->GetOriginalTarget(getter_AddRefs(t));
   
-#ifdef DEBUG_hyatt
+#if 0
   printf("%d : Focus occurred on: ", this);
   nsCOMPtr<nsIDOMElement> domDebugElement = do_QueryInterface(t);
   if (domDebugElement) {
@@ -439,9 +439,9 @@ nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
     return NS_OK;
 
   nsCOMPtr<nsIDOMEventTarget> t;
-  aEvent->GetTarget(getter_AddRefs(t));
+  aEvent->GetOriginalTarget(getter_AddRefs(t));
 
-#ifdef DEBUG_hyatt
+#if 0
   printf("%d : Blur occurred on: ", this);
   nsCOMPtr<nsIDOMElement> domDebugElement = do_QueryInterface(t);
   if (domDebugElement) {
