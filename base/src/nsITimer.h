@@ -24,6 +24,11 @@
 class nsITimer;
 class nsITimerCallback;
 
+// Implementations of nsITimer should be written such that there are no limitations
+// on what can be called by the TimerCallbackFunc. On platforms like the Macintosh this
+// means that callback functions must be called from the main event loop NOT from
+// an interrupt.
+
 /// Signature of timer callback function
 typedef void
 (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
