@@ -556,10 +556,16 @@ void CWizardUI::CreateControls()
 
 		CRect tmpRect = CRect(s_x, s_y, (s_x + s_width), (s_y + s_height));
 
-		if (widgetType == "Text" || widgetType == "BoldText" || widgetType == "DynamicText") {
+		if (widgetType == "Text" || widgetType == "BoldText") {
 			curWidget->control = new CStatic;
 			rv = ((CStatic*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
 		}
+		else if (widgetType == "DynamicText") {
+			curWidget->control = new CStatic;
+			curWidget->display = theInterpreter->GetTrimFile(curWidget->value);
+			rv = ((CStatic*)curWidget->control)->Create(curWidget->display, SS_LEFT, tmpRect, this, ID);
+		}
+
 		else if (widgetType == "Navigation Text") {
 			curWidget->control = new CNavText;
 			rv = ((CNavText*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
@@ -937,15 +943,17 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 			rv = tmpStr;
 		}
 	}
-	else if (widgetType == "DynamicText") 
+/*	else if (widgetType == "DynamicText") 
 	{
 		char myLine[MAX_SIZE];
 		curWidget->control->GetWindowText(myLine, 250);
-
+		
 		CString line = (CString)myLine;
-		rv = line;
+		if((line.Compare(curWidget->display)) == 0)
+		rv = curWidget->value;
+			
 	}
-
+*/
 	else
 		rv = curWidget->value; // !!! Fix this so we're not copying strings all the time
 								// Should be able to just pass in an "assign" boolean

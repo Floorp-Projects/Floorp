@@ -50,6 +50,8 @@ public:
 	BOOL interpret(CString cmds, WIDGET *curWidget);
 	BOOL CInterpret::GetRegistryKey( HKEY key, char *subkey, char *retdata );
 	BOOL CInterpret::OpenBrowser(const char *url);
+	CString CInterpret::GetTrimFile(CString filePath);
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CWizardMachineApp)

@@ -19,7 +19,7 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
+#define FILEPATHLENGTH 47
 extern CWizardMachineApp theApp;
 extern NODE *CurrentNode;
 extern HBITMAP hBitmap;
@@ -136,13 +136,18 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 
 	//Checking to see if the open file dialog did get a value or was merely cancelled.
 	//If it was cancelled then the value of the edit box is not changed.
-	if (fileDlg.GetPathName() != "")
+	if (retVal == IDOK)
 	{	
 		fullFileName = fileDlg.GetPathName();
 //		if ((fullFileName.Right(fileLength - dotPlace -1) == fileExt) && (tmpWidget && (CEdit*)tmpWidget->control))
 		if (tmpWidget && (CEdit*)tmpWidget->control)
-			((CEdit*)tmpWidget->control)->SetWindowText(fullFileName);
+		{
+			tmpWidget->value = fullFileName;
+			tmpWidget->display = GetTrimFile(fullFileName);
+		}
 	}
+	((CEdit*)tmpWidget->control)->SetWindowText(tmpWidget->display);
+		
 	return TRUE;
 
 }
@@ -480,6 +485,19 @@ BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms, WIDGET *curWidget)
 		return FALSE;
 
 	return TRUE;
+}
+CString CInterpret::GetTrimFile(CString filePath)
+{
+	int fileLength=0;
+	int findSlash=0;
+	fileLength = filePath.GetLength();
+	if (fileLength > FILEPATHLENGTH)
+	{
+		findSlash = filePath.Find('\\');
+		filePath.Delete(findSlash+1,(fileLength - FILEPATHLENGTH));
+		filePath.Insert(findSlash+1,"...");
+	}
+	return filePath;
 }
 
 BOOL CInterpret::interpret(char *cmds, WIDGET *curWidget)
