@@ -44,30 +44,12 @@ nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
 }
 
 nsPlaceholderFrame::nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aParent)
+  : nsFrame(aContent, aParent)
 {
 }
 
 nsPlaceholderFrame::~nsPlaceholderFrame()
 {
-}
-
-NS_IMETHODIMP
-nsPlaceholderFrame::DeleteFrame()
-{
-  // XXX This is sick, but because the frame that we wrap is *also*
-  // added to the body as a direct child, we must not delete the child
-  // twice.
-  mFirstChild = nsnull;
-
-  return nsContainerFrame::DeleteFrame();
-}
-
-NS_IMETHODIMP
-nsPlaceholderFrame::IsSplittable(nsSplittableType& aIsSplittable) const
-{
-  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -91,16 +73,21 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
   NS_ASSERTION(nsnull != container, "no floater container");
 
   // Have we created the anchored item yet?
-  if (nsnull == mFirstChild) {
+  if (nsnull == mAnchoredItem) {
     // If the content object is a container then wrap it in a body pseudo-frame
 
     // XXX begin hack
+    // XXX More hack. We don't want to blindly wrap a body pseudo-frame around 
+    // a table content object, because the body pseudo-frame will map the table's
+    // content children rather than create a table frame and let it map the
+    // children...
     PRBool select = PR_FALSE;
     nsIAtom* atom = mContent->GetTag();
     nsAutoString tmp;
     if (nsnull != atom) {
       atom->ToString(tmp);
-      if (tmp.EqualsIgnoreCase("select")) {
+      if (tmp.EqualsIgnoreCase("select") ||
+          tmp.EqualsIgnoreCase("table")) {
         select = PR_TRUE;
       }
       NS_RELEASE(atom);
@@ -108,51 +95,24 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     // XXX end hack
 
     if (mContent->CanContainChildren() && !select) {
-      nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
+      nsBodyFrame::NewFrame(&mAnchoredItem, mContent, this);
 
       // Use our style context for the pseudo-frame
-      mFirstChild->SetStyleContext(aPresContext, mStyleContext);
+      mAnchoredItem->SetStyleContext(aPresContext, mStyleContext);
     } else {
       // Create the anchored item
       nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
       nsresult rv = delegate->CreateFrame(aPresContext, mContent,
                                           mGeometricParent, mStyleContext,
-                                          mFirstChild);
+                                          mAnchoredItem);
       NS_RELEASE(delegate);
       if (NS_OK != rv) {
         return rv;
       }
     }
-    mChildCount = 1;
 
-    // Compute the available space for the floater. Use the default
-    // 'auto' width and height values
-    nsSize  kidAvailSize(0, NS_UNCONSTRAINEDSIZE);
-    nsSize  styleSize;
-    PRIntn  styleSizeFlags = nsCSSLayout::GetStyleSize(aPresContext, aReflowState,
-                                                       styleSize);
-
-    // XXX The width and height are for the content area only. Add in space for
-    // border and padding
-    if (styleSizeFlags & NS_SIZE_HAS_WIDTH) {
-      kidAvailSize.width = styleSize.width;
-    }
-    if (styleSizeFlags & NS_SIZE_HAS_HEIGHT) {
-      kidAvailSize.height = styleSize.height;
-    }
-
-    // Resize reflow the anchored item into the available space
-    // XXX Check for complete?
-    nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(mFirstChild, aReflowState, kidAvailSize,
-                                eReflowReason_Initial);
-    mFirstChild->WillReflow(*aPresContext);
-    mFirstChild->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-    mFirstChild->SizeTo(desiredSize.width, desiredSize.height);
-
-    // Now notify our containing block that there's a new floater
-    container->AddFloater(aPresContext, mFirstChild, this);
-    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    // Notify our containing block that there's a new floater
+    container->AddFloater(aPresContext, mAnchoredItem, this);
 
   } else {
     // XXX This causes anchored-items sizes to get fixed up; this is
@@ -160,13 +120,13 @@ nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     // of the incremental reflow methods and propagating things down
     // properly to the contained frame.
     nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(mFirstChild, aReflowState, aReflowState.maxSize,
+    nsReflowState   reflowState(mAnchoredItem, aReflowState, aReflowState.maxSize,
                                 eReflowReason_Resize);
-    mFirstChild->WillReflow(*aPresContext);
-    mFirstChild->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-    mFirstChild->SizeTo(desiredSize.width, desiredSize.height);
-    container->PlaceFloater(aPresContext, mFirstChild, this);
-    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    mAnchoredItem->WillReflow(*aPresContext);
+    mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+    mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
+    container->PlaceFloater(aPresContext, mAnchoredItem, this);
+    mAnchoredItem->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
