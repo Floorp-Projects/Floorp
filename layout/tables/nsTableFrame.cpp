@@ -5344,6 +5344,17 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
   }
 }
 
+PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
+{
+  PRBool result = PR_FALSE;
+  nsCellMap* cellMap = GetCellMap();
+  NS_PRECONDITION (cellMap, "bad call, cellMap not yet allocated.");
+  if (cellMap) {
+		result = cellMap->RowHasSpanningCells(aRowIndex);
+  }
+  return result;
+}
+
 PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex)
 {
   PRBool result = PR_FALSE;
