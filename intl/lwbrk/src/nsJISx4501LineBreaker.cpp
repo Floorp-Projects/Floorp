@@ -374,8 +374,14 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Next(
   NS_PRECONDITION( nsnull != aText, "null ptr");
   if(nsnull == aText)
      return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION( nsnull != oNext, "null ptr");
+  if(nsnull == oNext)
+     return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION( nsnull != oNeedMoreText, "null ptr");
+  if(nsnull == oNeedMoreText)
+     return NS_ERROR_NULL_POINTER;
 
-  NS_PRECONDITION( aPos < aLen, "aPos >= aLen");
+  NS_PRECONDITION( aPos <= aLen, "aPos > aLen");
   if( aPos > aLen )
      return NS_ERROR_ILLEGAL_VALUE;
 
@@ -433,6 +439,12 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Prev(
 {
   NS_PRECONDITION( nsnull != aText, "null ptr");
   if(nsnull == aText)
+     return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION( nsnull != oPrev, "null ptr");
+  if(nsnull == oPrev)
+     return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION( nsnull != oNeedMoreText, "null ptr");
+  if(nsnull == oNeedMoreText)
      return NS_ERROR_NULL_POINTER;
 
   if(aPos < 2)
