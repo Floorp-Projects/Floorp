@@ -1395,29 +1395,29 @@ static PRInt32 kInterFrameSpacingTable[4][4] =
   /*Inner*/  {0x01, 0x00, 0x01, 0x01}
 };
 
-#define GET_INTERSPACE(_scriptlevel_, _frametype1, _frametype2, _space) \
+#define GET_INTERSPACE(scriptlevel_, frametype1_, frametype2_, space_)  \
    /* no space if there is a frame that we know nothing about */        \
-   if (_frametype1 == eMathMLFrameType_UNKNOWN ||                       \
-       _frametype2 == eMathMLFrameType_UNKNOWN)                         \
-    _space = 0;                                                         \
+   if (frametype1_ == eMathMLFrameType_UNKNOWN ||                       \
+       frametype2_ == eMathMLFrameType_UNKNOWN)                         \
+    space_ = 0;                                                         \
   else {                                                                \
-    _space = kInterFrameSpacingTable[_frametype1][_frametype2];         \
-    _space = (_scriptlevel_ > 0 && (_space & 0xF0))                     \
+    space_ = kInterFrameSpacingTable[frametype1_][frametype2_];         \
+    space_ = (scriptlevel_ > 0 && (space_ & 0xF0))                      \
       ? 0 /* spacing is disabled */                                     \
-      : _space & 0x0F;                                                  \
+      : space_ & 0x0F;                                                  \
   }                                                                     \
 
-#define MAP_FRAMETYPE(_atomtype, _enumtype)                             \
-  if (_atomtype == nsMathMLAtoms::ordinaryMathMLFrame)                  \
-    _enumtype = eMathMLFrameType_Ordinary;                              \
-  else if (_atomtype == nsMathMLAtoms::schemataMathMLFrame)             \
-    _enumtype = eMathMLFrameType_Inner;                                 \
-  else if (_atomtype == nsMathMLAtoms::operatorVisibleMathMLFrame)      \
-    _enumtype = eMathMLFrameType_OperatorVisible;                       \
-  else if (_atomtype == nsMathMLAtoms::operatorInvisibleMathMLFrame)    \
-    _enumtype = eMathMLFrameType_OperatorInvisible;                     \
+#define MAP_FRAMETYPE(atomtype_, enumtype_)                             \
+  if (atomtype_ == nsMathMLAtoms::ordinaryMathMLFrame)                  \
+    enumtype_ = eMathMLFrameType_Ordinary;                              \
+  else if (atomtype_ == nsMathMLAtoms::schemataMathMLFrame)             \
+    enumtype_ = eMathMLFrameType_Inner;                                 \
+  else if (atomtype_ == nsMathMLAtoms::operatorVisibleMathMLFrame)      \
+    enumtype_ = eMathMLFrameType_OperatorVisible;                       \
+  else if (atomtype_ == nsMathMLAtoms::operatorInvisibleMathMLFrame)    \
+    enumtype_ = eMathMLFrameType_OperatorInvisible;                     \
   else                                                                  \
-    _enumtype = eMathMLFrameType_UNKNOWN;
+    enumtype_ = eMathMLFrameType_UNKNOWN;
 
 // This function computes the inter-space between two frames. However, 
 // since invisible operators need special treatment, the inter-space may
