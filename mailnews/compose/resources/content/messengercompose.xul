@@ -395,7 +395,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar class="toolbar-primary" id="composeToolbar" persist="collapsed">
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed">
       <box id="toolbar_button_box">
        <button class="button-toolbar-2 top" 
                id="button-send" value="&sendButton.label;"
@@ -424,11 +424,11 @@
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
                observes="cmd_saveDefault"/>
        <spring flex="1"/>
+      </box>
        <button id="navigator-throbber" 
                oncommand="goClickThrobber('compose.throbber.url')">
          <observes element="broadcaster_throbber" attribute="busy"/>
        </button>
-      </box>
     </toolbar>
   
     <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbautostretch="always" flex="1">
