@@ -426,7 +426,7 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-PRInt32 CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
+PRInt32 CTextToken::Consume(PRUnichar, CScanner& aScanner) {
   static nsAutoString terminals("&<\r\n");
   PRInt32 result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
   return result;
@@ -453,7 +453,7 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
+PRInt32 CCommentToken::Consume(PRUnichar, CScanner& aScanner) {
 
   PRUnichar ch,ch2;
   PRInt32   result=kNoError;
@@ -687,7 +687,7 @@ PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-PRInt32 ConsumeAttributeValueText(PRUnichar aChar,nsString& aString,CScanner& aScanner){
+PRInt32 ConsumeAttributeValueText(PRUnichar,nsString& aString,CScanner& aScanner){
 
   PRInt32 result=kNotFound;
   static nsAutoString terminals(" \t\b\r\n>");
@@ -1198,7 +1198,7 @@ PRInt32 CSkippedContentToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-PRInt32 CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
+PRInt32 CSkippedContentToken::Consume(PRUnichar,CScanner& aScanner) {
   PRBool      done=PR_FALSE;
   PRInt32     result=kNoError;
   nsString    temp;
