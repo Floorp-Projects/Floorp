@@ -44,12 +44,6 @@ nsPromiseFlatString::nsPromiseFlatString( const nsAString& aString )
       }
   }
 
-const PRUnichar*
-nsPromiseFlatString::get() const
-  {
-    return mPromisedString->get();
-  }
-
 const nsBufferHandle<PRUnichar>*
 nsPromiseFlatString::GetFlatBufferHandle() const
   {
@@ -68,6 +62,29 @@ nsPromiseFlatString::GetSharedBufferHandle() const
     return mPromisedString->GetSharedBufferHandle();
   }
 
+PRBool
+nsPromiseFlatString::Promises( const nsAString& aString ) const
+  {
+    return mPromisedString->Promises(aString);
+  }
+
+const PRUnichar*
+nsPromiseFlatString::get() const
+  {
+    return mPromisedString->get();
+  }
+
+PRUint32
+nsPromiseFlatString::Length() const
+  {
+    return mPromisedString->Length();
+  }
+
+const PRUnichar*
+nsPromiseFlatString::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+  {
+    return mPromisedString->GetReadableFragment(aFragment, aRequest, aOffset);
+  }
 
 
 
@@ -91,12 +108,6 @@ nsPromiseFlatCString::nsPromiseFlatCString( const nsACString& aString )
       }
   }
 
-const char*
-nsPromiseFlatCString::get() const
-  {
-    return mPromisedString->get();
-  }
-
 const nsBufferHandle<char>*
 nsPromiseFlatCString::GetFlatBufferHandle() const
   {
@@ -113,4 +124,28 @@ const nsSharedBufferHandle<char>*
 nsPromiseFlatCString::GetSharedBufferHandle() const
   {
     return mPromisedString->GetSharedBufferHandle();
+  }
+
+PRBool
+nsPromiseFlatCString::Promises( const nsACString& aString ) const
+  {
+    return mPromisedString->Promises(aString);
+  }
+
+const char*
+nsPromiseFlatCString::get() const
+  {
+    return mPromisedString->get();
+  }
+
+PRUint32
+nsPromiseFlatCString::Length() const
+  {
+    return mPromisedString->Length();
+  }
+
+const char*
+nsPromiseFlatCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+  {
+    return mPromisedString->GetReadableFragment(aFragment, aRequest, aOffset);
   }

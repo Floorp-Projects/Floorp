@@ -87,15 +87,25 @@ class NS_COM nsPromiseFlatString
 
     public:
       nsPromiseFlatString( const nsPromiseFlatString& );
-      virtual const PRUnichar* get() const; // this will be gone after we fix obsolete/nsString
 
     protected:
       nsPromiseFlatString() : mPromisedString(&mFlattenedString) { }
       explicit nsPromiseFlatString( const nsAString& aString );
 
-      virtual const nsBufferHandle<char_type>*        GetFlatBufferHandle() const;
-      virtual const nsBufferHandle<char_type>*        GetBufferHandle() const;
-      virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
+        // things we want to forward to the string we are promising
+      virtual const nsBufferHandle<PRUnichar>*        GetFlatBufferHandle() const;
+      virtual const nsBufferHandle<PRUnichar>*        GetBufferHandle() const;
+      virtual const nsSharedBufferHandle<PRUnichar>*  GetSharedBufferHandle() const;
+      virtual PRBool Promises( const nsAString& ) const;
+
+
+        // things we are forwarding now, but won't when we finally fix obsolete/nsString et al
+    public:
+      virtual const PRUnichar* get() const;
+      virtual PRUint32 Length() const;
+    protected:
+      virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
+
 
     private:
         // NOT TO BE IMPLEMENTED
@@ -113,15 +123,25 @@ class NS_COM nsPromiseFlatCString
 
     public:
       nsPromiseFlatCString( const nsPromiseFlatCString& );
-      virtual const char* get() const; // this will be gone after we fix obsolete/nsString
 
     protected:
       nsPromiseFlatCString() : mPromisedString(&mFlattenedString) { }
       explicit nsPromiseFlatCString( const nsACString& aString );
 
-      virtual const nsBufferHandle<char_type>*        GetFlatBufferHandle() const;
-      virtual const nsBufferHandle<char_type>*        GetBufferHandle() const;
-      virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
+        // things we want to forward to the string we are promising
+      virtual const nsBufferHandle<char>*       GetFlatBufferHandle() const;
+      virtual const nsBufferHandle<char>*       GetBufferHandle() const;
+      virtual const nsSharedBufferHandle<char>* GetSharedBufferHandle() const;
+      virtual PRBool Promises( const nsACString& ) const;
+
+
+        // things we are forwarding now, but won't when we finally fix obsolete/nsString et al
+    public:
+      virtual const char* get() const;
+      virtual PRUint32 Length() const;
+    protected:
+      virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
+
 
     private:
         // NOT TO BE IMPLEMENTED

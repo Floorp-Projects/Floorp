@@ -41,7 +41,8 @@ class NS_COM nsAFlatString
 
       virtual PRUint32 Length() const           { return PRUint32(GetBufferHandle()->DataLength()); }
 
-    protected:
+//  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatString|
+    public:
       virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
       virtual       PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
   };
@@ -57,7 +58,8 @@ class NS_COM nsAFlatCString
 
       virtual PRUint32 Length() const           { return PRUint32(GetBufferHandle()->DataLength()); }
 
-    protected:
+//  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatCString|
+    public:
       virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
       virtual       char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 );
   };
