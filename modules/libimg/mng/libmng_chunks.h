@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_chunks.h           copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 1.0.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : Chunk structures (definition)                              * */
 /* *                                                                        * */

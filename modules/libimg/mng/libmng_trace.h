@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_trace.h            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.4                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (definition)                               * */
 /* *                                                                        * */
@@ -95,6 +95,13 @@
 /* *                                                                        * */
 /* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
 /* *             - added "new" MAGN methods 3, 4 & 5                        * */
+/* *                                                                        * */
+/* *             1.0.1 - 02/08/2001 - G.Juyn                                * */
+/* *             - added MEND processing callback                           * */
+/* *             1.0.1 - 04/21/2001 - G.Juyn (code by G.Kelly)              * */
+/* *             - added BGRA8 canvas with premultiplied alpha              * */
+/* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
+/* *             - added "default" sRGB generation (Thanks Marti!)          * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -188,6 +195,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_SETCB_PROCESSSEEK      123
 #define MNG_FN_SETCB_PROCESSNEED      124
 #define MNG_FN_SETCB_PROCESSUNKNOWN   125
+#define MNG_FN_SETCB_PROCESSMEND      126
 
 #define MNG_FN_GETCB_MEMALLOC         201
 #define MNG_FN_GETCB_MEMFREE          202
@@ -214,6 +222,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_GETCB_PROCESSSEEK      223
 #define MNG_FN_GETCB_PROCESSNEED      224
 #define MNG_FN_GETCB_PROCESSUNKNOWN   225
+#define MNG_FN_GETCB_PROCESSMEND      226
 
 #define MNG_FN_SET_USERDATA           301
 #define MNG_FN_SET_CANVASSTYLE        302
@@ -245,6 +254,10 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_SET_SUSPENSIONMODE     328
 #define MNG_FN_SET_SECTIONBREAKS      329
 #define MNG_FN_SET_USEBKGD            330
+#define MNG_FN_SET_OUTPUTPROFILE2     331
+#define MNG_FN_SET_SRGBPROFILE2       332
+#define MNG_FN_SET_OUTPUTSRGB         333
+#define MNG_FN_SET_SRGBIMPLICIT       334
 
 #define MNG_FN_GET_USERDATA           401
 #define MNG_FN_GET_SIGTYPE            402
@@ -501,6 +514,7 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_DISPLAY_DX15          1122
 #define MNG_FN_DISPLAY_DX16          1123
 #define MNG_FN_DISPLAY_RGB8_A8       1124
+#define MNG_FN_DISPLAY_BGRA8PM       1125
 
 /* ************************************************************************** */
 

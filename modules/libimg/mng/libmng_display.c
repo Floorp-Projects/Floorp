@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_display.c          copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.5                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : Display management (implementation)                        * */
 /* *                                                                        * */
@@ -133,6 +133,14 @@
 /* *             - fixed compiler-warnings Mozilla (thanks Tim)             * */
 /* *             0.9.5 -  1/23/2001 - G.Juyn                                * */
 /* *             - fixed timing-problem with switching framing_modes        * */
+/* *                                                                        * */
+/* *             1.0.1 - 02/08/2001 - G.Juyn                                * */
+/* *             - added MEND processing callback                           * */
+/* *             1.0.1 - 02/13/2001 - G.Juyn                                * */
+/* *             - fixed first FRAM_MODE=4 timing problem                   * */
+/* *             1.0.1 - 04/21/2001 - G.Juyn                                * */
+/* *             - fixed memory-leak for JNGs with alpha (Thanks Gregg!)    * */
+/* *             - added BGRA8 canvas with premultiplied alpha              * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -332,30 +340,31 @@ void set_display_routine (mng_datap pData)
   {
     switch (pData->iCanvasstyle)         /* determine display routine */
     {
-      case MNG_CANVAS_RGB8    : { pData->fDisplayrow = (mng_fptr)display_rgb8;    break; }
-      case MNG_CANVAS_RGBA8   : { pData->fDisplayrow = (mng_fptr)display_rgba8;   break; }
-      case MNG_CANVAS_ARGB8   : { pData->fDisplayrow = (mng_fptr)display_argb8;   break; }
-      case MNG_CANVAS_RGB8_A8 : { pData->fDisplayrow = (mng_fptr)display_rgb8_a8; break; }
-      case MNG_CANVAS_BGR8    : { pData->fDisplayrow = (mng_fptr)display_bgr8;    break; }
-      case MNG_CANVAS_BGRA8   : { pData->fDisplayrow = (mng_fptr)display_bgra8;   break; }
-      case MNG_CANVAS_ABGR8   : { pData->fDisplayrow = (mng_fptr)display_abgr8;   break; }
-/*      case MNG_CANVAS_RGB16   : { pData->fDisplayrow = (mng_fptr)display_rgb16;   break; } */
-/*      case MNG_CANVAS_RGBA16  : { pData->fDisplayrow = (mng_fptr)display_rgba16;  break; } */
-/*      case MNG_CANVAS_ARGB16  : { pData->fDisplayrow = (mng_fptr)display_argb16;  break; } */
-/*      case MNG_CANVAS_BGR16   : { pData->fDisplayrow = (mng_fptr)display_bgr16;   break; } */
-/*      case MNG_CANVAS_BGRA16  : { pData->fDisplayrow = (mng_fptr)display_bgra16;  break; } */
-/*      case MNG_CANVAS_ABGR16  : { pData->fDisplayrow = (mng_fptr)display_abgr16;  break; } */
-/*      case MNG_CANVAS_INDEX8  : { pData->fDisplayrow = (mng_fptr)display_index8;  break; } */
-/*      case MNG_CANVAS_INDEXA8 : { pData->fDisplayrow = (mng_fptr)display_indexa8; break; } */
-/*      case MNG_CANVAS_AINDEX8 : { pData->fDisplayrow = (mng_fptr)display_aindex8; break; } */
-/*      case MNG_CANVAS_GRAY8   : { pData->fDisplayrow = (mng_fptr)display_gray8;   break; } */
-/*      case MNG_CANVAS_GRAY16  : { pData->fDisplayrow = (mng_fptr)display_gray16;  break; } */
-/*      case MNG_CANVAS_GRAYA8  : { pData->fDisplayrow = (mng_fptr)display_graya8;  break; } */
-/*      case MNG_CANVAS_GRAYA16 : { pData->fDisplayrow = (mng_fptr)display_graya16; break; } */
-/*      case MNG_CANVAS_AGRAY8  : { pData->fDisplayrow = (mng_fptr)display_agray8;  break; } */
-/*      case MNG_CANVAS_AGRAY16 : { pData->fDisplayrow = (mng_fptr)display_agray16; break; } */
-/*      case MNG_CANVAS_DX15    : { pData->fDisplayrow = (mng_fptr)display_dx15;    break; } */
-/*      case MNG_CANVAS_DX16    : { pData->fDisplayrow = (mng_fptr)display_dx16;    break; } */
+      case MNG_CANVAS_RGB8    : { pData->fDisplayrow = (mng_fptr)display_rgb8;     break; }
+      case MNG_CANVAS_RGBA8   : { pData->fDisplayrow = (mng_fptr)display_rgba8;    break; }
+      case MNG_CANVAS_ARGB8   : { pData->fDisplayrow = (mng_fptr)display_argb8;    break; }
+      case MNG_CANVAS_RGB8_A8 : { pData->fDisplayrow = (mng_fptr)display_rgb8_a8;  break; }
+      case MNG_CANVAS_BGR8    : { pData->fDisplayrow = (mng_fptr)display_bgr8;     break; }
+      case MNG_CANVAS_BGRA8   : { pData->fDisplayrow = (mng_fptr)display_bgra8;    break; }
+      case MNG_CANVAS_BGRA8PM : { pData->fDisplayrow = (mng_fptr)display_bgra8_pm; break; }
+      case MNG_CANVAS_ABGR8   : { pData->fDisplayrow = (mng_fptr)display_abgr8;    break; }
+/*      case MNG_CANVAS_RGB16   : { pData->fDisplayrow = (mng_fptr)display_rgb16;    break; } */
+/*      case MNG_CANVAS_RGBA16  : { pData->fDisplayrow = (mng_fptr)display_rgba16;   break; } */
+/*      case MNG_CANVAS_ARGB16  : { pData->fDisplayrow = (mng_fptr)display_argb16;   break; } */
+/*      case MNG_CANVAS_BGR16   : { pData->fDisplayrow = (mng_fptr)display_bgr16;    break; } */
+/*      case MNG_CANVAS_BGRA16  : { pData->fDisplayrow = (mng_fptr)display_bgra16;   break; } */
+/*      case MNG_CANVAS_ABGR16  : { pData->fDisplayrow = (mng_fptr)display_abgr16;   break; } */
+/*      case MNG_CANVAS_INDEX8  : { pData->fDisplayrow = (mng_fptr)display_index8;   break; } */
+/*      case MNG_CANVAS_INDEXA8 : { pData->fDisplayrow = (mng_fptr)display_indexa8;  break; } */
+/*      case MNG_CANVAS_AINDEX8 : { pData->fDisplayrow = (mng_fptr)display_aindex8;  break; } */
+/*      case MNG_CANVAS_GRAY8   : { pData->fDisplayrow = (mng_fptr)display_gray8;    break; } */
+/*      case MNG_CANVAS_GRAY16  : { pData->fDisplayrow = (mng_fptr)display_gray16;   break; } */
+/*      case MNG_CANVAS_GRAYA8  : { pData->fDisplayrow = (mng_fptr)display_graya8;   break; } */
+/*      case MNG_CANVAS_GRAYA16 : { pData->fDisplayrow = (mng_fptr)display_graya16;  break; } */
+/*      case MNG_CANVAS_AGRAY8  : { pData->fDisplayrow = (mng_fptr)display_agray8;   break; } */
+/*      case MNG_CANVAS_AGRAY16 : { pData->fDisplayrow = (mng_fptr)display_agray16;  break; } */
+/*      case MNG_CANVAS_DX15    : { pData->fDisplayrow = (mng_fptr)display_dx15;     break; } */
+/*      case MNG_CANVAS_DX16    : { pData->fDisplayrow = (mng_fptr)display_dx16;     break; } */
     }
   }
 
@@ -624,8 +633,8 @@ mng_retcode next_frame (mng_datap  pData,
         pData->iFramedelay = pData->iNextdelay;
     }
     else
-    {
-      if (iFramemode == 4)             /* delay before inserting background layer? */
+    {                                  /* delay before inserting background layer? */
+      if ((pData->bFramedone) && (iFramemode == 4))
         iRetcode = interframe_delay (pData);
     }
 
@@ -645,7 +654,8 @@ mng_retcode next_frame (mng_datap  pData,
       pData->iNextdelay = iDelay;      /* for *after* next subframe */
 
       if ((iOldmode == 2) || (iOldmode == 4))
-        pData->iFramedelay = iDelay;
+/*        pData->iFramedelay = iDelay; */
+        pData->iFramedelay = pData->iFRAMdelay;
 
       if (iChangedelay == 2)           /* also overall ? */
         pData->iFRAMdelay = iDelay;
@@ -730,8 +740,10 @@ mng_retcode next_frame (mng_datap  pData,
       return iRetcode;
 
     if ((pData->bDisplaying) && (pData->bRunning))
+    {
       pData->iFrameseq++;              /* count the frame ! */
-
+      pData->bFramedone = MNG_TRUE;    /* and indicate we've done one */
+    }
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -1056,6 +1068,13 @@ mng_retcode display_image (mng_datap  pData,
 
         if (iRetcode)                  /* on error bail out */
           return iRetcode;
+
+#if defined(MNG_INCLUDE_LCMS)          /* cleanup cms stuff */
+        iRetcode = mng_clear_cms (pData);
+
+        if (iRetcode)                  /* on error bail out */
+          return iRetcode;
+#endif
       }
     }
   }
@@ -1552,6 +1571,8 @@ mng_retcode restore_state (mng_datap pData)
 
   if (iRetcode)                        /* on error bail out */
     return iRetcode;
+                                       /* fresh cycle; fake no frames done yet */
+  pData->bFramedone             = MNG_FALSE;
 
   if (pData->pSavedata)                /* do we have a saved state ? */
   {
@@ -2220,13 +2241,15 @@ mng_retcode process_display_idat (mng_datap  pData,
       pData->iLayerseq++;              /* and it counts as a layer then ! */
   }
 
-  if (!pData->bInflating)              /* if we're not inflating already */
-  {                                    /* initialize row-processing */
+  if (pData->fInitrowproc)             /* need to initialize row processing? */
+  {
     iRetcode = ((mng_initrowproc)pData->fInitrowproc) (pData);
-
-    if (!iRetcode)                     /* initialize inflate */
-      iRetcode = mngzlib_inflateinit (pData);
+    pData->fInitrowproc = MNG_NULL;    /* only call this once !!! */
   }
+
+  if ((!iRetcode) && (!pData->bInflating))
+                                       /* initialize inflate */
+    iRetcode = mngzlib_inflateinit (pData);
 
   if (!iRetcode)                       /* all ok? then inflate, my man */
     iRetcode = mngzlib_inflaterows (pData, iRawlen, pRawdata);
@@ -2411,6 +2434,8 @@ mng_retcode process_display_mend (mng_datap pData)
                                        /* get the right animation object ! */
     pTERM = (mng_ani_termp)pData->pTermaniobj;
 
+    pData->iIterations++;              /* increase iteration count */
+
     switch (pTERM->iTermaction)        /* determine what to do! */
     {
       case 0 : {                       /* show last frame indefinitly */
@@ -2440,6 +2465,15 @@ mng_retcode process_display_mend (mng_datap pData)
 
                    if (iRetcode)       /* on error bail out */
                      return iRetcode;
+                                       /* notify the app ? */
+                   if (pData->fProcessmend)
+                   {
+                     mng_bool bOke = pData->fProcessmend ((mng_handle)pData,
+                                                          pData->iIterations,
+                                                          pTERM->iItermax);
+                     if (!bOke)        /* stop here and now ? */ 
+                       break;
+                   }
                                        /* restart from TERM chunk */
                    pData->pCurraniobj = pTERM;
 
@@ -3718,7 +3752,9 @@ mng_retcode process_display_jhdr (mng_datap pData)
   }
 
   if (!pData->bTimerset)               /* no timer break ? */
-  {
+  {                                    /* default row initialization ! */
+    pData->fInitrowproc = (mng_fptr)init_rowproc;
+
     if ((!pData->bHasDHDR) || (pData->iDeltatype == MNG_DELTATYPE_REPLACE))
     {                                  /* 8-bit JPEG ? */
       if (pData->iJHDRimgbitdepth == 8)
@@ -3862,10 +3898,11 @@ mng_retcode process_display_jdaa (mng_datap  pData,
 
   if (!pData->bJPEGdecompress2)        /* if we're not decompressing already */
   {
-    if (pData->fInitrowproc)           /* initialize row-processing */
+    if (pData->fInitrowproc)           /* initialize row-processing? */
+    {
       iRetcode = ((mng_initrowproc)pData->fInitrowproc) (pData);
-    else
-      iRetcode = init_rowproc (pData); /* this still if no alpha present ! */
+      pData->fInitrowproc = MNG_NULL;  /* only call this once !!! */
+    }
 
     if (!iRetcode)                     /* initialize decompress */
       iRetcode = mngjpeg_decompressinit2 (pData);
@@ -3874,11 +3911,14 @@ mng_retcode process_display_jdaa (mng_datap  pData,
   if (!iRetcode)                       /* all ok? then decompress, my man */
     iRetcode = mngjpeg_decompressdata2 (pData, iRawlen, pRawdata);
 
+  if (iRetcode)
+    return iRetcode;
+
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_JDAA, MNG_LC_END)
 #endif
 
-  return iRetcode;
+  return MNG_NOERROR;
 }
 #endif /* MNG_INCLUDE_JNG */
 
@@ -3909,10 +3949,11 @@ mng_retcode process_display_jdat (mng_datap  pData,
 
   if (!pData->bJPEGdecompress)         /* if we're not decompressing already */
   {
-    if (pData->fInitrowproc)           /* initialize row-processing */
+    if (pData->fInitrowproc)           /* initialize row-processing? */
+    {
       iRetcode = ((mng_initrowproc)pData->fInitrowproc) (pData);
-    else
-      iRetcode = init_rowproc (pData); /* this still if no alpha present ! */   
+      pData->fInitrowproc = MNG_NULL;  /* only call this once !!! */
+    }
 
     if (!iRetcode)                     /* initialize decompress */
       iRetcode = mngjpeg_decompressinit (pData);
@@ -3921,11 +3962,14 @@ mng_retcode process_display_jdat (mng_datap  pData,
   if (!iRetcode)                       /* all ok? then decompress, my man */
     iRetcode = mngjpeg_decompressdata (pData, iRawlen, pRawdata);
 
+  if (iRetcode)
+    return iRetcode;
+
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_PROCESS_DISPLAY_JDAT, MNG_LC_END)
 #endif
 
-  return iRetcode;
+  return MNG_NOERROR;
 }
 #endif /* MNG_INCLUDE_JNG */
 

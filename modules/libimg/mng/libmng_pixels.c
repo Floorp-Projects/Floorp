@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_pixels.c           copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.4                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : Pixel-row management routines (implementation)             * */
 /* *                                                                        * */
@@ -93,6 +93,11 @@
 /* *             - removed "old" MAGN methods 3 & 4                         * */
 /* *             - added "new" MAGN methods 3, 4 & 5                        * */
 /* *             - removed test filter-methods 1 & 65                       * */
+/* *                                                                        * */
+/* *             1.0.1 - 04/21/2001 - G.Juyn (code by G.Kelly)              * */
+/* *             - added BGRA8 canvas with premultiplied alpha              * */
+/* *             1.0.1 - 04/25/2001 - G.Juyn                                * */
+/* *             - moved mng_clear_cms to libmng_cms                        * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -208,6 +213,12 @@ mng_uint32 const interlace_divider  [7] = { 3, 3, 2, 2, 1, 1, 0 };
                             T * (mng_uint32)(GB) + (mng_uint32)32767) >> 16);    \
        (BC) = (mng_uint16)((S * (mng_uint32)(BT) +                               \
                             T * (mng_uint32)(BB) + (mng_uint32)32767) >> 16); }
+
+/* ************************************************************************** */
+
+/* note a good optimizing compiler will optimize this */
+#define DIV255B8(x) (mng_uint8)(((x) + 127) / 255)
+#define DIV255B16(x) (mng_uint16)(((x) + 32767) / 65535)
 
 /* ************************************************************************** */
 /* *                                                                        * */
@@ -1290,6 +1301,159 @@ mng_retcode display_bgra8 (mng_datap pData)
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_DISPLAY_BGRA8, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+
+/* ************************************************************************** */
+
+mng_retcode display_bgra8_pm (mng_datap pData)
+{
+  mng_uint8p pScanline;
+  mng_uint8p pDataline;
+  mng_int32  iX;
+  mng_uint32 s, t;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DISPLAY_BGRA8PM, MNG_LC_START)
+#endif
+                                       /* viewable row ? */
+  if ((pData->iRow >= pData->iSourcet) && (pData->iRow < pData->iSourceb))
+  {                                    /* address destination row */
+    pScanline = (mng_uint8p)pData->fGetcanvasline (((mng_handle)pData),
+                                                   pData->iRow + pData->iDestt -
+                                                   pData->iSourcet);
+                                       /* adjust destination row starting-point */
+    pScanline = pScanline + (pData->iCol << 2) + (pData->iDestl << 2);
+    pDataline = pData->pRGBArow;       /* address source row */
+
+    if (pData->bIsRGBA16)              /* adjust source row starting-point */
+      pDataline = pDataline + ((pData->iSourcel / pData->iColinc) << 3);
+    else
+      pDataline = pDataline + ((pData->iSourcel / pData->iColinc) << 2);
+
+    if (pData->bIsOpaque)              /* forget about transparency ? */
+    {
+      if (pData->bIsRGBA16)            /* 16-bit input row ? */
+      {
+        for (iX = pData->iSourcel + pData->iCol; iX < pData->iSourcer; iX += pData->iColinc)
+        {                              /* scale down by dropping the LSB */
+		  if ((s = pDataline[6]) == 0)
+			*(mng_uint32*) pScanline = 0; /* set all components = 0 */
+		  else
+		  {
+			if (s == 255)
+			{
+		      pScanline[0] = pDataline[4];
+              pScanline[1] = pDataline[2];
+              pScanline[2] = pDataline[0];
+              pScanline[3] = 255;
+			}
+			else
+			{
+              pScanline[0] = DIV255B8(s * pDataline[4]);
+              pScanline[1] = DIV255B8(s * pDataline[2]);
+              pScanline[2] = DIV255B8(s * pDataline[0]);
+              pScanline[3] = (mng_uint8)s;
+			}
+		  }
+          pScanline += (pData->iColinc << 2);
+          pDataline += 8;
+        }
+      }
+      else
+      {
+        for (iX = pData->iSourcel + pData->iCol; iX < pData->iSourcer; iX += pData->iColinc)
+        {                              /* copy the values and premultiply */
+		  if ((s = pDataline[3]) == 0)
+			*(mng_uint32*) pScanline = 0; /* set all components = 0 */
+		  else
+		  {
+			if (s == 255)
+			{
+		      pScanline[0] = pDataline[2];
+              pScanline[1] = pDataline[1];
+              pScanline[2] = pDataline[0];
+              pScanline[3] = 255;
+			}
+			else
+			{
+		      pScanline[0] = DIV255B8(s * pDataline[2]);
+              pScanline[1] = DIV255B8(s * pDataline[1]);
+              pScanline[2] = DIV255B8(s * pDataline[0]);
+              pScanline[3] = (mng_uint8)s;
+			}
+		  }
+
+          pScanline += (pData->iColinc << 2);
+          pDataline += 4;
+        }
+      }
+    }
+    else
+    {
+      if (pData->bIsRGBA16)            /* 16-bit input row ? */
+      {
+        for (iX = pData->iSourcel + pData->iCol; iX < pData->iSourcer; iX += pData->iColinc)
+        {                              /* get alpha values */
+          if ((s = pDataline[6]) != 0)       /* any opacity at all ? */
+          {                            /* fully opaque or background fully transparent ? */
+            if (s == 255)
+            {                          /* plain copy it */
+              pScanline[0] = pDataline[4];
+              pScanline[1] = pDataline[2];
+              pScanline[2] = pDataline[0];
+              pScanline[3] = 255;
+            }
+            else
+            {                          /* now blend (premultiplied) */
+			  t = 255 - s;
+			  pScanline[0] = DIV255B8(s * pDataline[4] + t * pScanline[0]);
+              pScanline[1] = DIV255B8(s * pDataline[2] + t * pScanline[1]);
+              pScanline[2] = DIV255B8(s * pDataline[0] + t * pScanline[2]);
+              pScanline[3] = (mng_uint8)(255 - DIV255B8(t * (255 - pScanline[3])));
+            }
+          }
+
+          pScanline += (pData->iColinc << 2);
+          pDataline += 8;
+        }
+      }
+      else
+      {
+        for (iX = pData->iSourcel + pData->iCol; iX < pData->iSourcer; iX += pData->iColinc)
+        {
+          if ((s = pDataline[3]) != 0)       /* any opacity at all ? */
+          {                            /* fully opaque ? */
+            if (s == 255)
+            {                          /* then simply copy the values */
+              pScanline[0] = pDataline[2];
+              pScanline[1] = pDataline[1];
+              pScanline[2] = pDataline[0];
+              pScanline[3] = 255;
+            }
+            else
+            {                          /* now blend (premultiplied) */
+			  t = 255 - s;
+			  pScanline[0] = DIV255B8(s * pDataline[2] + t * pScanline[0]);
+              pScanline[1] = DIV255B8(s * pDataline[1] + t * pScanline[1]);
+              pScanline[2] = DIV255B8(s * pDataline[0] + t * pScanline[2]);
+              pScanline[3] = (mng_uint8)(255 - DIV255B8(t * (255 - pScanline[3])));
+            }
+          }
+
+          pScanline += (pData->iColinc << 2);
+          pDataline += 4;
+        }
+      }
+    }
+  }
+
+  check_update_region (pData);
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_DISPLAY_BGRA8PM, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
@@ -8164,16 +8328,11 @@ mng_retcode cleanup_rowproc (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_CLEANUP_ROWPROC, MNG_LC_START)
 #endif
 
-#ifdef MNG_INCLUDE_LCMS
-  if (pData->hTrans)                   /* cleanup CMS transform */
-    mnglcms_freetransform (pData->hTrans);
-
-  pData->hTrans = 0;
-
-  if (pData->hProf1)                   /* cleanup CMS image-profile */
-    mnglcms_freeprofile (pData->hProf1);
-
-  pData->hProf1 = 0;
+#ifdef MNG_INCLUDE_LCMS                /* cleanup cms profile/transform */
+  mng_retcode iRetcode = mng_clear_cms (pData);
+  
+  if (iRetcode)                        /* on error bail out */
+    return iRetcode;
 #endif /* MNG_INCLUDE_LCMS */
 
   if (pData->pWorkrow)                 /* cleanup buffer for working row */

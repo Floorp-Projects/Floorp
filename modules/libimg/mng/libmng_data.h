@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_data.h             copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : main data structure definition                             * */
 /* *                                                                        * */
@@ -95,6 +95,11 @@
 /* *             - implemented delayed delta-processing                     * */
 /* *             0.9.4 - 12/16/2000 - G.Juyn                                * */
 /* *             - fixed mixup of data- & function-pointers (thanks Dimitri)* */
+/* *                                                                        * */
+/* *             1.0.1 - 02/08/2001 - G.Juyn                                * */
+/* *             - added MEND processing callback                           * */
+/* *             1.0.1 - 02/13/2001 - G.Juyn                                * */
+/* *             - fixed first FRAM_MODE=4 timing problem                   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -269,6 +274,7 @@ typedef struct mng_data_struct {
            mng_processsave   fProcesssave;
            mng_processseek   fProcessseek;
            mng_processneed   fProcessneed;
+           mng_processmend   fProcessmend;
            mng_processunknown fProcessunknown;
            mng_getcanvasline fGetcanvasline;
            mng_getbkgdline   fGetbkgdline;
@@ -385,6 +391,7 @@ typedef struct mng_data_struct {
 
 #ifdef MNG_SUPPORT_DISPLAY
            mng_bool          bDisplaying;        /* display-state variables */
+           mng_bool          bFramedone;
            mng_uint32        iFrameseq;
            mng_uint32        iLayerseq;
            mng_uint32        iFrametime;         /* millisecs */
@@ -414,6 +421,7 @@ typedef struct mng_data_struct {
            mng_objectp       pCurraniobj;        /* current animation object
                                                     "to be"/"being" processed */
            mng_objectp       pTermaniobj;        /* TERM animation object */
+           mng_uint32        iIterations;        /* TERM/MEND iteration count */
            mng_objectp       pObjzero;           /* "on-the-fly" image (object = 0) */
            mng_objectp       pLastclone;         /* last clone */
            mng_objectp       pStoreobj;          /* current store object for row routines */
@@ -639,13 +647,13 @@ typedef struct mng_data_struct {
 
            mng_bool          bJPEGcompress;      /* indicates "compress" initialized */
 
-           mng_bool          bJPEGdecompress;    /* indicates "decompress" ininitialized (JDAT) */
+           mng_bool          bJPEGdecompress;    /* indicates "decompress" initialized (JDAT) */
            mng_bool          bJPEGhasheader;     /* indicates "readheader" succeeded (JDAT) */
            mng_bool          bJPEGdecostarted;   /* indicates "decompress" started (JDAT) */
            mng_bool          bJPEGscanstarted;   /* indicates "first scan" started (JDAT) */
            mng_bool          bJPEGprogressive;   /* indicates a progressive image (JDAT) */
 
-           mng_bool          bJPEGdecompress2;   /* indicates "decompress" ininitialized (JDAA) */
+           mng_bool          bJPEGdecompress2;   /* indicates "decompress" initialized (JDAA) */
            mng_bool          bJPEGhasheader2;    /* indicates "readheader" succeeded (JDAA) */
            mng_bool          bJPEGdecostarted2;  /* indicates "decompress" started (JDAA) */
            mng_bool          bJPEGscanstarted2;  /* indicates "first scan" started (JDAA) */

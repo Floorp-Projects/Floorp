@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_dither.c           copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 1.0.0                                                      * */
 /* *                                                                        * */
 /* * purpose   : Dithering routines (implementation)                        * */
 /* *                                                                        * */

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_hlapi.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.4                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : high-level application API (implementation)                * */
 /* *                                                                        * */
@@ -115,6 +115,19 @@
 /* *             0.9.4 - 11/24/2000 - G.Juyn                                * */
 /* *             - moved restore of object 0 to libmng_display              * */
 /* *                                                                        * */
+/* *             1.0.1 - 02/08/2001 - G.Juyn                                * */
+/* *             - added MEND processing callback                           * */
+/* *             1.0.1 - 02/13/2001 - G.Juyn                                * */
+/* *             - fixed first FRAM_MODE=4 timing problem                   * */
+/* *             1.0.1 - 04/21/2001 - G.Juyn                                * */
+/* *             - fixed bug with display_reset/display_resume (Thanks G!)  * */
+/* *             1.0.1 - 04/22/2001 - G.Juyn                                * */
+/* *             - fixed memory-leak (Thanks Gregg!)                        * */
+/* *             1.0.1 - 04/23/2001 - G.Juyn                                * */
+/* *             - fixed reset_rundata to drop all objects                  * */
+/* *             1.0.1 - 04/25/2001 - G.Juyn                                * */
+/* *             - moved mng_clear_cms to libmng_cms                        * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -144,33 +157,6 @@
 /* *                                                                        * */
 /* * local routines                                                         * */
 /* *                                                                        * */
-/* ************************************************************************** */
-
-#if defined(MNG_SUPPORT_DISPLAY) && defined(MNG_INCLUDE_LCMS)
-mng_retcode mng_clear_cms (mng_datap pData)
-{
-#ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (pData, MNG_FN_CLEAR_CMS, MNG_LC_START)
-#endif
-
-  if (pData->hTrans)                   /* transformation still active ? */
-    mnglcms_freetransform (pData->hTrans);
-
-  pData->hTrans = 0;
-
-  if (pData->hProf1)                   /* file profile still active ? */
-    mnglcms_freeprofile (pData->hProf1);
-
-  pData->hProf1 = 0;
-
-#ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (pData, MNG_FN_CLEAR_CMS, MNG_LC_END)
-#endif
-
-  return MNG_NOERROR;
-}
-#endif /* MNG_SUPPORT_DISPLAY && MNG_INCLUDE_LCMS */
-
 /* ************************************************************************** */
 
 #if defined(MNG_SUPPORT_READ) || defined(MNG_SUPPORT_WRITE)
@@ -230,6 +216,8 @@ mng_retcode mng_drop_objects (mng_datap pData,
     pObject = pNext;                   /* neeeext */
   }
 
+  pData->pFirstimgobj = MNG_NULL;      /* clean this up!!! */
+
   if (bDropaniobj)                     /* drop animation objects ? */
   {
     pObject = pData->pFirstaniobj;     /* get first stored animation-object (if any) */
@@ -243,6 +231,8 @@ mng_retcode mng_drop_objects (mng_datap pData,
 
       pObject = pNext;                 /* neeeext */
     }
+
+    pData->pFirstaniobj = MNG_NULL;    /* clean this up!!! */
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -286,12 +276,19 @@ mng_retcode mng_drop_savedata (mng_datap pData)
 mng_retcode mng_reset_rundata (mng_datap pData)
 {
   drop_invalid_objects (pData);        /* drop invalidly stored objects */
-  mng_drop_savedata    (pData);        /* drop invalidly stored savedata */
+  mng_drop_savedata    (pData);        /* drop stored savedata */
   mng_reset_objzero    (pData);        /* reset object 0 */
+                                       /* drop stored objects (if any) */
+  mng_drop_objects     (pData, MNG_FALSE);
 
+  pData->bFramedone            = MNG_FALSE;
   pData->iFrameseq             = 0;    /* reset counters & stuff */
   pData->iLayerseq             = 0;
   pData->iFrametime            = 0;
+  pData->iRequestframe         = 0;
+  pData->iRequestlayer         = 0;
+  pData->iRequesttime          = 0;
+  pData->bSearching            = MNG_FALSE;
 
   pData->iRuntime              = 0;
   pData->iSynctime             = 0;
@@ -304,6 +301,10 @@ mng_retcode mng_reset_rundata (mng_datap pData)
   pData->bFreezing             = MNG_FALSE;
   pData->bResetting            = MNG_FALSE;
   pData->bNeedrefresh          = MNG_FALSE;
+
+  pData->iIterations           = 0;
+                                       /* start of animation objects! */
+  pData->pCurraniobj           = MNG_NULL;
 
   pData->iUpdateleft           = 0;    /* reset region */
   pData->iUpdateright          = 0;
@@ -1001,61 +1002,22 @@ mng_retcode MNG_DECL mng_cleanup (mng_handle* hHandle)
   MNG_VALIDHANDLE (*hHandle)           /* check validity handle */
   pData = ((mng_datap)(*hHandle));     /* and address main structure */
 
-#ifdef MNG_SUPPORT_READ
-  if ((pData->bReading) && (!pData->bEOF))
-    process_eof (pData);               /* cleanup app streaming */
-                                       /* cleanup default read buffers */
-  MNG_FREE (pData, pData->pReadbuf,    pData->iReadbufsize)
-  MNG_FREE (pData, pData->pLargebuf,   pData->iLargebufsize)
-  MNG_FREE (pData, pData->pSuspendbuf, pData->iSuspendbufsize)
-#endif
-
-#ifdef MNG_SUPPORT_WRITE               /* cleanup default write buffers */
-  MNG_FREE (pData, pData->pWritebuf, pData->iWritebufsize)
-#endif
+  mng_reset (*hHandle);                /* do an implicit reset to cleanup most stuff */
 
 #ifdef MNG_SUPPORT_DISPLAY             /* drop object 0 */
   free_imageobject (pData, (mng_imagep)pData->pObjzero);
 #endif
 
 #if defined(MNG_SUPPORT_DISPLAY) && defined(MNG_INCLUDE_LCMS)
-  mng_clear_cms (pData);               /* cleanup left-over cms stuff if any */
-
   if (pData->hProf2)                   /* output profile defined ? */
     mnglcms_freeprofile (pData->hProf2);
 
   if (pData->hProf3)                   /* sRGB profile defined ? */
     mnglcms_freeprofile (pData->hProf3);
-
 #endif /* MNG_SUPPORT_DISPLAY && MNG_INCLUDE_LCMS */
-
-#ifdef MNG_INCLUDE_JNG
-  mngjpeg_cleanup (pData);             /* cleanup jpeg stuff */
-#endif
-
-#ifdef MNG_INCLUDE_ZLIB
-  if (pData->bInflating)               /* if we've been inflating */
-  {
-#ifdef MNG_INCLUDE_DISPLAY_PROCS
-    cleanup_rowproc (pData);           /* cleanup row-processing, */
-#endif
-    mngzlib_inflatefree (pData);       /* cleanup inflate! */
-  }
-#endif /* MNG_INCLUDE_ZLIB */
 
 #ifdef MNG_INCLUDE_ZLIB
   mngzlib_cleanup (pData);             /* cleanup zlib stuff */
-#endif
-
-#if defined(MNG_SUPPORT_READ) || defined(MNG_SUPPORT_WRITE)
-  mng_drop_chunks  (pData);            /* drop stored chunks (if any) */
-#endif
-
-#ifdef MNG_SUPPORT_DISPLAY
-  mng_drop_objects (pData, MNG_TRUE);  /* drop stored objects (if any) */
-
-  if (pData->iGlobalProfilesize)       /* drop global profile (if any) */
-    MNG_FREEX (pData, pData->pGlobalProfile, pData->iGlobalProfilesize)
 #endif
 
 #ifdef MNG_SUPPORT_TRACE
@@ -1543,34 +1505,18 @@ mng_retcode MNG_DECL mng_display_resume (mng_handle hHandle)
     iRetcode = MNG_NEEDSECTIONWAIT;
   else
   {                                    /* no breaks = end of run */
-    pData->bRunning        = MNG_FALSE;
+    pData->bRunning = MNG_FALSE;
 
     if (pData->bFreezing)              /* trying to freeze ? */
     {                                  /* then we're there ! */
-      pData->bFreezing     = MNG_FALSE;
+      pData->bFreezing = MNG_FALSE;
     }
 
     if (pData->bResetting)             /* trying to reset as well ? */
     {                                  /* full stop!!! */
-      pData->bDisplaying   = MNG_FALSE;
-      pData->bTimerset     = MNG_FALSE;
-      pData->iBreakpoint   = 0;
-      pData->bSectionwait  = MNG_FALSE;
-      pData->bFreezing     = MNG_FALSE;
-      pData->bResetting    = MNG_FALSE;
-      pData->pCurraniobj   = MNG_NULL;
-      pData->iFrameseq     = 0;        /* reset all display-state variables */
-      pData->iLayerseq     = 0;
-      pData->iFrametime    = 0;
-      pData->iRequestframe = 0;
-      pData->iRequestlayer = 0;
-      pData->iRequesttime  = 0;
-      pData->bSearching    = MNG_FALSE;
-                                       /* drop all display objects */
-      iRetcode = mng_drop_objects (pData, MNG_FALSE);
+      pData->bDisplaying = MNG_FALSE;
 
-      if (!iRetcode)                   /* drop the savebuffer */
-        iRetcode = mng_drop_savedata (pData);
+      iRetcode = mng_reset_rundata (pData);
 
       if (iRetcode)                    /* on error bail out */
         return iRetcode;
@@ -1655,27 +1601,10 @@ mng_retcode MNG_DECL mng_display_reset (mng_handle hHandle)
       return iRetcode;
   }
   else
-  {
-    pData->bDisplaying   = MNG_FALSE;  /* full stop!!! */
-    pData->bRunning      = MNG_FALSE;
-    pData->bTimerset     = MNG_FALSE;
-    pData->iBreakpoint   = 0;
-    pData->bSectionwait  = MNG_FALSE;
-    pData->bFreezing     = MNG_FALSE;
-    pData->bResetting    = MNG_FALSE;
-    pData->pCurraniobj   = MNG_NULL;
-    pData->iFrameseq     = 0;          /* reset all display-state variables */
-    pData->iLayerseq     = 0;
-    pData->iFrametime    = 0;
-    pData->iRequestframe = 0;
-    pData->iRequestlayer = 0;
-    pData->iRequesttime  = 0;
-    pData->bSearching    = MNG_FALSE;
-                                       /* drop all display objects */
-    iRetcode = mng_drop_objects (pData, MNG_FALSE);
+  {                                    /* full stop!!! */
+    pData->bDisplaying = MNG_FALSE;
 
-    if (!iRetcode)                     /* drop the savebuffer */
-      iRetcode = mng_drop_savedata (pData);
+    iRetcode = mng_reset_rundata (pData);
 
     if (iRetcode)                      /* on error bail out */
       return iRetcode;

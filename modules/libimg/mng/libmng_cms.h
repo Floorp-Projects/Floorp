@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_cms.h              copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.2                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : color management routines (definition)                     * */
 /* *                                                                        * */
@@ -23,6 +23,11 @@
 /* *             0.9.2 - 08/05/2000 - G.Juyn                                * */
 /* *             - changed file-prefixes                                    * */
 /* *                                                                        * */
+/* *             1.0.1 - 04/25/2001 - G.Juyn                                * */
+/* *             - moved mng_clear_cms to libmng_cms                        * */
+/* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
+/* *             - added "default" sRGB generation (Thanks Marti!)          * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #if defined(__BORLANDC__) && defined(MNG_STRICT_ANSI)
@@ -39,8 +44,11 @@ void        mnglcms_initlibrary       (void);
 mng_cmsprof mnglcms_createfileprofile (mng_pchar    zFilename);
 mng_cmsprof mnglcms_creatememprofile  (mng_uint32   iProfilesize,
                                        mng_ptr      pProfile );
+mng_cmsprof mnglcms_createsrgbprofile (void);
 void        mnglcms_freeprofile       (mng_cmsprof  hProf    );
 void        mnglcms_freetransform     (mng_cmstrans hTrans   );
+
+mng_retcode mng_clear_cms             (mng_datap    pData    );
 #endif
 
 /* ************************************************************************** */

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_types.h            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.4                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : type specifications                                        * */
 /* *                                                                        * */
@@ -90,6 +90,9 @@
 /* *             - changed callback convention for MSVC (Thanks Chad)       * */
 /* *             0.9.4 - 12/16/2000 - G.Juyn                                * */
 /* *             - fixed mixup of data- & function-pointers (thanks Dimitri)* */
+/* *                                                                        * */
+/* *             1.0.1 - 02/08/2001 - G.Juyn                                * */
+/* *             - added MEND processing callback                           * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -419,6 +422,9 @@ typedef mng_bool   (MNG_DECL *mng_processseek)   (mng_handle  hHandle,
                                                   mng_pchar   zName);
 typedef mng_bool   (MNG_DECL *mng_processneed)   (mng_handle  hHandle,
                                                   mng_pchar   zKeyword);
+typedef mng_bool   (MNG_DECL *mng_processmend)   (mng_handle  hHandle,
+                                                  mng_uint32  iIterationsdone,
+                                                  mng_uint32  iIterationsleft);
 typedef mng_bool   (MNG_DECL *mng_processunknown) (mng_handle  hHandle,
                                                    mng_chunkid iChunkid,
                                                    mng_uint32  iRawlen,

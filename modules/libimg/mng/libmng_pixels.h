@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_pixels.h           copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.4                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : Pixel-row management routines (definition)                 * */
 /* *                                                                        * */
@@ -42,6 +42,9 @@
 /* *                                                                        * */
 /* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
 /* *             - added "new" MAGN methods 3, 4 & 5                        * */
+/* *                                                                        * */
+/* *             1.0.1 - 04/21/2001 - G.Juyn (code by G.Kelly)              * */
+/* *             - added BGRA8 canvas with premultiplied alpha              * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -81,6 +84,7 @@ mng_retcode display_argb8          (mng_datap  pData);
 mng_retcode display_rgb8_a8        (mng_datap  pData);
 mng_retcode display_bgr8           (mng_datap  pData);
 mng_retcode display_bgra8          (mng_datap  pData);
+mng_retcode display_bgra8_pm       (mng_datap  pData);
 mng_retcode display_abgr8          (mng_datap  pData);
 
 /* ************************************************************************** */
