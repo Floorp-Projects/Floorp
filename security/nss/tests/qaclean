@@ -107,6 +107,17 @@ esac
 
 nt_warning
 case $1 in 
+    -all)
+        for w in tommy y2sun2 kentuckyderby galileo shame axilla columbus \
+                 smarch charm hp64 biggayal orville kwyjibo hbombaix raven \
+                 jordan hornet phaedrus louie box dbldog huey washer dryer \
+                 shabadoo trex bummer compaqtor
+        do
+                echo $w
+                ping $w && rsh $w '/u/sonmi/bin/qaclean'
+        done
+
+        ;;
     ?*)
         rsh $1 '/u/sonmi/bin/qaclean'
         exit
@@ -129,4 +140,5 @@ kill_the_rest 3
 ls -l ${TMP}/nsstmp.*
 rm ${TMP}/nsstmp.* 2>/dev/null
 rm ${TMP}/certutilout.* 2>/dev/null
+rm ${TMP}/Pk12*
 nt_warning
