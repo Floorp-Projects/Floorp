@@ -848,7 +848,8 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
       nsCOMPtr<nsIDragService> dragService(do_GetService("@mozilla.org/widget/dragservice;1"));
       if ( !dragService )
         return NS_ERROR_FAILURE;
-      dragService->InvokeDragSession(targetNode, transArray, nsnull, nsIDragService::DRAGDROP_ACTION_COPY);
+      dragService->InvokeDragSession(targetNode, transArray, nsnull, nsIDragService::DRAGDROP_ACTION_COPY +
+                                      nsIDragService::DRAGDROP_ACTION_MOVE + nsIDragService::DRAGDROP_ACTION_LINK);
     }
   }
 
