@@ -249,7 +249,7 @@ PK11_FreeSymKey(PK11SymKey *symKey)
     PK11SlotInfo *slot;
     PRBool freeit = PR_TRUE;
 
-    if (PR_AtomicDecrement(&symKey->refCount) == -1) {
+    if (PR_AtomicDecrement(&symKey->refCount) == 0) {
 	destroy= PR_TRUE;
     }
     if (destroy) {
