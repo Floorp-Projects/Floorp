@@ -55,7 +55,7 @@
         for (var i = 0; i < elements.length; ++i) {
           var prefElt = window.opener.document.getElementById(elements[i]);
           var checkbox = document.getElementById(elements[i]);
-          checkbox.checked = prefElt.checked;
+          checkbox.checked = !prefElt.checked;
         }
       }
     
@@ -64,7 +64,7 @@
         for (var i = 0; i < elements.length; ++i) {
           var prefElt = window.opener.document.getElementById(elements[i]);
           var checkbox = document.getElementById(elements[i]);
-          prefElt.checked = checkbox.checked;
+          prefElt.checked = !checkbox.checked;
         }
       }
     ]]>
