@@ -126,7 +126,7 @@ main(int argc, char* argv[])
 {
   nsresult rv;
 
-  if (argc < 1) {
+  if (argc < 2) {
       printf("usage: %s <host>\n", argv[0]);
       return -1;
   }
@@ -181,7 +181,7 @@ main(int argc, char* argv[])
 #else
     PLEvent *gEvent;
     rv = eventQ->GetEvent(&gEvent);
-    PL_HandleEvent(gEvent);
+    rv = eventQ->HandleEvent(gEvent);
 #endif
 #endif
   }

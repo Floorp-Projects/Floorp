@@ -647,7 +647,7 @@ main(int argc, char* argv[])
 #else
     PLEvent *gEvent;
     rv = gEventQ->GetEvent(&gEvent);
-    PL_HandleEvent(gEvent);
+    rv = gEventQ->HandleEvent(gEvent);
 #endif /* XP_UNIX */
 #endif /* !WIN32 */
   }
