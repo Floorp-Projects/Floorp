@@ -86,14 +86,18 @@ typedef nsReflowStatus nsInlineReflowStatus;
 
 #define NS_INLINE_MAKE_BREAK_TYPE(_type)  ((_type) << 12)
 
-// Convenience macro's: Take a completion status and add to it
-// the desire to have a line-break before.
-#define NS_INLINE_LINE_BREAK_BEFORE(_completionStatus)                  \
-  ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_BEFORE |     \
+// Construct a line-break-before status. Note that there is no
+// completion status for a line-break before because we *know* that
+// the frame will be reflowed later and hence it's current completion
+// status doesn't matter.
+#define NS_INLINE_LINE_BREAK_BEFORE()                                   \
+  (NS_INLINE_BREAK | NS_INLINE_BREAK_BEFORE |                           \
    NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
 
-// Convenience macro's: Take a completion status and add to it
-// the desire to have a line-break after.
+// Take a completion status and add to it the desire to have a
+// line-break after. For this macro we do need the completion status
+// because the user of the status will need to know whether to
+// continue the frame or not.
 #define NS_INLINE_LINE_BREAK_AFTER(_completionStatus)                   \
   ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
    NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
