@@ -831,7 +831,9 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
       pc=mParserContext;
       pc->mScanner->Append(mUnusedInput);
     }
+
     pc->mScanner->Append(aSourceBuffer);
+
     if (nsnull != pc->mPrevContext) {
       pc->mMultipart = (pc->mPrevContext->mMultipart || !aLastCall);
     }
@@ -924,7 +926,14 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
   theContext.Append("<endnote>");       //XXXHack! I'll make this better later.
   nsAutoString theBuffer(theContext);
 
-  theBuffer.Append(aSourceBuffer);  
+#if 0
+      //use this to force a buffer-full of content as part of a paste operation...
+    theBuffer.Append("<title>title</title><a href=\"one\">link</a>");
+#else
+      //this is the normal code path for paste...
+    theBuffer.Append(aSourceBuffer);  
+#endif
+
   if(theBuffer.Length()){
     //now it's time to try to build the model from this fragment
 
