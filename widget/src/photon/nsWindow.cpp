@@ -833,11 +833,12 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
         area.size.w = rect.lr.x - rect.ul.x + 1;
         area.size.h = rect.lr.y - rect.ul.y + 1;
 
-      PtArg_t   args[20];  
-      int arg_count2 = 0;
+printf("nsWindow::CreateNative 1st region area=(%d,%d,%d,%d)\n", area.pos.x, area.pos.y, area.size.w, area.size.h);
+
+      PtArg_t  args[20];  
+      int      arg_count2 = 0;
 
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative parentWidget = <%p>\n", parentWidget));
-
 
         PtSetArg( &args[arg_count2++], Pt_ARG_REGION_PARENT,   Ph_ROOT_RID, 0 );
         PtSetArg( &args[arg_count2++], Pt_ARG_REGION_FIELDS,   fields, fields );
@@ -847,8 +848,6 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
         PtSetArg( &args[arg_count2++], Pt_ARG_AREA,            &area, 0 );
         PtSetArg( &args[arg_count2++], Pt_ARG_FILL_COLOR,      Pg_TRANSPARENT, 0 );
         PtSetArg( &args[arg_count2++], Pt_ARG_RAW_CALLBACKS,   &callback, 1 );
-        //PtSetArg( &args[arg_count2++], Pt_ARG_CURSOR_TYPE,     cursor_type, 1 );
-        //PtSetArg( &args[arg_count2++], Pt_ARG_CURSOR_COLOR,    cursor_color, 1 );
         mMenuRegion = PtCreateWidget( PtRegion, parentWidget, arg_count2, args );
 
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative mMenuRegion = <%p>\n", mMenuRegion));
@@ -859,7 +858,6 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FLAGS,    Ph_FORCE_FRONT, Ph_FORCE_FRONT );
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_BUT_RELEASE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_BUT_RELEASE );
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_BUT_RELEASE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_BUT_RELEASE|Ph_EV_DRAW);
-//HACK        PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR,      Pg_TRANSPARENT, 0 );
         mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
 
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative PtRegion = <%p>\n", mWidget));
@@ -1560,16 +1558,11 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset=<%d,%d>\n", offset.x, offset.y));
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc mBounds=<%d,%d,%d,%d>\n", pWin->mBounds.x, pWin->mBounds.y, pWin->mBounds.width, pWin->mBounds.height));
 
-#if 0
-    offset.x = area.pos.x;  
-    offset.y = area.pos.y;  
-#endif
-
-#if 0
+    /* Add the X,Y of area to offset to fix the throbber drawing in Viewer */
     offset.x += area.pos.x;  
     offset.y += area.pos.y;  
+
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset+area =<%d,%d>\n", offset.x, offset.y));
-#endif
 
     /* Build a List of Tiles that might be in front of me.... */
     PhTile_t *clip_tiles=pWin->GetWindowClipping(offset);
@@ -1595,17 +1588,37 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 	/* see whats left! */
 	PhTile_t *new_damage;
 
+#if 0
   // The upper left X seems to be off by 1 but this didn't help...
   // This appears to be a PHOTON BUG....
   if (damage->next->rect.ul.x != 0)
   {
     damage->next->rect.ul.x--;
   }
+#endif
+
+
+/* PHOTON BUG ? Each damage rect seems to be off by one so I go through and */
+/* subtract 1 from each... */
+
+#if 1
+{
+  /* Print out the Photon Damage tiles */
+  PhTile_t *top = damage;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc Subtracting one from every damage tile:\n"));
+  while(top)
+  {
+    if (top->rect.ul.x != 0)
+    {
+      top->rect.ul.x--;
+    }    
+    top=top->next;
+  }
+}
+#endif
 
     /* This could be leaking some memory */
 	new_damage = PhClipTilings(PhCopyTiles(damage->next), PhCopyTiles(clip_tiles), NULL);
-
-    /* Doing this breaks text selection but speeds things up */
     new_damage = PhCoalesceTiles( PhMergeTiles (PhSortTiles( new_damage )));
 
     if (new_damage == nsnull)
@@ -1701,17 +1714,20 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
       {
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage tile is not within our bounds, do nothing\n"));
 
+#if 0
         /* Move to the next Damage Tile */
         dmg = dmg->next;
         continue;
+#endif
       }
 
+#if 0
       /* clip damage to widgets bounds... */
       if( rect.ul.x < 0 ) rect.ul.x = 0;
       if( rect.ul.y < 0 ) rect.ul.y = 0;
       if( rect.lr.x >= area.size.w ) rect.lr.x = area.size.w - 1;
       if( rect.lr.y >= area.size.h ) rect.lr.y = area.size.h - 1;
-
+#endif
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc clipped damage <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
 
       nsDmg.x = rect.ul.x;
@@ -2561,6 +2577,11 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move this=(%p) to (%ld,%ld) mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d> mParent=<%p>\n", 
     this, aX, aY, mClipChildren, mClipSiblings, mBorderStyle, mWindowType, mParent));
 
+  PRInt32 origX, origY;
+
+  origX=aX;
+  origY=aY;
+
   if (mWindowType==eWindowType_popup)
   {
     PtWidget_t *top, *last = mWidget;
@@ -2570,68 +2591,56 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
       }
   
     nsWindow *myWindowParent = (nsWindow *) GetInstance(last);
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move last=<%p> myWindowParent=<%p>\n", last, myWindowParent));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move last=<%p> myWindowParent=<%p>\n", last, myWindowParent));
 
-#if 0
-    PhPoint_t p;
-	if ( PtWidgetOffset(mWidget,&p) )
+    if (myWindowParent)
     {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move mWidget=<%p> WidgetOffset=<%d,%d)\n",mWidget,  p.x,p.y));
-    }
-	
-    top=PtWidgetParent(mWidget);
-	if (top)
-	{
-  	  if ( PtWidgetOffset(top,&p) )
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move mWidget parent=<%p> WidgetOffset=<%d,%d)\n",top,  p.x,p.y));
-  	}	
+      int FrameLeft, FrameTop, FrameBottom;
+      PhArea_t   area;
 
-    top=PtWidgetParent(top);
-	if (top)
-	{
-  	  if ( PtWidgetOffset(top,&p) )
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move mWidget parent parent=<%p> WidgetOffset=<%d,%d)\n",top,  p.x,p.y));
-  	}	
-
-    if (mParent)
-	{
-	  nsRect r;
-
-	  mParent->GetBounds(r);
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move mParent=<%p> GetBounds rect=<%d,%d,%d,%d>\n", mParent, r.x,r.y,r.width,r.height));
-
-	  mParent->GetClientBounds(r);
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move mParent GetClientBounds rect=<%d,%d,%d,%d>\n", r.x,r.y,r.width,r.height));
-	}
-#endif	
- 
-      if (myWindowParent)
-      {
-        int FrameLeft, FrameTop, FrameBottom;
-        PhArea_t   area;
-          myWindowParent->GetFrameSize(&FrameLeft, NULL, &FrameTop, &FrameBottom);
-          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move parent frame size left=<%d> top=<%d>\n", FrameLeft, FrameTop));
-          PtWidgetArea(last, &area);
-          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move parent area=<%d,%d,%d,%d>\n", area.pos.x,area.pos.y,area.size.w,area.size.h));
+        myWindowParent->GetFrameSize(&FrameLeft, NULL, &FrameTop, &FrameBottom);
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move parent frame size left=<%d> top=<%d>\n", FrameLeft, FrameTop));
+        PtWidgetArea(last, &area);
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move parent area=<%d,%d,%d,%d>\n", area.pos.x,area.pos.y,area.size.w,area.size.h));
 		  
-          aX = aX + FrameLeft + area.pos.x;
-		  /* Subtract FrameBottom for Augusta/Photon 2 */
-          aY = aY + FrameTop + area.pos.y - FrameBottom;	
-      }
+        /* Must add in area in order for pop-up to be positioned right when */
+		/* mozilla is not at 0,0 */
+        aX = aX + FrameLeft + area.pos.x;
+
+	    /* Subtract FrameBottom for Augusta/Photon 2  PHOTON BUG */
+        aY = aY + FrameTop - FrameBottom + area.pos.y;
+    }
   }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move this=(%p) to (%ld,%ld) \n", this, aX, aY ));
 
+#if 1
+ /* Offset to the current virtual console */
+  if ( (mWindowType == eWindowType_dialog) ||
+	   (mWindowType == eWindowType_toplevel) )
+  {
+    PhRect_t console;
+	
+      /* 1 is a magic number and should be $PHIG */
+      PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console );
+	  aX += console.ul.x;
+	  aY += console.ul.y;
+
+printf("nsWindow::Move toplevel console=(%d,%d) total=(%d,%d)\n", console.ul.x, console.ul.y, aX, aY);
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move toplevel console=(%d,%d) total=(%d,%d)\n", console.ul.x, console.ul.y, aX, aY));
+  }
+#endif
+  
   /* Call my base class */
   nsresult res = nsWidget::Move(aX, aY);
 
   /* If I am a top-level window my origin should always be 0,0 */
   if ( (mWindowType == eWindowType_dialog) ||
-//       (mWindowType == eWindowType_popup) ||
 	   (mWindowType == eWindowType_toplevel) )
   {
     //printf("HACK HACK: forcing bounds to 0,0 for toplevel window\n");
-    mBounds.x = mBounds.y = 0;
+    mBounds.x = origX;
+	mBounds.y = origY;
   }
 
   return res;
