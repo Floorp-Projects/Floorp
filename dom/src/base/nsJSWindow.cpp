@@ -44,6 +44,7 @@
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsISidebar.h"
 #include "nsIDOMWindow.h"
 #include "nsIControllers.h"
 
@@ -61,6 +62,7 @@ static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
+static NS_DEFINE_IID(kISidebarIID, NS_ISIDEBAR_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
@@ -77,30 +79,31 @@ enum Window_slots {
   WINDOW_PARENT = -7,
   WINDOW_TOP = -8,
   WINDOW_CONTENT = -9,
-  WINDOW_MENUBAR = -10,
-  WINDOW_TOOLBAR = -11,
-  WINDOW_LOCATIONBAR = -12,
-  WINDOW_PERSONALBAR = -13,
-  WINDOW_STATUSBAR = -14,
-  WINDOW_SCROLLBARS = -15,
-  WINDOW_DIRECTORIES = -16,
-  WINDOW_CLOSED = -17,
-  WINDOW_FRAMES = -18,
-  WINDOW_CONTROLLERS = -19,
-  WINDOW_OPENER = -20,
-  WINDOW_STATUS = -21,
-  WINDOW_DEFAULTSTATUS = -22,
-  WINDOW_NAME = -23,
-  WINDOW_INNERWIDTH = -24,
-  WINDOW_INNERHEIGHT = -25,
-  WINDOW_OUTERWIDTH = -26,
-  WINDOW_OUTERHEIGHT = -27,
-  WINDOW_SCREENX = -28,
-  WINDOW_SCREENY = -29,
-  WINDOW_PAGEXOFFSET = -30,
-  WINDOW_PAGEYOFFSET = -31,
-  WINDOW_SCROLLX = -32,
-  WINDOW_SCROLLY = -33
+  WINDOW_SIDEBAR = -10,
+  WINDOW_MENUBAR = -11,
+  WINDOW_TOOLBAR = -12,
+  WINDOW_LOCATIONBAR = -13,
+  WINDOW_PERSONALBAR = -14,
+  WINDOW_STATUSBAR = -15,
+  WINDOW_SCROLLBARS = -16,
+  WINDOW_DIRECTORIES = -17,
+  WINDOW_CLOSED = -18,
+  WINDOW_FRAMES = -19,
+  WINDOW_CONTROLLERS = -20,
+  WINDOW_OPENER = -21,
+  WINDOW_STATUS = -22,
+  WINDOW_DEFAULTSTATUS = -23,
+  WINDOW_NAME = -24,
+  WINDOW_INNERWIDTH = -25,
+  WINDOW_INNERHEIGHT = -26,
+  WINDOW_OUTERWIDTH = -27,
+  WINDOW_OUTERHEIGHT = -28,
+  WINDOW_SCREENX = -29,
+  WINDOW_SCREENY = -30,
+  WINDOW_PAGEXOFFSET = -31,
+  WINDOW_PAGEYOFFSET = -32,
+  WINDOW_SCROLLX = -33,
+  WINDOW_SCROLLY = -34
 };
 
 /***********************************************************************/
@@ -281,6 +284,24 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case WINDOW_SIDEBAR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIDEBAR, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        nsISidebar* prop;
+        nsresult result = NS_OK;
+        result = a->GetSidebar(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object; n.b., this will do a release on 'prop'
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsISidebar), cx, obj, vp);
         }
         else {
           return nsJSUtils::nsReportError(cx, obj, result);
@@ -2780,6 +2801,7 @@ static JSPropertySpec WindowProperties[] =
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"content",    WINDOW_CONTENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"sidebar",    WINDOW_SIDEBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"locationbar",    WINDOW_LOCATIONBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},

@@ -818,6 +818,7 @@
     "window.closed", \
     "window.confirm", \
     "window.content", \
+    "window.sidebar", \
     "window.controllers", \
     "window.defaultstatus", \
     "window.directories", \

@@ -75,6 +75,7 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISelectionController.h"
+#include "nsISidebar.h"                // XXX for sidebar HACK, see bug 20721
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
@@ -105,7 +106,8 @@ GlobalWindowImpl::GlobalWindowImpl() : mScriptObject(nsnull),
    mGlobalObjectOwner(nsnull), mTimeouts(nsnull),
    mTimeoutInsertionPoint(nsnull), mRunningTimeout(nsnull),
    mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0),
-   mFirstDocumentLoad(PR_TRUE), mChromeEventHandler(nsnull), mDocShell(nsnull)
+   mFirstDocumentLoad(PR_TRUE), mChromeEventHandler(nsnull), mDocShell(nsnull),
+   mSidebar(nsnull)
 {
    NS_INIT_REFCNT();
 }
@@ -228,6 +230,12 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
             {
             ClearAllTimeouts();
   
+            if (mSidebar)
+              {
+                mSidebar->SetWindow(nsnull);
+                mSidebar = nsnull;
+              }
+
             if(mListenerManager)
                mListenerManager->RemoveAllListeners(PR_FALSE);
 
@@ -549,6 +557,30 @@ NS_IMETHODIMP GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
   NS_IF_ADDREF(*aContent);
 
   return NS_OK;
+}
+
+// XXX for sidebar HACK, see bug 20721
+NS_IMETHODIMP GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
+{
+  nsresult rv = NS_OK;
+
+  if (!mSidebar)
+  {
+    mSidebar = do_CreateInstance(NS_SIDEBAR_PROGID, &rv);
+
+    if (mSidebar)
+    {
+      nsIDOMWindow *win = NS_STATIC_CAST(nsIDOMWindow *, this);
+      /* no addref */
+      mSidebar->SetWindow(win);
+    }
+  }
+
+  *aSidebar = mSidebar;
+  NS_IF_ADDREF(*aSidebar);
+
+  return rv;
+
 }
 
 NS_IMETHODIMP GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)

@@ -36,6 +36,7 @@ class nsIDOMScreen;
 class nsIDOMHistory;
 class nsIDOMWindowCollection;
 class nsIDOMEvent;
+class nsISidebar;
 class nsIDOMWindow;
 class nsIControllers;
 
@@ -64,6 +65,8 @@ public:
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop)=0;
 
   NS_IMETHOD    GetContent(nsIDOMWindow** aContent)=0;
+
+  NS_IMETHOD    GetSidebar(nsISidebar** aSidebar)=0;
 
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar)=0;
 
@@ -209,6 +212,7 @@ public:
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent);  \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);  \
   NS_IMETHOD    GetContent(nsIDOMWindow** aContent);  \
+  NS_IMETHOD    GetSidebar(nsISidebar** aSidebar);  \
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar);  \
   NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar);  \
   NS_IMETHOD    GetLocationbar(nsIDOMBarProp** aLocationbar);  \
@@ -294,6 +298,7 @@ public:
   NS_IMETHOD    GetParent(nsIDOMWindow** aParent) { return _to GetParent(aParent); } \
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop) { return _to GetTop(aTop); } \
   NS_IMETHOD    GetContent(nsIDOMWindow** aContent) { return _to GetContent(aContent); } \
+  NS_IMETHOD    GetSidebar(nsISidebar** aSidebar) { return _to GetSidebar(aSidebar); } \
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar) { return _to GetMenubar(aMenubar); } \
   NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar) { return _to GetToolbar(aToolbar); } \
   NS_IMETHOD    GetLocationbar(nsIDOMBarProp** aLocationbar) { return _to GetLocationbar(aLocationbar); } \
