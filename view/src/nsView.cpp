@@ -76,6 +76,7 @@ nsView :: nsView()
   mXForm = nsnull;
   mVFlags = 0;
   mOpacity = 1.0f;
+  mViewManager = nsnull;
 }
 
 nsView :: ~nsView()
@@ -955,7 +956,13 @@ NS_IMETHODIMP nsView :: SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoor
 
 NS_IMETHODIMP nsView :: GetBounds(nsRect &aBounds) const
 {
-  nsIView *rootView;
+  nsIView *rootView = nsnull;
+
+  NS_ASSERTION(mViewManager, "mViewManager is null!");
+  if (!mViewManager) {
+    aBounds.x = aBounds.y = 0;
+    return NS_ERROR_FAILURE;
+  }
 
   mViewManager->GetRootView(rootView);
   aBounds = mBounds;
