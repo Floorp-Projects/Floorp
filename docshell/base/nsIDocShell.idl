@@ -259,6 +259,7 @@ interface nsIDocShell : nsISupports
    */
   const unsigned long APP_TYPE_UNKNOWN  = 0;
   const unsigned long APP_TYPE_MAIL     = 1;
+  const unsigned long APP_TYPE_EDITOR   = 2;
 
   attribute unsigned long appType;
 

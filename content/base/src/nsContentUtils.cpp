@@ -1692,19 +1692,48 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
   NS_PRECONDITION(aURI, "Must have a URI");
   NS_PRECONDITION(aLoadingDocument, "Must have a document");
 
-  // XXXbz Do security manager check here!
-
   nsIURI *docURI = aLoadingDocument->GetDocumentURI();
+
+  nsresult rv;
+
+  PRUint32 appType = nsIDocShell::APP_TYPE_UNKNOWN;
+
+  {
+    nsCOMPtr<nsISupports> container = aLoadingDocument->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+      do_QueryInterface(container);
+
+    if (docShellTreeItem) {
+      nsCOMPtr<nsIDocShellTreeItem> root;
+      docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
+
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(root));
+
+      if (!docShell || NS_FAILED(docShell->GetAppType(&appType))) {
+        appType = nsIDocShell::APP_TYPE_UNKNOWN;
+      }
+    }
+  }
+
+  if (appType != nsIDocShell::APP_TYPE_EDITOR) {
+    // Editor apps get special treatment here, editors can load images
+    // from anywhere.
+    rv = sSecurityManager->
+      CheckLoadURI(docURI, aURI, nsIScriptSecurityManager::ALLOW_CHROME);
+    if (NS_FAILED(rv)) {
+      return PR_FALSE;
+    }
+  }
 
   PRInt16 decision = nsIContentPolicy::ACCEPT;
 
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_IMAGE,
-                                          aURI,
-                                          docURI,
-                                          aContext,
-                                          EmptyCString(), //mime guess
-                                          nsnull,         //extra
-                                          &decision);
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_IMAGE,
+                                 aURI,
+                                 docURI,
+                                 aContext,
+                                 EmptyCString(), //mime guess
+                                 nsnull,         //extra
+                                 &decision);
 
   return NS_FAILED(rv) ? PR_FALSE : NS_CP_ACCEPTED(decision);
 }
