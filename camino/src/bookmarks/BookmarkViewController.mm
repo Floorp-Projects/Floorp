@@ -276,7 +276,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [mContainersTableView setAutosaveName:@"BMContainerView"];
   [mContainersTableView setAutosaveTableColumns:YES];
 
-  [mBookmarksOutlineView setAutosaveName:@"BMOutlineView"];
+  [mBookmarksOutlineView setAutosaveName:@"BookmarksOutlineView"];
   [mBookmarksOutlineView setAutosaveTableColumns:YES];
 
   [mHistoryOutlineView setAutosaveName:@"HistoryOutlineView"];
@@ -1169,7 +1169,6 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
 {
   id retValue = nil;
-  // XXX lame and slow to rely on exceptions here
   NS_DURING
     retValue = [item valueForKey:[tableColumn identifier]];
   NS_HANDLER
