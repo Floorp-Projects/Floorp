@@ -996,10 +996,36 @@ case "$target" in
             AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
         fi
         MOZ_TOOLS_DIR=`cygpath -w $MOZ_TOOLS_DIR | sed -e 's|\\\\|/|g'`
-        GLIB_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
-        GLIB_LIBS='$(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
-        LIBIDL_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
-        LIBIDL_LIBS='$(MOZ_TOOLS_DIR)/lib/libidl-0.6.lib $(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
+        if test -n "$GLIB_PREFIX"; then
+            if test -d "$GLIB_PREFIX"; then
+                _foo=`cygpath -u ${GLIB_PREFIX}`
+                if test `echo ${PATH} | grep -c "$_foo/bin:"` = 0; then
+                    AC_MSG_ERROR([GLIB_PREFIX must be in your \$PATH.])
+                fi
+                GLIB_CFLAGS="-I${GLIB_PREFIX}/include"
+                GLIB_LIBS="${GLIB_PREFIX}/lib/glib-1.2.lib"
+            else
+                AC_MSG_ERROR([GLIB_PREFIX is set but "${GLIB_PREFIX}" is not a directory.])
+            fi
+        else
+            GLIB_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
+            GLIB_LIBS='$(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
+        fi
+        if  test -n "$LIBIDL_PREFIX"; then
+            if test -d "$LIBIDL_PREFIX"; then
+                _foo=`cygpath -u ${LIBIDL_PREFIX}`
+                if test `echo ${PATH} | grep -c "$_foo/bin:"` = 0; then
+                    AC_MSG_ERROR([LIBIDL_PREFIX must be in your \$PATH.])
+                fi
+                LIBIDL_CFLAGS="-I${LIBIDL_PREFIX}/include"
+                LIBIDL_LIBS="${LIBIDL_PREFIX}/lib/libidl-0.6.lib ${LIBIDL_PREFIX}/lib/glib-1.2.lib"
+            else
+                AC_MSG_ERROR([LIBIDL_PREFIX is set but "${LIBIDL_PREFIX}" is not a directory.])
+            fi
+        else
+            LIBIDL_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
+            LIBIDL_LIBS='$(MOZ_TOOLS_DIR)/lib/libidl-0.6.lib $(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
+        fi
    else
         AC_MSG_ERROR([MOZ_TOOLS is not set])
     fi
