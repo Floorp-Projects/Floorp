@@ -101,3 +101,4 @@ PR_END_MACRO
 #endif // CALL_SAFETY_ON
 
 #endif //nsPluginSafety_h__
+
