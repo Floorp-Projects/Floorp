@@ -56,12 +56,12 @@
 #endif
 
 
-#if _MSC_VER >= 1200
+#if defined(__MINGW32__) || _MSC_VER >= 1200
 typedef HMONITOR (WINAPI *MonitorFromRectProc)(LPCRECT inRect, DWORD inFlag); 
 typedef BOOL (WINAPI *EnumDisplayMonitorsProc)(HDC, LPCRECT, MONITORENUMPROC, LPARAM);
 
 BOOL CALLBACK CountMonitors ( HMONITOR, HDC, LPRECT, LPARAM ioCount ) ;
-#elif !defined(__MINGW32__)
+#else
 typedef void* HMONITOR;
 #endif
 
@@ -78,8 +78,9 @@ public:
 
 
 nsScreenManagerWin :: nsScreenManagerWin ( )
-: mHasMultiMonitorAPIs(PR_FALSE), mGetMonitorInfoProc(nsnull), mMonitorFromRectProc(nsnull),
-    mEnumDisplayMonitorsProc(nsnull), mNumberOfScreens(0)
+  : mHasMultiMonitorAPIs(PR_FALSE), mNumberOfScreens(0),
+    mGetMonitorInfoProc(nsnull), mMonitorFromRectProc(nsnull),
+    mEnumDisplayMonitorsProc(nsnull)
 {
   // figure out if we can call the multiple monitor APIs that are only
   // available on Win98/2000.
@@ -165,7 +166,7 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inW
   RECT globalWindowBounds = { inLeft, inTop, inLeft + inWidth, inTop + inHeight };
 
   void* genScreen = nsnull;
-#if _MSC_VER >= 1200
+#if defined(__MINGW32__) || _MSC_VER >= 1200
   if ( mHasMultiMonitorAPIs ) {
     MonitorFromRectProc proc = (MonitorFromRectProc)mMonitorFromRectProc;
     HMONITOR screen = (*proc)( &globalWindowBounds, MONITOR_DEFAULTTOPRIMARY );
@@ -197,7 +198,7 @@ nsScreenManagerWin :: GetPrimaryScreen(nsIScreen** aPrimaryScreen)
 } // GetPrimaryScreen
 
 
-#if _MSC_VER >= 1200
+#if defined(__MINGW32__) || _MSC_VER >= 1200
 //
 // CountMonitors
 //
@@ -227,11 +228,13 @@ nsScreenManagerWin :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
 {
   if ( mNumberOfScreens )
     *aNumberOfScreens = mNumberOfScreens;
-#if _MSC_VER >= 1200
+#if defined(__MINGW32__) || _MSC_VER >= 1200
   else if ( mHasMultiMonitorAPIs ) {
       PRUint32 count = 0;
       EnumDisplayMonitorsProc proc = (EnumDisplayMonitorsProc)mEnumDisplayMonitorsProc;
       BOOL result = (*proc)(nsnull, nsnull, (MONITORENUMPROC)CountMonitors, (LPARAM)&count);
+      if (!result)
+        return NS_ERROR_FAILURE;
       *aNumberOfScreens = mNumberOfScreens = count;      
   } // if there can be > 1 screen
 #endif
@@ -241,4 +244,3 @@ nsScreenManagerWin :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
   return NS_OK;
   
 } // GetNumberOfScreens
-
