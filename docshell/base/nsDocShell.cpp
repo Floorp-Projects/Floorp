@@ -3157,11 +3157,8 @@ nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
 NS_IMETHODIMP
 nsDocShell::Repaint(PRBool aForce)
 {
-    nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(mContentViewer));
-    NS_ENSURE_TRUE(docViewer, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsIPresContext> context;
-    docViewer->GetPresContext(getter_AddRefs(context));
+    GetPresContext(getter_AddRefs(context));
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
     nsIViewManager* viewManager = context->GetViewManager();
