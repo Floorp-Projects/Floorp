@@ -70,6 +70,8 @@ clobber::
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\WalletEditor.js
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\WalletEditor.properties
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\WalletEditor.dtd
+        rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\privacy.xul
+        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\privacy.dtd
 
 install:: $(DLL)
         $(MAKE_INSTALL) interview.html $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
@@ -89,3 +91,5 @@ install:: $(DLL)
         $(MAKE_INSTALL) WalletEditor.js $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         $(MAKE_INSTALL) WalletEditor.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
         $(MAKE_INSTALL) WalletEditor.dtd $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+        $(MAKE_INSTALL) privacy.xul $(DIST)\bin\chrome\packages\core\communicator\content\wallet
+        $(MAKE_INSTALL) privacy.dtd $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s):
+-->
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/privacy.dtd" >
+
+<window id="privacy"
+        class="dialog"
+        title="&windowtitle.label;"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        orient="vertical">
+<!-- 
+  <script language="javascript" src="chrome://global/content/strres.js" />
+-->
+  <keyset id="keyset"/>
+           
+  <html:iframe id="it-doesnt-matter-anyway" class="output-container"
+       type="content" src="chrome://communicator/locale/wallet/privacy.html" flex="1"/>
+
+
+  <!-- from dialogOverlay.xul -->
+  <spring style="height: 5px;"/>
+  <box orient="horizontal">
+    <spring flex="100%"/>
+   <button class="right dialog" id="ok" value="&ok;" default="true" onclick="doOKButton()"/> 
+  </box>
+  <spring style="height: 5px;"/>
+
+</window>

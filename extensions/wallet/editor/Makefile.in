@@ -42,10 +42,10 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/WalletEditor.xul $(srcdir)/WalletEditor.js $(DIST)/bin/chrome/packages/core/communicator/content/wallet
+	$(INSTALL) $(srcdir)/WalletEditor.xul $(srcdir)/WalletEditor.js $(srcdir)/privacy.xul $(DIST)/bin/chrome/packages/core/communicator/content/wallet
 	$(INSTALL) $(srcdir)/interview.html $(srcdir)/index.html $(srcdir)/privacy.html $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
 	$(INSTALL) $(srcdir)/sample1.html $(srcdir)/sample2.html $(srcdir)/sample3.html $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
 	$(INSTALL) $(srcdir)/sample4.html $(srcdir)/sample5.html $(srcdir)/sample6.html $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
 	$(INSTALL) $(srcdir)/sample7.html $(srcdir)/sample8.html $(srcdir)/sample9.html $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
 	$(INSTALL) $(srcdir)/sample10.html $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
-	$(INSTALL) $(srcdir)/WalletEditor.properties  $(srcdir)/WalletEditor.dtd $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
+	$(INSTALL) $(srcdir)/WalletEditor.properties $(srcdir)/WalletEditor.dtd $(srcdir)/privacy.dtd $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
