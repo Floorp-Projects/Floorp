@@ -88,7 +88,7 @@
 <!ENTITY certmgr.delete.label "Delete">
 <!ENTITY certmgr.backup.label "Backup">
 <!ENTITY certmgr.backupall.label "Backup All">
-<!ENTITY certmgr.restore.label "Restore">
+<!ENTITY certmgr.restore.label "Import">
 <!ENTITY certmgr.details.label "Certificate Fields">
 <!ENTITY certmgr.fields.label "Field Value">
 <!ENTITY certmgr.hierarchy.label "Certificate Hierarchy">
