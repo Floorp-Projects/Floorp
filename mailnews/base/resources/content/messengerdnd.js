@@ -270,7 +270,7 @@ function DropOnFolderTree(event)
                                    sourceRescource,
                                    targetNode, messageList, false);
             }
-            catch(e);
+            catch(e)
             {
             dump ( "Exception : CopyMessages \n");
             }
