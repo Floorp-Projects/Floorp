@@ -360,7 +360,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
 
 #if 0
   // TEMPORARY: Testing mozIXMLTermStream
-  nsAutoString streamData = "<HTML><HEAD><TITLE>Stream Title</TITLE>"
+  nsAutoString streamData(  "<HTML><HEAD><TITLE>Stream Title</TITLE>"
                             "<SCRIPT language='JavaScript'>"
                             "function clik(){ dump('click\\n');return(false);}"
                             "</SCRIPT></HEAD>"
@@ -368,7 +368,7 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
                             "<SPAN STYLE='color: blue' onClick='return clik();'>Clik</SPAN></B><BR>"
 "<TABLE WIDTH=720><TR><TD WIDTH=700 BGCOLOR=maroon>&nbsp;</TABLE>"
                             "<BR>ABCD<BR>EFGH<BR>JKLM<BR>"
-                            "</BODY></HTML>";
+                            "</BODY></HTML>" );
 
   nsCOMPtr<mozIXMLTermStream> stream;
   result = NS_NewXMLTermStream(getter_AddRefs(stream));
@@ -673,7 +673,7 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
   if (!mLineTermAux)
     return NS_ERROR_FAILURE;
 
-  nsAutoString sendStr = aString;
+  nsAutoString sendStr(aString);
 
   // Preprocess string and check if it is to be consumed
   PRBool consumed, checkSize;
