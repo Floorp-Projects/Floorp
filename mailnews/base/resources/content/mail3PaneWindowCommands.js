@@ -270,9 +270,9 @@ var DefaultController =
           gDBView.getCommandStatus(nsMsgViewCommandType.junk, enabled, checkStatus);
         return enabled.value;
       case "cmd_killThread":
-        return GetNumSelectedMessages() == 1;
+        return GetNumSelectedMessages() > 0;
       case "cmd_watchThread":
-        if ((GetNumSelectedMessages() == 1) && gDBView)
+        if (gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
         return enabled.value;
       case "cmd_createFilterFromPopup":
