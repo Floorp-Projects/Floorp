@@ -763,7 +763,7 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
     JSStackFrame *caller;
 
     str = (JSString *) closure;
-    caller = cx->fp->down;
+    caller = JS_GetScriptedCaller(cx, NULL);
     if (!JS_EvaluateScript(cx, caller->scopeChain,
                            JS_GetStringBytes(str), JS_GetStringLength(str),
                            caller->script->filename, caller->script->lineno,

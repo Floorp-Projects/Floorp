@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -352,7 +352,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                              vp, wp->closure);
             if (ok) {
                 /*
-                 * Create pseudo-frame for call to setter so that any 
+                 * Create pseudo-frame for call to setter so that any
                  * stack-walking security code in the setter will correctly
                  * identify the guilty party.
                  */
@@ -633,11 +633,48 @@ JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
     return fp->pc;
 }
 
+JS_PUBLIC_API(JSStackFrame *)
+JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
+{
+    if (!fp)
+        fp = cx->fp;
+    while ((fp = fp->down) != NULL) {
+        if (fp->script)
+            return fp;
+    }
+    return NULL;
+}
+
+JS_PUBLIC_API(JSPrincipals *)
+JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
+{
+    if (fp->fun && cx->findObjectPrincipals) {
+        JSObject *callee = JSVAL_TO_OBJECT(fp->argv[-2]);
+
+        if (fp->fun->object != callee)
+            return cx->findObjectPrincipals(cx, callee);
+        /* FALL THROUGH */
+    }
+    if (fp->script)
+        return fp->script->principals;
+    return NULL;
+}
+
+JS_PUBLIC_API(JSPrincipals *)
+JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
+{
+    if (cx->findObjectPrincipals)
+        return cx->findObjectPrincipals(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
+    if (!caller)
+        return NULL;
+    return JS_StackFramePrincipals(cx, caller);
+}
+
 JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
 {
     if (fp->annotation && fp->script) {
-        JSPrincipals *principals = fp->script->principals;
+        JSPrincipals *principals = JS_StackFramePrincipals(cx, fp);
 
         if (principals && principals->globalPrivilegesEnabled(cx, principals)) {
             /*
@@ -661,10 +698,8 @@ JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp)
 {
     JSPrincipals *principals;
-    
-    if (!fp->script)
-        return NULL;
-    principals = fp->script->principals;
+
+    principals = JS_StackFramePrincipals(cx, fp);
     if (!principals)
         return NULL;
     return principals->getPrincipalArray(cx, principals);
@@ -816,9 +851,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     flags = fp->flags;
     fp->flags |= JSFRAME_DEBUGGER | JSFRAME_EVAL;
     script = JS_CompileUCScriptForPrincipals(cx, fp->scopeChain,
-                                             fp->script
-                                             ? fp->script->principals
-                                             : NULL,
+                                             JS_StackFramePrincipals(cx, fp),
                                              bytes, length, filename, lineno);
     fp->flags = flags;
     if (!script)
@@ -898,7 +931,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
         }
         cx->throwing = JS_FALSE;
     }
-    
+
     if (!js_GetProperty(cx, obj, sprop->id, &pd->value)) {
         if (!cx->throwing) {
             pd->flags = JSPD_ERROR;
@@ -910,14 +943,14 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     } else {
         pd->flags = 0;
     }
-    
+
     cx->throwing = wasThrowing;
     if (wasThrowing) {
         cx->exception = lastException;
         if (JSVAL_IS_GCTHING(lastException))
             js_RemoveRoot(cx->runtime, &lastException);
     }
-    
+
     getter = sprop->getter;
     pd->flags |= ((sprop->attrs & JSPROP_ENUMERATE) ? JSPD_ENUMERATE : 0)
               | ((sprop->attrs & JSPROP_READONLY)  ? JSPD_READONLY  : 0)
@@ -1141,7 +1174,7 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
     if (obj) {
         obytes = JS_GetObjectTotalSize(cx, obj);
         if (fun->nrefs > 1)
-            obytes = (obytes + fun->nrefs - 1) / fun->nrefs;
+            obytes = JS_HOWMANY(obytes, fun->nrefs);
         nbytes += obytes;
     }
     if (fun->script)
@@ -1194,7 +1227,7 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
         JS_ASSERT(principals->refcount);
         pbytes = sizeof *principals;
         if (principals->refcount > 1)
-            pbytes = (pbytes + principals->refcount - 1) / principals->refcount;
+            pbytes = JS_HOWMANY(pbytes, principals->refcount);
         nbytes += pbytes;
     }
 

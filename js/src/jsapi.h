@@ -1102,19 +1102,33 @@ struct JSPrincipals {
     JSBool (* JS_DLL_CALLBACK globalPrivilegesEnabled)(JSContext *cx, JSPrincipals *);
 
     /* Don't call "destroy"; use reference counting macros below. */
-    uintN refcount;
+    jsrefcount refcount;
     void (* JS_DLL_CALLBACK destroy)(JSContext *cx, struct JSPrincipals *);
 };
 
-#define JSPRINCIPALS_HOLD(cx, principals)               \
-    ((principals)->refcount++)
-#define JSPRINCIPALS_DROP(cx, principals)               \
-    ((--((principals)->refcount) == 0)                  \
-        ? (*(principals)->destroy)((cx), (principals))  \
-        : (void) 0)
+#ifdef JS_THREADSAFE
+#define JSPRINCIPALS_HOLD(cx, principals)   JS_HoldPrincipals(cx,principals)
+#define JSPRINCIPALS_DROP(cx, principals)   JS_DropPrincipals(cx,principals)
+
+extern JS_PUBLIC_API(jsrefcount)
+JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals);
+
+extern JS_PUBLIC_API(jsrefcount)
+JS_DropPrincipals(JSContext *cx, JSPrincipals *principals);
+
+#else
+#define JSPRINCIPALS_HOLD(cx, principals)   (++(principals)->refcount)
+#define JSPRINCIPALS_DROP(cx, principals)                                     \
+    ((--(principals)->refcount == 0)                                          \
+     ? ((*(principals)->destroy)((cx), (principals)), 0)                      \
+     : (principals)->refcount)
+#endif
 
 extern JS_PUBLIC_API(JSPrincipalsTranscoder)
 JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px);
+
+extern JS_PUBLIC_API(JSObjectPrincipalsFinder)
+JS_SetObjectPrincipalsFinder(JSContext *cx, JSObjectPrincipalsFinder fop);
 
 /************************************************************************/
 

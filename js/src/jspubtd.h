@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -514,7 +514,7 @@ typedef JSBool
                                         va_list *app);
 #endif
 
-typedef JSBool 
+typedef JSBool
 (* JS_DLL_CALLBACK JSLocaleToUpperCase)(JSContext *cx, JSString *src,
                                         jsval *rval);
 
@@ -542,6 +542,17 @@ typedef struct JSPrincipals JSPrincipals;
 typedef JSBool
 (* JS_DLL_CALLBACK JSPrincipalsTranscoder)(JSXDRState *xdr,
                                            JSPrincipals **principalsp);
+
+/*
+ * Return a weak reference to the principals associated with obj, possibly via
+ * the immutable parent chain leading from obj to a top-level container (e.g.,
+ * a window object in the DOM level 0).  If there are no principals associated
+ * with obj, return null.  Therefore null does not mean an error was reported;
+ * in no event should an error be reported or an exception be thrown by this
+ * callback's implementation.
+ */
+typedef JSPrincipals *
+(* JS_DLL_CALLBACK JSObjectPrincipalsFinder)(JSContext *cx, JSObject *obj);
 
 JS_END_EXTERN_C
 
