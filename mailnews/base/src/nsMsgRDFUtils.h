@@ -55,6 +55,8 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_COPY					"http://home.netscape.com/NC-rdf#Copy"
 #define NC_RDF_MOVE					"http://home.netscape.com/NC-rdf#Move"
 #define NC_RDF_MARKALLMESSAGESREAD  "http://home.netscape.com/NC-rdf#MarkAllMessagesRead"
+#define NC_RDF_COMPACT				"http://home.netscape.com/NC-rdf#Compact"
+#define NC_RDF_RENAME				"http://home.netscape.com/NC_rdf#Rename"
 
 //Message Commands
 #define NC_RDF_MARKREAD				"http://home.netscape.com/NC-rdf#MarkRead"

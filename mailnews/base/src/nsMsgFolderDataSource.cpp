@@ -59,6 +59,8 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Copy= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Move= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MarkAllMessagesRead= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Compact= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Rename= nsnull;
 
 
 
@@ -95,6 +97,8 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
   NS_RELEASE2(kNC_Copy, refcnt);
   NS_RELEASE2(kNC_Move, refcnt);
   NS_RELEASE2(kNC_MarkAllMessagesRead, refcnt);
+  NS_RELEASE2(kNC_Compact, refcnt);
+  NS_RELEASE2(kNC_Rename, refcnt);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
   mRDFService = nsnull;
@@ -134,7 +138,10 @@ nsresult nsMsgFolderDataSource::Init()
     mRDFService->GetResource(NC_RDF_GETNEWMESSAGES, &kNC_GetNewMessages);
     mRDFService->GetResource(NC_RDF_COPY, &kNC_Copy);
     mRDFService->GetResource(NC_RDF_MOVE, &kNC_Move);
-    mRDFService->GetResource(NC_RDF_MARKALLMESSAGESREAD, &kNC_MarkAllMessagesRead);
+    mRDFService->GetResource(NC_RDF_MARKALLMESSAGESREAD,
+                             &kNC_MarkAllMessagesRead);
+    mRDFService->GetResource(NC_RDF_COMPACT, &kNC_Compact);
+    mRDFService->GetResource(NC_RDF_RENAME, &kNC_Rename);
   }
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -434,6 +441,8 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     cmds->AppendElement(kNC_Copy);
     cmds->AppendElement(kNC_Move);
     cmds->AppendElement(kNC_MarkAllMessagesRead);
+    cmds->AppendElement(kNC_Compact);
+    cmds->AppendElement(kNC_Rename);
   }
 
   if (cmds != nsnull)
@@ -467,11 +476,14 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- folder commands are always enabled
       if (!((aCommand == kNC_Delete) ||
-		    (aCommand == kNC_NewFolder) ||
-		    (aCommand == kNC_Copy) ||
-		    (aCommand == kNC_Move) ||
-			(aCommand == kNC_GetNewMessages) ||
-			(aCommand == kNC_MarkAllMessagesRead))) {
+            (aCommand == kNC_NewFolder) ||
+            (aCommand == kNC_Copy) ||
+            (aCommand == kNC_Move) ||
+            (aCommand == kNC_GetNewMessages) ||
+            (aCommand == kNC_MarkAllMessagesRead) ||
+            (aCommand == kNC_Compact) || 
+            (aCommand == kNC_Rename))) 
+      {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -491,52 +503,47 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
   nsCOMPtr<nsISupports> supports;
   // XXX need to handle batching of command applied to all sources
 
-  PRUint32 cnt;
+  PRUint32 cnt = 0;
   PRUint32 i = 0;
 
+  rv = GetTransactionManager(aSources, getter_AddRefs(transactionManager));
+  if (NS_FAILED(rv)) return rv;
   rv = aSources->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
-
-  if (cnt > 1)
-  {
-    supports = getter_AddRefs(aSources->ElementAt(0));
-    transactionManager = do_QueryInterface(supports, &rv);
-    if (NS_SUCCEEDED(rv) && transactionManager)
-    {
-        aSources->RemoveElementAt(0);
-        cnt--;
-    }
-  }
 
   for ( ; i < cnt; i++) {
     supports  = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
-    if (NS_SUCCEEDED(rv)) {
-		if ((aCommand == kNC_Delete))
-		{
-			rv = DoDeleteFromFolder(folder, aArguments, transactionManager);
-		}
-		else if((aCommand == kNC_NewFolder)) 
-		{
-			rv = DoNewFolder(folder, aArguments);
-		}
-		else if((aCommand == kNC_GetNewMessages))
-		{
-			rv = folder->GetNewMessages();
-		}
-		else if((aCommand == kNC_Copy))
-		{
-			rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_FALSE);
-		}
-		else if((aCommand == kNC_Move))
-		{
-			rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_TRUE);
-		}
-		else if((aCommand == kNC_MarkAllMessagesRead))
-		{
-			rv = folder->MarkAllMessagesRead();
-		}
-
+    if (NS_SUCCEEDED(rv)) 
+    {
+      if ((aCommand == kNC_Delete))
+      {
+        rv = DoDeleteFromFolder(folder, aArguments, transactionManager);
+      }
+      else if((aCommand == kNC_NewFolder)) 
+      {
+        rv = DoNewFolder(folder, aArguments);
+      }
+      else if((aCommand == kNC_GetNewMessages))
+      {
+        rv = folder->GetNewMessages();
+      }
+      else if((aCommand == kNC_Copy))
+      {
+        rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_FALSE);
+      }
+      else if((aCommand == kNC_Move))
+      {
+        rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_TRUE);
+      }
+      else if((aCommand == kNC_MarkAllMessagesRead))
+      {
+        rv = folder->MarkAllMessagesRead();
+      }
+      else if ((aCommand == kNC_Compact))
+      {
+        rv = folder->Compact();
+      }
     }
   }
   //for the moment return NS_OK, because failure stops entire DoCommand process.

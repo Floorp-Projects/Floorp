@@ -137,6 +137,11 @@ public:
 
   NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 						const char *name);
+  NS_IMETHOD RenameFolder(nsIRDFCompositeDataSource* db, 
+                          nsIDOMXULElement* folder,
+                          const char* name);
+  NS_IMETHOD CompactFolder(nsIRDFCompositeDataSource* db,
+                           nsIDOMXULElement* folder);
   NS_IMETHOD Undo();
   NS_IMETHOD Redo();
   NS_IMETHOD SendUnsentMessages();
@@ -479,7 +484,8 @@ nsMessenger::OpenURL(const char * url)
 
 nsresult
 nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, char *command,
-						nsISupportsArray *srcArray, nsISupportsArray *argumentArray)
+                       nsISupportsArray *srcArray, 
+                       nsISupportsArray *argumentArray)
 {
 
 	nsresult rv;
@@ -971,6 +977,35 @@ nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *pa
 		rv = DoCommand(database, NC_RDF_NEWFOLDER, folderArray, nameArray);
 	}
 	return rv;
+}
+
+NS_IMETHODIMP
+nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
+                          nsIDOMXULElement* folder,
+                          const char* name)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMessenger::CompactFolder(nsIRDFCompositeDataSource* db,
+                           nsIDOMXULElement* folder)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  
+  if (!db || !folder) return rv;
+  nsCOMPtr<nsISupportsArray> folderArray;
+  nsCOMPtr<nsIRDFResource> folderResource;
+
+  rv = folder->GetResource(getter_AddRefs(folderResource));
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+    if (NS_FAILED(rv)) return rv;
+    folderArray->AppendElement(folderResource);
+    rv = DoCommand(db, NC_RDF_COMPACT, folderArray, nsnull);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
