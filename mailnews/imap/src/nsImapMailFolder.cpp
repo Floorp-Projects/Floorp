@@ -283,11 +283,6 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name,
 	*child = folder;
 	NS_IF_ADDREF(*child);
     nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(folder);
-    if (imapFolder)
-    {
-        // for renaming
-        imapFolder->SetOnlineName("");
-    }
 	return rv;
 }
 
@@ -907,8 +902,30 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName)
     return rv;
 }
 
-NS_IMETHODIMP
- nsImapMailFolder::RenameLocal(const char *newName)
+NS_IMETHODIMP nsImapMailFolder::PrepareToRename()
+{
+    PRUint32 cnt = 0, i;
+    if (mSubFolders)
+    {
+        nsCOMPtr<nsISupports> aSupport;
+        nsCOMPtr<nsIMsgImapMailFolder> folder;
+        mSubFolders->Count(&cnt);
+        if (cnt > 0)
+        {
+            for (i = 0; i < cnt; i++)
+            {
+                aSupport = getter_AddRefs(mSubFolders->ElementAt(i));
+                folder = do_QueryInterface(aSupport);
+                if (folder)
+                    folder->PrepareToRename();
+            }
+        }
+    }
+    SetOnlineName("");
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
 {
     nsCAutoString leafname = newName;
     // newName always in the canonical form "greatparent/parentname/leafname"
@@ -917,6 +934,7 @@ NS_IMETHODIMP
         leafname.Cut(0, leafpos+1);
 
     m_msgParser = null_nsCOMPtr();
+    PrepareToRename();
     ForceDBClosed();
 
     nsresult rv = NS_OK;
