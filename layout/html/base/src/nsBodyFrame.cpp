@@ -245,8 +245,19 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
     // Return our desired size
     ComputeDesiredSize(desiredRect, aReflowState.maxSize, borderPadding, aDesiredSize);
   }
+  else {
+    aDesiredSize.width = 0;
+    aDesiredSize.height = 0;
+    aDesiredSize.ascent = 0;
+    aDesiredSize.descent = 0;
+    if (nsnull != aDesiredSize.maxElementSize) {
+      aDesiredSize.maxElementSize->width = 0;
+      aDesiredSize.maxElementSize->height = 0;
+    }
+  }
   
-  NS_FRAME_TRACE_REFLOW_OUT("nsBodyFrame::Reflow", aStatus);
+  NS_FRAME_TRACE_MSG(("exit nsBodyFrame::Reflow: status=%d width=%d height=%d",
+                      aStatus, aDesiredSize.width, aDesiredSize.height));
   return NS_OK;
 }
 
