@@ -62,9 +62,12 @@ public synchronized class StoreFactory {
   private StoreFactory() {
     Preferences prefs = PreferencesFactory.Get();
     fAuthenticator = new DialogAuthenticator();
+    // ### Remember to put this back when authentication is set up
+    // ### otherwise we have a security problem  (talisman)
     fSession =
-      Session.getDefaultInstance(prefs.getAsProperties(),
-                                 fAuthenticator);
+      //      Session.getDefaultInstance(prefs.getAsProperties(),
+      //                           fAuthenticator);
+      Session.getDefaultInstance(prefs.getAsProperties(), null);
     fSession.setDebug(true);
   }
 
