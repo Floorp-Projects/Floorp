@@ -155,6 +155,25 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: GetSize ( int &aSize )
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextSpecGTK :: GetPageDimensions ( float &aWidth, float &aHeight )      
+{
+    if ( mPrData.size == NS_LETTER_SIZE ) {
+        aWidth = 8.5;
+        aHeight = 11.0;
+    } else if ( mPrData.size == NS_LEGAL_SIZE ) {
+        aWidth = 8.5;
+        aHeight = 14.0;
+    } else if ( mPrData.size == NS_EXECUTIVE_SIZE ) {
+        aWidth = 7.5;
+        aHeight = 10.0;
+    } else if ( mPrData.size == NS_A4_SIZE ) {
+        // 210mm X 297mm == 8.27in X 11.69in
+        aWidth = 8.27;
+        aHeight = 11.69;
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextSpecGTK :: GetTopMargin ( float &value )      
 {
   value = mPrData.top;

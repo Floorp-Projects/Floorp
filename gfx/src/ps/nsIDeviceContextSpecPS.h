@@ -104,6 +104,14 @@ public:
    NS_IMETHOD GetCommand (  char **aCommand ) = 0;   
 
   /*
+   * Get width and height based on user page size choice, e.g., 8.5 x 11.0 
+   * @update 
+   * @param aWidth, aHeight 
+   * @return 
+   **/
+   NS_IMETHOD GetPageDimensions ( float &aWidth, float &aHeight ) = 0;   
+
+  /*
    * If toPrinter = PR_FALSE, dest file 
    * @update 
    * @param aPath --
