@@ -509,7 +509,37 @@
   (defparameter *lm* (lexer-metagrammar *ll*)))
 
 
+(defun dump-lexer ()
+  (values
+   (depict-rtf-to-local-file
+    "JS20/LexerGrammar.rtf"
+    "JavaScript 2 Lexical Grammar"
+    #'(lambda (rtf-stream)
+        (depict-world-commands rtf-stream *lw* :heading-offset 1 :visible-semantics nil)))
+   (depict-rtf-to-local-file
+    "JS20/LexerSemantics.rtf"
+    "JavaScript 2 Lexical Semantics"
+    #'(lambda (rtf-stream)
+        (depict-world-commands rtf-stream *lw* :heading-offset 1)))
+   (depict-html-to-local-file
+    "JS20/LexerGrammar.html"
+    "JavaScript 2 Lexical Grammar"
+    t
+    #'(lambda (rtf-stream)
+        (depict-world-commands rtf-stream *lw* :heading-offset 1 :visible-semantics nil))
+    :external-link-base "notation.html")
+   (depict-html-to-local-file
+    "JS20/LexerSemantics.html"
+    "JavaScript 2 Lexical Semantics"
+    t
+    #'(lambda (rtf-stream)
+        (depict-world-commands rtf-stream *lw* :heading-offset 1))
+    :external-link-base "notation.html")))
+
+
 #|
+(dump-lexer)
+
 (depict-rtf-to-local-file
  "JS20/LexerCharClasses.rtf"
  "JavaScript 2 Lexical Character Classes"
@@ -521,32 +551,6 @@
      (depict-paragraph (rtf-stream :grammar-header)
        (depict rtf-stream "Grammar"))
      (depict-grammar rtf-stream *lg*)))
-
-(values
- (depict-rtf-to-local-file
-  "JS20/LexerGrammar.rtf"
-  "JavaScript 2 Lexical Grammar"
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *lw* :heading-offset 1 :visible-semantics nil)))
- (depict-rtf-to-local-file
-  "JS20/LexerSemantics.rtf"
-  "JavaScript 2 Lexical Semantics"
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *lw* :heading-offset 1)))
- (depict-html-to-local-file
-  "JS20/LexerGrammar.html"
-  "JavaScript 2 Lexical Grammar"
-  t
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *lw* :heading-offset 1 :visible-semantics nil))
-  :external-link-base "notation.html")
- (depict-html-to-local-file
-  "JS20/LexerSemantics.html"
-  "JavaScript 2 Lexical Semantics"
-  t
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *lw* :heading-offset 1))
-  :external-link-base "notation.html"))
 
 (with-local-output (s "JS20/LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))
 
