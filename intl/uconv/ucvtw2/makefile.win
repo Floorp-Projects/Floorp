@@ -29,6 +29,8 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS =				\
 	nsEUCTWToUnicode.cpp		\
 	nsUnicodeToEUCTW.cpp		\
+	nsUnicodeToCNS11643p1.cpp		\
+	nsUnicodeToCNS11643p2.cpp		\
 	nsUCvTW2Support.cpp		\
 	nsUCvTW2Dll.cpp			\
 	$(NULL)
@@ -36,6 +38,8 @@ CPPSRCS =				\
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsEUCTWToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToEUCTW.obj		\
+	.\$(OBJDIR)\nsUnicodeToCNS11643p1.obj		\
+	.\$(OBJDIR)\nsUnicodeToCNS11643p2.obj		\
 	.\$(OBJDIR)\nsUCvTW2Support.obj			\
 	.\$(OBJDIR)\nsUCvTW2Dll.obj 			\
 	$(NULL)
