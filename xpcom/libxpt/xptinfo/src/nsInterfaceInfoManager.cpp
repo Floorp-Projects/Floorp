@@ -19,6 +19,7 @@
 /* Implementation of nsIInterfaceInfo. */
 
 #include <sys/stat.h>
+#include "nscore.h"
 
 #include "nsISupports.h"
 #include "nsIInterfaceInfoManager.h"
