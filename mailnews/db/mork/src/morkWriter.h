@@ -85,7 +85,7 @@
 
 #define morkWriter_kMaxColumnNameSize        128 /* longest writable col name */
 
-#define morkWriter_kMaxIndent 56 /* default value for mWriter_MaxIndent */
+#define morkWriter_kMaxIndent 64 /* default value for mWriter_MaxIndent */
 #define morkWriter_kMaxLine   78 /* default value for mWriter_MaxLine */
 
 #define morkWriter_kYarnEscapeSlop  4 /* guess average yarn escape overhead */
