@@ -249,6 +249,8 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdat
 
     // make sure the new position in in bounds
 	GetScrolledView(scrolledView);
+	NS_ASSERTION(scrolledView, "no scrolled view");
+	if (!scrolledView) return NS_ERROR_FAILURE;
 	scrolledView->GetDimensions(&scrolledSize.width, &scrolledSize.height);
 
     nsSize portSize;
