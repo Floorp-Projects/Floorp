@@ -468,6 +468,8 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   if (content) {
     aDocObserver->ContentRemoved(nsnull, aParentContent, content, -1);
+    content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    content->SetParent(nsnull);
   }
 }  
 
