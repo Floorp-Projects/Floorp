@@ -47,4 +47,4 @@ FILES=\
         $(NULL)
 
 install:: $(FILES:/=\)
-	!@$(MAKE_INSTALL) $** $(DIST)\bin\searchplugins
+	!@$(MAKE_INSTALL) $** $(DIST)\bin\chrome\locales\en-US\communicator\locale\search\searchplugins
