@@ -30,13 +30,15 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIChromeEventHandler.h"
 
 static NS_DEFINE_IID(kIDOMHTMLFrameElementIID, NS_IDOMHTMLFRAMEELEMENT_IID);
 
 class nsHTMLFrameElement : public nsIDOMHTMLFrameElement,
                            public nsIScriptObjectOwner,
                            public nsIDOMEventReceiver,
-                           public nsIHTMLContent
+                           public nsIHTMLContent,
+                           public nsIChromeEventHandler
 {
 public:
   nsHTMLFrameElement(nsIAtom* aTag);
@@ -84,6 +86,9 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIChromeEventHandler
+  NS_DECL_NSICHROMEEVENTHANDLER
+
 protected:
   nsGenericHTMLLeafElement mInner;
 };
@@ -124,6 +129,11 @@ nsHTMLFrameElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLFrameElementIID)) {
     nsIDOMHTMLFrameElement* tmp = this;
     *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIChromeEventHandler))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIChromeEventHandler*, this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -251,4 +261,17 @@ NS_IMETHODIMP
 nsHTMLFrameElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+}
+
+//*****************************************************************************
+// nsHTMLFrameElement::nsIChromeEventHandler
+//*****************************************************************************   
+
+NS_IMETHODIMP nsHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
+   nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
+   nsEventStatus* aEventStatus)
+{
+   NS_ENSURE_ARG(aPresContext);
+   NS_ENSURE_ARG_POINTER(aEventStatus);
+   return HandleDOMEvent(*aPresContext, aEvent, aDOMEvent, aFlags,*aEventStatus);
 }
