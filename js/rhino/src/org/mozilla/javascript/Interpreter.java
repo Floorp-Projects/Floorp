@@ -1399,9 +1399,20 @@ public class Interpreter extends LabelTable {
         if (id.itsName.length() == 0)
             return;
         if ((id.itsFunctionType == FunctionNode.FUNCTION_STATEMENT &&
-             fn.itsClosure == null) ||
-            (id.itsFunctionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT &&
-             fn.itsClosure != null))
+             fn.itsClosure == null))
+        {
+            try {
+                // ECMA specifies that functions defined in global and 
+                // function scope should have DONTDELETE set.
+                ((ScriptableObject) scope).defineProperty(fn.itsData.itsName,
+                    fn, ScriptableObject.PERMANENT);
+            } catch (ClassCastException e) {
+                ScriptRuntime.setProp(scope, fn.itsData.itsName, fn, scope);
+            }
+        }
+
+        if (id.itsFunctionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT &&
+            fn.itsClosure != null)
         {
             ScriptRuntime.setProp(scope, fn.itsData.itsName, fn, scope);
         }

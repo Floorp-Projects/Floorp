@@ -2004,8 +2004,14 @@ public class ScriptRuntime {
     {
         fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
         fn.setParentScope(scope);
-        if (doSetName)
-            setName(scope, fn, scope, fnName);
+        if (doSetName) {
+            try {
+                ((ScriptableObject) scope).defineProperty(fnName, fn,
+                    ScriptableObject.PERMANENT);
+            } catch (ClassCastException e) {
+                setName(scope, fn, scope, fnName);
+            }
+        }
         return fn;
     }
 
