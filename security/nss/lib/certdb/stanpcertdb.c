@@ -482,13 +482,22 @@ CERT_FindCertByNicknameOrEmailAddr(CERTCertDBHandle *handle, char *name)
     NSSCertificate *c, *ct;
     CERTCertificate *cert;
     NSSUsage usage;
+
+    if (NULL == name) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
     usage.anyUsage = PR_TRUE;
     cc = STAN_GetDefaultCryptoContext();
     ct = NSSCryptoContext_FindBestCertificateByNickname(cc, name, 
                                                        NULL, &usage, NULL);
-    if (!ct) {
-	ct = NSSCryptoContext_FindBestCertificateByEmail(cc, name, 
-	                                                NULL, &usage, NULL);
+    if (!ct && PORT_Strchr(name, '@') != NULL) {
+        char* lowercaseName = CERT_FixupEmailAddr(name);
+        if (lowercaseName) {
+	    ct = NSSCryptoContext_FindBestCertificateByEmail(cc, lowercaseName, 
+							    NULL, &usage, NULL);
+            PORT_Free(lowercaseName);
+        }
     }
     cert = PK11_FindCertFromNickname(name, NULL);
     if (cert) {
