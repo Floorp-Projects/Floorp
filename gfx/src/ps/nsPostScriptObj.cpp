@@ -44,7 +44,7 @@ extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
 #define NS_PS_GREEN(x) (((float)(NS_GET_G(x))) / 255.0) 
 #define NS_PS_BLUE(x) (((float)(NS_GET_B(x))) / 255.0) 
 #define NS_TWIPS_TO_POINTS(x) ((x / 20))
-#define NS_IS_BOLD(x) (((x) >= 500) ? 1 : 0) 
+#define NS_IS_BOLD(x) (((x) >= 401) ? 1 : 0) 
 
 /* 
  * Paper Names 
@@ -454,6 +454,28 @@ char* charset_name = NULL;
   XP_FilePrintf(f, "} bind def\n");
   XP_FilePrintf(f, "%%%%EndProlog\n");
 
+
+
+  XP_FilePrintf(f, "%s%s%s%s%s%s%s%s%s%s%s%s%s\n", 
+  " /U27721 { ",
+  " {{-100 -100 2000 2000 480 878 507 878 517 688 561 530 638 405 548 269 433 173 292 117 290 114 290 113 292 113 439 157 562 243",
+  " 660 371 694 321 733 277 777 239 821 201 872 168 929 140 945 162 969 175 1000 180 1000 187 868 233 763 307 687 410 767 527 828 ",
+  " 674 871 850 881 866 892 876 906 882 888 901 871 918 855 932 851 926 846 921 841 915 836 909 830 903 824 897 433 897 449 874 480",
+  " 878 820 878 783 705 731 561 663 445 587 559 542 703 528 878 820 878 417 823 250 432 228 396 211 379 199 382 185 382 173 382 161",
+  " 383 149 383 138 384 128 386 113 383 113 378 128 370 156 364 177 355 191 343 203 338 210 326 214 307 212 290 211 274 209 259 207 ",
+  " 243 205 228 203 214 197 198 195 187 195 183 195 170 199 158 207 148 217 140 228 137 238 137 256 131 265 134 265 144 265 153 264 ",
+  " 162 264 171 263 180 262 189 261 199 255 249 257 300 265 354 429 823 417 823 105 745 149 705 182 653 203 589 218 575 231 579 242 ",
+  " 600 265 657 221 707 109 749 106 749 105 747 105 745 203 952 238 915 265 868 285 811 299 797 312 801 324 823 350 872 311 916 207 ",
+  " 956 204 956 203 954 203 952 }",
+  " <0b00010305050505050505030505050505050303030105050301030505050505050505050505050505050303010505050501050505050a>",
+  " }",
+  " ufill } bind def ");
+
+  XP_FilePrintf(f, "\n /NoglyphUnicodedict \n");
+  XP_FilePrintf(f, " << \n");
+  XP_FilePrintf(f, "  0 (U27721) \n");
+  XP_FilePrintf(f, " >> def \n");
+
   //definition of 'show' command to handle unicode
 
   //  XP_FilePrintf(f, "/cwidth 12 def\n");
@@ -470,17 +492,24 @@ char* charset_name = NULL;
   XP_FilePrintf(f, "	str i get /c1 exch def\n");
   XP_FilePrintf(f, "	str i 1 add get /c2 exch def\n");
   XP_FilePrintf(f, "	c2 1 ge \n");
-  XP_FilePrintf(f, "	{	\n");
-  XP_FilePrintf(f, "		gsave\n");
+  XP_FilePrintf(f, "    {	\n");
+  XP_FilePrintf(f, "        gsave\n");
   XP_FilePrintf(f, "        currentpoint translate\n");
   XP_FilePrintf(f, "		cwidth 1056 div cheight 1056 div scale\n");
   XP_FilePrintf(f, "        2 -2 translate \n");
+
+  XP_FilePrintf(f, "     /Unicodedict where { \n");
+  XP_FilePrintf(f, "       pop \n");  
   XP_FilePrintf(f, "        /c c2 256 mul c1 add def c Unicodedict\n");
+  XP_FilePrintf(f, "      }{ \n");
+  XP_FilePrintf(f, "      0 NoglyphUnicodedict \n");
+  XP_FilePrintf(f, "      } ifelse \n");
+
   XP_FilePrintf(f, "		exch get cvx exec	\n");
   XP_FilePrintf(f, "		grestore\n");
   XP_FilePrintf(f, "		currentpoint exch cwidth add exch moveto\n");
   XP_FilePrintf(f, "		/i i 2 add def \n");
-  XP_FilePrintf(f, "\n");
+  XP_FilePrintf(f, "      \n");
   XP_FilePrintf(f, "      }\n");
   XP_FilePrintf(f, "	  {\n");
   XP_FilePrintf(f, "		 str i 1 getinterval show /i i 2 add def\n"); 
@@ -1090,6 +1119,9 @@ nsPostScriptObj::setscriptfont(PRInt16 aFontIndex,const nsString &aFamily,nscoor
 {
 int postscriptFont = 0;
 
+
+//    XP_FilePrintf(mPrintContext->prSetup->out, "%% aFontIndex = %d, Family = %s, aStyle = %d, 
+//        aWeight=%d, postscriptfont = %d\n", aFontIndex, &aFamily, aStyle, aWeight, postscriptFont);
   XP_FilePrintf(mPrintContext->prSetup->out,"%d",NS_TWIPS_TO_POINTS(aHeight));
 	
   
@@ -1100,36 +1132,37 @@ int postscriptFont = 0;
   }
 
 
-#ifdef NOTNOW
+  //#ifdef NOTNOW
   //XXX:PS Add bold, italic and other settings here
 	switch(aStyle){
 	  case NS_FONT_STYLE_NORMAL :
 		  if (NS_IS_BOLD(aWeight)) {
-		    postscriptFont = 1;   // NORMAL BOLD
+		    postscriptFont = 1;   // TIMES NORMAL BOLD
       }else{
-        postscriptFont = 0; // Times Normal
+        postscriptFont = 0; // Times ROMAN Normal
 		  }
 	  break;
 
 	  case NS_FONT_STYLE_ITALIC:
 		  if (NS_IS_BOLD(aWeight)) {		  
-		    postscriptFont = 3; // BOLD ITALIC
+		    postscriptFont = 2; // TIMES BOLD ITALIC
       }else{			  
-		    postscriptFont = 2; // ITALIC
+		    postscriptFont = 3; // TIMES ITALIC
 		  }
 	  break;
 
 	  case NS_FONT_STYLE_OBLIQUE:
 		  if (NS_IS_BOLD(aWeight)) {	
-        postscriptFont = 7;   // COURIER-BOLD OBLIQUE
+        postscriptFont = 6;   // HELVETICA OBLIQUE
       }else{	
-        postscriptFont = 6;   // COURIER OBLIQUE
+        postscriptFont = 7;   // HELVETICA OBLIQUE
 		  }
 	    break;
 	}
-#endif
+    //#endif
 
 	 XP_FilePrintf(mPrintContext->prSetup->out, " f%d\n", postscriptFont);
+
 
 #if 0
      // The style of font (normal, italic, oblique)
@@ -1162,3 +1195,5 @@ nsPostScriptObj::comment(char *aTheComment)
   XP_FilePrintf(mPrintContext->prSetup->out,"%%%s\n", aTheComment);
 
 }
+
+
