@@ -23,7 +23,17 @@
 #ifndef nsComboboxControlFrame_h___
 #define nsComboboxControlFrame_h___
 
-#define OPTIMIZE_RESIZE_RELOW
+#ifdef DEBUG_evaughan
+//#define DEBUG_rods
+#endif
+
+#ifdef DEBUG_rods
+//#define DO_REFLOW_DEBUG
+//#define DO_REFLOW_COUNTER
+//#define DO_UNCONSTRAINED_CHECK
+//#define DO_PIXELS
+//#define DO_NEW_REFLOW
+#endif
 
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
@@ -34,12 +44,14 @@
 #include "nsIStatefulFrame.h"
 #include "nsIRollupListener.h"
 #include "nsIPresState.h"
+#include "nsCSSFrameConstructor.h"
 
 class nsFormFrame;
 class nsIView;
 class nsStyleContext;
 class nsIHTMLContent;
 class nsIListControlFrame;
+class nsITextContent;
 
 /**
  * Child list name indices
@@ -84,6 +96,10 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
@@ -160,8 +176,17 @@ public:
   //nsIRollupListener
   NS_IMETHOD Rollup();
 
+  NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
+    { mFrameConstructor = aConstructor; return NS_OK;} // not owner - do not addref!
 
 protected:
+  NS_IMETHOD CreateDisplayFrame(nsIPresContext* aPresContext);
+
+#ifdef DO_NEW_REFLOW
+  NS_IMETHOD ReflowItems(nsIPresContext* aPresContext,
+                         const nsHTMLReflowState& aReflowState,
+                         nsHTMLReflowMetrics& aDesiredSize);
+#endif
 
    // nsHTMLContainerFrame
   virtual PRIntn GetSkipSides() const;
@@ -185,7 +210,6 @@ public:
                                     nsIFrame *aFrame, 
                                     nsRect& aAbsoluteTwipsRect, 
                                     nsRect& aAbsolutePixelRect);
-  nsIFrame* GetDisplayFrame(nsIPresContext* aPresContext);
 protected:
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
@@ -197,19 +221,32 @@ protected:
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
   NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
 
-  nsFrameList mPopupFrames;                       // additional named child list
-  nsIPresContext*       mPresContext;             // XXX: Remove the need to cache the pres context.
-  nsFormFrame*          mFormFrame;               // Parent Form Frame
-  nsString              mTextStr;                 // Current Combo box selection
-  PRInt32               mSelectedIndex;           // current selected index
-  nsIHTMLContent*       mDisplayContent;          // Anonymous content used to display the current selection
-  nsIHTMLContent*       mButtonContent;           // Anonymous content used to popup the dropdown list
-  PRBool                mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
-  nsIFrame*             mDisplayFrame;            // frame to display selection
-  nsIFrame*             mButtonFrame;             // button frame
-  nsIFrame*             mDropdownFrame;           // dropdown list frame
-  nsIListControlFrame * mListControlFrame;        // ListControl Interface for the dropdown frame
-  PRBool                mIgnoreFocus;             // Tells the combo to ignore all focus notifications
+  void ReflowCombobox(nsIPresContext *         aPresContext,
+                      const nsHTMLReflowState& aReflowState,
+                      nsHTMLReflowMetrics&     aDesiredSize,
+                      nsReflowStatus&          aStatus,
+                      nsIFrame *               aDisplayFrame,
+                      nsIFrame *               aDropDownBtn,
+                      nscoord&                 aDisplayWidth,
+                      nscoord                  aBtnWidth,
+                      const nsMargin&          aBorderPadding,
+                      nscoord                  aFallBackHgt = -1,
+                      PRBool                   aCheckHeight = PR_FALSE);
+
+  nsFrameList              mPopupFrames;             // additional named child list
+  nsIPresContext*          mPresContext;             // XXX: Remove the need to cache the pres context.
+  nsFormFrame*             mFormFrame;               // Parent Form Frame
+  nsString                 mTextStr;                 // Current Combo box selection
+  PRInt32                  mSelectedIndex;           // current selected index
+  nsCOMPtr<nsITextContent> mDisplayContent;          // Anonymous content used to display the current selection
+  nsIHTMLContent*          mButtonContent;           // Anonymous content used to popup the dropdown list
+  PRBool                   mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
+  nsIFrame*                mDisplayFrame;            // frame to display selection
+  nsIFrame*                mButtonFrame;             // button frame
+  nsIFrame*                mDropdownFrame;           // dropdown list frame
+  nsIFrame*                mTextFrame;               // display area frame
+  nsIListControlFrame *    mListControlFrame;        // ListControl Interface for the dropdown frame
+  PRBool                   mIgnoreFocus;             // Tells the combo to ignore all focus notifications
 
   
   nsCOMPtr<nsIPresState> mPresState;               // Need cache state when list is null
@@ -217,6 +254,18 @@ protected:
   // Resize Reflow Optimization
   nsSize                mCacheSize;
   nsSize                mCachedMaxElementSize;
+  nsSize                mCachedAvailableSize;
+
+  nsSize                mCachedUncDropdownSize;
+  nsSize                mCachedUncComboSize;
+
+  nscoord               mItemDisplayWidth;
+  //nscoord               mItemDisplayHeight;
+  nsCSSFrameConstructor* mFrameConstructor;
+
+#ifdef DO_REFLOW_COUNTER
+  PRInt32 mReflowId;
+#endif
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

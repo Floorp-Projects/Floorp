@@ -22,6 +22,17 @@
 #ifndef nsListControlFrame_h___
 #define nsListControlFrame_h___
 
+#ifdef DEBUG_evaughan
+//#define DEBUG_rods
+#endif
+
+#ifdef DEBUG_rods
+//#define DO_REFLOW_DEBUG
+//#define DO_REFLOW_COUNTER
+//#define DO_UNCONSTRAINED_CHECK
+//#define DO_PIXELS
+#endif
+
 #include "nsScrollFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIListControlFrame.h"
@@ -95,7 +106,6 @@ public:
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void Reset(PRBool aDoSelect = PR_TRUE);
   virtual void Reset(nsIPresContext* aPresContext);
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual PRInt32 GetMaxNumValues();
@@ -127,6 +137,10 @@ public:
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent);
   NS_IMETHOD SetPresState(nsIPresState * aState) { mPresState = aState; return NS_OK;}
+  NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
+
+  NS_IMETHOD SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreStateInternal(nsIPresContext* aPresContext, nsIPresState* aState);
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
@@ -244,7 +258,8 @@ protected:
   PRBool       mIsAllContentHere;
   PRBool       mIsAllFramesHere;
   PRBool       mHasBeenInitialized;
-  PRBool       mWasRestored;
+
+  PRBool       mOverrideReflowOpt;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
@@ -256,6 +271,12 @@ protected:
   //Resize Reflow OpitmizationSize;
   nsSize       mCacheSize;
   nsSize       mCachedMaxElementSize;
+  nsSize       mCachedUnconstrainedSize;
+  nsSize       mCachedAvailableSize;
+
+#ifdef DO_REFLOW_COUNTER
+  PRInt32 mReflowId;
+#endif
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

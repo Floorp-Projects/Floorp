@@ -339,7 +339,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
       }
     }
 
-#if 1
+#if 0
   nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                                          aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
@@ -3140,10 +3140,12 @@ nsGfxListControlFrame::GetStateType(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
 NS_IMETHODIMP
-nsGfxListControlFrame::SaveState(nsIPresContext* aPresContext,
-                              nsIPresState** aState)
+nsGfxListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState)
 {
+  printf("^^^^^^^^^^^^^^^^^^ nsListControlFrame::SaveStateInternal\n");
+
   nsCOMPtr<nsISupportsArray> value;
   nsresult res = NS_NewISupportsArray(getter_AddRefs(value));
   if (NS_SUCCEEDED(res) && value) {
@@ -3175,41 +3177,44 @@ nsGfxListControlFrame::SaveState(nsIPresContext* aPresContext,
   return res;
 }
 
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxListControlFrame::SaveState(nsIPresContext* aPresContext,
+                              nsIPresState** aState)
+{
+  printf("^^^^^^^^^^^^^^^^^^ nsListControlFrame::SaveState\n");
+  if (mComboboxFrame == nsnull) {
+    return SaveStateInternal(aPresContext, aState);\
+  }
+
+  return NS_OK;
+}
+
+//-----------------------------------------------------------
+NS_IMETHODIMP
+nsGfxListControlFrame::RestoreStateInternal(nsIPresContext* aPresContext,
+                                         nsIPresState* aState)
+{
+  printf("^^^^^^^^^^^^^^^^^^ nsListControlFrame::RestoreStateInternal\n");
+  mPresState   = aState;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------
 NS_IMETHODIMP
 nsGfxListControlFrame::RestoreState(nsIPresContext* aPresContext,
                                  nsIPresState* aState)
 {
-  nsCOMPtr<nsISupports> supp;
-  aState->GetStatePropertyAsSupports("selecteditems", getter_AddRefs(supp));
-
-  nsresult res = NS_ERROR_NULL_POINTER;
-  if (!supp)
-    return res;
-
-  nsCOMPtr<nsISupportsArray> value = do_QueryInterface(supp);
-  if (!value)
-    return res;
-
-  Deselect();
-  
-  PRUint32 count = 0;
-  value->Count(&count);
-  
-  nsCOMPtr<nsISupportsPRInt32> thisVal;
-  PRInt32 j=0;
-  for (PRUint32 i=0; i<count; i++) {
-    nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
-    thisVal = do_QueryInterface(suppval);
-    if (thisVal) {
-      res = thisVal->GetData(&j);
-      if (NS_SUCCEEDED(res)) {
-        res = SetOptionSelected(j, PR_TRUE);
-      }
-    } else {
-      res = NS_ERROR_UNEXPECTED;
-    }
-    if (!NS_SUCCEEDED(res)) break;
+  printf("^^^^^^^^^^^^^^^^^^ nsListControlFrame::RestoreState\n");
+  // ignore requests for saving state that are made directly 
+  // to the list frame by the system
+  // The combobox frame will call RestoreStateInternal 
+  // to have its state saved.
+  //
+  // mComboboxFrame is null when it is a stand-alone listbox
+  if (mComboboxFrame == nsnull) {
+    RestoreStateInternal(aPresContext, aState);
   }
-    
-  return res;
+
+  return NS_OK;
 }

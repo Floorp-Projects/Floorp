@@ -31,6 +31,7 @@ class nsIPresContext;
 class nsString;
 class nsIContent;
 class nsVoidArray;
+class nsCSSFrameConstructor;
 
 
 // IID for the nsIComboboxControlFrame class
@@ -108,6 +109,11 @@ public:
    *
    */
   NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext) = 0;
+
+  /**
+   *
+   */
+  NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor) = 0;
 
 };
 
