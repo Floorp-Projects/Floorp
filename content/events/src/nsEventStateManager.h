@@ -130,7 +130,7 @@ public:
   //Method for centralized distribution of new DOM events
   NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool *aPreventDefault);
 
-  NS_IMETHOD ShiftFocus(PRBool forward, nsIContent* aStart=nsnull);
+  NS_IMETHOD ShiftFocus(PRBool aForward, nsIContent* aStart=nsnull);
 
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
@@ -152,6 +152,7 @@ protected:
   // DocShell Focus Traversal Methods
   //---------------------------------------------
 
+  nsresult ShiftFocusInternal(PRBool aForward, nsIContent* aStart = nsnull);
   void TabIntoDocument(nsIDocShell* aDocShell, PRBool aForward);
   void ShiftFocusByDoc(PRBool forward);
   PRBool IsFrameSetDoc(nsIDocShell* aDocShell);
@@ -253,7 +254,10 @@ protected:
 
   // So we don't have to keep checking accessibility.browsewithcaret pref
   PRBool mBrowseWithCaret;
-  
+
+  // Recursion guard for tabbing
+  PRBool mTabbedThroughDocument;
+
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   enum { kClickHoldDelay = 500 } ;        // 500ms == 1/2 second
 
