@@ -63,9 +63,13 @@ typedef unsigned char       PRUint8;
 #define INVALID_SXP   -1
 #define NON_SXP       -2
 #define VALID_SXP     1
+#define MATCH 0
+#define NOMATCH 1
+#define ABORTED -1
 
 #define PR_RDONLY     "rb"
 #define PR_SEEK_SET   SEEK_SET
 
 #define XP_RegExpValid(a)       NON_SXP
 #define XP_RegExpMatch(a,b,c)   PR_FALSE
+

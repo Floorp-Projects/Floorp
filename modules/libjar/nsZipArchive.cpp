@@ -355,7 +355,7 @@ PRInt32 nsZipArchive::FindNext( nsZipFind* aFind, char * aBuf, PRUint16 aSize )
     else if ( aFind->mPattern == 0 )  
       found = PR_TRUE;            // always match
     else if ( aFind->mRegExp )
-      found = XP_RegExpMatch( item->name, aFind->mPattern, PR_FALSE );
+      found = (XP_RegExpMatch( item->name, aFind->mPattern, PR_FALSE ) == MATCH);
     else
       found = ( PL_strcmp( item->name, aFind->mPattern ) == 0 );
   }
