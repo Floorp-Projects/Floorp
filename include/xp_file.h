@@ -391,11 +391,6 @@ extern int XP_FileRename(const char * from, XP_FileType fromtype,
 
 extern int XP_FileRemove(const char * name, XP_FileType type);
 
-extern int XP_MakeDirectory(const char* name, XP_FileType type);
-
-/* XP_MakeDirectoryR recursively creates all the directories needed */
-extern int XP_MakeDirectoryR(const char* name, XP_FileType type);
-
 extern int XP_RemoveDirectory(const char *name, XP_FileType type);
 
 extern int XP_RemoveDirectoryRecursive(const char *name, XP_FileType type);
