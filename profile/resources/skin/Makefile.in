@@ -29,6 +29,9 @@ FILES		= \
 	profileManager.css		\
 	pwiz_panels.css			\
 	header.gif			\
+	profileSelection.css		\
+	profileicon-selected.gif	\
+	profileicon.gif			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

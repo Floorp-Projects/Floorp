@@ -9,3 +9,5 @@ newProfile1_2.js
 profileManager.js
 profileManager.xul
 renameProfile.xul
+profileSelection.js
+profileSelection.xul

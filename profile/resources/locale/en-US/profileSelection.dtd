@@ -1,0 +1,45 @@
+<!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+  Contributors:
+    Ben Goodger (28/10/99)
+  
+-->
+
+<!ENTITY            windowtitle.label     "Select User Profile">
+
+<!ENTITY            welcometo.label       "Welcome to">
+<!ENTITY            mozilla.label         "MOZILLA">  
+
+<!ENTITY            introgeneral.label    "To access your personal profile, which contains your mail, settings and other personalized information, please choose your profile from the list, and click Start Mozilla to begin your session.">
+<!ENTITY            introroaming.label    "If you have a Roaming Access profile which does not exist on this computer, choose Roaming Access. Mozilla will then prompt you to log into your Roaming Access server.">
+
+<!ENTITY            profilename.label     "Profile Name:">
+
+<!ENTITY            workoffline.label     "Work Offline">
+
+<!ENTITY            password.label        "Password:">
+
+<!ENTITY            manageprofiles.label  "Manage Profiles">
+
+<!ENTITY            start.label           "Start Mozilla">
+<!ENTITY            exit.label            "Exit">
+<!ENTITY            manage.label          "Manage Profiles...">
+
+<!ENTITY            availprofiles.label   "Available Profiles">
+

@@ -32,6 +32,8 @@ FILES=\
 	profileManager.js		\
 	profileManager.xul		\
 	renameProfile.xul		\
+	profileSelection.xul		\
+	profileSelection.js		\
         $(NULL)
 
 install::

@@ -35,6 +35,8 @@ FILES		= \
         newProfile1_2.xul			\
 	newProfile1_1.js			\
 	newProfile1_2.js			\
+	profileSelection.xul			\
+	profileSelection.js			\
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

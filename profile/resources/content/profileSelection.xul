@@ -1,0 +1,108 @@
+<?xml version="1.0"?> 
+<!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+  Contributors:
+    Code:     Ben Goodger (28/10/99)
+    UI Ideas: Matthew Thomas, Ben Gregory
+  
+-->
+
+<?xml-stylesheet href="chrome://profile/skin/profileSelection.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://profile/locale/profileSelection.dtd" >
+<window 
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+	class="dialog"
+	title="&windowtitle.label;"
+  align="vertical"
+  onload="StartUp();"
+	width="450" height="226"> 
+      
+	<html:script language="javascript" src="chrome://global/content/strres.js" />
+  <html:script language="javascript" src="chrome://profile/content/profileSelection.js"/>
+
+  <box align="horizontal">
+    <box align="vertical" style="width: 245px;">
+      <html:div id="welcometo">&welcometo.label;</html:div>
+      <html:div id="mozilla">&mozilla.label;</html:div>
+      <spring style="height: 7px;"/>
+      <box align="vertical" id="prattle">
+        <html:div class="label">&introgeneral.label;</html:div>
+<!-- sspitzer roaming not supported yet 10-28-199
+       <html:div class="label">&introroaming.label;</html:div>
+-->
+      </box>
+    </box>
+    <box align="vertical" flex="100%">
+      <html:div style="width: 190px; height: 172px;">
+        <spring style="height: 1px;"/>
+        <tree 
+              id="profiles" style="width: 190px; height: 150px;"
+              onclick="return showSelection(event.target.parentNode.parentNode);"
+              ondblclick="return startWithProfile(event.target.parentNode.parentNode);"
+              onkeypress="if(event.which == 13) return startWithProfile(event.target.parentNode.parentNode);">
+          <treehead>
+            <treerow>
+              <treecell>&availprofiles.label;</treecell>
+            </treerow>
+          </treehead>
+          <treechildren id="profilekids">
+<!-- sspitzer roaming not supported yet 10-28-199
+            <treeitem id="roamingitem">
+              <treerow>
+                <treecell id="roamingcell">Roaming Access profile</treecell>
+              </treerow>
+            </treeitem>
+-->
+          </treechildren>
+        </tree>    
+<!-- sspitzer workoffline not supported yet 10-28-199
+        <html:table>
+          <html:tr>
+            <html:td valign="middle"><html:input type="checkbox" id="offline"/></html:td>
+            <html:td valign="middle">
+              <html:label for="offline" style="padding-top: 3px;">&workoffline.label;</html:label>
+            </html:td>
+          </html:tr>
+        </html:table>
+-->
+      </html:div>
+    </box>
+    <box align="vertical">
+      <spring style="width: 15px; height: 58px;"/>    
+      <spring id="makeup" style="width: 15px; height: 100px;"/>
+    </box>
+  </box>
+  <spring style="height: 10px;"/>
+  <html:div class="rule"/>
+  <spring style="height: 5px;"/>
+  <box class="selection" align="horizontal">
+    <titledbutton class="padded" id="manage" value="&manage.label;" onclick="onManageProfiles();"/>
+    <spring flex="100%"/>
+    <titledbutton id="exit" value="&exit.label;" onclick="onExit();"/>
+    <spring style="width: 5px;"/>
+    <titledbutton class="padded" id="start" value="&start.label;" onclick="onStart();"/>
+    <spring style="width: 19px;"/>
+  </box>
+
+  <keyset>
+    <key id="fooKey" key="s" command="true" shift="true" onkeydown="foo()"/>
+  </keyset>
+</window>
