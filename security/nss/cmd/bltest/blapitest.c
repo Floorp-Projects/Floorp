@@ -54,6 +54,73 @@ char *progName;
 		exit(-1); \
 	}
 
+static void Usage()
+{
+#define PRINTUSAGE(subject, option, predicate) \
+	fprintf(stderr, "%10s %s\t%s\n", subject, option, predicate);
+	fprintf(stderr, "\n");
+	PRINTUSAGE(progName, "[-DEHSV] -m", "List available cipher modes.");
+	fprintf(stderr, "\n");
+	PRINTUSAGE(progName, "-E -m mode ", "Encrypt a buffer.");
+	PRINTUSAGE("",      "", "[-i plaintext] [-o ciphertext] [-k key] [-v iv]");
+	PRINTUSAGE("",      "", "[-b bufsize] [-g keysize] [-erw]");
+	PRINTUSAGE("",      "", "[-p repetitions]");
+	PRINTUSAGE("",      "-m", "cipher mode to use.");
+	PRINTUSAGE("",      "-i", "file which contains input buffer.");
+	PRINTUSAGE("",      "-o", "file for output buffer.");
+	PRINTUSAGE("",      "-k", "file which contains key.");
+	PRINTUSAGE("",      "-v", "file which contains initialization vector.");
+	PRINTUSAGE("",      "-b", "size of input buffer.");
+	PRINTUSAGE("",      "-g", "key size.");
+	PRINTUSAGE("",      "-p", "do performance test.");
+	PRINTUSAGE("(rsa)", "-e", "rsa public exponent.");
+	PRINTUSAGE("(rc5)", "-r", "number of rounds.");
+	PRINTUSAGE("(rc5)", "-w", "wordsize (32 or 64).");
+	fprintf(stderr, "\n");
+	PRINTUSAGE(progName, "-D -m mode", "Decrypt a buffer.");
+	PRINTUSAGE("",      "", "[-i plaintext] [-o ciphertext] [-k key] [-v iv]");
+	PRINTUSAGE("",      "", "[-p repetitions]");
+	PRINTUSAGE("",      "-m", "cipher mode to use.");
+	PRINTUSAGE("",      "-i", "file which contains input buffer.");
+	PRINTUSAGE("",      "-o", "file for output buffer.");
+	PRINTUSAGE("",      "-k", "file which contains key.");
+	PRINTUSAGE("",      "-v", "file which contains initialization vector.");
+	PRINTUSAGE("",      "-p", "do performance test.");
+	fprintf(stderr, "\n");
+	PRINTUSAGE(progName, "-H -m mode", "Hash a buffer.");
+	PRINTUSAGE("",      "", "[-i plaintext] [-o hash]");
+	PRINTUSAGE("",      "", "[-b bufsize]");
+	PRINTUSAGE("",      "", "[-p repetitions]");
+	PRINTUSAGE("",      "-m", "cipher mode to use.");
+	PRINTUSAGE("",      "-i", "file which contains input buffer.");
+	PRINTUSAGE("",      "-o", "file for hash.");
+	PRINTUSAGE("",      "-b", "size of input buffer.");
+	PRINTUSAGE("",      "-p", "do performance test.");
+	fprintf(stderr, "\n");
+	PRINTUSAGE(progName, "-S -m mode", "Sign a buffer.");
+	PRINTUSAGE("",      "", "[-i plaintext] [-o signature] [-k key]");
+	PRINTUSAGE("",      "", "[-b bufsize]");
+	PRINTUSAGE("",      "", "[-p repetitions]");
+	PRINTUSAGE("",      "-m", "cipher mode to use.");
+	PRINTUSAGE("",      "-i", "file which contains input buffer.");
+	PRINTUSAGE("",      "-o", "file for signature.");
+	PRINTUSAGE("",      "-k", "file which contains key.");
+	PRINTUSAGE("",      "-p", "do performance test.");
+	fprintf(stderr, "\n");
+	PRINTUSAGE(progName, "-V -m mode", "Verify a signed buffer.");
+	PRINTUSAGE("",      "", "[-i plaintext] [-s signature] [-k key]");
+	PRINTUSAGE("",      "", "[-p repetitions]");
+	PRINTUSAGE("",      "-m", "cipher mode to use.");
+	PRINTUSAGE("",      "-i", "file which contains input buffer.");
+	PRINTUSAGE("",      "-s", "file which contains signature of input buffer.");
+	PRINTUSAGE("",      "-k", "file which contains key.");
+	PRINTUSAGE("",      "-p", "do performance test.");
+	fprintf(stderr, "\n");
+	PRINTUSAGE(progName, "-F", "Run the FIPS self-test.");
+	fprintf(stderr, "\n");
+	exit(1);
+}
+
 /*  Helper functions for ascii<-->binary conversion/reading/writing */
 
 static PRInt32
@@ -285,6 +352,11 @@ dsakey_to_file(DSAPrivateKey *key, char *filename)
 /*  Multi-purpose crypto information */
 typedef struct 
 {
+	PRBool  encrypt;
+	PRBool  decrypt;
+	PRBool  sign;
+	PRBool  verify;
+	PRBool  hash;
 	SECItem seed;
 	SECItem key;
    	SECItem iv;
@@ -293,7 +365,6 @@ typedef struct
 	SECItem sigseed;
 	PRInt32 keysize;
 	PRInt32 bufsize;
-	PRBool  encrypt;
 	PRBool  useseed;
 	PRBool  usesigseed;
 	PRBool  performance;
@@ -308,11 +379,12 @@ typedef struct
 	if (info->performance) \
 		time1 = PR_IntervalNow();
 
-#define TIMEFINISH(mode, bytes) \
+#define TIMEFINISH(mode, nb) \
 	if (info->performance) { \
 		time2 = (PRIntervalTime)(PR_IntervalNow() - time1); \
 		time1 = PR_IntervalToMilliseconds(time2); \
-		printf("%s %d bytes: %.2f ms\n", mode, bytes, ((float)(time1))/info->repetitions); \
+		printf("%s %d bytes: %.2f ms\n", mode, nb, \
+		         ((float)(time1))/info->repetitions); \
 	}
 
 /************************
@@ -542,6 +614,14 @@ rc2_cbc_test(blapitestInfo *info)
 			rv = RC2_Encrypt(rc2cx, info->out.data, &info->out.len, 
 			                 info->out.len, info->in.data, info->in.len);
 		TIMEFINISH("RC2 CBC ENCRYPT", info->in.len);
+		if (info->performance) {
+			/*  reset the context */
+			RC2_DestroyContext(rc2cx, PR_TRUE);
+			rc2cx = RC2_CreateContext(info->key.data, info->key.len, 
+			                         info->iv.data, NSS_RC2_CBC, info->key.len);
+			rv = RC2_Encrypt(rc2cx, info->out.data, &info->out.len, 
+			                 info->out.len, info->in.data, info->in.len);
+		}
 		CHECKERROR(rv, __LINE__);
 		if (rv) {
 			fprintf(stderr, "%s:  Failed to encrypt!\n", progName);
@@ -553,6 +633,14 @@ rc2_cbc_test(blapitestInfo *info)
 			rv = RC2_Decrypt(rc2cx, info->out.data, &info->out.len, 
 			                 info->out.len, info->in.data, info->in.len);
 		TIMEFINISH("RC2 CBC DECRYPT", info->in.len);
+		if (info->performance) {
+			/*  reset the context */
+			RC2_DestroyContext(rc2cx, PR_TRUE);
+			rc2cx = RC2_CreateContext(info->key.data, info->key.len, 
+			                         info->iv.data, NSS_RC2_CBC, info->key.len);
+			rv = RC2_Decrypt(rc2cx, info->out.data, &info->out.len, 
+			                 info->out.len, info->in.data, info->in.len);
+		}
 		if (rv) {
 			fprintf(stderr, "%s:  Failed to decrypt!\n", progName);
 			CHECKERROR(rv, __LINE__);
@@ -589,6 +677,13 @@ rc4_test(blapitestInfo *info)
 			rv = RC4_Encrypt(rc4cx, info->out.data, &info->out.len, 
 			                 info->out.len, info->in.data, info->in.len);
 		TIMEFINISH("RC4 ENCRYPT", info->in.len);
+		if (info->performance) {
+			/*  reset the context */
+			RC4_DestroyContext(rc4cx, PR_TRUE);
+			rc4cx = RC4_CreateContext(info->key.data, info->key.len);
+			rv = RC4_Encrypt(rc4cx, info->out.data, &info->out.len, 
+			                 info->out.len, info->in.data, info->in.len);
+		}
 		if (rv) {
 			fprintf(stderr, "%s:  Failed to encrypt!\n", progName);
 			CHECKERROR(rv, __LINE__);
@@ -599,6 +694,13 @@ rc4_test(blapitestInfo *info)
 			rv = RC4_Decrypt(rc4cx, info->out.data, &info->out.len, 
 			                 info->out.len, info->in.data, info->in.len);
 		TIMEFINISH("RC4 DECRYPT", info->in.len);
+		if (info->performance) {
+			/*  reset the context */
+			RC4_DestroyContext(rc4cx, PR_TRUE);
+			rc4cx = RC4_CreateContext(info->key.data, info->key.len);
+			rv = RC4_Decrypt(rc4cx, info->out.data, &info->out.len, 
+			                 info->out.len, info->in.data, info->in.len);
+		}
 		if (rv) {
 			fprintf(stderr, "%s:  Failed to decrypt!\n", progName);
 			CHECKERROR(rv, __LINE__);
@@ -682,6 +784,14 @@ rc5_cbc_test(blapitestInfo *info)
 			rv = RC5_Encrypt(rc5cx, info->out.data, &info->out.len, 
 			                 info->out.len, info->in.data, info->in.len);
 		TIMEFINISH("RC5 CBC ENCRYPT", info->in.len);
+		if (info->performance) {
+			/*  reset the context */
+			RC5_DestroyContext(rc5cx, PR_TRUE);
+			rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
+			                          info->iv.data, NSS_RC5_CBC);
+			rv = RC5_Encrypt(rc5cx, info->out.data, &info->out.len, 
+			                 info->out.len, info->in.data, info->in.len);
+		}
 		if (rv) {
 			fprintf(stderr, "%s:  Failed to encrypt!\n", progName);
 			CHECKERROR(rv, __LINE__);
@@ -692,6 +802,14 @@ rc5_cbc_test(blapitestInfo *info)
 			rv = RC5_Decrypt(rc5cx, info->out.data, &info->out.len, 
 			                 info->out.len, info->in.data, info->in.len);
 		TIMEFINISH("RC5 CBC DECRYPT", info->in.len);
+		if (info->performance) {
+			/*  reset the context */
+			RC5_DestroyContext(rc5cx, PR_TRUE);
+			rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
+			                          info->iv.data, NSS_RC5_CBC);
+			rv = RC5_Decrypt(rc5cx, info->out.data, &info->out.len, 
+			                 info->out.len, info->in.data, info->in.len);
+		}
 		if (rv) {
 			fprintf(stderr, "%s:  Failed to decrypt!\n", progName);
 			CHECKERROR(rv, __LINE__);
@@ -773,7 +891,7 @@ dsa_test(blapitestInfo *info)
 		CHECKERROR(rv, __LINE__);
 		dsakey_to_file(key, "tmp.key");
 	}
-	if (info->encrypt) {
+	if (info->sign) {
 		info->out.len = 48;
 		info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 		if (info->usesigseed) {
@@ -1129,23 +1247,41 @@ static char *mode_strings[] =
 	"rc5_ecb",
 	"rc5_cbc",
 	"rsa",
+	"#endencrypt",
 	"dsa",
+	"#endsign",
 	"md5",
 	"md5_multi",
 	"md2",
 	"md2_multi",
 	"sha1",
 	"sha1_multi"
+	"#endhash"
 };
 
 static void
-printmodes()
+printmodes(blapitestInfo *info)
 {
-	int i;
+	int i = 0;
 	int nummodes = sizeof(mode_strings) / sizeof(char *);
+	char *mode = mode_strings[0];
 	PR_fprintf(PR_STDERR, "Available modes: (specify with -m)\n", progName);
-	for (i=0; i<nummodes; i++) {
-		PR_fprintf(PR_STDERR, "%s\n", mode_strings[i]);
+	while (mode[0] != '#') {
+		if (info->encrypt || info->decrypt)
+			fprintf(stderr, "%s\n", mode);
+		mode = mode_strings[++i];
+	}
+	mode = mode_strings[++i];
+	while (mode[0] != '#') {
+		if (info->sign || info->verify)
+			fprintf(stderr, "%s\n", mode);
+		mode = mode_strings[++i];
+	}
+	mode = mode_strings[++i];
+	while (mode[0] != '#') {
+		if (info->hash)
+			fprintf(stderr, "%s\n", mode);
+		mode = mode_strings[++i];
 	}
 }
 
@@ -1158,14 +1294,14 @@ get_test_mode(const char *modestring)
 		if (PL_strcmp(modestring, mode_strings[i]) == 0)
 			return crypto_fns[i];
 	PR_fprintf(PR_STDERR, "%s: invalid mode: %s\n", progName, modestring);
-	exit(-1);
+	return NULL;
 }
 
 int main(int argc, char **argv) 
 {
 	PRFileDesc *infile, *outfile, *keyfile, *ivfile, *sigfile, *seedfile,
 	           *sigseedfile;
-	PRBool encrypt, decrypt, script = PR_FALSE, b64 = PR_TRUE;
+	PRBool b64 = PR_TRUE;
 	blapitestInfo info;
 	blapitestCryptoFn cryptofn = NULL;
 	PLOptState *optstate;
@@ -1181,18 +1317,19 @@ int main(int argc, char **argv)
 	info.rounds = 10;
 	info.wordsize = 4;
 	infile=outfile=keyfile=ivfile=sigfile=seedfile=sigseedfile=NULL;
-	info.performance=encrypt=decrypt=PR_FALSE;
 	info.repetitions = 1;
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
 	optstate = 
-	  PL_CreateOptState(argc, argv, "DEFS:ab:e:g:i:o:p:k:m:t:r:s:v:w:xyz:");
+	  PL_CreateOptState(argc, argv, "DEFHSVab:e:g:i:o:p:k:m:t:r:s:v:w:xyz:");
 	while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 		switch (optstate->option) {
-		case 'D':  decrypt = PR_TRUE; break;
-		case 'E':  encrypt = PR_TRUE; break;
+		case 'D':  info.decrypt = PR_TRUE; break;
+		case 'E':  info.encrypt = PR_TRUE; break;
 		case 'F':  dofips = PR_TRUE; break;
-		case 'S':  script = PR_TRUE; numiter=PORT_Atoi(optstate->value); break;
+		case 'H':  info.hash = PR_TRUE; break;
+		case 'S':  info.sign = PR_TRUE; break;
+		case 'V':  info.verify = PR_TRUE; break;
 		case 'a':  b64 = PR_FALSE; break;
 		case 'b':  info.bufsize = PORT_Atoi(optstate->value); break;
 		case 'e':  info.rsapubexp = PORT_Atoi(optstate->value); break;
@@ -1223,18 +1360,17 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if ((!encrypt && !decrypt) || (encrypt && decrypt))
-		return -1;
+	if (!info.encrypt && !info.decrypt && !info.hash && 
+	    !info.sign && !info.verify)
+		Usage();
 
 	if (!cryptofn) {
-		printmodes();
+		printmodes(&info);
 		return -1;
 	}
 
-	if (decrypt && !infile)
-		return -1;
-
-	info.encrypt = encrypt;
+	if (info.decrypt && !infile)
+		Usage();
 
 	RNG_RNGInit();
 
