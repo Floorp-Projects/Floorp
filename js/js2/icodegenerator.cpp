@@ -86,7 +86,7 @@ namespace ICG {
         */
         markMaxRegister();
             
-        return new ICodeModule(iCode, maxRegister, maxVariable);
+        return new ICodeModule(iCode, maxRegister);
     }
     
     /********************************************************************/
