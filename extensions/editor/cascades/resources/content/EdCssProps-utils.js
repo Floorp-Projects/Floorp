@@ -125,7 +125,11 @@ function getLocalFileURL(openOnly)
   }
   // SaveFilePickerDirectory(fp, fileType);
   
-  return fp.file ? getURLSpecFromFile(fp.file) : null;
+  var ioService = GetIOService();
+  if (ioService && ioService.getURLSpecFromFile)
+    return fp.file ? ioService.getURLSpecFromFile(fp.file) : null;
+  else
+    return fp.file ? getURLSpecFromFile(fp.file) : null;
 }
 
 // blatantly stolen from Venkman

@@ -70,7 +70,11 @@ var gInsertIndex = -1;
 // * dialog initialization code
 function Startup()
 {
-  if (!GetCurrentEditor()) {
+  if (InitEditorShell) {
+    if (!InitEditorShell())
+      return;
+  }
+  else if (GetCurrentEditor && !GetCurrentEditor()) {
     window.close();
     return;
   }
@@ -196,7 +200,7 @@ function FlushChanges()
 {
   if (gDialog.modified) {
     // let's make sure the editor is going to require save on exit
-    GetCurrentEditor().incrementModificationCount(1);
+    getCurrentEditor().incrementModificationCount(1);
   }
   // Validate all user data and set attributes and possibly insert new element here
   // If there's an error the user must correct, return false to keep dialog open.
@@ -1249,7 +1253,7 @@ function onConfirmCreateNewObject()
         subtreeitem.appendChild(subtreerow);
         gDialog.sheetsTreechildren.appendChild(subtreeitem);
 
-        newSheetOwnerNode = GetCurrentEditor().document.createElement("link");
+        newSheetOwnerNode = getCurrentEditor().document.createElement("link");
         newSheetOwnerNode.setAttribute("type", "text/css");
         newSheetOwnerNode.setAttribute("href", gDialog.newURL);
         if (gDialog.newAlternate) {
@@ -1294,7 +1298,7 @@ function onConfirmCreateNewObject()
         }
       }
       else if (!gDialog.newExternal) {
-        newSheetOwnerNode = GetCurrentEditor().document.createElement("style");
+        newSheetOwnerNode = getCurrentEditor().document.createElement("style");
         newSheetOwnerNode.setAttribute("type", "text/css");
         if (gDialog.newMediaList != "") {
           newSheetOwnerNode.setAttribute("media", gDialog.newMediaList);
@@ -1464,4 +1468,9 @@ function onExportStylesheet() {
   gAsyncLoadingTimerID = setTimeout("Refresh()", 500);
 }
 
-
+function getCurrentEditor() {
+  if (InitEditorShell)
+    return editorShell.editor;
+  else
+    return GetCurrentEditor();
+}
