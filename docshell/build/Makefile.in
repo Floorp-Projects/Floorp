@@ -34,7 +34,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS= \
-		$(DIST)/lib/libhtmldocshell_s.a \
 		$(DIST)/lib/libbasedocshell_s.a	\
 		$(NULL)
 
