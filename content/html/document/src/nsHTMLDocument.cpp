@@ -822,15 +822,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
        }
     } 
 
-    if(bTryCache)
+    if(bTryCache && urlSpec)
     {
        nsCOMPtr<nsINetDataCacheManager> cacheMgr;
        cacheMgr = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);       
-       NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot get cache mgr");
-       if(NS_SUCCEEDED(rv) && urlSpec)
+       if(NS_SUCCEEDED(rv))
        {
           rv = cacheMgr->GetCachedNetData(urlSpec, nsnull, 0, cacheFlags, getter_AddRefs(cachedData));
-          NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot get cached net data");
           if(NS_SUCCEEDED(rv)) {
               if(kCharsetFromCache > charsetSource) 
               {
