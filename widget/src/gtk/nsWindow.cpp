@@ -1963,6 +1963,9 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     // toplevel window?  if so, we should resize it as well.
     if (mIsToplevel && mShell)
     {
+      if (GTK_WIDGET_VISIBLE(mShell) && GTK_WIDGET_REALIZED(mShell))  // set_default_size won't make a window smaller after it is visible
+        gdk_window_resize(mShell->window, aWidth, aHeight);
+
       gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
     }
     gdk_superwin_resize(mSuperWin, aWidth, aHeight);
