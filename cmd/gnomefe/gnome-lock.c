@@ -4,9 +4,7 @@
 #include <signal.h>
 #include <pwd.h>
 
-#ifdef NSPR20
-#include "private/prpriv.h"	/* for PR_NewNamedMonitor */
-#endif /* NSPR20 */
+#include "nspr.h"
 
 extern int GNOMEFE_APP_HAS_DETECTED_LOCK;
 extern int GNOMEFE_ANOTHER_USER_IS_RUNNING_APP;
@@ -100,13 +98,6 @@ fe_create_pidlock (const char *name, unsigned long *paddr, pid_t *ppid)
   char *colon, *after;
   pid_t pid;
 
-#ifndef NSPR20
-  if (gethostname (hostname, sizeof hostname) < 0 ||
-      (hp = PR_gethostbyname (hostname, &hpbuf, dbbuf, sizeof(dbbuf), 0)) == NULL)
-    inaddr.s_addr = INADDR_LOOPBACK;
-  else
-    memcpy (&inaddr, hp->h_addr, sizeof inaddr);
-#else
   {
   PRStatus sts;
 
@@ -123,7 +114,6 @@ fe_create_pidlock (const char *name, unsigned long *paddr, pid_t *ppid)
     }
   }
   }
-#endif
 
   myaddr = inaddr.s_addr;
   signature = PR_smprintf ("%s:%u", inet_ntoa (inaddr), (unsigned)getpid ());
@@ -257,10 +247,6 @@ void check_for_lock_file()
 	      const char *host;
 
 	      inaddr.s_addr = addr;
-#ifndef NSPR20
-	      hp = PR_gethostbyaddr((char *)&inaddr, sizeof inaddr, AF_INET,
-				    &hpbuf, dbbuf, sizeof(dbbuf), 0);
-#else
               {
 	      PRStatus sts;
 	      PRNetAddr pr_addr;
@@ -273,7 +259,6 @@ void check_for_lock_file()
 	      else
 		  hp = &hpbuf;
 	      }
-#endif
 	      host = (hp == NULL) ? inet_ntoa(inaddr) : hp->h_name;
 	      fmt = PR_sprintf_append(fmt,
 		      XP_GetString(GNOMEFE_APPEARS_TO_BE_RUNNING_ON_HOST_UNDER_PID),

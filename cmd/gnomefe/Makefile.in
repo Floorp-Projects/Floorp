@@ -76,16 +76,7 @@ REQUIRES	= gnuzilla \
 		  libfont \
 		  mariner \
 		  msg \
-		  $(NULL)
-ifdef NSPR20
-REQUIRES          += plds \
-		  nspr20 \
-		  $(NULL)
-else
-REQUIRES          += nspr \
-		  $(NULL)
-endif
-REQUIRES          += parse \
+		  parse \
 		  plug \
 		  posixfe \
 		  hook \
