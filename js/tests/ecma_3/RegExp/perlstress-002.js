@@ -42,7 +42,7 @@
 * Perl 5 RegExp engine. We saved the results below to test the JS engine.
 *
 * Each of the examples below is a negative test; that is, each produces a
-* null match in Perl. Therefore we set expectedmatch = |null| in each section.
+* null match in Perl. Thus we set |expectedmatch| = |null| in each section.
 *
 * NOTE: ECMA/JS and Perl do differ on certain points. We have either commented
 * out such sections altogether, or modified them to fit what we expect from JS.
