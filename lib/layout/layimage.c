@@ -2243,7 +2243,7 @@ lo_FinishImage(MWContext *context, lo_DocState *state, LO_ImageStruct *image)
 		 * Append a dummy layout element in the line list.  When the relayout engine
 		 * will see this dummy element, it will call lo_LayoutFloatImage()
 		 */
-		lo_AppendFloatInLineList( state, (LO_Element *) image, NULL );
+		lo_AppendFloatInLineList(context, state, (LO_Element *) image, NULL );
 		
 		lo_LayoutFloatImage( context, state, image, TRUE);
 		

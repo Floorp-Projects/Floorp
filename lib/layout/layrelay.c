@@ -1652,10 +1652,12 @@ void lo_rl_AppendLinefeedAndFlushLine( MWContext *context, lo_DocState *state, L
  * Append a dummy layout element in the line list.  When the relayout engine
  * will see this dummy element, it will call lo_LayoutFloat{Image,JavaApp,Embed}()
  */
-void lo_AppendFloatInLineList( lo_DocState *state, LO_Element *ele, LO_Element *restOfLine)
+void lo_AppendFloatInLineList(MWContext *context,
+                              lo_DocState *state, LO_Element *ele, LO_Element *restOfLine)
 {
 	LO_Element *eptr;
-	LO_FloatStruct *float_dummy = XP_NEW_ZAP(LO_FloatStruct);
+	LO_FloatStruct *float_dummy = (LO_FloatStruct*)lo_NewElement(context, state,
+                                                                     LO_FLOAT, NULL, 0);
 	float_dummy->float_ele = ele;
 	float_dummy->lo_any.type = LO_FLOAT;
 	float_dummy->lo_any.ele_id = NEXT_ELEMENT;

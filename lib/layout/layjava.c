@@ -650,7 +650,7 @@ lo_FinishJavaApp(MWContext *context, lo_DocState *state,
 		java_app->objTag.next = state->float_list;
 		state->float_list = (LO_Element *)java_app;
 
-		lo_AppendFloatInLineList(state, (LO_Element*)java_app, NULL);
+		lo_AppendFloatInLineList(context, state, (LO_Element*)java_app, NULL);
 
 		lo_LayoutFloatJavaApp(context, state, java_app, TRUE);
 

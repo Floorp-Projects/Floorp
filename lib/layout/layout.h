@@ -1367,7 +1367,7 @@ extern void lo_FillInLineFeed( MWContext *context, lo_DocState *state, int32 bre
 extern void lo_UpdateStateWhileFlushingLine( MWContext *context, lo_DocState *state );
 extern void lo_AppendLineFeed( MWContext *context, lo_DocState *state, LO_LinefeedStruct *linefeed, int32 breaking, Bool updateFE );
 extern void lo_UpdateStateAfterFlushingLine( MWContext *context, lo_DocState *state, LO_LinefeedStruct *linefeed, Bool inRelayout );
-extern void lo_AppendFloatInLineList( lo_DocState *state, LO_Element *ele, LO_Element *restOfLine);
+extern void lo_AppendFloatInLineList( MWContext *context, lo_DocState *state, LO_Element *ele, LO_Element *restOfLine);
 
 /*
  * Common code for layout and relayout of tables

@@ -902,7 +902,7 @@ lo_FinishEmbed(MWContext *context, lo_DocState *state, LO_EmbedStruct *embed)
 		embed->objTag.next = state->float_list;
 		state->float_list = (LO_Element *)embed;
 
-		lo_AppendFloatInLineList(state, (LO_Element*)embed, NULL);
+		lo_AppendFloatInLineList(context, state, (LO_Element*)embed, NULL);
 
 		lo_LayoutFloatEmbed(context, state, embed, TRUE);
 
