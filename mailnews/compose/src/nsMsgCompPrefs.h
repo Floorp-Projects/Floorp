@@ -30,11 +30,13 @@ public:
 	const char * GetOrganization() {return m_organization;}
 	const char * GetUserFullName() {return m_userFullName;}
 	const char * GetUserEmail() {return m_userEmail;}
+	const char * GetReplyTo() {return m_replyTo;}
 
 private:
 	char * m_organization;
 	char * m_userFullName;
 	char * m_userEmail;
+	char * m_replyTo;
 };
 
 

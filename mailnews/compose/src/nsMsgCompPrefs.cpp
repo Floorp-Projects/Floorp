@@ -47,22 +47,20 @@ nsMsgCompPrefs::nsMsgCompPrefs(void * identiy /*= nsnull*/)
 			identity->GetOrganization(&aString);
 			if (aString)
 				m_organization = PL_strdup(aString);
-			else
-				NS_ASSERTION(0, "no email address defined for this user....");
-
 
 			identity->GetUserFullName(&aString);
 			if (aString)
 				m_userFullName = PL_strdup(aString);
-			else
-				NS_ASSERTION(0, "no email address defined for this user....");
-
 
 			identity->GetUserEmail(&aString);
 			if (aString)
 				m_userEmail = PL_strdup(aString);
 			else
 				NS_ASSERTION(0, "no email address defined for this user....");
+
+			identity->GetReplyTo(&aString);
+			if (aString)
+				m_replyTo= PL_strdup(aString);
 
 
 			// release the identity
