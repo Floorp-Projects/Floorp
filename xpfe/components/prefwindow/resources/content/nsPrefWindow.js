@@ -79,7 +79,7 @@ nsPrefWindow.prototype =
         {
           try 
             {
-              this.pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+              this.pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null);
               this.chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
               this.observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
             }
@@ -145,26 +145,25 @@ nsPrefWindow.prototype =
       getPrefIsLocked:
         function ( aPrefString )
           {
-            return hPrefWindow.pref.PrefIsLocked(aPrefString);
+            return this.pref.prefIsLocked(aPrefString);
           },
       getPref:
-        function ( aPrefType, aPrefString, aDefaultFlag )
+        function ( aPrefType, aPrefString )
           {
-            var pref = hPrefWindow.pref;
             try
               {
                 switch ( aPrefType )
                   {
                     case "bool":
-                      return !aDefaultFlag ? pref.GetBoolPref( aPrefString ) : pref.GetDefaultBoolPref( aPrefString );
+                      return this.pref.getBoolPref( aPrefString );
                     case "int":
-                      return !aDefaultFlag ? pref.GetIntPref( aPrefString ) : pref.GetDefaultIntPref( aPrefString );
+                      return this.pref.getIntPref( aPrefString );
                     case "localizedstring":
-                      return pref.getLocalizedUnicharPref( aPrefString );
+                      return this.pref.getComplexValue( aPrefString, Components.interfaces.nsIPrefLocalizedString ).data;
                     case "color":
                     case "string":
                     default:
-                         return !aDefaultFlag ? pref.CopyUnicharPref( aPrefString ) : pref.CopyDefaultUnicharPref( aPrefString );
+                       return this.pref.getComplexValue( aPrefString, Components.interfaces.nsISupportsString ).data;
                   }
               }
             catch (e)
@@ -186,16 +185,18 @@ nsPrefWindow.prototype =
                 switch ( aPrefType )
                   {
                     case "bool":
-                      hPrefWindow.pref.SetBoolPref( aPrefString, aValue );
+                      this.pref.setBoolPref( aPrefString, aValue );
                       break;
                     case "int":
-                      hPrefWindow.pref.SetIntPref( aPrefString, aValue );
+                      this.pref.setIntPref( aPrefString, aValue );
                       break;
                     case "color":
                     case "string":
                     case "localizedstring":
                     default:
-                      hPrefWindow.pref.SetUnicharPref( aPrefString, aValue );
+                      var supportsString = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
+                      supportsString.data = aValue;
+                      this.pref.setComplexValue( aPrefString, Components.interfaces.nsISupportsString, supportsString );
                       break;
                   }
               }
@@ -279,7 +280,9 @@ nsPrefWindow.prototype =
               }
               try 
                 {
-                  this.pref.savePrefFile(null);
+                  Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService)
+                            .savePrefFile(null);
                 }
               catch (e)
                 {

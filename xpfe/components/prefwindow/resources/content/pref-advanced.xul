@@ -149,7 +149,7 @@
     function sysPrefUpdate() {
       var checkObj = document.getElementById("systemPrefCheck");
       var prefstring = checkObj.getAttribute( "prefstring" );
-      parent.hPrefWindow.pref.SetBoolPref(prefstring, checkObj.checked);
+      parent.hPrefWindow.setPref("bool", prefstring, checkObj.checked);
       parent.hPrefWindow.pagePrefChanged = true;
       parent.hPrefWindow.pagePrefUpdated = [];
     }

@@ -58,14 +58,9 @@ function Startup()
   gData.loaded = true;
   parent.hPrefWindow.registerOKCallbackFunc( applySkin );
 
-  const kPrefSvcContractID = "@mozilla.org/preferences;1";
-  const kPrefSvcIID = Components.interfaces.nsIPref;
-  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-
   var theme = null;
   try {
-    theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
-                                     Components.interfaces.nsISupportsString).data;
+    theme = parent.hPrefWindow.pref.getComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString).data;
   } catch (e) {
   }
   var matches;
@@ -101,14 +96,9 @@ function applySkin()
   if (data.name == null)
     return;
 
-  const kPrefSvcContractID = "@mozilla.org/preferences;1";
-  const kPrefSvcIID = Components.interfaces.nsIPref;
-  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-
   var theme = null;
   try {
-    theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
-                                     Components.interfaces.nsISupportsString).data;
+    theme = parent.hPrefWindow.pref.getComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString).data;
   } catch (e) {
   }
 
@@ -124,11 +114,7 @@ function applySkin()
   var inUse = reg.isSkinSelected(data.name, true);
   if (!theme && inUse == Components.interfaces.nsIChromeRegistry.FULL) return;
 
-  var str = Components.classes["@mozilla.org/supports-string;1"]
-                      .createInstance(Components.interfaces.nsISupportsString);
-  str.data = data.name;
-
-  kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
+  parent.hPrefWindow.setPref("string", "general.skins.selectedSkin", data.name);
 
   // shut down quicklaunch so the next launch will have the new skin
   var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
@@ -208,10 +194,7 @@ function themeSelect()
     // XXX - this sucks and should only be temporary.
     var selectedSkin = "";
     try {
-      const kPrefSvcContractID = "@mozilla.org/preferences;1";
-      const kPrefSvcIID = Components.interfaces.nsIPref;
-      const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-      selectedSkin = kPrefSvc.CopyCharPref("general.skins.selectedSkin");
+      selectedSkin = parent.hPrefWindow.pref.getComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString).data;
     }
     catch (e) {
     }
