@@ -70,7 +70,6 @@
 
     <RDF:li>
       <RDF:Seq about="urn:sidebar:panel-group:applications">
-        <RDF:li resource="urn:sidebar:nc-panel:calculator" />
         <RDF:li resource="urn:sidebar:nc-panel:calendar" />
         <RDF:li resource="urn:sidebar:nc-panel:delivery" />
         <RDF:li resource="urn:sidebar:nc-panel:netcenterservices" />
@@ -184,12 +183,6 @@
     <NC:title>&sidebar.nc-panel.bookmarks;</NC:title>
     <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=bookmarks</NC:content>
     <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=bookmarks</NC:customize>
-  </RDF:Description>
-
-  <RDF:Description about='urn:sidebar:nc-panel:calculator'>
-    <NC:title>&sidebar.nc-panel.calculator;</NC:title>
-    <NC:content>http://my.netscape.com/sidebar/wrapper.tmpl?service=calculator</NC:content>
-    <NC:customize>http://my.netscape.com/setup_frameset.tmpl?mn_yes=1&amp;services=calculator</NC:customize>
   </RDF:Description>
 
   <RDF:Description about='urn:sidebar:nc-panel:calendar'>
