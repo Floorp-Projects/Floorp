@@ -539,7 +539,14 @@ nsTreeBodyFrame::Destroy(nsIPresContext* aPresContext)
     mTreeBoxObject = nsnull; // Drop our ref here.
   }
 
-  mView = nsnull;
+  if (mView) {
+    nsCOMPtr<nsITreeSelection> sel;
+    mView->GetSelection(getter_AddRefs(sel));
+    if (sel)
+      sel->SetTree(nsnull);
+    mView->SetTree(nsnull);
+    mView = nsnull;
+  }
 
   return nsLeafBoxFrame::Destroy(aPresContext);
 }
@@ -699,6 +706,10 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
   nsAutoString view(NS_LITERAL_STRING("view"));
   
   if (mView) {
+    nsCOMPtr<nsITreeSelection> sel;
+    mView->GetSelection(getter_AddRefs(sel));
+    if (sel)
+      sel->SetTree(nsnull);
     mView->SetTree(nsnull);
     mView = nsnull;
     box->RemoveProperty(view.get());
@@ -717,20 +728,22 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
   Invalidate();
  
   if (mView) {
+    // Give the view a new empty selection object to play with, but only if it
+    // doesn't have one already.
+    nsCOMPtr<nsITreeSelection> sel;
+    mView->GetSelection(getter_AddRefs(sel));
+    if (sel) {
+      sel->SetTree(mTreeBoxObject);
+    } else {
+      NS_NewTreeSelection(mTreeBoxObject, getter_AddRefs(sel));
+      mView->SetSelection(sel);
+    }
+
     // View, meet the tree.
     mView->SetTree(mTreeBoxObject);
     mView->GetRowCount(&mRowCount);
  
     box->SetPropertyAsSupports(view.get(), mView);
-
-    // Give the view a new empty selection object to play with, but only if it
-    // doesn't have one already.
-    nsCOMPtr<nsITreeSelection> sel;
-    mView->GetSelection(getter_AddRefs(sel));
-    if (!sel) {
-      NS_NewTreeSelection(mTreeBoxObject, getter_AddRefs(sel));
-      mView->SetSelection(sel);
-    }
 
     // The scrollbar will need to be updated.
     InvalidateScrollbar();
