@@ -61,7 +61,15 @@ public class MutationEventImpl extends EventImpl implements MutationEvent  {
   public String             getAttrName() {
     throw new UnsupportedOperationException();
   }
-  
+
+  /**
+   *  <code>attrChange</code> indicates the type of change which triggered 
+   * the attrModified event. 
+   */
+  public short 		getAttrChange() {
+    throw new UnsupportedOperationException();
+  }	
+	
   /**
    * 
    * @param typeArg Specifies the event type.
@@ -82,7 +90,8 @@ public class MutationEventImpl extends EventImpl implements MutationEvent  {
                                               Node relatedNodeArg, 
                                               String prevValueArg, 
                                               String newValueArg, 
-                                              String attrNameArg) {
+                                              String attrNameArg,
+					      short attrChangeArg) {
     throw new UnsupportedOperationException();
   }
 }

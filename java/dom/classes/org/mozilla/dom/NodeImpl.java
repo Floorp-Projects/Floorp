@@ -116,6 +116,8 @@ public class NodeImpl implements Node, EventTarget {
 	return "ERROR";
     }
 
+    public native boolean isSupported(String feature, String version);
+    public native boolean hasAttributes();
     public native Node appendChild(Node newChild) throws DOMException;
     public native Node cloneNode(boolean deep);
     public native NamedNodeMap getAttributes();

@@ -113,6 +113,79 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1hashCode
 
 /*
  * Class:     org_mozilla_dom_NodeImpl
+ * Method:    isSupported
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_isSupported
+  (JNIEnv *env, jobject jthis, jstring jfeature, jstring jversion)
+{
+  nsIDOMNode* node = (nsIDOMNode*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!node || !jfeature) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("DOMNode.isSupported: NULL pointer\n"));
+    return JNI_FALSE;
+  }
+
+  nsString* feature = JavaDOMGlobals::GetUnicode(env, jfeature);
+  if (!feature)
+      return JNI_FALSE;
+
+  nsString* version;
+  if (jversion) {
+      version = JavaDOMGlobals::GetUnicode(env, jversion);
+      if (!version) {
+	  nsMemory::Free(feature);
+	  return JNI_FALSE;
+      }
+  } else {
+      version = new nsString();
+  }
+
+  PRBool ret = PR_FALSE;
+  nsresult rv = node->IsSupported(*feature, *version, &ret);
+  nsMemory::Free(feature);
+  nsMemory::Free(version);
+
+  if (NS_FAILED(rv)) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.isSupported: failed (%x)\n", rv));
+  }
+
+  return ret == PR_TRUE ? JNI_TRUE : JNI_FALSE;
+}
+
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    hasAttributes
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_hasAttributes
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMNode* node = (nsIDOMNode*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  if (!node) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
+	   ("DOMNode.hasAttributes: NULL pointer\n"));
+    return JNI_FALSE;
+  }
+
+  PRBool ret = PR_FALSE;
+  nsresult rv = node->HasAttributes(&ret);
+
+  if (NS_FAILED(rv)) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Node.hasAttributes: failed (%x)\n", rv));
+  }
+
+  return ret == PR_TRUE ? JNI_TRUE : JNI_FALSE;
+}
+
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
  * Method:    finalize
  * Signature: ()V
  */
