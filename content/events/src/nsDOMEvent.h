@@ -225,13 +225,13 @@ protected:
   const char* GetEventName(PRUint32 aEventType);
 
   nsEvent* mEvent;
-  PRBool mEventIsInternal;
   nsIPresContext* mPresContext;
   nsIDOMEventTarget* mTarget;
   nsIDOMEventTarget* mCurrentTarget;
   nsIDOMEventTarget* mOriginalTarget;
   nsString*	mText;
   nsIPrivateTextRangeList*	mTextRange;
+  PRPackedBool mEventIsInternal;
 
   //These are use for internal data for user created events
   PRInt16 mButton;
