@@ -781,7 +781,9 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
   }
 
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
-  else if (aLength >= 4 && !memcmp(aContents, "\000\000\001\000", 4)) {
+  // CURs begin with 2-byte 0 followed by 2-byte 2.
+  else if (aLength >= 4 && (!memcmp(aContents, "\000\000\001\000", 4) ||
+                            !memcmp(aContents, "\000\000\002\000", 4))) {
     aContentType.AssignLiteral("image/x-icon");
   }
 

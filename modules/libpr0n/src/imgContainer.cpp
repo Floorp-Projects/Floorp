@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,15 +39,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsComponentManagerUtils.h"
+
 #include "imgContainer.h"
 
-NS_IMPL_ISUPPORTS1(imgContainer, imgIContainer)
+NS_IMPL_ISUPPORTS2(imgContainer, imgIContainer, nsIProperties)
 
 //******************************************************************************
 imgContainer::imgContainer() :
   mSize(0,0),
   mFrame(nsnull)
 {
+  mProperties = do_CreateInstance("@mozilla.org/properties;1");
 }
 
 //******************************************************************************

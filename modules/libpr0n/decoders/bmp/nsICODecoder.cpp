@@ -48,6 +48,9 @@
 
 #include "imgILoad.h"
 
+#include "nsIProperties.h"
+#include "nsISupportsPrimitives.h"
+
 #include "nsAutoPtr.h"
 
 NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
@@ -227,6 +230,8 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     return NS_OK;
 
   while (aCount && (mPos < ICONCOUNTOFFSET)) { // Skip to the # of icons.
+    if (mPos == 2) // if the third byte is 2: This is a cursor
+      mIsCursor = (*aBuffer == 2);
     mPos++; aBuffer++; aCount--;
   }
 
@@ -308,6 +313,23 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
 
     nsresult rv = mImage->Init(mDirEntry.mWidth, mDirEntry.mHeight, mObserver);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mIsCursor) {
+      nsCOMPtr<nsIProperties> props(do_QueryInterface(mImage));
+      if (props) {
+        nsCOMPtr<nsISupportsPRUint32> intwrapx = do_CreateInstance("@mozilla.org/supports-PRUint32;1");
+        nsCOMPtr<nsISupportsPRUint32> intwrapy = do_CreateInstance("@mozilla.org/supports-PRUint32;1");
+
+        if (intwrapx && intwrapy) {
+          intwrapx->SetData(mDirEntry.mXHotspot);
+          intwrapy->SetData(mDirEntry.mYHotspot);
+
+          props->Set("hotspotX", intwrapx);
+          props->Set("hotspotY", intwrapy);
+        }
+      }
+    }
+
     rv = mObserver->OnStartContainer(nsnull, mImage);
     NS_ENSURE_SUCCESS(rv, rv);
 

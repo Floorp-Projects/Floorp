@@ -64,8 +64,14 @@ struct IconDirEntry
   PRUint8   mHeight;
   PRUint8   mColorCount;
   PRUint8   mReserved;
-  PRUint16  mPlanes;
-  PRUint16  mBitCount;
+  union {
+    PRUint16 mPlanes;   // ICO
+    PRUint16 mXHotspot; // CUR
+  };
+  union {
+    PRUint16 mBitCount; // ICO
+    PRUint16 mYHotspot; // CUR
+  };
   PRUint32  mBytesInRes;
   PRUint32  mImageOffset;
 };
@@ -123,6 +129,7 @@ private:
 
   PRUint8* mDecodedBuffer;
   PRUint8* mAlphaBuffer;
+  PRPackedBool mIsCursor;
 };
 
 
