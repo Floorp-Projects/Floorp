@@ -1541,7 +1541,11 @@ nsProfile::UpdateRegistry(void)
 }
 
 NS_IMETHODIMP 
-nsProfile::SetRegString(const PRUnichar* profileName, const PRUnichar* regString)
+nsProfile::SetRegStrings(const PRUnichar* profileName, 
+                         const PRUnichar* regString,
+                         const PRUnichar* regName,
+                         const PRUnichar* regEmail,
+                         const PRUnichar* regOption)
 {
    nsresult rv = NS_OK;
 
@@ -1551,6 +1555,10 @@ nsProfile::SetRegString(const PRUnichar* profileName, const PRUnichar* regString
    if (NS_FAILED(rv)) return rv;
    
    aProfile->NCHavePregInfo = regString;
+
+   if (regName)    aProfile->NCProfileName   = regName;
+   if (regEmail)   aProfile->NCEmailAddress  = regEmail;
+   if (regOption)  aProfile->NCDeniedService = regOption;
 
    gProfileDataAccess->SetValue(aProfile);
 
