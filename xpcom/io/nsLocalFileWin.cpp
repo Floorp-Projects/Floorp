@@ -74,7 +74,7 @@
 extern "C" {
 unsigned char *_mbsstr( const unsigned char *str,
                         const unsigned char *substr );
-};
+}
 #endif
 
 class nsDriveEnumerator : public nsISimpleEnumerator
@@ -2549,7 +2549,7 @@ nsLocalFile::GlobalShutdown()
     NS_DestroyShortcutResolver();
 }
 
-NS_IMPL_ISUPPORTS1(nsDriveEnumerator, nsISimpleEnumerator);
+NS_IMPL_ISUPPORTS1(nsDriveEnumerator, nsISimpleEnumerator)
 
 nsDriveEnumerator::nsDriveEnumerator()
  : mLetter(0)

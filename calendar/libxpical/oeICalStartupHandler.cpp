@@ -55,5 +55,5 @@ oeICalStartupHandler::~oeICalStartupHandler()
 CMDLINEHANDLER_IMPL(oeICalStartupHandler, "-calendar", "general.startup.calendar",
                     "chrome://calendar/content", 
                     "Start with calendar", OE_ICALSTARTUPHANDLER_CONTRACTID,
-                    "Calendar cmd line handler", PR_FALSE, "", PR_TRUE);
+                    "Calendar cmd line handler", PR_FALSE, "", PR_TRUE)
 

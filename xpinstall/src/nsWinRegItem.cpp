@@ -37,6 +37,7 @@
 
 #include "nsWinRegItem.h"
 #include "nspr.h"
+#include "nsWinReg.h"
 
 #ifdef WIN32
 #include <windows.h> /* is this needed? */
@@ -264,19 +265,19 @@ nsString* nsWinRegItem::keystr(PRInt32 root, nsString* mSubkey, nsString* mName)
 
 	switch(root)
 	{
-	  case (int)(HKEY_CLASSES_ROOT) :
+	  case nsWinReg::NS_HKEY_CLASSES_ROOT:
 		  rootstr.Assign(NS_LITERAL_STRING("HKEY_CLASSES_ROOT\\"));
 		  break;
 
-	  case (int)(HKEY_CURRENT_USER) :
+	  case nsWinReg::NS_HKEY_CURRENT_USER:
 		  rootstr.Assign(NS_LITERAL_STRING("HKEY_CURRENT_USER\\"));
 		  break;
 
-	  case (int)(HKEY_LOCAL_MACHINE) :
+	  case nsWinReg::NS_HKEY_LOCAL_MACHINE:
 		  rootstr.Assign(NS_LITERAL_STRING("HKEY_LOCAL_MACHINE\\"));
 		  break;
 
-	  case (int)(HKEY_USERS) :
+	  case nsWinReg::NS_HKEY_USERS:
 		  rootstr.Assign(NS_LITERAL_STRING("HKEY_USERS\\"));
 		  break;
 
