@@ -123,6 +123,11 @@ protected:
                           nsReflowMetrics& aDesiredSize,
                           nsSize* aMaxElementSize);
 
+  nsresult AdjustSiblingsAfterReflow(nsIPresContext*      aPresContext,
+                                     RowGroupReflowState& aState,
+                                     nsIFrame*            aKidFrame,
+                                     nscoord              aDeltaY);
+
   /**
    * Reflow the frames we've already created
    *

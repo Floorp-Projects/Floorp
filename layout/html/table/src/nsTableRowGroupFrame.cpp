@@ -1010,6 +1010,60 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
   delete []rowHeights;
 }
 
+nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*      aPresContext,
+                                                         RowGroupReflowState& aState,
+                                                         nsIFrame*            aKidFrame,
+                                                         nscoord              aDeltaY)
+{
+  nsIFrame* lastKidFrame = aKidFrame;
+
+  if (aDeltaY != 0) {
+    // Move the frames that follow aKidFrame by aDeltaY
+    nsIFrame* kidFrame;
+
+    aKidFrame->GetNextSibling(kidFrame);
+    while (nsnull != kidFrame) {
+      nsPoint origin;
+  
+      // XXX We can't just slide the child if it has a next-in-flow
+      kidFrame->GetOrigin(origin);
+      origin.y += aDeltaY;
+  
+      // XXX We need to send move notifications to the frame...
+      kidFrame->WillReflow(*aPresContext);
+      kidFrame->MoveTo(origin.x, origin.y);
+
+      // Get the next frame
+      lastKidFrame = kidFrame;
+      kidFrame->GetNextSibling(kidFrame);
+    }
+
+  } else {
+    // Get the last frame
+    LastChild(lastKidFrame);
+  }
+
+#if 0
+  // Update our running y-offset to reflect the bottommost child
+  nsRect  rect;
+
+  lastKidFrame->GetRect(rect);
+  aState.y = rect.YMost();
+
+  // Get the bottom margin for the last child frame
+  const nsStyleSpacing* kidSpacing;
+  lastKidFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct *&)kidSpacing);
+  nsMargin margin;
+  kidSpacing->CalcMarginFor(lastKidFrame, margin);
+  if (margin.bottom < 0) {
+    aState.prevMaxNegBottomMargin = -margin.bottom;
+  } else {
+    aState.prevMaxPosBottomMargin = margin.bottom;
+  }
+#endif
+
+  return NS_OK;
+}
 
 /** Layout the entire row group.
   * This method stacks rows vertically according to HTML 4.0 rules.
@@ -1028,6 +1082,14 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
   PreReflowCheck();
 #endif
 
+  // Initialize out parameter
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = 0;
+    aDesiredSize.maxElementSize->height = 0;
+  }
+
+  RowGroupReflowState state(aPresContext, aReflowState);
+
   if (eReflowReason_Incremental == aReflowState.reason) {
     nsIFrame* target;
     aReflowState.reflowCommand->GetTarget(target);
@@ -1041,34 +1103,32 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*      aPresContext,
     aReflowState.reflowCommand->GetNext(kidFrame);
 
     // Pass along the reflow command
+    nsRect          oldKidRect;
     nsReflowMetrics desiredSize(nsnull);
+    kidFrame->GetRect(oldKidRect);
     // XXX Correctly compute the available space...
     nsReflowState kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
     kidFrame->WillReflow(*aPresContext);
     aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
     // Resize the row frame
-    nsRect  rect;
-    kidFrame->GetRect(rect);
+    nsRect  kidRect;
+    kidFrame->GetRect(kidRect);
     kidFrame->SizeTo(desiredSize.width, desiredSize.height);
+
+    // Adjust the frames that follow...
+    AdjustSiblingsAfterReflow(aPresContext, state, kidFrame,
+                              kidRect.YMost() - oldKidRect.YMost());
 
     // XXX Compute desired size...
 
   } else {
-    // Initialize out parameter
-    if (nsnull != aDesiredSize.maxElementSize) {
-      aDesiredSize.maxElementSize->width = 0;
-      aDesiredSize.maxElementSize->height = 0;
-    }
-  
     PRBool reflowMappedOK = PR_TRUE;
   
     aStatus = NS_FRAME_COMPLETE;
   
     // Check for an overflow list
     MoveOverflowToChildList();
-  
-    RowGroupReflowState state(aPresContext, aReflowState);
   
     // Reflow the existing frames
     if (nsnull != mFirstChild) {
