@@ -102,8 +102,9 @@ if (defined $::FORM{'rememberedquery'}) {
                       -value => $::FORM{'splitheader'},
                       -expires => 'Fri, 01-Jan-2038 00:00:00 GMT');
 
-    print $cgi->redirect("buglist.cgi?$::FORM{'rememberedquery'}");
     $vars->{'message'} = "change_columns";
+    $vars->{'redirect_url'} = "buglist.cgi?$::FORM{'rememberedquery'}";
+    print $cgi->redirect($vars->{'redirect_url'});
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;

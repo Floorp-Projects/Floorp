@@ -61,6 +61,8 @@
   [% ELSIF message_tag == "change_columns" %]
     [% title = "Change columns" %]
     Resubmitting your query with new columns...
+    Click <a href="[% redirect_url FILTER html %]">here</a>
+    if the page does not automatically refresh.
 
   [% ELSIF message_tag == "emailold_change_cancelled" %]
     [% title = "Cancel Request to Change Email Address" %]
