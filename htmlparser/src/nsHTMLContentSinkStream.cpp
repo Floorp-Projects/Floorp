@@ -309,8 +309,6 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream()
   mHTMLStackPos = 0;
   mColPos = 0;
   mIndent = 0;
-  mBuffer = nsnull;
-  mBufferSize = 0;
   mUnicodeEncoder = nsnull;
   mInBody = PR_FALSE;
 }
@@ -377,20 +375,6 @@ nsHTMLContentSinkStream::EndContext(PRInt32 aPosition)
 }
 
 
-void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
-{
-  if (mBufferSize < aNewSize)
-  {
-    delete [] mBuffer;
-    mBufferSize = 2*aNewSize+1; // make the twice as large
-    mBuffer = new char[mBufferSize];
-    if(mBuffer){
-      mBuffer[0] = 0;
-    }
-  }
-}
-
-
 /*
  * Entities are represented in the dom as single elements.
  * Substitute them back into entity for (e.g. &acute;) here.
@@ -408,7 +392,6 @@ void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc,
   {
     // Convert anything that maps to character entity
     // to the entity value
-    EnsureBufferSize(length);
     for (PRInt32 i = 0; i < length; i++)
     {
       ch = aSrc.CharAt(i);
@@ -443,16 +426,13 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 
   if (mUnicodeEncoder != nsnull && length > 0)
   {
-    EnsureBufferSize(length);
-    mBufferLength = mBufferSize;
+    PRInt32 theBufferLength = mBuffer.Length();
     
     mUnicodeEncoder->Reset();
     result = mUnicodeEncoder->Convert(htmlstr.GetUnicode(), &length,
-                                      mBuffer, &mBufferLength);
-    mBuffer[mBufferLength] = 0;
-    PRInt32 temp = mBufferLength;
+                                      mBuffer, &theBufferLength);
     if (NS_SUCCEEDED(result))
-      result = mUnicodeEncoder->Finish(mBuffer,&temp);
+      result = mUnicodeEncoder->Finish(mBuffer,&theBufferLength);
 
 #if 0
     // Do some conversions to make up for the unicode encoder's foibles:
@@ -469,7 +449,6 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 #endif
   }
 }
-
 
 void nsHTMLContentSinkStream::Write(const nsString& aString)
 {
@@ -490,7 +469,7 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
   if (mUnicodeEncoder)
   {
     EncodeToBuffer(aString);
-    out.write(mBuffer, mBufferLength);
+    out.write(mBuffer, mBuffer.Length());
   }
   // else just write the unicode
   else
@@ -556,22 +535,19 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
   if(theCount) {
     int i=0;
     for(i=0;i<theCount;i++){
-      const nsString& temp=aNode.GetKeyAt(i);
+      nsString& key=(nsString&)aNode.GetKeyAt(i);
       
-      nsString key = temp;
-
       if (mLowerCaseTags == PR_TRUE)
         key.ToLowerCase();
       else
         key.ToUpperCase();
 
-      EnsureBufferSize(key.Length());
-      key.ToCString(mBuffer,mBufferSize);
+      mBuffer.SetString(key);
 
         // send to ouput " [KEY]="
       Write(' ');
-      Write(mBuffer);
-      mColPos += 1 + strlen(mBuffer) + 1;
+      Write((char*)mBuffer);
+      mColPos += 1 + mBuffer.Length() + 1;
       
         // See if there's an attribute:
       const nsString& value=aNode.GetValueAt(i);
@@ -579,7 +555,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
       if (value.Length() > 0)
       {
         Write(char(kEqual));
-        mColPos += 1 + strlen(mBuffer) + 1;
+        mColPos += 1 + mBuffer.Length() + 1;
 
         // send to ouput "\"[VALUE]\""
         Write('\"');
@@ -587,7 +563,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
         Write('\"');
       }
 
-      mColPos += 1 + strlen(mBuffer) + 1;
+      mColPos += 1 + mBuffer.Length() + 1;
     }
   }
 }
@@ -863,11 +839,10 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   if ((mDoFormat || !mInBody) && PermitWSBeforeOpen(tag))
     AddIndent();
 
-  EnsureBufferSize(tagName.Length());
-  tagName.ToCString(mBuffer,mBufferSize);
+  mBuffer.SetString(tagName);
 
   Write(kLessThan);
-  Write(mBuffer);
+  Write((char*)mBuffer);
 
   mColPos += 1 + tagName.Length();
 
@@ -956,8 +931,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
     AddIndent();
   }
 
-  EnsureBufferSize(tagName.Length());
-  tagName.ToCString(mBuffer,mBufferSize);
+  mBuffer.SetString(tagName);
 
   if (tag != eHTMLTag_comment)
   {
@@ -965,10 +939,10 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
     Write(kForwardSlash);
     mColPos += 1 + 1;
   }
-  Write(mBuffer);
+  Write((char*)mBuffer);
   Write(kGreaterThan);
 
-  mColPos += strlen(mBuffer) + 1;
+  mColPos += mBuffer.Length() + 1;
 
   if (tag == eHTMLTag_body)
     mInBody = PR_FALSE;
@@ -1021,7 +995,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
     const nsString& entity = aNode.GetText();
     EncodeToBuffer(entity);
     Write('&');
-    Write(mBuffer);
+    Write((char*)mBuffer);
     Write(';');
     mColPos += entity.Length() + 2;
   }
