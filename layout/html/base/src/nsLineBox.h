@@ -273,15 +273,6 @@ public:
     return mFlags.mLineWrapped;
   }
 
-  // mLineWrapped bit
-  void SetForceInvalidate(PRBool aOn) {
-    NS_ASSERTION((PR_FALSE==aOn || PR_TRUE==aOn), "somebody is playing fast and loose with bools and bits!");
-    mFlags.mForceInvalidate = aOn;
-  }
-  PRBool IsForceInvalidate() const {
-    return mFlags.mForceInvalidate;
-  }
-
   // mResizeReflowOptimizationDisabled bit
   void DisableResizeReflowOptimization() {
     mFlags.mResizeReflowOptimizationDisabled = PR_TRUE;
@@ -420,11 +411,10 @@ public:
     PRUint32 mImpactedByFloat : 1;
     PRUint32 mHasPercentageChild : 1;
     PRUint32 mLineWrapped: 1;
-    PRUint32 mForceInvalidate: 1;                   // default 0 = means this line handles it's own invalidation.  1 = always invalidate this entire line
     PRUint32 mResizeReflowOptimizationDisabled: 1;  // default 0 = means that the opt potentially applies to this line. 1 = never skip reflowing this line for a resize reflow
     PRUint32 mBreakType : 4;
 
-    PRUint32 mChildCount : 20;
+    PRUint32 mChildCount : 21;
   };
 
   struct ExtraData {
