@@ -154,8 +154,8 @@ NS_IMETHODIMP nsCommandParams::GetStringValue(const char *name, nsAString & _ret
   HashEntry*  foundEntry = GetNamedEntry(name);
   if (foundEntry && foundEntry->mEntryType == eWStringType)
   {
-    NS_ASSERTION(foundEntry->mString, "Null string");
-    _retval.Assign(*foundEntry->mString);
+    NS_ASSERTION(foundEntry->mData.mString, "Null string");
+    _retval.Assign(*foundEntry->mData.mString);
     return NS_OK;
   }
   
@@ -168,8 +168,8 @@ NS_IMETHODIMP nsCommandParams::GetCStringValue(const char * name, char **_retval
   HashEntry*  foundEntry = GetNamedEntry(name);
   if (foundEntry && foundEntry->mEntryType == eStringType)
   {
-    NS_ASSERTION(foundEntry->mCString, "Null string");
-    *_retval= nsCRT::strdup((*foundEntry->mCString).get());
+    NS_ASSERTION(foundEntry->mData.mCString, "Null string");
+    *_retval= nsCRT::strdup((*foundEntry->mData.mCString).get());
     return NS_OK;
   }
   
@@ -237,7 +237,7 @@ NS_IMETHODIMP nsCommandParams::SetStringValue(const char * name, const nsAString
   GetOrMakeEntry(name, eWStringType, foundEntry);
   if (!foundEntry) return NS_ERROR_OUT_OF_MEMORY;
   
-  foundEntry->mString = new nsString(value);
+  foundEntry->mData.mString = new nsString(value);
   return NS_OK;
 }
 
@@ -248,7 +248,7 @@ NS_IMETHODIMP nsCommandParams::SetCStringValue(const char * name, const char * v
   GetOrMakeEntry(name, eStringType, foundEntry);
   if (!foundEntry)
     return NS_ERROR_OUT_OF_MEMORY;
-  foundEntry->mCString = new nsCString(value);
+  foundEntry->mData.mCString = new nsCString(value);
   return NS_OK;
 }
 
