@@ -1276,6 +1276,11 @@ public class ScriptRuntime {
                 return NativeWith.newWithSpecial(cx, args, fo, !isCall);
             if (name.equals("jsFunction_exec") && cl == NativeScript.class)
                 return ((NativeScript)jsThis).exec(cx, scope);
+            if (name.equals("exec") 
+                        && (cx.getRegExpProxy() != null)
+                        && (cx.getRegExpProxy().isRegExp(jsThis)))
+                return call(cx, fun, jsThis, args);
+               
         }
                 
         if (isCall)
