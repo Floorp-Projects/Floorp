@@ -24,12 +24,31 @@
 
 #include "stdio.h"
 
-extern void MenuProc(PRUint32 aId);
 
 int MenuItemActivate (PtWidget_t *widget, void *command, PtCallbackInfo_t *cbinfo)
 {
-//  printf("MenuItemActivateCb command=<%p>\n", command);
-  ::MenuProc((PRUint32)command);
+  PtArg_t    arg;
+  void       **data;
+
+  PtWidget_t *nativeWindow = PtGetParent( widget, PtWindow );
+
+  if( nativeWindow )
+  {  
+    PtSetArg( &arg, Pt_ARG_USER_DATA, &data, 0 );
+    if( PtGetResources( nativeWindow, 1, &arg ) == 0 )
+    {
+      if( data )
+      {
+        nsIWidget *xpWindow = (nsIWidget *) *data;
+        nsBrowserWindow* bw = nsBrowserWindow::FindBrowserFor( xpWindow, FIND_WINDOW );
+
+        if( bw )
+        {
+          bw->DispatchMenuItem( (int) command );
+        }
+      }
+    }
+  }
 
   return Pt_CONTINUE;
 }
