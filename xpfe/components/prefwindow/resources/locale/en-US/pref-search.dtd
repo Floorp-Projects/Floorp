@@ -13,5 +13,5 @@
 <!ENTITY  openSidebarSearchPanel.label "Open the 'Search Results' Sidebar panel when results are available">
 
 <!-- LOCALIZATION NOTE (defaultengine.label): Keep parenthesis so it sorts to the first position in the list -->
-<!ENTITY  defaultengine.label "(Default)">
+<!ENTITY  defaultengine.label "Netscape Search">
 <!ENTITY  searchResults.label "Search Results">
