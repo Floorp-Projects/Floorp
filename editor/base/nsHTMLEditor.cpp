@@ -7160,6 +7160,7 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
         nsCOMPtr<nsIDOMCharacterData>nodeAsText;
         nodeAsText = do_QueryInterface(node);
         nodeAsText->GetLength(&length);
+#ifdef NOT_QUITE_READY_FOR_PRIMETIME
         nsCOMPtr<nsISelectionController> selCon;
         res = GetSelectionController(getter_AddRefs(selCon));
         if (NS_FAILED(res)) return res;
@@ -7177,6 +7178,9 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
           *outIsEmptyNode = PR_FALSE;
           break;
         }
+#else
+        if (length) *outIsEmptyNode = PR_FALSE;
+#endif
       }
       else  // an editable, non-text node. we aren't an empty block 
       {
