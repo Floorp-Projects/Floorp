@@ -207,6 +207,9 @@ pref("mailnews.language_sensitive_font",    true);
 
 pref("mailnews.quotingPrefs.version",       0);  // used to decide whether to migrate global quoting prefs
 
+// the first time, we'll warn the user about the blind send, and they can disable the warning if they want.
+pref("mapi.blind-send.enabled",             true);  
+
 pref("offline.news.download.unread_only",   true);
 pref("offline.news.download.by_date",       true);
 pref("offline.news.download.days",          30);    // days
