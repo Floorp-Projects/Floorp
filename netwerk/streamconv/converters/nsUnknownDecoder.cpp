@@ -436,7 +436,7 @@ void nsUnknownDecoder::SniffForImageMimeType(const char *buf, PRUint32 len)
   }
 
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
-  if (len >= 4 && !nsCRT::memcmp(buf, "\000\000\001\000", 4)) {
+  if (len >= 4 && !memcmp(buf, "\000\000\001\000", 4)) {
     mContentType = NS_LITERAL_CSTRING("image/x-icon");
     return;
   }

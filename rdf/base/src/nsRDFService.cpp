@@ -432,7 +432,7 @@ BlobImpl::EqualsNode(nsIRDFNode *aNode, PRBool *aEquals)
             const PRUint8 *bytes;
             blob->GetValue(&bytes);
 
-            if (0 == nsCRT::memcmp(bytes, mData.mBytes, length)) {
+            if (0 == memcmp(bytes, mData.mBytes, length)) {
                 *aEquals = PR_TRUE;
                 return NS_OK;
             }
@@ -498,7 +498,7 @@ struct BlobHashEntry : public PLDHashEntryHdr {
             NS_STATIC_CAST(const BlobImpl::Data *, key);
 
         return (left->mLength == right->mLength)
-            && 0 == nsCRT::memcmp(left->mBytes, right->mBytes, right->mLength);
+            && 0 == memcmp(left->mBytes, right->mBytes, right->mLength);
     }
 };
 
