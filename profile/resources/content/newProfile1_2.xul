@@ -38,7 +38,7 @@
   <description>&pnl2.pname.label;</description> 
 
 
-  <textbox id="ProfileName" value="&pnl2.defaultPName.label;" onkeypress="updateProfileName();"/>
+  <textbox id="ProfileName" value="&pnl2.defaultPName.label;" oninput="updateProfileName();"/>
 
   <separator/>
 
