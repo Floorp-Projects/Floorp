@@ -29,6 +29,12 @@
 #define GESTALT_OPEN_TPT_TCP_PRESENT    gestaltOpenTptTCPPresentMask
 
 #include <OpenTptInternet.h>    // All the internet typedefs
+
+#if (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
+// for some reason Apple removed this typedef.
+typedef struct OTConfiguration	OTConfiguration;
+#endif
+
 #include "primpl.h"
 
 typedef enum SndRcvOpCode {
