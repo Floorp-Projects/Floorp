@@ -288,6 +288,54 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
   return false;
 }
 
+function editorSendPage()
+{
+  var docModified = editorShell.documentModified;
+  var pageUrl = window.editorShell.editorDocument.location;
+  if (pageUrl != "about:blank" && !docModified)
+  {
+    var pageTitle = window.editorShell.editorDocument.title;
+    window.openDialog("chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
+                        "chrome,all,dialog=no", "attachment='" + pageUrl + "',body='" + pageUrl +
+                        "',subject='" + pageTitle + "',bodyislink=true");
+  } else {
+    sendPageMustSave();
+  }
+}
+
+function sendPageMustSave()
+{
+  var result = {value:0};
+  commonDialogsService.UniversalDialog(
+    window,
+    null,
+    window.editorShell.GetString("SendPage"),
+    window.editorShell.GetString("SendPageCaption"),
+    null,
+    window.editorShell.GetString("Yes"),
+    window.editorShell.GetString("No"),
+    null,
+    null,
+    null,
+    null,
+    {value:0},
+    {value:0},
+    "chrome://global/skin/question-icon.gif",
+    {value:"false"},
+    2,
+    0,
+    0,
+    result
+    );
+  
+  if (result.value == 0)  // They chose "Yes" -- they'd like to save their document now
+  {
+    var returned = window.editorShell.saveDocument(false, false);
+    if (returned)
+      editorSendPage(); // They saved the page, now we can send page :)
+  }
+}
+
 // --------------------------- File menu ---------------------------
 
 
