@@ -59,6 +59,7 @@
 nsStreamListenerProxy::nsStreamListenerProxy()
     : mLock(nsnull)
     , mPendingCount(0)
+    , mPipeEmptied(PR_FALSE)
     , mListenerStatus(NS_OK)
 { }
 
@@ -258,19 +259,15 @@ nsStreamListenerProxy::OnDataAvailable(nsIChannel *aChannel,
         }
     }
     
-    //
-    // Enter the ChannelToResume lock
-    //
-    {
-        nsAutoLock lock(mLock);
-
+    while (1) {
+        mPipeEmptied = PR_FALSE;
         // 
         // Try to copy data into the pipe.
         //
-        // If the pipe is full, then suspend the calling channel.  It
-        // will be resumed when the pipe is emptied.  Being inside the 
-        // ChannelToResume lock ensures that the resume will follow
-        // the suspend.
+        // If the pipe is full, then we return NS_BASE_STREAM_WOULD_BLOCK
+        // so the calling channel can suspend itself.  If, however, we detect
+        // that the pipe was emptied during this time, we retry copying data
+        // into the pipe.
         //
         rv = mPipeOut->WriteFrom(aSource, aCount, &bytesWritten);
 
@@ -279,15 +276,23 @@ nsStreamListenerProxy::OnDataAvailable(nsIChannel *aChannel,
 
         if (NS_FAILED(rv)) {
             if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-                LOG(("nsStreamListenerProxy: Setting channel to resume [chan=%x]\n", aChannel));
+                nsAutoLock lock(mLock);
+                if (mPipeEmptied) {
+                    LOG(("nsStreamListenerProxy: Pipe emptied; looping back [chan=%x]\n", aChannel));
+                    continue;
+                }
+                LOG(("nsStreamListenerProxy: Pipe full; setting channel to resume [chan=%x]\n", aChannel));
                 mChannelToResume = aChannel;
             }
             return rv;
         }
-        else if (bytesWritten == 0) {
+        if (bytesWritten == 0) {
             LOG(("nsStreamListenerProxy: Copied zero bytes; not posting an event [chan=%x]\n", aChannel));
             return NS_OK;
         }
+
+        // Copied something into the pipe...
+        break;
     }
 
     //
@@ -377,8 +382,11 @@ nsStreamListenerProxy::OnEmpty(nsIInputStream *aInputStream)
     nsCOMPtr<nsIChannel> chan;
     {
         nsAutoLock lock(mLock);
-        chan = mChannelToResume;
-        mChannelToResume = 0;
+        if (mChannelToResume) {
+            chan = mChannelToResume;
+            mChannelToResume = 0;
+        }
+        mPipeEmptied = PR_TRUE; // Flag this call
     }
     if (chan) {
         LOG(("nsStreamListenerProxy: Resuming channel\n"));

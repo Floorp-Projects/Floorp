@@ -45,6 +45,7 @@ protected:
     nsCOMPtr<nsIChannel>      mChannelToResume;
     PRLock                   *mLock;
     PRUint32                  mPendingCount;
+    PRBool                    mPipeEmptied;
     nsresult                  mListenerStatus;
 };
 
