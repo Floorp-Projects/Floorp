@@ -59,6 +59,9 @@ CPPSRCS		= \
 ifdef MOZ_ENABLE_GTK2
 CSRCS           = \
 		gtkmozembedmarshal.c
+CPPSRCS         += \
+		EmbedPrompter.cpp \
+		GtkPromptService.cpp
 endif
 
 ifdef BUILD_STATIC_LIBS

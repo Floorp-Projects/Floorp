@@ -1,498 +1,395 @@
-/*
- * The contents of this file are subject to the Mozilla Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
- * 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
  * The Original Code is mozilla.org code.
- * 
- * The Initial Developer of the Original Code is Christopher Blizzard.
- * Portions created by Christopher Blizzard are Copyright (C)
- * Christopher Blizzard.  All Rights Reserved.
- * 
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Coporation.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
  * Contributor(s):
- *   Christopher Blizzard <blizzard@mozilla.org>
- */
+ *  Brian Ryner <bryner@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 #include "EmbedPrompter.h"
 #include "nsReadableUtils.h"
 
-// call backs from gtk widgets
+enum {
+    INCLUDE_USERNAME = 1 << 0,
+    INCLUDE_PASSWORD = 1 << 1,
+    INCLUDE_CHECKBOX = 1 << 2,
+    INCLUDE_CANCEL   = 1 << 3
+};
 
-gboolean
-toplevel_delete_cb(GtkWidget *aWidget, GdkEventAny *aEvent,
-		   EmbedPrompter *aPrompter);
+struct DialogDescription {
+    int    flags;
+    gchar* icon;
+};
 
-gboolean
-ok_clicked_cb(GtkButton *button, EmbedPrompter *aPrompter);
+// This table contains the optional widgets and icons associated with
+// each type of dialog.
 
-gboolean
-cancel_clicked_cb(GtkButton *button, EmbedPrompter *aPrompter);
+static const DialogDescription DialogTable[] = {
+    { 0,                      GTK_STOCK_DIALOG_WARNING  },  // ALERT
+    { INCLUDE_CHECKBOX,       GTK_STOCK_DIALOG_WARNING  },  // ALERT_CHECK
+    { INCLUDE_CANCEL,         GTK_STOCK_DIALOG_QUESTION },  // CONFIRM
+    { INCLUDE_CHECKBOX |
+      INCLUDE_CANCEL,         GTK_STOCK_DIALOG_QUESTION },  // CONFIRM_CHECK
+    { INCLUDE_CANCEL,         GTK_STOCK_DIALOG_QUESTION },  // PROMPT
+    { INCLUDE_CANCEL |
+      INCLUDE_USERNAME |
+      INCLUDE_PASSWORD,       GTK_STOCK_DIALOG_QUESTION },  // PROMPT_USER_PASS
+    { INCLUDE_CANCEL |
+      INCLUDE_PASSWORD,       GTK_STOCK_DIALOG_QUESTION },  // PROMPT_PASS
+    { INCLUDE_CANCEL,         GTK_STOCK_DIALOG_QUESTION },  // SELECT
+    { INCLUDE_CANCEL,         GTK_STOCK_DIALOG_QUESTION }   // UNIVERSAL
+};
 
 EmbedPrompter::EmbedPrompter(void)
+    : mCheckValue(PR_FALSE),
+      mItemList(nsnull),
+      mItemCount(0),
+      mButtonPressed(0),
+      mConfirmResult(PR_FALSE),
+      mSelectedItem(0),
+      mWindow(NULL),
+      mUserField(NULL),
+      mPassField(NULL),
+      mTextField(NULL),
+      mOptionMenu(NULL),
+      mCheckBox(NULL)
 {
-  mCheckValue    = PR_FALSE;
-  mConfirmResult = PR_FALSE;
-
-  mWindow        = nsnull;
-  mUserField     = nsnull;
-  mPassField     = nsnull;
-  mTextField     = nsnull;
-  mCheckBox      = nsnull;
 }
 
 EmbedPrompter::~EmbedPrompter(void)
 {
+    if (mItemList)
+        delete[] mItemList;
 }
 
 nsresult
-EmbedPrompter::Create(PromptType aType)
+EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
 {
-  nsresult rv = NS_OK;
+    mWindow = gtk_dialog_new_with_buttons(mTitle.get(), aParentWindow,
+                                          GTK_DIALOG_DESTROY_WITH_PARENT,
+                                          NULL);
 
-  int includeCheckFlag = 0;
+    // gtk will resize this for us as necessary
+    gtk_window_set_default_size(GTK_WINDOW(mWindow), 200, 100);
 
-  switch (aType) {
-  case TYPE_PROMPT_USER_PASS:
-    if (mCheckMessage.Length())
-      includeCheckFlag = EmbedPrompter::INCLUDE_CHECKBOX;
-    CreatePasswordPrompter(EmbedPrompter::INCLUDE_USERNAME | 
-			   includeCheckFlag);
-    break;
-  case TYPE_PROMPT_PASS:
-    if (mCheckMessage.Length())
-      includeCheckFlag = EmbedPrompter::INCLUDE_CHECKBOX;
-    CreatePasswordPrompter(includeCheckFlag);
-    break;
-  case TYPE_ALERT:
-    CreateAlertPrompter(0);
-    break;
-  case TYPE_CONFIRM:
-    CreateAlertPrompter(EmbedPrompter::INCLUDE_CANCEL);
-    break;
-  case TYPE_CONFIRM_CHECK:
-    CreateAlertPrompter(EmbedPrompter::INCLUDE_CANCEL |
-			EmbedPrompter::INCLUDE_CHECKBOX);
-    break;
-  case TYPE_ALERT_CHECK:
-    CreateAlertPrompter(EmbedPrompter::INCLUDE_CHECKBOX);
-    break;
-  case TYPE_PROMPT:
-    if (mCheckMessage.Length())
-      includeCheckFlag = EmbedPrompter::INCLUDE_CHECKBOX;
-    CreateAlertPrompter(EmbedPrompter::INCLUDE_CANCEL |
-			EmbedPrompter::INCLUDE_TEXTFIELD |
-			includeCheckFlag);
-    break;
-  default:
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-    break;
-  }
-  return rv;
+    // this HBox will contain the icon, and a vbox which contains the
+    // dialog text and other widgets.
+    GtkWidget* dialogHBox = gtk_hbox_new(FALSE, 12);
+
+
+    // Set up dialog properties according to the GNOME HIG
+    // (http://developer.gnome.org/projects/gup/hig/1.0/windows.html#alert-windows)
+
+    gtk_container_set_border_width(GTK_CONTAINER(mWindow), 6);
+    gtk_dialog_set_has_separator(GTK_DIALOG(mWindow), FALSE);
+    gtk_box_set_spacing(GTK_BOX(GTK_DIALOG(mWindow)->vbox), 12);
+    gtk_container_set_border_width(GTK_CONTAINER(dialogHBox), 6);
+
+
+    // This is the VBox which will contain the label and other controls.
+    GtkWidget* contentsVBox = gtk_vbox_new(FALSE, 12);
+
+    // get the stock icon for this dialog and put it in the box
+    const gchar* iconDesc = DialogTable[aType].icon;
+    GtkWidget* icon = gtk_image_new_from_stock(iconDesc, GTK_ICON_SIZE_DIALOG);
+    gtk_misc_set_alignment(GTK_MISC(icon), 0.5, 0.0);
+    gtk_box_pack_start(GTK_BOX(dialogHBox), icon, FALSE, FALSE, 0);
+
+    // now pack the label into the vbox
+    GtkWidget* label = gtk_label_new(mMessageText.get());
+    gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+    gtk_box_pack_start(GTK_BOX(contentsVBox), label, FALSE, FALSE, 0);
+
+    int widgetFlags = DialogTable[aType].flags;
+
+    if (widgetFlags & (INCLUDE_USERNAME | INCLUDE_PASSWORD)) {
+
+        // If we're creating a username and/or password field, make an hbox
+        // which will contain two vboxes, one for the labels and one for the
+        // text fields.  This will let us line up the textfields.
+
+        GtkWidget* userPassHBox = gtk_hbox_new(FALSE, 12);
+        GtkWidget* userPassLabels = gtk_vbox_new(TRUE, 6);
+        GtkWidget* userPassFields = gtk_vbox_new(TRUE, 6);
+
+        if (widgetFlags & INCLUDE_USERNAME) {
+            GtkWidget* userLabel = gtk_label_new("User Name:");
+            gtk_box_pack_start(GTK_BOX(userPassLabels), userLabel, FALSE,
+                               FALSE, 0);
+
+            mUserField = gtk_entry_new();
+
+            if (!mUser.IsEmpty())
+                gtk_entry_set_text(GTK_ENTRY(mUserField), mUser.get());
+
+            gtk_entry_set_activates_default(GTK_ENTRY(mUserField), TRUE);
+
+            gtk_box_pack_start(GTK_BOX(userPassFields), mUserField, FALSE,
+                               FALSE, 0);
+        }
+        if (widgetFlags & INCLUDE_PASSWORD) {
+            GtkWidget* passLabel = gtk_label_new("Password:");
+            gtk_box_pack_start(GTK_BOX(userPassLabels), passLabel, FALSE,
+                               FALSE, 0);
+
+            mPassField = gtk_entry_new();
+
+            if (!mPass.IsEmpty())
+                gtk_entry_set_text(GTK_ENTRY(mPassField), mPass.get());
+
+            gtk_entry_set_visibility(GTK_ENTRY(mPassField), FALSE);
+            gtk_entry_set_activates_default(GTK_ENTRY(mPassField), TRUE);
+
+            gtk_box_pack_start(GTK_BOX(userPassFields), mPassField, FALSE,
+                               FALSE, 0);
+        }
+
+        gtk_box_pack_start(GTK_BOX(userPassHBox), userPassLabels, FALSE,
+                           FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(userPassHBox), userPassFields, FALSE,
+                           FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(contentsVBox), userPassHBox, FALSE, FALSE, 0);
+    }
+
+    if (aType == TYPE_PROMPT) {
+        mTextField = gtk_entry_new();
+
+        if (!mTextValue.IsEmpty())
+            gtk_entry_set_text(GTK_ENTRY(mTextField), mTextValue.get());
+
+        gtk_entry_set_activates_default(GTK_ENTRY(mTextField), TRUE);
+
+        gtk_box_pack_start(GTK_BOX(contentsVBox), mTextField, FALSE, FALSE, 0);
+    }
+
+    // Add a checkbox
+    if ((widgetFlags & INCLUDE_CHECKBOX) && !mCheckMessage.IsEmpty()) {
+        mCheckBox = gtk_check_button_new_with_label(mCheckMessage.get());
+
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckBox),
+                                     mCheckValue);
+
+        gtk_box_pack_start(GTK_BOX(contentsVBox), mCheckBox, FALSE, FALSE, 0);
+    }
+
+    // Add a dropdown menu
+    if (aType == TYPE_SELECT) {
+        // Build up a GtkMenu containing the items
+        GtkWidget* menu = gtk_menu_new();
+        for (PRUint32 i = 0; i < mItemCount; ++i) {
+            GtkWidget* item = gtk_menu_item_new_with_label(mItemList[i].get());
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        }
+
+        // Now create an OptionMenu and set this as the menu
+        mOptionMenu = gtk_option_menu_new();
+
+        gtk_option_menu_set_menu(GTK_OPTION_MENU(mOptionMenu), menu);
+        gtk_box_pack_start(GTK_BOX(contentsVBox), mOptionMenu, FALSE, FALSE, 0);
+    }
+
+    if (aType == TYPE_UNIVERSAL) {
+        // Create buttons based on the flags passed in.
+        for (int i = 0; i < MAX_BUTTONS; ++i) {
+            if (!mButtonLabels[i].IsEmpty())
+                gtk_dialog_add_button(GTK_DIALOG(mWindow),
+                                      mButtonLabels[i].get(), i);
+        }
+    } else {
+        // Create standard ok and cancel buttons
+        if (widgetFlags & INCLUDE_CANCEL)
+            gtk_dialog_add_button(GTK_DIALOG(mWindow), GTK_STOCK_CANCEL,
+                                  GTK_RESPONSE_REJECT);
+
+        GtkWidget* okButton = gtk_dialog_add_button(GTK_DIALOG(mWindow),
+                                                    GTK_STOCK_OK,
+                                                    GTK_RESPONSE_ACCEPT);
+        gtk_widget_grab_default(okButton);
+    }
+
+    // Pack the contentsVBox into the dialogHBox and the dialog.
+    gtk_box_pack_start(GTK_BOX(dialogHBox), contentsVBox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(mWindow)->vbox), dialogHBox, FALSE,
+                       FALSE, 0);
+
+    return NS_OK;
 }
 
 void
 EmbedPrompter::SetTitle(const PRUnichar *aTitle)
 {
-  mTitle.AssignWithConversion(aTitle);
+    mTitle = NS_ConvertUCS2toUTF8(aTitle);
 }
 
 void
 EmbedPrompter::SetTextValue(const PRUnichar *aTextValue)
 {
-  mTextValue.AppendWithConversion(aTextValue);
+    mTextValue = NS_ConvertUCS2toUTF8(aTextValue);
 }
 
 void
 EmbedPrompter::SetCheckMessage(const PRUnichar *aMessage)
 {
-  mCheckMessage.AppendWithConversion(aMessage);
+    mCheckMessage = NS_ConvertUCS2toUTF8(aMessage);
 }
 
 void
 EmbedPrompter::SetMessageText(const PRUnichar *aMessageText)
 {
-  mMessageText.AppendWithConversion(aMessageText);
+    mMessageText = NS_ConvertUCS2toUTF8(aMessageText);
 }
 
 void
 EmbedPrompter::SetUser(const PRUnichar *aUser)
 {
-  mUser.AppendWithConversion(aUser);
+    mUser = NS_ConvertUCS2toUTF8(aUser);
 }
 
 void
 EmbedPrompter::SetPassword(const PRUnichar *aPass)
 {
-  mPass.AppendWithConversion(aPass);
+    mPass = NS_ConvertUCS2toUTF8(aPass);
 }
 
 void
 EmbedPrompter::SetCheckValue(const PRBool aValue)
 {
-  mCheckValue = aValue;
+    mCheckValue = aValue;
+}
+
+void
+EmbedPrompter::SetItems(const PRUnichar** aItemArray, PRUint32 aCount)
+{
+    if (mItemList)
+        delete[] mItemList;
+
+    mItemCount = aCount;
+    mItemList = new nsCString[aCount];
+    for (PRUint32 i = 0; i < aCount; ++i)
+        mItemList[i] = NS_ConvertUCS2toUTF8(aItemArray[i]);
+}
+
+void
+EmbedPrompter::SetButtons(const PRUnichar* aButton0Label,
+                          const PRUnichar* aButton1Label,
+                          const PRUnichar* aButton2Label)
+{
+    mButtonLabels[0] = NS_ConvertUCS2toUTF8(aButton0Label);
+    mButtonLabels[1] = NS_ConvertUCS2toUTF8(aButton1Label);
+    mButtonLabels[2] = NS_ConvertUCS2toUTF8(aButton2Label);
 }
 
 void
 EmbedPrompter::GetCheckValue(PRBool *aValue)
 {
-  *aValue = mCheckValue;
+    *aValue = mCheckValue;
 }
 
 void
 EmbedPrompter::GetConfirmValue(PRBool *aConfirmValue)
 {
-  *aConfirmValue = mConfirmResult;
+    *aConfirmValue = mConfirmResult;
 }
  
 void
 EmbedPrompter::GetTextValue(PRUnichar **aTextValue)
 {
-  *aTextValue = ToNewUnicode(mTextValue);
+    *aTextValue = ToNewUnicode(mTextValue);
 }
 
 void
 EmbedPrompter::GetUser(PRUnichar **aUser)
 {
-  *aUser = ToNewUnicode(mUser);
+    *aUser = ToNewUnicode(mUser);
 }
 
 void
 EmbedPrompter::GetPassword(PRUnichar **aPass)
 {
-  *aPass = ToNewUnicode(mPass);
+    *aPass = ToNewUnicode(mPass);
+}
+
+void
+EmbedPrompter::GetSelectedItem(PRInt32 *aIndex)
+{
+    *aIndex = mSelectedItem;
+}
+
+void
+EmbedPrompter::GetButtonPressed(PRInt32 *aButton)
+{
+    *aButton = mButtonPressed;
 }
 
 void
 EmbedPrompter::Run(void)
 {
-  gtk_widget_show_all(mWindow);
-  gtk_grab_add(mWindow);
-  gtk_main();
-}
-
-void
-EmbedPrompter::UserCancel(void)
-{
-  // someone pressed cancel or else they closed the window which is
-  // the same as a cancel.
-  mConfirmResult = PR_FALSE;
-
-  gtk_grab_remove(mWindow);
-  gtk_main_quit();
-
-  // destroy all of our widgets
-  gtk_widget_destroy(mWindow);
-
-  mWindow = nsnull;
-  mUserField = nsnull;
-  mPassField = nsnull;
-  mTextField = nsnull;
-  mCheckBox = nsnull;
-
-}
-
-void
-EmbedPrompter::UserOK(void)
-{
-  // someone pressed OK
-  mConfirmResult = PR_TRUE;
-
-  // save all of the data
-  if (mUserField) {
-    gchar *user;
-    user = gtk_editable_get_chars(GTK_EDITABLE(mUserField), 0, -1);
-    mUser.Assign(user);
-    g_free(user);
-  }
-
-  if (mPassField) {
-    gchar *pass;
-    pass = gtk_editable_get_chars(GTK_EDITABLE(mPassField), 0, -1);
-    mPass.Assign(pass);
-    g_free(pass);
-  }
-
-  if (mCheckBox)
-    mCheckValue = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(mCheckBox));
-
-  if (mTextField) {
-    gchar *text;
-    text = gtk_editable_get_chars(GTK_EDITABLE(mTextField), 0, -1);
-    mTextValue.Assign(text);
-    g_free(text);
-  }
-  
-  gtk_grab_remove(mWindow);
-  gtk_main_quit();
-
-  // destroy all of our widgets
-  gtk_widget_destroy(mWindow);
-
-  mWindow = nsnull;
-  mUserField = nsnull;
-  mPassField = nsnull;
-  mTextField = nsnull;
-  mCheckBox = nsnull;
-
-}
-
-
-
-void
-EmbedPrompter::CreatePasswordPrompter(int aFlags)
-{
-  // toplevel window
-  mWindow = gtk_window_new(GTK_WINDOW_DIALOG);
-  
-  // toplevel vbox
-  GtkBox *topLevelVBox = GTK_BOX(gtk_vbox_new(FALSE, /* homogeneous */
-					      3));    /* spacing */
-
-  // add it to the window
-  gtk_container_add(GTK_CONTAINER(mWindow),
-		    GTK_WIDGET(topLevelVBox));
-
-  // set our border width
-  gtk_container_set_border_width(GTK_CONTAINER(mWindow),
-				 4);
-
-  GtkWidget *msgLabel = gtk_label_new(mMessageText.get());
-  // add it
-  gtk_box_pack_start(topLevelVBox,
-		     msgLabel,
-		     FALSE, /* expand */
-		     FALSE, /* fill */
-		     0);    /* padding */
-
-  PRInt32 startPos;
-
-  if (aFlags & EmbedPrompter::INCLUDE_USERNAME) {
-    // the username label
-    GtkWidget *userLabel = gtk_label_new("User Name");
-    gtk_box_pack_start(topLevelVBox,
-		       userLabel,
-		       FALSE, /* expand */
-		       FALSE, /* fill */
-		       0);    /* padding */
-    // the username text area
-    mUserField = gtk_entry_new();
-    if (mUser.Length()) {
-      startPos = 0;
-      gtk_editable_insert_text(GTK_EDITABLE(mUserField),
-			       mUser.get(), mUser.Length(),
-			       &startPos);
+    gtk_widget_show_all(mWindow);
+    gint response = gtk_dialog_run(GTK_DIALOG(mWindow));
+    switch (response) {
+    case GTK_RESPONSE_NONE:
+    case GTK_RESPONSE_REJECT:
+    case GTK_RESPONSE_DELETE_EVENT:
+        mConfirmResult = PR_FALSE;
+        break;
+    case GTK_RESPONSE_ACCEPT:
+        mConfirmResult = PR_TRUE;
+        SaveDialogValues();
+        break;
+    default:
+        mButtonPressed = response;
+        SaveDialogValues();
     }
-    gtk_box_pack_start(topLevelVBox,
-		       mUserField,
-		       FALSE, /* expand */
-		       FALSE, /* fill */
-		       0);    /* padding */
-  }
 
-  // password label
-  GtkWidget *passLabel = gtk_label_new("Password");
-  gtk_box_pack_start(topLevelVBox,
-		   passLabel,
-		   FALSE, /* expand */
-		   FALSE, /* fill */
-		   0);    /* padding */
-
-  // password text field
-  mPassField = gtk_entry_new();
-  // it's a password field
-  gtk_entry_set_visibility(GTK_ENTRY(mPassField), FALSE);
-  if (mPass.Length()) {
-    startPos = 0;
-    gtk_editable_insert_text(GTK_EDITABLE(mPassField),
-			     mPass.get(), mPass.Length(),
-			     &startPos);
-  }
-  // add it
-  gtk_box_pack_start(topLevelVBox,
-		   mPassField,
-		   FALSE, /* expand */
-		   FALSE, /* fill */
-		   0);    /* padding */
-
-  // password manager field
-  if (aFlags & EmbedPrompter::INCLUDE_CHECKBOX) {
-    // make it
-    mCheckBox =
-      gtk_check_button_new_with_label(mCheckMessage.get());
-    // set its state
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckBox),
-				 mCheckValue);
-    // add it
-    gtk_box_pack_start(topLevelVBox,
-		     mCheckBox,
-		     FALSE, /* expand */
-		     FALSE, /* fill */
-		     0);    /* padding */
-  }
-
-  // gtk button box for the OK and Cancel buttons
-  GtkButtonBox *buttonBox = GTK_BUTTON_BOX(gtk_hbutton_box_new());
-  gtk_button_box_set_layout(buttonBox, GTK_BUTTONBOX_SPREAD);
-
-  gtk_box_pack_start(topLevelVBox,
-		     GTK_WIDGET(buttonBox),
-		     FALSE, /* expand */
-		     TRUE,  /* fill */
-		     0);    /* padding */
-
-  // OK
-  GtkWidget *okButton = gtk_button_new_with_label("OK");
-  gtk_box_pack_start(GTK_BOX(buttonBox),
-		     okButton,
-		     FALSE, /* expand */
-		     TRUE,  /* fill */
-		     0);    /* padding */
-
-  // cancel
-  GtkWidget *cancelButton = gtk_button_new_with_label("Cancel");
-  gtk_box_pack_start(GTK_BOX(buttonBox),
-		     cancelButton,
-		     FALSE, /* expand */
-		     TRUE,  /* fill */
-		     0);    /* padding */
-  
-  // hook up signals
-  gtk_signal_connect(GTK_OBJECT(mWindow), "delete_event",
-		     GTK_SIGNAL_FUNC(toplevel_delete_cb),
-		     this);
-  
-  gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
-		     GTK_SIGNAL_FUNC(ok_clicked_cb), this);
-  gtk_signal_connect(GTK_OBJECT(cancelButton), "clicked",
-		     GTK_SIGNAL_FUNC(cancel_clicked_cb), this);
+    gtk_widget_destroy(mWindow);
 }
 
 void
-EmbedPrompter::CreateAlertPrompter(int aFlags)
+EmbedPrompter::SaveDialogValues()
 {
-    // toplevel window
-  mWindow = gtk_window_new(GTK_WINDOW_DIALOG);
-  
-  // toplevel vbox
-  GtkBox *topLevelVBox = GTK_BOX(gtk_vbox_new(FALSE, /* homogeneous */
-					      3));    /* spacing */
+    if (mUserField)
+        mUser.Assign(gtk_entry_get_text(GTK_ENTRY(mUserField)));
 
-  // add it to the window
-  gtk_container_add(GTK_CONTAINER(mWindow),
-		    GTK_WIDGET(topLevelVBox));
+    if (mPassField)
+        mPass.Assign(gtk_entry_get_text(GTK_ENTRY(mPassField)));
 
-  // set our border width
-  gtk_container_set_border_width(GTK_CONTAINER(mWindow),
-				 4);
+    if (mCheckBox)
+        mCheckValue = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(mCheckBox));
 
-  // create our label
-  GtkWidget *label = gtk_label_new(mMessageText.get());
-  gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+    if (mTextField)
+        mTextValue.Assign(gtk_entry_get_text(GTK_ENTRY(mTextField)));
 
-  // add it
-  gtk_box_pack_start(topLevelVBox,
-		     label,
-		     TRUE, /* expand */
-		     TRUE, /* fill */
-		     0);    /* padding */
-
-  // text field
-  if (aFlags & EmbedPrompter::INCLUDE_TEXTFIELD) {
-    mTextField = gtk_entry_new();
-    if (mTextValue.Length()) {
-      int startPos = 0;
-      gtk_editable_insert_text(GTK_EDITABLE(mTextField),
-			       mTextValue.get(), mTextValue.Length(),
-			       &startPos);
-    }
-    gtk_box_pack_start(topLevelVBox,
-		       mTextField,
-		       FALSE, /* expand */
-		       FALSE, /* fill */
-		       0);    /* padding */
-  }
-
-  if (aFlags & EmbedPrompter::INCLUDE_CHECKBOX) {
-    // make it
-    mCheckBox = gtk_check_button_new_with_label(mCheckMessage);
-    // set its state
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckBox),
-				 mCheckValue);
-    // add it
-    gtk_box_pack_start(topLevelVBox,
-		       mCheckBox,
-		       FALSE, /* expand */
-		       FALSE, /* fill */
-		       0);    /* padding */
-  }
-
-  // gtk button box for the OK button
-  GtkButtonBox *buttonBox = GTK_BUTTON_BOX(gtk_hbutton_box_new());
-  gtk_button_box_set_layout(buttonBox, GTK_BUTTONBOX_SPREAD);
-
-  gtk_box_pack_start(topLevelVBox,
-		     GTK_WIDGET(buttonBox),
-		     FALSE, /* expand */
-		     FALSE,  /* fill */
-		     0);    /* padding */
-
-  // OK
-  GtkWidget *okButton = gtk_button_new_with_label("OK");
-  gtk_box_pack_start(GTK_BOX(buttonBox),
-		     okButton,
-		     FALSE, /* expand */
-		     TRUE,  /* fill */
-		     0);    /* padding */
-
-  if (aFlags & EmbedPrompter::INCLUDE_CANCEL) {
-    // cancel
-    GtkWidget *cancelButton = gtk_button_new_with_label("Cancel");
-    gtk_box_pack_start(GTK_BOX(buttonBox),
-		       cancelButton,
-		       FALSE, /* expand */
-		       TRUE,  /* fill */
-		       0);    /* padding */
-
-    // hook up the signal here instead of later since the object will
-    // go outta scope.
-    gtk_signal_connect(GTK_OBJECT(cancelButton), "clicked",
-		       GTK_SIGNAL_FUNC(cancel_clicked_cb), this);
-  }
-  
-
-  // hook up signals
-  gtk_signal_connect(GTK_OBJECT(mWindow), "delete_event",
-		     GTK_SIGNAL_FUNC(toplevel_delete_cb),
-		     this);
-  
-  gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
-		     GTK_SIGNAL_FUNC(ok_clicked_cb), this);
-}
-
-gboolean
-toplevel_delete_cb(GtkWidget *aWidget, GdkEventAny *aEvent,
-		   EmbedPrompter *aPrompter)
-{
-  aPrompter->UserCancel();
-  return TRUE;
-}
-
-gboolean
-ok_clicked_cb(GtkButton *button, EmbedPrompter *aPrompter)
-{
-  aPrompter->UserOK();
-  return TRUE;
-}
-
-gboolean
-cancel_clicked_cb(GtkButton *button, EmbedPrompter *aPrompter)
-{
-  aPrompter->UserCancel();
-  return TRUE;
+    if (mOptionMenu)
+        mSelectedItem = gtk_option_menu_get_history(GTK_OPTION_MENU(mOptionMenu));
 }

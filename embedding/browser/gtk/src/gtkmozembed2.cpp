@@ -790,6 +790,13 @@ gtk_moz_embed_set_comp_path(char *aPath)
 }
 
 void
+gtk_moz_embed_set_app_components(const nsModuleComponentInfo* aComps,
+                                 int aNumComponents)
+{
+  EmbedPrivate::SetAppComponents(aComps, aNumComponents);
+}
+
+void
 gtk_moz_embed_set_profile_path(char *aDir, char *aName)
 {
   EmbedPrivate::SetProfilePath(aDir, aName);
