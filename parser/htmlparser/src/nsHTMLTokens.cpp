@@ -546,7 +546,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   // be part of this text token (we wouldn't have come here if it weren't)
   aScanner.CurrentPosition(origin);
   start = origin;
-  start++;
+  ++start;
   aScanner.SetPosition(start);
 
   while((NS_OK==result) && (!done)) {
@@ -571,13 +571,13 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
               // If it standalone, replace the "\r" with a "\n" so that 
               // it will be considered by the layout system
               aScanner.ReplaceCharacter(end, kLF);
-              end++;
+              ++end;
             }
-            mNewlineCount++;
+            ++mNewlineCount;
             break;
           case kLF:
-            end++;
-            mNewlineCount++;
+            ++end;
+            ++mNewlineCount;
             break;
         } //switch
       }
@@ -947,17 +947,17 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
               // If it standalone, replace the "\r" with a "\n" so that 
               // it will be considered by the layout system
               aScanner.ReplaceCharacter(end, kLF);
-              end++;
+              ++end;
             }
-            mNewlineCount++;
+            ++mNewlineCount;
             break;
           case kLF:
-            end++;
-            mNewlineCount++;
+            ++end;
+            ++mNewlineCount;
             break;
           case '\'':
           case '"':
-            end++;
+            ++end;
             if (quote) {
               if (quote == aChar) {
                 quote = 0;
@@ -968,10 +968,10 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
             break;
           case kGreaterThan:
             if (quote) {
-              end++;
+              ++end;
             } else {
               start = end;
-              start++;  // Note that start is wrong after this, we just avoid temp var
+              ++start;  // Note that start is wrong after this, we just avoid temp var
               aScanner.SetPosition(start); // Skip the >
               done=PR_TRUE;
             }
@@ -1125,12 +1125,12 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
         
           while((NS_OK==result)) {
             if (FindCharInReadable(PRUnichar(kGreaterThan), theCurrOffset, endPos)) {
-              theCurrOffset++;
+              ++theCurrOffset;
               nsReadingIterator<PRUnichar> temp = theCurrOffset;
               temp.advance(-3);
               aChar=*temp;
               if(kMinus==aChar) {
-                temp++;
+                ++temp;
                 aChar=*temp;
                 if(kMinus==aChar) {
                   theStartOffset.advance(-2); // Include "<!" also..

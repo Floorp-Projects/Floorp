@@ -119,7 +119,7 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAReadableString& aTypes,
         inString = PR_TRUE;
       }
     }
-    current++;
+    ++current;
   }
   if (inString) {
     subString = Substring(start, current);
