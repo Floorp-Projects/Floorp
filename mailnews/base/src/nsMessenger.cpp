@@ -572,7 +572,9 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement 
 	if(NS_FAILED(rv))
 		return rv;
 
-	argumentArray->InsertElementAt(srcFolder, 0);
+	nsCOMPtr<nsISupports> srcFolderSupports(do_QueryInterface(srcFolder));
+	if(srcFolderSupports)
+		argumentArray->InsertElementAt(srcFolderSupports, 0);
 
 	rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
 	if(NS_FAILED(rv))
