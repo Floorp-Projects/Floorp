@@ -814,6 +814,12 @@ extensions/inspector/build/src/Makefile
 extensions/inspector/resources/Makefile
 "
 
+MAKEFILES_sroaming="
+extensions/sroaming/Makefile
+extensions/sroaming/src/Makefile
+extensions/sroaming/resources/Makefile
+"
+
 MAKEFILES_transformiix="
 extensions/transformiix/source/base/Makefile
 extensions/transformiix/source/main/Makefile
@@ -1281,6 +1287,9 @@ for extension in $MOZ_EXTENSIONS; do
         tasks ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/tasks/Makefile
             " ;;
+        sroaming ) MAKEFILES_extensions="$MAKEFILES_extensions
+            $MAKEFILES_sroaming"
+            ;;
         transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_transformiix"
             ;;
