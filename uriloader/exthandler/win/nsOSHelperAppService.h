@@ -47,12 +47,6 @@ public:
   // method overrides for windows registry look up steps....
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt, PRBool *aFound);
 
-  // GetFileTokenForPath must be implemented by each platform. 
-  // platformAppPath --> a platform specific path to an application that we got out of the 
-  //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
-  // aFile --> an nsIFile representation of that platform application path.
-  virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
-  
 protected:
   // Lookup a mime info by extension, using an optional type hint
   already_AddRefed<nsMIMEInfoWin> GetByExtension(const char *aFileExt, const char *aTypeHint = nsnull);
