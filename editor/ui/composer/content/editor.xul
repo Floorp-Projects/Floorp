@@ -72,6 +72,7 @@
     <commandset id="composerSaveMenuItems"/>    
     <commandset id="composerStyleMenuItems"/>
     <commandset id="composerTableMenuItems"/>
+    <commandset id="composerListMenuItems"/>
   </commands>
 
   <!-- Use this when we abandon the default startup page -->

@@ -297,7 +297,6 @@ function onMoreFewerImage()
     dialog.doConstrain = dialog.constrainCheckbox.checked;
     SetGlobalElementToCurrentDialogSettings();
     
-    //dialog.MoreSection.setAttribute("style","display: none");
     dialog.MoreSection.setAttribute("collapsed","true");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
@@ -310,7 +309,6 @@ function onMoreFewerImage()
   }
   else
   {
-    //dialog.MoreSection.setAttribute("style","display: inherit");
     dialog.MoreSection.removeAttribute("collapsed");
     // Hide the "Advanced Edit" next to "More..." Use button at bottom right of dialog
     dialog.AdvancedEditButton.setAttribute("style","display: none");

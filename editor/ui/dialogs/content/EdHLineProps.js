@@ -45,7 +45,6 @@ function Startup()
     window.close();
     return;
   }
-dump("1\n");
   // Create dialog object to store controls for easy access
   dialog = new Object;
   dialog.heightInput = document.getElementById("height");
@@ -56,21 +55,17 @@ dump("1\n");
   dialog.shading = document.getElementById("3dShading");
   dialog.pixelOrPercentMenulist = document.getElementById("pixelOrPercentMenulist");
 
-dump("2\n");
   // Make a copy to use for AdvancedEdit and onSaveDefault
   globalElement = hLineElement.cloneNode(false);
 
-dump("3 Init called...\n");
   // Initialize control values based on existing attributes
   InitDialog()
-dump("1\n");
 
   // SET FOCUS TO FIRST CONTROL
   dialog.widthInput.focus();
 
   // Resize window
   window.sizeToContent();
-dump("after sizeToContent\n");
 }
 
 // Set dialog widgets with attribute data

@@ -49,7 +49,7 @@ function Startup()
   BulletStyleLabel = document.getElementById("BulletStyleLabel");
   StartingNumberInput = document.getElementById("StartingNumber");
   StartingNumberLabel = document.getElementById("StartingNumberLabel");
-  AdvancedEditButton = document.getElementById("AdvancedEditButton");
+  AdvancedEditButton = document.getElementById("AdvancedEditButton1");
   
   // Try to get an existing list
 
