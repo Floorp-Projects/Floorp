@@ -104,14 +104,6 @@ function newDateTime(aPRTime) {
     return t;
 }
 
-function hasInterface(obj, iid) {
-    var result = null;
-    try {
-        result = obj.QueryInterface(iid);
-    } catch (e) { }
-    return result;
-}
-
 function makeOccurrence(item, start, end)
 {
     var occ = CalItemOccurrence();
@@ -344,9 +336,9 @@ calStorageCalendar.prototype = {
         }
 
         var item_iid = null;
-        if (hasInterface(item, kCalIEvent))
+        if (item instanceof kCalIEvent)
             item_iid = kCalIEvent;
-        else if (hasInterface(item, kCalITodo))
+        else if (item instanceof kCalITodo)
             item_iid = kCalITodo;
         else {
             aListener.onOperationComplete (this,
@@ -738,22 +730,22 @@ calStorageCalendar.prototype = {
         ip.ical_status = item.status;
 
         var flags = 0;
-        if (event = hasInterface(item, kCalIEvent)) {
+        if (item instanceof kCalIEvent) {
             ip.item_type = CAL_ITEM_TYPE_EVENT;
 
-            if (event.isAllDay)
+            if (item.isAllDay)
                 flags |= CAL_ITEM_FLAG_EVENT_ALLDAY;
 
-            ip.event_start = event.startDate.jsDate;
-            ip.event_end = event.endDate.jsDate;
-            ip.event_stamp = event.stampDate.jsDate;
-        } else if (todo = hasInterface(item, kCalITodo)) {
+            ip.event_start = item.startDate.jsDate;
+            ip.event_end = item.endDate.jsDate;
+            ip.event_stamp = item.stampDate.jsDate;
+        } else if (item instanceof kCalITodo) {
             ip.item_type = CAL_ITEM_TYPE_TODO;
 
-            ip.todo_entry = todo.entryTime.jsDate;
-            ip.todo_due = todo.dueDate.jsDate;
-            ip.todo_completed = todo.completedDate.jsDate;
-            ip.todo_complete = todo.percentComplete;
+            ip.todo_entry = item.entryTime.jsDate;
+            ip.todo_due = item.dueDate.jsDate;
+            ip.todo_completed = item.completedDate.jsDate;
+            ip.todo_complete = item.percentComplete;
         } else {
             // XXX fixme error
             throw Components.results.NS_ERROR_FAILURE;
