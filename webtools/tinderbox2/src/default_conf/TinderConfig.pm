@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.49 $ 
-# $Date: 2003/08/16 18:37:44 $ 
+# $Revision: 1.50 $ 
+# $Date: 2003/12/23 14:30:50 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -50,7 +50,6 @@ package TinderConfig;
 
 $ENV{'PATH'}=  (
                 '/bin'.
-':/home/kestes/mozilla/webtools/tinderbox2/build/test/vcsim'.
                 ':/usr/bin'.
                 ':/usr/local/bin'.
                 ':/opt/gnu/bin/'.
@@ -223,6 +222,7 @@ $PopUpImpl = (
 
 	   'TinderDB::VC_CVS',
 #	   'TinderDB::VC_Bonsai',
+#	   'TinderDB::VC_PVCSDimensions',
 #          'TinderDB::VC_Perforce',
 
 	   'TinderDB::Build',
@@ -360,13 +360,12 @@ $ADD_TEXT_BROWSER_STRINGS = 0;
 
 # Pick one display system if your VC system can display via a web
 # server then VCDisplay module that you wish to use, otherwise pick
-# 'None'. I would be very interested in a module to work with this
-# bonsai work alike tool http://viewcvs.sourceforge.net/ but I do not
-# have time not to investigate it.
+# 'None'.
 
 $VCDisplayImpl = (
-		  'VCDisplay::None',
-		  #'VCDisplay::Bonsai',
+		  #'VCDisplay::None',
+		  'VCDisplay::Bonsai',
+		  #'VCDisplay::ViewCVS',
 		  #'VCDisplay::Perforce_P4DB',
 		 );
 
@@ -415,6 +414,13 @@ $P4DB_URL =  "http://public.perforce.com/cgi-bin/p4db";
 #$BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
 $BONSAI_DIR = "/opt/apache/htdocs/webtools/bonsai";
 
+
+# If we are using PVCS we need to specify the user who will extract
+# the data from the Oracle database and a data seperator which will
+# not appear in any dataset.
+
+$VC_PVCS_USER = 'tinderbox/tinderbox';
+$VC_PVCS_SEPERATOR = '___///___';
 
 # If you your using BT_Generic we need to know how to make HTML
 # to point to the bug tracking CGI programs.
