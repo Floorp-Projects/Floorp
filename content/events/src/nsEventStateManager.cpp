@@ -2913,7 +2913,7 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent)
     nsEvent* innerEvent;
     privEvt->GetInternalNSEvent(&innerEvent);
     if (innerEvent) {
-      nsEventStatus status;
+      nsEventStatus status = nsEventStatus_eIgnore;
       nsCOMPtr<nsIScriptGlobalObject> target(do_QueryInterface(aTarget));
       if (target) {
         ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
