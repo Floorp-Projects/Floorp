@@ -21,7 +21,7 @@
 #include "nsIContextLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
-#include "COM_auto_ptr.h"
+#include "nsCOMPtr.h"
 #include "editorInterfaces.h"
 //#include "nsISelection.h"
 
@@ -38,10 +38,10 @@ PRMonitor *getEditorMonitor();
 class nsEditor : public nsIEditor
 {
 private:
-  COM_auto_ptr<nsIDOMDocument>      mDomInterfaceP;
-  COM_auto_ptr<nsIDOMEventListener> mKeyListenerP;
-  COM_auto_ptr<nsIDOMEventListener> mMouseListenerP;
-//  COM_auto_ptr<nsISelection>        mSelectionP;
+  nsCOMPtr<nsIDOMDocument>      mDomInterfaceP;
+  nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
+  nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
+//  nsCOMPtr<nsISelection>        mSelectionP;
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.

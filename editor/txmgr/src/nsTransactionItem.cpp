@@ -17,7 +17,7 @@
  */
 
 #include "nsTransactionItem.h"
-#include "COM_auto_ptr.h"
+#include "nsCOMPtr.h"
 
 nsTransactionItem::nsTransactionItem(nsITransaction *aTransaction)
     : mTransaction(aTransaction), mUndoStack(0), mRedoStack(0)

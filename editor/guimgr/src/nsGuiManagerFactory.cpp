@@ -21,7 +21,7 @@
 #include "nsGuiManagerFactory.h"
 #include "nsIEditor.h"
 #include "nsRepository.h"
-#include "COM_auto_ptr.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,           NS_IFACTORY_IID);
@@ -32,7 +32,7 @@ static NS_DEFINE_IID(kIGuiManagerFactoryIID, NS_IGUIMANAGERFACTORY_IID);
 nsresult
 getGuiManagerFactory(nsIFactory **aFactory)
 {
-  static COM_auto_ptr<nsIFactory>  g_pNSIFactory;
+  static nsCOMPtr<nsIFactory>  g_pNSIFactory;
 
   nsresult result = NS_ERROR_FAILURE;
   if (!g_pNSIFactory)
