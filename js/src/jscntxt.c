@@ -475,7 +475,7 @@ js_EnterLocalRootScope(JSContext *cx)
     mark = js_PushLocalRoot(cx, lrs, INT_TO_JSVAL(lrs->scopeMark));
     if (mark < 0)
         return JS_FALSE;
-    lrs->scopeMark = (uint16) mark;
+    lrs->scopeMark = (uint32) mark;
     return JS_TRUE;
 }
 
@@ -511,9 +511,9 @@ js_LeaveLocalRootScope(JSContext *cx)
     /* Pop the scope, restoring lrs->scopeMark. */
     lrc = lrs->topChunk;
     m = mark & JSLRS_CHUNK_MASK;
-    lrs->scopeMark = (uint16) JSVAL_TO_INT(lrc->roots[m]);
+    lrs->scopeMark = (uint32) JSVAL_TO_INT(lrc->roots[m]);
     lrc->roots[m] = JSVAL_NULL;
-    lrs->rootCount = (uint16) mark;
+    lrs->rootCount = (uint32) mark;
 
     /*
      * Free the stack eagerly, risking malloc churn.  The alternative would
@@ -605,7 +605,7 @@ js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
          * At start of first chunk, or not at start of a non-first top chunk.
          * Check for lrs->rootCount overflow.
          */
-        if ((uint16)(n + 1) == 0) {
+        if ((uint32)(n + 1) == 0) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_TOO_MANY_LOCAL_ROOTS);
             return -1;

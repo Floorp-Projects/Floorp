@@ -316,7 +316,7 @@ typedef struct JSResolvingEntry {
 
 typedef struct JSLocalRootChunk JSLocalRootChunk;
 
-#define JSLRS_CHUNK_SHIFT       6
+#define JSLRS_CHUNK_SHIFT       8
 #define JSLRS_CHUNK_SIZE        JS_BIT(JSLRS_CHUNK_SHIFT)
 #define JSLRS_CHUNK_MASK        JS_BITMASK(JSLRS_CHUNK_SHIFT)
 
@@ -326,8 +326,8 @@ struct JSLocalRootChunk {
 };
 
 typedef struct JSLocalRootStack {
-    uint16              scopeMark;
-    uint16              rootCount;
+    uint32              scopeMark;
+    uint32              rootCount;
     JSLocalRootChunk    *topChunk;
     JSLocalRootChunk    firstChunk;
 } JSLocalRootStack;
