@@ -21,6 +21,12 @@
 #include "plstr.h"
 #include "nsEmitterUtils.h"
 #include "nsMailHeaders.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
+// For the new pref API's
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /* 
  * This function will be used by the factory to generate an 
@@ -72,12 +78,24 @@ nsMimeEmitter::nsMimeEmitter()
   mLogFile = NULL;    /* Temp file to put generated XML into. */
   mReallyOutput = PR_FALSE;
 #endif
+
+  nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(mPrefs));
+  if (! (mPrefs && NS_SUCCEEDED(rv)))
+    return;
+  mPrefs->Startup("prefs.js");
+
+  mHeaderDisplayType = AllHeaders;
+  mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
 }
 
 nsMimeEmitter::~nsMimeEmitter(void)
 {
   if (mBufferMgr)
     delete mBufferMgr;
+
+  // Release the prefs service
+  if (mPrefs)
+    nsServiceManager::ReleaseService(kPrefCID, mPrefs);
 }
 
 // Set the output stream for processed data.
@@ -143,9 +161,14 @@ nsMimeEmitter::Complete()
 nsresult
 nsMimeEmitter::WriteXMLHeader(const char *msgID)
 {
-
   UtilityWrite("<?xml version=\"1.0\"?>");
-  UtilityWrite("<?xml-stylesheet href=\"resource:/res/mail.css\" type=\"text/css\"?>");
+
+  if (mHeaderDisplayType == MicroHeaders)
+    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailheader-micro.css\" type=\"text/css\"?>");
+  else if (mHeaderDisplayType == NormalHeaders)
+    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailheader-normal.css\" type=\"text/css\"?>");
+  else /* AllHeaders */
+    UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailheader-all.css\" type=\"text/css\"?>");
 
   UtilityWrite("<message id=\"");
   UtilityWrite(msgID);
@@ -158,17 +181,29 @@ nsMimeEmitter::WriteXMLHeader(const char *msgID)
 nsresult
 nsMimeEmitter::WriteXMLTag(const char *tagName, const char *value)
 {
+  if ( (!value) || (!*value) )
+    return NS_OK;
+
+  char  *newValue = nsEscapeHTML(value);
+  if (!newValue) 
+    return NS_OK;
+
+  UtilityWrite("<headertag>");
+
   UtilityWrite("<");
   UtilityWrite(tagName);
   UtilityWrite(">");
 
   UtilityWrite(tagName);
   UtilityWrite(": ");
-  UtilityWrite(value);
+  UtilityWrite(newValue);
 
   UtilityWrite("</");
   UtilityWrite(tagName);
   UtilityWrite(">");
+
+  UtilityWrite("</headertag>");
+
   return NS_OK;
 }
 

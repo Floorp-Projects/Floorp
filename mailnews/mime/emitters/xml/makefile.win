@@ -34,7 +34,10 @@ DEPTH=..\..\..\..
 # New build system where zip dll is build indepenant of java stubs.
 #//
 #//------------------------------------------------------------------------
-MODULE  = xmlemitter
+MODULE   = xmlemitter
+CSS1     = mailheader-micro.css
+CSS2	 = mailheader-normal.css
+CSS3	 = mailheader-all.css
 REQUIRES=
 #EXPORTS =\
 #		.\nsMimeEmitter.h	\
@@ -122,6 +125,9 @@ include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(CSS1) $(DIST)\bin\res
+	$(MAKE_INSTALL) .\$(CSS2) $(DIST)\bin\res
+	$(MAKE_INSTALL) .\$(CSS3) $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll

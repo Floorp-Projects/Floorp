@@ -19,6 +19,7 @@ DEPTH = ../../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
+CSS     = mailheader-micro.css mailheader-normal.css mailheader-all.css
 
 IS_COMPONENT=1
 
@@ -45,3 +46,5 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
+install:: $(LIBRARY_NAME)
+	$(INSTALL) $(CSS) $(DIST)/bin/res

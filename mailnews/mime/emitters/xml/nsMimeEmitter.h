@@ -23,6 +23,14 @@
 #include "nsMimeRebuffer.h"
 #include "nsINetOStream.h"
 #include "nsIMimeEmitter.h"
+#include "nsIPref.h"
+
+typedef enum {
+  MicroHeaders  = 0,
+  NormalHeaders,
+  AllHeaders
+} HeaderDisplayTypes;
+
 
 class nsMimeEmitter : public nsIMimeEmitter {
 public: 
@@ -78,6 +86,10 @@ protected:
     PRBool        mXMLHeaderStarted;
 
     PRUint32      mAttachCount;
+
+    nsIPref       *mPrefs;          /* Connnection to prefs service manager */
+    int32         mHeaderDisplayType; 
+
 #ifdef DEBUG
     PRBool        mReallyOutput;
     PRFileDesc    *mLogFile;        /* Temp file to put generated HTML into. */ 
