@@ -1,3 +1,4 @@
+dnl -*- Mode: Autoconf; tab-width: 4; indent-tabs-mode: nil; -*-
 dnl The contents of this file are subject to the Mozilla Public License
 dnl Version 1.0 (the "License"); you may not use this file except in
 dnl compliance with the License. You may obtain a copy of the License
@@ -853,15 +854,14 @@ then
 			MOZ_BUILD_ROOT=`pwd`
 		;;
 	esac
-
-	MOZ_ARG_DISABLE_BOOL(gtk-mozilla,
-	[  --disable-gtk-mozilla     Disable building of GtkMozilla GTK+ widget],
-		MOZ_ENABLE_GTK_MOZILLA=)
 fi
 dnl ========================================================
-dnl = 													   =
+dnl =                                                      =
 dnl = End Gtk support hackery                              =
-dnl = 													   =
+dnl =                                                      =
+dnl =   --disable-mozilla-gtk is down below because        =
+dnl =   order matters to the Build Configurator.           =
+dnl =                                                      =
 dnl ========================================================
 
 
@@ -2016,13 +2016,8 @@ MOZ_MONOLITHIC_TOOLKIT=1
 
 dnl The following are the only platforms I tested  -ramiro
 case "$target" in
-    *-*-linux*) 
-		MOZ_MONOLITHIC_TOOLKIT=
-		;;
-
-    *-*-solaris*) 
-		MOZ_MONOLITHIC_TOOLKIT=
-		;;
+    *-*-linux*)   MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-*-solaris*) MOZ_MONOLITHIC_TOOLKIT= ;;
 esac
 
 
@@ -2040,6 +2035,12 @@ dnl =
 dnl = End MOZ_MONOLITHIC_TOOLKIT hacks
 dnl =
 dnl ========================================================
+
+
+MOZ_ARG_DISABLE_BOOL(gtk-mozilla,
+[  --disable-gtk-mozilla     Disable building of GtkMozilla GTK+ widget],
+   MOZ_ENABLE_GTK_MOZILLA=)
+
 
 dnl ========================================================
 dnl =
@@ -2954,11 +2955,6 @@ EOF
   fi
 fi
 
-dnl Need to manual make the directories to get around deficiency in AC_OUTPUT
-for dir in lib modules modules/security build build/package; do
-   if test ! -d $dir; then rm -f $dir; mkdir $dir; fi
-done
-
 if test "$MOZ_INCREMENTAL_MAKEFILES"; then
   MAKEFILES="
     Makefile
@@ -2988,6 +2984,11 @@ if test "$MOZ_INCREMENTAL_MAKEFILES"; then
     system "mkdir ".join(" ",sort by_subdir_count @dirs) if @dirs;'
   changequote([,])
 else
+  dnl Manually make the directories to get around deficiency in AC_OUTPUT
+  for dir in lib modules modules/security build build/package; do
+    if test ! -d $dir; then rm -f $dir; mkdir $dir; fi
+  done
+
   dnl Load the list of Makefiles to generate.
   dnl   To add new Makefiles, edit allmakefiles.sh.
   dnl   allmakefiles.sh sets the variable, MAKEFILES.
