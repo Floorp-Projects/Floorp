@@ -1119,10 +1119,6 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
     }
 #endif /* USE_REGISTRY */
 
-    if (PL_strcmp(aContractID, "@mozilla.org/rdf/datasource") == 0)
-    {
-PR_ASSERT(false);
-    }
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) {
         char *buf = 0;
         if (NS_SUCCEEDED(res))
