@@ -176,9 +176,9 @@ nsMsgNewsFolder::isNewsHost()
 #define NEWSRC_MAP_FILE_COOKIE "netscape-newsrc-map-file"
 
 nsresult
-nsMsgNewsFolder::MapHostToNewsrcFile(nsFileSpec &fatFile, char *newshostname, nsFileSpec &newsrcFile)
+nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileSpec &newsrcFile)
 {
-  char lookingFor[512];
+  char *lookingFor = nsnull;
 	char buffer[512];
 	char psuedo_name[512];
 	char filename[512];
@@ -186,15 +186,19 @@ nsMsgNewsFolder::MapHostToNewsrcFile(nsFileSpec &fatFile, char *newshostname, ns
   PRBool rv;
 
 #ifdef DEBUG_sspitzer
-  printf("MapHostToNewsrcFile(%s,%s,??)\n",(const char *)fatFile, newshostname);
+  printf("MapHostToNewsrcFile(%s,%s,%s,??)\n",newshostname,(const char *)fatFile, newshostname);
 #endif
-  sprintf(lookingFor,"newsrc-%s",newshostname);
-  
+  lookingFor = PR_smprintf("newsrc-%s",newshostname);
+  if (lookingFor == nsnull) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   nsInputFileStream inputStream(fatFile);
  
   if (inputStream.eof()) {
     newsrcFile = "";
     inputStream.close();
+    PR_FREEIF(lookingFor);
     return NS_ERROR_FAILURE;
   }
 
@@ -206,6 +210,7 @@ nsMsgNewsFolder::MapHostToNewsrcFile(nsFileSpec &fatFile, char *newshostname, ns
   if ((!rv) || (PL_strncmp(buffer, NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE)))) {
     newsrcFile = "";
     inputStream.close();
+    PR_FREEIF(lookingFor);
     return NS_ERROR_FAILURE;
   }   
 
@@ -217,6 +222,7 @@ nsMsgNewsFolder::MapHostToNewsrcFile(nsFileSpec &fatFile, char *newshostname, ns
     if (!rv) {
       newsrcFile = "";
       inputStream.close();
+      PR_FREEIF(lookingFor);
       return NS_ERROR_FAILURE;
     }  
 
@@ -266,6 +272,7 @@ nsMsgNewsFolder::MapHostToNewsrcFile(nsFileSpec &fatFile, char *newshostname, ns
 #endif
       newsrcFile = filename;
       inputStream.close();
+      PR_FREEIF(lookingFor);
       return NS_OK;
     }
   }
@@ -273,15 +280,19 @@ nsMsgNewsFolder::MapHostToNewsrcFile(nsFileSpec &fatFile, char *newshostname, ns
   // failed to find a match in the map file
   newsrcFile = "";
   inputStream.close();
+  PR_FREEIF(lookingFor);
   return NS_ERROR_FAILURE;
 }
 #endif /* USE_NEWSRC_MAP_FILE */
 
 nsresult 
-nsMsgNewsFolder::GetNewsrcFile(nsFileSpec &path, nsFileSpec &newsrcFile)
+nsMsgNewsFolder::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &newsrcFile)
 {
   nsresult rv = NS_OK;
-  char *newshostname = path.GetLeafName();
+  
+  if (newshostname == nsnull) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
 #ifdef USE_NEWSRC_MAP_FILE
   // the fat file lives in the same directory as
@@ -289,24 +300,21 @@ nsMsgNewsFolder::GetNewsrcFile(nsFileSpec &path, nsFileSpec &newsrcFile)
   nsFileSpec fatFile(path);
   fatFile.SetLeafName("fat");
 
-  rv = MapHostToNewsrcFile(fatFile, newshostname, newsrcFile);
+  rv = MapHostToNewsrcFile(newshostname, fatFile, newsrcFile);
 #else
-  char str[1024];
+  char *str = nsnull;
 
-  if ((newshostname == nsnull) || (PL_strlen(newshostname) == 0)) {
-    newsrcFile = "";
-    rv = NS_ERROR_NULL_POINTER;
+  str = PR_smprintf(".newsrc-%s", newshostname);
+  if (str == nsnull) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  else {
-    sprintf(str, ".newsrc-%s", newshostname);
-    newsrcFile = path;
-    newsrcFile.SetLeafName(str);
-    rv = NS_OK;
-  }
+  newsrcFile = path;
+  newsrcFile.SetLeafName(str);
+  PR_FREEIF(str);
+  str = nsnull;
+  rv = NS_OK;
 #endif /* USE_NEWSRC_MAP_FILE */
-  if (newshostname) {
-    delete [] newshostname;
-  }
+
   return rv;
 }
 
@@ -315,19 +323,32 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 {
   nsresult rv = NS_OK;
 
-  if (isNewsHost()) {
+  if (isNewsHost()) {  
+    char *newshostname = nsnull;
+
+    // since we know it is a host, mURI is of the form
+    // news://foobar
+    // all we want is foobar
+    // so skip over news:// (a.k.a. kNewsRootURI)
+    newshostname = PR_smprintf("%s", mURI + PL_strlen(kNewsRootURI) + 1);
+    if (newshostname == nsnull) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
 #ifdef DEBUG_sspitzer
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
-
     nsFileSpec newsrcFile("");
-    rv = GetNewsrcFile(path, newsrcFile);
+    rv = GetNewsrcFile(newshostname, path, newsrcFile);
     if (rv == NS_OK) {
 #ifdef DEBUG_sspitzer
       printf("newsrc file = %s\n", (const char *)newsrcFile);
 #endif
       rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFile);
     }
+
+    PR_FREEIF(newshostname);
+    newshostname = nsnull;
   }
   else {
 #ifdef DEBUG_sspitzer

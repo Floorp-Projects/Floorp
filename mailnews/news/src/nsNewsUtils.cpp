@@ -58,22 +58,15 @@ nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
   nsresult rv;
-
   
-  nsAutoString sep;
-  sep += PR_GetDirectorySeparator();
-
-  nsAutoString sbdSep;
-  /* sspitzer: is this ok for mail and news? */
-  rv = nsGetMailFolderSeparator(sbdSep);
-  if (NS_FAILED(rv)) return rv;
+  nsAutoString sep = PR_GetDirectorySeparator();
 
   nsAutoString uri = uriStr;
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
 
-  if ((strcmp(rootURI, kNewsRootURI) == 0) || 
-           (strcmp(rootURI, kNewsMessageRootURI) == 0)) {
+  if ((PL_strcmp(rootURI, kNewsRootURI) == 0) || 
+           (PL_strcmp(rootURI, kNewsMessageRootURI) == 0)) {
     rv = nsGetNewsRoot(pathResult);
 	}
   else {
@@ -112,15 +105,15 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
     NS_ASSERTION(leftRes == pos,
                  "something wrong with nsString");
-	//We only want to add this after the first time around.
-	if(path.Length() > 0)
-	{
-		path += sep;
-		path += PR_GetDirectorySeparator();
-	}
-    // the first time around the separator is special because
-    // the root mail folder doesn't end with .sbd
-    sep = sbdSep;
+    //We only want to add this after the first time around.
+    if(path.Length() > 0) {
+      //We only want to add this after the first time around. 
+      path += sep;
+    }
+    else {
+      // we only want to add this the first time around
+      path += "host-";
+    }   
 
     path += folderName;
     uri.Cut(0, pos);
