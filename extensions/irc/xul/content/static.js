@@ -34,7 +34,7 @@
  *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
-const __cz_version   = "0.9.51";
+const __cz_version   = "0.9.52";
 const __cz_condition = "green";
 
 var warn;

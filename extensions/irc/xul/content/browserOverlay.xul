@@ -12,7 +12,9 @@
 <script type="application/x-javascript" src="chrome://chatzilla/content/chatzillaOverlay.js"/>
 
 <toolbarpalette id="BrowserToolbarPalette">
-  <toolbarbutton id="tb-chatzilla-open" oncommand="toIRC()" tooltiptext="&czButton.label;"/>
+  <toolbarbutton id="tb-chatzilla-open" oncommand="toIRC()" 
+      class="toolbarbutton-1"
+      label="&czButton.label;" tooltiptext="&czButton.label;"/>
 </toolbarpalette>
 
 </overlay>
