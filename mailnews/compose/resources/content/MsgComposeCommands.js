@@ -183,6 +183,12 @@ var gComposeRecyclingListener = {
     disableEditableFields()
     ReleaseGlobalVariables();
 
+    //Reset Boxes size    
+    document.getElementById("headers-box").removeAttribute("height");
+    document.getElementById("appcontent").removeAttribute("height");
+    document.getElementById("addresses-box").removeAttribute("width");
+    document.getElementById("attachments-box").removeAttribute("width");
+
     //Release the nsIMsgComposeParams object
     if (window.arguments && window.arguments[0])
       window.arguments[0] = null;
