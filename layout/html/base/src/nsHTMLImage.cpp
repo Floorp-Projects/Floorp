@@ -48,6 +48,8 @@ class ImageFrame : public nsLeafFrame {
 public:
   ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
+  NS_IMETHOD DeleteFrame();
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -133,7 +135,14 @@ ImageFrame::ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 
 ImageFrame::~ImageFrame()
 {
+}
+
+NS_METHOD
+ImageFrame::DeleteFrame()
+{
+  // Release image loader first so that it's refcnt can go to zero
   NS_IF_RELEASE(mImageLoader);
+  return nsLeafFrame::DeleteFrame();
 }
 
 void
