@@ -69,7 +69,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMDOcument.h"
+#include "nsIDOMDocument.h"
 #include "nsTimer.h"
 
 #include "nsILocaleService.h"
