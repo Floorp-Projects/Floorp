@@ -57,17 +57,6 @@
 
 #include "pathsub.h"
 
-#ifndef HAVE_LCHOWN
-#define HAVE_LCHOWN
-#endif
-
-#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) \
-    || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) \
-    || defined(RHAPSODY) || defined(NEXTSTEP) || defined(QNX) \
-    || defined(BEOS) || defined(VMS)
-#undef HAVE_LCHOWN
-#endif
-
 #define HAVE_FCHMOD
 
 #if defined(BEOS)

@@ -129,7 +129,7 @@ if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); else true; fi
 endef
 
 export:: $(TARGETS)
-	$(RM) -f $(dist_bindir)/nspr-config
+	rm -f $(dist_bindir)/nspr-config
 
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
