@@ -99,7 +99,8 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime)
 
 // called from any thread, with the connection lock held
 nsresult
-nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
+nsHttpConnection::SetTransaction(nsAHttpTransaction *transaction,
+                                 PRUint8 caps)
 {
     LOG(("nsHttpConnection::SetTransaction [this=%x trans=%x]\n",
          this, transaction));
@@ -112,158 +113,9 @@ nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
     NS_ADDREF(mTransaction);
 
     // default mKeepAlive according to what will be requested
-    mKeepAliveMask = mKeepAlive =
-        mTransaction->Capabilities() & NS_HTTP_ALLOW_KEEPALIVE;
+    mKeepAliveMask = mKeepAlive = (caps & NS_HTTP_ALLOW_KEEPALIVE);
 
     return ActivateConnection();
-}
-
-// called from the socket thread
-nsresult
-nsHttpConnection::OnHeadersAvailable(nsHttpTransaction *trans, PRBool *reset)
-{
-    LOG(("nsHttpConnection::OnHeadersAvailable [this=%x trans=%x]\n",
-        this, trans));
-
-    NS_ENSURE_ARG_POINTER(trans);
-
-    // we won't change our keep-alive policy unless the server has explicitly
-    // told us to do so.
-
-    if (!trans || !trans->ResponseHead()) {
-        LOG(("trans->ResponseHead() = %x\n", trans));
-        return NS_OK;
-    }
-
-    // inspect the connection headers for keep-alive info provided the
-    // transaction completed successfully.
-    const char *val = trans->ResponseHead()->PeekHeader(nsHttp::Connection);
-    if (!val)
-        val = trans->ResponseHead()->PeekHeader(nsHttp::Proxy_Connection);
-
-    if ((trans->ResponseHead()->Version() < NS_HTTP_VERSION_1_1) ||
-        (nsHttpHandler::get()->DefaultVersion() < NS_HTTP_VERSION_1_1)) {
-        // HTTP/1.0 connections are by default NOT persistent
-        if (val && !PL_strcasecmp(val, "keep-alive"))
-            mKeepAlive = PR_TRUE;
-        else
-            mKeepAlive = PR_FALSE;
-    }
-    else {
-        // HTTP/1.1 connections are by default persistent
-        if (val && !PL_strcasecmp(val, "close")) 
-            mKeepAlive = PR_FALSE;
-        else
-            mKeepAlive = PR_TRUE;
-    }
-    mKeepAliveMask = mKeepAlive;
-
-    // if this connection is persistent, then the server may send a "Keep-Alive"
-    // header specifying the maximum number of times the connection can be
-    // reused as well as the maximum amount of time the connection can be idle
-    // before the server will close it.  we ignore the max reuse count, because
-    // a "keep-alive" connection is by definition capable of being reused, and
-    // we only care about being able to reuse it once.  if a timeout is not 
-    // specified then we use our advertized timeout value.
-    if (mKeepAlive) {
-        val = trans->ResponseHead()->PeekHeader(nsHttp::Keep_Alive);
-
-        const char *cp = PL_strcasestr(val, "timeout=");
-        if (cp)
-            mIdleTimeout = (PRUint32) atoi(cp + 8);
-        else
-            mIdleTimeout = nsHttpHandler::get()->IdleTimeout();
-        
-        LOG(("Connection can be reused [this=%x idle-timeout=%u\n", this, mIdleTimeout));
-    }
-
-    // if we're doing an SSL proxy connect, then we need to check whether or not
-    // the connect was successful.  if so, then we have to reset the transaction
-    // and step-up the socket connection to SSL. finally, we have to wake up the
-    // socket write request.
-    if (mSSLProxyConnectStream) {
-        mSSLProxyConnectStream = 0;
-        if (trans->ResponseHead()->Status() == 200) {
-            LOG(("SSL proxy CONNECT succeeded!\n"));
-            *reset = PR_TRUE;
-            ProxyStepUp();
-            mWriteRequest->Resume();
-        }
-        else {
-            LOG(("SSL proxy CONNECT failed!\n"));
-            // close out the write request
-            mWriteRequest->Cancel(NS_OK);
-        }
-    }
-
-    return NS_OK;
-}
-
-// called from any thread
-nsresult
-nsHttpConnection::OnTransactionComplete(nsHttpTransaction *trans, nsresult status)
-{
-    LOG(("nsHttpConnection::OnTransactionComplete [this=%x trans=%x status=%x]\n",
-        this, trans, status));
-
-    // trans may not be mTransaction
-    if (trans != mTransaction)
-        return NS_OK;
-
-    nsCOMPtr<nsIRequest> writeReq, readReq;
-
-    // clear the read/write requests atomically.
-    {
-        nsAutoLock lock(mLock);
-        writeReq = mWriteRequest;
-        readReq = mReadRequest;
-    }
-
-    // cancel the requests... this will cause OnStopRequest to be fired
-    if (writeReq)
-        writeReq->Cancel(status);
-    if (readReq)
-        readReq->Cancel(status);
-
-    return NS_OK;
-}
-
-// not called from the socket thread
-nsresult
-nsHttpConnection::Suspend()
-{
-    // we only bother to suspend the read request, since that's the only
-    // one that will effect our consumers.
- 
-    nsCOMPtr<nsIRequest> readReq;
-    {
-        nsAutoLock lock(mLock);
-        readReq = mReadRequest;
-    }
-
-    if (readReq)
-        readReq->Suspend();
-
-    return NS_OK;
-}
-
-// not called from the socket thread
-nsresult
-nsHttpConnection::Resume()
-{
-    // we only need to worry about resuming the read request, since that's
-    // the only one that can be suspended.
-
-    nsCOMPtr<nsIRequest> readReq;
-    {
-        nsAutoLock lock(mLock);
-        readReq = mReadRequest;
-    }
-
-    if (readReq)
-        readReq->Resume();
-
-    return NS_OK;
 }
 
 // called from the socket thread
@@ -304,10 +156,166 @@ nsHttpConnection::IsAlive()
     return isAlive;
 }
 
+//----------------------------------------------------------------------------
+// nsHttpConnection::nsAHttpConnection
+//----------------------------------------------------------------------------
+
+// called from the socket thread
+nsresult
+nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
+                                     nsHttpResponseHead *responseHead,
+                                     PRBool *reset)
+{
+    LOG(("nsHttpConnection::OnHeadersAvailable [this=%p trans=%p response-head=%p]\n",
+        this, trans, responseHead));
+
+    NS_ENSURE_ARG_POINTER(trans);
+
+    // we won't change our keep-alive policy unless the server has explicitly
+    // told us to do so.
+
+    if (!trans || !responseHead) {
+        LOG(("nothing to do\n"));
+        return NS_OK;
+    }
+
+    // inspect the connection headers for keep-alive info provided the
+    // transaction completed successfully.
+    const char *val = responseHead->PeekHeader(nsHttp::Connection);
+    if (!val)
+        val = responseHead->PeekHeader(nsHttp::Proxy_Connection);
+
+    if ((responseHead->Version() < NS_HTTP_VERSION_1_1) ||
+        (nsHttpHandler::get()->DefaultVersion() < NS_HTTP_VERSION_1_1)) {
+        // HTTP/1.0 connections are by default NOT persistent
+        if (val && !PL_strcasecmp(val, "keep-alive"))
+            mKeepAlive = PR_TRUE;
+        else
+            mKeepAlive = PR_FALSE;
+    }
+    else {
+        // HTTP/1.1 connections are by default persistent
+        if (val && !PL_strcasecmp(val, "close")) 
+            mKeepAlive = PR_FALSE;
+        else
+            mKeepAlive = PR_TRUE;
+    }
+    mKeepAliveMask = mKeepAlive;
+
+    // if this connection is persistent, then the server may send a "Keep-Alive"
+    // header specifying the maximum number of times the connection can be
+    // reused as well as the maximum amount of time the connection can be idle
+    // before the server will close it.  we ignore the max reuse count, because
+    // a "keep-alive" connection is by definition capable of being reused, and
+    // we only care about being able to reuse it once.  if a timeout is not 
+    // specified then we use our advertized timeout value.
+    if (mKeepAlive) {
+        val = responseHead->PeekHeader(nsHttp::Keep_Alive);
+
+        const char *cp = PL_strcasestr(val, "timeout=");
+        if (cp)
+            mIdleTimeout = (PRUint32) atoi(cp + 8);
+        else
+            mIdleTimeout = nsHttpHandler::get()->IdleTimeout();
+        
+        LOG(("Connection can be reused [this=%x idle-timeout=%u\n", this, mIdleTimeout));
+    }
+
+    // if we're doing an SSL proxy connect, then we need to check whether or not
+    // the connect was successful.  if so, then we have to reset the transaction
+    // and step-up the socket connection to SSL. finally, we have to wake up the
+    // socket write request.
+    if (mSSLProxyConnectStream) {
+        mSSLProxyConnectStream = 0;
+        if (responseHead->Status() == 200) {
+            LOG(("SSL proxy CONNECT succeeded!\n"));
+            *reset = PR_TRUE;
+            ProxyStepUp();
+            mWriteRequest->Resume();
+        }
+        else {
+            LOG(("SSL proxy CONNECT failed!\n"));
+            // close out the write request
+            mWriteRequest->Cancel(NS_OK);
+        }
+    }
+
+    return NS_OK;
+}
+
+// called from any thread
+nsresult
+nsHttpConnection::OnTransactionComplete(nsAHttpTransaction *trans, nsresult status)
+{
+    LOG(("nsHttpConnection::OnTransactionComplete [this=%x trans=%x status=%x]\n",
+        this, trans, status));
+
+    // trans may not be mTransaction
+    if (trans != mTransaction)
+        return NS_OK;
+
+    nsCOMPtr<nsIRequest> writeReq, readReq;
+
+    // clear the read/write requests atomically.
+    {
+        nsAutoLock lock(mLock);
+        writeReq = mWriteRequest;
+        readReq = mReadRequest;
+    }
+
+    // cancel the requests... this will cause OnStopRequest to be fired
+    if (writeReq)
+        writeReq->Cancel(status);
+    if (readReq)
+        readReq->Cancel(status);
+
+    return NS_OK;
+}
+
+// not called from the socket thread
+nsresult
+nsHttpConnection::OnSuspend()
+{
+    // we only bother to suspend the read request, since that's the only
+    // one that will effect our consumers.
+ 
+    nsCOMPtr<nsIRequest> readReq;
+    {
+        nsAutoLock lock(mLock);
+        readReq = mReadRequest;
+    }
+
+    if (readReq)
+        readReq->Suspend();
+
+    return NS_OK;
+}
+
+// not called from the socket thread
+nsresult
+nsHttpConnection::OnResume()
+{
+    // we only need to worry about resuming the read request, since that's
+    // the only one that can be suspended.
+
+    nsCOMPtr<nsIRequest> readReq;
+    {
+        nsAutoLock lock(mLock);
+        readReq = mReadRequest;
+    }
+
+    if (readReq)
+        readReq->Resume();
+
+    return NS_OK;
+}
+
 // called on the socket thread
 void
-nsHttpConnection::DropTransaction()
+nsHttpConnection::DropTransaction(nsAHttpTransaction *trans)
 {
+    LOG(("nsHttpConnection::DropTransaction [trans=%p]\n", trans));
+
     // the assertion here is that the transaction will not be destroyed
     // by this release.  we unfortunately don't have a threadsafe way of
     // asserting this.
@@ -361,7 +369,7 @@ nsHttpConnection::ActivateConnection()
     // by the same token, we need to ensure that the transaction stays around.
     // and we must not access it via mTransaction, since mTransaction is null'd
     // in our OnStopRequest.
-    nsHttpTransaction *trans = mTransaction;
+    nsAHttpTransaction *trans = mTransaction;
     NS_ADDREF(trans);
 
     // We need to tell the socket transport what origin server we're
@@ -485,15 +493,19 @@ nsHttpConnection::SetupSSLProxyConnect()
     request.SetVersion(nsHttpHandler::get()->DefaultVersion());
     request.SetRequestURI(buf.get());
     request.SetHeader(nsHttp::User_Agent, nsHttpHandler::get()->UserAgent());
+
+    // NOTE: this cast is valid since this connection cannot be processing a
+    // transaction pipeline until after the first HTTP/1.1 response.
+    nsHttpTransaction *trans = NS_STATIC_CAST(nsHttpTransaction *, mTransaction);
     
-    val = mTransaction->RequestHead()->PeekHeader(nsHttp::Host);
+    val = trans->RequestHead()->PeekHeader(nsHttp::Host);
     if (val) {
         // all HTTP/1.1 requests must include a Host header (even though it
         // may seem redundant in this case; see bug 82388).
         request.SetHeader(nsHttp::Host, val);
     }
 
-    val = mTransaction->RequestHead()->PeekHeader(nsHttp::Proxy_Authorization);
+    val = trans->RequestHead()->PeekHeader(nsHttp::Proxy_Authorization);
     if (val) {
         // we don't know for sure if this authorization is intended for the
         // SSL proxy, so we add it just in case.
@@ -597,7 +609,7 @@ nsHttpConnection::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
         // make sure mTransaction is clear before calling OnStopTransaction
         if (mTransaction) { 
-            nsHttpTransaction *trans = mTransaction;
+            nsAHttpTransaction *trans = mTransaction;
             mTransaction = nsnull;
 
             trans->OnStopTransaction(status);
@@ -702,8 +714,11 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
     if (iid.Equals(NS_GET_IID(nsIProgressEventSink)))
         return QueryInterface(iid, result);
 
-    if (mTransaction && mTransaction->Callbacks())
-        return mTransaction->Callbacks()->GetInterface(iid, result);
+    if (mTransaction) {
+        nsCOMPtr<nsIInterfaceRequestor> callbacks;
+        mTransaction->GetNotificationCallbacks(getter_AddRefs(callbacks));
+        return callbacks->GetInterface(iid, result);
+    }
 
     return NS_ERROR_NO_INTERFACE;
 }

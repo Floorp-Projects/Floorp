@@ -178,17 +178,6 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     return rv;
 }
 
-nsresult
-nsHttpTransaction::SetConnection(nsHttpConnection *conn)
-{
-    LOG(("nsHttpTransaction::SetConnection [this=%x mConnection=%x conn=%x]\n",
-        this, mConnection, conn));
-
-    mConnection = conn;
-    NS_IF_ADDREF(mConnection);
-    return NS_OK;
-}
-
 nsHttpResponseHead *
 nsHttpTransaction::TakeResponseHead()
 {
@@ -199,6 +188,10 @@ nsHttpTransaction::TakeResponseHead()
     mResponseHead = nsnull;
     return head;
 }
+
+//----------------------------------------------------------------------------
+// nsHttpTransaction::nsAHttpTransaction
+//----------------------------------------------------------------------------
 
 // called on the socket transport thread
 nsresult
@@ -328,19 +321,21 @@ nsHttpTransaction::Restart()
     NS_ADDREF_THIS();
 
     // we don't want the connection to send anymore notifications to us.
-    mConnection->DropTransaction();
+    mConnection->DropTransaction(this);
 
-    nsHttpConnectionInfo *ci = mConnection->ConnectionInfo();
-    NS_ADDREF(ci);
+    nsHttpConnectionInfo *ci = nsnull;
+    mConnection->GetConnectionInfo(&ci);
+    NS_ASSERTION(ci, "connection info should be non-null");
+    if (ci) {
+        // we must release the connection before re-initiating this transaction
+        // since we'll be getting a new connection.
+        NS_RELEASE(mConnection);
 
-    // we must release the connection before calling initiate transaction
-    // since we will be getting a new connection.
-    NS_RELEASE(mConnection);
+        rv = nsHttpHandler::get()->InitiateTransaction(this, ci);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "InitiateTransaction failed");
 
-    rv = nsHttpHandler::get()->InitiateTransaction(this, ci);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "InitiateTransaction failed");
-
-    NS_RELEASE(ci);
+        NS_RELEASE(ci);
+    }
     NS_RELEASE_THIS();
     return NS_OK;
 }
@@ -492,7 +487,7 @@ nsHttpTransaction::HandleContentStart()
 #endif
         // notify the connection, give it a chance to cause a reset.
         PRBool reset = PR_FALSE;
-        mConnection->OnHeadersAvailable(this, &reset);
+        mConnection->OnHeadersAvailable(this, mResponseHead, &reset);
 
         // looks like we should ignore this response, resetting...
         if (reset) {
@@ -578,10 +573,10 @@ nsHttpTransaction::HandleContent(char *buf,
     }
     else if (mContentLength >= 0) {
         // HTTP/1.0 servers have been known to send erroneous Content-Length
-        // headers. So, unless the connection is keep-alive, we must make
+        // headers. So, unless the connection is persistent, we must make
         // allowances for a possibly invalid Content-Length header. Thus, if
-        // NOT keep-alive, we simply accept everything in |buf|.
-        if (mConnection->IsKeepAlive()) {
+        // NOT persistent, we simply accept everything in |buf|.
+        if (mConnection->IsPersistent()) {
             *countRead = PRUint32(mContentLength) - mContentRead;
             *countRead = PR_MIN(count, *countRead);
         }
@@ -761,7 +756,7 @@ nsHttpTransaction::Suspend()
 {
     LOG(("nsHttpTransaction::Suspend [this=%x]\n", this));
     if (mConnection && !mTransactionDone)
-        mConnection->Suspend();
+        mConnection->OnSuspend();
     return NS_OK;
 }
 
@@ -771,7 +766,7 @@ nsHttpTransaction::Resume()
 {
     LOG(("nsHttpTransaction::Resume [this=%x]\n", this));
     if (mConnection && !mTransactionDone)
-        mConnection->Resume();
+        mConnection->OnResume();
     return NS_OK;
 }
 
