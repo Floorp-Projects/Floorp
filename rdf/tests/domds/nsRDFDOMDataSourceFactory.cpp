@@ -35,18 +35,11 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRDFDOMDataSource);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRDFDOMViewerElement);
 
-struct components_t {
-  nsCID cid;
-  nsIGenericFactory::ConstructorProcPtr constructor;
-  const char *progid;
-  const char *description;
-};
-
-static components_t components[] =
+static nsModuleComponentInfo components[] =
 {
   { NS_RDF_DOMDATASOURCE_CID,        &nsRDFDOMDataSourceConstructor,  NS_RDF_DATASOURCE_PROGID_PREFIX "domds",  },
   { NS_RDF_DOMRESOURCEFACTORY_CID, &nsRDFDOMViewerElementConstructor, NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "dom", },
 };
 
-NS_IMPL_MODULE(components)
-NS_IMPL_NSGETMODULE(nsModule)
+NS_IMPL_MODULE(nsRDFDOMViewerModule, components)
+NS_IMPL_NSGETMODULE(nsRDFDOMViewerModule)

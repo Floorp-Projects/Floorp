@@ -128,6 +128,15 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID, void **aResult) 
 }                                                                               \
 
 
+// if you add entries to this structure, add them at the
+// END so you don't break declarations like
+// { NS_MY_CID, &nsMyObjectConstructor, etc.... }
+struct nsModuleComponentInfo {
+    nsCID cid;
+    nsIGenericFactory::ConstructorProcPtr constructor;
+    const char *progid;
+    const char *description;
+};
 
 #define NS_DECL_MODULE(_class)                                                \
 class _class : public nsIModule {                                             \
@@ -180,7 +189,8 @@ _class::RegisterSelf(nsIComponentManager *aCompMgr,                           \
                      const char* componentType)                               \
 {                                                                             \
     nsresult rv = NS_OK;                                                      \
-  for (unsigned int i=0; i<(sizeof(_table) / sizeof(_table[0])); i++) {       \
+    size_t i;                                                                 \
+  for (i=0; i<(sizeof(_table) / sizeof(_table[0])); i++) {                    \
     rv = aCompMgr->RegisterComponentSpec(_table[i].cid,                       \
                                          _table[i].description,               \
                                          _table[i].progid,                    \
@@ -197,7 +207,8 @@ _class::UnregisterSelf(nsIComponentManager *aCompMgr,                         \
                      const char* registryLocation)                            \
 {                                                                             \
     nsresult rv = NS_OK; \
-  for (unsigned int i=0; i<(sizeof(_table) / sizeof(_table[0])); i++) {       \
+    size_t i; \
+  for (i=0; i<(sizeof(_table) / sizeof(_table[0])); i++) {       \
     rv = aCompMgr->UnregisterComponentSpec(_table[i].cid, aPath);             \
   }                                                                           \
   return rv;                                                                  \
@@ -238,13 +249,34 @@ NSGetModule(nsIComponentManager *servMgr,                                     \
 }
 
 
-#define NS_IMPL_MODULE(_table) \
-    NS_DECL_MODULE(nsModule)  \
-    NS_IMPL_MODULE_CORE(nsModule) \
-    NS_IMPL_ISUPPORTS1(nsModule, nsIModule) \
-    NS_IMPL_MODULE_GETCLASSOBJECT(nsModule, _table) \
-    NS_IMPL_MODULE_REGISTERSELF(nsModule, _table) \
-    NS_IMPL_MODULE_UNREGISTERSELF(nsModule, _table) \
-    NS_IMPL_MODULE_CANUNLOAD(nsModule)
+#define NS_IMPL_MODULE(_module, _table) \
+    NS_DECL_MODULE(_module)  \
+    NS_IMPL_MODULE_CORE(_module) \
+    NS_IMPL_ISUPPORTS1(_module, nsIModule) \
+    NS_IMPL_MODULE_GETCLASSOBJECT(_module, _table) \
+    NS_IMPL_MODULE_REGISTERSELF(_module, _table) \
+    NS_IMPL_MODULE_UNREGISTERSELF(_module, _table) \
+    NS_IMPL_MODULE_CANUNLOAD(_module)
+
+
+
+// how to use the NS_IMPL_MODULE:
+// define your static constructors:
+// 
+// NS_GENERIC_FACTORY_CONSTRUCTOR(nsMyObject1)
+// NS_GENERIC_FACTORY_CONSTRUCTOR(nsMyObject2)
+//
+// define your array of component information:
+// static nsModuleComponentInfo components[] =
+// {
+//   { NS_MYOBJECT1_CID, &nsMyObject1Constructor, NS_MYOBJECT1_PROGID, },
+//   { NS_MYOBJECT2_CID, &nsMyObject2Constructor, NS_MYOBJECT2_PROGID, },
+//   { NS_MYOBJECT2_CID, &nsMyObject2Constructor, NS_MYoBJECT2_PROGID2, },
+// };
+//
+// NS_IMPL_MODULE(nsMyModule, components)
+// NS_IMPL_NSGETMODULE(nsMyModule)
+
+
 
 #endif /* nsIGenericFactory_h___ */

@@ -25,18 +25,11 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnixToolkitService)
 
-struct components_t {
-  nsCID cid;
-  nsIGenericFactory::ConstructorProcPtr constructor;
-  const char *progid;
-  const char *description;
-};
-
-static components_t components[] =
+static nsModuleComponentInfo components[] =
 {
   { NS_UNIX_TOOLKIT_SERVICE_CID, &nsUnixToolkitServiceConstructor,
     NS_UNIX_TOOLKIT_SERVICE_PROGID, "Unix WIndow Service", },
 };
 
-NS_IMPL_MODULE(components)
-NS_IMPL_NSGETMODULE(nsModule)
+NS_IMPL_MODULE(nsToolkitModule, components)
+NS_IMPL_NSGETMODULE(nsToolkitModule)
