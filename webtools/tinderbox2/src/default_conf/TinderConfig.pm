@@ -1,11 +1,12 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# TinderConfig - 
+
+# TinderConfig - Global configuration file containing the major
+# customizable settings.
 
 
-
-# $Revision: 1.2 $ 
-# $Date: 2000/11/29 21:11:40 $ 
+# $Revision: 1.3 $ 
+# $Date: 2001/01/04 00:28:00 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -198,6 +199,10 @@ $VCDisplayImpl = (
 # files allows great debugging capabilities and Storable, availible
 # from CPAN, which is a much faster binary format.
 
+# If you are worried about security you should use Storable because
+# Dumper uses and Eval to load the new code it is concievable that the
+# code could be forced to perform unwanted actions.
+
 $PersistenceImpl = (
                     'Persistence::Dumper',
                     # 'Persistence::Storable',
@@ -228,6 +233,16 @@ $FULL_LOG_TRIM_DAYS = 7;
 # zero means no, one means yes.
 
 $LOG_PERFORMANCE = 0;
+
+# Define IP addresses/domain names which are allowed to run the
+# administrative functions.
+
+$ADMINISTRATIVE_NETWORK_PAT = ( 
+                                '(^207\.200\.81\..*)|'.
+                                '(mozilla.org$)|'.
+                                '(netscape.com$)|'.
+                                '(^localhost$)'
+                              );
 
 
 1;
