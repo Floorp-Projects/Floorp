@@ -636,7 +636,7 @@ nsNntpIncomingServer::GetFirstGroupNeedingCounts(nsISupports **aFirstGroupNeedin
 		*aFirstGroupNeedingCounts = nsnull;
     	delete mGroupsEnumerator;
 		mGroupsEnumerator = nsnull;
-		return NS_OK;
+		return NS_ERROR_FAILURE;
 	}
 
     rv = mGroupsEnumerator->GetNext(aFirstGroupNeedingCounts);
