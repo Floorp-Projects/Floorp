@@ -86,7 +86,15 @@ void nsMsgBodyHandler::Initialize()
 
 nsMsgBodyHandler::~nsMsgBodyHandler()
 {
-    m_scope->SetFileStream(nsnull);
+    nsCOMPtr <nsIFileSpec> fileSpec;
+	nsresult rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
+    PRBool isOpen = PR_FALSE;
+	if (NS_SUCCEEDED(rv) && fileSpec)
+	{
+       fileSpec->IsStreamOpen(&isOpen);
+       if (isOpen) 
+         fileSpec->CloseStream();    
+    }
 }
 
 		
@@ -118,30 +126,17 @@ PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
 }
 void nsMsgBodyHandler::OpenLocalFolder()
 {
-    nsInputFileStream *stream=nsnull;
-    
-    nsCOMPtr<nsIInputStream> scopeFileStream;
-    nsresult rv = m_scope->GetFileStream(getter_AddRefs(scopeFileStream));
-
-	if (NS_FAILED(rv) || !scopeFileStream)
+    nsCOMPtr <nsIFileSpec> fileSpec;
+	nsresult rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
+    PRBool isOpen = PR_FALSE;
+	if (NS_SUCCEEDED(rv) && fileSpec)
 	{
-		nsCOMPtr <nsIFileSpec> fileSpec;
-		rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
-		if (NS_SUCCEEDED(rv) && fileSpec)
-		{
-			nsFileSpec path;
-			fileSpec->GetFileSpec(&path);
-            stream = new nsInputFileStream(path);
-            scopeFileStream = stream->GetIStream();
-            m_scope->SetFileStream(scopeFileStream);
-		}
-	} else {
-        stream = new nsInputFileStream(scopeFileStream);
+       fileSpec->IsStreamOpen(&isOpen);
+       if (isOpen) return;
+       fileSpec->OpenStreamForReading();
+       fileSpec->Seek(m_localFileOffset);
     }
-	if (stream) {
-        stream->seek(m_localFileOffset);
-        delete stream;
-    }
+
 }
 
 
@@ -191,15 +186,20 @@ PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
 		if (m_passedHeaders)
 			m_numLocalLines--; // the line count is only for body lines
 		// do we need to check the return value here?
-        nsCOMPtr<nsIInputStream> inputStream;
-        m_scope->GetFileStream(getter_AddRefs(inputStream));
-
-        nsInputFileStream fileStream(inputStream);
-		if (fileStream.eof())
+        nsCOMPtr <nsIFileSpec> fileSpec;
+	    nsresult rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
+	    if (NS_SUCCEEDED(rv) && fileSpec)
+        {
+          PRBool isEof = PR_FALSE;
+		  rv = fileSpec->Eof(&isEof);
+          if (NS_SUCCEEDED(rv) && isEof)
 			return -1;
 
-		if (fileStream.readline(buf, bufSize))
-			return nsCRT::strlen(buf);
+          PRBool wasTruncated = PR_FALSE;
+		  rv = fileSpec->ReadLine(&buf, bufSize, &wasTruncated);
+          if (NS_SUCCEEDED(rv) && !wasTruncated)
+            return nsCRT::strlen(buf);
+        }
 	}
 
 	return -1;

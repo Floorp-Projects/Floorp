@@ -1882,6 +1882,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	}
 
 	destFile->close();
+    delete destFile;
 	m_inboxFileStream->close();
 	// How are we going to do this with a stream?
 	nsresult truncRet = m_inboxFileSpec.Truncate(messageOffset);

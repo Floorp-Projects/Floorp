@@ -1252,7 +1252,6 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
 	m_attribute = attribute;
 	m_folder = folder;
 	m_searchServer = PR_TRUE;
-	m_fileStream = nsnull;
   m_searchSession = session;
 }
 
@@ -1260,35 +1259,13 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
 {
 	NS_INIT_REFCNT();
 	m_searchServer = PR_TRUE;
-	m_fileStream = nsnull;
 }
 
 nsMsgSearchScopeTerm::~nsMsgSearchScopeTerm ()
-{
+{  
 }
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchScopeTerm, nsIMsgSearchScopeTerm)
-
-NS_IMETHODIMP
-nsMsgSearchScopeTerm::GetFileStream(nsIInputStream** aResult)
-{
-  if (m_fileStream)
-  	*aResult =m_fileStream->GetIStream();
-	else
-	*aResult = nsnull;
-    NS_IF_ADDREF(*aResult);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchScopeTerm::SetFileStream(nsIInputStream *aStream)
-{
-    if (m_fileStream)
-        delete m_fileStream;
-    m_fileStream = new nsInputFileStream(aStream);
-
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsMsgSearchScopeTerm::GetFolder(nsIMsgFolder **aResult)

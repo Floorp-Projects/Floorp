@@ -55,7 +55,6 @@ public:
 	nsMsgSearchScopeValue m_attribute;
 	char *m_name;
 	nsCOMPtr <nsIMsgFolder> m_folder;
-	nsInputFileStream		*m_fileStream;
 	nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
   nsCOMPtr <nsIMsgSearchSession> m_searchSession;
 	PRBool m_searchServer;

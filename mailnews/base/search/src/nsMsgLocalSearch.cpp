@@ -722,13 +722,14 @@ void nsMsgSearchOfflineMail::CleanUpScope()
     
     m_db = nsnull;
 
-    nsCOMPtr<nsIInputStream> scopeFileStream;
-    nsresult rv = m_scope->GetFileStream(getter_AddRefs(scopeFileStream));
-    // If we were searching the body of the message, close the folder
-    if (NS_SUCCEEDED(rv) && scopeFileStream)
-    {
-        scopeFileStream->Close();
-        m_scope->SetFileStream(nsnull);
+    nsCOMPtr <nsIFileSpec> fileSpec;
+	nsresult rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
+    PRBool isOpen = PR_FALSE;
+	if (NS_SUCCEEDED(rv) && fileSpec)
+	{
+       fileSpec->IsStreamOpen(&isOpen);
+       if (isOpen) 
+         fileSpec->CloseStream();    
     }
 }
 

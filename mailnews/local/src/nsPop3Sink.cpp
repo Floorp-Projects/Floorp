@@ -211,6 +211,7 @@ nsPop3Sink::EndMailDelivery()
 	}
     if (m_outFileStream)
     {
+        m_outFileStream->close();
         delete m_outFileStream;
         m_outFileStream = 0;
     }
@@ -226,6 +227,7 @@ nsPop3Sink::AbortMailDelivery()
 {
     if (m_outFileStream)
     {
+        m_outFileStream->close();
         delete m_outFileStream;
         m_outFileStream = 0;
     }
@@ -408,6 +410,7 @@ nsPop3Sink::IncorporateComplete(void* closure)
       nsBuildLocalMessageURI(m_baseMessageUri, msgKey, m_messageUri);
   }
 	WriteLineToMailbox(MSG_LINEBREAK);
+        m_newMailParser->PublishMsgHeader();
 
 	// do not take out this printf as it is used by QA 
     // as part of the smoketest process!. They depend on seeing

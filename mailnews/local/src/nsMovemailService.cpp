@@ -480,6 +480,8 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                     // END
                     m_outFileStream->flush();	// try this.
                     m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK, nsnull);
+                    if (m_outFileStream->is_open())
+                      m_outFileStream->close();
                     delete m_outFileStream;
                     m_outFileStream = 0;
                     delete m_newMailParser;
@@ -493,6 +495,8 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                         delete filespecForTrunc;
                         filespecForTrunc = nsnull;
                     }
+                    if (spoolfile->is_open())
+                      spoolfile->close();
                     delete spoolfile;
                 }
            

@@ -785,6 +785,11 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 	path += nsAutoString(folderName);
 		
 	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
+    if (outputStream.is_open())
+    {
+      outputStream.flush();
+      outputStream.close();
+    }
    
 	// Create an empty database for this mail folder, set its name from the user  
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;

@@ -65,5 +65,6 @@ private:
 #define POP3_ENTER_PASSWORD_PROMPT_TITLE			4020
 #define POP3_MOVE_FOLDER_TO_TRASH                           4021
 #define POP3_FOLDER_ALREADY_EXISTS                          4022
+#define POP3_STAT_FAILURE                                   4024
 
 #endif /* _nsImapStringBundle_H__ */

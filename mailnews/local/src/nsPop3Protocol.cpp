@@ -217,6 +217,8 @@ net_pop3_load_state(const char* searchhost,
 
 	PR_Free(buf);
   }
+  if (fileStream.is_open())
+   fileStream.close();
   
   return result;
 }
@@ -290,6 +292,11 @@ net_pop3_write_state(Pop3UidlHost* host, nsIFileSpec *mailDirectory)
         outFileStream << MSG_LINEBREAK;
         PL_HashTableEnumerateEntries(host->hash, net_pop3_write_mapper, (void *)&outFileStream);
     }
+  }
+  if (outFileStream.is_open())
+  {
+    outFileStream.flush();
+    outFileStream.close();
   }
 }
 
@@ -594,8 +601,6 @@ NS_IMETHODIMP nsPop3Protocol::OnStopRequest(nsIRequest *request, nsISupports * a
 
 NS_IMETHODIMP nsPop3Protocol::Cancel(nsresult status)  // handle stop button
 {
-  CommitState(PR_TRUE);
-
   if(m_pop3ConData->msg_closure)
   {
       m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->msg_closure,
@@ -1051,8 +1056,12 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
            prompting the user for a password: just fail silently. */
         if (m_pop3ConData->only_check_for_new_mail)
             return MK_POP3_PASSWORD_UNDEFINED;
-        else
-            Error(POP3_PASSWORD_FAILURE);
+        else       //suppress POP3_PASSWORD_FAILURE alert
+        {
+          	m_pop3ConData->next_state = POP3_ERROR_DONE;
+	        m_pop3ConData->pause_for_read = PR_FALSE;
+        }
+        
 		SetFlag(POP3_PASSWORD_FAILED);
 
         PRBool prefBool = PR_FALSE;
@@ -1114,7 +1123,7 @@ nsPop3Protocol::GetStat()
 
     /* check stat response */
     if(!m_pop3ConData->command_succeeded)
-        return(Error(POP3_PASSWORD_FAILURE));
+      return(Error(POP3_STAT_FAILURE));
 
     /* stat response looks like:  %d %d
      * The first number is the number of articles
@@ -2185,7 +2194,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     
     if(status == 0 && !line)  // no bytes read in...
     {
-        if (m_pop3ConData->dot_fix && m_pop3ConData->assumed_end)
+        if (m_pop3ConData->dot_fix && m_pop3ConData->assumed_end && m_pop3ConData->msg_closure)
         {
             status =
                 m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
@@ -2243,7 +2252,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     // *** jefft in case of the message size that server tells us is different
     // from the actual message size
     if (pauseForMoreData && m_pop3ConData->dot_fix &&
-        m_pop3ConData->assumed_end)
+        m_pop3ConData->assumed_end && m_pop3ConData->msg_closure)
     {
         status = 
             m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);

@@ -236,8 +236,8 @@ public:
 	NS_IMETHOD ApplyFilterHit(nsIMsgFilter *filter, PRBool *applyMore);
 
 	nsOutputFileStream *GetLogFile();
-protected:
 	virtual PRInt32	PublishMsgHeader();
+protected:
 	char				*m_tmpdbName;				// Temporary filename of new database
 	PRBool				m_usingTempDB;
 	virtual void	ApplyFilters(PRBool *pMoved);
