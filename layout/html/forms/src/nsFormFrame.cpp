@@ -98,10 +98,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
 
-
-
-#define SPECIFY_CHARSET_IN_CONTENT_TYPE
-
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
