@@ -51,6 +51,7 @@ CPPSRCS =                       \
     DeleteTableRowTxn.cpp       \
     JoinTableCellsTxn.cpp       \
     InsertTextTxn.cpp           \
+    nsInsertHTMLTxn.cpp         \
     PlaceholderTxn.cpp          \
     DeleteTextTxn.cpp           \
     CreateElementTxn.cpp        \
