@@ -249,10 +249,6 @@ NPP_NewStream(NPP instance,
 }
 
 
-int32 STREAMBUFSIZE = 0X0FFFFFFF; /* If we are reading from a file in NPAsFile
-                   * mode so we can take any size stream in our
-                   * write call (since we ignore it) */
-
 int32 
 NPP_WriteReady(NPP instance, NPStream *stream)
 {
@@ -263,7 +259,7 @@ NPP_WriteReady(NPP instance, NPStream *stream)
     \*******************************************/
 
     /* Number of bytes ready to accept in NPP_Write() */
-    return STREAMBUFSIZE;
+    return -1L;   /* don't accept any bytes in NPP_Write() */
 }
 
 
@@ -277,7 +273,7 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
         This = (PluginInstance*) instance->pdata;
     \**************************************/
 
-    return len;     /* The number of bytes accepted */
+    return -1;   /* tell the browser to abort the stream, don't need it */
 }
 
 
