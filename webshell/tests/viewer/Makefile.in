@@ -37,6 +37,7 @@ CPPSRCS			= \
 			nsBrowserWindow.cpp \
 			nsEditorMode.cpp \
 			nsSetupRegistry.cpp \
+			nsThrobber.cpp \
 			nsViewerApp.cpp \
 			nsWebCrawler.cpp \
 			$(NULL)
