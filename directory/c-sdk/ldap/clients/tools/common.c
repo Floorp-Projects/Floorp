@@ -97,6 +97,7 @@ ldaptool_common_usage( int two_hosts )
     fprintf( stderr, "    -m pathname\tpath to security module database\n");
 #endif /* LDAP_TOOL_PKCS11 */
     fprintf( stderr, "    -W\t\tSSL key password\n" );
+    fprintf( stderr, "    -3\t\tcheck hostnames in SSL certificates\n" );
 
 #ifdef LDAP_TOOL_PKCS11
     fprintf( stderr, "    -Q [token][:certificate name]\tPKCS 11\n" );
@@ -181,6 +182,7 @@ static int		isW = 0;
 static int		isw = 0;
 static int		isD = 0;
 static int		isj = 0;
+static int		ssl_strength = LDAPTOOL_DEFSSLSTRENGTH;
 static char		*ssl_certdbpath = LDAPTOOL_DEFCERTDBPATH;
 static char		*ssl_keydbpath = LDAPTOOL_DEFKEYDBPATH;
 /*
@@ -299,8 +301,18 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	if ( lib_version_mismatch_is_fatal ) {
 	    exit( LDAP_LOCAL_ERROR );
 	}
-    } else if ( strcmp( ldai.ldapai_vendor_name, LDAP_VENDOR_NAME ) == 0
-	    && ldai.ldapai_vendor_version < LDAP_VENDOR_VERSION ) {
+    } else if ( strcmp( ldai.ldapai_vendor_name, LDAP_VENDOR_NAME ) != 0 ) {
+	fprintf( stderr, "%s: this program requires %s's LDAP\n"
+		"\tlibrary version %2.2f or greater; running with\n"
+		"\t%s's version %2.2f.\n",
+		ldaptool_progname, LDAP_VENDOR_NAME,
+		(float)LDAP_VENDOR_VERSION / 100,
+		ldai.ldapai_vendor_name,
+		(float)ldai.ldapai_vendor_version / 100 );
+	if ( lib_version_mismatch_is_fatal ) {
+	    exit( LDAP_LOCAL_ERROR );
+	}
+    } else if ( ldai.ldapai_vendor_version < LDAP_VENDOR_VERSION ) {
 	fprintf( stderr, "%s: this program requires %s's LDAP\n"
 		"\tlibrary version %2.2f or greater; running with"
 		" version %2.2f.\n",
@@ -319,7 +331,7 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	extra_opts = "";
     }
 
-    common_opts = "nvEMRHZ0d:D:f:h:j:I:K:N:O:P:p:Q:W:w:V:X:m:i:k:y:Y:J:";
+    common_opts = "nvEMRHZ03d:D:f:h:j:I:K:N:O:P:p:Q:W:w:V:X:m:i:k:y:Y:J:";
 
     /* note: optstring must include room for liblcache "C:" option */
     if (( optstring = (char *) malloc( strlen( extra_opts ) + strlen( common_opts )
@@ -441,6 +453,11 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    }
 	    isW = 1;
 	    break;
+
+	case '3':	/* check hostnames in SSL certificates ("no third") */
+	    ssl_strength = LDAPSSL_AUTH_CNCHECK;
+	    break;
+
 #ifdef LDAP_TOOL_PKCS11
 	case 'm':	/* SSL secmod path */
 	    ssl_secmodpath = strdup( optarg);
@@ -537,7 +554,8 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 
  	case '0':	/* zero -- override LDAP library version check */
 	    break;	/* already handled above */
-	case 'J':
+
+	case 'J':	/* send an arbitrary control */
 	    if ( (ctrl_arg = strdup( optarg)) == NULL ) {
 		perror ("strdup");
 		exit (LDAP_NO_MEMORY);
@@ -570,9 +588,15 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
     /* If '-Z' is specified, check if '-P' is specified too. */
     if ( isN || isW ) {
 	if ( !isZ ) {
-		printf( "%s: with -N, -W options, please specify -Z\n\n", ldaptool_progname ); 
+		fprintf( stderr, "%s: with -N, -W options, please specify -Z\n\n", ldaptool_progname ); 
 		return (-1);
 	}
+    }
+
+    /* if '-N' is specified, -W is needed too */
+    if ( isN && NULL == ssl_passwd ) {
+	fprintf( stderr, "%s: with the -N option, please specify -W also\n\n", ldaptool_progname ); 
+	return (-1);
     }
 
     if ( isj && isw ) {
@@ -753,7 +777,7 @@ static int PinArgRegistration( void )
 #ifndef _WIN32
     if ( SVRCORE_CreateStdPinObj(&StdPinObj, filename, PR_TRUE) !=
 	 SVRCORE_Success) {
-	printf("Security Initialization: Unable to create PinObj "
+	fprintf(stderr, "Security Initialization: Unable to create PinObj "
 	       "(%d)", PR_GetError());
 	return -1;
     }
@@ -772,14 +796,14 @@ static int PinArgRegistration( void )
     {
 	local_pkcs_fns.pkcs_gettokenname(NULL, &tokenName);
 	if ((err = SVRCORE_CreateNTUserPinObj(&NTUserPinObj)) != SVRCORE_Success){
-	    printf("Security Initialization: Unable to create NTUserPinObj "
+	    fprintf(stderr, "Security Initialization: Unable to create NTUserPinObj "
 		   "(%d)", PR_GetError());
 	    exit( LDAP_LOCAL_ERROR );
 	}
 	if ((err = SVRCORE_CreateArgPinObj(&ArgPinObj, tokenName, pin,
 					   (SVRCOREPinObj *)NTUserPinObj)) != SVRCORE_Success)
 	{
-	    printf("Security Initialization: Unable to create ArgPinObj "
+	    fprintf(stderr, "Security Initialization: Unable to create ArgPinObj "
 		   "(%d)", PR_GetError());
 	    return -1;
 
@@ -790,7 +814,7 @@ static int PinArgRegistration( void )
     else
     {
 	if ((err = SVRCORE_CreateNTUserPinObj(&NTUserPinObj)) != SVRCORE_Success){
-	    printf("Security Initialization: Unable to create NTUserPinObj "
+	    fprintf( stderr, "Security Initialization: Unable to create NTUserPinObj "
 		   "(%d)", PR_GetError());
 		return -1;
 	}
@@ -798,14 +822,14 @@ static int PinArgRegistration( void )
 	{
 	    if ((err = SVRCORE_CreateFilePinObj(&FilePinObj, filename)) !=
 		SVRCORE_Success) {
-		printf("Security Initialization: Unable to create FilePinObj "
+		fprintf( stderr, "Security Initialization: Unable to create FilePinObj "
 		       "(%d)", PR_GetError());
 		return -1;
 
 	    }
 	    if ((err = SVRCORE_CreateAltPinObj(&AltPinObj, (SVRCOREPinObj *)FilePinObj,
 					       (SVRCOREPinObj *)NTUserPinObj)) != SVRCORE_Success) {
-		printf("Security Initialization: Unable to create AltPinObj "
+		fprintf( stderr, "Security Initialization: Unable to create AltPinObj "
 		       "(%d)", PR_GetError());
 		return -1;
 	    }
@@ -889,6 +913,12 @@ ldaptool_ldap_init( int second_host )
 	    exit( LDAP_LOCAL_ERROR );
     }
 #endif /* LDAP_TOOL_PKCS11 */
+
+    /* set the default SSL strength (used for all future ld's we create) */
+    if ( ldapssl_set_strength( NULL, ssl_strength ) < 0 ) {
+	perror( "ldapssl_set_strength" );
+	exit( LDAP_LOCAL_ERROR );
+    }
 
     if (secure) {
 	if ( !user_port ) {
@@ -1555,7 +1585,7 @@ ldaptool_parse_ctrl_arg(char *ctrl_arg, char sep,
 		char **ctrl_oid, int *ctrl_criticality,
 		char **ctrl_value, int *vlen)
 {
-    char *s, *p, *d;
+    char *s, *p;
     int strict;
 
     /* Initialize passed variables with default values */

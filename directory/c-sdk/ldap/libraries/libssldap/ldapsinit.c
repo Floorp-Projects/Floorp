@@ -75,9 +75,11 @@ typedef struct ldapssl_std_functions {
  */
 typedef struct ldapssl_session_info {
     int			lssei_using_pcks_fns;
+    int			lssei_ssl_strength;
     char		*lssei_certnickname;
     char        	*lssei_keypasswd;
     LDAPSSLStdFunctions	lssei_std_functions;
+    CERTCertDBHandle	*lssei_certdbh;
 } LDAPSSLSessionInfo;
 
 
@@ -103,12 +105,6 @@ void set_using_pkcs_functions( int val )
 }
 
 
-/* 
- * External functions... this function currently lives in clientinit.c
- */
-int get_ssl_strength( void );
-
-
 /*
  * Utility functions:
  */
@@ -120,7 +116,7 @@ static void ldapssl_free_socket_info( LDAPSSLSocketInfo **soipp );
  *  SSL Stuff 
  */
 
-static int ldapssl_AuthCertificate(void *certdbarg, PRFileDesc *fd,
+static int ldapssl_AuthCertificate(void *sessionarg, PRFileDesc *fd,
 	PRBool checkSig, PRBool isServer);
 
 /*
@@ -136,6 +132,12 @@ static SECStatus check_clientauth_nicknames_and_passwd( LDAP *ld,
 	LDAPSSLSessionInfo *ssip );
 static char *get_keypassword( PK11SlotInfo *slot, PRBool retry,
 	void *sessionarg );
+
+/*
+ * Static variables.
+ */
+static int default_ssl_strength = LDAPSSL_AUTH_CERT;
+
 
 /*
  * Like ldap_init(), except also install I/O routines from libsec so we
@@ -290,7 +292,7 @@ do_ldapssl_connect(const char *hostlist, int defport, int timeout,
      */
     SSL_AuthCertificateHook( soi.soinfo_prfd,
 			     (SSLAuthCertificate)ldapssl_AuthCertificate, 
-			     (void *)CERT_GetDefaultCertDB());
+			     (void *)sseip );
 
     if ( SSL_GetClientAuthDataHook( soi.soinfo_prfd,
 		get_clientauth_data, clientauth ? sseip : NULL ) != 0 ) {
@@ -382,7 +384,16 @@ ldapssl_install_routines( LDAP *ld )
 	ldap_set_lderrno( ld, LDAP_NO_MEMORY, NULL, NULL );
 	return( -1 );
     }
+
+    /*
+     * Initialize session info.
+     * XXX: it would be nice to be able to set these on a per-session basis:
+     *		lssei_using_pcks_fns
+     *		lssei_certdbh
+     */
+    ssip->lssei_ssl_strength = default_ssl_strength;
     ssip->lssei_using_pcks_fns = using_pkcs_functions;
+    ssip->lssei_certdbh = CERT_GetDefaultCertDB();
 
     /*
      * override a few functions, saving a pointer to the standard function
@@ -489,6 +500,47 @@ ldapssl_enable_clientauth( LDAP *ld, char *keynickname,
 }
 
 
+/*
+ * Set the SSL strength for an existing SSL-enabled LDAP session handle.
+ *
+ * See the description of ldapssl_serverauth_init() above for valid
+ * sslstrength values. If ld is NULL, the default for new LDAP session
+ * handles is set.
+ *
+ * Returns 0 if all goes well and -1 if an error occurs.
+ */
+int
+LDAP_CALL
+ldapssl_set_strength( LDAP *ld, int sslstrength )
+{
+    int			rc = 0;	/* assume success */
+
+    if ( sslstrength != LDAPSSL_AUTH_WEAK &&
+		sslstrength != LDAPSSL_AUTH_CERT &&
+		sslstrength != LDAPSSL_AUTH_CNCHECK ) {
+	rc = -1;
+    } else {
+	if ( NULL == ld ) {	/* set default strength */
+	    default_ssl_strength = sslstrength;
+	} else {		/* set session-specific strength */
+	    PRLDAPSessionInfo	sei;
+	    LDAPSSLSessionInfo	*sseip;
+
+	    memset( &sei, 0, sizeof( sei ));
+	    sei.seinfo_size = PRLDAP_SESSIONINFO_SIZE;
+	    if ( prldap_get_session_info( ld, NULL, &sei ) == LDAP_SUCCESS ) {
+		sseip = (LDAPSSLSessionInfo *)sei.seinfo_appdata;
+		sseip->lssei_ssl_strength = sslstrength;
+	    } else {
+		rc = -1;
+	    }
+	}
+    }
+
+    return( rc );
+}
+
+
 static void
 ldapssl_free_session_info( LDAPSSLSessionInfo **ssipp )
 {
@@ -523,27 +575,25 @@ ldapssl_free_socket_info( LDAPSSLSocketInfo **soipp )
  * the cn is checked against the host name, set with SSL_SetURL()
  */
 
-/*
- * XXXceb NOTE, this needs to be fixed to check for the MITM hack 980623
- */
-
 static int
-ldapssl_AuthCertificate(void *certdbarg, PRFileDesc *fd, PRBool checkSig,
+ldapssl_AuthCertificate(void *sessionarg, PRFileDesc *fd, PRBool checkSig,
 	PRBool isServer)
 {
-    SECStatus          rv = SECFailure;
-    CERTCertDBHandle * handle;
-    CERTCertificate * cert;
-    SECCertUsage certUsage;
-    char * hostname    = (char *)0;
-    
-    if (!certdbarg || !socket)
+    SECStatus		rv = SECFailure;
+    LDAPSSLSessionInfo	*sseip;
+    CERTCertificate	*cert;
+    SECCertUsage	certUsage;
+    char		*hostname = (char *)0;
+
+    if (!sessionarg || !socket) {
 	return rv;
+    }
 
-    if (LDAPSSL_AUTH_WEAK == get_ssl_strength() )
-      return SECSuccess;
+    sseip = (LDAPSSLSessionInfo *)sessionarg;
 
-    handle = (CERTCertDBHandle *)certdbarg;
+    if (LDAPSSL_AUTH_WEAK == sseip->lssei_ssl_strength ) { /* no check */
+	return SECSuccess;
+    }
 
     if ( isServer ) {
 	certUsage = certUsageSSLClient;
@@ -552,13 +602,14 @@ ldapssl_AuthCertificate(void *certdbarg, PRFileDesc *fd, PRBool checkSig,
     }
     cert = SSL_PeerCertificate( fd );
     
-    rv = CERT_VerifyCertNow(handle, cert, checkSig, certUsage, NULL);
+    rv = CERT_VerifyCertNow(sseip->lssei_certdbh, cert, checkSig,
+			certUsage, NULL);
 
-    if ( rv != SECSuccess || isServer )
+    if ( rv != SECSuccess || isServer ) {
 	return rv;
+    }
   
-    if ( LDAPSSL_AUTH_CNCHECK == get_ssl_strength() )
-      {
+    if ( LDAPSSL_AUTH_CNCHECK == sseip->lssei_ssl_strength ) {
 	/* cert is OK.  This is the client side of an SSL connection.
 	 * Now check the name field in the cert against the desired hostname.
 	 * NB: This is our only defense against Man-In-The-Middle (MITM) 

@@ -65,7 +65,6 @@ static PRStatus local_SSLPLCY_Install(void);
  * This little tricky guy keeps us from initializing twice 
  */
 static int		inited = 0;
-static int ssl_strength = LDAPSSL_AUTH_CERT;
 static char  tokDes[34] = "Internal (Software) Database     ";
 static char ptokDes[34] = "Internal (Software) Token        ";
 
@@ -390,35 +389,6 @@ ldapssl_clientauth_init( const char *certdbpath, void *certdbhandle,
 }
 
 
-/* 
- * This is not the most elegant solution to SSL strength, but it
- * works because ldapssl_advclientauth_init() is only called once.
- */
-
-int get_ssl_strength( void )
-{
-  return ssl_strength;
-}
-
-/* 
- * At some point we might want to consider protecting this 
- * with a mutex..  For now there is no need.
- */
-int set_ssl_strength(int strength_val)
-{
-
-  if (strength_val == LDAPSSL_AUTH_WEAK ||
-      strength_val == LDAPSSL_AUTH_CERT ||
-      strength_val == LDAPSSL_AUTH_CNCHECK ) {
-    ssl_strength = strength_val;
-    return LDAP_SUCCESS;
-  }
-  return LDAP_PARAM_ERROR;
-
-}
-
-
-
 /*
  * Initialize ns/security so it can be used for SSL client authentication.
  * It is safe to call this more than once.
@@ -487,10 +457,7 @@ ldapssl_advclientauth_init(
 
     inited = 1;
     
-    set_ssl_strength( sslstrength );
-
-    return( 0 );
-
+    return ( ldapssl_set_strength( NULL, sslstrength ));
 }
 
 
@@ -591,12 +558,7 @@ ldapssl_pkcs_init( const struct ldapssl_pkcs_fns *pfns )
 	ldapssl_free((void **) &certdbName );
     }
     
-    /*
-    set_ssl_strength( sslstrength );
-    */
-
-    set_ssl_strength( LDAPSSL_AUTH_CERT );
-    return( 0 );
+    return ( ldapssl_set_strength( NULL, LDAPSSL_AUTH_CERT ));
 }
 
 
@@ -637,10 +599,8 @@ ldapssl_serverauth_init(const char* certdbpath,
 		     void *certdbhandle,
 		     const int sslstrength )
 {
-    int	rc = LDAP_SUCCESS;
-
-    if ((rc = set_ssl_strength( sslstrength )) != LDAP_SUCCESS) {
-	return ( rc );
+    if ( ldapssl_set_strength( NULL, sslstrength ) != 0 ) {
+	return( -1 );
     }
 
     return( ldapssl_clientauth_init( certdbpath, certdbhandle,

@@ -103,6 +103,7 @@ extern "C" {
 
 #define LDAPTOOL_DEFSEP		"="	/* used by ldapcmp and ldapsearch */
 #define LDAPTOOL_DEFHOST	"localhost"
+#define LDAPTOOL_DEFSSLSTRENGTH	LDAPSSL_AUTH_CERT
 #define LDAPTOOL_DEFCERTDBPATH	"."
 #define LDAPTOOL_DEFKEYDBPATH	"."
 #define LDAPTOOL_DEFREFHOPLIMIT		5
