@@ -221,9 +221,14 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   if (((aOffset + (PRInt32)aLength) > imgLen) || !imgData)
     return NS_ERROR_FAILURE;
 
-  PRInt32 newOffset = ((mSize.height - 1) * row_stride) - aOffset;
+  PRInt32 offset;
+#ifdef XP_PC
+  PRInt32 offset = ((mSize.height - 1) * row_stride) - aOffset;
+#else
+  offset = aOffset;
+#endif
 
-  memcpy(imgData + newOffset, aData, aLength);
+  memcpy(imgData + offset, aData, aLength);
 
   PRInt32 row = (aOffset / row_stride);
   mImage->SetDecodedRect(0, 0, mSize.width, row + 1);
