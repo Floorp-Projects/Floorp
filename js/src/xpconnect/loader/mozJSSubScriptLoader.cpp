@@ -131,7 +131,7 @@ mozJSSubScriptLoader::~mozJSSubScriptLoader()
 NS_IMPL_THREADSAFE_ISUPPORTS1(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 
 NS_IMETHODIMP /* args and return value are delt with using XPConnect and JSAPI */
-mozJSSubScriptLoader::LoadSubScript (const PRUnichar */*url*/
+mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
                                      /* [, JSObject *target_obj] */)
 {
     /*
