@@ -1482,7 +1482,7 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
         if (NS_FAILED(DecryptData(e->userValue, userValue)))
           return NS_ERROR_FAILURE;
 
-        if (aSearchString.Length() < userValue.Length() &&
+        if (aSearchString.Length() <= userValue.Length() &&
             StringBeginsWith(userValue, aSearchString)) {
           result->mArray.AppendElement(ToNewUnicode(userValue));
         }
