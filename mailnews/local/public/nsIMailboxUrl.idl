@@ -76,5 +76,6 @@ interface nsIMailboxUrl : nsISupports {
 	const long ActionMoveMessage = 3;
 	const long ActionSaveMessageToDisk = 4;
 	const long ActionAppendMessageToDisk = 5;
+	const long ActionOpenAttachment = 6;
 };
 
