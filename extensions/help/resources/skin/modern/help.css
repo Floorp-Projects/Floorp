@@ -41,10 +41,6 @@
 
 /* ::::: primary toolbar masthead ::::: */
 
-#helpToolbar > .toolbar-holder > .toolbar-primary-icon {
-  background-image: url("chrome://communicator/skin/help/mast-help.gif");
-}
-
 .toolbar-primary-holder {
   -moz-box-align: start;
   background-image: url("chrome://communicator/skin/toolbar/prtb-bg-noline.gif");

@@ -109,7 +109,6 @@ modern.jar:
         skin/modern/communicator/help/home-act.gif           (skin/modern/home-act.gif)
         skin/modern/communicator/help/home-dis.gif           (skin/modern/home-dis.gif)
         skin/modern/communicator/help/home-hov.gif           (skin/modern/home-hov.gif)
-        skin/modern/communicator/help/mast-help.gif          (skin/modern/mast-help.gif)
 
 classic.jar:
         skin/classic/communicator/help.css              (skin/classic/help.css)
