@@ -28,28 +28,43 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
+#include "nsIPresShell.h"
+#include "nsWeakReference.h"
 
 class nsIFrame;
 
 class nsAccessible : public nsIAccessible
+//                     public nsIAccessibleWidgetAccess
 {
   NS_DECL_ISUPPORTS
 
   // nsIAccessibilityService methods:
   NS_DECL_NSIACCESSIBLE
 
+  //NS_IMETHOD AccGetWidget(nsIWidget**);
+
 	public:
-		nsAccessible(nsIFrame* aFrame, nsIPresContext* aContext);
-		~nsAccessible();
+		nsAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIPresShell* aShell);
+		virtual ~nsAccessible();
 
 protected:
-  nsIFrame* GetFrame();
+  virtual nsIFrame* GetFrame();
+  virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
+  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIPresShell* aShell);
 
-private:
-  nsCOMPtr<nsIDOMNode> mNode;
-  nsIFrame* mFrame;
-  nsIPresContext* mPresContext;
+  nsCOMPtr<nsIContent> mContent;
+  nsWeakPtr mPresShell;
   nsCOMPtr<nsIAccessible> mAccessible;
+};
+
+/* Special Accessible that knows how to handle hit detection for flowing text */
+class nsHTMLBlockAccessible : public nsAccessible
+{
+public:
+   nsHTMLBlockAccessible(nsIAccessible* aAccessible, nsIContent* aContent, nsIPresShell* aShell);
+   NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval);
+protected:
+   virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIContent* aFrame, nsIPresShell* aShell);
 };
 
 #endif  

@@ -26,6 +26,7 @@ XPIDL_MODULE=accessibility
 XPIDLSRCS =               \
   .\nsIAccessibilityService.idl \
   .\nsIAccessible.idl \
+  .\nsIMutableAccessible.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

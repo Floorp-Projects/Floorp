@@ -17,31 +17,20 @@
  * Copyright (C) 1999 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
- * Original Author: Eric Vaughan (evaughan@netscape.com)
+ * Original Author: David W. Hyatt (hyatt@netscape.com)
  * 
- * Contributor(s): 
+ * Contributor(s): pav
  */
 
-#include "nsISupports.idl"
-#include "domstubs.idl"
-#include "nsIMutableAccessible.idl"
+#include "nsIAccessible.idl"
+#include "nsIAtom.idl"
 
-[scriptable, uuid(68D9720A-0984-42b6-A3F5-8237ED925727)]
-interface nsIAccessibilityService : nsISupports
+[scriptable, uuid(AD3274E5-9DD1-4614-81C8-BFF992869CBE)]
+interface nsIMutableAccessible : nsIAccessible
 {
-  nsIAccessible createRootAccessible(in nsISupports aPresShell);
-  nsIAccessible createHTMLBlockAccessible(in nsIAccessible aAccessible, in nsIDOMNode aNode, in nsISupports aPresShell);
-  nsIMutableAccessible createMutableAccessible(in nsIDOMNode aNode);
+  void SetNameAsNodeValue();
+  void SetName(in wstring aName);
+  void SetNameAsAttribute(in nsIAtom aAtom);
+  void SetRole(in wstring aRole);
+  void SetIsLeaf(in boolean aLeaf);
 };
-
-
-%{ C++
-
-// for component registration
-// {DE401C37-9A7F-4278-A6F8-3DE2833989EF}
-#define NS_ACCESSIBILITY_SERVICE_CID \
-{ 0xde401c37, 0x9a7f, 0x4278, { 0xa6, 0xf8, 0x3d, 0xe2, 0x83, 0x39, 0x89, 0xef } }
-
-extern nsresult
-NS_NewAccessibilityService(nsIAccessibilityService** aResult);
-%}

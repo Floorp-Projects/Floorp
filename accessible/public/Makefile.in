@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -18,26 +17,23 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#
 
-DEPTH=..\..
-MODULE=accessibility
-LIBRARY_NAME=accessibility_s
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-CPP_OBJS=\
-        .\$(OBJDIR)\nsAccessible.obj    \
-        .\$(OBJDIR)\nsRootAccessible.obj    \
-        .\$(OBJDIR)\nsMutableAccessible.obj    \
-        .\$(OBJDIR)\nsAccessibilityService.obj    \
-	$(NULL)
+include $(DEPTH)/config/autoconf.mk
 
-include <$(DEPTH)\config\rules.mak>
+MODULE		= accessibility
+XPIDL_MODULE= accessibility
 
-install:: $(LIBRARY)
-        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+XPIDLSRCS	= \
+			nsIAccessibilityService.idl \
+			nsIAccessible.idl \
+			nsIMutableAccessible.idl \
+			$(NULL)
 
-clobber::
-        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-
-
-
+include $(topsrcdir)/config/rules.mk
 
