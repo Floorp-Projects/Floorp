@@ -346,6 +346,8 @@
 #endif
 #endif
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('show');"/>
+          <xul:label value="&remove.label;" class="link" 
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -366,6 +368,8 @@
         <xul:vbox pack="start">
           <xul:label value="&retry.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
+          <xul:label value="&remove.label;" class="link" 
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -386,6 +390,8 @@
         <xul:vbox pack="start">
           <xul:label value="&retry.label;" class="link" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
+          <xul:label value="&remove.label;" class="link" 
+                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
