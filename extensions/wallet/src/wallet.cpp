@@ -2771,6 +2771,7 @@ wallet_FetchFromNetCenter() {
 void
 wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
   static PRBool wallet_tablesInitialized = PR_FALSE;
+  static PRBool wallet_tablesFetched = PR_FALSE;
   static PRBool wallet_keyInitialized = PR_FALSE;
 
   /* initialize tables 
@@ -2785,15 +2786,16 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
    * Similar problem applies to changing password.  Don't need tables in that case and
    * fetching them was causing a hang -- see bug 28148 and bug 28145.
    */
-  if (!wallet_tablesInitialized) {
 #ifdef DEBUG
 //wallet_ClearStopwatch();
 //wallet_ResumeStopwatch();
 #endif
-    if (fetchTables) {
-      wallet_FetchFromNetCenter();
-      wallet_tablesInitialized = PR_TRUE;
-    }
+  if (fetchTables && !wallet_tablesFetched) {
+    wallet_FetchFromNetCenter();
+    wallet_tablesInitialized = PR_TRUE;
+    wallet_tablesFetched = PR_TRUE;
+  }
+  if (!wallet_tablesInitialized) {
 #ifdef DEBUG
 //wallet_PauseStopwatch();
 //wallet_DumpStopwatch();
@@ -2808,6 +2810,7 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
     wallet_ReadFromFile(fieldSchemaFileName, wallet_FieldToSchema_list, PR_FALSE, PR_FALSE);
     wallet_ReadFromURLFieldToSchemaFile(URLFieldSchemaFileName, wallet_URLFieldToSchema_list);
     wallet_ReadFromFile(schemaConcatFileName, wallet_SchemaConcat_list, PR_FALSE, PR_FALSE);
+    wallet_tablesInitialized = PR_TRUE;
   }
 
   if (!unlockDatabase) {
