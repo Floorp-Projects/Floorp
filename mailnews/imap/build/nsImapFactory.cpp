@@ -21,7 +21,8 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsIMAPHostSessionList.h"
-#include "nsMsgLocalCID.h"
+#include "nsImapIncomingServer.h"
+#include "nsImapService.h"
 #include "pratom.h"
 #include "nsCOMPtr.h"
 
@@ -33,7 +34,8 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCImapUrl, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCImapProtocol, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
-
+static NS_DEFINE_CID(kCImapIncomingServer, NS_IMAPINCOMINGSERVER_CID);
+static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -118,16 +120,23 @@ nsresult nsImapFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 	{
 		inst = NS_STATIC_CAST(nsIImapUrl*, new nsImapUrl());
 	}
-
-	if (mClassID.Equals(kCImapProtocol))
+	else if (mClassID.Equals(kCImapProtocol))
 	{
 		inst = NS_STATIC_CAST(nsIImapProtocol *, new nsImapProtocol());
 	}
-
-	if (mClassID.Equals(kCImapHostSessionList))
+	else if (mClassID.Equals(kCImapHostSessionList))
 	{
 		inst = NS_STATIC_CAST(nsIImapHostSessionList *, new nsIMAPHostSessionList());
 	}
+	else if (mClassID.Equals(kCImapIncomingServer))
+	{
+		return NS_NewImapIncomingServer(aIID, aResult);
+	}
+	else if (mClassID.Equals(kCImapService))
+	{
+		inst = NS_STATIC_CAST(nsIImapService *, new nsImapService());
+	}
+
 	if (inst == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -196,6 +205,17 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 									path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
+	
+	rv = compMgr->RegisterComponent(kCImapIncomingServer,
+									"Imap Incoming Server",
+									"component://netscape/messenger/server&type=imap",
+									path, PR_TRUE, PR_TRUE);
+
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kCImapService, nsnull, nsnull,
+									path, PR_TRUE, PR_TRUE);
+
 	done:
 		(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -222,6 +242,12 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterFactory(kCImapHostSessionList, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterFactory(kCImapIncomingServer, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterFactory(kCImapService, path);
 	if (NS_FAILED(rv)) goto done;
 
 done:
