@@ -1291,6 +1291,11 @@ AC_ARG_WITH(pthreads,
         [if test "$withval" = "yes"; then
 	    AC_CHECK_LIB(pthread, pthread_attr_init, 
 		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1)
+            if test "x$ac_cv_lib_pthread_pthread_attr_init" = "xno" -a \
+                    "x$ac_cv_lib_c_r_gethostbyname_r" = "xno"; then
+	      AC_CHECK_LIB(c_r, pthread_attr_init, 
+		  NSPR_LIBS="-lc_r $NSPR_LIBS" USE_PTHREADS=1)
+            fi
             case "$target" in
             *-*-solaris*) 
                 AC_DEFINE(_REENTRANT) ;;
@@ -1380,7 +1385,8 @@ CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 if test "${NSPR_DIR}" -a -d "${NSPR_DIR}"; then
-    NSPR_CFLAGS="-I${NSPR_DIR}/include"
+    NSPR_INCLUDE_DIR="${NSPR_DIR}/include"
+    NSPR_CFLAGS="-I${NSPR_INCLUDE_DIR}"
     if test "$NSPR_LIBDIR"x != x; then
         NSPR_LIBS="-L${NSPR_LIBDIR} ${NSPR_LIBS}"
     else
@@ -1438,6 +1444,7 @@ AC_SUBST(ZLIB_CFLAGS)
 AC_SUBST(ZLIB_LIBS)
 AC_SUBST(PNG_CFLAGS)
 AC_SUBST(PNG_LIBS)
+AC_SUBST(NSPR_INCLUDE_DIR)
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 
