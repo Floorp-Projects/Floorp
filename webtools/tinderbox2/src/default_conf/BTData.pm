@@ -4,8 +4,8 @@
 # Tracking system and its relationship to the tinderbox trees.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2002/05/03 00:19:41 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/09 03:10:40 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BTData.pm,v $ 
 # $Name:  $ 
@@ -293,15 +293,15 @@ sub rec2bug_url {
 }
 
 
-sub get_all_progress_states {
+sub get_all_columns {
 
-  my (@progress_states) = main::uniq( values %BTData::STATUS_PROGRESS );
+  my (@columns) = main::uniq( values %BTData::STATUS_PROGRESS );
 
   # If the first element is null ignore it.
-  ($progress_states[0]) ||
-    (shift @progress_states);
+  ($columns[0]) ||
+    (shift @columns);
 
-  return @progress_states;
+  return @columns;
 }
 
 
