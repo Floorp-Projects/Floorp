@@ -235,62 +235,57 @@ void nsUnknownDecoder::DetermineContentType()
   NS_ASSERTION(mContentType.IsEmpty(), "Content type is already known.");
   if (!mContentType.IsEmpty()) return;
 
-  // First make sure that the buffer is ASCII...
-  for (i=0; i<mBufferLen; i++) {
-    char ch = mBuffer[i];
+  CBufDescriptor bufDesc((const char*)mBuffer, PR_TRUE, mBufferLen, mBufferLen);
+  nsCAutoString str(bufDesc);
 
-    // Found a non-ASCII character...
-    if (!ch || (0x80 & ch)) {
-      break;
+  //
+  // If the buffer begins with "#!" or "%!" then it is a script of some
+  // sort...
+  //
+  // This false match happened all the time...  For example, CGI scripts
+  // written in sh or perl that emit HTML.
+  //
+  if (str.EqualsWithConversion("#!", PR_FALSE, 2) || 
+      str.EqualsWithConversion("%!", PR_FALSE, 2)) {
+    mContentType = TEXT_PLAIN;
+  }
+  //
+  // If the buffer begins with a mailbox delimiter then it is not HTML
+  //
+  else if (str.EqualsWithConversion("From ", PR_TRUE, 5) || 
+           str.EqualsWithConversion(">From ", PR_TRUE, 6)) {
+    mContentType = TEXT_PLAIN;
+  }
+  //
+  // If the buffer contains "common" HTML tags then lets call it HTML :-)
+  //
+  else {
+    PRInt32 offset;
+
+    offset = str.Find("<HTML", PR_TRUE);
+    if (offset < 0) {
+      offset = str.Find("<TITLE", PR_TRUE);
+      if (offset < 0) {
+        offset = str.Find("<FRAMESET", PR_TRUE);
+        if (offset < 0) {
+          offset = str.Find("<SCRIPT", PR_TRUE);
+        }
+      }
+    }
+
+    if (offset >= 0) {
+      mContentType = TEXT_HTML;
     }
   }
 
   //
-  // The content is at least text/plain
+  // See if the buffer has any embedded nulls.  If not, then lets just
+  // call it text/plain...
   //
-  if (i == mBufferLen) {
-    CBufDescriptor bufDesc((const char*)mBuffer, PR_TRUE, mBufferLen, mBufferLen);
-    nsCAutoString str(bufDesc);
-    PRInt32 offset;
-
-    //
-    // If the buffer begins with "#!" or "%!" then it is a script of some
-    // sort...
-    //
-    // This false match happened all the time...  For example, CGI scripts
-    // written in sh or perl that emit HTML.
-    //
-    if (str.EqualsWithConversion("#!", PR_FALSE, 2) || 
-        str.EqualsWithConversion("%!", PR_FALSE, 2)) {
+  if (mContentType.IsEmpty()) {
+    for (i=0; i<mBufferLen && mBuffer[i]; i++);
+    if (i == mBufferLen) {
       mContentType = TEXT_PLAIN;
-    }
-    //
-    // If the buffer begins with a mailbox delimiter then it is not HTML
-    //
-    else if (str.EqualsWithConversion("From ", PR_TRUE, 5) || 
-             str.EqualsWithConversion(">From ", PR_TRUE, 6)) {
-      mContentType = TEXT_PLAIN;
-    }
-    //
-    // If the buffer contains "common" HTML tags then lets call it HTML :-)
-    //
-    else {
-      offset = str.Find("<HTML", PR_TRUE);
-      if (offset < 0) {
-        offset = str.Find("<TITLE", PR_TRUE);
-        if (offset < 0) {
-          offset = str.Find("<FRAMESET", PR_TRUE);
-          if (offset < 0) {
-            offset = str.Find("<SCRIPT", PR_TRUE);
-          }
-        }
-      }
-
-      if (offset >= 0) {
-        mContentType = TEXT_HTML;
-      } else {
-        mContentType = TEXT_PLAIN;
-      }
     }
   }
 
