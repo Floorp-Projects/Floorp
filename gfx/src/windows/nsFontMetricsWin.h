@@ -44,7 +44,7 @@
 enum eFontType {
  eFontType_UNKNOWN = -1,
  eFontType_Unicode,
- eFontType_NonUnicode,
+ eFontType_NonUnicode
 };
 
 struct nsCharacterMap {

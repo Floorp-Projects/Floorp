@@ -318,11 +318,11 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
                 pIdent = &identA;
             }
             else {
-                identW.User           = (PRUnichar *) user;
+                identW.User           = (unsigned short *) user;
                 identW.UserLength     = nsCRT::strlen(user);
-                identW.Domain         = (PRUnichar *) domain;
+                identW.Domain         = (unsigned short *) domain;
                 identW.DomainLength   = nsCRT::strlen(domain);
-                identW.Password       = (PRUnichar *) pass;
+                identW.Password       = (unsigned short *) pass;
                 identW.PasswordLength = nsCRT::strlen(pass);
                 identW.Flags          = SEC_WINNT_AUTH_IDENTITY_UNICODE;
                 pIdent = &identW;

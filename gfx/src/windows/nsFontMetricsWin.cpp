@@ -1476,7 +1476,7 @@ enum {
   eTTFormat6TrimmedTableMapping = 6,
   eTTFormat8Mixed16bitAnd32bitCoverage = 8,
   eTTFormat10TrimmedArray = 10,
-  eTTFormat12SegmentedCoverage = 12,
+  eTTFormat12SegmentedCoverage = 12
 };
 
 static void 
@@ -1939,7 +1939,7 @@ GetGlyphIndices(HDC                 aDC,
     PRUint16* idDelta = startCode + segCount;
     PRUint16* idRangeOffset = idDelta + segCount;
 
-    PRUint16* result = aResult.GetArray(aLength);
+    PRUnichar* result = aResult.GetArray(aLength);
     if (!result) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -4255,7 +4255,7 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
     if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
       // we are on a platform that doesn't implement GetGlyphOutlineW() 
       // we need to use glyph indices
-      rv = GetGlyphIndices(aDC, &mCMAP, (PRUint16*) buffer.GetArray(), destLength / 2, buf);
+      rv = GetGlyphIndices(aDC, &mCMAP, (PRUnichar*)buffer.GetArray(), destLength / 2, buf);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -4263,7 +4263,7 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
 
     // buffer.mBuffer is now a pseudo-Unicode string so that we can use 
     // GetBoundingMetricsCommon() also used by nsFontWinUnicode. 
-    return  GetBoundingMetricsCommon(aDC, mOverhangCorrection, (PRUint16*) buffer.GetArray(), 
+    return  GetBoundingMetricsCommon(aDC, mOverhangCorrection, (PRUnichar*)buffer.GetArray(), 
               destLength / 2, aBoundingMetrics, buf.GetArray());
 
   }
@@ -4437,7 +4437,7 @@ GenerateSingleByte(nsCharsetInfo* aSelf)
 { 
   PRUint32 map[UCS2_MAP_LEN];
   PRUint8 mb[256];
-  PRUint16 wc[256];
+  WCHAR wc[256];
   int i;
 
   memset(map, 0, sizeof(map));
@@ -4485,7 +4485,7 @@ GenerateMultiByte(nsCharsetInfo* aSelf)
 { 
   PRUint32 map[UCS2_MAP_LEN];
   memset(map, 0, sizeof(map));
-  for (PRUint16 c = 0; c < 0xFFFF; ++c) {
+  for (WCHAR c = 0; c < 0xFFFF; ++c) {
     BOOL defaulted = FALSE;
     WideCharToMultiByte(aSelf->mCodePage, 0, &c, 1, nsnull, 0, nsnull,
       &defaulted);
@@ -4499,7 +4499,7 @@ GenerateMultiByte(nsCharsetInfo* aSelf)
 static int
 HaveConverterFor(PRUint8 aCharset)
 {
-  PRUint16 wc = 'a';
+  WCHAR wc = 'a';
   char mb[8];
   if (WideCharToMultiByte(gCharsetInfo[gCharsetToIndex[aCharset]].mCodePage, 0,
                           &wc, 1, mb, sizeof(mb), nsnull, nsnull)) {

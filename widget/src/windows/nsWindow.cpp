@@ -6598,7 +6598,8 @@ nsWindow::HandleMouseActionOfIME(int aAction, POINT *ptPos)
 
       // Note: hitText has been done, so no check of mIMECompCharPos
       // and composing char maximum limit is necessary.
-      for (PRInt32 i = 0; i < mIMECompUnicode->Length(); i++) {
+      PRInt32 i = 0;
+      for (i = 0; i < mIMECompUnicode->Length(); i++) {
         if (PT_IN_RECT(*ptPos, mIMECompCharPos[i]))
           break;
       }

@@ -309,7 +309,7 @@ ChangeCase(JSContext *cx, JSString *src, jsval *rval,
   nsAutoString result;
   changeCaseFnc(str, result);
 
-  JSString *ucstr = JS_NewUCStringCopyN(cx, result.get(), result.Length());
+  JSString *ucstr = JS_NewUCStringCopyN(cx, (jschar*)result.get(), result.Length());
   if (!ucstr) {
     return JS_FALSE;
   }

@@ -891,8 +891,8 @@ nsGlobalHistory::SwapBytes(const PRUnichar *source, PRUnichar *dest,
                            PRInt32 aLen)
 {
   PRUint16 c;
-  const PRUint16 *inp;
-  PRUint16 *outp;
+  const PRUnichar *inp;
+  PRUnichar *outp;
   PRInt32 i;
 
   inp = source;

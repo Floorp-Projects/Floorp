@@ -1062,7 +1062,7 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
 PRBool
 nsNativeAppSupportWin::InitTopicStrings() {
     for ( int i = 0; i < topicCount; i++ ) {
-        if ( !( mTopics[ i ] = DdeCreateStringHandle( mInstance, topicNames[ i ], CP_WINANSI ) ) ) {
+        if ( !( mTopics[ i ] = DdeCreateStringHandle( mInstance, NS_CONST_CAST(char *,topicNames[ i ]), CP_WINANSI ) ) ) {
             return PR_FALSE;
         }
     }
