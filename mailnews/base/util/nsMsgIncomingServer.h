@@ -64,6 +64,7 @@ protected:
   
   nsCOMPtr <nsIFolder> m_rootFolder;
   nsresult getDefaultCharPref(const char *pref, char **);
+  nsresult getDefaultUnicharPref(const char *pref, PRUnichar **);
   nsresult getDefaultBoolPref(const char *pref, PRBool *);
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   

@@ -361,11 +361,40 @@ nsMsgIncomingServer::GetCharValue(const char *prefname,
 }
 
 nsresult
+nsMsgIncomingServer::GetUnicharValue(const char *prefname,
+                                     PRUnichar **val)
+{
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+  nsresult rv = m_prefs->CopyUnicharPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+  
+  if (NS_FAILED(rv))
+    rv = getDefaultUnicharPref(prefname, val);
+  
+  return rv;
+}
+
+nsresult
 nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
                                         char **val) {
   
   char *fullPrefName = getDefaultPrefName(prefname);
   nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  if (NS_FAILED(rv)) {
+    *val = nsnull;              // null is ok to return here
+    rv = NS_OK;
+  }
+  return rv;
+}
+
+nsresult
+nsMsgIncomingServer::getDefaultUnicharPref(const char *prefname,
+                                           PRUnichar **val) {
+  
+  char *fullPrefName = getDefaultPrefName(prefname);
+  nsresult rv = m_prefs->CopyUnicharPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
@@ -402,20 +431,45 @@ nsMsgIncomingServer::SetCharValue(const char *prefname,
   return rv;
 }
 
+nsresult
+nsMsgIncomingServer::SetUnicharValue(const char *prefname,
+                                  const PRUnichar * val)
+{
+  nsresult rv;
+  char *fullPrefName = getPrefName(m_serverKey, prefname);
+
+  if (!val) {
+    m_prefs->ClearUserPref(fullPrefName);
+    return NS_OK;
+  }
+
+  PRUnichar *defaultVal=nsnull;
+  rv = getDefaultUnicharPref(prefname, &defaultVal);
+  if (NS_SUCCEEDED(rv) &&
+      nsCRT::strcmp(defaultVal, val) == 0)
+    m_prefs->ClearUserPref(fullPrefName);
+  else
+    rv = m_prefs->SetUnicharPref(fullPrefName, val);
+  
+  PR_FREEIF(defaultVal);
+  
+  PR_smprintf_free(fullPrefName);
+  
+  return rv;
+}
+
 // pretty name is the display name to show to the user
 NS_IMETHODIMP
 nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
 
-  char *val=nsnull;
-  nsresult rv = GetCharValue("name", &val);
+  nsXPIDLString val;
+  nsresult rv = GetUnicharValue("name", getter_Copies(val));
   if (NS_FAILED(rv)) return rv;
 
-  nsString prettyName;
+  nsAutoString prettyName(val);
   
   // if there's no name, then just return the hostname
-  if (val) {
-    prettyName = val;
-  } else {
+  if (prettyName.IsEmpty()) {
     
     nsXPIDLCString username;
     rv = GetUsername(getter_Copies(username));
@@ -441,9 +495,7 @@ nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
 
 NS_IMETHODIMP
 nsMsgIncomingServer::SetPrettyName(const PRUnichar *value) {
-  // this is lossy. Not sure what to do.
-  nsCString str(value);
-  return SetCharValue("name", str.GetBuffer());
+  return SetUnicharValue("name", value);
 }
 
 NS_IMETHODIMP

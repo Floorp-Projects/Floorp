@@ -124,6 +124,9 @@ interface nsIMsgIncomingServer : nsISupports {
   string getCharValue(in string attr);
   void setCharValue(in string attr, in string value);
 
+  wstring getUnicharValue(in string attr);
+  void setUnicharValue(in string attr, in wstring value);
+  
   long getIntValue(in string attr);
   void setIntValue(in string attr, in long value);
 
