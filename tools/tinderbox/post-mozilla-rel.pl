@@ -9,11 +9,33 @@
 #  mozilla tree
 #  produced builds get put in Topsrcdir/installer/sea
 #
+#
+# tinder-config variables that you should set:
+#  package_creation_path: directory to run 'make installer' to create an
+#                         installer, and 'make' to create a zip/tar build
+#  ftp_path: directory to upload nightly builds to
+#  url_path: absolute URL to nightly build directory
+#  tbox_ftp_path: directory to upload tinderbox builds to
+#  tbox_url_path: absolute URL to tinderbox builds directory
+#  notify_list: list of email addresses to notify of nightly build completion
+#  build_hour: upload the first build completed after this hour as a nightly
+#  ssh_server: server to upload build to via ssh
+#  ssh_user: user to log in to ssh with
+#  ssh_version: if set, force ssh protocol version N
+#  milestone: suffix to append to date and latest- directory names
+#  stub_installer: (0/1) whether to upload a stub installer
+#  sea_installer: (0/1) whether to upload a sea (blob) installer
+#  archive: (0/1) whether to upload an archive (tar or zip) build
+#
+#  windows-specific variables:
+#   as_perl_path: cygwin-ized path to Activestate Perl's bin directory
 
 use strict;
 use Sys::Hostname;
 
 package PostMozilla;
+
+use Cwd;
 
 sub is_windows { return $Settings::OS =~ /^WIN/; }
 sub is_linux { return $Settings::OS eq 'Linux'; }
@@ -40,32 +62,54 @@ sub packit {
       die "Can't make installer for this platform.\n";
     }
     TinderUtils::print_log "INSTALLER_URL is " . $ENV{INSTALLER_URL} . "\n";
+
+    # the Windows installer scripts currently require Activestate Perl.
+    # Put it ahead of cygwin perl in the path.
+    my $save_path;
+    if (is_windows()) {
+      $save_path = $ENV{PATH};
+      $ENV{PATH} = $Settings::as_perl_path.":".$ENV{PATH};
+    }
+
     # the one operation we care about saving status of
     $status = TinderUtils::run_shell_command "make -C $packaging_dir installer";
     
     if (is_windows()) {
+      $ENV{PATH} = $save_path;
       #my $dos_stagedir = `cygpath -w $stagedir`;
       #chomp ($dos_stagedir);
     }
     mkdir($stagedir, 0775);
     if (is_windows()) {
-      TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
-      TinderUtils::run_shell_command "cp $package_location/sea/*.exe $package_location/stub/*.exe  $stagedir/";
+      if ($Settings::stub_installer) {
+        TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
+        TinderUtils::run_shell_command "cp $package_location/stub/*.exe $stagedir/";
+      }
+      if ($Settings::sea_installer) {
+        TinderUtils::run_shell_command "cp $package_location/sea/*.exe $stagedir/";
+      }
     } elsif (is_linux()) {
-      TinderUtils::run_shell_command "cp -r $package_location/raw/xpi $stagedir/linux-xpi";
-      TinderUtils::run_shell_command "cp $package_location/sea/*.tar.gz $package_location/stub/*.tar.gz  $stagedir/";
+      if ($Settings::stub_installer) {
+        TinderUtils::run_shell_command "cp -r $package_location/raw/xpi $stagedir/linux-xpi";
+        TinderUtils::run_shell_command "cp $package_location/stub/*.tar.gz $stagedir/";
+      }
+      if ($Settings::sea_installer) {
+        TinderUtils::run_shell_command "cp $package_location/sea/*.tar.gz $stagedir/";
+      }
     }
   }
 
-  TinderUtils::run_shell_command "make -C $packaging_dir";
-  if (is_windows()) {
-    TinderUtils::run_shell_command "cp $package_location/../*.zip $stagedir/";
-  } elsif (is_mac()) {
-    die "WRITE ME!";
-  } else {
-    TinderUtils::run_shell_command "cp $package_location/../dist/*.tar.gz $stagedir/";
+  if ($Settings::archive) {
+    TinderUtils::run_shell_command "make -C $packaging_dir";
+    if (is_windows()) {
+      TinderUtils::run_shell_command "cp $package_location/../*.zip $stagedir/";
+    } elsif (is_mac()) {
+      die "WRITE ME!";
+    } else {
+      TinderUtils::run_shell_command "cp $package_location/../dist/*.tar.gz $stagedir/";
+    }
   }
-  
+
   # need to reverse status, since it's a "unix" truth value, where 0 means 
   # success
   return ($status)?0:1;
@@ -93,12 +137,19 @@ sub pushit {
   my $short_ud = `basename $upload_directory`;
   chomp ($short_ud);
 
-  TinderUtils::run_shell_command "ssh -1 -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
-  TinderUtils::run_shell_command "scp -oProtocol=1 -r $upload_directory $Settings::ssh_user\@$ssh_server:$upload_path";
-  TinderUtils::run_shell_command "ssh -1 -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/$short_ud";
+  my $ssh_opts = "";
+  my $scp_opts = "";
+  if ($Settings::ssh_version ne '') {
+    $ssh_opts = "-".$Settings::ssh_version;
+    $scp_opts = "-oProtocol=".$Settings::ssh_version;
+  }
+
+  TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
+  TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory $Settings::ssh_user\@$ssh_server:$upload_path";
+  TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/$short_ud";
 
   if ($cachebuild) {
-    TinderUtils::run_shell_command "ssh -1 -l $Settings::ssh_user $ssh_server cp -pf $upload_path/$short_ud/* $upload_path/latest-$Settings::milestone/";
+    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server cp -pf $upload_path/$short_ud/* $upload_path/latest-$Settings::milestone/";
   }
   return 1;
 }
@@ -128,7 +179,7 @@ sub reportRelease {
 
   if ($Settings::notify_list ne "") {
     my $donemessage =   "\n" .
-                        "$Settings::OS Mozilla Build available at: \n" .
+                        "$Settings::OS $Settings::ProductName Build available at: \n" .
                         "$url \n";
     open(TMPMAIL, ">tmpmail.txt");
     print TMPMAIL "$donemessage \n";
@@ -159,6 +210,8 @@ sub main {
   my ($mozilla_build_dir) = @_;
   TinderUtils::print_log "Post-Build packaging/uploading commencing.\n";
 
+  chdir $mozilla_build_dir;
+
   if (is_windows()) {
     #$mozilla_build_dir = `cygpath $mozilla_build_dir`; # cygnusify the path
     #chop $mozilla_build_dir; # remove whitespace
@@ -181,8 +234,13 @@ sub main {
   # set up variables with default values
   my $last_build_day = 0;
   # need to modify the settings from tinder-config.pl
-  my $package_creation_path = $objdir . "/xpinstall/packager";
-  my $package_location = $objdir . "/installer";
+  my $package_creation_path = $objdir . $Settings::package_creation_path;
+  my $package_location;
+  if (is_windows()) {
+    $package_location = $objdir . "/dist/install";
+  } else {
+    $package_location = $objdir . "/installer";
+  }
   my $ftp_path = $Settings::ftp_path;
   my $url_path = $Settings::url_path;
 
@@ -215,9 +273,9 @@ sub main {
     $url_path         = $url_path . "/" . $upload_directory;
     $cachebuild = 1;
   } else {
-    $ftp_path   = "/home/ftp/pub/mozilla/tinderbox-builds";
+    $ftp_path   = $Settings::tbox_ftp_path;
     $upload_directory = shorthost();
-    $url_path   = "http://ftp.mozilla.org/pub/mozilla.org/mozilla/tinderbox-builds/" . $upload_directory;
+    $url_path   = $Settings::tbox_url_path . "/" . $upload_directory;
     $cachebuild = 0;
   }
 
