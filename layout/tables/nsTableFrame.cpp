@@ -322,26 +322,34 @@ nsTableFrame::~nsTableFrame()
 
 /* ****** CellMap methods ******* */
 
-/* return the index of the first row group after aStartIndex */
-PRInt32 nsTableFrame::NextRowGroup (PRInt32 aStartIndex)
+/* return the next row group frame after aRowGroupFrame */
+nsTableRowGroupFrame* nsTableFrame::NextRowGroupFrame(nsTableRowGroupFrame* aRowGroupFrame)
 {
-  int index = aStartIndex;
-  int count;
-  ChildCount(count);
-  nsIFrame * child;
-  ChildAt (index+1, child);
-
-  while (++index < count)
+  if (nsnull == aRowGroupFrame)
   {
-    const nsStyleDisplay *childDisplay;
-    child->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
-        NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
-        NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
-      return index;
-    child->GetNextSibling(child);
+    aRowGroupFrame = (nsTableRowGroupFrame*)mFirstChild;
   }
-  return count;
+  else
+  {
+    aRowGroupFrame->GetNextSibling((nsIFrame*&)aRowGroupFrame);
+  }
+
+  while (nsnull != aRowGroupFrame)
+  {
+    const nsStyleDisplay *display;
+    aRowGroupFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay ||
+        NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay ||
+        NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay )
+    {
+      break;
+    }
+
+    // Get the next frame
+    aRowGroupFrame->GetNextSibling((nsIFrame*&)aRowGroupFrame);
+  }
+
+  return aRowGroupFrame;
 }
 
 /* counts columns in column groups */
@@ -534,7 +542,7 @@ void nsTableFrame::BuildCellMap ()
 {
   if (gsDebug==PR_TRUE) printf("Build Cell Map...\n");
 
-  int rowCount = GetRowCount ();
+  int rowCount = GetRowCount();
   NS_ASSERTION(0!=rowCount, "bad state");
   if (0 == rowCount)
   {
@@ -545,65 +553,63 @@ void nsTableFrame::BuildCellMap ()
   // Make an educated guess as to how many columns we have. It's
   // only a guess because we can't know exactly until we have
   // processed the last row.
-  nsTableRowGroupFrame *rowGroup=nsnull;
-  PRInt32 childCount;
-  ChildCount (childCount);
-  PRInt32 groupIndex = NextRowGroup (-1);
+  nsTableRowGroupFrame *rowGroupFrame = NextRowGroupFrame(nsnull);
   if (0 == mColCount)
-    mColCount = GetSpecifiedColumnCount ();
+    mColCount = GetSpecifiedColumnCount();
   if (0 == mColCount) // no column parts
   {
-    ChildAt (groupIndex, (nsIFrame *&)rowGroup);
-    nsTableRowFrame *row;
-    rowGroup->ChildAt (0, (nsIFrame *&)row);
-    if (nsnull!=row)
+    // Use the first row to estimate the number of columns
+    nsTableRowFrame *rowFrame;
+    rowGroupFrame->FirstChild((nsIFrame*&)rowFrame);
+    if (nsnull!=rowFrame)
     {
-      mColCount = row->GetMaxColumns ();
+      mColCount = rowFrame->GetMaxColumns();
       if (gsDebug==PR_TRUE) 
         printf("mColCount=0 at start.  Guessing col count to be %d from a row.\n", mColCount);
     }
   }
+
+  // If we have a cell map reset it; otherwise allocate a new cell map
   if (nsnull==mCellMap)
     mCellMap = new nsCellMap(rowCount, mColCount);
   else
     mCellMap->Reset(rowCount, mColCount);
   if (gsDebug==PR_TRUE) printf("mCellMap set to (%d, %d)\n", rowCount, mColCount);
-  PRInt32 rowStart = 0;
-  if (gsDebug==PR_TRUE) printf("childCount is %d\n", childCount);
-  while (groupIndex < childCount)
+
+  // Iterate over each row frame group
+  PRInt32 rowIndex = -1;
+  while (nsnull != rowGroupFrame)
   {
-    if (gsDebug==PR_TRUE) printf("  groupIndex is %d\n", groupIndex);
-    if (gsDebug==PR_TRUE) printf("  rowStart is %d\n", rowStart);
-    ChildAt (groupIndex, (nsIFrame *&)rowGroup);
-    int groupRowCount;
-    rowGroup->ChildCount(groupRowCount);
-    if (gsDebug==PR_TRUE) printf("  groupRowCount is %d\n", groupRowCount);
-    nsTableRowFrame *row;
-    rowGroup->ChildAt (0, (nsIFrame *&)row);
-    for (PRInt32 rowIndex = 0; rowIndex < groupRowCount; rowIndex++)
+    // Iterate over each row frame within the row group
+    nsTableRowFrame *rowFrame;
+    rowGroupFrame->FirstChild((nsIFrame*&)rowFrame);
+    while (nsnull != rowFrame)
     {
+      // Set the row frame's row index. Note that this is a table-wide index,
+      // and not the index within the row group
+      rowIndex++;
+      rowFrame->SetRowIndex(rowIndex);
+
+      // XXX We should iterate the table cells using the sibling pointers, and
+      // not use ChildAt()...
       PRInt32 cellCount;
-      row->ChildCount (cellCount);
+      rowFrame->ChildCount (cellCount);
       PRInt32 cellIndex = 0;
       PRInt32 colIndex = 0;
       if (gsDebug==PR_TRUE) 
         DumpCellMap();
-      if (gsDebug==PR_TRUE) printf("    rowIndex is %d, row->SetRowIndex(%d)\n", rowIndex, rowIndex + rowStart);
-      row->SetRowIndex (rowIndex + rowStart);
+
       while (colIndex < mColCount)
       {
         if (gsDebug==PR_TRUE) printf("      colIndex = %d, with mColCount = %d\n", colIndex, mColCount);
-        CellData *data =mCellMap->GetCellAt(rowIndex + rowStart, colIndex);
+        CellData *data = mCellMap->GetCellAt(rowIndex, colIndex);
         if (nsnull == data)
         {
-          if (gsDebug==PR_TRUE) printf("      null data from GetCellAt(%d,%d)\n", rowIndex+rowStart, colIndex);
-          if (gsDebug==PR_TRUE) printf("      cellIndex=%d, cellCount=%d)\n", cellIndex, cellCount);
           if (cellIndex < cellCount)
           {
             nsTableCellFrame* cell;
-            row->ChildAt (cellIndex, (nsIFrame *&)cell);
-            if (gsDebug==PR_TRUE) printf("      calling BuildCellIntoMap(cell, %d, %d), and incrementing cellIndex\n", rowIndex + rowStart, colIndex);
-            BuildCellIntoMap (cell, rowIndex + rowStart, colIndex);
+            rowFrame->ChildAt(cellIndex, (nsIFrame *&)cell);
+            BuildCellIntoMap(cell, rowIndex, colIndex);
             cellIndex++;
           }
         }
@@ -621,21 +627,24 @@ void nsTableFrame::BuildCellMap ()
         {
           if (gsDebug==PR_TRUE) printf("     calling GrowCellMap again because cellIndex < %d\n", cellIndex, cellCount);
           GrowCellMap (colIndex + 1); // ensure enough cols in map, may be low due to colspans
-          CellData *data =mCellMap->GetCellAt(rowIndex + rowStart, colIndex);
+          CellData *data =mCellMap->GetCellAt(rowIndex, colIndex);
           if (data == nsnull)
           {
             nsTableCellFrame* cell;
-            row->ChildAt (cellIndex, (nsIFrame *&)cell);
-            BuildCellIntoMap (cell, rowIndex + rowStart, colIndex);
+            rowFrame->ChildAt (cellIndex, (nsIFrame *&)cell);
+            BuildCellIntoMap (cell, rowIndex, colIndex);
             cellIndex++;
           }
           colIndex++;
         }
       }
-      row->GetNextSibling((nsIFrame *&)row);
+
+      // Get the next row frame
+      rowFrame->GetNextSibling((nsIFrame *&)rowFrame);
     }
-    rowStart += groupRowCount;
-    groupIndex = NextRowGroup (groupIndex);
+
+    // Get the next row group frame
+    rowGroupFrame = NextRowGroupFrame(rowGroupFrame);
   }
   if (gsDebug==PR_TRUE)
     DumpCellMap ();
